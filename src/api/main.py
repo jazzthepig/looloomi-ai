@@ -1,0 +1,94 @@
+"""
+Looloomi AI - FastAPI Backend
+"""
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List
+from datetime import datetime
+import sys
+import os
+import numpy as np
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+app = FastAPI(title="Looloomi AI API", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class PortfolioRequest(BaseModel):
+    assets: List[str] = ["BTC", "ETH", "SOL", "BNB", "AVAX"]
+    strategy: str = "hrp"
+
+@app.get("/")
+async def root():
+    return {"name": "Looloomi AI API", "status": "running", "timestamp": datetime.now().isoformat()}
+
+@app.get("/api/v1/market/prices")
+async def get_prices(symbols: str = "BTC,ETH,SOL"):
+    from data.market.exchange_data import ExchangeDataFetcher
+    fetcher = ExchangeDataFetcher("binance")
+    symbol_list = [s.strip() + "/USDT" for s in symbols.split(",")]
+    tickers = fetcher.get_multiple_tickers(symbol_list)
+    return {"timestamp": datetime.now().isoformat(), "data": tickers.to_dict(orient="records")}
+
+@app.get("/api/v1/market/ohlcv/{symbol}")
+async def get_ohlcv(symbol: str, timeframe: str = "1d", limit: int = 30):
+    from data.market.exchange_data import ExchangeDataFetcher
+    fetcher = ExchangeDataFetcher("binance")
+    pair = symbol.upper() + "/USDT"
+    df = fetcher.get_ohlcv(pair, timeframe, limit)
+    if df.empty:
+        raise HTTPException(status_code=404, detail="No data")
+    df["timestamp"] = df["timestamp"].astype(str)
+    return {"symbol": pair, "data": df.to_dict(orient="records")}
+
+@app.post("/api/v1/portfolio/optimize")
+async def optimize_portfolio(request: PortfolioRequest):
+    from analytics.portfolio.optimizer import CryptoPortfolioOptimizer
+    optimizer = CryptoPortfolioOptimizer(assets=request.assets)
+    optimizer.fetch_historical_data(days=90)
+    if request.strategy == "hrp":
+        result = optimizer.optimize_hrp()
+    elif request.strategy == "min_variance":
+        result = optimizer.optimize_min_variance()
+    else:
+        result = optimizer.optimize_equal_weight()
+    return {"timestamp": datetime.now().isoformat(), "result": result}
+
+@app.get("/api/v1/portfolio/stats")
+async def get_portfolio_stats(assets: str = "BTC,ETH,SOL"):
+    from analytics.portfolio.optimizer import CryptoPortfolioOptimizer
+    asset_list = [s.strip() for s in assets.split(",")]
+    optimizer = CryptoPortfolioOptimizer(assets=asset_list)
+    prices = optimizer.fetch_historical_data(days=90)
+    stats = []
+    for asset in asset_list:
+        r = optimizer.returns_data[asset]
+        stats.append({
+            "asset": asset,
+            "return_90d": round(float(r.sum() * 100), 2),
+            "volatility": round(float(r.std() * np.sqrt(365) * 100), 2),
+            "sharpe": round(float((r.mean() * 365) / (r.std() * np.sqrt(365))), 2),
+            "price": round(float(prices[asset].iloc[-1]), 2)
+        })
+    return {"data": stats}
+
+@app.get("/api/v1/mmi/{token}")
+async def get_mmi(token: str = "bitcoin"):
+    from analytics.mmi.mmi_index_v3 import LooloomiMMI
+    mmi = LooloomiMMI(token)
+    score = mmi.calculate()
+    signal = mmi.get_signal(score)
+    return {"token": token, "mmi_score": score, "signal": signal, "components": mmi.components}
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
