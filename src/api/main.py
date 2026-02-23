@@ -13,7 +13,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-app = FastAPI(title="Looloomi AI API", version="0.1.0")
+app = FastAPI(title="Looloomi AI API", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,7 +29,20 @@ class PortfolioRequest(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"name": "Looloomi AI API", "status": "running", "timestamp": datetime.now().isoformat()}
+    return {
+        "name": "Looloomi AI API",
+        "version": "0.2.0",
+        "status": "running",
+        "timestamp": datetime.now().isoformat(),
+        "endpoints": [
+            "/api/v1/market/prices",
+            "/api/v1/portfolio/optimize",
+            "/api/v1/mmi/{token}",
+            "/api/v1/vc/funding-rounds",
+            "/api/v1/vc/unlocks",
+            "/api/v1/vc/overlap"
+        ]
+    }
 
 @app.get("/api/v1/market/prices")
 async def get_prices(symbols: str = "BTC,ETH,SOL"):
@@ -89,6 +102,44 @@ async def get_mmi(token: str = "bitcoin"):
     signal = mmi.get_signal(score)
     return {"token": token, "mmi_score": score, "signal": signal, "components": mmi.components}
 
+# ==================== VC DEAL FLOW ====================
+
+@app.get("/api/v1/vc/funding-rounds")
+async def get_funding_rounds(limit: int = 10):
+    """Get recent crypto funding rounds"""
+    from data.vc.deal_flow import VCDealFlowTracker
+    tracker = VCDealFlowTracker()
+    rounds = tracker.get_recent_funding_rounds(limit)
+    return {"timestamp": datetime.now().isoformat(), "data": rounds}
+
+@app.get("/api/v1/vc/unlocks")
+async def get_token_unlocks(days: int = 30):
+    """Get upcoming token unlocks"""
+    from data.vc.deal_flow import VCDealFlowTracker
+    tracker = VCDealFlowTracker()
+    unlocks = tracker.get_token_unlocks(days)
+    return {"timestamp": datetime.now().isoformat(), "data": unlocks}
+
+@app.get("/api/v1/vc/overlap")
+async def get_vc_overlap():
+    """Get VC portfolio overlap - high conviction signals"""
+    from data.vc.deal_flow import VCDealFlowTracker
+    tracker = VCDealFlowTracker()
+    overlap = tracker.get_vc_portfolio_overlap([])
+    return {"timestamp": datetime.now().isoformat(), "data": overlap}
+
+@app.get("/api/v1/vc/top-vcs")
+async def get_top_vcs(limit: int = 10):
+    """Get top crypto VCs by deal count"""
+    from data.vc.deal_flow import VCDealFlowTracker
+    tracker = VCDealFlowTracker()
+    vcs = tracker.get_top_vcs(limit)
+    return {"timestamp": datetime.now().isoformat(), "data": vcs}
+
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
