@@ -3,6 +3,8 @@ Looloomi AI - FastAPI Backend
 """
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
@@ -26,23 +28,6 @@ app.add_middleware(
 class PortfolioRequest(BaseModel):
     assets: List[str] = ["BTC", "ETH", "SOL", "BNB", "AVAX"]
     strategy: str = "hrp"
-
-@app.get("/")
-async def root():
-    return {
-        "name": "Looloomi AI API",
-        "version": "0.2.0",
-        "status": "running",
-        "timestamp": datetime.now().isoformat(),
-        "endpoints": [
-            "/api/v1/market/prices",
-            "/api/v1/portfolio/optimize",
-            "/api/v1/mmi/{token}",
-            "/api/v1/vc/funding-rounds",
-            "/api/v1/vc/unlocks",
-            "/api/v1/vc/overlap"
-        ]
-    }
 
 @app.get("/api/v1/market/prices")
 async def get_prices(symbols: str = "BTC,ETH,SOL"):
@@ -102,11 +87,8 @@ async def get_mmi(token: str = "bitcoin"):
     signal = mmi.get_signal(score)
     return {"token": token, "mmi_score": score, "signal": signal, "components": mmi.components}
 
-# ==================== VC DEAL FLOW ====================
-
 @app.get("/api/v1/vc/funding-rounds")
 async def get_funding_rounds(limit: int = 10):
-    """Get recent crypto funding rounds"""
     from data.vc.deal_flow import VCDealFlowTracker
     tracker = VCDealFlowTracker()
     rounds = tracker.get_recent_funding_rounds(limit)
@@ -114,7 +96,6 @@ async def get_funding_rounds(limit: int = 10):
 
 @app.get("/api/v1/vc/unlocks")
 async def get_token_unlocks(days: int = 30):
-    """Get upcoming token unlocks"""
     from data.vc.deal_flow import VCDealFlowTracker
     tracker = VCDealFlowTracker()
     unlocks = tracker.get_token_unlocks(days)
@@ -122,7 +103,6 @@ async def get_token_unlocks(days: int = 30):
 
 @app.get("/api/v1/vc/overlap")
 async def get_vc_overlap():
-    """Get VC portfolio overlap - high conviction signals"""
     from data.vc.deal_flow import VCDealFlowTracker
     tracker = VCDealFlowTracker()
     overlap = tracker.get_vc_portfolio_overlap([])
@@ -130,7 +110,6 @@ async def get_vc_overlap():
 
 @app.get("/api/v1/vc/top-vcs")
 async def get_top_vcs(limit: int = 10):
-    """Get top crypto VCs by deal count"""
     from data.vc.deal_flow import VCDealFlowTracker
     tracker = VCDealFlowTracker()
     vcs = tracker.get_top_vcs(limit)
@@ -139,6 +118,22 @@ async def get_top_vcs(limit: int = 10):
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+# Serve static files from dashboard build
+dashboard_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "dashboard", "dist")
+if os.path.exists(dashboard_path):
+    app.mount("/assets", StaticFiles(directory=os.path.join(dashboard_path, "assets")), name="assets")
+    
+    @app.get("/")
+    async def serve_dashboard():
+        return FileResponse(os.path.join(dashboard_path, "index.html"))
+    
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file_path = os.path.join(dashboard_path, full_path)
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(dashboard_path, "index.html"))
 
 if __name__ == "__main__":
     import uvicorn
