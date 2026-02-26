@@ -1,8 +1,11 @@
 [phases.setup]
-nixPkgs = ["python311", "gcc"]
+nixPkgs = ["python313", "nodejs_22"]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = [
+  "pip install -r requirements.txt",
+  "cd dashboard && npm install && npm run build && cd .."
+]
 
 [start]
-cmd = "uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+cmd = "python -m uvicorn src.api.main:app --host 0.0.0.0 --port $PORT"
