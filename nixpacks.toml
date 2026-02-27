@@ -4,7 +4,8 @@ nixPkgs = ["python313", "nodejs_22"]
 [phases.install]
 cmds = [
   "pip install -r requirements.txt",
-  "cd dashboard && npm install && npm run build"
+  "npm install --prefix dashboard",
+  "npm run build --prefix dashboard"
 ]
 
 [start]
