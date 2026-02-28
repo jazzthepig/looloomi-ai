@@ -10,3 +10,5 @@ python-dotenv>=1.0.0
 aiofiles>=23.0.0
 httpx>=0.25.0
 moralis>=0.1.49
+httpx>=0.25.0
+moralis>=0.1.49
