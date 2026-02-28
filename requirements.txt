@@ -12,3 +12,5 @@ httpx>=0.25.0
 moralis>=0.1.49
 httpx>=0.25.0
 moralis>=0.1.49
+httpx>=0.25.0
+moralis>=0.1.49
