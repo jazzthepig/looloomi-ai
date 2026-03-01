@@ -32,25 +32,26 @@ const T = {
 /* ─── RWA + Infrastructure Token Universe ───────────────────────────── */
 const TOKEN_UNIVERSE = [
   // RWA Core
-  { symbol: "ONDO",  name: "Ondo Finance",    category: "RWA",         color: "#4F6EF7" },
-  { symbol: "POLYX", name: "Polymesh",         category: "RWA",         color: "#9B59B6" },
-  { symbol: "CFG",   name: "Centrifuge",       category: "RWA",         color: "#2ECC71" },
-  { symbol: "MPL",   name: "Maple Finance",    category: "RWA",         color: "#E67E22" },
+  { symbol: "ONDO",  name: "Ondo Finance",    category: "RWA",    color: "#4F6EF7" },
+  { symbol: "POLYX", name: "Polymesh",        category: "RWA",    color: "#9B59B6" },
+  { symbol: "SYRUP", name: "Maple Finance",   category: "RWA",    color: "#E67E22" },
+  { symbol: "OPEN",  name: "OpenTrade",       category: "RWA",    color: "#2DD4A0" },
+  { symbol: "ACX",   name: "Across Protocol", category: "RWA",    color: "#6FCF97" },
   // Oracle / Data Infrastructure
-  { symbol: "LINK",  name: "Chainlink",        category: "Oracle",      color: "#2A5ADA" },
-  { symbol: "PYTH",  name: "Pyth Network",     category: "Oracle",      color: "#E6007A" },
+  { symbol: "LINK",  name: "Chainlink",       category: "Oracle", color: "#2A5ADA" },
+  { symbol: "PYTH",  name: "Pyth Network",    category: "Oracle", color: "#E6007A" },
   // L1 Backbone
-  { symbol: "BTC",   name: "Bitcoin",          category: "L1",          color: "#F7931A" },
-  { symbol: "ETH",   name: "Ethereum",         category: "L1",          color: "#627EEA" },
-  { symbol: "SOL",   name: "Solana",           category: "L1",          color: "#9945FF" },
-  { symbol: "AVAX",  name: "Avalanche",        category: "L1",          color: "#E84142" },
+  { symbol: "BTC",   name: "Bitcoin",         category: "L1",     color: "#F7931A" },
+  { symbol: "ETH",   name: "Ethereum",        category: "L1",     color: "#627EEA" },
+  { symbol: "SOL",   name: "Solana",          category: "L1",     color: "#9945FF" },
+  { symbol: "AVAX",  name: "Avalanche",       category: "L1",     color: "#E84142" },
   // L2 Scaling
-  { symbol: "ARB",   name: "Arbitrum",         category: "L2",          color: "#28A0F0" },
-  { symbol: "OP",    name: "Optimism",         category: "L2",          color: "#FF0420" },
+  { symbol: "ARB",   name: "Arbitrum",        category: "L2",     color: "#28A0F0" },
+  { symbol: "OP",    name: "Optimism",        category: "L2",     color: "#FF0420" },
   // DeFi Infrastructure
-  { symbol: "AAVE",  name: "Aave",             category: "DeFi",        color: "#B6509E" },
-  { symbol: "UNI",   name: "Uniswap",          category: "DeFi",        color: "#FF007A" },
-  { symbol: "MKR",   name: "Maker",            category: "DeFi",        color: "#1AAB9B" },
+  { symbol: "AAVE",  name: "Aave",            category: "DeFi",   color: "#B6509E" },
+  { symbol: "UNI",   name: "Uniswap",         category: "DeFi",   color: "#FF007A" },
+  { symbol: "MKR",   name: "Maker",           category: "DeFi",   color: "#1AAB9B" },
 ];
 
 const CATEGORIES = ["All", "RWA", "Oracle", "L1", "L2", "DeFi"];
@@ -421,12 +422,28 @@ export default function MarketDashboard() {
     }
   }, []);
 
+  // Fetch OHLCV for all tokens in background (mini charts)
+  const fetchAllOhlcv = useCallback(async () => {
+    const symbols = TOKEN_UNIVERSE.map(t => t.symbol);
+    for (let i = 0; i < symbols.length; i += 5) {
+      const batch = symbols.slice(i, i + 5);
+      await Promise.allSettled(batch.map(async (symbol) => {
+        try {
+          const r = await fetch(`${API_BASE}/market/ohlcv/${symbol}?interval=1h&limit=24`);
+          const json = await r.json();
+          if (json.data?.length) setOhlcv(prev => ({ ...prev, [symbol]: json.data }));
+        } catch (e) {}
+      }));
+    }
+  }, []);
+
   // Initial load
   useEffect(() => {
     const init = async () => {
       setLoading(true);
       await Promise.all([fetchPrices(), fetchSupplementary()]);
       setLoading(false);
+      fetchAllOhlcv();
     };
     init();
   }, []);
