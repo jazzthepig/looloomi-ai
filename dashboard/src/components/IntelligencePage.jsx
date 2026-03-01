@@ -187,7 +187,7 @@ const RWA_KEYWORDS = ["rwa", "real world asset", "tokeniz", "treasury", "bond", 
   "superstate", "securitize", "polymesh", "chainlink", "oracle"];
 
 const isRWARelated = (item) => {
-  const text = `${item.name} ${item.sector} ${item.category}`.toLowerCase();
+  const text = `${item.name || ""} ${item.sector || ""} ${item.category || ""} ${item.categoryGroup || ""}`.toLowerCase();
   return RWA_KEYWORDS.some(kw => text.includes(kw));
 };
 
@@ -279,18 +279,33 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
       const json = await r.json();
       const all = json.data || [];
 
-      // Sort by date desc
-      all.sort((a, b) => (b.date || 0) - (a.date || 0));
+      // Normalize backend fields → frontend fields
+      const normalized = all.map(r => ({
+        name:          r.project || r.name || "—",
+        round:         r.round_type || r.round || "—",
+        amount:        typeof r.amount === "number" ? r.amount / 1e6 : (r.amount || 0), // convert to $M
+        date:          r.date ? new Date(r.date).getTime() / 1000 : null, // ISO string → unix ts
+        leadInvestors: r.investors || r.leadInvestors || [],
+        otherInvestors:r.otherInvestors || [],
+        category:      r.category || r.sector || "—",
+        categoryGroup: r.categoryGroup || r.category || "—",
+        sector:        r.sector || r.category || "—",
+        source:        r.source || null,
+      }));
+      const all2 = normalized;
 
-      setRaises(all);
+      // Sort by date desc
+      all2.sort((a, b) => (b.date || 0) - (a.date || 0));
+
+      setRaises(all2);
       setLastUpdate(new Date());
 
       // Filter RWA-related
-      const rwa = all.filter(isRWARelated);
+      const rwa = all2.filter(isRWARelated);
       setRwaRaises(rwa);
 
       // Compute stats
-      const recentAll  = all.filter(r => r.date && (Date.now()/1000 - r.date) < 90 * 86400);
+      const recentAll  = all2.filter(r => r.date && (Date.now()/1000 - r.date) < 90 * 86400);
       const totalAmt   = recentAll.reduce((s, r) => s + (r.amount || 0), 0);
       const rwaAmt     = rwa.filter(r => r.date && (Date.now()/1000 - r.date) < 90 * 86400)
                             .reduce((s, r) => s + (r.amount || 0), 0);
