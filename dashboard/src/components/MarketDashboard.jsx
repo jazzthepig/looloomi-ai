@@ -350,7 +350,7 @@ const TokenDetail = ({ token, priceData, ohlcv, onClose }) => {
 /* ═══════════════════════════════════════════════════════════════════════
    MAIN MARKET DASHBOARD
 ═══════════════════════════════════════════════════════════════════════ */
-export default function MarketDashboard() {
+export default function MarketDashboard({ activeTab, setActiveTab }) {
   const [priceData, setPriceData]     = useState({});
   const [ohlcv, setOhlcv]             = useState({});
   const [fng, setFng]                 = useState(null);
@@ -499,10 +499,22 @@ export default function MarketDashboard() {
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               LOOLOOMI
             </span>
-            <span style={{ fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace",
-              letterSpacing: "0.12em", textTransform: "uppercase" }}>
-              RWA Intelligence
-            </span>
+            <div style={{ display: "flex", gap: 4 }}>
+              {["Market", "Intelligence", "Quant GP"].map(tab => (
+                <button key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    padding: "6px 16px", borderRadius: 6, fontSize: 12,
+                    fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                    background: activeTab === tab ? `${T.blue}22` : "transparent",
+                    border: `1px solid ${activeTab === tab ? T.blue : T.border}`,
+                    color: activeTab === tab ? T.blue : T.secondary,
+                    cursor: "pointer", outline: "none", transition: "all 0.2s",
+                  }}>
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
