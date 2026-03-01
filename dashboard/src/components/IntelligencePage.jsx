@@ -610,60 +610,245 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
           </div>
         )}
 
-        {/* ══ EST GP TAB ════════════════════════════════════════════ */}
+        {/* ══ QUANT GP TAB ══════════════════════════════════════════ */}
         {activeTab === "Quant GP" && (
           <div style={{ marginTop: 20 }}>
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between",
-              alignItems: "center", marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: T.primary,
-                  fontFamily: "'Syne', sans-serif", marginBottom: 4 }}>
-                  EST Alpha — Quantitative GP
+
+            {/* ── Hero: Vault Narrative ── */}
+            <div style={{
+              position: "relative", borderRadius: 16, overflow: "hidden",
+              marginBottom: 20, padding: "40px 40px 36px",
+              background: "linear-gradient(135deg, rgba(79,110,247,0.12) 0%, rgba(111,2,172,0.18) 50%, rgba(255,45,120,0.08) 100%)",
+              border: `1px solid ${T.borderHi}`,
+            }}>
+              {/* Background grid */}
+              <div style={{
+                position: "absolute", inset: 0, opacity: 0.04,
+                backgroundImage: "linear-gradient(#4F6EF7 1px, transparent 1px), linear-gradient(90deg, #4F6EF7 1px, transparent 1px)",
+                backgroundSize: "40px 40px",
+              }} />
+
+              <div style={{ position: "relative", zIndex: 1 }}>
+                {/* Badge row */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+                  {[
+                    { text: "SOLANA NATIVE", color: T.green },
+                    { text: "OSL STABLECOIN", color: T.amber },
+                    { text: "AI-CURATED", color: T.blue },
+                    { text: "0% MGMT FEE", color: T.turrellPink },
+                  ].map((b, i) => (
+                    <span key={i} style={{
+                      fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
+                      padding: "4px 10px", borderRadius: 4,
+                      background: `${b.color}18`, color: b.color,
+                      border: `1px solid ${b.color}33`,
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}>{b.text}</span>
+                  ))}
                 </div>
-                <div style={{ fontSize: 12, color: T.muted }}>
-                  Core General Partner · CometCloud AI Fund-of-Funds Strategy
+
+                {/* Main headline */}
+                <div style={{
+                  fontSize: 36, fontWeight: 800, color: T.primary,
+                  fontFamily: "'Syne', sans-serif", lineHeight: 1.15,
+                  marginBottom: 14, maxWidth: 700,
+                }}>
+                  CometCloud Vault
+                  <span style={{
+                    display: "block", fontSize: 18, fontWeight: 400,
+                    color: T.secondary, marginTop: 8,
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}>
+                    Asia's first AI-curated on-chain Fund-of-Funds,<br />
+                    built for human LPs and autonomous AI agents.
+                  </span>
+                </div>
+
+                {/* Key numbers */}
+                <div style={{ display: "flex", gap: 40, marginTop: 24, flexWrap: "wrap" }}>
+                  {[
+                    { value: "$30M",  label: "Target AUM" },
+                    { value: "5–8",   label: "Quant GPs" },
+                    { value: "0 / 0", label: "Mgmt / Entry Fee" },
+                    { value: "SOL",   label: "Native Chain" },
+                  ].map((s, i) => (
+                    <div key={i}>
+                      <div style={{
+                        fontSize: 28, fontWeight: 700, color: T.primary,
+                        fontFamily: "'JetBrains Mono', monospace",
+                      }}>{s.value}</div>
+                      <div style={{ fontSize: 11, color: T.muted, marginTop: 2,
+                        textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        {s.label}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px",
-                  borderRadius: 8, border: `1px solid ${T.amber}44`,
+            </div>
+
+            {/* ── How It Works ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em",
+                textTransform: "uppercase", marginBottom: 12,
+                display: "flex", alignItems: "center", gap: 8 }}>
+                <Zap size={12} /> How The Vault Works
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+                {[
+                  {
+                    step: "01",
+                    title: "Deposit",
+                    desc: "Subscribe with OSL stablecoin on Solana. Programmatic API available for AI agents.",
+                    color: T.blue,
+                    icon: "↓",
+                  },
+                  {
+                    step: "02",
+                    title: "AI Selection",
+                    desc: "Looloomi AI continuously scores and curates the GP universe using on-chain + quant signals.",
+                    color: T.turrellViolet,
+                    icon: "⚡",
+                  },
+                  {
+                    step: "03",
+                    title: "GP Allocation",
+                    desc: "Capital allocated across 5–8 vetted quant GPs. Each GP runs independent strategies.",
+                    color: T.amber,
+                    icon: "◎",
+                  },
+                  {
+                    step: "04",
+                    title: "Performance",
+                    desc: "Returns settled on-chain. Performance-only fee split with GP. Zero mgmt or entry cost.",
+                    color: T.green,
+                    icon: "↑",
+                  },
+                ].map((s, i) => (
+                  <div key={i} className="intel-card" style={{
+                    padding: 18, position: "relative", overflow: "hidden",
+                    animation: `fadeUp 0.3s ease ${i * 0.08}s both`,
+                    borderTop: `2px solid ${s.color}`,
+                  }}>
+                    <div style={{
+                      fontSize: 32, fontWeight: 800, color: `${s.color}18`,
+                      fontFamily: "'Syne', sans-serif", position: "absolute",
+                      top: 10, right: 14, lineHeight: 1,
+                    }}>{s.step}</div>
+                    <div style={{ fontSize: 22, marginBottom: 10 }}>{s.icon}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.primary,
+                      fontFamily: "'Syne', sans-serif", marginBottom: 8 }}>
+                      {s.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: T.secondary, lineHeight: 1.6 }}>
+                      {s.desc}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Why Solana + OSL ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+              {/* AI Agent LP */}
+              <div className="intel-card" style={{ padding: 20,
+                borderLeft: `2px solid ${T.blue}` }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.blue,
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                  marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>
+                  ⚡ Built for AI Agents
+                </div>
+                <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.8 }}>
+                  AI agents like OpenClaw can autonomously subscribe, monitor NAV, and redeem — all via on-chain calls. No human approval required. The vault is fully programmable: connect your agent's wallet, call the contract, done.
+                </div>
+                <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 8,
+                  background: "rgba(79,110,247,0.08)", border: `1px solid ${T.blue}22` }}>
+                  <code style={{ fontSize: 11, color: T.blue,
+                    fontFamily: "'JetBrains Mono', monospace" }}>
+                    vault.deposit(amount, agent_wallet) →<br />
+                    vault.get_nav() →<br />
+                    vault.redeem(shares, recipient)
+                  </code>
+                </div>
+              </div>
+
+              {/* OSL + HK Compliance */}
+              <div className="intel-card" style={{ padding: 20,
+                borderLeft: `2px solid ${T.amber}` }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.amber,
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                  marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>
+                  🏦 OSL · Hong Kong Licensed
+                </div>
+                <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.8 }}>
+                  Denominated in OSL's Solana stablecoin — issued by Hong Kong's leading licensed digital asset platform. Institutional-grade entry point with SFC-compliant infrastructure, bridging TradFi and on-chain capital seamlessly.
+                </div>
+                <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {["SFC Framework", "HK Licensed", "Solana Native", "Institutional"].map((t, i) => (
+                    <span key={i} style={{
+                      fontSize: 10, padding: "3px 8px", borderRadius: 4,
+                      background: "rgba(212,175,55,0.08)",
+                      color: T.amber, border: `1px solid ${T.amber}22`,
+                      fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
+                    }}>{t}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Vault Status Banner ── */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "14px 20px", borderRadius: 10, marginBottom: 20,
+              background: "rgba(45,212,160,0.06)", border: `1px solid ${T.green}33`,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div className="pulse-dot" style={{ width: 8, height: 8,
+                  borderRadius: "50%", background: T.amber }} />
+                <span style={{ fontSize: 13, color: T.amber, fontWeight: 600,
+                  fontFamily: "'DM Sans', sans-serif" }}>
+                  Vault Contract: In Development · Solana Devnet Q2 2026
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: T.muted,
+                fontFamily: "'JetBrains Mono', monospace" }}>
+                ERC-4626 equivalent · Anchor / Rust
+              </div>
+            </div>
+
+            {/* ── Core GP Section Header ── */}
+            <div style={{
+              display: "flex", justifyContent: "space-between",
+              alignItems: "center", marginBottom: 12,
+            }}>
+              <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em",
+                textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8 }}>
+                <Users size={12} /> Core General Partner
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6,
+                  padding: "6px 12px", borderRadius: 6,
+                  border: `1px solid ${T.amber}44`,
                   background: "rgba(212,175,55,0.06)" }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.amber }}
-                    className="pulse-dot" />
-                  <span style={{ fontSize: 11, color: T.amber,
+                  <div className="pulse-dot" style={{ width: 5, height: 5,
+                    borderRadius: "50%", background: T.amber }} />
+                  <span style={{ fontSize: 10, color: T.amber,
                     fontFamily: "'JetBrains Mono', monospace" }}>VERIFIED GP</span>
                 </div>
                 <a href="https://est.cc" target="_blank" rel="noopener noreferrer"
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px",
-                    borderRadius: 8, border: `1px solid ${T.border}`,
+                  style={{ display: "flex", alignItems: "center", gap: 6,
+                    padding: "6px 12px", borderRadius: 6,
+                    border: `1px solid ${T.border}`,
                     background: "transparent", color: T.secondary,
                     textDecoration: "none", fontSize: 11,
                     fontFamily: "'DM Sans', sans-serif" }}>
-                  <ExternalLink size={12} /> Open in New Tab
+                  <ExternalLink size={12} /> est.cc
                 </a>
               </div>
             </div>
 
-            {/* Key metrics bar */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 10, marginBottom: 16 }}>
-              {[
-                { label: "Strategy",      value: "Quantitative FoF",    color: T.blue },
-                { label: "Focus",         value: "Crypto & RWA",        color: T.amber },
-                { label: "Role in FoF",   value: "Core GP",             color: T.green },
-                { label: "HQ",            value: "Hong Kong",           color: T.turrellPink },
-              ].map((m, i) => (
-                <div key={i} className="intel-card" style={{ padding: "12px 16px" }}>
-                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.1em",
-                    textTransform: "uppercase", marginBottom: 6 }}>{m.label}</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: m.color,
-                    fontFamily: "'Syne', sans-serif" }}>{m.value}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* iframe */}
+            {/* ── EST Alpha iframe ── */}
             <div className="iframe-container">
               <iframe
                 src="https://est.cc"
@@ -673,10 +858,8 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
               />
             </div>
 
-            {/* Footer note */}
             <div style={{ marginTop: 12, fontSize: 11, color: T.muted, textAlign: "center" }}>
-              EST Alpha is CometCloud AI's core quantitative General Partner.
-              This page is for institutional LP due diligence purposes.
+              CometCloud Vault · Powered by Looloomi AI · Solana · OSL Stablecoin · Hong Kong
             </div>
           </div>
         )}
