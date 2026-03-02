@@ -1,270 +1,167 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
-  TrendingUp, TrendingDown, Activity, RefreshCw,
-  ExternalLink, Wifi, WifiOff, Zap, Building2,
-  DollarSign, Globe, ChevronRight, Calendar,
-  ArrowUpRight, Users, BarChart2, AlertCircle,
-  Newspaper, Filter, ChevronDown
+  RefreshCw, ExternalLink, Zap, Building2,
+  DollarSign, Globe, Activity, Users
 } from "lucide-react";
 
-/* ─── Design Tokens (same as MarketDashboard) ────────────────────── */
+/* ─── Design Tokens ──────────────────────────────────────────────────── */
 const T = {
-  void:      "#07060F",
-  deep:      "#0C0B1A",
-  surface:   "#12112B",
-  raised:    "#1A1940",
-  border:    "#2A2850",
-  borderHi:  "#3D3A70",
-  primary:   "#F0EDFF",
-  secondary: "#9893C4",
-  muted:     "#5C5888",
-  blue:      "#4F6EF7",
-  green:     "#2DD4A0",
-  red:       "#F5476A",
-  amber:     "#D4AF37",
-  turrellPink:   "#FF2D78",
-  turrellViolet: "#6F02AC",
-  turrellIndigo: "#3F44C7",
+  void:      "#020208",
+  deep:      "#06050F",
+  surface:   "#0A0918",
+  raised:    "#100E22",
+  overlay:   "#16132E",
+  border:    "#1A173A",
+  borderHi:  "#28244C",
+  primary:   "#F0EEFF",
+  secondary: "#8880BE",
+  muted:     "#3E3A6E",
+  dim:       "#252248",
+  violet:    "#6B0FCC",
+  indigo:    "#2D35D4",
+  cyan:      "#00C8E0",
+  pink:      "#FF1060",
+  amber:     "#E8A000",
+  green:     "#00D98A",
+  red:       "#FF2D55",
+  blue:      "#4472FF",
+};
+
+const FONTS = {
+  display: "'Space Grotesk', sans-serif",
+  body:    "'Exo 2', sans-serif",
+  mono:    "'JetBrains Mono', monospace",
 };
 
 const API_BASE = "/api/v1";
 
-/* ─── CSS ────────────────────────────────────────────────────────── */
+/* ─── CSS ────────────────────────────────────────────────────────────── */
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-  .intel-card {
-    background: rgba(18,17,43,0.85);
-    border: 1px solid #2A2850;
-    border-radius: 12px;
-    backdrop-filter: blur(16px);
-    transition: border-color 0.2s, transform 0.15s;
-  }
-  .intel-card:hover { border-color: #3D3A70; }
+  @keyframes breathe  { 0%,100%{opacity:.28;transform:scale(1) translateY(0)} 50%{opacity:.44;transform:scale(1.06) translateY(-12px)} }
+  @keyframes breathe2 { 0%,100%{opacity:.16;transform:scale(1)} 50%{opacity:.30;transform:scale(1.08) translateX(10px)} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes slideIn  { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.35} }
+  @keyframes shimmer  { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
 
-  .raise-row {
-    transition: background 0.15s, transform 0.15s;
-    cursor: pointer;
-  }
-  .raise-row:hover {
-    background: rgba(79,110,247,0.06) !important;
-    transform: translateX(2px);
-  }
+  .fade-up  { animation: fadeUp  .4s cubic-bezier(.16,1,.3,1) forwards; }
+  .slide-in { animation: slideIn .25s ease forwards; }
 
-  .event-item {
-    transition: background 0.15s;
-    cursor: pointer;
-  }
-  .event-item:hover { background: rgba(79,110,247,0.04); }
+  .turrell-wrap { position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden; }
+  .t-orb { position:absolute;border-radius:50%;filter:blur(100px);mix-blend-mode:screen; }
+  .t-orb-1 { width:720px;height:720px;background:radial-gradient(circle,rgba(107,15,204,.20) 0%,transparent 65%);top:-300px;left:-200px;animation:breathe 52s ease-in-out infinite; }
+  .t-orb-2 { width:560px;height:560px;background:radial-gradient(circle,rgba(45,53,212,.15) 0%,transparent 65%);top:5%;right:-200px;animation:breathe2 64s ease-in-out infinite 9s; }
+  .t-orb-3 { width:380px;height:380px;background:radial-gradient(circle,rgba(0,200,224,.09) 0%,transparent 65%);bottom:0;left:22%;animation:breathe 76s ease-in-out infinite 24s; }
+  .t-orb-4 { width:280px;height:280px;background:radial-gradient(circle,rgba(255,16,96,.07) 0%,transparent 65%);bottom:12%;right:8%;animation:breathe2 60s ease-in-out infinite 38s; }
 
-  .nav-tab {
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
-    outline: none;
-    background: none;
-  }
+  .lm-card { background:rgba(10,9,24,.82);border:1px solid #1A173A;border-radius:10px;backdrop-filter:blur(20px);transition:border-color .2s ease; }
+  .lm-card:hover { border-color:#28244C; }
+  .lm-card-accent { border-left-width:2px !important; }
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-  @keyframes slideIn {
-    from { opacity:0; transform: translateX(-6px); }
-    to   { opacity:1; transform: translateX(0); }
-  }
-  @keyframes breathe {
-    0%,100% { opacity:0.35; transform:scale(1); }
-    50% { opacity:0.5; transform:scale(1.06); }
-  }
+  .lm-row { transition:background .12s ease,transform .12s ease;cursor:pointer; }
+  .lm-row:hover { background:rgba(68,114,255,.05) !important;transform:translateX(2px); }
 
-  .fade-up { animation: fadeUp 0.35s ease forwards; }
-  .slide-in { animation: slideIn 0.25s ease forwards; }
-  .pulse-dot { animation: pulse 2s infinite; }
+  .lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:'Exo 2',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#8880BE;transition:all .18s ease;letter-spacing:.01em; }
+  .lm-tab:hover { border-color:#28244C;color:#F0EEFF; }
+  .lm-tab.active { border-color:rgba(68,114,255,.5);background:rgba(68,114,255,.10);color:#4472FF; }
 
-  .turrell-ambient {
-    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
-  }
-  .orb {
-    position: absolute; border-radius: 50%; filter: blur(80px);
-  }
-  .orb-1 {
-    width:600px; height:600px;
-    background: radial-gradient(circle, rgba(111,2,172,0.15) 0%, transparent 70%);
-    top:-200px; left:-100px;
-    animation: breathe 45s ease-in-out infinite;
-  }
-  .orb-2 {
-    width:500px; height:500px;
-    background: radial-gradient(circle, rgba(63,68,199,0.12) 0%, transparent 70%);
-    top:10%; right:-150px;
-    animation: breathe 55s ease-in-out infinite 15s;
-  }
-  .orb-3 {
-    width:350px; height:350px;
-    background: radial-gradient(circle, rgba(255,45,120,0.07) 0%, transparent 70%);
-    bottom:0; left:35%;
-    animation: breathe 65s ease-in-out infinite 28s;
-  }
+  .filter-btn { padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:'Exo 2',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#3E3A6E;transition:all .15s ease; }
+  .filter-btn:hover { border-color:#28244C;color:#8880BE; }
+  .filter-btn.active { border-color:rgba(68,114,255,.4);background:rgba(68,114,255,.08);color:#4472FF; }
 
-  .skeleton {
-    background: linear-gradient(90deg, #1A1940 25%, #2A2850 50%, #1A1940 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 4px;
-  }
-  @keyframes shimmer {
-    0% { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
+  .lm-action-btn { display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:500;font-family:'Exo 2',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#8880BE;transition:all .18s ease; }
+  .lm-action-btn:hover { border-color:#28244C;color:#F0EEFF; }
 
-  .badge {
-    display: inline-flex; align-items: center;
-    padding: 2px 8px; border-radius: 4px;
-    font-size: 10px; font-weight: 600;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    font-family: 'DM Sans', sans-serif;
-  }
+  .sk { background:linear-gradient(90deg,#100E22 30%,#16132E 50%,#100E22 70%);background-size:400px 100%;animation:shimmer 1.8s ease infinite;border-radius:4px;display:inline-block; }
+  .pulse-dot { animation:pulse 2.2s ease-in-out infinite; }
 
-  .iframe-container {
-    position: relative;
-    width: 100%;
-    height: calc(100vh - 80px);
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #2A2850;
-  }
-  .iframe-container iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: white;
-  }
+  .iframe-wrap { position:relative;width:100%;height:calc(100vh - 88px);border-radius:10px;overflow:hidden;border:1px solid #1A173A; }
+  .iframe-wrap iframe { width:100%;height:100%;border:none;background:white; }
+
+  .lm-badge { display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-family:'Exo 2',sans-serif; }
 `;
 
-/* ─── Helpers ────────────────────────────────────────────────────── */
+/* ─── Helpers ────────────────────────────────────────────────────────── */
 const fmt = {
   amount: (v) => {
     if (!v && v !== 0) return "—";
-    if (v >= 1000) return `$${(v/1000).toFixed(1)}B`;
+    if (v >= 1000) return `$${(v / 1000).toFixed(1)}B`;
     if (v >= 1)    return `$${v.toFixed(1)}M`;
     return `$${v.toFixed(2)}M`;
-  },
-  date: (ts) => {
-    if (!ts) return "—";
-    const d = new Date(ts * 1000);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   },
   dateRelative: (ts) => {
     if (!ts) return "—";
     const now = Date.now() / 1000;
     const diff = now - ts;
+    if (diff < 3600)    return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400)   return `${Math.floor(diff / 3600)}h ago`;
     if (diff < 604800)  return `${Math.floor(diff / 86400)}d ago`;
     if (diff < 2592000) return `${Math.floor(diff / 604800)}w ago`;
-    return fmt.date(ts);
+    const d = new Date(ts * 1000);
+    return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
   },
 };
 
-const CATEGORY_COLORS = {
-  "RWA":        { bg: "rgba(212,175,55,0.12)",  text: "#D4AF37" },
-  "DeFi":       { bg: "rgba(79,110,247,0.12)",  text: "#4F6EF7" },
-  "AI":         { bg: "rgba(255,45,120,0.10)",  text: "#FF2D78" },
-  "Infrastructure": { bg: "rgba(45,212,160,0.10)", text: "#2DD4A0" },
-  "Centralized Exchange": { bg: "rgba(156,163,175,0.10)", text: "#9893C4" },
-  "NFT":        { bg: "rgba(147,51,234,0.10)",  text: "#A855F7" },
-  "Gaming":     { bg: "rgba(234,179,8,0.10)",   text: "#EAB308" },
+/* ─── RWA Keywords ───────────────────────────────────────────────────── */
+const RWA_KW = ["rwa", "real world asset", "tokeniz", "treasury", "bond", "credit",
+  "lending", "ondo", "maple", "centrifuge", "goldfinch", "backed", "superstate",
+  "securitize", "polymesh", "chainlink", "oracle"];
+
+const isRWA = (item) => {
+  const txt = `${item.name||""} ${item.sector||""} ${item.category||""} ${item.categoryGroup||""}`.toLowerCase();
+  return RWA_KW.some(kw => txt.includes(kw));
 };
 
-const getCategoryColor = (cat) =>
-  CATEGORY_COLORS[cat] || { bg: "rgba(255,255,255,0.06)", text: "#9893C4" };
-
-/* ─── RWA News from multiple free sources ───────────────────────── */
-// Curated RWA event feed using DeFiLlama raises filtered for RWA
-const RWA_KEYWORDS = ["rwa", "real world asset", "tokeniz", "treasury", "bond", "credit",
-  "lending", "ondo", "maple", "centrifuge", "goldfinch", "backed", "matrixdock",
-  "superstate", "securitize", "polymesh", "chainlink", "oracle"];
-
-const isRWARelated = (item) => {
-  const text = `${item.name || ""} ${item.sector || ""} ${item.category || ""} ${item.categoryGroup || ""}`.toLowerCase();
-  return RWA_KEYWORDS.some(kw => text.includes(kw));
+/* ─── Category colors ────────────────────────────────────────────────── */
+const CAT_C = {
+  "RWA":            { bg: "rgba(232,160,0,.12)",  text: "#E8A000" },
+  "DeFi":           { bg: "rgba(68,114,255,.12)", text: "#4472FF" },
+  "AI":             { bg: "rgba(255,16,96,.10)",  text: "#FF1060" },
+  "Infrastructure": { bg: "rgba(0,217,138,.10)",  text: "#00D98A" },
+  "Layer 1":        { bg: "rgba(0,200,224,.08)",  text: "#00C8E0" },
+  "Layer 2":        { bg: "rgba(107,15,204,.10)", text: "#9945FF" },
+  "ZK":             { bg: "rgba(68,114,255,.08)", text: "#7B9FFF" },
 };
+const catStyle = (c) => CAT_C[c] || { bg: "rgba(255,255,255,.05)", text: "#8880BE" };
 
-/* ─── RWA Key Events (curated static + dynamic) ─────────────────── */
-const RWA_MACRO_EVENTS = [
-  {
-    id: "blackrock-buidl",
-    date: "Mar 2024",
-    title: "BlackRock Launches BUIDL on Ethereum",
-    summary: "BlackRock's tokenized money market fund reaches $500M+ AUM within weeks, validating institutional RWA demand.",
-    type: "institutional", impact: "high", source: "BlackRock"
-  },
-  {
-    id: "franklin-benji",
-    date: "Oct 2023",
-    title: "Franklin Templeton Expands BENJI to Polygon",
-    summary: "Franklin Templeton's on-chain money market fund expands to Polygon, bringing tokenized US Treasuries to new chain.",
-    type: "institutional", impact: "high", source: "Franklin Templeton"
-  },
-  {
-    id: "hk-rwa-framework",
-    date: "Nov 2023",
-    title: "Hong Kong SFC Issues RWA Tokenization Guidance",
-    summary: "SFC releases comprehensive framework for tokenized securities, positioning HK as Asia's RWA hub.",
-    type: "regulatory", impact: "high", source: "Hong Kong SFC"
-  },
-  {
-    id: "ondo-flux",
-    date: "Jan 2024",
-    title: "Ondo Finance Launches Flux Finance",
-    summary: "Ondo's DeFi lending protocol enables borrowing against tokenized US Treasury positions.",
-    type: "protocol", impact: "medium", source: "Ondo Finance"
-  },
-  {
-    id: "mas-project-guardian",
-    date: "Jun 2023",
-    title: "MAS Project Guardian — $100M Tokenized Bonds",
-    summary: "Singapore MAS pilots institutional-grade tokenized bonds with DBS, JPMorgan, SBI in Project Guardian.",
-    type: "regulatory", impact: "high", source: "MAS Singapore"
-  },
-  {
-    id: "chainlink-ccip",
-    date: "Aug 2023",
-    title: "Chainlink CCIP Goes Live — RWA Cross-Chain Bridge",
-    summary: "Chainlink's Cross-Chain Interoperability Protocol enables RWA movement across blockchains, critical infrastructure for institutional adoption.",
-    type: "infrastructure", impact: "high", source: "Chainlink"
-  },
+/* ─── Curated macro events ───────────────────────────────────────────── */
+const MACRO_EVENTS = [
+  { id: "buidl", date: "Mar 2024", title: "BlackRock Launches BUIDL on Ethereum", summary: "Tokenized money market fund reaches $500M+ AUM within weeks, validating institutional RWA demand.", type: "institutional", impact: "high", source: "BlackRock" },
+  { id: "benji", date: "Oct 2023", title: "Franklin Templeton Expands BENJI to Polygon", summary: "On-chain money market fund brings tokenized US Treasuries to Polygon.", type: "institutional", impact: "high", source: "Franklin Templeton" },
+  { id: "hk-sfc", date: "Nov 2023", title: "Hong Kong SFC Issues RWA Tokenization Guidance", summary: "Comprehensive framework for tokenized securities positions HK as Asia's RWA hub.", type: "regulatory", impact: "high", source: "HK SFC" },
+  { id: "flux", date: "Jan 2024", title: "Ondo Finance Launches Flux Finance", summary: "DeFi lending protocol enables borrowing against tokenized US Treasury positions.", type: "protocol", impact: "medium", source: "Ondo Finance" },
+  { id: "mas", date: "Jun 2023", title: "MAS Project Guardian — $100M Tokenized Bonds", summary: "Singapore MAS pilots institutional-grade tokenized bonds with DBS, JPMorgan, SBI.", type: "regulatory", impact: "high", source: "MAS Singapore" },
+  { id: "ccip", date: "Aug 2023", title: "Chainlink CCIP — RWA Cross-Chain Bridge", summary: "Cross-Chain Interoperability Protocol enables RWA movement across blockchains.", type: "infrastructure", impact: "high", source: "Chainlink" },
 ];
 
-const EVENT_TYPE_CONFIG = {
-  institutional: { color: T.amber,     label: "Institutional", icon: Building2 },
-  regulatory:    { color: T.blue,      label: "Regulatory",    icon: Globe },
-  protocol:      { color: T.green,     label: "Protocol",      icon: Zap },
-  infrastructure:{ color: "#9945FF",   label: "Infrastructure",icon: Activity },
-  funding:       { color: T.turrellPink, label: "Funding",     icon: DollarSign },
+const EV_TYPE = {
+  institutional: { color: T.amber,  label: "Institutional",  Icon: Building2 },
+  regulatory:    { color: T.blue,   label: "Regulatory",     Icon: Globe },
+  protocol:      { color: T.green,  label: "Protocol",       Icon: Zap },
+  infrastructure:{ color: "#9945FF",label: "Infrastructure", Icon: Activity },
 };
 
-const IMPACT_COLORS = {
-  high:   { bg: "rgba(245,71,106,0.12)", text: T.red },
-  medium: { bg: "rgba(212,175,55,0.10)", text: T.amber },
-  low:    { bg: "rgba(45,212,160,0.08)", text: T.green },
+const IMP_C = {
+  high:   { bg: "rgba(255,45,85,.10)", text: "#FF2D55" },
+  medium: { bg: "rgba(232,160,0,.10)", text: "#E8A000" },
+  low:    { bg: "rgba(0,217,138,.08)", text: "#00D98A" },
 };
 
-/* ═══════════════════════════════════════════════════════════════════
-   MAIN INTELLIGENCE PAGE
-═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════
+   INTELLIGENCE + QUANT GP PAGE
+═══════════════════════════════════════════════════════════════════════ */
 export default function IntelligencePage({ activeTab, setActiveTab }) {
-  const [raises, setRaises]           = useState([]);
-  const [rwaRaises, setRwaRaises]     = useState([]);
-  const [loading, setLoading]         = useState(true);
+  const [raises, setRaises]             = useState([]);
+  const [rwaRaises, setRwaRaises]       = useState([]);
+  const [loading, setLoading]           = useState(true);
   const [raisesFilter, setRaisesFilter] = useState("All");
-  const [lastUpdate, setLastUpdate]   = useState(null);
-  const [stats, setStats]             = useState(null);
+  const [lastUpdate, setLastUpdate]     = useState(null);
+  const [stats, setStats]               = useState(null);
 
-  /* ── CSS injection ── */
   useEffect(() => {
-    const id = "looloomi-intel-css";
+    const id = "lm-intel-css";
     if (!document.getElementById(id)) {
       const s = document.createElement("style");
       s.id = id; s.textContent = CSS;
@@ -272,60 +169,53 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
     }
   }, []);
 
-  /* ── Fetch raises from backend ── */
   const fetchRaises = useCallback(async () => {
     try {
       const r = await fetch(`${API_BASE}/vc/funding-rounds?limit=100`);
       const json = await r.json();
-      const all = json.data || [];
+      const raw = json.data || [];
 
-      // Normalize backend fields → frontend fields
-      const normalized = all.map(r => ({
-        name:          r.project || r.name || "—",
+      /* ── Normalize backend fields ── */
+      const all = raw.map(r => ({
+        name:          r.project  || r.name  || "—",
         round:         r.round_type || r.round || "—",
-        amount:        typeof r.amount === "number" ? r.amount / 1e6 : (r.amount || 0), // convert to $M
-        date:          r.date ? new Date(r.date).getTime() / 1000 : null, // ISO string → unix ts
-        leadInvestors: r.investors || r.leadInvestors || [],
-        otherInvestors:r.otherInvestors || [],
+        // backend sends raw dollars, convert to $M
+        amount:        typeof r.amount === "number" ? r.amount / 1e6 : 0,
+        // backend sends "2024-04-09" ISO string, convert to unix ts
+        date:          r.date ? Math.floor(new Date(r.date).getTime() / 1000) : null,
+        leadInvestors: Array.isArray(r.investors) ? r.investors
+                     : Array.isArray(r.leadInvestors) ? r.leadInvestors : [],
         category:      r.category || r.sector || "—",
         categoryGroup: r.categoryGroup || r.category || "—",
-        sector:        r.sector || r.category || "—",
-        source:        r.source || null,
+        sector:        r.sector   || r.category || "—",
       }));
-      const all2 = normalized;
 
-      // Sort by date desc
-      all2.sort((a, b) => (b.date || 0) - (a.date || 0));
+      all.sort((a, b) => (b.date || 0) - (a.date || 0));
 
-      setRaises(all2);
+      const rwa = all.filter(isRWA);
+      setRaises(all);
+      setRwaRaises(rwa);
       setLastUpdate(new Date());
 
-      // Filter RWA-related
-      const rwa = all2.filter(isRWARelated);
-      setRwaRaises(rwa);
+      // Stats — 90d window
+      const now90 = Date.now() / 1000 - 90 * 86400;
+      const recent    = all.filter(r => r.date && r.date > now90);
+      const recentRwa = rwa.filter(r => r.date && r.date > now90);
 
-      // Compute stats
-      const recentAll  = all2.filter(r => r.date && (Date.now()/1000 - r.date) < 90 * 86400);
-      const totalAmt   = recentAll.reduce((s, r) => s + (r.amount || 0), 0);
-      const rwaAmt     = rwa.filter(r => r.date && (Date.now()/1000 - r.date) < 90 * 86400)
-                            .reduce((s, r) => s + (r.amount || 0), 0);
-      const topVCs     = {};
-      recentAll.forEach(r => {
-        [...(r.leadInvestors||[]), ...(r.otherInvestors||[])].forEach(v => {
-          topVCs[v] = (topVCs[v] || 0) + 1;
-        });
+      const vcMap = {};
+      recent.forEach(r => {
+        r.leadInvestors.forEach(v => { vcMap[v] = (vcMap[v] || 0) + 1; });
       });
-      const topVC = Object.entries(topVCs).sort((a,b) => b[1]-a[1])[0];
+      const topVC = Object.entries(vcMap).sort((a, b) => b[1] - a[1])[0];
 
       setStats({
-        totalDeals:  recentAll.length,
-        totalAmount: totalAmt,
-        rwaAmount:   rwaAmt,
-        rwaDeals:    rwa.filter(r => r.date && (Date.now()/1000 - r.date) < 90 * 86400).length,
+        totalDeals:  recent.length,
+        totalAmount: recent.reduce((s, r) => s + (r.amount || 0), 0),
+        rwaAmount:   recentRwa.reduce((s, r) => s + (r.amount || 0), 0),
+        rwaDeals:    recentRwa.length,
         topVC:       topVC ? topVC[0] : "—",
         topVCDeals:  topVC ? topVC[1] : 0,
       });
-
     } catch (e) {
       console.error("Raises fetch error:", e);
     } finally {
@@ -335,120 +225,123 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
 
   useEffect(() => { fetchRaises(); }, []);
 
-  /* ── Filter options ── */
   const FILTERS = ["All", "RWA", "DeFi", "AI", "Infrastructure"];
 
-  const filteredRaises = raises.filter(r => {
+  const filtered = raises.filter(r => {
     if (raisesFilter === "All") return true;
-    if (raisesFilter === "RWA") return isRWARelated(r);
-    return (r.category || "").toLowerCase().includes(raisesFilter.toLowerCase()) ||
-           (r.categoryGroup || "").toLowerCase().includes(raisesFilter.toLowerCase());
+    if (raisesFilter === "RWA") return isRWA(r);
+    return (r.category || "").toLowerCase().includes(raisesFilter.toLowerCase())
+        || (r.categoryGroup || "").toLowerCase().includes(raisesFilter.toLowerCase());
   });
 
-  /* ── Render ── */
+  /* ── Shared nav ── */
+  const NavBar = () => (
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "18px 0 20px", borderBottom: `1px solid ${T.border}`,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <span style={{
+          fontFamily: FONTS.display, fontWeight: 800, fontSize: 20,
+          letterSpacing: "-0.03em",
+          background: `linear-gradient(120deg,${T.pink} 0%,${T.violet} 45%,${T.blue} 100%)`,
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+        }}>
+          LOOLOOMI
+        </span>
+        <div style={{ display: "flex", gap: 4 }}>
+          {["Market", "Intelligence", "Quant GP"].map(tab => (
+            <button key={tab} className={`lm-tab${activeTab === tab ? " active" : ""}`}
+              onClick={() => setActiveTab(tab)}>
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {lastUpdate && (
+          <span style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.mono }}>
+            {lastUpdate.toLocaleTimeString()}
+          </span>
+        )}
+        <button className="lm-action-btn" onClick={fetchRaises}>
+          <RefreshCw size={11} /> Refresh
+        </button>
+      </div>
+    </div>
+  );
+
+  /* ── Section label ── */
+  const Label = ({ Icon, children }) => (
+    <div style={{
+      fontSize: 10, color: T.muted, letterSpacing: "0.11em",
+      textTransform: "uppercase", fontFamily: FONTS.body,
+      display: "flex", alignItems: "center", gap: 7, marginBottom: 12,
+    }}>
+      {Icon && <Icon size={11} />}
+      {children}
+    </div>
+  );
+
   return (
     <div style={{ position: "relative", minHeight: "100vh", background: T.void }}>
-      <div className="turrell-ambient">
-        <div className="orb orb-1" /><div className="orb orb-2" /><div className="orb orb-3" />
+      <div className="turrell-wrap">
+        <div className="t-orb t-orb-1" /><div className="t-orb t-orb-2" />
+        <div className="t-orb t-orb-3" /><div className="t-orb t-orb-4" />
       </div>
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 24px 48px" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
+        <NavBar />
 
-        {/* ── Top Nav ── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "20px 0 24px", borderBottom: `1px solid ${T.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 22,
-              background: `linear-gradient(135deg, ${T.turrellPink}, ${T.turrellViolet}, ${T.blue})`,
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              LOOLOOMI
-            </span>
-            <div style={{ display: "flex", gap: 4 }}>
-              {["Market", "Intelligence", "Quant GP"].map(tab => (
-                <button key={tab} className="nav-tab"
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    padding: "6px 16px", borderRadius: 6, fontSize: 12,
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-                    background: activeTab === tab ? `${T.blue}22` : "transparent",
-                    border: `1px solid ${activeTab === tab ? T.blue : T.border}`,
-                    color: activeTab === tab ? T.blue : T.secondary,
-                  }}>
-                  {tab}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {lastUpdate && (
-              <span style={{ fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>
-                {lastUpdate.toLocaleTimeString()}
-              </span>
-            )}
-            <button onClick={fetchRaises}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px",
-                borderRadius: 6, border: `1px solid ${T.border}`,
-                background: "transparent", color: T.secondary,
-                cursor: "pointer", fontSize: 11, fontFamily: "'DM Sans', sans-serif" }}>
-              <RefreshCw size={12} /> Refresh
-            </button>
-          </div>
-        </div>
-
-        {/* ══ INTELLIGENCE TAB ══════════════════════════════════════ */}
+        {/* ══ INTELLIGENCE TAB ══════════════════════════════════════════════ */}
         {activeTab === "Intelligence" && (
           <div>
-            {/* ── Stats Row ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, margin: "20px 0" }}>
+            {/* Stat cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
               {[
-                { label: "90d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : "—", sub: `${stats?.totalDeals || "—"} deals`, color: T.blue },
-                { label: "RWA Sector (90d)", value: stats ? fmt.amount(stats.rwaAmount) : "—", sub: `${stats?.rwaDeals || "—"} RWA deals`, color: T.amber },
-                { label: "Most Active VC", value: stats?.topVC || "—", sub: `${stats?.topVCDeals || "—"} deals`, color: T.green },
-                { label: "Data Source", value: "DeFiLlama", sub: "Raises API · Live", color: T.turrellPink },
+                { label: "90d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals`, color: T.blue },
+                { label: "RWA Sector (90d)",  value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA deals`, color: T.amber },
+                { label: "Most Active VC",    value: stats?.topVC ?? null,                         sub: `${stats?.topVCDeals ?? "—"} deals`, color: T.green },
+                { label: "Data Source",       value: "DeFiLlama",                                  sub: "Raises API · Live", color: T.pink },
               ].map((s, i) => (
-                <div key={i} className="intel-card" style={{ padding: 16,
-                  animation: `fadeUp 0.3s ease ${i*0.08}s both` }}>
-                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.1em",
-                    textTransform: "uppercase", marginBottom: 8 }}>{s.label}</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: s.color,
-                    fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>{s.value}</div>
-                  <div style={{ fontSize: 11, color: T.muted }}>{s.sub}</div>
+                <div key={i} className="lm-card" style={{ padding: "18px 20px", animation: `fadeUp .3s ease ${i*.08}s both` }}>
+                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
+                    {s.label}
+                  </div>
+                  {s.value !== null
+                    ? <div style={{ fontSize: 24, fontWeight: 600, color: s.color, fontFamily: FONTS.mono, lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
+                    : <div className="sk" style={{ height: 24, width: 90, marginBottom: 6 }} />
+                  }
+                  <div style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.body }}>{s.sub}</div>
                 </div>
               ))}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 16 }}>
+            {/* Main 2-col layout */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 16 }}>
 
-              {/* ── VC Funding Rounds ── */}
+              {/* Left — VC Funding Table */}
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em",
-                    textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8 }}>
-                    <DollarSign size={12} /> VC Funding Rounds
-                  </div>
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <Label Icon={DollarSign}>VC Funding Rounds</Label>
+                  <div style={{ display: "flex", gap: 5 }}>
                     {FILTERS.map(f => (
-                      <button key={f}
-                        onClick={() => setRaisesFilter(f)}
-                        style={{
-                          padding: "4px 10px", borderRadius: 4, fontSize: 11,
-                          fontFamily: "'DM Sans', sans-serif", cursor: "pointer",
-                          background: raisesFilter === f ? `${T.blue}20` : "transparent",
-                          border: `1px solid ${raisesFilter === f ? T.blue : T.border}`,
-                          color: raisesFilter === f ? T.blue : T.muted,
-                        }}>
+                      <button key={f} className={`filter-btn${raisesFilter === f ? " active" : ""}`}
+                        onClick={() => setRaisesFilter(f)}>
                         {f}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="intel-card" style={{ overflow: "hidden" }}>
-                  {/* Table header */}
-                  <div style={{ display: "grid",
-                    gridTemplateColumns: "2fr 90px 100px 120px 80px",
-                    gap: 12, padding: "10px 16px", borderBottom: `1px solid ${T.border}`,
-                    fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                <div className="lm-card" style={{ overflow: "hidden" }}>
+                  {/* Header */}
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "2fr 90px 100px 130px 80px",
+                    gap: 12, padding: "10px 18px", borderBottom: `1px solid ${T.border}`,
+                    fontSize: 10, color: T.muted, letterSpacing: "0.11em",
+                    textTransform: "uppercase", fontFamily: FONTS.body,
+                  }}>
                     <span>Project</span>
                     <span>Round</span>
                     <span style={{ textAlign: "right" }}>Amount</span>
@@ -457,122 +350,112 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
                   </div>
 
                   {/* Rows */}
-                  <div style={{ maxHeight: 520, overflowY: "auto" }}>
-                    {loading ? (
-                      Array(8).fill(0).map((_, i) => (
-                        <div key={i} style={{ display: "grid",
-                          gridTemplateColumns: "2fr 90px 100px 120px 80px",
-                          gap: 12, padding: "12px 16px", borderBottom: `1px solid ${T.border}`,
-                          alignItems: "center" }}>
-                          {[120, 60, 60, 90, 60].map((w, j) => (
-                            <div key={j} className="skeleton" style={{ height: 12, width: w }} />
-                          ))}
-                        </div>
-                      ))
-                    ) : filteredRaises.slice(0, 50).map((r, i) => {
-                      const catColor = getCategoryColor(r.category);
-                      const lead = r.leadInvestors?.[0] || r.otherInvestors?.[0] || "—";
-                      const isRWA = isRWARelated(r);
-
-                      return (
-                        <div key={i} className="raise-row"
-                          style={{ display: "grid",
-                            gridTemplateColumns: "2fr 90px 100px 120px 80px",
-                            gap: 12, padding: "12px 16px",
-                            borderBottom: `1px solid ${T.border}`,
+                  <div style={{ maxHeight: 530, overflowY: "auto" }}>
+                    {loading
+                      ? Array(8).fill(0).map((_, i) => (
+                          <div key={i} style={{
+                            display: "grid", gridTemplateColumns: "2fr 90px 100px 130px 80px",
+                            gap: 12, padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
                             alignItems: "center",
-                            background: isRWA ? "rgba(212,175,55,0.02)" : "transparent",
-                            animation: `slideIn 0.2s ease ${Math.min(i*0.02, 0.3)}s both`,
                           }}>
+                            {[120, 60, 60, 90, 55].map((w, j) => (
+                              <div key={j} className="sk" style={{ height: 12, width: w }} />
+                            ))}
+                          </div>
+                        ))
+                      : filtered.slice(0, 60).map((r, i) => {
+                          const cs = catStyle(r.category);
+                          const lead = r.leadInvestors?.[0] || "—";
+                          const rwaTag = isRWA(r);
+                          return (
+                            <div key={i} className="lm-row"
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "2fr 90px 100px 130px 80px",
+                                gap: 12, padding: "12px 18px",
+                                borderBottom: `1px solid ${T.border}`,
+                                alignItems: "center",
+                                background: rwaTag ? "rgba(232,160,0,.018)" : "transparent",
+                                animation: `slideIn .2s ease ${Math.min(i*.02,.3)}s both`,
+                              }}>
 
-                          {/* Project */}
-                          <div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <span style={{ fontSize: 13, fontWeight: 600, color: T.primary,
-                                fontFamily: "'Syne', sans-serif" }}>{r.name}</span>
-                              {isRWA && (
-                                <span className="badge"
-                                  style={{ background: "rgba(212,175,55,0.12)", color: T.amber }}>
-                                  RWA
+                              {/* Project */}
+                              <div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
+                                  <span style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em" }}>
+                                    {r.name}
+                                  </span>
+                                  {rwaTag && (
+                                    <span className="lm-badge" style={{ background: "rgba(232,160,0,.12)", color: T.amber }}>
+                                      RWA
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body,
+                                  maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {r.sector !== "—" ? r.sector : r.category}
+                                </div>
+                              </div>
+
+                              {/* Round */}
+                              <div>
+                                <span className="lm-badge" style={{ background: cs.bg, color: cs.text }}>
+                                  {r.round || "—"}
                                 </span>
-                              )}
+                              </div>
+
+                              {/* Amount */}
+                              <div style={{ textAlign: "right" }}>
+                                <span style={{ fontSize: 13, fontWeight: 600, fontFamily: FONTS.mono, color: r.amount ? T.green : T.muted }}>
+                                  {r.amount ? fmt.amount(r.amount) : "Undisclosed"}
+                                </span>
+                              </div>
+
+                              {/* Lead */}
+                              <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body,
+                                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {lead}
+                              </div>
+
+                              {/* Date */}
+                              <div style={{ textAlign: "right", fontSize: 11, color: T.muted, fontFamily: FONTS.mono }}>
+                                {fmt.dateRelative(r.date)}
+                              </div>
                             </div>
-                            <div style={{ fontSize: 11, color: T.muted, marginTop: 2,
-                              maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis",
-                              whiteSpace: "nowrap" }}>
-                              {r.sector?.slice(0, 60) || r.category}
-                            </div>
-                          </div>
-
-                          {/* Round */}
-                          <div>
-                            <span className="badge" style={{ background: catColor.bg, color: catColor.text }}>
-                              {r.round || "—"}
-                            </span>
-                          </div>
-
-                          {/* Amount */}
-                          <div style={{ textAlign: "right" }}>
-                            <span style={{ fontSize: 14, fontWeight: 600,
-                              fontFamily: "'JetBrains Mono', monospace",
-                              color: r.amount ? T.green : T.muted }}>
-                              {r.amount ? fmt.amount(r.amount) : "Undisclosed"}
-                            </span>
-                          </div>
-
-                          {/* Lead investor */}
-                          <div style={{ fontSize: 11, color: T.secondary,
-                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {lead}
-                          </div>
-
-                          {/* Date */}
-                          <div style={{ textAlign: "right", fontSize: 11, color: T.muted,
-                            fontFamily: "'JetBrains Mono', monospace" }}>
-                            {fmt.dateRelative(r.date)}
-                          </div>
-                        </div>
-                      );
-                    })}
+                          );
+                        })
+                    }
                   </div>
                 </div>
               </div>
 
-              {/* ── RWA Key Events Sidebar ── */}
+              {/* Right sidebar — RWA Events */}
               <div>
-                <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em",
-                  textTransform: "uppercase", marginBottom: 12,
-                  display: "flex", alignItems: "center", gap: 8 }}>
-                  <Zap size={12} /> RWA Infrastructure Events
-                </div>
+                <Label Icon={Zap}>RWA Infrastructure Events</Label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {/* Live RWA raises */}
-                  {rwaRaises.slice(0, 4).map((r, i) => (
-                    <div key={i} className="intel-card event-item"
-                      style={{ padding: 14, animation: `fadeUp 0.3s ease ${i*0.06}s both` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between",
-                        alignItems: "flex-start", marginBottom: 8 }}>
-                        <span className="badge"
-                          style={{ background: "rgba(212,175,55,0.12)", color: T.amber }}>
-                          RWA Funding
-                        </span>
-                        <span style={{ fontSize: 10, color: T.muted,
-                          fontFamily: "'JetBrains Mono', monospace" }}>
-                          {fmt.dateRelative(r.date)}
-                        </span>
+                  {/* Live RWA raises from API */}
+                  {!loading && rwaRaises.slice(0, 3).map((r, i) => (
+                    <div key={i} className="lm-card" style={{
+                      padding: 14, borderLeft: `2px solid ${T.amber}`,
+                      animation: `fadeUp .3s ease ${i*.07}s both`,
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <span className="lm-badge" style={{ background: "rgba(232,160,0,.12)", color: T.amber }}>RWA Funding</span>
+                        <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>{fmt.dateRelative(r.date)}</span>
                       </div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.primary,
-                        fontFamily: "'Syne', sans-serif", marginBottom: 4 }}>
-                        {r.name} — {r.round}
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 5 }}>
+                        {r.name}
+                        <span style={{ fontSize: 11, fontWeight: 400, color: T.muted, fontFamily: FONTS.body, marginLeft: 6 }}>
+                          {r.round}
+                        </span>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 15, fontWeight: 700, color: T.green,
-                          fontFamily: "'JetBrains Mono', monospace" }}>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: T.green, fontFamily: FONTS.mono }}>
                           {r.amount ? fmt.amount(r.amount) : "Undisclosed"}
                         </span>
                         {r.leadInvestors?.[0] && (
-                          <span style={{ fontSize: 10, color: T.muted }}>
+                          <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
                             led by {r.leadInvestors[0]}
                           </span>
                         )}
@@ -581,39 +464,35 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
                   ))}
 
                   {/* Divider */}
-                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.1em",
-                    textTransform: "uppercase", padding: "4px 0",
-                    display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase",
+                    fontFamily: FONTS.body, padding: "4px 0", display: "flex", alignItems: "center", gap: 7 }}>
                     <Globe size={10} /> Macro Events
                   </div>
 
                   {/* Curated macro events */}
-                  {RWA_MACRO_EVENTS.slice(0, 4).map((ev, i) => {
-                    const cfg = EVENT_TYPE_CONFIG[ev.type] || EVENT_TYPE_CONFIG.protocol;
-                    const imp = IMPACT_COLORS[ev.impact] || IMPACT_COLORS.medium;
+                  {MACRO_EVENTS.slice(0, 4).map((ev, i) => {
+                    const cfg = EV_TYPE[ev.type] || EV_TYPE.protocol;
+                    const imp = IMP_C[ev.impact] || IMP_C.medium;
                     return (
-                      <div key={ev.id} className="intel-card event-item"
-                        style={{ padding: 14,
-                          animation: `fadeUp 0.3s ease ${(i+4)*0.06}s both`,
-                          borderLeft: `2px solid ${cfg.color}` }}>
-                        <div style={{ display: "flex", justifyContent: "space-between",
-                          alignItems: "center", marginBottom: 6 }}>
-                          <span className="badge"
-                            style={{ background: `${cfg.color}18`, color: cfg.color }}>
+                      <div key={ev.id} className="lm-card" style={{
+                        padding: 14, borderLeft: `2px solid ${cfg.color}`,
+                        animation: `fadeUp .3s ease ${(i+3)*.07}s both`,
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 7 }}>
+                          <span className="lm-badge" style={{ background: `${cfg.color}18`, color: cfg.color }}>
                             {cfg.label}
                           </span>
-                          <span className="badge" style={{ background: imp.bg, color: imp.text }}>
+                          <span className="lm-badge" style={{ background: imp.bg, color: imp.text }}>
                             {ev.impact} impact
                           </span>
                         </div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: T.primary,
-                          fontFamily: "'Syne', sans-serif", marginBottom: 4, lineHeight: 1.4 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 5, lineHeight: 1.4 }}>
                           {ev.title}
                         </div>
-                        <div style={{ fontSize: 11, color: T.secondary, lineHeight: 1.5 }}>
+                        <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.55 }}>
                           {ev.summary}
                         </div>
-                        <div style={{ fontSize: 10, color: T.muted, marginTop: 6 }}>
+                        <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 7 }}>
                           {ev.source} · {ev.date}
                         </div>
                       </div>
@@ -625,62 +504,66 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
           </div>
         )}
 
-        {/* ══ QUANT GP TAB ══════════════════════════════════════════ */}
+        {/* ══ QUANT GP TAB ══════════════════════════════════════════════════ */}
         {activeTab === "Quant GP" && (
           <div style={{ marginTop: 20 }}>
 
-            {/* ── Hero: Vault Narrative ── */}
+            {/* Hero — CometCloud Vault */}
             <div style={{
-              position: "relative", borderRadius: 16, overflow: "hidden",
-              marginBottom: 20, padding: "40px 40px 36px",
-              background: "linear-gradient(135deg, rgba(79,110,247,0.12) 0%, rgba(111,2,172,0.18) 50%, rgba(255,45,120,0.08) 100%)",
+              position: "relative", borderRadius: 12, overflow: "hidden",
+              marginBottom: 18, padding: "44px 44px 40px",
+              background: "linear-gradient(135deg, rgba(68,114,255,.10) 0%, rgba(107,15,204,.16) 50%, rgba(255,16,96,.07) 100%)",
               border: `1px solid ${T.borderHi}`,
             }}>
-              {/* Background grid */}
+              {/* Subtle grid overlay */}
               <div style={{
-                position: "absolute", inset: 0, opacity: 0.04,
-                backgroundImage: "linear-gradient(#4F6EF7 1px, transparent 1px), linear-gradient(90deg, #4F6EF7 1px, transparent 1px)",
-                backgroundSize: "40px 40px",
+                position: "absolute", inset: 0, opacity: 0.035,
+                backgroundImage: `linear-gradient(${T.blue} 1px,transparent 1px),linear-gradient(90deg,${T.blue} 1px,transparent 1px)`,
+                backgroundSize: "44px 44px",
+              }} />
+              {/* Edge glow */}
+              <div style={{
+                position: "absolute", inset: 0, opacity: 0.6,
+                background: "linear-gradient(180deg,transparent 60%,rgba(107,15,204,.12) 100%)",
               }} />
 
               <div style={{ position: "relative", zIndex: 1 }}>
-                {/* Badge row */}
-                <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+                {/* Badges */}
+                <div style={{ display: "flex", gap: 7, marginBottom: 22, flexWrap: "wrap" }}>
                   {[
                     { text: "SOLANA NATIVE", color: T.green },
                     { text: "OSL STABLECOIN", color: T.amber },
                     { text: "AI-CURATED", color: T.blue },
-                    { text: "0% MGMT FEE", color: T.turrellPink },
+                    { text: "0% MGMT FEE", color: T.pink },
                   ].map((b, i) => (
                     <span key={i} style={{
-                      fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
+                      fontSize: 10, fontWeight: 700, letterSpacing: "0.10em",
                       padding: "4px 10px", borderRadius: 4,
-                      background: `${b.color}18`, color: b.color,
-                      border: `1px solid ${b.color}33`,
-                      fontFamily: "'JetBrains Mono', monospace",
+                      background: `${b.color}16`, color: b.color,
+                      border: `1px solid ${b.color}30`,
+                      fontFamily: FONTS.mono,
                     }}>{b.text}</span>
                   ))}
                 </div>
 
-                {/* Main headline */}
+                {/* Headline */}
                 <div style={{
-                  fontSize: 36, fontWeight: 800, color: T.primary,
-                  fontFamily: "'Syne', sans-serif", lineHeight: 1.15,
-                  marginBottom: 14, maxWidth: 700,
+                  fontSize: 42, fontWeight: 800, color: T.primary,
+                  fontFamily: FONTS.display, letterSpacing: "-0.03em",
+                  lineHeight: 1.08, marginBottom: 12,
                 }}>
                   CometCloud Vault
-                  <span style={{
-                    display: "block", fontSize: 18, fontWeight: 400,
-                    color: T.secondary, marginTop: 8,
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}>
-                    Asia's first AI-curated on-chain Fund-of-Funds,<br />
-                    built for human LPs and autonomous AI agents.
-                  </span>
+                </div>
+                <div style={{
+                  fontSize: 16, fontWeight: 400, color: T.secondary,
+                  fontFamily: FONTS.body, lineHeight: 1.6, maxWidth: 560,
+                }}>
+                  Asia's first AI-curated on-chain Fund-of-Funds,
+                  built for human LPs and autonomous AI agents.
                 </div>
 
-                {/* Key numbers */}
-                <div style={{ display: "flex", gap: 40, marginTop: 24, flexWrap: "wrap" }}>
+                {/* Metrics */}
+                <div style={{ display: "flex", gap: 48, marginTop: 30, flexWrap: "wrap" }}>
                   {[
                     { value: "$30M",  label: "Target AUM" },
                     { value: "5–8",   label: "Quant GPs" },
@@ -688,75 +571,39 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
                     { value: "SOL",   label: "Native Chain" },
                   ].map((s, i) => (
                     <div key={i}>
-                      <div style={{
-                        fontSize: 28, fontWeight: 700, color: T.primary,
-                        fontFamily: "'JetBrains Mono', monospace",
-                      }}>{s.value}</div>
-                      <div style={{ fontSize: 11, color: T.muted, marginTop: 2,
-                        textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                        {s.label}
-                      </div>
+                      <div style={{ fontSize: 30, fontWeight: 700, fontFamily: FONTS.mono, color: T.primary, lineHeight: 1 }}>{s.value}</div>
+                      <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, textTransform: "uppercase", letterSpacing: "0.10em", marginTop: 6 }}>{s.label}</div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* ── How It Works ── */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em",
-                textTransform: "uppercase", marginBottom: 12,
-                display: "flex", alignItems: "center", gap: 8 }}>
-                <Zap size={12} /> How The Vault Works
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+            {/* How It Works */}
+            <div style={{ marginBottom: 16 }}>
+              <Label Icon={Zap}>How The Vault Works</Label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
                 {[
-                  {
-                    step: "01",
-                    title: "Deposit",
-                    desc: "Subscribe with OSL stablecoin on Solana. Programmatic API available for AI agents.",
-                    color: T.blue,
-                    icon: "↓",
-                  },
-                  {
-                    step: "02",
-                    title: "AI Selection",
-                    desc: "Looloomi AI continuously scores and curates the GP universe using on-chain + quant signals.",
-                    color: T.turrellViolet,
-                    icon: "⚡",
-                  },
-                  {
-                    step: "03",
-                    title: "GP Allocation",
-                    desc: "Capital allocated across 5–8 vetted quant GPs. Each GP runs independent strategies.",
-                    color: T.amber,
-                    icon: "◎",
-                  },
-                  {
-                    step: "04",
-                    title: "Performance",
-                    desc: "Returns settled on-chain. Performance-only fee split with GP. Zero mgmt or entry cost.",
-                    color: T.green,
-                    icon: "↑",
-                  },
+                  { step:"01", title:"Deposit",      desc:"Subscribe with OSL stablecoin on Solana. Programmatic API available for AI agents.", color:T.blue,   icon:"↓" },
+                  { step:"02", title:"AI Selection", desc:"Looloomi AI continuously scores and curates the GP universe using on-chain + quant signals.", color:T.violet, icon:"⚡" },
+                  { step:"03", title:"GP Allocation",desc:"Capital allocated across 5–8 vetted quant GPs. Each GP runs independent strategies.", color:T.amber,  icon:"◎" },
+                  { step:"04", title:"Performance",  desc:"Returns settled on-chain. Performance-only fee split with GP. Zero mgmt or entry cost.", color:T.green,  icon:"↑" },
                 ].map((s, i) => (
-                  <div key={i} className="intel-card" style={{
+                  <div key={i} className="lm-card" style={{
                     padding: 18, position: "relative", overflow: "hidden",
-                    animation: `fadeUp 0.3s ease ${i * 0.08}s both`,
                     borderTop: `2px solid ${s.color}`,
+                    animation: `fadeUp .3s ease ${i*.08}s both`,
                   }}>
                     <div style={{
-                      fontSize: 32, fontWeight: 800, color: `${s.color}18`,
-                      fontFamily: "'Syne', sans-serif", position: "absolute",
-                      top: 10, right: 14, lineHeight: 1,
+                      fontSize: 36, fontWeight: 800, color: `${s.color}14`,
+                      fontFamily: FONTS.display, position: "absolute",
+                      top: 10, right: 14, lineHeight: 1, userSelect: "none",
                     }}>{s.step}</div>
-                    <div style={{ fontSize: 22, marginBottom: 10 }}>{s.icon}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: T.primary,
-                      fontFamily: "'Syne', sans-serif", marginBottom: 8 }}>
+                    <div style={{ fontSize: 20, marginBottom: 10 }}>{s.icon}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 8 }}>
                       {s.title}
                     </div>
-                    <div style={{ fontSize: 12, color: T.secondary, lineHeight: 1.6 }}>
+                    <div style={{ fontSize: 12, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.65 }}>
                       {s.desc}
                     </div>
                   </div>
@@ -764,121 +611,87 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
               </div>
             </div>
 
-            {/* ── Why Solana + OSL ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-              {/* AI Agent LP */}
-              <div className="intel-card" style={{ padding: 20,
-                borderLeft: `2px solid ${T.blue}` }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.blue,
-                  letterSpacing: "0.08em", textTransform: "uppercase",
-                  marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>
+            {/* AI Agent + OSL */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+              <div className="lm-card" style={{ padding: 20, borderLeft: `2px solid ${T.blue}` }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10, fontFamily: FONTS.body }}>
                   ⚡ Built for AI Agents
                 </div>
-                <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.8 }}>
-                  AI agents like OpenClaw can autonomously subscribe, monitor NAV, and redeem — all via on-chain calls. No human approval required. The vault is fully programmable: connect your agent's wallet, call the contract, done.
+                <div style={{ fontSize: 13, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.75, marginBottom: 14 }}>
+                  AI agents like OpenClaw can autonomously subscribe, monitor NAV, and redeem — all via on-chain calls. No human approval required.
                 </div>
-                <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 8,
-                  background: "rgba(79,110,247,0.08)", border: `1px solid ${T.blue}22` }}>
-                  <code style={{ fontSize: 11, color: T.blue,
-                    fontFamily: "'JetBrains Mono', monospace" }}>
-                    vault.deposit(amount, agent_wallet) →<br />
-                    vault.get_nav() →<br />
+                <div style={{ padding: "11px 14px", borderRadius: 7, background: "rgba(68,114,255,.07)", border: `1px solid ${T.blue}20` }}>
+                  <code style={{ fontSize: 11, color: T.cyan, fontFamily: FONTS.mono, lineHeight: 1.9 }}>
+                    vault.deposit(amount, agent_wallet)<br />
+                    vault.get_nav()<br />
                     vault.redeem(shares, recipient)
                   </code>
                 </div>
               </div>
 
-              {/* OSL + HK Compliance */}
-              <div className="intel-card" style={{ padding: 20,
-                borderLeft: `2px solid ${T.amber}` }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.amber,
-                  letterSpacing: "0.08em", textTransform: "uppercase",
-                  marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>
+              <div className="lm-card" style={{ padding: 20, borderLeft: `2px solid ${T.amber}` }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.amber, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10, fontFamily: FONTS.body }}>
                   🏦 OSL · Hong Kong Licensed
                 </div>
-                <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.8 }}>
-                  Denominated in OSL's Solana stablecoin — issued by Hong Kong's leading licensed digital asset platform. Institutional-grade entry point with SFC-compliant infrastructure, bridging TradFi and on-chain capital seamlessly.
+                <div style={{ fontSize: 13, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.75, marginBottom: 14 }}>
+                  Denominated in OSL's Solana stablecoin — Hong Kong's leading licensed digital asset platform. Institutional-grade entry with SFC-compliant infrastructure.
                 </div>
-                <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
                   {["SFC Framework", "HK Licensed", "Solana Native", "Institutional"].map((t, i) => (
                     <span key={i} style={{
-                      fontSize: 10, padding: "3px 8px", borderRadius: 4,
-                      background: "rgba(212,175,55,0.08)",
-                      color: T.amber, border: `1px solid ${T.amber}22`,
-                      fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
+                      fontSize: 10, padding: "3px 8px", borderRadius: 3,
+                      background: "rgba(232,160,0,.08)", color: T.amber,
+                      border: `1px solid ${T.amber}20`,
+                      fontFamily: FONTS.body, fontWeight: 600,
                     }}>{t}</span>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* ── Vault Status Banner ── */}
+            {/* Status banner */}
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "14px 20px", borderRadius: 10, marginBottom: 20,
-              background: "rgba(45,212,160,0.06)", border: `1px solid ${T.green}33`,
+              padding: "13px 20px", borderRadius: 8, marginBottom: 18,
+              background: "rgba(0,217,138,.05)", border: `1px solid ${T.green}25`,
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div className="pulse-dot" style={{ width: 8, height: 8,
-                  borderRadius: "50%", background: T.amber }} />
-                <span style={{ fontSize: 13, color: T.amber, fontWeight: 600,
-                  fontFamily: "'DM Sans', sans-serif" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                <div className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: T.amber }} />
+                <span style={{ fontSize: 13, color: T.amber, fontWeight: 600, fontFamily: FONTS.body }}>
                   Vault Contract: In Development · Solana Devnet Q2 2026
                 </span>
               </div>
-              <div style={{ fontSize: 11, color: T.muted,
-                fontFamily: "'JetBrains Mono', monospace" }}>
-                ERC-4626 equivalent · Anchor / Rust
+              <div style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.mono }}>
+                SPL Vault · Anchor / Rust
               </div>
             </div>
 
-            {/* ── Core GP Section Header ── */}
-            <div style={{
-              display: "flex", justifyContent: "space-between",
-              alignItems: "center", marginBottom: 12,
-            }}>
-              <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em",
-                textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8 }}>
-                <Users size={12} /> Core General Partner
-              </div>
+            {/* Core GP header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <Label Icon={Users}>Core General Partner</Label>
               <div style={{ display: "flex", gap: 8 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6,
-                  padding: "6px 12px", borderRadius: 6,
-                  border: `1px solid ${T.amber}44`,
-                  background: "rgba(212,175,55,0.06)" }}>
-                  <div className="pulse-dot" style={{ width: 5, height: 5,
-                    borderRadius: "50%", background: T.amber }} />
-                  <span style={{ fontSize: 10, color: T.amber,
-                    fontFamily: "'JetBrains Mono', monospace" }}>VERIFIED GP</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 6, border: `1px solid ${T.amber}40`, background: "rgba(232,160,0,.06)" }}>
+                  <div className="pulse-dot" style={{ width: 5, height: 5, borderRadius: "50%", background: T.amber }} />
+                  <span style={{ fontSize: 10, color: T.amber, fontFamily: FONTS.mono, fontWeight: 600 }}>VERIFIED GP</span>
                 </div>
                 <a href="https://est.cc" target="_blank" rel="noopener noreferrer"
-                  style={{ display: "flex", alignItems: "center", gap: 6,
-                    padding: "6px 12px", borderRadius: 6,
-                    border: `1px solid ${T.border}`,
-                    background: "transparent", color: T.secondary,
-                    textDecoration: "none", fontSize: 11,
-                    fontFamily: "'DM Sans', sans-serif" }}>
-                  <ExternalLink size={12} /> est.cc
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.secondary, textDecoration: "none", fontSize: 11, fontFamily: FONTS.body }}>
+                  <ExternalLink size={11} /> est.cc
                 </a>
               </div>
             </div>
 
-            {/* ── EST Alpha iframe ── */}
-            <div className="iframe-container">
-              <iframe
-                src="https://est.cc"
-                title="EST Alpha — Quantitative GP"
-                allow="fullscreen"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-              />
+            {/* EST Alpha iframe */}
+            <div className="iframe-wrap">
+              <iframe src="https://est.cc" title="EST Alpha — Quantitative GP" allow="fullscreen"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" />
             </div>
 
-            <div style={{ marginTop: 12, fontSize: 11, color: T.muted, textAlign: "center" }}>
+            <div style={{ marginTop: 10, fontSize: 10, color: T.dim, textAlign: "center", fontFamily: FONTS.body }}>
               CometCloud Vault · Powered by Looloomi AI · Solana · OSL Stablecoin · Hong Kong
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
