@@ -432,7 +432,7 @@ const TokenDetail = ({ token, priceData, ohlcv, onClose }) => {
 /* ═══════════════════════════════════════════════════════════════════════
    MARKET DASHBOARD
 ═══════════════════════════════════════════════════════════════════════ */
-export default function MarketDashboard({ activeTab, setActiveTab }) {
+export default function MarketDashboard({ activeTab, setActiveTab, isSection = false }) {
   const [priceData, setPriceData]     = useState({});
   const [ohlcv, setOhlcv]             = useState({});
   const [fng, setFng]                 = useState(null);
@@ -616,7 +616,7 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
       </div>
 
       <div className="mobile-pad" style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
-        <NavBar />
+        {!isSection && <NavBar />}
 
         {/* ── Stat cards ── */}
         <div className="mobile-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>

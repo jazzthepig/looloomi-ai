@@ -235,7 +235,7 @@ const IMP_C = {
 /* ═══════════════════════════════════════════════════════════════════════
    INTELLIGENCE + QUANT GP PAGE
 ═══════════════════════════════════════════════════════════════════════ */
-export default function IntelligencePage({ activeTab, setActiveTab }) {
+export default function IntelligencePage({ activeTab, setActiveTab, isSection = false }) {
   const [raises, setRaises]             = useState([]);
   const [rwaRaises, setRwaRaises]       = useState([]);
   const [loading, setLoading]           = useState(true);
@@ -314,20 +314,23 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
 
       all.sort((a, b) => (b.date || 0) - (a.date || 0));
 
+      // Filter: amount > 0 AND date within last 180 days
+      const now180 = Date.now() / 1000 - 180 * 86400;
+      const recent180 = all.filter(r => r.amount > 0 && r.date && r.date > now180);
+
       // Broader filter: RWA + DeFi + Infrastructure
       const isSector = (item) => {
         const cat = (item.category || "").toLowerCase();
         return isRWA(item) || cat.includes("defi") || cat.includes("infrastructure") || cat.includes("l1") || cat.includes("l2");
       };
-      const sector = all.filter(isSector);
-      setRaises(all);
+      const sector = recent180.filter(isSector);
+      setRaises(recent180);
       setRwaRaises(sector);
       setLastUpdate(new Date());
 
-      // Stats — 90d window
-      const now90 = Date.now() / 1000 - 90 * 86400;
-      const recent    = all.filter(r => r.date && r.date > now90);
-      const recentRwa = sector.filter(r => r.date && r.date > now90);
+      // Stats — 180d window (matching filter)
+      const recent = recent180;
+      const recentRwa = sector;
 
       const vcMap = {};
       recent.forEach(r => {
@@ -355,12 +358,14 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
   const FILTERS = ["All", "RWA", "DeFi", "AI", "Infrastructure"];
 
   const filtered = raises.filter(r => {
-    // Default: only show RWA/DeFi/Infrastructure with amount > $1M
+    // All: show everything with amount > 0
     if (raisesFilter === "All") {
-      return (isRWA(r) || (r.category || "").toLowerCase().includes("defi") || (r.category || "").toLowerCase().includes("infrastructure")) && r.amount >= 1;
+      return r.amount > 0;
     }
-    if (raisesFilter === "RWA") return isRWA(r) && r.amount >= 1;
-    return ((r.category || "").toLowerCase().includes(raisesFilter.toLowerCase()) || (r.categoryGroup || "").toLowerCase().includes(raisesFilter.toLowerCase())) && r.amount >= 1;
+    // RWA: show RWA-related projects
+    if (raisesFilter === "RWA") return isRWA(r) && r.amount > 0;
+    // Other filters: match category
+    return ((r.category || "").toLowerCase().includes(raisesFilter.toLowerCase()) || (r.categoryGroup || "").toLowerCase().includes(raisesFilter.toLowerCase())) && r.amount > 0;
   });
 
   /* ── Shared nav ── */
@@ -428,7 +433,7 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
       </div>
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
-        <NavBar />
+        {!isSection && <NavBar />}
 
         {/* ══ INTELLIGENCE TAB ══════════════════════════════════════════════ */}
         {activeTab === "Intelligence" && (

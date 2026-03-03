@@ -350,7 +350,7 @@ const CSS = `
   .filter-btn.active { border-color:rgba(68,114,255,.4);background:rgba(68,114,255,.08);color:#4472FF; }
 `;
 
-export default function VaultPage({ activeTab, setActiveTab }) {
+export default function VaultPage({ activeTab, setActiveTab, isSection = false }) {
   const [funds, setFunds] = useState(SAMPLE_FUNDS);
   const [filterType, setFilterType] = useState("All");
   const [filterLocation, setFilterLocation] = useState("All");

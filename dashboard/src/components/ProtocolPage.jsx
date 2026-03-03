@@ -679,7 +679,7 @@ const CSS = `
   .filter-btn.active { border-color:rgba(68,114,255,.4);background:rgba(68,114,255,.08);color:#4472FF; }
 `;
 
-export default function ProtocolPage({ activeTab, setActiveTab }) {
+export default function ProtocolPage({ activeTab, setActiveTab, isSection = false }) {
   const [protocols, setProtocols] = useState(SAMPLE_PROTOCOLS);
   const [filterCategory, setFilterCategory] = useState("All");
   const [filterChain, setFilterChain] = useState("All");

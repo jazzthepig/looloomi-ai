@@ -22,7 +22,7 @@ class VCDealFlowTracker:
         self.cache = {}
         self.cache_ttl = 3600  # 1 hour
     
-    def get_recent_funding_rounds(self, limit: int = 20) -> List[Dict]:
+    def get_recent_funding_rounds(self, limit: int = 50) -> List[Dict]:
         """
         Get recent crypto funding rounds from DeFiLlama Raises API
         Returns: List of funding rounds with project, amount, round type, investors
@@ -38,24 +38,25 @@ class VCDealFlowTracker:
                 data = response.json()
                 raises = data.get("raises", [])
 
-                # Filter for relevant categories
-                target_cats = ["DeFi", "RWA", "Infrastructure", "L1", "L2", "DEX",
-                              "Liquid Staking Protocol", "Liquid Restaking Protocol", "Stablecoin"]
-                filtered = [r for r in raises if r.get("amount") and r.get("amount", 0) >= 1
-                           and r.get("category") in target_cats]
+                # Remove strict category filter - get ALL categories with amount > 0
+                # Frontend will handle filtering
+                filtered = [r for r in raises if r.get("amount") and r.get("amount", 0) >= 0.1]
 
                 # Sort by date descending (most recent first)
                 sorted_raises = sorted(filtered, key=lambda x: x.get("date", 0), reverse=True)
 
                 rounds = []
                 for item in sorted_raises[:limit]:
-                    # Convert timestamp to date string
+                    # Keep timestamp for proper sorting/filtering in frontend
+                    timestamp = item.get("date", 0)
+
+                    # Convert timestamp to date string for display
                     date_str = ""
-                    if item.get("date"):
+                    if timestamp:
                         try:
-                            date_str = datetime.fromtimestamp(item["date"]).strftime("%Y-%m-%d")
+                            date_str = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
                         except:
-                            date_str = str(item.get("date"))
+                            date_str = str(timestamp)
 
                     # Combine lead investors and other investors
                     all_investors = list(item.get("leadInvestors", [])) + list(item.get("otherInvestors", []))
@@ -64,7 +65,8 @@ class VCDealFlowTracker:
                         "project": item.get("name", "Unknown"),
                         "amount": item.get("amount", 0) * 1_000_000, # Convert to USD
                         "round_type": item.get("round", "Unknown"),
-                        "date": date_str,
+                        "date": timestamp,  # Keep timestamp for sorting
+                        "dateStr": date_str,  # String for display
                         "investors": all_investors[:10], # Limit to 10 investors
                         "category": item.get("category", "Unknown"),
                         "chains": item.get("chains", []),
