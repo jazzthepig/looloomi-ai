@@ -68,7 +68,16 @@ export default function App() {
   };
 
   return (
-    <div style={{ background: T.deep, minHeight: "100vh" }}>
+    <div style={{ background: "transparent", minHeight: "100vh", position: "relative" }}>
+      {/* TURRELL AMBIENT LIGHT CANVAS */}
+      <div className="turrell-canvas">
+        <div className="orb-primary"></div>
+        <div className="orb-gold"></div>
+        <div className="orb-violet"></div>
+        <div className="orb-center"></div>
+        <div className="noise-overlay"></div>
+      </div>
+
       {/* Fixed Navigation */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
@@ -115,7 +124,7 @@ export default function App() {
         </section>
 
         {/* Section Separator */}
-        <div style={separatorStyle} />
+        <div className="section-divider" />
 
         {/* Section 2: Market */}
         <section id="market" style={sectionStyle(1)}>
@@ -123,7 +132,7 @@ export default function App() {
         </section>
 
         {/* Section Separator */}
-        <div style={separatorStyle} />
+        <div className="section-divider" />
 
         {/* Section 3: Intelligence */}
         <section id="intelligence" style={sectionStyle(0)}>
@@ -131,7 +140,7 @@ export default function App() {
         </section>
 
         {/* Section Separator */}
-        <div style={separatorStyle} />
+        <div className="section-divider" />
 
         {/* Section 4: CIS */}
         <section id="cis" style={sectionStyle(1)}>
@@ -139,7 +148,7 @@ export default function App() {
         </section>
 
         {/* Section Separator */}
-        <div style={separatorStyle} />
+        <div className="section-divider" />
 
         {/* Section 5: Protocol */}
         <section id="protocol" style={sectionStyle(0)}>
@@ -147,7 +156,7 @@ export default function App() {
         </section>
 
         {/* Section Separator */}
-        <div style={separatorStyle} />
+        <div className="section-divider" />
 
         {/* Section 6: Vault */}
         <section id="vault" style={sectionStyle(1)}>
@@ -155,7 +164,7 @@ export default function App() {
         </section>
 
         {/* Section Separator */}
-        <div style={separatorStyle} />
+        <div className="section-divider" />
 
         {/* Section 7: Quant GP */}
         <section id="quantgp" style={sectionStyle(0)}>
@@ -166,8 +175,118 @@ export default function App() {
 
       <style>{`
         * { scroll-behavior: smooth; }
-        @keyframes breathe { 0%,100%{opacity:.28;transform:scale(1) translateY(0)} 50%{opacity:.44;transform:scale(1.06) translateY(-12px)} }
-        @keyframes breathe2 { 0%,100%{opacity:.16;transform:scale(1)} 50%{opacity:.30;transform:scale(1.08) translateX(10px)} }
+
+        /* ── TURRELL AMBIENT LIGHT SYSTEM ── */
+        .turrell-canvas {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          pointer-events: none;
+          background: #03030a;
+        }
+
+        .orb-primary {
+          position: absolute;
+          width: 900px;
+          height: 900px;
+          left: -200px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: radial-gradient(ellipse, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.06) 30%, rgba(6, 182, 212, 0.02) 60%, transparent 75%);
+          border-radius: 50%;
+          animation: orb-breathe-primary 8s ease-in-out infinite;
+          filter: blur(40px);
+        }
+
+        .orb-gold {
+          position: absolute;
+          width: 600px;
+          height: 600px;
+          right: -100px;
+          top: -100px;
+          background: radial-gradient(ellipse, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0.04) 40%, transparent 70%);
+          border-radius: 50%;
+          animation: orb-breathe-gold 11s ease-in-out infinite;
+          filter: blur(60px);
+        }
+
+        .orb-violet {
+          position: absolute;
+          width: 500px;
+          height: 500px;
+          right: 10%;
+          bottom: -80px;
+          background: radial-gradient(ellipse, rgba(124, 58, 237, 0.08) 0%, rgba(124, 58, 237, 0.03) 50%, transparent 70%);
+          border-radius: 50%;
+          animation: orb-breathe-violet 14s ease-in-out infinite;
+          filter: blur(50px);
+        }
+
+        .orb-center {
+          position: absolute;
+          width: 1400px;
+          height: 800px;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          background: radial-gradient(ellipse, rgba(6, 182, 212, 0.025) 0%, rgba(30, 10, 60, 0.03) 40%, transparent 70%);
+          border-radius: 50%;
+          filter: blur(80px);
+        }
+
+        .noise-overlay {
+          position: absolute;
+          inset: 0;
+          opacity: 0.035;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+          background-size: 200px 200px;
+        }
+
+        @keyframes orb-breathe-primary {
+          0%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
+          50% { opacity: 0.7; transform: translateY(-50%) scale(1.08); }
+        }
+        @keyframes orb-breathe-gold {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.12); }
+        }
+        @keyframes orb-breathe-violet {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(0.92); }
+        }
+
+        /* ── SECTION DIVIDERS ── */
+        .section-divider {
+          height: 1px;
+          background: linear-gradient(90deg, transparent 0%, rgba(6,182,212,0.06) 20%, rgba(6,182,212,0.16) 50%, rgba(6,182,212,0.06) 80%, transparent 100%);
+          position: relative;
+        }
+        .section-divider::after {
+          content: '';
+          position: absolute;
+          top: -3px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 35%;
+          height: 6px;
+          background: radial-gradient(ellipse, rgba(6,182,212,0.1) 0%, transparent 70%);
+          filter: blur(4px);
+        }
+
+        /* ── NAVBAR GLASSMORPHISM ── */
+        nav {
+          background: rgba(3, 3, 10, 0.75) !important;
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+        }
+
+        /* ── CARD TRANSPARENCY ── */
+        .lm-card, .card, [class*="card"] {
+          background: rgba(255, 255, 255, 0.02) !important;
+          border: 1px solid rgba(255, 255, 255, 0.06) !important;
+          backdrop-filter: blur(8px);
+        }
       `}</style>
     </div>
   );
@@ -176,15 +295,11 @@ export default function App() {
 const sectionStyle = (index) => ({
   minHeight: "100vh",
   padding: "80px 64px",
-  background: index % 2 === 0 ? T.deep : T.altBg,
+  background: "transparent",
   borderTop: "1px solid rgba(255,255,255,0.04)",
+  position: "relative",
+  zIndex: 1,
 });
-
-const separatorStyle = {
-  height: 1,
-  background: "rgba(6,182,212,0.15)",
-  boxShadow: "0 0 20px rgba(6,182,212,0.15)",
-};
 
 /* ─────────────────────────────────────────────────────────────────────────
    HERO SECTION
