@@ -24,32 +24,57 @@ class VCDealFlowTracker:
     
     def get_recent_funding_rounds(self, limit: int = 20) -> List[Dict]:
         """
-        Get recent crypto funding rounds
+        Get recent crypto funding rounds from DeFiLlama Raises API
         Returns: List of funding rounds with project, amount, round type, investors
-        Note: CryptoRank API deprecated. Using curated data + DeFiLlama.
+        API: https://api.llama.fi/raises
         """
         try:
-            # Try DeFiLlama first
+            # Use DeFiLlama raises API
             response = requests.get(
-                "https://api.llama.fi/funding-rounds",
-                timeout=10
+                "https://api.llama.fi/raises",
+                timeout=30
             )
-            if response.status_code == 200 and response.json():
+            if response.status_code == 200:
                 data = response.json()
+                raises = data.get("raises", [])
+
+                # Filter for relevant categories
+                target_cats = ["DeFi", "RWA", "Infrastructure", "L1", "L2", "DEX",
+                              "Liquid Staking Protocol", "Liquid Restaking Protocol", "Stablecoin"]
+                filtered = [r for r in raises if r.get("amount") and r.get("amount", 0) >= 1
+                           and r.get("category") in target_cats]
+
+                # Sort by date descending (most recent first)
+                sorted_raises = sorted(filtered, key=lambda x: x.get("date", 0), reverse=True)
+
                 rounds = []
-                for item in list(data)[:limit]:
+                for item in sorted_raises[:limit]:
+                    # Convert timestamp to date string
+                    date_str = ""
+                    if item.get("date"):
+                        try:
+                            date_str = datetime.fromtimestamp(item["date"]).strftime("%Y-%m-%d")
+                        except:
+                            date_str = str(item.get("date"))
+
+                    # Combine lead investors and other investors
+                    all_investors = list(item.get("leadInvestors", [])) + list(item.get("otherInvestors", []))
+
                     rounds.append({
-                        "project": item.get("projectName", "Unknown"),
-                        "amount": item.get("amount"),
-                        "round_type": item.get("roundType", "Unknown"),
-                        "date": item.get("date"),
-                        "investors": item.get("leadInvestors", []),
+                        "project": item.get("name", "Unknown"),
+                        "amount": item.get("amount", 0) * 1_000_000, # Convert to USD
+                        "round_type": item.get("round", "Unknown"),
+                        "date": date_str,
+                        "investors": all_investors[:10], # Limit to 10 investors
                         "category": item.get("category", "Unknown"),
+                        "chains": item.get("chains", []),
                     })
+
                 if rounds:
                     return rounds
+
         except Exception as e:
-            print(f"DeFiLlama funding API error: {e}")
+            print(f"DeFiLlama raises API error: {e}")
 
         # Fallback to curated recent funding rounds
         return self._get_mock_funding_rounds()
