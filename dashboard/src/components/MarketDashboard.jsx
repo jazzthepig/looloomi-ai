@@ -556,7 +556,7 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
           LOOLOOMI
         </span>
         <div className="mobile-nav" style={{ display: "flex", gap: 4 }}>
-          {["Market", "Intelligence", "Quant GP"].map(tab => (
+          {["Market", "Intelligence", "CIS", "Quant GP"].map(tab => (
             <button key={tab} className={`lm-tab${activeTab === tab ? " active" : ""}`}
               onClick={() => setActiveTab(tab)}>
               {tab}
