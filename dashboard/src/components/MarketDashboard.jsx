@@ -547,18 +547,26 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
       flexWrap: "wrap",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <span style={{
-          fontFamily: FONTS.display, fontWeight: 800, fontSize: 20,
-          letterSpacing: "-0.03em",
-          background: `linear-gradient(120deg, ${T.pink} 0%, ${T.violet} 45%, ${T.blue} 100%)`,
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-        }}>
-          LOOLOOMI
+        <span onClick={() => setActiveTab("Home")}
+          style={{
+            fontFamily: FONTS.display, fontWeight: 700, fontSize: 20,
+            letterSpacing: "-0.02em", color: T.primary, cursor: "pointer",
+          }}>
+          CometCloud
         </span>
         <div className="mobile-nav" style={{ display: "flex", gap: 4 }}>
-          {["Market", "Intelligence", "CIS", "Vault", "Protocol", "Quant GP"].map(tab => (
-            <button key={tab} className={`lm-tab${activeTab === tab ? " active" : ""}`}
-              onClick={() => setActiveTab(tab)}>
+          {["Home", "Market", "Intelligence", "CIS", "Vault", "Protocol", "Quant GP"].map(tab => (
+            <button key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: "8px 16px", borderRadius: 6, fontSize: 14, fontWeight: 500,
+                fontFamily: FONTS.body, cursor: "pointer", outline: "none",
+                border: "none",
+                background: activeTab === tab ? T.cyan : "transparent",
+                color: activeTab === tab ? "#fff" : T.secondary,
+                transition: "all 0.2s ease",
+              }}
+            >
               {tab}
             </button>
           ))}
