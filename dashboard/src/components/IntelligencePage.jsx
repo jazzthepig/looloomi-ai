@@ -161,45 +161,62 @@ const MACRO_EVENTS = [
 
 /* ─── Curated RWA Projects (Mar 2026) ────────────────────────────────── */
 const RWA_PROJECTS = [
-  // Tokenized Treasuries
-  { id: "ondo", name: "Ondo Finance", category: "Treasuries", tvl: 450000000, apy: 4.8, description: "Tokenized US Treasuries (OUSG, OMMF)", chain: "Ethereum", investors: ["Founders Fund", "Coinbase Ventures"] },
-  { id: "富力", name: "Franklin Templeton", category: "Treasuries", tvl: 380000000, apy: 4.5, description: "BENJI - On-chain US Treasury Fund", chain: "Polygon", investors: ["Franklin Templeton"] },
-  { id: "blackrock", name: "BlackRock", category: "Treasuries", tvl: 1200000000, apy: 4.3, description: "BUIDL - Tokenized Money Market Fund", chain: "Ethereum", investors: ["BlackRock"] },
-  { id: "circle", name: "Circle", category: "Stablecoin", tvl: 76000000000, apy: 0, description: "USDC - Regulated Stablecoin", chain: "Multi-chain", investors: ["Goldman Sachs", "Accel"] },
+  // Tokenized Treasuries / RWA
+  { id: "ondo", name: "Ondo Finance", category: "RWA - Treasuries", tvl: 2063553096, apy: 4.8, description: "Tokenized US Treasuries (OUSG, OMMF)", chain: "Multi-chain", investors: ["Founders Fund", "Coinbase Ventures"] },
+  { id: "blackrock", name: "BlackRock BUIDL", category: "RWA - Treasuries", tvl: 2531565611, apy: 4.3, description: "Tokenized Money Market Fund", chain: "Multi-chain", investors: ["BlackRock"] },
+  { id: "circle-usyc", name: "Circle USYC", category: "RWA - Treasuries", tvl: 1902157261, apy: 4.5, description: "US Treasury-backed yield", chain: "Multi-chain", investors: ["Circle", "Goldman Sachs"] },
+  { id: "franklin", name: "Franklin Templeton", category: "RWA - Treasuries", tvl: 380000000, apy: 4.5, description: "BENJI - On-chain US Treasury Fund", chain: "Polygon", investors: ["Franklin Templeton"] },
+  { id: "wisdomtree", name: "WisdomTree", category: "RWA - Treasuries", tvl: 741361216, apy: 4.2, description: "Tokenized treasury and commodities", chain: "Multi-chain", investors: ["WisdomTree"] },
+  { id: "superstate", name: "Superstate", category: "RWA - Treasuries", tvl: 701873051, apy: 4.6, description: "USTB - US Treasury Short Fund", chain: "Ethereum", investors: ["Coinbase", "SIX Group"] },
+  { id: "anemoy", name: "Anemoy Capital", category: "RWA - Treasuries", tvl: 568081855, apy: 5.2, description: "Treasury Bill protocol", chain: "Multi-chain", investors: ["a16z", "Dragonfly"] },
+
+  // Stablecoins
+  { id: "circle", name: "Circle (USDC)", category: "RWA - Stablecoin", tvl: 76000000000, apy: 0, description: "Regulated stablecoin", chain: "Multi-chain", investors: ["Goldman Sachs", "Accel", "IDG"] },
+  { id: "tether", name: "Tether (USDT)", category: "RWA - Stablecoin", tvl: 142000000000, apy: 0, description: "Largest stablecoin by volume", chain: "Multi-chain", investors: ["Tether Holdings"] },
+  { id: "paxos", name: "Paxos (USDP)", category: "RWA - Stablecoin", tvl: 1200000000, apy: 0, description: "Regulated stablecoin", chain: "Ethereum", investors: ["PayPal", "SEC"] },
+
+  // Commodities (Gold)
+  { id: "paxos-gold", name: "Paxos Gold (PAXG)", category: "RWA - Commodities", tvl: 2496506164, apy: 0, description: "Gold-backed token", chain: "Ethereum", investors: ["NYDFS", "Chainalysis"] },
+  { id: "tether-gold", name: "Tether Gold (XAU₮)", category: "RWA - Commodities", tvl: 3633721936, apy: 0, description: "Gold-backed token", chain: "Multi-chain", investors: ["Tether"] },
+  { id: "treasury-gold", name: "Trove Gold", category: "RWA - Commodities", tvl: 120000000, apy: 2.1, description: "Gold-backed tokens", chain: "Ethereum", investors: ["SIX Group"] },
 
   // Real Estate
-  { id: "realty", name: "Realty DAO", category: "Real Estate", tvl: 85000000, apy: 12.5, description: "Fractional real estate ownership", chain: "Solana", investors: ["Republic", "Animoca Brands"] },
-  { id: "tangible", name: "Tangible", category: "Real Estate", tvl: 42000000, apy: 8.2, description: "Tokenized real world assets", chain: "Ethereum", investors: ["SIX Group"] },
-  { id: "implied", name: "Implied Finance", category: "Real Estate", tvl: 18000000, apy: 15.0, description: "Real estate debt protocol", chain: "Ethereum", investors: ["Dragonfly"] },
-
-  // Commodities
-  { id: "tgold", name: "Trove Gold", category: "Commodities", tvl: 120000000, apy: 2.1, description: "Gold-backed tokens", chain: "Ethereum", investors: ["SIX Group"] },
-  { id: "koi", name: "Koi Finance", category: "Commodities", tvl: 8500000, apy: 3.5, description: "Precious metals lending", chain: "Solana", investors: ["Solana Ventures"] },
+  { id: "realty", name: "Realty DAO", category: "RWA - Real Estate", tvl: 85000000, apy: 12.5, description: "Fractional real estate ownership", chain: "Solana", investors: ["Republic", "Animoca Brands"] },
+  { id: "tangible", name: "Tangible", category: "RWA - Real Estate", tvl: 42000000, apy: 8.2, description: "Tokenized real world assets", chain: "Ethereum", investors: ["SIX Group"] },
+  { id: "implied", name: "Implied Finance", category: "RWA - Real Estate", tvl: 18000000, apy: 15.0, description: "Real estate debt protocol", chain: "Ethereum", investors: ["Dragonfly"] },
+  { id: "hastra", name: "Hastra", category: "RWA - Real Estate", tvl: 330521150, apy: 8.5, description: "Real estate protocol", chain: "Solana", investors: ["Solana Ventures"] },
 
   // Private Credit
-  { id: "maple", name: "Maple Finance", category: "Private Credit", tvl: 380000000, apy: 12.0, description: "Unsecured lending for institutional borrowers", chain: "Ethereum", investors: ["Polychain", "Galaxy"] },
-  { id: "centrifuge", name: "Centrifuge", category: "Private Credit", tvl: 220000000, apy: 9.5, description: "Asset financing protocol", chain: "Ethereum", investors: ["a16z", "Polychain"] },
-  { id: "credix", name: "Credix", category: "Private Credit", tvl: 95000000, apy: 14.0, description: "Credit marketplace for emerging markets", chain: "Solana", investors: ["Greylock", "Variant"] },
+  { id: "maple", name: "Maple Finance", category: "RWA - Private Credit", tvl: 1970282076, apy: 12.0, description: "Unsecured lending for institutional", chain: "Multi-chain", investors: ["Polychain", "Galaxy", "Apple"] },
+  { id: "centrifuge", name: "Centrifuge", category: "RWA - Private Credit", tvl: 1361042384, apy: 9.5, description: "Asset financing protocol", chain: "Multi-chain", investors: ["a16z", "Polychain"] },
+  { id: "credix", name: "Credix", category: "RWA - Private Credit", tvl: 95000000, apy: 14.0, description: "Credit marketplace for EM", chain: "Solana", investors: ["Greylock", "Variant"] },
+  { id: "aave-horizon", name: "Aave Horizon RWA", category: "RWA - Private Credit", tvl: 338389101, apy: 8.5, description: "Institutional lending", chain: "Ethereum", investors: ["Aave"] },
 
   // Derivatives
-  { id: "dydx", name: "dYdX", category: "Derivatives", tvl: 1200000000, apy: 0, description: "Decentralized perpetual futures", chain: "Cosmos", investors: ["a16z", "Polychain"] },
-  { id: "gmx", name: "GMX", category: "Derivatives", tvl: 680000000, apy: 0, description: "Decentralized perpetual trading", chain: "Arbitrum", investors: ["Framework"] },
+  { id: "dydx", name: "dYdX", category: "Derivatives", tvl: 1200000000, apy: 0, description: "Decentralized perpetual futures", chain: "Cosmos", investors: ["a16z", "Polychain", "Three Arrows"] },
+  { id: "gmx", name: "GMX", category: "Derivatives", tvl: 680000000, apy: 0, description: "Decentralized perpetual trading", chain: "Arbitrum", investors: ["Framework", "GSR"] },
+  { id: "drift", name: "Drift Protocol", category: "Derivatives", tvl: 338112171, apy: 0, description: "Solana perpetual DEX", chain: "Solana", investors: ["Paradigm", "Jump"] },
+  { id: "hyperliquid", name: "Hyperliquid", category: "Derivatives", tvl: 4147634073, apy: 0, description: "High-performance perps", chain: "Hyperliquid", investors: ["a16z", "DTN"] },
 
-  // Infrastructure
-  { id: "chainlink", name: "Chainlink", category: "Oracle", tvl: 0, apy: 0, description: "Cross-chain data infrastructure", chain: "Multi-chain", investors: ["a16z", "SoftBank"] },
-  { id: "pyth", name: "Pyth", category: "Oracle", tvl: 0, apy: 0, description: "Oracle for financial data", chain: "Solana", investors: ["a16z", "Jump"] },
+  // Infrastructure / Oracle
+  { id: "chainlink", name: "Chainlink", category: "Infrastructure", tvl: 0, apy: 0, description: "Cross-chain data infrastructure", chain: "Multi-chain", investors: ["a16z", "SoftBank", "Winklevoss"] },
+  { id: "pyth", name: "Pyth", category: "Infrastructure", tvl: 0, apy: 0, description: "Oracle for financial data", chain: "Solana", investors: ["a16z", "Jump", "Deliver"] },
 ];
 
 /* ─── Curated Active VCs (Mar 2026) ──────────────────────────────────── */
 const ACTIVE_VCS = [
-  { name: "a16z crypto", deals: 145, portfolio: ["Lido", "Arbitrum", "Coinbase", "Anthropic"], focus: "Infrastructure" },
-  { name: "Paradigm", deals: 89, portfolio: ["Uniswap", "dYdX", "Flashbots"], focus: "DeFi" },
-  { name: "Polychain", deals: 156, portfolio: ["Compound", "Maple", "Centrifuge"], focus: "DeFi/RWA" },
-  { name: "Dragonfly", deals: 78, portfolio: ["MakerDAO", "Near", "Mystiko"], focus: "Multi-chain" },
-  { name: "Pantera", deals: 210, portfolio: ["Solana", "Circle", "Bitwise"], focus: "Infrastructure" },
-  { name: "Coinbase Ventures", deals: 420, portfolio: ["OpenSea", "Ethereum", "Optimism"], focus: "Ecosystem" },
-  { name: "Binance Labs", deals: 180, portfolio: ["Polygon", "Injective", "Celestia"], focus: "Infrastructure" },
-  { name: "Solana Ventures", deals: 95, portfolio: ["Jupiter", "Marginfi", "Kamino"], focus: "Solana" },
+  { name: "a16z crypto", deals: 145, portfolio: ["Lido", "Arbitrum", "Coinbase", "Anthropic", "Base"], focus: "Infrastructure" },
+  { name: "Paradigm", deals: 89, portfolio: ["Uniswap", "dYdX", "Flashbots", "Fantom", "Scroll"], focus: "DeFi" },
+  { name: "Polychain", deals: 156, portfolio: ["Compound", "Maple", "Centrifuge", "EigenLayer", "Arbitrum"], focus: "DeFi/RWA" },
+  { name: "Dragonfly", deals: 78, portfolio: ["MakerDAO", "Near", "Mystiko", "Celestia", "Eclipse"], focus: "Multi-chain" },
+  { name: "Pantera", deals: 210, portfolio: ["Solana", "Circle", "Bitwise", "Avax", "Chainlink"], focus: "Infrastructure" },
+  { name: "Coinbase Ventures", deals: 420, portfolio: ["OpenSea", "Ethereum", "Optimism", "Base", "Ondo"], focus: "Ecosystem" },
+  { name: "Binance Labs", deals: 180, portfolio: ["Polygon", "Injective", "Celestia", "Sei", "Ton"], focus: "Infrastructure" },
+  { name: "Solana Ventures", deals: 95, portfolio: ["Jupiter", "Marginfi", "Kamino", "Drift", "Meteora"], focus: "Solana" },
+  { name: "Framework Ventures", deals: 85, portfolio: ["GMX", "Synthetix", "永续"], focus: "DeFi" },
+  { name: "Hack VC", deals: 95, portfolio: ["EigenLayer", "Lido", "Ritual", "Hyperliquid"], focus: "Infrastructure" },
+  { name: "Electric Capital", deals: 65, portfolio: ["Near", "Aptos", "Sui", "Circle"], focus: "Layer 1" },
+  { name: "Variant Fund", deals: 45, portfolio: ["Uniswap", "Aave", "MakerDAO", "PoolTogether"], focus: "DeFi" },
 ];
 
 const EV_TYPE = {
