@@ -2,6 +2,8 @@ import { useState } from "react";
 import MarketDashboard from "./components/MarketDashboard";
 import IntelligencePage from "./components/IntelligencePage";
 import CISLeaderboard from "./components/CISLeaderboard";
+import VaultPage from "./components/VaultPage";
+import ProtocolPage from "./components/ProtocolPage";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("Market");
@@ -16,6 +18,12 @@ export default function App() {
       )}
       {activeTab === "CIS" && (
         <CISPage activeTab={activeTab} setActiveTab={setActiveTab} />
+      )}
+      {activeTab === "Vault" && (
+        <VaultPage activeTab={activeTab} setActiveTab={setActiveTab} />
+      )}
+      {activeTab === "Protocol" && (
+        <ProtocolPage activeTab={activeTab} setActiveTab={setActiveTab} />
       )}
     </>
   );

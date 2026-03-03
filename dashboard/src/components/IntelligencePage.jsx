@@ -285,7 +285,7 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
           LOOLOOMI
         </span>
         <div style={{ display: "flex", gap: 4 }}>
-          {["Market", "Intelligence", "CIS", "Quant GP"].map(tab => (
+          {["Market", "Intelligence", "CIS", "Vault", "Protocol", "Quant GP"].map(tab => (
             <button key={tab} className={`lm-tab${activeTab === tab ? " active" : ""}`}
               onClick={() => setActiveTab(tab)}>
               {tab}
