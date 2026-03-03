@@ -68,14 +68,17 @@ export default function App() {
   };
 
   return (
-    <div style={{ background: "transparent", minHeight: "100vh", position: "relative" }}>
-      {/* TURRELL AMBIENT LIGHT CANVAS */}
+    <div style={{ background: "#010109", minHeight: "100vh", position: "relative" }}>
+      {/* TURRELL MULTI-DIMENSIONAL VOID SYSTEM */}
       <div className="turrell-canvas">
-        <div className="orb-primary"></div>
-        <div className="orb-gold"></div>
-        <div className="orb-violet"></div>
-        <div className="orb-center"></div>
-        <div className="noise-overlay"></div>
+        <div className="turrell-void"></div>
+        <div className="turrell-horizon"></div>
+        <div className="turrell-portal-left"></div>
+        <div className="turrell-portal-right"></div>
+        <div className="turrell-inner"></div>
+        <div className="turrell-frame"></div>
+        <div className="turrell-ground"></div>
+        <div className="turrell-grain"></div>
       </div>
 
       {/* Fixed Navigation */}
@@ -175,84 +178,124 @@ export default function App() {
 
       <style>{`
         * { scroll-behavior: smooth; }
+        body { background: #010109; min-height: 100vh; }
 
-        /* ── TURRELL AMBIENT LIGHT SYSTEM ── */
+        /* ── TURRELL VOID SYSTEM ── */
         .turrell-canvas {
           position: fixed;
           inset: 0;
           z-index: 0;
           pointer-events: none;
-          background: #03030a;
+          overflow: hidden;
         }
 
-        .orb-primary {
+        /* LAYER 1: The Void */
+        .turrell-void {
           position: absolute;
-          width: 900px;
-          height: 900px;
-          left: -200px;
+          inset: 0;
+          background: radial-gradient(ellipse 120% 100% at 50% 50%, #04041a 0%, #02020d 40%, #010108 100%);
+        }
+
+        /* LAYER 2: Deep horizon */
+        .turrell-horizon {
+          position: absolute;
+          left: -10%;
+          right: -10%;
+          top: 35%;
+          height: 30%;
+          background: radial-gradient(ellipse 80% 100% at 50% 50%, rgba(6, 182, 212, 0.07) 0%, rgba(6, 100, 180, 0.04) 40%, transparent 75%);
+          filter: blur(80px);
+          animation: turrell-breathe 12s ease-in-out infinite;
+        }
+
+        /* LAYER 3: Left portal */
+        .turrell-portal-left {
+          position: absolute;
+          width: 70vw;
+          height: 70vw;
+          left: -25vw;
           top: 50%;
           transform: translateY(-50%);
-          background: radial-gradient(ellipse, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.06) 30%, rgba(6, 182, 212, 0.02) 60%, transparent 75%);
-          border-radius: 50%;
-          animation: orb-breathe-primary 8s ease-in-out infinite;
-          filter: blur(40px);
-        }
-
-        .orb-gold {
-          position: absolute;
-          width: 600px;
-          height: 600px;
-          right: -100px;
-          top: -100px;
-          background: radial-gradient(ellipse, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0.04) 40%, transparent 70%);
-          border-radius: 50%;
-          animation: orb-breathe-gold 11s ease-in-out infinite;
+          background: radial-gradient(ellipse 40% 60% at 30% 50%, rgba(6, 182, 212, 0.11) 0%, rgba(6, 182, 212, 0.055) 35%, rgba(6, 182, 212, 0.015) 60%, transparent 80%);
           filter: blur(60px);
+          animation: turrell-portal-left-anim 9s ease-in-out infinite;
         }
 
-        .orb-violet {
+        /* LAYER 4: Right warmth */
+        .turrell-portal-right {
+          position: absolute;
+          width: 60vw;
+          height: 60vw;
+          right: -20vw;
+          top: -10%;
+          background: radial-gradient(ellipse 50% 70% at 70% 30%, rgba(245, 158, 11, 0.07) 0%, rgba(200, 100, 20, 0.035) 40%, transparent 70%);
+          filter: blur(90px);
+          animation: turrell-breathe 15s ease-in-out infinite reverse;
+        }
+
+        /* LAYER 5: Inner light */
+        .turrell-inner {
           position: absolute;
           width: 500px;
-          height: 500px;
-          right: 10%;
-          bottom: -80px;
-          background: radial-gradient(ellipse, rgba(124, 58, 237, 0.08) 0%, rgba(124, 58, 237, 0.03) 50%, transparent 70%);
-          border-radius: 50%;
-          animation: orb-breathe-violet 14s ease-in-out infinite;
-          filter: blur(50px);
-        }
-
-        .orb-center {
-          position: absolute;
-          width: 1400px;
-          height: 800px;
+          height: 300px;
           left: 50%;
           top: 50%;
           transform: translate(-50%, -50%);
-          background: radial-gradient(ellipse, rgba(6, 182, 212, 0.025) 0%, rgba(30, 10, 60, 0.03) 40%, transparent 70%);
-          border-radius: 50%;
-          filter: blur(80px);
+          background: radial-gradient(ellipse, rgba(100, 200, 255, 0.06) 0%, rgba(6, 182, 212, 0.025) 40%, transparent 70%);
+          filter: blur(40px);
+          animation: turrell-pulse-inner 6s ease-in-out infinite;
         }
 
-        .noise-overlay {
+        /* LAYER 6: Nested frame glow */
+        .turrell-frame {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          width: min(600px, 70vw);
+          height: min(360px, 45vw);
+          border-radius: 4px;
+          box-shadow: inset 0 0 80px rgba(6, 182, 212, 0.04), inset 0 0 30px rgba(6, 182, 212, 0.025), 0 0 120px rgba(6, 182, 212, 0.035), 0 0 60px rgba(6, 182, 212, 0.025), 0 0 200px rgba(6, 140, 200, 0.02);
+          animation: turrell-frame-breathe 8s ease-in-out infinite;
+        }
+
+        /* LAYER 7: Bottom warmth */
+        .turrell-ground {
+          position: absolute;
+          bottom: -5%;
+          left: 10%;
+          right: 10%;
+          height: 40%;
+          background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(124, 58, 237, 0.04) 0%, rgba(80, 20, 160, 0.02) 50%, transparent 75%);
+          filter: blur(70px);
+          animation: turrell-breathe 18s ease-in-out infinite;
+        }
+
+        /* LAYER 8: Film grain */
+        .turrell-grain {
           position: absolute;
           inset: 0;
-          opacity: 0.035;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-          background-size: 200px 200px;
+          opacity: 0.04;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          background-size: 180px 180px;
         }
 
-        @keyframes orb-breathe-primary {
+        @keyframes turrell-breathe {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.65; transform: scale(1.06); }
+        }
+        @keyframes turrell-pulse-inner {
+          0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          33% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.15); }
+          66% { opacity: 0.9; transform: translate(-50%, -50%) scale(0.95); }
+        }
+        @keyframes turrell-frame-breathe {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        @keyframes turrell-portal-left-anim {
           0%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
-          50% { opacity: 0.7; transform: translateY(-50%) scale(1.08); }
-        }
-        @keyframes orb-breathe-gold {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.12); }
-        }
-        @keyframes orb-breathe-violet {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(0.92); }
+          50% { opacity: 0.7; transform: translateY(-50%) scale(1.05); }
         }
 
         /* ── SECTION DIVIDERS ── */

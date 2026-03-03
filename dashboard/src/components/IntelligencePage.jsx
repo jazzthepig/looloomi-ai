@@ -436,7 +436,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         {!isSection && <NavBar />}
 
         {/* ══ INTELLIGENCE TAB ══════════════════════════════════════════════ */}
-        {activeTab === "Intelligence" && (
+        {(activeTab === "Intelligence" || isSection) && (
           <div>
             {/* Stat cards */}
             <div className="mobile-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
