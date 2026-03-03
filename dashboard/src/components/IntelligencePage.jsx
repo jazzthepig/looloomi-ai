@@ -263,19 +263,31 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
 
       /* ── Normalize backend fields with comprehensive fallback ── */
       const all = raw.map(item => {
-        // Backend returns amount in USD, convert to millions
-        const amount = typeof item.amount === "number" ? item.amount / 1e6
-          : parseFloat(item.amount_usd || 0) / 1e6;
+        // Backend returns amount in USD (already multiplied by 1e6), convert to millions
+        let amount = 0;
+        if (typeof item.amount === "number") {
+          amount = item.amount / 1_000_000;
+        } else if (typeof item.amount === "string") {
+          amount = parseFloat(item.amount) / 1_000_000;
+        }
 
         // Handle date - backend returns string "YYYY-MM-DD" or timestamp
         let date = null;
+        let dateStr = null;
         if (item.date) {
           if (typeof item.date === "number") {
-            date = item.date; // Already timestamp
+            // Already a timestamp
+            date = item.date;
+            dateStr = new Date(item.date * 1000).toISOString().split("T")[0];
           } else if (typeof item.date === "string") {
-            // Try to parse string date, fallback to current time
-            const parsed = Date.parse(item.date);
-            date = isNaN(parsed) ? Date.now() / 1000 : Math.floor(parsed / 1000);
+            // Parse string date "YYYY-MM-DD"
+            dateStr = item.date;
+            const parts = item.date.split("-");
+            if (parts.length === 3) {
+              date = Math.floor(new Date(parts[0], parts[1]-1, parts[2]).getTime() / 1000);
+            } else {
+              date = Math.floor(Date.parse(item.date) / 1000);
+            }
           }
         }
 
@@ -284,6 +296,7 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
           round: item.round_type || item.round || item.stage || "—",
           amount,
           date,
+          dateStr,
           leadInvestors: Array.isArray(item.investors) ? item.investors
             : Array.isArray(item.leadInvestors) ? item.leadInvestors
             : [],
@@ -293,6 +306,11 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
           chains: item.chains || [],
         };
       });
+
+      // Debug: log sample data
+      if (all.length > 0) {
+        console.log("Sample VC data:", JSON.stringify(all.slice(0, 3), null, 2));
+      }
 
       all.sort((a, b) => (b.date || 0) - (a.date || 0));
 
