@@ -263,12 +263,22 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
 
       /* ── Normalize backend fields with comprehensive fallback ── */
       const all = raw.map(item => {
+        // Backend returns amount in USD, convert to millions
         const amount = typeof item.amount === "number" ? item.amount / 1e6
           : parseFloat(item.amount_usd || 0) / 1e6;
-        const date = item.date ? Math.floor(new Date(item.date).getTime() / 1000)
-          : item.announced_at ? Math.floor(new Date(item.announced_at).getTime() / 1000)
-          : item.created_at ? Math.floor(new Date(item.created_at).getTime() / 1000)
-          : null;
+
+        // Handle date - backend returns string "YYYY-MM-DD" or timestamp
+        let date = null;
+        if (item.date) {
+          if (typeof item.date === "number") {
+            date = item.date; // Already timestamp
+          } else if (typeof item.date === "string") {
+            // Try to parse string date, fallback to current time
+            const parsed = Date.parse(item.date);
+            date = isNaN(parsed) ? Date.now() / 1000 : Math.floor(parsed / 1000);
+          }
+        }
+
         return {
           name: item.project || item.name || item.protocol || "—",
           round: item.round_type || item.round || item.stage || "—",
@@ -280,20 +290,26 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
           category: item.category || item.sector || "—",
           categoryGroup: item.categoryGroup || item.category || "—",
           sector: item.sector || item.category || "—",
+          chains: item.chains || [],
         };
       });
 
       all.sort((a, b) => (b.date || 0) - (a.date || 0));
 
-      const rwa = all.filter(isRWA);
+      // Broader filter: RWA + DeFi + Infrastructure
+      const isSector = (item) => {
+        const cat = (item.category || "").toLowerCase();
+        return isRWA(item) || cat.includes("defi") || cat.includes("infrastructure") || cat.includes("l1") || cat.includes("l2");
+      };
+      const sector = all.filter(isSector);
       setRaises(all);
-      setRwaRaises(rwa);
+      setRwaRaises(sector);
       setLastUpdate(new Date());
 
       // Stats — 90d window
       const now90 = Date.now() / 1000 - 90 * 86400;
       const recent    = all.filter(r => r.date && r.date > now90);
-      const recentRwa = rwa.filter(r => r.date && r.date > now90);
+      const recentRwa = sector.filter(r => r.date && r.date > now90);
 
       const vcMap = {};
       recent.forEach(r => {
