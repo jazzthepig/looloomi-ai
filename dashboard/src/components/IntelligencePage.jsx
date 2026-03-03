@@ -101,6 +101,8 @@ const CSS = `
     .mobile-hero { padding: 24px 20px !important; }
     .mobile-hero h1 { font-size: 28px !important; }
     .mobile-metrics { gap: 24px !important; }
+    .mobile-pipeline-grid { grid-template-columns: 1fr !important; }
+    .mobile-funds-scroll { flex-direction: column !important; }
   }
 `;
 
@@ -177,9 +179,10 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
   const [raises, setRaises]             = useState([]);
   const [rwaRaises, setRwaRaises]       = useState([]);
   const [loading, setLoading]           = useState(true);
-  const [raisesFilter, setRaisesFilter] = useState("All");
+  const [raisesFilter, setRaisesFilter] = useState("RWA");
   const [lastUpdate, setLastUpdate]     = useState(null);
   const [stats, setStats]               = useState(null);
+  const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
 
   useEffect(() => {
     const id = "lm-intel-css";
@@ -191,25 +194,33 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
   }, []);
 
   const fetchRaises = useCallback(async () => {
+    setLoading(true);
     try {
       const r = await fetch(`${API_BASE}/vc/funding-rounds?limit=100`);
       const json = await r.json();
       const raw = json.data || [];
 
-      /* ── Normalize backend fields ── */
-      const all = raw.map(r => ({
-        name:          r.project  || r.name  || "—",
-        round:         r.round_type || r.round || "—",
-        // backend sends raw dollars, convert to $M
-        amount:        typeof r.amount === "number" ? r.amount / 1e6 : 0,
-        // backend sends "2024-04-09" ISO string, convert to unix ts
-        date:          r.date ? Math.floor(new Date(r.date).getTime() / 1000) : null,
-        leadInvestors: Array.isArray(r.investors) ? r.investors
-                     : Array.isArray(r.leadInvestors) ? r.leadInvestors : [],
-        category:      r.category || r.sector || "—",
-        categoryGroup: r.categoryGroup || r.category || "—",
-        sector:        r.sector   || r.category || "—",
-      }));
+      /* ── Normalize backend fields with comprehensive fallback ── */
+      const all = raw.map(item => {
+        const amount = typeof item.amount === "number" ? item.amount / 1e6
+          : parseFloat(item.amount_usd || 0) / 1e6;
+        const date = item.date ? Math.floor(new Date(item.date).getTime() / 1000)
+          : item.announced_at ? Math.floor(new Date(item.announced_at).getTime() / 1000)
+          : item.created_at ? Math.floor(new Date(item.created_at).getTime() / 1000)
+          : null;
+        return {
+          name: item.project || item.name || item.protocol || "—",
+          round: item.round_type || item.round || item.stage || "—",
+          amount,
+          date,
+          leadInvestors: Array.isArray(item.investors) ? item.investors
+            : Array.isArray(item.leadInvestors) ? item.leadInvestors
+            : [],
+          category: item.category || item.sector || "—",
+          categoryGroup: item.categoryGroup || item.category || "—",
+          sector: item.sector || item.category || "—",
+        };
+      });
 
       all.sort((a, b) => (b.date || 0) - (a.date || 0));
 
@@ -249,10 +260,12 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
   const FILTERS = ["All", "RWA", "DeFi", "AI", "Infrastructure"];
 
   const filtered = raises.filter(r => {
-    if (raisesFilter === "All") return true;
-    if (raisesFilter === "RWA") return isRWA(r);
-    return (r.category || "").toLowerCase().includes(raisesFilter.toLowerCase())
-        || (r.categoryGroup || "").toLowerCase().includes(raisesFilter.toLowerCase());
+    // Default: only show RWA/DeFi/Infrastructure with amount > $1M
+    if (raisesFilter === "All") {
+      return (isRWA(r) || (r.category || "").toLowerCase().includes("defi") || (r.category || "").toLowerCase().includes("infrastructure")) && r.amount >= 1;
+    }
+    if (raisesFilter === "RWA") return isRWA(r) && r.amount >= 1;
+    return ((r.category || "").toLowerCase().includes(raisesFilter.toLowerCase()) || (r.categoryGroup || "").toLowerCase().includes(raisesFilter.toLowerCase())) && r.amount >= 1;
   });
 
   /* ── Shared nav ── */
@@ -343,8 +356,55 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
 
               {/* Left — VC Funding Table */}
               <div>
+                {/* Update Drawer */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Label Icon={DollarSign}>VC Funding Rounds</Label>
+                      {lastUpdate && (
+                        <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>
+                          Updated: {lastUpdate.toLocaleTimeString()}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      className="lm-action-btn"
+                      onClick={() => setShowUpdateDrawer(!showUpdateDrawer)}
+                      style={{ fontSize: 10 }}
+                    >
+                      {showUpdateDrawer ? "▲" : "▼"} Data Source
+                    </button>
+                  </div>
+
+                  {showUpdateDrawer && (
+                    <div className="lm-card" style={{
+                      padding: 14, borderLeft: `2px solid ${T.amber}`,
+                      marginBottom: 12, animation: "fadeUp .2s ease"
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, marginBottom: 4 }}>
+                            Data Source Information
+                          </div>
+                          <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.5 }}>
+                            Source: DeFiLlama / CryptoRank API · Real-time funding round data
+                          </div>
+                          <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>
+                            Coverage: Global crypto VC funding rounds · RWA/DeFi/Infrastructure focus
+                          </div>
+                        </div>
+                        <button className="lm-action-btn" onClick={fetchRaises} style={{ borderColor: `${T.amber}40` }}>
+                          <RefreshCw size={10} /> Refresh
+                        </button>
+                      </div>
+                      <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
+                        Default filter: RWA/DeFi/Infrastructure · Amount &gt; $1M · Sorted by date
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                  <Label Icon={DollarSign}>VC Funding Rounds</Label>
                   <div style={{ display: "flex", gap: 5 }}>
                     {FILTERS.map(f => (
                       <button key={f} className={`filter-btn${raisesFilter === f ? " active" : ""}`}
@@ -519,6 +579,154 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            </div>
+
+            {/* ══ TOKENIZED FUNDS & INDICES ══════════════════════════════════════ */}
+            <div style={{ marginTop: 24, marginBottom: 24 }}>
+              <div style={{ marginBottom: 14 }}>
+                <Label Icon={Globe}>TOKENIZED FUNDS & INDICES</Label>
+                <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body }}>
+                  Institutional-grade assets, live on-chain
+                </div>
+              </div>
+
+              {/* Tokenized Funds Cards - Horizontal scroll on desktop */}
+              <div className="mobile-funds-scroll" style={{
+                display: "flex", gap: 12, overflowX: "auto", paddingBottom: 8,
+              }}>
+                {[
+                  { name: "BUIDL", issuer: "BlackRock", aum: "$500M+", chain: "Ethereum", yield: "~5.0%", category: "Money Market", status: "LIVE" },
+                  { name: "BENJI", issuer: "Franklin Templeton", aum: "$400M+", chain: "Polygon/Stellar", yield: "~4.8%", category: "Treasury", status: "LIVE" },
+                  { name: "FOBXX", issuer: "WisdomTree", aum: "$45M", chain: "Stellar", yield: "~4.5%", category: "Treasury", status: "LIVE" },
+                  { name: "USDY", issuer: "Ondo Finance", aum: "$300M+", chain: "Ethereum/Solana", yield: "~5.2%", category: "Money Market", status: "LIVE" },
+                  { name: "OUSG", issuer: "Ondo Finance", aum: "$150M+", chain: "Ethereum", yield: "~4.7%", category: "Treasury", status: "LIVE" },
+                  { name: "BMMF", issuer: "Backed Finance", aum: "$80M+", chain: "Base", yield: "~4.6%", category: "Money Market", status: "LIVE" },
+                ].map((fund, i) => {
+                  const catColors = {
+                    "Money Market": { bg: "rgba(232,160,0,.10)", text: T.amber },
+                    "Treasury": { bg: "rgba(0,200,224,.10)", text: T.cyan },
+                    "Equity": { bg: "rgba(0,217,138,.10)", text: T.green },
+                  };
+                  const catColor = catColors[fund.category] || catColors["Money Market"];
+                  return (
+                    <div key={i} className="lm-card" style={{
+                      minWidth: 200, flex: "0 0 auto", padding: 16,
+                      borderTop: `2px solid ${catColor.text}`,
+                      transition: "transform .2s ease, box-shadow .2s ease",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 4px 20px ${catColor.text}20`; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em" }}>
+                            {fund.name}
+                          </div>
+                          <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, marginTop: 2 }}>
+                            {fund.issuer}
+                          </div>
+                        </div>
+                        <span className="lm-badge" style={{ background: "rgba(0,217,138,.12)", color: T.green, fontSize: 9 }}>
+                          {fund.status}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                        <span className="lm-badge" style={{ background: catColor.bg, color: catColor.text, fontSize: 9 }}>
+                          {fund.category}
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: T.amber, fontFamily: FONTS.mono }}>
+                          {fund.aum}
+                        </span>
+                      </div>
+                      <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
+                        <span>{fund.chain}</span>
+                        <span style={{ color: T.green }}>{fund.yield} APY</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ══ ON-CHAIN LISTING PIPELINE ══════════════════════════════════════ */}
+            <div style={{ marginBottom: 24 }}>
+              <Label Icon={Zap}>ON-CHAIN LISTING PIPELINE</Label>
+
+              <div className="mobile-pipeline-grid" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 12, marginTop: 12 }}>
+                {/* Left - Timeline */}
+                <div className="lm-card" style={{ background: "rgba(10,9,24,.92)", padding: 20 }}>
+                  {[
+                    { step: 1, title: "Asset Structuring", desc: "Legal wrapper, SPV design, regulatory alignment (SFC / MAS)", color: T.violet },
+                    { step: 2, title: "Tokenization", desc: "Smart contract deployment, ERC-1400 / ERC-3643 compliance standards", color: T.indigo },
+                    { step: 3, title: "Exchange Listing", desc: "CEX: OSL, HashKey · DEX: Uniswap V3, Orca (Solana)", color: T.blue },
+                    { step: 4, title: "Liquidity & Reporting", desc: "Market maker onboarding, daily NAV on-chain, automated reporting", color: T.cyan },
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: "flex", gap: 14, position: "relative", paddingBottom: i < 3 ? 20 : 0 }}>
+                      {i < 3 && (
+                        <div style={{
+                          position: "absolute", left: 7, top: 24, bottom: 0,
+                          width: 2, background: `linear-gradient(180deg,${item.color} 0%,${T.cyan} 100%)`,
+                          opacity: 0.4,
+                        }} />
+                      )}
+                      <div style={{
+                        width: 16, height: 16, borderRadius: "50%",
+                        background: item.color, flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 9, fontWeight: 700, color: "#fff", fontFamily: FONTS.mono,
+                      }}>
+                        {item.step}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 4 }}>
+                          {item.title}
+                        </div>
+                        <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.5 }}>
+                          {item.desc}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Right - CTA Card */}
+                <div className="lm-card" style={{
+                  padding: 20, borderLeft: `2px solid ${T.amber}`,
+                  display: "flex", flexDirection: "column", justifyContent: "center",
+                }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 8 }}>
+                    List Your Fund On-Chain
+                  </div>
+                  <div style={{ fontSize: 12, color: T.secondary, fontFamily: FONTS.body, marginBottom: 16, lineHeight: 1.5 }}>
+                    From structuring to first trade in 90 days
+                  </div>
+                  <div style={{ marginBottom: 18 }}>
+                    {[
+                      "SFC-compliant tokenization framework",
+                      "Direct access to OSL & HashKey liquidity",
+                      "AI-powered portfolio monitoring via Looloomi",
+                    ].map((point, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
+                        <span style={{ color: T.green, fontSize: 12 }}>✦</span>
+                        <span style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body }}>{point}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button style={{
+                    background: T.amber, color: "#000", border: "none",
+                    padding: "10px 16px", borderRadius: 6,
+                    fontSize: 12, fontWeight: 600, fontFamily: FONTS.display,
+                    cursor: "pointer", width: "100%",
+                    transition: "opacity .2s ease",
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = 0.9}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = 1}
+                  >
+                    Schedule a Consultation
+                  </button>
                 </div>
               </div>
             </div>
