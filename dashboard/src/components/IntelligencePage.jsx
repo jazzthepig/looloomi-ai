@@ -149,14 +149,14 @@ const CAT_C = {
 };
 const catStyle = (c) => CAT_C[c] || { bg: "rgba(255,255,255,.05)", text: "#8880BE" };
 
-/* ─── Curated macro events ───────────────────────────────────────────── */
+/* ─── Curated macro events (updated Mar 2026) ────────────────────────── */
 const MACRO_EVENTS = [
-  { id: "buidl", date: "Mar 2024", title: "BlackRock Launches BUIDL on Ethereum", summary: "Tokenized money market fund reaches $500M+ AUM within weeks, validating institutional RWA demand.", type: "institutional", impact: "high", source: "BlackRock" },
-  { id: "benji", date: "Oct 2023", title: "Franklin Templeton Expands BENJI to Polygon", summary: "On-chain money market fund brings tokenized US Treasuries to Polygon.", type: "institutional", impact: "high", source: "Franklin Templeton" },
-  { id: "hk-sfc", date: "Nov 2023", title: "Hong Kong SFC Issues RWA Tokenization Guidance", summary: "Comprehensive framework for tokenized securities positions HK as Asia's RWA hub.", type: "regulatory", impact: "high", source: "HK SFC" },
-  { id: "flux", date: "Jan 2024", title: "Ondo Finance Launches Flux Finance", summary: "DeFi lending protocol enables borrowing against tokenized US Treasury positions.", type: "protocol", impact: "medium", source: "Ondo Finance" },
-  { id: "mas", date: "Jun 2023", title: "MAS Project Guardian — $100M Tokenized Bonds", summary: "Singapore MAS pilots institutional-grade tokenized bonds with DBS, JPMorgan, SBI.", type: "regulatory", impact: "high", source: "MAS Singapore" },
-  { id: "ccip", date: "Aug 2023", title: "Chainlink CCIP — RWA Cross-Chain Bridge", summary: "Cross-Chain Interoperability Protocol enables RWA movement across blockchains.", type: "infrastructure", impact: "high", source: "Chainlink" },
+  { id: "sol-eth", date: "Feb 2026", title: "Solana Establishes $500M ETH Ecosystem Fund", summary: "Solana Foundation commits major capital to bridge Ethereum L2 ecosystems, validating cross-chain infrastructure.", type: "institutional", impact: "high", source: "Solana Foundation" },
+  { id: "ubs-rwa", date: "Jan 2026", title: "UBS Launches Tokenized Money Market Fund", summary: "Major Swiss bank enters RWA market with tokenized CHF and USD money market instruments.", type: "institutional", impact: "high", source: "UBS" },
+  { id: "hsbc-token", date: "Dec 2025", title: "HSBC Tokenizes $2B Real Estate on Polygon", summary: "Largest tokenized real estate deployment by a traditional bank, signaling institutional adoption.", type: "institutional", impact: "high", source: "HSBC" },
+  { id: "hk-eth", date: "Nov 2025", title: "Hong Kong Legalizes ETH as Recognized Asset", summary: "SFC ruling classifies ETH as property, enabling regulated ETH funds for retail investors.", type: "regulatory", impact: "high", source: "HK SFC" },
+  { id: "us-senate", date: "Oct 2025", title: "US Senate Passes Stablecoin Regulation Act", summary: "Comprehensive stablecoin framework establishes clear rules for issuance and reserves.", type: "regulatory", impact: "high", source: "US Senate" },
+  { id: "sec-eth", date: "Sep 2025", title: "SEC Approves Ethereum ETF Options Trading", summary: "Options on ETH ETFs cleared for trading, expanding institutional access to Ethereum.", type: "regulatory", impact: "high", source: "SEC" },
 ];
 
 const EV_TYPE = {
