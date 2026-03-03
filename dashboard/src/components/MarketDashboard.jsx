@@ -61,7 +61,7 @@ const CATEGORIES = ["All", "RWA", "Oracle", "L1", "L2", "DeFi"];
 const API_BASE = "/api/v1";
 const REFRESH_INTERVAL = 30000;
 
-/* ─── Global CSS ─────────────────────────────────────────────────────── */
+/* Global CSS */
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -223,6 +223,23 @@ const CSS = `
     border-color:rgba(68,114,255,.4);
     background:rgba(68,114,255,.10);
     color:#4472FF;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .mobile-hidden { display: none !important; }
+    .mobile-full { width: 100% !important; }
+    .mobile-stack { flex-direction: column !important; }
+    .mobile-pad { padding: 0 12px !important; }
+    .mobile-stat-grid { grid-template-columns: 1fr 1fr !important; }
+    .mobile-table-grid { grid-template-columns: 1.8fr 1fr 1fr !important; }
+    .mobile-table-header { grid-template-columns: 1.8fr 1fr 1fr !important; }
+    .mobile-nav { flex-wrap: wrap !important; gap: 6px !important; }
+    .mobile-nav-right { margin-top: 10px !important; width: 100% !important; justify-content: space-between !important; }
+    .mobile-7d-chart { display: none !important; }
+    .mobile-card-pad { padding: 12px 14px !important; }
+    .mobile-header { padding: 12px 0 14px !important; }
+    .mobile-footer { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
   }
 `;
 
@@ -523,10 +540,11 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
 
   /* ── Shared nav bar ── */
   const NavBar = () => (
-    <div style={{
+    <div className="mobile-header" style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "18px 0 20px",
       borderBottom: `1px solid ${T.border}`,
+      flexWrap: "wrap",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <span style={{
@@ -537,7 +555,7 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
         }}>
           LOOLOOMI
         </span>
-        <div style={{ display: "flex", gap: 4 }}>
+        <div className="mobile-nav" style={{ display: "flex", gap: 4 }}>
           {["Market", "Intelligence", "Quant GP"].map(tab => (
             <button key={tab} className={`lm-tab${activeTab === tab ? " active" : ""}`}
               onClick={() => setActiveTab(tab)}>
@@ -547,7 +565,7 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="mobile-nav-right" style={{ display: "flex", alignItems: "center", gap: 12 }}>
         {/* API status */}
         <div style={{
           display: "flex", alignItems: "center", gap: 6,
@@ -589,11 +607,11 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
         <div className="t-orb t-orb-4" />
       </div>
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
+      <div className="mobile-pad" style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
         <NavBar />
 
         {/* ── Stat cards ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
+        <div className="mobile-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
 
           {/* Fear & Greed */}
           <div className="lm-card" style={{ padding: "18px 20px" }}>
@@ -686,7 +704,7 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
         {/* ── Token Table ── */}
         <div className="lm-card" style={{ overflow: "hidden" }}>
           {/* Table header */}
-          <div style={{
+          <div className="mobile-table-header" style={{
             display: "grid", gridTemplateColumns: "2.2fr 1fr 1fr 1fr 80px",
             gap: 12, padding: "11px 20px",
             borderBottom: `1px solid ${T.border}`,
@@ -696,14 +714,14 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
             <span>Asset</span>
             <span style={{ textAlign: "right" }}>Price</span>
             <span style={{ textAlign: "right" }}>24h Change</span>
-            <span style={{ textAlign: "right" }}>Volume</span>
-            <span style={{ textAlign: "right" }}>7d Chart</span>
+            <span style={{ textAlign: "right" }} className="mobile-hidden">Volume</span>
+            <span style={{ textAlign: "right" }} className="mobile-7d-chart">7d Chart</span>
           </div>
 
           {/* Rows */}
           {loading
             ? Array(8).fill(0).map((_, i) => (
-                <div key={i} style={{
+                <div key={i} className="mobile-table-grid" style={{
                   display: "grid", gridTemplateColumns: "2.2fr 1fr 1fr 1fr 80px",
                   gap: 12, padding: "13px 20px", borderBottom: `1px solid ${T.border}`,
                   alignItems: "center",
@@ -720,7 +738,7 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
 
                 return (
                   <div key={token.symbol}>
-                    <div className="lm-row"
+                    <div className="lm-row mobile-table-grid"
                       onClick={() => setSelected(isSelected ? null : token)}
                       style={{
                         display: "grid", gridTemplateColumns: "2.2fr 1fr 1fr 1fr 80px",
@@ -768,14 +786,14 @@ export default function MarketDashboard({ activeTab, setActiveTab }) {
                       </div>
 
                       {/* Volume */}
-                      <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                      <div className="mobile-hidden" style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                         {p
                           ? <span style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.mono }}>{fmt.vol(p.volume_24h_usdt)}</span>
                           : <div className="sk" style={{ height: 13, width: 60 }} />}
                       </div>
 
                       {/* Chart */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                      <div className="mobile-7d-chart" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                         <Spark data={ohlcv[token.symbol]} positive={positive} />
                       </div>
                     </div>

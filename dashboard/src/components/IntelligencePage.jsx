@@ -81,6 +81,27 @@ const CSS = `
   .iframe-wrap iframe { width:100%;height:100%;border:none;background:white; }
 
   .lm-badge { display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-family:'Exo 2',sans-serif; }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .mobile-hidden { display: none !important; }
+    .mobile-full { width: 100% !important; }
+    .mobile-stack { flex-direction: column !important; }
+    .mobile-pad { padding: 0 12px !important; }
+    .mobile-stat-grid { grid-template-columns: 1fr 1fr !important; }
+    .mobile-table-header { grid-template-columns: 1.8fr 1fr 1fr !important; }
+    .mobile-table-row { grid-template-columns: 1.8fr 1fr 1fr !important; }
+    .mobile-nav { flex-wrap: wrap !important; gap: 6px !important; }
+    .mobile-nav-right { margin-top: 10px !important; width: 100% !important; justify-content: space-between !important; }
+    .mobile-card-pad { padding: 12px 14px !important; }
+    .mobile-header { padding: 12px 0 14px !important; }
+    .mobile-footer { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
+    .mobile-howitworks-grid { grid-template-columns: 1fr 1fr !important; }
+    .mobile-2col-grid { grid-template-columns: 1fr !important; }
+    .mobile-hero { padding: 24px 20px !important; }
+    .mobile-hero h1 { font-size: 28px !important; }
+    .mobile-metrics { gap: 24px !important; }
+  }
 `;
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
@@ -297,7 +318,7 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
         {activeTab === "Intelligence" && (
           <div>
             {/* Stat cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
+            <div className="mobile-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
               {[
                 { label: "90d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals`, color: T.blue },
                 { label: "RWA Sector (90d)",  value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA deals`, color: T.amber },
@@ -318,7 +339,7 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
             </div>
 
             {/* Main 2-col layout */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 16 }}>
+            <div className="mobile-2col-grid" style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 16 }}>
 
               {/* Left — VC Funding Table */}
               <div>
@@ -582,7 +603,7 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
             {/* How It Works */}
             <div style={{ marginBottom: 16 }}>
               <Label Icon={Zap}>How The Vault Works</Label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
+              <div className="mobile-howitworks-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
                 {[
                   { step:"01", title:"Deposit",      desc:"Subscribe with OSL stablecoin on Solana. Programmatic API available for AI agents.", color:T.blue,   icon:"↓" },
                   { step:"02", title:"AI Selection", desc:"Looloomi AI continuously scores and curates the GP universe using on-chain + quant signals.", color:T.violet, icon:"⚡" },
@@ -612,7 +633,7 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
             </div>
 
             {/* AI Agent + OSL */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+            <div className="mobile-2col-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
               <div className="lm-card" style={{ padding: 20, borderLeft: `2px solid ${T.blue}` }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10, fontFamily: FONTS.body }}>
                   ⚡ Built for AI Agents
