@@ -516,8 +516,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               </div>
             </div>
 
-            {/* Main 2-col layout */}
-            <div className="mobile-2col-grid" style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 16 }}>
+            {/* Main 2-col layout - responsive */}
+            <div className="mobile-2col-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 360px", gap: 16 }}>
 
               {/* Left — VC Funding Table */}
               <div>
@@ -848,7 +848,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             <div style={{ marginBottom: 24 }}>
               <Label Icon={Zap}>ON-CHAIN LISTING PIPELINE</Label>
 
-              <div className="mobile-pipeline-grid" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 12, marginTop: 12 }}>
+              <div className="mobile-pipeline-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 320px", gap: 12, marginTop: 12 }}>
                 {/* Left - Timeline */}
                 <div className="lm-card" style={{ background: "rgba(10,9,24,.92)", padding: 20 }}>
                   {[

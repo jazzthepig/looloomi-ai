@@ -136,6 +136,15 @@ async def get_vc_overlap():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/v1/vault/funds")
+async def get_vault_funds():
+    """Get all GP funds with websites"""
+    try:
+        from data.vc.funds_data import get_all_funds
+        return {"timestamp": datetime.now().isoformat(), "data": get_all_funds()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ── Portfolio optimization (unchanged, uses skfolio) ──────────────────────
 
 @app.post("/api/v1/portfolio/optimize")
