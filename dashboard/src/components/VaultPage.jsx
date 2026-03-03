@@ -59,6 +59,9 @@ const SAMPLE_FUNDS = [
     },
     grade: "A",
     description: "Institutional-grade DeFi quantitative trading fund specializing in yield optimization and arbitrage strategies.",
+    team: "Ex-Citadel, Jane Street, Two Sigma",
+    strategyDetail: "Multi-strategy DeFi: yield farming arbitrage, stablecoin spreads, LSD rebalancing",
+    advantage: "Institutional-grade risk management with real-time delta-neutral positioning",
   },
   {
     id: "gp-002",
@@ -84,6 +87,9 @@ const SAMPLE_FUNDS = [
     },
     grade: "B",
     description: "Venture capital focus on early-stage Web3 infrastructure and protocol investments.",
+    team: "Ex-Sequoia Asia, Blockchain.com Ventures",
+    strategyDetail: "Early-stage incubation: seed rounds, strategic tokens, ecosystem building",
+    advantage: "Strong Asia network with direct access to regional launchpads",
   },
   {
     id: "gp-003",
@@ -109,6 +115,9 @@ const SAMPLE_FUNDS = [
     },
     grade: "A",
     description: "Market-neutral crypto hedge fund with proven track record and institutional infrastructure.",
+    team: "Ex-Goldman Sachs, Citadel, Optiver",
+    strategyDetail: "Market-neutral: statistical arbitrage, pairs trading, volatility surface",
+    advantage: "Ultra-low latency infrastructure with institutional custody (Fireblocks, BitGo)",
   },
   {
     id: "gp-004",
@@ -134,6 +143,9 @@ const SAMPLE_FUNDS = [
     },
     grade: "C",
     description: "High-conviction momentum trading strategy with elevated risk profile.",
+    team: "Ex-Deribit, Bybit market makers",
+    strategyDetail: "Momentum & trend following across perpetual futures, options skew",
+    advantage: "High conviction, rapid capital deployment in emerging narratives",
   },
   {
     id: "gp-005",
@@ -159,11 +171,154 @@ const SAMPLE_FUNDS = [
     },
     grade: "B",
     description: "Research-driven long-only fund focusing on fundamental value plays in crypto assets.",
+    team: "Ex-Morgan Stanley, Bloomberg Research",
+    strategyDetail: "Fundamental research: protocol tokenomics, governance analysis, on-chain metrics",
+    advantage: "Deep fundamental research with proprietary valuation models",
+  },
+  // Additional On-chain / DeFi focused funds
+  {
+    id: "gp-006",
+    name: "Ethos Capital",
+    strategy: "On-Chain Active",
+    aum: 520000000,
+    yearFounded: 2021,
+    location: "Singapore",
+    performance: {
+      ytd: 28.5,
+      annualReturn: 32.1,
+      sharpeRatio: 1.72,
+      maxDrawdown: -14.2,
+    },
+    scores: {
+      performance: 23,
+      strategy: 18,
+      team: 17,
+      risk: 12,
+      transparency: 9,
+      aumTrackRecord: 9,
+      total: 88,
+    },
+    grade: "A",
+    description: "On-chain native fund using whale tracking, smart money flows, and protocol governance.",
+    team: "Early Ethereum validators, Nansen analysts",
+    strategyDetail: "Whale wallet tracking, governance voting strategies, MEV extraction",
+    advantage: "Direct on-chain alpha from wallet tracking and validator infrastructure",
+  },
+  {
+    id: "gp-007",
+    name: "LSD Alpha",
+    strategy: "LSD Focus",
+    aum: 180000000,
+    yearFounded: 2023,
+    location: "Berlin",
+    performance: {
+      ytd: 24.2,
+      annualReturn: 18.5,
+      sharpeRatio: 1.95,
+      maxDrawdown: -8.4,
+    },
+    scores: {
+      performance: 20,
+      strategy: 16,
+      team: 15,
+      risk: 14,
+      transparency: 9,
+      aumTrackRecord: 6,
+      total: 80,
+    },
+    grade: "B",
+    description: "Specialized liquid staking derivatives strategy with focus on restaking ecosystem.",
+    team: "Ex-Ethereum Foundation, Lido contributors",
+    strategyDetail: "LSD arbitrage, restaking tokens (EigenLayer), validator infrastructure",
+    advantage: "Deep technical expertise in Ethereum consensus and LSD mechanisms",
+  },
+  {
+    id: "gp-008",
+    name: "DeFi Pulse",
+    strategy: "Yield / Lending",
+    aum: 290000000,
+    yearFounded: 2022,
+    location: "Hong Kong",
+    performance: {
+      ytd: 16.8,
+      annualReturn: 14.2,
+      sharpeRatio: 1.55,
+      maxDrawdown: -10.5,
+    },
+    scores: {
+      performance: 18,
+      strategy: 17,
+      team: 16,
+      risk: 13,
+      transparency: 8,
+      aumTrackRecord: 7,
+      total: 79,
+    },
+    grade: "B",
+    description: "Active lending protocol selection and yield optimization across chains.",
+    team: "Ex-Compound, Aave governance participants",
+    strategyDetail: "Cross-chain yield optimization, supply/borrow rate arbitrage, collateral switching",
+    advantage: "Multi-chain yield aggregation with automated rebalancing",
+  },
+  {
+    id: "gp-009",
+    name: "Vaulted",
+    strategy: "Options / Volatility",
+    aum: 150000000,
+    yearFounded: 2023,
+    location: "London",
+    performance: {
+      ytd: 32.5,
+      annualReturn: 28.8,
+      sharpeRatio: 1.68,
+      maxDrawdown: -18.2,
+    },
+    scores: {
+      performance: 21,
+      strategy: 16,
+      team: 14,
+      risk: 11,
+      transparency: 8,
+      aumTrackRecord: 6,
+      total: 76,
+    },
+    grade: "B",
+    description: "Crypto-native options desk focused on volatility strategies and structured products.",
+    team: "Ex-Wolverine, DV Chain option traders",
+    strategyDetail: "Covered calls, protective puts, strangles, volatility arbitrage",
+    advantage: "Institutional options pricing with greeks management",
+  },
+  {
+    id: "gp-010",
+    name: "Terra Nova",
+    strategy: "Multi-Strategy",
+    aum: 680000000,
+    yearFounded: 2020,
+    location: "New York",
+    performance: {
+      ytd: 21.2,
+      annualReturn: 24.5,
+      sharpeRatio: 1.88,
+      maxDrawdown: -9.8,
+    },
+    scores: {
+      performance: 22,
+      strategy: 19,
+      team: 18,
+      risk: 13,
+      transparency: 9,
+      aumTrackRecord: 10,
+      total: 91,
+    },
+    grade: "A",
+    description: "Premier multi-strategy crypto fund with diversified approach across alpha sources.",
+    team: "Ex-Citadel, Point72, jump Trading",
+    strategyDetail: "Market making, quant strategies, venture, on-chain - balanced portfolio",
+    advantage: "Full-spectrum crypto exposure with institutional risk controls",
   },
 ];
-
-const FUND_TYPES = ["All", "DeFi Quant", "VC / Early Stage", "Market Neutral", "Trading / Momentum", "Long-Only / Research"];
-const LOCATIONS = ["All", "Singapore", "Hong Kong", "London", "Dubai", "New York"];
+const FUND_TYPES = ["All", "DeFi Quant", "VC / Early Stage", "Market Neutral", "Trading / Momentum", "Long-Only / Research", "On-Chain Active", "LSD Focus", "Yield / Lending", "Options / Volatility", "Multi-Strategy"];
+const LOCATIONS = ["All", "Singapore", "Hong Kong", "London", "Dubai", "New York", "Berlin"];
 
 /* ─── CSS ────────────────────────────────────────────────────────────── */
 const CSS = `
@@ -365,13 +520,18 @@ export default function VaultPage({ activeTab, setActiveTab }) {
                 <div style={{ fontFamily: FONTS.display, fontWeight: 600, color: T.primary, fontSize: 14 }}>
                   {fund.name}
                 </div>
-                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 11, color: T.cyan, fontFamily: FONTS.mono }}>{fund.strategy}</span>
                   <span style={{ fontSize: 11, color: T.muted }}>|</span>
                   <span style={{ fontSize: 11, color: T.secondary }}>{fund.location}</span>
                   <span style={{ fontSize: 11, color: T.muted }}>|</span>
                   <span style={{ fontSize: 11, color: T.secondary }}>{formatAUM(fund.aum)} AUM</span>
                 </div>
+                {fund.team && (
+                  <div style={{ fontSize: 10, color: T.muted, marginTop: 4 }}>
+                    {fund.team}
+                  </div>
+                )}
               </div>
 
               {/* Performance */}
@@ -427,6 +587,90 @@ export default function VaultPage({ activeTab, setActiveTab }) {
             </div>
           ))}
         </div>
+
+        {/* Selected Fund Detail */}
+        {selectedFund && (
+          <div className="lm-card" style={{ marginTop: 20, padding: 20, borderLeft: `3px solid ${getGradeColor(selectedFund.grade)}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <h3 style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: T.primary, margin: 0 }}>
+                    {selectedFund.name}
+                  </h3>
+                  <span style={{
+                    padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 600,
+                    background: `${getGradeColor(selectedFund.grade)}20`, color: getGradeColor(selectedFund.grade),
+                  }}>
+                    Grade {selectedFund.grade}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: T.secondary, marginTop: 6 }}>
+                  {selectedFund.strategy} · {selectedFund.location} · {formatAUM(selectedFund.aum)} AUM
+                </div>
+              </div>
+              <button onClick={() => setSelectedFund(null)} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 18 }}>
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+              <div>
+                <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Team Background
+                </div>
+                <div style={{ fontSize: 13, color: T.primary, lineHeight: 1.6 }}>
+                  {selectedFund.team || "—"}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Core Strategy
+                </div>
+                <div style={{ fontSize: 13, color: T.primary, lineHeight: 1.6 }}>
+                  {selectedFund.strategyDetail || selectedFund.description}
+                </div>
+              </div>
+            </div>
+
+            {selectedFund.advantage && (
+              <div style={{ marginTop: 16, padding: 12, background: "rgba(68,114,255,.05)", borderRadius: 8, border: `1px solid ${T.blue}30` }}>
+                <div style={{ fontSize: 11, color: T.blue, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+                  Key Advantage
+                </div>
+                <div style={{ fontSize: 13, color: T.primary }}>
+                  {selectedFund.advantage}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>YTD</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: selectedFund.performance.ytd >= 0 ? T.green : T.red, fontFamily: FONTS.mono }}>
+                  {selectedFund.performance.ytd >= 0 ? "+" : ""}{selectedFund.performance.ytd}%
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Annual</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>
+                  +{selectedFund.performance.annualReturn}%
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Sharpe</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>
+                  {selectedFund.performance.sharpeRatio}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Max DD</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: T.amber, fontFamily: FONTS.mono }}>
+                  {selectedFund.performance.maxDrawdown}%
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Score Breakdown Legend */}
         <div style={{ marginTop: 20, padding: 16, background: "rgba(10,9,24,.5)", borderRadius: 10, border: `1px solid ${T.border}` }}>

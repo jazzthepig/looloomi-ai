@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   RefreshCw, ExternalLink, Zap, Building2,
-  DollarSign, Globe, Activity, Users
+  DollarSign, Globe, Activity, Users, Shield
 } from "lucide-react";
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
@@ -157,6 +157,49 @@ const MACRO_EVENTS = [
   { id: "hk-eth", date: "Nov 2025", title: "Hong Kong Legalizes ETH as Recognized Asset", summary: "SFC ruling classifies ETH as property, enabling regulated ETH funds for retail investors.", type: "regulatory", impact: "high", source: "HK SFC" },
   { id: "us-senate", date: "Oct 2025", title: "US Senate Passes Stablecoin Regulation Act", summary: "Comprehensive stablecoin framework establishes clear rules for issuance and reserves.", type: "regulatory", impact: "high", source: "US Senate" },
   { id: "sec-eth", date: "Sep 2025", title: "SEC Approves Ethereum ETF Options Trading", summary: "Options on ETH ETFs cleared for trading, expanding institutional access to Ethereum.", type: "regulatory", impact: "high", source: "SEC" },
+];
+
+/* ─── Curated RWA Projects (Mar 2026) ────────────────────────────────── */
+const RWA_PROJECTS = [
+  // Tokenized Treasuries
+  { id: "ondo", name: "Ondo Finance", category: "Treasuries", tvl: 450000000, apy: 4.8, description: "Tokenized US Treasuries (OUSG, OMMF)", chain: "Ethereum", investors: ["Founders Fund", "Coinbase Ventures"] },
+  { id: "富力", name: "Franklin Templeton", category: "Treasuries", tvl: 380000000, apy: 4.5, description: "BENJI - On-chain US Treasury Fund", chain: "Polygon", investors: ["Franklin Templeton"] },
+  { id: "blackrock", name: "BlackRock", category: "Treasuries", tvl: 1200000000, apy: 4.3, description: "BUIDL - Tokenized Money Market Fund", chain: "Ethereum", investors: ["BlackRock"] },
+  { id: "circle", name: "Circle", category: "Stablecoin", tvl: 76000000000, apy: 0, description: "USDC - Regulated Stablecoin", chain: "Multi-chain", investors: ["Goldman Sachs", "Accel"] },
+
+  // Real Estate
+  { id: "realty", name: "Realty DAO", category: "Real Estate", tvl: 85000000, apy: 12.5, description: "Fractional real estate ownership", chain: "Solana", investors: ["Republic", "Animoca Brands"] },
+  { id: "tangible", name: "Tangible", category: "Real Estate", tvl: 42000000, apy: 8.2, description: "Tokenized real world assets", chain: "Ethereum", investors: ["SIX Group"] },
+  { id: "implied", name: "Implied Finance", category: "Real Estate", tvl: 18000000, apy: 15.0, description: "Real estate debt protocol", chain: "Ethereum", investors: ["Dragonfly"] },
+
+  // Commodities
+  { id: "tgold", name: "Trove Gold", category: "Commodities", tvl: 120000000, apy: 2.1, description: "Gold-backed tokens", chain: "Ethereum", investors: ["SIX Group"] },
+  { id: "koi", name: "Koi Finance", category: "Commodities", tvl: 8500000, apy: 3.5, description: "Precious metals lending", chain: "Solana", investors: ["Solana Ventures"] },
+
+  // Private Credit
+  { id: "maple", name: "Maple Finance", category: "Private Credit", tvl: 380000000, apy: 12.0, description: "Unsecured lending for institutional borrowers", chain: "Ethereum", investors: ["Polychain", "Galaxy"] },
+  { id: "centrifuge", name: "Centrifuge", category: "Private Credit", tvl: 220000000, apy: 9.5, description: "Asset financing protocol", chain: "Ethereum", investors: ["a16z", "Polychain"] },
+  { id: "credix", name: "Credix", category: "Private Credit", tvl: 95000000, apy: 14.0, description: "Credit marketplace for emerging markets", chain: "Solana", investors: ["Greylock", "Variant"] },
+
+  // Derivatives
+  { id: "dydx", name: "dYdX", category: "Derivatives", tvl: 1200000000, apy: 0, description: "Decentralized perpetual futures", chain: "Cosmos", investors: ["a16z", "Polychain"] },
+  { id: "gmx", name: "GMX", category: "Derivatives", tvl: 680000000, apy: 0, description: "Decentralized perpetual trading", chain: "Arbitrum", investors: ["Framework"] },
+
+  // Infrastructure
+  { id: "chainlink", name: "Chainlink", category: "Oracle", tvl: 0, apy: 0, description: "Cross-chain data infrastructure", chain: "Multi-chain", investors: ["a16z", "SoftBank"] },
+  { id: "pyth", name: "Pyth", category: "Oracle", tvl: 0, apy: 0, description: "Oracle for financial data", chain: "Solana", investors: ["a16z", "Jump"] },
+];
+
+/* ─── Curated Active VCs (Mar 2026) ──────────────────────────────────── */
+const ACTIVE_VCS = [
+  { name: "a16z crypto", deals: 145, portfolio: ["Lido", "Arbitrum", "Coinbase", "Anthropic"], focus: "Infrastructure" },
+  { name: "Paradigm", deals: 89, portfolio: ["Uniswap", "dYdX", "Flashbots"], focus: "DeFi" },
+  { name: "Polychain", deals: 156, portfolio: ["Compound", "Maple", "Centrifuge"], focus: "DeFi/RWA" },
+  { name: "Dragonfly", deals: 78, portfolio: ["MakerDAO", "Near", "Mystiko"], focus: "Multi-chain" },
+  { name: "Pantera", deals: 210, portfolio: ["Solana", "Circle", "Bitwise"], focus: "Infrastructure" },
+  { name: "Coinbase Ventures", deals: 420, portfolio: ["OpenSea", "Ethereum", "Optimism"], focus: "Ecosystem" },
+  { name: "Binance Labs", deals: 180, portfolio: ["Polygon", "Injective", "Celestia"], focus: "Infrastructure" },
+  { name: "Solana Ventures", deals: 95, portfolio: ["Jupiter", "Marginfi", "Kamino"], focus: "Solana" },
 ];
 
 const EV_TYPE = {
@@ -350,6 +393,63 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
                   <div style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.body }}>{s.sub}</div>
                 </div>
               ))}
+            </div>
+
+            {/* RWA Projects Section */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <Label Icon={Shield}>RWA Project Tracker</Label>
+                <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>
+                  {RWA_PROJECTS.length} protocols tracked
+                </span>
+              </div>
+              <div className="lm-card" style={{ overflow: "hidden" }}>
+                <div style={{
+                  display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1.5fr",
+                  padding: "12px 20px", borderBottom: `1px solid ${T.border}`,
+                  fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase",
+                  fontFamily: FONTS.body
+                }}>
+                  <div>Protocol</div>
+                  <div>Category</div>
+                  <div>TVL</div>
+                  <div>APY</div>
+                  <div>Chain</div>
+                </div>
+                {RWA_PROJECTS.slice(0, 12).map((p, idx) => (
+                  <div key={p.id} className="lm-row" style={{
+                    display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1.5fr",
+                    padding: "14px 20px", borderBottom: `1px solid ${T.border}`,
+                    alignItems: "center",
+                  }}>
+                    <div>
+                      <div style={{ fontFamily: FONTS.display, fontWeight: 600, color: T.primary, fontSize: 13 }}>
+                        {p.name}
+                      </div>
+                      <div style={{ fontSize: 10, color: T.secondary, marginTop: 2 }}>
+                        {p.description}
+                      </div>
+                    </div>
+                    <div>
+                      <span style={{
+                        padding: "3px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+                        background: catStyle(p.category).bg, color: catStyle(p.category).text,
+                      }}>
+                        {p.category}
+                      </span>
+                    </div>
+                    <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: T.green }}>
+                      {p.tvl >= 1e9 ? `$${(p.tvl/1e9).toFixed(1)}B` : p.tvl >= 1e6 ? `$${(p.tvl/1e6).toFixed(0)}M` : `$${(p.tvl/1e3).toFixed(0)}K`}
+                    </div>
+                    <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: p.apy > 0 ? T.green : T.muted }}>
+                      {p.apy > 0 ? `${p.apy}%` : "—"}
+                    </div>
+                    <div style={{ fontSize: 11, color: T.secondary }}>
+                      {p.chain}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Main 2-col layout */}
@@ -550,6 +650,34 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
                     fontFamily: FONTS.body, padding: "4px 0", display: "flex", alignItems: "center", gap: 7 }}>
                     <Globe size={10} /> Macro Events
                   </div>
+
+                  {/* Divider */}
+                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase",
+                    fontFamily: FONTS.body, padding: "4px 0", display: "flex", alignItems: "center", gap: 7, marginTop: 16 }}>
+                    <Users size={10} /> Active VCs
+                  </div>
+
+                  {/* Curated Active VCs */}
+                  {ACTIVE_VCS.slice(0, 6).map((vc, i) => (
+                    <div key={vc.name} className="lm-card" style={{
+                      padding: 12, marginBottom: 8, animation: `fadeUp .3s ease ${(i+5)*.07}s both`,
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                        <span style={{ fontFamily: FONTS.display, fontWeight: 600, color: T.primary, fontSize: 12 }}>
+                          {vc.name}
+                        </span>
+                        <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.green }}>
+                          {vc.deals} deals
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 10, color: T.amber, marginBottom: 4 }}>
+                        Focus: {vc.focus}
+                      </div>
+                      <div style={{ fontSize: 10, color: T.secondary }}>
+                        {vc.portfolio.slice(0, 4).join(", ")}
+                      </div>
+                    </div>
+                  ))}
 
                   {/* Curated macro events */}
                   {MACRO_EVENTS.slice(0, 4).map((ev, i) => {
