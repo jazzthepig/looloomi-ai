@@ -183,6 +183,7 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
   const [lastUpdate, setLastUpdate]     = useState(null);
   const [stats, setStats]               = useState(null);
   const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
+  const [iframeError, setIframeError]   = useState(false);
 
   useEffect(() => {
     const id = "lm-intel-css";
@@ -912,8 +913,20 @@ export default function IntelligencePage({ activeTab, setActiveTab }) {
 
             {/* EST Alpha iframe */}
             <div className="iframe-wrap">
-              <iframe src="https://est.cc" title="EST Alpha — Quantitative GP" allow="fullscreen"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" />
+              {iframeError ? (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", flexDirection: "column", gap: 12, color: T.muted }}>
+                  <div style={{ fontSize: 14, fontFamily: FONTS.body }}>EST Alpha GP Dashboard</div>
+                  <div style={{ fontSize: 12, color: T.secondary, fontFamily: FONTS.body }}>Coming Soon</div>
+                </div>
+              ) : (
+                <iframe
+                  src="https://est.cc"
+                  title="EST Alpha — Quantitative GP"
+                  allow="fullscreen"
+                  onError={() => setIframeError(true)}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                />
+              )}
             </div>
 
             <div style={{ marginTop: 10, fontSize: 10, color: T.dim, textAlign: "center", fontFamily: FONTS.body }}>
