@@ -328,7 +328,14 @@ export default function App() {
         @media (max-width: 900px) {
           nav {
             overflow-x: auto;
-            padding: 12px 20px;
+            padding: 10px 12px;
+          }
+          nav span[style*="fontFamily: FONTS.display"] {
+            font-size: 16px !important;
+          }
+          nav button {
+            padding: 6px 10px !important;
+            font-size: 12px !important;
           }
         }
 
@@ -342,12 +349,17 @@ export default function App() {
         /* ── RESPONSIVE: Section padding for different viewports ── */
         @media (max-width: 480px) {
           section {
-            padding: 60px 16px !important;
+            padding: 24px 12px !important;
           }
         }
         @media (min-width: 481px) and (max-width: 768px) {
           section {
-            padding: 70px 24px !important;
+            padding: 40px 16px !important;
+          }
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+          section {
+            padding: 60px 32px !important;
           }
         }
         @media (min-width: 1400px) {
@@ -369,6 +381,18 @@ export default function App() {
           }
         }
 
+        /* ── RESPONSIVE: Page headers ── */
+        @media (max-width: 768px) {
+          section h1 {
+            font-size: 22px !important;
+            margin-bottom: 12px !important;
+          }
+          section > div > div:first-child {
+            margin-top: 16px !important;
+            margin-bottom: 16px !important;
+          }
+        }
+
         /* ── CARD TRANSPARENCY ── */
         .lm-card, .card, [class*="card"] {
           background: rgba(255, 255, 255, 0.05) !important;
@@ -381,7 +405,7 @@ export default function App() {
 }
 
 const sectionStyle = (index) => ({
-  minHeight: "100vh",
+  minHeight: "auto",
   padding: "80px 64px",
   background: "transparent",
   borderTop: "1px solid rgba(255,255,255,0.04)",
