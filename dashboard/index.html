@@ -1,13 +1,470 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dashboard</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CometCloud — Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Exo+2:ital,wght@0,200;0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100%; height:100%;
+  background:#010812;
+  overflow:hidden;
+  font-family:'Syne', sans-serif;
+}
+
+/* ═══════════════════════════════════════════
+   FIXED BACKGROUND LAYERS
+═══════════════════════════════════════════ */
+.field {
+  position:fixed; inset:0;
+  background: radial-gradient(ellipse 180% 140% at 50% 45%,
+    #071a4a 0%, #030f2a 50%, #010812 100%);
+  animation: fieldBreath 22s ease-in-out infinite alternate;
+  z-index:0;
+}
+@keyframes fieldBreath {
+  0%   { filter: hue-rotate(0deg)  brightness(1.00); }
+  100% { filter: hue-rotate(-8deg) brightness(1.06); }
+}
+
+.grain {
+  position:fixed; inset:0; opacity:0.022; pointer-events:none; z-index:1;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px 200px;
+}
+
+/* ═══════════════════════════════════════════
+   OUTER BLUE FRAME
+═══════════════════════════════════════════ */
+.outer-frame {
+  position:fixed;
+  top:50%; left:50%;
+  width:78vw; height:54vw;
+  max-width:1080px; max-height:720px;
+  transform:translate(-50%, -50%);
+  border:1px solid rgba(37,99,235,0.42);
+  box-shadow:
+    inset 0 0 60px 8px  rgba(37,99,235,0.08),
+    0 0 40px  10px rgba(37,99,235,0.22),
+    0 0 100px 30px rgba(30,58,138,0.14),
+    0 0 220px 70px rgba(7,26,74,0.20);
+  animation: framePulse 14s ease-in-out infinite alternate;
+  pointer-events:none; z-index:2;
+  transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.outer-frame::before, .outer-frame::after {
+  content:''; position:absolute;
+  width:18px; height:18px;
+  border-color:rgba(99,102,241,0.55); border-style:solid;
+}
+.outer-frame::before { top:-1px; left:-1px; border-width:2px 0 0 2px; }
+.outer-frame::after  { bottom:-1px; right:-1px; border-width:0 2px 2px 0; }
+@keyframes framePulse {
+  0%   { border-color:rgba(37,99,235,0.35); }
+  100% { border-color:rgba(99,102,241,0.58); }
+}
+
+/* ═══════════════════════════════════════════
+   RINGS (5 CIS PILLARS)
+═══════════════════════════════════════════ */
+.rings-container {
+  position:fixed; top:50%; left:50%;
+  pointer-events:none; z-index:2;
+}
+.ring {
+  position:absolute; top:50%; left:50%;
+  border-radius:50%; border:1px solid transparent;
+  transform-origin:center;
+}
+.ring-1 {
+  width:52vw; height:36vw; max-width:720px; max-height:500px;
+  margin-top:calc(-18vw); margin-left:calc(-26vw);
+  border-color:rgba(37,99,235,0.18);
+  box-shadow:0 0 20px 2px rgba(37,99,235,0.10);
+  animation:ring1 28s linear infinite;
+}
+.ring-2 {
+  width:44vw; height:30vw; max-width:600px; max-height:415px;
+  margin-top:calc(-15vw); margin-left:calc(-22vw);
+  border-color:rgba(99,102,241,0.16);
+  animation:ring2 35s linear infinite reverse;
+}
+.ring-3 {
+  width:36vw; height:25vw; max-width:500px; max-height:345px;
+  margin-top:calc(-12.5vw); margin-left:calc(-18vw);
+  border-color:rgba(124,58,237,0.18);
+  animation:ring3 42s linear infinite;
+}
+.ring-4 {
+  width:28vw; height:19vw; max-width:390px; max-height:265px;
+  margin-top:calc(-9.5vw); margin-left:calc(-14vw);
+  border-color:rgba(168,85,247,0.20);
+  animation:ring4 20s linear infinite reverse;
+}
+.ring-5 {
+  width:20vw; height:14vw; max-width:280px; max-height:195px;
+  margin-top:calc(-7vw); margin-left:calc(-10vw);
+  border-color:rgba(199,210,254,0.22);
+  animation:ring5 16s linear infinite;
+}
+@keyframes ring1 { from{transform:rotate(0deg)scaleX(1)scaleY(1)}   to{transform:rotate(360deg)scaleX(1.03)scaleY(0.98)} }
+@keyframes ring2 { from{transform:rotate(0deg)}                      to{transform:rotate(-360deg)} }
+@keyframes ring3 { from{transform:rotate(15deg)}                     to{transform:rotate(375deg)} }
+@keyframes ring4 { from{transform:rotate(0deg)scaleX(1)scaleY(1)}   to{transform:rotate(-360deg)scaleX(1.06)scaleY(0.95)} }
+@keyframes ring5 { from{transform:rotate(30deg)}                     to{transform:rotate(390deg)} }
+
+/* ═══════════════════════════════════════════
+   CONVERGENCE RAYS
+═══════════════════════════════════════════ */
+.rays {
+  position:fixed; top:50%; left:50%;
+  width:60vw; height:60vw; max-width:800px; max-height:800px;
+  margin-top:-30vw; margin-left:-30vw;
+  opacity:0.055;
+  animation:raysRot 80s linear infinite;
+  pointer-events:none; z-index:2;
+}
+@keyframes raysRot { from{transform:translate(-50%,-50%)rotate(0deg)} to{transform:translate(-50%,-50%)rotate(360deg)} }
+.rays svg { width:100%; height:100%; }
+
+/* ═══════════════════════════════════════════
+   CONVERGENCE CORE — interactive
+═══════════════════════════════════════════ */
+.core-container {
+  position:fixed; top:50%; left:50%;
+  width:13vw; height:9vw;
+  max-width:180px; max-height:125px;
+  transform:translate(-50%, -50%);
+  cursor:pointer; z-index:20;
+  transition: width 0.55s cubic-bezier(0.34,1.56,0.64,1),
+              height 0.55s cubic-bezier(0.34,1.56,0.64,1),
+              max-width 0.55s cubic-bezier(0.34,1.56,0.64,1),
+              max-height 0.55s cubic-bezier(0.34,1.56,0.64,1);
+  animation:corePulse 6s ease-in-out infinite alternate;
+}
+
+/* Hover state — 3× scale via size expansion */
+.core-container:hover {
+  width:39vw; height:27vw;
+  max-width:540px; max-height:375px;
+  animation:none; /* stop bobbing while hovered */
+}
+
+@keyframes corePulse {
+  0%  { transform:translate(-50%,-50%)scale(1.00); }
+  100%{ transform:translate(-50%,-50%)scale(1.08); }
+}
+
+/* Re-center on hover — override animation transform */
+.core-container:hover {
+  transform:translate(-50%,-50%) !important;
+}
+
+.core-inner {
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse 70% 70% at 50% 50%,
+    rgba(10,15,60,0.85) 0%,
+    rgba(30,20,100,0.90) 40%,
+    rgba(100,50,200,0.85) 70%,
+    rgba(140,70,240,0.60) 90%,
+    transparent 100%);
+  transition: opacity 0.4s ease;
+}
+.core-container:hover .core-inner {
+  background:radial-gradient(ellipse 70% 70% at 50% 50%,
+    rgba(20,25,80,0.90) 0%,
+    rgba(50,30,130,0.92) 40%,
+    rgba(120,60,220,0.88) 70%,
+    rgba(160,90,255,0.70) 90%,
+    transparent 100%);
+}
+
+.core-edge { position:absolute; }
+.core-edge-top {
+  top:-1px; left:10%; right:10%; height:55%;
+  background:linear-gradient(to bottom,rgba(165,180,255,0.70) 0%,rgba(124,58,237,0.25) 35%,transparent 100%);
+  filter:blur(8px); animation:cEBreath 5s ease-in-out infinite alternate;
+}
+.core-edge-bottom {
+  bottom:-1px; left:10%; right:10%; height:45%;
+  background:linear-gradient(to top,rgba(148,163,255,0.60) 0%,rgba(99,102,241,0.20) 35%,transparent 100%);
+  filter:blur(9px); animation:cEBreath 7s ease-in-out infinite alternate;
+}
+.core-edge-left {
+  left:-1px; top:8%; bottom:8%; width:50%;
+  background:linear-gradient(to right,rgba(165,180,255,0.65) 0%,rgba(99,102,241,0.18) 40%,transparent 100%);
+  filter:blur(10px); animation:cEBreath 8s ease-in-out infinite alternate;
+}
+.core-edge-right {
+  right:-1px; top:8%; bottom:8%; width:50%;
+  background:linear-gradient(to left,rgba(165,180,255,0.65) 0%,rgba(99,102,241,0.18) 40%,transparent 100%);
+  filter:blur(10px); animation:cEBreath 9s ease-in-out infinite alternate;
+}
+@keyframes cEBreath { 0%{opacity:.75} 100%{opacity:1} }
+
+.core-frame {
+  position:absolute; inset:0;
+  box-shadow:
+    inset 0 0 20px 4px  rgba(165,180,255,0.25),
+    inset 0 0 40px 10px rgba(124,58,237,0.14),
+    0 0 30px  8px  rgba(99,102,241,0.45),
+    0 0 70px  20px rgba(37,99,235,0.28),
+    0 0 150px 55px rgba(30,58,138,0.18),
+    0 0 300px 110px rgba(7,26,74,0.20);
+  animation:cFBreath 6s ease-in-out infinite alternate;
+  transition: box-shadow 0.5s ease;
+}
+.core-container:hover .core-frame {
+  box-shadow:
+    inset 0 0 40px 8px  rgba(165,180,255,0.38),
+    inset 0 0 80px 20px rgba(124,58,237,0.24),
+    0 0 60px  16px rgba(99,102,241,0.65),
+    0 0 140px 45px rgba(37,99,235,0.42),
+    0 0 280px 100px rgba(30,58,138,0.28),
+    0 0 500px 180px rgba(7,26,74,0.30);
+}
+@keyframes cFBreath {
+  0%  { box-shadow:inset 0 0 20px 4px rgba(165,180,255,0.20),inset 0 0 40px 10px rgba(124,58,237,0.10),0 0 30px 8px rgba(99,102,241,0.35),0 0 70px 20px rgba(37,99,235,0.20),0 0 150px 55px rgba(30,58,138,0.13),0 0 300px 110px rgba(7,26,74,0.15); }
+  100%{ box-shadow:inset 0 0 25px 6px rgba(165,180,255,0.32),inset 0 0 50px 14px rgba(124,58,237,0.20),0 0 40px 12px rgba(99,102,241,0.55),0 0 90px 28px rgba(37,99,235,0.36),0 0 200px 75px rgba(30,58,138,0.24),0 0 380px 140px rgba(7,26,74,0.26); }
+}
+
+/* ═══════════════════════════════════════════
+   EXPLORE BUTTON — appears on core hover
+═══════════════════════════════════════════ */
+.core-cta {
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition: opacity 0.35s ease 0.15s;
+  z-index:5;
+}
+.core-container:hover .core-cta {
+  opacity:1; pointer-events:all;
+}
+.btn-explore {
+  font-family:'Syne', sans-serif;
+  font-size:clamp(10px,1vw,13px);
+  font-weight:600; letter-spacing:0.28em;
+  text-transform:uppercase;
+  color:rgba(199,210,254,0.92);
+  background:rgba(30,58,138,0.28);
+  border:1px solid rgba(99,102,241,0.50);
+  padding:12px 32px;
+  border-radius:2px;
+  cursor:pointer;
+  backdrop-filter:blur(8px);
+  transition:all 0.25s ease;
+  white-space:nowrap;
+}
+.btn-explore:hover {
+  background:rgba(37,99,235,0.40);
+  border-color:rgba(129,140,248,0.80);
+  color:#fff;
+  box-shadow:0 0 28px rgba(99,102,241,0.35);
+}
+
+/* ═══════════════════════════════════════════
+   ORBITING NODES
+═══════════════════════════════════════════ */
+.nodes-layer {
+  position:fixed; top:50%; left:50%;
+  width:0; height:0;
+  pointer-events:none; z-index:3;
+}
+.node { position:absolute; border-radius:50%; }
+.node-1{width:3px;height:3px;background:rgba(165,180,255,0.8);box-shadow:0 0 8px 3px rgba(99,102,241,0.6); animation:nO1 18s linear infinite;}
+.node-2{width:2px;height:2px;background:rgba(37,99,235,0.9);  box-shadow:0 0 6px 2px rgba(37,99,235,0.7);  animation:nO2 24s linear infinite;}
+.node-3{width:4px;height:4px;background:rgba(124,58,237,0.85);box-shadow:0 0 10px 4px rgba(124,58,237,0.55);animation:nO3 31s linear infinite reverse;}
+.node-4{width:2px;height:2px;background:rgba(199,210,254,0.9);box-shadow:0 0 6px 2px rgba(199,210,254,0.5);animation:nO4 14s linear infinite;}
+.node-5{width:3px;height:3px;background:rgba(168,85,247,0.8); box-shadow:0 0 8px 3px rgba(168,85,247,0.6); animation:nO5 38s linear infinite reverse;}
+.node-6{width:2px;height:2px;background:rgba(37,99,235,0.85); box-shadow:0 0 6px 2px rgba(37,99,235,0.6);  animation:nO6 21s linear infinite;}
+.node-7{width:3px;height:3px;background:rgba(129,140,248,0.8);box-shadow:0 0 8px 3px rgba(129,140,248,0.55);animation:nO7 27s linear infinite reverse;}
+.node-8{width:2px;height:2px;background:rgba(212,168,67,0.7); box-shadow:0 0 6px 2px rgba(212,168,67,0.5); animation:nO8 33s linear infinite;}
+@keyframes nO1{0%{transform:rotate(0deg)   translateX(22vw)rotate(0deg)}   100%{transform:rotate(360deg) translateX(22vw)rotate(-360deg)}}
+@keyframes nO2{0%{transform:rotate(45deg)  translateX(18vw)rotate(-45deg)} 100%{transform:rotate(405deg) translateX(18vw)rotate(-405deg)}}
+@keyframes nO3{0%{transform:rotate(120deg) translateX(26vw)rotate(-120deg)}100%{transform:rotate(-240deg)translateX(26vw)rotate(240deg)}}
+@keyframes nO4{0%{transform:rotate(200deg) translateX(14vw)rotate(-200deg)}100%{transform:rotate(560deg) translateX(14vw)rotate(-560deg)}}
+@keyframes nO5{0%{transform:rotate(280deg) translateX(30vw)rotate(-280deg)}100%{transform:rotate(-80deg) translateX(30vw)rotate(80deg)}}
+@keyframes nO6{0%{transform:rotate(330deg) translateX(20vw)rotate(-330deg)}100%{transform:rotate(690deg) translateX(20vw)rotate(-690deg)}}
+@keyframes nO7{0%{transform:rotate(75deg)  translateX(24vw)rotate(-75deg)} 100%{transform:rotate(-285deg)translateX(24vw)rotate(285deg)}}
+@keyframes nO8{0%{transform:rotate(160deg) translateX(16vw)rotate(-160deg)}100%{transform:rotate(520deg) translateX(16vw)rotate(-520deg)}}
+
+/* ═══════════════════════════════════════════
+   FRAME TEXT LABELS
+═══════════════════════════════════════════ */
+
+/* Wrapper that matches outer-frame position exactly */
+.frame-labels {
+  position:fixed;
+  top:50%; left:50%;
+  width:78vw; max-width:1080px;
+  height:54vw; max-height:720px;
+  transform:translate(-50%,-50%);
+  pointer-events:none; z-index:10;
+}
+
+/* TOP — two lines, positioned inside frame near top edge */
+.label-top {
+  position:absolute;
+  top:6%;                          /* inside frame, not riding the border */
+  left:50%; transform:translateX(-50%);
+  white-space:nowrap;
+  font-family:'Syne', sans-serif;
+  font-size:clamp(24px, 3.2vw, 52px);
+  font-weight:800;
+  letter-spacing:-0.03em;
+  line-height:1.10;
+  text-align:center;
+  opacity:0;
+  animation:labelFadeIn 1.4s ease forwards 0.6s;
+}
+
+/* BOTTOM — clear of the border, sitting comfortably below */
+.label-bottom {
+  position:absolute;
+  bottom:-3.2em;                   /* further below the frame edge */
+  left:50%; transform:translateX(-50%);
+  white-space:nowrap;
+  font-family:'Syne', sans-serif;
+  font-size:clamp(10px, 1.15vw, 16px);
+  font-weight:400;
+  letter-spacing:0.20em;
+  text-transform:uppercase;
+  color:rgba(99,102,241,0.50);
+  text-shadow: 0 0 30px rgba(37,99,235,0.18);
+  opacity:0;
+  animation:labelFadeIn 1.4s ease forwards 1.0s;
+}
+.label-bottom em {
+  font-style:normal;
+  color:rgba(6,182,212,0.75);
+  letter-spacing:0.20em;
+}
+
+@keyframes labelFadeIn {
+  from { opacity:0; transform:translateX(-50%) translateY(8px); }
+  to   { opacity:1; transform:translateX(-50%) translateY(0); }
+}
+
+/* ═══════════════════════════════════════════
+   PAGE TRANSITION OVERLAY
+═══════════════════════════════════════════ */
+.transition-overlay {
+  position:fixed; inset:0;
+  background:#010812;
+  opacity:0; pointer-events:none;
+  z-index:1000;
+  transition:opacity 0.6s ease;
+}
+.transition-overlay.active {
+  opacity:1; pointer-events:all;
+}
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="field"></div>
+<div class="grain"></div>
+
+<!-- Outer blue frame -->
+<div class="outer-frame" id="outerFrame"></div>
+
+<!-- Rings -->
+<div class="rings-container">
+  <div class="ring ring-1"></div>
+  <div class="ring ring-2"></div>
+  <div class="ring ring-3"></div>
+  <div class="ring ring-4"></div>
+  <div class="ring ring-5"></div>
+</div>
+
+<!-- Rays -->
+<div class="rays">
+  <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="rgba(99,102,241,1)" stroke-width="0.5" fill="none">
+      <line x1="400" y1="400" x2="400" y2="0"/>
+      <line x1="400" y1="400" x2="800" y2="0"/>
+      <line x1="400" y1="400" x2="800" y2="400"/>
+      <line x1="400" y1="400" x2="800" y2="800"/>
+      <line x1="400" y1="400" x2="400" y2="800"/>
+      <line x1="400" y1="400" x2="0"   y2="800"/>
+      <line x1="400" y1="400" x2="0"   y2="400"/>
+      <line x1="400" y1="400" x2="0"   y2="0"/>
+      <line x1="400" y1="400" x2="600" y2="100"/>
+      <line x1="400" y1="400" x2="700" y2="200"/>
+      <line x1="400" y1="400" x2="700" y2="600"/>
+      <line x1="400" y1="400" x2="600" y2="700"/>
+      <line x1="400" y1="400" x2="200" y2="700"/>
+      <line x1="400" y1="400" x2="100" y2="600"/>
+      <line x1="400" y1="400" x2="100" y2="200"/>
+      <line x1="400" y1="400" x2="200" y2="100"/>
+    </g>
+  </svg>
+</div>
+
+<!-- Core — interactive -->
+<div class="core-container" id="core">
+  <div class="core-inner"></div>
+  <div class="core-edge core-edge-top"></div>
+  <div class="core-edge core-edge-bottom"></div>
+  <div class="core-edge core-edge-left"></div>
+  <div class="core-edge core-edge-right"></div>
+  <div class="core-frame"></div>
+  <!-- CTA shown on hover -->
+  <div class="core-cta">
+    <button class="btn-explore" id="btnExplore">Explore Intelligence</button>
+  </div>
+</div>
+
+<!-- Nodes -->
+<div class="nodes-layer">
+  <div class="node node-1"></div>
+  <div class="node node-2"></div>
+  <div class="node node-3"></div>
+  <div class="node node-4"></div>
+  <div class="node node-5"></div>
+  <div class="node node-6"></div>
+  <div class="node node-7"></div>
+  <div class="node node-8"></div>
+</div>
+
+<!-- Frame text labels -->
+<div class="frame-labels">
+  <div class="label-top" id="labelTop">
+    <div><span style="color:rgba(255,255,255,0.96);font-weight:800">CometCloud</span></div>
+    <div><span style="color:rgba(99,102,241,0.82);font-weight:500">Intelligence</span><span style="color:rgba(199,210,254,0.60);font-weight:400">&nbsp;Platform</span></div>
+  </div>
+  <div class="label-bottom">
+    Navigation&nbsp;Infrastructure&nbsp;for&nbsp;the&nbsp;<em>On&#8209;Chain</em>&nbsp;World
+  </div>
+</div>
+
+<!-- Transition overlay -->
+<div class="transition-overlay" id="overlay"></div>
+
+<script>
+// ── Mouse parallax ──────────────────────────────────────
+document.addEventListener('mousemove', e => {
+  const x = (e.clientX / window.innerWidth  - 0.5);
+  const y = (e.clientY / window.innerHeight - 0.5);
+  document.getElementById('outerFrame').style.transform =
+    `translate(calc(-50% + ${x * 6}px), calc(-50% + ${y * 4}px))`;
+  document.querySelector('.field').style.filter =
+    `hue-rotate(${x * 6}deg) brightness(${1 + Math.abs(y) * 0.04})`;
+});
+
+// ── Navigate to Market page ─────────────────────────────
+document.getElementById('btnExplore').addEventListener('click', () => {
+  const overlay = document.getElementById('overlay');
+  overlay.classList.add('active');
+  setTimeout(() => {
+    window.location.href = 'about.html';
+  }, 600);
+});
+</script>
+</body>
 </html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CometCloud — Market</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Auto-scroll to market section after load
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const el = document.getElementById('market');
+          if (el) el.scrollIntoView({ behavior: 'auto' });
+        }, 100);
+      });
+    </script>
+  </body>
+</html>

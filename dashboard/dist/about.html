@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CometCloud — Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Exo+2:ital,wght@0,200;0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100%; min-height:100%;
+  background:#010812;
+  font-family:'Syne', sans-serif;
+  color:#e2e8f0;
+  overflow-x:hidden;
+}
+
+/* ── FIXED BG ─────────────────────────────────── */
+.field {
+  position:fixed; inset:0;
+  background:radial-gradient(ellipse 180% 140% at 50% 45%,
+    #071a4a 0%, #030f2a 50%, #010812 100%);
+  animation:fieldBreath 22s ease-in-out infinite alternate;
+  z-index:0;
+}
+@keyframes fieldBreath {
+  0%  { filter:hue-rotate(0deg)  brightness(1.00); }
+  100%{ filter:hue-rotate(-8deg) brightness(1.06); }
+}
+.grain {
+  position:fixed; inset:0; opacity:0.022; pointer-events:none; z-index:1;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px 200px;
+}
+
+/* Subtle outer ring — echoes the homepage rings */
+.bg-ring {
+  position:fixed; top:50%; left:50%;
+  border-radius:50%; border:1px solid;
+  pointer-events:none; z-index:1;
+  transform:translate(-50%,-50%);
+}
+.bg-ring-1 {
+  width:90vw; height:60vw; max-width:1200px; max-height:800px;
+  border-color:rgba(37,99,235,0.07);
+  animation:ringDrift1 40s linear infinite;
+}
+.bg-ring-2 {
+  width:70vw; height:48vw; max-width:960px; max-height:640px;
+  border-color:rgba(99,102,241,0.06);
+  animation:ringDrift1 55s linear infinite reverse;
+}
+@keyframes ringDrift1 { from{transform:translate(-50%,-50%)rotate(0deg)} to{transform:translate(-50%,-50%)rotate(360deg)} }
+
+/* ── PAGE ENTER FADE ── */
+.t-overlay {
+  position:fixed; inset:0; background:#010812;
+  opacity:1; z-index:1000; pointer-events:none;
+  animation:overlayOut 0.7s ease forwards 0.05s;
+}
+@keyframes overlayOut { from{opacity:1} to{opacity:0} }
+
+/* ── LAYOUT ───────────────────────────────────── */
+.page {
+  position:relative; z-index:10;
+  min-height:100vh;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:80px 48px 80px;
+}
+
+/* ── WORDMARK (top-left, minimal) ── */
+.wordmark {
+  position:fixed; top:28px; left:40px;
+  font-family:'Syne', sans-serif;
+  font-size:14px; font-weight:700;
+  letter-spacing:0.08em;
+  color:rgba(199,210,254,0.45);
+  text-decoration:none; z-index:50;
+  transition:color 0.3s;
+}
+.wordmark:hover { color:rgba(199,210,254,0.80); }
+
+/* ── BACK LINK ── */
+.back-link {
+  position:fixed; top:28px; right:40px;
+  font-family:'Syne', sans-serif;
+  font-size:11px; font-weight:500;
+  letter-spacing:0.22em; text-transform:uppercase;
+  color:rgba(99,102,241,0.38);
+  cursor:pointer; z-index:50;
+  transition:color 0.3s;
+}
+.back-link:hover { color:rgba(99,102,241,0.70); }
+
+/* ── CONTENT BLOCK ── */
+.content {
+  max-width:860px; width:100%;
+  display:flex; flex-direction:column;
+  align-items:center; text-align:center;
+  gap:0;
+}
+
+/* Eyebrow */
+.eyebrow {
+  font-family:'Syne', sans-serif;
+  font-size:10px; font-weight:500;
+  letter-spacing:0.40em; text-transform:uppercase;
+  color:rgba(37,99,235,0.65);
+  margin-bottom:28px;
+  opacity:0; animation:fadeUp 1s ease forwards 0.2s;
+}
+
+/* Main heading */
+.heading {
+  font-family:'Syne', sans-serif;
+  font-size:clamp(32px,5vw,64px);
+  font-weight:800;
+  line-height:1.02; letter-spacing:-0.03em;
+  margin-bottom:24px;
+  opacity:0; animation:fadeUp 1s ease forwards 0.4s;
+}
+.heading .w1 { color:rgba(255,255,255,0.96); }
+.heading .w2 {
+  color:rgba(99,102,241,0.85);
+  font-weight:500;
+}
+.heading .w3 { color:rgba(199,210,254,0.65); font-weight:400; }
+
+/* Sub description */
+.sub {
+  font-family:'Exo 2', sans-serif;
+  font-size:clamp(14px,1.5vw,17px);
+  font-weight:300; line-height:1.75;
+  color:rgba(148,163,184,0.85);
+  max-width:580px; margin-bottom:60px;
+  opacity:0; animation:fadeUp 1s ease forwards 0.6s;
+}
+.sub em {
+  font-style:normal;
+  color:rgba(6,182,212,0.90);
+}
+
+/* Horizontal divider line */
+.rule {
+  width:200px; height:1px; margin-bottom:52px;
+  background:linear-gradient(to right,transparent,rgba(37,99,235,0.35),transparent);
+  opacity:0; animation:fadeUp 1s ease forwards 0.65s;
+}
+
+/* ── THREE PILLARS ── */
+.pillars {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:20px; width:100%; margin-bottom:52px;
+  opacity:0; animation:fadeUp 1s ease forwards 0.8s;
+}
+.pillar {
+  background:rgba(1,8,18,0.55);
+  border:1px solid rgba(37,99,235,0.12);
+  border-radius:12px; padding:28px 24px;
+  backdrop-filter:blur(12px);
+  text-align:left;
+  position:relative; overflow:hidden;
+  transition:border-color 0.3s, background 0.3s;
+}
+.pillar::before {
+  content:'';
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,
+    var(--glow) 0%, transparent 70%);
+  opacity:0; transition:opacity 0.4s;
+}
+.pillar:hover { border-color:var(--border-hover); background:rgba(7,26,74,0.35); }
+.pillar:hover::before { opacity:1; }
+
+.pillar-1 { --glow:rgba(6,182,212,0.08);  --border-hover:rgba(6,182,212,0.30); }
+.pillar-2 { --glow:rgba(212,168,67,0.08); --border-hover:rgba(212,168,67,0.28); }
+.pillar-3 { --glow:rgba(124,58,237,0.08); --border-hover:rgba(124,58,237,0.30); }
+
+.pillar-icon {
+  width:36px; height:36px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; margin-bottom:16px;
+  position:relative; z-index:1;
+}
+.icon-cyan   { background:rgba(6,182,212,0.08);  border:1px solid rgba(6,182,212,0.20);  color:#06b6d4; }
+.icon-gold   { background:rgba(212,168,67,0.08); border:1px solid rgba(212,168,67,0.20); color:#d4a843; }
+.icon-violet { background:rgba(124,58,237,0.08); border:1px solid rgba(124,58,237,0.20); color:#a78bfa; }
+
+.pillar-title {
+  font-family:'Syne', sans-serif;
+  font-size:15px; font-weight:700;
+  color:#e2e8f0; margin-bottom:8px;
+  position:relative; z-index:1;
+}
+.pillar-desc {
+  font-family:'Exo 2', sans-serif;
+  font-size:12px; line-height:1.65;
+  color:rgba(71,85,105,1);
+  position:relative; z-index:1;
+}
+.pillar-tag {
+  margin-top:16px;
+  font-family:'Syne', sans-serif;
+  font-size:9px; font-weight:600;
+  letter-spacing:0.22em; text-transform:uppercase;
+  position:relative; z-index:1;
+}
+.tag-cyan   { color:rgba(6,182,212,0.45); }
+.tag-gold   { color:rgba(212,168,67,0.45); }
+.tag-violet { color:rgba(124,58,237,0.55); }
+
+/* ── CTA BUTTON ── */
+.cta-wrap {
+  display:flex; flex-direction:column;
+  align-items:center; gap:16px;
+  opacity:0; animation:fadeUp 1s ease forwards 1.0s;
+}
+.btn-enter {
+  font-family:'Syne', sans-serif;
+  font-size:12px; font-weight:600;
+  letter-spacing:0.30em; text-transform:uppercase;
+  color:rgba(199,210,254,0.90);
+  background:rgba(30,58,138,0.25);
+  border:1px solid rgba(99,102,241,0.42);
+  padding:14px 48px; border-radius:2px;
+  cursor:pointer; backdrop-filter:blur(8px);
+  transition:all 0.3s ease;
+  position:relative; overflow:hidden;
+}
+.btn-enter::after {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(120deg,transparent 0%,rgba(99,102,241,0.08) 50%,transparent 100%);
+  transform:translateX(-100%);
+  transition:transform 0.5s ease;
+}
+.btn-enter:hover {
+  background:rgba(37,99,235,0.32);
+  border-color:rgba(129,140,248,0.70);
+  color:#fff;
+  box-shadow:0 0 32px rgba(99,102,241,0.28), 0 0 80px rgba(37,99,235,0.12);
+}
+.btn-enter:hover::after { transform:translateX(100%); }
+
+.btn-hint {
+  font-family:'Exo 2', sans-serif;
+  font-size:10px; letter-spacing:0.18em;
+  color:rgba(30,58,138,0.70);
+  text-transform:uppercase;
+}
+
+/* ── BOTTOM INDEX DOTS ── */
+.page-dots {
+  position:fixed; bottom:28px; left:50%;
+  transform:translateX(-50%);
+  display:flex; gap:8px; z-index:50;
+}
+.dot {
+  width:5px; height:5px; border-radius:50%;
+  background:rgba(37,99,235,0.25);
+  transition:all 0.3s;
+}
+.dot.active {
+  background:rgba(99,102,241,0.70);
+  box-shadow:0 0 8px rgba(99,102,241,0.40);
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* Transition overlay for exit */
+.exit-overlay {
+  position:fixed; inset:0; background:#010812;
+  opacity:0; pointer-events:none; z-index:1000;
+  transition:opacity 0.55s ease;
+}
+.exit-overlay.active { opacity:1; pointer-events:all; }
+</style>
+</head>
+<body>
+
+<!-- BG -->
+<div class="field"></div>
+<div class="grain"></div>
+<div class="bg-ring bg-ring-1"></div>
+<div class="bg-ring bg-ring-2"></div>
+<div class="t-overlay"></div>
+<div class="exit-overlay" id="exitOverlay"></div>
+
+<!-- Wordmark -->
+<a class="wordmark" href="index.html">CometCloud</a>
+
+<!-- Back -->
+<div class="back-link" onclick="goBack()">← Back</div>
+
+<!-- Content -->
+<div class="page">
+  <div class="content">
+
+    <div class="eyebrow">CometCloud Intelligence Platform</div>
+
+    <h1 class="heading">
+      <span class="w1">Navigation</span><br>
+      <span class="w2">Infrastructure</span><br>
+      <span class="w3">for the On-Chain World</span>
+    </h1>
+
+    <p class="sub">
+      AI-powered intelligence combining <em>on-chain analytics</em>,
+      institutional fund intelligence, and RWA market data —
+      built for institutional investors and AI agents.
+    </p>
+
+    <div class="rule"></div>
+
+    <!-- 3 Pillars -->
+    <div class="pillars">
+
+      <div class="pillar pillar-1">
+        <div class="pillar-icon icon-cyan">◆</div>
+        <div class="pillar-title">CIS Scoring</div>
+        <div class="pillar-desc">Open-source 5-pillar asset evaluation framework spanning Fundamentals, Market Structure, On-Chain Health, Sentiment and Alpha Independence.</div>
+        <div class="pillar-tag tag-cyan">Intelligence Score</div>
+      </div>
+
+      <div class="pillar pillar-2">
+        <div class="pillar-icon icon-gold">◈</div>
+        <div class="pillar-title">Fund Intelligence</div>
+        <div class="pillar-desc">GP selection framework and 100-point evaluation system for institutional crypto fund-of-funds. Track record, strategy and risk in one view.</div>
+        <div class="pillar-tag tag-gold">Vault · Quant GP</div>
+      </div>
+
+      <div class="pillar pillar-3">
+        <div class="pillar-icon icon-violet">◇</div>
+        <div class="pillar-title">RWA Analytics</div>
+        <div class="pillar-desc">Real-time tokenized asset market data and signals. 40+ protocols tracked across private credit, treasury bills and real estate.</div>
+        <div class="pillar-tag tag-violet">Protocol · RWA</div>
+      </div>
+
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-wrap">
+      <button class="btn-enter" id="btnEnter">Enter Platform</button>
+      <div class="btn-hint">Market · Intelligence · CIS · Vault · Protocol · Quant GP</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Page dots (position 2 of 3) -->
+<div class="page-dots">
+  <div class="dot"></div>
+  <div class="dot active"></div>
+  <div class="dot"></div>
+</div>
+
+<script>
+// Enter platform
+document.getElementById('btnEnter').addEventListener('click', () => {
+  const overlay = document.getElementById('exitOverlay');
+  overlay.classList.add('active');
+  setTimeout(() => { window.location.href = 'market.html'; }, 560);
+});
+
+// Back to homepage
+function goBack() {
+  const overlay = document.getElementById('exitOverlay');
+  overlay.classList.add('active');
+  setTimeout(() => { window.location.href = 'index.html'; }, 560);
+}
+
+// Subtle mouse parallax on rings
+document.addEventListener('mousemove', e => {
+  const x = (e.clientX / window.innerWidth  - 0.5);
+  const y = (e.clientY / window.innerHeight - 0.5);
+  document.querySelector('.field').style.filter =
+    `hue-rotate(${x * 5}deg) brightness(${1 + Math.abs(y) * 0.04})`;
+});
+</script>
+</body>
+</html>
