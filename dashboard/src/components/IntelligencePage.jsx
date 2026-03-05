@@ -62,7 +62,7 @@ const CSS = `
   .lm-card-accent { border-left-width:2px !important; }
 
   .lm-row { transition:background .12s ease,transform .12s ease;cursor:pointer; }
-  .lm-row:hover { background:rgba(68,114,255,.05) !important;transform:translateX(2px); }
+  .lm-row:hover { background:rgba(6,182,212,.06) !important; border-left: 2px solid rgba(6,182,212,0.4); transform:translateX(2px); }
 
   .lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:'Exo 2',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#8880BE;transition:all .18s ease;letter-spacing:.01em; }
   .lm-tab:hover { border-color:#28244C;color:#F0EEFF; }

@@ -158,7 +158,8 @@ const CSS = `
     cursor:pointer;
   }
   .lm-row:hover {
-    background:rgba(68,114,255,.05) !important;
+    background:rgba(6,182,212,.06) !important;
+    border-left: 2px solid rgba(6,182,212,0.4);
     transform:translateX(2px);
   }
 
