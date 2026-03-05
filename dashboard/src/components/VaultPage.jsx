@@ -605,81 +605,49 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
         {/* Selected Fund Detail - BottomSheet */}
         <BottomSheet isOpen={!!selectedFund} onClose={() => setSelectedFund(null)}>
           {selectedFund && (
-            <div style={{ borderLeft: `3px solid ${getGradeColor(selectedFund.grade)}`, paddingLeft: 16 }}>
-              {/* Row 1: Name + Grade + Score (always visible) */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <h3 style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: T.primary, margin: 0 }}>
-                      {selectedFund.name}
-                    </h3>
-                    <span style={{
-                      padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 600,
-                      background: `${getGradeColor(selectedFund.grade)}20`, color: getGradeColor(selectedFund.grade),
-                    }}>
-                      Grade {selectedFund.grade}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 12, color: T.secondary, marginTop: 4 }}>
-                    {selectedFund.strategy} · {selectedFund.location} · {formatAUM(selectedFund.aum)} AUM
-                  </div>
+            <div style={{ borderLeft: `3px solid ${getGradeColor(selectedFund.grade)}`, paddingLeft: 12 }}>
+              {/* Row 1: Name + Grade (compact) */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <h3 style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: T.primary, margin: 0 }}>
+                    {selectedFund.name}
+                  </h3>
+                  <span style={{
+                    padding: "2px 8px", borderRadius: 3, fontSize: 11, fontWeight: 600,
+                    background: `${getGradeColor(selectedFund.grade)}20`, color: getGradeColor(selectedFund.grade),
+                  }}>
+                    Grade {selectedFund.grade}
+                  </span>
+                </div>
+                <div style={{ fontSize: 11, color: T.secondary }}>
+                  {selectedFund.strategy} · {formatAUM(selectedFund.aum)} AUM
                 </div>
               </div>
 
-              {/* Row 2: Key metrics (always visible) */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 12, paddingBottom: 12, borderBottom: `1px solid ${T.border}` }}>
-                <div>
-                  <div style={{ fontSize: 9, color: T.muted, marginBottom: 2 }}>YTD</div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: selectedFund.performance.ytd >= 0 ? T.green : T.red, fontFamily: FONTS.mono, userSelect: "none" }}>
-                    {selectedFund.performance.ytd >= 0 ? "+" : ""}{selectedFund.performance.ytd}%
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 9, color: T.muted, marginBottom: 2 }}>Annual</div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
-                    +{selectedFund.performance.annualReturn}%
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 9, color: T.muted, marginBottom: 2 }}>Sharpe</div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
-                    {selectedFund.performance.sharpeRatio}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 9, color: T.muted, marginBottom: 2 }}>Max DD</div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: T.amber, fontFamily: FONTS.mono, userSelect: "none" }}>
-                    {selectedFund.performance.maxDrawdown}%
-                  </div>
-                </div>
+              {/* Row 2: Key metrics (compact) */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 8, paddingBottom: 8, borderBottom: `1px solid ${T.border}` }}>
+                <div><div style={{ fontSize: 8, color: T.muted }}>YTD</div><div style={{ fontSize: 14, fontWeight: 600, color: selectedFund.performance.ytd >= 0 ? T.green : T.red, fontFamily: FONTS.mono }}>{selectedFund.performance.ytd >= 0 ? "+" : ""}{selectedFund.performance.ytd}%</div></div>
+                <div><div style={{ fontSize: 8, color: T.muted }}>Annual</div><div style={{ fontSize: 14, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>+{selectedFund.performance.annualReturn}%</div></div>
+                <div><div style={{ fontSize: 8, color: T.muted }}>Sharpe</div><div style={{ fontSize: 14, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{selectedFund.performance.sharpeRatio}</div></div>
+                <div><div style={{ fontSize: 8, color: T.muted }}>Max DD</div><div style={{ fontSize: 14, fontWeight: 600, color: T.amber, fontFamily: FONTS.mono }}>{selectedFund.performance.maxDrawdown}%</div></div>
               </div>
 
-              {/* Row 3+: Details (scrollable) */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              {/* Row 3: Details (compact) */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-                    Team Background
-                  </div>
-                  <div style={{ fontSize: 12, color: T.primary, lineHeight: 1.5 }}>
-                    {selectedFund.team || "—"}
-                  </div>
+                  <div style={{ fontSize: 9, color: T.muted, textTransform: "uppercase", marginBottom: 4 }}>Team</div>
+                  <div style={{ fontSize: 11, color: T.primary, lineHeight: 1.4 }}>{selectedFund.team || "—"}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-                    Core Strategy
-                  </div>
-                  <div style={{ fontSize: 12, color: T.primary, lineHeight: 1.5 }}>
-                    {selectedFund.strategyDetail || selectedFund.description}
-                  </div>
+                  <div style={{ fontSize: 9, color: T.muted, textTransform: "uppercase", marginBottom: 4 }}>Strategy</div>
+                  <div style={{ fontSize: 11, color: T.primary, lineHeight: 1.4 }}>{selectedFund.strategyDetail || selectedFund.description}</div>
                 </div>
               </div>
 
               {selectedFund.advantage && (
-                <div style={{ marginTop: 12, padding: 10, background: "rgba(68,114,255,.05)", borderRadius: 6, border: `1px solid ${T.blue}30` }}>
-                  <div style={{ fontSize: 10, color: T.blue, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>
-                    Key Advantage
-                  </div>
-                  <div style={{ fontSize: 12, color: T.primary }}>
+                <div style={{ marginTop: 8, padding: 8, background: "rgba(68,114,255,.05)", borderRadius: 4, border: `1px solid ${T.blue}30` }}>
+                  <div style={{ fontSize: 9, color: T.blue, textTransform: "uppercase", marginBottom: 3 }}>Key Advantage</div>
+                  <div style={{ fontSize: 11, color: T.primary }}>
                     {selectedFund.advantage}
                   </div>
                 </div>

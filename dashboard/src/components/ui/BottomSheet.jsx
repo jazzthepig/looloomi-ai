@@ -17,8 +17,8 @@ export default function BottomSheet({ isOpen, onClose, children }) {
         onClick={onClose}
         style={{
           position: "fixed", inset: 0,
-          background: "rgba(1,1,9,0.45)",
-          backdropFilter: "blur(3px)",
+          background: "rgba(1,1,9,0.20)",
+          backdropFilter: "blur(1px)",
           zIndex: 200,
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? "auto" : "none",
@@ -78,36 +78,51 @@ export default function BottomSheet({ isOpen, onClose, children }) {
       <style>{`
         @media (max-width: 768px) {
           div[style*="position: fixed"][style*="bottom: 0"] {
-            height: 52vh !important;
-            min-height: 280px !important;
-            max-height: 60vh !important;
+            height: 55vh !important;
+            min-height: 300px !important;
+            max-height: 65vh !important;
             border-radius: 12px 12px 0 0 !important;
           }
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child {
-            padding: 10px 20px 20px !important;
+            padding: 8px 16px 16px !important;
           }
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 10px !important;
+            gap: 6px !important;
           }
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child h3 {
-            font-size: 16px !important;
+            font-size: 15px !important;
           }
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div > div {
-            font-size: 14px !important;
+            font-size: 13px !important;
+          }
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="grid"] {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="gridTemplateColumns: repeat(4"] {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="gridTemplateColumns: repeat(5"] {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          div[style*="position: fixed"][style*="bottom: 0"] {
+            height: 60vh !important;
+            max-height: 70vh !important;
           }
         }
 
         @media (min-width: 769px) and (max-width: 1024px) {
           div[style*="position: fixed"][style*="bottom: 0"] {
-            height: 42vh !important;
-            max-height: 50vh !important;
+            height: 40vh !important;
+            max-height: 48vh !important;
           }
         }
 
         @media (min-width: 1400px) {
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child {
-            padding: 16px 48px 28px !important;
+            padding: 14px 48px 26px !important;
           }
         }
       `}</style>
