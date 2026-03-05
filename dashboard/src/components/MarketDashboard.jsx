@@ -62,6 +62,66 @@ const CATEGORIES = ["All", "RWA", "Oracle", "L1", "L2", "DeFi"];
 const API_BASE = "/api/v1";
 const REFRESH_INTERVAL = 30000;
 
+/* ─── CIS Score Data (mock - to be updated via AI daily) ───────────────── */
+const CIS_DATA = {
+  ONDO:   { score: 85.2, grade: "A" },
+  POLYX:  { score: 72.5, grade: "B" },
+  SYRUP:  { score: 80.3, grade: "A" },
+  OPEN:   { score: 68.0, grade: "B" },
+  ACX:    { score: 71.2, grade: "B" },
+  LINK:   { score: 80.0, grade: "B" },
+  PYTH:   { score: 75.5, grade: "B" },
+  BTC:    { score: 85.0, grade: "A" },
+  ETH:    { score: 85.0, grade: "A" },
+  SOL:    { score: 81.8, grade: "B" },
+  AVAX:   { score: 78.5, grade: "B" },
+  ARB:    { score: 70.8, grade: "B" },
+  OP:     { score: 68.6, grade: "C" },
+  AAVE:   { score: 77.2, grade: "B" },
+  UNI:    { score: 77.8, grade: "B" },
+  MKR:    { score: 76.0, grade: "B" },
+};
+
+/* ─── AI Signal Data (updated manually via AI daily) ────────────────────── */
+const AI_SIGNAL_DATA = {
+  ONDO:   { label: "Accumulate", color: "#00D98A" },
+  POLYX:  { label: "Hold", color: "#00C8E0" },
+  SYRUP:  { label: "Accumulate", color: "#00D98A" },
+  OPEN:   { label: "Neutral", color: "#8880BE" },
+  ACX:    { label: "Watch", color: "#E8A000" },
+  LINK:   { label: "Hold", color: "#00C8E0" },
+  PYTH:   { label: "Hold", color: "#00C8E0" },
+  BTC:    { label: "Hold", color: "#00C8E0" },
+  ETH:    { label: "Accumulate", color: "#00D98A" },
+  SOL:    { label: "Neutral", color: "#8880BE" },
+  AVAX:   { label: "Hold", color: "#00C8E0" },
+  ARB:    { label: "Watch", color: "#E8A000" },
+  OP:     { label: "Watch", color: "#E8A000" },
+  AAVE:   { label: "Hold", color: "#00C8E0" },
+  UNI:    { label: "Hold", color: "#00C8E0" },
+  MKR:    { label: "Neutral", color: "#8880BE" },
+};
+
+/* ─── TVL Data (mock - from DeFiLlama when available) ──────────────────── */
+const TVL_DATA = {
+  ONDO:   628000000,
+  POLYX:  180000000,
+  SYRUP:  459000000,
+  OPEN:   85000000,
+  ACX:    120000000,
+  LINK:   8700000000,
+  PYTH:   3200000000,
+  BTC:    120000000000,
+  ETH:    44000000000,
+  SOL:    9100000000,
+  AVAX:   7200000000,
+  ARB:    2800000000,
+  OP:     2100000000,
+  AAVE:   12400000000,
+  UNI:    8500000000,
+  MKR:    7200000000,
+};
+
 /* Global CSS */
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -234,7 +294,9 @@ const CSS = `
     .mobile-stack { flex-direction: column !important; }
     .mobile-pad { padding: 0 12px !important; }
     .mobile-stat-grid { grid-template-columns: 1fr 1fr !important; }
-    .mobile-table-grid { grid-template-columns: 1.8fr 1fr 1fr !important; }
+    .mobile-table-grid { grid-template-columns: 2fr 0.8fr 0.7fr 0.7fr !important; }
+    .mobile-table-header { grid-template-columns: 2fr 0.8fr 0.7fr 0.7fr !important; }
+    .mobile-cis-signal { display: none !important; }
     .mobile-table-header { grid-template-columns: 1.8fr 1fr 1fr !important; }
     .mobile-nav { flex-wrap: wrap !important; gap: 6px !important; }
     .mobile-nav-right { margin-top: 10px !important; width: 100% !important; justify-content: space-between !important; }
@@ -278,6 +340,14 @@ const CAT_STYLE = {
   "L1":     { bg: "rgba(0,217,138,.10)",    text: "#00D98A" },
   "L2":     { bg: "rgba(0,200,224,.08)",    text: "#00C8E0" },
   "DeFi":   { bg: "rgba(255,16,96,.10)",    text: "#FF1060" },
+};
+
+const fmtTvl = (v) => {
+  if (!v) return "—";
+  if (v >= 1e12) return `$${(v/1e12).toFixed(2)}T`;
+  if (v >= 1e9) return `$${(v/1e9).toFixed(2)}B`;
+  if (v >= 1e6) return `$${(v/1e6).toFixed(1)}M`;
+  return `$${v.toLocaleString()}`;
 };
 
 const CatBadge = ({ cat }) => {
@@ -716,28 +786,31 @@ export default function MarketDashboard({ activeTab, setActiveTab, isSection = f
         <div className="lm-card" style={{ overflow: "hidden" }}>
           {/* Table header */}
           <div className="mobile-table-header" style={{
-            display: "grid", gridTemplateColumns: "2.2fr 1fr 1fr 1fr 80px",
-            gap: 12, padding: "11px 20px",
+            display: "grid", gridTemplateColumns: "2fr 0.8fr 0.7fr 0.7fr 0.6fr 0.6fr 0.6fr 70px",
+            gap: 8, padding: "11px 20px",
             borderBottom: `1px solid ${T.border}`,
             fontSize: 10, color: T.muted, letterSpacing: "0.11em",
             textTransform: "uppercase", fontFamily: FONTS.body,
           }}>
             <span>Asset</span>
             <span style={{ textAlign: "right" }}>Price</span>
-            <span style={{ textAlign: "right" }}>24h Change</span>
-            <span style={{ textAlign: "right" }} className="mobile-hidden">Volume</span>
-            <span style={{ textAlign: "right" }} className="mobile-7d-chart">7d Chart</span>
+            <span style={{ textAlign: "right" }}>24h</span>
+            <span style={{ textAlign: "right" }}>TVL</span>
+            <span style={{ textAlign: "center" }}>CIS</span>
+            <span style={{ textAlign: "center" }}>AI Signal</span>
+            <span style={{ textAlign: "right" }} className="mobile-hidden">Vol</span>
+            <span style={{ textAlign: "right" }} className="mobile-7d-chart">Chart</span>
           </div>
 
           {/* Rows */}
           {loading
             ? Array(8).fill(0).map((_, i) => (
                 <div key={i} className="mobile-table-grid" style={{
-                  display: "grid", gridTemplateColumns: "2.2fr 1fr 1fr 1fr 80px",
-                  gap: 12, padding: "13px 20px", borderBottom: `1px solid ${T.border}`,
+                  display: "grid", gridTemplateColumns: "2fr 0.8fr 0.7fr 0.7fr 0.6fr 0.6fr 0.6fr 70px",
+                  gap: 8, padding: "13px 20px", borderBottom: `1px solid ${T.border}`,
                   alignItems: "center",
                 }}>
-                  {[130, 80, 70, 70, 72].map((w, j) => (
+                  {[120, 60, 50, 50, 45, 45, 45, 60].map((w, j) => (
                     <div key={j} className="sk" style={{ height: 13, width: w, maxWidth: "100%" }} />
                   ))}
                 </div>
@@ -746,14 +819,17 @@ export default function MarketDashboard({ activeTab, setActiveTab, isSection = f
                 const p = priceData[token.symbol];
                 const positive = (p?.change_24h || 0) >= 0;
                 const isSelected = selectedToken?.symbol === token.symbol;
+                const cis = CIS_DATA[token.symbol];
+                const aiSignal = AI_SIGNAL_DATA[token.symbol];
+                const tvl = TVL_DATA[token.symbol];
 
                 return (
                   <div key={token.symbol}>
                     <div className="lm-row mobile-table-grid"
                       onClick={() => setSelected(isSelected ? null : token)}
                       style={{
-                        display: "grid", gridTemplateColumns: "2.2fr 1fr 1fr 1fr 80px",
-                        gap: 12, padding: "13px 20px",
+                        display: "grid", gridTemplateColumns: "2fr 0.8fr 0.7fr 0.7fr 0.6fr 0.6fr 0.6fr 70px",
+                        gap: 8, padding: "13px 20px",
                         borderBottom: `1px solid ${T.border}`,
                         background: isSelected ? `rgba(68,114,255,.04)` : "transparent",
                         animation: `fadeUp 0.35s ease ${i * 0.03}s both`,
@@ -789,19 +865,53 @@ export default function MarketDashboard({ activeTab, setActiveTab, isSection = f
                       <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                         {p
                           ? <span style={{ fontSize: 13, fontWeight: 500, fontFamily: FONTS.mono, color: T.primary }}>{fmt.price(p.price)}</span>
-                          : <div className="sk" style={{ height: 13, width: 70 }} />}
+                          : <div className="sk" style={{ height: 13, width: 55 }} />}
                       </div>
 
                       {/* Change */}
                       <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                        {p ? <ChangeCell v={p.change_24h} /> : <div className="sk" style={{ height: 13, width: 55 }} />}
+                        {p ? <ChangeCell v={p.change_24h} /> : <div className="sk" style={{ height: 13, width: 45 }} />}
+                      </div>
+
+                      {/* TVL */}
+                      <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                        <span style={{ fontSize: 12, fontFamily: FONTS.mono, color: T.secondary }}>
+                          {fmtTvl(tvl)}
+                        </span>
+                      </div>
+
+                      {/* CIS Score */}
+                      <div className="mobile-cis-signal" style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {cis ? (
+                          <span style={{
+                            fontSize: 13, fontWeight: 600, fontFamily: FONTS.mono,
+                            color: cis.grade === "A" ? T.green : cis.grade === "B" ? T.blue : T.amber,
+                          }}>
+                            {cis.score}
+                          </span>
+                        ) : <span style={{ color: T.muted }}>—</span>}
+                      </div>
+
+                      {/* AI Signal */}
+                      <div className="mobile-cis-signal" style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {aiSignal ? (
+                          <span style={{
+                            fontSize: 10, fontWeight: 600, fontFamily: FONTS.body,
+                            padding: "3px 8px", borderRadius: 4,
+                            background: `${aiSignal.color}15`,
+                            border: `1px solid ${aiSignal.color}30`,
+                            color: aiSignal.color,
+                          }}>
+                            {aiSignal.label}
+                          </span>
+                        ) : <span style={{ color: T.muted }}>—</span>}
                       </div>
 
                       {/* Volume */}
                       <div className="mobile-hidden" style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                         {p
                           ? <span style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.mono }}>{fmt.vol(p.volume_24h_usdt)}</span>
-                          : <div className="sk" style={{ height: 13, width: 60 }} />}
+                          : <div className="sk" style={{ height: 13, width: 40 }} />}
                       </div>
 
                       {/* Chart */}
