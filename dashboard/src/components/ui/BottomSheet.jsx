@@ -73,6 +73,44 @@ export default function BottomSheet({ isOpen, onClose, children }) {
           {children}
         </div>
       </div>
+
+      {/* Responsive styles injected into page */}
+      <style>{`
+        @media (max-width: 768px) {
+          div[style*="position: fixed"][style*="bottom: 0"] {
+            height: 52vh !important;
+            min-height: 280px !important;
+            max-height: 60vh !important;
+            border-radius: 12px 12px 0 0 !important;
+          }
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child {
+            padding: 10px 20px 20px !important;
+          }
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+          }
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child h3 {
+            font-size: 16px !important;
+          }
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div > div {
+            font-size: 14px !important;
+          }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+          div[style*="position: fixed"][style*="bottom: 0"] {
+            height: 42vh !important;
+            max-height: 50vh !important;
+          }
+        }
+
+        @media (min-width: 1400px) {
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child {
+            padding: 16px 48px 28px !important;
+          }
+        }
+      `}</style>
     </>
   );
 }

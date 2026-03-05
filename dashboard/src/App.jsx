@@ -339,6 +339,36 @@ export default function App() {
           }
         }
 
+        /* ── RESPONSIVE: Section padding for different viewports ── */
+        @media (max-width: 480px) {
+          section {
+            padding: 60px 16px !important;
+          }
+        }
+        @media (min-width: 481px) and (max-width: 768px) {
+          section {
+            padding: 70px 24px !important;
+          }
+        }
+        @media (min-width: 1400px) {
+          section {
+            padding: 80px 80px !important;
+          }
+        }
+        @media (min-width: 1800px) {
+          section {
+            padding: 100px 100px !important;
+          }
+        }
+
+        /* ── RESPONSIVE: Grid adjustments ── */
+        @media (max-width: 640px) {
+          .mobile-stat-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+          }
+        }
+
         /* ── CARD TRANSPARENCY ── */
         .lm-card, .card, [class*="card"] {
           background: rgba(255, 255, 255, 0.05) !important;
