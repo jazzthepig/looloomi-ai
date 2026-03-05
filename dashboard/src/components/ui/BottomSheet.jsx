@@ -90,18 +90,25 @@ export default function BottomSheet({ isOpen, onClose, children }) {
             gap: 6px !important;
           }
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child h3 {
-            font-size: 15px !important;
+            font-size: 14px !important;
           }
-          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div > div {
-            font-size: 13px !important;
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div > div > div {
+            font-size: 12px !important;
           }
+          /* All numbers in sheets - shrink them */
+          div[style*="position: fixed"][style*="bottom: 0"] span[style*="fontFamily: FONTS.mono"] {
+            font-size: 12px !important;
+          }
+          /* Grid layouts */
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="grid"] {
             grid-template-columns: repeat(2, 1fr) !important;
           }
-          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="gridTemplateColumns: repeat(4"] {
+          /* 4 columns -> 2x2 */
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="repeat(4"] {
             grid-template-columns: repeat(2, 1fr) !important;
           }
-          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="gridTemplateColumns: repeat(5"] {
+          /* 5 columns -> 3+2 */
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="repeat(5"] {
             grid-template-columns: repeat(3, 1fr) !important;
           }
         }
@@ -110,6 +117,9 @@ export default function BottomSheet({ isOpen, onClose, children }) {
           div[style*="position: fixed"][style*="bottom: 0"] {
             height: 60vh !important;
             max-height: 70vh !important;
+          }
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="repeat(5"] {
+            grid-template-columns: repeat(2, 1fr) !important;
           }
         }
 
