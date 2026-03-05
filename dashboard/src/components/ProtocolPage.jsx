@@ -3,6 +3,7 @@ import {
   RefreshCw, Shield, TrendingUp, DollarSign, Lock,
   Activity, Globe, Zap, ArrowUpRight, ArrowDownRight
 } from "lucide-react";
+import BottomSheet from "./ui/BottomSheet";
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 const T = {
@@ -684,6 +685,7 @@ export default function ProtocolPage({ activeTab, setActiveTab, isSection = fals
   const [filterCategory, setFilterCategory] = useState("All");
   const [filterChain, setFilterChain] = useState("All");
   const [sortBy, setSortBy] = useState("total");
+  const [selectedProtocol, setSelectedProtocol] = useState(null);
 
   const filteredProtocols = protocols
     .filter(p => filterCategory === "All" || p.category === filterCategory)
@@ -849,7 +851,10 @@ export default function ProtocolPage({ activeTab, setActiveTab, isSection = fals
                 alignItems: "center",
                 animation: "fadeUp 0.3s ease forwards",
                 animationDelay: `${idx * 50}ms`,
+                cursor: "pointer",
+                background: selectedProtocol?.id === proto.id ? "rgba(68,114,255,.08)" : undefined,
               }}
+              onClick={() => setSelectedProtocol(selectedProtocol?.id === proto.id ? null : proto)}
             >
               {/* Protocol Info */}
               <div>
@@ -983,6 +988,84 @@ export default function ProtocolPage({ activeTab, setActiveTab, isSection = fals
           </div>
         </div>
       </div>
+
+      {/* Protocol Detail - BottomSheet */}
+      <BottomSheet isOpen={!!selectedProtocol} onClose={() => setSelectedProtocol(null)}>
+        {selectedProtocol && (
+          <div style={{ borderLeft: `3px solid ${getGradeColor(selectedProtocol.grade)}`, paddingLeft: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <h3 style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: T.primary, margin: 0 }}>
+                    {selectedProtocol.name}
+                  </h3>
+                  <span style={{
+                    padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 600,
+                    background: `${getGradeColor(selectedProtocol.grade)}20`, color: getGradeColor(selectedProtocol.grade),
+                  }}>
+                    Grade {selectedProtocol.grade}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: T.secondary, marginTop: 6 }}>
+                  {selectedProtocol.category} · {selectedProtocol.chain} · {formatTVL(selectedProtocol.tvl)} TVL
+                </div>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 13, color: T.primary, lineHeight: 1.6, marginBottom: 16 }}>
+              {selectedProtocol.description}
+            </div>
+
+            <div style={{ marginBottom: 16, padding: 12, background: "rgba(68,114,255,.05)", borderRadius: 8, border: `1px solid ${T.blue}30` }}>
+              <div style={{ fontSize: 11, color: T.blue, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                Security Audits
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {selectedProtocol.audits?.map((audit, i) => (
+                  <span key={i} style={{ fontSize: 12, color: T.primary, padding: "4px 8px", background: "rgba(68,114,255,.1)", borderRadius: 4 }}>
+                    {audit}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>TVL</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
+                  {formatTVL(selectedProtocol.tvl)}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>30d Change</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: selectedProtocol.tvlChange30d >= 0 ? T.green : T.red, fontFamily: FONTS.mono, userSelect: "none" }}>
+                  {selectedProtocol.tvlChange30d >= 0 ? "+" : ""}{selectedProtocol.tvlChange30d}%
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>APY</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: T.green, fontFamily: FONTS.mono, userSelect: "none" }}>
+                  {selectedProtocol.apy}%
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
+                Score Breakdown
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+                {Object.entries(selectedProtocol.scores).filter(([k]) => k !== "total").map(([key, val]) => (
+                  <div key={key} style={{ textAlign: "center", padding: 8, background: "rgba(10,9,24,.5)", borderRadius: 6 }}>
+                    <div style={{ fontSize: 9, color: T.muted, textTransform: "capitalize", marginBottom: 4 }}>{key}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.cyan, fontFamily: FONTS.mono, userSelect: "none" }}>{val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 }

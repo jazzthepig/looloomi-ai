@@ -7,6 +7,7 @@ import {
   AreaChart, Area, XAxis, YAxis,
   Tooltip, ResponsiveContainer
 } from "recharts";
+import BottomSheet from "./ui/BottomSheet";
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 const T = {
@@ -386,6 +387,7 @@ const TokenDetail = ({ token, priceData, ohlcv, onClose }) => {
               <div style={{
                 fontSize: big ? 26 : 15, fontWeight: big ? 600 : 500,
                 fontFamily: FONTS.mono, color: color || T.primary, lineHeight: 1.1,
+                userSelect: "none",
               }}>
                 {value}
               </div>
@@ -754,6 +756,7 @@ export default function MarketDashboard({ activeTab, setActiveTab, isSection = f
                         borderBottom: `1px solid ${T.border}`,
                         background: isSelected ? `rgba(68,114,255,.04)` : "transparent",
                         animation: `fadeUp 0.35s ease ${i * 0.03}s both`,
+                        cursor: "pointer",
                       }}>
 
                       {/* Asset */}
@@ -806,12 +809,6 @@ export default function MarketDashboard({ activeTab, setActiveTab, isSection = f
                       </div>
                     </div>
 
-                    {/* Expanded detail */}
-                    {isSelected && (
-                      <div style={{ padding: "0 10px 10px", background: `rgba(68,114,255,.02)` }}>
-                        <TokenDetail token={token} priceData={priceData} ohlcv={ohlcv} onClose={() => setSelected(null)} />
-                      </div>
-                    )}
                   </div>
                 );
               })
@@ -867,6 +864,13 @@ export default function MarketDashboard({ activeTab, setActiveTab, isSection = f
           </div>
         </div>
       </div>
+
+      {/* Token Detail - BottomSheet */}
+      <BottomSheet isOpen={!!selectedToken} onClose={() => setSelected(null)}>
+        {selectedToken && (
+          <TokenDetail token={selectedToken} priceData={priceData} ohlcv={ohlcv} onClose={() => setSelected(null)} />
+        )}
+      </BottomSheet>
     </div>
   );
 }

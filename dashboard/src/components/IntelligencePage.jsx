@@ -3,6 +3,7 @@ import {
   RefreshCw, ExternalLink, Zap, Building2,
   DollarSign, Globe, Activity, Users, Shield
 } from "lucide-react";
+import BottomSheet from "./ui/BottomSheet";
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 const T = {
@@ -244,6 +245,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const [stats, setStats]               = useState(null);
   const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
   const [iframeError, setIframeError]   = useState(false);
+  const [selectedRWA, setSelectedRWA]   = useState(null);
 
   useEffect(() => {
     const id = "lm-intel-css";
@@ -485,7 +487,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1.5fr",
                     padding: "14px 20px", borderBottom: `1px solid ${T.border}`,
                     alignItems: "center",
-                  }}>
+                    cursor: "pointer",
+                    background: selectedRWA?.id === p.id ? "rgba(68,114,255,.08)" : undefined,
+                  }}
+                  onClick={() => setSelectedRWA(selectedRWA?.id === p.id ? null : p)}>
                     <div>
                       <div style={{ fontFamily: FONTS.display, fontWeight: 600, color: T.primary, fontSize: 13 }}>
                         {p.name}
@@ -1127,6 +1132,57 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
           </div>
         )}
       </div>
+
+      {/* RWA Detail - BottomSheet */}
+      <BottomSheet isOpen={!!selectedRWA} onClose={() => setSelectedRWA(null)}>
+        {selectedRWA && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <h3 style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: T.primary, margin: 0 }}>
+                    {selectedRWA.name}
+                  </h3>
+                  <span style={{
+                    padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 600,
+                    background: catStyle(selectedRWA.category).bg, color: catStyle(selectedRWA.category).text,
+                  }}>
+                    {selectedRWA.category}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: T.secondary, marginTop: 6 }}>
+                  {selectedRWA.chain}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 13, color: T.primary, lineHeight: 1.6, marginBottom: 16 }}>
+              {selectedRWA.description}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>TVL</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
+                  {selectedRWA.tvl >= 1e9 ? `$${(selectedRWA.tvl/1e9).toFixed(1)}B` : selectedRWA.tvl >= 1e6 ? `$${(selectedRWA.tvl/1e6).toFixed(0)}M` : `$${(selectedRWA.tvl/1e3).toFixed(0)}K`}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>APY</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: T.green, fontFamily: FONTS.mono, userSelect: "none" }}>
+                  {selectedRWA.apy > 0 ? `${selectedRWA.apy}%` : "—"}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Chain</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: T.cyan, fontFamily: FONTS.mono }}>
+                  {selectedRWA.chain}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 }

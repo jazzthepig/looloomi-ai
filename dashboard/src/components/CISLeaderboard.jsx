@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ChevronDown, ChevronUp, BarChart3 } from "lucide-react";
 import { ChevronCw } from "lucide-react";
+import BottomSheet from "./ui/BottomSheet";
 
 const T = {
   void: "#020208",
@@ -233,13 +234,13 @@ export default function CISLeaderboard({ minimal = false }) {
           filtered.map((item, i) => (
             <div key={item.asset_id}>
               <div
-                onClick={() => setExpandedRow(expandedRow === item.asset_id ? null : item.asset_id)}
+                onClick={() => setExpandedRow(expandedRow?.asset_id === item.asset_id ? null : item)}
                 style={{
                   display: "grid",
                   gridTemplateColumns: minimal ? "40px 1.5fr 70px 50px" : "45px 2fr 80px 55px 200px",
                   gap: 12, padding: "12px 16px", borderBottom: `1px solid ${T.border}`,
                   alignItems: "center", cursor: "pointer",
-                  background: expandedRow === item.asset_id ? T.deep : "transparent",
+                  background: expandedRow?.asset_id === item.asset_id ? T.deep : "transparent",
                   transition: "background 0.15s ease"
                 }}
                 className="cis-row"
@@ -296,7 +297,7 @@ export default function CISLeaderboard({ minimal = false }) {
                     {item.grade}
                   </span>
                   {!minimal && (
-                    expandedRow === item.asset_id ? <ChevronUp size={14} color={T.muted} /> : <ChevronDown size={14} color={T.muted} />
+                    expandedRow?.asset_id === item.asset_id ? <ChevronUp size={14} color={T.muted} /> : <ChevronDown size={14} color={T.muted} />
                   )}
                 </div>
 
@@ -318,10 +319,10 @@ export default function CISLeaderboard({ minimal = false }) {
                 )}
               </div>
 
-              {/* Expanded Detail */}
-              {expandedRow === item.asset_id && !minimal && (
+              {/* Expanded Detail - moved to BottomSheet */}
+              {/* {expandedRow?.asset_id === item.asset_id && !minimal && (
                 <ExpandedDetail item={item} />
-              )}
+              )} */}
             </div>
           ))
         )}
@@ -345,6 +346,81 @@ export default function CISLeaderboard({ minimal = false }) {
       <style>{`
         .cis-row:hover { background: ${T.raised} !important; }
       `}</style>
+
+      {/* CIS Detail - BottomSheet */}
+      <BottomSheet isOpen={!!expandedRow && !minimal} onClose={() => setExpandedRow(null)}>
+        {expandedRow && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <h3 style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: T.primary, margin: 0 }}>
+                    {expandedRow.asset_name}
+                  </h3>
+                  <span style={{
+                    padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 600,
+                    background: `${GRADE_COLORS[expandedRow.grade]}20`, color: GRADE_COLORS[expandedRow.grade],
+                  }}>
+                    Grade {expandedRow.grade}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: T.secondary, marginTop: 6 }}>
+                  {expandedRow.asset_class} · Rank #{expandedRow.rank}
+                </div>
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: T.cyan, fontFamily: FONTS.mono, userSelect: "none" }}>
+                {expandedRow.total_score.toFixed(1)}
+              </div>
+            </div>
+
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12,
+              marginBottom: 20
+            }}>
+              {[
+                { key: "F", label: "基础", desc: "团队/产品/代币经济学" },
+                { key: "M", label: "市场", desc: "流动性/交易量/价差" },
+                { key: "O", label: "链上", desc: "真实活动/Holder行为" },
+                { key: "S", label: "情绪", desc: "社交/KOL/社区" },
+                { key: "alpha", label: "阿尔法", desc: "BTC独立性/因子暴露" },
+              ].map(p => (
+                <div key={p.key} style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 10, color: T.muted, marginBottom: 6, fontFamily: FONTS.body }}>
+                    {p.label}
+                  </div>
+                  <div style={{
+                    width: "100%", height: 8, background: T.border, borderRadius: 4,
+                    overflow: "hidden", marginBottom: 6
+                  }}>
+                    <div style={{
+                      width: `${expandedRow.pillars[p.key]}%`, height: "100%",
+                      background: GRADE_COLORS[expandedRow.grade],
+                      borderRadius: 4
+                    }} />
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
+                    {expandedRow.pillars[p.key]}
+                  </div>
+                  <div style={{ fontSize: 9, color: T.secondary, marginTop: 4, fontFamily: FONTS.body }}>
+                    {p.desc}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {Object.entries(expandedRow.pillars).map(([k, v]) => (
+                <span key={k} style={{
+                  fontSize: 11, fontFamily: FONTS.mono, color: T.secondary,
+                  background: T.surface, padding: "4px 8px", borderRadius: 4
+                }}>
+                  {k}: <span style={{ color: T.primary, userSelect: "none" }}>{v}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 }
