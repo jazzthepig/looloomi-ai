@@ -246,6 +246,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
   const [iframeError, setIframeError]   = useState(false);
   const [selectedRWA, setSelectedRWA]   = useState(null);
+  const [selectedVCRound, setSelectedVCRound] = useState(null);
 
   useEffect(() => {
     const id = "lm-intel-css";
@@ -521,8 +522,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               </div>
             </div>
 
-            {/* Main 2-col layout - responsive */}
-            <div className="mobile-2col-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 360px", gap: 16 }}>
+            {/* Main 2-col layout - 60/40 split */}
+            <div className="mobile-2col-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "3fr 2fr", gap: 16 }}>
 
               {/* Left — VC Funding Table */}
               <div>
@@ -623,12 +624,14 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                               style={{
                                 display: "grid",
                                 gridTemplateColumns: "2fr 90px 100px 130px 80px",
-                                gap: 12, padding: "12px 18px",
+                                gap: 12, padding: "16px 18px",
                                 borderBottom: `1px solid ${T.border}`,
                                 alignItems: "center",
+                                height: 56,
                                 background: rwaTag ? "rgba(232,160,0,.018)" : "transparent",
                                 animation: `slideIn .2s ease ${Math.min(i*.02,.3)}s both`,
-                              }}>
+                              }}
+                              onClick={() => setSelectedVCRound(selectedVCRound?.name === r.name ? null : r)}>
 
                               {/* Project */}
                               <div>
@@ -716,12 +719,6 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
                   {/* Divider */}
                   <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase",
-                    fontFamily: FONTS.body, padding: "4px 0", display: "flex", alignItems: "center", gap: 7 }}>
-                    <Globe size={10} /> Macro Events
-                  </div>
-
-                  {/* Divider */}
-                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase",
                     fontFamily: FONTS.body, padding: "4px 0", display: "flex", alignItems: "center", gap: 7, marginTop: 16 }}>
                     <Users size={10} /> Active VCs
                   </div>
@@ -778,6 +775,46 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     );
                   })}
                 </div>
+              </div>
+            </div>
+
+            {/* ══ MACRO EVENTS (Full Width Timeline) ═════════════════════════════ */}
+            <div style={{ marginTop: 24, marginBottom: 24 }}>
+              <div style={{ marginBottom: 16 }}>
+                <Label Icon={Globe}>MACRO EVENTS</Label>
+                <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body }}>
+                  Institutional and regulatory developments shaping the market
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                {MACRO_EVENTS.map((ev, i) => {
+                  const cfg = EV_TYPE[ev.type] || EV_TYPE.protocol;
+                  const imp = IMP_C[ev.impact] || IMP_C.medium;
+                  return (
+                    <div key={ev.id} className="lm-card" style={{
+                      padding: 16, borderLeft: `3px solid ${cfg.color}`,
+                      animation: `fadeUp .3s ease ${i*.07}s both`,
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                        <span className="lm-badge" style={{ background: `${cfg.color}18`, color: cfg.color }}>
+                          {cfg.label}
+                        </span>
+                        <span className="lm-badge" style={{ background: imp.bg, color: imp.text }}>
+                          {ev.impact}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 8, lineHeight: 1.4 }}>
+                        {ev.title}
+                      </div>
+                      <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.5, marginBottom: 10 }}>
+                        {ev.summary}
+                      </div>
+                      <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
+                        {ev.source} · {ev.date}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -1177,6 +1214,88 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Chain</div>
                 <div style={{ fontSize: 16, fontWeight: 600, color: T.cyan, fontFamily: FONTS.mono }}>
                   {selectedRWA.chain}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </BottomSheet>
+
+      {/* VC Funding Round Detail - BottomSheet */}
+      <BottomSheet isOpen={!!selectedVCRound} onClose={() => setSelectedVCRound(null)}>
+        {selectedVCRound && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <h3 style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: T.primary, margin: 0 }}>
+                    {selectedVCRound.name}
+                  </h3>
+                  {isRWA(selectedVCRound) && (
+                    <span style={{ padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 600, background: "rgba(232,160,0,.12)", color: T.amber }}>
+                      RWA
+                    </span>
+                  )}
+                  <span style={{
+                    padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 600,
+                    background: catStyle(selectedVCRound.category).bg, color: catStyle(selectedVCRound.category).text,
+                  }}>
+                    {selectedVCRound.round || "—"}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: T.secondary, marginTop: 6 }}>
+                  {selectedVCRound.sector !== "—" ? selectedVCRound.sector : selectedVCRound.category}
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Amount</div>
+                <div style={{ fontSize: 20, fontWeight: 600, color: T.green, fontFamily: FONTS.mono, userSelect: "none" }}>
+                  {selectedVCRound.amount ? fmt.amount(selectedVCRound.amount) : "Undisclosed"}
+                </div>
+              </div>
+            </div>
+
+            {selectedVCRound.chains?.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Chains
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {selectedVCRound.chains.map((chain, i) => (
+                    <span key={i} style={{ fontSize: 12, padding: "4px 8px", background: "rgba(68,114,255,.1)", borderRadius: 4, color: T.blue }}>
+                      {chain}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedVCRound.leadInvestors?.length > 0 && (
+              <div style={{ marginBottom: 16, padding: 12, background: "rgba(68,114,255,.05)", borderRadius: 8, border: `1px solid ${T.blue}30` }}>
+                <div style={{ fontSize: 10, color: T.blue, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Lead Investor{selectedVCRound.leadInvestors.length > 1 ? "s" : ""}
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {selectedVCRound.leadInvestors.map((inv, i) => (
+                    <span key={i} style={{ fontSize: 13, fontWeight: 600, color: T.primary }}>
+                      {inv}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Date</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>
+                  {selectedVCRound.dateStr || fmt.dateRelative(selectedVCRound.date)}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Category</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.cyan, fontFamily: FONTS.mono }}>
+                  {selectedVCRound.category}
                 </div>
               </div>
             </div>
