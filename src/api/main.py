@@ -24,6 +24,9 @@ from data.market.data_layer import (
     calculate_mmi,
 )
 
+# Import macro events scraper
+from backend.macro_events_scraper import fetch_all_macro_events
+
 app = FastAPI(title="Looloomi AI API", version="0.3.0")
 
 app.add_middleware(
@@ -97,6 +100,17 @@ async def get_mmi(token: str = "BTC"):
 @app.get("/api/v1/mmi/sentiment/fear-greed")
 async def fear_greed(limit: int = 30):
     return await get_fear_greed(limit)
+
+# ── Intelligence / Macro Events ──────────────────────────────────────────────
+
+@app.get("/api/v1/intelligence/macro-events")
+async def get_macro_events():
+    """Fetch latest macro events from RSS feeds (CoinDesk, The Block, Decrypt, CoinTelegraph) + DefiLlama Raises
+    Returns up to 20 events with auto-classification: REGULATORY/INSTITUTIONAL/MARKET/TECH
+    Impact levels: HIGH/MEDIUM/LOW
+    Cached for 60 minutes to avoid overloading RSS servers.
+    """
+    return {"events": await fetch_all_macro_events()}
 
 # ── VC deal flow endpoints ─────────────────────────────────────────────────
 
