@@ -38,11 +38,11 @@ const GRADE_COLORS = {
 };
 
 const GRADE_LABELS = {
-  A: "优先配置",
-  B: "合格",
-  C: "观察",
-  D: "回避",
-  F: "淘汰",
+  A: "Priority Allocation",
+  B: "Qualified",
+  C: "Watchlist",
+  D: "Avoid",
+  F: "Eliminated",
 };
 
 const ASSET_CLASS_COLORS = {

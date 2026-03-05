@@ -778,7 +778,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               </div>
             </div>
 
-            {/* ══ MACRO EVENTS (Full Width Timeline) ═════════════════════════════ */}
+            {/* ══ MACRO EVENTS (Full Width Vertical Timeline) ═════════════════════════════ */}
             <div style={{ marginTop: 24, marginBottom: 24 }}>
               <div style={{ marginBottom: 16 }}>
                 <Label Icon={Globe}>MACRO EVENTS</Label>
@@ -786,31 +786,36 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   Institutional and regulatory developments shaping the market
                 </div>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {MACRO_EVENTS.map((ev, i) => {
                   const cfg = EV_TYPE[ev.type] || EV_TYPE.protocol;
                   const imp = IMP_C[ev.impact] || IMP_C.medium;
                   return (
                     <div key={ev.id} className="lm-card" style={{
-                      padding: 16, borderLeft: `3px solid ${cfg.color}`,
+                      display: "flex", gap: 16, padding: "14px 18px",
+                      background: "rgba(255,255,255,0.025)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                      borderRadius: 8, borderLeft: `3px solid ${cfg.color}`,
                       animation: `fadeUp .3s ease ${i*.07}s both`,
                     }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                        <span className="lm-badge" style={{ background: `${cfg.color}18`, color: cfg.color }}>
-                          {cfg.label}
-                        </span>
-                        <span className="lm-badge" style={{ background: imp.bg, color: imp.text }}>
-                          {ev.impact}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 8, lineHeight: 1.4 }}>
-                        {ev.title}
-                      </div>
-                      <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.5, marginBottom: 10 }}>
-                        {ev.summary}
-                      </div>
-                      <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
-                        {ev.source} · {ev.date}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                          <span className="lm-badge" style={{ background: `${cfg.color}18`, color: cfg.color }}>
+                            {cfg.label}
+                          </span>
+                          <span className="lm-badge" style={{ background: imp.bg, color: imp.text }}>
+                            {ev.impact}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 6, lineHeight: 1.4 }}>
+                          {ev.title}
+                        </div>
+                        <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.5, marginBottom: 8 }}>
+                          {ev.summary}
+                        </div>
+                        <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
+                          {ev.source} · {ev.date}
+                        </div>
                       </div>
                     </div>
                   );

@@ -203,7 +203,7 @@ export default function App() {
           right: -10%;
           top: 35%;
           height: 30%;
-          background: radial-gradient(ellipse 80% 100% at 50% 50%, rgba(6, 182, 212, 0.07) 0%, rgba(6, 100, 180, 0.04) 40%, transparent 75%);
+          background: radial-gradient(ellipse 80% 100% at 50% 50%, rgba(6, 182, 212, 0.14) 0%, rgba(6, 100, 180, 0.06) 40%, transparent 75%);
           filter: blur(80px);
           animation: turrell-breathe 12s ease-in-out infinite;
         }
@@ -216,7 +216,7 @@ export default function App() {
           left: -25vw;
           top: 50%;
           transform: translateY(-50%);
-          background: radial-gradient(ellipse 40% 60% at 30% 50%, rgba(6, 182, 212, 0.11) 0%, rgba(6, 182, 212, 0.055) 35%, rgba(6, 182, 212, 0.015) 60%, transparent 80%);
+          background: radial-gradient(ellipse 40% 60% at 30% 50%, rgba(6, 182, 212, 0.18) 0%, rgba(6, 182, 212, 0.08) 35%, rgba(6, 182, 212, 0.02) 60%, transparent 80%);
           filter: blur(60px);
           animation: turrell-portal-left-anim 9s ease-in-out infinite;
         }
@@ -228,7 +228,7 @@ export default function App() {
           height: 60vw;
           right: -20vw;
           top: -10%;
-          background: radial-gradient(ellipse 50% 70% at 70% 30%, rgba(245, 158, 11, 0.07) 0%, rgba(200, 100, 20, 0.035) 40%, transparent 70%);
+          background: radial-gradient(ellipse 50% 70% at 70% 30%, rgba(245, 158, 11, 0.13) 0%, rgba(200, 100, 20, 0.05) 40%, transparent 70%);
           filter: blur(90px);
           animation: turrell-breathe 15s ease-in-out infinite reverse;
         }
@@ -241,7 +241,7 @@ export default function App() {
           left: 50%;
           top: 50%;
           transform: translate(-50%, -50%);
-          background: radial-gradient(ellipse, rgba(100, 200, 255, 0.06) 0%, rgba(6, 182, 212, 0.025) 40%, transparent 70%);
+          background: radial-gradient(ellipse, rgba(120, 210, 255, 0.11) 0%, rgba(6, 182, 212, 0.04) 40%, transparent 70%);
           filter: blur(40px);
           animation: turrell-pulse-inner 6s ease-in-out infinite;
         }
@@ -255,7 +255,7 @@ export default function App() {
           width: min(600px, 70vw);
           height: min(360px, 45vw);
           border-radius: 4px;
-          box-shadow: inset 0 0 80px rgba(6, 182, 212, 0.04), inset 0 0 30px rgba(6, 182, 212, 0.025), 0 0 120px rgba(6, 182, 212, 0.035), 0 0 60px rgba(6, 182, 212, 0.025), 0 0 200px rgba(6, 140, 200, 0.02);
+          box-shadow: inset 0 0 80px rgba(6, 182, 212, 0.08), inset 0 0 30px rgba(6, 182, 212, 0.05), 0 0 120px rgba(6, 182, 212, 0.06), 0 0 60px rgba(6, 182, 212, 0.04), 0 0 200px rgba(6, 140, 200, 0.03);
           animation: turrell-frame-breathe 8s ease-in-out infinite;
         }
 
@@ -301,7 +301,7 @@ export default function App() {
         /* ── SECTION DIVIDERS ── */
         .section-divider {
           height: 1px;
-          background: linear-gradient(90deg, transparent 0%, rgba(6,182,212,0.06) 20%, rgba(6,182,212,0.16) 50%, rgba(6,182,212,0.06) 80%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(6,182,212,0.025) 20%, rgba(6,182,212,0.06) 50%, rgba(6,182,212,0.025) 80%, transparent 100%);
           position: relative;
         }
         .section-divider::after {
@@ -312,7 +312,7 @@ export default function App() {
           transform: translateX(-50%);
           width: 35%;
           height: 6px;
-          background: radial-gradient(ellipse, rgba(6,182,212,0.1) 0%, transparent 70%);
+          background: radial-gradient(ellipse, rgba(6,182,212,0.04) 0%, transparent 70%);
           filter: blur(4px);
         }
 
@@ -324,10 +324,25 @@ export default function App() {
           border-bottom: 1px solid rgba(255,255,255,0.04) !important;
         }
 
+        /* ── RESPONSIVE: Nav tabs on small screens ── */
+        @media (max-width: 900px) {
+          nav {
+            overflow-x: auto;
+            padding: 12px 20px;
+          }
+        }
+
+        /* ── RESPONSIVE: Tables scroll horizontally ── */
+        @media (max-width: 768px) {
+          .tbl-wrap, .table-wrap {
+            overflow-x: auto;
+          }
+        }
+
         /* ── CARD TRANSPARENCY ── */
         .lm-card, .card, [class*="card"] {
-          background: rgba(255, 255, 255, 0.02) !important;
-          border: 1px solid rgba(255, 255, 255, 0.06) !important;
+          background: rgba(255, 255, 255, 0.05) !important;
+          border: 1px solid rgba(255, 255, 255, 0.10) !important;
           backdrop-filter: blur(8px);
         }
       `}</style>
