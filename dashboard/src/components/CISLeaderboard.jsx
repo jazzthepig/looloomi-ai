@@ -352,28 +352,28 @@ export default function CISLeaderboard({ minimal = false }) {
         {expandedRow && (
           <div>
             {/* Row 1: Name + Grade + Score */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <h3 style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: T.primary, margin: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4, lineHeight: 1.2 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <h3 style={{ fontFamily: FONTS.display, fontSize: 15, fontWeight: 700, color: T.primary, margin: 0 }}>
                   {expandedRow.asset_name}
                 </h3>
                 <span style={{
-                  padding: "2px 8px", borderRadius: 3, fontSize: 11, fontWeight: 600,
+                  padding: "1px 6px", borderRadius: 2, fontSize: 10, fontWeight: 600,
                   background: `${GRADE_COLORS[expandedRow.grade]}20`, color: GRADE_COLORS[expandedRow.grade],
                 }}>
                   Grade {expandedRow.grade}
                 </span>
               </div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: T.cyan, fontFamily: FONTS.mono }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: T.cyan, fontFamily: FONTS.mono }}>
                 {expandedRow.total_score.toFixed(1)}
               </div>
             </div>
-            <div style={{ fontSize: 11, color: T.secondary, marginBottom: 8 }}>{expandedRow.asset_class} · Rank #{expandedRow.rank}</div>
+            <div style={{ fontSize: 10, color: T.secondary, marginBottom: 6 }}>{expandedRow.asset_class} · Rank #{expandedRow.rank}</div>
 
             {/* Row 2: 5 Pillars */}
             <div style={{
-              display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6,
-              marginBottom: 8, paddingBottom: 8, borderBottom: `1px solid ${T.border}`
+              display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4,
+              marginBottom: 6, paddingBottom: 6, borderBottom: `1px solid ${T.border}`
             }}>
               {[
                 { key: "F", label: "Fundamental" },
@@ -383,8 +383,8 @@ export default function CISLeaderboard({ minimal = false }) {
                 { key: "alpha", label: "Alpha" },
               ].map(p => (
                 <div key={p.key} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 8, color: T.muted, marginBottom: 3 }}>{p.label}</div>
-                  <div style={{ width: "100%", height: 5, background: T.border, borderRadius: 2, overflow: "hidden", marginBottom: 3 }}>
+                  <div style={{ fontSize: 8, color: T.muted, marginBottom: 2 }}>{p.label}</div>
+                  <div style={{ width: "100%", height: 4, background: T.border, borderRadius: 2, overflow: "hidden", marginBottom: 2 }}>
                     <div style={{ width: `${expandedRow.pillars[p.key]}%`, height: "100%", background: GRADE_COLORS[expandedRow.grade], borderRadius: 2 }} />
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{expandedRow.pillars[p.key]}</div>

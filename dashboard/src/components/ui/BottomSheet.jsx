@@ -78,36 +78,36 @@ export default function BottomSheet({ isOpen, onClose, children }) {
       <style>{`
         @media (max-width: 768px) {
           div[style*="position: fixed"][style*="bottom: 0"] {
-            height: 55vh !important;
-            min-height: 300px !important;
-            max-height: 65vh !important;
+            height: 50vh !important;
+            min-height: 280px !important;
+            max-height: 60vh !important;
             border-radius: 12px 12px 0 0 !important;
           }
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child {
-            padding: 8px 16px 16px !important;
+            padding: 6px 12px 12px !important;
           }
+          /* Reduce spacing between elements */
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div {
-            gap: 6px !important;
+            gap: 4px !important;
+            margin-bottom: 4px !important;
+            padding-bottom: 4px !important;
           }
+          /* Keep fonts readable, reduce line-height instead */
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child h3 {
-            font-size: 14px !important;
+            font-size: 15px !important;
+            margin-bottom: 2px !important;
           }
-          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div > div > div {
+          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div > div {
             font-size: 12px !important;
+            line-height: 1.2 !important;
           }
-          /* All numbers in sheets - shrink them */
-          div[style*="position: fixed"][style*="bottom: 0"] span[style*="fontFamily: FONTS.mono"] {
-            font-size: 12px !important;
-          }
-          /* Grid layouts */
+          /* Grid layouts - compact */
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="grid"] {
-            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 4px !important;
           }
-          /* 4 columns -> 2x2 */
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="repeat(4"] {
             grid-template-columns: repeat(2, 1fr) !important;
           }
-          /* 5 columns -> 3+2 */
           div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="repeat(5"] {
             grid-template-columns: repeat(3, 1fr) !important;
           }
@@ -115,18 +115,15 @@ export default function BottomSheet({ isOpen, onClose, children }) {
 
         @media (max-width: 480px) {
           div[style*="position: fixed"][style*="bottom: 0"] {
-            height: 60vh !important;
-            max-height: 70vh !important;
-          }
-          div[style*="position: fixed"][style*="bottom: 0"] > div:last-child > div[style*="repeat(5"] {
-            grid-template-columns: repeat(2, 1fr) !important;
+            height: 55vh !important;
+            max-height: 65vh !important;
           }
         }
 
         @media (min-width: 769px) and (max-width: 1024px) {
           div[style*="position: fixed"][style*="bottom: 0"] {
-            height: 40vh !important;
-            max-height: 48vh !important;
+            height: 38vh !important;
+            max-height: 45vh !important;
           }
         }
 

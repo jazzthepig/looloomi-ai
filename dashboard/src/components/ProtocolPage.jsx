@@ -994,51 +994,51 @@ export default function ProtocolPage({ activeTab, setActiveTab, isSection = fals
       {/* Protocol Detail - BottomSheet */}
       <BottomSheet isOpen={!!selectedProtocol} onClose={() => setSelectedProtocol(null)}>
         {selectedProtocol && (
-          <div style={{ borderLeft: `3px solid ${getGradeColor(selectedProtocol.grade)}`, paddingLeft: 12 }}>
+          <div style={{ borderLeft: `3px solid ${getGradeColor(selectedProtocol.grade)}`, paddingLeft: 10 }}>
             {/* Row 1: Name + Grade */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <h3 style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 700, color: T.primary, margin: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, lineHeight: 1.2 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <h3 style={{ fontFamily: FONTS.display, fontSize: 15, fontWeight: 700, color: T.primary, margin: 0 }}>
                   {selectedProtocol.name}
                 </h3>
                 <span style={{
-                  padding: "2px 8px", borderRadius: 3, fontSize: 11, fontWeight: 600,
+                  padding: "1px 6px", borderRadius: 2, fontSize: 10, fontWeight: 600,
                   background: `${getGradeColor(selectedProtocol.grade)}20`, color: getGradeColor(selectedProtocol.grade),
                 }}>
                   Grade {selectedProtocol.grade}
                 </span>
               </div>
-              <div style={{ fontSize: 11, color: T.secondary }}>
-                {selectedProtocol.category} · {selectedProtocol.chain}
+              <div style={{ fontSize: 10, color: T.secondary }}>
+                {selectedProtocol.chain}
               </div>
             </div>
 
             {/* Row 2: Key metrics */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 8, paddingBottom: 8, borderBottom: `1px solid ${T.border}` }}>
-              <div><div style={{ fontSize: 8, color: T.muted }}>TVL</div><div style={{ fontSize: 14, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{formatTVL(selectedProtocol.tvl)}</div></div>
-              <div><div style={{ fontSize: 8, color: T.muted }}>30d</div><div style={{ fontSize: 14, fontWeight: 600, color: selectedProtocol.tvlChange30d >= 0 ? T.green : T.red, fontFamily: FONTS.mono }}>{selectedProtocol.tvlChange30d >= 0 ? "+" : ""}{selectedProtocol.tvlChange30d}%</div></div>
-              <div><div style={{ fontSize: 8, color: T.muted }}>APY</div><div style={{ fontSize: 14, fontWeight: 600, color: T.green, fontFamily: FONTS.mono }}>{selectedProtocol.apy}%</div></div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4, marginBottom: 6, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>
+              <div><div style={{ fontSize: 9, color: T.muted }}>TVL</div><div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{formatTVL(selectedProtocol.tvl)}</div></div>
+              <div><div style={{ fontSize: 9, color: T.muted }}>30d</div><div style={{ fontSize: 13, fontWeight: 600, color: selectedProtocol.tvlChange30d >= 0 ? T.green : T.red, fontFamily: FONTS.mono }}>{selectedProtocol.tvlChange30d >= 0 ? "+" : ""}{selectedProtocol.tvlChange30d}%</div></div>
+              <div><div style={{ fontSize: 9, color: T.muted }}>APY</div><div style={{ fontSize: 13, fontWeight: 600, color: T.green, fontFamily: FONTS.mono }}>{selectedProtocol.apy}%</div></div>
             </div>
 
-            {/* Row 3: Description (compact) */}
-            <div style={{ fontSize: 11, color: T.primary, lineHeight: 1.4, marginBottom: 8 }}>
+            {/* Row 3: Description */}
+            <div style={{ fontSize: 11, color: T.primary, lineHeight: 1.3, marginBottom: 6 }}>
               {selectedProtocol.description}
             </div>
 
-            <div style={{ marginBottom: 8, padding: 8, background: "rgba(68,114,255,.05)", borderRadius: 4, border: `1px solid ${T.blue}30` }}>
-              <div style={{ fontSize: 9, color: T.blue, textTransform: "uppercase", marginBottom: 4 }}>Security Audits</div>
-              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+            <div style={{ marginBottom: 6, padding: 6, background: "rgba(68,114,255,.05)", borderRadius: 3, border: `1px solid ${T.blue}30` }}>
+              <div style={{ fontSize: 9, color: T.blue, textTransform: "uppercase", marginBottom: 2 }}>Security</div>
+              <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
                 {selectedProtocol.audits?.map((audit, i) => (
-                  <span key={i} style={{ fontSize: 10, color: T.primary, padding: "2px 5px", background: "rgba(68,114,255,.1)", borderRadius: 2 }}>{audit}</span>
+                  <span key={i} style={{ fontSize: 10, color: T.primary, padding: "1px 4px", background: "rgba(68,114,255,.1)", borderRadius: 2 }}>{audit}</span>
                 ))}
               </div>
             </div>
 
-            <div style={{ paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 9, color: T.muted, textTransform: "uppercase", marginBottom: 6 }}>Score Breakdown</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }}>
+            <div style={{ paddingTop: 6, borderTop: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 9, color: T.muted, textTransform: "uppercase", marginBottom: 4 }}>Score</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
                 {Object.entries(selectedProtocol.scores).filter(([k]) => k !== "total").map(([key, val]) => (
-                  <div key={key} style={{ textAlign: "center", padding: 6, background: "rgba(10,9,24,.5)", borderRadius: 4 }}>
+                  <div key={key} style={{ textAlign: "center", padding: 4, background: "rgba(10,9,24,.5)", borderRadius: 3 }}>
                     <div style={{ fontSize: 8, color: T.muted, textTransform: "capitalize", marginBottom: 2 }}>{key}</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: T.cyan, fontFamily: FONTS.mono, userSelect: "none" }}>{val}</div>
                   </div>
