@@ -123,11 +123,11 @@ export default function CISLeaderboard({ minimal = false }) {
         marginBottom: 16
       }}>
         {[
-          { key: "F", label: "基础", desc: "团队/产品/代币经济学" },
-          { key: "M", label: "市场", desc: "流动性/交易量/价差" },
-          { key: "O", label: "链上", desc: "真实活动/Holder行为" },
-          { key: "S", label: "情绪", desc: "社交/KOL/社区" },
-          { key: "alpha", label: "阿尔法", desc: "BTC独立性/因子暴露" },
+          { key: "F", label: "Fundamental", desc: "Team/Product/Tokenomics" },
+          { key: "M", label: "Market", desc: "Liquidity/Volume/Spread" },
+          { key: "O", label: "On-Chain", desc: "Real Activity/Holder Behavior" },
+          { key: "S", label: "Sentiment", desc: "Social/KOL/Community" },
+          { key: "alpha", label: "Alpha", desc: "BTC Independence/Factor Exposure" },
         ].map(p => (
           <div key={p.key}>
             <div style={{ fontSize: 10, color: T.muted, marginBottom: 4, fontFamily: FONTS.body }}>
@@ -351,7 +351,8 @@ export default function CISLeaderboard({ minimal = false }) {
       <BottomSheet isOpen={!!expandedRow && !minimal} onClose={() => setExpandedRow(null)}>
         {expandedRow && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+            {/* Row 1: Name + Grade + Score (always visible) */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <h3 style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: T.primary, margin: 0 }}>
@@ -364,55 +365,54 @@ export default function CISLeaderboard({ minimal = false }) {
                     Grade {expandedRow.grade}
                   </span>
                 </div>
-                <div style={{ fontSize: 12, color: T.secondary, marginTop: 6 }}>
+                <div style={{ fontSize: 12, color: T.secondary, marginTop: 4 }}>
                   {expandedRow.asset_class} · Rank #{expandedRow.rank}
                 </div>
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: T.cyan, fontFamily: FONTS.mono, userSelect: "none" }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: T.cyan, fontFamily: FONTS.mono, userSelect: "none" }}>
                 {expandedRow.total_score.toFixed(1)}
               </div>
             </div>
 
+            {/* Row 2: 5 Pillars (always visible) */}
             <div style={{
-              display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12,
-              marginBottom: 20
+              display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8,
+              marginBottom: 12, paddingBottom: 12, borderBottom: `1px solid ${T.border}`
             }}>
               {[
-                { key: "F", label: "基础", desc: "团队/产品/代币经济学" },
-                { key: "M", label: "市场", desc: "流动性/交易量/价差" },
-                { key: "O", label: "链上", desc: "真实活动/Holder行为" },
-                { key: "S", label: "情绪", desc: "社交/KOL/社区" },
-                { key: "alpha", label: "阿尔法", desc: "BTC独立性/因子暴露" },
+                { key: "F", label: "Fundamental", desc: "Team/Product" },
+                { key: "M", label: "Market", desc: "Liquidity" },
+                { key: "O", label: "On-Chain", desc: "Real Activity" },
+                { key: "S", label: "Sentiment", desc: "Social/KOL" },
+                { key: "alpha", label: "Alpha", desc: "BTC Independence" },
               ].map(p => (
                 <div key={p.key} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 10, color: T.muted, marginBottom: 6, fontFamily: FONTS.body }}>
+                  <div style={{ fontSize: 9, color: T.muted, marginBottom: 4, fontFamily: FONTS.body }}>
                     {p.label}
                   </div>
                   <div style={{
-                    width: "100%", height: 8, background: T.border, borderRadius: 4,
-                    overflow: "hidden", marginBottom: 6
+                    width: "100%", height: 6, background: T.border, borderRadius: 3,
+                    overflow: "hidden", marginBottom: 4
                   }}>
                     <div style={{
                       width: `${expandedRow.pillars[p.key]}%`, height: "100%",
                       background: GRADE_COLORS[expandedRow.grade],
-                      borderRadius: 4
+                      borderRadius: 3
                     }} />
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
                     {expandedRow.pillars[p.key]}
-                  </div>
-                  <div style={{ fontSize: 9, color: T.secondary, marginTop: 4, fontFamily: FONTS.body }}>
-                    {p.desc}
                   </div>
                 </div>
               ))}
             </div>
 
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {/* Row 3: Pillar values (scrollable) */}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {Object.entries(expandedRow.pillars).map(([k, v]) => (
                 <span key={k} style={{
-                  fontSize: 11, fontFamily: FONTS.mono, color: T.secondary,
-                  background: T.surface, padding: "4px 8px", borderRadius: 4
+                  fontSize: 10, fontFamily: FONTS.mono, color: T.secondary,
+                  background: T.surface, padding: "3px 6px", borderRadius: 3
                 }}>
                   {k}: <span style={{ color: T.primary, userSelect: "none" }}>{v}</span>
                 </span>

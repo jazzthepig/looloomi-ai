@@ -395,6 +395,8 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
         {/* Navigation */}
+        {/* Navigation - hide when rendered as section */}
+        {!isSection && (
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "18px 0 20px", borderBottom: `1px solid ${T.border}`,
@@ -426,6 +428,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             </div>
           </div>
         </div>
+        )}
 
         {/* Header */}
         <div style={{ marginTop: 24, marginBottom: 20 }}>
@@ -603,7 +606,8 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
         <BottomSheet isOpen={!!selectedFund} onClose={() => setSelectedFund(null)}>
           {selectedFund && (
             <div style={{ borderLeft: `3px solid ${getGradeColor(selectedFund.grade)}`, paddingLeft: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              {/* Row 1: Name + Grade + Score (always visible) */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <h3 style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: T.primary, margin: 0 }}>
@@ -616,68 +620,70 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                       Grade {selectedFund.grade}
                     </span>
                   </div>
-                  <div style={{ fontSize: 12, color: T.secondary, marginTop: 6 }}>
+                  <div style={{ fontSize: 12, color: T.secondary, marginTop: 4 }}>
                     {selectedFund.strategy} · {selectedFund.location} · {formatAUM(selectedFund.aum)} AUM
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+              {/* Row 2: Key metrics (always visible) */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 12, paddingBottom: 12, borderBottom: `1px solid ${T.border}` }}>
                 <div>
-                  <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                  <div style={{ fontSize: 9, color: T.muted, marginBottom: 2 }}>YTD</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: selectedFund.performance.ytd >= 0 ? T.green : T.red, fontFamily: FONTS.mono, userSelect: "none" }}>
+                    {selectedFund.performance.ytd >= 0 ? "+" : ""}{selectedFund.performance.ytd}%
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 9, color: T.muted, marginBottom: 2 }}>Annual</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
+                    +{selectedFund.performance.annualReturn}%
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 9, color: T.muted, marginBottom: 2 }}>Sharpe</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
+                    {selectedFund.performance.sharpeRatio}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 9, color: T.muted, marginBottom: 2 }}>Max DD</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: T.amber, fontFamily: FONTS.mono, userSelect: "none" }}>
+                    {selectedFund.performance.maxDrawdown}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3+: Details (scrollable) */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
                     Team Background
                   </div>
-                  <div style={{ fontSize: 13, color: T.primary, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 12, color: T.primary, lineHeight: 1.5 }}>
                     {selectedFund.team || "—"}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
                     Core Strategy
                   </div>
-                  <div style={{ fontSize: 13, color: T.primary, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 12, color: T.primary, lineHeight: 1.5 }}>
                     {selectedFund.strategyDetail || selectedFund.description}
                   </div>
                 </div>
               </div>
 
               {selectedFund.advantage && (
-                <div style={{ marginTop: 16, padding: 12, background: "rgba(68,114,255,.05)", borderRadius: 8, border: `1px solid ${T.blue}30` }}>
-                  <div style={{ fontSize: 11, color: T.blue, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+                <div style={{ marginTop: 12, padding: 10, background: "rgba(68,114,255,.05)", borderRadius: 6, border: `1px solid ${T.blue}30` }}>
+                  <div style={{ fontSize: 10, color: T.blue, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>
                     Key Advantage
                   </div>
-                  <div style={{ fontSize: 13, color: T.primary }}>
+                  <div style={{ fontSize: 12, color: T.primary }}>
                     {selectedFund.advantage}
                   </div>
                 </div>
               )}
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
-                <div>
-                  <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>YTD</div>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: selectedFund.performance.ytd >= 0 ? T.green : T.red, fontFamily: FONTS.mono, userSelect: "none" }}>
-                    {selectedFund.performance.ytd >= 0 ? "+" : ""}{selectedFund.performance.ytd}%
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Annual</div>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
-                    +{selectedFund.performance.annualReturn}%
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Sharpe</div>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
-                    {selectedFund.performance.sharpeRatio}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Max DD</div>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: T.amber, fontFamily: FONTS.mono, userSelect: "none" }}>
-                    {selectedFund.performance.maxDrawdown}%
-                  </div>
-                </div>
-              </div>
             </div>
           )}
         </BottomSheet>

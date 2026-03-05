@@ -17,8 +17,8 @@ export default function BottomSheet({ isOpen, onClose, children }) {
         onClick={onClose}
         style={{
           position: "fixed", inset: 0,
-          background: "rgba(1,1,9,0.7)",
-          backdropFilter: "blur(6px)",
+          background: "rgba(1,1,9,0.45)",
+          backdropFilter: "blur(3px)",
           zIndex: 200,
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? "auto" : "none",
@@ -29,9 +29,9 @@ export default function BottomSheet({ isOpen, onClose, children }) {
       <div style={{
         position: "fixed",
         bottom: 0, left: 0, right: 0,
-        height: "42vh",
-        minHeight: "280px",
-        maxHeight: "480px",
+        height: "38vh",
+        minHeight: "260px",
+        maxHeight: "420px",
         background: "rgba(8,8,22,0.97)",
         border: "1px solid rgba(6,182,212,0.15)",
         borderBottom: "none",
@@ -68,7 +68,7 @@ export default function BottomSheet({ isOpen, onClose, children }) {
         {/* Scrollable content */}
         <div style={{
           flex: 1, overflowY: "auto",
-          padding: "16px 32px 32px",
+          padding: "12px 32px 24px",
         }}>
           {children}
         </div>
