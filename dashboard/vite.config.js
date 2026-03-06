@@ -16,7 +16,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        about: resolve(__dirname, 'about.html'),
+        vision: resolve(__dirname, 'vision.html'),
         market: resolve(__dirname, 'market.html'),
         app: resolve(__dirname, 'app.html')
       }
