@@ -526,6 +526,22 @@ export default function MarketDashboard({ activeTab: propActiveTab, setActiveTab
       s.id = id; s.textContent = CSS;
       document.head.appendChild(s);
     }
+
+    // Back to top visibility
+    const btt = document.getElementById("btt");
+    if (btt) {
+      const handleScroll = () => {
+        if (window.scrollY > 300) {
+          btt.style.opacity = "1";
+          btt.style.pointerEvents = "auto";
+        } else {
+          btt.style.opacity = "0";
+          btt.style.pointerEvents = "none";
+        }
+      };
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
   }, []);
 
   const fetchPrices = useCallback(async () => {
@@ -976,6 +992,39 @@ export default function MarketDashboard({ activeTab: propActiveTab, setActiveTab
           </div>
         </div>
       </div>
+
+      {/* ── Page Dots (○○●) ── */}
+      <div style={{
+        position: "fixed", bottom: 36, left: "50%", transform: "translateX(-50%)",
+        display: "flex", alignItems: "center", gap: 8, zIndex: 300,
+      }}>
+        <a href="index.html" style={{
+          width: 7, height: 7, borderRadius: "50%",
+          background: "rgba(37,99,235,0.35)", display: "inline-block"
+        }} title="Home" />
+        <a href="vision.html" style={{
+          width: 7, height: 7, borderRadius: "50%",
+          background: "rgba(37,99,235,0.35)", display: "inline-block"
+        }} title="About" />
+        <span style={{
+          width: 7, height: 7, borderRadius: "50%",
+          background: "rgba(99,140,248,0.85)", display: "inline-block"
+        }} />
+      </div>
+
+      {/* ── Back to Top Button ── */}
+      <button id="btt" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} title="Back to top" style={{
+        position: "fixed", bottom: 32, right: 32, zIndex: 300,
+        width: 40, height: 40, borderRadius: "50%",
+        background: "rgba(3,15,42,0.85)",
+        border: "1px solid rgba(99,102,241,0.35)",
+        color: "rgba(129,140,248,0.80)",
+        fontSize: 16, cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        backdropFilter: "blur(12px)",
+        opacity: 0, pointerEvents: "none",
+        transition: "opacity 0.3s, border-color 0.25s, box-shadow 0.25s",
+      }}>↑</button>
 
       {/* Token Detail - BottomSheet */}
       <BottomSheet isOpen={!!selectedToken} onClose={() => setSelected(null)}>
