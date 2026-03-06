@@ -608,6 +608,118 @@ footer {
   .layer-card { grid-template-columns: 60px 1fr; }
   footer { flex-direction: column; gap: 12px; text-align: center; }
 }
+
+/* ── CONTACT MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(2,2,8,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden;
+  transition: all 0.3s ease;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+
+.modal-card {
+  background: rgba(10,9,24,0.95);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 4px;
+  width: 90%; max-width: 480px;
+  padding: 40px;
+  position: relative;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+.modal-overlay.active .modal-card { transform: translateY(0); }
+
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: none; border: none;
+  color: var(--muted); font-size: 24px;
+  cursor: pointer; line-height: 1;
+  transition: color 0.2s;
+}
+.modal-close:hover { color: var(--white); }
+
+.modal-header { text-align: center; margin-bottom: 32px; }
+.modal-icon {
+  font-size: 28px; color: rgba(129,140,248,0.80);
+  margin-bottom: 12px;
+}
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 700;
+  color: var(--white); margin-bottom: 8px;
+}
+.modal-desc {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 12px; color: var(--muted);
+}
+
+.modal-form { display: flex; flex-direction: column; gap: 20px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: rgba(2,2,8,0.60);
+  border: 1px solid rgba(99,102,241,0.20);
+  border-radius: 2px;
+  padding: 12px 14px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 13px; color: var(--white);
+  outline: none; transition: border-color 0.2s;
+}
+.form-group input::placeholder,
+.form-group textarea::placeholder { color: rgba(199,210,254,0.30); }
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: rgba(129,140,248,0.60);
+}
+.form-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238196a8' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.btn-submit {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: #fff;
+  background: rgba(37,99,235,0.35);
+  border: 1px solid rgba(99,102,241,0.50);
+  padding: 14px 36px; border-radius: 2px;
+  cursor: pointer; margin-top: 8px;
+  transition: all 0.3s ease;
+}
+.btn-submit:hover {
+  background: rgba(37,99,235,0.55);
+  border-color: rgba(129,140,248,0.75);
+}
+
+/* AI Chat Button */
+.btn-ai {
+  background: rgba(129,140,248,0.15);
+  border-color: rgba(129,140,248,0.35);
+}
+.btn-ai:hover {
+  background: rgba(129,140,248,0.30);
+  border-color: rgba(129,140,248,0.60);
+}
+.ai-icon {
+  margin-right: 6px;
+  color: rgba(129,140,248,0.90);
+}
 </style>
 </head>
 <body>
@@ -881,13 +993,60 @@ footer {
         <h2 class="cta-title">CometCloud is in private access.</h2>
         <p class="cta-sub">Institutional allocators, GPs, and RWA partners — reach out directly.</p>
         <div class="cta-buttons">
-          <a class="btn-primary" href="/cdn-cgi/l/email-protection#8fe7eae3e3e0cfece0e2eafbece3e0faeba1eee6">Request Access</a>
+          <a class="btn-primary" href="#" id="btnContactForm">Request Access</a>
+          <a class="btn-primary btn-ai" href="https://t.me/CometCloudAI" target="_blank" rel="noopener">
+            <span class="ai-icon">◈</span> Chat with AI
+          </a>
           <a class="btn-primary" href="market.html" style="background:rgba(7,26,74,0.30);border-color:rgba(37,99,235,0.35)">Open Platform</a>
         </div>
       </div>
     </div>
   </section>
 
+</div>
+
+<!-- CONTACT FORM MODAL -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose">×</button>
+    <div class="modal-header">
+      <div class="modal-icon">◇</div>
+      <h3 class="modal-title">Request Access</h3>
+      <p class="modal-desc">Tell us about yourself and your interests.</p>
+    </div>
+    <form class="modal-form" id="contactForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" name="name" required placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label>Organization</label>
+          <input type="text" name="org" placeholder="Company / Fund">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" required placeholder="work@email.com">
+      </div>
+      <div class="form-group">
+        <label>Interest</label>
+        <select name="interest">
+          <option value="">Select your focus area</option>
+          <option value="fund">Fund-of-Funds Allocation</option>
+          <option value="gp">GP / Fund Partner</option>
+          <option value="rwa">RWA Protocol</option>
+          <option value="institutional">Institutional Services</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Message (Optional)</label>
+        <textarea name="message" rows="2" placeholder="How can we help?"></textarea>
+      </div>
+      <button type="submit" class="btn-submit">Submit Request</button>
+    </form>
+  </div>
 </div>
 
 <!-- FOOTER -->
@@ -902,6 +1061,42 @@ footer {
 </footer>
 
 <script>
+// Contact Modal
+const modal = document.getElementById('contactModal');
+const btnContact = document.getElementById('btnContactForm');
+const btnClose = document.getElementById('modalClose');
+const contactForm = document.getElementById('contactForm');
+
+btnContact.addEventListener('click', e => {
+  e.preventDefault();
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+});
+
+btnClose.addEventListener('click', () => {
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+});
+
+modal.addEventListener('click', e => {
+  if (e.target === modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+});
+
+contactForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const formData = new FormData(contactForm);
+  const data = Object.fromEntries(formData);
+  console.log('Contact form submitted:', data);
+  // Here you would send to your backend API
+  alert('Thank you! We will reach out shortly.');
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+  contactForm.reset();
+});
+
 // Scroll reveal — add hidden first so content shows if JS fails
 const reveals = document.querySelectorAll('.reveal');
 reveals.forEach(el => el.classList.add('hidden'));
