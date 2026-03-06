@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { ChevronDown, ChevronUp, BarChart3 } from "lucide-react";
-import { ChevronCw } from "lucide-react";
+import { ChevronDown, ChevronUp, BarChart3, RefreshCw } from "lucide-react";
 import BottomSheet from "./ui/BottomSheet";
 
 const T = {

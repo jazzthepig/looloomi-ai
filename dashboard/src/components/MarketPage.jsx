@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   RefreshCw, Wifi, WifiOff, ArrowUpRight, ArrowDownRight,
   Minus, Layers, TrendingUp
@@ -8,6 +8,7 @@ import {
   Tooltip, ResponsiveContainer
 } from "recharts";
 import BottomSheet from "./ui/BottomSheet";
+import CISLeaderboard from "./CISLeaderboard";
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 const T = {
@@ -62,64 +63,48 @@ const CATEGORIES = ["All", "RWA", "Oracle", "L1", "L2", "DeFi"];
 const API_BASE = "/api/v1";
 const REFRESH_INTERVAL = 30000;
 
-/* ─── CIS Score Data (mock - to be updated via AI daily) ───────────────── */
+/* ─── CIS Data (mock for demo) ────────────────────────────────────────── */
 const CIS_DATA = {
-  ONDO:   { score: 85.2, grade: "A" },
-  POLYX:  { score: 72.5, grade: "B" },
-  SYRUP:  { score: 80.3, grade: "A" },
-  OPEN:   { score: 68.0, grade: "B" },
-  ACX:    { score: 71.2, grade: "B" },
-  LINK:   { score: 80.0, grade: "B" },
-  PYTH:   { score: 75.5, grade: "B" },
-  BTC:    { score: 85.0, grade: "A" },
-  ETH:    { score: 85.0, grade: "A" },
-  SOL:    { score: 81.8, grade: "B" },
-  AVAX:   { score: 78.5, grade: "B" },
-  ARB:    { score: 70.8, grade: "B" },
-  OP:     { score: 68.6, grade: "C" },
-  AAVE:   { score: 77.2, grade: "B" },
-  UNI:    { score: 77.8, grade: "B" },
-  MKR:    { score: 76.0, grade: "B" },
+  ONDO:   { score: 85.2, grade: "A", pillars: { F: 88, M: 82, O: 85, S: 78, alpha: 80 } },
+  POLYX:  { score: 72.5, grade: "B", pillars: { F: 80, M: 68, O: 75, S: 65, alpha: 70 } },
+  SYRUP:  { score: 80.3, grade: "A", pillars: { F: 85, M: 78, O: 82, S: 72, alpha: 78 } },
+  OPEN:   { score: 68.0, grade: "B", pillars: { F: 72, M: 65, O: 70, S: 62, alpha: 65 } },
+  ACX:    { score: 71.2, grade: "B", pillars: { F: 75, M: 68, O: 72, S: 65, alpha: 70 } },
+  LINK:   { score: 80.0, grade: "B", pillars: { F: 88, M: 78, O: 85, S: 70, alpha: 65 } },
+  PYTH:   { score: 75.5, grade: "B", pillars: { F: 80, M: 72, O: 78, S: 68, alpha: 72 } },
+  BTC:    { score: 85.0, grade: "A", pillars: { F: 95, M: 98, O: 95, S: 60, alpha: 40 } },
+  ETH:    { score: 85.0, grade: "A", pillars: { F: 92, M: 95, O: 90, S: 68, alpha: 55 } },
+  SOL:    { score: 81.8, grade: "B", pillars: { F: 80, M: 90, O: 88, S: 75, alpha: 65 } },
+  AVAX:   { score: 78.5, grade: "B", pillars: { F: 82, M: 80, O: 78, S: 72, alpha: 70 } },
+  ARB:    { score: 70.8, grade: "B", pillars: { F: 75, M: 70, O: 78, S: 60, alpha: 62 } },
+  OP:     { score: 68.6, grade: "C", pillars: { F: 73, M: 68, O: 75, S: 58, alpha: 60 } },
+  AAVE:   { score: 77.2, grade: "B", pillars: { F: 82, M: 75, O: 85, S: 65, alpha: 70 } },
+  UNI:    { score: 77.8, grade: "B", pillars: { F: 80, M: 85, O: 82, S: 62, alpha: 68 } },
+  MKR:    { score: 76.0, grade: "B", pillars: { F: 85, M: 72, O: 88, S: 58, alpha: 60 } },
 };
 
-/* ─── AI Signal Data (updated manually via AI daily) ────────────────────── */
-const AI_SIGNAL_DATA = {
-  ONDO:   { label: "Accumulate", color: "#00D98A" },
-  POLYX:  { label: "Hold", color: "#00C8E0" },
-  SYRUP:  { label: "Accumulate", color: "#00D98A" },
-  OPEN:   { label: "Neutral", color: "#8880BE" },
-  ACX:    { label: "Watch", color: "#E8A000" },
-  LINK:   { label: "Hold", color: "#00C8E0" },
-  PYTH:   { label: "Hold", color: "#00C8E0" },
-  BTC:    { label: "Hold", color: "#00C8E0" },
-  ETH:    { label: "Accumulate", color: "#00D98A" },
-  SOL:    { label: "Neutral", color: "#8880BE" },
-  AVAX:   { label: "Hold", color: "#00C8E0" },
-  ARB:    { label: "Watch", color: "#E8A000" },
-  OP:     { label: "Watch", color: "#E8A000" },
-  AAVE:   { label: "Hold", color: "#00C8E0" },
-  UNI:    { label: "Hold", color: "#00C8E0" },
-  MKR:    { label: "Neutral", color: "#8880BE" },
-};
+/* ─── Signal Generation based on CIS + Price ────────────────────────── */
+const generateSignal = (symbol, priceData) => {
+  const p = priceData[symbol];
+  const cis = CIS_DATA[symbol];
 
-/* ─── TVL Data (mock - from DeFiLlama when available) ──────────────────── */
-const TVL_DATA = {
-  ONDO:   628000000,
-  POLYX:  180000000,
-  SYRUP:  459000000,
-  OPEN:   85000000,
-  ACX:    120000000,
-  LINK:   8700000000,
-  PYTH:   3200000000,
-  BTC:    120000000000,
-  ETH:    44000000000,
-  SOL:    9100000000,
-  AVAX:   7200000000,
-  ARB:    2800000000,
-  OP:     2100000000,
-  AAVE:   12400000000,
-  UNI:    8500000000,
-  MKR:    7200000000,
+  if (!p || !cis) return { label: "—", color: T.muted };
+
+  const change24h = p.change_24h || 0;
+  const score = cis.score;
+
+  // Signal logic
+  if (score >= 85 && change24h > -3) {
+    return { label: "Accumulate", color: T.green };
+  } else if (score >= 70 && score < 85 && change24h >= -2 && change24h <= 5) {
+    return { label: "Hold", color: T.cyan };
+  } else if (change24h > 15) {
+    return { label: "Watch", color: T.amber };
+  } else if (score < 60 || change24h < -10) {
+    return { label: "Sell", color: T.red };
+  } else {
+    return { label: "Neutral", color: T.secondary };
+  }
 };
 
 /* Global CSS */
@@ -157,8 +142,8 @@ const CSS = `
     to   { opacity:1; transform:translateX(0); }
   }
   @keyframes pulse {
-    0%,100% { opacity:1; }
-    50%      { opacity:0.35; }
+    0%,100% { opacity1; }
+    50%      { opacity0.35; }
   }
   @keyframes shimmer {
     0%   { background-position:-400px 0; }
@@ -287,6 +272,27 @@ const CSS = `
     color:#4472FF;
   }
 
+  /* Signal badge */
+  .signal-badge {
+    display:inline-flex; align-items:center;
+    padding:3px 8px; border-radius:4px;
+    font-size:10px; font-weight:600;
+    font-family:'Exo 2',sans-serif;
+    letter-spacing:0.05em;
+  }
+
+  /* CIS badge */
+  .cis-badge {
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px; font-weight:600;
+  }
+
+  /* Grade colors */
+  .grade-a { color:#00D98A; }
+  .grade-b { color:#4472FF; }
+  .grade-c { color:#E8A000; }
+  .grade-d { color:#FF2D55; }
+
   /* Mobile responsive */
   @media (max-width: 768px) {
     .mobile-hidden { display: none !important; }
@@ -294,10 +300,8 @@ const CSS = `
     .mobile-stack { flex-direction: column !important; }
     .mobile-pad { padding: 0 12px !important; }
     .mobile-stat-grid { grid-template-columns: 1fr 1fr !important; }
-    .mobile-table-grid { grid-template-columns: 2fr 0.8fr 0.7fr 0.7fr !important; }
-    .mobile-table-header { grid-template-columns: 2fr 0.8fr 0.7fr 0.7fr !important; }
-    .mobile-cis-signal { display: none !important; }
-    .mobile-table-header { grid-template-columns: 1.8fr 1fr 1fr !important; }
+    .mobile-table-grid { grid-template-columns: 1.8fr 1fr 1fr 1fr !important; }
+    .mobile-table-header { grid-template-columns: 1.8fr 1fr 1fr 1fr !important; }
     .mobile-nav { flex-wrap: wrap !important; gap: 6px !important; }
     .mobile-nav-right { margin-top: 10px !important; width: 100% !important; justify-content: space-between !important; }
     .mobile-7d-chart { display: none !important; }
@@ -340,14 +344,6 @@ const CAT_STYLE = {
   "L1":     { bg: "rgba(0,217,138,.10)",    text: "#00D98A" },
   "L2":     { bg: "rgba(0,200,224,.08)",    text: "#00C8E0" },
   "DeFi":   { bg: "rgba(255,16,96,.10)",    text: "#FF1060" },
-};
-
-const fmtTvl = (v) => {
-  if (!v) return "—";
-  if (v >= 1e12) return `$${(v/1e12).toFixed(2)}T`;
-  if (v >= 1e9) return `$${(v/1e9).toFixed(2)}B`;
-  if (v >= 1e6) return `$${(v/1e6).toFixed(1)}M`;
-  return `$${v.toLocaleString()}`;
 };
 
 const CatBadge = ({ cat }) => {
@@ -406,11 +402,43 @@ const ChangeCell = ({ v }) => {
   );
 };
 
+/* ─── CIS & Signal Cell ─────────────────────────────────────────────── */
+const CISScoreCell = ({ symbol }) => {
+  const cis = CIS_DATA[symbol];
+  if (!cis) return <span style={{ color: T.muted }}>—</span>;
+
+  const gradeClass = cis.grade === "A" ? "grade-a" : cis.grade === "B" ? "grade-b" : cis.grade === "C" ? "grade-c" : "grade-d";
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <span className={`cis-badge ${gradeClass}`}>{cis.score.toFixed(1)}</span>
+    </div>
+  );
+};
+
+const SignalCell = ({ symbol, priceData }) => {
+  const signal = generateSignal(symbol, priceData);
+  return (
+    <span
+      className="signal-badge"
+      style={{
+        background: `${signal.color}15`,
+        border: `1px solid ${signal.color}30`,
+        color: signal.color,
+      }}
+    >
+      {signal.label}
+    </span>
+  );
+};
+
 /* ─── Token Detail Panel ─────────────────────────────────────────────── */
 const TokenDetail = ({ token, priceData, ohlcv, onClose }) => {
   const p = priceData?.[token.symbol];
   const candles = ohlcv?.[token.symbol] || [];
   const positive = (p?.change_24h || 0) >= 0;
+  const cis = CIS_DATA[token.symbol];
+  const signal = generateSignal(token.symbol, priceData);
 
   return (
     <div className="lm-card fade-up" style={{ padding: 22, marginBottom: 2 }}>
@@ -440,6 +468,33 @@ const TokenDetail = ({ token, priceData, ohlcv, onClose }) => {
           cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 2px",
         }}>×</button>
       </div>
+
+      {/* CIS & Signal */}
+      {cis && (
+        <div style={{ display: "flex", gap: 16, marginBottom: 18, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: FONTS.body, marginBottom: 5 }}>
+              CIS Score
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 600, fontFamily: FONTS.mono, color: cis.grade === "A" ? T.green : cis.grade === "B" ? T.blue : T.amber }}>
+              {cis.score.toFixed(1)} <span style={{ fontSize: 14, color: T.muted }}>Grade {cis.grade}</span>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: FONTS.body, marginBottom: 5 }}>
+              AI Signal
+            </div>
+            <span className="signal-badge" style={{
+              background: `${signal.color}15`,
+              border: `1px solid ${signal.color}30`,
+              color: signal.color,
+              fontSize: 14, padding: "6px 12px",
+            }}>
+              {signal.label}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Stats row */}
       <div style={{ display: "flex", gap: 28, marginBottom: 18, flexWrap: "wrap" }}>
@@ -503,11 +558,10 @@ const TokenDetail = ({ token, priceData, ohlcv, onClose }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════════════════
-   MARKET DASHBOARD
+   MARKET PAGE - Full integration with CIS Score & Signal
 ═══════════════════════════════════════════════════════════════════════ */
-export default function MarketDashboard({ activeTab: propActiveTab, setActiveTab: propSetActiveTab, isSection = false }) {
+export default function MarketPage() {
   const [priceData, setPriceData]     = useState({});
-  const [activeTab, setActiveTab]     = useState(propActiveTab || "Asset Prices");
   const [ohlcv, setOhlcv]             = useState({});
   const [fng, setFng]                 = useState(null);
   const [defi, setDefi]               = useState(null);
@@ -517,6 +571,7 @@ export default function MarketDashboard({ activeTab: propActiveTab, setActiveTab
   const [category, setCategory]       = useState("All");
   const [selectedToken, setSelected]  = useState(null);
   const [apiStatus, setApiStatus]     = useState("connecting");
+  const [activeTab, setActiveTab]     = useState("Market");
   const intervalRef                   = useRef(null);
 
   useEffect(() => {
@@ -603,7 +658,7 @@ export default function MarketDashboard({ activeTab: propActiveTab, setActiveTab
   const fngLabel = fng?.current?.label ?? "—";
   const fngColor = fngVal === null ? T.muted : fngVal >= 60 ? T.green : fngVal >= 40 ? T.amber : T.red;
 
-  // Sorted for gainer/loser — only use actual data, not zero-padded
+  // Sorted for gainer/loser
   const withData = TOKEN_UNIVERSE
     .map(t => ({ ...t, chg: priceData[t.symbol]?.change_24h ?? null }))
     .filter(t => t.chg !== null)
@@ -612,7 +667,9 @@ export default function MarketDashboard({ activeTab: propActiveTab, setActiveTab
   const topGainer = withData[0];
   const topLoser  = withData[withData.length - 1];
 
-  /* ── Shared nav bar ── */
+  /* ── Navigation ── */
+  const TABS = ["Market", "CIS Leaderboard"];
+
   const NavBar = () => (
     <div className="mobile-header" style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -621,15 +678,15 @@ export default function MarketDashboard({ activeTab: propActiveTab, setActiveTab
       flexWrap: "wrap",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <span onClick={() => setActiveTab("Asset Prices")}
-          style={{
-            fontFamily: FONTS.display, fontWeight: 700, fontSize: 20,
-            letterSpacing: "-0.02em", color: T.primary, cursor: "pointer",
-          }}>
+        <a href="index.html" style={{
+          fontFamily: FONTS.display, fontWeight: 700, fontSize: 20,
+          letterSpacing: "-0.02em", color: T.primary, cursor: "pointer",
+          textDecoration: "none",
+        }}>
           CometCloud
-        </span>
+        </a>
         <div className="mobile-nav" style={{ display: "flex", gap: 4 }}>
-          {["Asset Prices", "Intelligence", "CIS", "Vault", "Protocol", "Quant GP"].map(tab => (
+          {TABS.map(tab => (
             <button key={tab}
               onClick={() => setActiveTab(tab)}
               style={{
@@ -679,6 +736,256 @@ export default function MarketDashboard({ activeTab: propActiveTab, setActiveTab
     </div>
   );
 
+  /* ── Market Tab ── */
+  const MarketTab = () => (
+    <>
+      {/* ── Stat cards ── */}
+      <div className="mobile-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
+
+        {/* Fear & Greed */}
+        <div className="lm-card" style={{ padding: "18px 20px" }}>
+          <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
+            Fear & Greed
+          </div>
+          {fngVal !== null ? (
+            <>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 9 }}>
+                <span style={{ fontSize: 32, fontWeight: 600, fontFamily: FONTS.mono, color: fngColor, lineHeight: 1 }}>
+                  {fngVal}
+                </span>
+                <span style={{ fontSize: 12, color: fngColor, fontFamily: FONTS.body, fontWeight: 500 }}>{fngLabel}</span>
+              </div>
+              <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>Alternative.me · Daily</div>
+            </>
+          ) : <div className="sk" style={{ height: 32, width: 100, marginTop: 4 }} />}
+        </div>
+
+        {/* DeFi TVL */}
+        <div className="lm-card" style={{ padding: "18px 20px" }}>
+          <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
+            DeFi TVL
+          </div>
+          {defi ? (
+            <>
+              <div style={{ fontSize: 32, fontWeight: 600, fontFamily: FONTS.mono, color: T.primary, lineHeight: 1 }}>
+                {defi.total_tvl_formatted}
+              </div>
+              <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>DeFiLlama · All chains</div>
+            </>
+          ) : <div className="sk" style={{ height: 32, width: 90, marginTop: 4 }} />}
+        </div>
+
+        {/* Top Gainer */}
+        <div className="lm-card" style={{ padding: "18px 20px" }}>
+          <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
+            Top Gainer (24h)
+          </div>
+          {topGainer ? (
+            <>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                <span style={{ fontSize: 20, fontWeight: 700, fontFamily: FONTS.display, color: T.primary, letterSpacing: "-0.01em" }}>
+                  {topGainer.symbol}
+                </span>
+                <span style={{ fontSize: 17, fontWeight: 500, fontFamily: FONTS.mono, color: T.green }}>
+                  +{topGainer.chg.toFixed(2)}%
+                </span>
+              </div>
+              <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>{topGainer.name}</div>
+            </>
+          ) : <div className="sk" style={{ height: 32, width: 110, marginTop: 4 }} />}
+        </div>
+
+        {/* Top Loser */}
+        <div className="lm-card" style={{ padding: "18px 20px" }}>
+          <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
+            Top Loser (24h)
+          </div>
+          {topLoser && topLoser.chg < 0 ? (
+            <>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                <span style={{ fontSize: 20, fontWeight: 700, fontFamily: FONTS.display, color: T.primary, letterSpacing: "-0.01em" }}>
+                  {topLoser.symbol}
+                </span>
+                <span style={{ fontSize: 17, fontWeight: 500, fontFamily: FONTS.mono, color: T.red }}>
+                  {topLoser.chg.toFixed(2)}%
+                </span>
+              </div>
+              <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>{topLoser.name}</div>
+            </>
+          ) : <div className="sk" style={{ height: 32, width: 110, marginTop: 4 }} />}
+        </div>
+      </div>
+
+      {/* ── Category filter ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+        {CATEGORIES.map(cat => (
+          <button key={cat}
+            className={`cat-btn${category === cat ? " active" : ""}`}
+            onClick={() => { setCategory(cat); setSelected(null); }}>
+            {cat}
+          </button>
+        ))}
+        <div style={{ marginLeft: "auto", fontSize: 11, color: T.muted, fontFamily: FONTS.mono }}>
+          {filtered.length} assets · Binance
+        </div>
+      </div>
+
+      {/* ── Token Table with CIS & Signal ── */}
+      <div className="lm-card" style={{ overflow: "hidden" }}>
+        {/* Table header */}
+        <div className="mobile-table-header" style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 0.9fr 0.8fr 0.8fr 0.7fr 0.8fr 80px",
+          gap: 8, padding: "11px 20px",
+          borderBottom: `1px solid ${T.border}`,
+          fontSize: 10, color: T.muted, letterSpacing: "0.11em",
+          textTransform: "uppercase", fontFamily: FONTS.body,
+        }}>
+          <span>Asset</span>
+          <span style={{ textAlign: "right" }}>Price</span>
+          <span style={{ textAlign: "right" }}>24h</span>
+          <span style={{ textAlign: "right" }}>7d</span>
+          <span style={{ textAlign: "center" }}>CIS</span>
+          <span style={{ textAlign: "center" }}>Signal</span>
+          <span style={{ textAlign: "right" }} className="mobile-7d-chart">Chart</span>
+        </div>
+
+        {/* Rows */}
+        {loading
+          ? Array(8).fill(0).map((_, i) => (
+              <div key={i} className="mobile-table-grid" style={{
+                display: "grid",
+                gridTemplateColumns: "2fr 0.9fr 0.8fr 0.8fr 0.7fr 0.8fr 80px",
+                gap: 8, padding: "13px 20px", borderBottom: `1px solid ${T.border}`,
+                alignItems: "center",
+              }}>
+                {[130, 70, 60, 60, 50, 60, 72].map((w, j) => (
+                  <div key={j} className="sk" style={{ height: 13, width: w, maxWidth: "100%" }} />
+                ))}
+              </div>
+            ))
+          : filtered.map((token, i) => {
+              const p = priceData[token.symbol];
+              const positive = (p?.change_24h || 0) >= 0;
+              const isSelected = selectedToken?.symbol === token.symbol;
+
+              return (
+                <div key={token.symbol}>
+                  <div className="lm-row mobile-table-grid"
+                    onClick={() => setSelected(isSelected ? null : token)}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "2fr 0.9fr 0.8fr 0.8fr 0.7fr 0.8fr 80px",
+                      gap: 8, padding: "13px 20px",
+                      borderBottom: `1px solid ${T.border}`,
+                      background: isSelected ? `rgba(68,114,255,.04)` : "transparent",
+                      animation: `fadeUp 0.35s ease ${i * 0.03}s both`,
+                      cursor: "pointer",
+                    }}>
+
+                    {/* Asset */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                      <div style={{
+                        width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
+                        background: `${token.color}15`,
+                        border: `1px solid ${token.color}35`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 9, fontWeight: 700, color: token.color, fontFamily: FONTS.mono,
+                      }}>
+                        {token.symbol.slice(0, 2)}
+                      </div>
+                      <div>
+                        <div style={{
+                          fontSize: 14, fontWeight: 600, color: T.primary,
+                          fontFamily: FONTS.display, letterSpacing: "-0.01em", lineHeight: 1.2,
+                        }}>
+                          {token.symbol}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+                          <span style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.body }}>{token.name}</span>
+                          <CatBadge cat={token.category} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Price */}
+                    <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                      {p
+                        ? <span style={{ fontSize: 13, fontWeight: 500, fontFamily: FONTS.mono, color: T.primary }}>{fmt.price(p.price)}</span>
+                        : <div className="sk" style={{ height: 13, width: 60 }} />}
+                    </div>
+
+                    {/* 24h Change */}
+                    <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                      {p ? <ChangeCell v={p.change_24h} /> : <div className="sk" style={{ height: 13, width: 50 }} />}
+                    </div>
+
+                    {/* 7d Change (mock) */}
+                    <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                      {p
+                        ? <ChangeCell v={(p.change_24h || 0) * 3.5} />
+                        : <div className="sk" style={{ height: 13, width: 50 }} />}
+                    </div>
+
+                    {/* CIS Score */}
+                    <div style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <CISScoreCell symbol={token.symbol} />
+                    </div>
+
+                    {/* Signal */}
+                    <div style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <SignalCell symbol={token.symbol} priceData={priceData} />
+                    </div>
+
+                    {/* Chart */}
+                    <div className="mobile-7d-chart" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                      <Spark data={ohlcv[token.symbol]} positive={positive} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+        }
+      </div>
+
+      {/* ── DeFi Top Protocols ── */}
+      {defi?.top_protocols?.length > 0 && (
+        <div style={{ marginTop: 22 }}>
+          <div style={{
+            fontSize: 10, color: T.muted, letterSpacing: "0.11em",
+            textTransform: "uppercase", fontFamily: FONTS.body,
+            marginBottom: 12, display: "flex", alignItems: "center", gap: 7,
+          }}>
+            <Layers size={11} /> DeFiLlama · Top Protocols by TVL
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 8 }}>
+            {defi.top_protocols.slice(0, 8).map((p, i) => (
+              <div key={p.name} className="lm-card" style={{
+                padding: "13px 16px",
+                animation: `fadeUp 0.3s ease ${i * 0.05}s both`,
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 6 }}>
+                  {p.name}
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 600, color: T.blue, fontFamily: FONTS.mono, marginBottom: 8 }}>
+                  {fmt.tvl(p.tvl)}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>{p.category}</span>
+                  {p.change_1d !== undefined && (
+                    <span style={{ fontSize: 10, fontFamily: FONTS.mono, color: (p.change_1d || 0) >= 0 ? T.green : T.red }}>
+                      {fmt.pct(p.change_1d)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div style={{ position: "relative", minHeight: "100vh", background: T.void }}>
       {/* Turrell ambient */}
@@ -690,275 +997,30 @@ export default function MarketDashboard({ activeTab: propActiveTab, setActiveTab
       </div>
 
       <div className="mobile-pad" style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
-        {!isSection && <NavBar />}
+        <NavBar />
 
-        {/* ── Stat cards ── */}
-        <div className="mobile-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
-
-          {/* Fear & Greed */}
-          <div className="lm-card" style={{ padding: "18px 20px" }}>
-            <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
-              Fear & Greed
+        {/* Tab Content */}
+        {activeTab === "Market" && <MarketTab />}
+        {activeTab === "CIS Leaderboard" && (
+          <div>
+            <div style={{ marginBottom: 20 }}>
+              <h2 style={{
+                fontFamily: FONTS.display, fontSize: 28, fontWeight: 700,
+                color: T.primary, marginBottom: 8, letterSpacing: "-0.02em"
+              }}>
+                <span style={{ color: T.cyan, marginRight: 12 }}>//</span>
+                CIS Leaderboard
+              </h2>
+              <p style={{
+                fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
+                maxWidth: 600, lineHeight: 1.6
+              }}>
+                CometCloud Intelligence Score — Multi-dimensional asset evaluation
+                across Fundamental, Market Structure, On-Chain Health, Sentiment, and Alpha Independence.
+              </p>
             </div>
-            {fngVal !== null ? (
-              <>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 9 }}>
-                  <span style={{ fontSize: 32, fontWeight: 600, fontFamily: FONTS.mono, color: fngColor, lineHeight: 1 }}>
-                    {fngVal}
-                  </span>
-                  <span style={{ fontSize: 12, color: fngColor, fontFamily: FONTS.body, fontWeight: 500 }}>{fngLabel}</span>
-                </div>
-                <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>Alternative.me · Daily</div>
-              </>
-            ) : <div className="sk" style={{ height: 32, width: 100, marginTop: 4 }} />}
-          </div>
-
-          {/* DeFi TVL */}
-          <div className="lm-card" style={{ padding: "18px 20px" }}>
-            <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
-              DeFi TVL
-            </div>
-            {defi ? (
-              <>
-                <div style={{ fontSize: 32, fontWeight: 600, fontFamily: FONTS.mono, color: T.primary, lineHeight: 1 }}>
-                  {defi.total_tvl_formatted}
-                </div>
-                <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>DeFiLlama · All chains</div>
-              </>
-            ) : <div className="sk" style={{ height: 32, width: 90, marginTop: 4 }} />}
-          </div>
-
-          {/* Top Gainer */}
-          <div className="lm-card" style={{ padding: "18px 20px" }}>
-            <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
-              Top Gainer (24h)
-            </div>
-            {topGainer ? (
-              <>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                  <span style={{ fontSize: 20, fontWeight: 700, fontFamily: FONTS.display, color: T.primary, letterSpacing: "-0.01em" }}>
-                    {topGainer.symbol}
-                  </span>
-                  <span style={{ fontSize: 17, fontWeight: 500, fontFamily: FONTS.mono, color: T.green }}>
-                    +{topGainer.chg.toFixed(2)}%
-                  </span>
-                </div>
-                <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>{topGainer.name}</div>
-              </>
-            ) : <div className="sk" style={{ height: 32, width: 110, marginTop: 4 }} />}
-          </div>
-
-          {/* Top Loser */}
-          <div className="lm-card" style={{ padding: "18px 20px" }}>
-            <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
-              Top Loser (24h)
-            </div>
-            {topLoser && topLoser.chg < 0 ? (
-              <>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                  <span style={{ fontSize: 20, fontWeight: 700, fontFamily: FONTS.display, color: T.primary, letterSpacing: "-0.01em" }}>
-                    {topLoser.symbol}
-                  </span>
-                  <span style={{ fontSize: 17, fontWeight: 500, fontFamily: FONTS.mono, color: T.red }}>
-                    {topLoser.chg.toFixed(2)}%
-                  </span>
-                </div>
-                <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>{topLoser.name}</div>
-              </>
-            ) : <div className="sk" style={{ height: 32, width: 110, marginTop: 4 }} />}
-          </div>
-        </div>
-
-        {/* ── Category filter ── */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
-          {CATEGORIES.map(cat => (
-            <button key={cat}
-              className={`cat-btn${category === cat ? " active" : ""}`}
-              onClick={() => { setCategory(cat); setSelected(null); }}>
-              {cat}
-            </button>
-          ))}
-          <div style={{ marginLeft: "auto", fontSize: 11, color: T.muted, fontFamily: FONTS.mono }}>
-            {filtered.length} assets · Binance
-          </div>
-        </div>
-
-        {/* ── Token Table ── */}
-        <div className="lm-card" style={{ overflow: "hidden" }}>
-          {/* Table header */}
-          <div className="mobile-table-header" style={{
-            display: "grid", gridTemplateColumns: "2fr 0.8fr 0.7fr 0.7fr 0.6fr 0.6fr 0.6fr 70px",
-            gap: 8, padding: "11px 20px",
-            borderBottom: `1px solid ${T.border}`,
-            fontSize: 10, color: T.muted, letterSpacing: "0.11em",
-            textTransform: "uppercase", fontFamily: FONTS.body,
-          }}>
-            <span>Asset</span>
-            <span style={{ textAlign: "right" }}>Price</span>
-            <span style={{ textAlign: "right" }}>24h</span>
-            <span style={{ textAlign: "right" }}>TVL</span>
-            <span style={{ textAlign: "center" }}>CIS</span>
-            <span style={{ textAlign: "center" }}>AI Signal</span>
-            <span style={{ textAlign: "right" }} className="mobile-hidden">Vol</span>
-            <span style={{ textAlign: "right" }} className="mobile-7d-chart">Chart</span>
-          </div>
-
-          {/* Rows */}
-          {loading
-            ? Array(8).fill(0).map((_, i) => (
-                <div key={i} className="mobile-table-grid" style={{
-                  display: "grid", gridTemplateColumns: "2fr 0.8fr 0.7fr 0.7fr 0.6fr 0.6fr 0.6fr 70px",
-                  gap: 8, padding: "13px 20px", borderBottom: `1px solid ${T.border}`,
-                  alignItems: "center",
-                }}>
-                  {[120, 60, 50, 50, 45, 45, 45, 60].map((w, j) => (
-                    <div key={j} className="sk" style={{ height: 13, width: w, maxWidth: "100%" }} />
-                  ))}
-                </div>
-              ))
-            : filtered.map((token, i) => {
-                const p = priceData[token.symbol];
-                const positive = (p?.change_24h || 0) >= 0;
-                const isSelected = selectedToken?.symbol === token.symbol;
-                const cis = CIS_DATA[token.symbol];
-                const aiSignal = AI_SIGNAL_DATA[token.symbol];
-                const tvl = TVL_DATA[token.symbol];
-
-                return (
-                  <div key={token.symbol}>
-                    <div className="lm-row mobile-table-grid"
-                      onClick={() => setSelected(isSelected ? null : token)}
-                      style={{
-                        display: "grid", gridTemplateColumns: "2fr 0.8fr 0.7fr 0.7fr 0.6fr 0.6fr 0.6fr 70px",
-                        gap: 8, padding: "13px 20px",
-                        borderBottom: `1px solid ${T.border}`,
-                        background: isSelected ? `rgba(68,114,255,.04)` : "transparent",
-                        animation: `fadeUp 0.35s ease ${i * 0.03}s both`,
-                        cursor: "pointer",
-                      }}>
-
-                      {/* Asset */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                        <div style={{
-                          width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
-                          background: `${token.color}15`,
-                          border: `1px solid ${token.color}35`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 9, fontWeight: 700, color: token.color, fontFamily: FONTS.mono,
-                        }}>
-                          {token.symbol.slice(0, 2)}
-                        </div>
-                        <div>
-                          <div style={{
-                            fontSize: 14, fontWeight: 600, color: T.primary,
-                            fontFamily: FONTS.display, letterSpacing: "-0.01em", lineHeight: 1.2,
-                          }}>
-                            {token.symbol}
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
-                            <span style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.body }}>{token.name}</span>
-                            <CatBadge cat={token.category} />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Price */}
-                      <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                        {p
-                          ? <span style={{ fontSize: 13, fontWeight: 500, fontFamily: FONTS.mono, color: T.primary }}>{fmt.price(p.price)}</span>
-                          : <div className="sk" style={{ height: 13, width: 55 }} />}
-                      </div>
-
-                      {/* Change */}
-                      <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                        {p ? <ChangeCell v={p.change_24h} /> : <div className="sk" style={{ height: 13, width: 45 }} />}
-                      </div>
-
-                      {/* TVL */}
-                      <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                        <span style={{ fontSize: 12, fontFamily: FONTS.mono, color: T.secondary }}>
-                          {fmtTvl(tvl)}
-                        </span>
-                      </div>
-
-                      {/* CIS Score */}
-                      <div className="mobile-cis-signal" style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {cis ? (
-                          <span style={{
-                            fontSize: 13, fontWeight: 600, fontFamily: FONTS.mono,
-                            color: cis.grade === "A" ? T.green : cis.grade === "B" ? T.blue : T.amber,
-                          }}>
-                            {cis.score}
-                          </span>
-                        ) : <span style={{ color: T.muted }}>—</span>}
-                      </div>
-
-                      {/* AI Signal */}
-                      <div className="mobile-cis-signal" style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {aiSignal ? (
-                          <span style={{
-                            fontSize: 10, fontWeight: 600, fontFamily: FONTS.body,
-                            padding: "3px 8px", borderRadius: 4,
-                            background: `${aiSignal.color}15`,
-                            border: `1px solid ${aiSignal.color}30`,
-                            color: aiSignal.color,
-                          }}>
-                            {aiSignal.label}
-                          </span>
-                        ) : <span style={{ color: T.muted }}>—</span>}
-                      </div>
-
-                      {/* Volume */}
-                      <div className="mobile-hidden" style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                        {p
-                          ? <span style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.mono }}>{fmt.vol(p.volume_24h_usdt)}</span>
-                          : <div className="sk" style={{ height: 13, width: 40 }} />}
-                      </div>
-
-                      {/* Chart */}
-                      <div className="mobile-7d-chart" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                        <Spark data={ohlcv[token.symbol]} positive={positive} />
-                      </div>
-                    </div>
-
-                  </div>
-                );
-              })
-          }
-        </div>
-
-        {/* ── DeFi Top Protocols ── */}
-        {defi?.top_protocols?.length > 0 && (
-          <div style={{ marginTop: 22 }}>
-            <div style={{
-              fontSize: 10, color: T.muted, letterSpacing: "0.11em",
-              textTransform: "uppercase", fontFamily: FONTS.body,
-              marginBottom: 12, display: "flex", alignItems: "center", gap: 7,
-            }}>
-              <Layers size={11} /> DeFiLlama · Top Protocols by TVL
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 8 }}>
-              {defi.top_protocols.slice(0, 8).map((p, i) => (
-                <div key={p.name} className="lm-card" style={{
-                  padding: "13px 16px",
-                  animation: `fadeUp 0.3s ease ${i * 0.05}s both`,
-                }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 6 }}>
-                    {p.name}
-                  </div>
-                  <div style={{ fontSize: 17, fontWeight: 600, color: T.blue, fontFamily: FONTS.mono, marginBottom: 8 }}>
-                    {fmt.tvl(p.tvl)}
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>{p.category}</span>
-                    {p.change_1d !== undefined && (
-                      <span style={{ fontSize: 10, fontFamily: FONTS.mono, color: (p.change_1d || 0) >= 0 ? T.green : T.red }}>
-                        {fmt.pct(p.change_1d)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className="lm-card" style={{ overflow: "hidden" }}>
+              <CISLeaderboard />
             </div>
           </div>
         )}
