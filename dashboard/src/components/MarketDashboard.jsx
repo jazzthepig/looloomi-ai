@@ -505,8 +505,8 @@ const TokenDetail = ({ token, priceData, ohlcv, onClose }) => {
 /* ═══════════════════════════════════════════════════════════════════════
    MARKET DASHBOARD
 ═══════════════════════════════════════════════════════════════════════ */
-export default function MarketDashboard({ activeTab, setActiveTab, isSection = false }) {
-  const [priceData, setPriceData]     = useState({});
+export default function MarketDashboard({ activeTab: propActiveTab, setActiveTab: propSetActiveTab, isSection = false }) {
+  const [activeTab, setActiveTab]     = useState(propActiveTab || "Asset Prices");
   const [ohlcv, setOhlcv]             = useState({});
   const [fng, setFng]                 = useState(null);
   const [defi, setDefi]               = useState(null);
@@ -620,7 +620,7 @@ export default function MarketDashboard({ activeTab, setActiveTab, isSection = f
       flexWrap: "wrap",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <span onClick={() => setActiveTab("Home")}
+        <span onClick={() => setActiveTab("Asset Prices")}
           style={{
             fontFamily: FONTS.display, fontWeight: 700, fontSize: 20,
             letterSpacing: "-0.02em", color: T.primary, cursor: "pointer",
@@ -628,7 +628,7 @@ export default function MarketDashboard({ activeTab, setActiveTab, isSection = f
           CometCloud
         </span>
         <div className="mobile-nav" style={{ display: "flex", gap: 4 }}>
-          {["Home", "Market", "Intelligence", "CIS", "Vault", "Protocol", "Quant GP"].map(tab => (
+          {["Asset Prices", "Intelligence", "CIS", "Vault", "Protocol", "Quant GP"].map(tab => (
             <button key={tab}
               onClick={() => setActiveTab(tab)}
               style={{

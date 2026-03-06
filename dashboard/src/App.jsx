@@ -27,8 +27,7 @@ const T = {
 };
 
 const SECTIONS = [
-  { id: "hero", label: "Home" },
-  { id: "market", label: "Market" },
+  { id: "market", label: "Asset Prices" },
   { id: "intelligence", label: "Intelligence" },
   { id: "cis", label: "CIS" },
   { id: "protocol", label: "Protocol" },
@@ -37,7 +36,7 @@ const SECTIONS = [
 ];
 
 export default function App() {
-  const [activeSection, setActiveSection] = useState("hero");
+  const [activeSection, setActiveSection] = useState("market");
   const sectionRefs = useRef({});
 
   useEffect(() => {
@@ -89,7 +88,7 @@ export default function App() {
         justifyContent: "space-between", padding: "16px 48px",
       }}>
         <span
-          onClick={() => scrollToSection("hero")}
+          onClick={() => scrollToSection("market")}
           style={{
             fontFamily: FONTS.display, fontWeight: 700, fontSize: 20,
             letterSpacing: "-0.02em", color: T.primary, cursor: "pointer",
@@ -121,56 +120,48 @@ export default function App() {
       {/* Sections Container - padding for fixed nav */}
       <div style={{ paddingTop: 64 }}>
 
-        {/* Section 1: Hero */}
-        <section id="hero" style={sectionStyle(0)}>
-          <HeroContent />
-        </section>
-
-        {/* Section Separator */}
-        <div className="section-divider" />
-
-        {/* Section 2: Market */}
-        <section id="market" style={sectionStyle(1)}>
+        {/* Section 1: Market */}
+        <section id="market" style={sectionStyle(0)}>
           <MarketDashboard isSection={true} />
         </section>
 
         {/* Section Separator */}
         <div className="section-divider" />
 
-        {/* Section 3: Intelligence */}
-        <section id="intelligence" style={sectionStyle(0)}>
+        {/* Section 2: Intelligence */}
+        <section id="intelligence" style={sectionStyle(1)}>
           <IntelligencePage isSection={true} />
         </section>
 
         {/* Section Separator */}
         <div className="section-divider" />
 
-        {/* Section 4: CIS */}
-        <section id="cis" style={sectionStyle(1)}>
+        {/* Section 3: CIS */}
+        <section id="cis" style={sectionStyle(0)}>
           <CISContent />
         </section>
 
         {/* Section Separator */}
         <div className="section-divider" />
 
-        {/* Section 5: Protocol */}
-        <section id="protocol" style={sectionStyle(0)}>
+        {/* Section 4: Protocol */}
+        <section id="protocol" style={sectionStyle(1)}>
           <ProtocolPage isSection={true} />
         </section>
 
         {/* Section Separator */}
         <div className="section-divider" />
 
-        {/* Section 6: Vault */}
-        <section id="vault" style={sectionStyle(1)}>
+        {/* Section 5: Vault */}
+        <section id="vault" style={sectionStyle(0)}>
           <VaultPage isSection={true} />
         </section>
 
         {/* Section Separator */}
         <div className="section-divider" />
 
-        {/* Section 7: Quant GP */}
-        <section id="quantgp" style={sectionStyle(0)}>
+        {/* Section 6: Quant GP */}
+        <section id="quantgp" style={sectionStyle(1)}>
           <QuantGPContent />
         </section>
 
