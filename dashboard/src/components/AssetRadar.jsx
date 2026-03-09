@@ -109,8 +109,9 @@ const Sparkline = ({ data, positive }) => {
 };
 
 /* ─── Asset Card Component ──────────────────────────────────────────── */
-const AssetCard = ({ asset, marketData, fngValue, onClick }) => {
-  const cis = CIS_DATA[asset.symbol];
+const AssetCard = ({ asset, marketData, cisData, fngValue, onClick }) => {
+  // Use API CIS data first, fallback to mock CIS_DATA, then show "—" if none
+  const cis = cisData?.[asset.symbol] || CIS_DATA[asset.symbol] || null;
   const change7d = marketData?.price_change_percentage_7d_in_currency || 0;
   const signal = calculateSignal(change7d, fngValue);
 
@@ -164,7 +165,7 @@ const AssetCard = ({ asset, marketData, fngValue, onClick }) => {
           borderRadius: 4,
           letterSpacing: "0.05em",
         }}>
-          CIS {cis.score.toFixed(0)}
+          {cis.grade} {cis.score?.toFixed(0)}
         </div>
       ) : (
         <div style={{
@@ -282,6 +283,7 @@ const SkeletonCard = () => (
 export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
   const [loading, setLoading] = useState(true);
   const [marketData, setMarketData] = useState({});
+  const [cisData, setCisData] = useState({});
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
 
@@ -289,22 +291,44 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
     setError(null);
     try {
       const ids = ASSETS.map(a => a.id).join(",");
-      const res = await fetch(
-        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`
-      );
-      if (!res.ok) throw new Error("Markets API failed");
-      const data = await res.json();
 
-      // Map to symbol key
+      // Fetch market data and CIS scores in parallel
+      const [marketsRes, cisRes] = await Promise.all([
+        fetch(
+          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`
+        ),
+        fetch('/api/v1/cis/scores').catch(() => null) // Gracefully handle missing API
+      ]);
+
+      if (!marketsRes.ok) throw new Error("Markets API failed");
+      const marketsData = await marketsRes.json();
+
+      // Process market data
       const dataMap = {};
-      data.forEach(coin => {
+      marketsData.forEach(coin => {
         const asset = ASSETS.find(a => a.id === coin.id);
         if (asset) {
           dataMap[asset.symbol] = coin;
         }
       });
-
       setMarketData(dataMap);
+
+      // Process CIS data if available
+      if (cisRes && cisRes.ok) {
+        try {
+          const cisJson = await cisRes.json();
+          if (cisJson.scores) {
+            const cisMap = {};
+            cisJson.scores.forEach(item => {
+              cisMap[item.symbol] = { score: item.cis_score, grade: item.grade };
+            });
+            setCisData(cisMap);
+          }
+        } catch (e) {
+          console.warn("CIS data parse error:", e);
+        }
+      }
+
       setLastUpdate(new Date());
     } catch (err) {
       console.error("AssetRadar fetch error:", err);
@@ -410,6 +434,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                   key={asset.symbol}
                   asset={asset}
                   marketData={marketData[asset.symbol]}
+                  cisData={cisData}
                   fngValue={fngValue}
                   onClick={() => {}}
                 />
