@@ -35,7 +35,10 @@ const FONTS = {
 };
 
 /* ─── Sample Funds Data ──────────────────────────────────────────────── */
-const SAMPLE_FUNDS = [
+/* Data fetched from /api/v1/vault/funds API - real verified GPs only */
+const SAMPLE_FUNDS = []; // Empty - data loaded from API
+
+/* PLACEHOLDER - remove after confirming API works
   {
     id: "gp-001",
     name: "ArkStream Capital",

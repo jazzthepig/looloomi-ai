@@ -3,7 +3,8 @@ GP Fund Data - Real crypto/hedge funds with official websites
 """
 from typing import List, Dict
 
-# Real crypto hedge funds and VC firms
+# Real crypto hedge funds and VC firms (verified with official websites)
+# Last updated: 2026-03-09
 GP_FUNDS: List[Dict] = [
     {
         "id": "gp-001",
@@ -13,24 +14,7 @@ GP_FUNDS: List[Dict] = [
         "aum": 450000000,
         "yearFounded": 2021,
         "location": "Singapore",
-    },
-    {
-        "id": "gp-002",
-        "name": "Nebula Ventures",
-        "website": "https://nebulaventures.io",
-        "strategy": "VC / Early Stage",
-        "aum": 280000000,
-        "yearFounded": 2022,
-        "location": "Hong Kong",
-    },
-    {
-        "id": "gp-003",
-        "name": "Quantum Hedge",
-        "website": "https://quantumhedge.com",
-        "strategy": "Market Neutral",
-        "aum": 820000000,
-        "yearFounded": 2020,
-        "location": "London",
+        "verified": True,
     },
     {
         "id": "gp-004",
