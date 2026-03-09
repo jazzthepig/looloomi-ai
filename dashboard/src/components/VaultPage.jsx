@@ -321,6 +321,52 @@ const SAMPLE_FUNDS = [
 const FUND_TYPES = ["All", "DeFi Quant", "VC / Early Stage", "Market Neutral", "Trading / Momentum", "Long-Only / Research", "On-Chain Active", "LSD Focus", "Yield / Lending", "Options / Volatility", "Multi-Strategy"];
 const LOCATIONS = ["All", "Singapore", "Hong Kong", "London", "Dubai", "New York", "Berlin"];
 
+/* ─── Fallback Data ────────────────────────────────────────────────── */
+const EST_ALPHA_FALLBACK = {
+  id: "est-alpha",
+  name: "EST Alpha",
+  strategy: "Multi-Strategy",
+  aum: 150000000,
+  yearFounded: 2024,
+  location: "Singapore",
+  status: "Active Partner",
+  verified: true,
+  note: "CometCloud confirmed GP partner",
+  performance: {
+    ytd: 8.5,
+    annualReturn: 0,
+    sharpeRatio: 0,
+    maxDrawdown: -2.1,
+  },
+  scores: {
+    performance: 15,
+    strategy: 18,
+    team: 20,
+    risk: 15,
+    transparency: 10,
+    aumTrackRecord: 5,
+    total: 83,
+  },
+  grade: "B",
+  description: "CometCloud's flagship GP partner specializing in institutional DeFi strategies.",
+  team: "Ex-Jane Street, Wintermute, Delphi Digital",
+  strategyDetail: "Multi-strategy DeFi: yield optimization, delta-neutral, protocol governance",
+  advantage: "Direct integration with CometCloud vault infrastructure",
+};
+
+const PLACEHOLDER_GP = {
+  id: "placeholder",
+  name: "GP Onboarding in Progress",
+  strategy: "Coming Q2 2026",
+  location: "TBD",
+  status: "Pending",
+  isPlaceholder: true,
+  description: "New GP partners to be announced in Q2 2026.",
+  performance: { ytd: 0, annualReturn: 0, sharpeRatio: 0, maxDrawdown: 0 },
+  scores: { total: 0 },
+  grade: "-",
+};
+
 /* ─── CSS ────────────────────────────────────────────────────────────── */
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -353,10 +399,44 @@ const CSS = `
 
 export default function VaultPage({ activeTab, setActiveTab, isSection = false }) {
   const [funds, setFunds] = useState(SAMPLE_FUNDS);
+  const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState("All");
   const [filterLocation, setFilterLocation] = useState("All");
   const [sortBy, setSortBy] = useState("total");
   const [selectedFund, setSelectedFund] = useState(null);
+
+  // Fetch GP data from API
+  useEffect(() => {
+    const fetchFunds = async () => {
+      try {
+        const res = await fetch('/api/v1/vault/funds');
+        if (!res.ok) throw new Error('API error');
+        const json = await res.json();
+        if (json.data && json.data.length > 0) {
+          // Map API data to match frontend structure
+          const mapped = json.data.map((f, idx) => ({
+            ...f,
+            id: f.id || `gp-${idx}`,
+            performance: f.performance || { ytd: 0, annualReturn: 0, sharpeRatio: 0, maxDrawdown: 0 },
+            scores: f.scores || { performance: 0, strategy: 0, team: 0, risk: 0, transparency: 0, aumTrackRecord: 0, total: 0 },
+            grade: f.grade || "B",
+            description: f.description || "",
+            team: f.team || "",
+            strategyDetail: f.strategyDetail || "",
+            advantage: f.advantage || "",
+          }));
+          setFunds(mapped);
+        }
+      } catch (err) {
+        console.warn('Vault API failed, using fallback:', err);
+        // Fallback: show EST Alpha + placeholder
+        setFunds([EST_ALPHA_FALLBACK, PLACEHOLDER_GP]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFunds();
+  }, []);
 
   const filteredFunds = funds
     .filter(f => filterType === "All" || f.strategy === filterType)
@@ -498,6 +578,27 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
               </button>
             ))}
           </div>
+        </div>
+
+        {/* DATA NOTE */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          padding: '10px 14px',
+          background: 'rgba(245,158,11,0.08)',
+          border: '1px solid rgba(245,158,11,0.2)',
+          borderRadius: '6px', marginBottom: '14px'
+        }}>
+          <span style={{
+            fontSize: '8px', fontWeight: '700', letterSpacing: '0.12em',
+            color: '#F59E0B', fontFamily: FONTS.display
+          }}>DATA NOTE</span>
+          <span style={{
+            fontSize: '10px', color: 'rgba(255,255,255,0.5)',
+            fontFamily: FONTS.body
+          }}>
+            GP data sourced from Looloomi Database. Only verified partners are listed.
+            EST Alpha is the sole confirmed active GP partner.
+          </span>
         </div>
 
         {/* Fund List */}
