@@ -1,56 +1,56 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 const T = {
-  void:      "#020208",
-  deep:      "#06050F",
-  surface:   "#0A0918",
-  raised:    "#100E22",
-  border:    "#1A173A",
-  borderHi:  "#28244C",
-  primary:   "#F0EEFF",
-  secondary: "#8880BE",
-  muted:     "#3E3A6E",
-  green:     "#00D98A",
-  red:       "#FF2D55",
-  amber:     "#E8A000",
-  gold:      "#D4AF37",
+  void:       "#030508",
+  deep:       "#06080f",
+  surface:    "#090d18",
+  raised:     "#0e1424",
+  card:       "#111929",
+  cardHover:  "#141e2e",
+  border:     "rgba(255,255,255,0.055)",
+  borderMd:   "rgba(255,255,255,0.10)",
+  borderHi:   "rgba(255,255,255,0.18)",
+  t1:         "rgba(255,255,255,0.90)",
+  t2:         "rgba(255,255,255,0.50)",
+  t3:         "rgba(255,255,255,0.26)",
+  t4:         "rgba(255,255,255,0.12)",
+  gold:       "#C8A84B",
+  goldLt:     "#E8C86A",
+  goldDim:    "rgba(200,168,75,0.13)",
+  goldGlow:   "rgba(200,168,75,0.06)",
+  green:      "#00E87A",
+  greenDim:   "rgba(0,232,122,0.10)",
+  red:        "#FF3D5A",
+  redDim:     "rgba(255,61,90,0.10)",
+  blue:       "#4B9EFF",
+  blueDim:    "rgba(75,158,255,0.10)",
+  purple:     "#A78BFA",
+  amber:      "#F59E0B",
 };
 
 const FONTS = {
-  display: "'Space Grotesk', sans-serif",
-  body:    "'Exo 2', sans-serif",
-  mono:    "'JetBrains Mono', monospace",
+  display: "'Syne', sans-serif",
+  mono:    "'DM Mono', monospace",
+  serif:   "'Cormorant Garamond', serif",
 };
 
-/* ─── TypeScript Interface ────────────────────────────────────────────── */
-/*
-interface Signal {
-  id: string;
-  timestamp: string;                        // ISO 8601 format
-  type: 'WHALE' | 'FUNDING' | 'FLOW' | 'MACRO' | 'RISK';
-  importance: 'HIGH' | 'MED' | 'LOW';
-  description: string;                       // Max 60 chars
-  affected_assets: string[];                // Token symbols, max 3
-}
-*/
-
+/* ─── Signal Types ───────────────────────────────────────────────────── */
 const SIGNAL_TYPES = {
-  WHALE:   { label: "WHALE",   color: "#9945FF", desc: "大额转账/持仓变动" },
-  FUNDING: { label: "FUNDING", color: "#00C8E0", desc: "资金费率变化" },
-  FLOW:    { label: "FLOW",    color: "#00D98A", desc: "资金流入/流出" },
-  MACRO:   { label: "MACRO",   color: "#F7931A", desc: "宏观事件" },
-  RISK:    { label: "RISK",    color: "#FF2D55", desc: "风险信号" },
+  WHALE:   { label: "WHALE",   color: T.purple, bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.2)" },
+  FUNDING: { label: "FUNDING", color: T.blue,   bg: "rgba(75,158,255,0.10)", border: "rgba(75,158,255,0.2)" },
+  FLOW:    { label: "FLOW",    color: T.green,  bg: "rgba(0,232,122,0.08)", border: "rgba(0,232,122,0.2)" },
+  MACRO:   { label: "MACRO",   color: T.gold,   bg: "rgba(200,168,75,0.12)", border: "rgba(200,168,75,0.2)" },
+  RISK:    { label: "RISK",    color: T.red,    bg: "rgba(255,61,90,0.10)", border: "rgba(255,61,90,0.2)" },
 };
 
 const IMPORTANCE_STYLES = {
-  HIGH: { color: T.red, bg: "rgba(255,45,85,0.15)", border: "rgba(255,45,85,0.3)" },
-  MED:  { color: T.primary, bg: "rgba(240,238,255,0.08)", border: "rgba(240,238,255,0.15)" },
-  LOW:  { color: T.muted, bg: "rgba(62,58,110,0.3)", border: "rgba(62,58,110,0.5)" },
+  HIGH: { color: T.red, bg: "rgba(255,61,90,0.12)", border: "rgba(255,61,90,0.25)" },
+  MED:  { color: T.gold, bg: "rgba(200,168,75,0.10)", border: "rgba(200,168,75,0.2)" },
+  LOW:  { color: T.t3, bg: "rgba(255,255,255,0.04)", border: T.border },
 };
 
 /* ─── Helper Functions ───────────────────────────────────────────────── */
-// Convert ISO timestamp to relative time
 const formatRelativeTime = (isoTimestamp) => {
   const timestamp = new Date(isoTimestamp).getTime();
   const diff = Date.now() - timestamp;
@@ -67,18 +67,13 @@ const formatRelativeTime = (isoTimestamp) => {
   return `${minutes}m ago`;
 };
 
-/* ─── API Fetch Function (to be replaced with real endpoint) ───────────── */
+/* ─── Mock Signals ───────────────────────────────────────────────────── */
 async function fetchSignalsFromAPI() {
-  // TODO: Replace with real API endpoint when available
-  // Real endpoint: GET /api/v1/signals/feed?limit=20
-  // Expected response: { signals: Signal[] }
-
-  // Mock data (remove when real API is ready)
   const now = new Date();
   const MOCK_SIGNALS = [
     {
       id: "s1",
-      timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2h ago
+      timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
       type: "WHALE",
       description: "BTC单笔转入Coinbase 1,240 BTC（约$84M），交易所净流入信号",
       affected_assets: ["BTC"],
@@ -86,7 +81,7 @@ async function fetchSignalsFromAPI() {
     },
     {
       id: "s2",
-      timestamp: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(), // 4h ago
+      timestamp: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(),
       type: "FUNDING",
       description: "ETH永续合约资金费率转负（-0.02%），空头情绪积累",
       affected_assets: ["ETH"],
@@ -94,7 +89,7 @@ async function fetchSignalsFromAPI() {
     },
     {
       id: "s3",
-      timestamp: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(), // 6h ago
+      timestamp: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(),
       type: "MACRO",
       description: "美联储发言暗示维持高利率，风险资产短期承压",
       affected_assets: ["BTC", "ETH"],
@@ -102,7 +97,7 @@ async function fetchSignalsFromAPI() {
     },
     {
       id: "s4",
-      timestamp: new Date(now.getTime() - 8 * 60 * 60 * 1000).toISOString(), // 8h ago
+      timestamp: new Date(now.getTime() - 8 * 60 * 60 * 1000).toISOString(),
       type: "FLOW",
       description: "Solana链上DEX净流入$128M，创月度新高",
       affected_assets: ["SOL"],
@@ -110,7 +105,7 @@ async function fetchSignalsFromAPI() {
     },
     {
       id: "s5",
-      timestamp: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(), // 12h ago
+      timestamp: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
       type: "RISK",
       description: "USDC溢价扩大至-0.3%，亚洲需求疲软",
       affected_assets: ["USDC"],
@@ -118,7 +113,7 @@ async function fetchSignalsFromAPI() {
     },
     {
       id: "s6",
-      timestamp: new Date(now.getTime() - 18 * 60 * 60 * 1000).toISOString(), // 18h ago
+      timestamp: new Date(now.getTime() - 18 * 60 * 60 * 1000).toISOString(),
       type: "WHALE",
       description: "未知地址向Binance转入4,500 ETH，减持信号",
       affected_assets: ["ETH"],
@@ -126,16 +121,15 @@ async function fetchSignalsFromAPI() {
     },
     {
       id: "s7",
-      timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), // 24h ago
+      timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
       type: "FUNDING",
       description: "BTC资金费率连续3日转正，多头平仓压力增加",
       affected_assets: ["BTC"],
       importance: "HIGH",
     },
-    // New signals added
     {
       id: "s8",
-      timestamp: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(), // 3h ago
+      timestamp: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(),
       type: "MACRO",
       description: "美联储褐皮书显示经济放缓，市场降息预期升温",
       affected_assets: ["BTC", "ETH", "SOL"],
@@ -143,119 +137,82 @@ async function fetchSignalsFromAPI() {
     },
     {
       id: "s9",
-      timestamp: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(), // 1h ago
+      timestamp: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
       type: "RISK",
       description: "某巨鲸地址转移4.2万ETH至未知钱包，链上异动预警",
       affected_assets: ["ETH"],
       importance: "MED",
     },
   ];
-
   return MOCK_SIGNALS;
 }
 
 /* ─── Signal Row Component ─────────────────────────────────────────────── */
-const SignalRow = ({ signal, onClick }) => {
-  const typeConfig = SIGNAL_TYPES[signal.type];
-  const impStyle = IMPORTANCE_STYLES[signal.importance];
+const SignalRow = ({ signal, isNew }) => {
+  const typeConfig = SIGNAL_TYPES[signal.type] || SIGNAL_TYPES.MACRO;
+  const impStyle = IMPORTANCE_STYLES[signal.importance] || IMPORTANCE_STYLES.LOW;
 
   return (
     <div
-      onClick={() => onClick?.(signal)}
+      className={isNew ? "signal-new" : ""}
       style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 16,
-        padding: "14px 16px",
-        borderRadius: 6,
+        display: "grid",
+        gridTemplateColumns: "auto 1fr auto",
+        gap: 11,
+        alignItems: "start",
+        padding: "13px 16px",
+        borderBottom: `1px solid ${T.border}`,
+        transition: "background 0.14s",
         cursor: "pointer",
-        transition: "background 0.15s ease",
-        position: "relative",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = "rgba(240,238,255,0.04)";
+        e.currentTarget.style.background = "rgba(255,255,255,0.02)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = "transparent";
       }}
     >
-      {/* Timeline Dot */}
+      {/* Type Badge */}
       <div style={{
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        width: 12,
+        fontFamily: FONTS.display,
+        fontSize: 7,
+        fontWeight: 700,
+        letterSpacing: "0.12em",
+        padding: "3px 6px",
+        borderRadius: 3,
+        background: typeConfig.bg,
+        color: typeConfig.color,
+        border: `1px solid ${typeConfig.border}`,
+        textTransform: "uppercase",
+        marginTop: 1,
+        whiteSpace: "nowrap",
       }}>
-        <div style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: typeConfig.color,
-          boxShadow: `0 0 8px ${typeConfig.color}`,
-          flexShrink: 0,
-        }} />
-        {/* Vertical line */}
-        <div style={{
-          position: "absolute",
-          top: 12,
-          width: 1,
-          height: "calc(100% - 4px)",
-          background: "rgba(255,255,255,0.15)",
-        }} />
-      </div>
-
-      {/* Time */}
-      <div style={{
-        fontSize: 11,
-        fontFamily: FONTS.mono,
-        color: T.muted,
-        minWidth: 55,
-        flexShrink: 0,
-        paddingTop: 2,
-      }}>
-        {formatRelativeTime(signal.timestamp)}
+        {typeConfig.label}
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Type Tag */}
-        <span style={{
-          display: "inline-block",
-          fontSize: 9,
-          fontFamily: FONTS.mono,
+      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <div style={{
+          fontFamily: FONTS.display,
+          fontSize: 11,
           fontWeight: 600,
-          color: typeConfig.color,
-          border: `1px solid ${typeConfig.color}`,
-          borderRadius: 3,
-          padding: "2px 5px",
-          marginRight: 8,
-          letterSpacing: "0.05em",
-        }}>
-          {typeConfig.label}
-        </span>
-
-        {/* Description */}
-        <span style={{
-          fontSize: 12,
-          fontFamily: FONTS.body,
-          color: T.primary,
-          lineHeight: 1.5,
+          color: T.t1,
+          letterSpacing: "0.01em",
+          lineHeight: 1.35,
         }}>
           {signal.description}
-        </span>
-
+        </div>
         {/* Asset Tags */}
-        <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 2 }}>
           {signal.affected_assets?.map((asset) => (
             <span key={asset} style={{
-              fontSize: 10,
+              fontSize: 8,
               fontFamily: FONTS.mono,
-              fontWeight: 500,
-              color: T.secondary,
-              background: "rgba(136,128,190,0.15)",
-              borderRadius: 4,
-              padding: "2px 6px",
+              color: T.t3,
+              background: "rgba(255,255,255,0.045)",
+              border: `1px solid ${T.border}`,
+              padding: "1px 5px",
+              borderRadius: 2,
             }}>
               {asset}
             </span>
@@ -263,20 +220,30 @@ const SignalRow = ({ signal, onClick }) => {
         </div>
       </div>
 
-      {/* Importance Tag */}
-      <div style={{
-        fontSize: 9,
-        fontFamily: FONTS.mono,
-        fontWeight: 600,
-        color: impStyle.color,
-        background: impStyle.bg,
-        border: `1px solid ${impStyle.border}`,
-        borderRadius: 4,
-        padding: "4px 8px",
-        flexShrink: 0,
-        alignSelf: "flex-start",
-      }}>
-        {signal.importance}
+      {/* Right: Time & Importance */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, minWidth: 54 }}>
+        <div style={{
+          fontSize: 8,
+          color: T.t3,
+          whiteSpace: "nowrap",
+        }}>
+          {formatRelativeTime(signal.timestamp)}
+        </div>
+        {signal.importance === "HIGH" && (
+          <div style={{
+            fontFamily: FONTS.display,
+            fontSize: 8,
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            padding: "2px 7px",
+            borderRadius: 3,
+            background: impStyle.bg,
+            color: impStyle.color,
+            border: `1px solid ${impStyle.border}`,
+          }}>
+            {signal.importance}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -285,18 +252,19 @@ const SignalRow = ({ signal, onClick }) => {
 /* ─── Skeleton Row ───────────────────────────────────────────────────── */
 const SkeletonRow = () => (
   <div style={{
-    display: "flex",
-    alignItems: "flex-start",
-    gap: 16,
-    padding: "14px 16px",
+    display: "grid",
+    gridTemplateColumns: "auto 1fr auto",
+    gap: 11,
+    alignItems: "start",
+    padding: "13px 16px",
+    borderBottom: `1px solid ${T.border}`,
   }}>
-    <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.muted, flexShrink: 0 }} />
-    <div className="sk" style={{ height: 12, width: 50, marginTop: 2 }} />
-    <div style={{ flex: 1 }}>
-      <div className="sk" style={{ height: 14, width: "80%", marginBottom: 8 }} />
-      <div className="sk" style={{ height: 20, width: 120 }} />
+    <div className="sk" style={{ height: 16, width: 50 }} />
+    <div>
+      <div className="sk" style={{ height: 14, width: "90%", marginBottom: 8 }} />
+      <div className="sk" style={{ height: 16, width: 80 }} />
     </div>
-    <div className="sk" style={{ height: 20, width: 40 }} />
+    <div className="sk" style={{ height: 14, width: 40 }} />
   </div>
 );
 
@@ -304,15 +272,19 @@ const SkeletonRow = () => (
 export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
   const [loading, setLoading] = useState(true);
   const [signals, setSignals] = useState([]);
+  const [displayedSignals, setDisplayedSignals] = useState([]);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const fetchSignals = async () => {
     setError(null);
     try {
-      // Fetch signals from API layer (currently uses mock data)
       const signals = await fetchSignalsFromAPI();
       setSignals(signals);
+      // Start with first 5 signals
+      setDisplayedSignals(signals.slice(0, 5));
+      setCurrentIndex(0);
       setLastUpdate(new Date());
     } catch (err) {
       console.error("SignalFeed fetch error:", err);
@@ -327,41 +299,63 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
     fetchSignals();
   }, [refreshTrigger]);
 
+  // Auto-rotate signals every 30 seconds
   useEffect(() => {
-    const interval = setInterval(fetchSignals, 30 * 1000); // 30s refresh for future real API
+    if (signals.length === 0) return;
+
+    const rotateSignals = () => {
+      setCurrentIndex(prev => {
+        const nextIndex = (prev + 1) % signals.length;
+        const endIndex = Math.min(nextIndex + 5, signals.length);
+        setDisplayedSignals(signals.slice(nextIndex, endIndex));
+        return nextIndex;
+      });
+    };
+
+    const interval = setInterval(rotateSignals, 30000); // 30s rotation
     return () => clearInterval(interval);
-  }, []);
+  }, [signals]);
 
   // Error state
   if (error && signals.length === 0) {
     return (
-      <div>
+      <div style={{
+        border: `1px solid ${T.border}`,
+        borderRadius: 12,
+        overflow: "hidden",
+        background: T.surface,
+      }}>
         <div style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: 14,
+          padding: "13px 16px",
+          borderBottom: `1px solid ${T.border}`,
+          background: "rgba(255,255,255,0.018)",
         }}>
-          <h2 style={{
-            fontSize: 14,
-            fontWeight: 600,
+          <div style={{
             fontFamily: FONTS.display,
-            color: T.primary,
+            fontSize: 9,
+            fontWeight: 700,
+            letterSpacing: "0.2em",
+            color: T.t3,
+            textTransform: "uppercase",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}>
+            <span style={{ width: 14, height: 1, background: T.t3 }} />
             Signal Feed
-          </h2>
+          </div>
         </div>
         <div style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           height: 200,
-          background: "rgba(10,9,24,0.6)",
-          border: "1px solid rgba(255,45,85,0.3)",
-          borderRadius: 8,
           color: T.red,
           fontSize: 12,
-          fontFamily: FONTS.body,
+          fontFamily: FONTS.mono,
         }}>
           数据加载失败 · {lastUpdate ? `上次更新: ${lastUpdate.toLocaleTimeString()}` : "请刷新"}
         </div>
@@ -370,52 +364,82 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
   }
 
   return (
-    <div>
-      {/* Section Title */}
+    <div style={{
+      border: `1px solid ${T.border}`,
+      borderRadius: 12,
+      overflow: "hidden",
+      background: T.surface,
+      position: "sticky",
+      top: 20,
+    }}>
+      {/* Header */}
       <div style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        marginBottom: 14,
+        padding: "13px 16px",
+        borderBottom: `1px solid ${T.border}`,
+        background: "rgba(255,255,255,0.018)",
       }}>
-        <h2 style={{
-          fontSize: 14,
-          fontWeight: 600,
+        <div style={{
           fontFamily: FONTS.display,
-          color: T.primary,
-          letterSpacing: "-0.01em",
+          fontSize: 9,
+          fontWeight: 700,
+          letterSpacing: "0.2em",
+          color: T.t3,
+          textTransform: "uppercase",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
         }}>
+          <span style={{ width: 14, height: 1, background: T.t3 }} />
           Signal Feed
-        </h2>
-        <span style={{
-          fontSize: 10,
-          color: T.muted,
-          fontFamily: FONTS.mono,
+        </div>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
         }}>
-          Real-time · Today
-        </span>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: 8,
+            color: T.green,
+            fontFamily: FONTS.display,
+            fontWeight: 700,
+            letterSpacing: "0.1em",
+          }}>
+            <span style={{
+              width: 4,
+              height: 4,
+              borderRadius: "50%",
+              background: T.green,
+            }} />
+            AUTO
+          </div>
+        </div>
       </div>
 
-      {/* Signal Timeline */}
+      {/* Signal List */}
       <div style={{
-        background: "rgba(10,9,24,0.6)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 8,
-        overflow: "hidden",
+        maxHeight: "calc(100vh - 300px)",
+        overflowY: "auto",
+        minHeight: 400,
       }}>
         {loading
           ? Array(5).fill(0).map((_, i) => <SkeletonRow key={i} />)
-          : signals.map((signal, idx) => (
+          : displayedSignals.map((signal, idx) => (
               <div key={signal.id} style={{ position: "relative" }}>
                 <SignalRow
                   signal={signal}
                   onClick={onSignalClick}
+                  isNew={idx === 0}
                 />
-                {/* Hide line on last item */}
-                {idx < signals.length - 1 && (
+                {idx < displayedSignals.length - 1 && (
                   <div style={{
                     position: "absolute",
-                    left: 27,
+                    left: 16,
                     top: 22,
                     width: 1,
                     height: "calc(100% - 8px)",
@@ -429,15 +453,16 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
       {/* Legend */}
       <div style={{
         display: "flex",
-        gap: 16,
-        marginTop: 12,
-        paddingLeft: 4,
+        gap: 12,
+        padding: "12px 16px",
+        borderTop: `1px solid ${T.border}`,
+        flexWrap: "wrap",
       }}>
         {Object.entries(SIGNAL_TYPES).map(([key, val]) => (
           <div key={key} style={{
             display: "flex",
             alignItems: "center",
-            gap: 6,
+            gap: 4,
           }}>
             <div style={{
               width: 6,
@@ -446,15 +471,25 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
               background: val.color,
             }} />
             <span style={{
-              fontSize: 9,
+              fontSize: 8,
               fontFamily: FONTS.mono,
-              color: T.muted,
+              color: T.t3,
             }}>
               {val.label}
             </span>
           </div>
         ))}
       </div>
+
+      <style>{`
+        @keyframes signal-in {
+          from { opacity: 0; transform: translateY(-5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .signal-new {
+          animation: signal-in 0.35s ease;
+        }
+      `}</style>
     </div>
   );
 }

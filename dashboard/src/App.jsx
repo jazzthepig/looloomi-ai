@@ -6,24 +6,36 @@ import VaultPage from "./components/VaultPage";
 import ProtocolPage from "./components/ProtocolPage";
 
 const FONTS = {
-  display: "'Space Grotesk', sans-serif",
-  body: "'Exo 2', sans-serif",
-  mono: "'JetBrains Mono', monospace",
+  display: "'Syne', sans-serif",
+  mono:    "'DM Mono', monospace",
+  serif:   "'Cormorant Garamond', serif",
 };
 
 const T = {
-  void: "#020208",
-  deep: "#0a0a0f",
-  surface: "#0f0f1a",
-  altBg: "#0d0d18",
-  border: "rgba(255,255,255,0.06)",
-  borderHi: "rgba(255,255,255,0.12)",
-  primary: "#F0EEFF",
-  secondary: "#94a3b8",
-  muted: "#64748b",
-  cyan: "#06b6d4",
-  gold: "#f59e0b",
-  violet: "#8b5cf6",
+  void:       "#030508",
+  deep:       "#06080f",
+  surface:    "#090d18",
+  raised:     "#0e1424",
+  card:       "#111929",
+  cardHover:  "#141e2e",
+  border:     "rgba(255,255,255,0.055)",
+  borderMd:   "rgba(255,255,255,0.10)",
+  borderHi:   "rgba(255,255,255,0.18)",
+  primary:    "#F0EEFF",
+  secondary:  "#8880BE",
+  muted:      "#3E3A6E",
+  gold:       "#C8A84B",
+  goldLt:     "#E8C86A",
+  goldDim:    "rgba(200,168,75,0.13)",
+  goldGlow:   "rgba(200,168,75,0.06)",
+  green:      "#00E87A",
+  greenDim:   "rgba(0,232,122,0.10)",
+  red:        "#FF3D5A",
+  redDim:     "rgba(255,61,90,0.10)",
+  blue:       "#4B9EFF",
+  blueDim:    "rgba(75,158,255,0.10)",
+  purple:     "#A78BFA",
+  amber:      "#F59E0B",
 };
 
 const SECTIONS = [
@@ -67,23 +79,24 @@ export default function App() {
   };
 
   return (
-    <div style={{ background: "#010109", minHeight: "100vh", position: "relative" }}>
-      {/* TURRELL MULTI-DIMENSIONAL VOID SYSTEM */}
+    <div style={{ background: "#030508", minHeight: "100vh", position: "relative" }}>
+      {/* AMBIENT LIGHT SYSTEM - 8 layers */}
       <div className="turrell-canvas">
         <div className="turrell-void"></div>
-        <div className="turrell-horizon"></div>
-        <div className="turrell-portal-left"></div>
-        <div className="turrell-portal-right"></div>
-        <div className="turrell-inner"></div>
-        <div className="turrell-frame"></div>
-        <div className="turrell-ground"></div>
-        <div className="turrell-grain"></div>
+        <div className="al1"></div>
+        <div className="al2"></div>
+        <div className="al3"></div>
+        <div className="al4"></div>
+        <div className="al5"></div>
+        <div className="al6"></div>
+        <div className="al7"></div>
+        <div className="al8"></div>
       </div>
 
       {/* Fixed Navigation */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-        background: "rgba(10,10,15,0.85)", backdropFilter: "blur(20px)",
+        background: "rgba(3,5,8,0.85)", backdropFilter: "blur(20px)",
         borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center",
         justifyContent: "space-between", padding: "16px 48px",
       }}>
@@ -91,24 +104,26 @@ export default function App() {
           onClick={() => scrollToSection("market")}
           style={{
             fontFamily: FONTS.display, fontWeight: 700, fontSize: 20,
-            letterSpacing: "-0.02em", color: T.primary, cursor: "pointer",
-            textShadow: "0 0 40px rgba(6,182,212,0.4)",
+            letterSpacing: "0.1em", color: T.primary, cursor: "pointer",
+            textShadow: "0 0 40px rgba(200,168,75,0.3)",
           }}
         >
-          CometCloud
+          COMETCLOUD
         </span>
-        <div style={{ display: "flex", gap: 4 }}>
+        <div style={{ display: "flex", gap: 2, background: T.raised, borderRadius: 10, padding: 3, border: `1px solid ${T.border}` }}>
           {SECTIONS.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => scrollToSection(id)}
               style={{
-                padding: "8px 16px", borderRadius: 6, fontSize: 13, fontWeight: 500,
-                fontFamily: FONTS.body, cursor: "pointer", outline: "none",
-                border: "none",
-                background: activeSection === id ? T.cyan : "transparent",
-                color: activeSection === id ? "#fff" : T.secondary,
+                padding: "7px 16px", borderRadius: 7, fontSize: 11, fontWeight: 700,
+                fontFamily: FONTS.display, cursor: "pointer", outline: "none",
+                border: "1px solid transparent",
+                background: activeSection === id ? T.goldDim : "transparent",
+                color: activeSection === id ? T.gold : "rgba(255,255,255,0.26)",
                 transition: "all 0.2s ease",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
               }}
             >
               {label}
@@ -169,9 +184,9 @@ export default function App() {
 
       <style>{`
         * { scroll-behavior: smooth; }
-        body { background: #010109; min-height: 100vh; }
+        body { background: #030508; min-height: 100vh; }
 
-        /* ── TURRELL VOID SYSTEM ── */
+        /* ── AMBIENT LIGHT SYSTEM — 8 layers, async breathing ── */
         .turrell-canvas {
           position: fixed;
           inset: 0;
@@ -180,119 +195,138 @@ export default function App() {
           overflow: hidden;
         }
 
-        /* LAYER 1: The Void */
+        /* LAYER 1: Top-left green glow */
         .turrell-void {
           position: absolute;
           inset: 0;
-          background: radial-gradient(ellipse 120% 100% at 50% 50%, #04041a 0%, #02020d 40%, #010108 100%);
+          background: radial-gradient(ellipse 120% 100% at 50% 50%, #050810 0%, #030508 50%, #030508 100%);
         }
 
-        /* LAYER 2: Deep horizon */
-        .turrell-horizon {
+        .al1 {
           position: absolute;
-          left: -10%;
-          right: -10%;
-          top: 35%;
-          height: 30%;
-          background: radial-gradient(ellipse 80% 100% at 50% 50%, rgba(6, 182, 212, 0.14) 0%, rgba(6, 100, 180, 0.06) 40%, transparent 75%);
+          width: 900px;
+          height: 500px;
+          top: -180px;
+          left: -120px;
+          background: radial-gradient(ellipse, rgba(0, 232, 122, 0.028), transparent 65%);
           filter: blur(80px);
-          animation: turrell-breathe 12s ease-in-out infinite;
+          animation: al1 13s ease-in-out infinite;
         }
 
-        /* LAYER 3: Left portal */
-        .turrell-portal-left {
+        .al2 {
           position: absolute;
-          width: 70vw;
-          height: 70vw;
-          left: -25vw;
-          top: 50%;
-          transform: translateY(-50%);
-          background: radial-gradient(ellipse 40% 60% at 30% 50%, rgba(6, 182, 212, 0.18) 0%, rgba(6, 182, 212, 0.08) 35%, rgba(6, 182, 212, 0.02) 60%, transparent 80%);
-          filter: blur(60px);
-          animation: turrell-portal-left-anim 9s ease-in-out infinite;
+          width: 600px;
+          height: 400px;
+          top: 300px;
+          right: -150px;
+          background: radial-gradient(ellipse, rgba(200, 168, 75, 0.022), transparent 65%);
+          filter: blur(80px);
+          animation: al2 19s ease-in-out infinite;
         }
 
-        /* LAYER 4: Right warmth */
-        .turrell-portal-right {
+        .al3 {
           position: absolute;
-          width: 60vw;
-          height: 60vw;
-          right: -20vw;
-          top: -10%;
-          background: radial-gradient(ellipse 50% 70% at 70% 30%, rgba(245, 158, 11, 0.13) 0%, rgba(200, 100, 20, 0.05) 40%, transparent 70%);
-          filter: blur(90px);
-          animation: turrell-breathe 15s ease-in-out infinite reverse;
+          width: 700px;
+          height: 300px;
+          bottom: -100px;
+          left: 30%;
+          background: radial-gradient(ellipse, rgba(75, 158, 255, 0.018), transparent 65%);
+          filter: blur(80px);
+          animation: al3 23s ease-in-out infinite;
         }
 
-        /* LAYER 5: Inner light */
-        .turrell-inner {
+        .al4 {
+          position: absolute;
+          width: 400px;
+          height: 400px;
+          top: 40%;
+          left: -80px;
+          background: radial-gradient(ellipse, rgba(167, 139, 250, 0.012), transparent 65%);
+          filter: blur(80px);
+          animation: al4 17s ease-in-out infinite;
+        }
+
+        .al5 {
           position: absolute;
           width: 500px;
-          height: 300px;
-          left: 50%;
-          top: 50%;
-          transform: translate(-50%, -50%);
-          background: radial-gradient(ellipse, rgba(120, 210, 255, 0.11) 0%, rgba(6, 182, 212, 0.04) 40%, transparent 70%);
-          filter: blur(40px);
-          animation: turrell-pulse-inner 6s ease-in-out infinite;
-        }
-
-        /* LAYER 6: Nested frame glow */
-        .turrell-frame {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          transform: translate(-50%, -50%);
-          width: min(600px, 70vw);
-          height: min(360px, 45vw);
-          border-radius: 4px;
-          box-shadow: inset 0 0 80px rgba(6, 182, 212, 0.08), inset 0 0 30px rgba(6, 182, 212, 0.05), 0 0 120px rgba(6, 182, 212, 0.06), 0 0 60px rgba(6, 182, 212, 0.04), 0 0 200px rgba(6, 140, 200, 0.03);
-          animation: turrell-frame-breathe 8s ease-in-out infinite;
-        }
-
-        /* LAYER 7: Bottom warmth */
-        .turrell-ground {
-          position: absolute;
-          bottom: -5%;
-          left: 10%;
+          height: 250px;
+          bottom: 20%;
           right: 10%;
-          height: 40%;
-          background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(124, 58, 237, 0.04) 0%, rgba(80, 20, 160, 0.02) 50%, transparent 75%);
-          filter: blur(70px);
-          animation: turrell-breathe 18s ease-in-out infinite;
+          background: radial-gradient(ellipse, rgba(255, 61, 90, 0.014), transparent 65%);
+          filter: blur(80px);
+          animation: al5 21s ease-in-out infinite;
         }
 
-        /* LAYER 8: Film grain */
-        .turrell-grain {
+        .al6 {
           position: absolute;
-          inset: 0;
-          opacity: 0.04;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-          background-size: 180px 180px;
+          width: 1100px;
+          height: 200px;
+          top: 60%;
+          left: 0;
+          background: radial-gradient(ellipse, rgba(75, 158, 255, 0.010), transparent 70%);
+          filter: blur(80px);
+          animation: al6 28s ease-in-out infinite;
         }
 
-        @keyframes turrell-breathe {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.65; transform: scale(1.06); }
+        .al7 {
+          position: absolute;
+          width: 300px;
+          height: 300px;
+          top: 10%;
+          right: 20%;
+          background: radial-gradient(ellipse, rgba(0, 232, 122, 0.010), transparent 65%);
+          filter: blur(80px);
+          animation: al7 15s ease-in-out infinite;
         }
-        @keyframes turrell-pulse-inner {
-          0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-          33% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.15); }
-          66% { opacity: 0.9; transform: translate(-50%, -50%) scale(0.95); }
+
+        .al8 {
+          position: absolute;
+          width: 800px;
+          height: 600px;
+          bottom: -200px;
+          right: -200px;
+          background: radial-gradient(ellipse, rgba(200, 168, 75, 0.008), transparent 65%);
+          filter: blur(80px);
+          animation: al8 31s ease-in-out infinite;
         }
-        @keyframes turrell-frame-breathe {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+
+        @keyframes al1 {
+          0%, 100% { opacity: 0.7; transform: scale(1) translate(0, 0); }
+          50% { opacity: 1; transform: scale(1.18) translate(28px, 18px); }
         }
-        @keyframes turrell-portal-left-anim {
-          0%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
-          50% { opacity: 0.7; transform: translateY(-50%) scale(1.05); }
+        @keyframes al2 {
+          0%, 100% { opacity: 0.5; transform: scale(1) translate(0, 0); }
+          50% { opacity: 0.9; transform: scale(1.22) translate(-22px, 28px); }
+        }
+        @keyframes al3 {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          60% { opacity: 1; transform: scale(1.3) translateX(30px); }
+        }
+        @keyframes al4 {
+          0%, 100% { opacity: 0.4; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.25) translate(15px, -20px); }
+        }
+        @keyframes al5 {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.2) translate(-10px, 10px); }
+        }
+        @keyframes al6 {
+          0%, 100% { opacity: 0.5; transform: scaleX(1); }
+          50% { opacity: 0.9; transform: scaleX(1.1); }
+        }
+        @keyframes al7 {
+          0%, 100% { opacity: 0.4; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.3); }
+        }
+        @keyframes al8 {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.15); }
         }
 
         /* ── SECTION DIVIDERS ── */
         .section-divider {
           height: 1px;
-          background: linear-gradient(90deg, transparent 0%, rgba(6,182,212,0.025) 20%, rgba(6,182,212,0.06) 50%, rgba(6,182,212,0.025) 80%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(200,168,75,0.025) 20%, rgba(200,168,75,0.06) 50%, rgba(200,168,75,0.025) 80%, transparent 100%);
           position: relative;
         }
         .section-divider::after {

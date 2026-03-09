@@ -2,48 +2,68 @@ import { useState, useEffect } from "react";
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 const T = {
-  void:      "#020208",
-  deep:      "#06050F",
-  surface:   "#0A0918",
-  raised:    "#100E22",
-  border:    "#1A173A",
-  borderHi:  "#28244C",
-  primary:   "#F0EEFF",
-  secondary: "#8880BE",
-  muted:     "#3E3A6E",
-  green:     "#00D98A",
-  red:       "#FF2D55",
-  amber:     "#E8A000",
-  gold:      "#D4AF37",
+  void:       "#030508",
+  deep:       "#06080f",
+  surface:    "#090d18",
+  raised:     "#0e1424",
+  card:       "#111929",
+  cardHover:  "#141e2e",
+  border:     "rgba(255,255,255,0.055)",
+  borderMd:   "rgba(255,255,255,0.10)",
+  borderHi:   "rgba(255,255,255,0.18)",
+  t1:         "rgba(255,255,255,0.90)",
+  t2:         "rgba(255,255,255,0.50)",
+  t3:         "rgba(255,255,255,0.26)",
+  t4:         "rgba(255,255,255,0.12)",
+  gold:       "#C8A84B",
+  goldLt:     "#E8C86A",
+  goldDim:    "rgba(200,168,75,0.13)",
+  goldGlow:   "rgba(200,168,75,0.06)",
+  green:      "#00E87A",
+  greenDim:   "rgba(0,232,122,0.10)",
+  red:        "#FF3D5A",
+  redDim:     "rgba(255,61,90,0.10)",
+  blue:       "#4B9EFF",
+  blueDim:    "rgba(75,158,255,0.10)",
+  purple:     "#A78BFA",
+  amber:      "#F59E0B",
 };
 
 const FONTS = {
-  display: "'Space Grotesk', sans-serif",
-  body:    "'Exo 2', sans-serif",
-  mono:    "'JetBrains Mono', monospace",
+  display: "'Syne', sans-serif",
+  mono:    "'DM Mono', monospace",
+  serif:   "'Cormorant Garamond', serif",
 };
 
-/* ─── Asset List ─────────────────────────────────────────────────────── */
+/* ─── Asset Categories ────────────────────────────────────────────────── */
+const ASSET_CATEGORIES = {
+  RWA: ["ONDO", "POLYX", "SYRUP", "OPEN", "ACX"],
+  ORACLE: ["LINK"],
+  L1: ["BTC", "ETH", "SOL", "BNB", "AVAX", "TIA", "APT", "SUI", "INJ", "STX"],
+  L2: ["ARB", "OP", "MATIC"],
+  DEFI: ["UNI", "AAVE"],
+};
+
 const ASSETS = [
-  { id: "bitcoin", symbol: "BTC", name: "Bitcoin" },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum" },
-  { id: "solana", symbol: "SOL", name: "Solana" },
-  { id: "binancecoin", symbol: "BNB", name: "BNB" },
-  { id: "avalanche-2", symbol: "AVAX", name: "Avalanche" },
-  { id: "chainlink", symbol: "LINK", name: "Chainlink" },
-  { id: "uniswap", symbol: "UNI", name: "Uniswap" },
-  { id: "aave", symbol: "AAVE", name: "Aave" },
-  { id: "optimism", symbol: "OP", name: "Optimism" },
-  { id: "arbitrum", symbol: "ARB", name: "Arbitrum" },
-  { id: "matic-network", symbol: "MATIC", name: "Polygon" },
-  { id: "sui", symbol: "SUI", name: "Sui" },
-  { id: "aptos", symbol: "APT", name: "Aptos" },
-  { id: "injective-protocol", symbol: "INJ", name: "Injective" },
-  { id: "celestia", symbol: "TIA", name: "Celestia" },
-  { id: "blockstack", symbol: "STX", name: "Stacks" },
+  { id: "bitcoin", symbol: "BTC", name: "Bitcoin", category: "L1" },
+  { id: "ethereum", symbol: "ETH", name: "Ethereum", category: "L1" },
+  { id: "solana", symbol: "SOL", name: "Solana", category: "L1" },
+  { id: "binancecoin", symbol: "BNB", name: "BNB", category: "L1" },
+  { id: "avalanche-2", symbol: "AVAX", name: "Avalanche", category: "L1" },
+  { id: "chainlink", symbol: "LINK", name: "Chainlink", category: "ORACLE" },
+  { id: "uniswap", symbol: "UNI", name: "Uniswap", category: "DEFI" },
+  { id: "aave", symbol: "AAVE", name: "Aave", category: "DEFI" },
+  { id: "optimism", symbol: "OP", name: "Optimism", category: "L2" },
+  { id: "arbitrum", symbol: "ARB", name: "Arbitrum", category: "L2" },
+  { id: "matic-network", symbol: "MATIC", name: "Polygon", category: "L2" },
+  { id: "sui", symbol: "SUI", name: "Sui", category: "L1" },
+  { id: "aptos", symbol: "APT", name: "Aptos", category: "L1" },
+  { id: "injective-protocol", symbol: "INJ", name: "Injective", category: "L1" },
+  { id: "celestia", symbol: "TIA", name: "Celestia", category: "L1" },
+  { id: "blockstack", symbol: "STX", name: "Stacks", category: "L1" },
 ];
 
-/* ─── CIS Data (from MarketPage) ────────────────────────────────────── */
+/* ─── CIS Data (fallback) ──────────────────────────────────────────── */
 const CIS_DATA = {
   BTC:  { score: 85.0, grade: "A" },
   ETH:  { score: 85.0, grade: "A" },
@@ -65,22 +85,21 @@ const CIS_DATA = {
 
 /* ─── Signal Calculation ─────────────────────────────────────────────── */
 const calculateSignal = (change7d, fngValue) => {
-  // Simple rules as specified
   if (change7d > 20 && fngValue > 75) {
-    return { label: "Caution", color: T.red, dot: "🔴" };
+    return { label: "Caution", color: T.red };
   }
   if (change7d < -20 && fngValue < 25) {
-    return { label: "Accumulate", color: T.green, dot: "🟢" };
+    return { label: "Accumulate", color: T.green };
   }
-  return { label: "Hold", color: T.amber, dot: "🟡" };
+  return { label: "Hold", color: T.amber };
 };
 
 /* ─── Sparkline Component ────────────────────────────────────────────── */
 const Sparkline = ({ data, positive }) => {
   if (!data || data.length < 2) return null;
 
-  const width = 120;
-  const height = 24;
+  const width = 80;
+  const height = 20;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
@@ -94,12 +113,12 @@ const Sparkline = ({ data, positive }) => {
   const color = positive ? T.green : T.red;
 
   return (
-    <svg width={width} height={height} style={{ display: "block", marginTop: 8 }}>
+    <svg width={width} height={height} style={{ display: "block" }}>
       <polyline
         points={points}
         fill="none"
         stroke={color}
-        strokeWidth="1.5"
+        strokeWidth="1.4"
         strokeLinecap="round"
         strokeLinejoin="round"
         style={{ filter: `drop-shadow(0 0 3px ${color})` }}
@@ -108,20 +127,47 @@ const Sparkline = ({ data, positive }) => {
   );
 };
 
+/* ─── Category Badge ────────────────────────────────────────────────── */
+const getCategoryBadge = (category) => {
+  const styles = {
+    RWA: { bg: "rgba(167,139,250,0.13)", color: T.purple, border: "rgba(167,139,250,0.22)" },
+    L1: { bg: "rgba(75,158,255,0.10)", color: T.blue, border: "rgba(75,158,255,0.2)" },
+    L2: { bg: "rgba(248,113,113,0.10)", color: "#F87171", border: "rgba(248,113,113,0.2)" },
+    ORACLE: { bg: "rgba(245,158,11,0.10)", color: T.amber, border: "rgba(245,158,11,0.2)" },
+    DEFI: { bg: "rgba(0,232,122,0.08)", color: T.green, border: "rgba(0,232,122,0.18)" },
+  };
+
+  return styles[category] || styles.L1;
+};
+
+/* ─── Grade Badge ───────────────────────────────────────────────────── */
+const getGradeStyle = (grade) => {
+  const styles = {
+    A: { bg: "rgba(0,232,122,0.15)", color: T.green, border: "rgba(0,232,122,0.3)" },
+    B: { bg: "rgba(75,158,255,0.12)", color: T.blue, border: "rgba(75,158,255,0.25)" },
+    C: { bg: "rgba(245,158,11,0.12)", color: T.amber, border: "rgba(245,158,11,0.22)" },
+    D: { bg: "rgba(255,61,90,0.10)", color: T.red, border: "rgba(255,61,90,0.2)" },
+  };
+  return styles[grade] || styles.B;
+};
+
 /* ─── Asset Card Component ──────────────────────────────────────────── */
 const AssetCard = ({ asset, marketData, cisData, fngValue, onClick }) => {
-  // Use API CIS data first, fallback to mock CIS_DATA, then show "—" if none
   const cis = cisData?.[asset.symbol] || CIS_DATA[asset.symbol] || null;
   const change7d = marketData?.price_change_percentage_7d_in_currency || 0;
   const signal = calculateSignal(change7d, fngValue);
+  const catStyle = getCategoryBadge(asset.category);
+  const gradeStyle = cis ? getGradeStyle(cis.grade) : null;
 
   const formatPrice = (price) => {
+    if (!price) return "—";
     if (price >= 1000) return price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (price >= 1) return price.toFixed(2);
     return price.toFixed(4);
   };
 
   const formatChange = (change) => {
+    if (!change) return "—";
     const prefix = change >= 0 ? "+" : "";
     return `${prefix}${change.toFixed(2)}%`;
   };
@@ -130,9 +176,9 @@ const AssetCard = ({ asset, marketData, cisData, fngValue, onClick }) => {
     <div
       onClick={onClick}
       style={{
-        background: "rgba(10,9,24,0.6)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 8,
+        background: T.surface,
+        border: `1px solid ${T.border}`,
+        borderRadius: 12,
         padding: "14px 16px",
         cursor: "pointer",
         transition: "border-color 0.2s ease, transform 0.15s ease",
@@ -140,61 +186,78 @@ const AssetCard = ({ asset, marketData, cisData, fngValue, onClick }) => {
         display: "flex",
         flexDirection: "column",
         height: "100%",
+        minHeight: 130,
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+        e.currentTarget.style.borderColor = T.borderHi;
         e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.background = T.cardHover;
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+        e.currentTarget.style.borderColor = T.border;
         e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.background = T.surface;
       }}
     >
-      {/* CIS Badge - Top Right */}
-      {cis ? (
-        <div style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          background: `linear-gradient(135deg, ${T.gold} 0%, #B8962E 100%)`,
-          color: "#000",
-          fontSize: 10,
+      {/* Category Badge */}
+      <div style={{
+        position: "absolute",
+        top: 8,
+        right: 8,
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}>
+        {cis && (
+          <div style={{
+            width: 28,
+            height: 28,
+            borderRadius: 6,
+            background: gradeStyle.bg,
+            color: gradeStyle.color,
+            border: `1px solid ${gradeStyle.border}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: FONTS.display,
+            fontSize: 11,
+            fontWeight: 800,
+            letterSpacing: "0.05em",
+          }}>
+            {cis.grade}
+          </div>
+        )}
+        <span style={{
+          fontFamily: FONTS.display,
+          fontSize: 8,
           fontWeight: 700,
-          fontFamily: FONTS.mono,
-          padding: "3px 6px",
-          borderRadius: 4,
-          letterSpacing: "0.05em",
+          letterSpacing: "0.1em",
+          padding: "2px 7px",
+          borderRadius: 3,
+          background: catStyle.bg,
+          color: catStyle.color,
+          border: `1px solid ${catStyle.border}`,
+          textTransform: "uppercase",
         }}>
-          {cis.grade} {cis.score?.toFixed(0)}
-        </div>
-      ) : (
-        <div style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          fontSize: 9,
-          color: T.muted,
-          fontFamily: FONTS.body,
-        }}>
-          Scoring...
-        </div>
-      )}
+          {asset.category}
+        </span>
+      </div>
 
-      {/* Asset Name & Symbol */}
+      {/* Asset Name */}
       <div style={{ marginBottom: 8 }}>
         <div style={{
+          fontFamily: FONTS.display,
           fontSize: 14,
           fontWeight: 600,
-          fontFamily: FONTS.display,
-          color: T.primary,
+          color: T.t1,
           letterSpacing: "-0.01em",
         }}>
           {asset.name}
         </div>
         <div style={{
-          fontSize: 11,
-          color: T.muted,
           fontFamily: FONTS.mono,
+          fontSize: 11,
+          color: T.t3,
           marginTop: 2,
         }}>
           {asset.symbol}
@@ -204,55 +267,55 @@ const AssetCard = ({ asset, marketData, cisData, fngValue, onClick }) => {
       {/* Price & Change */}
       <div style={{ marginBottom: 4 }}>
         <div style={{
-          fontSize: 18,
-          fontWeight: 600,
           fontFamily: FONTS.mono,
-          color: T.primary,
+          fontSize: 18,
+          fontWeight: 500,
+          color: T.t1,
         }}>
           ${formatPrice(marketData?.current_price)}
         </div>
         <div style={{
+          fontFamily: FONTS.mono,
           fontSize: 13,
           fontWeight: 500,
-          fontFamily: FONTS.mono,
           color: (marketData?.price_change_percentage_24h || 0) >= 0 ? T.green : T.red,
         }}>
-          {formatChange(marketData?.price_change_percentage_24h || 0)}
+          {formatChange(marketData?.price_change_percentage_24h)}
         </div>
       </div>
 
-      {/* Signal - Bottom Left */}
+      {/* Signal & Sparkline */}
       <div style={{
         position: "absolute",
         bottom: 12,
         left: 16,
+        right: 16,
         display: "flex",
         alignItems: "center",
-        gap: 6,
+        justifyContent: "space-between",
       }}>
         <div style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: signal.color,
-          boxShadow: `0 0 8px ${signal.color}`,
-        }} />
-        <span style={{
-          fontSize: 10,
-          fontWeight: 500,
-          fontFamily: FONTS.body,
-          color: signal.color,
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
         }}>
-          {signal.label}
-        </span>
-      </div>
-
-      {/* Sparkline - Bottom */}
-      <div style={{
-        position: "absolute",
-        bottom: 8,
-        right: 12,
-      }}>
+          <div style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: signal.color,
+            boxShadow: `0 0 8px ${signal.color}`,
+          }} />
+          <span style={{
+            fontFamily: FONTS.display,
+            fontSize: 9,
+            fontWeight: 600,
+            color: signal.color,
+            letterSpacing: "0.05em",
+          }}>
+            {signal.label}
+          </span>
+        </div>
         <Sparkline
           data={marketData?.sparkline_in_7d?.price}
           positive={(marketData?.price_change_percentage_7d_in_currency || 0) >= 0}
@@ -262,15 +325,15 @@ const AssetCard = ({ asset, marketData, cisData, fngValue, onClick }) => {
   );
 };
 
-/* ─── Skeleton Card ──────────────────────────────────────────────────── */
+/* ─── Skeleton Card ─────────────────────────────────────────────────── */
 const SkeletonCard = () => (
   <div style={{
-    background: "rgba(10,9,24,0.6)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 8,
+    background: T.surface,
+    border: `1px solid ${T.border}`,
+    borderRadius: 12,
     padding: "14px 16px",
     height: "100%",
-    minHeight: 140,
+    minHeight: 130,
   }}>
     <div className="sk" style={{ height: 12, width: 60, marginBottom: 8 }} />
     <div className="sk" style={{ height: 8, width: 40, marginBottom: 16 }} />
@@ -279,6 +342,16 @@ const SkeletonCard = () => (
   </div>
 );
 
+/* ─── Filter Chips ─────────────────────────────────────────────────── */
+const FILTERS = [
+  { id: "all", label: "All" },
+  { id: "rwa", label: "RWA" },
+  { id: "oracle", label: "Oracle" },
+  { id: "l1", label: "L1" },
+  { id: "l2", label: "L2" },
+  { id: "defi", label: "DeFi" },
+];
+
 /* ─── Main Component ────────────────────────────────────────────────── */
 export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
   const [loading, setLoading] = useState(true);
@@ -286,24 +359,23 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
   const [cisData, setCisData] = useState({});
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("all");
 
   const fetchData = async () => {
     setError(null);
     try {
       const ids = ASSETS.map(a => a.id).join(",");
 
-      // Fetch market data and CIS scores in parallel
       const [marketsRes, cisRes] = await Promise.all([
         fetch(
           `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`
         ),
-        fetch('/api/v1/cis/scores').catch(() => null) // Gracefully handle missing API
+        fetch('/api/v1/cis/scores').catch(() => null)
       ]);
 
       if (!marketsRes.ok) throw new Error("Markets API failed");
       const marketsData = await marketsRes.json();
 
-      // Process market data
       const dataMap = {};
       marketsData.forEach(coin => {
         const asset = ASSETS.find(a => a.id === coin.id);
@@ -313,7 +385,6 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
       });
       setMarketData(dataMap);
 
-      // Process CIS data if available
       if (cisRes && cisRes.ok) {
         try {
           const cisJson = await cisRes.json();
@@ -344,11 +415,16 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
   }, [refreshTrigger]);
 
   useEffect(() => {
-
     fetchData();
-    const interval = setInterval(fetchData, 60 * 1000); // 60s refresh
+    const interval = setInterval(fetchData, 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Filter assets
+  const filteredAssets = ASSETS.filter(asset => {
+    if (activeFilter === "all") return true;
+    return asset.category.toLowerCase() === activeFilter;
+  });
 
   // Error state
   if (error && Object.keys(marketData).length === 0) {
@@ -361,10 +437,10 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
           marginBottom: 14,
         }}>
           <h2 style={{
+            fontFamily: FONTS.display,
             fontSize: 14,
             fontWeight: 600,
-            fontFamily: FONTS.display,
-            color: T.primary,
+            color: T.t1,
           }}>
             Asset Radar
           </h2>
@@ -374,12 +450,12 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
           alignItems: "center",
           justifyContent: "center",
           height: 200,
-          background: "rgba(10,9,24,0.6)",
+          background: T.surface,
           border: "1px solid rgba(255,45,85,0.3)",
-          borderRadius: 8,
+          borderRadius: 12,
           color: T.red,
           fontSize: 12,
-          fontFamily: FONTS.body,
+          fontFamily: FONTS.mono,
         }}>
           数据加载失败 · {lastUpdate ? `上次更新: ${lastUpdate.toLocaleTimeString()}` : "请刷新"}
         </div>
@@ -387,10 +463,10 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
     );
   }
 
-  // Arrange in 4x4 grid
+  // Grid layout
   const rows = [];
-  for (let i = 0; i < ASSETS.length; i += 4) {
-    rows.push(ASSETS.slice(i, i + 4));
+  for (let i = 0; i < filteredAssets.length; i += 4) {
+    rows.push(filteredAssets.slice(i, i + 4));
   }
 
   return (
@@ -403,24 +479,55 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         marginBottom: 14,
       }}>
         <h2 style={{
+          fontFamily: FONTS.display,
           fontSize: 14,
           fontWeight: 600,
-          fontFamily: FONTS.display,
-          color: T.primary,
+          color: T.t1,
           letterSpacing: "-0.01em",
         }}>
           Asset Radar
         </h2>
         <span style={{
-          fontSize: 10,
-          color: T.muted,
           fontFamily: FONTS.mono,
+          fontSize: 10,
+          color: T.t3,
         }}>
           {ASSETS.length} assets · CoinGecko
         </span>
       </div>
 
-      {/* 4x4 Grid */}
+      {/* Filter Chips */}
+      <div style={{
+        display: "flex",
+        gap: 5,
+        flexWrap: "wrap",
+        marginBottom: 14,
+      }}>
+        {FILTERS.map(filter => (
+          <button
+            key={filter.id}
+            onClick={() => setActiveFilter(filter.id)}
+            style={{
+              fontFamily: FONTS.display,
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.07em",
+              padding: "5px 12px",
+              borderRadius: 5,
+              border: `1px solid ${activeFilter === filter.id ? "rgba(200,168,75,0.28)" : T.border}`,
+              color: activeFilter === filter.id ? T.gold : T.t3,
+              background: activeFilter === filter.id ? T.goldDim : "none",
+              cursor: "pointer",
+              transition: "all 0.16s",
+              textTransform: "uppercase",
+            }}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Asset Grid */}
       <div style={{
         display: "grid",
         gridTemplateColumns: "repeat(4, 1fr)",

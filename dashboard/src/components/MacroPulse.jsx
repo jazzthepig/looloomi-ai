@@ -1,64 +1,81 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 const T = {
-  void:      "#020208",
-  deep:      "#06050F",
-  surface:   "#0A0918",
-  raised:    "#100E22",
-  border:    "#1A173A",
-  primary:   "#F0EEFF",
-  secondary: "#8880BE",
-  muted:     "#3E3A6E",
-  green:     "#00D98A",
-  red:       "#FF2D55",
-  amber:     "#E8A000",
+  void:       "#030508",
+  deep:       "#06080f",
+  surface:    "#090d18",
+  raised:     "#0e1424",
+  card:       "#111929",
+  border:     "rgba(255,255,255,0.055)",
+  borderMd:   "rgba(255,255,255,0.10)",
+  borderHi:   "rgba(255,255,255,0.18)",
+  t1:         "rgba(255,255,255,0.90)",
+  t2:         "rgba(255,255,255,0.50)",
+  t3:         "rgba(255,255,255,0.26)",
+  t4:         "rgba(255,255,255,0.12)",
+  gold:       "#C8A84B",
+  goldLt:     "#E8C86A",
+  goldDim:    "rgba(200,168,75,0.13)",
+  goldGlow:   "rgba(200,168,75,0.06)",
+  green:      "#00E87A",
+  greenDim:   "rgba(0,232,122,0.10)",
+  red:        "#FF3D5A",
+  redDim:     "rgba(255,61,90,0.10)",
+  blue:       "#4B9EFF",
+  blueDim:    "rgba(75,158,255,0.10)",
+  purple:     "#A78BFA",
+  amber:      "#F59E0B",
 };
 
 const FONTS = {
-  display: "'Space Grotesk', sans-serif",
-  body:    "'Exo 2', sans-serif",
-  mono:    "'JetBrains Mono', monospace",
+  display: "'Syne', sans-serif",
+  mono:    "'DM Mono', monospace",
+  serif:   "'Cormorant Garamond', serif",
 };
 
 /* ─── Regime Calculation Logic ──────────────────────────────────────── */
-// Updated logic per requirements:
-// - RISK ON: btc7dChange > 5 且 fearGreed > 50
-// - RISK OFF: btc7dChange < -10 或 fearGreed < 25
-// - NEUTRAL: 其余情况
 const calculateRegime = (btc7dChange, fngValue) => {
-  // RISK ON: BTC 7d > 5% AND Fear & Greed > 50
   if (btc7dChange > 5 && fngValue > 50) {
     return "RISK ON";
   }
-  // RISK OFF: BTC 7d < -10% OR Fear & Greed < 25
   if (btc7dChange < -10 || fngValue < 25) {
     return "RISK OFF";
   }
-  // NEUTRAL: everything else
   return "NEUTRAL";
 };
+
+const REGIMES = ["NEUTRAL", "RISK ON", "RISK OFF"];
 
 const getRegimeConfig = (regime) => {
   switch (regime) {
     case "RISK ON":
       return {
         color: T.green,
-        glow: "rgba(0, 217, 138, 0.5)",
+        glow: "rgba(0,232,122,0.07)",
+        borderColor: "rgba(0,232,122,0.28)",
+        labelColor: T.green,
+        textShadow: "0 0 28px rgba(0,232,122,0.45), 0 0 60px rgba(0,232,122,0.15)",
         label: "看涨",
         description: "机构持续加仓，BTC领涨，市场风险偏好上升"
       };
     case "RISK OFF":
       return {
         color: T.red,
-        glow: "rgba(255, 45, 85, 0.5)",
+        glow: "rgba(255,61,90,0.07)",
+        borderColor: "rgba(255,61,90,0.28)",
+        labelColor: T.red,
+        textShadow: "0 0 28px rgba(255,61,90,0.45), 0 0 60px rgba(255,61,90,0.15)",
         label: "防御",
         description: "机构减仓观望，避险情绪升温"
       };
     default:
       return {
-        color: T.secondary,
-        glow: "rgba(136, 128, 190, 0.5)",
+        color: T.gold,
+        glow: "rgba(200,168,75,0.07)",
+        borderColor: "rgba(200,168,75,0.28)",
+        labelColor: T.gold,
+        textShadow: "0 0 28px rgba(200,168,75,0.45), 0 0 60px rgba(200,168,75,0.15)",
         label: "中性",
         description: "市场横盘整理，等待方向明确"
       };
@@ -85,10 +102,7 @@ const generateStatusDescription = (regime, btcDom, marketCapChange, fngValue) =>
     ],
   };
 
-  // Add some logic-based variation
   const descriptions = configs[regime] || configs["NEUTRAL"];
-
-  // Simple hash to pick consistent description
   const index = Math.floor((btcDom + marketCapChange + fngValue) / 33) % descriptions.length;
   return descriptions[index];
 };
@@ -96,47 +110,50 @@ const generateStatusDescription = (regime, btcDom, marketCapChange, fngValue) =>
 /* ─── Loading Skeleton ─────────────────────────────────────────────── */
 const SkeletonPulse = () => (
   <div style={{
-    display: "flex",
-    alignItems: "center",
-    height: 120,
-    padding: "0 32px",
-    background: "rgba(10,9,24,0.82)",
+    borderRadius: 13,
     border: `1px solid ${T.border}`,
-    borderRadius: 10,
-    gap: 40,
+    background: "linear-gradient(135deg, rgba(10,14,24,.98), rgba(6,9,15,.98))",
+    marginBottom: 18,
+    overflow: "hidden",
+    position: "relative",
+    height: 120,
   }}>
-    {/* Regime skeleton */}
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 160 }}>
-      <div className="sk" style={{ height: 14, width: 100 }} />
-      <div className="sk" style={{ height: 48, width: 140 }} />
-    </div>
-
-    {/* Divider */}
-    <div style={{ width: 1, height: 80, background: T.border }} />
-
-    {/* Metrics skeletons */}
-    {[1, 2, 3].map((i) => (
-      <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-        <div className="sk" style={{ height: 12, width: 80 }} />
-        <div className="sk" style={{ height: 32, width: 100 }} />
+    <div style={{ display: "grid", gridTemplateColumns: "220px 1px 1fr 1px 180px", alignItems: "center", padding: "20px 26px", gap: 0, height: "100%" }}>
+      <div style={{ paddingRight: 26 }}>
+        <div className="sk" style={{ height: 10, width: 80, marginBottom: 6 }} />
+        <div className="sk" style={{ height: 36, width: 140 }} />
       </div>
-    ))}
+      <div style={{ width: 1, height: 80, background: T.border }} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", padding: "0 30px" }}>
+        {[1, 2, 3].map(i => (
+          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <div className="sk" style={{ height: 10, width: 60 }} />
+            <div className="sk" style={{ height: 24, width: 80 }} />
+          </div>
+        ))}
+      </div>
+      <div style={{ width: 1, height: 80, background: T.border }} />
+      <div style={{ paddingLeft: 24, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+        <div className="sk" style={{ height: 14, width: 60 }} />
+        <div className="sk" style={{ height: 10, width: 80 }} />
+      </div>
+    </div>
   </div>
 );
 
 /* ─── Main Component ───────────────────────────────────────────────── */
-export default function MacroPulse({ refreshTrigger = 0 }) {
+export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [fngData, setFngData] = useState(null);
   const [btcData, setBtcData] = useState(null);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [manualRegime, setManualRegime] = useState(null); // User override
 
   const fetchData = async () => {
     setError(null);
     try {
-      // Fetch all data in parallel
       const [globalRes, fngRes, btcRes] = await Promise.all([
         fetch("https://api.coingecko.com/api/v3/global"),
         fetch("https://api.alternative.me/fng/"),
@@ -169,9 +186,17 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
   }, [refreshTrigger]);
 
   useEffect(() => {
-    const interval = setInterval(fetchData, 5 * 60 * 1000); // 5 min refresh
+    const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Handle click to toggle regime
+  const handleBannerClick = useCallback(() => {
+    const currentRegime = manualRegime || calculateRegime(btcData?.usd_7d_change || 0, fngData ? parseInt(fngData.value) : 50);
+    const currentIndex = REGIMES.indexOf(currentRegime);
+    const nextIndex = (currentIndex + 1) % REGIMES.length;
+    setManualRegime(REGIMES[nextIndex]);
+  }, [manualRegime, btcData, fngData]);
 
   // Calculate values
   const btcDominance = data?.market_cap_percentage?.btc || 0;
@@ -180,19 +205,18 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
   const fngLabel = fngData?.value_classification || "Neutral";
   const btc7dChange = btcData?.usd_7d_change || 0;
 
-  // Calculate regime using new logic
-  const regime = calculateRegime(btc7dChange, fngValue);
+  // Calculate regime - use manual override if set
+  const calculatedRegime = calculateRegime(btc7dChange, fngValue);
+  const regime = manualRegime || calculatedRegime;
   const regimeConfig = getRegimeConfig(regime);
   const statusDescription = generateStatusDescription(regime, btcDominance, totalMarketCapChange, fngValue);
 
-  // Get FNG color
   const getFngColor = (val) => {
     if (val > 65) return T.green;
     if (val < 35) return T.red;
     return T.amber;
   };
 
-  // Expose lastUpdate to parent via callback or just render
   if (loading && !data) {
     return <SkeletonPulse />;
   }
@@ -200,18 +224,18 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
   if (error && !data) {
     return (
       <div style={{
+        borderRadius: 13,
+        border: "1px solid rgba(255,61,90,0.3)",
+        background: "linear-gradient(135deg, rgba(10,14,24,.98), rgba(6,9,15,.98))",
+        marginBottom: 18,
+        overflow: "hidden",
+        height: 120,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        height: 120,
-        padding: "0 32px",
-        background: "rgba(10,9,24,0.82)",
-        border: "1px solid rgba(255,45,85,0.3)",
-        borderRadius: 10,
-        marginBottom: 20,
         color: T.red,
         fontSize: 12,
-        fontFamily: FONTS.body,
+        fontFamily: FONTS.mono,
       }}>
         数据加载失败 · {lastUpdate ? `上次更新: ${lastUpdate.toLocaleTimeString()}` : "请刷新"}
       </div>
@@ -219,155 +243,223 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
   }
 
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      height: 120,
-      padding: "0 32px",
-      background: "rgba(10,9,24,0.82)",
-      border: `1px solid ${T.border}`,
-      borderRadius: 10,
-      marginBottom: 20,
-      position: "relative",
-      overflow: "hidden",
-    }}>
-      {/* Ambient glow effect */}
+    <div
+      onClick={handleBannerClick}
+      style={{
+        borderRadius: 13,
+        border: `1px solid ${regimeConfig.borderColor}`,
+        background: "linear-gradient(135deg, rgba(10,14,24,.98), rgba(6,9,15,.98))",
+        marginBottom: 18,
+        overflow: "hidden",
+        position: "relative",
+        cursor: "pointer",
+        transition: "border-color 0.6s ease",
+      }}
+    >
+      {/* Ambient glow */}
       <div style={{
         position: "absolute",
-        left: 32,
-        top: "50%",
-        transform: "translateY(-50%)",
-        width: 4,
-        height: 80,
-        background: regimeConfig.color,
-        borderRadius: 2,
-        boxShadow: `0 0 20px ${regimeConfig.glow}, 0 0 40px ${regimeConfig.glow}`,
-        opacity: 0.8,
+        inset: 0,
+        pointerEvents: "none",
+        background: `radial-gradient(ellipse 70% 120% at 12% 50%, ${regimeConfig.glow}, transparent 60%)`,
+        transition: "opacity 0.6s ease",
       }} />
 
-      {/* Market Regime */}
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 4,
-        minWidth: 180,
-        paddingLeft: 20,
+      {/* Hint */}
+      <div className="mb-hint" style={{
+        position: "absolute",
+        bottom: 8,
+        right: 14,
+        fontSize: 8,
+        color: T.t3,
+        letterSpacing: "0.08em",
+        opacity: 0,
+        transition: "opacity 0.2s",
       }}>
-        <div style={{
-          fontSize: 10,
-          color: T.muted,
-          letterSpacing: "0.11em",
-          textTransform: "uppercase",
-          fontFamily: FONTS.body,
-        }}>
-          Market Regime
-        </div>
-        <div style={{
-          fontSize: 36,
-          fontWeight: 700,
-          fontFamily: FONTS.display,
-          color: regimeConfig.color,
-          lineHeight: 1.1,
-          textShadow: `0 0 30px ${regimeConfig.glow}`,
-          letterSpacing: "-0.02em",
-        }}>
-          {regime}
-        </div>
+        点击切换状态
       </div>
 
-      {/* Divider */}
       <div style={{
-        width: 1,
-        height: 80,
-        background: T.border,
-        margin: "0 32px",
-      }} />
-
-      {/* Metrics */}
-      <div style={{
-        display: "flex",
+        display: "grid",
+        gridTemplateColumns: "220px 1px 1fr 1px 180px",
         alignItems: "center",
-        flex: 1,
-        gap: 32,
+        padding: "20px 26px",
+        gap: 0,
       }}>
-        {/* BTC Dominance */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+        {/* Market Regime */}
+        <div style={{ paddingRight: 26 }}>
           <div style={{
-            fontSize: 10,
-            color: T.muted,
-            letterSpacing: "0.11em",
+            fontSize: 8,
+            letterSpacing: "0.2em",
+            color: T.t3,
+            fontFamily: FONTS.display,
+            fontWeight: 600,
             textTransform: "uppercase",
-            fontFamily: FONTS.body,
+            marginBottom: 4,
           }}>
-            BTC Dominance
+            Market Regime
           </div>
           <div style={{
+            fontFamily: FONTS.display,
             fontSize: 28,
-            fontWeight: 600,
-            fontFamily: FONTS.mono,
-            color: T.primary,
+            fontWeight: 800,
+            letterSpacing: "0.05em",
             lineHeight: 1,
+            color: regimeConfig.labelColor,
+            textShadow: regimeConfig.textShadow,
+            transition: "color 0.6s, text-shadow 0.6s",
           }}>
-            {btcDominance.toFixed(1)}%
+            {regime}
+          </div>
+          <div style={{
+            fontSize: 9,
+            color: T.t3,
+            marginTop: 6,
+            letterSpacing: "0.05em",
+          }}>
+            {regimeConfig.label}
           </div>
         </div>
 
         {/* Divider */}
-        <div style={{ width: 1, height: 60, background: T.border }} />
+        <div style={{ width: 1, height: 80, background: T.border }} />
 
-        {/* Fear & Greed */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
-          <div style={{
-            fontSize: 10,
-            color: T.muted,
-            letterSpacing: "0.11em",
-            textTransform: "uppercase",
-            fontFamily: FONTS.body,
-          }}>
-            Fear & Greed
-          </div>
-          <div style={{
-            fontSize: 28,
-            fontWeight: 600,
-            fontFamily: FONTS.mono,
-            color: getFngColor(fngValue),
-            lineHeight: 1,
-          }}>
-            {fngValue}
-            <span style={{
-              fontSize: 12,
-              fontWeight: 500,
-              color: getFngColor(fngValue),
-              marginLeft: 8,
-              fontFamily: FONTS.body,
+        {/* Metrics */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-around",
+          padding: "0 30px",
+          gap: 12,
+        }}>
+          {/* BTC Dominance */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <div style={{
+              fontSize: 8,
+              letterSpacing: "0.16em",
+              color: T.t3,
+              fontFamily: FONTS.display,
+              fontWeight: 600,
+              textTransform: "uppercase",
             }}>
-              {fngLabel}
-            </span>
+              BTC Dominance
+            </div>
+            <div style={{
+              fontFamily: FONTS.mono,
+              fontSize: 19,
+              fontWeight: 400,
+              color: T.t1,
+              letterSpacing: "-0.02em",
+            }}>
+              {btcDominance.toFixed(1)}%
+            </div>
+          </div>
+
+          <div style={{ width: 1, height: 36, background: T.border }} />
+
+          {/* Fear & Greed */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <div style={{
+              fontSize: 8,
+              letterSpacing: "0.16em",
+              color: T.t3,
+              fontFamily: FONTS.display,
+              fontWeight: 600,
+              textTransform: "uppercase",
+            }}>
+              Fear & Greed
+            </div>
+            <div style={{
+              fontFamily: FONTS.mono,
+              fontSize: 19,
+              fontWeight: 400,
+              color: getFngColor(fngValue),
+              letterSpacing: "-0.02em",
+            }}>
+              {fngValue}
+              <span style={{
+                fontSize: 9,
+                letterSpacing: "0.04em",
+                color: T.t3,
+                marginLeft: 8,
+              }}>
+                {fngLabel}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ width: 1, height: 36, background: T.border }} />
+
+          {/* Total Market Cap */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <div style={{
+              fontSize: 8,
+              letterSpacing: "0.16em",
+              color: T.t3,
+              fontFamily: FONTS.display,
+              fontWeight: 600,
+              textTransform: "uppercase",
+            }}>
+              Total MCap 24h
+            </div>
+            <div style={{
+              fontFamily: FONTS.mono,
+              fontSize: 19,
+              fontWeight: 400,
+              color: totalMarketCapChange >= 0 ? T.green : T.red,
+              letterSpacing: "-0.02em",
+            }}>
+              {totalMarketCapChange >= 0 ? "+" : ""}{totalMarketCapChange.toFixed(1)}%
+            </div>
           </div>
         </div>
 
         {/* Divider */}
-        <div style={{ width: 1, height: 60, background: T.border }} />
+        <div style={{ width: 1, height: 80, background: T.border }} />
 
-        {/* Total Market Cap Change */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+        {/* Right side */}
+        <div style={{ paddingLeft: 24, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
           <div style={{
-            fontSize: 10,
-            color: T.muted,
-            letterSpacing: "0.11em",
-            textTransform: "uppercase",
-            fontFamily: FONTS.body,
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            fontSize: 9,
+            color: T.green,
+            letterSpacing: "0.1em",
+            fontFamily: FONTS.display,
+            fontWeight: 700,
           }}>
-            Total MCap 24h
+            <span style={{
+              width: 5,
+              height: 5,
+              borderRadius: "50%",
+              background: T.green,
+              animation: "blink 2s ease-in-out infinite",
+            }} />
+            LIVE
           </div>
           <div style={{
-            fontSize: 28,
-            fontWeight: 600,
-            fontFamily: FONTS.mono,
-            color: totalMarketCapChange >= 0 ? T.green : T.red,
-            lineHeight: 1,
+            fontSize: 9,
+            color: T.t3,
           }}>
-            {totalMarketCapChange >= 0 ? "+" : ""}{totalMarketCapChange.toFixed(1)}%
+            {lastUpdate ? lastUpdate.toLocaleTimeString() : "--:--"}
+          </div>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 8,
+            color: T.t3,
+          }}>
+            <span>Auto</span>
+            <div style={{ width: 52, height: 2, background: "rgba(255,255,255,0.08)", borderRadius: 1, overflow: "hidden" }}>
+              <div style={{
+                height: "100%",
+                background: T.gold,
+                borderRadius: 1,
+                animation: "prog 300s linear infinite",
+              }} />
+            </div>
           </div>
         </div>
       </div>
@@ -376,16 +468,29 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
       <div style={{
         position: "absolute",
         bottom: 10,
-        right: 32,
+        right: 26,
         fontSize: 11,
-        color: T.secondary,
-        fontFamily: FONTS.body,
+        color: T.t2,
+        fontFamily: FONTS.serif,
+        fontStyle: "italic",
         maxWidth: 280,
         textAlign: "right",
         lineHeight: 1.4,
       }}>
         {statusDescription}
       </div>
+
+      <style>{`
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.25; }
+        }
+        @keyframes prog {
+          from { width: 0; }
+          to { width: 100%; }
+        }
+        div:hover .mb-hint { opacity: 1 !important; }
+      `}</style>
     </div>
   );
 }
