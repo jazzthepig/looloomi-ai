@@ -584,6 +584,23 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       </button>
                     ))}
                   </div>
+
+                  {/* Data Source Label */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    fontSize: '9px', color: 'rgba(255,255,255,0.3)'
+                  }}>
+                    <span style={{
+                      background: 'rgba(75,158,255,0.1)',
+                      border: '1px solid rgba(75,158,255,0.2)',
+                      color: '#4B9EFF', padding: '2px 7px', borderRadius: '3px',
+                      fontSize: '8px', fontWeight: '700', letterSpacing: '0.1em',
+                      fontFamily: FONTS.display
+                    }}>LIVE</span>
+                    <span>DefiLlama Raises API</span>
+                    <span style={{color:'rgba(255,255,255,0.15)'}}>·</span>
+                    <span id="vcUpdateTime">Updated {lastUpdate ? lastUpdate.toLocaleTimeString() : 'just now'}</span>
+                  </div>
                 </div>
 
                 <div className="lm-card" style={{ overflow: "hidden" }}>
@@ -679,6 +696,21 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                           );
                         })
                     }
+                  </div>
+
+                  {/* Data Disclaimer */}
+                  <div style={{
+                    padding: '10px 18px',
+                    borderTop: '1px solid rgba(255,255,255,0.055)',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    fontSize: '9px', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em'
+                  }}>
+                    <span>
+                      Source: DefiLlama Raises API · CryptoRank ·
+                      Deal amounts reflect reported figures and may be estimates.
+                      CometCloud does not verify individual deal terms.
+                    </span>
+                    <span>Data refreshes every 30 minutes</span>
                   </div>
                 </div>
               </div>
