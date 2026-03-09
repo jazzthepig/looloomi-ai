@@ -27,11 +27,11 @@ const FONTS = {
 /*
 interface Signal {
   id: string;
-  timestamp: number;           // Unix timestamp in ms
+  timestamp: string;                        // ISO 8601 format
   type: 'WHALE' | 'FUNDING' | 'FLOW' | 'MACRO' | 'RISK';
-  description: string;          // Max 60 chars
-  assets: string[];            // 1-3 token symbols
   importance: 'HIGH' | 'MED' | 'LOW';
+  description: string;                       // Max 60 chars
+  affected_assets: string[];                // Token symbols, max 3
 }
 */
 
@@ -49,68 +49,10 @@ const IMPORTANCE_STYLES = {
   LOW:  { color: T.muted, bg: "rgba(62,58,110,0.3)", border: "rgba(62,58,110,0.5)" },
 };
 
-/* ─── Mock Signals (TODO: Replace with real API endpoint) ──────────────── */
-const MOCK_SIGNALS = [
-  {
-    id: "s1",
-    timestamp: Date.now() - 2 * 60 * 60 * 1000, // 2h ago
-    type: "WHALE",
-    description: "BTC单笔转入Coinbase 1,240 BTC（约$84M），交易所净流入信号",
-    assets: ["BTC"],
-    importance: "HIGH",
-  },
-  {
-    id: "s2",
-    timestamp: Date.now() - 4 * 60 * 60 * 1000, // 4h ago
-    type: "FUNDING",
-    description: "ETH永续合约资金费率转负（-0.02%），空头情绪积累",
-    assets: ["ETH"],
-    importance: "MED",
-  },
-  {
-    id: "s3",
-    timestamp: Date.now() - 6 * 60 * 60 * 1000, // 6h ago
-    type: "MACRO",
-    description: "美联储发言暗示维持高利率，风险资产短期承压",
-    assets: ["BTC", "ETH"],
-    importance: "HIGH",
-  },
-  {
-    id: "s4",
-    timestamp: Date.now() - 8 * 60 * 60 * 1000, // 8h ago
-    type: "FLOW",
-    description: "Solana链上DEX净流入$128M，创月度新高",
-    assets: ["SOL"],
-    importance: "MED",
-  },
-  {
-    id: "s5",
-    timestamp: Date.now() - 12 * 60 * 60 * 1000, // 12h ago
-    type: "RISK",
-    description: "USDC溢价扩大至-0.3%，亚洲需求疲软",
-    assets: ["USDC"],
-    importance: "LOW",
-  },
-  {
-    id: "s6",
-    timestamp: Date.now() - 18 * 60 * 60 * 1000, // 18h ago
-    type: "WHALE",
-    description: "未知地址向Binance转入4,500 ETH，减持信号",
-    assets: ["ETH"],
-    importance: "MED",
-  },
-  {
-    id: "s7",
-    timestamp: Date.now() - 24 * 60 * 60 * 1000, // 24h ago
-    type: "FUNDING",
-    description: "BTC资金费率连续3日转正，多头平仓压力增加",
-    assets: ["BTC"],
-    importance: "HIGH",
-  },
-];
-
 /* ─── Helper Functions ───────────────────────────────────────────────── */
-const formatRelativeTime = (timestamp) => {
+// Convert ISO timestamp to relative time
+const formatRelativeTime = (isoTimestamp) => {
+  const timestamp = new Date(isoTimestamp).getTime();
   const diff = Date.now() - timestamp;
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor(diff / (1000 * 60));
@@ -124,6 +66,93 @@ const formatRelativeTime = (timestamp) => {
   }
   return `${minutes}m ago`;
 };
+
+/* ─── API Fetch Function (to be replaced with real endpoint) ───────────── */
+async function fetchSignalsFromAPI() {
+  // TODO: Replace with real API endpoint when available
+  // Real endpoint: GET /api/v1/signals/feed?limit=20
+  // Expected response: { signals: Signal[] }
+
+  // Mock data (remove when real API is ready)
+  const now = new Date();
+  const MOCK_SIGNALS = [
+    {
+      id: "s1",
+      timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2h ago
+      type: "WHALE",
+      description: "BTC单笔转入Coinbase 1,240 BTC（约$84M），交易所净流入信号",
+      affected_assets: ["BTC"],
+      importance: "HIGH",
+    },
+    {
+      id: "s2",
+      timestamp: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(), // 4h ago
+      type: "FUNDING",
+      description: "ETH永续合约资金费率转负（-0.02%），空头情绪积累",
+      affected_assets: ["ETH"],
+      importance: "MED",
+    },
+    {
+      id: "s3",
+      timestamp: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(), // 6h ago
+      type: "MACRO",
+      description: "美联储发言暗示维持高利率，风险资产短期承压",
+      affected_assets: ["BTC", "ETH"],
+      importance: "HIGH",
+    },
+    {
+      id: "s4",
+      timestamp: new Date(now.getTime() - 8 * 60 * 60 * 1000).toISOString(), // 8h ago
+      type: "FLOW",
+      description: "Solana链上DEX净流入$128M，创月度新高",
+      affected_assets: ["SOL"],
+      importance: "MED",
+    },
+    {
+      id: "s5",
+      timestamp: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(), // 12h ago
+      type: "RISK",
+      description: "USDC溢价扩大至-0.3%，亚洲需求疲软",
+      affected_assets: ["USDC"],
+      importance: "LOW",
+    },
+    {
+      id: "s6",
+      timestamp: new Date(now.getTime() - 18 * 60 * 60 * 1000).toISOString(), // 18h ago
+      type: "WHALE",
+      description: "未知地址向Binance转入4,500 ETH，减持信号",
+      affected_assets: ["ETH"],
+      importance: "MED",
+    },
+    {
+      id: "s7",
+      timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), // 24h ago
+      type: "FUNDING",
+      description: "BTC资金费率连续3日转正，多头平仓压力增加",
+      affected_assets: ["BTC"],
+      importance: "HIGH",
+    },
+    // New signals added
+    {
+      id: "s8",
+      timestamp: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(), // 3h ago
+      type: "MACRO",
+      description: "美联储褐皮书显示经济放缓，市场降息预期升温",
+      affected_assets: ["BTC", "ETH", "SOL"],
+      importance: "HIGH",
+    },
+    {
+      id: "s9",
+      timestamp: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(), // 1h ago
+      type: "RISK",
+      description: "某巨鲸地址转移4.2万ETH至未知钱包，链上异动预警",
+      affected_assets: ["ETH"],
+      importance: "MED",
+    },
+  ];
+
+  return MOCK_SIGNALS;
+}
 
 /* ─── Signal Row Component ─────────────────────────────────────────────── */
 const SignalRow = ({ signal, onClick }) => {
@@ -218,7 +247,7 @@ const SignalRow = ({ signal, onClick }) => {
 
         {/* Asset Tags */}
         <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {signal.assets.map((asset) => (
+          {signal.affected_assets?.map((asset) => (
             <span key={asset} style={{
               fontSize: 10,
               fontFamily: FONTS.mono,
@@ -281,14 +310,9 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
   const fetchSignals = async () => {
     setError(null);
     try {
-      // TODO: Replace with real API endpoint
-      // const res = await fetch('/api/v1/signals/today');
-      // const data = await res.json();
-      // setSignals(data);
-
-      // Simulate API call with mock data
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setSignals(MOCK_SIGNALS);
+      // Fetch signals from API layer (currently uses mock data)
+      const signals = await fetchSignalsFromAPI();
+      setSignals(signals);
       setLastUpdate(new Date());
     } catch (err) {
       console.error("SignalFeed fetch error:", err);
