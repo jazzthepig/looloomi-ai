@@ -9,6 +9,9 @@ import {
 } from "recharts";
 import BottomSheet from "./ui/BottomSheet";
 import CISLeaderboard from "./CISLeaderboard";
+import MacroPulse from "./MacroPulse";
+import AssetRadar from "./AssetRadar";
+import SignalFeed from "./SignalFeed";
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 const T = {
@@ -568,6 +571,7 @@ export default function MarketPage() {
   const [loading, setLoading]         = useState(true);
   const [lastUpdate, setLastUpdate]   = useState(null);
   const [live, setLive]               = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [category, setCategory]       = useState("All");
   const [selectedToken, setSelected]  = useState(null);
   const [apiStatus, setApiStatus]     = useState("connecting");
@@ -729,7 +733,11 @@ export default function MarketPage() {
           {live ? "LIVE" : "PAUSED"}
         </button>
 
-        <button className="lm-action-btn" onClick={() => { fetchPrices(); fetchSupplementary(); }}>
+        <button className="lm-action-btn" onClick={() => {
+          fetchPrices();
+          fetchSupplementary();
+          setRefreshTrigger(t => t + 1);
+        }}>
           <RefreshCw size={11} /> Refresh
         </button>
       </div>
@@ -739,6 +747,56 @@ export default function MarketPage() {
   /* ── Market Tab ── */
   const MarketTab = () => (
     <>
+      {/* ── Page Header ── */}
+      <div style={{
+        display: "flex",
+        alignItems: "baseline",
+        justifyContent: "space-between",
+        marginBottom: 24,
+        paddingTop: 8,
+      }}>
+        <div>
+          <h1 style={{
+            fontSize: 32,
+            fontWeight: 700,
+            fontFamily: FONTS.display,
+            color: T.primary,
+            letterSpacing: "-0.02em",
+            margin: 0,
+          }}>
+            Market
+          </h1>
+          <p style={{
+            fontSize: 13,
+            fontFamily: FONTS.body,
+            color: T.muted,
+            marginTop: 4,
+          }}>
+            Real-time intelligence layer
+          </p>
+        </div>
+        {lastUpdate && (
+          <span style={{
+            fontSize: 11,
+            color: T.muted,
+            fontFamily: FONTS.mono,
+          }}>
+            Last updated: {lastUpdate.toLocaleTimeString()}
+          </span>
+        )}
+      </div>
+
+      {/* ── Macro Pulse (Sticky) ── */}
+      <div style={{ position: "sticky", top: 0, zIndex: 10, background: T.void, paddingTop: 8, marginTop: -8 }}>
+        <MacroPulse btc7dChange={0} refreshTrigger={refreshTrigger} />
+      </div>
+
+      {/* ── Asset Radar ── */}
+      <AssetRadar fngValue={fngVal} refreshTrigger={refreshTrigger} />
+
+      {/* ── Signal Feed ── */}
+      <SignalFeed refreshTrigger={refreshTrigger} />
+
       {/* ── Stat cards ── */}
       <div className="mobile-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
 
