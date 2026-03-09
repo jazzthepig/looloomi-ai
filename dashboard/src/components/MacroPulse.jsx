@@ -22,21 +22,21 @@ const FONTS = {
 };
 
 /* ─── Regime Calculation Logic ──────────────────────────────────────── */
-const calculateRegime = (btc7dChange, fngValue, fundingRate = 0) => {
-  // Score based on BTC 7d change (-20% to +20% range)
-  const btcScore = btc7dChange > 10 ? 3 : btc7dChange > 0 ? 2 : btc7dChange > -10 ? 1 : 0;
-
-  // Score based on Fear & Greed (0-100)
-  const fngScore = fngValue > 65 ? 3 : fngValue > 35 ? 2 : fngValue > 20 ? 1 : 0;
-
-  // Score based on funding rate (simplified, assume 0 if not available)
-  const fundScore = fundingRate > 0.01 ? 1 : fundingRate < -0.01 ? 2 : 2;
-
-  const totalScore = btcScore + fngScore + fundScore;
-
-  if (totalScore >= 7) return "RISK ON";
-  if (totalScore >= 4) return "NEUTRAL";
-  return "RISK OFF";
+// Updated logic per requirements:
+// - RISK ON: btc7dChange > 5 且 fearGreed > 50
+// - RISK OFF: btc7dChange < -10 或 fearGreed < 25
+// - NEUTRAL: 其余情况
+const calculateRegime = (btc7dChange, fngValue) => {
+  // RISK ON: BTC 7d > 5% AND Fear & Greed > 50
+  if (btc7dChange > 5 && fngValue > 50) {
+    return "RISK ON";
+  }
+  // RISK OFF: BTC 7d < -10% OR Fear & Greed < 25
+  if (btc7dChange < -10 || fngValue < 25) {
+    return "RISK OFF";
+  }
+  // NEUTRAL: everything else
+  return "NEUTRAL";
 };
 
 const getRegimeConfig = (regime) => {
@@ -125,28 +125,35 @@ const SkeletonPulse = () => (
 );
 
 /* ─── Main Component ───────────────────────────────────────────────── */
-export default function MacroPulse({ btc7dChange = 5, fundingRate = 0, refreshTrigger = 0 }) {
+export default function MacroPulse({ refreshTrigger = 0 }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [fngData, setFngData] = useState(null);
+  const [btcData, setBtcData] = useState(null);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
 
   const fetchData = async () => {
     setError(null);
     try {
-      // Fetch CoinGecko global data
-      const globalRes = await fetch("https://api.coingecko.com/api/v3/global");
-      if (!globalRes.ok) throw new Error("Global API failed");
-      const globalJson = await globalRes.json();
+      // Fetch all data in parallel
+      const [globalRes, fngRes, btcRes] = await Promise.all([
+        fetch("https://api.coingecko.com/api/v3/global"),
+        fetch("https://api.alternative.me/fng/"),
+        fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_7d_change=true")
+      ]);
 
-      // Fetch Fear & Greed Index
-      const fngRes = await fetch("https://api.alternative.me/fng/");
+      if (!globalRes.ok) throw new Error("Global API failed");
       if (!fngRes.ok) throw new Error("FNG API failed");
+      if (!btcRes.ok) throw new Error("BTC API failed");
+
+      const globalJson = await globalRes.json();
       const fngJson = await fngRes.json();
+      const btcJson = await btcRes.json();
 
       setData(globalJson.data);
       setFngData(fngJson.data[0]);
+      setBtcData(btcJson.bitcoin);
       setLastUpdate(new Date());
     } catch (err) {
       console.error("MacroPulse fetch error:", err);
@@ -171,9 +178,10 @@ export default function MacroPulse({ btc7dChange = 5, fundingRate = 0, refreshTr
   const totalMarketCapChange = data?.market_cap_change_percentage_24h_usd || 0;
   const fngValue = fngData ? parseInt(fngData.value) : 50;
   const fngLabel = fngData?.value_classification || "Neutral";
+  const btc7dChange = btcData?.usd_7d_change || 0;
 
-  // Calculate regime
-  const regime = calculateRegime(btc7dChange, fngValue, fundingRate);
+  // Calculate regime using new logic
+  const regime = calculateRegime(btc7dChange, fngValue);
   const regimeConfig = getRegimeConfig(regime);
   const statusDescription = generateStatusDescription(regime, btcDominance, totalMarketCapChange, fngValue);
 
