@@ -444,14 +444,13 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
           }}>
             {lastUpdate ? lastUpdate.toLocaleTimeString() : "--:--"}
           </div>
-          <div style={{
+          <div className="mb-refresh" style={{
             display: "flex",
             alignItems: "center",
             gap: 6,
             fontSize: 8,
             color: T.t3,
           }}>
-            <span>Auto</span>
             <div style={{ width: 52, height: 2, background: "rgba(255,255,255,0.08)", borderRadius: 1, overflow: "hidden" }}>
               <div style={{
                 height: "100%",
@@ -460,6 +459,7 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
                 animation: "prog 300s linear infinite",
               }} />
             </div>
+            5 min
           </div>
         </div>
       </div>

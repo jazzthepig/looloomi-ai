@@ -37,10 +37,10 @@ const FONTS = {
 
 /* ─── Signal Types ───────────────────────────────────────────────────── */
 const SIGNAL_TYPES = {
+  MACRO:   { label: "MACRO",   color: T.gold,   bg: "rgba(200,168,75,0.12)", border: "rgba(200,168,75,0.2)" },
   WHALE:   { label: "WHALE",   color: T.purple, bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.2)" },
   FUNDING: { label: "FUNDING", color: T.blue,   bg: "rgba(75,158,255,0.10)", border: "rgba(75,158,255,0.2)" },
   FLOW:    { label: "FLOW",    color: T.green,  bg: "rgba(0,232,122,0.08)", border: "rgba(0,232,122,0.2)" },
-  MACRO:   { label: "MACRO",   color: T.gold,   bg: "rgba(200,168,75,0.12)", border: "rgba(200,168,75,0.2)" },
   RISK:    { label: "RISK",    color: T.red,    bg: "rgba(255,61,90,0.10)", border: "rgba(255,61,90,0.2)" },
 };
 
@@ -154,7 +154,7 @@ const SignalRow = ({ signal, isNew }) => {
 
   return (
     <div
-      className={isNew ? "signal-new" : ""}
+      className={isNew ? "signal-row new" : "signal-row"}
       style={{
         display: "grid",
         gridTemplateColumns: "auto 1fr auto",
@@ -173,7 +173,7 @@ const SignalRow = ({ signal, isNew }) => {
       }}
     >
       {/* Type Badge */}
-      <div style={{
+      <div className={`stype st-${signal.type.toLowerCase()}`} style={{
         fontFamily: FONTS.display,
         fontSize: 7,
         fontWeight: 700,
@@ -191,8 +191,8 @@ const SignalRow = ({ signal, isNew }) => {
       </div>
 
       {/* Content */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <div style={{
+      <div className="sr-body" style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <div className="sr-title" style={{
           fontFamily: FONTS.display,
           fontSize: 11,
           fontWeight: 600,
@@ -203,9 +203,9 @@ const SignalRow = ({ signal, isNew }) => {
           {signal.description}
         </div>
         {/* Asset Tags */}
-        <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 2 }}>
+        <div className="sr-assets" style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 2 }}>
           {signal.affected_assets?.map((asset) => (
-            <span key={asset} style={{
+            <span key={asset} className="sr-asset" style={{
               fontSize: 8,
               fontFamily: FONTS.mono,
               color: T.t3,
@@ -221,16 +221,16 @@ const SignalRow = ({ signal, isNew }) => {
       </div>
 
       {/* Right: Time & Importance */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, minWidth: 54 }}>
-        <div style={{
+      <div className="sr-right" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, minWidth: 54 }}>
+        <div className="sr-time" style={{
           fontSize: 8,
           color: T.t3,
           whiteSpace: "nowrap",
         }}>
           {formatRelativeTime(signal.timestamp)}
         </div>
-        {signal.importance === "HIGH" && (
-          <div style={{
+        {signal.importance && (
+          <div className={`impact imp-${signal.importance.toLowerCase()}`} style={{
             fontFamily: FONTS.display,
             fontSize: 8,
             fontWeight: 700,
@@ -319,13 +319,13 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
   // Error state
   if (error && signals.length === 0) {
     return (
-      <div style={{
+      <div className="signal-panel" style={{
         border: `1px solid ${T.border}`,
         borderRadius: 12,
         overflow: "hidden",
         background: T.surface,
       }}>
-        <div style={{
+        <div className="sp-head" style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -333,7 +333,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
           borderBottom: `1px solid ${T.border}`,
           background: "rgba(255,255,255,0.018)",
         }}>
-          <div style={{
+          <div className="sp-title" style={{
             fontFamily: FONTS.display,
             fontSize: 9,
             fontWeight: 700,
@@ -364,7 +364,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
   }
 
   return (
-    <div style={{
+    <div className="signal-panel" style={{
       border: `1px solid ${T.border}`,
       borderRadius: 12,
       overflow: "hidden",
@@ -373,7 +373,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
       top: 20,
     }}>
       {/* Header */}
-      <div style={{
+      <div className="sp-head" style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -381,7 +381,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         borderBottom: `1px solid ${T.border}`,
         background: "rgba(255,255,255,0.018)",
       }}>
-        <div style={{
+        <div className="sp-title" style={{
           fontFamily: FONTS.display,
           fontSize: 9,
           fontWeight: 700,
@@ -395,34 +395,29 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
           <span style={{ width: 14, height: 1, background: T.t3 }} />
           Signal Feed
         </div>
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-        }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            fontSize: 8,
-            color: T.green,
-            fontFamily: FONTS.display,
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{
+            background: "rgba(245,158,11,0.1)",
+            color: T.amber,
+            border: "1px solid rgba(245,158,11,0.2)",
+            fontSize: 7,
             fontWeight: 700,
             letterSpacing: "0.1em",
-          }}>
-            <span style={{
-              width: 4,
-              height: 4,
-              borderRadius: "50%",
-              background: T.green,
-            }} />
-            AUTO
-          </div>
+            padding: "2px 6px",
+            borderRadius: 3,
+            fontFamily: FONTS.display,
+          }}>MOCK</span>
+          <div style={{
+            width: 4,
+            height: 4,
+            borderRadius: "50%",
+            background: T.green,
+          }} />
         </div>
       </div>
 
       {/* Signal List */}
-      <div style={{
+      <div className="sp-body" style={{
         maxHeight: "calc(100vh - 300px)",
         overflowY: "auto",
         minHeight: 400,
@@ -430,24 +425,14 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         {loading
           ? Array(5).fill(0).map((_, i) => <SkeletonRow key={i} />)
           : displayedSignals.map((signal, idx) => (
-              <div key={signal.id} style={{ position: "relative" }}>
-                <SignalRow
-                  signal={signal}
-                  onClick={onSignalClick}
-                  isNew={idx === 0}
-                />
-                {idx < displayedSignals.length - 1 && (
-                  <div style={{
-                    position: "absolute",
-                    left: 16,
-                    top: 22,
-                    width: 1,
-                    height: "calc(100% - 8px)",
-                    background: "rgba(255,255,255,0.08)",
-                  }} />
-                )}
-              </div>
-            ))}
+              <SignalRow
+                key={signal.id}
+                signal={signal}
+                onClick={onSignalClick}
+                isNew={idx === 0}
+              />
+            ))
+        }
       </div>
 
       {/* Legend */}
@@ -486,7 +471,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
           from { opacity: 0; transform: translateY(-5px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .signal-new {
+        .signal-row.new {
           animation: signal-in 0.35s ease;
         }
       `}</style>
