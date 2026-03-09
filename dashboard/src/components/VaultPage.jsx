@@ -320,7 +320,9 @@ const SAMPLE_FUNDS = []; // Empty - data loaded from API
     strategyDetail: "Market making, quant strategies, venture, on-chain - balanced portfolio",
     advantage: "Full-spectrum crypto exposure with institutional risk controls",
   },
-];
+]; */
+
+/* Placeholder removed - real data from API */
 const FUND_TYPES = ["All", "DeFi Quant", "VC / Early Stage", "Market Neutral", "Trading / Momentum", "Long-Only / Research", "On-Chain Active", "LSD Focus", "Yield / Lending", "Options / Volatility", "Multi-Strategy"];
 const LOCATIONS = ["All", "Singapore", "Hong Kong", "London", "Dubai", "New York", "Berlin"];
 
