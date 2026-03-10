@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { ChevronDown, ChevronUp, BarChart3, RefreshCw } from "lucide-react";
-import BottomSheet from "./ui/BottomSheet";
 
 const T = {
   void: "#020208",
@@ -50,6 +48,7 @@ const ASSET_CLASS_COLORS = {
   L1: { bg: "rgba(0,200,224,.08)", text: "#00C8E0" },
   L2: { bg: "rgba(107,15,204,.10)", text: "#9945FF" },
   Infrastructure: { bg: "rgba(0,217,138,.10)", text: "#00D98A" },
+  Oracle: { bg: "rgba(167,139,250,.10)", text: "#A78BFA" },
   Memecoin: { bg: "rgba(255,16,96,.10)", text: "#FF1060" },
   AI: { bg: "rgba(255,16,96,.10)", text: "#FF1060" },
 };
@@ -58,26 +57,35 @@ const API_BASE = "/api/v1";
 
 // Sample data for demo (will be replaced by API)
 const SAMPLE_CIS_DATA = [
-  { rank: 1, asset_id: "buidl", asset_name: "BlackRock BUIDL", asset_class: "RWA", total_score: 88.8, grade: "A", pillars: { F: 95, M: 85, O: 90, S: 80, alpha: 85 } },
-  { rank: 2, asset_id: "benji", asset_name: "Franklin Templeton BENJI", asset_class: "RWA", total_score: 86.1, grade: "A", pillars: { F: 92, M: 82, O: 88, S: 78, alpha: 82 } },
-  { rank: 3, asset_id: "eth", asset_name: "Ethereum", asset_class: "L1", total_score: 85.0, grade: "A", pillars: { F: 92, M: 95, O: 90, S: 68, alpha: 55 } },
-  { rank: 4, asset_id: "btc", asset_name: "Bitcoin", asset_class: "L1", total_score: 85.0, grade: "A", pillars: { F: 95, M: 98, O: 95, S: 60, alpha: 40 } },
-  { rank: 5, asset_id: "usdy", asset_name: "Ondo USDY", asset_class: "RWA", total_score: 84.3, grade: "B", pillars: { F: 90, M: 80, O: 88, S: 75, alpha: 80 } },
-  { rank: 6, asset_id: "ousg", asset_name: "Ondo OUSG", asset_class: "RWA", total_score: 82.0, grade: "B", pillars: { F: 88, M: 78, O: 85, S: 72, alpha: 78 } },
-  { rank: 7, asset_id: "sol", asset_name: "Solana", asset_class: "L1", total_score: 81.8, grade: "B", pillars: { F: 80, M: 90, O: 88, S: 75, alpha: 65 } },
-  { rank: 8, asset_id: "link", asset_name: "Chainlink", asset_class: "Infrastructure", total_score: 80.0, grade: "B", pillars: { F: 88, M: 78, O: 85, S: 70, alpha: 65 } },
-  { rank: 9, asset_id: "ondo", asset_name: "Ondo Finance", asset_class: "RWA", total_score: 79.5, grade: "B", pillars: { F: 85, M: 78, O: 82, S: 70, alpha: 72 } },
-  { rank: 10, asset_id: "uni", asset_name: "Uniswap", asset_class: "DeFi", total_score: 77.8, grade: "B", pillars: { F: 80, M: 85, O: 82, S: 62, alpha: 68 } },
-  { rank: 11, asset_id: "aave", asset_name: "Aave", asset_class: "DeFi", total_score: 77.2, grade: "B", pillars: { F: 82, M: 75, O: 85, S: 65, alpha: 70 } },
-  { rank: 12, asset_id: "maker", asset_name: "Maker", asset_class: "DeFi", total_score: 76.0, grade: "B", pillars: { F: 85, M: 72, O: 88, S: 58, alpha: 60 } },
-  { rank: 13, asset_id: "base", asset_name: "Base", asset_class: "L2", total_score: 74.4, grade: "B", pillars: { F: 78, M: 72, O: 80, S: 70, alpha: 65 } },
-  { rank: 14, asset_id: "ton", asset_name: "Toncoin", asset_class: "L1", total_score: 72.2, grade: "B", pillars: { F: 70, M: 75, O: 78, S: 72, alpha: 60 } },
-  { rank: 15, asset_id: "comp", asset_name: "Compound", asset_class: "DeFi", total_score: 71.8, grade: "B", pillars: { F: 78, M: 70, O: 80, S: 55, alpha: 65 } },
-  { rank: 16, asset_id: "arb", asset_name: "Arbitrum", asset_class: "L2", total_score: 70.8, grade: "B", pillars: { F: 75, M: 70, O: 78, S: 60, alpha: 62 } },
-  { rank: 17, asset_id: "morpho", asset_name: "Morpho", asset_class: "DeFi", total_score: 69.5, grade: "C", pillars: { F: 72, M: 65, O: 78, S: 55, alpha: 75 } },
-  { rank: 18, asset_id: "op", asset_name: "Optimism", asset_class: "L2", total_score: 68.6, grade: "C", pillars: { F: 73, M: 68, O: 75, S: 58, alpha: 60 } },
-  { rank: 19, asset_id: "doge", asset_name: "Dogecoin", asset_class: "Memecoin", total_score: 58.5, grade: "C", pillars: { F: 25, M: 60, O: 45, S: 88, alpha: 35 } },
-  { rank: 20, asset_id: "pepe", asset_name: "Pepe", asset_class: "Memecoin", total_score: 52.1, grade: "C", pillars: { F: 15, M: 55, O: 40, S: 82, alpha: 28 } },
+  { rank: 1, asset_id: "buidl", asset_name: "BlackRock BUIDL", asset_class: "RWA", total_score: 88.8, grade: "A", pillars: { F: 95, M: 85, O: 90, S: 80, alpha: 85 }, description: "Largest tokenized money market fund. Multi-chain deployment. Institutional-grade compliance and reporting." },
+  { rank: 2, asset_id: "benji", asset_name: "Franklin Templeton BENJI", asset_class: "RWA", total_score: 86.1, grade: "A", pillars: { F: 92, M: 82, O: 88, S: 78, alpha: 82 }, description: "On-chain US Treasury fund on Polygon/Stellar. Proven track record, strong institutional backing." },
+  { rank: 3, asset_id: "eth", asset_name: "Ethereum", asset_class: "L1", total_score: 85.0, grade: "A", pillars: { F: 92, M: 95, O: 90, S: 68, alpha: 55 }, description: "Base layer for majority of RWA protocols. ETF approval validates institutional adoption trajectory." },
+  { rank: 4, asset_id: "btc", asset_name: "Bitcoin", asset_class: "L1", total_score: 85.0, grade: "A", pillars: { F: 95, M: 98, O: 95, S: 60, alpha: 40 }, description: "Digital gold narrative validated. Spot ETF inflows confirm institutional allocation framework." },
+  { rank: 5, asset_id: "usdy", asset_name: "Ondo USDY", asset_class: "RWA", total_score: 84.3, grade: "B", pillars: { F: 90, M: 80, O: 88, S: 75, alpha: 80 }, description: "Yield-bearing stablecoin backed by US Treasuries. Growing on-chain adoption across DeFi protocols." },
+  { rank: 6, asset_id: "ousg", asset_name: "Ondo OUSG", asset_class: "RWA", total_score: 82.0, grade: "B", pillars: { F: 88, M: 78, O: 85, S: 72, alpha: 78 }, description: "Tokenized US Treasury fund. Institutional-grade compliance and reporting framework." },
+  { rank: 7, asset_id: "sol", asset_name: "Solana", asset_class: "L1", total_score: 81.8, grade: "B", pillars: { F: 80, M: 90, O: 88, S: 75, alpha: 65 }, description: "High-throughput L1 capturing institutional DeFi and RWA activity. ETF pipeline active." },
+  { rank: 8, asset_id: "link", asset_name: "Chainlink", asset_class: "Infrastructure", total_score: 80.0, grade: "B", pillars: { F: 88, M: 78, O: 85, S: 70, alpha: 65 }, description: "Critical infrastructure layer for RWA price feeds. CCIP cross-chain standard gaining adoption." },
+  { rank: 9, asset_id: "ondo", asset_name: "Ondo Finance", asset_class: "RWA", total_score: 79.5, grade: "B", pillars: { F: 85, M: 78, O: 82, S: 70, alpha: 72 }, description: "Leading RWA tokenization platform. OUSG and USDY products with institutional distribution channels." },
+  { rank: 10, asset_id: "uni", asset_name: "Uniswap", asset_class: "DeFi", total_score: 77.8, grade: "B", pillars: { F: 80, M: 85, O: 82, S: 62, alpha: 68 }, description: "DEX standard with concentrated liquidity. Fee switch governance creates revenue potential." },
+  { rank: 11, asset_id: "aave", asset_name: "Aave", asset_class: "DeFi", total_score: 77.2, grade: "B", pillars: { F: 82, M: 75, O: 85, S: 65, alpha: 70 }, description: "Dominant lending protocol. GHO stablecoin integration, cross-chain expansion, consistent revenue." },
+  { rank: 12, asset_id: "maker", asset_name: "Maker", asset_class: "DeFi", total_score: 76.0, grade: "B", pillars: { F: 85, M: 72, O: 88, S: 58, alpha: 60 }, description: "Decentralized stablecoin protocol. DAI savings rate and MKR governance token utility." },
+  { rank: 13, asset_id: "base", asset_name: "Base", asset_class: "L2", total_score: 74.4, grade: "B", pillars: { F: 78, M: 72, O: 80, S: 70, alpha: 65 }, description: "Coinbase L2. Fast growing ecosystem with institutional backing. Low fees, high security." },
+  { rank: 14, asset_id: "ton", asset_name: "Toncoin", asset_class: "L1", total_score: 72.2, grade: "B", pillars: { F: 70, M: 75, O: 78, S: 72, alpha: 60 }, description: "Telegram blockchain. Growing adoption through messaging app integration. Gaming focus." },
+  { rank: 15, asset_id: "comp", asset_name: "Compound", asset_class: "DeFi", total_score: 71.8, grade: "B", pillars: { F: 78, M: 70, O: 80, S: 55, alpha: 65 }, description: "Algorithmic lending protocol. COMP token governance and compound treasury." },
+  { rank: 16, asset_id: "arb", asset_name: "Arbitrum", asset_class: "L2", total_score: 70.8, grade: "B", pillars: { F: 75, M: 70, O: 78, S: 60, alpha: 62 }, description: "Leading ETH L2 by TVL. Governance decentralization ongoing. Strong DeFi ecosystem." },
+  { rank: 17, asset_id: "morpho", asset_name: "Morpho", asset_class: "DeFi", total_score: 69.5, grade: "C", pillars: { F: 72, M: 65, O: 78, S: 55, alpha: 75 }, description: "Peer-to-peer lending protocol. Optimized liquidity and competitive yields." },
+  { rank: 18, asset_id: "op", asset_name: "Optimism", asset_class: "L2", total_score: 68.6, grade: "C", pillars: { F: 73, M: 68, O: 75, S: 58, alpha: 60 }, description: "OP Stack ecosystem growth. Superchain vision gaining traction. Base chain validates thesis." },
+  { rank: 19, asset_id: "doge", asset_name: "Dogecoin", asset_class: "Memecoin", total_score: 58.5, grade: "C", pillars: { F: 25, M: 60, O: 45, S: 88, alpha: 35 }, description: "Meme cryptocurrency with strong community. Payment adoption growing via Tesla and merchants." },
+  { rank: 20, asset_id: "pepe", asset_name: "Pepe", asset_class: "Memecoin", total_score: 52.1, grade: "C", pillars: { F: 15, M: 55, O: 40, S: 82, alpha: 28 }, description: "Meme token with viral community. High volatility, speculative nature." },
+];
+
+// Pillar definitions with weights
+const PILLAR_DEFS = [
+  { key: "F", name: "Fundamental", color: "#4472FF", weight: 30, desc: "Team / Product / Tokenomics" },
+  { key: "M", name: "Market Structure", color: "#A78BFA", weight: 25, desc: "Liquidity / Volume / Spread" },
+  { key: "O", name: "On-Chain Health", color: "#00D98A", weight: 20, desc: "Real Activity / Holder Behavior" },
+  { key: "S", name: "Sentiment", color: "#F59E0B", weight: 15, desc: "Social / KOL / Community" },
+  { key: "alpha", name: "Alpha Independence", color: "#FF2D55", weight: 10, desc: "BTC Independence / Factor Exposure" },
 ];
 
 export default function CISLeaderboard({ minimal = false }) {
@@ -85,11 +93,11 @@ export default function CISLeaderboard({ minimal = false }) {
   const [loading, setLoading] = useState(false);
   const [gradeFilter, setGradeFilter] = useState("All");
   const [classFilter, setClassFilter] = useState("All");
-  const [expandedRow, setExpandedRow] = useState(null);
+  const [selectedAsset, setSelectedAsset] = useState(SAMPLE_CIS_DATA[0]);
   const [sortBy, setSortBy] = useState("rank");
 
-  const GRADE_TABS = ["All", "A", "B", "C", "D", "F"];
-  const CLASS_TABS = ["All", "RWA", "L1", "L2", "DeFi", "Infrastructure", "Memecoin"];
+  const GRADE_TABS = ["All", "A", "B", "C", "D"];
+  const CLASS_TABS = ["All", "RWA", "L1", "L2", "DeFi", "Infrastructure", "Oracle", "Memecoin"];
 
   // Filter data
   const filtered = data.filter(item => {
@@ -97,6 +105,19 @@ export default function CISLeaderboard({ minimal = false }) {
     const classMatch = classFilter === "All" || item.asset_class === classFilter;
     return gradeMatch && classMatch;
   });
+
+  // Grade summary
+  const gradeSummary = {
+    A: data.filter(i => i.grade === "A").length,
+    B: data.filter(i => i.grade === "B").length,
+    C: data.filter(i => i.grade === "C").length,
+    D: data.filter(i => i.grade === "D" || i.grade === "F").length,
+  };
+
+  // Handle asset selection
+  const handleSelectAsset = (asset) => {
+    setSelectedAsset(asset);
+  };
 
   // Pillar bar width
   const PillarBar = ({ value, color = T.blue }) => (
@@ -152,259 +173,278 @@ export default function CISLeaderboard({ minimal = false }) {
     </div>
   );
 
+  // Minimal mode: just table without filters
+  if (minimal) {
+    return (
+      <div>
+        <div style={{
+          display: "grid", gridTemplateColumns: "40px 1.5fr 70px 50px",
+          gap: 12, padding: "8px 16px", borderBottom: `1px solid ${T.border}`,
+          fontSize: 10, color: T.muted, letterSpacing: "0.1em",
+          textTransform: "uppercase", fontFamily: FONTS.body
+        }}>
+          <span>#</span>
+          <span>Asset</span>
+          <span style={{ textAlign: "right" }}>CIS</span>
+          <span>Grade</span>
+        </div>
+        {filtered.map((item) => (
+          <div key={item.asset_id}
+            onClick={() => handleSelectAsset(item)}
+            style={{
+              display: "grid", gridTemplateColumns: "40px 1.5fr 70px 50px",
+              gap: 12, padding: "12px 16px", borderBottom: `1px solid ${T.border}`,
+              alignItems: "center", cursor: "pointer",
+              background: selectedAsset?.asset_id === item.asset_id ? T.deep : "transparent",
+              transition: "background 0.15s ease"
+            }}
+          >
+            <span style={{ fontSize: 12, fontFamily: FONTS.mono, color: T.muted }}>{item.rank}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, fontFamily: FONTS.display, color: T.primary }}>{item.asset_name}</span>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <span style={{ fontSize: 16, fontWeight: 700, fontFamily: FONTS.mono, color: GRADE_COLORS[item.grade] }}>{item.total_score.toFixed(1)}</span>
+            </div>
+            <span style={{
+              width: 24, height: 24, borderRadius: "50%", display: "flex",
+              alignItems: "center", justifyContent: "center",
+              background: `${GRADE_COLORS[item.grade]}20`,
+              fontSize: 12, fontWeight: 700, fontFamily: FONTS.mono,
+              color: GRADE_COLORS[item.grade], border: `1px solid ${GRADE_COLORS[item.grade]}40`
+            }}>{item.grade}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Full mode with 2-column layout
   return (
     <div>
-      {/* Filters */}
-      {!minimal && (
-        <div style={{ marginBottom: 16 }}>
-          {/* Grade Tabs */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-            {GRADE_TABS.map(g => (
-              <button
-                key={g}
-                onClick={() => setGradeFilter(g)}
-                style={{
-                  padding: "4px 12px", borderRadius: 4, fontSize: 11, fontWeight: 500,
-                  fontFamily: FONTS.body, cursor: "pointer", border: "1px solid",
-                  borderColor: gradeFilter === g ? `${GRADE_COLORS[g] || T.border}60` : T.border,
-                  background: gradeFilter === g ? `${GRADE_COLORS[g] || T.blue}15` : "transparent",
-                  color: gradeFilter === g ? (GRADE_COLORS[g] || T.primary) : T.secondary,
-                  transition: "all 0.15s ease"
-                }}
-              >
-                {g === "All" ? "All" : `Grade ${g}`}
-                {g !== "All" && (
-                  <span style={{ marginLeft: 4, opacity: 0.7 }}>
-                    ({data.filter(i => i.grade === g).length})
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Asset Class Tabs */}
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {CLASS_TABS.map(c => {
-              const cfg = ASSET_CLASS_COLORS[c] || {};
-              const isActive = classFilter === c;
-              return (
-                <button
-                  key={c}
-                  onClick={() => setClassFilter(c)}
-                  style={{
-                    padding: "3px 10px", borderRadius: 3, fontSize: 10, fontWeight: 500,
-                    fontFamily: FONTS.body, cursor: "pointer", border: "1px solid",
-                    borderColor: isActive ? `${cfg.text || T.border}50` : T.border,
-                    background: isActive ? cfg.bg : "transparent",
-                    color: isActive ? cfg.text : T.muted,
-                    transition: "all 0.15s ease"
-                  }}
-                >
-                  {c}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Table Header */}
+      {/* Grade Summary Cards */}
       <div style={{
-        display: "grid",
-        gridTemplateColumns: minimal ? "40px 1.5fr 70px 50px" : "45px 2fr 80px 55px 200px",
-        gap: 12, padding: "8px 16px", borderBottom: `1px solid ${T.border}`,
-        fontSize: 10, color: T.muted, letterSpacing: "0.1em",
-        textTransform: "uppercase", fontFamily: FONTS.body
+        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 18
       }}>
-        {!minimal && <span>#</span>}
-        <span>Asset</span>
-        <span style={{ textAlign: "right" }}>CIS</span>
-        <span>Grade</span>
-        {!minimal && <span style={{ paddingLeft: 8 }}>Pillars</span>}
+        {[
+          { grade: "A", label: "CIS Score ≥ 85", color: T.green },
+          { grade: "B", label: "CIS Score 70–84", color: T.blue },
+          { grade: "C", label: "CIS Score 55–69", color: T.amber },
+          { grade: "D", label: "CIS Score < 55", color: T.red },
+        ].map(g => (
+          <div key={g.grade} style={{
+            border: `1px solid ${T.border}`, borderRadius: 10,
+            padding: "14px 16px", background: T.surface,
+            display: "flex", flexDirection: "column", gap: 3,
+          }}>
+            <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 800, marginBottom: 2, color: g.color }}>
+              {g.grade}
+            </div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.primary }}>
+              {g.grade === "A" ? gradeSummary.A : g.grade === "B" ? gradeSummary.B : g.grade === "C" ? gradeSummary.C : gradeSummary.D}
+            </div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.26)", letterSpacing: "0.06em" }}>
+              {g.label}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Table Body */}
-      <div>
-        {filtered.length === 0 ? (
-          <div style={{ padding: 40, textAlign: "center", color: T.muted, fontFamily: FONTS.body }}>
-            No assets match the selected filters
-          </div>
-        ) : (
-          filtered.map((item, i) => (
-            <div key={item.asset_id}>
-              <div
-                onClick={() => setExpandedRow(expandedRow?.asset_id === item.asset_id ? null : item)}
+      {/* Filters Row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div style={{ display: "flex", gap: 6 }}>
+          {/* Grade Tabs */}
+          {GRADE_TABS.map(g => (
+            <button key={g} onClick={() => setGradeFilter(g)}
+              style={{
+                padding: "4px 12px", borderRadius: 4, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
+                fontFamily: FONTS.display, cursor: "pointer", border: "1px solid",
+                borderColor: gradeFilter === g ? `${GRADE_COLORS[g] || T.border}50` : T.border,
+                background: gradeFilter === g ? `${GRADE_COLORS[g] || T.blue}15` : "transparent",
+                color: gradeFilter === g ? (GRADE_COLORS[g] || T.primary) : T.muted,
+                transition: "all 0.15s ease"
+              }}>
+              {g}
+            </button>
+          ))}
+          <div style={{ width: 1, background: T.border, margin: "0 8px" }} />
+          {/* Asset Class Tabs */}
+          {CLASS_TABS.map(c => {
+            const cfg = ASSET_CLASS_COLORS[c] || {};
+            const isActive = classFilter === c;
+            return (
+              <button key={c} onClick={() => setClassFilter(c)}
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: minimal ? "40px 1.5fr 70px 50px" : "45px 2fr 80px 55px 200px",
-                  gap: 12, padding: "12px 16px", borderBottom: `1px solid ${T.border}`,
-                  alignItems: "center", cursor: "pointer",
-                  background: expandedRow?.asset_id === item.asset_id ? T.deep : "transparent",
-                  transition: "background 0.15s ease"
-                }}
-                className="cis-row"
-              >
-                {/* Rank */}
-                {!minimal && (
-                  <span style={{
-                    fontSize: 12, fontFamily: FONTS.mono, color: T.muted,
-                    width: 24
-                  }}>
-                    {item.rank}
-                  </span>
-                )}
+                  padding: "3px 10px", borderRadius: 3, fontSize: 9, fontWeight: 600,
+                  fontFamily: FONTS.display, cursor: "pointer", border: "1px solid",
+                  borderColor: isActive ? `${cfg.text || T.border}50` : T.border,
+                  background: isActive ? cfg.bg : "transparent",
+                  color: isActive ? cfg.text : T.muted,
+                  transition: "all 0.15s ease"
+                }}>
+                {c}
+              </button>
+            );
+          })}
+        </div>
+        {/* Pillar Legend */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 9, color: "rgba(255,255,255,0.26)" }}>
+          {PILLAR_DEFS.map(p => (
+            <span key={p.key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.color }} />
+              {p.key}
+            </span>
+          ))}
+        </div>
+      </div>
 
-                {/* Asset Name */}
+      {/* 2-Column Layout: Table + Detail Panel */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, alignItems: "start" }}>
+        {/* Left: Table */}
+        <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden", background: T.surface }}>
+          {/* Table Header */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "34px 1fr 80px 60px",
+            gap: 12, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
+            fontSize: 9, color: "rgba(255,255,255,0.26)", letterSpacing: "0.14em",
+            textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
+            background: "rgba(255,255,255,0.018)",
+          }}>
+            <span>#</span>
+            <span>Asset</span>
+            <span style={{ textAlign: "right" }}>CIS</span>
+            <span style={{ textAlign: "center" }}>Grade</span>
+          </div>
+
+          {/* Table Body */}
+          <div style={{ maxHeight: 500, overflowY: "auto" }}>
+            {filtered.length === 0 ? (
+              <div style={{ padding: 40, textAlign: "center", color: T.muted }}>No assets match</div>
+            ) : filtered.map((item) => (
+              <div key={item.asset_id}
+                onClick={() => handleSelectAsset(item)}
+                style={{
+                  display: "grid", gridTemplateColumns: "34px 1fr 80px 60px",
+                  gap: 12, padding: "13px 18px", borderBottom: `1px solid ${T.border}`,
+                  alignItems: "center", cursor: "pointer",
+                  background: selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent",
+                  transition: "background .14s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.022)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent"; }}
+              >
+                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: "rgba(255,255,255,0.26)", textAlign: "center" }}>{item.rank}</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 700, color: T.primary }}>{item.asset_name}</span>
                   <span style={{
-                    fontSize: 13, fontWeight: 600, fontFamily: FONTS.display,
-                    color: T.primary, letterSpacing: "-0.01em"
-                  }}>
-                    {item.asset_name}
-                  </span>
-                  <span style={{
-                    fontSize: 9, padding: "2px 6px", borderRadius: 3,
+                    fontSize: 8, padding: "2px 5px", borderRadius: 2,
                     background: ASSET_CLASS_COLORS[item.asset_class]?.bg || "transparent",
                     color: ASSET_CLASS_COLORS[item.asset_class]?.text || T.muted,
-                    fontFamily: FONTS.body, fontWeight: 500
-                  }}>
-                    {item.asset_class}
-                  </span>
+                    fontFamily: FONTS.display, fontWeight: 600, letterSpacing: "0.05em"
+                  }}>{item.asset_class}</span>
                 </div>
-
-                {/* CIS Score */}
-                <div style={{ textAlign: "right" }}>
-                  <span style={{
-                    fontSize: 16, fontWeight: 700, fontFamily: FONTS.mono,
-                    color: GRADE_COLORS[item.grade]
-                  }}>
-                    {item.total_score.toFixed(1)}
-                  </span>
-                </div>
-
-                {/* Grade */}
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 6
-                }}>
-                  <span style={{
-                    width: 24, height: 24, borderRadius: "50%", display: "flex",
-                    alignItems: "center", justifyContent: "center",
-                    background: `${GRADE_COLORS[item.grade]}20`,
-                    fontSize: 12, fontWeight: 700, fontFamily: FONTS.mono,
-                    color: GRADE_COLORS[item.grade], border: `1px solid ${GRADE_COLORS[item.grade]}40`
-                  }}>
-                    {item.grade}
-                  </span>
-                  {!minimal && (
-                    expandedRow?.asset_id === item.asset_id ? <ChevronUp size={14} color={T.muted} /> : <ChevronDown size={14} color={T.muted} />
-                  )}
-                </div>
-
-                {/* Pillars (minimal mode shows dots) */}
-                {!minimal && (
-                  <div style={{ display: "flex", gap: 3, paddingLeft: 8 }}>
-                    {["F", "M", "O", "S", "alpha"].map(p => (
-                      <div key={p} style={{
-                        width: 32, height: 4, background: T.border, borderRadius: 2, overflow: "hidden"
-                      }}>
-                        <div style={{
-                          width: `${item.pillars[p]}%`, height: "100%",
-                          background: p === "alpha" ? T.pink : (p === "S" ? T.amber : T.blue),
-                          borderRadius: 2
-                        }} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Expanded Detail - moved to BottomSheet */}
-              {/* {expandedRow?.asset_id === item.asset_id && !minimal && (
-                <ExpandedDetail item={item} />
-              )} */}
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Stats Footer */}
-      {!minimal && filtered.length > 0 && (
-        <div style={{
-          padding: "12px 16px", borderTop: `1px solid ${T.border}`,
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          fontSize: 11, color: T.muted, fontFamily: FONTS.body
-        }}>
-          <span>Showing {filtered.length} of {data.length} assets</span>
-          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <BarChart3 size={12} />
-            CIS v1.0 · Composite Intelligence Score
-          </span>
-        </div>
-      )}
-
-      <style>{`
-        .cis-row:hover { background: ${T.raised} !important; }
-      `}</style>
-
-      {/* CIS Detail - BottomSheet */}
-      <BottomSheet isOpen={!!expandedRow && !minimal} onClose={() => setExpandedRow(null)}>
-        {expandedRow && (
-          <div>
-            {/* Row 1: Name + Grade + Score */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4, lineHeight: 1.2 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <h3 style={{ fontFamily: FONTS.display, fontSize: 15, fontWeight: 700, color: T.primary, margin: 0 }}>
-                  {expandedRow.asset_name}
-                </h3>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 15, fontWeight: 400, textAlign: "right",
+                  color: item.total_score >= 85 ? T.green : item.total_score >= 70 ? T.blue : T.amber }}>
+                  {item.total_score.toFixed(1)}
+                </span>
                 <span style={{
-                  padding: "1px 6px", borderRadius: 2, fontSize: 10, fontWeight: 600,
-                  background: `${GRADE_COLORS[expandedRow.grade]}20`, color: GRADE_COLORS[expandedRow.grade],
-                }}>
-                  Grade {expandedRow.grade}
-                </span>
+                  width: 28, height: 28, borderRadius: "50%", display: "flex",
+                  alignItems: "center", justifyContent: "center", margin: "0 auto",
+                  background: `${GRADE_COLORS[item.grade]}20`,
+                  fontSize: 12, fontWeight: 700, fontFamily: FONTS.mono,
+                  color: GRADE_COLORS[item.grade], border: `1px solid ${GRADE_COLORS[item.grade]}40`
+                }}>{item.grade}</span>
               </div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: T.cyan, fontFamily: FONTS.mono }}>
-                {expandedRow.total_score.toFixed(1)}
-              </div>
-            </div>
-            <div style={{ fontSize: 10, color: T.secondary, marginBottom: 6 }}>{expandedRow.asset_class} · Rank #{expandedRow.rank}</div>
+            ))}
+          </div>
+        </div>
 
-            {/* Row 2: 5 Pillars */}
-            <div style={{
-              display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4,
-              marginBottom: 6, paddingBottom: 6, borderBottom: `1px solid ${T.border}`
-            }}>
-              {[
-                { key: "F", label: "Fundamental" },
-                { key: "M", label: "Market" },
-                { key: "O", label: "On-Chain" },
-                { key: "S", label: "Sentiment" },
-                { key: "alpha", label: "Alpha" },
-              ].map(p => (
-                <div key={p.key} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 8, color: T.muted, marginBottom: 2 }}>{p.label}</div>
-                  <div style={{ width: "100%", height: 4, background: T.border, borderRadius: 2, overflow: "hidden", marginBottom: 2 }}>
-                    <div style={{ width: `${expandedRow.pillars[p.key]}%`, height: "100%", background: GRADE_COLORS[expandedRow.grade], borderRadius: 2 }} />
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{expandedRow.pillars[p.key]}</div>
+        {/* Right: Detail Panel */}
+        <div style={{
+          border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden",
+          background: T.surface, position: "sticky", top: 80,
+        }}>
+          {/* Detail Header */}
+          <div style={{
+            padding: "18px 20px", borderBottom: `1px solid ${T.border}`,
+            background: "rgba(255,255,255,0.018)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <div>
+                <div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 800, color: T.primary }}>
+                  {selectedAsset?.asset_name}
                 </div>
-              ))}
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.26)", marginTop: 3 }}>
+                  {selectedAsset?.asset_class} · Rank #{selectedAsset?.rank}
+                </div>
+              </div>
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%", display: "flex",
+                alignItems: "center", justifyContent: "center",
+                background: `${GRADE_COLORS[selectedAsset?.grade]}20`,
+                fontSize: 14, fontWeight: 700, fontFamily: FONTS.mono,
+                color: GRADE_COLORS[selectedAsset?.grade],
+                border: `1px solid ${GRADE_COLORS[selectedAsset?.grade]}40`
+              }}>{selectedAsset?.grade}</div>
             </div>
-
-            {/* Row 3: Pillar values (scrollable) */}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {Object.entries(expandedRow.pillars).map(([k, v]) => (
-                <span key={k} style={{
-                  fontSize: 10, fontFamily: FONTS.mono, color: T.secondary,
-                  background: T.surface, padding: "3px 6px", borderRadius: 3
-                }}>
-                  {k}: <span style={{ color: T.primary, userSelect: "none" }}>{v}</span>
-                </span>
-              ))}
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span style={{
+                fontFamily: FONTS.mono, fontSize: 42, fontWeight: 400, lineHeight: 1, letterSpacing: "-0.03em",
+                color: selectedAsset?.total_score >= 85 ? T.green : selectedAsset?.total_score >= 70 ? T.blue : T.amber
+              }}>{selectedAsset?.total_score.toFixed(1)}</span>
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.26)" }}>/ 100</span>
             </div>
           </div>
-        )}
-      </BottomSheet>
+
+          {/* Detail Body */}
+          <div style={{ padding: "18px 20px" }}>
+            {/* Description */}
+            <div style={{ fontSize: 10, color: T.secondary, lineHeight: 1.6, marginBottom: 18, paddingBottom: 14, borderBottom: `1px solid ${T.border}` }}>
+              {selectedAsset?.description}
+            </div>
+
+            {/* Pillar Bars */}
+            {PILLAR_DEFS.map(p => {
+              const raw = selectedAsset?.pillars[p.key] || 0;
+              const scaled = Math.round((raw / 100) * p.weight * 10) / 10;
+              return (
+                <div key={p.key} style={{ marginBottom: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                    <span style={{ fontSize: 9, letterSpacing: "0.12em", color: "rgba(255,255,255,0.26)", fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
+                      {p.name}
+                    </span>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 500, color: p.color }}>
+                      {raw} <span style={{ color: "rgba(255,255,255,0.26)", fontSize: 9 }}>({scaled}pts)</span>
+                    </span>
+                  </div>
+                  <div style={{ height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ width: `${raw}%`, height: "100%", background: p.color, borderRadius: 2, transition: "width .5s ease .1s" }} />
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Footer */}
+            <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${T.border}`, fontSize: 9, color: "rgba(255,255,255,0.26)" }}>
+              CIS v3.1 · Scored by Looloomi AI · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Pillar Legend (for mobile/alternative) */}
+      <div style={{
+        marginTop: 16, paddingTop: 14, borderTop: `1px solid ${T.border}`,
+        display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap",
+        fontSize: 9, color: "rgba(255,255,255,0.35)"
+      }}>
+        {PILLAR_DEFS.map(p => (
+          <span key={p.key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.color }} />
+            <span style={{ fontWeight: 600 }}>{p.key}</span> = {p.name} ({p.weight}%)
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
