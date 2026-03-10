@@ -247,6 +247,19 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const [iframeError, setIframeError]   = useState(false);
   const [selectedRWA, setSelectedRWA]   = useState(null);
   const [selectedVCRound, setSelectedVCRound] = useState(null);
+  const [macroEvents, setMacroEvents]   = useState([]);
+
+  // Sector Heatmap data (mock data - replace with API when available)
+  const SECTOR_DATA = [
+    { name: "RWA", change: 2.4, tvl: "TVL $18.2B", changeColor: T.green, bgColor: "rgba(0,232,122,0.07)", borderColor: "rgba(0,232,122,0.12)" },
+    { name: "DeFi", change: -1.8, tvl: "TVL $95.7B", changeColor: T.red, bgColor: "rgba(255,61,90,0.07)", borderColor: "rgba(255,61,90,0.12)" },
+    { name: "L1", change: 0.3, tvl: "Mkt $1.4T", changeColor: T.secondary, bgColor: "rgba(255,255,255,0.035)", borderColor: T.border },
+    { name: "Oracle", change: 1.9, tvl: "Feeds 940", changeColor: T.green, bgColor: "rgba(0,232,122,0.07)", borderColor: "rgba(0,232,122,0.12)" },
+    { name: "GameFi", change: -5.2, tvl: "TVL $1.1B", changeColor: T.red, bgColor: "rgba(255,61,90,0.14)", borderColor: "rgba(255,61,90,0.22)" },
+    { name: "Staking", change: 1.1, tvl: "TVL $42B", changeColor: T.green, bgColor: "rgba(0,232,122,0.07)", borderColor: "rgba(0,232,122,0.12)" },
+    { name: "L2", change: 0.5, tvl: "TVL $9.8B", changeColor: T.secondary, bgColor: "rgba(255,255,255,0.035)", borderColor: T.border },
+    { name: "CEX", change: -0.9, tvl: "Vol $62B", changeColor: T.red, bgColor: "rgba(255,61,90,0.07)", borderColor: "rgba(255,61,90,0.12)" },
+  ];
 
   useEffect(() => {
     const id = "lm-intel-css";
@@ -357,6 +370,25 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   }, []);
 
   useEffect(() => { fetchRaises(); }, []);
+
+  // Fetch macro events
+  useEffect(() => {
+    const fetchMacroEvents = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/intelligence/macro-events`);
+        const json = await res.json();
+        const events = json.events || [];
+        // Filter for INSTITUTIONAL and REGULATORY categories
+        const filtered = events.filter(e =>
+          e.category === "INSTITUTIONAL" || e.category === "REGULATORY"
+        );
+        setMacroEvents(filtered);
+      } catch (e) {
+        console.error("Macro events fetch error:", e);
+      }
+    };
+    fetchMacroEvents();
+  }, []);
 
   const FILTERS = ["All", "RWA", "DeFi", "AI", "Infrastructure"];
 
@@ -522,11 +554,97 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               </div>
             </div>
 
-            {/* Main 2-col layout - 60/40 split */}
-            <div className="mobile-2col-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "3fr 2fr", gap: 16 }}>
+            {/* Main 2-col layout: Sector Heatmap + Macro Events */}
+            <div className="mobile-2col-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
 
-              {/* Left — VC Funding Table */}
-              <div>
+              {/* Left — Sector Heatmap */}
+              <div className="lm-card" style={{ padding: 0, overflow: "hidden" }}>
+                <div style={{ padding: "16px 18px 0" }}>
+                  <Label Icon={Activity}>Sector Heatmap · 24H</Label>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, padding: 12 }}>
+                  {SECTOR_DATA.map((sector, idx) => (
+                    <div key={idx} style={{
+                      borderRadius: 8, padding: "14px 16px",
+                      border: `1px solid ${sector.borderColor}`,
+                      background: sector.bgColor,
+                      transition: "all .2s ease", cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                    >
+                      <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, color: T.primary, letterSpacing: "0.04em", marginBottom: 4 }}>
+                        {sector.name}
+                      </div>
+                      <div style={{ fontFamily: FONTS.mono, fontSize: 17, fontWeight: 400, letterSpacing: "-0.02em", color: sector.changeColor }}>
+                        {sector.change > 0 ? "+" : ""}{sector.change.toFixed(1)}%
+                      </div>
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
+                        {sector.tvl}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right — Macro Events */}
+              <div className="lm-card" style={{ padding: 0, overflow: "hidden", maxHeight: 380, overflowY: "auto" }}>
+                <div style={{ padding: "16px 18px 12px", position: "sticky", top: 0, background: T.surface, zIndex: 1 }}>
+                  <Label Icon={Shield}>Macro Events</Label>
+                </div>
+                <div style={{ padding: "0 12px 12px" }}>
+                  {macroEvents.length > 0 ? macroEvents.slice(0, 4).map((event, idx) => (
+                    <div key={idx} style={{
+                      border: `1px solid ${T.border}`, borderRadius: 9,
+                      padding: "14px 16px", marginBottom: 8,
+                      background: "rgba(255,255,255,0.015)",
+                      display: "grid", gridTemplateColumns: "1fr auto", gap: 12,
+                      transition: "border-color .2s,background .2s", cursor: "pointer",
+                    }}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                          <span style={{
+                            fontFamily: FONTS.display, fontSize: 7, fontWeight: 700, letterSpacing: "0.12em",
+                            padding: "2px 6px", borderRadius: 3,
+                            background: event.category === "INSTITUTIONAL" ? "rgba(200,168,75,0.12)" : "rgba(75,158,255,0.10)",
+                            color: event.category === "INSTITUTIONAL" ? "#C8A84B" : "#4B9EFF",
+                            border: `1px solid ${event.category === "INSTITUTIONAL" ? "rgba(200,168,75,0.22)" : "rgba(75,158,255,0.22)"}`,
+                          }}>
+                            {event.category}
+                          </span>
+                        </div>
+                        <div style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 600, color: T.primary, lineHeight: 1.4 }}>
+                          {event.title}
+                        </div>
+                        <div style={{ fontSize: 10, color: T.secondary, lineHeight: 1.55, marginTop: 5 }}>
+                          {event.description?.slice(0, 80)}...
+                        </div>
+                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.26)", marginTop: 5 }}>
+                          {event.source} · {event.date}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, minWidth: 52 }}>
+                        <span style={{
+                          fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 6px", borderRadius: 3,
+                          background: event.impact === "HIGH" ? "rgba(255,61,90,0.12)" : "rgba(255,255,255,0.06)",
+                          color: event.impact === "HIGH" ? "#FF3D5A" : "rgba(255,255,255,0.4)",
+                          border: `1px solid ${event.impact === "HIGH" ? "rgba(255,61,90,0.22)" : "rgba(255,255,255,0.1)"}`,
+                        }}>
+                          {event.impact}
+                        </span>
+                      </div>
+                    </div>
+                  )) : (
+                    <div style={{ padding: 20, textAlign: "center", color: T.muted }}>
+                      Loading macro events...
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Full width — VC Funding Table */}
+            <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
                 {/* Update Drawer */}
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -604,15 +722,16 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 </div>
 
                 <div className="lm-card" style={{ overflow: "hidden" }}>
-                  {/* Header */}
+                  {/* Header - redesign style */}
                   <div style={{
-                    display: "grid", gridTemplateColumns: "2fr 90px 100px 130px 80px",
-                    gap: 12, padding: "10px 18px", borderBottom: `1px solid ${T.border}`,
-                    fontSize: 10, color: T.muted, letterSpacing: "0.11em",
-                    textTransform: "uppercase", fontFamily: FONTS.body,
+                    display: "grid", gridTemplateColumns: "1fr 80px 100px 130px 80px",
+                    gap: 10, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
+                    fontSize: 9, color: "rgba(255,255,255,0.26)", letterSpacing: "0.14em",
+                    textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
+                    background: "rgba(255,255,255,0.018)",
                   }}>
                     <span>Project</span>
-                    <span>Round</span>
+                    <span style={{ textAlign: "center" }}>Round</span>
                     <span style={{ textAlign: "right" }}>Amount</span>
                     <span>Lead Investor</span>
                     <span style={{ textAlign: "right" }}>Date</span>
@@ -623,8 +742,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     {loading
                       ? Array(8).fill(0).map((_, i) => (
                           <div key={i} style={{
-                            display: "grid", gridTemplateColumns: "2fr 90px 100px 130px 80px",
-                            gap: 12, padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
+                            display: "grid", gridTemplateColumns: "1fr 80px 100px 130px 80px",
+                            gap: 10, padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
                             alignItems: "center",
                           }}>
                             {[120, 60, 60, 90, 55].map((w, j) => (
@@ -640,56 +759,58 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                             <div key={i} className="lm-row"
                               style={{
                                 display: "grid",
-                                gridTemplateColumns: "2fr 90px 100px 130px 80px",
-                                gap: 12, padding: "16px 18px",
+                                gridTemplateColumns: "1fr 80px 100px 130px 80px",
+                                gap: 10, padding: "12px 18px",
                                 borderBottom: `1px solid ${T.border}`,
                                 alignItems: "center",
-                                height: 56,
+                                transition: "background .14s",
+                                cursor: "pointer",
                                 background: rwaTag ? "rgba(232,160,0,.018)" : "transparent",
                                 animation: `slideIn .2s ease ${Math.min(i*.02,.3)}s both`,
                               }}
-                              onClick={() => setSelectedVCRound(selectedVCRound?.name === r.name ? null : r)}>
+                              onClick={() => setSelectedVCRound(selectedVCRound?.name === r.name ? null : r)}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = rwaTag ? "rgba(232,160,0,.018)" : "transparent"; }}
+                            >
 
                               {/* Project */}
                               <div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
-                                  <span style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em" }}>
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: T.primary, fontFamily: FONTS.display }}>
                                     {r.name}
                                   </span>
-                                  {rwaTag && (
-                                    <span className="lm-badge" style={{ background: "rgba(232,160,0,.12)", color: T.amber }}>
-                                      RWA
-                                    </span>
-                                  )}
                                 </div>
-                                <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body,
-                                  maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", fontFamily: FONTS.body, marginTop: 2 }}>
                                   {r.sector !== "—" ? r.sector : r.category}
                                 </div>
                               </div>
 
-                              {/* Round */}
-                              <div>
-                                <span className="lm-badge" style={{ background: cs.bg, color: cs.text }}>
+                              {/* Round - redesign style */}
+                              <div style={{ textAlign: "center" }}>
+                                <span style={{
+                                  fontFamily: FONTS.display, fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
+                                  padding: "3px 7px", borderRadius: 3, border: `1px solid ${T.border}`,
+                                  color: "rgba(255,255,255,0.5)", textAlign: "center",
+                                }}>
                                   {r.round || "—"}
                                 </span>
                               </div>
 
                               {/* Amount */}
                               <div style={{ textAlign: "right" }}>
-                                <span style={{ fontSize: 13, fontWeight: 600, fontFamily: FONTS.mono, color: r.amount ? T.green : T.muted }}>
-                                  {r.amount ? fmt.amount(r.amount) : "Undisclosed"}
+                                <span style={{ fontSize: 13, fontWeight: 500, fontFamily: FONTS.mono, color: r.amount ? T.green : T.muted }}>
+                                  {r.amount ? fmt.amount(r.amount) : "—"}
                                 </span>
                               </div>
 
                               {/* Lead */}
-                              <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body,
+                              <div style={{ fontSize: 10, color: T.secondary, fontFamily: FONTS.body,
                                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {lead}
                               </div>
 
-                              {/* Date */}
-                              <div style={{ textAlign: "right", fontSize: 11, color: T.muted, fontFamily: FONTS.mono }}>
+                              {/* Date - redesign style */}
+                              <div style={{ textAlign: "right", fontSize: 9, color: "rgba(255,255,255,0.35)", fontFamily: FONTS.mono }}>
                                 {fmt.dateRelative(r.date)}
                               </div>
                             </div>
@@ -713,101 +834,6 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     <span>Data refreshes every 30 minutes</span>
                   </div>
                 </div>
-              </div>
-
-              {/* Right sidebar — RWA Events */}
-              <div>
-                <Label Icon={Zap}>RWA Infrastructure Events</Label>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-
-                  {/* Live RWA raises from API */}
-                  {!loading && rwaRaises.slice(0, 3).map((r, i) => (
-                    <div key={i} className="lm-card" style={{
-                      padding: 14, borderLeft: `2px solid ${T.amber}`,
-                      animation: `fadeUp .3s ease ${i*.07}s both`,
-                    }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                        <span className="lm-badge" style={{ background: "rgba(232,160,0,.12)", color: T.amber }}>RWA Funding</span>
-                        <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>{fmt.dateRelative(r.date)}</span>
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 5 }}>
-                        {r.name}
-                        <span style={{ fontSize: 11, fontWeight: 400, color: T.muted, fontFamily: FONTS.body, marginLeft: 6 }}>
-                          {r.round}
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 15, fontWeight: 600, color: T.green, fontFamily: FONTS.mono }}>
-                          {r.amount ? fmt.amount(r.amount) : "Undisclosed"}
-                        </span>
-                        {r.leadInvestors?.[0] && (
-                          <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
-                            led by {r.leadInvestors[0]}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Divider */}
-                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase",
-                    fontFamily: FONTS.body, padding: "4px 0", display: "flex", alignItems: "center", gap: 7, marginTop: 16 }}>
-                    <Users size={10} /> Active VCs
-                  </div>
-
-                  {/* Curated Active VCs */}
-                  {ACTIVE_VCS.slice(0, 6).map((vc, i) => (
-                    <div key={vc.name} className="lm-card" style={{
-                      padding: 12, marginBottom: 8, animation: `fadeUp .3s ease ${(i+5)*.07}s both`,
-                    }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                        <span style={{ fontFamily: FONTS.display, fontWeight: 600, color: T.primary, fontSize: 12 }}>
-                          {vc.name}
-                        </span>
-                        <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.green }}>
-                          {vc.deals} deals
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 10, color: T.amber, marginBottom: 4 }}>
-                        Focus: {vc.focus}
-                      </div>
-                      <div style={{ fontSize: 10, color: T.secondary }}>
-                        {vc.portfolio.slice(0, 4).join(", ")}
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Curated macro events */}
-                  {MACRO_EVENTS.slice(0, 4).map((ev, i) => {
-                    const cfg = EV_TYPE[ev.type] || EV_TYPE.protocol;
-                    const imp = IMP_C[ev.impact] || IMP_C.medium;
-                    return (
-                      <div key={ev.id} className="lm-card" style={{
-                        padding: 14, borderLeft: `2px solid ${cfg.color}`,
-                        animation: `fadeUp .3s ease ${(i+3)*.07}s both`,
-                      }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 7 }}>
-                          <span className="lm-badge" style={{ background: `${cfg.color}18`, color: cfg.color }}>
-                            {cfg.label}
-                          </span>
-                          <span className="lm-badge" style={{ background: imp.bg, color: imp.text }}>
-                            {ev.impact} impact
-                          </span>
-                        </div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 5, lineHeight: 1.4 }}>
-                          {ev.title}
-                        </div>
-                        <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.55 }}>
-                          {ev.summary}
-                        </div>
-                        <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 7 }}>
-                          {ev.source} · {ev.date}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
 
             {/* ══ MACRO EVENTS (Full Width Vertical Timeline) ═════════════════════════════ */}
