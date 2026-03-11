@@ -406,6 +406,13 @@ export default function App() {
           }
         }
 
+        /* ── RESPONSIVE: Quant GP ── */
+        @media (max-width: 768px) {
+          #quantgp .mobile-stat-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+
         /* ── RESPONSIVE: Page headers ── */
         @media (max-width: 768px) {
           section h1 {
@@ -595,33 +602,223 @@ function CISContent() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   QUANT GP SECTION (placeholder)
+   QUANT GP SECTION — EST Alpha Partner
 ──────────────────────────────────────────────────────────────────────── */
 function QuantGPContent() {
   return (
     <div style={{ maxWidth: 1600, margin: "0 auto" }}>
-      <div style={{ marginBottom: 32 }}>
-        <h2 style={{
-          fontFamily: FONTS.display, fontSize: 32, fontWeight: 700,
-          color: T.primary, marginBottom: 8, letterSpacing: "-0.02em"
+      {/* Section 1 — Partnership Banner */}
+      <div style={{
+        background: "linear-gradient(135deg, rgba(200,168,75,0.08) 0%, rgba(200,168,75,0.02) 50%, transparent 100%)",
+        border: "1px solid rgba(200,168,75,0.28)",
+        borderRadius: 12, padding: "24px 32px", marginBottom: 24,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        flexWrap: "wrap", gap: 20,
+      }}>
+        {/* Left: Logo placeholder */}
+        <div style={{
+          width: 64, height: 64, borderRadius: "50%",
+          background: "linear-gradient(135deg, #1a1520 0%, #0d0a10 100%)",
+          border: "2px solid rgba(200,168,75,0.4)",
+          display: "flex", alignItems: "center", justifyContent: "center",
         }}>
-          <span style={{ color: T.cyan, marginRight: 12 }}>//</span>
-          Quant GP Strategies
-        </h2>
-        <p style={{
-          fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
-          maxWidth: 600, lineHeight: 1.6
+          <span style={{
+            fontFamily: FONTS.display, fontSize: 24, fontWeight: 800,
+            color: "#C8A84B", letterSpacing: "-0.02em",
+          }}>E</span>
+        </div>
+
+        {/* Center: Name + Partner info */}
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{
+            fontFamily: FONTS.display, fontSize: 24, fontWeight: 700,
+            color: T.primary, letterSpacing: "-0.01em", marginBottom: 4,
+          }}>
+            EST Alpha
+          </div>
+          <div style={{
+            fontFamily: FONTS.body, fontSize: 13, color: T.secondary,
+          }}>
+            CometCloud GP Partner · Since 2025
+          </div>
+        </div>
+
+        {/* Right: Status badge */}
+        <div style={{
+          background: "rgba(0,232,122,0.10)", border: "1px solid rgba(0,232,122,0.25)",
+          borderRadius: 6, padding: "6px 14px",
+          display: "flex", alignItems: "center", gap: 6,
         }}>
-          AI-powered quantitative strategies for institutional-grade crypto fund management.
-        </p>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: "#00E87A", boxShadow: "0 0 8px rgba(0,232,122,0.5)",
+          }} />
+          <span style={{
+            fontFamily: FONTS.display, fontSize: 10, fontWeight: 700,
+            color: "#00E87A", letterSpacing: "0.1em",
+          }}>ACTIVE</span>
+        </div>
       </div>
 
+      {/* Section 2 — Key Stats */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24,
+      }}>
+        {[
+          { label: "Partner Since", value: "2025" },
+          { label: "Classification", value: "Quant / Systematic" },
+          { label: "Domicile", value: "Singapore" },
+          { label: "Status", value: "Active · Onboarding" },
+        ].map((stat, i) => (
+          <div key={i} style={{
+            background: T.surface, border: `1px solid ${T.border}`,
+            borderRadius: 10, padding: "16px 20px",
+          }}>
+            <div style={{
+              fontSize: 10, color: T.muted, letterSpacing: "0.1em",
+              textTransform: "uppercase", marginBottom: 8, fontFamily: FONTS.body,
+            }}>
+              {stat.label}
+            </div>
+            <div style={{
+              fontFamily: FONTS.mono, fontSize: 18, fontWeight: 600,
+              color: T.primary,
+            }}>
+              {stat.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Section 3 — Strategy Overview */}
       <div style={{
         background: T.surface, border: `1px solid ${T.border}`,
-        borderRadius: 10, padding: 48, textAlign: "center",
+        borderRadius: 12, padding: 24, marginBottom: 24,
       }}>
-        <p style={{ fontFamily: FONTS.body, fontSize: 16, color: T.secondary }}>
-          Quant GP strategies coming soon...
+        <div style={{
+          fontFamily: FONTS.display, fontSize: 12, fontWeight: 700,
+          color: "#C8A84B", letterSpacing: "0.1em", marginBottom: 12,
+          textTransform: "uppercase",
+        }}>
+          Strategy Overview
+        </div>
+        <div style={{
+          fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
+          lineHeight: 1.7, marginBottom: 16,
+        }}>
+          EST Alpha employs quantitative strategies across digital asset markets,
+          with a focus on systematic signal extraction and risk-adjusted return generation.
+          As CometCloud's inaugural GP partner, EST Alpha provides institutional-grade
+          execution infrastructure for the Vault's fund-of-funds structure.
+        </div>
+        <div style={{
+          background: "rgba(200,168,75,0.08)", border: "1px solid rgba(200,168,75,0.15)",
+          borderRadius: 6, padding: "10px 14px", display: "inline-block",
+        }}>
+          <span style={{
+            fontFamily: FONTS.body, fontSize: 11, color: "#C8A84B",
+          }}>
+            CometCloud Intelligence Score integration: Pending
+          </span>
+        </div>
+      </div>
+
+      {/* Section 4 — CIS Integration Status */}
+      <div style={{
+        background: T.surface, border: `1px solid ${T.border}`,
+        borderRadius: 12, padding: 24, marginBottom: 24,
+      }}>
+        <div style={{
+          fontFamily: FONTS.display, fontSize: 12, fontWeight: 700,
+          color: T.primary, letterSpacing: "0.1em", marginBottom: 20,
+          textTransform: "uppercase",
+        }}>
+          CIS Integration Pipeline
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {[
+            { step: 1, title: "Partnership Agreement", status: "completed", date: "2025" },
+            { step: 2, title: "Onboarding", status: "in_progress", date: "Q1 2026" },
+            { step: 3, title: "CIS Score Integration", status: "pending", date: "Q2 2026" },
+            { step: 4, title: "Live Performance Reporting", status: "pending", date: "Q2 2026" },
+          ].map((item, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: 16,
+              padding: "14px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none",
+            }}>
+              {/* Step indicator */}
+              <div style={{
+                width: 28, height: 28, borderRadius: "50%",
+                background: item.status === "completed" ? "rgba(0,232,122,0.15)" :
+                           item.status === "in_progress" ? "rgba(200,168,75,0.15)" : "rgba(255,255,255,0.05)",
+                border: `1px solid ${item.status === "completed" ? "rgba(0,232,122,0.4)" :
+                                  item.status === "in_progress" ? "rgba(200,168,75,0.4)" : "rgba(255,255,255,0.1)"}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                {item.status === "completed" ? (
+                  <span style={{ color: "#00E87A", fontSize: 12 }}>✓</span>
+                ) : item.status === "in_progress" ? (
+                  <span style={{ color: "#C8A84B", fontSize: 10 }}>◐</span>
+                ) : (
+                  <span style={{ color: T.muted, fontSize: 10 }}>○</span>
+                )}
+              </div>
+
+              {/* Content */}
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontFamily: FONTS.display, fontSize: 13, fontWeight: 600,
+                  color: T.primary, marginBottom: 2,
+                }}>
+                  {item.title}
+                </div>
+                <div style={{
+                  fontFamily: FONTS.body, fontSize: 11, color: T.muted,
+                }}>
+                  {item.date}
+                </div>
+              </div>
+
+              {/* Status label */}
+              <div style={{
+                fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
+                letterSpacing: "0.1em", padding: "4px 10px", borderRadius: 4,
+                background: item.status === "completed" ? "rgba(0,232,122,0.10)" :
+                           item.status === "in_progress" ? "rgba(200,168,75,0.10)" : "rgba(255,255,255,0.05)",
+                color: item.status === "completed" ? "#00E87A" :
+                       item.status === "in_progress" ? "#C8A84B" : T.muted,
+                border: `1px solid ${item.status === "completed" ? "rgba(0,232,122,0.2)" :
+                                  item.status === "in_progress" ? "rgba(200,168,75,0.2)" : "rgba(255,255,255,0.1)"}`,
+              }}>
+                {item.status === "completed" ? "COMPLETED" :
+                 item.status === "in_progress" ? "IN PROGRESS" : "PENDING"}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Section 5 — GP Shelf说明 */}
+      <div style={{
+        background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}`,
+        borderRadius: 10, padding: 20,
+      }}>
+        <div style={{
+          fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+          color: T.muted, letterSpacing: "0.12em", marginBottom: 10,
+          textTransform: "uppercase",
+        }}>
+          GP Shelf
+        </div>
+        <p style={{
+          fontFamily: FONTS.body, fontSize: 13, color: T.secondary,
+          lineHeight: 1.7, maxWidth: 800,
+        }}>
+          CometCloud Vault operates a GP Shelf model — a curated selection of
+          institutional-grade fund managers evaluated through the CIS framework.
+          EST Alpha is the founding GP. Additional GPs are evaluated through a
+          rigorous selection process.
         </p>
       </div>
     </div>
