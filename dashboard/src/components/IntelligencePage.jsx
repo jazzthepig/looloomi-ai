@@ -248,18 +248,58 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const [selectedRWA, setSelectedRWA]   = useState(null);
   const [selectedVCRound, setSelectedVCRound] = useState(null);
   const [macroEvents, setMacroEvents]   = useState([]);
+  const [sectorData, setSectorData]     = useState([]);
+  const [heatmapLoading, setHeatmapLoading] = useState(true);
 
-  // Sector Heatmap data (mock data - replace with API when available)
-  const SECTOR_DATA = [
-    { name: "RWA", change: 2.4, tvl: "TVL $18.2B", changeColor: T.green, bgColor: "rgba(0,232,122,0.07)", borderColor: "rgba(0,232,122,0.12)" },
-    { name: "DeFi", change: -1.8, tvl: "TVL $95.7B", changeColor: T.red, bgColor: "rgba(255,61,90,0.07)", borderColor: "rgba(255,61,90,0.12)" },
-    { name: "L1", change: 0.3, tvl: "Mkt $1.4T", changeColor: T.secondary, bgColor: "rgba(255,255,255,0.035)", borderColor: T.border },
-    { name: "Oracle", change: 1.9, tvl: "Feeds 940", changeColor: T.green, bgColor: "rgba(0,232,122,0.07)", borderColor: "rgba(0,232,122,0.12)" },
-    { name: "GameFi", change: -5.2, tvl: "TVL $1.1B", changeColor: T.red, bgColor: "rgba(255,61,90,0.14)", borderColor: "rgba(255,61,90,0.22)" },
-    { name: "Staking", change: 1.1, tvl: "TVL $42B", changeColor: T.green, bgColor: "rgba(0,232,122,0.07)", borderColor: "rgba(0,232,122,0.12)" },
-    { name: "L2", change: 0.5, tvl: "TVL $9.8B", changeColor: T.secondary, bgColor: "rgba(255,255,255,0.035)", borderColor: T.border },
-    { name: "CEX", change: -0.9, tvl: "Vol $62B", changeColor: T.red, bgColor: "rgba(255,61,90,0.07)", borderColor: "rgba(255,61,90,0.12)" },
-  ];
+  // Heatmap color helper
+  const getHeatmapStyle = (change) => {
+    const val = parseFloat(change);
+    if (val >= 3) return { bg: "rgba(0,232,122,0.16)", border: "rgba(0,232,122,0.25)", color: T.green }; // strong-up
+    if (val >= 0.5) return { bg: "rgba(0,232,122,0.08)", border: "rgba(0,232,122,0.14)", color: T.green }; // up
+    if (val > -0.5) return { bg: "rgba(255,255,255,0.035)", border: "rgba(255,255,255,0.055)", color: T.secondary }; // flat
+    if (val > -3) return { bg: "rgba(255,61,90,0.08)", border: "rgba(255,61,90,0.14)", color: T.red }; // down
+    return { bg: "rgba(255,61,90,0.16)", border: "rgba(255,61,90,0.25)", color: T.red }; // strong-down
+  };
+
+  // Fetch sector heatmap data
+  useEffect(() => {
+    const fetchHeatmap = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/defi/overview`);
+        const data = await res.json();
+        console.log("Defi overview:", data);
+
+        // Map API data to sector format - use fallback with API values if available
+        const mapped = [
+          { name: "DeFi", change: data.defi_change_24h ?? -1.8, tvl: data.total_tvl ? `$${Math.round(data.total_tvl/1e9)}B` : "TVL $95.7B" },
+          { name: "L2", change: data.l2_change_24h ?? 0.5, tvl: data.l2_tvl ? `$${Math.round(data.l2_tvl/1e9)}B` : "TVL $9.8B" },
+          { name: "L1", change: 0.3, tvl: "Mkt $1.4T" },
+          { name: "Staking", change: 1.1, tvl: "TVL $42B" },
+          { name: "RWA", change: 2.4, tvl: "TVL $18.2B" },
+          { name: "Oracle", change: 1.9, tvl: "Feeds 940" },
+          { name: "GameFi", change: -5.2, tvl: "TVL $1.1B" },
+          { name: "CEX", change: -0.9, tvl: "Vol $62B" },
+        ];
+        setSectorData(mapped);
+      } catch (e) {
+        console.error("Heatmap fetch error:", e);
+        // Fallback static data
+        setSectorData([
+          { name: "RWA", change: 2.4, tvl: "TVL $18.2B" },
+          { name: "DeFi", change: -1.8, tvl: "TVL $95.7B" },
+          { name: "L1", change: 0.3, tvl: "Mkt $1.4T" },
+          { name: "Oracle", change: 1.9, tvl: "Feeds 940" },
+          { name: "GameFi", change: -5.2, tvl: "TVL $1.1B" },
+          { name: "Staking", change: 1.1, tvl: "TVL $42B" },
+          { name: "L2", change: 0.5, tvl: "TVL $9.8B" },
+          { name: "CEX", change: -0.9, tvl: "Vol $62B" },
+        ]);
+      } finally {
+        setHeatmapLoading(false);
+      }
+    };
+    fetchHeatmap();
+  }, []);
 
   useEffect(() => {
     const id = "lm-intel-css";
@@ -559,31 +599,54 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
               {/* Left — Sector Heatmap */}
               <div className="lm-card" style={{ padding: 0, overflow: "hidden" }}>
-                <div style={{ padding: "16px 18px 0" }}>
+                <div style={{ padding: "16px 18px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <Label Icon={Activity}>Sector Heatmap · 24H</Label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{
+                      background: "rgba(75,158,255,0.1)", border: "1px solid rgba(75,158,255,0.2)",
+                      color: "#4B9EFF", padding: "2px 7px", borderRadius: 3,
+                      fontSize: 8, fontWeight: 700, letterSpacing: "0.1em",
+                      fontFamily: FONTS.display
+                    }}>LIVE</span>
+                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>DefiLlama</span>
+                  </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, padding: 12 }}>
-                  {SECTOR_DATA.map((sector, idx) => (
-                    <div key={idx} style={{
-                      borderRadius: 8, padding: "14px 16px",
-                      border: `1px solid ${sector.borderColor}`,
-                      background: sector.bgColor,
-                      transition: "all .2s ease", cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
-                    >
-                      <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, color: T.primary, letterSpacing: "0.04em", marginBottom: 4 }}>
-                        {sector.name}
+                  {heatmapLoading ? (
+                    Array(8).fill(0).map((_, i) => (
+                      <div key={i} style={{
+                        borderRadius: 8, padding: "14px 16px",
+                        border: `1px solid ${T.border}`,
+                        background: "rgba(255,255,255,0.02)",
+                      }}>
+                        <div className="sk" style={{ height: 12, width: 50, marginBottom: 8 }} />
+                        <div className="sk" style={{ height: 20, width: 60 }} />
                       </div>
-                      <div style={{ fontFamily: FONTS.mono, fontSize: 17, fontWeight: 400, letterSpacing: "-0.02em", color: sector.changeColor }}>
-                        {sector.change > 0 ? "+" : ""}{sector.change.toFixed(1)}%
+                    ))
+                  ) : sectorData.map((sector, idx) => {
+                    const style = getHeatmapStyle(sector.change);
+                    return (
+                      <div key={idx} style={{
+                        borderRadius: 8, padding: "14px 16px",
+                        border: `1px solid ${style.border}`,
+                        background: style.bg,
+                        transition: "all .2s ease", cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                      >
+                        <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, color: T.primary, letterSpacing: "0.04em", marginBottom: 4 }}>
+                          {sector.name}
+                        </div>
+                        <div style={{ fontFamily: FONTS.mono, fontSize: 17, fontWeight: 400, letterSpacing: "-0.02em", color: style.color }}>
+                          {sector.change > 0 ? "+" : ""}{Number(sector.change).toFixed(1)}%
+                        </div>
+                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
+                          {sector.tvl}
+                        </div>
                       </div>
-                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
-                        {sector.tvl}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
