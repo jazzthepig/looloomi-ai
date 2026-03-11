@@ -383,7 +383,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
           padding: "14px 18px", borderBottom: `1px solid ${T.border}`,
           background: "rgba(255,255,255,0.018)",
         }}>
-          <div className="section-label" style={{ margin: 0, fontFamily: FONTS.display, fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", color: T.t3, textTransform: "uppercase" }}>Asset Radar</div>
+          <div className="section-label" style={{ margin: 0, fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", color: T.t2, textTransform: "uppercase" }}>Asset Radar</div>
         </div>
         <div style={{ padding: 40, textAlign: "center", color: T.red, fontSize: 12 }}>
           数据加载失败 · {lastUpdate ? `上次更新: ${lastUpdate.toLocaleTimeString()}` : "请刷新"}
@@ -459,14 +459,14 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         <table className="data-table" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th style={{ width: 240, textAlign: "left", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 9, fontWeight: 600, letterSpacing: "0.15em", color: T.t3, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Asset</th>
-              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 9, fontWeight: 600, letterSpacing: "0.15em", color: T.t3, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Price</th>
-              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 9, fontWeight: 600, letterSpacing: "0.15em", color: T.t3, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>24H</th>
-              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 9, fontWeight: 600, letterSpacing: "0.15em", color: T.t3, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>TVL</th>
-              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 9, fontWeight: 600, letterSpacing: "0.15em", color: T.blue, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>CIS</th>
-              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 9, fontWeight: 600, letterSpacing: "0.15em", color: T.t3, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Signal</th>
-              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 9, fontWeight: 600, letterSpacing: "0.15em", color: T.t3, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Vol</th>
-              <th style={{ textAlign: "right", width: 80, padding: "10px 14px", fontFamily: FONTS.display, fontSize: 9, fontWeight: 600, letterSpacing: "0.15em", color: T.t3, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>7D</th>
+              <th style={{ width: 240, textAlign: "left", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Asset</th>
+              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Price</th>
+              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>24H</th>
+              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>TVL</th>
+              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.blue, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>CIS</th>
+              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Signal</th>
+              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Vol</th>
+              <th style={{ textAlign: "right", width: 80, padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>7D</th>
             </tr>
           </thead>
           <tbody>

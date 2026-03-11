@@ -116,11 +116,11 @@ export default function App() {
               key={id}
               onClick={() => scrollToSection(id)}
               style={{
-                padding: "7px 16px", borderRadius: 7, fontSize: 11, fontWeight: 700,
+                padding: "7px 16px", borderRadius: 7, fontSize: 12, fontWeight: 700,
                 fontFamily: FONTS.display, cursor: "pointer", outline: "none",
                 border: "1px solid transparent",
                 background: activeSection === id ? T.goldDim : "transparent",
-                color: activeSection === id ? T.gold : "rgba(255,255,255,0.26)",
+                color: activeSection === id ? T.gold : "rgba(255,255,255,0.50)",
                 transition: "all 0.2s ease",
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",

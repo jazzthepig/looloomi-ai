@@ -528,9 +528,9 @@ export default function CISLeaderboard({ minimal = false }) {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${T.border}` }}>
-                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600 }}>Pillar</th>
-                  <th style={{ textAlign: "center", padding: "10px 8px", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600, width: 80 }}>Weight</th>
-                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600 }}>What it measures</th>
+                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 11, color: "rgba(255,255,255,0.50)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700 }}>Pillar</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", fontSize: 11, color: "rgba(255,255,255,0.50)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700, width: 80 }}>Weight</th>
+                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 11, color: "rgba(255,255,255,0.50)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700 }}>What it measures</th>
                 </tr>
               </thead>
               <tbody>
