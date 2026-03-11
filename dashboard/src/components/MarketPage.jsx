@@ -37,9 +37,10 @@ const T = {
 };
 
 const FONTS = {
-  display: "'Space Grotesk', sans-serif",
-  body:    "'Exo 2', sans-serif",
-  mono:    "'JetBrains Mono', monospace",
+  display: "'Syne', sans-serif",
+  body:    "'Syne', sans-serif",
+  mono:    "'DM Mono', monospace",
+  serif:   "'Cormorant Garamond', serif",
 };
 
 /* ─── Token Universe ─────────────────────────────────────────────────── */
@@ -112,15 +113,13 @@ const generateSignal = (symbol, priceData) => {
 
 /* Global CSS */
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-font-smoothing: antialiased; }
 
   body {
     background: #020208;
     color: #F0EEFF;
-    font-family: 'Exo 2', sans-serif;
+    font-family: 'Syne', sans-serif;
     min-height: 100vh;
   }
 
@@ -215,7 +214,7 @@ const CSS = `
   .lm-tab {
     padding:5px 14px; border-radius:5px;
     font-size:12px; font-weight:500;
-    font-family:'Exo 2',sans-serif;
+    font-family:'Syne',sans-serif;
     cursor:pointer; outline:none;
     border:1px solid #1A173A;
     background:transparent; color:#8880BE;
@@ -233,7 +232,7 @@ const CSS = `
   .cat-btn {
     padding:5px 13px; border-radius:5px;
     font-size:11px; font-weight:500;
-    font-family:'Exo 2',sans-serif;
+    font-family:'Syne',sans-serif;
     cursor:pointer; outline:none;
     border:1px solid #1A173A;
     background:transparent; color:#3E3A6E;
@@ -262,7 +261,7 @@ const CSS = `
     display:flex; align-items:center; gap:6px;
     padding:6px 12px; border-radius:6px;
     font-size:11px; font-weight:500;
-    font-family:'Exo 2',sans-serif;
+    font-family:'Syne',sans-serif;
     cursor:pointer; outline:none;
     border:1px solid #1A173A;
     background:transparent; color:#8880BE;
@@ -280,13 +279,13 @@ const CSS = `
     display:inline-flex; align-items:center;
     padding:3px 8px; border-radius:4px;
     font-size:10px; font-weight:600;
-    font-family:'Exo 2',sans-serif;
+    font-family:'Syne',sans-serif;
     letter-spacing:0.05em;
   }
 
   /* CIS badge */
   .cis-badge {
-    font-family:'JetBrains Mono', monospace;
+    font-family:'DM Mono', monospace;
     font-size:13px; font-weight:600;
   }
 

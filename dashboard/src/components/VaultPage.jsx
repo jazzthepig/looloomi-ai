@@ -29,9 +29,10 @@ const T = {
 };
 
 const FONTS = {
-  display: "'Space Grotesk', sans-serif",
-  body:    "'Exo 2', sans-serif",
-  mono:    "'JetBrains Mono', monospace",
+  display: "'Syne', sans-serif",
+  body:    "'Syne', sans-serif",
+  mono:    "'DM Mono', monospace",
+  serif:   "'Cormorant Garamond', serif",
 };
 
 /* ─── Sample Funds Data ──────────────────────────────────────────────── */
@@ -374,8 +375,6 @@ const PLACEHOLDER_GP = {
 
 /* ─── CSS ────────────────────────────────────────────────────────────── */
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
   @keyframes breathe  { 0%,100%{opacity:.28;transform:scale(1) translateY(0)} 50%{opacity:.44;transform:scale(1.06) translateY(-12px)} }
   @keyframes breathe2 { 0%,100%{opacity:.16;transform:scale(1)} 50%{opacity:.30;transform:scale(1.08) translateX(10px)} }
   @keyframes fadeUp   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
@@ -393,11 +392,11 @@ const CSS = `
   .lm-row { transition:background .12s ease;cursor:pointer; }
   .lm-row:hover { background:rgba(6,182,212,.06) !important; border-left: 2px solid rgba(6,182,212,0.4); }
 
-  .lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:'Exo 2',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#8880BE;transition:all .18s ease;letter-spacing:.01em; }
+  .lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:'Syne',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#8880BE;transition:all .18s ease;letter-spacing:.01em; }
   .lm-tab:hover { border-color:#28244C;color:#F0EEFF; }
   .lm-tab.active { border-color:rgba(68,114,255,.5);background:rgba(68,114,255,.10);color:#4472FF; }
 
-  .filter-btn { padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:'Exo 2',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#3E3A6E;transition:all .15s ease; }
+  .filter-btn { padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:'Syne',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#3E3A6E;transition:all .15s ease; }
   .filter-btn:hover { border-color:#28244C;color:#8880BE; }
   .filter-btn.active { border-color:rgba(68,114,255,.4);background:rgba(68,114,255,.08);color:#4472FF; }
 `;

@@ -21,9 +21,10 @@ const T = {
 };
 
 const FONTS = {
-  display: "'Space Grotesk', sans-serif",
-  body: "'Exo 2', sans-serif",
-  mono: "'JetBrains Mono', monospace",
+  display: "'Syne', sans-serif",
+  body:    "'Syne', sans-serif",
+  mono:    "'DM Mono', monospace",
+  serif:   "'Cormorant Garamond', serif",
 };
 
 const GRADE_COLORS = {
