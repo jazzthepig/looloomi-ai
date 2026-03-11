@@ -88,6 +88,35 @@ const PILLAR_DEFS = [
   { key: "alpha", name: "Alpha Independence", color: "#FF2D55", weight: 10, desc: "BTC Independence / Factor Exposure" },
 ];
 
+// Responsive styles
+const CIS_CSS = `
+  @media (max-width: 1100px) {
+    .cis-layout { grid-template-columns: 1fr !important; }
+    .cis-grade-summary { grid-template-columns: repeat(2, 1fr) !important; }
+    .cis-filters { flex-wrap: wrap !important; }
+    .cis-pillar-legend-top { display: none !important; }
+  }
+  @media (max-width: 768px) {
+    .cis-grade-summary { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+    .cis-grade-card { padding: 10px 12px !important; }
+    .cis-grade-card .grade-letter { font-size: 18px !important; }
+    .cis-grade-card .grade-count { font-size: 22px !important; }
+    .cis-grade-card .grade-label { font-size: 8px !important; }
+    .cis-filters { gap: 4px !important; }
+    .cis-filter-btn { padding: 3px 8px !important; font-size: 8px !important; }
+    .cis-filter-divider { display: none !important; }
+    .cis-table-header, .cis-table-row { grid-template-columns: 30px 1fr 60px 40px !important; gap: 8px !important; padding: 10px 12px !important; }
+    .cis-detail-panel { position: static !important; margin-top: 16px !important; }
+    .cis-score { font-size: 32px !important; }
+    .cis-pillar-legend-bottom { gap: 12px !important; }
+    .cis-pillar-legend-bottom span { font-size: 8px !important; }
+  }
+  @media (max-width: 480px) {
+    .cis-grade-summary { grid-template-columns: 1fr 1fr !important; }
+    .cis-layout { gap: 12px !important; }
+  }
+`;
+
 export default function CISLeaderboard({ minimal = false }) {
   const [data, setData] = useState(SAMPLE_CIS_DATA);
   const [loading, setLoading] = useState(false);
@@ -95,6 +124,17 @@ export default function CISLeaderboard({ minimal = false }) {
   const [classFilter, setClassFilter] = useState("All");
   const [selectedAsset, setSelectedAsset] = useState(SAMPLE_CIS_DATA[0]);
   const [sortBy, setSortBy] = useState("rank");
+
+  // Inject responsive CSS
+  useEffect(() => {
+    const id = "cis-responsive-css";
+    if (!document.getElementById(id)) {
+      const s = document.createElement("style");
+      s.id = id;
+      s.textContent = CIS_CSS;
+      document.head.appendChild(s);
+    }
+  }, []);
 
   const GRADE_TABS = ["All", "A", "B", "C", "D"];
   const CLASS_TABS = ["All", "RWA", "L1", "L2", "DeFi", "Infrastructure", "Oracle", "Memecoin"];
@@ -223,7 +263,7 @@ export default function CISLeaderboard({ minimal = false }) {
   return (
     <div>
       {/* Grade Summary Cards */}
-      <div style={{
+      <div className="cis-grade-summary" style={{
         display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 18
       }}>
         {[
@@ -232,18 +272,18 @@ export default function CISLeaderboard({ minimal = false }) {
           { grade: "C", label: "CIS Score 55–69", color: T.amber },
           { grade: "D", label: "CIS Score < 55", color: T.red },
         ].map(g => (
-          <div key={g.grade} style={{
+          <div key={g.grade} className="cis-grade-card" style={{
             border: `1px solid ${T.border}`, borderRadius: 10,
             padding: "14px 16px", background: T.surface,
             display: "flex", flexDirection: "column", gap: 3,
           }}>
-            <div style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 800, marginBottom: 2, color: g.color }}>
+            <div className="grade-letter" style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 800, marginBottom: 2, color: g.color }}>
               {g.grade}
             </div>
-            <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.primary }}>
+            <div className="grade-count" style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.primary }}>
               {g.grade === "A" ? gradeSummary.A : g.grade === "B" ? gradeSummary.B : g.grade === "C" ? gradeSummary.C : gradeSummary.D}
             </div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.26)", letterSpacing: "0.06em" }}>
+            <div className="grade-label" style={{ fontSize: 9, color: "rgba(255,255,255,0.26)", letterSpacing: "0.06em" }}>
               {g.label}
             </div>
           </div>
@@ -251,11 +291,11 @@ export default function CISLeaderboard({ minimal = false }) {
       </div>
 
       {/* Filters Row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <div style={{ display: "flex", gap: 6 }}>
+      <div className="cis-filters" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {/* Grade Tabs */}
           {GRADE_TABS.map(g => (
-            <button key={g} onClick={() => setGradeFilter(g)}
+            <button key={g} onClick={() => setGradeFilter(g)} className="cis-filter-btn"
               style={{
                 padding: "4px 12px", borderRadius: 4, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
                 fontFamily: FONTS.display, cursor: "pointer", border: "1px solid",
@@ -267,13 +307,13 @@ export default function CISLeaderboard({ minimal = false }) {
               {g}
             </button>
           ))}
-          <div style={{ width: 1, background: T.border, margin: "0 8px" }} />
+          <div className="cis-filter-divider" style={{ width: 1, background: T.border, margin: "0 8px" }} />
           {/* Asset Class Tabs */}
           {CLASS_TABS.map(c => {
             const cfg = ASSET_CLASS_COLORS[c] || {};
             const isActive = classFilter === c;
             return (
-              <button key={c} onClick={() => setClassFilter(c)}
+              <button key={c} onClick={() => setClassFilter(c)} className="cis-filter-btn"
                 style={{
                   padding: "3px 10px", borderRadius: 3, fontSize: 9, fontWeight: 600,
                   fontFamily: FONTS.display, cursor: "pointer", border: "1px solid",
@@ -287,8 +327,8 @@ export default function CISLeaderboard({ minimal = false }) {
             );
           })}
         </div>
-        {/* Pillar Legend */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 9, color: "rgba(255,255,255,0.26)" }}>
+        {/* Pillar Legend - Top */}
+        <div className="cis-pillar-legend-top" style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 9, color: "rgba(255,255,255,0.26)" }}>
           {PILLAR_DEFS.map(p => (
             <span key={p.key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.color }} />
@@ -299,11 +339,11 @@ export default function CISLeaderboard({ minimal = false }) {
       </div>
 
       {/* 2-Column Layout: Table + Detail Panel */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, alignItems: "start" }}>
+      <div className="cis-layout" style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, alignItems: "start" }}>
         {/* Left: Table */}
         <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden", background: T.surface }}>
           {/* Table Header */}
-          <div style={{
+          <div className="cis-table-header" style={{
             display: "grid", gridTemplateColumns: "34px 1fr 80px 60px",
             gap: 12, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
             fontSize: 9, color: "rgba(255,255,255,0.26)", letterSpacing: "0.14em",
@@ -321,7 +361,7 @@ export default function CISLeaderboard({ minimal = false }) {
             {filtered.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", color: T.muted }}>No assets match</div>
             ) : filtered.map((item) => (
-              <div key={item.asset_id}
+              <div key={item.asset_id} className="cis-table-row"
                 onClick={() => handleSelectAsset(item)}
                 style={{
                   display: "grid", gridTemplateColumns: "34px 1fr 80px 60px",
@@ -360,7 +400,7 @@ export default function CISLeaderboard({ minimal = false }) {
         </div>
 
         {/* Right: Detail Panel */}
-        <div style={{
+        <div className="cis-detail-panel" style={{
           border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden",
           background: T.surface, position: "sticky", top: 80,
         }}>
@@ -388,7 +428,7 @@ export default function CISLeaderboard({ minimal = false }) {
               }}>{selectedAsset?.grade}</div>
             </div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-              <span style={{
+              <span className="cis-score" style={{
                 fontFamily: FONTS.mono, fontSize: 42, fontWeight: 400, lineHeight: 1, letterSpacing: "-0.03em",
                 color: selectedAsset?.total_score >= 85 ? T.green : selectedAsset?.total_score >= 70 ? T.blue : T.amber
               }}>{selectedAsset?.total_score.toFixed(1)}</span>
@@ -433,7 +473,7 @@ export default function CISLeaderboard({ minimal = false }) {
       </div>
 
       {/* Bottom Pillar Legend (for mobile/alternative) */}
-      <div style={{
+      <div className="cis-pillar-legend-bottom" style={{
         marginTop: 16, paddingTop: 14, borderTop: `1px solid ${T.border}`,
         display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap",
         fontSize: 9, color: "rgba(255,255,255,0.35)"
