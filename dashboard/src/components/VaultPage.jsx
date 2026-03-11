@@ -29,6 +29,7 @@ const T = {
 };
 
 const FONTS = {
+  brand:   "'Cormorant Garamond', serif",
   display: "'Syne', sans-serif",
   body:    "'Syne', sans-serif",
   mono:    "'DM Mono', monospace",

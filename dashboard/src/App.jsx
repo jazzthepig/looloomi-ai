@@ -6,6 +6,7 @@ import VaultPage from "./components/VaultPage";
 import ProtocolPage from "./components/ProtocolPage";
 
 const FONTS = {
+  brand:   "'Cormorant Garamond', serif",
   display: "'Syne', sans-serif",
   mono:    "'DM Mono', monospace",
   serif:   "'Cormorant Garamond', serif",

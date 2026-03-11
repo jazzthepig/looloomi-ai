@@ -1,7 +1,8 @@
 :root {
-  --ff-display: 'Syne', sans-serif;
-  --ff-mono: 'DM Mono', monospace;
-  --ff-serif: 'Cormorant Garamond', serif;
+  --ff-brand:   'Cormorant Garamond', Georgia, serif;
+  --ff-display: 'Syne', system-ui, sans-serif;
+  --ff-mono:    'DM Mono', 'Courier New', monospace;
+  --ff-serif:   'Cormorant Garamond', serif;
 
   font-family: var(--ff-display);
   line-height: 1.5;
@@ -15,6 +16,30 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* 标题使用 Syne */
+h1, h2, h3, h4 {
+  font-family: var(--ff-display);
+  font-weight: 700;
+}
+
+/* 数字使用 DM Mono */
+.font-mono,
+[class*="price"],
+[class*="amount"],
+[class*="tvl"],
+[class*="score"],
+[class*="apy"],
+[data-numeric] {
+  font-family: var(--ff-mono) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 表头使用 Syne */
+th {
+  font-family: var(--ff-display) !important;
+  font-weight: 700;
 }
 
 a {

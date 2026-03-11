@@ -30,6 +30,7 @@ const T = {
 };
 
 const FONTS = {
+  brand:   "'Cormorant Garamond', serif",
   display: "'Syne', sans-serif",
   mono:    "'DM Mono', monospace",
   serif:   "'Cormorant Garamond', serif",
