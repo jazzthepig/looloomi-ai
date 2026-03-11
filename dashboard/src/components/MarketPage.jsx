@@ -1046,13 +1046,15 @@ export default function MarketPage() {
 
   return (
     <div style={{ position: "relative", minHeight: "100vh", background: T.void }}>
-      {/* Turrell ambient */}
+      {/* Turrell ambient - only when not embedded in App.jsx */}
+      {!isSection && (
       <div className="turrell-wrap">
         <div className="t-orb t-orb-1" />
         <div className="t-orb t-orb-2" />
         <div className="t-orb t-orb-3" />
         <div className="t-orb t-orb-4" />
       </div>
+      )}
 
       <div className="mobile-pad" style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
         <NavBar />

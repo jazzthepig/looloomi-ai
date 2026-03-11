@@ -501,11 +501,14 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   );
 
   return (
-    <div style={{ position: "relative", minHeight: "100vh", background: T.void }}>
-      <div className="turrell-wrap">
-        <div className="t-orb t-orb-1" /><div className="t-orb t-orb-2" />
-        <div className="t-orb t-orb-3" /><div className="t-orb t-orb-4" />
-      </div>
+    <div style={{ position: "relative", minHeight: "100vh", background: "transparent" }}>
+      {/* Only render ambient light when not embedded in App.jsx */}
+      {!isSection && (
+        <div className="turrell-wrap">
+          <div className="t-orb t-orb-1" /><div className="t-orb t-orb-2" />
+          <div className="t-orb t-orb-3" /><div className="t-orb t-orb-4" />
+        </div>
+      )}
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
         {!isSection && <NavBar />}
