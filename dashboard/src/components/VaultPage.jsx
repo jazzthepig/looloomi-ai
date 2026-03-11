@@ -449,6 +449,8 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
     .sort((a, b) => b.scores[sortBy] - a.scores[sortBy]);
 
   const formatAUM = (val) => {
+    if (typeof val === 'string') return val;
+    if (!val || val === 0) return '—';
     if (val >= 1e9) return `$${(val / 1e9).toFixed(1)}B`;
     if (val >= 1e6) return `$${(val / 1e6).toFixed(0)}M`;
     return `$${val}`;
@@ -463,10 +465,13 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
     }
   };
 
+  const activeFunds = funds.filter(f => f.status === 'active');
+  const scoredFunds = funds.filter(f => f.scores?.total > 0);
+
   const stats = {
-    totalFunds: funds.length,
-    totalAUM: funds.reduce((acc, f) => acc + f.aum, 0),
-    avgScore: Math.round(funds.reduce((acc, f) => acc + f.scores.total, 0) / funds.length),
+    totalFunds: activeFunds.length,
+    totalAUM: 'Confidential',
+    avgScore: scoredFunds.length > 0 ? Math.round(scoredFunds.reduce((acc, f) => acc + f.scores.total, 0) / scoredFunds.length) : '—',
     gradeA: funds.filter(f => f.grade === "A").length,
   };
 
@@ -625,7 +630,9 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             <div>Grade</div>
           </div>
 
-          {filteredFunds.map((fund, idx) => (
+          {filteredFunds.map((fund, idx) => {
+            const isPlaceholder = fund.isPlaceholder || fund.status === 'evaluating';
+            return (
             <div key={fund.id} className="lm-row"
               style={{
                 display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 80px 60px",
@@ -633,10 +640,11 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                 alignItems: "center",
                 animation: "fadeUp 0.3s ease forwards",
                 animationDelay: `${idx * 50}ms`,
-                cursor: "pointer",
+                cursor: isPlaceholder ? "default" : "pointer",
                 background: selectedFund?.id === fund.id ? "rgba(68,114,255,.08)" : undefined,
+                opacity: isPlaceholder ? 0.5 : 1,
               }}
-              onClick={() => setSelectedFund(selectedFund?.id === fund.id ? null : fund)}
+              onClick={() => !isPlaceholder && setSelectedFund(selectedFund?.id === fund.id ? null : fund)}
             >
               {/* Fund Info */}
               <div>
@@ -700,15 +708,16 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                 <div style={{
                   display: "inline-flex", alignItems: "center", justifyContent: "center",
                   width: 32, height: 32, borderRadius: 6,
-                  background: `${getGradeColor(fund.grade)}20`,
-                  color: getGradeColor(fund.grade),
+                  background: isPlaceholder ? `${T.muted}20` : `${getGradeColor(fund.grade)}20`,
+                  color: isPlaceholder ? T.muted : getGradeColor(fund.grade),
                   fontFamily: FONTS.mono, fontWeight: 700, fontSize: 14,
                 }}>
-                  {fund.grade}
+                  {isPlaceholder ? "—" : fund.grade}
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Selected Fund Detail - BottomSheet */}

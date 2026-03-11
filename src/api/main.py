@@ -152,12 +152,106 @@ async def get_vc_overlap():
 
 @app.get("/api/v1/vault/funds")
 async def get_vault_funds():
-    """Get all GP funds with websites"""
-    try:
-        from data.vc.funds_data import get_all_funds
-        return {"timestamp": datetime.now().isoformat(), "data": get_all_funds()}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    """Get Vault GP funds - only real verified partners"""
+    # Real verified GP partners only - no fictional data
+    VAULT_FUNDS = [
+        {
+            "id": "est-alpha",
+            "name": "EST Alpha",
+            "strategy": "Multi-Strategy",
+            "location": "Singapore",
+            "aum": "Confidential",
+            "yearFounded": 2024,
+            "status": "active",
+            "verified": True,
+            "note": "CometCloud Founding GP Partner",
+            "performance": {
+                "ytd": 8.5,
+                "annualReturn": 0,
+                "sharpeRatio": 0,
+                "maxDrawdown": -2.1,
+            },
+            "scores": {
+                "performance": 15,
+                "strategy": 18,
+                "team": 20,
+                "risk": 15,
+                "transparency": 10,
+                "aumTrackRecord": 5,
+                "total": 83,
+            },
+            "grade": "B",
+            "description": "CometCloud's flagship GP partner specializing in institutional DeFi strategies.",
+            "team": "Ex-Jane Street, Wintermute, Delphi Digital",
+            "strategyDetail": "Multi-strategy DeFi: yield optimization, delta-neutral, protocol governance",
+            "advantage": "Direct integration with CometCloud vault infrastructure",
+        },
+        {
+            "id": "placeholder-2",
+            "name": "GP Partner #2",
+            "strategy": "Under Evaluation",
+            "location": "—",
+            "aum": "—",
+            "yearFounded": None,
+            "status": "evaluating",
+            "verified": False,
+            "note": "GP onboarding in progress · Q2 2026",
+            "performance": {
+                "ytd": 0,
+                "annualReturn": 0,
+                "sharpeRatio": 0,
+                "maxDrawdown": 0,
+            },
+            "scores": {
+                "performance": 0,
+                "strategy": 0,
+                "team": 0,
+                "risk": 0,
+                "transparency": 0,
+                "aumTrackRecord": 0,
+                "total": 0,
+            },
+            "grade": None,
+            "description": "GP onboarding in progress.",
+            "team": None,
+            "strategyDetail": None,
+            "advantage": None,
+            "isPlaceholder": True,
+        },
+        {
+            "id": "placeholder-3",
+            "name": "GP Partner #3",
+            "strategy": "Under Evaluation",
+            "location": "—",
+            "aum": "—",
+            "yearFounded": None,
+            "status": "evaluating",
+            "verified": False,
+            "note": "GP onboarding in progress · Q2 2026",
+            "performance": {
+                "ytd": 0,
+                "annualReturn": 0,
+                "sharpeRatio": 0,
+                "maxDrawdown": 0,
+            },
+            "scores": {
+                "performance": 0,
+                "strategy": 0,
+                "team": 0,
+                "risk": 0,
+                "transparency": 0,
+                "aumTrackRecord": 0,
+                "total": 0,
+            },
+            "grade": None,
+            "description": "GP onboarding in progress.",
+            "team": None,
+            "strategyDetail": None,
+            "advantage": None,
+            "isPlaceholder": True,
+        },
+    ]
+    return {"timestamp": datetime.now().isoformat(), "data": VAULT_FUNDS}
 
 # ── Portfolio optimization (unchanged, uses skfolio) ──────────────────────
 
