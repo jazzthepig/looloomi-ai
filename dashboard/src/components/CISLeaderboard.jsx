@@ -81,11 +81,19 @@ const SAMPLE_CIS_DATA = [
 
 // Pillar definitions with weights
 const PILLAR_DEFS = [
-  { key: "F", name: "Fundamental", color: "#4472FF", weight: 30, desc: "Team / Product / Tokenomics" },
-  { key: "M", name: "Market Structure", color: "#A78BFA", weight: 25, desc: "Liquidity / Volume / Spread" },
-  { key: "O", name: "On-Chain Health", color: "#00D98A", weight: 20, desc: "Real Activity / Holder Behavior" },
-  { key: "S", name: "Sentiment", color: "#F59E0B", weight: 15, desc: "Social / KOL / Community" },
-  { key: "alpha", name: "Alpha Independence", color: "#FF2D55", weight: 10, desc: "BTC Independence / Factor Exposure" },
+  { key: "F", name: "Fundamental", color: "#4472FF", weight: 30, desc: "Token economics, protocol revenue, team credibility, audit status" },
+  { key: "M", name: "Market Structure", color: "#A78BFA", weight: 25, desc: "Liquidity depth, price stability, derivatives market health" },
+  { key: "O", name: "On-Chain Health", color: "#00D98A", weight: 20, desc: "Active addresses, transaction velocity, whale concentration" },
+  { key: "S", name: "Sentiment", color: "#F59E0B", weight: 15, desc: "Developer activity, social momentum, VC flow, narrative strength" },
+  { key: "alpha", name: "Alpha Independence", color: "#FF2D55", weight: 10, desc: "BTC correlation (β), genuine uncorrelated return potential" },
+];
+
+// Grade definitions
+const GRADE_DEFINITIONS = [
+  { grade: "A", minScore: 85, label: "Institutional Quality", desc: "Meets institutional allocation standards across all pillars", borderColor: "#00D98A" },
+  { grade: "B", minScore: 70, label: "Investment Grade", desc: "Strong fundamentals with selective risk factors", borderColor: "#4472FF" },
+  { grade: "C", minScore: 55, label: "Speculative", desc: "Elevated risk, requires position sizing discipline", borderColor: "#F59E0B" },
+  { grade: "D", minScore: 0, label: "High Risk", desc: "Significant structural concerns, not recommended for institutional allocation", borderColor: "#FF2D55" },
 ];
 
 // Responsive styles
@@ -114,6 +122,10 @@ const CIS_CSS = `
   @media (max-width: 480px) {
     .cis-grade-summary { grid-template-columns: 1fr 1fr !important; }
     .cis-layout { gap: 12px !important; }
+    .cis-grade-definitions { grid-template-columns: 1fr 1fr !important; }
+  }
+  @media (max-width: 1100px) {
+    .cis-grade-definitions { grid-template-columns: repeat(2, 1fr) !important; }
   }
 `;
 
@@ -484,6 +496,120 @@ export default function CISLeaderboard({ minimal = false }) {
             <span style={{ fontWeight: 600 }}>{p.key}</span> = {p.name} ({p.weight}%)
           </span>
         ))}
+      </div>
+
+      {/* Methodolog Overview */}
+      <div style={{ marginTop: 32 }}>
+        <div style={{
+          background: T.surface, border: `1px solid ${T.border}`,
+          borderRadius: 12, overflow: "hidden",
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: "20px 24px", borderBottom: `1px solid ${T.border}`,
+            background: "rgba(255,255,255,0.018)",
+          }}>
+            <div style={{
+              fontFamily: FONTS.display, fontSize: 14, fontWeight: 700,
+              color: T.primary, letterSpacing: "-0.01em", marginBottom: 4,
+            }}>
+              CIS Methodology v3.1
+            </div>
+            <div style={{
+              fontFamily: FONTS.body, fontSize: 12, color: T.secondary,
+            }}>
+              Open-source scoring framework for institutional digital asset evaluation
+            </div>
+          </div>
+
+          {/* Pillar Table */}
+          <div style={{ padding: "16px 24px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600 }}>Pillar</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600, width: 80 }}>Weight</th>
+                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600 }}>What it measures</th>
+                </tr>
+              </thead>
+              <tbody>
+                {PILLAR_DEFS.map((p, i) => (
+                  <tr key={p.key} style={{ borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
+                    <td style={{ padding: "12px 8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.color }} />
+                        <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 700, color: p.color }}>{p.key}</span>
+                        <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 600, color: T.primary }}>{p.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ textAlign: "center", padding: "12px 8px" }}>
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 600, color: T.primary }}>{p.weight}pts</span>
+                    </td>
+                    <td style={{ padding: "12px 8px" }}>
+                      <span style={{ fontFamily: FONTS.body, fontSize: 11, color: T.secondary }}>{p.desc}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer note */}
+          <div style={{
+            padding: "14px 24px", borderTop: `1px solid ${T.border}`,
+            background: "rgba(255,255,255,0.015)",
+          }}>
+            <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted, lineHeight: 1.6 }}>
+              CIS scores are recalculated weekly using live on-chain and market data.
+              Methodology published on GitHub.
+              Scores do not constitute investment advice.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Grade Definitions */}
+      <div style={{ marginTop: 24, marginBottom: 16 }}>
+        <div style={{
+          fontFamily: FONTS.display, fontSize: 12, fontWeight: 700,
+          color: T.muted, letterSpacing: "0.1em", marginBottom: 12,
+          textTransform: "uppercase",
+        }}>
+          Grade Definitions
+        </div>
+        <div className="cis-grade-definitions" style={{
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10,
+        }}>
+          {GRADE_DEFINITIONS.map((g) => (
+            <div key={g.grade} style={{
+              background: T.surface, border: `1px solid ${g.borderColor}40`,
+              borderRadius: 10, padding: "16px 18px",
+              borderTop: `3px solid ${g.borderColor}`,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{
+                  fontFamily: FONTS.mono, fontSize: 20, fontWeight: 800,
+                  color: g.borderColor,
+                }}>{g.grade}</span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.muted }}>
+                  {g.minScore}{g.minScore > 0 ? "+" : ""}
+                </span>
+              </div>
+              <div style={{
+                fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+                color: T.primary, marginBottom: 6,
+              }}>
+                {g.label}
+              </div>
+              <div style={{
+                fontFamily: FONTS.body, fontSize: 10, color: T.secondary,
+                lineHeight: 1.5,
+              }}>
+                {g.desc}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
