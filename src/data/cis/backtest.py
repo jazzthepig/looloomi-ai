@@ -7,7 +7,7 @@ Backtest CIS rating strategy:
 
 Compare performance vs BTC buy-and-hold.
 
-Author: Terry
+Author: Seth
 """
 
 import asyncio

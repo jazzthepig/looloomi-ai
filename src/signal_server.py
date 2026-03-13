@@ -4,7 +4,7 @@ Signal Server - CIS API for Agents
 Port :8001 - Lightweight API for CIS scores
 Designed for: Freqtrade bots, AI agents, x402 payments
 
-Author: Terry
+Author: Seth
 """
 
 from fastapi import FastAPI, HTTPException, Query

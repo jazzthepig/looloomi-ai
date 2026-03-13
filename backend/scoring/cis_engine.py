@@ -10,7 +10,7 @@ Pillars:
 - S: Sentiment & Social Score
 - alpha: Alpha Independence Score
 
-Author: Terry (CTO)
+Author: Seth
 Version: 1.0
 """
 

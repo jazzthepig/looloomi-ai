@@ -3,7 +3,7 @@ CIS Data Provider - Real-time CIS scoring from market data
 ===========================================================
 Fetches real market data and calculates CIS scores using the scoring engine.
 
-Author: Terry
+Author: Seth
 """
 
 import httpx
