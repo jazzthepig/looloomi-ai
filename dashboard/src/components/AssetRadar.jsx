@@ -110,10 +110,14 @@ const getCategoryBadge = (category) => {
 /* ─── Grade Style ───────────────────────────────────────────────────── */
 const getGradeStyle = (grade) => {
   const styles = {
+    "A+": { bg: "rgba(0,232,122,0.18)", color: T.green, border: "rgba(0,232,123,0.4)" },
     A: { bg: "rgba(0,232,122,0.15)", color: T.green, border: "rgba(0,232,123,0.3)" },
+    "B+": { bg: "rgba(75,158,255,0.15)", color: T.blue, border: "rgba(75,158,255,0.35)" },
     B: { bg: "rgba(75,158,255,0.12)", color: T.blue, border: "rgba(75,158,255,0.25)" },
+    "C+": { bg: "rgba(245,158,11,0.15)", color: T.amber, border: "rgba(245,158,11,0.35)" },
     C: { bg: "rgba(245,158,11,0.12)", color: T.amber, border: "rgba(245,158,11,0.22)" },
     D: { bg: "rgba(255,61,90,0.10)", color: T.red, border: "rgba(255,61,90,0.2)" },
+    F: { bg: "rgba(136,136,136,0.10)", color: "#888888", border: "rgba(136,136,136,0.2)" },
   };
   return styles[grade] || styles.B;
 };

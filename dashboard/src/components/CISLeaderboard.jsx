@@ -29,8 +29,11 @@ const FONTS = {
 };
 
 const GRADE_COLORS = {
+  "A+": "#00D98A",
   A: "#00D98A",
+  "B+": "#4472FF",
   B: "#4472FF",
+  "C+": "#E8A000",
   C: "#E8A000",
   D: "#FF2D55",
   F: "#888888",
