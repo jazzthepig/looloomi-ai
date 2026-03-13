@@ -131,13 +131,72 @@ const CIS_CSS = `
   }
 `;
 
-export default function CISLeaderboard({ minimal = false }) {
-  const [data, setData] = useState(SAMPLE_CIS_DATA);
+export default function CISLeaderboard({ minimal = false, externalData = null }) {
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [gradeFilter, setGradeFilter] = useState("All");
   const [classFilter, setClassFilter] = useState("All");
-  const [selectedAsset, setSelectedAsset] = useState(SAMPLE_CIS_DATA[0]);
+  const [selectedAsset, setSelectedAsset] = useState(null);
   const [sortBy, setSortBy] = useState("rank");
+  const [dataSource, setDataSource] = useState("loading");
+
+  // Fetch data from API if not provided externally
+  useEffect(() => {
+    if (externalData && externalData.universe) {
+      // Use external data (from parent component)
+      const mapped = externalData.universe.map((asset, idx) => ({
+        rank: idx + 1,
+        asset_id: asset.symbol.toLowerCase(),
+        asset_name: asset.name,
+        asset_class: asset.asset_class,
+        total_score: asset.cis_score,
+        grade: asset.grade,
+        pillars: { F: asset.f, M: asset.m, O: asset.r, S: asset.s, alpha: asset.a },
+        description: "",
+      }));
+      setData(mapped);
+      setSelectedAsset(mapped[0] || null);
+      setDataSource("live");
+      return;
+    }
+
+    // Fetch from API
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch("/api/v1/cis/universe");
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        const json = await response.json();
+        if (json.universe && json.universe.length > 0) {
+          const mapped = json.universe.map((asset, idx) => ({
+            rank: idx + 1,
+            asset_id: asset.symbol.toLowerCase(),
+            asset_name: asset.name,
+            asset_class: asset.asset_class,
+            total_score: asset.cis_score,
+            grade: asset.grade,
+            pillars: { F: asset.f, M: asset.m, O: asset.r, S: asset.s, alpha: asset.a },
+            description: "",
+          }));
+          setData(mapped);
+          setSelectedAsset(mapped[0]);
+          setDataSource(json.data_source || "coingecko+defillama");
+        } else {
+          throw new Error("No data returned");
+        }
+      } catch (e) {
+        console.error("CISLeaderboard fetch error:", e);
+        setError(e.message);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [externalData]);
 
   // Inject responsive CSS
   useEffect(() => {
@@ -273,9 +332,51 @@ export default function CISLeaderboard({ minimal = false }) {
     );
   }
 
+  // Loading/Error state
+  if (loading) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", color: T.secondary }}>
+        <div style={{ fontSize: 14 }}>Loading CIS data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: 20, textAlign: "center" }}>
+        <div style={{ color: T.red, marginBottom: 12 }}>Failed to load: {error}</div>
+        <button onClick={() => window.location.reload()} style={{
+          padding: "8px 16px", background: "rgba(239,68,68,0.2)", border: "1px solid #ef4444",
+          borderRadius: 4, color: "#ef4444", cursor: "pointer"
+        }}>Retry</button>
+      </div>
+    );
+  }
+
+  if (!data.length) {
+    return (
+      <div style={{ padding: 40, textAlign: "center", color: T.secondary }}>
+        No CIS data available
+      </div>
+    );
+  }
+
   // Full mode with 2-column layout
   return (
     <div>
+      {/* Data Source Badge */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{
+          fontSize: 10, padding: "2px 8px", borderRadius: 4,
+          background: dataSource === "live" ? "rgba(34,197,94,0.2)" : "rgba(251,191,36,0.2)",
+          color: dataSource === "live" ? "#22c55e" : "#fbbf24"
+        }}>
+          {dataSource === "loading" ? "LOADING" : dataSource.toUpperCase()}
+        </span>
+        <span style={{ fontSize: 10, color: T.muted }}>
+          CIS v4.0 · {data.length} assets
+        </span>
+      </div>
       {/* Grade Summary Cards */}
       <div className="cis-grade-summary" style={{
         display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 18
