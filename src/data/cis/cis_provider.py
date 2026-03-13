@@ -117,53 +117,80 @@ def _cache_set(key: str, val: Any):
 
 
 async def fetch_cg_markets() -> Dict[str, dict]:
-    """Fetch all market data from CoinGecko - top 250 for broader coverage."""
+    """Fetch market data from CoinGecko - top 100 for broader coverage."""
     cache_key = "cg_markets"
     cached = _cache_get(cache_key)
     if cached:
         return cached
 
     result = {}
+    rate_limited = False
+
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            # Fetch top 200 coins (4 pages of 50) for broader coverage
-            for page in range(1, 5):
-                url = f"{CG_BASE}/coins/markets"
-                params = {
-                    "vs_currency": "usd",
-                    "order": "market_cap_desc",
-                    "per_page": 50,
-                    "page": page,
-                    "sparkline": False,
-                    "price_change_percentage": "30d,7d"
-                }
-                r = await client.get(url, params=params)
-                r.raise_for_status()
-                data = r.json()
-
-                if not data:
-                    break
-
-                for coin in data:
-                    coin_id = coin["id"]
-                    result[coin_id] = {
-                        "symbol": coin["symbol"].upper(),
-                        "name": coin["name"],
-                        "market_cap": coin.get("market_cap", 0),
-                        "volume_24h": coin.get("total_volume", 0),
-                        "price": coin.get("current_price", 0),
-                        "change_24h": coin.get("price_change_percentage_24h", 0),
-                        "change_7d": coin.get("price_change_percentage_7d", 0),
-                        "change_30d": coin.get("price_change_percentage_30d", 0),
-                        "circulating_supply": coin.get("circulating_supply", 0),
-                        "total_supply": coin.get("total_supply", 0),
-                        "ath_change_percentage": coin.get("ath_change_percentage", 0),
-                        # For volatility calculation
-                        "high_24h": coin.get("high_24h", 0),
-                        "low_24h": coin.get("low_24h", 0),
+            # Fetch top 100 coins (2 pages of 50) - balance between coverage and rate limit
+            for page in range(1, 3):
+                try:
+                    url = f"{CG_BASE}/coins/markets"
+                    params = {
+                        "vs_currency": "usd",
+                        "order": "market_cap_desc",
+                        "per_page": 50,
+                        "page": page,
+                        "sparkline": False,
+                        "price_change_percentage": "30d,7d"
                     }
+                    r = await client.get(url, params=params)
 
-            return _cache_set(cache_key, result)
+                    # Check for rate limit
+                    if r.status_code == 429:
+                        rate_limited = True
+                        print(f"CoinGecko rate limited on page {page}")
+                        break
+
+                    r.raise_for_status()
+                    data = r.json()
+
+                    if not data:
+                        break
+
+                    for coin in data:
+                        coin_id = coin["id"]
+                        result[coin_id] = {
+                            "symbol": coin["symbol"].upper(),
+                            "name": coin["name"],
+                            "market_cap": coin.get("market_cap", 0),
+                            "volume_24h": coin.get("total_volume", 0),
+                            "price": coin.get("current_price", 0),
+                            "change_24h": coin.get("price_change_percentage_24h", 0),
+                            "change_7d": coin.get("price_change_percentage_7d", 0),
+                            "change_30d": coin.get("price_change_percentage_30d", 0),
+                            "circulating_supply": coin.get("circulating_supply", 0),
+                            "total_supply": coin.get("total_supply", 0),
+                            "ath_change_percentage": coin.get("ath_change_percentage", 0),
+                            "high_24h": coin.get("high_24h", 0),
+                            "low_24h": coin.get("low_24h", 0),
+                        }
+
+                    # Small delay between pages
+                    await asyncio.sleep(1)
+
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code == 429:
+                        rate_limited = True
+                        print(f"CoinGecko rate limited on page {page}")
+                        break
+                    raise
+
+            # Only cache if we got data, don't cache empty results
+            if result:
+                return _cache_set(cache_key, result)
+            elif rate_limited:
+                # Return empty but don't cache - will retry on next request
+                return {}
+            else:
+                return {}
+
     except Exception as e:
         print(f"CoinGecko API error: {e}")
         return result if result else {}
