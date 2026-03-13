@@ -117,47 +117,56 @@ def _cache_set(key: str, val: Any):
 
 
 async def fetch_cg_markets() -> Dict[str, dict]:
-    """Fetch all market data from CoinGecko."""
+    """Fetch all market data from CoinGecko - top 250 for broader coverage."""
     cache_key = "cg_markets"
     cached = _cache_get(cache_key)
     if cached:
         return cached
 
+    result = {}
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            # Fetch top 100 coins
-            url = f"{CG_BASE}/coins/markets"
-            params = {
-                "vs_currency": "usd",
-                "order": "market_cap_desc",
-                "per_page": 100,
-                "page": 1,
-                "sparkline": False,
-                "price_change_percentage": "30d"
-            }
-            r = await client.get(url, params=params)
-            r.raise_for_status()
-            data = r.json()
-
-            result = {}
-            for coin in data:
-                result[coin["id"]] = {
-                    "symbol": coin["symbol"].upper(),
-                    "name": coin["name"],
-                    "market_cap": coin.get("market_cap", 0),
-                    "volume_24h": coin.get("total_volume", 0),
-                    "price": coin.get("current_price", 0),
-                    "change_24h": coin.get("price_change_percentage_24h", 0),
-                    "change_30d": coin.get("price_change_percentage_30d", 0),
-                    "circulating_supply": coin.get("circulating_supply", 0),
-                    "total_supply": coin.get("total_supply", 0),
-                    "ath_change_percentage": coin.get("ath_change_percentage", 0),
+        async with httpx.AsyncClient(timeout=30) as client:
+            # Fetch top 200 coins (4 pages of 50) for broader coverage
+            for page in range(1, 5):
+                url = f"{CG_BASE}/coins/markets"
+                params = {
+                    "vs_currency": "usd",
+                    "order": "market_cap_desc",
+                    "per_page": 50,
+                    "page": page,
+                    "sparkline": False,
+                    "price_change_percentage": "30d,7d"
                 }
+                r = await client.get(url, params=params)
+                r.raise_for_status()
+                data = r.json()
+
+                if not data:
+                    break
+
+                for coin in data:
+                    coin_id = coin["id"]
+                    result[coin_id] = {
+                        "symbol": coin["symbol"].upper(),
+                        "name": coin["name"],
+                        "market_cap": coin.get("market_cap", 0),
+                        "volume_24h": coin.get("total_volume", 0),
+                        "price": coin.get("current_price", 0),
+                        "change_24h": coin.get("price_change_percentage_24h", 0),
+                        "change_7d": coin.get("price_change_percentage_7d", 0),
+                        "change_30d": coin.get("price_change_percentage_30d", 0),
+                        "circulating_supply": coin.get("circulating_supply", 0),
+                        "total_supply": coin.get("total_supply", 0),
+                        "ath_change_percentage": coin.get("ath_change_percentage", 0),
+                        # For volatility calculation
+                        "high_24h": coin.get("high_24h", 0),
+                        "low_24h": coin.get("low_24h", 0),
+                    }
 
             return _cache_set(cache_key, result)
     except Exception as e:
         print(f"CoinGecko API error: {e}")
-        return {}
+        return result if result else {}
 
 
 async def fetch_defillama_tvl() -> Dict[str, float]:
@@ -758,8 +767,16 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         grade = get_grade(total_score)
         signal = get_signal(total_score, grade)
 
-        # 30d change
+        # 30d price change
         change_30d = market_data.get("change_30d", 0) or 0
+        change_7d = market_data.get("change_7d", 0) or 0
+
+        # Volatility (from 24h high/low)
+        high_24h = market_data.get("high_24h", 0) or 0
+        low_24h = market_data.get("low_24h", 0) or 0
+        volatility_30d = 0
+        if low_24h > 0 and high_24h > low_24h:
+            volatility_30d = round((high_24h - low_24h) / low_24h * 100, 1)
 
         # Percentile (simplified - based on score)
         percentile = int(min(99, max(1, total_score)))
@@ -770,6 +787,36 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 breakdown[key]["weight"] = contributions[key]["weight"]
                 breakdown[key]["contribution"] = contributions[key]["contribution"]
 
+        # Data completeness (confidence) - check what data sources we have
+        data_completeness = {
+            "price": bool(market_data.get("price", 0)),
+            "volume": bool(market_data.get("volume_24h", 0)),
+            "market_cap": bool(market_data.get("market_cap", 0)),
+            "tvl": bool(tvl and tvl > 0),
+            "sentiment": bool(fng and fng.get("value")),
+            "circulating_supply": bool(market_data.get("circulating_supply", 0)),
+        }
+        # Confidence score: 0-1 based on data completeness
+        confidence = round(sum(data_completeness.values()) / len(data_completeness), 2)
+
+        # Get CIS score change from history
+        score_change_7d = 0
+        score_change_30d = 0
+        try:
+            from .history_db import get_score_change
+            sc_30d = get_score_change(asset_id, days=30)
+            if sc_30d:
+                score_change_30d = round(sc_30d.get("change", 0), 1)
+            sc_7d = get_score_change(asset_id, days=7)
+            if sc_7d:
+                score_change_7d = round(sc_7d.get("change", 0), 1)
+        except Exception:
+            pass
+
+        # Max drawdown estimation (simplified from ath_distance)
+        ath_distance = abs(market_data.get("ath_change_percentage", 0) or 0)
+        max_drawdown_90d = min(ath_distance, 90)  # Cap at 90%
+
         universe.append({
             "symbol": asset_id,
             "name": config["name"],
@@ -777,6 +824,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "cis_score": total_score,
             "grade": grade,
             "signal": signal,
+            "confidence": confidence,
             "f": pillars["F"],
             "m": pillars["M"],
             "r": pillars["O"],
@@ -784,8 +832,14 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "a": pillars["A"],
             "breakdown": breakdown,
             "weights": weights,
+            "change_7d": round(change_7d, 1),
             "change_30d": round(change_30d, 1),
+            "score_change_7d": score_change_7d,
+            "score_change_30d": score_change_30d,
+            "volatility_30d": volatility_30d,
+            "max_drawdown_90d": round(max_drawdown_90d, 1),
             "percentile": percentile,
+            "data_completeness": data_completeness,
             "market_cap": market_data.get("market_cap", 0),
             "volume_24h": market_data.get("volume_24h", 0),
             "tvl": tvl,
