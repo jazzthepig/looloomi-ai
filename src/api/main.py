@@ -14,6 +14,9 @@ import sys, os, numpy as np
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+# Import CIS data provider
+from src.data.cis.cis_provider import calculate_cis_universe
+
 # Import our new data layer
 from data.market.data_layer import (
     get_prices_multi, get_price, get_ohlcv, get_top_gainers_losers,
@@ -107,47 +110,19 @@ async def fear_greed(limit: int = 30):
 async def get_cis_universe():
     """
     CIS v4.0 Universe Endpoint
-    Returns CIS scores for all tracked assets across 8 classes
+    Returns real CIS scores calculated from CoinGecko + DeFiLlama data
     """
-    from datetime import datetime
-
-    # Mock data - in production, this would connect to cometcloud-local cis_scheduler
-    mock_data = {
-        "status": "success",
-        "version": "4.0.0",
-        "timestamp": datetime.now().isoformat(),
-        "macro": {
-            "regime": "Tightening",
-            "fed_funds": 5.25,
-            "treasury_10y": 4.25,
-            "vix": 18.0,
-            "dxy": 104.0,
-            "cpi_yoy": 3.2,
-        },
-        "universe": [
-            {"symbol": "BTC", "name": "Bitcoin", "asset_class": "Crypto", "cis_score": 82.3, "grade": "A", "signal": "OVERWEIGHT", "f": 85, "m": 78, "r": 84, "s": 72, "a": 88, "change_30d": 4.2, "percentile": 91},
-            {"symbol": "ETH", "name": "Ethereum", "asset_class": "Crypto", "cis_score": 76.8, "grade": "B+", "signal": "OVERWEIGHT", "f": 80, "m": 74, "r": 78, "s": 68, "a": 76, "change_30d": -1.3, "percentile": 82},
-            {"symbol": "SOL", "name": "Solana", "asset_class": "Crypto", "cis_score": 74.1, "grade": "B+", "signal": "NEUTRAL", "f": 72, "m": 82, "r": 70, "s": 74, "a": 68, "change_30d": 6.8, "percentile": 78},
-            {"symbol": "NVDA", "name": "NVIDIA", "asset_class": "US Equity", "cis_score": 88.5, "grade": "A+", "signal": "STRONG OVERWEIGHT", "f": 92, "m": 90, "r": 85, "s": 82, "a": 91, "change_30d": 2.1, "percentile": 96},
-            {"symbol": "SPY", "name": "S&P 500", "asset_class": "US Equity", "cis_score": 71.2, "grade": "B", "signal": "NEUTRAL", "f": 70, "m": 68, "r": 76, "s": 72, "a": 65, "change_30d": -0.8, "percentile": 68},
-            {"symbol": "AAPL", "name": "Apple", "asset_class": "US Equity", "cis_score": 79.4, "grade": "B+", "signal": "OVERWEIGHT", "f": 84, "m": 76, "r": 80, "s": 74, "a": 78, "change_30d": 1.5, "percentile": 85},
-            {"symbol": "GLD", "name": "Gold", "asset_class": "Commodity", "cis_score": 84.7, "grade": "A", "signal": "STRONG OVERWEIGHT", "f": 78, "m": 88, "r": 90, "s": 85, "a": 82, "change_30d": 5.4, "percentile": 93},
-            {"symbol": "TLT", "name": "20Y Treasury", "asset_class": "US Bond", "cis_score": 58.3, "grade": "C+", "signal": "UNDERWEIGHT", "f": 65, "m": 45, "r": 62, "s": 58, "a": 55, "change_30d": -3.2, "percentile": 35},
-            {"symbol": "ONDO", "name": "Ondo Finance", "asset_class": "Crypto", "cis_score": 71.9, "grade": "B", "signal": "OVERWEIGHT", "f": 78, "m": 65, "r": 72, "s": 62, "a": 80, "change_30d": 12.1, "percentile": 70},
-            {"symbol": "LINK", "name": "Chainlink", "asset_class": "Crypto", "cis_score": 73.5, "grade": "B+", "signal": "OVERWEIGHT", "f": 76, "m": 70, "r": 74, "s": 70, "a": 75, "change_30d": 3.7, "percentile": 76},
-            {"symbol": "AAVE", "name": "Aave", "asset_class": "Crypto", "cis_score": 69.8, "grade": "B", "signal": "NEUTRAL", "f": 74, "m": 66, "r": 70, "s": 64, "a": 72, "change_30d": -2.5, "percentile": 62},
-            {"symbol": "QQQ", "name": "Nasdaq 100", "asset_class": "US Equity", "cis_score": 75.6, "grade": "B+", "signal": "OVERWEIGHT", "f": 78, "m": 74, "r": 76, "s": 72, "a": 74, "change_30d": 0.4, "percentile": 80},
-            {"symbol": "SLV", "name": "Silver", "asset_class": "Commodity", "cis_score": 68.2, "grade": "B", "signal": "NEUTRAL", "f": 62, "m": 72, "r": 68, "s": 70, "a": 64, "change_30d": 7.2, "percentile": 58},
-            {"symbol": "HYG", "name": "High Yield Bond", "asset_class": "US Bond", "cis_score": 52.1, "grade": "C", "signal": "UNDERWEIGHT", "f": 55, "m": 48, "r": 54, "s": 50, "a": 52, "change_30d": -1.8, "percentile": 22},
-            {"symbol": "AVAX", "name": "Avalanche", "asset_class": "Crypto", "cis_score": 62.4, "grade": "C+", "signal": "NEUTRAL", "f": 66, "m": 58, "r": 64, "s": 60, "a": 63, "change_30d": -5.1, "percentile": 45},
-            {"symbol": "EEM", "name": "EM Equity", "asset_class": "EM Equity", "cis_score": 56.7, "grade": "C+", "signal": "UNDERWEIGHT", "f": 58, "m": 52, "r": 60, "s": 55, "a": 54, "change_30d": -2.9, "percentile": 30},
-        ]
-    }
-
-    # Sort by CIS score
-    mock_data["universe"].sort(key=lambda x: x["cis_score"], reverse=True)
-
-    return mock_data
+    try:
+        result = await calculate_cis_universe()
+        return result
+    except Exception as e:
+        print(f"CIS calculation error: {e}")
+        # Fallback to minimal response
+        return {
+            "status": "error",
+            "message": str(e),
+            "universe": []
+        }
 
 @app.get("/api/v1/cis/asset/{symbol}")
 async def get_cis_asset(symbol: str):

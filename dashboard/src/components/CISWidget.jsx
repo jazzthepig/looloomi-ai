@@ -383,12 +383,167 @@ export function CISHeatmap({ data, filter, setFilter }) {
 
 /* ─── Main CIS Component ───────────────────────────────────────────── */
 
+/* ─── Weight Adjuster Component ────────────────────────────────────────── */
+function WeightAdjuster({ weights, onChange, pillarLabels }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [localWeights, setLocalWeights] = useState(weights);
+
+  const pillars = ["F", "M", "O", "S", "A"];
+  const colors = {
+    F: "#22c55e",
+    M: "#3b82f6",
+    O: "#f59e0b",
+    S: "#ec4899",
+    A: "#8b5cf6",
+  };
+
+  const handleSliderChange = (pillar, value) => {
+    const newWeights = { ...localWeights, [pillar]: parseFloat(value) };
+    setLocalWeights(newWeights);
+  };
+
+  const applyWeights = () => {
+    onChange(localWeights);
+    setIsOpen(false);
+  };
+
+  const resetWeights = () => {
+    const defaultWeights = { F: 0.25, M: 0.25, O: 0.20, S: 0.15, A: 0.15 };
+    setLocalWeights(defaultWeights);
+  };
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "6px 12px",
+          background: "rgba(255,255,255,0.04)",
+          border: `1px solid ${T.border}`,
+          borderRadius: 6,
+          color: T.secondary,
+          fontSize: 10,
+          fontFamily: FONTS.mono,
+          cursor: "pointer",
+          transition: "all 0.2s",
+        }}
+      >
+        <span style={{ color: T.gold }}>⚖</span>
+        WEIGHTS
+      </button>
+
+      {isOpen && (
+        <div style={{
+          position: "absolute",
+          top: "100%",
+          right: 0,
+          marginTop: 8,
+          padding: 16,
+          background: T.deep,
+          border: `1px solid ${T.border}`,
+          borderRadius: 8,
+          width: 280,
+          zIndex: 100,
+          boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: T.primary, marginBottom: 12, fontFamily: FONTS.display }}>
+            Adjust Pillar Weights
+          </div>
+
+          {pillars.map(pillar => (
+            <div key={pillar} style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <span style={{ fontSize: 10, color: colors[pillar], fontFamily: FONTS.mono, fontWeight: 600 }}>
+                  {pillar}: {pillarLabels[pillar]}
+                </span>
+                <span style={{ fontSize: 10, color: T.primary, fontFamily: FONTS.mono }}>
+                  {(localWeights[pillar] * 100).toFixed(0)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="0.5"
+                step="0.05"
+                value={localWeights[pillar]}
+                onChange={(e) => handleSliderChange(pillar, e.target.value)}
+                style={{
+                  width: "100%",
+                  height: 4,
+                  appearance: "none",
+                  background: T.border,
+                  borderRadius: 2,
+                  cursor: "pointer",
+                }}
+              />
+            </div>
+          ))}
+
+          <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+            <button
+              onClick={resetWeights}
+              style={{
+                flex: 1,
+                padding: "6px 12px",
+                background: "transparent",
+                border: `1px solid ${T.border}`,
+                borderRadius: 4,
+                color: T.secondary,
+                fontSize: 10,
+                cursor: "pointer",
+              }}
+            >
+              RESET
+            </button>
+            <button
+              onClick={applyWeights}
+              style={{
+                flex: 1,
+                padding: "6px 12px",
+                background: "rgba(200,168,75,0.15)",
+                border: `1px solid ${T.gold}`,
+                borderRadius: 4,
+                color: T.gold,
+                fontSize: 10,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              APPLY
+            </button>
+          </div>
+
+          <div style={{ fontSize: 9, color: T.muted, marginTop: 12, textAlign: "center" }}>
+            Total: {(Object.values(localWeights).reduce((a, b) => a + b, 0) * 100).toFixed(0)}%
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Main CIS Component ───────────────────────────────────────────── */
+
 export default function CISWidget({ refreshKey = 0 }) {
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState("leaderboard");
   const [loading, setLoading] = useState(false);
   const [dataSource, setDataSource] = useState("demo");
+  const [customWeights, setCustomWeights] = useState(null);
+
+  const pillarLabels = {
+    F: "Fundamental",
+    M: "Market",
+    O: "On-Chain",
+    S: "Sentiment",
+    A: "Alpha",
+  };
+
+  const defaultWeights = { F: 0.25, M: 0.25, O: 0.20, S: 0.15, A: 0.15 };
 
   const fetchData = async () => {
     setLoading(true);
@@ -430,6 +585,45 @@ export default function CISWidget({ refreshKey = 0 }) {
     return () => clearInterval(interval);
   }, [refreshKey]);
 
+  // Recalculate scores when custom weights change
+  const processedData = useMemo(() => {
+    if (!data) return null;
+    const weights = customWeights || defaultWeights;
+
+    const recalculated = data.universe.map(asset => {
+      const newScore =
+        weights.F * asset.f +
+        weights.M * asset.m +
+        weights.O * asset.r +
+        weights.S * asset.s +
+        weights.A * asset.a;
+
+      let newGrade;
+      if (newScore >= 85) newGrade = "A+";
+      else if (newScore >= 80) newGrade = "A";
+      else if (newScore >= 70) newGrade = "B+";
+      else if (newScore >= 60) newGrade = "B";
+      else if (newScore >= 50) newGrade = "C+";
+      else if (newScore >= 40) newGrade = "C";
+      else newGrade = "D";
+
+      let newSignal;
+      if (newGrade === "A+" || newGrade === "A") newSignal = "STRONG OVERWEIGHT";
+      else if (newGrade === "B+" || newGrade === "B") newSignal = "OVERWEIGHT";
+      else if (newGrade === "C") newSignal = "NEUTRAL";
+      else newSignal = "UNDERWEIGHT";
+
+      return { ...asset, cis_score: newScore, grade: newGrade, signal: newSignal };
+    });
+
+    recalculated.sort((a, b) => b.cis_score - a.cis_score);
+    return { ...data, universe: recalculated };
+  }, [data, customWeights]);
+
+  const handleWeightChange = (newWeights) => {
+    setCustomWeights(newWeights);
+  };
+
   return (
     <div className="fade-up" style={{ width: "100%", clear: "both" }}>
       {/* Header */}
@@ -441,11 +635,19 @@ export default function CISWidget({ refreshKey = 0 }) {
               {dataSource === "live" ? "LIVE" : "DEMO"}
             </span>
           </div>
-          <p style={{ fontSize: 11, color: T.secondary, marginTop: 4 }}>CIS v4.0 · Cross-Asset Scoring · {data?.universe?.length || 0} assets</p>
+          <p style={{ fontSize: 11, color: T.secondary, marginTop: 4 }}>
+            CIS v4.0 · Cross-Asset Scoring · {processedData?.universe?.length || 0} assets
+            {customWeights && <span style={{ color: T.gold, marginLeft: 8 }}>Custom Weights</span>}
+          </p>
         </div>
 
-        {/* View Toggle */}
-        <div style={{ display: "flex", gap: 4 }}>
+        {/* Controls */}
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <WeightAdjuster
+            weights={customWeights || defaultWeights}
+            onChange={handleWeightChange}
+            pillarLabels={pillarLabels}
+          />
           {[
             { id: "leaderboard", label: "Leaderboard" },
             { id: "heatmap", label: "Heatmap" },
@@ -480,10 +682,10 @@ export default function CISWidget({ refreshKey = 0 }) {
       {!loading && (
         <>
           {view === "leaderboard" && (
-            <CISLeaderboard data={data} filter={filter} setFilter={setFilter} />
+            <CISLeaderboard data={processedData} filter={filter} setFilter={setFilter} />
           )}
           {view === "heatmap" && (
-            <CISHeatmap data={data} filter={filter} setFilter={setFilter} />
+            <CISHeatmap data={processedData} filter={filter} setFilter={setFilter} />
           )}
         </>
       )}
