@@ -62,38 +62,6 @@ const SIGNAL_STYLES = {
 
 const ASSET_CLASSES = ["All", "Crypto", "US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"];
 
-/* ─── Mock Data (Fallback) ───────────────────────────────────────────── */
-const MOCK_DATA = {
-  status: "success",
-  version: "4.0.0",
-  macro: {
-    regime: "Tightening",
-    fed_funds: 5.25,
-    treasury_10y: 4.25,
-    vix: 18.0,
-    dxy: 104.0,
-    cpi_yoy: 3.2,
-  },
-  universe: [
-    { symbol: "BTC", name: "Bitcoin", asset_class: "Crypto", cis_score: 82.3, grade: "A", signal: "OVERWEIGHT", f: 85, m: 78, r: 84, s: 72, a: 88, change_30d: 4.2, percentile: 91 },
-    { symbol: "ETH", name: "Ethereum", asset_class: "Crypto", cis_score: 76.8, grade: "B+", signal: "OVERWEIGHT", f: 80, m: 74, r: 78, s: 68, a: 76, change_30d: -1.3, percentile: 82 },
-    { symbol: "SOL", name: "Solana", asset_class: "Crypto", cis_score: 74.1, grade: "B+", signal: "NEUTRAL", f: 72, m: 82, r: 70, s: 74, a: 68, change_30d: 6.8, percentile: 78 },
-    { symbol: "NVDA", name: "NVIDIA", asset_class: "US Equity", cis_score: 88.5, grade: "A+", signal: "STRONG OVERWEIGHT", f: 92, m: 90, r: 85, s: 82, a: 91, change_30d: 2.1, percentile: 96 },
-    { symbol: "SPY", name: "S&P 500", asset_class: "US Equity", cis_score: 71.2, grade: "B", signal: "NEUTRAL", f: 70, m: 68, r: 76, s: 72, a: 65, change_30d: -0.8, percentile: 68 },
-    { symbol: "AAPL", name: "Apple", asset_class: "US Equity", cis_score: 79.4, grade: "B+", signal: "OVERWEIGHT", f: 84, m: 76, r: 80, s: 74, a: 78, change_30d: 1.5, percentile: 85 },
-    { symbol: "GLD", name: "Gold", asset_class: "Commodity", cis_score: 84.7, grade: "A", signal: "STRONG OVERWEIGHT", f: 78, m: 88, r: 90, s: 85, a: 82, change_30d: 5.4, percentile: 93 },
-    { symbol: "TLT", name: "20Y Treasury", asset_class: "US Bond", cis_score: 58.3, grade: "C+", signal: "UNDERWEIGHT", f: 65, m: 45, r: 62, s: 58, a: 55, change_30d: -3.2, percentile: 35 },
-    { symbol: "ONDO", name: "Ondo Finance", asset_class: "Crypto", cis_score: 71.9, grade: "B", signal: "OVERWEIGHT", f: 78, m: 65, r: 72, s: 62, a: 80, change_30d: 12.1, percentile: 70 },
-    { symbol: "LINK", name: "Chainlink", asset_class: "Crypto", cis_score: 73.5, grade: "B+", signal: "OVERWEIGHT", f: 76, m: 70, r: 74, s: 70, a: 75, change_30d: 3.7, percentile: 76 },
-    { symbol: "AAVE", name: "Aave", asset_class: "Crypto", cis_score: 69.8, grade: "B", signal: "NEUTRAL", f: 74, m: 66, r: 70, s: 64, a: 72, change_30d: -2.5, percentile: 62 },
-    { symbol: "QQQ", name: "Nasdaq 100", asset_class: "US Equity", cis_score: 75.6, grade: "B+", signal: "OVERWEIGHT", f: 78, m: 74, r: 76, s: 72, a: 74, change_30d: 0.4, percentile: 80 },
-    { symbol: "SLV", name: "Silver", asset_class: "Commodity", cis_score: 68.2, grade: "B", signal: "NEUTRAL", f: 62, m: 72, r: 68, s: 70, a: 64, change_30d: 7.2, percentile: 58 },
-    { symbol: "HYG", name: "High Yield Bond", asset_class: "US Bond", cis_score: 52.1, grade: "C", signal: "UNDERWEIGHT", f: 55, m: 48, r: 54, s: 50, a: 52, change_30d: -1.8, percentile: 22 },
-    { symbol: "AVAX", name: "Avalanche", asset_class: "Crypto", cis_score: 62.4, grade: "C+", signal: "NEUTRAL", f: 66, m: 58, r: 64, s: 60, a: 63, change_30d: -5.1, percentile: 45 },
-    { symbol: "EEM", name: "EM Equity", asset_class: "EM Equity", cis_score: 56.7, grade: "C+", signal: "UNDERWEIGHT", f: 58, m: 52, r: 60, s: 55, a: 54, change_30d: -2.9, percentile: 30 },
-  ].sort((a, b) => b.cis_score - a.cis_score),
-};
-
 /* ─── Helper Components ──────────────────────────────────────────────── */
 
 function PillarBar({ value, label }) {
@@ -532,7 +500,7 @@ export default function CISWidget({ refreshKey = 0 }) {
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState("leaderboard");
   const [loading, setLoading] = useState(false);
-  const [dataSource, setDataSource] = useState("demo");
+  const [dataSource, setDataSource] = useState("loading");
   const [customWeights, setCustomWeights] = useState(null);
 
   const pillarLabels = {
@@ -545,12 +513,14 @@ export default function CISWidget({ refreshKey = 0 }) {
 
   const defaultWeights = { F: 0.25, M: 0.25, O: 0.20, S: 0.15, A: 0.15 };
 
+  const [error, setError] = useState(null);
+
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Try to fetch from local backend with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(`${API_BASE}/cis/universe`, {
         signal: controller.signal
@@ -560,16 +530,14 @@ export default function CISWidget({ refreshKey = 0 }) {
       if (response.ok) {
         const json = await response.json();
         setData(json);
-        // Show actual data source from API
-        setDataSource(json.data_source || "live");
+        setDataSource(json.data_source || "coingecko+defillama");
       } else {
-        throw new Error("API not available");
+        throw new Error(`API error: ${response.status}`);
       }
     } catch (e) {
-      console.log("CIS fetch error, using mock:", e.message);
-      // Fallback to mock data
-      setData(MOCK_DATA);
-      setDataSource("demo");
+      console.error("CIS fetch error:", e.message);
+      setError(e.message);
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -632,15 +600,47 @@ export default function CISWidget({ refreshKey = 0 }) {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: T.primary, fontFamily: FONTS.display }}>CometCloud Intelligence Score</h2>
-            <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: dataSource === "live" ? "rgba(34,197,94,0.2)" : "rgba(251,191,36,0.2)", color: dataSource === "live" ? "#22c55e" : "#fbbf24" }}>
-              {dataSource === "demo" ? "DEMO" : dataSource.toUpperCase()}
+            <span style={{
+              padding: "2px 8px",
+              borderRadius: 4,
+              fontSize: 10,
+              fontWeight: 600,
+              background: error ? "rgba(239,68,68,0.2)" : dataSource !== "loading" ? "rgba(34,197,94,0.2)" : "rgba(251,191,36,0.2)",
+              color: error ? "#ef4444" : dataSource !== "loading" ? "#22c55e" : "#fbbf24"
+            }}>
+              {error ? "ERROR" : dataSource === "loading" ? "LOADING" : dataSource.toUpperCase()}
             </span>
           </div>
           <p style={{ fontSize: 11, color: T.secondary, marginTop: 4 }}>
-            CIS v4.0 · Cross-Asset Scoring · {processedData?.universe?.length || 0} assets
+            CIS v4.0 · Real-time API · {processedData?.universe?.length || 0} assets
             {customWeights && <span style={{ color: T.gold, marginLeft: 8 }}>Custom Weights</span>}
+            {data?.timestamp && <span style={{ marginLeft: 8 }}>Updated: {new Date(data.timestamp).toLocaleString()}</span>}
           </p>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div style={{ width: "100%", padding: "12px 16px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 6, marginTop: 8 }}>
+            <p style={{ fontSize: 12, color: "#ef4444", margin: 0 }}>
+              <strong>Failed to load CIS data:</strong> {error}
+            </p>
+            <button
+              onClick={fetchData}
+              style={{
+                marginTop: 8,
+                padding: "6px 12px",
+                background: "rgba(239,68,68,0.2)",
+                border: "1px solid #ef4444",
+                borderRadius: 4,
+                color: "#ef4444",
+                fontSize: 11,
+                cursor: "pointer"
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* Controls */}
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
