@@ -1,0 +1,492 @@
+import React, { useState, useEffect, useMemo, Fragment } from "react";
+
+/* ─── Design Tokens ──────────────────────────────────────────────────── */
+const T = {
+  void: "#020208",
+  deep: "#06050F",
+  surface: "#0A0918",
+  raised: "#100E22",
+  overlay: "#16132E",
+  border: "#1A173A",
+  borderHi: "#28244C",
+  primary: "#F0EEFF",
+  secondary: "#8880BE",
+  muted: "#3E3A6E",
+  dim: "#252248",
+  violet: "#6B0FCC",
+  indigo: "#2D35D4",
+  cyan: "#00C8E0",
+  pink: "#FF1060",
+  amber: "#E8A000",
+  green: "#00D98A",
+  red: "#FF2D55",
+  gold: "#DAA520",
+};
+
+const FONTS = {
+  display: "'Syne', sans-serif",
+  body: "'Syne', sans-serif",
+  mono: "'DM Mono', monospace",
+};
+
+const API_BASE = "/api/v1";
+
+/* ─── Constants ──────────────────────────────────────────────────────── */
+const REGIME_COLORS = {
+  "Risk-On": "#22c55e",
+  "Risk-Off": "#ef4444",
+  "Tightening": "#f59e0b",
+  "Easing": "#3b82f6",
+  "Stagflation": "#dc2626",
+  "Goldilocks": "#a855f7",
+};
+
+const GRADE_COLORS = {
+  "A+": "#22c55e",
+  "A": "#4ade80",
+  "B+": "#86efac",
+  "B": "#fbbf24",
+  "C+": "#fb923c",
+  "C": "#f87171",
+  "D": "#ef4444",
+  "F": "#dc2626",
+};
+
+const SIGNAL_STYLES = {
+  "STRONG OVERWEIGHT": { bg: "rgba(34,197,94,0.15)", color: "#22c55e", label: "STRONG OW" },
+  "OVERWEIGHT": { bg: "rgba(74,222,128,0.12)", color: "#4ade80", label: "OW" },
+  "NEUTRAL": { bg: "rgba(251,191,36,0.10)", color: "#fbbf24", label: "NEUTRAL" },
+  "UNDERWEIGHT": { bg: "rgba(248,113,113,0.12)", color: "#f87171", label: "UW" },
+  "AVOID": { bg: "rgba(220,38,38,0.15)", color: "#dc2626", label: "AVOID" },
+};
+
+const ASSET_CLASSES = ["All", "Crypto", "US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"];
+
+/* ─── Mock Data (Fallback) ───────────────────────────────────────────── */
+const MOCK_DATA = {
+  status: "success",
+  version: "4.0.0",
+  macro: {
+    regime: "Tightening",
+    fed_funds: 5.25,
+    treasury_10y: 4.25,
+    vix: 18.0,
+    dxy: 104.0,
+    cpi_yoy: 3.2,
+  },
+  universe: [
+    { symbol: "BTC", name: "Bitcoin", asset_class: "Crypto", cis_score: 82.3, grade: "A", signal: "OVERWEIGHT", f: 85, m: 78, r: 84, s: 72, a: 88, change_30d: 4.2, percentile: 91 },
+    { symbol: "ETH", name: "Ethereum", asset_class: "Crypto", cis_score: 76.8, grade: "B+", signal: "OVERWEIGHT", f: 80, m: 74, r: 78, s: 68, a: 76, change_30d: -1.3, percentile: 82 },
+    { symbol: "SOL", name: "Solana", asset_class: "Crypto", cis_score: 74.1, grade: "B+", signal: "NEUTRAL", f: 72, m: 82, r: 70, s: 74, a: 68, change_30d: 6.8, percentile: 78 },
+    { symbol: "NVDA", name: "NVIDIA", asset_class: "US Equity", cis_score: 88.5, grade: "A+", signal: "STRONG OVERWEIGHT", f: 92, m: 90, r: 85, s: 82, a: 91, change_30d: 2.1, percentile: 96 },
+    { symbol: "SPY", name: "S&P 500", asset_class: "US Equity", cis_score: 71.2, grade: "B", signal: "NEUTRAL", f: 70, m: 68, r: 76, s: 72, a: 65, change_30d: -0.8, percentile: 68 },
+    { symbol: "AAPL", name: "Apple", asset_class: "US Equity", cis_score: 79.4, grade: "B+", signal: "OVERWEIGHT", f: 84, m: 76, r: 80, s: 74, a: 78, change_30d: 1.5, percentile: 85 },
+    { symbol: "GLD", name: "Gold", asset_class: "Commodity", cis_score: 84.7, grade: "A", signal: "STRONG OVERWEIGHT", f: 78, m: 88, r: 90, s: 85, a: 82, change_30d: 5.4, percentile: 93 },
+    { symbol: "TLT", name: "20Y Treasury", asset_class: "US Bond", cis_score: 58.3, grade: "C+", signal: "UNDERWEIGHT", f: 65, m: 45, r: 62, s: 58, a: 55, change_30d: -3.2, percentile: 35 },
+    { symbol: "ONDO", name: "Ondo Finance", asset_class: "Crypto", cis_score: 71.9, grade: "B", signal: "OVERWEIGHT", f: 78, m: 65, r: 72, s: 62, a: 80, change_30d: 12.1, percentile: 70 },
+    { symbol: "LINK", name: "Chainlink", asset_class: "Crypto", cis_score: 73.5, grade: "B+", signal: "OVERWEIGHT", f: 76, m: 70, r: 74, s: 70, a: 75, change_30d: 3.7, percentile: 76 },
+    { symbol: "AAVE", name: "Aave", asset_class: "Crypto", cis_score: 69.8, grade: "B", signal: "NEUTRAL", f: 74, m: 66, r: 70, s: 64, a: 72, change_30d: -2.5, percentile: 62 },
+    { symbol: "QQQ", name: "Nasdaq 100", asset_class: "US Equity", cis_score: 75.6, grade: "B+", signal: "OVERWEIGHT", f: 78, m: 74, r: 76, s: 72, a: 74, change_30d: 0.4, percentile: 80 },
+    { symbol: "SLV", name: "Silver", asset_class: "Commodity", cis_score: 68.2, grade: "B", signal: "NEUTRAL", f: 62, m: 72, r: 68, s: 70, a: 64, change_30d: 7.2, percentile: 58 },
+    { symbol: "HYG", name: "High Yield Bond", asset_class: "US Bond", cis_score: 52.1, grade: "C", signal: "UNDERWEIGHT", f: 55, m: 48, r: 54, s: 50, a: 52, change_30d: -1.8, percentile: 22 },
+    { symbol: "AVAX", name: "Avalanche", asset_class: "Crypto", cis_score: 62.4, grade: "C+", signal: "NEUTRAL", f: 66, m: 58, r: 64, s: 60, a: 63, change_30d: -5.1, percentile: 45 },
+    { symbol: "EEM", name: "EM Equity", asset_class: "EM Equity", cis_score: 56.7, grade: "C+", signal: "UNDERWEIGHT", f: 58, m: 52, r: 60, s: 55, a: 54, change_30d: -2.9, percentile: 30 },
+  ].sort((a, b) => b.cis_score - a.cis_score),
+};
+
+/* ─── Helper Components ──────────────────────────────────────────────── */
+
+function PillarBar({ value, label }) {
+  const color = value >= 80 ? "#22c55e" : value >= 65 ? "#fbbf24" : value >= 50 ? "#fb923c" : "#ef4444";
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 140, marginBottom: 4 }}>
+      <span style={{ fontSize: 10, color: "#6b7280", width: 14, textAlign: "right", fontFamily: FONTS.mono }}>{label}</span>
+      <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}>
+        <div style={{ width: `${value}%`, height: "100%", background: color, borderRadius: 3, transition: "width 0.5s ease" }} />
+      </div>
+      <span style={{ fontSize: 10, color: "#9ca3af", width: 26, textAlign: "right", fontFamily: FONTS.mono }}>{value}</span>
+    </div>
+  );
+}
+
+function HeatCell({ value, onClick }) {
+  const h = value >= 80 ? 142 : value >= 65 ? 48 + (value - 65) * 6 : value >= 50 ? 30 : 0;
+  const s = value >= 50 ? 70 : 80;
+  const l = 25 + (value / 100) * 25;
+  return (
+    <td
+      onClick={onClick}
+      style={{
+        background: `hsl(${h}, ${s}%, ${l}%)`,
+        color: "#fff",
+        fontSize: 11,
+        fontFamily: FONTS.mono,
+        fontWeight: 600,
+        textAlign: "center",
+        padding: "6px 4px",
+        borderRadius: 2,
+        minWidth: 36,
+        cursor: "pointer",
+        transition: "transform 0.1s ease",
+      }}
+    >
+      {value}
+    </td>
+  );
+}
+
+/* ─── Macro Regime Banner ───────────────────────────────────────────── */
+
+export function CISMacroBanner({ macro }) {
+  const regimeColor = REGIME_COLORS[macro?.regime] || "#888";
+  const regime = macro?.regime || "Unknown";
+
+  return (
+    <div className="lm-card" style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div>
+          <div style={{ fontSize: 10, color: T.secondary, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>Macro Regime</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: regimeColor, fontFamily: FONTS.display }}>{regime}</div>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {[
+          { label: "Fed", value: macro?.fed_funds ? `${macro.fed_funds}%` : "—" },
+          { label: "10Y", value: macro?.treasury_10y ? `${macro.treasury_10y}%` : "—" },
+          { label: "VIX", value: macro?.vix ?? "—" },
+          { label: "DXY", value: macro?.dxy ?? "—" },
+          { label: "CPI", value: macro?.cpi_yoy ? `${macro.cpi_yoy}%` : "—" },
+        ].map((m, i) => (
+          <div key={i} style={{ textAlign: "center", padding: "6px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6, border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ fontSize: 9, color: T.secondary, textTransform: "uppercase" }}>{m.label}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{m.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── CIS Leaderboard Table ──────────────────────────────────────────── */
+
+export function CISLeaderboard({ data, filter, setFilter }) {
+  const [expanded, setExpanded] = useState(null);
+
+  const filtered = useMemo(() => {
+    const items = data?.universe || [];
+    return filter === "All" ? items : items.filter(a => a.asset_class === filter);
+  }, [data, filter]);
+
+  const macro = data?.macro || {};
+
+  return (
+    <div>
+      {/* Filters */}
+      <div style={{ padding: "12px 0", display: "flex", gap: 4, flexWrap: "wrap" }}>
+        {ASSET_CLASSES.map(ac => (
+          <button
+            key={ac}
+            onClick={() => setFilter(ac)}
+            className="filter-btn"
+            style={{
+              borderColor: filter === ac ? T.gold : T.border,
+              background: filter === ac ? "rgba(218,165,32,0.12)" : "transparent",
+              color: filter === ac ? T.gold : T.muted,
+            }}
+          >
+            {ac}
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 2px" }}>
+          <thead>
+            <tr>
+              {["#", "Asset", "Class", "CIS", "Grade", "Signal", "Pillars", "30d", "Pctl"].map((h, i) => (
+                <th key={i} style={{ padding: "8px 10px", textAlign: i <= 1 ? "center" : "left", fontSize: 10, color: T.secondary, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${T.border}` }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((asset, idx) => {
+              const isExpanded = expanded === asset.symbol;
+              const sig = SIGNAL_STYLES[asset.signal] || SIGNAL_STYLES["NEUTRAL"];
+              return (
+                <React.Fragment key={asset.symbol}>
+                  <tr
+                    onClick={() => setExpanded(isExpanded ? null : asset.symbol)}
+                    className="lm-row"
+                    style={{
+                      background: isExpanded ? "rgba(218,165,32,0.04)" : idx % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent",
+                    }}
+                  >
+                    <td style={{ padding: "10px 8px", textAlign: "center", fontSize: 12, color: T.secondary, fontFamily: FONTS.mono, width: 36 }}>{idx + 1}</td>
+                    <td style={{ padding: "10px 8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: T.primary, fontFamily: FONTS.display }}>{asset.symbol}</span>
+                        <span style={{ fontSize: 11, color: T.secondary }}>{asset.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: "10px 8px", fontSize: 11, color: T.secondary }}>{asset.asset_class}</td>
+                    <td style={{ padding: "10px 8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 64, height: 5, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}>
+                          <div style={{ width: `${asset.cis_score}%`, height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${GRADE_COLORS[asset.grade] || "#fbbf24"}, ${GRADE_COLORS[asset.grade] || "#fbbf24"}88)` }} />
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 700, fontFamily: FONTS.mono, color: T.primary }}>{asset.cis_score.toFixed(1)}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: "10px 8px" }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: GRADE_COLORS[asset.grade] || "#fbbf24", fontFamily: FONTS.mono }}>{asset.grade}</span>
+                    </td>
+                    <td style={{ padding: "10px 8px" }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: sig.bg, color: sig.color }}>{sig.label}</span>
+                    </td>
+                    <td style={{ padding: "10px 4px", width: 140 }}>
+                      <div style={{ display: "flex", gap: 2 }}>
+                        {[asset.f, asset.m, asset.r, asset.s, asset.a].map((v, j) => {
+                          const c = v >= 80 ? "#22c55e" : v >= 65 ? "#fbbf24" : v >= 50 ? "#fb923c" : "#ef4444";
+                          return (
+                            <div key={j} style={{ flex: 1, height: 18, borderRadius: 2, background: `${c}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <span style={{ fontSize: 8, fontWeight: 700, color: c, fontFamily: FONTS.mono }}>{v}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </td>
+                    <td style={{ padding: "10px 8px", fontSize: 12, fontWeight: 600, fontFamily: FONTS.mono, color: asset.change_30d >= 0 ? T.green : T.red }}>
+                      {asset.change_30d >= 0 ? "+" : ""}{asset.change_30d.toFixed(1)}
+                    </td>
+                    <td style={{ padding: "10px 8px", fontSize: 11, color: T.secondary, fontFamily: FONTS.mono }}>
+                      {asset.percentile}%
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={9} style={{ padding: "0 8px 16px 44px", background: "rgba(218,165,32,0.02)" }}>
+                        <div style={{ display: "flex", gap: 24, padding: "12px 0", flexWrap: "wrap" }}>
+                          <div style={{ flex: 1, minWidth: 200 }}>
+                            <div style={{ fontSize: 11, color: T.gold, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Pillar Breakdown</div>
+                            <PillarBar value={asset.f} label="F" />
+                            <PillarBar value={asset.m} label="M" />
+                            <PillarBar value={asset.r} label="R" />
+                            <PillarBar value={asset.s} label="S" />
+                            <PillarBar value={asset.a} label="A" />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 200 }}>
+                            <div style={{ fontSize: 11, color: T.gold, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Summary</div>
+                            <div style={{ fontSize: 12, color: T.secondary, lineHeight: 1.8 }}>
+                              <div>Cross-Asset Percentile: <strong style={{ color: T.primary }}>Top {100 - asset.percentile}%</strong></div>
+                              <div>CIS Grade: <strong style={{ color: GRADE_COLORS[asset.grade] }}>{asset.grade}</strong> ({asset.cis_score.toFixed(1)}/100)</div>
+                              <div>Signal: <strong style={{ color: SIGNAL_STYLES[asset.signal]?.color }}>{asset.signal}</strong></div>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Cross-Asset Heatmap ───────────────────────────────────────────── */
+
+export function CISHeatmap({ data, filter, setFilter }) {
+  const [expanded, setExpanded] = useState(null);
+
+  const filtered = useMemo(() => {
+    const items = data?.universe || [];
+    return filter === "All" ? items : items.filter(a => a.asset_class === filter);
+  }, [data, filter]);
+
+  return (
+    <div>
+      {/* Filters */}
+      <div style={{ padding: "12px 0", display: "flex", gap: 4, flexWrap: "wrap" }}>
+        {ASSET_CLASSES.slice(0, 6).map(ac => (
+          <button
+            key={ac}
+            onClick={() => setFilter(ac)}
+            className="filter-btn"
+            style={{
+              borderColor: filter === ac ? T.gold : T.border,
+              background: filter === ac ? "rgba(218,165,32,0.12)" : "transparent",
+              color: filter === ac ? T.gold : T.muted,
+            }}
+          >
+            {ac}
+          </button>
+        ))}
+      </div>
+
+      {/* Heatmap */}
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderSpacing: "2px" }}>
+          <thead>
+            <tr>
+              <th style={{ padding: 8, textAlign: "left", fontSize: 10, color: T.secondary, fontWeight: 600 }}>Asset</th>
+              <th style={{ padding: 8, textAlign: "left", fontSize: 10, color: T.secondary, fontWeight: 600 }}>Class</th>
+              {["F", "M", "R", "S", "A"].map(p => (
+                <th key={p} style={{ padding: 8, textAlign: "center", fontSize: 11, color: T.gold, fontWeight: 700, fontFamily: FONTS.display }}>{p}</th>
+              ))}
+              <th style={{ padding: 8, textAlign: "center", fontSize: 10, color: T.secondary, fontWeight: 600 }}>CIS</th>
+              <th style={{ padding: 8, textAlign: "center", fontSize: 10, color: T.secondary, fontWeight: 600 }}>Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((asset) => (
+              <Fragment key={asset.symbol}>
+                <tr onClick={() => setExpanded(expanded === asset.symbol ? null : asset.symbol)} style={{ cursor: "pointer" }}>
+                  <td style={{ padding: "6px 8px", fontSize: 13, fontWeight: 700, color: T.primary, fontFamily: FONTS.display }}>{asset.symbol}</td>
+                  <td style={{ padding: "6px 8px", fontSize: 10, color: T.secondary }}>{asset.asset_class}</td>
+                  <HeatCell value={asset.f} />
+                  <HeatCell value={asset.m} />
+                  <HeatCell value={asset.r} />
+                  <HeatCell value={asset.s} />
+                  <HeatCell value={asset.a} />
+                  <td style={{ padding: "6px 8px", textAlign: "center", fontSize: 13, fontWeight: 700, color: T.primary, fontFamily: FONTS.mono }}>{asset.cis_score.toFixed(1)}</td>
+                  <td style={{ padding: "6px 8px", textAlign: "center", fontSize: 12, fontWeight: 700, color: GRADE_COLORS[asset.grade], fontFamily: FONTS.mono }}>{asset.grade}</td>
+                </tr>
+                {expanded === asset.symbol && (
+                  <tr>
+                    <td colSpan={9} style={{ padding: "12px 8px 16px 44px", background: "rgba(218,165,32,0.02)" }}>
+                      <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                        <div style={{ flex: 1, minWidth: 200 }}>
+                          <PillarBar value={asset.f} label="Fundamental" />
+                          <PillarBar value={asset.m} label="Momentum" />
+                          <PillarBar value={asset.r} label="Risk-Adjusted" />
+                          <PillarBar value={asset.s} label="Sensitivity" />
+                          <PillarBar value={asset.a} label="Alpha" />
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main CIS Component ───────────────────────────────────────────── */
+
+export default function CISWidget({ refreshKey = 0 }) {
+  const [data, setData] = useState(null);
+  const [filter, setFilter] = useState("All");
+  const [view, setView] = useState("leaderboard");
+  const [loading, setLoading] = useState(false);
+  const [dataSource, setDataSource] = useState("demo");
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Try to fetch from local backend with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(`${API_BASE}/cis/universe`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const json = await response.json();
+        setData(json);
+        setDataSource("live");
+      } else {
+        throw new Error("API not available");
+      }
+    } catch (e) {
+      console.log("CIS fetch error, using mock:", e.message);
+      // Fallback to mock data
+      setData(MOCK_DATA);
+      setDataSource("demo");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    fetchData();
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [refreshKey]);
+
+  return (
+    <div className="fade-up" style={{ width: "100%", clear: "both" }}>
+      {/* Header */}
+      <div style={{ padding: "16px 0", borderBottom: `1px solid ${T.border}`, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, width: "100%" }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: T.primary, fontFamily: FONTS.display }}>CometCloud Intelligence Score</h2>
+            <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: dataSource === "live" ? "rgba(34,197,94,0.2)" : "rgba(251,191,36,0.2)", color: dataSource === "live" ? "#22c55e" : "#fbbf24" }}>
+              {dataSource === "live" ? "LIVE" : "DEMO"}
+            </span>
+          </div>
+          <p style={{ fontSize: 11, color: T.secondary, marginTop: 4 }}>CIS v4.0 · Cross-Asset Scoring · {data?.universe?.length || 0} assets</p>
+        </div>
+
+        {/* View Toggle */}
+        <div style={{ display: "flex", gap: 4 }}>
+          {[
+            { id: "leaderboard", label: "Leaderboard" },
+            { id: "heatmap", label: "Heatmap" },
+          ].map(v => (
+            <button
+              key={v.id}
+              onClick={() => setView(v.id)}
+              className="lm-tab"
+              style={{
+                borderColor: view === v.id ? T.violet : T.border,
+                background: view === v.id ? "rgba(107,15,204,0.12)" : "transparent",
+                color: view === v.id ? "#c4b5fd" : T.secondary,
+              }}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Macro Banner */}
+      <CISMacroBanner macro={data?.macro} />
+
+      {/* Loading */}
+      {loading && (
+        <div style={{ padding: 40, textAlign: "center", color: T.secondary }}>
+          Loading CIS data...
+        </div>
+      )}
+
+      {/* Content */}
+      {!loading && (
+        <>
+          {view === "leaderboard" && (
+            <CISLeaderboard data={data} filter={filter} setFilter={setFilter} />
+          )}
+          {view === "heatmap" && (
+            <CISHeatmap data={data} filter={filter} setFilter={setFilter} />
+          )}
+        </>
+      )}
+    </div>
+  );
+}

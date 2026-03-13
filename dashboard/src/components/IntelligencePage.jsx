@@ -4,6 +4,7 @@ import {
   DollarSign, Globe, Activity, Users, Shield
 } from "lucide-react";
 import BottomSheet from "./ui/BottomSheet";
+import CISWidget from "./CISWidget";
 
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 const T = {
@@ -516,6 +517,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         {/* ══ INTELLIGENCE TAB ══════════════════════════════════════════════ */}
         {(activeTab === "Intelligence" || isSection) && (
           <div>
+            {/* CIS Widget */}
+            <div style={{ marginBottom: 24, width: "100%", clear: "both" }}>
+              <CISWidget />
+            </div>
+
             {/* Stat cards */}
             <div className="mobile-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
               {[

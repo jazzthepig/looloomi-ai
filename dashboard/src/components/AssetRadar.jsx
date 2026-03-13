@@ -314,7 +314,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         fetch(
           `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`
         ),
-        fetch('/api/v1/cis/scores').catch(() => null)
+        fetch('/api/v1/cis/universe').catch(() => null)
       ]);
 
       if (!marketsRes.ok) throw new Error("Markets API failed");
@@ -332,9 +332,9 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
       if (cisRes && cisRes.ok) {
         try {
           const cisJson = await cisRes.json();
-          if (cisJson.scores) {
+          if (cisJson.universe) {
             const cisMap = {};
-            cisJson.scores.forEach(item => {
+            cisJson.universe.forEach(item => {
               cisMap[item.symbol] = { score: item.cis_score, grade: item.grade };
             });
             setCisData(cisMap);
