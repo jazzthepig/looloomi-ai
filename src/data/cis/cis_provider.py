@@ -270,146 +270,306 @@ def calculate_cis_score(
 ) -> Dict[str, Any]:
     """
     Calculate CIS scores based on real market data.
-    Uses the five-pillar model: F, M, O, S, A (alpha)
+    Returns detailed breakdown with components for each pillar.
+
+    Returns:
+        {
+            "F": score,
+            "M": score,
+            "O": score,
+            "S": score,
+            "A": score,
+            "breakdown": {
+                "fundamental": {"score": x, "weight": y, "contribution": z, "components": {...}},
+                "momentum": {...},
+                ...
+            }
+        }
     """
-
-    # === Fundamental Score (F) - 25% default ===
-    # Based on: product age (proxy by market cap), exchange listings, partnerships
-    f_score = 50  # base
-
+    # Get raw data
     market_cap = market_data.get("market_cap", 0) if market_data else 0
-    if market_cap > 10e9:  # > $10B
-        f_score += 30
-    elif market_cap > 1e9:  # > $1B
-        f_score += 25
-    elif market_cap > 100e6:  # > $100M
-        f_score += 20
-    elif market_cap > 10e6:  # > $10M
-        f_score += 15
-    elif market_cap > 0:
-        f_score += 10
-
-    # Circulating supply ratio bonus
+    volume_24h = market_data.get("volume_24h", 0) if market_data else 0
     circ_supply = market_data.get("circulating_supply", 0) if market_data else 0
     total_supply = market_data.get("total_supply", 0) if market_data else 0
+    change_30d = market_data.get("change_30d", 0) or 0
+    change_24h = market_data.get("change_24h", 0) or 0
+    ath_distance = abs(market_data.get("ath_change_percentage", 0)) if market_data else 50
+    price = market_data.get("price", 0) if market_data else 0
+
+    # === Fundamental Score (F) ===
+    # Components: market_cap tier, circulating_supply ratio
+    f_components = {
+        "market_cap_tier": ">$10B" if market_cap > 10e9 else ">$1B" if market_cap > 1e9 else ">$100M" if market_cap > 100e6 else ">$10M" if market_cap > 10e6 else "<$10M",
+        "market_cap_usd": market_cap,
+        "circulating_supply_ratio": round(circ_supply / total_supply, 3) if total_supply > 0 and circ_supply > 0 else 0,
+    }
+
+    f_score = 50  # base
+    if market_cap > 10e9:
+        f_score += 30
+        f_components["market_cap_tier_score"] = 30
+    elif market_cap > 1e9:
+        f_score += 25
+        f_components["market_cap_tier_score"] = 25
+    elif market_cap > 100e6:
+        f_score += 20
+        f_components["market_cap_tier_score"] = 20
+    elif market_cap > 10e6:
+        f_score += 15
+        f_components["market_cap_tier_score"] = 15
+    elif market_cap > 0:
+        f_score += 10
+        f_components["market_cap_tier_score"] = 10
+    else:
+        f_components["market_cap_tier_score"] = 0
+
     if total_supply > 0 and circ_supply > 0:
         ratio = circ_supply / total_supply
         if ratio >= 0.7:
             f_score += 15
+            f_components["supply_ratio_score"] = 15
         elif ratio >= 0.5:
             f_score += 10
+            f_components["supply_ratio_score"] = 10
         elif ratio >= 0.3:
             f_score += 5
+            f_components["supply_ratio_score"] = 5
+        else:
+            f_components["supply_ratio_score"] = 0
+    else:
+        f_components["supply_ratio_score"] = 0
 
     f_score = min(100, f_score)
 
-    # === Market Structure Score (M) - 25% default ===
-    # Based on: volume, liquidity, market cap
-    m_score = 30  # base
+    # === Momentum Score (M) ===
+    # Components: volume_24h, vol_mcap_ratio, tvl (for DeFi/L2)
+    m_components = {
+        "volume_24h": volume_24h,
+        "volume_mcap_ratio": round(volume_24h / market_cap, 4) if market_cap > 0 else 0,
+        "tvl_usd": tvl if asset_class in ["DeFi", "L2"] else None,
+    }
 
-    volume_24h = market_data.get("volume_24h", 0) if market_data else 0
-    if volume_24h > 1e9:  # > $1B daily
+    m_score = 30  # base
+    if volume_24h > 1e9:
         m_score += 35
+        m_components["volume_score"] = 35
     elif volume_24h > 100e6:
         m_score += 30
+        m_components["volume_score"] = 30
     elif volume_24h > 10e6:
         m_score += 20
+        m_components["volume_score"] = 20
     elif volume_24h > 1e6:
         m_score += 15
+        m_components["volume_score"] = 15
     elif volume_24h > 0:
         m_score += 10
+        m_components["volume_score"] = 10
+    else:
+        m_components["volume_score"] = 0
 
-    # Volume/MCap ratio (liquidity indicator)
+    # Volume/MCap ratio
     if market_cap > 0:
         vol_ratio = volume_24h / market_cap
         if vol_ratio > 0.3:
             m_score += 20
+            m_components["liquidity_score"] = 20
         elif vol_ratio > 0.1:
             m_score += 15
+            m_components["liquidity_score"] = 15
         elif vol_ratio > 0.05:
             m_score += 10
+            m_components["liquidity_score"] = 10
+        else:
+            m_components["liquidity_score"] = 0
 
     # TVL bonus for DeFi/L2
     if asset_class in ["DeFi", "L2"] and tvl > 0:
         if tvl > 1e9:
             m_score += 15
+            m_components["tvl_score"] = 15
         elif tvl > 100e6:
             m_score += 10
+            m_components["tvl_score"] = 10
         elif tvl > 10e6:
             m_score += 5
+            m_components["tvl_score"] = 5
+        else:
+            m_components["tvl_score"] = 0
 
     m_score = min(100, m_score)
 
-    # === On-Chain Health Score (O) - 20% default ===
-    # Based on: TVL, ATH distance (indicates maturity)
+    # === On-Chain Health / Risk-Adjusted Score (O) ===
+    # Components: tvl (DeFi), ath_distance, supply health
+    o_components = {
+        "tvl_usd": tvl,
+        "ath_distance_pct": ath_distance,
+        "supply_circulating_ratio": round(circ_supply / total_supply, 3) if total_supply > 0 else 0,
+    }
+
     o_score = 40  # base
 
     if asset_class == "DeFi":
         if tvl > 1e9:
             o_score += 35
+            o_components["tvl_score"] = 35
         elif tvl > 100e6:
             o_score += 25
+            o_components["tvl_score"] = 25
         elif tvl > 10e6:
             o_score += 15
+            o_components["tvl_score"] = 15
         elif tvl > 1e6:
             o_score += 10
+            o_components["tvl_score"] = 10
+        else:
+            o_components["tvl_score"] = 0
     else:
-        # For non-DeFi, use ATH distance as proxy
-        ath_distance = abs(market_data.get("ath_change_percentage", 0)) if market_data else 50
-        if ath_distance < 20:  # Near ATH
+        # Use ATH distance as maturity proxy
+        if ath_distance < 20:
             o_score += 30
+            o_components["maturity_score"] = 30
         elif ath_distance < 50:
             o_score += 20
+            o_components["maturity_score"] = 20
         elif ath_distance < 70:
             o_score += 10
+            o_components["maturity_score"] = 10
+        else:
+            o_components["maturity_score"] = 0
 
     # Supply health
-    if total_supply > 0:
-        circ_ratio = circ_supply / total_supply
-        if circ_ratio > 0.5:
+    if total_supply > 0 and circ_supply > 0:
+        ratio = circ_supply / total_supply
+        if ratio > 0.5:
             o_score += 15
+            o_components["supply_health_score"] = 15
+        else:
+            o_components["supply_health_score"] = 0
+    else:
+        o_components["supply_health_score"] = 0
 
     o_score = min(100, o_score)
 
-    # === Sentiment Score (S) - 15% default ===
-    # Based on: Fear & Greed, price momentum
+    # === Sentiment Score (S) ===
+    # Components: fear_greed_index, price momentum (30d)
+    s_components = {
+        "fear_greed_value": fng.get("value") if fng else None,
+        "fear_greed_classification": fng.get("value_classification") if fng else None,
+        "return_30d": round(change_30d / 100, 4),
+        "return_24h": round(change_24h / 100, 4),
+    }
+
     s_score = 50  # base
 
     if fng:
         fng_value = int(fng.get("value", 50))
-        if fng_value > 75:  # Extreme Greed
+        if fng_value > 75:
             s_score = 85
-        elif fng_value > 65:  # Greed
+            s_components["fng_score"] = 35
+        elif fng_value > 65:
             s_score = 75
-        elif fng_value > 55:  # Neutral
+            s_components["fng_score"] = 25
+        elif fng_value > 55:
             s_score = 60
-        elif fng_value > 35:  # Fear
+            s_components["fng_score"] = 10
+        elif fng_value > 35:
             s_score = 45
-        else:  # Extreme Fear
+            s_components["fng_score"] = -5
+        else:
             s_score = 30
+            s_components["fng_score"] = -20
 
-    # 30d price change
-    change_30d = market_data.get("change_30d", 0) if market_data else 0
+    # 30d momentum
     if change_30d > 50:
         s_score = min(100, s_score + 15)
+        s_components["momentum_score"] = 15
     elif change_30d > 20:
         s_score = min(100, s_score + 10)
+        s_components["momentum_score"] = 10
     elif change_30d < -30:
         s_score = max(0, s_score - 15)
+        s_components["momentum_score"] = -15
     elif change_30d < -15:
         s_score = max(0, s_score - 10)
+        s_components["momentum_score"] = -10
+    else:
+        s_components["momentum_score"] = 0
 
-    # === Alpha Independence Score (A) - 15% default ===
-    # Lower correlation = higher alpha score
-    # We use ATH distance as a proxy for independence
+    # === Alpha Independence Score (A) ===
+    # Components: asset_class type, market_cap tier, ATH distance
+    a_components = {
+        "asset_class": asset_class,
+        "market_cap_usd": market_cap,
+        "ath_distance_pct": ath_distance,
+    }
+
     a_score = 50  # base
 
-    ath_distance = abs(market_data.get("ath_change_percentage", 0)) if market_data else 0
+    # Asset class independence bonus
     if asset_class in ["DeFi", "RWA", "L2"]:
-        # These are more independent
         a_score += 20
+        a_components["class_independence_score"] = 20
     elif asset_class == "L1":
         a_score += 15
+        a_components["class_independence_score"] = 15
+    else:
+        a_components["class_independence_score"] = 0
+
+    # Market cap tier (larger = less alpha)
+    if market_cap > 10e9:
+        a_score -= 10
+        a_components["size_drag_score"] = -10
+    elif market_cap > 1e9:
+        a_score -= 5
+        a_components["size_drag_score"] = -5
+    else:
+        a_components["size_drag_score"] = 0
+
+    # Price independence (distance from ATH)
+    if 30 < ath_distance < 70:
+        a_score += 15
+        a_components["price_independence_score"] = 15
+    elif ath_distance < 10:
+        a_score -= 10
+        a_components["price_independence_score"] = -10
+    else:
+        a_components["price_independence_score"] = 0
+
+    a_score = max(0, min(100, a_score))
+
+    # Build breakdown with scores
+    breakdown = {
+        "fundamental": {
+            "score": round(f_score, 1),
+            "components": f_components,
+        },
+        "momentum": {
+            "score": round(m_score, 1),
+            "components": m_components,
+        },
+        "risk_adjusted": {
+            "score": round(o_score, 1),
+            "components": o_components,
+        },
+        "sensitivity": {
+            "score": round(s_score, 1),
+            "components": s_components,
+        },
+        "alpha": {
+            "score": round(a_score, 1),
+            "components": a_components,
+        },
+    }
+
+    return {
+        "F": round(f_score, 1),
+        "M": round(m_score, 1),
+        "O": round(o_score, 1),
+        "S": round(s_score, 1),
+        "A": round(a_score, 1),
+        "breakdown": breakdown,
+    }
 
     # Large market cap = more established = less alpha
     if market_cap > 10e9:
@@ -434,8 +594,8 @@ def calculate_cis_score(
     }
 
 
-def calculate_total_score(pillars: Dict[str, float], asset_class: str) -> float:
-    """Calculate weighted total CIS score."""
+def calculate_total_score(pillars: Dict[str, float], asset_class: str) -> Dict[str, Any]:
+    """Calculate weighted total CIS score with detailed breakdown."""
 
     # Default weights
     weights = {
@@ -446,9 +606,41 @@ def calculate_total_score(pillars: Dict[str, float], asset_class: str) -> float:
         "RWA": {"F": 0.35, "M": 0.20, "O": 0.20, "S": 0.15, "A": 0.10},
         "Infrastructure": {"F": 0.30, "M": 0.20, "O": 0.25, "S": 0.10, "A": 0.15},
         "NFT": {"F": 0.15, "M": 0.25, "O": 0.15, "S": 0.30, "A": 0.15},
+        "US Equity": {"F": 0.30, "M": 0.25, "O": 0.10, "S": 0.20, "A": 0.15},
+        "US Bond": {"F": 0.30, "M": 0.20, "O": 0.10, "S": 0.20, "A": 0.20},
+        "Commodity": {"F": 0.25, "M": 0.25, "O": 0.10, "S": 0.20, "A": 0.20},
     }
 
     w = weights.get(asset_class, weights["Crypto"])
+
+    # Calculate contributions
+    contributions = {
+        "fundamental": {
+            "score": pillars["F"],
+            "weight": w["F"],
+            "contribution": round(w["F"] * pillars["F"], 2),
+        },
+        "momentum": {
+            "score": pillars["M"],
+            "weight": w["M"],
+            "contribution": round(w["M"] * pillars["M"], 2),
+        },
+        "risk_adjusted": {
+            "score": pillars["O"],
+            "weight": w["O"],
+            "contribution": round(w["O"] * pillars["O"], 2),
+        },
+        "sensitivity": {
+            "score": pillars["S"],
+            "weight": w["S"],
+            "contribution": round(w["S"] * pillars["S"], 2),
+        },
+        "alpha": {
+            "score": pillars["A"],
+            "weight": w["A"],
+            "contribution": round(w["A"] * pillars["A"], 2),
+        },
+    }
 
     total = (
         w["F"] * pillars["F"] +
@@ -458,7 +650,11 @@ def calculate_total_score(pillars: Dict[str, float], asset_class: str) -> float:
         w["A"] * pillars["A"]
     )
 
-    return round(total, 1)
+    return {
+        "total_score": round(total, 1),
+        "weights": w,
+        "contributions": contributions,
+    }
 
 
 def get_grade(score: float) -> str:
@@ -548,11 +744,17 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         if not market_data:
             continue
 
-        # Calculate pillar scores
-        pillars = calculate_cis_score(market_data, tvl, fng, asset_class)
+        # Calculate pillar scores with breakdown
+        pillars_result = calculate_cis_score(market_data, tvl, fng, asset_class)
+        pillars = {k: v for k, v in pillars_result.items() if k != "breakdown"}
+        breakdown = pillars_result.get("breakdown", {})
 
-        # Calculate total
-        total_score = calculate_total_score(pillars, asset_class)
+        # Calculate total with weights
+        total_result = calculate_total_score(pillars, asset_class)
+        total_score = total_result["total_score"]
+        weights = total_result["weights"]
+        contributions = total_result["contributions"]
+
         grade = get_grade(total_score)
         signal = get_signal(total_score, grade)
 
@@ -561,6 +763,12 @@ async def calculate_cis_universe() -> Dict[str, Any]:
 
         # Percentile (simplified - based on score)
         percentile = int(min(99, max(1, total_score)))
+
+        # Merge contributions into breakdown
+        for key in contributions:
+            if key in breakdown:
+                breakdown[key]["weight"] = contributions[key]["weight"]
+                breakdown[key]["contribution"] = contributions[key]["contribution"]
 
         universe.append({
             "symbol": asset_id,
@@ -574,6 +782,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "r": pillars["O"],
             "s": pillars["S"],
             "a": pillars["A"],
+            "breakdown": breakdown,
+            "weights": weights,
             "change_30d": round(change_30d, 1),
             "percentile": percentile,
             "market_cap": market_data.get("market_cap", 0),

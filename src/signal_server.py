@@ -30,9 +30,37 @@ from data.cis.cis_provider import (
 
 
 app = FastAPI(
-    title="CometCloud Signal API",
+    title="CometCloud CIS API",
     version="1.0.0",
-    description="CIS scores for AI agents and trading bots",
+    description="""# CometCloud Intelligence Score (CIS) API
+
+## Overview
+CIS is a cross-asset rating system that evaluates assets across five pillars:
+- **F** - Fundamental (team, tokenomics, product, partnerships)
+- **M** - Market Structure (liquidity, volume, exchange support)
+- **O** - On-Chain Health (TVL, network activity)
+- **S** - Sentiment (social signals, funding rate)
+- **A** - Alpha Independence (correlation to BTC/ETH)
+
+## Data Sources
+- **Crypto**: CoinGecko API
+- **TVL**: DeFiLlama
+- **Sentiment**: Alternative.me (Fear & Greed)
+- **Traditional Assets**: yfinance
+
+## Authentication
+Currently open. x402 payment integration coming soon.
+
+## Rate Limits
+- 60 requests/minute for live data
+- Cached data served from 5-minute TTL
+
+## Contact
+- API Support: api@cometcloud.ai
+- Documentation: docs.cometcloud.ai
+""",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 app.add_middleware(
@@ -211,9 +239,15 @@ async def get_cis_universe(
 @app.get("/api/v1/cis/asset/{symbol}", response_model=CISSingleResponse, tags=["CIS"])
 async def get_cis_asset(symbol: str):
     """
-    Get CIS score for a specific asset.
+    Get detailed CIS score for a specific asset.
 
     Example: /api/v1/cis/asset/BTC
+
+    Returns complete breakdown with:
+    - cis_score and grade
+    - pillar breakdown with weights and contributions
+    - component-level details
+    - data sources
     """
     # Try cache first
     cache_key = f"asset:{symbol.upper()}"
@@ -230,8 +264,61 @@ async def get_cis_asset(symbol: str):
         if not asset:
             raise HTTPException(status_code=404, detail=f"Asset {symbol} not found")
 
-        _set_cached(cache_key, asset)
-        return asset
+        # Build detailed response
+        breakdown = asset.get("breakdown", {})
+
+        response = {
+            "symbol": asset["symbol"],
+            "timestamp": result.get("timestamp", datetime.now().isoformat()),
+            "data_freshness": result.get("timestamp"),
+            "cis_score": asset["cis_score"],
+            "cis_grade": asset["grade"],
+            "signal": asset["signal"],
+            "cross_asset_percentile": asset["percentile"],
+            "macro_regime": result.get("macro", {}).get("regime", "Unknown"),
+            "pillar_breakdown": {
+                "fundamental": {
+                    "score": asset.get("f", 0),
+                    "weight": breakdown.get("fundamental", {}).get("weight", 0.25),
+                    "contribution": breakdown.get("fundamental", {}).get("contribution", 0),
+                    "components": breakdown.get("fundamental", {}).get("components", {}),
+                },
+                "momentum": {
+                    "score": asset.get("m", 0),
+                    "weight": breakdown.get("momentum", {}).get("weight", 0.25),
+                    "contribution": breakdown.get("momentum", {}).get("contribution", 0),
+                    "components": breakdown.get("momentum", {}).get("components", {}),
+                },
+                "risk_adjusted": {
+                    "score": asset.get("r", 0),
+                    "weight": breakdown.get("risk_adjusted", {}).get("weight", 0.20),
+                    "contribution": breakdown.get("risk_adjusted", {}).get("contribution", 0),
+                    "components": breakdown.get("risk_adjusted", {}).get("components", {}),
+                },
+                "sensitivity": {
+                    "score": asset.get("s", 0),
+                    "weight": breakdown.get("sensitivity", {}).get("weight", 0.15),
+                    "contribution": breakdown.get("sensitivity", {}).get("contribution", 0),
+                    "components": breakdown.get("sensitivity", {}).get("components", {}),
+                },
+                "alpha": {
+                    "score": asset.get("a", 0),
+                    "weight": breakdown.get("alpha", {}).get("weight", 0.15),
+                    "contribution": breakdown.get("alpha", {}).get("contribution", 0),
+                    "components": breakdown.get("alpha", {}).get("components", {}),
+                },
+            },
+            "data_sources": {
+                "price": "coingecko",
+                "tvl": "defillama",
+                "sentiment": "alternative.me",
+                "macro": "yfinance" if asset.get("asset_class") in ["US Equity", "US Bond", "Commodity"] else "estimated",
+            },
+            "methodology_version": "CIS_v4.0_FMRSA",
+        }
+
+        _set_cached(cache_key, response)
+        return response
 
     except HTTPException:
         raise

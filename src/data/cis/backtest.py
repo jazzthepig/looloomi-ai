@@ -1,272 +1,322 @@
 """
-CIS Backtest Framework
-=====================
-Backtest CIS rating strategy:
+CIS Backtest Framework v2
+=========================
+Backtest CIS rating strategy over 6 months:
+- Calculate CIS scores at month-start
 - Buy: CIS grade A+ / A
 - Sell: CIS grade C or below
+- Compare performance vs BTC buy-and-hold
 
-Compare performance vs BTC buy-and-hold.
+This validates whether CIS ratings can predict future performance.
 
 Author: Seth
 """
 
-import asyncio
 import json
+import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import sys
 import os
 
+# Use local yfinance
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import yfinance as yf
 
 
 # Backtest configuration
 BACKTEST_START = "2025-09-01"
 BACKTEST_END = "2026-03-01"
-REBALANCE_FREQ = "monthly"  # monthly, weekly
+REBALANCE_FREQ = "monthly"
+
+# Test assets
+CRYPTO_SYMBOLS = {
+    "BTC-USD": "Bitcoin",
+    "ETH-USD": "Ethereum",
+    "SOL-USD": "Solana",
+    "BNB-USD": "BNB",
+    "AVAX-USD": "Avalanche",
+    "ADA-USD": "Cardano",
+    "XRP-USD": "XRP",
+    "DOGE-USD": "Dogecoin",
+    "DOT-USD": "Polkadot",
+    "LINK-USD": "Chainlink",
+    "UNI-USD": "Uniswap",
+    "AAVE-USD": "Aave",
+    "MKR-USD": "Maker",
+    "MATIC-USD": "Polygon",
+    "ARB-USD": "Arbitrum",
+}
+
+# Traditional assets
+TRADITIONAL_SYMBOLS = {
+    "SPY": "S&P 500",
+    "QQQ": "Nasdaq 100",
+    "GLD": "Gold",
+    "TLT": "Treasury Bond",
+}
 
 
-def get_historical_prices(symbols: List[str], start: str, end: str) -> Dict[str, List[dict]]:
-    """Fetch historical prices for all symbols."""
-    print(f"Fetching historical prices from {start} to {end}...")
-
-    prices = {}
-    for symbol in symbols:
-        try:
-            ticker = yf.Ticker(symbol)
-            hist = ticker.history(start=start, end=end)
-            if len(hist) > 0:
-                prices[symbol] = [
-                    {
-                        "date": str(row.name.date()),
-                        "close": row["Close"],
-                        "volume": row["Volume"],
-                    }
-                    for _, row in hist.iterrows()
-                ]
-                print(f"  {symbol}: {len(prices[symbol])} days")
-        except Exception as e:
-            print(f"  {symbol}: error - {e}")
-
-    return prices
-
-
-def calculate_cis_scores_historical(prices: Dict[str, List[dict]], date: str) -> Dict[str, float]:
+def calculate_historical_cis(
+    prices: List[dict],
+    volume: List[dict],
+    date: str,
+    asset_class: str = "Crypto"
+) -> Dict[str, Any]:
     """
-    Calculate CIS scores for all assets at a given date.
-    Uses simplified scoring based on available data.
+    Calculate CIS score at a specific historical date using only data available up to that date.
     """
-    scores = {}
+    # Get prices up to the date
+    past_prices = [p for p in prices if p["date"] <= date]
+    past_volumes = [v for v in volume if v["date"] <= date] if volume else []
 
-    for symbol, price_data in prices.items():
-        # Find price at or before the given date
-        past_prices = [p for p in price_data if p["date"] <= date]
-        if not past_prices:
-            continue
+    if len(past_prices) < 30:
+        return None
 
-        current_price = past_prices[-1]["close"]
+    # Get current price and 30d price
+    current_price = past_prices[-1]["close"]
+    price_30d_ago = past_prices[-31]["close"] if len(past_prices) > 30 else past_prices[0]["close"]
+    change_30d = ((current_price - price_30d_ago) / price_30d_ago) * 100
 
-        # Get 30d change
-        if len(past_prices) > 30:
-            price_30d_ago = past_prices[-31]["close"]
-            change_30d = ((current_price - price_30d_ago) / price_30d_ago) * 100
-        else:
-            change_30d = 0
+    # Volume
+    avg_volume = sum(p["volume"] for p in past_volumes[-30:]) / 30 if past_volumes else 0
 
-        # Simplified CIS scoring (based on momentum + volatility)
-        # This is a simplified version - real backtest would use actual CIS calculation
-        base_score = 50
+    # Market cap proxy (simplified)
+    market_cap_proxy = current_price * avg_volume * 365
 
-        # Momentum factor (30d change)
-        if change_30d > 20:
-            base_score += 20
-        elif change_30d > 10:
-            base_score += 15
-        elif change_30d > 0:
-            base_score += 10
-        elif change_30d > -10:
-            base_score -= 5
-        else:
-            base_score -= 15
+    # === Simplified CIS Scoring ===
+    # F: Fundamental (based on market cap as proxy)
+    f_score = 30  # base
+    if market_cap_proxy > 10e9:
+        f_score += 40
+    elif market_cap_proxy > 1e9:
+        f_score += 30
+    elif market_cap_proxy > 100e6:
+        f_score += 20
+    f_score = min(100, f_score)
 
-        # Volume factor
-        recent_volumes = [p["volume"] for p in past_prices[-7:]]
-        avg_volume = sum(recent_volumes) / len(recent_volumes) if recent_volumes else 0
-        if avg_volume > 10_000_000:  # $10M+ daily volume
-            base_score += 15
-        elif avg_volume > 1_000_000:
-            base_score += 10
-        elif avg_volume > 100_000:
-            base_score += 5
-
-        # Market cap proxy (price * volume as proxy)
-        market_cap_proxy = current_price * avg_volume * 365
-        if market_cap_proxy > 10e9:
-            base_score += 15
-        elif market_cap_proxy > 1e9:
-            base_score += 10
-        elif market_cap_proxy > 100e6:
-            base_score += 5
-
-        scores[symbol] = min(100, max(0, base_score))
-
-    return scores
-
-
-def get_grade(score: float) -> str:
-    """Get letter grade from score."""
-    if score >= 85:
-        return "A+"
-    elif score >= 80:
-        return "A"
-    elif score >= 70:
-        return "B+"
-    elif score >= 60:
-        return "B"
-    elif score >= 50:
-        return "C+"
-    elif score >= 40:
-        return "C"
+    # M: Momentum (based on 30d return)
+    m_score = 50
+    if change_30d > 20:
+        m_score += 30
+    elif change_30d > 10:
+        m_score += 20
+    elif change_30d > 0:
+        m_score += 10
+    elif change_30d > -10:
+        m_score -= 10
     else:
-        return "D"
+        m_score -= 20
+    m_score = min(100, max(0, m_score))
+
+    # O: On-chain / Risk-adjusted (volume health)
+    o_score = 40
+    if avg_volume > 10_000_000:
+        o_score += 30
+    elif avg_volume > 1_000_000:
+        o_score += 20
+    elif avg_volume > 100_000:
+        o_score += 10
+    o_score = min(100, o_score)
+
+    # S: Sentiment (simplified - use momentum as proxy)
+    s_score = 50 + (change_30d / 2)  # Simplified
+    s_score = min(100, max(0, s_score))
+
+    # A: Alpha (smaller assets have more alpha potential)
+    a_score = 50
+    if market_cap_proxy < 1e9:
+        a_score += 20
+    elif market_cap_proxy < 10e9:
+        a_score += 10
+    elif market_cap_proxy > 50e9:
+        a_score -= 10
+    a_score = min(100, max(0, a_score))
+
+    # Weighted total (Crypto weights)
+    total = (
+        0.25 * f_score +
+        0.25 * m_score +
+        0.20 * o_score +
+        0.15 * s_score +
+        0.15 * a_score
+    )
+
+    # Grade
+    if total >= 85:
+        grade = "A+"
+    elif total >= 80:
+        grade = "A"
+    elif total >= 70:
+        grade = "B+"
+    elif total >= 60:
+        grade = "B"
+    elif total >= 50:
+        grade = "C+"
+    elif total >= 40:
+        grade = "C"
+    else:
+        grade = "D"
+
+    return {
+        "f": round(f_score, 1),
+        "m": round(m_score, 1),
+        "o": round(o_score, 1),
+        "s": round(s_score, 1),
+        "a": round(a_score, 1),
+        "total": round(total, 1),
+        "grade": grade,
+        "change_30d": round(change_30d, 2),
+    }
+
+
+def get_monthly_dates(start: str, end: str) -> List[str]:
+    """Generate monthly dates for rebalancing."""
+    dates = []
+    current = datetime.strptime(start, "%Y-%m-%d")
+    end_date = datetime.strptime(end, "%Y-%m-%d")
+
+    while current <= end_date:
+        dates.append(current.strftime("%Y-%m-%d"))
+        # Next month
+        if current.month == 12:
+            current = current.replace(year=current.year + 1, month=1)
+        else:
+            current = current.replace(month=current.month + 1)
+
+    return dates
 
 
 def run_backtest():
     """Run the CIS backtest."""
-    print("=" * 60)
-    print("CIS Backtest Framework")
-    print("=" * 60)
+    print("=" * 70)
+    print("CIS Backtest Framework v2")
+    print("=" * 70)
     print(f"Period: {BACKTEST_START} to {BACKTEST_END}")
-    print(f"Strategy: Buy A+/A grades, Sell C or below")
+    print(f"Strategy: Buy A/A+, Sell C or below")
     print(f"Rebalance: {REBALANCE_FREQ}")
     print()
 
-    # Assets to test
-    crypto_assets = ["BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", "AVAX-USD"]
-    equity_assets = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA"]
-    bond_assets = ["TLT", "IEF", "HYG"]
-    commodity_assets = ["GLD", "SLV", "USO"]
+    all_symbols = {**CRYPTO_SYMBOLS, **TRADITIONAL_SYMBOLS}
 
-    all_assets = crypto_assets + equity_assets + bond_assets + commodity_assets
+    # Fetch historical data
+    print("Fetching historical data...")
 
-    # Fetch historical prices
-    prices = get_historical_prices(all_assets, BACKTEST_START, BACKTEST_END)
+    price_data = {}
+    volume_data = {}
 
-    if not prices:
-        print("No price data fetched. Exiting.")
+    for symbol in all_symbols.keys():
+        try:
+            ticker = yf.Ticker(symbol)
+            # Download more history for 30d lookback
+            hist = ticker.history(start="2025-08-01", end=BACKTEST_END, auto_adjust=True)
+            time.sleep(0.3)  # Rate limiting
+
+            if len(hist) > 0:
+                price_data[symbol] = [
+                    {"date": str(row.name.date()), "close": row["Close"]}
+                    for _, row in hist.iterrows()
+                ]
+                volume_data[symbol] = [
+                    {"date": str(row.name.date()), "volume": row["Volume"]}
+                    for _, row in hist.iterrows()
+                ]
+                print(f"  {symbol}: {len(price_data[symbol])} days loaded")
+        except Exception as e:
+            print(f"  {symbol}: ERROR - {e}")
+
+    print(f"\nLoaded {len(price_data)} assets")
+    print()
+
+    if not price_data:
+        print("No data loaded. Exiting.")
         return
 
-    print(f"\nFetched data for {len(prices)} assets")
+    # Get rebalancing dates
+    rebalance_dates = get_monthly_dates(BACKTEST_START, BACKTEST_END)
+    print(f"Rebalancing dates: {len(rebalance_dates)} months")
     print()
 
-    # Generate rebalance dates
-    start_date = datetime.strptime(BACKTEST_START, "%Y-%m-%d")
-    end_date = datetime.strptime(BACKTEST_END, "%Y-%m-%d")
+    # Run backtest
+    # Track portfolio returns
+    portfolio_returns = []
+    btc_returns = []
+    grades_a_performance = []
+    grades_c_performance = []
 
-    rebalance_dates = []
-    current = start_date
-    while current <= end_date:
-        rebalance_dates.append(current.strftime("%Y-%m-%d"))
-        if REBALANCE_FREQ == "monthly":
-            # Next month
-            if current.month == 12:
-                current = current.replace(year=current.year + 1, month=1)
-            else:
-                current = current.replace(month=current.month + 1)
-        else:  # weekly
-            current += timedelta(days=7)
-
-    print(f"Rebalance dates: {len(rebalance_dates)}")
-    print()
-
-    # Track portfolio value over time
-    portfolio_value = 10000  # Start with $10k
-    btc_value = 10000  # BTC benchmark
-    btc_price_start = None
-    btc_price_end = None
-
-    portfolio_history = []
-    btc_history = []
-
-    for i, date in enumerate(rebalance_dates[:-1]):  # Skip last date (no rebalance needed)
-        # Calculate CIS scores at this date
-        scores = calculate_cis_scores_historical(prices, date)
-
-        # Determine buy/sell signals
-        buy_signals = []
-        sell_signals = []
-
-        for symbol, score in scores.items():
-            grade = get_grade(score)
-            if grade in ["A+", "A"]:
-                buy_signals.append((symbol, score, grade))
-            elif grade in ["C", "D", "F"]:
-                sell_signals.append((symbol, score, grade))
-
-        # Get next rebalance date for price lookup
+    for i, date in enumerate(rebalance_dates[:-1]):
         next_date = rebalance_dates[i + 1]
 
-        # Calculate portfolio performance to next date
-        if buy_signals:
-            # Simple equal-weight portfolio
-            allocation_per_asset = portfolio_value / len(buy_signals)
+        # Calculate CIS scores at this date
+        scores = {}
+        for symbol in all_symbols.keys():
+            if symbol in price_data and symbol in volume_data:
+                score = calculate_historical_cis(
+                    price_data[symbol],
+                    volume_data[symbol],
+                    date,
+                    "Crypto" if symbol in CRYPTO_SYMBOLS else "Traditional"
+                )
+                if score:
+                    scores[symbol] = score
 
-            for symbol, score, grade in buy_signals:
-                if symbol in prices:
-                    symbol_prices = prices[symbol]
-                    current_price_data = next((p for p in symbol_prices if p["date"] >= date), None)
-                    next_price_data = next((p for p in symbol_prices if p["date"] >= next_date), None)
+        # Separate by grade
+        grade_a = [s for s in scores.values() if s["grade"] in ["A+", "A"]]
+        grade_b = [s for s in scores.values() if s["grade"] in ["B+", "B"]]
+        grade_c = [s for s in scores.values() if s["grade"] in ["C+", "C", "D"]]
 
-                    if current_price_data and next_price_data:
-                        price_change = (next_price_data["close"] - current_price_data["close"]) / current_price_data["close"]
-                        allocation_per_asset *= (1 + price_change)
+        # Calculate next month performance for each group
+        def get_next_month_return(symbol):
+            if symbol not in price_data:
+                return None
+            prices = price_data[symbol]
+            current_price = next((p["close"] for p in prices if p["date"] >= date), None)
+            next_price = next((p["close"] for p in prices if p["date"] >= next_date), None)
+            if current_price and next_price:
+                return (next_price - current_price) / current_price * 100
+            return None
 
-            portfolio_value = allocation_per_asset * len(buy_signals)
+        a_returns = [r for r in [get_next_month_return(s) for s in scores.keys() if scores[s]["grade"] in ["A+", "A"]] if r is not None]
+        c_returns = [r for r in [get_next_month_return(s) for s in scores.keys() if scores[s]["grade"] in ["C+", "C", "D"]] if r is not None]
 
-        # Track BTC performance
-        if "BTC-USD" in prices:
-            btc_prices = prices["BTC-USD"]
-            btc_current = next((p for p in btc_prices if p["date"] >= date), None)
-            btc_next = next((p for p in btc_prices if p["date"] >= next_date), None)
+        avg_a = sum(a_returns) / len(a_returns) if a_returns else 0
+        avg_c = sum(c_returns) / len(c_returns) if c_returns else 0
 
-            if btc_current and btc_next:
-                btc_change = (btc_next["close"] - btc_current["close"]) / btc_current["close"]
-                btc_value *= (1 + btc_change)
+        # BTC benchmark
+        btc_return = get_next_month_return("BTC-USD") or 0
 
-                if not btc_price_start:
-                    btc_price_start = btc_current["close"]
-                btc_price_end = btc_next["close"]
+        print(f"{date}:")
+        print(f"  Grade A/A+: {len(grade_a)} assets, avg next month return: {avg_a:+.2f}%")
+        print(f"  Grade C/D:   {len(grade_c)} assets, avg next month return: {avg_c:+.2f}%")
+        print(f"  BTC:         {btc_return:+.2f}%")
+        print(f"  Alpha (A vs C): {avg_a - avg_c:+.2f}%")
+        print()
 
-        portfolio_history.append({"date": date, "value": portfolio_value})
-        btc_history.append({"date": date, "value": btc_value})
+        grades_a_performance.append(avg_a)
+        grades_c_performance.append(avg_c)
+        btc_returns.append(btc_return)
 
-        if i % 2 == 0:
-            print(f"{date}:")
-            print(f"  CIS Portfolio: ${portfolio_value:,.2f}")
-            print(f"  BTC Hold: ${btc_value:,.2f}")
-            print(f"  Buy signals: {len(buy_signals)}")
-            print()
-
-    # Final results
-    print("=" * 60)
+    # Summary
+    print("=" * 70)
     print("BACKTEST RESULTS")
-    print("=" * 60)
+    print("=" * 70)
 
-    total_return = (portfolio_value - 10000) / 10000 * 100
-    btc_return = (btc_value - 10000) / 10000 * 100
+    avg_a_perf = sum(grades_a_performance) / len(grades_a_performance) if grades_a_performance else 0
+    avg_c_perf = sum(grades_c_performance) / len(grades_c_performance) if grades_c_performance else 0
+    avg_btc = sum(btc_returns) / len(btc_returns) if btc_returns else 0
 
-    print(f"\nInitial Investment: $10,000")
-    print(f"\nCIS Strategy:")
-    print(f"  Final Value: ${portfolio_value:,.2f}")
-    print(f"  Total Return: {total_return:+.2f}%")
+    print(f"\nAverage Monthly Returns:")
+    print(f"  Grade A/A+ assets: {avg_a_perf:+.2f}%")
+    print(f"  Grade C/D assets: {avg_c_perf:+.2f}%")
+    print(f"  BTC:              {avg_btc:+.2f}%")
+    print(f"\n  Alpha (A vs C):   {avg_a_perf - avg_c_perf:+.2f}%")
+    print(f"  Alpha (A vs BTC): {avg_a_perf - avg_btc:+.2f}%")
 
-    print(f"\nBTC Buy-and-Hold:")
-    print(f"  Final Value: ${btc_value:,.2f}")
-    print(f"  Total Return: {btc_return:+.2f}%")
+    # Win rate
+    wins = sum(1 for a, c in zip(grades_a_performance, grades_c_performance) if a > c)
+    win_rate = wins / len(grades_a_performance) * 100 if grades_a_performance else 0
 
-    print(f"\nAlpha vs BTC: {total_return - btc_return:+.2f}%")
+    print(f"\n  Win rate (A beats C): {win_rate:.1f}%")
 
     # Save results
     results = {
@@ -274,18 +324,25 @@ def run_backtest():
             "start": BACKTEST_START,
             "end": BACKTEST_END,
             "rebalance": REBALANCE_FREQ,
+            "assets": len(all_symbols),
         },
-        "cis_strategy": {
-            "final_value": portfolio_value,
-            "total_return": total_return,
+        "summary": {
+            "avg_return_grade_a": round(avg_a_perf, 2),
+            "avg_return_grade_c": round(avg_c_perf, 2),
+            "avg_return_btc": round(avg_btc, 2),
+            "alpha_a_vs_c": round(avg_a_perf - avg_c_perf, 2),
+            "alpha_a_vs_btc": round(avg_a_perf - avg_btc, 2),
+            "win_rate": round(win_rate, 1),
         },
-        "btc_hold": {
-            "final_value": btc_value,
-            "total_return": btc_return,
-        },
-        "alpha": total_return - btc_return,
-        "portfolio_history": portfolio_history,
-        "btc_history": btc_history,
+        "monthly_data": [
+            {
+                "date": rebalance_dates[i],
+                "grade_a_return": round(grades_a_performance[i], 2) if i < len(grades_a_performance) else None,
+                "grade_c_return": round(grades_c_performance[i], 2) if i < len(grades_c_performance) else None,
+                "btc_return": round(btc_returns[i], 2) if i < len(btc_returns) else None,
+            }
+            for i in range(len(rebalance_dates) - 1)
+        ],
     }
 
     output_path = os.path.join(os.path.dirname(__file__), "backtest_results.json")
