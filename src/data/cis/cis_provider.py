@@ -594,6 +594,13 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         "cpi_yoy": 3.2,  # Would need real CPI
     }
 
+    # Save to history database
+    try:
+        from .history_db import save_cis_snapshot
+        save_cis_snapshot(universe, macro)
+    except Exception as e:
+        print(f"Failed to save CIS history: {e}")
+
     return {
         "status": "success",
         "version": "4.0.0",

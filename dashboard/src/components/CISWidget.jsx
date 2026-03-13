@@ -560,7 +560,8 @@ export default function CISWidget({ refreshKey = 0 }) {
       if (response.ok) {
         const json = await response.json();
         setData(json);
-        setDataSource("live");
+        // Show actual data source from API
+        setDataSource(json.data_source || "live");
       } else {
         throw new Error("API not available");
       }
@@ -632,7 +633,7 @@ export default function CISWidget({ refreshKey = 0 }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: T.primary, fontFamily: FONTS.display }}>CometCloud Intelligence Score</h2>
             <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: dataSource === "live" ? "rgba(34,197,94,0.2)" : "rgba(251,191,36,0.2)", color: dataSource === "live" ? "#22c55e" : "#fbbf24" }}>
-              {dataSource === "live" ? "LIVE" : "DEMO"}
+              {dataSource === "demo" ? "DEMO" : dataSource.toUpperCase()}
             </span>
           </div>
           <p style={{ fontSize: 11, color: T.secondary, marginTop: 4 }}>

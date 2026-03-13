@@ -189,6 +189,18 @@ async def get_cis_universe(
             "asset_count": len(universe),
         }
 
+        # Add 30d CIS change for each asset
+        try:
+            from src.data.cis.history_db import get_score_change
+            history_map = {}
+            for asset in universe:
+                change = get_score_change(asset["symbol"], days=30)
+                if change:
+                    history_map[asset["symbol"]] = change
+            response["history"] = history_map
+        except Exception as e:
+            print(f"Failed to get history: {e}")
+
         _set_cached(cache_key, response)
         return response
 
