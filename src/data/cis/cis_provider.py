@@ -20,29 +20,83 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 # CoinGecko API base
 CG_BASE = "https://api.coingecko.com/api/v3"
 
-# Asset configuration - maps to CoinGecko IDs
-ASSETS_CONFIG = {
+# Crypto assets config - maps to CoinGecko IDs
+CRYPTO_ASSETS = {
+    # L1
     "BTC": {"coingecko": "bitcoin", "name": "Bitcoin", "class": "Crypto"},
     "ETH": {"coingecko": "ethereum", "name": "Ethereum", "class": "Crypto"},
     "SOL": {"coingecko": "solana", "name": "Solana", "class": "L1"},
     "BNB": {"coingecko": "binancecoin", "name": "BNB", "class": "L1"},
     "AVAX": {"coingecko": "avalanche-2", "name": "Avalanche", "class": "L1"},
+    "DOT": {"coingecko": "polkadot", "name": "Polkadot", "class": "L1"},
+    "ADA": {"coingecko": "cardano", "name": "Cardano", "class": "L1"},
+    "XRP": {"coingecko": "ripple", "name": "XRP", "class": "L1"},
+    "DOGE": {"coingecko": "dogecoin", "name": "Dogecoin", "class": "L1"},
+    "TON": {"coingecko": "the-open-network", "name": "Toncoin", "class": "L1"},
+    # L2
     "ARB": {"coingecko": "arbitrum", "name": "Arbitrum", "class": "L2"},
     "OP": {"coingecko": "optimism", "name": "Optimism", "class": "L2"},
     "MATIC": {"coingecko": "matic-network", "name": "Polygon", "class": "L2"},
-    "LINK": {"coingecko": "chainlink", "name": "Chainlink", "class": "Infrastructure"},
+    "IMX": {"coingecko": "immutable-x", "name": "Immutable", "class": "L2"},
+    "BASE": {"coingecko": "base", "name": "Base", "class": "L2"},
+    "MANTLE": {"coingecko": "mantle", "name": "Mantle", "class": "L2"},
+    # DeFi
     "UNI": {"coingecko": "uniswap", "name": "Uniswap", "class": "DeFi"},
     "AAVE": {"coingecko": "aave", "name": "Aave", "class": "DeFi"},
-    "DOT": {"coingecko": "polkadot", "name": "Polkadot", "class": "L1"},
-    "ONDO": {"coingecko": "ondo-finance", "name": "Ondo Finance", "class": "RWA"},
-    "BLUR": {"coingecko": "blur", "name": "Blur", "class": "NFT"},
-    "IMX": {"coingecko": "immutable-x", "name": "Immutable", "class": "L2"},
-    "RPL": {"coingecko": "rocket-pool", "name": "Rocket Pool", "class": "DeFi"},
     "MKR": {"coingecko": "maker", "name": "Maker", "class": "DeFi"},
     "SNX": {"coingecko": "havven", "name": "Synthetix", "class": "DeFi"},
     "CRV": {"coingecko": "curve-dao-token", "name": "Curve", "class": "DeFi"},
     "LDO": {"coingecko": "lido-dao", "name": "Lido DAO", "class": "DeFi"},
+    "RPL": {"coingecko": "rocket-pool", "name": "Rocket Pool", "class": "DeFi"},
+    "COMP": {"coingecko": "compound-governance-token", "name": "Compound", "class": "DeFi"},
+    "SUSHI": {"coingecko": "sushi", "name": "SushiSwap", "class": "DeFi"},
+    # Infrastructure
+    "LINK": {"coingecko": "chainlink", "name": "Chainlink", "class": "Infrastructure"},
+    "STX": {"coingecko": "stacks", "name": "Stacks", "class": "Infrastructure"},
+    "RUNE": {"coingecko": "thorchain", "name": "THORChain", "class": "Infrastructure"},
+    "INJ": {"coingecko": "injective-protocol", "name": "Injective", "class": "Infrastructure"},
+    # RWA
+    "ONDO": {"coingecko": "ondo-finance", "name": "Ondo Finance", "class": "RWA"},
+    "GENIUS": {"coingecko": "genius", "name": "Genius", "class": "RWA"},
+    "POLYX": {"coingecko": "polymesh", "name": "Polymesh", "class": "RWA"},
+    # Memecoin (满足门槛的)
+    "PEPE": {"coingecko": "pepe", "name": "Pepe", "class": "Memecoin"},
 }
+
+# US Equities - yfinance symbols
+US_EQUITIES = {
+    "SPY": {"yfinance": "SPY", "name": "S&P 500 ETF", "class": "US Equity"},
+    "QQQ": {"yfinance": "QQQ", "name": "Nasdaq 100 ETF", "class": "US Equity"},
+    "AAPL": {"yfinance": "AAPL", "name": "Apple", "class": "US Equity"},
+    "MSFT": {"yfinance": "MSFT", "name": "Microsoft", "class": "US Equity"},
+    "NVDA": {"yfinance": "NVDA", "name": "NVIDIA", "class": "US Equity"},
+    "GOOGL": {"yfinance": "GOOGL", "name": "Alphabet", "class": "US Equity"},
+    "AMZN": {"yfinance": "AMZN", "name": "Amazon", "class": "US Equity"},
+    "META": {"yfinance": "META", "name": "Meta", "class": "US Equity"},
+    "TSLA": {"yfinance": "TSLA", "name": "Tesla", "class": "US Equity"},
+    "BRK.B": {"yfinance": "BRK-B", "name": "Berkshire", "class": "US Equity"},
+}
+
+# Bonds - yfinance symbols
+BONDS = {
+    "TLT": {"yfinance": "TLT", "name": "20+ Year Treasury Bond ETF", "class": "US Bond"},
+    "IEF": {"yfinance": "IEF", "name": "7-10 Year Treasury Bond ETF", "class": "US Bond"},
+    "SHY": {"yfinance": "SHY", "name": "1-3 Year Treasury Bond ETF", "class": "US Bond"},
+    "HYG": {"yfinance": "HYG", "name": "High Yield Bond ETF", "class": "US Bond"},
+    "LQD": {"yfinance": "LQD", "name": "Investment Grade Bond ETF", "class": "US Bond"},
+}
+
+# Commodities - yfinance symbols
+COMMODITIES = {
+    "GLD": {"yfinance": "GLD", "name": "Gold ETF", "class": "Commodity"},
+    "SLV": {"yfinance": "SLV", "name": "Silver ETF", "class": "Commodity"},
+    "USO": {"yfinance": "USO", "name": "Oil ETF", "class": "Commodity"},
+    "UNG": {"yfinance": "UNG", "name": "Natural Gas ETF", "class": "Commodity"},
+    "DBC": {"yfinance": "DBC", "name": "Commodities Index ETF", "class": "Commodity"},
+}
+
+# Combined assets config
+ASSETS_CONFIG = {**CRYPTO_ASSETS, **US_EQUITIES, **BONDS, **COMMODITIES}
 
 # Cache
 _cache: Dict = {}
@@ -153,6 +207,51 @@ async def fetch_fear_greed() -> Optional[dict]:
             return _cache_set(cache_key, data.get("data", [{}])[0])
     except Exception as e:
         print(f"Fear&Greed API error: {e}")
+        return None
+
+
+def get_yfinance_data(symbol: str) -> Optional[dict]:
+    """Fetch US equity/bond/commodity data using yfinance."""
+    cache_key = f"yf:{symbol}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    try:
+        import yfinance as yf
+        import time
+
+        # Rate limiting
+        time.sleep(0.2)
+
+        ticker = yf.Ticker(symbol)
+        info = ticker.info
+
+        # Get historical data for 30d change
+        hist = ticker.history(period="35d")
+        if len(hist) > 30:
+            price_30d_ago = hist['Close'].iloc[-31] if len(hist) > 31 else hist['Close'].iloc[0]
+            price_now = hist['Close'].iloc[-1]
+            change_30d = ((price_now - price_30d_ago) / price_30d_ago) * 100
+        else:
+            change_30d = 0
+
+        result = {
+            "symbol": symbol,
+            "price": info.get("currentPrice", info.get("regularMarketPrice", 0)),
+            "market_cap": info.get("marketCap", 0),
+            "volume_24h": info.get("regularMarketVolume", 0),
+            "change_24h": info.get("regularMarketChange", 0),
+            "change_30d": change_30d,
+            "circulating_supply": info.get("sharesOutstanding", 0),
+            "total_supply": info.get("sharesOutstanding", 0),
+            "ath_change_percentage": 0,  # yfinance doesn't provide this directly
+        }
+        return _cache_set(cache_key, result)
+    except Exception as e:
+        # Don't print on rate limit - it's expected
+        if "Rate limited" not in str(e):
+            print(f"yfinance error for {symbol}: {e}")
         return None
 
 
@@ -397,6 +496,10 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     """
     Calculate CIS scores for all tracked assets.
     Returns the complete universe with scores.
+
+    Data sources:
+    - Crypto: CoinGecko API
+    - US Equities/Bonds/Commodities: yfinance
     """
     # Fetch all data concurrently
     cg_markets, llama_tvl, fng = await asyncio.gather(
@@ -404,6 +507,13 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         fetch_defillama_tvl(),
         fetch_fear_greed()
     )
+
+    # Fetch yfinance data for US assets
+    yf_data = {}
+    for symbol, config in {**US_EQUITIES, **BONDS, **COMMODITIES}.items():
+        data = get_yfinance_data(config["yfinance"])
+        if data:
+            yf_data[symbol] = data
 
     # Macro regime determination
     btc_data = cg_markets.get("bitcoin", {})
@@ -421,11 +531,18 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     universe = []
 
     for asset_id, config in ASSETS_CONFIG.items():
-        cg_id = config["coingecko"]
         asset_class = config["class"]
 
-        market_data = cg_markets.get(cg_id, {})
-        tvl = llama_tvl.get(asset_id, 0)
+        # Get market data based on asset type
+        if asset_class in ["US Equity", "US Bond", "Commodity"]:
+            # Use yfinance data
+            market_data = yf_data.get(asset_id, {})
+            tvl = 0  # No TVL for traditional assets
+        else:
+            # Use CoinGecko data
+            cg_id = config.get("coingecko", "")
+            market_data = cg_markets.get(cg_id, {})
+            tvl = llama_tvl.get(asset_id, 0)
 
         # Skip if no market data
         if not market_data:
