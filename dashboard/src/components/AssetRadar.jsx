@@ -37,44 +37,52 @@ const FONTS = {
 };
 
 /* ─── Asset Categories ────────────────────────────────────────────────── */
+// Asset list matching CIS universe
 const ASSETS = [
+  // L1
   { id: "bitcoin", symbol: "BTC", name: "Bitcoin", category: "L1", color: "#F7931A" },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum", category: "L1", color: "#627EEA" },
+  { id: "ethereum", symbol: "ETH", name: "Ethereum", category: "Crypto", color: "#627EEA" },
   { id: "solana", symbol: "SOL", name: "Solana", category: "L1", color: "#9945FF" },
   { id: "binancecoin", symbol: "BNB", name: "BNB", category: "L1", color: "#F3BA2F" },
+  { id: "cardano", symbol: "ADA", name: "Cardano", category: "L1", color: "#0033AD" },
+  { id: "ripple", symbol: "XRP", name: "XRP", category: "L1", color: "#23292F" },
+  { id: "dogecoin", symbol: "DOGE", name: "Dogecoin", category: "L1", color: "#C2A633" },
+  { id: "the-open-network", symbol: "TON", name: "Toncoin", category: "L1", color: "#0098EA" },
   { id: "avalanche-2", symbol: "AVAX", name: "Avalanche", category: "L1", color: "#E84142" },
-  { id: "chainlink", symbol: "LINK", name: "Chainlink", category: "ORACLE", color: "#2A5ADA" },
-  { id: "uniswap", symbol: "UNI", name: "Uniswap", category: "DEFI", color: "#FF007A" },
-  { id: "aave", symbol: "AAVE", name: "Aave", category: "DEFI", color: "#2EBAC6" },
-  { id: "optimism", symbol: "OP", name: "Optimism", category: "L2", color: "#FF0420" },
+  { id: "polkadot", symbol: "DOT", name: "Polkadot", category: "L1", color: "#E6007A" },
+  // L2
   { id: "arbitrum", symbol: "ARB", name: "Arbitrum", category: "L2", color: "#28A0F0" },
+  { id: "optimism", symbol: "OP", name: "Optimism", category: "L2", color: "#FF0420" },
   { id: "matic-network", symbol: "MATIC", name: "Polygon", category: "L2", color: "#8247E5" },
-  { id: "sui", symbol: "SUI", name: "Sui", category: "L1", color: "#6FBBFF" },
-  { id: "aptos", symbol: "APT", name: "Aptos", category: "L1", color: "#4DE4B9" },
-  { id: "injective-protocol", symbol: "INJ", name: "Injective", category: "L1", color: "#00F2FE" },
-  { id: "celestia", symbol: "TIA", name: "Celestia", category: "L1", color: "#7B2BF9" },
-  { id: "blockstack", symbol: "STX", name: "Stacks", category: "L1", color: "#5546D6" },
+  { id: "immutable-x", symbol: "IMX", name: "Immutable", category: "L2", color: "#00BFFF" },
+  { id: "base", symbol: "BASE", name: "Base", category: "L2", color: "#0052FF" },
+  { id: "mantle", symbol: "MANTLE", name: "Mantle", category: "L2", color: "#00A8E0" },
+  // DeFi
+  { id: "uniswap", symbol: "UNI", name: "Uniswap", category: "DeFi", color: "#FF007A" },
+  { id: "aave", symbol: "AAVE", name: "Aave", category: "DeFi", color: "#2EBAC6" },
+  { id: "maker", symbol: "MKR", name: "Maker", category: "DeFi", color: "#1AAB9B" },
+  { id: "havven", symbol: "SNX", name: "Synthetix", category: "DeFi", color: "#00D1FF" },
+  { id: "curve-dao-token", symbol: "CRV", name: "Curve", category: "DeFi", color: "#FF6B6B" },
+  { id: "lido-dao", symbol: "LDO", name: "Lido", category: "DeFi", color: "#00A3FF" },
+  { id: "rocket-pool", symbol: "RPL", name: "Rocket Pool", category: "DeFi", color: "#FFFFFF" },
+  { id: "compound-governance-token", symbol: "COMP", name: "Compound", category: "DeFi", color: "#00D395" },
+  { id: "sushi", symbol: "SUSHI", name: "SushiSwap", category: "DeFi", color: "#FA52A0" },
+  // Infrastructure
+  { id: "chainlink", symbol: "LINK", name: "Chainlink", category: "Infrastructure", color: "#2A5ADA" },
+  { id: "stacks", symbol: "STX", name: "Stacks", category: "Infrastructure", color: "#5546D6" },
+  { id: "thorchain", symbol: "RUNE", name: "THORChain", category: "Infrastructure", color: "#2ECC71" },
+  { id: "injective-protocol", symbol: "INJ", name: "Injective", category: "Infrastructure", color: "#00F2FE" },
+  // RWA
+  { id: "ondo-finance", symbol: "ONDO", name: "Ondo", category: "RWA", color: "#2B65EC" },
+  { id: "genius", symbol: "GENIUS", name: "Genius", category: "RWA", color: "#FFD700" },
+  { id: "polymesh", symbol: "POLYX", name: "Polymesh", category: "#RWA", color: "#E6007A" },
+  // Memecoin
+  { id: "pepe", symbol: "PEPE", name: "Pepe", category: "Memecoin", color: "#00FF00" },
 ];
 
-/* ─── CIS Data (fallback) ──────────────────────────────────────────── */
-const CIS_DATA = {
-  BTC:  { score: 85.0, grade: "A" },
-  ETH:  { score: 85.0, grade: "A" },
-  SOL:  { score: 81.8, grade: "B" },
-  BNB:  { score: 78.0, grade: "B" },
-  AVAX: { score: 78.5, grade: "B" },
-  LINK: { score: 80.0, grade: "B" },
-  UNI:  { score: 77.8, grade: "B" },
-  AAVE: { score: 77.2, grade: "B" },
-  OP:   { score: 68.6, grade: "C" },
-  ARB:  { score: 70.8, grade: "B" },
-  MATIC:{ score: 72.0, grade: "B" },
-  SUI:  { score: 75.0, grade: "B" },
-  APT:  { score: 70.0, grade: "B" },
-  INJ:  { score: 73.0, grade: "B" },
-  TIA:  { score: 68.0, grade: "C" },
-  STX:  { score: 65.0, grade: "C" },
-};
+/* ─── CIS Data (fallback - rarely used) ──────────────────────────────────── */
+// Empty - now using API data only
+const CIS_DATA = {};
 
 /* ─── Signal Calculation ─────────────────────────────────────────────── */
 const calculateSignal = (change7d, fngValue) => {
