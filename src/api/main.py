@@ -104,6 +104,150 @@ async def get_mmi(token: str = "BTC"):
 async def fear_greed(limit: int = 30):
     return await get_fear_greed(limit)
 
+# ── Signals API ────────────────────────────────────────────────────────────────
+
+@app.get("/api/v1/signals")
+async def get_signals():
+    """
+    Generate trading signals from real market data.
+    Combines Fear & Greed, price momentum, DeFi TVL, and market movers.
+    """
+    signals = []
+    now = datetime.now()
+
+    try:
+        # 1. Fear & Greed Index
+        fng = await get_fear_greed(limit=1)
+        if fng.get("current"):
+            fng_val = fng["current"].get("value", 50)
+            fng_label = fng["current"].get("value_classification", "Neutral")
+            fng_time = fng["current"].get("update_time", "")
+
+            if fng_val <= 25:
+                sig_type = "RISK"
+                sig_importance = "HIGH"
+                sig_desc = f"F&G指数极度恐惧({fng_val})，历史数据显示此时买入BTC长期回报优异"
+            elif fng_val <= 45:
+                sig_type = "MACRO"
+                sig_importance = "MED"
+                sig_desc = f"F&G指数恐惧({fng_val})，市场情绪低迷但未至极端"
+            elif fng_val >= 75:
+                sig_type = "RISK"
+                sig_importance = "HIGH"
+                sig_desc = f"F&G指数极度贪婪({fng_val})，风险积聚注意回调"
+            elif fng_val >= 55:
+                sig_type = "MACRO"
+                sig_importance = "MED"
+                sig_desc = f"F&G指数贪婪({fng_val})，市场乐观情绪上升"
+            else:
+                sig_type = "MACRO"
+                sig_importance = "LOW"
+                sig_desc = f"F&G指数中性({fng_val})，市场观望情绪浓厚"
+
+            signals.append({
+                "id": "fng_1",
+                "timestamp": fng_time or now.isoformat(),
+                "type": sig_type,
+                "description": sig_desc,
+                "affected_assets": ["BTC", "ETH", "CRYPTO"],
+                "importance": sig_importance,
+                "source": "alternative.me",
+                "value": fng_val,
+            })
+
+        # 2. Top Gainers/Losers
+        movers = await get_top_gainers_losers()
+        if movers.get("gainers"):
+            for g in movers["gainers"][:2]:
+                change = g.get("change_24h", 0) or 0
+                if change >= 10:
+                    signals.append({
+                        "id": f"gainer_{g['symbol']}",
+                        "timestamp": now.isoformat(),
+                        "type": "MOMENTUM",
+                        "description": f"{g['symbol']} 24h暴涨{change:.1f}%，强劲上涨动能",
+                        "affected_assets": [g['symbol']],
+                        "importance": "HIGH" if change >= 15 else "MED",
+                        "source": "coingecko",
+                        "value": change,
+                    })
+
+        if movers.get("losers"):
+            for l in movers["losers"][:2]:
+                change = l.get("change_24h", 0) or 0
+                if change <= -10:
+                    signals.append({
+                        "id": f"loser_{l['symbol']}",
+                        "timestamp": now.isoformat(),
+                        "type": "RISK",
+                        "description": f"{l['symbol']} 24h暴跌{abs(change):.1f}%，注意止损风险",
+                        "affected_assets": [l['symbol']],
+                        "importance": "HIGH" if change <= -15 else "MED",
+                        "source": "coingecko",
+                        "value": change,
+                    })
+
+        # 3. DeFi Overview - TVL changes
+        defi = await get_defi_overview()
+        tvl_change = defi.get("change_24h", 0)
+        total_tvl = defi.get("total_tvl", 0)
+
+        if total_tvl > 0:
+            if tvl_change > 5:
+                signals.append({
+                    "id": "defi_tvl_up",
+                    "timestamp": now.isoformat(),
+                    "type": "FLOW",
+                    "description": f"DeFi总TVL 24h增加{tvl_change:.1f}%，资金大幅流入(${total_tvl/1e9:.1f}B)",
+                    "affected_assets": ["ETH", "DeFi"],
+                    "importance": "MED",
+                    "source": "defillama",
+                    "value": tvl_change,
+                })
+            elif tvl_change < -5:
+                signals.append({
+                    "id": "defi_tvl_down",
+                    "timestamp": now.isoformat(),
+                    "type": "RISK",
+                    "description": f"DeFi总TVL 24h下降{abs(tvl_change):.1f}%，资金净流出",
+                    "affected_assets": ["ETH", "DeFi"],
+                    "importance": "MED",
+                    "source": "defillama",
+                    "value": tvl_change,
+                })
+
+        # 4. Stablecoin flows
+        stables = await get_stablecoin_overview()
+        usdc_dom = stables.get("usdc", {}).get("dominance", 0)
+        usdt_dom = stables.get("usdt", {}).get("dominance", 0)
+
+        if usdc_dom > usdt_dom + 10:
+            signals.append({
+                "id": "stablecoin_shift",
+                "timestamp": now.isoformat(),
+                "type": "FLOW",
+                "description": "USDC主导地位增强(+{:.1f}%)，机构资金偏好".format(usdc_dom - usdt_dom),
+                "affected_assets": ["USDC", "USDT"],
+                "importance": "LOW",
+                "source": "defillama",
+                "value": usdc_dom - usdt_dom,
+            })
+
+    except Exception as e:
+        print(f"Signal generation error: {e}")
+
+    # Sort by importance and timestamp
+    importance_order = {"HIGH": 0, "MED": 1, "LOW": 2}
+    signals.sort(key=lambda x: (importance_order.get(x["importance"], 2), x["timestamp"]), reverse=True)
+
+    return {
+        "status": "success",
+        "version": "1.0.0",
+        "timestamp": now.isoformat(),
+        "data_source": "coingecko+defillama+alternative.me",
+        "signals": signals[:10],
+    }
+
 # ── CIS (CometCloud Intelligence Score) ───────────────────────────────────
 
 @app.get("/api/v1/cis/universe")

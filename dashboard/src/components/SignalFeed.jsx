@@ -38,11 +38,12 @@ const FONTS = {
 
 /* ─── Signal Types ───────────────────────────────────────────────────── */
 const SIGNAL_TYPES = {
-  MACRO:   { label: "MACRO",   color: T.gold,   bg: "rgba(200,168,75,0.12)", border: "rgba(200,168,75,0.2)" },
-  WHALE:   { label: "WHALE",   color: T.purple, bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.2)" },
-  FUNDING: { label: "FUNDING", color: T.blue,   bg: "rgba(75,158,255,0.10)", border: "rgba(75,158,255,0.2)" },
-  FLOW:    { label: "FLOW",    color: T.green,  bg: "rgba(0,232,122,0.08)", border: "rgba(0,232,122,0.2)" },
-  RISK:    { label: "RISK",    color: T.red,    bg: "rgba(255,61,90,0.10)", border: "rgba(255,61,90,0.2)" },
+  MACRO:    { label: "MACRO",    color: T.gold,   bg: "rgba(200,168,75,0.12)", border: "rgba(200,168,75,0.2)" },
+  WHALE:    { label: "WHALE",    color: T.purple, bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.2)" },
+  FUNDING:  { label: "FUNDING",  color: T.blue,   bg: "rgba(75,158,255,0.10)", border: "rgba(75,158,255,0.2)" },
+  FLOW:     { label: "FLOW",     color: T.green,  bg: "rgba(0,232,122,0.08)", border: "rgba(0,232,122,0.2)" },
+  RISK:     { label: "RISK",     color: T.red,    bg: "rgba(255,61,90,0.10)", border: "rgba(255,61,90,0.2)" },
+  MOMENTUM: { label: "MOMENTUM", color: T.cyan,   bg: "rgba(0,200,224,0.10)", border: "rgba(0,200,224,0.2)" },
 };
 
 const IMPORTANCE_STYLES = {
@@ -68,84 +69,17 @@ const formatRelativeTime = (isoTimestamp) => {
   return `${minutes}m ago`;
 };
 
-/* ─── Mock Signals ───────────────────────────────────────────────────── */
+/* ─── Fetch Real Signals ───────────────────────────────────────────────── */
 async function fetchSignalsFromAPI() {
-  const now = new Date();
-  const MOCK_SIGNALS = [
-    {
-      id: "s1",
-      timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-      type: "WHALE",
-      description: "BTC单笔转入Coinbase 1,240 BTC（约$84M），交易所净流入信号",
-      affected_assets: ["BTC"],
-      importance: "HIGH",
-    },
-    {
-      id: "s2",
-      timestamp: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(),
-      type: "FUNDING",
-      description: "ETH永续合约资金费率转负（-0.02%），空头情绪积累",
-      affected_assets: ["ETH"],
-      importance: "MED",
-    },
-    {
-      id: "s3",
-      timestamp: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(),
-      type: "MACRO",
-      description: "美联储发言暗示维持高利率，风险资产短期承压",
-      affected_assets: ["BTC", "ETH"],
-      importance: "HIGH",
-    },
-    {
-      id: "s4",
-      timestamp: new Date(now.getTime() - 8 * 60 * 60 * 1000).toISOString(),
-      type: "FLOW",
-      description: "Solana链上DEX净流入$128M，创月度新高",
-      affected_assets: ["SOL"],
-      importance: "MED",
-    },
-    {
-      id: "s5",
-      timestamp: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
-      type: "RISK",
-      description: "USDC溢价扩大至-0.3%，亚洲需求疲软",
-      affected_assets: ["USDC"],
-      importance: "LOW",
-    },
-    {
-      id: "s6",
-      timestamp: new Date(now.getTime() - 18 * 60 * 60 * 1000).toISOString(),
-      type: "WHALE",
-      description: "未知地址向Binance转入4,500 ETH，减持信号",
-      affected_assets: ["ETH"],
-      importance: "MED",
-    },
-    {
-      id: "s7",
-      timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
-      type: "FUNDING",
-      description: "BTC资金费率连续3日转正，多头平仓压力增加",
-      affected_assets: ["BTC"],
-      importance: "HIGH",
-    },
-    {
-      id: "s8",
-      timestamp: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(),
-      type: "MACRO",
-      description: "美联储褐皮书显示经济放缓，市场降息预期升温",
-      affected_assets: ["BTC", "ETH", "SOL"],
-      importance: "HIGH",
-    },
-    {
-      id: "s9",
-      timestamp: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
-      type: "RISK",
-      description: "某巨鲸地址转移4.2万ETH至未知钱包，链上异动预警",
-      affected_assets: ["ETH"],
-      importance: "MED",
-    },
-  ];
-  return MOCK_SIGNALS;
+  try {
+    const response = await fetch("/api/v1/signals");
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const data = await response.json();
+    return data.signals || [];
+  } catch (e) {
+    console.error("Failed to fetch signals:", e);
+    return [];
+  }
 }
 
 /* ─── Signal Row Component ─────────────────────────────────────────────── */
@@ -407,7 +341,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
             padding: "2px 6px",
             borderRadius: 3,
             fontFamily: FONTS.display,
-          }}>MOCK</span>
+          }}>LIVE</span>
           <div style={{
             width: 4,
             height: 4,
