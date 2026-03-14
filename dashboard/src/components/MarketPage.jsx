@@ -81,9 +81,6 @@ const generateSignal = (symbol, priceData) => {
     return { label: "Neutral", color: T.secondary };
   }
 };
-
-/* Global CSS */
-const CSS = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-font-smoothing: antialiased; }
 
@@ -548,15 +545,6 @@ export default function MarketPage() {
   const [activeTab, setActiveTab]     = useState("Market");
   const intervalRef                   = useRef(null);
 
-  useEffect(() => {
-    const id = "lm-market-css";
-    if (!document.getElementById(id)) {
-      const s = document.createElement("style");
-      s.id = id; s.textContent = CSS;
-      document.head.appendChild(s);
-    }
-  }, []);
-
   const fetchPrices = useCallback(async () => {
     const symbols = TOKEN_UNIVERSE.map(t => t.symbol).join(",");
     try {
@@ -571,8 +559,8 @@ export default function MarketPage() {
     } catch { setApiStatus("error"); }
   }, []);
 
-  const fetchOhlcv = useCallback(async (symbol) => {
-    if (ohlcv[symbol]) return;
+  const fetchOhlcv = useCallback(async (symbol, currentOhlcv) => {
+    if (currentOhlcv?.[symbol]) return;
     try {
       const r = await fetch(`${API_BASE}/market/ohlcv/${symbol}?interval=1h&limit=24`);
       const json = await r.json();
@@ -580,7 +568,7 @@ export default function MarketPage() {
     } catch (e) {
       console.error(`Failed to fetch OHLCV for ${symbol}:`, e);
     }
-  }, [ohlcv]);
+  }, []);
 
   const fetchSupplementary = useCallback(async () => {
     try {
@@ -629,8 +617,8 @@ export default function MarketPage() {
   }, [live, fetchPrices]);
 
   useEffect(() => {
-    if (selectedToken) fetchOhlcv(selectedToken.symbol);
-  }, [selectedToken]);
+    if (selectedToken) fetchOhlcv(selectedToken.symbol, ohlcv);
+  }, [selectedToken, fetchOhlcv]);
 
   const filtered = TOKEN_UNIVERSE.filter(t => category === "All" || t.category === category);
 

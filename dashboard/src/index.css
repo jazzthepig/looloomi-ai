@@ -4,6 +4,19 @@
   --ff-mono:    'DM Mono', 'Courier New', monospace;
   --ff-serif:   'Cormorant Garamond', serif;
 
+  --void:       #030508;
+  --deep:       #06080f;
+  --surface:    #090d18;
+  --raised:     #0e1424;
+  --card:       #111929;
+  --card-hover: #141e2e;
+  --border:     rgba(255,255,255,0.055);
+  --border-md:  rgba(255,255,255,0.10);
+  --border-hi:  rgba(255,255,255,0.18);
+  --primary:    #F0EEFF;
+  --secondary:  #8880BE;
+  --muted:      #3E3A6E;
+
   font-family: var(--ff-display);
   line-height: 1.5;
   font-weight: 400;
@@ -92,4 +105,94 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* ─── Global Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; }
+body { background: var(--void); color: var(--primary); min-height: 100vh; }
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
+
+/* ─── Animations ───────────────────────────────────────────────────────── */
+@keyframes breathe {
+  0%,100% { opacity:0.28; transform:scale(1) translateY(0); }
+  50%      { opacity:0.44; transform:scale(1.06) translateY(-12px); }
+}
+@keyframes breathe2 {
+  0%,100% { opacity:0.16; transform:scale(1); }
+  50%      { opacity:0.30; transform:scale(1.08) translateX(10px); }
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity:0; transform:translateX(-8px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+@keyframes pulse {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.35; }
+}
+@keyframes shimmer {
+  0%   { background-position:-400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+/* ─── Utility Classes ─────────────────────────────────────────────────── */
+.fade-up  { animation: fadeUp 0.4s cubic-bezier(.16,1,.3,1) forwards; }
+.slide-in { animation: slideIn 0.25s ease forwards; }
+
+/* ─── Turrell Ambient Orbs ───────────────────────────────────────────── */
+.turrell-wrap { position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden; }
+.t-orb { position:absolute;border-radius:50%;filter:blur(100px);mix-blend-mode:screen; }
+.t-orb-1 { width:720px;height:720px;background:radial-gradient(circle,rgba(107,15,204,.20) 0%,transparent 65%);top:-300px;left:-200px;animation:breathe 52s ease-in-out infinite; }
+.t-orb-2 { width:560px;height:560px;background:radial-gradient(circle,rgba(45,53,212,.15) 0%,transparent 65%);top:5%;right:-200px;animation:breathe2 64s ease-in-out infinite 9s; }
+.t-orb-3 { width:380px;height:380px;background:radial-gradient(circle,rgba(0,200,224,.09) 0%,transparent 65%);bottom:0;left:22%;animation:breathe 76s ease-in-out infinite 24s; }
+.t-orb-4 { width:280px;height:280px;background:radial-gradient(circle,rgba(255,16,96,.07) 0%,transparent 65%);bottom:12%;right:8%;animation:breathe2 60s ease-in-out infinite 38s; }
+
+/* ─── CometCloud Components ───────────────────────────────────────────── */
+.lm-card { background:rgba(10,9,24,.82);border:1px solid var(--muted);border-radius:10px;backdrop-filter:blur(20px);transition:border-color .2s ease; }
+.lm-card:hover { border-color:#28244C; }
+.lm-card-accent { border-left-width:2px !important; }
+.lm-row { transition:background .12s ease,transform .12s ease;cursor:pointer; }
+.lm-row:hover { background:rgba(6,182,212,.06) !important; border-left: 2px solid rgba(6,182,212,0.4); transform:translateX(2px); }
+
+.lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:var(--ff-display);cursor:pointer;outline:none;border:1px solid var(--muted);background:transparent;color:var(--secondary);transition:all .18s ease;letter-spacing:.01em; }
+.lm-tab:hover { border-color:#28244C;color:var(--primary); }
+.lm-tab.active { border-color:rgba(68,114,255,.5);background:rgba(68,114,255,.10);color:#4472FF; }
+
+.filter-btn { padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:var(--ff-display);cursor:pointer;outline:none;border:1px solid var(--muted);background:transparent;color:var(--muted);transition:all .15s ease; }
+.filter-btn:hover { border-color:#28244C;color:var(--secondary); }
+.filter-btn.active { border-color:rgba(68,114,255,.4);background:rgba(68,114,255,.08);color:#4472FF; }
+
+.lm-action-btn { display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:500;font-family:var(--ff-display);cursor:pointer;outline:none;border:1px solid var(--muted);background:transparent;color:var(--secondary);transition:all .18s ease; }
+.lm-action-btn:hover { border-color:#28244C;color:var(--primary); }
+
+.sk { background:linear-gradient(90deg,#100E22 30%,#16132E 50%,#100E22 70%);background-size:400px 100%;animation:shimmer 1.8s ease infinite;border-radius:4px;display:inline-block; }
+.pulse-dot { animation:pulse 2.2s ease-in-out infinite; }
+
+.lm-badge { display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-family:var(--ff-display); }
+
+/* ─── Mobile Responsive ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mobile-hidden { display: none !important; }
+  .mobile-full { width: 100% !important; }
+  .mobile-stack { flex-direction: column !important; }
+  .mobile-pad { padding: 0 12px !important; }
+  .mobile-stat-grid { grid-template-columns: 1fr 1fr !important; }
+  .mobile-table-header { grid-template-columns: 1.8fr 1fr 1fr !important; }
+  .mobile-table-row { grid-template-columns: 1.8fr 1fr 1fr !important; }
+  .mobile-nav { flex-wrap: wrap !important; gap: 6px !important; }
+  .mobile-nav-right { margin-top: 10px !important; width: 100% !important; justify-content: space-between !important; }
+  .mobile-card-pad { padding: 12px 14px !important; }
+  .mobile-header { padding: 12px 0 14px !important; }
+  .mobile-footer { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
+  .mobile-howitworks-grid { grid-template-columns: 1fr 1fr !important; }
+  .mobile-2col-grid { grid-template-columns: 1fr !important; }
+  .mobile-hero { padding: 24px 20px !important; }
 }
