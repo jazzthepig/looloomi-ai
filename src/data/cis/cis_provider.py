@@ -694,7 +694,7 @@ def calculate_total_score(pillars: Dict[str, float], asset_class: str) -> Dict[s
 
 
 def get_grade(score: float) -> str:
-    """Get letter grade from score."""
+    """Get letter grade from score (absolute thresholds)."""
     if score >= 85:
         return "A+"
     elif score >= 80:
@@ -710,6 +710,60 @@ def get_grade(score: float) -> str:
     elif score >= 30:
         return "D"
     return "F"
+
+
+def apply_forced_distribution(universe: list) -> list:
+    """
+    Apply forced distribution to CIS scores.
+    This ensures differentiation regardless of score concentration.
+    Distribution:
+    - A+: Top 10% (top 2 assets for 17 assets)
+    - A: 10-25%
+    - B+: 25-50%
+    - B: 50-75%
+    - C+: 75-90%
+    - C/D/F: Bottom 10%
+    """
+    if not universe:
+        return universe
+
+    n = len(universe)
+    # Sort by score descending
+    sorted_universe = sorted(universe, key=lambda x: x.get("cis_score", 0), reverse=True)
+
+    for i, asset in enumerate(sorted_universe):
+        # Calculate percentile rank (0-100, higher is better)
+        percentile = ((n - i) / n) * 100
+
+        # Assign grade based on forced distribution
+        if percentile >= 90:
+            grade = "A+"
+        elif percentile >= 75:
+            grade = "A"
+        elif percentile >= 50:
+            grade = "B+"
+        elif percentile >= 25:
+            grade = "B"
+        elif percentile >= 10:
+            grade = "C+"
+        else:
+            grade = "C"
+
+        # Update the asset with forced grade
+        asset["grade"] = grade
+        asset["percentile_rank"] = round(percentile, 1)
+
+        # Update signal based on new grade
+        if grade in ["A+", "A"]:
+            asset["signal"] = "STRONG OVERWEIGHT"
+        elif grade in ["B+", "B"]:
+            asset["signal"] = "OVERWEIGHT"
+        elif grade == "C+":
+            asset["signal"] = "NEUTRAL"
+        else:
+            asset["signal"] = "UNDERWEIGHT"
+
+    return sorted_universe
 
 
 def get_signal(score: float, grade: str) -> str:
@@ -874,6 +928,9 @@ async def calculate_cis_universe() -> Dict[str, Any]:
 
     # Sort by CIS score
     universe.sort(key=lambda x: x["cis_score"], reverse=True)
+
+    # Apply forced distribution for better differentiation
+    universe = apply_forced_distribution(universe)
 
     # Get macro data
     macro = {
