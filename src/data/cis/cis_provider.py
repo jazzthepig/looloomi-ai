@@ -22,24 +22,24 @@ CG_BASE = "https://api.coingecko.com/api/v3"
 
 # Crypto assets config - maps to CoinGecko IDs
 CRYPTO_ASSETS = {
-    # L1
+    # Top by market cap
     "BTC": {"coingecko": "bitcoin", "name": "Bitcoin", "class": "Crypto"},
     "ETH": {"coingecko": "ethereum", "name": "Ethereum", "class": "Crypto"},
-    "SOL": {"coingecko": "solana", "name": "Solana", "class": "L1"},
     "BNB": {"coingecko": "binancecoin", "name": "BNB", "class": "L1"},
+    "XRP": {"coingecko": "ripple", "name": "XRP", "class": "L1"},
+    "SOL": {"coingecko": "solana", "name": "Solana", "class": "L1"},
+    "ADA": {"coingecko": "cardano", "name": "Cardano", "class": "L1"},
+    "DOGE": {"coingecko": "dogecoin", "name": "Dogecoin", "class": "L1"},
+    # L1/L2
     "AVAX": {"coingecko": "avalanche-2", "name": "Avalanche", "class": "L1"},
     "DOT": {"coingecko": "polkadot", "name": "Polkadot", "class": "L1"},
-    "ADA": {"coingecko": "cardano", "name": "Cardano", "class": "L1"},
-    "XRP": {"coingecko": "ripple", "name": "XRP", "class": "L1"},
-    "DOGE": {"coingecko": "dogecoin", "name": "Dogecoin", "class": "L1"},
-    "TON": {"coingecko": "the-open-network", "name": "Toncoin", "class": "L1"},
-    # L2
+    "MATIC": {"coingecko": "matic-network", "name": "Polygon", "class": "L2"},
     "ARB": {"coingecko": "arbitrum", "name": "Arbitrum", "class": "L2"},
     "OP": {"coingecko": "optimism", "name": "Optimism", "class": "L2"},
-    "MATIC": {"coingecko": "matic-network", "name": "Polygon", "class": "L2"},
-    "IMX": {"coingecko": "immutable-x", "name": "Immutable", "class": "L2"},
     "BASE": {"coingecko": "base", "name": "Base", "class": "L2"},
     "MANTLE": {"coingecko": "mantle", "name": "Mantle", "class": "L2"},
+    "TON": {"coingecko": "the-open-network", "name": "Toncoin", "class": "L1"},
+    "INJ": {"coingecko": "injective-protocol", "name": "Injective", "class": "Infrastructure"},
     # DeFi
     "UNI": {"coingecko": "uniswap", "name": "Uniswap", "class": "DeFi"},
     "AAVE": {"coingecko": "aave", "name": "Aave", "class": "DeFi"},
@@ -47,20 +47,38 @@ CRYPTO_ASSETS = {
     "SNX": {"coingecko": "havven", "name": "Synthetix", "class": "DeFi"},
     "CRV": {"coingecko": "curve-dao-token", "name": "Curve", "class": "DeFi"},
     "LDO": {"coingecko": "lido-dao", "name": "Lido DAO", "class": "DeFi"},
-    "RPL": {"coingecko": "rocket-pool", "name": "Rocket Pool", "class": "DeFi"},
     "COMP": {"coingecko": "compound-governance-token", "name": "Compound", "class": "DeFi"},
     "SUSHI": {"coingecko": "sushi", "name": "SushiSwap", "class": "DeFi"},
     # Infrastructure
     "LINK": {"coingecko": "chainlink", "name": "Chainlink", "class": "Infrastructure"},
     "STX": {"coingecko": "stacks", "name": "Stacks", "class": "Infrastructure"},
     "RUNE": {"coingecko": "thorchain", "name": "THORChain", "class": "Infrastructure"},
-    "INJ": {"coingecko": "injective-protocol", "name": "Injective", "class": "Infrastructure"},
-    # RWA
+    # RWA / Memes / High volume
     "ONDO": {"coingecko": "ondo-finance", "name": "Ondo Finance", "class": "RWA"},
+    "PEPE": {"coingecko": "pepe", "name": "Pepe", "class": "Memecoin"},
+    "WIF": {"coingecko": "wif", "name": "WIF", "class": "Memecoin"},
+    "BONK": {"coingecko": "bonk", "name": "Bonk", "class": "Memecoin"},
+    "SUI": {"coingecko": "sui", "name": "Sui", "class": "L1"},
+    "APT": {"coingecko": "aptos", "name": "Aptos", "class": "L1"},
+    "NEAR": {"coingecko": "near", "name": "NEAR Protocol", "class": "L1"},
+    "FIL": {"coingecko": "filecoin", "name": "Filecoin", "class": "Infrastructure"},
+    "ATOM": {"coingecko": "cosmos", "name": "Cosmos", "class": "L1"},
+    "LTC": {"coingecko": "litecoin", "name": "Litecoin", "class": "Crypto"},
+    "BCH": {"coingecko": "bitcoin-cash", "name": "Bitcoin Cash", "class": "Crypto"},
+    "SEI": {"coingecko": "sei", "name": "Sei", "class": "L1"},
+    "TIA": {"coingecko": "celestia", "name": "Celestia", "class": "Infrastructure"},
+    "SAND": {"coingecko": "the-sandbox", "name": "The Sandbox", "class": "Gaming"},
+    "MANA": {"coingecko": "decentraland", "name": "Decentraland", "class": "Gaming"},
+    "AXS": {"coingecko": "axie-infinity", "name": "Axie Infinity", "class": "Gaming"},
+    "FTM": {"coingecko": "fantom", "name": "Fantom", "class": "L1"},
+    "ALGO": {"coingecko": "algorand", "name": "Algorand", "class": "L1"},
+    "VET": {"coingecko": "vechain", "name": "VeChain", "class": "Infrastructure"},
+    "HBAR": {"coingecko": "hedera-hashgraph", "name": "Hedera", "class": "L1"},
+    "ICP": {"coingecko": "internet-computer", "name": "Internet Computer", "class": "Infrastructure"},
+    "NEON": {"coingecko": "neon", "name": "Neon", "class": "L2"},
+    "IO": {"coingecko": "io-net", "name": "io.net", "class": "Infrastructure"},
     "GENIUS": {"coingecko": "genius", "name": "Genius", "class": "RWA"},
     "POLYX": {"coingecko": "polymesh", "name": "Polymesh", "class": "RWA"},
-    # Memecoin (满足门槛的)
-    "PEPE": {"coingecko": "pepe", "name": "Pepe", "class": "Memecoin"},
 }
 
 # US Equities - yfinance symbols
@@ -117,24 +135,64 @@ def _cache_set(key: str, val: Any):
 
 
 # Symbol mapping: CIS symbol -> Binance symbol
+# Priority: High liquidity pairs for reliable data
 BINANCE_SYMBOLS = {
+    # Top by market cap
     "BTC": "btcusdt",
     "ETH": "ethusdt",
-    "SOL": "solusdt",
     "BNB": "bnbusdt",
     "XRP": "xrpusdt",
+    "SOL": "solusdt",
     "ADA": "adausdt",
     "DOGE": "dogeusdt",
+    # L1/L2
     "AVAX": "avaxusdt",
     "DOT": "dotusdt",
+    "MATIC": "maticusdt",
     "ARB": "arbusdt",
+    "OP": "opusdt",
+    "BASE": "baseusdt",
     "MANTLE": "mntusdt",
     "TON": "tonusdt",
+    "INJ": "injusdt",
+    # DeFi
     "UNI": "uniusdt",
     "AAVE": "aaveusdt",
+    "MKR": "mkrusdt",
+    "SNX": "snxusdt",
+    "CRV": "crvusdt",
+    "LDO": "ldousdt",
+    "COMP": "compusdt",
+    "SUSHI": "sushiusdt",
+    # Infrastructure
     "LINK": "linkusdt",
+    "STX": "stxusdt",
+    "RUNE": "runeusdt",
+    # RWA / Memes
     "ONDO": "ondousdt",
     "PEPE": "pepeusdt",
+    "WIF": "wifusdt",
+    "BONK": "bonkusdt",
+    "SUI": "suiusdt",
+    "APT": "aptusdt",
+    "NEAR": "nearusdt",
+    "FIL": "filusdt",
+    "ATOM": "atomusdt",
+    "LTC": "ltcusdt",
+    "BCH": "bchusdt",
+    "NEON": "neonusdt",
+    "SEI": "seiusdt",
+    "TIA": "tiausdt",
+    "SAND": "sandusdt",
+    "MANA": "manausdt",
+    "AXS": "axsusdt",
+    "FTM": "ftmusdt",
+    "ALGO": "algousdt",
+    "VET": "vetusdt",
+    "HBAR": "hbarusdt",
+    "ICP": "icusdt",
+    "FTND": "ftndusdt",
+    "IO": "iousdt",
 }
 
 # Reverse mapping
