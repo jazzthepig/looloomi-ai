@@ -206,8 +206,12 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
     const rotateSignals = () => {
       setCurrentIndex(prev => {
         const nextIndex = (prev + 1) % signals.length;
-        const endIndex = Math.min(nextIndex + 5, signals.length);
-        setDisplayedSignals(signals.slice(nextIndex, endIndex));
+        // Circular slice — wraps around so we always show 5 entries
+        const sliced = [];
+        for (let i = 0; i < 5; i++) {
+          sliced.push(signals[(nextIndex + i) % signals.length]);
+        }
+        setDisplayedSignals(sliced);
         return nextIndex;
       });
     };

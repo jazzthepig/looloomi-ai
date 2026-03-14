@@ -39,8 +39,8 @@ const ASSET_CLASSES = ["All", "Crypto", "L1", "L2", "DeFi", "Infrastructure", "U
 function PillarBar({ value, label }) {
   const color = value >= 80 ? "#22c55e" : value >= 65 ? "#fbbf24" : value >= 50 ? "#fb923c" : "#ef4444";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 140, marginBottom: 4 }}>
-      <span style={{ fontSize: 10, color: "#6b7280", width: 14, textAlign: "right", fontFamily: FONTS.mono }}>{label}</span>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+      <span style={{ fontSize: 10, color: "#6b7280", minWidth: 96, fontFamily: FONTS.mono }}>{label}</span>
       <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}>
         <div style={{ width: `${value}%`, height: "100%", background: color, borderRadius: 3, transition: "width 0.5s ease" }} />
       </div>
@@ -139,6 +139,22 @@ export function CISLeaderboard({ data, filter, setFilter }) {
         ))}
       </div>
 
+      {/* Pillar Legend */}
+      <div style={{ display: "flex", gap: 16, padding: "6px 10px 10px", flexWrap: "wrap" }}>
+        {[
+          { key: "F", label: "Fundamental", color: "#22c55e" },
+          { key: "M", label: "Market",      color: "#3b82f6" },
+          { key: "O", label: "On-Chain",    color: "#f59e0b" },
+          { key: "S", label: "Sentiment",   color: "#ec4899" },
+          { key: "A", label: "Alpha",       color: "#8b5cf6" },
+        ].map(p => (
+          <div key={p.key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ fontFamily: FONTS.mono, fontSize: 10, fontWeight: 700, color: p.color }}>{p.key}</span>
+            <span style={{ fontSize: 10, color: T.muted }}>{p.label}</span>
+          </div>
+        ))}
+      </div>
+
       {/* Table */}
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 2px" }}>
@@ -211,11 +227,11 @@ export function CISLeaderboard({ data, filter, setFilter }) {
                         <div style={{ display: "flex", gap: 24, padding: "12px 0", flexWrap: "wrap" }}>
                           <div style={{ flex: 1, minWidth: 200 }}>
                             <div style={{ fontSize: 11, color: T.gold, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Pillar Breakdown</div>
-                            <PillarBar value={asset.f} label="F" />
-                            <PillarBar value={asset.m} label="M" />
-                            <PillarBar value={asset.r} label="R" />
-                            <PillarBar value={asset.s} label="S" />
-                            <PillarBar value={asset.a} label="A" />
+                            <PillarBar value={asset.f} label="Fundamental" />
+                            <PillarBar value={asset.m} label="Market" />
+                            <PillarBar value={asset.r} label="On-Chain" />
+                            <PillarBar value={asset.s} label="Sentiment" />
+                            <PillarBar value={asset.a} label="Alpha" />
                           </div>
                           <div style={{ flex: 1, minWidth: 200 }}>
                             <div style={{ fontSize: 11, color: T.gold, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Summary</div>
@@ -303,9 +319,9 @@ export function CISHeatmap({ data, filter, setFilter }) {
                       <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
                         <div style={{ flex: 1, minWidth: 200 }}>
                           <PillarBar value={asset.f} label="Fundamental" />
-                          <PillarBar value={asset.m} label="Momentum" />
-                          <PillarBar value={asset.r} label="Risk-Adjusted" />
-                          <PillarBar value={asset.s} label="Sensitivity" />
+                          <PillarBar value={asset.m} label="Market" />
+                          <PillarBar value={asset.r} label="On-Chain" />
+                          <PillarBar value={asset.s} label="Sentiment" />
                           <PillarBar value={asset.a} label="Alpha" />
                         </div>
                       </div>
