@@ -60,7 +60,7 @@ const SIGNAL_STYLES = {
   "AVOID": { bg: "rgba(220,38,38,0.15)", color: "#dc2626", label: "AVOID" },
 };
 
-const ASSET_CLASSES = ["All", "Crypto", "US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"];
+const ASSET_CLASSES = ["All", "Crypto", "L1", "L2", "DeFi", "Infrastructure", "US Equity", "US Bond", "Commodity"];
 
 /* ─── Helper Components ──────────────────────────────────────────────── */
 
