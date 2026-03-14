@@ -12,37 +12,7 @@ import CISLeaderboard from "./CISLeaderboard";
 import MacroPulse from "./MacroPulse";
 import AssetRadar from "./AssetRadar";
 import SignalFeed from "./SignalFeed";
-
-/* ─── Design Tokens ──────────────────────────────────────────────────── */
-const T = {
-  void:      "#020208",
-  deep:      "#06050F",
-  surface:   "#0A0918",
-  raised:    "#100E22",
-  overlay:   "#16132E",
-  border:    "#1A173A",
-  borderHi:  "#28244C",
-  primary:   "#F0EEFF",
-  secondary: "#8880BE",
-  muted:     "#3E3A6E",
-  dim:       "#252248",
-  violet:    "#6B0FCC",
-  indigo:    "#2D35D4",
-  cyan:      "#00C8E0",
-  pink:      "#FF1060",
-  amber:     "#E8A000",
-  green:     "#00D98A",
-  red:       "#FF2D55",
-  blue:      "#4472FF",
-};
-
-const FONTS = {
-  brand:   "'Cormorant Garamond', serif",
-  display: "'Syne', sans-serif",
-  body:    "'Syne', sans-serif",
-  mono:    "'DM Mono', monospace",
-  serif:   "'Cormorant Garamond', serif",
-};
+import { T, FONTS } from "../tokens";
 
 /* ─── Token Universe ─────────────────────────────────────────────────── */
 const TOKEN_UNIVERSE = [
@@ -607,7 +577,9 @@ export default function MarketPage() {
       const r = await fetch(`${API_BASE}/market/ohlcv/${symbol}?interval=1h&limit=24`);
       const json = await r.json();
       setOhlcv(prev => ({ ...prev, [symbol]: json.data || [] }));
-    } catch {}
+    } catch (e) {
+      console.error(`Failed to fetch OHLCV for ${symbol}:`, e);
+    }
   }, [ohlcv]);
 
   const fetchSupplementary = useCallback(async () => {
@@ -618,7 +590,9 @@ export default function MarketPage() {
       ]);
       if (fR.status === "fulfilled") setFng(fR.value);
       if (dR.status === "fulfilled") setDefi(dR.value);
-    } catch {}
+    } catch (e) {
+      console.error("Failed to fetch supplementary data:", e);
+    }
   }, []);
 
   const fetchAllOhlcv = useCallback(async () => {
@@ -630,7 +604,9 @@ export default function MarketPage() {
           const r = await fetch(`${API_BASE}/market/ohlcv/${sym}?interval=1h&limit=24`);
           const json = await r.json();
           if (json.data?.length) setOhlcv(prev => ({ ...prev, [sym]: json.data }));
-        } catch {}
+        } catch (e) {
+          console.error(`Failed to fetch OHLCV for ${sym}:`, e);
+        }
       }));
       await new Promise(res => setTimeout(res, 300));
     }

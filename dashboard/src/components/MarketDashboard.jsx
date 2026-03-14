@@ -2,42 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import MacroPulse from "./MacroPulse";
 import AssetRadar from "./AssetRadar";
 import SignalFeed from "./SignalFeed";
-
-/* ─── Design Tokens ──────────────────────────────────────────────────── */
-const T = {
-  void:       "#030508",
-  deep:       "#06080f",
-  surface:    "#090d18",
-  raised:     "#0e1424",
-  card:       "#111929",
-  cardHover:  "#141e2e",
-  border:     "rgba(255,255,255,0.055)",
-  borderMd:   "rgba(255,255,255,0.10)",
-  borderHi:   "rgba(255,255,255,0.18)",
-  t1:         "rgba(255,255,255,0.90)",
-  t2:         "rgba(255,255,255,0.50)",
-  t3:         "rgba(255,255,255,0.26)",
-  t4:         "rgba(255,255,255,0.12)",
-  gold:       "#C8A84B",
-  goldLt:     "#E8C86A",
-  goldDim:    "rgba(200,168,75,0.13)",
-  goldGlow:   "rgba(200,168,75,0.06)",
-  green:      "#00E87A",
-  greenDim:   "rgba(0,232,122,0.10)",
-  red:        "#FF3D5A",
-  redDim:     "rgba(255,61,90,0.10)",
-  blue:       "#4B9EFF",
-  blueDim:    "rgba(75,158,255,0.10)",
-  purple:     "#A78BFA",
-  amber:      "#F59E0B",
-};
-
-const FONTS = {
-  brand:   "'Cormorant Garamond', serif",
-  display: "'Syne', sans-serif",
-  mono:    "'DM Mono', monospace",
-  serif:   "'Cormorant Garamond', serif",
-};
+import { T, FONTS } from "../tokens";
 
 export default function MarketDashboard({ isSection = false }) {
   const [macroRefresh, setMacroRefresh] = useState(0);

@@ -1,32 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-
-const T = {
-  void: "#020208",
-  deep: "#06050F",
-  surface: "#0A0918",
-  raised: "#100E22",
-  border: "#1A173A",
-  borderHi: "#28244C",
-  primary: "#F0EEFF",
-  secondary: "#8880BE",
-  muted: "#3E3A6E",
-  violet: "#6B0FCC",
-  indigo: "#2D35D4",
-  cyan: "#00C8E0",
-  pink: "#FF1060",
-  amber: "#E8A000",
-  green: "#00D98A",
-  red: "#FF2D55",
-  blue: "#4472FF",
-};
-
-const FONTS = {
-  brand:   "'Cormorant Garamond', serif",
-  display: "'Syne', sans-serif",
-  body:    "'Syne', sans-serif",
-  mono:    "'DM Mono', monospace",
-  serif:   "'Cormorant Garamond', serif",
-};
+import { T, FONTS } from "../tokens";
 
 const GRADE_COLORS = {
   "A+": "#00D98A",
