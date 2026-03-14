@@ -38,25 +38,10 @@ const CATEGORIES = ["All", "RWA", "Oracle", "L1", "L2", "DeFi"];
 const API_BASE = "/api/v1";
 const REFRESH_INTERVAL = 30000;
 
-/* ─── CIS Data (mock for demo) ────────────────────────────────────────── */
-const CIS_DATA = {
-  ONDO:   { score: 85.2, grade: "A", pillars: { F: 88, M: 82, O: 85, S: 78, alpha: 80 } },
-  POLYX:  { score: 72.5, grade: "B", pillars: { F: 80, M: 68, O: 75, S: 65, alpha: 70 } },
-  SYRUP:  { score: 80.3, grade: "A", pillars: { F: 85, M: 78, O: 82, S: 72, alpha: 78 } },
-  OPEN:   { score: 68.0, grade: "B", pillars: { F: 72, M: 65, O: 70, S: 62, alpha: 65 } },
-  ACX:    { score: 71.2, grade: "B", pillars: { F: 75, M: 68, O: 72, S: 65, alpha: 70 } },
-  LINK:   { score: 80.0, grade: "B", pillars: { F: 88, M: 78, O: 85, S: 70, alpha: 65 } },
-  PYTH:   { score: 75.5, grade: "B", pillars: { F: 80, M: 72, O: 78, S: 68, alpha: 72 } },
-  BTC:    { score: 85.0, grade: "A", pillars: { F: 95, M: 98, O: 95, S: 60, alpha: 40 } },
-  ETH:    { score: 85.0, grade: "A", pillars: { F: 92, M: 95, O: 90, S: 68, alpha: 55 } },
-  SOL:    { score: 81.8, grade: "B", pillars: { F: 80, M: 90, O: 88, S: 75, alpha: 65 } },
-  AVAX:   { score: 78.5, grade: "B", pillars: { F: 82, M: 80, O: 78, S: 72, alpha: 70 } },
-  ARB:    { score: 70.8, grade: "B", pillars: { F: 75, M: 70, O: 78, S: 60, alpha: 62 } },
-  OP:     { score: 68.6, grade: "C", pillars: { F: 73, M: 68, O: 75, S: 58, alpha: 60 } },
-  AAVE:   { score: 77.2, grade: "B", pillars: { F: 82, M: 75, O: 85, S: 65, alpha: 70 } },
-  UNI:    { score: 77.8, grade: "B", pillars: { F: 80, M: 85, O: 82, S: 62, alpha: 68 } },
-  MKR:    { score: 76.0, grade: "B", pillars: { F: 85, M: 72, O: 88, S: 58, alpha: 60 } },
-};
+/* ─── CIS Data (to be fetched from /api/v1/cis/universe) ──────────────── */
+// Previously contained mock data - now empty to avoid misleading trading decisions
+// TODO: Fetch from API when signal generation endpoint is ready
+const CIS_DATA = {};
 
 /* ─── Signal Generation based on CIS + Price ────────────────────────── */
 const generateSignal = (symbol, priceData) => {

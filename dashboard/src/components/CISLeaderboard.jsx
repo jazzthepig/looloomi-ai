@@ -33,30 +33,6 @@ const ASSET_CLASS_COLORS = {
 
 const API_BASE = "/api/v1";
 
-// Sample data for demo (will be replaced by API)
-const SAMPLE_CIS_DATA = [
-  { rank: 1, asset_id: "buidl", asset_name: "BlackRock BUIDL", asset_class: "RWA", total_score: 88.8, grade: "A", pillars: { F: 95, M: 85, O: 90, S: 80, alpha: 85 }, description: "Largest tokenized money market fund. Multi-chain deployment. Institutional-grade compliance and reporting." },
-  { rank: 2, asset_id: "benji", asset_name: "Franklin Templeton BENJI", asset_class: "RWA", total_score: 86.1, grade: "A", pillars: { F: 92, M: 82, O: 88, S: 78, alpha: 82 }, description: "On-chain US Treasury fund on Polygon/Stellar. Proven track record, strong institutional backing." },
-  { rank: 3, asset_id: "eth", asset_name: "Ethereum", asset_class: "L1", total_score: 85.0, grade: "A", pillars: { F: 92, M: 95, O: 90, S: 68, alpha: 55 }, description: "Base layer for majority of RWA protocols. ETF approval validates institutional adoption trajectory." },
-  { rank: 4, asset_id: "btc", asset_name: "Bitcoin", asset_class: "L1", total_score: 85.0, grade: "A", pillars: { F: 95, M: 98, O: 95, S: 60, alpha: 40 }, description: "Digital gold narrative validated. Spot ETF inflows confirm institutional allocation framework." },
-  { rank: 5, asset_id: "usdy", asset_name: "Ondo USDY", asset_class: "RWA", total_score: 84.3, grade: "B", pillars: { F: 90, M: 80, O: 88, S: 75, alpha: 80 }, description: "Yield-bearing stablecoin backed by US Treasuries. Growing on-chain adoption across DeFi protocols." },
-  { rank: 6, asset_id: "ousg", asset_name: "Ondo OUSG", asset_class: "RWA", total_score: 82.0, grade: "B", pillars: { F: 88, M: 78, O: 85, S: 72, alpha: 78 }, description: "Tokenized US Treasury fund. Institutional-grade compliance and reporting framework." },
-  { rank: 7, asset_id: "sol", asset_name: "Solana", asset_class: "L1", total_score: 81.8, grade: "B", pillars: { F: 80, M: 90, O: 88, S: 75, alpha: 65 }, description: "High-throughput L1 capturing institutional DeFi and RWA activity. ETF pipeline active." },
-  { rank: 8, asset_id: "link", asset_name: "Chainlink", asset_class: "Infrastructure", total_score: 80.0, grade: "B", pillars: { F: 88, M: 78, O: 85, S: 70, alpha: 65 }, description: "Critical infrastructure layer for RWA price feeds. CCIP cross-chain standard gaining adoption." },
-  { rank: 9, asset_id: "ondo", asset_name: "Ondo Finance", asset_class: "RWA", total_score: 79.5, grade: "B", pillars: { F: 85, M: 78, O: 82, S: 70, alpha: 72 }, description: "Leading RWA tokenization platform. OUSG and USDY products with institutional distribution channels." },
-  { rank: 10, asset_id: "uni", asset_name: "Uniswap", asset_class: "DeFi", total_score: 77.8, grade: "B", pillars: { F: 80, M: 85, O: 82, S: 62, alpha: 68 }, description: "DEX standard with concentrated liquidity. Fee switch governance creates revenue potential." },
-  { rank: 11, asset_id: "aave", asset_name: "Aave", asset_class: "DeFi", total_score: 77.2, grade: "B", pillars: { F: 82, M: 75, O: 85, S: 65, alpha: 70 }, description: "Dominant lending protocol. GHO stablecoin integration, cross-chain expansion, consistent revenue." },
-  { rank: 12, asset_id: "maker", asset_name: "Maker", asset_class: "DeFi", total_score: 76.0, grade: "B", pillars: { F: 85, M: 72, O: 88, S: 58, alpha: 60 }, description: "Decentralized stablecoin protocol. DAI savings rate and MKR governance token utility." },
-  { rank: 13, asset_id: "base", asset_name: "Base", asset_class: "L2", total_score: 74.4, grade: "B", pillars: { F: 78, M: 72, O: 80, S: 70, alpha: 65 }, description: "Coinbase L2. Fast growing ecosystem with institutional backing. Low fees, high security." },
-  { rank: 14, asset_id: "ton", asset_name: "Toncoin", asset_class: "L1", total_score: 72.2, grade: "B", pillars: { F: 70, M: 75, O: 78, S: 72, alpha: 60 }, description: "Telegram blockchain. Growing adoption through messaging app integration. Gaming focus." },
-  { rank: 15, asset_id: "comp", asset_name: "Compound", asset_class: "DeFi", total_score: 71.8, grade: "B", pillars: { F: 78, M: 70, O: 80, S: 55, alpha: 65 }, description: "Algorithmic lending protocol. COMP token governance and compound treasury." },
-  { rank: 16, asset_id: "arb", asset_name: "Arbitrum", asset_class: "L2", total_score: 70.8, grade: "B", pillars: { F: 75, M: 70, O: 78, S: 60, alpha: 62 }, description: "Leading ETH L2 by TVL. Governance decentralization ongoing. Strong DeFi ecosystem." },
-  { rank: 17, asset_id: "morpho", asset_name: "Morpho", asset_class: "DeFi", total_score: 69.5, grade: "C", pillars: { F: 72, M: 65, O: 78, S: 55, alpha: 75 }, description: "Peer-to-peer lending protocol. Optimized liquidity and competitive yields." },
-  { rank: 18, asset_id: "op", asset_name: "Optimism", asset_class: "L2", total_score: 68.6, grade: "C", pillars: { F: 73, M: 68, O: 75, S: 58, alpha: 60 }, description: "OP Stack ecosystem growth. Superchain vision gaining traction. Base chain validates thesis." },
-  { rank: 19, asset_id: "doge", asset_name: "Dogecoin", asset_class: "Memecoin", total_score: 58.5, grade: "C", pillars: { F: 25, M: 60, O: 45, S: 88, alpha: 35 }, description: "Meme cryptocurrency with strong community. Payment adoption growing via Tesla and merchants." },
-  { rank: 20, asset_id: "pepe", asset_name: "Pepe", asset_class: "Memecoin", total_score: 52.1, grade: "C", pillars: { F: 15, M: 55, O: 40, S: 82, alpha: 28 }, description: "Meme token with viral community. High volatility, speculative nature." },
-];
-
 // Pillar definitions with weights
 const PILLAR_DEFS = [
   { key: "F", name: "Fundamental", color: "#4472FF", weight: 30, desc: "Token economics, protocol revenue, team credibility, audit status" },
