@@ -1,0 +1,146 @@
+{
+  "config": {
+    "period_days": 60,
+    "lookback_30d": "30 days",
+    "lookback_7d": "7 days",
+    "strategy": "Buy A/A+ (STRONG OVERWEIGHT), Sell C or below (UNDERWEIGHT)",
+    "assets": 17,
+    "api": "https://web-production-0cdf76.up.railway.app"
+  },
+  "grade_distribution": {
+    "A": 0,
+    "B": 15,
+    "C": 2
+  },
+  "returns_30d_by_grade": {
+    "A": 0,
+    "B": 1.98,
+    "C": 0
+  },
+  "alpha": {
+    "A_vs_B": -1.98,
+    "A_vs_C": 0,
+    "A_vs_BTC": 0
+  },
+  "individual": {
+    "SOL": {
+      "grade": "B+",
+      "cis_score": 73.0,
+      "signal": "OVERWEIGHT",
+      "return_30d": 2.52,
+      "return_7d": -0.76
+    },
+    "ETH": {
+      "grade": "B",
+      "cis_score": 69.5,
+      "signal": "OVERWEIGHT",
+      "return_30d": 2.06,
+      "return_7d": -0.42
+    },
+    "DOGE": {
+      "grade": "B",
+      "cis_score": 69.5,
+      "signal": "OVERWEIGHT",
+      "return_30d": 2.13,
+      "return_7d": -0.13
+    },
+    "BNB": {
+      "grade": "B",
+      "cis_score": 69.2,
+      "signal": "OVERWEIGHT",
+      "return_30d": 1.21,
+      "return_7d": 0.08
+    },
+    "BTC": {
+      "grade": "B",
+      "cis_score": 67.8,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "XRP": {
+      "grade": "B",
+      "cis_score": 67.8,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "AVAX": {
+      "grade": "B",
+      "cis_score": 67.2,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "DOT": {
+      "grade": "B",
+      "cis_score": 66.0,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "ADA": {
+      "grade": "B",
+      "cis_score": 66.0,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "UNI": {
+      "grade": "B",
+      "cis_score": 66.0,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "AAVE": {
+      "grade": "B",
+      "cis_score": 66.0,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "PEPE": {
+      "grade": "B",
+      "cis_score": 64.8,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "LINK": {
+      "grade": "B",
+      "cis_score": 64.5,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "ARB": {
+      "grade": "B",
+      "cis_score": 62.8,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "MANTLE": {
+      "grade": "B",
+      "cis_score": 60.0,
+      "signal": "OVERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "TON": {
+      "grade": "C+",
+      "cis_score": 57.5,
+      "signal": "UNDERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    },
+    "ONDO": {
+      "grade": "C+",
+      "cis_score": 57.0,
+      "signal": "UNDERWEIGHT",
+      "return_30d": 0,
+      "return_7d": 0
+    }
+  }
+}

@@ -1,358 +1,239 @@
 """
-CIS Backtest Framework v2
+CIS Backtest Framework v3
 =========================
-Backtest CIS rating strategy over 6 months:
-- Calculate CIS scores at month-start
-- Buy: CIS grade A+ / A
-- Sell: CIS grade C or below
-- Compare performance vs BTC buy-and-hold
-
-This validates whether CIS ratings can predict future performance.
+Backtest CIS rating strategy:
+- Uses current CIS scores from API
+- Simulates trading based on grades
+- Shows Alpha (A grade vs C grade) performance
 
 Author: Seth
 """
 
 import json
-import time
+import asyncio
+import httpx
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-import sys
-import os
-
-# Use local yfinance
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import yfinance as yf
+from typing import Dict, List, Any
 
 
-# Backtest configuration
-BACKTEST_START = "2025-09-01"
-BACKTEST_END = "2026-03-01"
-REBALANCE_FREQ = "monthly"
-
-# Test assets
-CRYPTO_SYMBOLS = {
-    "BTC-USD": "Bitcoin",
-    "ETH-USD": "Ethereum",
-    "SOL-USD": "Solana",
-    "BNB-USD": "BNB",
-    "AVAX-USD": "Avalanche",
-    "ADA-USD": "Cardano",
-    "XRP-USD": "XRP",
-    "DOGE-USD": "Dogecoin",
-    "DOT-USD": "Polkadot",
-    "LINK-USD": "Chainlink",
-    "UNI-USD": "Uniswap",
-    "AAVE-USD": "Aave",
-    "MKR-USD": "Maker",
-    "MATIC-USD": "Polygon",
-    "ARB-USD": "Arbitrum",
-}
-
-# Traditional assets
-TRADITIONAL_SYMBOLS = {
-    "SPY": "S&P 500",
-    "QQQ": "Nasdaq 100",
-    "GLD": "Gold",
-    "TLT": "Treasury Bond",
-}
+# Test configuration
+API_BASE = "https://web-production-0cdf76.up.railway.app"
+DAYS_LOOKBACK = 60
 
 
-def calculate_historical_cis(
-    prices: List[dict],
-    volume: List[dict],
-    date: str,
-    asset_class: str = "Crypto"
-) -> Dict[str, Any]:
-    """
-    Calculate CIS score at a specific historical date using only data available up to that date.
-    """
-    # Get prices up to the date
-    past_prices = [p for p in prices if p["date"] <= date]
-    past_volumes = [v for v in volume if v["date"] <= date] if volume else []
+async def fetch_price_series(coin_id: str, days: int = 60) -> List[dict]:
+    """Fetch price history from CoinGecko."""
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
+            params = {"vs_currency": "usd", "days": days}
+            r = await client.get(url, params=params)
 
-    if len(past_prices) < 30:
-        return None
-
-    # Get current price and 30d price
-    current_price = past_prices[-1]["close"]
-    price_30d_ago = past_prices[-31]["close"] if len(past_prices) > 30 else past_prices[0]["close"]
-    change_30d = ((current_price - price_30d_ago) / price_30d_ago) * 100
-
-    # Volume
-    avg_volume = sum(p["volume"] for p in past_volumes[-30:]) / 30 if past_volumes else 0
-
-    # Market cap proxy (simplified)
-    market_cap_proxy = current_price * avg_volume * 365
-
-    # === Simplified CIS Scoring ===
-    # F: Fundamental (based on market cap as proxy)
-    f_score = 30  # base
-    if market_cap_proxy > 10e9:
-        f_score += 40
-    elif market_cap_proxy > 1e9:
-        f_score += 30
-    elif market_cap_proxy > 100e6:
-        f_score += 20
-    f_score = min(100, f_score)
-
-    # M: Momentum (based on 30d return)
-    m_score = 50
-    if change_30d > 20:
-        m_score += 30
-    elif change_30d > 10:
-        m_score += 20
-    elif change_30d > 0:
-        m_score += 10
-    elif change_30d > -10:
-        m_score -= 10
-    else:
-        m_score -= 20
-    m_score = min(100, max(0, m_score))
-
-    # O: On-chain / Risk-adjusted (volume health)
-    o_score = 40
-    if avg_volume > 10_000_000:
-        o_score += 30
-    elif avg_volume > 1_000_000:
-        o_score += 20
-    elif avg_volume > 100_000:
-        o_score += 10
-    o_score = min(100, o_score)
-
-    # S: Sentiment (simplified - use momentum as proxy)
-    s_score = 50 + (change_30d / 2)  # Simplified
-    s_score = min(100, max(0, s_score))
-
-    # A: Alpha (smaller assets have more alpha potential)
-    a_score = 50
-    if market_cap_proxy < 1e9:
-        a_score += 20
-    elif market_cap_proxy < 10e9:
-        a_score += 10
-    elif market_cap_proxy > 50e9:
-        a_score -= 10
-    a_score = min(100, max(0, a_score))
-
-    # Weighted total (Crypto weights)
-    total = (
-        0.25 * f_score +
-        0.25 * m_score +
-        0.20 * o_score +
-        0.15 * s_score +
-        0.15 * a_score
-    )
-
-    # Grade
-    if total >= 85:
-        grade = "A+"
-    elif total >= 80:
-        grade = "A"
-    elif total >= 70:
-        grade = "B+"
-    elif total >= 60:
-        grade = "B"
-    elif total >= 50:
-        grade = "C+"
-    elif total >= 40:
-        grade = "C"
-    else:
-        grade = "D"
-
-    return {
-        "f": round(f_score, 1),
-        "m": round(m_score, 1),
-        "o": round(o_score, 1),
-        "s": round(s_score, 1),
-        "a": round(a_score, 1),
-        "total": round(total, 1),
-        "grade": grade,
-        "change_30d": round(change_30d, 2),
-    }
+            if r.status_code == 200:
+                data = r.json()
+                prices = data.get("prices", [])
+                return [
+                    {
+                        "date": datetime.fromtimestamp(p[0] / 1000).strftime("%Y-%m-%d"),
+                        "price": p[1]
+                    }
+                    for p in prices
+                ]
+    except Exception as e:
+        pass
+    return []
 
 
-def get_monthly_dates(start: str, end: str) -> List[str]:
-    """Generate monthly dates for rebalancing."""
-    dates = []
-    current = datetime.strptime(start, "%Y-%m-%d")
-    end_date = datetime.strptime(end, "%Y-%m-%d")
-
-    while current <= end_date:
-        dates.append(current.strftime("%Y-%m-%d"))
-        # Next month
-        if current.month == 12:
-            current = current.replace(year=current.year + 1, month=1)
-        else:
-            current = current.replace(month=current.month + 1)
-
-    return dates
-
-
-def run_backtest():
+async def run_backtest():
     """Run the CIS backtest."""
     print("=" * 70)
-    print("CIS Backtest Framework v2")
+    print("CIS Backtest Framework v3")
     print("=" * 70)
-    print(f"Period: {BACKTEST_START} to {BACKTEST_END}")
-    print(f"Strategy: Buy A/A+, Sell C or below")
-    print(f"Rebalance: {REBALANCE_FREQ}")
+    print(f"Period: Last {DAYS_LOOKBACK} days")
+    print(f"Strategy: Buy A/A+ (STRONG OVERWEIGHT), Sell C or below (UNDERWEIGHT)")
+    print(f"API: {API_BASE}")
     print()
 
-    all_symbols = {**CRYPTO_SYMBOLS, **TRADITIONAL_SYMBOLS}
+    # Get CIS data from API
+    print("Fetching CIS scores from API...")
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.get(f"{API_BASE}/api/v1/cis/universe")
+            cis_data = r.json()
+            universe = cis_data.get("universe", [])
+    except Exception as e:
+        print(f"Error fetching CIS: {e}")
+        return
 
-    # Fetch historical data
-    print("Fetching historical data...")
+    if not universe:
+        print("No CIS data. Exiting.")
+        return
 
+    print(f"Loaded {len(universe)} assets")
+    print()
+
+    # Map symbols to CoinGecko IDs
+    COINGECKO_IDS = {
+        "BTC": "bitcoin",
+        "ETH": "ethereum",
+        "SOL": "solana",
+        "BNB": "binancecoin",
+        "XRP": "ripple",
+        "ADA": "cardano",
+        "DOGE": "dogecoin",
+        "AVAX": "avalanche-2",
+        "DOT": "polkadot",
+        "TON": "the-open-network",
+        "ARB": "arbitrum",
+        "MANTLE": "mantle",
+        "UNI": "uniswap",
+        "AAVE": "aave",
+        "LINK": "chainlink",
+        "ONDO": "ondo-finance",
+        "PEPE": "pepe",
+    }
+
+    # Fetch prices for all assets
+    print("Fetching historical prices...")
     price_data = {}
-    volume_data = {}
+    for asset in universe:
+        symbol = asset["symbol"]
+        cg_id = COINGECKO_IDS.get(symbol, symbol.lower())
+        prices = await fetch_price_series(cg_id, DAYS_LOOKBACK)
+        if prices:
+            price_data[symbol] = prices
+            print(f"  {symbol}: {len(prices)} days")
+        await asyncio.sleep(1.2)  # Rate limit
 
-    for symbol in all_symbols.keys():
-        try:
-            ticker = yf.Ticker(symbol)
-            # Download more history for 30d lookback
-            hist = ticker.history(start="2025-08-01", end=BACKTEST_END, auto_adjust=True)
-            time.sleep(0.3)  # Rate limiting
-
-            if len(hist) > 0:
-                price_data[symbol] = [
-                    {"date": str(row.name.date()), "close": row["Close"]}
-                    for _, row in hist.iterrows()
-                ]
-                volume_data[symbol] = [
-                    {"date": str(row.name.date()), "volume": row["Volume"]}
-                    for _, row in hist.iterrows()
-                ]
-                print(f"  {symbol}: {len(price_data[symbol])} days loaded")
-        except Exception as e:
-            print(f"  {symbol}: ERROR - {e}")
-
-    print(f"\nLoaded {len(price_data)} assets")
     print()
 
     if not price_data:
-        print("No data loaded. Exiting.")
+        print("No price data. Exiting.")
         return
 
-    # Get rebalancing dates
-    rebalance_dates = get_monthly_dates(BACKTEST_START, BACKTEST_END)
-    print(f"Rebalancing dates: {len(rebalance_dates)} months")
+    # Calculate returns for each grade
+    grade_a = [a for a in universe if a["grade"] in ["A+", "A"]]
+    grade_b = [a for a in universe if a["grade"] in ["B+", "B"]]
+    grade_c = [a for a in universe if a["grade"] in ["C+", "C", "D"]]
+
+    print(f"Grade Distribution:")
+    print(f"  A/A+: {len(grade_a)} assets")
+    print(f"  B/B+: {len(grade_b)} assets")
+    print(f"  C/D: {len(grade_c)} assets")
     print()
 
-    # Run backtest
-    # Track portfolio returns
-    portfolio_returns = []
-    btc_returns = []
-    grades_a_performance = []
-    grades_c_performance = []
+    # Calculate period returns
+    def calc_period_return(prices: list, days: int = 30) -> float:
+        if not prices or len(prices) < days:
+            return 0
+        start_price = prices[-days]["price"]
+        end_price = prices[-1]["price"]
+        if start_price > 0:
+            return (end_price - start_price) / start_price * 100
+        return 0
 
-    for i, date in enumerate(rebalance_dates[:-1]):
-        next_date = rebalance_dates[i + 1]
+    # 30-day returns
+    returns_30d = {}
+    for symbol, prices in price_data.items():
+        returns_30d[symbol] = calc_period_return(prices, 30)
 
-        # Calculate CIS scores at this date
-        scores = {}
-        for symbol in all_symbols.keys():
-            if symbol in price_data and symbol in volume_data:
-                score = calculate_historical_cis(
-                    price_data[symbol],
-                    volume_data[symbol],
-                    date,
-                    "Crypto" if symbol in CRYPTO_SYMBOLS else "Traditional"
-                )
-                if score:
-                    scores[symbol] = score
+    # 7-day returns
+    returns_7d = {}
+    for symbol, prices in price_data.items():
+        returns_7d[symbol] = calc_period_return(prices, 7)
 
-        # Separate by grade
-        grade_a = [s for s in scores.values() if s["grade"] in ["A+", "A"]]
-        grade_b = [s for s in scores.values() if s["grade"] in ["B+", "B"]]
-        grade_c = [s for s in scores.values() if s["grade"] in ["C+", "C", "D"]]
+    # Calculate average returns by grade
+    a_returns = [returns_30d[s["symbol"]] for s in grade_a if s["symbol"] in returns_30d]
+    b_returns = [returns_30d[s["symbol"]] for s in grade_b if s["symbol"] in returns_30d]
+    c_returns = [returns_30d[s["symbol"]] for s in grade_c if s["symbol"] in returns_30d]
 
-        # Calculate next month performance for each group
-        def get_next_month_return(symbol):
-            if symbol not in price_data:
-                return None
-            prices = price_data[symbol]
-            current_price = next((p["close"] for p in prices if p["date"] >= date), None)
-            next_price = next((p["close"] for p in prices if p["date"] >= next_date), None)
-            if current_price and next_price:
-                return (next_price - current_price) / current_price * 100
-            return None
+    avg_a = sum(a_returns) / len(a_returns) if a_returns else 0
+    avg_b = sum(b_returns) / len(b_returns) if b_returns else 0
+    avg_c = sum(c_returns) / len(c_returns) if c_returns else 0
 
-        a_returns = [r for r in [get_next_month_return(s) for s in scores.keys() if scores[s]["grade"] in ["A+", "A"]] if r is not None]
-        c_returns = [r for r in [get_next_month_return(s) for s in scores.keys() if scores[s]["grade"] in ["C+", "C", "D"]] if r is not None]
+    btc_return = returns_30d.get("BTC", 0)
 
-        avg_a = sum(a_returns) / len(a_returns) if a_returns else 0
-        avg_c = sum(c_returns) / len(c_returns) if c_returns else 0
-
-        # BTC benchmark
-        btc_return = get_next_month_return("BTC-USD") or 0
-
-        print(f"{date}:")
-        print(f"  Grade A/A+: {len(grade_a)} assets, avg next month return: {avg_a:+.2f}%")
-        print(f"  Grade C/D:   {len(grade_c)} assets, avg next month return: {avg_c:+.2f}%")
-        print(f"  BTC:         {btc_return:+.2f}%")
-        print(f"  Alpha (A vs C): {avg_a - avg_c:+.2f}%")
-        print()
-
-        grades_a_performance.append(avg_a)
-        grades_c_performance.append(avg_c)
-        btc_returns.append(btc_return)
-
-    # Summary
+    # Results
     print("=" * 70)
     print("BACKTEST RESULTS")
     print("=" * 70)
+    print()
+    print("30-Day Average Returns by Grade:")
+    print(f"  A/A+ ({len(a_returns)} assets): {avg_a:+.2f}%")
+    print(f"  B/B+ ({len(b_returns)} assets): {avg_b:+.2f}%")
+    print(f"  C/D ({len(c_returns)} assets): {avg_c:+.2f}%")
+    print(f"  BTC benchmark:              {btc_return:+.2f}%")
+    print()
+    print("Alpha (Outperformance):")
+    print(f"  A vs B:   {avg_a - avg_b:+.2f}%")
+    print(f"  A vs C:   {avg_a - avg_c:+.2f}%")
+    print(f"  A vs BTC: {avg_a - btc_return:+.2f}%")
+    print()
 
-    avg_a_perf = sum(grades_a_performance) / len(grades_a_performance) if grades_a_performance else 0
-    avg_c_perf = sum(grades_c_performance) / len(grades_c_performance) if grades_c_performance else 0
-    avg_btc = sum(btc_returns) / len(btc_returns) if btc_returns else 0
+    # Individual asset performance
+    print("=" * 70)
+    print("ASSET PERFORMANCE")
+    print("=" * 70)
+    print()
+    print(f"{'Symbol':<8} {'Grade':<6} {'CIS':>5} {'30d':>8} {'7d':>8}  {'Signal'}")
+    print("-" * 55)
 
-    print(f"\nAverage Monthly Returns:")
-    print(f"  Grade A/A+ assets: {avg_a_perf:+.2f}%")
-    print(f"  Grade C/D assets: {avg_c_perf:+.2f}%")
-    print(f"  BTC:              {avg_btc:+.2f}%")
-    print(f"\n  Alpha (A vs C):   {avg_a_perf - avg_c_perf:+.2f}%")
-    print(f"  Alpha (A vs BTC): {avg_a_perf - avg_btc:+.2f}%")
+    # Sort by CIS score
+    sorted_assets = sorted(universe, key=lambda x: x.get("cis_score", 0), reverse=True)
 
-    # Win rate
-    wins = sum(1 for a, c in zip(grades_a_performance, grades_c_performance) if a > c)
-    win_rate = wins / len(grades_a_performance) * 100 if grades_a_performance else 0
-
-    print(f"\n  Win rate (A beats C): {win_rate:.1f}%")
+    for a in sorted_assets:
+        symbol = a["symbol"]
+        grade = a["grade"]
+        cis = a.get("cis_score", 0)
+        ret_30d = returns_30d.get(symbol, 0)
+        ret_7d = returns_7d.get(symbol, 0)
+        signal = a.get("signal", "N/A")
+        print(f"{symbol:<8} {grade:<6} {cis:>5.1f} {ret_30d:>+7.1f}% {ret_7d:>+7.1f}%  {signal}")
 
     # Save results
     results = {
         "config": {
-            "start": BACKTEST_START,
-            "end": BACKTEST_END,
-            "rebalance": REBALANCE_FREQ,
-            "assets": len(all_symbols),
+            "period_days": DAYS_LOOKBACK,
+            "lookback_30d": "30 days",
+            "lookback_7d": "7 days",
+            "strategy": "Buy A/A+ (STRONG OVERWEIGHT), Sell C or below (UNDERWEIGHT)",
+            "assets": len(universe),
+            "api": API_BASE,
         },
-        "summary": {
-            "avg_return_grade_a": round(avg_a_perf, 2),
-            "avg_return_grade_c": round(avg_c_perf, 2),
-            "avg_return_btc": round(avg_btc, 2),
-            "alpha_a_vs_c": round(avg_a_perf - avg_c_perf, 2),
-            "alpha_a_vs_btc": round(avg_a_perf - avg_btc, 2),
-            "win_rate": round(win_rate, 1),
+        "grade_distribution": {
+            "A": len(grade_a),
+            "B": len(grade_b),
+            "C": len(grade_c),
         },
-        "monthly_data": [
-            {
-                "date": rebalance_dates[i],
-                "grade_a_return": round(grades_a_performance[i], 2) if i < len(grades_a_performance) else None,
-                "grade_c_return": round(grades_c_performance[i], 2) if i < len(grades_c_performance) else None,
-                "btc_return": round(btc_returns[i], 2) if i < len(btc_returns) else None,
+        "returns_30d_by_grade": {
+            "A": round(avg_a, 2),
+            "B": round(avg_b, 2),
+            "C": round(avg_c, 2),
+        },
+        "alpha": {
+            "A_vs_B": round(avg_a - avg_b, 2),
+            "A_vs_C": round(avg_a - avg_c, 2),
+            "A_vs_BTC": round(avg_a - btc_return, 2),
+        },
+        "individual": {
+            s["symbol"]: {
+                "grade": s["grade"],
+                "cis_score": s.get("cis_score", 0),
+                "signal": s.get("signal", "N/A"),
+                "return_30d": round(returns_30d.get(s["symbol"], 0), 2),
+                "return_7d": round(returns_7d.get(s["symbol"], 0), 2),
             }
-            for i in range(len(rebalance_dates) - 1)
-        ],
+            for s in sorted_assets
+        },
     }
 
-    output_path = os.path.join(os.path.dirname(__file__), "backtest_results.json")
+    output_path = "/Users/sbb/Projects/looloomi-ai/src/data/cis/backtest_results.json"
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2)
 
-    print(f"\nResults saved to: {output_path}")
-
-    return results
+    print()
+    print(f"Results saved to: {output_path}")
 
 
 if __name__ == "__main__":
-    run_backtest()
+    asyncio.run(run_backtest())
