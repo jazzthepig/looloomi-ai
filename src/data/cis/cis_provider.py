@@ -79,6 +79,9 @@ CRYPTO_ASSETS = {
     "IO": {"coingecko": "io-net", "name": "io.net", "class": "Infrastructure"},
     "GENIUS": {"coingecko": "genius", "name": "Genius", "class": "RWA"},
     "POLYX": {"coingecko": "polymesh", "name": "Polymesh", "class": "RWA"},
+    # Hot tokens
+    "HYPER": {"coingecko": "hyper", "name": "Hyperliquid", "class": "L1"},
+    "VIRTUAL": {"coingecko": "virtual-protocol", "name": "Virtual Protocol", "class": "L2"},
 }
 
 # US Equities - yfinance symbols
@@ -193,6 +196,9 @@ BINANCE_SYMBOLS = {
     "ICP": "icusdt",
     "FTND": "ftndusdt",
     "IO": "iousdt",
+    # Hot tokens
+    "HYPER": "hyperusdt",
+    "VIRTUAL": "virtualusdt",
 }
 
 # Reverse mapping
