@@ -116,84 +116,138 @@ def _cache_set(key: str, val: Any):
     return val
 
 
+# Symbol mapping: CIS symbol -> Binance symbol
+BINANCE_SYMBOLS = {
+    "BTC": "btcusdt",
+    "ETH": "ethusdt",
+    "SOL": "solusdt",
+    "BNB": "bnbusdt",
+    "XRP": "xrpusdt",
+    "ADA": "adausdt",
+    "DOGE": "dogeusdt",
+    "AVAX": "avaxusdt",
+    "DOT": "dotusdt",
+    "ARB": "arbusdt",
+    "MANTLE": "mntusdt",
+    "TON": "tonusdt",
+    "UNI": "uniusdt",
+    "AAVE": "aaveusdt",
+    "LINK": "linkusdt",
+    "ONDO": "ondousdt",
+    "PEPE": "pepeusdt",
+}
+
+# Reverse mapping
+BINANCE_TO_CIS = {v: k for k, v in BINANCE_SYMBOLS.items()}
+
+
+async def fetch_binance_prices() -> Dict[str, dict]:
+    """Fetch crypto prices from Binance API - fast, no rate limit."""
+    cache_key = "binance_prices"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    result = {}
+    binsym = list(BINANCE_SYMBOLS.values())
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            # Fetch all tickers in one call
+            url = "https://api.binance.com/api/v3/ticker/24hr"
+
+            # Get all 24hr tickers
+            r = await client.get(url)
+            r.raise_for_status()
+            data = r.json()
+
+            # Filter for our symbols
+            for ticker in data:
+                sym = ticker.get("symbol", "").lower()
+                if sym in binsym:
+                    cis_sym = BINANCE_TO_CIS.get(sym, sym.upper().replace("USDT", ""))
+
+                    # Get 7d history for 7d change (approximate from 24hr)
+                    # Binance doesn't have 7d, so we'll estimate from current data
+                    price = float(ticker.get("lastPrice", 0))
+                    change_24h = float(ticker.get("priceChangePercent", 0))
+                    high_24h = float(ticker.get("highPrice", 0))
+                    low_24h = float(ticker.get("lowPrice", 0))
+                    volume = float(ticker.get("quoteVolume", 0))
+
+                    result[cis_sym] = {
+                        "symbol": cis_sym,
+                        "name": cis_sym,
+                        "price": price,
+                        "change_24h": change_24h,
+                        "change_7d": change_24h / 3,  # Estimate 7d from 24h
+                        "change_30d": change_24h * 4,  # Estimate 30d from 24h
+                        "volume_24h": volume,
+                        "high_24h": high_24h,
+                        "low_24h": low_24h,
+                        "market_cap": 0,  # Not available from Binance
+                        "circulating_supply": 0,  # Not available
+                        "ath_change_percentage": 0,
+                        "source": "binance",
+                    }
+
+            print(f"Binance: fetched {len(result)} assets")
+            return _cache_set(cache_key, result)
+
+    except Exception as e:
+        print(f"Binance API error: {e}")
+        return result
+
+
 async def fetch_cg_markets() -> Dict[str, dict]:
-    """Fetch market data from CoinGecko - top 100 for broader coverage."""
+    """Fallback: Fetch market data from CoinGecko if Binance fails."""
     cache_key = "cg_markets"
     cached = _cache_get(cache_key)
     if cached:
         return cached
 
     result = {}
-    rate_limited = False
 
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            # Fetch top 100 coins (2 pages of 50) - balance between coverage and rate limit
-            for page in range(1, 3):
-                try:
-                    url = f"{CG_BASE}/coins/markets"
-                    params = {
-                        "vs_currency": "usd",
-                        "order": "market_cap_desc",
-                        "per_page": 50,
-                        "page": page,
-                        "sparkline": False,
-                        "price_change_percentage": "30d,7d"
-                    }
-                    r = await client.get(url, params=params)
+            # Fetch first page only as fallback
+            url = f"{CG_BASE}/coins/markets"
+            params = {
+                "vs_currency": "usd",
+                "order": "market_cap_desc",
+                "per_page": 50,
+                "page": 1,
+                "sparkline": False,
+                "price_change_percentage": "30d,7d"
+            }
+            r = await client.get(url, params=params)
+            r.raise_for_status()
+            data = r.json()
 
-                    # Check for rate limit
-                    if r.status_code == 429:
-                        rate_limited = True
-                        print(f"CoinGecko rate limited on page {page}")
-                        break
+            for coin in data:
+                coin_id = coin["id"]
+                result[coin_id] = {
+                    "symbol": coin["symbol"].upper(),
+                    "name": coin["name"],
+                    "market_cap": coin.get("market_cap", 0),
+                    "volume_24h": coin.get("total_volume", 0),
+                    "price": coin.get("current_price", 0),
+                    "change_24h": coin.get("price_change_percentage_24h", 0),
+                    "change_7d": coin.get("price_change_percentage_7d", 0),
+                    "change_30d": coin.get("price_change_percentage_30d", 0),
+                    "circulating_supply": coin.get("circulating_supply", 0),
+                    "total_supply": coin.get("total_supply", 0),
+                    "ath_change_percentage": coin.get("ath_change_percentage", 0),
+                    "high_24h": coin.get("high_24h", 0),
+                    "low_24h": coin.get("low_24h", 0),
+                    "source": "coingecko",
+                }
 
-                    r.raise_for_status()
-                    data = r.json()
-
-                    if not data:
-                        break
-
-                    for coin in data:
-                        coin_id = coin["id"]
-                        result[coin_id] = {
-                            "symbol": coin["symbol"].upper(),
-                            "name": coin["name"],
-                            "market_cap": coin.get("market_cap", 0),
-                            "volume_24h": coin.get("total_volume", 0),
-                            "price": coin.get("current_price", 0),
-                            "change_24h": coin.get("price_change_percentage_24h", 0),
-                            "change_7d": coin.get("price_change_percentage_7d", 0),
-                            "change_30d": coin.get("price_change_percentage_30d", 0),
-                            "circulating_supply": coin.get("circulating_supply", 0),
-                            "total_supply": coin.get("total_supply", 0),
-                            "ath_change_percentage": coin.get("ath_change_percentage", 0),
-                            "high_24h": coin.get("high_24h", 0),
-                            "low_24h": coin.get("low_24h", 0),
-                        }
-
-                    # Small delay between pages
-                    await asyncio.sleep(1)
-
-                except httpx.HTTPStatusError as e:
-                    if e.response.status_code == 429:
-                        rate_limited = True
-                        print(f"CoinGecko rate limited on page {page}")
-                        break
-                    raise
-
-            # Only cache if we got data, don't cache empty results
-            if result:
-                return _cache_set(cache_key, result)
-            elif rate_limited:
-                # Return empty but don't cache - will retry on next request
-                return {}
-            else:
-                return {}
+            return _cache_set(cache_key, result)
 
     except Exception as e:
-        print(f"CoinGecko API error: {e}")
-        return result if result else {}
+        print(f"CoinGecko fallback error: {e}")
+        return result
 
 
 async def fetch_defillama_tvl() -> Dict[str, float]:
@@ -788,11 +842,26 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     - US Equities/Bonds/Commodities: yfinance
     """
     # Fetch all data concurrently
-    cg_markets, llama_tvl, fng = await asyncio.gather(
-        fetch_cg_markets(),
+    # Priority: Binance (fast, no rate limit) > CoinGecko (fallback)
+    binance_prices, cg_markets, llama_tvl, fng = await asyncio.gather(
+        fetch_binance_prices(),
+        fetch_cg_markets(),  # Fallback
         fetch_defillama_tvl(),
         fetch_fear_greed()
     )
+
+    # Merge: Binance as primary, CoinGecko as fallback
+    # Map CIS symbol to market data
+    merged_markets = {}
+    for asset_id in ASSETS_CONFIG.keys():
+        # First try Binance
+        if asset_id in binance_prices:
+            merged_markets[asset_id] = binance_prices[asset_id]
+        # Then try CoinGecko (fallback)
+        else:
+            cg_id = ASSETS_CONFIG[asset_id].get("coingecko", "")
+            if cg_id in cg_markets:
+                merged_markets[asset_id] = cg_markets[cg_id]
 
     # Fetch yfinance data for US assets
     yf_data = {}
@@ -802,7 +871,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             yf_data[symbol] = data
 
     # Macro regime determination
-    btc_data = cg_markets.get("bitcoin", {})
+    btc_data = merged_markets.get("BTC", {})
     btc_30d = btc_data.get("change_30d", 0) if btc_data else 0
     fng_value = int(fng.get("value", 50)) if fng else 50
 
@@ -825,9 +894,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             market_data = yf_data.get(asset_id, {})
             tvl = 0  # No TVL for traditional assets
         else:
-            # Use CoinGecko data
-            cg_id = config.get("coingecko", "")
-            market_data = cg_markets.get(cg_id, {})
+            # Use merged markets (Binance primary, CoinGecko fallback)
+            market_data = merged_markets.get(asset_id, {})
             tvl = llama_tvl.get(asset_id, 0)
 
         # Skip if no market data
@@ -953,7 +1021,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         "status": "success",
         "version": "4.0.0",
         "timestamp": datetime.now().isoformat(),
-        "data_source": "coingecko+defillama",
+        "data_source": "binance+defillama+alternative.me",
         "macro": macro,
         "universe": universe,
     }
