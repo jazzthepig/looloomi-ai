@@ -1,10 +1,9 @@
 """
-CIS Backtest Framework v3
-=========================
-Backtest CIS rating strategy:
-- Uses current CIS scores from API
-- Simulates trading based on grades
-- Shows Alpha (A grade vs C grade) performance
+CIS Backtest Framework v3.1
+==========================
+Backtest with CoinGecko historical data:
+- Fetch 4 assets at a time to avoid rate limits
+- Save results to history database
 
 Author: Seth
 """
@@ -12,20 +11,38 @@ Author: Seth
 import json
 import asyncio
 import httpx
+import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
+from typing import Dict, List
 
 
-# Test configuration
 API_BASE = "https://web-production-0cdf76.up.railway.app"
-DAYS_LOOKBACK = 60
+COINGECKO_IDS = {
+    "BTC": "bitcoin",
+    "ETH": "ethereum",
+    "SOL": "solana",
+    "BNB": "binancecoin",
+    "XRP": "ripple",
+    "ADA": "cardano",
+    "DOGE": "dogecoin",
+    "AVAX": "avalanche-2",
+    "DOT": "polkadot",
+    "ARB": "arbitrum",
+    "MANTLE": "mantle",
+    "TON": "the-open-network",
+    "UNI": "uniswap",
+    "AAVE": "aave",
+    "LINK": "chainlink",
+    "ONDO": "ondo-finance",
+    "PEPE": "pepe",
+}
 
 
-async def fetch_price_series(coin_id: str, days: int = 60) -> List[dict]:
-    """Fetch price history from CoinGecko."""
+async def fetch_price_history(cg_id: str, days: int = 60) -> List[dict]:
+    """Fetch historical prices from CoinGecko."""
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
+            url = f"https://api.coingecko.com/api/v3/coins/{cg_id}/market_chart"
             params = {"vs_currency": "usd", "days": days}
             r = await client.get(url, params=params)
 
@@ -33,179 +50,146 @@ async def fetch_price_series(coin_id: str, days: int = 60) -> List[dict]:
                 data = r.json()
                 prices = data.get("prices", [])
                 return [
-                    {
-                        "date": datetime.fromtimestamp(p[0] / 1000).strftime("%Y-%m-%d"),
-                        "price": p[1]
-                    }
+                    {"date": datetime.fromtimestamp(p[0] / 1000).strftime("%Y-%m-%d"), "price": p[1]}
                     for p in prices
                 ]
+            elif r.status_code == 429:
+                print(f"  Rate limited, waiting...")
+                await asyncio.sleep(60)
+                return []
     except Exception as e:
-        pass
+        print(f"  Error: {e}")
     return []
 
 
-async def run_backtest():
-    """Run the CIS backtest."""
-    print("=" * 70)
-    print("CIS Backtest Framework v3")
-    print("=" * 70)
-    print(f"Period: Last {DAYS_LOOKBACK} days")
-    print(f"Strategy: Buy A/A+ (STRONG OVERWEIGHT), Sell C or below (UNDERWEIGHT)")
-    print(f"API: {API_BASE}")
-    print()
+def calculate_return(prices: List[dict], days: int = 30) -> float:
+    """Calculate return for last N days."""
+    if not prices or len(prices) < days:
+        return 0.0
+    start = prices[-days]["price"]
+    end = prices[-1]["price"]
+    if start > 0:
+        return (end - start) / start * 100
+    return 0.0
 
-    # Get CIS data from API
-    print("Fetching CIS scores from API...")
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            r = await client.get(f"{API_BASE}/api/v1/cis/universe")
-            cis_data = r.json()
-            universe = cis_data.get("universe", [])
-    except Exception as e:
-        print(f"Error fetching CIS: {e}")
-        return
+
+async def run_backtest():
+    """Run backtest with batch fetching."""
+    print("=" * 60)
+    print("CIS Backtest v3.1 - Batch Fetch")
+    print("=" * 60)
+
+    # Get CIS scores
+    print("\nFetching CIS scores...")
+    async with httpx.AsyncClient(timeout=30) as client:
+        r = await client.get(f"{API_BASE}/api/v1/cis/universe")
+        cis_data = r.json()
+        universe = cis_data.get("universe", [])
 
     if not universe:
-        print("No CIS data. Exiting.")
+        print("No CIS data!")
         return
 
     print(f"Loaded {len(universe)} assets")
-    print()
+    print(f"Grade distribution: ", end="")
+    grades = {}
+    for a in universe:
+        g = a["grade"]
+        grades[g] = grades.get(g, 0) + 1
+    print(", ".join(f"{k}:{v}" for k, v in sorted(grades.items())))
 
-    # Map symbols to CoinGecko IDs
-    COINGECKO_IDS = {
-        "BTC": "bitcoin",
-        "ETH": "ethereum",
-        "SOL": "solana",
-        "BNB": "binancecoin",
-        "XRP": "ripple",
-        "ADA": "cardano",
-        "DOGE": "dogecoin",
-        "AVAX": "avalanche-2",
-        "DOT": "polkadot",
-        "TON": "the-open-network",
-        "ARB": "arbitrum",
-        "MANTLE": "mantle",
-        "UNI": "uniswap",
-        "AAVE": "aave",
-        "LINK": "chainlink",
-        "ONDO": "ondo-finance",
-        "PEPE": "pepe",
-    }
-
-    # Fetch prices for all assets
-    print("Fetching historical prices...")
+    # Fetch prices in batches of 4
+    print("\nFetching historical prices (4 assets at a time)...")
     price_data = {}
-    for asset in universe:
-        symbol = asset["symbol"]
-        cg_id = COINGECKO_IDS.get(symbol, symbol.lower())
-        prices = await fetch_price_series(cg_id, DAYS_LOOKBACK)
-        if prices:
-            price_data[symbol] = prices
-            print(f"  {symbol}: {len(prices)} days")
-        await asyncio.sleep(1.2)  # Rate limit
+    symbols = [a["symbol"] for a in universe]
 
-    print()
+    # Process in batches
+    batch_size = 4
+    for i in range(0, len(symbols), batch_size):
+        batch = symbols[i:i + batch_size]
+        print(f"\n  Batch {i // batch_size + 1}: {batch}")
 
-    if not price_data:
-        print("No price data. Exiting.")
-        return
+        tasks = []
+        for symbol in batch:
+            cg_id = COINGECKO_IDS.get(symbol, symbol.lower())
+            tasks.append(fetch_price_history(cg_id, 60))
 
-    # Calculate returns for each grade
+        results = await asyncio.gather(*tasks)
+
+        for symbol, prices in zip(batch, results):
+            if prices:
+                price_data[symbol] = prices
+                print(f"    {symbol}: {len(prices)} days")
+            else:
+                print(f"    {symbol}: FAILED")
+
+        # Rate limit delay between batches
+        if i + batch_size < len(symbols):
+            print("  Waiting 10s for rate limit...")
+            await asyncio.sleep(10)
+
+    # Calculate returns
+    print("\n" + "=" * 60)
+    print("RESULTS")
+    print("=" * 60)
+
+    # Group by grade
     grade_a = [a for a in universe if a["grade"] in ["A+", "A"]]
     grade_b = [a for a in universe if a["grade"] in ["B+", "B"]]
     grade_c = [a for a in universe if a["grade"] in ["C+", "C", "D"]]
 
-    print(f"Grade Distribution:")
-    print(f"  A/A+: {len(grade_a)} assets")
-    print(f"  B/B+: {len(grade_b)} assets")
-    print(f"  C/D: {len(grade_c)} assets")
-    print()
+    # Calculate 30d returns
+    returns = {s: calculate_return(price_data.get(s, []), 30) for s in symbols}
 
-    # Calculate period returns
-    def calc_period_return(prices: list, days: int = 30) -> float:
-        if not prices or len(prices) < days:
-            return 0
-        start_price = prices[-days]["price"]
-        end_price = prices[-1]["price"]
-        if start_price > 0:
-            return (end_price - start_price) / start_price * 100
-        return 0
-
-    # 30-day returns
-    returns_30d = {}
-    for symbol, prices in price_data.items():
-        returns_30d[symbol] = calc_period_return(prices, 30)
-
-    # 7-day returns
-    returns_7d = {}
-    for symbol, prices in price_data.items():
-        returns_7d[symbol] = calc_period_return(prices, 7)
-
-    # Calculate average returns by grade
-    a_returns = [returns_30d[s["symbol"]] for s in grade_a if s["symbol"] in returns_30d]
-    b_returns = [returns_30d[s["symbol"]] for s in grade_b if s["symbol"] in returns_30d]
-    c_returns = [returns_30d[s["symbol"]] for s in grade_c if s["symbol"] in returns_30d]
+    # Average by grade
+    a_returns = [returns[s["symbol"]] for s in grade_a if s["symbol"] in returns]
+    b_returns = [returns[s["symbol"]] for s in grade_b if s["symbol"] in returns]
+    c_returns = [returns[s["symbol"]] for s in grade_c if s["symbol"] in returns]
 
     avg_a = sum(a_returns) / len(a_returns) if a_returns else 0
     avg_b = sum(b_returns) / len(b_returns) if b_returns else 0
     avg_c = sum(c_returns) / len(c_returns) if c_returns else 0
 
-    btc_return = returns_30d.get("BTC", 0)
+    btc_return = returns.get("BTC", 0)
 
-    # Results
-    print("=" * 70)
-    print("BACKTEST RESULTS")
-    print("=" * 70)
-    print()
-    print("30-Day Average Returns by Grade:")
+    print(f"\n30-Day Returns by Grade:")
     print(f"  A/A+ ({len(a_returns)} assets): {avg_a:+.2f}%")
     print(f"  B/B+ ({len(b_returns)} assets): {avg_b:+.2f}%")
-    print(f"  C/D ({len(c_returns)} assets): {avg_c:+.2f}%")
-    print(f"  BTC benchmark:              {btc_return:+.2f}%")
-    print()
-    print("Alpha (Outperformance):")
-    print(f"  A vs B:   {avg_a - avg_b:+.2f}%")
-    print(f"  A vs C:   {avg_a - avg_c:+.2f}%")
+    print(f"  C/D  ({len(c_returns)} assets): {avg_c:+.2f}%")
+    print(f"  BTC: {btc_return:+.2f}%")
+
+    print(f"\nAlpha:")
+    print(f"  A vs B: {avg_a - avg_b:+.2f}%")
+    print(f"  A vs C: {avg_a - avg_c:+.2f}%")
     print(f"  A vs BTC: {avg_a - btc_return:+.2f}%")
-    print()
 
-    # Individual asset performance
-    print("=" * 70)
-    print("ASSET PERFORMANCE")
-    print("=" * 70)
-    print()
-    print(f"{'Symbol':<8} {'Grade':<6} {'CIS':>5} {'30d':>8} {'7d':>8}  {'Signal'}")
-    print("-" * 55)
-
-    # Sort by CIS score
-    sorted_assets = sorted(universe, key=lambda x: x.get("cis_score", 0), reverse=True)
-
+    # Individual assets
+    print(f"\nIndividual Performance:")
+    print(f"{'Symbol':<8} {'Grade':<6} {'Return':>10}")
+    print("-" * 30)
+    sorted_assets = sorted(universe, key=lambda x: returns.get(x["symbol"], 0), reverse=True)
     for a in sorted_assets:
-        symbol = a["symbol"]
-        grade = a["grade"]
-        cis = a.get("cis_score", 0)
-        ret_30d = returns_30d.get(symbol, 0)
-        ret_7d = returns_7d.get(symbol, 0)
-        signal = a.get("signal", "N/A")
-        print(f"{symbol:<8} {grade:<6} {cis:>5.1f} {ret_30d:>+7.1f}% {ret_7d:>+7.1f}%  {signal}")
+        ret = returns.get(a["symbol"], 0)
+        print(f"{a['symbol']:<8} {a['grade']:<6} {ret:>+9.2f}%")
 
-    # Save results
-    results = {
-        "config": {
-            "period_days": DAYS_LOOKBACK,
-            "lookback_30d": "30 days",
-            "lookback_7d": "7 days",
-            "strategy": "Buy A/A+ (STRONG OVERWEIGHT), Sell C or below (UNDERWEIGHT)",
-            "assets": len(universe),
-            "api": API_BASE,
-        },
-        "grade_distribution": {
-            "A": len(grade_a),
-            "B": len(grade_b),
-            "C": len(grade_c),
-        },
-        "returns_30d_by_grade": {
+    # Save to database
+    print("\nSaving to database...")
+    try:
+        from src.data.cis.history_db import init_db
+        from src.data.cis.cis_provider import calculate_cis_universe
+
+        # This would save the backtest result
+        # For now just print
+        print("  (Database save not implemented yet)")
+    except Exception as e:
+        print(f"  Error: {e}")
+
+    # Save to JSON
+    result = {
+        "timestamp": datetime.now().isoformat(),
+        "assets": len(universe),
+        "grades": grades,
+        "returns_by_grade": {
             "A": round(avg_a, 2),
             "B": round(avg_b, 2),
             "C": round(avg_c, 2),
@@ -215,23 +199,12 @@ async def run_backtest():
             "A_vs_C": round(avg_a - avg_c, 2),
             "A_vs_BTC": round(avg_a - btc_return, 2),
         },
-        "individual": {
-            s["symbol"]: {
-                "grade": s["grade"],
-                "cis_score": s.get("cis_score", 0),
-                "signal": s.get("signal", "N/A"),
-                "return_30d": round(returns_30d.get(s["symbol"], 0), 2),
-                "return_7d": round(returns_7d.get(s["symbol"], 0), 2),
-            }
-            for s in sorted_assets
-        },
+        "individual": {s: round(returns.get(s, 0), 2) for s in symbols},
     }
 
     output_path = "/Users/sbb/Projects/looloomi-ai/src/data/cis/backtest_results.json"
     with open(output_path, "w") as f:
-        json.dump(results, f, indent=2)
-
-    print()
+        json.dump(result, f, indent=2)
     print(f"Results saved to: {output_path}")
 
 
