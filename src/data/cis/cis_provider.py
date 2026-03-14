@@ -80,8 +80,8 @@ CRYPTO_ASSETS = {
     "GENIUS": {"coingecko": "genius", "name": "Genius", "class": "RWA"},
     "POLYX": {"coingecko": "polymesh", "name": "Polymesh", "class": "RWA"},
     # Hot tokens
-    "HYPER": {"coingecko": "hyper", "name": "Hyperliquid", "class": "L1"},
-    "VIRTUAL": {"coingecko": "virtual-protocol", "name": "Virtual Protocol", "class": "L2"},
+    "HYPER": {"coingecko": "hyperliquid", "name": "Hyperliquid", "class": "L1"},
+    "VIRTUAL": {"coingecko": "virtual-protocol", "name": "Virtuals Protocol", "class": "AI"},
 }
 
 # US Equities - yfinance symbols
@@ -760,6 +760,9 @@ def calculate_total_score(pillars: Dict[str, float], asset_class: str) -> Dict[s
         "RWA": {"F": 0.35, "M": 0.20, "O": 0.20, "S": 0.15, "A": 0.10},
         "Infrastructure": {"F": 0.30, "M": 0.20, "O": 0.25, "S": 0.10, "A": 0.15},
         "NFT": {"F": 0.15, "M": 0.25, "O": 0.15, "S": 0.30, "A": 0.15},
+        "Memecoin": {"F": 0.15, "M": 0.35, "O": 0.15, "S": 0.25, "A": 0.10},
+        "Gaming": {"F": 0.20, "M": 0.30, "O": 0.15, "S": 0.25, "A": 0.10},
+        "AI": {"F": 0.20, "M": 0.30, "O": 0.20, "S": 0.15, "A": 0.15},
         "US Equity": {"F": 0.30, "M": 0.25, "O": 0.10, "S": 0.20, "A": 0.15},
         "US Bond": {"F": 0.30, "M": 0.20, "O": 0.10, "S": 0.20, "A": 0.20},
         "Commodity": {"F": 0.25, "M": 0.25, "O": 0.10, "S": 0.20, "A": 0.20},
