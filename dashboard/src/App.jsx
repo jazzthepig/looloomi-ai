@@ -539,28 +539,6 @@ function CISContent() {
         </p>
       </div>
 
-      {/* Stats Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
-        {[
-          { label: "Total Assets", value: "20", color: "#4472FF" },
-          { label: "Grade A", value: "4", color: "#00D98A" },
-          { label: "Grade B", value: "12", color: "#4472FF" },
-          { label: "Grade C", value: "4", color: "#E8A000" },
-        ].map((s, i) => (
-          <div key={i} style={{
-            background: T.surface, border: `1px solid ${T.border}`,
-            borderRadius: 10, padding: 24,
-          }}>
-            <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12, fontFamily: FONTS.body }}>
-              {s.label}
-            </div>
-            <div style={{ fontSize: 32, fontWeight: 700, color: s.color, fontFamily: FONTS.mono }}>
-              {s.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Leaderboard */}
       <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>
         <CISLeaderboard />

@@ -180,10 +180,17 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
   const fetchSignals = async () => {
     setError(null);
     try {
-      const signals = await fetchSignalsFromAPI();
-      setSignals(signals);
-      // Start with first 5 signals
-      setDisplayedSignals(signals.slice(0, 5));
+      const raw = await fetchSignalsFromAPI();
+      // Deduplicate by description to avoid backend returning identical signals
+      const seen = new Set();
+      const unique = raw.filter(s => {
+        const key = s.description?.trim().toLowerCase();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      setSignals(unique);
+      setDisplayedSignals(unique.slice(0, 5));
       setCurrentIndex(0);
       setLastUpdate(new Date());
     } catch (err) {
