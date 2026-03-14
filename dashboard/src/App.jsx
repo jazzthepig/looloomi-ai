@@ -172,90 +172,98 @@ export default function App() {
 
         .al1 {
           position: absolute;
-          width: 900px;
-          height: 500px;
-          top: -180px;
-          left: -120px;
-          background: radial-gradient(ellipse, rgba(0, 232, 122, 0.028), transparent 65%);
-          filter: blur(80px);
+          width: 1100px;
+          height: 700px;
+          top: -220px;
+          left: -180px;
+          background: radial-gradient(ellipse, rgba(0, 232, 122, 0.11), transparent 60%);
+          filter: blur(90px);
           animation: al1 13s ease-in-out infinite;
+          mix-blend-mode: screen;
         }
 
         .al2 {
           position: absolute;
-          width: 600px;
-          height: 400px;
-          top: 300px;
-          right: -150px;
-          background: radial-gradient(ellipse, rgba(200, 168, 75, 0.022), transparent 65%);
-          filter: blur(80px);
+          width: 800px;
+          height: 500px;
+          top: 200px;
+          right: -200px;
+          background: radial-gradient(ellipse, rgba(200, 168, 75, 0.09), transparent 60%);
+          filter: blur(90px);
           animation: al2 19s ease-in-out infinite;
+          mix-blend-mode: screen;
         }
 
         .al3 {
           position: absolute;
-          width: 700px;
-          height: 300px;
-          bottom: -100px;
-          left: 30%;
-          background: radial-gradient(ellipse, rgba(75, 158, 255, 0.018), transparent 65%);
-          filter: blur(80px);
+          width: 900px;
+          height: 400px;
+          bottom: -80px;
+          left: 25%;
+          background: radial-gradient(ellipse, rgba(75, 158, 255, 0.08), transparent 60%);
+          filter: blur(90px);
           animation: al3 23s ease-in-out infinite;
+          mix-blend-mode: screen;
         }
 
         .al4 {
           position: absolute;
-          width: 400px;
-          height: 400px;
-          top: 40%;
-          left: -80px;
-          background: radial-gradient(ellipse, rgba(167, 139, 250, 0.012), transparent 65%);
+          width: 500px;
+          height: 500px;
+          top: 35%;
+          left: -100px;
+          background: radial-gradient(ellipse, rgba(167, 139, 250, 0.07), transparent 60%);
           filter: blur(80px);
           animation: al4 17s ease-in-out infinite;
+          mix-blend-mode: screen;
         }
 
         .al5 {
           position: absolute;
-          width: 500px;
-          height: 250px;
-          bottom: 20%;
-          right: 10%;
-          background: radial-gradient(ellipse, rgba(255, 61, 90, 0.014), transparent 65%);
+          width: 600px;
+          height: 350px;
+          bottom: 18%;
+          right: 8%;
+          background: radial-gradient(ellipse, rgba(255, 61, 90, 0.06), transparent 60%);
           filter: blur(80px);
           animation: al5 21s ease-in-out infinite;
+          mix-blend-mode: screen;
         }
 
         .al6 {
           position: absolute;
-          width: 1100px;
-          height: 200px;
-          top: 60%;
-          left: 0;
-          background: radial-gradient(ellipse, rgba(75, 158, 255, 0.010), transparent 70%);
-          filter: blur(80px);
+          width: 1400px;
+          height: 300px;
+          top: 55%;
+          left: -100px;
+          background: radial-gradient(ellipse, rgba(75, 158, 255, 0.05), transparent 65%);
+          filter: blur(100px);
           animation: al6 28s ease-in-out infinite;
+          mix-blend-mode: screen;
         }
 
         .al7 {
           position: absolute;
-          width: 300px;
-          height: 300px;
-          top: 10%;
-          right: 20%;
-          background: radial-gradient(ellipse, rgba(0, 232, 122, 0.010), transparent 65%);
-          filter: blur(80px);
+          width: 400px;
+          height: 400px;
+          top: 8%;
+          right: 18%;
+          background: radial-gradient(ellipse, rgba(0, 232, 122, 0.06), transparent 60%);
+          filter: blur(70px);
           animation: al7 15s ease-in-out infinite;
+          mix-blend-mode: screen;
         }
 
         .al8 {
           position: absolute;
-          width: 800px;
-          height: 600px;
-          bottom: -200px;
-          right: -200px;
-          background: radial-gradient(ellipse, rgba(200, 168, 75, 0.008), transparent 65%);
-          filter: blur(80px);
+          width: 1000px;
+          height: 800px;
+          bottom: -240px;
+          right: -240px;
+          background: radial-gradient(ellipse, rgba(200, 168, 75, 0.07), transparent 60%);
+          filter: blur(100px);
           animation: al8 31s ease-in-out infinite;
+          mix-blend-mode: screen;
         }
 
         @keyframes al1 {
@@ -294,19 +302,19 @@ export default function App() {
         /* ── SECTION DIVIDERS ── */
         .section-divider {
           height: 1px;
-          background: linear-gradient(90deg, transparent 0%, rgba(200,168,75,0.025) 20%, rgba(200,168,75,0.06) 50%, rgba(200,168,75,0.025) 80%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(200,168,75,0.06) 20%, rgba(200,168,75,0.18) 50%, rgba(200,168,75,0.06) 80%, transparent 100%);
           position: relative;
         }
         .section-divider::after {
           content: '';
           position: absolute;
-          top: -3px;
+          top: -6px;
           left: 50%;
           transform: translateX(-50%);
-          width: 35%;
-          height: 6px;
-          background: radial-gradient(ellipse, rgba(6,182,212,0.04) 0%, transparent 70%);
-          filter: blur(4px);
+          width: 40%;
+          height: 12px;
+          background: radial-gradient(ellipse, rgba(200,168,75,0.12) 0%, transparent 70%);
+          filter: blur(6px);
         }
 
         /* ── NAVBAR GLASSMORPHISM ── */
@@ -393,11 +401,34 @@ export default function App() {
           }
         }
 
-        /* ── CARD TRANSPARENCY ── */
+        /* ── CARD GLASS — Turrell inner-glow ── */
         .lm-card, .card, [class*="card"] {
-          background: rgba(255, 255, 255, 0.05) !important;
-          border: 1px solid rgba(255, 255, 255, 0.10) !important;
-          backdrop-filter: blur(8px);
+          background: rgba(8, 6, 20, 0.65) !important;
+          border: 1px solid rgba(255, 255, 255, 0.07) !important;
+          backdrop-filter: blur(24px) saturate(1.4);
+          -webkit-backdrop-filter: blur(24px) saturate(1.4);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.055),
+            inset 0 -1px 0 rgba(255, 255, 255, 0.02),
+            0 0 0 1px rgba(255, 255, 255, 0.03),
+            0 8px 32px rgba(0, 0, 0, 0.45);
+        }
+
+        /* ── SECTION AMBIENT — each section breathes with a colour ── */
+        #market    { --al-c: rgba(0, 200, 224, 0.04); }
+        #intelligence { --al-c: rgba(107, 15, 204, 0.05); }
+        #cis       { --al-c: rgba(200, 168, 75, 0.04); }
+        #protocol  { --al-c: rgba(75, 158, 255, 0.04); }
+        #vault     { --al-c: rgba(0, 232, 122, 0.04); }
+        #quantgp   { --al-c: rgba(200, 168, 75, 0.05); }
+
+        section::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(ellipse 80% 60% at 30% 40%, var(--al-c, transparent), transparent 70%);
+          pointer-events: none;
+          z-index: 0;
         }
       `}</style>
     </div>
