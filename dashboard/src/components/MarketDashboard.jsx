@@ -34,6 +34,24 @@ export default function MarketDashboard({ isSection = false }) {
       `}</style>
 
       <div className="market-page">
+        {/* Section Header */}
+        <div style={{ marginBottom: 24 }}>
+          <h2 style={{
+            fontFamily: FONTS.display, fontSize: 32, fontWeight: 700,
+            color: "rgba(240,238,255,1)", marginBottom: 6, letterSpacing: "-0.02em",
+            lineHeight: 1.1,
+          }}>
+            <span style={{ color: "#00C8E0", marginRight: 12 }}>//</span>
+            Asset Prices
+          </h2>
+          <p style={{
+            fontFamily: FONTS.body, fontSize: 14, color: "rgba(136,128,190,0.9)",
+            maxWidth: 500, lineHeight: 1.6, margin: 0,
+          }}>
+            Live market data across L1, L2, DeFi, RWA, and Infrastructure — 60s refresh via CoinGecko.
+          </p>
+        </div>
+
         {/* MacroPulse Banner */}
         <MacroPulse
           refreshTrigger={macroRefresh}

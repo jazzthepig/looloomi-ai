@@ -20,8 +20,8 @@ const ASSETS = [
   { id: "optimism", symbol: "OP", name: "Optimism", category: "L2", color: "#FF0420" },
   { id: "matic-network", symbol: "MATIC", name: "Polygon", category: "L2", color: "#8247E5" },
   { id: "immutable-x", symbol: "IMX", name: "Immutable", category: "L2", color: "#00BFFF" },
-  { id: "base", symbol: "BASE", name: "Base", category: "L2", color: "#0052FF" },
-  { id: "mantle", symbol: "MANTLE", name: "Mantle", category: "L2", color: "#00A8E0" },
+  { id: "starknet", symbol: "STRK", name: "Starknet", category: "L2", color: "#0C0C4F" },
+  { id: "mantle", symbol: "MNT", name: "Mantle", category: "L2", color: "#00A8E0" },
   // DeFi
   { id: "uniswap", symbol: "UNI", name: "Uniswap", category: "DeFi", color: "#FF007A" },
   { id: "aave", symbol: "AAVE", name: "Aave", category: "DeFi", color: "#2EBAC6" },
@@ -40,7 +40,7 @@ const ASSETS = [
   // RWA
   { id: "ondo-finance", symbol: "ONDO", name: "Ondo", category: "RWA", color: "#2B65EC" },
   { id: "genius", symbol: "GENIUS", name: "Genius", category: "RWA", color: "#FFD700" },
-  { id: "polymesh", symbol: "POLYX", name: "Polymesh", category: "#RWA", color: "#E6007A" },
+  { id: "polymesh", symbol: "POLYX", name: "Polymesh", category: "RWA", color: "#E6007A" },
   // Memecoin
   { id: "pepe", symbol: "PEPE", name: "Pepe", category: "Memecoin", color: "#00FF00" },
 ];
@@ -207,10 +207,10 @@ const AssetRow = ({ asset, marketData, cisData, fngValue }) => {
         </div>
       </td>
 
-      {/* TVL */}
+      {/* Mkt Cap */}
       <td style={{ textAlign: "right" }}>
         <div style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 400, color: T.t2 }}>
-          {formatVol(marketData?.total_volume)}
+          {formatVol(marketData?.market_cap)}
         </div>
       </td>
 
@@ -361,7 +361,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
           padding: "14px 18px", borderBottom: `1px solid ${T.border}`,
           background: "rgba(255,255,255,0.018)",
         }}>
-          <div className="section-label" style={{ margin: 0, fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", color: T.t2, textTransform: "uppercase" }}>Asset Radar</div>
+          <div className="section-label" style={{ margin: 0, fontFamily: FONTS.display, fontSize: 13, fontWeight: 700, letterSpacing: "0.12em", color: T.t1, textTransform: "uppercase" }}>Asset Radar</div>
         </div>
         <div style={{ padding: 40, textAlign: "center", color: T.red, fontSize: 12 }}>
           数据加载失败 · {lastUpdate ? `上次更新: ${lastUpdate.toLocaleTimeString()}` : "请刷新"}
@@ -390,15 +390,15 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         }}>
           <div style={{
             fontFamily: FONTS.display,
-            fontSize: 9,
+            fontSize: 13,
             fontWeight: 700,
-            letterSpacing: "0.22em",
-            color: T.t3,
+            letterSpacing: "0.12em",
+            color: T.t1,
             textTransform: "uppercase",
             display: "flex",
             alignItems: "center",
           }}>
-            <span style={{ width: 20, height: 1, background: T.t3, marginRight: 10 }} />
+            <span style={{ width: 16, height: 1, background: T.gold, marginRight: 10, opacity: 0.5 }} />
             Asset Radar
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -440,7 +440,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
               <th style={{ width: 240, textAlign: "left", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Asset</th>
               <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Price</th>
               <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>24H</th>
-              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>TVL</th>
+              <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Mkt Cap</th>
               <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.blue, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>CIS</th>
               <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Signal</th>
               <th style={{ textAlign: "right", padding: "10px 14px", fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", color: T.t2, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>Vol</th>

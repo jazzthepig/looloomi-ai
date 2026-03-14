@@ -246,16 +246,16 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         }}>
           <div className="sp-title" style={{
             fontFamily: FONTS.display,
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: 700,
-            letterSpacing: "0.18em",
-            color: T.t2,
+            letterSpacing: "0.12em",
+            color: T.t1,
             textTransform: "uppercase",
             display: "flex",
             alignItems: "center",
             gap: 8,
           }}>
-            <span style={{ width: 14, height: 1, background: T.t2 }} />
+            <span style={{ width: 14, height: 1, background: T.gold, opacity: 0.5 }} />
             Signal Feed
           </div>
         </div>
@@ -294,16 +294,16 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
       }}>
         <div className="sp-title" style={{
           fontFamily: FONTS.display,
-          fontSize: 9,
+          fontSize: 13,
           fontWeight: 700,
-          letterSpacing: "0.2em",
-          color: T.t3,
+          letterSpacing: "0.12em",
+          color: T.t1,
           textTransform: "uppercase",
           display: "flex",
           alignItems: "center",
           gap: 8,
         }}>
-          <span style={{ width: 14, height: 1, background: T.t3 }} />
+          <span style={{ width: 14, height: 1, background: T.gold, opacity: 0.5 }} />
           Signal Feed
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>

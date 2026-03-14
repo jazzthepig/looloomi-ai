@@ -171,11 +171,11 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
     return gradeMatch && classMatch;
   });
 
-  // Grade summary
+  // Grade summary — includes A+/B+/C+ variants
   const gradeSummary = {
-    A: data.filter(i => i.grade === "A").length,
-    B: data.filter(i => i.grade === "B").length,
-    C: data.filter(i => i.grade === "C").length,
+    A: data.filter(i => i.grade === "A" || i.grade === "A+").length,
+    B: data.filter(i => i.grade === "B" || i.grade === "B+").length,
+    C: data.filter(i => i.grade === "C" || i.grade === "C+").length,
     D: data.filter(i => i.grade === "D" || i.grade === "F").length,
   };
 
