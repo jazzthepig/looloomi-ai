@@ -204,17 +204,20 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
   };
 
   // Pillar bar width
-  const PillarBar = ({ value, color = T.blue }) => (
-    <div style={{
-      width: 60, height: 6, background: T.border, borderRadius: 3,
-      overflow: "hidden", display: "inline-block", marginRight: 4
-    }}>
+  const PillarBar = ({ value, color = T.blue }) => {
+    if (value === null || value === undefined) return null;
+    return (
       <div style={{
-        width: `${value}%`, height: "100%", background: color,
-        borderRadius: 3, transition: "width 0.3s ease"
-      }} />
-    </div>
-  );
+        width: 60, height: 6, background: T.border, borderRadius: 3,
+        overflow: "hidden", display: "inline-block", marginRight: 4
+      }}>
+        <div style={{
+          width: `${value}%`, height: "100%", background: color,
+          borderRadius: 3, transition: "width 0.3s ease"
+        }} />
+      </div>
+    );
+  };
 
   // Expanded row details
   const ExpandedDetail = ({ item }) => (
@@ -235,7 +238,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
         ].map(p => (
           <div key={p.key}>
             <div style={{ fontSize: 10, color: T.muted, marginBottom: 4, fontFamily: FONTS.body }}>
-              {p.label} · {item.pillars[p.key]}
+              {p.label} · {item.pillars[p.key] !== null && item.pillars[p.key] !== undefined ? item.pillars[p.key] : "—"}
             </div>
             <PillarBar value={item.pillars[p.key]} color={GRADE_COLORS[item.grade]} />
             <div style={{ fontSize: 9, color: T.secondary, marginTop: 4, fontFamily: FONTS.body }}>
@@ -250,7 +253,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
             fontSize: 10, fontFamily: FONTS.mono, color: T.secondary,
             background: T.surface, padding: "2px 6px", borderRadius: 3
           }}>
-            {k}: {v}
+            {k}: {v !== null && v !== undefined ? v : "—"}
           </span>
         ))}
       </div>
@@ -555,21 +558,24 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
 
             {/* Pillar Bars */}
             {PILLAR_DEFS.map(p => {
-              const raw = selectedAsset?.pillars[p.key] || 0;
-              const scaled = Math.round((raw / 100) * p.weight * 10) / 10;
+              const raw = selectedAsset?.pillars[p.key];
+              const isNull = raw === null || raw === undefined;
+              const scaled = isNull ? 0 : Math.round((raw / 100) * p.weight * 10) / 10;
               return (
                 <div key={p.key} style={{ marginBottom: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
                     <span style={{ fontSize: 9, letterSpacing: "0.12em", color: "rgba(255,255,255,0.26)", fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
                       {p.name}
                     </span>
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 500, color: p.color }}>
-                      {raw} <span style={{ color: "rgba(255,255,255,0.26)", fontSize: 9 }}>({scaled}pts)</span>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 500, color: isNull ? "rgba(255,255,255,0.26)" : p.color }}>
+                      {isNull ? "—" : raw} <span style={{ color: "rgba(255,255,255,0.26)", fontSize: 9 }}>{isNull ? "" : `(${scaled}pts)`}</span>
                     </span>
                   </div>
-                  <div style={{ height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 2, overflow: "hidden" }}>
-                    <div style={{ width: `${raw}%`, height: "100%", background: p.color, borderRadius: 2, transition: "width .5s ease .1s" }} />
-                  </div>
+                  {!isNull && (
+                    <div style={{ height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 2, overflow: "hidden" }}>
+                      <div style={{ width: `${raw}%`, height: "100%", background: p.color, borderRadius: 2, transition: "width .5s ease .1s" }} />
+                    </div>
+                  )}
                 </div>
               );
             })}

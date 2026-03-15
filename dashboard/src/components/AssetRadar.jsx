@@ -2,51 +2,47 @@ import { useState, useEffect } from "react";
 import { T, FONTS } from "../tokens";
 
 /* ─── Asset Categories ────────────────────────────────────────────────── */
-// Asset list — symbols must match CIS backend CRYPTO_ASSETS keys exactly.
-// cisKey: override when CoinGecko symbol ≠ CIS backend key (e.g. MNT vs MANTLE).
+// Asset list matching CIS universe
 const ASSETS = [
   // L1
-  { id: "bitcoin",            symbol: "BTC",   name: "Bitcoin",    category: "L1",   color: "#F7931A" },
-  { id: "ethereum",           symbol: "ETH",   name: "Ethereum",   category: "Crypto", color: "#627EEA" },
-  { id: "solana",             symbol: "SOL",   name: "Solana",     category: "L1",   color: "#9945FF" },
-  { id: "binancecoin",        symbol: "BNB",   name: "BNB",        category: "L1",   color: "#F3BA2F" },
-  { id: "cardano",            symbol: "ADA",   name: "Cardano",    category: "L1",   color: "#0033AD" },
-  { id: "ripple",             symbol: "XRP",   name: "XRP",        category: "L1",   color: "#23292F" },
-  { id: "dogecoin",           symbol: "DOGE",  name: "Dogecoin",   category: "L1",   color: "#C2A633" },
-  { id: "the-open-network",   symbol: "TON",   name: "Toncoin",    category: "L1",   color: "#0098EA" },
-  { id: "avalanche-2",        symbol: "AVAX",  name: "Avalanche",  category: "L1",   color: "#E84142" },
-  { id: "polkadot",           symbol: "DOT",   name: "Polkadot",   category: "L1",   color: "#E6007A" },
-  { id: "sui",                symbol: "SUI",   name: "Sui",        category: "L1",   color: "#6FBCF0" },
-  { id: "aptos",              symbol: "APT",   name: "Aptos",      category: "L1",   color: "#2DD8A3" },
-  { id: "near",               symbol: "NEAR",  name: "NEAR",       category: "L1",   color: "#00C1DE" },
-  { id: "injective-protocol", symbol: "INJ",   name: "Injective",  category: "L1",   color: "#00F2FE" },
+  { id: "bitcoin", symbol: "BTC", name: "Bitcoin", category: "L1", color: "#F7931A" },
+  { id: "ethereum", symbol: "ETH", name: "Ethereum", category: "Crypto", color: "#627EEA" },
+  { id: "solana", symbol: "SOL", name: "Solana", category: "L1", color: "#9945FF" },
+  { id: "binancecoin", symbol: "BNB", name: "BNB", category: "L1", color: "#F3BA2F" },
+  { id: "cardano", symbol: "ADA", name: "Cardano", category: "L1", color: "#0033AD" },
+  { id: "ripple", symbol: "XRP", name: "XRP", category: "L1", color: "#23292F" },
+  { id: "dogecoin", symbol: "DOGE", name: "Dogecoin", category: "L1", color: "#C2A633" },
+  { id: "the-open-network", symbol: "TON", name: "Toncoin", category: "L1", color: "#0098EA" },
+  { id: "avalanche-2", symbol: "AVAX", name: "Avalanche", category: "L1", color: "#E84142" },
+  { id: "polkadot", symbol: "DOT", name: "Polkadot", category: "L1", color: "#E6007A" },
   // L2
-  { id: "arbitrum",           symbol: "ARB",   name: "Arbitrum",   category: "L2",   color: "#28A0F0" },
-  { id: "optimism",           symbol: "OP",    name: "Optimism",   category: "L2",   color: "#FF0420" },
-  { id: "matic-network",      symbol: "MATIC", name: "Polygon",    category: "L2",   color: "#8247E5" },
-  // cisKey: CIS backend uses "MANTLE" as key, Binance ticker is MNT
-  { id: "mantle",             symbol: "MNT",   cisKey: "MANTLE",   name: "Mantle",   category: "L2",   color: "#00A8E0" },
+  { id: "arbitrum", symbol: "ARB", name: "Arbitrum", category: "L2", color: "#28A0F0" },
+  { id: "optimism", symbol: "OP", name: "Optimism", category: "L2", color: "#FF0420" },
+  { id: "matic-network", symbol: "MATIC", name: "Polygon", category: "L2", color: "#8247E5" },
+  { id: "immutable-x", symbol: "IMX", name: "Immutable", category: "L2", color: "#00BFFF" },
+  { id: "starknet", symbol: "STRK", name: "Starknet", category: "L2", color: "#0C0C4F" },
+  { id: "mantle", symbol: "MNT", name: "Mantle", category: "L2", color: "#00A8E0" },
   // DeFi
-  { id: "uniswap",                    symbol: "UNI",   name: "Uniswap",    category: "DeFi", color: "#FF007A" },
-  { id: "aave",                       symbol: "AAVE",  name: "Aave",       category: "DeFi", color: "#2EBAC6" },
-  { id: "maker",                      symbol: "MKR",   name: "Maker",      category: "DeFi", color: "#1AAB9B" },
-  { id: "havven",                     symbol: "SNX",   name: "Synthetix",  category: "DeFi", color: "#00D1FF" },
-  { id: "curve-dao-token",            symbol: "CRV",   name: "Curve",      category: "DeFi", color: "#FF6B6B" },
-  { id: "lido-dao",                   symbol: "LDO",   name: "Lido",       category: "DeFi", color: "#00A3FF" },
-  { id: "compound-governance-token",  symbol: "COMP",  name: "Compound",   category: "DeFi", color: "#00D395" },
-  { id: "sushi",                      symbol: "SUSHI", name: "SushiSwap",  category: "DeFi", color: "#FA52A0" },
+  { id: "uniswap", symbol: "UNI", name: "Uniswap", category: "DeFi", color: "#FF007A" },
+  { id: "aave", symbol: "AAVE", name: "Aave", category: "DeFi", color: "#2EBAC6" },
+  { id: "maker", symbol: "MKR", name: "Maker", category: "DeFi", color: "#1AAB9B" },
+  { id: "havven", symbol: "SNX", name: "Synthetix", category: "DeFi", color: "#00D1FF" },
+  { id: "curve-dao-token", symbol: "CRV", name: "Curve", category: "DeFi", color: "#FF6B6B" },
+  { id: "lido-dao", symbol: "LDO", name: "Lido", category: "DeFi", color: "#00A3FF" },
+  { id: "rocket-pool", symbol: "RPL", name: "Rocket Pool", category: "DeFi", color: "#FFFFFF" },
+  { id: "compound-governance-token", symbol: "COMP", name: "Compound", category: "DeFi", color: "#00D395" },
+  { id: "sushi", symbol: "SUSHI", name: "SushiSwap", category: "DeFi", color: "#FA52A0" },
   // Infrastructure
   { id: "chainlink", symbol: "LINK", name: "Chainlink", category: "Infrastructure", color: "#2A5ADA" },
-  { id: "stacks",    symbol: "STX",  name: "Stacks",    category: "Infrastructure", color: "#5546D6" },
+  { id: "stacks", symbol: "STX", name: "Stacks", category: "Infrastructure", color: "#5546D6" },
   { id: "thorchain", symbol: "RUNE", name: "THORChain", category: "Infrastructure", color: "#2ECC71" },
-  { id: "filecoin",  symbol: "FIL",  name: "Filecoin",  category: "Infrastructure", color: "#0090FF" },
-  { id: "celestia",  symbol: "TIA",  name: "Celestia",  category: "Infrastructure", color: "#7B2FBE" },
+  { id: "injective-protocol", symbol: "INJ", name: "Injective", category: "Infrastructure", color: "#00F2FE" },
   // RWA
-  { id: "ondo-finance", symbol: "ONDO",  name: "Ondo",      category: "RWA", color: "#2B65EC" },
-  { id: "polymesh",     symbol: "POLYX", name: "Polymesh",  category: "RWA", color: "#E6007A" },
+  { id: "ondo-finance", symbol: "ONDO", name: "Ondo", category: "RWA", color: "#2B65EC" },
+  { id: "genius", symbol: "GENIUS", name: "Genius", category: "RWA", color: "#FFD700" },
+  { id: "polymesh", symbol: "POLYX", name: "Polymesh", category: "RWA", color: "#E6007A" },
   // Memecoin
   { id: "pepe", symbol: "PEPE", name: "Pepe", category: "Memecoin", color: "#00FF00" },
-  { id: "wif",  symbol: "WIF",  name: "WIF",  category: "Memecoin", color: "#9945FF" },
 ];
 
 /* ─── CIS Data (fallback - rarely used) ──────────────────────────────────── */
@@ -134,10 +130,8 @@ const FILTERS = [
 ];
 
 /* ─── Table Row Component ───────────────────────────────────────────── */
-const AssetRow = ({ asset, marketData, cisData, cisLoading, fngValue }) => {
-  // Use cisKey override if present (e.g. MNT→MANTLE), else fall back to symbol
-  const cisLookupKey = asset.cisKey || asset.symbol;
-  const cis = cisData?.[cisLookupKey] || null;
+const AssetRow = ({ asset, marketData, cisData, fngValue }) => {
+  const cis = cisData?.[asset.symbol] || CIS_DATA[asset.symbol] || null;
   const change7d = marketData?.price_change_percentage_7d_in_currency || 0;
   const change24h = marketData?.price_change_percentage_24h || 0;
   const signal = calculateSignal(change7d, fngValue);
@@ -222,7 +216,7 @@ const AssetRow = ({ asset, marketData, cisData, cisLoading, fngValue }) => {
 
       {/* CIS */}
       <td style={{ textAlign: "right" }}>
-        {cis ? (
+        {cis && (
           <div style={{
             width: 28, height: 28, borderRadius: 6,
             background: gradeStyle.bg, color: gradeStyle.color,
@@ -232,10 +226,6 @@ const AssetRow = ({ asset, marketData, cisData, cisLoading, fngValue }) => {
           }}>
             {cis.grade}
           </div>
-        ) : cisLoading ? (
-          <div className="sk" style={{ width: 28, height: 28, borderRadius: 6, display: "inline-block" }} />
-        ) : (
-          <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: "rgba(255,255,255,0.18)" }}>—</span>
         )}
       </td>
 
@@ -287,86 +277,67 @@ const SkeletonRow = () => (
 export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
   const [loading, setLoading] = useState(true);
   const [marketData, setMarketData] = useState({});
-  // CIS is fetched independently — has its own loading state so market data
-  // displays immediately while the slower CIS API responds.
   const [cisData, setCisData] = useState({});
-  const [cisLoading, setCisLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // Fetch CoinGecko market data (fast — 1-2s)
-  const fetchMarkets = async () => {
-    const ids = ASSETS.map(a => a.id).join(",");
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`
-    );
-    if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
-    const data = await res.json();
-    const dataMap = {};
-    data.forEach(coin => {
-      const asset = ASSETS.find(a => a.id === coin.id);
-      if (asset) dataMap[asset.symbol] = coin;
-    });
-    return dataMap;
-  };
-
-  // Fetch CIS universe (slower — 3-8s depending on backend cold start)
-  // Keyed by item.symbol so cisMap["BTC"], cisMap["MANTLE"] etc.
-  const fetchCIS = async () => {
-    const res = await fetch("/api/v1/cis/universe");
-    if (!res.ok) throw new Error(`CIS API ${res.status}`);
-    const json = await res.json();
-    const cisMap = {};
-    (json.universe || []).forEach(item => {
-      cisMap[item.symbol] = {
-        score: item.cis_score,
-        grade: item.grade,
-        percentile: item.percentile_rank,
-      };
-    });
-    return cisMap;
-  };
-
-  const loadData = async () => {
+  const fetchData = async () => {
     setError(null);
-    // 1. Fire both fetches concurrently but handle them independently
-    const marketsPromise = fetchMarkets();
-    const cisPromise = fetchCIS();
-
-    // 2. Market data — show table as soon as prices arrive
     try {
-      const dataMap = await marketsPromise;
+      const ids = ASSETS.map(a => a.id).join(",");
+
+      const [marketsRes, cisRes] = await Promise.all([
+        fetch(
+          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`
+        ),
+        fetch('/api/v1/cis/universe').catch(() => null)
+      ]);
+
+      if (!marketsRes.ok) throw new Error("Markets API failed");
+      const marketsData = await marketsRes.json();
+
+      const dataMap = {};
+      marketsData.forEach(coin => {
+        const asset = ASSETS.find(a => a.id === coin.id);
+        if (asset) {
+          dataMap[asset.symbol] = coin;
+        }
+      });
       setMarketData(dataMap);
+
+      if (cisRes && cisRes.ok) {
+        try {
+          const cisJson = await cisRes.json();
+          if (cisJson.universe) {
+            const cisMap = {};
+            cisJson.universe.forEach(item => {
+              cisMap[item.symbol] = { score: item.cis_score, grade: item.grade };
+            });
+            setCisData(cisMap);
+          }
+        } catch (e) {
+          console.warn("CIS data parse error:", e);
+        }
+      }
+
       setLastUpdate(new Date());
     } catch (err) {
-      console.error("Markets fetch error:", err);
+      console.error("AssetRadar fetch error:", err);
       setError(err.message);
     } finally {
-      setLoading(false);  // table becomes visible
-    }
-
-    // 3. CIS grades — update column when ready, no blocking
-    try {
-      const cisMap = await cisPromise;
-      setCisData(cisMap);
-    } catch (err) {
-      console.warn("CIS fetch error (grades hidden):", err.message);
-      // Don't show a hard error — just leave grades as "—"
-    } finally {
-      setCisLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     setLoading(true);
-    setCisLoading(true);
-    loadData();
+    fetchData();
   }, [refreshTrigger]);
 
   useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 60 * 1000);
+    fetchData();
+    const interval = setInterval(fetchData, 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -485,7 +456,6 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                     asset={asset}
                     marketData={marketData[asset.symbol]}
                     cisData={cisData}
-                    cisLoading={cisLoading}
                     fngValue={fngValue}
                   />
                 ))

@@ -1158,8 +1158,11 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             rec = dict(binance_prices[asset_id])  # copy
             # Enrich from CoinGecko for fields Binance doesn't provide
             if cg_data:
-                rec["change_7d"] = cg_data.get("change_7d") or rec.get("change_7d")
-                rec["change_30d"] = cg_data.get("change_30d") or rec.get("change_30d")
+                # Handle None values properly
+                cg_7d = cg_data.get("change_7d")
+                cg_30d = cg_data.get("change_30d")
+                rec["change_7d"] = cg_7d if cg_7d is not None else rec.get("change_7d")
+                rec["change_30d"] = cg_30d if cg_30d is not None else rec.get("change_30d")
                 rec["market_cap"] = cg_data.get("market_cap", 0) or 0
                 rec["circulating_supply"] = cg_data.get("circulating_supply", 0) or 0
                 rec["total_supply"] = cg_data.get("total_supply", 0) or 0
