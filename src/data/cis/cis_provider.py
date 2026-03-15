@@ -396,6 +396,24 @@ async def fetch_fear_greed() -> Optional[dict]:
         return None
 
 
+async def fetch_cg_global() -> Optional[dict]:
+    """Fetch CoinGecko global data (includes BTC dominance)."""
+    cache_key = "cg_global"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.get(f"{CG_BASE}/global")
+            r.raise_for_status()
+            data = r.json()
+            return _cache_set(cache_key, data.get("data", {}))
+    except Exception as e:
+        print(f"CoinGecko global API error: {e}")
+        return None
+
+
 async def fetch_github_activity() -> Dict[str, int]:
     """
     Fetch commit counts for the last 4 weeks from GitHub public API.
@@ -546,6 +564,7 @@ async def fetch_macro_data() -> dict:
         "vix": 19.5,            # ~19.5 VIX (normal market)
         "dxy": 104.2,           # ~104 DXY
         "cpi_yoy": 2.8,         # ~2.8% CPI YoY
+        "btc_dominance": 52.0,  # BTC dominance %
     }
 
     # Fetch fresh data
@@ -557,6 +576,7 @@ async def fetch_macro_data() -> dict:
         "vix": fallback["vix"],
         "dxy": fallback["dxy"],
         "cpi_yoy": fallback["cpi_yoy"],
+        "btc_dominance": fallback["btc_dominance"],
         "_source": "fallback",
     }
 
@@ -606,8 +626,16 @@ async def fetch_macro_data() -> dict:
                 else:
                     result[key] = round(value, 2)
 
+        # Fetch BTC dominance from CoinGecko global
+        cg_global = await fetch_cg_global()
+        if cg_global:
+            btc_dom = cg_global.get("market_cap_percentage", {}).get("btc")
+            if btc_dom is not None:
+                result["btc_dominance"] = round(btc_dom, 1)
+                fetched_any = True
+
         if fetched_any:
-            result["_source"] = "yahoo"
+            result["_source"] = "api"
 
     except Exception as e:
         print(f"Error fetching macro data: {e}")
