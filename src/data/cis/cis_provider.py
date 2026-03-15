@@ -119,6 +119,37 @@ COMMODITIES = {
 # Combined assets config
 ASSETS_CONFIG = {**CRYPTO_ASSETS, **US_EQUITIES, **BONDS, **COMMODITIES}
 
+# GitHub repo paths for developer-activity tracking (Phase 2B)
+# Format: asset_id -> "owner/repo"
+# Covers top 25 assets with active public repos; others get None (no dev signal)
+GITHUB_REPOS: Dict[str, str] = {
+    "BTC":     "bitcoin/bitcoin",
+    "ETH":     "ethereum/go-ethereum",
+    "SOL":     "solana-labs/solana",
+    "ADA":     "IntersectMBO/cardano-node",
+    "AVAX":    "ava-labs/avalanchego",
+    "DOT":     "paritytech/polkadot",
+    "ARB":     "OffchainLabs/nitro",
+    "OP":      "ethereum-optimism/optimism",
+    "NEAR":    "near/nearcore",
+    "ATOM":    "cosmos/cosmos-sdk",
+    "FIL":     "filecoin-project/lotus",
+    "ALGO":    "algorand/go-algorand",
+    "ICP":     "dfinity/ic",
+    "STX":     "stacks-network/stacks-core",
+    "INJ":     "InjectiveLabs/injective-core",
+    "TIA":     "celestiaorg/celestia-node",
+    "SEI":     "sei-protocol/sei-chain",
+    "APT":     "aptos-labs/aptos-core",
+    "SUI":     "MystenLabs/sui",
+    "LINK":    "smartcontractkit/chainlink",
+    "AAVE":    "aave/aave-v3-core",
+    "UNI":     "Uniswap/v4-core",
+    "RUNE":    "thorchain/thornode",
+    "LDO":     "lidofinance/lido-dao",
+    "COMP":    "compound-finance/compound-protocol",
+}
+
 # Cache
 _cache: Dict = {}
 _cache_ttl = 300  # 5 minutes
@@ -244,13 +275,14 @@ async def fetch_binance_prices() -> Dict[str, dict]:
                         "name": cis_sym,
                         "price": price,
                         "change_24h": change_24h,
-                        "change_7d": change_24h / 3,  # Estimate 7d from 24h
-                        "change_30d": change_24h * 4,  # Estimate 30d from 24h
+                        "change_7d": None,   # Will be filled from CoinGecko merge
+                        "change_30d": None,  # Will be filled from CoinGecko merge
                         "volume_24h": volume,
                         "high_24h": high_24h,
                         "low_24h": low_24h,
-                        "market_cap": 0,  # Not available from Binance
-                        "circulating_supply": 0,  # Not available
+                        "market_cap": 0,  # Will be filled from CoinGecko merge
+                        "circulating_supply": 0,
+                        "total_supply": 0,
                         "ath_change_percentage": 0,
                         "source": "binance",
                     }
@@ -364,6 +396,53 @@ async def fetch_fear_greed() -> Optional[dict]:
         return None
 
 
+async def fetch_github_activity() -> Dict[str, int]:
+    """
+    Fetch commit counts for the last 4 weeks from GitHub public API.
+    Uses /repos/{owner}/{repo}/stats/participation (no auth, 60 req/hr).
+    Returns {asset_id: commits_last_4w} — best effort, empty on failure.
+    Cached for 2 hours to stay within the 60 req/hr rate limit.
+    """
+    cache_key = "github_activity"
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
+    results: Dict[str, int] = {}
+
+    async def _fetch_one(asset_id: str, repo: str):
+        try:
+            url = f"https://api.github.com/repos/{repo}/stats/participation"
+            headers = {
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            }
+            async with httpx.AsyncClient(timeout=8) as client:
+                r = await client.get(url, headers=headers)
+                if r.status_code == 200:
+                    data = r.json()
+                    # 'all' = array of 52 weekly totals (owner + contributors)
+                    all_weeks = data.get("all", [])
+                    if all_weeks and len(all_weeks) >= 4:
+                        return asset_id, sum(all_weeks[-4:])
+                # 202 = GitHub still computing; 404/403 = unavailable — skip silently
+        except Exception:
+            pass
+        return asset_id, None
+
+    tasks = [_fetch_one(aid, repo) for aid, repo in GITHUB_REPOS.items()]
+    raw = await asyncio.gather(*tasks, return_exceptions=True)
+
+    for item in raw:
+        if isinstance(item, tuple) and item[1] is not None:
+            results[item[0]] = int(item[1])
+
+    # Use a 2-hour TTL via a manual timestamp check on next hit
+    # (simple _cache_set uses global _cache_ttl=300; we override by storing a wrapper)
+    _cache[cache_key] = (results, datetime.now().timestamp() + 7200 - _cache_ttl)
+    return results
+
+
 def get_yfinance_data(symbol: str) -> Optional[dict]:
     """Fetch US equity/bond/commodity data using yfinance."""
     cache_key = f"yf:{symbol}"
@@ -420,7 +499,9 @@ def calculate_cis_score(
     market_data: dict,
     tvl: float,
     fng: Optional[dict],
-    asset_class: str
+    asset_class: str,
+    btc_change_30d: Optional[float] = None,
+    github_commits_4w: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Calculate CIS scores based on real market data.
@@ -458,22 +539,28 @@ def calculate_cis_score(
         "circulating_supply_ratio": round(circ_supply / total_supply, 3) if total_supply > 0 and circ_supply > 0 else 0,
     }
 
-    f_score = 50  # base
-    if market_cap > 10e9:
-        f_score += 30
-        f_components["market_cap_tier_score"] = 30
-    elif market_cap > 1e9:
-        f_score += 25
-        f_components["market_cap_tier_score"] = 25
-    elif market_cap > 100e6:
-        f_score += 20
-        f_components["market_cap_tier_score"] = 20
-    elif market_cap > 10e6:
-        f_score += 15
-        f_components["market_cap_tier_score"] = 15
-    elif market_cap > 0:
-        f_score += 10
-        f_components["market_cap_tier_score"] = 10
+    f_score = 10  # base — low floor so bad assets can score < 30
+    # 10-tier market cap scoring (wider spread)
+    if market_cap > 500e9:        # >$500B (BTC-tier)
+        f_score += 55; f_components["market_cap_tier_score"] = 55
+    elif market_cap > 100e9:      # >$100B
+        f_score += 48; f_components["market_cap_tier_score"] = 48
+    elif market_cap > 50e9:       # >$50B
+        f_score += 42; f_components["market_cap_tier_score"] = 42
+    elif market_cap > 10e9:       # >$10B
+        f_score += 35; f_components["market_cap_tier_score"] = 35
+    elif market_cap > 5e9:        # >$5B
+        f_score += 28; f_components["market_cap_tier_score"] = 28
+    elif market_cap > 1e9:        # >$1B
+        f_score += 22; f_components["market_cap_tier_score"] = 22
+    elif market_cap > 500e6:      # >$500M
+        f_score += 16; f_components["market_cap_tier_score"] = 16
+    elif market_cap > 100e6:      # >$100M
+        f_score += 11; f_components["market_cap_tier_score"] = 11
+    elif market_cap > 10e6:       # >$10M
+        f_score += 6;  f_components["market_cap_tier_score"] = 6
+    elif market_cap > 0:          # any cap
+        f_score += 2;  f_components["market_cap_tier_score"] = 2
     else:
         f_components["market_cap_tier_score"] = 0
 
@@ -503,22 +590,26 @@ def calculate_cis_score(
         "tvl_usd": tvl if asset_class in ["DeFi", "L2"] else None,
     }
 
-    m_score = 30  # base
-    if volume_24h > 1e9:
-        m_score += 35
-        m_components["volume_score"] = 35
-    elif volume_24h > 100e6:
-        m_score += 30
-        m_components["volume_score"] = 30
-    elif volume_24h > 10e6:
-        m_score += 20
-        m_components["volume_score"] = 20
-    elif volume_24h > 1e6:
-        m_score += 15
-        m_components["volume_score"] = 15
+    m_score = 10  # base — low floor
+    # 10-tier volume scoring
+    if volume_24h > 10e9:         # >$10B (BTC/ETH-tier)
+        m_score += 55; m_components["volume_score"] = 55
+    elif volume_24h > 5e9:        # >$5B
+        m_score += 48; m_components["volume_score"] = 48
+    elif volume_24h > 1e9:        # >$1B
+        m_score += 40; m_components["volume_score"] = 40
+    elif volume_24h > 500e6:      # >$500M
+        m_score += 33; m_components["volume_score"] = 33
+    elif volume_24h > 100e6:      # >$100M
+        m_score += 26; m_components["volume_score"] = 26
+    elif volume_24h > 50e6:       # >$50M
+        m_score += 20; m_components["volume_score"] = 20
+    elif volume_24h > 10e6:       # >$10M
+        m_score += 14; m_components["volume_score"] = 14
+    elif volume_24h > 1e6:        # >$1M
+        m_score += 8;  m_components["volume_score"] = 8
     elif volume_24h > 0:
-        m_score += 10
-        m_components["volume_score"] = 10
+        m_score += 3;  m_components["volume_score"] = 3
     else:
         m_components["volume_score"] = 0
 
@@ -561,7 +652,7 @@ def calculate_cis_score(
         "supply_circulating_ratio": round(circ_supply / total_supply, 3) if total_supply > 0 else 0,
     }
 
-    o_score = 40  # base
+    o_score = 10  # base — low floor
 
     if asset_class == "DeFi":
         if tvl > 1e9:
@@ -614,51 +705,77 @@ def calculate_cis_score(
         "return_24h": round(change_24h / 100, 4),
     }
 
-    s_score = 50  # base
+    # S score: FNG baseline (market-wide) + per-asset price momentum
+    # Both components contribute, so assets differ even in same macro environment
+    s_score = 10  # low floor — no real data means truly unknown
 
+    # FNG market baseline: maps 0-100 FNG → 0-50 market baseline points
     if fng:
         fng_value = int(fng.get("value", 50))
-        if fng_value > 75:
-            s_score = 85
-            s_components["fng_score"] = 35
-        elif fng_value > 65:
-            s_score = 75
-            s_components["fng_score"] = 25
-        elif fng_value > 55:
-            s_score = 60
-            s_components["fng_score"] = 10
-        elif fng_value > 35:
-            s_score = 45
-            s_components["fng_score"] = -5
-        else:
-            s_score = 30
-            s_components["fng_score"] = -20
-
-    # 30d momentum
-    if change_30d > 50:
-        s_score = min(100, s_score + 15)
-        s_components["momentum_score"] = 15
-    elif change_30d > 20:
-        s_score = min(100, s_score + 10)
-        s_components["momentum_score"] = 10
-    elif change_30d < -30:
-        s_score = max(0, s_score - 15)
-        s_components["momentum_score"] = -15
-    elif change_30d < -15:
-        s_score = max(0, s_score - 10)
-        s_components["momentum_score"] = -10
+        fng_contribution = round(fng_value * 0.5, 1)  # 0-50 points
+        s_score += fng_contribution
+        s_components["fng_score"] = fng_contribution
     else:
+        s_components["fng_score"] = None
+
+    # Per-asset 30d price momentum — differentiates assets within same market
+    if change_30d > 100:
+        s_score = min(100, s_score + 30); s_components["momentum_score"] = 30
+    elif change_30d > 50:
+        s_score = min(100, s_score + 20); s_components["momentum_score"] = 20
+    elif change_30d > 20:
+        s_score = min(100, s_score + 12); s_components["momentum_score"] = 12
+    elif change_30d > 5:
+        s_score = min(100, s_score + 5);  s_components["momentum_score"] = 5
+    elif change_30d > -10:
         s_components["momentum_score"] = 0
+    elif change_30d > -30:
+        s_score = max(0, s_score - 10);   s_components["momentum_score"] = -10
+    elif change_30d > -50:
+        s_score = max(0, s_score - 20);   s_components["momentum_score"] = -20
+    else:
+        s_score = max(0, s_score - 30);   s_components["momentum_score"] = -30
+
+    # 24h momentum: short-term signal boost/drag
+    if change_24h > 10:
+        s_score = min(100, s_score + 8);  s_components["short_momentum"] = 8
+    elif change_24h > 5:
+        s_score = min(100, s_score + 4);  s_components["short_momentum"] = 4
+    elif change_24h < -10:
+        s_score = max(0, s_score - 8);    s_components["short_momentum"] = -8
+    elif change_24h < -5:
+        s_score = max(0, s_score - 4);    s_components["short_momentum"] = -4
+    else:
+        s_components["short_momentum"] = 0
+
+    # Developer activity (GitHub commits in last 4 weeks)
+    # Active development = positive signal; near-zero = red flag
+    if github_commits_4w is not None:
+        s_components["github_commits_4w"] = github_commits_4w
+        if github_commits_4w > 300:       # Very high activity (e.g. BTC, ETH)
+            s_score = min(100, s_score + 10); s_components["dev_activity_score"] = 10
+        elif github_commits_4w > 100:     # Healthy activity
+            s_score = min(100, s_score + 6);  s_components["dev_activity_score"] = 6
+        elif github_commits_4w > 30:      # Moderate activity
+            s_score = min(100, s_score + 3);  s_components["dev_activity_score"] = 3
+        elif github_commits_4w > 5:       # Low but alive
+            s_components["dev_activity_score"] = 0
+        else:                             # Near-zero: possible red flag
+            s_score = max(0, s_score - 8);    s_components["dev_activity_score"] = -8
+    else:
+        s_components["github_commits_4w"] = None
+        s_components["dev_activity_score"] = None
 
     # === Alpha Independence Score (A) ===
-    # Components: asset_class type, market_cap tier, ATH distance
+    # Components: asset_class type, market_cap tier, ATH distance, BTC β proxy
     a_components = {
         "asset_class": asset_class,
         "market_cap_usd": market_cap,
         "ath_distance_pct": ath_distance,
+        "btc_change_30d": btc_change_30d,
     }
 
-    a_score = 50  # base
+    a_score = 10  # base — low floor
 
     # Asset class independence bonus
     if asset_class in ["DeFi", "RWA", "L2"]:
@@ -670,7 +787,7 @@ def calculate_cis_score(
     else:
         a_components["class_independence_score"] = 0
 
-    # Market cap tier (larger = less alpha)
+    # Market cap tier (larger = less alpha opportunity)
     if market_cap > 10e9:
         a_score -= 10
         a_components["size_drag_score"] = -10
@@ -680,7 +797,7 @@ def calculate_cis_score(
     else:
         a_components["size_drag_score"] = 0
 
-    # Price independence (distance from ATH)
+    # Price independence (distance from ATH — sweet spot = recovery potential)
     if 30 < ath_distance < 70:
         a_score += 15
         a_components["price_independence_score"] = 15
@@ -689,6 +806,31 @@ def calculate_cis_score(
         a_components["price_independence_score"] = -10
     else:
         a_components["price_independence_score"] = 0
+
+    # BTC β proxy: 30d divergence from BTC
+    # Positive divergence (outperforms BTC) = true alpha = score up
+    # Negative divergence (underperforms BTC) = beta drag = score down
+    # BTC itself: divergence = 0 → neutral (its alpha comes from class/size factors)
+    if btc_change_30d is not None:
+        divergence = change_30d - btc_change_30d
+        a_components["btc_divergence_30d"] = round(divergence, 1)
+        if divergence > 50:       # Major outperformance
+            a_score = min(100, a_score + 20); a_components["btc_alpha_score"] = 20
+        elif divergence > 20:     # Strong outperformance
+            a_score = min(100, a_score + 12); a_components["btc_alpha_score"] = 12
+        elif divergence > 10:     # Modest outperformance
+            a_score = min(100, a_score + 6);  a_components["btc_alpha_score"] = 6
+        elif divergence > -10:    # Tracks BTC (no distinct alpha)
+            a_components["btc_alpha_score"] = 0
+        elif divergence > -20:    # Modest underperformance
+            a_score = max(0, a_score - 8);    a_components["btc_alpha_score"] = -8
+        elif divergence > -50:    # Strong underperformance
+            a_score = max(0, a_score - 15);   a_components["btc_alpha_score"] = -15
+        else:                     # Severe underperformance
+            a_score = max(0, a_score - 20);   a_components["btc_alpha_score"] = -20
+    else:
+        a_components["btc_divergence_30d"] = None
+        a_components["btc_alpha_score"] = None
 
     a_score = max(0, min(100, a_score))
 
@@ -723,28 +865,6 @@ def calculate_cis_score(
         "S": round(s_score, 1),
         "A": round(a_score, 1),
         "breakdown": breakdown,
-    }
-
-    # Large market cap = more established = less alpha
-    if market_cap > 10e9:
-        a_score -= 10
-    elif market_cap > 1e9:
-        a_score -= 5
-
-    # Price independence (distance from ATH)
-    if 30 < ath_distance < 70:  # Sweet spot
-        a_score += 15
-    elif ath_distance < 10:  # Too close to ATH (potential pullback)
-        a_score -= 10
-
-    a_score = max(0, min(100, a_score))
-
-    return {
-        "F": round(f_score, 1),
-        "M": round(m_score, 1),
-        "O": round(o_score, 1),
-        "S": round(s_score, 1),
-        "A": round(a_score, 1),
     }
 
 
@@ -833,58 +953,18 @@ def get_grade(score: float) -> str:
     return "F"
 
 
-def apply_forced_distribution(universe: list) -> list:
+def compute_percentile_ranks(universe: list) -> list:
     """
-    Apply forced distribution to CIS scores.
-    This ensures differentiation regardless of score concentration.
-    Distribution:
-    - A+: Top 10% (top 2 assets for 17 assets)
-    - A: 10-25%
-    - B+: 25-50%
-    - B: 50-75%
-    - C+: 75-90%
-    - C/D/F: Bottom 10%
+    Compute percentile rank for each asset within the live universe.
+    Stored as metadata only — does NOT override absolute grade.
     """
     if not universe:
         return universe
-
     n = len(universe)
-    # Sort by score descending
-    sorted_universe = sorted(universe, key=lambda x: x.get("cis_score", 0), reverse=True)
-
-    for i, asset in enumerate(sorted_universe):
-        # Calculate percentile rank (0-100, higher is better)
-        percentile = ((n - i) / n) * 100
-
-        # Assign grade based on forced distribution
-        if percentile >= 90:
-            grade = "A+"
-        elif percentile >= 75:
-            grade = "A"
-        elif percentile >= 50:
-            grade = "B+"
-        elif percentile >= 25:
-            grade = "B"
-        elif percentile >= 10:
-            grade = "C+"
-        else:
-            grade = "C"
-
-        # Update the asset with forced grade
-        asset["grade"] = grade
-        asset["percentile_rank"] = round(percentile, 1)
-
-        # Update signal based on new grade
-        if grade in ["A+", "A"]:
-            asset["signal"] = "STRONG OVERWEIGHT"
-        elif grade in ["B+", "B"]:
-            asset["signal"] = "OVERWEIGHT"
-        elif grade == "C+":
-            asset["signal"] = "NEUTRAL"
-        else:
-            asset["signal"] = "UNDERWEIGHT"
-
-    return sorted_universe
+    sorted_u = sorted(universe, key=lambda x: x.get("cis_score", 0), reverse=True)
+    for i, asset in enumerate(sorted_u):
+        asset["percentile_rank"] = round(((n - i) / n) * 100, 1)
+    return sorted_u
 
 
 def get_signal(score: float, grade: str) -> str:
@@ -910,25 +990,35 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     """
     # Fetch all data concurrently
     # Priority: Binance (fast, no rate limit) > CoinGecko (fallback)
-    binance_prices, cg_markets, llama_tvl, fng = await asyncio.gather(
+    binance_prices, cg_markets, llama_tvl, fng, github_activity = await asyncio.gather(
         fetch_binance_prices(),
-        fetch_cg_markets(),  # Fallback
+        fetch_cg_markets(),
         fetch_defillama_tvl(),
-        fetch_fear_greed()
+        fetch_fear_greed(),
+        fetch_github_activity(),   # Phase 2B: dev activity (best-effort, 2h cache)
     )
 
-    # Merge: Binance as primary, CoinGecko as fallback
-    # Map CIS symbol to market data
+    # Merge: Binance as primary (speed), CoinGecko enriches missing fields
+    # Binance has: price, change_24h, volume, high/low
+    # CoinGecko has: market_cap, change_7d, change_30d, circ_supply, ATH distance
     merged_markets = {}
     for asset_id in ASSETS_CONFIG.keys():
-        # First try Binance
+        cg_id = ASSETS_CONFIG[asset_id].get("coingecko", "")
+        cg_data = cg_markets.get(cg_id, {})
+
         if asset_id in binance_prices:
-            merged_markets[asset_id] = binance_prices[asset_id]
-        # Then try CoinGecko (fallback)
-        else:
-            cg_id = ASSETS_CONFIG[asset_id].get("coingecko", "")
-            if cg_id in cg_markets:
-                merged_markets[asset_id] = cg_markets[cg_id]
+            rec = dict(binance_prices[asset_id])  # copy
+            # Enrich from CoinGecko for fields Binance doesn't provide
+            if cg_data:
+                rec["change_7d"] = cg_data.get("change_7d") or rec.get("change_7d")
+                rec["change_30d"] = cg_data.get("change_30d") or rec.get("change_30d")
+                rec["market_cap"] = cg_data.get("market_cap", 0) or 0
+                rec["circulating_supply"] = cg_data.get("circulating_supply", 0) or 0
+                rec["total_supply"] = cg_data.get("total_supply", 0) or 0
+                rec["ath_change_percentage"] = cg_data.get("ath_change_percentage", 0) or 0
+            merged_markets[asset_id] = rec
+        elif cg_data:
+            merged_markets[asset_id] = cg_data
 
     # Fetch yfinance data for US assets
     yf_data = {}
@@ -970,7 +1060,15 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             continue
 
         # Calculate pillar scores with breakdown
-        pillars_result = calculate_cis_score(market_data, tvl, fng, asset_class)
+        # Pass btc_30d for Alpha BTC-β proxy (None for BTC itself → neutral)
+        asset_btc_30d = btc_30d if asset_id != "BTC" else None
+        # Pass GitHub commit count for S pillar dev activity (None if no repo mapped)
+        gh_commits = github_activity.get(asset_id)
+        pillars_result = calculate_cis_score(
+            market_data, tvl, fng, asset_class,
+            btc_change_30d=asset_btc_30d,
+            github_commits_4w=gh_commits,
+        )
         pillars = {k: v for k, v in pillars_result.items() if k != "breakdown"}
         breakdown = pillars_result.get("breakdown", {})
 
@@ -1064,8 +1162,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     # Sort by CIS score
     universe.sort(key=lambda x: x["cis_score"], reverse=True)
 
-    # Apply forced distribution for better differentiation
-    universe = apply_forced_distribution(universe)
+    # Compute percentile ranks (metadata only — absolute grades from get_grade())
+    universe = compute_percentile_ranks(universe)
 
     # Get macro data
     macro = {

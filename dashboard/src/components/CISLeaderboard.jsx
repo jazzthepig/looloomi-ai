@@ -105,6 +105,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
         total_score: asset.cis_score,
         grade: asset.grade,
         pillars: { F: asset.f, M: asset.m, O: asset.r, S: asset.s, alpha: asset.a },
+        percentile_rank: asset.percentile_rank ?? null,
+        change_30d: asset.change_30d ?? null,
         description: "",
       }));
       setData(mapped);
@@ -130,6 +132,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
             total_score: asset.cis_score,
             grade: asset.grade,
             pillars: { F: asset.f, M: asset.m, O: asset.r, S: asset.s, alpha: asset.a },
+            percentile_rank: asset.percentile_rank ?? null,
+            change_30d: asset.change_30d ?? null,
             description: "",
           }));
           setData(mapped);
@@ -164,12 +168,27 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
   const GRADE_TABS = ["All", "A", "B", "C", "D"];
   const CLASS_TABS = ["All", "RWA", "L1", "L2", "DeFi", "Infrastructure", "Oracle", "Memecoin"];
 
-  // Filter data
+  // Filter data — match base grade bucket (A catches A and A+, etc.)
+  const GRADE_BUCKET = {
+    A: ["A", "A+"],
+    B: ["B", "B+"],
+    C: ["C", "C+"],
+    D: ["D", "F"],
+  };
   const filtered = data.filter(item => {
-    const gradeMatch = gradeFilter === "All" || item.grade === gradeFilter;
+    const gradeMatch = gradeFilter === "All" || (GRADE_BUCKET[gradeFilter] || [gradeFilter]).includes(item.grade);
     const classMatch = classFilter === "All" || item.asset_class === classFilter;
     return gradeMatch && classMatch;
   });
+
+  // Percentile-based signal — computed from live universe rankings
+  // Top 20% = Overweight | Middle 60% = Hold | Bottom 20% = Reduce
+  const getPercentileSignal = (pct) => {
+    if (pct == null) return null;
+    if (pct >= 80) return { label: "Overweight", color: "#00D98A", bg: "rgba(0,217,138,0.12)" };
+    if (pct >= 20) return { label: "Hold",       color: "#4472FF", bg: "rgba(68,114,255,0.10)" };
+    return               { label: "Reduce",      color: "#FF2D55", bg: "rgba(255,45,85,0.12)" };
+  };
 
   // Grade summary — includes A+/B+/C+ variants
   const gradeSummary = {
@@ -441,14 +460,25 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
                 onMouseLeave={(e) => { e.currentTarget.style.background = selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent"; }}
               >
                 <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: "rgba(255,255,255,0.26)", textAlign: "center" }}>{item.rank}</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 700, color: T.primary }}>{item.asset_name}</span>
-                  <span style={{
-                    fontSize: 8, padding: "2px 5px", borderRadius: 2,
-                    background: ASSET_CLASS_COLORS[item.asset_class]?.bg || "transparent",
-                    color: ASSET_CLASS_COLORS[item.asset_class]?.text || T.muted,
-                    fontFamily: FONTS.display, fontWeight: 600, letterSpacing: "0.05em"
-                  }}>{item.asset_class}</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 700, color: T.primary }}>{item.asset_name}</span>
+                    <span style={{
+                      fontSize: 8, padding: "2px 5px", borderRadius: 2,
+                      background: ASSET_CLASS_COLORS[item.asset_class]?.bg || "transparent",
+                      color: ASSET_CLASS_COLORS[item.asset_class]?.text || T.muted,
+                      fontFamily: FONTS.display, fontWeight: 600, letterSpacing: "0.05em"
+                    }}>{item.asset_class}</span>
+                  </div>
+                  {(() => {
+                    const sig = getPercentileSignal(item.percentile_rank);
+                    return sig ? (
+                      <span style={{
+                        fontSize: 8, fontFamily: FONTS.display, fontWeight: 700,
+                        letterSpacing: "0.06em", color: sig.color, opacity: 0.8,
+                      }}>{sig.label}</span>
+                    ) : null;
+                  })()}
                 </div>
                 <span style={{ fontFamily: FONTS.mono, fontSize: 15, fontWeight: 400, textAlign: "right",
                   color: item.total_score >= 85 ? T.green : item.total_score >= 70 ? T.blue : T.amber }}>
@@ -481,8 +511,21 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
                 <div style={{ fontFamily: FONTS.display, fontSize: 16, fontWeight: 800, color: T.primary }}>
                   {selectedAsset?.asset_name}
                 </div>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.26)", marginTop: 3 }}>
-                  {selectedAsset?.asset_class} · Rank #{selectedAsset?.rank}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
+                  <span style={{ fontSize: 9, color: "rgba(255,255,255,0.26)" }}>
+                    {selectedAsset?.asset_class} · Rank #{selectedAsset?.rank}
+                    {selectedAsset?.percentile_rank != null ? ` · P${Math.round(selectedAsset.percentile_rank)}` : ""}
+                  </span>
+                  {(() => {
+                    const sig = getPercentileSignal(selectedAsset?.percentile_rank);
+                    return sig ? (
+                      <span style={{
+                        fontSize: 8, fontFamily: FONTS.display, fontWeight: 700,
+                        letterSpacing: "0.07em", padding: "2px 7px", borderRadius: 3,
+                        background: sig.bg, color: sig.color, border: `1px solid ${sig.color}30`,
+                      }}>{sig.label}</span>
+                    ) : null;
+                  })()}
                 </div>
               </div>
               <div style={{
