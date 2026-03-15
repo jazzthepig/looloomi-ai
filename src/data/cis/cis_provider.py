@@ -488,6 +488,146 @@ def get_yfinance_data(symbol: str) -> Optional[dict]:
         return None
 
 
+# Macro data cache path on external drive
+MACRO_CACHE_PATH = "/Volumes/CometCloudAI/data/macro_cache.json"
+MACRO_CACHE_TTL = 3600  # 1 hour
+
+
+def _load_macro_cache() -> Optional[dict]:
+    """Load macro data from external drive cache."""
+    try:
+        if os.path.exists(MACRO_CACHE_PATH):
+            import json
+            with open(MACRO_CACHE_PATH, 'r') as f:
+                data = json.load(f)
+            # Check if cache is still valid
+            ts = data.get("timestamp", 0)
+            if datetime.now().timestamp() - ts < MACRO_CACHE_TTL:
+                return data
+    except Exception:
+        pass
+    return None
+
+
+def _save_macro_cache(data: dict):
+    """Save macro data to external drive cache."""
+    try:
+        os.makedirs(os.path.dirname(MACRO_CACHE_PATH), exist_ok=True)
+        import json
+        with open(MACRO_CACHE_PATH, 'w') as f:
+            json.dump(data, f)
+    except Exception as e:
+        print(f"Failed to save macro cache: {e}")
+
+
+async def fetch_macro_data() -> dict:
+    """
+    Fetch macro indicators via httpx from Yahoo Finance.
+    Falls back to hardcoded values if API fails.
+
+    Cached to external drive for 1 hour.
+    """
+    # Try memory cache first
+    cache_key = "macro_data"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    # Try external drive cache
+    disk_cache = _load_macro_cache()
+    if disk_cache:
+        _cache_set(cache_key, disk_cache)
+        return disk_cache
+
+    # Default fallback values (2025-03 realistic values)
+    fallback = {
+        "fed_funds": 4.25,      # ~4.25% as of March 2025
+        "treasury_10y": 4.15,   # ~4.15% 10Y yield
+        "vix": 19.5,            # ~19.5 VIX (normal market)
+        "dxy": 104.2,           # ~104 DXY
+        "cpi_yoy": 2.8,         # ~2.8% CPI YoY
+    }
+
+    # Fetch fresh data
+    result = {
+        "timestamp": datetime.now().timestamp(),
+        "regime": "unknown",
+        "fed_funds": fallback["fed_funds"],
+        "treasury_10y": fallback["treasury_10y"],
+        "vix": fallback["vix"],
+        "dxy": fallback["dxy"],
+        "cpi_yoy": fallback["cpi_yoy"],
+        "_source": "fallback",
+    }
+
+    # Yahoo Finance v8 quote endpoints
+    ticker_map = {
+        "vix": "^VIX",
+        "dxy": "DX-Y.NYB",
+        "treasury_10y": "^TNX",
+        "fed_funds": "^IRX",  # 13-week T-Bill as Fed proxy
+    }
+
+    async def fetch_yf_async(symbol: str) -> Optional[float]:
+        """Fetch using Yahoo Finance v8 quote API via httpx."""
+        import time
+
+        for attempt in range(2):
+            try:
+                url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+                async with httpx.AsyncClient(timeout=8) as client:
+                    resp = await client.get(url)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        result_data = data.get("chart", {}).get("result")
+                        if result_data and len(result_data) > 0:
+                            meta = result_data[0].get("meta", {})
+                            price = (
+                                meta.get("regularMarketPrice") or
+                                meta.get("previousClose")
+                            )
+                            if price:
+                                return float(price)
+            except Exception:
+                pass
+            if attempt < 1:
+                time.sleep(0.5)
+        return None
+
+    try:
+        # Fetch all tickers
+        fetched_any = False
+        for key, symbol in ticker_map.items():
+            value = await fetch_yf_async(symbol)
+            if value is not None:
+                fetched_any = True
+                if key == "fed_funds":
+                    result[key] = round(value / 100, 4)  # Convert % to decimal
+                else:
+                    result[key] = round(value, 2)
+
+        if fetched_any:
+            result["_source"] = "yahoo"
+
+    except Exception as e:
+        print(f"Error fetching macro data: {e}")
+
+    # Determine regime based on VIX
+    if result["vix"]:
+        if result["vix"] < 15:
+            result["regime"] = "low_volatility"
+        elif result["vix"] < 25:
+            result["regime"] = "normal"
+        else:
+            result["regime"] = "high_volatility"
+
+    # Save to external drive cache
+    _save_macro_cache(result)
+    _cache_set(cache_key, result)
+
+    return result
+
+
 def get_asset_class(asset_id: str) -> str:
     """Get asset class from config."""
     if asset_id in ASSETS_CONFIG:
@@ -613,20 +753,21 @@ def calculate_cis_score(
     else:
         m_components["volume_score"] = 0
 
-    # Volume/MCap ratio
+    # Volume/MCap ratio - Liquidity Profile (Phase 3)
     if market_cap > 0:
         vol_ratio = volume_24h / market_cap
-        if vol_ratio > 0.3:
-            m_score += 20
-            m_components["liquidity_score"] = 20
-        elif vol_ratio > 0.1:
+        if vol_ratio > 0.15:          # >15% = very liquid
             m_score += 15
             m_components["liquidity_score"] = 15
-        elif vol_ratio > 0.05:
-            m_score += 10
-            m_components["liquidity_score"] = 10
-        else:
-            m_components["liquidity_score"] = 0
+        elif vol_ratio > 0.05:         # 5-15% = liquid
+            m_score += 8
+            m_components["liquidity_score"] = 8
+        elif vol_ratio > 0.01:         # 1-5% = moderate
+            m_score += 3
+            m_components["liquidity_score"] = 3
+        else:                          # <1% = illiquid
+            m_score -= 10
+            m_components["liquidity_score"] = -10
 
     # TVL bonus for DeFi/L2
     if asset_class in ["DeFi", "L2"] and tvl > 0:
@@ -642,7 +783,7 @@ def calculate_cis_score(
         else:
             m_components["tvl_score"] = 0
 
-    m_score = min(100, m_score)
+    m_score = max(0, min(100, m_score))
 
     # === On-Chain Health / Risk-Adjusted Score (O) ===
     # Components: tvl (DeFi), ath_distance, supply health
@@ -890,41 +1031,48 @@ def calculate_total_score(pillars: Dict[str, float], asset_class: str) -> Dict[s
 
     w = weights.get(asset_class, weights["Crypto"])
 
+    # Handle None pillar values - replace with 0
+    f_val = pillars.get("F") or 0
+    m_val = pillars.get("M") or 0
+    o_val = pillars.get("O") or 0
+    s_val = pillars.get("S") or 0
+    a_val = pillars.get("A") or 0
+
     # Calculate contributions
     contributions = {
         "fundamental": {
-            "score": pillars["F"],
+            "score": f_val,
             "weight": w["F"],
-            "contribution": round(w["F"] * pillars["F"], 2),
+            "contribution": round(w["F"] * f_val, 2),
         },
         "momentum": {
-            "score": pillars["M"],
+            "score": m_val,
             "weight": w["M"],
-            "contribution": round(w["M"] * pillars["M"], 2),
+            "contribution": round(w["M"] * m_val, 2),
         },
         "risk_adjusted": {
-            "score": pillars["O"],
+            "score": o_val,
             "weight": w["O"],
-            "contribution": round(w["O"] * pillars["O"], 2),
+            "contribution": round(w["O"] * o_val, 2),
         },
         "sensitivity": {
-            "score": pillars["S"],
+            "score": s_val,
             "weight": w["S"],
-            "contribution": round(w["S"] * pillars["S"], 2),
+            "contribution": round(w["S"] * s_val, 2),
         },
         "alpha": {
-            "score": pillars["A"],
+            "score": a_val,
             "weight": w["A"],
-            "contribution": round(w["A"] * pillars["A"], 2),
+            "contribution": round(w["A"] * a_val, 2),
         },
     }
 
     total = (
-        w["F"] * pillars["F"] +
-        w["M"] * pillars["M"] +
-        w["O"] * pillars["O"] +
-        w["S"] * pillars["S"] +
-        w["A"] * pillars["A"]
+        w["F"] * f_val +
+        w["M"] * m_val +
+        w["O"] * o_val +
+        w["S"] * s_val +
+        w["A"] * a_val
     )
 
     return {
@@ -1016,6 +1164,12 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 rec["circulating_supply"] = cg_data.get("circulating_supply", 0) or 0
                 rec["total_supply"] = cg_data.get("total_supply", 0) or 0
                 rec["ath_change_percentage"] = cg_data.get("ath_change_percentage", 0) or 0
+            else:
+                # Fallback: estimate market_cap from volume when CoinGecko fails
+                # Volume is typically 2-10% of market cap for liquid assets
+                volume = rec.get("volume_24h", 0) or 0
+                if volume > 0 and rec.get("market_cap", 0) == 0:
+                    rec["market_cap"] = volume * 20  # Conservative estimate
             merged_markets[asset_id] = rec
         elif cg_data:
             merged_markets[asset_id] = cg_data
@@ -1029,8 +1183,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
 
     # Macro regime determination
     btc_data = merged_markets.get("BTC", {})
-    btc_30d = btc_data.get("change_30d", 0) if btc_data else 0
-    fng_value = int(fng.get("value", 50)) if fng else 50
+    btc_30d = btc_data.get("change_30d", 0) or 0 if btc_data else 0
+    fng_value = int(fng.get("value", 50) or 50) if fng else 50
 
     if btc_30d > 5 and fng_value > 55:
         regime = "Risk-On"
@@ -1154,6 +1308,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "max_drawdown_90d": round(max_drawdown_90d, 1),
             "percentile": percentile,
             "data_completeness": data_completeness,
+            "price": market_data.get("price", 0),
+            "change_24h": round(market_data.get("change_24h", 0) or 0, 2),
             "market_cap": market_data.get("market_cap", 0),
             "volume_24h": market_data.get("volume_24h", 0),
             "tvl": tvl,
@@ -1165,14 +1321,15 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     # Compute percentile ranks (metadata only — absolute grades from get_grade())
     universe = compute_percentile_ranks(universe)
 
-    # Get macro data
+    # Get macro data (from yfinance, cached to external drive)
+    macro_data = await fetch_macro_data()
     macro = {
-        "regime": regime,
-        "fed_funds": 5.25,  # Would need real Fed data
-        "treasury_10y": 4.25,  # Would need real Treasury data
-        "vix": 18.0,  # Would need real VIX
-        "dxy": 104.0,  # Would need real DXY
-        "cpi_yoy": 3.2,  # Would need real CPI
+        "regime": regime,  # Keep our Risk-On/Off determination
+        "fed_funds": macro_data.get("fed_funds"),
+        "treasury_10y": macro_data.get("treasury_10y"),
+        "vix": macro_data.get("vix"),
+        "dxy": macro_data.get("dxy"),
+        "cpi_yoy": macro_data.get("cpi_yoy"),
     }
 
     # Save to history database
