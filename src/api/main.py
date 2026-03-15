@@ -32,6 +32,14 @@ from backend.macro_events_scraper import fetch_all_macro_events
 
 app = FastAPI(title="Looloomi AI API", version="0.3.0")
 
+# ── Local Engine Cache (for JSON push from Mac Mini) ─────────────────────────────
+# Stores CIS scores pushed from local cis_v4_engine
+_local_cis_cache: dict = {
+    "universe": [],
+    "last_updated": None,
+    "source": None,  # "local_engine" or "railway"
+}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -250,18 +258,81 @@ async def get_signals():
 
 # ── CIS (CometCloud Intelligence Score) ───────────────────────────────────
 
+# Internal token from environment (set in Railway dashboard)
+import os
+_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
+
+
+@app.post("/internal/cis-scores")
+async def receive_local_cis_scores(payload: dict, x_internal_token: str = None):
+    """
+    Internal endpoint to receive CIS scores from local Mac Mini engine.
+    Called by cis_push.py after local engine completes scoring.
+    Requires X-Internal-Token header for authentication.
+    """
+    global _local_cis_cache
+
+    # Verify internal token
+    if _INTERNAL_TOKEN and x_internal_token != _INTERNAL_TOKEN:
+        return {"status": "error", "message": "Invalid token"}, 401
+
+    try:
+        universe = payload.get("universe", [])
+        timestamp = payload.get("timestamp")
+
+        _local_cis_cache["universe"] = universe
+        _local_cis_cache["last_updated"] = timestamp
+        _local_cis_cache["source"] = "local_engine"
+
+        print(f"[INTERNAL] Received {len(universe)} CIS scores from local engine")
+
+        return {"status": "success", "received": len(universe)}
+    except Exception as e:
+        print(f"Error receiving CIS scores: {e}")
+        return {"status": "error", "message": str(e)}
+
+
 @app.get("/api/v1/cis/universe")
-async def get_cis_universe():
+async def get_cis_universe(force_source: str = None):
     """
     CIS v4.0 Universe Endpoint
-    Returns real CIS scores calculated from CoinGecko + DeFiLlama data
+    Returns CIS scores. Priority: local_engine cache > Railway calculation
     """
+    # Check if local engine cache has fresh data (less than 2 hours old)
+    global _local_cis_cache
+
+    use_local = False
+    if force_source == "local" or (force_source != "railway" and _local_cis_cache["universe"]):
+        if _local_cis_cache["last_updated"]:
+            import time
+            age = time.time() - _local_cis_cache["last_updated"]
+            if age < 7200:  # Less than 2 hours
+                use_local = True
+
+    if use_local:
+        return {
+            "status": "success",
+            "version": "4.0.0",
+            "timestamp": _local_cis_cache["last_updated"],
+            "source": "local_engine",
+            "universe": _local_cis_cache["universe"],
+        }
+
+    # Fallback to Railway calculation
     try:
         result = await calculate_cis_universe()
+        result["source"] = "railway"
         return result
     except Exception as e:
         print(f"CIS calculation error: {e}")
-        # Fallback to minimal response
+        # If Railway fails and we have stale local cache, return it
+        if _local_cis_cache["universe"]:
+            return {
+                "status": "degraded",
+                "message": str(e),
+                "source": "local_engine_stale",
+                "universe": _local_cis_cache["universe"],
+            }
         return {
             "status": "error",
             "message": str(e),
