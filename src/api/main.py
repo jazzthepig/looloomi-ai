@@ -274,7 +274,7 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = None):
 
     # Verify internal token
     if _INTERNAL_TOKEN and x_internal_token != _INTERNAL_TOKEN:
-        return {"status": "error", "message": "Invalid token"}, 401
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
         universe = payload.get("universe", [])
