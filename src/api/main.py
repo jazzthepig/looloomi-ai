@@ -78,6 +78,23 @@ async def _redis_get() -> dict | None:
         print(f"[REDIS] GET error: {e}")
         return None
 
+def _sanitize_floats(obj):
+    """Recursively replace NaN/Inf numpy floats with None for JSON compliance."""
+    import math
+    if isinstance(obj, float):
+        return None if not math.isfinite(obj) else obj
+    if hasattr(obj, 'item'):          # numpy scalar (np.float64, np.int64, etc.)
+        try:
+            val = obj.item()
+            return None if isinstance(val, float) and not math.isfinite(val) else val
+        except Exception:
+            return None
+    if isinstance(obj, dict):
+        return {k: _sanitize_floats(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_floats(i) for i in obj]
+    return obj
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -360,7 +377,7 @@ async def get_cis_universe(force_source: str = None):
     try:
         result = await calculate_cis_universe()
         result["source"] = "railway"
-        return result
+        return _sanitize_floats(result)
     except Exception as e:
         print(f"[CIS] Railway calculation error: {e}")
         # Last resort: return stale Redis data if any
