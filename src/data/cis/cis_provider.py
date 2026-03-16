@@ -1404,6 +1404,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         "vix": macro_data.get("vix"),
         "dxy": macro_data.get("dxy"),
         "cpi_yoy": macro_data.get("cpi_yoy"),
+        "btc_dominance": macro_data.get("btc_dominance"),
     }
 
     # Save to history database
