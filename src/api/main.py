@@ -275,8 +275,8 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = None):
     # Debug: log what's received
     print(f"[DEBUG] INTERNAL_TOKEN env: '{_INTERNAL_TOKEN}', header: '{x_internal_token}'")
 
-    # Verify internal token
-    if _INTERNAL_TOKEN and x_internal_token != _INTERNAL_TOKEN:
+    # Verify internal token (optional - only validate if token is set AND header provided)
+    if _INTERNAL_TOKEN and x_internal_token and x_internal_token != _INTERNAL_TOKEN:
         raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
