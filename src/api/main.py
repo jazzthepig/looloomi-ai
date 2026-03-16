@@ -2,7 +2,7 @@
 Looloomi AI - FastAPI Backend v0.3.0
 Real data from: Binance + DeFiLlama + Alternative.me + Moralis + Etherscan
 """
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -264,7 +264,7 @@ _INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 
 @app.post("/internal/cis-scores")
-async def receive_local_cis_scores(payload: dict, x_internal_token: str = None):
+async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header(None)):
     """
     Internal endpoint to receive CIS scores from local Mac Mini engine.
     Called by cis_push.py after local engine completes scoring.
