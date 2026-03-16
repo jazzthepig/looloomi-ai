@@ -9,7 +9,8 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
-import sys, os, numpy as np
+import sys, os, numpy as np, json, time
+import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -32,13 +33,50 @@ from backend.macro_events_scraper import fetch_all_macro_events
 
 app = FastAPI(title="Looloomi AI API", version="0.3.0")
 
-# ── Local Engine Cache (for JSON push from Mac Mini) ─────────────────────────────
-# Stores CIS scores pushed from local cis_v4_engine
-_local_cis_cache: dict = {
-    "universe": [],
-    "last_updated": None,
-    "source": None,  # "local_engine" or "railway"
-}
+# ── Upstash Redis (persistent CIS cache across Railway deploys/instances) ────────
+_UPSTASH_URL   = os.environ.get("UPSTASH_REDIS_REST_URL", "")
+_UPSTASH_TOKEN = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
+_REDIS_KEY     = "cis:local_scores"
+_REDIS_TTL     = 7200  # 2 hours
+
+async def _redis_set(data: dict) -> bool:
+    """Write CIS payload to Upstash with 2 h TTL."""
+    if not _UPSTASH_URL:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.post(
+                f"{_UPSTASH_URL}/set/{_REDIS_KEY}",
+                content=json.dumps(data),
+                headers={
+                    "Authorization": f"Bearer {_UPSTASH_TOKEN}",
+                    "Content-Type": "application/json",
+                },
+                params={"EX": _REDIS_TTL},
+            )
+            return resp.status_code == 200
+    except Exception as e:
+        print(f"[REDIS] SET error: {e}")
+        return False
+
+async def _redis_get() -> dict | None:
+    """Read CIS payload from Upstash. Returns None on miss/error."""
+    if not _UPSTASH_URL:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.get(
+                f"{_UPSTASH_URL}/get/{_REDIS_KEY}",
+                headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
+            )
+            if resp.status_code == 200:
+                raw = resp.json().get("result")
+                if raw:
+                    return json.loads(raw)
+        return None
+    except Exception as e:
+        print(f"[REDIS] GET error: {e}")
+        return None
 
 app.add_middleware(
     CORSMiddleware,
@@ -258,8 +296,6 @@ async def get_signals():
 
 # ── CIS (CometCloud Intelligence Score) ───────────────────────────────────
 
-# Internal token from environment (set in Railway dashboard)
-import os
 _INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 
@@ -268,30 +304,30 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
     """
     Internal endpoint to receive CIS scores from local Mac Mini engine.
     Called by cis_push.py after local engine completes scoring.
-    Requires X-Internal-Token header for authentication.
+    Scores are stored in Upstash Redis (persistent across deploys/instances).
     """
-    global _local_cis_cache
-
-    # Debug: log what's received
     print(f"[DEBUG] INTERNAL_TOKEN env: '{_INTERNAL_TOKEN}', header: '{x_internal_token}'")
 
-    # Verify internal token (optional - only validate if token is set AND header provided)
     if _INTERNAL_TOKEN and x_internal_token and x_internal_token != _INTERNAL_TOKEN:
         raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
-        universe = payload.get("universe", [])
-        timestamp = payload.get("timestamp")
+        universe  = payload.get("universe", [])
+        timestamp = payload.get("timestamp", datetime.now().isoformat())
 
-        _local_cis_cache["universe"] = universe
-        _local_cis_cache["last_updated"] = timestamp
-        _local_cis_cache["source"] = "local_engine"
+        cache_data = {
+            "universe":     universe,
+            "last_updated": time.time(),
+            "timestamp":    timestamp,
+            "source":       "local_engine",
+        }
 
-        print(f"[INTERNAL] Received {len(universe)} CIS scores from local engine")
+        ok = await _redis_set(cache_data)
+        print(f"[INTERNAL] Received {len(universe)} CIS scores — Redis write: {ok}")
 
-        return {"status": "success", "received": len(universe)}
+        return {"status": "success", "received": len(universe), "cached": ok}
     except Exception as e:
-        print(f"Error receiving CIS scores: {e}")
+        print(f"[INTERNAL] Error receiving CIS scores: {e}")
         return {"status": "error", "message": str(e)}
 
 
@@ -299,48 +335,43 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
 async def get_cis_universe(force_source: str = None):
     """
     CIS v4.0 Universe Endpoint
-    Returns CIS scores. Priority: local_engine cache > Railway calculation
+    Priority: local_engine (Redis) → Railway calculation → stale Redis fallback
     """
-    # Check if local engine cache has fresh data (less than 2 hours old)
-    global _local_cis_cache
-
+    cached   = None
     use_local = False
-    if force_source == "local" or (force_source != "railway" and _local_cis_cache["universe"]):
-        if _local_cis_cache["last_updated"]:
-            import time
-            age = time.time() - _local_cis_cache["last_updated"]
-            if age < 7200:  # Less than 2 hours
+
+    if force_source != "railway":
+        cached = await _redis_get()
+        if cached and cached.get("universe"):
+            age = time.time() - cached.get("last_updated", 0)
+            if age < 7200 or force_source == "local":
                 use_local = True
 
     if use_local:
         return {
-            "status": "success",
-            "version": "4.0.0",
-            "timestamp": _local_cis_cache["last_updated"],
-            "source": "local_engine",
-            "universe": _local_cis_cache["universe"],
+            "status":    "success",
+            "version":   "4.0.0",
+            "timestamp": cached["timestamp"],
+            "source":    "local_engine",
+            "universe":  cached["universe"],
         }
 
-    # Fallback to Railway calculation
+    # Fallback: Railway calculates its own scores
     try:
         result = await calculate_cis_universe()
         result["source"] = "railway"
         return result
     except Exception as e:
-        print(f"CIS calculation error: {e}")
-        # If Railway fails and we have stale local cache, return it
-        if _local_cis_cache["universe"]:
+        print(f"[CIS] Railway calculation error: {e}")
+        # Last resort: return stale Redis data if any
+        if cached and cached.get("universe"):
             return {
-                "status": "degraded",
-                "message": str(e),
-                "source": "local_engine_stale",
-                "universe": _local_cis_cache["universe"],
+                "status":    "degraded",
+                "message":   str(e),
+                "source":    "local_engine_stale",
+                "universe":  cached["universe"],
             }
-        return {
-            "status": "error",
-            "message": str(e),
-            "universe": []
-        }
+        return {"status": "error", "message": str(e), "universe": []}
 
 @app.get("/api/v1/cis/asset/{symbol}")
 async def get_cis_asset(symbol: str):
