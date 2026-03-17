@@ -37,22 +37,26 @@ const ASSET_CLASSES = ["All", "Crypto", "L1", "L2", "DeFi", "Infrastructure", "U
 /* ─── Helper Components ──────────────────────────────────────────────── */
 
 function PillarBar({ value, label }) {
-  const color = value >= 80 ? "#22c55e" : value >= 65 ? "#fbbf24" : value >= 50 ? "#fb923c" : "#ef4444";
+  const v = value ?? 0;
+  const color = v >= 80 ? "#22c55e" : v >= 65 ? "#fbbf24" : v >= 50 ? "#fb923c" : "#ef4444";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
       <span style={{ fontSize: 10, color: "#6b7280", minWidth: 96, fontFamily: FONTS.mono }}>{label}</span>
       <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}>
-        <div style={{ width: `${value}%`, height: "100%", background: color, borderRadius: 3, transition: "width 0.5s ease" }} />
+        <div style={{ width: `${v}%`, height: "100%", background: color, borderRadius: 3, transition: "width 0.5s ease" }} />
       </div>
-      <span style={{ fontSize: 10, color: "#9ca3af", width: 26, textAlign: "right", fontFamily: FONTS.mono }}>{value}</span>
+      <span style={{ fontSize: 10, color: "#9ca3af", width: 26, textAlign: "right", fontFamily: FONTS.mono }}>
+        {value != null ? value : "—"}
+      </span>
     </div>
   );
 }
 
 function HeatCell({ value, onClick }) {
-  const h = value >= 80 ? 142 : value >= 65 ? 48 + (value - 65) * 6 : value >= 50 ? 30 : 0;
-  const s = value >= 50 ? 70 : 80;
-  const l = 25 + (value / 100) * 25;
+  const v = value ?? 0;
+  const h = v >= 80 ? 142 : v >= 65 ? 48 + (v - 65) * 6 : v >= 50 ? 30 : 0;
+  const s = v >= 50 ? 70 : 80;
+  const l = 25 + (v / 100) * 25;
   return (
     <td
       onClick={onClick}
@@ -205,20 +209,23 @@ export function CISLeaderboard({ data, filter, setFilter }) {
                     <td style={{ padding: "10px 4px", width: 140 }}>
                       <div style={{ display: "flex", gap: 2 }}>
                         {[asset.f, asset.m, asset.r, asset.s, asset.a].map((v, j) => {
-                          const c = v >= 80 ? "#22c55e" : v >= 65 ? "#fbbf24" : v >= 50 ? "#fb923c" : "#ef4444";
+                          const vv = v ?? 0;
+                          const c = vv >= 80 ? "#22c55e" : vv >= 65 ? "#fbbf24" : vv >= 50 ? "#fb923c" : "#ef4444";
                           return (
                             <div key={j} style={{ flex: 1, height: 18, borderRadius: 2, background: `${c}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <span style={{ fontSize: 8, fontWeight: 700, color: c, fontFamily: FONTS.mono }}>{v}</span>
+                              <span style={{ fontSize: 8, fontWeight: 700, color: c, fontFamily: FONTS.mono }}>{v != null ? v : "—"}</span>
                             </div>
                           );
                         })}
                       </div>
                     </td>
-                    <td style={{ padding: "10px 8px", fontSize: 12, fontWeight: 600, fontFamily: FONTS.mono, color: asset.change_30d >= 0 ? T.green : T.red }}>
-                      {asset.change_30d >= 0 ? "+" : ""}{asset.change_30d.toFixed(1)}
+                    <td style={{ padding: "10px 8px", fontSize: 12, fontWeight: 600, fontFamily: FONTS.mono, color: (asset.change_30d ?? 0) >= 0 ? T.green : T.red }}>
+                      {asset.change_30d != null
+                        ? `${asset.change_30d >= 0 ? "+" : ""}${asset.change_30d.toFixed(1)}`
+                        : "—"}
                     </td>
                     <td style={{ padding: "10px 8px", fontSize: 11, color: T.secondary, fontFamily: FONTS.mono }}>
-                      {asset.percentile}%
+                      {asset.percentile != null ? `${asset.percentile}%` : "—"}
                     </td>
                   </tr>
                   {isExpanded && (
@@ -236,8 +243,8 @@ export function CISLeaderboard({ data, filter, setFilter }) {
                           <div style={{ flex: 1, minWidth: 200 }}>
                             <div style={{ fontSize: 11, color: T.gold, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Summary</div>
                             <div style={{ fontSize: 12, color: T.secondary, lineHeight: 1.8 }}>
-                              <div>Cross-Asset Percentile: <strong style={{ color: T.primary }}>Top {100 - asset.percentile}%</strong></div>
-                              <div>CIS Grade: <strong style={{ color: GRADE_COLORS[asset.grade] }}>{asset.grade}</strong> ({asset.cis_score.toFixed(1)}/100)</div>
+                              <div>Cross-Asset Percentile: <strong style={{ color: T.primary }}>{asset.percentile != null ? `Top ${100 - asset.percentile}%` : "—"}</strong></div>
+                              <div>CIS Grade: <strong style={{ color: GRADE_COLORS[asset.grade] }}>{asset.grade}</strong> ({asset.cis_score != null ? asset.cis_score.toFixed(1) : "—"}/100)</div>
                               <div>Signal: <strong style={{ color: SIGNAL_STYLES[asset.signal]?.color }}>{asset.signal}</strong></div>
                             </div>
                           </div>
@@ -310,7 +317,7 @@ export function CISHeatmap({ data, filter, setFilter }) {
                   <HeatCell value={asset.r} />
                   <HeatCell value={asset.s} />
                   <HeatCell value={asset.a} />
-                  <td style={{ padding: "6px 8px", textAlign: "center", fontSize: 13, fontWeight: 700, color: T.primary, fontFamily: FONTS.mono }}>{asset.cis_score.toFixed(1)}</td>
+                  <td style={{ padding: "6px 8px", textAlign: "center", fontSize: 13, fontWeight: 700, color: T.primary, fontFamily: FONTS.mono }}>{asset.cis_score != null ? asset.cis_score.toFixed(1) : "—"}</td>
                   <td style={{ padding: "6px 8px", textAlign: "center", fontSize: 12, fontWeight: 700, color: GRADE_COLORS[asset.grade], fontFamily: FONTS.mono }}>{asset.grade}</td>
                 </tr>
                 {expanded === asset.symbol && (
@@ -549,11 +556,11 @@ export default function CISWidget({ refreshKey = 0 }) {
 
     const recalculated = data.universe.map(asset => {
       const newScore =
-        weights.F * asset.f +
-        weights.M * asset.m +
-        weights.O * asset.r +
-        weights.S * asset.s +
-        weights.A * asset.a;
+        weights.F * (asset.f ?? 0) +
+        weights.M * (asset.m ?? 0) +
+        weights.O * (asset.r ?? 0) +
+        weights.S * (asset.s ?? 0) +
+        weights.A * (asset.a ?? 0);
 
       let newGrade;
       if (newScore >= 85) newGrade = "A+";
