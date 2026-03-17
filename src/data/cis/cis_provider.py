@@ -50,12 +50,12 @@ CRYPTO_ASSETS = {
     "SUSHI": {"coingecko": "sushi", "name": "SushiSwap", "class": "DeFi"},
     # Infrastructure
     "LINK": {"coingecko": "chainlink", "name": "Chainlink", "class": "Infrastructure"},
-    "STX": {"coingecko": "stacks", "name": "Stacks", "class": "Infrastructure"},
+    "STX": {"coingecko": "blockstack", "name": "Stacks", "class": "Infrastructure"},
     "RUNE": {"coingecko": "thorchain", "name": "THORChain", "class": "Infrastructure"},
     # RWA / Memes / High volume
     "ONDO": {"coingecko": "ondo-finance", "name": "Ondo Finance", "class": "RWA"},
     "PEPE": {"coingecko": "pepe", "name": "Pepe", "class": "Memecoin"},
-    "WIF": {"coingecko": "wif", "name": "WIF", "class": "Memecoin"},
+    "WIF": {"coingecko": "dogwifcoin", "name": "WIF", "class": "Memecoin"},
     "BONK": {"coingecko": "bonk", "name": "Bonk", "class": "Memecoin"},
     "SUI": {"coingecko": "sui", "name": "Sui", "class": "L1"},
     "APT": {"coingecko": "aptos", "name": "Aptos", "class": "L1"},

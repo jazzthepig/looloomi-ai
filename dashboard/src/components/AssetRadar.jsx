@@ -37,7 +37,7 @@ const ASSETS = [
   { id: "sushi",                      symbol: "SUSHI", name: "SushiSwap",  category: "DeFi", color: "#FA52A0" },
   // Infrastructure
   { id: "chainlink", symbol: "LINK", name: "Chainlink", category: "Infrastructure", color: "#2A5ADA" },
-  { id: "stacks",    symbol: "STX",  name: "Stacks",    category: "Infrastructure", color: "#5546D6" },
+  { id: "blockstack", symbol: "STX",  name: "Stacks",    category: "Infrastructure", color: "#5546D6" },
   { id: "thorchain", symbol: "RUNE", name: "THORChain", category: "Infrastructure", color: "#2ECC71" },
   { id: "filecoin",  symbol: "FIL",  name: "Filecoin",  category: "Infrastructure", color: "#0090FF" },
   { id: "celestia",  symbol: "TIA",  name: "Celestia",  category: "Infrastructure", color: "#7B2FBE" },
@@ -46,7 +46,7 @@ const ASSETS = [
   { id: "polymesh",     symbol: "POLYX", name: "Polymesh",  category: "RWA", color: "#E6007A" },
   // Memecoin
   { id: "pepe", symbol: "PEPE", name: "Pepe", category: "Memecoin", color: "#00FF00" },
-  { id: "wif",  symbol: "WIF",  name: "WIF",  category: "Memecoin", color: "#9945FF" },
+  { id: "dogwifcoin", symbol: "WIF",  name: "WIF",  category: "Memecoin", color: "#9945FF" },
 ];
 
 /* ─── CIS Data (fallback - rarely used) ──────────────────────────────────── */

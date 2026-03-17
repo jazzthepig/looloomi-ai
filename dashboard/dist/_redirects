@@ -1,0 +1,4 @@
+# Cloudflare Pages — proxy API calls to Railway backend
+# Status 200 = transparent proxy (not a browser redirect)
+/api/*       https://web-production-0cdf76.up.railway.app/api/:splat       200
+/internal/*  https://web-production-0cdf76.up.railway.app/internal/:splat  200
