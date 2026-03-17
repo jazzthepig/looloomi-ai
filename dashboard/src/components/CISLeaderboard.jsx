@@ -67,7 +67,10 @@ const ASSET_CLASS_COLORS = {
   Infrastructure: { bg: "rgba(0,217,138,.10)", text: "#00D98A" },
   Oracle: { bg: "rgba(167,139,250,.10)", text: "#A78BFA" },
   Memecoin: { bg: "rgba(255,16,96,.10)", text: "#FF1060" },
-  AI: { bg: "rgba(255,16,96,.10)", text: "#FF1060" },
+  AI: { bg: "rgba(255,107,0,.10)", text: "#FF6B00" },
+  "US Equity": { bg: "rgba(68,114,255,.10)", text: "#4B9EFF" },
+  "US Bond":   { bg: "rgba(245,158,11,.10)", text: "#F59E0B" },
+  Commodity:   { bg: "rgba(200,168,75,.12)", text: "#C8A84B" },
 };
 
 const API_BASE = "/api/v1";
@@ -123,7 +126,7 @@ const CIS_CSS = `
   }
 `;
 
-export default function CISLeaderboard({ minimal = false, externalData = null }) {
+export default function CISLeaderboard({ minimal = false, externalData = null, onDataLoad = null }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -156,6 +159,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
       setData(mapped);
       setSelectedAsset(mapped[0] || null);
       setDataSource("live");
+      if (onDataLoad) onDataLoad(externalData.universe);
       return;
     }
 
@@ -185,6 +189,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
           setDataSource(json.data_source || "coingecko+defillama");
           setEngineSource(json.source || "railway");
           setUpdatedAt(json.timestamp ? new Date(json.timestamp).toLocaleString() : null);
+          if (onDataLoad) onDataLoad(json.universe);
         } else {
           throw new Error("No data returned");
         }
@@ -240,7 +245,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
   }, [data]);
 
   const GRADE_TABS = ["All", "A", "B", "C", "D"];
-  const CLASS_TABS = ["All", "RWA", "L1", "L2", "DeFi", "Infrastructure", "Oracle", "Memecoin"];
+  const CLASS_TABS = ["All", "L1", "L2", "DeFi", "RWA", "Infrastructure", "Oracle", "Memecoin", "US Equity", "US Bond", "Commodity"];
 
   // Filter data — match base grade bucket (A catches A and A+, etc.)
   const GRADE_BUCKET = {

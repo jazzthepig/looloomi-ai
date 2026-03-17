@@ -542,7 +542,7 @@ async def fetch_macro_data() -> dict:
 
     Cached to external drive for 1 hour.
     """
-    FRED_API_KEY = "5afc269032ce06a65c7eba5ec1bb49ad"
+    FRED_API_KEY = os.environ.get("FRED_API_KEY", "5afc269032ce06a65c7eba5ec1bb49ad")
 
     # Try memory cache first
     cache_key = "macro_data"
