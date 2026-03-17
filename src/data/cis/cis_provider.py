@@ -1066,6 +1066,7 @@ def calculate_cis_score(
             a_components["alpha_score"] = None
     else:
         # Crypto: BTC divergence
+        # BTC itself has no BTC benchmark — falls back to SPY cross-asset alpha
         if btc_change_30d is not None:
             divergence = change_30d - btc_change_30d
             a_components["btc_divergence_30d"] = round(divergence, 1)
@@ -1080,6 +1081,25 @@ def calculate_cis_score(
             elif divergence > -20:
                 a_score = max(0, a_score - 8);    a_components["btc_alpha_score"] = -8
             elif divergence > -50:
+                a_score = max(0, a_score - 15);   a_components["btc_alpha_score"] = -15
+            else:
+                a_score = max(0, a_score - 20);   a_components["btc_alpha_score"] = -20
+        elif spy_change_30d is not None:
+            # BTC uses SPY as cross-asset alpha: BTC outperforming equities = genuine alpha
+            divergence = change_30d - spy_change_30d
+            a_components["spy_divergence_30d"] = round(divergence, 1)
+            a_components["benchmark"] = "SPY (cross-asset)"
+            if divergence > 30:
+                a_score = min(100, a_score + 20); a_components["btc_alpha_score"] = 20
+            elif divergence > 15:
+                a_score = min(100, a_score + 12); a_components["btc_alpha_score"] = 12
+            elif divergence > 5:
+                a_score = min(100, a_score + 6);  a_components["btc_alpha_score"] = 6
+            elif divergence > -5:
+                a_components["btc_alpha_score"] = 0
+            elif divergence > -15:
+                a_score = max(0, a_score - 8);    a_components["btc_alpha_score"] = -8
+            elif divergence > -30:
                 a_score = max(0, a_score - 15);   a_components["btc_alpha_score"] = -15
             else:
                 a_score = max(0, a_score - 20);   a_components["btc_alpha_score"] = -20
@@ -1359,14 +1379,18 @@ async def calculate_cis_universe() -> Dict[str, Any]:
 
         # Calculate pillar scores with breakdown
         is_tradfi = asset_class in ["US Equity", "US Bond", "Commodity"]
+        # BTC: no BTC benchmark (can't compare to itself); spy_change_30d passed so A pillar uses SPY cross-asset
+        # Other crypto: use BTC 30d as benchmark
+        # TradFi: no BTC benchmark; use SPY (with SPY itself excluded)
         asset_btc_30d = btc_30d if (asset_id != "BTC" and not is_tradfi) else None
+        asset_spy_30d = spy_30d if (is_tradfi and asset_id != "SPY") or asset_id == "BTC" else None
         gh_commits = github_activity.get(asset_id)
         pillars_result = calculate_cis_score(
             market_data, tvl, fng, asset_class,
             btc_change_30d=asset_btc_30d,
             github_commits_4w=gh_commits,
             vix=live_vix if is_tradfi else None,
-            spy_change_30d=spy_30d if (is_tradfi and asset_id != "SPY") else None,
+            spy_change_30d=asset_spy_30d,
         )
         pillars = {k: v for k, v in pillars_result.items() if k != "breakdown"}
         breakdown = pillars_result.get("breakdown", {})

@@ -23,7 +23,7 @@ const ASSETS = [
   // L2
   { id: "arbitrum",           symbol: "ARB",   name: "Arbitrum",   category: "L2",   color: "#28A0F0" },
   { id: "optimism",           symbol: "OP",    name: "Optimism",   category: "L2",   color: "#FF0420" },
-  { id: "matic-network",      symbol: "MATIC", name: "Polygon",    category: "L2",   color: "#8247E5" },
+  { id: "polygon-ecosystem-token", symbol: "POL", name: "Polygon (POL)", category: "L2", color: "#8247E5" },
   // cisKey: CIS backend uses "MANTLE" as key, Binance ticker is MNT
   { id: "mantle",             symbol: "MNT",   cisKey: "MANTLE",   name: "Mantle",   category: "L2",   color: "#00A8E0" },
   // DeFi
