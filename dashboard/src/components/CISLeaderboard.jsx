@@ -42,12 +42,12 @@ const PILLAR_DEFS = [
   { key: "alpha", name: "Alpha Independence", color: "#FF2D55", weight: 10, desc: "BTC correlation (β), genuine uncorrelated return potential" },
 ];
 
-// Grade definitions
+// Grade definitions — percentile-based (Option A)
 const GRADE_DEFINITIONS = [
-  { grade: "A", minScore: 85, label: "Institutional Quality", desc: "Meets institutional allocation standards across all pillars", borderColor: "#00D98A" },
-  { grade: "B", minScore: 70, label: "Investment Grade", desc: "Strong fundamentals with selective risk factors", borderColor: "#4472FF" },
-  { grade: "C", minScore: 55, label: "Speculative", desc: "Elevated risk, requires position sizing discipline", borderColor: "#F59E0B" },
-  { grade: "D", minScore: 0, label: "High Risk", desc: "Significant structural concerns, not recommended for institutional allocation", borderColor: "#FF2D55" },
+  { grade: "A", minScore: "Top 15%", label: "Institutional Quality", desc: "Allocation signal: STRONG BUY. Meets institutional standards across all pillars. Position initiation or increase recommended.", borderColor: "#00D98A" },
+  { grade: "B", minScore: "Top 50%", label: "Investment Grade", desc: "Allocation signal: BUY. Strong fundamentals with selective risk factors. Suitable for portfolio inclusion with standard position sizing.", borderColor: "#4472FF" },
+  { grade: "C", minScore: "Top 85%", label: "Watch / Hold", desc: "Allocation signal: HOLD. Elevated risk or compressing momentum. Maintain existing positions; position sizing discipline required.", borderColor: "#F59E0B" },
+  { grade: "D", minScore: "Bottom 15%", label: "Reduce / Avoid", desc: "Allocation signal: REDUCE or AVOID. Significant structural concerns across multiple pillars. Not recommended for institutional allocation.", borderColor: "#FF2D55" },
 ];
 
 // Responsive styles
@@ -92,6 +92,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [sortBy, setSortBy] = useState("rank");
   const [dataSource, setDataSource] = useState("loading");
+  const [engineSource, setEngineSource] = useState(null); // "local_engine" | "railway"
+  const [updatedAt, setUpdatedAt] = useState(null);
 
   // Fetch data from API if not provided externally
   useEffect(() => {
@@ -139,6 +141,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
           setData(mapped);
           setSelectedAsset(mapped[0]);
           setDataSource(json.data_source || "coingecko+defillama");
+          setEngineSource(json.source || "railway");
+          setUpdatedAt(json.timestamp ? new Date(json.timestamp).toLocaleString() : null);
         } else {
           throw new Error("No data returned");
         }
@@ -338,28 +342,89 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
   // Full mode with 2-column layout
   return (
     <div>
-      {/* Data Source Badge */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <span style={{
-          fontSize: 10, padding: "2px 8px", borderRadius: 4,
-          background: dataSource === "live" ? "rgba(34,197,94,0.2)" : "rgba(251,191,36,0.2)",
-          color: dataSource === "live" ? "#22c55e" : "#fbbf24"
-        }}>
-          {dataSource === "loading" ? "LOADING" : dataSource.toUpperCase()}
-        </span>
-        <span style={{ fontSize: 10, color: T.muted }}>
+      {/* Header: engine source + timestamp */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{
+            fontSize: 10, padding: "3px 10px", borderRadius: 4, fontFamily: FONTS.display,
+            fontWeight: 700, letterSpacing: "0.08em",
+            background: engineSource === "local_engine" ? "rgba(0,217,138,0.15)" : "rgba(251,191,36,0.12)",
+            color: engineSource === "local_engine" ? "#00D98A" : "#fbbf24",
+            border: `1px solid ${engineSource === "local_engine" ? "rgba(0,217,138,0.3)" : "rgba(251,191,36,0.25)"}`,
+          }}>
+            {engineSource === "local_engine" ? "CIS PRO · LOCAL ENGINE" : "CIS MARKET · ESTIMATED"}
+          </span>
+          {engineSource !== "local_engine" && (
+            <span style={{ fontSize: 9, color: T.muted, fontFamily: FONTS.body }}>
+              Local engine offline — using market model
+            </span>
+          )}
+        </div>
+        <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>
           CIS v4.0 · {data.length} assets
+          {updatedAt && <span style={{ marginLeft: 8, opacity: 0.5 }}>Updated: {updatedAt}</span>}
         </span>
+      </div>
+
+      {/* Objectives + Methodology Banner */}
+      <div style={{
+        marginBottom: 20, padding: "18px 20px",
+        background: "rgba(68,114,255,0.04)", border: "1px solid rgba(68,114,255,0.14)",
+        borderRadius: 10,
+      }}>
+        <div style={{
+          fontFamily: FONTS.display, fontSize: 10, fontWeight: 700,
+          color: "#4472FF", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10,
+        }}>
+          CometCloud Intelligence Score — CIS v4.0
+        </div>
+        <div style={{
+          fontFamily: FONTS.body, fontSize: 12, color: T.secondary,
+          lineHeight: 1.75, marginBottom: 14,
+        }}>
+          A quantitative multi-pillar scoring system providing institutional investors with a systematic,
+          data-driven basis for allocation and position-sizing decisions across crypto and traditional assets —
+          updated every 30 minutes, comparable on a unified 0–100 scale.
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+          {[
+            {
+              title: "Problem Solved",
+              text: "Eliminates subjective analyst ratings. Algorithmic, reproducible scoring removes emotional bias from allocation decisions and provides a continuous signal — not quarterly reviews.",
+            },
+            {
+              title: "Methodology",
+              text: "5 independent pillars: F (Fundamental) · M (Market Structure) · O (On-Chain Health) · S (Sentiment) · A (Alpha Independence). Graded by relative percentile rank within the live universe — stays meaningful in any market regime.",
+            },
+            {
+              title: "Institutional Application",
+              text: "Grade ≥ B+ signals position initiation or increase. Grade C± warrants position-sizing discipline. Grade ≤ D signals reduction or exit. Cross-asset view enables rebalancing across crypto and TradFi on the same framework.",
+            },
+          ].map(card => (
+            <div key={card.title} style={{
+              background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 8, padding: "12px 14px",
+            }}>
+              <div style={{
+                fontFamily: FONTS.display, fontSize: 10, fontWeight: 700,
+                color: T.primary, marginBottom: 6, letterSpacing: "0.04em",
+              }}>{card.title}</div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted, lineHeight: 1.65 }}>
+                {card.text}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
       {/* Grade Summary Cards */}
       <div className="cis-grade-summary" style={{
         display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 18
       }}>
         {[
-          { grade: "A", label: "CIS Score ≥ 85", color: T.green },
-          { grade: "B", label: "CIS Score 70–84", color: T.blue },
-          { grade: "C", label: "CIS Score 55–69", color: T.amber },
-          { grade: "D", label: "CIS Score < 55", color: T.red },
+          { grade: "A", label: "Top 15% · A+ / A", color: T.green },
+          { grade: "B", label: "Top 50% · B+ / B", color: T.blue },
+          { grade: "C", label: "Top 85% · C+ / C", color: T.amber },
+          { grade: "D", label: "Bottom 15% · D / F", color: T.red },
         ].map(g => (
           <div key={g.grade} className="cis-grade-card" style={{
             border: `1px solid ${T.border}`, borderRadius: 10,
@@ -617,12 +682,12 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
               fontFamily: FONTS.display, fontSize: 14, fontWeight: 700,
               color: T.primary, letterSpacing: "-0.01em", marginBottom: 4,
             }}>
-              CIS Methodology v3.1
+              CIS Methodology v4.0
             </div>
             <div style={{
               fontFamily: FONTS.body, fontSize: 12, color: T.secondary,
             }}>
-              Open-source scoring framework for institutional digital asset evaluation
+              Quantitative scoring framework for institutional crypto and cross-asset evaluation
             </div>
           </div>
 
@@ -664,8 +729,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
             background: "rgba(255,255,255,0.015)",
           }}>
             <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted, lineHeight: 1.6 }}>
-              CIS scores are recalculated weekly using live on-chain and market data.
-              Methodology published on GitHub.
+              CIS scores are recalculated every 30 minutes using live market, on-chain, and macro data.
+              Grades are percentile-based within the current universe — not absolute thresholds — ensuring
+              the scale remains meaningful across market regimes.
               Scores do not constitute investment advice.
             </div>
           </div>
@@ -695,8 +761,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
                   fontFamily: FONTS.mono, fontSize: 20, fontWeight: 800,
                   color: g.borderColor,
                 }}>{g.grade}</span>
-                <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.muted }}>
-                  {g.minScore}{g.minScore > 0 ? "+" : ""}
+                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted }}>
+                  {g.minScore}
                 </span>
               </div>
               <div style={{
