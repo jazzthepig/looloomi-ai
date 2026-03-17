@@ -1,5 +1,44 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { T, FONTS } from "../tokens";
+
+/* ─── Inline Sparkline SVG ───────────────────────────────────────────── */
+const Sparkline = ({ scores, width = 72, height = 24 }) => {
+  if (!scores || scores.length < 2) {
+    return (
+      <div style={{ width, height, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", fontFamily: "monospace" }}>—</span>
+      </div>
+    );
+  }
+  const min = Math.min(...scores);
+  const max = Math.max(...scores);
+  const range = max - min || 1;
+  const pad = 2;
+  const w = width - pad * 2;
+  const h = height - pad * 2;
+  const pts = scores.map((v, i) => {
+    const x = pad + (i / (scores.length - 1)) * w;
+    const y = pad + h - ((v - min) / range) * h;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+
+  const last  = scores[scores.length - 1];
+  const first = scores[0];
+  const diff  = last - first;
+  const color = diff > 1 ? "#00D98A" : diff < -1 ? "#FF2D55" : "rgba(255,255,255,0.25)";
+
+  return (
+    <svg width={width} height={height} style={{ display: "block", overflow: "visible" }}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+      {/* Last point dot */}
+      <circle
+        cx={parseFloat(pts.split(" ").at(-1).split(",")[0])}
+        cy={parseFloat(pts.split(" ").at(-1).split(",")[1])}
+        r="2" fill={color} opacity="0.9"
+      />
+    </svg>
+  );
+};
 
 const GRADE_COLORS = {
   "A+": "#00D98A",
@@ -67,7 +106,8 @@ const CIS_CSS = `
     .cis-filters { gap: 4px !important; }
     .cis-filter-btn { padding: 3px 8px !important; font-size: 8px !important; }
     .cis-filter-divider { display: none !important; }
-    .cis-table-header, .cis-table-row { grid-template-columns: 30px 1fr 60px 40px !important; gap: 8px !important; padding: 10px 12px !important; }
+    .cis-table-header, .cis-table-row { grid-template-columns: 30px 1fr 60px 40px 0px !important; gap: 8px !important; padding: 10px 12px !important; }
+    .cis-table-header span:last-child, .cis-table-row > div:last-child { display: none !important; }
     .cis-detail-panel { position: static !important; margin-top: 16px !important; }
     .cis-score { font-size: 32px !important; }
     .cis-pillar-legend-bottom { gap: 12px !important; }
@@ -94,6 +134,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
   const [dataSource, setDataSource] = useState("loading");
   const [engineSource, setEngineSource] = useState(null); // "local_engine" | "railway"
   const [updatedAt, setUpdatedAt] = useState(null);
+  const [sparklines, setSparklines] = useState({});   // { [symbol]: number[] }
+  const sparkFetchedRef = useRef(false);
 
   // Fetch data from API if not provided externally
   useEffect(() => {
@@ -168,6 +210,34 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
       document.head.appendChild(s);
     }
   }, []);
+
+  // Fetch sparkline history after data loads — staggered to avoid hammering API
+  useEffect(() => {
+    if (!data.length || sparkFetchedRef.current) return;
+    sparkFetchedRef.current = true;
+
+    const fetchAll = async () => {
+      const symbols = data.map(d => d.asset_id?.toUpperCase() || d.asset_name?.toUpperCase());
+      for (let i = 0; i < symbols.length; i++) {
+        const sym = symbols[i];
+        if (!sym) continue;
+        try {
+          const res = await fetch(`/api/v1/cis/history/${sym}?days=7`);
+          const json = await res.json();
+          if (json.history && json.history.length > 1) {
+            const scores = json.history.map(h => h.score).filter(s => s != null);
+            if (scores.length > 1) {
+              setSparklines(prev => ({ ...prev, [sym]: scores }));
+            }
+          }
+        } catch { /* silent — sparkline is non-critical */ }
+        // 80ms stagger between fetches
+        await new Promise(r => setTimeout(r, 80));
+      }
+    };
+
+    fetchAll();
+  }, [data]);
 
   const GRADE_TABS = ["All", "A", "B", "C", "D"];
   const CLASS_TABS = ["All", "RWA", "L1", "L2", "DeFi", "Infrastructure", "Oracle", "Memecoin"];
@@ -498,7 +568,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
         <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden", background: T.surface }}>
           {/* Table Header */}
           <div className="cis-table-header" style={{
-            display: "grid", gridTemplateColumns: "34px 1fr 80px 60px",
+            display: "grid", gridTemplateColumns: "34px 1fr 80px 60px 80px",
             gap: 12, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
             fontSize: 9, color: "rgba(255,255,255,0.26)", letterSpacing: "0.14em",
             textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
@@ -508,17 +578,21 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
             <span>Asset</span>
             <span style={{ textAlign: "right" }}>CIS</span>
             <span style={{ textAlign: "center" }}>Grade</span>
+            <span style={{ textAlign: "center" }}>7D</span>
           </div>
 
           {/* Table Body */}
           <div style={{ maxHeight: 500, overflowY: "auto" }}>
             {filtered.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", color: T.muted }}>No assets match</div>
-            ) : filtered.map((item) => (
+            ) : filtered.map((item) => {
+              const symKey = (item.asset_id || "").toUpperCase();
+              const sparkData = sparklines[symKey] || null;
+              return (
               <div key={item.asset_id} className="cis-table-row"
                 onClick={() => handleSelectAsset(item)}
                 style={{
-                  display: "grid", gridTemplateColumns: "34px 1fr 80px 60px",
+                  display: "grid", gridTemplateColumns: "34px 1fr 80px 60px 80px",
                   gap: 12, padding: "13px 18px", borderBottom: `1px solid ${T.border}`,
                   alignItems: "center", cursor: "pointer",
                   background: selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent",
@@ -559,8 +633,13 @@ export default function CISLeaderboard({ minimal = false, externalData = null })
                   fontSize: 12, fontWeight: 700, fontFamily: FONTS.mono,
                   color: GRADE_COLORS[item.grade], border: `1px solid ${GRADE_COLORS[item.grade]}40`
                 }}>{item.grade}</span>
+                {/* 7D Sparkline */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Sparkline scores={sparkData} width={72} height={24} />
+                </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

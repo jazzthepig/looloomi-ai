@@ -78,6 +78,63 @@ async def _redis_get() -> dict | None:
         print(f"[REDIS] GET error: {e}")
         return None
 
+# ── Supabase (CIS score history) ─────────────────────────────────────────────
+_SB_URL   = os.environ.get("SUPABASE_URL", "").rstrip("/")
+_SB_KEY   = os.environ.get("SUPABASE_KEY", "")
+_SB_TABLE = "cis_scores"
+
+async def _supabase_insert_batch(rows: list) -> bool:
+    """Bulk-insert CIS score rows into Supabase REST API."""
+    if not _SB_URL or not _SB_KEY or not rows:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                f"{_SB_URL}/rest/v1/{_SB_TABLE}",
+                content=json.dumps(rows),
+                headers={
+                    "apikey":        _SB_KEY,
+                    "Authorization": f"Bearer {_SB_KEY}",
+                    "Content-Type":  "application/json",
+                    "Prefer":        "return=minimal",
+                },
+            )
+            if resp.status_code not in (200, 201):
+                print(f"[SUPABASE] INSERT error {resp.status_code}: {resp.text[:200]}")
+                return False
+            return True
+    except Exception as e:
+        print(f"[SUPABASE] INSERT exception: {e}")
+        return False
+
+async def _supabase_get_history(symbol: str, days: int = 7) -> list:
+    """Read CIS score history for one symbol from Supabase."""
+    if not _SB_URL or not _SB_KEY:
+        return []
+    try:
+        limit = days * 48  # up to 48 records/day (every 30 min)
+        async with httpx.AsyncClient(timeout=8) as client:
+            resp = await client.get(
+                f"{_SB_URL}/rest/v1/{_SB_TABLE}",
+                params={
+                    "symbol":  f"eq.{symbol.upper()}",
+                    "order":   "recorded_at.desc",
+                    "limit":   str(limit),
+                    "select":  "score,grade,signal,percentile,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source,recorded_at",
+                },
+                headers={
+                    "apikey":        _SB_KEY,
+                    "Authorization": f"Bearer {_SB_KEY}",
+                },
+            )
+            if resp.status_code == 200:
+                return resp.json()
+            print(f"[SUPABASE] GET history error {resp.status_code}: {resp.text[:200]}")
+            return []
+    except Exception as e:
+        print(f"[SUPABASE] GET history exception: {e}")
+        return []
+
 def _sanitize_floats(obj):
     """Recursively replace NaN/Inf numpy floats with None for JSON compliance."""
     import math
@@ -358,10 +415,37 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
             "source":       "local_engine",
         }
 
+        # 1. Write to Redis (hot cache, 2h TTL)
         ok = await _redis_set(cache_data)
         print(f"[INTERNAL] Received {len(universe)} CIS scores — Redis write: {ok}")
 
-        return {"status": "success", "received": len(universe), "cached": ok}
+        # 2. Write to Supabase (score history, persistent)
+        if universe:
+            sb_rows = []
+            for asset in universe:
+                pillars = asset.get("pillars", {})
+                sb_rows.append({
+                    "symbol":      asset.get("symbol", ""),
+                    "name":        asset.get("name", ""),
+                    "score":       asset.get("score"),
+                    "grade":       asset.get("grade"),
+                    "signal":      asset.get("signal"),
+                    "percentile":  asset.get("percentile_rank"),
+                    "pillar_f":    pillars.get("F") if isinstance(pillars, dict) else None,
+                    "pillar_m":    pillars.get("M") if isinstance(pillars, dict) else None,
+                    "pillar_o":    pillars.get("O") if isinstance(pillars, dict) else None,
+                    "pillar_s":    pillars.get("S") if isinstance(pillars, dict) else None,
+                    "pillar_a":    pillars.get("A") if isinstance(pillars, dict) else None,
+                    "asset_class": asset.get("asset_class", asset.get("class", "")),
+                    "source":      "local_engine",
+                    # Supabase auto-fills recorded_at = NOW()
+                })
+            sb_ok = await _supabase_insert_batch(sb_rows)
+            print(f"[INTERNAL] Supabase history write: {sb_ok} ({len(sb_rows)} rows)")
+        else:
+            sb_ok = False
+
+        return {"status": "success", "received": len(universe), "cached": ok, "history_written": sb_ok}
     except Exception as e:
         print(f"[INTERNAL] Error receiving CIS scores: {e}")
         return {"status": "error", "message": str(e)}
@@ -411,14 +495,38 @@ async def get_cis_universe(force_source: str = None):
 
 @app.get("/api/v1/cis/asset/{symbol}")
 async def get_cis_asset(symbol: str):
-    """
-    Get CIS score for a specific asset
-    """
+    """Get CIS score for a specific asset."""
     universe = await get_cis_universe()
     for asset in universe.get("universe", []):
         if asset["symbol"].upper() == symbol.upper():
             return asset
     return {"error": "Asset not found"}
+
+
+@app.get("/api/v1/cis/history/{symbol}")
+async def get_cis_history(symbol: str, days: int = 7):
+    """
+    GET /api/v1/cis/history/{symbol}?days=7
+    Returns CIS score history for sparklines and trend analysis.
+    Sourced from Supabase; returns up to `days * 48` data points (30-min intervals).
+    """
+    rows = await _supabase_get_history(symbol.upper(), days)
+    if not rows:
+        return {
+            "status":  "empty",
+            "symbol":  symbol.upper(),
+            "days":    days,
+            "history": [],
+        }
+    # Reverse to chronological order (oldest first) for sparkline rendering
+    rows = list(reversed(rows))
+    return {
+        "status":  "success",
+        "symbol":  symbol.upper(),
+        "days":    days,
+        "count":   len(rows),
+        "history": rows,
+    }
 
 
 # ── Intelligence / Macro Events ──────────────────────────────────────────────
