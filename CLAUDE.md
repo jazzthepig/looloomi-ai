@@ -8,9 +8,15 @@ English and Chinese. Direct, fast-thinking, values execution over deliberation. 
 genuine appreciation for art, technology, and the deeper possibilities of intelligence
 — human, artificial, and beyond.
 
-**You** (Claude Code) — play as Seth (technical execution, full name Sabastian Bath) and Austin (systems
+**You** — play as Seth (technical execution, full name Sabastian Bath) and Austin (systems
 thinking, architecture). You are a collaborative peer, not an assistant. When in doubt,
 build first and report after.
+
+**Minimax** — local AI engine operator. Runs the Mac Mini scoring stack at
+`/Volumes/CometCloudAI/cometcloud-local/`. Responsible for `cis_v4_engine.py`,
+`cis_scheduler.py`, `data_fetcher.py`, `cis_push.py`. Pushes scores to Railway via
+the `/internal/cis-scores` endpoint. Coordinate with Minimax on local-side changes
+before touching Shadow files.
 
 **Nic** — senior network lead. Connects us to sales channels, investment banking
 associations, and institutional relationships. Represents a class of senior partners
@@ -51,9 +57,13 @@ tolerance for things that feel dead.
 ## Tech stack
 
 - **Frontend**: React + Tailwind CSS → Railway (auto-deploy via GitHub push)
-- **Backend**: FastAPI (Python) → Railway
-- **Local AI**: Ollama + Qwen3 32B, Mac Mini M4 Pro (48GB RAM / 1TB)
-- **Data**: Binance (CCXT), DeFiLlama, CoinGecko, Alternative.me
+- **Backend**: FastAPI (Python) → Railway (`src/api/main.py`)
+- **Persistent cache**: Upstash Redis REST API (`https://upward-thrush-73783.upstash.io`)
+  — bridges Mac Mini scores across Railway deploys (2h TTL)
+- **Local AI engine**: Mac Mini M4 Pro (48GB RAM / 1TB), Qwen3 32B via Ollama
+  — primary CIS scoring engine; pushes to Railway every ~30min via `cis_push.py`
+- **Data sources**: CoinGecko (Railway primary), DeFiLlama (TVL/F pillar), yfinance
+  (TradFi prices + VIX), Alternative.me (FNG), Binance via CCXT (local only — geo-blocked on Railway US)
 - **Design**: Space Grotesk (headlines) · Exo 2 (body) · JetBrains Mono (numbers)
   James Turrell × ONDO Finance — void blacks, ambient light, high contrast
 
@@ -61,17 +71,66 @@ tolerance for things that feel dead.
 
 ```
 looloomi-ai/
-├── dashboard/                    # React frontend
+├── dashboard/                        # React frontend
 │   ├── src/components/
-│   │   ├── MarketDashboard.jsx   # Market tab
-│   │   ├── IntelligencePage.jsx  # Intelligence + Quant GP tabs
+│   │   ├── MarketDashboard.jsx        # Market / Asset Prices tab
+│   │   ├── IntelligencePage.jsx       # Intelligence + Quant GP tabs
+│   │   ├── CISLeaderboard.jsx         # CIS scoring leaderboard
 │   │   └── App.jsx
-│   └── dist/                     # Committed build output
-├── backend/                      # FastAPI
-│   ├── main.py
-│   └── routers/
+│   └── dist/                          # Committed build output (Railway serves this)
+├── src/
+│   ├── api/
+│   │   └── main.py                    # FastAPI — single-file God File (624 lines)
+│   └── data/
+│       └── cis/
+│           └── cis_provider.py        # Railway CIS scoring engine (CoinGecko-based)
+├── Shadow/
+│   └── cometcloud-local/              # Mirror of Mac Mini code — READ-ONLY reference
+│       ├── cis_v4_engine.py           # 8-asset-class scoring engine (Minimax)
+│       ├── cis_scheduler.py           # Job manager, pushes every ~30min
+│       ├── cis_push.py                # POSTs scores to Railway /internal/cis-scores
+│       └── data_fetcher.py            # DeFiLlama + CoinGecko + Binance fetcher
 └── CLAUDE.md
 ```
+
+## CIS architecture
+
+Two scoring paths, one leaderboard:
+
+```
+Mac Mini (cis_v4_engine.py)
+  └─→ cis_scheduler.py
+        └─→ cis_push.py → POST /internal/cis-scores → Upstash Redis (2h TTL)
+                                                              ↓
+Railway (cis_provider.py) ──────────────────────────→ GET /api/v1/cis/universe
+  └─ fallback if Redis empty or stale                        ↓
+                                                      CISLeaderboard.jsx
+```
+
+- Redis key: `cis:local_scores`
+- Internal auth: `X-Internal-Token` header (Railway env var `INTERNAL_API_TOKEN`)
+- Frontend badge: "CIS PRO · LOCAL ENGINE" (green) when Mac Mini scores served,
+  "CIS MARKET · ESTIMATED" (amber) when Railway fallback
+
+## CIS v4.0 scoring
+
+- **5 pillars**: F (Fundamental), M (Momentum), O (On-chain/Risk-Adjusted), S (Sentiment), A (Alpha)
+- **Grading**: Option A percentile — top 5%=A+, 15%=A, 30%=B+, 50%=B, 70%=C+, 85%=C, 95%=D, F
+- **Signals**: STRONG BUY / BUY / HOLD / REDUCE / AVOID
+- **S pillar**: Crypto uses FNG; US Equity/Bond/Commodity uses VIX (VIX<15=40pts, <20=30, <25=20, <30=10, ≥30=0)
+- **A pillar**: Crypto uses BTC 30d divergence; TradFi uses SPY 30d divergence (bonds inverted)
+- **Local engine adds**: 8 asset classes, per-asset benchmarks, 6 macro regimes (RISK_ON, RISK_OFF,
+  TIGHTENING, EASING, STAGFLATION, GOLDILOCKS), regime-aware pillar weight adjustments,
+  real DeFiLlama TVL for F pillar, `recommended_weight`, `class_rank`, `global_rank`
+
+## Railway environment variables
+
+| Key | Purpose |
+|-----|---------|
+| `UPSTASH_REDIS_REST_URL` | `https://upward-thrush-73783.upstash.io` |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash auth token |
+| `INTERNAL_API_TOKEN` | Guards `/internal/cis-scores` endpoint |
+| `COINGECKO_API_KEY` | Optional Pro key for higher rate limits |
 
 ## How to work with Jazz
 
@@ -81,12 +140,13 @@ looloomi-ai/
 - Complete tasks end-to-end: edit files → build → commit → push
 - If genuinely stuck, say so immediately. No spinning
 - Quality matters at the output layer. Internals can be rough, interfaces cannot
+- Shadow folder = read-only reference. Minimax owns local changes; coordinate before modifying
 
 ## Standard deploy workflow
 
 ```bash
 cd dashboard && npm run build && cd ..
-git add -A
+git add src/ dashboard/src/ dashboard/dist/
 git commit -m "<concise description>"
 git push origin main
 # Railway auto-deploys on push
@@ -100,12 +160,25 @@ git push origin main
 4. ONDO-style precision: thin borders, clean cards, no decorative noise
 5. Data always present — skeleton loaders only, never empty states
 
-## Current focus
+## Current focus (as of 2026-03-17)
 
-- CometCloud platform UI: Market, Intelligence, Quant GP tabs
-- Fund-of-funds investor materials
-- Intelligence page data pipeline (field normalization)
-- Local AI stack: MLX migration for Apple Silicon speed gains
+**Done (Week 1):**
+- CIS v4.0 percentile grading, VIX/SPY TradFi scoring, NaN serialization fix
+- Upstash Redis bridge (Mac Mini → Railway, persistent across deploys)
+- `Header()` binding fix, `/internal/cis-scores` auth working
+- CISLeaderboard: methodology banner, source badges, percentile grade definitions
+- Asset cleanup: MATIC→POL, remove BASE, fix NEON CoinGecko ID, remove GENIUS
+
+**Next (Week 2):**
+- Split `main.py` into FastAPI routers
+- CoinGecko Pro upgrade (remove rate limit errors)
+- Score history table (Supabase or Postgres)
+- Frontend sparklines (7d score trend per asset)
+
+**Week 3:**
+- Supabase full setup
+- Nic demo prep — investor-facing CIS report
+- Freqtrade activation (target: ~Mar 20)
 
 ---
 
