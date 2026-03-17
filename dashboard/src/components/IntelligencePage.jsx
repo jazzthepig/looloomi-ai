@@ -236,7 +236,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   useEffect(() => {
     const fetchHeatmap = async () => {
       try {
-        const res = await fetch(`${API_BASE}/defi/overview`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+        const res = await fetch(`${API_BASE}/defi/overview`, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const data = await res.json();
         console.log("Defi overview:", data);
 
@@ -382,20 +385,45 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
   useEffect(() => { fetchRaises(); }, []);
 
-  // Fetch macro events
+  // Fetch macro events — fall back to curated static list if API empty/fails
   useEffect(() => {
     const fetchMacroEvents = async () => {
       try {
-        const res = await fetch(`${API_BASE}/intelligence/macro-events`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(`${API_BASE}/intelligence/macro-events`, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const json = await res.json();
         const events = json.events || [];
-        // Filter for INSTITUTIONAL and REGULATORY categories
         const filtered = events.filter(e =>
           e.category === "INSTITUTIONAL" || e.category === "REGULATORY"
         );
-        setMacroEvents(filtered);
+        if (filtered.length > 0) {
+          setMacroEvents(filtered);
+        } else {
+          // Fallback: map curated MACRO_EVENTS to the same shape
+          const fallback = MACRO_EVENTS.map(e => ({
+            title: e.title,
+            description: e.summary,
+            category: e.type === "regulatory" ? "REGULATORY" : "INSTITUTIONAL",
+            impact: e.impact?.toUpperCase() || "HIGH",
+            source: e.source,
+            date: e.date,
+          }));
+          setMacroEvents(fallback);
+        }
       } catch (e) {
         console.error("Macro events fetch error:", e);
+        // Fallback on error too
+        const fallback = MACRO_EVENTS.map(e => ({
+          title: e.title,
+          description: e.summary,
+          category: e.type === "regulatory" ? "REGULATORY" : "INSTITUTIONAL",
+          impact: e.impact?.toUpperCase() || "HIGH",
+          source: e.source,
+          date: e.date,
+        }));
+        setMacroEvents(fallback);
       }
     };
     fetchMacroEvents();
@@ -635,50 +663,63 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   <Label Icon={Shield}>Macro Events</Label>
                 </div>
                 <div style={{ padding: "0 12px 12px" }}>
-                  {macroEvents.length > 0 ? macroEvents.slice(0, 4).map((event, idx) => (
+                  {macroEvents.length > 0 ? macroEvents.slice(0, 5).map((event, idx) => {
+                    const isInstitutional = event.category === "INSTITUTIONAL";
+                    const isHigh = event.impact === "HIGH";
+                    const desc = event.description || "";
+                    const truncated = desc.length > 120 ? desc.slice(0, 120) + "…" : desc;
+                    return (
                     <div key={idx} style={{
                       border: `1px solid ${T.border}`, borderRadius: 9,
                       padding: "14px 16px", marginBottom: 8,
                       background: "rgba(255,255,255,0.015)",
-                      display: "grid", gridTemplateColumns: "1fr auto", gap: 12,
                       transition: "border-color .2s,background .2s", cursor: "pointer",
-                    }}>
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-                          <span style={{
-                            fontFamily: FONTS.display, fontSize: 7, fontWeight: 700, letterSpacing: "0.12em",
-                            padding: "2px 6px", borderRadius: 3,
-                            background: event.category === "INSTITUTIONAL" ? "rgba(200,168,75,0.12)" : "rgba(75,158,255,0.10)",
-                            color: event.category === "INSTITUTIONAL" ? "#C8A84B" : "#4B9EFF",
-                            border: `1px solid ${event.category === "INSTITUTIONAL" ? "rgba(200,168,75,0.22)" : "rgba(75,158,255,0.22)"}`,
-                          }}>
-                            {event.category}
-                          </span>
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#28244C"; e.currentTarget.style.background = "rgba(255,255,255,0.025)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "rgba(255,255,255,0.015)"; }}
+                    >
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
+                            <span style={{
+                              fontFamily: FONTS.display, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
+                              padding: "3px 7px", borderRadius: 3,
+                              background: isInstitutional ? "rgba(200,168,75,0.12)" : "rgba(75,158,255,0.10)",
+                              color: isInstitutional ? "#C8A84B" : "#4B9EFF",
+                              border: `1px solid ${isInstitutional ? "rgba(200,168,75,0.22)" : "rgba(75,158,255,0.22)"}`,
+                              whiteSpace: "nowrap",
+                            }}>
+                              {event.category}
+                            </span>
+                          </div>
+                          <div style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 600, color: T.primary, lineHeight: 1.45, marginBottom: 6 }}>
+                            {event.title}
+                          </div>
+                          {truncated && (
+                            <div style={{ fontSize: 11, color: T.secondary, lineHeight: 1.6, marginBottom: 5 }}>
+                              {truncated}
+                            </div>
+                          )}
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
+                            {event.source}{event.date ? ` · ${event.date}` : ""}
+                          </div>
                         </div>
-                        <div style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 600, color: T.primary, lineHeight: 1.4 }}>
-                          {event.title}
-                        </div>
-                        <div style={{ fontSize: 10, color: T.secondary, lineHeight: 1.55, marginTop: 5 }}>
-                          {event.description?.slice(0, 80)}...
-                        </div>
-                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.26)", marginTop: 5 }}>
-                          {event.source} · {event.date}
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, minWidth: 52 }}>
                         <span style={{
-                          fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 6px", borderRadius: 3,
-                          background: event.impact === "HIGH" ? "rgba(255,61,90,0.12)" : "rgba(255,255,255,0.06)",
-                          color: event.impact === "HIGH" ? "#FF3D5A" : "rgba(255,255,255,0.4)",
-                          border: `1px solid ${event.impact === "HIGH" ? "rgba(255,61,90,0.22)" : "rgba(255,255,255,0.1)"}`,
+                          flexShrink: 0,
+                          fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 7px", borderRadius: 3,
+                          background: isHigh ? "rgba(255,61,90,0.12)" : "rgba(255,255,255,0.06)",
+                          color: isHigh ? "#FF3D5A" : "rgba(255,255,255,0.4)",
+                          border: `1px solid ${isHigh ? "rgba(255,61,90,0.22)" : "rgba(255,255,255,0.1)"}`,
+                          marginTop: 2,
                         }}>
                           {event.impact}
                         </span>
                       </div>
                     </div>
-                  )) : (
-                    <div style={{ padding: 20, textAlign: "center", color: T.muted }}>
-                      Loading macro events...
+                    );
+                  }) : (
+                    <div style={{ padding: 20, textAlign: "center", color: T.muted, fontSize: 12 }}>
+                      暂无宏观事件
                     </div>
                   )}
                 </div>

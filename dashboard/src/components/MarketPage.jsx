@@ -528,7 +528,15 @@ export default function MarketPage() {
   const [selectedToken, setSelected]  = useState(null);
   const [apiStatus, setApiStatus]     = useState("connecting");
   const [activeTab, setActiveTab]     = useState("Market");
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const intervalRef                   = useRef(null);
+
+  // Back-to-top scroll detection
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const fetchPrices = useCallback(async () => {
     const symbols = TOKEN_UNIVERSE.map(t => t.symbol).join(",");
@@ -1054,6 +1062,42 @@ export default function MarketPage() {
           <TokenDetail token={selectedToken} priceData={priceData} ohlcv={ohlcv} onClose={() => setSelected(null)} />
         )}
       </BottomSheet>
+
+      {/* Back to Top */}
+      {showBackToTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          style={{
+            position: "fixed",
+            bottom: 32,
+            right: 32,
+            zIndex: 200,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "9px 16px",
+            borderRadius: 8,
+            border: "1px solid rgba(68,114,255,0.35)",
+            background: "rgba(10,9,24,0.92)",
+            color: "#4472FF",
+            fontFamily: FONTS.display,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            cursor: "pointer",
+            backdropFilter: "blur(16px)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+            transition: "opacity 0.2s, transform 0.2s",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(68,114,255,0.12)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(10,9,24,0.92)"; }}
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M5 8V2M2 5l3-3 3 3" stroke="#4472FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          BACK TO TOP
+        </button>
+      )}
     </div>
   );
 }
