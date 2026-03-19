@@ -3,13 +3,14 @@ import { T, FONTS } from "../tokens";
 
 /* ─── Signal Types ───────────────────────────────────────────────────── */
 const SIGNAL_TYPES = {
-  MACRO:      { label: "MACRO",      color: T.gold,   bg: "rgba(200,168,75,0.12)",  border: "rgba(200,168,75,0.2)" },
-  WHALE:      { label: "WHALE",      color: T.purple, bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.2)" },
-  FUNDING:    { label: "FUNDING",    color: T.blue,   bg: "rgba(75,158,255,0.10)",  border: "rgba(75,158,255,0.2)" },
-  FLOW:       { label: "FLOW",       color: T.green,  bg: "rgba(0,232,122,0.08)",   border: "rgba(0,232,122,0.2)" },
-  RISK:       { label: "RISK",       color: T.red,    bg: "rgba(255,61,90,0.10)",   border: "rgba(255,61,90,0.2)" },
-  MOMENTUM:   { label: "MOMENTUM",   color: T.cyan,   bg: "rgba(0,200,224,0.10)",   border: "rgba(0,200,224,0.2)" },
-  REGULATORY: { label: "REGULATORY", color: "#4B9EFF", bg: "rgba(75,158,255,0.10)", border: "rgba(75,158,255,0.2)" },
+  MACRO:      { label: "MACRO",      color: T.gold,    bg: "rgba(200,168,75,0.12)",  border: "rgba(200,168,75,0.2)"  },
+  WHALE:      { label: "WHALE",      color: T.purple,  bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.2)" },
+  FUNDING:    { label: "FUNDING",    color: T.blue,    bg: "rgba(75,158,255,0.10)",  border: "rgba(75,158,255,0.2)"  },
+  FLOW:       { label: "FLOW",       color: T.green,   bg: "rgba(0,232,122,0.08)",   border: "rgba(0,232,122,0.2)"   },
+  RISK:       { label: "RISK",       color: T.red,     bg: "rgba(255,61,90,0.10)",   border: "rgba(255,61,90,0.2)"   },
+  MOMENTUM:   { label: "MOMENTUM",   color: T.cyan,    bg: "rgba(0,200,224,0.10)",   border: "rgba(0,200,224,0.2)"   },
+  REGULATORY: { label: "REGULATORY", color: "#4B9EFF", bg: "rgba(75,158,255,0.10)", border: "rgba(75,158,255,0.2)"  },
+  CIS:        { label: "CIS",        color: "#A78BFA", bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.2)" },
 };
 
 const IMPORTANCE_STYLES = {
@@ -35,10 +36,10 @@ async function fetchSignalsFromAPI() {
     const response = await fetch("/api/v1/signals");
     if (!response.ok) throw new Error(`API ${response.status}`);
     const data = await response.json();
-    return data.signals || [];
+    return { signals: data.signals || [], count: data.count || 0 };
   } catch (e) {
     console.error("SignalFeed fetch:", e);
-    return [];
+    return { signals: [], count: 0 };
   }
 }
 
@@ -110,24 +111,27 @@ const SignalRow = ({ signal, isNew }) => {
         {signal.description}
       </div>
 
-      {/* Asset Tags */}
-      {signal.affected_assets?.length > 0 && (
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-          {signal.affected_assets.map((asset) => (
-            <span key={asset} style={{
-              fontSize: 9,
-              fontFamily: FONTS.mono,
-              color: T.t3,
-              background: "rgba(255,255,255,0.045)",
-              border: `1px solid ${T.border}`,
-              padding: "2px 6px",
-              borderRadius: 2,
-            }}>
-              {asset}
-            </span>
-          ))}
-        </div>
-      )}
+      {/* Asset Tags + Source */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 4 }}>
+        {signal.affected_assets?.length > 0 && (
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+            {signal.affected_assets.map((asset) => (
+              <span key={asset} style={{
+                fontSize: 9, fontFamily: FONTS.mono, color: T.t3,
+                background: "rgba(255,255,255,0.045)", border: `1px solid ${T.border}`,
+                padding: "2px 6px", borderRadius: 2,
+              }}>
+                {asset}
+              </span>
+            ))}
+          </div>
+        )}
+        {signal.source && (
+          <span style={{ fontSize: 8, color: T.t3, fontFamily: FONTS.mono, opacity: 0.6, marginLeft: "auto" }}>
+            {signal.source}
+          </span>
+        )}
+      </div>
     </div>
   );
 };
@@ -148,22 +152,23 @@ const SkeletonRow = () => (
 export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
   const [loading, setLoading]   = useState(true);
   const [signals, setSignals]   = useState([]);
+  const [count, setCount]       = useState(0);
   const [error, setError]       = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
 
   const fetchSignals = useCallback(async () => {
     setError(null);
     try {
-      const raw = await fetchSignalsFromAPI();
-      // Deduplicate by description
+      const { signals: raw, count: total } = await fetchSignalsFromAPI();
       const seen = new Set();
       const unique = raw.filter(s => {
-        const key = s.description?.trim().toLowerCase();
+        const key = s.id || s.description?.trim().toLowerCase();
         if (!key || seen.has(key)) return false;
         seen.add(key);
         return true;
       });
       setSignals(unique);
+      setCount(total || unique.length);
       setLastUpdate(new Date());
     } catch (err) {
       setError(err.message);
@@ -214,6 +219,14 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         }}>
           <span style={{ width: 14, height: 1, background: T.gold, opacity: 0.5 }} />
           Signal Feed
+          {count > 0 && (
+            <span style={{
+              fontSize: 9, fontWeight: 700, fontFamily: FONTS.mono,
+              padding: "1px 6px", borderRadius: 10,
+              background: "rgba(200,168,75,0.15)", color: T.gold,
+              border: "1px solid rgba(200,168,75,0.25)",
+            }}>{count}</span>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {lastUpdate && (
