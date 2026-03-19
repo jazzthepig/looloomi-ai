@@ -166,6 +166,90 @@ def _cache_set(key: str, val: Any):
     return val
 
 
+# === Beta Calculation for S Pillar ===
+async def calculate_asset_betas(asset_id: str, asset_price_30d: list) -> dict:
+    """
+    Calculate 30d rolling betas between asset and macro factors (DXY, VIX, 10Y).
+    Returns beta values for each factor.
+    """
+    cache_key = f"betas:{asset_id}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    try:
+        import yfinance as yf
+        import numpy as np
+
+        # Need at least 20 data points
+        if len(asset_price_30d) < 20:
+            return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "insufficient_data"}
+
+        # Calculate asset returns
+        asset_returns = []
+        for i in range(1, len(asset_price_30d)):
+            if asset_price_30d[i-1] > 0:
+                ret = (asset_price_30d[i] - asset_price_30d[i-1]) / asset_price_30d[i-1]
+                asset_returns.append(ret)
+
+        if len(asset_returns) < 15:
+            return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "insufficient_data"}
+
+        # Fetch macro factor data
+        factors = {}
+        for symbol, name in [("DX-Y.NYB", "dxy"), ("^VIX", "vix"), ("^TNX", "tnx")]:
+            try:
+                ticker = yf.Ticker(symbol)
+                hist = ticker.history(period="35d")
+                if len(hist) > 20:
+                    prices = hist['Close'].values
+                    rets = []
+                    for i in range(1, len(prices)):
+                        if prices[i-1] > 0:
+                            r = (prices[i] - prices[i-1]) / prices[i-1]
+                            rets.append(r)
+                    if len(rets) >= 15:
+                        factors[name] = rets
+            except:
+                pass
+
+        if not factors:
+            return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "yfinance_error"}
+
+        # Align lengths (use minimum)
+        min_len = min(len(asset_returns), min(len(f.get("dxy", [0])) if "dxy" in factors else 0,
+                                               len(factors.get("vix", [0])),
+                                               len(factors.get("tnx", [0]))))
+
+        if min_len < 15:
+            return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "insufficient_data"}
+
+        # Calculate betas (simplified correlation * (asset_std / factor_std))
+        def calc_beta(asset_rets, factor_rets):
+            if len(asset_rets) != len(factor_rets):
+                min_len = min(len(asset_rets), len(factor_rets))
+                asset_rets = asset_rets[:min_len]
+                factor_rets = factor_rets[:min_len]
+            if np.std(asset_rets) == 0 or np.std(factor_rets) == 0:
+                return 0
+            correlation = np.corrcoef(asset_rets, factor_rets)[0, 1]
+            if np.isnan(correlation):
+                return 0
+            return round(correlation, 3)
+
+        result = {
+            "dxy_beta": calc_beta(asset_returns, factors.get("dxy", [0])),
+            "vix_beta": calc_beta(asset_returns, factors.get("vix", [0])),
+            "tnx_beta": calc_beta(asset_returns, factors.get("tnx", [0])),
+            "source": "30d_rolling"
+        }
+
+        return _cache_set(cache_key, result)
+
+    except Exception as e:
+        return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "error"}
+
+
 # Symbol mapping: CIS symbol -> Binance symbol
 # Priority: High liquidity pairs for reliable data
 BINANCE_SYMBOLS = {
@@ -323,6 +407,7 @@ async def fetch_cg_markets() -> Dict[str, dict]:
                     "symbol": coin["symbol"].upper(),
                     "name": coin["name"],
                     "market_cap": coin.get("market_cap", 0),
+                    "fdv": coin.get("fully_diluted_valuation", 0),  # FDV for F pillar
                     "volume_24h": coin.get("total_volume", 0),
                     "price": coin.get("current_price", 0),
                     "change_24h": coin.get("price_change_percentage_24h", 0),
@@ -712,6 +797,7 @@ def calculate_cis_score(
     github_commits_4w: Optional[int] = None,
     vix: Optional[float] = None,           # For non-crypto S pillar
     spy_change_30d: Optional[float] = None, # For non-crypto A pillar
+    asset_betas: Optional[dict] = None,   # 30d rolling betas (dxy, vix, tnx)
 ) -> Dict[str, Any]:
     """
     Calculate CIS scores based on real market data.
@@ -742,49 +828,78 @@ def calculate_cis_score(
     price = market_data.get("price", 0) if market_data else 0
 
     # === Fundamental Score (F) ===
-    # Components: market_cap tier, circulating_supply ratio
+    # Components: market_cap tier, tvl (DeFi/L2), fdv ratio, circulating_supply ratio
+    fdv = market_data.get("fdv", 0) if market_data else 0
+
     f_components = {
         "market_cap_tier": ">$10B" if market_cap > 10e9 else ">$1B" if market_cap > 1e9 else ">$100M" if market_cap > 100e6 else ">$10M" if market_cap > 10e6 else "<$10M",
         "market_cap_usd": market_cap,
+        "fdv_usd": fdv,
+        "tvl_usd": tvl if asset_class in ["DeFi", "L2"] else None,
         "circulating_supply_ratio": round(circ_supply / total_supply, 3) if total_supply > 0 and circ_supply > 0 else 0,
     }
 
     f_score = 10  # base — low floor so bad assets can score < 30
     # 10-tier market cap scoring (wider spread)
     if market_cap > 500e9:        # >$500B (BTC-tier)
-        f_score += 55; f_components["market_cap_tier_score"] = 55
+        f_score += 40; f_components["market_cap_tier_score"] = 40
     elif market_cap > 100e9:      # >$100B
-        f_score += 48; f_components["market_cap_tier_score"] = 48
-    elif market_cap > 50e9:       # >$50B
-        f_score += 42; f_components["market_cap_tier_score"] = 42
-    elif market_cap > 10e9:       # >$10B
         f_score += 35; f_components["market_cap_tier_score"] = 35
+    elif market_cap > 50e9:       # >$50B
+        f_score += 30; f_components["market_cap_tier_score"] = 30
+    elif market_cap > 10e9:       # >$10B
+        f_score += 25; f_components["market_cap_tier_score"] = 25
     elif market_cap > 5e9:        # >$5B
-        f_score += 28; f_components["market_cap_tier_score"] = 28
+        f_score += 20; f_components["market_cap_tier_score"] = 20
     elif market_cap > 1e9:        # >$1B
-        f_score += 22; f_components["market_cap_tier_score"] = 22
-    elif market_cap > 500e6:      # >$500M
         f_score += 16; f_components["market_cap_tier_score"] = 16
+    elif market_cap > 500e6:      # >$500M
+        f_score += 12; f_components["market_cap_tier_score"] = 12
     elif market_cap > 100e6:      # >$100M
-        f_score += 11; f_components["market_cap_tier_score"] = 11
+        f_score += 8; f_components["market_cap_tier_score"] = 8
     elif market_cap > 10e6:       # >$10M
-        f_score += 6;  f_components["market_cap_tier_score"] = 6
+        f_score += 4;  f_components["market_cap_tier_score"] = 4
     elif market_cap > 0:          # any cap
-        f_score += 2;  f_components["market_cap_tier_score"] = 2
+        f_score += 1;  f_components["market_cap_tier_score"] = 1
     else:
         f_components["market_cap_tier_score"] = 0
 
+    # TVL scoring for DeFi/L2 assets (from DeFiLlama)
+    if asset_class in ["DeFi", "L2"] and tvl > 0:
+        if tvl > 10e9:           # >$10B
+            f_score += 20; f_components["tvl_score"] = 20
+        elif tvl > 5e9:         # >$5B
+            f_score += 15; f_components["tvl_score"] = 15
+        elif tvl > 1e9:          # >$1B
+            f_score += 10; f_components["tvl_score"] = 10
+        elif tvl > 100e6:         # >$100M
+            f_score += 5; f_components["tvl_score"] = 5
+        else:
+            f_components["tvl_score"] = 0
+    else:
+        f_components["tvl_score"] = 0
+
+    # FDV/MCap ratio - lower is better (more fair launch)
+    if fdv > 0 and market_cap > 0:
+        ratio = fdv / market_cap
+        if ratio < 1.5:          # Close to mcap (fair)
+            f_score += 15; f_components["fdv_ratio_score"] = 15
+        elif ratio < 3:           # 1.5-3x
+            f_score += 10; f_components["fdv_ratio_score"] = 10
+        elif ratio < 5:           # 3-5x
+            f_score += 5; f_components["fdv_ratio_score"] = 5
+        else:
+            f_components["fdv_ratio_score"] = 0
+    else:
+        f_components["fdv_ratio_score"] = 0
+
+    # Supply health
     if total_supply > 0 and circ_supply > 0:
         ratio = circ_supply / total_supply
         if ratio >= 0.7:
-            f_score += 15
-            f_components["supply_ratio_score"] = 15
+            f_score += 10; f_components["supply_ratio_score"] = 10
         elif ratio >= 0.5:
-            f_score += 10
-            f_components["supply_ratio_score"] = 10
-        elif ratio >= 0.3:
-            f_score += 5
-            f_components["supply_ratio_score"] = 5
+            f_score += 5; f_components["supply_ratio_score"] = 5
         else:
             f_components["supply_ratio_score"] = 0
     else:
@@ -994,6 +1109,33 @@ def calculate_cis_score(
     else:
         s_components["github_commits_4w"] = None
         s_components["dev_activity_score"] = None
+
+    # Beta scoring for crypto assets (30d rolling correlation with macro factors)
+    # Lower correlation = better (more alpha, less systematic risk)
+    if asset_betas and asset_betas.get("source") == "30d_rolling":
+        dxy_beta = asset_betas.get("dxy_beta", 0)
+        vix_beta = asset_betas.get("vix_beta", 0)
+        tnx_beta = asset_betas.get("tnx_beta", 0)
+
+        s_components["dxy_beta"] = dxy_beta
+        s_components["vix_beta"] = vix_beta
+        s_components["tnx_beta"] = tnx_beta
+
+        # Beta score: lower is better (less correlated with macro risk)
+        # DXY beta: negative = good (crypto goes up when USD strengthens)
+        beta_score = 0
+        if dxy_beta < 0:
+            beta_score += min(10, abs(dxy_beta) * 10)  # Up to +10 for negative correlation
+        elif dxy_beta > 0.7:
+            beta_score -= 5  # Penalize high positive correlation
+
+        if vix_beta < 0:
+            beta_score += min(5, abs(vix_beta) * 5)  # Up to +5 for negative correlation
+
+        s_score = max(0, min(100, s_score + beta_score))
+        s_components["beta_score"] = beta_score
+    else:
+        s_components["beta_score"] = 0
 
     # === Alpha Independence Score (A) ===
     # Crypto: divergence vs BTC
@@ -1320,6 +1462,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 rec["change_7d"] = cg_7d if cg_7d is not None else rec.get("change_7d")
                 rec["change_30d"] = cg_30d if cg_30d is not None else rec.get("change_30d")
                 rec["market_cap"] = cg_data.get("market_cap", 0) or 0
+                rec["fdv"] = cg_data.get("fdv", 0) or 0  # Fully diluted valuation
                 rec["circulating_supply"] = cg_data.get("circulating_supply", 0) or 0
                 rec["total_supply"] = cg_data.get("total_supply", 0) or 0
                 rec["ath_change_percentage"] = cg_data.get("ath_change_percentage", 0) or 0
@@ -1385,12 +1528,28 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         asset_btc_30d = btc_30d if (asset_id != "BTC" and not is_tradfi) else None
         asset_spy_30d = spy_30d if (is_tradfi and asset_id != "SPY") or asset_id == "BTC" else None
         gh_commits = github_activity.get(asset_id)
+
+        # Calculate betas for crypto assets (async, cached)
+        asset_betas = None
+        if not is_tradfi and asset_id in BINANCE_SYMBOLS:
+            # Get price history for beta calculation
+            binance_sym = BINANCE_SYMBOLS[asset_id].upper().replace("USDT", "") + "USDT"
+            try:
+                from .data_layer import get_klines
+                price_history = await get_klines(binance_sym, months=1)
+                if price_history and len(price_history) >= 20:
+                    prices = [k["close"] for k in price_history]
+                    asset_betas = await calculate_asset_betas(asset_id, prices)
+            except Exception:
+                pass
+
         pillars_result = calculate_cis_score(
             market_data, tvl, fng, asset_class,
             btc_change_30d=asset_btc_30d,
             github_commits_4w=gh_commits,
             vix=live_vix if is_tradfi else None,
             spy_change_30d=asset_spy_30d,
+            asset_betas=asset_betas,
         )
         pillars = {k: v for k, v in pillars_result.items() if k != "breakdown"}
         breakdown = pillars_result.get("breakdown", {})
