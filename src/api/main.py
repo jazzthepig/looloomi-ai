@@ -569,6 +569,36 @@ async def get_cis_history_batch(symbols: str, days: int = 7):
     }
 
 
+@app.get("/api/v1/cis/backtest")
+async def get_cis_backtest():
+    """
+    GET /api/v1/cis/backtest
+    Returns backtest validation results: realized returns grouped by CIS grade.
+    Data from Binance/OKX 30-day klines vs CIS scores. Used to validate scoring.
+    Results cached in backtest_results.json, refreshed by backtest.py.
+    """
+    import os, json as _json
+    results_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "data", "cis", "backtest_results.json"
+    )
+    try:
+        if os.path.exists(results_path):
+            with open(results_path) as f:
+                data = _json.load(f)
+            return {"status": "success", "source": "file", **data}
+    except Exception as e:
+        print(f"[BACKTEST] Read error: {e}")
+
+    # Fallback: try SQLite via history_db
+    try:
+        from src.data.cis.history_db import get_backtest_summary
+        summary = get_backtest_summary()
+        return {"status": "success", "source": "db", **summary}
+    except Exception as e:
+        return {"status": "empty", "message": str(e)}
+
+
 # ── Agent API (JSON-only, minimal) ─────────────────────────────────────────
 
 @app.get("/api/v1/agent/cis")

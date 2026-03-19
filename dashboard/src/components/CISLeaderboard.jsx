@@ -139,6 +139,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   const [updatedAt, setUpdatedAt] = useState(null);
   const [sparklines, setSparklines] = useState({});   // { [symbol]: number[] }
   const sparkFetchedRef = useRef(false);
+  const [backtest, setBacktest] = useState(null);   // backtest summary from API
 
   // Fetch data from API if not provided externally
   useEffect(() => {
@@ -245,6 +246,14 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
 
     fetchAll();
   }, [data]);
+
+  // Fetch backtest validation summary once on mount
+  useEffect(() => {
+    fetch("/api/v1/cis/backtest")
+      .then(r => r.json())
+      .then(d => { if (d.status === "success") setBacktest(d); })
+      .catch(() => {});
+  }, []);
 
   const GRADE_TABS = ["All", "A", "B", "C", "D"];
   const CLASS_TABS = ["All", "L1", "L2", "DeFi", "RWA", "Infrastructure", "Oracle", "Memecoin", "US Equity", "US Bond", "Commodity"];
@@ -493,6 +502,64 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           ))}
         </div>
       </div>
+
+      {/* Backtest Validation Strip */}
+      {backtest && backtest.returns_by_grade && (
+        <div style={{
+          marginBottom: 18, padding: "14px 20px",
+          background: "rgba(0,217,138,0.04)", border: "1px solid rgba(0,217,138,0.14)",
+          borderRadius: 10, display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <span style={{
+              fontSize: 9, padding: "2px 8px", borderRadius: 3,
+              background: "rgba(0,217,138,0.12)", color: "#00D98A",
+              border: "1px solid rgba(0,217,138,0.25)",
+              fontFamily: FONTS.display, fontWeight: 700, letterSpacing: "0.1em",
+            }}>BACKTEST</span>
+            <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
+              30d realized returns by grade · Binance klines · {backtest.assets || "—"} assets
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            {Object.entries(backtest.returns_by_grade).map(([grade, ret]) => {
+              const color = ret > 3 ? "#00D98A" : ret > 0 ? "#4472FF" : "#FF2D55";
+              return (
+                <div key={grade} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+                  <span style={{
+                    fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+                    color: grade.startsWith("A") ? "#00D98A" : grade.startsWith("B") ? "#4472FF" : "#E8A000",
+                  }}>{grade}</span>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 400, color }}>
+                    {ret > 0 ? "+" : ""}{typeof ret === "number" ? ret.toFixed(2) : ret}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          {backtest.alpha && (
+            <div style={{ marginLeft: "auto", display: "flex", gap: 16, flexShrink: 0 }}>
+              {backtest.alpha.A_vs_B !== undefined && (
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 9, color: T.muted, fontFamily: FONTS.mono }}>A vs B alpha</div>
+                  <div style={{ fontSize: 12, fontFamily: FONTS.mono, color: "#00D98A" }}>
+                    +{backtest.alpha.A_vs_B.toFixed(2)}%
+                  </div>
+                </div>
+              )}
+              {backtest.alpha.A_vs_C !== undefined && (
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 9, color: T.muted, fontFamily: FONTS.mono }}>A vs C alpha</div>
+                  <div style={{ fontSize: 12, fontFamily: FONTS.mono, color: "#00D98A" }}>
+                    +{backtest.alpha.A_vs_C.toFixed(2)}%
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Grade Summary Cards */}
       <div className="cis-grade-summary" style={{
         display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 18
