@@ -2,15 +2,16 @@
 Looloomi AI - FastAPI Backend v0.3.0
 Real data from: Binance + DeFiLlama + Alternative.me + Moralis + Etherscan
 """
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Header, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
 import sys, os, numpy as np, json, time
 import httpx
+import asyncio
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -445,6 +446,9 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
         else:
             sb_ok = False
 
+        # Broadcast to WebSocket clients
+        asyncio.create_task(broadcast_cis_update(universe))
+
         return {"status": "success", "received": len(universe), "cached": ok, "history_written": sb_ok}
     except Exception as e:
         print(f"[INTERNAL] Error receiving CIS scores: {e}")
@@ -527,6 +531,119 @@ async def get_cis_history(symbol: str, days: int = 7):
         "count":   len(rows),
         "history": rows,
     }
+
+
+# ── Agent API (JSON-only, minimal) ─────────────────────────────────────────
+
+@app.get("/api/v1/agent/cis")
+async def agent_cis_endpoint():
+    """
+    Agent-optimized CIS endpoint: returns minimal JSON, no HTML/comments.
+    Perfect for LLM agents to consume directly.
+    """
+    cached = await _redis_get()
+    if cached and cached.get("universe"):
+        universe = cached["universe"]
+    else:
+        try:
+            result = await calculate_cis_universe()
+            universe = result.get("universe", [])
+        except:
+            universe = []
+
+    # Minimal format for agents
+    return {
+        "v": "4.0",
+        "ts": cached.get("timestamp") if cached else datetime.now().isoformat(),
+        "assets": [
+            {
+                "s": a["symbol"],
+                "g": a.get("grade", "?"),
+                "sc": a.get("cis_score", 0),
+                "sg": a.get("signal", "?"),
+                "f": a.get("pillars", {}).get("Fundamental"),
+                "m": a.get("pillars", {}).get("Momentum"),
+                "r": a.get("pillars", {}).get("Risk-Adjusted"),
+                "ss": a.get("pillars", {}).get("Sensitivity"),
+                "a": a.get("pillars", {}).get("Alpha"),
+            }
+            for a in universe
+        ]
+    }
+
+
+# ── WebSocket for Real-time CIS Updates ───────────────────────────────────
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except:
+                pass  # Skip dead connections
+
+manager = ConnectionManager()
+
+# Store last CIS data for new subscribers
+_last_cis_broadcast = None
+
+@app.websocket("/ws/cis")
+async def websocket_cis(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time CIS score updates.
+    Clients receive instant notifications when scores change (local engine push).
+
+    Message format:
+    {
+        "type": "update|full",
+        "timestamp": "ISO8601",
+        "assets": [...]  // only for "full" type
+    }
+    """
+    global _last_cis_broadcast
+    await manager.connect(websocket)
+
+    # Send current state immediately
+    if _last_cis_broadcast:
+        await websocket.send_json(_last_cis_broadcast)
+
+    try:
+        while True:
+            # Keep connection alive, wait for messages (ping/pong)
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+
+async def broadcast_cis_update(universe: list):
+    """Call this when CIS scores are updated (from /internal/cis-scores)"""
+    global _last_cis_broadcast
+    _last_cis_broadcast = {
+        "type": "full",
+        "timestamp": datetime.now().isoformat(),
+        "count": len(universe),
+        "assets": [
+            {
+                "s": a["symbol"],
+                "g": a.get("grade", "?"),
+                "sc": a.get("cis_score", 0),
+            }
+            for a in universe
+        ]
+    }
+    await manager.broadcast(_last_cis_broadcast)
 
 
 # ── Intelligence / Macro Events ──────────────────────────────────────────────
