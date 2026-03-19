@@ -16,7 +16,7 @@ import src.api.store as store
 
 router = APIRouter()
 
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
+_INTERNAL_TOKEN = os.environ.get("INTERNAL_API_TOKEN", "")
 
 
 # ── Internal push (Mac Mini → Railway) ───────────────────────────────────────
@@ -28,8 +28,6 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
     Writes to Upstash Redis (hot cache) and Supabase (score history).
     Triggers WebSocket broadcast to connected clients.
     """
-    print(f"[INTERNAL] Auth check — token configured: {bool(_INTERNAL_TOKEN)}, header present: {bool(x_internal_token)}")
-
     if _INTERNAL_TOKEN:
         if not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -223,6 +221,13 @@ async def agent_cis_endpoint():
         except Exception:
             universe = []
 
+    def _p(asset, key):
+        """Read pillar score — handles both flat keys (local engine) and nested pillars dict (Railway)."""
+        v = asset.get(key)
+        if v is not None:
+            return v
+        return asset.get("pillars", {}).get(key.upper())
+
     return {
         "v":  "4.0",
         "ts": cached.get("timestamp") if cached else datetime.now().isoformat(),
@@ -232,19 +237,18 @@ async def agent_cis_endpoint():
                 "g":  a.get("grade", "?"),
                 "sc": a.get("cis_score", a.get("score", 0)),
                 "sg": a.get("signal", "?"),
-                "f":  a.get("f"),
-                "m":  a.get("m"),
-                "r":  a.get("r"),
-                "ss": a.get("s"),
-                "a":  a.get("a"),
-                # Additional fields useful for trading agents
-                "ch30d": a.get("change_30d"),    # 30d price change %
-                "ch7d": a.get("change_7d"),      # 7d price change %
-                "vol": a.get("volatility_30d"),  # 30d volatility %
-                "mc": a.get("market_cap"),       # market cap
-                "vol24h": a.get("volume_24h"),   # 24h volume
-                "tvl": a.get("tvl"),             # TVL (for DeFi)
-                "conf": a.get("confidence"),      # data completeness score
+                "f":  _p(a, "f"),
+                "m":  _p(a, "m"),
+                "r":  _p(a, "r"),
+                "ss": _p(a, "s"),
+                "a":  _p(a, "a"),
+                "ch30d":  a.get("change_30d"),
+                "ch7d":   a.get("change_7d"),
+                "vol":    a.get("volatility_30d"),
+                "mc":     a.get("market_cap"),
+                "vol24h": a.get("volume_24h"),
+                "tvl":    a.get("tvl"),
+                "conf":   a.get("confidence"),
             }
             for a in universe
         ],
@@ -266,32 +270,43 @@ async def websocket_cis(websocket: WebSocket):
 
     try:
         while True:
-            data = await websocket.receive_text()
-            if data == "ping":
-                await websocket.send_text("pong")
-    except WebSocketDisconnect:
+            try:
+                data = await websocket.receive_text()
+                if data == "ping":
+                    await websocket.send_text("pong")
+            except Exception:
+                break
+    except Exception:
+        pass
+    finally:
         ws_manager.disconnect(websocket)
 
 
 async def _broadcast_cis_update(universe: list):
     """Called by internal push endpoint when new scores arrive."""
+    def _p(asset, key):
+        v = asset.get(key)
+        if v is not None:
+            return v
+        return asset.get("pillars", {}).get(key.upper())
+
     store.last_cis_broadcast = {
         "type":      "full",
         "timestamp": datetime.now().isoformat(),
         "count":     len(universe),
         "assets": [
             {
-                "s":    a["symbol"],
-                "g":    a.get("grade", "?"),
-                "sc":   a.get("cis_score", a.get("score", 0)),
-                "sg":   a.get("signal", "?"),
-                "f":    a.get("f"),
-                "m":    a.get("m"),
-                "r":    a.get("r"),
-                "ss":   a.get("s"),
-                "a":    a.get("a"),
+                "s":     a["symbol"],
+                "g":     a.get("grade", "?"),
+                "sc":    a.get("cis_score", a.get("score", 0)),
+                "sg":    a.get("signal", "?"),
+                "f":     _p(a, "f"),
+                "m":     _p(a, "m"),
+                "r":     _p(a, "r"),
+                "ss":    _p(a, "s"),
+                "a":     _p(a, "a"),
                 "ch30d": a.get("change_30d"),
-                "ch7d": a.get("change_7d"),
+                "ch7d":  a.get("change_7d"),
             }
             for a in universe
         ],

@@ -9,15 +9,16 @@ Routers:
   src/api/routers/vault.py        — /api/v1/vault/*, /api/v1/portfolio/*
   src/api/routers/onchain.py      — /api/v1/onchain/*
 """
-import os, sys
+import os, sys, json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from src.api.routers.market import router as market_router
 from src.api.routers.cis import router as cis_router
@@ -27,6 +28,7 @@ from src.api.routers.onchain import router as onchain_router
 
 app = FastAPI(title="Looloomi AI API", version="0.4.0")
 
+app.add_middleware(GZipMiddleware, minimum_size=500)  # ~60% payload reduction for agents
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -40,6 +42,23 @@ app.include_router(cis_router)
 app.include_router(intelligence_router)
 app.include_router(vault_router)
 app.include_router(onchain_router)
+
+
+# ── Agent Discovery (A2A v0.3) ────────────────────────────────────────────────
+
+_AGENT_CARD_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    ".well-known", "agent.json"
+)
+
+@app.get("/.well-known/agent.json", include_in_schema=False)
+async def agent_card():
+    """A2A Agent Card — standard discovery document for agent-to-agent protocols."""
+    try:
+        with open(_AGENT_CARD_PATH) as f:
+            return JSONResponse(content=json.load(f))
+    except Exception:
+        return JSONResponse(status_code=404, content={"error": "agent card not found"})
 
 
 # ── Health ────────────────────────────────────────────────────────────────────

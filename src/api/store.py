@@ -3,11 +3,32 @@ Shared state and utilities for all routers.
 - Upstash Redis (CIS hot cache)
 - Supabase (CIS score history)
 - WebSocket ConnectionManager
-- _sanitize_floats helper
+- sanitize_floats helper
+- Persistent httpx client pools (avoids reconnect overhead per request)
 """
 import os, json, math, time
 import httpx
 from fastapi import WebSocket
+from contextlib import asynccontextmanager
+
+# ── Persistent HTTP clients (reused across all requests) ──────────────────────
+# Initialized lazily on first use; kept alive for the process lifetime.
+_redis_client: httpx.AsyncClient | None = None
+_supabase_client: httpx.AsyncClient | None = None
+
+
+def _get_redis_client() -> httpx.AsyncClient:
+    global _redis_client
+    if _redis_client is None or _redis_client.is_closed:
+        _redis_client = httpx.AsyncClient(timeout=5, limits=httpx.Limits(max_connections=20))
+    return _redis_client
+
+
+def _get_supabase_client() -> httpx.AsyncClient:
+    global _supabase_client
+    if _supabase_client is None or _supabase_client.is_closed:
+        _supabase_client = httpx.AsyncClient(timeout=10, limits=httpx.Limits(max_connections=20))
+    return _supabase_client
 
 # ── Upstash Redis ────────────────────────────────────────────────────────────
 _UPSTASH_URL   = os.environ.get("UPSTASH_REDIS_REST_URL", "")
@@ -21,17 +42,17 @@ async def redis_set(data: dict) -> bool:
     if not _UPSTASH_URL:
         return False
     try:
-        async with httpx.AsyncClient(timeout=5) as client:
-            resp = await client.post(
-                f"{_UPSTASH_URL}/set/{_REDIS_KEY}",
-                content=json.dumps(data),
-                headers={
-                    "Authorization": f"Bearer {_UPSTASH_TOKEN}",
-                    "Content-Type": "application/json",
-                },
-                params={"EX": _REDIS_TTL},
-            )
-            return resp.status_code == 200
+        client = _get_redis_client()
+        resp = await client.post(
+            f"{_UPSTASH_URL}/set/{_REDIS_KEY}",
+            content=json.dumps(data),
+            headers={
+                "Authorization": f"Bearer {_UPSTASH_TOKEN}",
+                "Content-Type": "application/json",
+            },
+            params={"EX": _REDIS_TTL},
+        )
+        return resp.status_code == 200
     except Exception as e:
         print(f"[REDIS] SET error: {e}")
         return False
@@ -42,15 +63,15 @@ async def redis_get() -> dict | None:
     if not _UPSTASH_URL:
         return None
     try:
-        async with httpx.AsyncClient(timeout=5) as client:
-            resp = await client.get(
-                f"{_UPSTASH_URL}/get/{_REDIS_KEY}",
-                headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
-            )
-            if resp.status_code == 200:
-                raw = resp.json().get("result")
-                if raw:
-                    return json.loads(raw)
+        client = _get_redis_client()
+        resp = await client.get(
+            f"{_UPSTASH_URL}/get/{_REDIS_KEY}",
+            headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
+        )
+        if resp.status_code == 200:
+            raw = resp.json().get("result")
+            if raw:
+                return json.loads(raw)
         return None
     except Exception as e:
         print(f"[REDIS] GET error: {e}")
@@ -68,21 +89,21 @@ async def supabase_insert_batch(rows: list) -> bool:
     if not _SB_URL or not _SB_KEY or not rows:
         return False
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.post(
-                f"{_SB_URL}/rest/v1/{_SB_TABLE}",
-                content=json.dumps(rows),
-                headers={
-                    "apikey":        _SB_KEY,
-                    "Authorization": f"Bearer {_SB_KEY}",
-                    "Content-Type":  "application/json",
-                    "Prefer":        "return=minimal",
-                },
-            )
-            if resp.status_code not in (200, 201):
-                print(f"[SUPABASE] INSERT error {resp.status_code}: {resp.text[:200]}")
-                return False
-            return True
+        client = _get_supabase_client()
+        resp = await client.post(
+            f"{_SB_URL}/rest/v1/{_SB_TABLE}",
+            content=json.dumps(rows),
+            headers={
+                "apikey":        _SB_KEY,
+                "Authorization": f"Bearer {_SB_KEY}",
+                "Content-Type":  "application/json",
+                "Prefer":        "return=minimal",
+            },
+        )
+        if resp.status_code not in (200, 201):
+            print(f"[SUPABASE] INSERT error {resp.status_code}: {resp.text[:200]}")
+            return False
+        return True
     except Exception as e:
         print(f"[SUPABASE] INSERT exception: {e}")
         return False
@@ -94,24 +115,24 @@ async def supabase_get_history(symbol: str, days: int = 7) -> list:
         return []
     try:
         limit = days * 48  # up to 48 records/day (every 30 min)
-        async with httpx.AsyncClient(timeout=8) as client:
-            resp = await client.get(
-                f"{_SB_URL}/rest/v1/{_SB_TABLE}",
-                params={
-                    "symbol":  f"eq.{symbol.upper()}",
-                    "order":   "recorded_at.desc",
-                    "limit":   str(limit),
-                    "select":  "score,grade,signal,percentile,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source,recorded_at",
-                },
-                headers={
-                    "apikey":        _SB_KEY,
-                    "Authorization": f"Bearer {_SB_KEY}",
-                },
-            )
-            if resp.status_code == 200:
-                return resp.json()
-            print(f"[SUPABASE] GET history error {resp.status_code}: {resp.text[:200]}")
-            return []
+        client = _get_supabase_client()
+        resp = await client.get(
+            f"{_SB_URL}/rest/v1/{_SB_TABLE}",
+            params={
+                "symbol":  f"eq.{symbol.upper()}",
+                "order":   "recorded_at.desc",
+                "limit":   str(limit),
+                "select":  "score,grade,signal,percentile,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source,recorded_at",
+            },
+            headers={
+                "apikey":        _SB_KEY,
+                "Authorization": f"Bearer {_SB_KEY}",
+            },
+        )
+        if resp.status_code == 200:
+            return resp.json()
+        print(f"[SUPABASE] GET history error {resp.status_code}: {resp.text[:200]}")
+        return []
     except Exception as e:
         print(f"[SUPABASE] GET history exception: {e}")
         return []
@@ -146,8 +167,9 @@ class ConnectionManager:
 
     def disconnect(self, websocket: WebSocket):
         try:
-            self.active_connections.remove(websocket)
-        except ValueError:
+            if websocket in self.active_connections:
+                self.active_connections.remove(websocket)
+        except (ValueError, RuntimeError):
             pass
 
     async def broadcast(self, message: dict):
@@ -159,6 +181,17 @@ class ConnectionManager:
                 dead.append(connection)
         for conn in dead:
             self.disconnect(conn)
+
+    def cleanup_dead(self):
+        """Remove dead connections that raised errors during send."""
+        self.active_connections = [c for c in self.active_connections if self._is_alive(c)]
+
+    def _is_alive(self, websocket: WebSocket) -> bool:
+        """Check if WebSocket is still connected."""
+        try:
+            return websocket.client_state == 1  # State.CONNECTED
+        except Exception:
+            return False
 
 
 # Singleton — shared across all routers

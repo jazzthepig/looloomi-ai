@@ -1,0 +1,112 @@
+{
+  "name": "CometCloud AI",
+  "description": "AI-curated crypto Fund-of-Funds — CIS scoring engine, cross-asset analytics (64 assets, 8 classes), institutional DeFi intelligence. Built for both human LPs and autonomous AI agents.",
+  "url": "https://looloomi.ai",
+  "version": "1.0.0",
+  "protocol": "A2A/0.3",
+
+  "capabilities": {
+    "cis_scoring": {
+      "description": "CIS v4.0 — 5-pillar composite intelligence score (Fundamental, Momentum, On-chain, Sentiment, Alpha). Percentile-graded A+ through F. Macro-regime-aware.",
+      "endpoint": "/api/v1/agent/cis",
+      "format": "application/json",
+      "assets": 64,
+      "asset_classes": ["Crypto", "L1", "L2", "DeFi", "RWA", "US Equity", "US Bond", "Commodity"],
+      "grades": ["A+", "A", "B+", "B", "C+", "C", "D", "F"],
+      "signals": ["STRONG BUY", "BUY", "HOLD", "REDUCE", "AVOID"],
+      "refresh_interval_seconds": 1800,
+      "source": "local_engine_or_railway"
+    },
+    "cis_history": {
+      "description": "Per-asset CIS score history for trend analysis and sparklines.",
+      "endpoint": "/api/v1/cis/history/{symbol}",
+      "batch_endpoint": "/api/v1/cis/history/batch",
+      "format": "application/json",
+      "lookback_days": 30
+    },
+    "cis_backtest": {
+      "description": "Backtest validation: realized 30d returns grouped by CIS grade. Shows predictive power.",
+      "endpoint": "/api/v1/cis/backtest",
+      "format": "application/json"
+    },
+    "market_data": {
+      "description": "Real-time prices, OHLCV, market movers, gas prices.",
+      "endpoint": "/api/v1/market/prices",
+      "format": "application/json",
+      "sources": ["binance", "coingecko"]
+    },
+    "defi_data": {
+      "description": "DeFi TVL, DEX volumes, protocol revenues, stablecoin dominance, yield opportunities.",
+      "endpoint": "/api/v1/defi/overview",
+      "format": "application/json",
+      "source": "defillama"
+    },
+    "signals": {
+      "description": "Composite market signals: Fear & Greed, momentum, DeFi flows, stablecoin dynamics.",
+      "endpoint": "/api/v1/signals",
+      "format": "application/json"
+    },
+    "fund_data": {
+      "description": "CometCloud Vault — GP fund roster, performance, and portfolio optimization.",
+      "endpoint": "/api/v1/vault/funds",
+      "format": "application/json"
+    },
+    "realtime": {
+      "description": "WebSocket stream for real-time CIS score updates. Sends current state on connect, then pushes updates on each local engine scoring cycle (~30 min).",
+      "websocket": "/ws/cis",
+      "protocol": "json",
+      "events": ["full"],
+      "keepalive": "ping/pong"
+    }
+  },
+
+  "agent_usage": {
+    "recommended_flow": [
+      "1. GET /api/v1/agent/cis — fetch full CIS leaderboard",
+      "2. Filter by grade (A+/A = STRONG BUY candidates)",
+      "3. GET /api/v1/cis/history/batch?symbols=BTC,ETH,SOL&days=7 — check score trend",
+      "4. GET /api/v1/cis/backtest — validate grade-return correlation",
+      "5. Subscribe to /ws/cis for live score updates"
+    ],
+    "response_format": {
+      "v": "API version",
+      "ts": "ISO8601 timestamp",
+      "assets": [
+        {
+          "s": "symbol",
+          "g": "grade (A+ through F)",
+          "sc": "composite score (0-100)",
+          "sg": "signal (STRONG BUY / BUY / HOLD / REDUCE / AVOID)",
+          "f": "Fundamental pillar (0-100)",
+          "m": "Momentum pillar (0-100)",
+          "r": "On-chain/Risk pillar (0-100)",
+          "ss": "Sentiment pillar (0-100)",
+          "a": "Alpha pillar (0-100)",
+          "ch30d": "30d price change %",
+          "ch7d": "7d price change %",
+          "vol": "30d volatility %",
+          "mc": "market cap USD",
+          "vol24h": "24h volume USD",
+          "tvl": "total value locked USD",
+          "conf": "data confidence score (0-1)"
+        }
+      ]
+    }
+  },
+
+  "authentication": {
+    "type": "none",
+    "note": "Public read-only access. No API key required. Rate limits apply."
+  },
+
+  "rate_limits": {
+    "default": "60 requests/minute per IP",
+    "websocket": "unlimited concurrent connections"
+  },
+
+  "contact": {
+    "organization": "CometCloud AI / Looloomi",
+    "base": "Hong Kong",
+    "focus": "Institutional crypto Fund-of-Funds, APAC"
+  }
+}
