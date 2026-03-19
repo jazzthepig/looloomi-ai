@@ -1,0 +1,168 @@
+"""
+Shared state and utilities for all routers.
+- Upstash Redis (CIS hot cache)
+- Supabase (CIS score history)
+- WebSocket ConnectionManager
+- _sanitize_floats helper
+"""
+import os, json, math, time
+import httpx
+from fastapi import WebSocket
+
+# ── Upstash Redis ────────────────────────────────────────────────────────────
+_UPSTASH_URL   = os.environ.get("UPSTASH_REDIS_REST_URL", "")
+_UPSTASH_TOKEN = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
+_REDIS_KEY     = "cis:local_scores"
+_REDIS_TTL     = 7200  # 2 hours
+
+
+async def redis_set(data: dict) -> bool:
+    """Write CIS payload to Upstash with 2 h TTL."""
+    if not _UPSTASH_URL:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.post(
+                f"{_UPSTASH_URL}/set/{_REDIS_KEY}",
+                content=json.dumps(data),
+                headers={
+                    "Authorization": f"Bearer {_UPSTASH_TOKEN}",
+                    "Content-Type": "application/json",
+                },
+                params={"EX": _REDIS_TTL},
+            )
+            return resp.status_code == 200
+    except Exception as e:
+        print(f"[REDIS] SET error: {e}")
+        return False
+
+
+async def redis_get() -> dict | None:
+    """Read CIS payload from Upstash. Returns None on miss/error."""
+    if not _UPSTASH_URL:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.get(
+                f"{_UPSTASH_URL}/get/{_REDIS_KEY}",
+                headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
+            )
+            if resp.status_code == 200:
+                raw = resp.json().get("result")
+                if raw:
+                    return json.loads(raw)
+        return None
+    except Exception as e:
+        print(f"[REDIS] GET error: {e}")
+        return None
+
+
+# ── Supabase ──────────────────────────────────────────────────────────────────
+_SB_URL   = os.environ.get("SUPABASE_URL", "").rstrip("/")
+_SB_KEY   = os.environ.get("SUPABASE_KEY", "")
+_SB_TABLE = "cis_scores"
+
+
+async def supabase_insert_batch(rows: list) -> bool:
+    """Bulk-insert CIS score rows into Supabase REST API."""
+    if not _SB_URL or not _SB_KEY or not rows:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                f"{_SB_URL}/rest/v1/{_SB_TABLE}",
+                content=json.dumps(rows),
+                headers={
+                    "apikey":        _SB_KEY,
+                    "Authorization": f"Bearer {_SB_KEY}",
+                    "Content-Type":  "application/json",
+                    "Prefer":        "return=minimal",
+                },
+            )
+            if resp.status_code not in (200, 201):
+                print(f"[SUPABASE] INSERT error {resp.status_code}: {resp.text[:200]}")
+                return False
+            return True
+    except Exception as e:
+        print(f"[SUPABASE] INSERT exception: {e}")
+        return False
+
+
+async def supabase_get_history(symbol: str, days: int = 7) -> list:
+    """Read CIS score history for one symbol from Supabase."""
+    if not _SB_URL or not _SB_KEY:
+        return []
+    try:
+        limit = days * 48  # up to 48 records/day (every 30 min)
+        async with httpx.AsyncClient(timeout=8) as client:
+            resp = await client.get(
+                f"{_SB_URL}/rest/v1/{_SB_TABLE}",
+                params={
+                    "symbol":  f"eq.{symbol.upper()}",
+                    "order":   "recorded_at.desc",
+                    "limit":   str(limit),
+                    "select":  "score,grade,signal,percentile,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source,recorded_at",
+                },
+                headers={
+                    "apikey":        _SB_KEY,
+                    "Authorization": f"Bearer {_SB_KEY}",
+                },
+            )
+            if resp.status_code == 200:
+                return resp.json()
+            print(f"[SUPABASE] GET history error {resp.status_code}: {resp.text[:200]}")
+            return []
+    except Exception as e:
+        print(f"[SUPABASE] GET history exception: {e}")
+        return []
+
+
+# ── Float sanitizer ───────────────────────────────────────────────────────────
+def sanitize_floats(obj):
+    """Recursively replace NaN/Inf numpy floats with None for JSON compliance."""
+    if isinstance(obj, float):
+        return None if not math.isfinite(obj) else obj
+    if hasattr(obj, 'item'):  # numpy scalar
+        try:
+            val = obj.item()
+            return None if isinstance(val, float) and not math.isfinite(val) else val
+        except Exception:
+            return None
+    if isinstance(obj, dict):
+        return {k: sanitize_floats(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [sanitize_floats(i) for i in obj]
+    return obj
+
+
+# ── WebSocket connection manager ─────────────────────────────────────────────
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        try:
+            self.active_connections.remove(websocket)
+        except ValueError:
+            pass
+
+    async def broadcast(self, message: dict):
+        dead = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                dead.append(connection)
+        for conn in dead:
+            self.disconnect(conn)
+
+
+# Singleton — shared across all routers
+ws_manager = ConnectionManager()
+
+# Last CIS broadcast payload — sent to new subscribers on connect
+last_cis_broadcast: dict | None = None
