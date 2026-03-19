@@ -9,7 +9,6 @@ Shared state and utilities for all routers.
 import os, json, math, time
 import httpx
 from fastapi import WebSocket
-from contextlib import asynccontextmanager
 
 # ── Persistent HTTP clients (reused across all requests) ──────────────────────
 # Initialized lazily on first use; kept alive for the process lifetime.
@@ -83,58 +82,105 @@ _SB_URL   = os.environ.get("SUPABASE_URL", "").rstrip("/")
 _SB_KEY   = os.environ.get("SUPABASE_KEY", "")
 _SB_TABLE = "cis_scores"
 
+# Retry config
+_SB_MAX_RETRIES = 3
+_SB_BASE_DELAY = 1.0  # seconds
+
+
+async def _supabase_request_with_retry(
+    method: str,
+    url: str,
+    **kwargs
+) -> httpx.Response | None:
+    """Execute HTTP request with exponential backoff retry."""
+    import asyncio
+
+    client = _get_supabase_client()
+    last_error = None
+
+    for attempt in range(_SB_MAX_RETRIES):
+        try:
+            resp = await client.request(method, url, **kwargs)
+            if resp.status_code in (200, 201):
+                return resp
+            # Non-retryable error (4xx except 429)
+            if 400 <= resp.status_code < 500 and resp.status_code != 429:
+                print(f"[SUPABASE] Non-retryable error {resp.status_code}: {resp.text[:100]}")
+                return resp
+            last_error = f"HTTP {resp.status_code}"
+        except Exception as e:
+            last_error = str(e)
+
+        if attempt < _SB_MAX_RETRIES - 1:
+            delay = _SB_BASE_DELAY * (2 ** attempt)  # exponential backoff
+            print(f"[SUPABASE] Retry {attempt + 1}/{_SB_MAX_RETRIES} after {delay}s: {last_error}")
+            await asyncio.sleep(delay)
+
+    print(f"[SUPABASE] All retries exhausted: {last_error}")
+    return None
+
 
 async def supabase_insert_batch(rows: list) -> bool:
-    """Bulk-insert CIS score rows into Supabase REST API."""
+    """Bulk-insert CIS score rows into Supabase REST API with retry."""
     if not _SB_URL or not _SB_KEY or not rows:
+        print("[SUPABASE] Skipped: missing config or empty rows")
         return False
+
+    url = f"{_SB_URL}/rest/v1/{_SB_TABLE}"
+    headers = {
+        "apikey":        _SB_KEY,
+        "Authorization": f"Bearer {_SB_KEY}",
+        "Content-Type":  "application/json",
+        "Prefer":        "return=minimal",
+    }
+
     try:
-        client = _get_supabase_client()
-        resp = await client.post(
-            f"{_SB_URL}/rest/v1/{_SB_TABLE}",
+        resp = await _supabase_request_with_retry(
+            "POST",
+            url,
             content=json.dumps(rows),
-            headers={
-                "apikey":        _SB_KEY,
-                "Authorization": f"Bearer {_SB_KEY}",
-                "Content-Type":  "application/json",
-                "Prefer":        "return=minimal",
-            },
+            headers=headers,
         )
-        if resp.status_code not in (200, 201):
-            print(f"[SUPABASE] INSERT error {resp.status_code}: {resp.text[:200]}")
-            return False
-        return True
+        if resp and resp.status_code in (200, 201):
+            print(f"[SUPABASE] Inserted {len(rows)} rows (attempt 1)")
+            return True
+        if resp:
+            print(f"[SUPABASE] Insert failed after retries: {resp.status_code}")
+        return False
     except Exception as e:
-        print(f"[SUPABASE] INSERT exception: {e}")
+        print(f"[SUPABASE] Insert exception: {e}")
         return False
 
 
 async def supabase_get_history(symbol: str, days: int = 7) -> list:
-    """Read CIS score history for one symbol from Supabase."""
+    """Read CIS score history for one symbol from Supabase with retry."""
     if not _SB_URL or not _SB_KEY:
+        print("[SUPABASE] History read skipped: missing config")
         return []
+
+    url = f"{_SB_URL}/rest/v1/{_SB_TABLE}"
+    params = {
+        "symbol":  f"eq.{symbol.upper()}",
+        "order":   "recorded_at.desc",
+        "limit":   str(days * 48),
+        "select":  "score,grade,signal,percentile,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source,recorded_at",
+    }
+    headers = {
+        "apikey":        _SB_KEY,
+        "Authorization": f"Bearer {_SB_KEY}",
+    }
+
     try:
-        limit = days * 48  # up to 48 records/day (every 30 min)
-        client = _get_supabase_client()
-        resp = await client.get(
-            f"{_SB_URL}/rest/v1/{_SB_TABLE}",
-            params={
-                "symbol":  f"eq.{symbol.upper()}",
-                "order":   "recorded_at.desc",
-                "limit":   str(limit),
-                "select":  "score,grade,signal,percentile,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source,recorded_at",
-            },
-            headers={
-                "apikey":        _SB_KEY,
-                "Authorization": f"Bearer {_SB_KEY}",
-            },
-        )
-        if resp.status_code == 200:
-            return resp.json()
-        print(f"[SUPABASE] GET history error {resp.status_code}: {resp.text[:200]}")
+        resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
+        if resp and resp.status_code == 200:
+            data = resp.json()
+            print(f"[SUPABASE] History {symbol}: {len(data)} records (last 7d)")
+            return data
+        if resp:
+            print(f"[SUPABASE] History error {resp.status_code}: {resp.text[:100]}")
         return []
     except Exception as e:
-        print(f"[SUPABASE] GET history exception: {e}")
+        print(f"[SUPABASE] History exception: {e}")
         return []
 
 

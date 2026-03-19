@@ -29,7 +29,7 @@ async def get_market_prices(symbols: str = "BTC,ETH,SOL,BNB,AVAX"):
 @router.get("/api/v1/market/ohlcv/{symbol}")
 async def get_market_ohlcv(symbol: str, interval: str = "1h", limit: int = 100):
     data = await get_ohlcv(symbol, interval, limit)
-    if data and "error" in data[0]:
+    if isinstance(data, list) and data and isinstance(data[0], dict) and "error" in data[0]:
         raise HTTPException(status_code=502, detail=data[0]["error"])
     return {"symbol": symbol, "interval": interval, "data": data}
 

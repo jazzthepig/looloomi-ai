@@ -1,4 +1,5 @@
-const RAILWAY_URL = 'https://web-production-0cdf76.up.railway.app';
+// RAILWAY_URL is injected as a Cloudflare Pages environment variable — not hardcoded.
+// Set it in: CF Pages dashboard → Settings → Environment variables → RAILWAY_URL
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -7,7 +8,7 @@ const CORS_HEADERS = {
 };
 
 export async function onRequest(context) {
-  const { request } = context;
+  const { request, env } = context;
   const url = new URL(request.url);
 
   // Handle CORS preflight
@@ -15,7 +16,15 @@ export async function onRequest(context) {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
 
-  const targetUrl = RAILWAY_URL + url.pathname + url.search;
+  const railwayUrl = env.RAILWAY_URL;
+  if (!railwayUrl) {
+    return new Response(JSON.stringify({ error: 'Proxy not configured', detail: 'RAILWAY_URL env var missing' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+    });
+  }
+
+  const targetUrl = railwayUrl + url.pathname + url.search;
 
   const proxyRequest = new Request(targetUrl, {
     method: request.method,
@@ -36,7 +45,7 @@ export async function onRequest(context) {
   } catch (err) {
     return new Response(JSON.stringify({ error: 'Proxy error', detail: err.message }), {
       status: 502,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
     });
   }
 }

@@ -19,6 +19,14 @@ router = APIRouter()
 _INTERNAL_TOKEN = os.environ.get("INTERNAL_API_TOKEN", "")
 
 
+def _p(asset: dict, key: str):
+    """Read pillar score — handles flat keys (local engine) and nested pillars dict (Railway)."""
+    v = asset.get(key)
+    if v is not None:
+        return v
+    return asset.get("pillars", {}).get(key.upper())
+
+
 # ── Internal push (Mac Mini → Railway) ───────────────────────────────────────
 
 @router.post("/internal/cis-scores")
@@ -28,9 +36,9 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
     Writes to Upstash Redis (hot cache) and Supabase (score history).
     Triggers WebSocket broadcast to connected clients.
     """
-    if _INTERNAL_TOKEN:
-        if not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-            raise HTTPException(status_code=401, detail="Invalid token")
+    # Reject-by-default: require token always (fail secure if env var missing)
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
         universe  = payload.get("universe", [])
@@ -135,21 +143,7 @@ async def get_cis_asset(symbol: str):
 
 
 # ── CIS History ───────────────────────────────────────────────────────────────
-
-@router.get("/api/v1/cis/history/{symbol}")
-async def get_cis_history(symbol: str, days: int = 7):
-    """CIS score history for sparklines. Up to days*48 data points (30-min intervals)."""
-    rows = await supabase_get_history(symbol.upper(), days)
-    if not rows:
-        return {"status": "empty", "symbol": symbol.upper(), "days": days, "history": []}
-    return {
-        "status":  "success",
-        "symbol":  symbol.upper(),
-        "days":    days,
-        "count":   len(rows),
-        "history": list(reversed(rows)),  # chronological for sparklines
-    }
-
+# IMPORTANT: batch route MUST be registered before {symbol} route to avoid shadowing
 
 @router.get("/api/v1/cis/history/batch")
 async def get_cis_history_batch(symbols: str, days: int = 7):
@@ -171,6 +165,21 @@ async def get_cis_history_batch(symbols: str, days: int = 7):
         data[sym] = [] if isinstance(rows, Exception) or not rows else list(reversed(rows))
 
     return {"status": "success", "days": days, "count": len(data), "data": data}
+
+
+@router.get("/api/v1/cis/history/{symbol}")
+async def get_cis_history(symbol: str, days: int = 7):
+    """CIS score history for sparklines. Up to days*48 data points (30-min intervals)."""
+    rows = await supabase_get_history(symbol.upper(), days)
+    if not rows:
+        return {"status": "empty", "symbol": symbol.upper(), "days": days, "history": []}
+    return {
+        "status":  "success",
+        "symbol":  symbol.upper(),
+        "days":    days,
+        "count":   len(rows),
+        "history": list(reversed(rows)),  # chronological for sparklines
+    }
 
 
 # ── Backtest ──────────────────────────────────────────────────────────────────
@@ -220,13 +229,6 @@ async def agent_cis_endpoint():
             universe = result.get("universe", [])
         except Exception:
             universe = []
-
-    def _p(asset, key):
-        """Read pillar score — handles both flat keys (local engine) and nested pillars dict (Railway)."""
-        v = asset.get(key)
-        if v is not None:
-            return v
-        return asset.get("pillars", {}).get(key.upper())
 
     return {
         "v":  "4.0",
@@ -284,12 +286,6 @@ async def websocket_cis(websocket: WebSocket):
 
 async def _broadcast_cis_update(universe: list):
     """Called by internal push endpoint when new scores arrive."""
-    def _p(asset, key):
-        v = asset.get(key)
-        if v is not None:
-            return v
-        return asset.get("pillars", {}).get(key.upper())
-
     store.last_cis_broadcast = {
         "type":      "full",
         "timestamp": datetime.now().isoformat(),

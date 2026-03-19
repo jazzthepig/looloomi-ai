@@ -44,7 +44,7 @@ async function fetchSignalsFromAPI() {
 }
 
 /* ─── Signal Card ────────────────────────────────────────────────────── */
-const SignalRow = ({ signal, isNew }) => {
+const SignalRow = ({ signal, isNew, onClick }) => {
   const typeConfig = SIGNAL_TYPES[signal.type] || SIGNAL_TYPES.MACRO;
   const impStyle   = IMPORTANCE_STYLES[signal.importance] || IMPORTANCE_STYLES.LOW;
 
@@ -57,6 +57,7 @@ const SignalRow = ({ signal, isNew }) => {
         transition: "background 0.14s",
         cursor: "pointer",
       }}
+      onClick={onClick ? () => onClick(signal) : undefined}
       onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.025)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
     >

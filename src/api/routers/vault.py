@@ -2,6 +2,7 @@
 Vault router — GP funds, portfolio optimization
 Endpoints: /api/v1/vault/*, /api/v1/portfolio/*
 """
+import asyncio
 import numpy as np
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -101,16 +102,18 @@ class PortfolioRequest(BaseModel):
 
 @router.post("/api/v1/portfolio/optimize")
 async def optimize_portfolio(request: PortfolioRequest):
-    try:
+    def _run():
         from analytics.portfolio.optimizer import CryptoPortfolioOptimizer
         optimizer = CryptoPortfolioOptimizer(assets=request.assets)
         optimizer.fetch_historical_data(days=90)
         if request.strategy == "hrp":
-            result = optimizer.optimize_hrp()
+            return optimizer.optimize_hrp()
         elif request.strategy == "min_variance":
-            result = optimizer.optimize_min_variance()
+            return optimizer.optimize_min_variance()
         else:
-            result = optimizer.optimize_equal_weight()
+            return optimizer.optimize_equal_weight()
+    try:
+        result = await asyncio.to_thread(_run)
         return {"timestamp": datetime.now().isoformat(), "result": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -118,11 +121,15 @@ async def optimize_portfolio(request: PortfolioRequest):
 
 @router.get("/api/v1/portfolio/stats")
 async def get_portfolio_stats(assets: str = "BTC,ETH,SOL"):
-    try:
+    asset_list = [s.strip() for s in assets.split(",")]
+
+    def _run():
         from analytics.portfolio.optimizer import CryptoPortfolioOptimizer
-        asset_list = [s.strip() for s in assets.split(",")]
         optimizer = CryptoPortfolioOptimizer(assets=asset_list)
-        prices = optimizer.fetch_historical_data(days=90)
+        return optimizer, optimizer.fetch_historical_data(days=90)
+
+    try:
+        optimizer, prices = await asyncio.to_thread(_run)
 
         if optimizer.returns_data is not None:
             cols = list(optimizer.returns_data.columns)

@@ -51,14 +51,6 @@ const GRADE_COLORS = {
   F: "#888888",
 };
 
-const GRADE_LABELS = {
-  A: "Priority Allocation",
-  B: "Qualified",
-  C: "Watchlist",
-  D: "Avoid",
-  F: "Eliminated",
-};
-
 const ASSET_CLASS_COLORS = {
   RWA: { bg: "rgba(232,160,0,.12)", text: "#E8A000" },
   DeFi: { bg: "rgba(68,114,255,.12)", text: "#4472FF" },
@@ -218,6 +210,11 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   }, []);
 
   // Fetch sparkline history after data loads — single batch request
+  // Reset ref whenever data changes so sparklines re-fetch on refresh
+  useEffect(() => {
+    sparkFetchedRef.current = false;
+  }, [data]);
+
   useEffect(() => {
     if (!data.length || sparkFetchedRef.current) return;
     sparkFetchedRef.current = true;
@@ -523,7 +520,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           </div>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
             {Object.entries(backtest.returns_by_grade).map(([grade, ret]) => {
-              const color = ret > 3 ? "#00D98A" : ret > 0 ? "#4472FF" : "#FF2D55";
+              // TradFi assets return 0.0 — Binance klines don't carry SPY/AAPL/GLD/TLT
+              const noData = typeof ret !== "number" || ret === 0;
+              const color = noData ? "rgba(255,255,255,0.25)" : ret > 3 ? "#00D98A" : ret > 0 ? "#4472FF" : "#FF2D55";
               return (
                 <div key={grade} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
                   <span style={{
@@ -531,7 +530,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                     color: grade.startsWith("A") ? "#00D98A" : grade.startsWith("B") ? "#4472FF" : "#E8A000",
                   }}>{grade}</span>
                   <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 400, color }}>
-                    {ret > 0 ? "+" : ""}{typeof ret === "number" ? ret.toFixed(2) : ret}%
+                    {noData ? "—" : `${ret > 0 ? "+" : ""}${ret.toFixed(2)}%`}
                   </span>
                 </div>
               );
@@ -637,7 +636,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
       </div>
 
       {/* 2-Column Layout: Table + Detail Panel */}
-      <div className="cis-layout" style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, alignItems: "start" }}>
+      <div className="cis-layout" style={{ display: "grid", gridTemplateColumns: "1fr minmax(300px, 340px)", gap: 16, alignItems: "start" }}>
         {/* Left: Table */}
         <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden", background: T.surface }}>
           {/* Table Header */}
@@ -656,7 +655,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           </div>
 
           {/* Table Body */}
-          <div style={{ maxHeight: 500, overflowY: "auto" }}>
+          <div style={{ maxHeight: "calc(100vh - 380px)", minHeight: 300, overflowY: "auto" }}>
             {filtered.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", color: T.muted }}>No assets match</div>
             ) : filtered.map((item) => {
@@ -697,8 +696,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   })()}
                 </div>
                 <span style={{ fontFamily: FONTS.mono, fontSize: 15, fontWeight: 400, textAlign: "right",
-                  color: item.total_score >= 85 ? T.green : item.total_score >= 70 ? T.blue : T.amber }}>
-                  {item.total_score.toFixed(1)}
+                  color: (item.total_score ?? 0) >= 85 ? T.green : (item.total_score ?? 0) >= 70 ? T.blue : T.amber }}>
+                  {(item.total_score ?? 0).toFixed(1)}
                 </span>
                 <span style={{
                   width: 28, height: 28, borderRadius: "50%", display: "flex",
@@ -761,18 +760,20 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
               <span className="cis-score" style={{
                 fontFamily: FONTS.mono, fontSize: 42, fontWeight: 400, lineHeight: 1, letterSpacing: "-0.03em",
-                color: selectedAsset?.total_score >= 85 ? T.green : selectedAsset?.total_score >= 70 ? T.blue : T.amber
-              }}>{selectedAsset?.total_score.toFixed(1)}</span>
+                color: (selectedAsset?.total_score ?? 0) >= 85 ? T.green : (selectedAsset?.total_score ?? 0) >= 70 ? T.blue : T.amber
+              }}>{(selectedAsset?.total_score ?? 0).toFixed(1)}</span>
               <span style={{ fontSize: 10, color: "rgba(255,255,255,0.26)" }}>/ 100</span>
             </div>
           </div>
 
           {/* Detail Body */}
           <div style={{ padding: "18px 20px" }}>
-            {/* Description */}
-            <div style={{ fontSize: 10, color: T.secondary, lineHeight: 1.6, marginBottom: 18, paddingBottom: 14, borderBottom: `1px solid ${T.border}` }}>
-              {selectedAsset?.description}
-            </div>
+            {/* Description — only render if non-empty */}
+            {selectedAsset?.description && (
+              <div style={{ fontSize: 10, color: T.secondary, lineHeight: 1.6, marginBottom: 18, paddingBottom: 14, borderBottom: `1px solid ${T.border}` }}>
+                {selectedAsset.description}
+              </div>
+            )}
 
             {/* Pillar Bars */}
             {PILLAR_DEFS.map(p => {

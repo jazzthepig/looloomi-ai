@@ -111,9 +111,9 @@ export function CISMacroBanner({ macro }) {
   );
 }
 
-/* ─── CIS Leaderboard Table ──────────────────────────────────────────── */
+/* ─── CIS Leaderboard Table (simplified table — not to be confused with CISLeaderboard.jsx) ── */
 
-export function CISLeaderboard({ data, filter, setFilter }) {
+export function CISLeaderboardTable({ data, filter, setFilter }) {
   const [expanded, setExpanded] = useState(null);
 
   const filtered = useMemo(() => {
@@ -678,7 +678,7 @@ export default function CISWidget({ refreshKey = 0 }) {
       {!loading && (
         <>
           {view === "leaderboard" && (
-            <CISLeaderboard data={processedData} filter={filter} setFilter={setFilter} />
+            <CISLeaderboardTable data={processedData} filter={filter} setFilter={setFilter} />
           )}
           {view === "heatmap" && (
             <CISHeatmap data={processedData} filter={filter} setFilter={setFilter} />

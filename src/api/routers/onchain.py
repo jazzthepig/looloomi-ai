@@ -26,7 +26,8 @@ async def wallet_defi(address: str, chain: str = "eth"):
 @router.get("/api/v1/onchain/address/{address}")
 async def address_info(address: str):
     """ETH address info: balance + recent transactions."""
-    balance, txs = await get_eth_balance(address), await get_eth_transactions(address)
+    import asyncio
+    balance, txs = await asyncio.gather(get_eth_balance(address), get_eth_transactions(address))
     return {
         "address":      address,
         "balance":      balance,
