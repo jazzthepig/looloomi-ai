@@ -12,7 +12,7 @@ import time
 import httpx
 import asyncio
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -710,3 +710,135 @@ async def calculate_mmi(token: str = "BTC") -> dict:
         return _cache_set(key, result)
     except Exception as e:
         return {"token": token, "mmi_score": 50, "signal": "NEUTRAL", "error": str(e)}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# HISTORICAL KLINES FOR BACKTEST (Binance + OKX)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Binance API (public, no key needed for klines)
+BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
+
+# OKX API (public, no key needed for public candles)
+OKX_KLINES_URL = "https://www.okx.com/api/v5/market/history-candles"
+
+
+async def get_klines_binance(symbol: str, interval: str = "1d", months: int = 6) -> list[dict]:
+    """
+    Fetch historical klines from Binance.
+
+    Args:
+        symbol: e.g., "BTCUSDT", "ETHUSDT"
+        interval: "1d", "1h", "4h", etc.
+        months: number of months of history (default 6, max ~6 months limit)
+
+    Returns:
+        List of kline dicts: [{"time": ts, "open":, "high":, "low":, "close":, "volume":}, ...]
+    """
+    import httpx
+
+    # Binance limit is 1000 candles max per request
+    limit = min(months * 30, 1000)
+
+    params = {
+        "symbol": symbol.upper(),
+        "interval": interval,
+        "limit": limit,
+        "startTime": int((datetime.now(timezone.utc) - timedelta(days=months * 30)).timestamp() * 1000)
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(BINANCE_KLINES_URL, params=params)
+            if resp.status_code != 200:
+                return []
+
+            data = resp.json()
+            return [
+                {
+                    "time": int(k[0]),
+                    "open": float(k[1]),
+                    "high": float(k[2]),
+                    "low": float(k[3]),
+                    "close": float(k[4]),
+                    "volume": float(k[5]),
+                    "timestamp": datetime.fromtimestamp(int(k[0]) / 1000, tz=timezone.utc).isoformat(),
+                }
+                for k in data
+            ]
+    except Exception as e:
+        print(f"[BINANCE] klines error for {symbol}: {e}")
+        return []
+
+
+async def get_klines_okx(symbol: str, interval: str = "1d", months: int = 6) -> list[dict]:
+    """
+    Fetch historical klines from OKX.
+
+    Args:
+        symbol: e.g., "BTC-USDT", "ETH-USDT"
+        interval: "1D", "1H", "4H", etc. (OKX format)
+        months: number of months of history
+
+    Returns:
+        List of kline dicts: [{"time": ts, "open":, "high":, "low":, "close":, "volume":}, ...]
+    """
+    import httpx
+
+    # Map interval format
+    interval_map = {"1d": "1D", "1h": "1H", "4h": "4H", "15m": "15M", "5m": "5M"}
+    okx_interval = interval_map.get(interval, "1D")
+
+    # OKX uses after/before for pagination, we fetch the most recent ~6 months
+    params = {
+        "instId": symbol.upper().replace("USDT", "-USDT"),
+        "bar": okx_interval,
+        "limit": 100,
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(OKX_KLINES_URL, params=params)
+            if resp.status_code != 200:
+                return []
+
+            data = resp.json()
+            if data.get("code") != "0":
+                return []
+
+            klines = data.get("data", [])
+            # OKX returns: [time, open, high, low, close, volume, ...]
+            return [
+                {
+                    "time": int(k[0]),
+                    "open": float(k[1]),
+                    "high": float(k[2]),
+                    "low": float(k[3]),
+                    "close": float(k[4]),
+                    "volume": float(k[5]),
+                    "timestamp": datetime.fromtimestamp(int(k[0]) / 1000, tz=timezone.utc).isoformat(),
+                }
+                for k in reversed(klines)  # Oldest first
+            ]
+    except Exception as e:
+        print(f"[OKX] klines error for {symbol}: {e}")
+        return []
+
+
+async def get_klines(symbol: str, source: str = "binance", interval: str = "1d", months: int = 6) -> list[dict]:
+    """
+    Unified klines fetcher - try primary source, fallback to other.
+
+    Args:
+        symbol: e.g., "BTCUSDT"
+        source: "binance", "okx", or "auto" (try binance first, then okx)
+    """
+    if source == "binance" or source == "auto":
+        result = await get_klines_binance(symbol, interval, months)
+        if result:
+            return result
+
+    if source == "okx" or source == "auto":
+        return await get_klines_okx(symbol, interval, months)
+
+    return []

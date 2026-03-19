@@ -1,8 +1,8 @@
 """
-CIS Backtest Framework v3.1
-==========================
-Backtest with CoinGecko historical data:
-- Fetch 4 assets at a time to avoid rate limits
+CIS Backtest Framework v4.0
+===========================
+Backtest with Binance/OKX historical klines:
+- Fetch real market data from Binance API
 - Save results to history database
 
 Author: Seth
@@ -12,58 +12,64 @@ import json
 import asyncio
 import httpx
 import time
+import sys
+import os
 from datetime import datetime, timedelta
 from typing import Dict, List
 
+# Add project root to path (backtest.py is at src/data/cis/backtest.py)
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, project_root)
+
 
 API_BASE = "https://web-production-0cdf76.up.railway.app"
-COINGECKO_IDS = {
-    "BTC": "bitcoin",
-    "ETH": "ethereum",
-    "SOL": "solana",
-    "BNB": "binancecoin",
-    "XRP": "ripple",
-    "ADA": "cardano",
-    "DOGE": "dogecoin",
-    "AVAX": "avalanche-2",
-    "DOT": "polkadot",
-    "ARB": "arbitrum",
-    "MANTLE": "mantle",
-    "TON": "the-open-network",
-    "UNI": "uniswap",
-    "AAVE": "aave",
-    "LINK": "chainlink",
-    "ONDO": "ondo-finance",
-    "PEPE": "pepe",
+
+# Map CIS symbols to Binance trading pairs
+BINANCE_SYMBOLS = {
+    "BTC": "BTCUSDT",
+    "ETH": "ETHUSDT",
+    "SOL": "SOLUSDT",
+    "BNB": "BNBUSDT",
+    "XRP": "XRPUSDT",
+    "ADA": "ADAUSDT",
+    "DOGE": "DOGEUSDT",
+    "AVAX": "AVAXUSDT",
+    "DOT": "DOTUSDT",
+    "ARB": "ARBUSDT",
+    "MANTLE": "MANTLEUSDT",
+    "TON": "TONUSDT",
+    "UNI": "UNIUSDT",
+    "AAVE": "AAVEUSDT",
+    "LINK": "LINKUSDT",
+    "ONDO": "ONDOUSDT",
+    "PEPE": "PEPEUSDT",
 }
 
 
-async def fetch_price_history(cg_id: str, days: int = 60) -> List[dict]:
-    """Fetch historical prices from CoinGecko."""
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            url = f"https://api.coingecko.com/api/v3/coins/{cg_id}/market_chart"
-            params = {"vs_currency": "usd", "days": days}
-            r = await client.get(url, params=params)
+async def fetch_price_history(symbol: str, months: int = 6) -> List[dict]:
+    """Fetch historical klines from Binance API."""
+    from src.data.market.data_layer import get_klines
 
-            if r.status_code == 200:
-                data = r.json()
-                prices = data.get("prices", [])
-                return [
-                    {"date": datetime.fromtimestamp(p[0] / 1000).strftime("%Y-%m-%d"), "price": p[1]}
-                    for p in prices
-                ]
-            elif r.status_code == 429:
-                print(f"  Rate limited, waiting...")
-                await asyncio.sleep(60)
-                return []
-    except Exception as e:
-        print(f"  Error: {e}")
+    binance_pair = BINANCE_SYMBOLS.get(symbol, f"{symbol}USDT")
+    klines = await get_klines(binance_pair, source="auto", months=months)
+
+    if klines:
+        return [
+            {
+                "date": k["timestamp"][:10],  # YYYY-MM-DD
+                "price": k["close"],
+                "open": k["open"],
+                "high": k["high"],
+                "low": k["low"],
+                "volume": k["volume"],
+            }
+            for k in klines
+        ]
     return []
 
 
 def calculate_return(prices: List[dict], days: int = 30) -> float:
-    """Calculate return for last N days."""
+    """Calculate return for last N days from klines."""
     if not prices or len(prices) < days:
         return 0.0
     start = prices[-days]["price"]
@@ -74,9 +80,9 @@ def calculate_return(prices: List[dict], days: int = 30) -> float:
 
 
 async def run_backtest():
-    """Run backtest with batch fetching."""
+    """Run backtest with Binance/OKX klines."""
     print("=" * 60)
-    print("CIS Backtest v3.1 - Batch Fetch")
+    print("CIS Backtest v4.0 - Binance/OKX Data")
     print("=" * 60)
 
     # Get CIS scores
@@ -98,22 +104,18 @@ async def run_backtest():
         grades[g] = grades.get(g, 0) + 1
     print(", ".join(f"{k}:{v}" for k, v in sorted(grades.items())))
 
-    # Fetch prices in batches of 4
-    print("\nFetching historical prices (4 assets at a time)...")
+    # Fetch klines - no rate limits with Binance
+    print("\nFetching historical klines from Binance/OKX...")
     price_data = {}
     symbols = [a["symbol"] for a in universe]
 
-    # Process in batches
-    batch_size = 4
+    # Process in batches of 10 (Binance is fast)
+    batch_size = 10
     for i in range(0, len(symbols), batch_size):
         batch = symbols[i:i + batch_size]
         print(f"\n  Batch {i // batch_size + 1}: {batch}")
 
-        tasks = []
-        for symbol in batch:
-            cg_id = COINGECKO_IDS.get(symbol, symbol.lower())
-            tasks.append(fetch_price_history(cg_id, 60))
-
+        tasks = [fetch_price_history(symbol, 6) for symbol in batch]
         results = await asyncio.gather(*tasks)
 
         for symbol, prices in zip(batch, results):
@@ -123,10 +125,9 @@ async def run_backtest():
             else:
                 print(f"    {symbol}: FAILED")
 
-        # Rate limit delay between batches
+        # Small delay between batches
         if i + batch_size < len(symbols):
-            print("  Waiting 10s for rate limit...")
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     # Calculate returns
     print("\n" + "=" * 60)
@@ -175,12 +176,43 @@ async def run_backtest():
     # Save to database
     print("\nSaving to database...")
     try:
-        from src.data.cis.history_db import init_db
-        from src.data.cis.cis_provider import calculate_cis_universe
+        from src.data.cis.history_db import init_db, save_backtest_result
 
-        # This would save the backtest result
-        # For now just print
-        print("  (Database save not implemented yet)")
+        init_db()
+
+        # Calculate entry/exit dates (30 days ago to today)
+        exit_date = datetime.now().strftime("%Y-%m-%d")
+        entry_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+
+        saved_count = 0
+        for asset in universe:
+            symbol = asset["symbol"]
+            if symbol not in returns:
+                continue
+
+            ret = returns[symbol]
+            grade_entry = asset["grade"]
+            score_entry = asset.get("cis_score", 0)
+
+            # Save each asset's backtest result
+            success = save_backtest_result(
+                asset=symbol,
+                entry_date=entry_date,
+                exit_date=exit_date,
+                holding_days=30,
+                grade_entry=grade_entry,
+                grade_exit=grade_entry,  # Assume same grade for now
+                score_entry=score_entry,
+                score_exit=score_entry,
+                return_pct=round(ret, 2),
+                btc_return_pct=round(btc_return, 2),
+                alpha_vs_btc=round(ret - btc_return, 2),
+                data_source="binance"
+            )
+            if success:
+                saved_count += 1
+
+        print(f"  Saved {saved_count} backtest results")
     except Exception as e:
         print(f"  Error: {e}")
 

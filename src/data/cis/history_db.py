@@ -73,6 +73,27 @@ def init_db():
         )
     """)
 
+    # Backtest results - stores realized returns per grade
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS backtest_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset TEXT NOT NULL,
+            entry_date TEXT NOT NULL,
+            exit_date TEXT NOT NULL,
+            holding_days INTEGER NOT NULL,
+            grade_entry TEXT,
+            grade_exit TEXT,
+            score_entry REAL,
+            score_exit REAL,
+            return_pct REAL NOT NULL,
+            btc_return_pct REAL,
+            alpha_vs_btc REAL,
+            data_source TEXT DEFAULT 'binance',
+            calculated_at TEXT NOT NULL,
+            UNIQUE(asset, entry_date, exit_date)
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -193,6 +214,91 @@ def get_score_change(symbol: str, days: int = 30) -> Optional[Dict]:
         "end_score": last["cis_score"],
         "start_date": first["recorded_at"],
         "end_date": last["recorded_at"],
+    }
+
+
+def save_backtest_result(
+    asset: str,
+    entry_date: str,
+    exit_date: str,
+    holding_days: int,
+    grade_entry: str,
+    grade_exit: str,
+    score_entry: float,
+    score_exit: float,
+    return_pct: float,
+    btc_return_pct: float,
+    alpha_vs_btc: float,
+    data_source: str = "binance"
+) -> bool:
+    """Save backtest result to database."""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    now = datetime.now().isoformat()
+
+    try:
+        cursor.execute("""
+            INSERT OR REPLACE INTO backtest_results
+            (asset, entry_date, exit_date, holding_days, grade_entry, grade_exit,
+             score_entry, score_exit, return_pct, btc_return_pct, alpha_vs_btc,
+             data_source, calculated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            asset, entry_date, exit_date, holding_days,
+            grade_entry, grade_exit, score_entry, score_exit,
+            return_pct, btc_return_pct, alpha_vs_btc,
+            data_source, now
+        ))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"[BACKTEST] Save error: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def get_backtest_results(limit: int = 100) -> List[Dict]:
+    """Get backtest results."""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT * FROM backtest_results
+        ORDER BY calculated_at DESC
+        LIMIT ?
+    """, (limit,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+
+def get_backtest_summary() -> Dict:
+    """Get aggregated backtest results by grade."""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT grade_entry,
+               COUNT(*) as count,
+               AVG(return_pct) as avg_return,
+               AVG(alpha_vs_btc) as avg_alpha,
+               MIN(return_pct) as min_return,
+               MAX(return_pct) as max_return
+        FROM backtest_results
+        GROUP BY grade_entry
+        ORDER BY avg_return DESC
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return {
+        "grades": [dict(row) for row in rows],
+        "summary_generated_at": datetime.now().isoformat()
     }
 
 

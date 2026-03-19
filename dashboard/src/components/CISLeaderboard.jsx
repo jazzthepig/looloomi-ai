@@ -216,29 +216,31 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
     }
   }, []);
 
-  // Fetch sparkline history after data loads — staggered to avoid hammering API
+  // Fetch sparkline history after data loads — single batch request
   useEffect(() => {
     if (!data.length || sparkFetchedRef.current) return;
     sparkFetchedRef.current = true;
 
     const fetchAll = async () => {
-      const symbols = data.map(d => d.asset_id?.toUpperCase() || d.asset_name?.toUpperCase());
-      for (let i = 0; i < symbols.length; i++) {
-        const sym = symbols[i];
-        if (!sym) continue;
-        try {
-          const res = await fetch(`/api/v1/cis/history/${sym}?days=7`);
-          const json = await res.json();
-          if (json.history && json.history.length > 1) {
-            const scores = json.history.map(h => h.score).filter(s => s != null);
-            if (scores.length > 1) {
-              setSparklines(prev => ({ ...prev, [sym]: scores }));
+      const symbols = data
+        .map(d => d.asset_id?.toUpperCase() || d.asset_name?.toUpperCase())
+        .filter(Boolean);
+      if (!symbols.length) return;
+
+      try {
+        const res = await fetch(`/api/v1/cis/history/batch?symbols=${symbols.join(",")}&days=7`);
+        const json = await res.json();
+        if (json.data) {
+          const parsed = {};
+          for (const [sym, rows] of Object.entries(json.data)) {
+            if (Array.isArray(rows) && rows.length > 1) {
+              const scores = rows.map(h => h.score).filter(s => s != null);
+              if (scores.length > 1) parsed[sym] = scores;
             }
           }
-        } catch { /* silent — sparkline is non-critical */ }
-        // 80ms stagger between fetches
-        await new Promise(r => setTimeout(r, 80));
-      }
+          setSparklines(parsed);
+        }
+      } catch { /* silent — sparklines are non-critical */ }
     };
 
     fetchAll();
@@ -731,7 +733,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
 
             {/* Footer */}
             <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${T.border}`, fontSize: 9, color: "rgba(255,255,255,0.26)" }}>
-              CIS v3.1 · Scored by Looloomi AI · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+              CIS v4.0 · Scored by Looloomi AI · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </div>
           </div>
         </div>

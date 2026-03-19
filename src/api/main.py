@@ -534,6 +534,41 @@ async def get_cis_history(symbol: str, days: int = 7):
     }
 
 
+@app.get("/api/v1/cis/history/batch")
+async def get_cis_history_batch(symbols: str, days: int = 7):
+    """
+    GET /api/v1/cis/history/batch?symbols=BTC,ETH,SOL&days=7
+    Batch version of history endpoint — fetches all symbols concurrently.
+    Eliminates N+1 sparkline fetches from the frontend.
+    Returns a map of symbol → history array.
+    """
+    symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+    if not symbol_list:
+        return {"status": "error", "message": "No symbols provided", "data": {}}
+
+    # Cap at 60 symbols to avoid Supabase rate limits
+    symbol_list = symbol_list[:60]
+
+    results = await asyncio.gather(
+        *[_supabase_get_history(sym, days) for sym in symbol_list],
+        return_exceptions=True,
+    )
+
+    data = {}
+    for sym, rows in zip(symbol_list, results):
+        if isinstance(rows, Exception) or not rows:
+            data[sym] = []
+        else:
+            data[sym] = list(reversed(rows))  # chronological for sparklines
+
+    return {
+        "status":  "success",
+        "days":    days,
+        "count":   len(data),
+        "data":    data,
+    }
+
+
 # ── Agent API (JSON-only, minimal) ─────────────────────────────────────────
 
 @app.get("/api/v1/agent/cis")
