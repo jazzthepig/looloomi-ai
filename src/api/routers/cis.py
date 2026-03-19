@@ -230,13 +230,21 @@ async def agent_cis_endpoint():
             {
                 "s":  a["symbol"],
                 "g":  a.get("grade", "?"),
-                "sc": a.get("score", a.get("cis_score", 0)),
+                "sc": a.get("cis_score", a.get("score", 0)),
                 "sg": a.get("signal", "?"),
-                "f":  a.get("pillars", {}).get("F"),
-                "m":  a.get("pillars", {}).get("M"),
-                "r":  a.get("pillars", {}).get("O"),
-                "ss": a.get("pillars", {}).get("S"),
-                "a":  a.get("pillars", {}).get("A"),
+                "f":  a.get("f"),
+                "m":  a.get("m"),
+                "r":  a.get("r"),
+                "ss": a.get("s"),
+                "a":  a.get("a"),
+                # Additional fields useful for trading agents
+                "ch30d": a.get("change_30d"),    # 30d price change %
+                "ch7d": a.get("change_7d"),      # 7d price change %
+                "vol": a.get("volatility_30d"),  # 30d volatility %
+                "mc": a.get("market_cap"),       # market cap
+                "vol24h": a.get("volume_24h"),   # 24h volume
+                "tvl": a.get("tvl"),             # TVL (for DeFi)
+                "conf": a.get("confidence"),      # data completeness score
             }
             for a in universe
         ],
@@ -273,9 +281,17 @@ async def _broadcast_cis_update(universe: list):
         "count":     len(universe),
         "assets": [
             {
-                "s":  a["symbol"],
-                "g":  a.get("grade", "?"),
-                "sc": a.get("score", a.get("cis_score", 0)),
+                "s":    a["symbol"],
+                "g":    a.get("grade", "?"),
+                "sc":   a.get("cis_score", a.get("score", 0)),
+                "sg":   a.get("signal", "?"),
+                "f":    a.get("f"),
+                "m":    a.get("m"),
+                "r":    a.get("r"),
+                "ss":   a.get("s"),
+                "a":    a.get("a"),
+                "ch30d": a.get("change_30d"),
+                "ch7d": a.get("change_7d"),
             }
             for a in universe
         ],
