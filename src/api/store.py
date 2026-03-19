@@ -38,33 +38,45 @@ _REDIS_TTL     = 7200  # 2 hours
 
 async def redis_set(data: dict) -> bool:
     """Write CIS payload to Upstash with 2 h TTL."""
+    return await redis_set_key(_REDIS_KEY, data, ttl=_REDIS_TTL)
+
+
+async def redis_get() -> dict | None:
+    """Read CIS payload from Upstash. Returns None on miss/error."""
+    return await redis_get_key(_REDIS_KEY)
+
+
+# ── Generic key-based Redis helpers ──────────────────────────────────────────
+
+async def redis_set_key(key: str, data: dict, ttl: int = 7200) -> bool:
+    """Write any JSON payload to Upstash with TTL."""
     if not _UPSTASH_URL:
         return False
     try:
         client = _get_redis_client()
         resp = await client.post(
-            f"{_UPSTASH_URL}/set/{_REDIS_KEY}",
+            f"{_UPSTASH_URL}/set/{key}",
             content=json.dumps(data),
             headers={
                 "Authorization": f"Bearer {_UPSTASH_TOKEN}",
                 "Content-Type": "application/json",
             },
-            params={"EX": _REDIS_TTL},
+            params={"EX": ttl},
         )
         return resp.status_code == 200
     except Exception as e:
-        print(f"[REDIS] SET error: {e}")
+        print(f"[REDIS] SET {key} error: {e}")
         return False
 
 
-async def redis_get() -> dict | None:
-    """Read CIS payload from Upstash. Returns None on miss/error."""
+async def redis_get_key(key: str) -> dict | None:
+    """Read any JSON payload from Upstash. Returns None on miss/error."""
     if not _UPSTASH_URL:
         return None
     try:
         client = _get_redis_client()
         resp = await client.get(
-            f"{_UPSTASH_URL}/get/{_REDIS_KEY}",
+            f"{_UPSTASH_URL}/get/{key}",
             headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
         )
         if resp.status_code == 200:
@@ -73,7 +85,7 @@ async def redis_get() -> dict | None:
                 return json.loads(raw)
         return None
     except Exception as e:
-        print(f"[REDIS] GET error: {e}")
+        print(f"[REDIS] GET {key} error: {e}")
         return None
 
 

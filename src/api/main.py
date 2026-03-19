@@ -8,6 +8,7 @@ Routers:
   src/api/routers/intelligence.py — /api/v1/intelligence/*, /api/v1/vc/*
   src/api/routers/vault.py        — /api/v1/vault/*, /api/v1/portfolio/*
   src/api/routers/onchain.py      — /api/v1/onchain/*
+  src/api/routers/macro.py        — /api/v1/macro/*, /internal/macro-brief
 """
 import os, sys, json
 
@@ -25,8 +26,9 @@ from src.api.routers.cis import router as cis_router
 from src.api.routers.intelligence import router as intelligence_router
 from src.api.routers.vault import router as vault_router
 from src.api.routers.onchain import router as onchain_router
+from src.api.routers.macro import router as macro_router
 
-app = FastAPI(title="Looloomi AI API", version="0.4.0")
+app = FastAPI(title="Looloomi AI API", version="0.4.1")
 
 app.add_middleware(GZipMiddleware, minimum_size=500)  # ~60% payload reduction for agents
 app.add_middleware(
@@ -41,6 +43,7 @@ app.include_router(cis_router)
 app.include_router(intelligence_router)
 app.include_router(vault_router)
 app.include_router(onchain_router)
+app.include_router(macro_router)
 
 
 # ── Agent Discovery (A2A v0.3) ────────────────────────────────────────────────
