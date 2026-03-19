@@ -1,8 +1,19 @@
 const RAILWAY_URL = 'https://web-production-0cdf76.up.railway.app';
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Internal-Token',
+};
+
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
+
+  // Handle CORS preflight
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
 
   const targetUrl = RAILWAY_URL + url.pathname + url.search;
 
@@ -16,7 +27,7 @@ export async function onRequest(context) {
   try {
     const response = await fetch(proxyRequest);
     const newHeaders = new Headers(response.headers);
-    newHeaders.set('Access-Control-Allow-Origin', '*');
+    Object.entries(CORS_HEADERS).forEach(([k, v]) => newHeaders.set(k, v));
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,

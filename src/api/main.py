@@ -400,10 +400,11 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
     Called by cis_push.py after local engine completes scoring.
     Scores are stored in Upstash Redis (persistent across deploys/instances).
     """
-    print(f"[DEBUG] INTERNAL_TOKEN env: '{_INTERNAL_TOKEN}', header: '{x_internal_token}'")
+    print(f"[INTERNAL] Auth check — token configured: {bool(_INTERNAL_TOKEN)}, header present: {bool(x_internal_token)}")
 
-    if _INTERNAL_TOKEN and x_internal_token and x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    if _INTERNAL_TOKEN:
+        if not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+            raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
         universe  = payload.get("universe", [])
@@ -548,10 +549,10 @@ async def agent_cis_endpoint():
         try:
             result = await calculate_cis_universe()
             universe = result.get("universe", [])
-        except:
+        except Exception:
             universe = []
 
-    # Minimal format for agents
+    # Minimal format for agents — pillar keys match cis_provider.py (F/M/O/S/A)
     return {
         "v": "4.0",
         "ts": cached.get("timestamp") if cached else datetime.now().isoformat(),
@@ -559,13 +560,13 @@ async def agent_cis_endpoint():
             {
                 "s": a["symbol"],
                 "g": a.get("grade", "?"),
-                "sc": a.get("cis_score", 0),
+                "sc": a.get("score", a.get("cis_score", 0)),
                 "sg": a.get("signal", "?"),
-                "f": a.get("pillars", {}).get("Fundamental"),
-                "m": a.get("pillars", {}).get("Momentum"),
-                "r": a.get("pillars", {}).get("Risk-Adjusted"),
-                "ss": a.get("pillars", {}).get("Sensitivity"),
-                "a": a.get("pillars", {}).get("Alpha"),
+                "f": a.get("pillars", {}).get("F"),
+                "m": a.get("pillars", {}).get("M"),
+                "r": a.get("pillars", {}).get("O"),
+                "ss": a.get("pillars", {}).get("S"),
+                "a": a.get("pillars", {}).get("A"),
             }
             for a in universe
         ]
@@ -583,14 +584,20 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        try:
+            self.active_connections.remove(websocket)
+        except ValueError:
+            pass
 
     async def broadcast(self, message: dict):
+        dead = []
         for connection in self.active_connections:
             try:
                 await connection.send_json(message)
-            except:
-                pass  # Skip dead connections
+            except Exception:
+                dead.append(connection)
+        for conn in dead:
+            self.disconnect(conn)
 
 manager = ConnectionManager()
 
@@ -638,7 +645,7 @@ async def broadcast_cis_update(universe: list):
             {
                 "s": a["symbol"],
                 "g": a.get("grade", "?"),
-                "sc": a.get("cis_score", 0),
+                "sc": a.get("score", a.get("cis_score", 0)),
             }
             for a in universe
         ]
