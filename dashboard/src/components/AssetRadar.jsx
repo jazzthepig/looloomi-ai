@@ -56,12 +56,12 @@ const CIS_DATA = {};
 /* ─── Signal Calculation ─────────────────────────────────────────────── */
 const calculateSignal = (change7d, fngValue) => {
   if (change7d > 20 && fngValue > 75) {
-    return { label: "CAUTION", color: T.red, bg: "rgba(255,61,90,0.12)", border: "rgba(255,61,90,0.25)" };
+    return { label: "OVERBOUGHT", color: T.red, bg: "rgba(255,61,90,0.12)", border: "rgba(255,61,90,0.25)" };
   }
   if (change7d < -20 && fngValue < 25) {
-    return { label: "ACCUMULATE", color: T.green, bg: "rgba(0,232,122,0.12)", border: "rgba(0,232,122,0.25)" };
+    return { label: "OVERSOLD", color: T.green, bg: "rgba(0,232,122,0.12)", border: "rgba(0,232,122,0.25)" };
   }
-  return { label: "HOLD", color: T.blue, bg: "rgba(75,158,255,0.10)", border: "rgba(75,158,255,0.22)" };
+  return { label: "NEUTRAL", color: T.blue, bg: "rgba(75,158,255,0.10)", border: "rgba(75,158,255,0.22)" };
 };
 
 /* ─── Category Badge ────────────────────────────────────────────────── */

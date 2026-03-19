@@ -25,11 +25,11 @@ const GRADE_COLORS = {
 };
 
 const SIGNAL_STYLES = {
-  "STRONG OVERWEIGHT": { bg: "rgba(34,197,94,0.15)", color: "#22c55e", label: "STRONG OW" },
-  "OVERWEIGHT": { bg: "rgba(74,222,128,0.12)", color: "#4ade80", label: "OW" },
-  "NEUTRAL": { bg: "rgba(251,191,36,0.10)", color: "#fbbf24", label: "NEUTRAL" },
-  "UNDERWEIGHT": { bg: "rgba(248,113,113,0.12)", color: "#f87171", label: "UW" },
-  "AVOID": { bg: "rgba(220,38,38,0.15)", color: "#dc2626", label: "AVOID" },
+  "STRONG OVERWEIGHT": { bg: "rgba(34,197,94,0.15)",  color: "#22c55e", label: "VERY HIGH" },
+  "OVERWEIGHT":        { bg: "rgba(74,222,128,0.12)", color: "#4ade80", label: "HIGH"      },
+  "NEUTRAL":           { bg: "rgba(251,191,36,0.10)", color: "#fbbf24", label: "NEUTRAL"   },
+  "UNDERWEIGHT":       { bg: "rgba(248,113,113,0.12)",color: "#f87171", label: "LOW"       },
+  "AVOID":             { bg: "rgba(220,38,38,0.15)",  color: "#dc2626", label: "VERY LOW"  },
 };
 
 const ASSET_CLASSES = ["All", "Crypto", "L1", "L2", "DeFi", "Infrastructure", "US Equity", "US Bond", "Commodity"];
@@ -164,7 +164,7 @@ export function CISLeaderboard({ data, filter, setFilter }) {
         <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 2px" }}>
           <thead>
             <tr>
-              {["#", "Asset", "Class", "CIS", "Grade", "Signal", "Pillars", "30d", "Pctl"].map((h, i) => (
+              {["#", "Asset", "Class", "CIS", "Grade", "Rating", "Pillars", "30d", "Pctl"].map((h, i) => (
                 <th key={i} style={{ padding: "8px 10px", textAlign: i <= 1 ? "center" : "left", fontSize: 10, color: T.secondary, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${T.border}` }}>
                   {h}
                 </th>
@@ -245,7 +245,7 @@ export function CISLeaderboard({ data, filter, setFilter }) {
                             <div style={{ fontSize: 12, color: T.secondary, lineHeight: 1.8 }}>
                               <div>Cross-Asset Percentile: <strong style={{ color: T.primary }}>{asset.percentile != null ? `Top ${100 - asset.percentile}%` : "—"}</strong></div>
                               <div>CIS Grade: <strong style={{ color: GRADE_COLORS[asset.grade] }}>{asset.grade}</strong> ({asset.cis_score != null ? asset.cis_score.toFixed(1) : "—"}/100)</div>
-                              <div>Signal: <strong style={{ color: SIGNAL_STYLES[asset.signal]?.color }}>{asset.signal}</strong></div>
+                              <div>CIS Rating: <strong style={{ color: SIGNAL_STYLES[asset.signal]?.color }}>{SIGNAL_STYLES[asset.signal]?.label ?? "—"}</strong></div>
                             </div>
                           </div>
                         </div>
@@ -572,10 +572,10 @@ export default function CISWidget({ refreshKey = 0 }) {
       else newGrade = "D";
 
       let newSignal;
-      if (newGrade === "A+" || newGrade === "A") newSignal = "STRONG OVERWEIGHT";
-      else if (newGrade === "B+" || newGrade === "B") newSignal = "OVERWEIGHT";
-      else if (newGrade === "C") newSignal = "NEUTRAL";
-      else newSignal = "UNDERWEIGHT";
+      if (newGrade === "A+" || newGrade === "A") newSignal = "STRONG OVERWEIGHT";       // → VERY HIGH
+      else if (newGrade === "B+" || newGrade === "B") newSignal = "OVERWEIGHT";         // → HIGH
+      else if (newGrade === "C+" || newGrade === "C") newSignal = "NEUTRAL";            // → NEUTRAL
+      else newSignal = "UNDERWEIGHT";                                                   // → LOW
 
       return { ...asset, cis_score: newScore, grade: newGrade, signal: newSignal };
     });

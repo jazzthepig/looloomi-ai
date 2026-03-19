@@ -86,10 +86,10 @@ const PILLAR_DEFS = [
 
 // Grade definitions — percentile-based (Option A)
 const GRADE_DEFINITIONS = [
-  { grade: "A", minScore: "Top 15%", label: "Institutional Quality", desc: "Allocation signal: STRONG BUY. Meets institutional standards across all pillars. Position initiation or increase recommended.", borderColor: "#00D98A" },
-  { grade: "B", minScore: "Top 50%", label: "Investment Grade", desc: "Allocation signal: BUY. Strong fundamentals with selective risk factors. Suitable for portfolio inclusion with standard position sizing.", borderColor: "#4472FF" },
-  { grade: "C", minScore: "Top 85%", label: "Watch / Hold", desc: "Allocation signal: HOLD. Elevated risk or compressing momentum. Maintain existing positions; position sizing discipline required.", borderColor: "#F59E0B" },
-  { grade: "D", minScore: "Bottom 15%", label: "Reduce / Avoid", desc: "Allocation signal: REDUCE or AVOID. Significant structural concerns across multiple pillars. Not recommended for institutional allocation.", borderColor: "#FF2D55" },
+  { grade: "A", minScore: "Top 15%", label: "Institutional Quality", desc: "CIS rating: VERY HIGH. Meets institutional-grade standards across all five pillars. Strong composite signal supported by fundamental and momentum data.", borderColor: "#00D98A" },
+  { grade: "B", minScore: "Top 50%", label: "Investment Grade",       desc: "CIS rating: HIGH. Solid fundamentals with selective risk factors. Scores above the universe median across the majority of pillars.", borderColor: "#4472FF" },
+  { grade: "C", minScore: "Top 85%", label: "Watch List",             desc: "CIS rating: NEUTRAL. Elevated risk or compressing momentum. Pillar scores show mixed signals — monitor for directional change.", borderColor: "#F59E0B" },
+  { grade: "D", minScore: "Bottom 15%", label: "Low Score",           desc: "CIS rating: LOW. Significant structural weakness across multiple pillars. Scores in the bottom quartile of the live universe.", borderColor: "#FF2D55" },
 ];
 
 // Responsive styles
@@ -271,13 +271,13 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
     return gradeMatch && classMatch;
   });
 
-  // Percentile-based signal — computed from live universe rankings
-  // Top 20% = Overweight | Middle 60% = Hold | Bottom 20% = Reduce
+  // Percentile-based CIS rating — derived from live universe ranking
+  // Top 20% = Very High | Middle 60% = Neutral | Bottom 20% = Low
   const getPercentileSignal = (pct) => {
     if (pct == null) return null;
-    if (pct >= 80) return { label: "Overweight", color: "#00D98A", bg: "rgba(0,217,138,0.12)" };
-    if (pct >= 20) return { label: "Hold",       color: "#4472FF", bg: "rgba(68,114,255,0.10)" };
-    return               { label: "Reduce",      color: "#FF2D55", bg: "rgba(255,45,85,0.12)" };
+    if (pct >= 80) return { label: "Very High", color: "#00D98A", bg: "rgba(0,217,138,0.12)" };
+    if (pct >= 20) return { label: "Neutral",   color: "#4472FF", bg: "rgba(68,114,255,0.10)" };
+    return               { label: "Low",        color: "#FF2D55", bg: "rgba(255,45,85,0.12)" };
   };
 
   // Grade summary — includes A+/B+/C+ variants
@@ -484,7 +484,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             },
             {
               title: "Institutional Application",
-              text: "Grade ≥ B+ signals position initiation or increase. Grade C± warrants position-sizing discipline. Grade ≤ D signals reduction or exit. Cross-asset view enables rebalancing across crypto and TradFi on the same framework.",
+              text: "CIS grades provide a standardized, cross-asset scoring framework. Grade A/B reflect strong composite signals across multiple pillars. Grade C reflects mixed or deteriorating signals. Grade D/F reflect weak scores relative to the live universe. Applicable across crypto and TradFi on the same methodology.",
             },
           ].map(card => (
             <div key={card.title} style={{
