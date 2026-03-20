@@ -16,7 +16,7 @@ import src.api.store as store
 
 router = APIRouter()
 
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_API_TOKEN", "")
+_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 
 def _p(asset: dict, key: str):

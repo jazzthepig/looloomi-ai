@@ -14,7 +14,7 @@ from src.api.store import redis_set_key, redis_get_key
 
 router = APIRouter()
 
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_API_TOKEN", "")
+_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 _REDIS_KEY = "macro:brief"
 _REDIS_TTL = 43200  # 12 hours — briefs are twice daily
 
