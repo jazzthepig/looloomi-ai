@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import BottomSheet from "./ui/BottomSheet";
 import CISWidget from "./CISWidget";
+import MacroBrief from "./MacroBrief";
 import { T, FONTS } from "../tokens";
 
 const API_BASE = "/api/v1";
@@ -515,6 +516,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         {/* ══ INTELLIGENCE TAB ══════════════════════════════════════════════ */}
         {(activeTab === "Intelligence" || isSection) && (
           <div>
+            {/* Macro Brief — AI-generated market analysis */}
+            <div style={{ marginBottom: 16, width: "100%", clear: "both" }}>
+              <MacroBrief />
+            </div>
+
             {/* CIS Widget */}
             <div style={{ marginBottom: 24, width: "100%", clear: "both" }}>
               <CISWidget />
