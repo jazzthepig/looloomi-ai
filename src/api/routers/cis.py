@@ -64,7 +64,7 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                 sb_rows.append({
                     "symbol":      asset.get("symbol", ""),
                     "name":        asset.get("name", ""),
-                    "score":       asset.get("score"),
+                    "score":       asset.get("cis_score") or asset.get("score"),
                     "grade":       asset.get("grade"),
                     "signal":      asset.get("signal"),
                     "percentile":  asset.get("percentile_rank"),
