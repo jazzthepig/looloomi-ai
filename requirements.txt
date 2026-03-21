@@ -1,4 +1,4 @@
-# CometCloud Requirements - 2026-03-14
+# CometCloud Requirements - 2026-03-21
 fastapi>=0.100.0
 uvicorn>=0.23.0
 ccxt>=4.0.0
@@ -10,5 +10,6 @@ requests>=2.31.0
 python-dotenv>=1.0.0
 aiofiles>=23.0.0
 httpx>=0.25.0
+slowapi>=0.2.0
 moralis>=0.1.49
 yfinance>=0.2.0
