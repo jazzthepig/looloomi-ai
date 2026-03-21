@@ -378,7 +378,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
               <span style={{ fontSize: 13, fontWeight: 600, fontFamily: FONTS.display, color: T.primary }}>{item.asset_name}</span>
             </div>
             <div style={{ textAlign: "right" }}>
-              <span style={{ fontSize: 16, fontWeight: 700, fontFamily: FONTS.mono, color: GRADE_COLORS[item.grade] }}>{item.total_score.toFixed(1)}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, fontFamily: FONTS.mono, color: GRADE_COLORS[item.grade] }}>{(item.total_score ?? 0).toFixed(1)}</span>
             </div>
             <span style={{
               width: 24, height: 24, borderRadius: "50%", display: "flex",

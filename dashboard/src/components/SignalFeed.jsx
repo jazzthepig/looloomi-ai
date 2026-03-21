@@ -9,7 +9,7 @@ const SIGNAL_TYPES = {
   FLOW:       { label: "FLOW",       color: T.green,   bg: "rgba(0,232,122,0.08)",   border: "rgba(0,232,122,0.2)"   },
   RISK:       { label: "RISK",       color: T.red,     bg: "rgba(255,61,90,0.10)",   border: "rgba(255,61,90,0.2)"   },
   MOMENTUM:   { label: "MOMENTUM",   color: T.cyan,    bg: "rgba(0,200,224,0.10)",   border: "rgba(0,200,224,0.2)"   },
-  REGULATORY: { label: "REGULATORY", color: "#4B9EFF", bg: "rgba(75,158,255,0.10)", border: "rgba(75,158,255,0.2)"  },
+  REGULATORY: { label: "REGULATORY", color: "#FF8C42", bg: "rgba(255,140,66,0.10)",  border: "rgba(255,140,66,0.2)"  },
   CIS:        { label: "CIS",        color: "#A78BFA", bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.2)" },
 };
 

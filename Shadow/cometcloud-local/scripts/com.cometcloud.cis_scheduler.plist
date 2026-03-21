@@ -1,36 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
     "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!--
-  CometCloud CIS Scheduler — launchd agent
-  ==========================================
-  Fires cis_scheduler.py --run-once every 30 minutes.
-  Runs on login, survives reboots, logs to _logs/.
-
-  INSTALL (run once on Mac Mini, replace "minimax" with actual username):
-    cp /Volumes/CometCloudAI/cometcloud-local/scripts/com.cometcloud.cis_scheduler.plist \
-       ~/Library/LaunchAgents/
-    launchctl load ~/Library/LaunchAgents/com.cometcloud.cis_scheduler.plist
-
-  STATUS:
-    launchctl list | grep cometcloud
-
-  MANUAL TRIGGER:
-    launchctl kickstart gui/$(id -u)/com.cometcloud.cis_scheduler
-
-  STOP / UNLOAD:
-    launchctl unload ~/Library/LaunchAgents/com.cometcloud.cis_scheduler.plist
-
-  LOGS:
-    tail -f /Volumes/CometCloudAI/cometcloud-local/_logs/launchd_stdout.log
-    tail -f /Volumes/CometCloudAI/cometcloud-local/_logs/launchd_stderr.log
--->
 <plist version="1.0">
 <dict>
     <key>Label</key>
     <string>com.cometcloud.cis_scheduler</string>
 
-    <!-- Run cis_scheduler --run-once (scores all assets, saves file, pushes to Railway) -->
     <key>ProgramArguments</key>
     <array>
         <string>/Volumes/CometCloudAI/cometcloud-local/venv/bin/python</string>
@@ -39,29 +14,29 @@
         <string>--full</string>
     </array>
 
-    <!-- Env vars: reads INTERNAL_TOKEN + COINGECKO_API_KEY from ~/.zshenv values -->
-    <!-- IMPORTANT: replace values below with actual tokens from ~/.zshenv -->
     <key>EnvironmentVariables</key>
     <dict>
-        <key>HOME</key>
-        <string>/Users/minimax</string>
         <key>PATH</key>
         <string>/Volumes/CometCloudAI/cometcloud-local/venv/bin:/usr/local/bin:/usr/bin:/bin</string>
         <key>INTERNAL_TOKEN</key>
-        <string>REPLACE_WITH_INTERNAL_TOKEN</string>
+        <string>cometcloud_internal_2026</string>
         <key>COINGECKO_API_KEY</key>
-        <string>REPLACE_WITH_COINGECKO_API_KEY</string>
+        <string>CG-Rv47zv5eFuL2N9DXunbEQsrK</string>
         <key>RAILWAY_URL</key>
         <string>https://web-production-0cdf76.up.railway.app</string>
     </dict>
 
-    <!-- Fire every 30 minutes (1800 seconds) -->
-    <key>StartInterval</key>
-    <integer>1800</integer>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
 
-    <!-- Also run immediately on load -->
     <key>RunAtLoad</key>
     <true/>
+
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
 
     <key>WorkingDirectory</key>
     <string>/Volumes/CometCloudAI/cometcloud-local</string>
