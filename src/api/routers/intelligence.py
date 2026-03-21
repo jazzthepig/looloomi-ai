@@ -9,6 +9,16 @@ from data.market.data_layer import get_vc_raises
 
 router = APIRouter()
 
+# Lazy singleton — VCDealFlowTracker is expensive to instantiate per-request
+_vc_tracker = None
+
+def _get_vc_tracker():
+    global _vc_tracker
+    if _vc_tracker is None:
+        from data.vc.deal_flow import VCDealFlowTracker
+        _vc_tracker = VCDealFlowTracker()
+    return _vc_tracker
+
 
 # ── Macro Events ──────────────────────────────────────────────────────────────
 
@@ -29,8 +39,7 @@ async def get_macro_events():
 async def get_funding_rounds(limit: int = 20):
     try:
         try:
-            from data.vc.deal_flow import VCDealFlowTracker
-            tracker = VCDealFlowTracker()
+            tracker = _get_vc_tracker()
             rounds = tracker.get_recent_funding_rounds(limit)
             if rounds:
                 return {"timestamp": datetime.now().isoformat(), "data": rounds, "source": "internal"}
@@ -45,8 +54,7 @@ async def get_funding_rounds(limit: int = 20):
 @router.get("/api/v1/vc/unlocks")
 async def get_token_unlocks(days: int = 30):
     try:
-        from data.vc.deal_flow import VCDealFlowTracker
-        tracker = VCDealFlowTracker()
+        tracker = _get_vc_tracker()
         return {"timestamp": datetime.now().isoformat(), "data": tracker.get_token_unlocks(days)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -55,8 +63,7 @@ async def get_token_unlocks(days: int = 30):
 @router.get("/api/v1/vc/overlap")
 async def get_vc_overlap():
     try:
-        from data.vc.deal_flow import VCDealFlowTracker
-        tracker = VCDealFlowTracker()
+        tracker = _get_vc_tracker()
         return {"timestamp": datetime.now().isoformat(), "data": tracker.get_vc_portfolio_overlap([])}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
