@@ -9,6 +9,7 @@ Routers:
   src/api/routers/vault.py        — /api/v1/vault/*, /api/v1/portfolio/*
   src/api/routers/onchain.py      — /api/v1/onchain/*
   src/api/routers/macro.py        — /api/v1/macro/*, /internal/macro-brief
+  src/api/routers/quant.py        — /api/v1/quant/*, /internal/quant-push
 """
 import os, sys, json
 
@@ -27,6 +28,7 @@ from src.api.routers.intelligence import router as intelligence_router
 from src.api.routers.vault import router as vault_router
 from src.api.routers.onchain import router as onchain_router
 from src.api.routers.macro import router as macro_router
+from src.api.routers.quant import router as quant_router
 
 app = FastAPI(title="Looloomi AI API", version="0.4.1")
 
@@ -53,6 +55,12 @@ async def security_headers(request: Request, call_next):
     return response
 
 app.include_router(market_router)
+app.include_router(cis_router)
+app.include_router(intelligence_router)
+app.include_router(vault_router)
+app.include_router(onchain_router)
+app.include_router(macro_router)
+app.include_router(quant_router)
 app.include_router(cis_router)
 app.include_router(intelligence_router)
 app.include_router(vault_router)
