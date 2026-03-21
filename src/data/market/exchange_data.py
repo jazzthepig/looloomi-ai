@@ -1,11 +1,14 @@
 """
 Market Data Layer - Multi-source with fallbacks
 """
+import os
 import requests
 import pandas as pd
 from datetime import datetime
 from typing import List, Dict
 import time
+
+_COINGECKO_API_KEY = os.environ.get("COINGECKO_API_KEY", "")
 
 
 class ExchangeDataFetcher:
@@ -20,7 +23,7 @@ class ExchangeDataFetcher:
         self.coingecko_base = "https://api.coingecko.com/api/v3"
         self.symbol_map = {
             "BTC": "bitcoin",
-            "ETH": "ethereum", 
+            "ETH": "ethereum",
             "SOL": "solana",
             "BNB": "binancecoin",
             "AVAX": "avalanche-2",
@@ -30,6 +33,7 @@ class ExchangeDataFetcher:
             "MATIC": "matic-network",
             "LINK": "chainlink"
         }
+        self._cg_headers = {"x-cg-pro-api-key": _COINGECKO_API_KEY} if _COINGECKO_API_KEY else {}
         
     def get_multiple_tickers(self, symbols: List[str]) -> pd.DataFrame:
         """Fetch tickers using CoinGecko"""
@@ -47,12 +51,12 @@ class ExchangeDataFetcher:
                 "include_24hr_vol": "true"
             }
             
-            response = requests.get(url, params=params, timeout=10)
-            
+            response = requests.get(url, params=params, headers=self._cg_headers, timeout=10)
+
             if response.status_code == 200:
                 data = response.json()
                 tickers = []
-                
+
                 for base_symbol, coin_id in zip(base_symbols, coin_ids):
                     if coin_id in data:
                         coin_data = data[coin_id]
@@ -94,8 +98,8 @@ class ExchangeDataFetcher:
                 "days": limit
             }
             
-            response = requests.get(url, params=params, timeout=10)
-            
+            response = requests.get(url, params=params, headers=self._cg_headers, timeout=10)
+
             if response.status_code == 200:
                 data = response.json()
                 prices = data.get("prices", [])

@@ -160,25 +160,39 @@ git push origin main
 4. ONDO-style precision: thin borders, clean cards, no decorative noise
 5. Data always present — skeleton loaders only, never empty states
 
-## Current focus (as of 2026-03-17)
+## Current focus (as of 2026-03-21)
 
-**Done (Week 1):**
+**Done (Week 1 — Mar 10–16):**
 - CIS v4.0 percentile grading, VIX/SPY TradFi scoring, NaN serialization fix
 - Upstash Redis bridge (Mac Mini → Railway, persistent across deploys)
 - `Header()` binding fix, `/internal/cis-scores` auth working
 - CISLeaderboard: methodology banner, source badges, percentile grade definitions
 - Asset cleanup: MATIC→POL, remove BASE, fix NEON CoinGecko ID, remove GENIUS
 
-**Next (Week 2):**
-- Split `main.py` into FastAPI routers
-- CoinGecko Pro upgrade (remove rate limit errors)
-- Score history table (Supabase or Postgres)
-- Frontend sparklines (7d score trend per asset)
+**Done (Week 2 — Mar 17–21):**
+- Split `main.py` (624 lines → 100 lines) into 6 routers (1008 lines total)
+- Agent JSON API + WebSocket for real-time CIS push
+- Supabase score history integration (insert + read, retry logic)
+- CIS sparklines (7d trend) in CISLeaderboard + CISWidget
+- Backtest API endpoint (Binance/OKX klines, realized return by grade)
+- Signal Feed v2 — 7 concurrent sources, compliance-safe language
+- Auth hardening: CORS preflight, WebSocket leak fix, token reject-by-default
+- Macro Brief pipeline: Mac Mini → LM Studio (Qwen3 35B) → Railway → Dashboard
+- MacroBrief widget on Intelligence page (auto-refresh 10min)
+- UI/UX fixes: IntersectionObserver tab flicker, CIS list truncation (top 20 + expand),
+  empty VC Funding auto-hide, mobile/H5 responsive adaptation
+- Freqtrade prep: start script, CIS cache writer, CometCloudStrategy path update
 
-**Week 3:**
-- Supabase full setup
+**In progress / Blocked:**
+- Supabase project creation (Jazz — need URL + key → Railway env vars)
+- CoinGecko Pro upgrade (rate limit mitigation)
+- Freqtrade dry run activation (Minimax — `git pull` + run start script)
+
+**Next (Week 3 — Mar 24+):**
 - Nic demo prep — investor-facing CIS report
-- Freqtrade activation (target: ~Mar 20)
+- Freqtrade live monitoring dashboard widget
+- Score history analytics (grade migration, sector rotation signals)
+- Portfolio allocation engine v1
 
 ---
 

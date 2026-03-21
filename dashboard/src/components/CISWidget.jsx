@@ -34,6 +34,43 @@ const SIGNAL_STYLES = {
 
 const ASSET_CLASSES = ["All", "Crypto", "L1", "L2", "DeFi", "Infrastructure", "US Equity", "US Bond", "Commodity"];
 
+/* ─── Sparkline ──────────────────────────────────────────────────────── */
+
+function MiniSparkline({ scores, width = 60, height = 20 }) {
+  if (!scores || scores.length < 2) {
+    return (
+      <div style={{ width, height, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontSize: 8, color: "rgba(255,255,255,0.15)", fontFamily: "monospace" }}>—</span>
+      </div>
+    );
+  }
+  const min = Math.min(...scores);
+  const max = Math.max(...scores);
+  const range = max - min || 1;
+  const pad = 2;
+  const w = width - pad * 2;
+  const h = height - pad * 2;
+  const pts = scores.map((v, i) => {
+    const x = pad + (i / (scores.length - 1)) * w;
+    const y = pad + h - ((v - min) / range) * h;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+
+  const diff = scores[scores.length - 1] - scores[0];
+  const color = diff > 1 ? "#22c55e" : diff < -1 ? "#ef4444" : "rgba(255,255,255,0.25)";
+
+  return (
+    <svg width={width} height={height} style={{ display: "block" }}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
+      <circle
+        cx={parseFloat(pts.split(" ").at(-1).split(",")[0])}
+        cy={parseFloat(pts.split(" ").at(-1).split(",")[1])}
+        r="1.5" fill={color} opacity="0.9"
+      />
+    </svg>
+  );
+}
+
 /* ─── Helper Components ──────────────────────────────────────────────── */
 
 function PillarBar({ value, label }) {
@@ -113,13 +150,44 @@ export function CISMacroBanner({ macro }) {
 
 /* ─── CIS Leaderboard Table (simplified table — not to be confused with CISLeaderboard.jsx) ── */
 
-export function CISLeaderboardTable({ data, filter, setFilter }) {
+export function CISLeaderboardTable({ data, filter, setFilter, defaultLimit = 0 }) {
   const [expanded, setExpanded] = useState(null);
+  const [showAll, setShowAll] = useState(false);
+  const [sparklines, setSparklines] = useState({});
+  const sparkFetchedRef = React.useRef(false);
 
   const filtered = useMemo(() => {
     const items = data?.universe || [];
     return filter === "All" ? items : items.filter(a => a.asset_class === filter);
   }, [data, filter]);
+
+  // Fetch sparkline history (batch) when data changes
+  useEffect(() => { sparkFetchedRef.current = false; }, [data]);
+  useEffect(() => {
+    const symbols = (data?.universe || []).map(a => a.symbol).filter(Boolean);
+    if (!symbols.length || sparkFetchedRef.current) return;
+    sparkFetchedRef.current = true;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/cis/history/batch?symbols=${symbols.join(",")}&days=7`);
+        const json = await res.json();
+        if (json.data) {
+          const parsed = {};
+          for (const [sym, rows] of Object.entries(json.data)) {
+            if (Array.isArray(rows) && rows.length > 1) {
+              const scores = rows.map(h => h.score).filter(s => s != null);
+              if (scores.length > 1) parsed[sym] = scores;
+            }
+          }
+          setSparklines(parsed);
+        }
+      } catch { /* sparklines are non-critical */ }
+    })();
+  }, [data]);
+
+  // Apply row limit: 0 = no limit, otherwise truncate
+  const displayRows = (defaultLimit > 0 && !showAll) ? filtered.slice(0, defaultLimit) : filtered;
+  const hasMore = defaultLimit > 0 && filtered.length > defaultLimit;
 
   const macro = data?.macro || {};
 
@@ -160,11 +228,11 @@ export function CISLeaderboardTable({ data, filter, setFilter }) {
       </div>
 
       {/* Table */}
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 2px" }}>
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 2px", minWidth: 740 }}>
           <thead>
             <tr>
-              {["#", "Asset", "Class", "CIS", "Grade", "Rating", "Pillars", "30d", "Pctl"].map((h, i) => (
+              {["#", "Asset", "Class", "CIS", "Grade", "Rating", "Pillars", "7D", "30d", "Pctl"].map((h, i) => (
                 <th key={i} style={{ padding: "8px 10px", textAlign: i <= 1 ? "center" : "left", fontSize: 10, color: T.secondary, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${T.border}` }}>
                   {h}
                 </th>
@@ -172,7 +240,7 @@ export function CISLeaderboardTable({ data, filter, setFilter }) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((asset, idx) => {
+            {displayRows.map((asset, idx) => {
               const isExpanded = expanded === asset.symbol;
               const sig = SIGNAL_STYLES[asset.signal] || SIGNAL_STYLES["NEUTRAL"];
               return (
@@ -219,6 +287,9 @@ export function CISLeaderboardTable({ data, filter, setFilter }) {
                         })}
                       </div>
                     </td>
+                    <td style={{ padding: "10px 4px", width: 64 }}>
+                      <MiniSparkline scores={sparklines[asset.symbol?.toUpperCase()]} width={60} height={20} />
+                    </td>
                     <td style={{ padding: "10px 8px", fontSize: 12, fontWeight: 600, fontFamily: FONTS.mono, color: (asset.change_30d ?? 0) >= 0 ? T.green : T.red }}>
                       {asset.change_30d != null
                         ? `${asset.change_30d >= 0 ? "+" : ""}${asset.change_30d.toFixed(1)}`
@@ -230,7 +301,7 @@ export function CISLeaderboardTable({ data, filter, setFilter }) {
                   </tr>
                   {isExpanded && (
                     <tr>
-                      <td colSpan={9} style={{ padding: "0 8px 16px 44px", background: "rgba(218,165,32,0.02)" }}>
+                      <td colSpan={10} style={{ padding: "0 8px 16px 44px", background: "rgba(218,165,32,0.02)" }}>
                         <div style={{ display: "flex", gap: 24, padding: "12px 0", flexWrap: "wrap" }}>
                           <div style={{ flex: 1, minWidth: 200 }}>
                             <div style={{ fontSize: 11, color: T.gold, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Pillar Breakdown</div>
@@ -258,6 +329,24 @@ export function CISLeaderboardTable({ data, filter, setFilter }) {
           </tbody>
         </table>
       </div>
+
+      {/* Show all / Collapse toggle */}
+      {hasMore && (
+        <div style={{ padding: "12px 0", textAlign: "center" }}>
+          <button
+            onClick={() => setShowAll(!showAll)}
+            style={{
+              padding: "8px 24px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+              fontFamily: FONTS.display, cursor: "pointer", outline: "none",
+              border: `1px solid ${T.border}`, background: "rgba(255,255,255,0.02)",
+              color: T.secondary, transition: "all .15s ease",
+              letterSpacing: "0.06em",
+            }}
+          >
+            {showAll ? `Collapse to top ${defaultLimit}` : `Show all ${filtered.length} assets`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -293,8 +382,8 @@ export function CISHeatmap({ data, filter, setFilter }) {
       </div>
 
       {/* Heatmap */}
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderSpacing: "2px" }}>
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <table style={{ width: "100%", borderSpacing: "2px", minWidth: 560 }}>
           <thead>
             <tr>
               <th style={{ padding: 8, textAlign: "left", fontSize: 10, color: T.secondary, fontWeight: 600 }}>Asset</th>
@@ -490,7 +579,7 @@ function WeightAdjuster({ weights, onChange, pillarLabels }) {
 
 /* ─── Main CIS Component ───────────────────────────────────────────── */
 
-export default function CISWidget({ refreshKey = 0 }) {
+export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState("leaderboard");
@@ -678,7 +767,7 @@ export default function CISWidget({ refreshKey = 0 }) {
       {!loading && (
         <>
           {view === "leaderboard" && (
-            <CISLeaderboardTable data={processedData} filter={filter} setFilter={setFilter} />
+            <CISLeaderboardTable data={processedData} filter={filter} setFilter={setFilter} defaultLimit={defaultLimit} />
           )}
           {view === "heatmap" && (
             <CISHeatmap data={processedData} filter={filter} setFilter={setFilter} />

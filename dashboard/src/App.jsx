@@ -197,17 +197,33 @@ const SECTIONS = [
 export default function App() {
   const [activeSection, setActiveSection] = useState("market");
   const sectionRefs = useRef({});
+  const manualScrollRef = useRef(false);
 
   useEffect(() => {
+    // Track which sections are visible and by how much
+    const ratioMap = {};
+
     const observer = new IntersectionObserver(
       (entries) => {
+        // Skip observer updates during manual scroll (click-to-nav)
+        if (manualScrollRef.current) return;
+
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
+          ratioMap[entry.target.id] = entry.isIntersecting ? entry.intersectionRatio : 0;
         });
+
+        // Pick the section with the highest visible ratio
+        let best = null;
+        let bestRatio = 0;
+        for (const [id, ratio] of Object.entries(ratioMap)) {
+          if (ratio > bestRatio) {
+            bestRatio = ratio;
+            best = id;
+          }
+        }
+        if (best) setActiveSection(best);
       },
-      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+      { rootMargin: "0px 0px -40% 0px", threshold: [0, 0.1, 0.25, 0.5, 0.75] }
     );
 
     SECTIONS.forEach(({ id }) => {
@@ -219,10 +235,17 @@ export default function App() {
   }, []);
 
   const scrollToSection = (id) => {
+    // Lock the active tab immediately on click, suppress observer for 1.2s
+    setActiveSection(id);
+    manualScrollRef.current = true;
+
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
     }
+
+    // Re-enable observer after scroll finishes
+    setTimeout(() => { manualScrollRef.current = false; }, 1200);
   };
 
   return (
@@ -507,15 +530,40 @@ export default function App() {
         /* ── RESPONSIVE: Nav tabs on small screens ── */
         @media (max-width: 900px) {
           nav {
-            overflow-x: auto;
-            padding: 10px 12px;
+            flex-direction: column !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+            align-items: stretch !important;
           }
-          nav span[style*="fontFamily: FONTS.display"] {
+          nav > span {
             font-size: 16px !important;
+            text-align: center;
+          }
+          nav > div {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            white-space: nowrap;
+            justify-content: flex-start !important;
+          }
+          nav > div::-webkit-scrollbar { display: none; }
+          nav button {
+            padding: 8px 12px !important;
+            font-size: 11px !important;
+            min-width: max-content;
+            min-height: 36px;
+          }
+        }
+        @media (max-width: 480px) {
+          nav {
+            padding: 8px 8px !important;
+          }
+          nav > span {
+            font-size: 14px !important;
           }
           nav button {
-            padding: 6px 10px !important;
-            font-size: 12px !important;
+            padding: 7px 10px !important;
+            font-size: 10px !important;
           }
         }
 
@@ -523,6 +571,7 @@ export default function App() {
         @media (max-width: 768px) {
           .tbl-wrap, .table-wrap {
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
           }
         }
 
@@ -577,6 +626,33 @@ export default function App() {
           section > div > div:first-child {
             margin-top: 16px !important;
             margin-bottom: 16px !important;
+          }
+        }
+
+        /* ── RESPONSIVE: Nav height compensation ── */
+        @media (max-width: 900px) {
+          body > div > div:nth-child(3) {
+            padding-top: 88px !important;
+          }
+        }
+
+        /* ── RESPONSIVE: Touch targets ── */
+        @media (max-width: 768px) {
+          button, .filter-btn, .lm-tab, .lm-action-btn {
+            min-height: 36px;
+          }
+          .lm-row {
+            min-height: 44px;
+          }
+        }
+
+        /* ── RESPONSIVE: Cards on tiny screens ── */
+        @media (max-width: 380px) {
+          .lm-card {
+            border-radius: 6px !important;
+          }
+          section {
+            padding: 16px 8px !important;
           }
         }
 

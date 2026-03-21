@@ -76,6 +76,16 @@ const CSS = `
     .mobile-metrics { gap: 24px !important; }
     .mobile-pipeline-grid { grid-template-columns: 1fr !important; }
     .mobile-funds-scroll { flex-direction: column !important; }
+    .vc-table-header, .vc-table-row { grid-template-columns: 1.5fr 70px 80px !important; }
+    .vc-col-lead, .vc-col-date-header { display: none !important; }
+    .filter-btn { padding: 6px 10px !important; font-size: 10px !important; min-height: 32px; }
+    .lm-action-btn { min-height: 36px; padding: 8px 12px !important; }
+  }
+  @media (max-width: 480px) {
+    .vc-table-header, .vc-table-row { grid-template-columns: 1fr 60px !important; }
+    .vc-col-round, .vc-col-round-header { display: none !important; }
+    .mobile-stat-grid { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+    .mobile-howitworks-grid { grid-template-columns: 1fr !important; }
   }
 `;
 
@@ -523,7 +533,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
             {/* CIS Widget */}
             <div style={{ marginBottom: 24, width: "100%", clear: "both" }}>
-              <CISWidget />
+              <CISWidget defaultLimit={20} />
             </div>
 
             {/* Stat cards */}
@@ -732,8 +742,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               </div>
             </div>
 
-            {/* Full width — VC Funding Table */}
-            <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
+            {/* Full width — VC Funding Table (hidden when no data) */}
+            {(loading || raises.length > 0) && <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
                 {/* Update Drawer */}
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -812,7 +822,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
                 <div className="lm-card" style={{ overflow: "hidden" }}>
                   {/* Header - redesign style */}
-                  <div style={{
+                  <div className="vc-table-header" style={{
                     display: "grid", gridTemplateColumns: "1fr 80px 100px 130px 80px",
                     gap: 10, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
                     fontSize: 9, color: "rgba(255,255,255,0.26)", letterSpacing: "0.14em",
@@ -820,17 +830,17 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     background: "rgba(255,255,255,0.018)",
                   }}>
                     <span>Project</span>
-                    <span style={{ textAlign: "center" }}>Round</span>
+                    <span className="vc-col-round-header" style={{ textAlign: "center" }}>Round</span>
                     <span style={{ textAlign: "right" }}>Amount</span>
-                    <span>Lead Investor</span>
-                    <span style={{ textAlign: "right" }}>Date</span>
+                    <span className="vc-col-lead" style={{}}>Lead Investor</span>
+                    <span className="vc-col-date-header" style={{ textAlign: "right" }}>Date</span>
                   </div>
 
                   {/* Rows */}
                   <div style={{ maxHeight: 530, overflowY: "auto" }}>
                     {loading
                       ? Array(8).fill(0).map((_, i) => (
-                          <div key={i} style={{
+                          <div key={i} className="vc-table-row" style={{
                             display: "grid", gridTemplateColumns: "1fr 80px 100px 130px 80px",
                             gap: 10, padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
                             alignItems: "center",
@@ -845,7 +855,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                           const lead = r.leadInvestors?.[0] || "—";
                           const rwaTag = isRWA(r);
                           return (
-                            <div key={i} className="lm-row"
+                            <div key={i} className="lm-row vc-table-row"
                               style={{
                                 display: "grid",
                                 gridTemplateColumns: "1fr 80px 100px 130px 80px",
@@ -875,7 +885,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                               </div>
 
                               {/* Round - redesign style */}
-                              <div style={{ textAlign: "center" }}>
+                              <div className="vc-col-round" style={{ textAlign: "center" }}>
                                 <span style={{
                                   fontFamily: FONTS.display, fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
                                   padding: "3px 7px", borderRadius: 3, border: `1px solid ${T.border}`,
@@ -893,13 +903,13 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                               </div>
 
                               {/* Lead */}
-                              <div style={{ fontSize: 10, color: T.secondary, fontFamily: FONTS.body,
+                              <div className="vc-col-lead" style={{ fontSize: 10, color: T.secondary, fontFamily: FONTS.body,
                                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {lead}
                               </div>
 
                               {/* Date - redesign style */}
-                              <div style={{ textAlign: "right", fontSize: 9, color: "rgba(255,255,255,0.35)", fontFamily: FONTS.mono }}>
+                              <div className="vc-col-date-header" style={{ textAlign: "right", fontSize: 9, color: "rgba(255,255,255,0.35)", fontFamily: FONTS.mono }}>
                                 {fmt.dateRelative(r.date)}
                               </div>
                             </div>
@@ -923,7 +933,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     <span>Data refreshes every 30 minutes</span>
                   </div>
                 </div>
-            </div>
+            </div>}
 
             {/* ══ MACRO EVENTS (Full Width Vertical Timeline) ═════════════════════════════ */}
             <div style={{ marginTop: 24, marginBottom: 24 }}>
