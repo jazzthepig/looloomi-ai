@@ -7,7 +7,7 @@
  *
  * Bottom nav: PULSE | RANKINGS | SIGNALS
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { T, FONTS } from "../tokens";
 
 /* ── Design constants ─────────────────────────────────────────────────────── */
@@ -34,6 +34,53 @@ const REGIME_CONFIG = {
   STAGFLATION:  { label: "STAGFLATION",  color: "#FF8C42", bg: "rgba(255,140,66,0.08)", desc: "Stagflation regime" },
   GOLDILOCKS:   { label: "GOLDILOCKS",   color: "#C8A84B", bg: "rgba(200,168,75,0.08)", desc: "Goldilocks environment" },
 };
+
+/* Normalize regime strings from both engine formats:
+ * local_engine: "RISK_ON", "RISK_OFF", "TIGHTENING" etc.
+ * railway fallback: "Risk-On", "Risk-Off", "Neutral"          */
+function normalizeRegime(raw) {
+  if (!raw) return null;
+  const map = {
+    "risk-on": "RISK_ON", "risk on": "RISK_ON",
+    "risk-off": "RISK_OFF", "risk off": "RISK_OFF",
+    "neutral": null,
+    "tightening": "TIGHTENING",
+    "easing": "EASING",
+    "stagflation": "STAGFLATION",
+    "goldilocks": "GOLDILOCKS",
+  };
+  const key = raw.toLowerCase().trim();
+  if (raw.toUpperCase() === raw) return REGIME_CONFIG[raw] ? raw : null; // already normalized
+  return map[key] ?? null;
+}
+
+/* Unified asset field accessors — handles both engine formats */
+function assetGrade(a)  { return a.grade || a.cis_grade || "—"; }
+function assetScore(a)  { return a.cis_score ?? a.total_score; }
+function assetChange(a) { return a.change_24h ?? a.price_change_24h ?? null; }
+function assetPillars(a) {
+  // local_engine: { fundamental: 72, momentum: 68, ... }
+  if (a.pillar_scores && typeof a.pillar_scores === "object") {
+    return [
+      { key: "fundamental", label: "F · Fundamental",  val: a.pillar_scores.fundamental ?? a.pillar_scores.F },
+      { key: "momentum",    label: "M · Momentum",     val: a.pillar_scores.momentum    ?? a.pillar_scores.M },
+      { key: "onchain",     label: "O · On-Chain",     val: a.pillar_scores.onchain     ?? a.pillar_scores.O },
+      { key: "sentiment",   label: "S · Sentiment",    val: a.pillar_scores.sentiment   ?? a.pillar_scores.S },
+      { key: "alpha",       label: "A · Alpha",        val: a.pillar_scores.alpha       ?? a.pillar_scores.A },
+    ].filter(p => p.val != null);
+  }
+  // railway: flat f, m, r, s, a keys
+  if (a.f != null || a.m != null) {
+    return [
+      { key: "f", label: "F · Fundamental", val: a.f },
+      { key: "m", label: "M · Momentum",    val: a.m },
+      { key: "o", label: "O · On-Chain",    val: a.r ?? a.o },
+      { key: "s", label: "S · Sentiment",   val: a.s },
+      { key: "a", label: "A · Alpha",       val: a.a },
+    ].filter(p => p.val != null);
+  }
+  return [];
+}
 
 const ASSET_CLASS_COLOR = {
   L1:             "#00C8E0",
@@ -121,17 +168,19 @@ function pct(v) {
 /* ═══════════════════════════════════════════════════════════════════════════
    TAB 1: PULSE
    ═══════════════════════════════════════════════════════════════════════════ */
-function MobilePulse({ universe, macro, signals, sparkData, loading }) {
-  const regime = universe.find(a => a.macro_regime)?.macro_regime
-    || universe[0]?.macro_regime
-    || null;
-  const regimeCfg = REGIME_CONFIG[regime] || null;
+function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }) {
+  const regime = normalizeRegime(regimeRaw)
+    || normalizeRegime(universe.find(a => a.macro_regime)?.macro_regime);
+  const regimeCfg = regime ? REGIME_CONFIG[regime] : null;
 
   /* Top signals: A+/A/B+ grade assets with BUY or STRONG BUY */
+  const GRADE_ORDER = ["A+", "A", "B+", "B", "C+", "C", "D", "F"];
   const topSignals = [...universe]
     .sort((a, b) => {
-      const gradeOrder = ["A+", "A", "B+", "B", "C+", "C", "D", "F"];
-      return gradeOrder.indexOf(a.grade) - gradeOrder.indexOf(b.grade);
+      const ga = GRADE_ORDER.indexOf(assetGrade(a));
+      const gb = GRADE_ORDER.indexOf(assetGrade(b));
+      if (ga !== gb) return ga - gb;
+      return (assetScore(b) || 0) - (assetScore(a) || 0);
     })
     .slice(0, 6);
 
@@ -259,12 +308,13 @@ function MobilePulse({ universe, macro, signals, sparkData, loading }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
           {topSignals.map((asset, idx) => {
-            const gradeColor = GRADE_COLOR[asset.grade] || "#888";
+            const grade = assetGrade(asset);
+            const gradeColor = GRADE_COLOR[grade] || "#888";
             const sigColor = SIGNAL_COLOR[asset.signal] || T.t3;
             const classColor = ASSET_CLASS_COLOR[asset.asset_class] || T.t3;
             const spark = sparkData?.[asset.symbol] || sparkData?.[asset.asset] || null;
-            const score = asset.cis_score ?? asset.total_score;
-            const change = asset.price_change_24h ?? null;
+            const score = assetScore(asset);
+            const change = assetChange(asset);
 
             return (
               <div key={asset.symbol || asset.asset || idx} style={{
@@ -295,7 +345,7 @@ function MobilePulse({ universe, macro, signals, sparkData, loading }) {
                 </div>
 
                 {/* Grade badge */}
-                <GradeBadge grade={asset.grade} size={13} />
+                <GradeBadge grade={grade} size={13} />
 
                 {/* Name + class */}
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -479,7 +529,7 @@ function MobileRankings({ universe, loading }) {
         fontFamily: FONTS.mono, fontSize: 9, color: T.t3,
       }}>
         {["A","B","C","D"].map(g => {
-          const count = filtered.filter(a => a.grade?.startsWith(g)).length;
+          const count = filtered.filter(a => assetGrade(a)?.startsWith(g)).length;
           const color = { A: T.green, B: T.blue, C: T.amber, D: T.red }[g];
           if (!count) return null;
           return (
@@ -499,11 +549,12 @@ function MobileRankings({ universe, loading }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
           {filtered.map((asset, idx) => {
-            const score = asset.cis_score ?? asset.total_score;
-            const gradeColor = GRADE_COLOR[asset.grade] || "#888";
+            const grade = assetGrade(asset);
+            const score = assetScore(asset);
+            const gradeColor = GRADE_COLOR[grade] || "#888";
             const classColor = ASSET_CLASS_COLOR[asset.asset_class] || T.t3;
             const isOpen = expanded === (asset.symbol || asset.asset);
-            const pillars = asset.pillars || {};
+            const pillars = assetPillars(asset);
 
             return (
               <div key={asset.symbol || asset.asset || idx}>
@@ -528,7 +579,7 @@ function MobileRankings({ universe, loading }) {
                   </div>
 
                   {/* Grade */}
-                  <GradeBadge grade={asset.grade} size={12} />
+                  <GradeBadge grade={grade} size={12} />
 
                   {/* Name + class */}
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -601,17 +652,9 @@ function MobileRankings({ universe, loading }) {
                     </div>
 
                     {/* Pillar bars */}
-                    {Object.keys(pillars).length > 0 && (
+                    {pillars.length > 0 && (
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {[
-                          { key: "fundamental", label: "F · Fundamental" },
-                          { key: "momentum",    label: "M · Momentum" },
-                          { key: "onchain",     label: "O · On-Chain" },
-                          { key: "sentiment",   label: "S · Sentiment" },
-                          { key: "alpha",       label: "A · Alpha" },
-                        ].map(({ key, label }) => {
-                          const val = pillars[key];
-                          if (val == null) return null;
+                        {pillars.map(({ key, label, val }) => {
                           const pctW = Math.max(0, Math.min(100, val));
                           const barColor = val >= 70 ? T.green : val >= 50 ? T.blue : T.amber;
                           return (
@@ -649,16 +692,16 @@ function MobileRankings({ universe, loading }) {
                     )}
 
                     {/* Percentile + rank */}
-                    {(asset.global_rank || asset.percentile_rank != null) && (
+                    {(asset.global_rank || asset.class_rank || asset.percentile != null || asset.cross_asset_percentile != null) && (
                       <div style={{
                         display: "flex", gap: 16, marginTop: 12,
                         fontFamily: FONTS.mono, fontSize: 9, color: T.t3,
                       }}>
-                        {asset.global_rank && (
-                          <span>Rank #{asset.global_rank}</span>
+                        {(asset.global_rank || asset.class_rank) && (
+                          <span>Rank #{asset.global_rank ?? asset.class_rank}</span>
                         )}
-                        {asset.percentile_rank != null && (
-                          <span>Top {(100 - asset.percentile_rank).toFixed(0)}%</span>
+                        {(asset.percentile != null || asset.cross_asset_percentile != null) && (
+                          <span>Top {Math.round(100 - (asset.cross_asset_percentile ?? asset.percentile))}%</span>
                         )}
                       </div>
                     )}
@@ -789,6 +832,7 @@ function MobileSignals({ signals, loading }) {
 export default function MobileApp() {
   const [tab, setTab] = useState("pulse");
   const [universe, setUniverse] = useState([]);
+  const [regimeRaw, setRegimeRaw] = useState(null);  // top-level regime from API
   const [macro, setMacro] = useState(null);
   const [signals, setSignals] = useState([]);
   const [sparkData, setSparkData] = useState({});
@@ -808,8 +852,11 @@ export default function MobileApp() {
 
         if (cisRes.status === "fulfilled" && cisRes.value.ok) {
           const json = await cisRes.value.json();
-          const assets = json.universe || json.assets || json || [];
+          const assets = json.universe || json.assets || (Array.isArray(json) ? json : []);
           setUniverse(assets);
+          // Capture top-level regime (local engine: macro_regime, railway: regime)
+          const topRegime = json.macro_regime || json.regime || null;
+          if (topRegime) setRegimeRaw(topRegime);
 
           // Fetch sparklines for top 6 assets
           const top6 = [...assets]
@@ -922,12 +969,12 @@ export default function MobileApp() {
         flex: 1,
         overflowY: "auto",
         paddingTop: 52,  /* header height */
-        paddingBottom: 68, /* bottom nav height */
+        paddingBottom: "calc(68px + env(safe-area-inset-bottom, 0px))",
         position: "relative",
         zIndex: 1,
         WebkitOverflowScrolling: "touch",
       }}>
-        {tab === "pulse"    && <MobilePulse    universe={universe} macro={macro} signals={signals} sparkData={sparkData} loading={loading} />}
+        {tab === "pulse"    && <MobilePulse    universe={universe} macro={macro} signals={signals} sparkData={sparkData} loading={loading} regimeRaw={regimeRaw} />}
         {tab === "rankings" && <MobileRankings universe={universe} loading={loading} />}
         {tab === "signals"  && <MobileSignals  signals={signals} loading={loading} />}
       </div>
