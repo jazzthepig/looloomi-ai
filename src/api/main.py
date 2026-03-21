@@ -89,6 +89,10 @@ if os.path.exists(dashboard_path):
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
+        # API/internal/ws paths that don't match any router → 404 JSON (not SPA fallback)
+        _api_prefixes = ("api/", "internal/", "ws/", ".env", "config", "secrets", "admin", ".git")
+        if any(full_path.startswith(p) for p in _api_prefixes):
+            return JSONResponse(status_code=404, content={"detail": "Not found"})
         file_path = os.path.join(dashboard_path, full_path)
         if os.path.exists(file_path) and os.path.isfile(file_path):
             return FileResponse(file_path)
