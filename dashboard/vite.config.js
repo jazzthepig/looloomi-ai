@@ -18,7 +18,8 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         vision: resolve(__dirname, 'vision.html'),
         market: resolve(__dirname, 'market.html'),
-        app: resolve(__dirname, 'app.html')
+        app: resolve(__dirname, 'app.html'),
+        quant: resolve(__dirname, 'quant.html'),
       }
     }
   },
