@@ -39,19 +39,17 @@ def write_cache(data: dict):
     """Write CIS scores to cache file for Freqtrade."""
     CIS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Scheduler writes "scores" — normalize to "universe" for write_cache compat
+    # Scheduler writes "scores" — normalize to "universe" list for CometCloudStrategy compat
     scores_list = data.get("scores", [])
 
-    # Transform to the format CometCloudStrategy expects
-    # { symbol: { cis_score, grade, signal, ... } }
-    cache = {}
+    # Transform to the format CometCloudStrategy expects (list of assets)
+    universe = []
     for asset in scores_list:
         sym = asset.get("asset", asset.get("symbol", "")).upper()
         if not sym:
             continue
-        # Handle both "score" and "cis_score" keys
         raw_score = asset.get("cis_score") or asset.get("score", 0)
-        cache[sym] = {
+        universe.append({
             "symbol": sym,
             "name": asset.get("asset_name", asset.get("name", sym)),
             "cis_score": raw_score,
@@ -61,17 +59,25 @@ def write_cache(data: dict):
             "asset_class": asset.get("asset_class", ""),
             "pillars": asset.get("pillars", {}),
             "updated": data.get("timestamp", ""),
-        }
+        })
 
     payload = {
-        "scores": cache,
-        "count": len(cache),
+        "universe": universe,
+        "count": len(universe),
         "timestamp": data.get("timestamp", ""),
         "source": data.get("source", "local_engine"),
     }
 
+    # Write to Freqtrade CIS cache (CometCloudStrategy reads from here)
     CIS_CACHE_FILE.write_text(json.dumps(payload, indent=2))
-    print(f"[CIS-CACHE] Wrote {len(cache)} scores to {CIS_CACHE_FILE}")
+    print(f"[CIS-CACHE] Wrote {len(universe)} scores to {CIS_CACHE_FILE}")
+
+    # Also write to backend path (legacy CometCloudStrategy expected path)
+    backend_cache_dir = Path("/Volumes/CometCloudAI/backend/data/cis_cache")
+    backend_cache_dir.mkdir(parents=True, exist_ok=True)
+    backend_cache_file = backend_cache_dir / "cis_scores.json"
+    backend_cache_file.write_text(json.dumps(payload, indent=2))
+    print(f"[CIS-CACHE] Wrote {len(universe)} scores to {backend_cache_file}")
     return True
 
 
