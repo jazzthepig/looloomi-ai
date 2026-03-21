@@ -15,7 +15,7 @@ import os, sys, json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -31,12 +31,26 @@ from src.api.routers.macro import router as macro_router
 app = FastAPI(title="Looloomi AI API", version="0.4.1")
 
 app.add_middleware(GZipMiddleware, minimum_size=500)  # ~60% payload reduction for agents
+_frontend_origins = os.environ.get(
+    "FRONTEND_ORIGINS",
+    "https://looloomi.ai,https://looloomi.com,http://localhost:5173,http://localhost:8000"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=_frontend_origins,
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+# Security headers — applied to every response
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 app.include_router(market_router)
 app.include_router(cis_router)

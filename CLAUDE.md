@@ -108,7 +108,7 @@ Railway (cis_provider.py) ──────────────────
 ```
 
 - Redis key: `cis:local_scores`
-- Internal auth: `X-Internal-Token` header (Railway env var `INTERNAL_API_TOKEN`)
+- Internal auth: `X-Internal-Token` header (Railway env var `INTERNAL_TOKEN`)
 - Frontend badge: "CIS PRO · LOCAL ENGINE" (green) when Mac Mini scores served,
   "CIS MARKET · ESTIMATED" (amber) when Railway fallback
 
@@ -129,7 +129,7 @@ Railway (cis_provider.py) ──────────────────
 |-----|---------|
 | `UPSTASH_REDIS_REST_URL` | `https://upward-thrush-73783.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash auth token |
-| `INTERNAL_API_TOKEN` | Guards `/internal/cis-scores` endpoint |
+| `INTERNAL_TOKEN` | Guards `/internal/cis-scores` endpoint |
 | `COINGECKO_API_KEY` | Optional Pro key for higher rate limits |
 
 ## How to work with Jazz

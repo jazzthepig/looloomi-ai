@@ -77,6 +77,7 @@ export default function MacroBrief() {
     );
   }
 
+  // brief is plain text — NEVER use dangerouslySetInnerHTML (XSS prevention)
   const briefText = data.brief;
   const isLong = briefText.length > 600;
   const displayText = expanded || !isLong ? briefText : briefText.slice(0, 600) + "…";

@@ -4,10 +4,12 @@ Endpoints: /api/v1/intelligence/*, /api/v1/vc/*
 """
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
+import logging
 
 from data.market.data_layer import get_vc_raises
 
 router = APIRouter()
+_logger = logging.getLogger(__name__)
 
 # Lazy singleton — VCDealFlowTracker is expensive to instantiate per-request
 _vc_tracker = None
@@ -48,7 +50,8 @@ async def get_funding_rounds(limit: int = 20):
         raises = await get_vc_raises(limit)
         return {"timestamp": datetime.now().isoformat(), "data": raises, "source": "defillama"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        _logger.error(f"Error in {__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/api/v1/vc/unlocks")
@@ -57,7 +60,8 @@ async def get_token_unlocks(days: int = 30):
         tracker = _get_vc_tracker()
         return {"timestamp": datetime.now().isoformat(), "data": tracker.get_token_unlocks(days)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        _logger.error(f"Error in {__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/api/v1/vc/overlap")
@@ -66,4 +70,5 @@ async def get_vc_overlap():
         tracker = _get_vc_tracker()
         return {"timestamp": datetime.now().isoformat(), "data": tracker.get_vc_portfolio_overlap([])}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        _logger.error(f"Error in {__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")

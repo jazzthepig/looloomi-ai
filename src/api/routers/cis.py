@@ -2,7 +2,7 @@
 CIS router — scoring, history, backtest, agent API, WebSocket, internal push
 Endpoints: /api/v1/cis/*, /api/v1/agent/cis, /ws/cis, /internal/cis-scores
 """
-import os, json as _json, time, asyncio
+import os, json as _json, time, asyncio, re
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Header, WebSocket, WebSocketDisconnect
@@ -151,6 +151,9 @@ async def get_cis_history_batch(symbols: str, days: int = 7):
     Batch CIS history — single request for all symbols.
     Eliminates N+1 sparkline fetches. Returns map of symbol → history array.
     """
+    _SYMBOL_RE = re.compile(r"^[A-Z0-9]{2,12}(,[A-Z0-9]{2,12})*$")
+    if not _SYMBOL_RE.match(symbols.upper()):
+        return {"status": "error", "message": "Invalid symbol format", "data": {}}
     symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()][:60]
     if not symbol_list:
         return {"status": "error", "message": "No symbols provided", "data": {}}
@@ -263,8 +266,22 @@ async def agent_cis_endpoint():
 async def websocket_cis(websocket: WebSocket):
     """
     Real-time CIS score updates. Sends current state immediately on connect.
-    Supports ping/pong keepalive.
+    Supports ping/pong keepalive. Requires auth via first message: "auth:<INTERNAL_TOKEN>"
     """
+    await websocket.accept()
+    # Auth via first message — must contain valid token
+    try:
+        msg = await asyncio.wait_for(websocket.receive_text(), timeout=10)
+        if msg != f"auth:{_INTERNAL_TOKEN}":
+            await websocket.close(code=4001, reason="Unauthorized")
+            return
+    except asyncio.TimeoutError:
+        await websocket.close(code=4001, reason="Auth timeout")
+        return
+    except Exception:
+        await websocket.close(code=4001, reason="Auth error")
+        return
+
     await ws_manager.connect(websocket)
 
     if store.last_cis_broadcast:

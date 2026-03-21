@@ -8,6 +8,18 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
+import logging
+import re
+
+_logger = logging.getLogger(__name__)
+
+# Asset validation: alphanumeric, 2-12 chars, comma-separated
+_ASSET_RE = re.compile(r"^[A-Z0-9]{2,12}(,[A-Z0-9]{2,12})*$")
+
+def _validate_assets(assets: str) -> list[str]:
+    if not _ASSET_RE.match(assets.upper()):
+        raise HTTPException(status_code=400, detail="Invalid asset format")
+    return [s.strip().upper() for s in assets.split(",")]
 
 router = APIRouter()
 
@@ -116,12 +128,13 @@ async def optimize_portfolio(request: PortfolioRequest):
         result = await asyncio.to_thread(_run)
         return {"timestamp": datetime.now().isoformat(), "result": result}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        _logger.error(f"Error in {__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/api/v1/portfolio/stats")
 async def get_portfolio_stats(assets: str = "BTC,ETH,SOL"):
-    asset_list = [s.strip() for s in assets.split(",")]
+    asset_list = _validate_assets(assets)
 
     def _run():
         from analytics.portfolio.optimizer import CryptoPortfolioOptimizer
@@ -161,4 +174,5 @@ async def get_portfolio_stats(assets: str = "BTC,ETH,SOL"):
 
         return {"data": stats}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        _logger.error(f"Error in {__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
