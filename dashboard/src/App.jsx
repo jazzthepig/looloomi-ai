@@ -4,7 +4,20 @@ import IntelligencePage from "./components/IntelligencePage";
 import CISLeaderboard from "./components/CISLeaderboard";
 import VaultPage from "./components/VaultPage";
 import ProtocolPage from "./components/ProtocolPage";
+import MobileApp from "./components/MobileApp";
 import { T, FONTS } from "./tokens";
+
+/* ── Mobile detection ─────────────────────────────────────────────────────── */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
 
 /* ── Cross-Asset Class Colors (mirrors CISLeaderboard) ─────────────────── */
 const CA_COLORS = {
@@ -194,7 +207,7 @@ const SECTIONS = [
   { id: "quantgp", label: "Quant GP" },
 ];
 
-export default function App() {
+function DesktopApp() {
   const [activeSection, setActiveSection] = useState("market");
   const sectionRefs = useRef({});
   const manualScrollRef = useRef(false);
@@ -1062,4 +1075,10 @@ function QuantGPContent() {
       </div>
     </div>
   );
+}
+
+/* ── App: mobile/desktop router ─────────────────────────────────────────── */
+export default function App() {
+  const isMobile = useIsMobile();
+  return isMobile ? <MobileApp /> : <DesktopApp />;
 }
