@@ -81,16 +81,16 @@ const ProtocolDetail = ({ protocol }) => {
       {/* Signal + Risk + Weight row */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
         <span style={{
-          fontFamily: FONTS.display, fontSize: 10, fontWeight: 700,
-          letterSpacing: "0.1em", padding: "4px 10px", borderRadius: 4,
+          fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+          letterSpacing: "0.08em", padding: "4px 12px", borderRadius: 4,
           background: sig.bg, color: sig.color, border: `1px solid ${sig.border}`,
         }}>
           {p.signal}
         </span>
         {p.risk_tier && (
           <span style={{
-            fontFamily: FONTS.display, fontSize: 9, fontWeight: 600,
-            letterSpacing: "0.08em", padding: "3px 8px", borderRadius: 4,
+            fontFamily: FONTS.display, fontSize: 10, fontWeight: 600,
+            letterSpacing: "0.07em", padding: "3px 9px", borderRadius: 4,
             background: RISK_COLORS[p.risk_tier]?.bg, color: RISK_COLORS[p.risk_tier]?.color,
             border: `1px solid ${RISK_COLORS[p.risk_tier]?.color}30`,
           }}>
@@ -146,7 +146,7 @@ const ProtocolDetail = ({ protocol }) => {
 
       {/* Description */}
       <div style={{
-        marginTop: 12, fontSize: 11, color: T.t2,
+        marginTop: 12, fontSize: 12, color: T.t2,
         fontFamily: FONTS.body, lineHeight: 1.6,
       }}>
         {p.description}
@@ -205,24 +205,24 @@ export default function ProtocolIntelligence() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{
-            fontFamily: FONTS.display, fontSize: 13, fontWeight: 700,
+            fontFamily: FONTS.display, fontSize: 15, fontWeight: 700,
             color: T.t1, letterSpacing: "0.04em",
           }}>
             Protocol Intelligence
           </span>
           <span style={{
-            fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700,
-            padding: "2px 7px", borderRadius: 3, letterSpacing: "0.1em",
+            fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700,
+            padding: "2px 8px", borderRadius: 3, letterSpacing: "0.1em",
             background: "rgba(0,232,122,0.08)", color: T.green,
             border: "1px solid rgba(0,232,122,0.2)",
           }}>CIS SCORED</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 10, fontFamily: FONTS.mono, color: T.t3 }}>
+          <span style={{ fontSize: 11, fontFamily: FONTS.mono, color: T.t3 }}>
             {protocols.length} protocols · {totalTvl}
           </span>
           <span style={{
-            fontFamily: FONTS.mono, fontSize: 8, color: T.green, padding: "2px 6px",
+            fontFamily: FONTS.mono, fontSize: 9, color: T.green, padding: "2px 7px",
             borderRadius: 3, background: "rgba(0,232,122,0.06)", border: "1px solid rgba(0,232,122,0.15)",
           }}>LIVE</span>
         </div>
@@ -235,8 +235,8 @@ export default function ProtocolIntelligence() {
             const active = activeCategory === cat;
             return (
               <button key={cat} onClick={() => setActiveCategory(cat)} style={{
-                fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
-                letterSpacing: "0.06em", padding: "4px 10px", borderRadius: 4,
+                fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+                letterSpacing: "0.06em", padding: "5px 12px", borderRadius: 4,
                 cursor: "pointer", transition: "all 0.15s", border: "none",
                 background: active ? "rgba(75,158,255,0.10)" : "transparent",
                 color: active ? T.blue : T.t3,
@@ -254,7 +254,7 @@ export default function ProtocolIntelligence() {
             { key: "change_7d", label: "7D Flow" },
           ].map(s => (
             <button key={s.key} onClick={() => setSortBy(s.key)} style={{
-              fontFamily: FONTS.mono, fontSize: 8, padding: "3px 8px", borderRadius: 3,
+              fontFamily: FONTS.mono, fontSize: 10, padding: "4px 10px", borderRadius: 3,
               cursor: "pointer", border: "none",
               background: sortBy === s.key ? "rgba(255,255,255,0.06)" : "transparent",
               color: sortBy === s.key ? T.t1 : T.t3,
@@ -326,42 +326,42 @@ export default function ProtocolIntelligence() {
                   onMouseLeave={(e) => { if (!isExpanded_) e.currentTarget.style.background = isPick ? "rgba(0,232,122,0.015)" : "transparent"; }}
                 >
                   {/* Rank */}
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3, fontWeight: 600 }}>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.t3, fontWeight: 600 }}>
                     {p.rank}
                   </span>
 
                   {/* Protocol name + category */}
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 700, color: T.t1 }}>
+                      <span style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 700, color: T.t1 }}>
                         {p.name}
                       </span>
                       {isPick && (
                         <span style={{
-                          fontSize: 7, fontFamily: FONTS.mono, fontWeight: 700,
-                          padding: "1px 5px", borderRadius: 2, letterSpacing: "0.1em",
+                          fontSize: 8, fontFamily: FONTS.mono, fontWeight: 700,
+                          padding: "1px 6px", borderRadius: 2, letterSpacing: "0.1em",
                           background: "rgba(0,232,122,0.12)", color: T.green,
                           border: "1px solid rgba(0,232,122,0.25)",
                         }}>AI PICK</span>
                       )}
                     </div>
-                    <div style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.body, marginTop: 2 }}>
+                    <div style={{ fontSize: 10, color: T.t3, fontFamily: FONTS.body, marginTop: 2 }}>
                       {p.category} · {p.chain}
                     </div>
                   </div>
 
                   {/* TVL + direction */}
                   <div style={{ textAlign: "right" }}>
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 500, color: T.t1 }}>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 500, color: T.t1 }}>
                       {p.tvl_formatted || "—"}
                     </span>
-                    <span style={{ fontSize: 8, color: dirColor, marginLeft: 4 }}>{dirIcon}</span>
+                    <span style={{ fontSize: 9, color: dirColor, marginLeft: 4 }}>{dirIcon}</span>
                   </div>
 
                   {/* 7D flow */}
                   <div style={{ textAlign: "right" }}>
                     <span style={{
-                      fontFamily: FONTS.mono, fontSize: 11,
+                      fontFamily: FONTS.mono, fontSize: 12,
                       color: (p.tvl_change_7d || 0) > 0 ? T.green : (p.tvl_change_7d || 0) < 0 ? T.red : T.t3,
                     }}>
                       {(p.tvl_change_7d || 0) > 0 ? "+" : ""}{(p.tvl_change_7d || 0).toFixed(1)}%
@@ -371,12 +371,12 @@ export default function ProtocolIntelligence() {
                   {/* Grade */}
                   <div style={{ textAlign: "center" }}>
                     <span style={{
-                      fontFamily: FONTS.mono, fontSize: 11, fontWeight: 800,
+                      fontFamily: FONTS.mono, fontSize: 13, fontWeight: 800,
                       color: gradeColor,
                     }}>
                       {p.grade}
                     </span>
-                    <div style={{ fontSize: 8, color: T.t3, fontFamily: FONTS.mono, marginTop: 1 }}>
+                    <div style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.mono, marginTop: 1 }}>
                       {p.cis_score?.toFixed(0)}
                     </div>
                   </div>
@@ -384,8 +384,8 @@ export default function ProtocolIntelligence() {
                   {/* Signal */}
                   <div style={{ textAlign: "center" }}>
                     <span style={{
-                      fontFamily: FONTS.display, fontSize: 7, fontWeight: 700,
-                      letterSpacing: "0.06em", padding: "2px 5px", borderRadius: 3,
+                      fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
+                      letterSpacing: "0.05em", padding: "3px 6px", borderRadius: 3,
                       background: sigCfg.bg, color: sigCfg.color,
                       border: `1px solid ${sigCfg.border}`,
                     }}>
@@ -396,7 +396,7 @@ export default function ProtocolIntelligence() {
                   {/* Risk */}
                   <div style={{ textAlign: "center" }}>
                     <span style={{
-                      fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600,
+                      fontFamily: FONTS.mono, fontSize: 10, fontWeight: 600,
                       color: riskCfg.color,
                     }}>
                       {p.risk_tier}
