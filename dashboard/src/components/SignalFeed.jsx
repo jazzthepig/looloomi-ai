@@ -348,6 +348,7 @@ const SkeletonRow = () => (
 /* ─── Filter Bar ─────────────────────────────────────────────────────── */
 const FilterBar = ({ activeType, onChange }) => (
   <div style={{
+    flexShrink: 0,
     display: "flex", gap: 4, padding: "8px 16px",
     borderBottom: `1px solid ${T.border}`,
     overflowX: "auto", background: "rgba(255,255,255,0.008)",
@@ -430,13 +431,17 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
     <div className="signal-panel" style={{
       border: `1px solid ${T.border}`,
       borderRadius: 12,
-      overflow: "hidden",
       background: T.surface,
       position: "sticky",
       top: 20,
+      maxHeight: "calc(100vh - 40px)",
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden",
     }}>
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div style={{
+        flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "13px 16px", borderBottom: `1px solid ${T.border}`,
         background: "rgba(255,255,255,0.018)",
@@ -487,9 +492,9 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
 
       {/* ── Signal List ────────────────────────────────────────────────── */}
       <div style={{
-        maxHeight: "calc(100vh - 180px)",
+        flex: 1,
         overflowY: "auto",
-        minHeight: 320,
+        minHeight: 0,
         scrollbarWidth: "thin",
         scrollbarColor: `${T.border} transparent`,
       }}>
@@ -532,6 +537,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
 
       {/* ── Legend / Footer ─────────────────────────────────────────────── */}
       <div style={{
+        flexShrink: 0,
         display: "flex", gap: 8, padding: "10px 16px",
         borderTop: `1px solid ${T.border}`,
         flexWrap: "wrap", background: "rgba(255,255,255,0.01)",
