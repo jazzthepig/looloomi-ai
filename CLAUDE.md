@@ -160,7 +160,7 @@ git push origin main
 4. ONDO-style precision: thin borders, clean cards, no decorative noise
 5. Data always present — skeleton loaders only, never empty states
 
-## Current focus (as of 2026-03-21)
+## Current focus (as of 2026-03-23)
 
 **Done (Week 1 — Mar 10–16):**
 - CIS v4.0 percentile grading, VIX/SPY TradFi scoring, NaN serialization fix
@@ -183,15 +183,43 @@ git push origin main
   empty VC Funding auto-hide, mobile/H5 responsive adaptation
 - Freqtrade prep: start script, CIS cache writer, CometCloudStrategy path update
 
+**Done (Week 3 — Mar 22–23):**
+- Redis L2 cache layer: `_redis_get`/`_redis_set` in `data_layer.py` (no `store.py` dep)
+  - `get_defi_protocols_curated`: 1800s Redis (was 300s in-mem)
+  - `get_defi_overview`: 300s Redis + new fields (defi_change_24h, l2_tvl, rwa_tvl)
+  - `get_top_yields`: 600s Redis
+  - `get_fear_greed`: 3600s Redis
+- MacroPulse backend proxy: `/api/v1/market/macro-pulse` — parallel CG global + FNG + BTC
+  price, 300s Redis. MacroPulse.jsx now single backend call (was 3 browser API calls)
+- AssetRadar CG Pro proxy: `/api/v1/market/coingecko-markets` — no more browser rate limits
+- Protocol tab: replaced ProtocolPage (mock data) with ProtocolIntelligence (CIS-scored,
+  live DeFiLlama TVL). ProtocolPage.jsx dead code, no longer mounted
+- ProtocolIntelligence font scale fix: title 15px, filters 11px, protocol name 13px,
+  signal badge 9px, risk 10px. Consistent with platform typography
+- IntelligencePage sectorData: removed stale Mar 2026 hardcoded fallbacks ($95.7B etc.),
+  wired to live `defi_change_24h` / `l2_tvl` / `rwa_tvl` from `get_defi_overview` v2
+- Signal Feed: strict HORIZON_STYLES match — unknown time_horizon no longer renders badges
+- `strategy.html` — standalone investor demo page (Vite multi-entry):
+  - Hero (4 key metrics: 40 assets / 3 channels / $30M / 0% fee)
+  - Live Market Intelligence (regime, BTC dom, FNG, MCap — from macro-pulse API)
+  - CIS Engine showcase (5 pillars + top 10 live leaderboard from CIS API)
+  - Three Investment Channels (Trading Agent / Protocol Yield / Fund of Funds)
+  - How It Works (6-step architecture flow)
+  - Risk & Structure (6 cards: regulatory, tech, fees, on-chain, risk, transparency)
+  - CTA → Open Platform / Contact
+- vision.html nav: added "Strategy" link → strategy.html
+- `PROJECT_STATUS.md` — comprehensive real-state audit (能跑的 / 有问题的 / 还没做的)
+
 **In progress / Blocked:**
 - Supabase project creation (Jazz — need URL + key → Railway env vars)
-- CoinGecko Pro upgrade (rate limit mitigation)
+- CoinGecko Pro key confirmation (Jazz — verify COINGECKO_API_KEY in Railway env)
 - Freqtrade dry run activation (Minimax — `git pull` + run start script)
 
-**Next (Week 3 — Mar 24+):**
-- Nic demo prep — investor-facing CIS report
-- Freqtrade live monitoring dashboard widget
-- Score history analytics (grade migration, sector rotation signals)
+**Next (Week 3–4):**
+- User auth + wallet connect (Supabase Auth + Solana wallet adapter — ~3-4 days)
+- Nic demo walkthrough (strategy.html is ready, need to review + polish with Jazz)
+- Freqtrade dry run → trading agent P&L data → wire into strategy page
+- Score history analytics (grade migration, sector rotation)
 - Portfolio allocation engine v1
 
 ---

@@ -214,30 +214,31 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         const data = await res.json();
         console.log("Defi overview:", data);
 
-        // Map API data to sector format - use fallback with API values if available
+        // Map API data to sector format — live fields from get_defi_overview v2
+        const fmtB = (v) => v ? `$${Math.round(v / 1e9)}B` : "—";
         const mapped = [
-          { name: "DeFi", change: data.defi_change_24h ?? -1.8, tvl: data.total_tvl ? `$${Math.round(data.total_tvl/1e9)}B` : "TVL $95.7B" },
-          { name: "L2", change: data.l2_change_24h ?? 0.5, tvl: data.l2_tvl ? `$${Math.round(data.l2_tvl/1e9)}B` : "TVL $9.8B" },
-          { name: "L1", change: 0.3, tvl: "Mkt $1.4T" },
-          { name: "Staking", change: 1.1, tvl: "TVL $42B" },
-          { name: "RWA", change: 2.4, tvl: "TVL $18.2B" },
-          { name: "Oracle", change: 1.9, tvl: "Feeds 940" },
-          { name: "GameFi", change: -5.2, tvl: "TVL $1.1B" },
-          { name: "CEX", change: -0.9, tvl: "Vol $62B" },
+          { name: "DeFi", change: data.defi_change_24h ?? 0, tvl: fmtB(data.total_tvl) },
+          { name: "L2", change: data.l2_change_24h ?? 0, tvl: fmtB(data.l2_tvl) },
+          { name: "RWA", change: data.rwa_change_24h ?? 0, tvl: fmtB(data.rwa_tvl) },
+          { name: "L1", change: 0, tvl: "—" },
+          { name: "Staking", change: 0, tvl: "—" },
+          { name: "Oracle", change: 0, tvl: "—" },
+          { name: "GameFi", change: 0, tvl: "—" },
+          { name: "CEX", change: 0, tvl: "—" },
         ];
         setSectorData(mapped);
       } catch (e) {
         console.error("Heatmap fetch error:", e);
-        // Fallback static data
+        // Fallback — show sectors with no data rather than stale numbers
         setSectorData([
-          { name: "RWA", change: 2.4, tvl: "TVL $18.2B" },
-          { name: "DeFi", change: -1.8, tvl: "TVL $95.7B" },
-          { name: "L1", change: 0.3, tvl: "Mkt $1.4T" },
-          { name: "Oracle", change: 1.9, tvl: "Feeds 940" },
-          { name: "GameFi", change: -5.2, tvl: "TVL $1.1B" },
-          { name: "Staking", change: 1.1, tvl: "TVL $42B" },
-          { name: "L2", change: 0.5, tvl: "TVL $9.8B" },
-          { name: "CEX", change: -0.9, tvl: "Vol $62B" },
+          { name: "DeFi", change: 0, tvl: "—" },
+          { name: "L2", change: 0, tvl: "—" },
+          { name: "RWA", change: 0, tvl: "—" },
+          { name: "L1", change: 0, tvl: "—" },
+          { name: "Staking", change: 0, tvl: "—" },
+          { name: "Oracle", change: 0, tvl: "—" },
+          { name: "GameFi", change: 0, tvl: "—" },
+          { name: "CEX", change: 0, tvl: "—" },
         ]);
       } finally {
         setHeatmapLoading(false);
