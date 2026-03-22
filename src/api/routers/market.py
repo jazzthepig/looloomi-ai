@@ -21,7 +21,7 @@ from data.market.data_layer import (
     get_stablecoin_overview, get_top_yields, get_vc_raises,
     get_fear_greed, get_eth_gas, calculate_mmi,
     get_cg_global, get_cg_trending, get_gecko_terminal_pools, get_cg_derivatives,
-    get_cg_markets, get_defi_protocols_curated,
+    get_cg_markets, get_defi_protocols_curated, get_macro_pulse,
 )
 from src.api.store import redis_get
 
@@ -68,6 +68,17 @@ async def get_coingecko_markets(ids: str = ""):
     id_list = [i.strip() for i in ids.split(",") if i.strip()][:60]  # max 60 ids
     data = await get_cg_markets(id_list)
     return {"data": data, "count": len(data)}
+
+
+@router.get("/api/v1/market/macro-pulse")
+async def macro_pulse():
+    """
+    Combined macro overview: CG global + Fear & Greed + BTC price.
+    Replaces 3 direct browser calls in MacroPulse.jsx with a single cached backend call.
+    Response shape matches MacroPulse.jsx field accesses exactly.
+    TTL: 5 min Redis, 2 min in-memory.
+    """
+    return await get_macro_pulse()
 
 
 # ── DeFi (DeFiLlama) ─────────────────────────────────────────────────────────

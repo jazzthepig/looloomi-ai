@@ -121,23 +121,14 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
   const fetchData = async () => {
     setError(null);
     try {
-      const [globalRes, fngRes, btcRes] = await Promise.all([
-        fetch("https://api.coingecko.com/api/v3/global"),
-        fetch("https://api.alternative.me/fng/"),
-        fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_7d_change=true")
-      ]);
+      const res = await fetch("/api/v1/market/macro-pulse");
+      if (!res.ok) throw new Error(`Macro-pulse API ${res.status}`);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
 
-      if (!globalRes.ok) throw new Error("Global API failed");
-      if (!fngRes.ok) throw new Error("FNG API failed");
-      if (!btcRes.ok) throw new Error("BTC API failed");
-
-      const globalJson = await globalRes.json();
-      const fngJson = await fngRes.json();
-      const btcJson = await btcRes.json();
-
-      setData(globalJson.data);
-      setFngData(fngJson.data[0]);
-      setBtcData(btcJson.bitcoin);
+      setData(json.data);     // { market_cap_percentage: {btc:...}, market_cap_change_percentage_24h_usd:... }
+      setFngData(json.fng);   // { value: "...", value_classification: "..." }
+      setBtcData(json.btc);   // { usd, usd_24h_change, usd_7d_change }
       setLastUpdate(new Date());
     } catch (err) {
       console.error("MacroPulse fetch error:", err);
