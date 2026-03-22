@@ -1019,11 +1019,16 @@ async def get_signals():
 
     # ── Sort: HIGH first, then by strength, then by recency ──────────────────
     _order = {"HIGH": 0, "MED": 1, "LOW": 2}
+    def _ts_sort(x):
+        ts = x.get("timestamp") or ""
+        try:
+            return -(datetime.fromisoformat(ts.replace("Z", "")).timestamp()) if "T" in ts else 0
+        except Exception:
+            return 0
     signals.sort(key=lambda x: (
         _order.get(x.get("importance", "LOW"), 2),
         -x.get("signal_strength", 0),
-        -(datetime.fromisoformat(x["timestamp"].replace("Z", "")).timestamp()
-          if "T" in x.get("timestamp", "") else 0),
+        _ts_sort(x),
     ))
     return {
         "status": "success",
