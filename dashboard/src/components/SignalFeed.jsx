@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { T, FONTS } from "../tokens";
 
 /* ─── Signal Types ───────────────────────────────────────────────────── */
@@ -170,6 +170,14 @@ async function fetchSignalsFromAPI() {
 
 /* ─── Signal Row ─────────────────────────────────────────────────────── */
 const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
+  const rowRef = useRef(null);
+
+  useEffect(() => {
+    if (isExpanded && rowRef.current) {
+      rowRef.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [isExpanded]);
+
   const typeConfig = SIGNAL_TYPES[signal.type] || SIGNAL_TYPES.MACRO;
   const impStyle   = IMPORTANCE_STYLES[signal.importance] || IMPORTANCE_STYLES.LOW;
   const dirStyle   = signal.vector_direction ? (DIRECTION_STYLES[signal.vector_direction] || DIRECTION_STYLES.NEUTRAL) : null;
@@ -179,6 +187,7 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
 
   return (
     <div
+      ref={rowRef}
       className={isNew ? "signal-row new" : "signal-row"}
       style={{
         padding: "13px 16px",
@@ -434,7 +443,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
       }}>
         <div style={{
           fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
-          letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase",
+          letterSpacing: "0.12em", color: T.t1, textTransform: "uppercase",
           display: "flex", alignItems: "center", gap: 8,
         }}>
           <span style={{ width: 14, height: 1, background: T.gold, opacity: 0.5 }} />
@@ -478,9 +487,9 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
 
       {/* ── Signal List ────────────────────────────────────────────────── */}
       <div style={{
-        maxHeight: "calc(100vh - 340px)",
+        maxHeight: "calc(100vh - 180px)",
         overflowY: "auto",
-        minHeight: 280,
+        minHeight: 320,
         scrollbarWidth: "thin",
         scrollbarColor: `${T.border} transparent`,
       }}>
