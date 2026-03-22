@@ -426,6 +426,193 @@ async def get_fear_greed(limit: int = 30) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# COINGECKO PRO — Market global, trending, GeckoTerminal on-chain, derivatives
+# Requires COINGECKO_API_KEY in Railway env vars.
+# Pro base: https://pro-api.coingecko.com/api/v3
+# GeckoTerminal on-chain data accessible via /onchain/* (included in Pro plan).
+# Rate limit: up to 500 calls/min on Pro tier.
+# ══════════════════════════════════════════════════════════════════════════════
+
+CG_PRO_BASE = "https://pro-api.coingecko.com/api/v3"
+CG_API_KEY  = os.getenv("COINGECKO_API_KEY", "")
+
+def _cg_headers() -> dict:
+    """Attach Pro API key header. Falls back gracefully if key absent."""
+    return {"x-cg-pro-api-key": CG_API_KEY} if CG_API_KEY else {}
+
+
+async def get_cg_global() -> dict:
+    """
+    CoinGecko global market data.
+    Returns: btc_dominance, btc_dom_change_24h (approx), total_market_cap,
+             mcap_change_pct_24h, defi_market_cap, defi_to_total_ratio,
+             volume_24h, active_cryptocurrencies.
+    TTL: 3 min.
+    """
+    key = "cg_global"
+    cached = _cache_get(key, ttl=180)
+    if cached:
+        return cached
+    if not CG_API_KEY:
+        return {"error": "COINGECKO_API_KEY not set"}
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.get(f"{CG_PRO_BASE}/global", headers=_cg_headers())
+            r.raise_for_status()
+            d = r.json().get("data", {})
+            btc_dom  = d.get("market_cap_percentage", {}).get("btc", 0)
+            eth_dom  = d.get("market_cap_percentage", {}).get("eth", 0)
+            mcaps    = d.get("total_market_cap", {})
+            total_usd = mcaps.get("usd", 0)
+            defi_mcap = d.get("total_market_cap_defi_usd") or d.get("defi_market_cap", 0) or 0
+            result = {
+                "btc_dominance":       round(btc_dom, 2),
+                "eth_dominance":       round(eth_dom, 2),
+                "total_market_cap_usd": total_usd,
+                "mcap_change_pct_24h": round(d.get("market_cap_change_percentage_24h_usd", 0), 2),
+                "volume_24h_usd":      d.get("total_volume", {}).get("usd", 0),
+                "defi_market_cap":     defi_mcap,
+                "defi_to_total_ratio": round(defi_mcap / total_usd * 100, 2) if total_usd else 0,
+                "active_cryptocurrencies": d.get("active_cryptocurrencies", 0),
+                "markets":             d.get("markets", 0),
+            }
+            return _cache_set(key, result)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+async def get_cg_trending() -> list:
+    """
+    CoinGecko trending coins (top 7 in 24h by search volume).
+    Each entry: symbol, name, market_cap_rank, price_change_24h, score.
+    TTL: 5 min.
+    """
+    key = "cg_trending"
+    cached = _cache_get(key, ttl=300)
+    if cached:
+        return cached
+    if not CG_API_KEY:
+        return []
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.get(f"{CG_PRO_BASE}/search/trending", headers=_cg_headers())
+            r.raise_for_status()
+            coins = r.json().get("coins", [])
+            result = []
+            for c in coins[:7]:
+                item  = c.get("item", {})
+                pdata = item.get("data", {})
+                result.append({
+                    "symbol":         item.get("symbol", "").upper(),
+                    "name":           item.get("name", ""),
+                    "market_cap_rank": item.get("market_cap_rank"),
+                    "score":          item.get("score", 0),          # 0=highest
+                    "price_change_24h": pdata.get("price_change_percentage_24h", {}).get("usd", 0),
+                    "sparkline":      pdata.get("sparkline"),
+                })
+            return _cache_set(key, result)
+    except Exception as e:
+        return []
+
+
+async def get_gecko_terminal_pools(network: str = "eth", limit: int = 10) -> list:
+    """
+    GeckoTerminal trending DEX pools for a network (via CoinGecko Pro /onchain).
+    Returns top pools with price_change_24h, volume_24h_usd, reserve_in_usd (TVL),
+    base_token_symbol, pool_address.
+    Supported networks: eth, solana, bsc, arbitrum, base, polygon_pos, optimism.
+    TTL: 2 min.
+    """
+    key = f"gt_pools:{network}"
+    cached = _cache_get(key, ttl=120)
+    if cached:
+        return cached
+    if not CG_API_KEY:
+        return []
+    try:
+        async with httpx.AsyncClient(timeout=12) as client:
+            url = f"{CG_PRO_BASE}/onchain/networks/{network}/trending_pools"
+            r   = await client.get(url, headers=_cg_headers(),
+                                   params={"include": "base_token,quote_token", "page": 1})
+            r.raise_for_status()
+            pools = r.json().get("data", [])[:limit]
+            result = []
+            for p in pools:
+                attrs = p.get("attributes", {})
+                base  = (p.get("relationships", {})
+                           .get("base_token", {}).get("data", {}).get("id", "")) or ""
+                # Extract base symbol from included or attributes
+                sym = attrs.get("base_token_price_usd") and attrs.get("name", "").split("/")[0].strip()
+                result.append({
+                    "pool_address":       p.get("id", "").split("_")[-1] if "_" in p.get("id","") else p.get("id",""),
+                    "name":               attrs.get("name", ""),
+                    "base_token":         attrs.get("name", "").split("/")[0].strip().upper(),
+                    "network":            network,
+                    "price_change_5m":    float(attrs.get("price_change_percentage", {}).get("m5", 0) or 0),
+                    "price_change_1h":    float(attrs.get("price_change_percentage", {}).get("h1", 0) or 0),
+                    "price_change_24h":   float(attrs.get("price_change_percentage", {}).get("h24", 0) or 0),
+                    "volume_24h_usd":     float(attrs.get("volume_usd", {}).get("h24", 0) or 0),
+                    "reserve_usd":        float(attrs.get("reserve_in_usd", 0) or 0),
+                    "transactions_24h":   (attrs.get("transactions", {}).get("h24", {}).get("buys", 0) or 0) +
+                                          (attrs.get("transactions", {}).get("h24", {}).get("sells", 0) or 0),
+                    "fdv_usd":            float(attrs.get("fdv_usd", 0) or 0),
+                })
+            return _cache_set(key, result)
+    except Exception as e:
+        return []
+
+
+async def get_cg_derivatives() -> list:
+    """
+    CoinGecko derivatives tickers — funding rates and open interest.
+    Focuses on BTC and ETH perpetuals.
+    Returns list of {symbol, funding_rate, open_interest_usd, price_change_24h}.
+    TTL: 5 min.
+    """
+    key = "cg_derivatives"
+    cached = _cache_get(key, ttl=300)
+    if cached:
+        return cached
+    if not CG_API_KEY:
+        return []
+    try:
+        async with httpx.AsyncClient(timeout=12) as client:
+            r = await client.get(f"{CG_PRO_BASE}/derivatives",
+                                 headers=_cg_headers(),
+                                 params={"include_tickers": "unexpired"})
+            r.raise_for_status()
+            tickers = r.json()
+            # Focus on BTC and ETH perpetuals with meaningful OI
+            targets = {"BTC", "ETH", "SOL"}
+            result  = []
+            seen    = set()
+            for t in tickers:
+                sym = (t.get("base") or "").upper()
+                if sym not in targets:
+                    continue
+                key_str = f"{sym}:{t.get('market','')}"
+                if key_str in seen:
+                    continue
+                seen.add(key_str)
+                fr = t.get("funding_rate")
+                oi = t.get("open_interest_usd") or t.get("open_interest")
+                result.append({
+                    "symbol":            sym,
+                    "market":            t.get("market", ""),
+                    "price":             float(t.get("last") or 0),
+                    "funding_rate":      float(fr) if fr is not None else None,
+                    "open_interest_usd": float(oi) if oi is not None else None,
+                    "price_change_pct":  float(t.get("price_percentage_change_24h") or 0),
+                    "contract_type":     t.get("contract_type", ""),
+                })
+                if len(result) >= 9:  # 3 per asset × 3 assets
+                    break
+            return _cache_set(key, result)
+    except Exception as e:
+        return []
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # MORALIS — Multi-chain wallet analysis (free tier: 10M req/month)
 # Requires free API key from moralis.io
 # ══════════════════════════════════════════════════════════════════════════════
