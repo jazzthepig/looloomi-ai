@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-03-21T00:00:00",
+  "source": "CometCloudFreqtrade · 14mo backtest (2025-01 ~ 2026-03)",
+  "period": "14 months",
+  "strategy": "CometCloudMultiFactorV2",
+  "description": "逆人性交易 — MVRV < 0.9 + 价格位置 < 10% 入场",
+
+  "spot": {
+    "summary": { "trades": 91, "win_rate": 77, "avg_return": 1.67, "median_return": 3.48 },
+    "by_asset": [
+      { "asset": "BTC", "trades": 19, "win_rate": 84, "avg_return": 2.04, "median_return": 2.92 },
+      { "asset": "ETH", "trades": 29, "win_rate": 72, "avg_return": 1.59, "median_return": 4.67 },
+      { "asset": "SOL", "trades": 43, "win_rate": 77, "avg_return": 1.57, "median_return": 3.72 }
+    ]
+  },
+
+  "leveraged_3x": {
+    "summary": { "starting": 100000, "ending": 250190, "total_return": 150.2, "annualized": 119.5 },
+    "by_asset": [
+      { "asset": "BTC", "trades": 19, "win_rate": 84, "ending": 77891, "return": 133.7 },
+      { "asset": "ETH", "trades": 28, "win_rate": 71, "ending": 58740, "return": 76.2 },
+      { "asset": "SOL", "trades": 42, "win_rate": 76, "ending": 113559, "return": 240.7 }
+    ]
+  },
+
+  "smc_enhanced": {
+    "summary": { "trades": 73, "win_rate": 75, "avg_return": 2.58, "median_return": 4.67 },
+    "description": "MVRV < 0.9 + RSI < 30 + 价格位置 < 10%",
+    "vs_original": { "avg_return_improvement": "+35%", "median_improvement": "+29%" }
+  },
+
+  "key_findings": [
+    "极端值才有效: MVRV<0.9 + POS<10% = 77%胜率",
+    "组合优于单一: MVRV+价格位置 > 单独使用任一因子",
+    "趋势确认无效: ADX过滤后收益未提升",
+    "最大单笔亏损: ETH可达-63%"
+  ],
+
+  "strategy_upgrade_direction": [
+    "Smart Money信号 (FVG/Order Block)",
+    "多时间框架 (4h信号 + 15m入场)",
+    "动态仓位 (根据MVRV极端程度)"
+  ],
+
+  "status": "可用于实盘测试"
+}
