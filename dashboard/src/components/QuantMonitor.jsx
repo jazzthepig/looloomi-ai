@@ -56,11 +56,12 @@ const fmtTime = (ts) => {
 
 /* ─── API ───────────────────────────────────────────────────────────── */
 async function fetchQuantData() {
-  const [status, trades] = await Promise.all([
+  const [status, trades, backtest] = await Promise.all([
     fetch(`${API_BASE}/quant/status`).then(r => r.ok ? r.json() : null).catch(() => null),
     fetch(`${API_BASE}/quant/trades?limit=30`).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch(`${API_BASE}/quant/backtest`).then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
-  return { status, trades };
+  return { status, trades, backtest };
 }
 
 /* ─── Equity Card ───────────────────────────────────────────────────── */
@@ -180,7 +181,109 @@ function OpenTradeRow({ trade }) {
   );
 }
 
-/* ─── Trade History Row ─────────────────────────────────────────────── */
+/* ─── Backtest Card ─────────────────────────────────────────────────── */
+function BacktestCard({ data }) {
+  if (!data) return null;
+  const { spot, leveraged_3x, smc_enhanced, key_findings, strategy_upgrade_direction } = data;
+  const lev = leveraged_3x?.summary;
+
+  return (
+    <div className="quant-card fade-up" style={{ marginBottom: 16 }}>
+      <div style={{
+        padding: "12px 16px",
+        borderBottom: `1px solid ${T.border}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".08em", color: T.secondary, textTransform: "uppercase" }}>
+          Backtest · 14 Months
+        </span>
+        <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t3 }}>{data.strategy}</span>
+      </div>
+
+      {/* Key metrics row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
+        <div style={{ padding: "14px 16px", borderRight: `1px solid ${T.border}` }}>
+          <div className="stat-label">Total Return</div>
+          <div className="stat-value" style={{ fontSize: 22, color: lev && lev.total_return >= 0 ? T.green : T.red }}>
+            {lev ? `+${lev.total_return}%` : "—"}
+          </div>
+          <div className="stat-sub">3× leveraged</div>
+        </div>
+        <div style={{ padding: "14px 16px", borderRight: `1px solid ${T.border}` }}>
+          <div className="stat-label">Annualized</div>
+          <div className="stat-value" style={{ fontSize: 22, color: T.green }}>{lev?.annualized ? `${lev.annualized}%` : "—"}</div>
+          <div className="stat-sub">CAGR</div>
+        </div>
+        <div style={{ padding: "14px 16px", borderRight: `1px solid ${T.border}` }}>
+          <div className="stat-label">Win Rate</div>
+          <div className="stat-value" style={{ fontSize: 22, color: T.green }}>{spot?.summary?.win_rate ?? "—"}%</div>
+          <div className="stat-sub">{spot?.summary?.trades} trades</div>
+        </div>
+        <div style={{ padding: "14px 16px" }}>
+          <div className="stat-label">Median Return</div>
+          <div className="stat-value" style={{ fontSize: 22, color: T.cyan }}>{spot?.summary?.median_return ? `${spot.summary.median_return}%` : "—"}</div>
+          <div className="stat-sub">per trade</div>
+        </div>
+      </div>
+
+      {/* Per-asset performance */}
+      {lev?.by_asset && (
+        <div style={{ padding: "10px 16px", borderTop: `1px solid ${T.border}` }}>
+          <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: T.t3, marginBottom: 8, fontFamily: FONTS.display }}>By Asset</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+            {lev.by_asset.map(a => (
+              <div key={a.asset} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 6, padding: "8px 10px" }}>
+                <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 600, color: T.t1 }}>{a.asset}</div>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: a.return >= 0 ? T.green : T.red, marginTop: 2 }}>
+                  {a.return >= 0 ? "+" : ""}{a.return}%
+                </div>
+                <div style={{ fontSize: 9, color: T.t3, marginTop: 2 }}>{a.trades} trades · {a.win_rate}% WR</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Key findings */}
+      {key_findings && key_findings.length > 0 && (
+        <div style={{ padding: "10px 16px", borderTop: `1px solid ${T.border}` }}>
+          <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: T.t3, marginBottom: 6, fontFamily: FONTS.display }}>Key Findings</div>
+          {key_findings.map((f, i) => (
+            <div key={i} style={{ fontSize: 10, fontFamily: FONTS.mono, color: T.t2, marginBottom: 3, display: "flex", gap: 6 }}>
+              <span style={{ color: T.primary }}>›</span>{f}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* SMC Enhanced */}
+      {smc_enhanced && (
+        <div style={{ padding: "10px 16px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <span style={{ fontSize: 10, fontFamily: FONTS.display, fontWeight: 600, color: T.cyan }}>SMC Enhanced</span>
+            <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t3, marginLeft: 8 }}>
+              {smc_enhanced.summary.trades} trades · {smc_enhanced.summary.win_rate}% WR · median {smc_enhanced.summary.median_return}%
+            </span>
+          </div>
+          <div style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.green }}>{smc_enhanced.vs_original?.avg_return_improvement} avg return</div>
+        </div>
+      )}
+
+      {/* Status badge */}
+      <div style={{ padding: "8px 16px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{
+          fontSize: 9, fontFamily: FONTS.mono, fontWeight: 600,
+          padding: "2px 7px", borderRadius: 3,
+          background: "rgba(0,232,122,.10)", color: T.green,
+          border: `1px solid rgba(0,232,122,.2)`,
+        }}>{data.status}</span>
+        <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t3 }}>{data.description}</span>
+      </div>
+    </div>
+  );
+}
+
+
 function TradeHistoryRow({ trade }) {
   const pnl = trade.profit_abs ?? 0;
   const pnlPct = trade.profit_ratio ?? 0;
@@ -246,13 +349,13 @@ function SkeletonCard() {
 
 /* ─── Main Component ────────────────────────────────────────────────── */
 export default function QuantMonitor() {
-  const [data, setData] = useState({ status: null, trades: null });
+  const [data, setData] = useState({ status: null, trades: null, backtest: null });
   const [loading, setLoading] = useState(true);
   const [stale, setStale] = useState(false);
 
   const fetchData = useCallback(async () => {
-    const { status, trades } = await fetchQuantData();
-    setData({ status, trades });
+    const { status, trades, backtest } = await fetchQuantData();
+    setData({ status, trades, backtest });
     setStale(status?._stale ?? false);
     setLoading(false);
   }, []);
@@ -331,6 +434,9 @@ export default function QuantMonitor() {
             updated={status?.updated}
           />
         )}
+
+        {/* Backtest Results */}
+        {!loading && <BacktestCard data={data.backtest} />}
 
         {/* Open Trades */}
         <div className="quant-card fade-up" style={{ marginBottom: 16 }}>

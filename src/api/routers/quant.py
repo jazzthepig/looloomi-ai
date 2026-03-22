@@ -4,10 +4,13 @@ Endpoints:
   GET  /api/v1/quant/status    — current open trades, balance (from Redis cache)
   GET  /api/v1/quant/trades   — trade history
   GET  /api/v1/quant/equity   — equity curve
+  GET  /api/v1/quant/backtest — backtest results (static JSON)
   POST /internal/quant-push    — Mac Mini pushes Freqtrade status (auth required)
 """
 import os
+import json
 from datetime import datetime
+from pathlib import Path
 from fastapi import APIRouter, HTTPException, Header
 
 from src.api.store import redis_set_key, redis_get_key
@@ -103,3 +106,15 @@ async def get_quant_equity():
         "updated": ts,
         "_stale": False,
     }
+
+
+_BACKTEST_PATH = Path(__file__).parent.parent.parent / "data" / "quant" / "quant_backtest_results.json"
+
+
+@router.get("/api/v1/quant/backtest")
+async def get_quant_backtest():
+    """Historical backtest results for CometCloudMultiFactorV2 strategy."""
+    if not _BACKTEST_PATH.exists():
+        raise HTTPException(status_code=404, detail="Backtest results not found")
+    with open(_BACKTEST_PATH) as f:
+        return json.load(f)
