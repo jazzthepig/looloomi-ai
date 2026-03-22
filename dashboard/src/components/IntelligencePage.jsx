@@ -6,6 +6,7 @@ import {
 import BottomSheet from "./ui/BottomSheet";
 import CISWidget from "./CISWidget";
 import MacroBrief from "./MacroBrief";
+import ProtocolIntelligence from "./ProtocolIntelligence";
 import { T, FONTS } from "../tokens";
 
 const API_BASE = "/api/v1";
@@ -143,48 +144,7 @@ const MACRO_EVENTS = [
 ];
 
 /* ─── Curated RWA Projects (Mar 2026) ────────────────────────────────── */
-const RWA_PROJECTS = [
-  // Tokenized Treasuries / RWA
-  { id: "ondo", name: "Ondo Finance", category: "RWA - Treasuries", tvl: 2063553096, apy: 4.8, description: "Tokenized US Treasuries (OUSG, OMMF)", chain: "Multi-chain", investors: ["Founders Fund", "Coinbase Ventures"] },
-  { id: "blackrock", name: "BlackRock BUIDL", category: "RWA - Treasuries", tvl: 2531565611, apy: 4.3, description: "Tokenized Money Market Fund", chain: "Multi-chain", investors: ["BlackRock"] },
-  { id: "circle-usyc", name: "Circle USYC", category: "RWA - Treasuries", tvl: 1902157261, apy: 4.5, description: "US Treasury-backed yield", chain: "Multi-chain", investors: ["Circle", "Goldman Sachs"] },
-  { id: "franklin", name: "Franklin Templeton", category: "RWA - Treasuries", tvl: 380000000, apy: 4.5, description: "BENJI - On-chain US Treasury Fund", chain: "Polygon", investors: ["Franklin Templeton"] },
-  { id: "wisdomtree", name: "WisdomTree", category: "RWA - Treasuries", tvl: 741361216, apy: 4.2, description: "Tokenized treasury and commodities", chain: "Multi-chain", investors: ["WisdomTree"] },
-  { id: "superstate", name: "Superstate", category: "RWA - Treasuries", tvl: 701873051, apy: 4.6, description: "USTB - US Treasury Short Fund", chain: "Ethereum", investors: ["Coinbase", "SIX Group"] },
-  { id: "anemoy", name: "Anemoy Capital", category: "RWA - Treasuries", tvl: 568081855, apy: 5.2, description: "Treasury Bill protocol", chain: "Multi-chain", investors: ["a16z", "Dragonfly"] },
-
-  // Stablecoins
-  { id: "circle", name: "Circle (USDC)", category: "RWA - Stablecoin", tvl: 76000000000, apy: 0, description: "Regulated stablecoin", chain: "Multi-chain", investors: ["Goldman Sachs", "Accel", "IDG"] },
-  { id: "tether", name: "Tether (USDT)", category: "RWA - Stablecoin", tvl: 142000000000, apy: 0, description: "Largest stablecoin by volume", chain: "Multi-chain", investors: ["Tether Holdings"] },
-  { id: "paxos", name: "Paxos (USDP)", category: "RWA - Stablecoin", tvl: 1200000000, apy: 0, description: "Regulated stablecoin", chain: "Ethereum", investors: ["PayPal", "SEC"] },
-
-  // Commodities (Gold)
-  { id: "paxos-gold", name: "Paxos Gold (PAXG)", category: "RWA - Commodities", tvl: 2496506164, apy: 0, description: "Gold-backed token", chain: "Ethereum", investors: ["NYDFS", "Chainalysis"] },
-  { id: "tether-gold", name: "Tether Gold (XAU₮)", category: "RWA - Commodities", tvl: 3633721936, apy: 0, description: "Gold-backed token", chain: "Multi-chain", investors: ["Tether"] },
-  { id: "treasury-gold", name: "Trove Gold", category: "RWA - Commodities", tvl: 120000000, apy: 2.1, description: "Gold-backed tokens", chain: "Ethereum", investors: ["SIX Group"] },
-
-  // Real Estate
-  { id: "realty", name: "Realty DAO", category: "RWA - Real Estate", tvl: 85000000, apy: 12.5, description: "Fractional real estate ownership", chain: "Solana", investors: ["Republic", "Animoca Brands"] },
-  { id: "tangible", name: "Tangible", category: "RWA - Real Estate", tvl: 42000000, apy: 8.2, description: "Tokenized real world assets", chain: "Ethereum", investors: ["SIX Group"] },
-  { id: "implied", name: "Implied Finance", category: "RWA - Real Estate", tvl: 18000000, apy: 15.0, description: "Real estate debt protocol", chain: "Ethereum", investors: ["Dragonfly"] },
-  { id: "hastra", name: "Hastra", category: "RWA - Real Estate", tvl: 330521150, apy: 8.5, description: "Real estate protocol", chain: "Solana", investors: ["Solana Ventures"] },
-
-  // Private Credit
-  { id: "maple", name: "Maple Finance", category: "RWA - Private Credit", tvl: 1970282076, apy: 12.0, description: "Unsecured lending for institutional", chain: "Multi-chain", investors: ["Polychain", "Galaxy", "Apple"] },
-  { id: "centrifuge", name: "Centrifuge", category: "RWA - Private Credit", tvl: 1361042384, apy: 9.5, description: "Asset financing protocol", chain: "Multi-chain", investors: ["a16z", "Polychain"] },
-  { id: "credix", name: "Credix", category: "RWA - Private Credit", tvl: 95000000, apy: 14.0, description: "Credit marketplace for EM", chain: "Solana", investors: ["Greylock", "Variant"] },
-  { id: "aave-horizon", name: "Aave Horizon RWA", category: "RWA - Private Credit", tvl: 338389101, apy: 8.5, description: "Institutional lending", chain: "Ethereum", investors: ["Aave"] },
-
-  // Derivatives
-  { id: "dydx", name: "dYdX", category: "Derivatives", tvl: 1200000000, apy: 0, description: "Decentralized perpetual futures", chain: "Cosmos", investors: ["a16z", "Polychain", "Three Arrows"] },
-  { id: "gmx", name: "GMX", category: "Derivatives", tvl: 680000000, apy: 0, description: "Decentralized perpetual trading", chain: "Arbitrum", investors: ["Framework", "GSR"] },
-  { id: "drift", name: "Drift Protocol", category: "Derivatives", tvl: 338112171, apy: 0, description: "Solana perpetual DEX", chain: "Solana", investors: ["Paradigm", "Jump"] },
-  { id: "hyperliquid", name: "Hyperliquid", category: "Derivatives", tvl: 4147634073, apy: 0, description: "High-performance perps", chain: "Hyperliquid", investors: ["a16z", "DTN"] },
-
-  // Infrastructure / Oracle
-  { id: "chainlink", name: "Chainlink", category: "Infrastructure", tvl: 0, apy: 0, description: "Cross-chain data infrastructure", chain: "Multi-chain", investors: ["a16z", "SoftBank", "Winklevoss"] },
-  { id: "pyth", name: "Pyth", category: "Infrastructure", tvl: 0, apy: 0, description: "Oracle for financial data", chain: "Solana", investors: ["a16z", "Jump", "Deliver"] },
-];
+/* RWA_PROJECTS removed — replaced by ProtocolIntelligence (live CIS-scored data) */
 
 /* ─── Curated Active VCs (Mar 2026) ──────────────────────────────────── */
 const ACTIVE_VCS = [
@@ -227,7 +187,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const [stats, setStats]               = useState(null);
   const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
   const [iframeError, setIframeError]   = useState(false);
-  const [selectedRWA, setSelectedRWA]   = useState(null);
+  // selectedRWA removed — replaced by ProtocolIntelligence component
   const [selectedVCRound, setSelectedVCRound] = useState(null);
   const [macroEvents, setMacroEvents]   = useState([]);
   const [sectorData, setSectorData]     = useState([]);
@@ -557,65 +517,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               ))}
             </div>
 
-            {/* RWA Projects Section */}
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <Label Icon={Shield}>RWA Project Tracker</Label>
-                <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>
-                  {RWA_PROJECTS.length} protocols tracked
-                </span>
-              </div>
-              <div className="lm-card" style={{ overflow: "hidden" }}>
-                <div style={{
-                  display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1.5fr",
-                  padding: "12px 20px", borderBottom: `1px solid ${T.border}`,
-                  fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase",
-                  fontFamily: FONTS.body
-                }}>
-                  <div>Protocol</div>
-                  <div>Category</div>
-                  <div>TVL</div>
-                  <div>APY</div>
-                  <div>Chain</div>
-                </div>
-                {RWA_PROJECTS.slice(0, 12).map((p, idx) => (
-                  <div key={p.id} className="lm-row" style={{
-                    display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1.5fr",
-                    padding: "14px 20px", borderBottom: `1px solid ${T.border}`,
-                    alignItems: "center",
-                    cursor: "pointer",
-                    background: selectedRWA?.id === p.id ? "rgba(68,114,255,.08)" : undefined,
-                  }}
-                  onClick={() => setSelectedRWA(selectedRWA?.id === p.id ? null : p)}>
-                    <div>
-                      <div style={{ fontFamily: FONTS.display, fontWeight: 600, color: T.primary, fontSize: 13 }}>
-                        {p.name}
-                      </div>
-                      <div style={{ fontSize: 10, color: T.secondary, marginTop: 2 }}>
-                        {p.description}
-                      </div>
-                    </div>
-                    <div>
-                      <span style={{
-                        padding: "3px 8px", borderRadius: 4, fontSize: 10, fontWeight: 500,
-                        background: catStyle(p.category).bg, color: catStyle(p.category).text,
-                      }}>
-                        {p.category}
-                      </span>
-                    </div>
-                    <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: T.green }}>
-                      {p.tvl >= 1e9 ? `$${(p.tvl/1e9).toFixed(1)}B` : p.tvl >= 1e6 ? `$${(p.tvl/1e6).toFixed(0)}M` : `$${(p.tvl/1e3).toFixed(0)}K`}
-                    </div>
-                    <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: p.apy > 0 ? T.green : T.muted }}>
-                      {p.apy > 0 ? `${p.apy}%` : "—"}
-                    </div>
-                    <div style={{ fontSize: 11, color: T.secondary }}>
-                      {p.chain}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* ══ Protocol Intelligence ════════════════════════════════════ */}
+            <ProtocolIntelligence />
 
             {/* Main 2-col layout: Sector Heatmap + Macro Events */}
             <div className="mobile-2col-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
@@ -1331,57 +1234,6 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
           </div>
         )}
       </div>
-
-      {/* RWA Detail - BottomSheet */}
-      <BottomSheet isOpen={!!selectedRWA} onClose={() => setSelectedRWA(null)}>
-        {selectedRWA && (
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <h3 style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: T.primary, margin: 0 }}>
-                    {selectedRWA.name}
-                  </h3>
-                  <span style={{
-                    padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 600,
-                    background: catStyle(selectedRWA.category).bg, color: catStyle(selectedRWA.category).text,
-                  }}>
-                    {selectedRWA.category}
-                  </span>
-                </div>
-                <div style={{ fontSize: 12, color: T.secondary, marginTop: 6 }}>
-                  {selectedRWA.chain}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ fontSize: 13, color: T.primary, lineHeight: 1.6, marginBottom: 16 }}>
-              {selectedRWA.description}
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
-              <div>
-                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>TVL</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono, userSelect: "none" }}>
-                  {selectedRWA.tvl >= 1e9 ? `$${(selectedRWA.tvl/1e9).toFixed(1)}B` : selectedRWA.tvl >= 1e6 ? `$${(selectedRWA.tvl/1e6).toFixed(0)}M` : `$${(selectedRWA.tvl/1e3).toFixed(0)}K`}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>APY</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: T.green, fontFamily: FONTS.mono, userSelect: "none" }}>
-                  {selectedRWA.apy > 0 ? `${selectedRWA.apy}%` : "—"}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>Chain</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: T.cyan, fontFamily: FONTS.mono }}>
-                  {selectedRWA.chain}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </BottomSheet>
 
       {/* VC Funding Round Detail - BottomSheet */}
       <BottomSheet isOpen={!!selectedVCRound} onClose={() => setSelectedVCRound(null)}>
