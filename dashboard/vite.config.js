@@ -20,6 +20,7 @@ export default defineConfig({
         market: resolve(__dirname, 'market.html'),
         app: resolve(__dirname, 'app.html'),
         quant: resolve(__dirname, 'quant.html'),
+        strategy: resolve(__dirname, 'strategy.html'),
       }
     }
   },
