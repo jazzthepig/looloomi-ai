@@ -181,7 +181,8 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
   const typeConfig = SIGNAL_TYPES[signal.type] || SIGNAL_TYPES.MACRO;
   const impStyle   = IMPORTANCE_STYLES[signal.importance] || IMPORTANCE_STYLES.LOW;
   const dirStyle   = signal.vector_direction ? (DIRECTION_STYLES[signal.vector_direction] || DIRECTION_STYLES.NEUTRAL) : null;
-  const horizStyle = signal.time_horizon ? (HORIZON_STYLES[signal.time_horizon] || HORIZON_STYLES["24H"]) : null;
+  // Strict match only — unknown time_horizon values (e.g. raw numbers) must not render
+  const horizStyle = signal.time_horizon ? (HORIZON_STYLES[signal.time_horizon] || null) : null;
 
   const hasMeta = signal.pillar_impact || signal.logic;
 

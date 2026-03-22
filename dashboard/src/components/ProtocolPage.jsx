@@ -656,6 +656,46 @@ export default function ProtocolPage({ activeTab, setActiveTab, isSection = fals
   const [filterChain, setFilterChain] = useState("All");
   const [sortBy, setSortBy] = useState("total");
   const [selectedProtocol, setSelectedProtocol] = useState(null);
+  const [liveDataBadge, setLiveDataBadge] = useState(false);
+
+  // Fetch live TVL from DeFiLlama via backend and patch into curated list
+  useEffect(() => {
+    const fetchLiveTVL = async () => {
+      try {
+        const res = await fetch("/api/v1/defi/protocols");
+        if (!res.ok) return;
+        const live = await res.json();
+        if (!Array.isArray(live) || live.length === 0) return;
+
+        // Build lookup: lowercase name → live data
+        const liveMap = {};
+        live.forEach(p => {
+          if (p.name) liveMap[p.name.toLowerCase()] = p;
+        });
+
+        setProtocols(prev => prev.map(proto => {
+          const key = proto.name.toLowerCase();
+          // Try exact match, then partial match (e.g. "Aave V3" → "aave v3")
+          const liveProto = liveMap[key] ||
+            live.find(l => l.name && proto.name.toLowerCase().includes(l.name.toLowerCase().split(" ")[0]));
+          if (!liveProto || !liveProto.tvl) return proto;
+
+          return {
+            ...proto,
+            tvl:          liveProto.tvl,
+            tvlChange30d: liveProto.change_7d ?? proto.tvlChange30d,
+            chain:        liveProto.chains?.length > 1 ? "Multi-chain" : (liveProto.chains?.[0] || proto.chain),
+            _live: true,
+          };
+        }));
+        setLiveDataBadge(true);
+      } catch (e) {
+        // Non-fatal — page still shows curated mock data on error
+        console.warn("ProtocolPage live TVL fetch failed:", e);
+      }
+    };
+    fetchLiveTVL();
+  }, []);
 
   const filteredProtocols = protocols
     .filter(p => filterCategory === "All" || p.category === filterCategory)
@@ -740,13 +780,26 @@ export default function ProtocolPage({ activeTab, setActiveTab, isSection = fals
           }}>
             Protocol Library
           </h1>
-          <p style={{
-            fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
-            maxWidth: 600, lineHeight: 1.6
-          }}>
-            DeFi Protocol Analytics — Monitor TVL, yields, security, and risk across
-            leading lending, DEX, staking, and yield optimization protocols.
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <p style={{
+              fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
+              maxWidth: 600, lineHeight: 1.6, margin: 0,
+            }}>
+              DeFi Protocol Analytics — Monitor TVL, yields, security, and risk across
+              leading lending, DEX, staking, and yield optimization protocols.
+            </p>
+            {liveDataBadge && (
+              <span style={{
+                flexShrink: 0, padding: "3px 8px", borderRadius: 4, fontSize: 9,
+                fontFamily: FONTS.display, fontWeight: 700, letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                background: "rgba(0,232,122,0.10)", color: T.green,
+                border: "1px solid rgba(0,232,122,0.22)",
+              }}>
+                LIVE · DeFiLlama
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Stats Summary */}

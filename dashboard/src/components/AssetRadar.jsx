@@ -295,14 +295,13 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // Fetch CoinGecko market data (fast — 1-2s)
+  // Fetch CoinGecko market data via backend proxy (uses CG Pro key — no browser rate limits)
   const fetchMarkets = async () => {
     const ids = ASSETS.map(a => a.id).join(",");
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=true&price_change_percentage=7d`
-    );
-    if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
-    const data = await res.json();
+    const res = await fetch(`/api/v1/market/coingecko-markets?ids=${encodeURIComponent(ids)}`);
+    if (!res.ok) throw new Error(`Markets API ${res.status}`);
+    const json = await res.json();
+    const data = json.data || [];
     const dataMap = {};
     data.forEach(coin => {
       const asset = ASSETS.find(a => a.id === coin.id);
