@@ -1,12 +1,13 @@
 """
-Intelligence router — macro events, VC funding, token unlocks
-Endpoints: /api/v1/intelligence/*, /api/v1/vc/*
+Intelligence router — macro events, VC funding, token unlocks, protocol intelligence
+Endpoints: /api/v1/intelligence/*, /api/v1/vc/*, /api/v1/protocols/*
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from datetime import datetime
 import logging
 
 from data.market.data_layer import get_vc_raises
+from data.market.protocol_engine import get_protocol_universe
 
 router = APIRouter()
 _logger = logging.getLogger(__name__)
@@ -72,3 +73,23 @@ async def get_vc_overlap():
     except Exception as e:
         _logger.error(f"Error in {__name__}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# ── Protocol Intelligence ────────────────────────────────────────────────────
+
+@router.get("/api/v1/protocols/universe")
+async def get_protocols(
+    category: str | None = Query(None, description="Filter by category (e.g. 'RWA', 'DeFi - Lending')"),
+    min_grade: str | None = Query(None, description="Minimum CIS grade (A+, A, B+, B, C+, C, D, F)"),
+):
+    """
+    Protocol Intelligence — CIS-scored protocol universe.
+    Live DeFiLlama TVL data + 5-pillar scoring (F/M/O/S/A).
+    Returns ranked protocols with grade, signal, risk tier, and allocation weight.
+    Agent-consumable: query ?category=RWA&min_grade=B for filtered results.
+    """
+    try:
+        return await get_protocol_universe(category=category, min_grade=min_grade)
+    except Exception as e:
+        _logger.error(f"Protocol universe error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Protocol scoring failed")
