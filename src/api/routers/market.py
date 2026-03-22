@@ -874,7 +874,7 @@ async def get_signals():
                 pi = {"F": 0, "M": +5, "O": -18, "S": +8, "A": -12}
                 signals.append(_mk({
                     "id": f"deriv_fr_high_{sym}", "timestamp": now.isoformat(),
-                    "type": "RISK", "source": "coingecko", "importance": "HIGH",
+                    "type": "FUNDING", "source": "coingecko", "importance": "HIGH",
                     "description": f"{sym} 资金费率 +{fr_pct:.3f}% — 杠杆多头严重过热",
                     "affected_assets": [sym],
                     "value": fr_pct,
@@ -892,7 +892,7 @@ async def get_signals():
                 pi = {"F": 0, "M": -5, "O": +15, "S": -8, "A": +18}
                 signals.append(_mk({
                     "id": f"deriv_fr_neg_{sym}", "timestamp": now.isoformat(),
-                    "type": "MOMENTUM", "source": "coingecko", "importance": "MED",
+                    "type": "FUNDING", "source": "coingecko", "importance": "MED",
                     "description": f"{sym} 资金费率 {fr_pct:.3f}% — 做空拥挤，逼空条件形成",
                     "affected_assets": [sym],
                     "value": fr_pct,
@@ -904,6 +904,119 @@ async def get_signals():
                 "Trigger: watch for volume spike on a green candle as squeeze catalyst.",
                 "24H"))
 
+            # OI-based whale accumulation signal
+            if total_oi > 3e9 and 0 < avg_fr < 0.05:
+                pi = {"F": 0, "M": +8, "O": +12, "S": +5, "A": -5}
+                signals.append(_mk({
+                    "id": f"deriv_oi_whale_{sym}", "timestamp": now.isoformat(),
+                    "type": "WHALE", "source": "coingecko", "importance": "MED",
+                    "description": f"{sym} 合约持仓 ${total_oi/1e9:.1f}B — 大资金建仓，温和做多结构",
+                    "affected_assets": [sym],
+                    "value": total_oi / 1e9,
+                }, pi,
+                f"{sym} open interest ${total_oi/1e9:.1f}B with mild positive funding {fr_pct:.3f}%. "
+                "Institutional positioning pattern: large OI with controlled funding = "
+                "sustained accumulation, not speculative excess. "
+                "O pillar strong (+12): committed smart money in futures = demand floor. "
+                "Watch for OI acceleration on price dips = conviction buying.",
+                "7D"))
+
+    # ── 12. WHALE: Volume-spike + on-chain flow proxies ──────────────────────
+    # Source A: CoinGecko global — 24h vol/mcap ratio
+    if cg_global and not cg_global.get("error"):
+        vol_usd  = cg_global.get("volume_24h_usd", 0) or 0
+        mcap_usd = cg_global.get("total_market_cap_usd", 0) or 0
+        if mcap_usd > 0:
+            vol_ratio = vol_usd / mcap_usd
+            if vol_ratio >= 0.25:
+                pi = {"F": 0, "M": +10, "O": +18, "S": +8, "A": -5}
+                signals.append(_mk({
+                    "id": "whale_vol_spike", "timestamp": now.isoformat(),
+                    "type": "WHALE", "source": "coingecko", "importance": "HIGH",
+                    "description": f"全市场成交量/市值比 {vol_ratio*100:.1f}% — 大资金异常活跃",
+                    "affected_assets": ["BTC", "ETH", "CRYPTO"],
+                    "value": vol_ratio * 100,
+                }, pi,
+                f"24h volume/market cap ratio {vol_ratio*100:.1f}%: extremely elevated. "
+                "Normal range 5–12%. Spikes >20% signal institutional repositioning — "
+                "either large-scale accumulation or distribution. "
+                "O pillar surging (+18): unprecedented on-chain capital velocity. "
+                "Observe direction: if price holds/rises on volume = accumulation. "
+                "If price falls on volume = distribution by large holders.",
+                "24H"))
+            elif vol_ratio >= 0.15:
+                pi = {"F": 0, "M": +8, "O": +10, "S": +5, "A": 0}
+                signals.append(_mk({
+                    "id": "whale_vol_elevated", "timestamp": now.isoformat(),
+                    "type": "WHALE", "source": "coingecko", "importance": "MED",
+                    "description": f"全市场成交量活跃度高 {vol_ratio*100:.1f}% — 机构级别换手明显",
+                    "affected_assets": ["BTC", "ETH", "CRYPTO"],
+                    "value": vol_ratio * 100,
+                }, pi,
+                f"24h volume/market cap ratio {vol_ratio*100:.1f}%: above normal. "
+                "Elevated turnover suggests institutional rebalancing or rotation. "
+                "O pillar elevated (+10): capital flowing through the market. "
+                "Cross-reference with BTC.D change: rotation signal if dominance moves.",
+                "24H"))
+
+    # Source B: GeckoTerminal — whale wash / concentrated pool flow
+    all_whale_pools = list(gt_eth_pools or []) + list(gt_sol_pools or [])
+    for pool in all_whale_pools[:8]:
+        vol24  = pool.get("volume_24h_usd", 0) or 0
+        tvl    = pool.get("reserve_usd", 0)     or 0
+        name   = pool.get("name", "")
+        net    = pool.get("network", "eth").upper()
+        txns   = pool.get("transactions_24h", 0) or 0
+        chg24  = pool.get("price_change_24h", 0) or 0
+        token  = pool.get("base_token", name.split("/")[0].strip()) if name else "UNKNOWN"
+        if tvl < 50_000:
+            continue
+        vol_tvl = vol24 / tvl if tvl > 0 else 0
+
+        if vol_tvl >= 8 and vol24 > 300_000:
+            # Volume > 8x TVL = whale rotation through pool
+            pi = {"F": -5, "M": +12, "O": +15, "S": +8, "A": -8}
+            signals.append(_mk({
+                "id": f"whale_pool_{token[:8]}_{net}", "timestamp": now.isoformat(),
+                "type": "WHALE", "source": "defillama", "importance": "HIGH",
+                "description": f"鲸鱼流动: {name} ({net}) 成交量 {vol_tvl:.0f}×TVL · ${vol24/1e6:.2f}M",
+                "affected_assets": [token, net],
+                "value": vol_tvl,
+            }, pi,
+            f"DEX pool {name}: volume {vol_tvl:.0f}× TVL with ${vol24/1e6:.2f}M traded. "
+            f"Transactions: {txns}. Whale-scale flow signal — large holders rotating "
+            "through this pool. O pillar elevated (+15): concentrated smart money activity. "
+            "High vol/TVL with price stability = accumulation. "
+            "High vol/TVL with price decline = whale distribution/exit. "
+            f"24h price: {'+' if chg24 > 0 else ''}{chg24:.1f}%.",
+            "24H"))
+
+    # Source C: CoinGecko trending — small cap with high mcap rank change = whale pump
+    if cg_trending:
+        for coin in cg_trending[:7]:
+            sym   = coin.get("symbol", "")
+            rank  = coin.get("market_cap_rank") or 999
+            chg24 = coin.get("price_change_24h", 0) or 0
+            # Low rank + extreme move = likely whale-driven
+            if rank > 200 and abs(chg24) >= 25:
+                direction = "上涨" if chg24 > 0 else "下跌"
+                pi = ({"F": 0, "M": +15, "O": +8, "S": +12, "A": -15}
+                      if chg24 > 0 else
+                      {"F": -8, "M": -12, "O": -10, "S": -8, "A": +10})
+                signals.append(_mk({
+                    "id": f"whale_smallcap_{sym}", "timestamp": now.isoformat(),
+                    "type": "WHALE", "source": "coingecko", "importance": "HIGH",
+                    "description": f"鲸鱼扫货/出货: {sym} (MC#{rank}) 24h {'+' if chg24>0 else ''}{chg24:.1f}% 登上热搜",
+                    "affected_assets": [sym],
+                    "value": chg24,
+                }, pi,
+                f"{sym} (market cap rank #{rank}) {direction} {abs(chg24):.1f}% while trending. "
+                "Small-cap + trending + large move = whale-driven price action. "
+                "No organic retail volume supports this without on-chain backing. "
+                "HIGH risk: exit liquidity may be limited. Avoid chasing. "
+                "If accumulating: size to max 1–2% portfolio with hard stop.",
+                "IMMEDIATE"))
+
     # ── Sort: HIGH first, then by strength, then by recency ──────────────────
     _order = {"HIGH": 0, "MED": 1, "LOW": 2}
     signals.sort(key=lambda x: (
@@ -914,11 +1027,11 @@ async def get_signals():
     ))
     return {
         "status": "success",
-        "version": "3.1.0",
+        "version": "3.2.0",
         "timestamp": now.isoformat(),
         "data_source": "cis_engine+coingecko_pro+defillama+alternative.me+geckoterminal+news",
-        "count": len(signals[:20]),
-        "signals": signals[:20],
+        "count": len(signals[:40]),
+        "signals": signals[:40],
     }
 
 

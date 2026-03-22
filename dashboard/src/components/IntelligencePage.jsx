@@ -712,11 +712,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                             {event.title}
                           </div>
                           {truncated && (
-                            <div style={{ fontSize: 11, color: T.secondary, lineHeight: 1.6, marginBottom: 5 }}>
+                            <div style={{ fontSize: 11, color: T.t2, lineHeight: 1.6, marginBottom: 5 }}>
                               {truncated}
                             </div>
                           )}
-                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
+                          <div style={{ fontSize: 10, color: T.t3 }}>
                             {event.source}{event.date ? ` · ${event.date}` : ""}
                           </div>
                         </div>
@@ -879,7 +879,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                                     {r.name}
                                   </span>
                                 </div>
-                                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", fontFamily: FONTS.body, marginTop: 2 }}>
+                                <div style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.body, marginTop: 2 }}>
                                   {r.sector !== "—" ? r.sector : r.category}
                                 </div>
                               </div>
@@ -888,8 +888,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                               <div className="vc-col-round" style={{ textAlign: "center" }}>
                                 <span style={{
                                   fontFamily: FONTS.display, fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
-                                  padding: "3px 7px", borderRadius: 3, border: `1px solid ${T.border}`,
-                                  color: "rgba(255,255,255,0.5)", textAlign: "center",
+                                  padding: "3px 7px", borderRadius: 3, border: `1px solid ${T.borderMd}`,
+                                  color: T.t2, textAlign: "center",
                                 }}>
                                   {r.round || "—"}
                                 </span>
@@ -903,13 +903,13 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                               </div>
 
                               {/* Lead */}
-                              <div className="vc-col-lead" style={{ fontSize: 10, color: T.secondary, fontFamily: FONTS.body,
+                              <div className="vc-col-lead" style={{ fontSize: 10, color: T.t2, fontFamily: FONTS.body,
                                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {lead}
                               </div>
 
                               {/* Date - redesign style */}
-                              <div className="vc-col-date-header" style={{ textAlign: "right", fontSize: 9, color: "rgba(255,255,255,0.35)", fontFamily: FONTS.mono }}>
+                              <div className="vc-col-date-header" style={{ textAlign: "right", fontSize: 9, color: T.t3, fontFamily: FONTS.mono }}>
                                 {fmt.dateRelative(r.date)}
                               </div>
                             </div>
@@ -939,7 +939,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             <div style={{ marginTop: 24, marginBottom: 24 }}>
               <div style={{ marginBottom: 16 }}>
                 <Label Icon={Globe}>MACRO EVENTS</Label>
-                <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body }}>
+                <div style={{ fontSize: 11, color: T.t2, fontFamily: FONTS.body }}>
                   Institutional and regulatory developments shaping the market
                 </div>
               </div>
