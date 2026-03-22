@@ -3,7 +3,7 @@ import MarketDashboard from "./components/MarketDashboard";
 import IntelligencePage from "./components/IntelligencePage";
 import CISLeaderboard from "./components/CISLeaderboard";
 import VaultPage from "./components/VaultPage";
-import ProtocolPage from "./components/ProtocolPage";
+
 import MobileApp from "./components/MobileApp";
 import { T, FONTS } from "./tokens";
 
@@ -202,7 +202,6 @@ const SECTIONS = [
   { id: "market", label: "Asset Prices" },
   { id: "intelligence", label: "Intelligence" },
   { id: "cis", label: "CIS" },
-  { id: "protocol", label: "Protocol" },
   { id: "vault", label: "Vault" },
   { id: "quantgp", label: "Quant GP" },
 ];
@@ -342,15 +341,7 @@ function DesktopApp() {
         {/* Section Separator */}
         <div className="section-divider" />
 
-        {/* Section 4: Protocol */}
-        <section id="protocol" style={sectionStyle(1)}>
-          <ProtocolPage isSection={true} />
-        </section>
-
-        {/* Section Separator */}
-        <div className="section-divider" />
-
-        {/* Section 5: Vault */}
+        {/* Section 4: Vault */}
         <section id="vault" style={sectionStyle(0)}>
           <VaultPage isSection={true} />
         </section>
@@ -686,7 +677,6 @@ function DesktopApp() {
         #market    { --al-c: rgba(0, 200, 224, 0.04); }
         #intelligence { --al-c: rgba(107, 15, 204, 0.05); }
         #cis       { --al-c: rgba(200, 168, 75, 0.04); }
-        #protocol  { --al-c: rgba(75, 158, 255, 0.04); }
         #vault     { --al-c: rgba(0, 232, 122, 0.04); }
         #quantgp   { --al-c: rgba(200, 168, 75, 0.05); }
 
