@@ -21,6 +21,7 @@ from data.market.data_layer import (
     get_stablecoin_overview, get_top_yields, get_vc_raises,
     get_fear_greed, get_eth_gas, calculate_mmi,
     get_cg_global, get_cg_trending, get_gecko_terminal_pools, get_cg_derivatives,
+    get_cg_markets, get_defi_protocols_curated,
 )
 from src.api.store import redis_get
 
@@ -54,7 +55,32 @@ async def get_gas_prices():
     return await get_eth_gas()
 
 
+@router.get("/api/v1/market/coingecko-markets")
+async def get_coingecko_markets(ids: str = ""):
+    """
+    Proxy for CoinGecko coins/markets — uses the Pro key server-side.
+    Accepts comma-separated CoinGecko IDs: ?ids=bitcoin,ethereum,solana,...
+    Returns the raw CoinGecko markets list (same schema the AssetRadar expects).
+    Frontend calls this instead of direct CoinGecko to avoid browser rate limits.
+    """
+    if not ids:
+        raise HTTPException(status_code=400, detail="ids parameter required")
+    id_list = [i.strip() for i in ids.split(",") if i.strip()][:60]  # max 60 ids
+    data = await get_cg_markets(id_list)
+    return {"data": data, "count": len(data)}
+
+
 # ── DeFi (DeFiLlama) ─────────────────────────────────────────────────────────
+
+@router.get("/api/v1/defi/protocols")
+async def defi_protocols():
+    """
+    Curated DeFi protocol list with live TVL from DeFiLlama.
+    Used by ProtocolPage to display real data instead of mock values.
+    Returns list of {name, slug, category, chains, tvl, change_1d, change_7d}.
+    """
+    return await get_defi_protocols_curated()
+
 
 @router.get("/api/v1/defi/overview")
 async def defi_overview():

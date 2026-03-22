@@ -194,6 +194,71 @@ async def get_defi_overview() -> dict:
         return {"error": str(e)}
 
 
+async def get_defi_protocols_curated() -> list:
+    """
+    Returns real TVL + 7d/30d change for CometCloud's curated DeFi protocol library.
+    Fetches DeFiLlama /protocols (full list) and filters to our approved set.
+    Used to replace mock data in ProtocolPage.jsx with live numbers.
+    TTL: 5 min.
+    """
+    key = "defi_protocols_curated"
+    cached = _cache_get(key, ttl=300)
+    if cached:
+        return cached
+
+    # Curated protocol names (DeFiLlama name field — case-insensitive match)
+    CURATED = {
+        # Lending
+        "aave v3", "aave", "morpho", "spark", "compound v3", "compound",
+        "venus", "kamino lending", "marginfi",
+        # DEX
+        "uniswap", "curve dex", "curve", "balancer", "aerodrome",
+        "raydium", "orca", "pancakeswap",
+        # Liquid Staking
+        "lido", "rocket pool", "frax ether", "mantle staking",
+        "stader", "binance staking", "jito",
+        # CDP / Stablecoin
+        "sky", "makerdao", "liquity", "abracadabra",
+        # Yield
+        "convex finance", "yearn", "beefy", "pendle",
+        # RWA
+        "ondo finance", "maple finance", "goldfinch",
+        # Restaking
+        "eigenlayer", "karak network", "symbiotic",
+        # Bridge
+        "across protocol", "stargate", "hop protocol",
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=12) as client:
+            r = await client.get(f"{LLAMA_BASE}/protocols")
+            r.raise_for_status()
+            all_protos = r.json()
+
+        result = []
+        for p in all_protos:
+            name_lower = (p.get("name") or "").lower()
+            if name_lower in CURATED:
+                tvl = p.get("tvl") or 0
+                result.append({
+                    "name":          p.get("name"),
+                    "slug":          p.get("slug") or p.get("id") or "",
+                    "category":      p.get("category") or "DeFi",
+                    "chains":        (p.get("chains") or [])[:4],
+                    "tvl":           tvl,
+                    "change_1d":     round(p.get("change_1d") or 0, 2),
+                    "change_7d":     round(p.get("change_7d") or 0, 2),
+                    "logo":          p.get("logo") or "",
+                    "url":           p.get("url") or "",
+                })
+        # Sort by TVL descending
+        result.sort(key=lambda x: x["tvl"], reverse=True)
+        return _cache_set(key, result)
+    except Exception as e:
+        print(f"[DEFI_PROTOCOLS] Error: {e}")
+        return []
+
+
 async def get_protocol(protocol_slug: str) -> dict:
     """
     Get detailed data for a specific protocol.
@@ -559,6 +624,46 @@ async def get_gecko_terminal_pools(network: str = "eth", limit: int = 10) -> lis
                 })
             return _cache_set(key, result)
     except Exception as e:
+        return []
+
+
+async def get_cg_markets(ids: list[str]) -> list:
+    """
+    CoinGecko coins/markets — full market data for a list of coin IDs.
+    Returns the raw CoinGecko response list (same schema the frontend expects):
+      current_price, market_cap, total_volume, price_change_percentage_24h,
+      price_change_percentage_7d_in_currency, sparkline_in_7d.price, etc.
+    Uses the Pro endpoint + API key to avoid browser-side rate limits.
+    TTL: 2 min (fast-moving price data).
+    """
+    if not ids:
+        return []
+    ids_str = ",".join(ids)
+    key = f"cg_markets_{ids_str[:80]}"  # truncate cache key to reasonable length
+    cached = _cache_get(key, ttl=120)
+    if cached is not None:
+        return cached
+    base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            r = await client.get(
+                f"{base}/coins/markets",
+                headers=_cg_headers(),
+                params={
+                    "vs_currency": "usd",
+                    "ids": ids_str,
+                    "order": "market_cap_desc",
+                    "sparkline": "true",
+                    "price_change_percentage": "7d",
+                    "per_page": 250,
+                    "page": 1,
+                },
+            )
+            r.raise_for_status()
+            result = r.json()
+            return _cache_set(key, result)
+    except Exception as e:
+        print(f"[CG_MARKETS] Error: {e}")
         return []
 
 
