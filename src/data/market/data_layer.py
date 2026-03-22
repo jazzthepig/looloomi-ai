@@ -8,6 +8,7 @@ Etherscan requires a free key from etherscan.io/myapikey
 """
 
 import os
+import json
 import time
 import httpx
 import asyncio
@@ -35,6 +36,47 @@ def _cache_get(key: str, ttl: int = 30):
 def _cache_set(key: str, val):
     _cache[key] = (val, time.time())
     return val
+
+
+# ── Upstash Redis L2 Cache (shared across workers, survives deploys) ──────────
+_UPSTASH_URL   = os.getenv("UPSTASH_REDIS_REST_URL", "")
+_UPSTASH_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
+
+async def _redis_get(key: str):
+    """Read from Upstash. Returns None on miss or if not configured."""
+    if not _UPSTASH_URL:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=3) as c:
+            r = await c.get(
+                f"{_UPSTASH_URL}/get/{key}",
+                headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
+            )
+            if r.status_code == 200:
+                raw = r.json().get("result")
+                return json.loads(raw) if raw else None
+    except Exception:
+        pass
+    return None
+
+async def _redis_set(key: str, val, ttl: int) -> bool:
+    """Write to Upstash with TTL. Fire-and-forget style (non-blocking on failure)."""
+    if not _UPSTASH_URL:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=3) as c:
+            r = await c.post(
+                f"{_UPSTASH_URL}/set/{key}",
+                content=json.dumps(val),
+                headers={
+                    "Authorization": f"Bearer {_UPSTASH_TOKEN}",
+                    "Content-Type": "application/json",
+                },
+                params={"EX": ttl},
+            )
+            return r.status_code == 200
+    except Exception:
+        return False
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -159,52 +201,105 @@ LLAMA_YIELDS = "https://yields.llama.fi"
 LLAMA_STABLES = "https://stablecoins.llama.fi"
 
 async def get_defi_overview() -> dict:
-    """Global DeFi TVL and top protocols."""
-    key = "defi_overview"
+    """
+    Global DeFi TVL, 24h change, L2 TVL breakdown, and top protocols.
+    TTL: 5 min in-memory, 5 min Redis.
+    """
+    key = "defi_overview_v2"
     cached = _cache_get(key, ttl=300)
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
 
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
-            # Global TVL chart
-            r_global = await client.get(f"{LLAMA_BASE}/v2/historicalChainTvl")
-            global_tvl = r_global.json()
-            current_tvl = global_tvl[-1]["tvl"] if global_tvl else 0
+        async with httpx.AsyncClient(timeout=15) as client:
+            hist_coro     = client.get(f"{LLAMA_BASE}/v2/historicalChainTvl")
+            protocols_coro = client.get(f"{LLAMA_BASE}/protocols")
+            chains_coro   = client.get(f"{LLAMA_BASE}/v2/chains")
+            hist_r, proto_r, chains_r = await asyncio.gather(
+                hist_coro, protocols_coro, chains_coro, return_exceptions=True
+            )
 
-            # Top protocols
-            r_protocols = await client.get(f"{LLAMA_BASE}/protocols")
-            protocols = r_protocols.json()[:20]  # top 20
+        # ── Total TVL + 24h change ────────────────────────────────────────────
+        current_tvl = 0
+        defi_change_24h = 0.0
+        if not isinstance(hist_r, Exception) and hist_r.status_code == 200:
+            hist = hist_r.json()
+            if hist:
+                current_tvl = hist[-1].get("tvl", 0)
+                if len(hist) >= 2 and hist[-2].get("tvl", 0):
+                    prev = hist[-2]["tvl"]
+                    defi_change_24h = round((current_tvl - prev) / prev * 100, 2)
 
-            result = {
-                "total_tvl_usd": current_tvl,
-                "total_tvl_formatted": f"${current_tvl/1e9:.1f}B",
-                "top_protocols": [{
-                    "name":     p.get("name"),
-                    "tvl":      p.get("tvl", 0),
-                    "change_1d": p.get("change_1d", 0),
-                    "change_7d": p.get("change_7d", 0),
-                    "category": p.get("category"),
-                    "chains":   p.get("chains", [])[:3],
-                } for p in protocols if p.get("tvl", 0) > 0],
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-            return _cache_set(key, result)
+        # ── L2 TVL (Arbitrum, Optimism, Base, zkSync, Scroll, Starknet, Linea, Mantle) ──
+        L2_CHAINS = {
+            "arbitrum", "optimism", "base", "zksync era", "scroll",
+            "starknet", "linea", "mantle", "blast", "mode", "manta", "taiko",
+        }
+        l2_tvl = 0.0
+        if not isinstance(chains_r, Exception) and chains_r.status_code == 200:
+            chains_data = chains_r.json()
+            for ch in chains_data:
+                if (ch.get("name") or "").lower() in L2_CHAINS:
+                    l2_tvl += ch.get("tvl") or 0
+
+        # ── Top protocols ─────────────────────────────────────────────────────
+        protocols = []
+        if not isinstance(proto_r, Exception) and proto_r.status_code == 200:
+            all_protos = proto_r.json()
+            protocols  = all_protos[:20]
+
+        # ── RWA TVL — filter protocols by category ────────────────────────────
+        rwa_tvl = 0.0
+        rwa_change_24h = 0.0
+        if not isinstance(proto_r, Exception) and proto_r.status_code == 200:
+            rwa_protos = [p for p in all_protos if (p.get("category") or "").lower() == "rwa"]
+            rwa_tvl = sum(p.get("tvl") or 0 for p in rwa_protos)
+            if rwa_protos:
+                rwa_changes = [p.get("change_1d") or 0 for p in rwa_protos if p.get("change_1d") is not None]
+                if rwa_changes:
+                    rwa_change_24h = round(sum(rwa_changes) / len(rwa_changes), 2)
+
+        result = {
+            "total_tvl_usd": current_tvl,
+            "total_tvl":     current_tvl,   # alias used by IntelligencePage
+            "total_tvl_formatted": f"${current_tvl/1e9:.1f}B",
+            "defi_change_24h": defi_change_24h,
+            "l2_tvl":          l2_tvl,
+            "l2_change_24h":   0.0,          # chain-level 24h delta not in /v2/chains
+            "rwa_tvl":         rwa_tvl,
+            "rwa_change_24h":  rwa_change_24h,
+            "top_protocols": [{
+                "name":      p.get("name"),
+                "tvl":       p.get("tvl", 0),
+                "change_1d": p.get("change_1d", 0),
+                "change_7d": p.get("change_7d", 0),
+                "category":  p.get("category"),
+                "chains":    p.get("chains", [])[:3],
+            } for p in protocols if p.get("tvl", 0) > 0],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        await _redis_set(key, result, ttl=300)
+        return _cache_set(key, result)
     except Exception as e:
         return {"error": str(e)}
 
 
 async def get_defi_protocols_curated() -> list:
     """
-    Returns real TVL + 7d/30d change for CometCloud's curated DeFi protocol library.
+    Returns real TVL + 7d change for CometCloud's curated DeFi protocol library.
     Fetches DeFiLlama /protocols (full list) and filters to our approved set.
-    Used to replace mock data in ProtocolPage.jsx with live numbers.
-    TTL: 5 min.
+    TTL: 30 min Redis (DeFiLlama updates ~hourly, no need to hammer it).
     """
-    key = "defi_protocols_curated"
-    cached = _cache_get(key, ttl=300)
+    key = "defi_protocols_curated_v2"
+    cached = _cache_get(key, ttl=1800)
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
 
     # Curated protocol names (DeFiLlama name field — case-insensitive match)
     CURATED = {
@@ -253,6 +348,7 @@ async def get_defi_protocols_curated() -> list:
                 })
         # Sort by TVL descending
         result.sort(key=lambda x: x["tvl"], reverse=True)
+        await _redis_set(key, result, ttl=1800)
         return _cache_set(key, result)
     except Exception as e:
         print(f"[DEFI_PROTOCOLS] Error: {e}")
@@ -333,11 +429,14 @@ async def get_stablecoin_overview() -> dict:
 
 
 async def get_top_yields(min_tvl: float = 1_000_000, limit: int = 20) -> list[dict]:
-    """Top yield farming opportunities filtered by TVL."""
+    """Top yield farming opportunities filtered by TVL. TTL: 10 min Redis."""
     key = f"yields:{min_tvl}:{limit}"
     cached = _cache_get(key, ttl=600)
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
 
     try:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -358,6 +457,7 @@ async def get_top_yields(min_tvl: float = 1_000_000, limit: int = 20) -> list[di
                 "apy_reward": round(p.get("apyReward", 0) or 0, 2),
                 "pool_id":  p.get("pool"),
             } for p in filtered[:limit]]
+            await _redis_set(key, result, ttl=600)
             return _cache_set(key, result)
     except Exception as e:
         return [{"error": str(e)}]
@@ -461,11 +561,14 @@ async def get_vc_raises(limit: int = 20) -> list[dict]:
 # ══════════════════════════════════════════════════════════════════════════════
 
 async def get_fear_greed(limit: int = 30) -> dict:
-    """Crypto Fear & Greed Index. limit=1 for current, limit=30 for history."""
+    """Crypto Fear & Greed Index. limit=1 for current, limit=30 for history. TTL: 1 hr Redis."""
     key = f"fng:{limit}"
     cached = _cache_get(key, ttl=3600)  # updates daily
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
 
     try:
         async with httpx.AsyncClient(timeout=8) as client:
@@ -485,6 +588,7 @@ async def get_fear_greed(limit: int = 30) -> dict:
                 } for d in data],
                 "source": "alternative.me",
             }
+            await _redis_set(key, result, ttl=3600)
             return _cache_set(key, result)
     except Exception as e:
         return {"error": str(e)}
@@ -715,6 +819,82 @@ async def get_cg_derivatives() -> list:
             return _cache_set(key, result)
     except Exception as e:
         return []
+
+
+async def get_macro_pulse() -> dict:
+    """
+    Combined macro snapshot for the MacroPulse widget.
+    Fetches CG global market data + Fear & Greed + BTC price in parallel.
+    Uses Pro key when available; falls back to free CoinGecko endpoints.
+    Response mirrors the field paths MacroPulse.jsx expects:
+      .data.market_cap_percentage.btc
+      .data.market_cap_change_percentage_24h_usd
+      .fng.value / .fng.value_classification
+      .btc.usd / .btc.usd_24h_change / .btc.usd_7d_change
+    TTL: 5 min Redis, 2 min in-memory.
+    """
+    key = "macro_pulse"
+    cached = _cache_get(key, ttl=120)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    cg_base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    try:
+        async with httpx.AsyncClient(timeout=12) as client:
+            global_r, fng_r, btc_r = await asyncio.gather(
+                client.get(f"{cg_base}/global", headers=_cg_headers()),
+                client.get("https://api.alternative.me/fng/?limit=1"),
+                client.get(
+                    f"{cg_base}/simple/price",
+                    params={
+                        "ids": "bitcoin",
+                        "vs_currencies": "usd",
+                        "include_24hr_change": "true",
+                        "include_7d_change": "true",
+                    },
+                    headers=_cg_headers(),
+                ),
+                return_exceptions=True,
+            )
+
+        # ── Parse global ──────────────────────────────────────────────────────
+        cg_data: dict = {}
+        if not isinstance(global_r, Exception) and global_r.status_code == 200:
+            cg_data = global_r.json().get("data", {})
+
+        # ── Parse FNG ─────────────────────────────────────────────────────────
+        fng_entry: dict = {}
+        if not isinstance(fng_r, Exception) and fng_r.status_code == 200:
+            fng_list = fng_r.json().get("data", [])
+            if fng_list:
+                fng_entry = fng_list[0]
+
+        # ── Parse BTC ─────────────────────────────────────────────────────────
+        btc_entry: dict = {}
+        if not isinstance(btc_r, Exception) and btc_r.status_code == 200:
+            btc_entry = btc_r.json().get("bitcoin", {})
+
+        result = {
+            "data": {
+                "market_cap_percentage": cg_data.get("market_cap_percentage", {}),
+                "market_cap_change_percentage_24h_usd": cg_data.get(
+                    "market_cap_change_percentage_24h_usd", 0
+                ),
+            },
+            "fng": {
+                "value": fng_entry.get("value", "50"),
+                "value_classification": fng_entry.get("value_classification", "Neutral"),
+            },
+            "btc": btc_entry,  # {usd, usd_24h_change, usd_7d_change}
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        await _redis_set(key, result, ttl=300)
+        return _cache_set(key, result)
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
