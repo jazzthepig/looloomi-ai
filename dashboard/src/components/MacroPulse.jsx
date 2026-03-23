@@ -3,6 +3,12 @@ import { T, FONTS } from "../tokens";
 
 /* ─── Regime Calculation Logic ──────────────────────────────────────── */
 const calculateRegime = (btc7dChange, fngValue) => {
+  // If FNG is unavailable (null), rely on BTC change only
+  if (fngValue === null || fngValue === undefined) {
+    if (btc7dChange > 5) return "RISK ON";
+    if (btc7dChange < -10) return "RISK OFF";
+    return "NEUTRAL";
+  }
   if (btc7dChange > 5 && fngValue > 50) {
     return "RISK ON";
   }
@@ -70,7 +76,8 @@ const generateStatusDescription = (regime, btcDom, marketCapChange, fngValue) =>
   };
 
   const descriptions = configs[regime] || configs["NEUTRAL"];
-  const index = Math.floor((btcDom + marketCapChange + fngValue) / 33) % descriptions.length;
+  const fng = fngValue !== null && fngValue !== undefined ? fngValue : 50;
+  const index = Math.floor((btcDom + marketCapChange + fng) / 33) % descriptions.length;
   return descriptions[index];
 };
 
@@ -159,8 +166,8 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
   // Calculate values
   const btcDominance = data?.market_cap_percentage?.btc || 0;
   const totalMarketCapChange = data?.market_cap_change_percentage_24h_usd || 0;
-  const fngValue = fngData ? parseInt(fngData.value) : 50;
-  const fngLabel = fngData?.value_classification || "Neutral";
+  const fngValue = fngData ? parseInt(fngData.value) : null;
+  const fngLabel = fngData?.value_classification || (fngData ? "Neutral" : "N/A");
   const btc7dChange = btcData?.usd_7d_change || 0;
 
   // Calculate regime - use manual override if set
@@ -170,6 +177,7 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
   const statusDescription = generateStatusDescription(regime, btcDominance, totalMarketCapChange, fngValue);
 
   const getFngColor = (val) => {
+    if (val === null || val === undefined) return T.muted;
     if (val > 65) return T.green;
     if (val < 35) return T.red;
     return T.amber;
@@ -334,7 +342,7 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
               color: getFngColor(fngValue),
               letterSpacing: "-0.02em",
             }}>
-              {fngValue}
+              {fngValue !== null ? fngValue : "—"}
               <span style={{
                 fontSize: 9,
                 letterSpacing: "0.04em",

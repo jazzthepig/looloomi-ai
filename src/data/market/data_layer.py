@@ -23,6 +23,15 @@ MORALIS_KEY   = os.getenv("MORALIS_API_KEY", "")
 ETHERSCAN_KEY = os.getenv("ETHERSCAN_API_KEY", "")
 HELIUS_KEY    = os.getenv("HELIUS_API_KEY", "")
 
+# ── Persistent Redis client (reused across requests, avoids connection overhead) ──
+_redis_http_client: httpx.AsyncClient | None = None
+
+def _get_redis_client() -> httpx.AsyncClient:
+    global _redis_http_client
+    if _redis_http_client is None or _redis_http_client.is_closed:
+        _redis_http_client = httpx.AsyncClient(timeout=5, limits=httpx.Limits(max_connections=20))
+    return _redis_http_client
+
 # ── Simple TTL Cache ──────────────────────────────────────────────────────────
 _cache: dict = {}
 
@@ -47,14 +56,14 @@ async def _redis_get(key: str):
     if not _UPSTASH_URL:
         return None
     try:
-        async with httpx.AsyncClient(timeout=3) as c:
-            r = await c.get(
-                f"{_UPSTASH_URL}/get/{key}",
-                headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
-            )
-            if r.status_code == 200:
-                raw = r.json().get("result")
-                return json.loads(raw) if raw else None
+        client = _get_redis_client()
+        r = await client.get(
+            f"{_UPSTASH_URL}/get/{key}",
+            headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
+        )
+        if r.status_code == 200:
+            raw = r.json().get("result")
+            return json.loads(raw) if raw else None
     except Exception:
         pass
     return None
@@ -64,17 +73,17 @@ async def _redis_set(key: str, val, ttl: int) -> bool:
     if not _UPSTASH_URL:
         return False
     try:
-        async with httpx.AsyncClient(timeout=3) as c:
-            r = await c.post(
-                f"{_UPSTASH_URL}/set/{key}",
-                content=json.dumps(val),
-                headers={
-                    "Authorization": f"Bearer {_UPSTASH_TOKEN}",
-                    "Content-Type": "application/json",
-                },
-                params={"EX": ttl},
-            )
-            return r.status_code == 200
+        client = _get_redis_client()
+        r = await client.post(
+            f"{_UPSTASH_URL}/set/{key}",
+            content=json.dumps(val),
+            headers={
+                "Authorization": f"Bearer {_UPSTASH_TOKEN}",
+                "Content-Type": "application/json",
+            },
+            params={"EX": ttl},
+        )
+        return r.status_code == 200
     except Exception:
         return False
 

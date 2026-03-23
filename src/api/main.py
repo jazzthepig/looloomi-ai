@@ -61,11 +61,6 @@ app.include_router(vault_router)
 app.include_router(onchain_router)
 app.include_router(macro_router)
 app.include_router(quant_router)
-app.include_router(cis_router)
-app.include_router(intelligence_router)
-app.include_router(vault_router)
-app.include_router(onchain_router)
-app.include_router(macro_router)
 
 
 # ── Agent Discovery (A2A v0.3) ────────────────────────────────────────────────
