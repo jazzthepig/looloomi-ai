@@ -5,48 +5,47 @@ import { T, FONTS } from "../tokens";
 // id: CoinGecko coin ID
 // symbol: ticker shown in UI + used to join CIS data
 // cisKey: override when CIS backend uses a different key (e.g. MNT→MANTLE)
+// ── SELECTION CRITERIA ──────────────────────────────────────────────
+// Each category: top 3 by on-chain verifiable data (DeFiLlama TVL, chain
+// activity, protocol revenue). Assets that can't be verified as category
+// leaders are excluded. "龙头标准" — only projects with highest on-chain
+// metrics in their category.
+//
+// L1:    BTC (#1 mcap), ETH (#1 TVL ecosystem), SOL (#3 TVL + highest TPS)
+// L2:    ARB (#1 L2 TVL), OP (#2 L2 TVL), POL (#3 L2 TVL)
+// DeFi:  LDO (#1 TVL, liquid staking), AAVE (#1 lending TVL), UNI (#1 DEX volume)
+// Infra: LINK (#1 oracle by integrations), TIA (#1 DA layer by throughput), ENA (#1 synthetic dollar by TVL)
+// RWA:   ONDO (#1 tokenized treasury by AUM)
+// Meme:  DOGE (#1 meme by mcap) — single entry, meme lacks on-chain TVL metric
+//
+// Removed: ADA, XRP, TON, AVAX, DOT, SUI, APT, NEAR, INJ (not top-3 L1 by TVL)
+//          MNT (not top-3 L2 by TVL — Base is #3 but no tradable token)
+//          MKR, SNX, CRV, COMP, SUSHI (not top-3 DeFi by TVL)
+//          STX, RUNE, FIL (not top-3 infra by on-chain usage)
+//          POLYX (RWA TVL far below ONDO), PEPE, WIF (no on-chain verification basis)
+//          BNB (BSC TVL declining, #4+ by ecosystem activity)
+
 const ASSETS = [
-  // L1
-  { id: "bitcoin",            symbol: "BTC",   name: "Bitcoin",    category: "L1",   color: "#F7931A" },
-  { id: "ethereum",           symbol: "ETH",   name: "Ethereum",   category: "L1",   color: "#627EEA" },
-  { id: "solana",             symbol: "SOL",   name: "Solana",     category: "L1",   color: "#9945FF" },
-  { id: "binancecoin",        symbol: "BNB",   name: "BNB",        category: "L1",   color: "#F3BA2F" },
-  { id: "cardano",            symbol: "ADA",   name: "Cardano",    category: "L1",   color: "#0033AD" },
-  { id: "ripple",             symbol: "XRP",   name: "XRP",        category: "L1",   color: "#23292F" },
-  { id: "dogecoin",           symbol: "DOGE",  name: "Dogecoin",   category: "Meme", color: "#C2A633" },
-  { id: "the-open-network",   symbol: "TON",   name: "Toncoin",    category: "L1",   color: "#0098EA" },
-  { id: "avalanche-2",        symbol: "AVAX",  name: "Avalanche",  category: "L1",   color: "#E84142" },
-  { id: "polkadot",           symbol: "DOT",   name: "Polkadot",   category: "L1",   color: "#E6007A" },
-  { id: "sui",                symbol: "SUI",   name: "Sui",        category: "L1",   color: "#6FBCF0" },
-  { id: "aptos",              symbol: "APT",   name: "Aptos",      category: "L1",   color: "#2DD8A3" },
-  { id: "near",               symbol: "NEAR",  name: "NEAR",       category: "L1",   color: "#00C1DE" },
-  { id: "injective-protocol", symbol: "INJ",   name: "Injective",  category: "L1",   color: "#00F2FE" },
-  // L2
-  { id: "arbitrum",           symbol: "ARB",   name: "Arbitrum",   category: "L2",   color: "#28A0F0" },
-  { id: "optimism",           symbol: "OP",    name: "Optimism",   category: "L2",   color: "#FF0420" },
-  { id: "polygon-ecosystem-token", symbol: "POL", name: "Polygon (POL)", category: "L2", color: "#8247E5" },
-  { id: "mantle",             symbol: "MNT",   cisKey: "MANTLE",   name: "Mantle",   category: "L2",   color: "#00A8E0" },
-  // DeFi
-  { id: "uniswap",                    symbol: "UNI",   name: "Uniswap",    category: "DeFi", color: "#FF007A" },
-  { id: "aave",                       symbol: "AAVE",  name: "Aave",       category: "DeFi", color: "#2EBAC6" },
-  { id: "maker",                      symbol: "MKR",   name: "Maker",      category: "DeFi", color: "#1AAB9B" },
-  { id: "havven",                     symbol: "SNX",   name: "Synthetix",  category: "DeFi", color: "#00D1FF" },
-  { id: "curve-dao-token",            symbol: "CRV",   name: "Curve",      category: "DeFi", color: "#FF6B6B" },
-  { id: "lido-dao",                   symbol: "LDO",   name: "Lido",       category: "DeFi", color: "#00A3FF" },
-  { id: "compound-governance-token",  symbol: "COMP",  name: "Compound",   category: "DeFi", color: "#00D395" },
-  { id: "sushi",                      symbol: "SUSHI", name: "SushiSwap",  category: "DeFi", color: "#FA52A0" },
-  // Infra
-  { id: "chainlink", symbol: "LINK", name: "Chainlink", category: "Infra", color: "#2A5ADA" },
-  { id: "blockstack", symbol: "STX",  name: "Stacks",    category: "Infra", color: "#5546D6" },
-  { id: "thorchain", symbol: "RUNE", name: "THORChain", category: "Infra", color: "#2ECC71" },
-  { id: "filecoin",  symbol: "FIL",  name: "Filecoin",  category: "Infra", color: "#0090FF" },
-  { id: "celestia",  symbol: "TIA",  name: "Celestia",  category: "Infra", color: "#7B2FBE" },
-  // RWA
-  { id: "ondo-finance", symbol: "ONDO",  name: "Ondo",      category: "RWA", color: "#2B65EC" },
-  { id: "polymesh",     symbol: "POLYX", name: "Polymesh",  category: "RWA", color: "#E6007A" },
-  // Meme
-  { id: "pepe",       symbol: "PEPE", name: "Pepe", category: "Meme", color: "#00FF00" },
-  { id: "dogwifcoin", symbol: "WIF",  name: "WIF",  category: "Meme", color: "#9945FF" },
+  // L1 — top 3 by ecosystem TVL (DeFiLlama)
+  { id: "bitcoin",    symbol: "BTC",  name: "Bitcoin",   category: "L1",   color: "#F7931A" },
+  { id: "ethereum",   symbol: "ETH",  name: "Ethereum",  category: "L1",   color: "#627EEA" },
+  { id: "solana",     symbol: "SOL",  name: "Solana",    category: "L1",   color: "#9945FF" },
+  // L2 — top 3 by L2 TVL (DeFiLlama)
+  { id: "arbitrum",   symbol: "ARB",  name: "Arbitrum",  category: "L2",   color: "#28A0F0" },
+  { id: "optimism",   symbol: "OP",   name: "Optimism",  category: "L2",   color: "#FF0420" },
+  { id: "polygon-ecosystem-token", symbol: "POL", name: "Polygon", category: "L2", color: "#8247E5" },
+  // DeFi — top 3 by protocol TVL (DeFiLlama)
+  { id: "lido-dao",   symbol: "LDO",  name: "Lido",      category: "DeFi", color: "#00A3FF" },
+  { id: "aave",       symbol: "AAVE", name: "Aave",      category: "DeFi", color: "#2EBAC6" },
+  { id: "uniswap",    symbol: "UNI",  name: "Uniswap",   category: "DeFi", color: "#FF007A" },
+  // Infra — top 3 by on-chain integration count / usage
+  { id: "chainlink",  symbol: "LINK", name: "Chainlink",  category: "Infra", color: "#2A5ADA" },
+  { id: "celestia",   symbol: "TIA",  name: "Celestia",   category: "Infra", color: "#7B2FBE" },
+  { id: "ethena",     symbol: "ENA",  name: "Ethena",     category: "Infra", color: "#8B5CF6" },
+  // RWA — #1 by tokenized treasury AUM
+  { id: "ondo-finance", symbol: "ONDO", name: "Ondo",     category: "RWA",  color: "#2B65EC" },
+  // Meme — #1 by market cap (single entry — meme has no TVL metric)
+  { id: "dogecoin",   symbol: "DOGE", name: "Dogecoin",   category: "Meme", color: "#C2A633" },
 ];
 
 /* ─── Category Styles ─────────────────────────────────────────────── */
