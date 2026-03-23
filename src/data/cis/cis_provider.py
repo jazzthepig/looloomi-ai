@@ -554,7 +554,7 @@ async def get_yfinance_data(symbol: str) -> Optional[dict]:
     try:
         import yfinance as yf
 
-        # Rate limiting - use async sleep to avoid blocking event loop
+        # Rate limiting - async sleep to avoid blocking event loop
         await asyncio.sleep(0.2)
 
         def _fetch():
