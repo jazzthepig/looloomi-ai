@@ -127,7 +127,7 @@ class CISSingleResponse(BaseModel):
 
 class SignalResponse(BaseModel):
     signal: str
-    action: str  # "BUY", "SELL", "HOLD"
+    action: str  # "OUTPERFORM", "NEUTRAL", "UNDERWEIGHT"
     confidence: float
     rationale: str
 
@@ -371,18 +371,18 @@ async def get_trading_signal(symbol: str):
         cis_score = asset["cis_score"]
         grade = asset["grade"]
 
-        # Determine action
+        # Determine action — compliance-safe positioning language
         if grade in ["A+", "A"]:
-            action = "BUY"
+            action = "OUTPERFORM"
             confidence = min(1.0, (cis_score - 80) / 20 + 0.7)
         elif grade in ["B+", "B"]:
-            action = "HOLD"
+            action = "NEUTRAL"
             confidence = 0.6 + (cis_score - 70) / 100
         elif grade == "C+":
-            action = "HOLD"
+            action = "NEUTRAL"
             confidence = 0.5
         else:
-            action = "SELL"
+            action = "UNDERWEIGHT"
             confidence = min(1.0, (60 - cis_score) / 60 + 0.6)
 
         # Generate rationale

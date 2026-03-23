@@ -53,7 +53,7 @@ CRYPTO_ASSETS = {
     # DeFi
     "UNI": {"coingecko": "uniswap", "name": "Uniswap", "class": "DeFi"},
     "AAVE": {"coingecko": "aave", "name": "Aave", "class": "DeFi"},
-    "MKR": {"coingecko": "maker", "name": "Maker", "class": "DeFi"},
+    "MKR": {"coingecko": "maker", "name": "Maker", "class": "RWA"},
     "SNX": {"coingecko": "havven", "name": "Synthetix", "class": "DeFi"},
     "CRV": {"coingecko": "curve-dao-token", "name": "Curve", "class": "DeFi"},
     "LDO": {"coingecko": "lido-dao", "name": "Lido DAO", "class": "DeFi"},
@@ -389,54 +389,80 @@ async def fetch_binance_prices() -> Dict[str, dict]:
 
 
 async def fetch_cg_markets() -> Dict[str, dict]:
-    """Fallback: Fetch market data from CoinGecko if Binance fails."""
-    cache_key = "cg_markets"
+    """Fetch market data from CoinGecko for all tracked crypto assets.
+
+    Uses explicit coin IDs instead of top-N ranking to ensure smaller-cap
+    assets (e.g. POLYX, NEON) are always included regardless of market cap rank.
+    Batches into chunks of 50 to stay within URL length limits.
+    """
+    cache_key = "cg_markets_v2"
     cached = _cache_get(cache_key)
     if cached:
         return cached
 
     result = {}
 
+    # Collect all CoinGecko IDs we need
+    all_cg_ids = [cfg["coingecko"] for cfg in CRYPTO_ASSETS.values() if cfg.get("coingecko")]
+    # Deduplicate while preserving order
+    seen = set()
+    unique_ids = []
+    for cid in all_cg_ids:
+        if cid not in seen:
+            seen.add(cid)
+            unique_ids.append(cid)
+
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            # Fetch first page only as fallback
-            url = f"{_cg_base()}/coins/markets"
-            params = {
-                "vs_currency": "usd",
-                "order": "market_cap_desc",
-                "per_page": 250,
-                "page": 1,
-                "sparkline": False,
-                "price_change_percentage": "30d,7d"
-            }
-            r = await client.get(url, params=params, headers=_cg_headers())
-            r.raise_for_status()
-            data = r.json()
+            # Batch into chunks of 50 IDs to avoid URL length issues
+            batch_size = 50
+            for i in range(0, len(unique_ids), batch_size):
+                batch = unique_ids[i:i + batch_size]
+                ids_str = ",".join(batch)
 
-            for coin in data:
-                coin_id = coin["id"]
-                result[coin_id] = {
-                    "symbol": coin["symbol"].upper(),
-                    "name": coin["name"],
-                    "market_cap": coin.get("market_cap", 0),
-                    "fdv": coin.get("fully_diluted_valuation", 0),  # FDV for F pillar
-                    "volume_24h": coin.get("total_volume", 0),
-                    "price": coin.get("current_price", 0),
-                    "change_24h": coin.get("price_change_percentage_24h", 0),
-                    "change_7d": coin.get("price_change_percentage_7d", 0),
-                    "change_30d": coin.get("price_change_percentage_30d", 0),
-                    "circulating_supply": coin.get("circulating_supply", 0),
-                    "total_supply": coin.get("total_supply", 0),
-                    "ath_change_percentage": coin.get("ath_change_percentage", 0),
-                    "high_24h": coin.get("high_24h", 0),
-                    "low_24h": coin.get("low_24h", 0),
-                    "source": "coingecko",
+                url = f"{_cg_base()}/coins/markets"
+                params = {
+                    "vs_currency": "usd",
+                    "ids": ids_str,
+                    "order": "market_cap_desc",
+                    "per_page": 250,
+                    "page": 1,
+                    "sparkline": False,
+                    "price_change_percentage": "30d,7d"
                 }
+                r = await client.get(url, params=params, headers=_cg_headers())
+                r.raise_for_status()
+                data = r.json()
 
+                for coin in data:
+                    coin_id = coin["id"]
+                    result[coin_id] = {
+                        "symbol": coin["symbol"].upper(),
+                        "name": coin["name"],
+                        "market_cap": coin.get("market_cap", 0),
+                        "fdv": coin.get("fully_diluted_valuation", 0),
+                        "volume_24h": coin.get("total_volume", 0),
+                        "price": coin.get("current_price", 0),
+                        "change_24h": coin.get("price_change_percentage_24h", 0),
+                        "change_7d": coin.get("price_change_percentage_7d", 0),
+                        "change_30d": coin.get("price_change_percentage_30d", 0),
+                        "circulating_supply": coin.get("circulating_supply", 0),
+                        "total_supply": coin.get("total_supply", 0),
+                        "ath_change_percentage": coin.get("ath_change_percentage", 0),
+                        "high_24h": coin.get("high_24h", 0),
+                        "low_24h": coin.get("low_24h", 0),
+                        "source": "coingecko",
+                    }
+
+                # Rate limit: small delay between batches (free tier: 10-30 req/min)
+                if i + batch_size < len(unique_ids):
+                    await asyncio.sleep(1.5)
+
+            print(f"CoinGecko: fetched {len(result)}/{len(unique_ids)} assets")
             return _cache_set(cache_key, result)
 
     except Exception as e:
-        print(f"CoinGecko fallback error: {e}")
+        print(f"CoinGecko API error: {e}")
         return result
 
 
@@ -1351,12 +1377,25 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         elif cg_data:
             merged_markets[asset_id] = cg_data
 
-    # Fetch yfinance data for US assets
+    # Fetch yfinance data for US assets — parallel with semaphore to limit concurrency
     yf_data = {}
-    for symbol, config in {**US_EQUITIES, **BONDS, **COMMODITIES}.items():
-        data = await get_yfinance_data(config["yfinance"])
+    yf_assets = {**US_EQUITIES, **BONDS, **COMMODITIES}
+    yf_sem = asyncio.Semaphore(5)  # max 5 concurrent yfinance calls
+
+    async def _fetch_yf(sym, cfg):
+        async with yf_sem:
+            return sym, await get_yfinance_data(cfg["yfinance"])
+
+    yf_results = await asyncio.gather(
+        *[_fetch_yf(sym, cfg) for sym, cfg in yf_assets.items()],
+        return_exceptions=True
+    )
+    for item in yf_results:
+        if isinstance(item, Exception):
+            continue
+        sym, data = item
         if data:
-            yf_data[symbol] = data
+            yf_data[sym] = data
 
     # Macro regime determination
     btc_data = merged_markets.get("BTC", {})
