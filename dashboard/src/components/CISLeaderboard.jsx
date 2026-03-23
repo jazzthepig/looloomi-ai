@@ -515,7 +515,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           )}
         </div>
         <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>
-          CIS v4.0 · {data.length} assets
+          CIS v4.1 · {data.length} assets
           {updatedAt && <span style={{ marginLeft: 8, opacity: 0.5 }}>Updated: {updatedAt}</span>}
         </span>
       </div>
@@ -530,7 +530,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           fontFamily: FONTS.display, fontSize: 10, fontWeight: 700,
           color: "#4472FF", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10,
         }}>
-          CometCloud Intelligence Score — CIS v4.0
+          CometCloud Intelligence Score — CIS v4.1
         </div>
         <div style={{
           fontFamily: FONTS.body, fontSize: 12, color: T.secondary,
@@ -548,7 +548,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             },
             {
               title: "Methodology",
-              text: "5 independent pillars: F (Fundamental) · M (Market Structure) · O (On-Chain Health) · S (Sentiment) · A (Alpha Independence). Graded by relative percentile rank within the live universe — stays meaningful in any market regime.",
+              text: "5 independent pillars: F (Fundamental) · M (Market Structure) · O (On-Chain Health) · S (Sentiment) · A (Alpha Independence). Graded by absolute thresholds (A+≥85 → F<25) — consistent across all market regimes. Percentile rank shown as metadata only.",
             },
             {
               title: "Institutional Application",
@@ -897,7 +897,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
 
             {/* Footer */}
             <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${T.border}`, fontSize: 9, color: "rgba(255,255,255,0.26)" }}>
-              CIS v4.0 · Scored by Looloomi AI · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+              CIS v4.1 · Scored by Looloomi AI · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </div>
           </div>
         </div>
@@ -980,8 +980,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           }}>
             <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted, lineHeight: 1.6 }}>
               CIS scores are recalculated every 30 minutes using live market, on-chain, and macro data.
-              Grades are percentile-based within the current universe — not absolute thresholds — ensuring
-              the scale remains meaningful across market regimes.
+              Grades use absolute thresholds (A+≥85, A≥75, B+≥65, B≥55, C+≥45, C≥35, D≥25, F&lt;25) — consistent across all market regimes.
+              Percentile rank is shown as metadata only.
               Scores do not constitute investment advice.
             </div>
           </div>

@@ -40,9 +40,9 @@ PROTOCOL_REGISTRY = [
     # RWA — Treasuries
     {"id": "ondo",       "name": "Ondo Finance",       "slug": "ondo-finance",        "category": "RWA - Treasuries", "chain": "Multi-chain", "base_apy": 4.8, "audit_score": 9, "age_months": 24, "desc": "Tokenized US Treasuries (OUSG, OMMF)"},
     {"id": "blackrock",  "name": "BlackRock BUIDL",     "slug": "blackrock-buidl",     "category": "RWA - Treasuries", "chain": "Multi-chain", "base_apy": 4.3, "audit_score": 10, "age_months": 18, "desc": "Tokenized Money Market Fund"},
-    {"id": "franklin",   "name": "Franklin Templeton",  "slug": "franklin-templeton",   "category": "RWA - Treasuries", "chain": "Polygon",     "base_apy": 4.5, "audit_score": 10, "age_months": 20, "desc": "BENJI — On-chain US Treasury Fund"},
+    {"id": "franklin",   "name": "Franklin Templeton",  "slug": "franklin-onchain-us-government-money-fund", "category": "RWA - Treasuries", "chain": "Polygon",     "base_apy": 4.5, "audit_score": 10, "age_months": 20, "desc": "BENJI — On-chain US Treasury Fund"},
     {"id": "superstate", "name": "Superstate",          "slug": "superstate",           "category": "RWA - Treasuries", "chain": "Ethereum",    "base_apy": 4.6, "audit_score": 8,  "age_months": 14, "desc": "USTB — US Treasury Short Fund"},
-    {"id": "anemoy",     "name": "Anemoy Capital",      "slug": "anemoy",              "category": "RWA - Treasuries", "chain": "Multi-chain", "base_apy": 5.2, "audit_score": 7,  "age_months": 12, "desc": "Treasury Bill protocol"},
+    {"id": "anemoy",     "name": "Anemoy Capital",      "slug": "anemoy-capital",      "category": "RWA - Treasuries", "chain": "Multi-chain", "base_apy": 5.2, "audit_score": 7,  "age_months": 12, "desc": "Treasury Bill protocol"},
 
     # RWA — Private Credit
     {"id": "maple",      "name": "Maple Finance",       "slug": "maple",               "category": "RWA - Private Credit", "chain": "Multi-chain", "base_apy": 12.0, "audit_score": 8, "age_months": 36, "desc": "Institutional unsecured lending"},
@@ -52,12 +52,12 @@ PROTOCOL_REGISTRY = [
 
     # DeFi — Lending
     {"id": "aave",       "name": "Aave",                "slug": "aave",                "category": "DeFi - Lending",  "chain": "Multi-chain", "base_apy": 3.5,  "audit_score": 10, "age_months": 60, "desc": "Largest DeFi lending protocol"},
-    {"id": "compound",   "name": "Compound",            "slug": "compound",            "category": "DeFi - Lending",  "chain": "Multi-chain", "base_apy": 2.8,  "audit_score": 10, "age_months": 60, "desc": "Algorithmic money market"},
+    {"id": "compound",   "name": "Compound",            "slug": "compound-finance",    "category": "DeFi - Lending",  "chain": "Multi-chain", "base_apy": 2.8,  "audit_score": 10, "age_months": 60, "desc": "Algorithmic money market"},
     {"id": "morpho",     "name": "Morpho",              "slug": "morpho",              "category": "DeFi - Lending",  "chain": "Ethereum",    "base_apy": 5.5,  "audit_score": 9,  "age_months": 24, "desc": "Peer-to-peer lending optimizer"},
 
     # DeFi — DEX / Liquidity
     {"id": "uniswap",    "name": "Uniswap",             "slug": "uniswap",             "category": "DeFi - DEX",      "chain": "Multi-chain", "base_apy": 0,    "audit_score": 10, "age_months": 72, "desc": "Leading DEX by volume"},
-    {"id": "curve",      "name": "Curve Finance",       "slug": "curve-dex",           "category": "DeFi - DEX",      "chain": "Multi-chain", "base_apy": 2.0,  "audit_score": 9,  "age_months": 60, "desc": "Stablecoin DEX & yield"},
+    {"id": "curve",      "name": "Curve Finance",       "slug": "curve-finance",       "category": "DeFi - DEX",      "chain": "Multi-chain", "base_apy": 2.0,  "audit_score": 9,  "age_months": 60, "desc": "Stablecoin DEX & yield"},
     {"id": "jupiter",    "name": "Jupiter",             "slug": "jupiter",             "category": "DeFi - DEX",      "chain": "Solana",      "base_apy": 0,    "audit_score": 8,  "age_months": 24, "desc": "Solana DEX aggregator"},
 
     # DeFi — Liquid Staking
