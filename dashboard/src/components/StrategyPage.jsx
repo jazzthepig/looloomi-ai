@@ -439,7 +439,7 @@ export default function StrategyPage() {
               padding: "10px 20px", fontFamily: F.mono, fontSize: 9,
               color: T.t3, display: "flex", justifyContent: "space-between",
             }}>
-              <span>Source: CIS v4.0 · CoinGecko Pro + DeFiLlama + Alternative.me</span>
+              <span>Source: CIS v4.1 · CoinGecko Pro + DeFiLlama + Alternative.me</span>
               <span>Updated every 30 min via local AI engine</span>
             </div>
           </div>

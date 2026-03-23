@@ -34,13 +34,13 @@ def _cg_headers() -> dict:
 # Crypto assets config - maps to CoinGecko IDs
 CRYPTO_ASSETS = {
     # Top by market cap
-    "BTC": {"coingecko": "bitcoin", "name": "Bitcoin", "class": "Crypto"},
-    "ETH": {"coingecko": "ethereum", "name": "Ethereum", "class": "Crypto"},
+    "BTC": {"coingecko": "bitcoin", "name": "Bitcoin", "class": "L1"},
+    "ETH": {"coingecko": "ethereum", "name": "Ethereum", "class": "L1"},
     "BNB": {"coingecko": "binancecoin", "name": "BNB", "class": "L1"},
     "XRP": {"coingecko": "ripple", "name": "XRP", "class": "L1"},
     "SOL": {"coingecko": "solana", "name": "Solana", "class": "L1"},
     "ADA": {"coingecko": "cardano", "name": "Cardano", "class": "L1"},
-    "DOGE": {"coingecko": "dogecoin", "name": "Dogecoin", "class": "L1"},
+    "DOGE": {"coingecko": "dogecoin", "name": "Dogecoin", "class": "Memecoin"},
     # L1/L2
     "AVAX": {"coingecko": "avalanche-2", "name": "Avalanche", "class": "L1"},
     "DOT": {"coingecko": "polkadot", "name": "Polkadot", "class": "L1"},
@@ -598,10 +598,17 @@ async def get_yfinance_data(symbol: str) -> Optional[dict]:
             ticker = yf.Ticker(symbol)
             info = ticker.info
             hist = ticker.history(period="35d")
+            price_now = float(hist['Close'].iloc[-1]) if len(hist) > 0 else 0
+            # 7D change from history
+            if len(hist) > 7:
+                price_7d_ago = float(hist['Close'].iloc[-8])
+                change_7d = ((price_now - price_7d_ago) / price_7d_ago) * 100 if price_7d_ago else 0
+            else:
+                change_7d = 0
+            # 30D change from history
             if len(hist) > 30:
-                price_30d_ago = hist['Close'].iloc[-31] if len(hist) > 31 else hist['Close'].iloc[0]
-                price_now = hist['Close'].iloc[-1]
-                change_30d = ((price_now - price_30d_ago) / price_30d_ago) * 100
+                price_30d_ago = float(hist['Close'].iloc[-31] if len(hist) > 31 else hist['Close'].iloc[0])
+                change_30d = ((price_now - price_30d_ago) / price_30d_ago) * 100 if price_30d_ago else 0
             else:
                 change_30d = 0
             return {
@@ -610,6 +617,7 @@ async def get_yfinance_data(symbol: str) -> Optional[dict]:
                 "market_cap": info.get("marketCap", 0),
                 "volume_24h": info.get("regularMarketVolume", 0),
                 "change_24h": info.get("regularMarketChange", 0),
+                "change_7d": change_7d,
                 "change_30d": change_30d,
                 "circulating_supply": info.get("sharesOutstanding", 0),
                 "total_supply": info.get("sharesOutstanding", 0),
@@ -1287,6 +1295,11 @@ def calculate_las(
         liq_mult = 1.0
     else:
         liq_mult = 0.0
+
+    # Floor: any asset in the universe has at least 5% liquidity credit.
+    # Prevents near-zero LAS from CoinGecko volume data quality issues
+    # (e.g. MKR/POLYX only counting limited trading pairs).
+    liq_mult = max(liq_mult, 0.05)
 
     # Spread penalty
     spread_penalty = 1.0
