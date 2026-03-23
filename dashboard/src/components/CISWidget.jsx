@@ -25,10 +25,14 @@ const GRADE_COLORS = {
 };
 
 const SIGNAL_STYLES = {
+  "STRONG OUTPERFORM": { bg: "rgba(34,197,94,0.15)",  color: "#22c55e", label: "VERY HIGH" },
+  "OUTPERFORM":        { bg: "rgba(74,222,128,0.12)", color: "#4ade80", label: "HIGH"      },
+  "NEUTRAL":           { bg: "rgba(251,191,36,0.10)", color: "#fbbf24", label: "NEUTRAL"   },
+  "UNDERPERFORM":      { bg: "rgba(248,113,113,0.12)",color: "#f87171", label: "LOW"       },
+  "UNDERWEIGHT":       { bg: "rgba(220,38,38,0.15)",  color: "#dc2626", label: "VERY LOW"  },
+  // Legacy compat
   "STRONG OVERWEIGHT": { bg: "rgba(34,197,94,0.15)",  color: "#22c55e", label: "VERY HIGH" },
   "OVERWEIGHT":        { bg: "rgba(74,222,128,0.12)", color: "#4ade80", label: "HIGH"      },
-  "NEUTRAL":           { bg: "rgba(251,191,36,0.10)", color: "#fbbf24", label: "NEUTRAL"   },
-  "UNDERWEIGHT":       { bg: "rgba(248,113,113,0.12)",color: "#f87171", label: "LOW"       },
   "AVOID":             { bg: "rgba(220,38,38,0.15)",  color: "#dc2626", label: "VERY LOW"  },
 };
 

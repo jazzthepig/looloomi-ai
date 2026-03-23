@@ -396,7 +396,7 @@ export default function StrategyPage() {
             ) : topAssets.map((a, i) => {
               const score = a.cis_score ?? a.score ?? 0;
               const grade = a.grade || "—";
-              const signal = a.signal || "HOLD";
+              const signal = a.signal || "NEUTRAL";
               const ch7d = a.price_change_7d ?? a.change_7d ?? a.ch7d ?? 0;
               const sym = a.symbol || a.s || "—";
               return (
@@ -421,7 +421,7 @@ export default function StrategyPage() {
                   <span style={{
                     fontFamily: F.display, fontSize: 9, fontWeight: 700,
                     textAlign: "center", letterSpacing: "0.04em",
-                    color: signal === "STRONG BUY" || signal === "BUY" || signal === "ACCUMULATE" ? T.green : signal === "REDUCE" || signal === "AVOID" ? T.red : T.gold,
+                    color: signal.includes("OUTPERFORM") ? T.green : signal.includes("UNDER") ? T.red : T.gold,
                   }}>
                     {signal}
                   </span>
@@ -485,7 +485,7 @@ export default function StrategyPage() {
                 <div style={{ marginBottom: 6, fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.1em" }}>
                   SIGNAL FLOW
                 </div>
-                {["CIS Score Change → Signal Generation (BUY/SELL/HOLD)",
+                {["CIS Score Change → Signal Generation (OUTPERFORM/NEUTRAL/UNDERWEIGHT)",
                   "Macro Regime → Position Size Multiplier",
                   "Risk Limits → Max Allocation per Asset 8%",
                   "Execution → Freqtrade + CEX APIs"].map((s, i) => (
@@ -618,7 +618,7 @@ export default function StrategyPage() {
               <FlowStep num="2" title="CIS Scoring Engine"
                 desc="Dedicated local AI infrastructure scores each asset across 5 pillars. Regime-aware weight adjustments ensure scores reflect the current macro environment — not static rankings." />
               <FlowStep num="3" title="Signal Generation"
-                desc="Scores are converted to actionable signals: STRONG BUY, BUY, HOLD, REDUCE, AVOID. Confidence levels and recommended portfolio weights are computed per asset." />
+                desc="Scores are converted to positioning signals: STRONG OUTPERFORM, OUTPERFORM, NEUTRAL, UNDERPERFORM, UNDERWEIGHT. Confidence levels and recommended portfolio weights are computed per asset." />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <FlowStep num="4" title="Channel Allocation"

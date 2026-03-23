@@ -247,22 +247,22 @@ def _score_protocol(proto: dict, tvl_data: dict | None, category_stats: dict) ->
     else:
         grade = "F"
 
-    # Signal
+    # Signal — compliance-safe positioning language (no buy/sell)
     if normalized >= 65 and chg_7d > 0:
-        signal = "ACCUMULATE"
+        signal = "OUTPERFORM"
     elif normalized >= 50:
-        signal = "HOLD"
+        signal = "NEUTRAL"
     elif normalized >= 35:
-        signal = "REDUCE"
+        signal = "UNDERPERFORM"
     else:
-        signal = "AVOID"
+        signal = "UNDERWEIGHT"
 
     # Recommended weight (basis points of portfolio)
-    if signal == "ACCUMULATE":
+    if signal == "OUTPERFORM":
         rec_weight = min(800, max(200, int(normalized * 8)))
-    elif signal == "HOLD":
+    elif signal == "NEUTRAL":
         rec_weight = min(500, max(100, int(normalized * 4)))
-    elif signal == "REDUCE":
+    elif signal == "UNDERPERFORM":
         rec_weight = max(0, int(normalized * 2))
     else:
         rec_weight = 0
@@ -400,7 +400,7 @@ async def get_protocol_universe(category: str | None = None,
         del info["scores"]
 
     # 8. Top picks (agent-recommended)
-    top_picks = [p["id"] for p in scored if p["signal"] == "ACCUMULATE"][:5]
+    top_picks = [p["id"] for p in scored if p["signal"] == "OUTPERFORM"][:5]
 
     result = {
         "status": "success",

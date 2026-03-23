@@ -144,9 +144,13 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         asset_class: asset.asset_class,
         total_score: asset.cis_score,
         grade: asset.grade,
+        signal: asset.signal || "NEUTRAL",
         pillars: { F: asset.f, M: asset.m, O: asset.r, S: asset.s, alpha: asset.a },
         percentile_rank: asset.percentile_rank ?? null,
         change_30d: asset.change_30d ?? null,
+        data_tier: asset.data_tier ?? 2,
+        las: asset.las ?? null,
+        confidence: asset.confidence ?? null,
         description: "",
       }));
       setData(mapped);
@@ -172,9 +176,13 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             asset_class: asset.asset_class,
             total_score: asset.cis_score,
             grade: asset.grade,
+            signal: asset.signal || "NEUTRAL",
             pillars: { F: asset.f, M: asset.m, O: asset.r, S: asset.s, alpha: asset.a },
             percentile_rank: asset.percentile_rank ?? null,
             change_30d: asset.change_30d ?? null,
+            data_tier: asset.data_tier ?? 2,
+            las: asset.las ?? null,
+            confidence: asset.confidence ?? null,
             description: "",
           }));
           setData(mapped);
@@ -641,8 +649,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden", background: T.surface }}>
           {/* Table Header */}
           <div className="cis-table-header" style={{
-            display: "grid", gridTemplateColumns: "34px 1fr 80px 60px 80px",
-            gap: 12, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
+            display: "grid", gridTemplateColumns: "34px 1fr 80px 45px 50px 60px 80px",
+            gap: 8, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
             fontSize: 9, color: "rgba(255,255,255,0.26)", letterSpacing: "0.14em",
             textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
             background: "rgba(255,255,255,0.018)",
@@ -651,6 +659,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             <span>Asset</span>
             <span style={{ textAlign: "right" }}>CIS</span>
             <span style={{ textAlign: "center" }}>Grade</span>
+            <span style={{ textAlign: "right" }}>LAS</span>
+            <span style={{ textAlign: "center" }}>Signal</span>
             <span style={{ textAlign: "center" }}>7D</span>
           </div>
 
@@ -665,8 +675,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
               <div key={item.asset_id} className="cis-table-row"
                 onClick={() => handleSelectAsset(item)}
                 style={{
-                  display: "grid", gridTemplateColumns: "34px 1fr 80px 60px 80px",
-                  gap: 12, padding: "13px 18px", borderBottom: `1px solid ${T.border}`,
+                  display: "grid", gridTemplateColumns: "34px 1fr 80px 45px 50px 60px 80px",
+                  gap: 8, padding: "13px 18px", borderBottom: `1px solid ${T.border}`,
                   alignItems: "center", cursor: "pointer",
                   background: selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent",
                   transition: "background .14s",
@@ -684,21 +694,31 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                       color: ASSET_CLASS_COLORS[item.asset_class]?.text || T.muted,
                       fontFamily: FONTS.display, fontWeight: 600, letterSpacing: "0.05em"
                     }}>{item.asset_class}</span>
+                    {/* T1/T2 tier badge */}
+                    <span style={{
+                      fontSize: 7, fontWeight: 600, fontFamily: FONTS.mono,
+                      padding: "1px 4px", borderRadius: 3, letterSpacing: "0.04em",
+                      color: item.data_tier === 1 ? "#00E87A" : "#F59E0B",
+                      background: item.data_tier === 1 ? "rgba(0,232,122,0.08)" : "rgba(245,158,11,0.08)",
+                      border: `1px solid ${item.data_tier === 1 ? "rgba(0,232,122,0.2)" : "rgba(245,158,11,0.2)"}`,
+                    }}>T{item.data_tier || 2}</span>
                   </div>
-                  {(() => {
-                    const sig = getPercentileSignal(item.percentile_rank);
-                    return sig ? (
-                      <span style={{
-                        fontSize: 8, fontFamily: FONTS.display, fontWeight: 700,
-                        letterSpacing: "0.06em", color: sig.color, opacity: 0.8,
-                      }}>{sig.label}</span>
-                    ) : null;
-                  })()}
                 </div>
-                <span style={{ fontFamily: FONTS.mono, fontSize: 15, fontWeight: 400, textAlign: "right",
-                  color: (item.total_score ?? 0) >= 85 ? T.green : (item.total_score ?? 0) >= 70 ? T.blue : T.amber }}>
-                  {(item.total_score ?? 0).toFixed(1)}
-                </span>
+                {/* CIS score + confidence dot */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+                  {item.confidence != null && (
+                    <span title={`Confidence: ${(item.confidence * 100).toFixed(0)}%`} style={{
+                      width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
+                      background: item.confidence >= 0.7 ? "#00E87A" : item.confidence >= 0.5 ? "#F59E0B" : "#FF3D5A",
+                      opacity: 0.7,
+                    }} />
+                  )}
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 15, fontWeight: 400,
+                    color: (item.total_score ?? 0) >= 85 ? T.green : (item.total_score ?? 0) >= 70 ? T.blue : T.amber }}>
+                    {item.confidence != null && item.confidence < 0.5 ? "~" : ""}{(item.total_score ?? 0).toFixed(1)}
+                  </span>
+                </div>
+                {/* Grade */}
                 <span style={{
                   width: 28, height: 28, borderRadius: "50%", display: "flex",
                   alignItems: "center", justifyContent: "center", margin: "0 auto",
@@ -706,6 +726,19 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   fontSize: 12, fontWeight: 700, fontFamily: FONTS.mono,
                   color: GRADE_COLORS[item.grade], border: `1px solid ${GRADE_COLORS[item.grade]}40`
                 }}>{item.grade}</span>
+                {/* LAS */}
+                <span style={{ fontFamily: FONTS.mono, fontSize: 11, textAlign: "right",
+                  color: (item.las ?? 0) >= 60 ? "#00E87A" : (item.las ?? 0) >= 40 ? "rgba(255,255,255,0.5)" : "#FF3D5A" }}>
+                  {item.las != null ? item.las.toFixed(1) : "—"}
+                </span>
+                {/* Signal */}
+                <span style={{
+                  fontFamily: FONTS.display, fontSize: 7, fontWeight: 700,
+                  letterSpacing: "0.04em", textAlign: "center", whiteSpace: "nowrap",
+                  color: (item.signal || "").includes("OUTPERFORM") ? "#00E87A" : (item.signal || "").includes("UNDER") ? "#FF3D5A" : "#F59E0B",
+                }}>
+                  {item.signal || "NEUTRAL"}
+                </span>
                 {/* 7D Sparkline */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Sparkline scores={sparkData} width={72} height={24} />

@@ -19,11 +19,14 @@ const GRADE_COLOR = {
 };
 
 const SIGNAL_COLOR = {
-  "STRONG BUY": "#00E87A",
-  BUY:          "#4B9EFF",
-  HOLD:         "rgba(255,255,255,0.4)",
-  REDUCE:       "#E8A000",
-  AVOID:        "#FF3D5A",
+  "STRONG OUTPERFORM": "#00E87A",
+  OUTPERFORM:          "#4B9EFF",
+  NEUTRAL:             "rgba(255,255,255,0.4)",
+  UNDERPERFORM:        "#E8A000",
+  UNDERWEIGHT:         "#FF3D5A",
+  // Legacy compat
+  "STRONG BUY": "#00E87A", BUY: "#4B9EFF", HOLD: "rgba(255,255,255,0.4)",
+  REDUCE: "#E8A000", AVOID: "#FF3D5A",
 };
 
 const REGIME_CONFIG = {

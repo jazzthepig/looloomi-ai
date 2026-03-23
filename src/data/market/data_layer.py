@@ -751,8 +751,10 @@ async def get_cg_markets(ids: list[str]) -> list:
     """
     if not ids:
         return []
-    ids_str = ",".join(ids)
-    key = f"cg_markets_{ids_str[:80]}"  # truncate cache key to reasonable length
+    ids_str = ",".join(sorted(ids))  # sort for consistent cache key
+    import hashlib
+    ids_hash = hashlib.md5(ids_str.encode()).hexdigest()[:12]
+    key = f"cg_markets_{ids_hash}_{len(ids)}"  # hash-based key, no truncation collision
     cached = _cache_get(key, ttl=120)
     if cached is not None:
         return cached
@@ -1166,11 +1168,11 @@ async def calculate_mmi(token: str = "BTC") -> dict:
         )
 
         signal = (
-            "STRONG BUY"  if mmi_score >= 75 else
-            "BUY"         if mmi_score >= 60 else
-            "NEUTRAL"     if mmi_score >= 40 else
-            "SELL"        if mmi_score >= 25 else
-            "STRONG SELL"
+            "STRONG OUTPERFORM"  if mmi_score >= 75 else
+            "OUTPERFORM"         if mmi_score >= 60 else
+            "NEUTRAL"            if mmi_score >= 40 else
+            "UNDERPERFORM"       if mmi_score >= 25 else
+            "UNDERWEIGHT"
         )
 
         result = {

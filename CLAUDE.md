@@ -54,6 +54,24 @@ other. We are early infrastructure for that meeting point.
 This shapes how we build: with patience for complexity, respect for emergence, and no
 tolerance for things that feel dead.
 
+## Compliance rules
+
+1. **No buy/sell language in signals.** CometCloud does not hold an investment advisory
+   (投顾) license. All CIS signals MUST use positioning language only:
+   `STRONG OUTPERFORM` / `OUTPERFORM` / `NEUTRAL` / `UNDERPERFORM` / `UNDERWEIGHT`.
+   NEVER use `BUY`, `SELL`, `STRONG BUY`, `ACCUMULATE`, `AVOID`, `REDUCE` in any
+   user-facing output — backend, frontend, API responses, or documentation.
+   See `CIS_METHODOLOGY.md` §5 and §8.
+
+2. **Shadow folder is READ-ONLY.** Never `git add` or commit Shadow/ files. Shadow is
+   a local reference for Claude Cowork. All Mac Mini code changes go to
+   `/Volumes/CometCloudAI/cometcloud-local/` directly. This has been stated multiple
+   times — treat as a hard rule.
+
+3. **No internal implementation details in investor-facing pages.** strategy.html and
+   other investor-facing content must not mention specific tech stack (FastAPI, Railway,
+   Ollama, Qwen3, etc.), hardware specs, or internal architecture.
+
 ## Tech stack
 
 - **Frontend**: React + Tailwind CSS → Railway (auto-deploy via GitHub push)
@@ -112,16 +130,23 @@ Railway (cis_provider.py) ──────────────────
 - Frontend badge: "CIS PRO · LOCAL ENGINE" (green) when Mac Mini scores served,
   "CIS MARKET · ESTIMATED" (amber) when Railway fallback
 
-## CIS v4.0 scoring
+## CIS v4.1 scoring
 
 - **5 pillars**: F (Fundamental), M (Momentum), O (On-chain/Risk-Adjusted), S (Sentiment), A (Alpha)
-- **Grading**: Option A percentile — top 5%=A+, 15%=A, 30%=B+, 50%=B, 70%=C+, 85%=C, 95%=D, F
-- **Signals**: STRONG BUY / BUY / HOLD / REDUCE / AVOID
-- **S pillar**: Crypto uses FNG; US Equity/Bond/Commodity uses VIX (VIX<15=40pts, <20=30, <25=20, <30=10, ≥30=0)
-- **A pillar**: Crypto uses BTC 30d divergence; TradFi uses SPY 30d divergence (bonds inverted)
+- **Scoring**: Continuous log/linear functions (v4.1) — no more discrete tier step functions
+- **Grading**: Unified absolute thresholds (A+≥85, A≥75, B+≥65, B≥55, C+≥45, C≥35, D≥25, F<25)
+  — percentile rank is metadata only, does NOT override grades
+- **Signals** (compliance-safe): STRONG OUTPERFORM / OUTPERFORM / NEUTRAL / UNDERPERFORM / UNDERWEIGHT
+- **LAS** (Liquidity-Adjusted Score): CIS × liquidity_multiplier × confidence — for agent consumption
+- **Data Tiers**: T1 (Mac Mini full engine) / T2 (Railway market estimation)
+- **S pillar**: Crypto baseline = FNG × 0.4; TradFi = VIX inverse; per-asset divergence vs category
+  median; volatility regime modifier (breakout/capitulation/accumulation/stagnation)
+- **A pillar**: Crypto uses BTC 30d divergence; TradFi uses SPY 30d divergence (bonds inverted);
+  continuous linear scoring
 - **Local engine adds**: 8 asset classes, per-asset benchmarks, 6 macro regimes (RISK_ON, RISK_OFF,
   TIGHTENING, EASING, STAGFLATION, GOLDILOCKS), regime-aware pillar weight adjustments,
   real DeFiLlama TVL for F pillar, `recommended_weight`, `class_rank`, `global_rank`
+- **Full spec**: See `CIS_METHODOLOGY.md`
 
 ## Railway environment variables
 
