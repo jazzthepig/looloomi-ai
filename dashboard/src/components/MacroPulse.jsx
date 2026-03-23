@@ -76,8 +76,11 @@ const generateStatusDescription = (regime, btcDom, marketCapChange, fngValue) =>
   };
 
   const descriptions = configs[regime] || configs["NEUTRAL"];
-  const fng = fngValue !== null && fngValue !== undefined ? fngValue : 50;
-  const index = Math.floor((btcDom + marketCapChange + fng) / 33) % descriptions.length;
+  // Use fngValue if available, otherwise use null to indicate unavailable
+  const fng = fngValue !== null && fngValue !== undefined ? fngValue : null;
+  // If FNG unavailable, use BTC dom + market cap change only for index
+  const fngComponent = fng !== null ? fng : 50;
+  const index = Math.floor((btcDom + marketCapChange + fngComponent) / 33) % descriptions.length;
   return descriptions[index];
 };
 
@@ -157,7 +160,7 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
 
   // Handle click to toggle regime
   const handleBannerClick = useCallback(() => {
-    const currentRegime = manualRegime || calculateRegime(btcData?.usd_7d_change || 0, fngData ? parseInt(fngData.value) : 50);
+    const currentRegime = manualRegime || calculateRegime(btcData?.usd_7d_change || 0, fngValue);
     const currentIndex = REGIMES.indexOf(currentRegime);
     const nextIndex = (currentIndex + 1) % REGIMES.length;
     setManualRegime(REGIMES[nextIndex]);
