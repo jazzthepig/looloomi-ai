@@ -13,52 +13,6 @@ const SAMPLE_FUNDS = []; // Empty - data loaded from API
 const FUND_TYPES = ["All", "DeFi Quant", "VC / Early Stage", "Market Neutral", "Trading / Momentum", "Long-Only / Research", "On-Chain Active", "LSD Focus", "Yield / Lending", "Options / Volatility", "Multi-Strategy"];
 const LOCATIONS = ["All", "Singapore", "Hong Kong", "London", "Dubai", "New York", "Berlin"];
 
-/* ─── Fallback Data ────────────────────────────────────────────────── */
-const EST_ALPHA_FALLBACK = {
-  id: "est-alpha",
-  name: "EST Alpha",
-  strategy: "Multi-Strategy",
-  aum: 150000000,
-  yearFounded: 2024,
-  location: "Singapore",
-  status: "Active Partner",
-  verified: true,
-  note: "CometCloud confirmed GP partner",
-  performance: {
-    ytd: 8.5,
-    annualReturn: 0,
-    sharpeRatio: 0,
-    maxDrawdown: -2.1,
-  },
-  scores: {
-    performance: 15,
-    strategy: 18,
-    team: 20,
-    risk: 15,
-    transparency: 10,
-    aumTrackRecord: 5,
-    total: 83,
-  },
-  grade: "B",
-  description: "CometCloud's flagship GP partner specializing in institutional DeFi strategies.",
-  team: "Ex-Jane Street, Wintermute, Delphi Digital",
-  strategyDetail: "Multi-strategy DeFi: yield optimization, delta-neutral, protocol governance",
-  advantage: "Direct integration with CometCloud vault infrastructure",
-};
-
-const PLACEHOLDER_GP = {
-  id: "placeholder",
-  name: "GP Onboarding in Progress",
-  strategy: "Coming Q2 2026",
-  location: "TBD",
-  status: "Pending",
-  isPlaceholder: true,
-  description: "New GP partners to be announced in Q2 2026.",
-  performance: { ytd: 0, annualReturn: 0, sharpeRatio: 0, maxDrawdown: 0 },
-  scores: { total: 0 },
-  grade: "-",
-};
-
 /* ─── CSS ────────────────────────────────────────────────────────────── */
 const CSS = `
   @keyframes breathe  { 0%,100%{opacity:.28;transform:scale(1) translateY(0)} 50%{opacity:.44;transform:scale(1.06) translateY(-12px)} }
@@ -94,13 +48,14 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
   const [filterLocation, setFilterLocation] = useState("All");
   const [sortBy, setSortBy] = useState("total");
   const [selectedFund, setSelectedFund] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
 
   // Fetch GP data from API
   useEffect(() => {
     const fetchFunds = async () => {
       try {
         const res = await fetch('/api/v1/vault/funds');
-        if (!res.ok) throw new Error('API error');
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
         const json = await res.json();
         if (json.data && json.data.length > 0) {
           // Map API data to match frontend structure
@@ -116,11 +71,14 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             advantage: f.advantage || "",
           }));
           setFunds(mapped);
+        } else {
+          // Empty data is not an error - just show empty state
+          setFunds([]);
         }
       } catch (err) {
-        console.warn('Vault API failed, using fallback:', err);
-        // Fallback: show EST Alpha + placeholder
-        setFunds([EST_ALPHA_FALLBACK, PLACEHOLDER_GP]);
+        console.warn('Vault API failed:', err);
+        setFetchError(err.message || 'Failed to load GP data');
+        setFunds([]);
       } finally {
         setLoading(false);
       }
@@ -295,9 +253,30 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             fontFamily: FONTS.body
           }}>
             GP data sourced from Looloomi Database. Only verified partners are listed.
-            EST Alpha is the sole confirmed active GP partner.
           </span>
         </div>
+
+        {/* Error State */}
+        {fetchError && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '10px 14px',
+            background: 'rgba(239,68,68,0.08)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            borderRadius: '6px', marginBottom: '14px'
+          }}>
+            <span style={{
+              fontSize: '8px', fontWeight: '700', letterSpacing: '0.12em',
+              color: '#ef4444', fontFamily: FONTS.display
+            }}>API ERROR</span>
+            <span style={{
+              fontSize: '10px', color: 'rgba(255,255,255,0.5)',
+              fontFamily: FONTS.body
+            }}>
+              {fetchError} — GP data unavailable
+            </span>
+          </div>
+        )}
 
         {/* Fund List */}
         <div className="lm-card" style={{ overflow: "hidden" }}>
@@ -315,7 +294,15 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             <div>Grade</div>
           </div>
 
-          {filteredFunds.map((fund, idx) => {
+          {loading ? (
+            <div style={{ padding: "40px 20px", textAlign: "center", color: T.muted, fontFamily: FONTS.body, fontSize: 13 }}>
+              Loading GP data...
+            </div>
+          ) : filteredFunds.length === 0 ? (
+            <div style={{ padding: "40px 20px", textAlign: "center", color: T.muted, fontFamily: FONTS.body, fontSize: 13 }}>
+              No GP data available{fetchError ? ` (${fetchError})` : ""}
+            </div>
+          ) : filteredFunds.map((fund, idx) => {
             const isPlaceholder = fund.isPlaceholder || fund.status === 'evaluating';
             return (
             <div key={fund.id} className="lm-row"

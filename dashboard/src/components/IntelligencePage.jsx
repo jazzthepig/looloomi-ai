@@ -370,32 +370,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         const filtered = events.filter(e =>
           e.category === "INSTITUTIONAL" || e.category === "REGULATORY"
         );
-        if (filtered.length > 0) {
-          setMacroEvents(filtered);
-        } else {
-          // Fallback: map curated MACRO_EVENTS to the same shape
-          const fallback = MACRO_EVENTS.map(e => ({
-            title: e.title,
-            description: e.summary,
-            category: e.type === "regulatory" ? "REGULATORY" : "INSTITUTIONAL",
-            impact: e.impact?.toUpperCase() || "HIGH",
-            source: e.source,
-            date: e.date,
-          }));
-          setMacroEvents(fallback);
-        }
+        setMacroEvents(filtered);
       } catch (e) {
         console.error("Macro events fetch error:", e);
-        // Fallback on error too
-        const fallback = MACRO_EVENTS.map(e => ({
-          title: e.title,
-          description: e.summary,
-          category: e.type === "regulatory" ? "REGULATORY" : "INSTITUTIONAL",
-          impact: e.impact?.toUpperCase() || "HIGH",
-          source: e.source,
-          date: e.date,
-        }));
-        setMacroEvents(fallback);
+        setMacroEvents([]);
       }
     };
     fetchMacroEvents();
@@ -848,7 +826,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {MACRO_EVENTS.map((ev, i) => {
+                {macroEvents.length === 0 ? (
+                  <div style={{ padding: "20px", textAlign: "center", color: T.muted, fontSize: 12, fontFamily: FONTS.body }}>
+                    No macro events available
+                  </div>
+                ) : macroEvents.map((ev, i) => {
                   const cfg = EV_TYPE[ev.type] || EV_TYPE.protocol;
                   const imp = IMP_C[ev.impact] || IMP_C.medium;
                   return (
@@ -872,7 +854,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                           {ev.title}
                         </div>
                         <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.5, marginBottom: 8 }}>
-                          {ev.summary}
+                          {ev.description || ev.summary}
                         </div>
                         <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
                           {ev.source} · {ev.date}
