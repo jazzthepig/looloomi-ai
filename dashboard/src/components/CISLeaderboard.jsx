@@ -67,6 +67,56 @@ const ASSET_CLASS_COLORS = {
 
 const API_BASE = "/api/v1";
 
+// Asset name + class lookup — resolves when Mac Mini only sends symbol + "Crypto"
+const ASSET_META = {
+  BTC: { name: "Bitcoin", class: "L1" }, ETH: { name: "Ethereum", class: "L1" },
+  SOL: { name: "Solana", class: "L1" }, BNB: { name: "BNB", class: "L1" },
+  XRP: { name: "XRP", class: "L1" }, ADA: { name: "Cardano", class: "L1" },
+  DOGE: { name: "Dogecoin", class: "Memecoin" }, AVAX: { name: "Avalanche", class: "L1" },
+  DOT: { name: "Polkadot", class: "L1" }, POL: { name: "Polygon", class: "L2" },
+  ARB: { name: "Arbitrum", class: "L2" }, OP: { name: "Optimism", class: "L2" },
+  LINK: { name: "Chainlink", class: "Infrastructure" }, UNI: { name: "Uniswap", class: "DeFi" },
+  AAVE: { name: "Aave", class: "DeFi" }, MKR: { name: "Maker", class: "RWA" },
+  LDO: { name: "Lido DAO", class: "DeFi" }, CRV: { name: "Curve", class: "DeFi" },
+  COMP: { name: "Compound", class: "DeFi" }, SNX: { name: "Synthetix", class: "DeFi" },
+  SUSHI: { name: "SushiSwap", class: "DeFi" }, ONDO: { name: "Ondo Finance", class: "RWA" },
+  POLYX: { name: "Polymesh", class: "RWA" }, NEAR: { name: "NEAR Protocol", class: "L1" },
+  SUI: { name: "Sui", class: "L1" }, APT: { name: "Aptos", class: "L1" },
+  ATOM: { name: "Cosmos", class: "L1" }, FIL: { name: "Filecoin", class: "Infrastructure" },
+  PEPE: { name: "Pepe", class: "Memecoin" }, WIF: { name: "WIF", class: "Memecoin" },
+  BONK: { name: "Bonk", class: "Memecoin" }, INJ: { name: "Injective", class: "Infrastructure" },
+  TIA: { name: "Celestia", class: "Infrastructure" }, ENA: { name: "Ethena", class: "Infrastructure" },
+  SAND: { name: "The Sandbox", class: "Gaming" }, MANA: { name: "Decentraland", class: "Gaming" },
+  AXS: { name: "Axie Infinity", class: "Gaming" }, ICP: { name: "Internet Computer", class: "Infrastructure" },
+  HBAR: { name: "Hedera", class: "L1" }, ALGO: { name: "Algorand", class: "L1" },
+  VET: { name: "VeChain", class: "Infrastructure" }, STX: { name: "Stacks", class: "Infrastructure" },
+  RUNE: { name: "THORChain", class: "Infrastructure" }, HYPER: { name: "Hyperliquid", class: "L1" },
+  VIRTUAL: { name: "Virtuals Protocol", class: "AI" }, TON: { name: "Toncoin", class: "L1" },
+  LTC: { name: "Litecoin", class: "L1" }, BCH: { name: "Bitcoin Cash", class: "L1" },
+  SEI: { name: "Sei", class: "L1" }, FTM: { name: "Fantom", class: "L1" },
+  MANTLE: { name: "Mantle", class: "L2" }, NEON: { name: "Neon EVM", class: "L2" },
+  IO: { name: "io.net", class: "Infrastructure" }, PENDLE: { name: "Pendle", class: "DeFi" },
+  SPY: { name: "S&P 500 ETF", class: "US Equity" }, QQQ: { name: "Nasdaq 100 ETF", class: "US Equity" },
+  AAPL: { name: "Apple", class: "US Equity" }, MSFT: { name: "Microsoft", class: "US Equity" },
+  NVDA: { name: "NVIDIA", class: "US Equity" }, GOOGL: { name: "Alphabet", class: "US Equity" },
+  AMZN: { name: "Amazon", class: "US Equity" }, META: { name: "Meta", class: "US Equity" },
+  TSLA: { name: "Tesla", class: "US Equity" }, "BRK.B": { name: "Berkshire", class: "US Equity" },
+  GLD: { name: "Gold ETF", class: "Commodity" }, SLV: { name: "Silver ETF", class: "Commodity" },
+  USO: { name: "Oil ETF", class: "Commodity" }, TLT: { name: "20Y Treasury", class: "US Bond" },
+  IEF: { name: "7-10Y Treasury", class: "US Bond" }, SHY: { name: "1-3Y Treasury", class: "US Bond" },
+  HYG: { name: "High Yield Bond", class: "US Bond" }, LQD: { name: "IG Bond", class: "US Bond" },
+  UNG: { name: "Natural Gas", class: "Commodity" }, DBC: { name: "Commodities Index", class: "Commodity" },
+};
+
+function resolveAsset(asset) {
+  const sym = (asset.asset_id || asset.symbol || "").toUpperCase();
+  const meta = ASSET_META[sym];
+  return {
+    name: asset.name || (meta ? meta.name : sym),
+    asset_class: (asset.asset_class && asset.asset_class !== "Crypto") ? asset.asset_class : (meta ? meta.class : asset.asset_class || "Crypto"),
+  };
+}
+
 // Pillar definitions with weights
 const PILLAR_DEFS = [
   { key: "F", name: "Fundamental", color: "#4472FF", weight: 30, desc: "Token economics, protocol revenue, team credibility, audit status" },
@@ -137,11 +187,13 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   useEffect(() => {
     if (externalData && externalData.universe) {
       // Use external data (from parent component)
-      const mapped = externalData.universe.map((asset, idx) => ({
+      const mapped = externalData.universe.map((asset, idx) => {
+        const resolved = resolveAsset(asset);
+        return {
         rank: idx + 1,
-        asset_id: asset.symbol.toLowerCase(),
-        asset_name: asset.name,
-        asset_class: asset.asset_class,
+        asset_id: (asset.asset_id || asset.symbol || "").toLowerCase(),
+        asset_name: resolved.name,
+        asset_class: resolved.asset_class,
         total_score: asset.cis_score,
         grade: asset.grade,
         signal: asset.signal || "NEUTRAL",
@@ -152,7 +204,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         las: asset.las ?? null,
         confidence: asset.confidence ?? null,
         description: "",
-      }));
+      };});
       setData(mapped);
       setSelectedAsset(mapped[0] || null);
       setDataSource("live");
@@ -169,11 +221,13 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         if (!response.ok) throw new Error(`API error: ${response.status}`);
         const json = await response.json();
         if (json.universe && json.universe.length > 0) {
-          const mapped = json.universe.map((asset, idx) => ({
+          const mapped = json.universe.map((asset, idx) => {
+            const resolved = resolveAsset(asset);
+            return {
             rank: idx + 1,
-            asset_id: asset.symbol.toLowerCase(),
-            asset_name: asset.name,
-            asset_class: asset.asset_class,
+            asset_id: (asset.asset_id || asset.symbol || "").toLowerCase(),
+            asset_name: resolved.name,
+            asset_class: resolved.asset_class,
             total_score: asset.cis_score,
             grade: asset.grade,
             signal: asset.signal || "NEUTRAL",
@@ -184,12 +238,21 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             las: asset.las ?? null,
             confidence: asset.confidence ?? null,
             description: "",
-          }));
+          };});
           setData(mapped);
           setSelectedAsset(mapped[0]);
           setDataSource(json.data_source || "coingecko+defillama");
           setEngineSource(json.source || "railway");
-          setUpdatedAt(json.timestamp ? new Date(json.timestamp).toLocaleString() : null);
+          // Handle both Unix seconds and milliseconds timestamps
+          if (json.timestamp) {
+            const ts = typeof json.timestamp === "number" && json.timestamp < 1e12
+              ? json.timestamp * 1000  // Unix seconds → milliseconds
+              : json.timestamp;
+            const d = new Date(ts);
+            setUpdatedAt(d.getFullYear() > 2020 ? d.toLocaleString() : null);
+          } else {
+            setUpdatedAt(null);
+          }
           if (onDataLoad) onDataLoad(json.universe);
         } else {
           throw new Error("No data returned");

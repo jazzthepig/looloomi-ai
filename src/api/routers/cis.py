@@ -107,29 +107,78 @@ async def get_cis_universe(force_source: str = None):
             if age < 7200 or force_source == "local":
                 use_local = True
 
-    if use_local:
-        return {
-            "status":    "success",
-            "version":   "4.0.0",
-            "timestamp": cached["timestamp"],
-            "source":    "local_engine",
-            "universe":  cached["universe"],
-        }
-
+    # Always calculate Railway universe as T2 base (covers 65+ assets)
+    railway_universe = []
     try:
         result = await calculate_cis_universe()
-        result["source"] = "railway"
-        return sanitize_floats(result)
+        railway_universe = result.get("universe", [])
     except Exception as e:
         print(f"[CIS] Railway calculation error: {e}")
-        if cached and cached.get("universe"):
-            return {
-                "status":   "degraded",
-                "message":  str(e),
-                "source":   "local_engine_stale",
-                "universe": cached["universe"],
-            }
-        return {"status": "error", "message": str(e), "universe": []}
+
+    # Merge: Mac Mini T1 scores override Railway T2 where available
+    if use_local:
+        local_map = {}
+        for asset in cached.get("universe", []):
+            sym = (asset.get("asset_id") or asset.get("symbol", "")).upper()
+            asset["data_tier"] = 1
+            local_map[sym] = asset
+
+        merged = []
+        seen = set()
+        # First pass: Railway base (preserves ordering + enriched fields)
+        for asset in railway_universe:
+            sym = (asset.get("asset_id") or asset.get("symbol", "")).upper()
+            if sym in local_map:
+                # T1 override: use local score but keep Railway's market data + name
+                la = local_map[sym]
+                asset["cis_score"] = la.get("cis_score") or la.get("score", asset.get("cis_score"))
+                asset["grade"] = la.get("grade", asset.get("grade"))
+                asset["signal"] = la.get("signal", asset.get("signal"))
+                asset["data_tier"] = 1
+                # Merge pillars if local engine provides them
+                if la.get("pillars"):
+                    asset["pillars"] = la["pillars"]
+                elif any(la.get(k) is not None for k in ("f", "m", "r", "s", "a")):
+                    for k in ("f", "m", "r", "s", "a"):
+                        if la.get(k) is not None:
+                            asset[k] = la[k]
+            else:
+                asset["data_tier"] = 2
+            merged.append(asset)
+            seen.add(sym)
+
+        # Second pass: any Mac Mini assets not in Railway (shouldn't happen, but safe)
+        for sym, la in local_map.items():
+            if sym not in seen:
+                la["data_tier"] = 1
+                merged.append(la)
+
+        # Sort by CIS score descending
+        merged.sort(key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
+
+        return sanitize_floats({
+            "status":    "success",
+            "version":   "4.1.0",
+            "timestamp": cached.get("timestamp", time.time()),
+            "source":    "merged",
+            "t1_count":  len(local_map),
+            "t2_count":  len(merged) - len(local_map),
+            "universe":  merged,
+        })
+
+    # Pure Railway (no Mac Mini data available)
+    if railway_universe:
+        result["source"] = "railway"
+        return sanitize_floats(result)
+
+    # Last resort: stale Redis
+    if cached and cached.get("universe"):
+        return {
+            "status":   "degraded",
+            "source":   "local_engine_stale",
+            "universe": cached["universe"],
+        }
+    return {"status": "error", "message": "No scoring data available", "universe": []}
 
 
 @router.get("/api/v1/cis/asset/{symbol}")
