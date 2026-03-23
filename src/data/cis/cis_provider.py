@@ -2,10 +2,12 @@
 CIS Data Provider - Real-time CIS scoring from market data
 ===========================================================
 Fetches real market data and calculates CIS scores using the scoring engine.
+v4.1: Continuous scoring functions, unified grading, LAS.
 
 Author: Seth
 """
 
+import math
 import httpx
 import asyncio
 from typing import Dict, List, Any, Optional
@@ -18,7 +20,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # CoinGecko API base
-CG_BASE = "https://api.coingecko.com/api/v3"
+CG_PRO_BASE = "https://pro-api.coingecko.com/api/v3"
+CG_API_KEY = os.getenv("COINGECKO_API_KEY", "")
+
+def _cg_base() -> str:
+    """Use Pro API if key is set, otherwise free tier."""
+    return CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
+
+def _cg_headers() -> dict:
+    """Attach Pro API key header if configured."""
+    return {"x-cg-pro-api-key": CG_API_KEY} if CG_API_KEY else {}
 
 # Crypto assets config - maps to CoinGecko IDs
 CRYPTO_ASSETS = {
@@ -389,7 +400,7 @@ async def fetch_cg_markets() -> Dict[str, dict]:
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             # Fetch first page only as fallback
-            url = f"{CG_BASE}/coins/markets"
+            url = f"{_cg_base()}/coins/markets"
             params = {
                 "vs_currency": "usd",
                 "order": "market_cap_desc",
@@ -398,7 +409,7 @@ async def fetch_cg_markets() -> Dict[str, dict]:
                 "sparkline": False,
                 "price_change_percentage": "30d,7d"
             }
-            r = await client.get(url, params=params)
+            r = await client.get(url, params=params, headers=_cg_headers())
             r.raise_for_status()
             data = r.json()
 
@@ -488,7 +499,7 @@ async def fetch_cg_global() -> Optional[dict]:
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(f"{CG_BASE}/global")
+            r = await client.get(f"{_cg_base()}/global", headers=_cg_headers())
             r.raise_for_status()
             data = r.json()
             return _cache_set(cache_key, data.get("data", {}))
@@ -588,8 +599,10 @@ async def get_yfinance_data(symbol: str) -> Optional[dict]:
         return None
 
 
-# Macro data cache path on external drive
-MACRO_CACHE_PATH = "/Volumes/CometCloudAI/data/macro_cache.json"
+# Macro data cache path - configurable via env var for different deployments
+# On Mac Mini: /Volumes/CometCloudAI/data/macro_cache.json
+# On Railway: set MACRO_CACHE_PATH env var to a Railway-appropriate path
+MACRO_CACHE_PATH = os.getenv("MACRO_CACHE_PATH", "/Volumes/CometCloudAI/data/macro_cache.json")
 MACRO_CACHE_TTL = 3600  # 1 hour
 
 
@@ -790,6 +803,24 @@ def get_asset_class(asset_id: str) -> str:
     return "Crypto"
 
 
+def _log_score(value: float, base: float, scale: float, cap: float) -> float:
+    """Continuous log-scale scoring. value=base → 0, each 10x → +scale, capped at cap."""
+    if value <= 0:
+        return 0.0
+    if value <= base:
+        return 0.0
+    return min(cap, scale * math.log10(value / base))
+
+
+def _linear_interp(x: float, x0: float, x1: float, y0: float, y1: float) -> float:
+    """Linear interpolation clamped to [y0, y1] (or [y1, y0] if inverted)."""
+    lo, hi = min(y0, y1), max(y0, y1)
+    if x1 == x0:
+        return (y0 + y1) / 2
+    t = (x - x0) / (x1 - x0)
+    return max(lo, min(hi, y0 + t * (y1 - y0)))
+
+
 def calculate_cis_score(
     market_data: dict,
     tvl: float,
@@ -797,492 +828,306 @@ def calculate_cis_score(
     asset_class: str,
     btc_change_30d: Optional[float] = None,
     github_commits_4w: Optional[int] = None,
-    vix: Optional[float] = None,           # For non-crypto S pillar
-    spy_change_30d: Optional[float] = None, # For non-crypto A pillar
-    asset_betas: Optional[dict] = None,   # 30d rolling betas (dxy, vix, tnx)
+    vix: Optional[float] = None,
+    spy_change_30d: Optional[float] = None,
+    asset_betas: Optional[dict] = None,
+    category_median_30d: Optional[float] = None,  # v4.1: median 30d change for category
 ) -> Dict[str, Any]:
     """
-    Calculate CIS scores based on real market data.
-    Returns detailed breakdown with components for each pillar.
-
-    Returns:
-        {
-            "F": score,
-            "M": score,
-            "O": score,
-            "S": score,
-            "A": score,
-            "breakdown": {
-                "fundamental": {"score": x, "weight": y, "contribution": z, "components": {...}},
-                "momentum": {...},
-                ...
-            }
-        }
+    CIS v4.1 — Continuous scoring functions.
+    All pillars use log-scale or linear interpolation for genuine differentiation.
     """
-    # Get raw data
     market_cap = market_data.get("market_cap", 0) if market_data else 0
     volume_24h = market_data.get("volume_24h", 0) if market_data else 0
     circ_supply = market_data.get("circulating_supply", 0) if market_data else 0
     total_supply = market_data.get("total_supply", 0) if market_data else 0
     change_30d = market_data.get("change_30d", 0) or 0
+    change_7d = market_data.get("change_7d", 0) or 0
     change_24h = market_data.get("change_24h", 0) or 0
     ath_distance = abs(market_data.get("ath_change_percentage", 0)) if market_data else 50
     price = market_data.get("price", 0) if market_data else 0
-
-    # === Fundamental Score (F) ===
-    # Components: market_cap tier, tvl (DeFi/L2), fdv ratio, circulating_supply ratio
+    high_24h = market_data.get("high_24h", 0) or 0
+    low_24h = market_data.get("low_24h", 0) or 0
     fdv = market_data.get("fdv", 0) if market_data else 0
+    _is_tradfi = asset_class in ["US Equity", "US Bond", "Commodity"]
 
-    f_components = {
-        "market_cap_tier": ">$10B" if market_cap > 10e9 else ">$1B" if market_cap > 1e9 else ">$100M" if market_cap > 100e6 else ">$10M" if market_cap > 10e6 else "<$10M",
-        "market_cap_usd": market_cap,
-        "fdv_usd": fdv,
-        "tvl_usd": tvl if asset_class in ["DeFi", "L2"] else None,
-        "circulating_supply_ratio": round(circ_supply / total_supply, 3) if total_supply > 0 and circ_supply > 0 else 0,
-    }
+    # ── F — Fundamental (Structural Quality) ──────────────────────────
+    # Continuous: mcap log-scale (0-50) + tvl log-scale (0-20) + fdv fairness (0-15) + supply (0-15)
+    has_tvl_class = asset_class in ["DeFi", "L2"]
+    mcap_cap = 50 if has_tvl_class else 70  # Redistribute TVL points if N/A
 
-    f_score = 10  # base — low floor so bad assets can score < 30
-    # 10-tier market cap scoring (wider spread)
-    if market_cap > 500e9:        # >$500B (BTC-tier)
-        f_score += 40; f_components["market_cap_tier_score"] = 40
-    elif market_cap > 100e9:      # >$100B
-        f_score += 35; f_components["market_cap_tier_score"] = 35
-    elif market_cap > 50e9:       # >$50B
-        f_score += 30; f_components["market_cap_tier_score"] = 30
-    elif market_cap > 10e9:       # >$10B
-        f_score += 25; f_components["market_cap_tier_score"] = 25
-    elif market_cap > 5e9:        # >$5B
-        f_score += 20; f_components["market_cap_tier_score"] = 20
-    elif market_cap > 1e9:        # >$1B
-        f_score += 16; f_components["market_cap_tier_score"] = 16
-    elif market_cap > 500e6:      # >$500M
-        f_score += 12; f_components["market_cap_tier_score"] = 12
-    elif market_cap > 100e6:      # >$100M
-        f_score += 8; f_components["market_cap_tier_score"] = 8
-    elif market_cap > 10e6:       # >$10M
-        f_score += 4;  f_components["market_cap_tier_score"] = 4
-    elif market_cap > 0:          # any cap
-        f_score += 1;  f_components["market_cap_tier_score"] = 1
-    else:
-        f_components["market_cap_tier_score"] = 0
+    mcap_score = _log_score(market_cap, 1e6, 10, mcap_cap)  # $1M base, +10 per decade
+    tvl_score = _log_score(tvl, 1e6, 5, 20) if (has_tvl_class and tvl and tvl > 0) else 0.0
 
-    # TVL scoring for DeFi/L2 assets (from DeFiLlama)
-    if asset_class in ["DeFi", "L2"] and tvl > 0:
-        if tvl > 10e9:           # >$10B
-            f_score += 20; f_components["tvl_score"] = 20
-        elif tvl > 5e9:         # >$5B
-            f_score += 15; f_components["tvl_score"] = 15
-        elif tvl > 1e9:          # >$1B
-            f_score += 10; f_components["tvl_score"] = 10
-        elif tvl > 100e6:         # >$100M
-            f_score += 5; f_components["tvl_score"] = 5
-        else:
-            f_components["tvl_score"] = 0
-    else:
-        f_components["tvl_score"] = 0
-
-    # FDV/MCap ratio - lower is better (more fair launch)
+    # FDV fairness: ratio=1 → 15, ratio≥5 → 0, linear between
+    fdv_score = 0.0
     if fdv > 0 and market_cap > 0:
         ratio = fdv / market_cap
-        if ratio < 1.5:          # Close to mcap (fair)
-            f_score += 15; f_components["fdv_ratio_score"] = 15
-        elif ratio < 3:           # 1.5-3x
-            f_score += 10; f_components["fdv_ratio_score"] = 10
-        elif ratio < 5:           # 3-5x
-            f_score += 5; f_components["fdv_ratio_score"] = 5
-        else:
-            f_components["fdv_ratio_score"] = 0
-    else:
-        f_components["fdv_ratio_score"] = 0
+        fdv_score = max(0, _linear_interp(ratio, 1.0, 5.0, 15.0, 0.0))
 
-    # Supply health
-    if total_supply > 0 and circ_supply > 0:
-        ratio = circ_supply / total_supply
-        if ratio >= 0.7:
-            f_score += 10; f_components["supply_ratio_score"] = 10
-        elif ratio >= 0.5:
-            f_score += 5; f_components["supply_ratio_score"] = 5
-        else:
-            f_components["supply_ratio_score"] = 0
-    else:
-        f_components["supply_ratio_score"] = 0
+    # Supply health: continuous 0-15 based on circ/total
+    supply_ratio = (circ_supply / total_supply) if (total_supply > 0 and circ_supply > 0) else 0
+    supply_score = min(15, supply_ratio * 15)
 
-    f_score = min(100, f_score)
+    f_score = round(max(0, min(100, mcap_score + tvl_score + fdv_score + supply_score)), 1)
 
-    # === Momentum Score (M) ===
-    # Components: volume_24h, vol_mcap_ratio, tvl (for DeFi/L2)
-    m_components = {
-        "volume_24h": volume_24h,
-        "volume_mcap_ratio": round(volume_24h / market_cap, 4) if market_cap > 0 else 0,
-        "tvl_usd": tvl if asset_class in ["DeFi", "L2"] else None,
+    f_components = {
+        "market_cap_usd": market_cap,
+        "market_cap_score": round(mcap_score, 1),
+        "tvl_usd": tvl if has_tvl_class else None,
+        "tvl_score": round(tvl_score, 1),
+        "fdv_usd": fdv,
+        "fdv_ratio": round(fdv / market_cap, 2) if market_cap > 0 and fdv > 0 else None,
+        "fdv_score": round(fdv_score, 1),
+        "supply_ratio": round(supply_ratio, 3),
+        "supply_score": round(supply_score, 1),
     }
 
-    m_score = 10  # base — low floor
-    # 10-tier volume scoring
-    if volume_24h > 10e9:         # >$10B (BTC/ETH-tier)
-        m_score += 55; m_components["volume_score"] = 55
-    elif volume_24h > 5e9:        # >$5B
-        m_score += 48; m_components["volume_score"] = 48
-    elif volume_24h > 1e9:        # >$1B
-        m_score += 40; m_components["volume_score"] = 40
-    elif volume_24h > 500e6:      # >$500M
-        m_score += 33; m_components["volume_score"] = 33
-    elif volume_24h > 100e6:      # >$100M
-        m_score += 26; m_components["volume_score"] = 26
-    elif volume_24h > 50e6:       # >$50M
-        m_score += 20; m_components["volume_score"] = 20
-    elif volume_24h > 10e6:       # >$10M
-        m_score += 14; m_components["volume_score"] = 14
-    elif volume_24h > 1e6:        # >$1M
-        m_score += 8;  m_components["volume_score"] = 8
-    elif volume_24h > 0:
-        m_score += 3;  m_components["volume_score"] = 3
-    else:
-        m_components["volume_score"] = 0
+    # ── M — Momentum (Market Activity) ───────────────────────────────
+    # volume log-scale (0-40) + liquidity ratio (0-25) + price momentum (0-35)
+    vol_score = _log_score(volume_24h, 1e5, 8, 40)  # $100K base, +8 per decade
 
-    # Volume/MCap ratio - Liquidity Profile (Phase 3)
+    # Liquidity ratio: vol/mcap continuous, cap at 25
+    liq_score = 0.0
     if market_cap > 0:
         vol_ratio = volume_24h / market_cap
-        if vol_ratio > 0.15:          # >15% = very liquid
-            m_score += 15
-            m_components["liquidity_score"] = 15
-        elif vol_ratio > 0.05:         # 5-15% = liquid
-            m_score += 8
-            m_components["liquidity_score"] = 8
-        elif vol_ratio > 0.01:         # 1-5% = moderate
-            m_score += 3
-            m_components["liquidity_score"] = 3
-        else:                          # <1% = illiquid
-            m_score -= 10
-            m_components["liquidity_score"] = -10
-
-    # TVL bonus for DeFi/L2
-    if asset_class in ["DeFi", "L2"] and tvl > 0:
-        if tvl > 1e9:
-            m_score += 15
-            m_components["tvl_score"] = 15
-        elif tvl > 100e6:
-            m_score += 10
-            m_components["tvl_score"] = 10
-        elif tvl > 10e6:
-            m_score += 5
-            m_components["tvl_score"] = 5
+        if vol_ratio >= 0.01:
+            liq_score = min(25, vol_ratio * 200)  # 5%→10, 12.5%→25
         else:
-            m_components["tvl_score"] = 0
+            liq_score = max(-5, vol_ratio * 1000 - 5)  # Below 1% → penalty
 
-    m_score = max(0, min(100, m_score))
+    # Price momentum 30d: continuous linear map
+    # -50% → 0, 0% → 15, +50% → 30, +100% → 35
+    if change_30d <= -50:
+        mom_score = 0.0
+    elif change_30d <= 0:
+        mom_score = _linear_interp(change_30d, -50, 0, 0, 15)
+    elif change_30d <= 50:
+        mom_score = _linear_interp(change_30d, 0, 50, 15, 30)
+    else:
+        mom_score = min(35, _linear_interp(change_30d, 50, 100, 30, 35))
 
-    # === On-Chain Health / Risk-Adjusted Score (O) ===
-    # Components: tvl (DeFi), ath_distance, supply health
-    o_components = {
-        "tvl_usd": tvl,
-        "ath_distance_pct": ath_distance,
-        "supply_circulating_ratio": round(circ_supply / total_supply, 3) if total_supply > 0 else 0,
+    m_score = round(max(0, min(100, vol_score + liq_score + mom_score)), 1)
+
+    m_components = {
+        "volume_24h": volume_24h,
+        "volume_score": round(vol_score, 1),
+        "volume_mcap_ratio": round(volume_24h / market_cap, 4) if market_cap > 0 else 0,
+        "liquidity_score": round(liq_score, 1),
+        "momentum_30d_pct": round(change_30d, 1),
+        "momentum_score": round(mom_score, 1),
     }
 
-    o_score = 10  # base — low floor
+    # ── O — On-Chain Health / Risk-Adjusted ──────────────────────────
+    # ATH recovery (0-35) + drawdown estimate (0-35) + supply+tvl health (0-30)
 
-    if asset_class == "DeFi":
-        if tvl > 1e9:
-            o_score += 35
-            o_components["tvl_score"] = 35
-        elif tvl > 100e6:
-            o_score += 25
-            o_components["tvl_score"] = 25
-        elif tvl > 10e6:
-            o_score += 15
-            o_components["tvl_score"] = 15
-        elif tvl > 1e6:
-            o_score += 10
-            o_components["tvl_score"] = 10
-        else:
-            o_components["tvl_score"] = 0
+    # ATH recovery: continuous, at ATH → 35, -80% → 0
+    ath_score = max(0, _linear_interp(ath_distance, 0, 80, 35, 0))
+
+    # Drawdown estimate from 24h range (annualized vol proxy)
+    dd_score = 35.0  # default if no range data
+    if low_24h > 0 and high_24h > low_24h:
+        daily_range = (high_24h - low_24h) / low_24h
+        ann_vol = daily_range * math.sqrt(365) * 100  # rough annualized
+        dd_score = max(0, _linear_interp(ann_vol, 0, 200, 35, 0))
+
+    # Supply + TVL health (reuse)
+    health_score = supply_score  # 0-15 from F pillar
+    if has_tvl_class and tvl and tvl > 0:
+        health_score += min(15, _log_score(tvl, 1e6, 3.75, 15))
     else:
-        # Use ATH distance as maturity proxy
-        if ath_distance < 20:
-            o_score += 30
-            o_components["maturity_score"] = 30
-        elif ath_distance < 50:
-            o_score += 20
-            o_components["maturity_score"] = 20
-        elif ath_distance < 70:
-            o_score += 10
-            o_components["maturity_score"] = 10
-        else:
-            o_components["maturity_score"] = 0
+        health_score += max(0, _linear_interp(ath_distance, 0, 50, 15, 0))
 
-    # Supply health
-    if total_supply > 0 and circ_supply > 0:
-        ratio = circ_supply / total_supply
-        if ratio > 0.5:
-            o_score += 15
-            o_components["supply_health_score"] = 15
-        else:
-            o_components["supply_health_score"] = 0
-    else:
-        o_components["supply_health_score"] = 0
+    o_score = round(max(0, min(100, ath_score + dd_score + health_score)), 1)
 
-    o_score = min(100, o_score)
+    o_components = {
+        "ath_distance_pct": round(ath_distance, 1),
+        "ath_recovery_score": round(ath_score, 1),
+        "drawdown_estimate_score": round(dd_score, 1),
+        "health_score": round(health_score, 1),
+        "supply_ratio": round(supply_ratio, 3),
+        "tvl_usd": tvl,
+    }
 
-    # === Sentiment Score (S) ===
-    # Crypto: FNG-based baseline + per-asset momentum
-    # Non-crypto (equity/bond/commodity): VIX-based baseline + per-asset momentum
-    _is_tradfi = asset_class in ["US Equity", "US Bond", "Commodity"]
+    # ── S — Sentiment (Baseline + Divergence + Vol Regime) ───────────
+    # baseline (0-40) + divergence (-20 to +40) + vol regime (-10 to +20)
 
     s_components = {
         "return_30d": round(change_30d / 100, 4),
         "return_24h": round(change_24h / 100, 4),
     }
+
+    # Baseline
+    baseline = 0.0
     if _is_tradfi:
         s_components["vix"] = vix
-    else:
-        s_components["fear_greed_value"] = fng.get("value") if fng else None
-        s_components["fear_greed_classification"] = fng.get("value_classification") if fng else None
-
-    s_score = 10  # low floor
-
-    if _is_tradfi:
-        # VIX-based baseline: low VIX = calm market = positive sentiment
-        # Maps VIX range to 0-40 points (same scale as FNG contribution)
         if vix is not None:
-            if vix < 15:    vix_pts = 40   # Very calm, greed-like
-            elif vix < 20:  vix_pts = 30   # Normal
-            elif vix < 25:  vix_pts = 20   # Mild concern
-            elif vix < 30:  vix_pts = 10   # Elevated fear
-            else:           vix_pts = 0    # Crisis / extreme fear
-            s_score += vix_pts
-            s_components["vix_score"] = vix_pts
+            # VIX continuous: 10 → 40, 20 → 24, 35 → 0
+            baseline = max(0, _linear_interp(vix, 10, 35, 40, 0))
+            s_components["baseline_score"] = round(baseline, 1)
         else:
-            s_components["vix_score"] = None
+            baseline = 20  # neutral fallback
+            s_components["baseline_score"] = 20
     else:
-        # FNG market baseline: maps 0-100 FNG → 0-50 points
-        if fng:
-            fng_value = int(fng.get("value", 50))
-            fng_contribution = round(fng_value * 0.5, 1)
-            s_score += fng_contribution
-            s_components["fng_score"] = fng_contribution
+        fng_value = int(fng.get("value", 50)) if fng else None
+        s_components["fear_greed_value"] = fng_value
+        s_components["fear_greed_classification"] = fng.get("value_classification") if fng else None
+        if fng_value is not None:
+            baseline = fng_value * 0.4  # FNG 0→0, 50→20, 100→40
+            s_components["baseline_score"] = round(baseline, 1)
         else:
-            s_components["fng_score"] = None
+            baseline = 20
+            s_components["baseline_score"] = 20
 
-    # Per-asset 30d price momentum — differentiates assets within same market
-    if change_30d > 100:
-        s_score = min(100, s_score + 30); s_components["momentum_score"] = 30
-    elif change_30d > 50:
-        s_score = min(100, s_score + 20); s_components["momentum_score"] = 20
-    elif change_30d > 20:
-        s_score = min(100, s_score + 12); s_components["momentum_score"] = 12
-    elif change_30d > 5:
-        s_score = min(100, s_score + 5);  s_components["momentum_score"] = 5
-    elif change_30d > -10:
-        s_components["momentum_score"] = 0
-    elif change_30d > -30:
-        s_score = max(0, s_score - 10);   s_components["momentum_score"] = -10
-    elif change_30d > -50:
-        s_score = max(0, s_score - 20);   s_components["momentum_score"] = -20
-    else:
-        s_score = max(0, s_score - 30);   s_components["momentum_score"] = -30
+    # Divergence: asset 30d vs category median (continuous)
+    cat_median = category_median_30d if category_median_30d is not None else 0
+    asset_div = change_30d - cat_median
+    div_score = max(-15, min(25, asset_div * 0.5))
+    # 24h burst
+    burst_score = max(-5, min(10, change_24h * 0.5))
+    divergence_total = div_score + burst_score
+    s_components["category_divergence"] = round(asset_div, 1)
+    s_components["divergence_score"] = round(div_score, 1)
+    s_components["burst_score"] = round(burst_score, 1)
 
-    # 24h momentum: short-term signal boost/drag
-    if change_24h > 10:
-        s_score = min(100, s_score + 8);  s_components["short_momentum"] = 8
-    elif change_24h > 5:
-        s_score = min(100, s_score + 4);  s_components["short_momentum"] = 4
-    elif change_24h < -10:
-        s_score = max(0, s_score - 8);    s_components["short_momentum"] = -8
-    elif change_24h < -5:
-        s_score = max(0, s_score - 4);    s_components["short_momentum"] = -4
-    else:
-        s_components["short_momentum"] = 0
-
-    # Developer activity (GitHub commits in last 4 weeks)
-    # Active development = positive signal; near-zero = red flag
+    # Dev activity
+    dev_score = 0.0
     if github_commits_4w is not None:
         s_components["github_commits_4w"] = github_commits_4w
-        if github_commits_4w > 300:       # Very high activity (e.g. BTC, ETH)
-            s_score = min(100, s_score + 10); s_components["dev_activity_score"] = 10
-        elif github_commits_4w > 100:     # Healthy activity
-            s_score = min(100, s_score + 6);  s_components["dev_activity_score"] = 6
-        elif github_commits_4w > 30:      # Moderate activity
-            s_score = min(100, s_score + 3);  s_components["dev_activity_score"] = 3
-        elif github_commits_4w > 5:       # Low but alive
-            s_components["dev_activity_score"] = 0
-        else:                             # Near-zero: possible red flag
-            s_score = max(0, s_score - 8);    s_components["dev_activity_score"] = -8
+        if github_commits_4w > 300:
+            dev_score = 5
+        elif github_commits_4w > 100:
+            dev_score = 3
+        elif github_commits_4w > 30:
+            dev_score = 1
+        elif github_commits_4w <= 5:
+            dev_score = -8
+        s_components["dev_activity_score"] = dev_score
     else:
         s_components["github_commits_4w"] = None
         s_components["dev_activity_score"] = None
 
-    # Beta scoring for crypto assets (30d rolling correlation with macro factors)
-    # Lower correlation = better (more alpha, less systematic risk)
+    # Volatility regime modifier
+    vol_regime_score = 0.0
+    if low_24h > 0 and high_24h > low_24h:
+        daily_range_pct = ((high_24h - low_24h) / low_24h) * 100
+        elevated_vol = daily_range_pct > 5  # >5% daily range = elevated
+        if elevated_vol and change_7d > 5:
+            vol_regime_score = 15  # breakout
+        elif elevated_vol and change_7d < -5:
+            vol_regime_score = -10  # capitulation
+        elif not elevated_vol and change_7d > 3:
+            vol_regime_score = 10  # accumulation
+        elif not elevated_vol and change_7d < -3:
+            vol_regime_score = -5  # stagnation
+        s_components["vol_regime"] = "breakout" if vol_regime_score > 10 else "capitulation" if vol_regime_score < -5 else "accumulation" if vol_regime_score > 0 else "stagnation" if vol_regime_score < 0 else "neutral"
+    s_components["vol_regime_score"] = round(vol_regime_score, 1)
+
+    # Beta scoring (unchanged logic, continuous)
+    beta_score = 0.0
     if asset_betas and asset_betas.get("source") == "30d_rolling":
         dxy_beta = asset_betas.get("dxy_beta", 0)
         vix_beta = asset_betas.get("vix_beta", 0)
-        tnx_beta = asset_betas.get("tnx_beta", 0)
-
         s_components["dxy_beta"] = dxy_beta
         s_components["vix_beta"] = vix_beta
-        s_components["tnx_beta"] = tnx_beta
-
-        # Beta score: lower is better (less correlated with macro risk)
-        # DXY beta: negative = good (crypto goes up when USD strengthens)
-        beta_score = 0
         if dxy_beta < 0:
-            beta_score += min(10, abs(dxy_beta) * 10)  # Up to +10 for negative correlation
+            beta_score += min(10, abs(dxy_beta) * 10)
         elif dxy_beta > 0.7:
-            beta_score -= 5  # Penalize high positive correlation
-
+            beta_score -= 5
         if vix_beta < 0:
-            beta_score += min(5, abs(vix_beta) * 5)  # Up to +5 for negative correlation
-
-        s_score = max(0, min(100, s_score + beta_score))
-        s_components["beta_score"] = beta_score
+            beta_score += min(5, abs(vix_beta) * 5)
+        s_components["beta_score"] = round(beta_score, 1)
     else:
         s_components["beta_score"] = 0
 
-    # === Alpha Independence Score (A) ===
-    # Crypto: divergence vs BTC
-    # Non-crypto: divergence vs SPY (bonds inverted — rising when equities fall = alpha)
+    s_score = round(max(0, min(100, baseline + divergence_total + dev_score + vol_regime_score + beta_score)), 1)
+
+    # ── A — Alpha Independence ───────────────────────────────────────
+    # benchmark divergence (-20 to +40) + class independence (0-20) + size efficiency (-5 to +20) + correlation (-15 to 0)
     a_components = {
         "asset_class": asset_class,
         "market_cap_usd": market_cap,
         "ath_distance_pct": ath_distance,
     }
 
-    a_score = 10  # base — low floor
-
-    # Asset class independence bonus (crypto only)
+    # Class independence
+    class_ind = 0.0
     if not _is_tradfi:
-        if asset_class in ["DeFi", "RWA", "L2"]:
-            a_score += 20
-            a_components["class_independence_score"] = 20
-        elif asset_class == "L1":
-            a_score += 15
-            a_components["class_independence_score"] = 15
-        else:
-            a_components["class_independence_score"] = 0
+        class_map = {"DeFi": 20, "RWA": 20, "L2": 18, "Infrastructure": 15, "L1": 12, "Memecoin": 5}
+        class_ind = class_map.get(asset_class, 8)
+    a_components["class_independence_score"] = class_ind
 
-    # Market cap size drag — universal
-    if market_cap > 100e9:    # Mega-cap (SPY, AAPL tier or BTC tier)
-        a_score -= 5
-        a_components["size_drag_score"] = -5
+    # Size efficiency: smaller cap with relatively strong fundamentals → more alpha potential
+    size_eff = 0.0
+    if market_cap > 100e9:
+        size_eff = -5
     elif market_cap > 10e9:
-        a_score -= 3
-        a_components["size_drag_score"] = -3
+        size_eff = 0
+    elif market_cap > 1e9:
+        size_eff = 10
+    elif market_cap > 100e6:
+        size_eff = 15
     else:
-        a_components["size_drag_score"] = 0
+        size_eff = 20
+    a_components["size_efficiency_score"] = size_eff
 
-    # Price recovery potential (ATH distance)
-    if 30 < ath_distance < 70:
-        a_score += 15
-        a_components["price_independence_score"] = 15
-    elif ath_distance < 10:
-        a_score -= 5
-        a_components["price_independence_score"] = -5
-    else:
-        a_components["price_independence_score"] = 0
-
-    # Benchmark divergence — crypto uses BTC, non-crypto uses SPY
+    # Benchmark divergence — continuous linear
+    div_a_score = 0.0
     if _is_tradfi:
-        if spy_change_30d is not None and asset_class != "US Equity":  # Don't benchmark SPY vs itself
-            # Bonds: inverse relationship is the alpha signal
-            # Bond rising while equities falling = genuine alpha
+        if spy_change_30d is not None and asset_class != "US Equity":
             if asset_class == "US Bond":
-                divergence = spy_change_30d - change_30d  # Inverted: bond alpha = equity decline
+                divergence = spy_change_30d - change_30d
             else:
-                divergence = change_30d - spy_change_30d  # Commodity: normal divergence
+                divergence = change_30d - spy_change_30d
             a_components["spy_divergence_30d"] = round(divergence, 1)
-            if divergence > 20:
-                a_score = min(100, a_score + 20); a_components["alpha_score"] = 20
-            elif divergence > 10:
-                a_score = min(100, a_score + 12); a_components["alpha_score"] = 12
-            elif divergence > 5:
-                a_score = min(100, a_score + 6);  a_components["alpha_score"] = 6
-            elif divergence > -5:
-                a_components["alpha_score"] = 0
-            elif divergence > -15:
-                a_score = max(0, a_score - 8);    a_components["alpha_score"] = -8
-            elif divergence > -30:
-                a_score = max(0, a_score - 15);   a_components["alpha_score"] = -15
-            else:
-                a_score = max(0, a_score - 20);   a_components["alpha_score"] = -20
+            div_a_score = max(-20, min(40, divergence * 0.8))
+            a_components["alpha_score"] = round(div_a_score, 1)
         else:
             a_components["spy_divergence_30d"] = None
-            a_components["alpha_score"] = None
+            a_components["alpha_score"] = 0
     else:
-        # Crypto: BTC divergence
-        # BTC itself has no BTC benchmark — falls back to SPY cross-asset alpha
         if btc_change_30d is not None:
             divergence = change_30d - btc_change_30d
             a_components["btc_divergence_30d"] = round(divergence, 1)
-            if divergence > 50:
-                a_score = min(100, a_score + 20); a_components["btc_alpha_score"] = 20
-            elif divergence > 20:
-                a_score = min(100, a_score + 12); a_components["btc_alpha_score"] = 12
-            elif divergence > 10:
-                a_score = min(100, a_score + 6);  a_components["btc_alpha_score"] = 6
-            elif divergence > -10:
-                a_components["btc_alpha_score"] = 0
-            elif divergence > -20:
-                a_score = max(0, a_score - 8);    a_components["btc_alpha_score"] = -8
-            elif divergence > -50:
-                a_score = max(0, a_score - 15);   a_components["btc_alpha_score"] = -15
-            else:
-                a_score = max(0, a_score - 20);   a_components["btc_alpha_score"] = -20
+            div_a_score = max(-20, min(40, divergence * 0.8))
+            a_components["alpha_score"] = round(div_a_score, 1)
         elif spy_change_30d is not None:
-            # BTC uses SPY as cross-asset alpha: BTC outperforming equities = genuine alpha
             divergence = change_30d - spy_change_30d
             a_components["spy_divergence_30d"] = round(divergence, 1)
             a_components["benchmark"] = "SPY (cross-asset)"
-            if divergence > 30:
-                a_score = min(100, a_score + 20); a_components["btc_alpha_score"] = 20
-            elif divergence > 15:
-                a_score = min(100, a_score + 12); a_components["btc_alpha_score"] = 12
-            elif divergence > 5:
-                a_score = min(100, a_score + 6);  a_components["btc_alpha_score"] = 6
-            elif divergence > -5:
-                a_components["btc_alpha_score"] = 0
-            elif divergence > -15:
-                a_score = max(0, a_score - 8);    a_components["btc_alpha_score"] = -8
-            elif divergence > -30:
-                a_score = max(0, a_score - 15);   a_components["btc_alpha_score"] = -15
-            else:
-                a_score = max(0, a_score - 20);   a_components["btc_alpha_score"] = -20
+            div_a_score = max(-20, min(40, divergence * 0.8))
+            a_components["alpha_score"] = round(div_a_score, 1)
         else:
             a_components["btc_divergence_30d"] = None
-            a_components["btc_alpha_score"] = None
+            a_components["alpha_score"] = 0
 
-    a_score = max(0, min(100, a_score))
+    # Correlation discount (from betas)
+    corr_discount = 0.0
+    if asset_betas and asset_betas.get("source") == "30d_rolling":
+        btc_corr = abs(asset_betas.get("dxy_beta", 0))
+        if btc_corr > 0.8:
+            corr_discount = -15
+        elif btc_corr > 0.5:
+            corr_discount = -8
+    a_components["correlation_discount"] = corr_discount
 
-    # Build breakdown with scores
+    a_score = round(max(0, min(100, class_ind + size_eff + div_a_score + corr_discount + 10)), 1)  # +10 base
+
+    # ── Build breakdown ──────────────────────────────────────────────
     breakdown = {
-        "fundamental": {
-            "score": round(f_score, 1),
-            "components": f_components,
-        },
-        "momentum": {
-            "score": round(m_score, 1),
-            "components": m_components,
-        },
-        "risk_adjusted": {
-            "score": round(o_score, 1),
-            "components": o_components,
-        },
-        "sensitivity": {
-            "score": round(s_score, 1),
-            "components": s_components,
-        },
-        "alpha": {
-            "score": round(a_score, 1),
-            "components": a_components,
-        },
+        "fundamental": {"score": f_score, "components": f_components},
+        "momentum": {"score": m_score, "components": m_components},
+        "risk_adjusted": {"score": o_score, "components": o_components},
+        "sensitivity": {"score": s_score, "components": s_components},
+        "alpha": {"score": a_score, "components": a_components},
     }
 
     return {
-        "F": round(f_score, 1),
-        "M": round(m_score, 1),
-        "O": round(o_score, 1),
-        "S": round(s_score, 1),
-        "A": round(a_score, 1),
+        "F": f_score,
+        "M": m_score,
+        "O": o_score,
+        "S": s_score,
+        "A": a_score,
         "breakdown": breakdown,
     }
 
@@ -1361,44 +1206,26 @@ def calculate_total_score(pillars: Dict[str, float], asset_class: str) -> Dict[s
 
 
 def get_grade(score: float) -> str:
-    """Get letter grade from score (absolute thresholds). Used internally."""
-    if score >= 85:
-        return "A+"
-    elif score >= 80:
-        return "A"
-    elif score >= 70:
-        return "B+"
-    elif score >= 60:
-        return "B"
-    elif score >= 50:
-        return "C+"
-    elif score >= 40:
-        return "C"
-    elif score >= 30:
-        return "D"
-    return "F"
-
-
-def get_grade_by_percentile(percentile_rank: float) -> str:
     """
-    Option A: Grade based on relative rank within current universe.
-    Top 5% = A+, next 10% = A, next 15% = B+, next 20% = B,
-    next 20% = C+, next 15% = C, next 10% = D, bottom 5% = F.
+    Unified absolute grading — v4.1.
+    Both Railway and Mac Mini engines use these identical thresholds.
+    See CIS_METHODOLOGY.md §5.
     """
-    if percentile_rank >= 95:  return "A+"
-    if percentile_rank >= 85:  return "A"
-    if percentile_rank >= 70:  return "B+"
-    if percentile_rank >= 50:  return "B"
-    if percentile_rank >= 30:  return "C+"
-    if percentile_rank >= 15:  return "C"
-    if percentile_rank >= 5:   return "D"
+    if score >= 85:  return "A+"
+    if score >= 75:  return "A"
+    if score >= 65:  return "B+"
+    if score >= 55:  return "B"
+    if score >= 45:  return "C+"
+    if score >= 35:  return "C"
+    if score >= 25:  return "D"
     return "F"
 
 
 def compute_percentile_ranks(universe: list) -> list:
     """
-    Compute percentile rank for each asset within the live universe.
-    After this, grades are reassigned based on relative rank (Option A).
+    Compute percentile rank as METADATA only — does NOT override grades.
+    v4.1: Grades come from absolute thresholds via get_grade().
+    Percentile is still exposed in API for agents that want relative positioning.
     """
     if not universe:
         return universe
@@ -1407,24 +1234,70 @@ def compute_percentile_ranks(universe: list) -> list:
     for i, asset in enumerate(sorted_u):
         rank = round(((n - i) / n) * 100, 1)
         asset["percentile_rank"] = rank
-        # Option A: override grade and signal with percentile-based values
-        asset["grade"] = get_grade_by_percentile(rank)
-        asset["signal"] = get_signal(asset["cis_score"], asset["grade"])
+        # v4.1: NO grade override — absolute grades stand
     return sorted_u
 
 
-def get_signal(score: float, grade: str) -> str:
-    """Get trading signal from grade."""
-    if grade in ["A+", "A"]:
-        return "STRONG BUY"
-    elif grade in ["B+", "B"]:
-        return "BUY"
-    elif grade in ["C+", "C"]:
-        return "HOLD"
-    elif grade == "D":
-        return "REDUCE"
+def calculate_las(
+    cis_score: float,
+    volume_24h: float,
+    high_24h: float,
+    low_24h: float,
+    confidence: float,
+    aum: float = 30_000_000,
+    max_position_pct: float = 0.05,
+    participation_rate: float = 0.10,
+) -> Dict[str, Any]:
+    """
+    Liquidity-Adjusted Score — v4.1.
+    See CIS_METHODOLOGY.md §6.
+    """
+    target_position = aum * max_position_pct
+    daily_tradeable = volume_24h * participation_rate
+
+    if target_position > 0 and daily_tradeable > 0:
+        liq_mult = min(1.0, daily_tradeable / target_position)
+    elif daily_tradeable > 0:
+        liq_mult = 1.0
     else:
-        return "AVOID"
+        liq_mult = 0.0
+
+    # Spread penalty
+    spread_penalty = 1.0
+    if low_24h > 0 and high_24h > low_24h:
+        hl_range = (high_24h - low_24h) / low_24h
+        if hl_range > 0.05:
+            spread_penalty = max(0.8, 1.0 - (hl_range - 0.05) * 2)
+
+    las = round(cis_score * liq_mult * spread_penalty * confidence, 1)
+
+    return {
+        "las": max(0, las),
+        "las_params": {
+            "assumed_aum": aum,
+            "participation_rate": participation_rate,
+            "liquidity_multiplier": round(liq_mult, 3),
+            "spread_penalty": round(spread_penalty, 3),
+            "daily_tradeable_usd": round(daily_tradeable, 0),
+        },
+    }
+
+
+def get_signal(score: float, grade: str) -> str:
+    """
+    CIS positioning signal — v4.1 compliance-safe.
+    NO buy/sell language — we are not licensed investment advisors.
+    These are quantitative positioning indicators, not investment recommendations.
+    """
+    if grade == "A+":
+        return "STRONG OUTPERFORM"
+    if grade in ("A", "B+"):
+        return "OUTPERFORM"
+    if grade in ("B", "C+"):
+        return "NEUTRAL"
+    if grade == "C":
+        return "UNDERPERFORM"
+    return "UNDERWEIGHT"  # D, F
 
 
 async def calculate_cis_universe() -> Dict[str, Any]:
@@ -1502,6 +1375,23 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     macro_data_early = await fetch_macro_data()
     live_vix = macro_data_early.get("vix")
 
+    # v4.1: Pre-compute category median 30d change for S pillar divergence
+    category_changes = {}  # {class: [change_30d, ...]}
+    for aid, cfg in ASSETS_CONFIG.items():
+        ac = cfg["class"]
+        if ac in ["US Equity", "US Bond", "Commodity"]:
+            md = yf_data.get(aid, {})
+        else:
+            md = merged_markets.get(aid, {})
+        if md:
+            c30 = md.get("change_30d", 0) or 0
+            category_changes.setdefault(ac, []).append(c30)
+    category_medians = {}
+    for ac, changes in category_changes.items():
+        sorted_c = sorted(changes)
+        n = len(sorted_c)
+        category_medians[ac] = sorted_c[n // 2] if n else 0
+
     # Calculate scores for each asset
     universe = []
 
@@ -1552,6 +1442,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             vix=live_vix if is_tradfi else None,
             spy_change_30d=asset_spy_30d,
             asset_betas=asset_betas,
+            category_median_30d=category_medians.get(asset_class, 0),
         )
         pillars = {k: v for k, v in pillars_result.items() if k != "breakdown"}
         breakdown = pillars_result.get("breakdown", {})
@@ -1615,6 +1506,12 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         ath_distance = abs(market_data.get("ath_change_percentage", 0) or 0)
         max_drawdown_90d = min(ath_distance, 90)  # Cap at 90%
 
+        # v4.1: Liquidity-Adjusted Score
+        _vol_24h = market_data.get("volume_24h", 0) or 0
+        _h24 = market_data.get("high_24h", 0) or 0
+        _l24 = market_data.get("low_24h", 0) or 0
+        las_result = calculate_las(total_score, _vol_24h, _h24, _l24, confidence)
+
         universe.append({
             "symbol": asset_id,
             "name": config["name"],
@@ -1623,6 +1520,9 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "grade": grade,
             "signal": signal,
             "confidence": confidence,
+            "data_tier": 2,  # Railway = Tier 2
+            "las": las_result["las"],
+            "las_params": las_result["las_params"],
             "f": pillars["F"],
             "m": pillars["M"],
             "r": pillars["O"],
@@ -1641,20 +1541,20 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "price": market_data.get("price", 0),
             "change_24h": round(market_data.get("change_24h", 0) or 0, 2),
             "market_cap": market_data.get("market_cap", 0),
-            "volume_24h": market_data.get("volume_24h", 0),
+            "volume_24h": _vol_24h,
             "tvl": tvl,
         })
 
     # Sort by CIS score
     universe.sort(key=lambda x: x["cis_score"], reverse=True)
 
-    # Compute percentile ranks (metadata only — absolute grades from get_grade())
+    # v4.1: Compute percentile ranks as metadata only — grades NOT overridden
     universe = compute_percentile_ranks(universe)
 
     # Use macro_data already fetched above (cached, no double call)
     macro_data = macro_data_early
     macro = {
-        "regime": regime,  # Keep our Risk-On/Off determination
+        "regime": regime,
         "fed_funds": macro_data.get("fed_funds"),
         "treasury_10y": macro_data.get("treasury_10y"),
         "vix": macro_data.get("vix"),
@@ -1672,9 +1572,10 @@ async def calculate_cis_universe() -> Dict[str, Any]:
 
     return {
         "status": "success",
-        "version": "4.0.0",
+        "version": "4.1.0",
         "timestamp": datetime.now().isoformat(),
-        "data_source": "binance+defillama+alternative.me",
+        "data_source": "coingecko+defillama+alternative.me",
+        "data_tier": 2,
         "macro": macro,
         "universe": universe,
     }
