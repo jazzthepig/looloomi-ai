@@ -179,8 +179,8 @@ export default function StrategyPage() {
   })();
   const regimeColor = regime === "RISK ON" ? T.green : regime === "RISK OFF" ? T.red : T.gold;
 
-  const topAssets = (cisData?.assets || cisData?.scores || [])
-    .sort((a, b) => (b.score ?? b.cis_score ?? 0) - (a.score ?? a.cis_score ?? 0))
+  const topAssets = (cisData?.universe || cisData?.assets || cisData?.scores || [])
+    .sort((a, b) => (b.cis_score ?? b.score ?? 0) - (a.cis_score ?? a.score ?? 0))
     .slice(0, 10);
 
   const topProtocols = (protocols?.protocols || [])
@@ -189,11 +189,26 @@ export default function StrategyPage() {
 
   return (
     <div style={{ background: T.void, color: T.t1, minHeight: "100vh", position: "relative", overflow: "hidden" }}>
-      {/* ── Turrell ambient ────────────────────────────────────────────── */}
+      {/* ── Turrell ambient — 8 layers, async breathing, void with light ── */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        <div style={{ position: "absolute", width: 800, height: 800, borderRadius: "50%", filter: "blur(120px)", mixBlendMode: "screen", background: "radial-gradient(circle, rgba(107,15,204,0.12) 0%, transparent 65%)", top: -350, left: -250, animation: "breathe 52s ease-in-out infinite" }} />
-        <div style={{ position: "absolute", width: 600, height: 600, borderRadius: "50%", filter: "blur(120px)", mixBlendMode: "screen", background: "radial-gradient(circle, rgba(45,53,212,0.08) 0%, transparent 65%)", bottom: "10%", right: -200, animation: "breathe 68s ease-in-out infinite 12s" }} />
-        <div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", filter: "blur(100px)", mixBlendMode: "screen", background: "radial-gradient(circle, rgba(200,168,75,0.06) 0%, transparent 65%)", top: "50%", left: "40%", animation: "breathe 60s ease-in-out infinite 28s" }} />
+        {/* Base: subtle depth gradient — the void isn't flat */}
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 120% 100% at 50% 30%, #080c18 0%, #030508 55%, #020406 100%)" }} />
+        {/* L1: Top-left emerald — CIS green echo */}
+        <div className="al-orb" style={{ width: 1100, height: 700, top: -220, left: -180, background: "radial-gradient(ellipse, rgba(0,232,122,0.11) 0%, transparent 60%)", filter: "blur(90px)", animation: "alA 13s ease-in-out infinite" }} />
+        {/* L2: Right gold — CometCloud accent */}
+        <div className="al-orb" style={{ width: 900, height: 550, top: 180, right: -200, background: "radial-gradient(ellipse, rgba(200,168,75,0.10) 0%, transparent 58%)", filter: "blur(90px)", animation: "alB 19s ease-in-out infinite" }} />
+        {/* L3: Bottom center blue — cold horizon */}
+        <div className="al-orb" style={{ width: 1000, height: 450, bottom: -80, left: "20%", background: "radial-gradient(ellipse, rgba(75,158,255,0.09) 0%, transparent 60%)", filter: "blur(100px)", animation: "alC 23s ease-in-out infinite" }} />
+        {/* L4: Left violet — Turrell signature */}
+        <div className="al-orb" style={{ width: 600, height: 600, top: "30%", left: -120, background: "radial-gradient(ellipse, rgba(107,15,204,0.10) 0%, transparent 55%)", filter: "blur(90px)", animation: "alD 17s ease-in-out infinite" }} />
+        {/* L5: Bottom-right warm red — subtle tension */}
+        <div className="al-orb" style={{ width: 500, height: 350, bottom: "15%", right: "8%", background: "radial-gradient(ellipse, rgba(255,61,90,0.06) 0%, transparent 60%)", filter: "blur(80px)", animation: "alE 21s ease-in-out infinite" }} />
+        {/* L6: Wide horizontal blue band — depth layer */}
+        <div className="al-orb" style={{ width: 1400, height: 300, top: "55%", left: -100, background: "radial-gradient(ellipse, rgba(75,158,255,0.05) 0%, transparent 65%)", filter: "blur(100px)", animation: "alF 28s ease-in-out infinite" }} />
+        {/* L7: Top-right green — secondary pulse */}
+        <div className="al-orb" style={{ width: 400, height: 400, top: "8%", right: "15%", background: "radial-gradient(ellipse, rgba(0,232,122,0.07) 0%, transparent 60%)", filter: "blur(70px)", animation: "alG 15s ease-in-out infinite" }} />
+        {/* L8: Bottom-right gold — warm anchor */}
+        <div className="al-orb" style={{ width: 900, height: 700, bottom: -200, right: -200, background: "radial-gradient(ellipse, rgba(200,168,75,0.08) 0%, transparent 58%)", filter: "blur(100px)", animation: "alH 31s ease-in-out infinite" }} />
       </div>
 
       <div style={{ position: "relative", zIndex: 1 }}>
@@ -242,7 +257,7 @@ export default function StrategyPage() {
             fontFamily: F.body, fontSize: 16, color: T.t2,
             lineHeight: 1.7, maxWidth: 640, margin: "0 auto 48px",
           }}>
-            Proprietary CIS scoring engine analyzes 40+ digital assets across 5 dimensions.
+            Proprietary CIS scoring engine analyzes digital assets across 5 dimensions.
             Three distinct investment channels — algorithmic trading, DeFi protocol yield,
             and fund-of-funds allocation — all driven by real-time intelligence.
           </p>
@@ -252,7 +267,7 @@ export default function StrategyPage() {
             display: "flex", justifyContent: "center", gap: 48, flexWrap: "wrap",
             padding: "28px 0", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`,
           }}>
-            <Stat label="Assets Scored" value="40" sub="Crypto + TradFi" />
+            <Stat label="Assets Scored" value={`${topAssets.length || 14}+`} sub="Crypto + TradFi" />
             <Stat label="Investment Channels" value="3" sub="Algo · Protocol · FoF" />
             <Stat label="Target AUM" value="$30M" sub="Phase 1" />
             <Stat label="Management Fee" value="0%" sub="Performance only" color={T.green} />
@@ -285,7 +300,7 @@ export default function StrategyPage() {
           }}>
             {[
               { label: "BTC Dominance", value: btcDom ? `${btcDom.toFixed(1)}%` : "—", color: T.t1 },
-              { label: "Fear & Greed", value: fngVal || "—", sub: fngLabel || "", color: parseInt(fngVal) > 65 ? T.green : parseInt(fngVal) < 35 ? T.red : T.gold },
+              { label: "Fear & Greed", value: fngVal || "—", sub: fngLabel || "", color: fngVal ? (parseInt(fngVal) > 65 ? T.green : parseInt(fngVal) < 35 ? T.red : T.gold) : T.t3 },
               { label: "Total MCap 24h", value: mcapChange != null ? `${mcapChange >= 0 ? "+" : ""}${mcapChange.toFixed(1)}%` : "—", color: mcapChange >= 0 ? T.green : T.red },
               { label: "BTC 7D", value: macro?.btc?.usd_7d_change != null ? `${macro.btc.usd_7d_change >= 0 ? "+" : ""}${macro.btc.usd_7d_change.toFixed(1)}%` : "—", color: (macro?.btc?.usd_7d_change || 0) >= 0 ? T.green : T.red },
             ].map((m, i) => (
@@ -379,10 +394,10 @@ export default function StrategyPage() {
                 Loading CIS scores...
               </div>
             ) : topAssets.map((a, i) => {
-              const score = a.score ?? a.cis_score ?? 0;
+              const score = a.cis_score ?? a.score ?? 0;
               const grade = a.grade || "—";
               const signal = a.signal || "HOLD";
-              const ch7d = a.change_7d ?? a.ch7d ?? 0;
+              const ch7d = a.price_change_7d ?? a.change_7d ?? a.ch7d ?? 0;
               const sym = a.symbol || a.s || "—";
               return (
                 <div key={i} style={{
@@ -406,7 +421,7 @@ export default function StrategyPage() {
                   <span style={{
                     fontFamily: F.display, fontSize: 9, fontWeight: 700,
                     textAlign: "center", letterSpacing: "0.04em",
-                    color: signal === "STRONG BUY" || signal === "ACCUMULATE" ? T.green : signal === "REDUCE" || signal === "AVOID" ? T.red : T.gold,
+                    color: signal === "STRONG BUY" || signal === "BUY" || signal === "ACCUMULATE" ? T.green : signal === "REDUCE" || signal === "AVOID" ? T.red : T.gold,
                   }}>
                     {signal}
                   </span>
@@ -488,7 +503,7 @@ export default function StrategyPage() {
               subtitle="DEFI · CIS-CURATED · YIELD"
               description="CIS-rated DeFi protocol allocation. Capital is deployed to the highest-scoring protocols with verified security audits, sustainable yield sources, and sufficient TVL depth."
               metrics={[
-                { label: "Protocols Rated", value: `${protocols?.protocols?.length || 30}+`, color: T.t1 },
+                { label: "Protocols Rated", value: `${(protocols?.protocols || protocols?.data || []).length || 30}+`, color: T.t1 },
                 { label: "Target APY", value: "8-18%", color: T.green },
                 { label: "Min Audit Score", value: "7/10", color: T.t1 },
                 { label: "Min TVL", value: "> $100M", color: T.t1 },
@@ -601,7 +616,7 @@ export default function StrategyPage() {
               <FlowStep num="1" title="Multi-Source Data Ingestion"
                 desc="Real-time feeds from CoinGecko Pro, DeFiLlama, Alternative.me, and Binance. On-chain analytics, TVL flows, sentiment indices, and macro indicators aggregated every 30 minutes." />
               <FlowStep num="2" title="CIS Scoring Engine"
-                desc="Local AI infrastructure (Mac Mini M4 Pro, Qwen3 32B) scores each asset across 5 pillars. Regime-aware weight adjustments ensure scores reflect current macro environment." />
+                desc="Dedicated local AI infrastructure scores each asset across 5 pillars. Regime-aware weight adjustments ensure scores reflect the current macro environment — not static rankings." />
               <FlowStep num="3" title="Signal Generation"
                 desc="Scores are converted to actionable signals: STRONG BUY, BUY, HOLD, REDUCE, AVOID. Confidence levels and recommended portfolio weights are computed per asset." />
             </div>
@@ -611,7 +626,7 @@ export default function StrategyPage() {
               <FlowStep num="5" title="Risk Management"
                 desc="Maximum per-asset allocation 8%, sector concentration limits, drawdown triggers, and automatic regime-based derisking. All positions monitored in real-time." />
               <FlowStep num="6" title="Investor Dashboard"
-                desc="Full transparency: live CIS scores, channel performance, allocation breakdown, risk metrics. Real-time WebSocket updates for institutional subscribers." />
+                desc="Full transparency: live CIS scores, channel performance, allocation breakdown, and risk metrics. Real-time updates via WebSocket. All data accessible on-platform." />
             </div>
           </div>
         </Section>
@@ -634,7 +649,7 @@ export default function StrategyPage() {
           }}>
             {[
               { title: "Regulatory Framework", desc: "Hong Kong incorporated entity. Structured for institutional LP participation with proper fund documentation and compliance.", icon: "🏛" },
-              { title: "Technology Stack", desc: "FastAPI backend on Railway, React dashboard, Upstash Redis persistence, Supabase history, local AI scoring via Ollama. WebSocket real-time.", icon: "⚙" },
+              { title: "Technology Stack", desc: "Cloud-native architecture with real-time data pipelines, local AI scoring infrastructure, persistent caching, and WebSocket live updates.", icon: "⚙" },
               { title: "Fee Structure", desc: "Zero management fee. Performance-only fee alignment ensures our interests are fully aligned with LP returns.", icon: "💎" },
               { title: "On-Chain Settlement", desc: "Solana-based fund operations. OSL stablecoin denominated. Designed for both human LPs and autonomous AI agent participation.", icon: "⛓" },
               { title: "Risk Controls", desc: "Max 8% single-asset allocation. Regime-based derisking. Drawdown triggers. 6 macro regime detection for dynamic weight adjustment.", icon: "🛡" },
@@ -719,14 +734,27 @@ export default function StrategyPage() {
       </div>
 
       <style>{`
-        @keyframes breathe {
-          0%, 100% { opacity: 0.28; transform: scale(1) translateY(0); }
-          50% { opacity: 0.44; transform: scale(1.06) translateY(-12px); }
-        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body { background: ${T.void}; }
         ::selection { background: rgba(107,15,204,0.3); }
         a { cursor: pointer; }
+
+        .al-orb {
+          position: absolute;
+          border-radius: 50%;
+          mix-blend-mode: screen;
+        }
+
+        /* 8 async ambient animations — each orb breathes independently */
+        @keyframes alA { 0%,100% { opacity:.7; transform:scale(1) translate(0,0); } 50% { opacity:1; transform:scale(1.18) translate(28px,18px); } }
+        @keyframes alB { 0%,100% { opacity:.5; transform:scale(1) translate(0,0); } 50% { opacity:.9; transform:scale(1.22) translate(-22px,28px); } }
+        @keyframes alC { 0%,100% { opacity:.6; transform:scale(1); } 60% { opacity:1; transform:scale(1.3) translateX(30px); } }
+        @keyframes alD { 0%,100% { opacity:.4; transform:scale(1); } 50% { opacity:.8; transform:scale(1.25) translate(15px,-20px); } }
+        @keyframes alE { 0%,100% { opacity:.3; transform:scale(1); } 50% { opacity:.7; transform:scale(1.2) translate(-10px,10px); } }
+        @keyframes alF { 0%,100% { opacity:.5; transform:scaleX(1); } 50% { opacity:.9; transform:scaleX(1.1); } }
+        @keyframes alG { 0%,100% { opacity:.4; transform:scale(1); } 50% { opacity:.7; transform:scale(1.3); } }
+        @keyframes alH { 0%,100% { opacity:.3; transform:scale(1); } 50% { opacity:.6; transform:scale(1.15); } }
       `}</style>
     </div>
   );
