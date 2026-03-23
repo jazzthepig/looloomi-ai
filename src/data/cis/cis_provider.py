@@ -66,6 +66,7 @@ CRYPTO_ASSETS = {
     "BCH": {"coingecko": "bitcoin-cash", "name": "Bitcoin Cash", "class": "Crypto"},
     "SEI": {"coingecko": "sei", "name": "Sei", "class": "L1"},
     "TIA": {"coingecko": "celestia", "name": "Celestia", "class": "Infrastructure"},
+    "ENA": {"coingecko": "ethena", "name": "Ethena", "class": "Infrastructure"},
     "SAND": {"coingecko": "the-sandbox", "name": "The Sandbox", "class": "Gaming"},
     "MANA": {"coingecko": "decentraland", "name": "Decentraland", "class": "Gaming"},
     "AXS": {"coingecko": "axie-infinity", "name": "Axie Infinity", "class": "Gaming"},
