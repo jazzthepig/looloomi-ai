@@ -544,7 +544,7 @@ async def fetch_github_activity() -> Dict[str, int]:
     return results
 
 
-def get_yfinance_data(symbol: str) -> Optional[dict]:
+async def get_yfinance_data(symbol: str) -> Optional[dict]:
     """Fetch US equity/bond/commodity data using yfinance."""
     cache_key = f"yf:{symbol}"
     cached = _cache_get(cache_key)
@@ -553,34 +553,33 @@ def get_yfinance_data(symbol: str) -> Optional[dict]:
 
     try:
         import yfinance as yf
-        import time
 
-        # Rate limiting
-        time.sleep(0.2)
+        # Rate limiting - use async sleep to avoid blocking event loop
+        await asyncio.sleep(0.2)
 
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
+        def _fetch():
+            ticker = yf.Ticker(symbol)
+            info = ticker.info
+            hist = ticker.history(period="35d")
+            if len(hist) > 30:
+                price_30d_ago = hist['Close'].iloc[-31] if len(hist) > 31 else hist['Close'].iloc[0]
+                price_now = hist['Close'].iloc[-1]
+                change_30d = ((price_now - price_30d_ago) / price_30d_ago) * 100
+            else:
+                change_30d = 0
+            return {
+                "symbol": symbol,
+                "price": info.get("currentPrice", info.get("regularMarketPrice", 0)),
+                "market_cap": info.get("marketCap", 0),
+                "volume_24h": info.get("regularMarketVolume", 0),
+                "change_24h": info.get("regularMarketChange", 0),
+                "change_30d": change_30d,
+                "circulating_supply": info.get("sharesOutstanding", 0),
+                "total_supply": info.get("sharesOutstanding", 0),
+                "ath_change_percentage": 0,  # yfinance doesn't provide this directly
+            }
 
-        # Get historical data for 30d change
-        hist = ticker.history(period="35d")
-        if len(hist) > 30:
-            price_30d_ago = hist['Close'].iloc[-31] if len(hist) > 31 else hist['Close'].iloc[0]
-            price_now = hist['Close'].iloc[-1]
-            change_30d = ((price_now - price_30d_ago) / price_30d_ago) * 100
-        else:
-            change_30d = 0
-
-        result = {
-            "symbol": symbol,
-            "price": info.get("currentPrice", info.get("regularMarketPrice", 0)),
-            "market_cap": info.get("marketCap", 0),
-            "volume_24h": info.get("regularMarketVolume", 0),
-            "change_24h": info.get("regularMarketChange", 0),
-            "change_30d": change_30d,
-            "circulating_supply": info.get("sharesOutstanding", 0),
-            "total_supply": info.get("sharesOutstanding", 0),
-            "ath_change_percentage": 0,  # yfinance doesn't provide this directly
-        }
+        result = await asyncio.to_thread(_fetch)
         return _cache_set(cache_key, result)
     except Exception as e:
         # Don't print on rate limit - it's expected
@@ -1482,7 +1481,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     # Fetch yfinance data for US assets
     yf_data = {}
     for symbol, config in {**US_EQUITIES, **BONDS, **COMMODITIES}.items():
-        data = get_yfinance_data(config["yfinance"])
+        data = await get_yfinance_data(config["yfinance"])
         if data:
             yf_data[symbol] = data
 

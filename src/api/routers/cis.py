@@ -85,7 +85,7 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
         return {"status": "success", "received": len(universe), "cached": ok, "history_written": sb_ok}
     except Exception as e:
         print(f"[INTERNAL] Error receiving CIS scores: {e}")
-        return {"status": "error", "message": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ── CIS Universe ──────────────────────────────────────────────────────────────

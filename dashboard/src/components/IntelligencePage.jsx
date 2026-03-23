@@ -133,16 +133,6 @@ const CAT_C = {
 };
 const catStyle = (c) => CAT_C[c] || { bg: "rgba(255,255,255,.05)", text: "#8880BE" };
 
-/* ─── Curated macro events (updated Mar 2026) ────────────────────────── */
-const MACRO_EVENTS = [
-  { id: "sol-eth", date: "Feb 2026", title: "Solana Establishes $500M ETH Ecosystem Fund", summary: "Solana Foundation commits major capital to bridge Ethereum L2 ecosystems, validating cross-chain infrastructure.", type: "institutional", impact: "high", source: "Solana Foundation" },
-  { id: "ubs-rwa", date: "Jan 2026", title: "UBS Launches Tokenized Money Market Fund", summary: "Major Swiss bank enters RWA market with tokenized CHF and USD money market instruments.", type: "institutional", impact: "high", source: "UBS" },
-  { id: "hsbc-token", date: "Dec 2025", title: "HSBC Tokenizes $2B Real Estate on Polygon", summary: "Largest tokenized real estate deployment by a traditional bank, signaling institutional adoption.", type: "institutional", impact: "high", source: "HSBC" },
-  { id: "hk-eth", date: "Nov 2025", title: "Hong Kong Legalizes ETH as Recognized Asset", summary: "SFC ruling classifies ETH as property, enabling regulated ETH funds for retail investors.", type: "regulatory", impact: "high", source: "HK SFC" },
-  { id: "us-senate", date: "Oct 2025", title: "US Senate Passes Stablecoin Regulation Act", summary: "Comprehensive stablecoin framework establishes clear rules for issuance and reserves.", type: "regulatory", impact: "high", source: "US Senate" },
-  { id: "sec-eth", date: "Sep 2025", title: "SEC Approves Ethereum ETF Options Trading", summary: "Options on ETH ETFs cleared for trading, expanding institutional access to Ethereum.", type: "regulatory", impact: "high", source: "SEC" },
-];
-
 /* ─── Curated RWA Projects (Mar 2026) ────────────────────────────────── */
 /* RWA_PROJECTS removed — replaced by ProtocolIntelligence (live CIS-scored data) */
 
