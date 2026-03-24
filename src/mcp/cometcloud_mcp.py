@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "mcp[cli]>=1.6.0",
+#   "httpx>=0.27.0",
+#   "pydantic>=2.0.0",
+# ]
+# ///
 """
 CometCloud AI — MCP Server
 
