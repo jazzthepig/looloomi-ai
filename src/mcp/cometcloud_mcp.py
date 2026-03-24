@@ -21,8 +21,6 @@ Usage:
   MCP_PORT=8001 python cometcloud_mcp.py      # HTTP on port 8001
 """
 
-from __future__ import annotations
-
 import json
 import os
 from enum import Enum
@@ -620,7 +618,7 @@ async def cometcloud_get_prices(params: PricesInput) -> str:
         "openWorldHint": True,
     },
 )
-async def cometcloud_get_market_movers(_: None = None) -> str:
+async def cometcloud_get_market_movers() -> str:
     """Fetch the top gainers and losers across the tracked market universe.
 
     Returns the 5 biggest 24H gainers and 5 biggest losers, including price,
@@ -667,7 +665,7 @@ async def cometcloud_get_market_movers(_: None = None) -> str:
         "openWorldHint": True,
     },
 )
-async def cometcloud_get_macro_pulse(_: None = None) -> str:
+async def cometcloud_get_macro_pulse() -> str:
     """Get the current macro market pulse: Bitcoin dominance, Fear & Greed Index,
     total crypto market cap, DeFi TVL, and CometCloud's macro regime classification.
 
@@ -792,7 +790,7 @@ async def cometcloud_get_signal_feed(params: SignalFeedInput) -> str:
         "openWorldHint": True,
     },
 )
-async def cometcloud_get_macro_events(_: None = None) -> str:
+async def cometcloud_get_macro_events() -> str:
     """Fetch upcoming macro events that may impact asset prices and CIS scores.
 
     Covers Fed meetings, CPI/PPI releases, token unlocks, major protocol launches,
@@ -979,7 +977,7 @@ async def cometcloud_get_protocols(params: ProtocolsInput) -> str:
         "openWorldHint": True,
     },
 )
-async def cometcloud_get_defi_overview(_: None = None) -> str:
+async def cometcloud_get_defi_overview() -> str:
     """Get the current DeFi sector overview: total TVL, 24H and 7D changes,
     L2 TVL, RWA TVL, and top protocols by TVL.
 
@@ -1093,7 +1091,7 @@ async def cometcloud_get_defi_yields(params: YieldsInput) -> str:
         "openWorldHint": True,
     },
 )
-async def cometcloud_get_fund_portfolio(_: None = None) -> str:
+async def cometcloud_get_fund_portfolio() -> str:
     """Retrieve CometCloud's curated vault fund portfolio — the roster of GP
     partner funds available through the CometCloud Fund-of-Funds structure.
 
