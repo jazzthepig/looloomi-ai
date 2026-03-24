@@ -10,10 +10,11 @@ const GRADE_COLORS = {
 };
 
 const SIGNAL_COLORS = {
-  ACCUMULATE: { color: T.green, bg: "rgba(0,232,122,0.10)", border: "rgba(0,232,122,0.25)" },
-  HOLD:       { color: T.gold,  bg: "rgba(200,168,75,0.10)", border: "rgba(200,168,75,0.25)" },
-  REDUCE:     { color: T.amber, bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.25)" },
-  AVOID:      { color: T.red,   bg: "rgba(255,61,90,0.10)",  border: "rgba(255,61,90,0.25)" },
+  OUTPERFORM:   { color: T.green, bg: "rgba(0,232,122,0.10)", border: "rgba(0,232,122,0.25)" },
+  "STRONG OUTPERFORM": { color: T.green, bg: "rgba(0,232,122,0.15)", border: "rgba(0,232,122,0.35)" },
+  NEUTRAL:      { color: T.gold,  bg: "rgba(200,168,75,0.10)", border: "rgba(200,168,75,0.25)" },
+  UNDERPERFORM: { color: T.amber, bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.25)" },
+  UNDERWEIGHT:  { color: T.red,   bg: "rgba(255,61,90,0.10)",  border: "rgba(255,61,90,0.25)" },
 };
 
 const RISK_COLORS = {
@@ -70,7 +71,7 @@ const PillarMini = ({ pillars }) => {
 const ProtocolDetail = ({ protocol }) => {
   const p = protocol;
   if (!p) return null;
-  const sig = SIGNAL_COLORS[p.signal] || SIGNAL_COLORS.HOLD;
+  const sig = SIGNAL_COLORS[p.signal] || SIGNAL_COLORS.NEUTRAL;
 
   return (
     <div style={{
@@ -138,19 +139,75 @@ const ProtocolDetail = ({ protocol }) => {
         ))}
       </div>
 
+      {/* What it is */}
+      {p.description && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{
+            fontSize: 9, fontFamily: FONTS.mono, color: T.t3,
+            letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6,
+          }}>
+            What It Is
+          </div>
+          <div style={{
+            fontSize: 12, color: T.t2, fontFamily: FONTS.body, lineHeight: 1.65,
+          }}>
+            {p.description}
+          </div>
+        </div>
+      )}
+
+      {/* Why CometCloud selected it */}
+      {p.why_selected && (
+        <div style={{
+          marginBottom: 14, padding: "12px 14px", borderRadius: 6,
+          background: "rgba(75,158,255,0.04)", border: "1px solid rgba(75,158,255,0.12)",
+        }}>
+          <div style={{
+            fontSize: 9, fontFamily: FONTS.mono, color: "rgba(75,158,255,0.7)",
+            letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6,
+          }}>
+            Why CometCloud Holds This
+          </div>
+          <div style={{
+            fontSize: 12, color: T.t1, fontFamily: FONTS.body, lineHeight: 1.65,
+          }}>
+            {p.why_selected}
+          </div>
+        </div>
+      )}
+
+      {/* Strengths */}
+      {p.strengths && p.strengths.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{
+            fontSize: 9, fontFamily: FONTS.mono, color: T.t3,
+            letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8,
+          }}>
+            What We Like
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {p.strengths.map((s, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <span style={{
+                  color: T.green, fontFamily: FONTS.mono, fontSize: 10,
+                  marginTop: 1, flexShrink: 0, lineHeight: 1.6,
+                }}>▸</span>
+                <span style={{
+                  fontSize: 12, color: T.t2, fontFamily: FONTS.body, lineHeight: 1.6,
+                }}>
+                  {s}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Pillar breakdown */}
       <div style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t3, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>
         CIS Pillar Breakdown
       </div>
       <PillarMini pillars={p.pillars} />
-
-      {/* Description */}
-      <div style={{
-        marginTop: 12, fontSize: 12, color: T.t2,
-        fontFamily: FONTS.body, lineHeight: 1.6,
-      }}>
-        {p.description}
-      </div>
     </div>
   );
 };
