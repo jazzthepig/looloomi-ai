@@ -245,6 +245,22 @@ class PortfolioStatsInput(BaseModel):
     response_format: Fmt = Field(default=Fmt.JSON)
 
 
+class CisReportInput(BaseModel):
+    """Input for cometcloud_get_cis_report."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    symbol: str = Field(
+        ...,
+        description="Asset ticker symbol (e.g. BTC, ETH, SOL, LINK, AAPL, GLD).",
+        min_length=1,
+        max_length=12,
+    )
+
+    @field_validator("symbol")
+    @classmethod
+    def upper(cls, v: str) -> str:
+        return v.upper()
+
+
 # ── Grade ordering helper ─────────────────────────────────────────────────────
 
 _GRADE_ORDER = {"A+": 8, "A": 7, "B+": 6, "B": 5, "C+": 4, "C": 3, "D": 2, "F": 1}
@@ -1201,6 +1217,296 @@ async def cometcloud_get_portfolio_stats(params: PortfolioStatsInput) -> str:
             f"**Max Drawdown**: {data.get('max_drawdown', 0):.2%}",
             f"**CIS Quality Score**: {data.get('cis_weighted_score', 0):.1f}",
         ]
+        return "\n".join(lines)
+
+    except Exception as e:
+        return _err(e)
+
+
+# ── Tools — CIS Deep Report ───────────────────────────────────────────────────
+
+@mcp.tool(
+    name="cometcloud_get_cis_report",
+    annotations={
+        "title": "CIS Asset Report — Full Structured Scorecard",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_get_cis_report(params: CisReportInput) -> str:
+    """Generate a complete, structured CIS investment scorecard for a single asset.
+
+    Builds a quantitative report directly from live CIS engine data — no LM Studio,
+    no timeout risk. Returns pillar breakdown, signal rationale, trigger thresholds,
+    and monitoring metrics in clean markdown.
+
+    Use this tool when asked for a 'CIS report', 'scorecard', 'investment signal',
+    or 'analysis' of any asset. For an additional analyst narrative on top of the
+    scorecard, pass the output to lmstudio_cis_narrative.
+
+    Args:
+        params (CisReportInput):
+            - symbol: Ticker (e.g. 'LINK', 'BTC', 'ETH', 'SOL', 'MKR', 'AAPL')
+
+    Returns:
+        str: Structured markdown scorecard including:
+             - CIS composite score, grade, signal, LAS, confidence
+             - 5-pillar breakdown table with ratings and visual bars
+             - Price data + 7-day score trend
+             - Signal trigger conditions (upgrade / downgrade)
+             - Asset-class-specific monitoring metrics
+             - Compliance-safe positioning language throughout
+
+    Examples:
+        - "Give me a full CIS report on LINK" → symbol="LINK"
+        - "Generate a scorecard for SOL" → symbol="SOL"
+        - "Analyze BTC's CIS positioning" → symbol="BTC"
+    """
+    import asyncio
+    import datetime
+
+    try:
+        # Fetch CIS data + history concurrently
+        cis_result, hist_result = await asyncio.gather(
+            _get(f"/api/v1/cis/asset/{params.symbol}"),
+            _get(f"/api/v1/cis/history/{params.symbol}", {"days": 7}),
+            return_exceptions=True,
+        )
+        data = cis_result if not isinstance(cis_result, Exception) else {}
+        hist = hist_result if not isinstance(hist_result, Exception) else {}
+
+        if not data or isinstance(data, dict) and data.get("detail"):
+            return f"Error: Asset '{params.symbol}' not found in CIS universe."
+
+        # ── Extract fields ────────────────────────────────────────────────
+        symbol       = data.get("symbol", params.symbol)
+        name         = data.get("name", symbol)
+        asset_class  = data.get("asset_class", "—")
+        grade        = data.get("grade", "—")
+        cis_score    = float(data.get("cis_score", 0))
+        signal       = data.get("signal", "NEUTRAL")
+        las          = float(data.get("las", 0))
+        confidence   = float(data.get("confidence", 0))
+        rec_weight   = float(data.get("recommended_weight", 0))
+        pillars      = data.get("pillars", {})
+        pw           = data.get("pillar_weights", {"F": 0.25, "M": 0.20, "O": 0.20, "S": 0.20, "A": 0.15})
+        price        = float(data.get("price", 0))
+        market_cap   = float(data.get("market_cap", 0))
+        change_24h   = float(data.get("change_24h", 0))
+        change_7d    = float(data.get("change_7d", 0))
+        data_tier    = data.get("data_tier", "T2")
+        macro_regime = data.get("macro_regime", "—")
+
+        # ── Helpers ───────────────────────────────────────────────────────
+        def _rating(s: float) -> str:
+            if s >= 85: return "Exceptional"
+            if s >= 75: return "Strong"
+            if s >= 65: return "Above Avg"
+            if s >= 55: return "Moderate"
+            if s >= 45: return "Below Avg"
+            if s >= 35: return "Weak"
+            return "Very Weak"
+
+        def _bar(s: float) -> str:
+            n = max(0, min(10, round(s / 10)))
+            return "█" * n + "░" * (10 - n)
+
+        def _mc(v: float) -> str:
+            if v >= 1e12: return f"${v/1e12:.2f}T"
+            if v >= 1e9:  return f"${v/1e9:.2f}B"
+            if v >= 1e6:  return f"${v/1e6:.0f}M"
+            return f"${v:,.0f}"
+
+        # ── 7-day trend ───────────────────────────────────────────────────
+        hist_scores: List[float] = []
+        if isinstance(hist, dict):
+            hist_scores = [h.get("cis_score", 0) for h in hist.get("history", [])]
+        trend_str = "—"
+        if len(hist_scores) >= 2:
+            delta = hist_scores[-1] - hist_scores[0]
+            trend_str = f"{'▲' if delta >= 0 else '▼'} {abs(delta):.1f} pts (7d)"
+
+        # ── Signal descriptions (compliance-safe) ─────────────────────────
+        SIGNAL_DESC: Dict[str, str] = {
+            "STRONG OUTPERFORM": (
+                "High-conviction overweight. All major CIS pillars constructive; "
+                "composite materially above A-grade threshold. Regime-aligned."
+            ),
+            "OUTPERFORM": (
+                "Positive relative positioning. CIS composite above B+ threshold; "
+                "fundamental + momentum support overweight vs. benchmark."
+            ),
+            "NEUTRAL": (
+                "No directional conviction. Mixed pillar signals; CIS composite "
+                "in 45–65 range. Monitor for regime shift before increasing exposure."
+            ),
+            "UNDERPERFORM": (
+                "Cautious positioning. Headwinds in ≥2 pillars; CIS composite "
+                "below C+ threshold. Reduce relative exposure vs. benchmark."
+            ),
+            "UNDERWEIGHT": (
+                "Defensive positioning. CIS composite materially weak (<35). "
+                "Capital preservation priority; avoid new exposure."
+            ),
+        }
+
+        F = float(pillars.get("F", 0))
+        M = float(pillars.get("M", 0))
+        O = float(pillars.get("O", 0))
+        S = float(pillars.get("S", 0))
+        A = float(pillars.get("A", 0))
+
+        # ── Pillar notes ──────────────────────────────────────────────────
+        def _pnote(key: str, score: float, high: str, low: str) -> str:
+            tag = "✔" if score >= 60 else "✖" if score < 45 else "~"
+            return f"- **{key}** {tag}  {high if score >= 60 else low} *(score: {score:.1f})*"
+
+        pillar_notes = [
+            _pnote("F — Fundamental", F,
+                   "Value accrual, revenue, or network adoption metrics constructive.",
+                   "Fundamental headwinds — revenue, adoption, or balance sheet below threshold."),
+            _pnote("M — Momentum", M,
+                   "Positive price momentum relative to benchmark; trend and volume aligned.",
+                   "Trend below benchmark; near-term velocity weak. Caution on timing."),
+            _pnote("O — On-chain / Risk", O,
+                   "On-chain health stable — liquidity depth, volatility regime, network metrics nominal.",
+                   "On-chain risk elevated — liquidity concerns, high realized vol, or anomalous activity."),
+            _pnote("S — Sentiment", S,
+                   "Sentiment constructive — Fear & Greed, social indicators, derivatives positioning aligned.",
+                   "Sentiment cautious — market fear or speculative positioning creating near-term headwinds."),
+            _pnote("A — Alpha", A,
+                   "Positive alpha vs. benchmark (BTC/SPY) over 30d; regime-adjusted outperformance.",
+                   "Negative alpha vs. benchmark over 30d; underperforming peer group on risk-adjusted basis."),
+        ]
+
+        # ── Signal triggers ───────────────────────────────────────────────
+        if signal in ("NEUTRAL", "UNDERPERFORM", "UNDERWEIGHT"):
+            triggers = [
+                "| CIS ≥ 65 | ↑ → OUTPERFORM | Composite recovers to B+ threshold |",
+                "| F pillar ≥ 70 | ↑ Fundamental recovery | Revenue/adoption normalises |",
+                "| M pillar ≥ 65 | ↑ Momentum confirms | Trend re-establishes above benchmark |",
+                "| S pillar ≤ 25 | ↓ Capitulation risk | Extreme fear; watch for distribution |",
+                "| CIS ≤ 35 | ↓ → UNDERWEIGHT | C threshold — full defensive posture |",
+            ]
+        else:
+            triggers = [
+                "| CIS ≤ 55 | ↓ → NEUTRAL | Composite falls below B threshold |",
+                "| M pillar ≤ 45 | ↓ Momentum loss | Trend breaks below benchmark |",
+                "| O pillar ≤ 40 | ↓ On-chain risk spike | Liquidity or volatility deterioration |",
+                "| F pillar ≥ 85 | ↑ → STRONG OUTPERFORM | Exceptional fundamental conviction |",
+                "| CIS ≥ 85 | ↑ → STRONG OUTPERFORM | A+ grade — all pillars aligned |",
+            ]
+
+        # ── Asset-class monitoring metrics ────────────────────────────────
+        monitoring: Dict[str, List[str]] = {
+            "L1": [
+                "Active addresses + daily transaction count (F pillar driver)",
+                "Protocol revenue and fee burn rate vs. peers",
+                "30d price divergence vs. BTC benchmark (A pillar)",
+                "Derivatives OI and funding rate (O pillar — leverage risk)",
+                "Fear & Greed Index + social volume (S pillar)",
+            ],
+            "L2": [
+                "TVL bridged + sequencer revenue (F pillar)",
+                "TPS and gas savings vs. L1 (value proposition)",
+                "30d price divergence vs. ETH benchmark (A pillar)",
+                "Bridge liquidity and security audit status (O pillar)",
+                "Developer activity + deployed contracts",
+            ],
+            "DeFi": [
+                "TVL — absolute level and 7d/30d change (F pillar)",
+                "Protocol revenue / fee generation per dollar TVL",
+                "Market share vs. sector competitors (A pillar benchmark)",
+                "Liquidation health and collateral ratio (O pillar)",
+                "Governance activity and token concentration",
+            ],
+            "RWA": [
+                "AUM / TVL growth and weekly inflow trends (F pillar)",
+                "Yield spread vs. off-chain equivalent (value proposition)",
+                "Regulatory filing status and compliance updates",
+                "Issuer credit quality and counterparty exposure (O pillar)",
+                "Institutional integration pipeline and redemption flow",
+            ],
+        }
+        default_monitoring = [
+            "CIS composite — flag if any pillar moves ±5 pts within a week",
+            "F pillar: fundamental quality indicators (revenue, adoption, TVL)",
+            "M pillar: 30-day price vs. benchmark divergence",
+            "O pillar: liquidity depth and volatility regime",
+            "S pillar: Fear & Greed + derivatives positioning",
+        ]
+        monitor_lines = monitoring.get(asset_class, default_monitoring)
+
+        # ── Assemble report ───────────────────────────────────────────────
+        today = datetime.date.today().isoformat()
+
+        lines = [
+            f"# {name} ({symbol}) — CIS Investment Scorecard",
+            f"*{today} · CometCloud Intelligence System v4.1 · {asset_class} · {data_tier} · Regime: {macro_regime}*",
+            "",
+            "---",
+            "",
+            "## 1 · Composite Score",
+            "",
+            "| CIS Score | Grade | Signal | LAS | Confidence | Rec. Weight |",
+            "|-----------|-------|--------|-----|------------|-------------|",
+            f"| **{cis_score:.1f} / 100** | **{grade}** | **{signal}** "
+            f"| {las:.1f} | {confidence:.0%} | {rec_weight:.1f}% |",
+            "",
+            f"> **Positioning**: {SIGNAL_DESC.get(signal, signal)}",
+            "",
+            "---",
+            "",
+            "## 2 · Pillar Breakdown",
+            "",
+            "| Pillar | Weight | Score | Visual | Rating |",
+            "|--------|--------|-------|--------|--------|",
+            f"| F — Fundamental      | {pw.get('F', 0.25):.0%} | {F:.1f} | `{_bar(F)}` | {_rating(F)} |",
+            f"| M — Momentum         | {pw.get('M', 0.20):.0%} | {M:.1f} | `{_bar(M)}` | {_rating(M)} |",
+            f"| O — On-chain / Risk  | {pw.get('O', 0.20):.0%} | {O:.1f} | `{_bar(O)}` | {_rating(O)} |",
+            f"| S — Sentiment        | {pw.get('S', 0.20):.0%} | {S:.1f} | `{_bar(S)}` | {_rating(S)} |",
+            f"| A — Alpha            | {pw.get('A', 0.15):.0%} | {A:.1f} | `{_bar(A)}` | {_rating(A)} |",
+            "",
+            "### Pillar Notes",
+            "",
+        ] + pillar_notes + [
+            "",
+            "---",
+            "",
+            "## 3 · Price & Market Data",
+            "",
+            "| Price | 24H | 7D | Market Cap | Score Trend |",
+            "|-------|-----|----|------------|-------------|",
+            f"| **${price:,.4f}** | {change_24h:+.2f}% | {change_7d:+.2f}% "
+            f"| {_mc(market_cap)} | {trend_str} |",
+            "",
+            "---",
+            "",
+            "## 4 · Signal Trigger Levels",
+            "",
+            "Conditions that would cause a signal upgrade or downgrade:",
+            "",
+            "| Condition | Direction | Rationale |",
+            "|-----------|-----------|-----------|",
+        ] + triggers + [
+            "",
+            "---",
+            "",
+            "## 5 · Key Monitoring Metrics",
+            "",
+            "Track weekly for early signal-change detection:",
+            "",
+        ] + [f"- {m}" for m in monitor_lines] + [
+            "",
+            "---",
+            "",
+            "*CIS v4.1 — Absolute grading: A+≥85 · A≥75 · B+≥65 · B≥55 · C+≥45 · C≥35 · D≥25 · F<25*  ",
+            "*Signals are relative positioning language only — not investment advice.*  ",
+            "*Valid signals: STRONG OUTPERFORM / OUTPERFORM / NEUTRAL / UNDERPERFORM / UNDERWEIGHT*",
+        ]
+
         return "\n".join(lines)
 
     except Exception as e:
