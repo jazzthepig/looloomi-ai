@@ -38,33 +38,33 @@ const CATEGORIES = ["All", "RWA", "Oracle", "L1", "L2", "DeFi"];
 const API_BASE = "/api/v1";
 const REFRESH_INTERVAL = 30000;
 
-/* ─── CIS Data (to be fetched from /api/v1/cis/universe) ──────────────── */
-// Previously contained mock data - now empty to avoid misleading trading decisions
-// TODO: Fetch from API when signal generation endpoint is ready
-const CIS_DATA = {};
+/* ─── Signal Generation based on live CIS scores ──────────────────────── */
+// Compliance rule: ONLY use these 5 positioning signals.
+// NEVER: Buy, Sell, Hold, Accumulate, Avoid, Reduce, Overweight, 买入, 卖出, etc.
+const SIGNAL_MAP = {
+  "STRONG OUTPERFORM": { color: "#00D98A" },
+  "OUTPERFORM":        { color: "#4472FF" },
+  "NEUTRAL":           { color: "#888" },
+  "UNDERPERFORM":      { color: "#E8A000" },
+  "UNDERWEIGHT":       { color: "#FF2D55" },
+};
 
-/* ─── Signal Generation based on CIS + Price ────────────────────────── */
-const generateSignal = (symbol, priceData) => {
-  const p = priceData[symbol];
-  const cis = CIS_DATA[symbol];
+const scoreToSignal = (score) => {
+  if (score >= 75) return "STRONG OUTPERFORM";
+  if (score >= 55) return "OUTPERFORM";
+  if (score >= 40) return "NEUTRAL";
+  if (score >= 25) return "UNDERPERFORM";
+  return "UNDERWEIGHT";
+};
 
-  if (!p || !cis) return { label: "—", color: T.muted };
-
-  const change24h = p.change_24h || 0;
-  const score = cis.score;
-
-  // Signal logic
-  if (score >= 85 && change24h > -3) {
-    return { label: "Accumulate", color: T.green };
-  } else if (score >= 70 && score < 85 && change24h >= -2 && change24h <= 5) {
-    return { label: "Hold", color: T.cyan };
-  } else if (change24h > 15) {
-    return { label: "Watch", color: T.amber };
-  } else if (score < 60 || change24h < -10) {
-    return { label: "Sell", color: T.red };
-  } else {
-    return { label: "Neutral", color: T.secondary };
-  }
+const generateSignal = (symbol, cisUniverse) => {
+  const asset = cisUniverse[symbol];
+  if (!asset?.score) return { label: "—", color: T.muted };
+  // Use backend signal if present, otherwise derive from score
+  const sig = asset.signal && SIGNAL_MAP[asset.signal]
+    ? asset.signal
+    : scoreToSignal(asset.score);
+  return { label: sig, color: SIGNAL_MAP[sig]?.color || T.muted };
 };
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-font-smoothing: antialiased; }
@@ -358,21 +358,22 @@ const ChangeCell = ({ v }) => {
 };
 
 /* ─── CIS & Signal Cell ─────────────────────────────────────────────── */
-const CISScoreCell = ({ symbol }) => {
-  const cis = CIS_DATA[symbol];
+const CISScoreCell = ({ symbol, cisUniverse }) => {
+  const cis = cisUniverse?.[symbol];
   if (!cis) return <span style={{ color: T.muted }}>—</span>;
 
-  const gradeClass = cis.grade === "A" ? "grade-a" : cis.grade === "B" ? "grade-b" : cis.grade === "C" ? "grade-c" : "grade-d";
+  const g = cis.grade || "";
+  const gradeClass = g.startsWith("A") ? "grade-a" : g.startsWith("B") ? "grade-b" : g.startsWith("C") ? "grade-c" : "grade-d";
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      <span className={`cis-badge ${gradeClass}`}>{cis.score.toFixed(1)}</span>
+      <span className={`cis-badge ${gradeClass}`}>{Number(cis.score).toFixed(1)}</span>
     </div>
   );
 };
 
-const SignalCell = ({ symbol, priceData }) => {
-  const signal = generateSignal(symbol, priceData);
+const SignalCell = ({ symbol, cisUniverse }) => {
+  const signal = generateSignal(symbol, cisUniverse);
   return (
     <span
       className="signal-badge"
@@ -388,12 +389,12 @@ const SignalCell = ({ symbol, priceData }) => {
 };
 
 /* ─── Token Detail Panel ─────────────────────────────────────────────── */
-const TokenDetail = ({ token, priceData, ohlcv, onClose }) => {
+const TokenDetail = ({ token, priceData, ohlcv, cisUniverse, onClose }) => {
   const p = priceData?.[token.symbol];
   const candles = ohlcv?.[token.symbol] || [];
   const positive = (p?.change_24h || 0) >= 0;
-  const cis = CIS_DATA[token.symbol];
-  const signal = generateSignal(token.symbol, priceData);
+  const cis = cisUniverse?.[token.symbol];
+  const signal = generateSignal(token.symbol, cisUniverse);
 
   return (
     <div className="lm-card fade-up" style={{ padding: 22, marginBottom: 2 }}>
@@ -518,6 +519,7 @@ const TokenDetail = ({ token, priceData, ohlcv, onClose }) => {
 export default function MarketPage() {
   const [priceData, setPriceData]     = useState({});
   const [ohlcv, setOhlcv]             = useState({});
+  const [cisUniverse, setCisUniverse] = useState({});  // live CIS scores keyed by symbol
   const [fng, setFng]                 = useState(null);
   const [defi, setDefi]               = useState(null);
   const [loading, setLoading]         = useState(true);
@@ -563,6 +565,19 @@ export default function MarketPage() {
     }
   }, []);
 
+  const fetchCisUniverse = useCallback(async () => {
+    try {
+      const r = await fetch(`${API_BASE}/cis/universe`);
+      if (!r.ok) return;
+      const json = await r.json();
+      const map = {};
+      for (const asset of json.universe || json.assets || json || []) {
+        if (asset.symbol) map[asset.symbol] = asset;
+      }
+      setCisUniverse(map);
+    } catch { /* best-effort */ }
+  }, []);
+
   const fetchSupplementary = useCallback(async () => {
     try {
       const [fR, dR] = await Promise.allSettled([
@@ -596,7 +611,7 @@ export default function MarketPage() {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchPrices(), fetchSupplementary()]);
+      await Promise.all([fetchPrices(), fetchSupplementary(), fetchCisUniverse()]);
       setLoading(false);
       fetchAllOhlcv();
     };
@@ -944,12 +959,12 @@ export default function MarketPage() {
 
                     {/* CIS Score */}
                     <div style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <CISScoreCell symbol={token.symbol} />
+                      <CISScoreCell symbol={token.symbol} cisUniverse={cisUniverse} />
                     </div>
 
                     {/* Signal */}
                     <div style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <SignalCell symbol={token.symbol} priceData={priceData} />
+                      <SignalCell symbol={token.symbol} cisUniverse={cisUniverse} />
                     </div>
 
                     {/* Chart */}
@@ -1059,7 +1074,7 @@ export default function MarketPage() {
       {/* Token Detail - BottomSheet */}
       <BottomSheet isOpen={!!selectedToken} onClose={() => setSelected(null)}>
         {selectedToken && (
-          <TokenDetail token={selectedToken} priceData={priceData} ohlcv={ohlcv} onClose={() => setSelected(null)} />
+          <TokenDetail token={selectedToken} priceData={priceData} ohlcv={ohlcv} cisUniverse={cisUniverse} onClose={() => setSelected(null)} />
         )}
       </BottomSheet>
 
