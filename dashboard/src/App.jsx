@@ -5,6 +5,7 @@ import CISLeaderboard from "./components/CISLeaderboard";
 import VaultPage from "./components/VaultPage";
 import ProtocolIntelligence from "./components/ProtocolIntelligence";
 import MobileApp from "./components/MobileApp";
+import WalletConnect from "./components/WalletConnect";
 import { T, FONTS } from "./tokens";
 
 /* ── Mobile detection ─────────────────────────────────────────────────────── */
@@ -313,6 +314,7 @@ function DesktopApp() {
             </button>
           ))}
         </div>
+        <WalletConnect />
       </nav>
 
       {/* Sections Container - padding for fixed nav */}

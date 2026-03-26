@@ -1375,14 +1375,28 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 cg_30d = cg_data.get("change_30d")
                 rec["change_7d"] = cg_7d if cg_7d is not None else rec.get("change_7d")
                 rec["change_30d"] = cg_30d if cg_30d is not None else rec.get("change_30d")
-                rec["market_cap"] = cg_data.get("market_cap", 0) or 0
-                rec["fdv"] = cg_data.get("fdv", 0) or 0  # Fully diluted valuation
-                rec["circulating_supply"] = cg_data.get("circulating_supply", 0) or 0
+                cg_mc = cg_data.get("market_cap", 0) or 0
+                cg_fdv = cg_data.get("fdv", 0) or 0
+                cg_supply = cg_data.get("circulating_supply", 0) or 0
+                # CG sometimes returns market_cap=0 for rebranded tokens (e.g. MKR→SKY).
+                # Fallback chain: price×supply → FDV → volume×20
+                if cg_mc == 0:
+                    price = rec.get("price", 0) or cg_data.get("price", 0) or 0
+                    if cg_supply > 0 and price > 0:
+                        cg_mc = price * cg_supply
+                    elif cg_fdv > 0:
+                        cg_mc = cg_fdv
+                    else:
+                        volume = rec.get("volume_24h", 0) or cg_data.get("volume_24h", 0) or 0
+                        if volume > 0:
+                            cg_mc = volume * 20  # vol ~5% of mcap → ×20 conservative
+                rec["market_cap"] = cg_mc
+                rec["fdv"] = cg_fdv
+                rec["circulating_supply"] = cg_supply
                 rec["total_supply"] = cg_data.get("total_supply", 0) or 0
                 rec["ath_change_percentage"] = cg_data.get("ath_change_percentage", 0) or 0
             else:
-                # Fallback: estimate market_cap from volume when CoinGecko fails
-                # Volume is typically 2-10% of market cap for liquid assets
+                # Fallback: estimate market_cap from volume when CoinGecko fails entirely
                 volume = rec.get("volume_24h", 0) or 0
                 if volume > 0 and rec.get("market_cap", 0) == 0:
                     rec["market_cap"] = volume * 20  # Conservative estimate
