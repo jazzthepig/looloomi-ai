@@ -76,14 +76,16 @@ export function useWalletAuth() {
   const connect = useCallback(async () => {
     const phantom = window.solana;
     if (!phantom?.isPhantom) {
-      setState(s => ({ ...s, status: "error", error: "Phantom wallet not found. Install it at phantom.app" }));
+      setState(s => ({ ...s, status: "error", error: "Phantom not found — install at phantom.app" }));
+      // Auto-clear error after 4s
+      setTimeout(() => setState(s => s.status === "error" ? { ...s, status: "idle", error: null } : s), 4000);
       return;
     }
 
     setState(s => ({ ...s, status: "connecting", error: null }));
 
     try {
-      // 1. Connect wallet
+      // 1. Connect wallet (user may cancel → code 4001)
       const { publicKey } = await phantom.connect();
       const address = publicKey.toString();
 
@@ -91,10 +93,10 @@ export function useWalletAuth() {
 
       // 2. Get nonce from backend
       const nonceRes = await fetch(`${API}/api/v1/auth/nonce/${address}`);
-      if (!nonceRes.ok) throw new Error("Failed to get nonce");
+      if (!nonceRes.ok) throw new Error("Backend unavailable — try again");
       const { message, nonce } = await nonceRes.json();
 
-      // 3. Sign the message
+      // 3. Sign the message (user may cancel → code 4001)
       const encodedMsg = new TextEncoder().encode(message);
       const { signature } = await phantom.signMessage(encodedMsg, "utf8");
       const sigHex = toHex(signature);
@@ -106,7 +108,7 @@ export function useWalletAuth() {
         body: JSON.stringify({ address, nonce, signature: sigHex }),
       });
       if (!signinRes.ok) {
-        const err = await signinRes.json();
+        const err = await signinRes.json().catch(() => ({}));
         throw new Error(err.detail || "Sign-in failed");
       }
       const { session_token: token } = await signinRes.json();
@@ -115,8 +117,22 @@ export function useWalletAuth() {
       setState({ address, token, status: "connected", error: null });
 
     } catch (err) {
-      const msg = err?.message || "Connection failed";
-      setState(s => ({ ...s, status: "error", error: msg, address: null, token: null }));
+      // User dismissed Phantom popup → code 4001 or message includes "rejected"
+      const isCancel =
+        err?.code === 4001 ||
+        err?.message?.toLowerCase().includes("rejected") ||
+        err?.message?.toLowerCase().includes("cancelled") ||
+        err?.message?.toLowerCase().includes("user denied");
+
+      if (isCancel) {
+        // Silently reset — not an error
+        setState({ address: null, token: null, status: "idle", error: null });
+      } else {
+        const msg = err?.message || "Connection failed";
+        setState(s => ({ ...s, status: "error", error: msg, address: null, token: null }));
+        // Auto-clear error after 5s
+        setTimeout(() => setState(s => s.status === "error" ? { ...s, status: "idle", error: null } : s), 5000);
+      }
     }
   }, []);
 
@@ -146,7 +162,7 @@ export default function WalletConnect({ compact = false }) {
   const labelMap = {
     idle:       compact ? "Connect" : "Connect Wallet",
     connecting: "Connecting…",
-    signing:    "Sign message…",
+    signing:    "Sign in Phantom…",
     connected:  shortAddr(address),
     error:      compact ? "Retry" : "Retry",
   };
