@@ -104,7 +104,7 @@ const GRADE_STYLE = {
   D:    { bg: "rgba(255,61,90,0.10)",  color: T.red,   border: "rgba(255,61,90,0.22)" },
   F:    { bg: "rgba(136,136,136,0.10)", color: "#888",  border: "rgba(136,136,136,0.2)" },
 };
-const gradeStyle = (g) => GRADE_STYLE[g] || { bg: "rgba(0,0,0,0.04)", color: T.t3, border: T.border };
+const gradeStyle = (g) => GRADE_STYLE[g] || { bg: "rgba(255,255,255,0.04)", color: T.t3, border: T.border };
 
 /* ─── Filters (match actual categories) ───────────────────────────── */
 const FILTERS = [

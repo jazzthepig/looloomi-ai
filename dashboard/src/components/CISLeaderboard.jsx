@@ -556,7 +556,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             },
           ].map(card => (
             <div key={card.title} style={{
-              background: "#F9FAFB", border: "1px solid rgba(0,0,0,0.06)",
+              background: "#0D2038", border: "1px solid rgba(255,255,255,0.06)",
               borderRadius: 8, padding: "12px 14px",
             }}>
               <div style={{
@@ -651,7 +651,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             <div className="grade-count" style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.primary }}>
               {g.grade === "A" ? gradeSummary.A : g.grade === "B" ? gradeSummary.B : g.grade === "C" ? gradeSummary.C : gradeSummary.D}
             </div>
-            <div className="grade-label" style={{ fontSize: 9, color: "#9CA3AF", letterSpacing: "0.06em" }}>
+            <div className="grade-label" style={{ fontSize: 9, color: "#3E6680", letterSpacing: "0.06em" }}>
               {g.label}
             </div>
           </div>
@@ -696,7 +696,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           })}
         </div>
         {/* Pillar Legend - Top */}
-        <div className="cis-pillar-legend-top" style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 9, color: "#9CA3AF" }}>
+        <div className="cis-pillar-legend-top" style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 9, color: "#3E6680" }}>
           {PILLAR_DEFS.map(p => (
             <span key={p.key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.color }} />
@@ -714,9 +714,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           <div className="cis-table-header" style={{
             display: "grid", gridTemplateColumns: "34px 1fr 80px 45px 50px 60px 80px",
             gap: 8, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
-            fontSize: 9, color: "#9CA3AF", letterSpacing: "0.14em",
+            fontSize: 9, color: "#3E6680", letterSpacing: "0.14em",
             textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
-            background: "#F9FAFB",
+            background: "#0D2038",
           }}>
             <span>#</span>
             <span>Asset</span>
@@ -747,7 +747,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                 onMouseEnter={(e) => { e.currentTarget.style.background = "#F3F4F6"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent"; }}
               >
-                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: "#9CA3AF", textAlign: "center" }}>{item.rank}</span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: "#3E6680", textAlign: "center" }}>{item.rank}</span>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 700, color: T.primary }}>{item.asset_name}</span>
@@ -791,7 +791,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                 }}>{item.grade}</span>
                 {/* LAS */}
                 <span style={{ fontFamily: FONTS.mono, fontSize: 11, textAlign: "right",
-                  color: (item.las ?? 0) >= 60 ? "#00E87A" : (item.las ?? 0) >= 40 ? "#6B7280" : "#FF3D5A" }}>
+                  color: (item.las ?? 0) >= 60 ? "#00E87A" : (item.las ?? 0) >= 40 ? "#3E6680" : "#FF3D5A" }}>
                   {item.las != null ? item.las.toFixed(1) : "—"}
                 </span>
                 {/* Signal */}
@@ -820,7 +820,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           {/* Detail Header */}
           <div style={{
             padding: "18px 20px", borderBottom: `1px solid ${T.border}`,
-            background: "#F9FAFB",
+            background: "#0D2038",
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <div>
@@ -828,7 +828,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   {selectedAsset?.asset_name}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
-                  <span style={{ fontSize: 9, color: "#9CA3AF" }}>
+                  <span style={{ fontSize: 9, color: "#3E6680" }}>
                     {selectedAsset?.asset_class} · Rank #{selectedAsset?.rank}
                     {selectedAsset?.percentile_rank != null ? ` · P${Math.round(selectedAsset.percentile_rank)}` : ""}
                   </span>
@@ -858,7 +858,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                 fontFamily: FONTS.mono, fontSize: 42, fontWeight: 400, lineHeight: 1, letterSpacing: "-0.03em",
                 color: (selectedAsset?.total_score ?? 0) >= 85 ? T.green : (selectedAsset?.total_score ?? 0) >= 70 ? T.blue : T.amber
               }}>{(selectedAsset?.total_score ?? 0).toFixed(1)}</span>
-              <span style={{ fontSize: 10, color: "#9CA3AF" }}>/ 100</span>
+              <span style={{ fontSize: 10, color: "#3E6680" }}>/ 100</span>
             </div>
           </div>
 
@@ -879,15 +879,15 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
               return (
                 <div key={p.key} style={{ marginBottom: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                    <span style={{ fontSize: 9, letterSpacing: "0.12em", color: "#9CA3AF", fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
+                    <span style={{ fontSize: 9, letterSpacing: "0.12em", color: "#3E6680", fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
                       {p.name}
                     </span>
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 500, color: isNull ? "#9CA3AF" : p.color }}>
-                      {isNull ? "—" : raw} <span style={{ color: "#9CA3AF", fontSize: 9 }}>{isNull ? "" : `(${scaled}pts)`}</span>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 500, color: isNull ? "#3E6680" : p.color }}>
+                      {isNull ? "—" : raw} <span style={{ color: "#3E6680", fontSize: 9 }}>{isNull ? "" : `(${scaled}pts)`}</span>
                     </span>
                   </div>
                   {!isNull && (
-                    <div style={{ height: 4, background: "rgba(0,0,0,0.08)", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
                       <div style={{ width: `${raw}%`, height: "100%", background: p.color, borderRadius: 2, transition: "width .5s ease .1s" }} />
                     </div>
                   )}
@@ -896,7 +896,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             })}
 
             {/* Footer */}
-            <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${T.border}`, fontSize: 9, color: "#9CA3AF" }}>
+            <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${T.border}`, fontSize: 9, color: "#3E6680" }}>
               CIS v4.1 · Scored by Looloomi AI · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </div>
           </div>
@@ -907,7 +907,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
       <div className="cis-pillar-legend-bottom" style={{
         marginTop: 16, paddingTop: 14, borderTop: `1px solid ${T.border}`,
         display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap",
-        fontSize: 9, color: "#9CA3AF"
+        fontSize: 9, color: "#3E6680"
       }}>
         {PILLAR_DEFS.map(p => (
           <span key={p.key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -926,7 +926,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           {/* Header */}
           <div style={{
             padding: "20px 24px", borderBottom: `1px solid ${T.border}`,
-            background: "#F9FAFB",
+            background: "#0D2038",
           }}>
             <div style={{
               fontFamily: FONTS.display, fontSize: 14, fontWeight: 700,
@@ -946,9 +946,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${T.border}` }}>
-                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 11, color: "#6B7280", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700 }}>Pillar</th>
-                  <th style={{ textAlign: "center", padding: "10px 8px", fontSize: 11, color: "#6B7280", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700, width: 80 }}>Weight</th>
-                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 11, color: "#6B7280", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700 }}>What it measures</th>
+                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 11, color: "#3E6680", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700 }}>Pillar</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", fontSize: 11, color: "#3E6680", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700, width: 80 }}>Weight</th>
+                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 11, color: "#3E6680", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700 }}>What it measures</th>
                 </tr>
               </thead>
               <tbody>
@@ -976,7 +976,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           {/* Footer note */}
           <div style={{
             padding: "14px 24px", borderTop: `1px solid ${T.border}`,
-            background: "#F9FAFB",
+            background: "#0D2038",
           }}>
             <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted, lineHeight: 1.6 }}>
               CIS scores are recalculated every 30 minutes using live market, on-chain, and macro data.

@@ -27,17 +27,17 @@ const CSS = `
   .t-orb-3 { width:380px;height:380px;background:radial-gradient(circle,rgba(0,200,224,.09) 0%,transparent 65%);bottom:0;left:22%;animation:breathe 76s ease-in-out infinite 24s; }
   .t-orb-4 { width:280px;height:280px;background:radial-gradient(circle,rgba(255,16,96,.07) 0%,transparent 65%);bottom:12%;right:8%;animation:breathe2 60s ease-in-out infinite 38s; }
 
-  .lm-card { background:#FFFFFF;border:1px solid rgba(0,0,0,0.08);border-radius:10px;backdrop-filter:blur(20px); }
-  .lm-card:hover { border-color:rgba(0,0,0,0.12); }
+  .lm-card { background:#FFFFFF;border:1px solid rgba(255,255,255,0.08);border-radius:10px;backdrop-filter:blur(20px); }
+  .lm-card:hover { border-color:rgba(56,148,210,0.25); }
   .lm-row { transition:background .12s ease;cursor:pointer; }
   .lm-row:hover { background:rgba(6,182,212,.06) !important; border-left: 2px solid rgba(6,182,212,0.4); }
 
-  .lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:'Space Grotesk',sans-serif;cursor:pointer;outline:none;border:1px solid rgba(0,0,0,0.08);background:transparent;color:#6B7280;transition:all .18s ease;letter-spacing:.01em; }
-  .lm-tab:hover { border-color:rgba(0,0,0,0.12);color:#111827; }
+  .lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:'Space Grotesk',sans-serif;cursor:pointer;outline:none;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#3E6680;transition:all .18s ease;letter-spacing:.01em; }
+  .lm-tab:hover { border-color:rgba(56,148,210,0.25);color:#EFF8FF; }
   .lm-tab.active { border-color:rgba(68,114,255,.5);background:rgba(68,114,255,.10);color:#4472FF; }
 
-  .filter-btn { padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:'Space Grotesk',sans-serif;cursor:pointer;outline:none;border:1px solid rgba(0,0,0,0.08);background:transparent;color:#9CA3AF;transition:all .15s ease; }
-  .filter-btn:hover { border-color:rgba(0,0,0,0.12);color:#6B7280; }
+  .filter-btn { padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:'Space Grotesk',sans-serif;cursor:pointer;outline:none;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#3E6680;transition:all .15s ease; }
+  .filter-btn:hover { border-color:rgba(56,148,210,0.25);color:#3E6680; }
   .filter-btn.active { border-color:rgba(68,114,255,.4);background:rgba(68,114,255,.08);color:#4472FF; }
 `;
 
@@ -249,7 +249,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             color: '#F59E0B', fontFamily: FONTS.display
           }}>DATA NOTE</span>
           <span style={{
-            fontSize: '10px', color: '#6B7280',
+            fontSize: '10px', color: '#3E6680',
             fontFamily: FONTS.body
           }}>
             GP data sourced from Looloomi Database. Only verified partners are listed.
@@ -270,7 +270,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
               color: '#ef4444', fontFamily: FONTS.display
             }}>API ERROR</span>
             <span style={{
-              fontSize: '10px', color: '#6B7280',
+              fontSize: '10px', color: '#3E6680',
               fontFamily: FONTS.body
             }}>
               {fetchError} — GP data unavailable

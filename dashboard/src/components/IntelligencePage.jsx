@@ -21,7 +21,7 @@ const CSS = `
   .fade-up  { animation: fadeUp  .4s cubic-bezier(.16,1,.3,1) forwards; }
   .slide-in { animation: slideIn .25s ease forwards; }
 
-  .iframe-wrap { position:relative;width:100%;height:calc(100vh - 88px);border-radius:10px;overflow:hidden;border:1px solid rgba(0,0,0,0.08); }
+  .iframe-wrap { position:relative;width:100%;height:calc(100vh - 88px);border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08); }
   .iframe-wrap iframe { width:100%;height:100%;border:none;background:white; }
 
   /* Mobile responsive */
@@ -99,7 +99,7 @@ const CAT_C = {
   "Layer 2":        { bg: "rgba(107,15,204,.10)", text: "#9945FF" },
   "ZK":             { bg: "rgba(68,114,255,.08)", text: "#7B9FFF" },
 };
-const catStyle = (c) => CAT_C[c] || { bg: "rgba(0,0,0,0.04)", text: "#6B7280" };
+const catStyle = (c) => CAT_C[c] || { bg: "rgba(255,255,255,0.04)", text: "#3E6680" };
 
 /* ─── Curated RWA Projects (Mar 2026) ────────────────────────────────── */
 /* RWA_PROJECTS removed — replaced by ProtocolIntelligence (live CIS-scored data) */
@@ -156,7 +156,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
     const val = parseFloat(change);
     if (val >= 3) return { bg: "rgba(0,232,122,0.16)", border: "rgba(0,232,122,0.25)", color: T.green }; // strong-up
     if (val >= 0.5) return { bg: "rgba(0,232,122,0.08)", border: "rgba(0,232,122,0.14)", color: T.green }; // up
-    if (val > -0.5) return { bg: "#F3F4F6", border: "rgba(0,0,0,0.05)", color: T.secondary }; // flat
+    if (val > -0.5) return { bg: "#F3F4F6", border: "rgba(255,255,255,0.05)", color: T.secondary }; // flat
     if (val > -3) return { bg: "rgba(255,61,90,0.08)", border: "rgba(255,61,90,0.14)", color: T.red }; // down
     return { bg: "rgba(255,61,90,0.16)", border: "rgba(255,61,90,0.25)", color: T.red }; // strong-down
   };
@@ -471,7 +471,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       fontSize: 8, fontWeight: 700, letterSpacing: "0.1em",
                       fontFamily: FONTS.display
                     }}>LIVE</span>
-                    <span style={{ fontSize: 9, color: "#9CA3AF" }}>DefiLlama</span>
+                    <span style={{ fontSize: 9, color: "#3E6680" }}>DefiLlama</span>
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, padding: 12 }}>
@@ -504,7 +504,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                         <div style={{ fontFamily: FONTS.mono, fontSize: 17, fontWeight: 400, letterSpacing: "-0.02em", color: style.color }}>
                           {sector.change > 0 ? "+" : ""}{Number(sector.change).toFixed(1)}%
                         </div>
-                        <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 4 }}>
+                        <div style={{ fontSize: 9, color: "#3E6680", marginTop: 4 }}>
                           {sector.tvl}
                         </div>
                       </div>
@@ -528,11 +528,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     <div key={idx} style={{
                       border: `1px solid ${T.border}`, borderRadius: 9,
                       padding: "14px 16px", marginBottom: 8,
-                      background: "#F9FAFB",
+                      background: "#0D2038",
                       transition: "border-color .2s,background .2s", cursor: "pointer",
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)"; e.currentTarget.style.background = "#F3F4F6"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "#F9FAFB"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(56,148,210,0.25)"; e.currentTarget.style.background = "#F3F4F6"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "#0D2038"; }}
                     >
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -563,9 +563,9 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                         <span style={{
                           flexShrink: 0,
                           fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 7px", borderRadius: 3,
-                          background: isHigh ? "rgba(255,61,90,0.12)" : "rgba(0,0,0,0.06)",
-                          color: isHigh ? "#FF3D5A" : "#9CA3AF",
-                          border: `1px solid ${isHigh ? "rgba(255,61,90,0.22)" : "rgba(0,0,0,0.08)"}`,
+                          background: isHigh ? "rgba(255,61,90,0.12)" : "rgba(255,255,255,0.06)",
+                          color: isHigh ? "#FF3D5A" : "#3E6680",
+                          border: `1px solid ${isHigh ? "rgba(255,61,90,0.22)" : "rgba(255,255,255,0.08)"}`,
                           marginTop: 2,
                         }}>
                           {event.impact}
@@ -645,7 +645,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   {/* Data Source Label */}
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: '6px',
-                    fontSize: '9px', color: '#9CA3AF'
+                    fontSize: '9px', color: '#3E6680'
                   }}>
                     <span style={{
                       background: 'rgba(75,158,255,0.1)',
@@ -665,9 +665,9 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   <div className="vc-table-header" style={{
                     display: "grid", gridTemplateColumns: "1fr 80px 100px 130px 80px",
                     gap: 10, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
-                    fontSize: 9, color: "#9CA3AF", letterSpacing: "0.14em",
+                    fontSize: 9, color: "#3E6680", letterSpacing: "0.14em",
                     textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
-                    background: "#F9FAFB",
+                    background: "#0D2038",
                   }}>
                     <span>Project</span>
                     <span className="vc-col-round-header" style={{ textAlign: "center" }}>Round</span>
@@ -761,7 +761,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   {/* Data Disclaimer */}
                   <div style={{
                     padding: '10px 18px',
-                    borderTop: '1px solid rgba(0,0,0,0.05)',
+                    borderTop: '1px solid rgba(255,255,255,0.05)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     fontSize: '9px', color: 'rgba(0,0,0,0.15)', letterSpacing: '0.06em'
                   }}>
@@ -795,7 +795,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     <div key={ev.id} className="lm-card" style={{
                       display: "flex", gap: 16, padding: "14px 18px",
                       background: "#F3F4F6",
-                      border: "1px solid rgba(0,0,0,0.08)",
+                      border: "1px solid rgba(255,255,255,0.08)",
                       borderRadius: 8, borderLeft: `3px solid ${cfg.color}`,
                       animation: `fadeUp .3s ease ${i*.07}s both`,
                     }}>
@@ -898,7 +898,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
               <div className="mobile-pipeline-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 320px", gap: 12, marginTop: 12 }}>
                 {/* Left - Timeline */}
-                <div className="lm-card" style={{ background: "#FFFFFF", padding: 20 }}>
+                <div className="lm-card" style={{ background: "rgba(14,30,56,0.75)", padding: 20 }}>
                   {[
                     { step: 1, title: "Asset Structuring", desc: "Legal wrapper, SPV design, regulatory alignment (SFC / MAS)", color: T.violet },
                     { step: 2, title: "Tokenization", desc: "Smart contract deployment, ERC-1400 / ERC-3643 compliance standards", color: T.indigo },
