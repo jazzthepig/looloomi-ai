@@ -191,7 +191,7 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
       ref={rowRef}
       className={isNew ? "signal-row new" : "signal-row"}
       style={{
-        padding: "13px 16px",
+        padding: "16px 16px",
         borderBottom: `1px solid ${T.border}`,
         transition: "background 0.14s",
         cursor: hasMeta ? "pointer" : "default",
@@ -201,48 +201,20 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
       onMouseEnter={(e) => { if (!isExpanded) e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
       onMouseLeave={(e) => { if (!isExpanded) e.currentTarget.style.background = "transparent"; }}
     >
-      {/* ── Top row: badges + time ─────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7, flexWrap: "wrap", gap: 4 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-          {/* Type */}
+      {/* ── Top row: type label (text only) + direction icon + time ──── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, gap: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Type — text only, no box */}
           <span style={{
-            fontFamily: FONTS.display, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
-            padding: "2px 7px", borderRadius: 3,
-            background: typeConfig.bg, color: typeConfig.color, border: `1px solid ${typeConfig.border}`,
-            textTransform: "uppercase",
+            fontFamily: FONTS.display, fontSize: 9, fontWeight: 700, letterSpacing: "0.12em",
+            color: typeConfig.color, textTransform: "uppercase",
           }}>
             {typeConfig.label}
           </span>
-          {/* Importance */}
-          {signal.importance && (
-            <span style={{
-              fontFamily: FONTS.display, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
-              padding: "2px 7px", borderRadius: 3,
-              background: impStyle.bg, color: impStyle.color, border: `1px solid ${impStyle.border}`,
-            }}>
-              {signal.importance}
-            </span>
-          )}
-          {/* Vector direction */}
+          {/* Direction icon only — no label, no box */}
           {dirStyle && signal.vector_direction && signal.vector_direction !== "NEUTRAL" && (
-            <span style={{
-              fontFamily: FONTS.display, fontSize: 9, fontWeight: 700, letterSpacing: "0.08em",
-              padding: "2px 7px", borderRadius: 3,
-              background: dirStyle.bg, color: dirStyle.color, border: `1px solid ${dirStyle.border}`,
-              display: "flex", alignItems: "center", gap: 3,
-            }}>
-              <span style={{ fontSize: 10, lineHeight: 1 }}>{dirStyle.icon}</span>
-              {signal.vector_direction}
-            </span>
-          )}
-          {/* Time horizon */}
-          {horizStyle && signal.time_horizon && (
-            <span style={{
-              fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.06em",
-              padding: "2px 6px", borderRadius: 3,
-              background: horizStyle.bg, color: horizStyle.color, border: `1px solid ${horizStyle.border}`,
-            }}>
-              {signal.time_horizon}
+            <span style={{ fontSize: 10, lineHeight: 1, color: dirStyle.color, opacity: 0.7 }}>
+              {dirStyle.icon}
             </span>
           )}
         </div>
@@ -279,7 +251,7 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
             {signal.affected_assets.map((asset) => (
               <span key={asset} style={{
                 fontSize: 9, fontFamily: FONTS.mono, color: T.t3,
-                background: "#F3F4F6", border: `1px solid ${T.border}`,
+                background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`,
                 padding: "2px 6px", borderRadius: 2,
               }}>
                 {asset}

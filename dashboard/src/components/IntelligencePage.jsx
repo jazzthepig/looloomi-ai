@@ -156,7 +156,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
     const val = parseFloat(change);
     if (val >= 3) return { bg: "rgba(0,232,122,0.16)", border: "rgba(0,232,122,0.25)", color: T.green }; // strong-up
     if (val >= 0.5) return { bg: "rgba(0,232,122,0.08)", border: "rgba(0,232,122,0.14)", color: T.green }; // up
-    if (val > -0.5) return { bg: "#F3F4F6", border: "rgba(255,255,255,0.05)", color: T.secondary }; // flat
+    if (val > -0.5) return { bg: "rgba(14,30,56,0.5)", border: "rgba(56,148,210,0.08)", color: T.t3 }; // flat
     if (val > -3) return { bg: "rgba(255,61,90,0.08)", border: "rgba(255,61,90,0.14)", color: T.red }; // down
     return { bg: "rgba(255,61,90,0.16)", border: "rgba(255,61,90,0.25)", color: T.red }; // strong-down
   };

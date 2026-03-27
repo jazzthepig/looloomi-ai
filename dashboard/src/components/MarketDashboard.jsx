@@ -37,11 +37,10 @@ export default function MarketDashboard({ isSection = false }) {
         {/* Section Header */}
         <div style={{ marginBottom: 24 }}>
           <h2 style={{
-            fontFamily: FONTS.display, fontSize: 32, fontWeight: 700,
-            color: "rgba(240,238,255,1)", marginBottom: 6, letterSpacing: "-0.02em",
+            fontFamily: FONTS.brand, fontSize: 34, fontWeight: 400,
+            color: T.t1, marginBottom: 6, letterSpacing: "-0.02em",
             lineHeight: 1.1,
           }}>
-            <span style={{ color: "#00C8E0", marginRight: 12 }}>//</span>
             Asset Prices
           </h2>
           <p style={{

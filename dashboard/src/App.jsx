@@ -647,10 +647,9 @@ function CISContent() {
       {/* Section Header */}
       <div style={{ marginBottom: 32 }}>
         <h2 style={{
-          fontFamily: FONTS.display, fontSize: 32, fontWeight: 700,
-          color: T.primary, marginBottom: 8, letterSpacing: "-0.02em"
+          fontFamily: FONTS.brand, fontSize: 34, fontWeight: 400,
+          color: T.t1, marginBottom: 8, letterSpacing: "-0.02em"
         }}>
-          <span style={{ color: T.cyan, marginRight: 12 }}>//</span>
           CIS Leaderboard
         </h2>
         <p style={{

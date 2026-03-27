@@ -268,11 +268,9 @@ export default function ProtocolIntelligence() {
             Protocol Intelligence
           </span>
           <span style={{
-            fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700,
-            padding: "2px 8px", borderRadius: 3, letterSpacing: "0.1em",
-            background: "rgba(0,232,122,0.08)", color: T.green,
-            border: "1px solid rgba(0,232,122,0.2)",
-          }}>CIS SCORED</span>
+            fontFamily: FONTS.mono, fontSize: 9, fontWeight: 500,
+            letterSpacing: "0.08em", color: T.t3,
+          }}>CIS v4.1</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 11, fontFamily: FONTS.mono, color: T.t3 }}>
@@ -395,11 +393,9 @@ export default function ProtocolIntelligence() {
                       </span>
                       {isPick && (
                         <span style={{
-                          fontSize: 8, fontFamily: FONTS.mono, fontWeight: 700,
-                          padding: "1px 6px", borderRadius: 2, letterSpacing: "0.1em",
-                          background: "rgba(0,232,122,0.12)", color: T.green,
-                          border: "1px solid rgba(0,232,122,0.25)",
-                        }}>AI PICK</span>
+                          fontSize: 8, fontFamily: FONTS.mono, fontWeight: 600,
+                          letterSpacing: "0.08em", color: T.green, opacity: 0.75,
+                        }}>★</span>
                       )}
                     </div>
                     <div style={{ fontSize: 10, color: T.t3, fontFamily: FONTS.body, marginTop: 2 }}>

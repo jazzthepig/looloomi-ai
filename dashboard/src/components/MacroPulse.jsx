@@ -25,30 +25,30 @@ const getRegimeConfig = (regime) => {
     case "RISK ON":
       return {
         color: T.green,
-        glow: "rgba(0,232,122,0.07)",
-        borderColor: "rgba(0,232,122,0.28)",
+        glow: "rgba(0,232,122,0.04)",
+        borderColor: "rgba(0,232,122,0.18)",
         labelColor: T.green,
-        textShadow: "0 0 28px rgba(0,232,122,0.45), 0 0 60px rgba(0,232,122,0.15)",
+        textShadow: "none",
         label: "看涨",
         description: "机构持续加仓，BTC领涨，市场风险偏好上升"
       };
     case "RISK OFF":
       return {
-        color: T.red,
-        glow: "rgba(255,61,90,0.07)",
-        borderColor: "rgba(255,61,90,0.28)",
-        labelColor: T.red,
-        textShadow: "0 0 28px rgba(255,61,90,0.45), 0 0 60px rgba(255,61,90,0.15)",
+        color: "rgba(255,100,120,0.9)",
+        glow: "rgba(255,61,90,0.04)",
+        borderColor: "rgba(255,61,90,0.18)",
+        labelColor: "rgba(255,100,120,0.9)",
+        textShadow: "none",
         label: "防御",
         description: "机构减仓观望，避险情绪升温"
       };
     default:
       return {
         color: T.gold,
-        glow: "rgba(200,168,75,0.07)",
-        borderColor: "rgba(200,168,75,0.28)",
+        glow: "rgba(200,168,75,0.04)",
+        borderColor: "rgba(200,168,75,0.18)",
         labelColor: T.gold,
-        textShadow: "0 0 28px rgba(200,168,75,0.45), 0 0 60px rgba(200,168,75,0.15)",
+        textShadow: "none",
         label: "中性",
         description: "市场横盘整理，等待方向明确"
       };
@@ -269,14 +269,13 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
             Market Regime
           </div>
           <div style={{
-            fontFamily: FONTS.display,
-            fontSize: 28,
-            fontWeight: 800,
-            letterSpacing: "0.05em",
-            lineHeight: 1,
+            fontFamily: FONTS.brand,
+            fontSize: 26,
+            fontWeight: 400,
+            letterSpacing: "-0.01em",
+            lineHeight: 1.1,
             color: regimeConfig.labelColor,
-            textShadow: regimeConfig.textShadow,
-            transition: "color 0.6s, text-shadow 0.6s",
+            transition: "color 0.6s",
           }}>
             {regime}
           </div>

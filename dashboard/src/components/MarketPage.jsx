@@ -1037,10 +1037,9 @@ export default function MarketPage() {
           <div>
             <div style={{ marginBottom: 20 }}>
               <h2 style={{
-                fontFamily: FONTS.display, fontSize: 28, fontWeight: 700,
-                color: T.primary, marginBottom: 8, letterSpacing: "-0.02em"
+                fontFamily: FONTS.brand, fontSize: 30, fontWeight: 400,
+                color: T.t1, marginBottom: 8, letterSpacing: "-0.02em"
               }}>
-                <span style={{ color: T.cyan, marginRight: 12 }}>//</span>
                 CIS Leaderboard
               </h2>
               <p style={{
