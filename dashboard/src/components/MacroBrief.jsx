@@ -38,7 +38,7 @@ export default function MacroBrief() {
   if (loading) {
     return (
       <div style={{
-        background: "#FFFFFF",
+        background: "rgba(14,30,56,0.75)",
         border: `1px solid ${T.border}`,
         borderRadius: 10,
         padding: "20px 24px",
@@ -58,7 +58,7 @@ export default function MacroBrief() {
   if (!data?.brief) {
     return (
       <div style={{
-        background: "#FFFFFF",
+        background: "rgba(14,30,56,0.75)",
         border: `1px solid ${T.border}`,
         borderRadius: 10,
         padding: "20px 24px",
@@ -84,7 +84,7 @@ export default function MacroBrief() {
 
   return (
     <div style={{
-      background: "#FFFFFF",
+      background: "rgba(14,30,56,0.75)",
       border: `1px solid ${T.border}`,
       borderLeft: `2px solid ${T.cyan}`,
       borderRadius: 10,

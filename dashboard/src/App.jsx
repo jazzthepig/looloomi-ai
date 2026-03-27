@@ -95,7 +95,7 @@ function CrossAssetView({ universe = [] }) {
           const scores   = assets.map(a => a.cis_score).filter(v => v != null);
           const avgScore = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
           const topAsset = assets[0];
-          const clr      = CA_COLORS[cls] || { bg: "rgba(0,0,0,0.04)", text: "#6B7280" };
+          const clr      = CA_COLORS[cls] || { bg: "rgba(255,255,255,0.04)", text: "#6B7280" };
 
           // Grade distribution
           const gradeDist = { A: 0, B: 0, C: 0, D: 0 };
@@ -263,25 +263,34 @@ function DesktopApp() {
   };
 
   return (
-    <div style={{ background: "#FAFBFC", minHeight: "100vh", position: "relative" }}>
+    <div style={{ background: T.deep, minHeight: "100vh", position: "relative" }}>
 
-      {/* Fixed Navigation — clean, light, Stripe-style */}
+      {/* Turrell Ambient Orbs */}
+      <div className="turrell-wrap">
+        <div className="t-orb t-orb-1" />
+        <div className="t-orb t-orb-2" />
+        <div className="t-orb t-orb-3" />
+        <div className="t-orb t-orb-4" />
+      </div>
+
+      {/* Fixed Navigation — dark glassmorphism */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-        background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center",
+        background: "rgba(6,15,27,0.85)", backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center",
         justifyContent: "space-between", padding: "12px 48px",
       }}>
         <span
           onClick={() => scrollToSection("market")}
           style={{
-            fontFamily: FONTS.display, fontWeight: 700, fontSize: 18,
-            letterSpacing: "0.04em", color: "#111827", cursor: "pointer",
+            fontFamily: FONTS.brand, fontWeight: 600, fontSize: 18,
+            letterSpacing: "-0.01em", color: T.t1, cursor: "pointer",
           }}
         >
           CometCloud
         </span>
-        <div style={{ display: "flex", gap: 2, background: "#F3F4F6", borderRadius: 10, padding: 3, border: "1px solid rgba(0,0,0,0.06)" }}>
+        <div style={{ display: "flex", gap: 2, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, border: `1px solid ${T.border}` }}>
           {SECTIONS.map(({ id, label }) => (
             <button
               key={id}
@@ -289,10 +298,9 @@ function DesktopApp() {
               style={{
                 padding: "7px 16px", borderRadius: 7, fontSize: 12, fontWeight: 600,
                 fontFamily: FONTS.display, cursor: "pointer", outline: "none",
-                border: "1px solid transparent",
-                background: activeSection === id ? "#FFFFFF" : "transparent",
-                color: activeSection === id ? "#111827" : "#9CA3AF",
-                boxShadow: activeSection === id ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                border: `1px solid ${activeSection === id ? "rgba(6,182,212,0.35)" : "transparent"}`,
+                background: activeSection === id ? "rgba(6,182,212,0.10)" : "transparent",
+                color: activeSection === id ? T.cyan : T.t3,
                 transition: "all 0.2s ease",
                 letterSpacing: "0.04em",
               }}
@@ -356,12 +364,12 @@ function DesktopApp() {
 
       <style>{`
         * { scroll-behavior: smooth; }
-        body { background: #FAFBFC; min-height: 100vh; }
+        body { background: ${T.deep}; min-height: 100vh; }
 
-        /* ── SECTION DIVIDERS — subtle light border ── */
+        /* ── SECTION DIVIDERS — cyan-tinted glass line ── */
         .section-divider {
           height: 1px;
-          background: rgba(0,0,0,0.06);
+          background: linear-gradient(90deg, transparent 0%, rgba(56,148,210,0.08) 20%, rgba(56,148,210,0.18) 50%, rgba(56,148,210,0.08) 80%, transparent 100%);
           margin: 0 64px;
         }
 
@@ -494,12 +502,6 @@ function DesktopApp() {
           }
         }
 
-        /* ── CARDS — clean white with subtle shadow ── */
-        .lm-card, .card {
-          background: #FFFFFF !important;
-          border: 1px solid rgba(0,0,0,0.06) !important;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02) !important;
-        }
       `}</style>
     </div>
   );
@@ -508,7 +510,7 @@ function DesktopApp() {
 const sectionStyle = (index) => ({
   minHeight: "auto",
   padding: "80px 64px",
-  background: index % 2 === 0 ? "#FAFBFC" : "#FFFFFF",
+  background: index % 2 === 0 ? "transparent" : "rgba(13,32,56,0.35)",
   position: "relative",
   zIndex: 1,
 });

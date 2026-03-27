@@ -47,7 +47,7 @@ const PillarMini = ({ pillars }) => {
             }}>{p}</span>
             <div style={{
               flex: 1, height: 4, borderRadius: 2,
-              background: "rgba(0,0,0,0.06)",
+              background: "rgba(255,255,255,0.06)",
               overflow: "hidden",
             }}>
               <div style={{
@@ -102,7 +102,7 @@ const ProtocolDetail = ({ protocol }) => {
           <span style={{
             fontFamily: FONTS.mono, fontSize: 10, color: T.t2,
             padding: "3px 8px", borderRadius: 4,
-            background: "rgba(0,0,0,0.04)", border: `1px solid ${T.border}`,
+            background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`,
           }}>
             Rec. Weight: {(p.recommended_weight_bps / 100).toFixed(1)}%
           </span>
@@ -313,7 +313,7 @@ export default function ProtocolIntelligence() {
             <button key={s.key} onClick={() => setSortBy(s.key)} style={{
               fontFamily: FONTS.mono, fontSize: 10, padding: "4px 10px", borderRadius: 3,
               cursor: "pointer", border: "none",
-              background: sortBy === s.key ? "rgba(0,0,0,0.06)" : "transparent",
+              background: sortBy === s.key ? "rgba(255,255,255,0.06)" : "transparent",
               color: sortBy === s.key ? T.t1 : T.t3,
               outline: sortBy === s.key ? `1px solid ${T.border}` : "none",
             }}>

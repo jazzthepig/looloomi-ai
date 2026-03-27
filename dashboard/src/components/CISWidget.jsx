@@ -83,7 +83,7 @@ function PillarBar({ value, label }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
       <span style={{ fontSize: 10, color: "#6b7280", minWidth: 96, fontFamily: FONTS.mono }}>{label}</span>
-      <div style={{ flex: 1, height: 6, background: "rgba(0,0,0,0.04)", borderRadius: 3, overflow: "hidden" }}>
+      <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}>
         <div style={{ width: `${v}%`, height: "100%", background: color, borderRadius: 3, transition: "width 0.5s ease" }} />
       </div>
       <span style={{ fontSize: 10, color: "#9ca3af", width: 26, textAlign: "right", fontFamily: FONTS.mono }}>
@@ -142,7 +142,7 @@ export function CISMacroBanner({ macro }) {
           { label: "DXY", value: macro?.dxy ?? "—" },
           { label: "CPI", value: macro?.cpi_yoy ? `${macro.cpi_yoy}%` : "—" },
         ].map((m, i) => (
-          <div key={i} style={{ textAlign: "center", padding: "6px 12px", background: "rgba(0,0,0,0.03)", borderRadius: 6, border: "1px solid rgba(0,0,0,0.06)" }}>
+          <div key={i} style={{ textAlign: "center", padding: "6px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6, border: "1px solid rgba(255,255,255,0.06)" }}>
             <div style={{ fontSize: 9, color: T.secondary, textTransform: "uppercase" }}>{m.label}</div>
             <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{m.value}</div>
           </div>
@@ -266,7 +266,7 @@ export function CISLeaderboardTable({ data, filter, setFilter, defaultLimit = 0 
                     <td style={{ padding: "10px 8px", fontSize: 11, color: T.secondary }}>{asset.asset_class}</td>
                     <td style={{ padding: "10px 8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 64, height: 5, background: "rgba(0,0,0,0.04)", borderRadius: 3, overflow: "hidden" }}>
+                        <div style={{ width: 64, height: 5, background: "rgba(255,255,255,0.04)", borderRadius: 3, overflow: "hidden" }}>
                           <div style={{ width: `${asset.cis_score}%`, height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${GRADE_COLORS[asset.grade] || "#fbbf24"}, ${GRADE_COLORS[asset.grade] || "#fbbf24"}88)` }} />
                         </div>
                         <span style={{ fontSize: 13, fontWeight: 700, fontFamily: FONTS.mono, color: T.primary }}>{asset.cis_score.toFixed(1)}</span>
@@ -477,7 +477,7 @@ function WeightAdjuster({ weights, onChange, pillarLabels }) {
           alignItems: "center",
           gap: 6,
           padding: "6px 12px",
-          background: "rgba(0,0,0,0.04)",
+          background: "rgba(255,255,255,0.04)",
           border: `1px solid ${T.border}`,
           borderRadius: 6,
           color: T.secondary,
@@ -503,7 +503,7 @@ function WeightAdjuster({ weights, onChange, pillarLabels }) {
           borderRadius: 8,
           width: 280,
           zIndex: 100,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.12), 0 1px 6px rgba(0,0,0,0.06)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.12), 0 1px 6px rgba(255,255,255,0.06)",
         }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: T.primary, marginBottom: 12, fontFamily: FONTS.display }}>
             Adjust Pillar Weights

@@ -420,7 +420,7 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
             fontSize: 8,
             color: T.t3,
           }}>
-            <div style={{ width: 52, height: 2, background: "rgba(0,0,0,0.08)", borderRadius: 1, overflow: "hidden" }}>
+            <div style={{ width: 52, height: 2, background: "rgba(255,255,255,0.08)", borderRadius: 1, overflow: "hidden" }}>
               <div style={{
                 height: "100%",
                 background: T.gold,

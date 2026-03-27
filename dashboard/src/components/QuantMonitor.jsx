@@ -17,7 +17,7 @@ const CSS = `
   .spinner { animation: spin 1s linear infinite; }
   .sk { background:linear-gradient(90deg,#F3F4F6 30%,#E5E7EB 50%,#F3F4F6 70%);background-size:400px 100%;animation:shimmer 1.8s ease infinite;border-radius:4px;display:inline-block; }
 
-  .quant-card { background:#FFFFFF;border:1px solid rgba(0,0,0,0.08);border-radius:10px;backdrop-filter:blur(20px); }
+  .quant-card { background:#FFFFFF;border:1px solid rgba(255,255,255,0.08);border-radius:10px;backdrop-filter:blur(20px); }
 
   .badge { display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-family:'Space Grotesk',sans-serif; }
   .badge-live { background:rgba(0,232,122,.12);color:#00E87A;border:1px solid rgba(0,232,122,.25); }
@@ -25,10 +25,10 @@ const CSS = `
   .badge-trade-long { background:rgba(0,232,122,.10);color:#00E87A;border:1px solid rgba(0,232,122,.2); }
   .badge-trade-short { background:rgba(255,61,90,.10);color:#FF3D5A;border:1px solid rgba(255,61,90,.2); }
 
-  .stat-card { background:#FFFFFF;border:1px solid rgba(0,0,0,0.08);border-radius:10px;backdrop-filter:blur(20px);padding:16px 20px;text-align:center; }
-  .stat-label { font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6B7280;margin-bottom:6px;font-family:'Space Grotesk',sans-serif; }
-  .stat-value { font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#111827; }
-  .stat-sub { font-size:11px;color:#6B7280;margin-top:4px;font-family:'JetBrains Mono',monospace; }
+  .stat-card { background:#FFFFFF;border:1px solid rgba(255,255,255,0.08);border-radius:10px;backdrop-filter:blur(20px);padding:16px 20px;text-align:center; }
+  .stat-label { font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3E6680;margin-bottom:6px;font-family:'Space Grotesk',sans-serif; }
+  .stat-value { font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#EFF8FF; }
+  .stat-sub { font-size:11px;color:#3E6680;margin-top:4px;font-family:'JetBrains Mono',monospace; }
 
   @media (max-width: 768px) {
     .mobile-stack { flex-direction: column !important; }
@@ -113,7 +113,7 @@ function EquityCard({ equity, starting, dailyPnl, stale, updated }) {
             <span style={{ fontSize: 10, color: T.t3, fontFamily: FONTS.mono }}>P&L</span>
             <span style={{ fontSize: 10, color: pnlColor, fontFamily: FONTS.mono }}>{fmtPct(totalPnl)}</span>
           </div>
-          <div style={{ height: 4, background: "rgba(0,0,0,0.06)", borderRadius: 2 }}>
+          <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
             <div style={{
               height: "100%",
               width: `${Math.min(100, Math.max(0, 50 + totalPnl))}%`,
@@ -226,7 +226,7 @@ function BacktestCard({ data }) {
           <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: T.t3, marginBottom: 8, fontFamily: FONTS.display }}>By Asset</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
             {lev.by_asset.map(a => (
-              <div key={a.asset} style={{ background: "rgba(0,0,0,0.03)", borderRadius: 6, padding: "8px 10px" }}>
+              <div key={a.asset} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 6, padding: "8px 10px" }}>
                 <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 600, color: T.t1 }}>{a.asset}</div>
                 <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: a.return >= 0 ? T.green : T.red, marginTop: 2 }}>
                   {a.return >= 0 ? "+" : ""}{a.return}%
@@ -331,7 +331,7 @@ function SkeletonCard() {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
         {[0, 1, 2].map(i => (
-          <div key={i} style={{ padding: 16, background: "rgba(0,0,0,0.03)", borderRadius: 8 }}>
+          <div key={i} style={{ padding: 16, background: "rgba(255,255,255,0.03)", borderRadius: 8 }}>
             <div className="sk" style={{ height: 10, width: 60, marginBottom: 8 }} />
             <div className="sk" style={{ height: 28, width: 100 }} />
           </div>
