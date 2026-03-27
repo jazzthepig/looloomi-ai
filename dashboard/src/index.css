@@ -1,7 +1,7 @@
 :root {
-  --ff-brand:   'Newsreader', Georgia, serif;
-  --ff-display: 'Space Grotesk', system-ui, sans-serif;
-  --ff-body:    'Inter', system-ui, sans-serif;
+  --ff-brand:   'Syne', system-ui, sans-serif;
+  --ff-display: 'Syne', system-ui, sans-serif;
+  --ff-body:    'Exo 2', system-ui, sans-serif;
   --ff-mono:    'JetBrains Mono', monospace;
 
   --void:       #060F1B;

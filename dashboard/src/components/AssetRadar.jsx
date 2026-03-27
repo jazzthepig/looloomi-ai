@@ -356,7 +356,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
-          background: "#F9FAFB", flexWrap: "wrap", gap: 10,
+          background: "rgba(13,32,56,0.5)", flexWrap: "wrap", gap: 10,
         }}>
           {/* Title */}
           <div style={{
@@ -627,7 +627,7 @@ function Header({ count }) {
     <div style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
-      background: "#F9FAFB",
+      background: "rgba(13,32,56,0.5)",
     }}>
       <div style={{
         fontFamily: FONTS.display, fontSize: 13, fontWeight: 700,

@@ -531,7 +531,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       background: "#0D2038",
                       transition: "border-color .2s,background .2s", cursor: "pointer",
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(56,148,210,0.25)"; e.currentTarget.style.background = "#F3F4F6"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(56,148,210,0.25)"; e.currentTarget.style.background = "rgba(13,32,56,0.6)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "#0D2038"; }}
                     >
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
@@ -794,7 +794,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   return (
                     <div key={ev.id} className="lm-card" style={{
                       display: "flex", gap: 16, padding: "14px 18px",
-                      background: "#F3F4F6",
+                      background: "rgba(13,32,56,0.5)",
                       border: "1px solid rgba(255,255,255,0.08)",
                       borderRadius: 8, borderLeft: `3px solid ${cfg.color}`,
                       animation: `fadeUp .3s ease ${i*.07}s both`,

@@ -287,7 +287,7 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
                 fontFamily: FONTS.body, fontSize: 12, color: T.t2,
                 lineHeight: 1.65, letterSpacing: "0.01em",
                 padding: "10px 12px",
-                background: "#F3F4F6",
+                background: "rgba(13,32,56,0.6)",
                 border: `1px solid ${T.border}`,
                 borderRadius: 6,
               }}>

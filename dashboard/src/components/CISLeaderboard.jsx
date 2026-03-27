@@ -744,7 +744,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   background: selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent",
                   transition: "background .14s",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#F3F4F6"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(13,32,56,0.6)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent"; }}
               >
                 <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: "#3E6680", textAlign: "center" }}>{item.rank}</span>

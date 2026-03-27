@@ -72,7 +72,7 @@ const generateSignal = (symbol, cisUniverse) => {
   body {
     background: #091728;
     color: #EFF8FF;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Syne', sans-serif;
     min-height: 100vh;
   }
 
@@ -167,7 +167,7 @@ const generateSignal = (symbol, cisUniverse) => {
   .lm-tab {
     padding:5px 14px; border-radius:5px;
     font-size:12px; font-weight:500;
-    font-family:'Space Grotesk',sans-serif;
+    font-family:'Syne',sans-serif;
     cursor:pointer; outline:none;
     border:1px solid rgba(255,255,255,0.08);
     background:transparent; color:#7AAEC8;
@@ -185,7 +185,7 @@ const generateSignal = (symbol, cisUniverse) => {
   .cat-btn {
     padding:5px 13px; border-radius:5px;
     font-size:11px; font-weight:500;
-    font-family:'Space Grotesk',sans-serif;
+    font-family:'Syne',sans-serif;
     cursor:pointer; outline:none;
     border:1px solid rgba(255,255,255,0.08);
     background:transparent; color:#3E6680;
@@ -214,7 +214,7 @@ const generateSignal = (symbol, cisUniverse) => {
     display:flex; align-items:center; gap:6px;
     padding:6px 12px; border-radius:6px;
     font-size:11px; font-weight:500;
-    font-family:'Space Grotesk',sans-serif;
+    font-family:'Syne',sans-serif;
     cursor:pointer; outline:none;
     border:1px solid rgba(255,255,255,0.08);
     background:transparent; color:#7AAEC8;
@@ -232,7 +232,7 @@ const generateSignal = (symbol, cisUniverse) => {
     display:inline-flex; align-items:center;
     padding:3px 8px; border-radius:4px;
     font-size:10px; font-weight:600;
-    font-family:'Space Grotesk',sans-serif;
+    font-family:'Syne',sans-serif;
     letter-spacing:0.05em;
   }
 

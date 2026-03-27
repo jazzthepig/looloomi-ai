@@ -5,11 +5,11 @@
  */
 
 export const FONTS = {
-  brand:   "'Newsreader', Georgia, serif",           // display headings — authority
-  display: "'Space Grotesk', system-ui, sans-serif", // UI labels, nav, badges
-  body:    "'Inter', system-ui, sans-serif",          // body copy, descriptions
+  brand:   "'Syne', system-ui, sans-serif",          // display headings — Syne 700/800
+  display: "'Syne', system-ui, sans-serif",           // UI labels, nav
+  body:    "'Exo 2', system-ui, sans-serif",          // body copy, descriptions
   mono:    "'JetBrains Mono', monospace",             // numbers, scores, prices
-  serif:   "'Newsreader', Georgia, serif",
+  serif:   "'Syne', system-ui, sans-serif",
 };
 
 export const T = {

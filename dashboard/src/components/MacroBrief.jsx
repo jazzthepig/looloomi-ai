@@ -50,7 +50,7 @@ export default function MacroBrief() {
             Macro Brief
           </span>
         </div>
-        <div style={{ height: 16, width: 200, background: "linear-gradient(90deg,#F3F4F6 30%,#E5E7EB 50%,#F3F4F6 70%)", backgroundSize: "400px 100%", borderRadius: 4, animation: "shimmer 1.8s ease infinite" }} />
+        <div style={{ height: 16, width: 200, background: "linear-gradient(90deg,rgba(14,30,56,0.8) 30%,rgba(18,38,72,0.9) 50%,rgba(14,30,56,0.8) 70%)", backgroundSize: "400px 100%", borderRadius: 4, animation: "shimmer 1.8s ease infinite" }} />
       </div>
     );
   }

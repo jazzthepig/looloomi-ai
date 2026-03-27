@@ -253,7 +253,7 @@ export function CISLeaderboardTable({ data, filter, setFilter, defaultLimit = 0 
                     onClick={() => setExpanded(isExpanded ? null : asset.symbol)}
                     className="lm-row"
                     style={{
-                      background: isExpanded ? "rgba(218,165,32,0.04)" : idx % 2 === 0 ? "#F9FAFB" : "transparent",
+                      background: isExpanded ? "rgba(218,165,32,0.04)" : idx % 2 === 0 ? "rgba(13,32,56,0.3)" : "transparent",
                     }}
                   >
                     <td style={{ padding: "10px 8px", textAlign: "center", fontSize: 12, color: T.secondary, fontFamily: FONTS.mono, width: 36 }}>{idx + 1}</td>

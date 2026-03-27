@@ -609,16 +609,16 @@ function HeroContent() {
       <div style={{ position: "relative", height: 400, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{
           width: 320, height: 320, borderRadius: 24,
-          background: "linear-gradient(135deg, #F3F4F6 0%, #FFFFFF 100%)",
-          border: "1px solid rgba(0,0,0,0.08)",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
+          background: "linear-gradient(135deg, rgba(13,32,56,0.9) 0%, rgba(18,45,76,0.8) 100%)",
+          border: `1px solid ${T.borderMd}`,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
           display: "flex", alignItems: "center", justifyContent: "center",
           position: "relative", overflow: "hidden",
         }}>
           {/* Inner decorative elements */}
           <div style={{
             position: "absolute", top: 20, left: 20, right: 20, bottom: 20,
-            border: "1px solid rgba(0,0,0,0.04)", borderRadius: 16,
+            border: `1px solid ${T.border}`, borderRadius: 16,
           }} />
           <div style={{
             fontFamily: FONTS.display, fontSize: 64, fontWeight: 800,
@@ -689,8 +689,8 @@ function QuantGPContent() {
         {/* Left: Logo placeholder */}
         <div style={{
           width: 64, height: 64, borderRadius: "50%",
-          background: "linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)",
-          border: "2px solid rgba(146,114,42,0.3)",
+          background: "linear-gradient(135deg, rgba(13,32,56,0.9) 0%, rgba(18,45,76,0.8) 100%)",
+          border: "2px solid rgba(200,168,75,0.3)",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           <span style={{

@@ -186,7 +186,7 @@ export default function WalletConnect({ compact = false }) {
             ? "rgba(200,168,75,0.08)"
             : "rgba(255,255,255,0.04)",
           color: isConnected ? GOLD : "#7AAEC8",
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'Syne', sans-serif",
           fontWeight: 700,
           fontSize: compact ? 11 : 12,
           letterSpacing: "0.06em",
@@ -233,7 +233,7 @@ export default function WalletConnect({ compact = false }) {
           position: "absolute", top: "calc(100% + 8px)", right: 0,
           background: "rgba(14,30,56,0.95)", border: "1px solid rgba(255,61,90,0.3)",
           borderRadius: 8, padding: "8px 12px",
-          color: "#FF3D5A", fontSize: 11, fontFamily: "'Inter', sans-serif",
+          color: "#FF3D5A", fontSize: 11, fontFamily: "'Exo 2', sans-serif",
           boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
           whiteSpace: "nowrap", maxWidth: 240, zIndex: 2000,
         }}>
@@ -290,7 +290,7 @@ const menuItemStyle = {
   padding: "8px 12px", borderRadius: 6,
   border: "none", background: "transparent",
   color: "#7AAEC8",
-  fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 600,
+  fontFamily: "'Syne', sans-serif", fontSize: 12, fontWeight: 600,
   cursor: "pointer",
   transition: "background 0.15s",
 };
