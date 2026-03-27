@@ -636,17 +636,17 @@ const CSS = `
   .t-orb-3 { width:380px;height:380px;background:radial-gradient(circle,rgba(0,200,224,.09) 0%,transparent 65%);bottom:0;left:22%;animation:breathe 76s ease-in-out infinite 24s; }
   .t-orb-4 { width:280px;height:280px;background:radial-gradient(circle,rgba(255,16,96,.07) 0%,transparent 65%);bottom:12%;right:8%;animation:breathe2 60s ease-in-out infinite 38s; }
 
-  .lm-card { background:rgba(10,9,24,.82);border:1px solid #1A173A;border-radius:10px;backdrop-filter:blur(20px); }
-  .lm-card:hover { border-color:#28244C; }
+  .lm-card { background:#FFFFFF;border:1px solid rgba(0,0,0,0.08);border-radius:10px;backdrop-filter:blur(20px); }
+  .lm-card:hover { border-color:rgba(0,0,0,0.12); }
   .lm-row { transition:background .12s ease;cursor:pointer; }
   .lm-row:hover { background:rgba(6,182,212,.06) !important; border-left: 2px solid rgba(6,182,212,0.4); }
 
-  .lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:'Syne',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#8880BE;transition:all .18s ease;letter-spacing:.01em; }
-  .lm-tab:hover { border-color:#28244C;color:#F0EEFF; }
+  .lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:'Space Grotesk',sans-serif;cursor:pointer;outline:none;border:1px solid rgba(0,0,0,0.08);background:transparent;color:#6B7280;transition:all .18s ease;letter-spacing:.01em; }
+  .lm-tab:hover { border-color:rgba(0,0,0,0.12);color:#111827; }
   .lm-tab.active { border-color:rgba(68,114,255,.5);background:rgba(68,114,255,.10);color:#4472FF; }
 
-  .filter-btn { padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:'Syne',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#3E3A6E;transition:all .15s ease; }
-  .filter-btn:hover { border-color:#28244C;color:#8880BE; }
+  .filter-btn { padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:'Space Grotesk',sans-serif;cursor:pointer;outline:none;border:1px solid rgba(0,0,0,0.08);background:transparent;color:#9CA3AF;transition:all .15s ease; }
+  .filter-btn:hover { border-color:rgba(0,0,0,0.12);color:#6B7280; }
   .filter-btn.active { border-color:rgba(68,114,255,.4);background:rgba(68,114,255,.08);color:#4472FF; }
 `;
 
@@ -958,7 +958,7 @@ export default function ProtocolPage({ activeTab, setActiveTab, isSection = fals
         </div>
 
         {/* Score Breakdown Legend */}
-        <div style={{ marginTop: 20, padding: 16, background: "rgba(10,9,24,.5)", borderRadius: 10, border: `1px solid ${T.border}` }}>
+        <div style={{ marginTop: 20, padding: 16, background: "#F3F4F6", borderRadius: 10, border: `1px solid ${T.border}` }}>
           <div style={{ fontSize: 11, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
             Protocol Scoring — Evaluation Criteria
           </div>
@@ -1064,7 +1064,7 @@ export default function ProtocolPage({ activeTab, setActiveTab, isSection = fals
               <div style={{ fontSize: 9, color: T.muted, textTransform: "uppercase", marginBottom: 4 }}>Score</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
                 {Object.entries(selectedProtocol.scores).filter(([k]) => k !== "total").map(([key, val]) => (
-                  <div key={key} style={{ textAlign: "center", padding: 4, background: "rgba(10,9,24,.5)", borderRadius: 3 }}>
+                  <div key={key} style={{ textAlign: "center", padding: 4, background: "#F3F4F6", borderRadius: 3 }}>
                     <div style={{ fontSize: 8, color: T.muted, textTransform: "capitalize", marginBottom: 2 }}>{key}</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: T.cyan, fontFamily: FONTS.mono, userSelect: "none" }}>{val}</div>
                   </div>

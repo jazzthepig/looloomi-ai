@@ -21,11 +21,11 @@ const GRADE_COLOR = {
 const SIGNAL_COLOR = {
   "STRONG OUTPERFORM": "#00E87A",
   OUTPERFORM:          "#4B9EFF",
-  NEUTRAL:             "rgba(255,255,255,0.4)",
+  NEUTRAL:             "#9CA3AF",
   UNDERPERFORM:        "#E8A000",
   UNDERWEIGHT:         "#FF3D5A",
   // Legacy compat
-  "STRONG BUY": "#00E87A", BUY: "#4B9EFF", HOLD: "rgba(255,255,255,0.4)",
+  "STRONG BUY": "#00E87A", BUY: "#4B9EFF", HOLD: "#9CA3AF",
   REDUCE: "#E8A000", AVOID: "#FF3D5A",
 };
 
@@ -102,7 +102,7 @@ function Shimmer({ width = "100%", height = 14, radius = 4 }) {
     <div style={{
       width, height,
       borderRadius: radius,
-      background: "linear-gradient(90deg, #0e1424 25%, #16132e 50%, #0e1424 75%)",
+      background: "linear-gradient(90deg, #FFFFFF 25%, #16132e 50%, #FFFFFF 75%)",
       backgroundSize: "400px 100%",
       animation: "mobileShimmer 1.6s ease infinite",
     }} />
@@ -257,7 +257,7 @@ function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }
       {/* ── Macro Brief ────────────────────────────────────────────────────── */}
       {macro?.brief && (
         <div style={{
-          background: "rgba(10,9,24,0.8)",
+          background: "#FFFFFF",
           border: `1px solid ${T.border}`,
           borderLeft: `2px solid #06B6D4`,
           borderRadius: 10,
@@ -679,7 +679,7 @@ function MobileRankings({ universe, loading }) {
                                 </span>
                               </div>
                               <div style={{
-                                height: 3, background: "rgba(255,255,255,0.06)",
+                                height: 3, background: "rgba(0,0,0,0.06)",
                                 borderRadius: 2,
                               }}>
                                 <div style={{
@@ -915,7 +915,7 @@ export default function MobileApp() {
 
   return (
     <div style={{
-      background: "#030508",
+      background: "#FAFBFC",
       minHeight: "100dvh",
       display: "flex",
       flexDirection: "column",
@@ -1053,7 +1053,7 @@ export default function MobileApp() {
           50%       { opacity: 0.4; }
         }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        body { background: #030508; }
+        body { background: #FAFBFC; }
       `}</style>
     </div>
   );

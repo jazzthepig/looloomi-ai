@@ -12,29 +12,23 @@ const CSS = `
   @keyframes shimmer  { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
   @keyframes spin    { to{transform:rotate(360deg)} }
 
-  .turrell-wrap { position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden; }
-  .t-orb { position:absolute;border-radius:50%;filter:blur(100px);mix-blend-mode:screen; }
-  .t-orb-1 { width:720px;height:720px;background:radial-gradient(circle,rgba(107,15,204,.20) 0%,transparent 65%);top:-300px;left:-200px;animation:breathe 52s ease-in-out infinite; }
-  .t-orb-2 { width:560px;height:560px;background:radial-gradient(circle,rgba(0,232,122,.12) 0%,transparent 65%);top:5%;right:-200px;animation:breathe2 64s ease-in-out infinite 9s; }
-  .t-orb-3 { width:380px;height:380px;background:radial-gradient(circle,rgba(200,168,75,.08) 0%,transparent 65%);bottom:0;left:22%;animation:breathe 76s ease-in-out infinite 24s; }
-
-  .fade-up  { animation: fadeUp .4s cubic-bezier(.16,1,.3,1) forwards; }
+.fade-up  { animation: fadeUp .4s cubic-bezier(.16,1,.3,1) forwards; }
   .pulse-dot { animation: pulse 2.2s ease-in-out infinite; }
   .spinner { animation: spin 1s linear infinite; }
-  .sk { background:linear-gradient(90deg,#100E22 30%,#16132E 50%,#100E22 70%);background-size:400px 100%;animation:shimmer 1.8s ease infinite;border-radius:4px;display:inline-block; }
+  .sk { background:linear-gradient(90deg,#F3F4F6 30%,#E5E7EB 50%,#F3F4F6 70%);background-size:400px 100%;animation:shimmer 1.8s ease infinite;border-radius:4px;display:inline-block; }
 
-  .quant-card { background:rgba(10,9,24,.82);border:1px solid #1A173A;border-radius:10px;backdrop-filter:blur(20px); }
+  .quant-card { background:#FFFFFF;border:1px solid rgba(0,0,0,0.08);border-radius:10px;backdrop-filter:blur(20px); }
 
-  .badge { display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-family:'Syne',sans-serif; }
+  .badge { display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-family:'Space Grotesk',sans-serif; }
   .badge-live { background:rgba(0,232,122,.12);color:#00E87A;border:1px solid rgba(0,232,122,.25); }
   .badge-stale { background:rgba(245,158,11,.12);color:#F59E0B;border:1px solid rgba(245,158,11,.25); }
   .badge-trade-long { background:rgba(0,232,122,.10);color:#00E87A;border:1px solid rgba(0,232,122,.2); }
   .badge-trade-short { background:rgba(255,61,90,.10);color:#FF3D5A;border:1px solid rgba(255,61,90,.2); }
 
-  .stat-card { background:rgba(10,9,24,.82);border:1px solid #1A173A;border-radius:10px;backdrop-filter:blur(20px);padding:16px 20px;text-align:center; }
-  .stat-label { font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#8880BE;margin-bottom:6px;font-family:'Syne',sans-serif; }
-  .stat-value { font-size:28px;font-weight:700;font-family:'DM Mono',monospace;color:rgba(255,255,255,.90); }
-  .stat-sub { font-size:11px;color:#8880BE;margin-top:4px;font-family:'DM Mono',monospace; }
+  .stat-card { background:#FFFFFF;border:1px solid rgba(0,0,0,0.08);border-radius:10px;backdrop-filter:blur(20px);padding:16px 20px;text-align:center; }
+  .stat-label { font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6B7280;margin-bottom:6px;font-family:'Space Grotesk',sans-serif; }
+  .stat-value { font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#111827; }
+  .stat-sub { font-size:11px;color:#6B7280;margin-top:4px;font-family:'JetBrains Mono',monospace; }
 
   @media (max-width: 768px) {
     .mobile-stack { flex-direction: column !important; }
@@ -119,7 +113,7 @@ function EquityCard({ equity, starting, dailyPnl, stale, updated }) {
             <span style={{ fontSize: 10, color: T.t3, fontFamily: FONTS.mono }}>P&L</span>
             <span style={{ fontSize: 10, color: pnlColor, fontFamily: FONTS.mono }}>{fmtPct(totalPnl)}</span>
           </div>
-          <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
+          <div style={{ height: 4, background: "rgba(0,0,0,0.06)", borderRadius: 2 }}>
             <div style={{
               height: "100%",
               width: `${Math.min(100, Math.max(0, 50 + totalPnl))}%`,
@@ -232,7 +226,7 @@ function BacktestCard({ data }) {
           <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: T.t3, marginBottom: 8, fontFamily: FONTS.display }}>By Asset</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
             {lev.by_asset.map(a => (
-              <div key={a.asset} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 6, padding: "8px 10px" }}>
+              <div key={a.asset} style={{ background: "rgba(0,0,0,0.03)", borderRadius: 6, padding: "8px 10px" }}>
                 <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 600, color: T.t1 }}>{a.asset}</div>
                 <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: a.return >= 0 ? T.green : T.red, marginTop: 2 }}>
                   {a.return >= 0 ? "+" : ""}{a.return}%
@@ -337,7 +331,7 @@ function SkeletonCard() {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
         {[0, 1, 2].map(i => (
-          <div key={i} style={{ padding: 16, background: "rgba(255,255,255,0.03)", borderRadius: 8 }}>
+          <div key={i} style={{ padding: 16, background: "rgba(0,0,0,0.03)", borderRadius: 8 }}>
             <div className="sk" style={{ height: 10, width: 60, marginBottom: 8 }} />
             <div className="sk" style={{ height: 28, width: 100 }} />
           </div>

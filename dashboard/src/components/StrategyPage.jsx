@@ -62,7 +62,7 @@ const ChannelCard = ({ icon, title, subtitle, description, metrics, status, stat
     display: "flex", flexDirection: "column", gap: 16,
     transition: "border-color 0.2s",
   }}
-    onMouseEnter={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"}
+    onMouseEnter={(e) => e.currentTarget.style.borderColor = "rgba(0,0,0,0.10)"}
     onMouseLeave={(e) => e.currentTarget.style.borderColor = T.border}
   >
     {/* Header */}
@@ -192,7 +192,7 @@ export default function StrategyPage() {
       {/* ── Turrell ambient — 8 layers, async breathing, void with light ── */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
         {/* Base: subtle depth gradient — the void isn't flat */}
-        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 120% 100% at 50% 30%, #080c18 0%, #030508 55%, #020406 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 120% 100% at 50% 30%, #080c18 0%, #FAFBFC 55%, #020406 100%)" }} />
         {/* L1: Top-left emerald — CIS green echo */}
         <div className="al-orb" style={{ width: 1100, height: 700, top: -220, left: -180, background: "radial-gradient(ellipse, rgba(0,232,122,0.11) 0%, transparent 60%)", filter: "blur(90px)", animation: "alA 13s ease-in-out infinite" }} />
         {/* L2: Right gold — CometCloud accent */}
@@ -236,7 +236,7 @@ export default function StrategyPage() {
             border: `1px solid ${T.border}`,
             transition: "all 0.15s",
           }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = T.t1; }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)"; e.currentTarget.style.color = T.t1; }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.t2; }}
           >
             Open Platform
@@ -710,7 +710,7 @@ export default function StrategyPage() {
               border: `1px solid ${T.border}`,
               transition: "all 0.2s",
             }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = T.t1; }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)"; e.currentTarget.style.color = T.t1; }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.t2; }}
             >
               Contact Us

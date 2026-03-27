@@ -47,7 +47,7 @@ const PillarMini = ({ pillars }) => {
             }}>{p}</span>
             <div style={{
               flex: 1, height: 4, borderRadius: 2,
-              background: "rgba(255,255,255,0.06)",
+              background: "rgba(0,0,0,0.06)",
               overflow: "hidden",
             }}>
               <div style={{
@@ -77,7 +77,7 @@ const ProtocolDetail = ({ protocol }) => {
     <div style={{
       padding: "16px 20px",
       borderTop: `1px solid ${T.border}`,
-      background: "rgba(255,255,255,0.012)",
+      background: "rgba(0,0,0,0.012)",
     }}>
       {/* Signal + Risk + Weight row */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
@@ -102,7 +102,7 @@ const ProtocolDetail = ({ protocol }) => {
           <span style={{
             fontFamily: FONTS.mono, fontSize: 10, color: T.t2,
             padding: "3px 8px", borderRadius: 4,
-            background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`,
+            background: "rgba(0,0,0,0.04)", border: `1px solid ${T.border}`,
           }}>
             Rec. Weight: {(p.recommended_weight_bps / 100).toFixed(1)}%
           </span>
@@ -313,7 +313,7 @@ export default function ProtocolIntelligence() {
             <button key={s.key} onClick={() => setSortBy(s.key)} style={{
               fontFamily: FONTS.mono, fontSize: 10, padding: "4px 10px", borderRadius: 3,
               cursor: "pointer", border: "none",
-              background: sortBy === s.key ? "rgba(255,255,255,0.06)" : "transparent",
+              background: sortBy === s.key ? "rgba(0,0,0,0.06)" : "transparent",
               color: sortBy === s.key ? T.t1 : T.t3,
               outline: sortBy === s.key ? `1px solid ${T.border}` : "none",
             }}>
@@ -330,7 +330,7 @@ export default function ProtocolIntelligence() {
           display: "grid", gridTemplateColumns: "32px 1.6fr 0.8fr 0.8fr 0.6fr 0.5fr 0.5fr",
           padding: "11px 18px", borderBottom: `1px solid ${T.border}`,
           fontSize: 9, color: T.t3, letterSpacing: "0.1em", textTransform: "uppercase",
-          fontFamily: FONTS.mono, background: "rgba(255,255,255,0.015)",
+          fontFamily: FONTS.mono, background: "#F9FAFB",
         }}>
           <div>#</div>
           <div>Protocol</div>
@@ -375,11 +375,11 @@ export default function ProtocolIntelligence() {
                     display: "grid", gridTemplateColumns: "32px 1.6fr 0.8fr 0.8fr 0.6fr 0.5fr 0.5fr",
                     padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
                     alignItems: "center", cursor: "pointer",
-                    background: isExpanded_ ? "rgba(255,255,255,0.02)" : isPick ? "rgba(0,232,122,0.015)" : "transparent",
+                    background: isExpanded_ ? "rgba(0,0,0,0.02)" : isPick ? "rgba(0,232,122,0.015)" : "transparent",
                     transition: "background 0.12s",
                   }}
                   onClick={() => setExpandedId(isExpanded_ ? null : p.id)}
-                  onMouseEnter={(e) => { if (!isExpanded_) e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+                  onMouseEnter={(e) => { if (!isExpanded_) e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
                   onMouseLeave={(e) => { if (!isExpanded_) e.currentTarget.style.background = isPick ? "rgba(0,232,122,0.015)" : "transparent"; }}
                 >
                   {/* Rank */}

@@ -148,8 +148,8 @@ export function useWalletAuth() {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-const GOLD = "#C8A84B";
-const VOID = "rgba(3,5,8,0.95)";
+const GOLD = "#92722A";
+const VOID = "#FFFFFF";
 
 export default function WalletConnect({ compact = false }) {
   const { address, status, error, connect, disconnect } = useWalletAuth();
@@ -181,11 +181,11 @@ export default function WalletConnect({ compact = false }) {
           display: "flex", alignItems: "center", gap: 6,
           padding: compact ? "5px 12px" : "7px 16px",
           borderRadius: 8,
-          border: `1px solid ${isConnected ? "rgba(200,168,75,0.35)" : "rgba(200,168,75,0.2)"}`,
+          border: `1px solid ${isConnected ? "rgba(146,114,42,0.3)" : "rgba(0,0,0,0.1)"}`,
           background: isConnected
-            ? "rgba(200,168,75,0.08)"
-            : "rgba(200,168,75,0.04)",
-          color: isConnected ? GOLD : "rgba(200,168,75,0.7)",
+            ? "rgba(146,114,42,0.06)"
+            : "transparent",
+          color: isConnected ? GOLD : "#6B7280",
           fontFamily: "'Space Grotesk', sans-serif",
           fontWeight: 700,
           fontSize: compact ? 11 : 12,
@@ -196,12 +196,12 @@ export default function WalletConnect({ compact = false }) {
           whiteSpace: "nowrap",
         }}
         onMouseEnter={e => {
-          if (!isLoading) e.currentTarget.style.borderColor = "rgba(200,168,75,0.6)";
+          if (!isLoading) e.currentTarget.style.borderColor = "rgba(146,114,42,0.5)";
         }}
         onMouseLeave={e => {
           e.currentTarget.style.borderColor = isConnected
-            ? "rgba(200,168,75,0.35)"
-            : "rgba(200,168,75,0.2)";
+            ? "rgba(146,114,42,0.3)"
+            : "rgba(0,0,0,0.1)";
         }}
       >
         {/* Status dot */}
@@ -217,10 +217,10 @@ export default function WalletConnect({ compact = false }) {
         {/* Phantom logo (SVG) */}
         {!isConnected && !isLoading && (
           <svg width="14" height="14" viewBox="0 0 128 128" fill="none" style={{ flexShrink: 0 }}>
-            <rect width="128" height="128" rx="26" fill="rgba(200,168,75,0.3)" />
-            <path d="M110 64c0 25.4-20.6 46-46 46S18 89.4 18 64 38.6 18 64 18s46 20.6 46 46z" fill="rgba(200,168,75,0.8)" />
-            <circle cx="52" cy="58" r="8" fill="#020208" />
-            <circle cx="76" cy="58" r="8" fill="#020208" />
+            <rect width="128" height="128" rx="26" fill="rgba(146,114,42,0.15)" />
+            <path d="M110 64c0 25.4-20.6 46-46 46S18 89.4 18 64 38.6 18 64 18s46 20.6 46 46z" fill="rgba(146,114,42,0.6)" />
+            <circle cx="52" cy="58" r="8" fill="#FFFFFF" />
+            <circle cx="76" cy="58" r="8" fill="#FFFFFF" />
           </svg>
         )}
 
@@ -231,9 +231,10 @@ export default function WalletConnect({ compact = false }) {
       {status === "error" && error && (
         <div style={{
           position: "absolute", top: "calc(100% + 8px)", right: 0,
-          background: "rgba(15,5,5,0.98)", border: "1px solid rgba(255,45,85,0.3)",
+          background: "#FFFFFF", border: "1px solid rgba(239,68,68,0.2)",
           borderRadius: 8, padding: "8px 12px",
-          color: "#FF2D55", fontSize: 11, fontFamily: "'Exo 2', sans-serif",
+          color: "#EF4444", fontSize: 11, fontFamily: "'Inter', sans-serif",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
           whiteSpace: "nowrap", maxWidth: 240, zIndex: 2000,
         }}>
           {error}
@@ -245,10 +246,10 @@ export default function WalletConnect({ compact = false }) {
         <div
           style={{
             position: "absolute", top: "calc(100% + 8px)", right: 0,
-            background: VOID, border: "1px solid rgba(200,168,75,0.2)",
+            background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.08)",
             borderRadius: 10, padding: "4px",
             minWidth: 180, zIndex: 2000,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.8)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.04)",
           }}
           onMouseLeave={() => setShowMenu(false)}
         >
@@ -256,7 +257,7 @@ export default function WalletConnect({ compact = false }) {
           <div style={{
             padding: "8px 12px", fontSize: 11,
             fontFamily: "'JetBrains Mono', monospace", color: GOLD,
-            borderBottom: "1px solid rgba(200,168,75,0.1)",
+            borderBottom: "1px solid rgba(0,0,0,0.06)",
             marginBottom: 4,
           }}>
             {address}
@@ -288,7 +289,7 @@ const menuItemStyle = {
   display: "block", width: "100%", textAlign: "left",
   padding: "8px 12px", borderRadius: 6,
   border: "none", background: "transparent",
-  color: "rgba(255,255,255,0.7)",
+  color: "#4B5563",
   fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 600,
   cursor: "pointer",
   transition: "background 0.15s",

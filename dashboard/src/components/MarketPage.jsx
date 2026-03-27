@@ -70,15 +70,15 @@ const generateSignal = (symbol, cisUniverse) => {
   html { -webkit-font-smoothing: antialiased; }
 
   body {
-    background: #020208;
-    color: #F0EEFF;
-    font-family: 'Syne', sans-serif;
+    background: #FAFBFC;
+    color: #111827;
+    font-family: 'Space Grotesk', sans-serif;
     min-height: 100vh;
   }
 
   ::-webkit-scrollbar { width: 3px; height: 3px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #1A173A; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 2px; }
 
   @keyframes breathe {
     0%,100% { opacity:0.28; transform:scale(1) translateY(0); }
@@ -144,13 +144,13 @@ const generateSignal = (symbol, cisUniverse) => {
 
   /* Card */
   .lm-card {
-    background:rgba(10,9,24,.82);
-    border:1px solid #1A173A;
+    background:#FFFFFF;
+    border:1px solid rgba(0,0,0,0.08);
     border-radius:10px;
     backdrop-filter:blur(20px);
     transition:border-color .2s ease, box-shadow .2s ease;
   }
-  .lm-card:hover { border-color:#28244C; }
+  .lm-card:hover { border-color:rgba(0,0,0,0.12); }
 
   /* Interactive row */
   .lm-row {
@@ -167,14 +167,14 @@ const generateSignal = (symbol, cisUniverse) => {
   .lm-tab {
     padding:5px 14px; border-radius:5px;
     font-size:12px; font-weight:500;
-    font-family:'Syne',sans-serif;
+    font-family:'Space Grotesk',sans-serif;
     cursor:pointer; outline:none;
-    border:1px solid #1A173A;
-    background:transparent; color:#8880BE;
+    border:1px solid rgba(0,0,0,0.08);
+    background:transparent; color:#6B7280;
     transition:all .18s ease;
     letter-spacing:0.01em;
   }
-  .lm-tab:hover { border-color:#28244C; color:#F0EEFF; }
+  .lm-tab:hover { border-color:rgba(0,0,0,0.12); color:#111827; }
   .lm-tab.active {
     border-color:rgba(68,114,255,.5);
     background:rgba(68,114,255,.10);
@@ -185,13 +185,13 @@ const generateSignal = (symbol, cisUniverse) => {
   .cat-btn {
     padding:5px 13px; border-radius:5px;
     font-size:11px; font-weight:500;
-    font-family:'Syne',sans-serif;
+    font-family:'Space Grotesk',sans-serif;
     cursor:pointer; outline:none;
-    border:1px solid #1A173A;
-    background:transparent; color:#3E3A6E;
+    border:1px solid rgba(0,0,0,0.08);
+    background:transparent; color:#9CA3AF;
     transition:all .15s ease;
   }
-  .cat-btn:hover { border-color:#28244C; color:#8880BE; }
+  .cat-btn:hover { border-color:rgba(0,0,0,0.12); color:#6B7280; }
   .cat-btn.active {
     border-color:rgba(68,114,255,.4);
     background:rgba(68,114,255,.08);
@@ -200,7 +200,7 @@ const generateSignal = (symbol, cisUniverse) => {
 
   /* Skeleton */
   .sk {
-    background:linear-gradient(90deg,#100E22 30%,#16132E 50%,#100E22 70%);
+    background:linear-gradient(90deg,#F3F4F6 30%,#E5E7EB 50%,#F3F4F6 70%);
     background-size:400px 100%;
     animation:shimmer 1.8s ease infinite;
     border-radius:4px;
@@ -214,13 +214,13 @@ const generateSignal = (symbol, cisUniverse) => {
     display:flex; align-items:center; gap:6px;
     padding:6px 12px; border-radius:6px;
     font-size:11px; font-weight:500;
-    font-family:'Syne',sans-serif;
+    font-family:'Space Grotesk',sans-serif;
     cursor:pointer; outline:none;
-    border:1px solid #1A173A;
-    background:transparent; color:#8880BE;
+    border:1px solid rgba(0,0,0,0.08);
+    background:transparent; color:#6B7280;
     transition:all .18s ease;
   }
-  .lm-action-btn:hover { border-color:#28244C; color:#F0EEFF; }
+  .lm-action-btn:hover { border-color:rgba(0,0,0,0.12); color:#111827; }
   .lm-action-btn.live-on {
     border-color:rgba(68,114,255,.4);
     background:rgba(68,114,255,.10);
@@ -232,13 +232,13 @@ const generateSignal = (symbol, cisUniverse) => {
     display:inline-flex; align-items:center;
     padding:3px 8px; border-radius:4px;
     font-size:10px; font-weight:600;
-    font-family:'Syne',sans-serif;
+    font-family:'Space Grotesk',sans-serif;
     letter-spacing:0.05em;
   }
 
   /* CIS badge */
   .cis-badge {
-    font-family:'DM Mono', monospace;
+    font-family:'JetBrains Mono', monospace;
     font-size:13px; font-weight:600;
   }
 
@@ -302,7 +302,7 @@ const CAT_STYLE = {
 };
 
 const CatBadge = ({ cat }) => {
-  const s = CAT_STYLE[cat] || { bg: "rgba(255,255,255,.05)", text: "#8880BE" };
+  const s = CAT_STYLE[cat] || { bg: "rgba(0,0,0,0.04)", text: "#6B7280" };
   return (
     <span style={{
       display: "inline-flex", alignItems: "center",
@@ -1093,7 +1093,7 @@ export default function MarketPage() {
             padding: "9px 16px",
             borderRadius: 8,
             border: "1px solid rgba(68,114,255,0.35)",
-            background: "rgba(10,9,24,0.92)",
+            background: "#FFFFFF",
             color: "#4472FF",
             fontFamily: FONTS.display,
             fontSize: 11,
@@ -1101,11 +1101,11 @@ export default function MarketPage() {
             letterSpacing: "0.08em",
             cursor: "pointer",
             backdropFilter: "blur(16px)",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
             transition: "opacity 0.2s, transform 0.2s",
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(68,114,255,0.12)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(10,9,24,0.92)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "#FFFFFF"; }}
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path d="M5 8V2M2 5l3-3 3 3" stroke="#4472FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

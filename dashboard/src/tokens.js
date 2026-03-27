@@ -1,49 +1,59 @@
 /**
- * CometCloud Design Tokens
- * 统一的设计系统 - 所有组件应从此处导入
+ * CometCloud Design Tokens — Fintech Modern
+ * Light, clean, Stripe/Ramp-inspired. No glows, no sci-fi.
+ * All components import from here — single source of truth.
  */
 
 export const FONTS = {
-  brand:   "'Cormorant Garamond', serif",
-  display: "'Syne', sans-serif",
-  body:    "'Syne', sans-serif",
-  mono:    "'DM Mono', monospace",
-  serif:   "'Cormorant Garamond', serif",
+  brand:   "'Inter', sans-serif",
+  display: "'Space Grotesk', sans-serif",
+  body:    "'Inter', sans-serif",
+  mono:    "'JetBrains Mono', monospace",
+  serif:   "'Georgia', serif",
 };
 
 export const T = {
-  void:       "#030508",
-  deep:       "#06080f",
-  surface:    "#090d18",
-  raised:     "#0e1424",
-  card:       "#111929",
-  cardHover:  "#141e2e",
-  overlay:    "#16132E",
-  border:     "rgba(255,255,255,0.055)",
-  borderMd:   "rgba(255,255,255,0.10)",
-  borderHi:   "rgba(255,255,255,0.18)",
-  t1:         "rgba(255,255,255,0.94)",
-  t2:         "rgba(255,255,255,0.72)",
-  t3:         "rgba(255,255,255,0.44)",
-  t4:         "rgba(255,255,255,0.12)",
-  primary:    "#F0EEFF",
-  secondary:  "#B8B0E0",
-  muted:      "rgba(255,255,255,0.44)",
-  dim:        "#252248",
-  gold:       "#C8A84B",
-  goldLt:     "#E8C86A",
-  goldDim:    "rgba(200,168,75,0.13)",
-  goldGlow:   "rgba(200,168,75,0.06)",
-  green:      "#00E87A",
-  greenDim:   "rgba(0,232,122,0.10)",
-  red:        "#FF3D5A",
-  redDim:     "rgba(255,61,90,0.10)",
-  blue:       "#4B9EFF",
-  blueDim:    "rgba(75,158,255,0.10)",
-  purple:     "#A78BFA",
+  // ── Surfaces ─────────────────────────────────────────────────
+  void:       "#FFFFFF",
+  deep:       "#FAFBFC",
+  surface:    "#F3F4F6",
+  raised:     "#FFFFFF",
+  card:       "#FFFFFF",
+  cardHover:  "#F9FAFB",
+  overlay:    "#F8F8FF",
+
+  // ── Borders ──────────────────────────────────────────────────
+  border:     "rgba(0,0,0,0.06)",
+  borderMd:   "rgba(0,0,0,0.10)",
+  borderHi:   "rgba(0,0,0,0.16)",
+
+  // ── Typography ───────────────────────────────────────────────
+  t1:         "#111827",
+  t2:         "#4B5563",
+  t3:         "#9CA3AF",
+  t4:         "#E5E7EB",
+  primary:    "#111827",
+  secondary:  "#6B7280",
+  muted:      "#9CA3AF",
+  dim:        "#E5E7EB",
+
+  // ── Brand gold — warm, grounded, no glow ─────────────────────
+  gold:       "#92722A",
+  goldLt:     "#B8941E",
+  goldDim:    "rgba(146,114,42,0.07)",
+  goldGlow:   "rgba(146,114,42,0.04)",
+
+  // ── Status — toned down, Tailwind defaults ──────────────────
+  green:      "#10B981",
+  greenDim:   "rgba(16,185,129,0.08)",
+  red:        "#EF4444",
+  redDim:     "rgba(239,68,68,0.08)",
+  blue:       "#3B82F6",
+  blueDim:    "rgba(59,130,246,0.08)",
+  purple:     "#8B5CF6",
   amber:      "#F59E0B",
-  violet:     "#8B5CF6",
+  violet:     "#7C3AED",
   cyan:       "#06B6D4",
-  indigo:     "#2D35D4",
-  pink:       "#FF1060",
+  indigo:     "#4F46E5",
+  pink:       "#EC4899",
 };

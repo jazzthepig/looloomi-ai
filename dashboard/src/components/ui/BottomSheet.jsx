@@ -47,7 +47,7 @@ export default function BottomSheet({ isOpen, onClose, children }) {
         {/* Handle bar */}
         <div style={{
           width: "40px", height: "4px",
-          background: "rgba(255,255,255,0.12)",
+          background: "rgba(0,0,0,0.08)",
           borderRadius: "2px",
           margin: "12px auto 0",
           flexShrink: 0
@@ -58,7 +58,7 @@ export default function BottomSheet({ isOpen, onClose, children }) {
           style={{
             position: "absolute", top: "16px", right: "20px",
             background: "transparent",
-            border: "1px solid rgba(255,255,255,0.08)",
+            border: "1px solid rgba(0,0,0,0.06)",
             color: "#64748b", width: "28px", height: "28px",
             borderRadius: "6px", cursor: "pointer",
             fontSize: "14px", display: "flex",
