@@ -328,7 +328,7 @@ export default function ProtocolIntelligence() {
           display: "grid", gridTemplateColumns: "32px 1.6fr 0.8fr 0.8fr 0.6fr 0.5fr 0.5fr",
           padding: "11px 18px", borderBottom: `1px solid ${T.border}`,
           fontSize: 9, color: T.t3, letterSpacing: "0.1em", textTransform: "uppercase",
-          fontFamily: FONTS.mono, background: "#F9FAFB",
+          fontFamily: FONTS.mono, background: "rgba(13,32,56,0.5)",
         }}>
           <div>#</div>
           <div>Protocol</div>
