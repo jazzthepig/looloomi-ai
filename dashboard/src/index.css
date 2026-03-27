@@ -111,12 +111,13 @@ body { background: #091728; color: #EFF8FF; min-height: 100vh; }
 .slide-in { animation: slideIn 0.25s ease forwards; }
 
 /* ─── Turrell Ambient Orbs ──────────────────────────────────────────── */
+/* Turrell: 2 orbs only, very deep colors, high blur — light emerges from void */
 .turrell-wrap { position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden; }
-.t-orb { position:absolute;border-radius:50%;filter:blur(110px);mix-blend-mode:screen; }
-.t-orb-1 { width:680px;height:680px;background:radial-gradient(circle,rgba(6,100,180,.18) 0%,transparent 65%);top:-280px;left:-160px;animation:breathe 55s ease-in-out infinite; }
-.t-orb-2 { width:520px;height:520px;background:radial-gradient(circle,rgba(0,168,200,.12) 0%,transparent 65%);top:8%;right:-180px;animation:breathe2 68s ease-in-out infinite 8s; }
-.t-orb-3 { width:360px;height:360px;background:radial-gradient(circle,rgba(200,168,75,.07) 0%,transparent 65%);bottom:5%;left:20%;animation:breathe3 80s ease-in-out infinite 22s; }
-.t-orb-4 { width:260px;height:260px;background:radial-gradient(circle,rgba(107,15,204,.08) 0%,transparent 65%);bottom:15%;right:10%;animation:breathe 65s ease-in-out infinite 40s; }
+.t-orb { position:absolute;border-radius:50%;mix-blend-mode:screen; }
+.t-orb-1 { width:900px;height:900px;filter:blur(220px);background:radial-gradient(circle,rgba(0,40,80,.55) 0%,rgba(0,25,60,.28) 40%,transparent 70%);top:-350px;left:-200px;animation:breathe 80s ease-in-out infinite; }
+.t-orb-2 { width:700px;height:700px;filter:blur(200px);background:radial-gradient(circle,rgba(0,55,70,.40) 0%,rgba(0,30,50,.18) 45%,transparent 70%);bottom:-200px;right:-150px;animation:breathe2 95s ease-in-out infinite 18s; }
+/* t-orb-3 and t-orb-4 are no longer rendered */
+.t-orb-3, .t-orb-4 { display:none; }
 
 /* ─── CometCloud Components ───────────────────────────────────────────── */
 .lm-card {

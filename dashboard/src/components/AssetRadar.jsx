@@ -526,23 +526,19 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                                 {cis.confidence != null && cis.confidence < 0.5 ? "~" : ""}{cis.score.toFixed(1)}
                               </span>
                               <span style={{
-                                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                width: 28, height: 22, borderRadius: 5,
-                                background: gs.bg, color: gs.color, border: `1px solid ${gs.border}`,
-                                fontFamily: FONTS.display, fontSize: 10, fontWeight: 800,
+                                fontFamily: FONTS.mono, fontSize: 11, fontWeight: 700,
+                                color: gs.color,
+                                letterSpacing: "0.03em",
                               }}>
                                 {cis.grade}
                               </span>
-                              {/* T1/T2 tier badge */}
-                              <span style={{
-                                fontFamily: FONTS.mono, fontSize: 7, fontWeight: 600, letterSpacing: "0.05em",
-                                padding: "1px 4px", borderRadius: 3,
-                                color: cis.dataTier === 1 ? T.green : T.amber,
-                                background: cis.dataTier === 1 ? "rgba(0,232,122,0.08)" : "rgba(245,158,11,0.08)",
-                                border: `1px solid ${cis.dataTier === 1 ? "rgba(0,232,122,0.2)" : "rgba(245,158,11,0.2)"}`,
-                              }}>
-                                T{cis.dataTier || 2}
-                              </span>
+                              {/* T1/T2 tier: invisible until hover — no badge */}
+                              <span
+                                title={`Data: ${cis.dataTier === 1 ? "Local engine (T1)" : "Market estimate (T2)"}`}
+                                style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, cursor: "help",
+                                  background: cis.dataTier === 1 ? "rgba(0,232,122,0.35)" : "rgba(245,158,11,0.25)",
+                                }}
+                              />
                             </div>
                           ) : cisLoading ? (
                             <div className="sk" style={{ width: 55, height: 22, borderRadius: 5, display: "inline-block" }} />
@@ -571,9 +567,9 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                         <td style={{ textAlign: "center", padding: "9px 14px" }}>
                           {cis ? (
                             <span style={{
-                              fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
-                              letterSpacing: "0.06em", padding: "3px 9px", borderRadius: 4,
-                              background: ss.bg, color: ss.color, border: `1px solid ${ss.border}`,
+                              fontFamily: FONTS.display, fontSize: 9, fontWeight: 600,
+                              letterSpacing: "0.05em",
+                              color: ss.color,
                               textTransform: "uppercase", whiteSpace: "nowrap",
                             }}>
                               {signal}
