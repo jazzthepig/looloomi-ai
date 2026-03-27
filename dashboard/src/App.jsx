@@ -95,7 +95,7 @@ function CrossAssetView({ universe = [] }) {
           const scores   = assets.map(a => a.cis_score).filter(v => v != null);
           const avgScore = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
           const topAsset = assets[0];
-          const clr      = CA_COLORS[cls] || { bg: "rgba(255,255,255,.04)", text: "rgba(255,255,255,.5)" };
+          const clr      = CA_COLORS[cls] || { bg: "rgba(0,0,0,0.04)", text: "#6B7280" };
 
           // Grade distribution
           const gradeDist = { A: 0, B: 0, C: 0, D: 0 };
@@ -263,51 +263,38 @@ function DesktopApp() {
   };
 
   return (
-    <div style={{ background: "#030508", minHeight: "100vh", position: "relative" }}>
-      {/* AMBIENT LIGHT SYSTEM - 8 layers */}
-      <div className="turrell-canvas">
-        <div className="turrell-void"></div>
-        <div className="al1"></div>
-        <div className="al2"></div>
-        <div className="al3"></div>
-        <div className="al4"></div>
-        <div className="al5"></div>
-        <div className="al6"></div>
-        <div className="al7"></div>
-        <div className="al8"></div>
-      </div>
+    <div style={{ background: "#FAFBFC", minHeight: "100vh", position: "relative" }}>
 
-      {/* Fixed Navigation */}
+      {/* Fixed Navigation — clean, light, Stripe-style */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-        background: "rgba(3,5,8,0.85)", backdropFilter: "blur(20px)",
-        borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center",
-        justifyContent: "space-between", padding: "16px 48px",
+        background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center",
+        justifyContent: "space-between", padding: "12px 48px",
       }}>
         <span
           onClick={() => scrollToSection("market")}
           style={{
-            fontFamily: FONTS.display, fontWeight: 700, fontSize: 20,
-            letterSpacing: "0.1em", color: T.primary, cursor: "pointer",
-            textShadow: "0 0 40px rgba(200,168,75,0.3)",
+            fontFamily: FONTS.display, fontWeight: 700, fontSize: 18,
+            letterSpacing: "0.04em", color: "#111827", cursor: "pointer",
           }}
         >
-          COMETCLOUD
+          CometCloud
         </span>
-        <div style={{ display: "flex", gap: 2, background: T.raised, borderRadius: 10, padding: 3, border: `1px solid ${T.border}` }}>
+        <div style={{ display: "flex", gap: 2, background: "#F3F4F6", borderRadius: 10, padding: 3, border: "1px solid rgba(0,0,0,0.06)" }}>
           {SECTIONS.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => scrollToSection(id)}
               style={{
-                padding: "7px 16px", borderRadius: 7, fontSize: 12, fontWeight: 700,
+                padding: "7px 16px", borderRadius: 7, fontSize: 12, fontWeight: 600,
                 fontFamily: FONTS.display, cursor: "pointer", outline: "none",
                 border: "1px solid transparent",
-                background: activeSection === id ? T.goldDim : "transparent",
-                color: activeSection === id ? T.gold : "rgba(255,255,255,0.50)",
+                background: activeSection === id ? "#FFFFFF" : "transparent",
+                color: activeSection === id ? "#111827" : "#9CA3AF",
+                boxShadow: activeSection === id ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
                 transition: "all 0.2s ease",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
+                letterSpacing: "0.04em",
               }}
             >
               {label}
@@ -369,177 +356,13 @@ function DesktopApp() {
 
       <style>{`
         * { scroll-behavior: smooth; }
-        body { background: #030508; min-height: 100vh; }
+        body { background: #FAFBFC; min-height: 100vh; }
 
-        /* ── AMBIENT LIGHT SYSTEM — 8 layers, async breathing ── */
-        .turrell-canvas {
-          position: fixed;
-          inset: 0;
-          z-index: 0;
-          pointer-events: none;
-          overflow: hidden;
-        }
-
-        /* LAYER 1: Top-left green glow */
-        .turrell-void {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(ellipse 120% 100% at 50% 50%, #050810 0%, #030508 50%, #030508 100%);
-        }
-
-        .al1 {
-          position: absolute;
-          width: 1100px;
-          height: 700px;
-          top: -220px;
-          left: -180px;
-          background: radial-gradient(ellipse, rgba(0, 232, 122, 0.11), transparent 60%);
-          filter: blur(90px);
-          animation: al1 13s ease-in-out infinite;
-          mix-blend-mode: screen;
-        }
-
-        .al2 {
-          position: absolute;
-          width: 800px;
-          height: 500px;
-          top: 200px;
-          right: -200px;
-          background: radial-gradient(ellipse, rgba(200, 168, 75, 0.09), transparent 60%);
-          filter: blur(90px);
-          animation: al2 19s ease-in-out infinite;
-          mix-blend-mode: screen;
-        }
-
-        .al3 {
-          position: absolute;
-          width: 900px;
-          height: 400px;
-          bottom: -80px;
-          left: 25%;
-          background: radial-gradient(ellipse, rgba(75, 158, 255, 0.08), transparent 60%);
-          filter: blur(90px);
-          animation: al3 23s ease-in-out infinite;
-          mix-blend-mode: screen;
-        }
-
-        .al4 {
-          position: absolute;
-          width: 500px;
-          height: 500px;
-          top: 35%;
-          left: -100px;
-          background: radial-gradient(ellipse, rgba(167, 139, 250, 0.07), transparent 60%);
-          filter: blur(80px);
-          animation: al4 17s ease-in-out infinite;
-          mix-blend-mode: screen;
-        }
-
-        .al5 {
-          position: absolute;
-          width: 600px;
-          height: 350px;
-          bottom: 18%;
-          right: 8%;
-          background: radial-gradient(ellipse, rgba(255, 61, 90, 0.06), transparent 60%);
-          filter: blur(80px);
-          animation: al5 21s ease-in-out infinite;
-          mix-blend-mode: screen;
-        }
-
-        .al6 {
-          position: absolute;
-          width: 1400px;
-          height: 300px;
-          top: 55%;
-          left: -100px;
-          background: radial-gradient(ellipse, rgba(75, 158, 255, 0.05), transparent 65%);
-          filter: blur(100px);
-          animation: al6 28s ease-in-out infinite;
-          mix-blend-mode: screen;
-        }
-
-        .al7 {
-          position: absolute;
-          width: 400px;
-          height: 400px;
-          top: 8%;
-          right: 18%;
-          background: radial-gradient(ellipse, rgba(0, 232, 122, 0.06), transparent 60%);
-          filter: blur(70px);
-          animation: al7 15s ease-in-out infinite;
-          mix-blend-mode: screen;
-        }
-
-        .al8 {
-          position: absolute;
-          width: 1000px;
-          height: 800px;
-          bottom: -240px;
-          right: -240px;
-          background: radial-gradient(ellipse, rgba(200, 168, 75, 0.07), transparent 60%);
-          filter: blur(100px);
-          animation: al8 31s ease-in-out infinite;
-          mix-blend-mode: screen;
-        }
-
-        @keyframes al1 {
-          0%, 100% { opacity: 0.7; transform: scale(1) translate(0, 0); }
-          50% { opacity: 1; transform: scale(1.18) translate(28px, 18px); }
-        }
-        @keyframes al2 {
-          0%, 100% { opacity: 0.5; transform: scale(1) translate(0, 0); }
-          50% { opacity: 0.9; transform: scale(1.22) translate(-22px, 28px); }
-        }
-        @keyframes al3 {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          60% { opacity: 1; transform: scale(1.3) translateX(30px); }
-        }
-        @keyframes al4 {
-          0%, 100% { opacity: 0.4; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.25) translate(15px, -20px); }
-        }
-        @keyframes al5 {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.2) translate(-10px, 10px); }
-        }
-        @keyframes al6 {
-          0%, 100% { opacity: 0.5; transform: scaleX(1); }
-          50% { opacity: 0.9; transform: scaleX(1.1); }
-        }
-        @keyframes al7 {
-          0%, 100% { opacity: 0.4; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.3); }
-        }
-        @keyframes al8 {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.15); }
-        }
-
-        /* ── SECTION DIVIDERS ── */
+        /* ── SECTION DIVIDERS — subtle light border ── */
         .section-divider {
           height: 1px;
-          background: linear-gradient(90deg, transparent 0%, rgba(200,168,75,0.06) 20%, rgba(200,168,75,0.18) 50%, rgba(200,168,75,0.06) 80%, transparent 100%);
-          position: relative;
-        }
-        .section-divider::after {
-          content: '';
-          position: absolute;
-          top: -6px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 40%;
-          height: 12px;
-          background: radial-gradient(ellipse, rgba(200,168,75,0.12) 0%, transparent 70%);
-          filter: blur(6px);
-        }
-
-        /* ── NAVBAR GLASSMORPHISM ── */
-        nav {
-          background: rgba(3, 3, 10, 0.75) !important;
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+          background: rgba(0,0,0,0.06);
+          margin: 0 64px;
         }
 
         /* ── RESPONSIVE: Nav tabs on small screens ── */
@@ -671,34 +494,11 @@ function DesktopApp() {
           }
         }
 
-        /* ── CARD GLASS — Turrell inner-glow ── */
-        .lm-card, .card, [class*="card"] {
-          background: rgba(8, 6, 20, 0.65) !important;
-          border: 1px solid rgba(255, 255, 255, 0.07) !important;
-          backdrop-filter: blur(24px) saturate(1.4);
-          -webkit-backdrop-filter: blur(24px) saturate(1.4);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.055),
-            inset 0 -1px 0 rgba(255, 255, 255, 0.02),
-            0 0 0 1px rgba(255, 255, 255, 0.03),
-            0 8px 32px rgba(0, 0, 0, 0.45);
-        }
-
-        /* ── SECTION AMBIENT — each section breathes with a colour ── */
-        #market    { --al-c: rgba(0, 200, 224, 0.04); }
-        #intelligence { --al-c: rgba(107, 15, 204, 0.05); }
-        #cis       { --al-c: rgba(200, 168, 75, 0.04); }
-        #protocol  { --al-c: rgba(75, 158, 255, 0.04); }
-        #vault     { --al-c: rgba(0, 232, 122, 0.04); }
-        #quantgp   { --al-c: rgba(200, 168, 75, 0.05); }
-
-        section::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(ellipse 80% 60% at 30% 40%, var(--al-c, transparent), transparent 70%);
-          pointer-events: none;
-          z-index: 0;
+        /* ── CARDS — clean white with subtle shadow ── */
+        .lm-card, .card {
+          background: #FFFFFF !important;
+          border: 1px solid rgba(0,0,0,0.06) !important;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02) !important;
         }
       `}</style>
     </div>
@@ -708,8 +508,7 @@ function DesktopApp() {
 const sectionStyle = (index) => ({
   minHeight: "auto",
   padding: "80px 64px",
-  background: "transparent",
-  borderTop: "1px solid rgba(255,255,255,0.04)",
+  background: index % 2 === 0 ? "#FAFBFC" : "#FFFFFF",
   position: "relative",
   zIndex: 1,
 });
@@ -727,10 +526,11 @@ function HeroContent() {
       position: "relative", maxWidth: 1200, margin: "0 auto", paddingTop: 40,
       display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center",
     }}>
-      {/* Ambient orbs */}
+      {/* Subtle background accent */}
       <div style={{
-        position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
-        background: "radial-gradient(ellipse 80% 60% at 70% 40%, rgba(6,182,212,0.08) 0%, rgba(245,158,11,0.04) 40%, transparent 70%), #0a0a0f",
+        position: "absolute", top: -100, right: -200, width: 600, height: 600,
+        background: "radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 70%)",
+        pointerEvents: "none", zIndex: 0, filter: "blur(80px)",
       }} />
 
       {/* Left: Text */}
@@ -803,14 +603,30 @@ function HeroContent() {
         </div>
       </div>
 
-      {/* Right: Visual */}
-      <div style={{ position: "relative", height: 400 }}>
+      {/* Right: Visual — abstract grid/mesh */}
+      <div style={{ position: "relative", height: 400, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{
-          position: "absolute", inset: 0,
-          background: "radial-gradient(circle at 30% 30%, rgba(6,182,212,0.3) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(245,158,11,0.2) 0%, transparent 50%)",
-          filter: "blur(60px)",
-          animation: "pulse 8s ease-in-out infinite",
-        }} />
+          width: 320, height: 320, borderRadius: 24,
+          background: "linear-gradient(135deg, #F3F4F6 0%, #FFFFFF 100%)",
+          border: "1px solid rgba(0,0,0,0.08)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          position: "relative", overflow: "hidden",
+        }}>
+          {/* Inner decorative elements */}
+          <div style={{
+            position: "absolute", top: 20, left: 20, right: 20, bottom: 20,
+            border: "1px solid rgba(0,0,0,0.04)", borderRadius: 16,
+          }} />
+          <div style={{
+            fontFamily: FONTS.display, fontSize: 64, fontWeight: 800,
+            background: "linear-gradient(135deg, #06b6d4 0%, #92722A 100%)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            letterSpacing: "-0.04em",
+          }}>
+            CC
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -872,13 +688,13 @@ function QuantGPContent() {
         {/* Left: Logo placeholder */}
         <div style={{
           width: 64, height: 64, borderRadius: "50%",
-          background: "linear-gradient(135deg, #1a1520 0%, #0d0a10 100%)",
-          border: "2px solid rgba(200,168,75,0.4)",
+          background: "linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)",
+          border: "2px solid rgba(146,114,42,0.3)",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           <span style={{
             fontFamily: FONTS.display, fontSize: 24, fontWeight: 800,
-            color: "#C8A84B", letterSpacing: "-0.02em",
+            color: "#92722A", letterSpacing: "-0.02em",
           }}>E</span>
         </div>
 
@@ -1004,9 +820,9 @@ function QuantGPContent() {
               <div style={{
                 width: 28, height: 28, borderRadius: "50%",
                 background: item.status === "completed" ? "rgba(0,232,122,0.15)" :
-                           item.status === "in_progress" ? "rgba(200,168,75,0.15)" : "rgba(255,255,255,0.05)",
+                           item.status === "in_progress" ? "rgba(200,168,75,0.15)" : "rgba(0,0,0,0.04)",
                 border: `1px solid ${item.status === "completed" ? "rgba(0,232,122,0.4)" :
-                                  item.status === "in_progress" ? "rgba(200,168,75,0.4)" : "rgba(255,255,255,0.1)"}`,
+                                  item.status === "in_progress" ? "rgba(200,168,75,0.4)" : "rgba(0,0,0,0.08)"}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0,
               }}>
@@ -1039,11 +855,11 @@ function QuantGPContent() {
                 fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
                 letterSpacing: "0.1em", padding: "4px 10px", borderRadius: 4,
                 background: item.status === "completed" ? "rgba(0,232,122,0.10)" :
-                           item.status === "in_progress" ? "rgba(200,168,75,0.10)" : "rgba(255,255,255,0.05)",
+                           item.status === "in_progress" ? "rgba(200,168,75,0.10)" : "rgba(0,0,0,0.04)",
                 color: item.status === "completed" ? "#00E87A" :
                        item.status === "in_progress" ? "#C8A84B" : T.muted,
                 border: `1px solid ${item.status === "completed" ? "rgba(0,232,122,0.2)" :
-                                  item.status === "in_progress" ? "rgba(200,168,75,0.2)" : "rgba(255,255,255,0.1)"}`,
+                                  item.status === "in_progress" ? "rgba(200,168,75,0.2)" : "rgba(0,0,0,0.08)"}`,
               }}>
                 {item.status === "completed" ? "COMPLETED" :
                  item.status === "in_progress" ? "IN PROGRESS" : "PENDING"}
@@ -1055,7 +871,7 @@ function QuantGPContent() {
 
       {/* Section 5 — GP Shelf说明 */}
       <div style={{
-        background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}`,
+        background: "rgba(0,0,0,0.02)", border: `1px solid ${T.border}`,
         borderRadius: 10, padding: 20,
       }}>
         <div style={{

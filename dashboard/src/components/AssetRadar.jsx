@@ -104,7 +104,7 @@ const GRADE_STYLE = {
   D:    { bg: "rgba(255,61,90,0.10)",  color: T.red,   border: "rgba(255,61,90,0.22)" },
   F:    { bg: "rgba(136,136,136,0.10)", color: "#888",  border: "rgba(136,136,136,0.2)" },
 };
-const gradeStyle = (g) => GRADE_STYLE[g] || { bg: "rgba(255,255,255,0.04)", color: T.t3, border: T.border };
+const gradeStyle = (g) => GRADE_STYLE[g] || { bg: "rgba(0,0,0,0.04)", color: T.t3, border: T.border };
 
 /* ─── Filters (match actual categories) ───────────────────────────── */
 const FILTERS = [
@@ -356,7 +356,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
-          background: "rgba(255,255,255,0.018)", flexWrap: "wrap", gap: 10,
+          background: "#F9FAFB", flexWrap: "wrap", gap: 10,
         }}>
           {/* Title */}
           <div style={{
@@ -439,7 +439,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                     return (
                       <tr key={asset.symbol}
                         style={{ transition: "background 0.14s", cursor: "pointer" }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
+                        onMouseEnter={(e) => e.currentTarget.style.background = "rgba(0,0,0,0.02)"}
                         onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                       >
                         {/* Asset */}
@@ -631,7 +631,7 @@ function Header({ count }) {
     <div style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
-      background: "rgba(255,255,255,0.018)",
+      background: "#F9FAFB",
     }}>
       <div style={{
         fontFamily: FONTS.display, fontSize: 13, fontWeight: 700,

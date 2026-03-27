@@ -13,8 +13,6 @@ const API_BASE = "/api/v1";
 
 /* ─── CSS ────────────────────────────────────────────────────────────── */
 const CSS = `
-  @keyframes breathe  { 0%,100%{opacity:.28;transform:scale(1) translateY(0)} 50%{opacity:.44;transform:scale(1.06) translateY(-12px)} }
-  @keyframes breathe2 { 0%,100%{opacity:.16;transform:scale(1)} 50%{opacity:.30;transform:scale(1.08) translateX(10px)} }
   @keyframes fadeUp   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes slideIn  { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
   @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.35} }
@@ -23,38 +21,8 @@ const CSS = `
   .fade-up  { animation: fadeUp  .4s cubic-bezier(.16,1,.3,1) forwards; }
   .slide-in { animation: slideIn .25s ease forwards; }
 
-  .turrell-wrap { position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden; }
-  .t-orb { position:absolute;border-radius:50%;filter:blur(100px);mix-blend-mode:screen; }
-  .t-orb-1 { width:720px;height:720px;background:radial-gradient(circle,rgba(107,15,204,.20) 0%,transparent 65%);top:-300px;left:-200px;animation:breathe 52s ease-in-out infinite; }
-  .t-orb-2 { width:560px;height:560px;background:radial-gradient(circle,rgba(45,53,212,.15) 0%,transparent 65%);top:5%;right:-200px;animation:breathe2 64s ease-in-out infinite 9s; }
-  .t-orb-3 { width:380px;height:380px;background:radial-gradient(circle,rgba(0,200,224,.09) 0%,transparent 65%);bottom:0;left:22%;animation:breathe 76s ease-in-out infinite 24s; }
-  .t-orb-4 { width:280px;height:280px;background:radial-gradient(circle,rgba(255,16,96,.07) 0%,transparent 65%);bottom:12%;right:8%;animation:breathe2 60s ease-in-out infinite 38s; }
-
-  .lm-card { background:rgba(10,9,24,.82);border:1px solid #1A173A;border-radius:10px;backdrop-filter:blur(20px);transition:border-color .2s ease; }
-  .lm-card:hover { border-color:#28244C; }
-  .lm-card-accent { border-left-width:2px !important; }
-
-  .lm-row { transition:background .12s ease,transform .12s ease;cursor:pointer; }
-  .lm-row:hover { background:rgba(6,182,212,.06) !important; border-left: 2px solid rgba(6,182,212,0.4); transform:translateX(2px); }
-
-  .lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:'Syne',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#8880BE;transition:all .18s ease;letter-spacing:.01em; }
-  .lm-tab:hover { border-color:#28244C;color:#F0EEFF; }
-  .lm-tab.active { border-color:rgba(68,114,255,.5);background:rgba(68,114,255,.10);color:#4472FF; }
-
-  .filter-btn { padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;font-family:'Syne',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#3E3A6E;transition:all .15s ease; }
-  .filter-btn:hover { border-color:#28244C;color:#8880BE; }
-  .filter-btn.active { border-color:rgba(68,114,255,.4);background:rgba(68,114,255,.08);color:#4472FF; }
-
-  .lm-action-btn { display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:500;font-family:'Syne',sans-serif;cursor:pointer;outline:none;border:1px solid #1A173A;background:transparent;color:#8880BE;transition:all .18s ease; }
-  .lm-action-btn:hover { border-color:#28244C;color:#F0EEFF; }
-
-  .sk { background:linear-gradient(90deg,#100E22 30%,#16132E 50%,#100E22 70%);background-size:400px 100%;animation:shimmer 1.8s ease infinite;border-radius:4px;display:inline-block; }
-  .pulse-dot { animation:pulse 2.2s ease-in-out infinite; }
-
-  .iframe-wrap { position:relative;width:100%;height:calc(100vh - 88px);border-radius:10px;overflow:hidden;border:1px solid #1A173A; }
+  .iframe-wrap { position:relative;width:100%;height:calc(100vh - 88px);border-radius:10px;overflow:hidden;border:1px solid rgba(0,0,0,0.08); }
   .iframe-wrap iframe { width:100%;height:100%;border:none;background:white; }
-
-  .lm-badge { display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-family:'Syne',sans-serif; }
 
   /* Mobile responsive */
   @media (max-width: 768px) {
@@ -131,7 +99,7 @@ const CAT_C = {
   "Layer 2":        { bg: "rgba(107,15,204,.10)", text: "#9945FF" },
   "ZK":             { bg: "rgba(68,114,255,.08)", text: "#7B9FFF" },
 };
-const catStyle = (c) => CAT_C[c] || { bg: "rgba(255,255,255,.05)", text: "#8880BE" };
+const catStyle = (c) => CAT_C[c] || { bg: "rgba(0,0,0,0.04)", text: "#6B7280" };
 
 /* ─── Curated RWA Projects (Mar 2026) ────────────────────────────────── */
 /* RWA_PROJECTS removed — replaced by ProtocolIntelligence (live CIS-scored data) */
@@ -188,7 +156,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
     const val = parseFloat(change);
     if (val >= 3) return { bg: "rgba(0,232,122,0.16)", border: "rgba(0,232,122,0.25)", color: T.green }; // strong-up
     if (val >= 0.5) return { bg: "rgba(0,232,122,0.08)", border: "rgba(0,232,122,0.14)", color: T.green }; // up
-    if (val > -0.5) return { bg: "rgba(255,255,255,0.035)", border: "rgba(255,255,255,0.055)", color: T.secondary }; // flat
+    if (val > -0.5) return { bg: "#F3F4F6", border: "rgba(0,0,0,0.05)", color: T.secondary }; // flat
     if (val > -3) return { bg: "rgba(255,61,90,0.08)", border: "rgba(255,61,90,0.14)", color: T.red }; // down
     return { bg: "rgba(255,61,90,0.16)", border: "rgba(255,61,90,0.25)", color: T.red }; // strong-down
   };
@@ -503,7 +471,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       fontSize: 8, fontWeight: 700, letterSpacing: "0.1em",
                       fontFamily: FONTS.display
                     }}>LIVE</span>
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)" }}>DefiLlama</span>
+                    <span style={{ fontSize: 9, color: "#9CA3AF" }}>DefiLlama</span>
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, padding: 12 }}>
@@ -512,7 +480,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       <div key={i} style={{
                         borderRadius: 8, padding: "14px 16px",
                         border: `1px solid ${T.border}`,
-                        background: "rgba(255,255,255,0.02)",
+                        background: "rgba(0,0,0,0.02)",
                       }}>
                         <div className="sk" style={{ height: 12, width: 50, marginBottom: 8 }} />
                         <div className="sk" style={{ height: 20, width: 60 }} />
@@ -536,7 +504,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                         <div style={{ fontFamily: FONTS.mono, fontSize: 17, fontWeight: 400, letterSpacing: "-0.02em", color: style.color }}>
                           {sector.change > 0 ? "+" : ""}{Number(sector.change).toFixed(1)}%
                         </div>
-                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
+                        <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 4 }}>
                           {sector.tvl}
                         </div>
                       </div>
@@ -560,11 +528,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     <div key={idx} style={{
                       border: `1px solid ${T.border}`, borderRadius: 9,
                       padding: "14px 16px", marginBottom: 8,
-                      background: "rgba(255,255,255,0.015)",
+                      background: "#F9FAFB",
                       transition: "border-color .2s,background .2s", cursor: "pointer",
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#28244C"; e.currentTarget.style.background = "rgba(255,255,255,0.025)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "rgba(255,255,255,0.015)"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)"; e.currentTarget.style.background = "#F3F4F6"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "#F9FAFB"; }}
                     >
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -595,9 +563,9 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                         <span style={{
                           flexShrink: 0,
                           fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 7px", borderRadius: 3,
-                          background: isHigh ? "rgba(255,61,90,0.12)" : "rgba(255,255,255,0.06)",
-                          color: isHigh ? "#FF3D5A" : "rgba(255,255,255,0.4)",
-                          border: `1px solid ${isHigh ? "rgba(255,61,90,0.22)" : "rgba(255,255,255,0.1)"}`,
+                          background: isHigh ? "rgba(255,61,90,0.12)" : "rgba(0,0,0,0.06)",
+                          color: isHigh ? "#FF3D5A" : "#9CA3AF",
+                          border: `1px solid ${isHigh ? "rgba(255,61,90,0.22)" : "rgba(0,0,0,0.08)"}`,
                           marginTop: 2,
                         }}>
                           {event.impact}
@@ -677,7 +645,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   {/* Data Source Label */}
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: '6px',
-                    fontSize: '9px', color: 'rgba(255,255,255,0.3)'
+                    fontSize: '9px', color: '#9CA3AF'
                   }}>
                     <span style={{
                       background: 'rgba(75,158,255,0.1)',
@@ -687,7 +655,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       fontFamily: FONTS.display
                     }}>LIVE</span>
                     <span>DefiLlama Raises API</span>
-                    <span style={{color:'rgba(255,255,255,0.15)'}}>·</span>
+                    <span style={{color:'rgba(0,0,0,0.15)'}}>·</span>
                     <span id="vcUpdateTime">Updated {lastUpdate ? lastUpdate.toLocaleTimeString() : 'just now'}</span>
                   </div>
                 </div>
@@ -697,9 +665,9 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   <div className="vc-table-header" style={{
                     display: "grid", gridTemplateColumns: "1fr 80px 100px 130px 80px",
                     gap: 10, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
-                    fontSize: 9, color: "rgba(255,255,255,0.26)", letterSpacing: "0.14em",
+                    fontSize: 9, color: "#9CA3AF", letterSpacing: "0.14em",
                     textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
-                    background: "rgba(255,255,255,0.018)",
+                    background: "#F9FAFB",
                   }}>
                     <span>Project</span>
                     <span className="vc-col-round-header" style={{ textAlign: "center" }}>Round</span>
@@ -740,7 +708,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                                 animation: `slideIn .2s ease ${Math.min(i*.02,.3)}s both`,
                               }}
                               onClick={() => setSelectedVCRound(selectedVCRound?.name === r.name ? null : r)}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
                               onMouseLeave={(e) => { e.currentTarget.style.background = rwaTag ? "rgba(232,160,0,.018)" : "transparent"; }}
                             >
 
@@ -793,9 +761,9 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   {/* Data Disclaimer */}
                   <div style={{
                     padding: '10px 18px',
-                    borderTop: '1px solid rgba(255,255,255,0.055)',
+                    borderTop: '1px solid rgba(0,0,0,0.05)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    fontSize: '9px', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em'
+                    fontSize: '9px', color: 'rgba(0,0,0,0.15)', letterSpacing: '0.06em'
                   }}>
                     <span>
                       Source: DefiLlama Raises API · CryptoRank ·
@@ -826,8 +794,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   return (
                     <div key={ev.id} className="lm-card" style={{
                       display: "flex", gap: 16, padding: "14px 18px",
-                      background: "rgba(255,255,255,0.025)",
-                      border: "1px solid rgba(255,255,255,0.07)",
+                      background: "#F3F4F6",
+                      border: "1px solid rgba(0,0,0,0.08)",
                       borderRadius: 8, borderLeft: `3px solid ${cfg.color}`,
                       animation: `fadeUp .3s ease ${i*.07}s both`,
                     }}>
@@ -930,7 +898,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
               <div className="mobile-pipeline-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 320px", gap: 12, marginTop: 12 }}>
                 {/* Left - Timeline */}
-                <div className="lm-card" style={{ background: "rgba(10,9,24,.92)", padding: 20 }}>
+                <div className="lm-card" style={{ background: "#FFFFFF", padding: 20 }}>
                   {[
                     { step: 1, title: "Asset Structuring", desc: "Legal wrapper, SPV design, regulatory alignment (SFC / MAS)", color: T.violet },
                     { step: 2, title: "Tokenization", desc: "Smart contract deployment, ERC-1400 / ERC-3643 compliance standards", color: T.indigo },

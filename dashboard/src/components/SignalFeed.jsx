@@ -16,7 +16,7 @@ const SIGNAL_TYPES = {
 const IMPORTANCE_STYLES = {
   HIGH: { color: T.red,  bg: "rgba(255,61,90,0.12)",   border: "rgba(255,61,90,0.25)" },
   MED:  { color: T.gold, bg: "rgba(200,168,75,0.10)",  border: "rgba(200,168,75,0.2)" },
-  LOW:  { color: T.t3,   bg: "rgba(255,255,255,0.04)", border: T.border },
+  LOW:  { color: T.t3,   bg: "rgba(0,0,0,0.04)", border: T.border },
 };
 
 const DIRECTION_STYLES = {
@@ -24,7 +24,7 @@ const DIRECTION_STYLES = {
   BEARISH:     { color: T.red,    bg: "rgba(255,61,90,0.10)",   border: "rgba(255,61,90,0.25)",   icon: "↓" },
   CONTRARIAN:  { color: "#A78BFA",bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.25)", icon: "⟳" },
   MIXED:       { color: T.gold,   bg: "rgba(200,168,75,0.10)",  border: "rgba(200,168,75,0.2)",   icon: "↕" },
-  NEUTRAL:     { color: T.t3,     bg: "rgba(255,255,255,0.04)", border: T.border,                 icon: "—" },
+  NEUTRAL:     { color: T.t3,     bg: "rgba(0,0,0,0.04)", border: T.border,                 icon: "—" },
 };
 
 const HORIZON_STYLES = {
@@ -59,7 +59,7 @@ const PillarBars = ({ pillar_impact }) => {
           const pct = Math.abs(val) / maxAbs * 100;
           const isPos = val > 0;
           const isNeg = val < 0;
-          const barColor = isPos ? T.green : isNeg ? T.red : "rgba(255,255,255,0.12)";
+          const barColor = isPos ? T.green : isNeg ? T.red : "rgba(0,0,0,0.10)";
 
           return (
             <div key={p} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -73,14 +73,14 @@ const PillarBars = ({ pillar_impact }) => {
               {/* Bar track — center anchored */}
               <div style={{
                 flex: 1, height: 6, borderRadius: 3,
-                background: "rgba(255,255,255,0.06)",
+                background: "rgba(0,0,0,0.06)",
                 position: "relative",
                 overflow: "hidden",
               }}>
                 {/* Center line */}
                 <div style={{
                   position: "absolute", left: "50%", top: 0, bottom: 0,
-                  width: 1, background: "rgba(255,255,255,0.12)", transform: "translateX(-50%)",
+                  width: 1, background: "rgba(0,0,0,0.10)", transform: "translateX(-50%)",
                 }} />
                 {/* Fill */}
                 {val !== 0 && (
@@ -131,7 +131,7 @@ const StrengthBar = ({ value }) => {
       <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, flexShrink: 0 }}>STRENGTH</span>
       <div style={{
         flex: 1, height: 3, borderRadius: 2,
-        background: "rgba(255,255,255,0.06)", overflow: "hidden",
+        background: "rgba(0,0,0,0.06)", overflow: "hidden",
       }}>
         <div style={{
           height: "100%", width: `${value}%`,
@@ -195,10 +195,10 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
         borderBottom: `1px solid ${T.border}`,
         transition: "background 0.14s",
         cursor: hasMeta ? "pointer" : "default",
-        background: isExpanded ? "rgba(255,255,255,0.018)" : "transparent",
+        background: isExpanded ? "#F9FAFB" : "transparent",
       }}
       onClick={hasMeta ? onToggle : undefined}
-      onMouseEnter={(e) => { if (!isExpanded) e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+      onMouseEnter={(e) => { if (!isExpanded) e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
       onMouseLeave={(e) => { if (!isExpanded) e.currentTarget.style.background = "transparent"; }}
     >
       {/* ── Top row: badges + time ─────────────────────────────────────── */}
@@ -279,7 +279,7 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
             {signal.affected_assets.map((asset) => (
               <span key={asset} style={{
                 fontSize: 9, fontFamily: FONTS.mono, color: T.t3,
-                background: "rgba(255,255,255,0.045)", border: `1px solid ${T.border}`,
+                background: "#F3F4F6", border: `1px solid ${T.border}`,
                 padding: "2px 6px", borderRadius: 2,
               }}>
                 {asset}
@@ -315,7 +315,7 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
                 fontFamily: FONTS.body, fontSize: 12, color: T.t2,
                 lineHeight: 1.65, letterSpacing: "0.01em",
                 padding: "10px 12px",
-                background: "rgba(255,255,255,0.025)",
+                background: "#F3F4F6",
                 border: `1px solid ${T.border}`,
                 borderRadius: 6,
               }}>
@@ -352,7 +352,7 @@ const FilterBar = ({ activeType, onChange }) => (
     flexShrink: 0,
     display: "flex", gap: 4, padding: "8px 16px",
     borderBottom: `1px solid ${T.border}`,
-    overflowX: "auto", background: "rgba(255,255,255,0.008)",
+    overflowX: "auto", background: "rgba(0,0,0,0.01)",
     scrollbarWidth: "none",
   }}>
     {[null, ...Object.keys(SIGNAL_TYPES)].map((type) => {
@@ -367,9 +367,9 @@ const FilterBar = ({ activeType, onChange }) => (
             fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
             letterSpacing: "0.08em", padding: "3px 8px", borderRadius: 3,
             cursor: "pointer", transition: "all 0.15s",
-            background: isActive ? (cfg ? cfg.bg : "rgba(255,255,255,0.08)") : "transparent",
+            background: isActive ? (cfg ? cfg.bg : "rgba(0,0,0,0.08)") : "transparent",
             color:      isActive ? (cfg ? cfg.color : T.t1) : T.t3,
-            border:     isActive ? `1px solid ${cfg ? cfg.border : "rgba(255,255,255,0.15)"}` : "1px solid transparent",
+            border:     isActive ? `1px solid ${cfg ? cfg.border : "rgba(0,0,0,0.15)"}` : "1px solid transparent",
           }}
         >
           {type ?? "ALL"}
@@ -445,7 +445,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "13px 16px", borderBottom: `1px solid ${T.border}`,
-        background: "rgba(255,255,255,0.018)",
+        background: "#F9FAFB",
       }}>
         <div style={{
           fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
@@ -541,7 +541,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         flexShrink: 0,
         display: "flex", gap: 8, padding: "10px 16px",
         borderTop: `1px solid ${T.border}`,
-        flexWrap: "wrap", background: "rgba(255,255,255,0.01)",
+        flexWrap: "wrap", background: "#F9FAFB",
         alignItems: "center", justifyContent: "space-between",
       }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -565,7 +565,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         .signal-row.new { animation: signal-in 0.3s ease; }
         .signal-panel ::-webkit-scrollbar { width: 3px; }
         .signal-panel ::-webkit-scrollbar-track { background: transparent; }
-        .signal-panel ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+        .signal-panel ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 2px; }
       `}</style>
     </div>
   );
