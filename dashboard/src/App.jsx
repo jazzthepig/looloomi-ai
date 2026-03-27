@@ -265,12 +265,12 @@ function DesktopApp() {
   return (
     <div style={{ background: T.deep, minHeight: "100vh", position: "relative" }}>
 
-      {/* Turrell Ambient Orbs */}
-      <div className="turrell-wrap">
-        <div className="t-orb t-orb-1" />
-        <div className="t-orb t-orb-2" />
-        <div className="t-orb t-orb-3" />
-        <div className="t-orb t-orb-4" />
+      {/* Vision ambient background — drifting indigo/royal orbs */}
+      <div className="bg">
+        <div className="bg-base" />
+        <div className="bg-left" />
+        <div className="bg-right" />
+        <div className="bg-grain" />
       </div>
 
       {/* Fixed Navigation — dark glassmorphism */}
@@ -510,7 +510,7 @@ function DesktopApp() {
 const sectionStyle = (index) => ({
   minHeight: "auto",
   padding: "80px 64px",
-  background: index % 2 === 0 ? "transparent" : "rgba(13,32,56,0.35)",
+  background: index % 2 === 0 ? "transparent" : "rgba(7,26,74,0.25)",
   position: "relative",
   zIndex: 1,
 });
