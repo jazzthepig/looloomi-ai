@@ -23,14 +23,51 @@ MORALIS_KEY   = os.getenv("MORALIS_API_KEY", "")
 ETHERSCAN_KEY = os.getenv("ETHERSCAN_API_KEY", "")
 HELIUS_KEY    = os.getenv("HELIUS_API_KEY", "")
 
-# ── Persistent Redis client (reused across requests, avoids connection overhead) ──
+# ── Persistent HTTP clients — one per API domain ──────────────────────────────
+# Reused across requests: eliminates TCP connect + TLS handshake overhead per call.
+# ~50–100ms saved per cold connection, multiplied across 20 concurrent signal-feed fetches.
+
 _redis_http_client: httpx.AsyncClient | None = None
+_binance_client:    httpx.AsyncClient | None = None
+_llama_client:      httpx.AsyncClient | None = None
+_cg_client:         httpx.AsyncClient | None = None
+_misc_client:       httpx.AsyncClient | None = None
+
+_POOL_LIMITS = httpx.Limits(max_connections=30, max_keepalive_connections=15)
 
 def _get_redis_client() -> httpx.AsyncClient:
     global _redis_http_client
     if _redis_http_client is None or _redis_http_client.is_closed:
         _redis_http_client = httpx.AsyncClient(timeout=5, limits=httpx.Limits(max_connections=20))
     return _redis_http_client
+
+def _get_binance_client() -> httpx.AsyncClient:
+    """Persistent client for data-api.binance.vision"""
+    global _binance_client
+    if _binance_client is None or _binance_client.is_closed:
+        _binance_client = httpx.AsyncClient(timeout=10, limits=_POOL_LIMITS)
+    return _binance_client
+
+def _get_llama_client() -> httpx.AsyncClient:
+    """Persistent client for api.llama.fi / coins.llama.fi / yields.llama.fi"""
+    global _llama_client
+    if _llama_client is None or _llama_client.is_closed:
+        _llama_client = httpx.AsyncClient(timeout=15, limits=_POOL_LIMITS)
+    return _llama_client
+
+def _get_cg_client() -> httpx.AsyncClient:
+    """Persistent client for pro-api.coingecko.com / api.coingecko.com"""
+    global _cg_client
+    if _cg_client is None or _cg_client.is_closed:
+        _cg_client = httpx.AsyncClient(timeout=12, limits=_POOL_LIMITS)
+    return _cg_client
+
+def _get_misc_client() -> httpx.AsyncClient:
+    """Persistent client for alternative.me, etherscan, and other misc APIs"""
+    global _misc_client
+    if _misc_client is None or _misc_client.is_closed:
+        _misc_client = httpx.AsyncClient(timeout=10, limits=_POOL_LIMITS)
+    return _misc_client
 
 # ── Simple TTL Cache ──────────────────────────────────────────────────────────
 _cache: dict = {}
@@ -110,19 +147,19 @@ async def get_price(symbol: str) -> Optional[dict]:
 
     ticker = SYMBOL_MAP.get(symbol.upper(), f"{symbol.upper()}USDT")
     try:
-        async with httpx.AsyncClient(timeout=8) as client:
-            r = await client.get(f"{BINANCE_BASE}/ticker/24hr", params={"symbol": ticker})
-            d = r.json()
-            result = {
-                "symbol": symbol.upper(),
-                "price": float(d["lastPrice"]),
-                "change_24h": float(d["priceChangePercent"]),
-                "high_24h": float(d["highPrice"]),
-                "low_24h": float(d["lowPrice"]),
-                "volume_24h_usdt": float(d["quoteVolume"]),
-                "source": "binance",
-            }
-            return _cache_set(key, result)
+        client = _get_binance_client()
+        r = await client.get(f"{BINANCE_BASE}/ticker/24hr", params={"symbol": ticker})
+        d = r.json()
+        result = {
+            "symbol": symbol.upper(),
+            "price": float(d["lastPrice"]),
+            "change_24h": float(d["priceChangePercent"]),
+            "high_24h": float(d["highPrice"]),
+            "low_24h": float(d["lowPrice"]),
+            "volume_24h_usdt": float(d["quoteVolume"]),
+            "source": "binance",
+        }
+        return _cache_set(key, result)
     except Exception as e:
         return {"symbol": symbol, "error": str(e), "source": "binance"}
 
@@ -150,20 +187,20 @@ async def get_ohlcv(symbol: str, interval: str = "1h", limit: int = 100) -> list
 
     ticker = SYMBOL_MAP.get(symbol.upper(), f"{symbol.upper()}USDT")
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(f"{BINANCE_BASE}/klines",
-                                 params={"symbol": ticker, "interval": interval, "limit": limit})
-            candles = []
-            for c in r.json():
-                candles.append({
-                    "time":   datetime.fromtimestamp(c[0]/1000, tz=timezone.utc).isoformat(),
-                    "open":   float(c[1]),
-                    "high":   float(c[2]),
-                    "low":    float(c[3]),
-                    "close":  float(c[4]),
-                    "volume": float(c[5]),
-                })
-            return _cache_set(key, candles)
+        client = _get_binance_client()
+        r = await client.get(f"{BINANCE_BASE}/klines",
+                             params={"symbol": ticker, "interval": interval, "limit": limit})
+        candles = []
+        for c in r.json():
+            candles.append({
+                "time":   datetime.fromtimestamp(c[0]/1000, tz=timezone.utc).isoformat(),
+                "open":   float(c[1]),
+                "high":   float(c[2]),
+                "low":    float(c[3]),
+                "close":  float(c[4]),
+                "volume": float(c[5]),
+            })
+        return _cache_set(key, candles)
     except Exception as e:
         return [{"error": str(e)}]
 
@@ -176,26 +213,26 @@ async def get_top_gainers_losers() -> dict:
         return cached
 
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(f"{BINANCE_BASE}/ticker/24hr")
-            all_tickers = [t for t in r.json() if t["symbol"].endswith("USDT")]
-            sorted_t = sorted(all_tickers, key=lambda x: float(x["priceChangePercent"]))
-            result = {
-                "gainers": [{
-                    "symbol":  t["symbol"].replace("USDT", ""),
-                    "change":  float(t["priceChangePercent"]),
-                    "price":   float(t["lastPrice"]),
-                    "volume":  float(t["quoteVolume"]),
-                } for t in sorted_t[-5:][::-1]],
-                "losers": [{
-                    "symbol":  t["symbol"].replace("USDT", ""),
-                    "change":  float(t["priceChangePercent"]),
-                    "price":   float(t["lastPrice"]),
-                    "volume":  float(t["quoteVolume"]),
-                } for t in sorted_t[:5]],
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-            return _cache_set(key, result)
+        client = _get_binance_client()
+        r = await client.get(f"{BINANCE_BASE}/ticker/24hr")
+        all_tickers = [t for t in r.json() if t["symbol"].endswith("USDT")]
+        sorted_t = sorted(all_tickers, key=lambda x: float(x["priceChangePercent"]))
+        result = {
+            "gainers": [{
+                "symbol":  t["symbol"].replace("USDT", ""),
+                "change":  float(t["priceChangePercent"]),
+                "price":   float(t["lastPrice"]),
+                "volume":  float(t["quoteVolume"]),
+            } for t in sorted_t[-5:][::-1]],
+            "losers": [{
+                "symbol":  t["symbol"].replace("USDT", ""),
+                "change":  float(t["priceChangePercent"]),
+                "price":   float(t["lastPrice"]),
+                "volume":  float(t["quoteVolume"]),
+            } for t in sorted_t[:5]],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        return _cache_set(key, result)
     except Exception as e:
         return {"error": str(e)}
 
@@ -223,13 +260,13 @@ async def get_defi_overview() -> dict:
         return _cache_set(key, r_cached)
 
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            hist_coro     = client.get(f"{LLAMA_BASE}/v2/historicalChainTvl")
-            protocols_coro = client.get(f"{LLAMA_BASE}/protocols")
-            chains_coro   = client.get(f"{LLAMA_BASE}/v2/chains")
-            hist_r, proto_r, chains_r = await asyncio.gather(
-                hist_coro, protocols_coro, chains_coro, return_exceptions=True
-            )
+        client = _get_llama_client()
+        hist_r, proto_r, chains_r = await asyncio.gather(
+            client.get(f"{LLAMA_BASE}/v2/historicalChainTvl"),
+            client.get(f"{LLAMA_BASE}/protocols"),
+            client.get(f"{LLAMA_BASE}/v2/chains"),
+            return_exceptions=True,
+        )
 
         # ── Total TVL + 24h change ────────────────────────────────────────────
         current_tvl = 0
@@ -334,10 +371,10 @@ async def get_defi_protocols_curated() -> list:
     }
 
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
-            r = await client.get(f"{LLAMA_BASE}/protocols")
-            r.raise_for_status()
-            all_protos = r.json()
+        client = _get_llama_client()
+        r = await client.get(f"{LLAMA_BASE}/protocols")
+        r.raise_for_status()
+        all_protos = r.json()
 
         result = []
         for p in all_protos:
@@ -375,22 +412,22 @@ async def get_protocol(protocol_slug: str) -> dict:
         return cached
 
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
-            r = await client.get(f"{LLAMA_BASE}/protocol/{protocol_slug}")
-            d = r.json()
-            result = {
-                "name":        d.get("name"),
-                "tvl":         d.get("currentChainTvls", {}),
-                "total_tvl":   d.get("tvl", [{}])[-1].get("totalLiquidityUSD", 0),
-                "description": d.get("description"),
-                "category":    d.get("category"),
-                "chains":      d.get("chains", []),
-                "raises":      d.get("raises", []),  # funding rounds (free!)
-                "audits":      len(d.get("audits", [])),
-                "url":         d.get("url"),
-                "twitter":     d.get("twitter"),
-            }
-            return _cache_set(key, result)
+        client = _get_llama_client()
+        r = await client.get(f"{LLAMA_BASE}/protocol/{protocol_slug}")
+        d = r.json()
+        result = {
+            "name":        d.get("name"),
+            "tvl":         d.get("currentChainTvls", {}),
+            "total_tvl":   d.get("tvl", [{}])[-1].get("totalLiquidityUSD", 0),
+            "description": d.get("description"),
+            "category":    d.get("category"),
+            "chains":      d.get("chains", []),
+            "raises":      d.get("raises", []),  # funding rounds (free!)
+            "audits":      len(d.get("audits", [])),
+            "url":         d.get("url"),
+            "twitter":     d.get("twitter"),
+        }
+        return _cache_set(key, result)
     except Exception as e:
         return {"error": str(e)}
 
@@ -401,11 +438,11 @@ async def get_token_price_llama(coin_id: str) -> Optional[float]:
     coin_id format: 'coingecko:bitcoin' or 'ethereum:0x...' (contract address)
     """
     try:
-        async with httpx.AsyncClient(timeout=8) as client:
-            r = await client.get(f"{LLAMA_COINS}/prices/current/{coin_id}")
-            coins = r.json().get("coins", {})
-            if coins:
-                return list(coins.values())[0].get("price")
+        client = _get_llama_client()
+        r = await client.get(f"{LLAMA_COINS}/prices/current/{coin_id}")
+        coins = r.json().get("coins", {})
+        if coins:
+            return list(coins.values())[0].get("price")
     except Exception:
         pass
     return None
@@ -417,22 +454,26 @@ async def get_stablecoin_overview() -> dict:
     cached = _cache_get(key, ttl=600)
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
 
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
-            r = await client.get(f"{LLAMA_STABLES}/stablecoins?includePrices=true")
-            stables = r.json().get("peggedAssets", [])[:10]
-            result = {
-                "stablecoins": [{
-                    "name":        s.get("name"),
-                    "symbol":      s.get("symbol"),
-                    "peg_type":    s.get("pegType"),
-                    "circulating": s.get("circulating", {}).get("peggedUSD", 0),
-                    "chains":      list(s.get("chainCirculating", {}).keys())[:5],
-                } for s in stables],
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-            return _cache_set(key, result)
+        client = _get_llama_client()
+        r = await client.get(f"{LLAMA_STABLES}/stablecoins?includePrices=true")
+        stables = r.json().get("peggedAssets", [])[:10]
+        result = {
+            "stablecoins": [{
+                "name":        s.get("name"),
+                "symbol":      s.get("symbol"),
+                "peg_type":    s.get("pegType"),
+                "circulating": s.get("circulating", {}).get("peggedUSD", 0),
+                "chains":      list(s.get("chainCirculating", {}).keys())[:5],
+            } for s in stables],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        await _redis_set(key, result, ttl=600)
+        return _cache_set(key, result)
     except Exception as e:
         return {"error": str(e)}
 
@@ -448,82 +489,90 @@ async def get_top_yields(min_tvl: float = 1_000_000, limit: int = 20) -> list[di
         return _cache_set(key, r_cached)
 
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.get(f"{LLAMA_YIELDS}/pools")
-            pools = r.json().get("data", [])
-            filtered = [p for p in pools
-                        if (p.get("tvlUsd", 0) >= min_tvl and
-                            p.get("apy", 0) > 0 and
-                            p.get("apy", 0) < 1000)]  # filter out obviously broken pools
-            filtered.sort(key=lambda x: x.get("apy", 0), reverse=True)
-            result = [{
-                "project":  p.get("project"),
-                "chain":    p.get("chain"),
-                "symbol":   p.get("symbol"),
-                "tvl_usd":  p.get("tvlUsd", 0),
-                "apy":      round(p.get("apy", 0), 2),
-                "apy_base": round(p.get("apyBase", 0) or 0, 2),
-                "apy_reward": round(p.get("apyReward", 0) or 0, 2),
-                "pool_id":  p.get("pool"),
-            } for p in filtered[:limit]]
-            await _redis_set(key, result, ttl=600)
-            return _cache_set(key, result)
+        client = _get_llama_client()
+        r = await client.get(f"{LLAMA_YIELDS}/pools")
+        pools = r.json().get("data", [])
+        filtered = [p for p in pools
+                    if (p.get("tvlUsd", 0) >= min_tvl and
+                        p.get("apy", 0) > 0 and
+                        p.get("apy", 0) < 1000)]  # filter out obviously broken pools
+        filtered.sort(key=lambda x: x.get("apy", 0), reverse=True)
+        result = [{
+            "project":    p.get("project"),
+            "chain":      p.get("chain"),
+            "symbol":     p.get("symbol"),
+            "tvl_usd":    p.get("tvlUsd", 0),
+            "apy":        round(p.get("apy", 0), 2),
+            "apy_base":   round(p.get("apyBase", 0) or 0, 2),
+            "apy_reward": round(p.get("apyReward", 0) or 0, 2),
+            "pool_id":    p.get("pool"),
+        } for p in filtered[:limit]]
+        await _redis_set(key, result, ttl=600)
+        return _cache_set(key, result)
     except Exception as e:
         return [{"error": str(e)}]
 
 
 async def get_dex_volumes() -> dict:
-    """Top DEX volumes from DeFiLlama."""
+    """Top DEX volumes from DeFiLlama. TTL: 5 min Redis."""
     key = "dex_volumes"
     cached = _cache_get(key, ttl=300)
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
 
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
-            r = await client.get(f"{LLAMA_BASE}/overview/dexs?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true&dataType=dailyVolume")
-            d = r.json()
-            protocols = d.get("protocols", [])[:10]
-            result = {
-                "total_24h": d.get("total24h", 0),
-                "total_7d":  d.get("total7d", 0),
-                "top_dexs": [{
-                    "name":        p.get("name"),
-                    "volume_24h":  p.get("total24h", 0),
-                    "volume_7d":   p.get("total7d", 0),
-                    "chains":      p.get("chains", [])[:3],
-                    "change_1d":   p.get("change_1d", 0),
-                } for p in protocols],
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-            return _cache_set(key, result)
+        client = _get_llama_client()
+        r = await client.get(f"{LLAMA_BASE}/overview/dexs?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true&dataType=dailyVolume")
+        d = r.json()
+        protocols = d.get("protocols", [])[:10]
+        result = {
+            "total_24h": d.get("total24h", 0),
+            "total_7d":  d.get("total7d", 0),
+            "top_dexs": [{
+                "name":        p.get("name"),
+                "volume_24h":  p.get("total24h", 0),
+                "volume_7d":   p.get("total7d", 0),
+                "chains":      p.get("chains", [])[:3],
+                "change_1d":   p.get("change_1d", 0),
+            } for p in protocols],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        await _redis_set(key, result, ttl=300)
+        return _cache_set(key, result)
     except Exception as e:
         return {"error": str(e)}
 
 
 async def get_protocol_revenues() -> dict:
-    """Top protocol fees and revenues (protocol earnings)."""
+    """Top protocol fees and revenues (protocol earnings). TTL: 10 min Redis."""
     key = "revenues"
     cached = _cache_get(key, ttl=600)
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
 
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
-            r = await client.get(f"{LLAMA_BASE}/overview/fees?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true&dataType=dailyFees")
-            d = r.json()
-            protocols = d.get("protocols", [])[:10]
-            result = {
-                "total_fees_24h": d.get("total24h", 0),
-                "top_protocols": [{
-                    "name":      p.get("name"),
-                    "fees_24h":  p.get("total24h", 0),
-                    "fees_7d":   p.get("total7d", 0),
-                    "category":  p.get("category"),
-                } for p in protocols],
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-            return _cache_set(key, result)
+        client = _get_llama_client()
+        r = await client.get(f"{LLAMA_BASE}/overview/fees?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true&dataType=dailyFees")
+        d = r.json()
+        protocols = d.get("protocols", [])[:10]
+        result = {
+            "total_fees_24h": d.get("total24h", 0),
+            "top_protocols": [{
+                "name":      p.get("name"),
+                "fees_24h":  p.get("total24h", 0),
+                "fees_7d":   p.get("total7d", 0),
+                "category":  p.get("category"),
+            } for p in protocols],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        await _redis_set(key, result, ttl=600)
+        return _cache_set(key, result)
     except Exception as e:
         return {"error": str(e)}
 
@@ -544,10 +593,10 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
         return _cache_set(key, r_cached)
 
     try:
-        async with httpx.AsyncClient(timeout=25) as client:
-            resp = await client.get("https://api.llama.fi/raises")
-            resp.raise_for_status()
-            data = resp.json()
+        client = _get_llama_client()
+        resp = await client.get("https://api.llama.fi/raises", timeout=25)
+        resp.raise_for_status()
+        data = resp.json()
 
         raw = data.get("raises", [])
         cutoff = datetime.now(timezone.utc).timestamp() - 180 * 86400
@@ -602,25 +651,25 @@ async def get_fear_greed(limit: int = 30) -> dict:
         return _cache_set(key, r_cached)
 
     try:
-        async with httpx.AsyncClient(timeout=8) as client:
-            r = await client.get(f"https://api.alternative.me/fng/?limit={limit}")
-            data = r.json().get("data", [])
-            result = {
-                "current": {
-                    "value":       int(data[0]["value"]),
-                    "label":       data[0]["value_classification"],
-                    "timestamp":   data[0]["timestamp"],
-                } if data else {},
-                "history": [{
-                    "value":     int(d["value"]),
-                    "label":     d["value_classification"],
-                    "timestamp": d["timestamp"],
-                    "date":      datetime.fromtimestamp(int(d["timestamp"]), tz=timezone.utc).strftime("%Y-%m-%d"),
-                } for d in data],
-                "source": "alternative.me",
-            }
-            await _redis_set(key, result, ttl=3600)
-            return _cache_set(key, result)
+        client = _get_misc_client()
+        r = await client.get(f"https://api.alternative.me/fng/?limit={limit}")
+        data = r.json().get("data", [])
+        result = {
+            "current": {
+                "value":     int(data[0]["value"]),
+                "label":     data[0]["value_classification"],
+                "timestamp": data[0]["timestamp"],
+            } if data else {},
+            "history": [{
+                "value":     int(d["value"]),
+                "label":     d["value_classification"],
+                "timestamp": d["timestamp"],
+                "date":      datetime.fromtimestamp(int(d["timestamp"]), tz=timezone.utc).strftime("%Y-%m-%d"),
+            } for d in data],
+            "source": "alternative.me",
+        }
+        await _redis_set(key, result, ttl=3600)
+        return _cache_set(key, result)
     except Exception as e:
         return {"error": str(e)}
 
@@ -653,30 +702,34 @@ async def get_cg_global() -> dict:
     cached = _cache_get(key, ttl=180)
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
     if not CG_API_KEY:
         return {"error": "COINGECKO_API_KEY not set"}
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(f"{CG_PRO_BASE}/global", headers=_cg_headers())
-            r.raise_for_status()
-            d = r.json().get("data", {})
-            btc_dom  = d.get("market_cap_percentage", {}).get("btc", 0)
-            eth_dom  = d.get("market_cap_percentage", {}).get("eth", 0)
-            mcaps    = d.get("total_market_cap", {})
-            total_usd = mcaps.get("usd", 0)
-            defi_mcap = d.get("total_market_cap_defi_usd") or d.get("defi_market_cap", 0) or 0
-            result = {
-                "btc_dominance":       round(btc_dom, 2),
-                "eth_dominance":       round(eth_dom, 2),
-                "total_market_cap_usd": total_usd,
-                "mcap_change_pct_24h": round(d.get("market_cap_change_percentage_24h_usd", 0), 2),
-                "volume_24h_usd":      d.get("total_volume", {}).get("usd", 0),
-                "defi_market_cap":     defi_mcap,
-                "defi_to_total_ratio": round(defi_mcap / total_usd * 100, 2) if total_usd else 0,
-                "active_cryptocurrencies": d.get("active_cryptocurrencies", 0),
-                "markets":             d.get("markets", 0),
-            }
-            return _cache_set(key, result)
+        client = _get_cg_client()
+        r = await client.get(f"{CG_PRO_BASE}/global", headers=_cg_headers())
+        r.raise_for_status()
+        d = r.json().get("data", {})
+        btc_dom  = d.get("market_cap_percentage", {}).get("btc", 0)
+        eth_dom  = d.get("market_cap_percentage", {}).get("eth", 0)
+        mcaps    = d.get("total_market_cap", {})
+        total_usd = mcaps.get("usd", 0)
+        defi_mcap = d.get("total_market_cap_defi_usd") or d.get("defi_market_cap", 0) or 0
+        result = {
+            "btc_dominance":       round(btc_dom, 2),
+            "eth_dominance":       round(eth_dom, 2),
+            "total_market_cap_usd": total_usd,
+            "mcap_change_pct_24h": round(d.get("market_cap_change_percentage_24h_usd", 0), 2),
+            "volume_24h_usd":      d.get("total_volume", {}).get("usd", 0),
+            "defi_market_cap":     defi_mcap,
+            "defi_to_total_ratio": round(defi_mcap / total_usd * 100, 2) if total_usd else 0,
+            "active_cryptocurrencies": d.get("active_cryptocurrencies", 0),
+            "markets":             d.get("markets", 0),
+        }
+        await _redis_set(key, result, ttl=180)
+        return _cache_set(key, result)
     except Exception as e:
         return {"error": str(e)}
 
@@ -691,26 +744,30 @@ async def get_cg_trending() -> list:
     cached = _cache_get(key, ttl=300)
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
     if not CG_API_KEY:
         return []
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(f"{CG_PRO_BASE}/search/trending", headers=_cg_headers())
-            r.raise_for_status()
-            coins = r.json().get("coins", [])
-            result = []
-            for c in coins[:7]:
-                item  = c.get("item", {})
-                pdata = item.get("data", {})
-                result.append({
-                    "symbol":         item.get("symbol", "").upper(),
-                    "name":           item.get("name", ""),
-                    "market_cap_rank": item.get("market_cap_rank"),
-                    "score":          item.get("score", 0),          # 0=highest
-                    "price_change_24h": pdata.get("price_change_percentage_24h", {}).get("usd", 0),
-                    "sparkline":      pdata.get("sparkline"),
-                })
-            return _cache_set(key, result)
+        client = _get_cg_client()
+        r = await client.get(f"{CG_PRO_BASE}/search/trending", headers=_cg_headers())
+        r.raise_for_status()
+        coins = r.json().get("coins", [])
+        result = []
+        for c in coins[:7]:
+            item  = c.get("item", {})
+            pdata = item.get("data", {})
+            result.append({
+                "symbol":         item.get("symbol", "").upper(),
+                "name":           item.get("name", ""),
+                "market_cap_rank": item.get("market_cap_rank"),
+                "score":          item.get("score", 0),          # 0=highest
+                "price_change_24h": pdata.get("price_change_percentage_24h", {}).get("usd", 0),
+                "sparkline":      pdata.get("sparkline"),
+            })
+        await _redis_set(key, result, ttl=300)
+        return _cache_set(key, result)
     except Exception as e:
         return []
 
@@ -729,35 +786,39 @@ async def get_gecko_terminal_pools(network: str = "eth", limit: int = 10) -> lis
         return cached
     if not CG_API_KEY:
         return []
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
-            url = f"{CG_PRO_BASE}/onchain/networks/{network}/trending_pools"
-            r   = await client.get(url, headers=_cg_headers(),
-                                   params={"include": "base_token,quote_token", "page": 1})
-            r.raise_for_status()
-            pools = r.json().get("data", [])[:limit]
-            result = []
-            for p in pools:
-                attrs = p.get("attributes", {})
-                base  = (p.get("relationships", {})
-                           .get("base_token", {}).get("data", {}).get("id", "")) or ""
-                # Extract base symbol from included or attributes
-                sym = attrs.get("base_token_price_usd") and attrs.get("name", "").split("/")[0].strip()
-                result.append({
-                    "pool_address":       p.get("id", "").split("_")[-1] if "_" in p.get("id","") else p.get("id",""),
-                    "name":               attrs.get("name", ""),
-                    "base_token":         attrs.get("name", "").split("/")[0].strip().upper(),
-                    "network":            network,
-                    "price_change_5m":    float(attrs.get("price_change_percentage", {}).get("m5", 0) or 0),
-                    "price_change_1h":    float(attrs.get("price_change_percentage", {}).get("h1", 0) or 0),
-                    "price_change_24h":   float(attrs.get("price_change_percentage", {}).get("h24", 0) or 0),
-                    "volume_24h_usd":     float(attrs.get("volume_usd", {}).get("h24", 0) or 0),
-                    "reserve_usd":        float(attrs.get("reserve_in_usd", 0) or 0),
-                    "transactions_24h":   (attrs.get("transactions", {}).get("h24", {}).get("buys", 0) or 0) +
-                                          (attrs.get("transactions", {}).get("h24", {}).get("sells", 0) or 0),
-                    "fdv_usd":            float(attrs.get("fdv_usd", 0) or 0),
-                })
-            return _cache_set(key, result)
+        client = _get_cg_client()
+        url = f"{CG_PRO_BASE}/onchain/networks/{network}/trending_pools"
+        r   = await client.get(url, headers=_cg_headers(),
+                               params={"include": "base_token,quote_token", "page": 1})
+        r.raise_for_status()
+        pools = r.json().get("data", [])[:limit]
+        result = []
+        for p in pools:
+            attrs = p.get("attributes", {})
+            base  = (p.get("relationships", {})
+                       .get("base_token", {}).get("data", {}).get("id", "")) or ""
+            # Extract base symbol from included or attributes
+            sym = attrs.get("base_token_price_usd") and attrs.get("name", "").split("/")[0].strip()
+            result.append({
+                "pool_address":       p.get("id", "").split("_")[-1] if "_" in p.get("id","") else p.get("id",""),
+                "name":               attrs.get("name", ""),
+                "base_token":         attrs.get("name", "").split("/")[0].strip().upper(),
+                "network":            network,
+                "price_change_5m":    float(attrs.get("price_change_percentage", {}).get("m5", 0) or 0),
+                "price_change_1h":    float(attrs.get("price_change_percentage", {}).get("h1", 0) or 0),
+                "price_change_24h":   float(attrs.get("price_change_percentage", {}).get("h24", 0) or 0),
+                "volume_24h_usd":     float(attrs.get("volume_usd", {}).get("h24", 0) or 0),
+                "reserve_usd":        float(attrs.get("reserve_in_usd", 0) or 0),
+                "transactions_24h":   (attrs.get("transactions", {}).get("h24", {}).get("buys", 0) or 0) +
+                                      (attrs.get("transactions", {}).get("h24", {}).get("sells", 0) or 0),
+                "fdv_usd":            float(attrs.get("fdv_usd", 0) or 0),
+            })
+        await _redis_set(key, result, ttl=120)
+        return _cache_set(key, result)
     except Exception as e:
         return []
 
@@ -782,23 +843,23 @@ async def get_cg_markets(ids: list[str]) -> list:
         return cached
     base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.get(
-                f"{base}/coins/markets",
-                headers=_cg_headers(),
-                params={
-                    "vs_currency": "usd",
-                    "ids": ids_str,
-                    "order": "market_cap_desc",
-                    "sparkline": "true",
-                    "price_change_percentage": "7d",
-                    "per_page": 250,
-                    "page": 1,
-                },
-            )
-            r.raise_for_status()
-            result = r.json()
-            return _cache_set(key, result)
+        client = _get_cg_client()
+        r = await client.get(
+            f"{base}/coins/markets",
+            headers=_cg_headers(),
+            params={
+                "vs_currency": "usd",
+                "ids": ids_str,
+                "order": "market_cap_desc",
+                "sparkline": "true",
+                "price_change_percentage": "7d",
+                "per_page": 250,
+                "page": 1,
+            },
+        )
+        r.raise_for_status()
+        result = r.json()
+        return _cache_set(key, result)
     except Exception as e:
         print(f"[CG_MARKETS] Error: {e}")
         return []
@@ -815,41 +876,45 @@ async def get_cg_derivatives() -> list:
     cached = _cache_get(key, ttl=300)
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
     if not CG_API_KEY:
         return []
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
-            r = await client.get(f"{CG_PRO_BASE}/derivatives",
-                                 headers=_cg_headers(),
-                                 params={"include_tickers": "unexpired"})
-            r.raise_for_status()
-            tickers = r.json()
-            # Focus on BTC and ETH perpetuals with meaningful OI
-            targets = {"BTC", "ETH", "SOL"}
-            result  = []
-            seen    = set()
-            for t in tickers:
-                sym = (t.get("base") or "").upper()
-                if sym not in targets:
-                    continue
-                key_str = f"{sym}:{t.get('market','')}"
-                if key_str in seen:
-                    continue
-                seen.add(key_str)
-                fr = t.get("funding_rate")
-                oi = t.get("open_interest_usd") or t.get("open_interest")
-                result.append({
-                    "symbol":            sym,
-                    "market":            t.get("market", ""),
-                    "price":             float(t.get("last") or 0),
-                    "funding_rate":      float(fr) if fr is not None else None,
-                    "open_interest_usd": float(oi) if oi is not None else None,
-                    "price_change_pct":  float(t.get("price_percentage_change_24h") or 0),
-                    "contract_type":     t.get("contract_type", ""),
-                })
-                if len(result) >= 9:  # 3 per asset × 3 assets
-                    break
-            return _cache_set(key, result)
+        client = _get_cg_client()
+        r = await client.get(f"{CG_PRO_BASE}/derivatives",
+                             headers=_cg_headers(),
+                             params={"include_tickers": "unexpired"})
+        r.raise_for_status()
+        tickers = r.json()
+        # Focus on BTC and ETH perpetuals with meaningful OI
+        targets = {"BTC", "ETH", "SOL"}
+        result  = []
+        seen    = set()
+        for t in tickers:
+            sym = (t.get("base") or "").upper()
+            if sym not in targets:
+                continue
+            key_str = f"{sym}:{t.get('market','')}"
+            if key_str in seen:
+                continue
+            seen.add(key_str)
+            fr = t.get("funding_rate")
+            oi = t.get("open_interest_usd") or t.get("open_interest")
+            result.append({
+                "symbol":            sym,
+                "market":            t.get("market", ""),
+                "price":             float(t.get("last") or 0),
+                "funding_rate":      float(fr) if fr is not None else None,
+                "open_interest_usd": float(oi) if oi is not None else None,
+                "price_change_pct":  float(t.get("price_percentage_change_24h") or 0),
+                "contract_type":     t.get("contract_type", ""),
+            })
+            if len(result) >= 9:  # 3 per asset × 3 assets
+                break
+        await _redis_set(key, result, ttl=300)
+        return _cache_set(key, result)
     except Exception as e:
         return []
 
@@ -896,14 +961,14 @@ async def get_cg_vc_portfolios() -> list[dict]:
         return []
 
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.get(
-                f"{CG_PRO_BASE}/coins/categories",
-                headers=_cg_headers(),
-                params={"order": "market_cap_desc"},
-            )
-            r.raise_for_status()
-            all_cats = r.json()
+        client = _get_cg_client()
+        r = await client.get(
+            f"{CG_PRO_BASE}/coins/categories",
+            headers=_cg_headers(),
+            params={"order": "market_cap_desc"},
+        )
+        r.raise_for_status()
+        all_cats = r.json()
 
         result = []
         for cat in all_cats:
@@ -956,22 +1021,23 @@ async def get_macro_pulse() -> dict:
 
     cg_base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
-            global_r, fng_r, btc_r = await asyncio.gather(
-                client.get(f"{cg_base}/global", headers=_cg_headers()),
-                client.get("https://api.alternative.me/fng/?limit=1"),
-                client.get(
-                    f"{cg_base}/simple/price",
-                    params={
-                        "ids": "bitcoin",
-                        "vs_currencies": "usd",
-                        "include_24hr_change": "true",
-                        "include_7d_change": "true",
-                    },
-                    headers=_cg_headers(),
-                ),
-                return_exceptions=True,
-            )
+        cg  = _get_cg_client()
+        msc = _get_misc_client()
+        global_r, fng_r, btc_r = await asyncio.gather(
+            cg.get(f"{cg_base}/global", headers=_cg_headers()),
+            msc.get("https://api.alternative.me/fng/?limit=1"),
+            cg.get(
+                f"{cg_base}/simple/price",
+                params={
+                    "ids": "bitcoin",
+                    "vs_currencies": "usd",
+                    "include_24hr_change": "true",
+                    "include_7d_change": "true",
+                },
+                headers=_cg_headers(),
+            ),
+            return_exceptions=True,
+        )
 
         # ── Parse global ──────────────────────────────────────────────────────
         cg_data: dict = {}
@@ -1031,25 +1097,25 @@ async def get_wallet_portfolio(address: str, chain: str = "eth") -> dict:
 
     headers = {"X-API-Key": MORALIS_KEY}
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            # Net worth across all chains
-            r_worth = await client.get(
-                f"{MORALIS_BASE}/wallets/{address}/net-worth",
-                headers=headers,
-                params={"chains": [chain], "exclude_spam": "true", "exclude_unverified_contracts": "true"}
-            )
-            # Token balances with prices
-            r_tokens = await client.get(
-                f"{MORALIS_BASE}/wallets/{address}/tokens",
-                headers=headers,
-                params={"chain": chain, "exclude_spam": "true"}
-            )
-            # Recent transactions
-            r_txs = await client.get(
-                f"{MORALIS_BASE}/wallets/{address}/history",
-                headers=headers,
-                params={"chain": chain, "limit": 10}
-            )
+        client = _get_misc_client()
+        # Net worth across all chains
+        r_worth = await client.get(
+            f"{MORALIS_BASE}/wallets/{address}/net-worth",
+            headers=headers,
+            params={"chains": [chain], "exclude_spam": "true", "exclude_unverified_contracts": "true"}
+        )
+        # Token balances with prices
+        r_tokens = await client.get(
+            f"{MORALIS_BASE}/wallets/{address}/tokens",
+            headers=headers,
+            params={"chain": chain, "exclude_spam": "true"}
+        )
+        # Recent transactions
+        r_txs = await client.get(
+            f"{MORALIS_BASE}/wallets/{address}/history",
+            headers=headers,
+            params={"chain": chain, "limit": 10}
+        )
 
         worth_data   = r_worth.json()
         tokens_data  = r_tokens.json()
@@ -1097,12 +1163,12 @@ async def get_wallet_defi_positions(address: str, chain: str = "eth") -> dict:
 
     headers = {"X-API-Key": MORALIS_KEY}
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.get(
-                f"{MORALIS_BASE}/wallets/{address}/defi/positions",
-                headers=headers,
-                params={"chain": chain}
-            )
+        client = _get_misc_client()
+        r = await client.get(
+            f"{MORALIS_BASE}/wallets/{address}/defi/positions",
+            headers=headers,
+            params={"chain": chain}
+        )
         positions = r.json()
         result = {
             "address":  address,
@@ -1127,12 +1193,12 @@ async def get_token_holders(token_address: str, chain: str = "eth", limit: int =
 
     headers = {"X-API-Key": MORALIS_KEY}
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.get(
-                f"{MORALIS_BASE}/erc20/{token_address}/owners",
-                headers=headers,
-                params={"chain": chain, "limit": limit, "order": "DESC"}
-            )
+        client = _get_misc_client()
+        r = await client.get(
+            f"{MORALIS_BASE}/erc20/{token_address}/owners",
+            headers=headers,
+            params={"chain": chain, "limit": limit, "order": "DESC"}
+        )
         data = r.json()
         result = {
             "token_address": token_address,
@@ -1156,19 +1222,19 @@ async def etherscan_request(module: str, action: str, **params) -> dict:
         return {"error": "ETHERSCAN_API_KEY not set. Get free key at etherscan.io/myapikey"}
 
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(ETHERSCAN_BASE, params={
-                "chainid": 1,
-                "module":  module,
-                "action":  action,
-                "apikey":  ETHERSCAN_KEY,
-                **params
-            })
-            data = r.json()
-            if data.get("status") == "1":
-                return {"result": data.get("result"), "source": "etherscan"}
-            else:
-                return {"error": data.get("message", "Unknown error"), "source": "etherscan"}
+        client = _get_misc_client()
+        r = await client.get(ETHERSCAN_BASE, params={
+            "chainid": 1,
+            "module":  module,
+            "action":  action,
+            "apikey":  ETHERSCAN_KEY,
+            **params
+        })
+        data = r.json()
+        if data.get("status") == "1":
+            return {"result": data.get("result"), "source": "etherscan"}
+        else:
+            return {"error": data.get("message", "Unknown error"), "source": "etherscan"}
     except Exception as e:
         return {"error": str(e), "source": "etherscan"}
 
@@ -1333,24 +1399,23 @@ async def get_klines_binance(symbol: str, interval: str = "1d", months: int = 6)
     }
 
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.get(BINANCE_KLINES_URL, params=params)
-            if resp.status_code != 200:
-                return []
-
-            data = resp.json()
-            return [
-                {
-                    "time": int(k[0]),
-                    "open": float(k[1]),
-                    "high": float(k[2]),
-                    "low": float(k[3]),
-                    "close": float(k[4]),
-                    "volume": float(k[5]),
-                    "timestamp": datetime.fromtimestamp(int(k[0]) / 1000, tz=timezone.utc).isoformat(),
-                }
-                for k in data
-            ]
+        client = _get_binance_client()
+        resp = await client.get(BINANCE_KLINES_URL, params=params, timeout=30)
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        return [
+            {
+                "time": int(k[0]),
+                "open": float(k[1]),
+                "high": float(k[2]),
+                "low": float(k[3]),
+                "close": float(k[4]),
+                "volume": float(k[5]),
+                "timestamp": datetime.fromtimestamp(int(k[0]) / 1000, tz=timezone.utc).isoformat(),
+            }
+            for k in data
+        ]
     except Exception as e:
         print(f"[BINANCE] klines error for {symbol}: {e}")
         return []
@@ -1382,29 +1447,27 @@ async def get_klines_okx(symbol: str, interval: str = "1d", months: int = 6) -> 
     }
 
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.get(OKX_KLINES_URL, params=params)
-            if resp.status_code != 200:
-                return []
-
-            data = resp.json()
-            if data.get("code") != "0":
-                return []
-
-            klines = data.get("data", [])
-            # OKX returns: [time, open, high, low, close, volume, ...]
-            return [
-                {
-                    "time": int(k[0]),
-                    "open": float(k[1]),
-                    "high": float(k[2]),
-                    "low": float(k[3]),
-                    "close": float(k[4]),
-                    "volume": float(k[5]),
-                    "timestamp": datetime.fromtimestamp(int(k[0]) / 1000, tz=timezone.utc).isoformat(),
-                }
-                for k in reversed(klines)  # Oldest first
-            ]
+        client = _get_misc_client()
+        resp = await client.get(OKX_KLINES_URL, params=params, timeout=30)
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        if data.get("code") != "0":
+            return []
+        klines = data.get("data", [])
+        # OKX returns: [time, open, high, low, close, volume, ...]
+        return [
+            {
+                "time": int(k[0]),
+                "open": float(k[1]),
+                "high": float(k[2]),
+                "low": float(k[3]),
+                "close": float(k[4]),
+                "volume": float(k[5]),
+                "timestamp": datetime.fromtimestamp(int(k[0]) / 1000, tz=timezone.utc).isoformat(),
+            }
+            for k in reversed(klines)  # Oldest first
+        ]
     except Exception as e:
         print(f"[OKX] klines error for {symbol}: {e}")
         return []
