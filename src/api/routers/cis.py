@@ -5,7 +5,7 @@ Endpoints: /api/v1/cis/*, /api/v1/agent/cis, /ws/cis, /internal/cis-scores
 import os, json as _json, time, asyncio, re
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Header, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Header, WebSocket, WebSocketDisconnect, Response
 
 from src.api.store import (
     redis_set, redis_get,
@@ -91,11 +91,17 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
 # ── CIS Universe ──────────────────────────────────────────────────────────────
 
 @router.get("/api/v1/cis/universe")
-async def get_cis_universe(force_source: str = None):
+async def get_cis_universe(force_source: str = None, response: Response = None):
     """
     CIS v4.0 Universe — priority: local_engine (Redis) → Railway calc → stale Redis fallback
     """
     from src.data.cis.cis_provider import calculate_cis_universe
+
+    # Browser-level deduplication: 3 components hit this endpoint on load.
+    # max-age=60 means concurrent fetches within 60s return from browser cache (~0ms).
+    # stale-while-revalidate=120 keeps the UI fresh on background refresh.
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
 
     cached   = None
     use_local = False
