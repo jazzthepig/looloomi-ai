@@ -290,7 +290,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
     setLoading(true);
     setCisLoading(true);
     loadData();
-    const iv = setInterval(loadData, 60_000);
+    const iv = setInterval(loadData, 120_000); // 2 min — matches backend cg_markets cache TTL
     return () => clearInterval(iv);
   }, [refreshTrigger]);
 

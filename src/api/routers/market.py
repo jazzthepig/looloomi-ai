@@ -3,7 +3,7 @@ Market router — prices, DeFi, MMI, signals
 Endpoints: /api/v1/market/*, /api/v1/defi/*, /api/v1/mmi/*, /api/v1/signals
 """
 import re
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from datetime import datetime
 import asyncio
 
@@ -56,7 +56,7 @@ async def get_gas_prices():
 
 
 @router.get("/api/v1/market/coingecko-markets")
-async def get_coingecko_markets(ids: str = ""):
+async def get_coingecko_markets(ids: str = "", response: Response = None):
     """
     Proxy for CoinGecko coins/markets — uses the Pro key server-side.
     Accepts comma-separated CoinGecko IDs: ?ids=bitcoin,ethereum,solana,...
@@ -66,18 +66,22 @@ async def get_coingecko_markets(ids: str = ""):
     if not ids:
         raise HTTPException(status_code=400, detail="ids parameter required")
     id_list = [i.strip() for i in ids.split(",") if i.strip()][:60]  # max 60 ids
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=60"
     data = await get_cg_markets(id_list)
     return {"data": data, "count": len(data)}
 
 
 @router.get("/api/v1/market/macro-pulse")
-async def macro_pulse():
+async def macro_pulse(response: Response = None):
     """
     Combined macro overview: CG global + Fear & Greed + BTC price.
     Replaces 3 direct browser calls in MacroPulse.jsx with a single cached backend call.
     Response shape matches MacroPulse.jsx field accesses exactly.
     TTL: 5 min Redis, 2 min in-memory.
     """
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=180"
     return await get_macro_pulse()
 
 
