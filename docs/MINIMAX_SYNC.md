@@ -1,6 +1,6 @@
 # Mac Mini ↔ Railway CIS 接口同步
-**Last Updated:** 2026-03-24
-**Status:** 5 个不兼容项需修复
+**Last Updated:** 2026-03-28
+**Status:** ✅ 5 个原始不兼容项已修复 (2026-03-24) · ⚠️ 4 个 v4.1 新增字段待 Minimax 补充 (2026-03-28)
 
 ---
 
@@ -207,6 +207,185 @@ print('✓ 信号映射验证通过')
 "
 
 # 4. push 并验证 Railway
+python3 cis_push.py --dry-run
+```
+
+---
+
+## v4.1 新增字段 (2026-03-28) — Minimax 待补充
+
+CIS v4.1 在 Railway 端已上线以下字段。Mac Mini 推送的 payload 如果缺这些字段，merge 时会退回到 Railway T2 的计算值，精度下降。
+
+### 1. `cis_score` 字段名统一
+
+**现状：** Mac Mini 推的字段可能是 `total` 或 `score`
+**要求：** 改成 `cis_score`（Railway 主键，merge 逻辑优先读这个）
+
+```python
+# to_dict() 改动
+return {
+    "cis_score": round(self.total_score, 2),  # ← 原来是 "total" 或 "score"
+    ...
+}
+```
+
+> Railway merge 代码：`la.get("cis_score") or la.get("score", ...)` — `score` 仍可作 fallback，但统一成 `cis_score` 更干净。
+
+---
+
+### 2. `las` — Liquidity-Adjusted Score
+
+**现状：** Mac Mini 不推 `las`，前端收到 T1 资产时 LAS 列显示 Railway T2 估算值
+**要求：** Mac Mini 计算并推送 `las`
+
+Railway 计算公式（作参考，Minimax 可用 Binance 数据做更精准版本）：
+
+```python
+def compute_las(cis_score: float, price: float, volume_24h: float,
+                market_cap: float, confidence: float) -> float:
+    # Liquidity multiplier: 0.5~1.0 based on volume/mcap ratio
+    vol_ratio = volume_24h / market_cap if market_cap > 0 else 0
+    if vol_ratio >= 0.10:      liquidity_mult = 1.0
+    elif vol_ratio >= 0.05:    liquidity_mult = 0.90
+    elif vol_ratio >= 0.02:    liquidity_mult = 0.80
+    elif vol_ratio >= 0.005:   liquidity_mult = 0.70
+    else:                      liquidity_mult = 0.50
+
+    # Spread penalty: use Binance order book or estimate from volume
+    spread_penalty = 1.0  # 1.0 = tight spread; lower for illiquid
+
+    las = cis_score * liquidity_mult * spread_penalty * confidence
+    return max(0, round(las, 2))
+```
+
+推送字段：
+```python
+"las": compute_las(cis_score, price, volume_24h, market_cap, confidence)
+```
+
+---
+
+### 3. `confidence` — 数据质量置信度
+
+**现状：** Mac Mini 不推 `confidence`，前端 AssetRadar 的置信度小圆点对 T1 资产显示 Railway T2 估算值（通常偏低）
+**要求：** Mac Mini 推送 `confidence`，范围 0.0 ~ 1.0
+
+```python
+# 建议逻辑（Minimax 自行调整）
+def compute_confidence(has_orderbook: bool, has_tvl: bool,
+                       has_binance_klines: bool) -> float:
+    score = 0.60  # base
+    if has_orderbook:      score += 0.15  # Binance order book data
+    if has_tvl:            score += 0.15  # DeFiLlama TVL (DeFi assets)
+    if has_binance_klines: score += 0.10  # full OHLCV history
+    return min(1.0, round(score, 2))
+
+# 推送字段
+"confidence": compute_confidence(...)
+```
+
+---
+
+### 4. `change_30d` — 30 日价格变化 %
+
+**现状：** Mac Mini 不推 `change_30d`，CISWidget 和 CISLeaderboard 的 30D 列对 T1 资产显示 Railway 的 CoinGecko 数据
+**要求：** Mac Mini 推送 `change_30d`（Binance klines 计算，精度更高）
+
+```python
+# 推送字段（百分比，如 +12.5 表示涨 12.5%）
+"change_30d": round(((current_price - price_30d_ago) / price_30d_ago) * 100, 2)
+```
+
+---
+
+### 完整 to_dict() 模板（v4.1 更新版）
+
+```python
+def to_dict(self) -> dict:
+    return {
+        # 核心字段
+        "symbol":      self.symbol,
+        "name":        self.name,
+        "grade":       self.grade,           # A+/A/B+/B/C+/C/D/F (unified thresholds)
+        "signal":      self.signal,          # STRONG OUTPERFORM/OUTPERFORM/NEUTRAL/UNDERPERFORM/UNDERWEIGHT
+        "asset_class": self.asset_class,     # L1/L2/DeFi/RWA/Infrastructure/Memecoin/TradFi/Commodity
+
+        # ← v4.1 改: cis_score (不是 total/score)
+        "cis_score":   round(self.total_score, 2),
+
+        # 5 pillars flat keys
+        "f": round(self.pillar_scores.get("F", 0), 2),
+        "m": round(self.pillar_scores.get("M", 0), 2),
+        "r": round(self.pillar_scores.get("O", 0), 2),  # On-chain pillar key = "r"
+        "s": round(self.pillar_scores.get("S", 0), 2),
+        "a": round(self.pillar_scores.get("A", 0), 2),
+
+        # ← v4.1 新增
+        "las":        compute_las(...),     # Liquidity-Adjusted Score
+        "confidence": compute_confidence(...),  # 0.0 ~ 1.0
+        "change_30d": round(ch30d, 2),      # % 30d price change
+
+        # 市场数据
+        "price":      self.price,
+        "change_24h": self.change_24h,
+        "market_cap": self.market_cap,
+        "volume_24h": self.volume_24h,
+        "tvl":        self.tvl,
+
+        # 扩展（Mac Mini only，前端暂未使用但保留）
+        "recommended_weight": getattr(self, "recommended_weight", None),
+        "class_rank":         getattr(self, "class_rank", 0),
+        "global_rank":        getattr(self, "global_rank", 0),
+        "macro_regime":       getattr(self, "macro_regime", None),
+    }
+```
+
+---
+
+### 信号映射 v4.1（合规版，修正 HOLD/WATCH → NEUTRAL）
+
+⚠️ 旧版 MINIMAX_SYNC.md 的映射包含 `"HOLD"` 和 `"WATCH"`，这两个不在合规信号集里。前端 SignalFeed 有严格的 HORIZON_STYLES 匹配，未知信号直接不渲染。
+
+```python
+GRADE_TO_SIGNAL = {
+    "A+": "STRONG OUTPERFORM",
+    "A":  "OUTPERFORM",
+    "B+": "OUTPERFORM",
+    "B":  "NEUTRAL",          # ← 原来是 "HOLD"，改为 NEUTRAL
+    "C+": "NEUTRAL",          # ← 原来是 "WATCH"，改为 NEUTRAL
+    "C":  "UNDERPERFORM",     # ← 原来是 "WATCH"，改为 UNDERPERFORM
+    "D":  "UNDERPERFORM",
+    "F":  "UNDERWEIGHT",      # ← 原来是 "AVOID"，改为 UNDERWEIGHT
+}
+```
+
+---
+
+### 验证命令（v4.1 更新版）
+
+```bash
+cd /Volumes/CometCloudAI/cometcloud-local
+
+python3 -c "
+from cis_v4_engine import AssetScore
+# 用真实数据跑一个资产
+from data_fetcher import fetch_asset_data
+data = fetch_asset_data('BTC')
+score = AssetScore.from_data(data)
+d = score.to_dict()
+
+# v4.1 字段检查
+assert 'cis_score' in d, 'FAIL: missing cis_score'
+assert 'las' in d,       'FAIL: missing las'
+assert 'confidence' in d, 'FAIL: missing confidence'
+assert 'change_30d' in d, 'FAIL: missing change_30d'
+assert d['signal'] in ('STRONG OUTPERFORM','OUTPERFORM','NEUTRAL','UNDERPERFORM','UNDERWEIGHT'), \
+    f\"FAIL: invalid signal {d['signal']}\"
+assert d['grade'] in ('A+','A','B+','B','C+','C','D','F'), f\"FAIL: invalid grade {d['grade']}\"
+print(f\"✓ BTC: score={d['cis_score']} grade={d['grade']} las={d['las']} conf={d['confidence']}\")
+"
+
+# push dry run
 python3 cis_push.py --dry-run
 ```
 
