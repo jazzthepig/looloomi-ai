@@ -676,7 +676,7 @@ async def get_signals():
             impact = evt.get("impact", "").upper()
             if impact not in ("HIGH", "MEDIUM"):
                 continue
-            etype = evt.get("type", "MARKET").upper()
+            etype = evt.get("category", evt.get("type", "MARKET")).upper()
             type_map = {
                 "REGULATORY": ("REGULATORY", {"F": -8, "M": -5, "O": -10, "S": -15, "A": +5},
                     "Regulatory event: S pillar suppressed short-term (uncertainty discount). "
@@ -1078,10 +1078,26 @@ async def get_signals():
 
 
 async def _fetch_macro_signals() -> list:
-    """Pull macro events for the signal feed. Returns [] on failure."""
+    """
+    Pull macro events for the signal feed.
+    Uses the shared in-memory cache from intelligence.py (60-min TTL) to avoid
+    hammering RSS feeds on every signal refresh. Falls back to direct fetch on miss.
+    Returns [] on failure.
+    """
     try:
+        # Re-use the intelligence router cache — avoids redundant RSS scrapes
+        import importlib
+        intel_mod = importlib.import_module("src.api.routers.intelligence")
+        cache = getattr(intel_mod, "_macro_cache", {})
+        ttl   = getattr(intel_mod, "_MACRO_TTL", 3600)
+        import time as _time
+        if cache.get("data") and (_time.time() - cache.get("at", 0)) < ttl:
+            return cache["data"]
+        # Cache miss — fetch fresh and populate cache
         from backend.macro_events_scraper import fetch_all_macro_events
         events = await fetch_all_macro_events()
-        return events or []
+        cache["data"] = events or []
+        cache["at"]   = _time.time()
+        return cache["data"]
     except Exception:
         return []
