@@ -1,7 +1,7 @@
 /**
  * CometCloud Design Tokens
- * James Turrell × Editorial Finance
- * Dark navy / cyan-tinted — serif display + mono data
+ * Vision palette — midnight navy + royal blue + indigo + bloom
+ * Matches vision.html exactly
  */
 
 export const FONTS = {
@@ -13,52 +13,55 @@ export const FONTS = {
 };
 
 export const T = {
-  // ── Backgrounds — deep navy with cyan undertone ──────────────────────
-  void:       "#060F1B",        // absolute deepest
-  deep:       "#091728",        // page background
-  surface:    "#0D2038",        // elevated surface / section bg
-  raised:     "#112540",        // card background
-  card:       "#142D4C",        // inner card
-  cardHover:  "#193452",        // card hover
-  overlay:    "rgba(6,15,27,0.96)",
+  // ── Backgrounds — midnight navy (vision.html exact) ──────────────────
+  void:       "#010812",        // absolute void — nav overlay
+  deep:       "#030f2a",        // page background
+  surface:    "#071a4a",        // card / elevated surface
+  raised:     "#0d2255",        // inner card raised
+  card:       "#0f2860",        // deepest card
+  cardHover:  "#122e70",
+  overlay:    "rgba(1,8,18,0.96)",
 
-  // ── Borders — cyan-tinted glass ──────────────────────────────────────
-  border:     "rgba(56,148,210,0.10)",
-  borderMd:   "rgba(56,148,210,0.18)",
-  borderHi:   "rgba(56,148,210,0.30)",
+  // ── Borders — royal blue / indigo tint ───────────────────────────────
+  border:     "rgba(37,99,235,0.14)",
+  borderMd:   "rgba(37,99,235,0.22)",
+  borderHi:   "rgba(99,102,241,0.32)",
 
-  // ── Text hierarchy — 4 levels ────────────────────────────────────────
-  t1:         "#EFF8FF",        // primary — ice white
-  t2:         "#7AAEC8",        // secondary — blue-gray
-  t3:         "#3E6680",        // muted
-  t4:         "#1E3A52",        // dim / placeholder
+  // ── Text hierarchy — vision palette ──────────────────────────────────
+  t1:         "#f0f4ff",        // primary — ice white (vision --white)
+  t2:         "#c7d2fe",        // secondary — bloom lavender
+  t3:         "rgba(199,210,254,0.45)", // muted (vision --muted)
+  t4:         "rgba(199,210,254,0.20)", // dim
 
   // Semantic aliases
-  primary:    "#EFF8FF",
-  secondary:  "#7AAEC8",
-  muted:      "#3E6680",
-  dim:        "#1E3A52",
+  primary:    "#f0f4ff",
+  secondary:  "#c7d2fe",
+  muted:      "rgba(199,210,254,0.45)",
+  dim:        "rgba(199,210,254,0.20)",
 
   // ── Brand accents ────────────────────────────────────────────────────
-  gold:       "#C8A84B",
-  goldLt:     "#E8C96A",
-  goldDim:    "rgba(200,168,75,0.12)",
-  goldGlow:   "rgba(200,168,75,0.05)",
+  gold:       "#d4a843",        // vision --gold
+  goldLt:     "#e8c060",
+  goldDim:    "rgba(212,168,67,0.12)",
+  goldGlow:   "rgba(212,168,67,0.05)",
 
   // ── Status colors ────────────────────────────────────────────────────
   green:      "#00D98A",
   greenDim:   "rgba(0,217,138,0.10)",
   red:        "#FF3D5A",
   redDim:     "rgba(255,61,90,0.10)",
-  blue:       "#4B9EFF",
-  blueDim:    "rgba(75,158,255,0.10)",
+  blue:       "#2563eb",        // vision --royal
+  blueDim:    "rgba(37,99,235,0.10)",
 
-  // ── UI accents ───────────────────────────────────────────────────────
-  purple:     "#A78BFA",
-  amber:      "#F59E0B",
-  violet:     "#7C3AED",
-  cyan:       "#06B6D4",
-  cyanDim:    "rgba(6,182,212,0.10)",
-  indigo:     "#4F46E5",
+  // ── UI accents — vision palette ──────────────────────────────────────
+  indigo:     "#6366f1",        // vision --indigo
+  lavender:   "#818cf8",        // vision --lavender
+  bloom:      "#c7d2fe",        // vision --bloom
+  cobalt:     "#1e3a8a",        // vision --cobalt
+  royal:      "#2563eb",        // vision --royal
+  amber:      "#f59e0b",        // vision --amber
+  cyan:       "#06b6d4",        // vision --cyan
+  cyanDim:    "rgba(6,182,212,0.08)",
+  purple:     "#818cf8",
   pink:       "#EC4899",
 };

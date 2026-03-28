@@ -140,7 +140,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const [raises, setRaises]             = useState([]);
   const [rwaRaises, setRwaRaises]       = useState([]);
   const [loading, setLoading]           = useState(true);
-  const [raisesFilter, setRaisesFilter] = useState("RWA");
+  const [raisesFilter, setRaisesFilter] = useState("All");
   const [lastUpdate, setLastUpdate]     = useState(null);
   const [stats, setStats]               = useState(null);
   const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
@@ -325,10 +325,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         clearTimeout(timeoutId);
         const json = await res.json();
         const events = json.events || [];
-        const filtered = events.filter(e =>
-          e.category === "INSTITUTIONAL" || e.category === "REGULATORY"
-        );
-        setMacroEvents(filtered);
+        // show all events; filter is too strict and leaves list empty
+        setMacroEvents(events);
       } catch (e) {
         console.error("Macro events fetch error:", e);
         setMacroEvents([]);
@@ -502,9 +500,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                           {sector.name}
                         </div>
                         <div style={{ fontFamily: FONTS.mono, fontSize: 17, fontWeight: 400, letterSpacing: "-0.02em", color: style.color }}>
-                          {sector.change > 0 ? "+" : ""}{Number(sector.change).toFixed(1)}%
+                          {sector.tvl === "—" && sector.change === 0
+                            ? "—"
+                            : `${sector.change > 0 ? "+" : ""}${Number(sector.change).toFixed(1)}%`}
                         </div>
-                        <div style={{ fontSize: 9, color: "#3E6680", marginTop: 4 }}>
+                        <div style={{ fontSize: 9, color: "rgba(199,210,254,0.3)", marginTop: 4 }}>
                           {sector.tvl}
                         </div>
                       </div>
