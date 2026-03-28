@@ -319,32 +319,36 @@ const SkeletonRow = () => (
 );
 
 /* ─── Filter Bar ─────────────────────────────────────────────────────── */
+const TAB_LABELS = {
+  MACRO: "Macro", WHALE: "Whale", FUNDING: "Fund", FLOW: "Flow",
+  RISK: "Risk", MOMENTUM: "Mom", REGULATORY: "Reg",
+};
+
 const FilterBar = ({ activeType, onChange }) => (
   <div style={{
     flexShrink: 0,
-    display: "flex", gap: 4, padding: "8px 16px",
+    display: "flex", flexWrap: "wrap", gap: 4, padding: "8px 12px",
     borderBottom: `1px solid ${T.border}`,
-    overflowX: "auto", background: "rgba(0,0,0,0.01)",
-    scrollbarWidth: "none",
+    background: "rgba(0,0,0,0.01)",
   }}>
     {[null, ...Object.keys(SIGNAL_TYPES)].map((type) => {
       const isActive = activeType === type;
       const cfg = type ? SIGNAL_TYPES[type] : null;
+      const label = type ? (TAB_LABELS[type] || type) : "All";
       return (
         <button
           key={type ?? "ALL"}
           onClick={() => onChange(type)}
           style={{
-            flexShrink: 0,
             fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
-            letterSpacing: "0.08em", padding: "3px 8px", borderRadius: 3,
-            cursor: "pointer", transition: "all 0.15s",
+            letterSpacing: "0.06em", padding: "3px 8px", borderRadius: 3,
+            cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
             background: isActive ? (cfg ? cfg.bg : "rgba(255,255,255,0.08)") : "transparent",
             color:      isActive ? (cfg ? cfg.color : T.t1) : T.t3,
             border:     isActive ? `1px solid ${cfg ? cfg.border : "rgba(0,0,0,0.15)"}` : "1px solid transparent",
           }}
         >
-          {type ?? "ALL"}
+          {label}
         </button>
       );
     })}
@@ -516,16 +520,16 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         flexWrap: "wrap", background: "#0D2038",
         alignItems: "center", justifyContent: "space-between",
       }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {Object.entries(DIRECTION_STYLES).map(([key, val]) => (
-            <div key={key} style={{ display: "flex", alignItems: "center", gap: 3 }}>
-              <span style={{ fontSize: 9, color: val.color }}>{val.icon}</span>
-              <span style={{ fontSize: 8, fontFamily: FONTS.mono, color: T.t3, opacity: 0.7 }}>{key}</span>
+            <div key={key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: 11, color: val.color }}>{val.icon}</span>
+              <span style={{ fontSize: 10, fontFamily: FONTS.mono, color: T.t3, opacity: 0.75 }}>{key}</span>
             </div>
           ))}
         </div>
-        <span style={{ fontSize: 8, fontFamily: FONTS.mono, color: T.t3, opacity: 0.4 }}>
-          click to expand
+        <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t3, opacity: 0.4 }}>
+          tap to expand
         </span>
       </div>
 
