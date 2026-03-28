@@ -1281,23 +1281,39 @@ async def cometcloud_get_cis_report(params: CisReportInput) -> str:
             return f"Error: Asset '{params.symbol}' not found in CIS universe."
 
         # ── Extract fields ────────────────────────────────────────────────
-        symbol       = data.get("symbol", params.symbol)
-        name         = data.get("name", symbol)
-        asset_class  = data.get("asset_class", "—")
-        grade        = data.get("grade", "—")
-        cis_score    = float(data.get("cis_score", 0))
-        signal       = data.get("signal", "NEUTRAL")
-        las          = float(data.get("las", 0))
-        confidence   = float(data.get("confidence", 0))
-        rec_weight   = float(data.get("recommended_weight", 0))
-        pillars      = data.get("pillars", {})
-        pw           = data.get("pillar_weights", {"F": 0.25, "M": 0.20, "O": 0.20, "S": 0.20, "A": 0.15})
-        price        = float(data.get("price", 0))
-        market_cap   = float(data.get("market_cap", 0))
-        change_24h   = float(data.get("change_24h", 0))
-        change_7d    = float(data.get("change_7d", 0))
-        data_tier    = data.get("data_tier", "T2")
+        symbol      = data.get("symbol", params.symbol)
+        name        = data.get("name", symbol)
+        asset_class = data.get("asset_class", "—")
+        grade       = data.get("grade", "—")
+        cis_score   = float(data.get("cis_score", 0))
+        signal      = data.get("signal", "NEUTRAL")
+        las         = float(data.get("las", 0))
+        confidence  = float(data.get("confidence", 0))
+        rec_weight  = float(data.get("recommended_weight", 0))
+        price       = float(data.get("price", 0))
+        market_cap  = float(data.get("market_cap", 0))
+        change_24h  = float(data.get("change_24h", 0))
+        change_7d   = float(data.get("change_7d", 0))
         macro_regime = data.get("macro_regime", "—")
+
+        # data_tier: API returns int (1/2) or string; normalise to label
+        _dt = data.get("data_tier", 2)
+        data_tier = "T1_LOCAL" if str(_dt) in ("1", "T1", "T1_LOCAL") else "T2_MARKET"
+
+        # Pillar scores — T2 engine returns lowercase top-level keys (f, m, r, s, a)
+        # "r" = risk_adjusted → maps to O (On-chain/Risk) pillar
+        # "s" = sensitivity   → maps to S (Sentiment) pillar
+        # Also check nested "pillars" dict (T1 engine format) as fallback
+        _p  = data.get("pillars", {})
+        F   = float(data.get("f") or _p.get("F") or 0)
+        M   = float(data.get("m") or _p.get("M") or 0)
+        O   = float(data.get("r") or data.get("o") or _p.get("O") or 0)   # r = risk_adjusted
+        S   = float(data.get("s") or _p.get("S") or 0)                    # s = sensitivity
+        A   = float(data.get("a") or _p.get("A") or 0)
+
+        # Pillar weights — "weights" key in T2, "pillar_weights" in T1
+        _pw_default = {"F": 0.30, "M": 0.20, "O": 0.25, "S": 0.10, "A": 0.15}
+        pw = data.get("weights") or data.get("pillar_weights") or _pw_default
 
         # ── Helpers ───────────────────────────────────────────────────────
         def _rating(s: float) -> str:
@@ -1352,11 +1368,7 @@ async def cometcloud_get_cis_report(params: CisReportInput) -> str:
             ),
         }
 
-        F = float(pillars.get("F", 0))
-        M = float(pillars.get("M", 0))
-        O = float(pillars.get("O", 0))
-        S = float(pillars.get("S", 0))
-        A = float(pillars.get("A", 0))
+        # F/M/O/S/A already extracted above from top-level fields
 
         # ── Pillar notes ──────────────────────────────────────────────────
         def _pnote(key: str, score: float, high: str, low: str) -> str:

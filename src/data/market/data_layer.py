@@ -528,41 +528,63 @@ async def get_protocol_revenues() -> dict:
         return {"error": str(e)}
 
 
-async def get_vc_raises(limit: int = 20) -> list[dict]:
+async def get_vc_raises(limit: int = 100) -> list[dict]:
     """
-    VC funding rounds from DeFiLlama.
-    Note: /raises endpoint requires Pro for full data.
-    This uses the free protocols endpoint with embedded raise data.
+    VC funding rounds via DeFiLlama /raises endpoint.
+    Returns up to `limit` rounds sorted by date desc, last 180 days.
+    Amount is returned in USD (DeFiLlama stores in $M; we multiply ×1M).
+    TTL: 1h in-memory + 1h Redis.
     """
-    key = f"vc_raises:{limit}"
+    key = f"vc_raises_v3:{limit}"
     cached = _cache_get(key, ttl=3600)
     if cached:
         return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
 
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            r = await client.get(f"{LLAMA_BASE}/protocols")
-            protocols = r.json()
+        async with httpx.AsyncClient(timeout=25) as client:
+            resp = await client.get("https://api.llama.fi/raises")
+            resp.raise_for_status()
+            data = resp.json()
+
+        raw = data.get("raises", [])
+        cutoff = datetime.now(timezone.utc).timestamp() - 180 * 86400
 
         raises = []
-        for p in protocols:
-            for raise_event in p.get("raises", []):
-                raises.append({
-                    "project":    p.get("name"),
-                    "category":   p.get("category"),
-                    "chains":     p.get("chains", [])[:3],
-                    "amount_usd": raise_event.get("amount", 0),
-                    "round":      raise_event.get("round"),
-                    "date":       raise_event.get("date"),
-                    "investors":  raise_event.get("leadInvestors", []) + raise_event.get("otherInvestors", []),
-                    "source":     "defillama",
-                })
+        for r in raw:
+            raw_amount = r.get("amount") or 0   # DeFiLlama: $M
+            date_ts    = r.get("date") or 0
+            if raw_amount <= 0 or date_ts < cutoff:
+                continue
+
+            lead  = r.get("leadInvestors") or []
+            other = r.get("otherInvestors") or []
+
+            raises.append({
+                # Frontend reads: name, amount (USD), round, date, category, leadInvestors, investors, chains
+                "name":          r.get("name") or r.get("project") or "Unknown",
+                "amount":        int(raw_amount * 1_000_000),   # → USD for frontend /1M display
+                "round":         r.get("round") or r.get("roundType") or "—",
+                "date":          date_ts,                        # Unix timestamp seconds
+                "category":      r.get("category") or "DeFi",
+                "categoryGroup": r.get("category") or "DeFi",
+                "sector":        r.get("sector") or r.get("category") or "DeFi",
+                "chains":        (r.get("chains") or [])[:3],
+                "leadInvestors": lead,
+                "investors":     lead + other,
+                "description":   (r.get("description") or "")[:200],
+                "source":        "defillama",
+            })
 
         raises.sort(key=lambda x: x.get("date", 0) or 0, reverse=True)
         result = raises[:limit]
+        await _redis_set(key, result, ttl=3600)
         return _cache_set(key, result)
     except Exception as e:
-        return [{"error": str(e)}]
+        print(f"[VC_RAISES] Error: {e}")
+        return []
 
 
 # ══════════════════════════════════════════════════════════════════════════════

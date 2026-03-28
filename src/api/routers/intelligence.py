@@ -5,6 +5,7 @@ Endpoints: /api/v1/intelligence/*, /api/v1/vc/*, /api/v1/protocols/*
 from fastapi import APIRouter, HTTPException, Query
 from datetime import datetime
 import logging
+import time
 
 from data.market.data_layer import get_vc_raises
 from data.market.protocol_engine import get_protocol_universe
@@ -25,6 +26,11 @@ def _get_vc_tracker():
 
 # ── Macro Events ──────────────────────────────────────────────────────────────
 
+# In-memory cache — 60 min TTL (RSS feeds rate-limit aggressively)
+_macro_cache: dict = {"data": [], "at": 0.0}
+_MACRO_TTL = 3600
+
+
 @router.get("/api/v1/intelligence/macro-events")
 async def get_macro_events():
     """
@@ -32,8 +38,21 @@ async def get_macro_events():
     + DeFiLlama Raises. Auto-classified: REGULATORY/INSTITUTIONAL/MARKET/TECH.
     Impact levels: HIGH/MEDIUM/LOW. Cached 60 min.
     """
-    from backend.macro_events_scraper import fetch_all_macro_events
-    return {"events": await fetch_all_macro_events()}
+    now = time.time()
+    # Serve from cache if fresh
+    if _macro_cache["data"] and (now - _macro_cache["at"]) < _MACRO_TTL:
+        return {"events": _macro_cache["data"], "cached": True, "count": len(_macro_cache["data"])}
+
+    try:
+        from backend.macro_events_scraper import fetch_all_macro_events
+        events = await fetch_all_macro_events()
+        _macro_cache["data"] = events
+        _macro_cache["at"] = now
+        return {"events": events, "cached": False, "count": len(events)}
+    except Exception as e:
+        _logger.error(f"Macro events fetch failed: {e}", exc_info=True)
+        # Return stale cache or empty — never 500
+        return {"events": _macro_cache["data"] or [], "cached": True, "error": "fetch_failed", "count": len(_macro_cache["data"])}
 
 
 # ── VC Deal Flow ──────────────────────────────────────────────────────────────
