@@ -854,6 +854,86 @@ async def get_cg_derivatives() -> list:
         return []
 
 
+# ── VC Portfolio categories tracked ───────────────────────────────────────────
+_VC_CATS = [
+    {"id": "andreessen-horowitz-a16z-portfolio", "short": "a16z",           "tier": 1},
+    {"id": "paradigm-portfolio",                 "short": "Paradigm",        "tier": 1},
+    {"id": "coinbase-ventures-portfolio",        "short": "Coinbase Ventures","tier": 1},
+    {"id": "pantera-capital-portfolio",          "short": "Pantera",         "tier": 1},
+    {"id": "polychain-capital-portfolio",        "short": "Polychain",       "tier": 1},
+    {"id": "multicoin-capital-portfolio",        "short": "Multicoin",       "tier": 1},
+    {"id": "galaxy-digital-portfolio",           "short": "Galaxy Digital",  "tier": 1},
+    {"id": "dragonfly-capital-portfolio",        "short": "Dragonfly",       "tier": 2},
+    {"id": "sequoia-capital-portfolio",          "short": "Sequoia",         "tier": 2},
+    {"id": "delphi-ventures-portfolio",          "short": "Delphi",          "tier": 2},
+    {"id": "okx-ventures-portfolio",             "short": "OKX Ventures",    "tier": 2},
+    {"id": "binance-labs-portfolio",             "short": "Binance Labs",    "tier": 2},
+    {"id": "animoca-brands-portfolio",           "short": "Animoca",         "tier": 2},
+    {"id": "hashkey-capital-portfolio",          "short": "HashKey",         "tier": 2},
+    {"id": "dwf-labs-portfolio",                 "short": "DWF Labs",        "tier": 2},
+    {"id": "circle-ventures-portfolio",          "short": "Circle Ventures", "tier": 2},
+]
+_VC_CAT_IDS = {c["id"] for c in _VC_CATS}
+_VC_SHORT    = {c["id"]: c["short"] for c in _VC_CATS}
+_VC_TIER     = {c["id"]: c["tier"]  for c in _VC_CATS}
+
+
+async def get_cg_vc_portfolios() -> list[dict]:
+    """
+    CoinGecko /coins/categories filtered to major VC portfolio buckets.
+    Returns ~16 firms with: name, market_cap, change_24h, volume_24h, top_3_coins, tier.
+    Sorted by market_cap desc. TTL: 10 min.
+    """
+    key = "cg_vc_portfolios"
+    cached = _cache_get(key, ttl=600)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    if not CG_API_KEY:
+        return []
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            r = await client.get(
+                f"{CG_PRO_BASE}/coins/categories",
+                headers=_cg_headers(),
+                params={"order": "market_cap_desc"},
+            )
+            r.raise_for_status()
+            all_cats = r.json()
+
+        result = []
+        for cat in all_cats:
+            cid = cat.get("id", "")
+            if cid not in _VC_CAT_IDS:
+                continue
+            mcap   = cat.get("market_cap") or 0
+            chg24  = cat.get("market_cap_change_24h") or 0
+            vol24  = cat.get("volume_24h") or 0
+            top3   = cat.get("top_3_coins_id") or cat.get("top_3_coins") or []
+            result.append({
+                "id":          cid,
+                "name":        _VC_SHORT.get(cid, cat.get("name", cid)),
+                "full_name":   cat.get("name", cid),
+                "tier":        _VC_TIER.get(cid, 2),
+                "market_cap":  mcap,
+                "change_24h":  round(chg24, 2),
+                "volume_24h":  vol24,
+                "top_coins":   top3[:3],
+                "updated_at":  cat.get("updated_at", ""),
+            })
+
+        result.sort(key=lambda x: -(x["market_cap"] or 0))
+        await _redis_set(key, result, ttl=600)
+        return _cache_set(key, result)
+    except Exception as e:
+        print(f"[CG_VC_PORTFOLIOS] Error: {e}")
+        return []
+
+
 async def get_macro_pulse() -> dict:
     """
     Combined macro snapshot for the MacroPulse widget.

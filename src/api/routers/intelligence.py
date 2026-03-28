@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 import time
 
-from data.market.data_layer import get_vc_raises
+from data.market.data_layer import get_vc_raises, get_cg_vc_portfolios
 from data.market.protocol_engine import get_protocol_universe
 
 router = APIRouter()
@@ -72,6 +72,21 @@ async def get_funding_rounds(limit: int = 20):
     except Exception as e:
         _logger.error(f"Error in {__name__}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/api/v1/vc/portfolios")
+async def get_vc_portfolios():
+    """
+    VC portfolio performance via CoinGecko categories.
+    Returns ~16 major firms with market_cap, 24h change, volume, top_3_coins.
+    Sorted by portfolio market cap desc. TTL: 10 min.
+    """
+    try:
+        data = await get_cg_vc_portfolios()
+        return {"timestamp": datetime.now().isoformat(), "data": data, "count": len(data)}
+    except Exception as e:
+        _logger.error(f"VC portfolios error: {e}", exc_info=True)
+        return {"timestamp": datetime.now().isoformat(), "data": [], "count": 0}
 
 
 @router.get("/api/v1/vc/unlocks")

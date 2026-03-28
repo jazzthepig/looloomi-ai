@@ -150,6 +150,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const [macroEvents, setMacroEvents]   = useState([]);
   const [sectorData, setSectorData]     = useState([]);
   const [heatmapLoading, setHeatmapLoading] = useState(true);
+  const [vcPortfolios, setVcPortfolios] = useState([]);
+  const [vcPortfoliosLoading, setVcPortfoliosLoading] = useState(true);
 
   // Heatmap color helper
   const getHeatmapStyle = (change) => {
@@ -203,6 +205,23 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
       }
     };
     fetchHeatmap();
+  }, []);
+
+  // Fetch VC portfolio performance from CoinGecko categories
+  useEffect(() => {
+    const fetchVCPortfolios = async () => {
+      try {
+        const r = await fetch(`${API_BASE}/vc/portfolios`);
+        const json = await r.json();
+        setVcPortfolios(json.data || []);
+      } catch (e) {
+        console.error("VC portfolios fetch error:", e);
+        setVcPortfolios([]);
+      } finally {
+        setVcPortfoliosLoading(false);
+      }
+    };
+    fetchVCPortfolios();
   }, []);
 
   useEffect(() => {
@@ -581,6 +600,113 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 </div>
               </div>
             </div>
+
+            {/* ── VC Portfolio Performance (CoinGecko) ───────────────────── */}
+            {(vcPortfoliosLoading || vcPortfolios.length > 0) && (
+              <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
+                <div style={{ padding: "14px 18px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <Label Icon={Activity}>VC Portfolio Performance</Label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.muted, letterSpacing: "0.06em" }}>
+                      CoinGecko · 10min
+                    </span>
+                    <span style={{
+                      fontSize: 8, fontWeight: 700, letterSpacing: "0.1em",
+                      padding: "2px 6px", borderRadius: 3, fontFamily: FONTS.display,
+                      background: "rgba(37,99,235,0.10)", color: T.bloom,
+                      border: `1px solid rgba(37,99,235,0.20)`,
+                    }}>LIVE</span>
+                  </div>
+                </div>
+
+                {/* Column headers */}
+                <div style={{
+                  display: "grid", gridTemplateColumns: "1.6fr 1fr 0.9fr 1.2fr",
+                  padding: "6px 18px", borderTop: `1px solid ${T.border}`,
+                  borderBottom: `1px solid ${T.border}`,
+                }}>
+                  {["FIRM", "PORTFOLIO MCAP", "24H", "TOP HOLDINGS"].map(h => (
+                    <span key={h} style={{ fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
+                      letterSpacing: "0.1em", color: T.t4, textTransform: "uppercase" }}>{h}</span>
+                  ))}
+                </div>
+
+                <div style={{ maxHeight: 320, overflowY: "auto" }}>
+                  {vcPortfoliosLoading
+                    ? Array(8).fill(0).map((_, i) => (
+                        <div key={i} style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 0.9fr 1.2fr",
+                          padding: "9px 18px", borderBottom: `1px solid ${T.border}`, gap: 8 }}>
+                          <div className="sk" style={{ height: 12, width: "70%", borderRadius: 3 }} />
+                          <div className="sk" style={{ height: 12, width: "60%", borderRadius: 3 }} />
+                          <div className="sk" style={{ height: 12, width: "40%", borderRadius: 3 }} />
+                          <div className="sk" style={{ height: 12, width: "80%", borderRadius: 3 }} />
+                        </div>
+                      ))
+                    : vcPortfolios.map((vc, i) => {
+                        const chg = vc.change_24h ?? 0;
+                        const chgColor = chg > 0 ? T.green : chg < 0 ? T.red : T.t3;
+                        const mcapB = vc.market_cap ? (vc.market_cap / 1e9).toFixed(1) : "—";
+                        const volB  = vc.volume_24h ? (vc.volume_24h / 1e9).toFixed(2) : "—";
+                        const isT1  = vc.tier === 1;
+                        return (
+                          <div key={vc.id} className="lm-row" style={{
+                            display: "grid", gridTemplateColumns: "1.6fr 1fr 0.9fr 1.2fr",
+                            padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
+                            alignItems: "center", background: "transparent",
+                          }}>
+                            {/* Firm */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              {isT1 && (
+                                <span style={{ width: 3, height: 16, borderRadius: 2, flexShrink: 0,
+                                  background: `linear-gradient(180deg, ${T.indigo}, ${T.royal})` }} />
+                              )}
+                              <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: isT1 ? 600 : 400,
+                                color: isT1 ? T.t1 : T.t2 }}>
+                                {vc.name}
+                              </span>
+                            </div>
+                            {/* Market cap */}
+                            <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: T.t1 }}>
+                              ${mcapB}B
+                              <span style={{ fontSize: 9, color: T.t4, marginLeft: 4 }}>vol ${volB}B</span>
+                            </div>
+                            {/* 24h change */}
+                            <div style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 600, color: chgColor }}>
+                              {chg > 0 ? "+" : ""}{chg.toFixed(2)}%
+                            </div>
+                            {/* Top coins */}
+                            <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                              {(vc.top_coins || []).slice(0, 3).map(coin => (
+                                <span key={coin} style={{
+                                  fontFamily: FONTS.mono, fontSize: 9, fontWeight: 600,
+                                  color: T.bloom, background: "rgba(99,102,241,0.08)",
+                                  border: `1px solid rgba(99,102,241,0.18)`,
+                                  padding: "1px 6px", borderRadius: 3,
+                                  textTransform: "uppercase",
+                                }}>
+                                  {coin.replace(/-/g, " ").split(" ")[0]}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                </div>
+
+                {/* Footer */}
+                {!vcPortfoliosLoading && vcPortfolios.length > 0 && (
+                  <div style={{ padding: "8px 18px", borderTop: `1px solid ${T.border}`,
+                    display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t4 }}>
+                      {vcPortfolios.length} firms · ranked by portfolio market cap · CoinGecko categories
+                    </span>
+                    <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.indigo, opacity: 0.6 }}>
+                      ▌ Tier 1 firms highlighted
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Full width — VC Funding Table (hidden when no data) */}
             {(loading || raises.length > 0) && <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
