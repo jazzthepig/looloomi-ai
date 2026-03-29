@@ -8,24 +8,17 @@
  *   - Actual USDC deposit is handled by Drift's own UI (app.drift.trade)
  *
  * Phase 2 (future): @drift-labs/sdk direct vault deposit
+ *
+ * @solana/web3.js is lazy-loaded on first call to avoid bloating the main bundle.
  */
-
-import {
-  Connection,
-  Transaction,
-  TransactionInstruction,
-  PublicKey,
-  SystemProgram,
-} from "@solana/web3.js";
 
 // Solana mainnet-beta RPC — use Helius/Triton in prod for reliability
 const RPC_ENDPOINT = "https://api.mainnet-beta.solana.com";
-
-// Solana Memo program address (SPL Memo v2)
-const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+const MEMO_PROGRAM_ID_STR = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
 
 /**
  * Build and send a Solana Memo transaction tagging a CometCloud vault deposit intent.
+ * Lazy-loads @solana/web3.js on first invocation.
  *
  * @param {object} params
  * @param {string} params.walletAddress    - Connected Phantom wallet address
@@ -39,31 +32,37 @@ export async function sendVaultDepositMemo({ walletAddress, vaultAddress, partne
   if (!provider?.isPhantom) throw new Error("Phantom wallet not found");
   if (!provider.isConnected)  throw new Error("Wallet not connected");
 
-  const connection  = new Connection(RPC_ENDPOINT, "confirmed");
-  const publicKey   = new PublicKey(walletAddress);
+  // Lazy-load @solana/web3.js — only downloaded when user triggers a deposit intent
+  const {
+    Connection,
+    Transaction,
+    TransactionInstruction,
+    PublicKey,
+  } = await import("@solana/web3.js");
+
+  const connection = new Connection(RPC_ENDPOINT, "confirmed");
+  const publicKey  = new PublicKey(walletAddress);
+  const MEMO_PROGRAM_ID = new PublicKey(MEMO_PROGRAM_ID_STR);
 
   // Memo payload — on-chain forever, queryable by BumbleBee / CometCloud
   const memoData = JSON.stringify({
-    source:    "cometcloud",
-    action:    "vault_deposit_intent",
+    source:      "cometcloud",
+    action:      "vault_deposit_intent",
     partner,
-    vault:     vaultAddress,
+    vault:       vaultAddress,
     amount_usdc: amountUsdc,
-    ts:        Math.floor(Date.now() / 1000),
+    ts:          Math.floor(Date.now() / 1000),
   });
 
   const memoInstruction = new TransactionInstruction({
-    keys:       [{ pubkey: publicKey, isSigner: true, isWritable: false }],
-    programId:  MEMO_PROGRAM_ID,
-    data:       Buffer.from(memoData, "utf-8"),
+    keys:      [{ pubkey: publicKey, isSigner: true, isWritable: false }],
+    programId: MEMO_PROGRAM_ID,
+    data:      Buffer.from(memoData, "utf-8"),
   });
 
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
-  const tx = new Transaction({
-    recentBlockhash:    blockhash,
-    feePayer:           publicKey,
-  });
+  const tx = new Transaction({ recentBlockhash: blockhash, feePayer: publicKey });
   tx.add(memoInstruction);
 
   // Sign via Phantom (no auto-approve — user sees the tx)
