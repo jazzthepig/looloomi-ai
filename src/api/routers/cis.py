@@ -13,6 +13,7 @@ from src.api.store import (
     sanitize_floats, ws_manager,
 )
 import src.api.store as store
+from src.data.cis.cis_provider import calculate_cis_universe
 
 router = APIRouter()
 
@@ -95,8 +96,6 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
     """
     CIS v4.0 Universe — priority: local_engine (Redis) → Railway calc → stale Redis fallback
     """
-    from src.data.cis.cis_provider import calculate_cis_universe
-
     # Browser-level deduplication: 3 components hit this endpoint on load.
     # max-age=60 means concurrent fetches within 60s return from browser cache (~0ms).
     # stale-while-revalidate=120 keeps the UI fresh on background refresh.
@@ -308,8 +307,6 @@ async def agent_cis_endpoint(
     # Clamp pagination params
     limit  = max(1, min(limit, 100))
     offset = max(0, offset)
-
-    from src.data.cis.cis_provider import calculate_cis_universe
 
     cached = await redis_get()
     if cached and cached.get("universe"):
