@@ -45,11 +45,18 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
         universe  = payload.get("universe", [])
         timestamp = payload.get("timestamp", datetime.now().isoformat())
 
+        # Forward macro regime from Mac Mini payload so agent API + signal feed
+        # can read cached.get("macro", {}).get("regime", ...) correctly
+        macro = payload.get("macro") or {}
+        if not macro and payload.get("macro_regime"):
+            macro = {"regime": payload["macro_regime"]}
+
         cache_data = {
             "universe":     universe,
             "last_updated": time.time(),
             "timestamp":    timestamp,
             "source":       "local_engine",
+            "macro":        macro,
         }
 
         # 1. Write to Redis (hot cache, 2h TTL)
