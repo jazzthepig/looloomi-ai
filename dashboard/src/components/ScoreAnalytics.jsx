@@ -27,6 +27,20 @@ const SECTION = {
   marginBottom: 20,
 };
 
+// Normalize asset fields across T1/T2 response shapes
+function normalizeAsset(a) {
+  return {
+    symbol:      (a.symbol || a.asset_id || "").toUpperCase(),
+    name:        a.name || a.symbol || "",
+    score:       a.cis_score ?? a.score ?? 0,
+    grade:       a.grade || gradeForRaw(a.cis_score ?? a.score ?? 0),
+    signal:      a.signal || "",
+    asset_class: a.asset_class || a.class || "Other",
+    data_tier:   a.data_tier || 2,
+  };
+}
+
+function gradeForRaw(s) { return gradeForScore(s); }
 function gradeForScore(score) {
   if (score >= 85) return "A+";
   if (score >= 75) return "A";
@@ -246,7 +260,8 @@ export default function ScoreAnalytics() {
     fetch(`${API}/api/v1/cis/universe`)
       .then(r => r.json())
       .then(d => {
-        const assets = d.universe || d.assets || [];
+        const raw = d.universe || d.assets || [];
+        const assets = raw.map(normalizeAsset);
         setUniverse(assets);
         setLoading(false);
         // 2. Batch fetch history for top 20 assets
@@ -256,7 +271,7 @@ export default function ScoreAnalytics() {
           fetch(`${API}/api/v1/cis/history/batch?symbols=${top20}&days=7`)
             .then(r => r.json())
             .then(hd => {
-              setHistoryMap(hd.history || hd || {});
+              setHistoryMap(hd.data || hd.history || {});
               setHistLoading(false);
             })
             .catch(() => setHistLoading(false));
