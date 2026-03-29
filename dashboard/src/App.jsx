@@ -5,6 +5,8 @@ import CISLeaderboard from "./components/CISLeaderboard";
 import VaultPage from "./components/VaultPage";
 import ProtocolIntelligence from "./components/ProtocolIntelligence";
 import PortfolioAllocation from "./components/PortfolioAllocation";
+import { lazy, Suspense } from "react";
+const ScoreAnalytics = lazy(() => import("./components/ScoreAnalytics"));
 import MobileApp from "./components/MobileApp";
 import WalletConnect from "./components/WalletConnect";
 import { T, FONTS } from "./tokens";
@@ -672,6 +674,13 @@ function CISContent() {
 
       {/* Portfolio Builder — CIS-driven allocation engine */}
       <PortfolioAllocation universe={cisUniverse} />
+
+      {/* Score History Analytics — grade migration heatmap + sector rotation */}
+      <div style={{ marginTop: 24, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "24px 28px" }}>
+        <Suspense fallback={<div style={{ color: "rgba(199,210,254,0.3)", fontFamily: "monospace", fontSize: 11, padding: 24 }}>Loading analytics…</div>}>
+          <ScoreAnalytics />
+        </Suspense>
+      </div>
     </div>
   );
 }
