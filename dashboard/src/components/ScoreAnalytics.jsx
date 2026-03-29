@@ -245,7 +245,8 @@ function GradeDistribution({ assets }) {
 }
 
 /* ─── Main Component ─────────────────────────────────────────────────────── */
-export default function ScoreAnalytics() {
+// universe prop: raw array from CISLeaderboard (already fetched by parent) — avoids double-fetch
+export default function ScoreAnalytics({ universe: universeProp = [] }) {
   const [universe, setUniverse] = useState([]);
   const [historyMap, setHistoryMap] = useState({});
   const [loading, setLoading] = useState(true);
@@ -253,8 +254,14 @@ export default function ScoreAnalytics() {
   const [activeTab, setActiveTab] = useState("heatmap"); // heatmap | rotation
   const fetchedRef = useRef(false);
 
-  // 1. Load universe
+  // 1. If parent already has universe, use it directly; otherwise fetch independently
   useEffect(() => {
+    if (universeProp.length > 0) {
+      const assets = universeProp.map(normalizeAsset);
+      setUniverse(assets);
+      setLoading(false);
+      return;
+    }
     if (fetchedRef.current) return;
     fetchedRef.current = true;
     fetch(`${API}/api/v1/cis/universe`)
@@ -264,21 +271,23 @@ export default function ScoreAnalytics() {
         const assets = raw.map(normalizeAsset);
         setUniverse(assets);
         setLoading(false);
-        // 2. Batch fetch history for top 20 assets
-        if (assets.length) {
-          const top20 = assets.slice(0, 20).map(a => a.symbol).join(",");
-          setHistLoading(true);
-          fetch(`${API}/api/v1/cis/history/batch?symbols=${top20}&days=7`)
-            .then(r => r.json())
-            .then(hd => {
-              setHistoryMap(hd.data || hd.history || {});
-              setHistLoading(false);
-            })
-            .catch(() => setHistLoading(false));
-        }
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [universeProp]);
+
+  // 2. Batch fetch history whenever universe changes
+  useEffect(() => {
+    if (!universe.length) return;
+    const top20 = universe.slice(0, 20).map(a => a.symbol).join(",");
+    setHistLoading(true);
+    fetch(`${API}/api/v1/cis/history/batch?symbols=${top20}&days=7`)
+      .then(r => r.json())
+      .then(hd => {
+        setHistoryMap(hd.data || hd.history || {});
+        setHistLoading(false);
+      })
+      .catch(() => setHistLoading(false));
+  }, [universe]);
 
   const tabs = [
     { id: "heatmap",  label: "Grade Heatmap" },

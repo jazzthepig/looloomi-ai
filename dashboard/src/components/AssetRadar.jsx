@@ -421,7 +421,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                 <th style={{ ...thBase, textAlign: "right", cursor: "pointer" }} onClick={() => toggleSort("7d")}>7D</th>
                 <th style={{ ...thBase, textAlign: "right", cursor: "pointer" }} onClick={() => toggleSort("mcap")}>Mkt Cap</th>
                 <th style={{ ...thBase, textAlign: "right", cursor: "pointer", color: T.blue }} onClick={() => toggleSort("cis")}>CIS</th>
-                <th style={{ ...thBase, textAlign: "right", cursor: "pointer" }} onClick={() => toggleSort("las")}>LAS</th>
+                <th title="Liquidity-Adjusted Score = CIS × liquidity × confidence" style={{ ...thBase, textAlign: "right", cursor: "pointer" }} onClick={() => toggleSort("las")}>LAS ⓘ</th>
                 <th style={{ ...thBase, textAlign: "center" }}>Signal</th>
                 <th style={{ ...thBase, textAlign: "right", cursor: "pointer" }} onClick={() => toggleSort("vol")}>Volume</th>
                 <th style={{ ...thBase, textAlign: "right", width: 80 }}>Trend</th>
@@ -550,10 +550,14 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                         {/* LAS (Liquidity-Adjusted Score) */}
                         <td style={{ textAlign: "right", padding: "9px 14px" }}>
                           {cis?.las != null ? (
-                            <span style={{
-                              fontFamily: FONTS.mono, fontSize: 11, fontWeight: 500,
-                              color: cis.las >= 60 ? T.green : cis.las >= 40 ? T.t2 : T.red,
-                            }}>
+                            <span
+                              title={`LAS = CIS × Liquidity × Confidence\nCIS: ${(cis.score ?? 0).toFixed(1)}  Confidence: ${cis.confidence != null ? (cis.confidence * 100).toFixed(0) + "%" : "n/a"}\nLiquidity-Adjusted Score penalises low-volume assets.`}
+                              style={{
+                                fontFamily: FONTS.mono, fontSize: 11, fontWeight: 500,
+                                color: cis.las >= 60 ? T.green : cis.las >= 40 ? T.t2 : T.red,
+                                cursor: "help", borderBottom: `1px dotted ${T.t3}`,
+                              }}
+                            >
                               {cis.las.toFixed(1)}
                             </span>
                           ) : cisLoading ? (
