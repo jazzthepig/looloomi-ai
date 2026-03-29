@@ -678,7 +678,7 @@ function CISContent() {
       {/* Score History Analytics — grade migration heatmap + sector rotation */}
       <div style={{ marginTop: 24, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "24px 28px" }}>
         <Suspense fallback={<div style={{ color: "rgba(199,210,254,0.3)", fontFamily: "monospace", fontSize: 11, padding: 24 }}>Loading analytics…</div>}>
-          <ScoreAnalytics />
+          <ScoreAnalytics universe={cisUniverse} />
         </Suspense>
       </div>
     </div>
