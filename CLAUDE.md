@@ -196,7 +196,7 @@ git push origin main
 4. ONDO-style precision: thin borders, clean cards, no decorative noise
 5. Data always present — skeleton loaders only, never empty states
 
-## Current focus (as of 2026-03-23)
+## Current focus (as of 2026-03-29)
 
 **Done (Week 1 — Mar 10–16):**
 - CIS v4.0 percentile grading, VIX/SPY TradFi scoring, NaN serialization fix
@@ -260,68 +260,119 @@ git push origin main
 - MKR reclassified DeFi → RWA in backend (matches frontend)
 - `CIS_METHODOLOGY.md` — complete index methodology spec for investors & agents
 
-**In progress / Blocked:**
-- Supabase project creation (Jazz — need URL + key → Railway env vars)
-- CoinGecko Pro key confirmation (Jazz — verify COINGECKO_API_KEY in Railway env)
-- Freqtrade dry run activation (Minimax — `git pull` + run start script)
-- Git push pending (Jazz — needs GitHub auth from local machine)
+**Done (Week 3 cont. — Mar 24–29):**
+- Vault GP "BumbleBee" partner integration: `/api/v1/vault/deposit-memo`, Drift vault
+  deposit flow, Solana memo encoding, partner attribution from referral links
+- Lead capture API: `/api/v1/leads/capture` + `/api/v1/leads/list` (Supabase-backed)
+- Wallet auth backend: `/api/v1/auth/nonce` + `/api/v1/auth/verify` (Solana Sign-In)
+- Share card component + ShareCard.jsx (og:image-style card generation)
+- @solana/web3.js lazy-loaded: main bundle 502KB → 250KB (Solana chunk 264KB on demand)
+- ScoreAnalytics component (lazy-loaded, 401KB recharts chunk):
+  - Grade Migration Heatmap — 7-day per-asset grade grid, color-coded
+  - Sector Rotation Chart — avg CIS per asset class over 7 days (recharts LineChart)
+  - Grade Distribution Bar — current universe breakdown
+  - `normalizeAsset()` handles T1/T2 field shape differences (cis_score/score, asset_id/symbol)
+  - Prop-wired to parent `cisUniverse` (no duplicate /api/v1/cis/universe fetch)
+- PortfolioAllocation: CSV export button (filename = strategy + risk profile)
+- AssetRadar: LAS column tooltip (formula breakdown: CIS × liquidity × confidence),
+  mobile filter bar horizontal scroll (no wrap), dotted underline with cursor:help
+- Backend: `calculate_cis_universe` import hoisted to module level (was per-request)
+- Backend: `/internal/cis-scores` now forwards `macro_regime` from Mac Mini to Redis cache
+  (was silently dropped — agent API + signal feed always got "Unknown")
+- vision.html parallax JS completion (file was truncated mid-template-literal)
+- `scripts/supabase_all_tables.sql` — single-shot schema for all 5 tables:
+  `cis_scores`, `macro_briefs`, `wallet_profiles`, `leads`, `vault_deposit_intents`
+- email-validator added to `requirements.txt` (fixes Railway crash on pydantic EmailStr)
+- Final dist build: `main-29EOrMLX.js` (252KB), `ScoreAnalytics-DERPRYzc.js` (401KB lazy)
 
-## Task matrix — Week 3–4
+**Blocked — waiting on Jazz:**
+- `git push origin main` — 11 commits pending since `307444f` (last pushed)
+- Supabase: run `scripts/supabase_all_tables.sql`, add `SUPABASE_URL` + `SUPABASE_KEY`
+  (service_role) to Railway env vars
+- CoinGecko Pro key: verify `COINGECKO_API_KEY` set in Railway (CIS universe + macro-pulse
+  currently return empty — likely missing key)
+- Nic referral link: `https://looloomi.ai/strategy.html?ref=nic`
 
-### Seth / Austin (Claude Cowork)
+**Blocked — waiting on Minimax:**
+- `git pull` + align `cis_v4_engine.py` grade thresholds to v4.1 (A+≥85)
+- Freqtrade dry run: `start_dry_run.sh` + confirm CIS cache writer
+
+## Production health (as of 2026-03-29)
+
+- Railway: **ACTIVE** (commit `307444f`). 11 newer commits pending local push.
+- CIS universe: **EMPTY** — Mac Mini not pushing, Railway CIS scoring returning empty
+  (CoinGecko API key likely missing)
+- DeFi overview: **LIVE** — DeFiLlama returns $92B TVL, L2 $7B, RWA $24B
+- Macro Pulse: **DEGRADED** — BTC/FNG/global all returning zeros
+- Signal Feed: **DEGRADED** — signals generate but with no market data backing
+- Supabase: project exists (`soupjamxlfsmgmmtoeok`) but env vars not in Railway
+
+## Codebase metrics
+
+- Backend: 3,157 lines across 11 routers (`src/api/routers/`)
+- Frontend: 23 components (`dashboard/src/components/`), 916 lines in `App.jsx`
+- CIS provider: `cis_provider.py` calculates scores for 65+ assets
+- 60 files changed, +8,449 / -345 lines since last deployed base (`b36e1d4`)
+
+## Task matrix — Week 4 (Mar 30 – Apr 5)
+
+### Phase 1: Get production online (Jazz P0 → everyone unblocked)
+
+| # | Owner | Task | Est. |
+|---|-------|------|------|
+| 1 | Jazz | `git push origin main` | 5min |
+| 2 | Jazz | Run `scripts/supabase_all_tables.sql` in Supabase SQL Editor | 5min |
+| 3 | Jazz | Railway → Variables: `SUPABASE_URL`, `SUPABASE_KEY` (service_role) | 5min |
+| 4 | Jazz | Railway → Variables: verify `COINGECKO_API_KEY` is set | 5min |
+| 5 | Minimax | `git pull` + update grade thresholds to v4.1 | 30min |
+| 6 | Minimax | Verify `cis_push.py` POSTs correctly, confirm scores in Redis | 30min |
+| 7 | Seth | Post-deploy verify: CIS universe populated, MKR/POLYX data, response <2s | 1h |
+
+### Phase 2: User features (Seth / Austin)
+
 | Priority | Task | Est. | Depends on |
 |----------|------|------|------------|
-| P0 | Post-deploy verify: MKR/POLYX data, response time regression | 1h | Jazz git push |
-| P0 | User auth + wallet connect (Supabase Auth + Solana wallet adapter) | 3-4d | Jazz: Supabase URL + key |
-| P1 | Score history analytics — grade migration heatmap, sector rotation chart | 2d | Supabase live |
-| P1 | Portfolio allocation engine v1 — risk parity + CIS-weighted | 2-3d | CIS v4.1 stable |
-| P1 | Freqtrade CIS integration — wire live scores into CometCloudStrategy | 1d | Minimax: dry run active |
-| P2 | Trading agent P&L dashboard — connect Freqtrade metrics to strategy page | 2d | Freqtrade running |
-| P2 | Agent JSON API pagination + rate limiting (production hardening) | 1d | — |
-| P2 | WebSocket reconnect logic + heartbeat for real-time CIS push | 0.5d | — |
-| P3 | Mobile/H5 second pass — AssetRadar 30-asset horizontal scroll, LAS tooltip | 1d | — |
+| P0 | Wallet connect E2E test (Phantom devnet) → fix any auth flow bugs | 1d | Phase 1 complete |
+| P1 | My Portfolio view — watched assets, personalized CIS alerts, P&L tracking | 3d | Wallet connect working |
+| P1 | Freqtrade CIS integration — wire live scores into CometCloudStrategy | 1d | Minimax dry run active |
+| P1 | Score history: verify ScoreAnalytics heatmap populates after 24h of pushes | 0.5d | Supabase + Mac Mini |
+| P2 | Trading Agent P&L dashboard — Freqtrade metrics → strategy page | 2d | Freqtrade running |
+| P2 | Share card: og:image endpoint for Twitter/WeChat link previews | 1d | — |
+| P3 | Performance audit: Lighthouse score, lazy-load remaining heavy components | 1d | — |
+
+### Phase 3: Distribution (Jazz + Nic)
+
+| Priority | Task | Owner | Depends on |
+|----------|------|-------|------------|
+| P0 | Strategy.html walkthrough with Nic — collect institutional feedback | Jazz + Nic | Phase 1 deploy |
+| P1 | Wallet connect scope decision: Phantom only vs multi-wallet, custodial? | Jazz | — |
+| P1 | Identify 3-5 target family offices / HNW for soft intro | Nic | strategy reviewed |
+| P1 | Seed investor deck draft — positioning, fee, AUM targets | Jazz + Seth | strategy reviewed |
+| P2 | OSL stablecoin integration timeline — issuer API availability | Jazz | — |
+| P2 | HK SFC Type 9 license / compliance advisor engagement | Jazz | — |
+| P2 | IB association conference mapping (Q2 2026) | Nic | — |
 
 ### Minimax (Mac Mini)
+
 | Priority | Task | Est. | Depends on |
 |----------|------|------|------------|
-| P0 | `git pull` looloomi-ai → update `cis_v4_engine.py` grade thresholds to v4.1 (A+≥85) | 0.5h | Jazz push lands |
-| P0 | Verify `cis_push.py` still POSTs correctly after backend changes | 0.5h | — |
-| P0 | Freqtrade dry run activation: run `start_dry_run.sh`, confirm CIS cache writer | 1h | — |
+| P0 | Freqtrade dry run: `start_dry_run.sh`, confirm CIS cache writer | 1h | — |
 | P1 | Add LAS calculation to local engine output (match Railway schema) | 2h | — |
 | P1 | Macro Brief pipeline stability — LM Studio (Qwen3 35B) crash recovery | 1d | — |
-| P2 | DeFiLlama TVL refresh cadence: reduce from 30min to 15min for F pillar freshness | 0.5h | — |
-
-### Jazz (决策 + 外部)
-| Priority | Task | Depends on |
-|----------|------|------------|
-| P0 | `git push origin main` from local (GitHub auth needed) | — |
-| P0 | Supabase project creation → share URL + anon key + service key | — |
-| P0 | Confirm COINGECKO_API_KEY is set in Railway env vars | — |
-| P1 | Review strategy.html with Nic — collect feedback, confirm messaging | strategy.html deployed |
-| P1 | Decide wallet connect scope: Phantom only vs multi-wallet, custodial option? | — |
-| P1 | OSL stablecoin integration timeline — confirm issuer API availability | — |
-| P2 | HK SFC Type 9 license status / compliance advisor engagement | — |
-| P2 | Seed investor deck — positioning, fee structure, AUM targets | strategy.html stable |
-
-### Nic (网络 + 渠道)
-| Priority | Task | Depends on |
-|----------|------|------------|
-| P1 | Review strategy.html demo — feedback on positioning for institutional audience | Jazz schedules walkthrough |
-| P1 | Identify 3-5 target family offices / HNW for soft intro | strategy.html reviewed |
-| P2 | IB association channel mapping — which conferences Q2 2026 | — |
-| P2 | Feedback loop: what objections do institutional LPs raise re: AI-curated crypto? | — |
+| P2 | DeFiLlama TVL refresh: 30min → 15min for F pillar freshness | 0.5h | — |
 
 ## Critical path
 
 ```
-Jazz: git push + Supabase keys + CG Pro key
-  ├─→ Railway redeploy → verify MKR/POLYX + response time
-  ├─→ Minimax: pull + align v4.1 thresholds + Freqtrade dry run
-  ├─→ Seth: Supabase Auth + wallet connect (3-4d)
-  │     └─→ Score history analytics (2d)
-  │           └─→ Portfolio allocation engine v1 (2-3d)
-  └─→ Jazz + Nic: strategy.html walkthrough → soft intros
-        └─→ Seed investor deck
+Jazz: git push + Supabase SQL + env vars + CG Pro key
+  ├─→ Railway redeploy → Seth: verify CIS universe + macro-pulse + signals
+  ├─→ Minimax: pull + v4.1 align + Freqtrade dry run
+  │     └─→ Seth: Freqtrade CIS integration (1d)
+  │           └─→ Trading Agent P&L dashboard (2d)
+  ├─→ Seth: wallet connect E2E (1d) → My Portfolio view (3d)
+  │     └─→ Share card og:image (1d)
+  └─→ Jazz + Nic: strategy.html review → seed investor deck
+        └─→ Family office soft intros
 ```
 
 ---
