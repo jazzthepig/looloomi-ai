@@ -356,7 +356,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
-          background: "rgba(13,32,56,0.5)", flexWrap: "wrap", gap: 10,
+          background: "rgba(13,32,56,0.5)", gap: 10, overflow: "hidden",
         }}>
           {/* Title */}
           <div style={{
@@ -374,9 +374,9 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, overflowX: "auto", scrollbarWidth: "none", minWidth: 0 }}>
             {/* Category filters */}
-            <div style={{ display: "flex", gap: 4 }}>
+            <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
               {FILTERS.map(f => (
                 <button key={f.id} onClick={() => setActiveFilter(f.id)} style={{
                   fontFamily: FONTS.display, fontSize: 10, fontWeight: 600,
@@ -392,7 +392,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
             </div>
 
             {/* Sort selector */}
-            <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 3, alignItems: "center", flexShrink: 0 }}>
               <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, letterSpacing: "0.1em", marginRight: 4 }}>SORT</span>
               {SORT_OPTS.map(s => (
                 <button key={s.id} onClick={() => toggleSort(s.id)} style={{
