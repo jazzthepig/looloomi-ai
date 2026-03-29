@@ -14,7 +14,7 @@
  *   Aggressive    — min grade C+, max 20 assets, 30% cap
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { T, FONTS } from "../tokens";
 
 const PA_CSS = `
@@ -207,6 +207,31 @@ export default function PortfolioAllocation({ universe = [] }) {
     else next.add(cls);
     setSelectedClasses(next);
   };
+
+  const exportCSV = useCallback(() => {
+    if (!allocations.length) return;
+    const header = "Rank,Symbol,Name,Class,CIS Score,Grade,Signal,Weight (%)\n";
+    const rows = allocations.map((a, i) =>
+      [
+        i + 1,
+        a.symbol,
+        `"${(a.name || "").replace(/"/g, "'")}"`,
+        a.asset_class || "",
+        (a.cis_score || 0).toFixed(1),
+        a.grade || "",
+        a.signal || "NEUTRAL",
+        (a.weight * 100).toFixed(2),
+      ].join(",")
+    ).join("\n");
+    const csv = header + rows;
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `cometcloud-portfolio-${strategy.toLowerCase().replace(/ /g, "-")}-${PRESETS[preset].label.toLowerCase()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [allocations, strategy, preset]);
 
   if (!universe.length) return null;
 
@@ -516,9 +541,25 @@ export default function PortfolioAllocation({ universe = [] }) {
                 <span style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.body }}>
                   {strategy} · {PRESETS[preset].label} · {allocations.length} positions
                 </span>
-                <span style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.mono }}>
-                  Σ {(allocations.reduce((s, a) => s + a.weight, 0) * 100).toFixed(1)}%
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.mono }}>
+                    Σ {(allocations.reduce((s, a) => s + a.weight, 0) * 100).toFixed(1)}%
+                  </span>
+                  <button
+                    onClick={exportCSV}
+                    title="Export allocation as CSV"
+                    style={{
+                      padding: "3px 9px", borderRadius: 4, cursor: "pointer",
+                      border: `1px solid rgba(200,168,75,0.25)`,
+                      background: "rgba(200,168,75,0.06)",
+                      color: "#C8A84B", fontSize: 9,
+                      fontFamily: FONTS.display, fontWeight: 700,
+                      letterSpacing: "0.06em", transition: "all 0.15s",
+                    }}
+                  >
+                    ↓ CSV
+                  </button>
+                </div>
               </div>
             </div>
           )}
