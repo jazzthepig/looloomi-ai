@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   RefreshCw, TrendingUp, Shield, Users, DollarSign,
-  Activity, ArrowUpRight, ArrowDownRight, Globe
+  Activity, ArrowUpRight, ArrowDownRight, Globe, ExternalLink, Zap,
+  CheckCircle, AlertCircle
 } from "lucide-react";
 import BottomSheet from "./ui/BottomSheet";
 import { T, FONTS } from "../tokens";
+import { useAuth, shortAddr } from "../context/AuthContext.jsx";
+import { sendVaultDepositMemo } from "../lib/solanaVault.js";
 
 /* ─── Sample Funds Data ──────────────────────────────────────────────── */
 /* Data fetched from /api/v1/vault/funds API - real verified GPs only */
@@ -42,6 +45,7 @@ const CSS = `
 `;
 
 export default function VaultPage({ activeTab, setActiveTab, isSection = false }) {
+  const { isConnected, address, connect } = useAuth();
   const [funds, setFunds] = useState(SAMPLE_FUNDS);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState("All");
@@ -49,6 +53,14 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
   const [sortBy, setSortBy] = useState("total");
   const [selectedFund, setSelectedFund] = useState(null);
   const [fetchError, setFetchError] = useState(null);
+  const [partnerVaults, setPartnerVaults] = useState([]);
+  const [vaultsLoading, setVaultsLoading] = useState(true);
+  // Deposit intent modal state
+  const [depositTarget, setDepositTarget] = useState(null); // { fund, vault? }
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositState, setDepositState] = useState("idle"); // idle | signing | confirming | success | error
+  const [depositResult, setDepositResult] = useState(null); // { signature, explorerUrl }
+  const [depositError, setDepositError] = useState(null);
 
   // Fetch GP data from API
   useEffect(() => {
@@ -58,7 +70,6 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
         if (!res.ok) throw new Error(`API error: ${res.status}`);
         const json = await res.json();
         if (json.data && json.data.length > 0) {
-          // Map API data to match frontend structure
           const mapped = json.data.map((f, idx) => ({
             ...f,
             id: f.id || `gp-${idx}`,
@@ -72,7 +83,6 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
           }));
           setFunds(mapped);
         } else {
-          // Empty data is not an error - just show empty state
           setFunds([]);
         }
       } catch (err) {
@@ -86,10 +96,100 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
     fetchFunds();
   }, []);
 
+  // Fetch partner vaults (Drift on-chain)
+  useEffect(() => {
+    const fetchPartnerVaults = async () => {
+      try {
+        const res = await fetch('/api/v1/vault/partner-vaults');
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const json = await res.json();
+        setPartnerVaults(json.data || []);
+      } catch (err) {
+        console.warn('Partner vaults API failed:', err);
+        setPartnerVaults([]);
+      } finally {
+        setVaultsLoading(false);
+      }
+    };
+    fetchPartnerVaults();
+  }, []);
+
   const filteredFunds = funds
     .filter(f => filterType === "All" || f.strategy === filterType)
     .filter(f => filterLocation === "All" || f.location === filterLocation)
     .sort((a, b) => b.scores[sortBy] - a.scores[sortBy]);
+
+  // ── Deposit intent handler ──────────────────────────────────────────────────
+  const handleDepositIntent = useCallback(async () => {
+    if (!depositTarget || !depositAmount || isNaN(Number(depositAmount))) return;
+    const amount = Number(depositAmount);
+    if (amount <= 0) return;
+
+    const vaultAddress = depositTarget.vault?.vaultAddress || depositTarget.fund?.driftVault;
+    const partner      = depositTarget.vault?.partner || depositTarget.fund?.name;
+    const vaultId      = depositTarget.vault?.id || depositTarget.fund?.id;
+
+    if (!vaultAddress) {
+      setDepositError("No on-chain vault address configured for this fund.");
+      setDepositState("error");
+      return;
+    }
+
+    try {
+      setDepositState("signing");
+      setDepositError(null);
+
+      // 1. Send on-chain memo tx (attribution)
+      const { signature, explorerUrl } = await sendVaultDepositMemo({
+        walletAddress: address,
+        vaultAddress,
+        partner,
+        amountUsdc: amount,
+      });
+
+      setDepositState("confirming");
+
+      // 2. Record intent on backend
+      try {
+        await fetch("/api/v1/vault/deposit-intent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wallet_address: address,
+            vault_id:       vaultId,
+            vault_address:  vaultAddress,
+            partner,
+            amount_usdc:    amount,
+            tx_signature:   signature,
+            memo_data:      { source: "cometcloud", action: "vault_deposit_intent" },
+          }),
+        });
+      } catch (e) {
+        // Backend record failure is non-fatal — memo is on-chain regardless
+        console.warn("Backend intent record failed:", e);
+      }
+
+      setDepositResult({ signature, explorerUrl, partner, amount });
+      setDepositState("success");
+    } catch (err) {
+      console.error("Deposit memo failed:", err);
+      setDepositError(err.message || "Transaction failed. Please try again.");
+      setDepositState("error");
+    }
+  }, [depositTarget, depositAmount, address]);
+
+  const openDepositModal = (fund, vault = null) => {
+    setDepositTarget({ fund, vault });
+    setDepositAmount("");
+    setDepositState("idle");
+    setDepositResult(null);
+    setDepositError(null);
+  };
+
+  const closeDepositModal = () => {
+    setDepositTarget(null);
+    setDepositState("idle");
+  };
 
   const formatAUM = (val) => {
     if (typeof val === 'string') return val;
@@ -442,9 +542,395 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                   </div>
                 </div>
               )}
+
+              {/* ── Auth-gated Allocate CTA ── */}
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+                {isConnected ? (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ fontSize: 10, color: T.muted }}>
+                      Connected as <span style={{ color: "#C8A84B", fontFamily: "'JetBrains Mono', monospace" }}>{shortAddr(address)}</span>
+                    </div>
+                    <button
+                      style={{
+                        padding: "8px 20px", borderRadius: 6, fontSize: 12, fontWeight: 700,
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        background: "linear-gradient(135deg, rgba(200,168,75,0.15) 0%, rgba(200,168,75,0.08) 100%)",
+                        border: "1px solid rgba(200,168,75,0.4)", color: "#C8A84B",
+                        cursor: "pointer", letterSpacing: "0.06em",
+                        transition: "all 0.2s ease",
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(200,168,75,0.2)"; e.currentTarget.style.borderColor = "rgba(200,168,75,0.6)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(200,168,75,0.15) 0%, rgba(200,168,75,0.08) 100%)"; e.currentTarget.style.borderColor = "rgba(200,168,75,0.4)"; }}
+                      onClick={() => openDepositModal(selectedFund)}
+                    >
+                      Express Interest
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "10px 14px", borderRadius: 8,
+                    background: "rgba(56,148,210,0.05)", border: "1px solid rgba(56,148,210,0.15)",
+                  }}>
+                    <span style={{ fontSize: 11, color: T.t2, fontFamily: "'Exo 2', sans-serif" }}>
+                      Connect wallet to express interest
+                    </span>
+                    <button
+                      onClick={connect}
+                      style={{
+                        padding: "6px 14px", borderRadius: 6, fontSize: 11, fontWeight: 700,
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        background: "rgba(56,148,210,0.12)", border: "1px solid rgba(56,148,210,0.30)",
+                        color: "#7AAEC8", cursor: "pointer", letterSpacing: "0.05em",
+                      }}
+                    >
+                      Connect Wallet
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </BottomSheet>
+
+        {/* ── Deposit Intent Modal ─────────────────────────────────────── */}
+        {depositTarget && (
+          <div style={{
+            position: "fixed", inset: 0, zIndex: 100,
+            background: "rgba(2,2,8,0.85)", backdropFilter: "blur(12px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "20px",
+          }}
+            onClick={e => { if (e.target === e.currentTarget) closeDepositModal(); }}
+          >
+            <div style={{
+              width: "100%", maxWidth: 440,
+              background: "rgba(10,18,36,0.97)",
+              border: "1px solid rgba(56,148,210,0.18)",
+              borderRadius: 14, padding: "28px 28px 24px",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+            }}>
+              {/* Header */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 9, color: T.violet, fontFamily: FONTS.display, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
+                  Deposit Intent · On-Chain Attribution
+                </div>
+                <div style={{ fontFamily: FONTS.display, fontWeight: 700, fontSize: 17, color: T.primary }}>
+                  {depositTarget.vault?.partner || depositTarget.fund?.name}
+                </div>
+                <div style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.mono, marginTop: 4 }}>
+                  {(depositTarget.vault?.vaultAddress || depositTarget.fund?.driftVault || "").slice(0,12)}…
+                </div>
+              </div>
+
+              {/* State: idle / signing / confirming */}
+              {(depositState === "idle" || depositState === "error") && (
+                <>
+                  {/* How it works callout */}
+                  <div style={{
+                    padding: "10px 14px", borderRadius: 8, marginBottom: 18,
+                    background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.18)",
+                    fontSize: 11, color: T.muted, fontFamily: FONTS.body, lineHeight: 1.6,
+                  }}>
+                    <strong style={{ color: T.violet, fontSize: 10, fontWeight: 700 }}>How it works:</strong><br />
+                    1. This signs a lightweight Solana Memo tx (~0.000005 SOL fee) tagging your wallet as a CometCloud depositor.<br />
+                    2. You then complete the actual USDC deposit on Drift's vault page.<br />
+                    3. BumbleBee can attribute your AUM contribution on-chain.
+                  </div>
+
+                  {/* Amount input */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.display, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>
+                      Intended Deposit (USDC)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="100"
+                      placeholder="e.g. 10000"
+                      value={depositAmount}
+                      onChange={e => setDepositAmount(e.target.value)}
+                      style={{
+                        width: "100%", boxSizing: "border-box",
+                        padding: "10px 14px", borderRadius: 8,
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(56,148,210,0.25)",
+                        color: T.primary, fontFamily: FONTS.mono, fontSize: 16,
+                        outline: "none",
+                      }}
+                    />
+                    <div style={{ fontSize: 9, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>
+                      This amount is recorded in the memo — not a commitment.
+                    </div>
+                  </div>
+
+                  {depositError && (
+                    <div style={{
+                      display: "flex", alignItems: "flex-start", gap: 8,
+                      padding: "10px 12px", borderRadius: 7, marginBottom: 14,
+                      background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
+                    }}>
+                      <AlertCircle size={13} color="#ef4444" style={{ flexShrink: 0, marginTop: 1 }} />
+                      <span style={{ fontSize: 11, color: "#ef4444", fontFamily: FONTS.body }}>{depositError}</span>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button onClick={closeDepositModal} style={{
+                      flex: 1, padding: "10px 0", borderRadius: 8, cursor: "pointer",
+                      border: `1px solid ${T.border}`, background: "transparent",
+                      color: T.muted, fontFamily: FONTS.display, fontWeight: 600, fontSize: 12,
+                    }}>
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDepositIntent}
+                      disabled={!depositAmount || Number(depositAmount) <= 0}
+                      style={{
+                        flex: 2, padding: "10px 0", borderRadius: 8, cursor: "pointer",
+                        border: "1px solid rgba(200,168,75,0.5)",
+                        background: "linear-gradient(135deg, rgba(200,168,75,0.18) 0%, rgba(200,168,75,0.08) 100%)",
+                        color: "#C8A84B", fontFamily: FONTS.display, fontWeight: 700, fontSize: 13,
+                        letterSpacing: "0.04em", opacity: (!depositAmount || Number(depositAmount) <= 0) ? 0.4 : 1,
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      Sign & Record On-Chain
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Signing / confirming */}
+              {(depositState === "signing" || depositState === "confirming") && (
+                <div style={{ textAlign: "center", padding: "28px 0" }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: "50%",
+                    border: `2px solid ${T.violet}30`,
+                    borderTop: `2px solid ${T.violet}`,
+                    animation: "spin 0.8s linear infinite",
+                    margin: "0 auto 16px",
+                  }} />
+                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                  <div style={{ fontFamily: FONTS.display, fontWeight: 700, fontSize: 14, color: T.primary, marginBottom: 6 }}>
+                    {depositState === "signing" ? "Waiting for Phantom…" : "Confirming on Solana…"}
+                  </div>
+                  <div style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.body }}>
+                    {depositState === "signing" ? "Approve the memo transaction in your wallet." : "Transaction submitted — awaiting confirmation."}
+                  </div>
+                </div>
+              )}
+
+              {/* Success */}
+              {depositState === "success" && depositResult && (
+                <div style={{ textAlign: "center", padding: "12px 0" }}>
+                  <CheckCircle size={40} color={T.green} style={{ margin: "0 auto 14px" }} />
+                  <div style={{ fontFamily: FONTS.display, fontWeight: 700, fontSize: 15, color: T.primary, marginBottom: 6 }}>
+                    Attribution Recorded
+                  </div>
+                  <div style={{ fontSize: 12, color: T.muted, fontFamily: FONTS.body, lineHeight: 1.6, marginBottom: 20 }}>
+                    Your deposit intent for <strong style={{ color: T.primary }}>${depositResult.amount.toLocaleString()} USDC</strong> to <strong style={{ color: T.primary }}>{depositResult.partner}</strong> is now on-chain.
+                    <br />Complete your deposit on Drift to finish.
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <a
+                      href={depositResult.explorerUrl}
+                      target="_blank" rel="noopener noreferrer"
+                      style={{
+                        display: "block", padding: "10px 0", borderRadius: 8,
+                        border: `1px solid ${T.violet}40`, background: `${T.violet}08`,
+                        color: T.violet, fontFamily: FONTS.display, fontWeight: 700, fontSize: 12,
+                        textDecoration: "none", letterSpacing: "0.04em",
+                      }}
+                    >
+                      View on Solscan ↗
+                    </a>
+                    <a
+                      href={`https://app.drift.trade/vaults/strategy-vaults/${depositTarget.vault?.vaultAddress || depositTarget.fund?.driftVault}`}
+                      target="_blank" rel="noopener noreferrer"
+                      style={{
+                        display: "block", padding: "10px 0", borderRadius: 8,
+                        border: "1px solid rgba(200,168,75,0.4)",
+                        background: "rgba(200,168,75,0.08)",
+                        color: "#C8A84B", fontFamily: FONTS.display, fontWeight: 700, fontSize: 12,
+                        textDecoration: "none", letterSpacing: "0.04em",
+                      }}
+                    >
+                      Deposit on Drift →
+                    </a>
+                    <button onClick={closeDepositModal} style={{
+                      padding: "8px 0", borderRadius: 8, cursor: "pointer",
+                      border: `1px solid ${T.border}`, background: "transparent",
+                      color: T.muted, fontFamily: FONTS.display, fontSize: 11,
+                    }}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Partner Vaults — On-Chain ───────────────────────────────── */}
+        <div style={{ marginTop: 28 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <Zap size={14} color={T.violet} />
+            <span style={{ fontFamily: FONTS.display, fontSize: 14, fontWeight: 700, color: T.primary, letterSpacing: "-0.01em" }}>
+              Partner Vaults — On-Chain
+            </span>
+            <span style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: "0.12em",
+              color: T.violet, border: `1px solid ${T.violet}40`,
+              padding: "2px 7px", borderRadius: 3,
+            }}>DRIFT · SOLANA</span>
+          </div>
+
+          {vaultsLoading ? (
+            <div style={{ fontSize: 12, color: T.muted, fontFamily: FONTS.body, padding: "12px 0" }}>
+              Loading on-chain vaults…
+            </div>
+          ) : partnerVaults.length === 0 ? (
+            <div style={{ fontSize: 12, color: T.muted, fontFamily: FONTS.body }}>No partner vaults available.</div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 14 }}>
+              {partnerVaults.map(vault => {
+                const oc = vault.onChain || {};
+                const isLive = oc.live === true;
+                const formatUsd = (v) => {
+                  if (!v) return "—";
+                  const n = Number(v);
+                  if (isNaN(n)) return "—";
+                  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
+                  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
+                  return `$${n.toFixed(0)}`;
+                };
+                const fmtApy = (v) => {
+                  if (!v) return "—";
+                  const n = Number(v);
+                  if (isNaN(n)) return "—";
+                  return `${(n * 100).toFixed(2)}%`;
+                };
+                const fmtPct = (v) => {
+                  if (!v) return "—";
+                  const n = Number(v);
+                  if (isNaN(n)) return "—";
+                  if (n <= 1) return `${(n * 100).toFixed(1)}%`;
+                  return `${n.toFixed(1)}%`;
+                };
+                const shortAddr = (a) => a ? `${a.slice(0,6)}…${a.slice(-4)}` : "—";
+
+                return (
+                  <div key={vault.id} className="lm-card" style={{ padding: 18, position: "relative", overflow: "hidden" }}>
+                    {/* Ambient glow */}
+                    <div style={{
+                      position: "absolute", top: -40, right: -40,
+                      width: 120, height: 120, borderRadius: "50%",
+                      background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)",
+                      pointerEvents: "none",
+                    }} />
+
+                    {/* Header row */}
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+                      <div>
+                        <div style={{ fontFamily: FONTS.display, fontWeight: 700, fontSize: 15, color: T.primary }}>
+                          {vault.partner}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+                          <span style={{ fontSize: 10, color: T.violet, fontFamily: FONTS.mono }}>{vault.protocol}</span>
+                          <span style={{ fontSize: 10, color: T.muted }}>·</span>
+                          <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>
+                            {shortAddr(vault.vaultAddress)}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+                          padding: "2px 7px", borderRadius: 3,
+                          background: isLive ? "rgba(0,217,138,0.10)" : "rgba(245,158,11,0.10)",
+                          color: isLive ? T.green : T.amber,
+                          border: `1px solid ${isLive ? T.green : T.amber}40`,
+                        }}>
+                          {isLive ? "LIVE" : "PENDING"}
+                        </span>
+                        <span style={{ fontSize: 9, color: T.muted, fontFamily: FONTS.mono }}>{vault.platform}</span>
+                      </div>
+                    </div>
+
+                    {/* Stats grid */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 14 }}>
+                      {[
+                        { label: "TVL", value: formatUsd(oc.tvlUsd) },
+                        { label: "APY Est.", value: fmtApy(oc.apy) },
+                        { label: "Depositors", value: oc.depositors ?? "—" },
+                        { label: "Mgmt Fee", value: fmtPct(oc.managementFee) },
+                        { label: "Perf Fee", value: fmtPct(oc.profitShare) },
+                        { label: "Redeem", value: oc.redeemPeriod ? `${Math.round(oc.redeemPeriod / 86400)}d` : "—" },
+                      ].map((item, i) => (
+                        <div key={i}>
+                          <div style={{ fontSize: 9, color: T.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>
+                            {item.label}
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>
+                            {item.value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Footer */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
+                        On-chain · Permissionless · Solana
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {isConnected && (
+                          <button
+                            onClick={() => openDepositModal(null, vault)}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 5,
+                              fontSize: 11, fontWeight: 700, color: "#C8A84B",
+                              fontFamily: FONTS.display, letterSpacing: "0.04em",
+                              padding: "5px 12px", borderRadius: 6, cursor: "pointer",
+                              border: "1px solid rgba(200,168,75,0.4)",
+                              background: "rgba(200,168,75,0.08)",
+                              transition: "all 0.15s ease",
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(200,168,75,0.18)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(200,168,75,0.08)"; }}
+                          >
+                            Deposit Intent
+                          </button>
+                        )}
+                        <a
+                          href={vault.vaultUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "flex", alignItems: "center", gap: 5,
+                            fontSize: 11, fontWeight: 700, color: T.violet,
+                            fontFamily: FONTS.display, letterSpacing: "0.04em",
+                            textDecoration: "none",
+                            padding: "5px 12px", borderRadius: 6,
+                            border: `1px solid ${T.violet}40`,
+                            background: `${T.violet}08`,
+                            transition: "all 0.15s ease",
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = `${T.violet}18`; e.currentTarget.style.borderColor = `${T.violet}70`; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = `${T.violet}08`; e.currentTarget.style.borderColor = `${T.violet}40`; }}
+                        >
+                          View on Drift <ExternalLink size={10} />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Score Breakdown Legend */}
         <div style={{ marginTop: 20, padding: 16, background: "rgba(13,32,56,0.6)", borderRadius: 10, border: `1px solid ${T.border}` }}>

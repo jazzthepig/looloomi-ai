@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { T, FONTS } from "../tokens";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -37,6 +37,231 @@ const Label = ({ children, color = T.t3 }) => (
 const Divider = () => (
   <div style={{ height: 1, background: T.border, margin: "0 auto", maxWidth: 1120 }} />
 );
+
+/* ── Investment ranges ────────────────────────────────────────────────────── */
+const RANGES = ["Under $100K", "$100K – $500K", "$500K – $2M", "$2M – $10M", "Above $10M", "Prefer not to say"];
+
+/* ── Lead Capture component ──────────────────────────────────────────────── */
+function LeadCapture() {
+  const [form, setForm] = useState({ name: "", email: "", organization: "", investment_range: "", message: "" });
+  const [ref, setRef] = useState(null);
+  const [state, setState] = useState("idle"); // idle | submitting | success | error
+  const [error, setError] = useState(null);
+
+  // Read referral code from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const r = params.get("ref");
+    if (r) setRef(r.toLowerCase().trim());
+  }, []);
+
+  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim()) return;
+    setState("submitting");
+    setError(null);
+    try {
+      const res = await fetch("/api/v1/leads/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, ref, source_page: "strategy" }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.detail || "Submission failed");
+      setState("success");
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
+      setState("error");
+    }
+  };
+
+  const inputStyle = {
+    width: "100%", boxSizing: "border-box",
+    padding: "11px 14px", borderRadius: 7,
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(255,255,255,0.10)",
+    color: T.t1, fontFamily: F.body, fontSize: 13,
+    outline: "none", transition: "border-color 0.15s",
+  };
+  const labelStyle = {
+    display: "block", fontFamily: F.mono, fontSize: 10,
+    letterSpacing: "0.12em", textTransform: "uppercase",
+    color: T.t3, marginBottom: 6,
+  };
+
+  return (
+    <section id="contact" style={{ maxWidth: 1120, margin: "0 auto", padding: "80px 32px 120px" }}>
+      {/* Divider */}
+      <div style={{ height: 1, background: T.border, marginBottom: 80 }} />
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "start" }}>
+
+        {/* Left — copy */}
+        <div>
+          <div style={{ fontFamily: F.mono, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: T.t3, marginBottom: 16 }}>
+            Apply for Access
+          </div>
+          <h2 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 400, color: T.t1, margin: "0 0 20px", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+            Ready to allocate with{" "}
+            <span style={{ fontStyle: "italic", color: "#c8a84b" }}>intelligence</span>?
+          </h2>
+          <p style={{ fontFamily: F.body, fontSize: 14, color: T.t2, lineHeight: 1.7, margin: "0 0 32px", maxWidth: 400 }}>
+            CometCloud is available to qualified institutional investors, family offices, and accredited individuals across Asia-Pacific. Submit your details and we'll follow up within 24 hours.
+          </p>
+
+          {/* What happens next */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {[
+              ["01", "We review your profile and investment range"],
+              ["02", "Schedule a live walkthrough of the platform"],
+              ["03", "Onboard and begin allocating through the Fund-of-Funds"],
+            ].map(([n, txt]) => (
+              <div key={n} style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                <div style={{ fontFamily: F.mono, fontSize: 11, color: "#c8a84b", fontWeight: 700, minWidth: 24, marginTop: 1 }}>{n}</div>
+                <div style={{ fontFamily: F.body, fontSize: 13, color: T.t2, lineHeight: 1.5 }}>{txt}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Referral badge */}
+          {ref && (
+            <div style={{
+              marginTop: 28, display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "7px 14px", borderRadius: 20,
+              background: "rgba(200,168,75,0.08)", border: "1px solid rgba(200,168,75,0.25)",
+            }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#c8a84b" }} />
+              <span style={{ fontFamily: F.mono, fontSize: 10, color: "#c8a84b", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                Referred via {ref}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Right — form */}
+        <div>
+          {state === "success" ? (
+            <div style={{
+              padding: "48px 32px", borderRadius: 12, textAlign: "center",
+              background: "rgba(0,217,138,0.04)", border: "1px solid rgba(0,217,138,0.15)",
+            }}>
+              <div style={{ fontSize: 32, marginBottom: 16 }}>✦</div>
+              <div style={{ fontFamily: F.serif, fontSize: 22, fontWeight: 400, color: T.t1, marginBottom: 12 }}>
+                We'll be in touch.
+              </div>
+              <div style={{ fontFamily: F.body, fontSize: 13, color: T.t2, lineHeight: 1.65 }}>
+                Your enquiry has been received. Expect a response within 24 hours.
+              </div>
+              <a href="app.html" style={{
+                display: "inline-block", marginTop: 24,
+                fontFamily: F.display, fontSize: 12, fontWeight: 700, letterSpacing: "0.06em",
+                color: "#fff", textDecoration: "none",
+                padding: "10px 24px", borderRadius: 6,
+                background: "linear-gradient(135deg, rgba(107,15,204,0.5), rgba(45,53,212,0.5))",
+                border: "1px solid rgba(107,15,204,0.3)",
+              }}>
+                Explore the Platform →
+              </a>
+            </div>
+          ) : (
+            <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              {/* Name + Email row */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Name *</label>
+                  <input required value={form.name} onChange={set("name")} placeholder="Your name" style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = "rgba(200,168,75,0.4)"}
+                    onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.10)"} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Email *</label>
+                  <input required type="email" value={form.email} onChange={set("email")} placeholder="you@fund.com" style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = "rgba(200,168,75,0.4)"}
+                    onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.10)"} />
+                </div>
+              </div>
+
+              {/* Organization */}
+              <div>
+                <label style={labelStyle}>Organization</label>
+                <input value={form.organization} onChange={set("organization")} placeholder="Fund name / Family office / Institution" style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = "rgba(200,168,75,0.4)"}
+                  onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.10)"} />
+              </div>
+
+              {/* Investment range */}
+              <div>
+                <label style={labelStyle}>Investment Range</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                  {RANGES.map(r => (
+                    <button key={r} type="button" onClick={() => setForm(f => ({ ...f, investment_range: r }))}
+                      style={{
+                        padding: "6px 12px", borderRadius: 5, cursor: "pointer", fontSize: 12,
+                        fontFamily: F.mono, fontWeight: 500,
+                        border: `1px solid ${form.investment_range === r ? "rgba(200,168,75,0.5)" : "rgba(255,255,255,0.09)"}`,
+                        background: form.investment_range === r ? "rgba(200,168,75,0.10)" : "transparent",
+                        color: form.investment_range === r ? "#c8a84b" : T.t3,
+                        transition: "all 0.12s",
+                      }}
+                    >{r}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Message */}
+              <div>
+                <label style={labelStyle}>Message <span style={{ opacity: 0.5 }}>(optional)</span></label>
+                <textarea value={form.message} onChange={set("message")} rows={3}
+                  placeholder="Questions, timeline, specific focus areas..."
+                  style={{ ...inputStyle, resize: "vertical", minHeight: 80, lineHeight: 1.55 }}
+                  onFocus={e => e.target.style.borderColor = "rgba(200,168,75,0.4)"}
+                  onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.10)"} />
+              </div>
+
+              {error && (
+                <div style={{ padding: "10px 14px", borderRadius: 6, background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", fontSize: 12, color: "#f87171", fontFamily: F.body }}>
+                  {error}
+                </div>
+              )}
+
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <button type="submit" disabled={state === "submitting"}
+                  style={{
+                    flex: 1, padding: "13px 0", borderRadius: 8, cursor: "pointer",
+                    fontFamily: F.display, fontSize: 14, fontWeight: 700, letterSpacing: "0.04em",
+                    color: "#fff",
+                    background: "linear-gradient(135deg, rgba(107,15,204,0.55), rgba(45,53,212,0.55))",
+                    border: "1px solid rgba(107,15,204,0.35)",
+                    opacity: state === "submitting" ? 0.6 : 1, transition: "all 0.2s",
+                  }}>
+                  {state === "submitting" ? "Sending…" : "Submit Enquiry"}
+                </button>
+                <a href="app.html" style={{
+                  fontFamily: F.display, fontSize: 12, fontWeight: 700, color: T.t2,
+                  textDecoration: "none", letterSpacing: "0.04em", padding: "13px 20px",
+                  borderRadius: 8, border: `1px solid ${T.border}`, transition: "all 0.15s",
+                  whiteSpace: "nowrap",
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.color = T.t1; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = T.t2; e.currentTarget.style.borderColor = T.border; }}
+                >
+                  Open Platform →
+                </a>
+              </div>
+
+              <div style={{ fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.06em", lineHeight: 1.6 }}>
+                For qualified investors only. CometCloud AI does not hold an investment advisory licence.
+                All strategy outputs use positioning language only. Information shared is treated as confidential.
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 /* ── Stat pill ───────────────────────────────────────────────────────────── */
 const Stat = ({ label, value, color = T.t1, sub }) => (
@@ -673,50 +898,8 @@ export default function StrategyPage() {
 
         <Divider />
 
-        {/* ══ SECTION 7: CTA ════════════════════════════════════════════════ */}
-        <Section style={{ textAlign: "center", paddingBottom: 120 }}>
-          <h2 style={{
-            fontFamily: F.serif, fontSize: 38, fontWeight: 400,
-            color: T.t1, margin: "0 0 16px", letterSpacing: "-0.02em",
-          }}>
-            Ready to See the Full Platform?
-          </h2>
-          <p style={{
-            fontFamily: F.body, fontSize: 14, color: T.t2,
-            maxWidth: 480, margin: "0 auto 36px", lineHeight: 1.65,
-          }}>
-            Schedule a walkthrough of the CIS scoring engine, live market intelligence,
-            and investment channel allocation. Available for qualified institutional investors
-            and family offices.
-          </p>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
-            <a href="app.html" style={{
-              fontFamily: F.display, fontSize: 14, fontWeight: 700,
-              color: "#fff", textDecoration: "none", letterSpacing: "0.04em",
-              padding: "14px 32px", borderRadius: 8,
-              background: "linear-gradient(135deg, rgba(107,15,204,0.6), rgba(45,53,212,0.6))",
-              border: "1px solid rgba(107,15,204,0.3)",
-              transition: "all 0.2s",
-            }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-1px)"}
-              onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-            >
-              Open Platform
-            </a>
-            <a href="mailto:jazz@cometcloud.ai" style={{
-              fontFamily: F.display, fontSize: 14, fontWeight: 700,
-              color: T.t2, textDecoration: "none", letterSpacing: "0.04em",
-              padding: "14px 32px", borderRadius: 8,
-              border: `1px solid ${T.border}`,
-              transition: "all 0.2s",
-            }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)"; e.currentTarget.style.color = T.t1; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.t2; }}
-            >
-              Contact Us
-            </a>
-          </div>
-        </Section>
+        {/* ══ SECTION 7: LEAD CAPTURE ══════════════════════════════════════ */}
+        <LeadCapture />
 
         {/* ══ FOOTER ════════════════════════════════════════════════════════ */}
         <footer style={{

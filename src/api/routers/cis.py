@@ -5,7 +5,7 @@ Endpoints: /api/v1/cis/*, /api/v1/agent/cis, /ws/cis, /internal/cis-scores
 import os, json as _json, time, asyncio, re
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Header, WebSocket, WebSocketDisconnect, Response
+from fastapi import APIRouter, HTTPException, Header, WebSocket, WebSocketDisconnect, Response, Request
 
 from src.api.store import (
     redis_set, redis_get,
@@ -270,47 +270,110 @@ async def get_cis_backtest():
 
 # ── Agent API ─────────────────────────────────────────────────────────────────
 
+_AGENT_RATE_LIMIT: dict = {}  # ip → [timestamp, ...]
+_AGENT_RL_WINDOW  = 60   # seconds
+_AGENT_RL_MAX     = 30   # max requests per window per IP
+
 @router.get("/api/v1/agent/cis")
-async def agent_cis_endpoint():
+async def agent_cis_endpoint(
+    limit:       int = 40,    # max assets returned (1-100)
+    offset:      int = 0,     # pagination offset
+    asset_class: str = "",    # filter: L1/L2/DeFi/RWA/Infrastructure/Memecoin/TradFi
+    min_grade:   str = "",    # filter: A+/A/B+/B/C+/C/D/F
+    min_score:   float = 0.0, # filter: minimum cis_score
+    request: Request = None,
+):
     """
-    Agent-optimized CIS endpoint: minimal JSON, no HTML/comments.
-    Pillar keys: f/m/r/ss/a → F/M/O/S/A pillars.
+    Agent-optimized CIS endpoint — compact JSON for LLM/agent consumption.
+    Supports pagination, filtering, and per-IP rate limiting (30 req/min).
+
+    Query params:
+      limit       (int, 1-100, default 40)   — assets per page
+      offset      (int, default 0)           — pagination offset
+      asset_class (str)                      — filter by class
+      min_grade   (str)                      — minimum grade gate (e.g. B+)
+      min_score   (float)                    — minimum cis_score gate
     """
+    # Rate limiting — per client IP
+    if request:
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        hits = _AGENT_RATE_LIMIT.get(client_ip, [])
+        hits = [t for t in hits if now - t < _AGENT_RL_WINDOW]
+        if len(hits) >= _AGENT_RL_MAX:
+            raise HTTPException(status_code=429, detail="Rate limit: 30 req/min")
+        hits.append(now)
+        _AGENT_RATE_LIMIT[client_ip] = hits
+
+    # Clamp pagination params
+    limit  = max(1, min(limit, 100))
+    offset = max(0, offset)
+
     from src.data.cis.cis_provider import calculate_cis_universe
 
     cached = await redis_get()
     if cached and cached.get("universe"):
         universe = cached["universe"]
+        ts = cached.get("timestamp", datetime.now().isoformat())
+        regime = cached.get("macro", {}).get("regime", "Unknown")
     else:
         try:
             result = await calculate_cis_universe()
             universe = result.get("universe", [])
+            ts = result.get("timestamp", datetime.now().isoformat())
+            regime = result.get("macro", {}).get("regime", "Unknown")
         except Exception:
             universe = []
+            ts = datetime.now().isoformat()
+            regime = "Unknown"
+
+    # Filtering
+    _GRADE_ORDER = {"A+": 8, "A": 7, "B+": 6, "B": 5, "C+": 4, "C": 3, "D": 2, "F": 1}
+    min_grade_rank = _GRADE_ORDER.get(min_grade, 0)
+
+    filtered = []
+    for a in universe:
+        if asset_class and a.get("asset_class", "") != asset_class:
+            continue
+        sc = a.get("cis_score", a.get("score", 0)) or 0
+        if sc < min_score:
+            continue
+        if min_grade_rank and _GRADE_ORDER.get(a.get("grade", "F"), 1) < min_grade_rank:
+            continue
+        filtered.append(a)
+
+    total = len(filtered)
+    page  = filtered[offset: offset + limit]
 
     return {
-        "v":  "4.0",
-        "ts": cached.get("timestamp") if cached else datetime.now().isoformat(),
+        "v":      "4.1",
+        "ts":     ts,
+        "regime": regime,
+        "total":  total,
+        "offset": offset,
+        "limit":  limit,
         "assets": [
             {
-                "s":  a["symbol"],
-                "g":  a.get("grade", "?"),
-                "sc": a.get("cis_score", a.get("score", 0)),
-                "sg": a.get("signal", "?"),
-                "f":  _p(a, "f"),
-                "m":  _p(a, "m"),
-                "r":  _p(a, "r"),
-                "ss": _p(a, "s"),
-                "a":  _p(a, "a"),
+                "s":    a["symbol"],
+                "g":    a.get("grade", "?"),
+                "sc":   a.get("cis_score", a.get("score", 0)),
+                "sg":   a.get("signal", "?"),
+                "cls":  a.get("asset_class", ""),
+                "tier": a.get("data_tier", 2),
+                "f":    _p(a, "f"),
+                "m":    _p(a, "m"),
+                "r":    _p(a, "r"),
+                "ss":   _p(a, "s"),
+                "a":    _p(a, "a"),
+                "las":    a.get("las"),
+                "conf":   a.get("confidence"),
                 "ch30d":  a.get("change_30d"),
                 "ch7d":   a.get("change_7d"),
-                "vol":    a.get("volatility_30d"),
                 "mc":     a.get("market_cap"),
                 "vol24h": a.get("volume_24h"),
                 "tvl":    a.get("tvl"),
-                "conf":   a.get("confidence"),
             }
-            for a in universe
+            for a in page
         ],
     }
 
@@ -339,8 +402,34 @@ async def websocket_cis(websocket: WebSocket):
 
     await ws_manager.connect(websocket)
 
+    # Send current state immediately on connect
     if store.last_cis_broadcast:
         await websocket.send_json(store.last_cis_broadcast)
+
+    # Server-side heartbeat: send ping every 30s, expect pong within 10s.
+    # Cleans up stale connections from crashed Mac Mini scheduler.
+    _HEARTBEAT_INTERVAL = 30
+    _PONG_TIMEOUT       = 10
+    _pending_pong = False
+
+    async def _heartbeat():
+        nonlocal _pending_pong
+        while True:
+            await asyncio.sleep(_HEARTBEAT_INTERVAL)
+            try:
+                if _pending_pong:
+                    # Previous ping went unanswered — force close
+                    await websocket.close(code=1001, reason="Heartbeat timeout")
+                    return
+                await websocket.send_json({"type": "ping", "ts": time.time()})
+                _pending_pong = True
+                # Give client 10s to pong before next heartbeat check
+                await asyncio.sleep(_PONG_TIMEOUT)
+                # If still pending after pong window, close on next iteration
+            except Exception:
+                return
+
+    heartbeat_task = asyncio.create_task(_heartbeat())
 
     try:
         while True:
@@ -348,11 +437,14 @@ async def websocket_cis(websocket: WebSocket):
                 data = await websocket.receive_text()
                 if data == "ping":
                     await websocket.send_text("pong")
+                elif data == "pong" or data == '{"type":"pong"}':
+                    _pending_pong = False  # Heartbeat acknowledged
             except Exception:
                 break
     except Exception:
         pass
     finally:
+        heartbeat_task.cancel()
         ws_manager.disconnect(websocket)
 
 

@@ -21,6 +21,7 @@ export default defineConfig({
         app: resolve(__dirname, 'app.html'),
         quant: resolve(__dirname, 'quant.html'),
         strategy: resolve(__dirname, 'strategy.html'),
+        share: resolve(__dirname, 'share.html'),
       }
     }
   },

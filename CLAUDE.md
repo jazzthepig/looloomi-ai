@@ -72,6 +72,17 @@ tolerance for things that feel dead.
    other investor-facing content must not mention specific tech stack (FastAPI, Railway,
    Ollama, Qwen3, etc.), hardware specs, or internal architecture.
 
+4. **Mac Mini ↔ Railway interface contract.** All schema changes to the CIS push
+   interface (`/internal/cis-scores` POST body) MUST be documented in
+   `MINIMAX_SYNC.md` BEFORE code changes. This includes: field names, grade/signal
+   enumerations, pillar keys, asset_class values, timestamp format. No unilateral
+   changes — both sides must confirm.
+
+5. **Ownership boundaries.** Seth/Austin only modify `src/`, `dashboard/`, docs.
+   Minimax only modifies `/Volumes/CometCloudAI/cometcloud-local/`. Shadow/ is
+   read-only reference — never committed. When in doubt about who owns a change,
+   check `MINIMAX_SYNC.md` §1.
+
 ## Tech stack
 
 - **Frontend**: React + Tailwind CSS → Railway (auto-deploy via GitHub push)
@@ -235,17 +246,83 @@ git push origin main
 - vision.html nav: added "Strategy" link → strategy.html
 - `PROJECT_STATUS.md` — comprehensive real-state audit (能跑的 / 有问题的 / 还没做的)
 
+**Done (Week 3 cont. — Mar 23):**
+- CIS v4.1 continuous scoring: `_log_score()` + `_linear_interp()` replacing discrete
+  tier step functions — genuine differentiation across all 5 pillars
+- Unified absolute grading: A+≥85 → F<25 (both engines identical)
+- LAS (Liquidity-Adjusted Score): CIS × liquidity_multiplier × spread_penalty × confidence
+- Compliance sweep: all buy/sell signals → positioning-only language across 12+ files
+- AssetRadar expanded: 14 → 30 assets, 10 categories (L1/L2/DeFi/Infra/RWA/Meme/Gaming/AI/TradFi/Commodity)
+- Frontend: T1/T2 data tier badges, LAS column, confidence dots, signal text
+- `fetch_cg_markets()` fix: explicit coin IDs instead of top-250 (fixes MKR/POLYX no-data)
+- yfinance parallelization: 20 serial → 5 concurrent (asyncio.Semaphore)
+- Cache key hash fix in `data_layer.py` (md5-based, no truncation collision)
+- MKR reclassified DeFi → RWA in backend (matches frontend)
+- `CIS_METHODOLOGY.md` — complete index methodology spec for investors & agents
+
 **In progress / Blocked:**
 - Supabase project creation (Jazz — need URL + key → Railway env vars)
 - CoinGecko Pro key confirmation (Jazz — verify COINGECKO_API_KEY in Railway env)
 - Freqtrade dry run activation (Minimax — `git pull` + run start script)
+- Git push pending (Jazz — needs GitHub auth from local machine)
 
-**Next (Week 3–4):**
-- User auth + wallet connect (Supabase Auth + Solana wallet adapter — ~3-4 days)
-- Nic demo walkthrough (strategy.html is ready, need to review + polish with Jazz)
-- Freqtrade dry run → trading agent P&L data → wire into strategy page
-- Score history analytics (grade migration, sector rotation)
-- Portfolio allocation engine v1
+## Task matrix — Week 3–4
+
+### Seth / Austin (Claude Cowork)
+| Priority | Task | Est. | Depends on |
+|----------|------|------|------------|
+| P0 | Post-deploy verify: MKR/POLYX data, response time regression | 1h | Jazz git push |
+| P0 | User auth + wallet connect (Supabase Auth + Solana wallet adapter) | 3-4d | Jazz: Supabase URL + key |
+| P1 | Score history analytics — grade migration heatmap, sector rotation chart | 2d | Supabase live |
+| P1 | Portfolio allocation engine v1 — risk parity + CIS-weighted | 2-3d | CIS v4.1 stable |
+| P1 | Freqtrade CIS integration — wire live scores into CometCloudStrategy | 1d | Minimax: dry run active |
+| P2 | Trading agent P&L dashboard — connect Freqtrade metrics to strategy page | 2d | Freqtrade running |
+| P2 | Agent JSON API pagination + rate limiting (production hardening) | 1d | — |
+| P2 | WebSocket reconnect logic + heartbeat for real-time CIS push | 0.5d | — |
+| P3 | Mobile/H5 second pass — AssetRadar 30-asset horizontal scroll, LAS tooltip | 1d | — |
+
+### Minimax (Mac Mini)
+| Priority | Task | Est. | Depends on |
+|----------|------|------|------------|
+| P0 | `git pull` looloomi-ai → update `cis_v4_engine.py` grade thresholds to v4.1 (A+≥85) | 0.5h | Jazz push lands |
+| P0 | Verify `cis_push.py` still POSTs correctly after backend changes | 0.5h | — |
+| P0 | Freqtrade dry run activation: run `start_dry_run.sh`, confirm CIS cache writer | 1h | — |
+| P1 | Add LAS calculation to local engine output (match Railway schema) | 2h | — |
+| P1 | Macro Brief pipeline stability — LM Studio (Qwen3 35B) crash recovery | 1d | — |
+| P2 | DeFiLlama TVL refresh cadence: reduce from 30min to 15min for F pillar freshness | 0.5h | — |
+
+### Jazz (决策 + 外部)
+| Priority | Task | Depends on |
+|----------|------|------------|
+| P0 | `git push origin main` from local (GitHub auth needed) | — |
+| P0 | Supabase project creation → share URL + anon key + service key | — |
+| P0 | Confirm COINGECKO_API_KEY is set in Railway env vars | — |
+| P1 | Review strategy.html with Nic — collect feedback, confirm messaging | strategy.html deployed |
+| P1 | Decide wallet connect scope: Phantom only vs multi-wallet, custodial option? | — |
+| P1 | OSL stablecoin integration timeline — confirm issuer API availability | — |
+| P2 | HK SFC Type 9 license status / compliance advisor engagement | — |
+| P2 | Seed investor deck — positioning, fee structure, AUM targets | strategy.html stable |
+
+### Nic (网络 + 渠道)
+| Priority | Task | Depends on |
+|----------|------|------------|
+| P1 | Review strategy.html demo — feedback on positioning for institutional audience | Jazz schedules walkthrough |
+| P1 | Identify 3-5 target family offices / HNW for soft intro | strategy.html reviewed |
+| P2 | IB association channel mapping — which conferences Q2 2026 | — |
+| P2 | Feedback loop: what objections do institutional LPs raise re: AI-curated crypto? | — |
+
+## Critical path
+
+```
+Jazz: git push + Supabase keys + CG Pro key
+  ├─→ Railway redeploy → verify MKR/POLYX + response time
+  ├─→ Minimax: pull + align v4.1 thresholds + Freqtrade dry run
+  ├─→ Seth: Supabase Auth + wallet connect (3-4d)
+  │     └─→ Score history analytics (2d)
+  │           └─→ Portfolio allocation engine v1 (2-3d)
+  └─→ Jazz + Nic: strategy.html walkthrough → soft intros
+        └─→ Seed investor deck
+```
 
 ---
 
