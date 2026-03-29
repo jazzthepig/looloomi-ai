@@ -1117,4 +1117,11 @@ document.addEventListener('mousemove', e => {
   const x = (e.clientX / window.innerWidth  - 0.5);
   const y = (e.clientY / window.innerHeight - 0.5);
   document.querySelector('.bg-left').style.transform =
-    `translateY($
+    `translateY(${y * 25}px) translateX(${x * 15}px)`;
+  document.querySelector('.bg-right').style.transform =
+    `translateY(${y * -20}px) translateX(${x * -12}px)`;
+});
+
+</script>
+</body>
+</html>
