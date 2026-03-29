@@ -4,6 +4,7 @@ import IntelligencePage from "./components/IntelligencePage";
 import CISLeaderboard from "./components/CISLeaderboard";
 import VaultPage from "./components/VaultPage";
 import ProtocolIntelligence from "./components/ProtocolIntelligence";
+import PortfolioAllocation from "./components/PortfolioAllocation";
 import MobileApp from "./components/MobileApp";
 import WalletConnect from "./components/WalletConnect";
 import { T, FONTS } from "./tokens";
@@ -668,6 +669,9 @@ function CISContent() {
 
       {/* Cross-Asset Overview — zero additional fetches */}
       <CrossAssetView universe={cisUniverse} />
+
+      {/* Portfolio Builder — CIS-driven allocation engine */}
+      <PortfolioAllocation universe={cisUniverse} />
     </div>
   );
 }

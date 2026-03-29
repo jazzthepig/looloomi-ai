@@ -1166,27 +1166,90 @@ def calculate_cis_score(
     }
 
 
-def calculate_total_score(pillars: Dict[str, float], asset_class: str) -> Dict[str, Any]:
-    """Calculate weighted total CIS score with detailed breakdown."""
+def detect_regime(
+    btc_30d: float,
+    fng_value: int,
+    vix: Optional[float],
+    btc_dominance: Optional[float] = None,
+) -> str:
+    """
+    Classify macro regime from 4 signals.
+    Returns one of: Goldilocks / Risk-On / Easing / Neutral / Tightening / Risk-Off / Stagflation
+    Used to shift pillar weights in calculate_total_score().
+    """
+    vix  = vix  or 20.0
+    bdom = btc_dominance or 52.0
 
-    # Default weights
-    weights = {
-        "Crypto": {"F": 0.25, "M": 0.25, "O": 0.20, "S": 0.15, "A": 0.15},
-        "L1": {"F": 0.30, "M": 0.25, "O": 0.20, "S": 0.15, "A": 0.10},
-        "L2": {"F": 0.30, "M": 0.25, "O": 0.20, "S": 0.15, "A": 0.10},
-        "DeFi": {"F": 0.25, "M": 0.25, "O": 0.25, "S": 0.15, "A": 0.10},
-        "RWA": {"F": 0.35, "M": 0.20, "O": 0.20, "S": 0.15, "A": 0.10},
+    # Goldilocks: strong momentum + greed + calm vol
+    if btc_30d > 10 and fng_value > 60 and vix < 17:
+        return "Goldilocks"
+    # Pure Risk-On: positive momentum + greed (VIX moderate)
+    if btc_30d > 5 and fng_value > 55:
+        return "Risk-On"
+    # Stagflation: high vol + falling crypto + BTC dom surge (flight-to-quality)
+    if vix > 27 and btc_30d < -5 and bdom > 58:
+        return "Stagflation"
+    # Risk-Off: severe fear or crash
+    if btc_30d < -12 or fng_value < 28 or vix > 30:
+        return "Risk-Off"
+    # Tightening: elevated vol + compressed sentiment (rates up / liquidity withdrawal)
+    if vix > 21 and fng_value < 48:
+        return "Tightening"
+    # Easing: calm vol + recovering sentiment (liquidity returning)
+    if vix < 17 and fng_value > 45:
+        return "Easing"
+    return "Neutral"
+
+
+def calculate_total_score(
+    pillars: Dict[str, float],
+    asset_class: str,
+    regime: str = "Neutral",
+) -> Dict[str, Any]:
+    """Calculate weighted total CIS score with regime-aware pillar weights."""
+
+    # Base weights per asset class
+    _BASE_WEIGHTS: Dict[str, Dict[str, float]] = {
+        "Crypto":         {"F": 0.25, "M": 0.25, "O": 0.20, "S": 0.15, "A": 0.15},
+        "L1":             {"F": 0.30, "M": 0.25, "O": 0.20, "S": 0.15, "A": 0.10},
+        "L2":             {"F": 0.30, "M": 0.25, "O": 0.20, "S": 0.15, "A": 0.10},
+        "DeFi":           {"F": 0.25, "M": 0.25, "O": 0.25, "S": 0.15, "A": 0.10},
+        "RWA":            {"F": 0.35, "M": 0.20, "O": 0.20, "S": 0.15, "A": 0.10},
         "Infrastructure": {"F": 0.30, "M": 0.20, "O": 0.25, "S": 0.10, "A": 0.15},
-        "NFT": {"F": 0.15, "M": 0.25, "O": 0.15, "S": 0.30, "A": 0.15},
-        "Memecoin": {"F": 0.15, "M": 0.35, "O": 0.15, "S": 0.25, "A": 0.10},
-        "Gaming": {"F": 0.20, "M": 0.30, "O": 0.15, "S": 0.25, "A": 0.10},
-        "AI": {"F": 0.20, "M": 0.30, "O": 0.20, "S": 0.15, "A": 0.15},
-        "US Equity": {"F": 0.30, "M": 0.25, "O": 0.10, "S": 0.20, "A": 0.15},
-        "US Bond": {"F": 0.30, "M": 0.20, "O": 0.10, "S": 0.20, "A": 0.20},
-        "Commodity": {"F": 0.25, "M": 0.25, "O": 0.10, "S": 0.20, "A": 0.20},
+        "NFT":            {"F": 0.15, "M": 0.25, "O": 0.15, "S": 0.30, "A": 0.15},
+        "Memecoin":       {"F": 0.15, "M": 0.35, "O": 0.15, "S": 0.25, "A": 0.10},
+        "Gaming":         {"F": 0.20, "M": 0.30, "O": 0.15, "S": 0.25, "A": 0.10},
+        "AI":             {"F": 0.20, "M": 0.30, "O": 0.20, "S": 0.15, "A": 0.15},
+        "US Equity":      {"F": 0.30, "M": 0.25, "O": 0.10, "S": 0.20, "A": 0.15},
+        "US Bond":        {"F": 0.30, "M": 0.20, "O": 0.10, "S": 0.20, "A": 0.20},
+        "Commodity":      {"F": 0.25, "M": 0.25, "O": 0.10, "S": 0.20, "A": 0.20},
     }
 
-    w = weights.get(asset_class, weights["Crypto"])
+    # Regime multipliers — applied to base weights, then renormalized to sum=1.
+    # Philosophy:
+    #   Risk-On   → momentum + sentiment + alpha outperform; fundamentals matter less
+    #   Risk-Off  → fundamentals + risk-adjusted protection; sentiment suppressed
+    #   Tightening→ fundamentals dominate; momentum punished; risk-adj rises
+    #   Easing    → alpha + momentum rewarded; fundamentals secondary
+    #   Stagflation→ fundamentals + risk-adj paramount; sentiment & momentum penalized
+    #   Goldilocks→ balanced but alpha + sentiment elevated
+    _REGIME_MULT: Dict[str, Dict[str, float]] = {
+        "Goldilocks":  {"F": 0.90, "M": 1.10, "O": 0.90, "S": 1.15, "A": 1.25},
+        "Risk-On":     {"F": 0.85, "M": 1.20, "O": 0.85, "S": 1.20, "A": 1.25},
+        "Easing":      {"F": 0.90, "M": 1.15, "O": 0.95, "S": 1.10, "A": 1.20},
+        "Neutral":     {"F": 1.00, "M": 1.00, "O": 1.00, "S": 1.00, "A": 1.00},
+        "Tightening":  {"F": 1.25, "M": 0.85, "O": 1.20, "S": 0.80, "A": 1.05},
+        "Risk-Off":    {"F": 1.20, "M": 0.80, "O": 1.25, "S": 0.75, "A": 1.10},
+        "Stagflation": {"F": 1.30, "M": 0.75, "O": 1.25, "S": 0.70, "A": 1.00},
+    }
+
+    base = dict(_BASE_WEIGHTS.get(asset_class, _BASE_WEIGHTS["Crypto"]))
+    mult = _REGIME_MULT.get(regime, _REGIME_MULT["Neutral"])
+
+    # Apply multipliers and renormalize so weights always sum to 1.0
+    w = {k: base[k] * mult[k] for k in base}
+    total_w = sum(w.values())
+    w = {k: round(v / total_w, 4) for k, v in w.items()}
 
     # Handle None pillar values - replace with 0
     f_val = pillars.get("F") or 0
@@ -1424,22 +1487,19 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         if data:
             yf_data[sym] = data
 
-    # Macro regime determination
+    # Macro data fetch — VIX needed for regime detection + S pillar
+    macro_data_early = await fetch_macro_data()
+    live_vix = macro_data_early.get("vix")
+
+    # Macro regime determination — 7-state classifier using 4 signals
     btc_data = merged_markets.get("BTC", {})
     btc_30d = btc_data.get("change_30d", 0) or 0 if btc_data else 0
     fng_value = int(fng.get("value", 50) or 50) if fng else 50
-
-    if btc_30d > 5 and fng_value > 55:
-        regime = "Risk-On"
-    elif btc_30d < -10 or fng_value < 35:
-        regime = "Risk-Off"
-    else:
-        regime = "Neutral"
+    btc_dom = macro_data_early.get("btc_dominance")  # from fetch_macro_data CG global
+    regime = detect_regime(btc_30d, fng_value, live_vix, btc_dom)
 
     # Benchmarks for non-crypto scoring
     spy_30d = (yf_data.get("SPY", {}) or {}).get("change_30d", None)
-    macro_data_early = await fetch_macro_data()
-    live_vix = macro_data_early.get("vix")
 
     # v4.1: Pre-compute category median 30d change for S pillar divergence
     category_changes = {}  # {class: [change_30d, ...]}
@@ -1513,8 +1573,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         pillars = {k: v for k, v in pillars_result.items() if k != "breakdown"}
         breakdown = pillars_result.get("breakdown", {})
 
-        # Calculate total with weights
-        total_result = calculate_total_score(pillars, asset_class)
+        # Calculate total with regime-aware weights
+        total_result = calculate_total_score(pillars, asset_class, regime=regime)
         total_score = total_result["total_score"]
         weights = total_result["weights"]
         contributions = total_result["contributions"]
@@ -1587,6 +1647,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "signal": signal,
             "confidence": confidence,
             "data_tier": 2,  # Railway = Tier 2
+            "macro_regime": regime,
             "las": las_result["las"],
             "las_params": las_result["las_params"],
             "f": pillars["F"],

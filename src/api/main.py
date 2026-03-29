@@ -30,8 +30,9 @@ from src.api.routers.onchain import router as onchain_router
 from src.api.routers.macro import router as macro_router
 from src.api.routers.quant import router as quant_router
 from src.api.routers.auth import router as auth_router
+from src.api.routers.leads import router as leads_router
 
-app = FastAPI(title="Looloomi AI API", version="0.4.2")
+app = FastAPI(title="Looloomi AI API", version="0.4.3")
 
 app.add_middleware(GZipMiddleware, minimum_size=500)  # ~60% payload reduction for agents
 _frontend_origins = os.environ.get(
@@ -63,6 +64,7 @@ app.include_router(onchain_router)
 app.include_router(macro_router)
 app.include_router(quant_router)
 app.include_router(auth_router)
+app.include_router(leads_router)
 
 
 # ── Agent Discovery (A2A v0.3) ────────────────────────────────────────────────
