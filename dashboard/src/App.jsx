@@ -1,16 +1,28 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import MarketDashboard from "./components/MarketDashboard";
 import IntelligencePage from "./components/IntelligencePage";
 import CISLeaderboard from "./components/CISLeaderboard";
-import VaultPage from "./components/VaultPage";
-import ProtocolIntelligence from "./components/ProtocolIntelligence";
-import PortfolioAllocation from "./components/PortfolioAllocation";
-import { lazy, Suspense } from "react";
-const ScoreAnalytics = lazy(() => import("./components/ScoreAnalytics"));
-import MobileApp from "./components/MobileApp";
 import WalletConnect from "./components/WalletConnect";
-import MyPortfolio from "./components/MyPortfolio";
 import { T, FONTS } from "./tokens";
+
+/* ── Lazy-loaded secondary views (below fold / conditional) ── */
+const VaultPage = lazy(() => import("./components/VaultPage"));
+const ProtocolIntelligence = lazy(() => import("./components/ProtocolIntelligence"));
+const PortfolioAllocation = lazy(() => import("./components/PortfolioAllocation"));
+const ScoreAnalytics = lazy(() => import("./components/ScoreAnalytics"));
+const MobileApp = lazy(() => import("./components/MobileApp"));
+const MyPortfolio = lazy(() => import("./components/MyPortfolio"));
+
+/* ── Lazy-load fallback ──────────────────────────────────────────────────── */
+function SectionLoader() {
+  return (
+    <div style={{ padding: "48px 0", textAlign: "center" }}>
+      <div style={{ color: "rgba(199,210,254,0.2)", fontFamily: "monospace", fontSize: 11, letterSpacing: "0.1em" }}>
+        LOADING…
+      </div>
+    </div>
+  );
+}
 
 /* ── Mobile detection ─────────────────────────────────────────────────────── */
 function useIsMobile() {
@@ -347,7 +359,9 @@ function DesktopApp() {
 
         {/* Section 4: Protocol */}
         <section id="protocol" style={sectionStyle(1)}>
-          <ProtocolIntelligence />
+          <Suspense fallback={<SectionLoader />}>
+            <ProtocolIntelligence />
+          </Suspense>
         </section>
 
         {/* Section Separator */}
@@ -355,7 +369,9 @@ function DesktopApp() {
 
         {/* Section 5: Vault */}
         <section id="vault" style={sectionStyle(0)}>
-          <VaultPage isSection={true} />
+          <Suspense fallback={<SectionLoader />}>
+            <VaultPage isSection={true} />
+          </Suspense>
         </section>
 
         {/* Section Separator */}
@@ -371,7 +387,9 @@ function DesktopApp() {
 
         {/* Section 7: My Portfolio */}
         <section id="portfolio" style={sectionStyle(0)}>
-          <MyPortfolio cisUniverse={cisUniverse} />
+          <Suspense fallback={<SectionLoader />}>
+            <MyPortfolio cisUniverse={cisUniverse} />
+          </Suspense>
         </section>
 
       </div>
@@ -689,7 +707,9 @@ function CISContent({ onUniverseLoad }) {
       <CrossAssetView universe={cisUniverse} />
 
       {/* Portfolio Builder — CIS-driven allocation engine */}
-      <PortfolioAllocation universe={cisUniverse} />
+      <Suspense fallback={<SectionLoader />}>
+        <PortfolioAllocation universe={cisUniverse} />
+      </Suspense>
 
       {/* Score History Analytics — grade migration heatmap + sector rotation */}
       <div style={{ marginTop: 24, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "24px 28px" }}>
@@ -928,5 +948,5 @@ function QuantGPContent() {
 /* ── App: mobile/desktop router ─────────────────────────────────────────── */
 export default function App() {
   const isMobile = useIsMobile();
-  return isMobile ? <MobileApp /> : <DesktopApp />;
+  return isMobile ? <Suspense fallback={<SectionLoader />}><MobileApp /></Suspense> : <DesktopApp />;
 }
