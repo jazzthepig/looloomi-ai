@@ -9,6 +9,7 @@ import { lazy, Suspense } from "react";
 const ScoreAnalytics = lazy(() => import("./components/ScoreAnalytics"));
 import MobileApp from "./components/MobileApp";
 import WalletConnect from "./components/WalletConnect";
+import MyPortfolio from "./components/MyPortfolio";
 import { T, FONTS } from "./tokens";
 
 /* ── Mobile detection ─────────────────────────────────────────────────────── */
@@ -209,10 +210,12 @@ const SECTIONS = [
   { id: "protocol", label: "Protocol" },
   { id: "vault", label: "Vault" },
   { id: "quantgp", label: "Quant GP" },
+  { id: "portfolio", label: "My Portfolio" },
 ];
 
 function DesktopApp() {
   const [activeSection, setActiveSection] = useState("market");
+  const [cisUniverse, setCisUniverse] = useState([]);
   const sectionRefs = useRef({});
   const manualScrollRef = useRef(false);
 
@@ -336,7 +339,7 @@ function DesktopApp() {
 
         {/* Section 3: CIS */}
         <section id="cis" style={sectionStyle(0)}>
-          <CISContent />
+          <CISContent onUniverseLoad={setCisUniverse} />
         </section>
 
         {/* Section Separator */}
@@ -361,6 +364,14 @@ function DesktopApp() {
         {/* Section 6: Quant GP */}
         <section id="quantgp" style={sectionStyle(1)}>
           <QuantGPContent />
+        </section>
+
+        {/* Section Separator */}
+        <div className="section-divider" />
+
+        {/* Section 7: My Portfolio */}
+        <section id="portfolio" style={sectionStyle(0)}>
+          <MyPortfolio cisUniverse={cisUniverse} />
         </section>
 
       </div>
@@ -642,8 +653,13 @@ function HeroContent() {
    CISLeaderboard owns the single fetch; exposes raw universe via onDataLoad
    callback → CrossAssetView renders from the same data, zero extra requests
 ──────────────────────────────────────────────────────────────────────── */
-function CISContent() {
+function CISContent({ onUniverseLoad }) {
   const [cisUniverse, setCisUniverse] = useState([]);
+
+  const handleDataLoad = (data) => {
+    setCisUniverse(data);
+    if (onUniverseLoad) onUniverseLoad(data);
+  };
 
   return (
     <div style={{ maxWidth: 1600, margin: "0 auto" }}>
@@ -666,7 +682,7 @@ function CISContent() {
 
       {/* Leaderboard — owns the fetch, fires onDataLoad when done */}
       <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>
-        <CISLeaderboard onDataLoad={setCisUniverse} />
+        <CISLeaderboard onDataLoad={handleDataLoad} />
       </div>
 
       {/* Cross-Asset Overview — zero additional fetches */}
