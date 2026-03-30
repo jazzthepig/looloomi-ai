@@ -136,42 +136,34 @@ def _render_og_card(top5: list, macro: dict, ref: str = "") -> bytes:
     _draw_orb(img, W - 200, H - 200, 350, (45, 53, 212), 0.06)
     draw = ImageDraw.Draw(img)  # refresh after orb compositing
 
-    # Load fonts — try multiple paths for Railway (nixpacks) vs local (Ubuntu)
-    def _try_font(paths, size):
-        for p in paths:
-            try:
-                return ImageFont.truetype(p, size)
-            except Exception:
-                continue
+    # Load fonts — use matplotlib's bundled DejaVu (always present: Railway, local, CI)
+    def _mpl_font(name):
+        """Resolve font path via matplotlib's bundled TTFs — no OS font dependency."""
+        try:
+            import matplotlib
+            import os
+            base = os.path.join(os.path.dirname(matplotlib.__file__), "mpl-data", "fonts", "ttf")
+            return os.path.join(base, name)
+        except Exception:
+            return None
+
+    def _try_font(names, size):
+        for n in names:
+            p = _mpl_font(n)
+            if p:
+                try:
+                    return ImageFont.truetype(p, size)
+                except Exception:
+                    continue
         return ImageFont.load_default()
 
-    _sans_bold = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
-        "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
-        "/nix/store/*/share/fonts/truetype/DejaVuSans-Bold.ttf",
-    ]
-    _sans = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/TTF/DejaVuSans.ttf",
-    ]
-    _mono_bold = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
-        "/usr/share/fonts/dejavu/DejaVuSansMono-Bold.ttf",
-    ]
-    _mono = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
-        "/usr/share/fonts/dejavu/DejaVuSansMono.ttf",
-    ]
-
-    font_lg      = _try_font(_sans_bold, 28)
-    font_md      = _try_font(_sans_bold, 18)
-    font_sm      = _try_font(_sans, 14)
-    font_xs      = _try_font(_sans, 12)
-    font_mono    = _try_font(_mono, 14)
-    font_mono_lg = _try_font(_mono_bold, 20)
-    font_mono_sm = _try_font(_mono, 11)
+    font_lg      = _try_font(["DejaVuSans-Bold.ttf"], 28)
+    font_md      = _try_font(["DejaVuSans-Bold.ttf"], 18)
+    font_sm      = _try_font(["DejaVuSans.ttf"], 14)
+    font_xs      = _try_font(["DejaVuSans.ttf"], 12)
+    font_mono    = _try_font(["DejaVuSansMono.ttf"], 14)
+    font_mono_lg = _try_font(["DejaVuSansMono-Bold.ttf"], 20)
+    font_mono_sm = _try_font(["DejaVuSansMono.ttf"], 11)
 
     # ── Header ──────────────────────────────────────────────────────────────
     x, y = 48, 36
