@@ -136,17 +136,42 @@ def _render_og_card(top5: list, macro: dict, ref: str = "") -> bytes:
     _draw_orb(img, W - 200, H - 200, 350, (45, 53, 212), 0.06)
     draw = ImageDraw.Draw(img)  # refresh after orb compositing
 
-    # Load fonts
-    try:
-        font_lg = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
-        font_md = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
-        font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
-        font_xs = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
-        font_mono = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", 14)
-        font_mono_lg = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", 20)
-        font_mono_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", 11)
-    except Exception:
-        font_lg = font_md = font_sm = font_xs = font_mono = font_mono_lg = font_mono_sm = ImageFont.load_default()
+    # Load fonts — try multiple paths for Railway (nixpacks) vs local (Ubuntu)
+    def _try_font(paths, size):
+        for p in paths:
+            try:
+                return ImageFont.truetype(p, size)
+            except Exception:
+                continue
+        return ImageFont.load_default()
+
+    _sans_bold = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
+        "/nix/store/*/share/fonts/truetype/DejaVuSans-Bold.ttf",
+    ]
+    _sans = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans.ttf",
+    ]
+    _mono_bold = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
+        "/usr/share/fonts/dejavu/DejaVuSansMono-Bold.ttf",
+    ]
+    _mono = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+        "/usr/share/fonts/dejavu/DejaVuSansMono.ttf",
+    ]
+
+    font_lg      = _try_font(_sans_bold, 28)
+    font_md      = _try_font(_sans_bold, 18)
+    font_sm      = _try_font(_sans, 14)
+    font_xs      = _try_font(_sans, 12)
+    font_mono    = _try_font(_mono, 14)
+    font_mono_lg = _try_font(_mono_bold, 20)
+    font_mono_sm = _try_font(_mono, 11)
 
     # ── Header ──────────────────────────────────────────────────────────────
     x, y = 48, 36
@@ -314,24 +339,41 @@ async def og_image(ref: Optional[str] = None):
             return Response(content=data, media_type="image/png",
                           headers={"Cache-Control": "public, max-age=600"})
 
-    # Fetch live data
-    top5 = await _fetch_cis_top5()
-    macro = await _fetch_macro()
+    try:
+        # Fetch live data
+        top5 = await _fetch_cis_top5()
+        macro = await _fetch_macro()
 
-    # Render
-    png_bytes = _render_og_card(top5, macro, ref=ref or "")
+        # Render
+        png_bytes = _render_og_card(top5, macro, ref=ref or "")
 
-    # Cache
-    _og_cache[cache_k] = (png_bytes, time.time())
+        # Cache
+        _og_cache[cache_k] = (png_bytes, time.time())
 
-    return Response(
-        content=png_bytes,
-        media_type="image/png",
-        headers={
-            "Cache-Control": "public, max-age=600",
-            "X-OG-Assets": str(len(top5)),
-        },
-    )
+        return Response(
+            content=png_bytes,
+            media_type="image/png",
+            headers={
+                "Cache-Control": "public, max-age=600",
+                "X-OG-Assets": str(len(top5)),
+            },
+        )
+    except Exception as e:
+        print(f"[OG] Render error: {e}")
+        import traceback; traceback.print_exc()
+        # Return a minimal fallback PNG (1x1 transparent) rather than 500
+        import io
+        try:
+            from PIL import Image
+            fb = Image.new("RGB", (1200, 630), BG_COLOR)
+            buf = io.BytesIO()
+            fb.save(buf, format="PNG")
+            buf.seek(0)
+            return Response(content=buf.getvalue(), media_type="image/png",
+                          headers={"Cache-Control": "no-cache", "X-OG-Error": str(e)[:100]})
+        except Exception:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=503, detail=f"OG image unavailable: {e}")
 
 
 @router.get("/og-meta")
