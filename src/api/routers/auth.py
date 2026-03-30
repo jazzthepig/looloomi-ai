@@ -18,7 +18,7 @@ import os, json, time, secrets
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 
 from src.api.store import redis_get_key, redis_set_key, _get_supabase_client
@@ -86,7 +86,7 @@ async def _sb_upsert_profile(address: str) -> dict:
 def _verify_solana_signature(address: str, message: str, signature: str) -> bool:
     """
     Verify an Ed25519 signature from a Solana wallet.
-    Falls back to True in dev mode if PyNaCl is unavailable.
+    Raises 503 if PyNaCl/base58 unavailable — never silently skips.
     """
     try:
         import nacl.signing
@@ -108,10 +108,12 @@ def _verify_solana_signature(address: str, message: str, signature: str) -> bool
 
         verify_key.verify(msg_bytes, sig_bytes)
         return True
-    except ImportError:
-        # PyNaCl not installed — skip verification in dev
-        print("[AUTH] WARNING: PyNaCl not available, skipping sig verification")
-        return True
+    except ImportError as e:
+        # Critical: never skip signature verification
+        raise HTTPException(
+            status_code=503,
+            detail=f"Signature verification unavailable: {e}. Install PyNaCl + base58.",
+        )
     except Exception as e:
         print(f"[AUTH] Signature verification failed: {e}")
         return False
@@ -185,17 +187,20 @@ async def wallet_signin(req: WalletSigninRequest):
     # 2. Reconstruct message
     message = _sign_message(req.address, req.nonce)
 
-    # 3. Verify signature
+    # 3. Invalidate nonce BEFORE verification (prevent replay regardless of outcome)
+    await redis_set_key(cache_key, {}, ttl=1)
+
+    # 4. Verify signature
     if not _verify_solana_signature(req.address, message, req.signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
 
-    # 4. Upsert Supabase profile
+    # 5. Upsert Supabase profile
     profile = await _sb_upsert_profile(req.address)
 
-    # 5. Issue session token (24h Redis)
+    # 6. Issue session token (24h Redis)
     session_token = secrets.token_hex(32)
     session_key = f"auth:session:{session_token}"
-    await redis_set_key(
+    stored = await redis_set_key(
         session_key,
         {
             "address": req.address,
@@ -203,9 +208,8 @@ async def wallet_signin(req: WalletSigninRequest):
         },
         ttl=86400,  # 24 hours
     )
-
-    # Invalidate used nonce
-    await redis_set_key(cache_key, {}, ttl=1)
+    if not stored:
+        raise HTTPException(status_code=503, detail="Session storage unavailable — try again")
 
     return {
         "ok": True,
@@ -216,11 +220,26 @@ async def wallet_signin(req: WalletSigninRequest):
     }
 
 
+async def _validate_session_token(authorization: str | None, address: str) -> bool:
+    """Validate Bearer token from Authorization header against Redis session."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return False
+    token = authorization.split(" ", 1)[1]
+    session_data = await redis_get_key(f"auth:session:{token}")
+    if not session_data:
+        return False
+    return session_data.get("address") == address
+
+
 @router.get("/profile/{address}")
-async def get_profile(address: str):
-    """Fetch public wallet profile."""
+async def get_profile(address: str, authorization: str = Header(None)):
+    """Fetch wallet profile — requires valid session token."""
     if not _SB_URL or not _SB_KEY:
         raise HTTPException(status_code=503, detail="Auth service not configured")
+
+    # Require Bearer token that matches the requested address
+    if not await _validate_session_token(authorization, address):
+        raise HTTPException(status_code=401, detail="Invalid or expired session")
 
     client = _get_supabase_client()
     url = f"{_SB_URL}/rest/v1/{_SB_TABLE}"
