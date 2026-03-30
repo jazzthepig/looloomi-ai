@@ -101,22 +101,22 @@ function LeadCapture() {
         {/* Left — copy */}
         <div>
           <div style={{ fontFamily: F.mono, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: T.t3, marginBottom: 16 }}>
-            Apply for Access
+            Get Started
           </div>
           <h2 style={{ fontFamily: F.serif, fontSize: 36, fontWeight: 400, color: T.t1, margin: "0 0 20px", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
-            Ready to allocate with{" "}
-            <span style={{ fontStyle: "italic", color: "#c8a84b" }}>intelligence</span>?
+            Get the full{" "}
+            <span style={{ fontStyle: "italic", color: "#c8a84b" }}>CIS report</span>
           </h2>
           <p style={{ fontFamily: F.body, fontSize: 14, color: T.t2, lineHeight: 1.7, margin: "0 0 32px", maxWidth: 400 }}>
-            CometCloud is available to qualified institutional investors, family offices, and accredited individuals across Asia-Pacific. Submit your details and we'll follow up within 24 hours.
+            Receive a personalized CIS intelligence briefing — live asset scores, macro regime analysis, and allocation framework. Available to qualified investors, family offices, and accredited individuals across Asia-Pacific.
           </p>
 
           {/* What happens next */}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
-              ["01", "We review your profile and investment range"],
-              ["02", "Schedule a live walkthrough of the platform"],
-              ["03", "Onboard and begin allocating through the Fund-of-Funds"],
+              ["01", "Receive your personalized CIS intelligence briefing within 24 hours"],
+              ["02", "Schedule a live walkthrough of the platform and scoring engine"],
+              ["03", "Begin allocating through the Fund-of-Funds or Trading Agent channels"],
             ].map(([n, txt]) => (
               <div key={n} style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
                 <div style={{ fontFamily: F.mono, fontSize: 11, color: "#c8a84b", fontWeight: 700, minWidth: 24, marginTop: 1 }}>{n}</div>
@@ -236,7 +236,7 @@ function LeadCapture() {
                     border: "1px solid rgba(107,15,204,0.35)",
                     opacity: state === "submitting" ? 0.6 : 1, transition: "all 0.2s",
                   }}>
-                  {state === "submitting" ? "Sending…" : "Submit Enquiry"}
+                  {state === "submitting" ? "Sending…" : "Get CIS Report →"}
                 </button>
                 <a href="app.html" style={{
                   fontFamily: F.display, fontSize: 12, fontWeight: 700, color: T.t2,
@@ -564,6 +564,22 @@ export default function StrategyPage() {
             on-chain analytics, and sentiment indicators. Scores update every 30 minutes
             from our local AI infrastructure.
           </p>
+
+          {/* Data source disclosure */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "rgba(200,168,75,0.06)", border: "1px solid rgba(200,168,75,0.18)",
+            borderRadius: 6, padding: "6px 14px", marginBottom: 24,
+          }}>
+            <span style={{
+              fontFamily: F.mono, fontSize: 8, fontWeight: 700,
+              letterSpacing: "0.12em", color: "#c8a84b",
+              background: "rgba(200,168,75,0.15)", borderRadius: 3, padding: "2px 6px",
+            }}>T2 DATA</span>
+            <span style={{ fontFamily: F.body, fontSize: 10, color: T.t3 }}>
+              Live market scoring via CoinGecko · DeFiLlama · Alternative.me — T1 local AI engine scores available on request
+            </span>
+          </div>
 
           {/* 5 Pillars */}
           <div style={{
