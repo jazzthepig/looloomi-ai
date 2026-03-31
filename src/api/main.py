@@ -33,6 +33,8 @@ from src.api.routers.auth import router as auth_router
 from src.api.routers.leads import router as leads_router
 from src.api.routers.social import router as social_router
 
+_ENV = os.environ.get("ENVIRONMENT", "production")
+
 app = FastAPI(title="Looloomi AI API", version="0.4.3")
 
 app.add_middleware(GZipMiddleware, minimum_size=500)  # ~60% payload reduction for agents
@@ -92,7 +94,8 @@ async def agent_card():
 async def health():
     return {
         "status":  "healthy",
-        "version": "0.4.0",
+        "version": "0.4.3",
+        "environment": _ENV,
         "sources": ["binance", "defillama", "alternative.me", "moralis", "etherscan"],
     }
 
