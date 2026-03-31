@@ -13,6 +13,25 @@ const ScoreAnalytics = lazy(() => import("./components/ScoreAnalytics"));
 const MobileApp = lazy(() => import("./components/MobileApp"));
 const MyPortfolio = lazy(() => import("./components/MyPortfolio"));
 
+/* ── Staging environment banner ─────────────────────────────────────────── */
+function StagingBanner() {
+  const [env, setEnv] = useState(null);
+  useEffect(() => {
+    fetch("/health").then(r => r.json()).then(d => setEnv(d.environment)).catch(() => {});
+  }, []);
+  if (env !== "staging") return null;
+  return (
+    <div style={{
+      background: "linear-gradient(90deg, #FF6B00, #E8A000)",
+      color: "#000", textAlign: "center", padding: "4px 0",
+      fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.15em",
+      fontWeight: 700, position: "sticky", top: 0, zIndex: 9999,
+    }}>
+      ⚠ STAGING ENVIRONMENT — NOT PRODUCTION
+    </div>
+  );
+}
+
 /* ── Lazy-load fallback ──────────────────────────────────────────────────── */
 function SectionLoader() {
   return (
@@ -282,6 +301,9 @@ function DesktopApp() {
 
   return (
     <div style={{ background: T.deep, minHeight: "100vh", position: "relative" }}>
+
+      {/* Staging environment indicator — orange bar, only visible on staging */}
+      <StagingBanner />
 
       {/* Vision ambient background — drifting indigo/royal orbs */}
       <div className="bg">
