@@ -1,5 +1,5 @@
 # Multi-Agent Protocol — CometCloud AI / Looloomi
-*Version 1.0 — 2026-03-30*
+*Version 1.1 — 2026-03-31*
 
 ---
 
@@ -113,11 +113,44 @@ When Seth and Minimax work simultaneously:
 
 ---
 
-## 8. L3 Readiness Checklist
+## 8. Staging Environment Setup
+
+**Status:** `staging` branch exists (local + remote). Railway staging env: **pending Jazz creation.**
+
+### Railway Configuration (once Jazz creates the env)
+
+1. **Create environment:** Settings → Environments → New Environment → `staging` (duplicate from production)
+2. **Set source branch:** In the staging service settings → Source → Branch → `staging`
+3. **Add env var:** `ENVIRONMENT=staging` (Railway → staging service → Variables)
+4. **Keep all other vars** the same as production (UPSTASH, SUPABASE, COINGECKO_API_KEY, INTERNAL_TOKEN)
+5. **Staging URL** will be a separate Railway subdomain (e.g. `web-staging-xxxx.up.railway.app`)
+
+### Staging Deploy Workflow (L2.5)
+
+```bash
+# Seth commits feature to staging branch
+git add src/ dashboard/src/ dashboard/dist/
+git commit -m "feat: <description>"
+git push origin staging          # → Railway staging auto-deploys
+
+# Jazz reviews staging URL → if looks good:
+git checkout main
+git merge staging --no-ff
+git push origin main             # → Railway production auto-deploys
+```
+
+### Staging Indicator
+
+Backend: `/health` returns `"environment": "staging"` when `ENVIRONMENT=staging` is set.
+Frontend: Orange banner `⚠ STAGING ENVIRONMENT — NOT PRODUCTION` appears automatically — invisible on production.
+
+---
+
+## 9. L3 Readiness Checklist
 
 Before enabling fully autonomous deploys:
 
-- [ ] `staging` branch created, Railway staging env configured
+- [ ] `staging` branch created, Railway staging env configured ← **Jazz action needed**
 - [ ] Staging auto-deploys on push to `staging` branch
 - [ ] Monitor Agent runs smoke tests on staging before PR to main
 - [ ] Auto-merge rule: staging → main if all health checks pass
@@ -126,14 +159,14 @@ Before enabling fully autonomous deploys:
 
 ---
 
-## 9. Current Week (Apr 1–5) Assignments
+## 10. Current Week (Apr 1–5) Assignments
 
 **Seth (this session):**
 - [x] Wallet auth security hardening
 - [x] og:image endpoint + social meta tags
 - [x] Performance optimization (lazy-load, -30% bundle)
 - [x] My Portfolio feature
-- [ ] Staging branch + Railway staging env
+- [x] Staging branch code ready (StagingBanner, ENVIRONMENT health endpoint, docs)
 - [ ] Freqtrade CIS integration (after Minimax dry run)
 - [ ] Trading Agent P&L dashboard
 
@@ -146,7 +179,9 @@ Before enabling fully autonomous deploys:
 - [ ] P1: SLA heartbeat (alert if T1 data >2h stale)
 
 **Jazz:**
-- [ ] `git push origin main` (7 commits pending)
+- [ ] `git push origin main` (commits pending)
+- [ ] Create Railway staging environment (Settings → Environments → New → `staging`)
+- [ ] Configure staging service: Source branch = `staging`, add `ENVIRONMENT=staging` var
 - [ ] Strategy.html walkthrough with Nic
 - [ ] Seed investor deck draft
 

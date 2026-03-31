@@ -75,8 +75,8 @@ export default function ShareCard() {
         const cisJson   = cisRes.ok   ? await cisRes.json()   : null;
         const macroJson = macroRes.ok ? await macroRes.json() : null;
 
-        if (cisJson?.data) {
-          const sorted = [...cisJson.data]
+        if (cisJson?.universe || cisJson?.data) {
+          const sorted = [...(cisJson.universe || cisJson.data)]
             .filter(a => a.cis_score > 0 && a.grade)
             .sort((a, b) => (b.cis_score || 0) - (a.cis_score || 0))
             .slice(0, 5);

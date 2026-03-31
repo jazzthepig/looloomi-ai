@@ -608,7 +608,7 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
     setError(null);
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
 
       const response = await fetch(`${API_BASE}/cis/universe`, {
         signal: controller.signal
@@ -657,18 +657,19 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
 
       let newGrade;
       if (newScore >= 85) newGrade = "A+";
-      else if (newScore >= 80) newGrade = "A";
-      else if (newScore >= 70) newGrade = "B+";
-      else if (newScore >= 60) newGrade = "B";
-      else if (newScore >= 50) newGrade = "C+";
-      else if (newScore >= 40) newGrade = "C";
-      else newGrade = "D";
+      else if (newScore >= 75) newGrade = "A";
+      else if (newScore >= 65) newGrade = "B+";
+      else if (newScore >= 55) newGrade = "B";
+      else if (newScore >= 45) newGrade = "C+";
+      else if (newScore >= 35) newGrade = "C";
+      else if (newScore >= 25) newGrade = "D";
+      else newGrade = "F";
 
       let newSignal;
-      if (newGrade === "A+" || newGrade === "A") newSignal = "STRONG OVERWEIGHT";       // → VERY HIGH
-      else if (newGrade === "B+" || newGrade === "B") newSignal = "OVERWEIGHT";         // → HIGH
-      else if (newGrade === "C+" || newGrade === "C") newSignal = "NEUTRAL";            // → NEUTRAL
-      else newSignal = "UNDERWEIGHT";                                                   // → LOW
+      if (newGrade === "A+" || newGrade === "A") newSignal = "STRONG OUTPERFORM";
+      else if (newGrade === "B+" || newGrade === "B") newSignal = "OUTPERFORM";
+      else if (newGrade === "C+" || newGrade === "C") newSignal = "NEUTRAL";
+      else newSignal = "UNDERWEIGHT";
 
       return { ...asset, cis_score: newScore, grade: newGrade, signal: newSignal };
     });
