@@ -1056,7 +1056,14 @@ async def get_macro_pulse() -> dict:
         if not isinstance(btc_r, Exception) and btc_r.status_code == 200:
             btc_entry = btc_r.json().get("bitcoin", {})
 
+        _btc_dom = round(cg_data.get("market_cap_percentage", {}).get("btc", 0), 2)
+        _fg_val  = int(fng_entry.get("value", 50))
+        _fg_lbl  = fng_entry.get("value_classification", "Neutral")
+        _btc_px  = btc_entry.get("usd", 0)
+        _mc_usd  = cg_data.get("total_market_cap", {}).get("usd", 0)
+
         result = {
+            # ── nested structure (MacroPulse.jsx compat) ──────────────────────
             "data": {
                 "market_cap_percentage": cg_data.get("market_cap_percentage", {}),
                 "market_cap_change_percentage_24h_usd": cg_data.get(
@@ -1064,11 +1071,19 @@ async def get_macro_pulse() -> dict:
                 ),
             },
             "fng": {
-                "value": fng_entry.get("value", "50"),
-                "value_classification": fng_entry.get("value_classification", "Neutral"),
+                "value": str(_fg_val),
+                "value_classification": _fg_lbl,
             },
             "btc": btc_entry,  # {usd, usd_24h_change, usd_7d_change}
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            # ── flat fields (MCP agent compat) ────────────────────────────────
+            "btc_price":             _btc_px,
+            "btc_dominance":         _btc_dom,
+            "fear_greed_index":      _fg_val,
+            "fear_greed_label":      _fg_lbl,
+            "total_market_cap_usd":  _mc_usd,
+            "defi_tvl_usd":          0,   # from DeFiLlama, not this endpoint
+            "macro_regime":          "UNKNOWN",  # set by Mac Mini push via Redis
         }
         await _redis_set(key, result, ttl=300)
         return _cache_set(key, result)
