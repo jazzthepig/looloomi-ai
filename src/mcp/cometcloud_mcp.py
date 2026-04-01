@@ -328,7 +328,7 @@ async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
     """
     try:
         data = await _get("/api/v1/cis/universe")
-        assets = data.get("assets", [])
+        assets = data.get("universe", data.get("assets", []))
 
         # Apply filters
         if params.asset_class != AssetClassFilter.ALL:
@@ -541,7 +541,7 @@ async def cometcloud_get_cis_top(params: CisTopInput) -> str:
     """
     try:
         data = await _get("/api/v1/cis/universe")
-        assets = data.get("assets", [])
+        assets = data.get("universe", data.get("assets", []))
 
         if params.asset_class != AssetClassFilter.ALL:
             assets = [a for a in assets if a.get("asset_class") == params.asset_class]
@@ -715,21 +715,37 @@ async def cometcloud_get_macro_pulse() -> str:
     """
     try:
         data = await _get("/api/v1/market/macro-pulse")
-        fg   = data.get("fear_greed_index", 0)
-        dom  = data.get("btc_dominance", 0)
-        mc   = data.get("total_market_cap_usd", 0)
-        tvl  = data.get("defi_tvl_usd", 0)
+
+        # Flat fields (present after data_layer.py v2 — added 2026-04-02)
+        # Fall back to parsing nested structure for older deployments
+        _fng_nested  = data.get("fng", {})
+        _cg_nested   = data.get("data", {})
+        _btc_nested  = data.get("btc", {})
+
+        fg  = data.get("fear_greed_index",
+                       int(_fng_nested.get("value", 0) or 0))
+        fg_label = data.get("fear_greed_label",
+                            _fng_nested.get("value_classification", "—"))
+        dom = data.get("btc_dominance",
+                       round(_cg_nested.get("market_cap_percentage", {}).get("btc", 0), 2))
+        mc  = data.get("total_market_cap_usd", 0)
+        tvl = data.get("defi_tvl_usd", 0)
+        btc_px = data.get("btc_price",
+                          _btc_nested.get("usd", 0))
+        regime = data.get("macro_regime", "—")
 
         lines = [
             "# Macro Pulse",
             "",
-            f"**Regime**: {data.get('macro_regime', '—')}",
-            f"**Fear & Greed**: {fg} — {data.get('fear_greed_label', '—')}",
+            f"**Regime**: {regime}",
+            f"**Fear & Greed**: {fg} — {fg_label}",
             f"**BTC Dominance**: {dom:.1f}%",
-            f"**BTC Price**: ${data.get('btc_price', 0):,.0f}",
-            f"**Total Crypto Market Cap**: ${mc/1e9:.1f}B",
-            f"**DeFi TVL**: ${tvl/1e9:.1f}B",
+            f"**BTC Price**: ${btc_px:,.0f}",
         ]
+        if mc:
+            lines.append(f"**Total Crypto Market Cap**: ${mc/1e9:.1f}B")
+        if tvl:
+            lines.append(f"**DeFi TVL**: ${tvl/1e9:.1f}B")
         return "\n".join(lines)
 
     except Exception as e:
@@ -790,11 +806,19 @@ async def cometcloud_get_signal_feed(params: SignalFeedInput) -> str:
 
         lines = [f"# Signal Feed ({len(signals)} signals)", ""]
         for sig in signals:
+            # API uses description/logic/affected_assets/vector_direction
+            # (not title/body/asset/signal)
+            title   = sig.get("description") or sig.get("title") or "—"
+            body    = sig.get("logic") or sig.get("body") or ""
+            assets  = sig.get("affected_assets") or ([sig.get("asset")] if sig.get("asset") else [])
+            assets_str = ", ".join(assets) if isinstance(assets, list) else str(assets)
+            signal  = sig.get("vector_direction") or sig.get("signal") or "—"
             lines += [
-                f"### {sig.get('title', '—')}",
-                f"**Type**: {sig.get('type')} · **Asset**: {sig.get('asset', '—')} · "
-                f"**Signal**: {sig.get('signal')} · **Horizon**: {sig.get('time_horizon', '—')}",
-                sig.get("body", ""),
+                f"### {title}",
+                f"**Type**: {sig.get('type', '—')} · **Assets**: {assets_str} · "
+                f"**Direction**: {signal} · **Horizon**: {sig.get('time_horizon', '—')} · "
+                f"**Importance**: {sig.get('importance', '—')}",
+                body,
                 f"*{sig.get('timestamp', '')}*",
                 "",
             ]
