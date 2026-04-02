@@ -616,7 +616,7 @@ async def cometcloud_get_prices(params: PricesInput) -> str:
         if params.response_format == Fmt.JSON:
             return json.dumps(data, indent=2)
 
-        prices = data if isinstance(data, list) else data.get("prices", [])
+        prices = data.get("data", []) if isinstance(data, dict) else data
         lines = [
             "# Live Market Prices",
             "",
@@ -906,7 +906,7 @@ async def cometcloud_get_vc_funding(params: VcFundingInput) -> str:
     """
     try:
         data = await _get("/api/v1/vc/funding-rounds")
-        rounds = data.get("rounds", data if isinstance(data, list) else [])
+        rounds = data.get("data", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
         rounds = rounds[: params.limit]
 
         if params.response_format == Fmt.JSON:
@@ -1105,7 +1105,7 @@ async def cometcloud_get_defi_yields(params: YieldsInput) -> str:
     """
     try:
         data = await _get("/api/v1/defi/yields")
-        pools = data.get("pools", data if isinstance(data, list) else [])
+        pools = data.get("data", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
         pools = [p for p in pools if p.get("apy", 0) >= params.min_apy]
         pools = sorted(pools, key=lambda p: p.get("apy", 0), reverse=True)
         pools = pools[: params.limit]
@@ -1161,7 +1161,7 @@ async def cometcloud_get_fund_portfolio() -> str:
     """
     try:
         data = await _get("/api/v1/vault/funds")
-        funds = data.get("funds", data if isinstance(data, list) else [])
+        funds = data.get("data", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
 
         lines = ["# CometCloud GP Fund Portfolio", ""]
         for f in funds:
@@ -1221,15 +1221,11 @@ async def cometcloud_get_portfolio_stats(params: PortfolioStatsInput) -> str:
         - "Equal-weight portfolio stats for top L1s" → symbols="BTC,ETH,SOL,AVAX"
     """
     try:
-        body_params: Dict[str, Any] = {"assets": params.symbols}
-        if params.weights:
-            weight_list = [float(w.strip()) for w in params.weights.split(",")]
-            body_params["weights"] = weight_list
-
+        # Pass assets as query param (GET endpoint)
         async with httpx.AsyncClient(timeout=API_TIMEOUT) as client:
-            resp = await client.post(
+            resp = await client.get(
                 f"{RAILWAY_BASE}/api/v1/portfolio/stats",
-                json=body_params,
+                params={"assets": params.symbols},
             )
             resp.raise_for_status()
             data = resp.json()
