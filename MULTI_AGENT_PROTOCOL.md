@@ -159,31 +159,35 @@ Before enabling fully autonomous deploys:
 
 ---
 
-## 10. Current Week (Apr 1–5) Assignments
+## 10. Current Status (2026-04-02)
 
-**Seth (this session):**
-- [x] Wallet auth security hardening
-- [x] og:image endpoint + social meta tags
-- [x] Performance optimization (lazy-load, -30% bundle)
-- [x] My Portfolio feature
-- [x] Staging branch code ready (StagingBanner, ENVIRONMENT health endpoint, docs)
-- [ ] Freqtrade CIS integration (after Minimax dry run)
+**Seth — done this session:**
+- [x] MCP fixes: CIS universe key (`universe` not `assets`), macro_pulse nested fallback, signal feed field names (`description`/`logic`/`affected_assets`)
+- [x] MCP CIS timeout 20s → 60s (CIS universe was timing out)
+- [x] `data_layer.py`: `get_macro_pulse()` now returns flat fields alongside nested structure (MCP + frontend compat)
+- [x] `Shadow/cometcloud-local/data_fetcher.py`: 8 bug fixes (EODHD date format, API keys, symbol case, RateLimitError, yfinance hang, dup import)
+- [x] `Shadow/cometcloud-local/config.py`: v4.1 grade thresholds + compliance signals
+- [x] `Shadow/freqtrade/`: CometCloudT1Strategy.py + config_backtest_t1.json + run_t1_backtest.sh + T1_BACKTEST_VALIDATION.md
+- [x] `MINIMAX_SYNC.md` created (file-based protocol for Seth ↔ Minimax)
+- [ ] Freqtrade CIS integration (after Minimax dry run confirms T1)
 - [ ] Trading Agent P&L dashboard
 
-**Minimax:**
-- [ ] P0: `git pull` + v4.1 grade threshold alignment
-- [ ] P0: Verify `cis_push.py` → Redis (T1 badge should be green)
-- [ ] P0: Freqtrade dry run active + metrics JSON endpoint
-- [ ] P1: LAS calculation in local engine output
-- [ ] P1: T1 push metadata (`engine_version`, `push_timestamp` ms)
-- [ ] P1: SLA heartbeat (alert if T1 data >2h stale)
+**Minimax — pending (see MINIMAX_SYNC.md §3 for full detail):**
+- [ ] P0: Rotate EODHD + Finnhub API keys (exposed in git history)
+- [ ] P0: Apply `data_fetcher.py` + `config.py` from Shadow → restart `cis_scheduler.py`
+- [ ] P0: Confirm CIS scores in Redis (`cis:local_scores`) — T1 badge should turn green
+- [ ] P1: Run `run_t1_backtest.sh` → report PF/WR/MaxDD to Jazz
+- [ ] P1: Add LAS to local engine output (match Railway schema)
+- [ ] P2: Macro Brief LM Studio crash recovery
 
-**Jazz:**
-- [ ] `git push origin main` (commits pending)
-- [ ] Create Railway staging environment (Settings → Environments → New → `staging`)
-- [ ] Configure staging service: Source branch = `staging`, add `ENVIRONMENT=staging` var
+**Jazz — pending:**
+- [ ] `rm -f .git/HEAD.lock` then `git push origin main` (682fdbe + timeout fix pending)
+- [ ] Restart Claude Desktop after push (MCP reloads fixed code)
+- [ ] Railway → Variables: add `COINGECKO_API_KEY` (CIS universe empty without it)
+- [ ] Railway → Variables: add `SUPABASE_URL` + `SUPABASE_KEY` (service_role)
+- [ ] Run `scripts/supabase_all_tables.sql` in Supabase SQL Editor
 - [ ] Strategy.html walkthrough with Nic
-- [ ] Seed investor deck draft
+- [ ] Seed investor deck
 
 ---
 

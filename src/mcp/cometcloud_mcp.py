@@ -44,8 +44,9 @@ RAILWAY_BASE = os.getenv(
     "COMETCLOUD_API_BASE",
     "https://web-production-0cdf76.up.railway.app",
 )
-API_TIMEOUT = float(os.getenv("MCP_API_TIMEOUT", "20.0"))
-MCP_PORT    = int(os.getenv("MCP_PORT", "0"))  # 0 = stdio
+API_TIMEOUT     = float(os.getenv("MCP_API_TIMEOUT", "20.0"))
+API_TIMEOUT_CIS = float(os.getenv("MCP_API_TIMEOUT_CIS", "60.0"))  # CIS universe is expensive
+MCP_PORT        = int(os.getenv("MCP_PORT", "0"))  # 0 = stdio
 
 # ── Server ────────────────────────────────────────────────────────────────────
 
@@ -62,10 +63,11 @@ mcp = FastMCP(
 
 # ── Shared HTTP client ────────────────────────────────────────────────────────
 
-async def _get(path: str, params: Optional[Dict[str, Any]] = None) -> Any:
+async def _get(path: str, params: Optional[Dict[str, Any]] = None, timeout: Optional[float] = None) -> Any:
     """Single reusable GET call to the Railway API."""
     url = f"{RAILWAY_BASE}{path}"
-    async with httpx.AsyncClient(timeout=API_TIMEOUT) as client:
+    t = timeout if timeout is not None else API_TIMEOUT
+    async with httpx.AsyncClient(timeout=t) as client:
         resp = await client.get(url, params=params or {})
         resp.raise_for_status()
         return resp.json()
@@ -327,7 +329,7 @@ async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
         - "What RWA assets are rated OUTPERFORM?" → asset_class="RWA"
     """
     try:
-        data = await _get("/api/v1/cis/universe")
+        data = await _get("/api/v1/cis/universe", timeout=API_TIMEOUT_CIS)
         assets = data.get("universe", data.get("assets", []))
 
         # Apply filters
@@ -411,7 +413,7 @@ async def cometcloud_get_cis_asset(params: CisAssetInput) -> str:
         - "What's the recommended weight for ETH?" → symbol="ETH"
     """
     try:
-        data = await _get(f"/api/v1/cis/asset/{params.symbol}")
+        data = await _get(f"/api/v1/cis/asset/{params.symbol}", timeout=API_TIMEOUT_CIS)
 
         if params.response_format == Fmt.JSON:
             return json.dumps(data, indent=2)
@@ -483,7 +485,7 @@ async def cometcloud_get_cis_history(params: CisHistoryInput) -> str:
         - "Show me ETH's 30-day score trend" → symbol="ETH", days=30
     """
     try:
-        data = await _get(f"/api/v1/cis/history/{params.symbol}", params={"days": params.days})
+        data = await _get(f"/api/v1/cis/history/{params.symbol}", params={"days": params.days}, timeout=API_TIMEOUT_CIS)
 
         if params.response_format == Fmt.JSON:
             return json.dumps(data, indent=2)
@@ -540,7 +542,7 @@ async def cometcloud_get_cis_top(params: CisTopInput) -> str:
         - "Which L1s have OUTPERFORM signal?" → asset_class="L1", signal="OUTPERFORM"
     """
     try:
-        data = await _get("/api/v1/cis/universe")
+        data = await _get("/api/v1/cis/universe", timeout=API_TIMEOUT_CIS)
         assets = data.get("universe", data.get("assets", []))
 
         if params.asset_class != AssetClassFilter.ALL:
