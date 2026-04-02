@@ -373,7 +373,7 @@ async def get_signals():
 
     # ── 3. DeFi TVL → F + O vector ───────────────────────────────────────────
     if defi:
-        tvl_chg   = defi.get("change_24h", 0) or 0
+        tvl_chg   = defi.get("defi_change_24h", 0) or 0
         total_tvl = defi.get("total_tvl", 0) or 0
         if total_tvl > 0:
             if tvl_chg > 5:

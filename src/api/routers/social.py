@@ -86,16 +86,16 @@ async def _fetch_cis_top5() -> list:
 
         # Try Redis first (Mac Mini T1 data)
         cached = await redis_get()
-        if cached and cached.get("assets"):
-            assets = cached["assets"]
+        if cached and cached.get("universe"):
+            assets = cached["universe"]
             scored = [a for a in assets if (a.get("cis_score") or a.get("score", 0)) > 0]
             scored.sort(key=lambda a: a.get("cis_score") or a.get("score", 0), reverse=True)
             return scored[:5]
 
         # Fallback: Railway T2 scoring
         result = await calculate_cis_universe()
-        if result and result.get("data"):
-            assets = result["data"]
+        if result and result.get("universe"):
+            assets = result["universe"]
             scored = [a for a in assets if (a.get("cis_score", 0)) > 0 and a.get("grade")]
             scored.sort(key=lambda a: a.get("cis_score", 0), reverse=True)
             return scored[:5]
