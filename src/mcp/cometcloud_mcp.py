@@ -500,9 +500,12 @@ async def cometcloud_get_cis_history(params: CisHistoryInput) -> str:
             "|------|-------|-------|--------|",
         ]
         for row in history:
+            date_val = row.get('recorded_at', row.get('date', '—'))
+            score_val = row.get('score', 0)
+            grade_val = row.get('grade', '—')
+            signal_val = row.get('signal', '—')
             lines.append(
-                f"| {row.get('date')} | {row.get('score', 0):.1f} | "
-                f"{row.get('grade')} | {row.get('signal')} |"
+                f"| {date_val} | {score_val:.1f} | {grade_val} | {signal_val} |"
             )
         return "\n".join(lines)
 
