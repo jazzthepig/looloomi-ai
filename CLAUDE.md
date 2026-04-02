@@ -285,26 +285,38 @@ git push origin main
 - email-validator added to `requirements.txt` (fixes Railway crash on pydantic EmailStr)
 - Final dist build: `main-29EOrMLX.js` (252KB), `ScoreAnalytics-DERPRYzc.js` (401KB lazy)
 
+**Done (Week 4 — Apr 2, this session):**
+- MCP `cometcloud_get_cis_universe`: fixed key mismatch (`universe` not `assets`), timeout 20s→60s
+- MCP `cometcloud_get_macro_pulse`: added nested fallback parsing (returns real data now)
+- MCP `cometcloud_get_signal_feed`: fixed field names (`description`/`logic`/`affected_assets`)
+- `data_layer.py` `get_macro_pulse()`: added flat fields for MCP agent compat
+- `Shadow/cometcloud-local/data_fetcher.py`: 8 bug fixes (EODHD date, key exposure, symbol case, RateLimitError, yfinance hang)
+- `Shadow/cometcloud-local/config.py`: v4.1 grade thresholds + compliance signals
+- `Shadow/freqtrade/`: T1 strategy + backtest config + runner + validation doc
+- `MINIMAX_SYNC.md`: created — file-based protocol for Seth ↔ Minimax coordination
+- `MULTI_AGENT_PROTOCOL.md` §10: updated with current assignments
+
 **Blocked — waiting on Jazz:**
-- `git push origin main` — 11 commits pending since `307444f` (last pushed)
-- Supabase: run `scripts/supabase_all_tables.sql`, add `SUPABASE_URL` + `SUPABASE_KEY`
-  (service_role) to Railway env vars
-- CoinGecko Pro key: verify `COINGECKO_API_KEY` set in Railway (CIS universe + macro-pulse
-  currently return empty — likely missing key)
-- Nic referral link: `https://looloomi.ai/strategy.html?ref=nic`
+- `rm -f .git/HEAD.lock` + `git push origin main` (commit `682fdbe` pending)
+- Restart Claude Desktop after push (MCP reloads with fixed signal/CIS code)
+- Railway → Variables: add `COINGECKO_API_KEY` (CIS universe empty without it)
+- Railway → Variables: add `SUPABASE_URL` + `SUPABASE_KEY` (service_role)
+- Run `scripts/supabase_all_tables.sql` in Supabase SQL Editor
 
-**Blocked — waiting on Minimax:**
-- `git pull` + align `cis_v4_engine.py` grade thresholds to v4.1 (A+≥85)
-- Freqtrade dry run: `start_dry_run.sh` + confirm CIS cache writer
+**Blocked — waiting on Minimax (see MINIMAX_SYNC.md for full detail):**
+- Rotate EODHD + Finnhub API keys (exposed in git history via Shadow)
+- Apply `data_fetcher.py` + `config.py` from Shadow → restart `cis_scheduler.py`
+- Run T1 backtest (`run_t1_backtest.sh`) → report PF/WR/MaxDD
 
-## Production health (as of 2026-03-29)
+## Production health (as of 2026-04-02)
 
-- Railway: **ACTIVE** (commit `307444f`). 11 newer commits pending local push.
-- CIS universe: **EMPTY** — Mac Mini not pushing, Railway CIS scoring returning empty
-  (CoinGecko API key likely missing)
-- DeFi overview: **LIVE** — DeFiLlama returns $92B TVL, L2 $7B, RWA $24B
-- Macro Pulse: **DEGRADED** — BTC/FNG/global all returning zeros
-- Signal Feed: **DEGRADED** — signals generate but with no market data backing
+- Railway: **ACTIVE** (commit `2c251e2`). Commit `682fdbe` pending push.
+- CIS universe: **EMPTY** — Mac Mini not pushing + Railway CoinGecko key missing. API returns 70 assets via fallback but needs key for full scoring.
+- DeFi overview: **LIVE** — DeFiLlama $92B TVL
+- Macro Pulse: **LIVE** ✅ — BTC=$68,795, F&G=8 (Extreme Fear), Dom=56.3%
+- Signal Feed API: **LIVE** ✅ — 19 signals with full data. MCP rendering fixed pending restart.
+- MCP CIS universe: **BROKEN** (pending MCP restart) — API works, MCP reads wrong key
+- MCP Signal feed: **BROKEN** (pending MCP restart) — API works, MCP reads wrong field names
 - Supabase: project exists (`soupjamxlfsmgmmtoeok`) but env vars not in Railway
 
 ## Codebase metrics
