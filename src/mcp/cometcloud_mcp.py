@@ -341,7 +341,7 @@ async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
         result = {
             "universe_size": len(assets),
             "data_tier": data.get("source", "T2_MARKET"),
-            "macro_regime": data.get("macro_regime", "UNKNOWN"),
+            "macro_regime": data.get("macro", {}).get("regime", "UNKNOWN"),
             "last_updated": data.get("last_updated"),
             "assets": assets,
         }
@@ -669,11 +669,11 @@ async def cometcloud_get_market_movers() -> str:
             "|--------|-------|------|",
         ]
         for a in gainers:
-            lines.append(f"| **{a.get('symbol')}** | ${a.get('price', 0):,.4f} | +{a.get('change_24h', 0):.2f}% |")
+            lines.append(f"| **{a.get('symbol')}** | ${a.get('price', 0):,.4f} | +{a.get('change', 0):.2f}% |")
 
         lines += ["", "## 🔻 Top Losers", "| Symbol | Price | 24H% |", "|--------|-------|------|"]
         for a in losers:
-            lines.append(f"| **{a.get('symbol')}** | ${a.get('price', 0):,.4f} | {a.get('change_24h', 0):.2f}% |")
+            lines.append(f"| **{a.get('symbol')}** | ${a.get('price', 0):,.4f} | {a.get('change', 0):.2f}% |")
 
         return "\n".join(lines)
 

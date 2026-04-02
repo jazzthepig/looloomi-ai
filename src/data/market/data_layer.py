@@ -1021,9 +1021,10 @@ async def get_macro_pulse() -> dict:
 
     cg_base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
     try:
-        cg  = _get_cg_client()
-        msc = _get_misc_client()
-        global_r, fng_r, btc_r = await asyncio.gather(
+        cg   = _get_cg_client()
+        msc  = _get_misc_client()
+        # ── Run all fetches in parallel (4 concurrent) ─────────────────────────
+        global_r, fng_r, btc_r, defi_ov = await asyncio.gather(
             cg.get(f"{cg_base}/global", headers=_cg_headers()),
             msc.get("https://api.alternative.me/fng/?limit=1"),
             cg.get(
@@ -1036,6 +1037,7 @@ async def get_macro_pulse() -> dict:
                 },
                 headers=_cg_headers(),
             ),
+            get_defi_overview(),   # parallel — has its own Redis TTL
             return_exceptions=True,
         )
 
@@ -1055,6 +1057,11 @@ async def get_macro_pulse() -> dict:
         btc_entry: dict = {}
         if not isinstance(btc_r, Exception) and btc_r.status_code == 200:
             btc_entry = btc_r.json().get("bitcoin", {})
+
+        # ── Parse DeFi overview (only need total_tvl_usd) ─────────────────────
+        _defi_tvl = 0
+        if not isinstance(defi_ov, Exception) and isinstance(defi_ov, dict):
+            _defi_tvl = defi_ov.get("total_tvl_usd", 0)
 
         _btc_dom = round(cg_data.get("market_cap_percentage", {}).get("btc", 0), 2)
         _fg_val  = int(fng_entry.get("value", 50))
@@ -1082,7 +1089,7 @@ async def get_macro_pulse() -> dict:
             "fear_greed_index":      _fg_val,
             "fear_greed_label":      _fg_lbl,
             "total_market_cap_usd":  _mc_usd,
-            "defi_tvl_usd":          0,   # from DeFiLlama, not this endpoint
+            "defi_tvl_usd":          _defi_tvl,
             "macro_regime":          "UNKNOWN",  # set by Mac Mini push via Redis
         }
         await _redis_set(key, result, ttl=300)
