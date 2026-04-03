@@ -37,14 +37,14 @@ export default function MarketDashboard({ isSection = false }) {
         {/* Section Header */}
         <div style={{ marginBottom: 24 }}>
           <h2 style={{
-            fontFamily: FONTS.brand, fontSize: 42, fontWeight: 700,
+            fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
             color: T.t1, marginBottom: 6, letterSpacing: "-0.03em",
             lineHeight: 1.05,
           }}>
             Asset Prices
           </h2>
           <p style={{
-            fontFamily: FONTS.body, fontSize: 14, color: "rgba(136,128,190,0.9)",
+            fontFamily: FONTS.body, fontSize: 14, color: T.muted,
             maxWidth: 500, lineHeight: 1.6, margin: 0,
           }}>
             Live market data across L1, L2, DeFi, RWA, and Infrastructure — 60s refresh via CoinGecko.

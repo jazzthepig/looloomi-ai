@@ -91,11 +91,13 @@ const SkeletonPulse = () => (
     border: `1px solid ${T.border}`,
     background: "linear-gradient(135deg, rgba(10,14,24,.98), rgba(6,9,15,.98))",
     marginBottom: 18,
-    overflow: "hidden",
+    overflowX: "auto",
+    overflowY: "hidden",
     position: "relative",
     height: 120,
+    scrollbarWidth: "none",
   }}>
-    <div style={{ display: "grid", gridTemplateColumns: "220px 1px 1fr 1px 180px", alignItems: "center", padding: "20px 26px", gap: 0, height: "100%" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "220px 1px 1fr 1px 180px", alignItems: "center", padding: "20px 26px", gap: 0, height: "100%", minWidth: 580 }}>
       <div style={{ paddingRight: 26 }}>
         <div className="sk" style={{ height: 10, width: 80, marginBottom: 6 }} />
         <div className="sk" style={{ height: 36, width: 140 }} />
@@ -219,10 +221,12 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
         border: `1px solid ${regimeConfig.borderColor}`,
         background: "linear-gradient(135deg, rgba(10,14,24,.98), rgba(6,9,15,.98))",
         marginBottom: 18,
-        overflow: "hidden",
+        overflowX: "auto",
+        overflowY: "hidden",
         position: "relative",
         cursor: "pointer",
         transition: "border-color 0.6s ease",
+        scrollbarWidth: "none",
       }}
     >
       {/* Ambient glow */}
@@ -248,12 +252,13 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
         点击切换状态
       </div>
 
-      <div style={{
+      <div className="mp-grid" style={{
         display: "grid",
         gridTemplateColumns: "220px 1px 1fr 1px 180px",
         alignItems: "center",
         padding: "20px 26px",
         gap: 0,
+        minWidth: 580,
       }}>
         {/* Market Regime */}
         <div style={{ paddingRight: 26 }}>
@@ -458,6 +463,7 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
           to { width: 100%; }
         }
         div:hover .mb-hint { opacity: 1 !important; }
+        .mp-grid::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );

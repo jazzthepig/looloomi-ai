@@ -1,0 +1,9 @@
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[programs.devnet]
+address = "4xqfDm5m6wiGrdBLqTK5D77dpD8NbD2ED7xGa7LWqeA"
+
+[registry]
+url = "https://api.apr.dev"

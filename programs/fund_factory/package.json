@@ -1,0 +1,16 @@
+{
+  "name": "@cometcloud/fund_factory",
+  "version": "1.0.0",
+  "description": "**Status:** Phase 1, Task 1.2 — In Development **Network:** Solana (Devnet → Testnet → Mainnet) **Language:** Rust (Anchor framework 0.30+)",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
