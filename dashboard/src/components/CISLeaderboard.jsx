@@ -356,6 +356,26 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
     D: data.filter(i => i.grade === "D" || i.grade === "F").length,
   };
 
+  // Universe pillar means — for factor attribution in detail panel
+  // Computes average score per pillar across all loaded assets.
+  // Used to show "±X vs avg" deviation for the selected asset.
+  const pillarMeans = (() => {
+    if (!data.length) return {};
+    const sums   = { F: 0, M: 0, O: 0, S: 0, alpha: 0 };
+    const counts = { F: 0, M: 0, O: 0, S: 0, alpha: 0 };
+    for (const item of data) {
+      for (const k of ["F", "M", "O", "S", "alpha"]) {
+        const v = item.pillars?.[k];
+        if (v != null && !isNaN(v)) { sums[k] += v; counts[k]++; }
+      }
+    }
+    const result = {};
+    for (const k of ["F", "M", "O", "S", "alpha"]) {
+      result[k] = counts[k] > 0 ? sums[k] / counts[k] : null;
+    }
+    return result;
+  })();
+
   // Handle asset selection
   const handleSelectAsset = (asset) => {
     setSelectedAsset(asset);
@@ -871,24 +891,63 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
               </div>
             )}
 
-            {/* Pillar Bars */}
+            {/* Pillar Bars + Factor Attribution */}
+            <div style={{
+              marginBottom: 6, fontSize: 9, color: "#3E6680",
+              fontFamily: FONTS.display, letterSpacing: "0.1em", textTransform: "uppercase",
+            }}>
+              Grade Drivers
+            </div>
             {PILLAR_DEFS.map(p => {
-              const raw = selectedAsset?.pillars[p.key];
-              const isNull = raw === null || raw === undefined;
-              const scaled = isNull ? 0 : Math.round((raw / 100) * p.weight * 10) / 10;
+              const raw     = selectedAsset?.pillars[p.key];
+              const isNull  = raw === null || raw === undefined;
+              const scaled  = isNull ? 0 : Math.round((raw / 100) * p.weight * 10) / 10;
+              const mean    = pillarMeans[p.key];
+              const dev     = (!isNull && mean != null) ? raw - mean : null;
+              const devColor = dev == null ? "#3E6680"
+                : dev >  8 ? "#00D98A"
+                : dev >  2 ? "#4472FF"
+                : dev > -2 ? "#3E6680"
+                : dev > -8 ? "#F59E0B"
+                :            "#FF3D5A";
+              const devLabel = dev == null ? null
+                : `${dev > 0 ? "+" : ""}${dev.toFixed(1)}`;
               return (
                 <div key={p.key} style={{ marginBottom: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                    <span style={{ fontSize: 9, letterSpacing: "0.12em", color: "#3E6680", fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
-                      {p.name}
-                    </span>
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 500, color: isNull ? "#3E6680" : p.color }}>
-                      {isNull ? "—" : raw} <span style={{ color: "#3E6680", fontSize: 9 }}>{isNull ? "" : `(${scaled}pts)`}</span>
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: 9, letterSpacing: "0.10em", color: "#3E6680", fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
+                        {p.name}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                      {devLabel && (
+                        <span title={`Universe avg: ${mean?.toFixed(1)}`} style={{
+                          fontFamily: FONTS.mono, fontSize: 9, color: devColor,
+                          background: `${devColor}12`, padding: "1px 5px",
+                          borderRadius: 3, border: `1px solid ${devColor}25`,
+                          cursor: "default",
+                        }}>
+                          {devLabel} vs avg
+                        </span>
+                      )}
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 500, color: isNull ? "#3E6680" : p.color }}>
+                        {isNull ? "—" : raw}
+                        <span style={{ color: "#3E6680", fontSize: 9 }}>{isNull ? "" : ` (${scaled}pts)`}</span>
+                      </span>
+                    </div>
                   </div>
                   {!isNull && (
-                    <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                      <div style={{ width: `${raw}%`, height: "100%", background: p.color, borderRadius: 2, transition: "width .5s ease .1s" }} />
+                    <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden", position: "relative" }}>
+                      {/* Universe average marker */}
+                      {mean != null && (
+                        <div style={{
+                          position: "absolute", left: `${mean}%`, top: 0, bottom: 0,
+                          width: 1, background: "rgba(255,255,255,0.20)", zIndex: 1,
+                        }} />
+                      )}
+                      <div style={{ width: `${raw}%`, height: "100%", background: p.color, borderRadius: 2, transition: "width .5s ease .1s", position: "relative" }} />
                     </div>
                   )}
                 </div>
