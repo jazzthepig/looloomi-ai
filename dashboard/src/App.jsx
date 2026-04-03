@@ -381,9 +381,23 @@ function DesktopApp() {
 
         {/* Section 4: Protocol */}
         <section id="protocol" style={sectionStyle(1)}>
-          <Suspense fallback={<SectionLoader />}>
-            <ProtocolIntelligence />
-          </Suspense>
+          <div style={{ maxWidth: 1600, margin: "0 auto" }}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{
+                fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
+                color: T.t1, marginBottom: 6, letterSpacing: "-0.03em", lineHeight: 1.05,
+              }}>Protocol</h2>
+              <p style={{
+                fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
+                maxWidth: 520, lineHeight: 1.6, margin: 0,
+              }}>
+                CIS-scored DeFi and RWA protocols — live TVL, 7-day momentum, and on-chain risk signals.
+              </p>
+            </div>
+            <Suspense fallback={<SectionLoader />}>
+              <ProtocolIntelligence />
+            </Suspense>
+          </div>
         </section>
 
         {/* Section Separator */}
@@ -401,7 +415,21 @@ function DesktopApp() {
 
         {/* Section 6: Quant GP */}
         <section id="quantgp" style={sectionStyle(1)}>
-          <QuantGPContent />
+          <div style={{ maxWidth: 1600, margin: "0 auto" }}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{
+                fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
+                color: T.t1, marginBottom: 6, letterSpacing: "-0.03em", lineHeight: 1.05,
+              }}>Quant GP</h2>
+              <p style={{
+                fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
+                maxWidth: 520, lineHeight: 1.6, margin: 0,
+              }}>
+                Verified GP partner network — quantitative and systematic strategies powering the CometCloud Fund-of-Funds.
+              </p>
+            </div>
+            <QuantGPContent />
+          </div>
         </section>
 
         {/* Section Separator */}
@@ -409,9 +437,23 @@ function DesktopApp() {
 
         {/* Section 7: My Portfolio */}
         <section id="portfolio" style={sectionStyle(0)}>
-          <Suspense fallback={<SectionLoader />}>
-            <MyPortfolio cisUniverse={cisUniverse} />
-          </Suspense>
+          <div style={{ maxWidth: 1600, margin: "0 auto" }}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{
+                fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
+                color: T.t1, marginBottom: 6, letterSpacing: "-0.03em", lineHeight: 1.05,
+              }}>My Portfolio</h2>
+              <p style={{
+                fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
+                maxWidth: 520, lineHeight: 1.6, margin: 0,
+              }}>
+                Watchlist, position tracker, and CIS grade alerts — wallet-synced and private.
+              </p>
+            </div>
+            <Suspense fallback={<SectionLoader />}>
+              <MyPortfolio cisUniverse={cisUniverse} />
+            </Suspense>
+          </div>
         </section>
 
       </div>
@@ -704,19 +746,18 @@ function CISContent({ onUniverseLoad }) {
   return (
     <div style={{ maxWidth: 1600, margin: "0 auto" }}>
       {/* Section Header */}
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: 28 }}>
         <h2 style={{
-          fontFamily: FONTS.brand, fontSize: 34, fontWeight: 400,
-          color: T.t1, marginBottom: 8, letterSpacing: "-0.02em"
+          fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
+          color: T.t1, marginBottom: 6, letterSpacing: "-0.03em", lineHeight: 1.05,
         }}>
-          CIS Leaderboard
+          CIS
         </h2>
         <p style={{
           fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
-          maxWidth: 600, lineHeight: 1.6
+          maxWidth: 520, lineHeight: 1.6, margin: 0,
         }}>
-          CometCloud Intelligence Score — Multi-dimensional asset evaluation
-          across Fundamental, Market Structure, On-Chain Health, Sentiment, and Alpha Independence.
+          CometCloud Intelligence Score — 5-pillar evaluation across Fundamental, Market Structure, On-Chain Health, Sentiment, and Alpha Independence.
         </p>
       </div>
 
@@ -748,7 +789,7 @@ function CISContent({ onUniverseLoad }) {
 ──────────────────────────────────────────────────────────────────────── */
 function QuantGPContent() {
   return (
-    <div style={{ maxWidth: 1600, margin: "0 auto" }}>
+    <div>
       {/* Section 1 — Partnership Banner */}
       <div style={{
         background: "linear-gradient(135deg, rgba(200,168,75,0.08) 0%, rgba(200,168,75,0.02) 50%, transparent 100%)",

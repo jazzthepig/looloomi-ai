@@ -559,7 +559,7 @@ export default function MyPortfolio({ cisUniverse = [] }) {
   }, []);
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
+    <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 0 32px" }}>
 
       {/* Header */}
       <div style={{ marginBottom: 28 }}>

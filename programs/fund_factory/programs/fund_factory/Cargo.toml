@@ -1,0 +1,27 @@
+[package]
+name = "fund_factory"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75.0"
+
+[lib]
+name = "fund_factory"
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+anchor-spl = { version = "0.32.1", features = ["token-2022"] }
+spl-token-2022 = { version = "4.0.0", features = ["extension- transferable-lite"] }
+spl-associated-token-account = "3.0.0"
+spl-transfer-hook-interface = "0.6.0"
+thiserror = "1.0"
+num-traits = "0.2"
+num-derive = "0.4"
+
+[dev-dependencies]
+anchor-ergo-test-utils = "0.32.0"
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1

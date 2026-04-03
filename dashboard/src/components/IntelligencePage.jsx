@@ -434,12 +434,31 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         </div>
       )}
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: isSection ? "0 0 40px" : "0 28px 56px" }}>
         {!isSection && <NavBar />}
 
         {/* ══ INTELLIGENCE TAB ══════════════════════════════════════════════ */}
         {(activeTab === "Intelligence" || isSection) && (
           <div>
+            {/* Section Header (when embedded in App.jsx scroll layout) */}
+            {isSection && (
+              <div style={{ marginBottom: 24 }}>
+                <h2 style={{
+                  fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
+                  color: T.primary, marginBottom: 6, letterSpacing: "-0.03em",
+                  lineHeight: 1.05,
+                }}>
+                  Intelligence
+                </h2>
+                <p style={{
+                  fontFamily: FONTS.body, fontSize: 14, color: T.muted,
+                  maxWidth: 520, lineHeight: 1.6, margin: 0,
+                }}>
+                  AI-generated macro analysis, VC funding flows, sector heatmaps, and DeFi protocol intelligence.
+                </p>
+              </div>
+            )}
+
             {/* Macro Brief — AI-generated market analysis */}
             <div style={{ marginBottom: 16, width: "100%", clear: "both" }}>
               <MacroBrief />

@@ -234,7 +234,7 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
       <div style={{
         fontFamily: FONTS.display, fontSize: 13, fontWeight: 600,
         color: T.t1, letterSpacing: "0.005em", lineHeight: 1.45,
-        marginBottom: 7,
+        marginBottom: 7, wordBreak: "break-word", overflowWrap: "break-word",
       }}>
         {signal.description}
       </div>
@@ -325,11 +325,12 @@ const TAB_LABELS = {
 };
 
 const FilterBar = ({ activeType, onChange }) => (
-  <div style={{
+  <div className="signal-filter-bar" style={{
     flexShrink: 0,
-    display: "flex", flexWrap: "wrap", gap: 4, padding: "8px 12px",
+    display: "flex", flexWrap: "nowrap", gap: 4, padding: "8px 12px",
     borderBottom: `1px solid ${T.border}`,
     background: "rgba(0,0,0,0.01)",
+    overflowX: "auto", scrollbarWidth: "none",
   }}>
     {[null, ...Object.keys(SIGNAL_TYPES)].map((type) => {
       const isActive = activeType === type;
@@ -542,6 +543,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         .signal-panel ::-webkit-scrollbar { width: 3px; }
         .signal-panel ::-webkit-scrollbar-track { background: transparent; }
         .signal-panel ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+        .signal-filter-bar::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );

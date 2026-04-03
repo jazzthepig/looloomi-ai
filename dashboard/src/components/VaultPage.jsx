@@ -229,7 +229,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
       </div>
       )}
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "0 28px 56px" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: isSection ? "0 0 40px" : "0 28px 56px" }}>
         {/* Navigation */}
         {/* Navigation - hide when rendered as section */}
         {!isSection && (
@@ -267,13 +267,14 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
         )}
 
         {/* Header */}
-        <div style={{ marginTop: 24, marginBottom: 20 }}>
-          <h1 style={{
-            fontFamily: FONTS.display, fontSize: 28, fontWeight: 700,
-            color: T.primary, marginBottom: 8, letterSpacing: "-0.02em"
+        <div style={{ marginTop: isSection ? 0 : 24, marginBottom: 20 }}>
+          <h2 style={{
+            fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
+            color: T.primary, marginBottom: 6, letterSpacing: "-0.03em",
+            lineHeight: 1.05,
           }}>
-            Vault — Fund-of-Funds
-          </h1>
+            Vault
+          </h2>
           <p style={{
             fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
             maxWidth: 600, lineHeight: 1.6
@@ -288,7 +289,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
           {[
             { label: "Active GPs", value: stats.totalFunds, icon: Users, color: T.blue },
             { label: "Total AUM", value: formatAUM(stats.totalAUM), icon: DollarSign, color: T.green },
-            { label: "Avg Score", value: stats.avgScore, icon: TrendingUp, color: T.violet },
+            { label: "Avg Score", value: stats.avgScore, icon: TrendingUp, color: T.purple },
             { label: "Grade A", value: stats.gradeA, icon: Shield, color: T.green },
           ].map((s, i) => (
             <div key={i} className="lm-card" style={{ padding: "16px 20px" }}>
