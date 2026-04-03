@@ -109,6 +109,19 @@ const PRESETS = {
   },
 };
 
+// ── Pearson correlation (3-point: 24h / 7d / 30d return vector) ──────────────
+function pearsonCorr(xs, ys) {
+  const n = xs.length;
+  if (n < 2) return 0;
+  const mx = xs.reduce((a, b) => a + b, 0) / n;
+  const my = ys.reduce((a, b) => a + b, 0) / n;
+  const num = xs.reduce((s, x, i) => s + (x - mx) * (ys[i] - my), 0);
+  const dx  = Math.sqrt(xs.reduce((s, x) => s + (x - mx) ** 2, 0));
+  const dy  = Math.sqrt(ys.reduce((s, y) => s + (y - my) ** 2, 0));
+  if (dx === 0 || dy === 0) return 0;
+  return num / (dx * dy);
+}
+
 // ── Allocation algorithms ─────────────────────────────────────────────────────
 function applyCap(weights, cap) {
   for (let i = 0; i < 5; i++) {
@@ -161,8 +174,8 @@ export default function PortfolioAllocation({ universe = [] }) {
 
   const activeClasses = selectedClasses ?? new Set(availableClasses);
 
-  const { allocations, metrics } = useMemo(() => {
-    if (!universe.length) return { allocations: [], metrics: null };
+  const { allocations, metrics, corrWarning } = useMemo(() => {
+    if (!universe.length) return { allocations: [], metrics: null, corrWarning: null };
 
     const maxAssets = customSize ?? cfg.maxAssets;
     const eligible = universe.filter(a =>
@@ -177,7 +190,7 @@ export default function PortfolioAllocation({ universe = [] }) {
       .sort((a, b) => (b.cis_score || 0) - (a.cis_score || 0))
       .slice(0, maxAssets);
 
-    if (!selected.length) return { allocations: [], metrics: null };
+    if (!selected.length) return { allocations: [], metrics: null, corrWarning: null };
 
     let weights;
     if (strategy === "CIS-Weighted")      weights = allocateCISWeighted(selected, cfg.cap);
@@ -198,7 +211,41 @@ export default function PortfolioAllocation({ universe = [] }) {
       signalDist[sig] = (signalDist[sig] || 0) + a.weight;
     }
 
-    return { allocations: allocs, metrics: { avgCIS, classCount, signalDist, count: allocs.length } };
+    // ── Correlation cluster detection ────────────────────────────────────────
+    // Use 3-point return vector [change_24h, change_7d, change_30d] as proxy.
+    // Pearson ≥ 0.75 across all three windows = likely co-moving assets.
+    const getReturns = (a) => [
+      a.change_24h ?? 0,
+      a.change_7d  ?? 0,
+      a.change_30d ?? 0,
+    ];
+    const corrPairs = [];
+    for (let i = 0; i < allocs.length; i++) {
+      for (let j = i + 1; j < allocs.length; j++) {
+        const r = pearsonCorr(getReturns(allocs[i]), getReturns(allocs[j]));
+        if (r >= 0.75) {
+          corrPairs.push({ a: allocs[i].symbol, b: allocs[j].symbol, corr: r });
+        }
+      }
+    }
+    corrPairs.sort((x, y) => y.corr - x.corr);
+    let corrWarning = null;
+    if (corrPairs.length > 0) {
+      // Build cluster set from all flagged pairs
+      const clusterSet = new Set();
+      corrPairs.forEach(({ a, b }) => { clusterSet.add(a); clusterSet.add(b); });
+      const combinedWeight = allocs
+        .filter(a => clusterSet.has(a.symbol))
+        .reduce((s, a) => s + a.weight, 0);
+      corrWarning = {
+        pairs: corrPairs.slice(0, 3),
+        cluster: [...clusterSet].slice(0, 7),
+        maxCorr: corrPairs[0].corr,
+        combinedWeight,
+      };
+    }
+
+    return { allocations: allocs, metrics: { avgCIS, classCount, signalDist, count: allocs.length }, corrWarning };
   }, [universe, preset, strategy, customSize, activeClasses]);
 
   const toggleClass = (cls) => {
@@ -427,6 +474,47 @@ export default function PortfolioAllocation({ universe = [] }) {
                     </span>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Correlation Warning */}
+          {corrWarning && (
+            <div style={{
+              background: "rgba(255,107,53,0.06)",
+              border: "1px solid rgba(255,107,53,0.22)",
+              borderRadius: 8, padding: "11px 14px",
+              display: "flex", alignItems: "flex-start", gap: 10,
+            }}>
+              <span style={{ color: "#FF6B35", fontSize: 14, flexShrink: 0, marginTop: 1 }}>⚠</span>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontFamily: FONTS.display, fontWeight: 700, fontSize: 10,
+                  color: "#FF6B35", letterSpacing: "0.1em", textTransform: "uppercase",
+                  marginBottom: 5,
+                }}>
+                  High Correlation Warning
+                </div>
+                <div style={{ fontSize: 11, color: T.t2, fontFamily: FONTS.body, lineHeight: 1.55 }}>
+                  <span style={{ fontFamily: FONTS.mono, color: "#FF9F7A", fontWeight: 600 }}>
+                    {corrWarning.cluster.join(" · ")}
+                  </span>
+                  {" "}move together (r ≈ {corrWarning.maxCorr.toFixed(2)}, combined {(corrWarning.combinedWeight * 100).toFixed(0)}% of portfolio).
+                  Effective diversification may be lower than {corrWarning.cluster.length} positions suggest — consider reducing concentration or adding non-correlated classes.
+                </div>
+                {corrWarning.pairs.length > 1 && (
+                  <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 5 }}>
+                    {corrWarning.pairs.map(({ a, b, corr }) => (
+                      <span key={`${a}-${b}`} style={{
+                        fontSize: 9, fontFamily: FONTS.mono, color: "rgba(255,107,53,0.75)",
+                        background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.15)",
+                        borderRadius: 4, padding: "2px 6px",
+                      }}>
+                        {a}/{b} r={corr.toFixed(2)}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

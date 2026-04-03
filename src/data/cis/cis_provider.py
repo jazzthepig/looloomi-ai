@@ -992,6 +992,8 @@ def calculate_cis_score(
     }
 
     # Baseline
+    # v4.1.1 enhancement: crypto baseline now uses 3-signal composite (0-40)
+    # instead of FNG×0.4 alone. Signals are volume-observable and momentum-derived.
     baseline = 0.0
     if _is_tradfi:
         s_components["vix"] = vix
@@ -1003,15 +1005,61 @@ def calculate_cis_score(
             baseline = 20  # neutral fallback
             s_components["baseline_score"] = 20
     else:
+        # === Signal 1: Volume Surge (0–15) ===
+        # Relative turnover (vol/mcap) as a proxy for active market participation.
+        # High vol/mcap = real interest; low = dead market.
+        vol_surge_signal = 0.0
+        if market_cap > 0 and volume_24h > 0:
+            vol_mcap_ratio = volume_24h / market_cap
+            if vol_mcap_ratio >= 0.10:
+                vol_surge_signal = 15.0
+            elif vol_mcap_ratio >= 0.03:
+                vol_surge_signal = _linear_interp(vol_mcap_ratio, 0.03, 0.10, 8.0, 15.0)
+            elif vol_mcap_ratio >= 0.01:
+                vol_surge_signal = _linear_interp(vol_mcap_ratio, 0.01, 0.03, 3.0, 8.0)
+            elif vol_mcap_ratio >= 0.003:
+                vol_surge_signal = _linear_interp(vol_mcap_ratio, 0.003, 0.01, 0.0, 3.0)
+            # below 0.3% vol/mcap → 0 (illiquid / dead)
+        else:
+            vol_mcap_ratio = 0.0
+
+        # === Signal 2: Momentum Structure (0–15) ===
+        # Cross-timeframe alignment (24h / 7d / 30d). Aligned trend = conviction.
+        # Mixed = neutral. All negative = risk-off.
+        mom_struct = 0.0
+        if change_24h > 0 and change_7d > 0 and change_30d > 0:
+            # Full bullish alignment: score by composite strength
+            strength = min(1.0, (change_24h / 3.0 + change_7d / 10.0 + change_30d / 20.0) / 3.0)
+            mom_struct = _linear_interp(strength, 0.0, 1.0, 8.0, 15.0)
+        elif change_24h < 0 and change_7d < 0 and change_30d < 0:
+            # Full bearish alignment: no contribution (handled by divergence penalty)
+            mom_struct = 0.0
+        else:
+            # Mixed signals: moderate score based on medium-term direction
+            if change_7d > 5:
+                mom_struct = _linear_interp(change_7d, 5.0, 20.0, 7.0, 11.0)
+            elif change_7d >= -3:
+                mom_struct = 6.0  # consolidating / neutral
+            else:
+                mom_struct = max(0.0, _linear_interp(change_7d, -15.0, -3.0, 0.0, 6.0))
+
+        # === Signal 3: FNG Secondary (0–10) ===
+        # Fear & Greed as a reduced-weight sentiment backdrop only.
         fng_value = int(fng.get("value", 50)) if fng else None
         s_components["fear_greed_value"] = fng_value
         s_components["fear_greed_classification"] = fng.get("value_classification") if fng else None
+        fng_secondary = 0.0
         if fng_value is not None:
-            baseline = fng_value * 0.4  # FNG 0→0, 50→20, 100→40
-            s_components["baseline_score"] = round(baseline, 1)
+            fng_secondary = _linear_interp(float(fng_value), 0.0, 100.0, 0.0, 10.0)
         else:
-            baseline = 20
-            s_components["baseline_score"] = 20
+            fng_secondary = 5.0  # neutral fallback
+
+        baseline = vol_surge_signal + mom_struct + fng_secondary
+        s_components["vol_surge_signal"] = round(vol_surge_signal, 1)
+        s_components["vol_mcap_ratio"] = round(vol_mcap_ratio, 4)
+        s_components["momentum_structure_signal"] = round(mom_struct, 1)
+        s_components["fng_secondary_signal"] = round(fng_secondary, 1)
+        s_components["baseline_score"] = round(baseline, 1)
 
     # Divergence: asset 30d vs category median (continuous)
     cat_median = category_median_30d if category_median_30d is not None else 0
