@@ -32,6 +32,7 @@ from src.api.routers.quant import router as quant_router
 from src.api.routers.auth import router as auth_router
 from src.api.routers.leads import router as leads_router
 from src.api.routers.social import router as social_router
+from src.api.routers.factory import router as factory_router
 
 _ENV = os.environ.get("ENVIRONMENT", "production")
 
@@ -69,6 +70,7 @@ app.include_router(quant_router)
 app.include_router(auth_router)
 app.include_router(leads_router)
 app.include_router(social_router)
+app.include_router(factory_router)
 
 
 # ── Agent Discovery (A2A v0.3) ────────────────────────────────────────────────

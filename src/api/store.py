@@ -227,10 +227,13 @@ class ConnectionManager:
         try:
             if websocket in self.active_connections:
                 self.active_connections.remove(websocket)
-        except (ValueError, RuntimeError):
-            pass
+        except (ValueError, RuntimeError) as e:
+            print(f"[WS] disconnect error: {e}")
 
     async def broadcast(self, message: dict):
+        # Remove dead connections before broadcasting
+        self.cleanup_dead()
+
         dead = []
         for connection in self.active_connections:
             try:
