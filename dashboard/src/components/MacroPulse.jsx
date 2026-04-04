@@ -236,6 +236,7 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
         pointerEvents: "none",
         background: `radial-gradient(ellipse 70% 120% at 12% 50%, ${regimeConfig.glow}, transparent 60%)`,
         transition: "opacity 0.6s ease",
+        animation: "ambientGlow 4s ease-in-out infinite",
       }} />
 
       {/* Hint */}

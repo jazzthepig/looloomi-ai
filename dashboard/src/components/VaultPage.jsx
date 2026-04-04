@@ -22,6 +22,31 @@ const CSS = `
   @keyframes breathe2 { 0%,100%{opacity:.16;transform:scale(1)} 50%{opacity:.30;transform:scale(1.08) translateX(10px)} }
   @keyframes fadeUp   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes slideIn  { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes ambientGlow { 0%,100%{opacity:0.6} 50%{opacity:1} }
+  @keyframes shimmerBtn { 0%{background-position:-200px 0} 100%{background-position:200px 0} }
+
+  .cta-btn-hover {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .cta-btn-hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+    background-size: 200px 100%;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .cta-btn-hover:hover::after {
+    opacity: 1;
+    animation: shimmerBtn 1s ease infinite;
+  }
+  .cta-btn-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(99,102,241,0.2);
+  }
 
   .turrell-wrap { position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden; }
   .t-orb { position:absolute;border-radius:50%;filter:blur(100px);mix-blend-mode:screen; }
@@ -823,13 +848,14 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                 const shortAddr = (a) => a ? `${a.slice(0,6)}…${a.slice(-4)}` : "—";
 
                 return (
-                  <div key={vault.id} className="lm-card" style={{ padding: 18, position: "relative", overflow: "hidden" }}>
+                  <div key={vault.id} className="lm-card transition-lift" style={{ padding: 18, position: "relative", overflow: "hidden" }}>
                     {/* Ambient glow */}
                     <div style={{
                       position: "absolute", top: -40, right: -40,
                       width: 120, height: 120, borderRadius: "50%",
                       background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)",
                       pointerEvents: "none",
+                      animation: "ambientGlow 4s ease-in-out infinite",
                     }} />
 
                     {/* Header row */}
@@ -890,6 +916,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                         {isConnected && (
                           <button
                             onClick={() => openDepositModal(null, vault)}
+                            className="cta-btn-hover"
                             style={{
                               display: "flex", alignItems: "center", gap: 5,
                               fontSize: 11, fontWeight: 700, color: "#C8A84B",
@@ -897,10 +924,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                               padding: "5px 12px", borderRadius: 6, cursor: "pointer",
                               border: "1px solid rgba(200,168,75,0.4)",
                               background: "rgba(200,168,75,0.08)",
-                              transition: "all 0.15s ease",
                             }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(200,168,75,0.18)"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(200,168,75,0.08)"; }}
                           >
                             Deposit Intent
                           </button>

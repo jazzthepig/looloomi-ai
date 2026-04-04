@@ -136,6 +136,10 @@ const GRADE_DEFINITIONS = [
 
 // Responsive styles
 const CIS_CSS = `
+  @keyframes fadeInRow {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   @media (max-width: 1100px) {
     .cis-layout { grid-template-columns: 1fr !important; }
     .cis-grade-summary { grid-template-columns: repeat(2, 1fr) !important; }
@@ -182,6 +186,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   const [sparklines, setSparklines] = useState({});   // { [symbol]: number[] }
   const sparkFetchedRef = useRef(false);
   const [backtest, setBacktest] = useState(null);   // backtest summary from API
+  const tableBodyRef = useRef(null);
+  const tableHeaderRef = useRef(null);
+  const [tableScrolled, setTableScrolled] = useState(false);
 
   // Fetch data from API if not provided externally
   useEffect(() => {
@@ -322,6 +329,17 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
       .then(d => { if (d.status === "success") setBacktest(d); })
       .catch(() => {});
   }, []);
+
+  // Table scroll handler — add shadow when scrolled
+  const handleTableScroll = (e) => {
+    const scrolled = e.currentTarget.scrollTop > 8;
+    setTableScrolled(scrolled);
+    if (tableHeaderRef.current) {
+      tableHeaderRef.current.style.boxShadow = scrolled
+        ? "0 4px 16px rgba(0,0,0,0.25)"
+        : "none";
+    }
+  };
 
   const GRADE_TABS = ["All", "A", "B", "C", "D"];
   const CLASS_TABS = ["All", "L1", "L2", "DeFi", "RWA", "Infrastructure", "Oracle", "Memecoin", "US Equity", "US Bond", "Commodity"];
@@ -731,13 +749,21 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         {/* Left: Table */}
         <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden", background: T.surface }}>
           {/* Table Header */}
-          <div className="cis-table-header" style={{
-            display: "grid", gridTemplateColumns: "34px 1fr 80px 45px 50px 60px 80px",
-            gap: 8, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
-            fontSize: 9, color: "#3E6680", letterSpacing: "0.14em",
-            textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
-            background: "#0D2038",
-          }}>
+          <div
+            ref={tableHeaderRef}
+            className="cis-table-header"
+            style={{
+              display: "grid", gridTemplateColumns: "34px 1fr 80px 45px 50px 60px 80px",
+              gap: 8, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
+              fontSize: 9, color: "#3E6680", letterSpacing: "0.14em",
+              textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
+              background: "#0D2038",
+              transition: "box-shadow 0.2s ease",
+              position: "sticky",
+              top: 0,
+              zIndex: 10,
+            }}
+          >
             <span>#</span>
             <span>Asset</span>
             <span style={{ textAlign: "right" }}>CIS</span>
@@ -748,22 +774,31 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           </div>
 
           {/* Table Body */}
-          <div style={{ maxHeight: "calc(100vh - 380px)", minHeight: 300, overflowY: "auto" }}>
+          <div
+            key={`table-${gradeFilter}-${classFilter}`}
+            ref={tableBodyRef}
+            onScroll={handleTableScroll}
+            className="tab-content"
+            style={{ maxHeight: "calc(100vh - 380px)", minHeight: 300, overflowY: "auto" }}
+          >
             {filtered.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", color: T.muted }}>No assets match</div>
-            ) : filtered.map((item) => {
+            ) : filtered.map((item, idx) => {
               const symKey = (item.asset_id || "").toUpperCase();
               const sparkData = sparklines[symKey] || null;
               return (
-              <div key={item.asset_id} className="cis-table-row"
-                onClick={() => handleSelectAsset(item)}
+              <div
+                key={item.asset_id}
+                className="cis-table-row transition-row"
                 style={{
                   display: "grid", gridTemplateColumns: "34px 1fr 80px 45px 50px 60px 80px",
                   gap: 8, padding: "13px 18px", borderBottom: `1px solid ${T.border}`,
                   alignItems: "center", cursor: "pointer",
                   background: selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent",
-                  transition: "background .14s",
+                  animation: `fadeInRow 0.3s ease ${idx * 25}ms forwards`,
+                  opacity: 0,
                 }}
+                onClick={() => handleSelectAsset(item)}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(13,32,56,0.6)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent"; }}
               >
@@ -802,7 +837,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   </span>
                 </div>
                 {/* Grade */}
-                <span style={{
+                <span className="grade-badge" style={{
                   width: 28, height: 28, borderRadius: "50%", display: "flex",
                   alignItems: "center", justifyContent: "center", margin: "0 auto",
                   background: `${GRADE_COLORS[item.grade]}20`,

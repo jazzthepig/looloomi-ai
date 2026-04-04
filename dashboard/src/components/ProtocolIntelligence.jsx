@@ -369,16 +369,26 @@ export default function ProtocolIntelligence() {
             return (
               <div key={p.id}>
                 <div
+                  className="transition-row"
                   style={{
                     display: "grid", gridTemplateColumns: "32px 1.6fr 0.8fr 0.8fr 0.6fr 0.5fr 0.5fr",
                     padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
                     alignItems: "center", cursor: "pointer",
                     background: isExpanded_ ? "rgba(0,0,0,0.02)" : isPick ? "rgba(0,232,122,0.015)" : "transparent",
-                    transition: "background 0.12s",
                   }}
                   onClick={() => setExpandedId(isExpanded_ ? null : p.id)}
-                  onMouseEnter={(e) => { if (!isExpanded_) e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
-                  onMouseLeave={(e) => { if (!isExpanded_) e.currentTarget.style.background = isPick ? "rgba(0,232,122,0.015)" : "transparent"; }}
+                  onMouseEnter={(e) => {
+                    if (!isExpanded_) {
+                      e.currentTarget.style.background = "rgba(13,32,56,0.6)";
+                      e.currentTarget.style.borderLeft = "2px solid rgba(99,102,241,0.35)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isExpanded_) {
+                      e.currentTarget.style.background = isPick ? "rgba(0,232,122,0.015)" : "transparent";
+                      e.currentTarget.style.borderLeft = "none";
+                    }
+                  }}
                 >
                   {/* Rank */}
                   <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.t3, fontWeight: 600 }}>

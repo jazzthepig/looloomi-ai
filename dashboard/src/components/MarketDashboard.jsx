@@ -8,6 +8,13 @@ export default function MarketDashboard({ isSection = false }) {
   const [macroRefresh, setMacroRefresh] = useState(0);
   const [assetRefresh, setAssetRefresh] = useState(0);
   const [signalRefresh, setSignalRefresh] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // Trigger entrance animations after mount
+    const timer = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleRefresh = useCallback(() => {
     setMacroRefresh(n => n + 1);
@@ -23,19 +30,13 @@ export default function MarketDashboard({ isSection = false }) {
       position: "relative",
       zIndex: 1,
     }}>
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .market-page {
-          animation: fade-in 0.25s ease forwards;
-        }
-      `}</style>
-
-      <div className="market-page">
+      <div className="market-page" style={{
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? "translateY(0)" : "translateY(12px)",
+        transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(.16,1,.3,1)",
+      }}>
         {/* Section Header */}
-        <div style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: 24, animationDelay: "0ms" }}>
           <h2 style={{
             fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
             color: T.t1, marginBottom: 6, letterSpacing: "-0.03em",
@@ -52,10 +53,17 @@ export default function MarketDashboard({ isSection = false }) {
         </div>
 
         {/* MacroPulse Banner */}
-        <MacroPulse
-          refreshTrigger={macroRefresh}
-          onRefresh={handleRefresh}
-        />
+        <div style={{
+          marginBottom: 16,
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? "translateY(0)" : "translateY(8px)",
+          transition: "opacity 0.35s ease 80ms, transform 0.35s ease 80ms",
+        }}>
+          <MacroPulse
+            refreshTrigger={macroRefresh}
+            onRefresh={handleRefresh}
+          />
+        </div>
 
         {/* Market Grid: Main Content + Signal Panel */}
         <div style={{
@@ -65,7 +73,14 @@ export default function MarketDashboard({ isSection = false }) {
           alignItems: "start",
         }}>
           {/* Main Content */}
-          <div className="market-main">
+          <div
+            className="market-main"
+            style={{
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 0.35s ease 160ms, transform 0.35s ease 160ms",
+            }}
+          >
             {/* Asset Radar */}
             <AssetRadar
               refreshTrigger={assetRefresh}
@@ -73,7 +88,16 @@ export default function MarketDashboard({ isSection = false }) {
           </div>
 
           {/* Signal Panel (Right Side) */}
-          <div className="market-side" style={{ position: "sticky", top: 20 }}>
+          <div
+            className="market-side"
+            style={{
+              position: "sticky",
+              top: 20,
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 0.35s ease 240ms, transform 0.35s ease 240ms",
+            }}
+          >
             <SignalFeed
               refreshTrigger={signalRefresh}
             />
@@ -91,6 +115,8 @@ export default function MarketDashboard({ isSection = false }) {
           fontSize: 9,
           color: T.t3,
           letterSpacing: "0.07em",
+          opacity: mounted ? 1 : 0,
+          transition: "opacity 0.3s ease 320ms",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <span>Data: CoinGecko · Alternative.me</span>
