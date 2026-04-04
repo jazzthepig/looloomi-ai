@@ -222,8 +222,8 @@ async def calculate_asset_betas(asset_id: str, asset_price_30d: list) -> dict:
                             rets.append(r)
                     if len(rets) >= 15:
                         factors[name] = rets
-            except:
-                pass
+            except Exception as e:
+                print(f"[Beta] yfinance factor {symbol} failed: {e}")
 
         if not factors:
             return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "yfinance_error"}
@@ -564,8 +564,8 @@ async def fetch_github_activity() -> Dict[str, int]:
                     if all_weeks and len(all_weeks) >= 4:
                         return asset_id, sum(all_weeks[-4:])
                 # 202 = GitHub still computing; 404/403 = unavailable — skip silently
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[GitHub] activity fetch for {repo}: {e}")
         return asset_id, None
 
     tasks = [_fetch_one(aid, repo) for aid, repo in GITHUB_REPOS.items()]
@@ -651,8 +651,8 @@ def _load_macro_cache() -> Optional[dict]:
             ts = data.get("timestamp", 0)
             if datetime.now().timestamp() - ts < MACRO_CACHE_TTL:
                 return data
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[MacroCache] read failed: {e}")
     return None
 
 
@@ -783,8 +783,8 @@ async def fetch_macro_data() -> dict:
                             )
                             if price:
                                 return float(price)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[YFinance] price fetch failed for {symbol}: {e}")
             if attempt < 1:
                 time.sleep(0.5)
         return None
@@ -1606,8 +1606,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 if price_history and len(price_history) >= 20:
                     prices = [k["close"] for k in price_history]
                     asset_betas = await calculate_asset_betas(asset_id, prices)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[CIS] beta calculation failed for {asset_id}: {e}")
 
         pillars_result = calculate_cis_score(
             market_data, tvl, fng, asset_class,
@@ -1673,8 +1673,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             sc_7d = get_score_change(asset_id, days=7)
             if sc_7d:
                 score_change_7d = round(sc_7d.get("change", 0), 1)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[CIS] score change fetch failed for {asset_id}: {e}")
 
         # Max drawdown estimation (simplified from ath_distance)
         ath_distance = abs(market_data.get("ath_change_percentage", 0) or 0)
