@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   RefreshCw, ExternalLink, Zap, Building2,
   DollarSign, Globe, Activity, Users, Shield
@@ -152,6 +152,13 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const [heatmapLoading, setHeatmapLoading] = useState(true);
   const [vcPortfolios, setVcPortfolios] = useState([]);
   const [vcPortfoliosLoading, setVcPortfoliosLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  // Page entrance animation
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Heatmap color helper
   const getHeatmapStyle = (change) => {
@@ -442,7 +449,12 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
           <div>
             {/* Section Header (when embedded in App.jsx scroll layout) */}
             {isSection && (
-              <div style={{ marginBottom: 24 }}>
+              <div style={{
+                marginBottom: 24,
+                opacity: mounted ? 1 : 0,
+                transform: mounted ? "translateY(0)" : "translateY(8px)",
+                transition: "opacity 0.35s ease, transform 0.35s ease",
+              }}>
                 <h2 style={{
                   fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
                   color: T.primary, marginBottom: 6, letterSpacing: "-0.03em",
@@ -460,24 +472,39 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             )}
 
             {/* Macro Brief — AI-generated market analysis */}
-            <div style={{ marginBottom: 16, width: "100%", clear: "both" }}>
+            <div style={{
+              marginBottom: 16, width: "100%", clear: "both",
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 0.35s ease 80ms, transform 0.35s ease 80ms",
+            }}>
               <MacroBrief />
             </div>
 
             {/* CIS Widget */}
-            <div style={{ marginBottom: 24, width: "100%", clear: "both" }}>
+            <div style={{
+              marginBottom: 24, width: "100%", clear: "both",
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 0.35s ease 160ms, transform 0.35s ease 160ms",
+            }}>
               <CISWidget defaultLimit={20} />
             </div>
 
             {/* Stat cards */}
-            <div className="mobile-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0" }}>
+            <div className="mobile-stat-grid" style={{
+              display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0",
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 0.35s ease 240ms, transform 0.35s ease 240ms",
+            }}>
               {[
                 { label: "90d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals`, color: T.blue },
                 { label: "RWA Sector (90d)",  value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA deals`, color: T.amber },
                 { label: "Most Active VC",    value: stats?.topVC ?? null,                         sub: `${stats?.topVCDeals ?? "—"} deals`, color: T.green },
                 { label: "Data Source",       value: "DeFiLlama",                                  sub: "Raises API · Live", color: T.pink },
               ].map((s, i) => (
-                <div key={i} className="lm-card" style={{ padding: "18px 20px", animation: `fadeUp .3s ease ${i*.08}s both` }}>
+                <div key={i} className="lm-card transition-lift" style={{ padding: "18px 20px" }}>
                   <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
                     {s.label}
                   </div>
@@ -491,13 +518,24 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             </div>
 
             {/* ══ Protocol Intelligence ════════════════════════════════════ */}
-            <ProtocolIntelligence />
+            <div style={{
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 0.35s ease 320ms, transform 0.35s ease 320ms",
+            }}>
+              <ProtocolIntelligence />
+            </div>
 
             {/* Main 2-col layout: Sector Heatmap + Macro Events */}
-            <div className="mobile-2col-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div className="mobile-2col-grid" style={{
+              display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16,
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 0.35s ease 400ms, transform 0.35s ease 400ms",
+            }}>
 
               {/* Left — Sector Heatmap */}
-              <div className="lm-card" style={{ padding: 0, overflow: "hidden" }}>
+              <div className="lm-card transition-lift" style={{ padding: 0, overflow: "hidden" }}>
                 <div style={{ padding: "16px 18px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <Label Icon={Activity}>Sector Heatmap · 24H</Label>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -529,10 +567,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                         borderRadius: 8, padding: "14px 16px",
                         border: `1px solid ${style.border}`,
                         background: style.bg,
-                        transition: "all .2s ease", cursor: "pointer",
+                        transition: "transform .2s ease, box-shadow .2s ease, border-color .2s ease", cursor: "pointer",
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.25)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
                       >
                         <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, color: T.primary, letterSpacing: "0.04em", marginBottom: 4 }}>
                           {sector.name}
@@ -552,7 +590,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               </div>
 
               {/* Right — Macro Events */}
-              <div className="lm-card" style={{ padding: 0, overflow: "hidden", maxHeight: 380, overflowY: "auto" }}>
+              <div className="lm-card transition-lift" style={{ padding: 0, overflow: "hidden", maxHeight: 380, overflowY: "auto" }}>
                 <div style={{ padding: "16px 18px 12px", position: "sticky", top: 0, background: T.surface, zIndex: 1 }}>
                   <Label Icon={Shield}>Macro Events</Label>
                 </div>
@@ -567,10 +605,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       border: `1px solid ${T.border}`, borderRadius: 9,
                       padding: "14px 16px", marginBottom: 8,
                       background: "#0D2038",
-                      transition: "border-color .2s,background .2s", cursor: "pointer",
+                      transition: "border-color .2s,background .2s,transform .15s,box-shadow .2s", cursor: "pointer",
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(56,148,210,0.25)"; e.currentTarget.style.background = "rgba(13,32,56,0.6)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "#0D2038"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(56,148,210,0.35)"; e.currentTarget.style.background = "rgba(13,32,56,0.7)"; e.currentTarget.style.transform = "translateX(2px)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "#0D2038"; e.currentTarget.style.transform = "translateX(0)"; }}
                     >
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>

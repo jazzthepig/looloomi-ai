@@ -438,9 +438,8 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
 
                     return (
                       <tr key={asset.symbol}
-                        style={{ transition: "background 0.14s", cursor: "pointer" }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = "rgba(0,0,0,0.02)"}
-                        onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                        className="transition-row"
+                        style={{ cursor: "pointer" }}
                       >
                         {/* Asset */}
                         <td style={{ padding: "9px 14px" }}>
@@ -451,7 +450,11 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                               display: "flex", alignItems: "center", justifyContent: "center",
                               fontFamily: FONTS.display, fontSize: 10, fontWeight: 800,
                               flexShrink: 0,
-                            }}>
+                              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.boxShadow = `0 0 12px ${asset.color}40`; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }}
+                            >
                               {asset.symbol.slice(0, 3)}
                             </div>
                             <div>

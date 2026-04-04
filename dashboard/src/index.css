@@ -125,9 +125,100 @@ body { background: #030f2a; color: #f0f4ff; min-height: 100vh; }
 @keyframes slideIn  { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
 @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.35} }
 @keyframes shimmer  { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+@keyframes slideUp  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes scaleIn  { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
+@keyframes glowPulse { 0%,100%{box-shadow:0 0 8px rgba(99,102,241,0.15)} 50%{box-shadow:0 0 20px rgba(99,102,241,0.30)} }
+@keyframes ambientGlow { 0%,100%{opacity:0.6} 50%{opacity:1} }
 
-.fade-up  { animation: fadeUp 0.4s cubic-bezier(.16,1,.3,1) forwards; }
-.slide-in { animation: slideIn 0.25s ease forwards; }
+.fade-up    { animation: fadeUp 0.4s cubic-bezier(.16,1,.3,1) forwards; }
+.slide-in   { animation: slideIn 0.25s ease forwards; }
+.fade-in    { animation: fadeIn 0.3s ease forwards; }
+.slide-up   { animation: slideUp 0.3s ease forwards; }
+.scale-in   { animation: scaleIn 0.25s cubic-bezier(.16,1,.3,1) forwards; }
+
+/* Scroll-triggered animations */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.animate-on-scroll.animate-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children */
+.stagger-child {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.stagger-child.animate-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Micro-interactions */
+.transition-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.transition-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 16px rgba(99,102,241,0.08);
+}
+
+.transition-glow {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.transition-glow:hover {
+  box-shadow: 0 0 16px rgba(99,102,241,0.25), 0 0 8px rgba(99,102,241,0.15);
+  transform: translateY(-1px);
+}
+
+.transition-row {
+  transition: background 0.12s ease, transform 0.15s ease, border-color 0.12s ease;
+}
+.transition-row:hover {
+  background: rgba(37,99,235,.06) !important;
+  transform: translateX(2px);
+}
+
+/* Tab/content transitions */
+.tab-content {
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.tab-content-enter {
+  opacity: 0;
+  transform: translateY(4px);
+}
+.tab-content-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.tab-content-exit {
+  opacity: 1;
+}
+.tab-content-exit-active {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* Ambient pulse for widgets */
+.ambient-pulse {
+  animation: ambientGlow 3s ease-in-out infinite;
+}
+
+/* Grade badge hover */
+.grade-badge {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.grade-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px currentColor;
+}
 
 /* ─── Vision Ambient Background ────────────────────────────────────────── */
 .bg {
