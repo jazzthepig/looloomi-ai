@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import {
   RefreshCw, ExternalLink, Zap, Building2,
   DollarSign, Globe, Activity, Users, Shield
@@ -6,8 +6,10 @@ import {
 import BottomSheet from "./ui/BottomSheet";
 import CISWidget from "./CISWidget";
 import MacroBrief from "./MacroBrief";
-import ProtocolIntelligence from "./ProtocolIntelligence";
 import { T, FONTS } from "../tokens";
+
+// Lazy — recharts + DeFiLlama logic (~80KB); only used on Protocol tab
+const ProtocolIntelligence = lazy(() => import("./ProtocolIntelligence"));
 
 const API_BASE = "/api/v1";
 
@@ -523,7 +525,9 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               transform: mounted ? "translateY(0)" : "translateY(8px)",
               transition: "opacity 0.35s ease 320ms, transform 0.35s ease 320ms",
             }}>
-              <ProtocolIntelligence />
+              <Suspense fallback={<div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(199,210,254,0.3)", fontFamily: "monospace", fontSize: 11 }}>Loading protocols…</div>}>
+                <ProtocolIntelligence />
+              </Suspense>
             </div>
 
             {/* Main 2-col layout: Sector Heatmap + Macro Events */}
