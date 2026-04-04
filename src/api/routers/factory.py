@@ -16,7 +16,7 @@ GET  /api/v1/factory/fund/{id} — Get fund details
 from fastapi import APIRouter, HTTPException, Header, Depends
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 
 router = APIRouter(prefix="/api/v1/factory", tags=["factory"])
@@ -76,6 +76,7 @@ class FundResponse(BaseModel):
     is_paused: bool
     gp_authority: str
     created_at: str
+    data_source: str = "solana_mainnet"  # "solana_mainnet" or "mock"
 
 
 class InvestorPositionResponse(BaseModel):
@@ -84,6 +85,7 @@ class InvestorPositionResponse(BaseModel):
     shares: float
     last_nav: float
     cumulative_fees: float
+    data_source: str = "solana_mainnet"
 
 
 # ============================================================================
@@ -107,6 +109,7 @@ MOCK_FUNDS = {
         "gp_authority": "GpAuthority1111111111111111111111111111111111111",
         "treasury": "Treasury1111111111111111111111111111111111111",
         "created_at": "2026-03-01T00:00:00Z",
+        "data_source": "mock",  # Solana RPC not yet integrated
     }
 }
 
@@ -166,6 +169,7 @@ async def deploy_fund(
             "createToken2022Mint",
             "createFundVault",
         ],
+        "data_source": "mock",  # Solana RPC not yet integrated
     }
 
 
@@ -210,6 +214,7 @@ async def deposit(
         "shares_to_mint": shares,
         "nav": fund["nav"],
         "message": "Deposit transaction constructed. Awaiting wallet signature.",
+        "data_source": "mock",
     }
 
 
@@ -252,6 +257,7 @@ async def redeem(
         "net_amount": net_amount,
         "nav": fund["nav"],
         "message": "Redeem transaction constructed. Awaiting wallet signature.",
+        "data_source": "mock",
     }
 
 
@@ -285,7 +291,8 @@ async def update_nav(
         "fund_id": request.fund_id,
         "old_nav": old_nav,
         "new_nav": fund["nav"],
-        "updated_at": datetime.utcnow().isoformat() + "Z",
+        "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "data_source": "mock",
     }
 
 
@@ -314,7 +321,8 @@ async def manage_whitelist(
         "investor": request.investor,
         "kyc_level": request.kyc_level,
         "action": "added" if request.add else "removed",
-        "updated_at": datetime.utcnow().isoformat() + "Z",
+        "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "data_source": "mock",
     }
 
 
@@ -334,6 +342,7 @@ async def get_investor_position(fund_id: int, investor: str):
         shares=0.0,  # TODO: Fetch from chain
         last_nav=fund["nav"],
         cumulative_fees=0.0,
+        data_source="mock",  # Solana RPC not yet integrated
     )
 
 
@@ -348,5 +357,6 @@ async def health_check():
         "status": "healthy",
         "program_id": "FundFactory1111111111111111111111111111111",
         "cluster": "devnet",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "data_source": "mock",  # Solana RPC not yet integrated
     }
