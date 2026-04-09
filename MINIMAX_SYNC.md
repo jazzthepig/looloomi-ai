@@ -1,19 +1,24 @@
 # MINIMAX_SYNC.md — Seth ↔ Minimax 协调文档
-*最后更新: 2026-04-02 — Seth*
+*最后更新: 2026-04-10 — Seth（优先级已更新，Railway push 完成）*
 
 ---
 
 ## §1 文件所有权
 
-| 路径 | 所有者 | 说明 |
-|------|--------|------|
-| `src/api/`, `src/data/`, `src/mcp/` | **Seth** | Railway 后端，git 管理 |
-| `dashboard/` | **Seth** | React 前端，git 管理 |
-| `/Volumes/CometCloudAI/cometcloud-local/` | **Minimax** | 本地引擎，不进 git |
-| `/Volumes/CometCloudAI/freqtrade/` | **Minimax** | Freqtrade，不进 git |
-| `Shadow/` | **只读参考** | Seth 写参考代码，Minimax 手动 apply 到实际路径 |
+Mac Mini `/Volumes/CometCloudAI/` 下有三个独立目录，各自有用途：
 
-**规则：Seth 不碰 cometcloud-local。Minimax 不碰 src/ 或 dashboard/。**
+| 实际路径 | Shadow 镜像 | 所有者 | 用途 |
+|---------|------------|--------|------|
+| `/Volumes/CometCloudAI/cometcloud-local/` | `Shadow/cometcloud-local/` | **Minimax** | 本地后端：CIS 引擎 (`cis_v4_engine.py`)、scheduler、data fetcher、Ollama/Qwen3 推理 |
+| `/Volumes/CometCloudAI/freqtrade/` | `Shadow/freqtrade/` | **Minimax** | 策略研究 + 计算实验室：strategies、backtesting、dry run |
+| `/Volumes/CometCloudAI/data/` | `Shadow/data/` | **Minimax** | 数据存储 |
+| `~/projects/looloomi-ai/src/` | — | **Seth** | Railway 后端，git 管理，auto-deploy |
+| `~/projects/looloomi-ai/dashboard/` | — | **Seth** | React 前端，git 管理，auto-deploy |
+| `~/projects/looloomi-ai/programs/` | — | **Seth/Jazz** | Solana 链上合约（Anchor），活跃开发 |
+
+**Shadow/ 是只读参考镜像** — Seth 在 Shadow/ 里写参考代码，Minimax 手动 apply 到对应的实际路径。Shadow/ 永远不 commit 进 git。
+
+**规则：Seth 不碰 cometcloud-local 或 freqtrade。Minimax 不碰 src/ 或 dashboard/。**
 
 ---
 
@@ -131,34 +136,96 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 
 ---
 
-## §4 Minimax 当前任务优先级
+## §4 Minimax 当前任务优先级（2026-04-10 更新）
 
-| 优先级 | 任务 | 依赖 |
-|--------|------|------|
-| P0 | Apply `config.py` v4.1 thresholds + compliance signals | — |
-| P0 | Apply `data_fetcher.py` 8 bug fixes | Rotate EODHD/Finnhub keys first |
-| P0 | Restart `cis_scheduler.py` → 确认 Redis key `cis:local_scores` 有数据 | 上两项完成 |
-| P0 | 通知 Jazz：CIS scores 已进 Redis（T1 badge 应该变绿） | — |
-| P1 | Apply T1 策略三件套 + 跑 `run_t1_backtest.sh` | Freqtrade venv 正常 |
-| P1 | 回报 backtest 结果（PF / WR / MaxDD） | backtest 完成 |
-| P1 | LAS 字段加入 local engine 输出（match Railway schema） | — |
-| P2 | Macro Brief pipeline 稳定性（LM Studio crash recovery） | — |
-| P2 | DeFiLlama TVL 刷新 30min → 15min | — |
+### 🔴 P0 — 必须先做（阻塞 CIS 数据）
+
+| # | 任务 | 命令/文件 | 验收标准 | 状态 |
+|---|------|----------|---------|------|
+| 1 | Rotate EODHD + Finnhub keys（已暴露） | 重新申请，设置环境变量 | 代码中无硬编码 key | 🔴 |
+| 2 | Apply `data_fetcher.py` 8 bug fixes | `cp Shadow/cometcloud-local/data_fetcher.py /Volumes/CometCloudAI/cometcloud-local/` | 文件 MD5 一致 | 🔴 |
+| 3 | Apply `config.py` v4.1 thresholds + compliance signals | `cp Shadow/cometcloud-local/config.py /Volumes/CometCloudAI/cometcloud-local/` | grade A+≥85, 信号无 BUY/SELL | 🔴 |
+| 4 | Restart `cis_scheduler.py` | `pkill -f cis_scheduler && python cis_scheduler.py &` | `cis:local_scores` key 在 Redis 有数据 | 🔴 |
+| 5 | 验证 CIS push 成功 | `curl -H "X-Internal-Token: $INTERNAL_TOKEN" https://looloomi.up.railway.app/api/v1/cis/universe \| jq '.data_tier'` | 返回 `"T1_LOCAL"` 而不是 `"railway"` | 🔴 |
+| 6 | 通知 Jazz：T1 badge 变绿 | — | — | 🔴 |
+
+### 🟠 P1 — 本周内（影响 universe 质量）
+
+| # | 任务 | 说明 | 状态 |
+|---|------|------|------|
+| 7 | **Universe 过滤**：从 cis_v4_engine.py 的资产列表中移除 14 个已排除资产 | 见下方 §4A 排除列表 | 🟡 |
+| 8 | 确认 HYPER（Hyperliquid）在评分列表中保留 | v1.1 inclusion standard 已重新纳入 | 🟡 |
+| 9 | LAS 字段加入 local engine 输出 | `"las": cis_score * liquidity_multiplier * confidence` — 与 Railway schema 对齐 | 🟡 |
+| 10 | Apply T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` 目录，决策标准：PF ≥ 1.25 → dry run | 🟡 |
+| 11 | 回报 backtest 结果（PF / WR / MaxDD） | 发给 Jazz | 🟡 |
+
+### 🟡 P2 — 下周
+
+| # | 任务 | 状态 |
+|---|------|------|
+| 12 | Macro Brief pipeline 稳定性 — LM Studio crash recovery（Gemma 4 26B-A4B 替代 Qwen3-35B 做 narrative generation） | 🟡 |
+| 13 | DeFiLlama TVL 刷新 30min → 15min | 🟡 |
+| 14 | 模型切换：Narrative generation → **Gemma 4 26B-A4B**；Event classification → **Qwen 3.5 35B-A3B**（见 PRD_V2_2.md §5） | 🟡 |
+
+### ⚠️ 已完成 / 被阻塞
+
+| # | 任务 | 说明 |
+|---|------|------|
+| — | Seth Railway push | ✅ commit `a2008f1` 已推送，包含 P0 文件 |
+| — | Redis `cis:local_scores` 数据存在 | 等待 P0 #1-#3 apply 后 Mac Mini 重新 push |
 
 ---
 
-## §5 Seth 已完成 / Railway 已部署
+## §4A Universe 过滤 — 从评分列表删除这 14 个资产
 
-本 session 已提交到 git 的 src/ 变更（commit `682fdbe`）：
+以下资产已在 EXCLUSION_LIST.md v1.1 中确认排除。请从 `cis_v4_engine.py` 的 `ASSETS` 列表（或等效配置）中移除：
 
-| 文件 | 变更 |
-|------|------|
-| `src/mcp/cometcloud_mcp.py` | CIS universe key 修复（`universe` not `assets`）；signal feed 字段修复；macro_pulse 嵌套结构 fallback 解析；CIS 超时 20s→60s |
-| `src/data/market/data_layer.py` | `get_macro_pulse()` 新增 flat fields（`btc_price`, `btc_dominance`, `fear_greed_index` 等）供 MCP agent 直接读取 |
+```
+BONK   — Criterion 3+7 (anonymous team, no custody)
+PEPE   — Criterion 3+7 (anonymous team, no custody)
+WIF    — Criterion 3+6+7 (anonymous team, no custody, history)
+MANA   — Criterion 1+2 (volume <$5M, DAU <1K)
+SAND   — Criterion 1 (volume declining below threshold)
+AXS    — Criterion 7 ($625M Ronin exploit, unresolved)
+CRV    — Criterion 7 (founder conflict of interest — personal loan positions)
+SUSHI  — Criterion 7 (repeated treasury integrity incidents 2020-2024)
+SNX    — Criterion 2 (data discontinuity from 3 product pivots)
+ICP    — Criterion 5 (undisclosed 90% supply inflation at launch)
+VIRTUAL— Criterion 3 (no institutional custodian support)
+BCH    — Criterion 4 (Roger Ver DOJ indictment 2024)
+FTM    — Criterion 5 (FTM→S rebrand breaks time-series; new asset <18mo)
+POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
+```
 
-**⚠️ 等待 Jazz：**
-- `rm -f .git/HEAD.lock && git push origin main`（推送 682fdbe 到 Railway）
-- 重启 Claude Desktop（MCP server 加载修复后代码）
+**保留（不要删除）：**
+- `HYPER` (Hyperliquid) — 已在 v1.1 重新纳入，confidence multiplier 0.85× 直到 180 天历史
+- `DOGE` — passes all 7 criteria，保留
+- `RUNE` — borderline，暂时保留但加 `"remediation_flag": true` 字段，等 Jazz 最终决定
+- `MKR` — 保留（SKY 不评分）
+
+---
+
+## §5 Seth 已完成 / 待推送到 Railway
+
+**Railway 已推送（commit `a2008f1`）：** 2026-04-10 push 成功，包含全部 P0 文件 + dashboard 新页面 + dist build。Railway auto-deploy 已触发。
+
+**所有待处理项已清空。** 无阻塞项。
+
+| 文件 | 变更 | Session |
+|------|------|---------|
+| `src/mcp/cometcloud_mcp.py` | CIS universe key 修复；signal feed 字段修复；macro_pulse fallback；3 新工具（get_cis_exclusions, get_inclusion_standard, get_regime_context）；get_vc_funding → get_institutional_flows | Apr 2 + Apr 10 |
+| `src/api/routers/cis.py` | 新增 `/api/v1/agent/cis-exclusions` + `/api/v1/agent/inclusion-standard` 两个端点；含完整静态排除数据 | Apr 10 |
+| `src/api/routers/leads.py` | BumbleBee → HumbleBee Capital | Apr 10 |
+| `src/api/routers/vault.py` | BumbleBee → HumbleBee Capital | Apr 10 |
+| `src/data/market/data_layer.py` | `get_macro_pulse()` flat fields for MCP | Apr 2 |
+| `dashboard/src/agent.jsx` | 全新 /agent.html 页面 — MCP API landing page + pricing + key request form | Apr 10 |
+| `dashboard/src/analytics.jsx` | Standalone analytics page | Apr 9 |
+| `dashboard/src/portfolio.jsx` | Standalone portfolio page | Apr 9 |
+| `dashboard/src/components/VaultPage.jsx` | HumbleBee fix | Apr 10 |
+| `dashboard/src/components/ShareCard.jsx` | HumbleBee fix + T.muted tokens | Apr 9 |
+| `dashboard/src/lib/solanaVault.js` | HumbleBee fix | Apr 10 |
+| `dashboard/vite.config.js` | portfolio + analytics + agent entries added | Apr 9-10 |
+| `dashboard/dist/` | Built output for all above | Apr 10 |
 
 ---
 
