@@ -101,7 +101,7 @@ const CAT_C = {
   "Layer 2":        { bg: "rgba(107,15,204,.10)", text: "#9945FF" },
   "ZK":             { bg: "rgba(68,114,255,.08)", text: "#7B9FFF" },
 };
-const catStyle = (c) => CAT_C[c] || { bg: "rgba(255,255,255,0.04)", text: "#3E6680" };
+const catStyle = (c) => CAT_C[c] || { bg: "rgba(255,255,255,0.04)", text: T.muted };
 
 /* ─── Curated RWA Projects (Mar 2026) ────────────────────────────────── */
 /* RWA_PROJECTS removed — replaced by ProtocolIntelligence (live CIS-scored data) */
@@ -549,7 +549,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       fontSize: 8, fontWeight: 700, letterSpacing: "0.1em",
                       fontFamily: FONTS.display
                     }}>LIVE</span>
-                    <span style={{ fontSize: 9, color: "#3E6680" }}>DefiLlama</span>
+                    <span style={{ fontSize: 9, color: T.muted }}>DefiLlama</span>
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, padding: 12 }}>
@@ -608,11 +608,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     <div key={idx} style={{
                       border: `1px solid ${T.border}`, borderRadius: 9,
                       padding: "14px 16px", marginBottom: 8,
-                      background: "#0D2038",
+                      background: T.raised,
                       transition: "border-color .2s,background .2s,transform .15s,box-shadow .2s", cursor: "pointer",
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(56,148,210,0.35)"; e.currentTarget.style.background = "rgba(13,32,56,0.7)"; e.currentTarget.style.transform = "translateX(2px)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "#0D2038"; e.currentTarget.style.transform = "translateX(0)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = T.raised; e.currentTarget.style.transform = "translateX(0)"; }}
                     >
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -644,7 +644,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                           flexShrink: 0,
                           fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 7px", borderRadius: 3,
                           background: isHigh ? "rgba(255,61,90,0.12)" : "rgba(255,255,255,0.06)",
-                          color: isHigh ? "#FF3D5A" : "#3E6680",
+                          color: isHigh ? "#FF3D5A" : T.muted,
                           border: `1px solid ${isHigh ? "rgba(255,61,90,0.22)" : "rgba(255,255,255,0.08)"}`,
                           marginTop: 2,
                         }}>
@@ -832,7 +832,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   {/* Data Source Label */}
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: '6px',
-                    fontSize: '9px', color: '#3E6680'
+                    fontSize: '9px', color: T.muted
                   }}>
                     <span style={{
                       background: 'rgba(75,158,255,0.1)',
@@ -842,7 +842,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       fontFamily: FONTS.display
                     }}>LIVE</span>
                     <span>DefiLlama Raises API</span>
-                    <span style={{color:'rgba(0,0,0,0.15)'}}>·</span>
+                    <span style={{color:'rgba(148,163,184,0.35)'}}>·</span>
                     <span id="vcUpdateTime">Updated {lastUpdate ? lastUpdate.toLocaleTimeString() : 'just now'}</span>
                   </div>
                 </div>
@@ -852,9 +852,9 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   <div className="vc-table-header" style={{
                     display: "grid", gridTemplateColumns: "1fr 80px 100px 130px 80px",
                     gap: 10, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
-                    fontSize: 9, color: "#3E6680", letterSpacing: "0.14em",
+                    fontSize: 9, color: T.muted, letterSpacing: "0.14em",
                     textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
-                    background: "#0D2038",
+                    background: T.raised,
                   }}>
                     <span>Project</span>
                     <span className="vc-col-round-header" style={{ textAlign: "center" }}>Round</span>
@@ -950,7 +950,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     padding: '10px 18px',
                     borderTop: '1px solid rgba(255,255,255,0.05)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    fontSize: '9px', color: 'rgba(0,0,0,0.15)', letterSpacing: '0.06em'
+                    fontSize: '9px', color: 'rgba(148,163,184,0.45)', letterSpacing: '0.06em'
                   }}>
                     <span>
                       Source: DefiLlama Raises API · CryptoRank ·

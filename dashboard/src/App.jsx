@@ -8,10 +8,7 @@ import { T, FONTS } from "./tokens";
 /* ── Lazy-loaded secondary views (below fold / conditional) ── */
 const VaultPage = lazy(() => import("./components/VaultPage"));
 const ProtocolIntelligence = lazy(() => import("./components/ProtocolIntelligence"));
-const PortfolioAllocation = lazy(() => import("./components/PortfolioAllocation"));
-const ScoreAnalytics = lazy(() => import("./components/ScoreAnalytics"));
 const MobileApp = lazy(() => import("./components/MobileApp"));
-const MyPortfolio = lazy(() => import("./components/MyPortfolio"));
 
 /* ── Staging environment banner ─────────────────────────────────────────── */
 function StagingBanner() {
@@ -241,7 +238,12 @@ const SECTIONS = [
   { id: "protocol", label: "Protocol" },
   { id: "vault", label: "Vault" },
   { id: "quantgp", label: "Quant GP" },
-  { id: "portfolio", label: "My Portfolio" },
+];
+
+// External page links — rendered as anchor tags next to the section tabs
+const EXTERNAL_PAGES = [
+  { href: "/portfolio.html", label: "Portfolio" },
+  { href: "/analytics.html", label: "Analytics" },
 ];
 
 function DesktopApp() {
@@ -330,23 +332,55 @@ function DesktopApp() {
         >
           CometCloud
         </span>
-        <div style={{ display: "flex", gap: 2, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, border: `1px solid ${T.border}` }}>
-          {SECTIONS.map(({ id, label }) => (
-            <button
-              key={id}
-              onClick={() => scrollToSection(id)}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {/* Section scroll tabs */}
+          <div style={{ display: "flex", gap: 1, background: "rgba(255,255,255,0.04)", borderRadius: 9, padding: 3, border: `1px solid ${T.border}` }}>
+            {SECTIONS.map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => scrollToSection(id)}
+                style={{
+                  padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                  fontFamily: FONTS.display, cursor: "pointer", outline: "none",
+                  border: `1px solid ${activeSection === id ? "rgba(6,182,212,0.35)" : "transparent"}`,
+                  background: activeSection === id ? "rgba(6,182,212,0.10)" : "transparent",
+                  color: activeSection === id ? T.cyan : T.t3,
+                  transition: "all 0.2s ease",
+                  letterSpacing: "0.03em",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div style={{ width: 1, height: 20, background: T.border, flexShrink: 0 }} />
+
+          {/* External page links */}
+          {EXTERNAL_PAGES.map(({ href, label }) => (
+            <a
+              key={href}
+              href={href}
               style={{
-                padding: "7px 16px", borderRadius: 7, fontSize: 12, fontWeight: 600,
+                padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600,
                 fontFamily: FONTS.display, cursor: "pointer", outline: "none",
-                border: `1px solid ${activeSection === id ? "rgba(6,182,212,0.35)" : "transparent"}`,
-                background: activeSection === id ? "rgba(6,182,212,0.10)" : "transparent",
-                color: activeSection === id ? T.cyan : T.t3,
+                border: `1px solid transparent`,
+                background: "transparent",
+                color: T.t3,
+                textDecoration: "none",
                 transition: "all 0.2s ease",
-                letterSpacing: "0.04em",
+                letterSpacing: "0.03em",
+                whiteSpace: "nowrap",
+                display: "flex", alignItems: "center", gap: 4,
               }}
+              onMouseEnter={e => { e.currentTarget.style.color = T.cyan; e.currentTarget.style.background = "rgba(6,182,212,0.06)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = T.t3; e.currentTarget.style.background = "transparent"; }}
             >
               {label}
-            </button>
+              <span style={{ fontSize: 9, opacity: 0.5 }}>↗</span>
+            </a>
           ))}
         </div>
         <WalletConnect />
@@ -432,29 +466,6 @@ function DesktopApp() {
           </div>
         </section>
 
-        {/* Section Separator */}
-        <div className="section-divider" />
-
-        {/* Section 7: My Portfolio */}
-        <section id="portfolio" style={sectionStyle(0)}>
-          <div style={{ maxWidth: 1600, margin: "0 auto" }}>
-            <div style={{ marginBottom: 24 }}>
-              <h2 style={{
-                fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
-                color: T.t1, marginBottom: 6, letterSpacing: "-0.03em", lineHeight: 1.05,
-              }}>My Portfolio</h2>
-              <p style={{
-                fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
-                maxWidth: 520, lineHeight: 1.6, margin: 0,
-              }}>
-                Watchlist, position tracker, and CIS grade alerts — wallet-synced and private.
-              </p>
-            </div>
-            <Suspense fallback={<SectionLoader />}>
-              <MyPortfolio cisUniverse={cisUniverse} />
-            </Suspense>
-          </div>
-        </section>
 
       </div>
 
@@ -466,7 +477,7 @@ function DesktopApp() {
         .section-divider {
           height: 1px;
           background: linear-gradient(90deg, transparent 0%, rgba(56,148,210,0.08) 20%, rgba(56,148,210,0.18) 50%, rgba(56,148,210,0.08) 80%, transparent 100%);
-          margin: 0 64px;
+          margin: 0;
         }
 
         /* ── RESPONSIVE: Nav tabs on small screens ── */
@@ -519,29 +530,19 @@ function DesktopApp() {
 
         /* ── RESPONSIVE: Section padding for different viewports ── */
         @media (max-width: 480px) {
-          section {
-            padding: 24px 12px !important;
-          }
+          section { padding: 24px 14px !important; }
         }
         @media (min-width: 481px) and (max-width: 768px) {
-          section {
-            padding: 40px 16px !important;
-          }
+          section { padding: 36px 20px !important; }
         }
         @media (min-width: 769px) and (max-width: 1024px) {
-          section {
-            padding: 60px 32px !important;
-          }
+          section { padding: 48px 32px !important; }
         }
         @media (min-width: 1400px) {
-          section {
-            padding: 80px 80px !important;
-          }
+          section { padding: 64px 64px !important; }
         }
         @media (min-width: 1800px) {
-          section {
-            padding: 100px 100px !important;
-          }
+          section { padding: 72px 80px !important; }
         }
 
         /* ── RESPONSIVE: Grid adjustments ── */
@@ -605,7 +606,7 @@ function DesktopApp() {
 
 const sectionStyle = (index) => ({
   minHeight: "auto",
-  padding: "80px 64px",
+  padding: "56px 48px",    // base; responsive overrides in <style> below
   background: index % 2 === 0 ? "transparent" : "rgba(7,26,74,0.25)",
   position: "relative",
   zIndex: 1,
@@ -769,16 +770,36 @@ function CISContent({ onUniverseLoad }) {
       {/* Cross-Asset Overview — zero additional fetches */}
       <CrossAssetView universe={cisUniverse} />
 
-      {/* Portfolio Builder — CIS-driven allocation engine */}
-      <Suspense fallback={<SectionLoader />}>
-        <PortfolioAllocation universe={cisUniverse} />
-      </Suspense>
-
-      {/* Score History Analytics — grade migration heatmap + sector rotation */}
-      <div style={{ marginTop: 24, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "24px 28px" }}>
-        <Suspense fallback={<div style={{ color: "rgba(199,210,254,0.3)", fontFamily: "monospace", fontSize: 11, padding: 24 }}>Loading analytics…</div>}>
-          <ScoreAnalytics universe={cisUniverse} />
-        </Suspense>
+      {/* Links to standalone pages */}
+      <div style={{
+        marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap",
+      }}>
+        <a href="/portfolio.html" style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "10px 20px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+          fontFamily: FONTS.display, letterSpacing: "0.04em",
+          background: "rgba(6,182,212,0.08)", border: `1px solid rgba(6,182,212,0.22)`,
+          color: T.cyan, textDecoration: "none",
+          transition: "all .18s ease",
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(6,182,212,0.14)"; e.currentTarget.style.borderColor = "rgba(6,182,212,0.4)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(6,182,212,0.08)"; e.currentTarget.style.borderColor = "rgba(6,182,212,0.22)"; }}
+        >
+          Portfolio Builder ↗
+        </a>
+        <a href="/analytics.html" style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "10px 20px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+          fontFamily: FONTS.display, letterSpacing: "0.04em",
+          background: "rgba(107,15,204,0.08)", border: `1px solid rgba(107,15,204,0.22)`,
+          color: "#9945FF", textDecoration: "none",
+          transition: "all .18s ease",
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(107,15,204,0.14)"; e.currentTarget.style.borderColor = "rgba(107,15,204,0.4)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(107,15,204,0.08)"; e.currentTarget.style.borderColor = "rgba(107,15,204,0.22)"; }}
+        >
+          Score Analytics ↗
+        </a>
       </div>
     </div>
   );

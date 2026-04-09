@@ -4,7 +4,7 @@
  * Phase 1: Memo-based AUM attribution
  *   - Sends a lightweight Solana transaction with a Memo instruction
  *   - Memo tags the deposit intent as originating from CometCloud
- *   - BumbleBee Capital can filter all vault depositors by this memo on-chain
+ *   - HumbleBee Capital can filter all vault depositors by this memo on-chain
  *   - Actual USDC deposit is handled by Drift's own UI (app.drift.trade)
  *
  * Phase 2 (future): @drift-labs/sdk direct vault deposit
@@ -23,7 +23,7 @@ const MEMO_PROGRAM_ID_STR = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
  * @param {object} params
  * @param {string} params.walletAddress    - Connected Phantom wallet address
  * @param {string} params.vaultAddress     - Drift vault address
- * @param {string} params.partner          - GP partner name (e.g. "BumbleBee Capital")
+ * @param {string} params.partner          - GP partner name (e.g. "HumbleBee Capital")
  * @param {number} params.amountUsdc       - Intended deposit amount in USDC
  * @returns {Promise<{ signature: string, explorerUrl: string }>}
  */
@@ -44,7 +44,7 @@ export async function sendVaultDepositMemo({ walletAddress, vaultAddress, partne
   const publicKey  = new PublicKey(walletAddress);
   const MEMO_PROGRAM_ID = new PublicKey(MEMO_PROGRAM_ID_STR);
 
-  // Memo payload — on-chain forever, queryable by BumbleBee / CometCloud
+  // Memo payload — on-chain forever, queryable by HumbleBee / CometCloud
   const memoData = JSON.stringify({
     source:      "cometcloud",
     action:      "vault_deposit_intent",

@@ -25,7 +25,7 @@ const PA_CSS = `
   }
   .pa-metrics {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 10px;
   }
   .pa-alloc-table {
@@ -245,7 +245,35 @@ export default function PortfolioAllocation({ universe = [] }) {
       };
     }
 
-    return { allocations: allocs, metrics: { avgCIS, classCount, signalDist, count: allocs.length }, corrWarning };
+    // ── Risk metrics ────────────────────────────────────────────────────────────
+    // Effective N (inverse Herfindahl): 1/Σw² — 1 = single position, N = perfect equal weight
+    const hhi         = allocs.reduce((s, a) => s + a.weight ** 2, 0);
+    const effectiveN  = hhi > 0 ? 1 / hhi : allocs.length;
+
+    // Weighted portfolio volatility proxy (|change_30d| as σ surrogate)
+    const weightedVol = allocs.reduce((s, a) => {
+      const v30 = Math.abs(a.change_30d ?? a.change_7d ?? a.change_24h ?? 0);
+      return s + a.weight * v30;
+    }, 0);
+
+    // Portfolio BTC beta proxy: weighted correlation of each asset's 30d return vs BTC 30d
+    // We use cross-sectional Pearson of the 3-point return vectors vs any BTC entry in universe
+    const btcEntry = universe.find(a => (a.asset_id || a.symbol || "").toUpperCase() === "BTC");
+    let btcBeta = null;
+    if (btcEntry) {
+      const btcVec = getReturns(btcEntry);
+      const betaSum = allocs.reduce((s, a) => {
+        const rho = pearsonCorr(getReturns(a), btcVec);
+        return s + a.weight * rho;
+      }, 0);
+      btcBeta = betaSum;  // weighted average correlation as beta proxy (−1 to 1)
+    }
+
+    return {
+      allocations: allocs,
+      metrics: { avgCIS, classCount, signalDist, count: allocs.length, effectiveN, weightedVol, btcBeta },
+      corrWarning,
+    };
   }, [universe, preset, strategy, customSize, activeClasses]);
 
   const toggleClass = (cls) => {
@@ -423,10 +451,36 @@ export default function PortfolioAllocation({ universe = [] }) {
                   mono: false,
                   color: SIG_COLOR[Object.entries(metrics.signalDist).sort((a,b)=>b[1]-a[1])[0]?.[0]] || T.t1,
                 },
+                {
+                  label: "Eff. N",
+                  value: metrics.effectiveN?.toFixed(1) ?? "—",
+                  mono: true,
+                  color: metrics.effectiveN >= metrics.count * 0.8 ? T.green
+                       : metrics.effectiveN >= metrics.count * 0.5 ? T.t1
+                       : T.amber,
+                  title: `Effective positions (inverse HHI). Lower than position count = concentration risk. Max = ${metrics.count}`,
+                },
+                {
+                  label: "Vol Proxy",
+                  value: metrics.weightedVol != null ? `${metrics.weightedVol.toFixed(1)}%` : "—",
+                  mono: true,
+                  color: metrics.weightedVol < 15 ? T.green : metrics.weightedVol < 35 ? T.amber : T.red,
+                  title: "Weighted avg |30d change| across positions — directional volatility proxy, not annualised σ",
+                },
+                ...(metrics.btcBeta != null ? [{
+                  label: "β BTC",
+                  value: metrics.btcBeta.toFixed(2),
+                  mono: true,
+                  color: Math.abs(metrics.btcBeta) < 0.4 ? T.green
+                       : Math.abs(metrics.btcBeta) < 0.7 ? T.t1
+                       : T.amber,
+                  title: "Weighted-avg return correlation vs BTC (3-point proxy). <0.4 = low BTC dependency.",
+                }] : []),
               ].map((m, i) => (
-                <div key={i} style={{
+                <div key={i} title={m.title || ""} style={{
                   background: T.surface, border: `1px solid ${T.border}`,
                   borderRadius: 8, padding: "12px 14px",
+                  cursor: m.title ? "help" : "default",
                 }}>
                   <div style={{ fontSize: 9, color: T.t3, textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: FONTS.display, marginBottom: 6 }}>
                     {m.label}

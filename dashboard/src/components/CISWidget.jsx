@@ -44,7 +44,7 @@ function MiniSparkline({ scores, width = 60, height = 20 }) {
   if (!scores || scores.length < 2) {
     return (
       <div style={{ width, height, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 8, color: "rgba(0,0,0,0.15)", fontFamily: "monospace" }}>—</span>
+        <span style={{ fontSize: 9, color: "rgba(199,210,254,0.20)", fontFamily: "'JetBrains Mono', monospace" }}>—</span>
       </div>
     );
   }
@@ -61,7 +61,7 @@ function MiniSparkline({ scores, width = 60, height = 20 }) {
   }).join(" ");
 
   const diff = scores[scores.length - 1] - scores[0];
-  const color = diff > 1 ? "#22c55e" : diff < -1 ? "#ef4444" : "rgba(0,0,0,0.15)";
+  const color = diff > 1 ? "#22c55e" : diff < -1 ? "#ef4444" : "rgba(148,163,184,0.25)";
 
   return (
     <svg width={width} height={height} style={{ display: "block" }}>

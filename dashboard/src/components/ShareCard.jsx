@@ -133,7 +133,7 @@ export default function ShareCard() {
         <div style={{ fontFamily: F.display, fontSize: 22, fontWeight: 700, color: "#F1F5F9", letterSpacing: "-0.02em" }}>
           Marketing Share Card
         </div>
-        <div style={{ fontFamily: F.body, fontSize: 12, color: "#3E6680", marginTop: 4 }}>
+        <div style={{ fontFamily: F.body, fontSize: 12, color: T.muted, marginTop: 4 }}>
           Screenshot and share on WeChat / Telegram / social
         </div>
       </div>
@@ -162,12 +162,12 @@ export default function ShareCard() {
               <div style={{ fontFamily: F.display, fontWeight: 800, fontSize: 18, color: "#F1F5F9", letterSpacing: "-0.02em", marginBottom: 3 }}>
                 CometCloud AI
               </div>
-              <div style={{ fontFamily: F.body, fontSize: 11, color: "#3E6680", letterSpacing: "0.05em" }}>
+              <div style={{ fontFamily: F.body, fontSize: 11, color: T.muted, letterSpacing: "0.05em" }}>
                 AI Fund-of-Funds · Solana · HK
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontFamily: F.mono, fontSize: 9, color: "#3E6680", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 3 }}>
+              <div style={{ fontFamily: F.mono, fontSize: 9, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 3 }}>
                 {today}
               </div>
               {regime && (
@@ -200,7 +200,7 @@ export default function ShareCard() {
                 { label: "BTC Dom.", value: btcDom ? `${btcDom.toFixed(1)}%` : "—" },
               ].map((m, i) => (
                 <div key={i} style={{ padding: "12px 14px", background: "rgba(0,0,0,0.2)" }}>
-                  <div style={{ fontFamily: F.mono, fontSize: 8, color: "#3E6680", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>{m.label}</div>
+                  <div style={{ fontFamily: F.mono, fontSize: 8, color: T.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>{m.label}</div>
                   <div style={{ fontFamily: F.mono, fontSize: 16, fontWeight: 500, color: m.color || "#E2E8F0" }}>{m.value}</div>
                 </div>
               ))}
@@ -210,19 +210,19 @@ export default function ShareCard() {
           {/* CIS Top 5 */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <div style={{ fontFamily: F.display, fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3E6680" }}>
+              <div style={{ fontFamily: F.display, fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: T.muted }}>
                 CIS Top Assets
               </div>
               <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
-              <div style={{ fontFamily: F.mono, fontSize: 8, color: "#3E6680", letterSpacing: "0.06em" }}>
+              <div style={{ fontFamily: F.mono, fontSize: 8, color: T.muted, letterSpacing: "0.06em" }}>
                 LIVE · AI-SCORED
               </div>
             </div>
 
             {loading ? (
-              <div style={{ padding: "24px 0", textAlign: "center", color: "#3E6680", fontFamily: F.body, fontSize: 12 }}>Loading…</div>
+              <div style={{ padding: "24px 0", textAlign: "center", color: T.muted, fontFamily: F.body, fontSize: 12 }}>Loading…</div>
             ) : topAssets.length === 0 ? (
-              <div style={{ padding: "24px 0", textAlign: "center", color: "#3E6680", fontFamily: F.body, fontSize: 12 }}>No data available</div>
+              <div style={{ padding: "24px 0", textAlign: "center", color: T.muted, fontFamily: F.body, fontSize: 12 }}>No data available</div>
             ) : topAssets.map((a, i) => {
               const gc = GRADE_COLOR[a.grade] || "#6B7280";
               const sc = SIG_COLOR[a.signal] || "#6B7280";
@@ -233,10 +233,10 @@ export default function ShareCard() {
                   padding: "10px 0",
                   borderBottom: i < topAssets.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
                 }}>
-                  <span style={{ fontFamily: F.mono, fontSize: 10, color: "#3E6680" }}>{i + 1}</span>
+                  <span style={{ fontFamily: F.mono, fontSize: 10, color: T.muted }}>{i + 1}</span>
                   <div>
                     <div style={{ fontFamily: F.display, fontWeight: 700, fontSize: 14, color: "#F1F5F9" }}>{a.symbol}</div>
-                    <div style={{ fontFamily: F.body, fontSize: 10, color: "#3E6680", marginTop: 1 }}>{a.asset_class}</div>
+                    <div style={{ fontFamily: F.body, fontSize: 10, color: T.muted, marginTop: 1 }}>{a.asset_class}</div>
                   </div>
                   <div style={{ fontFamily: F.mono, fontSize: 14, color: (a.cis_score || 0) >= 65 ? "#00D98A" : "#C8A84B" }}>
                     {(a.cis_score || 0).toFixed(1)}
@@ -281,7 +281,7 @@ export default function ShareCard() {
 
           {/* Footer */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontFamily: F.mono, fontSize: 9, color: "#3E6680", letterSpacing: "0.08em" }}>
+            <div style={{ fontFamily: F.mono, fontSize: 9, color: T.muted, letterSpacing: "0.08em" }}>
               looloomi.ai/strategy
             </div>
             <div style={{ fontFamily: F.mono, fontSize: 9, color: "#1E3A5F", letterSpacing: "0.06em" }}>
@@ -296,13 +296,13 @@ export default function ShareCard() {
 
         {/* Referral code */}
         <div>
-          <div style={{ fontFamily: F.mono, fontSize: 9, color: "#3E6680", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
+          <div style={{ fontFamily: F.mono, fontSize: 9, color: T.muted, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
             Your Referral Code
           </div>
           <input
             value={refCode}
             onChange={e => setRefCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-            placeholder="e.g. nic · bumblebee · yourname"
+            placeholder="e.g. nic · humblebee · yourname"
             style={{
               width: "100%", boxSizing: "border-box",
               padding: "10px 14px", borderRadius: 8,
@@ -312,7 +312,7 @@ export default function ShareCard() {
               outline: "none",
             }}
           />
-          <div style={{ fontFamily: F.body, fontSize: 11, color: "#3E6680", marginTop: 6 }}>
+          <div style={{ fontFamily: F.body, fontSize: 11, color: T.muted, marginTop: 6 }}>
             Leads from your link will be attributed to this code.
           </div>
         </div>

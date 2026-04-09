@@ -61,8 +61,8 @@ _VAULT_FUNDS = [
         "advantage": "Direct integration with CometCloud vault infrastructure",
     },
     {
-        "id": "bumblebee-capital",
-        "name": "BumbleBee Capital",
+        "id": "humblebee-capital",
+        "name": "HumbleBee Capital",
         "strategy": "Structured Yield",
         "location": "Hong Kong",
         "aum": "Confidential",
@@ -109,11 +109,11 @@ async def get_vault_funds():
 
 # ── Partner Vaults (on-chain, Drift Protocol) ─────────────────────────────────
 
-# KnightTrade / BumbleBee Capital vault on Drift
+# KnightTrade / HumbleBee Capital vault on Drift
 _PARTNER_VAULTS = [
     {
-        "id": "bumblebee-drift-1",
-        "partner": "BumbleBee Capital",
+        "id": "humblebee-drift-1",
+        "partner": "HumbleBee Capital",
         "protocol": "Drift",
         "chain": "Solana",
         "vaultAddress": "FS9fJYRrQ2hQPcXJTFrC1zBskTE3z4WayzbYL8jFrQK7",
@@ -164,9 +164,9 @@ async def _fetch_drift_vault(vault_address: str) -> dict:
 
 class DepositIntentRequest(BaseModel):
     wallet_address: str
-    vault_id: str                   # e.g. "bumblebee-drift-1"
+    vault_id: str                   # e.g. "humblebee-drift-1"
     vault_address: str              # Drift vault pubkey
-    partner: str                    # e.g. "BumbleBee Capital"
+    partner: str                    # e.g. "HumbleBee Capital"
     amount_usdc: float
     tx_signature: str               # Solana memo tx sig
     memo_data: Optional[dict] = None

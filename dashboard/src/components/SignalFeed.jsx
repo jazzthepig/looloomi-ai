@@ -195,7 +195,7 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
         borderBottom: `1px solid ${T.border}`,
         transition: "background 0.14s",
         cursor: hasMeta ? "pointer" : "default",
-        background: isExpanded ? "#0D2038" : "transparent",
+        background: isExpanded ? T.raised : "transparent",
       }}
       onClick={hasMeta ? onToggle : undefined}
       onMouseEnter={(e) => { if (!isExpanded) e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
@@ -346,7 +346,7 @@ const FilterBar = ({ activeType, onChange }) => (
             cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
             background: isActive ? (cfg ? cfg.bg : "rgba(255,255,255,0.08)") : "transparent",
             color:      isActive ? (cfg ? cfg.color : T.t1) : T.t3,
-            border:     isActive ? `1px solid ${cfg ? cfg.border : "rgba(0,0,0,0.15)"}` : "1px solid transparent",
+            border:     isActive ? `1px solid ${cfg ? cfg.border : "rgba(148,163,184,0.20)"}` : "1px solid transparent",
           }}
         >
           {label}
@@ -422,7 +422,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "13px 16px", borderBottom: `1px solid ${T.border}`,
-        background: "#0D2038",
+        background: T.raised,
       }}>
         <div style={{
           fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
@@ -518,7 +518,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
         flexShrink: 0,
         display: "flex", gap: 8, padding: "10px 16px",
         borderTop: `1px solid ${T.border}`,
-        flexWrap: "wrap", background: "#0D2038",
+        flexWrap: "wrap", background: T.raised,
         alignItems: "center", justifyContent: "space-between",
       }}>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
