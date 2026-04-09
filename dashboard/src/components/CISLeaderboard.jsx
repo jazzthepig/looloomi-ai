@@ -42,15 +42,16 @@ const Sparkline = ({ scores, width = 72, height = 24 }) => {
   );
 };
 
+// Grade colors unified to T.* tokens — single source of truth
 const GRADE_COLORS = {
-  "A+": "#00D98A",
-  A: "#00D98A",
-  "B+": "#4472FF",
-  B: "#4472FF",
-  "C+": "#E8A000",
-  C: "#E8A000",
-  D: "#FF2D55",
-  F: "#888888",
+  "A+": T.green,    // #00D98A
+  A:    T.green,
+  "B+": T.indigo,   // #6366f1 — was orphan #4472FF
+  B:    T.indigo,
+  "C+": T.amber,    // #f59e0b
+  C:    T.amber,
+  D:    T.red,      // #FF3D5A
+  F:    T.dim,
 };
 
 const ASSET_CLASS_COLORS = {
