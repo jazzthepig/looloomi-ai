@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
-import MarketDashboard from "./components/MarketDashboard";
+// MarketDashboard removed (Q5 — cut market tab, reduces infra cost)
+// File can be deleted: dashboard/src/components/MarketDashboard.jsx
 import IntelligencePage from "./components/IntelligencePage";
 import CISLeaderboard from "./components/CISLeaderboard";
 import WalletConnect from "./components/WalletConnect";
+import SiteNav from "./components/SiteNav";
 import { T, FONTS } from "./tokens";
 
 /* ── Lazy-loaded secondary views (below fold / conditional) ── */
@@ -68,10 +70,10 @@ const CA_COLORS = {
 };
 
 const GRADE_COLORS_CA = {
-  "A+": "#00D98A", A: "#00D98A",
-  "B+": "#4472FF", B: "#4472FF",
-  "C+": "#E8A000", C: "#E8A000",
-  D: "#FF2D55", F: "#888",
+  "A+": T.green,  A: T.green,
+  "B+": T.indigo, B: T.indigo,
+  "C+": T.amber,  C: T.amber,
+  D: T.red, F: T.dim,
 };
 
 const CLASS_ORDER = [
@@ -201,10 +203,10 @@ function CrossAssetView({ universe = [] }) {
               {/* Grade distribution bar */}
               <div style={{ display: "flex", gap: 3 }}>
                 {[
-                  { key: "A", color: "#00D98A" },
-                  { key: "B", color: "#4472FF" },
-                  { key: "C", color: "#E8A000" },
-                  { key: "D", color: "#FF2D55" },
+                  { key: "A", color: T.green },
+                  { key: "B", color: T.indigo },
+                  { key: "C", color: T.amber },
+                  { key: "D", color: T.red },
                 ].map(({ key, color }) => {
                   const count = gradeDist[key];
                   if (!count) return null;
@@ -232,7 +234,6 @@ function CrossAssetView({ universe = [] }) {
 }
 
 const SECTIONS = [
-  { id: "market", label: "Asset Prices" },
   { id: "intelligence", label: "Intelligence" },
   { id: "cis", label: "CIS" },
   { id: "protocol", label: "Protocol" },
@@ -247,7 +248,7 @@ const EXTERNAL_PAGES = [
 ];
 
 function DesktopApp() {
-  const [activeSection, setActiveSection] = useState("market");
+  const [activeSection, setActiveSection] = useState("intelligence");
   const [cisUniverse, setCisUniverse] = useState([]);
   const sectionRefs = useRef({});
   const manualScrollRef = useRef(false);
@@ -315,112 +316,41 @@ function DesktopApp() {
         <div className="bg-grain" />
       </div>
 
-      {/* Fixed Navigation — dark glassmorphism */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-        background: "rgba(6,15,27,0.85)", backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center",
-        justifyContent: "space-between", padding: "12px 48px",
-      }}>
-        <span
-          onClick={() => scrollToSection("market")}
-          style={{
-            fontFamily: FONTS.brand, fontWeight: 600, fontSize: 18,
-            letterSpacing: "-0.01em", color: T.t1, cursor: "pointer",
-          }}
-        >
-          CometCloud
-        </span>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          {/* Section scroll tabs */}
-          <div style={{ display: "flex", gap: 1, background: "rgba(255,255,255,0.04)", borderRadius: 9, padding: 3, border: `1px solid ${T.border}` }}>
-            {SECTIONS.map(({ id, label }) => (
-              <button
-                key={id}
-                onClick={() => scrollToSection(id)}
-                style={{
-                  padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600,
-                  fontFamily: FONTS.display, cursor: "pointer", outline: "none",
-                  border: `1px solid ${activeSection === id ? "rgba(6,182,212,0.35)" : "transparent"}`,
-                  background: activeSection === id ? "rgba(6,182,212,0.10)" : "transparent",
-                  color: activeSection === id ? T.cyan : T.t3,
-                  transition: "all 0.2s ease",
-                  letterSpacing: "0.03em",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Divider */}
-          <div style={{ width: 1, height: 20, background: T.border, flexShrink: 0 }} />
-
-          {/* External page links */}
-          {EXTERNAL_PAGES.map(({ href, label }) => (
-            <a
-              key={href}
-              href={href}
-              style={{
-                padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600,
-                fontFamily: FONTS.display, cursor: "pointer", outline: "none",
-                border: `1px solid transparent`,
-                background: "transparent",
-                color: T.t3,
-                textDecoration: "none",
-                transition: "all 0.2s ease",
-                letterSpacing: "0.03em",
-                whiteSpace: "nowrap",
-                display: "flex", alignItems: "center", gap: 4,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.color = T.cyan; e.currentTarget.style.background = "rgba(6,182,212,0.06)"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = T.t3; e.currentTarget.style.background = "transparent"; }}
-            >
-              {label}
-              <span style={{ fontSize: 9, opacity: 0.5 }}>↗</span>
-            </a>
-          ))}
-        </div>
-        <WalletConnect />
-      </nav>
+      {/* Fixed Navigation — shared SiteNav with scroll tabs + WalletConnect */}
+      <SiteNav
+        sections={SECTIONS}
+        activeSection={activeSection}
+        onSectionClick={scrollToSection}
+        rightSlot={<WalletConnect />}
+      />
 
       {/* Sections Container - padding for fixed nav */}
-      <div style={{ paddingTop: 64 }}>
+      <div data-sections style={{ paddingTop: 64 }}>
 
-        {/* Section 1: Market */}
-        <section id="market" style={sectionStyle(0)}>
-          <MarketDashboard isSection={true} />
-        </section>
-
-        {/* Section Separator */}
-        <div className="section-divider" />
-
-        {/* Section 2: Intelligence */}
-        <section id="intelligence" style={sectionStyle(1)}>
+        {/* Section 1: Intelligence */}
+        <section id="intelligence" style={sectionStyle(0)}>
           <IntelligencePage isSection={true} />
         </section>
 
         {/* Section Separator */}
         <div className="section-divider" />
 
-        {/* Section 3: CIS */}
-        <section id="cis" style={sectionStyle(0)}>
+        {/* Section 2: CIS */}
+        <section id="cis" style={sectionStyle(1)}>
           <CISContent onUniverseLoad={setCisUniverse} />
         </section>
 
         {/* Section Separator */}
         <div className="section-divider" />
 
-        {/* Section 4: Protocol */}
-        <section id="protocol" style={sectionStyle(1)}>
+        {/* Section 3: Protocol */}
+        <section id="protocol" style={sectionStyle(0)}>
           <div style={{ maxWidth: 1600, margin: "0 auto" }}>
             <div style={{ marginBottom: 24 }}>
               <h2 style={{
-                fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
-                color: T.t1, marginBottom: 6, letterSpacing: "-0.03em", lineHeight: 1.05,
-              }}>Protocol</h2>
+                fontFamily: FONTS.brand, fontSize: 28, fontWeight: 700,
+                color: T.t1, marginBottom: 6, letterSpacing: "-0.02em", lineHeight: 1.05,
+              }}>Protocol Intelligence</h2>
               <p style={{
                 fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
                 maxWidth: 520, lineHeight: 1.6, margin: 0,
@@ -437,8 +367,8 @@ function DesktopApp() {
         {/* Section Separator */}
         <div className="section-divider" />
 
-        {/* Section 5: Vault */}
-        <section id="vault" style={sectionStyle(0)}>
+        {/* Section 4: Vault */}
+        <section id="vault" style={sectionStyle(1)}>
           <Suspense fallback={<SectionLoader />}>
             <VaultPage isSection={true} />
           </Suspense>
@@ -447,13 +377,13 @@ function DesktopApp() {
         {/* Section Separator */}
         <div className="section-divider" />
 
-        {/* Section 6: Quant GP */}
-        <section id="quantgp" style={sectionStyle(1)}>
+        {/* Section 5: Quant GP */}
+        <section id="quantgp" style={sectionStyle(0)}>
           <div style={{ maxWidth: 1600, margin: "0 auto" }}>
             <div style={{ marginBottom: 24 }}>
               <h2 style={{
-                fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
-                color: T.t1, marginBottom: 6, letterSpacing: "-0.03em", lineHeight: 1.05,
+                fontFamily: FONTS.brand, fontSize: 28, fontWeight: 700,
+                color: T.t1, marginBottom: 6, letterSpacing: "-0.02em", lineHeight: 1.05,
               }}>Quant GP</h2>
               <p style={{
                 fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
@@ -476,49 +406,11 @@ function DesktopApp() {
         /* ── SECTION DIVIDERS — cyan-tinted glass line ── */
         .section-divider {
           height: 1px;
-          background: linear-gradient(90deg, transparent 0%, rgba(56,148,210,0.08) 20%, rgba(56,148,210,0.18) 50%, rgba(56,148,210,0.08) 80%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(6,182,212,0.07) 20%, rgba(6,182,212,0.16) 50%, rgba(6,182,212,0.07) 80%, transparent 100%);
           margin: 0;
         }
 
-        /* ── RESPONSIVE: Nav tabs on small screens ── */
-        @media (max-width: 900px) {
-          nav {
-            flex-direction: column !important;
-            gap: 8px !important;
-            padding: 10px 12px !important;
-            align-items: stretch !important;
-          }
-          nav > span {
-            font-size: 16px !important;
-            text-align: center;
-          }
-          nav > div {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            white-space: nowrap;
-            justify-content: flex-start !important;
-          }
-          nav > div::-webkit-scrollbar { display: none; }
-          nav button {
-            padding: 8px 12px !important;
-            font-size: 11px !important;
-            min-width: max-content;
-            min-height: 36px;
-          }
-        }
-        @media (max-width: 480px) {
-          nav {
-            padding: 8px 8px !important;
-          }
-          nav > span {
-            font-size: 14px !important;
-          }
-          nav button {
-            padding: 7px 10px !important;
-            font-size: 10px !important;
-          }
-        }
+        /* Nav responsive handled by SiteNav.jsx internal styles */
 
         /* ── RESPONSIVE: Tables scroll horizontally ── */
         @media (max-width: 768px) {
@@ -574,7 +466,7 @@ function DesktopApp() {
 
         /* ── RESPONSIVE: Nav height compensation ── */
         @media (max-width: 900px) {
-          body > div > div:nth-child(3) {
+          [data-sections] {
             padding-top: 88px !important;
           }
         }

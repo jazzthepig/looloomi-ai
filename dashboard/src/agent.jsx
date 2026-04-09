@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { T, FONTS } from './tokens';
+import SiteNav from './components/SiteNav';
 
 const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:8000'
@@ -36,61 +37,27 @@ function AmbientOrbs() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.4; }
         }
+
+        /* ── agent.jsx responsive ── */
+        @media (max-width: 768px) {
+          .agent-quickstart-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 640px) {
+          nav[data-agent] {
+            padding: 0 16px !important;
+          }
+          nav[data-agent] .agent-nav-links {
+            display: none !important;
+          }
+        }
       `}</style>
     </div>
   );
 }
 
-// ── Nav ─────────────────────────────────────────────────────────────────────
-function Nav() {
-  return (
-    <nav style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: 'rgba(1,8,18,0.88)',
-      borderBottom: `1px solid ${T.border}`,
-      backdropFilter: 'blur(20px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 32px', height: 56,
-    }}>
-      <a href="/app.html" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontFamily: FONTS.brand, fontWeight: 800, fontSize: 16, color: T.t1, letterSpacing: '0.02em' }}>
-          COMETCLOUD
-        </span>
-        <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.indigo, letterSpacing: '0.1em', marginTop: 1 }}>
-          AI
-        </span>
-      </a>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-        {[
-          { label: 'Platform', href: '/app.html' },
-          { label: 'Intelligence', href: '/app.html' },
-          { label: 'Methodology', href: '/methodology.html' },
-          { label: 'Fund', href: '/strategy.html' },
-        ].map(link => (
-          <a key={link.label} href={link.href} style={{
-            fontFamily: FONTS.display, fontSize: 12, fontWeight: 600,
-            color: T.t3, textDecoration: 'none', letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            transition: 'color 0.2s',
-          }}
-            onMouseEnter={e => e.target.style.color = T.t1}
-            onMouseLeave={e => e.target.style.color = T.t3}
-          >{link.label}</a>
-        ))}
-        <a href="#request-key" style={{
-          fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
-          color: T.deep, background: T.indigo,
-          padding: '6px 14px', borderRadius: 6,
-          textDecoration: 'none', letterSpacing: '0.06em', textTransform: 'uppercase',
-          transition: 'opacity 0.2s',
-        }}
-          onMouseEnter={e => e.target.style.opacity = '0.85'}
-          onMouseLeave={e => e.target.style.opacity = '1'}
-        >Get API Key</a>
-      </div>
-    </nav>
-  );
-}
+// Nav is now SiteNav — see component call in AgentPage render
 
 // ── Tool card ────────────────────────────────────────────────────────────────
 function ToolCard({ tool, tier, description, returns, badge }) {
@@ -151,6 +118,7 @@ function TierCard({ name, price, priceNote, features, cta, ctaHref, highlight })
       borderRadius: 16,
       padding: '28px 26px',
       flex: 1,
+      minWidth: 240,
       position: 'relative',
       overflow: 'hidden',
     }}>
@@ -340,10 +308,10 @@ function LiveStats() {
 
   const stats = [
     { label: 'Universe', value: '54+', unit: 'assets rated' },
-    { label: 'Excluded', value: '9,946+', unit: 'assets filtered' },
+    { label: 'Exclusion records', value: '14', unit: 'structured rejections' },
     { label: 'Score refresh', value: '30', unit: 'min cadence' },
     { label: 'Macro regime', value: pulse?.macro_regime || 'Risk-Off', unit: 'live' },
-    { label: 'MCP tools', value: '6', unit: 'available' },
+    { label: 'MCP tools', value: '19', unit: 'available' },
   ];
 
   return (
@@ -451,7 +419,12 @@ response = client.messages.create(
       color: T.t1,
     }}>
       <AmbientOrbs />
-      <Nav />
+      <SiteNav
+        activePage="agent"
+        ctaLabel="Get API Key"
+        ctaHref="#request-key"
+        ctaHighlight={true}
+      />
 
       {/* ── Hero ── */}
       <section style={{
@@ -580,7 +553,7 @@ response = client.messages.create(
             Connect in 2 minutes.
           </h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div className="agent-quickstart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           {/* Claude Desktop config */}
           <div>
             <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, color: T.t3, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
@@ -641,7 +614,7 @@ response = client.messages.create(
             Free tier is open indefinitely. Pro tier pricing introduced when the product earns it.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 18 }}>
+        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
           <TierCard
             name="Free"
             price="$0"

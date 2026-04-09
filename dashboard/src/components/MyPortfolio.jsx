@@ -17,29 +17,29 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { T, FONTS } from "../tokens";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ── Constants — use T.* tokens as source of truth ────────────────────────────
 const LS_KEY = "cc_portfolio";
-const GOLD   = "#C8A84B";
-const GREEN  = "#00E87A";
-const RED    = "#FF2D55";
-const BLUE   = "#3894D2";
+const GOLD   = T.gold;      // #d4a843
+const GREEN  = T.green;     // #00D98A
+const RED    = T.red;       // #FF3D5A
+const BLUE   = T.cyan;      // #06b6d4
 
 const GRADE_ORDER = ["A+", "A", "B+", "B", "C+", "C", "D", "F"];
 const gradeColor = (g) => {
-  if (!g) return T?.muted || "#666";
+  if (!g) return T.muted;
   if (g === "A+" || g === "A") return GREEN;
-  if (g === "B+" || g === "B") return "#7FFFB2";
+  if (g === "B+" || g === "B") return T.indigo;
   if (g === "C+" || g === "C") return GOLD;
-  if (g === "D") return "#FF8C42";
+  if (g === "D") return T.amber;
   return RED;
 };
 
 const signalColor = (s) => {
-  if (!s) return T?.muted || "#666";
+  if (!s) return T.muted;
   if (s === "STRONG OUTPERFORM") return GREEN;
-  if (s === "OUTPERFORM") return "#7FFFB2";
+  if (s === "OUTPERFORM") return T.indigo;
   if (s === "NEUTRAL") return GOLD;
-  if (s === "UNDERPERFORM") return "#FF8C42";
+  if (s === "UNDERPERFORM") return T.amber;
   return RED;
 };
 
@@ -163,7 +163,7 @@ function WatchCard({ asset, position, onEdit, onRemove, prevGrade }) {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <div>
-          <div style={{ fontFamily: FONTS.display, fontSize: 14, fontWeight: 700, color: "#EFF8FF" }}>
+          <div style={{ fontFamily: FONTS.display, fontSize: 14, fontWeight: 700, color: T.t1 }}>
             {a.symbol}
           </div>
           <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted, marginTop: 1 }}>
@@ -185,7 +185,7 @@ function WatchCard({ asset, position, onEdit, onRemove, prevGrade }) {
 
       {/* Price row */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 600, color: "#EFF8FF" }}>
+        <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 600, color: T.t1 }}>
           {fmtPrice(price)}
         </span>
         <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: chgColor }}>
@@ -258,11 +258,11 @@ function PositionModal({ symbol, asset, existing, onSave, onClose }) {
       display: "flex", alignItems: "center", justifyContent: "center",
     }} onClick={onClose}>
       <div style={{
-        background: "#060d1a", border: "1px solid rgba(56,148,210,0.2)",
+        background: T.surface, border: `1px solid ${T.borderMd}`,
         borderRadius: 16, padding: "28px 28px 24px",
         width: 320, position: "relative",
       }} onClick={e => e.stopPropagation()}>
-        <div style={{ fontFamily: FONTS.display, fontSize: 15, fontWeight: 700, color: "#EFF8FF", marginBottom: 4 }}>
+        <div style={{ fontFamily: FONTS.display, fontSize: 15, fontWeight: 700, color: T.t1, marginBottom: 4 }}>
           {symbol} Position
         </div>
         {a && (
@@ -329,7 +329,7 @@ const inputStyle = {
   display: "block", width: "100%", marginTop: 6,
   background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
   borderRadius: 6, padding: "8px 10px",
-  color: "#EFF8FF", fontFamily: FONTS.mono, fontSize: 12,
+  color: T.t1, fontFamily: FONTS.mono, fontSize: 12,
   outline: "none",
   boxSizing: "border-box",
 };
@@ -374,7 +374,7 @@ function AssetSearch({ universe, watchlist, onAdd }) {
           placeholder="Search assets to watch…"
           style={{
             background: "none", border: "none", outline: "none",
-            color: "#EFF8FF", fontFamily: FONTS.body, fontSize: 12,
+            color: T.t1, fontFamily: FONTS.body, fontSize: 12,
             flex: 1,
           }}
         />
@@ -383,7 +383,7 @@ function AssetSearch({ universe, watchlist, onAdd }) {
       {open && results.length > 0 && (
         <div style={{
           position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
-          background: "#060d1a", border: "1px solid rgba(56,148,210,0.2)",
+          background: T.surface, border: `1px solid ${T.borderMd}`,
           borderRadius: 8, overflow: "hidden", zIndex: 500,
           boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
         }}>
@@ -402,7 +402,7 @@ function AssetSearch({ universe, watchlist, onAdd }) {
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
               >
                 <div>
-                  <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 700, color: "#EFF8FF" }}>
+                  <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 700, color: T.t1 }}>
                     {n.symbol}
                   </span>
                   <span style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted, marginLeft: 8 }}>
@@ -464,7 +464,7 @@ function SummaryBar({ watchedAssets, positions }) {
       ].map(({ label, value, color }) => (
         <div key={label}>
           <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted }}>{label}</div>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 700, color: color || "#EFF8FF", marginTop: 1 }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 700, color: color || T.t1, marginTop: 1 }}>
             {value}
           </div>
         </div>
@@ -567,7 +567,7 @@ export default function MyPortfolio({ cisUniverse = [] }) {
           <div>
             <h2 style={{
               fontFamily: FONTS.display, fontSize: 22, fontWeight: 700,
-              color: "#EFF8FF", margin: 0, letterSpacing: "-0.02em",
+              color: T.t1, margin: 0, letterSpacing: "-0.02em",
             }}>
               My Portfolio
             </h2>

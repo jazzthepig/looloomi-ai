@@ -23,8 +23,8 @@ function PageNav({ activeTab, setActiveTab }) {
   return (
     <nav style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-      background: "rgba(6,15,27,0.90)", backdropFilter: "blur(18px)",
-      WebkitBackdropFilter: "blur(18px)",
+      background: "rgba(1,8,18,0.92)", backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
       borderBottom: `1px solid ${T.border}`,
       display: "flex", alignItems: "center",
       justifyContent: "space-between", padding: "0 48px", height: 56,

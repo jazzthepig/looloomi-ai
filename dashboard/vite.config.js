@@ -17,7 +17,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         vision: resolve(__dirname, 'vision.html'),
-        market: resolve(__dirname, 'market.html'),
+        // market entry removed (Q5 — cut market tab)
         app: resolve(__dirname, 'app.html'),
         quant: resolve(__dirname, 'quant.html'),
         strategy: resolve(__dirname, 'strategy.html'),

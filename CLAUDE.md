@@ -261,7 +261,7 @@ git push origin main
 - `CIS_METHODOLOGY.md` — complete index methodology spec for investors & agents
 
 **Done (Week 3 cont. — Mar 24–29):**
-- Vault GP "BumbleBee" partner integration: `/api/v1/vault/deposit-memo`, Drift vault
+- Vault GP "HumbleBee Capital" partner integration: `/api/v1/vault/deposit-memo`, Drift vault
   deposit flow, Solana memo encoding, partner attribution from referral links
 - Lead capture API: `/api/v1/leads/capture` + `/api/v1/leads/list` (Supabase-backed)
 - Wallet auth backend: `/api/v1/auth/nonce` + `/api/v1/auth/verify` (Solana Sign-In)
