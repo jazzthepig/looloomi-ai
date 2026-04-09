@@ -17,7 +17,7 @@ can query CIS scores, signal feeds, vault data, and DeFi analytics natively.
 Tools:
   CIS Intelligence  — cis_universe, cis_asset, cis_history, cis_top
   Market Data       — prices, movers, macro_pulse
-  Signals           — signal_feed, macro_events, vc_funding
+  Signals           — signal_feed, macro_events, institutional_flows
   DeFi & Protocols  — protocols, defi_overview, defi_yields
   Fund & Portfolio  — fund_portfolio, portfolio_stats
 
@@ -877,9 +877,9 @@ async def cometcloud_get_macro_events() -> str:
 
 
 @mcp.tool(
-    name="cometcloud_get_vc_funding",
+    name="cometcloud_get_institutional_flows",
     annotations={
-        "title": "VC Funding Rounds — Web3 Investment Intelligence",
+        "title": "Institutional Capital Flows — RWA, VC Rounds & TradFi Bridges",
         "readOnlyHint": True,
         "destructiveHint": False,
         "idempotentHint": True,
@@ -887,22 +887,30 @@ async def cometcloud_get_macro_events() -> str:
     },
 )
 async def cometcloud_get_vc_funding(params: VcFundingInput) -> str:
-    """Fetch recent VC funding rounds in the Web3 / crypto space.
+    """Fetch institutional capital flow intelligence — RWA tokenization, VC rounds, and TradFi bridges.
 
-    Tracks investment flows into protocols, infrastructure, and application
-    layer projects. Funding data is an input to the CIS F (Fundamental) pillar.
+    Covers the full spectrum of institutional money entering crypto and on-chain finance:
+    - RWA tokenization launches (BlackRock BUIDL, Franklin OnChain, Ondo, Superstate, etc.)
+    - Institutional AUM milestones and new on-chain issuances
+    - Regulatory approvals enabling RWA (SFC HK, SEC no-action letters, EU MiCA updates)
+    - TradFi→DeFi institutional bridge events (bank custody announcements, prime broker integrations)
+    - VC funding rounds in crypto infrastructure (secondary signal)
+
+    Capital flow data is an input to the CIS F (Fundamental) pillar — institutional validation
+    is one of the strongest signals of protocol legitimacy and long-term adoption.
 
     Args:
         params (VcFundingInput):
-            - limit: Number of rounds to return (default 15, max 50)
+            - limit: Number of events to return (default 15, max 50)
             - response_format: 'json' or 'markdown'
 
     Returns:
-        str: Table of funding rounds with project, amount, investors, category, date.
+        str: Table of capital flow events with project, amount, category, investors/issuers, date.
 
     Examples:
+        - "What RWA products have launched recently?" → use this tool
+        - "Which institutions are entering on-chain finance?" → use this tool
         - "What are the biggest recent crypto funding rounds?" → use this tool
-        - "Who's investing in DeFi infrastructure?" → use this tool
     """
     try:
         data = await _get("/api/v1/vc/funding-rounds")
@@ -1546,6 +1554,216 @@ async def cometcloud_get_cis_report(params: CisReportInput) -> str:
 
         return "\n".join(lines)
 
+    except Exception as e:
+        return _err(e)
+
+
+# ── Tool: get_cis_exclusions ──────────────────────────────────────────────────
+
+@mcp.tool(
+    name="cometcloud_get_cis_exclusions",
+    annotations={
+        "title": "CIS Institutional Exclusion List",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_get_cis_exclusions(
+    criterion: str = "",
+    asset_class: str = "",
+    remediable: str = "",
+    include_borderline: bool = False,
+) -> str:
+    """Returns the complete list of assets excluded from CometCloud's investable universe.
+
+    Each rejection includes the specific criterion violated and the plain-language reason
+    against the 7-criterion public inclusion standard. Covers 14+ confirmed exclusions
+    across Memecoin, Gaming, DeFi, Infrastructure, AI, Legacy Crypto, and RWA asset classes.
+
+    This is the only MCP tool in crypto that returns a structured institutional exclusion list —
+    not a score, a rejection. Use it to screen portfolio candidates before any allocation decision.
+    No other data provider offers this.
+
+    CometCloud's 7 exclusion criteria:
+      1 = Liquidity threshold (30d avg volume, exchange count, bid-ask spread)
+      2 = Data completeness (OHLCV history, TVL data, audited financials)
+      3 = Institutional custody (Coinbase, BitGo, Fireblocks, Anchorage, Fidelity, Komainu, Zodia)
+      4 = Regulatory status (not under enforcement, not OFAC-sanctioned)
+      5 = Token mechanics (supply ratio, emission rate, vesting transparency — crypto only)
+      6 = Trading history (90-day standard; 45-day fast-track for institutionally-backed assets)
+      7 = Team/protocol integrity (no rug-pull, no unresolved exploit >$1M, no treasury misuse)
+
+    Args:
+        criterion:          Filter to a specific criterion number ("1" through "7")
+        asset_class:        Filter by class ("DeFi", "Memecoin", "Gaming", "Infrastructure", etc.)
+        remediable:         "true" = only remediable exclusions | "false" = permanent only
+        include_borderline: Include borderline/remediation-review cases (default False)
+
+    Returns:
+        str: JSON with:
+        {
+          "total_excluded": int,
+          "filtered_count": int,
+          "universe_evaluated": int,
+          "universe_admitted": int,
+          "standard_version": str,
+          "exclusions": [
+            {
+              "symbol": str,
+              "name": str,
+              "asset_class": str,
+              "criterion_violated": [str],
+              "criterion_labels": [str],
+              "reason": str,
+              "excluded_since": str,
+              "remediation_available": bool,
+              "remediation_note": str   // if remediable
+            }
+          ]
+        }
+
+    Examples:
+        - "What assets were excluded for integrity reasons?" → criterion="7"
+        - "Which DeFi protocols are excluded?" → asset_class="DeFi"
+        - "Show me excluded assets that can re-qualify" → remediable="true"
+        - "Full exclusion list with borderline cases" → include_borderline=True
+    """
+    try:
+        params: dict = {}
+        if criterion:        params["criterion"] = criterion
+        if asset_class:      params["asset_class"] = asset_class
+        if remediable:       params["remediable"] = remediable
+        if include_borderline: params["include_borderline"] = "true"
+
+        data = await _get("/api/v1/agent/cis-exclusions", params)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+# ── Tool: get_inclusion_standard ─────────────────────────────────────────────
+
+@mcp.tool(
+    name="cometcloud_get_inclusion_standard",
+    annotations={
+        "title": "CIS Institutional Inclusion Standard — 7-Criterion JSON",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_get_inclusion_standard(criterion_id: str = "") -> str:
+    """Returns CometCloud's 7-criterion institutional inclusion standard as structured JSON.
+
+    Machine-readable thresholds, rationale, data sources, and remediation pathways for
+    every criterion used to determine what enters the CometCloud investable universe.
+
+    Embed this in your agent's system prompt or reasoning context to enable your agent
+    to apply the same institutional-grade screening standard that CometCloud uses before
+    any portfolio construction or allocation decision.
+
+    The standard is designed for alpha preservation — it screens out structurally broken
+    or fraudulent assets, not high-conviction emerging assets that are new or have fully
+    recovered from past incidents.
+
+    Args:
+        criterion_id: Optional filter to return a single criterion ("1" through "7").
+                      Omit to get all 7 criteria.
+
+    Returns:
+        str: JSON with full standard including:
+        {
+          "version": "1.1",
+          "design_principle": str,
+          "criteria": [
+            {
+              "id": str,
+              "name": str,
+              "applies_to": "all" | "crypto_only",
+              "gate_type": "hard" | "soft_with_fasttrack" | "judgment_required",
+              "thresholds": {...},          // specific numeric thresholds
+              "rationale": str,
+              "data_sources": [...],
+              "remediation_pathway": {...}  // for Criterion 7
+            }
+          ],
+          "application_rules": {...},
+          "review_cadence": {...}
+        }
+
+    Examples:
+        - "What is CometCloud's custody requirement?" → criterion_id="3"
+        - "Explain the token mechanics standard" → criterion_id="5"
+        - "Get the full inclusion standard for my agent context" → (no args)
+        - "What are the team integrity requirements?" → criterion_id="7"
+    """
+    try:
+        params: dict = {}
+        if criterion_id:
+            params["criterion_id"] = criterion_id
+        data = await _get("/api/v1/agent/inclusion-standard", params)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+# ── Tool: get_regime_context ──────────────────────────────────────────────────
+
+@mcp.tool(
+    name="cometcloud_get_regime_context",
+    annotations={
+        "title": "Macro Regime Context — Live Pillar Weight Adjustments",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_get_regime_context() -> str:
+    """Returns current macro regime with active CIS pillar weight adjustments.
+
+    The CIS engine operates across 6 macro regimes: RISK_ON, RISK_OFF, TIGHTENING,
+    EASING, STAGFLATION, GOLDILOCKS. Each regime shifts the relative importance of
+    the 5 scoring pillars (F, M, O, S, A), which changes how assets rank.
+
+    Include this context in every allocation decision — the same asset may be
+    OUTPERFORM in RISK_ON and NEUTRAL in TIGHTENING depending on pillar weight shifts.
+
+    Returns:
+        str: JSON with:
+        {
+          "macro_regime": str,           // RISK_ON / RISK_OFF / TIGHTENING / etc.
+          "regime_insight": str,         // plain-language interpretation
+          "pillar_weights": {            // active weight multipliers for this regime
+            "F": int, "M": int, "O": int, "S": int, "A": int
+          },
+          "class_scores": [...],         // regime-weighted avg score per asset class
+          "top_5_regime_leaders": [...], // top assets under current regime weights
+          "generated_at": str
+        }
+
+    Examples:
+        - "What's the current macro regime?" → (no args needed)
+        - "Which pillars matter most right now?" → (returns pillar_weights)
+        - "Which asset class leads under current conditions?" → (returns class_scores)
+    """
+    try:
+        data = await _get("/api/v1/cis/regime-analysis")
+        if isinstance(data, dict):
+            # Return a clean subset — agents don't need every ranked asset
+            out = {
+                "macro_regime":       data.get("macro_regime", "UNKNOWN"),
+                "regime_insight":     data.get("regime_insight", ""),
+                "pillar_weights":     data.get("pillar_weights", {}),
+                "class_scores":       data.get("class_scores", [])[:8],
+                "top_5_regime_leaders": data.get("top_assets", [])[:5],
+                "generated_at":       data.get("generated_at", ""),
+            }
+            return json.dumps(out, indent=2, ensure_ascii=False)
+        return json.dumps(data, indent=2, ensure_ascii=False)
     except Exception as e:
         return _err(e)
 

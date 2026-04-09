@@ -661,7 +661,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                     <strong style={{ color: T.violet, fontSize: 10, fontWeight: 700 }}>How it works:</strong><br />
                     1. This signs a lightweight Solana Memo tx (~0.000005 SOL fee) tagging your wallet as a CometCloud depositor.<br />
                     2. You then complete the actual USDC deposit on Drift's vault page.<br />
-                    3. BumbleBee can attribute your AUM contribution on-chain.
+                    3. HumbleBee can attribute your AUM contribution on-chain.
                   </div>
 
                   {/* Amount input */}

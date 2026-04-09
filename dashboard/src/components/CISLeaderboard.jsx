@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense, useMemo } from "react";
 import { T, FONTS } from "../tokens";
+
+const CISCompare = lazy(() => import("./CISCompare"));
 
 /* ─── Inline Sparkline SVG ───────────────────────────────────────────── */
 const Sparkline = ({ scores, width = 72, height = 24 }) => {
   if (!scores || scores.length < 2) {
     return (
       <div style={{ width, height, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 9, color: "rgba(0,0,0,0.15)", fontFamily: "monospace" }}>—</span>
+        <span style={{ fontSize: 9, color: T.dim, fontFamily: FONTS.mono }}>—</span>
       </div>
     );
   }
@@ -25,7 +27,7 @@ const Sparkline = ({ scores, width = 72, height = 24 }) => {
   const last  = scores[scores.length - 1];
   const first = scores[0];
   const diff  = last - first;
-  const color = diff > 1 ? "#00D98A" : diff < -1 ? "#FF2D55" : "rgba(0,0,0,0.15)";
+  const color = diff > 1 ? "#00D98A" : diff < -1 ? "#FF2D55" : T.dim;
 
   return (
     <svg width={width} height={height} style={{ display: "block", overflow: "visible" }}>
@@ -180,6 +182,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   const [classFilter, setClassFilter] = useState("All");
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [sortBy, setSortBy] = useState("rank");
+  const [viewMode, setViewMode] = useState("leaderboard"); // "leaderboard" | "compare"
+  const [methodologyOpen, setMethodologyOpen] = useState(false); // collapsed by default
   const [dataSource, setDataSource] = useState("loading");
   const [engineSource, setEngineSource] = useState(null); // "local_engine" | "railway"
   const [updatedAt, setUpdatedAt] = useState(null);
@@ -552,61 +556,98 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             </span>
           )}
         </div>
-        <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>
-          CIS v4.1 · {data.length} assets
-          {updatedAt && <span style={{ marginLeft: 8, opacity: 0.5 }}>Updated: {updatedAt}</span>}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>
+            CIS v4.1 · {data.length} assets
+            {updatedAt && <span style={{ marginLeft: 8, opacity: 0.5 }}>Updated: {updatedAt}</span>}
+          </span>
+          {/* View mode toggle */}
+          <div style={{ display: "flex", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 6, overflow: "hidden" }}>
+            {[
+              { key: "leaderboard", label: "Leaderboard" },
+              { key: "compare",     label: "Compare ↔" },
+            ].map(v => (
+              <button
+                key={v.key}
+                onClick={() => setViewMode(v.key)}
+                style={{
+                  padding: "4px 10px",
+                  border: "none",
+                  background: viewMode === v.key ? T.borderHi : "transparent",
+                  color: viewMode === v.key ? T.t1 : T.muted,
+                  fontSize: 10,
+                  fontFamily: FONTS.mono,
+                  cursor: "pointer",
+                  fontWeight: viewMode === v.key ? 600 : 400,
+                  transition: "all 0.15s",
+                }}
+              >{v.label}</button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Objectives + Methodology Banner */}
-      <div style={{
-        marginBottom: 20, padding: "18px 20px",
-        background: "rgba(68,114,255,0.04)", border: "1px solid rgba(68,114,255,0.14)",
-        borderRadius: 10,
-      }}>
-        <div style={{
-          fontFamily: FONTS.display, fontSize: 10, fontWeight: 700,
-          color: "#4472FF", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10,
-        }}>
-          CometCloud Intelligence Score — CIS v4.1
-        </div>
-        <div style={{
-          fontFamily: FONTS.body, fontSize: 12, color: T.secondary,
-          lineHeight: 1.75, marginBottom: 14,
-        }}>
-          A quantitative multi-pillar scoring system providing institutional investors with a systematic,
-          data-driven basis for allocation and position-sizing decisions across crypto and traditional assets —
-          updated every 30 minutes, comparable on a unified 0–100 scale.
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-          {[
-            {
-              title: "Problem Solved",
-              text: "Eliminates subjective analyst ratings. Algorithmic, reproducible scoring removes emotional bias from allocation decisions and provides a continuous signal — not quarterly reviews.",
-            },
-            {
-              title: "Methodology",
-              text: "5 independent pillars: F (Fundamental) · M (Market Structure) · O (On-Chain Health) · S (Sentiment) · A (Alpha Independence). Graded by absolute thresholds (A+≥85 → F<25) — consistent across all market regimes. Percentile rank shown as metadata only.",
-            },
-            {
-              title: "Institutional Application",
-              text: "CIS grades provide a standardized, cross-asset scoring framework. Grade A/B reflect strong composite signals across multiple pillars. Grade C reflects mixed or deteriorating signals. Grade D/F reflect weak scores relative to the live universe. Applicable across crypto and TradFi on the same methodology.",
-            },
-          ].map(card => (
-            <div key={card.title} style={{
-              background: "#0D2038", border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: 8, padding: "12px 14px",
-            }}>
-              <div style={{
-                fontFamily: FONTS.display, fontSize: 10, fontWeight: 700,
-                color: T.primary, marginBottom: 6, letterSpacing: "0.04em",
-              }}>{card.title}</div>
-              <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted, lineHeight: 1.65 }}>
-                {card.text}
-              </div>
+      {/* Objectives + Methodology Banner — collapsible */}
+      <div style={{ marginBottom: 16 }}>
+        {/* Toggle row */}
+        <button
+          onClick={() => setMethodologyOpen(o => !o)}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            width: "100%", background: "rgba(68,114,255,0.04)",
+            border: "1px solid rgba(68,114,255,0.14)", borderRadius: methodologyOpen ? "10px 10px 0 0" : 10,
+            padding: "10px 16px", cursor: "pointer",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontFamily: FONTS.mono, fontSize: 10, fontWeight: 700, color: T.blue, letterSpacing: "0.14em", textTransform: "uppercase" }}>
+              CometCloud Intelligence Score — CIS v4.1
+            </span>
+            <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
+              5-pillar · 0–100 scale · 30min refresh · absolute grade thresholds
+            </span>
+          </div>
+          <span style={{ color: T.muted, fontSize: 14, lineHeight: 1, transform: methodologyOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
+        </button>
+
+        {/* Expanded content */}
+        {methodologyOpen && (
+          <div style={{
+            padding: "16px 18px 18px",
+            background: "rgba(68,114,255,0.03)", border: "1px solid rgba(68,114,255,0.14)",
+            borderTop: "none", borderRadius: "0 0 10px 10px",
+          }}>
+            <div style={{ fontFamily: FONTS.body, fontSize: 12, color: T.secondary, lineHeight: 1.75, marginBottom: 14 }}>
+              A quantitative multi-pillar scoring system providing institutional investors with a systematic,
+              data-driven basis for allocation and position-sizing decisions across crypto and traditional assets —
+              updated every 30 minutes, comparable on a unified 0–100 scale.
             </div>
-          ))}
-        </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+              {[
+                {
+                  title: "Problem Solved",
+                  text: "Eliminates subjective analyst ratings. Algorithmic, reproducible scoring removes emotional bias and provides a continuous signal — not quarterly reviews.",
+                },
+                {
+                  title: "Methodology",
+                  text: "5 pillars: F (Fundamental) · M (Market Structure) · O (On-Chain Health) · S (Sentiment) · A (Alpha Independence). Absolute thresholds: A+≥85 → F<25. Percentile rank is metadata only.",
+                },
+                {
+                  title: "Institutional Application",
+                  text: "Grade A/B = strong composite signals across pillars. Grade C = mixed or deteriorating signals. Grade D/F = weak scores. Applicable across crypto and TradFi on unified methodology.",
+                },
+              ].map(card => (
+                <div key={card.title} style={{
+                  background: T.raised, border: `1px solid ${T.border}`,
+                  borderRadius: 8, padding: "12px 14px",
+                }}>
+                  <div style={{ fontFamily: FONTS.display, fontSize: 10, fontWeight: 700, color: T.primary, marginBottom: 6, letterSpacing: "0.04em" }}>{card.title}</div>
+                  <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.muted, lineHeight: 1.65 }}>{card.text}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Backtest Validation Strip */}
@@ -631,7 +672,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             {Object.entries(backtest.returns_by_grade).map(([grade, ret]) => {
               // TradFi assets return 0.0 — Binance klines don't carry SPY/AAPL/GLD/TLT
               const noData = typeof ret !== "number" || ret === 0;
-              const color = noData ? "rgba(0,0,0,0.15)" : ret > 3 ? "#00D98A" : ret > 0 ? "#4472FF" : "#FF2D55";
+              const color = noData ? "rgba(148,163,184,0.25)" : ret > 3 ? "#00D98A" : ret > 0 ? "#4472FF" : "#FF2D55";
               return (
                 <div key={grade} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
                   <span style={{
@@ -689,14 +730,42 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             <div className="grade-count" style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.primary }}>
               {g.grade === "A" ? gradeSummary.A : g.grade === "B" ? gradeSummary.B : g.grade === "C" ? gradeSummary.C : gradeSummary.D}
             </div>
-            <div className="grade-label" style={{ fontSize: 9, color: "#3E6680", letterSpacing: "0.06em" }}>
+            <div className="grade-label" style={{ fontSize: 9, color: T.muted, letterSpacing: "0.06em" }}>
               {g.label}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Filters Row */}
+      {/* ── Compare view ── */}
+      {viewMode === "compare" && (
+        <div style={{ marginTop: 8, marginBottom: 20 }}>
+          <Suspense fallback={<div style={{ padding: 32, textAlign: "center", color: T.muted, fontFamily: FONTS.mono, fontSize: 11 }}>Loading compare…</div>}>
+            <CISCompare
+              cisUniverse={
+                // Normalise internal `data` shape → CISCompare's expected shape
+                data.map(a => ({
+                  symbol:      a.asset_id?.toUpperCase() || a.symbol || "",
+                  name:        a.asset_name || a.name || a.asset_id || "",
+                  asset_class: a.asset_class || "—",
+                  cis_score:   a.total_score ?? a.cis_score ?? 0,
+                  change_24h:  a.change_24h,
+                  change_7d:   a.change_7d,
+                  change_30d:  a.change_30d,
+                  price:       a.price,
+                  grade:       a.grade,
+                  signal:      a.signal,
+                  data_tier:   a.data_tier,
+                  pillars:     a.pillars,
+                }))
+              }
+            />
+          </Suspense>
+        </div>
+      )}
+
+      {/* Filters Row + Table (leaderboard view) */}
+      {viewMode === "leaderboard" && (<>
       <div className="cis-filters" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {/* Grade Tabs */}
@@ -734,7 +803,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           })}
         </div>
         {/* Pillar Legend - Top */}
-        <div className="cis-pillar-legend-top" style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 9, color: "#3E6680" }}>
+        <div className="cis-pillar-legend-top" style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 9, color: T.muted }}>
           {PILLAR_DEFS.map(p => (
             <span key={p.key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.color }} />
@@ -755,9 +824,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             style={{
               display: "grid", gridTemplateColumns: "34px 1fr 80px 45px 50px 60px 80px",
               gap: 8, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
-              fontSize: 9, color: "#3E6680", letterSpacing: "0.14em",
+              fontSize: 9, color: T.muted, letterSpacing: "0.14em",
               textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
-              background: "#0D2038",
+              background: T.raised,
               transition: "box-shadow 0.2s ease",
               position: "sticky",
               top: 0,
@@ -802,7 +871,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(13,32,56,0.6)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent"; }}
               >
-                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: "#3E6680", textAlign: "center" }}>{item.rank}</span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, textAlign: "center" }}>{item.rank}</span>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <span style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 700, color: T.primary }}>{item.asset_name}</span>
@@ -846,7 +915,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                 }}>{item.grade}</span>
                 {/* LAS */}
                 <span style={{ fontFamily: FONTS.mono, fontSize: 11, textAlign: "right",
-                  color: (item.las ?? 0) >= 60 ? "#00E87A" : (item.las ?? 0) >= 40 ? "#3E6680" : "#FF3D5A" }}>
+                  color: (item.las ?? 0) >= 60 ? "#00E87A" : (item.las ?? 0) >= 40 ? T.muted : "#FF3D5A" }}>
                   {item.las != null ? item.las.toFixed(1) : "—"}
                 </span>
                 {/* Signal */}
@@ -870,12 +939,12 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         {/* Right: Detail Panel */}
         <div className="cis-detail-panel" style={{
           border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden",
-          background: T.surface, position: "sticky", top: 80,
+          background: T.surface, position: "sticky", top: 72,
         }}>
           {/* Detail Header */}
           <div style={{
             padding: "18px 20px", borderBottom: `1px solid ${T.border}`,
-            background: "#0D2038",
+            background: T.raised,
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <div>
@@ -883,7 +952,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   {selectedAsset?.asset_name}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
-                  <span style={{ fontSize: 9, color: "#3E6680" }}>
+                  <span style={{ fontSize: 9, color: T.muted }}>
                     {selectedAsset?.asset_class} · Rank #{selectedAsset?.rank}
                     {selectedAsset?.percentile_rank != null ? ` · P${Math.round(selectedAsset.percentile_rank)}` : ""}
                   </span>
@@ -913,7 +982,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                 fontFamily: FONTS.mono, fontSize: 42, fontWeight: 400, lineHeight: 1, letterSpacing: "-0.03em",
                 color: (selectedAsset?.total_score ?? 0) >= 85 ? T.green : (selectedAsset?.total_score ?? 0) >= 70 ? T.blue : T.amber
               }}>{(selectedAsset?.total_score ?? 0).toFixed(1)}</span>
-              <span style={{ fontSize: 10, color: "#3E6680" }}>/ 100</span>
+              <span style={{ fontSize: 10, color: T.muted }}>/ 100</span>
             </div>
           </div>
 
@@ -928,7 +997,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
 
             {/* Pillar Bars + Factor Attribution */}
             <div style={{
-              marginBottom: 6, fontSize: 9, color: "#3E6680",
+              marginBottom: 6, fontSize: 9, color: T.muted,
               fontFamily: FONTS.display, letterSpacing: "0.1em", textTransform: "uppercase",
             }}>
               Grade Drivers
@@ -939,10 +1008,10 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
               const scaled  = isNull ? 0 : Math.round((raw / 100) * p.weight * 10) / 10;
               const mean    = pillarMeans[p.key];
               const dev     = (!isNull && mean != null) ? raw - mean : null;
-              const devColor = dev == null ? "#3E6680"
+              const devColor = dev == null ? T.muted
                 : dev >  8 ? "#00D98A"
                 : dev >  2 ? "#4472FF"
-                : dev > -2 ? "#3E6680"
+                : dev > -2 ? T.muted
                 : dev > -8 ? "#F59E0B"
                 :            "#FF3D5A";
               const devLabel = dev == null ? null
@@ -952,7 +1021,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                       <span style={{ width: 5, height: 5, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
-                      <span style={{ fontSize: 9, letterSpacing: "0.10em", color: "#3E6680", fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
+                      <span style={{ fontSize: 9, letterSpacing: "0.10em", color: T.muted, fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
                         {p.name}
                       </span>
                     </div>
@@ -967,9 +1036,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                           {devLabel} vs avg
                         </span>
                       )}
-                      <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 500, color: isNull ? "#3E6680" : p.color }}>
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 500, color: isNull ? T.muted : p.color }}>
                         {isNull ? "—" : raw}
-                        <span style={{ color: "#3E6680", fontSize: 9 }}>{isNull ? "" : ` (${scaled}pts)`}</span>
+                        <span style={{ color: T.muted, fontSize: 9 }}>{isNull ? "" : ` (${scaled}pts)`}</span>
                       </span>
                     </div>
                   </div>
@@ -990,7 +1059,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             })}
 
             {/* Footer */}
-            <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${T.border}`, fontSize: 9, color: "#3E6680" }}>
+            <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${T.border}`, fontSize: 9, color: T.muted }}>
               CIS v4.1 · Scored by Looloomi AI · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </div>
           </div>
@@ -1001,7 +1070,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
       <div className="cis-pillar-legend-bottom" style={{
         marginTop: 16, paddingTop: 14, borderTop: `1px solid ${T.border}`,
         display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap",
-        fontSize: 9, color: "#3E6680"
+        fontSize: 9, color: T.muted
       }}>
         {PILLAR_DEFS.map(p => (
           <span key={p.key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -1020,7 +1089,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           {/* Header */}
           <div style={{
             padding: "20px 24px", borderBottom: `1px solid ${T.border}`,
-            background: "#0D2038",
+            background: T.raised,
           }}>
             <div style={{
               fontFamily: FONTS.display, fontSize: 14, fontWeight: 700,
@@ -1040,9 +1109,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${T.border}` }}>
-                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 11, color: "#3E6680", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700 }}>Pillar</th>
-                  <th style={{ textAlign: "center", padding: "10px 8px", fontSize: 11, color: "#3E6680", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700, width: 80 }}>Weight</th>
-                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 11, color: "#3E6680", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700 }}>What it measures</th>
+                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 11, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700 }}>Pillar</th>
+                  <th style={{ textAlign: "center", padding: "10px 8px", fontSize: 11, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700, width: 80 }}>Weight</th>
+                  <th style={{ textAlign: "left", padding: "10px 8px", fontSize: 11, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 700 }}>What it measures</th>
                 </tr>
               </thead>
               <tbody>
@@ -1070,7 +1139,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           {/* Footer note */}
           <div style={{
             padding: "14px 24px", borderTop: `1px solid ${T.border}`,
-            background: "#0D2038",
+            background: T.raised,
           }}>
             <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted, lineHeight: 1.6 }}>
               CIS scores are recalculated every 30 minutes using live market, on-chain, and macro data.
@@ -1125,6 +1194,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           ))}
         </div>
       </div>
+      </>)} {/* end viewMode === "leaderboard" */}
     </div>
   );
 }

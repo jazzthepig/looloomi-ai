@@ -43,7 +43,7 @@ INVESTMENT_RANGES = [
 # ── Known referral partners (for attribution display) ─────────────────────────
 _REFERRAL_PARTNERS = {
     "nic":        "Nic — Senior Network Lead",
-    "bumblebee":  "BumbleBee Capital",
+    "humblebee":  "HumbleBee Capital",
     "est":        "EST Alpha",
     "cometcloud": "CometCloud Direct",
 }
