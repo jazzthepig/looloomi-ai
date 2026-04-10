@@ -866,10 +866,14 @@ def calculate_cis_score(
     spy_change_30d: Optional[float] = None,
     asset_betas: Optional[dict] = None,
     category_median_30d: Optional[float] = None,  # v4.1: median 30d change for category
+    dev_activity_score: Optional[float] = None,   # v4.2: CG Pro dev score 0-100 (tech assets)
+    eodhd_fundamentals: Optional[dict] = None,    # v4.2: EODHD PE/revenue data (US Equity)
 ) -> Dict[str, Any]:
     """
-    CIS v4.1 — Continuous scoring functions.
+    CIS v4.2 — Continuous scoring functions.
     All pillars use log-scale or linear interpolation for genuine differentiation.
+    v4.2 additions: CG Pro dev_activity_score in F pillar for tech assets;
+    EODHD PE/revenue scoring in F pillar for US Equity.
     """
     market_cap = market_data.get("market_cap", 0) if market_data else 0
     volume_24h = market_data.get("volume_24h", 0) if market_data else 0
@@ -887,6 +891,7 @@ def calculate_cis_score(
 
     # ── F — Fundamental (Structural Quality) ──────────────────────────
     # Continuous: mcap log-scale (0-50) + tvl log-scale (0-20) + fdv fairness (0-15) + supply (0-15)
+    # v4.2: US Equity → PE/revenue replace fdv/supply; tech assets → CG dev_activity bonus (0-10)
     has_tvl_class = asset_class in ["DeFi", "L2"]
     mcap_cap = 50 if has_tvl_class else 70  # Redistribute TVL points if N/A
 
@@ -895,27 +900,77 @@ def calculate_cis_score(
 
     # FDV fairness: ratio=1 → 15, ratio≥5 → 0, linear between
     fdv_score = 0.0
-    if fdv > 0 and market_cap > 0:
-        ratio = fdv / market_cap
-        fdv_score = max(0, _linear_interp(ratio, 1.0, 5.0, 15.0, 0.0))
-
-    # Supply health: continuous 0-15 based on circ/total
     supply_ratio = (circ_supply / total_supply) if (total_supply > 0 and circ_supply > 0) else 0
     supply_score = min(15, supply_ratio * 15)
 
-    f_score = round(max(0, min(100, mcap_score + tvl_score + fdv_score + supply_score)), 1)
+    if asset_class != "US Equity":
+        if fdv > 0 and market_cap > 0:
+            ratio = fdv / market_cap
+            fdv_score = max(0, _linear_interp(ratio, 1.0, 5.0, 15.0, 0.0))
 
-    f_components = {
+    # v4.2: EODHD fundamentals for US Equity — PE + revenue replace fdv + supply
+    eodhd_pe_score = 0.0
+    eodhd_rev_score = 0.0
+    if asset_class == "US Equity" and eodhd_fundamentals:
+        pe = eodhd_fundamentals.get("pe_ratio")
+        rev_growth = eodhd_fundamentals.get("revenue_growth_yoy")
+        # PE scoring: sweet spot 10-25 → up to 15pts; high PE or negative → penalty
+        if pe is not None and pe > 0:
+            if pe <= 10:
+                eodhd_pe_score = _linear_interp(pe, 5, 10, 8, 13)
+            elif pe <= 25:
+                eodhd_pe_score = _linear_interp(pe, 10, 25, 13, 15)
+            elif pe <= 40:
+                eodhd_pe_score = _linear_interp(pe, 25, 40, 15, 5)
+            else:
+                eodhd_pe_score = max(0, _linear_interp(pe, 40, 100, 5, 0))
+        # Revenue growth YoY: -10% → 0, flat → 7, +25% → 15 (cap)
+        if rev_growth is not None:
+            if rev_growth >= 25:
+                eodhd_rev_score = 15.0
+            elif rev_growth >= 0:
+                eodhd_rev_score = _linear_interp(rev_growth, 0, 25, 7, 15)
+            else:
+                eodhd_rev_score = max(0, _linear_interp(rev_growth, -10, 0, 0, 7))
+        fdv_score = eodhd_pe_score
+        supply_score = eodhd_rev_score
+
+    # v4.2: Dev activity bonus for tech assets (CG Pro developer_data, pre-fetched)
+    # Classes that benefit: L1, L2, DeFi, Infrastructure, AI, RWA
+    _is_tech_asset = asset_class in {"L1", "L2", "DeFi", "Infrastructure", "AI", "RWA"}
+    dev_bonus = 0.0
+    if _is_tech_asset and dev_activity_score is not None:
+        # dev_activity_score 0-100 → bonus 0-10 (linear; 50 → 5, 90 → 9)
+        dev_bonus = min(10.0, dev_activity_score * 0.10)
+
+    f_score = round(max(0, min(100, mcap_score + tvl_score + fdv_score + supply_score + dev_bonus)), 1)
+
+    f_components: dict = {
         "market_cap_usd": market_cap,
         "market_cap_score": round(mcap_score, 1),
         "tvl_usd": tvl if has_tvl_class else None,
         "tvl_score": round(tvl_score, 1),
-        "fdv_usd": fdv,
-        "fdv_ratio": round(fdv / market_cap, 2) if market_cap > 0 and fdv > 0 else None,
-        "fdv_score": round(fdv_score, 1),
-        "supply_ratio": round(supply_ratio, 3),
-        "supply_score": round(supply_score, 1),
     }
+    if asset_class == "US Equity" and eodhd_fundamentals:
+        f_components.update({
+            "pe_ratio": eodhd_fundamentals.get("pe_ratio"),
+            "pe_score": round(eodhd_pe_score, 1),
+            "revenue_growth_yoy": eodhd_fundamentals.get("revenue_growth_yoy"),
+            "revenue_score": round(eodhd_rev_score, 1),
+            "gross_margin": eodhd_fundamentals.get("gross_margin"),
+            "profit_margin": eodhd_fundamentals.get("profit_margin"),
+        })
+    else:
+        f_components.update({
+            "fdv_usd": fdv,
+            "fdv_ratio": round(fdv / market_cap, 2) if market_cap > 0 and fdv > 0 else None,
+            "fdv_score": round(fdv_score, 1),
+            "supply_ratio": round(supply_ratio, 3),
+            "supply_score": round(supply_score, 1),
+        })
+    if dev_bonus > 0:
+        f_components["dev_activity_score_cg"] = round(dev_activity_score, 1)
+        f_components["dev_bonus"] = round(dev_bonus, 1)
 
     # ── M — Momentum (Market Activity) ───────────────────────────────
     # volume log-scale (0-40) + liquidity ratio (0-25) + price momentum (0-35)
@@ -1459,14 +1514,62 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     - Crypto: CoinGecko API
     - US Equities/Bonds/Commodities: yfinance
     """
+    # ── v4.2 pre-fetch helpers ────────────────────────────────────────
+    async def _fetch_cg_dev_bulk() -> dict:
+        """Pre-fetch CG Pro developer_data for all tech assets. 24h Redis TTL."""
+        _tech_classes = {"L1", "L2", "DeFi", "Infrastructure", "AI", "RWA"}
+        _sem = asyncio.Semaphore(4)
+        _results: dict = {}
+        async def _one(aid: str, cg_id: str):
+            async with _sem:
+                try:
+                    from data.market.data_layer import get_cg_developer_data
+                    data = await get_cg_developer_data(cg_id)
+                    if data and "error" not in data:
+                        _results[aid] = data
+                except Exception:
+                    pass
+        tasks = [
+            _one(aid, cfg["coingecko"])
+            for aid, cfg in CRYPTO_ASSETS.items()
+            if cfg.get("class") in _tech_classes and cfg.get("coingecko")
+        ]
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        return _results
+
+    async def _fetch_eodhd_bulk() -> dict:
+        """Pre-fetch EODHD fundamentals for US Equity assets. 6h Redis TTL."""
+        _sem = asyncio.Semaphore(3)
+        _results: dict = {}
+        async def _one(aid: str, ticker: str):
+            async with _sem:
+                try:
+                    from data.market.data_layer import get_eodhd_fundamentals
+                    data = await get_eodhd_fundamentals(ticker, "US")
+                    if data and "error" not in data:
+                        _results[aid] = data
+                except Exception:
+                    pass
+        tasks = [
+            _one(aid, cfg["yfinance"])
+            for aid, cfg in US_EQUITIES.items()
+            if cfg.get("yfinance")
+        ]
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        return _results
+
     # Fetch all data concurrently
     # Priority: Binance (fast, no rate limit) > CoinGecko (fallback)
-    binance_prices, cg_markets, llama_tvl, fng, github_activity = await asyncio.gather(
+    binance_prices, cg_markets, llama_tvl, fng, github_activity, cg_dev_data, eodhd_data = await asyncio.gather(
         fetch_binance_prices(),
         fetch_cg_markets(),
         fetch_defillama_tvl(),
         fetch_fear_greed(),
         fetch_github_activity(),   # Phase 2B: dev activity (best-effort, 2h cache)
+        _fetch_cg_dev_bulk(),      # v4.2: CG Pro developer data for tech assets
+        _fetch_eodhd_bulk(),       # v4.2: EODHD fundamentals for US Equity
     )
 
     # Merge: Binance as primary (speed), CoinGecko enriches missing fields
@@ -1609,6 +1712,10 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             except Exception as e:
                 print(f"[CIS] beta calculation failed for {asset_id}: {e}")
 
+        # v4.2: resolve per-asset enrichment data
+        asset_dev_score = (cg_dev_data.get(asset_id) or {}).get("dev_activity_score") if not is_tradfi else None
+        asset_eodhd = eodhd_data.get(asset_id) if asset_class == "US Equity" else None
+
         pillars_result = calculate_cis_score(
             market_data, tvl, fng, asset_class,
             btc_change_30d=asset_btc_30d,
@@ -1617,6 +1724,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             spy_change_30d=asset_spy_30d,
             asset_betas=asset_betas,
             category_median_30d=category_medians.get(asset_class, 0),
+            dev_activity_score=asset_dev_score,
+            eodhd_fundamentals=asset_eodhd,
         )
         pillars = {k: v for k, v in pillars_result.items() if k != "breakdown"}
         breakdown = pillars_result.get("breakdown", {})
