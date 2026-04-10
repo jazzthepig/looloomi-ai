@@ -22,6 +22,10 @@ from data.market.data_layer import (
     get_fear_greed, get_eth_gas, calculate_mmi,
     get_cg_global, get_cg_trending, get_gecko_terminal_pools, get_cg_derivatives,
     get_cg_markets, get_defi_protocols_curated, get_macro_pulse,
+    # v4.2: paid API endpoints
+    get_economic_dashboard, get_cg_developer_data,
+    get_cg_price_history, get_cg_exchange_concentration,
+    get_eodhd_earnings_calendar,
 )
 from src.api.store import redis_get
 
@@ -1105,3 +1109,111 @@ async def _fetch_macro_signals() -> list:
         return cache["data"]
     except Exception:
         return []
+
+
+# ── v4.2: Paid API endpoints ──────────────────────────────────────────────────
+
+@router.get("/api/v1/market/economic-indicators")
+async def economic_indicators():
+    """
+    Multi-country macro dashboard powered by EODHD.
+    Returns CPI, GDP growth, interest rate, unemployment, PMI for US, HK, CN.
+    Derives macro regime from real economic data (not price action).
+    Cache: 4h Redis TTL.
+    """
+    try:
+        data = await get_economic_dashboard()
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Economic dashboard error: {e}")
+
+
+@router.get("/api/v1/market/developer-data/{coin_id}")
+async def developer_data(coin_id: str):
+    """
+    CoinGecko Pro developer activity for a single coin.
+    Returns commit_count_4_weeks, stars, closed_issues, pull_request_contributors,
+    and a composite dev_activity_score (0-100).
+    Cache: 24h Redis TTL (developer metrics change slowly).
+
+    Example: /api/v1/market/developer-data/ethereum
+    """
+    # Basic validation — CG coin IDs are lowercase slug
+    coin_id = coin_id.lower().strip()
+    if not coin_id or len(coin_id) > 60:
+        raise HTTPException(status_code=400, detail="Invalid coin_id")
+    try:
+        data = await get_cg_developer_data(coin_id)
+        if not data or "error" in data:
+            raise HTTPException(status_code=404, detail=f"No developer data for {coin_id}")
+        return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Developer data error: {e}")
+
+
+@router.get("/api/v1/market/price-history/{coin_id}")
+async def price_history(coin_id: str, days: int = 365):
+    """
+    CoinGecko Pro OHLCV history (daily candles) for a single coin.
+    Default 365 days; supports 1-365 range. Includes price, volume, market_cap series.
+    Cache: 2h Redis TTL.
+
+    Example: /api/v1/market/price-history/bitcoin?days=90
+    """
+    coin_id = coin_id.lower().strip()
+    if not coin_id or len(coin_id) > 60:
+        raise HTTPException(status_code=400, detail="Invalid coin_id")
+    days = max(1, min(365, days))
+    try:
+        data = await get_cg_price_history(coin_id, days)
+        if not data or "error" in data:
+            raise HTTPException(status_code=404, detail=f"No price history for {coin_id}")
+        return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Price history error: {e}")
+
+
+@router.get("/api/v1/market/exchange-concentration/{coin_id}")
+async def exchange_concentration(coin_id: str):
+    """
+    CoinGecko Pro exchange concentration analysis for a single coin.
+    Returns per-exchange volume share, Herfindahl-Hirschman Index (HHI),
+    and a concentration risk flag (low/moderate/high/very_high).
+    Cache: 1h Redis TTL.
+
+    Example: /api/v1/market/exchange-concentration/bitcoin
+    """
+    coin_id = coin_id.lower().strip()
+    if not coin_id or len(coin_id) > 60:
+        raise HTTPException(status_code=400, detail="Invalid coin_id")
+    try:
+        data = await get_cg_exchange_concentration(coin_id)
+        if not data or "error" in data:
+            raise HTTPException(status_code=404, detail=f"No exchange data for {coin_id}")
+        return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Exchange concentration error: {e}")
+
+
+@router.get("/api/v1/market/earnings-calendar")
+async def earnings_calendar(symbols: str = "AAPL,MSFT,NVDA,GOOGL,AMZN,META,TSLA", days_ahead: int = 30):
+    """
+    Upcoming earnings dates for US Equity symbols via EODHD.
+    Returns report_date, estimate EPS, period end, and days_until for each symbol.
+    Cache: 4h Redis TTL.
+
+    Example: /api/v1/market/earnings-calendar?symbols=AAPL,NVDA&days_ahead=14
+    """
+    symbol_list = _validate_symbols(symbols)
+    days_ahead = max(1, min(90, days_ahead))
+    try:
+        data = await get_eodhd_earnings_calendar(symbol_list, days_ahead)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Earnings calendar error: {e}")

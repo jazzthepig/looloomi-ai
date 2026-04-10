@@ -22,6 +22,7 @@ load_dotenv()
 MORALIS_KEY   = os.getenv("MORALIS_API_KEY", "")
 ETHERSCAN_KEY = os.getenv("ETHERSCAN_API_KEY", "")
 HELIUS_KEY    = os.getenv("HELIUS_API_KEY", "")
+EODHD_KEY     = os.getenv("EODHD_API_KEY", "")
 
 # ── Persistent HTTP clients — one per API domain ──────────────────────────────
 # Reused across requests: eliminates TCP connect + TLS handshake overhead per call.
@@ -1090,8 +1091,32 @@ async def get_macro_pulse() -> dict:
             "fear_greed_label":      _fg_lbl,
             "total_market_cap_usd":  _mc_usd,
             "defi_tvl_usd":          _defi_tvl,
-            "macro_regime":          "UNKNOWN",  # set by Mac Mini push via Redis
+            "macro_regime":          "UNKNOWN",  # set by Mac Mini push via Redis; see below
         }
+
+        # ── EODHD regime fallback — use when Mac Mini hasn't pushed a regime ──
+        # Check Redis for Mac Mini regime first; if UNKNOWN, derive from EODHD.
+        try:
+            mm_regime = await _redis_get("cis:local_scores")
+            if mm_regime and isinstance(mm_regime, dict):
+                pushed_regime = mm_regime.get("macro_regime", "UNKNOWN")
+            else:
+                pushed_regime = "UNKNOWN"
+
+            if pushed_regime != "UNKNOWN":
+                result["macro_regime"] = pushed_regime
+                result["regime_source"] = "mac_mini"
+            elif EODHD_KEY:
+                # Derive from economic indicators (cached 4h separately)
+                us_macro = await get_eodhd_macro_indicators("usa")
+                derived  = us_macro.get("derived_regime", "UNKNOWN")
+                if derived != "UNKNOWN":
+                    result["macro_regime"]   = derived
+                    result["regime_source"]  = "eodhd_derived"
+                    result["regime_inputs"]  = us_macro.get("regime_inputs", {})
+        except Exception:
+            pass  # regime stays UNKNOWN — non-blocking
+
         await _redis_set(key, result, ttl=300)
         return _cache_set(key, result)
     except Exception as e:
@@ -1512,3 +1537,554 @@ async def get_klines(symbol: str, source: str = "binance", interval: str = "1d",
         return await get_klines_okx(symbol, interval, months)
 
     return []
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# EODHD — Macro Economic Indicators + Equity Fundamentals
+# Requires EODHD_API_KEY in Railway env vars.
+# Plans: All-World ~$80/mo  ·  Fundamentals World ~$50/mo  ·  Free plan = EOD only
+# Docs: https://eodhd.com/financial-apis/
+# ══════════════════════════════════════════════════════════════════════════════
+
+EODHD_BASE = "https://eodhd.com/api"
+
+# Macro indicator codes recognised by EODHD /macro-indicator/{country}
+_EODHD_MACRO_INDICATORS = {
+    "cpi_yoy":          "inflation_consumer_prices_annual",
+    "gdp_growth":       "real_gdp_growth",
+    "unemployment":     "unemployment_rate",
+    "interest_rate":    "interest_rate",       # central bank policy rate
+    "real_interest":    "real_interest_rate",
+}
+
+# Which countries we care about — ISO 2-letter
+_MACRO_COUNTRIES = ["usa", "hkg", "chn"]
+
+
+async def get_eodhd_macro_indicators(country: str = "usa") -> dict:
+    """
+    Fetch latest macro economic indicators for a country from EODHD.
+    Returns: {cpi_yoy, gdp_growth, unemployment, interest_rate, real_interest, country, source}
+    TTL: 4 hours Redis (macro data is daily/monthly; no need to hammer)
+    """
+    if not EODHD_KEY:
+        return {"error": "EODHD_API_KEY not set", "country": country}
+
+    country = country.lower()
+    key = f"eodhd_macro_{country}"
+    cached = _cache_get(key, ttl=14400)   # 4h in-mem
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    client = _get_misc_client()
+    result = {"country": country, "source": "eodhd", "indicators": {}}
+    errors = []
+
+    async def _fetch_one(short_name: str, indicator_code: str):
+        try:
+            r = await client.get(
+                f"{EODHD_BASE}/macro-indicator/{country}",
+                params={
+                    "indicator": indicator_code,
+                    "fmt": "json",
+                    "api_token": EODHD_KEY,
+                    "limit": 4,          # last 4 readings for trend
+                },
+                timeout=10,
+            )
+            if r.status_code == 200:
+                data = r.json()
+                if data and isinstance(data, list):
+                    latest = data[0]
+                    prev   = data[1] if len(data) > 1 else None
+                    return short_name, {
+                        "value":       float(latest.get("value", 0) or 0),
+                        "date":        latest.get("date", ""),
+                        "prev_value":  float(prev.get("value", 0)) if prev else None,
+                        "trend":       "up" if prev and float(latest.get("value", 0)) > float(prev.get("value", 0)) else "down",
+                    }
+        except Exception as e:
+            errors.append(f"{short_name}: {e}")
+        return short_name, None
+
+    tasks = [_fetch_one(k, v) for k, v in _EODHD_MACRO_INDICATORS.items()]
+    fetched = await asyncio.gather(*tasks)
+
+    for short_name, data in fetched:
+        if data:
+            result["indicators"][short_name] = data
+
+    result["errors"] = errors if errors else None
+
+    # Derive simple regime signal from EODHD data
+    inds = result["indicators"]
+    cpi   = inds.get("cpi_yoy",       {}).get("value", 0) or 0
+    gdp   = inds.get("gdp_growth",    {}).get("value", 0) or 0
+    rate  = inds.get("interest_rate", {}).get("value", 0) or 0
+    rate_trend = inds.get("interest_rate", {}).get("trend", "")
+
+    regime = _derive_macro_regime(cpi=cpi, gdp=gdp, rate=rate, rate_trend=rate_trend)
+    result["derived_regime"] = regime
+    result["regime_inputs"]  = {"cpi_yoy": cpi, "gdp_growth": gdp, "policy_rate": rate}
+
+    await _redis_set(key, result, ttl=14400)
+    return _cache_set(key, result)
+
+
+def _derive_macro_regime(cpi: float, gdp: float, rate: float, rate_trend: str) -> str:
+    """
+    Simple regime classification from EODHD macro indicators.
+    Used as Railway-side fallback when Mac Mini hasn't pushed a regime.
+
+    Thresholds calibrated to post-2020 environment:
+      TIGHTENING   : CPI > 4% OR rate rising AND CPI > 3%
+      EASING       : rate falling AND CPI < 3%
+      STAGFLATION  : CPI > 4% AND GDP < 1.5%
+      GOLDILOCKS   : CPI 1.5-3.5% AND GDP > 2.5% AND rate stable
+      RISK_ON      : GDP > 2% AND CPI moderate (2-4%)
+      RISK_OFF     : GDP < 1% OR rate > 5% AND CPI > 3%
+    """
+    if cpi > 4 and gdp < 1.5:
+        return "STAGFLATION"
+    if cpi > 4 or (rate_trend == "up" and cpi > 3):
+        return "TIGHTENING"
+    if rate_trend == "down" and cpi < 3:
+        return "EASING"
+    if 1.5 <= cpi <= 3.5 and gdp > 2.5 and rate_trend != "up":
+        return "GOLDILOCKS"
+    if gdp < 1 or (rate > 5 and cpi > 3):
+        return "RISK_OFF"
+    return "RISK_ON"
+
+
+async def get_eodhd_fundamentals(ticker: str, exchange: str = "US") -> dict:
+    """
+    EODHD equity fundamentals — P/E, EPS, revenue, margins, beta.
+    Covers SPY/QQQ/AAPL/MSFT/NVDA/GOOGL/AMZN/META/TSLA/GLD/TLT and others.
+    TTL: 6 hours (fundamentals update daily post-close at most)
+
+    ticker: e.g. "SPY", "AAPL", "NVDA"
+    exchange: "US" for NYSE/NASDAQ, "TO" for TSX, "LSE" for London, etc.
+    """
+    if not EODHD_KEY:
+        return {"error": "EODHD_API_KEY not set", "ticker": ticker}
+
+    key = f"eodhd_fund_{ticker}_{exchange}"
+    cached = _cache_get(key, ttl=21600)   # 6h
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    client = _get_misc_client()
+    try:
+        r = await client.get(
+            f"{EODHD_BASE}/{ticker}.{exchange}/fundamentals",
+            params={
+                "fmt": "json",
+                "api_token": EODHD_KEY,
+                # Fetch only the fields we need — reduce response size
+                "filter": ",".join([
+                    "General::Code",
+                    "General::Type",
+                    "General::Sector",
+                    "General::Industry",
+                    "Highlights::MarketCapitalizationMln",
+                    "Highlights::PERatio",
+                    "Highlights::ForwardPE",
+                    "Highlights::EPS",
+                    "Highlights::EPSEstimateNextYear",
+                    "Highlights::DividendYield",
+                    "Highlights::RevenueGrowthTTM",
+                    "Highlights::GrossProfitTTM",
+                    "Highlights::EBITDAMrgin",
+                    "Technicals::Beta",
+                    "Valuation::TrailingPE",
+                    "Valuation::ForwardPE",
+                    "Valuation::PriceSalesTTM",
+                    "Valuation::PriceBookMRQ",
+                ]),
+            },
+            timeout=12,
+        )
+        r.raise_for_status()
+        raw = r.json()
+
+        # Flatten into a clean dict — raw EODHD structure is deeply nested
+        hi = raw.get("Highlights", {}) or {}
+        tech = raw.get("Technicals", {}) or {}
+        val  = raw.get("Valuation",  {}) or {}
+        gen  = raw.get("General",    {}) or {}
+
+        result = {
+            "ticker":          ticker,
+            "exchange":        exchange,
+            "type":            gen.get("Type", ""),
+            "sector":          gen.get("Sector", ""),
+            "industry":        gen.get("Industry", ""),
+            "market_cap_mln":  _safe_float(hi.get("MarketCapitalizationMln")),
+            "pe_ratio":        _safe_float(hi.get("PERatio") or val.get("TrailingPE")),
+            "forward_pe":      _safe_float(hi.get("ForwardPE") or val.get("ForwardPE")),
+            "eps":             _safe_float(hi.get("EPS")),
+            "eps_next_year":   _safe_float(hi.get("EPSEstimateNextYear")),
+            "dividend_yield":  _safe_float(hi.get("DividendYield")),
+            "revenue_growth":  _safe_float(hi.get("RevenueGrowthTTM")),
+            "gross_profit":    _safe_float(hi.get("GrossProfitTTM")),
+            "ebitda_margin":   _safe_float(hi.get("EBITDAMrgin")),  # note: EODHD typo preserved
+            "beta":            _safe_float(tech.get("Beta")),
+            "price_to_sales":  _safe_float(val.get("PriceSalesTTM")),
+            "price_to_book":   _safe_float(val.get("PriceBookMRQ")),
+            "source":          "eodhd",
+        }
+        await _redis_set(key, result, ttl=21600)
+        return _cache_set(key, result)
+    except Exception as e:
+        return {"error": str(e), "ticker": ticker}
+
+
+def _safe_float(val) -> Optional[float]:
+    """Safely convert EODHD value to float; returns None for null/None/empty."""
+    if val is None or val == "" or val == "None":
+        return None
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return None
+
+
+async def get_eodhd_earnings_calendar(symbols: list[str], days_ahead: int = 14) -> list[dict]:
+    """
+    Upcoming earnings events for a list of tickers (EODHD earnings calendar).
+    Useful for S pillar — earnings dates create volatility; pre-earnings premium.
+    TTL: 4 hours (calendar doesn't change intraday)
+
+    symbols: ['AAPL', 'NVDA', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA']
+    Returns: [{symbol, report_date, eps_estimate, eps_actual, surprise_pct}, ...]
+    """
+    if not EODHD_KEY:
+        return []
+
+    from datetime import date, timedelta
+    today    = date.today()
+    end_date = today + timedelta(days=days_ahead)
+    key = f"eodhd_earnings_{','.join(sorted(symbols))}_{today.isoformat()}"
+    cached = _cache_get(key, ttl=14400)
+    if cached:
+        return cached
+
+    client = _get_misc_client()
+    try:
+        r = await client.get(
+            f"{EODHD_BASE}/calendar/earnings",
+            params={
+                "fmt":       "json",
+                "api_token": EODHD_KEY,
+                "from":      today.isoformat(),
+                "to":        end_date.isoformat(),
+                "symbols":   ",".join(f"{s}.US" for s in symbols),
+            },
+            timeout=10,
+        )
+        r.raise_for_status()
+        raw = r.json()
+        earnings = raw.get("earnings", []) if isinstance(raw, dict) else raw
+        result = []
+        for e in earnings:
+            result.append({
+                "symbol":      e.get("code", "").replace(".US", ""),
+                "report_date": e.get("report_date", ""),
+                "eps_estimate":  _safe_float(e.get("estimate")),
+                "eps_actual":    _safe_float(e.get("actual")),
+                "surprise_pct":  _safe_float(e.get("percent")),
+                "before_after_market": e.get("before_after_market", ""),
+            })
+        result.sort(key=lambda x: x["report_date"])
+        return _cache_set(key, result)
+    except Exception as e:
+        return []
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# COINGECKO PRO — Developer Activity + Exchange Concentration
+# Uses COINGECKO_API_KEY (Pro endpoint). Falls back gracefully if not set.
+# ══════════════════════════════════════════════════════════════════════════════
+
+async def get_cg_developer_data(coin_id: str) -> dict:
+    """
+    CoinGecko /coins/{id} — developer_data only.
+    Returns commit cadence, issue velocity, contributor count, stars.
+    These are direct signals for the F pillar (Fundamental) — active dev = healthier protocol.
+
+    coin_id: CoinGecko ID, e.g. 'solana', 'ethereum', 'chainlink'
+    TTL: 24 hours (GitHub stats update once/day on CoinGecko)
+    """
+    if not CG_API_KEY:
+        return {"coin_id": coin_id, "available": False}
+
+    key = f"cg_devdata_{coin_id}"
+    cached = _cache_get(key, ttl=86400)    # 24h
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    client = _get_cg_client()
+    try:
+        r = await client.get(
+            f"{CG_PRO_BASE}/coins/{coin_id}",
+            headers=_cg_headers(),
+            params={
+                "localization":   "false",
+                "tickers":        "false",
+                "market_data":    "false",
+                "community_data": "false",
+                "developer_data": "true",
+                "sparkline":      "false",
+            },
+            timeout=15,
+        )
+        r.raise_for_status()
+        raw  = r.json()
+        devd = raw.get("developer_data", {}) or {}
+
+        result = {
+            "coin_id":                   coin_id,
+            "available":                 True,
+            "forks":                     devd.get("forks", 0),
+            "stars":                     devd.get("stars", 0),
+            "subscribers":               devd.get("subscribers", 0),
+            "total_issues":              devd.get("total_issues", 0),
+            "closed_issues":             devd.get("closed_issues", 0),
+            "pull_requests_merged":      devd.get("pull_requests_merged", 0),
+            "pull_request_contributors": devd.get("pull_request_contributors", 0),
+            "commit_count_4_weeks":      devd.get("commit_count_4_weeks", 0),
+            "code_additions_4_weeks":    (devd.get("code_additions_deletions_4_weeks") or {}).get("additions", 0),
+            "code_deletions_4_weeks":    (devd.get("code_additions_deletions_4_weeks") or {}).get("deletions", 0),
+            "source": "coingecko_pro",
+        }
+
+        # Derived dev activity score 0-100
+        result["dev_activity_score"] = _score_dev_activity(result)
+
+        await _redis_set(key, result, ttl=86400)
+        return _cache_set(key, result)
+    except Exception as e:
+        return {"coin_id": coin_id, "available": False, "error": str(e)}
+
+
+def _score_dev_activity(d: dict) -> float:
+    """
+    Scores developer activity 0-100 based on CoinGecko developer_data.
+    Logarithmic scaling — avoids large projects (BTC/ETH) monopolising the score.
+
+    Components (equal weight):
+      - commit_count_4_weeks  : 0-100 (log scale, 200 commits = ~90)
+      - closed_issues_4_weeks : 0-100 (log scale, 100 closed = ~90)
+      - stars                 : 0-100 (log scale, 10k stars = ~90)
+      - pr_merged             : 0-100 (log scale, 50 merged/mo = ~90)
+    """
+    import math
+
+    def log_score(val, midpoint):
+        """Maps val to 0-100 with midpoint at ~50."""
+        if not val or val <= 0:
+            return 0.0
+        return min(100.0, 100.0 * math.log1p(val) / math.log1p(midpoint * 4))
+
+    commits     = log_score(d.get("commit_count_4_weeks", 0),      50)
+    closed      = log_score(d.get("closed_issues", 0),             200)
+    stars       = log_score(d.get("stars", 0),                    5000)
+    pr_merged   = log_score(d.get("pull_requests_merged", 0),      100)
+
+    return round((commits + closed + stars + pr_merged) / 4, 1)
+
+
+async def get_cg_exchange_concentration(coin_id: str) -> dict:
+    """
+    CoinGecko /coins/{id}/tickers — exchange volume concentration.
+    High concentration (>70% on one exchange) = elevated liquidity/custody risk.
+    Used in O pillar (on-chain/risk-adjusted) scoring.
+
+    Returns:
+      top_exchange: str           — name of exchange with most volume
+      top_exchange_pct: float     — % of total volume on that exchange
+      exchange_count: int         — number of exchanges listing this asset
+      herfindahl_index: float     — 0-1 market concentration index (1 = monopoly)
+      risk_flag: bool             — True if top_exchange_pct > 65%
+    """
+    key = f"cg_exconc_{coin_id}"
+    cached = _cache_get(key, ttl=3600)   # 1h
+    if cached:
+        return cached
+    if not CG_API_KEY:
+        return {"coin_id": coin_id, "available": False}
+
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    client = _get_cg_client()
+    try:
+        r = await client.get(
+            f"{CG_PRO_BASE}/coins/{coin_id}/tickers",
+            headers=_cg_headers(),
+            params={
+                "include_exchange_logo": "false",
+                "order":    "volume_desc",
+                "per_page": 100,
+                "page":     1,
+            },
+            timeout=15,
+        )
+        r.raise_for_status()
+        tickers = r.json().get("tickers", [])
+
+        # Aggregate volume by exchange
+        exchange_vol: dict[str, float] = {}
+        for t in tickers:
+            ex_name = (t.get("market", {}) or {}).get("name", "Unknown")
+            vol_usd = float(t.get("converted_volume", {}).get("usd", 0) or 0)
+            exchange_vol[ex_name] = exchange_vol.get(ex_name, 0) + vol_usd
+
+        if not exchange_vol:
+            return {"coin_id": coin_id, "available": False}
+
+        total_vol = sum(exchange_vol.values())
+        if total_vol == 0:
+            return {"coin_id": coin_id, "available": False}
+
+        sorted_ex = sorted(exchange_vol.items(), key=lambda x: x[1], reverse=True)
+        top_ex, top_vol = sorted_ex[0]
+        top_pct = round(top_vol / total_vol * 100, 1)
+
+        # Herfindahl-Hirschman Index (sum of squared market shares)
+        hhi = round(sum((v / total_vol) ** 2 for v in exchange_vol.values()), 4)
+
+        result = {
+            "coin_id":          coin_id,
+            "available":        True,
+            "top_exchange":     top_ex,
+            "top_exchange_pct": top_pct,
+            "exchange_count":   len(exchange_vol),
+            "herfindahl_index": hhi,
+            "risk_flag":        top_pct > 65,
+            "top_3_exchanges":  [{"exchange": ex, "pct": round(vol / total_vol * 100, 1)}
+                                  for ex, vol in sorted_ex[:3]],
+            "total_volume_usd": round(total_vol, 0),
+            "source": "coingecko_pro",
+        }
+
+        await _redis_set(key, result, ttl=3600)
+        return _cache_set(key, result)
+    except Exception as e:
+        return {"coin_id": coin_id, "available": False, "error": str(e)}
+
+
+async def get_cg_price_history(coin_id: str, days: int = 365) -> dict:
+    """
+    CoinGecko /coins/{id}/market_chart — full price history.
+    Pro key unlocks up to 365 days (free tier capped at 30 days for hourly data).
+    Used for: A pillar (90d+ alpha calculation), volatility regime detection.
+
+    Returns: {coin_id, days, prices: [[ts_ms, price], ...], source}
+    TTL: 2h Redis (daily candles; intraday not needed here)
+    """
+    if not CG_API_KEY:
+        return {"coin_id": coin_id, "available": False, "reason": "no_pro_key"}
+
+    # Clamp to safe range; Pro supports up to 'max'
+    days = min(max(days, 7), 365)
+    key = f"cg_history_{coin_id}_{days}d"
+    cached = _cache_get(key, ttl=7200)   # 2h
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    client = _get_cg_client()
+    try:
+        r = await client.get(
+            f"{CG_PRO_BASE}/coins/{coin_id}/market_chart",
+            headers=_cg_headers(),
+            params={
+                "vs_currency": "usd",
+                "days":        str(days),
+                "interval":    "daily",    # daily candles regardless of range
+            },
+            timeout=20,
+        )
+        r.raise_for_status()
+        raw    = r.json()
+        prices = raw.get("prices", [])       # [[timestamp_ms, price], ...]
+        volumes = raw.get("total_volumes", [])
+
+        result = {
+            "coin_id":     coin_id,
+            "available":   True,
+            "days":        days,
+            "data_points": len(prices),
+            "prices":      prices,
+            "volumes":     volumes,
+            "source":      "coingecko_pro",
+        }
+        await _redis_set(key, result, ttl=7200)
+        return _cache_set(key, result)
+    except Exception as e:
+        return {"coin_id": coin_id, "available": False, "error": str(e)}
+
+
+async def get_economic_dashboard() -> dict:
+    """
+    Institutional-grade macro economic dashboard.
+    Combines EODHD macro indicators across US/HK/CN in a single call.
+    Used by: /api/v1/market/economic-indicators endpoint + MacroBrief pipeline.
+    TTL: 4 hours Redis.
+    """
+    key = "economic_dashboard"
+    cached = _cache_get(key, ttl=14400)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    if not EODHD_KEY:
+        return {"available": False, "reason": "EODHD_API_KEY not set in Railway env vars"}
+
+    # Fetch US, HK, CN indicators in parallel
+    usa, hkg, chn = await asyncio.gather(
+        get_eodhd_macro_indicators("usa"),
+        get_eodhd_macro_indicators("hkg"),
+        get_eodhd_macro_indicators("chn"),
+        return_exceptions=True,
+    )
+
+    def _safe(r):
+        return r if isinstance(r, dict) else {"error": str(r)}
+
+    us_data  = _safe(usa)
+    hk_data  = _safe(hkg)
+    cn_data  = _safe(chn)
+
+    # US regime from economic data (used as fallback when Mac Mini isn't pushing)
+    us_regime = us_data.get("derived_regime", "UNKNOWN")
+    us_inputs = us_data.get("regime_inputs", {})
+
+    result = {
+        "available":    True,
+        "us":           us_data,
+        "hk":           hk_data,
+        "cn":           cn_data,
+        "us_regime":    us_regime,
+        "regime_inputs": us_inputs,
+        "source":       "eodhd",
+        "timestamp":    datetime.now(timezone.utc).isoformat(),
+    }
+    await _redis_set(key, result, ttl=14400)
+    return _cache_set(key, result)
