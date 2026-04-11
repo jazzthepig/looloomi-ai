@@ -8,9 +8,11 @@ import SiteNav from "./components/SiteNav";
 import { T, FONTS } from "./tokens";
 
 /* ── Lazy-loaded secondary views (below fold / conditional) ── */
-const VaultPage = lazy(() => import("./components/VaultPage"));
+const VaultPage            = lazy(() => import("./components/VaultPage"));
 const ProtocolIntelligence = lazy(() => import("./components/ProtocolIntelligence"));
-const MobileApp = lazy(() => import("./components/MobileApp"));
+const MobileApp            = lazy(() => import("./components/MobileApp"));
+const AssetRadar           = lazy(() => import("./components/AssetRadar"));
+const QuantMonitor         = lazy(() => import("./components/QuantMonitor"));
 
 /* ── Staging environment banner ─────────────────────────────────────────── */
 function StagingBanner() {
@@ -504,14 +506,10 @@ const sectionStyle = (index) => ({
   zIndex: 1,
 });
 
-/* ─────────────────────────────────────────────────────────────────────────
-   HERO SECTION
-──────────────────────────────────────────────────────────────────────── */
-function HeroContent() {
-  const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  };
+/* HeroContent removed — was dead code (Market tab cut, no longer rendered).
+   Kept in vision.html and strategy.html as standalone investor entry points. */
 
+function _HeroContent_REMOVED() {
   return (
     <div style={{
       position: "relative", maxWidth: 1200, margin: "0 auto", paddingTop: 40,
@@ -624,6 +622,109 @@ function HeroContent() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   EARNINGS CALENDAR WIDGET
+──────────────────────────────────────────────────────────────────────── */
+function EarningsCalendarWidget() {
+  const [data, setData]       = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/v1/market/earnings-calendar?symbols=AAPL,NVDA,MSFT,AMZN,GOOGL&days_ahead=30")
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => null)
+      .then(json => { if (!cancelled) { setData(json); setLoading(false); } });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Hide entirely if no data or empty / unavailable
+  if (!loading && (!data || !data.available || !data.events?.length)) return null;
+
+  const fmtDate = (d) => {
+    if (!d) return "—";
+    const dt = new Date(d);
+    return dt.toLocaleDateString([], { month: "short", day: "numeric" });
+  };
+  const daysUntil = (d) => {
+    if (!d) return null;
+    const diff = Math.round((new Date(d) - new Date()) / 86400000);
+    return diff;
+  };
+
+  return (
+    <div style={{ marginTop: 28 }}>
+      {/* Header */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10, marginBottom: 12,
+      }}>
+        <div style={{ width: 14, height: 1, background: T.gold, opacity: 0.5 }} />
+        <span style={{
+          fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+          letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase",
+        }}>
+          Earnings Calendar
+        </span>
+        <span style={{
+          fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5,
+        }}>
+          EODHD · next 30 days
+        </span>
+      </div>
+
+      {loading ? (
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {[1,2,3,4].map(i => (
+            <div key={i} className="sk" style={{ height: 54, width: 120, borderRadius: 8 }} />
+          ))}
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {(data.events || []).slice(0, 8).map((ev, i) => {
+            const days = daysUntil(ev.date);
+            const soon = days !== null && days <= 7;
+            return (
+              <div key={i} style={{
+                background: soon ? "rgba(200,168,75,0.05)" : T.surface,
+                border: `1px solid ${soon ? "rgba(200,168,75,0.3)" : T.border}`,
+                borderRadius: 8, padding: "10px 14px", minWidth: 110,
+              }}>
+                <div style={{
+                  fontFamily: FONTS.mono, fontSize: 13, fontWeight: 700,
+                  color: T.t1, marginBottom: 3,
+                }}>
+                  {ev.symbol || ev.ticker}
+                </div>
+                <div style={{
+                  fontFamily: FONTS.mono, fontSize: 10, color: T.t3, marginBottom: 4,
+                }}>
+                  {fmtDate(ev.date)}
+                </div>
+                {days !== null && (
+                  <div style={{
+                    fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700,
+                    letterSpacing: "0.06em",
+                    color: soon ? T.gold : T.t3,
+                  }}>
+                    {days === 0 ? "TODAY" : days === 1 ? "TOMORROW" : `IN ${days}D`}
+                  </div>
+                )}
+                {ev.eps_estimate != null && (
+                  <div style={{
+                    fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.7, marginTop: 2,
+                  }}>
+                    EPS est. {ev.eps_estimate > 0 ? "+" : ""}{ev.eps_estimate?.toFixed(2)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    CIS SECTION
    CISLeaderboard owns the single fetch; exposes raw universe via onDataLoad
    callback → CrossAssetView renders from the same data, zero extra requests
@@ -641,8 +742,8 @@ function CISContent({ onUniverseLoad }) {
       {/* Section Header */}
       <div style={{ marginBottom: 28 }}>
         <h2 style={{
-          fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
-          color: T.t1, marginBottom: 6, letterSpacing: "-0.03em", lineHeight: 1.05,
+          fontFamily: FONTS.brand, fontSize: 28, fontWeight: 700,
+          color: T.t1, marginBottom: 6, letterSpacing: "-0.02em", lineHeight: 1.05,
         }}>
           CIS
         </h2>
@@ -661,6 +762,9 @@ function CISContent({ onUniverseLoad }) {
 
       {/* Cross-Asset Overview — zero additional fetches */}
       <CrossAssetView universe={cisUniverse} />
+
+      {/* Earnings Calendar — upcoming events for US equities in CIS universe */}
+      <EarningsCalendarWidget />
 
       {/* Links to standalone pages */}
       <div style={{
@@ -692,6 +796,28 @@ function CISContent({ onUniverseLoad }) {
         >
           Score Analytics ↗
         </a>
+      </div>
+
+      {/* Asset Radar — 30-asset deep-scan table with category filters, LAS, dev scores */}
+      <div style={{ marginTop: 40 }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12, marginBottom: 16,
+          paddingBottom: 14, borderBottom: `1px solid ${T.border}`,
+        }}>
+          <div style={{ width: 14, height: 1, background: T.cyan, opacity: 0.5 }} />
+          <span style={{
+            fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+            letterSpacing: "0.14em", color: T.t2, textTransform: "uppercase",
+          }}>
+            Asset Radar
+          </span>
+          <span style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.mono, marginLeft: "auto" }}>
+            30 assets · 10 categories · live CG Pro
+          </span>
+        </div>
+        <Suspense fallback={<SectionLoader />}>
+          <AssetRadar />
+        </Suspense>
       </div>
     </div>
   );
@@ -800,99 +926,36 @@ function QuantGPContent() {
         </div>
         <div style={{
           fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
-          lineHeight: 1.7, marginBottom: 16,
+          lineHeight: 1.7,
         }}>
           EST Alpha employs quantitative strategies across digital asset markets,
           with a focus on systematic signal extraction and risk-adjusted return generation.
           As CometCloud's inaugural GP partner, EST Alpha provides institutional-grade
           execution infrastructure for the Vault's fund-of-funds structure.
         </div>
-        <div style={{
-          background: "rgba(200,168,75,0.08)", border: "1px solid rgba(200,168,75,0.15)",
-          borderRadius: 6, padding: "10px 14px", display: "inline-block",
-        }}>
-          <span style={{
-            fontFamily: FONTS.body, fontSize: 11, color: "#C8A84B",
-          }}>
-            CometCloud Intelligence Score integration: Pending
-          </span>
-        </div>
       </div>
 
-      {/* Section 4 — CIS Integration Status */}
-      <div style={{
-        background: T.surface, border: `1px solid ${T.border}`,
-        borderRadius: 12, padding: 24, marginBottom: 24,
-      }}>
+      {/* Section 4 — Live Strategy Performance (QuantMonitor) */}
+      <div style={{ marginBottom: 24 }}>
         <div style={{
-          fontFamily: FONTS.display, fontSize: 12, fontWeight: 700,
-          color: T.primary, letterSpacing: "0.1em", marginBottom: 20,
-          textTransform: "uppercase",
+          display: "flex", alignItems: "center", gap: 10, marginBottom: 14,
         }}>
-          CIS Integration Pipeline
+          <div style={{ width: 14, height: 1, background: T.gold, opacity: 0.6 }} />
+          <span style={{
+            fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+            letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase",
+          }}>
+            Live Strategy Performance
+          </span>
+          <span style={{
+            fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5,
+          }}>
+            CometCloud Trading Engine · Freqtrade Dry Run
+          </span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {[
-            { step: 1, title: "Partnership Agreement", status: "completed", date: "2025" },
-            { step: 2, title: "Onboarding", status: "in_progress", date: "Q1 2026" },
-            { step: 3, title: "CIS Score Integration", status: "pending", date: "Q2 2026" },
-            { step: 4, title: "Live Performance Reporting", status: "pending", date: "Q2 2026" },
-          ].map((item, i) => (
-            <div key={i} style={{
-              display: "flex", alignItems: "center", gap: 16,
-              padding: "14px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none",
-            }}>
-              {/* Step indicator */}
-              <div style={{
-                width: 28, height: 28, borderRadius: "50%",
-                background: item.status === "completed" ? "rgba(0,232,122,0.15)" :
-                           item.status === "in_progress" ? "rgba(200,168,75,0.15)" : "rgba(0,0,0,0.04)",
-                border: `1px solid ${item.status === "completed" ? "rgba(0,232,122,0.4)" :
-                                  item.status === "in_progress" ? "rgba(200,168,75,0.4)" : "rgba(0,0,0,0.08)"}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-              }}>
-                {item.status === "completed" ? (
-                  <span style={{ color: "#00E87A", fontSize: 12 }}>✓</span>
-                ) : item.status === "in_progress" ? (
-                  <span style={{ color: "#C8A84B", fontSize: 10 }}>◐</span>
-                ) : (
-                  <span style={{ color: T.muted, fontSize: 10 }}>○</span>
-                )}
-              </div>
-
-              {/* Content */}
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  fontFamily: FONTS.display, fontSize: 13, fontWeight: 600,
-                  color: T.primary, marginBottom: 2,
-                }}>
-                  {item.title}
-                </div>
-                <div style={{
-                  fontFamily: FONTS.body, fontSize: 11, color: T.muted,
-                }}>
-                  {item.date}
-                </div>
-              </div>
-
-              {/* Status label */}
-              <div style={{
-                fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
-                letterSpacing: "0.1em", padding: "4px 10px", borderRadius: 4,
-                background: item.status === "completed" ? "rgba(0,232,122,0.10)" :
-                           item.status === "in_progress" ? "rgba(200,168,75,0.10)" : "rgba(0,0,0,0.04)",
-                color: item.status === "completed" ? "#00E87A" :
-                       item.status === "in_progress" ? "#C8A84B" : T.muted,
-                border: `1px solid ${item.status === "completed" ? "rgba(0,232,122,0.2)" :
-                                  item.status === "in_progress" ? "rgba(200,168,75,0.2)" : "rgba(0,0,0,0.08)"}`,
-              }}>
-                {item.status === "completed" ? "COMPLETED" :
-                 item.status === "in_progress" ? "IN PROGRESS" : "PENDING"}
-              </div>
-            </div>
-          ))}
-        </div>
+        <Suspense fallback={<SectionLoader />}>
+          <QuantMonitor />
+        </Suspense>
       </div>
 
       {/* Section 5 — GP Shelf说明 */}

@@ -499,12 +499,26 @@ function EmptyState({ onFocus }) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
+const MOBILE_BP = 768;
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < MOBILE_BP);
+  useEffect(() => {
+    const h = () => setIsMobile(window.innerWidth < MOBILE_BP);
+    window.addEventListener("resize", h, { passive: true });
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  return isMobile;
+}
+const PORTFOLIO_MOBILE_PREVIEW = 2;
+
 export default function MyPortfolio({ cisUniverse = [] }) {
   const { isConnected, address } = useAuth();
+  const isMobile = useIsMobile();
 
   const [portfolio, setPortfolio] = useState(loadPortfolio);
   const [editSymbol, setEditSymbol] = useState(null);
   const [searchRef, setSearchRef] = useState(null);
+  const [showAllMobile, setShowAllMobile] = useState(false);
 
   // Persist on change
   useEffect(() => { savePortfolio(portfolio); }, [portfolio]);
@@ -516,13 +530,24 @@ export default function MyPortfolio({ cisUniverse = [] }) {
     return m;
   }, [cisUniverse]);
 
-  // Watched assets with live CIS data
+  // Watched assets with live CIS data — sorted by CIS score desc (top rec first)
   const watchedAssets = useMemo(() =>
     portfolio.watchlist
       .map(sym => universeMap[sym])
-      .filter(Boolean),
+      .filter(Boolean)
+      .sort((a, b) => {
+        const scoreA = a.cis_score ?? a.score ?? 0;
+        const scoreB = b.cis_score ?? b.score ?? 0;
+        return scoreB - scoreA;
+      }),
     [portfolio.watchlist, universeMap]
   );
+
+  // Mobile: show top PORTFOLIO_MOBILE_PREVIEW unless expanded
+  const visibleAssets = (isMobile && !showAllMobile)
+    ? watchedAssets.slice(0, PORTFOLIO_MOBILE_PREVIEW)
+    : watchedAssets;
+  const hiddenAssetCount = watchedAssets.length - PORTFOLIO_MOBILE_PREVIEW;
 
   const addToWatchlist = useCallback((symbol) => {
     setPortfolio(p => {
@@ -625,25 +650,69 @@ export default function MyPortfolio({ cisUniverse = [] }) {
       {watchedAssets.length === 0 ? (
         <EmptyState onFocus={() => searchRef?.querySelector("input")?.focus()} />
       ) : (
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-          gap: 14,
-        }}>
-          {watchedAssets.map(asset => {
-            const n = norm(asset);
-            return (
-              <WatchCard
-                key={n.symbol}
-                asset={asset}
-                position={portfolio.positions[n.symbol]}
-                prevGrade={portfolio.gradeSnapshot[n.symbol]}
-                onEdit={setEditSymbol}
-                onRemove={removeFromWatchlist}
-              />
-            );
-          })}
-        </div>
+        <>
+          {isMobile && watchedAssets.length > 0 && (
+            <div style={{
+              fontSize: 10, fontFamily: FONTS.mono, color: T.muted,
+              marginBottom: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+            }}>
+              {showAllMobile
+                ? `All ${watchedAssets.length} assets`
+                : `Top ${Math.min(PORTFOLIO_MOBILE_PREVIEW, watchedAssets.length)} by CIS score`}
+            </div>
+          )}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+            gap: 14,
+          }}>
+            {visibleAssets.map(asset => {
+              const n = norm(asset);
+              return (
+                <WatchCard
+                  key={n.symbol}
+                  asset={asset}
+                  position={portfolio.positions[n.symbol]}
+                  prevGrade={portfolio.gradeSnapshot[n.symbol]}
+                  onEdit={setEditSymbol}
+                  onRemove={removeFromWatchlist}
+                />
+              );
+            })}
+          </div>
+
+          {/* Mobile expand / collapse */}
+          {isMobile && hiddenAssetCount > 0 && !showAllMobile && (
+            <button
+              onClick={() => setShowAllMobile(true)}
+              style={{
+                marginTop: 12, width: "100%", padding: "11px",
+                background: "rgba(0,200,224,0.04)",
+                border: `1px solid ${T.border}`, borderRadius: 8,
+                color: T.cyan, fontFamily: FONTS.display,
+                fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+                cursor: "pointer",
+              }}
+            >
+              + {hiddenAssetCount} more assets
+            </button>
+          )}
+          {isMobile && showAllMobile && watchedAssets.length > PORTFOLIO_MOBILE_PREVIEW && (
+            <button
+              onClick={() => setShowAllMobile(false)}
+              style={{
+                marginTop: 12, width: "100%", padding: "11px",
+                background: "transparent",
+                border: `1px solid ${T.border}`, borderRadius: 8,
+                color: T.muted, fontFamily: FONTS.display,
+                fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+                cursor: "pointer",
+              }}
+            >
+              ↑ Show less
+            </button>
+          )}
+        </>
       )}
 
       {/* Offline notice */}
