@@ -6,6 +6,7 @@ import {
 import BottomSheet from "./ui/BottomSheet";
 import CISWidget from "./CISWidget";
 import MacroBrief from "./MacroBrief";
+import EconomicIndicators from "./EconomicIndicators";
 import { T, FONTS } from "../tokens";
 
 // Lazy — recharts + DeFiLlama logic (~80KB); only used on Protocol tab
@@ -481,6 +482,16 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               transition: "opacity 0.35s ease 80ms, transform 0.35s ease 80ms",
             }}>
               <MacroBrief />
+            </div>
+
+            {/* Economic Indicators — EODHD multi-country macro panel */}
+            <div style={{
+              marginBottom: 20, width: "100%", clear: "both",
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 0.35s ease 120ms, transform 0.35s ease 120ms",
+            }}>
+              <EconomicIndicators />
             </div>
 
             {/* CIS Widget */}

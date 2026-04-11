@@ -913,7 +913,8 @@ def calculate_cis_score(
     eodhd_rev_score = 0.0
     if asset_class == "US Equity" and eodhd_fundamentals:
         pe = eodhd_fundamentals.get("pe_ratio")
-        rev_growth = eodhd_fundamentals.get("revenue_growth_yoy")
+        # EODHD field is "revenue_growth" (TTM) — accept both keys for safety
+        rev_growth = eodhd_fundamentals.get("revenue_growth_yoy") or eodhd_fundamentals.get("revenue_growth")
         # PE scoring: sweet spot 10-25 → up to 15pts; high PE or negative → penalty
         if pe is not None and pe > 0:
             if pe <= 10:
@@ -955,7 +956,7 @@ def calculate_cis_score(
         f_components.update({
             "pe_ratio": eodhd_fundamentals.get("pe_ratio"),
             "pe_score": round(eodhd_pe_score, 1),
-            "revenue_growth_yoy": eodhd_fundamentals.get("revenue_growth_yoy"),
+            "revenue_growth_yoy": eodhd_fundamentals.get("revenue_growth_yoy") or eodhd_fundamentals.get("revenue_growth"),
             "revenue_score": round(eodhd_rev_score, 1),
             "gross_margin": eodhd_fundamentals.get("gross_margin"),
             "profit_margin": eodhd_fundamentals.get("profit_margin"),

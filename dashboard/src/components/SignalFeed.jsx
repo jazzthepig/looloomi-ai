@@ -356,6 +356,20 @@ const FilterBar = ({ activeType, onChange }) => (
   </div>
 );
 
+/* ─── Mobile detection hook ──────────────────────────────────────────── */
+const MOBILE_BP = 768;
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < MOBILE_BP);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < MOBILE_BP);
+    window.addEventListener("resize", handler, { passive: true });
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+}
+
+const MOBILE_PREVIEW = 3; // signals shown on mobile before "show more"
+
 /* ─── Main Component ─────────────────────────────────────────────────── */
 export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
   const [loading, setLoading]       = useState(true);
@@ -366,6 +380,8 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [activeFilter, setActiveFilter] = useState(null);
   const [version, setVersion]       = useState(null);
+  const [showAllMobile, setShowAllMobile] = useState(false);
+  const isMobile = useIsMobile();
 
   const fetchSignals = useCallback(async () => {
     setError(null);
@@ -402,6 +418,17 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
   const filteredSignals = activeFilter
     ? signals.filter((s) => s.type === activeFilter)
     : signals;
+
+  // Reset mobile "show all" when filter changes
+  const handleFilterChange = (type) => {
+    setActiveFilter(type);
+    setShowAllMobile(false);
+  };
+
+  const visibleSignals = (isMobile && !showAllMobile)
+    ? filteredSignals.slice(0, MOBILE_PREVIEW)
+    : filteredSignals;
+  const hiddenCount = filteredSignals.length - MOBILE_PREVIEW;
 
   const handleToggle = (id) => setExpandedId((prev) => (prev === id ? null : id));
 
@@ -466,7 +493,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
       </div>
 
       {/* ── Filter Bar ─────────────────────────────────────────────────── */}
-      <FilterBar activeType={activeFilter} onChange={setActiveFilter} />
+      <FilterBar activeType={activeFilter} onChange={handleFilterChange} />
 
       {/* ── Signal List ────────────────────────────────────────────────── */}
       <div style={{
@@ -495,21 +522,55 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
             暂无信号
           </div>
         ) : (
-          filteredSignals.map((signal, idx) => {
-            const id = signal.id || String(idx);
-            return (
-              <SignalRow
-                key={id}
-                signal={signal}
-                isNew={idx === 0 && !activeFilter}
-                isExpanded={expandedId === id}
-                onToggle={() => {
-                  handleToggle(id);
-                  if (onSignalClick) onSignalClick(signal);
+          <>
+            {visibleSignals.map((signal, idx) => {
+              const id = signal.id || String(idx);
+              return (
+                <SignalRow
+                  key={id}
+                  signal={signal}
+                  isNew={idx === 0 && !activeFilter}
+                  isExpanded={expandedId === id}
+                  onToggle={() => {
+                    handleToggle(id);
+                    if (onSignalClick) onSignalClick(signal);
+                  }}
+                />
+              );
+            })}
+
+            {/* ── Mobile: show more / collapse ────────────────────────── */}
+            {isMobile && hiddenCount > 0 && !showAllMobile && (
+              <button
+                onClick={() => setShowAllMobile(true)}
+                style={{
+                  width: "100%", padding: "12px 16px",
+                  background: "rgba(0,200,224,0.04)",
+                  border: "none", borderTop: `1px solid ${T.border}`,
+                  color: T.cyan, fontFamily: FONTS.display,
+                  fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+                  cursor: "pointer", textAlign: "center",
                 }}
-              />
-            );
-          })
+              >
+                + {hiddenCount} more signals
+              </button>
+            )}
+            {isMobile && showAllMobile && filteredSignals.length > MOBILE_PREVIEW && (
+              <button
+                onClick={() => setShowAllMobile(false)}
+                style={{
+                  width: "100%", padding: "12px 16px",
+                  background: "transparent",
+                  border: "none", borderTop: `1px solid ${T.border}`,
+                  color: T.t3, fontFamily: FONTS.display,
+                  fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+                  cursor: "pointer", textAlign: "center",
+                }}
+              >
+                ↑ Collapse
+              </button>
+            )}
+          </>
         )}
       </div>
 
