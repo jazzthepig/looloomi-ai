@@ -239,7 +239,7 @@ def _render_og_card(top5: list, macro: dict, ref: str = "") -> bytes:
             symbol = asset.get("symbol", "???")
             score = asset.get("cis_score") or asset.get("score", 0)
             grade = asset.get("grade", "—")
-            signal = asset.get("signal", "NEUTRAL")
+            signal = asset.get("signal") or "NEUTRAL"
             asset_class = asset.get("asset_class", "")
 
             gc = GRADE_COLORS.get(grade, DIM)
@@ -264,7 +264,7 @@ def _render_og_card(top5: list, macro: dict, ref: str = "") -> bytes:
 
             # Signal
             sig_text = SIGNAL_SHORT.get(signal, signal)
-            sig_color = GREEN if "OUTPERFORM" in signal else (GOLD if signal == "NEUTRAL" else RED)
+            sig_color = GREEN if "OUTPERFORM" in (signal or "") else (GOLD if signal == "NEUTRAL" else RED)
             draw.text((740, ay + 8), sig_text, fill=sig_color, font=font_mono)
 
     # ── Bottom bar ──────────────────────────────────────────────────────────

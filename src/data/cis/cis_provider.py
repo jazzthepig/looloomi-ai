@@ -577,7 +577,7 @@ async def fetch_github_activity() -> Dict[str, int]:
 
     # Use a 2-hour TTL via a manual timestamp check on next hit
     # (simple _cache_set uses global _cache_ttl=300; we override by storing a wrapper)
-    _cache[cache_key] = (results, datetime.now().timestamp() + 7200 - _cache_ttl)
+    _cache[cache_key] = (results, datetime.now().timestamp() + 7200)
     return results
 
 
@@ -659,7 +659,10 @@ def _load_macro_cache() -> Optional[dict]:
 def _save_macro_cache(data: dict):
     """Save macro data to external drive cache."""
     try:
-        os.makedirs(os.path.dirname(MACRO_CACHE_PATH), exist_ok=True)
+        cache_dir = os.path.dirname(MACRO_CACHE_PATH)
+        if not os.path.exists(cache_dir):
+            # Path not available (e.g., Railway) — skip disk cache silently
+            return
         import json
         with open(MACRO_CACHE_PATH, 'w') as f:
             json.dump(data, f)
@@ -1673,6 +1676,20 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     # Calculate scores for each asset
     universe = []
 
+    # Pre-fetch klines for all crypto assets that need beta calculation (avoid N serial HTTP calls)
+    from .data_layer import get_klines as _gk
+    _kline_tasks = {}
+    for aid, cfg in ASSETS_CONFIG.items():
+        ac = cfg["class"]
+        if ac not in ["US Equity", "US Bond", "Commodity"] and aid in BINANCE_SYMBOLS:
+            sym = BINANCE_SYMBOLS[aid].upper().replace("USDT", "") + "USDT"
+            _kline_tasks[aid] = _gk(sym, months=1)
+    _kline_results = await asyncio.gather(*_kline_tasks.values(), return_exceptions=True)
+    _kline_map = {}
+    for aid, result in zip(_kline_tasks.keys(), _kline_results):
+        if not isinstance(result, Exception) and result and len(result) >= 20:
+            _kline_map[aid] = [k["close"] for k in result]
+
     for asset_id, config in ASSETS_CONFIG.items():
         asset_class = config["class"]
 
@@ -1699,17 +1716,12 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         asset_spy_30d = spy_30d if (is_tradfi and asset_id != "SPY") or asset_id == "BTC" else None
         gh_commits = github_activity.get(asset_id)
 
-        # Calculate betas for crypto assets (async, cached)
+        # Calculate betas for crypto assets (pre-fetched above to avoid serial HTTP calls)
         asset_betas = None
-        if not is_tradfi and asset_id in BINANCE_SYMBOLS:
-            # Get price history for beta calculation
-            binance_sym = BINANCE_SYMBOLS[asset_id].upper().replace("USDT", "") + "USDT"
+        if not is_tradfi and asset_id in _kline_map:
             try:
-                from .data_layer import get_klines
-                price_history = await get_klines(binance_sym, months=1)
-                if price_history and len(price_history) >= 20:
-                    prices = [k["close"] for k in price_history]
-                    asset_betas = await calculate_asset_betas(asset_id, prices)
+                prices = _kline_map[asset_id]
+                asset_betas = await calculate_asset_betas(asset_id, prices)
             except Exception as e:
                 print(f"[CIS] beta calculation failed for {asset_id}: {e}")
 
@@ -1856,7 +1868,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         print(f"Failed to save CIS history: {e}")
 
     return {
-        "status": "success",
+        "status": "error" if not universe else "success",
         "version": "4.1.0",
         "timestamp": datetime.now().isoformat(),
         "data_source": "coingecko+defillama+alternative.me",

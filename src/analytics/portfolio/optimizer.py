@@ -26,7 +26,7 @@ class CryptoPortfolioOptimizer:
     
     def __init__(self, assets: List[str] = None):
         self.assets = assets or ["BTC", "ETH", "SOL", "BNB", "AVAX"]
-        self.exchange = ccxt.binance({'enableRateLimit': True})
+        self.exchange = ccxt.okx({'enableRateLimit': True})
         self.returns_data = None
         
     def fetch_historical_data(self, days: int = 90) -> pd.DataFrame:

@@ -18,6 +18,9 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
 import asyncio
+import os
+
+_INTERNAL_TOKEN = os.getenv("INTERNAL_TOKEN", "")
 
 router = APIRouter(prefix="/api/v1/factory", tags=["factory"])
 
@@ -157,6 +160,10 @@ async def deploy_fund(
     # - Simulate to check for errors
     # - Return { transaction: base64, message: "Sign with wallet" }
 
+    # Auth: reject-by-default
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
     return {
         "status": "pending",
         "fund_id": request.fund_id,
@@ -189,6 +196,8 @@ async def deposit(
     5. Return transaction for signing
     """
     # TODO: Integrate with Solana RPC
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
 
     fund = MOCK_FUNDS.get(request.fund_id)
     if not fund:
@@ -234,6 +243,8 @@ async def redeem(
     5. Return transaction for signing
     """
     # TODO: Integrate with Solana RPC
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
 
     fund = MOCK_FUNDS.get(request.fund_id)
     if not fund:
@@ -274,6 +285,9 @@ async def update_nav(
     2. Calculating new NAV
     3. Signing with GP authority
     """
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
     # TODO: Integrate with Solana RPC
 
     fund = MOCK_FUNDS.get(request.fund_id)
@@ -309,6 +323,9 @@ async def manage_whitelist(
     - 1: Accredited investor
     - 2: Institutional investor
     """
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
     # TODO: Integrate with Solana RPC
 
     fund = MOCK_FUNDS.get(request.fund_id)

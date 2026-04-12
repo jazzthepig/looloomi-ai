@@ -185,10 +185,15 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
 
     # Last resort: stale Redis
     if cached and cached.get("universe"):
+        stale_universe = cached["universe"]
         return {
-            "status":   "degraded",
-            "source":   "local_engine_stale",
-            "universe": cached["universe"],
+            "status":    "degraded",
+            "version":   "4.1.0",
+            "timestamp": cached.get("timestamp", time.time()),
+            "source":    "local_engine_stale",
+            "t1_count":  0,
+            "t2_count":  len(stale_universe),
+            "universe":  stale_universe,
         }
     return {"status": "error", "message": "No scoring data available", "universe": []}
 
