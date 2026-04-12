@@ -13,6 +13,7 @@ const ProtocolIntelligence = lazy(() => import("./components/ProtocolIntelligenc
 const MobileApp            = lazy(() => import("./components/MobileApp"));
 const AssetRadar           = lazy(() => import("./components/AssetRadar"));
 const QuantMonitor         = lazy(() => import("./components/QuantMonitor"));
+const MyPortfolio          = lazy(() => import("./components/MyPortfolio"));
 
 /* ── Staging environment banner ─────────────────────────────────────────── */
 function StagingBanner() {
@@ -241,11 +242,11 @@ const SECTIONS = [
   { id: "protocol", label: "Protocol" },
   { id: "vault", label: "Vault" },
   { id: "quantgp", label: "Quant GP" },
+  { id: "portfolio", label: "Portfolio" },
 ];
 
 // External page links — rendered as anchor tags next to the section tabs
 const EXTERNAL_PAGES = [
-  { href: "/portfolio.html", label: "Portfolio" },
   { href: "/analytics.html", label: "Analytics" },
 ];
 
@@ -396,6 +397,16 @@ function DesktopApp() {
             </div>
             <QuantGPContent />
           </div>
+        </section>
+
+        {/* Section Separator */}
+        <div className="section-divider" />
+
+        {/* Section 6: Portfolio */}
+        <section id="portfolio" style={sectionStyle(1)}>
+          <Suspense fallback={<SectionLoader />}>
+            <MyPortfolio cisUniverse={cisUniverse} />
+          </Suspense>
         </section>
 
 
