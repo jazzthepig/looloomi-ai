@@ -49,7 +49,9 @@ async def receive_quant_status(payload: dict, x_internal_token: str = Header(Non
         await redis_set_key(_REDIS_KEY_STATUS, {**status_data, "_ts": ts}, ttl=_REDIS_TTL)
     if trades_data:
         # Append to trade history (keep last 100)
-        existing = await redis_get_key(_REDIS_KEY_TRADES) or []
+        existing = await redis_get_key(_REDIS_KEY_TRADES)
+        if not isinstance(existing, list):
+            existing = []
         updated = trades_data + existing
         await redis_set_key(_REDIS_KEY_TRADES, updated[:100], ttl=_REDIS_TTL * 10)
     if equity_data:
