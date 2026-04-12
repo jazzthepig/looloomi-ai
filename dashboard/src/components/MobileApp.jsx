@@ -24,9 +24,6 @@ const SIGNAL_COLOR = {
   NEUTRAL:             "#9CA3AF",
   UNDERPERFORM:        "#E8A000",
   UNDERWEIGHT:         "#FF3D5A",
-  // Legacy compat
-  "STRONG BUY": "#00E87A", BUY: "#4B9EFF", HOLD: "#9CA3AF",
-  REDUCE: "#E8A000", AVOID: "#FF3D5A",
 };
 
 const REGIME_CONFIG = {
@@ -176,7 +173,7 @@ function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }
     || normalizeRegime(universe.find(a => a.macro_regime)?.macro_regime);
   const regimeCfg = regime ? REGIME_CONFIG[regime] : null;
 
-  /* Top signals: A+/A/B+ grade assets with BUY or STRONG BUY */
+  /* Top signals: A+/A/B+ grade assets with STRONG OUTPERFORM or OUTPERFORM */
   const GRADE_ORDER = ["A+", "A", "B+", "B", "C+", "C", "D", "F"];
   const topSignals = [...universe]
     .sort((a, b) => {

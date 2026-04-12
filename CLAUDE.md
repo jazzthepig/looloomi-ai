@@ -54,6 +54,16 @@ other. We are early infrastructure for that meeting point.
 This shapes how we build: with patience for complexity, respect for emergence, and no
 tolerance for things that feel dead.
 
+## Skills (`.claude/skills/`)
+
+Domain knowledge is structured as skills for progressive disclosure. Load the
+relevant skill when working in that domain — don't rely solely on CLAUDE.md.
+
+| Skill | Path | When to load |
+|---|---|---|
+| `compliance-language` | `.claude/skills/compliance-language/SKILL.md` | ANY user-facing output — signals, API, frontend, docs, decks, emails |
+| `cis-methodology` | `.claude/skills/cis-methodology/SKILL.md` | CIS scoring, grading, LAS, pillars, data tiers, regime detection |
+
 ## Compliance rules
 
 1. **No buy/sell language in signals.** CometCloud does not hold an investment advisory
@@ -62,6 +72,7 @@ tolerance for things that feel dead.
    NEVER use `BUY`, `SELL`, `STRONG BUY`, `ACCUMULATE`, `AVOID`, `REDUCE` in any
    user-facing output — backend, frontend, API responses, or documentation.
    See `CIS_METHODOLOGY.md` §5 and §8.
+   **Full rules + substitution tables:** `.claude/skills/compliance-language/`
 
 2. **Shadow folder is READ-ONLY.** Never `git add` or commit Shadow/ files. Shadow is
    a local reference for Claude Cowork. All Mac Mini code changes go to

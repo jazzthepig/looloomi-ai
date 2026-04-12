@@ -9,7 +9,7 @@ Each protocol is scored across 5 CIS pillars:
   S (Sentiment):   Community + dev activity + trending
   A (Alpha):       Outperformance vs category peers
 
-Output: CIS grade (A+ → F), signal (ACCUMULATE/HOLD/REDUCE/AVOID),
+Output: CIS grade (A+ → F), signal (STRONG OUTPERFORM/OUTPERFORM/NEUTRAL/UNDERPERFORM/UNDERWEIGHT),
         recommended_weight, per-pillar breakdown, risk_tier.
 """
 

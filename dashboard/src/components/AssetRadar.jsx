@@ -84,12 +84,6 @@ const SIG_STYLE = {
   NEUTRAL:             { color: T.gold,  bg: "rgba(200,168,75,0.09)", border: "rgba(200,168,75,0.2)" },
   UNDERPERFORM:        { color: T.red,   bg: "rgba(255,61,90,0.09)",  border: "rgba(255,61,90,0.2)" },
   UNDERWEIGHT:         { color: T.red,   bg: "rgba(255,61,90,0.14)",  border: "rgba(255,61,90,0.3)" },
-  // Legacy compat (in case cached data still has old signals)
-  "STRONG BUY": { color: T.green, bg: "rgba(0,232,122,0.14)",  border: "rgba(0,232,122,0.3)" },
-  BUY:          { color: T.green, bg: "rgba(0,232,122,0.09)",  border: "rgba(0,232,122,0.2)" },
-  HOLD:         { color: T.gold,  bg: "rgba(200,168,75,0.09)", border: "rgba(200,168,75,0.2)" },
-  REDUCE:       { color: T.red,   bg: "rgba(255,61,90,0.09)",  border: "rgba(255,61,90,0.2)" },
-  AVOID:        { color: T.red,   bg: "rgba(255,61,90,0.14)",  border: "rgba(255,61,90,0.3)" },
 };
 const sigStyle = (sig) => SIG_STYLE[sig] || SIG_STYLE.NEUTRAL;
 

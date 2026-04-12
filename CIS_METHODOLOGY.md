@@ -45,7 +45,7 @@ Both engines produce the same output schema:
 {
   "cis_score": float,       // 0-100, weighted composite
   "grade": str,             // A+ through F (unified absolute thresholds)
-  "signal": str,            // STRONG BUY / BUY / HOLD / REDUCE / AVOID
+  "signal": str,            // STRONG OUTPERFORM / OUTPERFORM / NEUTRAL / UNDERPERFORM / UNDERWEIGHT
   "data_tier": int,         // 1 or 2
   "confidence": float,      // 0.0-1.0
   "las": float,             // Liquidity-Adjusted Score (0-100)
