@@ -930,7 +930,7 @@ async def get_signals():
                 "liquidation cascade risk. Historically, BTC funding >0.1% precedes "
                 "10–20% deleveraging events within 72h. "
                 f"OI: ${total_oi/1e9:.2f}B — {'dangerously concentrated' if total_oi > 5e9 else 'elevated'}. "
-                "AVOID new longs; consider reducing exposure on bounces.",
+                "Framework positions as UNDERWEIGHT; risk reduction positioning favored on bounces.",
                 "24H"))
 
             elif avg_fr <= -0.04:  # negative funding = shorts overcrowded

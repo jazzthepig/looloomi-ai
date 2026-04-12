@@ -144,17 +144,17 @@ class LooloomiMMI:
         return round(mmi, 1)
     
     def get_signal(self, score: float) -> str:
-        """Trading signal interpretation"""
+        """Trading signal interpretation (positioning language only per compliance)"""
         if score >= 75:
-            return "🔴 SELL SIGNAL - Market overheated"
+            return "🔴 MARKET OVERHEATED - Consider risk reduction positioning"
         elif score >= 60:
-            return "🟡 CAUTION - Greed building"
+            return "🟡 GREED BUILDING - Caution advised for new entries"
         elif score >= 40:
-            return "⚪ NEUTRAL - No clear signal"
+            return "⚪ NEUTRAL REGIME - No clear directional bias"
         elif score >= 25:
-            return "🟢 ACCUMULATE - Fear present"
+            return "🟢 FEAR PRESENT - Market positioned favorably"
         else:
-            return "🟢🟢 STRONG BUY - Extreme fear = opportunity"
+            return "🟢🟢 EXTREME FEAR - Exceptional opportunity positioning"
     
     def report(self) -> Dict:
         """Generate MMI report"""
