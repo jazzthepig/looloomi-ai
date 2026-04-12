@@ -165,12 +165,12 @@ async def wallet_signin(req: WalletSigninRequest):
       1. Fetch nonce from Redis for this address
       2. Reconstruct sign message
       3. Verify Ed25519 signature
-      4. Upsert wallet_profiles in Supabase
-      5. Return session token (simple Redis-backed token, 24h TTL)
-    """
-    if not _SB_URL or not _SB_KEY:
-        raise HTTPException(status_code=503, detail="Auth service not configured")
+      4. Upsert wallet_profiles in Supabase (optional — skipped if SUPABASE_URL/KEY not set)
+      5. Return session token (Redis-backed, 24h TTL)
 
+    Degrades gracefully: session token is always issued if signature is valid.
+    Supabase profile creation is optional — platform works without it.
+    """
     # 1. Fetch expected nonce
     cache_key = f"auth:nonce:{req.address}"
     nonce_data = await redis_get_key(cache_key)
@@ -194,8 +194,12 @@ async def wallet_signin(req: WalletSigninRequest):
     if not _verify_solana_signature(req.address, message, req.signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
 
-    # 5. Upsert Supabase profile
-    profile = await _sb_upsert_profile(req.address)
+    # 5. Upsert Supabase profile (optional — skip gracefully if not configured)
+    profile = None
+    if _SB_URL and _SB_KEY:
+        profile = await _sb_upsert_profile(req.address)
+    else:
+        print(f"[AUTH] Supabase not configured — skipping profile upsert for {req.address[:8]}…")
 
     # 6. Issue session token (24h Redis)
     session_token = secrets.token_hex(32)
@@ -233,13 +237,22 @@ async def _validate_session_token(authorization: str | None, address: str) -> bo
 
 @router.get("/profile/{address}")
 async def get_profile(address: str, authorization: str = Header(None)):
-    """Fetch wallet profile — requires valid session token."""
-    if not _SB_URL or not _SB_KEY:
-        raise HTTPException(status_code=503, detail="Auth service not configured")
+    """Fetch wallet profile — requires valid session token.
 
+    Returns minimal profile from Redis session if Supabase not configured.
+    This lets AuthContext validate sessions even without the full Supabase stack.
+    """
     # Require Bearer token that matches the requested address
     if not await _validate_session_token(authorization, address):
         raise HTTPException(status_code=401, detail="Invalid or expired session")
+
+    # If Supabase not configured, return minimal profile from session data
+    if not _SB_URL or not _SB_KEY:
+        return {
+            "wallet_address": address,
+            "last_seen": datetime.now(timezone.utc).isoformat(),
+            "supabase": False,
+        }
 
     client = _get_supabase_client()
     url = f"{_SB_URL}/rest/v1/{_SB_TABLE}"

@@ -1,0 +1,33 @@
+{
+  "_comment": "Copy this template for any feature spanning >1 Cowork session. Save as features/<feature-name>.json",
+  "feature": "<name>",
+  "owner": "Seth | Austin | Jazz | Minimax",
+  "started": "YYYY-MM-DD",
+  "target": "YYYY-MM-DD",
+  "status": "in_progress | blocked | done",
+
+  "goal": "One sentence: what does this feature do for the user?",
+
+  "done": [
+    "List of completed subtasks"
+  ],
+
+  "in_progress": "The single task currently active (max 1)",
+
+  "next": [
+    "Ordered list of remaining tasks"
+  ],
+
+  "blocked_on": {
+    "who": "Jazz | Minimax | external",
+    "what": "What they need to do",
+    "since": "YYYY-MM-DD"
+  },
+
+  "key_files": [
+    "src/api/routers/example.py",
+    "dashboard/src/components/Example.jsx"
+  ],
+
+  "notes": "Any context that doesn't fit elsewhere"
+}
