@@ -1602,7 +1602,10 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         async def _one(aid: str, cg_id: str):
             async with _sem:
                 try:
-                    from data.market.data_layer import get_cg_developer_data
+                    try:
+                        from src.data.market.data_layer import get_cg_developer_data
+                    except ImportError:
+                        from data.market.data_layer import get_cg_developer_data
                     data = await get_cg_developer_data(cg_id)
                     if data and "error" not in data:
                         _results[aid] = data
@@ -1624,7 +1627,10 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         async def _one(aid: str, ticker: str):
             async with _sem:
                 try:
-                    from data.market.data_layer import get_eodhd_fundamentals
+                    try:
+                        from src.data.market.data_layer import get_eodhd_fundamentals
+                    except ImportError:
+                        from data.market.data_layer import get_eodhd_fundamentals
                     data = await get_eodhd_fundamentals(ticker, "US")
                     if data and "error" not in data:
                         _results[aid] = data
@@ -1752,14 +1758,21 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     universe = []
 
     # Pre-fetch klines for all crypto assets that need beta calculation (avoid N serial HTTP calls)
-    from .data_layer import get_klines as _gk
+    try:
+        from src.data.market.data_layer import get_klines as _gk
+    except ImportError:
+        try:
+            from data.market.data_layer import get_klines as _gk
+        except ImportError:
+            _gk = None
     _kline_tasks = {}
-    for aid, cfg in ASSETS_CONFIG.items():
-        ac = cfg["class"]
-        if ac not in ["US Equity", "US Bond", "Commodity"] and aid in BINANCE_SYMBOLS:
-            sym = BINANCE_SYMBOLS[aid].upper().replace("USDT", "") + "USDT"
-            _kline_tasks[aid] = _gk(sym, months=1)
-    _kline_results = await asyncio.gather(*_kline_tasks.values(), return_exceptions=True)
+    if _gk is not None:
+        for aid, cfg in ASSETS_CONFIG.items():
+            ac = cfg["class"]
+            if ac not in ["US Equity", "US Bond", "Commodity"] and aid in BINANCE_SYMBOLS:
+                sym = BINANCE_SYMBOLS[aid].upper().replace("USDT", "") + "USDT"
+                _kline_tasks[aid] = _gk(sym, months=1)
+    _kline_results = await asyncio.gather(*_kline_tasks.values(), return_exceptions=True) if _kline_tasks else []
     _kline_map = {}
     for aid, result in zip(_kline_tasks.keys(), _kline_results):
         if not isinstance(result, Exception) and result and len(result) >= 20:
