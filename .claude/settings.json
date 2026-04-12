@@ -1,0 +1,20 @@
+{
+  "_comment": "CometCloud AI — Claude Code project settings. Committed to repo (team-wide).",
+  "_see": "HARNESS_UPGRADE.md Phase B for hooks architecture; .claude/skills/ for domain knowledge.",
+
+  "hooks": {
+    "PreToolUse": [
+      {
+        "_comment": "Compliance hook: warns (dry-run) or blocks forbidden transactional language in user-facing edits.",
+        "_to_block": "Set COMPLIANCE_BLOCK=1 in Railway or local env to switch from warn to block.",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/compliance_check.py"
+          }
+        ]
+      }
+    ]
+  }
+}
