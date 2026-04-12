@@ -1415,7 +1415,7 @@ async def calculate_mmi(token: str = "BTC") -> dict:
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Binance API (public, no key needed for klines)
-BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
+BINANCE_KLINES_URL = "https://data-api.binance.vision/api/v3/klines"  # geo-accessible mirror (api.binance.com blocked on Railway US)
 
 # OKX API (public, no key needed for public candles)
 OKX_KLINES_URL = "https://www.okx.com/api/v5/market/history-candles"
