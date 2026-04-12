@@ -23,6 +23,49 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 CG_PRO_BASE = "https://pro-api.coingecko.com/api/v3"
 CG_API_KEY = os.getenv("COINGECKO_API_KEY", "")
 
+# Upstash Redis — persistent L2 cache across Railway deploys
+# Mirrors the pattern in data_layer.py. Gracefully no-ops if not configured.
+_UPSTASH_URL   = os.getenv("UPSTASH_REDIS_REST_URL", "").rstrip("/")
+_UPSTASH_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
+
+import json as _json
+
+async def _upstash_get(key: str):
+    """Read from Upstash REST. Returns None on miss or if not configured."""
+    if not _UPSTASH_URL:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=5) as cl:
+            r = await cl.get(
+                f"{_UPSTASH_URL}/get/{key}",
+                headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
+            )
+            if r.status_code == 200:
+                raw = r.json().get("result")
+                return _json.loads(raw) if raw else None
+    except Exception:
+        pass
+    return None
+
+async def _upstash_set(key: str, val, ttl: int) -> bool:
+    """Write to Upstash with TTL. Fire-and-forget — never blocks on failure."""
+    if not _UPSTASH_URL:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=5) as cl:
+            r = await cl.post(
+                f"{_UPSTASH_URL}/set/{key}",
+                content=_json.dumps(val),
+                headers={
+                    "Authorization": f"Bearer {_UPSTASH_TOKEN}",
+                    "Content-Type": "application/json",
+                },
+                params={"EX": ttl},
+            )
+            return r.status_code == 200
+    except Exception:
+        return False
+
 def _cg_base() -> str:
     """Use Pro API if key is set, otherwise free tier."""
     return CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
@@ -330,19 +373,32 @@ BINANCE_TO_CIS = {v: k for k, v in BINANCE_SYMBOLS.items()}
 
 
 async def fetch_binance_prices() -> Dict[str, dict]:
-    """Fetch crypto prices from Binance API - fast, no rate limit."""
+    """Fetch crypto prices from Binance public data mirror.
+
+    Uses data-api.binance.vision (not api.binance.com) — the vision endpoint
+    is geo-accessible from Railway US, whereas api.binance.com is geo-blocked.
+
+    Cache hierarchy: L1 in-process → L2 Upstash (300s TTL, survives deploys).
+    """
     cache_key = "binance_prices"
+    redis_key = "cis:binance_prices"
+
     cached = _cache_get(cache_key)
     if cached:
         return cached
+
+    r2 = await _upstash_get(redis_key)
+    if r2:
+        _cache_set(cache_key, r2)
+        return r2
 
     result = {}
     binsym = list(BINANCE_SYMBOLS.values())
 
     try:
         async with httpx.AsyncClient(timeout=15) as client:
-            # Fetch all tickers in one call
-            url = "https://api.binance.com/api/v3/ticker/24hr"
+            # data-api.binance.vision is the public mirror — no geo-block, no API key
+            url = "https://data-api.binance.vision/api/v3/ticker/24hr"
 
             # Get all 24hr tickers
             r = await client.get(url)
@@ -381,24 +437,38 @@ async def fetch_binance_prices() -> Dict[str, dict]:
                     }
 
             print(f"Binance: fetched {len(result)} assets")
-            return _cache_set(cache_key, result)
+            _cache_set(cache_key, result)
+            await _upstash_set(redis_key, result, ttl=300)   # 5min TTL — prices are time-sensitive
+            return result
 
     except Exception as e:
         print(f"Binance API error: {e}")
-        return result
+        return r2 or result
 
 
 async def fetch_cg_markets() -> Dict[str, dict]:
     """Fetch market data from CoinGecko for all tracked crypto assets.
 
-    Uses explicit coin IDs instead of top-N ranking to ensure smaller-cap
-    assets (e.g. POLYX, NEON) are always included regardless of market cap rank.
-    Batches into chunks of 50 to stay within URL length limits.
+    Cache hierarchy:
+      L1 — in-process memory (_cache): 300s TTL, resets on restart/deploy
+      L2 — Upstash Redis: 1800s TTL, survives Railway deploys and cold starts
+
+    Uses explicit coin IDs (not top-N) so POLYX, NEON etc. are always included.
+    Batches into chunks of 50 to stay within CG URL length limits.
     """
-    cache_key = "cg_markets_v2"
+    cache_key = "cg_markets_v3"
+    redis_key = "cis:cg_markets_v3"
+
+    # L1: in-process memory (fastest)
     cached = _cache_get(cache_key)
     if cached:
         return cached
+
+    # L2: Upstash Redis (survives deploys)
+    r2 = await _upstash_get(redis_key)
+    if r2:
+        _cache_set(cache_key, r2)   # warm L1
+        return r2
 
     result = {}
 
@@ -459,11 +529,16 @@ async def fetch_cg_markets() -> Dict[str, dict]:
                     await asyncio.sleep(1.5)
 
             print(f"CoinGecko: fetched {len(result)}/{len(unique_ids)} assets")
-            return _cache_set(cache_key, result)
+            _cache_set(cache_key, result)                       # L1
+            await _upstash_set(redis_key, result, ttl=1800)    # L2: 30min TTL
+            return result
 
     except Exception as e:
         print(f"CoinGecko API error: {e}")
-        return result
+        # Return stale L2 if available rather than empty
+        if not r2:
+            r2 = await _upstash_get(redis_key)
+        return r2 or result
 
 
 async def fetch_defillama_tvl() -> Dict[str, float]:
