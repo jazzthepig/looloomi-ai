@@ -10,6 +10,11 @@ Routers:
   src/api/routers/onchain.py      — /api/v1/onchain/*
   src/api/routers/macro.py        — /api/v1/macro/*, /internal/macro-brief
   src/api/routers/quant.py        — /api/v1/quant/*, /internal/quant-push
+  src/api/routers/auth.py         — /api/v1/auth/*
+  src/api/routers/leads.py        — /api/v1/leads/*
+  src/api/routers/social.py       — /api/v1/social/*
+  src/api/routers/share.py        — /api/v1/share/og-image
+  src/api/routers/factory.py      — /api/v1/factory/*
 """
 import os, sys, json
 
@@ -33,6 +38,7 @@ from src.api.routers.auth import router as auth_router
 from src.api.routers.leads import router as leads_router
 from src.api.routers.social import router as social_router
 from src.api.routers.factory import router as factory_router
+from src.api.routers.share import router as share_router
 
 _ENV = os.environ.get("ENVIRONMENT", "production")
 
@@ -71,6 +77,7 @@ app.include_router(auth_router)
 app.include_router(leads_router)
 app.include_router(social_router)
 app.include_router(factory_router)
+app.include_router(share_router)
 
 
 # ── Agent Discovery (A2A v0.3) ────────────────────────────────────────────────
