@@ -29,7 +29,7 @@ async def receive_macro_brief(payload: dict, x_internal_token: str = Header(None
     {
         "brief": "...",          # The analysis text (markdown)
         "market_data": {...},    # Raw data snapshot used for the analysis
-        "model": "qwen3.5-35b", # Model that generated it
+        "model": "gemma-4-26b-a4b", # Model that generated it (updated from qwen3.5-35b)
         "generated_at": "..."   # ISO timestamp
     }
     """
