@@ -168,14 +168,16 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         # Sort by CIS score descending
         merged.sort(key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
 
+        _cached_regime = (cached.get("macro") or {}).get("regime", "UNKNOWN")
         return sanitize_floats({
-            "status":    "success",
-            "version":   "4.1.0",
-            "timestamp": cached.get("timestamp", time.time()),
-            "source":    "merged",
-            "t1_count":  len(local_map),
-            "t2_count":  len(merged) - len(local_map),
-            "universe":  merged,
+            "status":       "success",
+            "version":      "4.1.0",
+            "timestamp":    cached.get("timestamp", time.time()),
+            "source":       "merged",
+            "t1_count":     len(local_map),
+            "t2_count":     len(merged) - len(local_map),
+            "macro_regime": _cached_regime,
+            "universe":     merged,
         })
 
     # Pure Railway (no Mac Mini data available)
@@ -187,13 +189,14 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
     if cached and cached.get("universe"):
         stale_universe = cached["universe"]
         return {
-            "status":    "degraded",
-            "version":   "4.1.0",
-            "timestamp": cached.get("timestamp", time.time()),
-            "source":    "local_engine_stale",
-            "t1_count":  0,
-            "t2_count":  len(stale_universe),
-            "universe":  stale_universe,
+            "status":       "degraded",
+            "version":      "4.1.0",
+            "timestamp":    cached.get("timestamp", time.time()),
+            "source":       "local_engine_stale",
+            "t1_count":     0,
+            "t2_count":     len(stale_universe),
+            "macro_regime": (cached.get("macro") or {}).get("regime", "UNKNOWN"),
+            "universe":     stale_universe,
         }
     return {"status": "error", "message": "No scoring data available", "universe": []}
 
@@ -996,25 +999,28 @@ async def websocket_cis(websocket: WebSocket):
 
 async def _broadcast_cis_update(universe: list):
     """Called by internal push endpoint when new scores arrive."""
-    store.last_cis_broadcast = {
-        "type":      "full",
-        "timestamp": datetime.now().isoformat(),
-        "count":     len(universe),
-        "assets": [
-            {
-                "s":     a["symbol"],
-                "g":     a.get("grade", "?"),
-                "sc":    a.get("cis_score", a.get("score", 0)),
-                "sg":    a.get("signal", "?"),
-                "f":     _p(a, "f"),
-                "m":     _p(a, "m"),
-                "r":     _p(a, "r"),
-                "ss":    _p(a, "s"),
-                "a":     _p(a, "a"),
-                "ch30d": a.get("change_30d"),
-                "ch7d":  a.get("change_7d"),
-            }
-            for a in universe
-        ],
-    }
-    await ws_manager.broadcast(store.last_cis_broadcast)
+    try:
+        store.last_cis_broadcast = {
+            "type":      "full",
+            "timestamp": datetime.now().isoformat(),
+            "count":     len(universe),
+            "assets": [
+                {
+                    "s":     a["symbol"],
+                    "g":     a.get("grade", "?"),
+                    "sc":    a.get("cis_score", a.get("score", 0)),
+                    "sg":    a.get("signal", "?"),
+                    "f":     _p(a, "f"),
+                    "m":     _p(a, "m"),
+                    "r":     _p(a, "r"),
+                    "ss":    _p(a, "s"),
+                    "a":     _p(a, "a"),
+                    "ch30d": a.get("change_30d"),
+                    "ch7d":  a.get("change_7d"),
+                }
+                for a in universe
+            ],
+        }
+        await ws_manager.broadcast(store.last_cis_broadcast)
+    except Exception as e:
+        print(f"[WS] broadcast error (non-fatal): {e}")

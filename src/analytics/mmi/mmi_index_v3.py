@@ -114,16 +114,13 @@ class LooloomiMMI:
         }
     
     def get_social_score(self) -> Dict:
-        """Social Score: placeholder until X API available"""
-        print(f"    Social data: using neutral placeholder...")
-        
-        # For now, return neutral score
-        # TODO: Implement X API / web scraping
+        """Social Score: X/Twitter API not configured — returns neutral with available: False"""
         return {
-            'score': 50,
-            'note': 'Placeholder - needs X API implementation',
-            'twitter': 'N/A',
-            'telegram': 'N/A'
+            'score': 50,        # Neutral — does not influence composite until real data
+            'available': False,
+            'note': 'Social data unavailable — X API not configured',
+            'twitter': None,
+            'telegram': None,
         }
     
     def calculate(self) -> float:

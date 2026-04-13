@@ -154,24 +154,40 @@ class VCDealFlowTracker:
     
     def get_vc_portfolio_overlap(self, vc_names: List[str]) -> Dict:
         """
-        Find projects that multiple top VCs have invested in
-        High overlap = strong signal
+        Find projects that multiple top VCs have co-invested in.
+        Derived from recent funding rounds in the dataset — no hardcoded data.
         """
-        # This would require portfolio data from each VC
-        # For now, return curated high-conviction plays
+        rounds = self.get_recent_funding_rounds(200)
+        # Build project → investor set map
+        project_investors: Dict[str, set] = {}
+        for r in rounds:
+            proj = r.get("project", "")
+            investors = r.get("investors", [])
+            if not proj or not investors:
+                continue
+            if proj not in project_investors:
+                project_investors[proj] = set()
+            project_investors[proj].update(investors)
+
+        # Filter vc_names if provided
+        target_vcs = set(vc_names) if vc_names else None
+
+        overlaps = []
+        for proj, investors in project_investors.items():
+            matched = list(investors & target_vcs) if target_vcs else list(investors)
+            count = len(matched)
+            if count >= 2:
+                overlaps.append({"project": proj, "vcs": sorted(matched), "count": count})
+
+        overlaps.sort(key=lambda x: x["count"], reverse=True)
+        high = [o for o in overlaps if o["count"] >= 3]
+        recent = [o for o in overlaps if o["count"] == 2]
+
         return {
-            "high_overlap": [
-                {"project": "Celestia", "vcs": ["Paradigm", "Polychain", "a16z"], "count": 3},
-                {"project": "EigenLayer", "vcs": ["a16z", "Polychain", "Coinbase Ventures"], "count": 3},
-                {"project": "Monad", "vcs": ["Paradigm", "Dragonfly", "Electric Capital"], "count": 3},
-                {"project": "Berachain", "vcs": ["Polychain", "Framework", "Hack VC"], "count": 3},
-                {"project": "Movement Labs", "vcs": ["Polychain", "Hack VC", "Placeholder"], "count": 3},
-            ],
-            "recent_overlap": [
-                {"project": "Story Protocol", "vcs": ["a16z", "Polychain"], "count": 2},
-                {"project": "Succinct", "vcs": ["Paradigm", "Robot Ventures"], "count": 2},
-                {"project": "Ritual", "vcs": ["Archetype", "Accomplice"], "count": 2},
-            ]
+            "high_overlap": high[:10],
+            "recent_overlap": recent[:10],
+            "data_source": "funding_rounds",
+            "available": len(overlaps) > 0,
         }
     
     def _get_mock_funding_rounds(self) -> List[Dict]:

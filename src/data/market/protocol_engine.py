@@ -323,7 +323,10 @@ async def fetch_all_protocol_tvls() -> dict:
 
     tvl_map = {}
     for p, result in zip(PROTOCOL_REGISTRY, results):
-        if isinstance(result, dict) and result:
+        if isinstance(result, Exception):
+            print(f"[protocol_engine] TVL fetch error for {p['id']}: {result}")
+            tvl_map[p["id"]] = None
+        elif isinstance(result, dict) and result:
             tvl_map[p["id"]] = result
         else:
             tvl_map[p["id"]] = None

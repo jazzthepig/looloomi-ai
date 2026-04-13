@@ -22,7 +22,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(o
 sys.path.insert(0, project_root)
 
 
-API_BASE = "https://web-production-0cdf76.up.railway.app"
+API_BASE = os.getenv("RAILWAY_URL", "http://localhost:8000").rstrip("/")
 
 # Map CIS symbols to Binance trading pairs
 BINANCE_SYMBOLS = {
