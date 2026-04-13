@@ -1,0 +1,104 @@
+{
+  "name": "cometcloud-intelligence",
+  "version": "1.0.0",
+  "description": "CometCloud Institutional DeFi Intelligence — CIS scoring, macro analysis, protocol analytics for AI agents",
+  "author": "CometCloud AI / Looloomi",
+  "license": "MIT",
+  "homepage": "https://cometcloud.ai",
+  "repository": "https://github.com/jazzthepig/looloomi-ai",
+
+  "skills": [
+    {
+      "name": "cometcloud/cis-methodology",
+      "description": "CIS v4.1 5-pillar scoring — Fundamental/Market Structure/On-chain Health/Sentiment/Alpha"
+    },
+    {
+      "name": "cometcloud/compliance-language",
+      "description": "HK SFC positioning rules — STRONG OUTPERFORM/OUTPERFORM/NEUTRAL/UNDERPERFORM/UNDERWEIGHT"
+    },
+    {
+      "name": "cometcloud/mac-mini-coord",
+      "description": "Mac Mini ↔ Railway data pipeline coordination"
+    },
+    {
+      "name": "cometcloud/deploy",
+      "description": "Railway deploy workflow, git conventions, rollback"
+    },
+    {
+      "name": "cometcloud/design",
+      "description": "Turrell void design system, Space Grotesk/Exo 2/JetBrains Mono typography"
+    },
+    {
+      "name": "cometcloud/tech",
+      "description": "FastAPI/React/Upstash/CoinGecko tech stack reference"
+    }
+  ],
+
+  "commands": [
+    {
+      "name": "/cis",
+      "description": "Get CIS score for an asset — /cis SOL",
+      "path": ".claude/skills/cometcloud/cis-methodology.md"
+    },
+    {
+      "name": "/regime",
+      "description": "Get current macro regime — RISK_ON/RISK_OFF/TIGHTENING/EASING/STAGFLATION/GOLDILOCKS",
+      "path": ".claude/skills/cometcloud/tech.md"
+    }
+  ],
+
+  "agents": [
+    {
+      "name": "compliance-auditor",
+      "description": "Scan codebase for prohibited buy/sell language",
+      "path": ".claude/agents/compliance-auditor.md"
+    },
+    {
+      "name": "cis-validator",
+      "description": "Recompute CIS scores from raw data, verify against given values",
+      "path": ".claude/agents/cis-validator.md"
+    },
+    {
+      "name": "deploy-verifier",
+      "description": "Post-deploy health check for Railway endpoints",
+      "path": ".claude/agents/deploy-verifier.md"
+    },
+    {
+      "name": "minimax-coordinator",
+      "description": "Mac Mini ↔ Railway interface contract manager",
+      "path": ".claude/agents/minimax-coordinator.md"
+    },
+    {
+      "name": "research-agent",
+      "description": "GP/RWA deep research, structured reports",
+      "path": ".claude/agents/research-agent.md"
+    }
+  ],
+
+  "mcpServers": [
+    {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["src/mcp/cometcloud_mcp.py"],
+      "description": "CometCloud MCP server — CIS scoring, market data, protocol analytics"
+    }
+  ],
+
+  "tags": [
+    "defi",
+    "crypto",
+    "institutional",
+    "fund-of-funds",
+    "solana",
+    "cis",
+    "portfolio-optimization"
+  ],
+
+  "capabilities": {
+    "marketIntelligence": true,
+    "cisScoring": true,
+    "macroAnalysis": true,
+    "protocolAnalytics": true,
+    "portfolioOptimization": true
+  }
+}

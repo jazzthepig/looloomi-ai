@@ -5,6 +5,8 @@
 #   "mcp[cli]>=1.6.0",
 #   "httpx>=0.27.0",
 #   "pydantic>=2.0.0",
+#   "tenacity>=0.4.0",
+#   "cachetools>=5.0.0",
 # ]
 # ///
 """
@@ -29,14 +31,18 @@ Usage:
   MCP_PORT=8001 python cometcloud_mcp.py      # HTTP on port 8001
 """
 
+import asyncio
 import json
 import os
+import time
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import httpx
+from cachetools import TTLCache
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -61,21 +67,102 @@ mcp = FastMCP(
     ),
 )
 
-# ── Shared HTTP client ────────────────────────────────────────────────────────
+# ── Circuit Breaker ────────────────────────────────────────────────────────────
 
-async def _get(path: str, params: Optional[Dict[str, Any]] = None, timeout: Optional[float] = None) -> Any:
-    """Single reusable GET call to the Railway API."""
+class CircuitBreaker:
+    """Circuit breaker: 5 failures in 300s window → open state for 60s."""
+
+    def __init__(self, window: float = 300.0, threshold: int = 5, reset: float = 60.0):
+        self.window = window
+        self.threshold = threshold
+        self.reset_after = reset
+        self.failures: list[float] = []
+        self.opened_at: float | None = None
+
+    def record_failure(self) -> None:
+        now = time.time()
+        self.failures = [t for t in self.failures if now - t < self.window]
+        self.failures.append(now)
+        if len(self.failures) >= self.threshold and self.opened_at is None:
+            self.opened_at = now
+
+    def is_open(self) -> bool:
+        if self.opened_at is None:
+            return False
+        if time.time() - self.opened_at > self.reset_after:
+            self.opened_at = None
+            self.failures = []
+            return False
+        return True
+
+    def get_retry_after(self) -> float:
+        if self.opened_at is None:
+            return 0.0
+        return max(0.0, self.reset_after - (time.time() - self.opened_at))
+
+
+_breaker = CircuitBreaker()
+
+# ── 60-second in-process cache ─────────────────────────────────────────────────
+
+_cache: TTLCache = TTLCache(maxsize=256, ttl=60.0)
+
+
+def _cache_key(path: str, params: dict | None) -> str:
+    p = json.dumps(params or {}, sort_keys=True)
+    return f"{path}?{p}"
+
+
+# ── Shared HTTP client (retry + circuit breaker + cache) ──────────────────────
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=0.5, min=1, max=10),
+    reraise=True,
+)
+async def _get(
+    path: str,
+    params: Optional[Dict[str, Any]] = None,
+    timeout: Optional[float] = None,
+    use_cache: bool = True,
+) -> Any:
+    """GET with retry, circuit breaker, and 60s cache."""
+    key = _cache_key(path, params)
+
+    # Circuit breaker check
+    if _breaker.is_open():
+        raise httpx.HTTPStatusError(
+            "Circuit breaker open",
+            request=httpx.Request("GET", f"{RAILWAY_BASE}{path}"),
+            response=httpx.Response(503),
+        )
+
+    # Cache hit
+    if use_cache and key in _cache:
+        return _cache[key]
+
     url = f"{RAILWAY_BASE}{path}"
     t = timeout if timeout is not None else API_TIMEOUT
     async with httpx.AsyncClient(timeout=t) as client:
-        resp = await client.get(url, params=params or {})
-        resp.raise_for_status()
-        return resp.json()
+        try:
+            resp = await client.get(url, params=params or {})
+            resp.raise_for_status()
+            result = resp.json()
+            if use_cache:
+                _cache[key] = result
+            return result
+        except Exception as e:
+            if isinstance(e, (httpx.HTTPStatusError, httpx.TimeoutException, OSError)):
+                _breaker.record_failure()
+            raise
 
 
 def _err(e: Exception) -> str:
     """Consistent error formatting for all tools."""
     if isinstance(e, httpx.HTTPStatusError):
+        if e.response.status_code == 503 and "Circuit breaker" in str(e):
+            after = _breaker.get_retry_after()
+            return f"Error: Service temporarily unavailable (circuit breaker open). Retry in {int(after)}s."
         s = e.response.status_code
         if s == 404:
             return "Error: Resource not found. Check the symbol or slug."
@@ -86,6 +173,8 @@ def _err(e: Exception) -> str:
         return f"Error: API returned {s}."
     if isinstance(e, httpx.TimeoutException):
         return "Error: Request timed out. The API may be under load — retry."
+    if isinstance(e, OSError) and "connection" in str(e).lower():
+        return "Error: Connection failed. Check network — retry."
     return f"Error: {type(e).__name__}: {e}"
 
 
@@ -1764,6 +1853,212 @@ async def cometcloud_get_regime_context() -> str:
             }
             return json.dumps(out, indent=2, ensure_ascii=False)
         return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# COMPOSITE TOOLS — multi-endpoint aggregations for agent efficiency
+# Each replaces 3-4 separate tool calls with a single round-trip
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+# ── Tool: market_snapshot ──────────────────────────────────────────────────────
+
+
+@mcp.tool(
+    name="cometcloud_market_snapshot",
+    annotations={
+        "title": "Market Snapshot — Regime + Movers + DeFi Overview in One Call",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_market_snapshot() -> str:
+    """One-call market context: macro regime + top movers + DeFi TVL health.
+
+    Replaces 3 separate calls: cometcloud_get_macro_pulse + get_market_movers + get_defi_overview.
+    Use this as the first tool in any market analysis session to establish regime context.
+
+    Returns:
+        str: JSON with {macro_pulse, gainers, losers, defi_overview} merged.
+    """
+    try:
+        results = await asyncio.gather(
+            _get("/api/v1/market/macro-pulse"),
+            _get("/api/v1/market/movers"),
+            _get("/api/v1/defi/overview"),
+            return_exceptions=True,
+        )
+        macro = results[0] if not isinstance(results[0], Exception) else {}
+        movers = results[1] if not isinstance(results[1], Exception) else {}
+        defi = results[2] if not isinstance(results[2], Exception) else {}
+
+        return json.dumps(
+            {
+                "macro_pulse": macro,
+                "gainers": movers.get("gainers", [])[:5],
+                "losers": movers.get("losers", [])[:5],
+                "defi_overview": defi,
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    except Exception as e:
+        return _err(e)
+
+
+# ── Tool: asset_deep_dive ──────────────────────────────────────────────────────
+
+
+@mcp.tool(
+    name="cometcloud_asset_deep_dive",
+    annotations={
+        "title": "Asset Deep Dive — CIS + Price + Signals in One Call",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_asset_deep_dive(params: CisAssetInput) -> str:
+    """Full asset view: CIS scorecard + price + recent signals in one call.
+
+    Replaces 3 separate calls: cometcloud_get_cis_asset + get_prices + get_signal_feed.
+    Use when an asset is mentioned by name for any reason — gets complete context.
+
+    Args:
+        params: CisAssetInput with symbol (required) and response_format (optional).
+
+    Returns:
+        str: JSON with {cis_asset, price_data, recent_signals} merged.
+    """
+    try:
+        results = await asyncio.gather(
+            _get(f"/api/v1/cis/asset/{params.symbol}"),
+            _get("/api/v1/market/prices", params={"symbols": params.symbol}),
+            _get("/api/v1/signals", params={"asset": params.symbol, "limit": 5}),
+            return_exceptions=True,
+        )
+        cis = results[0] if not isinstance(results[0], Exception) else {}
+        price_data = results[1] if not isinstance(results[1], Exception) else {}
+        signals = results[2] if not isinstance(results[2], Exception) else {}
+
+        prices = price_data.get("data", [{}]) if isinstance(price_data, dict) else []
+        price = prices[0] if prices else {}
+
+        return json.dumps(
+            {
+                "asset": params.symbol.upper(),
+                "cis": cis,
+                "price": price,
+                "recent_signals": signals.get("signals", []) if isinstance(signals, dict) else [],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    except Exception as e:
+        return _err(e)
+
+
+# ── Tool: portfolio_brief ─────────────────────────────────────────────────────
+
+
+@mcp.tool(
+    name="cometcloud_portfolio_brief",
+    annotations={
+        "title": "Portfolio Brief — Top Performers + GP Funds + Best Yields",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_portfolio_brief() -> str:
+    """Current opportunity set: OUTPERFORM CIS assets + GP funds + top DeFi yields.
+
+    Replaces 3 separate calls: cometcloud_get_cis_universe + get_fund_portfolio + get_defi_yields.
+    Use for daily morning brief on current market opportunities.
+
+    Returns:
+        str: JSON with {top_assets (signal=OUTPERFORM), fund_portfolio, top_yields}.
+    """
+    try:
+        results = await asyncio.gather(
+            _get("/api/v1/cis/universe"),
+            _get("/api/v1/vault/funds"),
+            _get("/api/v1/defi/yields", params={"limit": 10, "min_apy": 0}),
+            return_exceptions=True,
+        )
+        universe = results[0] if not isinstance(results[0], Exception) else {}
+        funds = results[1] if not isinstance(results[1], Exception) else {}
+        yields = results[2] if not isinstance(results[2], Exception) else {}
+
+        assets = universe.get("assets", []) if isinstance(universe, dict) else []
+        outperform = [a for a in assets if a.get("signal") in ("STRONG OUTPERFORM", "OUTPERFORM")][:10]
+
+        return json.dumps(
+            {
+                "top_performers": outperform,
+                "fund_portfolio": funds.get("data", []) if isinstance(funds, dict) else [],
+                "top_yields": yields.get("pools", [])[:10] if isinstance(yields, dict) else [],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    except Exception as e:
+        return _err(e)
+
+
+# ── Tool: regime_allocation ───────────────────────────────────────────────────
+
+
+@mcp.tool(
+    name="cometcloud_regime_allocation",
+    annotations={
+        "title": "Regime Allocation — Regime Context + Leaders + Institutional Flows",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_regime_allocation() -> str:
+    """Regime-aware allocation: macro context + CIS regime leaders + VC institutional flows.
+
+    Replaces 3 separate calls: cometcloud_get_regime_context + get_cis_universe + get_institutional_flows.
+    Use when making allocation decisions or responding to macro events.
+
+    Returns:
+        str: JSON with {regime_context, regime_leaders, institutional_flows}.
+    """
+    try:
+        results = await asyncio.gather(
+            _get("/api/v1/cis/regime-analysis"),
+            _get("/api/v1/cis/universe"),
+            _get("/api/v1/vc/funding-rounds", params={"limit": 10}),
+            return_exceptions=True,
+        )
+        regime = results[0] if not isinstance(results[0], Exception) else {}
+        universe = results[1] if not isinstance(results[1], Exception) else {}
+        flows = results[2] if not isinstance(results[2], Exception) else {}
+
+        assets = universe.get("assets", []) if isinstance(universe, dict) else []
+        leaders = regime.get("top_5_regime_leaders", []) if isinstance(regime, dict) else []
+        leader_symbols = {l.get("symbol") for l in leaders if isinstance(l, dict)}
+        regime_assets = [a for a in assets if a.get("symbol") in leader_symbols][:5]
+
+        return json.dumps(
+            {
+                "regime_context": regime,
+                "regime_leaders": regime_assets,
+                "institutional_flows": flows.get("rounds", [])[:10] if isinstance(flows, dict) else [],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
     except Exception as e:
         return _err(e)
 
