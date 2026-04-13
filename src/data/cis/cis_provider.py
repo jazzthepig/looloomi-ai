@@ -753,8 +753,8 @@ async def fetch_macro_data() -> dict:
     Cached to external drive for 1 hour.
     """
     FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
-    if not FRED_API_KEY:
-        raise RuntimeError("FRED_API_KEY environment variable is required")
+    # FRED is optional enrichment — VIX, DXY, btc_dominance come from yfinance/CG
+    # If key missing, skip FRED fetch entirely and rely on yfinance fallbacks below
 
     # Try memory cache first
     cache_key = "macro_data"
@@ -793,45 +793,45 @@ async def fetch_macro_data() -> dict:
 
     fetched_any = False
 
-    # Fetch from FRED API
-    try:
-        fred_series = {
-            "fed_funds": "FEDFUNDS",      # Effective Federal Funds Rate
-            "treasury_10y": "GS10",       # 10-Year Treasury Constant Maturity Rate
-            "cpi_yoy": "CPIAUCSL",        # CPI for All Urban Consumers
-        }
-
-        async with httpx.AsyncClient(timeout=15) as client:
-            for key, series_id in fred_series.items():
-                try:
-                    url = f"https://api.stlouisfed.org/fred/series/observations"
-                    params = {
-                        "series_id": series_id,
-                        "api_key": FRED_API_KEY,
-                        "observation_limit": 12,  # Need 12 for YoY CPI
-                        "sort_order": "desc",
-                        "file_type": "json",
-                    }
-                    resp = await client.get(url, params=params)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        observations = data.get("observations", [])
-                        if observations and observations[0].get("value") != ".":
-                            value = float(observations[0].get("value", 0))
-                            if key == "cpi_yoy":
-                                # CPI is monthly, calculate YoY change
-                                if len(observations) >= 12 and observations[11].get("value") != ".":
-                                    prev_value = float(observations[11].get("value", 0))
-                                    if prev_value > 0:
-                                        result[key] = round(((value - prev_value) / prev_value) * 100, 1)
-                                        fetched_any = True
-                            else:
-                                result[key] = round(value, 2)
-                                fetched_any = True
-                except Exception as e:
-                    print(f"FRED error for {key}: {e}")
-    except Exception as e:
-        print(f"FRED API error: {e}")
+    # Fetch from FRED API (optional — skip entirely if key not configured)
+    if FRED_API_KEY:
+        try:
+            fred_series = {
+                "fed_funds": "FEDFUNDS",      # Effective Federal Funds Rate
+                "treasury_10y": "GS10",       # 10-Year Treasury Constant Maturity Rate
+                "cpi_yoy": "CPIAUCSL",        # CPI for All Urban Consumers
+            }
+            async with httpx.AsyncClient(timeout=15) as client:
+                for key, series_id in fred_series.items():
+                    try:
+                        url = f"https://api.stlouisfed.org/fred/series/observations"
+                        params = {
+                            "series_id": series_id,
+                            "api_key": FRED_API_KEY,
+                            "observation_limit": 12,  # Need 12 for YoY CPI
+                            "sort_order": "desc",
+                            "file_type": "json",
+                        }
+                        resp = await client.get(url, params=params)
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            observations = data.get("observations", [])
+                            if observations and observations[0].get("value") != ".":
+                                value = float(observations[0].get("value", 0))
+                                if key == "cpi_yoy":
+                                    # CPI is monthly, calculate YoY change
+                                    if len(observations) >= 12 and observations[11].get("value") != ".":
+                                        prev_value = float(observations[11].get("value", 0))
+                                        if prev_value > 0:
+                                            result[key] = round(((value - prev_value) / prev_value) * 100, 1)
+                                            fetched_any = True
+                                else:
+                                    result[key] = round(value, 2)
+                                    fetched_any = True
+                    except Exception as e:
+                        print(f"FRED error for {key}: {e}")
+        except Exception as e:
+            print(f"FRED API error: {e}")
 
     # Yahoo Finance v8 quote endpoints
     ticker_map = {
