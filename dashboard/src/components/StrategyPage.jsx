@@ -395,14 +395,28 @@ export default function StrategyPage() {
   const fngLabel = macro?.fng?.value_classification;
   const mcapChange = macro?.data?.market_cap_change_percentage_24h_usd;
 
+  // Use backend regime from CIS universe (authoritative) — fallback to macro-pulse estimate
   const regime = (() => {
+    const backendRegime = cisData?.macro_regime;
+    if (backendRegime && backendRegime !== "UNKNOWN") {
+      // Normalise to display format
+      const map = {
+        RISK_ON: "RISK ON", GOLDILOCKS: "GOLDILOCKS", EASING: "EASING",
+        RISK_OFF: "RISK OFF", TIGHTENING: "TIGHTENING", STAGFLATION: "STAGFLATION",
+      };
+      return map[backendRegime] || backendRegime.replace(/_/g, " ");
+    }
+    // Fallback: simple estimate from macro pulse
     const btc7d = macro?.btc?.usd_7d_change || 0;
     const fng = parseInt(fngVal || 50);
     if (btc7d > 5 && fng > 50) return "RISK ON";
     if (btc7d < -10 || fng < 25) return "RISK OFF";
     return "NEUTRAL";
   })();
-  const regimeColor = regime === "RISK ON" ? T.green : regime === "RISK OFF" ? T.red : T.gold;
+  const regimeColor = (regime === "RISK ON" || regime === "GOLDILOCKS") ? T.green
+    : (regime === "RISK OFF" || regime === "STAGFLATION") ? T.red
+    : (regime === "TIGHTENING") ? T.amber
+    : T.gold;
 
   const topAssets = (cisData?.universe || cisData?.assets || cisData?.scores || [])
     .sort((a, b) => (b.cis_score ?? b.score ?? 0) - (a.cis_score ?? a.score ?? 0))

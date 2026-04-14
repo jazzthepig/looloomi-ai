@@ -225,12 +225,12 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
   };
 
   const getGradeColor = (grade) => {
-    switch(grade) {
-      case "A": return T.green;
-      case "B": return T.blue;
-      case "C": return T.amber;
-      default: return T.muted;
-    }
+    if (!grade || grade === "—") return T.muted;
+    if (grade.startsWith("A")) return T.green;   // A, A+
+    if (grade.startsWith("B")) return T.blue;    // B, B+
+    if (grade.startsWith("C")) return T.amber;   // C, C+
+    if (grade === "D" || grade === "F") return T.red;
+    return T.muted;
   };
 
   const activeFunds = funds.filter(f => f.status === 'active');

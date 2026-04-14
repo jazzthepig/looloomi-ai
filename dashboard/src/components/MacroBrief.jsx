@@ -127,7 +127,17 @@ export default function MacroBrief() {
         </span>
 
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
-          <Clock size={10} color={T.muted} />
+          {data.stale && (
+            <span style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase",
+              fontFamily: FONTS.display, padding: "2px 6px", borderRadius: 3,
+              background: "rgba(245,158,11,0.12)", color: T.amber,
+              border: "1px solid rgba(245,158,11,0.25)",
+            }}>
+              STALE
+            </span>
+          )}
+          <Clock size={10} color={data.stale ? T.amber : T.muted} />
           <span style={{ fontSize: 10, color: data.stale ? T.amber : T.muted, fontFamily: FONTS.mono }}>
             {formatAge(data.age_seconds)}
           </span>
