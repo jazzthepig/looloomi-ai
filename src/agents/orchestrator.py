@@ -41,6 +41,11 @@ class HARNESSOrchestrator:
         self.planning_prompt = """你是 CometCloud HARNESS 编排 agent。你的职责是将任务路由到正确的 subagent。
 
 可用 subagents:
+- market-signal: 链上市场信号（每小时 :00）
+- cis-scorer: CIS v4.1 评分推送（每小时 :05）
+- macro-pulse: 宏观脉搏检测（每小时 :10）
+- gp-monitor: GP 表现追踪（每日 06:00）
+- report-generator: 每日情报报告（每日 07:00）
 - compliance-auditor: 扫描违规买入/卖出语言
 - cis-validator: 验证 CIS 评分计算
 - deploy-verifier: 部署后健康检查
@@ -57,22 +62,28 @@ class HARNESSOrchestrator:
         """Route task to appropriate agent."""
         task_lower = task.lower()
 
-        if "compliance" in task_lower or "audit" in task_lower or "buy" in task_lower or "sell" in task_lower:
+        # Scheduled data agents (Phase G) — highest priority for data tasks
+        if "market" in task_lower or "whale" in task_lower or "orderbook" in task_lower or "stablecoin" in task_lower:
+            return "market-signal"
+        elif "cis" in task_lower or "score" in task_lower:
+            return "cis-scorer"
+        elif "macro" in task_lower or "regime" in task_lower or "fng" in task_lower or "vix" in task_lower:
+            return "macro-pulse"
+        elif "gp" in task_lower or "fund" in task_lower or "monitor" in task_lower:
+            return "gp-monitor"
+        elif "report" in task_lower or "brief" in task_lower:
+            return "report-generator"
+        # HARNESS orchestration agents
+        elif "compliance" in task_lower or "audit" in task_lower or "buy" in task_lower or "sell" in task_lower:
             return "compliance-auditor"
-        elif "cis" in task_lower or "score" in task_lower or "validation" in task_lower:
+        elif "validate" in task_lower or "validation" in task_lower:
             return "cis-validator"
         elif "deploy" in task_lower or "railway" in task_lower or "verify" in task_lower:
             return "deploy-verifier"
         elif "minimax" in task_lower or "mac mini" in task_lower or "sync" in task_lower:
             return "minimax-coordinator"
-        elif "research" in task_lower or "gp" in task_lower or "rwa" in task_lower:
+        elif "research" in task_lower or "rwa" in task_lower:
             return "research-agent"
-        elif "data" in task_lower or "collect" in task_lower:
-            return "data-collector"
-        elif "report" in task_lower or "write" in task_lower:
-            return "report-writer"
-        elif "code" in task_lower or "fix" in task_lower or "implement" in task_lower:
-            return "code-executor"
         else:
             return "research-agent"  # default
 
@@ -107,6 +118,7 @@ class HARNESSOrchestrator:
 def main():
     parser = argparse.ArgumentParser(description="CometCloud HARNESS Orchestrator")
     parser.add_argument("--list", action="store_true", help="List all available agents")
+    parser.add_argument("--schedules", action="store_true", help="List all scheduled agents with cron times")
     parser.add_argument("--agent", type=str, help="Run specific agent")
     parser.add_argument("--input", type=str, help="JSON input for agent")
     parser.add_argument("--route", type=str, help="Route a task to appropriate agent")
@@ -122,6 +134,9 @@ def main():
             "validate CIS scores for BTC",
             "verify Railway deployment",
             "research RWA tokenization",
+            "collect whale flows",
+            "update CIS scores",
+            "macro regime check",
         ]
         print("HARNESS Orchestrator Test")
         print("=" * 50)
@@ -139,9 +154,25 @@ def main():
         print("=" * 50)
         for name in orchestrator.list_agents():
             agent = orchestrator.get_agent_info(name)
-            print(f"\n  {name} ({agent['model']})")
+            schedule = agent.get("schedule", "on-demand")
+            sched_note = f" [{schedule}]" if schedule != "on-demand" else ""
+            print(f"\n  {name} ({agent['model']}){sched_note}")
             print(f"    {agent['description']}")
             print(f"    tools: {', '.join(agent['tools'])}")
+        return
+
+    if args.schedules:
+        print("Scheduled Agents (Phase G):")
+        print("=" * 50)
+        scheduled = [
+            (name, agent)
+            for name, agent in orchestrator.agents.items()
+            if "schedule" in agent
+        ]
+        for name, agent in sorted(scheduled, key=lambda x: x[1]["schedule"]):
+            print(f"  {agent['schedule']}  {name}")
+            print(f"           {agent['description']}")
+            print()
         return
 
     if args.route:

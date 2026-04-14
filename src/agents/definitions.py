@@ -5,6 +5,66 @@ HARNESS Architecture — Phase D
 5 subagents migrated from .md files to AgentDefinition Python objects.
 """
 
+# ── Market Signal Agent ───────────────────────────────────────────────────────
+
+MARKET_SIGNAL_AGENT = {
+    "name": "market-signal",
+    "description": "On-chain market signals — whale flows, stablecoin supply, orderbook depth",
+    "tools": ["Read", "Bash", "Grep"],
+    "model": "haiku",
+    "skills": ["cis-methodology"],
+    "schedule": "0 * * * *",  # hourly at :00
+    "prompt": "Market signal — collect whale flows, CEX orderbook depth, stablecoin supply changes",
+}
+
+# ── CIS Scorer Agent ──────────────────────────────────────────────────────────
+
+CIS_SCORER_AGENT = {
+    "name": "cis-scorer",
+    "description": "CIS v4.1 scoring — push scores to Railway /internal/cis-scores",
+    "tools": ["Read", "Bash"],
+    "model": "haiku",
+    "skills": ["cis-methodology"],
+    "schedule": "5 * * * *",  # hourly at :05
+    "prompt": "CIS scorer — compute CIS scores for universe, push to Railway via /internal/cis-scores",
+}
+
+# ── Macro Pulse Agent ─────────────────────────────────────────────────────────
+
+MACRO_PULSE_AGENT = {
+    "name": "macro-pulse",
+    "description": "Macro regime detection — BTC/FNG/VIX, regime classification, brief generation",
+    "tools": ["Read", "Bash", "WebFetch"],
+    "model": "haiku",
+    "skills": ["cis-methodology"],
+    "schedule": "10 * * * *",  # hourly at :10
+    "prompt": "Macro pulse — update macro regime, BTC/FNG/VIX signals, push brief to Railway",
+}
+
+# ── GP Monitor Agent ──────────────────────────────────────────────────────────
+
+GP_MONITOR_AGENT = {
+    "name": "gp-monitor",
+    "description": "GP performance tracking — TVL, yield, risk metrics for monitored GPs",
+    "tools": ["Read", "Bash", "Grep"],
+    "model": "haiku",
+    "skills": ["cis-methodology"],
+    "schedule": "0 6 * * *",  # daily at 06:00
+    "prompt": "GP monitor — fetch GP TVL/yield data, update performance metrics",
+}
+
+# ── Report Generator Agent ─────────────────────────────────────────────────────
+
+REPORT_GENERATOR_AGENT = {
+    "name": "report-generator",
+    "description": "Daily intelligence reports — Macro Brief, GP summary, signal digest",
+    "tools": ["Read", "Bash", "Write"],
+    "model": "sonnet",
+    "skills": ["cis-methodology", "compliance-language"],
+    "schedule": "0 7 * * *",  # daily at 07:00
+    "prompt": "Report generator — compile daily intelligence digest, push to Railway",
+}
+
 # ── Compliance Auditor ─────────────────────────────────────────────────────────
 
 COMPLIANCE_AUDITOR = {
@@ -62,7 +122,16 @@ RESEARCH_AGENT = {
 
 # ── Registry ───────────────────────────────────────────────────────────────────
 
+# ── Registry ───────────────────────────────────────────────────────────────────
+
 AGENTS = {
+    # Scheduled data agents (Phase G)
+    "market-signal": MARKET_SIGNAL_AGENT,
+    "cis-scorer": CIS_SCORER_AGENT,
+    "macro-pulse": MACRO_PULSE_AGENT,
+    "gp-monitor": GP_MONITOR_AGENT,
+    "report-generator": REPORT_GENERATOR_AGENT,
+    # HARNESS orchestration agents (Phase D)
     "compliance-auditor": COMPLIANCE_AUDITOR,
     "cis-validator": CIS_VALIDATOR,
     "deploy-verifier": DEPLOY_VERIFIER,
