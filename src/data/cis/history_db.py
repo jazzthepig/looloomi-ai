@@ -6,11 +6,14 @@ SQLite database for storing CIS scores over time.
 Author: Seth
 """
 
+import logging
 import sqlite3
 import json
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional
 import os
+
+_logger = logging.getLogger(__name__)
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "cis_history.db")
 
@@ -253,7 +256,7 @@ def save_backtest_result(
         conn.commit()
         return True
     except Exception as e:
-        print(f"[BACKTEST] Save error: {e}")
+        _logger.warning(f"[BACKTEST] Save error: {e}")
         return False
     finally:
         conn.close()

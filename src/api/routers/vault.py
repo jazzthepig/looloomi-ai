@@ -220,7 +220,10 @@ async def record_deposit_intent(req: DepositIntentRequest):
     # Fallback: Redis list (last 500 intents)
     if not stored:
         try:
-            from data_layer import _redis_set, _redis_get
+            try:
+                from src.data.market.data_layer import _redis_set, _redis_get
+            except ImportError:
+                from data.market.data_layer import _redis_set, _redis_get
             existing_raw = await _redis_get("vault:deposit_intents")
             existing = json.loads(existing_raw) if existing_raw else []
             existing.append(record)

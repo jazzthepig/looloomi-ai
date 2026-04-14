@@ -1,12 +1,15 @@
 """
 Market Data Layer - Multi-source with fallbacks
 """
+import logging
 import os
 import requests
 import pandas as pd
 from datetime import datetime
 from typing import List, Dict
 import time
+
+_logger = logging.getLogger(__name__)
 
 _COINGECKO_API_KEY = os.environ.get("COINGECKO_API_KEY", "")
 
@@ -72,11 +75,11 @@ class ExchangeDataFetcher:
                 
                 return pd.DataFrame(tickers)
             else:
-                print(f"CoinGecko error: {response.status_code}")
+                _logger.warning(f"CoinGecko error: {response.status_code}")
                 return self._get_fallback_data(base_symbols)
                 
         except Exception as e:
-            print(f"Error fetching prices: {e}")
+            _logger.warning(f"Error fetching prices: {e}")
             return self._get_fallback_data([s.replace("/USDT", "") for s in symbols])
     
     def get_ticker(self, symbol: str) -> Dict:
@@ -117,7 +120,7 @@ class ExchangeDataFetcher:
                 return pd.DataFrame()
                 
         except Exception as e:
-            print(f"Error fetching OHLCV: {e}")
+            _logger.warning(f"Error fetching OHLCV: {e}")
             return pd.DataFrame()
     
     def _get_fallback_data(self, symbols: List[str]) -> pd.DataFrame:

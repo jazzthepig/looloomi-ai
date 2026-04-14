@@ -22,8 +22,11 @@ import asyncio
 from datetime import datetime, timezone
 from typing import Optional
 
+import logging
 from fastapi import APIRouter, Query
 from fastapi.responses import Response
+
+_logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/share", tags=["share"])
 
@@ -397,7 +400,7 @@ async def og_image(
                 reverse=True,
             )[:5]
         except Exception as e:
-            print(f"og-image: CIS fetch error: {e}")
+            _logger.warning(f"og-image: CIS fetch error: {e}")
 
     # Macro pulse
     try:
@@ -408,7 +411,7 @@ async def og_image(
             from src.api.routers.market import get_macro_pulse as _gmp
             macro = await asyncio.wait_for(_gmp(), timeout=8) or {}
         except Exception as e:
-            print(f"og-image: macro fetch error: {e}")
+            _logger.warning(f"og-image: macro fetch error: {e}")
 
     # ── Render in thread (Pillow is CPU-bound) ────────────────────────────────
     png_bytes = await asyncio.to_thread(_render, cis_top5, macro)

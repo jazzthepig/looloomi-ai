@@ -5,6 +5,7 @@ Endpoints: /api/v1/cis/*, /api/v1/agent/cis, /ws/cis, /internal/cis-scores
 import os, json as _json, time, asyncio, re
 from datetime import datetime
 
+import logging
 from fastapi import APIRouter, HTTPException, Header, WebSocket, WebSocketDisconnect, Response, Request
 
 from src.api.store import (
@@ -14,6 +15,8 @@ from src.api.store import (
 )
 import src.api.store as store
 from src.data.cis.cis_provider import calculate_cis_universe
+
+_logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -61,7 +64,7 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
 
         # 1. Write to Redis (hot cache, 2h TTL)
         ok = await redis_set(cache_data)
-        print(f"[INTERNAL] Received {len(universe)} CIS scores — Redis write: {ok}")
+        _logger.info(f"[INTERNAL] Received {len(universe)} CIS scores — Redis write: {ok}")
 
         # 2. Write to Supabase (score history, persistent)
         sb_ok = False
@@ -85,14 +88,14 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                     "source":      "local_engine",
                 })
             sb_ok = await supabase_insert_batch(sb_rows)
-            print(f"[INTERNAL] Supabase history write: {sb_ok} ({len(sb_rows)} rows)")
+            _logger.warning(f"[INTERNAL] Supabase history write: {sb_ok} ({len(sb_rows)} rows)")
 
         # 3. Broadcast to WebSocket clients
         asyncio.create_task(_broadcast_cis_update(universe))
 
         return {"status": "success", "received": len(universe), "cached": ok, "history_written": sb_ok}
     except Exception as e:
-        print(f"[INTERNAL] Error receiving CIS scores: {e}")
+        _logger.warning(f"[INTERNAL] Error receiving CIS scores: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -125,7 +128,7 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         result = await calculate_cis_universe()
         railway_universe = result.get("universe", [])
     except Exception as e:
-        print(f"[CIS] Railway calculation error: {e}")
+        _logger.warning(f"[CIS] Railway calculation error: {e}")
 
     # Merge: Mac Mini T1 scores override Railway T2 where available
     if use_local:
@@ -501,7 +504,7 @@ async def get_cis_backtest():
                 data = _json.load(f)
             return {"status": "success", "source": "file", **data}
     except Exception as e:
-        print(f"[BACKTEST] Read error: {e}")
+        _logger.warning(f"[BACKTEST] Read error: {e}")
 
     try:
         from src.data.cis.history_db import get_backtest_summary
@@ -1023,4 +1026,4 @@ async def _broadcast_cis_update(universe: list):
         }
         await ws_manager.broadcast(store.last_cis_broadcast)
     except Exception as e:
-        print(f"[WS] broadcast error (non-fatal): {e}")
+        _logger.warning(f"[WS] broadcast error (non-fatal): {e}")

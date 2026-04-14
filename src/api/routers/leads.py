@@ -151,7 +151,10 @@ async def _store_lead(record: dict) -> bool:
 
     if not stored:
         try:
-            from data_layer import _redis_get, _redis_set
+            try:
+                from src.data.market.data_layer import _redis_get, _redis_set
+            except ImportError:
+                from data.market.data_layer import _redis_get, _redis_set
             existing_raw = await _redis_get("cometcloud:leads")
             existing = json.loads(existing_raw) if existing_raw else []
             existing.append(record)
@@ -236,7 +239,10 @@ async def leads_summary(token: str = ""):
 
     if not leads:
         try:
-            from data_layer import _redis_get
+            try:
+                from src.data.market.data_layer import _redis_get
+            except ImportError:
+                from data.market.data_layer import _redis_get
             raw = await _redis_get("cometcloud:leads")
             leads = json.loads(raw) if raw else []
         except Exception:
