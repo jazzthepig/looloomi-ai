@@ -6,9 +6,12 @@ Shared state and utilities for all routers.
 - sanitize_floats helper
 - Persistent httpx client pools (avoids reconnect overhead per request)
 """
+import logging
 import os, json, math, time
 import httpx
 from fastapi import WebSocket
+
+_logger = logging.getLogger(__name__)
 
 # ── Persistent HTTP clients (reused across all requests) ──────────────────────
 # Initialized lazily on first use; kept alive for the process lifetime.
@@ -65,7 +68,7 @@ async def redis_set_key(key: str, data: dict, ttl: int = 7200) -> bool:
         )
         return resp.status_code == 200
     except Exception as e:
-        print(f"[REDIS] SET {key} error: {e}")
+        _logger.warning(f"[REDIS] SET {key} error: {e}")
         return False
 
 
@@ -85,7 +88,7 @@ async def redis_get_key(key: str) -> dict | None:
                 return json.loads(raw)
         return None
     except Exception as e:
-        print(f"[REDIS] GET {key} error: {e}")
+        _logger.warning(f"[REDIS] GET {key} error: {e}")
         return None
 
 
@@ -117,7 +120,7 @@ async def _supabase_request_with_retry(
                 return resp
             # Non-retryable error (4xx except 429)
             if 400 <= resp.status_code < 500 and resp.status_code != 429:
-                print(f"[SUPABASE] Non-retryable error {resp.status_code}: {resp.text[:100]}")
+                _logger.warning(f"[SUPABASE] Non-retryable error {resp.status_code}: {resp.text[:100]}")
                 return resp
             last_error = f"HTTP {resp.status_code}"
         except Exception as e:
@@ -125,17 +128,17 @@ async def _supabase_request_with_retry(
 
         if attempt < _SB_MAX_RETRIES - 1:
             delay = _SB_BASE_DELAY * (2 ** attempt)  # exponential backoff
-            print(f"[SUPABASE] Retry {attempt + 1}/{_SB_MAX_RETRIES} after {delay}s: {last_error}")
+            _logger.warning(f"[SUPABASE] Retry {attempt + 1}/{_SB_MAX_RETRIES} after {delay}s: {last_error}")
             await asyncio.sleep(delay)
 
-    print(f"[SUPABASE] All retries exhausted: {last_error}")
+    _logger.warning(f"[SUPABASE] All retries exhausted: {last_error}")
     return None
 
 
 async def supabase_insert_batch(rows: list) -> bool:
     """Bulk-insert CIS score rows into Supabase REST API with retry."""
     if not _SB_URL or not _SB_KEY or not rows:
-        print("[SUPABASE] Skipped: missing config or empty rows")
+        _logger.warning("[SUPABASE] Skipped: missing config or empty rows")
         return False
 
     url = f"{_SB_URL}/rest/v1/{_SB_TABLE}"
@@ -154,20 +157,20 @@ async def supabase_insert_batch(rows: list) -> bool:
             headers=headers,
         )
         if resp and resp.status_code in (200, 201):
-            print(f"[SUPABASE] Inserted {len(rows)} rows (attempt 1)")
+            _logger.info(f"[SUPABASE] Inserted {len(rows)} rows (attempt 1)")
             return True
         if resp:
-            print(f"[SUPABASE] Insert failed after retries: {resp.status_code}")
+            _logger.warning(f"[SUPABASE] Insert failed after retries: {resp.status_code}")
         return False
     except Exception as e:
-        print(f"[SUPABASE] Insert exception: {e}")
+        _logger.warning(f"[SUPABASE] Insert exception: {e}")
         return False
 
 
 async def supabase_get_history(symbol: str, days: int = 7) -> list:
     """Read CIS score history for one symbol from Supabase with retry."""
     if not _SB_URL or not _SB_KEY:
-        print("[SUPABASE] History read skipped: missing config")
+        _logger.warning("[SUPABASE] History read skipped: missing config")
         return []
 
     url = f"{_SB_URL}/rest/v1/{_SB_TABLE}"
@@ -186,13 +189,13 @@ async def supabase_get_history(symbol: str, days: int = 7) -> list:
         resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
         if resp and resp.status_code == 200:
             data = resp.json()
-            print(f"[SUPABASE] History {symbol}: {len(data)} records (last 7d)")
+            _logger.warning(f"[SUPABASE] History {symbol}: {len(data)} records (last 7d)")
             return data
         if resp:
-            print(f"[SUPABASE] History error {resp.status_code}: {resp.text[:100]}")
+            _logger.warning(f"[SUPABASE] History error {resp.status_code}: {resp.text[:100]}")
         return []
     except Exception as e:
-        print(f"[SUPABASE] History exception: {e}")
+        _logger.warning(f"[SUPABASE] History exception: {e}")
         return []
 
 
@@ -228,7 +231,7 @@ class ConnectionManager:
             if websocket in self.active_connections:
                 self.active_connections.remove(websocket)
         except (ValueError, RuntimeError) as e:
-            print(f"[WS] disconnect error: {e}")
+            _logger.warning(f"[WS] disconnect error: {e}")
 
     async def broadcast(self, message: dict):
         # Remove dead connections before broadcasting

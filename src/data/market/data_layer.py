@@ -12,9 +12,12 @@ import json
 import time
 import httpx
 import asyncio
+import logging
 from typing import Optional
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
+
+_logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -398,7 +401,7 @@ async def get_defi_protocols_curated() -> list:
         await _redis_set(key, result, ttl=1800)
         return _cache_set(key, result)
     except Exception as e:
-        print(f"[DEFI_PROTOCOLS] Error: {e}")
+        _logger.warning(f"[DEFI_PROTOCOLS] Error: {e}")
         return []
 
 
@@ -633,7 +636,7 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
         await _redis_set(key, result, ttl=3600)
         return _cache_set(key, result)
     except Exception as e:
-        print(f"[VC_RAISES] Error: {e}")
+        _logger.warning(f"[VC_RAISES] Error: {e}")
         return []
 
 
@@ -862,7 +865,7 @@ async def get_cg_markets(ids: list[str]) -> list:
         result = r.json()
         return _cache_set(key, result)
     except Exception as e:
-        print(f"[CG_MARKETS] Error: {e}")
+        _logger.warning(f"[CG_MARKETS] Error: {e}")
         return []
 
 
@@ -996,7 +999,7 @@ async def get_cg_vc_portfolios() -> list[dict]:
         await _redis_set(key, result, ttl=600)
         return _cache_set(key, result)
     except Exception as e:
-        print(f"[CG_VC_PORTFOLIOS] Error: {e}")
+        _logger.warning(f"[CG_VC_PORTFOLIOS] Error: {e}")
         return []
 
 
@@ -1464,7 +1467,7 @@ async def get_klines_binance(symbol: str, interval: str = "1d", months: int = 6)
             for k in data
         ]
     except Exception as e:
-        print(f"[BINANCE] klines error for {symbol}: {e}")
+        _logger.warning(f"[BINANCE] klines error for {symbol}: {e}")
         return []
 
 
@@ -1516,7 +1519,7 @@ async def get_klines_okx(symbol: str, interval: str = "1d", months: int = 6) -> 
             for k in reversed(klines)  # Oldest first
         ]
     except Exception as e:
-        print(f"[OKX] klines error for {symbol}: {e}")
+        _logger.warning(f"[OKX] klines error for {symbol}: {e}")
         return []
 
 

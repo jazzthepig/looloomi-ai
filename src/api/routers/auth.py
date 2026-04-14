@@ -18,10 +18,13 @@ import os, json, time, secrets
 from datetime import datetime, timezone
 from typing import Optional
 
+import logging
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 
 from src.api.store import redis_get_key, redis_set_key, _get_supabase_client
+
+_logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -76,10 +79,10 @@ async def _sb_upsert_profile(address: str) -> dict:
             rows = resp.json()
             return rows[0] if isinstance(rows, list) and rows else payload
         else:
-            print(f"[AUTH] Supabase upsert error {resp.status_code}: {resp.text[:200]}")
+            _logger.warning(f"[AUTH] Supabase upsert error {resp.status_code}: {resp.text[:200]}")
             return payload
     except Exception as e:
-        print(f"[AUTH] Supabase upsert exception: {e}")
+        _logger.warning(f"[AUTH] Supabase upsert exception: {e}")
         return payload
 
 
@@ -115,7 +118,7 @@ def _verify_solana_signature(address: str, message: str, signature: str) -> bool
             detail=f"Signature verification unavailable: {e}. Install PyNaCl + base58.",
         )
     except Exception as e:
-        print(f"[AUTH] Signature verification failed: {e}")
+        _logger.warning(f"[AUTH] Signature verification failed: {e}")
         return False
 
 
@@ -199,7 +202,7 @@ async def wallet_signin(req: WalletSigninRequest):
     if _SB_URL and _SB_KEY:
         profile = await _sb_upsert_profile(req.address)
     else:
-        print(f"[AUTH] Supabase not configured — skipping profile upsert for {req.address[:8]}…")
+        _logger.warning(f"[AUTH] Supabase not configured — skipping profile upsert for {req.address[:8]}…")
 
     # 6. Issue session token (24h Redis)
     session_token = secrets.token_hex(32)

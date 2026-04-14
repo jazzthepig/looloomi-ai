@@ -8,9 +8,12 @@ Endpoints:
 """
 import os, json, time
 
+import logging
 from fastapi import APIRouter, HTTPException, Header
 
 from src.api.store import redis_set_key, redis_get_key
+
+_logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -47,7 +50,7 @@ async def receive_macro_brief(payload: dict, x_internal_token: str = Header(None
     if not ok:
         raise HTTPException(status_code=502, detail="Redis write failed")
 
-    print(f"[MACRO] Brief received — {len(payload['brief'])} chars, model={payload.get('model', '?')}")
+    _logger.info(f"[MACRO] Brief received — {len(payload['brief'])} chars, model={payload.get('model', '?')}")
     return {
         "status": "ok",
         "chars": len(payload["brief"]),

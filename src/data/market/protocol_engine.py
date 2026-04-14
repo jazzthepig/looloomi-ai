@@ -13,11 +13,14 @@ Output: CIS grade (A+ → F), signal (STRONG OUTPERFORM/OUTPERFORM/NEUTRAL/UNDER
         recommended_weight, per-pillar breakdown, risk_tier.
 """
 
+import logging
 import time
 import math
 import httpx
 import asyncio
 from datetime import datetime, timezone
+
+_logger = logging.getLogger(__name__)
 
 # ── TTL cache (shared with data_layer pattern) ─────────────────────────────
 _pcache: dict = {}
@@ -324,7 +327,7 @@ async def fetch_all_protocol_tvls() -> dict:
     tvl_map = {}
     for p, result in zip(PROTOCOL_REGISTRY, results):
         if isinstance(result, Exception):
-            print(f"[protocol_engine] TVL fetch error for {p['id']}: {result}")
+            _logger.warning(f"[protocol_engine] TVL fetch error for {p['id']}: {result}")
             tvl_map[p["id"]] = None
         elif isinstance(result, dict) and result:
             tvl_map[p["id"]] = result

@@ -11,9 +11,12 @@ import os
 import json
 from datetime import datetime
 from pathlib import Path
+import logging
 from fastapi import APIRouter, HTTPException, Header
 
 from src.api.store import redis_set_key, redis_get_key
+
+_logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -59,7 +62,7 @@ async def receive_quant_status(payload: dict, x_internal_token: str = Header(Non
 
     count_status = 1 if status_data else 0
     count_trades = len(trades_data)
-    print(f"[QUANT] Push received — status={count_status} trades={count_trades}")
+    _logger.info(f"[QUANT] Push received — status={count_status} trades={count_trades}")
     return {"ok": True, "timestamp": ts}
 
 

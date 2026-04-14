@@ -10,10 +10,13 @@ Author: Seth
 import math
 import httpx
 import asyncio
+import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import sys
 import os
+
+_logger = logging.getLogger(__name__)
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -266,7 +269,7 @@ async def calculate_asset_betas(asset_id: str, asset_price_30d: list) -> dict:
                     if len(rets) >= 15:
                         factors[name] = rets
             except Exception as e:
-                print(f"[Beta] yfinance factor {symbol} failed: {e}")
+                _logger.warning(f"[Beta] yfinance factor {symbol} failed: {e}")
 
         if not factors:
             return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "yfinance_error"}
@@ -436,13 +439,13 @@ async def fetch_binance_prices() -> Dict[str, dict]:
                         "source": "binance",
                     }
 
-            print(f"Binance: fetched {len(result)} assets")
+            _logger.info(f"Binance: fetched {len(result)} assets")
             _cache_set(cache_key, result)
             await _upstash_set(redis_key, result, ttl=300)   # 5min TTL — prices are time-sensitive
             return result
 
     except Exception as e:
-        print(f"Binance API error: {e}")
+        _logger.warning(f"Binance API error: {e}")
         return r2 or result
 
 
@@ -528,13 +531,13 @@ async def fetch_cg_markets() -> Dict[str, dict]:
                 if i + batch_size < len(unique_ids):
                     await asyncio.sleep(1.5)
 
-            print(f"CoinGecko: fetched {len(result)}/{len(unique_ids)} assets")
+            _logger.info(f"CoinGecko: fetched {len(result)}/{len(unique_ids)} assets")
             _cache_set(cache_key, result)                       # L1
             await _upstash_set(redis_key, result, ttl=1800)    # L2: 30min TTL
             return result
 
     except Exception as e:
-        print(f"CoinGecko API error: {e}")
+        _logger.warning(f"CoinGecko API error: {e}")
         # Return stale L2 if available rather than empty
         if not r2:
             r2 = await _upstash_get(redis_key)
@@ -569,7 +572,7 @@ async def fetch_defillama_tvl() -> Dict[str, float]:
 
             return _cache_set(cache_key, result)
     except Exception as e:
-        print(f"DeFiLlama API error: {e}")
+        _logger.warning(f"DeFiLlama API error: {e}")
         return {}
 
 
@@ -587,7 +590,7 @@ async def fetch_fear_greed() -> Optional[dict]:
             data = r.json()
             return _cache_set(cache_key, data.get("data", [{}])[0])
     except Exception as e:
-        print(f"Fear&Greed API error: {e}")
+        _logger.warning(f"Fear&Greed API error: {e}")
         return None
 
 
@@ -605,7 +608,7 @@ async def fetch_cg_global() -> Optional[dict]:
             data = r.json()
             return _cache_set(cache_key, data.get("data", {}))
     except Exception as e:
-        print(f"CoinGecko global API error: {e}")
+        _logger.warning(f"CoinGecko global API error: {e}")
         return None
 
 
@@ -622,29 +625,29 @@ async def fetch_github_activity() -> Dict[str, int]:
         return cached
 
     results: Dict[str, int] = {}
+    _gh_headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
 
-    async def _fetch_one(asset_id: str, repo: str):
+    async def _fetch_one(client: httpx.AsyncClient, asset_id: str, repo: str):
         try:
             url = f"https://api.github.com/repos/{repo}/stats/participation"
-            headers = {
-                "Accept": "application/vnd.github+json",
-                "X-GitHub-Api-Version": "2022-11-28",
-            }
-            async with httpx.AsyncClient(timeout=8) as client:
-                r = await client.get(url, headers=headers)
-                if r.status_code == 200:
-                    data = r.json()
-                    # 'all' = array of 52 weekly totals (owner + contributors)
-                    all_weeks = data.get("all", [])
-                    if all_weeks and len(all_weeks) >= 4:
-                        return asset_id, sum(all_weeks[-4:])
-                # 202 = GitHub still computing; 404/403 = unavailable — skip silently
+            r = await client.get(url, headers=_gh_headers)
+            if r.status_code == 200:
+                data = r.json()
+                # 'all' = array of 52 weekly totals (owner + contributors)
+                all_weeks = data.get("all", [])
+                if all_weeks and len(all_weeks) >= 4:
+                    return asset_id, sum(all_weeks[-4:])
+            # 202 = GitHub still computing; 404/403 = unavailable — skip silently
         except Exception as e:
-            print(f"[GitHub] activity fetch for {repo}: {e}")
+            _logger.warning(f"[GitHub] activity fetch for {repo}: {e}")
         return asset_id, None
 
-    tasks = [_fetch_one(aid, repo) for aid, repo in GITHUB_REPOS.items()]
-    raw = await asyncio.gather(*tasks, return_exceptions=True)
+    async with httpx.AsyncClient(timeout=8) as client:
+        tasks = [_fetch_one(client, aid, repo) for aid, repo in GITHUB_REPOS.items()]
+        raw = await asyncio.gather(*tasks, return_exceptions=True)
 
     for item in raw:
         if isinstance(item, tuple) and item[1] is not None:
@@ -704,7 +707,7 @@ async def get_yfinance_data(symbol: str) -> Optional[dict]:
     except Exception as e:
         # Don't print on rate limit - it's expected
         if "Rate limited" not in str(e):
-            print(f"yfinance error for {symbol}: {e}")
+            _logger.warning(f"yfinance error for {symbol}: {e}")
         return None
 
 
@@ -727,7 +730,7 @@ def _load_macro_cache() -> Optional[dict]:
             if datetime.now().timestamp() - ts < MACRO_CACHE_TTL:
                 return data
     except Exception as e:
-        print(f"[MacroCache] read failed: {e}")
+        _logger.warning(f"[MacroCache] read failed: {e}")
     return None
 
 
@@ -742,7 +745,7 @@ def _save_macro_cache(data: dict):
         with open(MACRO_CACHE_PATH, 'w') as f:
             json.dump(data, f)
     except Exception as e:
-        print(f"Failed to save macro cache: {e}")
+        _logger.warning(f"Failed to save macro cache: {e}")
 
 
 async def fetch_macro_data() -> dict:
@@ -829,9 +832,9 @@ async def fetch_macro_data() -> dict:
                                     result[key] = round(value, 2)
                                     fetched_any = True
                     except Exception as e:
-                        print(f"FRED error for {key}: {e}")
+                        _logger.warning(f"FRED error for {key}: {e}")
         except Exception as e:
-            print(f"FRED API error: {e}")
+            _logger.warning(f"FRED API error: {e}")
 
     # Yahoo Finance v8 quote endpoints
     ticker_map = {
@@ -862,7 +865,7 @@ async def fetch_macro_data() -> dict:
                             if price:
                                 return float(price)
             except Exception as e:
-                print(f"[YFinance] price fetch failed for {symbol}: {e}")
+                _logger.warning(f"[YFinance] price fetch failed for {symbol}: {e}")
             if attempt < 1:
                 time.sleep(0.5)
         return None
@@ -890,7 +893,7 @@ async def fetch_macro_data() -> dict:
             result["_source"] = "api"
 
     except Exception as e:
-        print(f"Error fetching macro data: {e}")
+        _logger.warning(f"Error fetching macro data: {e}")
 
     # Determine regime based on VIX
     if result["vix"]:
@@ -1811,7 +1814,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 prices = _kline_map[asset_id]
                 asset_betas = await calculate_asset_betas(asset_id, prices)
             except Exception as e:
-                print(f"[CIS] beta calculation failed for {asset_id}: {e}")
+                _logger.warning(f"[CIS] beta calculation failed for {asset_id}: {e}")
 
         # v4.2: resolve per-asset enrichment data
         asset_dev_score = (cg_dev_data.get(asset_id) or {}).get("dev_activity_score") if not is_tradfi else None
@@ -1884,7 +1887,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             if sc_7d:
                 score_change_7d = round(sc_7d.get("change", 0), 1)
         except Exception as e:
-            print(f"[CIS] score change fetch failed for {asset_id}: {e}")
+            _logger.warning(f"[CIS] score change fetch failed for {asset_id}: {e}")
 
         # Max drawdown estimation (simplified from ath_distance)
         ath_distance = abs(market_data.get("ath_change_percentage", 0) or 0)
@@ -1953,7 +1956,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         from .history_db import save_cis_snapshot
         save_cis_snapshot(universe, macro)
     except Exception as e:
-        print(f"Failed to save CIS history: {e}")
+        _logger.warning(f"Failed to save CIS history: {e}")
 
     return {
         "status": "error" if not universe else "success",

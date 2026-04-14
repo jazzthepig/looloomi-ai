@@ -2,10 +2,13 @@
 VC Deal Flow Tracker
 Track funding rounds, VC portfolios, and token unlocks
 """
+import logging
 import requests
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import time
+
+_logger = logging.getLogger(__name__)
 
 
 class VCDealFlowTracker:
@@ -76,7 +79,7 @@ class VCDealFlowTracker:
                     return rounds
 
         except Exception as e:
-            print(f"DeFiLlama raises API error: {e}")
+            _logger.warning(f"DeFiLlama raises API error: {e}")
 
         # Fallback to curated recent funding rounds
         return self._get_mock_funding_rounds()
@@ -110,7 +113,7 @@ class VCDealFlowTracker:
                 return self._get_mock_top_vcs()
                 
         except Exception as e:
-            print(f"Error fetching VCs: {e}")
+            _logger.warning(f"Error fetching VCs: {e}")
             return self._get_mock_top_vcs()
     
     def get_token_unlocks(self, days_ahead: int = 30) -> List[Dict]:
@@ -149,7 +152,7 @@ class VCDealFlowTracker:
                 return self._get_mock_unlocks()
                 
         except Exception as e:
-            print(f"Error fetching unlocks: {e}")
+            _logger.warning(f"Error fetching unlocks: {e}")
             return self._get_mock_unlocks()
     
     def get_vc_portfolio_overlap(self, vc_names: List[str]) -> Dict:

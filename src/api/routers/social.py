@@ -12,8 +12,11 @@ Caching: Redis 10min TTL (keyed by ref param). In-memory 60s fallback.
 
 import io, time, math, hashlib
 from typing import Optional
+import logging
 from fastapi import APIRouter, Response
 from fastapi.responses import Response as FastAPIResponse
+
+_logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/social", tags=["social"])
 
@@ -100,7 +103,7 @@ async def _fetch_cis_top5() -> list:
             scored.sort(key=lambda a: a.get("cis_score", 0), reverse=True)
             return scored[:5]
     except Exception as e:
-        print(f"[OG] CIS fetch error: {e}")
+        _logger.warning(f"[OG] CIS fetch error: {e}")
     return []
 
 
@@ -110,7 +113,7 @@ async def _fetch_macro() -> dict:
         from src.data.market.data_layer import get_macro_pulse
         return await get_macro_pulse()
     except Exception as e:
-        print(f"[OG] Macro fetch error: {e}")
+        _logger.warning(f"[OG] Macro fetch error: {e}")
     return {}
 
 
@@ -351,7 +354,7 @@ async def og_image(ref: Optional[str] = None):
             },
         )
     except Exception as e:
-        print(f"[OG] Render error: {e}")
+        _logger.warning(f"[OG] Render error: {e}")
         import traceback; traceback.print_exc()
         # Return a minimal fallback PNG (1x1 transparent) rather than 500
         import io
