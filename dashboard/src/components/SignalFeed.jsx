@@ -511,15 +511,15 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
             height: 200, color: T.t3, fontSize: 11, fontFamily: FONTS.mono,
             flexDirection: "column", gap: 6,
           }}>
-            <span style={{ color: T.red }}>数据加载失败</span>
-            <span>请稍后重试</span>
+            <span style={{ color: T.red }}>Signal feed unavailable · 数据加载失败</span>
+            <span style={{ color: T.muted }}>Retry in a moment · 请稍后重试</span>
           </div>
         ) : filteredSignals.length === 0 ? (
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             height: 200, color: T.t3, fontSize: 11, fontFamily: FONTS.mono,
           }}>
-            暂无信号
+            No signals generated yet · 暂无信号
           </div>
         ) : (
           <>

@@ -182,8 +182,6 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         const res = await fetch(`${API_BASE}/defi/overview`, { signal: controller.signal });
         clearTimeout(timeoutId);
         const data = await res.json();
-        console.log("Defi overview:", data);
-
         // Map API data to sector format — live fields from get_defi_overview v2
         const fmtB = (v) => v ? `$${Math.round(v / 1e9)}B` : "—";
         const mapped = [
@@ -296,10 +294,6 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         };
       });
 
-      // Debug: log sample data
-      if (all.length > 0) {
-        console.log("Sample VC data:", JSON.stringify(all.slice(0, 3), null, 2));
-      }
 
       all.sort((a, b) => (b.date || 0) - (a.date || 0));
 
