@@ -55,10 +55,7 @@ const CSS = `
   .t-orb-3 { width:380px;height:380px;background:radial-gradient(circle,rgba(0,200,224,.09) 0%,transparent 65%);bottom:0;left:22%;animation:breathe 76s ease-in-out infinite 24s; }
   .t-orb-4 { width:280px;height:280px;background:radial-gradient(circle,rgba(255,16,96,.07) 0%,transparent 65%);bottom:12%;right:8%;animation:breathe2 60s ease-in-out infinite 38s; }
 
-  .lm-card { background:rgba(13,32,56,0.80);border:1px solid rgba(56,148,210,0.12);border-radius:10px;backdrop-filter:blur(20px); }
-  .lm-card:hover { border-color:rgba(56,148,210,0.25); }
-  .lm-row { transition:background .12s ease;cursor:pointer; }
-  .lm-row:hover { background:rgba(6,182,212,.06) !important; border-left: 2px solid rgba(6,182,212,0.4); }
+  /* lm-card/lm-row inherit from index.css global card system */
 
   .lm-tab { padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;font-family:'Syne',sans-serif;cursor:pointer;outline:none;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#3E6680;transition:all .18s ease;letter-spacing:.01em; }
   .lm-tab:hover { border-color:rgba(56,148,210,0.25);color:#EFF8FF; }
@@ -314,7 +311,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             { label: "Avg Score", value: stats.avgScore, icon: TrendingUp, color: T.purple },
             { label: "Grade A", value: stats.gradeA, icon: Shield, color: T.green },
           ].map((s, i) => (
-            <div key={i} className="lm-card" style={{ padding: "16px 20px" }}>
+            <div key={i} className="lm-stat-card" style={{ padding: "16px 20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <s.icon size={14} color={s.color} />
                 <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>

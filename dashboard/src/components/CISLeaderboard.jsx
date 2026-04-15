@@ -715,27 +715,41 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 18
       }}>
         {[
-          { grade: "A", label: "Top 15% · A+ / A", color: T.green },
-          { grade: "B", label: "Top 50% · B+ / B", color: T.blue },
-          { grade: "C", label: "Top 85% · C+ / C", color: T.amber },
-          { grade: "D", label: "Bottom 15% · D / F", color: T.red },
-        ].map(g => (
-          <div key={g.grade} className="cis-grade-card" style={{
-            border: `1px solid ${T.border}`, borderRadius: 10,
-            padding: "14px 16px", background: T.surface,
-            display: "flex", flexDirection: "column", gap: 3,
-          }}>
-            <div className="grade-letter" style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 800, marginBottom: 2, color: g.color }}>
-              {g.grade}
+          { grade: "A", label: "Institutional", sub: "A+ · A", color: T.green, colorDim: "rgba(0,217,138,0.10)", borderColor: "rgba(0,217,138,0.22)" },
+          { grade: "B", label: "Investment Grade", sub: "B+ · B", color: "#4472FF", colorDim: "rgba(68,114,255,0.10)", borderColor: "rgba(68,114,255,0.22)" },
+          { grade: "C", label: "Speculative", sub: "C+ · C", color: T.amber, colorDim: "rgba(245,158,11,0.10)", borderColor: "rgba(245,158,11,0.22)" },
+          { grade: "D", label: "Underweight", sub: "D · F", color: T.red, colorDim: "rgba(255,61,90,0.10)", borderColor: "rgba(255,61,90,0.22)" },
+        ].map(g => {
+          const count = g.grade === "A" ? gradeSummary.A : g.grade === "B" ? gradeSummary.B : g.grade === "C" ? gradeSummary.C : gradeSummary.D;
+          const total = (gradeSummary.A || 0) + (gradeSummary.B || 0) + (gradeSummary.C || 0) + (gradeSummary.D || 0);
+          const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+          return (
+            <div key={g.grade} className="cis-grade-card" style={{
+              border: `1px solid ${g.borderColor}`,
+              borderLeft: `3px solid ${g.color}`,
+              borderRadius: 8,
+              padding: "12px 14px",
+              background: g.colorDim,
+              display: "flex", flexDirection: "column", gap: 6,
+            }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                <span className="grade-letter" style={{ fontFamily: FONTS.display, fontSize: 14, fontWeight: 700, color: g.color, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  {g.label}
+                </span>
+                <span className="grade-count" style={{ fontFamily: FONTS.mono, fontSize: 20, fontWeight: 700, color: g.color }}>
+                  {count}
+                </span>
+              </div>
+              <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
+                <div style={{ width: `${pct}%`, height: "100%", background: g.color, borderRadius: 1, opacity: 0.7, transition: "width .6s ease" }} />
+              </div>
+              <div className="grade-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 9, color: T.muted, letterSpacing: "0.07em", fontFamily: FONTS.mono }}>{g.sub}</span>
+                <span style={{ fontSize: 9, color: T.muted, fontFamily: FONTS.mono }}>{pct}%</span>
+              </div>
             </div>
-            <div className="grade-count" style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.primary }}>
-              {g.grade === "A" ? gradeSummary.A : g.grade === "B" ? gradeSummary.B : g.grade === "C" ? gradeSummary.C : gradeSummary.D}
-            </div>
-            <div className="grade-label" style={{ fontSize: 9, color: T.muted, letterSpacing: "0.06em" }}>
-              {g.label}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── Compare view ── */}
