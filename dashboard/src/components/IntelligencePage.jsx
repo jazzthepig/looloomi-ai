@@ -447,24 +447,20 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             {/* Section Header (when embedded in App.jsx scroll layout) */}
             {isSection && (
               <div style={{
-                marginBottom: 24,
+                marginBottom: 20,
+                display: "flex", alignItems: "center", gap: 10,
+                paddingBottom: 14, borderBottom: "1px solid rgba(6,182,212,0.08)",
                 opacity: mounted ? 1 : 0,
                 transform: mounted ? "translateY(0)" : "translateY(8px)",
                 transition: "opacity 0.35s ease, transform 0.35s ease",
               }}>
-                <h2 style={{
-                  fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
-                  color: T.primary, marginBottom: 6, letterSpacing: "-0.03em",
-                  lineHeight: 1.05,
-                }}>
+                <div style={{ width: 2, height: 16, background: "rgba(6,182,212,0.65)", borderRadius: 1, flexShrink: 0 }} />
+                <span style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 600, color: T.primary, letterSpacing: "-0.01em" }}>
                   Intelligence
-                </h2>
-                <p style={{
-                  fontFamily: FONTS.body, fontSize: 14, color: T.muted,
-                  maxWidth: 520, lineHeight: 1.6, margin: 0,
-                }}>
-                  AI-generated macro analysis, VC funding flows, sector heatmaps, and DeFi protocol intelligence.
-                </p>
+                </span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  · AI Market Analysis
+                </span>
               </div>
             )}
 

@@ -259,18 +259,19 @@ export default function ProtocolIntelligence() {
   return (
     <div style={{ marginBottom: 24 }}>
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, paddingBottom: 14, borderBottom: "1px solid rgba(6,182,212,0.08)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 2, height: 16, background: "rgba(6,182,212,0.65)", borderRadius: 1 }} />
           <span style={{
-            fontFamily: FONTS.display, fontSize: 15, fontWeight: 700,
-            color: T.t1, letterSpacing: "0.04em",
+            fontFamily: FONTS.display, fontSize: 18, fontWeight: 600,
+            color: T.t1, letterSpacing: "-0.01em",
           }}>
             Protocol Intelligence
           </span>
           <span style={{
-            fontFamily: FONTS.mono, fontSize: 9, fontWeight: 500,
-            letterSpacing: "0.08em", color: T.t3,
-          }}>CIS v4.1</span>
+            fontFamily: FONTS.mono, fontSize: 10,
+            letterSpacing: "0.1em", textTransform: "uppercase", color: T.muted,
+          }}>· CIS v4.1</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 11, fontFamily: FONTS.mono, color: T.t3 }}>
