@@ -418,9 +418,10 @@ export default function StrategyPage() {
     : (regime === "TIGHTENING") ? T.amber
     : T.gold;
 
-  const topAssets = (cisData?.universe || cisData?.assets || cisData?.scores || [])
-    .sort((a, b) => (b.cis_score ?? b.score ?? 0) - (a.cis_score ?? a.score ?? 0))
-    .slice(0, 10);
+  const allAssets = (cisData?.universe || cisData?.assets || cisData?.scores || [])
+    .sort((a, b) => (b.cis_score ?? b.score ?? 0) - (a.cis_score ?? a.score ?? 0));
+  const topAssets = allAssets.slice(0, 10);
+  const universeSize = cisData?.universe_size || allAssets.length || null;
 
   const topProtocols = (protocols?.protocols || [])
     .sort((a, b) => (b.cis_score || 0) - (a.cis_score || 0))
@@ -506,7 +507,7 @@ export default function StrategyPage() {
             display: "flex", justifyContent: "center", gap: 48, flexWrap: "wrap",
             padding: "28px 0", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`,
           }}>
-            <Stat label="Assets Scored" value={`${topAssets.length || 14}+`} sub="Crypto + TradFi" />
+            <Stat label="Assets Scored" value={universeSize ? `${universeSize}+` : "40+"} sub="Crypto + TradFi" />
             <Stat label="Investment Channels" value="3" sub="Algo · Protocol · FoF" />
             <Stat label="Target AUM" value="$30M" sub="Phase 1" />
             <Stat label="Management Fee" value="0%" sub="Performance only" color={T.green} />

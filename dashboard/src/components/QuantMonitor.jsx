@@ -60,8 +60,9 @@ async function fetchQuantData() {
 
 /* ─── Equity Card ───────────────────────────────────────────────────── */
 function EquityCard({ equity, starting, dailyPnl, stale, updated }) {
-  const totalPnl = starting > 0 ? ((equity - starting) / starting * 100) : 0;
-  const pnlColor = totalPnl >= 0 ? T.green : T.red;
+  const hasEquity = equity != null && !isNaN(equity);
+  const totalPnl = (hasEquity && starting > 0) ? ((equity - starting) / starting * 100) : null;
+  const pnlColor = (totalPnl == null || totalPnl >= 0) ? T.green : T.red;
   const dailyColor = typeof dailyPnl === "number" ? (dailyPnl >= 0 ? T.green : T.red) : T.t3;
 
   return (
@@ -107,7 +108,7 @@ function EquityCard({ equity, starting, dailyPnl, stale, updated }) {
       </div>
 
       {/* Equity progress bar */}
-      {starting > 0 && (
+      {starting > 0 && totalPnl != null && (
         <div style={{ marginTop: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
             <span style={{ fontSize: 10, color: T.t3, fontFamily: FONTS.mono }}>P&L</span>
