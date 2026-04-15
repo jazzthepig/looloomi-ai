@@ -974,7 +974,12 @@ def calculate_cis_score(
     # Continuous: mcap log-scale (0-50) + tvl log-scale (0-20) + fdv fairness (0-15) + supply (0-15)
     # v4.2: US Equity → PE/revenue replace fdv/supply; tech assets → CG dev_activity bonus (0-10)
     has_tvl_class = asset_class in ["DeFi", "L2"]
-    mcap_cap = 50 if has_tvl_class else 70  # Redistribute TVL points if N/A
+    # Reduce mcap cap for mega-cap assets (>$500B) to prevent F score maxing at 100
+    # Mega-cap (>$500B) → mcap_cap 40; Large-cap ($50-500B) → 55; Others → 70/50
+    if market_cap > 500e9:
+        mcap_cap = 40 if not has_tvl_class else 30
+    else:
+        mcap_cap = 50 if has_tvl_class else 55
 
     mcap_score = _log_score(market_cap, 1e6, 10, mcap_cap)  # $1M base, +10 per decade
     tvl_score = _log_score(tvl, 1e6, 5, 20) if (has_tvl_class and tvl and tvl > 0) else 0.0
@@ -1091,25 +1096,38 @@ def calculate_cis_score(
 
     # ── O — On-Chain Health / Risk-Adjusted ──────────────────────────
     # ATH recovery (0-35) + drawdown estimate (0-35) + supply+tvl health (0-30)
+    # NOTE: For TradFi assets, O pillar is not applicable — set to 0 or null
 
-    # ATH recovery: continuous, at ATH → 35, -80% → 0
-    ath_score = max(0, _linear_interp(ath_distance, 0, 80, 35, 0))
+    o_score = 0.0  # Default for TradFi
 
-    # Drawdown estimate from 24h range (annualized vol proxy)
-    dd_score = 35.0  # default if no range data
-    if low_24h > 0 and high_24h > low_24h:
-        daily_range = (high_24h - low_24h) / low_24h
-        ann_vol = daily_range * math.sqrt(365) * 100  # rough annualized
-        dd_score = max(0, _linear_interp(ann_vol, 0, 200, 35, 0))
+    if not _is_tradfi:
+        # ATH recovery: continuous, at ATH → 35, -80% → 0
+        ath_score = max(0, _linear_interp(ath_distance, 0, 80, 35, 0))
 
-    # Supply + TVL health (reuse)
-    health_score = supply_score  # 0-15 from F pillar
-    if has_tvl_class and tvl and tvl > 0:
-        health_score += min(15, _log_score(tvl, 1e6, 3.75, 15))
+        # Drawdown estimate from 24h range (annualized vol proxy)
+        dd_score = 35.0  # default if no range data
+        if low_24h > 0 and high_24h > low_24h:
+            daily_range = (high_24h - low_24h) / low_24h
+            ann_vol = daily_range * math.sqrt(365) * 100  # rough annualized
+            dd_score = max(0, _linear_interp(ann_vol, 0, 200, 35, 0))
+
+        # Supply + TVL health (reuse)
+        health_score = supply_score  # 0-15 from F pillar
+        if has_tvl_class and tvl and tvl > 0:
+            health_score += min(15, _log_score(tvl, 1e6, 3.75, 15))
+        else:
+            health_score += max(0, _linear_interp(ath_distance, 0, 50, 15, 0))
+
+        o_score = round(max(0, min(100, ath_score + dd_score + health_score)), 1)
     else:
-        health_score += max(0, _linear_interp(ath_distance, 0, 50, 15, 0))
-
-    o_score = round(max(0, min(100, ath_score + dd_score + health_score)), 1)
+        # For TradFi: use volatility as proxy for risk (inverse of stability)
+        # Lower volatility = better O score (0-40, not 0-100 like crypto)
+        if low_24h > 0 and high_24h > low_24h:
+            daily_range_pct = ((high_24h - low_24h) / low_24h) * 100
+            # 0.5% daily range → 40, 2% range → 20, 5% range → 0
+            o_score = round(max(0, _linear_interp(daily_range_pct, 0.5, 5.0, 40, 0)), 1)
+        else:
+            o_score = 20.0  # neutral fallback for TradFi
 
     o_components = {
         "ath_distance_pct": round(ath_distance, 1),
@@ -1135,12 +1153,13 @@ def calculate_cis_score(
     if _is_tradfi:
         s_components["vix"] = vix
         if vix is not None:
-            # VIX continuous: 10 → 40, 20 → 24, 35 → 0
-            baseline = max(0, _linear_interp(vix, 10, 35, 40, 0))
+            # VIX continuous: 10 → 50, 20 → 30, 35 → 5
+            # TradFi gets higher baseline range (0-50) since markets are more stable/efficient
+            baseline = max(5, _linear_interp(vix, 10, 35, 50, 5))
             s_components["baseline_score"] = round(baseline, 1)
         else:
-            baseline = 20  # neutral fallback
-            s_components["baseline_score"] = 20
+            baseline = 25  # neutral fallback (was 20)
+            s_components["baseline_score"] = 25
     else:
         # === Signal 1: Volume Surge (0–15) ===
         # Relative turnover (vol/mcap) as a proxy for active market participation.
