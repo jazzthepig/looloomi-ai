@@ -17,7 +17,7 @@ const CSS = `
   .spinner { animation: spin 1s linear infinite; }
   .sk { background:linear-gradient(90deg,rgba(14,30,56,0.8) 30%,rgba(18,38,72,0.9) 50%,rgba(14,30,56,0.8) 70%);background-size:400px 100%;animation:shimmer 1.8s ease infinite;border-radius:4px;display:inline-block; }
 
-  .quant-card { background:rgba(13,32,56,0.80);border:1px solid rgba(255,255,255,0.08);border-radius:10px;backdrop-filter:blur(20px); }
+  .quant-card { background:rgba(7,26,74,0.55);border:1px solid rgba(37,99,235,0.14);border-radius:10px;backdrop-filter:blur(24px);box-shadow:0 1px 0 rgba(255,255,255,0.04) inset,0 8px 40px rgba(0,0,0,0.36); }
 
   .badge { display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-family:'Syne',sans-serif; }
   .badge-live { background:rgba(0,232,122,.12);color:#00E87A;border:1px solid rgba(0,232,122,.25); }
@@ -25,10 +25,11 @@ const CSS = `
   .badge-trade-long { background:rgba(0,232,122,.10);color:#00E87A;border:1px solid rgba(0,232,122,.2); }
   .badge-trade-short { background:rgba(255,61,90,.10);color:#FF3D5A;border:1px solid rgba(255,61,90,.2); }
 
-  .stat-card { background:rgba(13,32,56,0.80);border:1px solid rgba(255,255,255,0.08);border-radius:10px;backdrop-filter:blur(20px);padding:16px 20px;text-align:center; }
-  .stat-label { font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3E6680;margin-bottom:6px;font-family:'Syne',sans-serif; }
-  .stat-value { font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#EFF8FF; }
-  .stat-sub { font-size:11px;color:#3E6680;margin-top:4px;font-family:'JetBrains Mono',monospace; }
+  .stat-card { background:rgba(15,40,96,0.60);border:1px solid rgba(99,102,241,0.16);border-radius:8px;backdrop-filter:blur(12px);padding:16px 20px;text-align:center;transition:border-color .18s ease; }
+  .stat-card:hover { border-color:rgba(99,102,241,0.28); }
+  .stat-label { font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(199,210,254,0.45);margin-bottom:6px;font-family:'Syne',sans-serif; }
+  .stat-value { font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#f0f4ff; }
+  .stat-sub { font-size:11px;color:rgba(199,210,254,0.45);margin-top:4px;font-family:'JetBrains Mono',monospace; }
 
   @media (max-width: 768px) {
     .mobile-stack { flex-direction: column !important; }
