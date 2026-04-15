@@ -30,17 +30,17 @@
   },
 
   "key_findings": [
-    "极端值才有效: MVRV<0.9 + POS<10% = 77%胜率",
-    "组合优于单一: MVRV+价格位置 > 单独使用任一因子",
-    "趋势确认无效: ADX过滤后收益未提升",
-    "最大单笔亏损: ETH可达-63%"
+    "Extremes-only signal: MVRV<0.9 + POS<10% → 77% win rate",
+    "Factor combination outperforms single-factor: MVRV + price position > either alone",
+    "Trend confirmation adds noise: ADX filter did not improve returns",
+    "Max single-trade drawdown: ETH can reach -63% — position sizing critical"
   ],
 
   "strategy_upgrade_direction": [
-    "Smart Money信号 (FVG/Order Block)",
-    "多时间框架 (4h信号 + 15m入场)",
-    "动态仓位 (根据MVRV极端程度)"
+    "Smart Money signals (FVG / Order Block detection)",
+    "Multi-timeframe (4h signal + 15m entry refinement)",
+    "Dynamic position sizing (scaled to MVRV extremity)"
   ],
 
-  "status": "可用于实盘测试"
+  "status": "Ready for live dry-run deployment"
 }
