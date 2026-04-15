@@ -1936,7 +1936,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "las_params": las_result["las_params"],
             "f": pillars["F"],
             "m": pillars["M"],
-            "r": pillars["O"],
+            "o": pillars["O"],
             "s": pillars["S"],
             "a": pillars["A"],
             "breakdown": breakdown,

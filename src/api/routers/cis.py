@@ -153,8 +153,8 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
                 # Merge pillars if local engine provides them
                 if la.get("pillars"):
                     asset["pillars"] = la["pillars"]
-                elif any(la.get(k) is not None for k in ("f", "m", "r", "s", "a")):
-                    for k in ("f", "m", "r", "s", "a"):
+                elif any(la.get(k) is not None for k in ("f", "m", "o", "r", "s", "a")):
+                    for k in ("f", "m", "o", "r", "s", "a"):
                         if la.get(k) is not None:
                             asset[k] = la[k]
             else:
@@ -265,7 +265,7 @@ async def get_cis_compare(symbols: str, response: Response = None):
         return {
             "F": _get("F", "f"),
             "M": _get("M", "m"),
-            "O": _get("O", "r"),        # T1 uses 'r' for on-chain/risk
+            "O": _get("O", "o", "r"),   # "o" canonical (v4.1+), "r" legacy fallback
             "S": _get("S", "s"),
             "A": _get("alpha", "a"),
         }
@@ -294,7 +294,7 @@ async def get_cis_compare(symbols: str, response: Response = None):
     pil_sums = {"F": 0.0, "M": 0.0, "O": 0.0, "S": 0.0, "A": 0.0}
     pil_n    = {"F": 0,   "M": 0,   "O": 0,   "S": 0,   "A": 0}
     for a in universe:
-        for k, raw_k, flat_k in [("F","F","f"),("M","M","m"),("O","O","r"),("S","S","s"),("A","alpha","a")]:
+        for k, raw_k, flat_k in [("F","F","f"),("M","M","m"),("O","O","o"),("S","S","s"),("A","alpha","a")]:
             p = a.get("pillars") or {}
             v = p.get(raw_k) if p.get(raw_k) is not None else a.get(flat_k)
             if v is not None:
@@ -358,7 +358,7 @@ _REGIME_INSIGHTS = {
     "STAGFLATION": "On-Chain Risk + Fundamental stability. Real-yield and RWA historically outperform. High-beta alts underperform.",
     "GOLDILOCKS":  "Broadest opportunity set. Alpha independence is key edge — look for uncorrelated return vs benchmark. Growth and quality both rewarded.",
 }
-_PILLAR_FLAT = [("F","F","f"), ("M","M","m"), ("O","O","r"), ("S","S","s"), ("A","alpha","a")]
+_PILLAR_FLAT = [("F","F","f"), ("M","M","m"), ("O","O","o"), ("S","S","s"), ("A","alpha","a")]
 
 
 @router.get("/api/v1/cis/regime-analysis")
@@ -606,7 +606,7 @@ async def agent_cis_endpoint(
                 "tier": a.get("data_tier", 2),
                 "f":    _p(a, "f"),
                 "m":    _p(a, "m"),
-                "r":    _p(a, "r"),
+                "o":    _p(a, "o") or _p(a, "r"),
                 "ss":   _p(a, "s"),
                 "a":    _p(a, "a"),
                 "las":    a.get("las"),
@@ -1015,7 +1015,7 @@ async def _broadcast_cis_update(universe: list):
                     "sg":    a.get("signal", "?"),
                     "f":     _p(a, "f"),
                     "m":     _p(a, "m"),
-                    "r":     _p(a, "r"),
+                    "o":     _p(a, "o") or _p(a, "r"),
                     "ss":    _p(a, "s"),
                     "a":     _p(a, "a"),
                     "ch30d": a.get("change_30d"),

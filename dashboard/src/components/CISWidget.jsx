@@ -276,7 +276,7 @@ export function CISLeaderboardTable({ data, filter, setFilter, defaultLimit = 0 
                     </td>
                     <td style={{ padding: "10px 4px", width: 140 }}>
                       <div style={{ display: "flex", gap: 2 }}>
-                        {[asset.f, asset.m, asset.r, asset.s, asset.a].map((v, j) => {
+                        {[asset.f, asset.m, asset.o ?? asset.r, asset.s, asset.a].map((v, j) => {
                           const vv = v ?? 0;
                           const c = vv >= 80 ? "#22c55e" : vv >= 65 ? "#fbbf24" : vv >= 50 ? "#fb923c" : "#ef4444";
                           return (
@@ -307,7 +307,7 @@ export function CISLeaderboardTable({ data, filter, setFilter, defaultLimit = 0 
                             <div style={{ fontSize: 11, color: T.gold, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Pillar Breakdown</div>
                             <PillarBar value={asset.f} label="Fundamental" />
                             <PillarBar value={asset.m} label="Market" />
-                            <PillarBar value={asset.r} label="On-Chain" />
+                            <PillarBar value={asset.o ?? asset.r} label="On-Chain" />
                             <PillarBar value={asset.s} label="Sentiment" />
                             <PillarBar value={asset.a} label="Alpha" />
                           </div>
@@ -403,7 +403,7 @@ export function CISHeatmap({ data, filter, setFilter }) {
                   <td style={{ padding: "6px 8px", fontSize: 10, color: T.secondary }}>{asset.asset_class}</td>
                   <HeatCell value={asset.f} />
                   <HeatCell value={asset.m} />
-                  <HeatCell value={asset.r} />
+                  <HeatCell value={asset.o ?? asset.r} />
                   <HeatCell value={asset.s} />
                   <HeatCell value={asset.a} />
                   <td style={{ padding: "6px 8px", textAlign: "center", fontSize: 13, fontWeight: 700, color: T.primary, fontFamily: FONTS.mono }}>{asset.cis_score != null ? asset.cis_score.toFixed(1) : "—"}</td>
@@ -416,7 +416,7 @@ export function CISHeatmap({ data, filter, setFilter }) {
                         <div style={{ flex: 1, minWidth: 200 }}>
                           <PillarBar value={asset.f} label="Fundamental" />
                           <PillarBar value={asset.m} label="Market" />
-                          <PillarBar value={asset.r} label="On-Chain" />
+                          <PillarBar value={asset.o ?? asset.r} label="On-Chain" />
                           <PillarBar value={asset.s} label="Sentiment" />
                           <PillarBar value={asset.a} label="Alpha" />
                         </div>
@@ -647,7 +647,7 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
       const newScore =
         weights.F * (asset.f ?? 0) +
         weights.M * (asset.m ?? 0) +
-        weights.O * (asset.r ?? 0) +
+        weights.O * (asset.o ?? asset.r ?? 0) +
         weights.S * (asset.s ?? 0) +
         weights.A * (asset.a ?? 0);
 
