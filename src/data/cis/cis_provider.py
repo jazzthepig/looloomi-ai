@@ -1098,7 +1098,11 @@ def calculate_cis_score(
     # ATH recovery (0-35) + drawdown estimate (0-35) + supply+tvl health (0-30)
     # NOTE: For TradFi assets, O pillar is not applicable — set to 0 or null
 
-    o_score = 0.0  # Default for TradFi
+    # Pre-define locals so o_components can always reference them safely
+    ath_score = 0.0
+    dd_score = 0.0
+    health_score = 0.0
+    o_score = 0.0
 
     if not _is_tradfi:
         # ATH recovery: continuous, at ATH → 35, -80% → 0
