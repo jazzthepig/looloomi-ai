@@ -35,6 +35,23 @@ function StagingBanner() {
 }
 
 /* ── Lazy-load fallback ──────────────────────────────────────────────────── */
+// ── Editorial section label — consistent across all sections ──────────────
+function SectionLabel({ label, sub }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingBottom: 14, borderBottom: "1px solid rgba(6,182,212,0.08)" }}>
+      <div style={{ width: 2, height: 16, background: "rgba(6,182,212,0.65)", borderRadius: 1, flexShrink: 0 }} />
+      <span style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 600, color: T.t1, letterSpacing: "-0.01em" }}>
+        {label}
+      </span>
+      {sub && (
+        <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          · {sub}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function SectionLoader() {
   return (
     <div style={{ padding: "48px 0", textAlign: "center" }}>
@@ -348,19 +365,7 @@ function DesktopApp() {
 
         {/* Section 3: Protocol */}
         <section id="protocol" style={sectionStyle(0)}>
-          <div style={{ maxWidth: 1600, margin: "0 auto" }}>
-            <div style={{ marginBottom: 24 }}>
-              <h2 style={{
-                fontFamily: FONTS.brand, fontSize: 28, fontWeight: 700,
-                color: T.t1, marginBottom: 6, letterSpacing: "-0.02em", lineHeight: 1.05,
-              }}>Protocol Intelligence</h2>
-              <p style={{
-                fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
-                maxWidth: 520, lineHeight: 1.6, margin: 0,
-              }}>
-                CIS-scored DeFi and RWA protocols — live TVL, 7-day momentum, and on-chain risk signals.
-              </p>
-            </div>
+          <div style={{ maxWidth: 1400, margin: "0 auto" }}>
             <Suspense fallback={<SectionLoader />}>
               <ProtocolIntelligence />
             </Suspense>
@@ -382,19 +387,8 @@ function DesktopApp() {
 
         {/* Section 5: Quant GP */}
         <section id="quantgp" style={sectionStyle(0)}>
-          <div style={{ maxWidth: 1600, margin: "0 auto" }}>
-            <div style={{ marginBottom: 24 }}>
-              <h2 style={{
-                fontFamily: FONTS.brand, fontSize: 28, fontWeight: 700,
-                color: T.t1, marginBottom: 6, letterSpacing: "-0.02em", lineHeight: 1.05,
-              }}>Quant GP</h2>
-              <p style={{
-                fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
-                maxWidth: 520, lineHeight: 1.6, margin: 0,
-              }}>
-                Verified GP partner network — quantitative and systematic strategies powering the CometCloud Fund-of-Funds.
-              </p>
-            </div>
+          <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+            <SectionLabel label="Quant GP" sub="GP Partner Network" />
             <QuantGPContent />
           </div>
         </section>
@@ -511,7 +505,7 @@ function DesktopApp() {
 
 const sectionStyle = (index) => ({
   minHeight: "auto",
-  padding: "56px 48px",    // base; responsive overrides in <style> below
+  padding: "44px 48px",    // base; responsive overrides in <style> below
   background: index % 2 === 0 ? "transparent" : "rgba(7,26,74,0.25)",
   position: "relative",
   zIndex: 1,
@@ -749,22 +743,9 @@ function CISContent({ onUniverseLoad }) {
   };
 
   return (
-    <div style={{ maxWidth: 1600, margin: "0 auto" }}>
+    <div style={{ maxWidth: 1400, margin: "0 auto" }}>
       {/* Section Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h2 style={{
-          fontFamily: FONTS.brand, fontSize: 28, fontWeight: 700,
-          color: T.t1, marginBottom: 6, letterSpacing: "-0.02em", lineHeight: 1.05,
-        }}>
-          CIS
-        </h2>
-        <p style={{
-          fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
-          maxWidth: 520, lineHeight: 1.6, margin: 0,
-        }}>
-          CometCloud Intelligence Score — 5-pillar evaluation across Fundamental, Market Structure, On-Chain Health, Sentiment, and Alpha Independence.
-        </p>
-      </div>
+      <SectionLabel label="CIS" sub="Intelligence Score" />
 
       {/* Leaderboard — owns the fetch, fires onDataLoad when done */}
       <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>

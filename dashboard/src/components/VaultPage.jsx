@@ -292,21 +292,18 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
         )}
 
         {/* Header */}
-        <div style={{ marginTop: isSection ? 0 : 24, marginBottom: 20 }}>
-          <h2 style={{
-            fontFamily: FONTS.brand, fontSize: 38, fontWeight: 700,
-            color: T.primary, marginBottom: 6, letterSpacing: "-0.03em",
-            lineHeight: 1.05,
-          }}>
+        <div style={{
+          marginTop: isSection ? 0 : 24, marginBottom: 20,
+          display: "flex", alignItems: "center", gap: 10,
+          paddingBottom: 14, borderBottom: "1px solid rgba(6,182,212,0.08)",
+        }}>
+          <div style={{ width: 2, height: 16, background: "rgba(6,182,212,0.65)", borderRadius: 1, flexShrink: 0 }} />
+          <span style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 600, color: T.primary, letterSpacing: "-0.01em" }}>
             Vault
-          </h2>
-          <p style={{
-            fontFamily: FONTS.body, fontSize: 14, color: T.secondary,
-            maxWidth: 600, lineHeight: 1.6
-          }}>
-            GP Selection Framework — Evaluate and select top-tier crypto fund managers
-            across Performance, Strategy, Team, Risk, Transparency, and Track Record.
-          </p>
+          </span>
+          <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            · GP Selection
+          </span>
         </div>
 
         {/* Stats Summary */}
