@@ -586,117 +586,96 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   // Full mode with 2-column layout
   return (
     <div>
-      {/* Header: engine source + timestamp */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {/* ── Header row ── */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        marginBottom: 24, paddingBottom: 16, borderBottom: `1px solid rgba(37,99,235,0.08)`,
+        flexWrap: "wrap", gap: 10,
+      }}>
+        {/* Left: title + engine badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <span style={{
-            fontSize: 10, padding: "3px 10px", borderRadius: 4, fontFamily: FONTS.display,
-            fontWeight: 700, letterSpacing: "0.08em",
-            background: engineSource === "local_engine" ? "rgba(0,217,138,0.15)" : "rgba(251,191,36,0.12)",
-            color: engineSource === "local_engine" ? "#00D98A" : "#fbbf24",
-            border: `1px solid ${engineSource === "local_engine" ? "rgba(0,217,138,0.3)" : "rgba(251,191,36,0.25)"}`,
+            fontFamily: FONTS.display, fontSize: 20, fontWeight: 700,
+            color: T.t1, letterSpacing: "-0.01em",
           }}>
-            {engineSource === "local_engine" ? "CIS PRO · LOCAL ENGINE" : "CIS MARKET · ESTIMATED"}
+            CometCloud Intelligence Score
           </span>
-          {engineSource !== "local_engine" && (
-            <span style={{ fontSize: 9, color: T.muted, fontFamily: FONTS.body }}>
-              Local engine offline — using market model
-            </span>
-          )}
+          <span style={{
+            fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700,
+            letterSpacing: "0.10em", padding: "3px 8px", borderRadius: 3,
+            background: engineSource === "local_engine" ? "rgba(0,217,138,0.10)" : "rgba(251,191,36,0.08)",
+            color:      engineSource === "local_engine" ? "#00D98A" : "#fbbf24",
+            border:    `1px solid ${engineSource === "local_engine" ? "rgba(0,217,138,0.22)" : "rgba(251,191,36,0.20)"}`,
+          }}>
+            {engineSource === "local_engine" ? "LOCAL ENGINE" : "ESTIMATED"}
+          </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono }}>
+
+        {/* Right: meta + controls */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, opacity: 0.5 }}>
             CIS v4.1 · {data.length} assets
-            {updatedAt && <span style={{ marginLeft: 8, opacity: 0.5 }}>Updated: {updatedAt}</span>}
+            {updatedAt && <> · <span style={{ opacity: 0.7 }}>{updatedAt}</span></>}
           </span>
           {/* View mode toggle */}
-          <div style={{ display: "flex", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 6, overflow: "hidden" }}>
+          <div style={{ display: "flex", borderRadius: 5, border: `1px solid rgba(37,99,235,0.14)`, overflow: "hidden" }}>
             {[
               { key: "leaderboard", label: "Leaderboard" },
-              { key: "compare",     label: "Compare ↔" },
+              { key: "compare",     label: "Heatmap" },
             ].map(v => (
-              <button
-                key={v.key}
-                onClick={() => setViewMode(v.key)}
-                style={{
-                  padding: "4px 10px",
-                  border: "none",
-                  background: viewMode === v.key ? T.borderHi : "transparent",
-                  color: viewMode === v.key ? T.t1 : T.muted,
-                  fontSize: 10,
-                  fontFamily: FONTS.mono,
-                  cursor: "pointer",
-                  fontWeight: viewMode === v.key ? 600 : 400,
-                  transition: "all 0.15s",
-                }}
-              >{v.label}</button>
+              <button key={v.key} onClick={() => setViewMode(v.key)} style={{
+                padding: "4px 12px", border: "none",
+                background: viewMode === v.key ? "rgba(99,102,241,0.12)" : "transparent",
+                color: viewMode === v.key ? T.t1 : T.muted,
+                fontSize: 10, fontFamily: FONTS.mono, cursor: "pointer",
+                fontWeight: viewMode === v.key ? 600 : 400,
+                transition: "all 0.15s",
+              }}>{v.label}</button>
+            ))}
+          </div>
+          {/* Methodology toggle */}
+          <button
+            onClick={() => setMethodologyOpen(o => !o)}
+            style={{
+              padding: "4px 10px", borderRadius: 4,
+              border: `1px solid rgba(37,99,235,0.14)`,
+              background: methodologyOpen ? "rgba(68,114,255,0.08)" : "transparent",
+              color: T.muted, fontSize: 10, fontFamily: FONTS.mono, cursor: "pointer",
+              letterSpacing: "0.06em", transition: "all .15s",
+            }}
+          >
+            {methodologyOpen ? "Methodology ▴" : "Methodology ▾"}
+          </button>
+        </div>
+      </div>
+
+      {/* Methodology panel — collapsible, below the title row */}
+      {methodologyOpen && (
+        <div style={{
+          marginBottom: 20, padding: "16px 20px",
+          background: "rgba(68,114,255,0.03)",
+          border: "1px solid rgba(68,114,255,0.10)",
+          borderRadius: 8,
+        }}>
+          <div style={{ fontFamily: FONTS.body, fontSize: 12, color: T.secondary, lineHeight: 1.75, marginBottom: 14 }}>
+            5-pillar scoring system across crypto and TradFi on a unified 0–100 scale. Updated every 30 minutes.
+            Absolute grade thresholds: A+≥85 · A≥75 · B+≥65 · B≥55 · C+≥45 · C≥35 · D≥25 · F&lt;25.
+            Percentile rank is metadata only — does not override grades.
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+            {[
+              { title: "Problem Solved", text: "Eliminates subjective analyst ratings. Algorithmic, reproducible scoring removes emotional bias and provides a continuous signal — not quarterly reviews." },
+              { title: "Methodology",   text: "F (Fundamental) · M (Market Structure) · O (On-Chain Health) · S (Sentiment) · A (Alpha Independence). Mac Mini T1 engine for full scoring, Railway T2 for market estimation." },
+              { title: "Application",   text: "Grade A/B = strong composite signals. Grade C = mixed or deteriorating signals. Grade D/F = structural weakness. Applies equally across crypto and TradFi." },
+            ].map(card => (
+              <div key={card.title} style={{ borderLeft: `1px solid rgba(68,114,255,0.20)`, paddingLeft: 12 }}>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, color: T.blue, marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>{card.title}</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.muted, lineHeight: 1.65 }}>{card.text}</div>
+              </div>
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Objectives + Methodology Banner — collapsible */}
-      <div style={{ marginBottom: 16 }}>
-        {/* Toggle row */}
-        <button
-          onClick={() => setMethodologyOpen(o => !o)}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            width: "100%", background: "rgba(68,114,255,0.04)",
-            border: "1px solid rgba(68,114,255,0.14)", borderRadius: methodologyOpen ? "10px 10px 0 0" : 10,
-            padding: "10px 16px", cursor: "pointer",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontFamily: FONTS.mono, fontSize: 10, fontWeight: 700, color: T.blue, letterSpacing: "0.14em", textTransform: "uppercase" }}>
-              CometCloud Intelligence Score — CIS v4.1
-            </span>
-            <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
-              5-pillar · 0–100 scale · 30min refresh · absolute grade thresholds
-            </span>
-          </div>
-          <span style={{ color: T.muted, fontSize: 14, lineHeight: 1, transform: methodologyOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
-        </button>
-
-        {/* Expanded content */}
-        {methodologyOpen && (
-          <div style={{
-            padding: "16px 18px 18px",
-            background: "rgba(68,114,255,0.03)", border: "1px solid rgba(68,114,255,0.14)",
-            borderTop: "none", borderRadius: "0 0 10px 10px",
-          }}>
-            <div style={{ fontFamily: FONTS.body, fontSize: 12, color: T.secondary, lineHeight: 1.75, marginBottom: 14 }}>
-              A quantitative multi-pillar scoring system providing institutional investors with a systematic,
-              data-driven basis for allocation and position-sizing decisions across crypto and traditional assets —
-              updated every 30 minutes, comparable on a unified 0–100 scale.
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-              {[
-                {
-                  title: "Problem Solved",
-                  text: "Eliminates subjective analyst ratings. Algorithmic, reproducible scoring removes emotional bias and provides a continuous signal — not quarterly reviews.",
-                },
-                {
-                  title: "Methodology",
-                  text: "5 pillars: F (Fundamental) · M (Market Structure) · O (On-Chain Health) · S (Sentiment) · A (Alpha Independence). Absolute thresholds: A+≥85 → F<25. Percentile rank is metadata only.",
-                },
-                {
-                  title: "Institutional Application",
-                  text: "Grade A/B = strong composite signals across pillars. Grade C = mixed or deteriorating signals. Grade D/F = weak scores. Applicable across crypto and TradFi on unified methodology.",
-                },
-              ].map(card => (
-                <div key={card.title} style={{
-                  background: T.raised, border: `1px solid ${T.border}`,
-                  borderRadius: 8, padding: "12px 14px",
-                }}>
-                  <div style={{ fontFamily: FONTS.display, fontSize: 10, fontWeight: 700, color: T.primary, marginBottom: 6, letterSpacing: "0.04em" }}>{card.title}</div>
-                  <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.muted, lineHeight: 1.65 }}>{card.text}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Backtest Validation Strip */}
       {backtest && backtest.returns_by_grade && (
@@ -757,42 +736,70 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         </div>
       )}
 
-      {/* Grade Summary Cards */}
+      {/* Grade Summary — editorial: big letter, count, thin bar */}
       <div className="cis-grade-summary" style={{
-        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 18
+        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0,
+        marginBottom: 24, borderBottom: `1px solid rgba(37,99,235,0.08)`,
       }}>
         {[
-          { grade: "A", label: "Institutional", sub: "A+ · A", color: T.green, colorDim: "rgba(0,217,138,0.10)", borderColor: "rgba(0,217,138,0.22)" },
-          { grade: "B", label: "Investment Grade", sub: "B+ · B", color: "#4472FF", colorDim: "rgba(68,114,255,0.10)", borderColor: "rgba(68,114,255,0.22)" },
-          { grade: "C", label: "Speculative", sub: "C+ · C", color: T.amber, colorDim: "rgba(245,158,11,0.10)", borderColor: "rgba(245,158,11,0.22)" },
-          { grade: "D", label: "Underweight", sub: "D · F", color: T.red, colorDim: "rgba(255,61,90,0.10)", borderColor: "rgba(255,61,90,0.22)" },
+          { grade: "A", label: "Institutional",   sub: "A+ · A", color: T.green },
+          { grade: "B", label: "Investment Grade", sub: "B+ · B", color: "#4472FF" },
+          { grade: "C", label: "Speculative",      sub: "C+ · C", color: T.amber },
+          { grade: "D", label: "Underweight",      sub: "D · F",  color: T.red },
         ].map(g => {
           const count = g.grade === "A" ? gradeSummary.A : g.grade === "B" ? gradeSummary.B : g.grade === "C" ? gradeSummary.C : gradeSummary.D;
           const total = (gradeSummary.A || 0) + (gradeSummary.B || 0) + (gradeSummary.C || 0) + (gradeSummary.D || 0);
-          const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+          const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
+          const isActive = gradeFilter === g.grade;
           return (
-            <div key={g.grade} className="cis-grade-card" style={{
-              border: `1px solid ${g.borderColor}`,
-              borderLeft: `3px solid ${g.color}`,
-              borderRadius: 8,
-              padding: "12px 14px",
-              background: g.colorDim,
-              display: "flex", flexDirection: "column", gap: 6,
-            }}>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-                <span className="grade-letter" style={{ fontFamily: FONTS.display, fontSize: 14, fontWeight: 700, color: g.color, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                  {g.label}
-                </span>
-                <span className="grade-count" style={{ fontFamily: FONTS.mono, fontSize: 20, fontWeight: 700, color: g.color }}>
-                  {count}
-                </span>
+            <div key={g.grade}
+              className="cis-grade-card"
+              onClick={() => setGradeFilter(isActive ? "All" : g.grade)}
+              style={{
+                padding: "20px 24px 16px",
+                borderLeft: `2px solid ${isActive ? g.color : g.color + "28"}`,
+                borderRight: `1px solid rgba(37,99,235,0.06)`,
+                background: isActive ? `${g.color}05` : "transparent",
+                cursor: "pointer",
+                transition: "background .15s ease, border-color .15s ease",
+              }}
+              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = `${g.color}04`; }}
+              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+            >
+              {/* Grade letter — hero element */}
+              <div className="grade-letter" style={{
+                fontFamily: FONTS.mono, fontSize: 52, fontWeight: 400,
+                color: g.color, letterSpacing: "-0.04em", lineHeight: 1,
+                opacity: isActive ? 1 : 0.55,
+                transition: "opacity .15s ease",
+              }}>
+                {g.grade}
               </div>
-              <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
-                <div style={{ width: `${pct}%`, height: "100%", background: g.color, borderRadius: 1, opacity: 0.7, transition: "width .6s ease" }} />
+              {/* Count */}
+              <div className="grade-count" style={{
+                fontFamily: FONTS.mono, fontSize: 26, fontWeight: 400,
+                color: T.t1, letterSpacing: "-0.02em", lineHeight: 1, marginTop: 6,
+              }}>
+                {count}
               </div>
-              <div className="grade-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 9, color: T.muted, letterSpacing: "0.07em", fontFamily: FONTS.mono }}>{g.sub}</span>
-                <span style={{ fontSize: 9, color: T.muted, fontFamily: FONTS.mono }}>{pct}%</span>
+              {/* Label */}
+              <div className="grade-label" style={{
+                fontFamily: FONTS.mono, fontSize: 8, color: T.t3,
+                letterSpacing: "0.09em", textTransform: "uppercase",
+                marginTop: 8, opacity: 0.55,
+              }}>
+                {g.label}
+              </div>
+              {/* Progress bar */}
+              <div style={{ height: 1, background: "rgba(255,255,255,0.05)", marginTop: 12 }}>
+                <div style={{
+                  width: `${pct}%`, height: "100%",
+                  background: g.color, opacity: isActive ? 0.8 : 0.35,
+                  transition: "width .6s ease, opacity .15s ease",
+                }} />
+              </div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.4, marginTop: 5 }}>
+                {pct}%
               </div>
             </div>
           );
