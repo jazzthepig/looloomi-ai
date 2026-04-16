@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { T, FONTS } from "../tokens";
+import { T, FONTS, sigStyle as sigStyleFromTokens } from "../tokens";
 
 /* ─── Asset Universe ────────────────────────────────────────────────── */
 // "龙头标准" — top 3 per category by on-chain verifiable data.
@@ -77,15 +77,8 @@ const CAT_STYLE = {
 };
 const catStyle = (cat) => CAT_STYLE[cat] || CAT_STYLE.L1;
 
-/* ─── Signal Styles (CIS v4.1 — compliance-safe positioning signals) ── */
-const SIG_STYLE = {
-  "STRONG OUTPERFORM": { color: T.green, bg: "rgba(0,232,122,0.14)",  border: "rgba(0,232,122,0.3)" },
-  OUTPERFORM:          { color: T.green, bg: "rgba(0,232,122,0.09)",  border: "rgba(0,232,122,0.2)" },
-  NEUTRAL:             { color: T.gold,  bg: "rgba(200,168,75,0.09)", border: "rgba(200,168,75,0.2)" },
-  UNDERPERFORM:        { color: T.red,   bg: "rgba(255,61,90,0.09)",  border: "rgba(255,61,90,0.2)" },
-  UNDERWEIGHT:         { color: T.red,   bg: "rgba(255,61,90,0.14)",  border: "rgba(255,61,90,0.3)" },
-};
-const sigStyle = (sig) => SIG_STYLE[sig] || SIG_STYLE.NEUTRAL;
+/* ─── Signal style from shared tokens ─────────────────────────────── */
+const sigStyle = sigStyleFromTokens;
 
 /* ─── Grade Styles ────────────────────────────────────────────────── */
 const GRADE_STYLE = {
@@ -350,7 +343,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "12px 18px", borderBottom: `1px solid ${T.border}`,
-          background: "rgba(13,32,56,0.5)", gap: 10, overflow: "hidden",
+          background: T.raised, gap: 10, overflow: "hidden",
         }}>
           {/* Title */}
           <div style={{
@@ -564,14 +557,16 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                           )}
                         </td>
 
-                        {/* Signal (from CIS, not calculated) */}
+                        {/* Signal — badge */}
                         <td style={{ textAlign: "center", padding: "9px 14px" }}>
                           {cis ? (
                             <span style={{
-                              fontFamily: FONTS.display, fontSize: 9, fontWeight: 600,
-                              letterSpacing: "0.05em",
-                              color: ss.color,
-                              textTransform: "uppercase", whiteSpace: "nowrap",
+                              fontFamily: FONTS.display, fontSize: 8, fontWeight: 700,
+                              letterSpacing: "0.04em", whiteSpace: "nowrap",
+                              color: ss.color, background: ss.bg,
+                              border: `1px solid ${ss.border}`,
+                              padding: "3px 6px", borderRadius: 3,
+                              display: "inline-block",
                             }}>
                               {signal}
                             </span>
