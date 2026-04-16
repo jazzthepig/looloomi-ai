@@ -40,7 +40,7 @@ const ScoreBreakdown = ({ scores }) => {
             style={{ display: "flex", alignItems: "center", gap: 5, cursor: "default" }}
           >
             <span style={{
-              fontFamily: "JetBrains Mono, monospace", fontSize: 8, fontWeight: 600,
+              fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600,
               color: c.color, opacity: 0.7, width: 32, flexShrink: 0,
               letterSpacing: "-0.01em",
             }}>{c.short}</span>
@@ -54,7 +54,7 @@ const ScoreBreakdown = ({ scores }) => {
               }} />
             </div>
             <span style={{
-              fontFamily: "JetBrains Mono, monospace", fontSize: 9,
+              fontFamily: FONTS.mono, fontSize: 9,
               color: "rgba(199,210,254,0.5)", width: 14, textAlign: "right", flexShrink: 0,
             }}>{val}</span>
           </div>
