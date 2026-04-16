@@ -67,67 +67,89 @@ function EquityCard({ equity, starting, dailyPnl, stale, updated }) {
   const dailyColor = typeof dailyPnl === "number" ? (dailyPnl >= 0 ? T.green : T.red) : T.t3;
 
   return (
-    <div className="quant-card fade-up" style={{ padding: "20px 24px", marginBottom: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".1em", color: T.secondary, textTransform: "uppercase" }}>Dry Run · BTC/ETH/SOL</span>
-          <span className={`badge ${stale ? "badge-stale" : "badge-live"}`}>
-            {stale ? "STALE" : "LIVE"}
-          </span>
-        </div>
-        {updated && (
-          <span style={{ fontSize: 10, fontFamily: FONTS.mono, color: T.t3 }}>
-            {fmtTime(updated)}
-          </span>
-        )}
-      </div>
+    <div className="fade-up" style={{
+      paddingBottom: 24, marginBottom: 24,
+      borderBottom: `1px solid rgba(37,99,235,0.08)`,
+      position: "relative",
+    }}>
+      {/* Ambient glow */}
+      <div style={{
+        position: "absolute", top: -16, left: -32, width: "40%", bottom: 0,
+        background: `radial-gradient(ellipse 80% 100% at 0% 50%, ${pnlColor}08, transparent 75%)`,
+        pointerEvents: "none",
+      }} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
-        <div className="stat-card">
-          <div className="stat-label">Equity</div>
-          <div className="stat-value" style={{ color: equity >= starting ? T.green : T.red }}>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 0, flexWrap: "wrap", position: "relative" }}>
+        {/* Equity */}
+        <div style={{ paddingRight: 36, paddingBottom: 4 }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.22em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
+            Equity
+          </div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 38, fontWeight: 400, color: equity >= starting ? T.green : T.red, letterSpacing: "-0.025em", lineHeight: 1 }}>
             ${typeof equity === "number" ? equity.toFixed(2) : "—"}
           </div>
-          <div className="stat-sub" style={{ color: pnlColor }}>{fmtPct(totalPnl)} total</div>
+          {totalPnl != null && (
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, marginTop: 7, color: pnlColor }}>
+              {fmtPct(totalPnl)} total
+            </div>
+          )}
         </div>
-        <div className="stat-card">
-          <div className="stat-label">Daily P&L</div>
-          <div className="stat-value" style={{ fontSize: 22, color: dailyColor }}>
+
+        {/* Divider */}
+        <div style={{ width: 1, height: 48, background: "rgba(37,99,235,0.12)", marginRight: 36, marginBottom: 8, flexShrink: 0 }} />
+
+        {/* Daily P&L */}
+        <div style={{ paddingRight: 36, paddingBottom: 4 }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>Daily P&amp;L</div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: dailyColor, letterSpacing: "-0.02em", lineHeight: 1 }}>
             {typeof dailyPnl === "number" ? fmtPct(dailyPnl) : "—"}
           </div>
-          <div className="stat-sub" style={{ color: dailyColor }}>
-            {typeof dailyPnl === "number" ? fmtAbs(dailyPnl * starting / 100) : ""}
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, marginTop: 7, color: dailyColor, opacity: 0.75 }}>
+            {typeof dailyPnl === "number" ? fmtAbs(dailyPnl * starting / 100) : "—"}
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-label">Starting</div>
-          <div className="stat-value" style={{ fontSize: 22, color: T.t2 }}>
-            ${starting > 0 ? starting.toFixed(2) : "—"}
+
+        {/* Starting */}
+        <div style={{ paddingRight: 36, paddingBottom: 4 }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>Starting</div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.t2, letterSpacing: "-0.02em", lineHeight: 1 }}>
+            ${starting > 0 ? starting.toFixed(0) : "—"}
           </div>
-          <div className="stat-sub">USDT paper</div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, marginTop: 7, color: T.t3, opacity: 0.6 }}>USDT paper</div>
+        </div>
+
+        {/* Status indicator — far right */}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, paddingBottom: 8 }}>
+          <span style={{
+            width: 5, height: 5, borderRadius: "50%",
+            background: stale ? T.amber : T.green, flexShrink: 0,
+            boxShadow: `0 0 6px ${stale ? T.amber : T.green}`,
+            animation: stale ? "none" : "blink 2.2s ease-in-out infinite",
+          }} />
+          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: stale ? T.amber : T.t3, letterSpacing: "0.10em", opacity: 0.7 }}>
+            {stale ? "STALE" : "DRY RUN · BTC/ETH/SOL"}
+          </span>
+          {updated && (
+            <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.45 }}>
+              · {fmtTime(updated)}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Equity progress bar */}
+      {/* P&L thin progress bar */}
       {starting > 0 && totalPnl != null && (
-        <div style={{ marginTop: 8 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <span style={{ fontSize: 10, color: T.t3, fontFamily: FONTS.mono }}>P&L</span>
-            <span style={{ fontSize: 10, color: pnlColor, fontFamily: FONTS.mono }}>{fmtPct(totalPnl)}</span>
-          </div>
-          <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
-            <div style={{
-              height: "100%",
-              width: `${Math.min(100, Math.max(0, 50 + totalPnl))}%`,
-              background: totalPnl >= 0
-                ? `linear-gradient(90deg, ${T.green}40, ${T.green})`
-                : `linear-gradient(90deg, ${T.red}, ${T.red}40)`,
-              borderRadius: 2,
-              transition: "width .5s ease",
-            }} />
-          </div>
+        <div style={{ marginTop: 16, height: 2, background: "rgba(255,255,255,0.05)", borderRadius: 1 }}>
+          <div style={{
+            height: "100%",
+            width: `${Math.min(100, Math.max(0, 50 + totalPnl / 2))}%`,
+            background: pnlColor, borderRadius: 1, opacity: 0.5,
+            transition: "width .5s ease",
+          }} />
         </div>
       )}
+
+      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }`}</style>
     </div>
   );
 }
@@ -180,60 +202,54 @@ function OpenTradeRow({ trade }) {
 /* ─── Backtest Card ─────────────────────────────────────────────────── */
 function BacktestCard({ data }) {
   if (!data) return null;
-  const { spot, leveraged_3x, smc_enhanced, key_findings, strategy_upgrade_direction } = data;
+  const { spot, leveraged_3x, smc_enhanced, key_findings } = data;
   const lev = leveraged_3x?.summary;
 
   return (
-    <div className="quant-card fade-up" style={{ marginBottom: 16 }}>
-      <div style={{
-        padding: "12px 16px",
-        borderBottom: `1px solid ${T.border}`,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".08em", color: T.secondary, textTransform: "uppercase" }}>
-          Backtest · 14 Months
+    <div className="fade-up" style={{ marginBottom: 24, paddingBottom: 24, borderBottom: `1px solid rgba(37,99,235,0.08)` }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.08)` }}>
+        <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
+          Backtest
         </span>
-        <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t3 }}>{data.strategy}</span>
+        <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>
+          14 months · {data.strategy}
+        </span>
+        <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.green, opacity: 0.7, marginLeft: "auto" }}>{data.status}</span>
       </div>
 
-      {/* Key metrics row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
-        <div style={{ padding: "14px 16px", borderRight: `1px solid ${T.border}` }}>
-          <div className="stat-label">Total Return</div>
-          <div className="stat-value" style={{ fontSize: 22, color: lev && lev.total_return >= 0 ? T.green : T.red }}>
-            {lev ? `+${lev.total_return}%` : "—"}
+      {/* Key metrics — inline strip */}
+      <div style={{ display: "flex", gap: 0, flexWrap: "wrap", marginBottom: 16 }}>
+        {[
+          { label: "Total Return", value: lev ? `+${lev.total_return}%` : "—", sub: "3× leveraged", color: lev && lev.total_return >= 0 ? T.green : T.red },
+          { label: "Annualized",   value: lev?.annualized ? `${lev.annualized}%` : "—", sub: "CAGR", color: T.green },
+          { label: "Win Rate",     value: spot?.summary?.win_rate != null ? `${spot.summary.win_rate}%` : "—", sub: `${spot?.summary?.trades ?? "—"} trades`, color: T.green },
+          { label: "Median Return",value: spot?.summary?.median_return ? `${spot.summary.median_return}%` : "—", sub: "per trade", color: T.cyan },
+        ].map((s, i, arr) => (
+          <div key={i} style={{
+            paddingRight: 32,
+            borderRight: i < arr.length - 1 ? `1px solid rgba(37,99,235,0.10)` : "none",
+            marginRight: i < arr.length - 1 ? 32 : 0,
+            paddingBottom: 4,
+          }}>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 8, opacity: 0.6 }}>{s.label}</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 22, fontWeight: 400, color: s.color, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 5 }}>{s.value}</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, opacity: 0.6 }}>{s.sub}</div>
           </div>
-          <div className="stat-sub">3× leveraged</div>
-        </div>
-        <div style={{ padding: "14px 16px", borderRight: `1px solid ${T.border}` }}>
-          <div className="stat-label">Annualized</div>
-          <div className="stat-value" style={{ fontSize: 22, color: T.green }}>{lev?.annualized ? `${lev.annualized}%` : "—"}</div>
-          <div className="stat-sub">CAGR</div>
-        </div>
-        <div style={{ padding: "14px 16px", borderRight: `1px solid ${T.border}` }}>
-          <div className="stat-label">Win Rate</div>
-          <div className="stat-value" style={{ fontSize: 22, color: T.green }}>{spot?.summary?.win_rate ?? "—"}%</div>
-          <div className="stat-sub">{spot?.summary?.trades} trades</div>
-        </div>
-        <div style={{ padding: "14px 16px" }}>
-          <div className="stat-label">Median Return</div>
-          <div className="stat-value" style={{ fontSize: 22, color: T.cyan }}>{spot?.summary?.median_return ? `${spot.summary.median_return}%` : "—"}</div>
-          <div className="stat-sub">per trade</div>
-        </div>
+        ))}
       </div>
 
-      {/* Per-asset performance */}
+      {/* Per-asset */}
       {lev?.by_asset && (
-        <div style={{ padding: "10px 16px", borderTop: `1px solid ${T.border}` }}>
-          <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: T.t3, marginBottom: 8, fontFamily: FONTS.display }}>By Asset</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, marginBottom: 8, opacity: 0.6 }}>By Asset</div>
+          <div style={{ display: "flex", gap: 24 }}>
             {lev.by_asset.map(a => (
-              <div key={a.asset} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 6, padding: "8px 10px" }}>
-                <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 600, color: T.t1 }}>{a.asset}</div>
-                <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: a.return >= 0 ? T.green : T.red, marginTop: 2 }}>
+              <div key={a.asset}>
+                <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 600, color: T.t2, marginBottom: 3 }}>{a.asset}</div>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: a.return >= 0 ? T.green : T.red }}>
                   {a.return >= 0 ? "+" : ""}{a.return}%
                 </div>
-                <div style={{ fontSize: 9, color: T.t3, marginTop: 2 }}>{a.trades} trades · {a.win_rate}% WR</div>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, opacity: 0.6, marginTop: 2 }}>{a.trades}t · {a.win_rate}% WR</div>
               </div>
             ))}
           </div>
@@ -242,11 +258,11 @@ function BacktestCard({ data }) {
 
       {/* Key findings */}
       {key_findings && key_findings.length > 0 && (
-        <div style={{ padding: "10px 16px", borderTop: `1px solid ${T.border}` }}>
-          <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: T.t3, marginBottom: 6, fontFamily: FONTS.display }}>Key Findings</div>
+        <div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, marginBottom: 6, opacity: 0.6 }}>Key Findings</div>
           {key_findings.map((f, i) => (
-            <div key={i} style={{ fontSize: 10, fontFamily: FONTS.mono, color: T.t2, marginBottom: 3, display: "flex", gap: 6 }}>
-              <span style={{ color: T.primary }}>›</span>{f}
+            <div key={i} style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t2, marginBottom: 4, display: "flex", gap: 8 }}>
+              <span style={{ color: T.t3, opacity: 0.5 }}>›</span>{f}
             </div>
           ))}
         </div>
@@ -254,27 +270,16 @@ function BacktestCard({ data }) {
 
       {/* SMC Enhanced */}
       {smc_enhanced && (
-        <div style={{ padding: "10px 16px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid rgba(37,99,235,0.08)`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <span style={{ fontSize: 10, fontFamily: FONTS.display, fontWeight: 600, color: T.cyan }}>SMC Enhanced</span>
-            <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t3, marginLeft: 8 }}>
+            <span style={{ fontFamily: FONTS.display, fontSize: 10, fontWeight: 600, color: T.cyan }}>SMC Enhanced</span>
+            <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, marginLeft: 8 }}>
               {smc_enhanced.summary.trades} trades · {smc_enhanced.summary.win_rate}% WR · median {smc_enhanced.summary.median_return}%
             </span>
           </div>
-          <div style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.green }}>{smc_enhanced.vs_original?.avg_return_improvement} avg return</div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.green }}>{smc_enhanced.vs_original?.avg_return_improvement} avg return</div>
         </div>
       )}
-
-      {/* Status badge */}
-      <div style={{ padding: "8px 16px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{
-          fontSize: 9, fontFamily: FONTS.mono, fontWeight: 600,
-          padding: "2px 7px", borderRadius: 3,
-          background: "rgba(0,232,122,.10)", color: T.green,
-          border: `1px solid rgba(0,232,122,.2)`,
-        }}>{data.status}</span>
-        <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t3 }}>{data.description}</span>
-      </div>
     </div>
   );
 }
@@ -326,16 +331,13 @@ function TradeHistoryRow({ trade }) {
 /* ─── Skeleton ──────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
-    <div className="quant-card" style={{ padding: "20px 24px", marginBottom: 16 }}>
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-        <div className="sk" style={{ height: 18, width: 120 }} />
-        <div className="sk" style={{ height: 18, width: 60 }} />
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-        {[0, 1, 2].map(i => (
-          <div key={i} style={{ padding: 16, background: "rgba(255,255,255,0.03)", borderRadius: 8 }}>
-            <div className="sk" style={{ height: 10, width: 60, marginBottom: 8 }} />
-            <div className="sk" style={{ height: 28, width: 100 }} />
+    <div style={{ paddingBottom: 24, marginBottom: 24, borderBottom: `1px solid rgba(37,99,235,0.08)` }}>
+      <div style={{ display: "flex", gap: 40 }}>
+        {[90, 70, 60].map((w, i) => (
+          <div key={i}>
+            <div className="sk" style={{ height: 8, width: 40, marginBottom: 10 }} />
+            <div className="sk" style={{ height: 36, width: w }} />
+            <div className="sk" style={{ height: 8, width: 30, marginTop: 8 }} />
           </div>
         ))}
       </div>
@@ -367,50 +369,33 @@ export default function QuantMonitor() {
   const closedTrades = (trades?.trades || []).slice(0, 30);
 
   return (
-    <div style={{ minHeight: "100vh", background: T.void, color: T.t1, padding: "0 0 48px" }}>
+    <div style={{ color: T.t1, padding: "0 0 32px" }}>
       <style>{CSS}</style>
 
-      {/* Ambient background */}
-      <div className="turrell-wrap">
-        <div className="t-orb t-orb-1" />
-        <div className="t-orb t-orb-2" />
-        <div className="t-orb t-orb-3" />
-      </div>
-
-      {/* Header */}
+      {/* Header — minimal */}
       <div style={{
-        position: "sticky", top: 0, zIndex: 10,
-        background: "rgba(3,5,8,.88)", backdropFilter: "blur(16px)",
-        borderBottom: `1px solid ${T.border}`,
-        padding: "12px 20px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
+        paddingBottom: 24, marginBottom: 4,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontFamily: FONTS.display, fontSize: 14, fontWeight: 700, letterSpacing: ".08em", color: T.primary }}>
-            QUANT MONITOR
+          <span style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em", color: T.t1 }}>
+            Quant Monitor
           </span>
-          <span style={{
-            fontSize: 9, fontFamily: FONTS.mono, fontWeight: 600,
-            padding: "2px 7px", borderRadius: 3,
-            background: "rgba(0,232,122,.10)", color: T.green,
-            border: `1px solid rgba(0,232,122,.2)`,
-            letterSpacing: ".08em",
-          }}>DRY RUN</span>
+          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, letterSpacing: "0.10em", opacity: 0.5 }}>
+            · Freqtrade dry run
+          </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: stale ? T.amber : T.green }} className={stale ? "" : "pulse-dot"} />
-          <span style={{ fontSize: 10, color: stale ? T.amber : T.green, fontFamily: FONTS.mono }}>
-            {stale ? "STALE" : "CONNECTED"}
-          </span>
+          <div style={{ width: 5, height: 5, borderRadius: "50%", background: stale ? T.amber : T.green }} className={stale ? "" : "pulse-dot"} />
           <button
             onClick={fetchData}
             style={{
-              background: "transparent", border: `1px solid ${T.border}`,
-              borderRadius: 5, padding: "4px 8px", cursor: "pointer",
+              background: "transparent", border: `1px solid rgba(37,99,235,0.14)`,
+              borderRadius: 4, padding: "3px 7px", cursor: "pointer",
               color: T.t3, display: "flex", alignItems: "center",
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={loading ? "spinner" : ""}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={loading ? "spinner" : ""}>
               <path d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
             </svg>
           </button>
@@ -418,7 +403,7 @@ export default function QuantMonitor() {
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 16px" }}>
+      <div>
 
         {/* Equity + Stats */}
         {loading ? <SkeletonCard /> : (
@@ -434,35 +419,24 @@ export default function QuantMonitor() {
         {/* Backtest Results */}
         {!loading && <BacktestCard data={data.backtest} />}
 
-        {/* Open Trades */}
-        <div className="quant-card fade-up" style={{ marginBottom: 16 }}>
-          <div style={{
-            padding: "12px 16px",
-            borderBottom: `1px solid ${T.border}`,
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".08em", color: T.secondary, textTransform: "uppercase" }}>
+        {/* Open Positions */}
+        <div className="fade-up" style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
+            <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
               Open Positions
             </span>
-            <span style={{ fontSize: 10, fontFamily: FONTS.mono, color: T.t3 }}>{openTrades.length} active</span>
+            <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>{openTrades.length} active</span>
           </div>
 
-          {openTrades.length === 0 ? (
-            <div style={{ padding: "24px", textAlign: "center", color: T.t3, fontSize: 12, fontFamily: FONTS.mono }}>
-              No open positions
-            </div>
-          ) : (
+          {openTrades.length === 0 ? null : (
             <div>
-              {/* Header */}
               <div style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 80px 80px 80px 60px",
-                gap: 8,
-                padding: "6px 16px",
-                borderBottom: `1px solid ${T.border}`,
+                display: "grid", gridTemplateColumns: "1fr 80px 80px 80px 60px",
+                gap: 8, padding: "0 0 6px",
+                borderBottom: `1px solid rgba(37,99,235,0.08)`,
               }}>
                 {["Pair", "Entry", "Current", "P&L", "Side"].map(h => (
-                  <div key={h} style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: T.t3, fontFamily: FONTS.display, textAlign: h === "Pair" ? "left" : "right" }}>{h}</div>
+                  <div key={h} style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, opacity: 0.5, textAlign: h === "Pair" ? "left" : "right" }}>{h}</div>
                 ))}
               </div>
               {openTrades.map((t, i) => <OpenTradeRow key={t.trade_id || i} trade={t} />)}
@@ -471,34 +445,23 @@ export default function QuantMonitor() {
         </div>
 
         {/* Trade History */}
-        <div className="quant-card fade-up">
-          <div style={{
-            padding: "12px 16px",
-            borderBottom: `1px solid ${T.border}`,
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".08em", color: T.secondary, textTransform: "uppercase" }}>
+        <div className="fade-up" style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
+            <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
               Trade History
             </span>
-            <span style={{ fontSize: 10, fontFamily: FONTS.mono, color: T.t3 }}>{closedTrades.length} recent</span>
+            <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>{closedTrades.length} recent</span>
           </div>
 
-          {closedTrades.length === 0 ? (
-            <div style={{ padding: "24px", textAlign: "center", color: T.t3, fontSize: 12, fontFamily: FONTS.mono }}>
-              No closed trades yet
-            </div>
-          ) : (
+          {closedTrades.length === 0 ? null : (
             <div>
-              {/* Header */}
               <div style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 80px 80px 70px",
-                gap: 8,
-                padding: "6px 16px",
-                borderBottom: `1px solid ${T.border}`,
+                display: "grid", gridTemplateColumns: "1fr 80px 80px 70px",
+                gap: 8, padding: "0 0 6px",
+                borderBottom: `1px solid rgba(37,99,235,0.08)`,
               }}>
                 {["Pair", "Entry", "Exit", "P&L"].map(h => (
-                  <div key={h} style={{ fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: T.t3, fontFamily: FONTS.display, textAlign: h === "Pair" ? "left" : "right" }}>{h}</div>
+                  <div key={h} style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, opacity: 0.5, textAlign: h === "Pair" ? "left" : "right" }}>{h}</div>
                 ))}
               </div>
               {closedTrades.map((t, i) => <TradeHistoryRow key={t.trade_id || i} trade={t} />)}
@@ -507,7 +470,7 @@ export default function QuantMonitor() {
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: 24, textAlign: "center", color: T.t3, fontSize: 10, fontFamily: FONTS.mono, opacity: 0.5 }}>
+        <div style={{ paddingTop: 16, borderTop: `1px solid rgba(37,99,235,0.06)`, color: T.t3, fontSize: 9, fontFamily: FONTS.mono, opacity: 0.4, letterSpacing: "0.08em" }}>
           CometCloud Quant · Dry Run · Paper Trading · 10,000 USDT
         </div>
       </div>

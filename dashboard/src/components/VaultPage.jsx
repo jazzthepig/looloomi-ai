@@ -351,22 +351,23 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
           </span>
         </div>
 
-        {/* Stats Summary */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 24 }}>
+        {/* Stats strip — flat, no cards */}
+        <div style={{ display: "flex", gap: 0, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid rgba(37,99,235,0.08)` }}>
           {[
-            { label: "Active GPs", value: stats.totalFunds, icon: Users, color: T.blue },
-            { label: "Total AUM", value: formatAUM(stats.totalAUM), icon: DollarSign, color: T.green },
-            { label: "Avg Score", value: stats.avgScore, icon: TrendingUp, color: T.purple },
-            { label: "Grade A", value: stats.gradeA, icon: Shield, color: T.green },
-          ].map((s, i) => (
-            <div key={i} className="lm-stat-card" style={{ padding: "16px 20px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <s.icon size={14} color={s.color} />
-                <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  {s.label}
-                </div>
+            { label: "Active GPs",  value: stats.totalFunds,         color: T.blue },
+            { label: "Total AUM",   value: formatAUM(stats.totalAUM), color: T.t2  },
+            { label: "Avg Score",   value: stats.avgScore,            color: T.t2  },
+            { label: "Grade A",     value: stats.gradeA,              color: T.green },
+          ].map((s, i, arr) => (
+            <div key={i} style={{
+              paddingRight: 32,
+              borderRight: i < arr.length - 1 ? `1px solid rgba(37,99,235,0.10)` : "none",
+              marginRight: i < arr.length - 1 ? 32 : 0,
+            }}>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 8, opacity: 0.6 }}>
+                {s.label}
               </div>
-              <div style={{ fontSize: 24, fontWeight: 600, color: s.color, fontFamily: FONTS.mono }}>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 24, fontWeight: 400, color: s.color, letterSpacing: "-0.02em", lineHeight: 1 }}>
                 {s.value}
               </div>
             </div>
