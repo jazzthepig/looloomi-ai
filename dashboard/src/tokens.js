@@ -64,4 +64,15 @@ export const T = {
   cyanDim:    "rgba(6,182,212,0.08)",
   purple:     "#818cf8",
   pink:       "#EC4899",
+  violet:     "#7C3AED",
 };
+
+/* ─── CIS Positioning Signal Styles — shared across all components ─────── */
+export const SIG_STYLE = {
+  "STRONG OUTPERFORM": { color: "#00D98A", bg: "rgba(0,217,138,0.14)", border: "rgba(0,217,138,0.30)" },
+  OUTPERFORM:          { color: "#00D98A", bg: "rgba(0,217,138,0.09)", border: "rgba(0,217,138,0.18)" },
+  NEUTRAL:             { color: "#d4a843", bg: "rgba(212,168,67,0.09)", border: "rgba(212,168,67,0.20)" },
+  UNDERPERFORM:        { color: "#FF3D5A", bg: "rgba(255,61,90,0.09)", border: "rgba(255,61,90,0.18)" },
+  UNDERWEIGHT:         { color: "#FF3D5A", bg: "rgba(255,61,90,0.14)", border: "rgba(255,61,90,0.28)" },
+};
+export const sigStyle = (sig) => SIG_STYLE[(sig || "").toUpperCase()] || SIG_STYLE.NEUTRAL;

@@ -89,7 +89,7 @@ const SkeletonPulse = () => (
   <div style={{
     borderRadius: 13,
     border: `1px solid ${T.border}`,
-    background: "linear-gradient(135deg, rgba(10,14,24,.98), rgba(6,9,15,.98))",
+    background: "rgba(7,26,74,0.55)",
     marginBottom: 18,
     overflowX: "auto",
     overflowY: "hidden",
@@ -197,7 +197,7 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
       <div style={{
         borderRadius: 13,
         border: "1px solid rgba(255,61,90,0.3)",
-        background: "linear-gradient(135deg, rgba(10,14,24,.98), rgba(6,9,15,.98))",
+        background: "rgba(7,26,74,0.55)",
         marginBottom: 18,
         overflow: "hidden",
         height: 120,
@@ -219,7 +219,9 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
       style={{
         borderRadius: 13,
         border: `1px solid ${regimeConfig.borderColor}`,
-        background: "linear-gradient(135deg, rgba(10,14,24,.98), rgba(6,9,15,.98))",
+        background: "rgba(7,26,74,0.55)",
+        backdropFilter: "blur(24px)",
+        boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 40px rgba(0,0,0,0.36)",
         marginBottom: 18,
         overflowX: "auto",
         overflowY: "hidden",
@@ -259,7 +261,7 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
         alignItems: "center",
         padding: "20px 26px",
         gap: 0,
-        minWidth: 580,
+        minWidth: 680,
       }}>
         {/* Market Regime */}
         <div style={{ paddingRight: 26 }}>
@@ -298,91 +300,66 @@ export default function MacroPulse({ refreshTrigger = 0, onRefresh }) {
         {/* Divider */}
         <div style={{ width: 1, height: 80, background: T.border }} />
 
-        {/* Metrics */}
+        {/* Metrics — 4 stats: BTC Price · Dom · F&G · MCap 24h */}
         <div style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-around",
-          padding: "0 30px",
-          gap: 12,
+          padding: "0 24px",
+          gap: 8,
         }}>
+          {/* BTC Price */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <div style={{ fontSize: 8, letterSpacing: "0.16em", color: T.t3, fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
+              BTC Price
+            </div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 19, fontWeight: 400, color: T.t1, letterSpacing: "-0.02em" }}>
+              {btcData?.usd != null
+                ? "$" + btcData.usd.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+                : "—"}
+            </div>
+            {btcData?.usd_24h_change != null && (
+              <div style={{ fontSize: 9, fontFamily: FONTS.mono, color: btcData.usd_24h_change >= 0 ? T.green : T.red }}>
+                {btcData.usd_24h_change >= 0 ? "+" : ""}{btcData.usd_24h_change.toFixed(1)}%
+              </div>
+            )}
+          </div>
+
+          <div style={{ width: 1, height: 44, background: T.border }} />
+
           {/* BTC Dominance */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-            <div style={{
-              fontSize: 8,
-              letterSpacing: "0.16em",
-              color: T.t3,
-              fontFamily: FONTS.display,
-              fontWeight: 600,
-              textTransform: "uppercase",
-            }}>
-              BTC Dominance
+            <div style={{ fontSize: 8, letterSpacing: "0.16em", color: T.t3, fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
+              BTC Dom
             </div>
-            <div style={{
-              fontFamily: FONTS.mono,
-              fontSize: 19,
-              fontWeight: 400,
-              color: T.t1,
-              letterSpacing: "-0.02em",
-            }}>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 19, fontWeight: 400, color: T.t1, letterSpacing: "-0.02em" }}>
               {btcDominance.toFixed(1)}%
             </div>
           </div>
 
-          <div style={{ width: 1, height: 36, background: T.border }} />
+          <div style={{ width: 1, height: 44, background: T.border }} />
 
           {/* Fear & Greed */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-            <div style={{
-              fontSize: 8,
-              letterSpacing: "0.16em",
-              color: T.t3,
-              fontFamily: FONTS.display,
-              fontWeight: 600,
-              textTransform: "uppercase",
-            }}>
+            <div style={{ fontSize: 8, letterSpacing: "0.16em", color: T.t3, fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
               Fear & Greed
             </div>
-            <div style={{
-              fontFamily: FONTS.mono,
-              fontSize: 19,
-              fontWeight: 400,
-              color: getFngColor(fngValue),
-              letterSpacing: "-0.02em",
-            }}>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 19, fontWeight: 400, color: getFngColor(fngValue), letterSpacing: "-0.02em" }}>
               {fngValue !== null ? fngValue : "—"}
-              <span style={{
-                fontSize: 9,
-                letterSpacing: "0.04em",
-                color: T.t3,
-                marginLeft: 8,
-              }}>
-                {fngLabel}
-              </span>
+            </div>
+            <div style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t3, letterSpacing: "0.02em" }}>
+              {fngLabel}
             </div>
           </div>
 
-          <div style={{ width: 1, height: 36, background: T.border }} />
+          <div style={{ width: 1, height: 44, background: T.border }} />
 
-          {/* Total Market Cap */}
+          {/* Total MCap 24h */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-            <div style={{
-              fontSize: 8,
-              letterSpacing: "0.16em",
-              color: T.t3,
-              fontFamily: FONTS.display,
-              fontWeight: 600,
-              textTransform: "uppercase",
-            }}>
-              Total MCap 24h
+            <div style={{ fontSize: 8, letterSpacing: "0.16em", color: T.t3, fontFamily: FONTS.display, fontWeight: 600, textTransform: "uppercase" }}>
+              MCap 24h
             </div>
-            <div style={{
-              fontFamily: FONTS.mono,
-              fontSize: 19,
-              fontWeight: 400,
-              color: totalMarketCapChange >= 0 ? T.green : T.red,
-              letterSpacing: "-0.02em",
-            }}>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 19, fontWeight: 400, color: totalMarketCapChange >= 0 ? T.green : T.red, letterSpacing: "-0.02em" }}>
               {totalMarketCapChange >= 0 ? "+" : ""}{totalMarketCapChange.toFixed(1)}%
             </div>
           </div>

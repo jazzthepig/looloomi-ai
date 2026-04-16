@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense, useMemo } from "react";
-import { T, FONTS } from "../tokens";
+import { T, FONTS, sigStyle } from "../tokens";
 
 const CISCompare = lazy(() => import("./CISCompare"));
 
@@ -982,14 +982,21 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   color: (item.las ?? 0) >= 60 ? "#00E87A" : (item.las ?? 0) >= 40 ? T.muted : "#FF3D5A" }}>
                   {item.las != null ? item.las.toFixed(1) : "—"}
                 </span>
-                {/* Signal */}
-                <span style={{
-                  fontFamily: FONTS.display, fontSize: 7, fontWeight: 700,
-                  letterSpacing: "0.04em", textAlign: "center", whiteSpace: "nowrap",
-                  color: (item.signal || "").includes("OUTPERFORM") ? "#00E87A" : (item.signal || "").includes("UNDER") ? "#FF3D5A" : "#F59E0B",
-                }}>
-                  {item.signal || "NEUTRAL"}
-                </span>
+                {/* Signal — badge */}
+                {(() => {
+                  const ss = sigStyle(item.signal);
+                  return (
+                    <span style={{
+                      fontFamily: FONTS.display, fontSize: 7, fontWeight: 700,
+                      letterSpacing: "0.04em", textAlign: "center", whiteSpace: "nowrap",
+                      color: ss.color, background: ss.bg,
+                      border: `1px solid ${ss.border}`,
+                      padding: "2px 5px", borderRadius: 3, display: "inline-block",
+                    }}>
+                      {item.signal || "NEUTRAL"}
+                    </span>
+                  );
+                })()}
                 {/* 7D Sparkline */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Sparkline scores={sparkData} width={72} height={24} />
