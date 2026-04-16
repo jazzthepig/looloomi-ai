@@ -1,25 +1,24 @@
 import { useState, useEffect } from "react";
-import { Activity, Clock, Cpu } from "lucide-react";
 import { T, FONTS } from "../tokens";
 
 const API_BASE = "/api/v1";
 
 function formatAge(seconds) {
-  if (!seconds || seconds < 0) return "—";
+  if (!seconds || seconds < 0) return null;
   if (seconds < 3600) return `${Math.round(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.round(seconds / 3600)}h ago`;
   return `${Math.round(seconds / 86400)}d ago`;
 }
 
 export default function MacroBrief() {
-  const [data, setData] = useState(null);
+  const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     const fetchBrief = async () => {
       try {
-        const res = await fetch(`${API_BASE}/macro/brief`);
+        const res  = await fetch(`${API_BASE}/macro/brief`);
         const json = await res.json();
         setData(json);
       } catch (e) {
@@ -29,156 +28,80 @@ export default function MacroBrief() {
       }
     };
     fetchBrief();
-    // Refresh every 10 minutes
     const interval = setInterval(fetchBrief, 600_000);
     return () => clearInterval(interval);
   }, []);
 
-  // No brief yet — show placeholder
-  if (loading) {
-    return (
-      <div style={{
-        background: "rgba(7,26,74,0.55)",
-        border: `1px solid ${T.border}`,
-        borderRadius: 10,
-        padding: "20px 24px",
-        backdropFilter: "blur(20px)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-          <Activity size={14} color={T.cyan} />
-          <span style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.display, letterSpacing: ".08em", textTransform: "uppercase" }}>
-            Macro Brief
-          </span>
-        </div>
-        <div style={{ height: 16, width: 200, background: "linear-gradient(90deg,rgba(14,30,56,0.8) 30%,rgba(18,38,72,0.9) 50%,rgba(14,30,56,0.8) 70%)", backgroundSize: "400px 100%", borderRadius: 4, animation: "shimmer 1.8s ease infinite" }} />
-      </div>
-    );
-  }
+  // Nothing to show — no box, no placeholder, just gone
+  if (loading || !data?.brief) return null;
 
-  if (!data?.brief) {
-    return (
-      <div style={{
-        background: "rgba(7,26,74,0.55)",
-        border: `1px solid ${T.border}`,
-        borderRadius: 10,
-        padding: "20px 24px",
-        backdropFilter: "blur(20px)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Activity size={14} color={T.muted} />
-          <span style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.display, letterSpacing: ".08em", textTransform: "uppercase" }}>
-            Macro Brief
-          </span>
-          <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.mono, marginLeft: "auto" }}>
-            Awaiting next scheduled run
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  // brief is plain text — NEVER use dangerouslySetInnerHTML (XSS prevention)
-  const briefText = data.brief;
-  const isLong = briefText.length > 600;
+  const briefText  = data.brief;
+  const isLong     = briefText.length > 600;
   const displayText = expanded || !isLong ? briefText : briefText.slice(0, 600) + "…";
+  const age        = formatAge(data.age_seconds);
 
   return (
     <div style={{
-      background: "rgba(7,26,74,0.55)",
-      border: `1px solid ${T.border}`,
-      borderLeft: `2px solid rgba(6,182,212,0.60)`,
-      borderRadius: 10,
-      padding: "20px 24px",
-      backdropFilter: "blur(24px)",
-      boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 40px rgba(0,0,0,0.36)",
+      display: "flex", gap: 20, marginBottom: 28,
+      paddingBottom: 24, borderBottom: `1px solid rgba(37,99,235,0.10)`,
       animation: "fadeUp .4s cubic-bezier(.16,1,.3,1) forwards",
     }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-        <Activity size={14} color={T.cyan} />
-        <span style={{
-          fontSize: 11,
-          color: T.cyan,
-          fontFamily: FONTS.display,
-          fontWeight: 600,
-          letterSpacing: ".08em",
-          textTransform: "uppercase",
-        }}>
-          Macro Brief
-        </span>
+      {/* Left accent bar */}
+      <div style={{
+        width: 2, flexShrink: 0,
+        background: "linear-gradient(180deg, rgba(6,182,212,0.70) 0%, rgba(6,182,212,0.10) 100%)",
+        borderRadius: 1, marginTop: 3,
+      }} />
 
-        {/* Source badge */}
-        <span style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 4,
-          padding: "2px 7px",
-          borderRadius: 3,
-          fontSize: 9,
-          fontWeight: 600,
-          letterSpacing: ".06em",
-          textTransform: "uppercase",
-          fontFamily: FONTS.display,
-          background: "rgba(0,232,122,0.08)",
-          color: T.green,
-          border: "1px solid rgba(0,232,122,0.15)",
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Meta line */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10, marginBottom: 10,
         }}>
-          <Cpu size={9} />
-          {data.model || "LOCAL AI"}
-        </span>
-
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
-          {data.stale && (
-            <span style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase",
-              fontFamily: FONTS.display, padding: "2px 6px", borderRadius: 3,
-              background: "rgba(245,158,11,0.12)", color: T.amber,
-              border: "1px solid rgba(245,158,11,0.25)",
-            }}>
-              STALE
+          <span style={{
+            fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700,
+            letterSpacing: "0.12em", textTransform: "uppercase", color: T.cyan,
+          }}>
+            Macro Brief
+          </span>
+          {data.model && (
+            <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>
+              {data.model}
             </span>
           )}
-          <Clock size={10} color={data.stale ? T.amber : T.muted} />
-          <span style={{ fontSize: 10, color: data.stale ? T.amber : T.muted, fontFamily: FONTS.mono }}>
-            {formatAge(data.age_seconds)}
-          </span>
+          {age && (
+            <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: data.stale ? T.amber : T.t3, marginLeft: "auto", opacity: data.stale ? 1 : 0.5 }}>
+              {data.stale ? "stale · " : ""}{age}
+            </span>
+          )}
         </div>
-      </div>
 
-      {/* Brief body */}
-      <div style={{
-        fontSize: 13,
-        lineHeight: 1.7,
-        color: T.t1,
-        fontFamily: FONTS.body,
-        whiteSpace: "pre-wrap",
-        opacity: 0.88,
-      }}>
-        {displayText}
-      </div>
+        {/* Brief body — plain prose */}
+        <div style={{
+          fontFamily: FONTS.body, fontSize: 14, lineHeight: 1.75,
+          color: T.t1, opacity: 0.88, whiteSpace: "pre-wrap",
+        }}>
+          {displayText}
+        </div>
 
-      {/* Expand toggle */}
-      {isLong && (
-        <button
-          onClick={() => setExpanded(!expanded)}
-          style={{
-            marginTop: 10,
-            padding: "4px 10px",
-            borderRadius: 4,
-            fontSize: 10,
-            fontWeight: 500,
-            fontFamily: FONTS.display,
-            cursor: "pointer",
-            outline: "none",
-            border: `1px solid ${T.border}`,
-            background: "transparent",
-            color: T.secondary,
-            transition: "all .15s ease",
-          }}
-        >
-          {expanded ? "Collapse" : "Read full brief"}
-        </button>
-      )}
+        {/* Expand */}
+        {isLong && (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            style={{
+              marginTop: 8, padding: 0, background: "none", border: "none",
+              cursor: "pointer", outline: "none",
+              fontFamily: FONTS.mono, fontSize: 10, color: T.cyan, opacity: 0.6,
+              letterSpacing: "0.04em",
+              transition: "opacity .15s ease",
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = 1}
+            onMouseLeave={e => e.currentTarget.style.opacity = 0.6}
+          >
+            {expanded ? "↑ collapse" : "↓ read more"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
