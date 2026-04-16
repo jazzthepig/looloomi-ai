@@ -404,6 +404,53 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
     setSelectedAsset(asset);
   };
 
+  // Compact 5-pillar mini chart for table rows
+  const PillarMiniChart = ({ pillars }) => {
+    if (!pillars) return null;
+    const defs = [
+      { key: "F",     color: "#4472FF" },
+      { key: "M",     color: "#A78BFA" },
+      { key: "O",     color: "#00D98A" },
+      { key: "S",     color: "#F59E0B" },
+      { key: "alpha", color: "#FF2D55" },
+    ];
+    return (
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 3, marginTop: 4 }}>
+        {defs.map(p => {
+          const raw = pillars[p.key];
+          const val = (raw != null && !isNaN(raw)) ? Number(raw) : null;
+          const label = p.key === "alpha" ? "A" : p.key;
+          return (
+            <div
+              key={p.key}
+              title={`${p.key === "alpha" ? "Alpha" : p.key}: ${val != null ? val.toFixed(1) : "—"}`}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, cursor: "default" }}
+            >
+              <span style={{
+                fontFamily: FONTS.mono, fontSize: 6, fontWeight: 700,
+                color: val != null ? p.color : T.dim, opacity: val != null ? 0.65 : 0.3,
+                letterSpacing: 0,
+              }}>{label}</span>
+              <div style={{ width: 14, height: 28, background: "rgba(255,255,255,0.05)", borderRadius: 2, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                <div style={{
+                  width: "100%",
+                  height: val != null ? `${Math.max(4, val)}%` : "4%",
+                  background: val != null ? p.color : "transparent",
+                  opacity: val != null ? 0.75 : 0,
+                  transition: "height 0.4s ease",
+                }} />
+              </div>
+              <span style={{
+                fontFamily: FONTS.mono, fontSize: 6,
+                color: val != null ? T.muted : T.dim, opacity: val != null ? 0.7 : 0.3,
+              }}>{val != null ? Math.round(val) : "—"}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   // Pillar bar width
   const PillarBar = ({ value, color = T.blue }) => {
     if (value === null || value === undefined) return null;
@@ -838,7 +885,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             className="cis-table-header"
             style={{
               display: "grid", gridTemplateColumns: "34px 1fr 80px 45px 50px 60px 80px",
-              gap: 8, padding: "9px 18px", borderBottom: `1px solid ${T.border}`,
+              gap: 8, padding: "9px 18px 9px", borderBottom: `1px solid ${T.border}`,
               fontSize: 9, color: T.muted, letterSpacing: "0.14em",
               textTransform: "uppercase", fontFamily: FONTS.display, fontWeight: 600,
               background: T.raised,
@@ -876,8 +923,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                 className="cis-table-row transition-row"
                 style={{
                   display: "grid", gridTemplateColumns: "34px 1fr 80px 45px 50px 60px 80px",
-                  gap: 8, padding: "13px 18px", borderBottom: `1px solid ${T.border}`,
-                  alignItems: "center", cursor: "pointer",
+                  gap: 8, padding: "10px 18px", borderBottom: `1px solid ${T.border}`,
+                  alignItems: "start", cursor: "pointer",
                   background: selectedAsset?.asset_id === item.asset_id ? "rgba(68,114,255,0.06)" : "transparent",
                   animation: `fadeInRow 0.3s ease ${idx * 25}ms forwards`,
                   opacity: 0,
@@ -905,6 +952,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                       border: `1px solid ${item.data_tier === 1 ? "rgba(0,232,122,0.2)" : "rgba(245,158,11,0.2)"}`,
                     }}>T{item.data_tier || 2}</span>
                   </div>
+                  {/* Pillar mini chart — 5 vertical bars F/M/O/S/A */}
+                  <PillarMiniChart pillars={item.pillars} />
                 </div>
                 {/* CIS score + confidence dot */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>

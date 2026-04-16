@@ -50,7 +50,7 @@ const CountryPanel = ({ flag, label, data }) => {
       <div style={{
         flex: 1, minWidth: 160,
         border: `1px solid ${T.border}`, borderRadius: 10,
-        padding: "14px 16px", background: T.surface,
+        padding: "14px 16px", background: T.raised,
       }}>
         <div style={{ fontSize: 13, marginBottom: 8 }}>{flag} <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, color: T.t2 }}>{label}</span></div>
         <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3, opacity: 0.5 }}>No data</div>
@@ -66,7 +66,7 @@ const CountryPanel = ({ flag, label, data }) => {
     <div style={{
       flex: 1, minWidth: 160,
       border: `1px solid ${T.border}`, borderRadius: 10,
-      background: T.surface, overflow: "hidden",
+      background: T.raised, overflow: "hidden",
     }}>
       {/* Country header */}
       <div style={{
@@ -136,7 +136,7 @@ const CountryPanel = ({ flag, label, data }) => {
 const SkeletonPanel = () => (
   <div style={{
     flex: 1, minWidth: 160, border: `1px solid ${T.border}`,
-    borderRadius: 10, background: T.surface, padding: "14px 16px",
+    borderRadius: 10, background: T.raised, padding: "14px 16px",
   }}>
     <div className="sk" style={{ height: 14, width: "60%", borderRadius: 4, marginBottom: 12 }} />
     {[80, 90, 70, 75, 65].map((w, i) => (
@@ -243,21 +243,30 @@ export default function EconomicIndicators() {
         </div>
       )}
 
-      {/* Panels */}
+      {/* Panels — L1 card wrapper containing 3 L2 country panels */}
       {(loading || (data && data.available)) && (
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          {loading ? (
-            COUNTRIES.map(c => <SkeletonPanel key={c.key} />)
-          ) : (
-            COUNTRIES.map(c => (
-              <CountryPanel
-                key={c.key}
-                flag={c.flag}
-                label={c.label}
-                data={data?.[c.key]}
-              />
-            ))
-          )}
+        <div style={{
+          background: "rgba(7,26,74,0.45)",
+          border: "1px solid rgba(37,99,235,0.14)",
+          borderRadius: 12,
+          padding: 14,
+          backdropFilter: "blur(20px)",
+          boxShadow: "0 1px 0 rgba(255,255,255,0.03) inset, 0 4px 24px rgba(0,0,0,0.24)",
+        }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {loading ? (
+              COUNTRIES.map(c => <SkeletonPanel key={c.key} />)
+            ) : (
+              COUNTRIES.map(c => (
+                <CountryPanel
+                  key={c.key}
+                  flag={c.flag}
+                  label={c.label}
+                  data={data?.[c.key]}
+                />
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>

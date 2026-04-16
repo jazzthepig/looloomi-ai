@@ -16,6 +16,54 @@ const SAMPLE_FUNDS = []; // Empty - data loaded from API
 const FUND_TYPES = ["All", "DeFi Quant", "VC / Early Stage", "Market Neutral", "Trading / Momentum", "Long-Only / Research", "On-Chain Active", "LSD Focus", "Yield / Lending", "Options / Volatility", "Multi-Strategy"];
 const LOCATIONS = ["All", "Singapore", "Hong Kong", "London", "Dubai", "New York", "Berlin"];
 
+/* ─── Score Breakdown — segmented bar with tooltip labels ─────────────── */
+const SCORE_CRITERIA = [
+  { key: "performance",   label: "Performance",   short: "Perf",   max: 25, color: "#4472FF" },
+  { key: "strategy",      label: "Strategy",      short: "Strat",  max: 20, color: "#A78BFA" },
+  { key: "team",          label: "Team",          short: "Team",   max: 20, color: "#00D98A" },
+  { key: "risk",          label: "Risk Mgmt",     short: "Risk",   max: 15, color: "#F59E0B" },
+  { key: "transparency",  label: "Transparency",  short: "Trans",  max: 10, color: "#00C8E0" },
+  { key: "aumTrackRecord",label: "AUM & Track",   short: "AUM",    max: 10, color: "#C8A84B" },
+];
+
+const ScoreBreakdown = ({ scores }) => {
+  if (!scores) return null;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      {SCORE_CRITERIA.map(c => {
+        const val = scores[c.key] ?? 0;
+        const pct = c.max > 0 ? (val / c.max) * 100 : 0;
+        return (
+          <div
+            key={c.key}
+            title={`${c.label}: ${val} / ${c.max} pts`}
+            style={{ display: "flex", alignItems: "center", gap: 5, cursor: "default" }}
+          >
+            <span style={{
+              fontFamily: "JetBrains Mono, monospace", fontSize: 8, fontWeight: 600,
+              color: c.color, opacity: 0.7, width: 32, flexShrink: 0,
+              letterSpacing: "-0.01em",
+            }}>{c.short}</span>
+            <div style={{
+              flex: 1, height: 3, background: "rgba(255,255,255,0.07)",
+              borderRadius: 2, overflow: "hidden",
+            }}>
+              <div style={{
+                width: `${pct}%`, height: "100%", background: c.color,
+                borderRadius: 2, opacity: 0.75, transition: "width .4s ease",
+              }} />
+            </div>
+            <span style={{
+              fontFamily: "JetBrains Mono, monospace", fontSize: 9,
+              color: "rgba(199,210,254,0.5)", width: 14, textAlign: "right", flexShrink: 0,
+            }}>{val}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 /* ─── CSS ────────────────────────────────────────────────────────────── */
 const CSS = `
   @keyframes breathe  { 0%,100%{opacity:.28;transform:scale(1) translateY(0)} 50%{opacity:.44;transform:scale(1.06) translateY(-12px)} }
@@ -478,15 +526,8 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                 </div>
               </div>
 
-              {/* Score Breakdown */}
-              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                {Object.entries(fund.scores).filter(([k]) => k !== "total").map(([key, val]) => (
-                  <div key={key} style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 9, color: T.muted, textTransform: "capitalize" }}>{key.slice(0,3)}</div>
-                    <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.mono }}>{val}</div>
-                  </div>
-                ))}
-              </div>
+              {/* Score Breakdown — segmented mini bars */}
+              <ScoreBreakdown scores={fund.scores} />
 
               {/* Total Score */}
               <div>
@@ -957,20 +998,24 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             GP Selection Framework — Scoring Criteria
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 16 }}>
-            {[
-              { label: "Performance", score: 25, desc: "YTD, Annual Return, Sharpe" },
-              { label: "Strategy", score: 20, desc: "Clarity, Differentiation" },
-              { label: "Team", score: 20, desc: "Background, Experience" },
-              { label: "Risk", score: 15, desc: "Management, Limits" },
-              { label: "Transparency", score: 10, desc: "Reporting, Disclosure" },
-              { label: "AUM & Track", score: 10, desc: "Scale, History" },
-            ].map((item, i) => (
+            {SCORE_CRITERIA.map((item, i) => (
               <div key={i}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: T.primary }}>{item.label}</span>
-                  <span style={{ fontSize: 10, color: T.blue, fontFamily: FONTS.mono }}>{item.score}pts</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 2, background: item.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, fontWeight: 600, color: T.primary, fontFamily: FONTS.display }}>{item.label}</span>
+                  <span style={{ fontSize: 10, color: item.color, fontFamily: FONTS.mono, opacity: 0.8 }}>{item.max}pts</span>
                 </div>
-                <div style={{ fontSize: 10, color: T.muted }}>{item.desc}</div>
+                <div style={{ height: 3, background: "rgba(255,255,255,0.07)", borderRadius: 2, marginBottom: 6 }}>
+                  <div style={{ width: `${(item.max / 100) * 100}%`, height: "100%", background: item.color, borderRadius: 2, opacity: 0.6 }} />
+                </div>
+                <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
+                  {item.key === "performance" ? "YTD, Annual Return, Sharpe" :
+                   item.key === "strategy"    ? "Clarity, Differentiation" :
+                   item.key === "team"        ? "Background, Experience" :
+                   item.key === "risk"        ? "Management, Limits" :
+                   item.key === "transparency"? "Reporting, Disclosure" :
+                                               "Scale, History"}
+                </div>
               </div>
             ))}
           </div>
