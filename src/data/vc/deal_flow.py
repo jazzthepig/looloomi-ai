@@ -28,61 +28,59 @@ class VCDealFlowTracker:
     def get_recent_funding_rounds(self, limit: int = 50) -> List[Dict]:
         """
         Get recent crypto funding rounds from DeFiLlama Raises API
-        Returns: List of funding rounds with project, amount, round type, investors
+        Returns: List of funding rounds with project, amount_usd, round, investors
         API: https://api.llama.fi/raises
         """
         try:
-            # Use DeFiLlama raises API
             response = requests.get(
                 "https://api.llama.fi/raises",
                 timeout=30
             )
-            if response.status_code == 200:
-                data = response.json()
-                raises = data.get("raises", [])
+            # 402 = paid plan — return mock instead of raising
+            if response.status_code == 402:
+                _logger.warning("DeFiLlama /raises requires paid plan — using fallback")
+                return self._get_mock_funding_rounds()
+            if response.status_code != 200:
+                _logger.warning(f"DeFiLlama /raises status {response.status_code}")
+                return self._get_mock_funding_rounds()
+            data = response.json()
+            raises = data.get("raises", [])
 
-                # Remove strict category filter - get ALL categories with amount > 0
-                # Frontend will handle filtering
-                filtered = [r for r in raises if r.get("amount") and r.get("amount", 0) >= 0.1]
+            filtered = [r for r in raises if r.get("amount") and r.get("amount", 0) >= 0.1]
 
-                # Sort by date descending (most recent first)
-                sorted_raises = sorted(filtered, key=lambda x: x.get("date", 0), reverse=True)
+            sorted_raises = sorted(filtered, key=lambda x: x.get("date", 0), reverse=True)
 
-                rounds = []
-                for item in sorted_raises[:limit]:
-                    # Keep timestamp for proper sorting/filtering in frontend
-                    timestamp = item.get("date", 0)
+            rounds = []
+            for item in sorted_raises[:limit]:
+                timestamp = item.get("date", 0)
+                date_str = ""
+                if timestamp:
+                    try:
+                        date_str = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
+                    except:
+                        date_str = str(timestamp)
 
-                    # Convert timestamp to date string for display
-                    date_str = ""
-                    if timestamp:
-                        try:
-                            date_str = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
-                        except:
-                            date_str = str(timestamp)
+                all_investors = list(item.get("leadInvestors", [])) + list(item.get("otherInvestors", []))
 
-                    # Combine lead investors and other investors
-                    all_investors = list(item.get("leadInvestors", [])) + list(item.get("otherInvestors", []))
+                rounds.append({
+                    "project":     item.get("name", "Unknown"),
+                    "amount_usd":  int((item.get("amount", 0) or 0) * 1_000_000),
+                    "round":       item.get("round", "Unknown"),
+                    "date":        timestamp,
+                    "dateStr":     date_str,
+                    "investors":   all_investors[:10],
+                    "category":    item.get("category", "Unknown"),
+                    "chains":      item.get("chains", []),
+                })
 
-                    rounds.append({
-                        "project": item.get("name", "Unknown"),
-                        "amount": item.get("amount", 0) * 1_000_000, # Convert to USD
-                        "round_type": item.get("round", "Unknown"),
-                        "date": timestamp,  # Keep timestamp for sorting
-                        "dateStr": date_str,  # String for display
-                        "investors": all_investors[:10], # Limit to 10 investors
-                        "category": item.get("category", "Unknown"),
-                        "chains": item.get("chains", []),
-                    })
+            return rounds if rounds else self._get_mock_funding_rounds()
 
-                if rounds:
-                    return rounds
-
+        except requests.RequestException as e:
+            _logger.warning(f"DeFiLlama /raises network error: {e}")
+            return self._get_mock_funding_rounds()
         except Exception as e:
-            _logger.warning(f"DeFiLlama raises API error: {e}")
-
-        # Fallback to curated recent funding rounds
-        return self._get_mock_funding_rounds()
+            _logger.warning(f"DeFiLlama /raises error: {e}")
+            return self._get_mock_funding_rounds()
     
     def get_top_vcs(self, limit: int = 20) -> List[Dict]:
         """

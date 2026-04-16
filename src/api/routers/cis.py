@@ -186,6 +186,9 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
     # Pure Railway (no Mac Mini data available)
     if railway_universe:
         result["source"] = "railway"
+        result["macro_regime"] = (result.get("macro") or {}).get("regime", "UNKNOWN")
+        result["t1_count"] = 0
+        result["t2_count"] = len(railway_universe)
         return sanitize_floats(result)
 
     # Last resort: stale Redis
