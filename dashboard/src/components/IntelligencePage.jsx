@@ -494,28 +494,35 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               <CISWidget defaultLimit={20} />
             </div>
 
-            {/* Stat cards */}
-            <div className="mobile-stat-grid" style={{
-              display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "20px 0",
+            {/* Stat strip — inline, no cards */}
+            <div style={{
+              display: "flex", gap: 0, margin: "20px 0",
+              paddingBottom: 20, borderBottom: `1px solid rgba(37,99,235,0.08)`,
               opacity: mounted ? 1 : 0,
               transform: mounted ? "translateY(0)" : "translateY(8px)",
               transition: "opacity 0.35s ease 240ms, transform 0.35s ease 240ms",
+              flexWrap: "wrap",
             }}>
               {[
                 { label: "90d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals`, color: T.blue },
-                { label: "RWA Sector (90d)",  value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA deals`, color: T.amber },
+                { label: "RWA Sector",        value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA deals`, color: T.amber },
                 { label: "Most Active VC",    value: stats?.topVC ?? null,                         sub: `${stats?.topVCDeals ?? "—"} deals`, color: T.green },
-                { label: "Data Source",       value: "DeFiLlama",                                  sub: "Raises API · Live", color: T.pink },
-              ].map((s, i) => (
-                <div key={i} className="lm-card transition-lift" style={{ padding: "18px 20px" }}>
-                  <div style={{ fontSize: 10, color: T.muted, letterSpacing: "0.11em", textTransform: "uppercase", fontFamily: FONTS.body, marginBottom: 10 }}>
+                { label: "Source",            value: "DeFiLlama",                                  sub: "Raises API · Live", color: T.t3 },
+              ].map((s, i, arr) => (
+                <div key={i} style={{
+                  paddingRight: 36, paddingLeft: i === 0 ? 0 : 0,
+                  borderRight: i < arr.length - 1 ? `1px solid rgba(37,99,235,0.10)` : "none",
+                  marginRight: i < arr.length - 1 ? 36 : 0,
+                  paddingBottom: 4,
+                }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 8, opacity: 0.6 }}>
                     {s.label}
                   </div>
                   {s.value !== null
-                    ? <div style={{ fontSize: 24, fontWeight: 600, color: s.color, fontFamily: FONTS.mono, lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
-                    : <div className="sk" style={{ height: 24, width: 90, marginBottom: 6 }} />
+                    ? <div style={{ fontFamily: FONTS.mono, fontSize: 22, fontWeight: 400, color: s.color, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 5 }}>{s.value}</div>
+                    : <div className="sk" style={{ height: 22, width: 80, marginBottom: 5 }} />
                   }
-                  <div style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.body }}>{s.sub}</div>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, opacity: 0.6 }}>{s.sub}</div>
                 </div>
               ))}
             </div>
@@ -595,68 +602,46 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               </div>
 
               {/* Right — Macro Events */}
-              <div className="lm-card transition-lift" style={{ padding: 0, overflow: "hidden", maxHeight: 380, overflowY: "auto" }}>
-                <div style={{ padding: "16px 18px 12px", position: "sticky", top: 0, background: T.surface, zIndex: 1 }}>
+              <div style={{ padding: "16px 0 0", overflow: "hidden", maxHeight: 380, overflowY: "auto" }}>
+                <div style={{ paddingBottom: 12, marginBottom: 4 }}>
                   <Label Icon={Shield}>Macro Events</Label>
                 </div>
-                <div style={{ padding: "0 12px 12px" }}>
+                <div>
                   {macroEvents.length > 0 ? macroEvents.slice(0, 5).map((event, idx) => {
                     const isInstitutional = event.category === "INSTITUTIONAL";
                     const isHigh = event.impact === "HIGH";
+                    const catColor = isInstitutional ? "#C8A84B" : "#4B9EFF";
                     const desc = event.description || "";
-                    const truncated = desc.length > 120 ? desc.slice(0, 120) + "…" : desc;
+                    const truncated = desc.length > 100 ? desc.slice(0, 100) + "…" : desc;
                     return (
                     <div key={idx} style={{
-                      border: `1px solid ${T.border}`, borderRadius: 9,
-                      padding: "14px 16px", marginBottom: 8,
-                      background: T.raised,
-                      transition: "border-color .2s,background .2s,transform .15s,box-shadow .2s", cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(56,148,210,0.35)"; e.currentTarget.style.background = "rgba(13,32,56,0.7)"; e.currentTarget.style.transform = "translateX(2px)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = T.raised; e.currentTarget.style.transform = "translateX(0)"; }}
-                    >
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
-                            <span style={{
-                              fontFamily: FONTS.display, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
-                              padding: "3px 7px", borderRadius: 3,
-                              background: isInstitutional ? "rgba(200,168,75,0.12)" : "rgba(75,158,255,0.10)",
-                              color: isInstitutional ? "#C8A84B" : "#4B9EFF",
-                              border: `1px solid ${isInstitutional ? "rgba(200,168,75,0.22)" : "rgba(75,158,255,0.22)"}`,
-                              whiteSpace: "nowrap",
-                            }}>
-                              {event.category}
-                            </span>
-                          </div>
-                          <div style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 600, color: T.primary, lineHeight: 1.45, marginBottom: 6 }}>
-                            {event.title}
-                          </div>
-                          {truncated && (
-                            <div style={{ fontSize: 11, color: T.t2, lineHeight: 1.6, marginBottom: 5 }}>
-                              {truncated}
-                            </div>
-                          )}
-                          <div style={{ fontSize: 10, color: T.t3 }}>
-                            {event.source}{event.date ? ` · ${event.date}` : ""}
-                          </div>
-                        </div>
-                        <span style={{
-                          flexShrink: 0,
-                          fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 7px", borderRadius: 3,
-                          background: isHigh ? "rgba(255,61,90,0.12)" : "rgba(255,255,255,0.06)",
-                          color: isHigh ? "#FF3D5A" : T.muted,
-                          border: `1px solid ${isHigh ? "rgba(255,61,90,0.22)" : "rgba(255,255,255,0.08)"}`,
-                          marginTop: 2,
-                        }}>
-                          {event.impact}
+                      padding: "12px 0", borderBottom: `1px solid rgba(37,99,235,0.07)`,
+                      cursor: "pointer",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
+                        <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.10em", color: catColor, textTransform: "uppercase" }}>
+                          {event.category}
                         </span>
+                        {isHigh && (
+                          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: "#FF3D5A", letterSpacing: "0.06em" }}>· HIGH</span>
+                        )}
+                      </div>
+                      <div style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 600, color: T.t1, lineHeight: 1.4, marginBottom: 4 }}>
+                        {event.title}
+                      </div>
+                      {truncated && (
+                        <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.t3, lineHeight: 1.55, marginBottom: 4 }}>
+                          {truncated}
+                        </div>
+                      )}
+                      <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, opacity: 0.55 }}>
+                        {event.source}{event.date ? ` · ${event.date}` : ""}
                       </div>
                     </div>
                     );
                   }) : (
-                    <div style={{ padding: 20, textAlign: "center", color: T.muted, fontSize: 12 }}>
-                      暂无宏观事件
+                    <div style={{ padding: "20px 0", color: T.muted, fontSize: 12, fontFamily: FONTS.body }}>
+                      No macro events available
                     </div>
                   )}
                 </div>
@@ -963,47 +948,43 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 </div>
             </div>}
 
-            {/* ══ MACRO EVENTS (Full Width Vertical Timeline) ═════════════════════════════ */}
+            {/* ══ MACRO EVENTS ═════════════════════════════ */}
             <div style={{ marginTop: 24, marginBottom: 24 }}>
-              <div style={{ marginBottom: 16 }}>
-                <Label Icon={Globe}>MACRO EVENTS</Label>
-                <div style={{ fontSize: 11, color: T.t2, fontFamily: FONTS.body }}>
-                  Institutional and regulatory developments shaping the market
-                </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
+                <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase" }}>
+                  Macro Events
+                </span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.45 }}>
+                  Institutional &amp; regulatory
+                </span>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {macroEvents.length === 0 ? (
-                  <div style={{ padding: "20px", textAlign: "center", color: T.muted, fontSize: 12, fontFamily: FONTS.body }}>
-                    No macro events available
-                  </div>
-                ) : macroEvents.map((ev, i) => {
+              <div>
+                {macroEvents.length === 0 ? null : macroEvents.map((ev, i) => {
                   const cfg = EV_TYPE[ev.type] || EV_TYPE.protocol;
-                  const imp = IMP_C[ev.impact] || IMP_C.medium;
+                  const isHigh = ev.impact === "HIGH";
                   return (
-                    <div key={ev.id} className="lm-card" style={{
-                      display: "flex", gap: 16, padding: "14px 18px",
-                      background: "rgba(13,32,56,0.5)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      borderRadius: 8, borderLeft: `3px solid ${cfg.color}`,
-                      animation: `fadeUp .3s ease ${i*.07}s both`,
+                    <div key={ev.id} style={{
+                      display: "flex", gap: 16, paddingTop: 14, paddingBottom: 14,
+                      borderBottom: `1px solid rgba(37,99,235,0.07)`,
+                      animation: `fadeUp .3s ease ${i*.05}s both`,
                     }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                          <span className="lm-badge" style={{ background: `${cfg.color}18`, color: cfg.color }}>
+                      {/* Thin color accent left */}
+                      <div style={{ width: 2, flexShrink: 0, background: cfg.color, borderRadius: 1, opacity: 0.55, alignSelf: "stretch" }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
+                          <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.10em", color: cfg.color, textTransform: "uppercase" }}>
                             {cfg.label}
                           </span>
-                          <span className="lm-badge" style={{ background: imp.bg, color: imp.text }}>
-                            {ev.impact}
+                          {isHigh && <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.red, letterSpacing: "0.06em" }}>· HIGH</span>}
+                          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5, marginLeft: "auto" }}>
+                            {ev.source} · {ev.date}
                           </span>
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 6, lineHeight: 1.4 }}>
+                        <div style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 600, color: T.t1, letterSpacing: "-0.01em", lineHeight: 1.4, marginBottom: 5 }}>
                           {ev.title}
                         </div>
-                        <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.5, marginBottom: 8 }}>
+                        <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t3, lineHeight: 1.55 }}>
                           {ev.description || ev.summary}
-                        </div>
-                        <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
-                          {ev.source} · {ev.date}
                         </div>
                       </div>
                     </div>
@@ -1082,38 +1063,37 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
             {/* ══ ON-CHAIN LISTING PIPELINE ══════════════════════════════════════ */}
             <div style={{ marginBottom: 24 }}>
-              <Label Icon={Zap}>ON-CHAIN LISTING PIPELINE</Label>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
+                <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase" }}>
+                  On-Chain Listing Pipeline
+                </span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.45 }}>
+                  90 days structuring to trade
+                </span>
+              </div>
 
-              <div className="mobile-pipeline-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 320px", gap: 12, marginTop: 12 }}>
-                {/* Left - Timeline */}
-                <div className="lm-card" style={{ background: "rgba(14,30,56,0.75)", padding: 20 }}>
+              <div className="mobile-pipeline-grid" style={{ display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 320px", gap: 40, marginTop: 12 }}>
+                {/* Left - Step list */}
+                <div>
                   {[
-                    { step: 1, title: "Asset Structuring", desc: "Legal wrapper, SPV design, regulatory alignment (SFC / MAS)", color: T.violet },
-                    { step: 2, title: "Tokenization", desc: "Smart contract deployment, ERC-1400 / ERC-3643 compliance standards", color: T.indigo },
-                    { step: 3, title: "Exchange Listing", desc: "CEX: OSL, HashKey · DEX: Uniswap V3, Orca (Solana)", color: T.blue },
-                    { step: 4, title: "Liquidity & Reporting", desc: "Market maker onboarding, daily NAV on-chain, automated reporting", color: T.cyan },
+                    { step: "01", title: "Asset Structuring", desc: "Legal wrapper, SPV design, regulatory alignment (SFC / MAS)", color: T.violet },
+                    { step: "02", title: "Tokenization", desc: "Smart contract deployment, ERC-1400 / ERC-3643 compliance standards", color: T.indigo },
+                    { step: "03", title: "Exchange Listing", desc: "CEX: OSL, HashKey · DEX: Uniswap V3, Orca (Solana)", color: T.blue },
+                    { step: "04", title: "Liquidity & Reporting", desc: "Market maker onboarding, daily NAV on-chain, automated reporting", color: T.cyan },
                   ].map((item, i) => (
-                    <div key={i} style={{ display: "flex", gap: 14, position: "relative", paddingBottom: i < 3 ? 20 : 0 }}>
-                      {i < 3 && (
-                        <div style={{
-                          position: "absolute", left: 7, top: 24, bottom: 0,
-                          width: 2, background: `linear-gradient(180deg,${item.color} 0%,${T.cyan} 100%)`,
-                          opacity: 0.4,
-                        }} />
-                      )}
+                    <div key={i} style={{ display: "flex", gap: 20, paddingBottom: i < 3 ? 20 : 0, paddingTop: i > 0 ? 4 : 0 }}>
                       <div style={{
-                        width: 16, height: 16, borderRadius: "50%",
-                        background: item.color, flexShrink: 0,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 9, fontWeight: 700, color: "#fff", fontFamily: FONTS.mono,
+                        fontFamily: FONTS.mono, fontSize: 11, fontWeight: 400,
+                        color: item.color, opacity: 0.55, flexShrink: 0,
+                        width: 24, paddingTop: 2,
                       }}>
                         {item.step}
                       </div>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 4 }}>
+                      <div style={{ borderLeft: `1px solid ${item.color}28`, paddingLeft: 16 }}>
+                        <div style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 600, color: T.t1, letterSpacing: "-0.01em", marginBottom: 5 }}>
                           {item.title}
                         </div>
-                        <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.5 }}>
+                        <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t3, lineHeight: 1.55 }}>
                           {item.desc}
                         </div>
                       </div>
@@ -1121,40 +1101,39 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   ))}
                 </div>
 
-                {/* Right - CTA Card */}
-                <div className="lm-card" style={{
-                  padding: 20, borderLeft: `2px solid ${T.amber}`,
-                  display: "flex", flexDirection: "column", justifyContent: "center",
-                }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: T.primary, fontFamily: FONTS.display, letterSpacing: "-0.01em", marginBottom: 8 }}>
+                {/* Right - CTA */}
+                <div style={{ borderLeft: `2px solid rgba(200,168,75,0.20)`, paddingLeft: 24 }}>
+                  <div style={{ fontFamily: FONTS.display, fontSize: 15, fontWeight: 600, color: T.t1, letterSpacing: "-0.01em", marginBottom: 8 }}>
                     List Your Fund On-Chain
                   </div>
-                  <div style={{ fontSize: 12, color: T.secondary, fontFamily: FONTS.body, marginBottom: 16, lineHeight: 1.5 }}>
+                  <div style={{ fontFamily: FONTS.body, fontSize: 12, color: T.t3, marginBottom: 18, lineHeight: 1.6 }}>
                     From structuring to first trade in 90 days
                   </div>
-                  <div style={{ marginBottom: 18 }}>
+                  <div style={{ marginBottom: 20 }}>
                     {[
                       "SFC-compliant tokenization framework",
                       "Direct access to OSL & HashKey liquidity",
                       "AI-powered portfolio monitoring via Looloomi",
                     ].map((point, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
-                        <span style={{ color: T.green, fontSize: 12 }}>✦</span>
-                        <span style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body }}>{point}</span>
+                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 9 }}>
+                        <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.green, paddingTop: 1 }}>›</span>
+                        <span style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t2, lineHeight: 1.5 }}>{point}</span>
                       </div>
                     ))}
                   </div>
                   <button style={{
-                    background: T.amber, color: "#000", border: "none",
-                    padding: "10px 16px", borderRadius: 6,
-                    fontSize: 12, fontWeight: 600, fontFamily: FONTS.display,
-                    cursor: "pointer", width: "100%",
-                    transition: "opacity .2s ease",
+                    background: "transparent",
+                    color: T.amber,
+                    border: `1px solid rgba(200,168,75,0.35)`,
+                    padding: "8px 18px", borderRadius: 4,
+                    fontSize: 11, fontWeight: 600, fontFamily: FONTS.mono,
+                    cursor: "pointer", letterSpacing: "0.04em",
+                    transition: "border-color .15s, color .15s",
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.opacity = 0.9}
-                  onMouseLeave={(e) => e.currentTarget.style.opacity = 1}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(200,168,75,0.70)"; e.currentTarget.style.color = "#E8C563"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(200,168,75,0.35)"; e.currentTarget.style.color = T.amber; }}
                   >
-                    Schedule a Consultation
+                    Schedule a Consultation →
                   </button>
                 </div>
               </div>
