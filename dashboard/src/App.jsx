@@ -162,11 +162,9 @@ function CrossAssetView({ universe = [] }) {
           }
 
           return (
-            <div key={cls} style={{
-              background: T.surface, border: `1px solid ${T.border}`,
-              borderRadius: 10, padding: "16px 18px",
+            <div key={cls} className="lm-card" style={{
+              padding: "16px 18px",
               borderTop: `2px solid ${clr.text}40`,
-              transition: "border-color .15s",
             }}>
               {/* Class badge + count */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -748,7 +746,7 @@ function CISContent({ onUniverseLoad }) {
       <SectionLabel label="CIS" sub="Intelligence Score" />
 
       {/* Leaderboard — owns the fetch, fires onDataLoad when done */}
-      <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>
+      <div className="lm-card" style={{ overflow: "hidden" }}>
         <CISLeaderboard onDataLoad={handleDataLoad} />
       </div>
 
@@ -884,10 +882,7 @@ function QuantGPContent() {
           { label: "Domicile", value: "Singapore" },
           { label: "Status", value: "Active · Onboarding" },
         ].map((stat, i) => (
-          <div key={i} style={{
-            background: T.surface, border: `1px solid ${T.border}`,
-            borderRadius: 10, padding: "16px 20px",
-          }}>
+          <div key={i} className="lm-stat-card" style={{ padding: "16px 20px" }}>
             <div style={{
               fontSize: 10, color: T.muted, letterSpacing: "0.1em",
               textTransform: "uppercase", marginBottom: 8, fontFamily: FONTS.body,
@@ -905,10 +900,7 @@ function QuantGPContent() {
       </div>
 
       {/* Section 3 — Strategy Overview */}
-      <div style={{
-        background: T.surface, border: `1px solid ${T.border}`,
-        borderRadius: 12, padding: 24, marginBottom: 24,
-      }}>
+      <div className="lm-card" style={{ padding: 24, marginBottom: 24 }}>
         <div style={{
           fontFamily: FONTS.display, fontSize: 12, fontWeight: 700,
           color: "#C8A84B", letterSpacing: "0.1em", marginBottom: 12,
@@ -950,11 +942,8 @@ function QuantGPContent() {
         </Suspense>
       </div>
 
-      {/* Section 5 — GP Shelf说明 */}
-      <div style={{
-        background: "rgba(0,0,0,0.02)", border: `1px solid ${T.border}`,
-        borderRadius: 10, padding: 20,
-      }}>
+      {/* Section 5 — GP Shelf */}
+      <div className="lm-card-inner" style={{ padding: 20 }}>
         <div style={{
           fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
           color: T.muted, letterSpacing: "0.12em", marginBottom: 10,
