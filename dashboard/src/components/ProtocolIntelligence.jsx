@@ -31,36 +31,39 @@ const PILLAR_NAMES = { F: "Fundamental", M: "Momentum", O: "On-chain Risk", S: "
 
 const CATEGORIES = ["All", "RWA", "DeFi", "Derivatives", "Infrastructure"];
 
-/* ─── Pillar Radar (mini horizontal bars) ──────────────────────────── */
+/* ─── Pillar Strip (inline text, quartile-colored) ─────────────────── */
+const PILLAR_DEFS = [
+  { key: "F", color: "#4472FF" },
+  { key: "M", color: "#A78BFA" },
+  { key: "O", color: "#00D98A" },
+  { key: "S", color: "#F59E0B" },
+  { key: "A", color: "#FF2D55" },
+];
+
 const PillarMini = ({ pillars }) => {
   if (!pillars) return null;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 10 }}>
-      {PILLAR_LABELS.map((p) => {
-        const val = pillars[p] ?? 0;
-        const color = val >= 70 ? T.green : val >= 40 ? T.gold : val >= 20 ? T.amber : T.red;
+    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+      {PILLAR_DEFS.map((p, i) => {
+        const raw = pillars[p.key];
+        const val = (raw != null && !isNaN(raw)) ? Number(raw) : null;
+        const scoreColor = val == null ? "rgba(148,163,184,0.2)"
+          : val >= 75 ? p.color
+          : val >= 50 ? p.color + "BB"
+          : val >= 25 ? p.color + "70"
+          : "rgba(148,163,184,0.3)";
         return (
-          <div key={p} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span key={p.key} style={{ display: "flex", alignItems: "center", gap: 0 }}>
             <span style={{
-              fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700,
-              color, width: 10, textAlign: "center",
-            }}>{p}</span>
-            <div style={{
-              flex: 1, height: 4, borderRadius: 2,
-              background: "rgba(255,255,255,0.06)",
-              overflow: "hidden",
+              fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.02em",
+              color: scoreColor, whiteSpace: "nowrap",
             }}>
-              <div style={{
-                height: "100%", width: `${val}%`,
-                background: color, borderRadius: 2,
-                transition: "width 0.5s ease",
-              }} />
-            </div>
-            <span style={{
-              fontFamily: FONTS.mono, fontSize: 8, color: T.t3,
-              width: 20, textAlign: "right",
-            }}>{val}</span>
-          </div>
+              {p.key}·{val != null ? Math.round(val) : "—"}
+            </span>
+            {i < PILLAR_DEFS.length - 1 && (
+              <span style={{ color: "rgba(148,163,184,0.15)", marginLeft: 6, marginRight: 0, fontSize: 9 }}>|</span>
+            )}
+          </span>
         );
       })}
     </div>

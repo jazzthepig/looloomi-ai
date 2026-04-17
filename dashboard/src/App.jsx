@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 // MarketDashboard removed (Q5 — cut market tab, reduces infra cost)
 // File can be deleted: dashboard/src/components/MarketDashboard.jsx
 import IntelligencePage from "./components/IntelligencePage";
@@ -266,82 +266,160 @@ function CrossAssetView({ universe = [] }) {
   );
 }
 
-const SECTIONS = [
-  { id: "intelligence", label: "Intelligence" },
-  { id: "cis", label: "CIS" },
-  { id: "protocol", label: "Protocol" },
-  { id: "vault", label: "Vault" },
-  { id: "quantgp", label: "Quant GP" },
-  { id: "portfolio", label: "Portfolio" },
+const NAV_ITEMS = [
+  { id: "intelligence", label: "Intelligence", icon: "◈", sub: "Signals · Events · Macro" },
+  { id: "cis",          label: "CIS Engine",   icon: "◆", sub: "Scoring · Leaderboard" },
+  { id: "protocol",     label: "Protocols",    icon: "⬡", sub: "DeFi TVL · Selection" },
+  { id: "vault",        label: "Vault",        icon: "◎", sub: "Fund of Funds" },
+  { id: "quantgp",      label: "Quant GP",     icon: "∿", sub: "EST Alpha · Live" },
+  { id: "portfolio",    label: "Portfolio",    icon: "⊡", sub: "My Holdings" },
 ];
 
-// External page links — rendered as anchor tags next to the section tabs
-const EXTERNAL_PAGES = [
-  { href: "/analytics.html", label: "Analytics" },
+// Used by mobile SiteNav
+const SECTIONS = NAV_ITEMS.map(({ id, label }) => ({ id, label }));
+
+const TOOL_LINKS = [
+  { label: "Portfolio Builder", href: "/portfolio.html" },
+  { label: "Score Analytics",  href: "/analytics.html" },
+  { label: "Agent API",        href: "/agent.html" },
+  { label: "Fund Strategy",    href: "/strategy.html" },
 ];
+
+/* ── Sidebar ────────────────────────────────────────────────────────────── */
+function Sidebar({ activeSection, onNavigate, bottomSlot }) {
+  return (
+    <div style={{
+      width: 220, minWidth: 220,
+      height: "100vh",
+      position: "fixed", left: 0, top: 0,
+      background: "rgba(1,5,14,0.97)",
+      borderRight: "1px solid rgba(6,182,212,0.07)",
+      display: "flex", flexDirection: "column",
+      zIndex: 1000,
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+    }}>
+
+      {/* Brand */}
+      <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid rgba(6,182,212,0.07)" }}>
+        <a href="/app.html" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ fontFamily: FONTS.brand, fontWeight: 800, fontSize: 13, color: T.t1, letterSpacing: "0.06em" }}>
+            COMETCLOUD
+          </span>
+          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.indigo, letterSpacing: "0.1em" }}>AI</span>
+        </a>
+        <div style={{
+          fontFamily: FONTS.mono, fontSize: 8, color: T.muted,
+          letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 6, opacity: 0.6,
+        }}>
+          Institutional Intelligence
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto", scrollbarWidth: "none" }}>
+
+        {/* Platform group */}
+        <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.muted, letterSpacing: "0.16em", textTransform: "uppercase", padding: "6px 12px 8px", opacity: 0.55 }}>
+          Platform
+        </div>
+
+        {NAV_ITEMS.map(item => {
+          const active = activeSection === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              style={{
+                width: "100%", textAlign: "left",
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "9px 10px 9px 12px", borderRadius: 6,
+                cursor: "pointer", border: "none", marginBottom: 2,
+                background: active ? "rgba(6,182,212,0.07)" : "transparent",
+                color: active ? T.t1 : T.t3,
+                transition: "all 0.14s",
+              }}
+              onMouseEnter={e => { if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.025)"; e.currentTarget.style.color = T.t2; } }}
+              onMouseLeave={e => { if (!active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.t3; } }}
+            >
+              {/* Active pip */}
+              <div style={{
+                width: 2, height: 18, borderRadius: 1, flexShrink: 0,
+                background: active ? T.cyan : "transparent",
+                transition: "background 0.14s",
+              }} />
+              {/* Icon */}
+              <span style={{ fontFamily: FONTS.mono, fontSize: 12, color: active ? T.cyan : T.t3, flexShrink: 0, lineHeight: 1, opacity: active ? 1 : 0.5 }}>
+                {item.icon}
+              </span>
+              {/* Label + sub */}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: active ? 700 : 500, letterSpacing: "0.01em", whiteSpace: "nowrap" }}>
+                  {item.label}
+                </div>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: active ? T.t3 : T.muted, marginTop: 2, opacity: 0.65, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {item.sub}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "rgba(6,182,212,0.05)", margin: "10px 12px" }} />
+
+        {/* Tools group */}
+        <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.muted, letterSpacing: "0.16em", textTransform: "uppercase", padding: "4px 12px 8px", opacity: 0.55 }}>
+          Tools
+        </div>
+
+        {TOOL_LINKS.map(link => (
+          <a key={link.href} href={link.href} style={{
+            width: "100%", display: "flex", alignItems: "center", gap: 10,
+            padding: "7px 10px 7px 14px", borderRadius: 6, marginBottom: 2,
+            textDecoration: "none", color: T.muted,
+            transition: "all 0.14s",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.025)"; e.currentTarget.style.color = T.t2; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.muted; }}
+          >
+            <div style={{ fontFamily: FONTS.display, fontSize: 11, flex: 1, letterSpacing: "0.01em" }}>{link.label}</div>
+            <span style={{ fontSize: 9, opacity: 0.35 }}>↗</span>
+          </a>
+        ))}
+      </nav>
+
+      {/* Bottom: wallet + version */}
+      <div style={{ padding: "14px 16px 18px", borderTop: "1px solid rgba(6,182,212,0.07)" }}>
+        {bottomSlot}
+        <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.muted, textAlign: "center", marginTop: 12, letterSpacing: "0.06em", opacity: 0.4 }}>
+          CIS v4.1 · CometCloud © 2025
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function DesktopApp() {
   const [activeSection, setActiveSection] = useState("intelligence");
-  const [cisUniverse, setCisUniverse] = useState([]);
-  const sectionRefs = useRef({});
-  const manualScrollRef = useRef(false);
+  const [cisUniverse, setCisUniverse]     = useState([]);
+  // Lazy-mount: track which sections have been visited — mount once, keep alive
+  const [visited, setVisited] = useState(() => new Set(["intelligence"]));
 
-  useEffect(() => {
-    // Track which sections are visible and by how much
-    const ratioMap = {};
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Skip observer updates during manual scroll (click-to-nav)
-        if (manualScrollRef.current) return;
-
-        entries.forEach((entry) => {
-          ratioMap[entry.target.id] = entry.isIntersecting ? entry.intersectionRatio : 0;
-        });
-
-        // Pick the section with the highest visible ratio
-        let best = null;
-        let bestRatio = 0;
-        for (const [id, ratio] of Object.entries(ratioMap)) {
-          if (ratio > bestRatio) {
-            bestRatio = ratio;
-            best = id;
-          }
-        }
-        if (best) setActiveSection(best);
-      },
-      { rootMargin: "0px 0px -40% 0px", threshold: [0, 0.1, 0.25, 0.5, 0.75] }
-    );
-
-    SECTIONS.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  const scrollToSection = (id) => {
-    // Lock the active tab immediately on click, suppress observer for 1.2s
+  const navigate = (id) => {
     setActiveSection(id);
-    manualScrollRef.current = true;
-
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
-
-    // Re-enable observer after scroll finishes
-    setTimeout(() => { manualScrollRef.current = false; }, 1200);
+    setVisited(prev => { const next = new Set(prev); next.add(id); return next; });
+    // Scroll content pane back to top on section switch
+    const pane = document.getElementById("cc-content-pane");
+    if (pane) pane.scrollTop = 0;
   };
 
   return (
-    <div style={{ background: T.deep, minHeight: "100vh", position: "relative" }}>
+    <div style={{ background: T.deep, minHeight: "100vh", display: "flex", position: "relative" }}>
 
-      {/* Staging environment indicator — orange bar, only visible on staging */}
       <StagingBanner />
 
-      {/* Vision ambient background — drifting indigo/royal orbs */}
+      {/* Ambient background orbs (fixed, behind everything) */}
       <div className="bg">
         <div className="bg-base" />
         <div className="bg-left" />
@@ -349,180 +427,149 @@ function DesktopApp() {
         <div className="bg-grain" />
       </div>
 
-      {/* Fixed Navigation — shared SiteNav with scroll tabs + WalletConnect */}
-      <SiteNav
-        sections={SECTIONS}
-        activeSection={activeSection}
-        onSectionClick={scrollToSection}
-        rightSlot={<WalletConnect />}
-      />
-
-      {/* Sections Container - padding for fixed nav */}
-      <div data-sections style={{ paddingTop: 64 }}>
-
-        {/* Section 1: Intelligence */}
-        <section id="intelligence" style={sectionStyle(0)}>
-          <IntelligencePage isSection={true} />
-        </section>
-
-        {/* Section Separator */}
-        <div className="section-divider" />
-
-        {/* Section 2: CIS */}
-        <section id="cis" style={sectionStyle(1)}>
-          <CISContent onUniverseLoad={setCisUniverse} />
-        </section>
-
-        {/* Section Separator */}
-        <div className="section-divider" />
-
-        {/* Section 3: Protocol */}
-        <section id="protocol" style={sectionStyle(0)}>
-          <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-            <Suspense fallback={<SectionLoader />}>
-              <ProtocolIntelligence />
-            </Suspense>
-          </div>
-        </section>
-
-        {/* Section Separator */}
-        <div className="section-divider" />
-
-        {/* Section 4: Vault */}
-        <section id="vault" style={sectionStyle(1)}>
-          <Suspense fallback={<SectionLoader />}>
-            <VaultPage isSection={true} />
-          </Suspense>
-        </section>
-
-        {/* Section Separator */}
-        <div className="section-divider" />
-
-        {/* Section 5: Quant GP */}
-        <section id="quantgp" style={sectionStyle(0)}>
-          <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-            <SectionLabel label="Quant GP" sub="GP Partner Network" />
-            <QuantGPContent />
-          </div>
-        </section>
-
-        {/* Section Separator */}
-        <div className="section-divider" />
-
-        {/* Section 6: Portfolio */}
-        <section id="portfolio" style={sectionStyle(1)}>
-          <Suspense fallback={<SectionLoader />}>
-            <MyPortfolio cisUniverse={cisUniverse} />
-          </Suspense>
-        </section>
-
-
+      {/* ── Sidebar — desktop only ── */}
+      <div className="cc-sidebar">
+        <Sidebar
+          activeSection={activeSection}
+          onNavigate={navigate}
+          bottomSlot={<WalletConnect />}
+        />
       </div>
 
+      {/* ── Top nav — mobile fallback ── */}
+      <div className="cc-topnav">
+        <SiteNav
+          sections={SECTIONS}
+          activeSection={activeSection}
+          onSectionClick={navigate}
+          rightSlot={<WalletConnect />}
+        />
+      </div>
+
+      {/* ── Content pane ── */}
+      <main
+        id="cc-content-pane"
+        className="cc-main"
+        style={{ flex: 1, overflowY: "auto", height: "100vh", position: "relative", zIndex: 1 }}
+      >
+        {/* Intelligence */}
+        <div style={{ display: activeSection === "intelligence" ? "block" : "none" }}>
+          {visited.has("intelligence") && (
+            <section style={contentPad}>
+              <IntelligencePage isSection={true} />
+            </section>
+          )}
+        </div>
+
+        {/* CIS */}
+        <div style={{ display: activeSection === "cis" ? "block" : "none" }}>
+          {visited.has("cis") && (
+            <section style={contentPad}>
+              <CISContent onUniverseLoad={setCisUniverse} />
+            </section>
+          )}
+        </div>
+
+        {/* Protocol */}
+        <div style={{ display: activeSection === "protocol" ? "block" : "none" }}>
+          {visited.has("protocol") && (
+            <section style={contentPad}>
+              <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+                <Suspense fallback={<SectionLoader />}>
+                  <ProtocolIntelligence />
+                </Suspense>
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* Vault */}
+        <div style={{ display: activeSection === "vault" ? "block" : "none" }}>
+          {visited.has("vault") && (
+            <section style={contentPad}>
+              <Suspense fallback={<SectionLoader />}>
+                <VaultPage isSection={true} />
+              </Suspense>
+            </section>
+          )}
+        </div>
+
+        {/* Quant GP */}
+        <div style={{ display: activeSection === "quantgp" ? "block" : "none" }}>
+          {visited.has("quantgp") && (
+            <section style={contentPad}>
+              <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+                <SectionLabel label="Quant GP" sub="GP Partner Network" />
+                <QuantGPContent />
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* Portfolio */}
+        <div style={{ display: activeSection === "portfolio" ? "block" : "none" }}>
+          {visited.has("portfolio") && (
+            <section style={contentPad}>
+              <Suspense fallback={<SectionLoader />}>
+                <MyPortfolio cisUniverse={cisUniverse} />
+              </Suspense>
+            </section>
+          )}
+        </div>
+      </main>
+
       <style>{`
-        * { scroll-behavior: smooth; }
-        body { background: ${T.deep}; min-height: 100vh; }
+        body { background: ${T.deep}; margin: 0; }
 
-        /* ── SECTION DIVIDERS — cyan-tinted glass line ── */
-        .section-divider {
-          height: 1px;
-          background: linear-gradient(90deg, transparent 0%, rgba(6,182,212,0.07) 20%, rgba(6,182,212,0.16) 50%, rgba(6,182,212,0.07) 80%, transparent 100%);
-          margin: 0;
-        }
+        /* Desktop: sidebar visible, top nav hidden */
+        .cc-sidebar  { display: block; }
+        .cc-topnav   { display: none; }
+        .cc-main     { margin-left: 220px; }
 
-        /* Nav responsive handled by SiteNav.jsx internal styles */
-
-        /* ── RESPONSIVE: Tables scroll horizontally ── */
-        @media (max-width: 768px) {
-          .tbl-wrap, .table-wrap {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-          }
-        }
-
-        /* ── RESPONSIVE: Section padding for different viewports ── */
-        @media (max-width: 480px) {
-          section { padding: 24px 14px !important; }
-        }
-        @media (min-width: 481px) and (max-width: 768px) {
-          section { padding: 36px 20px !important; }
-        }
-        @media (min-width: 769px) and (max-width: 1024px) {
-          section { padding: 48px 32px !important; }
-        }
-        @media (min-width: 1400px) {
-          section { padding: 64px 64px !important; }
-        }
-        @media (min-width: 1800px) {
-          section { padding: 72px 80px !important; }
-        }
-
-        /* ── RESPONSIVE: Grid adjustments ── */
-        @media (max-width: 640px) {
-          .mobile-stat-grid {
-            grid-template-columns: 1fr 1fr !important;
-            gap: 8px !important;
-          }
-        }
-
-        /* ── RESPONSIVE: Quant GP ── */
-        @media (max-width: 768px) {
-          #quantgp .mobile-stat-grid {
-            grid-template-columns: 1fr 1fr !important;
-          }
-        }
-
-        /* ── RESPONSIVE: Page headers ── */
-        @media (max-width: 768px) {
-          section h1 {
-            font-size: 22px !important;
-            margin-bottom: 12px !important;
-          }
-          section > div > div:first-child {
-            margin-top: 16px !important;
-            margin-bottom: 16px !important;
-          }
-        }
-
-        /* ── RESPONSIVE: Nav height compensation ── */
+        /* Mobile: sidebar hidden, top nav visible */
         @media (max-width: 900px) {
-          [data-sections] {
-            padding-top: 88px !important;
-          }
+          .cc-sidebar  { display: none; }
+          .cc-topnav   { display: block; }
+          .cc-main     { margin-left: 0 !important; padding-top: 88px; height: auto !important; overflow-y: visible !important; }
         }
 
-        /* ── RESPONSIVE: Touch targets ── */
+        /* Content padding — responsive */
+        @media (max-width: 480px)  { section { padding: 24px 14px !important; } }
+        @media (min-width: 481px) and (max-width: 768px) { section { padding: 36px 20px !important; } }
+        @media (min-width: 769px) and (max-width: 1100px) { section { padding: 40px 32px !important; } }
+        @media (min-width: 1400px) { section { padding: 56px 64px !important; } }
+        @media (min-width: 1800px) { section { padding: 64px 80px !important; } }
+
+        /* Tables */
         @media (max-width: 768px) {
-          button, .filter-btn, .lm-tab, .lm-action-btn {
-            min-height: 36px;
-          }
-          .lm-row {
-            min-height: 44px;
-          }
+          .tbl-wrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         }
 
-        /* ── RESPONSIVE: Cards on tiny screens ── */
+        /* Touch targets */
+        @media (max-width: 768px) {
+          button, .filter-btn, .lm-tab, .lm-action-btn { min-height: 36px; }
+          .lm-row { min-height: 44px; }
+        }
+
+        /* Tiny screens */
         @media (max-width: 380px) {
-          .lm-card {
-            border-radius: 6px !important;
-          }
-          section {
-            padding: 16px 8px !important;
-          }
+          .lm-card { border-radius: 6px !important; }
+          section  { padding: 16px 8px !important; }
         }
 
+        /* Sidebar scrollbar */
+        .cc-sidebar nav::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );
 }
 
-const sectionStyle = (index) => ({
-  minHeight: "auto",
-  padding: "44px 48px",    // base; responsive overrides in <style> below
-  background: index % 2 === 0 ? "transparent" : "rgba(7,26,74,0.25)",
+const contentPad = {
+  padding: "44px 48px",   // base; responsive overrides in DesktopApp <style>
+  minHeight: "calc(100vh - 88px)",
   position: "relative",
   zIndex: 1,
-});
+};
 
 /* HeroContent removed — was dead code (Market tab cut, no longer rendered).
    Kept in vision.html and strategy.html as standalone investor entry points. */
