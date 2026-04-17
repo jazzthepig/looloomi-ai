@@ -7,8 +7,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-# CCXT for data
-import ccxt
+# yfinance for data — OKX/Binance ccxt are geo-blocked on Railway US
+import yfinance as yf
 
 # Portfolio optimization
 from skfolio.optimization import MeanRisk, HierarchicalRiskParity
@@ -18,34 +18,70 @@ from skfolio.optimization.convex import ObjectiveFunction
 import warnings
 warnings.filterwarnings('ignore')
 
+# yfinance ticker map — crypto: {symbol}-USD, TradFi passed through as-is
+_YF_TICKER_MAP = {
+    "BTC": "BTC-USD", "ETH": "ETH-USD", "SOL": "SOL-USD",
+    "BNB": "BNB-USD", "AVAX": "AVAX-USD", "XRP": "XRP-USD",
+    "ADA": "ADA-USD", "DOT": "DOT-USD", "LINK": "LINK-USD",
+    "UNI": "UNI-USD", "AAVE": "AAVE-USD", "ARB": "ARB-USD",
+    "OP": "OP-USD",   "POL": "POL-USD",   "DOGE": "DOGE-USD",
+}
+
 
 class CryptoPortfolioOptimizer:
     """
-    Institutional-grade portfolio optimization for crypto assets
+    Institutional-grade portfolio optimization for crypto assets.
+    Data source: yfinance (works on Railway US; ccxt OKX/Binance are geo-blocked).
     """
-    
+
     def __init__(self, assets: List[str] = None):
         self.assets = assets or ["BTC", "ETH", "SOL", "BNB", "AVAX"]
-        self.exchange = ccxt.okx({'enableRateLimit': True})
         self.returns_data = None
-        
+
     def fetch_historical_data(self, days: int = 90) -> pd.DataFrame:
-        """Fetch historical price data for all assets"""
-        print(f"  Fetching {days} days of data for {len(self.assets)} assets...")
-        
-        all_data = {}
-        for asset in self.assets:
-            symbol = f"{asset}/USDT"
-            try:
-                ohlcv = self.exchange.fetch_ohlcv(symbol, '1d', limit=days)
-                df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-                df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-                df.set_index('timestamp', inplace=True)
-                all_data[asset] = df['close']
-            except Exception as e:
-                print(f"    Warning: Could not fetch {symbol}: {e}")
-        
-        prices = pd.DataFrame(all_data)
+        """
+        Fetch daily close prices via yfinance for all assets.
+        Returns a DataFrame indexed by date with one column per asset.
+        """
+        end   = datetime.utcnow()
+        start = end - timedelta(days=days + 5)  # +5 buffer for weekends/gaps
+
+        tickers = [_YF_TICKER_MAP.get(a.upper(), f"{a.upper()}-USD") for a in self.assets]
+        try:
+            raw = yf.download(
+                tickers,
+                start=start.strftime("%Y-%m-%d"),
+                end=end.strftime("%Y-%m-%d"),
+                progress=False,
+                auto_adjust=True,
+            )
+            # yf returns MultiIndex (field, ticker) when >1 ticker
+            if isinstance(raw.columns, pd.MultiIndex):
+                prices = raw["Close"].copy()
+                prices.columns = [
+                    self.assets[tickers.index(t)] if t in tickers else t
+                    for t in prices.columns
+                ]
+            else:
+                # single-ticker case — column is the ticker string
+                prices = raw[["Close"]].copy()
+                prices.columns = self.assets[:1]
+        except Exception as e:
+            print(f"[optimizer] yfinance batch download failed: {e}")
+            # Per-asset fallback
+            prices_dict: dict = {}
+            for asset, ticker in zip(self.assets, tickers):
+                try:
+                    d = yf.download(ticker, start=start.strftime("%Y-%m-%d"),
+                                    end=end.strftime("%Y-%m-%d"),
+                                    progress=False, auto_adjust=True)
+                    if not d.empty:
+                        prices_dict[asset] = d["Close"]
+                except Exception as inner:
+                    print(f"[optimizer] yfinance failed for {ticker}: {inner}")
+            prices = pd.DataFrame(prices_dict)
+
+        prices = prices.dropna(how="all").tail(days)
         self.returns_data = prices.pct_change().dropna()
         return prices
     
