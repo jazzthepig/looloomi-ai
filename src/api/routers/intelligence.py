@@ -46,8 +46,10 @@ async def get_macro_events():
     try:
         from backend.macro_events_scraper import fetch_all_macro_events
         events = await fetch_all_macro_events()
-        _macro_cache["data"] = events
-        _macro_cache["at"] = now
+        # Only cache if we got actual events — don't freeze an empty result for 60 min
+        if events:
+            _macro_cache["data"] = events
+            _macro_cache["at"] = now
         return {"events": events, "cached": False, "count": len(events)}
     except Exception as e:
         _logger.error(f"Macro events fetch failed: {e}", exc_info=True)
