@@ -444,6 +444,11 @@ function DesktopApp() {
           onSectionClick={navigate}
           rightSlot={<WalletConnect />}
         />
+        {/* Desktop upsell — only visible on mobile, below nav */}
+        <div className="cc-desktop-hint">
+          <span style={{ opacity: 0.45, marginRight: 6 }}>⊞</span>
+          Open on desktop for the full platform experience
+        </div>
       </div>
 
       {/* ── Content pane ── */}
@@ -530,7 +535,31 @@ function DesktopApp() {
         @media (max-width: 900px) {
           .cc-sidebar  { display: none; }
           .cc-topnav   { display: block; }
-          .cc-main     { margin-left: 0 !important; padding-top: 88px; height: auto !important; overflow-y: visible !important; }
+          .cc-main     { margin-left: 0 !important; padding-top: 108px; height: auto !important; overflow-y: visible !important; }
+        }
+
+        /* Desktop upsell strip — mobile only */
+        .cc-desktop-hint {
+          display: none;
+        }
+        @media (max-width: 900px) {
+          .cc-desktop-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 56px;
+            left: 0; right: 0;
+            height: 28px;
+            background: rgba(6,182,212,0.06);
+            border-bottom: 1px solid rgba(6,182,212,0.10);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.06em;
+            color: rgba(6,182,212,0.55);
+            z-index: 999;
+            pointer-events: none;
+          }
         }
 
         /* Content padding — responsive */
