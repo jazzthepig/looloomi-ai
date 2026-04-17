@@ -336,7 +336,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
         </div>
         )}
 
-        {/* Header */}
+        {/* Header — title left, live stats right */}
         <div style={{
           marginTop: isSection ? 0 : 24, marginBottom: 20,
           display: "flex", alignItems: "center", gap: 10,
@@ -349,29 +349,23 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
           <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
             · GP Selection
           </span>
-        </div>
-
-        {/* Stats strip — flat, no cards */}
-        <div style={{ display: "flex", gap: 0, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid rgba(37,99,235,0.08)` }}>
-          {[
-            { label: "Active GPs",  value: stats.totalFunds,         color: T.blue },
-            { label: "Total AUM",   value: formatAUM(stats.totalAUM), color: T.t2  },
-            { label: "Avg Score",   value: stats.avgScore,            color: T.t2  },
-            { label: "Grade A",     value: stats.gradeA,              color: T.green },
-          ].map((s, i, arr) => (
-            <div key={i} style={{
-              paddingRight: 32,
-              borderRight: i < arr.length - 1 ? `1px solid rgba(37,99,235,0.10)` : "none",
-              marginRight: i < arr.length - 1 ? 32 : 0,
-            }}>
-              <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 8, opacity: 0.6 }}>
-                {s.label}
+          {/* Live stats inline — right-aligned */}
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 0 }}>
+            {[
+              { label: "ACTIVE GPs",  value: stats.totalFunds,          color: T.blue  },
+              { label: "AVG SCORE",   value: stats.avgScore,             color: T.t2   },
+              { label: "GRADE A",     value: stats.gradeA,               color: T.green },
+            ].map((s, i, arr) => (
+              <div key={i} style={{
+                paddingLeft: 20, paddingRight: i < arr.length - 1 ? 20 : 0,
+                borderLeft: `1px solid rgba(6,182,212,0.10)`,
+                display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1,
+              }}>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.16em", color: T.muted, textTransform: "uppercase" }}>{s.label}</div>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: s.color, letterSpacing: "-0.01em" }}>{s.value}</div>
               </div>
-              <div style={{ fontFamily: FONTS.mono, fontSize: 24, fontWeight: 400, color: s.color, letterSpacing: "-0.02em", lineHeight: 1 }}>
-                {s.value}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Filters */}

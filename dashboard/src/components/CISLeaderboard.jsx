@@ -404,47 +404,36 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
     setSelectedAsset(asset);
   };
 
-  // Compact 5-pillar mini chart for table rows
+  // Pillar inline text strip — F·72 M·58 O·81 S·44 A·63
   const PillarMiniChart = ({ pillars }) => {
     if (!pillars) return null;
     const defs = [
-      { key: "F",     color: "#4472FF" },
-      { key: "M",     color: "#A78BFA" },
-      { key: "O",     color: "#00D98A" },
-      { key: "S",     color: "#F59E0B" },
-      { key: "alpha", color: "#FF2D55" },
+      { key: "F",     label: "F", color: "#4472FF" },
+      { key: "M",     label: "M", color: "#A78BFA" },
+      { key: "O",     label: "O", color: "#00D98A" },
+      { key: "S",     label: "S", color: "#F59E0B" },
+      { key: "alpha", label: "A", color: "#FF2D55" },
     ];
     return (
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 3, marginTop: 4 }}>
-        {defs.map(p => {
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+        {defs.map((p, i) => {
           const raw = pillars[p.key];
           const val = (raw != null && !isNaN(raw)) ? Number(raw) : null;
-          const label = p.key === "alpha" ? "A" : p.key;
+          // Color by quartile: ≥75 bright, ≥50 mid, ≥25 dim, <25 muted
+          const scoreColor = val == null ? "rgba(148,163,184,0.2)"
+            : val >= 75 ? p.color
+            : val >= 50 ? p.color + "BB"
+            : val >= 25 ? p.color + "70"
+            : "rgba(148,163,184,0.3)";
           return (
-            <div
+            <span
               key={p.key}
               title={`${p.key === "alpha" ? "Alpha" : p.key}: ${val != null ? val.toFixed(1) : "—"}`}
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, cursor: "default" }}
+              style={{ fontFamily: FONTS.mono, fontSize: 8, letterSpacing: "0.02em", color: scoreColor, whiteSpace: "nowrap" }}
             >
-              <span style={{
-                fontFamily: FONTS.mono, fontSize: 6, fontWeight: 700,
-                color: val != null ? p.color : T.dim, opacity: val != null ? 0.65 : 0.3,
-                letterSpacing: 0,
-              }}>{label}</span>
-              <div style={{ width: 14, height: 28, background: "rgba(255,255,255,0.05)", borderRadius: 2, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-                <div style={{
-                  width: "100%",
-                  height: val != null ? `${Math.max(4, val)}%` : "4%",
-                  background: val != null ? p.color : "transparent",
-                  opacity: val != null ? 0.75 : 0,
-                  transition: "height 0.4s ease",
-                }} />
-              </div>
-              <span style={{
-                fontFamily: FONTS.mono, fontSize: 6,
-                color: val != null ? T.muted : T.dim, opacity: val != null ? 0.7 : 0.3,
-              }}>{val != null ? Math.round(val) : "—"}</span>
-            </div>
+              {p.label}·{val != null ? Math.round(val) : "—"}
+              {i < defs.length - 1 && <span style={{ color: "rgba(148,163,184,0.15)", marginLeft: 6 }}>|</span>}
+            </span>
           );
         })}
       </div>

@@ -36,7 +36,8 @@ function StagingBanner() {
 
 /* ── Lazy-load fallback ──────────────────────────────────────────────────── */
 // ── Editorial section label — consistent across all sections ──────────────
-function SectionLabel({ label, sub }) {
+// stats: [{ label, value, color }] — rendered inline right-aligned (Fortress pattern)
+function SectionLabel({ label, sub, stats = null }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingBottom: 14, borderBottom: "1px solid rgba(6,182,212,0.08)" }}>
       <div style={{ width: 2, height: 16, background: "rgba(6,182,212,0.65)", borderRadius: 1, flexShrink: 0 }} />
@@ -47,6 +48,20 @@ function SectionLabel({ label, sub }) {
         <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
           · {sub}
         </span>
+      )}
+      {stats && stats.length > 0 && (
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 0 }}>
+          {stats.map((s, i) => (
+            <div key={i} style={{
+              paddingLeft: 20, paddingRight: i < stats.length - 1 ? 20 : 0,
+              borderLeft: `1px solid rgba(6,182,212,0.10)`,
+              display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1,
+            }}>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.16em", color: T.muted, textTransform: "uppercase" }}>{s.label}</div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: s.color || T.t2, letterSpacing: "-0.01em" }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -740,10 +755,22 @@ function CISContent({ onUniverseLoad }) {
     if (onUniverseLoad) onUniverseLoad(data);
   };
 
+  // Derive live stats from loaded universe
+  const cisStats = cisUniverse.length > 0 ? (() => {
+    const scored = cisUniverse.filter(a => (a.cis_score ?? a.score ?? 0) > 0);
+    const gradeA = cisUniverse.filter(a => a.grade === "A" || a.grade === "A+").length;
+    const topScore = Math.max(...scored.map(a => a.cis_score ?? a.score ?? 0));
+    return [
+      { label: "ASSETS",  value: cisUniverse.length,               color: T.cyan  },
+      { label: "GRADE A", value: gradeA,                            color: "#00D98A" },
+      { label: "TOP CIS", value: scored.length ? topScore.toFixed(1) : "—", color: T.t2 },
+    ];
+  })() : null;
+
   return (
     <div style={{ maxWidth: 1400, margin: "0 auto" }}>
       {/* Section Header */}
-      <SectionLabel label="CIS" sub="Intelligence Score" />
+      <SectionLabel label="CIS" sub="Intelligence Score" stats={cisStats} />
 
       {/* Leaderboard — owns the fetch, fires onDataLoad when done */}
       <div className="lm-card" style={{ overflow: "hidden" }}>

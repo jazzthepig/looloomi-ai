@@ -166,11 +166,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   // Heatmap color helper
   const getHeatmapStyle = (change) => {
     const val = parseFloat(change);
-    if (val >= 3) return { bg: "rgba(0,232,122,0.16)", border: "rgba(0,232,122,0.25)", color: T.green }; // strong-up
-    if (val >= 0.5) return { bg: "rgba(0,232,122,0.08)", border: "rgba(0,232,122,0.14)", color: T.green }; // up
-    if (val > -0.5) return { bg: "rgba(14,30,56,0.5)", border: "rgba(56,148,210,0.08)", color: T.t3 }; // flat
-    if (val > -3) return { bg: "rgba(255,61,90,0.08)", border: "rgba(255,61,90,0.14)", color: T.red }; // down
-    return { bg: "rgba(255,61,90,0.16)", border: "rgba(255,61,90,0.25)", color: T.red }; // strong-down
+    if (val >= 3) return { bg: "rgba(0,232,122,0.22)", color: T.green }; // strong-up
+    if (val >= 0.5) return { bg: "rgba(0,232,122,0.10)", color: T.green }; // up
+    if (val > -0.5) return { bg: "rgba(14,30,56,0.55)", color: T.t3 }; // flat
+    if (val > -3) return { bg: "rgba(255,61,90,0.10)", color: T.red }; // down
+    return { bg: "rgba(255,61,90,0.22)", color: T.red }; // strong-down
   };
 
   // Fetch sector heatmap data
@@ -461,6 +461,23 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
                   · AI Market Analysis
                 </span>
+                {/* Live inline stats — right-aligned */}
+                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 0 }}>
+                  {[
+                    { label: "MACRO EVENTS", value: macroEvents.length || "—", color: T.cyan },
+                    { label: "VC ROUNDS", value: raises.length || "—", color: T.t2 },
+                    { label: "DEFI TVL", value: sectorData.find(s => s.name === "DeFi")?.tvl || "—", color: T.t2 },
+                  ].map((s, i, arr) => (
+                    <div key={i} style={{
+                      paddingLeft: 20, paddingRight: i < arr.length - 1 ? 20 : 0,
+                      borderLeft: `1px solid rgba(6,182,212,0.10)`,
+                      display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1,
+                    }}>
+                      <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.16em", color: T.muted, textTransform: "uppercase" }}>{s.label}</div>
+                      <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: s.color, letterSpacing: "-0.01em" }}>{s.value}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -560,39 +577,35 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     <span style={{ fontSize: 9, color: T.muted }}>DefiLlama</span>
                   </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, padding: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 3, padding: "10px 12px 12px" }}>
                   {heatmapLoading ? (
                     Array(8).fill(0).map((_, i) => (
-                      <div key={i} style={{
-                        borderRadius: 8, padding: "14px 16px",
-                        border: `1px solid ${T.border}`,
-                        background: "rgba(0,0,0,0.02)",
-                      }}>
-                        <div className="sk" style={{ height: 12, width: 50, marginBottom: 8 }} />
-                        <div className="sk" style={{ height: 20, width: 60 }} />
+                      <div key={i} style={{ padding: "14px 14px", background: "rgba(14,30,56,0.4)" }}>
+                        <div className="sk" style={{ height: 10, width: 44, marginBottom: 8 }} />
+                        <div className="sk" style={{ height: 18, width: 52 }} />
                       </div>
                     ))
                   ) : sectorData.map((sector, idx) => {
-                    const style = getHeatmapStyle(sector.change);
+                    const s = getHeatmapStyle(sector.change);
                     return (
                       <div key={idx} style={{
-                        borderRadius: 8, padding: "14px 16px",
-                        border: `1px solid ${style.border}`,
-                        background: style.bg,
-                        transition: "transform .2s ease, box-shadow .2s ease, border-color .2s ease", cursor: "pointer",
+                        padding: "12px 14px",
+                        background: s.bg,
+                        transition: "filter 0.15s ease",
+                        cursor: "default",
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.25)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.filter = "brightness(1.18)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.filter = "brightness(1)"; }}
                       >
-                        <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, color: T.primary, letterSpacing: "0.04em", marginBottom: 4 }}>
+                        <div style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, color: T.t3, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
                           {sector.name}
                         </div>
-                        <div style={{ fontFamily: FONTS.mono, fontSize: 17, fontWeight: 400, letterSpacing: "-0.02em", color: style.color }}>
+                        <div style={{ fontFamily: FONTS.mono, fontSize: 20, fontWeight: 400, letterSpacing: "-0.02em", color: s.color, lineHeight: 1 }}>
                           {sector.tvl === "—" && sector.change === 0
                             ? "—"
                             : `${sector.change > 0 ? "+" : ""}${Number(sector.change).toFixed(1)}%`}
                         </div>
-                        <div style={{ fontSize: 9, color: "rgba(199,210,254,0.3)", marginTop: 4 }}>
+                        <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.45, marginTop: 5 }}>
                           {sector.tvl}
                         </div>
                       </div>
