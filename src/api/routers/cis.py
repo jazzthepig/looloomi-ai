@@ -207,6 +207,37 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
     return {"status": "error", "message": "No scoring data available", "universe": []}
 
 
+@router.get("/api/v1/cis/top")
+async def get_cis_top(limit: int = 10, response: Response = None):
+    """
+    Top-N CIS assets by score.
+    Returns the same merged T1+T2 universe as /api/v1/cis/universe but sliced
+    to top N and sorted by score descending. Used by ShareCard, StrategyPage.
+    """
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
+
+    # Re-use the full universe logic then slice
+    full = await get_cis_universe(force_source=None)
+    universe = full.get("universe", [])
+    if not universe:
+        return {"status": full.get("status", "ok"), "source": full.get("source"), "top": [], "limit": limit}
+
+    sorted_assets = sorted(universe, key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
+    top = sorted_assets[:limit]
+    return {
+        "status":       full.get("status", "ok"),
+        "version":      "4.1.0",
+        "source":       full.get("source"),
+        "macro_regime": full.get("macro_regime"),
+        "t1_count":     full.get("t1_count", 0),
+        "t2_count":     full.get("t2_count", 0),
+        "total":        len(universe),
+        "limit":        limit,
+        "top":          sanitize_floats(top),
+    }
+
+
 @router.get("/api/v1/cis/asset/{symbol}")
 async def get_cis_asset(symbol: str):
     """Get CIS score for a specific asset."""
