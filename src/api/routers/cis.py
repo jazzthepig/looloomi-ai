@@ -172,10 +172,13 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         merged.sort(key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
 
         # macro_regime: Mac Mini may send flat {"regime": "Risk-Off"} or
-        # nested {"macro": {"regime": ...}} — try both paths
+        # nested {"macro": {"regime": ...}} — try both paths, then fall back
+        # to Railway's own regime calculation so we never return UNKNOWN
         _cached_regime = (
             (cached.get("macro") or {}).get("regime")
             or cached.get("regime")
+            or (result.get("macro") or {}).get("regime")
+            or (result.get("regime"))
             or "UNKNOWN"
         )
 
