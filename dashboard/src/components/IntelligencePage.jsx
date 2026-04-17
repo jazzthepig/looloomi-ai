@@ -124,10 +124,19 @@ const ACTIVE_VCS = [
 ];
 
 const EV_TYPE = {
-  institutional: { color: T.amber,  label: "Institutional",  Icon: Building2 },
-  regulatory:    { color: T.blue,   label: "Regulatory",     Icon: Globe },
-  protocol:      { color: T.green,  label: "Protocol",       Icon: Zap },
-  infrastructure:{ color: "#9945FF",label: "Infrastructure", Icon: Activity },
+  // legacy keys
+  institutional: { color: T.amber,  label: "Institutional" },
+  regulatory:    { color: T.blue,   label: "Regulatory"    },
+  protocol:      { color: T.green,  label: "Protocol"      },
+  infrastructure:{ color: "#9945FF",label: "Infrastructure"},
+  // new keys from macro_events_scraper
+  raise:         { color: T.amber,  label: "Institutional" },
+  news:          { color: T.cyan,   label: "Market"        },
+  // category-keyed fallbacks (uppercase from backend)
+  INSTITUTIONAL: { color: T.amber,  label: "Institutional" },
+  REGULATORY:    { color: T.blue,   label: "Regulatory"    },
+  MACRO:         { color: "#9945FF",label: "Macro"         },
+  MARKET:        { color: T.cyan,   label: "Market"        },
 };
 
 const IMP_C = {
@@ -973,10 +982,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               </div>
               <div>
                 {macroEvents.length === 0 ? null : macroEvents.map((ev, i) => {
-                  const cfg = EV_TYPE[ev.type] || EV_TYPE.protocol;
+                  const cfg = EV_TYPE[ev.type] || EV_TYPE[ev.category] || EV_TYPE[ev.category?.toLowerCase()] || EV_TYPE.protocol;
                   const isHigh = ev.impact === "HIGH";
                   return (
-                    <div key={ev.id} style={{
+                    <div key={ev.id || ev.title?.slice(0, 40) || i} style={{
                       display: "flex", gap: 16, paddingTop: 14, paddingBottom: 14,
                       borderBottom: `1px solid rgba(37,99,235,0.07)`,
                       animation: `fadeUp .3s ease ${i*.05}s both`,

@@ -153,6 +153,7 @@ async def get_price(symbol: str) -> Optional[dict]:
     try:
         client = _get_binance_client()
         r = await client.get(f"{BINANCE_BASE}/ticker/24hr", params={"symbol": ticker})
+        r.raise_for_status()
         d = r.json()
         result = {
             "symbol": symbol.upper(),
@@ -194,8 +195,12 @@ async def get_ohlcv(symbol: str, interval: str = "1h", limit: int = 100) -> list
         client = _get_binance_client()
         r = await client.get(f"{BINANCE_BASE}/klines",
                              params={"symbol": ticker, "interval": interval, "limit": limit})
+        r.raise_for_status()
+        raw = r.json()
+        if not isinstance(raw, list):
+            return [{"error": f"Binance returned non-list response: {str(raw)[:100]}"}]
         candles = []
-        for c in r.json():
+        for c in raw:
             candles.append({
                 "time":   datetime.fromtimestamp(c[0]/1000, tz=timezone.utc).isoformat(),
                 "open":   float(c[1]),
