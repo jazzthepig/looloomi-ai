@@ -171,7 +171,26 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         # Sort by CIS score descending
         merged.sort(key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
 
-        _cached_regime = (cached.get("macro") or {}).get("regime", "UNKNOWN")
+        # macro_regime: Mac Mini may send flat {"regime": "Risk-Off"} or
+        # nested {"macro": {"regime": ...}} — try both paths
+        _cached_regime = (
+            (cached.get("macro") or {}).get("regime")
+            or cached.get("regime")
+            or "UNKNOWN"
+        )
+
+        # Normalize T1 pillars: Mac Mini sends flat keys (f/m/o/s/a).
+        # Build nested pillars dict so frontend components can read asset.pillars.F etc.
+        for a in merged:
+            if a.get("data_tier") == 1 and a.get("pillars") is None:
+                pf = a.get("f") or a.get("F")
+                pm = a.get("m") or a.get("M")
+                po = a.get("o") or a.get("O")
+                ps = a.get("s") or a.get("S")
+                pa = a.get("a") or a.get("A")
+                if any(v is not None for v in (pf, pm, po, ps, pa)):
+                    a["pillars"] = {"F": pf, "M": pm, "O": po, "S": ps, "A": pa}
+
         return sanitize_floats({
             "status":       "success",
             "version":      "4.1.0",
@@ -201,7 +220,11 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
             "source":       "local_engine_stale",
             "t1_count":     0,
             "t2_count":     len(stale_universe),
-            "macro_regime": (cached.get("macro") or {}).get("regime", "UNKNOWN"),
+            "macro_regime": (
+                (cached.get("macro") or {}).get("regime")
+                or cached.get("regime")
+                or "UNKNOWN"
+            ),
             "universe":     stale_universe,
         }
     return {"status": "error", "message": "No scoring data available", "universe": []}
