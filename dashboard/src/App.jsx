@@ -14,6 +14,7 @@ const MobileApp            = lazy(() => import("./components/MobileApp"));
 const AssetRadar           = lazy(() => import("./components/AssetRadar"));
 const QuantMonitor         = lazy(() => import("./components/QuantMonitor"));
 const MyPortfolio          = lazy(() => import("./components/MyPortfolio"));
+const SignalFeed           = lazy(() => import("./components/SignalFeed"));
 
 /* ── Staging environment banner ─────────────────────────────────────────── */
 function StagingBanner() {
@@ -267,15 +268,26 @@ function CrossAssetView({ universe = [] }) {
 }
 
 const NAV_ITEMS = [
-  { id: "intelligence", label: "Intelligence", icon: "◈", sub: "Signals · Events · Macro" },
-  { id: "cis",          label: "CIS Engine",   icon: "◆", sub: "Scoring · Leaderboard" },
-  { id: "protocol",     label: "Protocols",    icon: "⬡", sub: "DeFi TVL · Selection" },
-  { id: "vault",        label: "Vault",        icon: "◎", sub: "Fund of Funds" },
-  { id: "quantgp",      label: "Quant GP",     icon: "∿", sub: "EST Alpha · Live" },
-  { id: "portfolio",    label: "Portfolio",    icon: "⊡", sub: "My Holdings" },
+  { id: "intelligence", label: "Intelligence", icon: "◈", sub: "Signals · Events · Macro",
+    children: [
+      { id: "intelligence.signals", label: "Signal Feed" },
+      { id: "intelligence.macro",   label: "Macro" },
+      { id: "intelligence.events",  label: "Events & VC" },
+    ]
+  },
+  { id: "cis", label: "CIS Engine", icon: "◆", sub: "Scoring · Leaderboard",
+    children: [
+      { id: "cis.leaderboard", label: "Leaderboard" },
+      { id: "cis.radar",       label: "Asset Radar" },
+    ]
+  },
+  { id: "protocol",  label: "Protocols", icon: "⬡", sub: "DeFi TVL · Selection" },
+  { id: "vault",     label: "Vault",     icon: "◎", sub: "Fund of Funds" },
+  { id: "quantgp",   label: "Quant GP",  icon: "∿", sub: "EST Alpha · Live" },
+  { id: "portfolio", label: "Portfolio", icon: "⊡", sub: "My Holdings" },
 ];
 
-// Used by mobile SiteNav
+// Used by mobile SiteNav — top-level items only
 const SECTIONS = NAV_ITEMS.map(({ id, label }) => ({ id, label }));
 
 const TOOL_LINKS = [
@@ -325,43 +337,78 @@ function Sidebar({ activeSection, onNavigate, bottomSlot }) {
         </div>
 
         {NAV_ITEMS.map(item => {
+          const isParentActive = activeSection === item.id || activeSection.startsWith(item.id + ".");
           const active = activeSection === item.id;
           return (
-            <button
-              key={item.id}
-              onClick={() => onNavigate(item.id)}
-              style={{
-                width: "100%", textAlign: "left",
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "9px 10px 9px 12px", borderRadius: 6,
-                cursor: "pointer", border: "none", marginBottom: 2,
-                background: active ? "rgba(6,182,212,0.07)" : "transparent",
-                color: active ? T.t1 : T.t3,
-                transition: "all 0.14s",
-              }}
-              onMouseEnter={e => { if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.025)"; e.currentTarget.style.color = T.t2; } }}
-              onMouseLeave={e => { if (!active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.t3; } }}
-            >
-              {/* Active pip */}
-              <div style={{
-                width: 2, height: 18, borderRadius: 1, flexShrink: 0,
-                background: active ? T.cyan : "transparent",
-                transition: "background 0.14s",
-              }} />
-              {/* Icon */}
-              <span style={{ fontFamily: FONTS.mono, fontSize: 12, color: active ? T.cyan : T.t3, flexShrink: 0, lineHeight: 1, opacity: active ? 1 : 0.5 }}>
-                {item.icon}
-              </span>
-              {/* Label + sub */}
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: active ? 700 : 500, letterSpacing: "0.01em", whiteSpace: "nowrap" }}>
-                  {item.label}
+            <div key={item.id}>
+              <button
+                onClick={() => onNavigate(item.id)}
+                style={{
+                  width: "100%", textAlign: "left",
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "9px 10px 9px 12px", borderRadius: 6,
+                  cursor: "pointer", border: "none", marginBottom: 2,
+                  background: isParentActive ? "rgba(6,182,212,0.07)" : "transparent",
+                  color: isParentActive ? T.t1 : T.t3,
+                  transition: "all 0.14s",
+                }}
+                onMouseEnter={e => { if (!isParentActive) { e.currentTarget.style.background = "rgba(255,255,255,0.025)"; e.currentTarget.style.color = T.t2; } }}
+                onMouseLeave={e => { if (!isParentActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.t3; } }}
+              >
+                {/* Active pip */}
+                <div style={{
+                  width: 2, height: 18, borderRadius: 1, flexShrink: 0,
+                  background: active ? T.cyan : isParentActive ? "rgba(6,182,212,0.35)" : "transparent",
+                  transition: "background 0.14s",
+                }} />
+                {/* Icon */}
+                <span style={{ fontFamily: FONTS.mono, fontSize: 12, color: isParentActive ? T.cyan : T.t3, flexShrink: 0, lineHeight: 1, opacity: isParentActive ? 1 : 0.5 }}>
+                  {item.icon}
+                </span>
+                {/* Label + sub */}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: isParentActive ? 700 : 500, letterSpacing: "0.01em", whiteSpace: "nowrap" }}>
+                    {item.label}
+                  </div>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: isParentActive ? T.t3 : T.muted, marginTop: 2, opacity: 0.65, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {item.sub}
+                  </div>
                 </div>
-                <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: active ? T.t3 : T.muted, marginTop: 2, opacity: 0.65, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {item.sub}
+              </button>
+
+              {/* Children — shown when parent is active */}
+              {item.children && isParentActive && (
+                <div style={{ marginLeft: 24, marginBottom: 4 }}>
+                  {item.children.map(child => {
+                    const childActive = activeSection === child.id;
+                    return (
+                      <button
+                        key={child.id}
+                        onClick={() => onNavigate(child.id)}
+                        style={{
+                          width: "100%", textAlign: "left",
+                          display: "flex", alignItems: "center", gap: 8,
+                          padding: "6px 10px 6px 10px", borderRadius: 5,
+                          cursor: "pointer", border: "none", marginBottom: 1,
+                          background: childActive ? "rgba(6,182,212,0.10)" : "transparent",
+                          color: childActive ? T.cyan : "rgba(148,163,184,0.55)",
+                          transition: "all 0.12s",
+                        }}
+                        onMouseEnter={e => { if (!childActive) { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = T.t2; } }}
+                        onMouseLeave={e => { if (!childActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(148,163,184,0.55)"; } }}
+                      >
+                        <div style={{
+                          width: 1, height: 12, background: childActive ? T.cyan : "rgba(6,182,212,0.25)", borderRadius: 1, flexShrink: 0,
+                        }} />
+                        <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: childActive ? 600 : 400, letterSpacing: "0.01em", whiteSpace: "nowrap" }}>
+                          {child.label}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-              </div>
-            </button>
+              )}
+            </div>
           );
         })}
 
@@ -518,6 +565,65 @@ function DesktopApp() {
               <Suspense fallback={<SectionLoader />}>
                 <MyPortfolio cisUniverse={cisUniverse} />
               </Suspense>
+            </section>
+          )}
+        </div>
+
+        {/* ── Intelligence sub-pages ─────────────────────────────────────── */}
+
+        {/* intelligence.signals */}
+        <div style={{ display: activeSection === "intelligence.signals" ? "block" : "none" }}>
+          {visited.has("intelligence.signals") && (
+            <section style={contentPad}>
+              <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+                <SectionLabel label="Signal Feed" sub="Live intelligence signals" />
+                <Suspense fallback={<SectionLoader />}>
+                  <SignalFeed />
+                </Suspense>
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* intelligence.macro */}
+        <div style={{ display: activeSection === "intelligence.macro" ? "block" : "none" }}>
+          {visited.has("intelligence.macro") && (
+            <section style={contentPad}>
+              <IntelligencePage isSection={true} view="macro" />
+            </section>
+          )}
+        </div>
+
+        {/* intelligence.events */}
+        <div style={{ display: activeSection === "intelligence.events" ? "block" : "none" }}>
+          {visited.has("intelligence.events") && (
+            <section style={contentPad}>
+              <IntelligencePage isSection={true} view="events" />
+            </section>
+          )}
+        </div>
+
+        {/* ── CIS sub-pages ──────────────────────────────────────────────── */}
+
+        {/* cis.leaderboard */}
+        <div style={{ display: activeSection === "cis.leaderboard" ? "block" : "none" }}>
+          {visited.has("cis.leaderboard") && (
+            <section style={contentPad}>
+              <CISContent onUniverseLoad={setCisUniverse} />
+            </section>
+          )}
+        </div>
+
+        {/* cis.radar */}
+        <div style={{ display: activeSection === "cis.radar" ? "block" : "none" }}>
+          {visited.has("cis.radar") && (
+            <section style={contentPad}>
+              <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+                <SectionLabel label="Asset Radar" sub="30-asset live scoring" />
+                <Suspense fallback={<SectionLoader />}>
+                  <AssetRadar />
+                </Suspense>
+              </div>
             </section>
           )}
         </div>
