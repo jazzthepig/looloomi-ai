@@ -1177,9 +1177,9 @@ def calculate_cis_score(
                 vol_surge_signal = _linear_interp(vol_mcap_ratio, 0.03, 0.10, 8.0, 15.0)
             elif vol_mcap_ratio >= 0.01:
                 vol_surge_signal = _linear_interp(vol_mcap_ratio, 0.01, 0.03, 3.0, 8.0)
-            elif vol_mcap_ratio >= 0.003:
-                vol_surge_signal = _linear_interp(vol_mcap_ratio, 0.003, 0.01, 0.0, 3.0)
-            # below 0.3% vol/mcap → 0 (illiquid / dead)
+            elif vol_mcap_ratio >= 0.0005:
+                vol_surge_signal = _linear_interp(vol_mcap_ratio, 0.0005, 0.003, 0.5, 3.0)
+            # below 0.05% vol/mcap → 0 (illiquid / dead)
         else:
             vol_mcap_ratio = 0.0
 
@@ -1202,6 +1202,12 @@ def calculate_cis_score(
                 mom_struct = 6.0  # consolidating / neutral
             else:
                 mom_struct = max(0.0, _linear_interp(change_7d, -15.0, -3.0, 0.0, 6.0))
+            # v4.2: Recovery bonus — short-term bounce but not yet confirmed
+            # 24h + 7d positive while 30d still negative = early recovery signal
+            if change_24h > 0 and change_7d > 0 and change_30d < 0:
+                recovery_bonus = min(5.0, _linear_interp(change_24h, 0.0, 5.0, 0.0, 5.0))
+                mom_struct = min(15.0, mom_struct + recovery_bonus)
+                s_components["recovery_bonus"] = round(recovery_bonus, 1)
 
         # === Signal 3: FNG Secondary (0–10) ===
         # Fear & Greed as a reduced-weight sentiment backdrop only.
@@ -1224,7 +1230,13 @@ def calculate_cis_score(
     # Divergence: asset 30d vs category median (continuous)
     cat_median = category_median_30d if category_median_30d is not None else 0
     asset_div = change_30d - cat_median
-    div_score = max(-15, min(25, asset_div * 0.5))
+    # v4.2: Dampener in extreme fear (FNG < 25 → 0.5; FNG < 40 → 0.75)
+    _dampen = 1.0
+    if fng_value and fng_value < 25:
+        _dampen = 0.5
+    elif fng_value and fng_value < 40:
+        _dampen = 0.75
+    div_score = max(-15, min(25, asset_div * 0.5 * _dampen))
     # 24h burst
     burst_score = max(-5, min(10, change_24h * 0.5))
     divergence_total = div_score + burst_score
@@ -1344,11 +1356,14 @@ def calculate_cis_score(
             a_components["alpha_score"] = 0
 
     # Correlation discount (from betas)
+    # v4.2: In Risk-Off, correlation discount floor is -8 (less punitive, BTC correlation
+    # is expected — don't penalize a second time since S pillar already handles macro beta)
     corr_discount = 0.0
     if asset_betas and asset_betas.get("source") == "30d_rolling":
         btc_corr = abs(asset_betas.get("dxy_beta", 0))
         if btc_corr > 0.8:
-            corr_discount = -15
+            _floor = -8  # Risk-Off: BTC correlation expected; less punitive
+            corr_discount = max(_floor, _linear_interp(btc_corr, 0.8, 1.0, 0, -15))
         elif btc_corr > 0.5:
             corr_discount = -8
     a_components["correlation_discount"] = corr_discount
@@ -1466,7 +1481,18 @@ def calculate_total_score(
     s_val = pillars.get("S") or 0
     a_val = pillars.get("A") or 0
 
-    # Calculate contributions
+    # v4.2: raw_cis_score = base weights only (no regime adjustment)
+    # This shows "what pillars actually score" before market regime adjustment
+    base = dict(_BASE_WEIGHTS.get(asset_class, _BASE_WEIGHTS["Crypto"]))
+    raw_total = (
+        base["F"] * f_val +
+        base["M"] * m_val +
+        base["O"] * o_val +
+        base["S"] * s_val +
+        base["A"] * a_val
+    )
+
+    # Calculate contributions (regime-adjusted weights)
     contributions = {
         "fundamental": {
             "score": f_val,
@@ -1505,6 +1531,7 @@ def calculate_total_score(
 
     return {
         "total_score": round(total, 1),
+        "raw_cis_score": round(raw_total, 1),  # v4.2: pre-regime base score
         "weights": w,
         "contributions": contributions,
     }
@@ -1860,6 +1887,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         # Calculate total with regime-aware weights
         total_result = calculate_total_score(pillars, asset_class, regime=regime)
         total_score = total_result["total_score"]
+        raw_cis_score = total_result.get("raw_cis_score", total_score)  # v4.2: base score
         weights = total_result["weights"]
         contributions = total_result["contributions"]
 
@@ -1927,6 +1955,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "name": config["name"],
             "asset_class": asset_class,
             "cis_score": total_score,
+            "raw_cis_score": raw_cis_score,  # v4.2: base pillar score (no regime adjustment)
             "grade": grade,
             "signal": signal,
             "confidence": confidence,

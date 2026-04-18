@@ -147,6 +147,10 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
                 # T1 override: use local score but keep Railway's market data + name
                 la = local_map[sym]
                 asset["cis_score"] = la.get("cis_score") or la.get("score", asset.get("cis_score"))
+                # v4.2: Mac Mini T1 score is base-weighted (no regime adjustment applied),
+                # so its score IS the raw score. Use it as raw_cis_score unless Railway
+                # already computed one from the T2 fallback path.
+                asset["raw_cis_score"] = la.get("raw_cis_score") or la.get("cis_score") or asset.get("cis_score")
                 asset["grade"] = la.get("grade", asset.get("grade"))
                 asset["signal"] = la.get("signal", asset.get("signal"))
                 asset["data_tier"] = 1
@@ -166,6 +170,14 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         for sym, la in local_map.items():
             if sym not in seen:
                 la["data_tier"] = 1
+                # v4.2: compute raw_cis_score from T1 pillars if not present
+                if la.get("raw_cis_score") is None:
+                    pf = la.get("f") or la.get("F") or 50
+                    pm = la.get("m") or la.get("M") or 50
+                    po = la.get("o") or la.get("O") or 50
+                    ps = la.get("s") or la.get("S") or 50
+                    pa = la.get("a") or la.get("A") or 50
+                    la["raw_cis_score"] = round((0.25*pf + 0.25*pm + 0.20*po + 0.15*ps + 0.15*pa), 1)
                 merged.append(la)
 
         # Sort by CIS score descending
