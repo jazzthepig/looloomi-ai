@@ -123,6 +123,12 @@ const ACTIVE_VCS = [
   { name: "Variant Fund", deals: 45, portfolio: ["Uniswap", "Aave", "MakerDAO", "PoolTogether"], focus: "DeFi" },
 ];
 
+// Strip HTML tags from strings (news APIs sometimes embed HTML in description fields)
+const stripHtml = (html) => {
+  if (!html) return '';
+  return html.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+};
+
 const EV_TYPE = {
   // legacy keys
   institutional: { color: T.amber,  label: "Institutional" },
@@ -644,7 +650,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     const isInstitutional = event.category === "INSTITUTIONAL";
                     const isHigh = event.impact === "HIGH";
                     const catColor = isInstitutional ? "#C8A84B" : "#4B9EFF";
-                    const desc = event.description || "";
+                    const desc = stripHtml(event.description || "");
                     const truncated = desc.length > 100 ? desc.slice(0, 100) + "…" : desc;
                     return (
                     <div key={idx} style={{
@@ -1018,7 +1024,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                           {ev.title}
                         </div>
                         <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t3, lineHeight: 1.55 }}>
-                          {ev.description || ev.summary}
+                          {stripHtml(ev.description || ev.summary)}
                         </div>
                       </div>
                     </div>
