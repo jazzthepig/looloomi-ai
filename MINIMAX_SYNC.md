@@ -1,5 +1,5 @@
 # MINIMAX_SYNC.md — Seth ↔ Minimax 协调文档
-*最后更新: 2026-04-10 — Seth（优先级已更新，Railway push 完成）*
+*最后更新: 2026-04-18 — Minimax（CIS v4.2 评分修复 + price=0 根因修复）*
 
 ---
 
@@ -136,43 +136,58 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 
 ---
 
-## §4 Minimax 当前任务优先级（2026-04-10 更新）
+## §4 Minimax 当前任务优先级（2026-04-18 更新）
 
-### 🔴 P0 — 必须先做（阻塞 CIS 数据）
+### 🔴 P0 — 已完成（2026-04-18）
 
-| # | 任务 | 命令/文件 | 验收标准 | 状态 |
-|---|------|----------|---------|------|
-| 1 | Rotate EODHD + Finnhub keys（已暴露） | 重新申请，设置环境变量 | 代码中无硬编码 key | 🔴 |
-| 2 | Apply `data_fetcher.py` 8 bug fixes | `cp Shadow/cometcloud-local/data_fetcher.py /Volumes/CometCloudAI/cometcloud-local/` | 文件 MD5 一致 | 🔴 |
-| 3 | Apply `config.py` v4.1 thresholds + compliance signals | `cp Shadow/cometcloud-local/config.py /Volumes/CometCloudAI/cometcloud-local/` | grade A+≥85, 信号无 BUY/SELL | 🔴 |
-| 4 | Restart `cis_scheduler.py` | `pkill -f cis_scheduler && python cis_scheduler.py &` | `cis:local_scores` key 在 Redis 有数据 | 🔴 |
-| 5 | 验证 CIS push 成功 | `curl -H "X-Internal-Token: $INTERNAL_TOKEN" https://looloomi.up.railway.app/api/v1/cis/universe \| jq '.data_tier'` | 返回 `"T1_LOCAL"` 而不是 `"railway"` | 🔴 |
-| 6 | 通知 Jazz：T1 badge 变绿 | — | — | 🔴 |
+| # | 任务 | 文件 | 验收标准 | 状态 |
+|---|------|------|---------|------|
+| 1 | Rotate EODHD + Finnhub keys（已暴露） | `data_fetcher.py` | 环境变量，无硬编码 | ✅ |
+| 2 | Apply `data_fetcher.py` 8 bug fixes | `data_fetcher.py` | 文件已 apply | ✅ |
+| 3 | Apply `config.py` v4.1 thresholds | `config.py` | grade A+≥85, compliance signals | ✅ |
+| 4 | **NEW: CoinGecko null 修复** | `data_fetcher.py` | POLYX/PEPE 返回 null → 跳过，不缓存 price=0 | ✅ |
+| 5 | **NEW: confidence=0 过滤** | `cis_scheduler.py` | price=0 资产不进入 universe | ✅ |
+| 6 | `cis_push.py` macro_regime 已确认 | `cis_push.py` | payload 包含 `macro_regime` 字段 | ✅ |
+| 7 | Restart `cis_scheduler.py` | — | 等待 Jazz 确认时机 | 🔄 |
 
 ### 🟠 P1 — 本周内（影响 universe 质量）
 
 | # | 任务 | 说明 | 状态 |
 |---|------|------|------|
-| 7 | **Universe 过滤**：从 cis_v4_engine.py 的资产列表中移除 14 个已排除资产 | 见下方 §4A 排除列表 | 🟡 |
-| 8 | 确认 HYPER（Hyperliquid）在评分列表中保留 | v1.1 inclusion standard 已重新纳入 | 🟡 |
-| 9 | LAS 字段加入 local engine 输出 | `"las": cis_score * liquidity_multiplier * confidence` — 与 Railway schema 对齐 | 🟡 |
-| 10 | Apply T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` 目录，决策标准：PF ≥ 1.25 → dry run | 🟡 |
-| 11 | 回报 backtest 结果（PF / WR / MaxDD） | 发给 Jazz | 🟡 |
+| 8 | **Universe 过滤**：POLYX + PEPE 等 14 个已排除资产 | 见下方 §4A | 🟡 **待确认是否已从引擎移除** |
+| 9 | 确认 HYPER（Hyperliquid）在评分列表中保留 | v1.1 inclusion standard | 🟡 |
+| 10 | LAS 字段加入 local engine 输出 | 与 Railway schema 对齐 | 🟡 |
+| 11 | Apply T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` | 🟡 |
+| 12 | 回报 backtest 结果（PF / WR / MaxDD） | 发给 Jazz | 🟡 |
 
 ### 🟡 P2 — 下周
 
 | # | 任务 | 状态 |
 |---|------|------|
-| 12 | Macro Brief pipeline 稳定性 — LM Studio crash recovery（Gemma 4 26B-A4B 替代 Qwen3-35B 做 narrative generation） | 🟡 |
-| 13 | DeFiLlama TVL 刷新 30min → 15min | 🟡 |
-| 14 | 模型切换：Narrative generation → **Gemma 4 26B-A4B**；Event classification → **Qwen 3.5 35B-A3B**（见 PRD_V2_2.md §5） | 🟡 |
+| 13 | Macro Brief pipeline 稳定性 | 🟡 |
+| 14 | DeFiLlama TVL 刷新 30min → 15min | 🟡 |
+| 15 | 模型切换：Gemma 4 26B-A4B / Qwen 3.5 35B-A3B | 🟡 |
 
-### ⚠️ 已完成 / 被阻塞
+### 📋 根因分析（2026-04-18）
 
-| # | 任务 | 说明 |
-|---|------|------|
-| — | Seth Railway push | ✅ commit `a2008f1` 已推送，包含 P0 文件 |
-| — | Redis `cis:local_scores` 数据存在 | 等待 P0 #1-#3 apply 后 Mac Mini 重新 push |
+**POLYX / PEPE / SLV price=0 根因已确认：**
+
+1. **POLYX** — CoinGecko 对 `polymesh` 返回 `{"polymesh": null}`（币种下线或未收录）
+   - `fetch_crypto_price()` / `fetch_crypto_prices_batch()` 未检查 `item is None`
+   - 修复：检测 `null` → 跳过，不缓存 price=0
+
+2. **PEPE** — 同上，CoinGecko 可能返回 null
+   - 同修复
+
+3. **SLV** — yfinance 从当前 IP 返回 403（受限）
+   - `fetch_tradfi_prices_batch()` 无 fallback，price=0
+   - 修复：置信度=0 资产被过滤，不进入 universe
+
+4. **CIS 高分假象** — confidence=0 的资产被推送到 Railway
+   - 引擎用 placeholder beta 给出虚假高分（POLYX CIS=100, confidence=0）
+   - 修复：scheduler 过滤 `confidence == 0` 资产
+
+**重要：POLYX + PEPE 在 §4A 排除列表中，应从引擎移除，不应出现在 scores 中。**
 
 ---
 
