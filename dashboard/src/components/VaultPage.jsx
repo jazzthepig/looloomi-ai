@@ -187,7 +187,8 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
   const filteredFunds = funds
     .filter(f => filterType === "All" || f.strategy === filterType)
     .filter(f => filterLocation === "All" || f.location === filterLocation)
-    .sort((a, b) => b.scores[sortBy] - a.scores[sortBy]);
+    // null-safe sort: null scores sort to bottom
+    .sort((a, b) => (b.scores?.[sortBy] ?? -1) - (a.scores?.[sortBy] ?? -1));
 
   // ── Deposit intent handler ──────────────────────────────────────────────────
   const handleDepositIntent = useCallback(async () => {
@@ -502,23 +503,36 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
 
               {/* Performance */}
               <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, color: fund.performance.ytd >= 0 ? T.green : T.red, fontFamily: FONTS.mono, fontSize: 13 }}>
-                  {fund.performance.ytd >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-                  {fund.performance.ytd >= 0 ? "+" : ""}{fund.performance.ytd}%
-                </div>
-                <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>
-                  Sharpe: {fund.performance.sharpeRatio}
-                </div>
+                {fund.performance.ytd != null ? (
+                  <>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, color: fund.performance.ytd >= 0 ? T.green : T.red, fontFamily: FONTS.mono, fontSize: 13 }}>
+                      {fund.performance.ytd >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                      {fund.performance.ytd >= 0 ? "+" : ""}{fund.performance.ytd}%
+                    </div>
+                    <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>
+                      Sharpe: {fund.performance.sharpeRatio ?? "—"}
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted }}>
+                    On-chain NAV<br />
+                    <span style={{ color: T.cyan, fontSize: 9 }}>↗ Drift</span>
+                  </div>
+                )}
               </div>
 
               {/* Risk */}
               <div>
-                <div style={{ color: T.amber, fontFamily: FONTS.mono, fontSize: 13 }}>
-                  {fund.performance.maxDrawdown}%
-                </div>
-                <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>
-                  Max DD
-                </div>
+                {fund.performance.maxDrawdown != null ? (
+                  <>
+                    <div style={{ color: T.amber, fontFamily: FONTS.mono, fontSize: 13 }}>
+                      {fund.performance.maxDrawdown}%
+                    </div>
+                    <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>Max DD</div>
+                  </>
+                ) : (
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted }}>—</div>
+                )}
               </div>
 
               {/* Score Breakdown — segmented mini bars */}
@@ -527,7 +541,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
               {/* Total Score */}
               <div>
                 <div style={{ fontSize: 18, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>
-                  {fund.scores.total}
+                  {fund.scores?.total ?? "—"}
                 </div>
               </div>
 
