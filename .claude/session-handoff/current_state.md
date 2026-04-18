@@ -1,71 +1,74 @@
-# Current State — Updated 2026-04-12 (~5pm JST)
+# Current State — Updated 2026-04-18
 
-## Commits on Railway (pushed)
-- `6c09dad` — Phase A: compliance-language + cis-methodology skills, 12 violations fixed
-- `9ebc5a8` — Auth graceful degradation (wallet-signin no longer 503 without Supabase) + Phase D session handoff
+## Commits on Railway (confirmed via `git log origin/main`)
+- `13668fc` — fix(cis): CIS v4.2 scoring corrections — market rebound detection
+- `cb9eaee` — fix: CIS data layer — Binance geo-block + Upstash L2 cache
+- `b5d2bc7` — feat: Phase B+C+D — compliance hook, subagents, Portfolio tab
+- `9ebc5a8` — fix: wallet auth graceful degradation
+- `6c09dad` — Phase A: compliance-language + cis-methodology skills
 
-## Commits local only (need Jazz to push from Mac Mini)
+## CIS v4.2 Scoring Fix (commit `13668fc`) — Applied 2026-04-18
 
-```bash
-rm -f .git/index.lock .git/HEAD.lock
-git add \
-  .claude/hooks/compliance_check.py \
-  .claude/settings.json \
-  .claude/agents/compliance-auditor.md \
-  .claude/agents/cis-validator.md \
-  .claude/agents/deploy-verifier.md \
-  .claude/agent-memory/compliance-auditor/MEMORY.md \
-  .claude/agent-memory/cis-validator/MEMORY.md \
-  .claude/agent-memory/deploy-verifier/MEMORY.md \
-  dashboard/src/App.jsx \
-  dashboard/dist/
-git commit -m "feat: Phase B+C — compliance hook, 3 subagents + Portfolio section mounted"
-git push origin main
-```
+### What changed in `src/data/cis/cis_provider.py`:
 
-## Files changed but NOT yet in any commit (need staging + commit above)
-- `.claude/hooks/compliance_check.py` — Phase B compliance hook (dry-run, PreToolUse)
-- `.claude/settings.json` — hooks registration
-- `.claude/agents/compliance-auditor.md` — compliance audit subagent
-- `.claude/agents/cis-validator.md` — CIS scoring validation subagent
-- `.claude/agents/deploy-verifier.md` — post-deploy health check subagent
-- `.claude/agent-memory/*/MEMORY.md` — seeded memory for 3 new agents
-- `dashboard/src/App.jsx` — Portfolio added as Section 6 (lazy MyPortfolio mount)
-- `dashboard/dist/` — rebuilt after Portfolio section + compliance signal map cleanup
+1. **Dual score display** — `raw_cis_score` (base weights, no regime) vs `cis_score` (regime-adjusted)
+   - `calculate_total_score()` now returns both `total_score` and `raw_cis_score`
+   - Each asset in universe now carries both fields
+   - Frontend can show: `CIS BASE: 72 / CIS ADJ: 58 (Risk-Off)`
 
-## Active feature: Portfolio tab (wired, not yet on Railway)
-MyPortfolio.jsx (741 lines, fully built) is now mounted as Section 6 in App.jsx:
-- Wallet-gated: shows connect prompt if not signed in
-- Watchlist: pin assets from CIS universe (localStorage)
-- Position tracker: cost basis → live P&L
-- CIS grade change alerts since asset was added
-- No extra API calls — reads cisUniverse prop from parent
+2. **S pillar recovery bonus** — rebounding assets (24h+7d positive, 30d negative) get +0–5 bonus
+   - `s_components["recovery_bonus"]` exposed for transparency
 
-## Auth is now unblocked (on Railway since 9ebc5a8)
-wallet-signin no longer returns 503 without Supabase configured.
-Session token issued from Redis. Profile creation is soft-optional.
-→ Wallet connect E2E with Phantom devnet should work now.
+3. **S pillar vol/mcap threshold** — lowered from 0.3% to 0.05%
+   - More assets qualify for vol_surge_signal in low-volume recovering markets
 
-## Production health (as of 6c09dad / 9ebc5a8)
-- CIS Universe: ❌ EMPTY — COINGECKO_API_KEY still missing in Railway
-- Macro Pulse: ✅ LIVE
-- Signal Feed: ✅ LIVE
-- DeFi Overview: ✅ LIVE
-- Wallet auth: ✅ FIXED (9ebc5a8) — can sign in without Supabase
-- Portfolio tab: ⏳ PENDING Railway deploy after push above
+4. **A pillar correlation floor** — in Risk-Off, BTC corr discount floor raised from -15 to -8
+   - Prevents double-penalizing BTC correlation (S pillar already handles macro beta in Risk-Off)
 
-## Next tasks (in order)
-1. **Jazz**: `rm -f .git/index.lock .git/HEAD.lock` + run git add + commit + push above
-2. **Jazz**: Add `COINGECKO_API_KEY` to Railway → CIS universe populates
-3. **Jazz**: Add `SUPABASE_URL` + `SUPABASE_KEY` → full profile persistence
-4. **Jazz/Seth**: Wallet connect E2E test on devnet (Phantom)
-5. **Seth**: Phase E — CometCloud plugin packaging (optional, no blocker)
+5. **Divergence dampener** — in extreme fear (FNG<25), divergence halved; FNG<40: 0.75x
+   - Prevents panic-sell assets from being doubly penalized vs category peers
+
+### What changed in `src/api/routers/cis.py`:
+- T1 merge now preserves `raw_cis_score` from Mac Mini
+- T1-only assets get `raw_cis_score` computed from pillars if missing
+
+### Fix 6 (Skipped): CometCloudStrategy.py compliance
+- Shadow folder is read-only per CLAUDE.md rules — cannot modify
+- GRADE_ORDER dict itself is compliance-safe (grade letters only)
+
+## Production health (2026-04-18)
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Railway | ✅ LIVE | HEAD = 13668fc (CIS v4.2) |
+| CIS Universe | 🔄 DEPLOYING | v4.2 fixes live after Railway auto-deploy |
+| raw_cis_score field | ✅ ADDED | Now in /api/v1/cis/universe + /top responses |
+| Macro Pulse | ✅ LIVE | Expected unchanged |
+| Signal Feed | ✅ LIVE | Expected unchanged |
+| DeFi Overview | ✅ LIVE | Expected unchanged |
+
+## Pending by owner
+
+### Minimax (Mac Mini)
+1. Investigate `data_fetcher.py` price=0 failures for POLYX, PEPE, SLV
+2. Confirm `cis_push.py` sends `macro_regime` field correctly
+3. Restart `cis_scheduler.py` after data fetcher fix
+
+### Jazz
+1. Verify Railway deployment of `13668fc` completes without crash
+2. Check `/api/v1/cis/top?limit=5` shows `raw_cis_score` field and B+ grades during rebound
+3. Verify `SUPABASE_URL` + `SUPABASE_KEY` in Railway Variables
+
+### Seth (Austin)
+1. Verify CIS universe populates after deploy — `universe_size > 0`, grade distribution spans C to B+
+2. Wallet connect E2E test with Phantom devnet
+3. Strategy.html walkthrough prep for Nic
 
 ## HARNESS_UPGRADE.md progress
-- Phase A: ✅ Skills (committed + pushed)
-- Phase B: ✅ Hook (on disk, pending commit)
-- Phase C: ✅ Subagents + memory (on disk, pending commit)
-- Phase D: ✅ Session handoff (committed + pushed in 9ebc5a8)
+- Phase A: ✅ Skills
+- Phase B: ✅ Compliance hook
+- Phase C: ✅ Subagents + memory
+- Phase D: ✅ Session handoff
 - Phase E: Plugin packaging — not started
 - Phase F: GitHub Agentic Workflows — not started
 - Phase G: Scheduled task migration — not started

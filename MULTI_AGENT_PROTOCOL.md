@@ -8,11 +8,14 @@
 | Agent | Identity | Mode | Owns |
 |-------|----------|------|------|
 | **Jazz** | Founder, human-in-the-loop | Decision + Deploy | Product direction, git push to main, investor relations |
-| **Seth** | Austin/Sebastian Bath (Cowork) | L2 semi-auto | `src/`, `dashboard/src/`, `dashboard/dist/`, docs |
-| **Minimax** | Claude Code on Mac Mini | L1 fully-auto | `/Volumes/CometCloudAI/cometcloud-local/`, `Shadow/` ref only |
+| **Seth** | Austin/Sebastian Bath (Cowork) | L2 semi-auto | `src/`, `dashboard/`, `programs/`, docs — git repo at `~/projects/looloomi-ai/` |
+| **Minimax** | Claude Code on Mac Mini | L1 fully-auto | `/Volumes/CometCloudAI/cometcloud-local/` (CIS engine + local backend) · `/Volumes/CometCloudAI/freqtrade/` (strategy lab) · `/Volumes/CometCloudAI/data/` (data store) |
 | **Monitor** | Scheduled agent (Cowork) | L1 fully-auto | Production health checks, no code changes |
 
-**Ownership is hard.** Seth never modifies `cometcloud-local/`. Minimax never modifies `src/` or `dashboard/`. Shadow/ is read-only reference for both.
+**Ownership is hard.**
+- Seth only modifies `src/`, `dashboard/`, docs in the git repo.
+- Minimax only modifies the three directories under `/Volumes/CometCloudAI/` above.
+- `Shadow/` is read-only reference for both — Seth writes reference code there, Minimax manually applies to actual paths. Never committed to git.
 
 ---
 
@@ -159,33 +162,33 @@ Before enabling fully autonomous deploys:
 
 ---
 
-## 10. Current Status (2026-04-02)
+## 10. Current Status (2026-04-18)
 
-**Seth — done this session:**
-- [x] MCP fixes: CIS universe key (`universe` not `assets`), macro_pulse nested fallback, signal feed field names (`description`/`logic`/`affected_assets`)
-- [x] MCP CIS timeout 20s → 60s (CIS universe was timing out)
-- [x] `data_layer.py`: `get_macro_pulse()` now returns flat fields alongside nested structure (MCP + frontend compat)
-- [x] `Shadow/cometcloud-local/data_fetcher.py`: 8 bug fixes (EODHD date format, API keys, symbol case, RateLimitError, yfinance hang, dup import)
-- [x] `Shadow/cometcloud-local/config.py`: v4.1 grade thresholds + compliance signals
-- [x] `Shadow/freqtrade/`: CometCloudT1Strategy.py + config_backtest_t1.json + run_t1_backtest.sh + T1_BACKTEST_VALIDATION.md
-- [x] `MINIMAX_SYNC.md` created (file-based protocol for Seth ↔ Minimax)
-- [ ] Freqtrade CIS integration (after Minimax dry run confirms T1)
+**Seth — committed this session (commit `13668fc`):**
+- [x] CIS v4.2 scoring fixes — `cis_provider.py` + `cis.py` (see current_state.md §CIS v4.2)
+  - Dual score display: `raw_cis_score` + `cis_score` per asset
+  - S pillar recovery bonus (+0–5 for rebounding assets)
+  - S pillar vol/mcap threshold lowered 0.3% → 0.05%
+  - A pillar correlation floor raised -15 → -8 in Risk-Off
+  - Divergence dampener in extreme fear (FNG<25: 0.5x, FNG<40: 0.75x)
+- [x] Frontend build verified clean
+- [ ] Freqtrade CIS integration (pending Minimax T1 dry run)
 - [ ] Trading Agent P&L dashboard
 
 **Minimax — pending (see MINIMAX_SYNC.md §3 for full detail):**
-- [ ] P0: Rotate EODHD + Finnhub API keys (exposed in git history)
-- [ ] P0: Apply `data_fetcher.py` + `config.py` from Shadow → restart `cis_scheduler.py`
-- [ ] P0: Confirm CIS scores in Redis (`cis:local_scores`) — T1 badge should turn green
-- [ ] P1: Run `run_t1_backtest.sh` → report PF/WR/MaxDD to Jazz
+- [ ] P0: Investigate `data_fetcher.py` price=0 failures (POLYX, PEPE, SLV)
+- [ ] P0: Confirm `cis_push.py` sends `macro_regime` field correctly
+- [ ] P0: Restart `cis_scheduler.py` after data fetcher fix
+- [ ] P0: Confirm CIS scores in Redis (`cis:local_scores`) — T1 badge green
+- [ ] P1: Run T1 backtest → report PF/WR/MaxDD to Jazz
 - [ ] P1: Add LAS to local engine output (match Railway schema)
 - [ ] P2: Macro Brief LM Studio crash recovery
 
 **Jazz — pending:**
-- [ ] `rm -f .git/HEAD.lock` then `git push origin main` (682fdbe + timeout fix pending)
-- [ ] Restart Claude Desktop after push (MCP reloads fixed code)
-- [ ] Railway → Variables: add `COINGECKO_API_KEY` (CIS universe empty without it)
-- [ ] Railway → Variables: add `SUPABASE_URL` + `SUPABASE_KEY` (service_role)
-- [ ] Run `scripts/supabase_all_tables.sql` in Supabase SQL Editor
+- [x] Git push — already done (13668fc pushed this session)
+- [ ] Verify Railway deployment completes (13668fc auto-deploys ~2min)
+- [ ] Check `/api/v1/cis/top?limit=5` — should show `raw_cis_score` field + B+ grades
+- [ ] Railway → Variables: verify `COINGECKO_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`
 - [ ] Strategy.html walkthrough with Nic
 - [ ] Seed investor deck
 
