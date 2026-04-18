@@ -146,8 +146,17 @@ const StrengthBar = ({ value }) => {
 
 /* ─── Helper ─────────────────────────────────────────────────────────── */
 const formatRelativeTime = (isoTimestamp) => {
-  const ts = new Date(isoTimestamp).getTime();
+  if (!isoTimestamp) return "—";
+  // Normalise short date strings like "Apr 18" (no year) — append current year
+  // so they don't parse as ~year-2001 and show "9131d ago"
+  let normalized = String(isoTimestamp).trim();
+  if (/^[A-Za-z]{3}\s+\d{1,2}$/.test(normalized)) {
+    normalized = `${normalized} ${new Date().getFullYear()}`;
+  }
+  const ts = new Date(normalized).getTime();
+  if (isNaN(ts)) return "—";
   const diff = Date.now() - ts;
+  if (diff < 0) return "just now";
   const hours = Math.floor(diff / 3600000);
   const minutes = Math.floor(diff / 60000);
   if (hours >= 24) return `${Math.floor(hours / 24)}d ago`;
