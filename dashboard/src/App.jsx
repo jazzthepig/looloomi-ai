@@ -451,11 +451,14 @@ function DesktopApp() {
   const [activeSection, setActiveSection] = useState("intelligence");
   const [cisUniverse, setCisUniverse]     = useState([]);
   // Lazy-mount: track which sections have been visited — mount once, keep alive
+  // "cis.leaderboard" pre-seeded so clicking CIS Engine parent mounts it immediately
   const [visited, setVisited] = useState(() => new Set(["intelligence"]));
 
   const navigate = (id) => {
-    setActiveSection(id);
-    setVisited(prev => { const next = new Set(prev); next.add(id); return next; });
+    // "cis" parent redirects to cis.leaderboard (canonical sub-page — avoids double CISContent mount)
+    const resolved = id === "cis" ? "cis.leaderboard" : id;
+    setActiveSection(resolved);
+    setVisited(prev => { const next = new Set(prev); next.add(resolved); return next; });
     // Scroll content pane back to top on section switch
     const pane = document.getElementById("cc-content-pane");
     if (pane) pane.scrollTop = 0;
@@ -509,15 +512,6 @@ function DesktopApp() {
           {visited.has("intelligence") && (
             <section style={contentPad}>
               <IntelligencePage isSection={true} />
-            </section>
-          )}
-        </div>
-
-        {/* CIS */}
-        <div style={{ display: activeSection === "cis" ? "block" : "none" }}>
-          {visited.has("cis") && (
-            <section style={contentPad}>
-              <CISContent onUniverseLoad={setCisUniverse} />
             </section>
           )}
         </div>

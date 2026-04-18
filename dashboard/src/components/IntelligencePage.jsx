@@ -465,18 +465,18 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               }}>
                 <div style={{ width: 2, height: 16, background: "rgba(6,182,212,0.65)", borderRadius: 1, flexShrink: 0 }} />
                 <span style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 600, color: T.primary, letterSpacing: "-0.01em" }}>
-                  Intelligence
+                  {view === "macro" ? "Macro" : view === "events" ? "Events & VC" : "Intelligence"}
                 </span>
                 <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  · AI Market Analysis
+                  {view === "macro" ? "· Macro Pulse & Economic Indicators" : view === "events" ? "· VC Funding & Regulatory" : "· AI Market Analysis"}
                 </span>
-                {/* Live inline stats — right-aligned */}
+                {/* Live inline stats — right-aligned, filtered by view */}
                 <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 0 }}>
                   {[
-                    { label: "MACRO EVENTS", value: macroEvents.length || "—", color: T.cyan },
-                    { label: "VC ROUNDS", value: raises.length || "—", color: T.t2 },
-                    { label: "DEFI TVL", value: sectorData.find(s => s.name === "DeFi")?.tvl || "—", color: T.t2 },
-                  ].map((s, i, arr) => (
+                    (view === "all" || view === "macro") && { label: "MACRO EVENTS", value: macroEvents.length || "—", color: T.cyan },
+                    (view === "all" || view === "events") && { label: "VC ROUNDS", value: raises.length || "—", color: T.t2 },
+                    (view === "all" || view === "macro") && { label: "DEFI TVL", value: sectorData.find(s => s.name === "DeFi")?.tvl || "—", color: T.t2 },
+                  ].filter(Boolean).map((s, i, arr) => (
                     <div key={i} style={{
                       paddingLeft: 20, paddingRight: i < arr.length - 1 ? 20 : 0,
                       borderLeft: `1px solid rgba(6,182,212,0.10)`,
