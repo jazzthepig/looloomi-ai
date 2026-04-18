@@ -148,7 +148,7 @@ const IMP_C = {
 /* ═══════════════════════════════════════════════════════════════════════
    INTELLIGENCE + QUANT GP PAGE
 ═══════════════════════════════════════════════════════════════════════ */
-export default function IntelligencePage({ activeTab, setActiveTab, isSection = false }) {
+export default function IntelligencePage({ activeTab, setActiveTab, isSection = false, view = "all" }) {
   const [raises, setRaises]             = useState([]);
   const [rwaRaises, setRwaRaises]       = useState([]);
   const [loading, setLoading]           = useState(true);
@@ -491,6 +491,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             )}
 
             {/* Macro Brief — AI-generated market analysis */}
+            {(view === "all" || view === "macro") && (
             <div style={{
               marginBottom: 16, width: "100%", clear: "both",
               opacity: mounted ? 1 : 0,
@@ -499,8 +500,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             }}>
               <MacroBrief />
             </div>
+            )}
 
             {/* Economic Indicators — EODHD multi-country macro panel */}
+            {(view === "all" || view === "macro") && (
             <div style={{
               marginBottom: 20, width: "100%", clear: "both",
               opacity: mounted ? 1 : 0,
@@ -509,8 +512,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             }}>
               <EconomicIndicators />
             </div>
+            )}
 
             {/* CIS Widget */}
+            {view === "all" && (
             <div style={{
               marginBottom: 24, width: "100%", clear: "both",
               opacity: mounted ? 1 : 0,
@@ -519,8 +524,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             }}>
               <CISWidget defaultLimit={20} />
             </div>
+            )}
 
             {/* Stat strip — inline, no cards */}
+            {(view === "all" || view === "events") && (
             <div style={{
               display: "flex", gap: 0, margin: "20px 0",
               paddingBottom: 20, borderBottom: `1px solid rgba(37,99,235,0.08)`,
@@ -552,8 +559,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 </div>
               ))}
             </div>
+            )}
 
             {/* ══ Protocol Intelligence ════════════════════════════════════ */}
+            {view === "all" && (
             <div style={{
               opacity: mounted ? 1 : 0,
               transform: mounted ? "translateY(0)" : "translateY(8px)",
@@ -563,8 +572,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 <ProtocolIntelligence />
               </Suspense>
             </div>
+            )}
 
             {/* Main 2-col layout: Sector Heatmap + Macro Events */}
+            {(view === "all" || view === "macro") && (
             <div className="mobile-2col-grid" style={{
               display: "grid", gridTemplateColumns: isSection ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16,
               opacity: mounted ? 1 : 0,
@@ -669,9 +680,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 </div>
               </div>
             </div>
+            )}
 
             {/* ── VC Portfolio Performance (CoinGecko) ───────────────────── */}
-            {(vcPortfoliosLoading || vcPortfolios.length > 0) && (
+            {(view === "all" || view === "events") && (vcPortfoliosLoading || vcPortfolios.length > 0) && (
               <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
                 <div style={{ padding: "14px 18px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <Label Icon={Activity}>VC Portfolio Performance</Label>
@@ -778,7 +790,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             )}
 
             {/* Full width — VC Funding Table (hidden when no data) */}
-            {(loading || raises.length > 0) && <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
+            {(view === "all" || view === "events") && (loading || raises.length > 0) && <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
                 {/* Update Drawer */}
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -971,7 +983,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             </div>}
 
             {/* ══ MACRO EVENTS ═════════════════════════════ */}
-            <div style={{ marginTop: 24, marginBottom: 24 }}>
+            {(view === "all" || view === "events") && <div style={{ marginTop: 24, marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
                 <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase" }}>
                   Macro Events
@@ -1013,10 +1025,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   );
                 })}
               </div>
-            </div>
+            </div>}
 
             {/* ══ TOKENIZED FUNDS & INDICES ══════════════════════════════════════ */}
-            <div style={{ marginTop: 24, marginBottom: 24 }}>
+            {view === "all" && <div style={{ marginTop: 24, marginBottom: 24 }}>
               <div style={{ marginBottom: 14 }}>
                 <Label Icon={Globe}>TOKENIZED FUNDS & INDICES</Label>
                 <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body }}>
@@ -1081,10 +1093,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   );
                 })}
               </div>
-            </div>
+            </div>}
 
             {/* ══ ON-CHAIN LISTING PIPELINE ══════════════════════════════════════ */}
-            <div style={{ marginBottom: 24 }}>
+            {view === "all" && <div style={{ marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
                 <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase" }}>
                   On-Chain Listing Pipeline
@@ -1159,7 +1171,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   </button>
                 </div>
               </div>
-            </div>
+            </div>}
           </div>
         )}
 
