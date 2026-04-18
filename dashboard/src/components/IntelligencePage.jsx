@@ -983,7 +983,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             </div>}
 
             {/* ══ MACRO EVENTS ═════════════════════════════ */}
-            {(view === "all" || view === "events") && <div style={{ marginTop: 24, marginBottom: 24 }}>
+            {(view === "all" || view === "events") && macroEvents.length > 0 && <div style={{ marginTop: 24, marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
                 <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase" }}>
                   Macro Events
@@ -993,7 +993,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 </span>
               </div>
               <div>
-                {macroEvents.length === 0 ? null : macroEvents.map((ev, i) => {
+                {macroEvents.map((ev, i) => {
                   const cfg = EV_TYPE[ev.type] || EV_TYPE[ev.category] || EV_TYPE[ev.category?.toLowerCase()] || EV_TYPE.protocol;
                   const isHigh = ev.impact === "HIGH";
                   return (
