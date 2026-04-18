@@ -43,6 +43,9 @@
 | Railway | ✅ LIVE | HEAD = 13668fc (CIS v4.2) |
 | CIS Universe | 🔄 DEPLOYING | v4.2 fixes live after Railway auto-deploy |
 | raw_cis_score field | ✅ ADDED | Now in /api/v1/cis/universe + /top responses |
+| Mac Mini data fetcher | ✅ FIXED | CoinGecko null handling fixed; confidence=0 filter added |
+| Mac Mini scheduler | ✅ FIXED | Skips zero-confidence assets from universe |
+| Mac Mini cis_push | ✅ CONFIRMED | macro_regime field in payload (line 114) |
 | Macro Pulse | ✅ LIVE | Expected unchanged |
 | Signal Feed | ✅ LIVE | Expected unchanged |
 | DeFi Overview | ✅ LIVE | Expected unchanged |
@@ -50,19 +53,21 @@
 ## Pending by owner
 
 ### Minimax (Mac Mini)
-1. Investigate `data_fetcher.py` price=0 failures for POLYX, PEPE, SLV
-2. Confirm `cis_push.py` sends `macro_regime` field correctly
-3. Restart `cis_scheduler.py` after data fetcher fix
+- [x] CoinGecko null handler — POLYX/PEPE: skip null items, don't cache price=0
+- [x] cis_scheduler confidence=0 filter — skip zero-data assets from universe
+- [x] cis_push.py macro_regime confirmed in payload
+- [ ] Restart `cis_scheduler.py` to apply fixes
+- [ ] Confirm POLYX + PEPE removed from ASSET_UNIVERSE (§4A exclusion list)
 
 ### Jazz
-1. Verify Railway deployment of `13668fc` completes without crash
-2. Check `/api/v1/cis/top?limit=5` shows `raw_cis_score` field and B+ grades during rebound
-3. Verify `SUPABASE_URL` + `SUPABASE_KEY` in Railway Variables
+- [ ] Verify Railway deployment of `13668fc` completes without crash
+- [ ] Check `/api/v1/cis/top?limit=5` — should show `raw_cis_score` field and B+ grades
+- [ ] Railway → Variables: verify `COINGECKO_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`
 
 ### Seth (Austin)
-1. Verify CIS universe populates after deploy — `universe_size > 0`, grade distribution spans C to B+
-2. Wallet connect E2E test with Phantom devnet
-3. Strategy.html walkthrough prep for Nic
+- [ ] Verify CIS universe populates after deploy — `universe_size > 0`, grade distribution spans C to B+
+- [ ] Wallet connect E2E test with Phantom devnet
+- [ ] Strategy.html walkthrough prep for Nic
 
 ## HARNESS_UPGRADE.md progress
 - Phase A: ✅ Skills
