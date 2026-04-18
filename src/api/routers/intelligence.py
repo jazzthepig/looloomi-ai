@@ -66,11 +66,12 @@ async def get_funding_rounds(limit: int = 20):
             tracker = _get_vc_tracker()
             rounds = tracker.get_recent_funding_rounds(limit)
             if rounds:
-                return {"timestamp": datetime.now().isoformat(), "data": rounds, "source": "internal"}
+                return {"timestamp": datetime.now().isoformat(), "data": rounds, "source": "internal", "data_status": "ok"}
         except Exception:
             pass
         raises = await get_vc_raises(limit)
-        return {"timestamp": datetime.now().isoformat(), "data": raises, "source": "defillama"}
+        data_status = "ok" if raises else "no_data"
+        return {"timestamp": datetime.now().isoformat(), "data": raises, "source": "defillama", "data_status": data_status}
     except Exception as e:
         _logger.error(f"Error in {__name__}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")

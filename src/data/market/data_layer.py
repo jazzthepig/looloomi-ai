@@ -1107,7 +1107,12 @@ async def get_macro_pulse() -> dict:
         try:
             mm_regime = await _redis_get("cis:local_scores")
             if mm_regime and isinstance(mm_regime, dict):
-                pushed_regime = mm_regime.get("macro_regime", "UNKNOWN")
+                # Mac Mini stores nested {"macro": {"regime": "RISK_ON"}}; flat "macro_regime" key is fallback
+                pushed_regime = (
+                    (mm_regime.get("macro") or {}).get("regime")
+                    or mm_regime.get("macro_regime")
+                    or "UNKNOWN"
+                )
             else:
                 pushed_regime = "UNKNOWN"
 
@@ -1629,14 +1634,20 @@ async def get_eodhd_macro_indicators(country: str = "usa") -> dict:
 
     # Derive simple regime signal from EODHD data
     inds = result["indicators"]
-    cpi   = inds.get("cpi_yoy",       {}).get("value", 0) or 0
-    gdp   = inds.get("gdp_growth",    {}).get("value", 0) or 0
-    rate  = inds.get("interest_rate", {}).get("value", 0) or 0
-    rate_trend = inds.get("interest_rate", {}).get("trend", "")
+    if not inds:
+        # All indicators failed — EODHD free plan may not cover macro data, or API errored silently
+        result["error"] = "EODHD_MACRO_UNAVAILABLE"
+        result["derived_regime"] = "UNKNOWN"
+        result["regime_inputs"] = {}
+    else:
+        cpi   = inds.get("cpi_yoy",       {}).get("value", 0) or 0
+        gdp   = inds.get("gdp_growth",    {}).get("value", 0) or 0
+        rate  = inds.get("interest_rate", {}).get("value", 0) or 0
+        rate_trend = inds.get("interest_rate", {}).get("trend", "")
 
-    regime = _derive_macro_regime(cpi=cpi, gdp=gdp, rate=rate, rate_trend=rate_trend)
-    result["derived_regime"] = regime
-    result["regime_inputs"]  = {"cpi_yoy": cpi, "gdp_growth": gdp, "policy_rate": rate}
+        regime = _derive_macro_regime(cpi=cpi, gdp=gdp, rate=rate, rate_trend=rate_trend)
+        result["derived_regime"] = regime
+        result["regime_inputs"]  = {"cpi_yoy": cpi, "gdp_growth": gdp, "policy_rate": rate}
 
     await _redis_set(key, result, ttl=14400)
     return _cache_set(key, result)
