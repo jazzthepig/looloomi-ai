@@ -10,10 +10,26 @@ Cached in-process for 30 min.
 """
 import asyncio
 import logging
+import re
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 import httpx
+
+
+def _strip_html(text: str) -> str:
+    """Strip HTML tags (including unclosed/truncated ones) and decode common entities."""
+    if not text:
+        return ""
+    # Remove complete tags
+    text = re.sub(r"<[^>]+>", " ", text)
+    # Remove any remaining unclosed tag fragments (e.g. truncated <img src="...")
+    text = re.sub(r"<[^>]*$", "", text)
+    # Decode common HTML entities
+    text = text.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">") \
+               .replace("&nbsp;", " ").replace("&quot;", '"').replace("&#39;", "'")
+    # Collapse whitespace
+    return re.sub(r"\s+", " ", text).strip()
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +127,7 @@ async def _fetch_rss(feed: dict, client: httpx.AsyncClient) -> list:
             title       = (item.findtext("title") or "").strip()
             link        = (item.findtext("link") or "").strip()
             pub_date    = (item.findtext("pubDate") or "").strip()
-            description = (item.findtext("description") or "").strip()[:250]
+            description = _strip_html(item.findtext("description") or "")[:250]
 
             if not title or not _is_macro_relevant(title, description):
                 continue
