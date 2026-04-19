@@ -207,9 +207,10 @@ git push origin main
 4. ONDO-style precision: thin borders, clean cards, no decorative noise
 5. Data always present — skeleton loaders only, never empty states
 
-## Current focus (as of 2026-03-29)
+## Current focus (as of 2026-04-19)
 
 **Done (Week 1 — Mar 10–16):**
+
 - CIS v4.0 percentile grading, VIX/SPY TradFi scoring, NaN serialization fix
 - Upstash Redis bridge (Mac Mini → Railway, persistent across deploys)
 - `Header()` binding fix, `/internal/cis-scores` auth working
@@ -296,7 +297,7 @@ git push origin main
 - email-validator added to `requirements.txt` (fixes Railway crash on pydantic EmailStr)
 - Final dist build: `main-29EOrMLX.js` (252KB), `ScoreAnalytics-DERPRYzc.js` (401KB lazy)
 
-**Done (Week 4 — Apr 2, this session):**
+**Done (Week 4 — Apr 2):**
 - MCP `cometcloud_get_cis_universe`: fixed key mismatch (`universe` not `assets`), timeout 20s→60s
 - MCP `cometcloud_get_macro_pulse`: added nested fallback parsing (returns real data now)
 - MCP `cometcloud_get_signal_feed`: fixed field names (`description`/`logic`/`affected_assets`)
@@ -307,91 +308,125 @@ git push origin main
 - `MINIMAX_SYNC.md`: created — file-based protocol for Seth ↔ Minimax coordination
 - `MULTI_AGENT_PROTOCOL.md` §10: updated with current assignments
 
-**Blocked — waiting on Jazz:**
-- `rm -f .git/HEAD.lock` + `git push origin main` (commit `682fdbe` pending)
-- Restart Claude Desktop after push (MCP reloads with fixed signal/CIS code)
-- Railway → Variables: add `COINGECKO_API_KEY` (CIS universe empty without it)
-- Railway → Variables: add `SUPABASE_URL` + `SUPABASE_KEY` (service_role)
+**Done (Week 5 — Apr 18–19):**
+- CIS v4.2 scoring corrections (`13668fc`): dual score display (raw_cis_score + regime-adjusted),
+  S pillar recovery bonus for rebounding assets, vol/mcap threshold 0.3%→0.05%, A pillar
+  correlation floor raised in Risk-Off, divergence dampener in extreme fear (FNG<25)
+- `cis.py` T1 merge: preserves `raw_cis_score` from Mac Mini; computes from pillars if missing
+- Sidebar sub-pages: Intelligence children (Signal Feed / Macro / Events & VC) + CIS children
+  (Leaderboard / Asset Radar) — expandable nav, visited-set lazy mount, scroll-to-top on nav
+- `IntelligencePage` `view` prop: `"all" | "macro" | "events"` gates block rendering without
+  splitting data fetching; section header + inline stats strip both reflect view context
+- CIS redirect: `navigate("cis")` → `"cis.leaderboard"` prevents double CISContent mount
+- Vault null-safe fixes: sort crash on null scores, null YTD performance cell, orphan Macro
+  Events section header when `macroEvents.length === 0`
+- Full Chrome QA pass of `looloomi.ai/app`: Signal Feed, Macro, Events & VC, CIS Leaderboard,
+  Asset Radar, Protocol Intelligence, Vault, Quant GP, Portfolio — all sections verified
+- **Bug fix** `SignalFeed.jsx` `formatRelativeTime()`: short date strings like `"Apr 18"` (no year)
+  now append current year — was showing "9131d ago" on all macro signals
+- **Bug fix** `IntelligencePage.jsx` Macro Events: `stripHtml()` strips raw `<p>/<img>` HTML
+  from CoinTelegraph article descriptions — applied in compact preview and standalone section
+- **Design fix** `index.css` card system: `lm-card` / `lm-card-inner` / `lm-stat-card` changed
+  from saturated navy overlay (`rgba(7,26,74,0.55)`) to near-void dark surfaces
+  (`rgba(5,7,22,0.88)`) with faint cyan borders — Turrell × ONDO void-black design language
+- `data_layer.py`: macro-pulse reads nested `cis:local_scores.macro.regime` (was reading flat
+  key, silently missing Mac Mini's nested format); EODHD sets error flag on total failure
+- `intelligence.py`: vc/funding-rounds returns `data_status` field for empty-vs-loading distinction
+- Shadow/ removed from git tracking (`.gitignore`) — contained config files with API keys
+- Minimax applied: CoinGecko null handler (POLYX/PEPE price=0 root cause), confidence=0 filter
+  skips zero-data assets, macro_regime confirmed in cis_push.py payload
+- 13 §4A excluded assets removed from Mac Mini ASSET_UNIVERSE and symbol mappings:
+  POLYX, PEPE, WIF, BONK, SAND, MANA, AXS, CRV, SUSHI, SNX, ICP, BCH, FTM
+
+**Pending — waiting on Minimax:**
+- Restart `cis_scheduler.py` to push clean universe with fixes applied
+- Rotate EODHD + Finnhub API keys (were exposed in git history via Shadow)
+- Start Freqtrade dry run: `start_dry_run.sh`
+- Run T1 backtest (`run_t1_backtest.sh`) → report PF/WR/MaxDD
+- Add LAS calculation to local engine output (match Railway schema)
+
+**Pending — env vars (Jazz → Railway dashboard):**
+- `COINGECKO_API_KEY` — CIS universe empty without it (Railway CoinGecko rate-limited)
+- `SUPABASE_URL` + `SUPABASE_KEY` (service_role) — score history + leads not writing
 - Run `scripts/supabase_all_tables.sql` in Supabase SQL Editor
 
-**Blocked — waiting on Minimax (see MINIMAX_SYNC.md for full detail):**
-- Rotate EODHD + Finnhub API keys (exposed in git history via Shadow)
-- Apply `data_fetcher.py` + `config.py` from Shadow → restart `cis_scheduler.py`
-- Run T1 backtest (`run_t1_backtest.sh`) → report PF/WR/MaxDD
+## Production health (as of 2026-04-19)
 
-## Production health (as of 2026-04-02)
-
-- Railway: **ACTIVE** (commit `2c251e2`). Commit `682fdbe` pending push.
-- CIS universe: **EMPTY** — Mac Mini not pushing + Railway CoinGecko key missing. API returns 70 assets via fallback but needs key for full scoring.
-- DeFi overview: **LIVE** — DeFiLlama $92B TVL
-- Macro Pulse: **LIVE** ✅ — BTC=$68,795, F&G=8 (Extreme Fear), Dom=56.3%
-- Signal Feed API: **LIVE** ✅ — 19 signals with full data. MCP rendering fixed pending restart.
-- MCP CIS universe: **BROKEN** (pending MCP restart) — API works, MCP reads wrong key
-- MCP Signal feed: **BROKEN** (pending MCP restart) — API works, MCP reads wrong field names
-- Supabase: project exists (`soupjamxlfsmgmmtoeok`) but env vars not in Railway
+- Railway: **ACTIVE** — HEAD = `1558695` (all Week 5 fixes deployed) ✅
+- CIS universe: **EMPTY** — `COINGECKO_API_KEY` missing from Railway env vars. Mac Mini
+  scheduler needs restart to push clean universe after excluded-asset cleanup.
+- DeFi overview: **LIVE** — DeFiLlama TVL, 25 protocols scored ✅
+- Macro Pulse: **LIVE** ✅ — BTC, F&G, Dom all live; regime key path now fixed
+- Signal Feed: **LIVE** ✅ — signals with correct timestamps (year-append fix deployed)
+- Macro Events: **LIVE** ✅ — HTML stripped from descriptions (stripHtml fix deployed)
+- MacroBrief: **NULL** — Mac Mini LM Studio pipeline not connected / not pushing
+- Economic Indicators: **EMPTY** — EODHD API key missing/expired. All cells show "—".
+- Quant Monitor (Freqtrade): **STALE** — dry-run not started by Minimax
+- Supabase: project exists (`soupjamxlfsmgmmtoeok`) but env vars not set in Railway
 
 ## Codebase metrics
 
-- Backend: 3,157 lines across 11 routers (`src/api/routers/`)
-- Frontend: 23 components (`dashboard/src/components/`), 916 lines in `App.jsx`
-- CIS provider: `cis_provider.py` calculates scores for 65+ assets
-- 60 files changed, +8,449 / -345 lines since last deployed base (`b36e1d4`)
+- Backend: ~4,935 lines across 11 routers (`src/api/routers/`) + main
+- Frontend: 26 components (`dashboard/src/components/`), 1,175 lines in `App.jsx`
+- CIS provider: `cis_provider.py` calculates scores for 65+ assets (13 §4A assets excluded)
+- Shadow/: removed from git tracking (read-only local reference, never commit)
 
-## Task matrix — Week 4 (Mar 30 – Apr 5)
+## Task matrix — Week 6 (Apr 20+)
 
-### Phase 1: Get production online (Jazz P0 → everyone unblocked)
+### Unblocked now (Seth / Austin)
 
-| # | Owner | Task | Est. |
-|---|-------|------|------|
-| 1 | Jazz | `git push origin main` | 5min |
-| 2 | Jazz | Run `scripts/supabase_all_tables.sql` in Supabase SQL Editor | 5min |
-| 3 | Jazz | Railway → Variables: `SUPABASE_URL`, `SUPABASE_KEY` (service_role) | 5min |
-| 4 | Jazz | Railway → Variables: verify `COINGECKO_API_KEY` is set | 5min |
-| 5 | Minimax | `git pull` + update grade thresholds to v4.1 | 30min |
-| 6 | Minimax | Verify `cis_push.py` POSTs correctly, confirm scores in Redis | 30min |
-| 7 | Seth | Post-deploy verify: CIS universe populated, MKR/POLYX data, response <2s | 1h |
-
-### Phase 2: User features (Seth / Austin)
-
-| Priority | Task | Est. | Depends on |
-|----------|------|------|------------|
-| P0 | Wallet connect E2E test (Phantom devnet) → fix any auth flow bugs | 1d | Phase 1 complete |
-| P1 | My Portfolio view — watched assets, personalized CIS alerts, P&L tracking | 3d | Wallet connect working |
-| P1 | Freqtrade CIS integration — wire live scores into CometCloudStrategy | 1d | Minimax dry run active |
+| Priority | Task | Est. | Notes |
+|----------|------|------|-------|
+| P0 | CIS universe: set `COINGECKO_API_KEY` in Railway + Minimax scheduler restart | 30min | Jazz + Minimax |
+| P0 | Wallet connect E2E test (Phantom devnet) → fix any auth flow bugs | 1d | — |
+| P1 | My Portfolio view — watched assets, personalized CIS alerts, P&L tracking | 3d | Wallet connect |
 | P1 | Score history: verify ScoreAnalytics heatmap populates after 24h of pushes | 0.5d | Supabase + Mac Mini |
+| P1 | Freqtrade CIS integration — wire live scores into CometCloudStrategy | 1d | Minimax dry run |
 | P2 | Trading Agent P&L dashboard — Freqtrade metrics → strategy page | 2d | Freqtrade running |
 | P2 | Share card: og:image endpoint for Twitter/WeChat link previews | 1d | — |
-| P3 | Performance audit: Lighthouse score, lazy-load remaining heavy components | 1d | — |
+| P2 | Economic Indicators: EODHD key rotation → restore macro data | 0.5d | Minimax |
+| P3 | Lighthouse audit + lazy-load heavy components | 1d | — |
 
-### Phase 3: Distribution (Jazz + Nic)
+### Jazz → Railway (env vars)
 
-| Priority | Task | Owner | Depends on |
-|----------|------|-------|------------|
-| P0 | Strategy.html walkthrough with Nic — collect institutional feedback | Jazz + Nic | Phase 1 deploy |
-| P1 | Wallet connect scope decision: Phantom only vs multi-wallet, custodial? | Jazz | — |
-| P1 | Identify 3-5 target family offices / HNW for soft intro | Nic | strategy reviewed |
-| P1 | Seed investor deck draft — positioning, fee, AUM targets | Jazz + Seth | strategy reviewed |
-| P2 | OSL stablecoin integration timeline — issuer API availability | Jazz | — |
-| P2 | HK SFC Type 9 license / compliance advisor engagement | Jazz | — |
-| P2 | IB association conference mapping (Q2 2026) | Nic | — |
+| Var | Status | Action |
+|-----|--------|--------|
+| `COINGECKO_API_KEY` | ❌ MISSING | Add CG Pro key → CIS universe populated |
+| `SUPABASE_URL` | ❌ MISSING | Add → score history + leads writes |
+| `SUPABASE_KEY` | ❌ MISSING | Add service_role key |
+
+Run `scripts/supabase_all_tables.sql` in Supabase SQL Editor after env vars set.
 
 ### Minimax (Mac Mini)
 
-| Priority | Task | Est. | Depends on |
-|----------|------|------|------------|
-| P0 | Freqtrade dry run: `start_dry_run.sh`, confirm CIS cache writer | 1h | — |
-| P1 | Add LAS calculation to local engine output (match Railway schema) | 2h | — |
-| P1 | Macro Brief pipeline stability — LM Studio (Qwen3 35B) crash recovery | 1d | — |
-| P2 | DeFiLlama TVL refresh: 30min → 15min for F pillar freshness | 0.5h | — |
+| Priority | Task | Est. |
+|----------|------|------|
+| P0 | Restart `cis_scheduler.py` — push clean universe (13 excluded assets removed) | 15min |
+| P0 | Rotate EODHD + Finnhub API keys (exposed in old git history) | 30min |
+| P0 | Freqtrade dry run: `start_dry_run.sh`, confirm CIS cache writer | 1h |
+| P1 | Add LAS calculation to local engine output (match Railway schema) | 2h |
+| P1 | Macro Brief pipeline stability — LM Studio (Qwen3 35B) crash recovery | 1d |
+| P2 | DeFiLlama TVL refresh: 30min → 15min for F pillar freshness | 0.5h |
+
+### Jazz + Nic (distribution)
+
+| Priority | Task | Owner |
+|----------|------|-------|
+| P0 | Strategy.html walkthrough with Nic — collect institutional feedback | Jazz + Nic |
+| P1 | Wallet connect scope decision: Phantom only vs multi-wallet, custodial? | Jazz |
+| P1 | Identify 3-5 target family offices / HNW for soft intro | Nic |
+| P1 | Seed investor deck draft — positioning, fee, AUM targets | Jazz + Seth |
+| P2 | OSL stablecoin integration timeline — issuer API availability | Jazz |
+| P2 | HK SFC Type 9 license / compliance advisor engagement | Jazz |
+| P2 | IB association conference mapping (Q2 2026) | Nic |
 
 ## Critical path
 
 ```
-Jazz: git push + Supabase SQL + env vars + CG Pro key
-  ├─→ Railway redeploy → Seth: verify CIS universe + macro-pulse + signals
-  ├─→ Minimax: pull + v4.1 align + Freqtrade dry run
-  │     └─→ Seth: Freqtrade CIS integration (1d)
-  │           └─→ Trading Agent P&L dashboard (2d)
+Jazz: COINGECKO_API_KEY + SUPABASE env vars in Railway
+  ├─→ Minimax: restart cis_scheduler.py → CIS universe populates
+  │     ├─→ Seth: verify ScoreAnalytics heatmap after 24h
+  │     └─→ Minimax: Freqtrade dry run → Seth: Trading Agent P&L dashboard
   ├─→ Seth: wallet connect E2E (1d) → My Portfolio view (3d)
   │     └─→ Share card og:image (1d)
   └─→ Jazz + Nic: strategy.html review → seed investor deck
