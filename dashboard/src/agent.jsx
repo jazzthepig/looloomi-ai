@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
 import { T, FONTS } from './tokens';
 import SiteNav from './components/SiteNav';
 
@@ -715,3 +716,5 @@ response = client.messages.create(
     </div>
   );
 }
+
+createRoot(document.getElementById('root')).render(<AgentPage />);
