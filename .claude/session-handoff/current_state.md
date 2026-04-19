@@ -53,11 +53,11 @@
 ## Pending by owner
 
 ### Minimax (Mac Mini)
+- [x] **CORRECT FIX**: Removed 13 excluded assets from `ASSET_UNIVERSE` (§4A) — POLYX, PEPE, WIF, BONK, SAND, MANA, AXS, CRV, SUSHI, SNX, ICP, BCH, FTM — from config.py + data_fetcher.py symbol mappings
 - [x] CoinGecko null handler — POLYX/PEPE: skip null items, don't cache price=0
 - [x] cis_scheduler confidence=0 filter — skip zero-data assets from universe
 - [x] cis_push.py macro_regime confirmed in payload
-- [ ] Restart `cis_scheduler.py` to apply fixes
-- [ ] Confirm POLYX + PEPE removed from ASSET_UNIVERSE (§4A exclusion list)
+- [ ] Restart `cis_scheduler.py` to apply fixes + push clean universe to Railway
 
 ### Jazz
 - [ ] Verify Railway deployment of `13668fc` completes without crash

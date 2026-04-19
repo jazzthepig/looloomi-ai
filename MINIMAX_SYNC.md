@@ -154,7 +154,7 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 
 | # | 任务 | 说明 | 状态 |
 |---|------|------|------|
-| 8 | **Universe 过滤**：POLYX + PEPE 等 14 个已排除资产 | 见下方 §4A | 🟡 **待确认是否已从引擎移除** |
+| 8 | **Universe 过滤**：13 个已排除资产 | §4A — POLYX/PEPE/WIF/BONK/SAND/MANA/AXS/CRV/SUSHI/SNX/ICP/BCH/FTM 已从 config.py + data_fetcher.py 移除 | ✅ |
 | 9 | 确认 HYPER（Hyperliquid）在评分列表中保留 | v1.1 inclusion standard | 🟡 |
 | 10 | LAS 字段加入 local engine 输出 | 与 Railway schema 对齐 | 🟡 |
 | 11 | Apply T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` | 🟡 |
@@ -172,22 +172,15 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 
 **POLYX / PEPE / SLV price=0 根因已确认：**
 
-1. **POLYX** — CoinGecko 对 `polymesh` 返回 `{"polymesh": null}`（币种下线或未收录）
-   - `fetch_crypto_price()` / `fetch_crypto_prices_batch()` 未检查 `item is None`
-   - 修复：检测 `null` → 跳过，不缓存 price=0
+1. **POLYX** — §4A 排除但仍在 `ASSET_UNIVERSE` 中。已从 config.py + data_fetcher.py 移除。
+2. **PEPE** — §4A 排除但仍在 `ASSET_UNIVERSE` 中。已从 config.py + data_fetcher.py 移除。
+3. **SLV** — yfinance 403，confidence=0 → 被 confidence=0 过滤器过滤，不进入 universe。
+4. **CIS 高分假象** — §4A 排除资产不应该在评分中出现，已从根删除。
 
-2. **PEPE** — 同上，CoinGecko 可能返回 null
-   - 同修复
+**已从 `config.py` + `data_fetcher.py` 移除（13 个）：**
+POLYX, PEPE, WIF, BONK, SAND, MANA, AXS, CRV, SUSHI, SNX, ICP, BCH, FTM
 
-3. **SLV** — yfinance 从当前 IP 返回 403（受限）
-   - `fetch_tradfi_prices_batch()` 无 fallback，price=0
-   - 修复：置信度=0 资产被过滤，不进入 universe
-
-4. **CIS 高分假象** — confidence=0 的资产被推送到 Railway
-   - 引擎用 placeholder beta 给出虚假高分（POLYX CIS=100, confidence=0）
-   - 修复：scheduler 过滤 `confidence == 0` 资产
-
-**重要：POLYX + PEPE 在 §4A 排除列表中，应从引擎移除，不应出现在 scores 中。**
+**下一步：** 重启 `cis_scheduler.py` 使生效。
 
 ---
 
