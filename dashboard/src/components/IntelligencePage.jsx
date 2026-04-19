@@ -126,7 +126,11 @@ const ACTIVE_VCS = [
 // Strip HTML tags from strings (news APIs sometimes embed HTML in description fields)
 const stripHtml = (html) => {
   if (!html) return '';
-  return html.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  return html
+    .replace(/<[^>]+>/g, ' ')       // complete tags
+    .replace(/<[^>]*$/g, '')         // unclosed/truncated tags at end
+    .replace(/&[a-z]+;/gi, ' ')     // HTML entities
+    .replace(/\s+/g, ' ').trim();
 };
 
 const EV_TYPE = {
