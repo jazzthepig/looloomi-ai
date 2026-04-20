@@ -78,118 +78,164 @@ def _cg_headers() -> dict:
     return {"x-cg-pro-api-key": CG_API_KEY} if CG_API_KEY else {}
 
 # Crypto assets config - maps to CoinGecko IDs
+# Universe aligned with cometcloud-local/config.py ASSET_UNIVERSE
 CRYPTO_ASSETS = {
-    # Top by market cap
-    "BTC": {"coingecko": "bitcoin", "name": "Bitcoin", "class": "L1"},
-    "ETH": {"coingecko": "ethereum", "name": "Ethereum", "class": "L1"},
-    "BNB": {"coingecko": "binancecoin", "name": "BNB", "class": "L1"},
-    "XRP": {"coingecko": "ripple", "name": "XRP", "class": "L1"},
-    "SOL": {"coingecko": "solana", "name": "Solana", "class": "L1"},
-    "ADA": {"coingecko": "cardano", "name": "Cardano", "class": "L1"},
-    "DOGE": {"coingecko": "dogecoin", "name": "Dogecoin", "class": "Memecoin"},
-    # L1/L2
-    "AVAX": {"coingecko": "avalanche-2", "name": "Avalanche", "class": "L1"},
-    "DOT": {"coingecko": "polkadot", "name": "Polkadot", "class": "L1"},
-    "POL": {"coingecko": "polygon-ecosystem-token", "name": "Polygon (POL)", "class": "L2"},
-    "ARB": {"coingecko": "arbitrum", "name": "Arbitrum", "class": "L2"},
-    "OP": {"coingecko": "optimism", "name": "Optimism", "class": "L2"},
-    "MANTLE": {"coingecko": "mantle", "name": "Mantle", "class": "L2"},
-    "TON": {"coingecko": "the-open-network", "name": "Toncoin", "class": "L1"},
-    "INJ": {"coingecko": "injective-protocol", "name": "Injective", "class": "Infrastructure"},
-    # DeFi
-    "UNI": {"coingecko": "uniswap", "name": "Uniswap", "class": "DeFi"},
-    "AAVE": {"coingecko": "aave", "name": "Aave", "class": "DeFi"},
-    "MKR": {"coingecko": "maker", "name": "Maker", "class": "RWA"},
-    "LDO": {"coingecko": "lido-dao", "name": "Lido DAO", "class": "DeFi"},
-    "COMP": {"coingecko": "compound-governance-token", "name": "Compound", "class": "DeFi"},
+    # L1 — Layer 1 blockchains
+    "BTC":    {"coingecko": "bitcoin",                 "name": "Bitcoin",         "class": "L1"},
+    "ETH":    {"coingecko": "ethereum",                "name": "Ethereum",        "class": "L1"},
+    "SOL":    {"coingecko": "solana",                  "name": "Solana",          "class": "L1"},
+    "BNB":    {"coingecko": "binancecoin",             "name": "BNB",             "class": "L1"},
+    "XRP":    {"coingecko": "ripple",                  "name": "XRP",             "class": "L1"},
+    "ADA":    {"coingecko": "cardano",                 "name": "Cardano",         "class": "L1"},
+    "AVAX":   {"coingecko": "avalanche-2",             "name": "Avalanche",       "class": "L1"},
+    "DOT":    {"coingecko": "polkadot",                "name": "Polkadot",        "class": "L1"},
+    "NEAR":   {"coingecko": "near",                    "name": "NEAR Protocol",   "class": "L1"},
+    "ALGO":   {"coingecko": "algorand",                "name": "Algorand",        "class": "L1"},
+    "FTM":    {"coingecko": "fantom",                  "name": "Fantom",          "class": "L1"},
+    "HBAR":   {"coingecko": "hedera-hashgraph",        "name": "Hedera",          "class": "L1"},
+    "SUI":    {"coingecko": "sui",                     "name": "Sui",             "class": "L1"},
+    "APT":    {"coingecko": "aptos",                   "name": "Aptos",           "class": "L1"},
+    "SEI":    {"coingecko": "sei",                     "name": "Sei",             "class": "L1"},
+    "ATOM":   {"coingecko": "cosmos",                  "name": "Cosmos",          "class": "L1"},
+    "FIL":    {"coingecko": "filecoin",                "name": "Filecoin",        "class": "L1"},
+    "ICP":    {"coingecko": "internet-computer",       "name": "Internet Computer","class": "L1"},
+    "LTC":    {"coingecko": "litecoin",                "name": "Litecoin",        "class": "Crypto"},
+    "BCH":    {"coingecko": "bitcoin-cash",            "name": "Bitcoin Cash",    "class": "Crypto"},
+    # L2 — Layer 2 scaling
+    "ARB":    {"coingecko": "arbitrum",                "name": "Arbitrum",        "class": "L2"},
+    "OP":     {"coingecko": "optimism",                "name": "Optimism",        "class": "L2"},
+    "POL":    {"coingecko": "polygon-ecosystem-token", "name": "Polygon (POL)",   "class": "L2"},
+    "MANTLE": {"coingecko": "mantle",                  "name": "Mantle",          "class": "L2"},
+    "NEON":   {"coingecko": "neon-evm",                "name": "Neon EVM",        "class": "L2"},
+    "STX":    {"coingecko": "blockstack",              "name": "Stacks",          "class": "L2"},
+    "STRK":   {"coingecko": "starknet",                "name": "StarkNet",        "class": "L2"},
+    # DeFi — Decentralized Finance
+    "UNI":    {"coingecko": "uniswap",                 "name": "Uniswap",         "class": "DeFi"},
+    "AAVE":   {"coingecko": "aave",                    "name": "Aave",            "class": "DeFi"},
+    "MKR":    {"coingecko": "maker",                   "name": "Maker",           "class": "RWA"},
+    "SNX":    {"coingecko": "havven",                  "name": "Synthetix",       "class": "DeFi"},
+    "CRV":    {"coingecko": "curve-dao-token",         "name": "Curve",           "class": "DeFi"},
+    "LDO":    {"coingecko": "lido-dao",                "name": "Lido DAO",        "class": "DeFi"},
+    "PENDLE": {"coingecko": "pendle",                  "name": "Pendle",          "class": "DeFi"},
+    "ENA":    {"coingecko": "ethena",                  "name": "Ethena",          "class": "DeFi"},
+    "RUNE":   {"coingecko": "thorchain",               "name": "THORChain",       "class": "DeFi"},
+    "COMP":   {"coingecko": "compound-governance-token","name": "Compound",       "class": "DeFi"},
+    "SUSHI":  {"coingecko": "sushi",                   "name": "SushiSwap",       "class": "DeFi"},
     # Infrastructure
-    "LINK": {"coingecko": "chainlink", "name": "Chainlink", "class": "Infrastructure"},
-    "STX": {"coingecko": "blockstack", "name": "Stacks", "class": "Infrastructure"},
-    "RUNE": {"coingecko": "thorchain", "name": "THORChain", "class": "Infrastructure"},
-    # RWA / High volume
-    "ONDO": {"coingecko": "ondo-finance", "name": "Ondo Finance", "class": "RWA"},
-    "SUI": {"coingecko": "sui", "name": "Sui", "class": "L1"},
-    "APT": {"coingecko": "aptos", "name": "Aptos", "class": "L1"},
-    "NEAR": {"coingecko": "near", "name": "NEAR Protocol", "class": "L1"},
-    "FIL": {"coingecko": "filecoin", "name": "Filecoin", "class": "Infrastructure"},
-    "ATOM": {"coingecko": "cosmos", "name": "Cosmos", "class": "L1"},
-    "LTC": {"coingecko": "litecoin", "name": "Litecoin", "class": "Crypto"},
-    "SEI": {"coingecko": "sei", "name": "Sei", "class": "L1"},
-    "TIA": {"coingecko": "celestia", "name": "Celestia", "class": "Infrastructure"},
-    "ENA": {"coingecko": "ethena", "name": "Ethena", "class": "Infrastructure"},
-    "ALGO": {"coingecko": "algorand", "name": "Algorand", "class": "L1"},
-    "VET": {"coingecko": "vechain", "name": "VeChain", "class": "Infrastructure"},
-    "HBAR": {"coingecko": "hedera-hashgraph", "name": "Hedera", "class": "L1"},
-    "NEON": {"coingecko": "neon-evm", "name": "Neon EVM", "class": "L2"},
-    "IO": {"coingecko": "io-net", "name": "io.net", "class": "Infrastructure"},
-    # Hot tokens
-    "HYPER": {"coingecko": "hyperliquid", "name": "Hyperliquid", "class": "L1"},
-    "VIRTUAL": {"coingecko": "virtual-protocol", "name": "Virtuals Protocol", "class": "AI"},
+    "LINK":   {"coingecko": "chainlink",               "name": "Chainlink",       "class": "Infrastructure"},
+    "INJ":    {"coingecko": "injective-protocol",      "name": "Injective",       "class": "Infrastructure"},
+    "TIA":    {"coingecko": "celestia",                "name": "Celestia",        "class": "Infrastructure"},
+    "IO":     {"coingecko": "io-net",                  "name": "io.net",          "class": "Infrastructure"},
+    "VET":    {"coingecko": "vechain",                 "name": "VeChain",         "class": "Infrastructure"},
+    # RWA — Real World Assets
+    "ONDO":   {"coingecko": "ondo-finance",            "name": "Ondo Finance",    "class": "RWA"},
+    "POLYX":  {"coingecko": "polymesh",                "name": "Polymesh",        "class": "RWA"},
+    # Memecoin
+    "PEPE":   {"coingecko": "pepe",                    "name": "Pepe",            "class": "Memecoin"},
+    "WIF":    {"coingecko": "dogwifcoin",              "name": "WIF",             "class": "Memecoin"},
+    "BONK":   {"coingecko": "bonk",                    "name": "Bonk",            "class": "Memecoin"},
+    # Gaming / Metaverse
+    "SAND":   {"coingecko": "the-sandbox",             "name": "The Sandbox",     "class": "Gaming"},
+    "MANA":   {"coingecko": "decentraland",            "name": "Decentraland",    "class": "Gaming"},
+    "AXS":    {"coingecko": "axie-infinity",           "name": "Axie Infinity",   "class": "Gaming"},
+    "GALA":   {"coingecko": "gala",                    "name": "Gala",            "class": "Gaming"},
 }
 
 # US Equities - yfinance symbols
 US_EQUITIES = {
-    "SPY": {"yfinance": "SPY", "name": "S&P 500 ETF", "class": "US Equity"},
-    "QQQ": {"yfinance": "QQQ", "name": "Nasdaq 100 ETF", "class": "US Equity"},
-    "AAPL": {"yfinance": "AAPL", "name": "Apple", "class": "US Equity"},
-    "MSFT": {"yfinance": "MSFT", "name": "Microsoft", "class": "US Equity"},
-    "NVDA": {"yfinance": "NVDA", "name": "NVIDIA", "class": "US Equity"},
-    "GOOGL": {"yfinance": "GOOGL", "name": "Alphabet", "class": "US Equity"},
-    "AMZN": {"yfinance": "AMZN", "name": "Amazon", "class": "US Equity"},
-    "META": {"yfinance": "META", "name": "Meta", "class": "US Equity"},
-    "TSLA": {"yfinance": "TSLA", "name": "Tesla", "class": "US Equity"},
-    "BRK.B": {"yfinance": "BRK-B", "name": "Berkshire", "class": "US Equity"},
+    "SPY":  {"yfinance": "SPY",  "name": "S&P 500 ETF",       "class": "US Equity"},
+    "QQQ":  {"yfinance": "QQQ",  "name": "Nasdaq 100 ETF",    "class": "US Equity"},
+    "AAPL": {"yfinance": "AAPL", "name": "Apple",             "class": "US Equity"},
+    "MSFT": {"yfinance": "MSFT", "name": "Microsoft",         "class": "US Equity"},
+    "NVDA": {"yfinance": "NVDA", "name": "NVIDIA",            "class": "US Equity"},
+    "GOOGL":{"yfinance": "GOOGL","name": "Alphabet",          "class": "US Equity"},
+    "AMZN": {"yfinance": "AMZN", "name": "Amazon",            "class": "US Equity"},
+    "META": {"yfinance": "META", "name": "Meta",              "class": "US Equity"},
+    "TSLA": {"yfinance": "TSLA", "name": "Tesla",             "class": "US Equity"},
+    "XLF":  {"yfinance": "XLF",  "name": "Financial Select",  "class": "US Equity"},
 }
 
 # Bonds - yfinance symbols
 BONDS = {
-    "TLT": {"yfinance": "TLT", "name": "20+ Year Treasury Bond ETF", "class": "US Bond"},
-    "IEF": {"yfinance": "IEF", "name": "7-10 Year Treasury Bond ETF", "class": "US Bond"},
-    "SHY": {"yfinance": "SHY", "name": "1-3 Year Treasury Bond ETF", "class": "US Bond"},
-    "HYG": {"yfinance": "HYG", "name": "High Yield Bond ETF", "class": "US Bond"},
-    "LQD": {"yfinance": "LQD", "name": "Investment Grade Bond ETF", "class": "US Bond"},
+    "TLT": {"yfinance": "TLT", "name": "20+ Year Treasury Bond ETF",    "class": "US Bond"},
+    "IEF": {"yfinance": "IEF", "name": "7-10 Year Treasury Bond ETF",   "class": "US Bond"},
+    "SHY": {"yfinance": "SHY", "name": "1-3 Year Treasury Bond ETF",    "class": "US Bond"},
+    "TIP": {"yfinance": "TIP", "name": "TIPS ETF",                      "class": "US Bond"},
+    "HYG": {"yfinance": "HYG", "name": "High Yield Bond ETF",           "class": "US Bond"},
+    "LQD": {"yfinance": "LQD", "name": "Investment Grade Bond ETF",     "class": "US Bond"},
 }
 
 # Commodities - yfinance symbols
 COMMODITIES = {
-    "GLD": {"yfinance": "GLD", "name": "Gold ETF", "class": "Commodity"},
-    "SLV": {"yfinance": "SLV", "name": "Silver ETF", "class": "Commodity"},
-    "USO": {"yfinance": "USO", "name": "Oil ETF", "class": "Commodity"},
-    "UNG": {"yfinance": "UNG", "name": "Natural Gas ETF", "class": "Commodity"},
-    "DBC": {"yfinance": "DBC", "name": "Commodities Index ETF", "class": "Commodity"},
+    "GLD":  {"yfinance": "GLD",  "name": "Gold ETF",           "class": "Commodity"},
+    "SLV":  {"yfinance": "SLV",  "name": "Silver ETF",         "class": "Commodity"},
+    "USO":  {"yfinance": "USO",  "name": "Oil ETF",            "class": "Commodity"},
+    "UNG":  {"yfinance": "UNG",  "name": "Natural Gas ETF",    "class": "Commodity"},
+    "CPER": {"yfinance": "CPER", "name": "Copper ETF",         "class": "Commodity"},
+    "DBA":  {"yfinance": "DBA",  "name": "Agriculture ETF",    "class": "Commodity"},
+}
+
+# FX — Currency ETFs (yfinance)
+FX = {
+    "UUP": {"yfinance": "UUP", "name": "US Dollar ETF",    "class": "FX"},
+    "FXE": {"yfinance": "FXE", "name": "Euro ETF",         "class": "FX"},
+    "FXY": {"yfinance": "FXY", "name": "Yen ETF",          "class": "FX"},
+    "FXI": {"yfinance": "FXI", "name": "China Large Cap",  "class": "FX"},
+}
+
+# Real Estate — REIT ETFs (yfinance)
+REAL_ESTATE = {
+    "VNQ":  {"yfinance": "VNQ",  "name": "US REIT ETF",       "class": "Real Estate"},
+    "IYR":  {"yfinance": "IYR",  "name": "US Real Estate ETF", "class": "Real Estate"},
+    "VNQI": {"yfinance": "VNQI", "name": "Intl REIT ETF",      "class": "Real Estate"},
+}
+
+# EM Equity — Emerging Market ETFs (yfinance)
+EM_EQUITY = {
+    "EEM":  {"yfinance": "EEM",  "name": "EM ETF",            "class": "EM Equity"},
+    "VWO":  {"yfinance": "VWO",  "name": "Vanguard EM ETF",   "class": "EM Equity"},
+    "INDA": {"yfinance": "INDA", "name": "India ETF",         "class": "EM Equity"},
+    "EWZ":  {"yfinance": "EWZ",  "name": "Brazil ETF",        "class": "EM Equity"},
 }
 
 # Combined assets config
-ASSETS_CONFIG = {**CRYPTO_ASSETS, **US_EQUITIES, **BONDS, **COMMODITIES}
+ASSETS_CONFIG = {**CRYPTO_ASSETS, **US_EQUITIES, **BONDS, **COMMODITIES, **FX, **REAL_ESTATE, **EM_EQUITY}
 
 # GitHub repo paths for developer-activity tracking (Phase 2B)
 # Format: asset_id -> "owner/repo"
 # Covers top 25 assets with active public repos; others get None (no dev signal)
 GITHUB_REPOS: Dict[str, str] = {
-    "BTC":     "bitcoin/bitcoin",
-    "ETH":     "ethereum/go-ethereum",
-    "SOL":     "solana-labs/solana",
-    "ADA":     "IntersectMBO/cardano-node",
-    "AVAX":    "ava-labs/avalanchego",
-    "DOT":     "paritytech/polkadot",
-    "ARB":     "OffchainLabs/nitro",
-    "OP":      "ethereum-optimism/optimism",
-    "NEAR":    "near/nearcore",
-    "ATOM":    "cosmos/cosmos-sdk",
-    "FIL":     "filecoin-project/lotus",
-    "ALGO":    "algorand/go-algorand",
-    "STX":     "stacks-network/stacks-core",
-    "INJ":     "InjectiveLabs/injective-core",
-    "TIA":     "celestiaorg/celestia-node",
-    "SEI":     "sei-protocol/sei-chain",
-    "APT":     "aptos-labs/aptos-core",
-    "SUI":     "MystenLabs/sui",
-    "LINK":    "smartcontractkit/chainlink",
-    "AAVE":    "aave/aave-v3-core",
-    "UNI":     "Uniswap/v4-core",
-    "RUNE":    "thorchain/thornode",
-    "LDO":     "lidofinance/lido-dao",
-    "COMP":    "compound-finance/compound-protocol",
+    "BTC":    "bitcoin/bitcoin",
+    "ETH":    "ethereum/go-ethereum",
+    "SOL":    "solana-labs/solana",
+    "ADA":    "IntersectMBO/cardano-node",
+    "AVAX":   "ava-labs/avalanchego",
+    "DOT":    "paritytech/polkadot",
+    "NEAR":   "near/nearcore",
+    "ALGO":   "algorand/go-algorand",
+    "FTM":    "Fantom-foundation/go-opera",
+    "SUI":    "MystenLabs/sui",
+    "APT":    "aptos-labs/aptos-core",
+    "SEI":    "sei-protocol/sei-chain",
+    "ATOM":   "cosmos/cosmos-sdk",
+    "FIL":    "filecoin-project/lotus",
+    "ICP":    "dfinity/ic",
+    "ARB":    "OffchainLabs/nitro",
+    "OP":     "ethereum-optimism/optimism",
+    "STX":    "stacks-network/stacks-core",
+    "STRK":   "starkware-libs/cairo",
+    "UNI":    "Uniswap/v4-core",
+    "AAVE":   "aave/aave-v3-core",
+    "SNX":    "Synthetixio/synthetix",
+    "CRV":    "curvefi/curve-contract",
+    "LDO":    "lidofinance/lido-dao",
+    "PENDLE": "pendle-finance/core-v2",
+    "RUNE":   "thorchain/thornode",
+    "COMP":   "compound-finance/compound-protocol",
+    "SUSHI":  "sushiswap/sushiswap",
+    "LINK":   "smartcontractkit/chainlink",
+    "INJ":    "InjectiveLabs/injective-core",
+    "TIA":    "celestiaorg/celestia-node",
 }
 
 # Cache
@@ -295,53 +341,66 @@ async def calculate_asset_betas(asset_id: str, asset_price_30d: list) -> dict:
 
 
 # Symbol mapping: CIS symbol -> Binance symbol
-# Priority: High liquidity pairs for reliable data
+# Aligned with cometcloud-local ASSET_UNIVERSE crypto assets
 BINANCE_SYMBOLS = {
-    # Top by market cap
-    "BTC": "btcusdt",
-    "ETH": "ethusdt",
-    "BNB": "bnbusdt",
-    "XRP": "xrpusdt",
-    "SOL": "solusdt",
-    "ADA": "adausdt",
-    "DOGE": "dogeusdt",
-    # L1/L2
-    "AVAX": "avaxusdt",
-    "DOT": "dotusdt",
-    "POL": "polusdt",
-    "ARB": "arbusdt",
-    "OP": "opusdt",
+    # L1
+    "BTC":    "btcusdt",
+    "ETH":    "ethusdt",
+    "SOL":    "solusdt",
+    "BNB":    "bnbusdt",
+    "XRP":    "xrpusdt",
+    "ADA":    "adausdt",
+    "AVAX":   "avaxusdt",
+    "DOT":    "dotusdt",
+    "NEAR":   "nearusdt",
+    "ALGO":   "algousdt",
+    "FTM":    "ftmusdt",
+    "HBAR":   "hbarusdt",
+    "SUI":    "suiusdt",
+    "APT":    "aptusdt",
+    "SEI":    "seiusdt",
+    "ATOM":   "atomusdt",
+    "FIL":    "filusdt",
+    "ICP":    "icpusdt",
+    "LTC":    "ltcusdt",
+    "BCH":    "bchusdt",
+    # L2
+    "ARB":    "arbusdt",
+    "OP":     "opusdt",
+    "POL":    "polusdt",
     "MANTLE": "mntusdt",
-    "TON": "tonusdt",
-    "INJ": "injusdt",
+    "NEON":   "neonusdt",
+    "STX":    "stxusdt",
+    "STRK":   "strkusdt",
     # DeFi
-    "UNI": "uniusdt",
-    "AAVE": "aaveusdt",
-    "MKR": "mkrusdt",
-    "LDO": "ldousdt",
-    "COMP": "compusdt",
+    "UNI":    "uniusdt",
+    "AAVE":   "aaveusdt",
+    "MKR":    "mkrusdt",
+    "SNX":    "snxusdt",
+    "CRV":    "crvusdt",
+    "LDO":    "ldousdt",
+    "PENDLE": "pendleusdt",
+    "ENA":    "enausdt",
+    "RUNE":   "runeusdt",
+    "COMP":   "compusdt",
+    "SUSHI":  "sushiusdt",
     # Infrastructure
-    "LINK": "linkusdt",
-    "STX": "stxusdt",
-    "RUNE": "runeusdt",
-    # RWA / High volume
-    "ONDO": "ondousdt",
-    "SUI": "suiusdt",
-    "APT": "aptusdt",
-    "NEAR": "nearusdt",
-    "FIL": "filusdt",
-    "ATOM": "atomusdt",
-    "LTC": "ltcusdt",
-    "NEON": "neonusdt",
-    "SEI": "seiusdt",
-    "TIA": "tiausdt",
-    "ALGO": "algousdt",
-    "VET": "vetusdt",
-    "HBAR": "hbarusdt",
-    "IO": "iousdt",
-    # Hot tokens
-    "HYPER": "hyperusdt",
-    "VIRTUAL": "virtualusdt",
+    "LINK":   "linkusdt",
+    "INJ":    "injusdt",
+    "TIA":    "tiausdt",
+    "IO":     "iousdt",
+    "VET":    "vetusdt",
+    # RWA
+    "ONDO":   "ondousdt",
+    # Memecoin
+    "PEPE":   "pepeusdt",
+    "WIF":    "wifusdt",
+    "BONK":   "bonkusdt",
+    # Gaming
+    "SAND":   "sandusdt",
+    "MANA":   "manausdt",
+    "AXS":    "axsusdt",
+    "GALA":   "galausdt",
 }
 
 # Reverse mapping
@@ -942,7 +1001,7 @@ def calculate_cis_score(
     high_24h = market_data.get("high_24h", 0) or 0
     low_24h = market_data.get("low_24h", 0) or 0
     fdv = market_data.get("fdv", 0) if market_data else 0
-    _is_tradfi = asset_class in ["US Equity", "US Bond", "Commodity"]
+    _is_tradfi = asset_class in ["US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"]
 
     # ── F — Fundamental (Structural Quality) ──────────────────────────
     # Continuous: mcap log-scale (0-50) + tvl log-scale (0-20) + fdv fairness (0-15) + supply (0-15)
@@ -1733,7 +1792,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
 
     # Fetch yfinance data for US assets — parallel with semaphore to limit concurrency
     yf_data = {}
-    yf_assets = {**US_EQUITIES, **BONDS, **COMMODITIES}
+    yf_assets = {**US_EQUITIES, **BONDS, **COMMODITIES, **FX, **REAL_ESTATE, **EM_EQUITY}
     yf_sem = asyncio.Semaphore(5)  # max 5 concurrent yfinance calls
 
     async def _fetch_yf(sym, cfg):
