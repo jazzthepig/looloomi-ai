@@ -55,60 +55,85 @@ const GRADE_COLORS = {
 };
 
 const ASSET_CLASS_COLORS = {
-  RWA: { bg: "rgba(232,160,0,.12)", text: "#E8A000" },
-  DeFi: { bg: "rgba(68,114,255,.12)", text: "#4472FF" },
-  L1: { bg: "rgba(0,200,224,.08)", text: "#00C8E0" },
-  L2: { bg: "rgba(107,15,204,.10)", text: "#9945FF" },
-  Infrastructure: { bg: "rgba(0,217,138,.10)", text: "#00D98A" },
-  Oracle: { bg: "rgba(167,139,250,.10)", text: "#A78BFA" },
-  Memecoin: { bg: "rgba(255,16,96,.10)", text: "#FF1060" },
-  AI: { bg: "rgba(255,107,0,.10)", text: "#FF6B00" },
-  "US Equity": { bg: "rgba(68,114,255,.10)", text: "#4B9EFF" },
-  "US Bond":   { bg: "rgba(245,158,11,.10)", text: "#F59E0B" },
-  Commodity:   { bg: "rgba(200,168,75,.12)", text: "#C8A84B" },
+  RWA:           { bg: "rgba(232,160,0,.12)",   text: "#E8A000" },
+  DeFi:          { bg: "rgba(68,114,255,.12)",  text: "#4472FF" },
+  L1:            { bg: "rgba(0,200,224,.08)",   text: "#00C8E0" },
+  L2:            { bg: "rgba(107,15,204,.10)",  text: "#9945FF" },
+  Infrastructure:{ bg: "rgba(0,217,138,.10)",   text: "#00D98A" },
+  Memecoin:      { bg: "rgba(255,16,96,.10)",   text: "#FF1060" },
+  AI:            { bg: "rgba(255,107,0,.10)",   text: "#FF6B00" },
+  Gaming:        { bg: "rgba(236,72,153,.10)",  text: "#EC4899" },
+  Crypto:        { bg: "rgba(0,200,224,.06)",   text: "#00C8E0" },
+  "US Equity":   { bg: "rgba(68,114,255,.10)",  text: "#4B9EFF" },
+  "US Bond":     { bg: "rgba(245,158,11,.10)",  text: "#F59E0B" },
+  Commodity:     { bg: "rgba(200,168,75,.12)",  text: "#C8A84B" },
+  FX:            { bg: "rgba(52,211,153,.10)",  text: "#34D399" },
+  "Real Estate": { bg: "rgba(251,146,60,.10)",  text: "#FB923C" },
+  "EM Equity":   { bg: "rgba(167,139,250,.10)", text: "#A78BFA" },
 };
 
 const API_BASE = "/api/v1";
 
-// Asset name + class lookup — resolves when Mac Mini only sends symbol + "Crypto"
+// Asset name + class lookup — aligned with cometcloud-local ASSET_UNIVERSE (85 assets)
 const ASSET_META = {
+  // L1
   BTC: { name: "Bitcoin", class: "L1" }, ETH: { name: "Ethereum", class: "L1" },
   SOL: { name: "Solana", class: "L1" }, BNB: { name: "BNB", class: "L1" },
   XRP: { name: "XRP", class: "L1" }, ADA: { name: "Cardano", class: "L1" },
-  DOGE: { name: "Dogecoin", class: "Memecoin" }, AVAX: { name: "Avalanche", class: "L1" },
-  DOT: { name: "Polkadot", class: "L1" }, POL: { name: "Polygon", class: "L2" },
-  ARB: { name: "Arbitrum", class: "L2" }, OP: { name: "Optimism", class: "L2" },
-  LINK: { name: "Chainlink", class: "Infrastructure" }, UNI: { name: "Uniswap", class: "DeFi" },
-  AAVE: { name: "Aave", class: "DeFi" }, MKR: { name: "Maker", class: "RWA" },
-  LDO: { name: "Lido DAO", class: "DeFi" }, CRV: { name: "Curve", class: "DeFi" },
-  COMP: { name: "Compound", class: "DeFi" }, SNX: { name: "Synthetix", class: "DeFi" },
-  SUSHI: { name: "SushiSwap", class: "DeFi" }, ONDO: { name: "Ondo Finance", class: "RWA" },
-  POLYX: { name: "Polymesh", class: "RWA" }, NEAR: { name: "NEAR Protocol", class: "L1" },
+  AVAX: { name: "Avalanche", class: "L1" }, DOT: { name: "Polkadot", class: "L1" },
+  NEAR: { name: "NEAR Protocol", class: "L1" }, ALGO: { name: "Algorand", class: "L1" },
+  FTM: { name: "Fantom", class: "L1" }, HBAR: { name: "Hedera", class: "L1" },
   SUI: { name: "Sui", class: "L1" }, APT: { name: "Aptos", class: "L1" },
-  ATOM: { name: "Cosmos", class: "L1" }, FIL: { name: "Filecoin", class: "Infrastructure" },
+  SEI: { name: "Sei", class: "L1" }, ATOM: { name: "Cosmos", class: "L1" },
+  FIL: { name: "Filecoin", class: "L1" }, ICP: { name: "Internet Computer", class: "L1" },
+  LTC: { name: "Litecoin", class: "Crypto" }, BCH: { name: "Bitcoin Cash", class: "Crypto" },
+  // L2
+  ARB: { name: "Arbitrum", class: "L2" }, OP: { name: "Optimism", class: "L2" },
+  POL: { name: "Polygon", class: "L2" }, MANTLE: { name: "Mantle", class: "L2" },
+  NEON: { name: "Neon EVM", class: "L2" }, STX: { name: "Stacks", class: "L2" },
+  STRK: { name: "StarkNet", class: "L2" },
+  // DeFi
+  UNI: { name: "Uniswap", class: "DeFi" }, AAVE: { name: "Aave", class: "DeFi" },
+  MKR: { name: "Maker", class: "RWA" }, SNX: { name: "Synthetix", class: "DeFi" },
+  CRV: { name: "Curve", class: "DeFi" }, LDO: { name: "Lido DAO", class: "DeFi" },
+  PENDLE: { name: "Pendle", class: "DeFi" }, ENA: { name: "Ethena", class: "DeFi" },
+  RUNE: { name: "THORChain", class: "DeFi" }, COMP: { name: "Compound", class: "DeFi" },
+  SUSHI: { name: "SushiSwap", class: "DeFi" },
+  // Infrastructure
+  LINK: { name: "Chainlink", class: "Infrastructure" }, INJ: { name: "Injective", class: "Infrastructure" },
+  TIA: { name: "Celestia", class: "Infrastructure" }, IO: { name: "io.net", class: "Infrastructure" },
+  VET: { name: "VeChain", class: "Infrastructure" },
+  // RWA
+  ONDO: { name: "Ondo Finance", class: "RWA" }, POLYX: { name: "Polymesh", class: "RWA" },
+  // Memecoin
   PEPE: { name: "Pepe", class: "Memecoin" }, WIF: { name: "WIF", class: "Memecoin" },
-  BONK: { name: "Bonk", class: "Memecoin" }, INJ: { name: "Injective", class: "Infrastructure" },
-  TIA: { name: "Celestia", class: "Infrastructure" }, ENA: { name: "Ethena", class: "Infrastructure" },
+  BONK: { name: "Bonk", class: "Memecoin" },
+  // Gaming
   SAND: { name: "The Sandbox", class: "Gaming" }, MANA: { name: "Decentraland", class: "Gaming" },
-  AXS: { name: "Axie Infinity", class: "Gaming" }, ICP: { name: "Internet Computer", class: "Infrastructure" },
-  HBAR: { name: "Hedera", class: "L1" }, ALGO: { name: "Algorand", class: "L1" },
-  VET: { name: "VeChain", class: "Infrastructure" }, STX: { name: "Stacks", class: "Infrastructure" },
-  RUNE: { name: "THORChain", class: "Infrastructure" }, HYPER: { name: "Hyperliquid", class: "L1" },
-  VIRTUAL: { name: "Virtuals Protocol", class: "AI" }, TON: { name: "Toncoin", class: "L1" },
-  LTC: { name: "Litecoin", class: "L1" }, BCH: { name: "Bitcoin Cash", class: "L1" },
-  SEI: { name: "Sei", class: "L1" }, FTM: { name: "Fantom", class: "L1" },
-  MANTLE: { name: "Mantle", class: "L2" }, NEON: { name: "Neon EVM", class: "L2" },
-  IO: { name: "io.net", class: "Infrastructure" }, PENDLE: { name: "Pendle", class: "DeFi" },
+  AXS: { name: "Axie Infinity", class: "Gaming" }, GALA: { name: "Gala", class: "Gaming" },
+  // US Equity
   SPY: { name: "S&P 500 ETF", class: "US Equity" }, QQQ: { name: "Nasdaq 100 ETF", class: "US Equity" },
   AAPL: { name: "Apple", class: "US Equity" }, MSFT: { name: "Microsoft", class: "US Equity" },
   NVDA: { name: "NVIDIA", class: "US Equity" }, GOOGL: { name: "Alphabet", class: "US Equity" },
   AMZN: { name: "Amazon", class: "US Equity" }, META: { name: "Meta", class: "US Equity" },
-  TSLA: { name: "Tesla", class: "US Equity" }, "BRK.B": { name: "Berkshire", class: "US Equity" },
-  GLD: { name: "Gold ETF", class: "Commodity" }, SLV: { name: "Silver ETF", class: "Commodity" },
-  USO: { name: "Oil ETF", class: "Commodity" }, TLT: { name: "20Y Treasury", class: "US Bond" },
-  IEF: { name: "7-10Y Treasury", class: "US Bond" }, SHY: { name: "1-3Y Treasury", class: "US Bond" },
+  TSLA: { name: "Tesla", class: "US Equity" }, XLF: { name: "Financial Select", class: "US Equity" },
+  // US Bond
+  TLT: { name: "20Y Treasury", class: "US Bond" }, IEF: { name: "7-10Y Treasury", class: "US Bond" },
+  SHY: { name: "1-3Y Treasury", class: "US Bond" }, TIP: { name: "TIPS ETF", class: "US Bond" },
   HYG: { name: "High Yield Bond", class: "US Bond" }, LQD: { name: "IG Bond", class: "US Bond" },
-  UNG: { name: "Natural Gas", class: "Commodity" }, DBC: { name: "Commodities Index", class: "Commodity" },
+  // Commodity
+  GLD: { name: "Gold ETF", class: "Commodity" }, SLV: { name: "Silver ETF", class: "Commodity" },
+  USO: { name: "Oil ETF", class: "Commodity" }, UNG: { name: "Natural Gas", class: "Commodity" },
+  CPER: { name: "Copper ETF", class: "Commodity" }, DBA: { name: "Agriculture ETF", class: "Commodity" },
+  // FX
+  UUP: { name: "US Dollar ETF", class: "FX" }, FXE: { name: "Euro ETF", class: "FX" },
+  FXY: { name: "Yen ETF", class: "FX" }, FXI: { name: "China Large Cap", class: "FX" },
+  // Real Estate
+  VNQ: { name: "US REIT ETF", class: "Real Estate" }, IYR: { name: "US Real Estate ETF", class: "Real Estate" },
+  VNQI: { name: "Intl REIT ETF", class: "Real Estate" },
+  // EM Equity
+  EEM: { name: "EM ETF", class: "EM Equity" }, VWO: { name: "Vanguard EM ETF", class: "EM Equity" },
+  INDA: { name: "India ETF", class: "EM Equity" }, EWZ: { name: "Brazil ETF", class: "EM Equity" },
 };
 
 function resolveAsset(asset) {
@@ -349,7 +374,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   };
 
   const GRADE_TABS = ["All", "A", "B", "C", "D"];
-  const CLASS_TABS = ["All", "L1", "L2", "DeFi", "RWA", "Infrastructure", "Oracle", "Memecoin", "US Equity", "US Bond", "Commodity"];
+  const CLASS_TABS = ["All", "L1", "L2", "DeFi", "RWA", "Infrastructure", "Gaming", "Memecoin", "Crypto", "US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"];
 
   // Filter data — match base grade bucket (A catches A and A+, etc.)
   const GRADE_BUCKET = {
