@@ -344,22 +344,25 @@ async def get_cis_compare(symbols: str, response: Response = None):
 
     def _norm_asset(a: dict, sym: str) -> dict:
         pil = _norm_pillars(a)
+        cis_sc = round(float(a.get("cis_score") or a.get("score") or 0), 1)
+        raw_sc = a.get("raw_cis_score")
         return {
-            "symbol":      sym,
-            "name":        a.get("name", sym),
-            "asset_class": a.get("asset_class") or a.get("class") or "—",
-            "cis_score":   round(float(a.get("cis_score") or a.get("score") or 0), 1),
-            "grade":       a.get("grade", "—"),
-            "signal":      a.get("signal", "NEUTRAL"),
-            "data_tier":   a.get("data_tier", 2),
-            "price":       a.get("price"),
-            "change_24h":  a.get("change_24h"),
-            "change_7d":   a.get("change_7d"),
-            "market_cap":  a.get("market_cap"),
-            "volume_24h":  a.get("volume_24h"),
-            "las":         a.get("las"),
-            "confidence":  a.get("confidence"),
-            "pillars":     pil,
+            "symbol":         sym,
+            "name":           a.get("name", sym),
+            "asset_class":    a.get("asset_class") or a.get("class") or "—",
+            "cis_score":      cis_sc,
+            "raw_cis_score":  round(float(raw_sc), 1) if raw_sc is not None else cis_sc,
+            "grade":          a.get("grade", "—"),
+            "signal":         a.get("signal", "NEUTRAL"),
+            "data_tier":      a.get("data_tier", 2),
+            "price":          a.get("price"),
+            "change_24h":     a.get("change_24h"),
+            "change_7d":      a.get("change_7d"),
+            "market_cap":     a.get("market_cap"),
+            "volume_24h":     a.get("volume_24h"),
+            "las":            a.get("las"),
+            "confidence":     a.get("confidence"),
+            "pillars":        pil,
         }
 
     # Universe pillar averages (for relative context — shown as dotted line on bars)

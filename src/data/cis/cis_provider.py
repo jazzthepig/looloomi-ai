@@ -949,6 +949,7 @@ def calculate_cis_score(
     category_median_30d: Optional[float] = None,  # v4.1: median 30d change for category
     dev_activity_score: Optional[float] = None,   # v4.2: CG Pro dev score 0-100 (tech assets)
     eodhd_fundamentals: Optional[dict] = None,    # v4.2: EODHD PE/revenue data (US Equity)
+    regime: str = "Neutral",                      # v4.2: macro regime for regime-aware A pillar
 ) -> Dict[str, Any]:
     """
     CIS v4.2 — Continuous scoring functions.
@@ -1356,17 +1357,18 @@ def calculate_cis_score(
             a_components["alpha_score"] = 0
 
     # Correlation discount (from betas)
-    # v4.2: In Risk-Off, correlation discount floor is -8 (less punitive, BTC correlation
-    # is expected — don't penalize a second time since S pillar already handles macro beta)
+    # v4.2: In Risk-Off, floor is -8 (less punitive — high correlation is expected in
+    # drawdowns; S pillar already penalises macro beta). Other regimes: floor = -20.
     corr_discount = 0.0
     if asset_betas and asset_betas.get("source") == "30d_rolling":
         btc_corr = abs(asset_betas.get("dxy_beta", 0))
         if btc_corr > 0.8:
-            _floor = -8  # Risk-Off: BTC correlation expected; less punitive
-            corr_discount = max(_floor, _linear_interp(btc_corr, 0.8, 1.0, 0, -15))
+            _floor = -8 if regime == "Risk-Off" else -20
+            corr_discount = max(_floor, _linear_interp(btc_corr, 0.8, 1.0, 0, _floor))
         elif btc_corr > 0.5:
-            corr_discount = -8
+            corr_discount = -8 if regime == "Risk-Off" else -12
     a_components["correlation_discount"] = corr_discount
+    a_components["corr_floor_regime"] = regime
 
     a_score = round(max(0, min(100, class_ind + size_eff + div_a_score + corr_discount + 10)), 1)  # +10 base
 
@@ -1880,6 +1882,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             category_median_30d=category_medians.get(asset_class, 0),
             dev_activity_score=asset_dev_score,
             eodhd_fundamentals=asset_eodhd,
+            regime=regime,  # v4.2: regime-aware A pillar corr discount
         )
         pillars = {k: v for k, v in pillars_result.items() if k != "breakdown"}
         breakdown = pillars_result.get("breakdown", {})
