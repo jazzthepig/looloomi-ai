@@ -153,6 +153,7 @@ BONDS = {
 # Commodities - yfinance symbols
 COMMODITIES = {
     "GLD": {"yfinance": "GLD", "name": "Gold ETF", "class": "Commodity"},
+    "SLV": {"yfinance": "SLV", "name": "Silver ETF", "class": "Commodity"},
     "USO": {"yfinance": "USO", "name": "Oil ETF", "class": "Commodity"},
     "UNG": {"yfinance": "UNG", "name": "Natural Gas ETF", "class": "Commodity"},
     "DBC": {"yfinance": "DBC", "name": "Commodities Index ETF", "class": "Commodity"},
