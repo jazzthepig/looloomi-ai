@@ -207,6 +207,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         asset_name: resolved.name,
         asset_class: resolved.asset_class,
         total_score: asset.cis_score,
+        raw_score: asset.raw_cis_score ?? null,
         grade: asset.grade,
         signal: asset.signal || "NEUTRAL",
         pillars: { F: asset.f, M: asset.m, O: asset.o ?? asset.r, S: asset.s, alpha: asset.a },
@@ -241,6 +242,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             asset_name: resolved.name,
             asset_class: resolved.asset_class,
             total_score: asset.cis_score,
+            raw_score: asset.raw_cis_score ?? null,
             grade: asset.grade,
             signal: asset.signal || "NEUTRAL",
             pillars: { F: asset.f, M: asset.m, O: asset.o ?? asset.r, S: asset.s, alpha: asset.a },
@@ -951,19 +953,28 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   {/* Pillar mini chart — 5 vertical bars F/M/O/S/A */}
                   <PillarMiniChart pillars={item.pillars} />
                 </div>
-                {/* CIS score + confidence dot */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-                  {item.confidence != null && (
-                    <span title={`Confidence: ${(item.confidence * 100).toFixed(0)}%`} style={{
-                      width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
-                      background: item.confidence >= 0.7 ? "#00E87A" : item.confidence >= 0.5 ? "#F59E0B" : "#FF3D5A",
-                      opacity: 0.7,
-                    }} />
+                {/* CIS score + confidence dot + raw score */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    {item.confidence != null && (
+                      <span title={`Confidence: ${(item.confidence * 100).toFixed(0)}%`} style={{
+                        width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
+                        background: item.confidence >= 0.7 ? "#00E87A" : item.confidence >= 0.5 ? "#F59E0B" : "#FF3D5A",
+                        opacity: 0.7,
+                      }} />
+                    )}
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 15, fontWeight: 400,
+                      color: (item.total_score ?? 0) >= 85 ? T.green : (item.total_score ?? 0) >= 70 ? T.blue : T.amber }}>
+                      {item.confidence != null && item.confidence < 0.5 ? "~" : ""}{(item.total_score ?? 0).toFixed(1)}
+                    </span>
+                  </div>
+                  {/* v4.2: raw score when it differs from regime-adjusted */}
+                  {item.raw_score != null && Math.abs(item.raw_score - item.total_score) >= 0.5 && (
+                    <span title="Raw pillar score before regime adjustment"
+                      style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.muted, opacity: 0.65, lineHeight: 1 }}>
+                      ↑{item.raw_score.toFixed(1)}
+                    </span>
                   )}
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 15, fontWeight: 400,
-                    color: (item.total_score ?? 0) >= 85 ? T.green : (item.total_score ?? 0) >= 70 ? T.blue : T.amber }}>
-                    {item.confidence != null && item.confidence < 0.5 ? "~" : ""}{(item.total_score ?? 0).toFixed(1)}
-                  </span>
                 </div>
                 {/* Grade */}
                 <span className="grade-badge" style={{
@@ -1051,6 +1062,18 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
               }}>{(selectedAsset?.total_score ?? 0).toFixed(1)}</span>
               <span style={{ fontSize: 10, color: T.muted }}>/ 100</span>
             </div>
+            {/* v4.2: Dual score — raw vs regime-adjusted */}
+            {selectedAsset?.raw_score != null && (
+              <div style={{ display: "flex", gap: 12, marginTop: 6, alignItems: "center" }}>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.muted, letterSpacing: "0.08em" }}>
+                  RAW <span style={{ color: T.secondary, fontSize: 11 }}>{(selectedAsset.raw_score ?? 0).toFixed(1)}</span>
+                </span>
+                <span style={{ fontSize: 9, color: T.muted }}>→</span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.muted, letterSpacing: "0.08em" }}>
+                  REGIME-ADJ <span style={{ color: T.amber, fontSize: 11 }}>{(selectedAsset.total_score ?? 0).toFixed(1)}</span>
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Detail Body */}
