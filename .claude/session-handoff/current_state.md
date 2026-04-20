@@ -54,9 +54,12 @@
 
 ### Minimax (Mac Mini)
 - [x] **CORRECT FIX**: Removed 13 excluded assets from `ASSET_UNIVERSE` (§4A) — POLYX, PEPE, WIF, BONK, SAND, MANA, AXS, CRV, SUSHI, SNX, ICP, BCH, FTM — from config.py + data_fetcher.py symbol mappings
-- [x] CoinGecko null handler — POLYX/PEPE: skip null items, don't cache price=0
+- [x] DOGE added back (was removed accidentally) — §4A keep list
+- [x] CoinGecko null handler — skip null items, don't cache price=0
 - [x] cis_scheduler confidence=0 filter — skip zero-data assets from universe
 - [x] cis_push.py macro_regime confirmed in payload
+- [x] CoinGecko symbol mappings cleaned up — all 73 universe assets have CG IDs
+- [x] DeFiLlama protocol_map updated — removed excluded assets, fixed POL → "polygon-ecosystem-token"
 - [ ] Restart `cis_scheduler.py` to apply fixes + push clean universe to Railway
 
 ### Jazz
