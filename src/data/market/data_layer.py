@@ -1679,6 +1679,157 @@ def _derive_macro_regime(cpi: float, gdp: float, rate: float, rate_trend: str) -
     return "RISK_ON"
 
 
+# ── FRED Fallback — Free macro data (no API key required) ─────────────────────
+# FRED: Federal Reserve Economic Data (St. Louis Fed)
+# Series used:
+#   CPALTT01USM661S  — CPI YoY % (monthly, already year-over-year)
+#   A191RL1Q225SBEA   — Real GDP QoQ % (quarterly)
+#   UNRATE           — Unemployment rate % (monthly)
+#   FEDFUNDS         — Federal funds rate % (monthly)
+
+_FRED_SERIES = {
+    "cpi_yoy":       "CPALTT01USM661S",
+    "gdp_growth":    "A191RL1Q225SBEA",
+    "unemployment":  "UNRATE",
+    "interest_rate": "FEDFUNDS",
+}
+
+
+async def _get_fred_macro_indicators(country: str = "usa") -> dict:
+    """
+    Fetch latest US macro indicators from FRED (Federal Reserve Economic Data).
+    Free, no API key needed. Used as fallback when EODHD is unavailable.
+
+    Series used:
+      CPIAUCSL        — CPI index level (monthly), used to compute YoY %
+      A191RL1Q225SBEA — Real GDP QoQ % (quarterly, already percent change)
+      UNRATE          — Unemployment rate % (monthly)
+      FEDFUNDS        — Federal funds rate % (monthly)
+    TTL: 4 hours Redis.
+    """
+    if country.lower() != "usa":
+        return {"country": country, "error": "FRED fallback only supports USA"}
+
+    key = "fred_macro_usa"
+    cached = _cache_get(key, ttl=14400)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    client = _get_misc_client()
+    result = {"country": "usa", "source": "fred", "indicators": {}}
+    errors = []
+
+    async def _fetch_cpi_yoy():
+        """CPI YoY: fetch CPIAUCSL, compute 12-month % change."""
+        try:
+            r = await client.get(
+                "https://fred.stlouisfed.org/graph/fredgraph.csv",
+                params={"id": "CPIAUCSL", "limit": 14},
+                timeout=15,
+            )
+            if r.status_code == 200:
+                lines = r.text.strip().split("\n")
+                rows = [ln.split(",") for ln in lines[1:] if ln]
+                rows_sorted = sorted(rows, key=lambda r: r[0], reverse=True)
+                # rows_sorted[0] = latest month, [12] = same month last year
+                if len(rows_sorted) >= 13:
+                    latest = rows_sorted[0]
+                    prev = rows_sorted[12]
+                    val = float(latest[1])
+                    prev_val = float(prev[1])
+                    yoy = (val - prev_val) / prev_val * 100
+                    return {
+                        "value":     round(yoy, 2),
+                        "date":      latest[0],
+                        "prev_value": round((prev_val - float(rows_sorted[13][1])) / float(rows_sorted[13][1]) * 100, 2) if len(rows_sorted) > 13 else None,
+                        "trend":     "up" if yoy > 0 else "down",
+                    }
+        except Exception as e:
+            errors.append(f"cpi_yoy: {e}")
+        return None
+
+    async def _fetch_series(short_name: str, series_id: str):
+        try:
+            r = await client.get(
+                "https://fred.stlouisfed.org/graph/fredgraph.csv",
+                params={"id": series_id, "limit": 4},
+                timeout=15,
+            )
+            if r.status_code == 200:
+                lines = r.text.strip().split("\n")
+                rows = [ln.split(",") for ln in lines[1:] if ln]
+                rows_sorted = sorted(rows, key=lambda r: r[0], reverse=True)
+                if len(rows_sorted) >= 2:
+                    latest = rows_sorted[0]
+                    prev = rows_sorted[1]
+                    try:
+                        val = float(latest[1])
+                        prev_val = float(prev[1])
+                        return short_name, {
+                            "value":      val,
+                            "date":       latest[0],
+                            "prev_value": prev_val,
+                            "trend":      "up" if val > prev_val else "down",
+                        }
+                    except (ValueError, IndexError):
+                        pass
+        except Exception as e:
+            errors.append(f"{short_name}: {e}")
+        return short_name, None
+
+    # Fetch all in parallel
+    cpi_task = _fetch_cpi_yoy()
+    gdp_task = _fetch_series("gdp_growth", "A191RL1Q225SBEA")
+    unemp_task = _fetch_series("unemployment", "UNRATE")
+    rate_task = _fetch_series("interest_rate", "FEDFUNDS")
+
+    cpi_data, gdp_result, unemp_result, rate_result = await asyncio.gather(
+        cpi_task, gdp_task, unemp_task, rate_task
+    )
+
+    if cpi_data:
+        result["indicators"]["cpi_yoy"] = cpi_data
+    if gdp_result:
+        _, gdp_val = gdp_result
+        if gdp_val:
+            result["indicators"]["gdp_growth"] = gdp_val
+    if unemp_result:
+        _, unemp_val = unemp_result
+        if unemp_val:
+            result["indicators"]["unemployment"] = unemp_val
+    if rate_result:
+        _, rate_val = rate_result
+        if rate_val:
+            result["indicators"]["interest_rate"] = rate_val
+
+    result["errors"] = errors if errors else None
+
+    inds = result["indicators"]
+    if not inds:
+        result["error"] = "FRED_UNAVAILABLE"
+        result["derived_regime"] = "UNKNOWN"
+        result["regime_inputs"] = {}
+    else:
+        cpi        = inds.get("cpi_yoy",       {}).get("value", 0) or 0
+        gdp_raw    = inds.get("gdp_growth",    {}).get("value", 0) or 0
+        rate       = inds.get("interest_rate", {}).get("value", 0) or 0
+        rate_trend = inds.get("interest_rate", {}).get("trend", "")
+        # A191RL1Q225SBEA is quarterly % change; annualize for regime thresholds
+        gdp        = gdp_raw * 4
+
+        regime = _derive_macro_regime(cpi=cpi, gdp=gdp, rate=rate, rate_trend=rate_trend)
+        result["derived_regime"] = regime
+        result["regime_inputs"]  = {"cpi_yoy": cpi, "gdp_growth": gdp, "policy_rate": rate}
+
+    await _redis_set(key, result, ttl=14400)
+    return _cache_set(key, result)
+
+
+
+
 async def get_eodhd_fundamentals(ticker: str, exchange: str = "US") -> dict:
     """
     EODHD equity fundamentals — P/E, EPS, revenue, margins, beta.
@@ -2073,27 +2224,31 @@ async def get_economic_dashboard() -> dict:
     if r_cached:
         return _cache_set(key, r_cached)
 
-    if not EODHD_KEY:
-        return {"available": False, "reason": "EODHD_API_KEY not set in Railway env vars"}
-
-    # Fetch US, HK, CN indicators in parallel
-    usa, hkg, chn = await asyncio.gather(
-        get_eodhd_macro_indicators("usa"),
-        get_eodhd_macro_indicators("hkg"),
-        get_eodhd_macro_indicators("chn"),
-        return_exceptions=True,
-    )
+    # Try EODHD first, fall back to FRED (free) for USA
+    # HK/CN only via EODHD — FRED is US-only
+    usa_task = get_eodhd_macro_indicators("usa")
+    hkg_task = get_eodhd_macro_indicators("hkg")
+    chn_task = get_eodhd_macro_indicators("chn")
+    usa, hkg, chn = await asyncio.gather(usa_task, hkg_task, chn_task, return_exceptions=True)
 
     def _safe(r):
         return r if isinstance(r, dict) else {"error": str(r)}
 
-    us_data  = _safe(usa)
-    hk_data  = _safe(hkg)
-    cn_data  = _safe(chn)
+    us_data = _safe(usa)
+    hk_data = _safe(hkg)
+    cn_data = _safe(chn)
+
+    # Fall back to FRED for US if EODHD failed
+    if us_data.get("error") in ("EODHD_API_KEY not set", "EODHD_MACRO_UNAVAILABLE"):
+        fred_data = await _get_fred_macro_indicators("usa")
+        if not fred_data.get("error"):
+            us_data = fred_data
 
     # US regime from economic data (used as fallback when Mac Mini isn't pushing)
     us_regime = us_data.get("derived_regime", "UNKNOWN")
     us_inputs = us_data.get("regime_inputs", {})
+
+    source = us_data.get("source", "unknown")
 
     result = {
         "available":    True,
@@ -2102,7 +2257,7 @@ async def get_economic_dashboard() -> dict:
         "cn":           cn_data,
         "us_regime":    us_regime,
         "regime_inputs": us_inputs,
-        "source":       "eodhd",
+        "source":       source,
         "timestamp":    datetime.now(timezone.utc).isoformat(),
     }
     await _redis_set(key, result, ttl=14400)
