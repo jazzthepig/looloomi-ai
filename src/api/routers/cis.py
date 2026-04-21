@@ -245,6 +245,73 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
     return {"status": "error", "message": "No scoring data available", "universe": []}
 
 
+@router.get("/api/v1/cis/debug/datasources")
+async def debug_datasources():
+    """
+    Diagnostic: run each CIS data source independently and report what was returned.
+    Shows exactly which feed is empty so we can pinpoint the T2 failure.
+    NOT for production use — internal debugging only.
+    """
+    import asyncio, time as _time
+    from src.data.cis.cis_provider import (
+        fetch_binance_prices, fetch_cg_markets, fetch_defillama_tvl,
+        fetch_fear_greed, CG_API_KEY, _cg_base, _UPSTASH_URL
+    )
+    import yfinance as yf
+
+    results = {}
+    t0 = _time.time()
+
+    # Binance
+    try:
+        t = _time.time()
+        bp = await asyncio.wait_for(fetch_binance_prices(), timeout=15)
+        results["binance"] = {"count": len(bp), "sample": list(bp.keys())[:5], "ms": int((_time.time()-t)*1000)}
+    except Exception as e:
+        results["binance"] = {"error": str(e)}
+
+    # CoinGecko
+    try:
+        t = _time.time()
+        cgm = await asyncio.wait_for(fetch_cg_markets(), timeout=30)
+        results["coingecko"] = {"count": len(cgm), "sample": list(cgm.keys())[:5], "ms": int((_time.time()-t)*1000),
+                                "api_key_set": bool(CG_API_KEY), "base_url": _cg_base()}
+    except Exception as e:
+        results["coingecko"] = {"error": str(e), "api_key_set": bool(CG_API_KEY), "base_url": _cg_base()}
+
+    # DeFiLlama
+    try:
+        t = _time.time()
+        tvl = await asyncio.wait_for(fetch_defillama_tvl(), timeout=15)
+        results["defillama"] = {"count": len(tvl), "ms": int((_time.time()-t)*1000)}
+    except Exception as e:
+        results["defillama"] = {"error": str(e)}
+
+    # Fear & Greed
+    try:
+        t = _time.time()
+        fng = await asyncio.wait_for(fetch_fear_greed(), timeout=10)
+        results["fear_greed"] = {"value": fng.get("value") if fng else None, "ms": int((_time.time()-t)*1000)}
+    except Exception as e:
+        results["fear_greed"] = {"error": str(e)}
+
+    # yfinance spot check (SPY only)
+    try:
+        t = _time.time()
+        def _yf_spy():
+            tk = yf.Ticker("SPY")
+            h = tk.history(period="5d")
+            return float(h['Close'].iloc[-1]) if len(h) > 0 else None
+        spy_price = await asyncio.wait_for(asyncio.to_thread(_yf_spy), timeout=20)
+        results["yfinance_spy"] = {"price": spy_price, "ms": int((_time.time()-t)*1000)}
+    except Exception as e:
+        results["yfinance_spy"] = {"error": str(e)}
+
+    results["upstash_configured"] = bool(_UPSTASH_URL)
+    results["total_ms"] = int((_time.time()-t0)*1000)
+    return results
+
+
 @router.get("/api/v1/cis/top")
 async def get_cis_top(limit: int = 10, response: Response = None):
     """
