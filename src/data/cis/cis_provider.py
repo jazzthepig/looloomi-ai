@@ -1768,12 +1768,16 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 cg_mc = cg_data.get("market_cap", 0) or 0
                 cg_fdv = cg_data.get("fdv", 0) or 0
                 cg_supply = cg_data.get("circulating_supply", 0) or 0
+                cg_total_supply = cg_data.get("total_supply", 0) or 0
                 # CG sometimes returns market_cap=0 for rebranded tokens (e.g. MKR→SKY).
-                # Fallback chain: price×supply → FDV → volume×20
+                # Fallback chain: price×circ_supply → price×total_supply → FDV → volume×20
                 if cg_mc == 0:
                     price = rec.get("price", 0) or cg_data.get("price", 0) or 0
                     if cg_supply > 0 and price > 0:
                         cg_mc = price * cg_supply
+                    elif cg_total_supply > 0 and price > 0:
+                        # circ_supply=0 but total_supply exists (e.g. MKR rebrand)
+                        cg_mc = price * cg_total_supply
                     elif cg_fdv > 0:
                         cg_mc = cg_fdv
                     else:
@@ -1783,7 +1787,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 rec["market_cap"] = cg_mc
                 rec["fdv"] = cg_fdv
                 rec["circulating_supply"] = cg_supply
-                rec["total_supply"] = cg_data.get("total_supply", 0) or 0
+                rec["total_supply"] = cg_total_supply
                 rec["ath_change_percentage"] = cg_data.get("ath_change_percentage", 0) or 0
             else:
                 # Fallback: estimate market_cap from volume when CoinGecko fails entirely

@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0",
+  "name": "CometCloud AI",
+  "description": "AI-curated crypto Fund-of-Funds intelligence platform. CIS (CometCloud Intelligence Score) provides 5-pillar cross-asset scoring for 85+ crypto and TradFi assets. Built for human institutional investors and autonomous AI agents equally. Signals use positioning-only language per Hong Kong SFC compliance requirements.",
+  "url": "https://looloomi.ai",
+  "api_base": "https://looloomi.ai/api/v1",
+  "version": "1.2.0",
+  "created": "2026-04-21",
+  "provider": {
+    "name": "CometCloud AI / Looloomi",
+    "url": "https://looloomi.ai",
+    "contact": "jazz@cometcloud.ai",
+    "jurisdiction": "Hong Kong SAR"
+  },
+  "capabilities": {
+    "cis_scoring": {
+      "description": "5-pillar cross-asset intelligence scoring (F/M/O/S/A)",
+      "endpoint": "/cis/universe",
+      "asset_count": 85,
+      "asset_classes": [
+        "L1", "L2", "DeFi", "RWA", "Gaming", "AI",
+        "US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"
+      ],
+      "refresh_interval_seconds": 1800,
+      "data_tiers": ["T1 (local engine)", "T2 (market estimation)"]
+    },
+    "macro_pulse": {
+      "description": "Real-time macro regime detection, BTC price, Fear & Greed Index",
+      "endpoint": "/market/macro-pulse",
+      "refresh_interval_seconds": 300,
+      "regimes": ["RISK_ON", "RISK_OFF", "TIGHTENING", "EASING", "STAGFLATION", "GOLDILOCKS"]
+    },
+    "signal_feed": {
+      "description": "Compliance-safe positioning signals from 7 concurrent data sources",
+      "endpoint": "/market/signals",
+      "signal_vocabulary": ["STRONG OUTPERFORM", "OUTPERFORM", "NEUTRAL", "UNDERPERFORM", "UNDERWEIGHT"]
+    },
+    "realtime": {
+      "websocket": "wss://looloomi.ai/ws/cis",
+      "protocol": "json",
+      "events": ["score_update", "signal_change", "regime_change"]
+    },
+    "agent_api": {
+      "description": "Machine-readable CIS scores optimized for agent consumption",
+      "endpoint": "/agent/cis",
+      "includes": ["cis_score", "raw_cis_score", "las", "grade", "signal", "pillars", "macro_regime", "confidence"]
+    }
+  },
+  "authentication": {
+    "public_endpoints": [
+      "/cis/universe", "/cis/top", "/market/macro-pulse",
+      "/market/signals", "/market/defi-overview", "/agent/cis"
+    ],
+    "authenticated_endpoints": {
+      "type": "bearer",
+      "header": "X-API-Key",
+      "note": "Pro tier API key required for score history, backtests, and higher rate limits"
+    }
+  },
+  "rate_limits": {
+    "public": "60 requests/minute",
+    "pro": "600 requests/minute"
+  },
+  "compliance": {
+    "jurisdiction": "Hong Kong SAR",
+    "regulatory_note": "CometCloud AI does not hold an SFC Type 4 or Type 9 license. All signals use positioning language only (OUTPERFORM/NEUTRAL/UNDERPERFORM). Not investment advice.",
+    "signal_standard": "SFC-compliant positioning language — no transactional recommendations"
+  },
+  "integration": {
+    "mcp_plugin": "cometcloud-intelligence (Claude marketplace)",
+    "eliza_plugin": "@cometcloud/eliza-plugin (coming Q3 2026)",
+    "a2a_tasks": "/agent/tasks (async analysis delegation — coming Q2 2026)"
+  }
+}
