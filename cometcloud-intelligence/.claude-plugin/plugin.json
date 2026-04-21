@@ -1,0 +1,37 @@
+{
+  "name": "cometcloud-intelligence",
+  "display_name": "CometCloud AI Intelligence",
+  "version": "0.1.0",
+  "description": "Live crypto market intelligence from CometCloud AI. Query the CIS (CometCloud Intelligence Score) leaderboard, get 5-pillar scoring breakdowns for 85+ assets across crypto and TradFi, check the current macro regime, and explore the signal feed — all directly in Claude. Built for institutional investors, DeFi analysts, and AI agents.",
+  "author": {
+    "name": "CometCloud AI / Looloomi",
+    "url": "https://looloomi.ai",
+    "email": "jazz@cometcloud.ai"
+  },
+  "homepage": "https://looloomi.ai",
+  "license": "proprietary",
+  "keywords": ["crypto", "finance", "CIS", "DeFi", "macro", "intelligence", "scoring", "fund"],
+  "categories": ["Finance", "Research", "Data"],
+  "skills": [
+    "skills/research-token",
+    "skills/explain-cis",
+    "skills/fetch-macro-brief",
+    "skills/portfolio-builder",
+    "skills/compliance-check"
+  ],
+  "commands": [
+    "commands/cis.md",
+    "commands/regime.md"
+  ],
+  "agents": [
+    "agents/cis-analyst.md"
+  ],
+  "mcp_servers": [
+    "mcp/cometcloud.json"
+  ],
+  "permissions": {
+    "network": ["looloomi.ai", "web-production-0cdf76.up.railway.app"],
+    "filesystem": "none"
+  },
+  "min_claude_version": "claude-sonnet-4-5"
+}

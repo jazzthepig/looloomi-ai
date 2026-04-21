@@ -1,0 +1,33 @@
+{
+  "name": "cometcloud",
+  "description": "CometCloud AI MCP server — live CIS scores, macro pulse, signal feed",
+  "type": "remote",
+  "url": "https://looloomi.ai/mcp",
+  "auth": {
+    "type": "none",
+    "note": "Public endpoints. Pro endpoints require X-API-Key header."
+  },
+  "tools": [
+    {
+      "name": "cometcloud_get_cis_universe",
+      "description": "Get the full CIS leaderboard — all scored assets with grades, signals, pillars, and LAS"
+    },
+    {
+      "name": "cometcloud_get_cis_asset",
+      "description": "Get CIS score and 5-pillar breakdown for a specific asset by symbol (e.g., BTC, SOL, ONDO)"
+    },
+    {
+      "name": "cometcloud_get_macro_pulse",
+      "description": "Get current macro regime, BTC price, Fear & Greed Index, and BTC dominance"
+    },
+    {
+      "name": "cometcloud_get_signal_feed",
+      "description": "Get the current signal feed — positioning signals from 7 concurrent data sources"
+    },
+    {
+      "name": "cometcloud_get_top_assets",
+      "description": "Get the top N assets by CIS score (default: 10). Returns grade, signal, and LAS."
+    }
+  ],
+  "fallback_note": "If /mcp endpoint not yet live, tools route to /api/v1/* FastAPI endpoints directly. See ROADMAP_A2A.md Phase 2 for MCP server deployment."
+}

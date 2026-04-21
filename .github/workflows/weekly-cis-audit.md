@@ -1,116 +1,65 @@
-# CometCloud Weekly CIS Audit
-# Runs every Sunday at 02:00 UTC
-# Pulls last 7 days of CIS scores from Supabase, verifies no unexpected grade drops
+# Weekly CIS Audit
+*GitHub Agentic Workflow — Phase F, HARNESS_UPGRADE.md*
 
-name: Weekly CIS Audit
+## Trigger
+on: schedule: cron: '0 8 * * 1'  (Every Monday 8:00 UTC)
 
-on:
-  schedule:
-    - cron: '0 2 * * 0'  # Every Sunday at 02:00 UTC
-  workflow_dispatch:  # Allow manual trigger
+## Goal
 
-jobs:
-  audit:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+Pull the last 7 days of CIS scores from Supabase and run a quality audit. Detect:
+1. Assets that dropped below D grade (score < 25) unexpectedly
+2. Assets with unusually high grade volatility (>2 grade steps in 7 days)
+3. Assets where T1 (Mac Mini) and T2 (Railway) scores diverge by >15 points
+4. Any compliance violations in stored signal labels
+5. Scoring coverage: total assets scored, data tier breakdown (T1 vs T2)
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+## Steps
 
-      - name: Install dependencies
-        run: |
-          pip install supabase pyyaml requests --quiet
+1. Query Supabase `cis_scores` table:
+   ```sql
+   SELECT symbol, cis_score, raw_cis_score, grade, signal, data_tier, created_at
+   FROM cis_scores
+   WHERE created_at > NOW() - INTERVAL '7 days'
+   ORDER BY symbol, created_at ASC
+   ```
 
-      - name: Run CIS audit
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        run: |
-          python3 << 'PYEOF'
-          import os
-          from supabase import create_client
+2. For each asset, compute:
+   - Grade trajectory (ordered by timestamp): list of grade labels over the week
+   - Max grade drop: from highest grade to lowest grade in the period
+   - T1/T2 divergence: max(|T1_score - T2_score|) across shared assets
 
-          supabase_url = os.getenv("SUPABASE_URL")
-          supabase_key = os.getenv("SUPABASE_KEY")
+3. Flag anomalies:
+   - Any asset scoring below D (< 25) in 3+ consecutive readings
+   - Any asset with grade drop > 2 steps (e.g., A → C or B+ → D)
+   - Any T1/T2 divergence > 15 points
+   - Any signal field containing: BUY, SELL, HOLD, AVOID, ACCUMULATE, REDUCE
 
-          if not supabase_url or not supabase_key:
-            print("⚠️ Supabase credentials not configured — skipping audit")
-            print("Configure SUPABASE_URL and SUPABASE_KEY in GitHub Secrets")
-            exit(0)
+4. Compute coverage report:
+   - Total unique assets scored this week
+   - T1 asset count vs T2 asset count
+   - Asset classes represented
+   - Scoring frequency (pushes per day, average)
 
-          try:
-            client = create_client(supabase_url, supabase_key)
+## Reporting
 
-            # Fetch last 7 days of CIS scores
-            from datetime import datetime, timedelta
-            seven_days_ago = (datetime.utcnow() - timedelta(days=7)).isoformat()
+If anomalies found:
+1. Open a GitHub issue: "Weekly CIS Audit — [date] — [N anomalies found]"
+2. Label: `cis-audit`, `priority: medium`
+3. Issue body: full anomaly list with asset names, scores, dates, and recommended actions
 
-            response = client.table("cis_scores").select("*").gte("created_at", seven_days_ago).execute()
+If no anomalies:
+- Post a commit comment on the latest main commit: "Weekly CIS audit: no anomalies. Coverage: [N] assets, [T1]/[T2] split."
 
-            scores = response.data
-            if not scores:
-              print("⚠️ No CIS scores found in last 7 days")
-              exit(0)
+## Context
 
-            print(f"📊 CIS Audit: {len(scores)} scores in last 7 days")
+This audit is the early-warning system for CIS scoring quality. Unexpected grade
+drops can indicate data source failures (CoinGecko, DeFiLlama, yfinance), scoring
+engine bugs, or genuine market events that warrant Minimax investigation. T1/T2
+divergence > 15 points means the Mac Mini and Railway engines are disagreeing
+materially — either the local engine has a bug or Railway's fallback is miscalibrated.
 
-            # Group by asset
-            by_asset = {}
-            for s in scores:
-              aid = s.get("asset_id", "unknown")
-              if aid not in by_asset:
-                by_asset[aid] = []
-              by_asset[aid].append(s)
+The `cis_scores` table only populates once `SUPABASE_URL` and `SUPABASE_KEY` are
+set in Railway env vars. Until those are set, this workflow will report zero data
+and should be noted as blocked.
 
-            # Check for grade drops
-            GRADE_THRESHOLDS = {"A+": 90, "A": 80, "B": 70, "C": 60, "D": 50, "F": 0}
-            alerts = []
-
-            for asset, asset_scores in by_asset.items():
-              sorted_scores = sorted(asset_scores, key=lambda x: x.get("created_at", ""))
-              if len(sorted_scores) >= 2:
-                latest = sorted_scores[-1].get("cis_score", 0)
-                previous = sorted_scores[-2].get("cis_score", 0)
-                if latest < previous - 5:  # >5 point drop
-                  alerts.append(f"  ⚠️ {asset}: {previous:.1f} → {latest:.1f} (dropped {previous-latest:.1f})")
-
-            if alerts:
-              print("\n## 🚨 Grade Drop Alerts")
-              for a in alerts:
-                print(a)
-            else:
-              print("\n✅ No significant grade drops detected")
-
-            # Grade distribution
-            grade_dist = {"A+": 0, "A": 0, "B": 0, "C": 0, "D": 0, "F": 0}
-            for s in scores:
-              score = s.get("cis_score", 0)
-              if score >= 90: grade = "A+"
-              elif score >= 80: grade = "A"
-              elif score >= 70: grade = "B"
-              elif score >= 60: grade = "C"
-              elif score >= 50: grade = "D"
-              else: grade = "F"
-              grade_dist[grade] += 1
-
-            print("\n📈 Grade Distribution (last 7 days):")
-            for g, c in grade_dist.items():
-              bar = "█" * (c // 5) if c > 0 else "-"
-              print(f"  {g}: {c:3} {bar}")
-
-          except Exception as e:
-            print(f"⚠️ Audit error: {e}")
-            exit(0)
-
-          PYEOF
-
-      - name: Report final status
-        run: |
-          echo "## ✅ Weekly CIS Audit Complete"
-          echo "Report generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          echo ""
-          echo "Next scheduled run: $(date -d 'next Sunday' -u +%Y-%m-%dT02:00:00Z)"
+See `.claude/agents/cis-validator.md` for the agent that runs manual CIS validation.
