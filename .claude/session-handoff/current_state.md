@@ -1,11 +1,13 @@
-# Current State — Updated 2026-04-18
+# Current State — Updated 2026-04-21
 
 ## Commits on Railway (confirmed via `git log origin/main`)
+- `11dd71c` — Fix T2 scoring crash: hoist fng_value, fix FX/RE/EM routing, per-asset try/except
+- `3e5464c` — fix: expand EODHD error check for FRED fallback
+- `484b88c` — fix: add FRED fallback for macro indicators when EODHD unavailable
+- `db44af0` — Add /api/v1/cis/debug/datasources
 - `13668fc` — fix(cis): CIS v4.2 scoring corrections — market rebound detection
 - `cb9eaee` — fix: CIS data layer — Binance geo-block + Upstash L2 cache
 - `b5d2bc7` — feat: Phase B+C+D — compliance hook, subagents, Portfolio tab
-- `9ebc5a8` — fix: wallet auth graceful degradation
-- `6c09dad` — Phase A: compliance-language + cis-methodology skills
 
 ## CIS v4.2 Scoring Fix (commit `13668fc`) — Applied 2026-04-18
 
@@ -73,10 +75,48 @@
 - [ ] Strategy.html walkthrough prep for Nic
 
 ## HARNESS_UPGRADE.md progress
-- Phase A: ✅ Skills
-- Phase B: ✅ Compliance hook
-- Phase C: ✅ Subagents + memory
-- Phase D: ✅ Session handoff
-- Phase E: Plugin packaging — not started
-- Phase F: GitHub Agentic Workflows — not started
-- Phase G: Scheduled task migration — not started
+- Phase A: ✅ All 6 skills (compliance-language, cis-methodology, mac-mini-coordination, deploy-workflow, design-system, tech-stack)
+- Phase B: ✅ Compliance hook (.claude/hooks/compliance_check.py, dry-run mode)
+- Phase C: ✅ Subagents (compliance-auditor, cis-validator, deploy-verifier, code-frontend-reviewer, local-data-coordinator)
+- Phase D: ✅ Session handoff + agent memory
+- Phase E: ✅ Plugin structure (cometcloud-intelligence/ — manifest + 5 skills + 2 commands + 1 agent + MCP config)
+- Phase F: ✅ GitHub Agentic Workflows (.github/workflows/ — compliance-pr-check, post-deploy-verify, weekly-cis-audit)
+- Phase G: Scheduled task migration — not started (Mac Mini cron stays for now)
+
+## ROADMAP_A2A.md progress
+- Phase 1: ✅ Foundation fixes (all done in previous sessions)
+- Phase 2.1: ✅ Agent Card (dashboard/public/.well-known/agent.json — A2A discovery)
+- Phase 2.2: MCP server FastMCP wrapper — not yet deployed (cometcloud.json references it)
+- Phase 3: Solana agent infrastructure — not started
+- Phase 4: Competitive moat — not started
+
+## Production health (2026-04-21)
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Railway | ✅ LIVE | HEAD = 11dd71c (T2 scoring fix) |
+| CIS T2 universe | ⚠️ NEEDS `COINGECKO_API_KEY` | 85 assets, 14 classes — key missing from Railway |
+| CIS T1 (Mac Mini) | ⏳ PENDING | Minimax needs to restart cis_scheduler.py |
+| Macro Pulse | ✅ LIVE | BTC + FNG + dominance live |
+| Signal Feed | ✅ LIVE | Timestamps + HTML strip fixed |
+| DeFi Overview | ✅ LIVE | DeFiLlama TVL live |
+| MacroBrief | ❌ NULL | LM Studio pipeline not connected |
+| Economic Indicators | ❌ EMPTY | EODHD key missing/expired |
+| Supabase | ❌ NOT CONNECTED | SUPABASE_URL + SUPABASE_KEY missing from Railway |
+
+## Pending by owner
+
+### Jazz (Railway env vars)
+- [ ] Add `COINGECKO_API_KEY` → CIS universe populates
+- [ ] Add `SUPABASE_URL` + `SUPABASE_KEY` (service_role) → score history + leads
+- [ ] Run scripts/supabase_all_tables.sql in Supabase SQL Editor
+
+### Minimax (Mac Mini)
+- [ ] Restart `cis_scheduler.py` → push clean universe (13 excluded assets removed)
+- [ ] Rotate EODHD + Finnhub API keys (exposed in old git history)
+- [ ] Start Freqtrade dry run (start_dry_run.sh)
+- [ ] Add LAS calculation to local engine output
+
+### Seth (next)
+- [ ] Commit harness upgrade (Phase A-F + agent card) to git
+- [ ] Plugin marketplace submission (Phase E) — once jazz green-lights
+- [ ] Wallet connect E2E test (Phantom devnet)
