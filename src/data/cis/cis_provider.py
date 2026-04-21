@@ -1183,6 +1183,10 @@ def calculate_cis_score(
         "return_24h": round(change_24h / 100, 4),
     }
 
+    # FNG value — needed by both crypto and TradFi (divergence dampener).
+    # Must be assigned before the if/else branch to avoid UnboundLocalError.
+    fng_value = int(fng.get("value", 50)) if fng else None
+
     # Baseline
     # v4.1.1 enhancement: crypto baseline now uses 3-signal composite (0-40)
     # instead of FNG×0.4 alone. Signals are volume-observable and momentum-derived.
@@ -1244,7 +1248,7 @@ def calculate_cis_score(
 
         # === Signal 3: FNG Secondary (0–10) ===
         # Fear & Greed as a reduced-weight sentiment backdrop only.
-        fng_value = int(fng.get("value", 50)) if fng else None
+        # (fng_value already assigned above the if/else branch)
         s_components["fear_greed_value"] = fng_value
         s_components["fear_greed_classification"] = fng.get("value_classification") if fng else None
         fng_secondary = 0.0
@@ -1869,7 +1873,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         asset_class = config["class"]
 
         # Get market data based on asset type
-        if asset_class in ["US Equity", "US Bond", "Commodity"]:
+        _is_yfinance_asset = asset_class in ["US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"]
+        if _is_yfinance_asset:
             # Use yfinance data
             market_data = yf_data.get(asset_id, {})
             tvl = 0  # No TVL for traditional assets
@@ -1883,7 +1888,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             continue
 
         # Calculate pillar scores with breakdown
-        is_tradfi = asset_class in ["US Equity", "US Bond", "Commodity"]
+        is_tradfi = asset_class in ["US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"]
         # BTC: no BTC benchmark (can't compare to itself); spy_change_30d passed so A pillar uses SPY cross-asset
         # Other crypto: use BTC 30d as benchmark
         # TradFi: no BTC benchmark; use SPY (with SPY itself excluded)
@@ -1904,18 +1909,22 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         asset_dev_score = (cg_dev_data.get(asset_id) or {}).get("dev_activity_score") if not is_tradfi else None
         asset_eodhd = eodhd_data.get(asset_id) if asset_class == "US Equity" else None
 
-        pillars_result = calculate_cis_score(
-            market_data, tvl, fng, asset_class,
-            btc_change_30d=asset_btc_30d,
-            github_commits_4w=gh_commits,
-            vix=live_vix if is_tradfi else None,
-            spy_change_30d=asset_spy_30d,
-            asset_betas=asset_betas,
-            category_median_30d=category_medians.get(asset_class, 0),
-            dev_activity_score=asset_dev_score,
-            eodhd_fundamentals=asset_eodhd,
-            regime=regime,  # v4.2: regime-aware A pillar corr discount
-        )
+        try:
+            pillars_result = calculate_cis_score(
+                market_data, tvl, fng, asset_class,
+                btc_change_30d=asset_btc_30d,
+                github_commits_4w=gh_commits,
+                vix=live_vix if is_tradfi else None,
+                spy_change_30d=asset_spy_30d,
+                asset_betas=asset_betas,
+                category_median_30d=category_medians.get(asset_class, 0),
+                dev_activity_score=asset_dev_score,
+                eodhd_fundamentals=asset_eodhd,
+                regime=regime,
+            )
+        except Exception as e:
+            _logger.warning(f"[CIS] score calculation failed for {asset_id} ({asset_class}): {e}")
+            continue
         pillars = {k: v for k, v in pillars_result.items() if k != "breakdown"}
         breakdown = pillars_result.get("breakdown", {})
 
