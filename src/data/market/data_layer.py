@@ -2239,7 +2239,7 @@ async def get_economic_dashboard() -> dict:
     cn_data = _safe(chn)
 
     # Fall back to FRED for US if EODHD failed
-    if us_data.get("error") in ("EODHD_API_KEY not set", "EODHD_MACRO_UNAVAILABLE"):
+    if us_data.get("error") in ("EODHD_API_KEY not set", "EODHD_MACRO_UNAVAILABLE") or us_data.get("error", "").startswith("EODHD_"):
         fred_data = await _get_fred_macro_indicators("usa")
         if not fred_data.get("error"):
             us_data = fred_data
