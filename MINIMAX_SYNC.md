@@ -251,3 +251,43 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 ---
 
 *文件优先于口头协议。任何接口变更在写代码前先更新本文档。*
+
+---
+
+## §7 Shadow 同步记录（2026-04-21）
+
+**状态：** ✅ 完成。4 个文件与 Mac Mini 实际代码完全一致。
+
+| 文件 | 同步状态 |
+|------|---------|
+| `data_fetcher.py` | ✅ |
+| `cis_scheduler.py` | ✅ |
+| `config.py` | ✅ |
+| `cis_v4_engine.py` | ✅ |
+
+**本次同步带入的关键修复（Minimax 确认已应用）：**
+
+| 修复 | 文件 | 说明 |
+|------|------|------|
+| `fetch_coingecko_market_data` 缓存键 | `data_fetcher.py` | `load_cache`/`save_cache` 从 `"fundamental"` → `"coingecko"`，消除键冲突 |
+| `fetch_defillama_tvl` 缓存键 | `data_fetcher.py` | `save_cache` 从 `"fundamental"` → `"tvl"`，消除键冲突 |
+| `SYMBOL_TO_ID["STX"]` | `data_fetcher.py` | `"stacks"` → `"blockstack"`，修复 price=2.66e-08 |
+| `SYMBOL_TO_ID["ONDO"]` | `data_fetcher.py` | `"ondo"` → `"ondo-finance"`，修复 price=0 |
+| CoinGecko 重试逻辑 | `data_fetcher.py` | 5 次重试 + exponential backoff on 429 |
+| `volume_24h`/`change_24h` 提取 | `data_fetcher.py` | 从 fundamental + coingecko 两路提取 |
+
+**当前 Railway 生产状态（2026-04-21 确认）：**
+- 84 assets：T1=25（Mac Mini）+ T2=59（Railway CoinGecko 估算）
+- `macro_regime: Tightening` ✅（来自 Mac Mini，之前为 Neutral）
+- `source: merged` ✅
+- `cis_scheduler.py` 运行中（PID 33143）
+- FRED fallback 已推送，等 Railway 部署后 TradFi 经济指标恢复
+
+**§6 更新（API keys）：**
+
+| Key | 当前状态 |
+|-----|---------|
+| `COINGECKO_API_KEY` | ✅ **Jazz 已添加** → CIS universe 正常 |
+| `EODHD_API_KEY` | ❌ 仍缺失/过期 → Minimax 待 rotate |
+| `FINNHUB_API_KEY` | ❌ 同上 |
+| `SUPABASE_URL` / `SUPABASE_KEY` | ❌ Railway 未设置 → Jazz 待添加 |

@@ -90,18 +90,20 @@
 - Phase 3: Solana agent infrastructure — not started
 - Phase 4: Competitive moat — not started
 
-## Production health (2026-04-21)
+## Production health (2026-04-21 — updated after Minimax sync)
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Railway | ✅ LIVE | HEAD = 11dd71c (T2 scoring fix) |
-| CIS T2 universe | ⚠️ NEEDS `COINGECKO_API_KEY` | 85 assets, 14 classes — key missing from Railway |
-| CIS T1 (Mac Mini) | ⏳ PENDING | Minimax needs to restart cis_scheduler.py |
-| Macro Pulse | ✅ LIVE | BTC + FNG + dominance live |
+| Railway | ✅ LIVE | HEAD = 11dd71c + FRED fallback deploying |
+| CIS universe | ✅ 84 assets | T1=25 (Mac Mini) + T2=59 (Railway). COINGECKO_API_KEY confirmed set |
+| CIS T1 Mac Mini | ✅ RUNNING | cis_scheduler.py PID 33143, pushing every 30min |
+| macro_regime | ✅ Tightening | Mac Mini regime flowing through (was Neutral before) |
+| Macro Pulse | ✅ LIVE | BTC + FNG + dominance + regime |
 | Signal Feed | ✅ LIVE | Timestamps + HTML strip fixed |
 | DeFi Overview | ✅ LIVE | DeFiLlama TVL live |
 | MacroBrief | ❌ NULL | LM Studio pipeline not connected |
-| Economic Indicators | ❌ EMPTY | EODHD key missing/expired |
+| Economic Indicators | ⏳ DEPLOYING | FRED fallback code pushed, waiting Railway redeploy |
 | Supabase | ❌ NOT CONNECTED | SUPABASE_URL + SUPABASE_KEY missing from Railway |
+| Shadow sync | ✅ DONE | 4 files synced (see MINIMAX_SYNC.md §7) |
 
 ## Pending by owner
 
