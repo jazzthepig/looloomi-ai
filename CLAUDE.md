@@ -338,31 +338,71 @@ git push origin main
 - 13 §4A excluded assets removed from Mac Mini ASSET_UNIVERSE and symbol mappings:
   POLYX, PEPE, WIF, BONK, SAND, MANA, AXS, CRV, SUSHI, SNX, ICP, BCH, FTM
 
+**Done (Week 6 — Apr 21–24):**
+- Shadow sync complete: 4 files synced to Mac Mini local engine (§7 MINIMAX_SYNC.md)
+  - Cache key fixes: `fundamental→coingecko`, `fundamental→tvl` in data_fetcher.py
+  - Symbol mapping fixes: STX `stacks→blockstack`, ONDO `ondo→ondo-finance`
+- cis_scheduler.py running (PID 33143) — pushing every 30min; clean universe post-§4A removal
+- 84 assets live on Railway: T1=25 (Mac Mini full engine) + T2=59 (Railway estimation)
+- macro_regime=Tightening flowing through from Mac Mini (nested key path fixed)
+- Agent harness Phase A–F complete and deployed (commit `31194ae`):
+  - Phase A: 6 skills (compliance-language, cis-methodology, mac-mini-coordination,
+    deploy-workflow, design-system, tech-stack)
+  - Phase B: Compliance hook (`.claude/hooks/compliance_check.py`, dry-run mode)
+  - Phase C: 5 subagents (compliance-auditor, cis-validator, deploy-verifier,
+    code-frontend-reviewer, local-data-coordinator)
+  - Phase D: Session handoff + agent memory (`.claude/session-handoff/`)
+  - Phase E: Plugin structure (`cometcloud-intelligence/` — manifest + 5 skills + 2 commands
+    + 1 agent + MCP config pointing to `src/mcp/cometcloud_mcp.py`)
+  - Phase F: GitHub Agentic Workflows (`.github/workflows/` — compliance-pr-check,
+    post-deploy-verify, weekly-cis-audit)
+- A2A agent card: `dashboard/public/.well-known/agent.json` + `dashboard/dist/.well-known/agent.json`
+  — ROADMAP_A2A Phase 2.1 ✅
+- Supabase env vars confirmed set in Railway — score history writes active
+- MCP config corrected: `cometcloud-intelligence/mcp/cometcloud.json` now stdio → actual
+  `src/mcp/cometcloud_mcp.py` (2072-line server); `remote_when_deployed` section for Phase 2.2
+
+**Done (Week 7 — Apr 24–25):**
+- CIS scoring fixes (3 bugs found and fixed):
+  1. Mac Mini `FundamentalScorer.score()`: `_score_crypto()` only called for `AssetClass.CRYPTO`
+     (BTC/LTC/BCH). All L1/L2/DeFi/RWA/INFRA/MEME/GAMING fell through to `_score_generic()` → F=50 always.
+     Fixed: expanded check to include all crypto subclasses. MKR/UNI/AAVE/PENDLE now F=70.
+  2. Mac Mini `data_fetcher.py`: `SYMBOL_TO_COINGECKO_ID["POL"]` was `"polygon"` (404) → fixed to
+     `"polygon-ecosystem-token"`.
+  3. Railway `cis_provider.py`: CG Pro `/coins/markets` returns `circ_supply=0` for rebranded tokens
+     (MKR/AAVE/UNI). Added `price×total_supply` as secondary mcap fallback before FDV/volume×20.
+- cis_scheduler.py subprocess path: venv Python used for child `cis_push.py` process
+  (was using system Python → CG Pro key not loaded → Supabase writes always failed). Fixed.
+- Supabase score history: now writing successfully (`history_written: true`), 10+ rows accumulating
+- CIS score state: T1 top = MKR B (CIS=56.8), T2 F pillar normal (LTC=66.3, BCH=69.6),
+  but no B+ assets yet — S and A pillars systematically low, blocking freqtrade trades
+
 **Pending — waiting on Minimax:**
-- Restart `cis_scheduler.py` to push clean universe with fixes applied
-- Rotate EODHD + Finnhub API keys (were exposed in git history via Shadow)
+- Rotate EODHD + Finnhub API keys (exposed in old git history via Shadow)
 - Start Freqtrade dry run: `start_dry_run.sh`
 - Run T1 backtest (`run_t1_backtest.sh`) → report PF/WR/MaxDD
 - Add LAS calculation to local engine output (match Railway schema)
+- MacroBrief pipeline stability — LM Studio (Qwen3 35B) crash recovery
 
-**Pending — env vars (Jazz → Railway dashboard):**
-- `COINGECKO_API_KEY` — CIS universe empty without it (Railway CoinGecko rate-limited)
-- `SUPABASE_URL` + `SUPABASE_KEY` (service_role) — score history + leads not writing
-- Run `scripts/supabase_all_tables.sql` in Supabase SQL Editor
+## Production health (as of 2026-04-25)
 
-## Production health (as of 2026-04-19)
-
-- Railway: **ACTIVE** — HEAD = `1558695` (all Week 5 fixes deployed) ✅
-- CIS universe: **EMPTY** — `COINGECKO_API_KEY` missing from Railway env vars. Mac Mini
-  scheduler needs restart to push clean universe after excluded-asset cleanup.
+- Railway: **ACTIVE** — HEAD = `4aada1a` ✅
+- CIS universe: **LIVE** — 84 assets (T1=25 Mac Mini + T2=59 Railway). COINGECKO_API_KEY set ✅
+- Mac Mini scheduler: **RUNNING** — cis_scheduler.py PID 33143, pushing every ~30min ✅
+- macro_regime: **Tightening** — Mac Mini regime flowing through correctly ✅
 - DeFi overview: **LIVE** — DeFiLlama TVL, 25 protocols scored ✅
-- Macro Pulse: **LIVE** ✅ — BTC, F&G, Dom all live; regime key path now fixed
-- Signal Feed: **LIVE** ✅ — signals with correct timestamps (year-append fix deployed)
-- Macro Events: **LIVE** ✅ — HTML stripped from descriptions (stripHtml fix deployed)
+- Macro Pulse: **LIVE** ✅ — BTC, F&G, dominance all live
+- Signal Feed: **LIVE** ✅ — correct timestamps, compliance-safe language
+- Macro Events: **LIVE** ✅ — HTML stripped from descriptions
+- Supabase: **CONNECTED** ✅ — `soupjamxlfsmgmmtoeok`, score history writing ✅
+- ScoreAnalytics: **LIVE** ✅ — heatmap populating with score history rows
 - MacroBrief: **NULL** — Mac Mini LM Studio pipeline not connected / not pushing
-- Economic Indicators: **EMPTY** — EODHD API key missing/expired. All cells show "—".
-- Quant Monitor (Freqtrade): **STALE** — dry-run not started by Minimax
-- Supabase: project exists (`soupjamxlfsmgmmtoeok`) but env vars not set in Railway
+- Economic Indicators: **EMPTY** — EODHD key missing/expired. All cells show "—".
+- Quant Monitor (Freqtrade): **NOT STARTED** — dry-run not yet started by Minimax
+- Agent harness: **DEPLOYED** ✅ — Phase A–F complete, all skills + plugin + workflows live
+- A2A discovery: **LIVE** ✅ — `/.well-known/agent.json` served from Railway
+- **BUG**: No B+ assets (CIS≥65) — S pillar (12-13) and A pillar (20-30) systematically low.
+  freqtrade `MIN_CIS_SCORE=65` gate blocks all trades. Root cause in Railway T2 S/A formulas.
 
 ## Codebase metrics
 
@@ -371,42 +411,32 @@ git push origin main
 - CIS provider: `cis_provider.py` calculates scores for 65+ assets (13 §4A assets excluded)
 - Shadow/: removed from git tracking (read-only local reference, never commit)
 
-## Task matrix — Week 6 (Apr 20+)
+## Task matrix — Week 7 (Apr 24+)
 
-### Unblocked now (Seth / Austin)
+### Seth (Seth / Austin)
 
 | Priority | Task | Est. | Notes |
 |----------|------|------|-------|
-| P0 | CIS universe: set `COINGECKO_API_KEY` in Railway + Minimax scheduler restart | 30min | Jazz + Minimax |
-| P0 | Wallet connect E2E test (Phantom devnet) → fix any auth flow bugs | 1d | — |
-| P1 | My Portfolio view — watched assets, personalized CIS alerts, P&L tracking | 3d | Wallet connect |
-| P1 | Score history: verify ScoreAnalytics heatmap populates after 24h of pushes | 0.5d | Supabase + Mac Mini |
-| P1 | Freqtrade CIS integration — wire live scores into CometCloudStrategy | 1d | Minimax dry run |
+| P1 | Investigate Railway T2 S/A pillar — why scores 12-13 and 20-30 | 1d | Blocks freqtrade |
+| P1 | Wallet connect E2E test (Phantom devnet) → fix auth flow bugs | 1d | — |
+| P1 | Phase 2.2 MCP sidecar — deploy `src/mcp/cometcloud_mcp.py` as Railway worker | 1d | ROADMAP_A2A |
+| P2 | Freqtrade CIS integration — wire live scores into CometCloudStrategy | 1d | Minimax dry run first |
 | P2 | Trading Agent P&L dashboard — Freqtrade metrics → strategy page | 2d | Freqtrade running |
 | P2 | Share card: og:image endpoint for Twitter/WeChat link previews | 1d | — |
-| P2 | Economic Indicators: EODHD key rotation → restore macro data | 0.5d | Minimax |
-| P3 | Lighthouse audit + lazy-load heavy components | 1d | — |
-
-### Jazz → Railway (env vars)
-
-| Var | Status | Action |
-|-----|--------|--------|
-| `COINGECKO_API_KEY` | ❌ MISSING | Add CG Pro key → CIS universe populated |
-| `SUPABASE_URL` | ❌ MISSING | Add → score history + leads writes |
-| `SUPABASE_KEY` | ❌ MISSING | Add service_role key |
-
-Run `scripts/supabase_all_tables.sql` in Supabase SQL Editor after env vars set.
+| P2 | My Portfolio view — after wallet connect | 3d | — |
+| P2 | Verify ScoreAnalytics heatmap populates | 0.5d | Supabase ✅ + scheduler ✅ |
 
 ### Minimax (Mac Mini)
 
 | Priority | Task | Est. |
 |----------|------|------|
-| P0 | Restart `cis_scheduler.py` — push clean universe (13 excluded assets removed) | 15min |
 | P0 | Rotate EODHD + Finnhub API keys (exposed in old git history) | 30min |
 | P0 | Freqtrade dry run: `start_dry_run.sh`, confirm CIS cache writer | 1h |
 | P1 | Add LAS calculation to local engine output (match Railway schema) | 2h |
 | P1 | Macro Brief pipeline stability — LM Studio (Qwen3 35B) crash recovery | 1d |
+| P1 | Run T1 backtest (`run_t1_backtest.sh`) → report PF/WR/MaxDD | 2h |
 | P2 | DeFiLlama TVL refresh: 30min → 15min for F pillar freshness | 0.5h |
+| P3 | Investigate S/A pillar systematic low scores in Railway T2 | ongoing |
 
 ### Jazz + Nic (distribution)
 
@@ -423,12 +453,13 @@ Run `scripts/supabase_all_tables.sql` in Supabase SQL Editor after env vars set.
 ## Critical path
 
 ```
-Jazz: COINGECKO_API_KEY + SUPABASE env vars in Railway
-  ├─→ Minimax: restart cis_scheduler.py → CIS universe populates
-  │     ├─→ Seth: verify ScoreAnalytics heatmap after 24h
-  │     └─→ Minimax: Freqtrade dry run → Seth: Trading Agent P&L dashboard
+CIS universe ✅ + Supabase ✅ + Mac Mini scheduler ✅
+  ├─→ Seth: verify ScoreAnalytics heatmap (24h data accumulation)
+  │     └─→ Seth: Freqtrade integration → Trading Agent P&L dashboard
+  ├─→ Minimax: Freqtrade dry run → Seth: Trading Agent P&L dashboard
   ├─→ Seth: wallet connect E2E (1d) → My Portfolio view (3d)
   │     └─→ Share card og:image (1d)
+  ├─→ Seth: Phase 2.2 MCP sidecar → agent ecosystem (ROADMAP_A2A)
   └─→ Jazz + Nic: strategy.html review → seed investor deck
         └─→ Family office soft intros
 ```
