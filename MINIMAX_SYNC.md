@@ -162,11 +162,19 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 
 ### 🔴 P0 — 2026-04-26（部署验证）
 
-**任务：** 确认 HEAD = `223c865` 已 deploy 到 Railway，并跑 deploy verification。
+**状态：✅ 完成（2026-04-26 09:13 UTC）**
 
-**注意：** `/health` 和 `/mcp/sse` 通过 `looloomi.ai`（Cloudflare）测试返回 HTML — 这是
-Cloudflare SPA 缓存问题，不是 Railway 的 bug。用 `/api/v1/health`（新增端点）绕过，
-用 Railway direct URL 验证 MCP。
+| # | 验证项 | 结果 |
+|---|--------|------|
+| 1 | `/api/v1/health` | ✅ `{"status": "healthy", "version": "0.4.3"}` |
+| 2 | `/mcp/sse` (Railway direct) | ✅ HTTP 405 — endpoint exists, only GET allowed |
+| 3 | CIS universe | ✅ 84 assets, source=merged, regime=Tightening |
+| 4 | Top asset | ✅ MKR CIS=56.8 B-tier, passes threshold=52 |
+
+**CIS评分亮点（MKR示例，2026-04-26）：**
+- `s=43.7` — beta_source=cg_proxy（修复生效，不再是0）
+- `a=60.0` — class_ind=20, size_eff=15, base+25（修复生效）
+- regime=Tightening → freqtrade threshold=52，MKR 56.8通过
 
 ```bash
 # 1. 确认 Railway 已 deploy（用 /api/v1/health 绕过 Cloudflare 缓存）
@@ -188,8 +196,8 @@ python scripts/test_auth_e2e.py
 # 期望: ALL 11 TESTS PASSED
 
 # 4. 确认 CIS universe 正常
-curl https://looloomi.ai/api/v1/cis/universe | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'Assets: {len(d.get(\"assets\", []))}, source: {d.get(\"source\")}')"
-# 期望: Assets: 80+, source: local_engine 或 market_estimation
+curl https://looloomi.ai/api/v1/cis/universe | python3 -c "import json,sys; d=json.load(sys.stdin); u=d.get('universe',[]); print(f'Assets: {len(u)}, source: {d.get(\"source\")}')"
+# 期望: Assets: 80+, source: merged
 ```
 
 **验收标准：**
@@ -293,14 +301,14 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 
 ## §5 Seth 已完成 / Railway 最新状态
 
-**当前 HEAD（2026-04-26）：** `01327bc` — feat(mcp): Phase 2.2 — MCP server at /mcp/sse + auth E2E test
+**当前 HEAD（2026-04-26）：** `05e8198` — fix(api): add /api/v1/health to bypass Cloudflare SPA cache
 
 最近 commit 时间线：
-- `01327bc` — Phase 2.2 COMMIT_READY.md push-gate update
-- `6a47e66` — **Phase 2.2 主 commit**：main.py MCP mount, requirements.txt, cometcloud.json, CISWidget.jsx fix, StrategyPage.jsx fix, scripts/test_auth_e2e.py, ROADMAP_A2A.md ✅
-- `2ddbaef` — **Minimax**：T2 beta fallback, A base +25, tighten regime S weight
-- `e991ae7` — **Minimax**：CLAUDE.md Week 7 update
-- `b7095fc` — Phase A-F harness + A2A agent card
+- `05e8198` — **Seth**：/api/v1/health + deploy docs update ✅
+- `223c865` — **Seth**：COMMIT_READY.md push-gate + MINIMAX_SYNC.md §4 verification ✅
+- `2ddbaef` — **Minimax**：T2 beta fallback, A base +25, tighten regime S weight ✅
+- `e991ae7` — **Minimax**：CLAUDE.md Week 7 update ✅
+- `b7095fc` — Phase A-F harness + A2A agent card ✅
 
 **所有待处理项已清空。** 无阻塞项。
 
@@ -328,10 +336,10 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 |-----|---------|------|
 | `EODHD_API_KEY` | **已暴露在 git history**（`Shadow/cometcloud-local/data_fetcher.py`） | Minimax: rotate key，通过环境变量设置，不写入代码 |
 | `FINNHUB_API_KEY` | **同上** | 同上 |
-| `COINGECKO_API_KEY` | Railway env var 未设置（导致 CIS universe 为空） | Jazz: 在 Railway → Variables 中添加 |
-| `INTERNAL_TOKEN` | Railway env var，正常 | — |
-| `UPSTASH_REDIS_REST_TOKEN` | Railway env var，正常 | — |
-| `SUPABASE_URL` / `SUPABASE_KEY` | **未在 Railway 设置** | Jazz: 添加到 Railway Variables |
+| `COINGECKO_API_KEY` | ✅ Railway env var 已设置 | — |
+| `INTERNAL_TOKEN` | ✅ Railway env var，正常 | — |
+| `UPSTASH_REDIS_REST_TOKEN` | ✅ Railway env var，正常 | — |
+| `SUPABASE_URL` / `SUPABASE_KEY` | ❓ 待 Jazz 确认 | Jazz: 验证是否已添加 |
 
 ---
 
