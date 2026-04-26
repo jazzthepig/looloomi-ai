@@ -214,7 +214,7 @@ curl https://looloomi.ai/api/v1/cis/universe | python3 -c "import json,sys; d=js
 
 | # | 任务 | 说明 | 状态 |
 |---|------|------|------|
-| 16 | **Freqtrade 动态阈值**：把 `MIN_CIS_SCORE=55` 换成 regime-aware | 见 COMMIT_READY.md §Freqtrade 或下面代码 | 🟡 |
+| 16 | **Freqtrade 动态阈值**：regime-aware threshold 已 apply | ✅ Mac Mini `/Volumes/CometCloudAI/freqtrade/user_data/strategies/CometCloudStrategy.py` |
 | 17 | **auth E2E test** 在 Mac Mini 跑 | `python scripts/test_auth_e2e.py` | 🟡 |
 | 18 | **Supabase wallet_profiles 表** 确认存在 | `SELECT * FROM wallet_profiles LIMIT 1` | 🟡 |
 | 10 | LAS 字段加入 local engine 输出 | 与 Railway schema 对齐 | 🟡 |
