@@ -8,11 +8,11 @@
   "env": {
     "BASE_URL": "https://looloomi.ai"
   },
-  "note": "Runs cometcloud_mcp.py in stdio mode against the Railway production API. Requires: pip install 'mcp[cli]>=1.6.0' httpx pydantic tenacity cachetools",
-  "remote_when_deployed": {
-    "type": "streamable_http",
-    "url": "https://looloomi.ai/mcp",
-    "note": "Available once Railway MCP sidecar is deployed (ROADMAP_A2A Phase 2.2). Set MCP_PORT env var on Railway worker."
+  "note": "Local stdio mode — runs cometcloud_mcp.py against Railway production API. For remote HTTP use the 'remote' config below.",
+  "remote": {
+    "type": "sse",
+    "url": "https://looloomi.ai/mcp/sse",
+    "note": "ROADMAP_A2A Phase 2.2 — live. SSE transport: GET /mcp/sse (stream), POST /mcp/messages (send). Mounted in FastAPI via ASGI."
   },
   "tools": [
     {

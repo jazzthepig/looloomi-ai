@@ -239,13 +239,13 @@ function LeadCapture() {
                   {state === "submitting" ? "Sending…" : "Get CIS Report →"}
                 </button>
                 <a href="app.html" style={{
-                  fontFamily: F.display, fontSize: 12, fontWeight: 700, color: T.t2,
+                  fontFamily: F.display, fontSize: 12, fontWeight: 700, color: "rgba(199,210,254,0.85)",
                   textDecoration: "none", letterSpacing: "0.04em", padding: "13px 20px",
-                  borderRadius: 8, border: `1px solid ${T.border}`, transition: "all 0.15s",
+                  borderRadius: 8, border: "1px solid rgba(99,102,241,0.40)", transition: "all 0.15s",
                   whiteSpace: "nowrap",
                 }}
-                  onMouseEnter={e => { e.currentTarget.style.color = T.t1; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = T.t2; e.currentTarget.style.borderColor = T.border; }}
+                  onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(129,140,248,0.70)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "rgba(199,210,254,0.85)"; e.currentTarget.style.borderColor = "rgba(99,102,241,0.40)"; }}
                 >
                   Open Platform →
                 </a>
