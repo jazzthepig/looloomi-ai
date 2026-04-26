@@ -17,3 +17,7 @@ PyNaCl>=1.5.0
 base58>=2.1.0
 email-validator>=2.0.0
 Pillow>=10.0.0
+# MCP Server — ROADMAP_A2A Phase 2.2
+mcp[cli]>=1.6.0
+cachetools>=5.0.0
+tenacity>=8.0.0

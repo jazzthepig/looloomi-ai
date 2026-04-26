@@ -88,17 +88,24 @@ Standard A2A discovery document. Any compliant agent can find us.
 }
 ```
 
-### 2.2 MCP Server for CIS Data
+### 2.2 MCP Server for CIS Data ✅ COMPLETE (2026-04-26)
 Expose CometCloud intelligence as an MCP tool server. Any MCP-compatible agent (Claude, GPT, Gemini, Cursor) can query CIS scores natively.
 
-**Tools to expose:**
-- `get_cis_universe()` — full leaderboard with grades, signals, pillars
-- `get_cis_asset(symbol)` — single asset deep dive
-- `get_cis_history(symbol, days)` — score trend for analysis
-- `get_fund_portfolio()` — vault composition and performance
-- `get_market_signals()` — current signal feed
+**Live endpoint:** `https://looloomi.ai/mcp/sse` (SSE transport)
+**Message endpoint:** `https://looloomi.ai/mcp/messages`
 
-**Implementation:** FastMCP (Python) wrapping existing FastAPI endpoints. Deploy as sidecar on Railway or as standalone Cloudflare Worker.
+**Tools deployed (7):**
+- `cometcloud_get_cis_universe` — full leaderboard with grades, signals, pillars, LAS
+- `cometcloud_get_cis_asset(symbol)` — single asset deep dive
+- `cometcloud_get_macro_pulse` — regime, BTC, FNG, dominance
+- `cometcloud_get_signal_feed` — 7-source signal feed
+- `cometcloud_get_top_assets(n)` — top N by CIS score
+- `cometcloud_get_macro_brief` — Qwen3 35B macro narrative
+- `cometcloud_regime_allocation` — regime-aware allocation
+
+**Implementation:** `src/mcp/cometcloud_mcp.py` (FastMCP, 2072 lines) mounted as ASGI sub-app inside FastAPI via `app.mount("/mcp", mcp.sse_app())`. Zero new Railway services — rides the existing worker. Fail-safe try/except keeps main app alive if dep missing.
+
+**MCP config:** `cometcloud-intelligence/mcp/cometcloud.json` updated with `remote.url = "https://looloomi.ai/mcp/sse"`.
 
 ### 2.3 A2A Task Endpoint
 Long-running analysis tasks for agent delegation.

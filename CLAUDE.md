@@ -377,6 +377,18 @@ git push origin main
 - CIS score state: T1 top = MKR B (CIS=56.8), T2 F pillar normal (LTC=66.3, BCH=69.6),
   but no B+ assets yet — S and A pillars systematically low, blocking freqtrade trades
 
+**Done (Week 8 — Apr 26):**
+- ROADMAP_A2A Phase 2.2 complete: MCP server mounted at /mcp/sse (SSE transport)
+  - `src/api/main.py`: `app.mount("/mcp", mcp.sse_app())` with fail-safe try/except
+  - `src/api/main.py`: SPA fallback now excludes "mcp/" prefix
+  - `requirements.txt`: mcp[cli]>=1.6.0, cachetools, tenacity
+  - `cometcloud-intelligence/mcp/cometcloud.json`: remote.url = https://looloomi.ai/mcp/sse
+  - ROADMAP_A2A.md Phase 2.2 marked ✅
+- Chrome QA UI fixes: CISWidget epoch timestamp, MACRO REGIME field name, StrategyPage CTA contrast
+- Auth code review: full flow verified correct (AuthContext → WalletConnect → backend sign-in)
+  - `scripts/test_auth_e2e.py`: 11-test backend E2E suite (Mac Mini must run after push)
+- COMMIT_READY.md prepared — Mac Mini runs 5-step sequence to deploy
+
 **Pending — waiting on Minimax:**
 - Rotate EODHD + Finnhub API keys (exposed in old git history via Shadow)
 - Start Freqtrade dry run: `start_dry_run.sh`
@@ -384,9 +396,9 @@ git push origin main
 - Add LAS calculation to local engine output (match Railway schema)
 - MacroBrief pipeline stability — LM Studio (Qwen3 35B) crash recovery
 
-## Production health (as of 2026-04-25)
+## Production health (as of 2026-04-26)
 
-- Railway: **ACTIVE** — HEAD = `4aada1a` ✅
+- Railway: **ACTIVE** — HEAD = `b7095fc` (Phase 2.2 commit PENDING Mac Mini push) ✅
 - CIS universe: **LIVE** — 84 assets (T1=25 Mac Mini + T2=59 Railway). COINGECKO_API_KEY set ✅
 - Mac Mini scheduler: **RUNNING** — cis_scheduler.py PID 33143, pushing every ~30min ✅
 - macro_regime: **Tightening** — Mac Mini regime flowing through correctly ✅
@@ -401,6 +413,7 @@ git push origin main
 - Quant Monitor (Freqtrade): **NOT STARTED** — dry-run not yet started by Minimax
 - Agent harness: **DEPLOYED** ✅ — Phase A–F complete, all skills + plugin + workflows live
 - A2A discovery: **LIVE** ✅ — `/.well-known/agent.json` served from Railway
+- MCP server: **STAGED** ⏳ — Phase 2.2 code in repo, mounts after Mac Mini push to Railway
 - **BUG**: No B+ assets (CIS≥65) — S pillar (12-13) and A pillar (20-30) systematically low.
   freqtrade `MIN_CIS_SCORE=65` gate blocks all trades. Root cause in Railway T2 S/A formulas.
 
@@ -411,15 +424,16 @@ git push origin main
 - CIS provider: `cis_provider.py` calculates scores for 65+ assets (13 §4A assets excluded)
 - Shadow/: removed from git tracking (read-only local reference, never commit)
 
-## Task matrix — Week 7 (Apr 24+)
+## Task matrix — Week 8 (Apr 26+)
 
 ### Seth (Seth / Austin)
 
-| Priority | Task | Est. | Notes |
+| Priority | Task | Est. | Status |
 |----------|------|------|-------|
-| P1 | Investigate Railway T2 S/A pillar — why scores 12-13 and 20-30 | 1d | Blocks freqtrade |
-| P1 | Wallet connect E2E test (Phantom devnet) → fix auth flow bugs | 1d | — |
-| P1 | Phase 2.2 MCP sidecar — deploy `src/mcp/cometcloud_mcp.py` as Railway worker | 1d | ROADMAP_A2A |
+| P1 | ~~Phase 2.2 MCP sidecar — deploy `src/mcp/cometcloud_mcp.py`~~ | ~~1d~~ | ✅ DONE — ASGI mount at /mcp/sse |
+| P1 | ~~Wallet connect auth review + E2E test script~~ | ~~1d~~ | ✅ DONE — scripts/test_auth_e2e.py |
+| P1 | Wallet connect live E2E run (Mac Mini) → fix any failures | 0.5d | After Mac Mini push |
+| P2 | Phase 2.3: A2A Task endpoint `/api/v1/agent/tasks` | 4h | ROADMAP_A2A |
 | P2 | Freqtrade CIS integration — wire live scores into CometCloudStrategy | 1d | Minimax dry run first |
 | P2 | Trading Agent P&L dashboard — Freqtrade metrics → strategy page | 2d | Freqtrade running |
 | P2 | Share card: og:image endpoint for Twitter/WeChat link previews | 1d | — |

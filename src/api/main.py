@@ -80,6 +80,22 @@ app.include_router(factory_router)
 app.include_router(share_router)
 
 
+# ── MCP Server (ROADMAP_A2A Phase 2.2) ───────────────────────────────────────
+# Mounts the CometCloud MCP tool server at /mcp using streamable-HTTP transport.
+# Any MCP-compatible agent (Claude, GPT, Gemini, Cursor) can query CIS scores
+# and fund data natively at https://looloomi.ai/mcp.
+# Fail-safe: if mcp[cli] dep is missing the main app still runs.
+
+try:
+    from src.mcp.cometcloud_mcp import mcp as _cometcloud_mcp
+    # SSE transport: GET /mcp/sse (stream), POST /mcp/messages (send)
+    # Clients: Claude Desktop, Cursor, any MCP-compatible agent
+    app.mount("/mcp", _cometcloud_mcp.sse_app())
+    print("[MCP] ✅ Mounted at /mcp/sse — ROADMAP_A2A Phase 2.2")
+except Exception as _mcp_err:
+    print(f"[MCP] ⚠️  Not mounted: {_mcp_err}")
+
+
 # ── Agent Discovery (A2A v0.3) ────────────────────────────────────────────────
 
 _AGENT_CARD_PATH = os.path.join(
@@ -124,8 +140,8 @@ if os.path.exists(dashboard_path):
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
-        # API/internal/ws paths that don't match any router → 404 JSON (not SPA fallback)
-        _api_prefixes = ("api/", "internal/", "ws/", ".env", "config", "secrets", "admin", ".git")
+        # API/internal/ws/mcp paths that don't match any router → 404 JSON (not SPA fallback)
+        _api_prefixes = ("api/", "internal/", "ws/", "mcp/", ".env", "config", "secrets", "admin", ".git")
         if any(full_path.startswith(p) for p in _api_prefixes):
             return JSONResponse(status_code=404, content={"detail": "Not found"})
         file_path = os.path.join(dashboard_path, full_path)

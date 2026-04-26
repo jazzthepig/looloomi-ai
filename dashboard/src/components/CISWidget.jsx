@@ -699,7 +699,7 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
           <p style={{ fontSize: 11, color: T.secondary, marginTop: 4 }}>
             CIS v4.1 · Real-time API · {processedData?.universe?.length || 0} assets
             {customWeights && <span style={{ color: T.gold, marginLeft: 8 }}>Custom Weights</span>}
-            {data?.timestamp && <span style={{ marginLeft: 8 }}>Updated: {new Date(data.timestamp).toLocaleString()}</span>}
+            {data?.timestamp && <span style={{ marginLeft: 8 }}>Updated: {new Date(data.timestamp < 1e12 ? data.timestamp * 1000 : data.timestamp).toLocaleString()}</span>}
           </p>
         </div>
 
@@ -755,7 +755,7 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
       </div>
 
       {/* Macro Banner */}
-      <CISMacroBanner macro={data?.macro} />
+      <CISMacroBanner macro={{ regime: data?.macro_regime }} />
 
       {/* Loading */}
       {loading && (

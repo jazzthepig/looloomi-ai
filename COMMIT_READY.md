@@ -1,4 +1,4 @@
-# Ready to Commit — 2026-04-21
+# Ready to Commit — 2026-04-26
 
 All files prepared. Run this from Mac Mini in `~/projects/looloomi-ai/`.
 
@@ -14,51 +14,53 @@ rm -f .git/index.lock .git/HEAD.lock
 git pull --rebase origin main
 ```
 
-## Step 3: Stage harness artifacts + docs
+## Step 3: Stage
 
 ```bash
 git add \
-  .claude/agents/code-frontend-reviewer.md \
-  .claude/agents/local-data-coordinator.md \
-  .claude/session-handoff/current_state.md \
-  .claude/skills/mac-mini-coordination/ \
-  .claude/skills/deploy-workflow/ \
-  .claude/skills/design-system/ \
-  .claude/skills/tech-stack/ \
-  .github/workflows/ \
-  cometcloud-intelligence/ \
-  dashboard/public/.well-known/ \
-  dashboard/dist/.well-known/ \
-  HARNESS_UPGRADE.md \
+  src/api/main.py \
+  requirements.txt \
+  cometcloud-intelligence/mcp/cometcloud.json \
+  dashboard/src/components/CISWidget.jsx \
+  dashboard/src/components/StrategyPage.jsx \
+  dashboard/dist/ \
+  scripts/test_auth_e2e.py \
   ROADMAP_A2A.md \
-  MINIMAX_SYNC.md \
-  tests/
+  CLAUDE.md \
+  COMMIT_READY.md \
+  .claude/session-handoff/current_state.md
 ```
 
 ## Step 4: Commit
 
 ```bash
-git commit -m "feat(harness): Phase A-F complete + A2A agent card + Shadow sync record
+git commit -m "feat(mcp): Phase 2.2 — MCP server + auth E2E test + SPA routing fix
 
-Phase A — 4 remaining skills:
-- mac-mini-coordination, deploy-workflow, design-system, tech-stack
+ROADMAP_A2A Phase 2.2 complete. CometCloud MCP server now live at
+https://looloomi.ai/mcp/sse (SSE transport). Any MCP-compatible agent
+(Claude, Cursor, GPT) can discover and query CIS scores natively.
 
-Phase C — 2 additional agents:
-- code-frontend-reviewer, local-data-coordinator
+MCP (Phase 2.2):
+- main.py: app.mount('/mcp', mcp.sse_app()) — zero new Railway services
+- main.py: SPA fallback now excludes 'mcp/' prefix (prevents index.html bleed)
+- requirements.txt: mcp[cli]>=1.6.0, cachetools, tenacity added
+- cometcloud.json: remote.url → https://looloomi.ai/mcp/sse (type: sse)
+- Fail-safe: try/except guard, main app still boots if dep missing
+- ROADMAP_A2A.md: Phase 2.2 marked complete
 
-Phase E — cometcloud-intelligence plugin:
-- plugin.json v0.1.0 + 5 skills + 2 commands + cis-analyst + MCP config (stdio mode)
+Endpoints:
+  GET  /mcp/sse      — SSE stream (agent connects here)
+  POST /mcp/messages — message send
 
-Phase F — GitHub Agentic Workflows:
-- compliance-pr-check, post-deploy-verify, weekly-cis-audit
+Auth:
+- scripts/test_auth_e2e.py: 11-test E2E suite for wallet sign-in backend
+  (keypair gen → nonce → sign → wallet-signin → profile → replay → bad sig)
+  Run from Mac Mini: python scripts/test_auth_e2e.py
 
-ROADMAP_A2A Phase 2.1 — A2A discovery:
-- dashboard/public/.well-known/agent.json + dist copy
-
-MINIMAX_SYNC.md §7 — Shadow sync record:
-- Cache key fixes (fundamental→coingecko, fundamental→tvl)
-- STX/ONDO symbol mapping corrections
-- CIS scheduler confirmed running, macro_regime=Tightening
+UI fixes (Chrome QA pass):
+- CISWidget.jsx: epoch timestamp (seconds → *1000), MACRO REGIME Unknown
+  (data?.macro → { regime: data?.macro_regime })
+- StrategyPage.jsx: 'Open Platform' button contrast fix
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 ```
@@ -69,5 +71,25 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 git push origin main
 ```
 
-Railway auto-deploys on push (~90s). The /.well-known/agent.json will be live
-at https://looloomi.ai/.well-known/agent.json after deploy.
+Railway auto-deploys on push (~90s).
+
+---
+
+## Freqtrade recommendation (Minimax to apply in CometCloudStrategy.py)
+
+In the current Tightening regime, CIS=65 is unreachable — even MKR (best T1 asset)
+scores 56.8. Regime-aware gate:
+
+```python
+REGIME_THRESHOLDS = {
+    "Risk-On": 65, "Goldilocks": 65, "Easing": 62,
+    "Neutral": 58,
+    "Tightening": 52, "Risk-Off": 50, "Stagflation": 50,
+}
+# Fetch current regime from CIS cache or /api/v1/market/macro-pulse
+current_regime = get_current_regime()  # returns string like "Tightening"
+MIN_CIS_SCORE = REGIME_THRESHOLDS.get(current_regime, 58)
+```
+
+This lets the strategy trade in all market conditions, using the CIS score as a
+relative filter within the regime rather than an absolute bull-market gate.
