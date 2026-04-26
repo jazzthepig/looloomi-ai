@@ -398,12 +398,12 @@ git push origin main
 
 ## Production health (as of 2026-04-26)
 
-- Railway: **ACTIVE** — HEAD = `b7095fc` (Phase 2.2 commit PENDING Mac Mini push) ✅
+- Railway: **ACTIVE** — HEAD = `223c865` ✅
 - CIS universe: **LIVE** — 84 assets (T1=25 Mac Mini + T2=59 Railway). COINGECKO_API_KEY set ✅
 - Mac Mini scheduler: **RUNNING** — cis_scheduler.py PID 33143, pushing every ~30min ✅
 - macro_regime: **Tightening** — Mac Mini regime flowing through correctly ✅
 - DeFi overview: **LIVE** — DeFiLlama TVL, 25 protocols scored ✅
-- Macro Pulse: **LIVE** ✅ — BTC, F&G, dominance all live
+- Macro Pulse: **LIVE** ✅ — BTC $77,995, F&G, dominance all live
 - Signal Feed: **LIVE** ✅ — correct timestamps, compliance-safe language
 - Macro Events: **LIVE** ✅ — HTML stripped from descriptions
 - Supabase: **CONNECTED** ✅ — `soupjamxlfsmgmmtoeok`, score history writing ✅
@@ -413,9 +413,12 @@ git push origin main
 - Quant Monitor (Freqtrade): **NOT STARTED** — dry-run not yet started by Minimax
 - Agent harness: **DEPLOYED** ✅ — Phase A–F complete, all skills + plugin + workflows live
 - A2A discovery: **LIVE** ✅ — `/.well-known/agent.json` served from Railway
-- MCP server: **STAGED** ⏳ — Phase 2.2 code in repo, mounts after Mac Mini push to Railway
+- MCP server: **DEPLOYED** ⚠️ — Phase 2.2 code live on Railway (`01327bc`). `/health` + `/mcp/sse`
+  return HTML via Cloudflare proxy — verify via Railway direct URL `web-production-0cdf76.up.railway.app`
+  to confirm if Railway is receiving these paths correctly.
 - **BUG**: No B+ assets (CIS≥65) — S pillar (12-13) and A pillar (20-30) systematically low.
-  freqtrade `MIN_CIS_SCORE=65` gate blocks all trades. Root cause in Railway T2 S/A formulas.
+  freqtrade MIN_CIS_SCORE dynamic threshold added to MINIMAX_SYNC.md §4 task 16 (Tightening → 52).
+  Root cause in Railway T2 S/A formulas still unresolved.
 
 ## Codebase metrics
 

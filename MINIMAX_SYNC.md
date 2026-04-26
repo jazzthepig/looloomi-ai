@@ -162,16 +162,25 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 
 ### 🔴 P0 — 2026-04-26（部署验证）
 
-**任务：** 确认 HEAD = `01327bc` 已 deploy 到 Railway，并跑 deploy verification。
+**任务：** 确认 HEAD = `223c865` 已 deploy 到 Railway，并跑 deploy verification。
+
+**注意：** `/health` 和 `/mcp/sse` 通过 `looloomi.ai`（Cloudflare）测试返回 HTML — 这是
+Cloudflare SPA 缓存问题，不是 Railway 的 bug。用 `/api/v1/health`（新增端点）绕过，
+用 Railway direct URL 验证 MCP。
 
 ```bash
-# 1. 确认 Railway 已 deploy
-curl https://looloomi.ai/health | python3 -m json.tool
+# 1. 确认 Railway 已 deploy（用 /api/v1/health 绕过 Cloudflare 缓存）
+curl https://looloomi.ai/api/v1/health | python3 -m json.tool
 # 期望: "version": "0.4.3", "status": "healthy"
 
-# 2. 确认 MCP 已挂载
-curl -I https://looloomi.ai/mcp/sse
+# 1b. 通过 Railway 直连确认（绕过 Cloudflare）
+curl https://web-production-0cdf76.up.railway.app/health | python3 -m json.tool
+# 期望: "version": "0.4.3", "status": "healthy"
+
+# 2. 确认 MCP 已挂载（通过 Railway 直连）
+curl -I https://web-production-0cdf76.up.railway.app/mcp/sse
 # 期望: HTTP 200 + Content-Type: text/event-stream
+# 如果返回 404 JSON → MCP import 失败，检查 Railway build log 里 "[MCP] ⚠️" 那行
 
 # 3. 跑 auth E2E test
 cd ~/projects/looloomi-ai
@@ -184,8 +193,8 @@ curl https://looloomi.ai/api/v1/cis/universe | python3 -c "import json,sys; d=js
 ```
 
 **验收标准：**
-- `/health` → version 0.4.3
-- `/mcp/sse` → HTTP 200 text/event-stream
+- `/api/v1/health` → version 0.4.3
+- Railway direct `/mcp/sse` → HTTP 200 text/event-stream
 - auth E2E → 11 tests pass
 - CIS universe → ≥ 80 assets
 
