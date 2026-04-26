@@ -1,106 +1,73 @@
-# Ready to Commit — 2026-04-26 (Phase 2.2 MCP + auth test)
+# COMMIT_READY.md
 
-## Current state
-- HEAD = `2ddbaef` — fix(cis): T2 beta fallback, A base +25, tighten regime S weight
-- `dashboard/dist/` is CLEAN (Minimax's build included the CISWidget + StrategyPage fixes)
-- Phase 2.2 MCP changes are still uncommitted — run steps below to push
+Push-gate only. Seth stages files from Cowork; Minimax clears lock + commits + pushes.
 
 ---
 
-## Step 1: Remove FUSE locks
+## Pending commit (staged, ready to push)
+
+Files staged by Seth — waiting on lock clear:
+- `COMMIT_READY.md` — reformatted to push-gate (no more 5-step sequence for Minimax)
+- `MINIMAX_SYNC.md` — §4 deploy verification tasks, §5 HEAD updated to `01327bc`
 
 ```bash
-rm -f .git/index.lock .git/HEAD.lock
-```
+# 1. Clear FUSE lock (Cowork VM leaves this)
+rm -f ~/projects/looloomi-ai/.git/index.lock
 
-## Step 2: Pull latest (absorb 2ddbaef)
+# 2. Commit (files already staged)
+cd ~/projects/looloomi-ai
+git commit -m "chore(harness): COMMIT_READY.md → push-gate; MINIMAX_SYNC.md §4/§5 updated
 
-```bash
-git pull --rebase origin main
-```
-
-## Step 3: Stage
-
-```bash
-git add \
-  src/api/main.py \
-  requirements.txt \
-  cometcloud-intelligence/mcp/cometcloud.json \
-  dashboard/src/components/CISWidget.jsx \
-  dashboard/src/components/StrategyPage.jsx \
-  scripts/test_auth_e2e.py \
-  ROADMAP_A2A.md \
-  CLAUDE.md \
-  COMMIT_READY.md \
-  .claude/session-handoff/current_state.md
-```
-
-Note: `dashboard/dist/` is NOT staged — already committed in `2ddbaef`. Source files (CISWidget.jsx, StrategyPage.jsx) are staged so they stay in sync with the dist.
-
-## Step 4: Commit
-
-```bash
-git commit -m "feat(mcp): Phase 2.2 — MCP server at /mcp/sse + auth E2E test
-
-ROADMAP_A2A Phase 2.2 complete. CometCloud MCP server live at
-https://looloomi.ai/mcp/sse (SSE transport). Any MCP-compatible
-agent (Claude, Cursor, GPT) can query CIS scores natively.
-
-MCP:
-- main.py: app.mount('/mcp', mcp.sse_app()) — zero new Railway services
-- main.py: SPA fallback now excludes 'mcp/' prefix
-- requirements.txt: mcp[cli]>=1.6.0, cachetools, tenacity
-- cometcloud.json: remote.url → https://looloomi.ai/mcp/sse (type: sse)
-- Fail-safe: try/except guard, main app still boots if dep missing
-- ROADMAP_A2A.md: Phase 2.2 marked complete
-
-Auth:
-- scripts/test_auth_e2e.py: 11-test backend E2E for wallet sign-in
-  Run: python scripts/test_auth_e2e.py
-
-UI fixes (source files — dist already in 2ddbaef):
-- CISWidget.jsx: epoch timestamp *1000, MACRO REGIME field name fix
-- StrategyPage.jsx: 'Open Platform' button contrast raised
+- COMMIT_READY.md: push-gate only format — Seth commits, Minimax pushes
+- MINIMAX_SYNC.md §4: P0 deploy verification + P1 auth E2E + Freqtrade dynamic threshold
+- MINIMAX_SYNC.md §5: HEAD = 01327bc, commit timeline updated
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
-```
 
-## Step 5: Push
-
-```bash
+# 3. Push
 git push origin main
 ```
 
-Railway auto-deploys on push (~90s).
+---
+
+## After push — deploy verification (P0 from §4 MINIMAX_SYNC.md)
+
+```bash
+# Health check
+curl https://looloomi.ai/health | python3 -m json.tool
+
+# MCP mounted?
+curl -I https://looloomi.ai/mcp/sse
+
+# Auth E2E
+python ~/projects/looloomi-ai/scripts/test_auth_e2e.py
+
+# CIS universe
+curl https://looloomi.ai/api/v1/cis/universe | python3 -c \
+  "import json,sys; d=json.load(sys.stdin); a=d.get('assets',[]); print(f'Assets: {len(a)}, source: {d.get(\"source\")}')"
+```
 
 ---
 
-## Freqtrade — regime-aware threshold (apply when ready)
+## Freqtrade — regime-aware threshold (P1 task 16 in MINIMAX_SYNC.md)
 
-`2ddbaef` lowered `MIN_CIS_SCORE` to 55 as a quick fix. The better long-term approach is regime-aware dynamic thresholds in `CometCloudStrategy.py`:
+Replace `MIN_CIS_SCORE = 55` in `CometCloudStrategy.py`:
 
 ```python
 REGIME_THRESHOLDS = {
-    "Risk-On":    65,
-    "Goldilocks": 65,
-    "Easing":     62,
-    "Neutral":    58,
-    "Tightening": 52,
-    "Risk-Off":   50,
-    "Stagflation":50,
+    "Risk-On": 65, "Goldilocks": 65, "Easing": 62,
+    "Neutral": 58,
+    "Tightening": 52, "Risk-Off": 50, "Stagflation": 50,
 }
-
-def get_current_regime() -> str:
-    # Read from CIS cache or /api/v1/market/macro-pulse
+def get_current_regime():
     try:
         import requests
         r = requests.get("https://looloomi.ai/api/v1/market/macro-pulse", timeout=5)
         return r.json().get("macro_regime", "Neutral")
     except Exception:
-        return "Neutral"   # safe default
+        return "Neutral"
 
-current_regime = get_current_regime()
-MIN_CIS_SCORE = REGIME_THRESHOLDS.get(current_regime, 58)
+MIN_CIS_SCORE = REGIME_THRESHOLDS.get(get_current_regime(), 58)
 ```
 
-This uses CIS score as a relative filter within the regime rather than an absolute bull-market gate. In current Tightening regime: threshold = 52, MKR at 56.8 would trade.
+In current Tightening regime: threshold = 52 → MKR (56.8) passes immediately.

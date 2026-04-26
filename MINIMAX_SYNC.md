@@ -136,7 +136,7 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 
 ---
 
-## §4 Minimax 当前任务优先级（2026-04-18 更新）
+## §4 Minimax 当前任务优先级（2026-04-26 更新）
 
 ### 🔴 P0 — 已完成（2026-04-18）
 
@@ -159,6 +159,75 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 | 10 | LAS 字段加入 local engine 输出 | 与 Railway schema 对齐 | 🟡 |
 | 11 | Apply T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` | 🟡 |
 | 12 | 回报 backtest 结果（PF / WR / MaxDD） | 发给 Jazz | 🟡 |
+
+### 🔴 P0 — 2026-04-26（部署验证）
+
+**任务：** 确认 HEAD = `01327bc` 已 deploy 到 Railway，并跑 deploy verification。
+
+```bash
+# 1. 确认 Railway 已 deploy
+curl https://looloomi.ai/health | python3 -m json.tool
+# 期望: "version": "0.4.3", "status": "healthy"
+
+# 2. 确认 MCP 已挂载
+curl -I https://looloomi.ai/mcp/sse
+# 期望: HTTP 200 + Content-Type: text/event-stream
+
+# 3. 跑 auth E2E test
+cd ~/projects/looloomi-ai
+python scripts/test_auth_e2e.py
+# 期望: ALL 11 TESTS PASSED
+
+# 4. 确认 CIS universe 正常
+curl https://looloomi.ai/api/v1/cis/universe | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'Assets: {len(d.get(\"assets\", []))}, source: {d.get(\"source\")}')"
+# 期望: Assets: 80+, source: local_engine 或 market_estimation
+```
+
+**验收标准：**
+- `/health` → version 0.4.3
+- `/mcp/sse` → HTTP 200 text/event-stream
+- auth E2E → 11 tests pass
+- CIS universe → ≥ 80 assets
+
+**结果请写入 §4 状态或 Supabase logs。**
+
+---
+
+### 🟠 P1 — 本周
+
+| # | 任务 | 说明 | 状态 |
+|---|------|------|------|
+| 16 | **Freqtrade 动态阈值**：把 `MIN_CIS_SCORE=55` 换成 regime-aware | 见 COMMIT_READY.md §Freqtrade 或下面代码 | 🟡 |
+| 17 | **auth E2E test** 在 Mac Mini 跑 | `python scripts/test_auth_e2e.py` | 🟡 |
+| 18 | **Supabase wallet_profiles 表** 确认存在 | `SELECT * FROM wallet_profiles LIMIT 1` | 🟡 |
+| 10 | LAS 字段加入 local engine 输出 | 与 Railway schema 对齐 | 🟡 |
+| 11 | T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` | 🟡 |
+| 12 | 回报 backtest 结果（PF / WR / MaxDD） | 发给 Jazz | 🟡 |
+
+**Freqtrade 动态阈值（任务16）代码：**
+
+```python
+REGIME_THRESHOLDS = {
+    "Risk-On":     65,
+    "Goldilocks":  65,
+    "Easing":      62,
+    "Neutral":     58,
+    "Tightening":  52,   # 当前 regime — MKR 56.8 会通过
+    "Risk-Off":    50,
+    "Stagflation": 50,
+}
+def get_current_regime():
+    try:
+        import requests
+        r = requests.get("https://looloomi.ai/api/v1/market/macro-pulse", timeout=5)
+        return r.json().get("macro_regime", "Neutral")
+    except Exception:
+        return "Neutral"
+
+MIN_CIS_SCORE = REGIME_THRESHOLDS.get(get_current_regime(), 58)
+```
+
+---
 
 ### 🟡 P2 — 下周
 
@@ -213,9 +282,16 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 
 ---
 
-## §5 Seth 已完成 / 待推送到 Railway
+## §5 Seth 已完成 / Railway 最新状态
 
-**Railway 已推送（commit `a2008f1`）：** 2026-04-10 push 成功，包含全部 P0 文件 + dashboard 新页面 + dist build。Railway auto-deploy 已触发。
+**当前 HEAD（2026-04-26）：** `01327bc` — feat(mcp): Phase 2.2 — MCP server at /mcp/sse + auth E2E test
+
+最近 commit 时间线：
+- `01327bc` — Phase 2.2 COMMIT_READY.md push-gate update
+- `6a47e66` — **Phase 2.2 主 commit**：main.py MCP mount, requirements.txt, cometcloud.json, CISWidget.jsx fix, StrategyPage.jsx fix, scripts/test_auth_e2e.py, ROADMAP_A2A.md ✅
+- `2ddbaef` — **Minimax**：T2 beta fallback, A base +25, tighten regime S weight
+- `e991ae7` — **Minimax**：CLAUDE.md Week 7 update
+- `b7095fc` — Phase A-F harness + A2A agent card
 
 **所有待处理项已清空。** 无阻塞项。
 
