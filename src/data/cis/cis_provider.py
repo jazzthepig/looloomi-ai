@@ -1329,7 +1329,19 @@ def calculate_cis_score(
             beta_score += min(5, abs(vix_beta) * 5)
         s_components["beta_score"] = round(beta_score, 1)
     else:
-        s_components["beta_score"] = 0
+        # T2 fallback: use CG change_30d relative to BTC as beta proxy
+        # assets that outperform BTC get positive beta score
+        # This is crude but ensures S pillar isn't structurally 0 for all T2
+        if btc_change_30d is not None and change_30d is not None and btc_change_30d != 0:
+            rel_perf = (change_30d - btc_change_30d) / abs(btc_change_30d)
+            if rel_perf > 0:
+                beta_score = min(8.0, rel_perf * 15)
+            else:
+                beta_score = max(-5.0, rel_perf * 10)
+        else:
+            beta_score = 0.0
+        s_components["beta_score"] = round(beta_score, 1)
+        s_components["beta_source"] = "cg_proxy"
 
     s_score = round(max(0, min(100, baseline + divergence_total + dev_score + vol_regime_score + beta_score)), 1)
 
@@ -1342,9 +1354,11 @@ def calculate_cis_score(
     }
 
     # Class independence
+    # v4.3: L1 raised from 12→18 — L1 ecosystems have equal structural alpha potential as L2.
+    # Size-efficiency already zero-scores large-caps; class_ind should not double-penalise them.
     class_ind = 0.0
     if not _is_tradfi:
-        class_map = {"DeFi": 20, "RWA": 20, "L2": 18, "Infrastructure": 15, "L1": 12, "Memecoin": 5}
+        class_map = {"DeFi": 20, "RWA": 20, "L2": 18, "L1": 18, "Infrastructure": 15, "Memecoin": 5}
         class_ind = class_map.get(asset_class, 8)
     a_components["class_independence_score"] = class_ind
 
@@ -1406,7 +1420,9 @@ def calculate_cis_score(
     a_components["correlation_discount"] = corr_discount
     a_components["corr_floor_regime"] = regime
 
-    a_score = round(max(0, min(100, class_ind + size_eff + div_a_score + corr_discount + 10)), 1)  # +10 base
+    # v4.3: base raised from +10 → +20. Neutral divergence (zero outperformance) anchors at 38+
+    # for mid-cap assets rather than 22+. Large-cap L1 floor: 18+0+20 = 38 (was 22).
+    a_score = round(max(0, min(100, class_ind + size_eff + div_a_score + corr_discount + 25)), 1)  # v4.3: base +25 (raised from +20)
 
     # ── Build breakdown ──────────────────────────────────────────────
     breakdown = {
@@ -1499,8 +1515,8 @@ def calculate_total_score(
         "Risk-On":     {"F": 0.85, "M": 1.20, "O": 0.85, "S": 1.20, "A": 1.25},
         "Easing":      {"F": 0.90, "M": 1.15, "O": 0.95, "S": 1.10, "A": 1.20},
         "Neutral":     {"F": 1.00, "M": 1.00, "O": 1.00, "S": 1.00, "A": 1.00},
-        "Tightening":  {"F": 1.25, "M": 0.85, "O": 1.20, "S": 0.80, "A": 1.05},
-        "Risk-Off":    {"F": 1.20, "M": 0.80, "O": 1.25, "S": 0.75, "A": 1.10},
+        "Tightening":  {"F": 1.25, "M": 0.85, "O": 1.20, "S": 0.90, "A": 1.05},
+        "Risk-Off":    {"F": 1.20, "M": 0.80, "O": 1.25, "S": 0.85, "A": 1.10},
         "Stagflation": {"F": 1.30, "M": 0.75, "O": 1.25, "S": 0.70, "A": 1.00},
     }
 
