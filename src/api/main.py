@@ -114,15 +114,23 @@ async def agent_card():
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
+# Two endpoints: /health for Railway direct, /api/v1/health to bypass Cloudflare SPA cache.
+
+_health_payload = {
+    "status":  "healthy",
+    "version": "0.4.3",
+    "environment": _ENV,
+    "sources": ["binance", "defillama", "alternative.me", "moralis", "etherscan"],
+}
 
 @app.get("/health")
 async def health():
-    return {
-        "status":  "healthy",
-        "version": "0.4.3",
-        "environment": _ENV,
-        "sources": ["binance", "defillama", "alternative.me", "moralis", "etherscan"],
-    }
+    return _health_payload
+
+@app.get("/api/v1/health")
+async def health_api():
+    """API-prefixed health check — bypasses Cloudflare SPA caching rules."""
+    return _health_payload
 
 
 # ── Serve React SPA ───────────────────────────────────────────────────────────
