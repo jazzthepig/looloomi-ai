@@ -4,38 +4,44 @@ Push-gate only. Seth stages files from Cowork; Minimax clears lock + commits + p
 
 ---
 
-## Current status: CLEAR — 2026-04-26
+## Pending commit (staged, ready to push)
 
-All pending items from previous sessions have been committed:
+Files staged by Seth — waiting on lock clear:
+- `CLAUDE.md` — production health: MCP LIVE ✅, HEAD = f7f5bc0, Freqtrade threshold done
+- `MINIMAX_SYNC.md` — T10/T16 marked ✅, §5 HEAD updated, deploy verification results logged
+- `.claude/agent-memory/deploy-verifier/MEMORY.md` — MCP status corrected to LIVE ✅
 
-| Commit | 内容 | 状态 |
-|--------|------|------|
-| `05e8198` | `/api/v1/health` + deploy docs update | ✅ pushed |
-| `9ff46d6` | MINIMAX_SYNC.md §4 P0 verification + §5 HEAD + §6 | ✅ pushed |
-| `223c865` | COMMIT_READY.md push-gate + MINIMAX_SYNC.md §4 | ✅ pushed |
-| `2ddbaef` | T2 beta fallback + A base +25 + regime S weight | ✅ pushed |
+```bash
+# 1. Clear FUSE lock
+rm -f ~/projects/looloomi-ai/.git/index.lock
+
+# 2. Stage COMMIT_READY.md (lock prevented this from Cowork)
+cd ~/projects/looloomi-ai
+git add COMMIT_READY.md
+
+# 3. Commit
+git commit -m "docs: session close — MCP verified LIVE, T10/T16 done, deploy results logged
+
+- CLAUDE.md: MCP server LIVE ✅ (HTTP 405 on /mcp/sse = route mounted, GET-only correct)
+- MINIMAX_SYNC.md: T10 LAS ✅ + T16 Freqtrade threshold ✅; §5 HEAD = f7f5bc0
+- deploy-verifier MEMORY.md: verification results Apr 26 — all checks passed
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+
+# 4. Push
+git push origin main
+```
 
 ---
 
-## Minimax outstanding tasks (2026-04-26)
+## Next session — open items
 
-These require action from Mac Mini, not Cowork:
+**Minimax (MINIMAX_SYNC.md §4 P1):**
+- T17: `python scripts/test_auth_e2e.py` — auth E2E (11 tests)
+- T18: Confirm Supabase `wallet_profiles` table exists
+- T11/T12: Run `run_t1_backtest.sh` → report PF/WR/MaxDD to Jazz
 
-| # | Task | Status |
-|---|------|--------|
-| T16 | Freqtrade regime-aware threshold | ✅ **Already applied** to `/Volumes/CometCloudAI/freqtrade/.../CometCloudStrategy.py` (confirmed live) |
-| T17 | Auth E2E test — `python3 ~/projects/looloomi-ai/scripts/test_auth_e2e.py` | 🟡 Mac Mini run |
-| T18 | Supabase wallet_profiles confirm | 🟡 Jazz confirm |
-| T10 | LAS fields in local engine output | ✅ Already in Mac Mini `cis_v4_engine.py` (line 828: `"las": self.las`) |
-| T11 | Apply T1 strategy + run backtest | 🟡 Mac Mini run |
-| T12 | Report backtest PF/WR/MaxDD to Jazz | 🟡 Mac Mini |
-
----
-
-## How to update this file
-
-When Seth stages files:
-1. Replace "Current status: CLEAR" with staged file list and commit message
-2. After push, revert to "Current status: CLEAR"
-
-Do not add step-by-step instructions. Push-gate only.
+**Seth / next session:**
+- Phase 2.3: A2A task endpoint `/api/v1/agent/tasks` (ROADMAP_A2A)
+- Investigate Railway T2 S/A pillar systematically low (S=12-13, A=20-30)
+- Verify ScoreAnalytics heatmap has >24h data (accumulating since Apr 26)
