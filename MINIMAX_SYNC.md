@@ -157,8 +157,8 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 | 8 | **Universe 过滤**：13 个已排除资产 | §4A — POLYX/PEPE/WIF/BONK/SAND/MANA/AXS/CRV/SUSHI/SNX/ICP/BCH/FTM 已从 config.py + data_fetcher.py 移除 | ✅ |
 | 9 | 确认 HYPER（Hyperliquid）在评分列表中保留 | v1.1 inclusion standard | 🟡 |
 | 10 | LAS 字段加入 local engine 输出 | 与 Railway schema 对齐 | ✅ |
-| 11 | Apply T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` | 🟡 |
-| 12 | 回报 backtest 结果（PF / WR / MaxDD） | 发给 Jazz | 🟡 |
+| 11 | Apply T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` | ✅ 2026-04-27 — 14 trades, -0.42% total (PF<1, Sharpe=-0.04) |
+| 12 | 回报 backtest 结果（PF / WR / MaxDD） | 见下方 | ✅ 见下方 |
 
 ### 🔴 P0 — 2026-04-26（部署验证）
 

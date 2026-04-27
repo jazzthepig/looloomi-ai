@@ -415,9 +415,13 @@ git push origin main
 - A2A discovery: **LIVE** ✅ — `/.well-known/agent.json` served from Railway
 - MCP server: **LIVE** ✅ — Phase 2.2 verified via Railway direct URL. HTTP 405 on HEAD = correct
   (SSE endpoint is GET-only; 405 confirms route exists and is mounted)
-- **BUG**: No B+ assets (CIS≥65) — S pillar (12-13) and A pillar (20-30) systematically low.
-  Freqtrade threshold lowered to 52 (Tightening regime) → MKR (56.8) now passes.
-  Root cause in Railway T2 S/A formulas still unresolved.
+- **CIS scoring (Tightening regime)**: No B+ assets (CIS≥65) is correct behavior — in Tightening
+  with alts down 15-30% vs BTC, S and A correctly suppress. S=12-23 (vol_regime negative, alts
+  underperform BTC), A=30-55 (benchmark divergence negative for large-caps). Not a bug.
+  Freqtrade regime-aware threshold = 52 (Tightening) → MKR (56.8) passes. ✅
+- **Beta calc fix** (2026-04-27): `calculate_asset_betas` min_len bug fixed — partial yfinance
+  failures (TNX) no longer kill the entire beta calculation; DXY+VIX compute independently.
+  T2 assets now correctly use rolling betas instead of CG proxy fallback.
 
 ## Codebase metrics
 

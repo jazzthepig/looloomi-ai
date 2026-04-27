@@ -306,31 +306,30 @@ async def calculate_asset_betas(asset_id: str, asset_price_30d: list) -> dict:
         if not factors:
             return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "yfinance_error"}
 
-        # Align lengths (use minimum)
-        min_len = min(len(asset_returns), min(len(f.get("dxy", [0])) if "dxy" in factors else 0,
-                                               len(factors.get("vix", [0])),
-                                               len(factors.get("tnx", [0]))))
-
-        if min_len < 15:
+        # Require at least DXY or VIX — TNX optional.
+        # Previous bug: min() over all factors including missing ones (default [0] = length 1)
+        # caused min_len=1 → insufficient_data even when DXY+VIX were fully fetched.
+        if "dxy" not in factors and "vix" not in factors:
             return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "insufficient_data"}
 
-        # Calculate betas (simplified correlation * (asset_std / factor_std))
+        # Calculate betas per-factor with independent length alignment (robust to partial failures).
         def calc_beta(asset_rets, factor_rets):
-            if len(asset_rets) != len(factor_rets):
-                min_len = min(len(asset_rets), len(factor_rets))
-                asset_rets = asset_rets[:min_len]
-                factor_rets = factor_rets[:min_len]
-            if np.std(asset_rets) == 0 or np.std(factor_rets) == 0:
+            if not factor_rets or len(factor_rets) < 15:
                 return 0
-            correlation = np.corrcoef(asset_rets, factor_rets)[0, 1]
+            n = min(len(asset_rets), len(factor_rets))
+            a = asset_rets[:n]
+            f = factor_rets[:n]
+            if np.std(a) == 0 or np.std(f) == 0:
+                return 0
+            correlation = np.corrcoef(a, f)[0, 1]
             if np.isnan(correlation):
                 return 0
             return round(correlation, 3)
 
         result = {
-            "dxy_beta": calc_beta(asset_returns, factors.get("dxy", [0])),
-            "vix_beta": calc_beta(asset_returns, factors.get("vix", [0])),
-            "tnx_beta": calc_beta(asset_returns, factors.get("tnx", [0])),
+            "dxy_beta": calc_beta(asset_returns, factors.get("dxy", [])),
+            "vix_beta": calc_beta(asset_returns, factors.get("vix", [])),
+            "tnx_beta": calc_beta(asset_returns, factors.get("tnx", [])),
             "source": "30d_rolling"
         }
 
@@ -354,16 +353,13 @@ BINANCE_SYMBOLS = {
     "DOT":    "dotusdt",
     "NEAR":   "nearusdt",
     "ALGO":   "algousdt",
-    "FTM":    "ftmusdt",
     "HBAR":   "hbarusdt",
     "SUI":    "suiusdt",
     "APT":    "aptusdt",
     "SEI":    "seiusdt",
     "ATOM":   "atomusdt",
     "FIL":    "filusdt",
-    "ICP":    "icpusdt",
     "LTC":    "ltcusdt",
-    "BCH":    "bchusdt",
     # L2
     "ARB":    "arbusdt",
     "OP":     "opusdt",
@@ -376,14 +372,11 @@ BINANCE_SYMBOLS = {
     "UNI":    "uniusdt",
     "AAVE":   "aaveusdt",
     "MKR":    "mkrusdt",
-    "SNX":    "snxusdt",
-    "CRV":    "crvusdt",
     "LDO":    "ldousdt",
     "PENDLE": "pendleusdt",
     "ENA":    "enausdt",
     "RUNE":   "runeusdt",
     "COMP":   "compusdt",
-    "SUSHI":  "sushiusdt",
     # Infrastructure
     "LINK":   "linkusdt",
     "INJ":    "injusdt",
@@ -392,15 +385,9 @@ BINANCE_SYMBOLS = {
     "VET":    "vetusdt",
     # RWA
     "ONDO":   "ondousdt",
-    # Memecoin
-    "PEPE":   "pepeusdt",
-    "WIF":    "wifusdt",
-    "BONK":   "bonkusdt",
     # Gaming
-    "SAND":   "sandusdt",
-    "MANA":   "manausdt",
-    "AXS":    "axsusdt",
     "GALA":   "galausdt",
+    # §4A excluded — removed: FTM, ICP, BCH, SNX, CRV, SUSHI, PEPE, WIF, BONK, SAND, MANA, AXS
 }
 
 # Reverse mapping
