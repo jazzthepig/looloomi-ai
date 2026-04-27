@@ -59,13 +59,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Security headers — applied to every response
+# Security + LLM discoverability headers — applied to every response
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    # llms.txt discoverability — tells LLM crawlers where to find structured docs
+    response.headers["Link"] = '</llms.txt>; rel="llms-txt"'
+    response.headers["X-Llms-Txt"] = "/llms.txt"
     return response
 
 app.include_router(market_router)
