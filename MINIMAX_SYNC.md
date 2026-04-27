@@ -220,30 +220,47 @@ curl https://looloomi.ai/api/v1/cis/universe | python3 -c "import json,sys; d=js
 | 12 | 回报 backtest 结果（PF / WR / MaxDD） | 见下方 §4A | ✅ |
 | 17 | **auth E2E test** 在 Mac Mini 跑 | `python scripts/test_auth_e2e.py` | ❌ walrus operator bug (Python 3.14) — Seth已修复，重新 push 后跑 |
 | 18 | **Supabase wallet_profiles 表** 确认存在 | `SELECT * FROM wallet_profiles LIMIT 1` | 🟡 Jazz 确认 |
+| 20 | **CISEnhancedStrategy dry run** | 确认文件位置 → 修改 CometCloudStrategy.py → 启动 dry run | 🔴 Jazz 决定后执行 |
 
-### §4A — Backtest 结果（2026-04-27）
+### §4A — Freqtrade 策略方向（2026-04-27 最终确认）
 
-**TrendStrategy 历史盈利确认：PF=1.46（2024年数据，169 trades）**
-- 这是 Jazz 在 freqtrade 里跑过并赚钱的策略
+**TrendStrategy — Jazz 已验证盈利策略：**
+- PF=1.46，169 trades（2024年回测数据）
 - MACD 4h + 成交量确认 + 止盈10% + 止损4%
+- 这是既有可行策略，不需要从零构建
 
-**CISEnhancedStrategy 回测结果（PF < 1）：**
-- CIS cache 只有 2026 年分数，用来过滤 2024 年入场信号 → 时间错位
-- SOL/ETH/BTC 被 CIS gate 过滤（时间维度不匹配）
-- **这不是策略问题，是回测方法论问题**
+**CISEnhancedStrategy — Minimax 已在 Mac Mini 创建：**
 
-**正确方向（≠ 回测）：**
-1. TrendStrategy (MACD 4h, PF=1.46) + 实时 CIS gate → live trading
-2. CIS gate 作用：只在 CIS >= threshold 的资产上开多
-3. Regime-aware: Tightening 下 MKR 通过（threshold=52），其他资产过滤
-4. 不需要回测证明结合有效，因为：
-   - TrendStrategy 单跑已赚钱（PF=1.46）
-   - CIS gate 是风险过滤，不是收益来源
-   - Live 运行时 CIS 分数和 regime 是实时的
+路径：`/Volumes/CometCloudAI/freqtrade/user_data/strategies/CISEnhancedStrategy.py`
 
-**run_t1_backtest.sh 修正：** `--output` 参数已废弃（freqtrade 2026.3），改为 `--export-filename`。
+核心逻辑：
+- 继承 TrendStrategy 的趋势跟踪（MACD 4h），不修改入场/出场信号逻辑
+- 加 CIS gate：只在 CIS >= threshold 的资产上开多
+- Regime-aware gate：Tightening/Risk-Off 下严控做多
+- 当前状态：Tightening regime，threshold=52，MKR(56.8) 通过
 
-**Freqtrade 动态阈值（任务16）代码：**
+**回测结果 PF < 1 的真实原因：**
+- CIS cache 只有 2026 年分数，用来过滤 2024 年历史信号 → 时间维度不匹配
+- SOL/ETH/BTC 被 2026 CIS gate 错误过滤，导致 TrendStrategy 无法入场
+- **这不是策略问题，是回测方法论问题** — 无法用 2026 年信号验证 2024 年表现
+- 结论：不需要回测证明 CIS enhancement 有效。TrendStrategy 单跑已赚钱(PF=1.46)，CIS gate 是风险过滤器，实时运行时分数和 regime 都是当前的
+
+**正确路径：直接上 dry run**
+```
+TrendStrategy (PF=1.46) + live CIS gate → dry run → live trading
+                               ↑
+               实时从 Railway /api/v1/cis/universe 取分数
+               Tightening 下 threshold=52，MKR 56.8 通过
+```
+
+**Minimax 下一步任务（T20）：**
+1. 确认 `CISEnhancedStrategy.py` 在 `/Volumes/CometCloudAI/freqtrade/user_data/strategies/`
+2. 修改 `CometCloudStrategy.py`：直接继承 CISEnhancedStrategy 或将其作为第二策略并行运行
+3. 启动 dry run
+
+**run_t1_backtest.sh 修正（已完成）：** `--output` 参数已废弃（freqtrade 2026.3），改为 `--export-filename`。
+
+**Freqtrade 动态阈值（任务16，已应用）：**
 
 ```python
 REGIME_THRESHOLDS = {
@@ -275,7 +292,7 @@ MIN_CIS_SCORE = REGIME_THRESHOLDS.get(get_current_regime(), 58)
 | 13 | Macro Brief pipeline 稳定性 | 🟡 |
 | 14 | DeFiLlama TVL 刷新 30min → 15min | 🟡 |
 | 15 | 模型切换：Gemma 4 26B-A4B / Qwen 3.5 35B-A3B | 🟡 |
-| 19 | **Freqtrade 策略方向修正** | Jazz已有盈利策略 → 目标是用CIS信号增强已有策略，不是从零建策略。Seth不参与此模块，由Minimax与Jazz直接协调 | 🟡 Minimax + Jazz |
+| 19 | **Freqtrade 策略方向修正** | ✅ 方向确认：TrendStrategy(PF=1.46) + CIS gate → dry run。CISEnhancedStrategy.py 已在 Mac Mini 创建。见 §4A | ✅ 方向锁定 → 执行 T20 |
 
 ### 📋 根因分析（2026-04-18）
 
@@ -324,21 +341,32 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 
 ## §5 Seth 已完成 / Railway 最新状态
 
-**当前 HEAD（2026-04-26）：** `f7f5bc0` — Minimax cleanup: COMMIT_READY.md + MINIMAX_SYNC.md status
+**当前 HEAD（2026-04-27，待 push）：** Minimax 本次 push 包含：
+- `src/data/cis/cis_provider.py` — beta calc fix + BINANCE_SYMBOLS cleanup
+- `src/api/routers/agent.py` — Phase 2.3 A2A task queue (NEW)
+- `src/api/main.py` — agent_router registered
+- `dashboard/public/.well-known/agent.json` + `dist/` — a2a_tasks live spec
+- `ROADMAP_A2A.md` — Phase 2.3 ✅
+- `COMMIT_READY.md`, `CLAUDE.md`, `MINIMAX_SYNC.md` — docs
 
 最近 commit 时间线：
 - `f7f5bc0` — **Minimax**：cleanup commit (COMMIT_READY.md + MINIMAX_SYNC.md status) ✅
 - `05e8198` — **Seth**：/api/v1/health Cloudflare bypass + deploy docs update ✅
 - `223c865` — **Seth**：COMMIT_READY.md push-gate + MINIMAX_SYNC.md §4 verification ✅
 - `01327bc` — **Seth/Minimax**：Phase 2.2 MCP server + auth E2E test script ✅
-- `2ddbaef` — **Minimax**：T2 beta fallback, A base +25, tighten regime S weight ✅
 
 **Deploy verification 通过（2026-04-26）:**
 - `/api/v1/health` ✅ — version 0.4.3, healthy
 - `/mcp/sse` (Railway direct) ✅ — HTTP 405 (endpoint exists, GET-only is correct)
 - CIS universe ✅ — 84 assets, regime=Tightening, MKR passes threshold=52
 
-**待处理项：** T17 (auth E2E), T18 (wallet_profiles), T11/T12 (backtest)
+**Phase 2.3 A2A task queue — smoke test 通过（2026-04-27）:**
+- `POST /api/v1/agent/tasks` → 返回 task_id，status=pending ✅
+- `GET /api/v1/agent/tasks/{task_id}` → 几秒后 completed ✅
+- 结果：84 assets，limit 30，返回 top CIS 资产 ✅
+- 全部 C+/C grade，NEUTRAL/UNDERPERFORM — 符合当前 Tightening regime ✅
+
+**待处理项：** T17 (auth E2E，等 push), T18 (wallet_profiles), T20 (dry run)
 
 | 文件 | 变更 | Session |
 |------|------|---------|
