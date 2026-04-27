@@ -34,12 +34,11 @@
 
 ## Week 3 attack sequence (Apr 28 – May 4)
 
-### TODAY (Apr 27, Sunday) — before midnight
+### BY TUESDAY AFTERNOON (Jazz out networking Apr 27)
 
 | Action | Owner | Time | Notes |
 |--------|-------|------|-------|
-| **Microsoft AI Agents Hackathon** — submit NOW | Jazz | 2h | Window closes tomorrow (Apr 27-28). Core project: autonomous crypto screening agent powered by CometCloud MCP. Submission = demo + MCP server URL + use case. |
-| Build 60-second screen recording demo | Jazz | 1h | Required for Product Hunt tomorrow. Record: MCP tool call → CIS score → exclusion check flow in Claude Desktop or Cursor. |
+| Build 60-second screen recording demo | Jazz | 1h | Required for Product Hunt. Record: MCP tool call → CIS score → exclusion check flow in Claude Desktop or Cursor. |
 
 ### MONDAY (Apr 28)
 

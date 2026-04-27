@@ -24,6 +24,17 @@ Push-gate only. Seth stages files from Cowork; Minimax clears lock + commits + p
 - `CLAUDE.md` — Phase 2.3 LIVE ✅, Freqtrade DRY RUN PENDING, T20 added, metrics updated
 - `MINIMAX_SYNC.md` — §4A TrendStrategy direction locked, T20 dry run task, §5 Phase 2.3 smoke test ✅
 - `ATTACK_PLAN.md` — NEW: Week 3+ execution plan (Apr 28–May 4)
+- `WEEKLY_REVIEW.md` — NEW: weekly strategy review ritual + first entry (2026-04-27)
+- `CLAUDE.md` — weekly review section added (cadence, structure, adversarial lenses)
+- `examples/GETTING_STARTED.md` — NEW: Agent onboarding guide (Claude Desktop / Cursor / REST / Python)
+- `examples/claude-desktop-config.json` — NEW: Drop-in Claude Desktop MCP config
+- `examples/cursor-mcp.json` — NEW: Drop-in Cursor MCP config
+- `examples/agent_example.py` — NEW: Full Python agent workflow (macro → CIS → signals → A2A task)
+- `src/api/routers/cis.py` — NEW: GET /api/v1/cis/history/{symbol} + GET /api/v1/cis/trend/{symbol} (Redis-cached, Supabase-backed)
+- `src/api/routers/factory.py` — Solana mock gate: _SOLANA_READY flag, public GETs return 503 when not live
+- `dashboard/public/privacy.html` + `dashboard/dist/privacy.html` — NEW: privacy policy (required for Anthropic Connectors Directory)
+- `MINIMAX_SYNC.md` — §6 added: T21 (health alert), T22 (MacroBrief fix), T23 (Freqtrade dry run)
+- `JAZZ_TODAY.md` — NEW: Apr 27-28 action brief (hackathon + demo + Product Hunt + registries)
 
 ```bash
 # 1. Clear FUSE lock
@@ -42,6 +53,10 @@ git add \
   dashboard/dist/llms.txt \
   glama.json \
   src/mcp/cometcloud_mcp.py \
+  examples/GETTING_STARTED.md \
+  examples/claude-desktop-config.json \
+  examples/cursor-mcp.json \
+  examples/agent_example.py \
   ROADMAP_A2A.md \
   CLAUDE.md \
   MINIMAX_SYNC.md \

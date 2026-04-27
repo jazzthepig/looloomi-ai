@@ -189,6 +189,40 @@ Railway (cis_provider.py) ──────────────────
 - Quality matters at the output layer. Internals can be rough, interfaces cannot
 - Shadow folder = read-only reference. Minimax owns local changes; coordinate before modifying
 
+## Weekly strategy review
+
+Builder mode and strategist mode use different mental operating systems. The weekly review
+is protected time for the strategist lens — not a sprint, not a task list.
+
+**Cadence:** Once a week (Sunday evening or Monday before sprint starts). Jazz may also
+call an ad hoc review any time with "let's do a strategy review" or similar.
+
+**Structure (≈1 hour):**
+
+1. **Adversarial reads — 30 min** (rotate the lens each week to keep it fresh)
+   - *Trader agent*: would an autonomous agent actually rely on this for decisions? What would stop it?
+   - *Institutional LP*: would a family office / fund manager trust this enough to commit capital?
+   - *Competitor*: what would a well-resourced team copy first, and how fast?
+   - *Developer*: what's the friction from first discovery to first tool call?
+
+2. **Infrastructure debt check — 15 min**
+   Whatever shipped last week — does it hold up under the adversarial read?
+   Reference the fix matrix (effort × impact × owner) and update priorities.
+
+3. **One strategic priority — 15 min**
+   Not a task list. One sentence: what is the single most important thing this week
+   that moves the company forward, not just the codebase?
+
+**Output:** Update `WEEKLY_REVIEW.md` (root of repo) with date, lens used, findings,
+and the one strategic priority. Accumulates over time — becomes a map of how thinking
+evolved, useful for investors.
+
+**Key insight (2026-04-27):** The gap between "building a product" and "building a company"
+is this layer — design, strategy, positioning, user psychology. These don't emerge from
+sprints. Proximity blindness is real: when builder and evaluator are the same team, you
+fill gaps with internal knowledge that a first-time user doesn't have. The weekly review
+is the structural fix for this.
+
 ## Standard deploy workflow
 
 ```bash
@@ -387,23 +421,30 @@ git push origin main
 - Chrome QA UI fixes: CISWidget epoch timestamp, MACRO REGIME field name, StrategyPage CTA contrast
 - Auth code review: full flow verified correct (AuthContext → WalletConnect → backend sign-in)
   - `scripts/test_auth_e2e.py`: 11-test backend E2E suite (Mac Mini must run after push)
-- COMMIT_READY.md prepared — Mac Mini runs 5-step sequence to deploy
 - ROADMAP_A2A Phase 2.3 complete: A2A Task Queue endpoint
-  - `src/api/routers/agent.py`: async task queue (portfolio_analysis / cis_snapshot / regime_briefing)
-  - `src/api/main.py`: agent_router registered
+  - `src/api/routers/agent.py`: async task queue + 5 bug fixes (try-except, Redis logging, exc_info, division guard)
+  - `src/api/main.py`: agent_router registered + llms.txt discoverability headers
   - `dashboard/public/.well-known/agent.json` + `dist/`: a2a_tasks live endpoint spec
   - `ROADMAP_A2A.md`: Phase 2.3 marked ✅
+- ScoreAnalytics.jsx: VITE_API_BASE → VITE_API_URL (env var fix)
+- Agent ecosystem blitz (Week 3 playbook deliverables — all deployed):
+  - `dashboard/public/llms.txt` + `dist/llms.txt`: LLM crawler discoverability doc
+  - `glama.json` (repo root): Glama.ai auto-index registration file
+  - `src/mcp/cometcloud_mcp.py`: assertive descriptions on 5 tools (7.5x EMNLP pattern)
+  - `ATTACK_PLAN.md`: Week 3 execution plan (Apr 28–May 4)
+- **Full push complete** (2026-04-27) — all Week 8 work live on Railway ✅
 
 **Pending — waiting on Minimax:**
 - Rotate EODHD + Finnhub API keys (exposed in old git history via Shadow)
-- Start Freqtrade dry run: `start_dry_run.sh`
-- Run T1 backtest (`run_t1_backtest.sh`) → report PF/WR/MaxDD
-- Add LAS calculation to local engine output (match Railway schema)
+- T20: Start Freqtrade dry run (CISEnhancedStrategy) — see MINIMAX_SYNC.md §4A
 - MacroBrief pipeline stability — LM Studio (Qwen3 35B) crash recovery
 
-## Production health (as of 2026-04-26)
+## Production health (as of 2026-04-27)
 
-- Railway: **ACTIVE** — HEAD = `f7f5bc0` ✅
+- Railway: **ACTIVE** — HEAD = current (Week 8 full push complete) ✅
+- MCP server: **LIVE** ✅ — /mcp/sse mounted; llms.txt headers active; glama.json in repo
+- llms.txt: **LIVE** ✅ — served at /llms.txt; Link + X-Llms-Txt headers on all responses
+- MCP descriptions: **ASSERTIVE** ✅ — 7.5x EMNLP pattern on 5 tools (get_cis_exclusions, get_cis_universe, get_macro_pulse, get_cis_report, get_inclusion_standard)
 - CIS universe: **LIVE** — 84 assets (T1=25 Mac Mini + T2=59 Railway). COINGECKO_API_KEY set ✅
 - Mac Mini scheduler: **RUNNING** — cis_scheduler.py PID 33143, pushing every ~30min ✅
 - macro_regime: **Tightening** — flowing through correctly ✅
