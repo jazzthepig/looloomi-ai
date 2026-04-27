@@ -7,9 +7,14 @@ Push-gate only. Seth stages files from Cowork; Minimax clears lock + commits + p
 ## Pending commit (staged, ready to push)
 
 Files staged by Seth — waiting on lock clear:
-- `CLAUDE.md` — production health: MCP LIVE ✅, HEAD = f7f5bc0, Freqtrade threshold done
-- `MINIMAX_SYNC.md` — T10/T16 marked ✅, §5 HEAD updated, deploy verification results logged
-- `.claude/agent-memory/deploy-verifier/MEMORY.md` — MCP status corrected to LIVE ✅
+- `src/data/cis/cis_provider.py` — two fixes:
+  1. `calculate_asset_betas` min_len bug: partial yfinance failures (TNX) no longer kill the
+     entire beta calc. DXY+VIX now compute independently. T2 assets get real rolling betas
+     instead of falling back to the crude CG proxy.
+  2. `BINANCE_SYMBOLS` cleanup: removed 12 §4A excluded assets
+     (FTM, ICP, BCH, SNX, CRV, SUSHI, PEPE, WIF, BONK, SAND, MANA, AXS)
+- `CLAUDE.md` — "BUG" note corrected: S/A low scores are correct Tightening market signal,
+  not a bug. Beta fix documented.
 
 ```bash
 # 1. Clear FUSE lock
@@ -20,11 +25,14 @@ cd ~/projects/looloomi-ai
 git add COMMIT_READY.md
 
 # 3. Commit
-git commit -m "docs: session close — MCP verified LIVE, T10/T16 done, deploy results logged
+git commit -m "fix(cis): beta calc partial-failure bug + BINANCE_SYMBOLS §4A cleanup
 
-- CLAUDE.md: MCP server LIVE ✅ (HTTP 405 on /mcp/sse = route mounted, GET-only correct)
-- MINIMAX_SYNC.md: T10 LAS ✅ + T16 Freqtrade threshold ✅; §5 HEAD = f7f5bc0
-- deploy-verifier MEMORY.md: verification results Apr 26 — all checks passed
+- calculate_asset_betas: TNX/VIX partial yfinance failure no longer kills entire
+  beta computation. Each factor now aligns independently (prev: min([0])=1 < 15
+  threshold → always returned insufficient_data, forcing CG proxy fallback for all T2)
+- BINANCE_SYMBOLS: removed 12 §4A excluded assets (FTM, ICP, BCH, SNX, CRV,
+  SUSHI, PEPE, WIF, BONK, SAND, MANA, AXS)
+- CLAUDE.md: S/A low scores reclassified — correct Tightening signal, not a bug
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 
@@ -34,14 +42,13 @@ git push origin main
 
 ---
 
-## Next session — open items
+## Next session open items
+
+**Seth:**
+- Phase 2.3: A2A Task endpoint `/api/v1/agent/tasks` (ROADMAP_A2A)
+- Verify beta fix improved T2 S scores after next scheduler cycle
 
 **Minimax (MINIMAX_SYNC.md §4 P1):**
-- T17: `python scripts/test_auth_e2e.py` — auth E2E (11 tests)
-- T18: Confirm Supabase `wallet_profiles` table exists
-- T11/T12: Run `run_t1_backtest.sh` → report PF/WR/MaxDD to Jazz
-
-**Seth / next session:**
-- Phase 2.3: A2A task endpoint `/api/v1/agent/tasks` (ROADMAP_A2A)
-- Investigate Railway T2 S/A pillar systematically low (S=12-13, A=20-30)
-- Verify ScoreAnalytics heatmap has >24h data (accumulating since Apr 26)
+- T17: `python scripts/test_auth_e2e.py` — 11 auth tests
+- T18: Confirm Supabase `wallet_profiles` table
+- T11/T12: Run backtest → report PF/WR/MaxDD
