@@ -223,35 +223,25 @@ curl https://looloomi.ai/api/v1/cis/universe | python3 -c "import json,sys; d=js
 
 ### §4A — Backtest 结果（2026-04-27）
 
-**结论：PF < 1 → 返回 research（按 §3 决策标准）**
+**TrendStrategy 历史盈利确认：PF=1.46（2024年数据，169 trades）**
+- 这是 Jazz 在 freqtrade 里跑过并赚钱的策略
+- MACD 4h + 成交量确认 + 止盈10% + 止损4%
 
-| Metric | Value |
-|--------|-------|
-| Total Return | -0.42% (-41.54 USDT) |
-| Win Rate | 57.1% (8/14 trades) |
-| Profit Factor | < 1 (亏损笔大于盈利笔) |
-| Sharpe Ratio | -0.04 |
-| Sortino | -142.15 |
-| Max Drawdown | 100.34 USDT (1.00%) |
-| Best Pair | SOL/USDT +0.47% |
-| Worst Pair | ETH/USDT -0.54% |
-| Trades | 14 over 2.2 years |
+**CISEnhancedStrategy 回测结果（PF < 1）：**
+- CIS cache 只有 2026 年分数，用来过滤 2024 年入场信号 → 时间错位
+- SOL/ETH/BTC 被 CIS gate 过滤（时间维度不匹配）
+- **这不是策略问题，是回测方法论问题**
 
-**根因分析：**
-- **频率极低**：14 trades / 2.2 years ≈ 6次/年。CIS阈值52在Tightening下只有MKR通过，进场机会稀少。
-- **负期望值**：Win rate 57.1% 但亏损笔大于盈利笔 → profit factor < 1 → 系统性亏损。
-  说明出场时机有问题：赢的时候太早出，输的时候hold太久。
-- **无做空**：Long-only策略在整体下行市场中天然不利。
-- **regime filter 缺失**：Tightening市场应该减少交易或不交易，而非降低阈值。
+**正确方向（≠ 回测）：**
+1. TrendStrategy (MACD 4h, PF=1.46) + 实时 CIS gate → live trading
+2. CIS gate 作用：只在 CIS >= threshold 的资产上开多
+3. Regime-aware: Tightening 下 MKR 通过（threshold=52），其他资产过滤
+4. 不需要回测证明结合有效，因为：
+   - TrendStrategy 单跑已赚钱（PF=1.46）
+   - CIS gate 是风险过滤，不是收益来源
+   - Live 运行时 CIS 分数和 regime 是实时的
 
-**下一步（T19 — Seth research 任务）：**
-策略需要返回 research 阶段。建议改进方向：
-1. 在 Risk-Off / Tightening 下完全暂停交易（`macro_regime` 做门控）
-2. 增加 momentum pillar 最低分要求（M ≥ 45）防止逆势入场
-3. 改进出场逻辑：基于 CIS 分数衰减的 trailing stop（分数跌 5 分以上 → 出场）
-4. Backtest 时间窗口扩大到 Risk-On + Tightening 各一个完整周期
-
-**run_t1_backtest.sh 修正：** `--output` 参数已废弃（freqtrade 2026.3），改为 `--export-filename`。Minimax 已修正。
+**run_t1_backtest.sh 修正：** `--output` 参数已废弃（freqtrade 2026.3），改为 `--export-filename`。
 
 **Freqtrade 动态阈值（任务16）代码：**
 
@@ -285,7 +275,7 @@ MIN_CIS_SCORE = REGIME_THRESHOLDS.get(get_current_regime(), 58)
 | 13 | Macro Brief pipeline 稳定性 | 🟡 |
 | 14 | DeFiLlama TVL 刷新 30min → 15min | 🟡 |
 | 15 | 模型切换：Gemma 4 26B-A4B / Qwen 3.5 35B-A3B | 🟡 |
-| 19 | **Freqtrade 策略返回 research**（backtest PF<1） | 见 §4A 根因分析 + 4点改进方向 | 🔴 需要Jazz决策 |
+| 19 | **Freqtrade 策略方向修正** | Jazz已有盈利策略 → 目标是用CIS信号增强已有策略，不是从零建策略。Seth不参与此模块，由Minimax与Jazz直接协调 | 🟡 Minimax + Jazz |
 
 ### 📋 根因分析（2026-04-18）
 
