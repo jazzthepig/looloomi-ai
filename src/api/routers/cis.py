@@ -6,10 +6,11 @@ import os, json as _json, time, asyncio, re
 from datetime import datetime
 
 import logging
-from fastapi import APIRouter, HTTPException, Header, WebSocket, WebSocketDisconnect, Response, Request
+from fastapi import APIRouter, HTTPException, Header, Query, WebSocket, WebSocketDisconnect, Response, Request
 
 from src.api.store import (
     redis_set, redis_get,
+    redis_set_key, redis_get_key,
     supabase_insert_batch, supabase_get_history,
     sanitize_floats, ws_manager,
 )
@@ -1169,3 +1170,82 @@ async def _broadcast_cis_update(universe: list):
         await ws_manager.broadcast(store.last_cis_broadcast)
     except Exception as e:
         _logger.warning(f"[WS] broadcast error (non-fatal): {e}")
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/cis/history/{symbol}
+# ---------------------------------------------------------------------------
+
+@router.get("/cis/history/{symbol}")
+async def get_cis_history(
+    symbol: str,
+    days: int = Query(default=30, ge=1, le=90),
+):
+    """Return CIS score history for a symbol from Supabase (Redis-cached, TTL=300s)."""
+    sym = symbol.upper()
+    cache_key = f"cis:history:{sym}:{days}"
+
+    cached = await redis_get_key(cache_key)
+    if cached:
+        return cached
+
+    rows = await supabase_get_history(sym, days)
+
+    if not rows:
+        result = {"symbol": sym, "history": [], "count": 0, "message": "No history found"}
+    else:
+        result = {
+            "symbol": sym,
+            "history": rows,
+            "count": len(rows),
+            "days_requested": days,
+        }
+
+    await redis_set_key(cache_key, result, ttl=300)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/cis/trend/{symbol}
+# ---------------------------------------------------------------------------
+
+@router.get("/cis/trend/{symbol}")
+async def get_cis_trend(
+    symbol: str,
+    days: int = Query(default=7, ge=1, le=30),
+):
+    """Return trend direction (improving / stable / declining) for a symbol over N days."""
+    sym = symbol.upper()
+
+    rows = await supabase_get_history(sym, days)
+
+    if len(rows) < 2:
+        _logger.warning(f"[CIS trend] insufficient data for {sym}: {len(rows)} rows")
+        return {"symbol": sym, "trend": "insufficient_data", "direction": None}
+
+    half = len(rows) // 2
+    recent_scores = [r.get("score", 0) for r in rows[:half]]
+    older_scores  = [r.get("score", 0) for r in rows[half:]]
+
+    avg_recent = sum(recent_scores) / len(recent_scores)
+    avg_older  = sum(older_scores)  / len(older_scores)
+    delta = avg_recent - avg_older
+
+    if delta > 1:
+        direction = "improving"
+    elif delta < -1:
+        direction = "declining"
+    else:
+        direction = "stable"
+
+    return {
+        "symbol":        sym,
+        "trend":         direction,
+        "delta_cis":     round(delta, 2),
+        "avg_recent":    round(avg_recent, 2),
+        "avg_older":     round(avg_older, 2),
+        "data_points":   len(rows),
+        "days":          days,
+        "latest_grade":  rows[0].get("grade"),
+        "latest_signal": rows[0].get("signal"),
+    }

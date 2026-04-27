@@ -22,6 +22,16 @@ import os
 
 _INTERNAL_TOKEN = os.getenv("INTERNAL_TOKEN", "")
 
+# Solana RPC integration flag — set SOLANA_READY=true in env when programs are deployed
+_SOLANA_READY = os.getenv("SOLANA_READY", "false").lower() == "true"
+
+_COMING_SOON = {
+    "status": "coming_soon",
+    "message": "Solana on-chain integration is under development. Fund data will be live when Solana programs are deployed.",
+    "data_source": "mock",
+    "solana_ready": False,
+}
+
 router = APIRouter(prefix="/api/v1/factory", tags=["factory"])
 
 # ============================================================================
@@ -121,17 +131,23 @@ MOCK_FUNDS = {
 # API Endpoints
 # ============================================================================
 
-@router.get("/funds", response_model=List[FundResponse])
+@router.get("/funds")
 async def list_funds():
     """List all deployed funds on-chain."""
+    if not _SOLANA_READY:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=503, content={**_COMING_SOON, "funds": []})
     return [
         FundResponse(**fund) for fund in MOCK_FUNDS.values()
     ]
 
 
-@router.get("/fund/{fund_id}", response_model=FundResponse)
+@router.get("/fund/{fund_id}")
 async def get_fund(fund_id: int):
     """Get details of a specific fund."""
+    if not _SOLANA_READY:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=503, content={**_COMING_SOON, "fund_id": fund_id})
     if fund_id not in MOCK_FUNDS:
         raise HTTPException(status_code=404, detail="Fund not found")
     return FundResponse(**MOCK_FUNDS[fund_id])
@@ -346,6 +362,9 @@ async def manage_whitelist(
 @router.get("/position/{fund_id}/{investor}")
 async def get_investor_position(fund_id: int, investor: str):
     """Get investor's position in a fund."""
+    if not _SOLANA_READY:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=503, content={**_COMING_SOON, "fund_id": fund_id, "investor": investor})
     # TODO: Integrate with Solana RPC - fetch from InvestorPosition PDA
 
     fund = MOCK_FUNDS.get(fund_id)
@@ -376,4 +395,5 @@ async def health_check():
         "cluster": "devnet",
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "data_source": "mock",  # Solana RPC not yet integrated
+        "solana_ready": _SOLANA_READY,
     }

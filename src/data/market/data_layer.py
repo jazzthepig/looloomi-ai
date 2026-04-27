@@ -1127,6 +1127,22 @@ async def get_macro_pulse() -> dict:
                     result["macro_regime"]   = derived
                     result["regime_source"]  = "eodhd_derived"
                     result["regime_inputs"]  = us_macro.get("regime_inputs", {})
+                else:
+                    # EODHD returned error/unavailable — try FRED (free, no key)
+                    fred_data = await _get_fred_macro_indicators("usa")
+                    fred_regime = fred_data.get("derived_regime")
+                    if fred_regime and fred_regime != "UNKNOWN":
+                        result["macro_regime"]   = fred_regime
+                        result["regime_source"] = "fred_derived"
+                        result["regime_inputs"] = fred_data.get("regime_inputs", {})
+            else:
+                # No EODHD key — try FRED directly (free, no API key needed)
+                fred_data = await _get_fred_macro_indicators("usa")
+                fred_regime = fred_data.get("derived_regime")
+                if fred_regime and fred_regime != "UNKNOWN":
+                    result["macro_regime"]   = fred_regime
+                    result["regime_source"] = "fred_derived"
+                    result["regime_inputs"] = fred_data.get("regime_inputs", {})
         except Exception:
             pass  # regime stays UNKNOWN — non-blocking
 

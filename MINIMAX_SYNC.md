@@ -440,3 +440,155 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 | `EODHD_API_KEY` | ❌ 仍缺失/过期 → Minimax 待 rotate |
 | `FINNHUB_API_KEY` | ❌ 同上 |
 | `SUPABASE_URL` / `SUPABASE_KEY` | ❌ Railway 未设置 → Jazz 待添加 |
+
+---
+
+## §6 新任务 — 2026-04-27
+
+*Seth → Minimax. 以下三个任务优先级均为 P1，本周内完成。*
+
+---
+
+### T21: Mac Mini 健康告警 (Health Alerting)
+
+**目的 / Purpose:**
+When Mac Mini hasn't pushed to Railway for >2 hours, T1 silently degrades to T2 with no visibility. This is a single point of failure — a VC-level concern. Railway shows green; reality is stale estimated scores with no indication of the outage.
+
+**Chinese notes:** Mac Mini 超过 2 小时未推送时，T1 静默降级为 T2 估算分。Railway 显示绿色，但投资者看到的是过期数据。这是一个对 VC 可见的单点故障，必须解决。
+
+**做法 / Implementation:**
+
+In `cis_scheduler.py`, after each successful push to `/internal/cis-scores`:
+
+```python
+import time, pathlib
+pathlib.Path("/tmp/cis_last_push.txt").write_text(str(time.time()))
+```
+
+Add a second check loop (or cron job) that runs every 15 minutes:
+
+```python
+def check_heartbeat():
+    try:
+        last = float(pathlib.Path("/tmp/cis_last_push.txt").read_text())
+        if time.time() - last > 7200:  # 2 hours
+            send_alert()
+    except FileNotFoundError:
+        pass  # scheduler hasn't run yet
+
+def send_alert():
+    # Option A: POST to Railway task queue (re-uses existing A2A infra)
+    import requests
+    requests.post(
+        "https://looloomi.ai/api/v1/agent/tasks",
+        json={"task_type": "regime_briefing", "parameters": {"alert": "Mac Mini CIS push overdue >2h — T1 degraded to T2"}},
+        headers={"Authorization": f"Bearer {INTERNAL_TOKEN}"},
+        timeout=10
+    )
+    # Option B: write to local log (simpler, always works)
+    with open("/tmp/cis_alert.log", "a") as f:
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ALERT: CIS push overdue >2h\n")
+```
+
+Use whichever alert method is simpler to implement. Option B (local log + `tail -f`) is acceptable for now.
+
+**验收标准 / Acceptance:**
+- `/tmp/cis_last_push.txt` is updated after every successful push
+- If Mac Mini is restarted or cis_scheduler.py crashes, the alert fires within 15 minutes of the 2-hour threshold
+
+**Effort:** 2h | **Priority:** P1
+
+---
+
+### T22: MacroBrief Pipeline Fix
+
+**目的 / Purpose:**
+The `macro_briefs` table in Supabase has 0 rows. The LM Studio / Qwen3 35B narrative pipeline is dead. Agents calling `/api/v1/market/macro-brief` return null context. This blocks the AI narrative layer entirely.
+
+**Chinese notes:** Supabase `macro_briefs` 表 0 行。LM Studio / Qwen3 管道已停止运行。Intelligence 页面 MacroBrief 组件无内容。AI 叙事层完全失效，影响 agent 生态演示质量。
+
+**做法 / Diagnosis steps:**
+
+1. Check if LM Studio is running:
+   ```bash
+   curl http://localhost:1234/v1/models
+   ```
+   If no response → LM Studio crashed. Skip to step 3.
+
+2. If LM Studio is running, test the pipeline manually:
+   ```bash
+   cd /Volumes/CometCloudAI/cometcloud-local/
+   python cis_push.py --once
+   ```
+   Check output for macro_brief payload. If missing → the brief generation step is erroring silently. Check `cis_scheduler.py` logs.
+
+3. If LM Studio crashed:
+   - Restart LM Studio app
+   - Reload Qwen3 32B model (or 35B if available)
+   - Re-run `cis_push.py` manually
+
+4. Once one successful push includes a macro_brief, confirm it appears in Supabase:
+   ```sql
+   SELECT id, created_at, LEFT(brief_text, 200) FROM macro_briefs ORDER BY created_at DESC LIMIT 3;
+   ```
+
+5. Confirm the Railway endpoint returns it:
+   ```bash
+   curl https://looloomi.ai/api/v1/market/macro-brief | python3 -m json.tool
+   ```
+
+**Report back:** When fixed, paste the first successful macro_brief text (first 300 chars) into this section as a confirmation entry. Format:
+
+```
+✅ T22 CONFIRMED — [date]
+Brief sample: "[first 300 chars of brief_text]"
+```
+
+**Effort:** 2–6h depending on root cause | **Priority:** P1
+
+---
+
+### T23: Freqtrade Dry Run (carry-over from T20)
+
+**目的 / Purpose:**
+Prove the CIS gate works in live conditions before the Product Hunt launch. Without a live dry run, Freqtrade integration is a claim, not a fact. The trading agent demo on strategy.html needs real signal activity.
+
+**Chinese notes:** Product Hunt 发布前必须证明 CIS gate 在实盘条件下有效。dry run 的第一个交易信号 = 真实的产品叙事素材。无 dry run → 策略演示只是描述，不是数据。
+
+**做法 / Steps (same as T20, carried over):**
+
+1. Confirm `CISEnhancedStrategy.py` exists:
+   ```bash
+   ls /Volumes/CometCloudAI/freqtrade/user_data/strategies/CISEnhancedStrategy.py
+   ```
+
+2. If file exists, start dry run:
+   ```bash
+   freqtrade trade \
+     --dry-run \
+     --strategy CISEnhancedStrategy \
+     --config /Volumes/CometCloudAI/freqtrade/user_data/config.json
+   ```
+
+3. Monitor for first trade signal:
+   ```bash
+   tail -f ~/.freqtrade/logs/freqtrade.log | grep -E "(SIGNAL|BUY|entering|CIS)"
+   ```
+   Note: freqtrade uses BUY/SELL internally for trade direction — this is system-level, not user-facing output. Compliant.
+
+4. Report back (write to MINIMAX_SYNC.md §6 T23 status):
+   - First asset selected
+   - CIS score at time of signal
+   - Regime at time of signal
+   - Timestamp of first signal
+
+**验收标准 / Acceptance:**
+- Dry run running (process alive, not crashed)
+- At least one trade signal logged within 24h
+- CIS gate confirmed active (asset passed threshold for current regime)
+
+**Effort:** 2h | **Priority:** P1
+
+---
+
+*§6 added by Seth — 2026-04-27. Minimax: please confirm receipt and update status inline.*
