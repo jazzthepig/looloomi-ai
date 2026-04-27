@@ -156,7 +156,7 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 |---|------|------|------|
 | 8 | **Universe 过滤**：13 个已排除资产 | §4A — POLYX/PEPE/WIF/BONK/SAND/MANA/AXS/CRV/SUSHI/SNX/ICP/BCH/FTM 已从 config.py + data_fetcher.py 移除 | ✅ |
 | 9 | 确认 HYPER（Hyperliquid）在评分列表中保留 | v1.1 inclusion standard | 🟡 |
-| 10 | LAS 字段加入 local engine 输出 | 与 Railway schema 对齐 | 🟡 |
+| 10 | LAS 字段加入 local engine 输出 | 与 Railway schema 对齐 | ✅ |
 | 11 | Apply T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` | 🟡 |
 | 12 | 回报 backtest 结果（PF / WR / MaxDD） | 发给 Jazz | 🟡 |
 
@@ -214,10 +214,10 @@ curl https://looloomi.ai/api/v1/cis/universe | python3 -c "import json,sys; d=js
 
 | # | 任务 | 说明 | 状态 |
 |---|------|------|------|
-| 16 | **Freqtrade 动态阈值**：regime-aware threshold 已 apply | ✅ Mac Mini `/Volumes/CometCloudAI/freqtrade/user_data/strategies/CometCloudStrategy.py` |
+| 16 | **Freqtrade 动态阈值**：regime-aware threshold | Mac Mini `CometCloudStrategy.py` | ✅ |
+| 10 | **LAS 字段加入 local engine 输出** | 与 Railway schema 对齐 | ✅ |
 | 17 | **auth E2E test** 在 Mac Mini 跑 | `python scripts/test_auth_e2e.py` | 🟡 |
 | 18 | **Supabase wallet_profiles 表** 确认存在 | `SELECT * FROM wallet_profiles LIMIT 1` | 🟡 |
-| 10 | LAS 字段加入 local engine 输出 | 与 Railway schema 对齐 | 🟡 |
 | 11 | T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` | 🟡 |
 | 12 | 回报 backtest 结果（PF / WR / MaxDD） | 发给 Jazz | 🟡 |
 
@@ -301,16 +301,21 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 
 ## §5 Seth 已完成 / Railway 最新状态
 
-**当前 HEAD（2026-04-26）：** `05e8198` — fix(api): add /api/v1/health to bypass Cloudflare SPA cache
+**当前 HEAD（2026-04-26）：** `f7f5bc0` — Minimax cleanup: COMMIT_READY.md + MINIMAX_SYNC.md status
 
 最近 commit 时间线：
-- `05e8198` — **Seth**：/api/v1/health + deploy docs update ✅
+- `f7f5bc0` — **Minimax**：cleanup commit (COMMIT_READY.md + MINIMAX_SYNC.md status) ✅
+- `05e8198` — **Seth**：/api/v1/health Cloudflare bypass + deploy docs update ✅
 - `223c865` — **Seth**：COMMIT_READY.md push-gate + MINIMAX_SYNC.md §4 verification ✅
+- `01327bc` — **Seth/Minimax**：Phase 2.2 MCP server + auth E2E test script ✅
 - `2ddbaef` — **Minimax**：T2 beta fallback, A base +25, tighten regime S weight ✅
-- `e991ae7` — **Minimax**：CLAUDE.md Week 7 update ✅
-- `b7095fc` — Phase A-F harness + A2A agent card ✅
 
-**所有待处理项已清空。** 无阻塞项。
+**Deploy verification 通过（2026-04-26）:**
+- `/api/v1/health` ✅ — version 0.4.3, healthy
+- `/mcp/sse` (Railway direct) ✅ — HTTP 405 (endpoint exists, GET-only is correct)
+- CIS universe ✅ — 84 assets, regime=Tightening, MKR passes threshold=52
+
+**待处理项：** T17 (auth E2E), T18 (wallet_profiles), T11/T12 (backtest)
 
 | 文件 | 变更 | Session |
 |------|------|---------|

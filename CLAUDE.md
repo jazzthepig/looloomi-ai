@@ -398,26 +398,25 @@ git push origin main
 
 ## Production health (as of 2026-04-26)
 
-- Railway: **ACTIVE** — HEAD = `223c865` ✅
+- Railway: **ACTIVE** — HEAD = `f7f5bc0` ✅
 - CIS universe: **LIVE** — 84 assets (T1=25 Mac Mini + T2=59 Railway). COINGECKO_API_KEY set ✅
 - Mac Mini scheduler: **RUNNING** — cis_scheduler.py PID 33143, pushing every ~30min ✅
-- macro_regime: **Tightening** — Mac Mini regime flowing through correctly ✅
+- macro_regime: **Tightening** — flowing through correctly ✅
 - DeFi overview: **LIVE** — DeFiLlama TVL, 25 protocols scored ✅
 - Macro Pulse: **LIVE** ✅ — BTC $77,995, F&G, dominance all live
 - Signal Feed: **LIVE** ✅ — correct timestamps, compliance-safe language
 - Macro Events: **LIVE** ✅ — HTML stripped from descriptions
-- Supabase: **CONNECTED** ✅ — `soupjamxlfsmgmmtoeok`, score history writing ✅
+- Supabase: **CONNECTED** ✅ — score history writing (history_written: true) ✅
 - ScoreAnalytics: **LIVE** ✅ — heatmap populating with score history rows
 - MacroBrief: **NULL** — Mac Mini LM Studio pipeline not connected / not pushing
 - Economic Indicators: **EMPTY** — EODHD key missing/expired. All cells show "—".
-- Quant Monitor (Freqtrade): **NOT STARTED** — dry-run not yet started by Minimax
+- Quant Monitor (Freqtrade): **NOT STARTED** — regime-aware threshold ✅ applied, dry-run pending
 - Agent harness: **DEPLOYED** ✅ — Phase A–F complete, all skills + plugin + workflows live
 - A2A discovery: **LIVE** ✅ — `/.well-known/agent.json` served from Railway
-- MCP server: **DEPLOYED** ⚠️ — Phase 2.2 code live on Railway (`01327bc`). `/health` + `/mcp/sse`
-  return HTML via Cloudflare proxy — verify via Railway direct URL `web-production-0cdf76.up.railway.app`
-  to confirm if Railway is receiving these paths correctly.
+- MCP server: **LIVE** ✅ — Phase 2.2 verified via Railway direct URL. HTTP 405 on HEAD = correct
+  (SSE endpoint is GET-only; 405 confirms route exists and is mounted)
 - **BUG**: No B+ assets (CIS≥65) — S pillar (12-13) and A pillar (20-30) systematically low.
-  freqtrade MIN_CIS_SCORE dynamic threshold added to MINIMAX_SYNC.md §4 task 16 (Tightening → 52).
+  Freqtrade threshold lowered to 52 (Tightening regime) → MKR (56.8) now passes.
   Root cause in Railway T2 S/A formulas still unresolved.
 
 ## Codebase metrics
