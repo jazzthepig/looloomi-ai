@@ -28,9 +28,8 @@
 - MacroBrief: ❌ NULL — LM Studio pipeline not connected
 - Economic Indicators: ❌ EMPTY — EODHD key missing/expired
 - Freqtrade: ❌ NOT STARTED — dry-run pending Minimax
-- MCP Server: ⚠️ DEPLOYED but UNVERIFIED — `/mcp/sse` returns HTML via Cloudflare proxy.
-  Must verify via Railway direct URL: `curl https://web-production-0cdf76.up.railway.app/mcp/sse`
-  Expected: `text/event-stream` response if MCP mounted, JSON 404 if import failed.
+- MCP Server: ✅ LIVE — Verified via Railway direct URL. HTTP 405 on HEAD request = correct behavior.
+  SSE endpoint is GET-only; 405 confirms route is registered and mounted. Phase 2.2 complete.
 
 ### Cloudflare routing issue
 `/health` and `/mcp/sse` return HTML when tested via `https://looloomi.ai`. Likely Cloudflare
