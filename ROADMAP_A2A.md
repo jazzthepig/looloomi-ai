@@ -107,40 +107,48 @@ Expose CometCloud intelligence as an MCP tool server. Any MCP-compatible agent (
 
 **MCP config:** `cometcloud-intelligence/mcp/cometcloud.json` updated with `remote.url = "https://looloomi.ai/mcp/sse"`.
 
-### 2.3 A2A Task Endpoint
-Long-running analysis tasks for agent delegation.
+### 2.3 A2A Task Endpoint ✅ COMPLETE (2026-04-27)
+Long-running analysis tasks for agent delegation. Async task queue backed by Upstash Redis.
+
+**Implementation:** `src/api/routers/agent.py` — registered in `main.py` alongside all other routers.
+
+**Endpoints:**
+- `POST /api/v1/agent/tasks` → 202 + task_id + poll URL (fire-and-forget, no blocking)
+- `GET /api/v1/agent/tasks/{task_id}` → poll status + result (public)
+- `GET /api/v1/agent/tasks` → list active tasks (X-Internal-Token required)
+
+**Task types:**
+- `portfolio_analysis` — filter by CIS threshold + asset classes → equal-weight allocation with positioning signals
+- `cis_snapshot` — filtered/sorted universe snapshot for agent context windows
+- `regime_briefing` — macro regime + signal implications; depth=full adds sector rotation + top opportunities
+
+**Architecture:**
+- In-memory `_active_tasks` dict (hot path, max 50 entries)
+- Upstash Redis backup per task (`task:{task_id}`, 1h TTL) — survives Railway restarts
+- `asyncio.Semaphore(5)` — max 5 concurrent task executors
+- `asyncio.create_task()` — background execution, caller gets immediate 202
 
 ```
 POST /api/v1/agent/tasks
-{
-  "type": "portfolio_analysis",
-  "params": {
-    "target_return": 0.15,
-    "max_drawdown": 0.10,
-    "asset_classes": ["Crypto", "DeFi"],
-    "horizon": "6m"
-  }
-}
+{ "type": "portfolio_analysis", "params": { "min_cis": 55, "asset_classes": ["L1", "DeFi"] } }
 
 → 202 Accepted
-{
-  "task_id": "task_abc123",
-  "status": "working",
-  "poll": "/api/v1/agent/tasks/task_abc123",
-  "stream": "/api/v1/agent/tasks/task_abc123/stream"
-}
+{ "task_id": "a3f9...", "status": "pending", "poll": "/api/v1/agent/tasks/a3f9..." }
+
+GET /api/v1/agent/tasks/a3f9...
+→ { "status": "completed", "result": { "assets": [...], "macro_regime": "Tightening", ... } }
 ```
 
-| # | Task | Owner | Effort |
+| # | Task | Owner | Status |
 |---|------|-------|--------|
-| 2.1 | Create `/.well-known/agent.json` + serve via Cloudflare | Seth | 1h |
-| 2.2 | Build MCP server (FastMCP) wrapping CIS + fund endpoints | Seth | 4h |
-| 2.3 | Deploy MCP server to Railway (sidecar) or Cloudflare Worker | Seth | 2h |
-| 2.4 | Implement `/api/v1/agent/tasks` with async task queue | Seth | 6h |
-| 2.5 | Add SSE streaming for task progress | Seth | 3h |
-| 2.6 | API key management (free tier: 60 req/min, pro: 600 req/min) | Seth | 3h |
+| 2.1 | Create `/.well-known/agent.json` + serve via Cloudflare | Seth | ✅ |
+| 2.2 | Build MCP server (FastMCP) wrapping CIS + fund endpoints | Seth | ✅ |
+| 2.3 | Deploy MCP server to Railway (sidecar) | Seth | ✅ |
+| 2.4 | Implement `/api/v1/agent/tasks` with async task queue | Seth | ✅ |
+| 2.5 | Add SSE streaming for task progress | Seth | — (polling sufficient for v1) |
+| 2.6 | API key management (free tier: 60 req/min, pro: 600 req/min) | Seth | — (Phase 3) |
 
-**Gate:** External agent can discover CometCloud, query CIS data via MCP, and submit analysis tasks.
+**Gate:** ✅ External agent can discover CometCloud, query CIS data via MCP, and submit analysis tasks.
 
 ---
 

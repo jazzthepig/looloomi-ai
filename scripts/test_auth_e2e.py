@@ -85,7 +85,8 @@ def run_tests(base: str):
         assert nonce,   "Missing nonce in response"
         assert message, "Missing message in response"
         assert len(nonce) == 32,  f"Nonce length unexpected: {len(nonce)} (want 32 hex chars)"
-        assert req_addr := data.get("address"), "Missing address in response"
+        req_addr = data.get("address")  # walrus-free: compatible with Python 3.8–3.14+
+        assert req_addr, "Missing address in response"
         assert req_addr == address, f"Address mismatch: {req_addr} != {address}"
         assert "CometCloud AI" in message, "Message missing CometCloud AI header"
         assert nonce in message, "Nonce not in message"

@@ -410,7 +410,8 @@ git push origin main
 - ScoreAnalytics: **LIVE** ✅ — heatmap populating with score history rows
 - MacroBrief: **NULL** — Mac Mini LM Studio pipeline not connected / not pushing
 - Economic Indicators: **EMPTY** — EODHD key missing/expired. All cells show "—".
-- Quant Monitor (Freqtrade): **NOT STARTED** — regime-aware threshold ✅ applied, dry-run pending
+- Quant Monitor (Freqtrade): **RESEARCH** — backtest ran (PF<1, -0.42%, 14 trades/2.2yr). Per §3
+  decision criteria → return to research. Dry-run on hold. See MINIMAX_SYNC.md §4A.
 - Agent harness: **DEPLOYED** ✅ — Phase A–F complete, all skills + plugin + workflows live
 - A2A discovery: **LIVE** ✅ — `/.well-known/agent.json` served from Railway
 - MCP server: **LIVE** ✅ — Phase 2.2 verified via Railway direct URL. HTTP 405 on HEAD = correct
@@ -436,27 +437,28 @@ git push origin main
 
 | Priority | Task | Est. | Status |
 |----------|------|------|-------|
-| P1 | ~~Phase 2.2 MCP sidecar — deploy `src/mcp/cometcloud_mcp.py`~~ | ~~1d~~ | ✅ DONE — ASGI mount at /mcp/sse |
-| P1 | ~~Wallet connect auth review + E2E test script~~ | ~~1d~~ | ✅ DONE — scripts/test_auth_e2e.py |
-| P1 | Wallet connect live E2E run (Mac Mini) → fix any failures | 0.5d | After Mac Mini push |
+| P1 | ~~Phase 2.2 MCP sidecar — deploy `src/mcp/cometcloud_mcp.py`~~ | ~~1d~~ | ✅ DONE |
+| P1 | ~~Wallet connect auth review + E2E test script~~ | ~~1d~~ | ✅ DONE |
+| P1 | ~~Beta calc fix (calculate_asset_betas min_len bug)~~ | ~~2h~~ | ✅ DONE — 2026-04-27 |
+| P1 | Wallet connect live E2E run (Mac Mini) → re-run after Python 3.14 fix | 0.5d | T17 fix staged |
 | P2 | Phase 2.3: A2A Task endpoint `/api/v1/agent/tasks` | 4h | ROADMAP_A2A |
-| P2 | Freqtrade CIS integration — wire live scores into CometCloudStrategy | 1d | Minimax dry run first |
-| P2 | Trading Agent P&L dashboard — Freqtrade metrics → strategy page | 2d | Freqtrade running |
+| P2 | Freqtrade strategy research — macro_regime gate + momentum filter + exit logic | 1d | Blocked on Jazz decision |
+| P2 | Trading Agent P&L dashboard — Freqtrade metrics → strategy page | 2d | Blocked on dry run |
 | P2 | Share card: og:image endpoint for Twitter/WeChat link previews | 1d | — |
 | P2 | My Portfolio view — after wallet connect | 3d | — |
 | P2 | Verify ScoreAnalytics heatmap populates | 0.5d | Supabase ✅ + scheduler ✅ |
 
 ### Minimax (Mac Mini)
 
-| Priority | Task | Est. |
-|----------|------|------|
-| P0 | Rotate EODHD + Finnhub API keys (exposed in old git history) | 30min |
-| P0 | Freqtrade dry run: `start_dry_run.sh`, confirm CIS cache writer | 1h |
-| P1 | Add LAS calculation to local engine output (match Railway schema) | 2h |
-| P1 | Macro Brief pipeline stability — LM Studio (Qwen3 35B) crash recovery | 1d |
-| P1 | Run T1 backtest (`run_t1_backtest.sh`) → report PF/WR/MaxDD | 2h |
-| P2 | DeFiLlama TVL refresh: 30min → 15min for F pillar freshness | 0.5h |
-| P3 | Investigate S/A pillar systematic low scores in Railway T2 | ongoing |
+| Priority | Task | Est. | Status |
+|----------|------|------|------|
+| P0 | Rotate EODHD + Finnhub API keys (exposed in old git history) | 30min | 🔴 |
+| P1 | ~~Add LAS calculation to local engine output~~ | ~~2h~~ | ✅ Done |
+| P1 | ~~Run T1 backtest → report results~~ | ~~2h~~ | ✅ Done — PF<1 → research |
+| P1 | Re-run auth E2E after Seth's Python 3.14 fix | 15min | 🟡 After push |
+| P1 | Macro Brief pipeline stability — LM Studio (Qwen3 35B) crash recovery | 1d | 🟡 |
+| P2 | Freqtrade strategy redesign (T19) — per §4A decision | — | 🔴 Jazz decision first |
+| P2 | DeFiLlama TVL refresh: 30min → 15min for F pillar freshness | 0.5h | 🟡 |
 
 ### Jazz + Nic (distribution)
 

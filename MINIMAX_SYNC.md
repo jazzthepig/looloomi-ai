@@ -216,10 +216,42 @@ curl https://looloomi.ai/api/v1/cis/universe | python3 -c "import json,sys; d=js
 |---|------|------|------|
 | 16 | **Freqtrade 动态阈值**：regime-aware threshold | Mac Mini `CometCloudStrategy.py` | ✅ |
 | 10 | **LAS 字段加入 local engine 输出** | 与 Railway schema 对齐 | ✅ |
-| 17 | **auth E2E test** 在 Mac Mini 跑 | `python scripts/test_auth_e2e.py` | 🟡 |
-| 18 | **Supabase wallet_profiles 表** 确认存在 | `SELECT * FROM wallet_profiles LIMIT 1` | 🟡 |
-| 11 | T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` | 🟡 |
-| 12 | 回报 backtest 结果（PF / WR / MaxDD） | 发给 Jazz | 🟡 |
+| 11 | T1 策略三件套 + 跑 `run_t1_backtest.sh` | `Shadow/freqtrade/` | ✅ 2026-04-27 |
+| 12 | 回报 backtest 结果（PF / WR / MaxDD） | 见下方 §4A | ✅ |
+| 17 | **auth E2E test** 在 Mac Mini 跑 | `python scripts/test_auth_e2e.py` | ❌ walrus operator bug (Python 3.14) — Seth已修复，重新 push 后跑 |
+| 18 | **Supabase wallet_profiles 表** 确认存在 | `SELECT * FROM wallet_profiles LIMIT 1` | 🟡 Jazz 确认 |
+
+### §4A — Backtest 结果（2026-04-27）
+
+**结论：PF < 1 → 返回 research（按 §3 决策标准）**
+
+| Metric | Value |
+|--------|-------|
+| Total Return | -0.42% (-41.54 USDT) |
+| Win Rate | 57.1% (8/14 trades) |
+| Profit Factor | < 1 (亏损笔大于盈利笔) |
+| Sharpe Ratio | -0.04 |
+| Sortino | -142.15 |
+| Max Drawdown | 100.34 USDT (1.00%) |
+| Best Pair | SOL/USDT +0.47% |
+| Worst Pair | ETH/USDT -0.54% |
+| Trades | 14 over 2.2 years |
+
+**根因分析：**
+- **频率极低**：14 trades / 2.2 years ≈ 6次/年。CIS阈值52在Tightening下只有MKR通过，进场机会稀少。
+- **负期望值**：Win rate 57.1% 但亏损笔大于盈利笔 → profit factor < 1 → 系统性亏损。
+  说明出场时机有问题：赢的时候太早出，输的时候hold太久。
+- **无做空**：Long-only策略在整体下行市场中天然不利。
+- **regime filter 缺失**：Tightening市场应该减少交易或不交易，而非降低阈值。
+
+**下一步（T19 — Seth research 任务）：**
+策略需要返回 research 阶段。建议改进方向：
+1. 在 Risk-Off / Tightening 下完全暂停交易（`macro_regime` 做门控）
+2. 增加 momentum pillar 最低分要求（M ≥ 45）防止逆势入场
+3. 改进出场逻辑：基于 CIS 分数衰减的 trailing stop（分数跌 5 分以上 → 出场）
+4. Backtest 时间窗口扩大到 Risk-On + Tightening 各一个完整周期
+
+**run_t1_backtest.sh 修正：** `--output` 参数已废弃（freqtrade 2026.3），改为 `--export-filename`。Minimax 已修正。
 
 **Freqtrade 动态阈值（任务16）代码：**
 
@@ -253,6 +285,7 @@ MIN_CIS_SCORE = REGIME_THRESHOLDS.get(get_current_regime(), 58)
 | 13 | Macro Brief pipeline 稳定性 | 🟡 |
 | 14 | DeFiLlama TVL 刷新 30min → 15min | 🟡 |
 | 15 | 模型切换：Gemma 4 26B-A4B / Qwen 3.5 35B-A3B | 🟡 |
+| 19 | **Freqtrade 策略返回 research**（backtest PF<1） | 见 §4A 根因分析 + 4点改进方向 | 🔴 需要Jazz决策 |
 
 ### 📋 根因分析（2026-04-18）
 

@@ -69,6 +69,12 @@
   "integration": {
     "mcp_plugin": "cometcloud-intelligence (Claude marketplace)",
     "eliza_plugin": "@cometcloud/eliza-plugin (coming Q3 2026)",
-    "a2a_tasks": "/agent/tasks (async analysis delegation — coming Q2 2026)"
+    "a2a_tasks": {
+      "description": "Async analysis delegation — POST to receive task_id, GET to poll result",
+      "endpoint": "/agent/tasks",
+      "status": "live",
+      "task_types": ["portfolio_analysis", "cis_snapshot", "regime_briefing"],
+      "protocol": "A2A v0.3 (task delegation)"
+    }
   }
 }
