@@ -1,5 +1,5 @@
 """
-Looloomi AI — FastAPI Backend v0.4.0
+Looloomi AI — FastAPI Backend v0.4.3
 Modular router architecture. God-file main.py split complete.
 
 Routers:
@@ -15,6 +15,7 @@ Routers:
   src/api/routers/social.py       — /api/v1/social/*
   src/api/routers/share.py        — /api/v1/share/og-image
   src/api/routers/factory.py      — /api/v1/factory/*
+  src/api/routers/agent.py        — /api/v1/agent/tasks (A2A Phase 2.3)
 """
 import os, sys, json
 
@@ -39,6 +40,7 @@ from src.api.routers.leads import router as leads_router
 from src.api.routers.social import router as social_router
 from src.api.routers.factory import router as factory_router
 from src.api.routers.share import router as share_router
+from src.api.routers.agent import router as agent_router
 
 _ENV = os.environ.get("ENVIRONMENT", "production")
 
@@ -78,6 +80,7 @@ app.include_router(leads_router)
 app.include_router(social_router)
 app.include_router(factory_router)
 app.include_router(share_router)
+app.include_router(agent_router)
 
 
 # ── MCP Server (ROADMAP_A2A Phase 2.2) ───────────────────────────────────────
