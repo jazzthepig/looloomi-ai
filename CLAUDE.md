@@ -388,6 +388,11 @@ git push origin main
 - Auth code review: full flow verified correct (AuthContext → WalletConnect → backend sign-in)
   - `scripts/test_auth_e2e.py`: 11-test backend E2E suite (Mac Mini must run after push)
 - COMMIT_READY.md prepared — Mac Mini runs 5-step sequence to deploy
+- ROADMAP_A2A Phase 2.3 complete: A2A Task Queue endpoint
+  - `src/api/routers/agent.py`: async task queue (portfolio_analysis / cis_snapshot / regime_briefing)
+  - `src/api/main.py`: agent_router registered
+  - `dashboard/public/.well-known/agent.json` + `dist/`: a2a_tasks live endpoint spec
+  - `ROADMAP_A2A.md`: Phase 2.3 marked ✅
 
 **Pending — waiting on Minimax:**
 - Rotate EODHD + Finnhub API keys (exposed in old git history via Shadow)
@@ -410,12 +415,16 @@ git push origin main
 - ScoreAnalytics: **LIVE** ✅ — heatmap populating with score history rows
 - MacroBrief: **NULL** — Mac Mini LM Studio pipeline not connected / not pushing
 - Economic Indicators: **EMPTY** — EODHD key missing/expired. All cells show "—".
-- Quant Monitor (Freqtrade): **RESEARCH** — backtest ran (PF<1, -0.42%, 14 trades/2.2yr). Per §3
-  decision criteria → return to research. Dry-run on hold. See MINIMAX_SYNC.md §4A.
+- Quant Monitor (Freqtrade): **DRY RUN PENDING** 🟡 — Direction locked: TrendStrategy (PF=1.46, 169 trades,
+  MACD 4h, TP=10% SL=4%) + live CIS gate. `CISEnhancedStrategy.py` created on Mac Mini by Minimax.
+  Backtest PF<1 was methodology issue (2026 CIS scores filtering 2024 signals, time mismatch — not a strategy bug).
+  Next: Minimax confirms file, modifies CometCloudStrategy, starts dry run. See MINIMAX_SYNC.md §4A.
 - Agent harness: **DEPLOYED** ✅ — Phase A–F complete, all skills + plugin + workflows live
 - A2A discovery: **LIVE** ✅ — `/.well-known/agent.json` served from Railway
 - MCP server: **LIVE** ✅ — Phase 2.2 verified via Railway direct URL. HTTP 405 on HEAD = correct
   (SSE endpoint is GET-only; 405 confirms route exists and is mounted)
+- A2A Task Queue: **LIVE** ✅ — Phase 2.3 confirmed working (2026-04-27). POST→pending, GET→completed in seconds.
+  84 assets returned, all C+/C grade NEUTRAL/UNDERPERFORM = correct Tightening regime behavior.
 - **CIS scoring (Tightening regime)**: No B+ assets (CIS≥65) is correct behavior — in Tightening
   with alts down 15-30% vs BTC, S and A correctly suppress. S=12-23 (vol_regime negative, alts
   underperform BTC), A=30-55 (benchmark divergence negative for large-caps). Not a bug.
@@ -426,7 +435,7 @@ git push origin main
 
 ## Codebase metrics
 
-- Backend: ~4,935 lines across 11 routers (`src/api/routers/`) + main
+- Backend: ~5,200 lines across 12 routers (`src/api/routers/`) + main
 - Frontend: 26 components (`dashboard/src/components/`), 1,175 lines in `App.jsx`
 - CIS provider: `cis_provider.py` calculates scores for 65+ assets (13 §4A assets excluded)
 - Shadow/: removed from git tracking (read-only local reference, never commit)
@@ -441,9 +450,8 @@ git push origin main
 | P1 | ~~Wallet connect auth review + E2E test script~~ | ~~1d~~ | ✅ DONE |
 | P1 | ~~Beta calc fix (calculate_asset_betas min_len bug)~~ | ~~2h~~ | ✅ DONE — 2026-04-27 |
 | P1 | Wallet connect live E2E run (Mac Mini) → re-run after Python 3.14 fix | 0.5d | T17 fix staged |
-| P2 | Phase 2.3: A2A Task endpoint `/api/v1/agent/tasks` | 4h | ROADMAP_A2A |
-| P2 | Freqtrade strategy research — macro_regime gate + momentum filter + exit logic | 1d | Blocked on Jazz decision |
-| P2 | Trading Agent P&L dashboard — Freqtrade metrics → strategy page | 2d | Blocked on dry run |
+| P2 | ~~Phase 2.3: A2A Task endpoint `/api/v1/agent/tasks`~~ | ~~4h~~ | ✅ DONE — 2026-04-27 |
+| P2 | Trading Agent P&L dashboard — Freqtrade metrics → strategy page | 2d | Blocked on Freqtrade (Seth不参与策略模块) |
 | P2 | Share card: og:image endpoint for Twitter/WeChat link previews | 1d | — |
 | P2 | My Portfolio view — after wallet connect | 3d | — |
 | P2 | Verify ScoreAnalytics heatmap populates | 0.5d | Supabase ✅ + scheduler ✅ |
@@ -454,10 +462,10 @@ git push origin main
 |----------|------|------|------|
 | P0 | Rotate EODHD + Finnhub API keys (exposed in old git history) | 30min | 🔴 |
 | P1 | ~~Add LAS calculation to local engine output~~ | ~~2h~~ | ✅ Done |
-| P1 | ~~Run T1 backtest → report results~~ | ~~2h~~ | ✅ Done — PF<1 → research |
+| P1 | ~~Run T1 backtest → report results~~ | ~~2h~~ | ✅ Done — PF<1 → methodology issue, not strategy |
 | P1 | Re-run auth E2E after Seth's Python 3.14 fix | 15min | 🟡 After push |
 | P1 | Macro Brief pipeline stability — LM Studio (Qwen3 35B) crash recovery | 1d | 🟡 |
-| P2 | Freqtrade strategy redesign (T19) — per §4A decision | — | 🔴 Jazz decision first |
+| P1 | **CISEnhancedStrategy dry run (T20)** — confirm file path → modify CometCloudStrategy.py → start dry run | 2h | 🔴 Ready to execute |
 | P2 | DeFiLlama TVL refresh: 30min → 15min for F pillar freshness | 0.5h | 🟡 |
 
 ### Jazz + Nic (distribution)

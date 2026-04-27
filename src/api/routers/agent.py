@@ -50,7 +50,8 @@ async def _redis_set(key: str, val: dict, ttl: int = _TASK_TTL) -> bool:
                 json=val,
             )
         return True
-    except Exception:
+    except Exception as e:
+        _logger.warning(f"[tasks] Redis SET {key} failed: {e}")
         return False
 
 async def _redis_get(key: str) -> Optional[dict]:
@@ -65,8 +66,8 @@ async def _redis_get(key: str) -> Optional[dict]:
             if r.status_code == 200:
                 raw = r.json().get("result")
                 return _json.loads(raw) if isinstance(raw, str) else raw
-    except Exception:
-        pass
+    except Exception as e:
+        _logger.warning(f"[tasks] Redis GET {key} failed: {e}")
     return None
 
 # In-memory fallback for active tasks (hot path, zero latency)
@@ -128,7 +129,9 @@ async def _save_task(task: dict):
         oldest = sorted(_active_tasks, key=lambda k: _active_tasks[k]["created_at"])[0]
         _active_tasks.pop(oldest, None)
     _active_tasks[tid] = task
-    await _redis_set(f"task:{tid}", task)
+    ok = await _redis_set(f"task:{tid}", task)
+    if not ok and _UPSTASH_URL:
+        _logger.warning(f"[tasks] Redis persist failed for {tid} — task is in-memory only (lost on restart)")
 
 async def _load_task(task_id: str) -> Optional[dict]:
     """Hot-path: in-memory first, Redis fallback."""
@@ -209,7 +212,7 @@ async def _exec_portfolio_analysis(task_id: str, params: dict):
             score = a.get("cis_score") or a.get("score", 0)
             grade = a.get("grade", "?")
             sig   = a.get("signal", "NEUTRAL")
-            w     = round((las / total_las) if total_las > 0 else 1 / len(selected), 4)
+            w     = round((las / total_las) if total_las > 0 else 1 / max(len(selected), 1), 4)
             allocation.append({
                 "symbol":         a.get("symbol") or a.get("asset_id"),
                 "name":           a.get("name"),
@@ -244,7 +247,7 @@ async def _exec_portfolio_analysis(task_id: str, params: dict):
         await _update_task(task_id, status="completed", result=result)
 
     except Exception as e:
-        _logger.error(f"[tasks] portfolio_analysis {task_id} failed: {e}")
+        _logger.error(f"[tasks] portfolio_analysis {task_id} failed: {e}", exc_info=True)
         await _update_task(task_id, status="failed", error=str(e))
 
 
@@ -311,7 +314,7 @@ async def _exec_cis_snapshot(task_id: str, params: dict):
         await _update_task(task_id, status="completed", result=result)
 
     except Exception as e:
-        _logger.error(f"[tasks] cis_snapshot {task_id} failed: {e}")
+        _logger.error(f"[tasks] cis_snapshot {task_id} failed: {e}", exc_info=True)
         await _update_task(task_id, status="failed", error=str(e))
 
 
@@ -402,7 +405,7 @@ async def _exec_regime_briefing(task_id: str, params: dict):
         await _update_task(task_id, status="completed", result=result)
 
     except Exception as e:
-        _logger.error(f"[tasks] regime_briefing {task_id} failed: {e}")
+        _logger.error(f"[tasks] regime_briefing {task_id} failed: {e}", exc_info=True)
         await _update_task(task_id, status="failed", error=str(e))
 
 
@@ -417,13 +420,22 @@ _EXECUTORS = {
 
 async def _run_task(task_id: str, task_type: str, params: dict):
     """Background worker: acquire semaphore, mark working, execute, persist result."""
-    async with _task_semaphore:
-        await _update_task(task_id, status="working")
-        executor = _EXECUTORS.get(task_type)
-        if executor is None:
-            await _update_task(task_id, status="failed", error=f"Unknown task type: {task_type}")
-            return
-        await executor(task_id, params)
+    try:
+        async with _task_semaphore:
+            await _update_task(task_id, status="working")
+            executor = _EXECUTORS.get(task_type)
+            if executor is None:
+                await _update_task(task_id, status="failed", error=f"Unknown task type: {task_type}")
+                return
+            await executor(task_id, params)
+    except Exception as e:
+        # Top-level safety net — prevents task staying "pending" forever if semaphore
+        # or _update_task itself throws (e.g., Redis race on startup)
+        _logger.error(f"[tasks] _run_task outer failure for {task_id}: {e}", exc_info=True)
+        try:
+            await _update_task(task_id, status="failed", error=f"Internal error: {e}")
+        except Exception:
+            pass  # at this point in-memory update already failed, nothing more to do
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────

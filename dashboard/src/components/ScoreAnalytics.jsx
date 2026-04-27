@@ -6,7 +6,7 @@ import {
 import { T, FONTS } from "../tokens";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
-const API = import.meta.env.VITE_API_BASE || "";
+const API = import.meta.env.VITE_API_URL || "";
 
 const GRADE_ORDER = ["A+", "A", "B+", "B", "C+", "C", "D", "F"];
 const GRADE_COLOR = {

@@ -7,17 +7,17 @@ Push-gate only. Seth stages files from Cowork; Minimax clears lock + commits + p
 ## Pending commit (staged + unstaged, all ready)
 
 **Already staged** (Seth got these before lock):
-- `CLAUDE.md` — task matrix updated: backtest → research, beta fix ✅, T11/T12 ✅
-- `MINIMAX_SYNC.md` — §4 backtest results (§4A), T11/T12 ✅, T17 ❌ fix staged, T19 research task
 - `scripts/test_auth_e2e.py` — walrus operator removed (Python 3.14 compat)
 
 **Needs `git add` by Minimax** (lock blocked Seth from staging):
 - `src/data/cis/cis_provider.py` — beta calc fix + BINANCE_SYMBOLS §4A cleanup
 - `src/api/routers/agent.py` — NEW: Phase 2.3 A2A task queue (portfolio_analysis / cis_snapshot / regime_briefing)
 - `src/api/main.py` — registered agent_router; docstring version bump to v0.4.3
-- `dashboard/public/.well-known/agent.json` — a2a_tasks updated: "coming Q2 2026" → live endpoint spec
+- `dashboard/public/.well-known/agent.json` — a2a_tasks: live endpoint spec (was "coming Q2 2026")
 - `dashboard/dist/.well-known/agent.json` — same (Railway serves from dist)
-- `ROADMAP_A2A.md` — Phase 2.3 marked ✅ COMPLETE with full implementation notes
+- `ROADMAP_A2A.md` — Phase 2.3 ✅ COMPLETE
+- `CLAUDE.md` — Phase 2.3 LIVE ✅, Freqtrade DRY RUN PENDING, T20 added, metrics updated
+- `MINIMAX_SYNC.md` — §4A TrendStrategy direction locked, T20 dry run task, §5 Phase 2.3 smoke test ✅
 
 ```bash
 # 1. Clear FUSE lock
@@ -32,28 +32,30 @@ git add \
   dashboard/public/.well-known/agent.json \
   dashboard/dist/.well-known/agent.json \
   ROADMAP_A2A.md \
+  CLAUDE.md \
+  MINIMAX_SYNC.md \
   COMMIT_READY.md
 
 # 3. Commit everything (already staged + newly added)
-git commit -m "feat(a2a+cis): Phase 2.3 task queue, beta calc fix, auth E2E Python 3.14 compat
+git commit -m "feat(a2a+cis+freqtrade): Phase 2.3 live, beta fix, TrendStrategy+CIS direction locked
 
-- src/api/routers/agent.py: NEW — A2A Phase 2.3 task endpoint
+- src/api/routers/agent.py: NEW — A2A Phase 2.3 task endpoint (smoke test ✅)
   POST /api/v1/agent/tasks → 202 + task_id (fire-and-forget)
   GET  /api/v1/agent/tasks/{task_id} → poll status + result
   Three task types: portfolio_analysis / cis_snapshot / regime_briefing
   Upstash Redis persistence (1h TTL), asyncio.Semaphore(5) concurrency
-- src/api/main.py: registered agent_router alongside all other routers
-- cis_provider.py: calculate_asset_betas min_len bug fixed — partial yfinance factor
-  failures (TNX down) no longer kill DXY+VIX beta calc. Each factor now independent.
+- src/api/main.py: agent_router registered; docstring v0.4.3
+- cis_provider.py: calculate_asset_betas min_len bug fixed — partial yfinance
+  factor failures (TNX) no longer kill DXY+VIX beta calc. Each factor independent.
   T2 assets get real 30d rolling betas instead of crude CG proxy fallback.
-- cis_provider.py: BINANCE_SYMBOLS removes 12 §4A excluded assets (FTM, ICP, BCH,
-  SNX, CRV, SUSHI, PEPE, WIF, BONK, SAND, MANA, AXS)
-- scripts/test_auth_e2e.py: walrus operator (:=) replaced — Python 3.14 compat.
-  Re-run: python scripts/test_auth_e2e.py
-- agent.json (public + dist): a2a_tasks now live endpoint spec (was 'coming Q2 2026')
-- ROADMAP_A2A.md: Phase 2.3 marked ✅ COMPLETE
-- CLAUDE.md: task matrix Week 8 updated — backtest PF<1→research, beta fix noted
-- MINIMAX_SYNC.md: §4A backtest results + 4-point strategy research direction
+- cis_provider.py: BINANCE_SYMBOLS removes 12 §4A excluded assets
+- scripts/test_auth_e2e.py: walrus operator replaced — Python 3.14 compat
+- agent.json (public + dist): a2a_tasks live endpoint spec
+- ROADMAP_A2A.md: Phase 2.3 ✅ COMPLETE
+- MINIMAX_SYNC.md: §4A TrendStrategy(PF=1.46) + CIS gate direction locked;
+  T20 dry run task added; backtest PF<1 correctly attributed to methodology
+  mismatch (2026 scores vs 2024 signals), not strategy failure
+- CLAUDE.md: Phase 2.3 LIVE ✅, Freqtrade DRY RUN PENDING 🟡, T20 added
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 
