@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "cometcloud": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://looloomi.ai/mcp/sse"],
+      "env": {}
+    }
+  }
+}
