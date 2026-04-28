@@ -91,7 +91,7 @@ export default function EconomicIndicators() {
             Economic Indicators
           </span>
           <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.4 }}>
-            EODHD · 4h cache
+            {data?.source || 'EODHD'} · 4h cache
           </span>
         </div>
         {lastFetch && (

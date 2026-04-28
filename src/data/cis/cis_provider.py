@@ -91,16 +91,13 @@ CRYPTO_ASSETS = {
     "DOT":    {"coingecko": "polkadot",                "name": "Polkadot",        "class": "L1"},
     "NEAR":   {"coingecko": "near",                    "name": "NEAR Protocol",   "class": "L1"},
     "ALGO":   {"coingecko": "algorand",                "name": "Algorand",        "class": "L1"},
-    "FTM":    {"coingecko": "fantom",                  "name": "Fantom",          "class": "L1"},
     "HBAR":   {"coingecko": "hedera-hashgraph",        "name": "Hedera",          "class": "L1"},
     "SUI":    {"coingecko": "sui",                     "name": "Sui",             "class": "L1"},
     "APT":    {"coingecko": "aptos",                   "name": "Aptos",           "class": "L1"},
     "SEI":    {"coingecko": "sei",                     "name": "Sei",             "class": "L1"},
     "ATOM":   {"coingecko": "cosmos",                  "name": "Cosmos",          "class": "L1"},
     "FIL":    {"coingecko": "filecoin",                "name": "Filecoin",        "class": "L1"},
-    "ICP":    {"coingecko": "internet-computer",       "name": "Internet Computer","class": "L1"},
     "LTC":    {"coingecko": "litecoin",                "name": "Litecoin",        "class": "Crypto"},
-    "BCH":    {"coingecko": "bitcoin-cash",            "name": "Bitcoin Cash",    "class": "Crypto"},
     # L2 — Layer 2 scaling
     "ARB":    {"coingecko": "arbitrum",                "name": "Arbitrum",        "class": "L2"},
     "OP":     {"coingecko": "optimism",                "name": "Optimism",        "class": "L2"},
@@ -113,14 +110,11 @@ CRYPTO_ASSETS = {
     "UNI":    {"coingecko": "uniswap",                 "name": "Uniswap",         "class": "DeFi"},
     "AAVE":   {"coingecko": "aave",                    "name": "Aave",            "class": "DeFi"},
     "MKR":    {"coingecko": "maker",                   "name": "Maker",           "class": "RWA"},
-    "SNX":    {"coingecko": "havven",                  "name": "Synthetix",       "class": "DeFi"},
-    "CRV":    {"coingecko": "curve-dao-token",         "name": "Curve",           "class": "DeFi"},
     "LDO":    {"coingecko": "lido-dao",                "name": "Lido DAO",        "class": "DeFi"},
     "PENDLE": {"coingecko": "pendle",                  "name": "Pendle",          "class": "DeFi"},
     "ENA":    {"coingecko": "ethena",                  "name": "Ethena",          "class": "DeFi"},
     "RUNE":   {"coingecko": "thorchain",               "name": "THORChain",       "class": "DeFi"},
     "COMP":   {"coingecko": "compound-governance-token","name": "Compound",       "class": "DeFi"},
-    "SUSHI":  {"coingecko": "sushi",                   "name": "SushiSwap",       "class": "DeFi"},
     # Infrastructure
     "LINK":   {"coingecko": "chainlink",               "name": "Chainlink",       "class": "Infrastructure"},
     "INJ":    {"coingecko": "injective-protocol",      "name": "Injective",       "class": "Infrastructure"},
@@ -129,15 +123,8 @@ CRYPTO_ASSETS = {
     "VET":    {"coingecko": "vechain",                 "name": "VeChain",         "class": "Infrastructure"},
     # RWA — Real World Assets
     "ONDO":   {"coingecko": "ondo-finance",            "name": "Ondo Finance",    "class": "RWA"},
-    "POLYX":  {"coingecko": "polymesh",                "name": "Polymesh",        "class": "RWA"},
     # Memecoin
-    "PEPE":   {"coingecko": "pepe",                    "name": "Pepe",            "class": "Memecoin"},
-    "WIF":    {"coingecko": "dogwifcoin",              "name": "WIF",             "class": "Memecoin"},
-    "BONK":   {"coingecko": "bonk",                    "name": "Bonk",            "class": "Memecoin"},
     # Gaming / Metaverse
-    "SAND":   {"coingecko": "the-sandbox",             "name": "The Sandbox",     "class": "Gaming"},
-    "MANA":   {"coingecko": "decentraland",            "name": "Decentraland",    "class": "Gaming"},
-    "AXS":    {"coingecko": "axie-infinity",           "name": "Axie Infinity",   "class": "Gaming"},
     "GALA":   {"coingecko": "gala",                    "name": "Gala",            "class": "Gaming"},
 }
 

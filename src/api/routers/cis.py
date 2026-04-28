@@ -1249,3 +1249,100 @@ async def get_cis_trend(
         "latest_grade":  rows[0].get("grade"),
         "latest_signal": rows[0].get("signal"),
     }
+
+
+# ── CIS Score History + Trend (agent-queryable) ───────────────────────────────
+
+@router.get("/api/v1/cis/history/{symbol}")
+async def cis_history(symbol: str, days: int = 30):
+    """
+    Returns CIS score history for a single asset from Supabase.
+    Agents use this for backtesting, trend detection, and score drift analysis.
+    Cached in Redis 5 minutes to avoid hammering Supabase on repeated calls.
+
+    Example: GET /api/v1/cis/history/BTC?days=7
+    """
+    symbol = symbol.upper()
+    cache_key = f"cis:history:{symbol}:{days}"
+
+    cached = await store.redis_get_key(cache_key)
+    if cached:
+        return cached
+
+    rows = await store.supabase_get_history(symbol, days=days)
+
+    if not rows:
+        return {
+            "symbol": symbol,
+            "days": days,
+            "count": 0,
+            "history": [],
+            "note": "No history found. Asset may not be in T1 universe or Supabase not yet populated."
+        }
+
+    result = {
+        "symbol": symbol,
+        "days": days,
+        "count": len(rows),
+        "history": sanitize_floats(rows),
+    }
+
+    await store.redis_set_key(cache_key, result, ttl=300)
+    return result
+
+
+@router.get("/api/v1/cis/trend/{symbol}")
+async def cis_trend(symbol: str, days: int = 7):
+    """
+    Returns directional trend for a single asset: improving / stable / declining.
+    Compares earliest vs latest CIS score over the window.
+    Agents use this for momentum-based filtering and drift alerts.
+
+    Example: GET /api/v1/cis/trend/ETH?days=7
+    """
+    symbol = symbol.upper()
+    cache_key = f"cis:trend:{symbol}:{days}"
+
+    cached = await store.redis_get_key(cache_key)
+    if cached:
+        return cached
+
+    rows = await store.supabase_get_history(symbol, days=days)
+
+    if len(rows) < 2:
+        return {
+            "symbol": symbol,
+            "days": days,
+            "trend": "insufficient_data",
+            "data_points": len(rows),
+        }
+
+    # rows are desc (latest first)
+    latest = rows[0]
+    earliest = rows[-1]
+    latest_score  = latest.get("score") or 0
+    earliest_score = earliest.get("score") or 0
+    delta = round(latest_score - earliest_score, 2)
+
+    if delta >= 3:
+        direction = "improving"
+    elif delta <= -3:
+        direction = "declining"
+    else:
+        direction = "stable"
+
+    result = {
+        "symbol":         symbol,
+        "days":           days,
+        "trend":          direction,
+        "delta":          delta,
+        "latest_score":   round(latest_score, 2),
+        "earliest_score": round(earliest_score, 2),
+        "latest_grade":   latest.get("grade"),
+        "latest_signal":  latest.get("signal"),
+        "recorded_at":    latest.get("recorded_at"),
+        "data_points":    len(rows),
+    }
+
+    await store.redis_set_key(cache_key, result, ttl=300)
+    return result
