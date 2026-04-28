@@ -4,13 +4,13 @@ import { T, FONTS } from "../tokens";
 /* ─── Signal Types ───────────────────────────────────────────────────── */
 const SIGNAL_TYPES = {
   MACRO:      { label: "MACRO",      color: T.gold,    bg: "rgba(200,168,75,0.12)",  border: "rgba(200,168,75,0.2)"  },
-  WHALE:      { label: "WHALE",      color: T.purple,  bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.2)" },
+  WHALE:      { label: "WHALE",      color: "#FF8C42", bg: "rgba(255,140,66,0.12)",  border: "rgba(255,140,66,0.2)"  },
   FUNDING:    { label: "FUNDING",    color: T.blue,    bg: "rgba(75,158,255,0.10)",  border: "rgba(75,158,255,0.2)"  },
   FLOW:       { label: "FLOW",       color: T.green,   bg: "rgba(0,232,122,0.08)",   border: "rgba(0,232,122,0.2)"   },
   RISK:       { label: "RISK",       color: T.red,     bg: "rgba(255,61,90,0.10)",   border: "rgba(255,61,90,0.2)"   },
   MOMENTUM:   { label: "MOMENTUM",   color: T.cyan,    bg: "rgba(0,200,224,0.10)",   border: "rgba(0,200,224,0.2)"   },
   REGULATORY: { label: "REGULATORY", color: "#FF8C42", bg: "rgba(255,140,66,0.10)",  border: "rgba(255,140,66,0.2)"  },
-  CIS:        { label: "CIS",        color: "#A78BFA", bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.2)" },
+  CIS:        { label: "CIS",        color: T.cyan,    bg: "rgba(0,200,224,0.10)",  border: "rgba(0,200,224,0.2)"  },
 };
 
 const IMPORTANCE_STYLES = {
@@ -330,7 +330,7 @@ const SkeletonRow = () => (
 /* ─── Filter Bar ─────────────────────────────────────────────────────── */
 const TAB_LABELS = {
   MACRO: "Macro", WHALE: "Whale", FUNDING: "Fund", FLOW: "Flow",
-  RISK: "Risk", MOMENTUM: "Mom", REGULATORY: "Reg",
+  RISK: "Risk", MOMENTUM: "Mom", REGULATORY: "Reg", CIS: "CIS",
 };
 
 const FilterBar = ({ activeType, onChange }) => (

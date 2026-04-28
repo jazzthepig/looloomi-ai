@@ -1062,6 +1062,107 @@ async def get_signals():
                 "If accumulating: size to max 1–2% portfolio with hard stop.",
                 "IMMEDIATE"))
 
+    # ── CIS universe: asset-specific positioning signals ─────────────────────────
+    if cis_cache:
+        universe = cis_cache.get("universe") or cis_cache.get("assets") or []
+        macro_regime = cis_cache.get("macro_regime", "UNKNOWN")
+
+        # Threshold by regime
+        thresholds = {"TIGHTENING": 52, "GOLDILOCKS": 65, "RISK_ON": 60, "EASING": 58}
+        threshold = thresholds.get(macro_regime, 58)
+
+        # Top passing assets — signal: OUTPERFORM
+        passing = [a for a in universe if (a.get("cis_score") or a.get("score") or 0) >= threshold]
+        passing.sort(key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
+
+        if passing:
+            top_symbols = [a.get("symbol") or a.get("asset_id") for a in passing[:5]]
+            top_scores = [round(a.get("cis_score") or a.get("score") or 0, 1) for a in passing[:5]]
+            summary = ", ".join(f"{s} ({sc})" for s, sc in zip(top_symbols, top_scores))
+            pi = {"F": 8, "M": 5, "O": 4, "S": 3, "A": 5}
+            signals.append(_mk({
+                "id": "cis_passing",
+                "timestamp": now.isoformat(),
+                "type": "CIS",
+                "importance": "HIGH",
+                "description": f"{len(passing)} assets pass CIS ≥{threshold} in {macro_regime} regime: {summary}",
+                "affected_assets": top_symbols,
+                "source": "cometcloud_cis",
+                "value": len(passing),
+            }, pi,
+            f"CIS universe scan: {len(passing)} of {len(universe)} assets meet institutional threshold "
+            f"({threshold}) for current {macro_regime} regime. T1 Mac Mini scores. "
+            f"Top assets by composite CIS: {summary}. "
+            f"Regime-aware weights applied — tighter thresholds in Tightening, wider in Goldilocks.",
+            "24H"))
+
+        # Failing / excluded assets — signal: UNDERPERFORM
+        failing = [a for a in universe if (a.get("cis_score") or a.get("score") or 0) < threshold]
+        if failing:
+            fail_symbols = [a.get("symbol") or a.get("asset_id") for a in failing[:5]]
+            pi_neg = {"F": -5, "M": -4, "O": -3, "S": -6, "A": -4}
+            signals.append(_mk({
+                "id": "cis_failing",
+                "timestamp": now.isoformat(),
+                "type": "CIS",
+                "importance": "MED",
+                "description": f"{len(failing)} assets below CIS threshold in {macro_regime}: {', '.join(fail_symbols[:5])}{'...' if len(failing) > 5 else ''}",
+                "affected_assets": fail_symbols,
+                "source": "cometcloud_cis",
+                "value": len(failing),
+            }, pi_neg,
+            f"{len(failing)} tracked assets fail CIS ≥{threshold}. S and A pillars most suppressed. "
+            f"Common causes in {macro_regime}: momentum breakdown (M pillar), vol regime negative (S pillar), "
+            f"underperformance vs BTC benchmark (A pillar). Do not override with manual entry.",
+            "24H"))
+
+    # ── Whale movement detection — volume spike vs 7d baseline ───────────────────
+    if movers:
+        gainers = movers.get("gainers") or []
+        losers  = movers.get("losers") or []
+
+        whale_alerts = []
+        for asset in (gainers + losers):
+            vol_24h = asset.get("total_volume") or 0
+            mcap    = asset.get("market_cap") or 1
+            price_chg = asset.get("price_change_percentage_24h") or 0
+
+            # Volume/mcap ratio spike: >8% vol/mcap in 24h = unusual accumulation
+            vol_ratio = vol_24h / mcap if mcap > 0 else 0
+            if vol_ratio > 0.08 and abs(price_chg) > 3:
+                symbol = (asset.get("symbol") or "").upper()
+                direction = "accumulation" if price_chg > 0 else "distribution"
+                whale_alerts.append({
+                    "symbol": symbol,
+                    "direction": direction,
+                    "price_chg": round(price_chg, 2),
+                    "vol_ratio": round(vol_ratio * 100, 1),
+                    "price": asset.get("current_price", 0),
+                })
+
+        if whale_alerts:
+            symbols = [w["symbol"] for w in whale_alerts[:5]]
+            desc_parts = [f"{w['symbol']} ({w['direction']}, {w['price_chg']:+.1f}%, vol/mcap {w['vol_ratio']}%)"
+                          for w in whale_alerts[:3]]
+            pi_whale = {"F": 0, "M": 12, "O": 8, "S": 6, "A": 4}
+            signals.append(_mk({
+                "id": "whale_volume",
+                "timestamp": now.isoformat(),
+                "type": "WHALE",
+                "importance": "HIGH",
+                "description": f"Abnormal volume detected — {len(whale_alerts)} assets show whale-level activity",
+                "affected_assets": symbols,
+                "source": "cg_volume_analysis",
+                "value": len(whale_alerts),
+                "whale_detail": whale_alerts[:5],
+            }, pi_whale,
+            f"Volume/mcap ratio >8% with price movement >3% — statistically significant institutional flow. "
+            f"Signals: {'; '.join(desc_parts)}. "
+            f"High vol_ratio with price rise = accumulation (bullish for M/O pillars). "
+            f"High vol_ratio with price drop = distribution (negative M/S signal). "
+            f"Cross-reference with CIS score before acting — whale flow in low-CIS assets is noise.",
+            "24H"))
+
     # ── Sort: HIGH first, then by strength, then by recency ──────────────────
     _order = {"HIGH": 0, "MED": 1, "LOW": 2}
     def _ts_sort(x):

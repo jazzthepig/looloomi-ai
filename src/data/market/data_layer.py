@@ -1695,6 +1695,110 @@ def _derive_macro_regime(cpi: float, gdp: float, rate: float, rate_trend: str) -
     return "RISK_ON"
 
 
+# ── World Bank Fallback — Free macro data for HK / CN / USA ───────────────────
+# World Bank API: https://api.worldbank.org/v2
+# No API key required. Annual data, updated ~6 months after year-end.
+# Used as fallback when EODHD is unavailable (expired key or free plan limit).
+
+async def _get_worldbank_macro(country: str) -> dict:
+    """
+    Free fallback for EODHD macro data using World Bank API + yfinance.
+    Returns same structure as get_eodhd_macro_indicators().
+    Country codes: 'hkg', 'chn', 'usa'
+    """
+    WB_CODES = {"hkg": "HKG", "chn": "CHN", "usa": "USA"}
+    WB_BASE = "https://api.worldbank.org/v2"
+
+    wb_code = WB_CODES.get(country.lower(), country.upper())
+    indicators = {}
+
+    async def _fetch_wb(short_name, wb_indicator):
+        try:
+            client = _get_misc_client()
+            r = await client.get(
+                f"{WB_BASE}/country/{wb_code}/indicator/{wb_indicator}",
+                params={"format": "json", "mrv": 2, "per_page": 2},
+                timeout=10,
+            )
+            if r.status_code == 200:
+                data = r.json()
+                rows = data[1] if len(data) > 1 else []
+                rows = [x for x in (rows or []) if x.get("value") is not None]
+                if rows:
+                    latest = rows[0]
+                    prev = rows[1] if len(rows) > 1 else None
+                    val = float(latest["value"])
+                    prev_val = float(prev["value"]) if prev else None
+                    return short_name, {
+                        "value": round(val, 2),
+                        "date": latest.get("date", ""),
+                        "prev_value": round(prev_val, 2) if prev_val else None,
+                        "trend": "up" if prev_val and val > prev_val else "down",
+                        "source": "worldbank",
+                    }
+        except Exception:
+            pass
+        return short_name, None
+
+    tasks = [
+        _fetch_wb("cpi_yoy",      "FP.CPI.TOTL.ZG"),
+        _fetch_wb("gdp_growth",   "NY.GDP.MKTP.KD.ZG"),
+        _fetch_wb("unemployment", "SL.UEM.TOTL.ZS"),
+    ]
+    fetched = await asyncio.gather(*tasks)
+    for name, val in fetched:
+        if val:
+            indicators[name] = val
+
+    # Known policy rates — slow-changing, hardcoded with reference date
+    policy_rates = {
+        "hkg": {"value": 5.25, "date": "2024-11", "trend": "down", "source": "hkma", "prev_value": 5.5},
+        "chn": {"value": 3.10, "date": "2024-10", "trend": "down", "source": "pboc", "prev_value": 3.35},
+        "usa": {"value": 4.50, "date": "2024-12", "trend": "down", "source": "fed",  "prev_value": 5.25},
+    }
+    if country.lower() in policy_rates:
+        indicators["interest_rate"] = policy_rates[country.lower()]
+
+    # PMI proxy from yfinance equity index momentum (5-day return → 50 ± 15 scale)
+    yf_symbols = {"hkg": "^HSI", "chn": "000001.SS", "usa": "SPY"}
+    yf_sym = yf_symbols.get(country.lower())
+    if yf_sym:
+        try:
+            import yfinance as yf
+            ticker = yf.Ticker(yf_sym)
+            hist = ticker.history(period="5d")
+            if not hist.empty:
+                close_latest = float(hist["Close"].iloc[-1])
+                close_prev   = float(hist["Close"].iloc[0])
+                pct = round((close_latest - close_prev) / close_prev * 100, 2)
+                pmi_proxy = round(50 + max(-15, min(15, pct * 2)), 1)
+                indicators["pmi"] = {
+                    "value": pmi_proxy,
+                    "date": hist.index[-1].strftime("%Y-%m-%d"),
+                    "trend": "up" if pct > 0 else "down",
+                    "source": "yfinance_proxy",
+                    "note": f"{yf_sym} 5d: {pct:+.2f}%",
+                }
+        except Exception:
+            pass
+
+    if not indicators:
+        return {"error": "WORLDBANK_UNAVAILABLE", "country": country, "indicators": {}}
+
+    cpi        = indicators.get("cpi_yoy",       {}).get("value", 0) or 0
+    gdp        = indicators.get("gdp_growth",    {}).get("value", 0) or 0
+    rate       = indicators.get("interest_rate", {}).get("value", 0) or 0
+    rate_trend = indicators.get("interest_rate", {}).get("trend", "")
+
+    return {
+        "country":        country,
+        "source":         "worldbank+yfinance",
+        "indicators":     indicators,
+        "derived_regime": _derive_macro_regime(cpi=cpi, gdp=gdp, rate=rate, rate_trend=rate_trend),
+        "regime_inputs":  {"cpi_yoy": cpi, "gdp_growth": gdp, "policy_rate": rate},
+    }
+
+
 # ── FRED Fallback — Free macro data (no API key required) ─────────────────────
 # FRED: Federal Reserve Economic Data (St. Louis Fed)
 # Series used:
@@ -2259,6 +2363,24 @@ async def get_economic_dashboard() -> dict:
         fred_data = await _get_fred_macro_indicators("usa")
         if not fred_data.get("error"):
             us_data = fred_data
+
+    # Fallback for HK when EODHD unavailable — World Bank + yfinance (^HSI proxy)
+    if hk_data.get("error"):
+        hk_fallback = await _get_worldbank_macro("hkg")
+        if not hk_fallback.get("error"):
+            hk_data = hk_fallback
+
+    # Fallback for CN when EODHD unavailable — World Bank + yfinance (000001.SS proxy)
+    if cn_data.get("error"):
+        cn_fallback = await _get_worldbank_macro("chn")
+        if not cn_fallback.get("error"):
+            cn_data = cn_fallback
+
+    # Also try World Bank for US if both EODHD and FRED failed
+    if us_data.get("error"):
+        us_wb = await _get_worldbank_macro("usa")
+        if not us_wb.get("error"):
+            us_data = us_wb
 
     # US regime from economic data (used as fallback when Mac Mini isn't pushing)
     us_regime = us_data.get("derived_regime", "UNKNOWN")
