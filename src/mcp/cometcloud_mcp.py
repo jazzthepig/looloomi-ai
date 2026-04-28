@@ -48,7 +48,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 RAILWAY_BASE = os.getenv(
     "COMETCLOUD_API_BASE",
-    "https://web-production-0cdf76.up.railway.app",
+    "https://looloomi.ai",
 )
 API_TIMEOUT     = float(os.getenv("MCP_API_TIMEOUT", "20.0"))
 API_TIMEOUT_CIS = float(os.getenv("MCP_API_TIMEOUT_CIS", "60.0"))  # CIS universe is expensive
@@ -427,10 +427,16 @@ async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
         if params.min_grade:
             assets = [a for a in assets if _above_min_grade(a.get("grade", "F"), params.min_grade)]
 
+        # macro_regime is a flat top-level key in the CIS API response (not nested under "macro")
+        macro_regime = (
+            data.get("macro_regime")
+            or (data.get("macro") or {}).get("regime")
+            or "UNKNOWN"
+        )
         result = {
             "universe_size": len(assets),
             "data_tier": data.get("source", "T2_MARKET"),
-            "macro_regime": data.get("macro", {}).get("regime", "UNKNOWN"),
+            "macro_regime": macro_regime,
             "last_updated": data.get("last_updated"),
             "assets": assets,
         }
@@ -439,9 +445,25 @@ async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
             return json.dumps(result, indent=2)
 
         # Markdown
+        regime_notes = {
+            "TIGHTENING":   "⚠️ Tightening regime: S and A pillars suppressed across all assets. "
+                            "High-CIS threshold (≥52) may still find selective entries. "
+                            "Expect mostly NEUTRAL/UNDERPERFORM signals — this is correct behavior.",
+            "RISK_OFF":     "⚠️ Risk-Off regime: defensive positioning. O pillar and F pillar weighted higher.",
+            "STAGFLATION":  "⚠️ Stagflation: worst regime for risk assets. Only A+ CIS assets considered.",
+            "GOLDILOCKS":   "✅ Goldilocks regime: ideal conditions. All pillars benefit. Max deployment.",
+            "RISK_ON":      "✅ Risk-On: elevated risk appetite. M and A pillars amplified.",
+            "EASING":       "✅ Easing: liquidity-driven rally. F and O pillars benefit.",
+        }
+        regime_note = regime_notes.get(macro_regime, "")
+
         lines = [
             f"# CIS Universe — {len(assets)} assets",
-            f"**Data tier**: {result['data_tier']} · **Regime**: {result['macro_regime']}",
+            f"**Regime**: {macro_regime} · **Data tier**: {result['data_tier']}",
+        ]
+        if regime_note:
+            lines += ["", regime_note]
+        lines += [
             "",
             "| # | Symbol | Class | Grade | Score | Signal | LAS |",
             "|---|--------|-------|-------|-------|--------|-----|",
@@ -737,35 +759,59 @@ async def cometcloud_get_prices(params: PricesInput) -> str:
     },
 )
 async def cometcloud_get_market_movers() -> str:
-    """Fetch the top gainers and losers across the tracked market universe.
+    """Fetch the top gainers and losers across the CIS-tracked universe (84 assets).
 
-    Returns the 5 biggest 24H gainers and 5 biggest losers, including price,
-    change percentage, and market cap. Useful for momentum scanning.
+    Returns the 5 biggest 24H gainers and 5 biggest losers from the CIS universe,
+    including CIS grade, price, change percentage, and signal. Derived from CIS
+    universe data updated every 30 minutes.
 
     Returns:
-        str: Markdown table of top gainers and losers with symbol, price, change%.
+        str: Markdown table of top gainers and losers with symbol, grade, price, change%.
 
     Examples:
         - "What's pumping today?" → use this tool
         - "What are the biggest losers in crypto right now?" → use this tool
+        - "Which CIS-tracked assets moved most today?" → use this tool
     """
     try:
-        data = await _get("/api/v1/market/movers")
-        gainers = data.get("gainers", [])
-        losers  = data.get("losers", [])
+        data = await _get("/api/v1/cis/universe", timeout=API_TIMEOUT_CIS)
+        assets = data.get("universe", data.get("assets", []))
 
-        lines = ["# Market Movers — 24H", ""]
+        # Filter to assets with price change data
+        with_chg = [a for a in assets if a.get("change_24h") is not None]
+        with_chg.sort(key=lambda a: a.get("change_24h", 0), reverse=True)
+
+        gainers = with_chg[:5]
+        losers  = list(reversed(with_chg[-5:])) if len(with_chg) >= 5 else []
+
+        macro_regime = (
+            data.get("macro_regime")
+            or (data.get("macro") or {}).get("regime")
+            or "UNKNOWN"
+        )
+
+        lines = [f"# Market Movers — 24H | Regime: {macro_regime}", ""]
         lines += [
-            "## 🔺 Top Gainers",
-            "| Symbol | Price | 24H% |",
-            "|--------|-------|------|",
+            "## Top Gainers (CIS Universe)",
+            "| Symbol | Grade | Price | 24H% | Signal |",
+            "|--------|-------|-------|------|--------|",
         ]
         for a in gainers:
-            lines.append(f"| **{a.get('symbol')}** | ${a.get('price', 0):,.4f} | +{a.get('change', 0):.2f}% |")
+            px = a.get("price") or a.get("current_price") or 0
+            chg = a.get("change_24h", 0)
+            lines.append(
+                f"| **{a.get('symbol')}** | {a.get('grade','?')} | "
+                f"${px:,.4f} | {chg:+.2f}% | {a.get('signal','—')} |"
+            )
 
-        lines += ["", "## 🔻 Top Losers", "| Symbol | Price | 24H% |", "|--------|-------|------|"]
+        lines += ["", "## Top Losers (CIS Universe)", "| Symbol | Grade | Price | 24H% | Signal |", "|--------|-------|-------|------|--------|"]
         for a in losers:
-            lines.append(f"| **{a.get('symbol')}** | ${a.get('price', 0):,.4f} | {a.get('change', 0):.2f}% |")
+            px = a.get("price") or a.get("current_price") or 0
+            chg = a.get("change_24h", 0)
+            lines.append(
+                f"| **{a.get('symbol')}** | {a.get('grade','?')} | "
+                f"${px:,.4f} | {chg:+.2f}% | {a.get('signal','—')} |"
+            )
 
         return "\n".join(lines)
 
@@ -1257,27 +1303,44 @@ async def cometcloud_get_fund_portfolio() -> str:
     """
     try:
         data = await _get("/api/v1/vault/funds")
-        funds = data.get("data", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+        all_funds = data.get("data", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+        # Only show verified, non-placeholder funds to agents
+        funds = [f for f in all_funds if not f.get("isPlaceholder") and f.get("verified")]
+
+        if not funds:
+            return "No verified GP funds currently available. Onboarding in progress."
 
         lines = ["# CometCloud GP Fund Portfolio", ""]
         for f in funds:
-            perf = f.get("performance", {})
-            sc   = f.get("scores", {})
+            perf = f.get("performance", {}) or {}
+            sc   = f.get("scores", {}) or {}
+            status = f.get("status", "—")
             lines += [
                 f"## {f.get('name', '—')}",
                 f"**Strategy**: {f.get('strategy', '—')} · "
                 f"**Location**: {f.get('location', '—')} · "
-                f"**Status**: {f.get('status', '—')}",
+                f"**Status**: {status}",
                 f"**AUM**: {f.get('aum', '—')} · "
                 f"**Founded**: {f.get('yearFounded', '—')}",
             ]
-            if perf:
+            # Only show performance if real data available (not nulled-out)
+            ytd = perf.get("ytd")
+            max_dd = perf.get("maxDrawdown")
+            if ytd is not None and max_dd is not None:
                 lines.append(
-                    f"**YTD**: {perf.get('ytd', 0):+.1f}% · "
-                    f"**Max DD**: {perf.get('maxDrawdown', 0):.1f}%"
+                    f"**YTD**: {ytd:+.1f}% · **Max DD**: {max_dd:.1f}%"
                 )
+            elif perf.get("_note"):
+                lines.append(f"*Performance: {perf['_note']}*")
+            # Show CIS composite score if available
+            total = sc.get("total")
+            grade = f.get("grade")
+            if total and grade and grade != "—":
+                lines.append(f"**CIS Score**: {total}/100 · **Grade**: {grade}")
             if f.get("note"):
                 lines.append(f"*{f['note']}*")
+            if f.get("description"):
+                lines.append(f.get("description"))
             lines.append("")
         return "\n".join(lines)
 
@@ -1318,6 +1381,7 @@ async def cometcloud_get_portfolio_stats(params: PortfolioStatsInput) -> str:
     """
     try:
         # Pass assets as query param (GET endpoint)
+        # API returns {"data": [{asset, return_90d, volatility, sharpe, price}, ...]}
         async with httpx.AsyncClient(timeout=API_TIMEOUT) as client:
             resp = await client.get(
                 f"{RAILWAY_BASE}/api/v1/portfolio/stats",
@@ -1329,15 +1393,40 @@ async def cometcloud_get_portfolio_stats(params: PortfolioStatsInput) -> str:
         if params.response_format == Fmt.JSON:
             return json.dumps(data, indent=2)
 
+        stats_list = data.get("data", []) if isinstance(data, dict) else []
+        if not stats_list:
+            return f"No data returned for assets: {params.symbols}"
+
         lines = [
             f"# Portfolio Stats — {params.symbols}",
             "",
-            f"**Expected Annual Return**: {data.get('expected_return', 0):.2%}",
-            f"**Annual Volatility**: {data.get('volatility', 0):.2%}",
-            f"**Sharpe Ratio**: {data.get('sharpe_ratio', 0):.2f}",
-            f"**Max Drawdown**: {data.get('max_drawdown', 0):.2%}",
-            f"**CIS Quality Score**: {data.get('cis_weighted_score', 0):.1f}",
+            "| Asset | 90d Return | Volatility (ann.) | Sharpe | Price |",
+            "|-------|-----------|-------------------|--------|-------|",
         ]
+        for s in stats_list:
+            if s.get("error"):
+                lines.append(f"| {s.get('asset', '?')} | — | — | — | Error: {s['error']} |")
+                continue
+            price = s.get("price", 0)
+            price_str = f"${price:,.2f}" if price < 1000 else f"${price:,.0f}"
+            lines.append(
+                f"| **{s.get('asset', '?')}** | {s.get('return_90d', 0):+.1f}% | "
+                f"{s.get('volatility', 0):.1f}% | {s.get('sharpe', 0):.2f} | {price_str} |"
+            )
+
+        # Summary row across all valid assets
+        valid = [s for s in stats_list if not s.get("error")]
+        if valid:
+            avg_return = sum(s.get("return_90d", 0) for s in valid) / len(valid)
+            avg_vol    = sum(s.get("volatility", 0) for s in valid) / len(valid)
+            avg_sharpe = sum(s.get("sharpe", 0) for s in valid) / len(valid)
+            lines += [
+                "",
+                f"**Equal-weight avg** — 90d Return: {avg_return:+.1f}% | "
+                f"Volatility: {avg_vol:.1f}% | Sharpe: {avg_sharpe:.2f}",
+                "",
+                "*Note: 90d return, annualized volatility, Sharpe from historical price data.*",
+            ]
         return "\n".join(lines)
 
     except Exception as e:
@@ -1883,21 +1972,36 @@ async def cometcloud_market_snapshot() -> str:
         str: JSON with {macro_pulse, gainers, losers, defi_overview} merged.
     """
     try:
+        # Fetch macro-pulse, CIS universe (for movers), and DeFi overview in parallel
+        # Note: /api/v1/market/movers uses Binance (geo-blocked on Railway) — use CIS universe instead
         results = await asyncio.gather(
             _get("/api/v1/market/macro-pulse"),
-            _get("/api/v1/market/movers"),
+            _get("/api/v1/cis/universe", timeout=API_TIMEOUT_CIS),
             _get("/api/v1/defi/overview"),
             return_exceptions=True,
         )
         macro = results[0] if not isinstance(results[0], Exception) else {}
-        movers = results[1] if not isinstance(results[1], Exception) else {}
+        universe_data = results[1] if not isinstance(results[1], Exception) else {}
         defi = results[2] if not isinstance(results[2], Exception) else {}
+
+        # Derive movers from CIS universe change_24h
+        assets = universe_data.get("universe", universe_data.get("assets", []))
+        with_chg = [a for a in assets if a.get("change_24h") is not None]
+        with_chg_sorted = sorted(with_chg, key=lambda a: a.get("change_24h", 0), reverse=True)
+        gainers = [
+            {"symbol": a.get("symbol"), "grade": a.get("grade"), "change_24h": a.get("change_24h"), "signal": a.get("signal")}
+            for a in with_chg_sorted[:5]
+        ]
+        losers = [
+            {"symbol": a.get("symbol"), "grade": a.get("grade"), "change_24h": a.get("change_24h"), "signal": a.get("signal")}
+            for a in reversed(with_chg_sorted[-5:])
+        ]
 
         return json.dumps(
             {
                 "macro_pulse": macro,
-                "gainers": movers.get("gainers", [])[:5],
-                "losers": movers.get("losers", [])[:5],
+                "gainers": gainers,
+                "losers": losers,
                 "defi_overview": defi,
             },
             indent=2,
@@ -1993,14 +2097,42 @@ async def cometcloud_portfolio_brief() -> str:
         funds = results[1] if not isinstance(results[1], Exception) else {}
         yields = results[2] if not isinstance(results[2], Exception) else {}
 
-        assets = universe.get("assets", []) if isinstance(universe, dict) else []
-        outperform = [a for a in assets if a.get("signal") in ("STRONG OUTPERFORM", "OUTPERFORM")][:10]
+        assets = universe.get("universe", universe.get("assets", [])) if isinstance(universe, dict) else []
+        macro_regime = (
+            universe.get("macro_regime")
+            or (universe.get("macro") or {}).get("regime")
+            or "UNKNOWN"
+        ) if isinstance(universe, dict) else "UNKNOWN"
+
+        # Primary: assets with OUTPERFORM/STRONG OUTPERFORM signals
+        outperform = [a for a in assets if a.get("signal") in ("STRONG OUTPERFORM", "OUTPERFORM")]
+        # Fallback: in suppressed regimes (Tightening/Risk-Off), return top-scoring assets regardless of signal
+        if not outperform:
+            top_scored = sorted(assets, key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
+            outperform = top_scored[:10]
+
+        # Yields: API returns {"data": [...]} not {"pools": [...]}
+        yields_list = []
+        if isinstance(yields, dict):
+            yields_list = (yields.get("data") or yields.get("pools") or [])[:10]
+
+        # Only include verified, non-placeholder GP funds
+        fund_list = []
+        if isinstance(funds, dict):
+            fund_list = [f for f in funds.get("data", []) if not f.get("isPlaceholder") and f.get("verified")]
 
         return json.dumps(
             {
-                "top_performers": outperform,
-                "fund_portfolio": funds.get("data", []) if isinstance(funds, dict) else [],
-                "top_yields": yields.get("pools", [])[:10] if isinstance(yields, dict) else [],
+                "macro_regime": macro_regime,
+                "regime_note": (
+                    f"Tightening regime: CIS grades suppressed. Top assets shown by score, not signal."
+                    if macro_regime == "TIGHTENING" else
+                    f"Risk-Off regime: defensive positioning required." if macro_regime == "RISK_OFF" else
+                    None
+                ),
+                "top_performers": outperform[:10],
+                "fund_portfolio": fund_list,
+                "top_yields": yields_list,
             },
             indent=2,
             ensure_ascii=False,
@@ -2042,16 +2174,33 @@ async def cometcloud_regime_allocation() -> str:
         universe = results[1] if not isinstance(results[1], Exception) else {}
         flows = results[2] if not isinstance(results[2], Exception) else {}
 
-        assets = universe.get("assets", []) if isinstance(universe, dict) else []
+        # CIS universe key is "universe" (not "assets") — "assets" is deprecated
+        assets = universe.get("universe", universe.get("assets", [])) if isinstance(universe, dict) else []
+        macro_regime = (
+            universe.get("macro_regime")
+            or (universe.get("macro") or {}).get("regime")
+            or "UNKNOWN"
+        ) if isinstance(universe, dict) else "UNKNOWN"
+
         leaders = regime.get("top_5_regime_leaders", []) if isinstance(regime, dict) else []
         leader_symbols = {l.get("symbol") for l in leaders if isinstance(l, dict)}
-        regime_assets = [a for a in assets if a.get("symbol") in leader_symbols][:5]
+        # If regime analysis returned leaders, use those; otherwise fall back to top CIS scores
+        if leader_symbols:
+            regime_assets = [a for a in assets if a.get("symbol") in leader_symbols][:5]
+        else:
+            regime_assets = sorted(assets, key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)[:5]
+
+        # VC funding returns {"data": [...]} not {"rounds": [...]}
+        vc_data = []
+        if isinstance(flows, dict):
+            vc_data = (flows.get("data") or flows.get("rounds") or [])[:10]
 
         return json.dumps(
             {
+                "macro_regime": macro_regime,
                 "regime_context": regime,
                 "regime_leaders": regime_assets,
-                "institutional_flows": flows.get("rounds", [])[:10] if isinstance(flows, dict) else [],
+                "institutional_flows": vc_data,
             },
             indent=2,
             ensure_ascii=False,

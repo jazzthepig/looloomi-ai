@@ -1116,51 +1116,62 @@ async def get_signals():
             f"underperformance vs BTC benchmark (A pillar). Do not override with manual entry.",
             "24H"))
 
-    # ── Whale movement detection — volume spike vs 7d baseline ───────────────────
-    if movers:
-        gainers = movers.get("gainers") or []
-        losers  = movers.get("losers") or []
+    # ── Whale movement detection — vol/mcap spike across CIS universe ────────────
+    # Uses CIS universe (not Binance movers — geo-blocked on Railway).
+    # CIS universe fields: volume_24h, change_24h, market_cap, symbol, cis_score
+    if cis_cache:
+        _cis_universe = cis_cache.get("universe") or cis_cache.get("assets") or []
 
         whale_alerts = []
-        for asset in (gainers + losers):
-            vol_24h = asset.get("total_volume") or 0
-            mcap    = asset.get("market_cap") or 1
-            price_chg = asset.get("price_change_percentage_24h") or 0
+        for asset in _cis_universe:
+            vol_24h   = asset.get("volume_24h") or 0
+            mcap      = asset.get("market_cap") or 0
+            price_chg = asset.get("change_24h") or 0
+            cis_score = asset.get("cis_score") or asset.get("score") or 0
 
-            # Volume/mcap ratio spike: >8% vol/mcap in 24h = unusual accumulation
-            vol_ratio = vol_24h / mcap if mcap > 0 else 0
+            if mcap <= 0:
+                continue
+            # Volume/mcap ratio spike: >8% vol/mcap in 24h = institutional-level flow
+            vol_ratio = vol_24h / mcap
             if vol_ratio > 0.08 and abs(price_chg) > 3:
-                symbol = (asset.get("symbol") or "").upper()
+                symbol = (asset.get("symbol") or asset.get("asset_id") or "").upper()
                 direction = "accumulation" if price_chg > 0 else "distribution"
                 whale_alerts.append({
-                    "symbol": symbol,
+                    "symbol":    symbol,
                     "direction": direction,
                     "price_chg": round(price_chg, 2),
                     "vol_ratio": round(vol_ratio * 100, 1),
-                    "price": asset.get("current_price", 0),
+                    "cis_score": round(cis_score, 1),
+                    "grade":     asset.get("grade", "?"),
                 })
 
         if whale_alerts:
+            # Sort by vol_ratio desc — biggest spike first
+            whale_alerts.sort(key=lambda w: w["vol_ratio"], reverse=True)
             symbols = [w["symbol"] for w in whale_alerts[:5]]
-            desc_parts = [f"{w['symbol']} ({w['direction']}, {w['price_chg']:+.1f}%, vol/mcap {w['vol_ratio']}%)"
-                          for w in whale_alerts[:3]]
+            desc_parts = [
+                f"{w['symbol']} ({w['direction']}, {w['price_chg']:+.1f}%, "
+                f"vol/mcap {w['vol_ratio']}%, CIS {w['cis_score']})"
+                for w in whale_alerts[:3]
+            ]
             pi_whale = {"F": 0, "M": 12, "O": 8, "S": 6, "A": 4}
             signals.append(_mk({
                 "id": "whale_volume",
                 "timestamp": now.isoformat(),
                 "type": "WHALE",
                 "importance": "HIGH",
-                "description": f"Abnormal volume detected — {len(whale_alerts)} assets show whale-level activity",
+                "description": f"Abnormal volume detected — {len(whale_alerts)} CIS-tracked assets show whale-level activity",
                 "affected_assets": symbols,
-                "source": "cg_volume_analysis",
+                "source": "cis_volume_analysis",
                 "value": len(whale_alerts),
                 "whale_detail": whale_alerts[:5],
             }, pi_whale,
-            f"Volume/mcap ratio >8% with price movement >3% — statistically significant institutional flow. "
+            f"Volume/mcap ratio >8% with price movement >3% in CIS-tracked universe — "
+            f"statistically significant institutional flow. "
             f"Signals: {'; '.join(desc_parts)}. "
             f"High vol_ratio with price rise = accumulation (bullish for M/O pillars). "
             f"High vol_ratio with price drop = distribution (negative M/S signal). "
-            f"Cross-reference with CIS score before acting — whale flow in low-CIS assets is noise.",
+            f"Cross-reference CIS score: whale flow in low-CIS (grade D/F) assets is noise.",
             "24H"))
 
     # ── Sort: HIGH first, then by strength, then by recency ──────────────────
