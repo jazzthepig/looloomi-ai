@@ -30,11 +30,15 @@ Push-gate only. Seth stages files from Cowork; Minimax clears lock + commits + p
 - `examples/claude-desktop-config.json` — NEW: Drop-in Claude Desktop MCP config
 - `examples/cursor-mcp.json` — NEW: Drop-in Cursor MCP config
 - `examples/agent_example.py` — NEW: Full Python agent workflow (macro → CIS → signals → A2A task)
-- `src/api/routers/cis.py` — NEW: GET /api/v1/cis/history/{symbol} + GET /api/v1/cis/trend/{symbol} (Redis-cached, Supabase-backed)
-- `src/api/routers/factory.py` — Solana mock gate: _SOLANA_READY flag, public GETs return 503 when not live
-- `dashboard/public/privacy.html` + `dashboard/dist/privacy.html` — NEW: privacy policy (required for Anthropic Connectors Directory)
+- `src/api/routers/cis.py` — NEW: GET /api/v1/cis/history/{symbol}?days=30 + GET /api/v1/cis/trend/{symbol}?days=7
+- `dashboard/dist/privacy.html` — synced from public/
 - `MINIMAX_SYNC.md` — §6 added: T21 (health alert), T22 (MacroBrief fix), T23 (Freqtrade dry run)
 - `JAZZ_TODAY.md` — NEW: Apr 27-28 action brief (hackathon + demo + Product Hunt + registries)
+- `src/data/market/data_layer.py` — NEW: World Bank API fallback for HK/CN economic indicators (CPI, GDP, unemployment, PMI proxy, policy rates)
+- `src/api/routers/market.py` — NEW: CIS universe signals (passing/failing per regime threshold) + whale volume detection (vol/mcap > 8% + price move > 3%)
+- `dashboard/src/components/SignalFeed.jsx` — NEW: CIS (cyan) + WHALE (amber) type badge styles; "MEDIUM"→"MED" importance fix
+- `dashboard/src/components/EconomicIndicators.jsx` — source badge shows "worldbank+yfinance" when fallback active
+- `dashboard/dist/assets/` — rebuilt dist (picks up SignalFeed + EconomicIndicators JSX changes)
 
 ```bash
 # 1. Clear FUSE lock
@@ -44,13 +48,20 @@ rm -f ~/projects/looloomi-ai/.git/index.lock
 cd ~/projects/looloomi-ai
 git add \
   src/data/cis/cis_provider.py \
+  src/data/market/data_layer.py \
   src/api/routers/agent.py \
+  src/api/routers/cis.py \
+  src/api/routers/market.py \
   src/api/main.py \
   dashboard/src/components/ScoreAnalytics.jsx \
+  dashboard/src/components/SignalFeed.jsx \
+  dashboard/src/components/EconomicIndicators.jsx \
   dashboard/public/.well-known/agent.json \
   dashboard/dist/.well-known/agent.json \
   dashboard/public/llms.txt \
   dashboard/dist/llms.txt \
+  dashboard/dist/privacy.html \
+  dashboard/dist/assets/ \
   glama.json \
   src/mcp/cometcloud_mcp.py \
   examples/GETTING_STARTED.md \
@@ -61,10 +72,21 @@ git add \
   CLAUDE.md \
   MINIMAX_SYNC.md \
   ATTACK_PLAN.md \
+  WEEKLY_REVIEW.md \
+  JAZZ_TODAY.md \
   COMMIT_READY.md
 
 # 3. Commit everything (already staged + newly added)
-git commit -m "feat(a2a+mcp+playbook): Phase 2.3 live, agent.py hardened, llms.txt + glama.json, assertive MCP descriptions
+git commit -m "feat(signals+econ+a2a+mcp): CIS/whale signals, HK/CN econ indicators, Phase 2.3 live, llms.txt + glama.json
+
+Signals & Economic Indicators:
+- market.py: CIS universe signals — passing/failing assets per regime threshold (TIGHTENING=52, etc.)
+- market.py: Whale detection — vol/mcap > 8% + |price_chg| > 3% → WHALE signal (HIGH importance)
+- data_layer.py: World Bank API fallback for HK/CN econ indicators when EODHD fails
+  CPI (FP.CPI.TOTL.ZG), GDP (NY.GDP.MKTP.KD.ZG), Unemployment (SL.UEM.TOTL.ZS)
+  Hardcoded policy rates: HKMA 5.25%, PBOC 3.1% LPR, Fed 4.50%
+  PMI proxy: yfinance 5d equity return (^HSI, 000001.SS) mapped to 50±15 scale
+- SignalFeed.jsx: CIS type (cyan) + WHALE type (amber) badge styles; MEDIUM→MED importance fix
 
 A2A / API:
 - src/api/routers/agent.py: Phase 2.3 A2A task queue (smoke test ✅)
@@ -74,11 +96,13 @@ A2A / API:
   BUG FIX: _save_task logs when Redis persist fails (task is in-memory only)
   BUG FIX: all 3 executor error logs now include exc_info=True (stack traces in Railway)
   BUG FIX: 1/len(selected) → 1/max(len(selected),1) division edge case guard
+- src/api/routers/cis.py: GET /api/v1/cis/history/{symbol}?days=30 + GET /api/v1/cis/trend/{symbol}?days=7
 - src/api/main.py: agent_router registered; Link+X-Llms-Txt discoverability headers; v0.4.3
 - cis_provider.py: calculate_asset_betas min_len bug fixed; BINANCE_SYMBOLS §4A cleanup
 
 Frontend:
 - ScoreAnalytics.jsx: VITE_API_BASE → VITE_API_URL (was wrong env var, diverged from all other components)
+- dist/ rebuilt — all JSX changes included
 
 MCP / Discoverability (Week 3 playbook — agent ecosystem blitz):
 - dashboard/public/llms.txt + dist/llms.txt: NEW — LLM crawler doc (844K+ site standard)
@@ -88,7 +112,8 @@ MCP / Discoverability (Week 3 playbook — agent ecosystem blitz):
 
 Docs:
 - ATTACK_PLAN.md: NEW — Week 3 execution plan (Apr 28–May 4)
-- ROADMAP_A2A.md: Phase 2.3 ✅; MINIMAX_SYNC.md: T20 dry run + direction locked; CLAUDE.md: updated
+- WEEKLY_REVIEW.md: NEW — weekly strategy review ritual + first entry (2026-04-27)
+- ROADMAP_A2A.md: Phase 2.3 ✅; MINIMAX_SYNC.md: T20→T23 tasks; CLAUDE.md: updated
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 
