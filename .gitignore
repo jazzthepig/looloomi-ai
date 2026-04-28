@@ -8,3 +8,10 @@ dashboard/node_modules/
 *.log
 src/data/cis/cis_history.db
 Shadow/
+
+# Internal operational docs — never commit
+JAZZ_TODAY.md
+ATTACK_PLAN.md
+MINIMAX_SYNC.md
+COMMIT_READY.md
+WEEKLY_REVIEW.md

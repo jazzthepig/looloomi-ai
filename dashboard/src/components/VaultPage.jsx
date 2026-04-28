@@ -28,6 +28,20 @@ const SCORE_CRITERIA = [
 
 const ScoreBreakdown = ({ scores }) => {
   if (!scores) return null;
+  // If all pillar scores are null, show pending state
+  const allNull = SCORE_CRITERIA.every(c => scores[c.key] == null);
+  if (allNull) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <span style={{ fontSize: 9, color: "rgba(245,158,11,0.7)", fontFamily: FONTS.mono, letterSpacing: "0.06em" }}>
+          ASSESSMENT
+        </span>
+        <span style={{ fontSize: 8, color: "rgba(62,102,128,0.9)", fontFamily: FONTS.body }}>
+          In progress
+        </span>
+      </div>
+    );
+  }
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {SCORE_CRITERIA.map(c => {
@@ -585,12 +599,22 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
               </div>
 
               {/* Row 2: Key metrics */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4, marginBottom: 6, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>
-                <div><div style={{ fontSize: 9, color: T.muted }}>YTD</div><div style={{ fontSize: 13, fontWeight: 600, color: selectedFund.performance.ytd >= 0 ? T.green : T.red, fontFamily: FONTS.mono }}>{selectedFund.performance.ytd >= 0 ? "+" : ""}{selectedFund.performance.ytd}%</div></div>
-                <div><div style={{ fontSize: 9, color: T.muted }}>Annual</div><div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>+{selectedFund.performance.annualReturn}%</div></div>
-                <div><div style={{ fontSize: 9, color: T.muted }}>Sharpe</div><div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{selectedFund.performance.sharpeRatio}</div></div>
-                <div><div style={{ fontSize: 9, color: T.muted }}>Max DD</div><div style={{ fontSize: 13, fontWeight: 600, color: T.amber, fontFamily: FONTS.mono }}>{selectedFund.performance.maxDrawdown}%</div></div>
-              </div>
+              {(() => {
+                const p = selectedFund.performance || {};
+                const fmtYtd = p.ytd != null ? `${p.ytd >= 0 ? "+" : ""}${p.ytd}%` : "—";
+                const ytdColor = p.ytd != null ? (p.ytd >= 0 ? T.green : T.red) : T.muted;
+                const fmtAnnual = p.annualReturn != null ? `+${p.annualReturn}%` : "—";
+                const fmtSharpe = p.sharpeRatio != null ? String(p.sharpeRatio) : "—";
+                const fmtDD = p.maxDrawdown != null ? `${p.maxDrawdown}%` : "—";
+                return (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4, marginBottom: 6, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>
+                    <div><div style={{ fontSize: 9, color: T.muted }}>YTD</div><div style={{ fontSize: 13, fontWeight: 600, color: ytdColor, fontFamily: FONTS.mono }}>{fmtYtd}</div></div>
+                    <div><div style={{ fontSize: 9, color: T.muted }}>Annual</div><div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{fmtAnnual}</div></div>
+                    <div><div style={{ fontSize: 9, color: T.muted }}>Sharpe</div><div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{fmtSharpe}</div></div>
+                    <div><div style={{ fontSize: 9, color: T.muted }}>Max DD</div><div style={{ fontSize: 13, fontWeight: 600, color: T.amber, fontFamily: FONTS.mono }}>{fmtDD}</div></div>
+                  </div>
+                );
+              })()}
 
               {/* Row 3: Details */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
