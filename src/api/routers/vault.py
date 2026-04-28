@@ -41,9 +41,10 @@ _VAULT_FUNDS = [
         "note": "CometCloud Founding GP Partner",
         "performance": {
             "ytd": 8.5,
-            "annualReturn": 0,
-            "sharpeRatio": 0,
+            "annualReturn": None,
+            "sharpeRatio": None,
             "maxDrawdown": -2.1,
+            "_note": "YTD preliminary, unaudited — live track record accumulating",
         },
         "scores": {
             "performance": 15,
@@ -80,25 +81,7 @@ _VAULT_FUNDS = [
         "driftVault": "FS9fJYRrQ2hQPcXJTFrC1zBskTE3z4WayzbYL8jFrQK7",
         "vaultUrl": "https://app.drift.trade/vaults/strategy-vaults/FS9fJYRrQ2hQPcXJTFrC1zBskTE3z4WayzbYL8jFrQK7",
     },
-    {
-        "id": "placeholder-3",
-        "name": "GP Partner #3",
-        "strategy": "Under Evaluation",
-        "location": "—",
-        "aum": "—",
-        "yearFounded": None,
-        "status": "evaluating",
-        "verified": False,
-        "note": "GP onboarding in progress · Q2 2026",
-        "performance": {"ytd": 0, "annualReturn": 0, "sharpeRatio": 0, "maxDrawdown": 0},
-        "scores": {"performance": 0, "strategy": 0, "team": 0, "risk": 0, "transparency": 0, "aumTrackRecord": 0, "total": 0},
-        "grade": None,
-        "description": "GP onboarding in progress.",
-        "team": None,
-        "strategyDetail": None,
-        "advantage": None,
-        "isPlaceholder": True,
-    },
+    # GP Partner #3 slot reserved — onboarding Q2 2026. Not exposed via API until verified.
 ]
 
 

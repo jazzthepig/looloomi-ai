@@ -2336,7 +2336,8 @@ async def get_economic_dashboard() -> dict:
     Used by: /api/v1/market/economic-indicators endpoint + MacroBrief pipeline.
     TTL: 4 hours Redis.
     """
-    key = "economic_dashboard"
+    # v2: bumped after adding World Bank + FRED fallbacks for HK/CN (invalidates old error cache)
+    key = "economic_dashboard_v2"
     cached = _cache_get(key, ttl=14400)
     if cached:
         return cached

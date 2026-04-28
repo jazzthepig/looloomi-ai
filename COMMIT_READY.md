@@ -19,13 +19,13 @@ Push-gate only. Seth stages files from Cowork; Minimax clears lock + commits + p
 - `dashboard/public/llms.txt` — NEW: LLM crawler discoverability doc (844K+ site standard)
 - `dashboard/dist/llms.txt` — NEW: same, Railway-served copy
 - `glama.json` — NEW: repo root, required for Glama.ai auto-index (17,200+ servers)
-- `src/mcp/cometcloud_mcp.py` — assertive descriptions on 5 tools (7.5x invocation multiplier)
+- `src/mcp/cometcloud_mcp.py` — **FULL MCP AUDIT + 8 BUG FIXES** (see MCP fixes section below)
+- `src/api/routers/vault.py` — placeholder GP Partner #3 removed; EST Alpha performance labeled unaudited
 - `ROADMAP_A2A.md` — Phase 2.3 ✅ COMPLETE
 - `CLAUDE.md` — Phase 2.3 LIVE ✅, Freqtrade DRY RUN PENDING, T20 added, metrics updated
 - `MINIMAX_SYNC.md` — §4A TrendStrategy direction locked, T20 dry run task, §5 Phase 2.3 smoke test ✅
 - `ATTACK_PLAN.md` — NEW: Week 3+ execution plan (Apr 28–May 4)
 - `WEEKLY_REVIEW.md` — NEW: weekly strategy review ritual + first entry (2026-04-27)
-- `CLAUDE.md` — weekly review section added (cadence, structure, adversarial lenses)
 - `examples/GETTING_STARTED.md` — NEW: Agent onboarding guide (Claude Desktop / Cursor / REST / Python)
 - `examples/claude-desktop-config.json` — NEW: Drop-in Claude Desktop MCP config
 - `examples/cursor-mcp.json` — NEW: Drop-in Cursor MCP config
@@ -34,8 +34,8 @@ Push-gate only. Seth stages files from Cowork; Minimax clears lock + commits + p
 - `dashboard/dist/privacy.html` — synced from public/
 - `MINIMAX_SYNC.md` — §6 added: T21 (health alert), T22 (MacroBrief fix), T23 (Freqtrade dry run)
 - `JAZZ_TODAY.md` — NEW: Apr 27-28 action brief (hackathon + demo + Product Hunt + registries)
-- `src/data/market/data_layer.py` — NEW: World Bank API fallback for HK/CN economic indicators (CPI, GDP, unemployment, PMI proxy, policy rates)
-- `src/api/routers/market.py` — NEW: CIS universe signals (passing/failing per regime threshold) + whale volume detection (vol/mcap > 8% + price move > 3%)
+- `src/data/market/data_layer.py` — NEW: World Bank API fallback for HK/CN economic indicators (CPI, GDP, unemployment, PMI proxy, policy rates); cache key bumped to `economic_dashboard_v2` to bypass stale EODHD error cache
+- `src/api/routers/market.py` — NEW: CIS universe signals (passing/failing per regime threshold) + whale volume detection (vol/mcap > 8% + price move > 3%); BUG FIX: whale detection was using Binance movers (geo-blocked on Railway, wrong field names) → now uses CIS universe (volume_24h, change_24h, market_cap)
 - `dashboard/src/components/SignalFeed.jsx` — NEW: CIS (cyan) + WHALE (amber) type badge styles; "MEDIUM"→"MED" importance fix
 - `dashboard/src/components/EconomicIndicators.jsx` — source badge shows "worldbank+yfinance" when fallback active
 - `dashboard/dist/assets/` — rebuilt dist (picks up SignalFeed + EconomicIndicators JSX changes)
@@ -52,6 +52,7 @@ git add \
   src/api/routers/agent.py \
   src/api/routers/cis.py \
   src/api/routers/market.py \
+  src/api/routers/vault.py \
   src/api/main.py \
   dashboard/src/components/ScoreAnalytics.jsx \
   dashboard/src/components/SignalFeed.jsx \
@@ -77,15 +78,20 @@ git add \
   COMMIT_READY.md
 
 # 3. Commit everything (already staged + newly added)
-git commit -m "feat(signals+econ+a2a+mcp): CIS/whale signals, HK/CN econ indicators, Phase 2.3 live, llms.txt + glama.json
+git commit -m "feat(signals+econ+a2a+mcp): CIS/whale signals, HK/CN econ, Phase 2.3 live, MCP audit
 
 Signals & Economic Indicators:
 - market.py: CIS universe signals — passing/failing assets per regime threshold (TIGHTENING=52, etc.)
 - market.py: Whale detection — vol/mcap > 8% + |price_chg| > 3% → WHALE signal (HIGH importance)
+  BUG FIX: was using Binance movers (geo-blocked on Railway) with wrong field names (total_volume,
+  market_cap, price_change_percentage_24h none of which exist in Binance data → always zero alerts)
+  Fixed: now uses CIS universe (volume_24h, change_24h, market_cap) — correct fields, no geo-block
 - data_layer.py: World Bank API fallback for HK/CN econ indicators when EODHD fails
   CPI (FP.CPI.TOTL.ZG), GDP (NY.GDP.MKTP.KD.ZG), Unemployment (SL.UEM.TOTL.ZS)
   Hardcoded policy rates: HKMA 5.25%, PBOC 3.1% LPR, Fed 4.50%
   PMI proxy: yfinance 5d equity return (^HSI, 000001.SS) mapped to 50±15 scale
+  BUG FIX: cache key bumped economic_dashboard → economic_dashboard_v2 to bypass stale EODHD
+  error data in Redis (otherwise World Bank fallback never runs on existing Railway instances)
 - SignalFeed.jsx: CIS type (cyan) + WHALE type (amber) badge styles; MEDIUM→MED importance fix
 
 A2A / API:
@@ -100,8 +106,24 @@ A2A / API:
 - src/api/main.py: agent_router registered; Link+X-Llms-Txt discoverability headers; v0.4.3
 - cis_provider.py: calculate_asset_betas min_len bug fixed; BINANCE_SYMBOLS §4A cleanup
 
+MCP Server (cometcloud_mcp.py) — full audit, 8 bugs fixed:
+- RAILWAY_BASE default: was old internal Railway URL → now https://looloomi.ai
+- macro_regime: was reading wrong key (macro.regime) → now reads flat macro_regime key correctly
+- get_market_movers: rewrote to use CIS universe (was /api/v1/market/movers → Binance geo-blocked)
+- market_snapshot: movers now from CIS universe, not geo-blocked Binance
+- portfolio_brief: fixed assets key (universe→assets fallback), yields key (data not pools),
+  added Tightening regime fallback (top-scored when no OUTPERFORM signals), filtered placeholder GPs
+- get_fund_portfolio: filters out placeholder/unverified GPs; handles null performance gracefully
+- get_portfolio_stats: fixed response parsing (API returns per-asset list, not portfolio summary)
+- regime_allocation: fixed universe key (universe not assets); fixed VC flows key (data not rounds);
+  added macro_regime to output; added fallback leaders when regime-analysis returns empty
+
+vault.py:
+- Removed GP Partner #3 placeholder from _VAULT_FUNDS (was exposed via API → embarrassing for agents)
+- EST Alpha performance marked unaudited/preliminary
+
 Frontend:
-- ScoreAnalytics.jsx: VITE_API_BASE → VITE_API_URL (was wrong env var, diverged from all other components)
+- ScoreAnalytics.jsx: VITE_API_BASE → VITE_API_URL (env var fix)
 - dist/ rebuilt — all JSX changes included
 
 MCP / Discoverability (Week 3 playbook — agent ecosystem blitz):
@@ -144,6 +166,21 @@ curl -s -X POST https://looloomi.ai/api/v1/agent/tasks \
 
 # Poll the result (replace task_id)
 curl -s https://looloomi.ai/api/v1/agent/tasks/<task_id> | jq .status
+```
+
+---
+
+## MCP fixes summary (for post-deploy verification)
+
+```bash
+# Test market movers (was always erroring — Binance geo-block)
+curl -s "https://looloomi.ai/api/v1/cis/universe" | jq '.universe | sort_by(-.change_24h) | .[0:3] | .[] | {symbol, change_24h, grade}'
+
+# Test economic indicators (HK/CN should now show World Bank data)
+curl -s "https://looloomi.ai/api/v1/market/economic-dashboard" | jq '.data.hk.indicators | {cpi, gdp, policy_rate}'
+
+# Test whale signals (should appear when vol/mcap > 8% + price_chg > 3%)
+curl -s "https://looloomi.ai/api/v1/signals" | jq '[.signals[] | select(.type == "WHALE")]'
 ```
 
 ---
