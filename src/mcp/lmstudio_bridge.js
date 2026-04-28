@@ -85,9 +85,8 @@ async function getModel() {
     const data = await httpGet(`${BASE}/v1/models`);
     const models = data?.data || [];
     if (models.length === 0) throw new Error('No models loaded in LM Studio');
-    // Prefer any model with qwen in the name
-    const qwen = models.find(m => m.id.toLowerCase().includes('qwen'));
-    _model = (qwen || models[0]).id;
+    // Use whatever model is currently loaded — no hardcoded preference
+    _model = models[0].id;
     return _model;
   } catch (e) {
     throw new Error(`Cannot reach LM Studio at ${BASE}: ${e.message}`);
