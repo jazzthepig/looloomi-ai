@@ -1,5 +1,5 @@
 # MINIMAX_SYNC.md — Seth ↔ Minimax 协调文档
-*最后更新: 2026-04-18 — Minimax（CIS v4.2 评分修复 + price=0 根因修复）*
+*最后更新: 2026-04-28 — Seth（Railway §4A 清理 + FRED regime fallback + Mac Mini scheduler 确认停止）*
 
 ---
 
@@ -148,7 +148,7 @@ backtest 专用 config：fee=0.001（0.1%/side），max_open_trades=1
 | 4 | **NEW: CoinGecko null 修复** | `data_fetcher.py` | POLYX/PEPE 返回 null → 跳过，不缓存 price=0 | ✅ |
 | 5 | **NEW: confidence=0 过滤** | `cis_scheduler.py` | price=0 资产不进入 universe | ✅ |
 | 6 | `cis_push.py` macro_regime 已确认 | `cis_push.py` | payload 包含 `macro_regime` 字段 | ✅ |
-| 7 | Restart `cis_scheduler.py` | — | 等待 Jazz 确认时机 | 🔄 |
+| 7 | Restart `cis_scheduler.py` | — | 等待 Jazz 确认时机 | 🔴 **确认停止** — 2026-04-28 检查：T1=0, Redis key=EMPTY |
 
 ### 🟠 P1 — 本周内（影响 universe 质量）
 
@@ -222,7 +222,13 @@ curl https://looloomi.ai/api/v1/cis/universe | python3 -c "import json,sys; d=js
 | 18 | **Supabase wallet_profiles 表** 确认存在 | `SELECT * FROM wallet_profiles LIMIT 1` | 🟡 Jazz 确认 |
 | 20 | **CISEnhancedStrategy dry run** | 确认文件位置 → 修改 CometCloudStrategy.py → 启动 dry run | 🔴 Jazz 决定后执行 |
 
-### §4A — Freqtrade 策略方向（2026-04-27 最终确认）
+### §4A — Railway §4A 清理 + Freqtrade 策略方向
+
+**Railway §4A 资产清理（2026-04-28 Seth 完成）：**
+- 问题：Railway `ASSETS_CONFIG` 和 `BINANCE_SYMBOLS` 里仍有 §4A 排除资产（PEPE/WIF/BONK/FTM/ICP/BCH/SNX/CRV/SUSHI/SAND/MANA/AXS/POLYX），导致 Railway T2 引擎继续给它们算分
+- 修复：`cis_provider.py` ASSETS_CONFIG — 13 个 §4A 排除资产全部移除
+- 结果：Railway deploy 后 universe 从 84 → **71 assets**（PEPE/BCH/ICP/WIF/BONK/FTM 全部移除）
+- commit: `352006e`
 
 **TrendStrategy — Jazz 已验证盈利策略：**
 - PF=1.46，169 trades（2024年回测数据）
@@ -341,32 +347,52 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 
 ## §5 Seth 已完成 / Railway 最新状态
 
-**当前 HEAD（2026-04-27，待 push）：** Minimax 本次 push 包含：
-- `src/data/cis/cis_provider.py` — beta calc fix + BINANCE_SYMBOLS cleanup
-- `src/api/routers/agent.py` — Phase 2.3 A2A task queue (NEW)
-- `src/api/main.py` — agent_router registered
-- `dashboard/public/.well-known/agent.json` + `dist/` — a2a_tasks live spec
-- `ROADMAP_A2A.md` — Phase 2.3 ✅
-- `COMMIT_READY.md`, `CLAUDE.md`, `MINIMAX_SYNC.md` — docs
+**当前 HEAD（2026-04-28）：**
 
-最近 commit 时间线：
-- `f7f5bc0` — **Minimax**：cleanup commit (COMMIT_READY.md + MINIMAX_SYNC.md status) ✅
-- `05e8198` — **Seth**：/api/v1/health Cloudflare bypass + deploy docs update ✅
-- `223c865` — **Seth**：COMMIT_READY.md push-gate + MINIMAX_SYNC.md §4 verification ✅
-- `01327bc` — **Seth/Minimax**：Phase 2.2 MCP server + auth E2E test script ✅
+| Commit | 内容 |
+|--------|------|
+| `e84d607` | feat(signals+econ+a2a+mcp): CIS/whale signals, HK/CN econ indicators, Phase 2.3 live |
+| `352006e` | fix(universe): remove §4A excluded assets from Railway ASSETS_CONFIG — 71 assets |
+| `6d1af1b` | fix(macro): FRED fallback for macro_regime when EODHD unavailable |
+| `31fc476` | docs: update COMMIT_READY.md + MINIMAX_SYNC.md with complete file list |
+| `629f6be` | feat(core): llms.txt discoverability, MCP assertive descriptions |
+| `14a1a30` | docs(a2a+cis): Phase 2.3 live, beta fix, TrendStrategy+CIS direction locked |
 
-**Deploy verification 通过（2026-04-26）:**
-- `/api/v1/health` ✅ — version 0.4.3, healthy
-- `/mcp/sse` (Railway direct) ✅ — HTTP 405 (endpoint exists, GET-only is correct)
-- CIS universe ✅ — 84 assets, regime=Tightening, MKR passes threshold=52
+**Railway 生产状态（2026-04-28 确认）：**
 
-**Phase 2.3 A2A task queue — smoke test 通过（2026-04-27）:**
-- `POST /api/v1/agent/tasks` → 返回 task_id，status=pending ✅
-- `GET /api/v1/agent/tasks/{task_id}` → 几秒后 completed ✅
-- 结果：84 assets，limit 30，返回 top CIS 资产 ✅
-- 全部 C+/C grade，NEUTRAL/UNDERPERFORM — 符合当前 Tightening regime ✅
+| 检查项 | 结果 |
+|--------|------|
+| `/api/v1/health` | ✅ `version=0.4.3` |
+| `/api/v1/cis/universe` | ✅ 71 assets（§4A 清理后），source=railway |
+| T1 assets (Mac Mini) | 🔴 **0** — scheduler 已停止 |
+| Redis `cis:local_scores` | 🔴 **EMPTY** — Mac Mini 没有在推送 |
+| `macro_regime` | ✅ RISK_ON（来自 FRED fallback，2026-04-28 确认） |
+| `macro_regime` source | `fred_derived`，inputs: CPI=3.29%, GDP=2.0%, FedRate=3.64% |
+| Cloudflare `/api/*` | ⚠️ FNG null — Cloudflare SPA 拦截，需要 Jazz 改 Cloudflare 配置 |
 
-**待处理项：** T17 (auth E2E，等 push), T18 (wallet_profiles), T20 (dry run)
+**T21/T22/T23 状态：**
+
+| Task | 内容 | 状态 |
+|------|------|------|
+| T21 | Mac Mini 健康告警（2h 无推送则 alert） | 🟡 待 Minimax 实现 |
+| T22 | MacroBrief pipeline 修复（LM Studio/Qwen3） | 🟡 待 Minimax 诊断 |
+| T23 | Freqtrade CISEnhancedStrategy dry run | 🔴 待 Minimax 执行 |
+| T24 | **Mac Mini scheduler 重启** | 🔴 **新 P0** — cis_scheduler.py 已停止，需 Minimax 重启 |
+
+**Mac Mini scheduler 停止 — 确认（2026-04-28）：**
+```
+Redis cis:local_scores = EMPTY
+CIS universe source = railway (无 Mac Mini 数据)
+T1 assets = 0
+→ cis_scheduler.py 进程已停止（PID 33143 可能已失效）
+```
+Minimax 需要重启：
+```bash
+cd /Volumes/CometCloudAI/cometcloud-local
+source ../venv/bin/activate
+nohup python cis_scheduler.py > ../logs/cis_scheduler.log 2>&1 &
+echo $!
+```
 
 | 文件 | 变更 | Session |
 |------|------|---------|
@@ -390,11 +416,11 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 
 | Key | 当前状态 | 行动 |
 |-----|---------|------|
-| `EODHD_API_KEY` | **已暴露在 git history**（`Shadow/cometcloud-local/data_fetcher.py`） | Minimax: rotate key，通过环境变量设置，不写入代码 |
-| `FINNHUB_API_KEY` | **同上** | 同上 |
-| `COINGECKO_API_KEY` | ✅ Railway env var 已设置 | — |
-| `INTERNAL_TOKEN` | ✅ Railway env var，正常 | — |
-| `UPSTASH_REDIS_REST_TOKEN` | ✅ Railway env var，正常 | — |
+| `EODHD_API_KEY` | ✅ Minimax 已 rotate，现在 Railway env var 正常 | — |
+| `FINNHUB_API_KEY` | ✅ 同上 | — |
+| `COINGECKO_API_KEY` | ✅ Railway env var 正常 | — |
+| `INTERNAL_TOKEN` | ✅ Railway env var 正常 | — |
+| `UPSTASH_REDIS_REST_TOKEN` | ✅ Railway env var 正常 | — |
 | `SUPABASE_URL` / `SUPABASE_KEY` | ❓ 待 Jazz 确认 | Jazz: 验证是否已添加 |
 
 ---
@@ -403,7 +429,7 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 
 ---
 
-## §7 Shadow 同步记录（2026-04-21）
+## §9 Shadow 同步记录（历史 — 2026-04-21，已完成）
 
 **状态：** ✅ 完成。4 个文件与 Mac Mini 实际代码完全一致。
 
@@ -443,7 +469,52 @@ POLYX  — Criterion 1 (30d volume ~$300K vs $5M minimum)
 
 ---
 
-## §6 新任务 — 2026-04-27
+## §7 新任务 T24（2026-04-28）
+
+*Seth → Minimax.*
+
+---
+
+### 🔴 T24: Mac Mini scheduler 重启（P0 — 最紧急）
+
+**状态：2026-04-28 确认停止**
+- `cis:local_scores` Redis key = EMPTY
+- T1 assets = 0（无 Mac Mini 数据）
+- CIS universe source = railway only
+
+**做法：**
+```bash
+# 1. 检查当前 PID
+ps aux | grep cis_scheduler | grep -v grep
+
+# 2. 如果停了，重启
+cd /Volumes/CometCloudAI/cometcloud-local
+source ../venv/bin/activate
+nohup python cis_scheduler.py > ../logs/cis_scheduler.log 2>&1 &
+echo $!  # 记新 PID
+
+# 3. 验证推送
+sleep 5
+curl -s -X POST https://web-production-0cdf76.up.railway.app/internal/cis-scores \
+  -H "Content-Type: application/json" \
+  -H "X-Internal-Token: $INTERNAL_TOKEN" \
+  -d '{"test": true}' 2>&1 | head -5
+
+# 4. 确认 Redis 有数据
+# 等待约 30 秒后
+UPSTASH_URL="https://upward-thrush-73783.upstash.io"
+UPSTASH_TOKEN="..."
+curl -s "$UPSTASH_URL/get/cis:local_scores" -H "Authorization: Bearer $UPSTASH_TOKEN" \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); print('OK, assets:', len(json.loads(d['result']).get('assets',[]))) if d.get('result') else print('EMPTY')"
+```
+
+**验收标准：**
+- Redis `cis:local_scores` 有数据（非 EMPTY）
+- CIS universe source = `merged`，T1 > 0
+
+---
+
+## §8 原任务 — 2026-04-27
 
 *Seth → Minimax. 以下三个任务优先级均为 P1，本周内完成。*
 
