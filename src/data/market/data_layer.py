@@ -1143,6 +1143,33 @@ async def get_macro_pulse() -> dict:
                     result["macro_regime"]   = fred_regime
                     result["regime_source"] = "fred_derived"
                     result["regime_inputs"] = fred_data.get("regime_inputs", {})
+
+            # ── Unified regime: blend crypto sentiment + macro inputs ─────────────
+            # Sources: VIX (from cis:macro_data Redis), FNG (already fetched),
+            # BTC 30d (from CG global), macro inputs (from FRED above).
+            # Weight: crypto sentiment 40%, real-economy 60%.
+            try:
+                fred_ind  = fred_data.get("indicators", {}) if fred_data else {}
+                cpi_val   = (fred_ind.get("cpi_yoy") or {}).get("value", 0) or 0
+                gdp_val   = (fred_ind.get("gdp_growth") or {}).get("value", 0) or 0
+                rate_val  = (fred_ind.get("interest_rate") or {}).get("value", 0) or 0
+                r_trend   = (fred_ind.get("interest_rate") or {}).get("trend", "")
+                btc_30d   = cg_data.get("market_cap_change_percentage_24h_usd", 0) or 0
+
+                unified   = derive_regime_unified(
+                    vix      = result.get("vix"),       # may be None if not available
+                    fng_value= _fg_val,
+                    btc_30d  = btc_30d,
+                    btc_dom  = _btc_dom,
+                    cpi      = cpi_val,
+                    gdp      = gdp_val,
+                    rate     = rate_val,
+                    rate_trend= r_trend,
+                )
+                result["macro_regime"]   = unified
+                result["regime_source"]  = "unified"
+            except Exception:
+                pass  # keep existing regime_source set above
         except Exception:
             pass  # regime stays UNKNOWN — non-blocking
 
@@ -1693,6 +1720,71 @@ def _derive_macro_regime(cpi: float, gdp: float, rate: float, rate_trend: str) -
     if gdp < 1 or (rate > 5 and cpi > 3):
         return "RISK_OFF"
     return "RISK_ON"
+
+
+def derive_regime_unified(
+    vix: Optional[float] = None,
+    fng_value: Optional[int] = None,
+    btc_30d: float = 0.0,
+    btc_dom: float = 52.0,
+    cpi: float = 0.0,
+    gdp: float = 0.0,
+    rate: float = 0.0,
+    rate_trend: str = "",
+) -> str:
+    """
+    Weighted regime classifier combining crypto sentiment (VIX/FNG/BTC) and
+    real-economy signals (CPI/GDP/rates). Returns a unified regime string.
+
+    Weights:
+      Crypto sentiment (VIX/FNG/BTC momentum): 40%
+      Real-economy (CPI/GDP/rates):          60%
+
+    Each signal normalized 0-100:
+      vix_sentiment:   100-vix  (VIX 10→90, 30→70 is bearish)
+      fng_sentiment:   fng      (FNG 0-100 direct)
+      btc_momentum:    BTC 30d change mapped to 0-100
+      econ_sentiment:  derived from _derive_macro_regime on macro inputs
+
+    All regimes: Goldilocks / Risk-On / Easing / Neutral / Tightening / Risk-Off / Stagflation
+    """
+    # ── Crypto sentiment score (0-100) ───────────────────────────────────────
+    vix_s  = max(0.0, min(100.0, 100.0 - (vix or 20.0)))       # low VIX = bullish
+    fng_s  = max(0.0, min(100.0, float(fng_value or 50)))
+    btc_s  = max(0.0, min(100.0, (btc_30d + 20) * 2.5))        # -20%→0, +20%→100
+
+    crypto_score = vix_s * 0.35 + fng_s * 0.40 + btc_s * 0.25   # 0-100
+
+    # ── Real-economy score (0-100) ─────────────────────────────────────────────
+    # Use the same threshold logic as _derive_macro_regime but emit a 0-100 score
+    _MACRO_WEIGHTS = {
+        "STAGFLATION": 10,
+        "TIGHTENING":  25,
+        "RISK_OFF":    20,
+        "NEUTRAL":     45,
+        "EASING":      60,
+        "RISK_ON":     70,
+        "GOLDILOCKS":  85,
+    }
+    macro_regime = _derive_macro_regime(cpi=cpi, gdp=gdp, rate=rate, rate_trend=rate_trend)
+    macro_score = _MACRO_WEIGHTS.get(macro_regime, 45)
+
+    # ── Weighted combined score ─────────────────────────────────────────────────
+    combined = crypto_score * 0.40 + macro_score * 0.60          # 0-100
+
+    if combined >= 80:
+        return "GOLDILOCKS"
+    if combined >= 70:
+        return "RISK_ON"
+    if combined >= 60:
+        return "EASING"
+    if combined >= 45:
+        return "NEUTRAL"
+    if combined >= 30:
+        return "TIGHTENING"
+    if combined < 20:
+        return "RISK_OFF"
+    return "STAGFLATION"
 
 
 # ── World Bank Fallback — Free macro data for HK / CN / USA ───────────────────
