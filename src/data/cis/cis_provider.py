@@ -244,10 +244,76 @@ def _cache_set(key: str, val: Any):
 
 
 # === Beta Calculation for S Pillar ===
+async def _fetch_factor_rets(symbol: str, name: str) -> tuple[str, list | None]:
+    """Fetch factor returns in thread pool (yfinance is sync-blocking)."""
+    import yfinance as yf
+    try:
+        ticker = yf.Ticker(symbol)
+        hist = ticker.history(period="35d")
+        if len(hist) < 20:
+            return name, None
+        prices = hist['Close'].values
+        rets = []
+        for i in range(1, len(prices)):
+            if prices[i-1] > 0:
+                rets.append((prices[i] - prices[i-1]) / prices[i-1])
+        return name, rets if len(rets) >= 15 else None
+    except Exception as e:
+        _logger.warning(f"[Beta] yfinance factor {symbol} failed: {e}")
+        return name, None
+
+
+async def _betas_in_thread(asset_id: str, asset_price_30d: list) -> dict:
+    """Run the full beta calc (numpy + yfinance sync calls) in thread pool."""
+    import numpy as np
+
+    if len(asset_price_30d) < 20:
+        return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "insufficient_data"}
+
+    asset_returns = [
+        (asset_price_30d[i] - asset_price_30d[i-1]) / asset_price_30d[i-1]
+        for i in range(1, len(asset_price_30d))
+        if asset_price_30d[i-1] > 0
+    ]
+    if len(asset_returns) < 15:
+        return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "insufficient_data"}
+
+    # Fetch 3 factors concurrently in thread pool
+    results = await asyncio.gather(
+        _fetch_factor_rets("DX-Y.NYB", "dxy"),
+        _fetch_factor_rets("^VIX", "vix"),
+        _fetch_factor_rets("^TNX", "tnx"),
+    )
+    factors = {name: rets for name, rets in results if rets is not None}
+
+    if "dxy" not in factors and "vix" not in factors:
+        return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "insufficient_data"}
+
+    def calc_beta(asset_rets, factor_rets):
+        if not factor_rets or len(factor_rets) < 15:
+            return 0
+        n = min(len(asset_rets), len(factor_rets))
+        a, f = asset_rets[:n], factor_rets[:n]
+        if np.std(a) == 0 or np.std(f) == 0:
+            return 0
+        corr = np.corrcoef(a, f)[0, 1]
+        return round(corr, 3) if not np.isnan(corr) else 0
+
+    return {
+        "dxy_beta": calc_beta(asset_returns, factors.get("dxy", [])),
+        "vix_beta": calc_beta(asset_returns, factors.get("vix", [])),
+        "tnx_beta": calc_beta(asset_returns, factors.get("tnx", [])),
+        "source": "30d_rolling",
+    }
+
+
+_beta_sem = asyncio.Semaphore(3)
+
 async def calculate_asset_betas(asset_id: str, asset_price_30d: list) -> dict:
     """
     Calculate 30d rolling betas between asset and macro factors (DXY, VIX, 10Y).
-    Returns beta values for each factor.
+    Runs fully in thread pool — yfinance sync calls no longer block the event loop.
+    Concurrent beta calcs capped at 3 via semaphore.
     """
     cache_key = f"betas:{asset_id}"
     cached = _cache_get(cache_key)
@@ -255,73 +321,10 @@ async def calculate_asset_betas(asset_id: str, asset_price_30d: list) -> dict:
         return cached
 
     try:
-        import yfinance as yf
-        import numpy as np
-
-        # Need at least 20 data points
-        if len(asset_price_30d) < 20:
-            return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "insufficient_data"}
-
-        # Calculate asset returns
-        asset_returns = []
-        for i in range(1, len(asset_price_30d)):
-            if asset_price_30d[i-1] > 0:
-                ret = (asset_price_30d[i] - asset_price_30d[i-1]) / asset_price_30d[i-1]
-                asset_returns.append(ret)
-
-        if len(asset_returns) < 15:
-            return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "insufficient_data"}
-
-        # Fetch macro factor data
-        factors = {}
-        for symbol, name in [("DX-Y.NYB", "dxy"), ("^VIX", "vix"), ("^TNX", "tnx")]:
-            try:
-                ticker = yf.Ticker(symbol)
-                hist = ticker.history(period="35d")
-                if len(hist) > 20:
-                    prices = hist['Close'].values
-                    rets = []
-                    for i in range(1, len(prices)):
-                        if prices[i-1] > 0:
-                            r = (prices[i] - prices[i-1]) / prices[i-1]
-                            rets.append(r)
-                    if len(rets) >= 15:
-                        factors[name] = rets
-            except Exception as e:
-                _logger.warning(f"[Beta] yfinance factor {symbol} failed: {e}")
-
-        if not factors:
-            return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "yfinance_error"}
-
-        # Require at least DXY or VIX — TNX optional.
-        # Previous bug: min() over all factors including missing ones (default [0] = length 1)
-        # caused min_len=1 → insufficient_data even when DXY+VIX were fully fetched.
-        if "dxy" not in factors and "vix" not in factors:
-            return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "insufficient_data"}
-
-        # Calculate betas per-factor with independent length alignment (robust to partial failures).
-        def calc_beta(asset_rets, factor_rets):
-            if not factor_rets or len(factor_rets) < 15:
-                return 0
-            n = min(len(asset_rets), len(factor_rets))
-            a = asset_rets[:n]
-            f = factor_rets[:n]
-            if np.std(a) == 0 or np.std(f) == 0:
-                return 0
-            correlation = np.corrcoef(a, f)[0, 1]
-            if np.isnan(correlation):
-                return 0
-            return round(correlation, 3)
-
-        result = {
-            "dxy_beta": calc_beta(asset_returns, factors.get("dxy", [])),
-            "vix_beta": calc_beta(asset_returns, factors.get("vix", [])),
-            "tnx_beta": calc_beta(asset_returns, factors.get("tnx", [])),
-            "source": "30d_rolling"
-        }
-
-        return _cache_set(cache_key, result)
-
+        async with _beta_sem:
+            result = await asyncio.to_thread(_betas_in_thread, asset_id, asset_price_30d)
+        _cache_set(cache_key, result)
+        return result
     except Exception as e:
         return {"dxy_beta": 0, "vix_beta": 0, "tnx_beta": 0, "source": "error"}
 
@@ -523,8 +526,8 @@ async def fetch_cg_markets() -> Dict[str, dict]:
                         "volume_24h": coin.get("total_volume", 0),
                         "price": coin.get("current_price", 0),
                         "change_24h": coin.get("price_change_percentage_24h", 0),
-                        "change_7d": coin.get("price_change_percentage_7d", 0),
-                        "change_30d": coin.get("price_change_percentage_30d", 0),
+                        "change_7d": coin.get("price_change_percentage_7d_in_currency") or coin.get("price_change_percentage_7d", 0),
+                        "change_30d": coin.get("price_change_percentage_30d_in_currency") or coin.get("price_change_percentage_30d", 0),
                         "circulating_supply": coin.get("circulating_supply", 0),
                         "total_supply": coin.get("total_supply", 0),
                         "ath_change_percentage": coin.get("ath_change_percentage", 0),
