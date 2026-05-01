@@ -1137,6 +1137,11 @@ async def get_macro_pulse() -> dict:
                         result["regime_inputs"] = fred_data.get("regime_inputs", {})
                 # Always apply unified regime: blend crypto sentiment + macro inputs
                 _apply_unified_regime(result, fred_data, _fg_val, _btc_dom, cg_data)
+                # Write unified regime to shared key so CIS endpoint reads the same value
+                await _redis_set("cis:regime", {
+                    "regime": result["macro_regime"],
+                    "source": result.get("regime_source", "unified"),
+                }, ttl=300)
             else:
                 # No EODHD key — try FRED directly (free, no API key needed)
                 fred_data = await _get_fred_macro_indicators("usa")
@@ -1147,6 +1152,11 @@ async def get_macro_pulse() -> dict:
                     result["regime_inputs"] = fred_data.get("regime_inputs", {})
                 # Always apply unified regime: blend crypto sentiment + macro inputs
                 _apply_unified_regime(result, fred_data, _fg_val, _btc_dom, cg_data)
+                # Write unified regime to shared key so CIS endpoint reads the same value
+                await _redis_set("cis:regime", {
+                    "regime": result["macro_regime"],
+                    "source": result.get("regime_source", "unified"),
+                }, ttl=300)
         except Exception:
             pass  # regime stays UNKNOWN — non-blocking
 

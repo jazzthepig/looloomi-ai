@@ -184,6 +184,16 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         # Sort by CIS score descending
         merged.sort(key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
 
+        # Fetch the unified regime written by get_macro_pulse() to ensure consistency
+        # across both endpoints. Fall back to cached regime if Redis read fails.
+        try:
+            from src.data.market.data_layer import _redis_get
+            unified = await _redis_get("cis:regime")
+            if unified and unified.get("regime"):
+                _cached_regime = unified["regime"]
+        except Exception:
+            pass  # keep existing _cached_regime on error
+
         # macro_regime: Mac Mini may send flat {"regime": "Risk-Off"} or
         # nested {"macro": {"regime": ...}} — try both paths, then fall back
         # to Railway's own regime calculation so we never return UNKNOWN
@@ -192,6 +202,7 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
             or cached.get("regime")
             or (result.get("macro") or {}).get("regime")
             or (result.get("regime"))
+            or _cached_regime  # unified regime from Redis takes priority
             or "UNKNOWN"
         )
 
@@ -221,7 +232,16 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
     # Pure Railway (no Mac Mini data available)
     if railway_universe:
         result["source"] = "railway"
-        result["macro_regime"] = (result.get("macro") or {}).get("regime", "UNKNOWN")
+        # Try unified regime from Redis, then fallback to own regime detection
+        try:
+            from src.data.market.data_layer import _redis_get
+            unified = await _redis_get("cis:regime")
+            if unified and unified.get("regime"):
+                result["macro_regime"] = unified["regime"]
+            else:
+                result["macro_regime"] = (result.get("macro") or {}).get("regime", "UNKNOWN")
+        except Exception:
+            result["macro_regime"] = (result.get("macro") or {}).get("regime", "UNKNOWN")
         result["t1_count"] = 0
         result["t2_count"] = len(railway_universe)
         return sanitize_floats(result)
