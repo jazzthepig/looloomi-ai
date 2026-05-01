@@ -185,10 +185,10 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         merged.sort(key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
 
         # Fetch the unified regime written by get_macro_pulse() to ensure consistency
-        # across both endpoints. This is the PRIMARY source — override VIX-based detection.
+        # across both endpoints. Use store.redis_get_key (same Upstash client) to avoid
+        # import issues with data_layer's _redis_get.
         try:
-            from src.data.market.data_layer import _redis_get
-            unified = await _redis_get("cis:regime")
+            unified = await store.redis_get_key("cis:regime")
             if unified and unified.get("regime"):
                 _cached_regime = unified["regime"]
             else:
@@ -200,7 +200,6 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
                     or "UNKNOWN"
                 )
         except Exception:
-            # Redis unavailable — try all fallback paths but prefer Mac Mini / cached
             _cached_regime = (
                 (cached.get("macro") or {}).get("regime")
                 or cached.get("regime")
@@ -235,10 +234,9 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
     # Pure Railway (no Mac Mini data available)
     if railway_universe:
         result["source"] = "railway"
-        # Try unified regime from Redis, then fallback to own regime detection
+        # Try unified regime from Redis (written by get_macro_pulse), then VIX fallback
         try:
-            from src.data.market.data_layer import _redis_get
-            unified = await _redis_get("cis:regime")
+            unified = await store.redis_get_key("cis:regime")
             if unified and unified.get("regime"):
                 result["macro_regime"] = unified["regime"]
             else:
