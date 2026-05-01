@@ -184,14 +184,27 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         # Sort by CIS score descending
         merged.sort(key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
 
-        # Fetch the unified regime written by get_macro_pulse() to ensure consistency
-        # across both endpoints. Use store.redis_get_key (same Upstash client) to avoid
-        # import issues with data_layer's _redis_get.
+        # Get unified regime directly from get_macro_pulse() rather than via Redis.
+        # This ensures both endpoints return identical macro_regime without Redis round-trip.
         try:
-            unified = await store.redis_get_key("cis:regime")
-            if unified and unified.get("regime"):
-                _cached_regime = unified["regime"]
-            else:
+            from src.data.market.data_layer import get_macro_pulse
+            pulse = await get_macro_pulse()
+            _cached_regime = pulse.get("macro_regime") or "UNKNOWN"
+        except Exception:
+            # Fallback: try Redis key, then Mac Mini cached, then VIX
+            try:
+                unified = await store.redis_get_key("cis:regime")
+                if unified and unified.get("regime"):
+                    _cached_regime = unified["regime"]
+                else:
+                    _cached_regime = (
+                        (cached.get("macro") or {}).get("regime")
+                        or cached.get("regime")
+                        or (result.get("macro") or {}).get("regime")
+                        or (result.get("regime"))
+                        or "UNKNOWN"
+                    )
+            except Exception:
                 _cached_regime = (
                     (cached.get("macro") or {}).get("regime")
                     or cached.get("regime")
@@ -199,14 +212,6 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
                     or (result.get("regime"))
                     or "UNKNOWN"
                 )
-        except Exception:
-            _cached_regime = (
-                (cached.get("macro") or {}).get("regime")
-                or cached.get("regime")
-                or (result.get("macro") or {}).get("regime")
-                or (result.get("regime"))
-                or "UNKNOWN"
-            )
 
         # Normalize T1 pillars: Mac Mini sends flat keys (f/m/o/s/a).
         # Build nested pillars dict so frontend components can read asset.pillars.F etc.
@@ -234,13 +239,11 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
     # Pure Railway (no Mac Mini data available)
     if railway_universe:
         result["source"] = "railway"
-        # Try unified regime from Redis (written by get_macro_pulse), then VIX fallback
+        # Get unified regime directly from get_macro_pulse() — same source as macro-pulse endpoint
         try:
-            unified = await store.redis_get_key("cis:regime")
-            if unified and unified.get("regime"):
-                result["macro_regime"] = unified["regime"]
-            else:
-                result["macro_regime"] = (result.get("macro") or {}).get("regime", "UNKNOWN")
+            from src.data.market.data_layer import get_macro_pulse
+            pulse = await get_macro_pulse()
+            result["macro_regime"] = pulse.get("macro_regime") or "UNKNOWN"
         except Exception:
             result["macro_regime"] = (result.get("macro") or {}).get("regime", "UNKNOWN")
         result["t1_count"] = 0
