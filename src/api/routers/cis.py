@@ -196,13 +196,13 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
 
         # macro_regime: Mac Mini may send flat {"regime": "Risk-Off"} or
         # nested {"macro": {"regime": ...}} — try both paths, then fall back
-        # to Railway's own regime calculation so we never return UNKNOWN
+        # to unified regime from Redis (written by get_macro_pulse), then VIX-based detection
         _cached_regime = (
             (cached.get("macro") or {}).get("regime")
             or cached.get("regime")
-            or (result.get("macro") or {}).get("regime")
+            or _cached_regime  # unified regime from Redis — takes priority
+            or (result.get("macro") or {}).get("regime")  # VIX-based fallback
             or (result.get("regime"))
-            or _cached_regime  # unified regime from Redis takes priority
             or "UNKNOWN"
         )
 
