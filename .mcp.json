@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "cometcloud": {
+      "command": "python3",
+      "args": ["src/mcp/cometcloud_mcp.py"],
+      "cwd": "${workspaceRoot}",
+      "env": {
+        "COMETCLOUD_API_BASE": "https://looloomi.ai",
+        "MCP_API_TIMEOUT": "20",
+        "MCP_API_TIMEOUT_CIS": "60"
+      }
+    },
+    "lmstudio": {
+      "command": "node",
+      "args": ["src/mcp/lmstudio_bridge.js"],
+      "cwd": "${workspaceRoot}",
+      "env": {
+        "LMSTUDIO_BASE": "http://localhost:1234",
+        "LMSTUDIO_MODEL": "",
+        "LM_TEMPERATURE": "0.7"
+      },
+      "_note": "Mac Mini only — LM Studio must be running at localhost:1234. Auto-detects loaded model (gemma4-26b)."
+    }
+  }
+}
