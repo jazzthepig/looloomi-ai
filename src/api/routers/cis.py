@@ -185,26 +185,29 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         merged.sort(key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
 
         # Fetch the unified regime written by get_macro_pulse() to ensure consistency
-        # across both endpoints. Fall back to cached regime if Redis read fails.
+        # across both endpoints. This is the PRIMARY source — override VIX-based detection.
         try:
             from src.data.market.data_layer import _redis_get
             unified = await _redis_get("cis:regime")
             if unified and unified.get("regime"):
                 _cached_regime = unified["regime"]
+            else:
+                _cached_regime = (
+                    (cached.get("macro") or {}).get("regime")
+                    or cached.get("regime")
+                    or (result.get("macro") or {}).get("regime")
+                    or (result.get("regime"))
+                    or "UNKNOWN"
+                )
         except Exception:
-            pass  # keep existing _cached_regime on error
-
-        # macro_regime: Mac Mini may send flat {"regime": "Risk-Off"} or
-        # nested {"macro": {"regime": ...}} — try both paths, then fall back
-        # to unified regime from Redis (written by get_macro_pulse), then VIX-based detection
-        _cached_regime = (
-            (cached.get("macro") or {}).get("regime")
-            or cached.get("regime")
-            or _cached_regime  # unified regime from Redis — takes priority
-            or (result.get("macro") or {}).get("regime")  # VIX-based fallback
-            or (result.get("regime"))
-            or "UNKNOWN"
-        )
+            # Redis unavailable — try all fallback paths but prefer Mac Mini / cached
+            _cached_regime = (
+                (cached.get("macro") or {}).get("regime")
+                or cached.get("regime")
+                or (result.get("macro") or {}).get("regime")
+                or (result.get("regime"))
+                or "UNKNOWN"
+            )
 
         # Normalize T1 pillars: Mac Mini sends flat keys (f/m/o/s/a).
         # Build nested pillars dict so frontend components can read asset.pillars.F etc.
