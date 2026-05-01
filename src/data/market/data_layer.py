@@ -1128,13 +1128,15 @@ async def get_macro_pulse() -> dict:
                     result["regime_source"]  = "eodhd_derived"
                     result["regime_inputs"]  = us_macro.get("regime_inputs", {})
                 else:
-                    # EODHD returned error/unavailable — try FRED (free, no key)
+                    # EODHD failed or missing — try FRED
                     fred_data = await _get_fred_macro_indicators("usa")
                     fred_regime = fred_data.get("derived_regime")
                     if fred_regime and fred_regime != "UNKNOWN":
                         result["macro_regime"]   = fred_regime
                         result["regime_source"] = "fred_derived"
                         result["regime_inputs"] = fred_data.get("regime_inputs", {})
+                # Always apply unified regime: blend crypto sentiment + macro inputs
+                _apply_unified_regime(result, fred_data, _fg_val, _btc_dom, cg_data)
             else:
                 # No EODHD key — try FRED directly (free, no API key needed)
                 fred_data = await _get_fred_macro_indicators("usa")
@@ -1143,33 +1145,8 @@ async def get_macro_pulse() -> dict:
                     result["macro_regime"]   = fred_regime
                     result["regime_source"] = "fred_derived"
                     result["regime_inputs"] = fred_data.get("regime_inputs", {})
-
-            # ── Unified regime: blend crypto sentiment + macro inputs ─────────────
-            # Sources: VIX (from cis:macro_data Redis), FNG (already fetched),
-            # BTC 30d (from CG global), macro inputs (from FRED above).
-            # Weight: crypto sentiment 40%, real-economy 60%.
-            try:
-                fred_ind  = fred_data.get("indicators", {}) if fred_data else {}
-                cpi_val   = (fred_ind.get("cpi_yoy") or {}).get("value", 0) or 0
-                gdp_val   = (fred_ind.get("gdp_growth") or {}).get("value", 0) or 0
-                rate_val  = (fred_ind.get("interest_rate") or {}).get("value", 0) or 0
-                r_trend   = (fred_ind.get("interest_rate") or {}).get("trend", "")
-                btc_30d   = cg_data.get("market_cap_change_percentage_24h_usd", 0) or 0
-
-                unified   = derive_regime_unified(
-                    vix      = result.get("vix"),       # may be None if not available
-                    fng_value= _fg_val,
-                    btc_30d  = btc_30d,
-                    btc_dom  = _btc_dom,
-                    cpi      = cpi_val,
-                    gdp      = gdp_val,
-                    rate     = rate_val,
-                    rate_trend= r_trend,
-                )
-                result["macro_regime"]   = unified
-                result["regime_source"]  = "unified"
-            except Exception:
-                pass  # keep existing regime_source set above
+                # Always apply unified regime: blend crypto sentiment + macro inputs
+                _apply_unified_regime(result, fred_data, _fg_val, _btc_dom, cg_data)
         except Exception:
             pass  # regime stays UNKNOWN — non-blocking
 
