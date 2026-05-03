@@ -498,7 +498,7 @@ def _score_protocol(proto: dict, tvl_data: dict | None, category_stats: dict) ->
 
 def _fmt_usd(v: float) -> str:
     if not v:
-        return "—"
+        return "$0"
     if v >= 1e12:
         return f"${v/1e12:.1f}T"
     if v >= 1e9:
