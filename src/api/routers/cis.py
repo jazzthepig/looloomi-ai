@@ -12,7 +12,6 @@ from src.api.store import (
     redis_set, redis_get,
     redis_set_key, redis_get_key,
     supabase_insert_batch, supabase_get_history,
-    supabase_get_recent_scores,
     sanitize_floats, ws_manager,
 )
 import src.api.store as store
@@ -69,60 +68,28 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
         _logger.info(f"[INTERNAL] Received {len(universe)} CIS scores — Redis write: {ok}")
 
         # 2. Write to Supabase (score history, persistent)
-        #    Also computes score_delta and score_zscore from recent history.
         sb_ok = False
         if universe:
-            # Fetch last 30 scores per symbol to compute delta + Z-score
-            # (done in bulk: one query per push, not per asset)
-            symbols_in_push = [a.get("symbol", "") for a in universe if a.get("symbol")]
-            recent_scores   = await supabase_get_recent_scores(symbols_in_push, n=30)
-
-            macro_regime_push = payload.get("macro_regime") or (macro or {}).get("regime")
-
             sb_rows = []
             for asset in universe:
-                symbol  = asset.get("symbol", "")
                 pillars = asset.get("pillars", {})
-                score   = asset.get("cis_score") or asset.get("score")
-                data_tier = "T1" if asset.get("data_tier") == "T1" else "T2"
-
-                # Score delta and Z-score from recent history
-                score_delta  = None
-                score_zscore = None
-                history = recent_scores.get(symbol, [])
-                if history and score is not None:
-                    prev_scores = [h["score"] for h in history if h.get("score") is not None]
-                    if prev_scores:
-                        score_delta = round(score - prev_scores[0], 2)
-                        if len(prev_scores) >= 5:
-                            mean = sum(prev_scores) / len(prev_scores)
-                            std  = (sum((s - mean) ** 2 for s in prev_scores) / len(prev_scores)) ** 0.5
-                            score_zscore = round((score - mean) / std, 3) if std > 0 else 0.0
-
                 sb_rows.append({
-                    "symbol":        symbol,
-                    "name":          asset.get("name", ""),
-                    "score":         score,
-                    "raw_cis_score": asset.get("raw_cis_score") or score,
-                    "grade":         asset.get("grade"),
-                    "signal":        asset.get("signal"),
-                    "percentile":    asset.get("percentile_rank"),
-                    "pillar_f":      pillars.get("F") if isinstance(pillars, dict) else None,
-                    "pillar_m":      pillars.get("M") if isinstance(pillars, dict) else None,
-                    "pillar_o":      pillars.get("O") if isinstance(pillars, dict) else None,
-                    "pillar_s":      pillars.get("S") if isinstance(pillars, dict) else None,
-                    "pillar_a":      pillars.get("A") if isinstance(pillars, dict) else None,
-                    "asset_class":   asset.get("asset_class", asset.get("class", "")),
-                    "macro_regime":  macro_regime_push,
-                    "data_tier":     data_tier,
-                    "las":           asset.get("las"),
-                    "confidence":    asset.get("confidence", 1.0 if data_tier == "T1" else 0.8),
-                    "score_delta":   score_delta,
-                    "score_zscore":  score_zscore,
-                    "source":        "local_engine",
+                    "symbol":      asset.get("symbol", ""),
+                    "name":        asset.get("name", ""),
+                    "score":       asset.get("cis_score") or asset.get("score"),
+                    "grade":       asset.get("grade"),
+                    "signal":      asset.get("signal"),
+                    "percentile":  asset.get("percentile_rank"),
+                    "pillar_f":    pillars.get("F") if isinstance(pillars, dict) else None,
+                    "pillar_m":    pillars.get("M") if isinstance(pillars, dict) else None,
+                    "pillar_o":    pillars.get("O") if isinstance(pillars, dict) else None,
+                    "pillar_s":    pillars.get("S") if isinstance(pillars, dict) else None,
+                    "pillar_a":    pillars.get("A") if isinstance(pillars, dict) else None,
+                    "asset_class": asset.get("asset_class", asset.get("class", "")),
+                    "source":      "local_engine",
                 })
             sb_ok = await supabase_insert_batch(sb_rows)
-            _logger.warning(f"[INTERNAL] Supabase history write: {sb_ok} ({len(sb_rows)} rows, with delta+zscore)")
+            _logger.warning(f"[INTERNAL] Supabase history write: {sb_ok} ({len(sb_rows)} rows)")
 
         # 3. Broadcast to WebSocket clients
         asyncio.create_task(_broadcast_cis_update(universe))
@@ -406,7 +373,7 @@ async def get_cis_asset(symbol: str):
     """Get CIS score for a specific asset."""
     universe = await get_cis_universe()
     for asset in universe.get("universe", []):
-        if asset.get("symbol", asset.get("asset_id", "")).upper() == symbol.upper():
+        if asset["symbol"].upper() == symbol.upper():
             return asset
     return {"error": "Asset not found"}
 
@@ -647,18 +614,10 @@ async def get_regime_analysis(response: Response = None):
 # IMPORTANT: batch route MUST be registered before {symbol} route to avoid shadowing
 
 @router.get("/api/v1/cis/history/batch")
-async def get_cis_history_batch(
-    symbols: str,
-    days: int = Query(default=30, ge=1, le=365),
-    include_historical: bool = Query(default=True),
-):
+async def get_cis_history_batch(symbols: str, days: int = 7):
     """
-    Batch CIS history — single request for up to 60 symbols.
-    Returns map of symbol → [rows sorted oldest-first].
-    Each row includes: score, grade, signal, pillar_f..a, macro_regime, data_tier,
-                       score_delta, score_zscore, recorded_at.
-    include_historical=True (default): includes T2_historical reconstruction rows.
-    include_historical=False: live pushes only (source=local_engine).
+    Batch CIS history — single request for all symbols.
+    Eliminates N+1 sparkline fetches. Returns map of symbol → history array.
     """
     _SYMBOL_RE = re.compile(r"^[A-Z0-9]{2,12}(,[A-Z0-9]{2,12})*$")
     if not _SYMBOL_RE.match(symbols.upper()):
@@ -667,30 +626,31 @@ async def get_cis_history_batch(
     if not symbol_list:
         return {"status": "error", "message": "No symbols provided", "data": {}}
 
-    cache_key = f"cis:history:batch:{','.join(sorted(symbol_list))}:{days}:{include_historical}"
-    cached = await redis_get_key(cache_key)
-    if cached:
-        return cached
-
     results = await asyncio.gather(
         *[supabase_get_history(sym, days) for sym in symbol_list],
         return_exceptions=True,
     )
 
-    data: dict = {}
+    data = {}
     for sym, rows in zip(symbol_list, results):
-        if isinstance(rows, Exception) or not rows:
-            data[sym] = []
-            continue
-        # Sort oldest-first for time-series charts
-        sorted_rows = list(reversed(rows))
-        if not include_historical:
-            sorted_rows = [r for r in sorted_rows if r.get("source") == "local_engine"]
-        data[sym] = sorted_rows
+        data[sym] = [] if isinstance(rows, Exception) or not rows else list(reversed(rows))
 
-    result = {"status": "success", "days": days, "count": len(data), "data": data}
-    await redis_set_key(cache_key, result, ttl=120)
-    return result
+    return {"status": "success", "days": days, "count": len(data), "data": data}
+
+
+@router.get("/api/v1/cis/history/{symbol}")
+async def get_cis_history(symbol: str, days: int = 7):
+    """CIS score history for sparklines. Up to days*48 data points (30-min intervals)."""
+    rows = await supabase_get_history(symbol.upper(), days)
+    if not rows:
+        return {"status": "empty", "symbol": symbol.upper(), "days": days, "history": []}
+    return {
+        "status":  "success",
+        "symbol":  symbol.upper(),
+        "days":    days,
+        "count":   len(rows),
+        "history": list(reversed(rows)),  # chronological for sparklines
+    }
 
 
 # ── Backtest ──────────────────────────────────────────────────────────────────

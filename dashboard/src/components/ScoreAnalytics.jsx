@@ -53,134 +53,82 @@ function gradeForScore(score) {
 }
 
 /* ─── Grade Migration Heatmap ────────────────────────────────────────────── */
-// Compute score velocity from last N history rows (oldest-first assumed)
-function computeVelocity(hist) {
-  const scores = hist.map(h => h.score).filter(s => s != null);
-  if (scores.length < 2) return null;
-  return scores[scores.length - 1] - scores[0]; // total change over window
-}
-
-function VelocityBadge({ delta }) {
-  if (delta == null) return <span style={{ fontSize: 9, color: T.t4 }}>—</span>;
-  const abs = Math.abs(delta);
-  if (abs < 1) return <span style={{ fontSize: 9, color: T.t3 }}>→</span>;
-  const color = delta > 0 ? "#00D98A" : "#ef4444";
-  const arrow = delta > 0 ? "↑" : "↓";
-  return (
-    <span style={{ fontSize: 9, color, fontWeight: 700, fontFamily: FONTS.mono }}>
-      {arrow}{abs.toFixed(1)}
-    </span>
-  );
-}
-
 function GradeHeatmap({ assets, historyMap }) {
-  // Show last 14 days so historical reconstruction data is visible
-  const NUM_DAYS = 14;
+  // Build 7 date labels (today → -6d)
   const days = [];
-  for (let i = NUM_DAYS - 1; i >= 0; i--) {
+  for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     days.push(d.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
   }
 
   const rows = assets.slice(0, 20);
-  const cellW = 40, cellH = 26;
+  const cellW = 52, cellH = 28;
 
   if (!rows.length) return (
     <div style={{ color: T.t3, fontFamily: FONTS.body, fontSize: 13, padding: "32px 0", textAlign: "center" }}>
-      No asset data yet. Run the reconstruction script or wait for live CIS pushes.
+      No asset data yet. Scores populate once CIS push is active.
     </div>
   );
 
-  // Check how much real history we have
-  const totalRows = Object.values(historyMap).reduce((s, v) => s + (v?.length || 0), 0);
-  const hasRealHistory = totalRows > rows.length * 2; // more than just current scores
-
   return (
-    <div>
-      {!hasRealHistory && (
-        <div style={{
-          background: "rgba(6,182,212,0.06)", border: `1px solid ${T.cyan}20`,
-          borderRadius: 8, padding: "10px 14px", marginBottom: 12,
-          fontSize: 11, color: T.t3, fontFamily: FONTS.body,
-        }}>
-          <span style={{ color: T.cyan, fontWeight: 600 }}>History populating</span>
-          {" — "}run <code style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t2 }}>python scripts/reconstruct_cis_history.py</code>
-          {" "}to backfill 365 days, or wait for live pushes to accumulate.
-        </div>
-      )}
-      <div style={{ overflowX: "auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: `90px 44px repeat(${NUM_DAYS}, ${cellW}px)`, gap: 1, minWidth: 600 }}>
-          {/* Header */}
-          <div style={{ fontSize: 9, color: T.t4, fontFamily: FONTS.mono, padding: "6px 0" }} />
-          <div style={{ fontSize: 9, color: T.t4, fontFamily: FONTS.mono, textAlign: "center", padding: "6px 2px" }}>Δ30d</div>
-          {days.map(d => (
-            <div key={d} style={{ fontSize: 8, color: T.t3, fontFamily: FONTS.mono, textAlign: "center", padding: "6px 1px" }}>
-              {d.replace(/\s/g, "\n")}
-            </div>
-          ))}
+    <div style={{ overflowX: "auto" }}>
+      <div style={{ display: "grid", gridTemplateColumns: `100px repeat(7, ${cellW}px)`, gap: 1, minWidth: 480 }}>
+        {/* Header */}
+        <div style={{ fontSize: 10, color: T.t4, fontFamily: FONTS.mono, padding: "6px 0" }} />
+        {days.map(d => (
+          <div key={d} style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.mono, textAlign: "center", padding: "6px 2px" }}>{d}</div>
+        ))}
 
-          {/* Rows */}
-          {rows.map(asset => {
-            const hist = historyMap[asset.symbol] || [];
-            const velocity = computeVelocity(hist);
-            const now = Date.now();
-            const slotGrades = days.map((_, idx) => {
-              const dayStart = now - (NUM_DAYS - 1 - idx) * 86400000;
-              const dayEnd   = dayStart + 86400000;
-              const inSlot   = hist.filter(h => {
-                const ts = new Date(h.recorded_at || h.ts || 0).getTime();
-                return ts >= dayStart && ts < dayEnd;
-              });
-              if (!inSlot.length) return idx === NUM_DAYS - 1 ? (asset.grade || gradeForScore(asset.score || 0)) : null;
-              const avg = inSlot.reduce((s, h) => s + (h.score || 0), 0) / inSlot.length;
-              return gradeForScore(avg);
+        {/* Rows */}
+        {rows.map(asset => {
+          const hist = historyMap[asset.symbol] || [];
+          // Bucket history into 7 day slots
+          const now = Date.now();
+          const slotGrades = days.map((_, idx) => {
+            const dayStart = now - (6 - idx) * 86400000;
+            const dayEnd   = dayStart + 86400000;
+            const inSlot   = hist.filter(h => {
+              const ts = new Date(h.recorded_at || h.ts || 0).getTime();
+              return ts >= dayStart && ts < dayEnd;
             });
+            if (!inSlot.length) return asset.grade || gradeForScore(asset.score || 0);
+            const avg = inSlot.reduce((s, h) => s + (h.score || 0), 0) / inSlot.length;
+            return gradeForScore(avg);
+          });
 
-            return [
-              <div key={`sym-${asset.symbol}`} style={{
-                fontSize: 11, color: T.t2, fontFamily: FONTS.mono,
-                display: "flex", alignItems: "center", padding: "2px 0",
-                overflow: "hidden", whiteSpace: "nowrap",
-              }}>
-                {asset.symbol}
-              </div>,
-              <div key={`vel-${asset.symbol}`} style={{
+          return [
+            <div key={`sym-${asset.symbol}`} style={{
+              fontSize: 11, color: T.t2, fontFamily: FONTS.mono,
+              display: "flex", alignItems: "center", padding: "2px 0",
+              overflow: "hidden", whiteSpace: "nowrap",
+            }}>
+              {asset.symbol}
+            </div>,
+            ...slotGrades.map((grade, di) => (
+              <div key={`${asset.symbol}-${di}`} style={{
                 height: cellH, display: "flex", alignItems: "center", justifyContent: "center",
+                background: `${GRADE_COLOR[grade]}18`,
+                border: `1px solid ${GRADE_COLOR[grade]}30`,
+                borderRadius: 4,
               }}>
-                <VelocityBadge delta={velocity} />
-              </div>,
-              ...slotGrades.map((grade, di) => grade ? (
-                <div key={`${asset.symbol}-${di}`} style={{
-                  height: cellH, display: "flex", alignItems: "center", justifyContent: "center",
-                  background: `${GRADE_COLOR[grade]}18`,
-                  border: `1px solid ${GRADE_COLOR[grade]}30`,
-                  borderRadius: 3,
-                }}>
-                  <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: GRADE_COLOR[grade], fontWeight: 600 }}>
-                    {grade}
-                  </span>
-                </div>
-              ) : (
-                <div key={`${asset.symbol}-${di}`} style={{
-                  height: cellH, borderRadius: 3,
-                  background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}20`,
-                }} />
-              )),
-            ];
-          })}
-        </div>
+                <span style={{ fontSize: 10, fontFamily: FONTS.mono, color: GRADE_COLOR[grade], fontWeight: 600 }}>
+                  {grade}
+                </span>
+              </div>
+            )),
+          ];
+        })}
+      </div>
 
-        {/* Grade legend */}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14, alignItems: "center" }}>
-          {GRADE_ORDER.map(g => (
-            <div key={g} style={{ display: "flex", alignItems: "center", gap: 3 }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, background: GRADE_COLOR[g] }} />
-              <span style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.mono }}>{g}</span>
-            </div>
-          ))}
-          <span style={{ fontSize: 9, color: T.t4, fontFamily: FONTS.mono, marginLeft: 8 }}>Δ30d = 30-day score change</span>
-        </div>
+      {/* Grade legend */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
+        {GRADE_ORDER.map(g => (
+          <div key={g} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ width: 10, height: 10, borderRadius: 2, background: GRADE_COLOR[g] }} />
+            <span style={{ fontSize: 10, color: T.t3, fontFamily: FONTS.mono }}>{g}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -328,12 +276,11 @@ export default function ScoreAnalytics({ universe: universeProp = [] }) {
   }, [universeProp]);
 
   // 2. Batch fetch history whenever universe changes
-  //    Request 30 days to cover both live pushes and historical reconstruction data.
   useEffect(() => {
     if (!universe.length) return;
     const top20 = universe.slice(0, 20).map(a => a.symbol).join(",");
     setHistLoading(true);
-    fetch(`${API}/api/v1/cis/history/batch?symbols=${top20}&days=30&include_historical=true`)
+    fetch(`${API}/api/v1/cis/history/batch?symbols=${top20}&days=7`)
       .then(r => r.json())
       .then(hd => {
         setHistoryMap(hd.data || hd.history || {});
