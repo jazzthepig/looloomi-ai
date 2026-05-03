@@ -337,8 +337,8 @@ async def _exec_regime_briefing(task_id: str, params: dict):
 
         regime  = macro_pulse.get("macro_regime", "Unknown") if not isinstance(macro_pulse, Exception) else "Unknown"
         btc     = macro_pulse.get("btc_price") if not isinstance(macro_pulse, Exception) else None
-        fng     = macro_pulse.get("fear_greed_value") if not isinstance(macro_pulse, Exception) else None
-        fng_cls = macro_pulse.get("fear_greed_classification") if not isinstance(macro_pulse, Exception) else None
+        fng     = macro_pulse.get("fear_greed_index") if not isinstance(macro_pulse, Exception) else None
+        fng_cls = macro_pulse.get("fear_greed_label") if not isinstance(macro_pulse, Exception) else None
         dom     = macro_pulse.get("btc_dominance") if not isinstance(macro_pulse, Exception) else None
 
         _REGIME_SIGNALS = {
@@ -531,3 +531,49 @@ async def list_tasks(
             for t in tasks
         ],
     }
+
+
+# ── Analytics: Pillar Fitness — Simons Upgrade P0.3 ──────────────────────────
+
+@router.get("/api/v1/analytics/pillar-fitness")
+async def get_pillar_fitness(response: Response = None):
+    """
+    Returns regime-specific pillar weights from signal_fitness_regression.
+    These weights measure which pillars predict realized_return_7d across trade history.
+
+    Output:
+        regime_pillar_weights.json mapping regime → {F, M, O, S, A} weights.
+        Each regime shows: correlations, weights, sample_size.
+
+    Updated on every 100 new trade_results rows. Cached 1h in Redis.
+    Schedule: run after every 100 new trade_results rows.
+
+    Usage: agents use these weights to understand which pillars are most predictive
+    in each macro regime — improving signal quality over time.
+    """
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=3600, stale-while-revalidate=7200"
+
+    # Check Redis cache first
+    cache_key = "analytics:pillar_fitness"
+    cached = await _redis_get(cache_key)
+    if cached:
+        return {"status": "success", "source": "cache", **cached}
+
+    # Compute fresh from Supabase trade_results
+    try:
+        from src.analytics.signal_fitness_regression import (
+            build_pillar_fitness_output,
+            _fetch_trade_results,
+        )
+        rows = _fetch_trade_results()
+        if not rows:
+            return {"status": "success", "source": "computed", "error": "No trade results yet"}
+
+        data = build_pillar_fitness_output(rows)
+        # Cache result
+        await _redis_set(cache_key, data, ttl=3600)
+        return {"status": "success", "source": "computed", **data}
+    except Exception as e:
+        _logger.warning(f"[PILLAR_FITNESS] compute failed: {e}")
+        return {"status": "error", "message": str(e)}

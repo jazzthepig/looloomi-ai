@@ -33,16 +33,96 @@ Usage:
 
 import asyncio
 import json
+import logging
 import os
 import time
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
+import queue
 
 import httpx
 from cachetools import TTLCache
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from tenacity import retry, stop_after_attempt, wait_exponential
+
+_log = logging.getLogger("cometcloud_mcp")
+
+# ── Agent Call Log — Simons Upgrade P2.1 ───────────────────────────────────
+# Fire-and-forget async Supabase write. Must NOT add latency to tool responses.
+# Queue thread-safe, batched once/sec via background task.
+
+import queue
+_call_log_queue: queue.Queue = queue.Queue()
+_SB_URL   = os.getenv("SUPABASE_URL", "").rstrip("/")
+_SB_KEY   = os.getenv("SUPABASE_KEY", os.getenv("SUPABASE_SERVICE_KEY", ""))
+_SB_TABLE = "agent_call_log"
+
+
+def _enqueue_agent_call(tool_name: str, symbol: str = None, latency_ms: float = 0.0, response_size: int = 0):
+    """Queue a call for async write to Supabase. Thread-safe, non-blocking."""
+    _call_log_queue.put_nowait({
+        "tool_name": tool_name,
+        "symbol":    symbol,
+        "latency_ms": latency_ms,
+        "response_size_bytes": response_size,
+        "agent_id":  os.getenv("AGENT_ID", "mcp_server"),
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+    })
+
+
+async def _flush_call_log():
+    """Background task: drain queue and batch-write to Supabase. Runs every ~1s."""
+    if not _SB_URL or not _SB_KEY:
+        return
+    rows = []
+    while True:
+        try:
+            row = _call_log_queue.get_nowait()
+            rows.append(row)
+        except queue.Empty:
+            break
+        if len(rows) >= 50:  # flush at 50 rows
+            break
+
+    if not rows:
+        return
+
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                f"{_SB_URL}/rest/v1/{_SB_TABLE}",
+                content=json.dumps(rows),
+                headers={
+                    "apikey":        _SB_KEY,
+                    "Authorization": f"Bearer {_SB_KEY}",
+                    "Content-Type":  "application/json",
+                    "Prefer":        "return=minimal",
+                },
+            )
+        if resp.status_code not in (200, 201):
+            _log.warning(f"[AGENT_CALL_LOG] write failed: {resp.status_code}")
+    except Exception as e:
+        _log.warning(f"[AGENT_CALL_LOG] exception: {e}")
+
+
+# Start background flush task
+async def _call_log_loop():
+    while True:
+        await asyncio.sleep(1)
+        await _flush_call_log()
+
+# Start it once at module load (non-blocking)
+_background_task = asyncio.create_task(_call_log_loop())
+
+
+def _start_call_log():
+    """Idempotent start of background log task."""
+    global _background_task
+    if _background_task.done() or _background_task.cancelled():
+        _background_task = asyncio.create_task(_call_log_loop())
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -126,7 +206,7 @@ async def _get(
     timeout: Optional[float] = None,
     use_cache: bool = True,
 ) -> Any:
-    """GET with retry, circuit breaker, and 60s cache."""
+    """GET with retry, circuit breaker, and 60s cache. Instruments every call for agent_call_log."""
     key = _cache_key(path, params)
 
     # Circuit breaker check
@@ -143,18 +223,47 @@ async def _get(
 
     url = f"{RAILWAY_BASE}{path}"
     t = timeout if timeout is not None else API_TIMEOUT
-    async with httpx.AsyncClient(timeout=t) as client:
-        try:
+
+    # ── Simons Upgrade P2.1: instrument call timing
+    t0 = time.perf_counter()
+    tool_name = _derive_tool_name(path)
+    symbol = (params or {}).get("symbol") or (params or {}).get("symbols", "")
+    try:
+        async with httpx.AsyncClient(timeout=t) as client:
             resp = await client.get(url, params=params or {})
             resp.raise_for_status()
             result = resp.json()
+            latency_ms = (time.perf_counter() - t0) * 1000
+            response_size = len(resp.content) if hasattr(resp, 'content') else 0
+            _enqueue_agent_call(tool_name, symbol, latency_ms, response_size)
             if use_cache:
                 _cache[key] = result
             return result
-        except Exception as e:
-            if isinstance(e, (httpx.HTTPStatusError, httpx.TimeoutException, OSError)):
-                _breaker.record_failure()
-            raise
+    except Exception as e:
+        latency_ms = (time.perf_counter() - t0) * 1000
+        _enqueue_agent_call(tool_name, symbol, latency_ms, 0)
+        if isinstance(e, (httpx.HTTPStatusError, httpx.TimeoutException, OSError)):
+            _breaker.record_failure()
+        raise
+
+
+def _derive_tool_name(path: str) -> str:
+    """Map API path to canonical tool name for agent_call_log."""
+    if "/cis/universe" in path:   return "cometcloud_get_cis_universe"
+    if "/cis/asset" in path:      return "cometcloud_get_cis_asset"
+    if "/cis/history" in path:    return "cometcloud_get_cis_history"
+    if "/cis/top" in path:         return "cometcloud_get_cis_top"
+    if "/market/macro-pulse" in path: return "cometcloud_get_macro_pulse"
+    if "/market/movers" in path:  return "cometcloud_get_market_movers"
+    if "/market/prices" in path:  return "cometcloud_get_prices"
+    if "/signals/feed" in path:    return "cometcloud_get_signal_feed"
+    if "/events" in path:          return "cometcloud_get_macro_events"
+    if "/defi/protocols" in path:  return "cometcloud_get_protocols"
+    if "/defi/overview" in path:   return "cometcloud_get_defi_overview"
+    if "/defi/yields" in path:     return "cometcloud_get_top_yields"
+    if "/vault/portfolio" in path: return "cometcloud_get_fund_portfolio"
+    if "/institutional/flows" in path: return "cometcloud_get_institutional_flows"
+    return path.strip("/").replace("/", "_").replace("api_v1_", "") or "unknown"
 
 
 def _err(e: Exception) -> str:
