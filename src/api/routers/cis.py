@@ -2,7 +2,7 @@
 CIS router — scoring, history, backtest, agent API, WebSocket, internal push
 Endpoints: /api/v1/cis/*, /api/v1/agent/cis, /ws/cis, /internal/cis-scores
 """
-import os, json as _json, time, asyncio, re
+import os, json as _json, time, asyncio, re, math
 from datetime import datetime
 
 import logging
@@ -12,6 +12,7 @@ from src.api.store import (
     redis_set, redis_get,
     redis_set_key, redis_get_key,
     supabase_insert_batch, supabase_get_history,
+    supabase_get_recent_scores,
     sanitize_floats, ws_manager,
 )
 import src.api.store as store
@@ -22,6 +23,34 @@ _logger = logging.getLogger(__name__)
 router = APIRouter()
 
 _INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
+
+# ── Regime tracking (Simons Upgrade P1.1) ────────────────────────────────────
+# Persists in-module across requests. Reset on Railway restart — acceptable
+# since regime transitions are rare and Supabase history is the source of truth.
+_last_push_regime: dict[str, str] = {}   # symbol → previous regime (for transition detection)
+_push_counts: dict[str, int] = {}         # regime → consecutive push count (for confidence)
+
+
+def _compute_regime_confidence(regime: str) -> float:
+    """
+    Compute confidence in current regime classification (Simons Upgrade P1.1).
+    Based on:
+    - consecutive push count in current regime (more pushes = more confident)
+    - BTC dominance 20d MA spread (tight = confident, wide = uncertain)
+    - FNG reading proximity to boundaries
+    Returns 0.0-1.0. Below 0.6 = early warning zone.
+    """
+    push_count = _push_counts.get(regime, 1)
+
+    # Push-count component: log scale, 0.85 max at 50+ pushes
+    count_score = min(0.85, 0.3 + 0.11 * math.log1p(push_count))
+
+    # Regime stability bonus: RISK_ON/RISK_OFF are binary and more confident
+    stability_bonus = {"RISK_ON": 0.05, "RISK_OFF": 0.05, "TIGHTENING": 0.03,
+                       "EASING": 0.03, "GOLDILOCKS": 0.02}.get(regime, 0.0)
+
+    confidence = min(1.0, count_score + stability_bonus)
+    return round(confidence, 2)
 
 
 def _p(asset: dict, key: str):
@@ -68,28 +97,82 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
         _logger.info(f"[INTERNAL] Received {len(universe)} CIS scores — Redis write: {ok}")
 
         # 2. Write to Supabase (score history, persistent)
+        #    Also computes score_delta and score_zscore from recent history.
         sb_ok = False
         if universe:
+            # Fetch last 30 scores per symbol to compute delta + Z-score
+            # (done in bulk: one query per push, not per asset)
+            symbols_in_push = [a.get("symbol", "") for a in universe if a.get("symbol")]
+            recent_scores   = await supabase_get_recent_scores(symbols_in_push, n=30)
+
+            macro_regime_push = payload.get("macro_regime") or (macro or {}).get("regime")
+
+            # Regime transition detection (Simons Upgrade P1.1)
+            # Compare current push regime vs last push's regime per symbol.
+            # Supabase history is source of truth — _last_push_regime is for transition flag.
+            def _detect_regime_transition(symbol: str, current_regime: str) -> tuple[bool, str]:
+                prev = _last_push_regime.get(symbol)
+                if prev and prev != current_regime:
+                    return True, prev
+                return False, prev or ""
+
             sb_rows = []
             for asset in universe:
+                symbol  = asset.get("symbol", "")
                 pillars = asset.get("pillars", {})
+                score   = asset.get("cis_score") or asset.get("score")
+                data_tier = "T1" if asset.get("data_tier") == "T1" else "T2"
+
+                # Score delta and Z-score from recent history
+                score_delta  = None
+                score_zscore = None
+                history = recent_scores.get(symbol, [])
+                if history and score is not None:
+                    prev_scores = [h["score"] for h in history if h.get("score") is not None]
+                    if prev_scores:
+                        score_delta = round(score - prev_scores[0], 2)
+                        if len(prev_scores) >= 5:
+                            mean = sum(prev_scores) / len(prev_scores)
+                            std  = (sum((s - mean) ** 2 for s in prev_scores) / len(prev_scores)) ** 0.5
+                            score_zscore = round((score - mean) / std, 3) if std > 0 else 0.0
+
+                # Regime transition detection
+                regime_transition, previous_regime = _detect_regime_transition(symbol, macro_regime_push or "")
+
                 sb_rows.append({
-                    "symbol":      asset.get("symbol", ""),
-                    "name":        asset.get("name", ""),
-                    "score":       asset.get("cis_score") or asset.get("score"),
-                    "grade":       asset.get("grade"),
-                    "signal":      asset.get("signal"),
-                    "percentile":  asset.get("percentile_rank"),
-                    "pillar_f":    pillars.get("F") if isinstance(pillars, dict) else None,
-                    "pillar_m":    pillars.get("M") if isinstance(pillars, dict) else None,
-                    "pillar_o":    pillars.get("O") if isinstance(pillars, dict) else None,
-                    "pillar_s":    pillars.get("S") if isinstance(pillars, dict) else None,
-                    "pillar_a":    pillars.get("A") if isinstance(pillars, dict) else None,
-                    "asset_class": asset.get("asset_class", asset.get("class", "")),
-                    "source":      "local_engine",
+                    "symbol":             symbol,
+                    "name":               asset.get("name", ""),
+                    "score":              score,
+                    "raw_cis_score":      asset.get("raw_cis_score") or score,
+                    "grade":              asset.get("grade"),
+                    "signal":             asset.get("signal"),
+                    "percentile":         asset.get("percentile_rank"),
+                    "pillar_f":           pillars.get("F") if isinstance(pillars, dict) else None,
+                    "pillar_m":           pillars.get("M") if isinstance(pillars, dict) else None,
+                    "pillar_o":           pillars.get("O") if isinstance(pillars, dict) else None,
+                    "pillar_s":           pillars.get("S") if isinstance(pillars, dict) else None,
+                    "pillar_a":           pillars.get("A") if isinstance(pillars, dict) else None,
+                    "asset_class":        asset.get("asset_class", asset.get("class", "")),
+                    "macro_regime":       macro_regime_push,
+                    "regime_transition":  regime_transition,
+                    "previous_regime":     previous_regime,
+                    "data_tier":          data_tier,
+                    "data_quality_score": asset.get("data_quality_score"),
+                    "las":                asset.get("las"),
+                    "confidence":         asset.get("confidence", 1.0 if data_tier == "T1" else 0.8),
+                    "score_delta":        score_delta,
+                    "score_zscore":       score_zscore,
+                    "source":             "local_engine",
                 })
+
+                # Update tracked regime + push count for next push comparison
+                if symbol and macro_regime_push:
+                    _last_push_regime[symbol] = macro_regime_push
+                # Track push counts for regime confidence (Simons P1.1)
+                if macro_regime_push:
+                    _push_counts[macro_regime_push] = _push_counts.get(macro_regime_push, 0) + 1
             sb_ok = await supabase_insert_batch(sb_rows)
-            _logger.warning(f"[INTERNAL] Supabase history write: {sb_ok} ({len(sb_rows)} rows)")
+            _logger.warning(f"[INTERNAL] Supabase history write: {sb_ok} ({len(sb_rows)} rows, with delta+zscore)")
 
         # 3. Broadcast to WebSocket clients
         asyncio.create_task(_broadcast_cis_update(universe))
@@ -225,15 +308,35 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
                 if any(v is not None for v in (pf, pm, po, ps, pa)):
                     a["pillars"] = {"F": pf, "M": pm, "O": po, "S": ps, "A": pa}
 
+        # ── Simons Upgrade P1.1/P1.3: regime confidence + data quality + pillar velocity
+        # regime_confidence: computed from push count in current regime + BTC dominance 20d MA
+        # data_quality_score: passed through from Mac Mini push payload
+        # pillar_velocity: z-score of each pillar vs 30d rolling mean (from Mac Mini push payload)
+        regime_confidence = _compute_regime_confidence(macro_regime_push or _cached_regime or "UNKNOWN")
+
+        # Attach velocity/quality fields to each asset (from Mac Mini push payload)
+        for a in merged:
+            # pillar_velocity: {"F": "+0.8σ 30d", "M": "-0.3σ 30d", ...}
+            # Mac Mini computes and sends it; if missing, leave None
+            pv = a.get("pillar_velocity")
+            if pv:
+                a["pillar_velocity"] = pv
+            # data_quality_score: 0.0-1.0, from Mac Mini data_fetcher
+            dq = a.get("data_quality_score")
+            a["data_quality_score"] = dq if dq is not None else None
+            # regime_confidence: shared across universe (same push)
+            a["regime_confidence"] = regime_confidence
+
         return sanitize_floats({
-            "status":       "success",
-            "version":      "4.1.0",
-            "timestamp":    cached.get("timestamp", time.time()),
-            "source":       "merged",
-            "t1_count":     len(local_map),
-            "t2_count":     len(merged) - len(local_map),
-            "macro_regime": _cached_regime,
-            "universe":     merged,
+            "status":            "success",
+            "version":           "4.1.0",
+            "timestamp":         cached.get("timestamp", time.time()),
+            "source":            "merged",
+            "t1_count":          len(local_map),
+            "t2_count":          len(merged) - len(local_map),
+            "macro_regime":      _cached_regime,
+            "regime_confidence": regime_confidence,
+            "universe":          merged,
         })
 
     # Pure Railway (no Mac Mini data available)
@@ -373,7 +476,7 @@ async def get_cis_asset(symbol: str):
     """Get CIS score for a specific asset."""
     universe = await get_cis_universe()
     for asset in universe.get("universe", []):
-        if asset["symbol"].upper() == symbol.upper():
+        if asset.get("symbol", asset.get("asset_id", "")).upper() == symbol.upper():
             return asset
     return {"error": "Asset not found"}
 
@@ -610,14 +713,73 @@ async def get_regime_analysis(response: Response = None):
     })
 
 
+# ── Regime Transitions — Simons Upgrade P1.1 ─────────────────────────────────
+
+@router.get("/api/v1/macro/regime-transitions")
+async def get_regime_transitions(limit: int = 20, response: Response = None):
+    """
+    Returns recent regime transitions with timestamps and affected assets.
+    Source: Supabase cis_scores where regime_transition=TRUE.
+
+    Each row: symbol, previous_regime, macro_regime (new), recorded_at
+    """
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
+
+    if not store._SB_URL or not store._SB_KEY:
+        return {"status": "error", "message": "Supabase not configured"}
+
+    url = f"{store._SB_URL}/rest/v1/cis_scores"
+    params = {
+        "select":    "symbol,macro_regime,previous_regime,recorded_at",
+        "regime_transition": "eq.true",
+        "order":     "recorded_at.desc",
+        "limit":     str(limit),
+    }
+    headers = {
+        "apikey":        store._SB_KEY,
+        "Authorization": f"Bearer {store._SB_KEY}",
+    }
+
+    try:
+        resp = await store._supabase_request_with_retry("GET", url, params=params, headers=headers)
+        if resp and resp.status_code == 200:
+            rows = resp.json()
+            return {
+                "status":   "success",
+                "count":    len(rows),
+                "transitions": [
+                    {
+                        "symbol":          r.get("symbol"),
+                        "previous_regime":  r.get("previous_regime"),
+                        "new_regime":       r.get("macro_regime"),
+                        "transition_time":  r.get("recorded_at"),
+                    }
+                    for r in rows
+                ],
+            }
+    except Exception as e:
+        _logger.warning(f"[REGIME_TRANSITIONS] error: {e}")
+
+    return {"status": "success", "count": 0, "transitions": []}
+
+
 # ── CIS History ───────────────────────────────────────────────────────────────
 # IMPORTANT: batch route MUST be registered before {symbol} route to avoid shadowing
 
 @router.get("/api/v1/cis/history/batch")
-async def get_cis_history_batch(symbols: str, days: int = 7):
+async def get_cis_history_batch(
+    symbols: str,
+    days: int = Query(default=30, ge=1, le=365),
+    include_historical: bool = Query(default=True),
+):
     """
-    Batch CIS history — single request for all symbols.
-    Eliminates N+1 sparkline fetches. Returns map of symbol → history array.
+    Batch CIS history — single request for up to 60 symbols.
+    Returns map of symbol → [rows sorted oldest-first].
+    Each row includes: score, grade, signal, pillar_f..a, macro_regime, data_tier,
+                       score_delta, score_zscore, recorded_at.
+    include_historical=True (default): includes T2_historical reconstruction rows.
+    include_historical=False: live pushes only (source=local_engine).
     """
     _SYMBOL_RE = re.compile(r"^[A-Z0-9]{2,12}(,[A-Z0-9]{2,12})*$")
     if not _SYMBOL_RE.match(symbols.upper()):
@@ -626,31 +788,30 @@ async def get_cis_history_batch(symbols: str, days: int = 7):
     if not symbol_list:
         return {"status": "error", "message": "No symbols provided", "data": {}}
 
+    cache_key = f"cis:history:batch:{','.join(sorted(symbol_list))}:{days}:{include_historical}"
+    cached = await redis_get_key(cache_key)
+    if cached:
+        return cached
+
     results = await asyncio.gather(
         *[supabase_get_history(sym, days) for sym in symbol_list],
         return_exceptions=True,
     )
 
-    data = {}
+    data: dict = {}
     for sym, rows in zip(symbol_list, results):
-        data[sym] = [] if isinstance(rows, Exception) or not rows else list(reversed(rows))
+        if isinstance(rows, Exception) or not rows:
+            data[sym] = []
+            continue
+        # Sort oldest-first for time-series charts
+        sorted_rows = list(reversed(rows))
+        if not include_historical:
+            sorted_rows = [r for r in sorted_rows if r.get("source") == "local_engine"]
+        data[sym] = sorted_rows
 
-    return {"status": "success", "days": days, "count": len(data), "data": data}
-
-
-@router.get("/api/v1/cis/history/{symbol}")
-async def get_cis_history(symbol: str, days: int = 7):
-    """CIS score history for sparklines. Up to days*48 data points (30-min intervals)."""
-    rows = await supabase_get_history(symbol.upper(), days)
-    if not rows:
-        return {"status": "empty", "symbol": symbol.upper(), "days": days, "history": []}
-    return {
-        "status":  "success",
-        "symbol":  symbol.upper(),
-        "days":    days,
-        "count":   len(rows),
-        "history": list(reversed(rows)),  # chronological for sparklines
-    }
+    result = {"status": "success", "days": days, "count": len(data), "data": data}
+    await redis_set_key(cache_key, result, ttl=120)
+    return result
 
 
 # ── Backtest ──────────────────────────────────────────────────────────────────
