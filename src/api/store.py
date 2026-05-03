@@ -167,6 +167,55 @@ async def supabase_insert_batch(rows: list) -> bool:
         return False
 
 
+async def supabase_get_recent_scores(symbols: list, n: int = 30) -> dict:
+    """
+    Fetch the last `n` scores for each symbol in the list.
+    Returns {symbol: [{"score": float, "recorded_at": str, "macro_regime": str}, ...]}
+    sorted oldest-first per symbol — used to compute delta and Z-score on push.
+    """
+    if not _SB_URL or not _SB_KEY or not symbols:
+        return {}
+
+    result: dict = {}
+    url = f"{_SB_URL}/rest/v1/{_SB_TABLE}"
+    headers = {
+        "apikey":        _SB_KEY,
+        "Authorization": f"Bearer {_SB_KEY}",
+    }
+
+    # Batch all symbols in a single OR-filter query
+    symbols_filter = ",".join(f'"{s.upper()}"' for s in symbols)
+    params = {
+        "symbol":  f"in.({symbols_filter})",
+        "order":   "recorded_at.asc",
+        "limit":   str(len(symbols) * n),
+        "select":  "symbol,score,recorded_at,macro_regime",
+        # Only live pushes — don't pollute delta calc with historical reconstruction
+        "source":  "eq.local_engine",
+    }
+
+    try:
+        resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
+        if resp and resp.status_code == 200:
+            rows = resp.json()
+            for row in rows:
+                sym = row.get("symbol", "").upper()
+                if sym not in result:
+                    result[sym] = []
+                result[sym].append({
+                    "score":        row.get("score"),
+                    "recorded_at":  row.get("recorded_at"),
+                    "macro_regime": row.get("macro_regime"),
+                })
+            # Keep last `n` per symbol
+            for sym in result:
+                result[sym] = result[sym][-n:]
+    except Exception as e:
+        _logger.warning(f"[SUPABASE] get_recent_scores exception: {e}")
+
+    return result
+
+
 async def supabase_get_history(symbol: str, days: int = 7) -> list:
     """Read CIS score history for one symbol from Supabase with retry."""
     if not _SB_URL or not _SB_KEY:
@@ -178,7 +227,7 @@ async def supabase_get_history(symbol: str, days: int = 7) -> list:
         "symbol":  f"eq.{symbol.upper()}",
         "order":   "recorded_at.desc",
         "limit":   str(days * 48),
-        "select":  "score,grade,signal,percentile,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source,recorded_at",
+        "select":  "score,raw_cis_score,grade,signal,percentile,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,macro_regime,data_tier,las,score_delta,score_zscore,source,recorded_at",
     }
     headers = {
         "apikey":        _SB_KEY,

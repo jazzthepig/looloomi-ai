@@ -81,11 +81,14 @@ function renderMarkdown(text) {
       continue;
     }
 
-    // blank line → paragraph spacer
+    // blank line → paragraph spacer (only if there's content above, skip consecutive blanks)
     if (line.trim() === "") {
-      // only add space if there's content before it
-      if (nodes.length && nodes[nodes.length - 1]?.type !== "div" || true) {
-        nodes.push(<div key={key++} style={{ height: 8 }} />);
+      if (nodes.length > 0) {
+        const last = nodes[nodes.length - 1];
+        // Don't double-space: skip if last node was already a spacer
+        if (!(last?.props?.style?.height === 8)) {
+          nodes.push(<div key={key++} style={{ height: 8 }} />);
+        }
       }
       continue;
     }
@@ -131,7 +134,13 @@ export default function MacroBrief() {
 
   const briefText   = data.brief;
   const isLong      = briefText.length > 600;
-  const displayText = expanded || !isLong ? briefText : briefText.slice(0, 600) + "…";
+  // Slice at last newline before 600 to avoid splitting mid-bold/mid-word
+  const safeSlice   = (() => {
+    if (!isLong) return briefText;
+    const cut = briefText.lastIndexOf("\n", 600);
+    return (cut > 200 ? briefText.slice(0, cut) : briefText.slice(0, 600)) + "…";
+  })();
+  const displayText = expanded || !isLong ? briefText : safeSlice;
   const age         = formatAge(data.age_seconds);
 
   return (
@@ -158,9 +167,9 @@ export default function MacroBrief() {
           }}>
             Macro Brief
           </span>
-          {data.model && (
+          {data.source === "mac_mini" && (
             <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>
-              {data.model}
+              AI Analysis
             </span>
           )}
           {age && (
