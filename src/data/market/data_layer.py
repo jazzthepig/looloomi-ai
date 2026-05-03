@@ -306,9 +306,10 @@ async def get_defi_overview() -> dict:
             all_protos = proto_r.json()
             protocols  = all_protos[:20]
 
-        # ── RWA TVL — filter protocols by category ────────────────────────────
+        # ── RWA TVL + L2 change — filter protocols by category ───────────────
         rwa_tvl = 0.0
         rwa_change_24h = 0.0
+        l2_change_24h = 0.0
         if not isinstance(proto_r, Exception) and proto_r.status_code == 200:
             rwa_protos = [p for p in all_protos if (p.get("category") or "").lower() == "rwa"]
             rwa_tvl = sum(p.get("tvl") or 0 for p in rwa_protos)
@@ -317,13 +318,21 @@ async def get_defi_overview() -> dict:
                 if rwa_changes:
                     rwa_change_24h = round(sum(rwa_changes) / len(rwa_changes), 2)
 
+            # L2 24h change: weighted average of change_1d across L2 protocol categories
+            # (chain-level /v2/chains has no delta — use protocol-level data instead)
+            L2_PROTOCOL_CATEGORIES = {"rollup", "optimistic rollup", "zk rollup", "layer 2", "l2"}
+            l2_protos = [p for p in all_protos if (p.get("category") or "").lower() in L2_PROTOCOL_CATEGORIES]
+            l2_changes = [p.get("change_1d") for p in l2_protos if p.get("change_1d") is not None]
+            if l2_changes:
+                l2_change_24h = round(sum(l2_changes) / len(l2_changes), 2)
+
         result = {
             "total_tvl_usd": current_tvl,
             "total_tvl":     current_tvl,   # alias used by IntelligencePage
             "total_tvl_formatted": f"${current_tvl/1e9:.1f}B",
             "defi_change_24h": defi_change_24h,
             "l2_tvl":          l2_tvl,
-            "l2_change_24h":   0.0,          # chain-level 24h delta not in /v2/chains
+            "l2_change_24h":   l2_change_24h,
             "rwa_tvl":         rwa_tvl,
             "rwa_change_24h":  rwa_change_24h,
             "top_protocols": [{
@@ -1135,9 +1144,7 @@ async def get_macro_pulse() -> dict:
                         result["macro_regime"]   = fred_regime
                         result["regime_source"] = "fred_derived"
                         result["regime_inputs"] = fred_data.get("regime_inputs", {})
-                # Always apply unified regime: blend crypto sentiment + macro inputs
-                _apply_unified_regime(result, fred_data, _fg_val, _btc_dom, cg_data)
-                # Write unified regime to shared key so CIS endpoint reads the same value
+                # Write regime to shared key so CIS endpoint reads the same value
                 await _redis_set("cis:regime", {
                     "regime": result["macro_regime"],
                     "source": result.get("regime_source", "unified"),
@@ -1150,9 +1157,7 @@ async def get_macro_pulse() -> dict:
                     result["macro_regime"]   = fred_regime
                     result["regime_source"] = "fred_derived"
                     result["regime_inputs"] = fred_data.get("regime_inputs", {})
-                # Always apply unified regime: blend crypto sentiment + macro inputs
-                _apply_unified_regime(result, fred_data, _fg_val, _btc_dom, cg_data)
-                # Write unified regime to shared key so CIS endpoint reads the same value
+                # Write regime to shared key so CIS endpoint reads the same value
                 await _redis_set("cis:regime", {
                     "regime": result["macro_regime"],
                     "source": result.get("regime_source", "unified"),
