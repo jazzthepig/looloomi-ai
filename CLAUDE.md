@@ -81,7 +81,7 @@ relevant skill when working in that domain — don't rely solely on CLAUDE.md.
 
 3. **No internal implementation details in investor-facing pages.** strategy.html and
    other investor-facing content must not mention specific tech stack (FastAPI, Railway,
-   Ollama, Qwen3, etc.), hardware specs, or internal architecture.
+   Ollama, Gemma4-26b, LM Studio, etc.), hardware specs, or internal architecture.
 
 4. **Mac Mini ↔ Railway interface contract.** All schema changes to the CIS push
    interface (`/internal/cis-scores` POST body) MUST be documented in
@@ -100,8 +100,8 @@ relevant skill when working in that domain — don't rely solely on CLAUDE.md.
 - **Backend**: FastAPI (Python) → Railway (`src/api/main.py`)
 - **Persistent cache**: Upstash Redis REST API (`https://upward-thrush-73783.upstash.io`)
   — bridges Mac Mini scores across Railway deploys (2h TTL)
-- **Local AI engine**: Mac Mini M4 Pro (48GB RAM / 1TB), Qwen3 32B via Ollama
-  — primary CIS scoring engine; pushes to Railway every ~30min via `cis_push.py`
+- **Local AI engine**: Mac Mini M4 Pro (48GB RAM / 1TB), Gemma4-26b via LM Studio
+  — Macro Brief narrative; CIS scoring engine pushes to Railway every ~30min via `cis_push.py`
 - **Data sources**: CoinGecko (Railway primary), DeFiLlama (TVL/F pillar), yfinance
   (TradFi prices + VIX), Alternative.me (FNG), Binance via CCXT (local only — geo-blocked on Railway US)
 - **Design**: Space Grotesk (headlines) · Exo 2 (body) · JetBrains Mono (numbers)
@@ -259,7 +259,7 @@ git push origin main
 - Backtest API endpoint (Binance/OKX klines, realized return by grade)
 - Signal Feed v2 — 7 concurrent sources, compliance-safe language
 - Auth hardening: CORS preflight, WebSocket leak fix, token reject-by-default
-- Macro Brief pipeline: Mac Mini → LM Studio (Qwen3 35B) → Railway → Dashboard
+- Macro Brief pipeline: Mac Mini → LM Studio (Gemma4-26b) → Railway → Dashboard
 - MacroBrief widget on Intelligence page (auto-refresh 10min)
 - UI/UX fixes: IntersectionObserver tab flicker, CIS list truncation (top 20 + expand),
   empty VC Funding auto-hide, mobile/H5 responsive adaptation
@@ -437,7 +437,7 @@ git push origin main
 **Pending — waiting on Minimax:**
 - Rotate EODHD + Finnhub API keys (exposed in old git history via Shadow)
 - T20: Start Freqtrade dry run (CISEnhancedStrategy) — see MINIMAX_SYNC.md §4A
-- MacroBrief pipeline stability — LM Studio (Qwen3 35B) crash recovery
+- MacroBrief pipeline stability — LM Studio (Gemma4-26b) crash recovery
 
 ## Production health (as of 2026-04-27)
 
@@ -505,7 +505,7 @@ git push origin main
 | P1 | ~~Add LAS calculation to local engine output~~ | ~~2h~~ | ✅ Done |
 | P1 | ~~Run T1 backtest → report results~~ | ~~2h~~ | ✅ Done — PF<1 → methodology issue, not strategy |
 | P1 | Re-run auth E2E after Seth's Python 3.14 fix | 15min | 🟡 After push |
-| P1 | Macro Brief pipeline stability — LM Studio (Qwen3 35B) crash recovery | 1d | 🟡 |
+| P1 | Macro Brief pipeline stability — LM Studio (Gemma4-26b) crash recovery | 1d | 🟡 |
 | P1 | **CISEnhancedStrategy dry run (T20)** — confirm file path → modify CometCloudStrategy.py → start dry run | 2h | 🔴 Ready to execute |
 | P2 | DeFiLlama TVL refresh: 30min → 15min for F pillar freshness | 0.5h | 🟡 |
 

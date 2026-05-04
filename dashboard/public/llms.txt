@@ -20,7 +20,7 @@ Compatible with: Claude Desktop, Cursor, ChatGPT, any MCP client
 - `get_macro_pulse()` — Returns current macro regime (RISK_ON/RISK_OFF/TIGHTENING/EASING/STAGFLATION/GOLDILOCKS), BTC price, Fear & Greed Index, and BTC dominance.
 - `get_signal_feed()` — Returns compliance-safe positioning signals from 7 concurrent data sources.
 - `get_top_assets(n?)` — Returns top N assets ranked by CIS score.
-- `get_macro_brief()` — Returns AI-generated macro narrative from Qwen3 35B local model.
+- `get_macro_brief()` — Returns AI-generated macro narrative from Gemma4-26b local model.
 - `get_regime_allocation()` — Returns regime-aware portfolio allocation suggestions.
 
 ## API Documentation

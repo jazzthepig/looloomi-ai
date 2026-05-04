@@ -19,7 +19,7 @@ The rule applies to:
 - Frontend React components (badges, tooltips, sidebar text, modal copy)
 - Static HTML pages (strategy.html, vision.html)
 - Investor decks, one-pagers, emails, WeChat/Twitter posts
-- Generated analyst narratives from LM Studio / Qwen3
+- Generated analyst narratives from LM Studio / Gemma4-26b
 - SQL seed data, cached test fixtures, example payloads in docs
 - MCP tool descriptions and response bodies
 - Markdown documentation in this repo
