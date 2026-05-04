@@ -1,5 +1,37 @@
 # Deploy Verifier — Agent Memory
 
+## CRITICAL: Startup crash incident — 2026-05-04
+
+### Crash cause (platform was fully down, all endpoints returning errors)
+Two import errors at startup caused FastAPI to fail completely:
+
+1. `src/api/routers/cis.py` imported `supabase_get_recent_scores` from `store.py`
+   but the function was never implemented in `store.py` (added in Simons Upgrade P1.1
+   without writing the corresponding store.py function).
+   FIX: Added `supabase_get_recent_scores(symbols, n=30) -> dict` to store.py.
+   It does a bulk Supabase query using PostgREST `in.(...)` filter.
+
+2. `src/api/routers/agent.py` line 539: `Response` used as type hint in
+   `get_pillar_fitness()` but `Response` was missing from the fastapi import line.
+   FIX: Added `Response` to the `from fastapi import ...` line.
+
+### Fix commit
+`aac9008` — pushed to main 2026-05-04. Railway auto-deploys on main push.
+
+### Symptom signature for future reference
+- All endpoints return errors (not just one router)
+- Frontend shows "REGIME · LOADING" and "0 ASSETS" — CIS universe empty
+- This means FastAPI never started, not a data issue
+- Check: `python3 -c "import src.api.main"` locally to catch import errors before push
+
+### Network note
+This sandbox environment has NO outbound internet access — all curl requests to
+external URLs (including looloomi.ai and web-production-0cdf76.up.railway.app) return
+HTTP 403 with `x-deny-reason: host_not_allowed` from the sandbox's network egress
+filter. Cannot directly probe live endpoints. Use local import testing instead.
+
+---
+
 ## Railway production (as of 2026-04-26)
 
 ### Latest deployed commit
