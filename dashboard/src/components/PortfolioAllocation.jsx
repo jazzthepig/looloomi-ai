@@ -158,14 +158,92 @@ function allocateRiskParity(assets, cap) {
   return applyCap(invVols.map(v => v / totalInv), cap);
 }
 
+function allocateLASWeighted(assets, cap) {
+  // Uses LAS (Liquidity-Adjusted Score) for T1 assets; falls back to CIS for T2
+  const scores = assets.map(a => a.las_score || a.cis_score || 0);
+  const total = scores.reduce((s, v) => s + v, 0);
+  if (!total) return allocateEqualWeight(assets);
+  return applyCap(scores.map(v => v / total), cap);
+}
+
+function allocateMomentum(assets, cap) {
+  // CIS × momentum modifier using 7d return: positive trend amplifies, negative dampens
+  // Momentum contribution clamped to [-0.3, +0.5] to avoid runaway winners
+  const scores = assets.map(a => {
+    const cis   = a.cis_score || 0;
+    const mom7d = a.change_7d ?? 0;
+    const factor = mom7d > 0
+      ? Math.min(mom7d / 40, 0.5)    // +20% 7d → +0.5 amplifier
+      : Math.max(mom7d / 67, -0.3);  // −20% 7d → −0.3 dampener
+    return cis * (1 + factor);
+  });
+  const total = scores.reduce((s, v) => s + v, 0);
+  if (!total) return allocateEqualWeight(assets);
+  return applyCap(scores.map(v => v / total), cap);
+}
+
+// Iteratively redistribute weight from overcapped sectors to others
+function applySectorCap(allocs, weights, maxSectorPct) {
+  if (!maxSectorPct) return weights;
+  for (let iter = 0; iter < 10; iter++) {
+    const sectorW = {};
+    allocs.forEach((a, i) => {
+      const cls = a.asset_class || "Other";
+      sectorW[cls] = (sectorW[cls] || 0) + weights[i];
+    });
+    const overcap = new Set(
+      Object.entries(sectorW).filter(([, w]) => w > maxSectorPct).map(([c]) => c)
+    );
+    if (!overcap.size) break;
+    let totalExcess = 0;
+    weights = weights.map((w, i) => {
+      const cls = allocs[i].asset_class || "Other";
+      if (overcap.has(cls)) {
+        const scaled = w * (maxSectorPct / sectorW[cls]);
+        totalExcess += w - scaled;
+        return scaled;
+      }
+      return w;
+    });
+    const freeTotal = weights.reduce((s, w, i) =>
+      s + (overcap.has(allocs[i].asset_class || "Other") ? 0 : w), 0);
+    if (freeTotal > 0) {
+      weights = weights.map((w, i) =>
+        overcap.has(allocs[i].asset_class || "Other")
+          ? w
+          : w + (w / freeTotal) * totalExcess
+      );
+    }
+  }
+  const total = weights.reduce((s, w) => s + w, 0);
+  return total > 0 ? weights.map(w => w / total) : weights;
+}
+
+// ── Regime palette ─────────────────────────────────────────────────────────────
+const REGIME_COLOR = {
+  RISK_ON:     "#00D98A",
+  GOLDILOCKS:  "#4472FF",
+  EASING:      "#9945FF",
+  TIGHTENING:  "#E8A000",
+  RISK_OFF:    "#FF2D55",
+  STAGFLATION: "#FF6B35",
+};
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function PortfolioAllocation({ universe = [] }) {
   const [preset, setPreset]           = useState("Balanced");
   const [strategy, setStrategy]       = useState("CIS-Weighted");
   const [customSize, setCustomSize]   = useState(null);
   const [selectedClasses, setSelectedClasses] = useState(null);
+  const [sectorCap, setSectorCap]     = useState(null);
 
   const cfg = PRESETS[preset];
+
+  // Detect current macro regime from T1 assets (global, not per-asset)
+  const macroRegime = useMemo(() => {
+    for (const a of universe) { if (a.macro_regime) return a.macro_regime; }
+    return null;
+  }, [universe]);
 
   const availableClasses = useMemo(
     () => [...new Set(universe.map(a => a.asset_class).filter(Boolean))].sort(),
@@ -194,8 +272,12 @@ export default function PortfolioAllocation({ universe = [] }) {
 
     let weights;
     if (strategy === "CIS-Weighted")      weights = allocateCISWeighted(selected, cfg.cap);
+    else if (strategy === "LAS-Weighted") weights = allocateLASWeighted(selected, cfg.cap);
+    else if (strategy === "Momentum+")    weights = allocateMomentum(selected, cfg.cap);
     else if (strategy === "Equal Weight") weights = allocateEqualWeight(selected);
     else                                  weights = allocateRiskParity(selected, cfg.cap);
+
+    if (sectorCap) weights = applySectorCap(selected, weights, sectorCap);
 
     const total = weights.reduce((s, w) => s + w, 0);
     weights = weights.map(w => w / total);
@@ -274,7 +356,7 @@ export default function PortfolioAllocation({ universe = [] }) {
       metrics: { avgCIS, classCount, signalDist, count: allocs.length, effectiveN, weightedVol, btcBeta },
       corrWarning,
     };
-  }, [universe, preset, strategy, customSize, activeClasses]);
+  }, [universe, preset, strategy, customSize, activeClasses, sectorCap]);
 
   const toggleClass = (cls) => {
     const next = new Set(activeClasses);
@@ -361,20 +443,26 @@ export default function PortfolioAllocation({ universe = [] }) {
           {/* Strategy */}
           <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "16px 18px" }}>
             <div style={labelStyle}>Allocation Strategy</div>
-            {["CIS-Weighted", "Equal Weight", "Risk Parity"].map(s => (
-              <button key={s} onClick={() => setStrategy(s)}
+            {[
+              { id: "CIS-Weighted",  sub: "default" },
+              { id: "LAS-Weighted",  sub: "liquidity-adjusted" },
+              { id: "Momentum+",     sub: "CIS × 7d trend" },
+              { id: "Equal Weight",  sub: null },
+              { id: "Risk Parity",   sub: "inverse vol" },
+            ].map(({ id, sub }) => (
+              <button key={id} onClick={() => setStrategy(id)}
                 style={{
                   display: "block", width: "100%", textAlign: "left",
                   padding: "7px 10px", borderRadius: 6, marginBottom: 4, cursor: "pointer",
-                  border: `1px solid ${strategy === s ? "rgba(56,148,210,0.4)" : T.border}`,
-                  background: strategy === s ? "rgba(56,148,210,0.08)" : "transparent",
-                  color: strategy === s ? "#7AAEC8" : T.t3,
+                  border: `1px solid ${strategy === id ? "rgba(56,148,210,0.4)" : T.border}`,
+                  background: strategy === id ? "rgba(56,148,210,0.08)" : "transparent",
+                  color: strategy === id ? "#7AAEC8" : T.t3,
                   fontFamily: FONTS.display, fontWeight: 600, fontSize: 11,
                   transition: "all 0.15s",
                 }}
               >
-                {s}
-                {s === "CIS-Weighted" && <span style={{ fontSize: 9, color: T.t3, marginLeft: 6, fontWeight: 400 }}>default</span>}
+                {id}
+                {sub && <span style={{ fontSize: 9, color: T.t3, marginLeft: 6, fontWeight: 400 }}>{sub}</span>}
               </button>
             ))}
 
@@ -394,6 +482,28 @@ export default function PortfolioAllocation({ universe = [] }) {
                     {n ?? "Auto"}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+              <div style={labelStyle}>Sector Cap</div>
+              <div style={{ display: "flex", gap: 5 }}>
+                {[null, 0.35, 0.45].map(cap => (
+                  <button key={cap ?? "off"} onClick={() => setSectorCap(cap)}
+                    style={{
+                      flex: 1, padding: "5px 0", borderRadius: 5, fontSize: 10,
+                      fontFamily: FONTS.mono, fontWeight: 600, cursor: "pointer",
+                      border: `1px solid ${sectorCap === cap ? "rgba(200,168,75,0.5)" : T.border}`,
+                      background: sectorCap === cap ? "rgba(200,168,75,0.10)" : "transparent",
+                      color: sectorCap === cap ? "#C8A84B" : T.t3,
+                    }}
+                  >
+                    {cap == null ? "Off" : `${Math.round(cap * 100)}%`}
+                  </button>
+                ))}
+              </div>
+              <div style={{ fontSize: 9, color: T.t3, marginTop: 5, fontFamily: FONTS.body }}>
+                Max weight per asset class
               </div>
             </div>
           </div>
@@ -432,6 +542,36 @@ export default function PortfolioAllocation({ universe = [] }) {
 
         {/* ── RIGHT PANEL: Output ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Regime banner */}
+          {macroRegime && (
+            <div style={{
+              padding: "8px 14px", borderRadius: 7,
+              background: `${REGIME_COLOR[macroRegime] || "#6B7280"}0A`,
+              border: `1px solid ${REGIME_COLOR[macroRegime] || "#6B7280"}30`,
+              display: "flex", alignItems: "center", gap: 10,
+            }}>
+              <div style={{
+                width: 6, height: 6, borderRadius: "50%",
+                background: REGIME_COLOR[macroRegime] || "#6B7280", flexShrink: 0,
+              }} />
+              <span style={{
+                fontSize: 9, fontFamily: FONTS.display, fontWeight: 700,
+                letterSpacing: "0.12em", textTransform: "uppercase",
+                color: REGIME_COLOR[macroRegime] || "#6B7280",
+              }}>
+                Regime · {macroRegime.replace("_", " ")}
+              </span>
+              <span style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.body, marginLeft: "auto" }}>
+                {macroRegime === "TIGHTENING" && "Weights skewed toward quality. Min grade filter applies."}
+                {macroRegime === "RISK_OFF"   && "Defensive posture. High correlation among alts expected."}
+                {macroRegime === "RISK_ON"    && "Risk appetite elevated. Full allocation eligible."}
+                {macroRegime === "GOLDILOCKS" && "Ideal conditions. Broad universe active."}
+                {macroRegime === "EASING"     && "Liquidity expanding. Growth assets favoured."}
+                {macroRegime === "STAGFLATION"&& "Mixed signals. RWA and commodities defensive."}
+              </span>
+            </div>
+          )}
 
           {/* Metrics */}
           {metrics && (
