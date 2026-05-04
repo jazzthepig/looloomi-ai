@@ -2,13 +2,13 @@
 /**
  * LM Studio Bridge — MCP Server
  *
- * Bridges Claude to local LM Studio (Qwen3.5 35B) running on Mac Mini.
+ * Bridges Claude to local LM Studio (Gemma4-26b) running on Mac Mini.
  * Zero npm dependencies — pure Node.js stdlib only.
  *
  * Place at: ~/.claude/mcp/lmstudio_bridge.js
  *
  * Tools:
- *   lmstudio_chat           — free-form prompt to Qwen3.5
+ *   lmstudio_chat           — free-form prompt to Gemma4-26b
  *   lmstudio_analyze        — structured analysis (CIS data, market data, etc.)
  *   lmstudio_macro_brief    — generate CometCloud macro brief from live data
  *
@@ -103,8 +103,7 @@ async function chat(messages, temperature = DEFAULT_TEMP, maxTokens = 2048) {
     temperature,
     max_tokens      : maxTokens,
     stream          : false,
-    // Disable Qwen3.x thinking/reasoning mode — we want direct structured output,
-    // not chain-of-thought. Works with LM Studio >= 0.3.6 and Qwen3 series.
+    // Extended params ignored by non-thinking models (safe to pass for any LM Studio model)
     thinking        : { type: 'disabled' },
     enable_thinking : false,
   });
@@ -122,14 +121,14 @@ const TOOLS = [
   {
     name        : 'lmstudio_chat',
     description : (
-      'Send a free-form prompt to the local Qwen3.5 35B model running in LM Studio on the Mac Mini. ' +
+      'Send a free-form prompt to the local Gemma4-26b model running in LM Studio on the Mac Mini. ' +
       'No API cost. Best for long-form analysis, reasoning tasks, or anything that benefits from a ' +
       'large local context window. Responds in the same language as the prompt.'
     ),
     inputSchema : {
       type       : 'object',
       properties : {
-        prompt      : { type: 'string', description: 'The prompt or question to send to Qwen3.5.' },
+        prompt      : { type: 'string', description: 'The prompt or question to send to Gemma4-26b.' },
         system      : { type: 'string', description: 'Optional system prompt to set model behaviour.' },
         temperature : { type: 'number', description: 'Sampling temperature 0.0–1.0 (default 0.7). Lower = more deterministic.' },
         max_tokens  : { type: 'number', description: 'Max tokens in response (default 2048, max 8192).' },
@@ -140,7 +139,7 @@ const TOOLS = [
   {
     name        : 'lmstudio_analyze',
     description : (
-      'Ask Qwen3.5 35B to analyze structured data — CIS scores, market data, protocol TVL, portfolio ' +
+      'Ask Gemma4-26b to analyze structured data — CIS scores, market data, protocol TVL, portfolio ' +
       'allocations, or any JSON/text payload. Provide the raw data and a specific analysis task. ' +
       'Capped at 1200 tokens to avoid timeout. For single-asset CIS reports use cometcloud_get_cis_report instead.'
     ),
@@ -175,7 +174,7 @@ const TOOLS = [
   {
     name        : 'lmstudio_macro_brief',
     description : (
-      'Generate a CometCloud Macro Brief using Qwen3.5 35B. Accepts raw macro data ' +
+      'Generate a CometCloud Macro Brief using Gemma4-26b. Accepts raw macro data ' +
       '(Fear & Greed, BTC dominance, market cap, regime, sector flows) and produces a ' +
       'structured institutional-quality macro narrative. Same pipeline as the dashboard MacroBrief widget.'
     ),

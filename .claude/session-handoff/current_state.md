@@ -121,7 +121,7 @@ correct. Need to investigate S/A scoring formulas on Railway T2.
 - [ ] Rotate EODHD + Finnhub API keys (exposed in old git history)
 - [ ] Start Freqtrade dry run (start_dry_run.sh)
 - [ ] Add LAS calculation to local engine output
-- [ ] MacroBrief pipeline stability (LM Studio Qwen3 35B crash recovery)
+- [ ] MacroBrief pipeline stability (LM Studio Gemma4-26b crash recovery)
 - [ ] Run T1 backtest (run_t1_backtest.sh)
 
 ### Jazz + Nic

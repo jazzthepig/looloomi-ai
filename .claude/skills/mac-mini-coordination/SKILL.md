@@ -52,7 +52,7 @@ config.py              → ASSET_UNIVERSE, grade thresholds, compliance signals
 **Mac Mini data sources that Railway cannot use:**
 - Binance via CCXT — geo-blocked on Railway US. Mac Mini has no restriction.
 - EODHD API — TradFi prices + earnings calendar. Key in Mac Mini env, not Railway.
-- LM Studio (Qwen3 35B via Ollama) — Macro Brief narrative generation. Mac Mini only.
+- LM Studio (Gemma4-26b) — Macro Brief narrative generation. Mac Mini only.
 
 **Redis bridge:**
 - Key: `cis:local_scores` — Minimax writes, Seth reads (via `GET /api/v1/cis/universe`)

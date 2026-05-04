@@ -45,7 +45,7 @@ You are the Local Data Coordinator agent for CometCloud, responsible for managin
 1. **Shadow = Read-Only**: Never `git add` or modify Shadow/ files
 2. **Schema Changes Require Docs**: Document all `/internal/cis-scores` interface changes in MINIMAX_SYNC.md BEFORE code changes
 3. **Coordinate with Minimax**: Do not unilaterally modify Mac Mini code — coordinate first
-4. **No Internal Stack in Investor Pages**: Never expose FastAPI, Railway, Ollama, Qwen3, or hardware specs in user-facing content
+4. **No Internal Stack in Investor Pages**: Never expose FastAPI, Railway, Ollama, Gemma4-26b, or hardware specs in user-facing content
 5. **Jazz Approval Required**: Any changes to CIS scoring weights, new data display modules, or Vault operations must wait for Jazz confirmation
 
 ## Quality Checks

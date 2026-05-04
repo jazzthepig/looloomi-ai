@@ -419,3 +419,164 @@ python3 cis_push.py --dry-run
 - **Seth/Austin**: Railway 代码 (`src/`, `dashboard/`)
 
 有任何问题先更新本文档再动手。
+
+---
+
+## §8 — T27: Wire CISHistoryProvider into CISEnhancedStrategy.confirm_trade_entry()
+
+**Owner:** Minimax (Mac Mini)
+**Status:** 🔴 Pending
+**Depends on:** T25/T26 Supabase time-series stack ✅
+
+### Background
+
+`CISHistoryProvider` (`src/data/cis/cis_history_provider.py` on Railway) queries
+Supabase for historical CIS scores by (symbol, datetime). It lets Freqtrade gate
+entries on the real CIS score that was live at that moment — not a stale Redis
+snapshot. The 365-day reconstruction (T26) means backtesting coverage now extends
+back to May 2025.
+
+---
+
+### Step 1: Copy the module to Mac Mini
+
+```bash
+# From wherever you have the Railway repo checked out:
+cp src/data/cis/cis_history_provider.py \
+   /Volumes/CometCloudAI/cometcloud-local/cis_history_provider.py
+```
+
+Confirm Supabase credentials are in `/Volumes/CometCloudAI/cometcloud-local/.env`:
+
+```bash
+SUPABASE_URL=https://soupjamxlfsmgmmtoeok.supabase.co
+SUPABASE_SERVICE_KEY=<service role key>
+# Railway API fallback (if Supabase unreachable):
+COMETCLOUD_API_BASE=https://looloomi.ai
+```
+
+Required pip dependency (already in Railway requirements.txt):
+
+```bash
+pip install httpx
+```
+
+---
+
+### Step 2: Patch CISEnhancedStrategy.py
+
+Add the following to `/Volumes/CometCloudAI/cometcloud-local/CISEnhancedStrategy.py`:
+
+```python
+# ── Top-level imports (add alongside existing imports) ────────────────────────
+import logging
+from datetime import datetime
+from typing import Optional
+from cis_history_provider import CISHistoryProvider   # same directory
+
+_log = logging.getLogger(__name__)
+
+# Regime-aware CIS entry thresholds.
+# Keys match CIS v4.1 macro regime names from cis_v4_engine.py.
+_REGIME_CIS_THRESHOLDS: dict[str, float] = {
+    "RISK_ON":     45.0,
+    "GOLDILOCKS":  45.0,
+    "EASING":      48.0,
+    "TIGHTENING":  52.0,
+    "RISK_OFF":    60.0,
+    "STAGFLATION": 58.0,
+}
+_DEFAULT_CIS_THRESHOLD = 52.0
+```
+
+Inside the `CISEnhancedStrategy` class body:
+
+```python
+    # ── CIS gate (class-level singleton, shared across all pairs) ─────────────
+    _history_provider: Optional[CISHistoryProvider] = None
+
+    @property
+    def _cis(self) -> CISHistoryProvider:
+        if CISEnhancedStrategy._history_provider is None:
+            CISEnhancedStrategy._history_provider = CISHistoryProvider()
+        return CISEnhancedStrategy._history_provider
+
+    def confirm_trade_entry(
+        self,
+        pair: str,
+        order_type: str,
+        amount: float,
+        rate: float,
+        time_in_force: str,
+        current_time: datetime,
+        entry_tag: Optional[str],
+        side: str,
+        **kwargs,
+    ) -> bool:
+        """Gate entries on historical CIS score at the candidate entry time."""
+        symbol = pair.split("/")[0].upper()   # "BTC/USDT:USDT" → "BTC"
+
+        passes = self._cis.passes_cis_gate(
+            symbol=symbol,
+            dt=current_time,
+            min_score=_DEFAULT_CIS_THRESHOLD,
+            regime_thresholds=_REGIME_CIS_THRESHOLDS,
+        )
+
+        if not passes:
+            score   = self._cis.get_cis_at(symbol, current_time)
+            regime  = self._cis.get_regime_at(symbol, current_time)
+            needed  = _REGIME_CIS_THRESHOLDS.get(regime, _DEFAULT_CIS_THRESHOLD)
+            _log.info(
+                f"[CIS GATE] {symbol} BLOCKED — "
+                f"score={score} regime={regime} needed≥{needed}"
+            )
+
+        return passes
+```
+
+---
+
+### Step 3: Verify on Mac Mini
+
+```bash
+cd /Volumes/CometCloudAI/cometcloud-local
+
+python3 -c "
+from datetime import datetime, timezone
+from cis_history_provider import get_provider
+
+p = get_provider()
+dt = datetime.now(tz=timezone.utc)
+
+score  = p.get_cis_at('BTC', dt)
+grade  = p.get_grade_at('BTC', dt)
+regime = p.get_regime_at('BTC', dt)
+vel    = p.get_score_velocity('BTC', dt, window=7)
+
+print(f'BTC  score={score}  grade={grade}  regime={regime}  velocity_7d={vel}')
+assert score is not None, 'FAIL: no score — Supabase unreachable or no history for BTC'
+
+passes = p.passes_cis_gate('BTC', dt, min_score=40)
+print(f'gate(40)={passes}')
+print('✓ CISHistoryProvider OK')
+"
+```
+
+Railway-side validation (runs anywhere with Supabase creds):
+
+```bash
+python3 scripts/test_cis_history_provider.py
+```
+
+---
+
+### Notes
+
+- `passes_cis_gate()` returns `False` (blocks entry) when Supabase returns no data for
+  a symbol — fail-closed is intentional. The Railway fallback (`/api/v1/cis/history/{symbol}`)
+  activates automatically if Supabase is unreachable.
+- The `_history_provider` singleton is class-level, not instance-level, so Freqtrade's
+  multi-pair manager shares one connection pool.
+- Score velocity (`get_score_velocity`) is available for optional secondary signals
+  but is NOT part of the gate by default — add only after dry-run data confirms value.

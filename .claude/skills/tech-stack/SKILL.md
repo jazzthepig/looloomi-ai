@@ -1,6 +1,6 @@
 ---
 name: tech-stack
-description: CometCloud/Looloomi full technology stack reference. Use this skill when working with backend routes, frontend build, data sources, infrastructure, environment variables, or debugging connectivity between components. Triggers include "stack", "FastAPI", "React", "Upstash", "Redis", "CoinGecko", "DeFiLlama", "yfinance", "EODHD", "Qwen3", "Railway", "Supabase", "Binance", "CCXT", "Vite", "Tailwind", "requirements.txt", "env var", "API key", "endpoint", "router". Every connectivity question and "why is X empty" question should load this skill first.
+description: CometCloud/Looloomi full technology stack reference. Use this skill when working with backend routes, frontend build, data sources, infrastructure, environment variables, or debugging connectivity between components. Triggers include "stack", "FastAPI", "React", "Upstash", "Redis", "CoinGecko", "DeFiLlama", "yfinance", "EODHD", "Gemma4-26b", "Railway", "Supabase", "Binance", "CCXT", "Vite", "Tailwind", "requirements.txt", "env var", "API key", "endpoint", "router". Every connectivity question and "why is X empty" question should load this skill first.
 ---
 
 # CometCloud Tech Stack — Complete Reference
@@ -26,7 +26,7 @@ Mac Mini M4 Pro (Minimax local engine)
     ├── cis_v4_engine.py    → full 5-pillar scoring
     ├── cis_scheduler.py    → schedules pushes every ~30 min
     ├── cis_push.py         → POST /internal/cis-scores → Upstash Redis
-    ├── LM Studio (Qwen3 35B) → Macro Brief narrative
+    ├── LM Studio (Gemma4-26b) → Macro Brief narrative
     └── Binance via CCXT    → market data (geo-accessible from Mac Mini)
 ```
 
@@ -149,7 +149,7 @@ cd dashboard && rm -rf dist/assets && npm run build
 
 ### Mac Mini M4 Pro
 - **Specs:** Apple M4 Pro, 48GB unified memory, 1TB SSD
-- **AI:** Qwen3 35B via Ollama (LM Studio for Macro Brief, Ollama for direct inference)
+- **AI:** Gemma4-26b via LM Studio (Macro Brief narrative generation, Mac Mini only)
 - **Scheduling:** `cis_scheduler.py` cron — runs every 30 min, pushes CIS to Railway
 - **Freqtrade:** dry run not yet started (as of Apr 2026)
 
