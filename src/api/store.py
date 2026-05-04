@@ -167,6 +167,51 @@ async def supabase_insert_batch(rows: list) -> bool:
         return False
 
 
+async def supabase_get_recent_scores(symbols: list, n: int = 30) -> dict:
+    """Bulk-fetch last N CIS score rows per symbol from Supabase.
+
+    Returns dict keyed by symbol (uppercase) → list of rows ordered newest-first.
+    Each row contains at minimum {"score": float, "recorded_at": str}.
+    Used by /internal/cis-scores to compute score_delta and score_zscore on push.
+    Returns empty dict if Supabase is unconfigured or unreachable.
+    """
+    if not _SB_URL or not _SB_KEY or not symbols:
+        return {}
+
+    symbols_upper = [s.upper() for s in symbols if s]
+    # Supabase PostgREST: filter on list via in.(A,B,C)
+    in_filter = "in.(" + ",".join(symbols_upper) + ")"
+    url = f"{_SB_URL}/rest/v1/{_SB_TABLE}"
+    params = {
+        "symbol": in_filter,
+        "order":  "recorded_at.desc",
+        "limit":  str(n * len(symbols_upper)),
+        "select": "symbol,score,grade,recorded_at",
+    }
+    headers = {
+        "apikey":        _SB_KEY,
+        "Authorization": f"Bearer {_SB_KEY}",
+    }
+
+    try:
+        resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
+        if resp and resp.status_code == 200:
+            rows = resp.json()
+            result: dict = {}
+            for row in rows:
+                sym = row.get("symbol", "").upper()
+                if sym:
+                    result.setdefault(sym, []).append(row)
+            # Each symbol list is already ordered newest-first (Supabase returns in query order)
+            return result
+        if resp:
+            _logger.warning(f"[SUPABASE] get_recent_scores error {resp.status_code}: {resp.text[:100]}")
+        return {}
+    except Exception as e:
+        _logger.warning(f"[SUPABASE] get_recent_scores exception: {e}")
+        return {}
+
+
 async def supabase_get_history(symbol: str, days: int = 7) -> list:
     """Read CIS score history for one symbol from Supabase with retry."""
     if not _SB_URL or not _SB_KEY:
