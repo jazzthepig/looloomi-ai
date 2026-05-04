@@ -28,6 +28,11 @@ from data.market.data_layer import (
     get_eodhd_earnings_calendar,
 )
 from src.api.store import redis_get
+from data.cis.cis_provider import ASSETS_CONFIG as _CIS_ASSETS_CONFIG
+
+# Static fallback universe — keys of ASSETS_CONFIG (BTC, ETH, SOL, …)
+# Used when Redis CIS cache is empty so signal filtering always has a reference set.
+_STATIC_UNIVERSE: frozenset[str] = frozenset(_CIS_ASSETS_CONFIG.keys())
 
 router = APIRouter()
 
@@ -222,6 +227,11 @@ async def get_signals():
         _safe(get_cg_derivatives()),
     )
 
+    # Universe filter — only emit per-asset signals for assets we score.
+    # Prefer live cache (reflects any universe changes); fall back to static.
+    _live = {a.get("symbol", "").upper() for a in ((cis_cache or {}).get("universe") or [])}
+    universe_syms: frozenset[str] = frozenset(_live) if _live else _STATIC_UNIVERSE
+
     # ── 1. Fear & Greed → S + A vector ───────────────────────────────────────
     if fng and fng.get("current"):
         fng_val  = fng["current"].get("value", 50)
@@ -302,7 +312,9 @@ async def get_signals():
 
     # ── 2. Price movers → M + A vector ───────────────────────────────────────
     if movers:
-        for g in (movers.get("gainers") or [])[:3]:
+        for g in (movers.get("gainers") or [])[:15]:
+            if g.get("symbol", "").upper() not in universe_syms:
+                continue
             chg = g.get("change", g.get("change_24h", 0)) or 0
             if chg >= 5:
                 if chg >= 20:
@@ -338,7 +350,9 @@ async def get_signals():
                     "affected_assets": [g["symbol"]],
                 }, pi, logic, horizon))
 
-        for l in (movers.get("losers") or [])[:3]:
+        for l in (movers.get("losers") or [])[:15]:
+            if l.get("symbol", "").upper() not in universe_syms:
+                continue
             chg = l.get("change", l.get("change_24h", 0)) or 0
             if chg <= -5:
                 if chg <= -20:
@@ -797,8 +811,10 @@ async def get_signals():
         defi_l1 = {"ETH", "SOL", "AVAX", "ARB", "OP", "UNI", "AAVE", "MKR", "CRV", "LDO"}
         trending_defi = [s for s in trending_symbols if s in defi_l1]
 
-        for coin in cg_trending[:5]:
+        for coin in cg_trending[:10]:
             sym   = coin.get("symbol", "")
+            if sym.upper() not in universe_syms:
+                continue
             score = coin.get("score", 7)           # 0=top, 6=bottom
             rank  = coin.get("market_cap_rank") or 999
             chg24 = coin.get("price_change_24h", 0) or 0
@@ -839,7 +855,7 @@ async def get_signals():
 
     # ── 10. GeckoTerminal On-chain Pools → O + M vector ──────────────────────
     all_pools = list(gt_eth_pools or []) + list(gt_sol_pools or [])
-    for pool in all_pools[:6]:
+    for pool in all_pools[:20]:
         chg24  = pool.get("price_change_24h", 0) or 0
         vol24  = pool.get("volume_24h_usd", 0)   or 0
         tvl    = pool.get("reserve_usd", 0)       or 0
@@ -847,6 +863,8 @@ async def get_signals():
         net    = pool.get("network", "eth").upper()
         txns   = pool.get("transactions_24h", 0)  or 0
         token  = pool.get("base_token", name.split("/")[0].strip()) if name else "UNKNOWN"
+        if token.upper() not in universe_syms:
+            continue
 
         # New high-TVL pool (>$500k TVL, high tx count) = new liquidity event
         if tvl > 500_000 and txns > 500 and abs(chg24) < 30:
@@ -911,6 +929,8 @@ async def get_signals():
                 oi_by_sym.setdefault(sym, []).append(oi)
 
         for sym, frs in fr_by_sym.items():
+            if sym.upper() not in universe_syms:
+                continue
             avg_fr   = sum(frs) / len(frs)
             total_oi = sum(oi_by_sym.get(sym, [0]))
             fr_pct   = avg_fr * 100
