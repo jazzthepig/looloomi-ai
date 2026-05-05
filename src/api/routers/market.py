@@ -3,7 +3,7 @@ Market router — prices, DeFi, MMI, signals
 Endpoints: /api/v1/market/*, /api/v1/defi/*, /api/v1/mmi/*, /api/v1/signals
 """
 import re
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Response
 from datetime import datetime
 import asyncio
 
@@ -198,7 +198,7 @@ def _mk(base: dict, pi: dict, logic: str, horizon: str = "24H") -> dict:
 
 
 @router.get("/api/v1/signals")
-async def get_signals():
+async def get_signals(background_tasks: BackgroundTasks):
     """
     Market signal feed v3.0 — pillar-aware vector signals.
     Each signal carries: pillar_impact (F/M/O/S/A), logic (causal chain),
@@ -1271,6 +1271,31 @@ async def get_signals():
 
                 # Persist baseline (26h TTL — refreshes daily, survives normal deploy gaps)
                 await redis_set_key("signal:grade_baseline", current_grades, ttl=26 * 3600)
+
+                # ── Webhook fan-out (async, non-blocking) ──────────────────────
+                try:
+                    from src.api.routers.webhooks import fire_grade_webhooks
+                    if grade_upgrades:
+                        await fire_grade_webhooks(
+                            "GRADE_UPGRADE",
+                            [{"symbol": g["symbol"], "from": g["from"], "to": g["to"],
+                              "delta": g["delta"], "cis_score": g["cis_score"]}
+                             for g in grade_upgrades[:10]],
+                            macro_regime,
+                            background_tasks,
+                        )
+                    if grade_downgrades:
+                        await fire_grade_webhooks(
+                            "GRADE_DOWNGRADE",
+                            [{"symbol": g["symbol"], "from": g["from"], "to": g["to"],
+                              "delta": g["delta"], "cis_score": g["cis_score"]}
+                             for g in grade_downgrades[:10]],
+                            macro_regime,
+                            background_tasks,
+                        )
+                except Exception:
+                    pass  # Webhook delivery is best-effort
+
             except Exception:
                 pass  # Grade tracking is best-effort; never block signal feed
 

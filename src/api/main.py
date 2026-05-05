@@ -17,6 +17,7 @@ Routers:
   src/api/routers/factory.py      — /api/v1/factory/*
   src/api/routers/agent.py        — /api/v1/agent/tasks (A2A Phase 2.3)
   src/api/routers/keys.py         — /api/v1/keys/* (API key issuance + verification)
+  src/api/routers/webhooks.py     — /api/v1/webhooks/* (grade-change push subscriptions)
 """
 import os, sys, json
 
@@ -43,6 +44,7 @@ from src.api.routers.factory import router as factory_router
 from src.api.routers.share import router as share_router
 from src.api.routers.agent import router as agent_router
 from src.api.routers.keys import router as keys_router
+from src.api.routers.webhooks import router as webhooks_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
 
 _ENV = os.environ.get("ENVIRONMENT", "production")
@@ -89,6 +91,7 @@ app.include_router(factory_router)
 app.include_router(share_router)
 app.include_router(agent_router)
 app.include_router(keys_router)
+app.include_router(webhooks_router)
 
 
 # ── MCP Server (ROADMAP_A2A Phase 2.2) ───────────────────────────────────────
