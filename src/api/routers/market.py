@@ -27,7 +27,7 @@ from data.market.data_layer import (
     get_cg_price_history, get_cg_exchange_concentration,
     get_eodhd_earnings_calendar,
 )
-from src.api.store import redis_get
+from src.api.store import redis_get, redis_get_key, redis_set_key
 from data.cis.cis_provider import ASSETS_CONFIG as _CIS_ASSETS_CONFIG
 
 # Static fallback universe — keys of ASSETS_CONFIG (BTC, ETH, SOL, …)
@@ -1193,6 +1193,86 @@ async def get_signals():
             f"High vol_ratio with price drop = distribution (negative M/S signal). "
             f"Cross-reference CIS score: whale flow in low-CIS (grade D/F) assets is noise.",
             "24H"))
+
+    # ── Grade change detection (Redis-persisted daily baseline) ──────────────
+    # Compares current CIS grades to a Redis snapshot from the previous run.
+    # Generates GRADE_UPGRADE / GRADE_DOWNGRADE signals when grades shift.
+    _GRADE_ORDER = {"A+": 9, "A": 8, "B+": 7, "B": 6, "C+": 5, "C": 4, "D": 3, "F": 2}
+    if cis_cache:
+        _universe_all = cis_cache.get("universe") or cis_cache.get("assets") or []
+        _asset_map    = {
+            (a.get("symbol") or a.get("asset_id") or "").upper(): a
+            for a in _universe_all
+        }
+        current_grades = {
+            sym: a.get("grade") for sym, a in _asset_map.items()
+            if a.get("grade") and sym in universe_syms
+        }
+
+        if current_grades:
+            try:
+                prev_grades = (await redis_get_key("signal:grade_baseline")) or {}
+                grade_upgrades, grade_downgrades = [], []
+
+                for sym, curr_grade in current_grades.items():
+                    prev_grade = prev_grades.get(sym)
+                    if not prev_grade or prev_grade == curr_grade:
+                        continue
+                    delta = _GRADE_ORDER.get(curr_grade, 0) - _GRADE_ORDER.get(prev_grade, 0)
+                    entry = {
+                        "symbol":    sym,
+                        "from":      prev_grade,
+                        "to":        curr_grade,
+                        "delta":     delta,
+                        "cis_score": round((_asset_map.get(sym) or {}).get("cis_score") or 0, 1),
+                    }
+                    (grade_upgrades if delta > 0 else grade_downgrades).append(entry)
+
+                grade_upgrades.sort(key=lambda g: g["delta"], reverse=True)
+                grade_downgrades.sort(key=lambda g: g["delta"])
+
+                if grade_upgrades:
+                    up_desc = ", ".join(f"{g['symbol']} {g['from']}→{g['to']}" for g in grade_upgrades[:5])
+                    imp = "HIGH" if grade_upgrades[0]["delta"] >= 2 else "MED"
+                    signals.append(_mk({
+                        "id":              "grade_upgrade",
+                        "timestamp":       now.isoformat(),
+                        "type":            "GRADE",
+                        "importance":      imp,
+                        "description":     f"Grade upgrade detected: {up_desc}",
+                        "affected_assets": [g["symbol"] for g in grade_upgrades[:5]],
+                        "source":          "cis_grade_tracker",
+                        "value":           len(grade_upgrades),
+                    }, {"F": 8, "M": 6, "O": 5, "S": 4, "A": 7},
+                    f"CIS grade upgrade for {len(grade_upgrades)} asset(s): {up_desc}. "
+                    f"Grade upgrades reflect sustained cross-pillar improvement — not single-day noise. "
+                    f"Indicates improving fundamentals (F), momentum recovery (M), or reduced on-chain risk (O). "
+                    f"Regime: {macro_regime}. Review position sizing vs updated grade thresholds.",
+                    "24H"))
+
+                if grade_downgrades:
+                    dn_desc = ", ".join(f"{g['symbol']} {g['from']}→{g['to']}" for g in grade_downgrades[:3])
+                    imp = "HIGH" if abs(grade_downgrades[0]["delta"]) >= 2 else "MED"
+                    signals.append(_mk({
+                        "id":              "grade_downgrade",
+                        "timestamp":       now.isoformat(),
+                        "type":            "GRADE",
+                        "importance":      imp,
+                        "description":     f"Grade downgrade detected: {dn_desc}",
+                        "affected_assets": [g["symbol"] for g in grade_downgrades[:5]],
+                        "source":          "cis_grade_tracker",
+                        "value":           len(grade_downgrades),
+                    }, {"F": -6, "M": -8, "O": -5, "S": -4, "A": -5},
+                    f"CIS grade downgrade for {len(grade_downgrades)} asset(s): {dn_desc}. "
+                    f"Grade downgrades signal sustained deterioration across CIS pillars. "
+                    f"Common drivers: TVL decline (F), momentum breakdown (M), vol regime (S). "
+                    f"Adjust exposure vs regime threshold for {macro_regime}.",
+                    "24H"))
+
+                # Persist baseline (26h TTL — refreshes daily, survives normal deploy gaps)
+                await redis_set_key("signal:grade_baseline", current_grades, ttl=26 * 3600)
+            except Exception:
+                pass  # Grade tracking is best-effort; never block signal feed
 
     # ── Sort: HIGH first, then by strength, then by recency ──────────────────
     _order = {"HIGH": 0, "MED": 1, "LOW": 2}
