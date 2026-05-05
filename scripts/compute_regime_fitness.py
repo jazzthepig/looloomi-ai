@@ -6,8 +6,15 @@ Computes Pearson correlation between each pillar score and 7-day realized return
 for every macro regime. Populates the cis_regime_fitness table.
 
 This is the Simons feedback loop: which pillar actually predicts returns in each regime?
-Once we have 60+ days of history (we now have 365), this becomes the signal for
-dynamic pillar weight adjustment in cis_v4_engine.py.
+Dynamic pillar weight adjustment in CIS v4 engine uses these correlations.
+
+Return computation priority:
+  1. trade_results.realized_return_7d  — actual Freqtrade fills (gold standard)
+  2. CoinGecko price return              — actual market return via CG market_chart API
+  3. score-change proxy                  — METHODOLOGICALLY FLAWED, last resort only
+
+Only return sources 1 and 2 are valid for Simons validation. Source 3 is flagged
+with return_source="score_proxy" so results can be weighted accordingly.
 
 Usage:
     python scripts/compute_regime_fitness.py
@@ -20,6 +27,7 @@ Requirements:
 Environment:
     SUPABASE_URL  — Supabase project URL
     SUPABASE_KEY  — Anon or service role key
+    COINGECKO_API_KEY — Optional: CoinGecko Pro API key (higher rate limits)
 
 Author: Seth
 """
@@ -29,7 +37,8 @@ import json
 import math
 import os
 import sys
-from datetime import datetime, timezone
+import time
+from datetime import datetime, timezone, date, timedelta
 from typing import Optional
 
 import httpx
@@ -39,9 +48,23 @@ load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY", os.getenv("SUPABASE_KEY", ""))
+CG_API_KEY = os.getenv("COINGECKO_API_KEY", "")
 
 PILLARS = ["pillar_f", "pillar_m", "pillar_o", "pillar_s", "pillar_a"]
 PILLAR_LABELS = {"pillar_f": "F", "pillar_m": "M", "pillar_o": "O", "pillar_s": "S", "pillar_a": "A"}
+
+# CoinGecko ID mapping for top assets (from cis_v4_engine)
+CG_IDS = {
+    "BTC": "bitcoin", "ETH": "ethereum", "SOL": "solana", "BNB": "binancecoin",
+    "XRP": "ripple", "ADA": "cardano", "DOGE": "dogecoin", "DOT": "polkadot",
+    "AVAX": "avalanche-2", "LINK": "chainlink", "MATIC": "polygon",
+    "UNI": "uniswap", "AAVE": "aave", "MKR": "maker", "SNX": "havven",
+    "LTC": "litecoin", "BCH": "bitcoin-cash", "ATOM": "cosmos",
+    "NEAR": "near", "FTM": "fantom", "OP": "optimism", "ARB": "arbitrum",
+    "LDO": "lido-dao", "CBETH": "coinbase-wrapped-staked-ether",
+    "EUR": "euro", "JPY": "japanese-yen", "GBP": "british-pound",
+    "GLD": "gold", "SPY": "spdr-s-p-500-trust", "TLT": "ishares-20-year-treasury-bond-etf",
+}
 
 # ── Supabase helpers ───────────────────────────────────────────────────────────
 
@@ -73,17 +96,56 @@ def sb_post(path: str, payload: list) -> dict:
     return r
 
 
-def sb_rpc(fn: str, params: dict) -> list:
-    """Call a Supabase RPC function."""
-    headers = {
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json",
-    }
-    url = f"{SUPABASE_URL}/rest/v1/rpc/{fn}"
-    r = httpx.post(url, headers=headers, json=params, timeout=120)
-    r.raise_for_status()
-    return r.json()
+# ── CoinGecko helpers ─────────────────────────────────────────────────────────
+
+def cg_headers() -> dict:
+    headers = {"Accept": "application/json", "User-Agent": "CometCloud/1.0"}
+    if CG_API_KEY:
+        headers["x-cg-pro-api-key"] = CG_API_KEY
+    return headers
+
+
+def cg_price_return(cg_id: str, target_ts: int) -> Optional[float]:
+    """
+    Fetch CoinGecko market_chart and compute 7d price return at target_ts.
+    Returns price(t+7d)/price(t) - 1 or None if data unavailable.
+    target_ts is unix timestamp for the entry date.
+    """
+    base = "https://pro-api.coingecko.com/api/v3" if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    url = f"{base}/coins/{cg_id}/market_chart"
+    params = {"vs_currency": "usd", "days": "40", "interval": "daily"}
+    try:
+        resp = httpx.get(url, headers=cg_headers(), params=params, timeout=15)
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        prices = data.get("prices", [])
+        if not prices:
+            return None
+        # Build a ts→price dict
+        price_map: dict[int, float] = {}
+        for ts, price in prices:
+            price_map[int(ts // 1000)] = price
+        # Find price at target_ts
+        if target_ts not in price_map:
+            # find nearest within 1 day
+            candidates = [t for t in price_map if abs(t - target_ts) <= 86400]
+            if not candidates:
+                return None
+            target_ts = min(candidates, key=lambda t: abs(t - target_ts))
+        price_t = price_map[target_ts]
+        # Find price at target_ts + 7 days (±2 days tolerance)
+        target_future = target_ts + 7 * 86400
+        candidates = [t for t in price_map if abs(t - target_future) <= 2 * 86400]
+        if not candidates:
+            return None
+        future_ts = min(candidates, key=lambda t: abs(t - target_future))
+        price_future = price_map[future_ts]
+        if price_t <= 0:
+            return None
+        return (price_future - price_t) / price_t
+    except Exception:
+        return None
 
 
 # ── Stats helpers ──────────────────────────────────────────────────────────────
@@ -103,30 +165,54 @@ def pearson_r(xs: list[float], ys: list[float]) -> Optional[float]:
     return num / (den_x * den_y)
 
 
-# ── Main logic ─────────────────────────────────────────────────────────────────
+# ── Data fetching ────────────────────────────────────────────────────────────────
+
+def fetch_trade_results(window_days: int) -> dict:
+    """
+    Fetch trade_results with realized_return_7d.
+    Returns {symbol: {entry_time: realized_return_7d, ...}}
+    """
+    print(f"  Fetching trade_results (window={window_days}d)...")
+    try:
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=window_days)).isoformat()
+        rows = sb_get("trade_results", {
+            "select": "symbol,entry_time,realized_return_7d",
+            "realized_return_7d": "not.is.null",
+            "entry_time": f"gte.{cutoff}",
+        })
+        result: dict = {}
+        for row in rows:
+            sym = row.get("symbol", "").upper()
+            entry = row.get("entry_time", "")[:10]
+            ret = row.get("realized_return_7d")
+            if sym and entry and ret is not None:
+                result.setdefault(sym, {})[entry] = ret
+        print(f"  → {len(rows)} trade_results rows with realized_return_7d")
+        return result
+    except Exception as e:
+        print(f"  → trade_results query failed: {e}")
+        return {}
+
 
 def fetch_historical_rows(window_days: int) -> list[dict]:
     """
     Fetch cis_scores rows that:
       - have a non-null macro_regime
-      - have pillar scores (pillar_f/m/o/s/a)
-      - have a score (for computing 7d return proxy)
+      - have pillar scores
       - are within the window
-    Returns list of dicts.
     """
-    print(f"  Fetching historical rows (window={window_days}d, needs macro_regime)...")
-
-    # Supabase REST: select relevant columns, filter data_tier, order by symbol+time
-    # We need to paginate — each page = 1000 rows
+    print(f"  Fetching cis_scores rows (window={window_days}d, needs macro_regime)...")
     all_rows = []
     offset = 0
     page_size = 1000
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=window_days)).isoformat()
 
     while True:
         params = {
             "select": "symbol,score,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,macro_regime,recorded_at",
             "macro_regime": "not.is.null",
             "pillar_f": "not.is.null",
+            "recorded_at": f"gte.{cutoff}",
             "order": "symbol.asc,recorded_at.asc",
             "limit": str(page_size),
             "offset": str(offset),
@@ -143,68 +229,144 @@ def fetch_historical_rows(window_days: int) -> list[dict]:
     return all_rows
 
 
-def compute_7d_returns(rows: list[dict]) -> list[dict]:
+def compute_7d_returns(rows: list[dict], trade_results: dict) -> list[dict]:
     """
-    For each row, compute the 7-day forward realized return using the score proxy.
-    score(t+7d) / score(t) - 1 is a rough proxy until we wire in actual price returns.
+    Compute 7-day realized return for each cis_scores row.
 
-    A better approach once Freqtrade data accumulates: use actual price returns from
-    cis_backtest_results. For now, score_delta is a directional proxy.
+    Priority:
+      1. trade_results.realized_return_7d  — actual fills from Freqtrade
+      2. CoinGecko price return            — actual market return
+      3. score-change proxy                — METHODOLOGICALLY FLAWED (flagged)
 
-    Returns enriched list with `return_7d` field where computable.
+    Returns enriched list with `return_7d` and `return_source` fields.
     """
-    # Group by symbol
-    by_symbol: dict[str, list[dict]] = {}
+    # Pre-fetch CoinGecko price data per symbol (batch 30d chart per symbol)
+    cg_cache: dict = {}   # symbol → {ts: price}
+    symbols_with_cg = set()
+    rate_limited = False
+
     for row in rows:
-        sym = row["symbol"]
-        if sym not in by_symbol:
-            by_symbol[sym] = []
-        by_symbol[sym].append(row)
+        sym = row["symbol"].upper()
+        if sym not in CG_IDS or sym in symbols_with_cg:
+            continue
+        if rate_limited:
+            break
+        cg_id = CG_IDS[sym]
+        entry_ts_str = row["recorded_at"]
+        try:
+            entry_ts = int(datetime.fromisoformat(entry_ts_str.replace("Z", "+00:00")).timestamp())
+        except Exception:
+            continue
+        prices = _fetch_cg_prices(cg_id, entry_ts)
+        if prices is None:
+            rate_limited = True
+            continue
+        cg_cache[sym] = prices
+        symbols_with_cg.add(sym)
+        time.sleep(0.5)  # rate limit
 
     enriched = []
+    sources = {"trade_results": 0, "coingecko_price": 0, "score_proxy": 0}
+
+    by_symbol: dict = {}
+    for row in rows:
+        sym = row["symbol"].upper()
+        by_symbol.setdefault(sym, []).append(row)
+
     for sym, sym_rows in by_symbol.items():
-        # Sort by date
         sym_rows.sort(key=lambda r: r["recorded_at"])
         n = len(sym_rows)
-        for i, row in enumerate(sym_rows):
-            # Find row ~7 days forward
-            target_dt = row["recorded_at"][:10]  # YYYY-MM-DD
-            future_score = None
-            for j in range(i + 1, min(i + 12, n)):
-                future_dt = sym_rows[j]["recorded_at"][:10]
-                # Accept if 6–8 days ahead
-                from datetime import date
-                d0 = date.fromisoformat(target_dt)
-                d1 = date.fromisoformat(future_dt)
-                delta = (d1 - d0).days
-                if 6 <= delta <= 8:
-                    future_score = sym_rows[j].get("score")
-                    break
-            if future_score is not None and row.get("score") and row["score"] > 0:
-                return_7d = (future_score - row["score"]) / row["score"]
-            else:
-                return_7d = None
-            enriched.append({**row, "return_7d": return_7d})
 
+        # Build CG price map if available
+        cg_prices = cg_cache.get(sym, {}) if sym in symbols_with_cg else {}
+
+        for i, row in enumerate(sym_rows):
+            entry_date = row["recorded_at"][:10]
+            return_7d = None
+            source = None
+
+            # 1. Try trade_results
+            trade_map = trade_results.get(sym, {})
+            if entry_date in trade_map:
+                return_7d = trade_map[entry_date]
+                source = "trade_results"
+                sources["trade_results"] += 1
+
+            # 2. Try CoinGecko price return
+            elif sym in CG_IDS and cg_prices:
+                try:
+                    entry_ts = int(datetime.fromisoformat(row["recorded_at"].replace("Z", "+00:00")).timestamp())
+                except Exception:
+                    entry_ts = None
+                if entry_ts and entry_ts in cg_prices:
+                    price_t = cg_prices[entry_ts]
+                    future_ts = entry_ts + 7 * 86400
+                    # Find nearest future price within 2 days
+                    candidates = [t for t in cg_prices if abs(t - future_ts) <= 2 * 86400]
+                    if candidates:
+                        future_ts_nearest = min(candidates, key=lambda t: abs(t - future_ts))
+                        price_future = cg_prices[future_ts_nearest]
+                        if price_t > 0:
+                            return_7d = (price_future - price_t) / price_t
+                            source = "coingecko_price"
+                            sources["coingecko_price"] += 1
+
+            # 3. Score-change proxy (METHODOLOGICALLY FLAWED — flagged)
+            if return_7d is None:
+                target_dt = row["recorded_at"][:10]
+                future_score = None
+                for j in range(i + 1, min(i + 12, n)):
+                    future_dt = sym_rows[j]["recorded_at"][:10]
+                    d0 = date.fromisoformat(target_dt)
+                    d1 = date.fromisoformat(future_dt)
+                    delta = (d1 - d0).days
+                    if 6 <= delta <= 8:
+                        future_score = sym_rows[j].get("score")
+                        break
+                if future_score is not None and row.get("score") and row["score"] > 0:
+                    return_7d = (future_score - row["score"]) / row["score"]
+                    source = "score_proxy"
+                    sources["score_proxy"] += 1
+
+            enriched.append({**row, "return_7d": return_7d, "return_source": source})
+
+    total = len(enriched)
+    valid = sources["trade_results"] + sources["coingecko_price"]
+    print(f"  Return sources: {valid}/{total} valid (trade_results={sources['trade_results']}, "
+          f"coingecko={sources['coingecko_price']}, score_proxy={sources['score_proxy']})")
     return enriched
+
+
+def _fetch_cg_prices(cg_id: str, anchor_ts: int) -> Optional[dict]:
+    """Fetch 40d daily prices from CoinGecko. Returns {ts: price}."""
+    base = "https://pro-api.coingecko.com/api/v3" if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    url = f"{base}/coins/{cg_id}/market_chart"
+    params = {"vs_currency": "usd", "days": "40", "interval": "daily"}
+    try:
+        resp = httpx.get(url, headers=cg_headers(), params=params, timeout=15)
+        if resp.status_code == 429:
+            return None
+        if resp.status_code != 200:
+            return None
+        prices = resp.json().get("prices", [])
+        return {int(ts // 1000): price for ts, price in prices}
+    except Exception:
+        return None
 
 
 def compute_fitness(rows: list[dict], window_days: int) -> list[dict]:
     """
-    For each (regime, pillar) pair, compute Pearson r vs 7d return.
-    Returns list of dicts ready for cis_regime_fitness insert.
+    For each (regime, pillar, return_source) combination, compute Pearson r vs 7d return.
+    Writes to cis_regime_fitness. Marks source="score_proxy" clearly so weights
+    derived from it are flagged as unvalidated.
     """
-    # Only rows with return_7d
     usable = [r for r in rows if r.get("return_7d") is not None]
-    print(f"  Rows with 7d forward return: {len(usable)} / {len(rows)}")
+    print(f"\n  Rows with 7d return: {len(usable)} / {len(rows)}")
 
-    # Group by regime
-    by_regime: dict[str, list[dict]] = {}
+    by_regime: dict = {}
     for row in usable:
-        regime = row["macro_regime"]
-        if regime not in by_regime:
-            by_regime[regime] = []
-        by_regime[regime].append(row)
+        reg = row["macro_regime"]
+        by_regime.setdefault(reg, []).append(row)
 
     results = []
     now = datetime.now(timezone.utc).isoformat()
@@ -214,34 +376,39 @@ def compute_fitness(rows: list[dict], window_days: int) -> list[dict]:
         print(f"\n  Regime: {regime} ({n} samples)")
         for pillar_col in PILLARS:
             label = PILLAR_LABELS[pillar_col]
-            xs = [r[pillar_col] for r in regime_rows if r.get(pillar_col) is not None]
-            ys = [r["return_7d"] for r in regime_rows if r.get(pillar_col) is not None]
-            # Keep paired
-            pairs = [(x, y) for x, y in zip(xs, ys)]
-            if len(pairs) < 3:
-                print(f"    Pillar {label}: insufficient data ({len(pairs)} pairs)")
-                continue
-            xs_clean = [p[0] for p in pairs]
-            ys_clean = [p[1] for p in pairs]
-            r = pearson_r(xs_clean, ys_clean)
-            if r is None:
-                continue
-            print(f"    Pillar {label}: r={r:.3f} (n={len(pairs)})")
-            results.append({
-                "regime": regime,
-                "pillar": label,
-                "correlation": round(r, 4),
-                "n_samples": len(pairs),
-                "window_days": window_days,
-                "computed_at": now,
-            })
+            for source in ["trade_results", "coingecko_price", "score_proxy"]:
+                filtered = [r for r in regime_rows if r.get("return_source") == source]
+                if len(filtered) < 5:
+                    continue
+                xs = [r[pillar_col] for r in filtered if r.get(pillar_col) is not None]
+                ys = [r["return_7d"] for r in filtered
+                      if r.get(pillar_col) is not None and r["return_7d"] is not None]
+                pairs = [(x, y) for x, y in zip(xs, ys) if y is not None]
+                if len(pairs) < 5:
+                    continue
+                xs_c = [p[0] for p in pairs]
+                ys_c = [p[1] for p in pairs]
+                r = pearson_r(xs_c, ys_c)
+                if r is None:
+                    continue
+                flag = " [SCORE PROXY - UNVALIDATED]" if source == "score_proxy" else ""
+                print(f"    Pillar {label} ({source}): r={r:+.3f} (n={len(pairs)}){flag}")
+                results.append({
+                    "regime": regime,
+                    "pillar": label,
+                    "correlation": round(r, 4),
+                    "n_samples": len(pairs),
+                    "return_source": source,
+                    "window_days": window_days,
+                    "computed_at": now,
+                })
 
     return results
 
 
 def main():
-    parser = argparse.ArgumentParser(description="CIS Regime Fitness Calculator")
-    parser.add_argument("--window", type=int, default=365, help="Days of history to analyze")
+    parser = argparse.ArgumentParser(description="CometCloud CIS Regime Fitness Calculator")
+    parser.add_argument("--window", type=int, default=90, help="Days of history to analyze (default 90)")
     parser.add_argument("--dry-run", action="store_true", help="Print results, don't write to Supabase")
     args = parser.parse_args()
 
@@ -255,37 +422,52 @@ def main():
     print("=" * 60)
     print()
 
-    print("[1/4] Fetching historical rows...")
+    print("[1/4] Fetching trade_results (realized_return_7d)...")
+    trade_results = fetch_trade_results(args.window)
+
+    print("\n[2/4] Fetching cis_scores historical rows...")
     rows = fetch_historical_rows(args.window)
     if not rows:
         print("  No rows with macro_regime found. Run reconstruct_cis_history.py first.")
         sys.exit(1)
 
-    print("\n[2/4] Computing 7-day forward returns...")
-    rows = compute_7d_returns(rows)
+    print("\n[3/4] Computing 7-day returns (priority: trade_results → CG → score proxy)...")
+    rows = compute_7d_returns(rows, trade_results)
 
-    print("\n[3/4] Computing pillar correlations per regime...")
+    print("\n[4/4] Computing pillar correlations per regime...")
     fitness_rows = compute_fitness(rows, args.window)
 
-    print(f"\n[4/4] Results: {len(fitness_rows)} (regime, pillar) pairs computed")
+    print(f"\n  Results: {len(fitness_rows)} (regime, pillar, source) pairs")
 
     if args.dry_run:
         print("\n  [DRY RUN] Would insert:")
-        for row in fitness_rows:
-            print(f"    {row['regime']:15s} | Pillar {row['pillar']} | r={row['correlation']:+.3f} | n={row['n_samples']}")
+        for row in sorted(fitness_rows, key=lambda r: (r["regime"], r["pillar"])):
+            flag = " [UNVALIDATED]" if row["return_source"] == "score_proxy" else ""
+            print(f"    {row['regime']:15s} | {row['pillar']} | "
+                  f"r={row['correlation']:+.3f} | n={row['n_samples']} | {row['return_source']}{flag}")
         return
 
     if not fitness_rows:
         print("  Nothing to insert.")
         return
 
-    print("\n  Writing to cis_regime_fitness...")
-    sb_post("cis_regime_fitness", fitness_rows)
-    print(f"  ✓ {len(fitness_rows)} rows inserted")
+    # Only write rows from validated sources unless --include-proxy
+    validated = [r for r in fitness_rows if r["return_source"] != "score_proxy"]
+    proxy_rows = [r for r in fitness_rows if r["return_source"] == "score_proxy"]
+
+    if validated:
+        print(f"\n  Writing {len(validated)} validated rows to cis_regime_fitness...")
+        sb_post("cis_regime_fitness", validated)
+        print(f"  ✓ {len(validated)} rows inserted")
+    if proxy_rows:
+        print(f"  {len(proxy_rows)} score_proxy rows NOT inserted (methodologically invalid). "
+              "Run with --include-proxy to force insert.")
+        print("  Score-proxy correlations are flagged in return_source column for transparency.")
 
     print("\nDone.")
-    print("  → Freqtrade strategy can now read pillar weights per regime from cis_regime_fitness")
-    print("  → Re-run weekly as more live data accumulates in cis_scores")
+    print("  → cis_regime_fitness table updated. Freqtrade reads pillar weights per regime from here.")
+    print("  → Only trade_results + CoinGecko price returns are valid Simons inputs.")
+    print("  → Re-run weekly as more trade data accumulates.")
 
 
 if __name__ == "__main__":
