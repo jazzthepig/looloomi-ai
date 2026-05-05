@@ -10,55 +10,54 @@ import { T, FONTS, sigStyle as sigStyleFromTokens } from "../tokens";
 // L2 (3):    Top 3 by L2 TVL (DeFiLlama L2 ranking)
 // DeFi (3):  Top 3 by protocol TVL (DeFiLlama)
 // Infra (3): Top 3 by on-chain integration count / service revenue
-// RWA (3):   Top 3 by tokenized asset AUM (RWA.xyz / DeFiLlama)
-// Meme (3):  Top 3 by market cap (only verifiable metric for memes)
-// Gaming (3): Top 3 by daily active users (DappRadar)
-// AI (3):    Top 3 by market cap in AI/DePIN sector
-// US Equity (3): Top 3 by market cap (S&P component)
+// RWA (2):      ONDO + MKR (POLYX excluded — Criterion 1 Liquidity)
+// Gaming (1):   GALA (AXS/MANA/SAND all excluded)
+// AI (1):       NEAR Protocol (ICP/VIRTUAL excluded)
+// US Equity (3): Top 3 by market cap (S&P mega-cap)
 // Commodity (3): Top 3 ETFs by AUM
 //
-// Total: 30 assets (10 categories × 3)
+// All assets pass CometCloud Inclusion Standard v1.1 (7 criteria).
+// Excluded assets (PEPE/WIF/SAND/MANA/AXS/ICP/VIRTUAL/POLYX) removed April 2026.
+// Total: 29 assets across 9 categories
 
 const ASSETS = [
-  // L1 — top 3 by ecosystem TVL (DeFiLlama)
-  { id: "bitcoin",    symbol: "BTC",  name: "Bitcoin",    category: "L1",    color: "#F7931A" },
-  { id: "ethereum",   symbol: "ETH",  name: "Ethereum",   category: "L1",    color: "#627EEA" },
-  { id: "solana",     symbol: "SOL",  name: "Solana",     category: "L1",    color: "#9945FF" },
-  // L2 — top 3 by L2 TVL (DeFiLlama)
-  { id: "arbitrum",   symbol: "ARB",  name: "Arbitrum",   category: "L2",    color: "#28A0F0" },
-  { id: "optimism",   symbol: "OP",   name: "Optimism",   category: "L2",    color: "#FF0420" },
-  { id: "polygon-ecosystem-token", symbol: "POL", name: "Polygon", category: "L2", color: "#8247E5" },
-  // DeFi — top 3 by protocol TVL (DeFiLlama)
-  { id: "lido-dao",   symbol: "LDO",  name: "Lido",       category: "DeFi",  color: "#00A3FF" },
-  { id: "aave",       symbol: "AAVE", name: "Aave",       category: "DeFi",  color: "#2EBAC6" },
-  { id: "uniswap",    symbol: "UNI",  name: "Uniswap",    category: "DeFi",  color: "#FF007A" },
-  // Infra — top 3 by on-chain integration count / service revenue
-  { id: "chainlink",  symbol: "LINK", name: "Chainlink",  category: "Infra", color: "#2A5ADA" },
-  { id: "celestia",   symbol: "TIA",  name: "Celestia",   category: "Infra", color: "#7B2FBE" },
-  { id: "ethena",     symbol: "ENA",  name: "Ethena",     category: "Infra", color: "#8B5CF6" },
-  // RWA — top 3 by tokenized asset AUM (RWA.xyz)
-  { id: "ondo-finance", symbol: "ONDO", name: "Ondo",     category: "RWA",   color: "#2B65EC" },
-  { id: "maker",      symbol: "MKR",  name: "Maker",      category: "RWA",   color: "#1AAB9B", cisKey: "MKR" },
-  { id: "polymesh",   symbol: "POLYX", name: "Polymesh",  category: "RWA",   color: "#1348E8", cisKey: "POLYX" },
-  // Meme — top 3 by market cap
-  { id: "dogecoin",   symbol: "DOGE", name: "Dogecoin",   category: "Meme",  color: "#C2A633" },
-  { id: "pepe",       symbol: "PEPE", name: "Pepe",       category: "Meme",  color: "#479F53" },
-  { id: "dogwifcoin", symbol: "WIF",  name: "dogwifhat",  category: "Meme",  color: "#C08A53" },
-  // Gaming — top 3 by DAU (DappRadar)
-  { id: "the-sandbox", symbol: "SAND", name: "Sandbox",   category: "Gaming", color: "#00ADEF" },
-  { id: "decentraland", symbol: "MANA", name: "Decentraland", category: "Gaming", color: "#FF2D55" },
-  { id: "axie-infinity", symbol: "AXS", name: "Axie",     category: "Gaming", color: "#0055D5" },
-  // AI / DePIN — top 3 by market cap in sector
-  { id: "near",       symbol: "NEAR", name: "NEAR",       category: "AI",    color: "#00C08B" },
-  { id: "internet-computer", symbol: "ICP", name: "ICP",  category: "AI",    color: "#29ABE2", cisKey: "ICP" },
-  { id: "virtual-protocol", symbol: "VIRTUAL", name: "Virtuals", category: "AI", color: "#7C3AED", cisKey: "VIRTUAL" },
-  // US Equity — top 3 by market cap (S&P mega-cap)
-  { id: "spy",        symbol: "SPY",  name: "S&P 500",    category: "TradFi", color: "#4CAF50", cisKey: "SPY" },
-  { id: "aapl",       symbol: "AAPL", name: "Apple",      category: "TradFi", color: "#A2AAAD", cisKey: "AAPL" },
-  { id: "nvda",       symbol: "NVDA", name: "NVIDIA",     category: "TradFi", color: "#76B900", cisKey: "NVDA" },
+  // L1 — top 7 by ecosystem TVL / market cap (CIS investable universe)
+  { id: "bitcoin",          symbol: "BTC",    name: "Bitcoin",    category: "L1",        color: "#F7931A" },
+  { id: "ethereum",         symbol: "ETH",    name: "Ethereum",   category: "L1",        color: "#627EEA" },
+  { id: "solana",           symbol: "SOL",    name: "Solana",     category: "L1",        color: "#9945FF" },
+  { id: "binancecoin",      symbol: "BNB",    name: "BNB",        category: "L1",        color: "#F3BA2F" },
+  { id: "avalanche-2",      symbol: "AVAX",   name: "Avalanche",  category: "L1",        color: "#E84142" },
+  { id: "sui",              symbol: "SUI",    name: "Sui",        category: "L1",        color: "#4DA2FF" },
+  { id: "aptos",            symbol: "APT",    name: "Aptos",      category: "L1",        color: "#00C9A7" },
+  // L2 — top 4 by TVL (DeFiLlama)
+  { id: "arbitrum",         symbol: "ARB",    name: "Arbitrum",   category: "L2",        color: "#28A0F0" },
+  { id: "optimism",         symbol: "OP",     name: "Optimism",   category: "L2",        color: "#FF0420" },
+  { id: "polygon-ecosystem-token", symbol: "POL", name: "Polygon", category: "L2",       color: "#8247E5" },
+  { id: "starknet",         symbol: "STRK",   name: "StarkNet",   category: "L2",        color: "#A78BFA" },
+  // DeFi — top 5 by protocol TVL / fee revenue (DeFiLlama)
+  { id: "lido-dao",         symbol: "LDO",    name: "Lido",       category: "DeFi",      color: "#00A3FF" },
+  { id: "aave",             symbol: "AAVE",   name: "Aave",       category: "DeFi",      color: "#2EBAC6" },
+  { id: "uniswap",          symbol: "UNI",    name: "Uniswap",    category: "DeFi",      color: "#FF007A" },
+  { id: "ethena",           symbol: "ENA",    name: "Ethena",     category: "DeFi",      color: "#8B5CF6" },
+  { id: "pendle",           symbol: "PENDLE", name: "Pendle",     category: "DeFi",      color: "#2D9CDB" },
+  // Infrastructure — by on-chain service revenue / integration count
+  { id: "chainlink",        symbol: "LINK",   name: "Chainlink",  category: "Infra",     color: "#2A5ADA" },
+  { id: "celestia",         symbol: "TIA",    name: "Celestia",   category: "Infra",     color: "#7B2FBE" },
+  { id: "injective-protocol", symbol: "INJ",  name: "Injective",  category: "Infra",     color: "#00B2FF" },
+  // RWA — by tokenized AUM (RWA.xyz)
+  { id: "ondo-finance",     symbol: "ONDO",   name: "Ondo",       category: "RWA",       color: "#2B65EC" },
+  { id: "maker",            symbol: "MKR",    name: "Maker",      category: "RWA",       color: "#1AAB9B", cisKey: "MKR" },
+  // Gaming — CIS investable universe (GALA passes all 7 criteria)
+  { id: "gala",             symbol: "GALA",   name: "Gala",       category: "Gaming",    color: "#3D86FF" },
+  // AI / DePIN — NEAR Protocol (AI computing narrative, CIS-scored)
+  { id: "near",             symbol: "NEAR",   name: "NEAR",       category: "AI",        color: "#00C08B" },
+  // US Equity — mega-cap by market cap (S&P 500)
+  { id: "spy",              symbol: "SPY",    name: "S&P 500",    category: "TradFi",    color: "#4CAF50", cisKey: "SPY" },
+  { id: "aapl",             symbol: "AAPL",   name: "Apple",      category: "TradFi",    color: "#A2AAAD", cisKey: "AAPL" },
+  { id: "nvda",             symbol: "NVDA",   name: "NVIDIA",     category: "TradFi",    color: "#76B900", cisKey: "NVDA" },
   // Commodity — top 3 ETFs by AUM
-  { id: "gld",        symbol: "GLD",  name: "Gold",       category: "Commodity", color: "#FFD700", cisKey: "GLD" },
-  { id: "slv",        symbol: "SLV",  name: "Silver",     category: "Commodity", color: "#C0C0C0", cisKey: "SLV" },
+  { id: "gld",              symbol: "GLD",    name: "Gold",       category: "Commodity", color: "#FFD700", cisKey: "GLD" },
+  { id: "slv",              symbol: "SLV",    name: "Silver",     category: "Commodity", color: "#C0C0C0", cisKey: "SLV" },
   { id: "uso",        symbol: "USO",  name: "Oil",        category: "Commodity", color: "#8B4513", cisKey: "USO" },
 ];
 
@@ -101,9 +100,8 @@ const FILTERS = [
   { id: "DeFi",      label: "DeFi" },
   { id: "Infra",     label: "Infra" },
   { id: "RWA",       label: "RWA" },
-  { id: "AI",        label: "AI" },
   { id: "Gaming",    label: "Gaming" },
-  { id: "Meme",      label: "Meme" },
+  { id: "AI",        label: "AI" },
   { id: "TradFi",    label: "TradFi" },
   { id: "Commodity", label: "Cmdty" },
 ];
