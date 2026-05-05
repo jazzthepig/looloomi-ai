@@ -130,11 +130,13 @@ function PortfolioPage() {
       .then(d => {
         const raw = d.assets || d.universe || d.data || d || [];
         const arr = Array.isArray(raw) ? raw : [];
-        // Normalise field shapes (T1 / T2 can differ)
+        const regime = d.macro_regime || null;
+        // Normalise field shapes (T1 / T2 can differ); inject top-level regime
         setCisUniverse(arr.map(a => ({
           ...a,
-          symbol:     (a.asset_id || a.symbol || "").toUpperCase(),
-          cis_score:  a.total_score ?? a.cis_score ?? 0,
+          symbol:      (a.asset_id || a.symbol || "").toUpperCase(),
+          cis_score:   a.total_score ?? a.cis_score ?? 0,
+          macro_regime: a.macro_regime || regime,
         })));
       })
       .catch(() => setCisUniverse([]))
