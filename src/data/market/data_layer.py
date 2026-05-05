@@ -850,6 +850,10 @@ async def get_cg_markets(ids: list[str]) -> list:
     cached = _cache_get(key, ttl=120)
     if cached is not None:
         return cached
+    r2 = await _redis_get(key)
+    if r2:
+        _cache_set(key, r2)
+        return r2
     base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
     try:
         client = _get_cg_client()
@@ -861,17 +865,20 @@ async def get_cg_markets(ids: list[str]) -> list:
                 "ids": ids_str,
                 "order": "market_cap_desc",
                 "sparkline": "true",
-                "price_change_percentage": "7d",
+                "price_change_percentage": "30d,7d,1y",
                 "per_page": 250,
                 "page": 1,
             },
         )
         r.raise_for_status()
         result = r.json()
-        return _cache_set(key, result)
+        _cache_set(key, result)
+        return result
     except Exception as e:
         _logger.warning(f"[CG_MARKETS] Error: {e}")
-        return []
+        # Return stale L2 cache on error
+        r2 = await _redis_get(key)
+        return r2 or []
 
 
 async def get_cg_derivatives() -> list:
