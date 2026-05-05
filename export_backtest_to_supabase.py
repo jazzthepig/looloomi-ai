@@ -36,7 +36,7 @@ SUPABASE_KEY  = os.getenv("SUPABASE_KEY", os.getenv("SUPABASE_SERVICE_KEY", ""))
 SUPABASE_TABLE = "trade_results"
 
 # Local path where Freqtrade backtests are stored
-BACKTEST_DIR = Path("/Volumes/CometCloudAI/cometcloud-local/backtest_results")
+BACKTEST_DIR = Path("/Volumes/CometCloudAI/freqtrade/user_data/backtest_results")
 RAILWAY_BASE = os.getenv("COMETCLOUD_API_BASE", "https://looloomi.ai")
 
 
@@ -47,8 +47,8 @@ def _parse_trade_row(row: dict) -> dict:
     return {
         "symbol":         row.get("pair", "").replace("_", "/"),
         "side":           row.get("side", "").upper(),
-        "entry_time":     _parse_ts(row.get("open_time")),
-        "exit_time":      _parse_ts(row.get("close_time")),
+        "entry_time":     _parse_ts(row.get("open_date")),
+        "exit_time":      _parse_ts(row.get("close_date")),
         "entry_price":    row.get("open_rate"),
         "exit_price":     row.get("close_rate"),
         "profit_pct":     round(row.get("profit_ratio", 0) * 100, 4) if row.get("profit_ratio") is not None else None,
@@ -98,19 +98,22 @@ def _fetch_cis_at_entry(symbol: str, entry_time: str, provider) -> dict:
     except Exception:
         return {}
 
-    score = provider.get_cis_at(symbol, dt)
+    # Strip /USDT suffix — provider uses base symbol like "BTC", not "BTC/USDT"
+    sym = symbol.replace("/USDT", "").replace("/USD", "")
+    score = provider.get_cis_at(sym, dt)
     if score is None:
         return {}
 
+    pillars = provider.get_pillar_at(sym, dt) or {}
     return {
         "cis_score_at_entry":   score,
-        "cis_grade_at_entry":   provider.get_grade_at(symbol, dt),
-        "pillar_f_at_entry":    provider.get_pillar_at(symbol, dt).get("F"),
-        "pillar_m_at_entry":    provider.get_pillar_at(symbol, dt).get("M"),
-        "pillar_o_at_entry":    provider.get_pillar_at(symbol, dt).get("O"),
-        "pillar_s_at_entry":    provider.get_pillar_at(symbol, dt).get("S"),
-        "pillar_a_at_entry":    provider.get_pillar_at(symbol, dt).get("A"),
-        "macro_regime_at_entry": provider.get_regime_at(symbol, dt),
+        "cis_grade_at_entry":   provider.get_grade_at(sym, dt),
+        "pillar_f_at_entry":    pillars.get("F"),
+        "pillar_m_at_entry":    pillars.get("M"),
+        "pillar_o_at_entry":    pillars.get("O"),
+        "pillar_s_at_entry":    pillars.get("S"),
+        "pillar_a_at_entry":    pillars.get("A"),
+        "macro_regime_at_entry": provider.get_regime_at(sym, dt),
     }
 
 
@@ -161,22 +164,46 @@ def export_backtest_file(filepath: Path, dry_run: bool = False) -> dict:
     if not filepath.exists():
         return {"error": f"File not found: {filepath}"}
 
-    with open(filepath) as f:
-        data = json.load(f)
+    # Handle .zip format (Freqtrade backtest export)
+    if str(filepath).endswith(".zip"):
+        import zipfile
+        with zipfile.ZipFile(filepath) as z:
+            json_name = [n for n in z.namelist() if n.endswith(".json") and "config" not in n and "strategy" not in n and "market" not in n]
+            if not json_name:
+                return {"error": f"No trade JSON found in zip: {z.namelist()}"}
+            with z.open(json_name[0]) as f:
+                data = json.loads(f.read())
+    else:
+        with open(filepath) as f:
+            data = json.load(f)
 
     # Handle both single-trade-array and wrapped {trades: [...]} formats
-    trades = data.get("trades", data) if isinstance(data, dict) else data
+    # Also handle Freqtrade nested {strategy: {strategy_name: {trades: [...]}}} format
+    trades = None
+    if isinstance(data, dict):
+        trades = data.get("trades")
+        if trades is None:
+            # Try nested strategy format: {strategy: {strategy_name: {trades: [...]}}}
+            strategy_dict = data.get("strategy", {})
+            for strat_name, strat_data in strategy_dict.items():
+                if isinstance(strat_data, dict) and "trades" in strat_data:
+                    trades = strat_data["trades"]
+                    break
+    else:
+        trades = data
     if not isinstance(trades, list):
         return {"error": "Invalid format: expected list of trades"}
 
     provider = _load_cis_history_provider()
     enriched_rows = []
     skipped = 0
+    skip_reasons = {"no_symbol_or_entry": 0, "no_cis_score": 0, "other": 0}
 
     for raw_row in trades:
         row = _parse_trade_row(raw_row)
         if not row.get("symbol") or not row.get("entry_time"):
             skipped += 1
+            skip_reasons["no_symbol_or_entry"] += 1
             continue
 
         cis_state = _fetch_cis_at_entry(
@@ -184,7 +211,13 @@ def export_backtest_file(filepath: Path, dry_run: bool = False) -> dict:
             row["entry_time"],
             provider,
         )
-        row.update(cis_state)
+        if cis_state.get("cis_score_at_entry") is not None:
+            row.update(cis_state)
+        else:
+            skipped += 1
+            skip_reasons["no_cis_score"] += 1
+            continue
+
         row["recorded_at"] = datetime.now(timezone.utc).isoformat()
 
         # Realized 7d return: only set if exit_price available (closed trade)
@@ -196,7 +229,8 @@ def export_backtest_file(filepath: Path, dry_run: bool = False) -> dict:
         enriched_rows.append(row)
 
     if dry_run:
-        print(f"\n[DRY RUN] Would export {len(enriched_rows)} trades ({skipped} skipped)")
+        print(f"\n[DRY RUN] Would export {len(enriched_rows)} trades "
+              f"(skipped: {skipped} → {dict(sorted(skip_reasons.items()))})")
         for r in enriched_rows[:5]:
             print(f"  {r['symbol']} | entry={r['entry_time'][:19]} | "
                   f"CIS={r.get('cis_score_at_entry', 'N/A')} | "

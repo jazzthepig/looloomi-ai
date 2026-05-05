@@ -2408,6 +2408,242 @@ async def get_cg_price_history(coin_id: str, days: int = 365) -> dict:
         return {"coin_id": coin_id, "available": False, "error": str(e)}
 
 
+async def get_cg_market_chart_range(coin_id: str, from_ts: int, to_ts: int) -> dict:
+    """
+    CoinGecko Pro /coins/{id}/market_chart/range — prices in a precise unix timestamp window.
+    Superior to the `days` endpoint for regime fitness computation: returns ONLY the data
+    for the requested window, no over-fetching.
+
+    Args:
+        coin_id:  CoinGecko coin ID (e.g. 'bitcoin')
+        from_ts:  Unix timestamp (seconds) — window start
+        to_ts:    Unix timestamp (seconds) — window end
+
+    Returns: {prices: [[ts_ms, price]], volumes: [[ts_ms, vol]], granularity}
+    TTL: 2h Redis (historical data doesn't change)
+    """
+    if not CG_API_KEY:
+        return {"available": False, "reason": "no_pro_key"}
+
+    key = f"cg_range_{coin_id}_{from_ts}_{to_ts}"
+    cached = _cache_get(key, ttl=7200)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    client = _get_cg_client()
+    try:
+        r = await client.get(
+            f"{CG_PRO_BASE}/coins/{coin_id}/market_chart/range",
+            headers=_cg_headers(),
+            params={"vs_currency": "usd", "from": from_ts, "to": to_ts},
+            timeout=20,
+        )
+        r.raise_for_status()
+        raw = r.json()
+        result = {
+            "coin_id":     coin_id,
+            "available":   True,
+            "from_ts":     from_ts,
+            "to_ts":       to_ts,
+            "data_points": len(raw.get("prices", [])),
+            "prices":      raw.get("prices", []),     # [[ts_ms, price], ...]
+            "volumes":     raw.get("total_volumes", []),
+            "market_caps": raw.get("market_caps", []),
+            "source":      "coingecko_pro",
+        }
+        await _redis_set(key, result, ttl=7200)
+        return _cache_set(key, result)
+    except Exception as e:
+        return {"coin_id": coin_id, "available": False, "error": str(e)}
+
+
+async def get_cg_coin_history(coin_id: str, date_str: str) -> dict:
+    """
+    CoinGecko /coins/{id}/history — snapshot price, market cap, volume at a specific date.
+    date_str format: 'DD-MM-YYYY' (CoinGecko format)
+
+    Returns: {price, market_cap, volume_24h, date_str, source}
+    TTL: 24h (historical snapshots are immutable)
+
+    Key use cases:
+      - Regime fitness: exact price at CIS score timestamp
+      - Backtest: reconstruct entry/exit prices for any historical date
+    """
+    key = f"cg_hist_{coin_id}_{date_str}"
+    cached = _cache_get(key, ttl=86400)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    client = _get_cg_client()
+    try:
+        r = await client.get(
+            f"{base}/coins/{coin_id}/history",
+            headers=_cg_headers(),
+            params={"date": date_str, "localization": "false"},
+            timeout=15,
+        )
+        r.raise_for_status()
+        data = r.json()
+        md = data.get("market_data", {})
+        result = {
+            "coin_id":    coin_id,
+            "date_str":   date_str,
+            "available":  True,
+            "price":      md.get("current_price", {}).get("usd"),
+            "market_cap": md.get("market_cap", {}).get("usd"),
+            "volume_24h": md.get("total_volume", {}).get("usd"),
+            "source":     "coingecko_pro" if CG_API_KEY else "coingecko_free",
+        }
+        await _redis_set(key, result, ttl=86400)
+        return _cache_set(key, result)
+    except Exception as e:
+        return {"coin_id": coin_id, "date_str": date_str, "available": False, "error": str(e)}
+
+
+async def get_cg_circulating_supply_chart(coin_id: str, days: int = 30) -> dict:
+    """
+    CoinGecko Pro /coins/{id}/circulating_supply_chart — supply trend over time.
+    Pro-only endpoint. Free tier returns 404.
+
+    Returns supply change data useful for F pillar scoring:
+      - Deflationary supply (burns, buybacks) → F pillar boost
+      - Rapid supply inflation → F pillar penalty
+      - Supply_change_pct: (latest - earliest) / earliest * 100
+
+    TTL: 4h Redis (supply doesn't change rapidly)
+    """
+    if not CG_API_KEY:
+        return {"available": False, "reason": "pro_only"}
+
+    days = min(max(days, 7), 365)
+    key = f"cg_supply_{coin_id}_{days}d"
+    cached = _cache_get(key, ttl=14400)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    client = _get_cg_client()
+    try:
+        r = await client.get(
+            f"{CG_PRO_BASE}/coins/{coin_id}/circulating_supply_chart",
+            headers=_cg_headers(),
+            params={"days": str(days)},
+            timeout=15,
+        )
+        r.raise_for_status()
+        raw = r.json()
+        # CG returns [[ts_ms, supply], ...]
+        supply_series = raw.get("circulating_supply", [])
+        if not supply_series or len(supply_series) < 2:
+            return {"coin_id": coin_id, "available": False, "reason": "insufficient_data"}
+
+        supplies = [float(s[1]) for s in supply_series]
+        earliest = supplies[0]
+        latest   = supplies[-1]
+        change_pct = (latest - earliest) / earliest * 100 if earliest > 0 else 0
+
+        result = {
+            "coin_id":          coin_id,
+            "available":        True,
+            "days":             days,
+            "supply_earliest":  earliest,
+            "supply_latest":    latest,
+            "supply_change_pct": round(change_pct, 4),  # negative = deflationary (bullish F)
+            "data_points":      len(supply_series),
+            "series":           supply_series[-30:],    # last 30 data points for charts
+            "source":           "coingecko_pro",
+        }
+        await _redis_set(key, result, ttl=14400)
+        return _cache_set(key, result)
+    except Exception as e:
+        return {"coin_id": coin_id, "available": False, "error": str(e)}
+
+
+async def get_cg_coin_tickers(coin_id: str, depth: int = 10) -> dict:
+    """
+    CoinGecko /coins/{id}/tickers — exchange volume distribution.
+    Used for O pillar liquidity concentration scoring:
+      - High exchange concentration (top-3 > 80%) → liquidity risk flag
+      - Low bid-ask spread → tighter markets → O pillar boost
+      - Trust score per exchange: green/yellow/red
+
+    Returns: {exchanges: [{name, volume_usd, trust_score, bid_ask_spread_pct}],
+              hhi: Herfindahl–Hirschman Index of volume concentration,
+              top3_share_pct: float}
+    TTL: 10 min
+    """
+    base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    key = f"cg_tickers_{coin_id}"
+    cached = _cache_get(key, ttl=600)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    client = _get_cg_client()
+    try:
+        r = await client.get(
+            f"{base}/coins/{coin_id}/tickers",
+            headers=_cg_headers(),
+            params={"depth": "true", "order": "volume_desc", "page": 1},
+            timeout=15,
+        )
+        r.raise_for_status()
+        tickers = r.json().get("tickers", [])
+
+        # Aggregate by exchange
+        exchange_vol: dict[str, float] = {}
+        exchange_trust: dict[str, str] = {}
+        exchange_spread: dict[str, float] = {}
+        for t in tickers[:50]:
+            mkt = t.get("market", {}).get("name", "Unknown")
+            vol = float(t.get("converted_volume", {}).get("usd", 0) or 0)
+            exchange_vol[mkt] = exchange_vol.get(mkt, 0) + vol
+            exchange_trust[mkt] = t.get("trust_score", "")
+            if t.get("bid_ask_spread_percentage"):
+                exchange_spread[mkt] = float(t["bid_ask_spread_percentage"])
+
+        total_vol = sum(exchange_vol.values()) or 1
+        sorted_exchanges = sorted(exchange_vol.items(), key=lambda x: x[1], reverse=True)[:depth]
+
+        # HHI — sum of squared market shares (0–10000); lower = more distributed
+        hhi = sum((vol / total_vol * 100) ** 2 for _, vol in sorted_exchanges)
+        top3_share = sum(v for _, v in sorted_exchanges[:3]) / total_vol * 100
+
+        result = {
+            "coin_id":       coin_id,
+            "available":     True,
+            "total_volume_usd": total_vol,
+            "exchanges":     [
+                {
+                    "name":            ex,
+                    "volume_usd":      vol,
+                    "share_pct":       round(vol / total_vol * 100, 2),
+                    "trust_score":     exchange_trust.get(ex, ""),
+                    "bid_ask_spread":  exchange_spread.get(ex),
+                }
+                for ex, vol in sorted_exchanges
+            ],
+            "hhi":           round(hhi, 1),
+            "top3_share_pct": round(top3_share, 2),
+            "source":        "coingecko_pro" if CG_API_KEY else "coingecko_free",
+        }
+        await _redis_set(key, result, ttl=600)
+        return _cache_set(key, result)
+    except Exception as e:
+        return {"coin_id": coin_id, "available": False, "error": str(e)}
+
+
 async def get_economic_dashboard() -> dict:
     """
     Institutional-grade macro economic dashboard.

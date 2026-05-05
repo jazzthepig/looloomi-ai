@@ -494,55 +494,91 @@ async def fetch_cg_markets() -> Dict[str, dict]:
             seen.add(cid)
             unique_ids.append(cid)
 
+    # Pro key present: larger batches, parallel fetch, sparkline enabled
+    # Free tier: smaller batches, serial, no sparkline (rate limit workaround)
+    _pro = bool(CG_API_KEY)
+    batch_size = 200 if _pro else 50
+
+    async def _fetch_batch(client: httpx.AsyncClient, batch: list[str]) -> list:
+        ids_str = ",".join(batch)
+        params = {
+            "vs_currency":            "usd",
+            "ids":                    ids_str,
+            "order":                  "market_cap_desc",
+            "per_page":               250,
+            "page":                   1,
+            "sparkline":              "true" if _pro else "false",
+            "price_change_percentage": "30d,7d,1y",
+        }
+        try:
+            r = await client.get(f"{_cg_base()}/coins/markets",
+                                 params=params, headers=_cg_headers())
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            _logger.warning(f"CoinGecko batch error: {e}")
+            return []
+
+    def _sparkline_7d_return(sparkline_prices: list) -> float | None:
+        """Compute 7d return from 168-point hourly sparkline. More accurate than CG's field."""
+        if not sparkline_prices or len(sparkline_prices) < 2:
+            return None
+        p0, p_last = sparkline_prices[0], sparkline_prices[-1]
+        if p0 and p0 > 0:
+            return round((p_last - p0) / p0 * 100, 4)
+        return None
+
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            # Batch into chunks of 50 IDs to avoid URL length issues
-            batch_size = 50
-            for i in range(0, len(unique_ids), batch_size):
-                batch = unique_ids[i:i + batch_size]
-                ids_str = ",".join(batch)
+            batches = [unique_ids[i:i + batch_size] for i in range(0, len(unique_ids), batch_size)]
 
-                url = f"{_cg_base()}/coins/markets"
-                params = {
-                    "vs_currency": "usd",
-                    "ids": ids_str,
-                    "order": "market_cap_desc",
-                    "per_page": 250,
-                    "page": 1,
-                    "sparkline": False,
-                    "price_change_percentage": "30d,7d"
+            if _pro:
+                # Pro: fetch all batches in parallel (500 rpm headroom)
+                batch_results = await asyncio.gather(*[_fetch_batch(client, b) for b in batches])
+                all_coins = [coin for batch in batch_results for coin in batch]
+            else:
+                # Free: serial with rate-limit delay
+                all_coins = []
+                for i, batch in enumerate(batches):
+                    all_coins.extend(await _fetch_batch(client, batch))
+                    if i < len(batches) - 1:
+                        await asyncio.sleep(1.5)
+
+            for coin in all_coins:
+                coin_id = coin["id"]
+                sparkline_prices = (coin.get("sparkline_in_7d") or {}).get("price") or []
+                sparkline_return = _sparkline_7d_return(sparkline_prices) if _pro else None
+                result[coin_id] = {
+                    "symbol":               coin["symbol"].upper(),
+                    "name":                 coin["name"],
+                    "market_cap":           coin.get("market_cap", 0),
+                    "fdv":                  coin.get("fully_diluted_valuation", 0),
+                    "volume_24h":           coin.get("total_volume", 0),
+                    "price":                coin.get("current_price", 0),
+                    "change_24h":           coin.get("price_change_percentage_24h", 0),
+                    "change_7d":            sparkline_return if sparkline_return is not None
+                                            else (coin.get("price_change_percentage_7d_in_currency")
+                                                  or coin.get("price_change_percentage_7d", 0)),
+                    "change_30d":           coin.get("price_change_percentage_30d_in_currency")
+                                            or coin.get("price_change_percentage_30d", 0),
+                    "change_1y":            coin.get("price_change_percentage_1y_in_currency", 0),
+                    "circulating_supply":   coin.get("circulating_supply", 0),
+                    "total_supply":         coin.get("total_supply", 0),
+                    "max_supply":           coin.get("max_supply"),
+                    "supply_ratio":         round(coin.get("circulating_supply", 0) / coin.get("total_supply", 1), 4)
+                                            if coin.get("total_supply") else None,
+                    "ath_change_percentage": coin.get("ath_change_percentage", 0),
+                    "high_24h":             coin.get("high_24h", 0),
+                    "low_24h":              coin.get("low_24h", 0),
+                    "sparkline_7d":         sparkline_prices[-24:] if sparkline_prices else [],  # last 24h hourly
+                    "sparkline_return_7d":  sparkline_return,
+                    "source":               "coingecko_pro" if _pro else "coingecko",
                 }
-                r = await client.get(url, params=params, headers=_cg_headers())
-                r.raise_for_status()
-                data = r.json()
 
-                for coin in data:
-                    coin_id = coin["id"]
-                    result[coin_id] = {
-                        "symbol": coin["symbol"].upper(),
-                        "name": coin["name"],
-                        "market_cap": coin.get("market_cap", 0),
-                        "fdv": coin.get("fully_diluted_valuation", 0),
-                        "volume_24h": coin.get("total_volume", 0),
-                        "price": coin.get("current_price", 0),
-                        "change_24h": coin.get("price_change_percentage_24h", 0),
-                        "change_7d": coin.get("price_change_percentage_7d_in_currency") or coin.get("price_change_percentage_7d", 0),
-                        "change_30d": coin.get("price_change_percentage_30d_in_currency") or coin.get("price_change_percentage_30d", 0),
-                        "circulating_supply": coin.get("circulating_supply", 0),
-                        "total_supply": coin.get("total_supply", 0),
-                        "ath_change_percentage": coin.get("ath_change_percentage", 0),
-                        "high_24h": coin.get("high_24h", 0),
-                        "low_24h": coin.get("low_24h", 0),
-                        "source": "coingecko",
-                    }
-
-                # Rate limit: small delay between batches (free tier: 10-30 req/min)
-                if i + batch_size < len(unique_ids):
-                    await asyncio.sleep(1.5)
-
-            _logger.info(f"CoinGecko: fetched {len(result)}/{len(unique_ids)} assets")
-            _cache_set(cache_key, result)                       # L1
-            await _upstash_set(redis_key, result, ttl=1800)    # L2: 30min TTL
+            _logger.info(f"CoinGecko {'Pro' if _pro else 'free'}: fetched {len(result)}/{len(unique_ids)} assets "
+                         f"({'parallel' if _pro else 'serial'}, batch_size={batch_size})")
+            _cache_set(cache_key, result)
+            await _upstash_set(redis_key, result, ttl=1800)
             return result
 
     except Exception as e:
@@ -973,11 +1009,14 @@ def calculate_cis_score(
     change_30d = market_data.get("change_30d", 0) or 0
     change_7d = market_data.get("change_7d", 0) or 0
     change_24h = market_data.get("change_24h", 0) or 0
+    # Pro: sparkline_return_7d is computed from 168-point hourly data (more precise than CG field)
+    sparkline_return_7d = market_data.get("sparkline_return_7d") if market_data else None
     ath_distance = abs(market_data.get("ath_change_percentage", 0)) if market_data else 50
     price = market_data.get("price", 0) if market_data else 0
     high_24h = market_data.get("high_24h", 0) or 0
     low_24h = market_data.get("low_24h", 0) or 0
     fdv = market_data.get("fdv", 0) if market_data else 0
+    max_supply = market_data.get("max_supply") if market_data else None
     _is_tradfi = asset_class in ["US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"]
 
     # ── F — Fundamental (Structural Quality) ──────────────────────────
@@ -998,6 +1037,15 @@ def calculate_cis_score(
     fdv_score = 0.0
     supply_ratio = (circ_supply / total_supply) if (total_supply > 0 and circ_supply > 0) else 0
     supply_score = min(15, supply_ratio * 15)
+
+    # Pro: capped-emission bonus — if max_supply is set and >85% issued, the asset is
+    # near peak inflation → supply certainty premium (+0 to +5 on F pillar)
+    # BTC (93% issued) and LTC (94% issued) benefit most.
+    emission_bonus = 0.0
+    if max_supply and max_supply > 0 and circ_supply > 0:
+        emission_pct = circ_supply / max_supply
+        if emission_pct >= 0.85:
+            emission_bonus = _linear_interp(emission_pct, 0.85, 1.0, 0.0, 5.0)
 
     if asset_class != "US Equity":
         if fdv > 0 and market_cap > 0:
@@ -1040,7 +1088,7 @@ def calculate_cis_score(
         # dev_activity_score 0-100 → bonus 0-10 (linear; 50 → 5, 90 → 9)
         dev_bonus = min(10.0, dev_activity_score * 0.10)
 
-    f_score = round(max(0, min(100, mcap_score + tvl_score + fdv_score + supply_score + dev_bonus)), 1)
+    f_score = round(max(0, min(100, mcap_score + tvl_score + fdv_score + supply_score + dev_bonus + emission_bonus)), 1)
 
     f_components: dict = {
         "market_cap_usd": market_cap,
@@ -1083,17 +1131,29 @@ def calculate_cis_score(
             liq_score = max(-5, vol_ratio * 1000 - 5)  # Below 1% → penalty
 
     # Price momentum 30d: continuous linear map
-    # -50% → 0, 0% → 15, +50% → 30, +100% → 35
+    # -50% → 0, 0% → 15, +50% → 27, +100% → 30 (cap reduced to 30 to make room for sparkline)
     if change_30d <= -50:
         mom_score = 0.0
     elif change_30d <= 0:
         mom_score = _linear_interp(change_30d, -50, 0, 0, 15)
     elif change_30d <= 50:
-        mom_score = _linear_interp(change_30d, 0, 50, 15, 30)
+        mom_score = _linear_interp(change_30d, 0, 50, 15, 27)
     else:
-        mom_score = min(35, _linear_interp(change_30d, 50, 100, 30, 35))
+        mom_score = min(30, _linear_interp(change_30d, 50, 100, 27, 30))
 
-    m_score = round(max(0, min(100, vol_score + liq_score + mom_score)), 1)
+    # 7d sparkline momentum (Pro: 168-point hourly precision; fallback: CG change_7d field)
+    # -20% → 0, 0% → 5, +20% → 10 (max 10; blended with 30d for short-term confirmation)
+    _r7 = sparkline_return_7d if sparkline_return_7d is not None else change_7d
+    if _r7 <= -20:
+        sparkline_7d_score = 0.0
+    elif _r7 <= 0:
+        sparkline_7d_score = _linear_interp(_r7, -20, 0, 0, 5)
+    elif _r7 <= 20:
+        sparkline_7d_score = _linear_interp(_r7, 0, 20, 5, 10)
+    else:
+        sparkline_7d_score = 10.0  # cap — avoid rewarding short spikes above 10
+
+    m_score = round(max(0, min(100, vol_score + liq_score + mom_score + sparkline_7d_score)), 1)
 
     m_components = {
         "volume_24h": volume_24h,
@@ -1102,6 +1162,9 @@ def calculate_cis_score(
         "liquidity_score": round(liq_score, 1),
         "momentum_30d_pct": round(change_30d, 1),
         "momentum_score": round(mom_score, 1),
+        "momentum_7d_pct": round(_r7, 1),
+        "sparkline_7d_score": round(sparkline_7d_score, 1),
+        "sparkline_source": "pro_168pt" if sparkline_return_7d is not None else "cg_field",
     }
 
     # ── O — On-Chain Health / Risk-Adjusted ──────────────────────────
