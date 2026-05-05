@@ -507,7 +507,7 @@ export default function StrategyPage() {
             display: "flex", justifyContent: "center", gap: 48, flexWrap: "wrap",
             padding: "28px 0", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`,
           }}>
-            <Stat label="Assets Scored" value={universeSize ? `${universeSize}+` : "40+"} sub="Crypto + TradFi" />
+            <Stat label="Assets Scored" value={universeSize ? `${universeSize}+` : "80+"} sub="Crypto + TradFi" />
             <Stat label="Investment Channels" value="3" sub="Algo · Protocol · FoF" />
             <Stat label="Target AUM" value="$30M" sub="Phase 1" />
             <Stat label="Management Fee" value="0%" sub="Performance only" color={T.green} />
