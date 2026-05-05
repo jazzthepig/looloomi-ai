@@ -1,5 +1,5 @@
 """
-Looloomi AI — FastAPI Backend v0.4.3
+Looloomi AI — FastAPI Backend v0.4.4
 Modular router architecture. God-file main.py split complete.
 
 Routers:
@@ -16,6 +16,7 @@ Routers:
   src/api/routers/share.py        — /api/v1/share/og-image
   src/api/routers/factory.py      — /api/v1/factory/*
   src/api/routers/agent.py        — /api/v1/agent/tasks (A2A Phase 2.3)
+  src/api/routers/keys.py         — /api/v1/keys/* (API key issuance + verification)
 """
 import os, sys, json
 
@@ -41,12 +42,15 @@ from src.api.routers.social import router as social_router
 from src.api.routers.factory import router as factory_router
 from src.api.routers.share import router as share_router
 from src.api.routers.agent import router as agent_router
+from src.api.routers.keys import router as keys_router
+from src.api.middleware.rate_limit import RateLimitMiddleware
 
 _ENV = os.environ.get("ENVIRONMENT", "production")
 
-app = FastAPI(title="Looloomi AI API", version="0.4.3")
+app = FastAPI(title="Looloomi AI API", version="0.4.4")
 
 app.add_middleware(GZipMiddleware, minimum_size=500)  # ~60% payload reduction for agents
+app.add_middleware(RateLimitMiddleware)               # sliding-window rate limiter (Upstash Redis)
 _frontend_origins = os.environ.get(
     "FRONTEND_ORIGINS",
     "https://looloomi.ai,https://looloomi.com,http://localhost:5173,http://localhost:8000"
@@ -84,6 +88,7 @@ app.include_router(social_router)
 app.include_router(factory_router)
 app.include_router(share_router)
 app.include_router(agent_router)
+app.include_router(keys_router)
 
 
 # ── MCP Server (ROADMAP_A2A Phase 2.2) ───────────────────────────────────────
@@ -124,7 +129,7 @@ async def agent_card():
 
 _health_payload = {
     "status":  "healthy",
-    "version": "0.4.3",
+    "version": "0.4.4",
     "environment": _ENV,
     "sources": ["binance", "defillama", "alternative.me", "moralis", "etherscan"],
 }
