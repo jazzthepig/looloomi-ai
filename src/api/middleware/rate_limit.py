@@ -4,10 +4,11 @@ Rate Limit Middleware — CometCloud AI
 Sliding-window rate limiter using Upstash Redis.
 
 Tiers:
-  anon      10 rpm / 100 rpd   — unauthenticated, IP-keyed
-  free      60 rpm / 1000 rpd  — X-API-Key present, free tier
-  pro      300 rpm / 50000 rpd — X-API-Key present, pro tier
-  internal 5000 rpm / ∞        — internal token, no limit enforced
+  dashboard 600 rpm / ∞       — same-origin (Referer matches FRONTEND_ORIGINS) — never throttled
+  anon      120 rpm / 2000 rpd — unauthenticated external, IP-keyed
+  free       60 rpm / 1000 rpd — X-API-Key present, free tier
+  pro       300 rpm / 50000 rpd — X-API-Key present, pro tier
+  internal  5000 rpm / ∞       — internal token, no limit enforced
 
 Paths exempt from rate limiting:
   /health, /api/v1/health, /.well-known/*, /llms.txt, /static/*, /assets/*
@@ -51,6 +52,23 @@ _EXEMPT_PREFIXES = (
     "/vite.svg",
     "/favicon",
 )
+
+# Same-origin dashboard origins — treated as trusted, very high limit
+_FRONTEND_ORIGINS = set(
+    os.getenv(
+        "FRONTEND_ORIGINS",
+        "https://looloomi.ai,https://looloomi.com,http://localhost:5173,http://localhost:8000"
+    ).split(",")
+)
+
+
+def _is_same_origin(request: Request) -> bool:
+    """True if request comes from our own dashboard (Referer or Origin header matches)."""
+    for header in ("referer", "origin"):
+        val = request.headers.get(header, "").strip().rstrip("/")
+        if val and any(val.startswith(o.rstrip("/")) for o in _FRONTEND_ORIGINS):
+            return True
+    return False
 
 # Cache validated keys in memory for 30s to avoid hitting Supabase on every request
 _key_cache: dict[str, tuple[dict, float]] = {}
@@ -124,7 +142,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if internal_token and _INTERNAL and internal_token == _INTERNAL:
             return await call_next(request)
 
-        if raw_key:
+        # Same-origin dashboard requests — high limit, never blocks the UI
+        if not raw_key and _is_same_origin(request):
+            forwarded = request.headers.get("X-Forwarded-For", "")
+            ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+            identity  = f"dash:{ip}"
+            rpm_limit = 600
+            rpd_limit = 0  # no daily cap for dashboard
+        elif raw_key:
             key_row = await _get_key_row(raw_key)
             if key_row is None:
                 return JSONResponse(
@@ -135,12 +160,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             rpm_limit = key_row["rate_limit_rpm"]
             rpd_limit = key_row["rate_limit_day"]
         else:
-            # Anon — IP-based
+            # Anon external — IP-based
             forwarded = request.headers.get("X-Forwarded-For", "")
             identity  = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
             identity  = f"ip:{identity}"
-            rpm_limit = 10
-            rpd_limit = 100
+            rpm_limit = 120
+            rpd_limit = 2000
 
         # Check minute window
         rpm_count = await _redis_incr(f"rl:rpm:{identity}", 60)
@@ -157,9 +182,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 headers={"Retry-After": "60", "X-RateLimit-Limit": str(rpm_limit)},
             )
 
-        # Check day window
-        rpd_count = await _redis_incr(f"rl:rpd:{identity}", 86400)
-        if rpd_count > rpd_limit:
+        # Check day window (skip if rpd_limit == 0 = unlimited)
+        rpd_count = await _redis_incr(f"rl:rpd:{identity}", 86400) if rpd_limit > 0 else 0
+        if rpd_limit > 0 and rpd_count > rpd_limit:
             return JSONResponse(
                 status_code=429,
                 content={
