@@ -26,6 +26,8 @@ from data.market.data_layer import (
     get_economic_dashboard, get_cg_developer_data,
     get_cg_price_history, get_cg_exchange_concentration,
     get_eodhd_earnings_calendar,
+    # v4.3: CoinGecko Pro — supply inflation + exchange depth
+    get_cg_circulating_supply_chart, get_cg_coin_tickers,
 )
 from src.api.store import redis_get, redis_get_key, redis_set_key
 from data.cis.cis_provider import ASSETS_CONFIG as _CIS_ASSETS_CONFIG
@@ -1454,3 +1456,84 @@ async def earnings_calendar(symbols: str = "AAPL,MSFT,NVDA,GOOGL,AMZN,META,TSLA"
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Earnings calendar error: {e}")
+
+
+@router.get("/api/v1/market/supply-chart/{coin_id}")
+async def supply_chart(coin_id: str, days: int = 30):
+    """
+    CoinGecko Pro — circulating supply trend for a single coin.
+    Pro-only endpoint; returns 503 if no Pro key is configured.
+
+    Use cases:
+    - Deflationary signal: supply_change_pct < 0 (burns, buybacks) → F pillar boost
+    - Inflation risk: supply_change_pct > 5% over 30d → flag for agents
+    - Chart: `series` field returns last 30 data points [[ts_ms, supply], ...]
+
+    Response fields:
+      supply_earliest    float   — supply at window start
+      supply_latest      float   — supply at window end
+      supply_change_pct  float   — (latest-earliest)/earliest*100; negative=deflationary
+      data_points        int     — number of data points returned
+      series             list    — [[ts_ms, supply], ...] (last 30 pts for charting)
+
+    Cache: 4h Redis TTL.
+
+    Examples:
+      /api/v1/market/supply-chart/bitcoin?days=30
+      /api/v1/market/supply-chart/ethereum?days=90
+    """
+    coin_id = coin_id.lower().strip()
+    if not coin_id or len(coin_id) > 60:
+        raise HTTPException(status_code=400, detail="Invalid coin_id")
+    days = max(7, min(365, days))
+    try:
+        data = await get_cg_circulating_supply_chart(coin_id, days)
+        if not data.get("available"):
+            reason = data.get("reason", "unknown")
+            if reason == "pro_only":
+                raise HTTPException(status_code=503, detail="CoinGecko Pro key required for supply chart data")
+            raise HTTPException(status_code=404, detail=f"Supply chart unavailable for {coin_id}: {reason}")
+        return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Supply chart error: {e}")
+
+
+@router.get("/api/v1/market/tickers/{coin_id}")
+async def coin_tickers(coin_id: str, depth: int = 10):
+    """
+    CoinGecko — exchange volume distribution and liquidity depth for a single coin.
+    Works on free tier (falls back gracefully); Pro unlocks bid-ask spread data.
+
+    Use cases:
+    - Exchange concentration risk: HHI > 5000 or top3_share_pct > 80% = elevated risk
+    - Liquidity quality: trust_score per exchange (green/yellow/red)
+    - Spread quality: bid_ask_spread per exchange (tighter = better O pillar)
+    - Agent O pillar enrichment: pass coin_id from CIS universe
+
+    Response fields:
+      hhi              float  — Herfindahl-Hirschman Index (0–10000; lower = more distributed)
+      top3_share_pct   float  — % of volume on top 3 exchanges
+      total_volume_usd float  — aggregate USD volume across all tickers
+      exchanges        list   — [{name, volume_usd, share_pct, trust_score, bid_ask_spread}]
+
+    Cache: 10 min Redis TTL.
+
+    Examples:
+      /api/v1/market/tickers/bitcoin
+      /api/v1/market/tickers/uniswap?depth=5
+    """
+    coin_id = coin_id.lower().strip()
+    if not coin_id or len(coin_id) > 60:
+        raise HTTPException(status_code=400, detail="Invalid coin_id")
+    depth = max(3, min(20, depth))
+    try:
+        data = await get_cg_coin_tickers(coin_id, depth)
+        if not data.get("available"):
+            raise HTTPException(status_code=404, detail=f"No ticker data for {coin_id}")
+        return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Tickers error: {e}")
