@@ -269,9 +269,18 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
 
         # Get unified regime directly from get_macro_pulse() rather than via Redis.
         # This ensures both endpoints return identical macro_regime without Redis round-trip.
+        # Wrap with asyncio.timeout to prevent blocking on slow FRED calls (max 5s).
         try:
+            import asyncio
             from src.data.market.data_layer import get_macro_pulse
-            pulse = await get_macro_pulse()
+            try:
+                pulse = await asyncio.wait_for(get_macro_pulse(), timeout=5.0)
+            except asyncio.TimeoutError:
+                _logger.warning("[CIS] get_macro_pulse timed out, using fallback regime")
+                pulse = {}
+            except asyncio.CancelledError:
+                _logger.warning("[CIS] get_macro_pulse cancelled, using fallback regime")
+                pulse = {}
             _cached_regime = pulse.get("macro_regime") or "UNKNOWN"
         except Exception:
             # Fallback: try Redis key, then Mac Mini cached, then VIX
