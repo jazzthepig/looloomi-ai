@@ -215,7 +215,7 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         _logger.warning(f"[CIS] Railway calculation error: {e}")
 
     # Merge: Mac Mini T1 scores override Railway T2 where available
-    if use_local:
+    if use_local and cached and cached.get("universe"):
         local_map = {}
         for asset in cached.get("universe", []):
             sym = (asset.get("asset_id") or asset.get("symbol", "")).upper()
