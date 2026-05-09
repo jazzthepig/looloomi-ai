@@ -321,7 +321,7 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         # regime_confidence: computed from push count in current regime + BTC dominance 20d MA
         # data_quality_score: passed through from Mac Mini push payload
         # pillar_velocity: z-score of each pillar vs 30d rolling mean (from Mac Mini push payload)
-        regime_confidence = _compute_regime_confidence(macro_regime_push or _cached_regime or "UNKNOWN")
+        regime_confidence = _compute_regime_confidence(_cached_regime or "UNKNOWN")
 
         # Attach velocity/quality fields to each asset (from Mac Mini push payload)
         for a in merged:
@@ -352,9 +352,14 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
     if railway_universe:
         result["source"] = "railway"
         # Get unified regime directly from get_macro_pulse() — same source as macro-pulse endpoint
+        # Wrap with timeout to prevent blocking on slow FRED calls (same as merged path)
         try:
             from src.data.market.data_layer import get_macro_pulse
-            pulse = await get_macro_pulse()
+            try:
+                pulse = await asyncio.wait_for(get_macro_pulse(), timeout=5.0)
+            except (asyncio.TimeoutError, asyncio.CancelledError):
+                _logger.warning("[CIS] get_macro_pulse timed out in Railway path, using fallback regime")
+                pulse = {}
             result["macro_regime"] = pulse.get("macro_regime") or "UNKNOWN"
         except Exception:
             result["macro_regime"] = (result.get("macro") or {}).get("regime", "UNKNOWN")
