@@ -435,7 +435,7 @@ git push origin main
 - **Full push complete** (2026-04-27) — all Week 8 work live on Railway ✅
 
 **Pending — waiting on Minimax:**
-- Rotate EODHD + Finnhub API keys (exposed in old git history via Shadow)
+- ~~Rotate EODHD + Finnhub API keys~~ ✅ Done ~Apr 25 (Jazz confirmed May 2026)
 - T20: Start Freqtrade dry run (CISEnhancedStrategy) — see MINIMAX_SYNC.md §4A
 - MacroBrief pipeline stability — LM Studio (Gemma4-26b) crash recovery
 
@@ -455,7 +455,7 @@ git push origin main
 - Supabase: **CONNECTED** ✅ — score history writing (history_written: true) ✅
 - ScoreAnalytics: **LIVE** ✅ — heatmap populating with score history rows
 - MacroBrief: **NULL** — Mac Mini LM Studio pipeline not connected / not pushing
-- Economic Indicators: **EMPTY** — EODHD key missing/expired. All cells show "—".
+- Economic Indicators: **LIVE** ✅ — EODHD key rotated ~Apr 25; static scaffold fallback added May 2026.
 - Quant Monitor (Freqtrade): **DRY RUN PENDING** 🟡 — Direction locked: TrendStrategy (PF=1.46, 169 trades,
   MACD 4h, TP=10% SL=4%) + live CIS gate. `CISEnhancedStrategy.py` created on Mac Mini by Minimax.
   Backtest PF<1 was methodology issue (2026 CIS scores filtering 2024 signals, time mismatch — not a strategy bug).
@@ -501,7 +501,7 @@ git push origin main
 
 | Priority | Task | Est. | Status |
 |----------|------|------|------|
-| P0 | Rotate EODHD + Finnhub API keys (exposed in old git history) | 30min | 🔴 |
+| P0 | ~~Rotate EODHD + Finnhub API keys~~ | ~~30min~~ | ✅ Done ~Apr 25 |
 | P1 | ~~Add LAS calculation to local engine output~~ | ~~2h~~ | ✅ Done |
 | P1 | ~~Run T1 backtest → report results~~ | ~~2h~~ | ✅ Done — PF<1 → methodology issue, not strategy |
 | P1 | Re-run auth E2E after Seth's Python 3.14 fix | 15min | 🟡 After push |

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { T, FONTS, sigStyle as sigStyleFromTokens } from "../tokens";
 
 /* ─── Asset Universe ────────────────────────────────────────────────── */
@@ -116,6 +116,25 @@ const SORT_OPTS = [
   { id: "vol",   label: "Volume" },
 ];
 
+/* ─── HHI Risk label ──────────────────────────────────────────────── */
+// Herfindahl-Hirschman Index 0-10000; higher = more concentrated liquidity risk
+const hhiLabel = (hhi) => {
+  if (hhi == null) return null;
+  if (hhi < 1500) return { label: "LOW", color: T.green,  bg: "rgba(0,232,122,0.10)", title: `HHI ${hhi.toFixed(0)} — well-distributed exchange volume` };
+  if (hhi < 3000) return { label: "MOD", color: T.amber,  bg: "rgba(245,158,11,0.10)", title: `HHI ${hhi.toFixed(0)} — moderate concentration` };
+  if (hhi < 5000) return { label: "HIGH", color: T.red,   bg: "rgba(255,61,90,0.10)",  title: `HHI ${hhi.toFixed(0)} — elevated concentration risk` };
+  return              { label: "CRIT", color: "#FF3B5C", bg: "rgba(255,59,92,0.14)", title: `HHI ${hhi.toFixed(0)} — critical concentration — single venue dominates` };
+};
+
+/* ─── Supply inflation label ──────────────────────────────────────── */
+const supplyLabel = (pct) => {
+  if (pct == null) return null;
+  if (pct < -0.5)  return { label: `${pct.toFixed(1)}% 🔥`, color: T.green,  bg: "rgba(0,232,122,0.10)", title: `Supply deflated ${Math.abs(pct).toFixed(2)}% (burns/buybacks) — bullish F pillar` };
+  if (pct < 0.5)   return { label: `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`, color: T.t2, bg: "transparent", title: `Supply stable (${pct.toFixed(2)}% 30d)` };
+  if (pct < 2)     return { label: `+${pct.toFixed(1)}%`, color: T.amber, bg: "rgba(245,158,11,0.08)", title: `Mild supply inflation +${pct.toFixed(2)}% 30d` };
+  return             { label: `+${pct.toFixed(1)}%`, color: T.red,   bg: "rgba(255,61,90,0.08)",  title: `Supply inflation +${pct.toFixed(2)}% 30d — dilution risk` };
+};
+
 /* ─── Sparkline ───────────────────────────────────────────────────── */
 const Sparkline = ({ data, positive }) => {
   if (!data || data.length < 2) return null;
@@ -188,6 +207,8 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
   const [activeFilter, setActiveFilter] = useState("all");
   const [sortBy, setSortBy]           = useState("mcap");
   const [sortDir, setSortDir]         = useState(-1);       // -1 = desc
+  const [proData, setProData]         = useState({});       // keyed by coin_id: {hhi, supply_change_pct}
+  const [showProCols, setShowProCols] = useState(false);    // toggle PRO columns
 
   /* ── Fetch CoinGecko market data (crypto only) ────────────────── */
   const NON_CG_CATS = new Set(["TradFi", "Commodity"]);
@@ -270,6 +291,32 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
     }
   };
 
+  /* ── Fetch Pro data (tickers HHI + supply) for crypto assets only ── */
+  const loadProData = useCallback(async () => {
+    const cryptoAssets = ASSETS.filter(a => !["TradFi", "Commodity"].includes(a.category));
+    // Stagger requests — 5 at a time, 200ms apart — stays well within rate limits
+    const BATCH = 5;
+    const results = {};
+    for (let i = 0; i < cryptoAssets.length; i += BATCH) {
+      const batch = cryptoAssets.slice(i, i + BATCH);
+      await Promise.allSettled(batch.map(async (asset) => {
+        try {
+          const [tickersRes, supplyRes] = await Promise.allSettled([
+            fetch(`/api/v1/market/tickers/${asset.id}`).then(r => r.ok ? r.json() : null),
+            fetch(`/api/v1/market/supply-chart/${asset.id}?days=30`).then(r => r.ok ? r.json() : null),
+          ]);
+          results[asset.id] = {
+            hhi:               tickersRes.status === "fulfilled" ? tickersRes.value?.hhi : null,
+            top3_share:        tickersRes.status === "fulfilled" ? tickersRes.value?.top3_share_pct : null,
+            supply_change_pct: supplyRes.status === "fulfilled"  ? supplyRes.value?.supply_change_pct : null,
+          };
+        } catch (_) {}
+      }));
+      if (i + BATCH < cryptoAssets.length) await new Promise(r => setTimeout(r, 200));
+    }
+    setProData(results);
+  }, []);
+
   // Single useEffect — initial load + interval + refreshTrigger
   useEffect(() => {
     setLoading(true);
@@ -278,6 +325,11 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
     const iv = setInterval(loadData, 120_000); // 2 min — matches backend cg_markets cache TTL
     return () => clearInterval(iv);
   }, [refreshTrigger]);
+
+  // Load Pro data when pro columns toggled on (lazy — avoid 29 req on initial load)
+  useEffect(() => {
+    if (showProCols) loadProData();
+  }, [showProCols, loadProData]);
 
   /* ── Merge & derive display data ──────────────────────────────── */
   const rows = useMemo(() => {
@@ -392,6 +444,18 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                 </button>
               ))}
             </div>
+
+            {/* PRO data toggle */}
+            <button onClick={() => setShowProCols(v => !v)} style={{
+              fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
+              letterSpacing: "0.10em", padding: "4px 10px", borderRadius: 5, flexShrink: 0,
+              border: `1px solid ${showProCols ? "rgba(167,139,250,0.35)" : T.border}`,
+              color: showProCols ? T.purple : T.t3,
+              background: showProCols ? "rgba(167,139,250,0.08)" : "transparent",
+              cursor: "pointer", transition: "all 0.15s", textTransform: "uppercase",
+            }} title="Show liquidity concentration (HHI) and supply inflation data">
+              ◈ PRO
+            </button>
           </div>
         </div>
 
@@ -408,6 +472,8 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                 <th style={{ ...thBase, textAlign: "right", cursor: "pointer", color: T.blue }} onClick={() => toggleSort("cis")}>CIS</th>
                 <th title="Liquidity-Adjusted Score = CIS × liquidity × confidence" style={{ ...thBase, textAlign: "right", cursor: "pointer" }} onClick={() => toggleSort("las")}>LAS ⓘ</th>
                 <th style={{ ...thBase, textAlign: "center" }}>Signal</th>
+                {showProCols && <th title="Herfindahl-Hirschman Index — exchange volume concentration. Lower = better distributed." style={{ ...thBase, textAlign: "center", color: T.purple }}>Liq Risk ⓘ</th>}
+                {showProCols && <th title="Circulating supply change (30d). Negative = deflationary. Positive = inflation/dilution." style={{ ...thBase, textAlign: "right", color: T.purple }}>Supply 30D ⓘ</th>}
                 <th style={{ ...thBase, textAlign: "right", cursor: "pointer" }} onClick={() => toggleSort("vol")}>Volume</th>
                 <th style={{ ...thBase, textAlign: "right", width: 80 }}>Trend</th>
               </tr>
@@ -586,6 +652,49 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                         <td style={{ textAlign: "right", padding: "9px 14px", width: 80 }}>
                           <Sparkline data={mkt.sparkline_in_7d?.price} positive={(ch7d || 0) >= 0} />
                         </td>
+                        {/* PRO: Liquidity Risk (HHI) */}
+                        {showProCols && (() => {
+                          const pd = proData[asset.id];
+                          const lbl = hhiLabel(pd?.hhi);
+                          return (
+                            <td style={{ textAlign: "center", padding: "9px 14px" }}>
+                              {lbl ? (
+                                <span title={lbl.title} style={{
+                                  fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700,
+                                  letterSpacing: "0.06em", padding: "2px 7px", borderRadius: 3,
+                                  color: lbl.color, background: lbl.bg, cursor: "help",
+                                }}>
+                                  {lbl.label}
+                                </span>
+                              ) : (
+                                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3 }}>—</span>
+                              )}
+                            </td>
+                          );
+                        })()}
+
+                        {/* PRO: Supply Inflation (30D) */}
+                        {showProCols && (() => {
+                          const pd = proData[asset.id];
+                          const lbl = supplyLabel(pd?.supply_change_pct);
+                          return (
+                            <td style={{ textAlign: "right", padding: "9px 14px" }}>
+                              {lbl ? (
+                                <span title={lbl.title} style={{
+                                  fontFamily: FONTS.mono, fontSize: 11, fontWeight: 500,
+                                  color: lbl.color, background: lbl.bg, cursor: "help",
+                                  padding: lbl.bg !== "transparent" ? "1px 5px" : "0",
+                                  borderRadius: 3,
+                                }}>
+                                  {lbl.label}
+                                </span>
+                              ) : (
+                                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3 }}>—</span>
+                              )}
+                            </td>
+                          );
+                        })()}
+
                       </tr>
                     );
                   })

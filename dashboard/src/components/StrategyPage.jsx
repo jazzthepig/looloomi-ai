@@ -929,7 +929,151 @@ export default function StrategyPage() {
 
         <Divider />
 
-        {/* ══ SECTION 7: LEAD CAPTURE ══════════════════════════════════════ */}
+        {/* ══ SECTION 7: RaaS — Research as a Service ═══════════════════════ */}
+        <Section id="raas">
+          <Label color={T.purple}>Research as a Service</Label>
+          <h2 style={{
+            fontFamily: F.display, fontSize: 28, fontWeight: 800,
+            color: T.t1, margin: "0 0 14px",
+          }}>
+            Institutional Intelligence API
+          </h2>
+          <p style={{
+            fontFamily: F.body, fontSize: 15, color: T.t2,
+            lineHeight: 1.7, maxWidth: 640, margin: "0 0 48px",
+          }}>
+            CometCloud Intelligence Score is available as a standalone data product.
+            Family offices, quant funds, and crypto research desks subscribe for
+            real-time CIS grades, regime signals, and grade-change webhooks — without
+            building the infrastructure themselves.
+          </p>
+
+          {/* Tier cards */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 16, marginBottom: 48,
+          }}>
+            {[
+              {
+                tier: "Free",
+                rpm: "60 req/min",
+                rpd: "1,000 req/day",
+                color: T.t2,
+                border: T.border,
+                features: ["CIS universe — 84 assets", "Grade + signal per asset", "Macro regime", "5-pillar breakdown"],
+                cta: "Get API key",
+              },
+              {
+                tier: "Pro",
+                rpm: "300 req/min",
+                rpd: "50,000 req/day",
+                color: T.blue,
+                border: "rgba(75,158,255,0.35)",
+                features: ["All Free features", "Grade-change webhooks (HMAC signed)", "LAS & confidence scores", "Historical score data (Supabase)", "Supply inflation + exchange HHI", "Priority SLA"],
+                cta: "Contact for access",
+                highlight: true,
+              },
+              {
+                tier: "Enterprise",
+                rpm: "Unlimited",
+                rpd: "Custom",
+                color: T.purple,
+                border: "rgba(167,139,250,0.35)",
+                features: ["All Pro features", "Custom regime weight tuning", "White-label data feed", "Dedicated Mac Mini scoring lane", "Co-investment in CometCloud FoF", "Quarterly strategy review"],
+                cta: "Book a call",
+              },
+            ].map((plan, i) => (
+              <div key={i} style={{
+                background: plan.highlight ? "rgba(75,158,255,0.05)" : "rgba(10,14,24,0.7)",
+                border: `1px solid ${plan.border}`,
+                borderRadius: 12, padding: "28px 22px",
+                display: "flex", flexDirection: "column",
+              }}>
+                <div style={{ fontFamily: F.serif, fontSize: 11, fontWeight: 600, color: plan.color, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8 }}>
+                  {plan.tier}
+                </div>
+                <div style={{ fontFamily: F.mono, fontSize: 10, color: T.t3, marginBottom: 20 }}>
+                  {plan.rpm} · {plan.rpd}
+                </div>
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
+                  {plan.features.map((f, j) => (
+                    <li key={j} style={{
+                      fontFamily: F.body, fontSize: 12, color: T.t2, lineHeight: 1.6,
+                      paddingBottom: 6, borderBottom: `1px solid rgba(255,255,255,0.04)`,
+                      marginBottom: 6, display: "flex", gap: 8, alignItems: "flex-start",
+                    }}>
+                      <span style={{ color: plan.color, flexShrink: 0, marginTop: 2 }}>·</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <a href="mailto:jazz@cometcloud.ai" style={{
+                  display: "block", textAlign: "center",
+                  fontFamily: F.display, fontSize: 11, fontWeight: 700,
+                  letterSpacing: "0.10em", padding: "10px 0", borderRadius: 6,
+                  border: `1px solid ${plan.border}`, color: plan.color,
+                  background: "transparent", textDecoration: "none",
+                  transition: "all 0.15s", textTransform: "uppercase",
+                }}>
+                  {plan.cta}
+                </a>
+              </div>
+            ))}
+          </div>
+
+          {/* Differentiators row */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 12,
+          }}>
+            {[
+              { icon: "⚡", title: "Real-time Grades", desc: "CIS scores update every 30 minutes from local AI engine. Grade changes fire webhook within 30 seconds." },
+              { icon: "🔐", title: "HMAC-Signed Delivery", desc: "Every webhook signed with per-subscription secret. Verify X-CometCloud-Signature on receipt." },
+              { icon: "📐", title: "Simons-Grade Methodology", desc: "Pearson IC validated pillar weights per macro regime. Same feedback loop as Renaissance quant infrastructure." },
+              { icon: "🌏", title: "APAC-First Coverage", desc: "Tailored for Hong Kong, Singapore, and Greater China institutional clients. Multi-regime macro overlay." },
+            ].map((item, i) => (
+              <div key={i} style={{
+                background: "rgba(255,255,255,0.015)", border: `1px solid ${T.border}`,
+                borderRadius: 8, padding: "16px 16px",
+              }}>
+                <div style={{ fontSize: 18, marginBottom: 8 }}>{item.icon}</div>
+                <div style={{ fontFamily: F.display, fontSize: 12, fontWeight: 700, color: T.t1, marginBottom: 6 }}>
+                  {item.title}
+                </div>
+                <div style={{ fontFamily: F.body, fontSize: 11, color: T.t3, lineHeight: 1.6 }}>
+                  {item.desc}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* API endpoint preview */}
+          <div style={{
+            marginTop: 36, background: "rgba(0,0,0,0.4)", border: `1px solid rgba(75,158,255,0.15)`,
+            borderRadius: 10, padding: "20px 24px",
+          }}>
+            <div style={{ fontFamily: F.mono, fontSize: 9, color: T.blue, letterSpacing: "0.12em", marginBottom: 12 }}>
+              QUICK START
+            </div>
+            <pre style={{ fontFamily: F.mono, fontSize: 11, color: T.t2, lineHeight: 1.8, overflow: "auto" }}>{`# Get your free API key
+curl -X POST https://looloomi.ai/api/v1/keys/create \\
+  -H "Content-Type: application/json" \\
+  -d '{"email":"you@fund.com","name":"Your Fund"}'
+
+# Fetch live CIS universe — 84 assets, grades, signals, 5-pillar scores
+curl https://looloomi.ai/api/v1/cis/universe \\
+  -H "X-API-Key: cc_live_YOUR_KEY"
+
+# Subscribe to grade-change webhooks
+curl -X POST https://looloomi.ai/api/v1/webhooks/subscribe \\
+  -H "X-API-Key: cc_live_YOUR_KEY" \\
+  -d '{"url":"https://your-fund.com/hooks/cis"}'`}</pre>
+          </div>
+        </Section>
+
+        <Divider />
+
+        {/* ══ SECTION 8: LEAD CAPTURE ══════════════════════════════════════ */}
         <LeadCapture />
 
         {/* ══ FOOTER ════════════════════════════════════════════════════════ */}
