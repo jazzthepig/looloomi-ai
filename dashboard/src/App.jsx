@@ -9,6 +9,7 @@ import { T, FONTS } from "./tokens";
 
 /* ── Lazy-loaded secondary views (below fold / conditional) ── */
 const VaultPage            = lazy(() => import("./components/VaultPage"));
+const ApiKeysPage          = lazy(() => import("./components/ApiKeysPage"));
 const ProtocolIntelligence = lazy(() => import("./components/ProtocolIntelligence"));
 const MobileApp            = lazy(() => import("./components/MobileApp"));
 const AssetRadar           = lazy(() => import("./components/AssetRadar"));
@@ -285,6 +286,7 @@ const NAV_ITEMS = [
   { id: "vault",     label: "Vault",     icon: "◎", sub: "Fund of Funds" },
   { id: "quantgp",   label: "Quant GP",  icon: "∿", sub: "EST Alpha · Live" },
   { id: "portfolio", label: "Portfolio", icon: "⊡", sub: "My Holdings" },
+  { id: "api-keys",  label: "API Keys",  icon: "⌘", sub: "RaaS · Free · Pro" },
 ];
 
 // Used by mobile SiteNav — top-level items only
@@ -295,6 +297,7 @@ const TOOL_LINKS = [
   { label: "Score Analytics",  href: "/analytics.html" },
   { label: "Agent API",        href: "/agent.html" },
   { label: "Fund Strategy",    href: "/strategy.html" },
+  { label: "Privacy Policy",   href: "/privacy.html" },
 ];
 
 /* ── Sidebar ────────────────────────────────────────────────────────────── */
@@ -619,6 +622,15 @@ function DesktopApp() {
                 </Suspense>
               </div>
             </section>
+          )}
+        </div>
+
+        {/* api-keys */}
+        <div style={{ display: activeSection === "api-keys" ? "block" : "none" }}>
+          {visited.has("api-keys") && (
+            <Suspense fallback={<SectionLoader />}>
+              <ApiKeysPage />
+            </Suspense>
           )}
         </div>
       </main>

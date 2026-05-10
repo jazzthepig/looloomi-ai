@@ -223,7 +223,7 @@ async def supabase_get_history(symbol: str, days: int = 7) -> list:
         "symbol":  f"eq.{symbol.upper()}",
         "order":   "recorded_at.desc",
         "limit":   str(days * 48),
-        "select":  "score,grade,signal,percentile,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source,recorded_at",
+        "select":  "score,raw_cis_score,grade,signal,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,score_delta,score_zscore,macro_regime,data_tier,las,confidence,asset_class,recorded_at",
     }
     headers = {
         "apikey":        _SB_KEY,
