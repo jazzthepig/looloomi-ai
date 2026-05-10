@@ -1085,8 +1085,9 @@ curl -X POST https://looloomi.ai/api/v1/webhooks/subscribe \\
           <span style={{ fontFamily: F.serif, fontSize: 14, color: T.t3, letterSpacing: "-0.01em" }}>
             CometCloud AI
           </span>
-          <span style={{ fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.08em" }}>
-            HONG KONG · {new Date().getFullYear()}
+          <span style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            <a href="/privacy.html" style={{ fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.08em", textDecoration: "none", opacity: 0.7 }}>Privacy</a>
+            <span style={{ fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.08em" }}>HONG KONG · {new Date().getFullYear()}</span>
           </span>
         </footer>
       </div>
