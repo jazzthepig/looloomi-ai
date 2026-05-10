@@ -2658,8 +2658,8 @@ async def get_economic_dashboard() -> dict:
     Used by: /api/v1/market/economic-indicators endpoint + MacroBrief pipeline.
     TTL: 4 hours Redis.
     """
-    # v2: bumped after adding World Bank + FRED fallbacks for HK/CN (invalidates old error cache)
-    key = "economic_dashboard_v2"
+    # v3: bumped after adding static scaffold fallback (invalidates old error cache)
+    key = "economic_dashboard_v3"
     cached = _cache_get(key, ttl=14400)
     if cached:
         return cached
@@ -2704,6 +2704,20 @@ async def get_economic_dashboard() -> dict:
         us_wb = await _get_worldbank_macro("usa")
         if not us_wb.get("error"):
             us_data = us_wb
+
+    # Last-resort static scaffold — known macro values (updated quarterly)
+    # Ensures the EconomicIndicators panel always renders rather than vanishing.
+    _STATIC_FALLBACK = {
+        "usa": {"cpi_yoy": 2.8, "gdp_growth": 2.4, "interest_rate": 4.50, "unemployment": 4.1, "pmi": 49.3, "source": "static_q1_2026", "derived_regime": "TIGHTENING"},
+        "hkg": {"cpi_yoy": 2.1, "gdp_growth": 2.5, "interest_rate": 4.75, "unemployment": 3.1, "pmi": 50.8, "source": "static_q1_2026", "derived_regime": "NEUTRAL"},
+        "chn": {"cpi_yoy": 0.4, "gdp_growth": 4.8, "interest_rate": 3.45, "unemployment": 5.1, "pmi": 50.2, "source": "static_q1_2026", "derived_regime": "EASING"},
+    }
+    if us_data.get("error"):
+        us_data = {**_STATIC_FALLBACK["usa"], "stale": True}
+    if hk_data.get("error"):
+        hk_data = {**_STATIC_FALLBACK["hkg"], "stale": True}
+    if cn_data.get("error"):
+        cn_data = {**_STATIC_FALLBACK["chn"], "stale": True}
 
     # US regime from economic data (used as fallback when Mac Mini isn't pushing)
     us_regime = us_data.get("derived_regime", "UNKNOWN")
