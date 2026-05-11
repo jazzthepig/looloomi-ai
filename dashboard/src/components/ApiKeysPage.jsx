@@ -3,6 +3,7 @@
  * Free tier delivered instantly. Pro/Enterprise via email follow-up.
  */
 import { useState } from "react";
+import { track } from "../main.jsx";
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
@@ -80,6 +81,7 @@ export default function ApiKeysPage() {
 
       setResult(data);
       setState("success");
+      track("api_key_created", { tier: "free", intended_use: form.intended_use || "general" });
     } catch (err) {
       setErrorMsg(err.message || "Request failed. Try again or email jazz@cometcloud.ai");
       setState("error");
