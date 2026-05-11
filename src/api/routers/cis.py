@@ -17,6 +17,7 @@ from src.api.store import (
 )
 import src.api.store as store
 from src.data.cis.cis_provider import calculate_cis_universe
+from src.api.routers.webhooks import fire_grade_webhooks
 
 _logger = logging.getLogger(__name__)
 
@@ -173,6 +174,34 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                     _push_counts[macro_regime_push] = _push_counts.get(macro_regime_push, 0) + 1
             sb_ok = await supabase_insert_batch(sb_rows)
             _logger.warning(f"[INTERNAL] Supabase history write: {sb_ok} ({len(sb_rows)} rows, with delta+zscore)")
+
+            # Grade change detection → fire webhooks (fire-and-forget)
+            grade_changes = []
+            for asset in universe:
+                symbol     = asset.get("symbol", "")
+                new_grade  = asset.get("grade", "")
+                new_signal = asset.get("signal", "")
+                history    = recent_scores.get(symbol, [])
+                if history and new_grade:
+                    prev_grade  = history[0].get("grade", "")
+                    prev_signal = history[0].get("signal", "")
+                    if prev_grade and prev_grade != new_grade:
+                        grade_changes.append({
+                            "symbol":      symbol,
+                            "asset_class": asset.get("asset_class", asset.get("class", "")),
+                            "old_grade":   prev_grade,
+                            "new_grade":   new_grade,
+                            "old_signal":  prev_signal,
+                            "new_signal":  new_signal,
+                            "cis_score":   round(asset.get("cis_score") or asset.get("score") or 0.0, 2),
+                        })
+            if grade_changes:
+                _logger.info(f"[INTERNAL] {len(grade_changes)} grade changes — firing webhooks")
+                asyncio.create_task(fire_grade_webhooks(
+                    event   = "grade_change",
+                    assets  = grade_changes,
+                    regime  = macro_regime_push or "",
+                ))
 
         # 3. Broadcast to WebSocket clients
         asyncio.create_task(_broadcast_cis_update(universe))

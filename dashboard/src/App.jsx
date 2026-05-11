@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import { track } from "./main.jsx";
 // MarketDashboard removed (Q5 — cut market tab, reduces infra cost)
 // File can be deleted: dashboard/src/components/MarketDashboard.jsx
 import IntelligencePage from "./components/IntelligencePage";
@@ -462,6 +463,7 @@ function DesktopApp() {
     const resolved = id === "cis" ? "cis.leaderboard" : id;
     setActiveSection(resolved);
     setVisited(prev => { const next = new Set(prev); next.add(resolved); return next; });
+    track("section_view", { section: resolved });
     // Scroll content pane back to top on section switch
     const pane = document.getElementById("cc-content-pane");
     if (pane) pane.scrollTop = 0;

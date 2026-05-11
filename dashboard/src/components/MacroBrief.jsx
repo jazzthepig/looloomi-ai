@@ -126,8 +126,23 @@ export default function MacroBrief() {
     return () => clearInterval(interval);
   }, []);
 
-  // Nothing to show — no box, no placeholder, just gone
-  if (loading || !data?.brief) return null;
+  if (loading) return null;
+
+  // LM Studio offline or Mac Mini not pushing — show minimal offline pill
+  if (!data?.brief) return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8,
+      marginBottom: 20, padding: "7px 12px",
+      background: "rgba(255,255,255,0.02)",
+      border: "1px solid rgba(255,255,255,0.04)",
+      borderRadius: 4, width: "fit-content",
+    }}>
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,160,60,0.5)", display: "inline-block", flexShrink: 0 }} />
+      <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(176,174,165,0.4)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+        Macro Brief · LM Studio offline
+      </span>
+    </div>
+  );
 
   const briefText   = data.brief;
   const isLong      = briefText.length > 600;

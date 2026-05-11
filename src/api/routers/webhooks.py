@@ -17,6 +17,7 @@ Delivery:
 Auth: X-API-Key required on all endpoints.
 """
 
+import asyncio
 import hashlib
 import hmac
 import json
@@ -165,12 +166,13 @@ async def fire_grade_webhooks(
     event: str,
     assets: list[dict],
     regime: str,
-    background_tasks: BackgroundTasks,
+    background_tasks: Optional[BackgroundTasks] = None,
 ) -> None:
     """
-    Called from signal feed when grade changes are detected.
-    Fans out to all active subscribers for this event type.
-    Non-blocking — all deliveries run as background tasks.
+    Fan out grade-change events to all active webhook subscribers.
+    Can be called with or without BackgroundTasks:
+      - With BackgroundTasks (from route handlers): uses add_task
+      - Without (from asyncio.create_task in push handler): uses asyncio.create_task
     """
     try:
         rows = await _sb_get({
@@ -191,13 +193,21 @@ async def fire_grade_webhooks(
         for row in rows:
             if event not in (row.get("events") or []):
                 continue
-            background_tasks.add_task(
-                _deliver,
-                url=row["url"],
-                secret=row["secret"],
-                payload=payload,
-                key_prefix=row["key_prefix"],
-            )
+            if background_tasks is not None:
+                background_tasks.add_task(
+                    _deliver,
+                    url=row["url"],
+                    secret=row["secret"],
+                    payload=payload,
+                    key_prefix=row["key_prefix"],
+                )
+            else:
+                asyncio.create_task(_deliver(
+                    url=row["url"],
+                    secret=row["secret"],
+                    payload=payload,
+                    key_prefix=row["key_prefix"],
+                ))
     except Exception as e:
         _log.debug(f"[webhook] fan-out error: {e}")
 
