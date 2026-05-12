@@ -78,18 +78,36 @@ async def _sb_get_by_hash(key_hash: str) -> Optional[dict]:
 
 
 async def _sb_increment_usage(key_id: int) -> None:
-    """Bump request_count and last_used_at. Fire-and-forget."""
+    """Bump request_count (via RPC) and last_used_at. Fire-and-forget.
+
+    Two separate calls:
+      1. PATCH last_used_at (string value — safe in PostgREST PATCH)
+      2. RPC increment_api_key_usage (atomic INTEGER increment — cannot use
+         SQL expression strings in PATCH body; PostgREST treats them as literals)
+    """
     try:
+        now = datetime.now(timezone.utc).isoformat()
         async with httpx.AsyncClient(timeout=5) as client:
+            # Update timestamp
             await client.patch(
-                f"{_SB_URL}/rest/v1/api_keys?id=eq.{key_id}",
-                json={"last_used_at": datetime.now(timezone.utc).isoformat(),
-                      "request_count": "request_count + 1"},
+                f"{_SB_URL}/rest/v1/api_keys",
+                params={"id": f"eq.{key_id}"},
+                json={"last_used_at": now},
                 headers={
                     "apikey":        _SB_KEY,
                     "Authorization": f"Bearer {_SB_KEY}",
                     "Content-Type":  "application/json",
                     "Prefer":        "return=minimal",
+                },
+            )
+            # Atomic counter via RPC
+            await client.post(
+                f"{_SB_URL}/rest/v1/rpc/increment_api_key_usage",
+                json={"p_key_id": key_id},
+                headers={
+                    "apikey":        _SB_KEY,
+                    "Authorization": f"Bearer {_SB_KEY}",
+                    "Content-Type":  "application/json",
                 },
             )
     except Exception:
