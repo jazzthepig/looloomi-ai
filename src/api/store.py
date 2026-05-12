@@ -186,7 +186,7 @@ async def supabase_get_recent_scores(symbols: list, n: int = 30) -> dict:
         "symbol": in_filter,
         "order":  "recorded_at.desc",
         "limit":  str(n * len(symbols_upper)),
-        "select": "symbol,score,grade,recorded_at",
+        "select": "symbol,score,grade,signal,recorded_at",
     }
     headers = {
         "apikey":        _SB_KEY,

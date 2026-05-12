@@ -86,6 +86,26 @@ async def _sb_patch(key_prefix: str, url: str, payload: dict) -> None:
         )
 
 
+async def _sb_increment(key_prefix: str, url: str, success: bool) -> None:
+    """Atomic fire_count / fail_count increment via Supabase RPC.
+    Falls back silently — counts are telemetry, not critical path.
+    Requires increment_webhook_delivery() function in Supabase (supabase_migration_week10.sql).
+    """
+    try:
+        async with httpx.AsyncClient(timeout=4) as client:
+            await client.post(
+                f"{_SB_URL}/rest/v1/rpc/increment_webhook_delivery",
+                json={"p_key_prefix": key_prefix, "p_url": url, "p_success": success},
+                headers={
+                    "apikey":        _SB_KEY,
+                    "Authorization": f"Bearer {_SB_KEY}",
+                    "Content-Type":  "application/json",
+                },
+            )
+    except Exception:
+        pass  # telemetry — never block delivery
+
+
 async def _sb_delete(key_prefix: str, url: str) -> None:
     async with httpx.AsyncClient(timeout=8) as client:
         await client.delete(
@@ -137,26 +157,19 @@ async def _deliver(url: str, secret: str, payload: dict, key_prefix: str) -> Non
                 },
             )
             if r.status_code < 300:
-                await _sb_patch(key_prefix, url, {
-                    "last_fired_at": now,
-                    "fire_count":    "fire_count + 1",
-                    "last_error":    None,
-                })
+                await _sb_patch(key_prefix, url, {"last_fired_at": now, "last_error": None})
+                await _sb_increment(key_prefix, url, success=True)
                 _log.info(f"[webhook] ✅ {url} → {r.status_code}")
             else:
                 err = f"HTTP {r.status_code}: {r.text[:120]}"
-                await _sb_patch(key_prefix, url, {
-                    "fail_count": "fail_count + 1",
-                    "last_error": err,
-                })
+                await _sb_patch(key_prefix, url, {"last_error": err})
+                await _sb_increment(key_prefix, url, success=False)
                 _log.warning(f"[webhook] ⚠️  {url} → {err}")
     except Exception as e:
         err = str(e)[:200]
         try:
-            await _sb_patch(key_prefix, url, {
-                "fail_count": "fail_count + 1",
-                "last_error": err,
-            })
+            await _sb_patch(key_prefix, url, {"last_error": err})
+            await _sb_increment(key_prefix, url, success=False)
         except Exception:
             pass
         _log.warning(f"[webhook] ❌ {url} → {err}")

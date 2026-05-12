@@ -175,8 +175,9 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
             sb_ok = await supabase_insert_batch(sb_rows)
             _logger.warning(f"[INTERNAL] Supabase history write: {sb_ok} ({len(sb_rows)} rows, with delta+zscore)")
 
-            # Grade change detection → fire webhooks (fire-and-forget)
-            grade_changes = []
+            # Grade change detection → fire GRADE_UPGRADE / GRADE_DOWNGRADE webhooks
+            _GRADE_RANK = {"A+": 8, "A": 7, "B+": 6, "B": 5, "C+": 4, "C": 3, "D": 2, "F": 1}
+            upgrades, downgrades = [], []
             for asset in universe:
                 symbol     = asset.get("symbol", "")
                 new_grade  = asset.get("grade", "")
@@ -184,23 +185,36 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                 history    = recent_scores.get(symbol, [])
                 if history and new_grade:
                     prev_grade  = history[0].get("grade", "")
-                    prev_signal = history[0].get("signal", "")
+                    prev_signal = history[0].get("signal", "")  # "" if not in select (acceptable)
                     if prev_grade and prev_grade != new_grade:
-                        grade_changes.append({
+                        change = {
                             "symbol":      symbol,
                             "asset_class": asset.get("asset_class", asset.get("class", "")),
-                            "old_grade":   prev_grade,
-                            "new_grade":   new_grade,
+                            "from":        prev_grade,
+                            "to":          new_grade,
+                            "delta":       _GRADE_RANK.get(new_grade, 0) - _GRADE_RANK.get(prev_grade, 0),
                             "old_signal":  prev_signal,
                             "new_signal":  new_signal,
                             "cis_score":   round(asset.get("cis_score") or asset.get("score") or 0.0, 2),
-                        })
-            if grade_changes:
-                _logger.info(f"[INTERNAL] {len(grade_changes)} grade changes — firing webhooks")
+                        }
+                        if _GRADE_RANK.get(new_grade, 0) > _GRADE_RANK.get(prev_grade, 0):
+                            upgrades.append(change)
+                        else:
+                            downgrades.append(change)
+
+            if upgrades:
+                _logger.info(f"[INTERNAL] {len(upgrades)} GRADE_UPGRADE — firing webhooks")
                 asyncio.create_task(fire_grade_webhooks(
-                    event   = "grade_change",
-                    assets  = grade_changes,
-                    regime  = macro_regime_push or "",
+                    event  = "GRADE_UPGRADE",
+                    assets = upgrades,
+                    regime = macro_regime_push or "",
+                ))
+            if downgrades:
+                _logger.info(f"[INTERNAL] {len(downgrades)} GRADE_DOWNGRADE — firing webhooks")
+                asyncio.create_task(fire_grade_webhooks(
+                    event  = "GRADE_DOWNGRADE",
+                    assets = downgrades,
+                    regime = macro_regime_push or "",
                 ))
 
         # 3. Broadcast to WebSocket clients
