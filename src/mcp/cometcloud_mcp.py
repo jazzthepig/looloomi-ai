@@ -247,6 +247,24 @@ async def _get(
         raise
 
 
+async def _post(path: str, body: dict, timeout: float = 15.0) -> Any:
+    """POST helper for trading execution endpoints."""
+    url = f"{RAILWAY_BASE}{path}"
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        resp = await client.post(url, json=body)
+        resp.raise_for_status()
+        return resp.json()
+
+
+async def _delete(path: str, body: dict | None = None, timeout: float = 10.0) -> Any:
+    """DELETE helper for closing positions."""
+    url = f"{RAILWAY_BASE}{path}"
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        resp = await client.request("DELETE", url, json=body or {})
+        resp.raise_for_status()
+        return resp.json()
+
+
 def _derive_tool_name(path: str) -> str:
     """Map API path to canonical tool name for agent_call_log."""
     if "/cis/universe" in path:   return "cometcloud_get_cis_universe"
@@ -2353,6 +2371,265 @@ async def cometcloud_get_grade_changes(params: GradeChangesInput) -> str:
             "/api/v1/cis/grade-changes",
             params={"hours": params.hours},
         )
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+# ── Trading Execution Tools (#25, #26, #27) ────────────────────────────────────
+
+class TradeSignalInput(BaseModel):
+    symbol: str = Field(..., description="Asset symbol to evaluate e.g. BTC, ETH, SOL, MKR")
+    side: str = Field("LONG", description="Trade direction: LONG or SHORT")
+    size_usd: float = Field(500, ge=10, le=50000, description="Intended position size in USD")
+
+@mcp.tool()
+async def cometcloud_get_trade_signal(params: TradeSignalInput) -> str:
+    """
+    Evaluates a CIS asset and returns a compliance-safe trade signal with entry/exit parameters.
+
+    WHEN TO CALL: Before submitting any order via cometcloud_submit_paper_order. Always call this
+    first to validate the signal, check the CIS gate, and get suggested stop-loss/take-profit levels.
+
+    RETURNS: CIS score, grade, signal, macro regime, whether it passes the CIS gate (regime-dependent
+    threshold), recommended SL/TP percentages, and a compliance-safe recommendation string.
+
+    IMPORTANT: All recommendations use positioning-only language (OUTPERFORM/NEUTRAL/UNDERPERFORM).
+    Not investment advice. CometCloud AI — Hong Kong SFC compliance.
+
+    EXAMPLE WORKFLOW:
+    1. cometcloud_get_trade_signal(symbol="SOL", size_usd=500) → check passes_gate
+    2. If passes_gate=true → cometcloud_submit_paper_order(symbol, side, size_usd, sl_pct, tp_pct)
+    3. cometcloud_get_positions() → verify position opened
+    4. cometcloud_get_trade_signal(symbol="SOL") again after 4h to reassess
+    """
+    try:
+        data = await _post("/api/v1/agent/tasks", {
+            "type": "trade_signal",
+            "params": {"symbol": params.symbol, "side": params.side, "size_usd": params.size_usd},
+        })
+        task_id = data.get("task_id")
+        if not task_id:
+            return json.dumps(data, indent=2)
+        # Poll until complete (max 30s)
+        for _ in range(15):
+            await asyncio.sleep(2)
+            result = await _get(f"/api/v1/agent/tasks/{task_id}", use_cache=False)
+            if result.get("status") in ("completed", "failed"):
+                return json.dumps(result.get("result") or result, indent=2, ensure_ascii=False)
+        return json.dumps({"error": "timeout", "task_id": task_id}, indent=2)
+    except Exception as e:
+        return _err(e)
+
+
+class PaperOrderInput(BaseModel):
+    symbol: str = Field(..., description="Asset symbol e.g. BTC, ETH, SOL")
+    side: str = Field("LONG", description="LONG or SHORT")
+    size_usd: float = Field(..., ge=10, le=100000, description="Position size in USD")
+    stop_loss_pct: float = Field(0.04, ge=0.005, le=0.30, description="Stop loss percentage e.g. 0.04 = 4%")
+    take_profit_pct: float = Field(0.10, ge=0.01, le=2.0, description="Take profit percentage e.g. 0.10 = 10%")
+    note: str = Field("", description="Agent reasoning note for audit trail")
+
+@mcp.tool()
+async def cometcloud_submit_paper_order(params: PaperOrderInput) -> str:
+    """
+    Submit a paper trade order. CIS-gated and risk-controlled. Simulates fill at current market price.
+
+    WHEN TO CALL: After cometcloud_get_trade_signal confirms passes_gate=true.
+    DO NOT call without first validating via cometcloud_get_trade_signal.
+
+    RISK CONTROLS (enforced server-side, cannot be bypassed):
+    - CIS gate: minimum score by regime (Tightening=52, Risk-Off=62, Goldilocks=45)
+    - Max position size: 10% of portfolio value per symbol
+    - Max open positions: 10 concurrent
+    - Max portfolio drawdown: 15% before new entries halted
+    - No duplicate positions in same symbol
+
+    RETURNS: status (filled|rejected), order_id, fill_price, stop_loss, take_profit, cis_score.
+    If rejected, returns reason for rejection — do not retry without addressing the reason.
+
+    After a fill: use order_id with cometcloud_get_positions to track P&L.
+    To close: use cometcloud_close_position(order_id).
+    """
+    try:
+        data = await _post("/api/v1/trading/order", {
+            "symbol":          params.symbol,
+            "side":            params.side,
+            "size_usd":        params.size_usd,
+            "stop_loss_pct":   params.stop_loss_pct,
+            "take_profit_pct": params.take_profit_pct,
+            "mode":            "PAPER",
+            "note":            params.note,
+        })
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool()
+async def cometcloud_get_positions() -> str:
+    """
+    Returns all open paper trading positions with live P&L from CoinGecko prices.
+
+    WHEN TO CALL:
+    - Before submitting a new order (check exposure and available cash)
+    - To monitor unrealized P&L across the portfolio
+    - After a cometcloud_submit_paper_order to confirm the fill
+    - To check if stop-loss or take-profit levels have been hit (sl_triggered, tp_triggered flags)
+
+    RETURNS: positions array with entry_price, current_price, unrealized_pnl, unrealized_pct,
+    stop_loss, take_profit, cis_grade at entry, macro_regime at entry.
+    Also returns: cash_usd, portfolio_usd, total unrealized_pnl.
+
+    If sl_triggered or tp_triggered is true on a position → call cometcloud_close_position(order_id).
+    """
+    try:
+        data = await _get("/api/v1/trading/positions")
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+class ClosePositionInput(BaseModel):
+    order_id: str = Field(..., description="Order ID returned by cometcloud_submit_paper_order")
+    reason: str = Field("agent_close", description="Exit reason for audit trail e.g. tp_hit, sl_hit, signal_degraded")
+
+@mcp.tool()
+async def cometcloud_close_position(params: ClosePositionInput) -> str:
+    """
+    Close an open paper trading position at current market price.
+
+    WHEN TO CALL:
+    - When cometcloud_get_positions shows sl_triggered=true or tp_triggered=true
+    - When cometcloud_get_trade_signal shows the signal has degraded (grade dropped, UNDERPERFORM)
+    - When macro_regime has shifted to Risk-Off or Stagflation (reduce exposure)
+    - On scheduled portfolio rebalancing
+
+    RETURNS: realized_pnl (USD), realized_pct, exit_price, held_seconds.
+    """
+    try:
+        data = await _delete(
+            f"/api/v1/trading/positions/{params.order_id}",
+            body={"reason": params.reason},
+        )
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+class MineAlphaInput(BaseModel):
+    type: str = Field("grade_alpha", description="grade_alpha | pillar_fitness | signal_accuracy | regime_performance")
+    hours: int = Field(168, ge=1, le=8760, description="Lookback window in hours (default 168 = 1 week)")
+
+@mcp.tool()
+async def cometcloud_mine_alpha(params: MineAlphaInput) -> str:
+    """
+    Data mining: correlates CIS signals with realized trade outcomes.
+
+    WHEN TO CALL: After accumulating 5+ closed trades. Use to understand which CIS signals,
+    grades, pillars, and macro regimes produce the best outcomes.
+
+    type=grade_alpha        — avg realized return by CIS grade (A+ > A > B+ etc). Shows if grade predicts alpha.
+    type=pillar_fitness     — Pearson correlation: which pillars (F/M/O/S/A) predict realized_pct.
+    type=signal_accuracy    — OUTPERFORM/NEUTRAL/UNDERPERFORM accuracy vs realized positive/negative returns.
+    type=regime_performance — trade win rate and avg return by macro regime (Tightening/Easing/Risk-On etc).
+
+    AGENT WORKFLOW: Run grade_alpha weekly. If A/B grades systematically underperform,
+    flag to CIS methodology team. If a pillar shows near-zero correlation, reduce its weight.
+    """
+    try:
+        data = await _get("/api/v1/trading/mine", params={"type": params.type, "hours": params.hours})
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+# ── Vector Search & Derivatives Tools (#30-32) ───────────────────────────────
+
+class FindSimilarInput(BaseModel):
+    symbol: str    = Field(..., description="Target symbol, e.g. ETH, SOL, BTC")
+    k:      int    = Field(5, ge=1, le=20, description="Number of similar assets to return")
+    cross_class: bool = Field(False, description="If true, find cross-asset-class analogs only")
+
+@mcp.tool()
+async def cometcloud_find_similar_assets(params: FindSimilarInput) -> str:
+    """
+    Vector similarity search: find assets most similar to a target across 18 dimensions
+    (fundamentals, momentum, on-chain, sentiment, alpha, market cap, price changes,
+    volume, funding rates, OI, ATH proximity, LAS, confidence, class, regime alignment).
+
+    WHEN TO CALL: Portfolio construction (find substitutes for overweight positions),
+    pair trading candidates, regime clustering, cross-asset analog discovery.
+
+    cross_class=true finds structurally similar assets in different categories —
+    e.g., a DeFi protocol that behaves like a TradFi bond (low vol, stable score, low funding).
+
+    AGENT WORKFLOW: If BTC position is maxed, call with symbol=BTC cross_class=false
+    to find closest crypto substitutes. Then call cometcloud_get_cis_universe to check
+    their grades and position sizing.
+
+    Returns ranked list with cosine similarity [−1, 1]. Score > 0.95 = near-identical
+    multi-dimensional profile. Score < 0.7 = meaningfully different.
+    """
+    try:
+        data = await _get("/api/v1/cis/similar",
+                          params={"symbol": params.symbol, "k": params.k,
+                                  "cross_class": str(params.cross_class).lower()})
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool()
+async def cometcloud_get_asset_clusters() -> str:
+    """
+    K-means++ clustering of all 84 CIS assets by 18-dimensional embedding.
+    Returns 6 natural groupings with per-cluster CIS quality, dominant asset class,
+    and member list ranked by score.
+
+    WHEN TO CALL: Regime-aware portfolio construction, sector rotation analysis,
+    diversification validation. Cluster 0 (rank 0) = highest-quality centroid.
+
+    AGENT WORKFLOW: Check which cluster your current positions belong to.
+    Over-concentration in one cluster = correlated risk. Diversify across
+    clusters 0, 1, 2 for quality spread with low within-cluster correlation.
+
+    The 18 dimensions span fundamental score, momentum, on-chain risk, sentiment,
+    alpha vs benchmark, market cap, price momentum, funding rate, OI/MCap leverage,
+    ATH proximity, liquidity-adjusted score, and macro regime alignment.
+    """
+    try:
+        data = await _get("/api/v1/cis/cluster", params={"k": 6})
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool()
+async def cometcloud_get_funding_rates() -> str:
+    """
+    CoinGecko Pro derivatives: real-time funding rates + open interest for all
+    perpetual futures in the CIS universe (35+ assets, OI-weighted across all exchanges).
+
+    WHEN TO CALL: Before entering a long position (check for overleveraged_long signal),
+    monitoring systemic liquidation risk (high OI/MCap = fragile longs), or looking
+    for negative funding rate opportunities (short squeeze setups).
+
+    Funding signals:
+      overleveraged_long  — funding > +0.1%/8h, crowded longs, liquidation risk
+      bullish_basis       — healthy positive carry, institutional demand
+      neutral             — balanced open interest
+      bearish_basis       — negative funding, mild short pressure
+      extreme_short       — funding < −0.1%/8h, crowded shorts, squeeze risk
+
+    Note: funding_rate_8h is % per 8h. funding_rate_ann = annualized % (× 3 × 365).
+    OI/MCap > 0.5 (50%) = heavily leveraged, avoid large longs.
+
+    AGENT WORKFLOW: High funding + high OI/MCap = O-pillar penalty already applied
+    in CIS score. This tool lets you see the raw signal before it's absorbed.
+    """
+    try:
+        data = await _get("/api/v1/market/funding-rates")
         return json.dumps(data, indent=2, ensure_ascii=False)
     except Exception as e:
         return _err(e)

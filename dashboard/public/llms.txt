@@ -29,7 +29,7 @@ claude mcp add --transport sse cometcloud https://looloomi.ai/mcp/sse
 
 Agent discovery card: https://looloomi.ai/.well-known/agent.json
 
-## MCP Tools (23 available)
+## MCP Tools (32 available)
 
 ### Intelligence
 - `cometcloud_get_cis_universe` — Full 84-asset investable universe with 5-pillar CIS scores (F/M/O/S/A), grades (A+ to F), LAS, confidence, and compliance-safe positioning signals. Use first for any portfolio or screening task.
@@ -64,6 +64,18 @@ Agent discovery card: https://looloomi.ai/.well-known/agent.json
 - `cometcloud_asset_deep_dive` — One-call deep dive on a symbol: price + CIS + history + pillar breakdown + exclusion check.
 - `cometcloud_portfolio_brief` — One-call portfolio summary: current positions + weighted CIS + regime context.
 
+### Paper Trading & Alpha Mining
+- `cometcloud_get_trade_signal` — CIS-gated trade signal evaluation: validates symbol against regime-appropriate CIS threshold, returns passes_gate, suggested SL/TP, compliance-safe recommendation.
+- `cometcloud_submit_paper_order` — Submit a paper trade order: CIS gate + risk checks → fills at live CoinGecko price → stored in Redis position store.
+- `cometcloud_get_positions` — Current open paper trading positions with live mark-to-market P&L.
+- `cometcloud_close_position` — Close an open paper position at current market price, realize P&L.
+- `cometcloud_mine_alpha` — Data mining: Pearson correlation of CIS pillars vs realized returns, grade alpha, signal accuracy, regime performance.
+
+### Vector Search & Derivatives
+- `cometcloud_find_similar_assets` — 18-dimensional cosine similarity: find assets most similar to a target across fundamentals, momentum, on-chain, sentiment, funding rates, OI, and regime alignment. Use for pair trading, substitutes, and diversification.
+- `cometcloud_get_asset_clusters` — K-means++ clustering of all 84 assets by 18-dim embedding. Returns 6 natural groupings with quality, dominant class, and member list. Cluster 0 = highest quality centroid.
+- `cometcloud_get_funding_rates` — CoinGecko Pro derivatives: real-time funding rates + OI for 35+ perpetual assets (OI-weighted across all exchanges). Signals: overleveraged_long | bullish_basis | neutral | bearish_basis | extreme_short.
+
 ## REST API
 
 Base URL: https://looloomi.ai
@@ -73,10 +85,18 @@ Key endpoints (no auth required for free tier):
 - GET /api/v1/cis/asset/{symbol} — Single asset deep score
 - GET /api/v1/cis/history/{symbol}?days=7 — Score time series (delta, zscore, regime)
 - GET /api/v1/cis/top?n=10 — Top N assets by CIS score
+- GET /api/v1/cis/similar?symbol=ETH&k=5 — 18-dim cosine similarity neighbors
+- GET /api/v1/cis/cluster?k=6 — K-means++ asset clusters
+- GET /api/v1/cis/embeddings — Raw 18-dim embedding vectors
 - GET /api/v1/market/macro-pulse — Regime, BTC, FNG, dominance
+- GET /api/v1/market/funding-rates — Derivatives: funding rate + OI (OI-weighted, CG Pro)
+- GET /api/v1/market/trending-overlay — CoinGecko trending rank × CIS score divergence
 - GET /api/v1/signals/feed — Signal feed (7 sources)
 - GET /api/v1/market/supply-chart/{coin_id}?days=30 — Circulating supply inflation (CG Pro)
 - GET /api/v1/market/tickers/{coin_id} — Exchange depth, HHI concentration, bid-ask spread
+- POST /api/v1/trading/order — Submit paper trade (CIS-gated)
+- GET /api/v1/trading/positions — Open positions with live P&L
+- GET /api/v1/trading/mine?type=grade_alpha — Alpha mining: pillar fitness, signal accuracy
 - POST /api/v1/keys/create — Self-serve free API key (60 rpm / 1,000 rpd)
 - GET /api/v1/webhooks/events — Supported webhook event types
 
@@ -88,16 +108,20 @@ Pro tier (300 rpm / 50,000 rpd): jazz@cometcloud.ai
 5-pillar continuous scoring (v4.3):
 - F (Fundamental): Market cap, liquidity depth, TVL (DeFiLlama), circulating supply inflation
 - M (Momentum): 30d price momentum + 7d sparkline (168-point hourly, CoinGecko Pro)
-- O (On-chain/Risk-Adjusted): Network activity, beta, volatility-adjusted returns, exchange HHI
-- S (Sentiment): Fear & Greed × 0.4, vol regime modifier, per-asset divergence vs category median
+- O (On-chain/Risk-Adjusted): Network activity, beta, volatility-adjusted returns, exchange HHI, funding rate penalty, OI/MCap leverage penalty (CG Pro)
+- S (Sentiment): Fear & Greed × 0.4, vol regime modifier, per-asset divergence vs category median, CoinGecko trending rank boost (CG Pro)
 - A (Alpha): 30d divergence vs BTC benchmark (crypto) or SPY (TradFi, bonds inverted)
 
 Grading (absolute thresholds): A+ (≥85) · A (≥75) · B+ (≥65) · B (≥55) · C+ (≥45) · C (≥35) · D (≥25) · F (<25)
-LAS (Liquidity-Adjusted Score): CIS × liquidity_multiplier × confidence
+LAS (Liquidity-Adjusted Score): CIS × liquidity_multiplier × confidence × OI_leverage_multiplier
 Data tiers: T1 = Mac Mini full engine (25 assets) · T2 = Railway estimation (59 assets)
 Macro regimes: RISK_ON · RISK_OFF · TIGHTENING · EASING · STAGFLATION · GOLDILOCKS
 
 Signals (compliance-safe, no buy/sell): STRONG OUTPERFORM · OUTPERFORM · NEUTRAL · UNDERPERFORM · UNDERWEIGHT
+
+Vector embeddings: 18-dim per asset, persisted to Redis after every CIS compute.
+Dims: [F/100, M/100, O/100, S/100, A/100, CIS/100, log_mcap/15, chg_24h, chg_7d, chg_30d,
+       vol_mcap, funding_rate, oi_mcap_ratio, ath_proximity, las/100, confidence, class_enc, regime_align]
 
 ## Asset Universe
 

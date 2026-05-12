@@ -80,7 +80,7 @@ _task_semaphore = asyncio.Semaphore(5)
 
 # ── Schema ───────────────────────────────────────────────────────────────────
 
-TASK_TYPES = {"portfolio_analysis", "cis_snapshot", "regime_briefing"}
+TASK_TYPES = {"portfolio_analysis", "cis_snapshot", "regime_briefing", "trade_signal", "position_snapshot"}
 
 class TaskRequest(BaseModel):
     type: str = Field(..., description=f"Task type: {', '.join(sorted(TASK_TYPES))}")
@@ -409,12 +409,157 @@ async def _exec_regime_briefing(task_id: str, params: dict):
         await _update_task(task_id, status="failed", error=str(e))
 
 
+async def _exec_trade_signal(task_id: str, params: dict):
+    """
+    Evaluates a symbol and returns a trade signal with CIS context, entry/exit levels.
+    Agents can use this to decide whether to submit a paper order.
+
+    params:
+      symbol      — asset symbol (required)
+      size_usd    — intended position size in USD (default 500)
+      side        — LONG | SHORT (default LONG)
+    """
+    try:
+        from src.data.cis.cis_provider import calculate_cis_universe
+        from src.data.market.data_layer import get_macro_pulse
+
+        symbol   = params.get("symbol", "").upper()
+        size_usd = float(params.get("size_usd", 500))
+        side     = params.get("side", "LONG").upper()
+
+        if not symbol:
+            await _update_task(task_id, status="failed", error="symbol is required")
+            return
+
+        # Fetch CIS universe + macro in parallel
+        universe_data, macro = await asyncio.gather(
+            calculate_cis_universe(),
+            get_macro_pulse(),
+            return_exceptions=True,
+        )
+
+        assets = (universe_data.get("assets") or universe_data.get("universe", [])
+                  if not isinstance(universe_data, Exception) else [])
+        regime = (macro.get("macro_regime", "Unknown")
+                  if not isinstance(macro, Exception) else "Unknown")
+
+        # Find the target asset
+        asset = next(
+            (a for a in assets
+             if (a.get("symbol") or a.get("asset_id", "")).upper() == symbol),
+            None,
+        )
+
+        if not asset:
+            await _update_task(task_id, status="failed", error=f"Symbol {symbol} not found in CIS universe")
+            return
+
+        cis   = asset.get("cis_score") or asset.get("total_score") or asset.get("score") or 0
+        grade = asset.get("grade", "?")
+        sig   = asset.get("signal", "NEUTRAL")
+        las   = asset.get("las", 0) or 0
+
+        # Regime-aware CIS gate
+        _GATES = {"Tightening": 52, "Risk-Off": 62, "Stagflation": 65,
+                  "Goldilocks": 45, "Risk-On": 48, "Easing": 48}
+        gate   = _GATES.get(regime, 50)
+        passes = cis >= gate
+
+        # Entry/exit levels (ATR-based approximation using pillar M)
+        momentum = (asset.get("pillars") or {}).get("M", 50)
+        volatility_adj = 1 + max(0, (80 - momentum) / 200)   # higher vol if momentum weak
+        sl_pct = round(0.04 * volatility_adj, 4)
+        tp_pct = round(0.10 * volatility_adj, 4)
+
+        # Recommendation language (positioning-only, HK SFC compliant)
+        if not passes:
+            recommendation = "NEUTRAL — CIS score below regime gate. Monitor for improvement."
+        elif sig in ("STRONG OUTPERFORM", "OUTPERFORM"):
+            recommendation = f"OUTPERFORM — {symbol} passes CIS gate ({cis:.1f} > {gate}) in {regime}. Consider long entry if risk capacity allows."
+        elif sig == "NEUTRAL":
+            recommendation = f"NEUTRAL — {symbol} passes gate marginally. Monitor regime shift."
+        else:
+            recommendation = f"UNDERPERFORM — {symbol} signaling weakness despite passing gate. Wait for signal upgrade."
+
+        result = {
+            "symbol":         symbol,
+            "name":           asset.get("name"),
+            "asset_class":    asset.get("asset_class"),
+            "cis_score":      round(cis, 1),
+            "grade":          grade,
+            "signal":         sig,
+            "las":            round(las, 1),
+            "data_tier":      asset.get("data_tier"),
+            "macro_regime":   regime,
+            "cis_gate":       gate,
+            "passes_gate":    passes,
+            "recommendation": recommendation,
+            "suggested_trade": {
+                "symbol":           symbol,
+                "side":             side,
+                "size_usd":         size_usd,
+                "stop_loss_pct":    sl_pct,
+                "take_profit_pct":  tp_pct,
+                "mode":             "PAPER",
+            } if passes else None,
+            "pillars": asset.get("pillars"),
+            "compliance": (
+                "All signals use positioning-only language per HK SFC compliance. "
+                "Not investment advice. Execute via POST /api/v1/trading/order."
+            ),
+        }
+        await _update_task(task_id, status="completed", result=result)
+
+    except Exception as e:
+        _logger.error(f"[tasks] trade_signal {task_id} failed: {e}", exc_info=True)
+        await _update_task(task_id, status="failed", error=str(e))
+
+
+async def _exec_position_snapshot(task_id: str, params: dict):
+    """
+    Returns current paper trading portfolio state: open positions, P&L, metrics.
+    Agents use this to assess current exposure before submitting new orders.
+    """
+    try:
+        import httpx as _h
+        base = "http://localhost:8000"  # internal loopback on Railway
+        async with _h.AsyncClient(timeout=10) as cl:
+            positions_r, metrics_r = await asyncio.gather(
+                cl.get(f"{base}/api/v1/trading/positions"),
+                cl.get(f"{base}/api/v1/trading/metrics"),
+                return_exceptions=True,
+            )
+        positions = positions_r.json() if not isinstance(positions_r, Exception) and positions_r.status_code == 200 else {}
+        metrics   = metrics_r.json()   if not isinstance(metrics_r,   Exception) and metrics_r.status_code   == 200 else {}
+
+        result = {
+            "open_positions": positions.get("positions", []),
+            "count":          positions.get("count", 0),
+            "cash_usd":       positions.get("cash_usd"),
+            "portfolio_usd":  positions.get("portfolio_usd"),
+            "unrealized_pnl": positions.get("unrealized_pnl"),
+            "metrics":        metrics,
+            "agent_note":     (
+                "Use POST /api/v1/trading/order to open positions. "
+                "Use DELETE /api/v1/trading/positions/{order_id} to close. "
+                "Use GET /api/v1/trading/mine for alpha analysis."
+            ),
+        }
+        await _update_task(task_id, status="completed", result=result)
+
+    except Exception as e:
+        _logger.error(f"[tasks] position_snapshot {task_id} failed: {e}", exc_info=True)
+        await _update_task(task_id, status="failed", error=str(e))
+
+
 # ── Dispatch table ────────────────────────────────────────────────────────────
 
 _EXECUTORS = {
-    "portfolio_analysis": _exec_portfolio_analysis,
-    "cis_snapshot":       _exec_cis_snapshot,
-    "regime_briefing":    _exec_regime_briefing,
+    "portfolio_analysis":  _exec_portfolio_analysis,
+    "cis_snapshot":        _exec_cis_snapshot,
+    "regime_briefing":     _exec_regime_briefing,
+    "trade_signal":        _exec_trade_signal,
+    "position_snapshot":   _exec_position_snapshot,
 }
 
 
