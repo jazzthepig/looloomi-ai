@@ -29,7 +29,7 @@ claude mcp add --transport sse cometcloud https://looloomi.ai/mcp/sse
 
 Agent discovery card: https://looloomi.ai/.well-known/agent.json
 
-## MCP Tools (22 available)
+## MCP Tools (23 available)
 
 ### Intelligence
 - `cometcloud_get_cis_universe` — Full 84-asset investable universe with 5-pillar CIS scores (F/M/O/S/A), grades (A+ to F), LAS, confidence, and compliance-safe positioning signals. Use first for any portfolio or screening task.

@@ -1,61 +1,93 @@
 {
   "schema_version": "0.3",
   "name": "CometCloud AI",
-  "display_name": "CometCloud AI — Crypto Fund-of-Funds Intelligence",
-  "description": "AI-curated crypto Fund-of-Funds platform. Exposes CIS (CometCloud Intelligence Score) — a 5-pillar cross-asset scoring engine for 30+ crypto and TradFi assets — plus protocol analytics, market signals, DeFi yields, and VC funding intelligence. Built for institutional investors and autonomous AI agents.",
-  "url": "https://web-production-0cdf76.up.railway.app",
+  "display_name": "CometCloud AI — Institutional Crypto Intelligence",
+  "description": "Institutional-grade crypto and TradFi intelligence for AI agents. CIS (CometCloud Intelligence Score) — 5-pillar scoring across 84 assets — plus macro regime detection, DeFi analytics, grade-change webhooks, and 9,946+ asset exclusion intelligence. Built for autonomous AI agents and human institutional investors. Hong Kong SAR.",
+  "url": "https://looloomi.ai",
   "homepage": "https://looloomi.ai",
-  "version": "1.0.0",
+  "version": "0.4.4",
   "provider": {
-    "name": "Looloomi",
+    "name": "CometCloud AI / Looloomi Ltd",
     "url": "https://looloomi.ai",
-    "contact": "hello@looloomi.ai"
+    "contact": "jazz@cometcloud.ai"
   },
   "capabilities": {
     "cis_scoring": {
-      "description": "5-pillar cross-asset scoring engine (F/M/O/S/A) for crypto and TradFi assets",
+      "description": "5-pillar cross-asset scoring engine (F/M/O/S/A) — CIS v4.3",
       "endpoint": "/api/v1/cis/universe",
-      "assets": 30,
-      "asset_classes": ["L1", "L2", "DeFi", "RWA", "Memecoin", "Gaming", "AI", "Commodity", "US Equity", "US Bond"],
-      "grading": "absolute thresholds: A+>=85, A>=75, B+>=65, B>=55, C+>=45, C>=35, D>=25, F<25",
+      "assets": 84,
+      "data_tiers": { "T1": 25, "T2": 59 },
+      "asset_classes": ["L1", "L2", "DeFi", "Infrastructure", "RWA", "Memecoin", "Gaming", "AI", "US Equity", "Commodity"],
+      "grading": "absolute thresholds: A+(≥85) A(≥75) B+(≥65) B(≥55) C+(≥45) C(≥35) D(≥25) F(<25)",
       "signals": ["STRONG OUTPERFORM", "OUTPERFORM", "NEUTRAL", "UNDERPERFORM", "UNDERWEIGHT"],
-      "compliance_note": "Positioning language only. Not investment advice."
+      "compliance_note": "Positioning language only. Not investment advice. CometCloud AI does not hold SFC Type 4 or 9."
     },
-    "market_data": { "endpoint": "/api/v1/market/prices" },
-    "macro_pulse":  { "endpoint": "/api/v1/market/macro-pulse" },
-    "signals":      { "endpoint": "/api/v1/signals" },
-    "protocols":    { "endpoint": "/api/v1/protocols/universe", "protocols": 25 },
+    "exclusions": {
+      "description": "9,946+ assets evaluated and excluded with documented reasons",
+      "endpoint": "/api/v1/cis/exclusions"
+    },
+    "macro_pulse":  { "endpoint": "/api/v1/market/macro-pulse", "regimes": ["RISK_ON", "RISK_OFF", "TIGHTENING", "EASING", "STAGFLATION", "GOLDILOCKS"] },
+    "signals":      { "endpoint": "/api/v1/signals/feed", "sources": 7 },
+    "protocols":    { "endpoint": "/api/v1/defi/protocols", "count": 25 },
     "defi":         { "endpoint": "/api/v1/defi/overview" },
     "yields":       { "endpoint": "/api/v1/defi/yields" },
-    "vc_funding":   { "endpoint": "/api/v1/vc/funding-rounds" },
-    "vault":        { "endpoint": "/api/v1/vault/funds" },
+    "vc_funding":   { "endpoint": "/api/v1/intelligence/vc" },
     "portfolio":    { "endpoint": "/api/v1/portfolio/stats", "method": "POST" },
+    "webhooks":     { "endpoint": "/api/v1/webhooks/subscribe", "events": ["GRADE_UPGRADE", "GRADE_DOWNGRADE"], "auth": "X-API-Key" },
+    "api_keys":     { "endpoint": "/api/v1/keys/create", "method": "POST", "free_tier": "60rpm/1000rpd" },
     "realtime":     { "websocket": "/ws/cis", "events": ["score_update", "signal_change"] },
-    "agent_api":    { "endpoint": "/api/v1/agent/cis" }
+    "agent_tasks":  { "endpoint": "/api/v1/agent/tasks", "method": "POST", "description": "A2A async task queue" }
   },
   "mcp": {
+    "transport": "sse",
+    "url": "https://looloomi.ai/mcp/sse",
     "tools": [
       "cometcloud_get_cis_universe",
       "cometcloud_get_cis_asset",
       "cometcloud_get_cis_history",
       "cometcloud_get_cis_top",
-      "cometcloud_get_prices",
-      "cometcloud_get_market_movers",
+      "cometcloud_get_cis_report",
+      "cometcloud_get_cis_exclusions",
+      "cometcloud_get_inclusion_standard",
       "cometcloud_get_macro_pulse",
       "cometcloud_get_signal_feed",
       "cometcloud_get_macro_events",
-      "cometcloud_get_vc_funding",
+      "cometcloud_get_prices",
+      "cometcloud_get_market_movers",
+      "cometcloud_get_regime_context",
       "cometcloud_get_protocols",
       "cometcloud_get_defi_overview",
       "cometcloud_get_defi_yields",
+      "cometcloud_get_institutional_flows",
       "cometcloud_get_fund_portfolio",
-      "cometcloud_get_portfolio_stats"
-    ]
+      "cometcloud_get_portfolio_stats",
+      "cometcloud_regime_allocation",
+      "cometcloud_market_snapshot",
+      "cometcloud_asset_deep_dive",
+      "cometcloud_portfolio_brief"
+    ],
+    "tool_count": 23
   },
-  "authentication": { "type": "none", "note": "Public. API key tier planned Q2 2026." },
-  "rate_limits": { "default": "60 req/min" },
+  "a2a": {
+    "task_endpoint": "https://looloomi.ai/api/v1/agent/tasks",
+    "discovery": "https://looloomi.ai/.well-known/agent.json"
+  },
+  "authentication": {
+    "type": "api_key",
+    "header": "X-API-Key",
+    "key_format": "cc_live_<32 hex chars>",
+    "get_key": "POST https://looloomi.ai/api/v1/keys/create",
+    "free_tier": "60 req/min, 1,000 req/day — no credit card"
+  },
+  "rate_limits": {
+    "unauthenticated": "10 req/min",
+    "free_tier": "60 req/min / 1,000 req/day",
+    "pro_tier": "300 req/min / 50,000 req/day"
+  },
   "compliance": {
     "signals": "Positioning language only. Not investment advice.",
-    "jurisdiction": "Hong Kong"
+    "jurisdiction": "Hong Kong SAR",
+    "operator": "Looloomi Ltd",
+    "sfc_license": "None held"
   }
 }

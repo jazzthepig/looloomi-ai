@@ -210,3 +210,83 @@ CREATE OR REPLACE VIEW regime_transitions AS
     FROM cis_scores
     WHERE regime_transition = TRUE
     ORDER BY recorded_at DESC;
+
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 8. API Keys — Self-serve key issuance (Week 10)
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS api_keys (
+    id              BIGSERIAL PRIMARY KEY,
+    key_prefix      TEXT NOT NULL UNIQUE,
+    key_hash        TEXT NOT NULL UNIQUE,
+    name            TEXT,
+    email           TEXT,
+    intended_use    TEXT,
+    tier            TEXT NOT NULL DEFAULT 'free',
+    rate_limit_rpm  INTEGER NOT NULL DEFAULT 60,    -- matches keys.py
+    rate_limit_day  INTEGER NOT NULL DEFAULT 1000,  -- matches keys.py
+    active          BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_used_at    TIMESTAMPTZ,
+    request_count   BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_keys_prefix  ON api_keys(key_prefix);
+CREATE INDEX IF NOT EXISTS idx_api_keys_hash    ON api_keys(key_hash);
+CREATE INDEX IF NOT EXISTS idx_api_keys_email   ON api_keys(email);
+CREATE INDEX IF NOT EXISTS idx_api_keys_active  ON api_keys(active) WHERE active = TRUE;
+
+ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "api_keys_insert" ON api_keys FOR INSERT WITH CHECK (true);
+CREATE POLICY "api_keys_select" ON api_keys FOR SELECT USING (true);
+CREATE POLICY "api_keys_update" ON api_keys FOR UPDATE USING (true);
+
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 9. Analytics Events — Self-hosted Supabase tracking (Week 10)
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS analytics_events (
+    id          BIGSERIAL PRIMARY KEY,
+    event       TEXT NOT NULL,
+    props       JSONB DEFAULT '{}',
+    path        TEXT,
+    referrer    TEXT,
+    ip_hash     TEXT,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_analytics_event    ON analytics_events(event);
+CREATE INDEX IF NOT EXISTS idx_analytics_recorded ON analytics_events(recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_ip       ON analytics_events(ip_hash);
+
+ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "analytics_insert" ON analytics_events FOR INSERT WITH CHECK (true);
+CREATE POLICY "analytics_select" ON analytics_events FOR SELECT USING (true);
+
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 10. Webhook Subscriptions — Grade-change push delivery (Week 10)
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS webhook_subscriptions (
+    id             BIGSERIAL PRIMARY KEY,
+    key_prefix     TEXT NOT NULL,
+    url            TEXT NOT NULL,
+    events         TEXT[] NOT NULL DEFAULT '{GRADE_UPGRADE,GRADE_DOWNGRADE}',
+    secret         TEXT NOT NULL,
+    active         BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_fired_at  TIMESTAMPTZ,
+    fire_count     INTEGER NOT NULL DEFAULT 0,
+    fail_count     INTEGER NOT NULL DEFAULT 0,
+    last_error     TEXT,
+    UNIQUE (key_prefix, url)
+);
+
+CREATE INDEX IF NOT EXISTS idx_webhook_subs_key_prefix ON webhook_subscriptions(key_prefix);
+CREATE INDEX IF NOT EXISTS idx_webhook_subs_active     ON webhook_subscriptions(active) WHERE active = TRUE;
+
+ALTER TABLE webhook_subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "webhook_subs_insert" ON webhook_subscriptions FOR INSERT WITH CHECK (true);
+CREATE POLICY "webhook_subs_select" ON webhook_subscriptions FOR SELECT USING (true);
+CREATE POLICY "webhook_subs_update" ON webhook_subscriptions FOR UPDATE USING (true);
+CREATE POLICY "webhook_subs_delete" ON webhook_subscriptions FOR DELETE USING (true);
