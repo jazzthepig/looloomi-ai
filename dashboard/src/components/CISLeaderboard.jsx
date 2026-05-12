@@ -74,6 +74,66 @@ const ASSET_CLASS_COLORS = {
 
 const API_BASE = "/api/v1";
 
+/* ── MoverRow — single grade-change card ─────────────────────────────── */
+const MoverRow = ({ mover, direction }) => {
+  const isUp   = direction === "up";
+  const accent = isUp ? "#00D98A" : "#FF3D5A";
+  const fromC  = GRADE_COLORS[mover.from_grade] || "#888";
+  const toC    = GRADE_COLORS[mover.to_grade]   || "#888";
+  const steps  = Math.abs(mover.delta);
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 12,
+      padding: "9px 14px", marginBottom: 4, borderRadius: 6,
+      background: isUp ? "rgba(0,217,138,0.04)" : "rgba(255,61,90,0.04)",
+      border: `1px solid ${isUp ? "rgba(0,217,138,0.10)" : "rgba(255,61,90,0.10)"}`,
+    }}>
+      {/* Symbol */}
+      <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 700, color: "#E8EAF0", minWidth: 52 }}>
+        {mover.symbol}
+      </span>
+      {/* Grade transition */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ fontFamily: FONTS.mono, fontSize: 11, fontWeight: 700, color: fromC, opacity: 0.7 }}>
+          {mover.from_grade}
+        </span>
+        <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: accent }}>
+          {isUp ? "→" : "→"}
+        </span>
+        <span style={{ fontFamily: FONTS.mono, fontSize: 11, fontWeight: 700, color: toC }}>
+          {mover.to_grade}
+        </span>
+        <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: accent, opacity: 0.8, marginLeft: 2 }}>
+          {isUp ? "+" : ""}{steps > 0 ? (isUp ? `+${steps}` : `-${steps}`) : ""}
+        </span>
+      </div>
+      {/* Score */}
+      <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: "#8899BB", marginLeft: "auto" }}>
+        CIS {mover.cis_score}
+      </span>
+      {/* Signal */}
+      {mover.signal && (
+        <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: accent, opacity: 0.8, letterSpacing: "0.08em" }}>
+          {mover.signal}
+        </span>
+      )}
+      {/* Timestamp */}
+      {mover.changed_at && (
+        <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: "#445566", minWidth: 60, textAlign: "right" }}>
+          {(() => {
+            try {
+              const d = new Date(mover.changed_at);
+              const now = new Date();
+              const hrs = Math.floor((now - d) / 3600000);
+              return hrs < 1 ? "< 1h ago" : hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs/24)}d ago`;
+            } catch { return ""; }
+          })()}
+        </span>
+      )}
+    </div>
+  );
+};
+
 // Asset name + class lookup — aligned with cometcloud-local ASSET_UNIVERSE (85 assets)
 const ASSET_META = {
   // L1
@@ -208,7 +268,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   const [classFilter, setClassFilter] = useState("All");
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [sortBy, setSortBy] = useState("rank");
-  const [viewMode, setViewMode] = useState("leaderboard"); // "leaderboard" | "compare"
+  const [viewMode, setViewMode] = useState("leaderboard"); // "leaderboard" | "compare" | "movers"
+  const [movers, setMovers] = useState(null);       // { upgrades, downgrades, hours, total_changes }
+  const [moversLoading, setMoversLoading] = useState(false);
   const [methodologyOpen, setMethodologyOpen] = useState(false); // collapsed by default
   const [dataSource, setDataSource] = useState("loading");
   const [engineSource, setEngineSource] = useState(null); // "local_engine" | "railway"
@@ -361,6 +423,17 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
       .then(d => { if (d.status === "success") setBacktest(d); })
       .catch(() => {});
   }, []);
+
+  // Fetch grade movers when Movers tab is activated
+  useEffect(() => {
+    if (viewMode !== "movers") return;
+    if (movers) return; // already loaded
+    setMoversLoading(true);
+    fetch("/api/v1/cis/grade-changes?hours=48")
+      .then(r => r.json())
+      .then(d => { setMovers(d); setMoversLoading(false); })
+      .catch(() => setMoversLoading(false));
+  }, [viewMode]);
 
   // Table scroll handler — add shadow when scrolled
   const handleTableScroll = (e) => {
@@ -638,6 +711,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             {[
               { key: "leaderboard", label: "Leaderboard" },
               { key: "compare",     label: "Heatmap" },
+              { key: "movers",      label: "Movers" },
             ].map(v => (
               <button key={v.key} onClick={() => setViewMode(v.key)} style={{
                 padding: "4px 12px", border: "none",
@@ -846,6 +920,68 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
               }
             />
           </Suspense>
+        </div>
+      )}
+
+      {/* ── Movers view ── */}
+      {viewMode === "movers" && (
+        <div style={{ marginTop: 8, marginBottom: 20 }}>
+          {moversLoading && (
+            <div style={{ padding: 40, textAlign: "center", color: T.muted, fontFamily: FONTS.mono, fontSize: 11 }}>
+              Scanning grade changes…
+            </div>
+          )}
+          {!moversLoading && movers && (
+            <div>
+              {/* Header row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, opacity: 0.55 }}>
+                  {movers.total_changes} grade change{movers.total_changes !== 1 ? "s" : ""} · {movers.checked} assets checked · last 48h
+                </span>
+                <button
+                  onClick={() => { setMovers(null); setMoversLoading(true); fetch("/api/v1/cis/grade-changes?hours=48").then(r=>r.json()).then(d=>{setMovers(d);setMoversLoading(false);}).catch(()=>setMoversLoading(false)); }}
+                  style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.muted, background: "none", border: `1px solid rgba(37,99,235,0.14)`, borderRadius: 4, padding: "3px 8px", cursor: "pointer" }}
+                >
+                  Refresh
+                </button>
+              </div>
+
+              {movers.total_changes === 0 && (
+                <div style={{ padding: "28px 0", textAlign: "center", color: T.muted, fontFamily: FONTS.mono, fontSize: 11 }}>
+                  No grade changes in the last 48 hours — {movers.stable_count} assets stable.
+                </div>
+              )}
+
+              {/* Upgrades */}
+              {movers.upgrades.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.green, letterSpacing: "0.12em", fontWeight: 700, marginBottom: 8, opacity: 0.85 }}>
+                    ▲ UPGRADES ({movers.upgrades.length})
+                  </div>
+                  {movers.upgrades.map((m, i) => (
+                    <MoverRow key={m.symbol + i} mover={m} direction="up" />
+                  ))}
+                </div>
+              )}
+
+              {/* Downgrades */}
+              {movers.downgrades.length > 0 && (
+                <div>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.red, letterSpacing: "0.12em", fontWeight: 700, marginBottom: 8, opacity: 0.85 }}>
+                    ▼ DOWNGRADES ({movers.downgrades.length})
+                  </div>
+                  {movers.downgrades.map((m, i) => (
+                    <MoverRow key={m.symbol + i} mover={m} direction="down" />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {!moversLoading && !movers && (
+            <div style={{ padding: 40, textAlign: "center", color: T.muted, fontFamily: FONTS.mono, fontSize: 11 }}>
+              Failed to load grade changes.
+            </div>
+          )}
         </div>
       )}
 
