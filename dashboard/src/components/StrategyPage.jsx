@@ -1007,14 +1007,23 @@ export default function StrategyPage() {
                     </li>
                   ))}
                 </ul>
-                <a href="mailto:jazz@cometcloud.ai" style={{
-                  display: "block", textAlign: "center",
-                  fontFamily: F.display, fontSize: 11, fontWeight: 700,
-                  letterSpacing: "0.10em", padding: "10px 0", borderRadius: 6,
-                  border: `1px solid ${plan.border}`, color: plan.color,
-                  background: "transparent", textDecoration: "none",
-                  transition: "all 0.15s", textTransform: "uppercase",
-                }}>
+                <a
+                  href={
+                    plan.tier === "Free"
+                      ? "/app?section=api-keys"
+                      : plan.tier === "Enterprise"
+                      ? "mailto:jazz@cometcloud.ai"
+                      : "mailto:jazz@cometcloud.ai"
+                  }
+                  style={{
+                    display: "block", textAlign: "center",
+                    fontFamily: F.display, fontSize: 11, fontWeight: 700,
+                    letterSpacing: "0.10em", padding: "10px 0", borderRadius: 6,
+                    border: `1px solid ${plan.border}`, color: plan.color,
+                    background: "transparent", textDecoration: "none",
+                    transition: "all 0.15s", textTransform: "uppercase",
+                  }}
+                >
                   {plan.cta}
                 </a>
               </div>

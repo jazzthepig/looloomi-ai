@@ -452,11 +452,17 @@ function Sidebar({ activeSection, onNavigate, bottomSlot }) {
 }
 
 function DesktopApp() {
-  const [activeSection, setActiveSection] = useState("intelligence");
+  // Deep-link via ?section=xxx — e.g. /app?section=api-keys from strategy page CTA
+  const _initSection = (() => {
+    const p = new URLSearchParams(window.location.search).get("section");
+    if (p) window.history.replaceState({}, "", window.location.pathname);
+    return p || "intelligence";
+  })();
+  const [activeSection, setActiveSection] = useState(_initSection);
   const [cisUniverse, setCisUniverse]     = useState([]);
   // Lazy-mount: track which sections have been visited — mount once, keep alive
   // "cis.leaderboard" pre-seeded so clicking CIS Engine parent mounts it immediately
-  const [visited, setVisited] = useState(() => new Set(["intelligence"]));
+  const [visited, setVisited] = useState(() => new Set([_initSection]));
 
   const navigate = (id) => {
     // "cis" parent redirects to cis.leaderboard (canonical sub-page — avoids double CISContent mount)

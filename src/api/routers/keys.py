@@ -115,9 +115,10 @@ async def lookup_key(raw_key: str) -> Optional[dict]:
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
 class CreateKeyRequest(BaseModel):
-    name:  str        = Field(..., min_length=1, max_length=80,  description="Label for this key, e.g. 'My trading bot'")
-    email: str        = Field(..., description="Contact email — used for abuse notifications only")
-    tier:  str        = Field("free", description="Tier: 'free' (default). Pro keys issued manually.")
+    name:         str           = Field(..., min_length=1, max_length=80,  description="Label for this key, e.g. 'My trading bot'")
+    email:        str           = Field(..., description="Contact email — used for abuse notifications only")
+    tier:         str           = Field("free", description="Tier: 'free' (default). Pro keys issued manually.")
+    intended_use: Optional[str] = Field(None, max_length=200, description="Self-described use case — optional")
 
 
 class CreateKeyResponse(BaseModel):
@@ -152,6 +153,7 @@ async def create_key(body: CreateKeyRequest):
         "key_hash":       _hash_key(key),
         "name":           body.name,
         "email":          body.email,
+        "intended_use":   body.intended_use or "",
         "tier":           tier,
         "rate_limit_rpm": rpm,
         "rate_limit_day": rpd,
