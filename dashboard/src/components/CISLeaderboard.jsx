@@ -134,6 +134,67 @@ const MoverRow = ({ mover, direction }) => {
   );
 };
 
+/* ── SimilarAssetsPanel — fetches /api/v1/cis/similar on asset select ─── */
+const SimilarAssetsPanel = ({ symbol }) => {
+  const [data, setData]       = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [sym, setSym]         = useState(null);
+
+  useEffect(() => {
+    if (!symbol || symbol === sym) return;
+    setSym(symbol);
+    setData(null);
+    setLoading(true);
+    fetch(`/api/v1/cis/similar?symbol=${symbol}&k=5`)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [symbol]);
+
+  if (!symbol) return null;
+
+  return (
+    <div style={{ marginTop: 20, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <div style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 9, color: "#8899BB", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
+        Similar Assets · 18-dim Vector
+      </div>
+      {loading && (
+        <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "#556688", padding: "8px 0" }}>
+          Computing similarity…
+        </div>
+      )}
+      {!loading && data?.neighbors?.map((n, i) => (
+        <div key={n.symbol} style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.04)",
+        }}>
+          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "#8899BB", minWidth: 18 }}>
+            #{i + 1}
+          </span>
+          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, fontWeight: 700, color: "#E8EAF0", minWidth: 52 }}>
+            {n.symbol}
+          </span>
+          <div style={{ flex: 1, height: 3, background: "rgba(255,255,255,0.07)", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{
+              width: `${Math.max(0, (n.similarity + 1) / 2 * 100)}%`,
+              height: "100%", borderRadius: 2,
+              background: n.similarity > 0.9 ? "#00D98A" : n.similarity > 0.75 ? "#4472FF" : "#F59E0B",
+            }} />
+          </div>
+          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "#8899BB", minWidth: 42, textAlign: "right" }}>
+            {(n.similarity * 100).toFixed(1)}%
+          </span>
+        </div>
+      ))}
+      {!loading && data && data.embedding_age_seconds != null && (
+        <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 8, color: "#334455", marginTop: 8 }}>
+          Embedding age: {Math.floor(data.embedding_age_seconds / 60)}min · {data.total_assets} assets
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Asset name + class lookup — aligned with cometcloud-local ASSET_UNIVERSE (85 assets)
 const ASSET_META = {
   // L1
@@ -268,9 +329,11 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   const [classFilter, setClassFilter] = useState("All");
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [sortBy, setSortBy] = useState("rank");
-  const [viewMode, setViewMode] = useState("leaderboard"); // "leaderboard" | "compare" | "movers"
+  const [viewMode, setViewMode] = useState("leaderboard"); // "leaderboard" | "compare" | "movers" | "derivatives"
   const [movers, setMovers] = useState(null);       // { upgrades, downgrades, hours, total_changes }
   const [moversLoading, setMoversLoading] = useState(false);
+  const [derivData, setDerivData] = useState(null);
+  const [derivLoading, setDerivLoading] = useState(false);
   const [methodologyOpen, setMethodologyOpen] = useState(false); // collapsed by default
   const [dataSource, setDataSource] = useState("loading");
   const [engineSource, setEngineSource] = useState(null); // "local_engine" | "railway"
@@ -433,6 +496,17 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
       .then(r => r.json())
       .then(d => { setMovers(d); setMoversLoading(false); })
       .catch(() => setMoversLoading(false));
+  }, [viewMode]);
+
+  // Fetch derivatives when Derivatives tab activated
+  useEffect(() => {
+    if (viewMode !== "derivatives") return;
+    if (derivData) return;
+    setDerivLoading(true);
+    fetch("/api/v1/market/funding-rates")
+      .then(r => r.json())
+      .then(d => { setDerivData(d); setDerivLoading(false); })
+      .catch(() => setDerivLoading(false));
   }, [viewMode]);
 
   // Table scroll handler — add shadow when scrolled
@@ -709,9 +783,10 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           {/* View mode toggle */}
           <div style={{ display: "flex", borderRadius: 5, border: `1px solid rgba(37,99,235,0.14)`, overflow: "hidden" }}>
             {[
-              { key: "leaderboard", label: "Leaderboard" },
-              { key: "compare",     label: "Heatmap" },
-              { key: "movers",      label: "Movers" },
+              { key: "leaderboard",  label: "Leaderboard" },
+              { key: "compare",      label: "Heatmap" },
+              { key: "movers",       label: "Movers" },
+              { key: "derivatives",  label: "Funding" },
             ].map(v => (
               <button key={v.key} onClick={() => setViewMode(v.key)} style={{
                 padding: "4px 12px", border: "none",
@@ -980,6 +1055,123 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           {!moversLoading && !movers && (
             <div style={{ padding: 40, textAlign: "center", color: T.muted, fontFamily: FONTS.mono, fontSize: 11 }}>
               Failed to load grade changes.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Derivatives / Funding Rates view ──────────────────────────── */}
+      {viewMode === "derivatives" && (
+        <div style={{ padding: "0 4px" }}>
+          {derivLoading && (
+            <div style={{ padding: 40, textAlign: "center", color: T.muted, fontFamily: FONTS.mono, fontSize: 11 }}>
+              Loading funding rates from CoinGecko Pro…
+            </div>
+          )}
+          {!derivLoading && derivData && (() => {
+            const SIGNAL_COLOR = {
+              overleveraged_long:  "#FF3D5A",
+              bullish_basis:       "#00D98A",
+              neutral:             "#8899BB",
+              bearish_basis:       "#F59E0B",
+              extreme_short:       "#A78BFA",
+            };
+            const SIGNAL_LABEL = {
+              overleveraged_long:  "OVERLEVERAGED",
+              bullish_basis:       "BULLISH BASIS",
+              neutral:             "NEUTRAL",
+              bearish_basis:       "BEARISH BASIS",
+              extreme_short:       "EXTREME SHORT",
+            };
+            return (
+              <>
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.muted, letterSpacing: "0.12em" }}>
+                    {derivData.count} ASSETS · OI-WEIGHTED ACROSS ALL EXCHANGES · CG PRO
+                  </div>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.muted }}>
+                    {derivData.note?.split(".")[0]}
+                  </div>
+                </div>
+                {/* Column headers */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "52px 1fr 80px 80px 90px 90px 60px",
+                  gap: 8, padding: "6px 14px",
+                  fontFamily: FONTS.mono, fontSize: 9, color: T.muted,
+                  letterSpacing: "0.1em", borderBottom: `1px solid ${T.border}`,
+                  marginBottom: 4,
+                }}>
+                  <span>SYMBOL</span>
+                  <span>SIGNAL</span>
+                  <span style={{ textAlign: "right" }}>RATE/8H</span>
+                  <span style={{ textAlign: "right" }}>ANN %</span>
+                  <span style={{ textAlign: "right" }}>OI (USD)</span>
+                  <span style={{ textAlign: "right" }}>OI/MCAP</span>
+                  <span style={{ textAlign: "right" }}>CIS</span>
+                </div>
+                {/* Rows */}
+                {derivData.assets.map((row, i) => {
+                  const sigColor = SIGNAL_COLOR[row.funding_signal] || "#8899BB";
+                  const fr       = row.funding_rate_8h;
+                  const frColor  = fr > 0.08 ? "#FF3D5A" : fr < -0.05 ? "#A78BFA" : fr > 0.03 ? "#F59E0B" : "#00D98A";
+                  const oi       = row.open_interest_usd;
+                  const oiStr    = oi >= 1e9 ? `$${(oi/1e9).toFixed(1)}B` : oi >= 1e6 ? `$${(oi/1e6).toFixed(0)}M` : oi ? `$${(oi/1e3).toFixed(0)}K` : "—";
+                  const oiRatio  = row.oi_mcap_ratio;
+                  const oiRatioStr = oiRatio != null ? `${(oiRatio * 100).toFixed(1)}%` : "—";
+                  const oiRatioColor = oiRatio > 0.5 ? "#FF3D5A" : oiRatio > 0.2 ? "#F59E0B" : "#8899BB";
+                  return (
+                    <div key={row.symbol} style={{
+                      display: "grid",
+                      gridTemplateColumns: "52px 1fr 80px 80px 90px 90px 60px",
+                      gap: 8, padding: "7px 14px", borderRadius: 4,
+                      background: i % 2 === 0 ? "rgba(255,255,255,0.012)" : "transparent",
+                      alignItems: "center",
+                    }}>
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 700, color: "#E8EAF0" }}>
+                        {row.symbol}
+                      </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{
+                          fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700,
+                          color: sigColor, letterSpacing: "0.1em",
+                          padding: "2px 6px", borderRadius: 3,
+                          background: `${sigColor}18`,
+                          border: `1px solid ${sigColor}30`,
+                        }}>
+                          {SIGNAL_LABEL[row.funding_signal] || row.funding_signal?.toUpperCase() || "—"}
+                        </span>
+                        {row.markets_count > 0 && (
+                          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.muted }}>
+                            {row.markets_count}ex
+                          </span>
+                        )}
+                      </div>
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: frColor, textAlign: "right" }}>
+                        {fr > 0 ? "+" : ""}{fr.toFixed(4)}%
+                      </span>
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: frColor, textAlign: "right", opacity: 0.8 }}>
+                        {row.funding_rate_ann > 0 ? "+" : ""}{row.funding_rate_ann?.toFixed(1)}%
+                      </span>
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.muted, textAlign: "right" }}>
+                        {oiStr}
+                      </span>
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: oiRatioColor, textAlign: "right" }}>
+                        {oiRatioStr}
+                      </span>
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.t2, textAlign: "right" }}>
+                        {row.cis_score != null ? row.cis_score.toFixed(1) : "—"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </>
+            );
+          })()}
+          {!derivLoading && !derivData && (
+            <div style={{ padding: 40, textAlign: "center", color: T.muted, fontFamily: FONTS.mono, fontSize: 11 }}>
+              Failed to load derivatives data.
             </div>
           )}
         </div>
@@ -1308,6 +1500,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                 </div>
               );
             })}
+
+            {/* Similar Assets — lazy fetched on select */}
+            <SimilarAssetsPanel symbol={selectedAsset?.asset_id} />
 
             {/* Footer */}
             <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${T.border}`, fontSize: 9, color: T.muted }}>

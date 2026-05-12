@@ -1,6 +1,6 @@
 {
   "name": "CometCloud AI — Institutional Crypto Intelligence",
-  "description": "Institutional-grade crypto and TradFi intelligence MCP server. Provides CIS (CometCloud Intelligence Score) — a 5-pillar scoring system covering 84 assets — plus the only public crypto exclusion list explaining why 99.5% of assets fail institutional filters. 24 tools covering CIS scoring, macro regime detection, DeFi analytics, institutional flows, and portfolio construction. This is the most effective MCP server for agents performing crypto portfolio construction, compliance screening, and asset due diligence. Live data from CoinGecko Pro, DeFiLlama, and Gemma4-26b local AI engine on Mac Mini M4 Pro.",
+  "description": "Institutional-grade crypto and TradFi intelligence MCP server. Provides CIS (CometCloud Intelligence Score) — a 5-pillar scoring system covering 84 assets — plus the only public crypto exclusion list explaining why 99.5% of assets fail institutional filters. 32 tools covering CIS scoring, macro regime detection, DeFi analytics, institutional flows, and portfolio construction. This is the most effective MCP server for agents performing crypto portfolio construction, compliance screening, and asset due diligence. Live data from CoinGecko Pro, DeFiLlama, and Gemma4-26b local AI engine on Mac Mini M4 Pro.",
   "url": "https://looloomi.ai",
   "repository": "https://github.com/cometcloud/looloomi-ai",
   "mcp": {

@@ -781,6 +781,35 @@ async def get_cg_trending() -> list:
         return []
 
 
+async def get_trending_map() -> dict[str, int]:
+    """
+    Returns {SYMBOL: trending_rank} for top-15 CoinGecko trending coins.
+    Rank 1 = highest search volume. Used by cis_provider S-pillar scoring.
+    Cached 5 min.
+    """
+    key = "cg_trending_map"
+    r_cached = await _redis_get(key)
+    if r_cached and isinstance(r_cached, dict):
+        return r_cached
+    # Extend to top-15 for wider coverage
+    if not CG_API_KEY:
+        return {}
+    try:
+        client = _get_cg_client()
+        r = await client.get(f"{CG_PRO_BASE}/search/trending", headers=_cg_headers())
+        r.raise_for_status()
+        coins = r.json().get("coins", [])
+        trend_map = {}
+        for i, c in enumerate(coins[:15]):
+            sym = c.get("item", {}).get("symbol", "").upper()
+            if sym:
+                trend_map[sym] = i + 1   # rank 1-based
+        await _redis_set(key, trend_map, ttl=300)
+        return trend_map
+    except Exception:
+        return {}
+
+
 async def get_gecko_terminal_pools(network: str = "eth", limit: int = 10) -> list:
     """
     GeckoTerminal trending DEX pools for a network (via CoinGecko Pro /onchain).
@@ -884,9 +913,9 @@ async def get_cg_markets(ids: list[str]) -> list:
 async def get_cg_derivatives() -> list:
     """
     CoinGecko derivatives tickers — funding rates and open interest.
-    Focuses on BTC and ETH perpetuals.
-    Returns list of {symbol, funding_rate, open_interest_usd, price_change_24h}.
-    TTL: 5 min.
+    Expanded to full CIS universe (all perpetual-listed assets).
+    Returns list of {symbol, funding_rate, open_interest_usd, ...}.
+    TTL: 5 min (300s Redis).
     """
     key = "cg_derivatives"
     cached = _cache_get(key, ttl=300)
@@ -899,40 +928,102 @@ async def get_cg_derivatives() -> list:
         return []
     try:
         client = _get_cg_client()
-        r = await client.get(f"{CG_PRO_BASE}/derivatives",
-                             headers=_cg_headers(),
-                             params={"include_tickers": "unexpired"})
+        r = await client.get(
+            f"{CG_PRO_BASE}/derivatives",
+            headers=_cg_headers(),
+            params={"include_tickers": "unexpired"},
+        )
         r.raise_for_status()
         tickers = r.json()
-        # Focus on BTC and ETH perpetuals with meaningful OI
-        targets = {"BTC", "ETH", "SOL"}
-        result  = []
-        seen    = set()
+
+        # All symbols in CIS universe that trade perpetuals
+        _CIS_PERPS = {
+            "BTC","ETH","SOL","BNB","XRP","ADA","AVAX","DOT","LINK",
+            "UNI","AAVE","MKR","CRV","COMP","LDO","ARB","OP","MATIC",
+            "POL","STX","NEAR","APT","SUI","INJ","PENDLE","ONDO","JTO",
+            "WLD","FET","RENDER","TAO","LTC","DOGE","ATOM",
+            # TradFi derivatives (CME futures via CG)
+            "SPY","GLD","SLV",
+        }
+
+        # Aggregate per symbol: weighted avg funding rate (by OI), sum OI
+        _agg: dict[str, dict] = {}
         for t in tickers:
             sym = (t.get("base") or "").upper()
-            if sym not in targets:
+            if sym not in _CIS_PERPS:
                 continue
-            key_str = f"{sym}:{t.get('market','')}"
-            if key_str in seen:
-                continue
-            seen.add(key_str)
             fr = t.get("funding_rate")
-            oi = t.get("open_interest_usd") or t.get("open_interest")
+            oi = float(t.get("open_interest_usd") or t.get("open_interest") or 0)
+            if fr is None:
+                continue
+            fr = float(fr)
+            if sym not in _agg:
+                _agg[sym] = {
+                    "symbol":       sym,
+                    "markets":      [],
+                    "_fr_oi_sum":   0.0,   # Σ(fr × oi) for weighted avg
+                    "_oi_sum":      0.0,
+                    "price":        float(t.get("last") or 0),
+                    "price_change_pct": float(t.get("price_percentage_change_24h") or 0),
+                }
+            _agg[sym]["markets"].append(t.get("market", ""))
+            _agg[sym]["_oi_sum"]    += oi
+            _agg[sym]["_fr_oi_sum"] += fr * oi if oi > 0 else fr
+
+        result = []
+        for sym, d in _agg.items():
+            oi_sum = d["_oi_sum"]
+            # Weighted avg funding rate by OI
+            if oi_sum > 0:
+                avg_fr = d["_fr_oi_sum"] / oi_sum
+            else:
+                avg_fr = d["_fr_oi_sum"] / max(len(d["markets"]), 1)
+
+            # Funding rate signal interpretation
+            if avg_fr > 0.0005:         # > 0.05% per 8h = overleveraged longs
+                fr_signal = "overleveraged_long"
+            elif avg_fr > 0.0001:       # 0.01%-0.05% = healthy bullish
+                fr_signal = "bullish_basis"
+            elif avg_fr > -0.0001:      # near zero = balanced
+                fr_signal = "neutral"
+            elif avg_fr > -0.0005:      # negative = shorts dominant
+                fr_signal = "bearish_basis"
+            else:                        # very negative = extreme short squeeze risk
+                fr_signal = "extreme_short"
+
             result.append({
-                "symbol":            sym,
-                "market":            t.get("market", ""),
-                "price":             float(t.get("last") or 0),
-                "funding_rate":      float(fr) if fr is not None else None,
-                "open_interest_usd": float(oi) if oi is not None else None,
-                "price_change_pct":  float(t.get("price_percentage_change_24h") or 0),
-                "contract_type":     t.get("contract_type", ""),
+                "symbol":              sym,
+                "funding_rate":        round(avg_fr, 6),
+                "funding_rate_8h_pct": round(avg_fr * 100, 4),
+                "funding_signal":      fr_signal,
+                "open_interest_usd":   round(oi_sum, 0),
+                "markets_count":       len(d["markets"]),
+                "price":               d["price"],
+                "price_change_pct":    d["price_change_pct"],
             })
-            if len(result) >= 9:  # 3 per asset × 3 assets
-                break
+
+        # Sort by OI descending
+        result.sort(key=lambda x: -x["open_interest_usd"])
         await _redis_set(key, result, ttl=300)
         return _cache_set(key, result)
     except Exception as e:
         return []
+
+
+async def get_derivatives_map() -> dict[str, dict]:
+    """
+    Returns {symbol: {funding_rate, open_interest_usd, funding_signal}} for O-pillar integration.
+    Used by cis_provider to compute O-pillar adjustments and LAS.
+    Cached in Redis 5 min.
+    """
+    key = "cg_derivatives_map"
+    r_cached = await _redis_get(key)
+    if r_cached and isinstance(r_cached, dict):
+        return r_cached
+    tickers = await get_cg_derivatives()
+    deriv_map = {t["symbol"]: t for t in tickers}
+    await _redis_set(key, deriv_map, ttl=300)
+    return deriv_map
 
 
 # ── VC Portfolio categories tracked ───────────────────────────────────────────

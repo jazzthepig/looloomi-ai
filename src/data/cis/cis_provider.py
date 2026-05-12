@@ -1206,6 +1206,53 @@ def calculate_cis_score(
         else:
             o_score = 20.0  # neutral fallback for TradFi
 
+    # ── v4.3: Derivatives (funding rate + OI) → O-pillar adjustment ─────
+    # Funding rate encodes market positioning risk:
+    #   Extreme positive (>0.05%/8h): overleveraged longs → cascade risk → O penalty (-8 to -15)
+    #   Healthy positive (0.01-0.05%): bullish basis, normal → slight bonus (+3)
+    #   Neutral (±0.01%): balanced → 0
+    #   Negative (-0.01% to -0.05%): shorts dominant → squeeze setup → neutral/+2
+    #   Extreme negative (<-0.05%): massive short exposure = squeeze risk = NOT inherently safer → -3
+    # OI/MCap ratio: high leverage in system vs spot market
+    #   >100% OI vs MCap: extreme leverage → O penalty (-5 to -10)
+    #   50-100%: elevated → -3
+    #   <20%: spot-driven = healthy → +3
+    _sym_key  = asset_id.upper()
+    _drv       = _deriv_map.get(_sym_key, {})
+    _fr        = float(_drv.get("funding_rate") or 0)
+    _oi_usd    = float(_drv.get("open_interest_usd") or 0)
+    _fr_adj    = 0.0
+    _oi_adj    = 0.0
+    _fr_signal = "N/A (no derivatives)"
+
+    if _drv and not _is_tradfi:
+        _fr_signal = _drv.get("funding_signal", "unknown")
+        # Funding rate modifier
+        if _fr > 0.0005:      # >0.05%/8h — overleveraged longs
+            _fr_adj = _linear_interp(_fr, 0.0005, 0.002, -8.0, -15.0)
+        elif _fr > 0.0001:    # healthy bullish
+            _fr_adj = _linear_interp(_fr, 0.0001, 0.0005, 3.0, 0.0)
+        elif _fr > -0.0001:   # neutral
+            _fr_adj = 0.0
+        elif _fr > -0.0005:   # negative — shorts paying
+            _fr_adj = 2.0     # slight squeeze setup bonus (risk-adjusted)
+        else:                  # extreme negative
+            _fr_adj = -3.0    # excessive leverage on short side also risky
+
+        # OI / MCap leverage ratio
+        if market_cap > 0 and _oi_usd > 0:
+            _oi_ratio = _oi_usd / market_cap
+            if _oi_ratio > 1.0:
+                _oi_adj = _linear_interp(_oi_ratio, 1.0, 3.0, -5.0, -10.0)
+            elif _oi_ratio > 0.5:
+                _oi_adj = _linear_interp(_oi_ratio, 0.5, 1.0, -3.0, -5.0)
+            elif _oi_ratio < 0.2:
+                _oi_adj = 3.0   # low leverage = spot-driven = healthy
+
+        # Apply adjustments to o_score
+        if not _is_tradfi:
+            o_score = round(max(0.0, min(100.0, o_score + _fr_adj + _oi_adj)), 1)
+
     o_components = {
         "ath_distance_pct": round(ath_distance, 1),
         "ath_recovery_score": round(ath_score, 1),
@@ -1213,6 +1260,13 @@ def calculate_cis_score(
         "health_score": round(health_score, 1),
         "supply_ratio": round(supply_ratio, 3),
         "tvl_usd": tvl,
+        # v4.3 derivatives additions
+        "funding_rate": round(_fr, 6) if _drv else None,
+        "funding_signal": _fr_signal,
+        "funding_adj": round(_fr_adj, 1),
+        "oi_usd": round(_oi_usd, 0) if _oi_usd > 0 else None,
+        "oi_mcap_ratio": round(_oi_usd / market_cap, 3) if market_cap > 0 and _oi_usd > 0 else None,
+        "oi_adj": round(_oi_adj, 1),
     }
 
     # ── S — Sentiment (Baseline + Divergence + Vol Regime) ───────────
@@ -1383,7 +1437,28 @@ def calculate_cis_score(
         s_components["beta_score"] = round(beta_score, 1)
         s_components["beta_source"] = "cg_proxy"
 
-    s_score = round(max(0, min(100, baseline + divergence_total + dev_score + vol_regime_score + beta_score)), 1)
+    # ── v4.3: Trending rank → S-pillar boost ─────────────────────────
+    # CoinGecko trending = top-15 by search volume in 24h (Pro endpoint).
+    # Rank 1=highest. Search volume is a leading indicator of social sentiment.
+    #   Top 1-3:  +10 to +15 (strong momentum signal)
+    #   Top 4-7:  +5 to +9
+    #   Top 8-15: +2 to +4
+    _trend_rank = _trend_map.get(_sym_key)
+    _trend_boost = 0.0
+    if _trend_rank is not None and not _is_tradfi:
+        if _trend_rank <= 3:
+            _trend_boost = _linear_interp(float(_trend_rank), 1.0, 3.0, 15.0, 10.0)
+        elif _trend_rank <= 7:
+            _trend_boost = _linear_interp(float(_trend_rank), 4.0, 7.0, 9.0, 5.0)
+        elif _trend_rank <= 15:
+            _trend_boost = _linear_interp(float(_trend_rank), 8.0, 15.0, 4.0, 2.0)
+        s_components["trending_rank"] = _trend_rank
+        s_components["trending_boost"] = round(_trend_boost, 1)
+    else:
+        s_components["trending_rank"] = None
+        s_components["trending_boost"] = 0
+
+    s_score = round(max(0, min(100, baseline + divergence_total + dev_score + vol_regime_score + beta_score + _trend_boost)), 1)
 
     # ── A — Alpha Independence ───────────────────────────────────────
     # benchmark divergence (-20 to +40) + class independence (0-20) + size efficiency (-5 to +20) + correlation (-15 to 0)
@@ -1792,9 +1867,14 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             await asyncio.gather(*tasks, return_exceptions=True)
         return _results
 
-    # Fetch all data concurrently
-    # Priority: Binance (fast, no rate limit) > CoinGecko (fallback)
-    binance_prices, cg_markets, llama_tvl, fng, github_activity, cg_dev_data, eodhd_data = await asyncio.gather(
+    # Fetch all data concurrently — including CG Pro derivatives + trending for pillar wiring
+    try:
+        from src.data.market.data_layer import get_derivatives_map, get_trending_map
+    except ImportError:
+        from data.market.data_layer import get_derivatives_map, get_trending_map
+
+    (binance_prices, cg_markets, llama_tvl, fng, github_activity,
+     cg_dev_data, eodhd_data, _deriv_map, _trend_map) = await asyncio.gather(
         fetch_binance_prices(),
         fetch_cg_markets(),
         fetch_defillama_tvl(),
@@ -1802,6 +1882,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         fetch_github_activity(),   # Phase 2B: dev activity (best-effort, 2h cache)
         _fetch_cg_dev_bulk(),      # v4.2: CG Pro developer data for tech assets
         _fetch_eodhd_bulk(),       # v4.2: EODHD fundamentals for US Equity
+        get_derivatives_map(),     # v4.3: funding rates + OI → O-pillar adjustment
+        get_trending_map(),        # v4.3: trending rank → S-pillar boost
     )
 
     # Merge: Binance as primary (speed), CoinGecko enriches missing fields
@@ -2054,6 +2136,16 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         _l24 = market_data.get("low_24h", 0) or 0
         las_result = calculate_las(total_score, _vol_24h, _h24, _l24, confidence)
 
+        # v4.3: Apply OI leverage penalty to LAS — high OI/MCap = systemic liquidation risk
+        _oi_for_las = float((_deriv_map or {}).get(asset_id.upper(), {}).get("open_interest_usd") or 0)
+        if _oi_for_las > 0 and market_cap > 0:
+            _oi_ratio_las = _oi_for_las / market_cap
+            # OI > 20% MCap starts applying discount (max 30% LAS reduction at 100% OI/MCap)
+            _leverage_mult = max(0.7, 1.0 - max(0.0, (_oi_ratio_las - 0.2)) * 0.375)
+            las_result["las"] = round(las_result["las"] * _leverage_mult, 1)
+            las_result["las_params"]["oi_leverage_multiplier"] = round(_leverage_mult, 3)
+            las_result["las_params"]["oi_mcap_ratio"] = round(_oi_ratio_las, 4)
+
         universe.append({
             "symbol": asset_id,
             "name": config["name"],
@@ -2113,6 +2205,30 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         save_cis_snapshot(universe, macro)
     except Exception as e:
         _logger.warning(f"Failed to save CIS history: {e}")
+
+    # v4.3: Generate and persist asset embeddings to Redis vector store
+    try:
+        from src.data.vector.embedder import generate_embedding, generate_regime_embedding
+        from src.data.vector.store import save_embeddings
+        macro_pulse_for_embed = {
+            "macro_regime": regime,
+            "btc_dominance": macro_data.get("btc_dominance", 50),
+            "fear_greed_index": fng.get("value", 50) if fng else 50,
+            "global_mcap_usd": macro_data.get("global_mcap_usd"),
+            "btc_change_7d": btc_data.get("change_7d", 0) if btc_data else 0,
+        }
+        embeddings: dict[str, list[float]] = {}
+        for asset in universe:
+            try:
+                vec = generate_embedding(asset, macro_regime=regime, derivatives=_deriv_map)
+                embeddings[asset["symbol"].upper()] = vec
+            except Exception:
+                pass
+        regime_vec = generate_regime_embedding(macro_pulse_for_embed, universe)
+        save_embeddings(embeddings, macro_regime=regime, regime_vec=regime_vec)
+        _logger.info(f"[CIS] Vector store updated: {len(embeddings)} embeddings")
+    except Exception as e:
+        _logger.warning(f"[CIS] Vector store update failed: {e}")
 
     return {
         "status": "error" if not universe else "success",

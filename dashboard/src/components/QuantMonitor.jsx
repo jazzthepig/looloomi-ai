@@ -345,6 +345,344 @@ function SkeletonCard() {
   );
 }
 
+/* ─── Paper Trading Panel ───────────────────────────────────────────── */
+const COMMON_SYMS = ["BTC","ETH","SOL","ARB","OP","LINK","AAVE","MKR","UNI","PENDLE","ONDO","TAO","RENDER","INJ","LDO"];
+
+function PaperTrading() {
+  const [positions, setPositions] = useState(null);
+  const [metrics, setMetrics] = useState(null);
+  const [mineData, setMineData] = useState(null);
+  const [mineType, setMineType] = useState("grade_alpha");
+  const [orderForm, setOrderForm] = useState({ symbol: "ETH", side: "LONG", size_usd: 500, sl: 4, tp: 10 });
+  const [submitting, setSubmitting] = useState(false);
+  const [lastResult, setLastResult] = useState(null);
+  const [tab, setTab] = useState("positions"); // positions | order | mine
+
+  const fetchPositions = useCallback(async () => {
+    const [pos, met] = await Promise.all([
+      fetch("/api/v1/trading/positions").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("/api/v1/trading/metrics").then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    setPositions(pos);
+    setMetrics(met);
+  }, []);
+
+  const fetchMine = useCallback(async (type) => {
+    setMineData(null);
+    const d = await fetch(`/api/v1/trading/mine?type=${type}&hours=168`).then(r => r.ok ? r.json() : null).catch(() => null);
+    setMineData(d);
+  }, []);
+
+  useEffect(() => { fetchPositions(); }, [fetchPositions]);
+  useEffect(() => {
+    if (tab === "mine") fetchMine(mineType);
+  }, [tab, mineType, fetchMine]);
+
+  const submitOrder = async () => {
+    setSubmitting(true);
+    setLastResult(null);
+    try {
+      const r = await fetch("/api/v1/trading/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          symbol: orderForm.symbol,
+          side: orderForm.side,
+          size_usd: parseFloat(orderForm.size_usd),
+          stop_loss_pct: parseFloat(orderForm.sl) / 100,
+          take_profit_pct: parseFloat(orderForm.tp) / 100,
+          mode: "PAPER",
+          note: "QuantMonitor UI order",
+        }),
+      });
+      const d = await r.json();
+      setLastResult(d);
+      if (d.status === "filled") fetchPositions();
+    } catch (e) {
+      setLastResult({ status: "error", reason: e.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const closePosition = async (order_id) => {
+    await fetch(`/api/v1/trading/positions/${order_id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason: "ui_close" }),
+    });
+    fetchPositions();
+  };
+
+  const accentColor = tab === "positions" ? "#00D98A" : tab === "order" ? "#6366f1" : "#f59e0b";
+
+  return (
+    <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid rgba(37,99,235,0.08)" }}>
+      {/* Section header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: "#C7D2FE", textTransform: "uppercase" }}>
+            Paper Trading Agent
+          </span>
+          {metrics && (
+            <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: metrics.total_pnl_usd >= 0 ? "#00D98A" : "#FF3D5A", opacity: 0.8 }}>
+              {metrics.total_pnl_usd >= 0 ? "+" : ""}${(metrics.total_pnl_usd || 0).toFixed(2)} realized
+            </span>
+          )}
+        </div>
+        {/* Tabs */}
+        <div style={{ display: "flex", borderRadius: 5, border: "1px solid rgba(37,99,235,0.14)", overflow: "hidden" }}>
+          {[["positions","Positions"],["order","Order"],["mine","Mine"]].map(([k,l]) => (
+            <button key={k} onClick={() => setTab(k)} style={{
+              padding: "4px 10px", border: "none",
+              background: tab === k ? "rgba(99,102,241,0.12)" : "transparent",
+              color: tab === k ? "#C7D2FE" : "rgba(199,210,254,0.4)",
+              fontSize: 10, fontFamily: FONTS.mono, cursor: "pointer",
+              fontWeight: tab === k ? 600 : 400,
+            }}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Portfolio bar */}
+      {metrics && (
+        <div style={{ display: "flex", gap: 20, marginBottom: 16, flexWrap: "wrap" }}>
+          {[
+            ["Portfolio", `$${(metrics.portfolio_usd || 10000).toFixed(0)}`],
+            ["Cash", `$${(metrics.cash_usd || 0).toFixed(0)}`],
+            ["Trades", metrics.total_trades],
+            ["Win Rate", metrics.win_rate != null ? `${metrics.win_rate}%` : "—"],
+            ["Avg Return", metrics.avg_return_pct != null ? `${metrics.avg_return_pct >= 0 ? "+" : ""}${metrics.avg_return_pct?.toFixed(2)}%` : "—"],
+            ["Sharpe", metrics.sharpe_approx ?? "—"],
+          ].map(([label, val]) => (
+            <div key={label}>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.4)", letterSpacing: "0.12em", marginBottom: 3 }}>{label.toUpperCase()}</div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: "#E8EAF0" }}>{val}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Positions tab ── */}
+      {tab === "positions" && (
+        <div>
+          {!positions && <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: "rgba(199,210,254,0.3)", padding: "12px 0" }}>Loading positions…</div>}
+          {positions && positions.count === 0 && (
+            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: "rgba(199,210,254,0.3)", padding: "12px 0" }}>
+              No open positions. Use the Order tab to enter a trade.
+            </div>
+          )}
+          {positions && positions.positions?.map(pos => {
+            const pnlColor = (pos.unrealized_pnl || 0) >= 0 ? "#00D98A" : "#FF3D5A";
+            const triggered = pos.sl_triggered || pos.tp_triggered;
+            return (
+              <div key={pos.order_id} style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "9px 12px", marginBottom: 5, borderRadius: 6,
+                background: triggered ? "rgba(255,61,90,0.06)" : "rgba(15,30,70,0.6)",
+                border: `1px solid ${triggered ? "rgba(255,61,90,0.20)" : "rgba(37,99,235,0.12)"}`,
+              }}>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 11, fontWeight: 700, color: "#E8EAF0", minWidth: 44 }}>{pos.symbol}</span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: pos.side === "LONG" ? "#00D98A" : "#FF3D5A", minWidth: 36 }}>{pos.side}</span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.5)" }}>@ ${pos.entry_price?.toFixed(4)}</span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: pnlColor, marginLeft: "auto" }}>
+                  {pos.unrealized_pnl >= 0 ? "+" : ""}${(pos.unrealized_pnl || 0).toFixed(2)} ({pos.unrealized_pct >= 0 ? "+" : ""}{(pos.unrealized_pct || 0).toFixed(2)}%)
+                </span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: "rgba(199,210,254,0.3)", minWidth: 30 }}>
+                  {pos.cis_grade} {pos.cis_score?.toFixed(0)}
+                </span>
+                {triggered && (
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: "#FF3D5A" }}>
+                    {pos.sl_triggered ? "SL" : "TP"} hit
+                  </span>
+                )}
+                <button onClick={() => closePosition(pos.order_id)} style={{
+                  fontFamily: FONTS.mono, fontSize: 8, color: "#FF3D5A",
+                  background: "rgba(255,61,90,0.08)", border: "1px solid rgba(255,61,90,0.2)",
+                  borderRadius: 3, padding: "2px 7px", cursor: "pointer",
+                }}>Close</button>
+              </div>
+            );
+          })}
+          <button onClick={fetchPositions} style={{
+            marginTop: 8, fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.4)",
+            background: "none", border: "1px solid rgba(37,99,235,0.14)", borderRadius: 4,
+            padding: "3px 10px", cursor: "pointer",
+          }}>Refresh</button>
+        </div>
+      )}
+
+      {/* ── Order tab ── */}
+      {tab === "order" && (
+        <div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+            {/* Symbol */}
+            <div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: "rgba(199,210,254,0.4)", marginBottom: 4, letterSpacing: "0.10em" }}>SYMBOL</div>
+              <select
+                value={orderForm.symbol}
+                onChange={e => setOrderForm(f => ({...f, symbol: e.target.value}))}
+                style={{ fontFamily: FONTS.mono, fontSize: 11, color: "#E8EAF0", background: "rgba(15,30,70,0.8)", border: "1px solid rgba(37,99,235,0.18)", borderRadius: 4, padding: "5px 8px" }}
+              >
+                {COMMON_SYMS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            {/* Side */}
+            <div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: "rgba(199,210,254,0.4)", marginBottom: 4, letterSpacing: "0.10em" }}>SIDE</div>
+              <div style={{ display: "flex", borderRadius: 4, border: "1px solid rgba(37,99,235,0.18)", overflow: "hidden" }}>
+                {["LONG","SHORT"].map(s => (
+                  <button key={s} onClick={() => setOrderForm(f => ({...f, side: s}))} style={{
+                    padding: "5px 12px", border: "none", fontFamily: FONTS.mono, fontSize: 10, cursor: "pointer",
+                    background: orderForm.side === s ? (s === "LONG" ? "rgba(0,217,138,0.15)" : "rgba(255,61,90,0.15)") : "rgba(15,30,70,0.8)",
+                    color: orderForm.side === s ? (s === "LONG" ? "#00D98A" : "#FF3D5A") : "rgba(199,210,254,0.4)",
+                    fontWeight: orderForm.side === s ? 700 : 400,
+                  }}>{s}</button>
+                ))}
+              </div>
+            </div>
+            {/* Size */}
+            <div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: "rgba(199,210,254,0.4)", marginBottom: 4, letterSpacing: "0.10em" }}>SIZE (USD)</div>
+              <input type="number" min="10" max="5000" value={orderForm.size_usd}
+                onChange={e => setOrderForm(f => ({...f, size_usd: e.target.value}))}
+                style={{ fontFamily: FONTS.mono, fontSize: 11, color: "#E8EAF0", background: "rgba(15,30,70,0.8)", border: "1px solid rgba(37,99,235,0.18)", borderRadius: 4, padding: "5px 8px", width: 80 }}
+              />
+            </div>
+            {/* SL/TP */}
+            <div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: "rgba(199,210,254,0.4)", marginBottom: 4, letterSpacing: "0.10em" }}>SL %</div>
+              <input type="number" min="0.5" max="30" step="0.5" value={orderForm.sl}
+                onChange={e => setOrderForm(f => ({...f, sl: e.target.value}))}
+                style={{ fontFamily: FONTS.mono, fontSize: 11, color: "#FF3D5A", background: "rgba(15,30,70,0.8)", border: "1px solid rgba(255,61,90,0.18)", borderRadius: 4, padding: "5px 8px", width: 60 }}
+              />
+            </div>
+            <div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: "rgba(199,210,254,0.4)", marginBottom: 4, letterSpacing: "0.10em" }}>TP %</div>
+              <input type="number" min="1" max="200" step="0.5" value={orderForm.tp}
+                onChange={e => setOrderForm(f => ({...f, tp: e.target.value}))}
+                style={{ fontFamily: FONTS.mono, fontSize: 11, color: "#00D98A", background: "rgba(15,30,70,0.8)", border: "1px solid rgba(0,217,138,0.18)", borderRadius: 4, padding: "5px 8px", width: 60 }}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={submitOrder}
+            disabled={submitting}
+            style={{
+              fontFamily: FONTS.mono, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+              color: "#E8EAF0", background: submitting ? "rgba(99,102,241,0.12)" : "rgba(99,102,241,0.18)",
+              border: "1px solid rgba(99,102,241,0.30)", borderRadius: 5, padding: "8px 20px",
+              cursor: submitting ? "not-allowed" : "pointer", marginBottom: 14, transition: "all 0.15s",
+            }}
+          >
+            {submitting ? "Submitting…" : `Submit ${orderForm.side} ${orderForm.symbol} $${orderForm.size_usd}`}
+          </button>
+
+          {/* Result */}
+          {lastResult && (
+            <div style={{
+              padding: "10px 14px", borderRadius: 6, marginBottom: 8,
+              background: lastResult.status === "filled" ? "rgba(0,217,138,0.06)" : "rgba(255,61,90,0.06)",
+              border: `1px solid ${lastResult.status === "filled" ? "rgba(0,217,138,0.15)" : "rgba(255,61,90,0.15)"}`,
+            }}>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: lastResult.status === "filled" ? "#00D98A" : "#FF3D5A", fontWeight: 700, marginBottom: 4 }}>
+                {lastResult.status === "filled" ? "✓ Filled" : `✗ ${lastResult.status === "rejected" ? "Rejected" : "Error"}`}
+              </div>
+              {lastResult.status === "filled" ? (
+                <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.6)", lineHeight: 1.6 }}>
+                  {lastResult.symbol} {lastResult.side} @ ${lastResult.fill_price?.toFixed(4)} · CIS {lastResult.cis_score} {lastResult.grade} · {lastResult.macro_regime}
+                  <br />SL ${lastResult.stop_loss?.toFixed(4)} · TP ${lastResult.take_profit?.toFixed(4)} · ID: {lastResult.order_id}
+                </div>
+              ) : (
+                <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(255,61,90,0.8)" }}>{lastResult.reason}</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Mine tab ── */}
+      {tab === "mine" && (
+        <div>
+          <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+            {[
+              ["grade_alpha","Grade Alpha"],
+              ["pillar_fitness","Pillar Fitness"],
+              ["signal_accuracy","Signal Accuracy"],
+              ["regime_performance","By Regime"],
+            ].map(([k,l]) => (
+              <button key={k} onClick={() => setMineType(k)} style={{
+                fontFamily: FONTS.mono, fontSize: 9, padding: "4px 10px", borderRadius: 4,
+                border: "1px solid rgba(37,99,235,0.14)",
+                background: mineType === k ? "rgba(245,158,11,0.12)" : "transparent",
+                color: mineType === k ? "#f59e0b" : "rgba(199,210,254,0.4)",
+                cursor: "pointer", fontWeight: mineType === k ? 700 : 400,
+              }}>{l}</button>
+            ))}
+          </div>
+
+          {!mineData && <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: "rgba(199,210,254,0.3)" }}>Mining…</div>}
+          {mineData?.message && (
+            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: "rgba(199,210,254,0.4)", padding: "10px 0" }}>
+              {mineData.message} — close some trades first to generate analysis data.
+            </div>
+          )}
+          {mineData && !mineData.message && (
+            <div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: "rgba(199,210,254,0.35)", marginBottom: 10, letterSpacing: "0.08em" }}>
+                {mineData.trade_count} trades · {mineData.hours}h window · {mineData.source}
+              </div>
+              {/* Grade Alpha */}
+              {mineData.by_grade && Object.entries(mineData.by_grade).map(([grade, stats]) => (
+                <div key={grade} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 5, padding: "6px 10px", borderRadius: 4, background: "rgba(15,30,70,0.5)" }}>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 11, fontWeight: 700, color: "#C7D2FE", minWidth: 28 }}>{grade}</span>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: stats.avg_return_pct >= 0 ? "#00D98A" : "#FF3D5A" }}>
+                    {stats.avg_return_pct >= 0 ? "+" : ""}{stats.avg_return_pct?.toFixed(2)}% avg
+                  </span>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.4)" }}>{stats.win_rate_pct}% win · {stats.trade_count} trades</span>
+                </div>
+              ))}
+              {/* Pillar Fitness */}
+              {mineData.pillar_correlations && Object.entries(mineData.pillar_correlations).map(([pillar, corr]) => (
+                <div key={pillar} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 5, padding: "6px 10px", borderRadius: 4, background: "rgba(15,30,70,0.5)" }}>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 10, fontWeight: 700, color: "#C7D2FE", minWidth: 24 }}>Pillar {pillar}</span>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: corr == null ? "rgba(199,210,254,0.3)" : corr > 0 ? "#00D98A" : "#FF3D5A" }}>
+                    {corr == null ? "< 5 trades" : `ρ = ${corr.toFixed(3)}`}
+                  </span>
+                  {corr != null && <div style={{ flex: 1, height: 3, background: "rgba(37,99,235,0.15)", borderRadius: 2 }}>
+                    <div style={{ height: "100%", width: `${Math.abs(corr)*100}%`, borderRadius: 2, background: corr > 0 ? "#00D98A" : "#FF3D5A", transition: "width 0.5s ease" }} />
+                  </div>}
+                </div>
+              ))}
+              {/* Regime Performance */}
+              {mineData.by_regime && Object.entries(mineData.by_regime).map(([regime, stats]) => (
+                <div key={regime} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 5, padding: "6px 10px", borderRadius: 4, background: "rgba(15,30,70,0.5)" }}>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: "#C7D2FE", minWidth: 90 }}>{regime}</span>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: stats.avg_return_pct >= 0 ? "#00D98A" : "#FF3D5A" }}>
+                    {stats.avg_return_pct >= 0 ? "+" : ""}{stats.avg_return_pct?.toFixed(2)}% avg
+                  </span>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.4)" }}>{stats.win_rate_pct}% win · {stats.trade_count}T</span>
+                </div>
+              ))}
+              {/* Signal Accuracy */}
+              {mineData.by_signal && Object.entries(mineData.by_signal).map(([sig, stats]) => (
+                <div key={sig} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 5, padding: "6px 10px", borderRadius: 4, background: "rgba(15,30,70,0.5)" }}>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: "#C7D2FE", minWidth: 110 }}>{sig}</span>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: stats.avg_return_pct >= 0 ? "#00D98A" : "#FF3D5A" }}>
+                    {stats.avg_return_pct >= 0 ? "+" : ""}{stats.avg_return_pct?.toFixed(2)}% avg
+                  </span>
+                  {stats.accuracy_pct != null && <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.4)" }}>{stats.accuracy_pct}% accurate · {stats.trade_count}T</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main Component ────────────────────────────────────────────────── */
 export default function QuantMonitor() {
   const [data, setData] = useState({ status: null, trades: null, backtest: null });
@@ -469,9 +807,12 @@ export default function QuantMonitor() {
           )}
         </div>
 
+        {/* Paper Trading Execution Loop */}
+        <PaperTrading />
+
         {/* Footer */}
         <div style={{ paddingTop: 16, borderTop: `1px solid rgba(37,99,235,0.06)`, color: T.t3, fontSize: 9, fontFamily: FONTS.mono, opacity: 0.4, letterSpacing: "0.08em" }}>
-          CometCloud Quant · Dry Run · Paper Trading · 10,000 USDT
+          CometCloud Quant · Freqtrade Dry Run + Paper Agent · 10,000 USDT
         </div>
       </div>
     </div>
