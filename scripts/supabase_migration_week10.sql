@@ -94,3 +94,27 @@ CREATE POLICY "webhook_subs_insert" ON webhook_subscriptions FOR INSERT WITH CHE
 CREATE POLICY "webhook_subs_select" ON webhook_subscriptions FOR SELECT USING (true);
 CREATE POLICY "webhook_subs_update" ON webhook_subscriptions FOR UPDATE USING (true);
 CREATE POLICY "webhook_subs_delete" ON webhook_subscriptions FOR DELETE USING (true);
+
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 4. RPC: Atomic webhook delivery counter
+-- Called by webhooks.py _sb_increment() — avoids SQL expression strings in PATCH
+-- which PostgREST cannot evaluate (would set INTEGER column to string literal).
+-- ═══════════════════════════════════════════════════════════════════
+CREATE OR REPLACE FUNCTION increment_webhook_delivery(
+    p_key_prefix TEXT,
+    p_url        TEXT,
+    p_success    BOOLEAN
+) RETURNS VOID AS $$
+BEGIN
+    IF p_success THEN
+        UPDATE webhook_subscriptions
+        SET fire_count = fire_count + 1
+        WHERE key_prefix = p_key_prefix AND url = p_url;
+    ELSE
+        UPDATE webhook_subscriptions
+        SET fail_count = fail_count + 1
+        WHERE key_prefix = p_key_prefix AND url = p_url;
+    END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
