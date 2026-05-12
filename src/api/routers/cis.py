@@ -1588,3 +1588,117 @@ async def cis_trend(symbol: str, days: int = 7):
 
     await store.redis_set_key(cache_key, result, ttl=300)
     return result
+
+
+# ── Grade Changes — polling endpoint for agents ───────────────────────────────
+
+_GRADE_RANK_STATIC = {"A+": 8, "A": 7, "B+": 6, "B": 5, "C+": 4, "C": 3, "D": 2, "F": 1}
+
+
+@router.get("/api/v1/cis/grade-changes")
+async def get_grade_changes(hours: int = 24):
+    """
+    Returns assets whose CIS grade changed in the last N hours.
+
+    Compares the two most recent Supabase score rows per asset.
+    Useful for agents polling grade transitions without implementing webhook endpoints.
+    Complements the push-based GRADE_UPGRADE/GRADE_DOWNGRADE webhook delivery.
+
+    Response fields:
+      upgrades   — assets that moved to a higher grade (e.g. B → B+), sorted by delta desc
+      downgrades — assets that moved to a lower grade  (e.g. B+ → B), sorted by delta asc
+      stable_count — assets with unchanged grades
+      total_changes — upgrades + downgrades count
+
+    Example: GET /api/v1/cis/grade-changes?hours=24
+             GET /api/v1/cis/grade-changes?hours=6
+    """
+    from datetime import timezone
+
+    cache_key = f"cis:grade_changes:{hours}"
+    cached = await store.redis_get_key(cache_key)
+    if cached:
+        return cached
+
+    # Get current universe symbols
+    universe = await redis_get()
+    if not universe:
+        try:
+            universe = await calculate_cis_universe()
+        except Exception:
+            universe = []
+
+    assets  = universe if isinstance(universe, list) else universe.get("assets", [])
+    symbols = [a.get("symbol") for a in assets if a.get("symbol")]
+
+    if not symbols:
+        return {"upgrades": [], "downgrades": [], "stable_count": 0, "checked": 0, "hours": hours, "total_changes": 0}
+
+    # Fetch last 2 scores per symbol (sufficient to detect one grade change)
+    recent = await store.supabase_get_recent_scores(symbols, n=2)
+
+    upgrades: list   = []
+    downgrades: list = []
+    stable   = 0
+    now      = datetime.utcnow().replace(tzinfo=timezone.utc)
+
+    for sym, rows in recent.items():
+        if len(rows) < 2:
+            stable += 1
+            continue
+
+        latest = rows[0]   # newest first
+        prev   = rows[1]
+
+        new_grade  = latest.get("grade", "")
+        prev_grade = prev.get("grade",  "")
+
+        if not new_grade or not prev_grade or new_grade == prev_grade:
+            stable += 1
+            continue
+
+        # Respect the hours window — skip if the latest score predates the window
+        try:
+            change_ts = datetime.fromisoformat(
+                latest.get("recorded_at", "").replace("Z", "+00:00")
+            )
+            if (now - change_ts).total_seconds() / 3600 > hours:
+                stable += 1
+                continue
+        except Exception:
+            pass  # include if timestamp parsing fails
+
+        new_rank  = _GRADE_RANK_STATIC.get(new_grade,  0)
+        prev_rank = _GRADE_RANK_STATIC.get(prev_grade, 0)
+        delta     = new_rank - prev_rank
+
+        entry = {
+            "symbol":     sym,
+            "from_grade": prev_grade,
+            "to_grade":   new_grade,
+            "delta":      delta,
+            "cis_score":  round(latest.get("score") or 0, 2),
+            "signal":     latest.get("signal", ""),
+            "changed_at": latest.get("recorded_at", ""),
+        }
+
+        if delta > 0:
+            upgrades.append(entry)
+        else:
+            downgrades.append(entry)
+
+    upgrades.sort(key=lambda x: -x["delta"])
+    downgrades.sort(key=lambda x: x["delta"])
+
+    result = {
+        "hours":         hours,
+        "upgrades":      upgrades,
+        "downgrades":    downgrades,
+        "stable_count":  stable,
+        "checked":       len(symbols),
+        "total_changes": len(upgrades) + len(downgrades),
+    }
+
+    # Cache 15 min — Mac Mini pushes every ~30 min so sub-minute freshness is unnecessary
+    await store.redis_set_key(cache_key, result, ttl=900)
+    return result

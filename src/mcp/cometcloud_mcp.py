@@ -2318,6 +2318,46 @@ async def cometcloud_regime_allocation() -> str:
         return _err(e)
 
 
+# ── Grade Changes — polling-friendly alternative to webhooks ──────────────────
+
+class GradeChangesInput(BaseModel):
+    hours: int = Field(24, ge=1, le=168, description="Look-back window in hours (1-168). Default 24.")
+
+
+@mcp.tool()
+async def cometcloud_get_grade_changes(params: GradeChangesInput) -> str:
+    """
+    Returns all CIS grade changes detected in the last N hours across the 84-asset investable universe.
+
+    WHEN TO CALL: Call this instead of polling cometcloud_get_cis_universe repeatedly.
+    Use it to detect momentum shifts, filter for upgrade/downgrade candidates, or trigger
+    research on specific assets. Complements the push-based webhook delivery for agents
+    that cannot host an HTTPS endpoint.
+
+    OUTPUT:
+    - upgrades:    assets that moved to a higher grade (e.g. C+ → B, B → B+). Sorted by |delta| desc.
+    - downgrades:  assets that moved to a lower grade.  Sorted by |delta| desc.
+    - stable_count: assets with no grade change in the window.
+    - total_changes: len(upgrades) + len(downgrades).
+
+    Each change entry:
+    { symbol, from_grade, to_grade, delta (integer, positive=upgrade), cis_score, signal, changed_at }
+
+    AGENT WORKFLOW EXAMPLE:
+    1. cometcloud_get_grade_changes(hours=24)          ← scan for movers
+    2. cometcloud_get_cis_asset(symbol="ETH")           ← deep-dive on upgrade
+    3. cometcloud_get_regime_context()                   ← regime-adjusted action
+    """
+    try:
+        data = await _get(
+            "/api/v1/cis/grade-changes",
+            params={"hours": params.hours},
+        )
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
