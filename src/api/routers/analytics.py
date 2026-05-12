@@ -116,24 +116,44 @@ async def analytics_summary(
     if not _SB_URL or not _SB_KEY:
         return {"error": "Supabase not configured"}
 
+    import asyncio
+
+    since = time.strftime('%Y-%m-%dT00:00:00Z', time.gmtime(time.time() - days * 86400))
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
+
     try:
         async with httpx.AsyncClient(timeout=8) as client:
-            r = await client.get(
-                f"{_SB_URL}/rest/v1/analytics_events",
-                params={
-                    "select":      "event,props,path,recorded_at",
-                    "recorded_at": f"gte.{time.strftime('%Y-%m-%dT00:00:00Z', time.gmtime(time.time() - days * 86400))}",
-                    "order":       "recorded_at.desc",
-                    "limit":       "2000",
-                },
-                headers={"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"},
+            events_r, keys_r = await asyncio.gather(
+                client.get(
+                    f"{_SB_URL}/rest/v1/analytics_events",
+                    params={
+                        "select":      "event,props,path,recorded_at",
+                        "recorded_at": f"gte.{since}",
+                        "order":       "recorded_at.desc",
+                        "limit":       "2000",
+                    },
+                    headers=headers,
+                ),
+                client.get(
+                    f"{_SB_URL}/rest/v1/api_keys",
+                    params={
+                        "select": "key_prefix,email,tier,name,intended_use,active,created_at,last_used_at,request_count",
+                        "order":  "created_at.desc",
+                        "limit":  "500",
+                    },
+                    headers=headers,
+                ),
+                return_exceptions=True,
             )
-            rows = r.json() if r.status_code == 200 else []
 
-        # Aggregate
+        rows = events_r.json() if not isinstance(events_r, Exception) and events_r.status_code == 200 else []
+        key_rows = keys_r.json() if not isinstance(keys_r, Exception) and keys_r.status_code == 200 else []
+
+        # ── Analytics events aggregate ────────────────────────────────────────
         event_counts: dict[str, int] = {}
         section_counts: dict[str, int] = {}
-        keys_created = 0
+        keys_created_events = 0
+        ip_set: set = set()
 
         for row in rows:
             ev = row.get("event", "")
@@ -142,14 +162,55 @@ async def analytics_summary(
                 section = (row.get("props") or {}).get("section", "unknown")
                 section_counts[section] = section_counts.get(section, 0) + 1
             if ev == "api_key_created":
-                keys_created += 1
+                keys_created_events += 1
+
+        # ── API key stats ─────────────────────────────────────────────────────
+        total_keys    = len(key_rows)
+        active_keys   = sum(1 for k in key_rows if k.get("active"))
+        pro_keys      = sum(1 for k in key_rows if k.get("tier") == "pro")
+        used_keys     = sum(1 for k in key_rows if k.get("request_count", 0) > 0)
+        total_requests = sum(k.get("request_count", 0) or 0 for k in key_rows)
+
+        # Unique email domains
+        domains: dict[str, int] = {}
+        for k in key_rows:
+            email = k.get("email", "")
+            if "@" in email:
+                domain = email.split("@")[-1].lower()
+                domains[domain] = domains.get(domain, 0) + 1
+
+        # Recent keys (last 5)
+        recent_keys = [
+            {
+                "key_prefix":    k.get("key_prefix", ""),
+                "email":         k.get("email", ""),
+                "name":          k.get("name", ""),
+                "intended_use":  k.get("intended_use", ""),
+                "tier":          k.get("tier", ""),
+                "request_count": k.get("request_count", 0),
+                "created_at":    k.get("created_at", ""),
+                "last_used_at":  k.get("last_used_at"),
+            }
+            for k in key_rows[:10]
+        ]
 
         return {
-            "days":           days,
-            "total_events":   len(rows),
-            "unique_events":  sorted(event_counts.items(), key=lambda x: -x[1]),
-            "section_views":  sorted(section_counts.items(), key=lambda x: -x[1]),
-            "keys_created":   keys_created,
+            "days":             days,
+            "since":            since,
+            "events": {
+                "total":        len(rows),
+                "by_type":      sorted(event_counts.items(), key=lambda x: -x[1]),
+                "section_views": sorted(section_counts.items(), key=lambda x: -x[1]),
+            },
+            "api_keys": {
+                "total":        total_keys,
+                "active":       active_keys,
+                "pro":          pro_keys,
+                "used":         used_keys,
+                "total_requests": total_requests,
+                "by_domain":    sorted(domains.items(), key=lambda x: -x[1])[:15],
+                "recent":       recent_keys,
+            },
         }
     except Exception as e:
         return {"error": str(e)}

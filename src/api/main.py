@@ -1,5 +1,5 @@
 """
-Looloomi AI — FastAPI Backend v0.4.4
+Looloomi AI — FastAPI Backend v0.5.0
 Modular router architecture. God-file main.py split complete.
 
 Routers:
@@ -50,7 +50,7 @@ from src.api.middleware.rate_limit import RateLimitMiddleware
 
 _ENV = os.environ.get("ENVIRONMENT", "production")
 
-app = FastAPI(title="Looloomi AI API", version="0.4.4")
+app = FastAPI(title="Looloomi AI API", version="0.5.0")
 
 app.add_middleware(GZipMiddleware, minimum_size=500)  # ~60% payload reduction for agents
 app.add_middleware(RateLimitMiddleware)               # sliding-window rate limiter (Upstash Redis)
@@ -134,7 +134,7 @@ async def agent_card():
 
 _health_payload = {
     "status":  "healthy",
-    "version": "0.4.4",
+    "version": "0.5.0",
     "environment": _ENV,
     "sources": ["binance", "defillama", "alternative.me", "moralis", "etherscan"],
 }

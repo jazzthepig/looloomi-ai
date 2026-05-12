@@ -99,7 +99,23 @@ CREATE POLICY "webhook_subs_delete" ON webhook_subscriptions FOR DELETE USING (t
 
 
 -- ═══════════════════════════════════════════════════════════════════
--- 4. RPC: Atomic webhook delivery counter
+-- 4. RPC: Atomic API key usage counter
+-- PostgREST PATCH cannot evaluate SQL expressions; "request_count + 1"
+-- as a JSON string literal causes a type error on INTEGER columns.
+-- ═══════════════════════════════════════════════════════════════════
+CREATE OR REPLACE FUNCTION increment_api_key_usage(
+    p_key_id BIGINT
+) RETURNS VOID AS $$
+BEGIN
+    UPDATE api_keys
+    SET request_count = request_count + 1
+    WHERE id = p_key_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- ═══════════════════════════════════════════════════════════════════
+-- 5. RPC: Atomic webhook delivery counter
 -- PostgREST PATCH cannot evaluate SQL expressions ("fire_count + 1"
 -- would be treated as a string literal, causing a type error).
 -- This function handles atomic increments cleanly.
