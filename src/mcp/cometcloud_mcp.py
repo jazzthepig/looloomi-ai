@@ -2635,6 +2635,76 @@ async def cometcloud_get_funding_rates() -> str:
         return _err(e)
 
 
+# ── Factor Registry Tools (#33-34) ────────────────────────────────────────────
+
+class FactorQueryInput(BaseModel):
+    pillar:      str = Field("", description="Filter by pillar: F, M, O, S, A (blank = all)")
+    asset_class: str = Field("", description="Filter by asset class (blank = all)")
+
+@mcp.tool()
+async def cometcloud_get_factor_registry(params: FactorQueryInput) -> str:
+    """
+    CIS factor registry: the complete database of all 30 factors used in CIS scoring.
+
+    WHEN TO CALL: Understanding WHY an asset scored high/low on a specific pillar,
+    researching which data sources feed each pillar, evaluating model transparency for
+    institutional due diligence, or identifying which factors penalise an asset in the
+    current macro regime.
+
+    Each factor includes:
+    - id, pillar, name, description
+    - data source (coingecko | coingecko_pro | defillama | yfinance | eodhd | github | computed)
+    - normalization method and score contribution range
+    - asset classes it applies to
+    - regime_weight (how much it matters in each of 7 macro regimes)
+    - inclusion_criteria (§F-SEL justification for why this factor is in the model)
+    - known_issues (documented data quality or methodology gaps)
+
+    AGENT WORKFLOW: Call cometcloud_get_cis_asset first to see which pillars are low.
+    Then call this tool filtered by that pillar to understand which specific factors
+    are dragging the score and whether they reflect real risk or data limitations.
+
+    pillar="" returns all 30 factors. pillar="O" returns only On-chain/Risk-Adjusted factors.
+    """
+    params_dict: dict = {}
+    if params.pillar:
+        params_dict["pillar"] = params.pillar
+    if params.asset_class:
+        params_dict["asset_class"] = params.asset_class
+    try:
+        data = await _get("/api/v1/factors", params=params_dict)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool()
+async def cometcloud_get_factor_selection_standard() -> str:
+    """
+    §F-SEL — the 7-criteria standard used to select factors into the CIS model.
+
+    WHEN TO CALL: Institutional due diligence on model methodology, understanding
+    why certain factors were included/excluded, evaluating model independence from
+    data provider risk, or preparing investor documentation about scoring methodology.
+
+    Returns all 7 selection criteria:
+    1. Measurability (systematic data source, no manual input)
+    2. Predictability (|Pearson r| > 0.10 vs 30d forward return, OR risk flag)
+    3. Orthogonality (pairwise r < 0.70 within same pillar)
+    4. Timeliness (data available within 24h T2 / 4h T1)
+    5. Universe Breadth (applicable to ≥ 60% of assets or class-restricted)
+    6. Stability (monotonic scoring, no cliff edges)
+    7. Compliance (positioning language only, no investment recommendation)
+
+    Also returns review cadence and governance structure (Jazz + Seth).
+    """
+    try:
+        data = await _get("/api/v1/factors/selection-standard")
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

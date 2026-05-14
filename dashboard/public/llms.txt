@@ -29,7 +29,7 @@ claude mcp add --transport sse cometcloud https://looloomi.ai/mcp/sse
 
 Agent discovery card: https://looloomi.ai/.well-known/agent.json
 
-## MCP Tools (32 available)
+## MCP Tools (34 available)
 
 ### Intelligence
 - `cometcloud_get_cis_universe` — Full 84-asset investable universe with 5-pillar CIS scores (F/M/O/S/A), grades (A+ to F), LAS, confidence, and compliance-safe positioning signals. Use first for any portfolio or screening task.
@@ -76,6 +76,10 @@ Agent discovery card: https://looloomi.ai/.well-known/agent.json
 - `cometcloud_get_asset_clusters` — K-means++ clustering of all 84 assets by 18-dim embedding. Returns 6 natural groupings with quality, dominant class, and member list. Cluster 0 = highest quality centroid.
 - `cometcloud_get_funding_rates` — CoinGecko Pro derivatives: real-time funding rates + OI for 35+ perpetual assets (OI-weighted across all exchanges). Signals: overleveraged_long | bullish_basis | neutral | bearish_basis | extreme_short.
 
+### Factor Registry & Model Transparency
+- `cometcloud_get_factor_registry` — Full database of all 30 CIS scoring factors. Each entry includes: data source, normalization, score range, asset class applicability, regime weights, inclusion rationale (§F-SEL), and known data quality issues. Filter by pillar or asset class.
+- `cometcloud_get_factor_selection_standard` — §F-SEL: the 7 criteria a factor must satisfy for CIS inclusion (measurability, predictability |r|>0.10, orthogonality, timeliness, breadth, stability, compliance). Institutional due diligence document.
+
 ## REST API
 
 Base URL: https://looloomi.ai
@@ -97,6 +101,11 @@ Key endpoints (no auth required for free tier):
 - POST /api/v1/trading/order — Submit paper trade (CIS-gated)
 - GET /api/v1/trading/positions — Open positions with live P&L
 - GET /api/v1/trading/mine?type=grade_alpha — Alpha mining: pillar fitness, signal accuracy
+- GET /api/v1/factors — Full factor registry (30 factors, all pillars)
+- GET /api/v1/factors/{factor_id} — Single factor detail with live performance
+- GET /api/v1/factors/pillar/{pillar} — Factors for F|M|O|S|A with Pearson r
+- GET /api/v1/factors/performance — Factor health report (active/probationary/candidate_removal)
+- GET /api/v1/factors/selection-standard — §F-SEL: 7-criteria factor inclusion standard
 - POST /api/v1/keys/create — Self-serve free API key (60 rpm / 1,000 rpd)
 - GET /api/v1/webhooks/events — Supported webhook event types
 
