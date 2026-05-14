@@ -691,6 +691,16 @@ async def mine_alpha(
         result = _mine_grade_alpha(closed)
     elif type == "pillar_fitness":
         result = _mine_pillar_fitness(closed)
+        # v4.3: Persist pillar fitness to factor performance DB
+        try:
+            from src.data.factors.performance import update_from_pillar_fitness
+            pillar_corrs = result.get("pillar_correlations", {})
+            # Convert {"F": 0.23, ...} → {"F": {"correlation": 0.23, "sample_size": len(closed)}}
+            enriched = {k: {"correlation": v, "sample_size": len(closed)}
+                        for k, v in pillar_corrs.items() if v is not None}
+            update_from_pillar_fitness(enriched, len(closed))
+        except Exception as _pf_err:
+            _logger.debug(f"[trading] factor perf update skipped: {_pf_err}")
     elif type == "signal_accuracy":
         result = _mine_signal_accuracy(closed)
     elif type == "regime_performance":

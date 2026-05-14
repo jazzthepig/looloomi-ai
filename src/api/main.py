@@ -21,6 +21,7 @@ Routers:
   src/api/routers/trading.py      — /api/v1/trading/* (paper trading + signal queue + data mining)
   src/api/routers/vector.py       — /api/v1/cis/similar, /api/v1/cis/cluster, /api/v1/cis/embeddings,
                                      /api/v1/market/funding-rates, /api/v1/market/trending-overlay
+  src/api/routers/factors.py      — /api/v1/factors/*, factor registry + §F-SEL + performance tracking
 """
 import os, sys, json
 
@@ -51,11 +52,12 @@ from src.api.routers.webhooks  import router as webhooks_router
 from src.api.routers.analytics import router as analytics_router
 from src.api.routers.trading import router as trading_router
 from src.api.routers.vector import router as vector_router
+from src.api.routers.factors import router as factors_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
 
 _ENV = os.environ.get("ENVIRONMENT", "production")
 
-app = FastAPI(title="Looloomi AI API", version="0.6.1")
+app = FastAPI(title="Looloomi AI API", version="0.6.2")
 
 app.add_middleware(GZipMiddleware, minimum_size=500)  # ~60% payload reduction for agents
 app.add_middleware(RateLimitMiddleware)               # sliding-window rate limiter (Upstash Redis)
@@ -101,6 +103,7 @@ app.include_router(webhooks_router)
 app.include_router(analytics_router)
 app.include_router(trading_router)
 app.include_router(vector_router)
+app.include_router(factors_router)
 
 
 # ── MCP Server (ROADMAP_A2A Phase 2.2) ───────────────────────────────────────
@@ -141,7 +144,7 @@ async def agent_card():
 
 _health_payload = {
     "status":  "healthy",
-    "version": "0.6.1",
+    "version": "0.6.2",
     "environment": _ENV,
     "sources": ["binance", "defillama", "alternative.me", "moralis", "etherscan"],
 }
