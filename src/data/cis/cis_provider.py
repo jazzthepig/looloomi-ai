@@ -1873,8 +1873,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     except ImportError:
         from data.market.data_layer import get_derivatives_map, get_trending_map
 
-    (binance_prices, cg_markets, llama_tvl, fng, github_activity,
-     cg_dev_data, eodhd_data, _deriv_map, _trend_map) = await asyncio.gather(
+    _raw = await asyncio.gather(
         fetch_binance_prices(),
         fetch_cg_markets(),
         fetch_defillama_tvl(),
@@ -1884,7 +1883,26 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         _fetch_eodhd_bulk(),       # v4.2: EODHD fundamentals for US Equity
         get_derivatives_map(),     # v4.3: funding rates + OI → O-pillar adjustment
         get_trending_map(),        # v4.3: trending rank → S-pillar boost
+        return_exceptions=True,
     )
+    # Safe unpack — any failed coroutine returns its exception, not a crash
+    def _safe(val, default):
+        return default if isinstance(val, Exception) else val
+
+    binance_prices = _safe(_raw[0], {})
+    cg_markets     = _safe(_raw[1], [])
+    llama_tvl      = _safe(_raw[2], {})
+    fng            = _safe(_raw[3], {})
+    github_activity= _safe(_raw[4], {})
+    cg_dev_data    = _safe(_raw[5], {})
+    eodhd_data     = _safe(_raw[6], {})
+    _deriv_map     = _safe(_raw[7], {})
+    _trend_map     = _safe(_raw[8], {})
+
+    for i, name in enumerate(["binance","cg_markets","defillama","fng","github",
+                               "cg_dev","eodhd","derivatives","trending"]):
+        if isinstance(_raw[i], Exception):
+            _logger.warning(f"[CIS] data source '{name}' failed: {_raw[i]}")
 
     # Merge: Binance as primary (speed), CoinGecko enriches missing fields
     # Binance has: price, change_24h, volume, high/low
