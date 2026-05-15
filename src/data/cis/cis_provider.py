@@ -732,8 +732,12 @@ async def get_yfinance_data(symbol: str) -> Optional[dict]:
             if len(hist) > 30:
                 price_30d_ago = float(hist['Close'].iloc[-31] if len(hist) > 31 else hist['Close'].iloc[0])
                 change_30d = ((price_now - price_30d_ago) / price_30d_ago) * 100 if price_30d_ago else 0
+                # Daily return std dev over available history (used for vol-adjusted SL/TP)
+                daily_rets = hist['Close'].pct_change().dropna()
+                volatility_30d = float(daily_rets.std()) if len(daily_rets) >= 5 else 0.0
             else:
                 change_30d = 0
+                volatility_30d = 0.0
             return {
                 "symbol": symbol,
                 "price": info.get("currentPrice", info.get("regularMarketPrice", 0)),
@@ -742,6 +746,7 @@ async def get_yfinance_data(symbol: str) -> Optional[dict]:
                 "change_24h": info.get("regularMarketChange", 0),
                 "change_7d": change_7d,
                 "change_30d": change_30d,
+                "volatility_30d": round(volatility_30d, 5),
                 "circulating_supply": info.get("sharesOutstanding", 0),
                 "total_supply": info.get("sharesOutstanding", 0),
                 "ath_change_percentage": 0,  # yfinance doesn't provide this directly
