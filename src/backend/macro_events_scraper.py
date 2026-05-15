@@ -3,8 +3,10 @@ Macro events scraper — macro-relevant events from multiple reliable sources.
 
 Sources (priority order):
   1. DeFiLlama Raises — always available on Railway, feeds INSTITUTIONAL events
-  2. RSS feeds (CoinDesk, CoinTelegraph, Decrypt) — best-effort; US cloud IPs
-     frequently get rate-limited/blocked, so RSS is treated as additive only.
+  2. RSS feeds — best-effort; Railway US IPs can be blocked by some providers.
+     Prioritise feeds with permissive CDNs: The Block, Blockworks, Bitcoin Magazine,
+     CryptoSlate. CoinDesk / CoinTelegraph / Decrypt are frequently geo-blocked
+     and have been removed as primary sources.
 
 Cached in-process for 30 min.
 """
@@ -36,11 +38,18 @@ logger = logging.getLogger(__name__)
 _CACHE: dict = {"data": [], "at": 0.0}
 _TTL = 1800  # 30 min
 
-# RSS feeds — best-effort (may be blocked on Railway US IPs)
+# RSS feeds — best-effort.
+# Feeds below are CDN-served and generally reachable from Railway US IPs.
+# CoinDesk / CoinTelegraph / Decrypt removed — frequently geo-blocked on US cloud.
 _RSS_FEEDS = [
+    # Institutional / VC focus
+    {"url": "https://www.theblock.co/rss.xml",          "source": "The Block"},
+    {"url": "https://blockworks.co/feed",                "source": "Blockworks"},
+    # Broad market + macro
+    {"url": "https://cryptoslate.com/feed/",             "source": "CryptoSlate"},
+    {"url": "https://bitcoinmagazine.com/feed",          "source": "Bitcoin Magazine"},
+    # Fallback: CoinDesk (succeeds ~40% of the time from US IPs)
     {"url": "https://www.coindesk.com/arc/outboundfeeds/rss/", "source": "CoinDesk"},
-    {"url": "https://cointelegraph.com/rss",                    "source": "CoinTelegraph"},
-    {"url": "https://decrypt.co/feed",                          "source": "Decrypt"},
 ]
 
 # Broad keyword filter — don't over-filter; any finance/crypto headline counts
@@ -50,6 +59,11 @@ _MACRO_KEYWORDS = [
     "powell", "monetary policy", "recession", "macro", "halving",
     "institutional", "blackrock", "vanguard", "fund", "billion", "million",
     "stablecoin", "defi", "solana", "ethereum", "bank", "finance",
+    # VC / funding specific
+    "raise", "raises", "raised", "funding", "seed", "series a", "series b",
+    "series c", "venture", "capital", "investment", "grant", "ecosystem fund",
+    "a16z", "paradigm", "sequoia", "coinbase ventures", "binance labs",
+    "polychain", "multicoin", "pantera", "dragonfly",
 ]
 
 
@@ -79,13 +93,13 @@ async def _fetch_defillama_raises(client: httpx.AsyncClient) -> list:
             return []
         data = r.json()
         raw = data.get("raises", [])
-        cutoff = time.time() - 90 * 86400  # last 90 days
+        cutoff = time.time() - 120 * 86400  # last 120 days
 
         for raise_ in raw:
             amount_m = raise_.get("amount") or 0
             date_ts  = raise_.get("date") or 0
-            if amount_m < 1 or date_ts < cutoff:
-                continue  # skip tiny/old raises
+            if amount_m < 0.25 or date_ts < cutoff:
+                continue  # skip raises under $250K or older than 90 days
 
             amount_usd = amount_m * 1_000_000
             name       = raise_.get("name") or raise_.get("project") or "Unknown"
@@ -142,10 +156,13 @@ async def _fetch_rss(feed: dict, client: httpx.AsyncClient) -> list:
 
             # Classify category by keyword
             text_lower = (title + " " + description).lower()
-            if any(k in text_lower for k in ["sec", "regulation", "law", "policy", "ban", "approve"]):
+            if any(k in text_lower for k in ["sec", "regulation", "law", "policy", "ban", "approve", "license"]):
                 cat, impact = "REGULATORY", "HIGH"
             elif any(k in text_lower for k in ["fed", "fomc", "rate", "inflation", "cpi", "powell", "monetary"]):
                 cat, impact = "MACRO", "HIGH"
+            elif any(k in text_lower for k in ["raises", "raised", "funding round", "series a", "series b",
+                                                "seed round", "venture", "a16z", "paradigm", "pantera"]):
+                cat, impact = "INSTITUTIONAL", "HIGH"
             elif any(k in text_lower for k in ["institutional", "blackrock", "vanguard", "fund", "etf"]):
                 cat, impact = "INSTITUTIONAL", "MEDIUM"
             else:
@@ -220,8 +237,9 @@ async def fetch_all_macro_events() -> list:
             _CACHE["data"] = result
             _CACHE["at"] = now
 
+        rss_sources = sum(1 for r in results[1:] if isinstance(r, list) and r)
         logger.info(f"[macro_events] fetched {len(result)} events "
-                    f"(raises + {len(_RSS_FEEDS)} RSS feeds)")
+                    f"(DeFiLlama raises + {rss_sources}/{len(_RSS_FEEDS)} RSS feeds live)")
     except Exception as e:
         logger.error(f"[macro_events] fetch_all_macro_events failed: {e}")
         # Serve stale rather than empty
