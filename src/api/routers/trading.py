@@ -193,22 +193,25 @@ async def _save_signal_queue(queue: list):
 
 # ── CIS gate check ─────────────────────────────────────────────────────────────
 
-async def _get_cis_for_symbol(symbol: str) -> tuple[float, str, str]:
-    """Returns (cis_score, grade, macro_regime) for a symbol."""
+async def _get_cis_for_symbol(symbol: str) -> tuple[float, str, str, dict]:
+    """Returns (cis_score, grade, macro_regime, full_asset_dict) for a symbol.
+
+    Returns the full asset dict so callers can snapshot pillar scores at entry
+    for alpha mining (pillar_fitness Pearson correlation via /api/v1/trading/mine).
+    """
     try:
         from src.data.cis.cis_provider import calculate_cis_universe
         from src.api.store import redis_get_key as _rg
-        # Try Redis cache first
+        # Try Redis cache first (Mac Mini T1 push, 2h TTL)
         cached = await _rg("cis:local_scores")
-        universe = None
         if cached and isinstance(cached, dict):
             assets = cached.get("assets") or cached.get("universe", [])
             for a in assets:
                 sym = (a.get("symbol") or a.get("asset_id") or "").upper()
                 if sym == symbol.upper():
                     score = a.get("cis_score") or a.get("total_score") or a.get("score", 0) or 0
-                    return float(score), a.get("grade", "?"), cached.get("macro_regime", "Unknown")
-        # Fallback: compute
+                    return float(score), a.get("grade", "?"), cached.get("macro_regime", "Unknown"), a
+        # Fallback: compute via Railway CIS engine
         universe_data = await calculate_cis_universe()
         assets = universe_data.get("assets") or universe_data.get("universe", [])
         regime = universe_data.get("macro_regime", "Unknown")
@@ -216,10 +219,10 @@ async def _get_cis_for_symbol(symbol: str) -> tuple[float, str, str]:
             sym = (a.get("symbol") or a.get("asset_id") or "").upper()
             if sym == symbol.upper():
                 score = a.get("cis_score") or a.get("total_score") or a.get("score", 0) or 0
-                return float(score), a.get("grade", "?"), regime
+                return float(score), a.get("grade", "?"), regime, a
     except Exception as e:
         _logger.warning(f"[TRADING] CIS lookup failed for {symbol}: {e}")
-    return 0.0, "?", "Unknown"
+    return 0.0, "?", "Unknown", {}
 
 
 # ── Risk validation ────────────────────────────────────────────────────────────
@@ -301,7 +304,10 @@ async def submit_order(req: OrderRequest):
         _get_cis_for_symbol(symbol),
         _fetch_price(symbol),
     )
-    cis_score, grade, regime = cis_result if isinstance(cis_result, tuple) else (0.0, "?", "Unknown")
+    if isinstance(cis_result, tuple) and len(cis_result) == 4:
+        cis_score, grade, regime, _asset = cis_result
+    else:
+        cis_score, grade, regime, _asset = 0.0, "?", "Unknown", {}
 
     if not price:
         raise HTTPException(status_code=422, detail=f"Cannot fetch live price for {symbol}. Check symbol or CoinGecko ID mapping.")
@@ -325,11 +331,33 @@ async def submit_order(req: OrderRequest):
         }
 
     # Paper fill
-    order_id    = uuid.uuid4().hex[:12]
-    qty         = req.size_usd / price
-    filled_at   = price
-    sl_price    = filled_at * (1 - req.stop_loss_pct)   if req.side == "LONG" else filled_at * (1 + req.stop_loss_pct)
-    tp_price    = filled_at * (1 + req.take_profit_pct) if req.side == "LONG" else filled_at * (1 - req.take_profit_pct)
+    order_id  = uuid.uuid4().hex[:12]
+    qty       = req.size_usd / price
+    filled_at = price
+
+    # ── Volatility-adjusted SL/TP ─────────────────────────────────────────────
+    # Use asset's realized 30d volatility if available, otherwise fall back to
+    # caller-supplied pct (default 4% SL / 10% TP from the request schema).
+    # Normalize units: crypto vol = % (e.g. 3.5), TradFi = decimal (e.g. 0.03).
+    vol_raw = float(_asset.get("volatility_30d") or 0)
+    vol_30d = vol_raw / 100 if vol_raw > 0.5 else vol_raw   # % → decimal if >0.5
+    if vol_30d > 0.005:
+        # Risk 1.5× daily vol for SL, target 2.5× for TP (reward:risk ≈ 1.67)
+        sl_pct_auto = round(max(0.02, min(0.15, 1.5 * vol_30d)), 4)
+        tp_pct_auto = round(max(0.05, min(0.50, 2.5 * vol_30d)), 4)
+        # Only override if caller left defaults unchanged (avoid overriding intentional sizing)
+        final_sl = sl_pct_auto if req.stop_loss_pct == 0.04 else req.stop_loss_pct
+        final_tp = tp_pct_auto if req.take_profit_pct == 0.10 else req.take_profit_pct
+    else:
+        final_sl = req.stop_loss_pct
+        final_tp = req.take_profit_pct
+
+    sl_price = filled_at * (1 - final_sl) if req.side == "LONG" else filled_at * (1 + final_sl)
+    tp_price = filled_at * (1 + final_tp) if req.side == "LONG" else filled_at * (1 - final_tp)
+
+    # ── Snapshot pillar scores at entry (required for mine_alpha pillar_fitness) ──
+    _pillars = _asset.get("pillars") or {}
+    _p = lambda k: round(float(_pillars.get(k) or 0), 1)
 
     position = {
         "order_id":         order_id,
@@ -340,12 +368,22 @@ async def submit_order(req: OrderRequest):
         "entry_price":      filled_at,
         "stop_loss":        round(sl_price, 6),
         "take_profit":      round(tp_price, 6),
+        "stop_loss_pct":    final_sl,
+        "take_profit_pct":  final_tp,
         "current_price":    filled_at,
         "current_value_usd":req.size_usd,
         "unrealized_pnl":   0.0,
         "unrealized_pct":   0.0,
         "cis_score":        round(cis_score, 1),
         "cis_grade":        grade,
+        "cis_signal":       _asset.get("signal", "NEUTRAL"),  # for _mine_signal_accuracy
+        "pillar_f_at_entry": _p("F"),
+        "pillar_m_at_entry": _p("M"),
+        "pillar_o_at_entry": _p("O") or _p("R"),  # O (risk-adjusted) may be keyed "R" in T2
+        "pillar_s_at_entry": _p("S"),
+        "pillar_a_at_entry": _p("A"),
+        "las_at_entry":     round(float(_asset.get("las") or 0), 1),
+        "confidence_at_entry": round(float(_asset.get("confidence") or 0), 3),
         "macro_regime":     regime,
         "mode":             req.mode,
         "note":             req.note,
