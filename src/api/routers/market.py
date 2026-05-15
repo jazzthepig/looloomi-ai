@@ -2,18 +2,7 @@
 Market router — prices, DeFi, MMI, signals
 Endpoints: /api/v1/market/*, /api/v1/defi/*, /api/v1/mmi/*, /api/v1/signals
 """
-import re
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Response
-from datetime import datetime
-import asyncio
-
-# Symbol validation: alphanumeric, 2-12 chars, comma-separated
-_SYMBOL_RE = re.compile(r"^[A-Z0-9]{2,12}(,[A-Z0-9]{2,12})*$")
-
-def _validate_symbols(symbols: str) -> list[str]:
-    if not _SYMBOL_RE.match(symbols.upper()):
-        raise HTTPException(status_code=400, detail="Invalid symbol format")
-    return [s.strip().upper() for s in symbols.split(",")]
+from src.api.utils import validate_symbols as _validate_symbols
 
 from data.market.data_layer import (
     get_prices_multi, get_ohlcv, get_top_gainers_losers,

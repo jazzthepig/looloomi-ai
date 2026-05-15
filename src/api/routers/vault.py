@@ -2,25 +2,15 @@
 Vault router — GP funds, portfolio optimization
 Endpoints: /api/v1/vault/*, /api/v1/portfolio/*
 """
-import asyncio
+import asyncio, json
 import numpy as np
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 import logging
-import re
-import os
-
-_logger = logging.getLogger(__name__)
-
-# Asset validation: alphanumeric, 2-12 chars, comma-separated
-_ASSET_RE = re.compile(r"^[A-Z0-9]{2,12}(,[A-Z0-9]{2,12})*$")
-
-def _validate_assets(assets: str) -> list[str]:
-    if not _ASSET_RE.match(assets.upper()):
-        raise HTTPException(status_code=400, detail="Invalid asset format")
-    return [s.strip().upper() for s in assets.split(",")]
+from src.api.utils import validate_symbols as _validate_assets
+from src.api.store import redis_set_key as _redis_set, redis_get_key as _redis_get
 
 router = APIRouter()
 
@@ -203,14 +193,11 @@ async def record_deposit_intent(req: DepositIntentRequest):
     # Fallback: Redis list (last 500 intents)
     if not stored:
         try:
-            try:
-                from src.data.market.data_layer import _redis_set, _redis_get
-            except ImportError:
-                from data.market.data_layer import _redis_set, _redis_get
-            existing_raw = await _redis_get("vault:deposit_intents")
-            existing = json.loads(existing_raw) if existing_raw else []
+            existing = await _redis_get("vault:deposit_intents") or []
+            if not isinstance(existing, list):
+                existing = []
             existing.append(record)
-            await _redis_set("vault:deposit_intents", json.dumps(existing[-500:]), ttl=86400 * 30)
+            await _redis_set("vault:deposit_intents", existing[-500:], ttl=86400 * 30)
             stored = True
         except Exception as e:
             _logger.warning(f"Redis deposit intent write failed: {e}")

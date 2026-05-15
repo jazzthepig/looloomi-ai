@@ -129,14 +129,19 @@ _AGENT_CARD_PATH = os.path.join(
     ".well-known", "agent.json"
 )
 
+# Load once at startup — static file, never changes at runtime
+try:
+    with open(_AGENT_CARD_PATH) as f:
+        _AGENT_CARD: dict | None = json.load(f)
+except Exception:
+    _AGENT_CARD = None
+
 @app.get("/.well-known/agent.json", include_in_schema=False)
 async def agent_card():
     """A2A Agent Card — standard discovery document for agent-to-agent protocols."""
-    try:
-        with open(_AGENT_CARD_PATH) as f:
-            return JSONResponse(content=json.load(f))
-    except Exception:
+    if _AGENT_CARD is None:
         return JSONResponse(status_code=404, content={"error": "agent card not found"})
+    return JSONResponse(content=_AGENT_CARD)
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
@@ -179,8 +184,10 @@ if os.path.exists(dashboard_path):
         if any(full_path.startswith(p) for p in _api_prefixes):
             return JSONResponse(status_code=404, content={"detail": "Not found"})
         file_path = os.path.join(dashboard_path, full_path)
-        if os.path.exists(file_path) and os.path.isfile(file_path):
+        try:
             return FileResponse(file_path)
+        except FileNotFoundError:
+            pass
         return FileResponse(os.path.join(dashboard_path, "index.html"))
 
 
