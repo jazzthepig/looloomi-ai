@@ -2,6 +2,11 @@
 Market router — prices, DeFi, MMI, signals
 Endpoints: /api/v1/market/*, /api/v1/defi/*, /api/v1/mmi/*, /api/v1/signals
 """
+import re
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Response
+from datetime import datetime
+import asyncio
+
 from src.api.utils import validate_symbols as _validate_symbols
 
 from data.market.data_layer import (
