@@ -31,6 +31,10 @@ CG_API_KEY = os.getenv("COINGECKO_API_KEY", "")
 _UPSTASH_URL   = os.getenv("UPSTASH_REDIS_REST_URL", "").rstrip("/")
 _UPSTASH_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
 
+# Simons feedback loop — IC-based pillar weight multiplier cache
+# Populated once per scoring run from cis:factor_performance (30min TTL).
+_ic_mult_cache: dict = {"data": None, "expires": 0.0}
+
 import json as _json
 
 async def _upstash_get(key: str):
@@ -68,6 +72,100 @@ async def _upstash_set(key: str, val, ttl: int) -> bool:
             return r.status_code == 200
     except Exception:
         return False
+
+
+async def _refresh_ic_multipliers() -> dict:
+    """
+    Simons feedback loop — reads cis:factor_performance from Redis and computes
+    per-pillar IC strength multipliers for the current scoring run.
+
+    Returns {"F": float, "M": float, "O": float, "S": float, "A": float}.
+    Multiplier formula: 1.0 + clamp(mean_active_IC × 2.5, -0.30, +0.30)
+      • IC = 0.10 (minimum active)  →  1.25x weight boost
+      • IC = 0.20                   →  1.50x weight boost
+      • IC = -0.10                  →  0.75x dampen
+    Only "active" factors (|r| > 0.10, sample ≥ 10) contribute.
+    Neutral {k: 1.0} returned on any error — scoring unaffected until data exists.
+    Cache TTL: 1800s (matches Mac Mini scheduler frequency).
+    """
+    import time as _time
+    now = _time.time()
+
+    # Serve from cache if still valid
+    if _ic_mult_cache["data"] is not None and now < _ic_mult_cache["expires"]:
+        return _ic_mult_cache["data"]
+
+    neutral = {"F": 1.0, "M": 1.0, "O": 1.0, "S": 1.0, "A": 1.0}
+
+    try:
+        fp = await _upstash_get("cis:factor_performance")
+        if not fp or not isinstance(fp, dict):
+            _ic_mult_cache.update({"data": neutral, "expires": now + 1800})
+            return neutral
+
+        # Factor ID → pillar mapping — MUST match _PILLAR_COMPONENT_MAP in performance.py exactly
+        _factor_to_pillar: dict[str, str] = {
+            # F pillar
+            "market_cap": "F", "tvl": "F", "volume_24h": "F",
+            "supply_inflation": "F", "fdv_ratio": "F", "dev_activity": "F",
+            "eodhd_pe": "F", "eodhd_revenue_growth": "F",
+            # M pillar
+            "momentum_30d": "M", "momentum_7d_sparkline": "M", "ath_distance": "M",
+            # O pillar
+            "volatility_annualised": "O", "ath_drawdown": "O", "tvl_risk_score": "O",
+            "exchange_hhi": "O", "funding_rate": "O", "oi_mcap_ratio": "O",
+            # S pillar
+            "fear_greed_index": "S", "vix_inverse": "S", "category_divergence": "S",
+            "vol_regime": "S", "momentum_structure": "S", "beta_dxy_vix": "S",
+            "trending_rank": "S", "recovery_bonus": "S",
+            # A pillar
+            "btc_divergence": "A", "spy_divergence": "A",
+            "class_independence": "A", "size_efficiency": "A", "correlation_discount": "A",
+        }
+
+        pillar_ics: dict[str, list[float]] = {"F": [], "M": [], "O": [], "S": [], "A": []}
+        for factor_id, data in fp.items():
+            if factor_id.startswith("_"):
+                continue  # skip _meta entry
+            if not isinstance(data, dict):
+                continue
+            pillar = _factor_to_pillar.get(factor_id)
+            if not pillar:
+                continue
+            r = data.get("pearson_r")
+            status = data.get("status", "probationary")
+            sample = data.get("sample_size", 0) or 0
+            # Only trust active factors with meaningful sample size
+            if status == "active" and isinstance(r, (int, float)) and sample >= 10:
+                pillar_ics[pillar].append(float(r))
+
+        result: dict[str, float] = {}
+        active_count = 0
+        for pillar, ics in pillar_ics.items():
+            if ics:
+                mean_r = sum(ics) / len(ics)
+                # ±30% max weight shift per pillar
+                mult = 1.0 + max(-0.30, min(0.30, mean_r * 2.5))
+                active_count += len(ics)
+            else:
+                mult = 1.0
+            result[pillar] = round(mult, 4)
+
+        if active_count > 0:
+            _logger.info(
+                f"[CIS·Simons] IC multipliers applied — {active_count} active factors: "
+                + " ".join(f"{k}={v:.3f}" for k, v in result.items())
+            )
+        else:
+            _logger.debug("[CIS·Simons] No active IC factors yet — neutral weights used")
+
+        _ic_mult_cache.update({"data": result, "expires": now + 1800})
+        return result
+
+    except Exception as e:
+        _logger.warning(f"[CIS·Simons] IC multiplier load failed: {e} — using neutral weights")
+        _ic_mult_cache.update({"data": neutral, "expires": now + 300})
+        return neutral
 
 def _cg_base() -> str:
     """Use Pro API if key is set, otherwise free tier."""
@@ -1602,8 +1700,15 @@ def calculate_total_score(
     pillars: Dict[str, float],
     asset_class: str,
     regime: str = "Neutral",
+    ic_mult: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Any]:
-    """Calculate weighted total CIS score with regime-aware pillar weights."""
+    """
+    Calculate weighted total CIS score with three-layer pillar weights:
+      1. Base weights (per asset class)
+      2. Regime multipliers (market cycle adjustment)
+      3. IC multipliers (Simons feedback — Pearson IC from paper trades)
+    ic_mult is optional; if None or empty, layer 3 is skipped (neutral).
+    """
 
     # Base weights per asset class
     _BASE_WEIGHTS: Dict[str, Dict[str, float]] = {
@@ -1643,8 +1748,16 @@ def calculate_total_score(
     base = dict(_BASE_WEIGHTS.get(asset_class, _BASE_WEIGHTS["Crypto"]))
     mult = _REGIME_MULT.get(regime, _REGIME_MULT["Neutral"])
 
-    # Apply multipliers and renormalize so weights always sum to 1.0
+    # Layer 1+2: base × regime
     w = {k: base[k] * mult[k] for k in base}
+
+    # Layer 3: Simons IC feedback — apply per-pillar IC strength multipliers
+    if ic_mult:
+        for k in w:
+            if k in ic_mult:
+                w[k] *= ic_mult[k]
+
+    # Renormalize so weights always sum to 1.0
     total_w = sum(w.values())
     w = {k: round(v / total_w, 4) for k, v in w.items()}
 
@@ -1888,6 +2001,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         _fetch_eodhd_bulk(),       # v4.2: EODHD fundamentals for US Equity
         get_derivatives_map(),     # v4.3: funding rates + OI → O-pillar adjustment
         get_trending_map(),        # v4.3: trending rank → S-pillar boost
+        _refresh_ic_multipliers(), # Simons: IC-based pillar weight feedback
         return_exceptions=True,
     )
     # Safe unpack — any failed coroutine returns its exception, not a crash
@@ -1903,9 +2017,10 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     eodhd_data     = _safe(_raw[6], {})
     _deriv_map     = _safe(_raw[7], {})
     _trend_map     = _safe(_raw[8], {})
+    _ic_mult       = _safe(_raw[9], {"F": 1.0, "M": 1.0, "O": 1.0, "S": 1.0, "A": 1.0})
 
     for i, name in enumerate(["binance","cg_markets","defillama","fng","github",
-                               "cg_dev","eodhd","derivatives","trending"]):
+                               "cg_dev","eodhd","derivatives","trending","ic_mult"]):
         if isinstance(_raw[i], Exception):
             _logger.warning(f"[CIS] data source '{name}' failed: {_raw[i]}")
 
@@ -2093,8 +2208,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         pillars = {k: v for k, v in pillars_result.items() if k != "breakdown"}
         breakdown = pillars_result.get("breakdown", {})
 
-        # Calculate total with regime-aware weights
-        total_result = calculate_total_score(pillars, asset_class, regime=regime)
+        # Calculate total with three-layer weights: base → regime → IC feedback
+        total_result = calculate_total_score(pillars, asset_class, regime=regime, ic_mult=_ic_mult)
         total_score = total_result["total_score"]
         raw_cis_score = total_result.get("raw_cis_score", total_score)  # v4.2: base score
         weights = total_result["weights"]
