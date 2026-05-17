@@ -6,13 +6,13 @@ Email delivery: Resend API (RESEND_API_KEY env var)
 Notification target: LEAD_NOTIFY_EMAIL env var
 Storage: Supabase `leads` table → Redis fallback (30d TTL)
 """
-import os
-import json
+import os, json
 import logging
 from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from src.api.store import redis_get_key as _redis_get, redis_set_key as _redis_set
 
 _logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -151,14 +151,11 @@ async def _store_lead(record: dict) -> bool:
 
     if not stored:
         try:
-            try:
-                from src.data.market.data_layer import _redis_get, _redis_set
-            except ImportError:
-                from data.market.data_layer import _redis_get, _redis_set
-            existing_raw = await _redis_get("cometcloud:leads")
-            existing = json.loads(existing_raw) if existing_raw else []
+            existing = await _redis_get("cometcloud:leads") or []
+            if not isinstance(existing, list):
+                existing = []
             existing.append(record)
-            await _redis_set("cometcloud:leads", json.dumps(existing[-1000:]), ttl=86400 * 30)
+            await _redis_set("cometcloud:leads", existing[-1000:], ttl=86400 * 30)
             stored = True
         except Exception as e:
             _logger.warning(f"Redis lead write failed: {e}")
@@ -239,12 +236,7 @@ async def leads_summary(token: str = ""):
 
     if not leads:
         try:
-            try:
-                from src.data.market.data_layer import _redis_get
-            except ImportError:
-                from data.market.data_layer import _redis_get
-            raw = await _redis_get("cometcloud:leads")
-            leads = json.loads(raw) if raw else []
+            leads = await _redis_get("cometcloud:leads") or []
         except Exception:
             leads = []
 
