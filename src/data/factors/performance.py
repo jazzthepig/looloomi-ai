@@ -97,16 +97,17 @@ def _redis_get(key: str) -> Optional[str]:
 
 def _redis_set(key: str, value: str, ttl: int = _TTL) -> bool:
     import os, urllib.request
-    url   = os.environ.get("UPSTASH_REDIS_REST_URL", "")
+    url   = os.environ.get("UPSTASH_REDIS_REST_URL", "").rstrip("/")
     token = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
     if not url or not token:
         return False
     try:
-        payload = json.dumps(["SET", key, value, "EX", str(ttl)]).encode()
+        # Upstash REST: POST /set/{key}?EX={ttl} with value as body
+        # (pipeline format requires [["SET",...]] outer array — use simple REST to avoid that)
         req = urllib.request.Request(
-            f"{url}/pipeline",
-            data=payload,
-            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            f"{url}/set/{key}?EX={ttl}",
+            data=value.encode("utf-8"),
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "text/plain"},
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=5) as r:
