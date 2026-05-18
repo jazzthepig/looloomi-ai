@@ -993,7 +993,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             </div>}
 
             {/* ══ MACRO EVENTS ═════════════════════════════ */}
-            {(view === "all" || view === "events") && macroEvents.length > 0 && <div style={{ marginTop: 24, marginBottom: 24 }}>
+            {(view === "all") && macroEvents.length > 0 && <div style={{ marginTop: 24, marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
                 <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase" }}>
                   Macro Events
