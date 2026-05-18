@@ -683,6 +683,174 @@ function PaperTrading() {
   );
 }
 
+/* ─── Simons IC Feedback Panel ──────────────────────────────────────── */
+const PILLAR_LABELS = { F: "Fundamental", M: "Momentum", O: "On-chain / Risk", S: "Sentiment", A: "Alpha" };
+const PILLAR_ORDER  = ["F", "M", "O", "S", "A"];
+const PILLAR_HUE    = { F: "#6366f1", M: "#00D98A", O: "#f59e0b", S: "#38bdf8", A: "#a78bfa" };
+
+function computeMultiplier(factors) {
+  if (!factors || factors.length === 0) return 1.0;
+  const active = factors.filter(f => f.pearson_r != null && Math.abs(f.pearson_r) > 0.10 && (f.sample_size || 0) >= 10);
+  if (active.length === 0) return 1.0;
+  const meanR = active.reduce((s, f) => s + (f.pearson_r || 0), 0) / active.length;
+  return Math.round((1.0 + Math.max(-0.30, Math.min(0.30, meanR * 2.5))) * 10000) / 10000;
+}
+
+function SimonsPanel() {
+  const [perf, setPerf] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = () =>
+      fetch(`${API_BASE}/factors/performance`)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null)
+        .then(d => { setPerf(d); setLoading(false); });
+    load();
+    const iv = setInterval(load, 120_000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const report = perf?.report || {};
+  const meta   = report.meta || {};
+  const hasData = (meta.total_trades_analysed || 0) > 0;
+
+  // Build per-pillar summary from all factor lists
+  const pillarMap = { F: [], M: [], O: [], S: [], A: [] };
+  ["active", "probationary", "candidate_removal"].forEach(status => {
+    (report[status] || []).forEach(f => {
+      const p = (f.pillar || "").toUpperCase();
+      if (pillarMap[p]) pillarMap[p].push({ ...f, status });
+    });
+  });
+
+  const multipliers = {};
+  PILLAR_ORDER.forEach(p => {
+    multipliers[p] = computeMultiplier(pillarMap[p]);
+  });
+
+  // Cold start state — no trades mined yet
+  const coldStart = !hasData && !loading;
+
+  return (
+    <div className="fade-up" style={{ marginBottom: 28 }}>
+      {/* Section header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, paddingBottom: 10, borderBottom: "1px solid rgba(37,99,235,0.10)" }}>
+        <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
+          Simons IC Loop
+        </span>
+        <span style={{
+          fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".08em",
+          padding: "1px 6px", borderRadius: 3,
+          ...(coldStart
+            ? { background: "rgba(245,158,11,0.10)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.22)" }
+            : { background: "rgba(0,217,138,0.08)", color: "#00D98A", border: "1px solid rgba(0,217,138,0.18)" }),
+        }}>
+          {coldStart ? "AWAITING TRADES" : `${meta.total_trades_analysed || 0} TRADES · ${meta.periods_computed || 0} RUNS`}
+        </span>
+        {!coldStart && !loading && (
+          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.45, marginLeft: "auto" }}>
+            {(report.active || []).length} active · {(report.probationary || []).length} prob. · {(report.no_data || []).length} cold
+          </span>
+        )}
+      </div>
+
+      {loading && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
+          {PILLAR_ORDER.map(p => (
+            <div key={p} style={{ height: 52, borderRadius: 6 }} className="sk" />
+          ))}
+        </div>
+      )}
+
+      {!loading && coldStart && (
+        <div style={{
+          padding: "18px 20px",
+          borderRadius: 8,
+          background: "rgba(5,7,22,0.60)",
+          border: "1px solid rgba(99,102,241,0.10)",
+          display: "flex", alignItems: "center", gap: 14,
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(245,158,11,0.5)" strokeWidth="1.5">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          <div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: "rgba(199,210,254,0.55)", marginBottom: 3 }}>
+              IC feedback loop initializing — all pillar multipliers neutral (1.0×)
+            </div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.28)" }}>
+              Loop activates once Freqtrade closes 5+ trades and mine_alpha(pillar_fitness) runs
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!loading && !coldStart && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+          {PILLAR_ORDER.map(p => {
+            const factors  = pillarMap[p] || [];
+            const mult     = multipliers[p];
+            const color    = PILLAR_HUE[p];
+            const active   = factors.filter(f => f.status === "active").length;
+            const total    = factors.length + (report.no_data || []).filter(f => (f.pillar || "").toUpperCase() === p).length;
+            const delta    = mult - 1.0;
+            const pct      = Math.abs(delta) / 0.30; // 0→1 fill
+            const sign     = delta >= 0 ? "+" : "";
+
+            return (
+              <div key={p} style={{
+                borderRadius: 8, padding: "12px 14px",
+                background: "rgba(5,7,22,0.70)",
+                border: `1px solid ${color}22`,
+                display: "flex", flexDirection: "column", gap: 6,
+                transition: "border-color .2s ease",
+              }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = `${color}44`}
+                onMouseLeave={e => e.currentTarget.style.borderColor = `${color}22`}
+              >
+                {/* Pillar name */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: ".12em", color, textTransform: "uppercase" }}>{p}</span>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.30)", letterSpacing: ".05em" }}>{active}/{total} active</span>
+                </div>
+
+                {/* Multiplier value */}
+                <div style={{ fontFamily: FONTS.mono, fontSize: 22, fontWeight: 400, color: delta > 0.005 ? "#00D98A" : delta < -0.005 ? "#FF3D5A" : "rgba(199,210,254,0.55)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                  {sign}{delta.toFixed(3)}<span style={{ fontSize: 11, opacity: 0.5 }}>×</span>
+                </div>
+
+                {/* IC bar */}
+                <div style={{ height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 1 }}>
+                  <div style={{
+                    height: "100%",
+                    width: `${Math.round(pct * 100)}%`,
+                    background: delta >= 0 ? "#00D98A" : "#FF3D5A",
+                    borderRadius: 1,
+                    transition: "width .6s ease",
+                    opacity: 0.7,
+                  }} />
+                </div>
+
+                {/* Label */}
+                <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)", letterSpacing: ".04em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {PILLAR_LABELS[p]}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Formula hint */}
+      {!coldStart && !loading && (
+        <div style={{ marginTop: 8, fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.18)", letterSpacing: ".05em" }}>
+          weight = base × regime × IC · IC = 1 + clamp(mean_active_r × 2.5, −0.30, +0.30)
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main Component ────────────────────────────────────────────────── */
 export default function QuantMonitor() {
   const [data, setData] = useState({ status: null, trades: null, backtest: null });
@@ -809,6 +977,9 @@ export default function QuantMonitor() {
 
         {/* Paper Trading Execution Loop */}
         <PaperTrading />
+
+        {/* Simons IC Feedback Loop */}
+        <SimonsPanel />
 
         {/* Footer */}
         <div style={{ paddingTop: 16, borderTop: `1px solid rgba(37,99,235,0.06)`, color: T.t3, fontSize: 9, fontFamily: FONTS.mono, opacity: 0.4, letterSpacing: "0.08em" }}>
