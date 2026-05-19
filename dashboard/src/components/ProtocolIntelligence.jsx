@@ -124,9 +124,9 @@ const ProtocolDetail = ({ protocol }) => {
       {/* TVL stats row */}
       <div style={{ display: "flex", gap: 20, marginBottom: 14, flexWrap: "wrap" }}>
         {[
-          { label: "TVL", value: p.tvl_formatted || "—", color: T.t1 },
-          { label: "7D", value: `${p.tvl_change_7d > 0 ? "+" : ""}${p.tvl_change_7d?.toFixed(1) ?? 0}%`, color: p.tvl_change_7d > 0 ? T.green : p.tvl_change_7d < 0 ? T.red : T.t3 },
-          { label: "30D", value: `${p.tvl_change_30d > 0 ? "+" : ""}${p.tvl_change_30d?.toFixed(1) ?? 0}%`, color: p.tvl_change_30d > 0 ? T.green : p.tvl_change_30d < 0 ? T.red : T.t3 },
+          { label: "TVL", value: p.live_data ? (p.tvl_formatted || "—") : "—", color: p.live_data ? T.t1 : T.t3 },
+          { label: "7D", value: p.live_data ? `${p.tvl_change_7d > 0 ? "+" : ""}${p.tvl_change_7d?.toFixed(1) ?? 0}%` : "—", color: p.live_data ? (p.tvl_change_7d > 0 ? T.green : p.tvl_change_7d < 0 ? T.red : T.t3) : T.t3 },
+          { label: "30D", value: p.live_data ? `${p.tvl_change_30d > 0 ? "+" : ""}${p.tvl_change_30d?.toFixed(1) ?? 0}%` : "—", color: p.live_data ? (p.tvl_change_30d > 0 ? T.green : p.tvl_change_30d < 0 ? T.red : T.t3) : T.t3 },
           { label: "APY", value: p.apy > 0 ? `${p.apy}%` : "—", color: p.apy > 0 ? T.green : T.t3 },
           { label: "Audit", value: `${p.audit_score}/10`, color: p.audit_score >= 8 ? T.green : p.audit_score >= 6 ? T.gold : T.red },
           { label: "Age", value: `${p.age_months}mo`, color: T.t2 },
@@ -419,20 +419,24 @@ export default function ProtocolIntelligence() {
 
                   {/* TVL + direction */}
                   <div style={{ textAlign: "right" }}>
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 500, color: T.t1 }}>
-                      {p.tvl_formatted || "—"}
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 500, color: p.live_data ? T.t1 : T.t3 }}>
+                      {p.live_data ? (p.tvl_formatted || "—") : "—"}
                     </span>
-                    <span style={{ fontSize: 9, color: dirColor, marginLeft: 4 }}>{dirIcon}</span>
+                    {p.live_data && <span style={{ fontSize: 9, color: dirColor, marginLeft: 4 }}>{dirIcon}</span>}
                   </div>
 
                   {/* 7D flow */}
                   <div style={{ textAlign: "right" }}>
-                    <span style={{
-                      fontFamily: FONTS.mono, fontSize: 12,
-                      color: (p.tvl_change_7d || 0) > 0 ? T.green : (p.tvl_change_7d || 0) < 0 ? T.red : T.t3,
-                    }}>
-                      {(p.tvl_change_7d || 0) > 0 ? "+" : ""}{(p.tvl_change_7d || 0).toFixed(1)}%
-                    </span>
+                    {p.live_data ? (
+                      <span style={{
+                        fontFamily: FONTS.mono, fontSize: 12,
+                        color: (p.tvl_change_7d || 0) > 0 ? T.green : (p.tvl_change_7d || 0) < 0 ? T.red : T.t3,
+                      }}>
+                        {(p.tvl_change_7d || 0) > 0 ? "+" : ""}{(p.tvl_change_7d || 0).toFixed(1)}%
+                      </span>
+                    ) : (
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.t3 }}>—</span>
+                    )}
                   </div>
 
                   {/* Grade */}

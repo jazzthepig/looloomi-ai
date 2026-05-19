@@ -44,7 +44,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "ondo", "name": "Ondo Finance", "slug": "ondo-finance",
         "category": "RWA - Treasuries", "chain": "Multi-chain",
-        "base_apy": 4.8, "audit_score": 9, "age_months": 24,
+        "base_apy": 4.8, "audit_score": 9, "age_months": 42,  # launched Jan 2022
         "desc": "Ondo Finance brings institutional-grade US Treasury exposure on-chain through its OUSG (BlackRock T-bill ETF) and OMMF (money market) tokens. Redemptions settle T+0 for qualified buyers, bridging the operational gap between TradFi yield and DeFi composability.",
         "why_selected": "Ondo is the clearest signal that institutional capital has accepted tokenized RWA as a structural asset class. Its partnership with BlackRock, $500M+ TVL trajectory, and cross-chain expansion across Ethereum, Solana, and Arbitrum make it the bellwether for the RWA narrative we are positioned around.",
         "strengths": ["BlackRock BUIDL integration — direct T-bill ETF backing", "T+0 settlement for qualified institutional buyers", "Cross-chain: Ethereum, Solana, Arbitrum, Mantle", "Highest institutional brand trust in the tokenized treasury space"],
@@ -52,7 +52,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "blackrock", "name": "BlackRock BUIDL", "slug": "blackrock-buidl",
         "category": "RWA - Treasuries", "chain": "Multi-chain",
-        "base_apy": 4.3, "audit_score": 10, "age_months": 18,
+        "base_apy": 4.3, "audit_score": 10, "age_months": 26,  # launched March 2024
         "desc": "BUIDL is BlackRock's tokenized money market fund — the world's largest asset manager issuing directly on-chain via Securitize. Investors hold tokenized shares of a fund that invests exclusively in US Treasury bills, overnight repos, and cash. BlackRock custody, Deloitte audit.",
         "why_selected": "This is the institutional credibility anchor for the entire tokenized treasury sector. When BlackRock tokenizes $500M+ on Ethereum, it de-risks the regulatory narrative for every fund allocating to RWA. We hold BUIDL as a benchmark, not just a position.",
         "strengths": ["Issued by world's largest asset manager ($10T AUM)", "Perfect audit score — Deloitte-audited, SEC-registered fund", "Accepted as collateral by major DeFi protocols (Ondo, Frax)", "Fastest-growing tokenized fund in history"],
@@ -60,7 +60,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "franklin", "name": "Franklin Templeton", "slug": "franklin-onchain-us-government-money-fund",
         "category": "RWA - Treasuries", "chain": "Polygon",
-        "base_apy": 4.5, "audit_score": 10, "age_months": 20,
+        "base_apy": 4.5, "audit_score": 10, "age_months": 53,  # launched April 2021
         "desc": "The Franklin OnChain US Government Money Fund (FOBXX) was the first US-registered mutual fund to use a public blockchain for transaction processing and record-keeping. The BENJI token on Polygon represents fund shares, accruing daily yield from T-bills and government repos.",
         "why_selected": "Franklin Templeton moved first — before BlackRock, before Fidelity. That first-mover institutional courage, combined with their $1.5T AUM and the regulatory clarity of a registered mutual fund structure, makes FOBXX a core allocation for any RWA sleeve.",
         "strengths": ["First US-regulated mutual fund on a public blockchain (2021)", "Daily yield accrual — interest compounds directly into token value", "SEC and FINRA compliant — no regulatory ambiguity", "Franklin's $1.5T AUM backstops institutional confidence"],
@@ -68,15 +68,15 @@ PROTOCOL_REGISTRY = [
     {
         "id": "superstate", "name": "Superstate", "slug": "superstate",
         "category": "RWA - Treasuries", "chain": "Ethereum",
-        "base_apy": 4.6, "audit_score": 8, "age_months": 14,
+        "base_apy": 4.6, "audit_score": 8, "age_months": 26,  # launched March 2023
         "desc": "Superstate issues USTB — a tokenized short-duration US Treasury fund built on Ethereum and designed specifically for DeFi composability. Founded by Robert Leshner (Compound founder), it targets DeFi treasuries and DAOs seeking compliant on-chain yield without custody risk.",
         "why_selected": "Superstate sits at the intersection of two of our highest-conviction themes: the RWA yield narrative and DeFi protocol treasury adoption. Leshner's track record building Compound — the protocol that defined algorithmic money markets — makes this team a tier-one bet on the institutional DeFi transition.",
         "strengths": ["Founded by Robert Leshner (Compound creator)", "Designed for DeFi protocol treasury integration", "Short-duration focus minimises interest rate risk", "Growing DAO/treasury client base provides sticky AUM"],
     },
     {
-        "id": "anemoy", "name": "Anemoy Capital", "slug": "anemoy-capital",
+        "id": "anemoy", "name": "Anemoy Capital", "slug": "anemoy",
         "category": "RWA - Treasuries", "chain": "Multi-chain",
-        "base_apy": 5.2, "audit_score": 7, "age_months": 12,
+        "base_apy": 5.2, "audit_score": 7, "age_months": 20,  # launched Sep 2023; DL slug: anemoy
         "desc": "Anemoy operates the Liquid Treasury Fund — a tokenized T-bill vehicle built on Centrifuge's infrastructure with cross-chain reach via Axelar. Its higher APY relative to peers reflects a slightly wider maturity ladder and tactical allocation to short-dated agency paper.",
         "why_selected": "Anemoy offers incremental yield pickup (50–90bps) over the BlackRock/Franklin tier with acceptable credit quality. For a fund-of-funds structure where blended yield matters, this kind of differentiated instrument is worth holding in a satellite position alongside the anchor names.",
         "strengths": ["Higher APY — blended T-bill + agency paper strategy", "Built on Centrifuge infrastructure — proven legal wrapper", "Cross-chain via Axelar — not locked to a single L1", "Fills a yield gap between pure T-bill funds and private credit"],
@@ -86,7 +86,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "maple", "name": "Maple Finance", "slug": "maple",
         "category": "RWA - Private Credit", "chain": "Multi-chain",
-        "base_apy": 12.0, "audit_score": 8, "age_months": 36,
+        "base_apy": 12.0, "audit_score": 8, "age_months": 48,  # launched May 2021
         "desc": "Maple Finance is an institutional undercollateralized lending marketplace where creditworthy borrowers — primarily crypto market makers, trading firms, and fintechs — access capital against verified reputation and balance sheet. Lenders earn yield by funding vetted pools managed by expert Pool Delegates.",
         "why_selected": "Maple survived the 2022 blowup (Orthogonal Trading default) and came back with a materially stronger risk framework: over-collateralized pools, KYC/KYB requirements, and institutional-only borrower onboarding. Protocols that improve after stress tests are exactly what we want in the private credit sleeve.",
         "strengths": ["Post-2022 rebuild: stricter underwriting, institutional borrowers only", "Pool Delegate model — credit experts own risk decisions", "12%+ APY with institutional-grade counterparties", "Expanding to real-world SME lending via Maple Direct"],
@@ -100,9 +100,9 @@ PROTOCOL_REGISTRY = [
         "strengths": ["MakerDAO integration — $200M+ deployed via Centrifuge vaults", "Dual-tranche (DROP/TIN) risk structuring for different risk appetites", "Widest originator diversity — invoices, trade finance, real estate", "4 years live: most battle-tested RWA infrastructure on-chain"],
     },
     {
-        "id": "credix", "name": "Credix", "slug": "credix-finance",
+        "id": "credix", "name": "Credix", "slug": "credix",
         "category": "RWA - Private Credit", "chain": "Solana",
-        "base_apy": 14.0, "audit_score": 7, "age_months": 24,
+        "base_apy": 14.0, "audit_score": 7, "age_months": 42,  # launched Nov 2021; DL slug: credix
         "desc": "Credix connects institutional lenders with emerging market fintechs — primarily in Latin America and Southeast Asia — seeking USD liquidity. Borrowers are credit-assessed fintech companies with established loan books; lenders access high-yield EM credit exposure with downside protection from structural seniority.",
         "why_selected": "EM private credit is structurally underserved by traditional finance, and that inefficiency is exactly where on-chain capital can extract a durable premium. Credix's 14% APY reflects genuine credit complexity, not protocol risk — a distinction that matters for portfolio construction.",
         "strengths": ["14%+ APY — genuine EM credit premium, not inflated emissions", "Borrowers are regulated fintechs with audited loan books", "Solana-native — low transaction costs for frequent settlement", "Fills a white space TradFi banks systematically underserve"],
@@ -110,7 +110,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "goldfinch", "name": "Goldfinch", "slug": "goldfinch",
         "category": "RWA - Private Credit", "chain": "Ethereum",
-        "base_apy": 8.0, "audit_score": 9, "age_months": 36,
+        "base_apy": 8.0, "audit_score": 9, "age_months": 54,  # launched Nov 2020
         "desc": "Goldfinch extends credit to off-chain businesses without crypto collateral, using a network of on-chain auditors and backers to underwrite credit risk. Its senior/junior pool structure means stablecoin LPs to the senior pool are protected by backer capital absorbing first losses. Primary borrowers are fintech lenders across EM markets.",
         "why_selected": "Goldfinch's auditor model is genuinely novel — it decentralises the credit underwriting function rather than just the capital deployment. Three years of live performance with real borrowers across Africa, Southeast Asia, and LatAm gives it a track record that newer protocols cannot match.",
         "strengths": ["Decentralised underwriting via on-chain auditor/backer network", "Senior LP first-loss protection — structurally safer for scale capital", "36+ months live performance with real-world borrower repayments", "High audit score — Certik, Trace, and Trail of Bits reviewed"],
@@ -120,7 +120,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "aave", "name": "Aave", "slug": "aave",
         "category": "DeFi - Lending", "chain": "Multi-chain",
-        "base_apy": 3.5, "audit_score": 10, "age_months": 60,
+        "base_apy": 3.5, "audit_score": 10, "age_months": 66,  # launched Jan 2020 as Aave
         "desc": "Aave is the dominant DeFi money market — $10B+ in TVL across Ethereum, Arbitrum, Polygon, and Avalanche. It supports 30+ collateral types, flash loans, credit delegation, and a GHO native stablecoin. The protocol's risk parameters are battle-tested across three market cycles and multiple black swan events.",
         "why_selected": "If you run a crypto fund-of-funds and aren't watching Aave, you're not watching DeFi. It is the benchmark lending rate for on-chain capital — equivalent to LIBOR in TradFi. We track it as both an alpha source and a systemic risk indicator.",
         "strengths": ["$10B+ TVL across 7+ chains — largest DeFi lending protocol", "10/10 audit score: OpenZeppelin, Certik, SigmaPrime, Trail of Bits", "Flash loans, credit delegation, GHO stablecoin — full ecosystem", "5 years continuous operation through all major market cycles"],
@@ -128,7 +128,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "compound", "name": "Compound", "slug": "compound-finance",
         "category": "DeFi - Lending", "chain": "Multi-chain",
-        "base_apy": 2.8, "audit_score": 10, "age_months": 60,
+        "base_apy": 2.8, "audit_score": 10, "age_months": 80,  # launched Sep 2018
         "desc": "Compound invented algorithmic on-chain money markets in 2018. Its interest rate model — continuous, market-driven, reactive — became the template every subsequent lending protocol copied. Compound v3 (Comet) introduced single-asset borrowing markets with improved capital efficiency and reduced governance surface.",
         "why_selected": "Compound's institutional API and integrations with traditional broker-dealers make it a critical piece of the emerging TradFi-DeFi bridge. Its conservative approach — lower yields, tighter risk params — is exactly what institutional allocators need as a gateway product.",
         "strengths": ["Original DeFi money market — invented the model (2018)", "v3 Comet: cleaner architecture, better capital efficiency", "Institutional API used by broker-dealers and prime brokers", "Most governance-decentralised major lending protocol"],
@@ -136,7 +136,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "morpho", "name": "Morpho", "slug": "morpho",
         "category": "DeFi - Lending", "chain": "Ethereum",
-        "base_apy": 5.5, "audit_score": 9, "age_months": 24,
+        "base_apy": 5.5, "audit_score": 9, "age_months": 36,  # launched Aug 2022
         "desc": "Morpho is a peer-to-peer lending optimizer that sits on top of Aave and Compound, matching lenders and borrowers directly when possible to eliminate the spread that pool-based AMMs always clip. Unmatched liquidity falls back to the underlying protocol, so there is zero duration mismatch risk. Morpho Blue extends this to permissionless market creation.",
         "why_selected": "Morpho solves a structural inefficiency: pool-based lending always benefits from a spread that should belong to lenders and borrowers. Its $2B+ TVL growth from zero in 24 months, with no pool-based liquidity risk, is the strongest product-market fit signal in the lending category.",
         "strengths": ["P2P matching eliminates AMM spread — better rates for both sides", "Morpho Blue: permissionless market creation, no governance gatekeeping", "Zero duration mismatch — unmatched capital is always in Aave/Compound", "Fastest TVL growth in lending category: $0 → $2B in 24 months"],
@@ -146,15 +146,15 @@ PROTOCOL_REGISTRY = [
     {
         "id": "uniswap", "name": "Uniswap", "slug": "uniswap",
         "category": "DeFi - DEX", "chain": "Multi-chain",
-        "base_apy": 0, "audit_score": 10, "age_months": 72,
+        "base_apy": 0, "audit_score": 10, "age_months": 78,  # launched Nov 2018
         "desc": "Uniswap is the most-used DEX in crypto — $1T+ cumulative volume, 12+ chains, and 6 years of continuous operation. Its concentrated liquidity model (v3) let LPs deploy capital within custom price ranges for higher fee capture. Uniswap v4 introduces hooks — arbitrary custom logic at the pool level — making it a programmable liquidity primitive.",
         "why_selected": "Uniswap is DeFi's price discovery layer. Every fund that touches crypto interacts with it, either directly or through aggregators that route through it. It is the rails — and we need exposure to the rails.",
         "strengths": ["$1T+ cumulative trading volume — dominant market share", "v4 hooks: programmable AMM logic unlocks infinite protocol design space", "10/10 audit score across 6 years of open-source scrutiny", "LP fee revenue is real, sustainable yield — not token emissions"],
     },
     {
-        "id": "curve", "name": "Curve Finance", "slug": "curve-finance",
+        "id": "curve", "name": "Curve Finance", "slug": "curve",
         "category": "DeFi - DEX", "chain": "Multi-chain",
-        "base_apy": 2.0, "audit_score": 9, "age_months": 60,
+        "base_apy": 2.0, "audit_score": 9, "age_months": 64,  # launched Jan 2020; DL slug: curve
         "desc": "Curve Finance runs the deepest stablecoin and pegged-asset liquidity in DeFi. Its StableSwap invariant minimises slippage on correlated assets — USDC/USDT, stETH/ETH, crvUSD — making it the backbone of stable liquidity across the ecosystem. The veToken governance model (vote-escrowed CRV) created Curve Wars, influencing emissions allocation across the entire DeFi sector.",
         "why_selected": "Curve is critical DeFi infrastructure. Every stablecoin yield strategy runs through it. Every RWA protocol that needs secondary market liquidity will need Curve pools. We track it as both a yield source and an ecosystem health indicator.",
         "strengths": ["Deepest stablecoin liquidity in DeFi — $3B+ TVL", "StableSwap: lowest slippage for pegged assets by design", "veToken model drives multi-protocol governance participation (Curve Wars)", "crvUSD: native over-collateralized stablecoin adds protocol revenue"],
@@ -162,7 +162,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "jupiter", "name": "Jupiter", "slug": "jupiter",
         "category": "DeFi - DEX", "chain": "Solana",
-        "base_apy": 0, "audit_score": 8, "age_months": 24,
+        "base_apy": 0, "audit_score": 8, "age_months": 30,  # launched Oct 2021
         "desc": "Jupiter is Solana's dominant DEX aggregator — routing trades across Orca, Raydium, Lifinity, and every other Solana AMM to find best execution. Its JLP (Jupiter Liquidity Pool) lets LPs earn fees from perp trading activity. Jupiter processes $1B+ monthly volume and is the primary interface for most Solana DeFi users.",
         "why_selected": "CometCloud's Solana-native architecture means Jupiter is native infrastructure for us. As Solana's liquidity aggregation layer, it compounds any volume growth on the chain directly into protocol revenue. Its perp product diversifies revenue beyond AMM fees.",
         "strengths": ["Solana's #1 DEX aggregator — dominant routing market share", "JLP vault: earn fees from leveraged perp trading, not just AMM swaps", "Best execution routing across all major Solana liquidity sources", "Core Solana ecosystem infrastructure — grows with the chain"],
@@ -172,7 +172,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "lido", "name": "Lido", "slug": "lido",
         "category": "DeFi - Staking", "chain": "Multi-chain",
-        "base_apy": 3.2, "audit_score": 10, "age_months": 48,
+        "base_apy": 3.2, "audit_score": 10, "age_months": 54,  # launched Dec 2020
         "desc": "Lido issues stETH — liquid staking tokens representing staked ETH plus accrued rewards. With $20B+ in TVL, it stakes roughly 32% of all ETH in the network. stETH is accepted as collateral on Aave, Compound, Morpho, and used in dozens of DeFi strategies. Lido is actively decentralising its node operator set via DVT (Distributed Validator Technology).",
         "why_selected": "stETH is the most liquid, most deeply integrated yield-bearing asset in DeFi. Any strategy that runs through Ethereum-based DeFi either holds stETH or competes with strategies that do. It is the risk-free rate of the Ethereum ecosystem.",
         "strengths": ["$20B+ TVL — largest staking protocol by a factor of 5x", "stETH accepted as collateral across all major DeFi lending markets", "Real ETH staking yield — not token emissions", "DVT roadmap addresses validator concentration risk systematically"],
@@ -180,7 +180,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "rocketpool", "name": "Rocket Pool", "slug": "rocket-pool",
         "category": "DeFi - Staking", "chain": "Ethereum",
-        "base_apy": 3.0, "audit_score": 9, "age_months": 36,
+        "base_apy": 3.0, "audit_score": 9, "age_months": 44,  # launched Oct 2021
         "desc": "Rocket Pool runs a decentralised ETH staking network where node operators post 8 ETH + RPL collateral to create minipools, completing 32 ETH validator requirements by drawing from a rETH deposit pool. Its trust model is fundamentally more decentralised than Lido — no allowlisted operators, no multi-sig custody.",
         "why_selected": "For a fund positioning around long-term Ethereum health, rETH is the more philosophically aligned choice. Network decentralisation is a risk factor for Ethereum consensus — protocols that reduce validator concentration reduce systemic risk to the network we rely on.",
         "strengths": ["Truly permissionless node operator set — no KYC or allowlisting", "rETH value accrual model — token appreciates vs ETH, no rebasing", "RPL collateral requirement aligns node operator incentives with protocol health", "Lower counterparty risk than operator-allowlisted alternatives"],
@@ -188,7 +188,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "jito", "name": "Jito", "slug": "jito",
         "category": "DeFi - Staking", "chain": "Solana",
-        "base_apy": 7.5, "audit_score": 8, "age_months": 18,
+        "base_apy": 7.5, "audit_score": 8, "age_months": 28,  # launched Dec 2022
         "desc": "Jito operates Solana's dominant MEV-aware liquid staking protocol. JitoSOL holders earn both base staking rewards and a share of MEV (Maximum Extractable Value) tips collected by the Jito-client validator software, which now powers the majority of Solana's validator stake. The additional MEV yield creates a structural APY premium over vanilla SOL staking.",
         "why_selected": "Jito's MEV capture is unique — it redistributes value that would otherwise go to sophisticated searchers back to JitoSOL holders. On a chain processing $1B+ daily volume, MEV is material yield. For our Solana-native architecture, JitoSOL is the optimal base asset.",
         "strengths": ["MEV tip redistribution — structural yield premium over vanilla staking", "Jito-client powers majority of Solana validator stake — entrenched infrastructure", "7.5%+ APY: highest yield for non-speculative SOL exposure", "JitoSOL: deep liquidity as Solana's premier yield-bearing collateral asset"],
@@ -198,7 +198,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "hyperliquid", "name": "Hyperliquid", "slug": "hyperliquid",
         "category": "Derivatives", "chain": "Hyperliquid",
-        "base_apy": 0, "audit_score": 7, "age_months": 18,
+        "base_apy": 0, "audit_score": 7, "age_months": 24,  # mainnet Nov 2023
         "desc": "Hyperliquid is a vertically integrated L1 blockchain purpose-built for high-performance perpetual futures trading. Its on-chain order book processes 100,000+ orders per second with sub-second finality. The HLP (Hyperliquidity Provider) vault lets passive LPs earn fees by acting as a market maker across all perp markets.",
         "why_selected": "Hyperliquid broke the assumption that CEX-grade performance requires centralisation. $2B+ TVL with zero VC backing and organic growth is a signal that the market validated its architecture before anyone prompted it to. For derivatives exposure, this is the protocol with the strongest PMF.",
         "strengths": ["100k+ orders/second on-chain — CEX-grade performance, DEX ownership", "$2B+ TVL grown entirely organically — no VC pump, no airdrop farming", "HLP vault: passive LP access to market-making yield", "Owns its own L1 — no dependency on Ethereum gas or sequencer latency"],
@@ -206,7 +206,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "gmx", "name": "GMX", "slug": "gmx",
         "category": "Derivatives", "chain": "Arbitrum",
-        "base_apy": 0, "audit_score": 9, "age_months": 30,
+        "base_apy": 0, "audit_score": 9, "age_months": 44,  # launched Sep 2021
         "desc": "GMX runs a decentralised perpetual and spot trading platform where LPs fund a multi-asset liquidity pool (GLP) that acts as counterparty to traders. GLP earns 70% of platform fees and is itself a yield-bearing basket of BTC, ETH, and stablecoins. GMX v2 introduced isolated markets with better risk partitioning.",
         "why_selected": "GMX's GLP model proved that LPs can profit by acting as the house in a leveraged trading market. Its $400M+ GLP pool has generated consistent fee revenue through bull and bear cycles — a rare thing in DeFi. The v2 upgrade substantially improved capital efficiency and risk controls.",
         "strengths": ["GLP LPs earn 70% of all trading fees — real, consistent revenue", "Multi-asset pool (BTC/ETH/stables) — natural hedge against directional markets", "v2 isolated markets reduce systemic risk from single asset blowouts", "3-year track record of fee generation through multiple market regimes"],
@@ -214,7 +214,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "dydx", "name": "dYdX", "slug": "dydx",
         "category": "Derivatives", "chain": "Cosmos",
-        "base_apy": 0, "audit_score": 9, "age_months": 48,
+        "base_apy": 0, "audit_score": 9, "age_months": 60,  # launched Apr 2021 (v1)
         "desc": "dYdX v4 operates as a sovereign Cosmos appchain, giving it full control over its order book, matching engine, and fee structure without dependency on Ethereum's throughput constraints. It is the oldest decentralised perps exchange and is optimised for professional and institutional trading workflows.",
         "why_selected": "dYdX took the bold move of launching its own chain to escape EVM throughput limits. That architectural bet positions it for institutional adoption — traditional trading firms require order book performance that no EVM chain can currently deliver. We track it as the institutional-grade perps benchmark.",
         "strengths": ["Cosmos appchain: full sovereignty over performance and fee parameters", "Order book model — familiar UX for professional and institutional traders", "4 years of continuous operation — oldest decentralised perps exchange", "Staking dYdX earns a share of protocol trading fees"],
@@ -224,7 +224,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "eigenlayer", "name": "EigenLayer", "slug": "eigenlayer",
         "category": "Infrastructure", "chain": "Ethereum",
-        "base_apy": 3.8, "audit_score": 8, "age_months": 18,
+        "base_apy": 3.8, "audit_score": 8, "age_months": 35,  # mainnet Jun 2023
         "desc": "EigenLayer introduced restaking — the ability to use staked ETH as cryptoeconomic security for additional protocols (Actively Validated Services, or AVSs) simultaneously. Restakers can earn additional yield from AVS fees on top of base ETH staking rewards. It currently secures $10B+ in restaked ETH and is bootstrapping security for a new class of decentralised infrastructure services.",
         "why_selected": "EigenLayer is creating a new economic primitive: pooled cryptoeconomic security. Every new protocol that builds on AVS infrastructure rather than bootstrapping its own validator set makes EigenLayer more valuable. In 18 months it became the largest DeFi protocol by TVL — that velocity is signal.",
         "strengths": ["$10B+ TVL — largest DeFi protocol by TVL in 2024", "Restaking enables yield stacking on top of base ETH staking rewards", "AVS ecosystem: oracles, bridges, data availability layers all leverage it", "Enables new protocols to bootstrap security without dilutive token issuance"],
@@ -232,15 +232,15 @@ PROTOCOL_REGISTRY = [
     {
         "id": "ethena", "name": "Ethena", "slug": "ethena",
         "category": "Infrastructure", "chain": "Ethereum",
-        "base_apy": 15.0, "audit_score": 7, "age_months": 12,
-        "desc": "Ethena issues USDe — a synthetic dollar backed by ETH spot holdings hedged with short ETH perpetual futures positions, making it delta-neutral. The funding rate earned from the short perp position (typically positive when markets are bullish) is distributed to sUSDe stakers, generating 10–25% APY in bull markets. In bear markets, negative funding can compress yield.",
-        "why_selected": "USDe is the most economically interesting stablecoin design since DAI. Its yield is derived from a real market mechanism — perp funding rates — not from token inflation or unsustainable subsidies. We hold it as a high-yield satellite position with clear risk parameters: yield goes negative when perp funding inverts.",
-        "strengths": ["15%+ APY from structural perp funding rate — not emissions", "Delta-neutral design: ETH spot long + ETH perp short = price-neutral exposure", "Rapidly became top-5 stablecoin by market cap from launch", "Transparent risk: funding rate publicly observable, risk is understood"],
+        "base_apy": 7.0, "audit_score": 7, "age_months": 27,  # launched Feb 2024; APY now ~5-10% (market-dependent)
+        "desc": "Ethena issues USDe — a synthetic dollar backed by ETH spot holdings hedged with short ETH perpetual futures positions, making it delta-neutral. The funding rate earned from the short perp position is distributed to sUSDe stakers. APY is market-dependent: 15-25% in bull regimes, 3-8% in sideways/bear markets, and can briefly go negative if funding inverts.",
+        "why_selected": "USDe is the most economically interesting stablecoin design since DAI. Its yield is derived from a real market mechanism — perp funding rates — not from token inflation or unsustainable subsidies. We hold it as a high-yield satellite position with clear risk parameters: yield compresses when perp funding inverts.",
+        "strengths": ["Variable APY 5-25% from structural perp funding rate — not emissions", "Delta-neutral design: ETH spot long + ETH perp short = price-neutral exposure", "Rapidly became top-5 stablecoin by market cap from launch", "Transparent risk: funding rate publicly observable, risk is understood"],
     },
     {
         "id": "pendle", "name": "Pendle", "slug": "pendle",
         "category": "DeFi - Yield", "chain": "Multi-chain",
-        "base_apy": 8.0, "audit_score": 8, "age_months": 30,
+        "base_apy": 8.0, "audit_score": 8, "age_months": 48,  # launched Jun 2021
         "desc": "Pendle splits yield-bearing tokens into Principal Tokens (PT) and Yield Tokens (YT), allowing users to trade future yield independently of principal. A trader who expects yields to rise buys YT; one who wants fixed-rate exposure locks in yield by holding PT to maturity. This creates a yield curve for DeFi — the first on-chain fixed-rate market with genuine depth.",
         "why_selected": "Pendle is building the DeFi yield curve — the infrastructure that fixed-income desks need to manage duration risk systematically. As RWA yield products multiply, the ability to trade and hedge yield duration becomes essential. Pendle is the only protocol with real TVL doing this.",
         "strengths": ["First DeFi protocol with a functioning yield curve (PT/YT split)", "$3B+ TVL across Ethereum, Arbitrum, BNB Chain, Mantle", "Fixed-rate locking on stETH, eETH, USDe — institutional demand use case", "Rapidly becoming the yield management layer for RWA products"],
@@ -248,7 +248,7 @@ PROTOCOL_REGISTRY = [
     {
         "id": "maker", "name": "Sky (MakerDAO)", "slug": "makerdao",
         "category": "DeFi - Stablecoin", "chain": "Ethereum",
-        "base_apy": 5.0, "audit_score": 10, "age_months": 84,
+        "base_apy": 5.0, "audit_score": 10, "age_months": 90,  # launched Dec 2017
         "desc": "MakerDAO (rebranding as Sky) is the oldest major DeFi protocol and issuer of DAI — the first decentralised stablecoin by scale. DAI is backed by a mix of ETH, WBTC, and real-world assets including USDC, US Treasuries via Centrifuge vaults, and T-bill ETFs. The DAI Savings Rate (DSR) provides baseline yield to all DAI holders.",
         "why_selected": "MakerDAO is the bedrock of DeFi. Seven years of continuous operation, $5B+ DAI supply, and deep integration across every major protocol means it functions as critical financial infrastructure. Its RWA allocation — $2B+ in T-bills and credit instruments — makes it a direct expression of our thesis.",
         "strengths": ["7 years live — longest-running major DeFi protocol", "10/10 audit score — most thoroughly audited codebase in DeFi", "$2B+ deployed in RWA (T-bills, Centrifuge vaults) — DeFi's largest RWA allocator", "DAI is accepted collateral in every major DeFi protocol on Ethereum"],
