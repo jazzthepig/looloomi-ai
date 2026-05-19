@@ -696,106 +696,219 @@ function computeMultiplier(factors) {
   return Math.round((1.0 + Math.max(-0.30, Math.min(0.30, meanR * 2.5))) * 10000) / 10000;
 }
 
+// ── Pipeline node labels for the loop flow strip ─────────────────────────────
+const LOOP_NODES = [
+  { id: "cis",    label: "CIS SCORE",   sub: "5-pillar scoring" },
+  { id: "signal", label: "SIGNAL",      sub: "OUTPERFORM gate"  },
+  { id: "trade",  label: "TRADE OPEN",  sub: "position entry"   },
+  { id: "close",  label: "TRADE CLOSE", sub: "realized P&L"     },
+  { id: "mine",   label: "MINE",        sub: "Pearson IC"       },
+  { id: "ic",     label: "IC MULT",     sub: "weight adjust"    },
+];
+
 function SimonsPanel() {
-  const [perf, setPerf] = useState(null);
+  const [loop, setLoop]   = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = () =>
-      fetch(`${API_BASE}/factors/performance`)
+      fetch(`${API_BASE}/trading/loop-state`)
         .then(r => r.ok ? r.json() : null)
         .catch(() => null)
-        .then(d => { setPerf(d); setLoading(false); });
+        .then(d => { setLoop(d); setLoading(false); });
     load();
-    const iv = setInterval(load, 120_000);
+    const iv = setInterval(load, 60_000);
     return () => clearInterval(iv);
   }, []);
 
-  const report = perf?.report || {};
-  const meta   = report.meta || {};
-  const hasData = (meta.total_trades_analysed || 0) > 0;
+  const active      = loop?.loop_active ?? false;
+  const icMult      = loop?.ic_multipliers ?? {};
+  const closed      = loop?.closed_trades ?? 0;
+  const nextMine    = loop?.next_mine_at ?? 5;
+  const mineRuns    = loop?.mine_periods ?? 0;
+  const regime      = loop?.regime ?? "—";
+  const gateThresh  = loop?.gate_threshold ?? 50;
+  const activeFact  = loop?.active_factors ?? 0;
+  const openPos     = loop?.open_positions ?? 0;
 
-  // Build per-pillar summary from all factor lists
-  const pillarMap = { F: [], M: [], O: [], S: [], A: [] };
-  ["active", "probationary", "candidate_removal"].forEach(status => {
-    (report[status] || []).forEach(f => {
-      const p = (f.pillar || "").toUpperCase();
-      if (pillarMap[p]) pillarMap[p].push({ ...f, status });
-    });
-  });
-
-  const multipliers = {};
-  PILLAR_ORDER.forEach(p => {
-    multipliers[p] = computeMultiplier(pillarMap[p]);
-  });
-
-  // Cold start state — no trades mined yet
-  const coldStart = !hasData && !loading;
+  // Node "live" state — what stages have data flowing through them
+  const nodeAlive = {
+    cis:    true,                  // always live
+    signal: true,                  // always gating
+    trade:  openPos > 0 || closed > 0,
+    close:  closed > 0,
+    mine:   mineRuns > 0,
+    ic:     active,
+  };
 
   return (
     <div className="fade-up" style={{ marginBottom: 28 }}>
-      {/* Section header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, paddingBottom: 10, borderBottom: "1px solid rgba(37,99,235,0.10)" }}>
+
+      {/* ── Header ── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10,
+        marginBottom: 14, paddingBottom: 10,
+        borderBottom: "1px solid rgba(37,99,235,0.10)",
+      }}>
         <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
           Simons IC Loop
         </span>
         <span style={{
           fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".08em",
-          padding: "1px 6px", borderRadius: 3,
-          ...(coldStart
-            ? { background: "rgba(245,158,11,0.10)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.22)" }
-            : { background: "rgba(0,217,138,0.08)", color: "#00D98A", border: "1px solid rgba(0,217,138,0.18)" }),
+          padding: "1px 7px", borderRadius: 3,
+          ...(active
+            ? { background: "rgba(0,217,138,0.08)", color: "#00D98A", border: "1px solid rgba(0,217,138,0.18)" }
+            : { background: "rgba(245,158,11,0.10)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.22)" }),
         }}>
-          {coldStart ? "AWAITING TRADES" : `${meta.total_trades_analysed || 0} TRADES · ${meta.periods_computed || 0} RUNS`}
+          {active ? `LOOP ACTIVE · ${mineRuns} MINE RUNS` : closed >= 5 ? "MINE PENDING" : `AWAITING TRADES · ${nextMine} TO GO`}
         </span>
-        {!coldStart && !loading && (
-          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.45, marginLeft: "auto" }}>
-            {(report.active || []).length} active · {(report.probationary || []).length} prob. · {(report.no_data || []).length} cold
+        {!loading && (
+          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.40, marginLeft: "auto" }}>
+            {closed} closed · {openPos} open · {activeFact} active factors
           </span>
         )}
       </div>
 
       {loading && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
-          {PILLAR_ORDER.map(p => (
-            <div key={p} style={{ height: 52, borderRadius: 6 }} className="sk" />
-          ))}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 6, marginBottom: 12 }}>
+          {[0,1,2,3,4,5].map(i => <div key={i} style={{ height: 40, borderRadius: 5 }} className="sk" />)}
         </div>
       )}
 
-      {!loading && coldStart && (
+      {/* ── Pipeline flow strip ── */}
+      {!loading && (
         <div style={{
-          padding: "18px 20px",
-          borderRadius: 8,
-          background: "rgba(5,7,22,0.60)",
-          border: "1px solid rgba(99,102,241,0.10)",
-          display: "flex", alignItems: "center", gap: 14,
+          display: "flex", alignItems: "center", gap: 0,
+          marginBottom: 14, padding: "10px 12px",
+          background: "rgba(5,7,22,0.70)",
+          borderRadius: 8, border: "1px solid rgba(37,99,235,0.07)",
+          overflowX: "auto",
         }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(245,158,11,0.5)" strokeWidth="1.5">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-          </svg>
+          {LOOP_NODES.map((node, i) => {
+            const alive = nodeAlive[node.id];
+            const c = alive ? (active ? "#00D98A" : "#f59e0b") : "rgba(199,210,254,0.15)";
+            const isLast = i === LOOP_NODES.length - 1;
+            return (
+              <div key={node.id} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+                <div style={{ textAlign: "center", minWidth: 72 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginBottom: 3 }}>
+                    <div style={{
+                      width: 5, height: 5, borderRadius: "50%",
+                      background: c,
+                      boxShadow: alive ? `0 0 6px ${c}` : "none",
+                      transition: "all .4s",
+                    }} />
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 7, fontWeight: 700, letterSpacing: ".08em", color: c }}>
+                      {node.label}
+                    </span>
+                  </div>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 6, color: "rgba(199,210,254,0.22)", letterSpacing: ".04em" }}>
+                    {node.sub}
+                  </div>
+                </div>
+                {!isLast ? (
+                  <div style={{
+                    flex: 1, height: 1, minWidth: 12, maxWidth: 28,
+                    background: nodeAlive[LOOP_NODES[i+1]?.id]
+                      ? `linear-gradient(90deg, ${c}, rgba(0,217,138,0.15))`
+                      : "rgba(255,255,255,0.05)",
+                    position: "relative",
+                  }}>
+                    {/* Arrow tip */}
+                    <div style={{
+                      position: "absolute", right: 0, top: "50%",
+                      transform: "translateY(-50%)",
+                      width: 0, height: 0,
+                      borderTop: "3px solid transparent",
+                      borderBottom: "3px solid transparent",
+                      borderLeft: `4px solid ${nodeAlive[LOOP_NODES[i+1]?.id] ? c : "rgba(255,255,255,0.08)"}`,
+                    }} />
+                  </div>
+                ) : (
+                  /* Closing arc — IC feeds back into CIS */
+                  <div style={{
+                    width: 14, height: 1,
+                    background: active
+                      ? "linear-gradient(90deg, #00D98A40, transparent)"
+                      : "rgba(255,255,255,0.04)",
+                  }} />
+                )}
+              </div>
+            );
+          })}
+          {/* Loop closed indicator */}
+          <div style={{
+            fontFamily: FONTS.mono, fontSize: 6, letterSpacing: ".08em",
+            color: active ? "#00D98A" : "rgba(199,210,254,0.15)",
+            marginLeft: 4, flexShrink: 0,
+          }}>
+            ↺
+          </div>
+        </div>
+      )}
+
+      {/* ── Regime gate strip ── */}
+      {!loading && (
+        <div style={{
+          display: "flex", gap: 16, alignItems: "center",
+          padding: "8px 12px", marginBottom: 12,
+          background: "rgba(5,7,22,0.45)",
+          borderRadius: 6, border: "1px solid rgba(255,255,255,0.04)",
+        }}>
           <div>
-            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: "rgba(199,210,254,0.55)", marginBottom: 3 }}>
-              IC feedback loop initializing — all pillar multipliers neutral (1.0×)
-            </div>
-            <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.28)" }}>
-              Loop activates once Freqtrade closes 5+ trades and mine_alpha(pillar_fitness) runs
+            <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)", letterSpacing: ".1em", marginBottom: 2 }}>REGIME</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t2 }}>{regime.replace(/_/g, " ")}</div>
+          </div>
+          <div style={{ width: 1, height: 22, background: "rgba(255,255,255,0.06)" }} />
+          <div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)", letterSpacing: ".1em", marginBottom: 2 }}>CIS GATE</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: "#f59e0b" }}>≥ {gateThresh}</div>
+          </div>
+          <div style={{ width: 1, height: 22, background: "rgba(255,255,255,0.06)" }} />
+          <div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)", letterSpacing: ".1em", marginBottom: 2 }}>AUTO-MINE</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t2 }}>every 5 closes</div>
+          </div>
+          <div style={{ width: 1, height: 22, background: "rgba(255,255,255,0.06)" }} />
+          <div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)", letterSpacing: ".1em", marginBottom: 2 }}>NEXT MINE</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: nextMine <= 1 ? "#00D98A" : T.t2 }}>
+              {closed < 5 ? `${nextMine} trades` : `${nextMine} trades`}
             </div>
           </div>
         </div>
       )}
 
-      {!loading && !coldStart && (
+      {/* ── IC multiplier grid ── */}
+      {!loading && !active && (
+        <div style={{
+          padding: "14px 16px", borderRadius: 8,
+          background: "rgba(5,7,22,0.60)",
+          border: "1px solid rgba(99,102,241,0.10)",
+          display: "flex", alignItems: "center", gap: 12,
+        }}>
+          <div style={{ color: "rgba(245,158,11,0.5)", fontSize: 14 }}>○</div>
+          <div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.45)", marginBottom: 2 }}>
+              {closed < 5
+                ? `All pillar multipliers neutral (1.0×) — ${nextMine} more close${nextMine === 1 ? "" : "s"} to activate`
+                : `${closed} trades closed — mine has not run yet`}
+            </div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: "rgba(199,210,254,0.22)" }}>
+              IC loop activates automatically on trade 5, 10, 15… no manual trigger needed
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!loading && active && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
           {PILLAR_ORDER.map(p => {
-            const factors  = pillarMap[p] || [];
-            const mult     = multipliers[p];
-            const color    = PILLAR_HUE[p];
-            const active   = factors.filter(f => f.status === "active").length;
-            const total    = factors.length + (report.no_data || []).filter(f => (f.pillar || "").toUpperCase() === p).length;
-            const delta    = mult - 1.0;
-            const pct      = Math.abs(delta) / 0.30; // 0→1 fill
-            const sign     = delta >= 0 ? "+" : "";
+            const mult  = icMult[p] ?? 1.0;
+            const color = PILLAR_HUE[p];
+            const delta = mult - 1.0;
+            const pct   = Math.abs(delta) / 0.30;
+            const sign  = delta >= 0 ? "+" : "";
 
             return (
               <div key={p} style={{
@@ -808,13 +921,13 @@ function SimonsPanel() {
                 onMouseEnter={e => e.currentTarget.style.borderColor = `${color}44`}
                 onMouseLeave={e => e.currentTarget.style.borderColor = `${color}22`}
               >
-                {/* Pillar name */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: ".12em", color, textTransform: "uppercase" }}>{p}</span>
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.30)", letterSpacing: ".05em" }}>{active}/{total} active</span>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 7, color: delta > 0.005 ? "#00D98A" : delta < -0.005 ? "#FF3D5A" : "rgba(199,210,254,0.30)" }}>
+                    {sign}{(delta * 100).toFixed(0)}%
+                  </span>
                 </div>
 
-                {/* Multiplier value */}
                 <div style={{ fontFamily: FONTS.mono, fontSize: 22, fontWeight: 400, color: delta > 0.005 ? "#00D98A" : delta < -0.005 ? "#FF3D5A" : "rgba(199,210,254,0.55)", letterSpacing: "-0.02em", lineHeight: 1 }}>
                   {sign}{delta.toFixed(3)}<span style={{ fontSize: 11, opacity: 0.5 }}>×</span>
                 </div>
@@ -842,9 +955,9 @@ function SimonsPanel() {
       )}
 
       {/* Formula hint */}
-      {!coldStart && !loading && (
+      {!loading && (
         <div style={{ marginTop: 8, fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.18)", letterSpacing: ".05em" }}>
-          weight = base × regime × IC · IC = 1 + clamp(mean_active_r × 2.5, −0.30, +0.30)
+          weight = base × regime × IC · IC = 1 + clamp(mean_active_r × 2.5, −0.30, +0.30) · auto-mines every 5 closes
         </div>
       )}
     </div>
