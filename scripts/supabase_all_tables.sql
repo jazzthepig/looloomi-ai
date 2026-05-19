@@ -290,3 +290,22 @@ CREATE POLICY "webhook_subs_insert" ON webhook_subscriptions FOR INSERT WITH CHE
 CREATE POLICY "webhook_subs_select" ON webhook_subscriptions FOR SELECT USING (true);
 CREATE POLICY "webhook_subs_update" ON webhook_subscriptions FOR UPDATE USING (true);
 CREATE POLICY "webhook_subs_delete" ON webhook_subscriptions FOR DELETE USING (true);
+
+-- Atomic delivery counter increment (called by webhooks.py _sb_increment)
+CREATE OR REPLACE FUNCTION increment_webhook_delivery(
+    p_key_prefix TEXT,
+    p_url        TEXT,
+    p_success    BOOLEAN
+) RETURNS void AS $$
+BEGIN
+    IF p_success THEN
+        UPDATE webhook_subscriptions
+        SET fire_count = fire_count + 1
+        WHERE key_prefix = p_key_prefix AND url = p_url;
+    ELSE
+        UPDATE webhook_subscriptions
+        SET fail_count = fail_count + 1
+        WHERE key_prefix = p_key_prefix AND url = p_url;
+    END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

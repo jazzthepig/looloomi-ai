@@ -420,7 +420,9 @@ async def calculate_asset_betas(asset_id: str, asset_price_30d: list) -> dict:
 
     try:
         async with _beta_sem:
-            result = await asyncio.to_thread(_betas_in_thread, asset_id, asset_price_30d)
+            # Python 3.14: asyncio.to_thread with async func returns coroutine, not awaitable
+            # Run directly without to_thread wrapper (sync yfinance calls inside are the bottleneck, not this wrapper)
+            result = await _betas_in_thread(asset_id, asset_price_30d)
         _cache_set(cache_key, result)
         return result
     except Exception as e:
@@ -709,7 +711,8 @@ async def fetch_defillama_tvl() -> Dict[str, float]:
 
                 # Map to our config
                 for asset_id, config in ASSETS_CONFIG.items():
-                    if config["coingecko"].lower() == slug or symbol == asset_id:
+                    cg_id = config.get("coingecko", "")
+                    if cg_id and cg_id.lower() == slug or symbol == asset_id:
                         result[asset_id] = tvl
                         break
 
@@ -1089,6 +1092,7 @@ def calculate_cis_score(
     tvl: float,
     fng: Optional[dict],
     asset_class: str,
+    asset_id: Optional[str] = None,
     btc_change_30d: Optional[float] = None,
     github_commits_4w: Optional[int] = None,
     vix: Optional[float] = None,
@@ -1098,6 +1102,8 @@ def calculate_cis_score(
     dev_activity_score: Optional[float] = None,   # v4.2: CG Pro dev score 0-100 (tech assets)
     eodhd_fundamentals: Optional[dict] = None,    # v4.2: EODHD PE/revenue data (US Equity)
     regime: str = "Neutral",                      # v4.2: macro regime for regime-aware A pillar
+    _deriv_map: Optional[dict] = None,            # v4.3: derivatives funding rate + OI (internal)
+    _trend_map: Optional[dict] = None,            # v4.3: trending rank for S-pillar boost (internal)
 ) -> Dict[str, Any]:
     """
     CIS v4.2 — Continuous scoring functions.
@@ -2192,6 +2198,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         try:
             pillars_result = calculate_cis_score(
                 market_data, tvl, fng, asset_class,
+                asset_id=asset_id,
                 btc_change_30d=asset_btc_30d,
                 github_commits_4w=gh_commits,
                 vix=live_vix if is_tradfi else None,
@@ -2201,6 +2208,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 dev_activity_score=asset_dev_score,
                 eodhd_fundamentals=asset_eodhd,
                 regime=regime,
+                _deriv_map=_deriv_map,
+                _trend_map=_trend_map,
             )
         except Exception as e:
             _logger.warning(f"[CIS] score calculation failed for {asset_id} ({asset_class}): {e}")
