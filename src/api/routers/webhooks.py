@@ -38,7 +38,7 @@ _SB_KEY = os.getenv("SUPABASE_SERVICE_KEY", os.getenv("SUPABASE_KEY", ""))
 
 router = APIRouter(prefix="/api/v1/webhooks", tags=["webhooks"])
 
-SUPPORTED_EVENTS = {"GRADE_UPGRADE", "GRADE_DOWNGRADE"}
+SUPPORTED_EVENTS = {"GRADE_UPGRADE", "GRADE_DOWNGRADE", "SIGNAL_CHANGE"}
 
 
 # ── Supabase helpers ──────────────────────────────────────────────────────────
@@ -346,7 +346,7 @@ async def test_webhook(
     test_payload = {
         "event":     "TEST",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "assets":    [{"symbol": "BTC", "from": "B+", "to": "A", "delta": 1, "cis_score": 76.4}],
+        "assets":    [{"symbol": "BTC", "from": "B+", "to": "A", "delta": 1, "cis_score": 76.4, "new_signal": "OUTPERFORM", "old_signal": "NEUTRAL"}],
         "regime":    "TEST_MODE",
         "source":    "cometcloud_webhook_test",
         "message":   "This is a test delivery. Your endpoint and signature verification are working correctly.",
@@ -382,11 +382,16 @@ async def list_events():
                 "description": "One or more CIS-scored assets moved to a lower grade",
                 "importance":  "HIGH if delta ≥2 grades, MED if 1 grade",
             },
+            {
+                "event":       "SIGNAL_CHANGE",
+                "description": "One or more assets changed positioning signal (e.g. NEUTRAL → STRONG OUTPERFORM)",
+                "importance":  "HIGH on STRONG OUTPERFORM/UNDERWEIGHT transitions, MED otherwise",
+            },
         ],
         "payload_shape": {
-            "event":     "GRADE_UPGRADE | GRADE_DOWNGRADE | TEST",
+            "event":     "GRADE_UPGRADE | GRADE_DOWNGRADE | SIGNAL_CHANGE | TEST",
             "timestamp": "ISO8601",
-            "assets":    [{"symbol": "str", "from": "str", "to": "str", "delta": "int", "cis_score": "float"}],
+            "assets":    [{"symbol": "str", "from": "str", "to": "str", "delta": "int", "cis_score": "float", "grade": "str (SIGNAL_CHANGE only)", "old_signal": "str (SIGNAL_CHANGE only)", "new_signal": "str (SIGNAL_CHANGE only)"}],
             "regime":    "str",
             "source":    "cometcloud_cis_v4",
         },

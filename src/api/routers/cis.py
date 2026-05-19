@@ -217,6 +217,42 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                     regime = macro_regime_push or "",
                 ))
 
+            # Signal-level change detection (fires even without grade change)
+            # Tracks: NEUTRAL/UNDERPERFORM/UNDERWEIGHT → OUTPERFORM/STRONG OUTPERFORM transitions
+            _SIGNAL_RANK = {
+                "STRONG OUTPERFORM": 5, "OUTPERFORM": 4, "NEUTRAL": 3,
+                "UNDERPERFORM": 2, "UNDERWEIGHT": 1,
+            }
+            signal_changes = []
+            for asset in universe:
+                symbol     = asset.get("symbol", "")
+                new_signal = asset.get("signal", "")
+                history    = recent_scores.get(symbol, [])
+                if not history or not new_signal:
+                    continue
+                prev_signal = history[0].get("signal", "")
+                if not prev_signal or prev_signal == new_signal:
+                    continue
+                # Only fire if not already captured by grade change event
+                is_grade_change = any(a["symbol"] == symbol for a in upgrades + downgrades)
+                if not is_grade_change:
+                    signal_changes.append({
+                        "symbol":      symbol,
+                        "asset_class": asset.get("asset_class", asset.get("class", "")),
+                        "from":        prev_signal,
+                        "to":          new_signal,
+                        "delta":       _SIGNAL_RANK.get(new_signal, 0) - _SIGNAL_RANK.get(prev_signal, 0),
+                        "grade":       asset.get("grade", ""),
+                        "cis_score":   round(asset.get("cis_score") or asset.get("score") or 0.0, 2),
+                    })
+            if signal_changes:
+                _logger.info(f"[INTERNAL] {len(signal_changes)} SIGNAL_CHANGE — firing webhooks")
+                asyncio.create_task(fire_grade_webhooks(
+                    event  = "SIGNAL_CHANGE",
+                    assets = signal_changes,
+                    regime = macro_regime_push or "",
+                ))
+
         # 3. Broadcast to WebSocket clients
         asyncio.create_task(_broadcast_cis_update(universe))
 
