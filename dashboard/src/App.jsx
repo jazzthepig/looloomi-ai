@@ -17,6 +17,7 @@ const AssetRadar           = lazy(() => import("./components/AssetRadar"));
 const QuantMonitor         = lazy(() => import("./components/QuantMonitor"));
 const MyPortfolio          = lazy(() => import("./components/MyPortfolio"));
 const SignalFeed           = lazy(() => import("./components/SignalFeed"));
+const StrategiesPage       = lazy(() => import("./components/StrategiesPage"));
 
 /* ── Staging environment banner ─────────────────────────────────────────── */
 function StagingBanner() {
@@ -283,6 +284,7 @@ const NAV_ITEMS = [
       { id: "cis.radar",       label: "Asset Radar" },
     ]
   },
+  { id: "strategies", label: "Strategies", icon: "▲", sub: "3 Autonomous Strategies" },
   { id: "protocol",  label: "Protocols", icon: "⬡", sub: "DeFi TVL · Selection" },
   { id: "vault",     label: "Vault",     icon: "◎", sub: "Fund of Funds" },
   { id: "quantgp",   label: "Quant GP",  icon: "∿", sub: "EST Alpha · Live" },
@@ -523,6 +525,19 @@ function DesktopApp() {
           {visited.has("intelligence") && (
             <section style={contentPad}>
               <IntelligencePage isSection={true} />
+            </section>
+          )}
+        </div>
+
+        {/* Strategies */}
+        <div style={{ display: activeSection === "strategies" ? "block" : "none" }}>
+          {visited.has("strategies") && (
+            <section style={contentPad}>
+              <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+                <Suspense fallback={<SectionLoader />}>
+                  <StrategiesPage />
+                </Suspense>
+              </div>
             </section>
           )}
         </div>

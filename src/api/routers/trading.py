@@ -568,6 +568,12 @@ async def close_position(order_id: str, req: CloseRequest = None):
 
     _logger.info(f"[TRADING] CLOSE {sym} @ {price:.4f} | P&L: {pnl_pct:+.2f}% (${pnl_abs:+.2f})")
 
+    # ── Simons IC Loop — auto-mine after every 5th closed trade ──────────────
+    all_closed = [p for p in positions.values() if p.get("status") == "closed"]
+    n_closed   = len(all_closed)
+    if n_closed >= 5 and (n_closed == 5 or n_closed % 5 == 0):
+        asyncio.create_task(_auto_mine_ic(all_closed, n_closed))
+
     return {
         "status":       "closed",
         "order_id":     order_id,
@@ -580,6 +586,135 @@ async def close_position(order_id: str, req: CloseRequest = None):
             datetime.fromisoformat(pos["closed_at"].replace("Z", "+00:00")) -
             datetime.fromisoformat(pos["opened_at"].replace("Z", "+00:00"))
         ).total_seconds() if pos.get("opened_at") else None,
+    }
+
+
+# ── Simons IC Loop — auto-mine background task ───────────────────────────────
+
+async def _auto_mine_ic(closed: list, n_closed: int) -> None:
+    """
+    Background task: runs pillar fitness correlation and writes IC multipliers to Redis.
+    Called automatically every 5th trade close. Never blocks the close response.
+
+    Flow: close_position() → create_task(_auto_mine_ic) →
+          _mine_pillar_fitness(closed) → update_from_pillar_fitness() →
+          cis:factor_performance (Redis, 7d TTL) →
+          _refresh_ic_multipliers() reads on next CIS scoring run →
+          calculate_total_score(ic_mult=...) Layer 3 applied.
+    """
+    _logger.info(f"[IC-LOOP] Auto-mine triggered — {n_closed} closed trades")
+    try:
+        # 1. Bust stale mine cache (all hour windows for pillar_fitness)
+        for hours in [24, 72, 168, 720]:
+            await _rset(f"trading:mine:pillar_fitness:{hours}", json.dumps({"_busted": True}), ttl=1)
+
+        # 2. Run Pearson IC per pillar against ALL closed trades (max sample)
+        result  = _mine_pillar_fitness(closed)
+        corrs   = result.get("pillar_correlations", {})
+        enriched = {
+            k: {"correlation": v, "sample_size": n_closed}
+            for k, v in corrs.items() if v is not None
+        }
+        if not enriched:
+            _logger.info("[IC-LOOP] Insufficient pillar snapshot data — need ≥5 trades with pillar_X_at_entry fields")
+            return
+
+        # 3. Persist to cis:factor_performance via performance.py
+        from src.data.factors.performance import update_from_pillar_fitness
+        update_from_pillar_fitness(enriched, n_closed)
+
+        _logger.info(f"[IC-LOOP] IC update complete — correlations: {corrs}")
+    except Exception as exc:
+        _logger.warning(f"[IC-LOOP] Auto-mine failed: {exc}")
+
+
+# ── GET /api/v1/trading/loop-state ────────────────────────────────────────────
+
+_REGIME_GATE = {
+    "RISK_ON": 45, "GOLDILOCKS": 45, "EASING": 48,
+    "TIGHTENING": 52, "RISK_OFF": 58, "STAGFLATION": 60,
+}
+
+
+@router.get("/api/v1/trading/loop-state")
+async def get_loop_state():
+    """
+    Simons IC feedback loop — unified state for the analysis/trade cycle.
+
+    Returns:
+      loop_active       — bool: mine has run + ≥5 closed trades
+      closed_trades     — total closed paper trades
+      open_positions    — current open count
+      ic_multipliers    — {F,M,O,S,A} → current weight multiplier (1.0 = neutral)
+      mine_last_run     — unix timestamp of last mine run (or null)
+      mine_periods      — how many mine runs completed
+      next_mine_at      — trades until next auto-mine trigger
+      regime            — current macro regime from CIS
+      gate_threshold    — min CIS score for trade entry in current regime
+    """
+    positions_data, factor_raw, cis_raw = await asyncio.gather(
+        _get_positions(),
+        _rget("cis:factor_performance"),
+        _rget("cis:local_scores"),
+    )
+
+    closed = [p for p in positions_data.values() if p.get("status") == "closed"]
+    open_  = [p for p in positions_data.values() if p.get("status") == "open"]
+    n_closed = len(closed)
+
+    # ── Parse factor performance ──────────────────────────────────────────────
+    fp   = json.loads(factor_raw) if factor_raw else {}
+    meta = fp.get("_meta", {})
+
+    # Compute IC multiplier per pillar (mirrors _refresh_ic_multipliers in cis_provider.py)
+    ic_mult: dict[str, float] = {}
+    for pillar in ("F", "M", "O", "S", "A"):
+        factors = [
+            v for k, v in fp.items()
+            if k != "_meta" and isinstance(v, dict) and (v.get("pillar") or "").upper() == pillar
+        ]
+        active = [
+            f for f in factors
+            if f.get("pearson_r") is not None
+            and abs(f.get("pearson_r", 0)) > 0.10
+            and (f.get("sample_size") or 0) >= 10
+        ]
+        if active:
+            mean_r = sum(f["pearson_r"] for f in active) / len(active)
+            ic_mult[pillar] = round(1.0 + max(-0.30, min(0.30, mean_r * 2.5)), 4)
+        else:
+            ic_mult[pillar] = 1.0
+
+    # ── Parse current regime ──────────────────────────────────────────────────
+    regime = "UNKNOWN"
+    if cis_raw:
+        try:
+            cis_data = json.loads(cis_raw)
+            regime = (
+                cis_data.get("macro", {}).get("regime")
+                or cis_data.get("macro_regime")
+                or "UNKNOWN"
+            )
+        except Exception:
+            pass
+
+    gate_threshold = _REGIME_GATE.get(regime, 50)
+    loop_active    = n_closed >= 5 and bool(meta.get("last_run"))
+    next_mine_at   = max(0, 5 - n_closed) if n_closed < 5 else (5 - (n_closed % 5)) % 5 or 5
+
+    return {
+        "loop_active":      loop_active,
+        "closed_trades":    n_closed,
+        "open_positions":   len(open_),
+        "ic_multipliers":   ic_mult,
+        "mine_last_run":    meta.get("last_run"),
+        "mine_periods":     meta.get("periods_computed", 0),
+        "mine_total_trades":meta.get("total_trades_analysed", 0),
+        "regime":           regime,
+        "gate_threshold":   gate_threshold,
+        "next_mine_at":     next_mine_at,
+        "auto_mine_every":  5,
+        "active_factors":   len([v for k, v in fp.items() if k != "_meta" and isinstance(v, dict) and v.get("status") == "active"]),
     }
 
 
