@@ -696,6 +696,131 @@ function computeMultiplier(factors) {
   return Math.round((1.0 + Math.max(-0.30, Math.min(0.30, meanR * 2.5))) * 10000) / 10000;
 }
 
+/* ─── Factor Lab ─────────────────────────────────────────────────────────── */
+// Shows pending Gemma4-26b discovery requests and active factor hypotheses.
+// Rendered at the bottom of SimonsPanel when discovery data is present.
+function FactorLab() {
+  const [disc, setDisc] = useState(null);
+
+  useEffect(() => {
+    const load = () =>
+      fetch(`${API_BASE}/factors/discovery`)
+        .then(r => r.ok ? r.json() : null).catch(() => null)
+        .then(d => setDisc(d));
+    load();
+    const iv = setInterval(load, 120_000); // 2min — discovery is slow-moving
+    return () => clearInterval(iv);
+  }, []);
+
+  if (!disc) return null;
+  const hasPending    = disc.has_pending;
+  const hypotheses    = disc.hypotheses ?? {};
+  const pending       = disc.pending;
+  const pillarsWithH  = Object.keys(hypotheses);
+  if (!hasPending && pillarsWithH.length === 0) return null;
+
+  const CONF_COLOR = { HIGH: "#00D98A", MEDIUM: "#f59e0b", LOW: "rgba(199,210,254,0.30)" };
+
+  return (
+    <div style={{
+      marginTop: 16, padding: "14px 16px", borderRadius: 8,
+      background: "rgba(5,7,22,0.60)",
+      border: "1px solid rgba(99,102,241,0.12)",
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <span style={{ fontFamily: FONTS.display, fontSize: 10, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
+          Factor Lab
+        </span>
+        {hasPending && (
+          <span style={{
+            fontFamily: FONTS.mono, fontSize: 7, fontWeight: 700, letterSpacing: ".08em",
+            padding: "1px 7px", borderRadius: 3,
+            background: "rgba(245,158,11,0.10)", color: "#f59e0b",
+            border: "1px solid rgba(245,158,11,0.22)",
+          }}>
+            QUEUED
+          </span>
+        )}
+      </div>
+
+      {/* Pending request */}
+      {hasPending && (
+        <div style={{
+          marginBottom: 10, padding: "8px 10px", borderRadius: 6,
+          background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)",
+        }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: "#f59e0b", marginBottom: 3, fontWeight: 700 }}>
+            Weak IC detected · Awaiting Gemma4-26b analysis
+          </div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.40)" }}>
+            Pillars: {(pending?.pillars || []).join(", ")} &nbsp;·&nbsp; Regime: {pending?.regime ?? "—"} &nbsp;·&nbsp; Mac Mini will process on next push cycle
+          </div>
+        </div>
+      )}
+
+      {/* Active hypotheses per pillar */}
+      {pillarsWithH.map(pillar => {
+        const item = hypotheses[pillar] ?? {};
+        const hyps = item.hypotheses || [];
+        const color = PILLAR_HUE[pillar] || "#6366f1";
+        const age   = item.generated_at
+          ? Math.round((Date.now() / 1000 - item.generated_at) / 3600)
+          : null;
+        return (
+          <div key={pillar} style={{ marginBottom: 10 }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8, marginBottom: 6,
+            }}>
+              <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, color, letterSpacing: ".10em" }}>
+                PILLAR {pillar}
+              </span>
+              <span style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)" }}>
+                {hyps.length} hypothesis{hyps.length !== 1 ? "es" : ""}
+                {age != null ? ` · generated ${age}h ago` : ""}
+              </span>
+            </div>
+            {hyps.map((h, i) => (
+              <div key={i} style={{
+                display: "flex", gap: 10, alignItems: "flex-start",
+                marginBottom: 5, padding: "8px 10px", borderRadius: 6,
+                background: "rgba(255,255,255,0.025)",
+                border: `1px solid ${color}14`,
+              }}>
+                {/* Confidence badge */}
+                <span style={{
+                  fontFamily: FONTS.mono, fontSize: 7, fontWeight: 700,
+                  color: CONF_COLOR[h.confidence] ?? CONF_COLOR.LOW,
+                  flexShrink: 0, paddingTop: 1,
+                }}>
+                  {h.confidence}
+                </span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t1, marginBottom: 2, fontWeight: 600 }}>
+                    {h.name}
+                  </div>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.35)", marginBottom: 2, wordBreak: "break-all" }}>
+                    {h.formula}
+                  </div>
+                  {h.regime_rationale && (
+                    <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)", fontStyle: "italic" }}>
+                      {h.regime_rationale}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+
+      <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.15)", marginTop: 4 }}>
+        |r| &lt; 0.05 × 3 mine runs → Gemma4-26b hypothesis generation → test → evolve
+      </div>
+    </div>
+  );
+}
+
 // ── Pipeline node labels for the loop flow strip ─────────────────────────────
 const LOOP_NODES = [
   { id: "cis",    label: "CIS SCORE",   sub: "5-pillar scoring" },
@@ -960,6 +1085,9 @@ function SimonsPanel() {
           weight = base × regime × IC · IC = 1 + clamp(mean_active_r × 2.5, −0.30, +0.30) · auto-mines every 5 closes
         </div>
       )}
+
+      {/* Factor Lab — LLM hypothesis generation */}
+      {!loading && <FactorLab />}
     </div>
   );
 }
