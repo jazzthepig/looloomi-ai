@@ -106,7 +106,7 @@ Total crypto market cap stands at {mcap_str} with BTC at {btc_str} ({chg_str} 24
 
 **Positioning:** {regime_action}
 
-*Auto-generated from live market data. Mac Mini LLM brief updates 2× daily when available.*"""
+Powered by Looloomi-AI"""
 
     return brief
 

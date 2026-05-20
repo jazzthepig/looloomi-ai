@@ -32,6 +32,55 @@ filter. Cannot directly probe live endpoints. Use local import testing instead.
 
 ---
 
+## Verification report — commit cf9cc52 (2026-05-19)
+
+### Result: PASS — all 5 checks green
+
+| Endpoint | Status | Details |
+|---|---|---|
+| `/health` | ✅ PASS | `{"status":"healthy","version":"0.6.2","sources":["binance","defillama","alternative.me","moralis","etherscan"]}` |
+| `/api/v1/cis/universe` | ✅ PASS | 58 assets, all T1 (Mac Mini engine), regime=Tightening, compliance-safe signals (OUTPERFORM/NEUTRAL/UNDERPERFORM only), no BUY/SELL/ACCUMULATE |
+| `/api/v1/market/prices` | ✅ PASS | BTC=$76,819, ETH=$2,133 — live Binance data |
+| `/api/v1/defi/overview` | ✅ PASS | $82.9B TVL, l2_tvl=$6.46B, rwa_tvl=$27.1B, 24h=-0.31% |
+| `/api/v1/defi/protocols` | ✅ PASS | 14 protocols scored, DeFiLlama live TVL, logos + URLs present |
+
+### Notable changes from previous deploy (223c865)
+- CIS universe: 84 → 58 assets (Mac Mini now scoring 58 assets, no T2 Railway fallback in use)
+- Asset mix: Heavy TradFi/commercial assets at top (USO, NVDA, GOOGL, AMZN, SPY, QQQ, AAPL, MSFT, TSLA, META) — all with price=0, volume=0 (static data, not live)
+- Crypto assets still present in lower ranks: BTC (62.2, B), ETH (48.3, UNDERPERFORM), SOL (47.4), ADA (42.4)
+- All signals compliance-safe: OUTPERFORM/NEUTRAL/UNDERPERFORM only
+- Pillar data: O pillar consistently null across all assets (expected — on-chain/risk pillar not populated)
+- F pillar: Fixed at 50 for crypto/L1/L2, 55.8 for US Equities, 70 for DeFi, 72 for US Bonds — seems hardcoded or limited data source
+
+### Potential concerns (non-blocking)
+1. **Pillar O always null** — on-chain/risk pillar not being populated. May be intentional (T1 engine not computing it) or data gap.
+2. **F pillar binary** — 50 (crypto/L1/L2/commodity) vs 55.8 (equities) vs 70 (DeFi) vs 72 (bonds) — appears formulaic, not market-derived. Could indicate limited fundamental data feed.
+3. **Top assets are TradFi ETFs with price=0** — these score well on low-volatility characteristics (A pillar = 100 for USO/GOOGL) but have no live price data. Frontend may show 0 for these.
+4. **No T2 fallback** — 58 vs old 84. If Mac Mini scheduler is down, Railway would serve 0 assets. Monitor.
+
+### CIS scoring state (as of 2026-05-19)
+- Top: USO B+ (70.9), NVDA B+ (68.5), GOOGL B+ (68.4) — all non-crypto
+- BTC: 62.2 (B, NEUTRAL) — raw_cis_score=46.34
+- ETH: 48.3 (C+, UNDERPERFORM) — raw_cis_score=34.15
+- Lowest: OP (39.9), POL (40.8), AAVE (41.1) — all C range
+- Regime threshold for trades: 52 (Tightening) — only USO(70.9), NVDA(68.5), GOOGL(68.4), AMZN(68.4), SPY(68.2), QQQ(68.2), PENDLE(67.7), INJ(66.0), CPER(65.9), AAPL(65.3) pass
+
+### Railway env vars (assumeunchanged from 2026-04-26 unless Jazz updated)
+- UPSTASH_REDIS_REST_URL: ✅ Set
+- UPSTASH_REDIS_REST_TOKEN: ✅ Set
+- INTERNAL_TOKEN: ✅ Set
+- COINGECKO_API_KEY: ✅ Set
+- SUPABASE_URL: ✅ Set
+- SUPABASE_KEY: ✅ Set
+- EODHD_API_KEY: ❓ Unknown (may have been updated)
+
+### Network note (outdated — agent can now reach Railway)
+Previous memory stated sandbox has no outbound access. Current session CAN reach
+web-production-0cdf76.up.railway.app directly. Cloudflare bypass not needed for Railway
+direct URL.
+
+---
+
 ## Railway production (as of 2026-04-26)
 
 ### Latest deployed commit
