@@ -620,10 +620,30 @@ async def _auto_mine_ic(closed: list, n_closed: int) -> None:
             return
 
         # 3. Persist to cis:factor_performance via performance.py
-        from src.data.factors.performance import update_from_pillar_fitness
+        from src.data.factors.performance import update_from_pillar_fitness, load as _fp_load
         update_from_pillar_fitness(enriched, n_closed)
 
         _logger.info(f"[IC-LOOP] IC update complete — correlations: {corrs}")
+
+        # 4. Check for weak IC pillars → queue Gemma4-26b discovery if needed
+        try:
+            cis_raw = await _rget("cis:local_scores")
+            regime  = "UNKNOWN"
+            if cis_raw and isinstance(cis_raw, dict):
+                regime = (
+                    cis_raw.get("macro", {}).get("regime")
+                    or cis_raw.get("macro_regime")
+                    or "UNKNOWN"
+                )
+            fp = _fp_load()
+            if fp:
+                from src.data.factors.discovery import check_and_queue_discovery
+                queued = check_and_queue_discovery(fp, regime)
+                if queued:
+                    _logger.info(f"[IC-LOOP] Discovery queued for weak pillars: {queued}")
+        except Exception as disc_exc:
+            _logger.debug(f"[IC-LOOP] Discovery check skipped: {disc_exc}")
+
     except Exception as exc:
         _logger.warning(f"[IC-LOOP] Auto-mine failed: {exc}")
 
