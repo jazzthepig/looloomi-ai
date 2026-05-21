@@ -56,7 +56,13 @@ def _get_llama_client() -> httpx.AsyncClient:
     """Persistent client for api.llama.fi / coins.llama.fi / yields.llama.fi"""
     global _llama_client
     if _llama_client is None or _llama_client.is_closed:
-        _llama_client = httpx.AsyncClient(timeout=15, limits=_POOL_LIMITS)
+        _llama_client = httpx.AsyncClient(
+            timeout=20, limits=_POOL_LIMITS,
+            headers={
+                "User-Agent": "Mozilla/5.0 (compatible; CometCloud/1.0; +https://looloomi.ai)",
+                "Accept": "application/json",
+            },
+        )
     return _llama_client
 
 def _get_cg_client() -> httpx.AsyncClient:
@@ -634,6 +640,7 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
     Returns up to `limit` rounds sorted by date desc, last 180 days.
     Amount is returned in USD (DeFiLlama stores in $M; we multiply ×1M).
     TTL: 1h in-memory + 1h Redis.
+    Retry: 2 attempts with fresh client on failure (handles Cloudflare 403).
     """
     key = f"vc_raises_v3:{limit}"
     cached = _cache_get(key, ttl=3600)
@@ -643,15 +650,25 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
     if r_cached:
         return _cache_set(key, r_cached)
 
-    try:
+    _RAISES_URL = "https://api.llama.fi/raises"
+
+    async def _fetch_once() -> list:
         client = _get_llama_client()
-        resp = await client.get("https://api.llama.fi/raises", timeout=25)
+        resp = await client.get(_RAISES_URL, timeout=25)
+        _logger.info(f"[VC_RAISES] HTTP {resp.status_code} from {_RAISES_URL}")
+        if resp.status_code == 403:
+            _logger.warning("[VC_RAISES] 403 from DeFiLlama — Cloudflare block; returning stale cache")
+            return []
         resp.raise_for_status()
         data = resp.json()
 
-        raw = data.get("raises", [])
-        cutoff = datetime.now(timezone.utc).timestamp() - 180 * 86400
+        # DeFiLlama returns {"raises": [...]} — handle any key variation
+        raw = data.get("raises") or data.get("data") or data.get("fundraises") or []
+        if not raw:
+            _logger.warning(f"[VC_RAISES] Empty response — keys: {list(data.keys())[:10]}")
+            return []
 
+        cutoff = datetime.now(timezone.utc).timestamp() - 180 * 86400
         raises = []
         for r in raw:
             raw_amount = r.get("amount") or 0   # DeFiLlama: $M
@@ -663,9 +680,8 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
             other = r.get("otherInvestors") or []
 
             raises.append({
-                # Frontend reads: name, amount (USD), round, date, category, leadInvestors, investors, chains
                 "name":          r.get("name") or r.get("project") or "Unknown",
-                "amount":        int(raw_amount * 1_000_000),   # → USD for frontend /1M display
+                "amount":        int(raw_amount * 1_000_000),   # → USD (frontend divides by 1M)
                 "round":         r.get("round") or r.get("roundType") or "—",
                 "date":          date_ts,                        # Unix timestamp seconds
                 "category":      r.get("category") or "DeFi",
@@ -679,12 +695,20 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
             })
 
         raises.sort(key=lambda x: x.get("date", 0) or 0, reverse=True)
-        result = raises[:limit]
-        await _redis_set(key, result, ttl=3600)
-        return _cache_set(key, result)
+        return raises[:limit]
+
+    try:
+        result = await _fetch_once()
+        if result:
+            await _redis_set(key, result, ttl=3600)
+            return _cache_set(key, result)
+        # Empty — return stale Redis if available (don't serve [] when cache exists)
+        stale = await _redis_get(f"{key}:stale")
+        return stale or []
     except Exception as e:
         _logger.warning(f"[VC_RAISES] Error: {e}")
-        return []
+        stale = await _redis_get(f"{key}:stale")
+        return stale or []
 
 
 async def get_token_unlocks(days_ahead: int = 30) -> list[dict]:

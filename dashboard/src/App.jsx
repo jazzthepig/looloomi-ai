@@ -17,7 +17,8 @@ const AssetRadar           = lazy(() => import("./components/AssetRadar"));
 const QuantMonitor         = lazy(() => import("./components/QuantMonitor"));
 const MyPortfolio          = lazy(() => import("./components/MyPortfolio"));
 const SignalFeed           = lazy(() => import("./components/SignalFeed"));
-const StrategiesPage       = lazy(() => import("./components/StrategiesPage"));
+const StrategiesPage         = lazy(() => import("./components/StrategiesPage"));
+const MultiFactorStrategies  = lazy(() => import("./components/MultiFactorStrategies"));
 
 /* ── Staging environment banner ─────────────────────────────────────────── */
 function StagingBanner() {
@@ -71,11 +72,11 @@ function SectionLabel({ label, sub, stats = null }) {
   );
 }
 
-function SectionLoader() {
+function SectionLoader({ label = "LOADING…" }) {
   return (
     <div style={{ padding: "48px 0", textAlign: "center" }}>
       <div style={{ color: "rgba(199,210,254,0.2)", fontFamily: FONTS.mono, fontSize: 11, letterSpacing: "0.1em" }}>
-        LOADING…
+        {label}
       </div>
     </div>
   );
@@ -284,7 +285,7 @@ const NAV_ITEMS = [
       { id: "cis.radar",       label: "Asset Radar" },
     ]
   },
-  { id: "strategies", label: "Strategies", icon: "▲", sub: "3 Autonomous Strategies" },
+  { id: "strategies", label: "Strategies", icon: "▲", sub: "Autonomous · Multi-Factor" },
   { id: "protocol",  label: "Protocols", icon: "⬡", sub: "DeFi TVL · Selection" },
   { id: "vault",     label: "Vault",     icon: "◎", sub: "Fund of Funds" },
   { id: "quantgp",   label: "Trading Engine", icon: "∿", sub: "IC Loop · Freqtrade · Live" },
@@ -534,7 +535,25 @@ function DesktopApp() {
           {visited.has("strategies") && (
             <section style={contentPad}>
               <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-                <Suspense fallback={<SectionLoader />}>
+                {/* Multi-Factor Strategy Engine — factor weight profiles + live rescoring */}
+                <div style={{ marginBottom: 32 }}>
+                  <Suspense fallback={<SectionLoader label="LOADING STRATEGIES…" />}>
+                    <MultiFactorStrategies />
+                  </Suspense>
+                </div>
+                {/* Divider */}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 12, marginBottom: 28,
+                  opacity: 0.35,
+                }}>
+                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "rgba(199,210,254,0.4)", letterSpacing: "0.14em" }}>
+                    AUTONOMOUS EXECUTION
+                  </span>
+                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                </div>
+                {/* Autonomous strategies (fund channels) */}
+                <Suspense fallback={<SectionLoader label="LOADING CHANNELS…" />}>
                   <StrategiesPage />
                 </Suspense>
               </div>
