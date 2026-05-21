@@ -716,11 +716,21 @@ export default function PortfolioAllocation({ universe = [] }) {
           {/* Allocation table */}
           {allocations.length === 0 ? (
             <div style={{
-              background: T.surface, border: `1px solid ${T.border}`,
-              borderRadius: 10, padding: "40px 20px", textAlign: "center",
-              color: T.t3, fontFamily: FONTS.body, fontSize: 13,
+              background: T.surface, border: `1px solid rgba(245,158,11,0.15)`,
+              borderRadius: 10, padding: "32px 24px", textAlign: "center",
             }}>
-              No assets match the current filters — try a lower grade threshold or more asset classes.
+              <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: "#f59e0b", letterSpacing: ".10em", marginBottom: 10 }}>
+                ⚠ NO QUALIFYING ASSETS
+              </div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 13, color: T.t3, marginBottom: 8, lineHeight: 1.6 }}>
+                {macroRegime && (macroRegime.includes("TIGHTEN") || macroRegime.includes("RISK_OFF") || macroRegime.includes("STAGFLAT"))
+                  ? <>In the current <span style={{ color: "#f59e0b", fontFamily: FONTS.mono, fontSize: 11 }}>{macroRegime.replace(/_/g, " ")}</span> regime, most assets score below grade B. Switch to <strong style={{ color: T.t2 }}>Aggressive</strong> profile or lower grade filters to build a portfolio.</>
+                  : <>No assets match the current grade threshold. Try switching to <strong style={{ color: T.t2 }}>Aggressive</strong> profile or selecting more asset classes.</>
+                }
+              </div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: "rgba(199,210,254,0.30)", letterSpacing: ".06em" }}>
+                Min grade: {cfg.minGrade} · Universe: {universe.length} assets scored
+              </div>
             </div>
           ) : (
             <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden" }}>

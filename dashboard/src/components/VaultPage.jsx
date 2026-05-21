@@ -376,7 +376,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                 borderLeft: `1px solid rgba(6,182,212,0.10)`,
                 display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1,
               }}>
-                <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.16em", color: T.muted, textTransform: "uppercase" }}>{s.label}</div>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.12em", color: T.muted, textTransform: "uppercase" }}>{s.label}</div>
                 <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: s.color, letterSpacing: "-0.01em" }}>{s.value}</div>
               </div>
             ))}

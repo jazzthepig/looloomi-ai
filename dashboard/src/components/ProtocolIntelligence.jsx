@@ -359,7 +359,7 @@ export default function ProtocolIntelligence() {
             ))
           ) : error ? (
             <div style={{ padding: 40, textAlign: "center", color: T.t3, fontSize: 11 }}>
-              Protocol data loading... API warming up.
+              Protocol data loading — API warming up.
             </div>
           ) : filtered.map((p, idx) => {
             const isExpanded_ = expandedId === p.id;

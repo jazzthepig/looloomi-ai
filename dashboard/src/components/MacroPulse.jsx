@@ -149,7 +149,7 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
         {/* ── Regime — headline element ── */}
         <div style={{ paddingRight: 40, paddingBottom: 4 }}>
           <div style={{
-            fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.22em",
+            fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.16em",
             color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6,
           }}>
             Market Regime
@@ -175,7 +175,7 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
 
         {/* ── BTC Price ── */}
         <div style={{ paddingRight: 36, paddingBottom: 4 }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.14em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
             Bitcoin
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 34, fontWeight: 400, color: T.t1, letterSpacing: "-0.02em", lineHeight: 1 }}>
@@ -192,7 +192,7 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
 
         {/* ── BTC Dominance ── */}
         <div style={{ paddingRight: 36, paddingBottom: 4 }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.14em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
             BTC Dom
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.t1, letterSpacing: "-0.02em", lineHeight: 1 }}>
@@ -203,7 +203,7 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
 
         {/* ── Fear & Greed ── */}
         <div style={{ paddingRight: 36, paddingBottom: 4 }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.14em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
             Fear &amp; Greed
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: getFngColor(fngValue), letterSpacing: "-0.02em", lineHeight: 1 }}>
@@ -216,7 +216,7 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
 
         {/* ── MCap 24h ── */}
         <div style={{ paddingRight: 36, paddingBottom: 4 }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.14em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
             Total MCap 24h
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1, color: totalMarketCapChange >= 0 ? T.green : T.red }}>

@@ -492,7 +492,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       borderLeft: `1px solid rgba(6,182,212,0.10)`,
                       display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1,
                     }}>
-                      <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.16em", color: T.muted, textTransform: "uppercase" }}>{s.label}</div>
+                      <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.12em", color: T.muted, textTransform: "uppercase" }}>{s.label}</div>
                       <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: s.color, letterSpacing: "-0.01em" }}>{s.value}</div>
                     </div>
                   ))}
@@ -558,7 +558,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   marginRight: i < arr.length - 1 ? 36 : 0,
                   paddingBottom: 4,
                 }}>
-                  <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 8, opacity: 0.6 }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.14em", color: T.t3, textTransform: "uppercase", marginBottom: 8, opacity: 0.6 }}>
                     {s.label}
                   </div>
                   {s.value !== null
@@ -578,7 +578,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               transform: mounted ? "translateY(0)" : "translateY(8px)",
               transition: "opacity 0.35s ease 320ms, transform 0.35s ease 320ms",
             }}>
-              <Suspense fallback={<div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(199,210,254,0.3)", fontFamily: "monospace", fontSize: 11 }}>Loading protocols…</div>}>
+              <Suspense fallback={<div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(199,210,254,0.25)", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.10em" }}>LOADING PROTOCOLS…</div>}>
                 <ProtocolIntelligence />
               </Suspense>
             </div>

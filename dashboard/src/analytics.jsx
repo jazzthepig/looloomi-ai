@@ -87,7 +87,9 @@ function AnalyticsPage() {
   const [error, setError]             = useState(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/cis/universe`)
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 20_000);
+    fetch(`${API_BASE}/cis/universe`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => {
         const raw = d.assets || d.universe || d.data || d || [];
@@ -98,8 +100,11 @@ function AnalyticsPage() {
           cis_score: a.total_score ?? a.cis_score ?? 0,
         })));
       })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
+      .catch(e => {
+        if (e.name === "AbortError") setError("Request timed out — Railway may be starting up. Refresh in 30 seconds.");
+        else setError(e.message);
+      })
+      .finally(() => { clearTimeout(timeout); setLoading(false); });
   }, []);
 
   return (
