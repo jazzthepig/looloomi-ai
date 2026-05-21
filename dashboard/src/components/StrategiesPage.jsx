@@ -65,7 +65,7 @@ function PositionRow({ rank, symbol, signal, score, grade, weight, change7d }) {
       <span style={{ fontFamily: F.mono, fontSize: 9, color: T.muted }}>{rank}</span>
       <span style={{ fontFamily: F.display, fontSize: 12, fontWeight: 700, color: T.t1 }}>{symbol}</span>
       <span style={{
-        fontFamily: F.mono, fontSize: 7, fontWeight: 700, letterSpacing: "0.06em",
+        fontFamily: F.mono, fontSize: 9, fontWeight: 700, letterSpacing: "0.04em",
         color: SIG_COLORS[signal] || T.muted,
       }}>
         {signal === "STRONG OUTPERFORM" ? "STR.OUTPERF" : signal}
@@ -100,7 +100,7 @@ function PositionTable({ assets, maxRows = 5, emptyMsg = "Loading positions…" 
         display: "grid",
         gridTemplateColumns: "22px 60px 1fr 52px 38px 46px",
         padding: "4px 0 6px",
-        fontFamily: F.mono, fontSize: 7, color: T.muted, letterSpacing: "0.12em",
+        fontFamily: F.mono, fontSize: 9, color: T.muted, letterSpacing: "0.10em",
         borderBottom: "1px solid rgba(255,255,255,0.07)",
         marginBottom: 2,
       }}>

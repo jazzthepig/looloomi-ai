@@ -187,7 +187,7 @@ const SimilarAssetsPanel = ({ symbol }) => {
         </div>
       ))}
       {!loading && data && data.embedding_age_seconds != null && (
-        <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 8, color: "#334455", marginTop: 8 }}>
+        <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, opacity: 0.4, marginTop: 8 }}>
           Embedding age: {Math.floor(data.embedding_age_seconds / 60)}min · {data.total_assets} assets
         </div>
       )}
@@ -720,8 +720,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   // Loading/Error state
   if (loading) {
     return (
-      <div style={{ padding: 40, textAlign: "center", color: T.secondary }}>
-        <div style={{ fontSize: 14 }}>Loading CIS data...</div>
+      <div style={{ padding: 40, textAlign: "center" }}>
+        <div style={{ fontSize: 11, fontFamily: FONTS.mono, color: "rgba(199,210,254,0.25)", letterSpacing: "0.12em" }}>LOADING CIS UNIVERSE…</div>
       </div>
     );
   }
@@ -1296,7 +1296,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                     }}>{item.asset_class}</span>
                     {/* T1/T2 tier badge */}
                     <span style={{
-                      fontSize: 7, fontWeight: 600, fontFamily: FONTS.mono,
+                      fontSize: 9, fontWeight: 600, fontFamily: FONTS.mono,
                       padding: "1px 4px", borderRadius: 3, letterSpacing: "0.04em",
                       color: item.data_tier === 1 ? "#00E87A" : "#F59E0B",
                       background: item.data_tier === 1 ? "rgba(0,232,122,0.08)" : "rgba(245,158,11,0.08)",
@@ -1347,7 +1347,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   const ss = sigStyle(item.signal);
                   return (
                     <span style={{
-                      fontFamily: FONTS.display, fontSize: 7, fontWeight: 700,
+                      fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
                       letterSpacing: "0.04em", textAlign: "center", whiteSpace: "nowrap",
                       color: ss.color, background: ss.bg,
                       border: `1px solid ${ss.border}`,

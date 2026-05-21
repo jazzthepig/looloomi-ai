@@ -82,7 +82,7 @@ function EquityCard({ equity, starting, dailyPnl, stale, updated }) {
       <div style={{ display: "flex", alignItems: "flex-end", gap: 0, flexWrap: "wrap", position: "relative" }}>
         {/* Equity */}
         <div style={{ paddingRight: 36, paddingBottom: 4 }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.22em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.16em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
             Equity
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 38, fontWeight: 400, color: equity >= starting ? T.green : T.red, letterSpacing: "-0.025em", lineHeight: 1 }}>
@@ -100,7 +100,7 @@ function EquityCard({ equity, starting, dailyPnl, stale, updated }) {
 
         {/* Daily P&L */}
         <div style={{ paddingRight: 36, paddingBottom: 4 }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>Daily P&amp;L</div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.14em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>Daily P&amp;L</div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: dailyColor, letterSpacing: "-0.02em", lineHeight: 1 }}>
             {typeof dailyPnl === "number" ? fmtPct(dailyPnl) : "—"}
           </div>
@@ -111,7 +111,7 @@ function EquityCard({ equity, starting, dailyPnl, stale, updated }) {
 
         {/* Starting */}
         <div style={{ paddingRight: 36, paddingBottom: 4 }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>Starting</div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.14em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>Starting</div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.t2, letterSpacing: "-0.02em", lineHeight: 1 }}>
             ${starting > 0 ? starting.toFixed(0) : "—"}
           </div>
@@ -231,7 +231,7 @@ function BacktestCard({ data }) {
             marginRight: i < arr.length - 1 ? 32 : 0,
             paddingBottom: 4,
           }}>
-            <div style={{ fontFamily: FONTS.mono, fontSize: 7, letterSpacing: "0.20em", color: T.t3, textTransform: "uppercase", marginBottom: 8, opacity: 0.6 }}>{s.label}</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.14em", color: T.t3, textTransform: "uppercase", marginBottom: 8, opacity: 0.6 }}>{s.label}</div>
             <div style={{ fontFamily: FONTS.mono, fontSize: 22, fontWeight: 400, color: s.color, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 5 }}>{s.value}</div>
             <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, opacity: 0.6 }}>{s.sub}</div>
           </div>
@@ -456,7 +456,7 @@ function PaperTrading() {
             ["Sharpe", metrics.sharpe_approx ?? "—"],
           ].map(([label, val]) => (
             <div key={label}>
-              <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.4)", letterSpacing: "0.12em", marginBottom: 3 }}>{label.toUpperCase()}</div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.4)", letterSpacing: "0.10em", marginBottom: 3 }}>{label.toUpperCase()}</div>
               <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: "#E8EAF0" }}>{val}</div>
             </div>
           ))}
@@ -734,7 +734,7 @@ function FactorLab() {
         </span>
         {hasPending && (
           <span style={{
-            fontFamily: FONTS.mono, fontSize: 7, fontWeight: 700, letterSpacing: ".08em",
+            fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, letterSpacing: ".06em",
             padding: "1px 7px", borderRadius: 3,
             background: "rgba(245,158,11,0.10)", color: "#f59e0b",
             border: "1px solid rgba(245,158,11,0.22)",
@@ -789,7 +789,7 @@ function FactorLab() {
               }}>
                 {/* Confidence badge */}
                 <span style={{
-                  fontFamily: FONTS.mono, fontSize: 7, fontWeight: 700,
+                  fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700,
                   color: CONF_COLOR[h.confidence] ?? CONF_COLOR.LOW,
                   flexShrink: 0, paddingTop: 1,
                 }}>
@@ -915,19 +915,19 @@ function SimonsPanel() {
             const isLast = i === LOOP_NODES.length - 1;
             return (
               <div key={node.id} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
-                <div style={{ textAlign: "center", minWidth: 72 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginBottom: 3 }}>
+                <div style={{ textAlign: "center", minWidth: 88 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginBottom: 4 }}>
                     <div style={{
-                      width: 5, height: 5, borderRadius: "50%",
+                      width: 7, height: 7, borderRadius: "50%",
                       background: c,
-                      boxShadow: alive ? `0 0 6px ${c}` : "none",
+                      boxShadow: alive ? `0 0 8px ${c}` : "none",
                       transition: "all .4s",
                     }} />
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 7, fontWeight: 700, letterSpacing: ".08em", color: c }}>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 10, fontWeight: 700, letterSpacing: ".08em", color: c }}>
                       {node.label}
                     </span>
                   </div>
-                  <div style={{ fontFamily: FONTS.mono, fontSize: 6, color: "rgba(199,210,254,0.22)", letterSpacing: ".04em" }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.40)", letterSpacing: ".04em" }}>
                     {node.sub}
                   </div>
                 </div>
@@ -963,9 +963,10 @@ function SimonsPanel() {
           })}
           {/* Loop closed indicator */}
           <div style={{
-            fontFamily: FONTS.mono, fontSize: 6, letterSpacing: ".08em",
+            fontFamily: FONTS.mono, fontSize: 16, letterSpacing: ".08em",
             color: active ? "#00D98A" : "rgba(199,210,254,0.15)",
-            marginLeft: 4, flexShrink: 0,
+            marginLeft: 6, flexShrink: 0,
+            lineHeight: 1,
           }}>
             ↺
           </div>
@@ -981,22 +982,22 @@ function SimonsPanel() {
           borderRadius: 6, border: "1px solid rgba(255,255,255,0.04)",
         }}>
           <div>
-            <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)", letterSpacing: ".1em", marginBottom: 2 }}>REGIME</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.35)", letterSpacing: ".08em", marginBottom: 2 }}>REGIME</div>
             <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t2 }}>{regime.replace(/_/g, " ")}</div>
           </div>
           <div style={{ width: 1, height: 22, background: "rgba(255,255,255,0.06)" }} />
           <div>
-            <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)", letterSpacing: ".1em", marginBottom: 2 }}>CIS GATE</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.35)", letterSpacing: ".08em", marginBottom: 2 }}>CIS GATE</div>
             <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: "#f59e0b" }}>≥ {gateThresh}</div>
           </div>
           <div style={{ width: 1, height: 22, background: "rgba(255,255,255,0.06)" }} />
           <div>
-            <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)", letterSpacing: ".1em", marginBottom: 2 }}>AUTO-MINE</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.35)", letterSpacing: ".08em", marginBottom: 2 }}>AUTO-MINE</div>
             <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t2 }}>every 5 closes</div>
           </div>
           <div style={{ width: 1, height: 22, background: "rgba(255,255,255,0.06)" }} />
           <div>
-            <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)", letterSpacing: ".1em", marginBottom: 2 }}>NEXT MINE</div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.35)", letterSpacing: ".08em", marginBottom: 2 }}>NEXT MINE</div>
             <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: nextMine <= 1 ? "#00D98A" : T.t2 }}>
               {closed < 5 ? `${nextMine} trades` : `${nextMine} trades`}
             </div>
@@ -1048,7 +1049,7 @@ function SimonsPanel() {
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: ".12em", color, textTransform: "uppercase" }}>{p}</span>
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 7, color: delta > 0.005 ? "#00D98A" : delta < -0.005 ? "#FF3D5A" : "rgba(199,210,254,0.30)" }}>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: delta > 0.005 ? "#00D98A" : delta < -0.005 ? "#FF3D5A" : "rgba(199,210,254,0.30)" }}>
                     {sign}{(delta * 100).toFixed(0)}%
                   </span>
                 </div>
