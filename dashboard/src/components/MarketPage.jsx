@@ -752,11 +752,13 @@ export default function MarketPage() {
                       {p ? <ChangeCell v={p.change_24h} /> : <div className="sk" style={{ height: 13, width: 50 }} />}
                     </div>
 
-                    {/* 7d Change (mock) */}
+                    {/* 7d Change — from CIS universe (real CoinGecko data) */}
                     <div style={{ textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                      {p
-                        ? <ChangeCell v={(p.change_24h || 0) * 3.5} />
-                        : <div className="sk" style={{ height: 13, width: 50 }} />}
+                      {cisUniverse[token.symbol]?.change_7d != null
+                        ? <ChangeCell v={cisUniverse[token.symbol].change_7d} />
+                        : p
+                          ? <span style={{ color: T.muted, fontFamily: FONTS.mono, fontSize: 12 }}>—</span>
+                          : <div className="sk" style={{ height: 13, width: 50 }} />}
                     </div>
 
                     {/* CIS Score */}

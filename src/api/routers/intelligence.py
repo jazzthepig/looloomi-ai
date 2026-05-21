@@ -7,21 +7,11 @@ from datetime import datetime
 import logging
 import time
 
-from data.market.data_layer import get_vc_raises, get_cg_vc_portfolios
+from data.market.data_layer import get_vc_raises, get_cg_vc_portfolios, get_token_unlocks
 from data.market.protocol_engine import get_protocol_universe
 
 router = APIRouter()
 _logger = logging.getLogger(__name__)
-
-# Lazy singleton — VCDealFlowTracker is expensive to instantiate per-request
-_vc_tracker = None
-
-def _get_vc_tracker():
-    global _vc_tracker
-    if _vc_tracker is None:
-        from data.vc.deal_flow import VCDealFlowTracker
-        _vc_tracker = VCDealFlowTracker()
-    return _vc_tracker
 
 
 # ── Macro Events ──────────────────────────────────────────────────────────────
@@ -61,20 +51,18 @@ async def get_macro_events():
 
 @router.get("/api/v1/vc/funding-rounds")
 async def get_funding_rounds(limit: int = 20):
+    """
+    Recent crypto VC funding rounds via DeFiLlama /raises.
+    Sorted by date desc, last 180 days, ≥$100K raises only.
+    TTL: 1h. Returns empty list when DeFiLlama is unavailable — never mock data.
+    """
     try:
-        try:
-            tracker = _get_vc_tracker()
-            rounds = tracker.get_recent_funding_rounds(limit)
-            if rounds:
-                return {"timestamp": datetime.now().isoformat(), "data": rounds, "source": "internal", "data_status": "ok"}
-        except Exception:
-            pass
         raises = await get_vc_raises(limit)
         data_status = "ok" if raises else "no_data"
         return {"timestamp": datetime.now().isoformat(), "data": raises, "source": "defillama", "data_status": data_status}
     except Exception as e:
         _logger.error(f"Error in {__name__}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        return {"timestamp": datetime.now().isoformat(), "data": [], "source": "defillama", "data_status": "error"}
 
 
 @router.get("/api/v1/vc/portfolios")
@@ -93,23 +81,54 @@ async def get_vc_portfolios():
 
 
 @router.get("/api/v1/vc/unlocks")
-async def get_token_unlocks(days: int = 30):
+async def get_upcoming_unlocks(days: int = 30):
+    """
+    Upcoming token unlocks from DeFiLlama /emissions.
+    Returns events within `days` days, sorted by unlock date.
+    TTL: 2h. Returns empty list when DeFiLlama is unavailable — never mock data.
+    """
     try:
-        tracker = _get_vc_tracker()
-        return {"timestamp": datetime.now().isoformat(), "data": tracker.get_token_unlocks(days)}
+        data = await get_token_unlocks(days_ahead=days)
+        data_status = "ok" if data else "no_data"
+        return {"timestamp": datetime.now().isoformat(), "data": data, "source": "defillama", "data_status": data_status}
     except Exception as e:
-        _logger.error(f"Error in {__name__}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        _logger.error(f"Token unlocks error: {e}", exc_info=True)
+        return {"timestamp": datetime.now().isoformat(), "data": [], "source": "defillama", "data_status": "error"}
 
 
 @router.get("/api/v1/vc/overlap")
 async def get_vc_overlap():
+    """VC co-investment overlap derived from live funding rounds — no mock data."""
     try:
-        tracker = _get_vc_tracker()
-        return {"timestamp": datetime.now().isoformat(), "data": tracker.get_vc_portfolio_overlap([])}
+        raises = await get_vc_raises(200)
+        project_investors: dict = {}
+        for r in raises:
+            proj = r.get("name") or r.get("project") or ""
+            investors = r.get("investors") or []
+            if not proj or not investors:
+                continue
+            if proj not in project_investors:
+                project_investors[proj] = set()
+            project_investors[proj].update(investors)
+
+        overlaps = []
+        for proj, investors in project_investors.items():
+            count = len(investors)
+            if count >= 2:
+                overlaps.append({"project": proj, "vcs": sorted(investors), "count": count})
+        overlaps.sort(key=lambda x: x["count"], reverse=True)
+
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "high_overlap": [o for o in overlaps if o["count"] >= 3][:10],
+                "recent_overlap": [o for o in overlaps if o["count"] == 2][:10],
+                "available": len(overlaps) > 0,
+            }
+        }
     except Exception as e:
-        _logger.error(f"Error in {__name__}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        _logger.error(f"VC overlap error: {e}", exc_info=True)
+        return {"timestamp": datetime.now().isoformat(), "data": {"high_overlap": [], "recent_overlap": [], "available": False}}
 
 
 # ── Protocol Intelligence ────────────────────────────────────────────────────

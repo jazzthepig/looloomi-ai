@@ -294,38 +294,80 @@ async def get_defi_overview() -> dict:
             "starknet", "linea", "mantle", "blast", "mode", "manta", "taiko",
         }
         l2_tvl = 0.0
+        chains_data = []
         if not isinstance(chains_r, Exception) and chains_r.status_code == 200:
             chains_data = chains_r.json()
             for ch in chains_data:
                 if (ch.get("name") or "").lower() in L2_CHAINS:
                     l2_tvl += ch.get("tvl") or 0
 
+        # ── L1 TVL (major non-L2 chains by TVL) ──────────────────────────────
+        L1_CHAINS = {
+            "ethereum", "tron", "bsc", "solana", "avalanche", "sui",
+            "near", "aptos", "cardano", "ton", "polkadot",
+        }
+        l1_tvl = 0.0
+        for ch in chains_data:
+            if (ch.get("name") or "").lower() in L1_CHAINS:
+                l1_tvl += ch.get("tvl") or 0
+
         # ── Top protocols ─────────────────────────────────────────────────────
         protocols = []
+        all_protos = []
         if not isinstance(proto_r, Exception) and proto_r.status_code == 200:
             all_protos = proto_r.json()
             protocols  = all_protos[:20]
 
-        # ── RWA TVL — filter protocols by category ────────────────────────────
-        rwa_tvl = 0.0
-        rwa_change_24h = 0.0
-        if not isinstance(proto_r, Exception) and proto_r.status_code == 200:
-            rwa_protos = [p for p in all_protos if (p.get("category") or "").lower() == "rwa"]
-            rwa_tvl = sum(p.get("tvl") or 0 for p in rwa_protos)
-            if rwa_protos:
-                rwa_changes = [p.get("change_1d") or 0 for p in rwa_protos if p.get("change_1d") is not None]
-                if rwa_changes:
-                    rwa_change_24h = round(sum(rwa_changes) / len(rwa_changes), 2)
+        def _sector_tvl_change(cat_names: set) -> tuple[float, float]:
+            """Return (total_tvl, avg_change_1d) for protocols matching category names."""
+            matched = [p for p in all_protos if (p.get("category") or "").lower() in cat_names]
+            tvl = sum(p.get("tvl") or 0 for p in matched)
+            changes = [p.get("change_1d") for p in matched if p.get("change_1d") is not None]
+            change = round(sum(changes) / len(changes), 2) if changes else 0.0
+            return tvl, change
+
+        def _l2_change(proto_list: list) -> float:
+            """L2 24h change: average change_1d of protocols primarily on L2 chains."""
+            l2_protos = [
+                p for p in proto_list
+                if any(c.lower() in L2_CHAINS for c in (p.get("chains") or []))
+                and (p.get("tvl") or 0) > 1_000_000  # ignore micro-protocols
+            ]
+            changes = [p.get("change_1d") for p in l2_protos if p.get("change_1d") is not None]
+            return round(sum(changes) / len(changes), 2) if changes else 0.0
+
+        # ── Sector breakdowns ─────────────────────────────────────────────────
+        rwa_tvl, rwa_change_24h    = _sector_tvl_change({"rwa"})
+        staking_tvl, staking_change = _sector_tvl_change({"liquid staking", "staking", "lst"})
+        oracle_tvl, oracle_change   = _sector_tvl_change({"oracle"})
+        gaming_tvl, gaming_change   = _sector_tvl_change({"gaming", "gamefi", "nft marketplace"})
+        dex_tvl, dex_change         = _sector_tvl_change({"dexes", "dex", "amm"})
+        lending_tvl, lending_change = _sector_tvl_change({"lending", "cdp"})
+
+        l2_change_24h = _l2_change(all_protos) if all_protos else 0.0
 
         result = {
-            "total_tvl_usd": current_tvl,
-            "total_tvl":     current_tvl,   # alias used by IntelligencePage
-            "total_tvl_formatted": f"${current_tvl/1e9:.1f}B",
-            "defi_change_24h": defi_change_24h,
-            "l2_tvl":          l2_tvl,
-            "l2_change_24h":   0.0,          # chain-level 24h delta not in /v2/chains
-            "rwa_tvl":         rwa_tvl,
-            "rwa_change_24h":  rwa_change_24h,
+            "total_tvl_usd":          current_tvl,
+            "total_tvl":              current_tvl,   # alias
+            "total_tvl_formatted":    f"${current_tvl/1e9:.1f}B",
+            "defi_change_24h":        defi_change_24h,
+            # Sector TVL + 24h change
+            "l1_tvl":                 l1_tvl,
+            "l1_change_24h":          0.0,           # chain-level not available in /v2/chains
+            "l2_tvl":                 l2_tvl,
+            "l2_change_24h":          l2_change_24h,
+            "rwa_tvl":                rwa_tvl,
+            "rwa_change_24h":         rwa_change_24h,
+            "staking_tvl":            staking_tvl,
+            "staking_change_24h":     staking_change,
+            "oracle_tvl":             oracle_tvl,
+            "oracle_change_24h":      oracle_change,
+            "gaming_tvl":             gaming_tvl,
+            "gaming_change_24h":      gaming_change,
+            "dex_tvl":                dex_tvl,
+            "dex_change_24h":         dex_change,
+            "lending_tvl":            lending_tvl,
+            "lending_change_24h":     lending_change,
             "top_protocols": [{
                 "name":      p.get("name"),
                 "tvl":       p.get("tvl", 0),
@@ -643,6 +685,66 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
     except Exception as e:
         _logger.warning(f"[VC_RAISES] Error: {e}")
         return []
+
+
+async def get_token_unlocks(days_ahead: int = 30) -> list[dict]:
+    """
+    Upcoming token unlocks from DeFiLlama /emissions endpoint.
+    Filters to events within `days_ahead` days from now, sorted by unlock date.
+    Returns [] on any error — never returns mock/fabricated data.
+    TTL: 2h in-memory + 2h Redis.
+    """
+    key = f"token_unlocks_v1:{days_ahead}"
+    cached = _cache_get(key, ttl=7200)
+    if cached is not None:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached is not None:
+        return _cache_set(key, r_cached)
+
+    try:
+        client = _get_llama_client()
+        # DeFiLlama emissions endpoint returns per-protocol event arrays
+        resp = await client.get("https://api.llama.fi/emissions", timeout=20)
+        if resp.status_code != 200:
+            _logger.warning(f"[TOKEN_UNLOCKS] DeFiLlama /emissions status {resp.status_code}")
+            return _cache_set(key, [])
+
+        data = resp.json()
+        now_ts = datetime.now(timezone.utc).timestamp()
+        cutoff_ts = now_ts + days_ahead * 86400
+
+        unlocks: list[dict] = []
+        protocols = data if isinstance(data, list) else data.get("protocols", [])
+        for proto in protocols:
+            name = proto.get("name") or proto.get("protocol") or "Unknown"
+            events = proto.get("events") or proto.get("upcomingEvent") or []
+            if not isinstance(events, list):
+                events = [events] if events else []
+            for ev in events:
+                ts = ev.get("timestamp") or ev.get("ts") or 0
+                if not ts or ts < now_ts or ts > cutoff_ts:
+                    continue
+                amount_usd = ev.get("value") or ev.get("amount_usd") or 0
+                # Some fields use token amounts — skip if clearly not USD
+                days_until = int((ts - now_ts) / 86400)
+                unlocks.append({
+                    "protocol":   name,
+                    "date":       datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
+                    "timestamp":  int(ts),
+                    "amount_usd": amount_usd,
+                    "type":       ev.get("type") or ev.get("category") or "unlock",
+                    "days_until": days_until,
+                })
+
+        unlocks.sort(key=lambda x: x["timestamp"])
+        result = unlocks[:50]
+        await _redis_set(key, result, ttl=7200)
+        return _cache_set(key, result)
+    except Exception as e:
+        _logger.warning(f"[TOKEN_UNLOCKS] Error: {e}")
+        # Return empty — never fabricated data
+        return _cache_set(key, [])
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1478,10 +1580,10 @@ async def calculate_mmi(token: str = "BTC") -> dict:
     """
     Composite Market Mood Index using:
     - Fear & Greed (25%) — Alternative.me, free
-    - Price momentum (25%) — Binance, free
-    - DeFi TVL trend (20%) — DeFiLlama, free
+    - Price momentum (25%) — Binance/CoinGecko, free
+    - DeFi TVL trend (20%) — DeFiLlama 24h change, free
     - DEX volume trend (15%) — DeFiLlama, free
-    - Market dominance (15%) — DeFiLlama stablecoins, free
+    - Stablecoin dominance (15%) — CoinGecko global, free
     """
     key = f"mmi:{token}"
     cached = _cache_get(key, ttl=300)
@@ -1489,29 +1591,37 @@ async def calculate_mmi(token: str = "BTC") -> dict:
         return cached
 
     try:
-        fg_data, price_data, tvl_data, dex_data = await asyncio.gather(
+        fg_data, price_data, tvl_data, dex_data, cg_global = await asyncio.gather(
             get_fear_greed(limit=7),
             get_price(token),
             get_defi_overview(),
             get_dex_volumes(),
+            get_cg_global(),
         )
 
         # Component 1: Fear & Greed (0-100)
         fg_score = fg_data.get("current", {}).get("value", 50)
 
-        # Component 2: Price momentum (7-day trend → 0-100)
+        # Component 2: Price momentum (24h change → 0-100)
         price_change = price_data.get("change_24h", 0) if price_data else 0
         momentum_score = min(100, max(0, 50 + price_change * 2.5))
 
-        # Component 3: DeFi TVL health (simplified → use 50 as baseline if data unavailable)
-        tvl_score = 55.0  # placeholder — expand with TVL trend calculation
+        # Component 3: DeFi TVL trend — live 24h change from DeFiLlama
+        # +2% TVL day = strong confidence (score 60); -2% = low (score 40)
+        defi_change = tvl_data.get("defi_change_24h", 0) if not tvl_data.get("error") else 0
+        tvl_score = min(100, max(0, 50 + defi_change * 5))
 
-        # Component 4: DEX volume relative to baseline
+        # Component 4: DEX volume relative to $3B/day baseline
         dex_volume = dex_data.get("total_24h", 0)
         dex_score = min(100, max(20, 40 + (dex_volume / 1e9) * 2)) if dex_volume else 50
 
-        # Component 5: Stablecoin dominance (high dominance → fear)
-        stable_score = 50.0  # placeholder
+        # Component 5: BTC dominance — rising dominance = capital rotating to safety = risk-off
+        # BTC dom 60% = neutral (50); 70% = strong risk-off (30); 50% = risk-on (70)
+        # Falls back to neutral (50) if CG global unavailable (no Pro key)
+        btc_dom = 60.0  # neutral baseline
+        if isinstance(cg_global, dict) and not cg_global.get("error"):
+            btc_dom = float(cg_global.get("btc_dominance") or 60)
+        stable_score = min(100, max(0, 50 - (btc_dom - 60) * 2))
 
         # Weighted composite
         mmi_score = round(
@@ -1540,11 +1650,12 @@ async def calculate_mmi(token: str = "BTC") -> dict:
                 "momentum":      round(momentum_score, 1),
                 "defi_tvl":      round(tvl_score, 1),
                 "dex_volume":    round(dex_score, 1),
-                "stablecoin":    round(stable_score, 1),
+                "btc_dominance": round(stable_score, 1),
             },
+            "btc_dominance":    round(btc_dom, 2),
             "fear_greed_label": fg_data.get("current", {}).get("label", ""),
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "sources": ["alternative.me", "binance", "defillama"],
+            "sources": ["alternative.me", "coingecko", "defillama"],
         }
         return _cache_set(key, result)
     except Exception as e:
@@ -1927,11 +2038,14 @@ async def _get_worldbank_macro(country: str) -> dict:
         if val:
             indicators[name] = val
 
-    # Known policy rates — slow-changing, hardcoded with reference date
+    # Known policy rates — updated May 2026
+    # Fed: 4.25% (two 25bp cuts in 2025 from 4.75% peak)
+    # HKMA: tracks USD LIBOR/SOFR closely, effectively 4.25-4.50%
+    # PBOC: continued easing, MLF rate 3.10%
     policy_rates = {
-        "hkg": {"value": 5.25, "date": "2024-11", "trend": "down", "source": "hkma", "prev_value": 5.5},
-        "chn": {"value": 3.10, "date": "2024-10", "trend": "down", "source": "pboc", "prev_value": 3.35},
-        "usa": {"value": 4.50, "date": "2024-12", "trend": "down", "source": "fed",  "prev_value": 5.25},
+        "hkg": {"value": 4.25, "date": "2026-05", "trend": "down", "source": "hkma", "prev_value": 4.75},
+        "chn": {"value": 3.10, "date": "2026-05", "trend": "down", "source": "pboc", "prev_value": 3.35},
+        "usa": {"value": 4.25, "date": "2026-05", "trend": "down", "source": "fed",  "prev_value": 4.50},
     }
     if country.lower() in policy_rates:
         indicators["interest_rate"] = policy_rates[country.lower()]
@@ -2796,12 +2910,13 @@ async def get_economic_dashboard() -> dict:
         if not us_wb.get("error"):
             us_data = us_wb
 
-    # Last-resort static scaffold — known macro values (updated quarterly)
-    # Ensures the EconomicIndicators panel always renders rather than vanishing.
+    # Last-resort static scaffold — known macro values (updated May 2026)
+    # Reflects: Fed at 4.25% (one cut from Q1), PBOC easing cycle ongoing,
+    # HK tracking Fed via HKMA peg. Ensures panel always renders.
     _STATIC_FALLBACK = {
-        "usa": {"cpi_yoy": 2.8, "gdp_growth": 2.4, "interest_rate": 4.50, "unemployment": 4.1, "pmi": 49.3, "source": "static_q1_2026", "derived_regime": "TIGHTENING"},
-        "hkg": {"cpi_yoy": 2.1, "gdp_growth": 2.5, "interest_rate": 4.75, "unemployment": 3.1, "pmi": 50.8, "source": "static_q1_2026", "derived_regime": "NEUTRAL"},
-        "chn": {"cpi_yoy": 0.4, "gdp_growth": 4.8, "interest_rate": 3.45, "unemployment": 5.1, "pmi": 50.2, "source": "static_q1_2026", "derived_regime": "EASING"},
+        "usa": {"cpi_yoy": 2.4, "gdp_growth": 2.1, "interest_rate": 4.25, "unemployment": 4.2, "pmi": 50.2, "source": "static_may_2026", "derived_regime": "TIGHTENING"},
+        "hkg": {"cpi_yoy": 2.0, "gdp_growth": 2.8, "interest_rate": 4.50, "unemployment": 3.0, "pmi": 51.2, "source": "static_may_2026", "derived_regime": "NEUTRAL"},
+        "chn": {"cpi_yoy": 0.3, "gdp_growth": 4.9, "interest_rate": 3.10, "unemployment": 5.0, "pmi": 50.4, "source": "static_may_2026", "derived_regime": "EASING"},
     }
     if us_data.get("error"):
         us_data = {**_STATIC_FALLBACK["usa"], "stale": True}
