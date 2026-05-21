@@ -202,30 +202,30 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         clearTimeout(timeoutId);
         const data = await res.json();
         // Map API data to sector format — live fields from get_defi_overview v2
-        const fmtB = (v) => v ? `$${Math.round(v / 1e9)}B` : "—";
+        const fmtB = (v) => (v && v > 1e7) ? `$${(v / 1e9).toFixed(1)}B` : (v && v > 0 ? `$${(v / 1e6).toFixed(0)}M` : "—");
         const mapped = [
-          { name: "DeFi", change: data.defi_change_24h ?? 0, tvl: fmtB(data.total_tvl) },
-          { name: "L2", change: data.l2_change_24h ?? 0, tvl: fmtB(data.l2_tvl) },
-          { name: "RWA", change: data.rwa_change_24h ?? 0, tvl: fmtB(data.rwa_tvl) },
-          { name: "L1", change: 0, tvl: "—" },
-          { name: "Staking", change: 0, tvl: "—" },
-          { name: "Oracle", change: 0, tvl: "—" },
-          { name: "GameFi", change: 0, tvl: "—" },
-          { name: "CEX", change: 0, tvl: "—" },
+          { name: "DeFi",    change: data.defi_change_24h    ?? 0, tvl: fmtB(data.total_tvl) },
+          { name: "L2",      change: data.l2_change_24h      ?? 0, tvl: fmtB(data.l2_tvl) },
+          { name: "L1",      change: data.l1_change_24h      ?? 0, tvl: fmtB(data.l1_tvl) },
+          { name: "Staking", change: data.staking_change_24h ?? 0, tvl: fmtB(data.staking_tvl) },
+          { name: "RWA",     change: data.rwa_change_24h     ?? 0, tvl: fmtB(data.rwa_tvl) },
+          { name: "DEX",     change: data.dex_change_24h     ?? 0, tvl: fmtB(data.dex_tvl) },
+          { name: "Lending", change: data.lending_change_24h ?? 0, tvl: fmtB(data.lending_tvl) },
+          { name: "Oracle",  change: data.oracle_change_24h  ?? 0, tvl: fmtB(data.oracle_tvl) },
         ];
         setSectorData(mapped);
       } catch (e) {
         console.error("Heatmap fetch error:", e);
         // Fallback — show sectors with no data rather than stale numbers
         setSectorData([
-          { name: "DeFi", change: 0, tvl: "—" },
-          { name: "L2", change: 0, tvl: "—" },
-          { name: "RWA", change: 0, tvl: "—" },
-          { name: "L1", change: 0, tvl: "—" },
+          { name: "DeFi",    change: 0, tvl: "—" },
+          { name: "L2",      change: 0, tvl: "—" },
+          { name: "L1",      change: 0, tvl: "—" },
           { name: "Staking", change: 0, tvl: "—" },
-          { name: "Oracle", change: 0, tvl: "—" },
-          { name: "GameFi", change: 0, tvl: "—" },
-          { name: "CEX", change: 0, tvl: "—" },
+          { name: "RWA",     change: 0, tvl: "—" },
+          { name: "DEX",     change: 0, tvl: "—" },
+          { name: "Lending", change: 0, tvl: "—" },
+          { name: "Oracle",  change: 0, tvl: "—" },
         ]);
       } finally {
         setHeatmapLoading(false);
