@@ -799,8 +799,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               </div>
             )}
 
-            {/* Full width — VC Funding Table (hidden when no data) */}
-            {(view === "all" || view === "events") && (loading || raises.length > 0) && <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
+            {/* Full width — VC Funding Table (always shown) */}
+            {(view === "all" || view === "events") && <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
                 {/* Update Drawer */}
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -907,6 +907,27 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                             ))}
                           </div>
                         ))
+                      : filtered.length === 0
+                      ? (
+                          <div style={{
+                            padding: "40px 18px", textAlign: "center",
+                            display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                          }}>
+                            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 4 }}>
+                              No funding rounds available
+                            </div>
+                            <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t4, lineHeight: 1.6, maxWidth: 320 }}>
+                              DeFiLlama data is refreshing. Recent rounds typically appear within 30 minutes.
+                            </div>
+                            <button
+                              className="lm-action-btn"
+                              onClick={fetchRaises}
+                              style={{ marginTop: 8, fontSize: 10 }}
+                            >
+                              <RefreshCw size={10} /> Retry
+                            </button>
+                          </div>
+                        )
                       : filtered.slice(0, 60).map((r, i) => {
                           const cs = catStyle(r.category);
                           const lead = r.leadInvestors?.[0] || "—";
