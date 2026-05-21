@@ -176,55 +176,46 @@ def _cg_headers() -> dict:
     return {"x-cg-pro-api-key": CG_API_KEY} if CG_API_KEY else {}
 
 # Crypto assets config - maps to CoinGecko IDs
-# Universe aligned with cometcloud-local/config.py ASSET_UNIVERSE
+# Universe aligned with CometCloud Inclusion Standard v2.0 (May 2026)
+# 10 hard gates: Liquidity($10M/30d+3tier1), MarketCap($500M+FDV), CG Rank(top150),
+# Data Completeness(90d+OHLCV), Custody(institutional), Regulatory,
+# TokenMechanics(circ/total>=0.30/inflation<20%/yr), TradingHistory(180d),
+# ProtocolIntegrity, FastTrack($1B+FDV+custody+tier1listing). Ref: INCLUSION_STANDARD.md v2.0
 CRYPTO_ASSETS = {
-    # L1 — Layer 1 blockchains
-    "BTC":    {"coingecko": "bitcoin",                 "name": "Bitcoin",         "class": "L1"},
-    "ETH":    {"coingecko": "ethereum",                "name": "Ethereum",        "class": "L1"},
-    "SOL":    {"coingecko": "solana",                  "name": "Solana",          "class": "L1"},
-    "BNB":    {"coingecko": "binancecoin",             "name": "BNB",             "class": "L1"},
-    "XRP":    {"coingecko": "ripple",                  "name": "XRP",             "class": "L1"},
-    "ADA":    {"coingecko": "cardano",                 "name": "Cardano",         "class": "L1"},
-    "AVAX":   {"coingecko": "avalanche-2",             "name": "Avalanche",       "class": "L1"},
-    "DOT":    {"coingecko": "polkadot",                "name": "Polkadot",        "class": "L1"},
-    "NEAR":   {"coingecko": "near",                    "name": "NEAR Protocol",   "class": "L1"},
-    "ALGO":   {"coingecko": "algorand",                "name": "Algorand",        "class": "L1"},
-    "HBAR":   {"coingecko": "hedera-hashgraph",        "name": "Hedera",          "class": "L1"},
-    "SUI":    {"coingecko": "sui",                     "name": "Sui",             "class": "L1"},
-    "APT":    {"coingecko": "aptos",                   "name": "Aptos",           "class": "L1"},
-    "SEI":    {"coingecko": "sei",                     "name": "Sei",             "class": "L1"},
-    "ATOM":   {"coingecko": "cosmos",                  "name": "Cosmos",          "class": "L1"},
-    "FIL":    {"coingecko": "filecoin",                "name": "Filecoin",        "class": "L1"},
-    "LTC":    {"coingecko": "litecoin",                "name": "Litecoin",        "class": "Crypto"},
+        # L1 — Layer 1 blockchains
+    "BTC":   {"coingecko": "bitcoin",                  "name": "Bitcoin",       "class": "L1"},
+    "ETH":   {"coingecko": "ethereum",                 "name": "Ethereum",      "class": "L1"},
+    "SOL":   {"coingecko": "solana",                   "name": "Solana",         "class": "L1"},
+    "BNB":   {"coingecko": "binancecoin",              "name": "BNB",            "class": "L1"},
+    "XRP":   {"coingecko": "ripple",                   "name": "XRP",            "class": "L1"},
+    "ADA":   {"coingecko": "cardano",                  "name": "Cardano",        "class": "L1"},
+    "AVAX":  {"coingecko": "avalanche-2",              "name": "Avalanche",      "class": "L1"},
+    "DOT":   {"coingecko": "polkadot",                 "name": "Polkadot",       "class": "L1"},
+    "NEAR":  {"coingecko": "near",                     "name": "NEAR Protocol",  "class": "L1"},
+    "SUI":   {"coingecko": "sui",                     "name": "Sui",            "class": "L1"},
+    "APT":   {"coingecko": "aptos",                   "name": "Aptos",          "class": "L1"},
+    # Hyperliquid — mcap ~#11, ~$13.5B FDV. Passes all 9 gates. Fast-track eligible.
+    "HYPE":  {"coingecko": "hyperliquid",              "name": "Hyperliquid",   "class": "L1"},
     # L2 — Layer 2 scaling
-    "ARB":    {"coingecko": "arbitrum",                "name": "Arbitrum",        "class": "L2"},
-    "OP":     {"coingecko": "optimism",                "name": "Optimism",        "class": "L2"},
-    "POL":    {"coingecko": "polygon-ecosystem-token", "name": "Polygon (POL)",   "class": "L2"},
-    "MANTLE": {"coingecko": "mantle",                  "name": "Mantle",          "class": "L2"},
-    "NEON":   {"coingecko": "neon-evm",                "name": "Neon EVM",        "class": "L2"},
-    "STX":    {"coingecko": "blockstack",              "name": "Stacks",          "class": "L2"},
-    "STRK":   {"coingecko": "starknet",                "name": "StarkNet",        "class": "L2"},
+    "ARB":   {"coingecko": "arbitrum",                 "name": "Arbitrum",       "class": "L2"},
+    "OP":    {"coingecko": "optimism",                 "name": "Optimism",       "class": "L2"},
+    "POL":   {"coingecko": "polygon-ecosystem-token",  "name": "Polygon",        "class": "L2"},
+    "STRK":  {"coingecko": "starknet",                 "name": "StarkNet",       "class": "L2"},
     # DeFi — Decentralized Finance
-    "UNI":    {"coingecko": "uniswap",                 "name": "Uniswap",         "class": "DeFi"},
-    "AAVE":   {"coingecko": "aave",                    "name": "Aave",            "class": "DeFi"},
-    "MKR":    {"coingecko": "maker",                   "name": "Maker",           "class": "RWA"},
-    "LDO":    {"coingecko": "lido-dao",                "name": "Lido DAO",        "class": "DeFi"},
-    "PENDLE": {"coingecko": "pendle",                  "name": "Pendle",          "class": "DeFi"},
-    "ENA":    {"coingecko": "ethena",                  "name": "Ethena",          "class": "DeFi"},
-    "RUNE":   {"coingecko": "thorchain",               "name": "THORChain",       "class": "DeFi"},
-    "COMP":   {"coingecko": "compound-governance-token","name": "Compound",       "class": "DeFi"},
+    "UNI":   {"coingecko": "uniswap",                 "name": "Uniswap",        "class": "DeFi"},
+    "AAVE":  {"coingecko": "aave",                    "name": "Aave",           "class": "DeFi"},
+    "LDO":   {"coingecko": "lido-dao",                "name": "Lido DAO",       "class": "DeFi"},
+    "PENDLE":{"coingecko": "pendle",                   "name": "Pendle",         "class": "DeFi"},
     # Infrastructure
-    "LINK":   {"coingecko": "chainlink",               "name": "Chainlink",       "class": "Infrastructure"},
-    "INJ":    {"coingecko": "injective-protocol",      "name": "Injective",       "class": "Infrastructure"},
-    "TIA":    {"coingecko": "celestia",                "name": "Celestia",        "class": "Infrastructure"},
-    "IO":     {"coingecko": "io-net",                  "name": "io.net",          "class": "Infrastructure"},
-    "VET":    {"coingecko": "vechain",                 "name": "VeChain",         "class": "Infrastructure"},
+    "LINK":  {"coingecko": "chainlink",                "name": "Chainlink",      "class": "Infrastructure"},
+    "INJ":   {"coingecko": "injective-protocol",      "name": "Injective",      "class": "Infrastructure"},
+    "TIA":   {"coingecko": "celestia",                 "name": "Celestia",       "class": "Infrastructure"},
     # RWA — Real World Assets
-    "ONDO":   {"coingecko": "ondo-finance",            "name": "Ondo Finance",    "class": "RWA"},
-    # Memecoin
-    # Gaming / Metaverse
-    "GALA":   {"coingecko": "gala",                    "name": "Gala",            "class": "Gaming"},
+    "ONDO":  {"coingecko": "ondo-finance",            "name": "Ondo Finance",   "class": "RWA"},
+    "MKR":   {"coingecko": "maker",                   "name": "Maker",           "class": "RWA"},
 }
+
+# 24 crypto assets. Universe v2.0 total: 24 crypto + 10 US Equity + 6 Bonds + 3 Commodities = 43
 
 # US Equities - yfinance symbols
 US_EQUITIES = {
@@ -288,39 +279,31 @@ ASSETS_CONFIG = {**CRYPTO_ASSETS, **US_EQUITIES, **BONDS, **COMMODITIES, **FX, *
 
 # GitHub repo paths for developer-activity tracking (Phase 2B)
 # Format: asset_id -> "owner/repo"
-# Covers top 25 assets with active public repos; others get None (no dev signal)
+# Covers assets in CRYPTO_ASSETS v2.0 with active public repos
 GITHUB_REPOS: Dict[str, str] = {
-    "BTC":    "bitcoin/bitcoin",
-    "ETH":    "ethereum/go-ethereum",
-    "SOL":    "solana-labs/solana",
-    "ADA":    "IntersectMBO/cardano-node",
-    "AVAX":   "ava-labs/avalanchego",
-    "DOT":    "paritytech/polkadot",
-    "NEAR":   "near/nearcore",
-    "ALGO":   "algorand/go-algorand",
-    "FTM":    "Fantom-foundation/go-opera",
-    "SUI":    "MystenLabs/sui",
-    "APT":    "aptos-labs/aptos-core",
-    "SEI":    "sei-protocol/sei-chain",
-    "ATOM":   "cosmos/cosmos-sdk",
-    "FIL":    "filecoin-project/lotus",
-    "ICP":    "dfinity/ic",
-    "ARB":    "OffchainLabs/nitro",
-    "OP":     "ethereum-optimism/optimism",
-    "STX":    "stacks-network/stacks-core",
-    "STRK":   "starkware-libs/cairo",
-    "UNI":    "Uniswap/v4-core",
-    "AAVE":   "aave/aave-v3-core",
-    "SNX":    "Synthetixio/synthetix",
-    "CRV":    "curvefi/curve-contract",
-    "LDO":    "lidofinance/lido-dao",
-    "PENDLE": "pendle-finance/core-v2",
-    "RUNE":   "thorchain/thornode",
-    "COMP":   "compound-finance/compound-protocol",
-    "SUSHI":  "sushiswap/sushiswap",
-    "LINK":   "smartcontractkit/chainlink",
-    "INJ":    "InjectiveLabs/injective-core",
-    "TIA":    "celestiaorg/celestia-node",
+    "BTC":  "bitcoin/bitcoin",
+    "ETH":  "ethereum/go-ethereum",
+    "SOL":  "solana-labs/solana",
+    "BNB":  "bnb-chain/op-geth",           # BNB Chain (Beacon Chain)
+    "XRP":  "XRPLF/rippled",
+    "ADA":  "IntersectMBO/cardano-node",
+    "AVAX": "ava-labs/avalanchego",
+    "DOT":  "paritytech/polkadot",
+    "NEAR": "near/nearcore",
+    "SUI":  "MystenLabs/sui",
+    "APT":  "aptos-labs/aptos-core",
+    # HYPE: no public GitHub repo (Hyperliquid is proprietary/closed source)
+    "ARB":  "OffchainLabs/nitro",
+    "OP":   "ethereum-optimism/optimism",
+    "POL":  "0xPolygon/polygon-cli",
+    "STRK": "starkware-libs/cairo",
+    "UNI":  "Uniswap/v4-core",
+    "AAVE": "aave/aave-v3-core",
+    "LDO":  "lidofinance/lido-dao",
+    "PENDLE":"pendle-finance/core-v2",
+    "LINK": "smartcontractkit/chainlink",
+    "INJ":  "InjectiveLabs/injective-core",
+    "TIA":  "celestiaorg/celestia-node",
 }
 
 # Cache
@@ -433,53 +416,36 @@ async def calculate_asset_betas(asset_id: str, asset_price_30d: list) -> dict:
 # Aligned with cometcloud-local ASSET_UNIVERSE crypto assets
 BINANCE_SYMBOLS = {
     # L1
-    "BTC":    "btcusdt",
-    "ETH":    "ethusdt",
-    "SOL":    "solusdt",
-    "BNB":    "bnbusdt",
-    "XRP":    "xrpusdt",
-    "ADA":    "adausdt",
-    "AVAX":   "avaxusdt",
-    "DOT":    "dotusdt",
-    "NEAR":   "nearusdt",
-    "ALGO":   "algousdt",
-    "HBAR":   "hbarusdt",
-    "SUI":    "suiusdt",
-    "APT":    "aptusdt",
-    "SEI":    "seiusdt",
-    "ATOM":   "atomusdt",
-    "FIL":    "filusdt",
-    "LTC":    "ltcusdt",
+    "BTC":   "btcusdt",
+    "ETH":   "ethusdt",
+    "SOL":   "solusdt",
+    "BNB":   "bnbusdt",
+    "XRP":   "xrpusdt",
+    "ADA":   "adausdt",
+    "AVAX":  "avaxusdt",
+    "DOT":   "dotusdt",
+    "NEAR":  "nearusdt",
+    "SUI":   "suiusdt",
+    "APT":   "aptusdt",
+    "HYPE":  "hyperusdt",
     # L2
-    "ARB":    "arbusdt",
-    "OP":     "opusdt",
-    "POL":    "polusdt",
-    "MANTLE": "mntusdt",
-    "NEON":   "neonusdt",
-    "STX":    "stxusdt",
-    "STRK":   "strkusdt",
+    "ARB":   "arbusdt",
+    "OP":    "opusdt",
+    "POL":   "polusdt",
+    "STRK":  "strkusdt",
     # DeFi
-    "UNI":    "uniusdt",
-    "AAVE":   "aaveusdt",
-    "MKR":    "mkrusdt",
-    "LDO":    "ldousdt",
-    "PENDLE": "pendleusdt",
-    "ENA":    "enausdt",
-    "RUNE":   "runeusdt",
-    "COMP":   "compusdt",
+    "UNI":   "uniusdt",
+    "AAVE":  "aaveusdt",
+    "LDO":   "ldousdt",
+    "PENDLE":"pendleusdt",
     # Infrastructure
-    "LINK":   "linkusdt",
-    "INJ":    "injusdt",
-    "TIA":    "tiausdt",
-    "IO":     "iousdt",
-    "VET":    "vetusdt",
+    "LINK":  "linkusdt",
+    "INJ":   "injusdt",
+    "TIA":   "tiausdt",
     # RWA
-    "ONDO":   "ondousdt",
-    # Gaming
-    "GALA":   "galausdt",
-    # §4A excluded — removed: FTM, ICP, BCH, SNX, CRV, SUSHI, PEPE, WIF, BONK, SAND, MANA, AXS
+    "ONDO":  "ondousdt",
+    "MKR":   "mkrusdt",
 }
-
 # Reverse mapping
 BINANCE_TO_CIS = {v: k for k, v in BINANCE_SYMBOLS.items()}
 

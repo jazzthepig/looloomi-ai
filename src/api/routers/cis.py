@@ -1175,9 +1175,9 @@ async def get_cis_exclusions(
         "filtered_count": len(results),
         "universe_evaluated": 70,
         "universe_admitted": 70 - len(_CIS_EXCLUSIONS),
-        "standard_version": "1.1",
+        "standard_version": "2.0",
         "standard_url": "cometcloud.ai/methodology",
-        "last_reviewed": "2026-04-09",
+        "last_reviewed": "2026-05-21",
         "exclusions": results,
     }
     if include_borderline:
@@ -1189,8 +1189,8 @@ async def get_cis_exclusions(
 # ── Agent: Inclusion Standard ─────────────────────────────────────────────────
 
 _INCLUSION_STANDARD = {
-    "version": "1.1",
-    "effective_date": "2026-04-09",
+    "version": "2.0",
+    "effective_date": "2026-05-21",
     "design_principle": "Alpha-preserving filter, not risk-elimination filter. Screens structurally broken or fraudulent assets — not high-conviction emerging assets that are new or have fully recovered from past incidents.",
     "criteria": [
         {
