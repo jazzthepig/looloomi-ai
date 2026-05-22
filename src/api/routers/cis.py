@@ -1186,6 +1186,215 @@ async def get_cis_exclusions(
     return JSONResponse(content=out)
 
 
+# ── Agent: Universe Watchlist ─────────────────────────────────────────────────
+# Assets that have been excluded but are approaching or re-entering eligibility.
+# Scanned weekly — assets entering CG top 150 auto-flagged for re-review.
+# Auto-flags assets entering top 100 for accelerated inclusion review.
+
+_WATCHLIST_CONFIG = {
+    # Assets excluded from v1.1/v2.0 universe that warrant monitoring.
+    # Each entry: criterion that was violated, current CG rank (if known),
+    # and the blocking condition that must resolve before re-review.
+    "VIRTUAL": {
+        "name": "Virtuals Protocol",
+        "symbol": "VIRTUAL",
+        "asset_class": "AI",
+        "violated_criterion": "3",       # Institutional custody
+        "blocking_condition": "Coinbase/BitGo/Fireblocks custody support",
+        "last_cg_rank": 47,              # ~top 50 as of May 2026 — eligible for fast-track
+        "fast_track_eligible": True,
+        "fdv_note": "~600M FDV — below $1B fast-track threshold but high momentum",
+        "remediation_available": True,
+    },
+    "FTM": {
+        "name": "Fantom / Sonic",
+        "symbol": "FTM",
+        "asset_class": "L1",
+        "violated_criterion": "5",       # Token mechanics (rebrand migration)
+        "blocking_condition": "12+ months stable post-migration tokenomics + institutional custody",
+        "last_cg_rank": 89,              # ~top 100 — approaching
+        "fast_track_eligible": False,
+        "fdv_note": "Sonic (S) airdrop completed Jan 2025 — track from Jan 2026 for 180d clean",
+        "remediation_available": True,
+    },
+    "ICP": {
+        "name": "Internet Computer",
+        "symbol": "ICP",
+        "asset_class": "Infrastructure",
+        "violated_criterion": "5",       # Token mechanics (undisclosed inflation)
+        "blocking_condition": "Historical non-disclosure — not retroactively remediable",
+        "last_cg_rank": 68,              # top 100 — high priority watch
+        "fast_track_eligible": False,
+        "fdv_note": "Dfinity governance reward emissions remain variable; supply schedule uncertain",
+        "remediation_available": False,
+    },
+    "BCH": {
+        "name": "Bitcoin Cash",
+        "symbol": "BCH",
+        "asset_class": "Crypto",
+        "violated_criterion": "4",       # Regulatory (Roger Ver DOJ case)
+        "blocking_condition": "Ver case resolved without conviction OR delisting risk confirmed absent",
+        "last_cg_rank": 31,              # top 50 — high priority
+        "fast_track_eligible": False,
+        "fdv_note": "Roger Ver DOJ case ongoing since April 2024 — no resolution yet",
+        "remediation_available": True,
+    },
+    "GALA": {
+        "name": "Gala",
+        "symbol": "GALA",
+        "asset_class": "Gaming",
+        "violated_criterion": "1",       # Liquidity ($5M → $10M threshold breached)
+        "blocking_condition": "30d avg volume > $10M sustained for 60+ days",
+        "last_cg_rank": 198,             # Below top 150 — not currently re-reviewable
+        "fast_track_eligible": False,
+        "fdv_note": "CG rank ~198 — below rank floor threshold. Would need top 150 first.",
+        "remediation_available": True,
+    },
+    "ENA": {
+        "name": "Ethena",
+        "symbol": "ENA",
+        "asset_class": "DeFi",
+        "violated_criterion": "6",       # Trading history (<180d at launch, fast-track not applied)
+        "blocking_condition": "180 days continuous trading history on tier-1 exchange",
+        "last_cg_rank": 62,              # top 100 — approaching re-review window
+        "fast_track_eligible": False,
+        "fdv_note": "ENA launched March 2024 — passed 180d threshold September 2024. Eligible for re-review.",
+        "remediation_available": True,
+    },
+    "SAND": {
+        "name": "The Sandbox",
+        "symbol": "SAND",
+        "asset_class": "Gaming",
+        "violated_criterion": "1",       # Liquidity
+        "blocking_condition": "30d avg volume > $10M sustained for 60+ days",
+        "last_cg_rank": 203,             # Below top 150 — not currently re-reviewable
+        "fast_track_eligible": False,
+        "fdv_note": "CG rank ~203 — below rank floor. Below $10M daily volume.",
+        "remediation_available": True,
+    },
+    "MANA": {
+        "name": "Decentraland",
+        "symbol": "MANA",
+        "asset_class": "Gaming",
+        "violated_criterion": "1",       # Liquidity + data completeness
+        "blocking_condition": "30d avg volume > $10M + DAU > 1,000 sustained",
+        "last_cg_rank": 215,             # Well below top 150
+        "fast_track_eligible": False,
+        "fdv_note": "CG rank ~215. Volume declining. No near-term re-entry path.",
+        "remediation_available": True,
+    },
+    "POLYX": {
+        "name": "Polymesh",
+        "symbol": "POLYX",
+        "asset_class": "RWA",
+        "violated_criterion": "1",       # Liquidity ($250K-$500K daily volume vs $10M threshold)
+        "blocking_condition": "30d avg volume > $10M sustained for 60+ days",
+        "last_cg_rank": 287,             # Well below top 150
+        "fast_track_eligible": False,
+        "fdv_note": "CG rank ~287. Staking mechanics structurally suppress secondary liquidity.",
+        "remediation_available": True,
+    },
+}
+
+
+@router.get("/api/v1/agent/universe-watchlist")
+async def get_universe_watchlist(include_resolved: bool = False):
+    """
+    Returns excluded assets approaching or eligible for re-entry review.
+
+    Auto-flags assets entering CoinGecko top 150 (weekly scan trigger).
+    Auto-flags assets entering top 100 for accelerated inclusion review (Fast-Track pathway).
+
+    This endpoint is the institutional answer to "what could possibly be added next?"
+    — it surfaces the pipeline of candidate re-entries so allocators can monitor
+    the curation boundary proactively.
+
+    Filter: ?include_resolved=true includes assets whose blocking condition has cleared
+    (e.g., VIRTUAL if Coinbase adds custody support, BCH if Ver case resolves).
+
+    Each entry includes: symbol, name, violated criterion, blocking condition,
+    current CG rank (proxy data), fast-track eligibility, and remediation status.
+    """
+    watchlist = []
+    for symbol, entry in _WATCHLIST_CONFIG.items():
+        # Determine watch status based on CG rank proximity
+        rank = entry.get("last_cg_rank", 999)
+        in_top_150 = rank <= 150
+        in_top_100 = rank <= 100
+        in_top_50  = rank <= 50
+
+        # Status logic
+        if entry.get("remediation_available") is False:
+            status = "permanently_excluded"
+        elif in_top_50 and entry.get("fast_track_eligible"):
+            status = "fast_track_candidate"
+        elif in_top_100:
+            status = "accelerated_review"
+        elif in_top_150:
+            status = "re_review_pending"
+        else:
+            status = "monitoring"
+
+        watch_entry = {
+            "symbol": symbol,
+            "name": entry["name"],
+            "asset_class": entry["asset_class"],
+            "violated_criterion": entry["violated_criterion"],
+            "criterion_label": {
+                "1": "Liquidity Threshold",
+                "2": "Data Completeness",
+                "3": "Institutional Custody",
+                "4": "Regulatory Status",
+                "5": "Token Mechanics",
+                "6": "Trading History",
+                "7": "Protocol Integrity",
+            }.get(entry["violated_criterion"], "Unknown"),
+            "blocking_condition": entry["blocking_condition"],
+            "current_cg_rank": rank,
+            "in_top_150": in_top_150,
+            "in_top_100": in_top_100,
+            "fast_track_eligible": entry.get("fast_track_eligible", False),
+            "fdv_note": entry.get("fdv_note", ""),
+            "remediation_available": entry.get("remediation_available", False),
+            "status": status,
+            "review_trigger": (
+                "Accelerated — asset in CG top 100" if in_top_100
+                else f"Standard — asset in CG top 150" if in_top_150
+                else "Rank floor not breached — monitor"
+            ),
+        }
+        watchlist.append(watch_entry)
+
+    # Sort: fast-track candidates first, then by CG rank
+    status_order = {"fast_track_candidate": 0, "accelerated_review": 1,
+                    "re_review_pending": 2, "monitoring": 3, "permanently_excluded": 4}
+    watchlist.sort(key=lambda x: (status_order.get(x["status"], 5), x["current_cg_rank"]))
+
+    total = len(watchlist)
+    action_items = [w for w in watchlist if w["status"] in (
+        "fast_track_candidate", "accelerated_review", "re_review_pending"
+    )]
+
+    out = {
+        "total_watchlist": total,
+        "action_items": len(action_items),
+        "fast_track_candidates": sum(1 for w in watchlist if w["status"] == "fast_track_candidate"),
+        "accelerated_reviews": sum(1 for w in watchlist if w["status"] == "accelerated_review"),
+        "re_review_pending": sum(1 for w in watchlist if w["status"] == "re_review_pending"),
+        "monitoring": sum(1 for w in watchlist if w["status"] == "monitoring"),
+        "permanently_excluded": sum(1 for w in watchlist if w["status"] == "permanently_excluded"),
+        "standard_version": "2.0",
+        "last_reviewed": "2026-05-21",
+        "watchlist": watchlist,
+    }
+
+    if not include_resolved:
+        out["watchlist"] = [w for w in watchlist if w["status"] != "permanently_excluded"]
+        out["total_watchlist"] = len(out["watchlist"])
+
+    return JSONResponse(content=out)
+
+
 # ── Agent: Inclusion Standard ─────────────────────────────────────────────────
 
 _INCLUSION_STANDARD = {
