@@ -104,24 +104,7 @@ const CAT_C = {
 };
 const catStyle = (c) => CAT_C[c] || { bg: "rgba(255,255,255,0.04)", text: T.muted };
 
-/* ─── Curated RWA Projects (Mar 2026) ────────────────────────────────── */
-/* RWA_PROJECTS removed — replaced by ProtocolIntelligence (live CIS-scored data) */
-
-/* ─── Curated Active VCs (Mar 2026) ──────────────────────────────────── */
-const ACTIVE_VCS = [
-  { name: "a16z crypto", deals: 145, portfolio: ["Lido", "Arbitrum", "Coinbase", "Anthropic", "Base"], focus: "Infrastructure" },
-  { name: "Paradigm", deals: 89, portfolio: ["Uniswap", "dYdX", "Flashbots", "Fantom", "Scroll"], focus: "DeFi" },
-  { name: "Polychain", deals: 156, portfolio: ["Compound", "Maple", "Centrifuge", "EigenLayer", "Arbitrum"], focus: "DeFi/RWA" },
-  { name: "Dragonfly", deals: 78, portfolio: ["MakerDAO", "Near", "Mystiko", "Celestia", "Eclipse"], focus: "Multi-chain" },
-  { name: "Pantera", deals: 210, portfolio: ["Solana", "Circle", "Bitwise", "Avax", "Chainlink"], focus: "Infrastructure" },
-  { name: "Coinbase Ventures", deals: 420, portfolio: ["OpenSea", "Ethereum", "Optimism", "Base", "Ondo"], focus: "Ecosystem" },
-  { name: "Binance Labs", deals: 180, portfolio: ["Polygon", "Injective", "Celestia", "Sei", "Ton"], focus: "Infrastructure" },
-  { name: "Solana Ventures", deals: 95, portfolio: ["Jupiter", "Marginfi", "Kamino", "Drift", "Meteora"], focus: "Solana" },
-  { name: "Framework Ventures", deals: 85, portfolio: ["GMX", "Synthetix", "永续"], focus: "DeFi" },
-  { name: "Hack VC", deals: 95, portfolio: ["EigenLayer", "Lido", "Ritual", "Hyperliquid"], focus: "Infrastructure" },
-  { name: "Electric Capital", deals: 65, portfolio: ["Near", "Aptos", "Sui", "Circle"], focus: "Layer 1" },
-  { name: "Variant Fund", deals: 45, portfolio: ["Uniswap", "Aave", "MakerDAO", "PoolTogether"], focus: "DeFi" },
-];
+/* ─── RWA/VC static data removed — replaced by live API calls ─────────── */
 
 // Strip HTML tags from strings (news APIs sometimes embed HTML in description fields)
 const stripHtml = (html) => {
@@ -693,7 +676,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             )}
 
             {/* ── VC Portfolio Performance (CoinGecko) ───────────────────── */}
-            {(view === "all" || view === "events") && (vcPortfoliosLoading || vcPortfolios.length > 0) && (
+            {(view === "all" || view === "events") && (
               <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
                 <div style={{ padding: "14px 18px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <Label Icon={Activity}>VC Portfolio Performance</Label>
@@ -733,6 +716,12 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                           <div className="sk" style={{ height: 12, width: "80%", borderRadius: 3 }} />
                         </div>
                       ))
+                    : vcPortfolios.length === 0
+                    ? (
+                        <div style={{ padding: "32px 18px", textAlign: "center", color: T.t4, fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.08em" }}>
+                          CoinGecko portfolio data unavailable · refreshing
+                        </div>
+                      )
                     : vcPortfolios.map((vc, i) => {
                         const chg = vc.change_24h ?? 0;
                         const chgColor = chg > 0 ? T.green : chg < 0 ? T.red : T.t3;
@@ -1060,11 +1049,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
             {/* ══ TOKENIZED FUNDS & INDICES ══════════════════════════════════════ */}
             {view === "all" && <div style={{ marginTop: 24, marginBottom: 24 }}>
-              <div style={{ marginBottom: 14 }}>
+              <div style={{ marginBottom: 14, display: "flex", alignItems: "baseline", gap: 12 }}>
                 <Label Icon={Globe}>TOKENIZED FUNDS & INDICES</Label>
-                <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body }}>
-                  Institutional-grade assets, live on-chain
-                </div>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.muted, opacity: 0.55, letterSpacing: "0.08em" }}>
+                  Reference · May 2026
+                </span>
               </div>
 
               {/* Tokenized Funds Cards - Horizontal scroll on desktop */}
@@ -1104,7 +1093,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                             {fund.issuer}
                           </div>
                         </div>
-                        <span className="lm-badge" style={{ background: "rgba(0,217,138,.12)", color: T.green, fontSize: 9 }}>
+                        <span className="lm-badge" style={{ background: "rgba(148,163,184,.08)", color: T.t3, fontSize: 9 }}>
                           {fund.status}
                         </span>
                       </div>
