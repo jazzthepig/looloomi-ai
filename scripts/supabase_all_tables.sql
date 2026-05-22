@@ -27,17 +27,19 @@ CREATE TABLE IF NOT EXISTS cis_scores (
     pillar_a            REAL,
     asset_class         TEXT,
     macro_regime        TEXT,
-    regime_transition   BOOLEAN DEFAULT FALSE,
-    previous_regime     TEXT,
-    data_tier           INTEGER,
-    data_quality_score  REAL,
-    las                 REAL,
-    confidence          REAL,
-    score_delta         REAL,
-    score_zscore        REAL,
-    source              TEXT DEFAULT 'local_engine',
     recorded_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Migration: add columns introduced in later versions (safe to run on existing table)
+ALTER TABLE cis_scores ADD COLUMN IF NOT EXISTS regime_transition   BOOLEAN DEFAULT FALSE;
+ALTER TABLE cis_scores ADD COLUMN IF NOT EXISTS previous_regime     TEXT;
+ALTER TABLE cis_scores ADD COLUMN IF NOT EXISTS data_tier           INTEGER;
+ALTER TABLE cis_scores ADD COLUMN IF NOT EXISTS data_quality_score  REAL;
+ALTER TABLE cis_scores ADD COLUMN IF NOT EXISTS las                 REAL;
+ALTER TABLE cis_scores ADD COLUMN IF NOT EXISTS confidence          REAL;
+ALTER TABLE cis_scores ADD COLUMN IF NOT EXISTS score_delta         REAL;
+ALTER TABLE cis_scores ADD COLUMN IF NOT EXISTS score_zscore        REAL;
+ALTER TABLE cis_scores ADD COLUMN IF NOT EXISTS source              TEXT DEFAULT 'local_engine';
 
 CREATE INDEX IF NOT EXISTS idx_cis_scores_symbol_time
     ON cis_scores (symbol, recorded_at DESC);
@@ -49,6 +51,8 @@ CREATE INDEX IF NOT EXISTS idx_cis_scores_regime_transition
     ON cis_scores (regime_transition) WHERE regime_transition = TRUE;
 
 ALTER TABLE cis_scores ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "cis_scores_select" ON cis_scores;
+DROP POLICY IF EXISTS "cis_scores_insert" ON cis_scores;
 CREATE POLICY "cis_scores_select" ON cis_scores FOR SELECT USING (true);
 CREATE POLICY "cis_scores_insert" ON cis_scores FOR INSERT WITH CHECK (true);
 
@@ -69,6 +73,8 @@ CREATE INDEX IF NOT EXISTS idx_macro_briefs_time
     ON macro_briefs (recorded_at DESC);
 
 ALTER TABLE macro_briefs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "macro_briefs_select" ON macro_briefs;
+DROP POLICY IF EXISTS "macro_briefs_insert" ON macro_briefs;
 CREATE POLICY "macro_briefs_select" ON macro_briefs FOR SELECT USING (true);
 CREATE POLICY "macro_briefs_insert" ON macro_briefs FOR INSERT WITH CHECK (true);
 
@@ -85,6 +91,9 @@ CREATE TABLE IF NOT EXISTS wallet_profiles (
 );
 
 ALTER TABLE wallet_profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "wp_select" ON wallet_profiles;
+DROP POLICY IF EXISTS "wp_insert" ON wallet_profiles;
+DROP POLICY IF EXISTS "wp_update" ON wallet_profiles;
 CREATE POLICY "wp_select" ON wallet_profiles FOR SELECT TO anon USING (true);
 CREATE POLICY "wp_insert" ON wallet_profiles FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "wp_update" ON wallet_profiles FOR UPDATE TO anon USING (true);
@@ -169,6 +178,8 @@ CREATE INDEX IF NOT EXISTS idx_trade_results_realized_7d ON trade_results(realiz
     WHERE realized_return_7d IS NOT NULL;
 
 ALTER TABLE trade_results ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "trade_results_select" ON trade_results;
+DROP POLICY IF EXISTS "trade_results_insert" ON trade_results;
 CREATE POLICY "trade_results_select" ON trade_results FOR SELECT USING (true);
 CREATE POLICY "trade_results_insert" ON trade_results FOR INSERT WITH CHECK (true);
 
@@ -193,6 +204,8 @@ CREATE INDEX IF NOT EXISTS idx_agent_call_log_symbol   ON agent_call_log(symbol)
 CREATE INDEX IF NOT EXISTS idx_agent_call_log_recorded ON agent_call_log(recorded_at DESC);
 
 ALTER TABLE agent_call_log ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "agent_call_log_select" ON agent_call_log;
+DROP POLICY IF EXISTS "agent_call_log_insert" ON agent_call_log;
 CREATE POLICY "agent_call_log_select" ON agent_call_log FOR SELECT USING (true);
 CREATE POLICY "agent_call_log_insert" ON agent_call_log FOR INSERT WITH CHECK (true);
 
@@ -237,6 +250,9 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_email   ON api_keys(email);
 CREATE INDEX IF NOT EXISTS idx_api_keys_active  ON api_keys(active) WHERE active = TRUE;
 
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "api_keys_insert" ON api_keys;
+DROP POLICY IF EXISTS "api_keys_select" ON api_keys;
+DROP POLICY IF EXISTS "api_keys_update" ON api_keys;
 CREATE POLICY "api_keys_insert" ON api_keys FOR INSERT WITH CHECK (true);
 CREATE POLICY "api_keys_select" ON api_keys FOR SELECT USING (true);
 CREATE POLICY "api_keys_update" ON api_keys FOR UPDATE USING (true);
@@ -260,6 +276,8 @@ CREATE INDEX IF NOT EXISTS idx_analytics_recorded ON analytics_events(recorded_a
 CREATE INDEX IF NOT EXISTS idx_analytics_ip       ON analytics_events(ip_hash);
 
 ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "analytics_insert" ON analytics_events;
+DROP POLICY IF EXISTS "analytics_select" ON analytics_events;
 CREATE POLICY "analytics_insert" ON analytics_events FOR INSERT WITH CHECK (true);
 CREATE POLICY "analytics_select" ON analytics_events FOR SELECT USING (true);
 
@@ -286,6 +304,10 @@ CREATE INDEX IF NOT EXISTS idx_webhook_subs_key_prefix ON webhook_subscriptions(
 CREATE INDEX IF NOT EXISTS idx_webhook_subs_active     ON webhook_subscriptions(active) WHERE active = TRUE;
 
 ALTER TABLE webhook_subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "webhook_subs_insert" ON webhook_subscriptions;
+DROP POLICY IF EXISTS "webhook_subs_select" ON webhook_subscriptions;
+DROP POLICY IF EXISTS "webhook_subs_update" ON webhook_subscriptions;
+DROP POLICY IF EXISTS "webhook_subs_delete" ON webhook_subscriptions;
 CREATE POLICY "webhook_subs_insert" ON webhook_subscriptions FOR INSERT WITH CHECK (true);
 CREATE POLICY "webhook_subs_select" ON webhook_subscriptions FOR SELECT USING (true);
 CREATE POLICY "webhook_subs_update" ON webhook_subscriptions FOR UPDATE USING (true);
@@ -332,6 +354,9 @@ CREATE INDEX IF NOT EXISTS idx_sj_class     ON signal_journal(asset_class);
 CREATE INDEX IF NOT EXISTS idx_sj_open      ON signal_journal(exit_date) WHERE exit_date IS NULL;
 
 ALTER TABLE signal_journal ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "sj_select" ON signal_journal;
+DROP POLICY IF EXISTS "sj_insert" ON signal_journal;
+DROP POLICY IF EXISTS "sj_update" ON signal_journal;
 CREATE POLICY "sj_select" ON signal_journal FOR SELECT USING (true);
 CREATE POLICY "sj_insert" ON signal_journal FOR INSERT WITH CHECK (true);
 CREATE POLICY "sj_update" ON signal_journal FOR UPDATE USING (true);
