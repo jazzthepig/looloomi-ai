@@ -158,8 +158,8 @@ async def get_macro_brief():
     data = await redis_get_key(_REDIS_KEY)
     now  = int(time.time())
 
-    # Serve LLM brief if fresh
-    if data:
+    # Serve LLM brief if fresh AND has actual content
+    if data and data.get("brief"):
         age    = now - data.get("received_at", 0)
         source = data.get("source", "mac_mini")
         # Always serve Mac Mini LLM briefs until they expire (12h TTL)
