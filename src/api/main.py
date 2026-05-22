@@ -55,6 +55,7 @@ from src.api.routers.vector import router as vector_router
 from src.api.routers.factors import router as factors_router
 from src.api.routers.discovery import router as discovery_router
 from src.api.routers.strategies import router as strategies_router
+from src.api.routers.signals import router as signals_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
 
 _ENV = os.environ.get("ENVIRONMENT", "production")
@@ -108,6 +109,7 @@ app.include_router(vector_router)
 app.include_router(factors_router)
 app.include_router(discovery_router)
 app.include_router(strategies_router)
+app.include_router(signals_router)
 
 
 # ── MCP Server (ROADMAP_A2A Phase 2.2) ───────────────────────────────────────

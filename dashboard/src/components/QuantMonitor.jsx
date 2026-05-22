@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { T, FONTS } from "../tokens";
+import PerformanceDashboard from "./PerformanceDashboard";
 
 const API_BASE = "/api/v1";
 
@@ -1098,6 +1099,7 @@ export default function QuantMonitor() {
   const [data, setData] = useState({ status: null, trades: null, backtest: null });
   const [loading, setLoading] = useState(true);
   const [stale, setStale] = useState(false);
+  const [mainTab, setMainTab] = useState("performance"); // performance | paper
 
   const fetchData = useCallback(async () => {
     const { status, trades, backtest } = await fetchQuantData();
@@ -1107,127 +1109,144 @@ export default function QuantMonitor() {
   }, []);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 30_000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    if (mainTab === "paper") {
+      fetchData();
+      const interval = setInterval(fetchData, 30_000);
+      return () => clearInterval(interval);
+    }
+  }, [fetchData, mainTab]);
 
   const { status, trades } = data;
-  const openTrades = status?.open_trades || [];
+  const openTrades   = status?.open_trades || [];
   const closedTrades = (trades?.trades || []).slice(0, 30);
 
   return (
     <div style={{ color: T.t1, padding: "0 0 32px" }}>
       <style>{CSS}</style>
 
-      {/* Header — minimal */}
+      {/* ── Top-level tab switcher ── */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        paddingBottom: 24, marginBottom: 4,
+        paddingBottom: 16, marginBottom: 20,
+        borderBottom: "1px solid rgba(37,99,235,0.08)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em", color: T.t1 }}>
-            Quant Monitor
-          </span>
-          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, letterSpacing: "0.10em", opacity: 0.5 }}>
-            · Freqtrade dry run
-          </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 5, height: 5, borderRadius: "50%", background: stale ? T.amber : T.green }} className={stale ? "" : "pulse-dot"} />
-          <button
-            onClick={fetchData}
-            style={{
-              background: "transparent", border: `1px solid rgba(37,99,235,0.14)`,
-              borderRadius: 4, padding: "3px 7px", cursor: "pointer",
-              color: T.t3, display: "flex", alignItems: "center",
-            }}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={loading ? "spinner" : ""}>
-              <path d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-            </svg>
-          </button>
+        <div style={{ display: "flex", gap: 0 }}>
+          {[
+            ["performance", "Signal Performance"],
+            ["paper",       "Paper Agent"],
+          ].map(([k, l]) => (
+            <button key={k} onClick={() => setMainTab(k)} style={{
+              fontFamily: FONTS.mono, fontSize: 10, padding: "6px 16px",
+              background: "transparent", border: "none",
+              borderBottom: `2px solid ${mainTab === k ? "#38BDF8" : "transparent"}`,
+              color: mainTab === k ? "#38BDF8" : T.t3,
+              cursor: "pointer", letterSpacing: ".04em",
+              transition: "color .15s, border-color .15s",
+            }}>
+              {l}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Content */}
-      <div>
+      {/* ── Signal Performance tab (primary) ── */}
+      {mainTab === "performance" && <PerformanceDashboard />}
 
-        {/* Equity + Stats */}
-        {loading ? <SkeletonCard /> : (
-          <EquityCard
-            equity={status?.balance?.equity}
-            starting={status?.balance?.starting || 10000}
-            dailyPnl={status?.daily_pnl}
-            stale={stale}
-            updated={status?.updated}
-          />
-        )}
-
-        {/* Backtest Results */}
-        {!loading && <BacktestCard data={data.backtest} />}
-
-        {/* Open Positions */}
-        <div className="fade-up" style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
-            <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
-              Open Positions
-            </span>
-            <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>{openTrades.length} active</span>
+      {/* ── Paper Agent tab (secondary, legacy Freqtrade + paper trading) ── */}
+      {mainTab === "paper" && (
+        <div>
+          {/* Header */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            paddingBottom: 16, marginBottom: 4,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 600, color: T.t1 }}>
+                Paper Agent
+              </span>
+              <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, letterSpacing: "0.10em", opacity: 0.5 }}>
+                · In-process paper trading + Simons IC loop
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: stale ? T.amber : T.green }} className={stale ? "" : "pulse-dot"} />
+              <button onClick={fetchData} style={{
+                background: "transparent", border: `1px solid rgba(37,99,235,0.14)`,
+                borderRadius: 4, padding: "3px 7px", cursor: "pointer",
+                color: T.t3, display: "flex", alignItems: "center",
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={loading ? "spinner" : ""}>
+                  <path d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                </svg>
+              </button>
+            </div>
           </div>
 
-          {openTrades.length === 0 ? null : (
-            <div>
-              <div style={{
-                display: "grid", gridTemplateColumns: "1fr 80px 80px 80px 60px",
-                gap: 8, padding: "0 0 6px",
-                borderBottom: `1px solid rgba(37,99,235,0.08)`,
-              }}>
-                {["Pair", "Entry", "Current", "P&L", "Side"].map(h => (
-                  <div key={h} style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, opacity: 0.5, textAlign: h === "Pair" ? "left" : "right" }}>{h}</div>
-                ))}
-              </div>
-              {openTrades.map((t, i) => <OpenTradeRow key={t.trade_id || i} trade={t} />)}
-            </div>
+          {/* Equity + Stats */}
+          {loading ? <SkeletonCard /> : (
+            <EquityCard
+              equity={status?.balance?.equity}
+              starting={status?.balance?.starting || 10000}
+              dailyPnl={status?.daily_pnl}
+              stale={stale}
+              updated={status?.updated}
+            />
           )}
-        </div>
 
-        {/* Trade History */}
-        <div className="fade-up" style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
-            <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
-              Trade History
-            </span>
-            <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>{closedTrades.length} recent</span>
+          {/* Backtest Results */}
+          {!loading && <BacktestCard data={data.backtest} />}
+
+          {/* Open Positions */}
+          <div className="fade-up" style={{ marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
+              <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
+                Open Positions
+              </span>
+              <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>{openTrades.length} active</span>
+            </div>
+            {openTrades.length === 0 ? null : (
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 80px 60px", gap: 8, padding: "0 0 6px", borderBottom: `1px solid rgba(37,99,235,0.08)` }}>
+                  {["Pair", "Entry", "Current", "P&L", "Side"].map(h => (
+                    <div key={h} style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, opacity: 0.5, textAlign: h === "Pair" ? "left" : "right" }}>{h}</div>
+                  ))}
+                </div>
+                {openTrades.map((t, i) => <OpenTradeRow key={t.trade_id || i} trade={t} />)}
+              </div>
+            )}
           </div>
 
-          {closedTrades.length === 0 ? null : (
-            <div>
-              <div style={{
-                display: "grid", gridTemplateColumns: "1fr 80px 80px 70px",
-                gap: 8, padding: "0 0 6px",
-                borderBottom: `1px solid rgba(37,99,235,0.08)`,
-              }}>
-                {["Pair", "Entry", "Exit", "P&L"].map(h => (
-                  <div key={h} style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, opacity: 0.5, textAlign: h === "Pair" ? "left" : "right" }}>{h}</div>
-                ))}
-              </div>
-              {closedTrades.map((t, i) => <TradeHistoryRow key={t.trade_id || i} trade={t} />)}
+          {/* Trade History */}
+          <div className="fade-up" style={{ marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
+              <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
+                Trade History
+              </span>
+              <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>{closedTrades.length} recent</span>
             </div>
-          )}
+            {closedTrades.length === 0 ? null : (
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 70px", gap: 8, padding: "0 0 6px", borderBottom: `1px solid rgba(37,99,235,0.08)` }}>
+                  {["Pair", "Entry", "Exit", "P&L"].map(h => (
+                    <div key={h} style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, opacity: 0.5, textAlign: h === "Pair" ? "left" : "right" }}>{h}</div>
+                  ))}
+                </div>
+                {closedTrades.map((t, i) => <TradeHistoryRow key={t.trade_id || i} trade={t} />)}
+              </div>
+            )}
+          </div>
+
+          {/* Paper Trading Execution Loop */}
+          <PaperTrading />
+
+          {/* Simons IC Feedback Loop */}
+          <SimonsPanel />
+
+          <div style={{ paddingTop: 16, borderTop: `1px solid rgba(37,99,235,0.06)`, color: T.t3, fontSize: 9, fontFamily: FONTS.mono, opacity: 0.4, letterSpacing: "0.08em" }}>
+            CometCloud Paper Agent · In-process simulation · $10,000 USDT
+          </div>
         </div>
-
-        {/* Paper Trading Execution Loop */}
-        <PaperTrading />
-
-        {/* Simons IC Feedback Loop */}
-        <SimonsPanel />
-
-        {/* Footer */}
-        <div style={{ paddingTop: 16, borderTop: `1px solid rgba(37,99,235,0.06)`, color: T.t3, fontSize: 9, fontFamily: FONTS.mono, opacity: 0.4, letterSpacing: "0.08em" }}>
-          CometCloud Quant · Freqtrade Dry Run + Paper Agent · 10,000 USDT
-        </div>
-      </div>
+      )}
     </div>
   );
 }
