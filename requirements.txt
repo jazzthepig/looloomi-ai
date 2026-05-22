@@ -21,3 +21,6 @@ Pillow>=10.0.0
 mcp[cli]>=1.6.0
 cachetools>=5.0.0
 tenacity>=8.0.0
+# Buy-side performance metrics — open-source institutional-grade
+empyrical>=0.5.5
+scipy>=1.10.0

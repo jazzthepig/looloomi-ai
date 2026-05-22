@@ -24,6 +24,18 @@ _logger = logging.getLogger(__name__)
 router = APIRouter()
 
 _INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
+_SB_KEY_SET     = bool(os.environ.get("SUPABASE_KEY", ""))  # guard signal logging
+
+
+async def _log_signals_task(universe: list, regime: str, prices: dict):
+    """Fire-and-forget: log OUTPERFORM signals + close downgrades in signal_journal."""
+    try:
+        from src.api.routers.signals import log_cis_signals
+        n = await log_cis_signals(universe, regime, prices)
+        if n:
+            _logger.info(f"[SIGNALS] {n} new signals logged")
+    except Exception as e:
+        _logger.warning(f"[SIGNALS] log task error: {e}")
 
 # ── Regime tracking (Simons Upgrade P1.1) ────────────────────────────────────
 # Persists in-module across requests. Reset on Railway restart — acceptable
@@ -253,7 +265,23 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                     regime = macro_regime_push or "",
                 ))
 
-        # 3. Broadcast to WebSocket clients
+        # 3. Signal journal — auto-log OUTPERFORM threshold crossings (fire-and-forget)
+        #    Extract prices from the universe payload (Mac Mini includes price data).
+        #    Falls back to None if price unavailable — entry_price will be null (still logs signal).
+        if universe and _SB_KEY_SET:
+            prices_from_payload = {}
+            for a in universe:
+                sym = (a.get("symbol") or a.get("asset_id") or "").upper()
+                px  = a.get("price") or a.get("current_price") or a.get("market_data", {}).get("price")
+                if sym and px:
+                    try:
+                        prices_from_payload[sym] = float(px)
+                    except (TypeError, ValueError):
+                        pass
+            regime_for_signals = macro_regime_push or (macro or {}).get("regime") or ""
+            asyncio.create_task(_log_signals_task(universe, regime_for_signals, prices_from_payload))
+
+        # 4. Broadcast to WebSocket clients
         asyncio.create_task(_broadcast_cis_update(universe))
 
         return {"status": "success", "received": len(universe), "cached": ok, "history_written": sb_ok}

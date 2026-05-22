@@ -291,6 +291,52 @@ CREATE POLICY "webhook_subs_select" ON webhook_subscriptions FOR SELECT USING (t
 CREATE POLICY "webhook_subs_update" ON webhook_subscriptions FOR UPDATE USING (true);
 CREATE POLICY "webhook_subs_delete" ON webhook_subscriptions FOR DELETE USING (true);
 
+-- ═══════════════════════════════════════════════════════════════════
+-- 11. Signal Journal — CIS OUTPERFORM threshold crossings
+-- Starts the institutional track record clock.
+-- Auto-populated by /internal/cis-scores push path (signals.py).
+-- Each row = one tradeable signal (entry + eventual exit).
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS signal_journal (
+    id              BIGSERIAL PRIMARY KEY,
+    symbol          TEXT NOT NULL,
+    asset_class     TEXT,
+    grade           TEXT,
+    signal          TEXT NOT NULL,            -- OUTPERFORM | STRONG_OUTPERFORM
+    cis_score       REAL,
+    raw_cis_score   REAL,
+    las             REAL,
+    pillar_f        REAL,
+    pillar_m        REAL,
+    pillar_o        REAL,
+    pillar_s        REAL,
+    pillar_a        REAL,
+    macro_regime    TEXT,
+    strategy        TEXT DEFAULT 'CIS_THRESHOLD',
+    data_tier       INTEGER DEFAULT 2,
+    entry_price     REAL,
+    exit_price      REAL,
+    exit_date       TIMESTAMPTZ,
+    exit_reason     TEXT,                     -- DOWNGRADE | STOP_LOSS | TAKE_PROFIT | OPEN
+    return_pct      REAL,
+    holding_days    REAL,
+    signal_date     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    recorded_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sj_symbol    ON signal_journal(symbol);
+CREATE INDEX IF NOT EXISTS idx_sj_date      ON signal_journal(signal_date DESC);
+CREATE INDEX IF NOT EXISTS idx_sj_signal    ON signal_journal(signal);
+CREATE INDEX IF NOT EXISTS idx_sj_regime    ON signal_journal(macro_regime);
+CREATE INDEX IF NOT EXISTS idx_sj_class     ON signal_journal(asset_class);
+CREATE INDEX IF NOT EXISTS idx_sj_open      ON signal_journal(exit_date) WHERE exit_date IS NULL;
+
+ALTER TABLE signal_journal ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "sj_select" ON signal_journal FOR SELECT USING (true);
+CREATE POLICY "sj_insert" ON signal_journal FOR INSERT WITH CHECK (true);
+CREATE POLICY "sj_update" ON signal_journal FOR UPDATE USING (true);
+
+
 -- Atomic delivery counter increment (called by webhooks.py _sb_increment)
 CREATE OR REPLACE FUNCTION increment_webhook_delivery(
     p_key_prefix TEXT,
