@@ -1297,27 +1297,281 @@ _WATCHLIST_CONFIG = {
 }
 
 
+# ── CoinGecko proxy for watchlist live data ──────────────────────────────────
+# Cache: 60s TTL to avoid rate limits when watchlist is polled frequently.
+_watchlist_cache: dict = {}
+_watchlist_cache_ts: float = 0.0
+_WATCHLIST_CACHE_TTL: float = 60.0
+
+
+async def _get_cg_market_for_watchlist(symbol: str, cg_id: str) -> dict:
+    """Fetch live market data for a watchlist asset. 60s in-process cache."""
+    global _watchlist_cache, _watchlist_cache_ts
+    from src.data.cis.cis_provider import _cg_headers, CG_API_KEY
+
+    now = time.time()
+    if _watchlist_cache and (now - _watchlist_cache_ts) < _WATCHLIST_CACHE_TTL:
+        return _watchlist_cache.get(symbol, {})
+
+    result = {}
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=10) as client:
+            url = f"https://api.coingecko.com/api/v3/coins/markets"
+            params = {"vs_currency": "usd", "ids": cg_id, "price_change_percentage": "30d"}
+            headers = _cg_headers() if CG_API_KEY else {}
+            resp = await client.get(url, params=params, headers=headers)
+            if resp.status_code == 200:
+                data = resp.json()
+                if data:
+                    c = data[0]
+                    result = {
+                        "price": c.get("current_price"),
+                        "mcap_usd": c.get("market_cap"),
+                        "fdv_usd": c.get("fully_diluted_valuation"),
+                        "volume_24h": c.get("total_volume"),
+                        "mcap_rank": c.get("market_cap_rank"),
+                        "price_change_30d_pct": c.get("price_change_percentage_30d_in_currency"),
+                        "circ_supply": c.get("circulating_supply"),
+                        "total_supply": c.get("total_supply"),
+                        " ATH_distance_pct": c.get("ath_change_percentage"),
+                    }
+    except Exception:
+        pass
+
+    _watchlist_cache[symbol] = result
+    _watchlist_cache_ts = now
+    return result
+
+
+def _volume_vs_threshold(volume_24h: Optional[float], threshold: float = 10_000_000) -> dict:
+    """Compute volume vs liquidity threshold with distance-to-clearing."""
+    if not volume_24h:
+        return {"ratio": None, "pct_of_threshold": None, "distance_usd": None, "status": "unknown"}
+    ratio = volume_24h / threshold
+    return {
+        "ratio": round(ratio, 2),
+        "pct_of_threshold": round(ratio * 100, 1),
+        "distance_usd": round(threshold - volume_24h, 0) if volume_24h < threshold else 0,
+        "status": "cleared" if ratio >= 1.0 else f"{round((1 - ratio) * 100, 1)}% below threshold",
+    }
+
+
+def _days_since(date_str: str) -> int:
+    """Days elapsed since a date string YYYY-MM-DD."""
+    try:
+        from datetime import date
+        past = date.fromisoformat(date_str)
+        return (date.today() - past).days
+    except Exception:
+        return 0
+
+
+def _gate_status(entry: dict, live_data: dict) -> list[dict]:
+    """
+    Per-criterion gate status for a watchlist asset.
+    Returns list of {gate_id, label, status, notes} for the 10 v2.0 gates.
+    """
+    criterion = entry["violated_criterion"]
+    mcap_rank = entry.get("last_cg_rank", 999)
+    vol_data = live_data.get("volume_24h")
+    mcap = live_data.get("mcap_usd")
+    fdv = live_data.get("fdv_usd")
+    circ = live_data.get("circ_supply", 0) or 0
+    total = live_data.get("total_supply", 0) or 0
+
+    gates = []
+    gates.append({
+        "gate_id": "1",
+        "label": "Liquidity ($10M/30d + 3 tier-1)",
+        "status": "cleared" if (vol_data and vol_data >= 10_000_000) else "failing",
+        "notes": f"${vol_data / 1e6:.1f}M daily vol" if vol_data else "No live volume data",
+    })
+    gates.append({
+        "gate_id": "2",
+        "label": "Market Cap ($500M FDV floor)",
+        "status": "cleared" if (fdv and fdv >= 500_000_000) else "failing",
+        "notes": f"${fdv / 1e9:.1f}B FDV" if fdv else "No FDV data",
+    })
+    gates.append({
+        "gate_id": "3",
+        "label": "CG Rank (top 150)",
+        "status": "cleared" if mcap_rank <= 150 else "failing",
+        "notes": f"CG rank #{mcap_rank}",
+    })
+    gates.append({
+        "gate_id": "4",
+        "label": "Data Completeness (90d+ OHLCV)",
+        "status": "unknown",
+        "notes": "Requires on-chain data audit",
+    })
+    gates.append({
+        "gate_id": "5",
+        "label": "Institutional Custody",
+        "status": "cleared" if entry.get("fast_track_eligible") else "failing",
+        "notes": entry.get("blocking_condition", "See criterion 5 notes"),
+    })
+    gates.append({
+        "gate_id": "6",
+        "label": "Regulatory Status",
+        "status": "cleared" if criterion != "4" else "failing",
+        "notes": "Ver DOJ case ongoing" if criterion == "4" else "No active regulatory concerns",
+    })
+    gates.append({
+        "gate_id": "7",
+        "label": "Token Mechanics (circ/total≥30%, inflation<20%/yr)",
+        "status": "unknown",
+        "notes": "Supply data: circ/total=" + (f"{circ/total*100:.0f}%" if total > 0 else "unavailable"),
+    })
+    gates.append({
+        "gate_id": "8",
+        "label": "Trading History (180d)",
+        "status": "cleared" if criterion != "6" else "failing",
+        "notes": "ENA: launched Mar 2024, 180d+ Sep 2024" if entry["symbol"] == "ENA" else "See trading history criterion",
+    })
+    gates.append({
+        "gate_id": "9",
+        "label": "Protocol Integrity",
+        "status": "cleared" if criterion != "7" else "failing",
+        "notes": "No rug-pull or unresolved exploit" if criterion != "7" else entry.get("blocking_condition", ""),
+    })
+    gates.append({
+        "gate_id": "10",
+        "label": "Fast-Track ($1B+ FDV + custody + tier-1)",
+        "status": "eligible" if entry.get("fast_track_eligible") else "not_eligible",
+        "notes": f"FDV {fdv/1e9:.1f}B — fast-track eligible" if (entry.get("fast_track_eligible") and fdv) else "Below $1B FDV or no custody",
+    })
+    return gates
+
+
+def _risk_factors(entry: dict, live_data: dict) -> list[dict]:
+    """Generate specific risk factors based on violation type."""
+    risks = []
+    criterion = entry["violated_criterion"]
+    symbol = entry.get("symbol", "")
+
+    if criterion == "1":  # Liquidity
+        vol = live_data.get("volume_24h")
+        if vol:
+            shortfall = max(0, 10_000_000 - vol)
+            risks.append({
+                "factor": "Liquidity Shortfall",
+                "severity": "HIGH" if vol < 5_000_000 else "MEDIUM",
+                "description": f"${shortfall/1e6:.1f}M below $10M threshold. Structural if staking-heavy.",
+            })
+        risks.append({
+            "factor": "Bid-Ask Spread Risk",
+            "severity": "MEDIUM",
+            "description": "Wide spreads on low-liquidity venues increase execution slippage for institutional orders.",
+        })
+
+    if criterion == "3":  # Custody
+        risks.append({
+            "factor": "Custody Gap",
+            "severity": "HIGH",
+            "description": "Cannot be held in institutional custody — blocks pension/family-office allocation.",
+        })
+        risks.append({
+            "factor": "LP Eligibility Risk",
+            "severity": "HIGH",
+            "description": "Regulated funds require eligible assets. Custody gap = structural fund exclusion.",
+        })
+
+    if criterion == "4":  # Regulatory
+        risks.append({
+            "factor": "DOJ/Regulatory Proximity",
+            "severity": "HIGH",
+            "description": "Active legal proceedings create delisting risk on tier-1 exchanges.",
+        })
+        risks.append({
+            "factor": "Team Regulatory Exposure",
+            "severity": "HIGH",
+            "description": "Key team member under charges — protocol governance depends on individual's legal stability.",
+        })
+
+    if criterion == "5":  # Token mechanics
+        risks.append({
+            "factor": "Supply Schedule Uncertainty",
+            "severity": "MEDIUM",
+            "description": "Variable or undisclosed inflation schedule creates unpredictable dilution.",
+        })
+        risks.append({
+            "factor": "Circ/Total Supply Risk",
+            "severity": "MEDIUM",
+            "description": "Low circulating share means large future unlock events can shock price.",
+        })
+
+    if criterion == "6":  # Trading history
+        risks.append({
+            "factor": "Limited Price History",
+            "severity": "LOW",
+            "description": "180d+ history now met. Confidence in momentum and alpha signals recovered.",
+        })
+
+    if criterion == "7":  # Protocol integrity
+        risks.append({
+            "factor": "Team Integrity Risk",
+            "severity": "HIGH",
+            "description": "Past rug/exploit/misuse — reputational risk for fund allocating here.",
+        })
+
+    # Cross-cutting: rank-based risk
+    rank = entry.get("last_cg_rank", 999)
+    if rank <= 50:
+        risks.append({
+            "factor": "Concentration Risk (Top 50)",
+            "severity": "MEDIUM",
+            "description": "High rank = high correlation with broad crypto sentiment. Sharp drawdowns affect fund NAV.",
+        })
+    if rank <= 100:
+        risks.append({
+            "factor": "Elevated Speculation Premium",
+            "severity": "MEDIUM",
+            "description": "Top 100 assets trade at premium to fair value due to narrative demand.",
+        })
+
+    return risks
+
+
 @router.get("/api/v1/agent/universe-watchlist")
-async def get_universe_watchlist(include_resolved: bool = False):
+async def get_universe_watchlist(
+    include_resolved: bool = False,
+    include_live_data: bool = False,    # fetch CG live data (60s cache, adds latency)
+    include_risk_factors: bool = False,  # include per-asset risk factors
+):
     """
     Returns excluded assets approaching or eligible for re-entry review.
 
     Auto-flags assets entering CoinGecko top 150 (weekly scan trigger).
-    Auto-flags assets entering top 100 for accelerated inclusion review (Fast-Track pathway).
+    Auto-flags assets entering top 100 for accelerated inclusion review.
+    Auto-flags top 50 assets with custody support as fast-track candidates.
 
-    This endpoint is the institutional answer to "what could possibly be added next?"
-    — it surfaces the pipeline of candidate re-entries so allocators can monitor
-    the curation boundary proactively.
+    Per asset includes:
+      - Violation details + blocking condition
+      - 10-gate status (which v2.0 gates currently cleared/failing)
+      - Live market data (price, mcap, FDV, volume) when ?include_live_data=true
+      - Risk factors specific to violation type
+      - Days since exclusion, days until re-review eligibility
 
-    Filter: ?include_resolved=true includes assets whose blocking condition has cleared
-    (e.g., VIRTUAL if Coinbase adds custody support, BCH if Ver case resolves).
-
-    Each entry includes: symbol, name, violated criterion, blocking condition,
-    current CG rank (proxy data), fast-track eligibility, and remediation status.
+    Add ?include_risk_factors=true for institutional risk analysis per asset.
+    Add ?include_live_data=true for real-time CG market data (N requests, slower).
+    Add ?include_resolved=true to include permanently excluded assets.
     """
+    # CG IDs for live data fetch (symbol → CG coin id)
+    _SYMBOL_TO_CG_ID = {
+        "VIRTUAL": "virtuals-protocol",
+        "FTM":     "fantom",
+        "ICP":     "internet-computer",
+        "BCH":     "bitcoin-cash",
+        "GALA":    "gala",
+        "ENA":     "ethena",
+        "SAND":    "the-sandbox",
+        "MANA":    "decentraland",
+        "POLYX":   "polymesh",
+    }
+
     watchlist = []
     for symbol, entry in _WATCHLIST_CONFIG.items():
-        # Determine watch status based on CG rank proximity
         rank = entry.get("last_cg_rank", 999)
         in_top_150 = rank <= 150
         in_top_100 = rank <= 100
@@ -1335,6 +1589,7 @@ async def get_universe_watchlist(include_resolved: bool = False):
         else:
             status = "monitoring"
 
+        # Build base entry
         watch_entry = {
             "symbol": symbol,
             "name": entry["name"],
@@ -1353,6 +1608,7 @@ async def get_universe_watchlist(include_resolved: bool = False):
             "current_cg_rank": rank,
             "in_top_150": in_top_150,
             "in_top_100": in_top_100,
+            "in_top_50": in_top_50,
             "fast_track_eligible": entry.get("fast_track_eligible", False),
             "fdv_note": entry.get("fdv_note", ""),
             "remediation_available": entry.get("remediation_available", False),
@@ -1363,6 +1619,115 @@ async def get_universe_watchlist(include_resolved: bool = False):
                 else "Rank floor not breached — monitor"
             ),
         }
+
+        # ── Live market data (optional, costs N CG API calls) ──────────────
+        live_data = {}
+        if include_live_data:
+            cg_id = _SYMBOL_TO_CG_ID.get(symbol)
+            if cg_id:
+                live_data = await _get_cg_market_for_watchlist(symbol, cg_id)
+
+        # ── Gate status for all 10 v2.0 gates ─────────────────────────────
+        gates = _gate_status(entry, live_data)
+        watch_entry["gate_status"] = gates
+
+        # ── Volume analysis for liquidity violations ─────────────────────
+        if entry["violated_criterion"] == "1":
+            vol = live_data.get("volume_24h")
+            watch_entry["volume_analysis"] = _volume_vs_threshold(vol)
+            watch_entry["volume_threshold"] = "$10M/day 30d avg"
+            watch_entry["volume_status"] = (
+                "CLEARED — volume threshold met"
+                if (vol and vol >= 10_000_000) else
+                f"FALLING — ${(10_000_000 - (vol or 0)) / 1e6:.1f}M below threshold"
+            )
+
+        # ── Trading history eligibility for ENA ─────────────────────────
+        if symbol == "ENA":
+            # ENA launched March 2024 → 180d threshold reached September 2024
+            from datetime import date
+            launch_date = date(2024, 3, 4)  # approximate launch
+            days_since_launch = (date.today() - launch_date).days
+            watch_entry["trading_history"] = {
+                "launch_date": "2024-03-04",
+                "days_since_launch": days_since_launch,
+                "threshold_days": 180,
+                "threshold_met": True,
+                "eligible_since": "2024-09-01",
+                "note": "180d threshold met September 2024. Criterion 6 blocking condition resolved. Re-review eligible.",
+            }
+        else:
+            watch_entry["trading_history"] = None
+
+        # ── Regulatory timeline for BCH ────────────────────────────────────
+        if symbol == "BCH":
+            watch_entry["regulatory_timeline"] = {
+                "event": "Roger Ver DOJ indictment",
+                "filed_date": "2024-04-01",
+                "days_since": _days_since("2024-04-01"),
+                "case_status": "Active proceedings",
+                "delisting_risk": "MEDIUM",
+                "note": "No resolution in 26+ months. Resolution would clear Criterion 4.",
+            }
+        else:
+            watch_entry["regulatory_timeline"] = None
+
+        # ── Token mechanics for FTM (Sonic rebrand) ─────────────────────
+        if symbol == "FTM":
+            watch_entry["token_migration"] = {
+                "event": "Fantom → Sonic rebrand (Jan 2025)",
+                "new_token": "S (SONIC)",
+                "migration_ratio": "1:1 FTM→S + 190.5M S airdrop",
+                "migration_date": "2025-01-14",
+                "days_since_migration": _days_since("2025-01-14"),
+                "track_from_date": "2025-01-14",
+                "clean_period_end": "2026-01-14",
+                "note": "12-month clean period ends January 2026. Criterion 5 re-review eligible after that date.",
+                "blocking_condition_met": False,
+            }
+        else:
+            watch_entry["token_migration"] = None
+
+        # ── Live data fields merged in ─────────────────────────────────────
+        if live_data:
+            watch_entry["price"] = live_data.get("price")
+            watch_entry["mcap_usd"] = live_data.get("mcap_usd")
+            watch_entry["fdv_usd"] = live_data.get("fdv_usd")
+            watch_entry["volume_24h"] = live_data.get("volume_24h")
+            watch_entry["price_change_30d_pct"] = live_data.get("price_change_30d_pct")
+            watch_entry["circ_supply"] = live_data.get("circ_supply")
+            watch_entry["total_supply"] = live_data.get("total_supply")
+            watch_entry["ath_distance_pct"] = live_data.get("ATH_distance_pct")
+        else:
+            watch_entry["price"] = None
+            watch_entry["mcap_usd"] = None
+            watch_entry["fdv_usd"] = None
+            watch_entry["volume_24h"] = None
+            watch_entry["price_change_30d_pct"] = None
+            watch_entry["circ_supply"] = None
+            watch_entry["total_supply"] = None
+            watch_entry["ath_distance_pct"] = None
+
+        # ── Risk factors (optional, adds computation) ───────────────────
+        if include_risk_factors:
+            watch_entry["risk_factors"] = _risk_factors(entry, live_data)
+            watch_entry["risk_summary"] = {
+                "HIGH_count": sum(1 for r in watch_entry["risk_factors"] if r.get("severity") == "HIGH"),
+                "MEDIUM_count": sum(1 for r in watch_entry["risk_factors"] if r.get("severity") == "MEDIUM"),
+                "LOW_count": sum(1 for r in watch_entry["risk_factors"] if r.get("severity") == "LOW"),
+            }
+        else:
+            watch_entry["risk_factors"] = None
+            watch_entry["risk_summary"] = None
+
+        # ── Institutional flags ─────────────────────────────────────────
+        watch_entry["institutional_flags"] = {
+            "lp_eligible": entry.get("remediation_available", False) and entry.get("fast_track_eligible", False),
+            "fund_manager_ allocatable": entry.get("remediation_available", False) and (rank <= 150),
+            "regulatory_watch": entry["violated_criterion"] == "4",
+            "custody_watch": entry["violated_criterion"] == "3",
+        }
+
         watchlist.append(watch_entry)
 
     # Sort: fast-track candidates first, then by CG rank
