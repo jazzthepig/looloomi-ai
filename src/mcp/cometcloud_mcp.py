@@ -114,15 +114,22 @@ async def _call_log_loop():
         await asyncio.sleep(1)
         await _flush_call_log()
 
-# Start it once at module load (non-blocking)
-_background_task = asyncio.create_task(_call_log_loop())
+# Deferred start — creates task only when an event loop is running.
+# Fixes: RuntimeError at import time when no loop exists (e.g., `python -m uvicorn` at startup).
+def _start_background_log():
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return  # No loop yet — will be started lazily on first request
+    global _background_task
+    _background_task = loop.create_task(_call_log_loop())
+
+_start_background_log()
 
 
 def _start_call_log():
-    """Idempotent start of background log task."""
-    global _background_task
-    if _background_task.done() or _background_task.cancelled():
-        _background_task = asyncio.create_task(_call_log_loop())
+    """Idempotent (re)start of background log task."""
+    _start_background_log()
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
