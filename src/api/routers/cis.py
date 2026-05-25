@@ -1333,10 +1333,7 @@ _WATCHLIST_CACHE_TTL: float = 60.0
 
 
 async def _get_cg_market_for_watchlist(symbol: str, cg_id: str) -> dict:
-    """
-    Fetch live market data for a watchlist asset.
-    60s in-process cache. Stores current rank snapshot for trend calc.
-    """
+    """Fetch live market data for a watchlist asset. 60s in-process cache."""
     global _watchlist_cache, _watchlist_cache_ts
     from src.data.cis.cis_provider import _cg_headers, CG_API_KEY
 
@@ -1348,18 +1345,10 @@ async def _get_cg_market_for_watchlist(symbol: str, cg_id: str) -> dict:
     try:
         import httpx
         async with httpx.AsyncClient(timeout=10) as client:
+            url = f"https://api.coingecko.com/api/v3/coins/markets"
+            params = {"vs_currency": "usd", "ids": cg_id, "price_change_percentage": "30d"}
             headers = _cg_headers() if CG_API_KEY else {}
-            params = {
-                "vs_currency": "usd",
-                "ids": cg_id,
-                "price_change_percentage": "30d",
-                "sparkline": "false",
-            }
-            resp = await client.get(
-                "https://api.coingecko.com/api/v3/coins/markets",
-                params=params,
-                headers=headers,
-            )
+            resp = await client.get(url, params=params, headers=headers)
             if resp.status_code == 200:
                 data = resp.json()
                 if data:
@@ -1373,8 +1362,7 @@ async def _get_cg_market_for_watchlist(symbol: str, cg_id: str) -> dict:
                         "price_change_30d_pct": c.get("price_change_percentage_30d_in_currency"),
                         "circ_supply": c.get("circulating_supply"),
                         "total_supply": c.get("total_supply"),
-                        "ath_distance_pct": c.get("ath_change_percentage"),
-                        "rank_snapshot": c.get("market_cap_rank"),
+                        " ATH_distance_pct": c.get("ath_change_percentage"),
                     }
     except Exception:
         pass
@@ -1382,343 +1370,6 @@ async def _get_cg_market_for_watchlist(symbol: str, cg_id: str) -> dict:
     _watchlist_cache[symbol] = result
     _watchlist_cache_ts = now
     return result
-
-
-def _rank_trend(current_rank: int, prior_rank: Optional[int]) -> dict:
-    """
-    Compute rank direction and delta.
-    Lower rank number = higher mcap = better.
-    Positive delta = improving (rank number fell = mcap gained on market).
-    """
-    if not prior_rank or not current_rank:
-        return {
-            "direction": "unknown", "delta": 0,
-            "current_rank": current_rank, "prior_rank": prior_rank,
-            "status": "insufficient_data",
-            "urgency_note": "Track rank weekly for trend",
-        }
-    delta = prior_rank - current_rank  # positive = improving
-    direction = "improving" if delta > 0 else "deteriorating" if delta < 0 else "stable"
-    pct = round(abs(delta) / max(prior_rank, 1) * 100, 1) if delta != 0 else 0
-    return {
-        "direction": direction,
-        "delta": delta,
-        "delta_pct": pct,
-        "current_rank": current_rank,
-        "prior_rank": prior_rank,
-        "status": direction,
-        "urgency_note": (
-            "Rising urgency — rank improving toward top 50"
-            if direction == "improving" and current_rank <= 50 else
-            "Rank improving toward top 100 — accelerated review approaching"
-            if direction == "improving" and current_rank <= 100 else
-            "Rank deteriorating — monitor"
-            if direction == "deteriorating" else
-            "Stable — continue monitoring"
-        ),
-    }
-
-
-def _volume_trend_analysis(current_vol: Optional[float], price_change_30d: Optional[float]) -> dict:
-    """
-    Analyze volume trend as proxy for liquidity trajectory.
-    Uses 30d price change as direction signal; actual volume trend requires
-    multi-day comparison but 30d price direction correlates with volume flow.
-    """
-    if not current_vol:
-        return {"direction": "unknown", "status": "no_data"}
-    if not price_change_30d:
-        price_dir = "neutral"
-    elif price_change_30d > 5:
-        price_dir = "strong_uptrend"
-    elif price_change_30d > 0:
-        price_dir = "mild_uptrend"
-    elif price_change_30d > -5:
-        price_dir = "mild_downtrend"
-    else:
-        price_dir = "strong_downtrend"
-
-    vol_vs_threshold = current_vol / 10_000_000
-    if vol_vs_threshold >= 1.0:
-        clearance = "cleared"
-    elif vol_vs_threshold >= 0.5:
-        clearance = "approaching"
-    else:
-        clearance = "far_from_threshold"
-
-    return {
-        "current_vol_24h": current_vol,
-        "vol_vs_threshold_ratio": round(vol_vs_threshold, 2),
-        "price_direction_30d": price_dir,
-        "price_change_30d_pct": price_change_30d,
-        "clearance_status": clearance,
-        "pct_below_threshold": round((1 - vol_vs_threshold) * 100, 1) if vol_vs_threshold < 1 else 0,
-        "status": clearance,
-        "note": (
-            "Volume clearing threshold — re-review eligible"
-            if clearance == "cleared" else
-            f"Volume at {round(vol_vs_threshold*100,0)}% of threshold — momentum direction: {price_dir}"
-        ),
-    }
-
-
-def _fdv_trajectory(entry: dict, fdv: Optional[float], price_change_30d: Optional[float]) -> dict:
-    """
-    Estimate FDV trajectory and time to $1B fast-track threshold.
-    Uses 30d price change as proxy for FDV growth rate.
-    """
-    if not fdv:
-        return {
-            "fdv_current_b": None, "growth_rate_30d": None,
-            "months_to_1b": None, "trajectory": "unknown",
-            "fast_track_threshold_b": 1.0,
-        }
-    growth_rate_30d = (price_change_30d / 100) if price_change_30d else 0
-    # Approximate monthly rate from 30d daily growth
-    monthly_rate = ((1 + growth_rate_30d) ** (30.44 / 30)) - 1 if growth_rate_30d != 0 else 0
-    fdv_b = fdv / 1e9
-    threshold = 1.0  # $1B fast-track
-
-    import math as _math
-    if fdv_b >= threshold:
-        trajectory = "fast_track_ready"
-        months_to_1b = 0
-    elif monthly_rate > 0.01:  # >1% monthly
-        try:
-            months_to_1b = round(_math.log(threshold / fdv_b) / _math.log(1 + monthly_rate), 1)
-            months_to_1b = max(months_to_1b, 0)
-        except Exception:
-            months_to_1b = None
-        trajectory = "on_track" if (months_to_1b and months_to_1b <= 3) else "slow_growth"
-    elif monthly_rate < -0.01:
-        trajectory = "declining"
-        months_to_1b = None
-    else:
-        trajectory = "stagnant"
-        months_to_1b = None
-
-    return {
-        "fdv_current_b": round(fdv_b, 2),
-        "growth_rate_30d": round(growth_rate_30d * 100, 2) if growth_rate_30d else 0,
-        "monthly_growth_rate_pct": round(monthly_rate * 100, 2) if monthly_rate else 0,
-        "months_to_1b": months_to_1b,
-        "trajectory": trajectory,
-        "fast_track_threshold_b": 1.0,
-        "fast_track_eligible_now": fdv_b >= 1.0 and entry.get("fast_track_eligible", False),
-        "note": (
-            f"${fdv_b:.1f}B FDV — fast-track ready"
-            if trajectory == "fast_track_ready" else
-            f"${fdv_b:.2f}B FDV, {months_to_1b:.0f}mo to $1B at {round(monthly_rate*100,1)}%/mo growth"
-            if trajectory in ("on_track", "slow_growth") and months_to_1b else
-            f"${fdv_b:.2f}B FDV, declining — fast-track unlikely"
-            if trajectory == "declining" else
-            f"${fdv_b:.2f}B FDV, stagnant — fast-track unlikely within 12mo"
-        ),
-    }
-
-
-def _gate_clearing_prediction(entry: dict, live_data: dict) -> dict:
-    """
-    Estimate when each blocking condition will clear, based on trajectory.
-    Returns list of per-gate clearing predictions with confidence levels.
-    """
-    symbol = entry["symbol"]
-    criterion = entry["violated_criterion"]
-    fdv = live_data.get("fdv_usd")
-    vol = live_data.get("volume_24h")
-    fdv_traj = _fdv_trajectory(entry, fdv, live_data.get("price_change_30d_pct"))
-
-    predictions = []
-
-    # Gate 1: Liquidity
-    if criterion == "1":
-        vol_ratio = (vol / 10_000_000) if vol else 0
-        if vol_ratio >= 1.0:
-            predictions.append({
-                "gate": "1_liquidity", "label": "Liquidity ($10M/30d)",
-                "status": "cleared", "estimated_months": 0, "confidence": "high",
-                "note": "Volume threshold met — eligible for re-review",
-            })
-        elif vol_ratio >= 0.5:
-            # Estimate: assume 10% monthly volume growth
-            import math as _math
-            shortfall = (10_000_000 - (vol or 0)) / 10_000_000
-            growth_rate = 0.10
-            months_est = round(_math.log(1 - shortfall) / _math.log(1 + growth_rate), 1)                 if (growth_rate > 0 and shortfall > 0 and shortfall < 1) else None
-            predictions.append({
-                "gate": "1_liquidity", "label": "Liquidity ($10M/30d)",
-                "status": "approaching", "estimated_months": max(months_est, 0) if months_est else None,
-                "confidence": "medium",
-                "note": f"At {round(vol_ratio*100,0)}% of threshold — {months_est:.0f}mo at 10%/mo growth assumed",
-            })
-        else:
-            predictions.append({
-                "gate": "1_liquidity", "label": "Liquidity ($10M/30d)",
-                "status": "far", "estimated_months": None, "confidence": "low",
-                "note": f"At {round(vol_ratio*100,0)}% of threshold — structural barrier if staking-heavy",
-            })
-
-    # Gate 3: Custody (VIRTUAL fast-track)
-    if criterion == "3" and entry.get("fast_track_eligible"):
-        predictions.append({
-            "gate": "3_custody", "label": "Institutional Custody",
-            "status": "event_driven", "estimated_months": None, "confidence": "high",
-            "trigger": "Coinbase Prime / BitGo / Fireblocks adds VIRTUAL",
-            "note": "No predictable timeline — event-driven. Monitor custodian announcements.",
-        })
-
-    # Gate 4: Regulatory (BCH)
-    if criterion == "4":
-        predictions.append({
-            "gate": "4_regulatory", "label": "Regulatory Status",
-            "status": "event_driven", "estimated_months": None, "confidence": "low",
-            "trigger": "Roger Ver DOJ case resolution",
-            "note": "No predictable resolution timeline. Delisting risk remains.",
-        })
-
-    # Gate 5: Token mechanics (FTM Sonic clean period ends Jan 2026)
-    if criterion == "5":
-        if symbol == "FTM":
-            from datetime import date
-            clean_end = date(2026, 1, 14)
-            months_to = max(0, (clean_end - date.today()).days // 30)
-            predictions.append({
-                "gate": "5_token_mechanics", "label": "Token Mechanics",
-                "status": "milestone_approaching", "estimated_months": months_to,
-                "confidence": "high",
-                "trigger": f"12-month Sonic clean period ends 2026-01-14",
-                "note": f"Token migration clean period ends Jan 2026 — {months_to}mo remaining",
-            })
-        else:
-            predictions.append({
-                "gate": "5_token_mechanics", "label": "Token Mechanics",
-                "status": "not_remediable", "estimated_months": None, "confidence": "high",
-                "note": "Historical undisclosed inflation event — not retroactively remediable per v2.0 criterion 7",
-            })
-
-    # Gate 6: Trading history (ENA)
-    if criterion == "6" and symbol == "ENA":
-        predictions.append({
-            "gate": "6_trading_history", "label": "Trading History (180d)",
-            "status": "cleared", "estimated_months": 0, "confidence": "high",
-            "note": "180d threshold met September 2024 — criterion 6 resolved. Re-review eligible.",
-        })
-
-    # Gate 10: Fast-track ($1B FDV)
-    traj = fdv_traj.get("trajectory", "unknown")
-    mths = fdv_traj.get("months_to_1b")
-    if traj == "fast_track_ready":
-        predictions.append({
-            "gate": "10_fast_track", "label": "Fast-Track ($1B FDV + custody + tier-1)",
-            "status": "fdv_cleared", "estimated_months": 0, "confidence": "high",
-            "note": f"${fdv_traj.get('fdv_current_b', 0):.1f}B FDV — awaiting custody support",
-        })
-    elif traj in ("on_track", "slow_growth") and mths:
-        predictions.append({
-            "gate": "10_fast_track", "label": "Fast-Track ($1B FDV + custody + tier-1)",
-            "status": "trajectory_based", "estimated_months": mths,
-            "confidence": "medium",
-            "note": f"${fdv_traj.get('fdv_current_b', 0):.2f}B FDV, {mths:.0f}mo at {fdv_traj.get('monthly_growth_rate_pct', 0):.1f}%/mo growth",
-        })
-    elif traj in ("declining", "stagnant"):
-        predictions.append({
-            "gate": "10_fast_track", "label": "Fast-Track ($1B FDV + custody + tier-1)",
-            "status": "unlikely_12mo", "estimated_months": None, "confidence": "medium",
-            "note": f"${fdv_traj.get('fdv_current_b', 0):.2f}B FDV, {traj} — fast-track not expected within 12mo",
-        })
-
-    return {"predictions": predictions}
-
-
-def _comparable_assets_analysis(entry: dict, live_data: dict) -> dict:
-    """
-    Estimate what CIS score this asset would receive if included in universe.
-    Uses nearest peer assets' CIS scores as reference range.
-    """
-    symbol = entry["symbol"]
-    asset_class = entry["asset_class"]
-    criterion = entry["violated_criterion"]
-
-    # Peer mapping: closest CIS universe asset per excluded asset
-    _PEERS = {
-        "VIRTUAL":  {"peer": "NEAR", "reason": "AI/DePIN narrative, similar mcap tier"},
-        "FTM":      {"peer": "AVAX", "reason": "L1 with DeFi ecosystem"},
-        "ICP":      {"peer": "TIA",  "reason": "Modular/infrastructure, similar tech narrative"},
-        "BCH":      {"peer": "LTC",  "reason": "Legacy payment chain — CIS was B range"},
-        "GALA":     {"peer": "NEAR", "reason": "Gaming AI narrative similar"},
-        "ENA":      {"peer": "LDO",  "reason": "Liquid staking, yield-bearing DeFi"},
-        "SAND":     {"peer": "NEAR", "reason": "Gaming/metaverse — NEAR has broader utility"},
-        "MANA":     {"peer": "NEAR", "reason": "Metaverse/VR — similar low-liquidity profile"},
-        "POLYX":    {"peer": "MKR",  "reason": "RWA lending — similar institutional narrative"},
-    }
-
-    peer_info = _PEERS.get(symbol, {"peer": None, "reason": "No close peer in current universe"})
-    peer_symbol = peer_info["peer"]
-
-    # Peer CIS score would be fetched from live universe — we return a template
-    # and the frontend fetches actual peer score from /api/v1/cis/universe
-    return {
-        "peer_symbol": peer_symbol,
-        "peer_reason": peer_info["reason"],
-        "estimated_cis_range": {
-            "F": None,  # Would be fetched from live data by frontend
-            "note": f"Peer {peer_symbol}: frontend fetches live CIS from /api/v1/cis/universe",
-        },
-        "comparable_grade_estimate": None,  # Resolved by frontend
-        "confidence": "low",
-        "note": (
-            "Frontend should fetch live CIS score for peer "
-            f"{peer_symbol} and use as directional estimate for {symbol}"
-        ),
-    }
-
-
-def _s_pillar_estimate(entry: dict, live_data: dict, fear_greed: int = 50) -> dict:
-    """
-    Estimate S pillar score for excluded asset based on:
-    - Fear & Greed baseline for crypto (FNG × 0.4)
-    - Asset's own 30d momentum as divergence signal
-    - Market regime context (current: Tightening)
-    """
-    symbol = entry["symbol"]
-    price_change_30d = live_data.get("price_change_30d_pct", 0)
-    asset_class = entry["asset_class"]
-
-    # S pillar baseline: FNG × 0.4 for crypto
-    fng_baseline = fear_greed * 0.4  # 0-40 range
-
-    # Divergence: 30d price change vs category median
-    # For watchlist assets we estimate category median as ±10% around FNG proxy
-    # In Tightening regime: alt sentiment suppresses S further
-    regime_modifier = {
-        "RISK_ON": 5, "RISK_OFF": -3, "TIGHTENING": -5,
-        "EASING": 3, "STAGFLATION": -8, "GOLDILOCKS": 5,
-    }.get("TIGHTENING", 0)  # current regime
-
-    # Simple momentum divergence: assets outperforming FNG get positive divergence
-    if price_change_30d is not None:
-        momentum_divergence = (price_change_30d - fng_baseline) / 10  # scaled
-        momentum_divergence = max(-10, min(10, momentum_divergence))  # clamp
-    else:
-        momentum_divergence = 0
-
-    s_estimate = fng_baseline + momentum_divergence + regime_modifier
-    s_estimate = max(5, min(60, s_estimate))  # realistic S range for excluded assets
-
-    return {
-        "s_estimate": round(s_estimate, 1),
-        "fng_baseline": round(fng_baseline, 1),
-        "momentum_divergence": round(momentum_divergence, 1),
-        "regime_modifier": regime_modifier,
-        "regime": "Tightening",
-        "confidence": "low",
-        "note": (
-            f"S estimate = FNG({fear_greed})×0.4={fng_baseline:.0f} "
-            f"+ divergence({momentum_divergence:+.0f}) "
-            f"+ regime({regime_modifier:+.0f}) = {s_estimate:.0f}. "
-            "Exclude from universe: no real CIS engine score available for excluded assets."
-        ),
-    }
 
 
 def _volume_vs_threshold(volume_24h: Optional[float], threshold: float = 10_000_000) -> dict:
@@ -1745,46 +1396,79 @@ def _days_since(date_str: str) -> int:
 
 
 def _gate_status(entry: dict, live_data: dict) -> list[dict]:
-    """Per-criterion gate status for a watchlist asset. Returns 10 v2.0 gates."""
+    """
+    Per-criterion gate status for a watchlist asset.
+    Returns list of {gate_id, label, status, notes} for the 10 v2.0 gates.
+    """
     criterion = entry["violated_criterion"]
-    mcap_rank = live_data.get("mcap_rank") or entry.get("last_cg_rank", 999)
+    mcap_rank = entry.get("last_cg_rank", 999)
     vol_data = live_data.get("volume_24h")
+    mcap = live_data.get("mcap_usd")
     fdv = live_data.get("fdv_usd")
     circ = live_data.get("circ_supply", 0) or 0
     total = live_data.get("total_supply", 0) or 0
 
-    gates = [
-        {"gate_id": "1",  "label": "Liquidity ($10M/30d + 3 tier-1)",
-         "status": "cleared" if (vol_data and vol_data >= 10_000_000) else "failing",
-         "notes": f"${vol_data / 1e6:.1f}M daily vol" if vol_data else "No live volume data"},
-        {"gate_id": "2",  "label": "Market Cap ($500M FDV floor)",
-         "status": "cleared" if (fdv and fdv >= 500_000_000) else "failing",
-         "notes": f"${fdv / 1e9:.1f}B FDV" if fdv else "No FDV data"},
-        {"gate_id": "3",  "label": "CG Rank (top 150)",
-         "status": "cleared" if mcap_rank <= 150 else "failing",
-         "notes": f"CG rank #{mcap_rank}"},
-        {"gate_id": "4",  "label": "Data Completeness (90d+ OHLCV)",
-         "status": "unknown",
-         "notes": "Requires on-chain data audit"},
-        {"gate_id": "5",  "label": "Institutional Custody",
-         "status": "cleared" if entry.get("fast_track_eligible") else "failing",
-         "notes": entry.get("blocking_condition", "See criterion 5")},
-        {"gate_id": "6",  "label": "Regulatory Status",
-         "status": "cleared" if criterion != "4" else "failing",
-         "notes": "Ver DOJ case ongoing" if criterion == "4" else "No active regulatory concerns"},
-        {"gate_id": "7",  "label": "Token Mechanics (circ/total>=30%, inflation<20%/yr)",
-         "status": "unknown",
-         "notes": "circ/total=" + (f"{circ/total*100:.0f}%" if total > 0 else "unavailable")},
-        {"gate_id": "8",  "label": "Trading History (180d)",
-         "status": "cleared" if criterion != "6" else "failing",
-         "notes": "ENA: 180d+ Sep 2024" if entry["symbol"] == "ENA" else "See criterion 8"},
-        {"gate_id": "9",  "label": "Protocol Integrity",
-         "status": "cleared" if criterion != "7" else "failing",
-         "notes": entry.get("blocking_condition", "") if criterion == "7" else "No rug/exploit"},
-        {"gate_id": "10", "label": "Fast-Track ($1B+ FDV + custody + tier-1)",
-         "status": "eligible" if entry.get("fast_track_eligible") else "not_eligible",
-         "notes": f"FDV {fdv/1e9:.1f}B — eligible" if (entry.get("fast_track_eligible") and fdv) else "Below $1B or no custody"},
-    ]
+    gates = []
+    gates.append({
+        "gate_id": "1",
+        "label": "Liquidity ($10M/30d + 3 tier-1)",
+        "status": "cleared" if (vol_data and vol_data >= 10_000_000) else "failing",
+        "notes": f"${vol_data / 1e6:.1f}M daily vol" if vol_data else "No live volume data",
+    })
+    gates.append({
+        "gate_id": "2",
+        "label": "Market Cap ($500M FDV floor)",
+        "status": "cleared" if (fdv and fdv >= 500_000_000) else "failing",
+        "notes": f"${fdv / 1e9:.1f}B FDV" if fdv else "No FDV data",
+    })
+    gates.append({
+        "gate_id": "3",
+        "label": "CG Rank (top 150)",
+        "status": "cleared" if mcap_rank <= 150 else "failing",
+        "notes": f"CG rank #{mcap_rank}",
+    })
+    gates.append({
+        "gate_id": "4",
+        "label": "Data Completeness (90d+ OHLCV)",
+        "status": "unknown",
+        "notes": "Requires on-chain data audit",
+    })
+    gates.append({
+        "gate_id": "5",
+        "label": "Institutional Custody",
+        "status": "cleared" if entry.get("fast_track_eligible") else "failing",
+        "notes": entry.get("blocking_condition", "See criterion 5 notes"),
+    })
+    gates.append({
+        "gate_id": "6",
+        "label": "Regulatory Status",
+        "status": "cleared" if criterion != "4" else "failing",
+        "notes": "Ver DOJ case ongoing" if criterion == "4" else "No active regulatory concerns",
+    })
+    gates.append({
+        "gate_id": "7",
+        "label": "Token Mechanics (circ/total≥30%, inflation<20%/yr)",
+        "status": "unknown",
+        "notes": "Supply data: circ/total=" + (f"{circ/total*100:.0f}%" if total > 0 else "unavailable"),
+    })
+    gates.append({
+        "gate_id": "8",
+        "label": "Trading History (180d)",
+        "status": "cleared" if criterion != "6" else "failing",
+        "notes": "ENA: launched Mar 2024, 180d+ Sep 2024" if entry["symbol"] == "ENA" else "See trading history criterion",
+    })
+    gates.append({
+        "gate_id": "9",
+        "label": "Protocol Integrity",
+        "status": "cleared" if criterion != "7" else "failing",
+        "notes": "No rug-pull or unresolved exploit" if criterion != "7" else entry.get("blocking_condition", ""),
+    })
+    gates.append({
+        "gate_id": "10",
+        "label": "Fast-Track ($1B+ FDV + custody + tier-1)",
+        "status": "eligible" if entry.get("fast_track_eligible") else "not_eligible",
+        "notes": f"FDV {fdv/1e9:.1f}B — fast-track eligible" if (entry.get("fast_track_eligible") and fdv) else "Below $1B FDV or no custody",
+    })
     return gates
 
 
@@ -1794,64 +1478,87 @@ def _risk_factors(entry: dict, live_data: dict) -> list[dict]:
     criterion = entry["violated_criterion"]
     symbol = entry.get("symbol", "")
 
-    if criterion == "1":
+    if criterion == "1":  # Liquidity
         vol = live_data.get("volume_24h")
         if vol:
             shortfall = max(0, 10_000_000 - vol)
             risks.append({
-                "factor": "Liquidity Shortfall", "severity": "HIGH" if vol < 5_000_000 else "MEDIUM",
+                "factor": "Liquidity Shortfall",
+                "severity": "HIGH" if vol < 5_000_000 else "MEDIUM",
                 "description": f"${shortfall/1e6:.1f}M below $10M threshold. Structural if staking-heavy.",
             })
         risks.append({
-            "factor": "Bid-Ask Spread Risk", "severity": "MEDIUM",
+            "factor": "Bid-Ask Spread Risk",
+            "severity": "MEDIUM",
             "description": "Wide spreads on low-liquidity venues increase execution slippage for institutional orders.",
         })
-    if criterion == "3":
-        risks += [
-            {"factor": "Custody Gap", "severity": "HIGH",
-             "description": "Cannot be held in institutional custody — blocks pension/family-office allocation."},
-            {"factor": "LP Eligibility Risk", "severity": "HIGH",
-             "description": "Regulated funds require eligible assets. Custody gap = structural fund exclusion."},
-        ]
-    if criterion == "4":
-        risks += [
-            {"factor": "DOJ/Regulatory Proximity", "severity": "HIGH",
-             "description": "Active legal proceedings create delisting risk on tier-1 exchanges."},
-            {"factor": "Team Regulatory Exposure", "severity": "HIGH",
-             "description": "Key team member under charges — protocol governance depends on individual's legal stability."},
-        ]
-    if criterion == "5":
-        risks += [
-            {"factor": "Supply Schedule Uncertainty", "severity": "MEDIUM",
-             "description": "Variable or undisclosed inflation schedule creates unpredictable dilution."},
-            {"factor": "Circ/Total Supply Risk", "severity": "MEDIUM",
-             "description": "Large future unlock events can shock price."},
-        ]
-    if criterion == "6":
+
+    if criterion == "3":  # Custody
         risks.append({
-            "factor": "Limited Price History", "severity": "LOW",
-            "description": "180d+ history now met. Momentum and alpha signals recovered.",
+            "factor": "Custody Gap",
+            "severity": "HIGH",
+            "description": "Cannot be held in institutional custody — blocks pension/family-office allocation.",
         })
-    if criterion == "7":
         risks.append({
-            "factor": "Team Integrity Risk", "severity": "HIGH",
+            "factor": "LP Eligibility Risk",
+            "severity": "HIGH",
+            "description": "Regulated funds require eligible assets. Custody gap = structural fund exclusion.",
+        })
+
+    if criterion == "4":  # Regulatory
+        risks.append({
+            "factor": "DOJ/Regulatory Proximity",
+            "severity": "HIGH",
+            "description": "Active legal proceedings create delisting risk on tier-1 exchanges.",
+        })
+        risks.append({
+            "factor": "Team Regulatory Exposure",
+            "severity": "HIGH",
+            "description": "Key team member under charges — protocol governance depends on individual's legal stability.",
+        })
+
+    if criterion == "5":  # Token mechanics
+        risks.append({
+            "factor": "Supply Schedule Uncertainty",
+            "severity": "MEDIUM",
+            "description": "Variable or undisclosed inflation schedule creates unpredictable dilution.",
+        })
+        risks.append({
+            "factor": "Circ/Total Supply Risk",
+            "severity": "MEDIUM",
+            "description": "Low circulating share means large future unlock events can shock price.",
+        })
+
+    if criterion == "6":  # Trading history
+        risks.append({
+            "factor": "Limited Price History",
+            "severity": "LOW",
+            "description": "180d+ history now met. Confidence in momentum and alpha signals recovered.",
+        })
+
+    if criterion == "7":  # Protocol integrity
+        risks.append({
+            "factor": "Team Integrity Risk",
+            "severity": "HIGH",
             "description": "Past rug/exploit/misuse — reputational risk for fund allocating here.",
         })
 
+    # Cross-cutting: rank-based risk
     rank = entry.get("last_cg_rank", 999)
     if rank <= 50:
         risks.append({
-            "factor": "Concentration Risk (Top 50)", "severity": "MEDIUM",
-            "description": "High rank = high correlation with broad crypto sentiment.",
+            "factor": "Concentration Risk (Top 50)",
+            "severity": "MEDIUM",
+            "description": "High rank = high correlation with broad crypto sentiment. Sharp drawdowns affect fund NAV.",
         })
     if rank <= 100:
         risks.append({
-            "factor": "Elevated Speculation Premium", "severity": "MEDIUM",
-            "description": "Top 100 assets trade at premium to fair value.",
+            "factor": "Elevated Speculation Premium",
+            "severity": "MEDIUM",
+            "description": "Top 100 assets trade at premium to fair value due to narrative demand.",
         })
 
     return risks
-
 
 
 @router.get("/api/v1/agent/universe-watchlist")
@@ -2040,38 +1747,6 @@ async def get_universe_watchlist(
         else:
             watch_entry["risk_factors"] = None
             watch_entry["risk_summary"] = None
-
-        # ── 6 analytical dimensions ────────────────────────────────────────
-        # These enrich the watchlist with forward-looking analytical estimates
-        if include_live_data or include_risk_factors:
-            # 1. Rank trend: CG rank change over 30d
-            rank_snapshot = live_data.get("rank_snapshot", {})
-            watch_entry["rank_trend"] = _rank_trend(entry, rank_snapshot)
-
-            # 2. Volume trend: 30d volume vs prior period, % change
-            vol = live_data.get("volume_24h")
-            watch_entry["volume_trend"] = _volume_trend_analysis(vol, 10_000_000)
-
-            # 3. FDV trajectory: growth rate + time to $1B fast-track threshold
-            fdv = live_data.get("fdv_usd")
-            watch_entry["fdv_trajectory"] = _fdv_trajectory(fdv)
-
-            # 4. Gate clearing prediction: per-gate estimated months to clearance
-            fdv_traj = watch_entry.get("fdv_trajectory", {})
-            watch_entry["gate_clearing_prediction"] = _gate_clearing_prediction(entry, live_data, fdv_traj)
-
-            # 5. Comparable assets CIS: estimated score range using nearest peer assets
-            watch_entry["comparable_assets_cis"] = _comparable_assets_analysis(entry, live_data)
-
-            # 6. S pillar estimate: S = FNG×0.4 + momentum_divergence + regime_modifier
-            watch_entry["s_pillar_estimate"] = _s_pillar_estimate(entry, live_data, fear_greed=50)
-        else:
-            watch_entry["rank_trend"] = None
-            watch_entry["volume_trend"] = None
-            watch_entry["fdv_trajectory"] = None
-            watch_entry["gate_clearing_prediction"] = None
-            watch_entry["comparable_assets_cis"] = None
-            watch_entry["s_pillar_estimate"] = None
 
         # ── Institutional flags ─────────────────────────────────────────
         watch_entry["institutional_flags"] = {
