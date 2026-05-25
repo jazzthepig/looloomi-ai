@@ -3,6 +3,7 @@ CIS router — scoring, history, backtest, agent API, WebSocket, internal push
 Endpoints: /api/v1/cis/*, /api/v1/agent/cis, /ws/cis, /internal/cis-scores
 """
 import os, json as _json, time, asyncio, re, math
+from typing import Optional
 from datetime import datetime
 
 import logging
