@@ -1,9 +1,9 @@
 [phases.setup]
-nixPkgs = ["nodejs_22"]
+nixPkgs = ["nodejs_22", "python312", "python312Packages.pip"]
 
 [phases.install]
 cmds = [
-  "pip install -r requirements.txt",
+  "pip install --prefer-binary -r requirements.txt",
   "npm install --prefix dashboard",
   "npm run build --prefix dashboard"
 ]
