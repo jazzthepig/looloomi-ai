@@ -671,9 +671,11 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
         cutoff = datetime.now(timezone.utc).timestamp() - 180 * 86400
         raises = []
         for r in raw:
-            raw_amount = r.get("amount") or 0   # DeFiLlama: $M
+            raw_amount = r.get("amount")        # DeFiLlama: $M — None = undisclosed
             date_ts    = r.get("date") or 0
-            if raw_amount <= 0 or date_ts < cutoff:
+            # Filter only by date — include undisclosed (amount=None/0) raises.
+            # Many recent deals are undisclosed; filtering by amount drops the whole feed.
+            if date_ts < cutoff:
                 continue
 
             lead  = r.get("leadInvestors") or []
@@ -681,7 +683,9 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
 
             raises.append({
                 "name":          r.get("name") or r.get("project") or "Unknown",
-                "amount":        int(raw_amount * 1_000_000),   # → USD (frontend divides by 1M)
+                # amount=None → 0 (frontend shows "—" for zero; stats skip undisclosed)
+                "amount":        int((raw_amount or 0) * 1_000_000),  # → USD
+                "amount_disclosed": raw_amount is not None and raw_amount > 0,
                 "round":         r.get("round") or r.get("roundType") or "—",
                 "date":          date_ts,                        # Unix timestamp seconds
                 "category":      r.get("category") or "DeFi",
@@ -700,9 +704,11 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
     try:
         result = await _fetch_once()
         if result:
+            # Write both primary cache (1h) and long-lived stale fallback (24h)
             await _redis_set(key, result, ttl=3600)
+            await _redis_set(f"{key}:stale", result, ttl=86400)
             return _cache_set(key, result)
-        # Empty — return stale Redis if available (don't serve [] when cache exists)
+        # Empty from API — return stale Redis if available (don't serve [] when cache exists)
         stale = await _redis_get(f"{key}:stale")
         return stale or []
     except Exception as e:
