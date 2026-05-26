@@ -299,9 +299,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
       all.sort((a, b) => (b.date || 0) - (a.date || 0));
 
-      // Filter: amount > 0 AND date within last 180 days
+      // Filter: date within last 180 days — include undisclosed (amount=0) raises.
+      // Filtering by amount > 0 drops the whole feed when amounts are undisclosed.
       const now180 = Date.now() / 1000 - 180 * 86400;
-      const recent180 = all.filter(r => r.amount > 0 && r.date && r.date > now180);
+      const recent180 = all.filter(r => r.date && r.date > now180);
 
       // Broader filter: RWA + DeFi + Infrastructure
       const isSector = (item) => {
@@ -323,13 +324,17 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
       });
       const topVC = Object.entries(vcMap).sort((a, b) => b[1] - a[1])[0];
 
+      // totalAmount / rwaAmount only count disclosed amounts (amount > 0)
+      const disclosedRecent = recent.filter(r => r.amount > 0);
+      const disclosedRwa    = recentRwa.filter(r => r.amount > 0);
       setStats({
-        totalDeals:  recent.length,
-        totalAmount: recent.reduce((s, r) => s + (r.amount || 0), 0),
-        rwaAmount:   recentRwa.reduce((s, r) => s + (r.amount || 0), 0),
-        rwaDeals:    recentRwa.length,
-        topVC:       topVC ? topVC[0] : "—",
-        topVCDeals:  topVC ? topVC[1] : 0,
+        totalDeals:       recent.length,
+        disclosedDeals:   disclosedRecent.length,
+        totalAmount:      disclosedRecent.reduce((s, r) => s + r.amount, 0),
+        rwaAmount:        disclosedRwa.reduce((s, r) => s + r.amount, 0),
+        rwaDeals:         recentRwa.length,
+        topVC:            topVC ? topVC[0] : "—",
+        topVCDeals:       topVC ? topVC[1] : 0,
       });
     } catch (e) {
       console.error("Raises fetch error:", e);
@@ -363,14 +368,13 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const FILTERS = ["All", "RWA", "DeFi", "AI", "Infrastructure"];
 
   const filtered = raises.filter(r => {
-    // All: show everything with amount > 0
-    if (raisesFilter === "All") {
-      return r.amount > 0;
-    }
+    // All: show all (including undisclosed amounts — shown as "—" in table)
+    if (raisesFilter === "All") return true;
     // RWA: show RWA-related projects
-    if (raisesFilter === "RWA") return isRWA(r) && r.amount > 0;
+    if (raisesFilter === "RWA") return isRWA(r);
     // Other filters: match category
-    return ((r.category || "").toLowerCase().includes(raisesFilter.toLowerCase()) || (r.categoryGroup || "").toLowerCase().includes(raisesFilter.toLowerCase())) && r.amount > 0;
+    return (r.category || "").toLowerCase().includes(raisesFilter.toLowerCase()) ||
+           (r.categoryGroup || "").toLowerCase().includes(raisesFilter.toLowerCase());
   });
 
   /* ── Shared nav ── */
@@ -530,7 +534,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               flexWrap: "wrap",
             }}>
               {[
-                { label: "90d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals`, color: T.blue },
+                { label: "90d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals (${stats?.disclosedDeals ?? 0} disclosed)`, color: T.blue },
                 { label: "RWA Sector",        value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA deals`, color: T.amber },
                 { label: "Most Active VC",    value: stats?.topVC ?? null,                         sub: `${stats?.topVCDeals ?? "—"} deals`, color: T.green },
                 { label: "Source",            value: "DeFiLlama",                                  sub: "Raises API · Live", color: T.t3 },
