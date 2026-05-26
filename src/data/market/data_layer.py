@@ -645,7 +645,7 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
     import re as _re
     import xml.etree.ElementTree as _ET
 
-    key = f"vc_raises_v4:{limit}"
+    key = f"vc_raises_v5:{limit}"
     cached = _cache_get(key, ttl=3600)
     if cached:
         return cached
@@ -741,6 +741,22 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
             return int(num * 1_000_000_000)
         return int(num * 1_000_000)
 
+    # Generic aggregate terms that are NOT real company names — block these
+    _GENERIC_NAME_BLOCKLIST = {
+        "crypto companies", "crypto firms", "crypto startups", "crypto projects",
+        "web3 companies", "web3 firms", "web3 startups", "web3 projects",
+        "blockchain companies", "blockchain firms", "blockchain startups",
+        "defi projects", "defi protocols", "defi companies",
+        "nft projects", "nft companies", "metaverse projects",
+        "bitcoin companies", "ethereum companies", "solana projects",
+        "tech companies", "tech startups", "fintech companies",
+        "ai companies", "ai startups", "artificial intelligence companies",
+        "gaming companies", "gaming startups",
+        "investment firm", "venture capital", "crypto funds",
+        "report", "analysis", "weekly", "monthly", "quarterly", "annual",
+        "the report", "a report", "new report",
+    }
+
     def _parse_project_name(title: str) -> str:
         """Extract project name from a funding headline."""
         # Common patterns: "ProjectName raises $X", "ProjectName secures $X"
@@ -753,6 +769,9 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
                 name = m.group(1).strip()
                 # Clean up trailing conjunctions/prepositions
                 name = _re.sub(r"\s+(has|have|to|in|for|the)\s*$", "", name, flags=_re.IGNORECASE)
+                # Reject generic aggregate names (industry-level headlines, not company rounds)
+                if name.lower() in _GENERIC_NAME_BLOCKLIST:
+                    return ""
                 if len(name) > 2 and len(name) < 60:
                     return name
         return ""
