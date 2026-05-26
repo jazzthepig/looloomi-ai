@@ -296,6 +296,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
           categoryGroup: item.categoryGroup || item.category || "—",
           sector: item.sector || item.category || "—",
           chains: item.chains || [],
+          description: item.description || "",
+          source: item.source || "—",
         };
       });
 
@@ -540,7 +542,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 { label: "90d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals (${stats?.disclosedDeals ?? 0} disclosed)`, color: T.blue },
                 { label: "RWA Sector",        value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA deals`, color: T.amber },
                 { label: "Most Active VC",    value: stats?.topVC ?? null,                         sub: `${stats?.topVCDeals ?? "—"} deals`, color: T.green },
-                { label: "Source",            value: "DeFiLlama",                                  sub: "Raises API · Live", color: T.t3 },
+                { label: "Source",            value: "Multi-Source",                                sub: "RSS + CoinGecko · Live", color: T.t3 },
               ].map((s, i, arr) => (
                 <div key={i} style={{
                   paddingRight: 36, paddingLeft: i === 0 ? 0 : 0,
@@ -832,10 +834,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                             Data Source Information
                           </div>
                           <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.5 }}>
-                            Source: DeFiLlama / CryptoRank API · Real-time funding round data
+                            Sources: The Block · Blockworks · CryptoSlate · CoinTelegraph · CoinGecko Pro
                           </div>
                           <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>
-                            Coverage: Global crypto VC funding rounds · RWA/DeFi/Infrastructure focus
+                            Coverage: Global crypto VC funding rounds · RSS headline extraction + CoinGecko data
                           </div>
                         </div>
                         <button className="lm-action-btn" onClick={fetchRaises} style={{ borderColor: `${T.amber}40` }}>
@@ -871,7 +873,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       fontSize: '8px', fontWeight: '700', letterSpacing: '0.1em',
                       fontFamily: FONTS.display
                     }}>LIVE</span>
-                    <span>DefiLlama Raises API</span>
+                    <span>Multi-Source · RSS + CoinGecko</span>
                     <span style={{color:'rgba(148,163,184,0.35)'}}>·</span>
                     <span id="vcUpdateTime">Updated {lastUpdate ? lastUpdate.toLocaleTimeString() : 'just now'}</span>
                   </div>
@@ -917,7 +919,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                               No funding rounds available
                             </div>
                             <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t4, lineHeight: 1.6, maxWidth: 320 }}>
-                              DeFiLlama data is refreshing. Recent rounds typically appear within 30 minutes.
+                              Scanning RSS feeds and CoinGecko for recent rounds. Data refreshes hourly.
                             </div>
                             <button
                               className="lm-action-btn"
@@ -956,9 +958,24 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                                   <span style={{ fontSize: 12, fontWeight: 700, color: T.primary, fontFamily: FONTS.display }}>
                                     {r.name}
                                   </span>
+                                  {r.source && r.source !== "defillama" && (
+                                    <span style={{
+                                      fontFamily: FONTS.mono, fontSize: 7, fontWeight: 600,
+                                      color: T.t4, background: "rgba(99,102,241,0.06)",
+                                      border: `1px solid rgba(99,102,241,0.12)`,
+                                      padding: "1px 4px", borderRadius: 2, letterSpacing: "0.04em",
+                                    }}>
+                                      {r.source}
+                                    </span>
+                                  )}
                                 </div>
                                 <div style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.body, marginTop: 2 }}>
                                   {r.sector !== "—" ? r.sector : r.category}
+                                  {r.description && selectedVCRound?.name === r.name && (
+                                    <span style={{ display: "block", marginTop: 4, fontSize: 10, color: T.t2, lineHeight: 1.5 }}>
+                                      {r.description.slice(0, 160)}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
 
@@ -1004,11 +1021,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     fontSize: '9px', color: 'rgba(148,163,184,0.45)', letterSpacing: '0.06em'
                   }}>
                     <span>
-                      Source: DefiLlama Raises API · CryptoRank ·
+                      Sources: The Block · Blockworks · CryptoSlate · CoinGecko Pro ·
                       Deal amounts reflect reported figures and may be estimates.
                       CometCloud does not verify individual deal terms.
                     </span>
-                    <span>Data refreshes every 30 minutes</span>
+                    <span>Data refreshes hourly</span>
                   </div>
                 </div>
             </div>}
