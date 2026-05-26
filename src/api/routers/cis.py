@@ -2088,7 +2088,7 @@ async def get_universe_watchlist(
             fdv = live_data.get("fdv_usd")
             watch_entry["fdv_trajectory"] = _fdv_trajectory(fdv)
             fdv_traj = watch_entry.get("fdv_trajectory", {})
-            watch_entry["gate_clearing_prediction"] = _gate_clearing_prediction(entry, live_data, fdv_traj)
+            watch_entry["gate_clearing_prediction"] = _gate_clearing_prediction(entry, live_data)
             watch_entry["comparable_assets_cis"] = _comparable_assets_analysis(entry, live_data)
             watch_entry["s_pillar_estimate"] = _s_pillar_estimate(entry, live_data, fear_greed=50)
         else:
