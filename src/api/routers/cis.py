@@ -1750,6 +1750,29 @@ async def get_universe_watchlist(
             watch_entry["risk_factors"] = None
             watch_entry["risk_summary"] = None
 
+        # ── 6 analytical dimensions ─────────────────────────────────────
+        if include_live_data or include_risk_factors:
+            rank_snapshot = live_data.get("rank_snapshot", {})
+            watch_entry["rank_trend"] = _rank_trend(
+                current_rank=rank,
+                prior_rank=rank_snapshot if isinstance(rank_snapshot, int) else None,
+            )
+            vol = live_data.get("volume_24h")
+            watch_entry["volume_trend"] = _volume_trend_analysis(vol, 10_000_000)
+            fdv = live_data.get("fdv_usd")
+            watch_entry["fdv_trajectory"] = _fdv_trajectory(fdv)
+            fdv_traj = watch_entry.get("fdv_trajectory", {})
+            watch_entry["gate_clearing_prediction"] = _gate_clearing_prediction(entry, live_data, fdv_traj)
+            watch_entry["comparable_assets_cis"] = _comparable_assets_analysis(entry, live_data)
+            watch_entry["s_pillar_estimate"] = _s_pillar_estimate(entry, live_data, fear_greed=50)
+        else:
+            watch_entry["rank_trend"] = None
+            watch_entry["volume_trend"] = None
+            watch_entry["fdv_trajectory"] = None
+            watch_entry["gate_clearing_prediction"] = None
+            watch_entry["comparable_assets_cis"] = None
+            watch_entry["s_pillar_estimate"] = None
+
         # ── Institutional flags ─────────────────────────────────────────
         watch_entry["institutional_flags"] = {
             "lp_eligible": entry.get("remediation_available", False) and entry.get("fast_track_eligible", False),
