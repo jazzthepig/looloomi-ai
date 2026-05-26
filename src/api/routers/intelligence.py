@@ -7,8 +7,11 @@ from datetime import datetime
 import logging
 import time
 
+import os
 from data.market.data_layer import get_vc_raises, get_cg_vc_portfolios, get_token_unlocks
 from data.market.protocol_engine import get_protocol_universe
+
+_CG_API_KEY = os.getenv("COINGECKO_API_KEY", "")
 
 router = APIRouter()
 _logger = logging.getLogger(__name__)
@@ -72,12 +75,18 @@ async def get_vc_portfolios():
     Returns ~16 major firms with market_cap, 24h change, volume, top_3_coins.
     Sorted by portfolio market cap desc. TTL: 10 min.
     """
+    if not _CG_API_KEY:
+        return {"timestamp": datetime.now().isoformat(), "data": [], "count": 0,
+                "data_status": "no_api_key"}
     try:
         data = await get_cg_vc_portfolios()
-        return {"timestamp": datetime.now().isoformat(), "data": data, "count": len(data)}
+        data_status = "ok" if data else "no_data"
+        return {"timestamp": datetime.now().isoformat(), "data": data, "count": len(data),
+                "data_status": data_status}
     except Exception as e:
         _logger.error(f"VC portfolios error: {e}", exc_info=True)
-        return {"timestamp": datetime.now().isoformat(), "data": [], "count": 0}
+        return {"timestamp": datetime.now().isoformat(), "data": [], "count": 0,
+                "data_status": "error"}
 
 
 @router.get("/api/v1/vc/unlocks")
