@@ -2,11 +2,9 @@
 Macro events scraper — macro-relevant events from multiple reliable sources.
 
 Sources (priority order):
-  1. DeFiLlama Raises — always available on Railway, feeds INSTITUTIONAL events
-  2. RSS feeds — best-effort; Railway US IPs can be blocked by some providers.
-     Prioritise feeds with permissive CDNs: The Block, Blockworks, Bitcoin Magazine,
-     CryptoSlate. CoinDesk / CoinTelegraph / Decrypt are frequently geo-blocked
-     and have been removed as primary sources.
+  1. RSS feeds — primary source. The Block, Blockworks, CryptoSlate, Bitcoin Magazine,
+     CoinTelegraph, The Defiant, DL News. CoinDesk sometimes geo-blocked from US IPs.
+  2. DeFiLlama Raises — paywalled since ~May 2026; best-effort fallback only.
 
 Cached in-process for 30 min.
 """
@@ -48,6 +46,10 @@ _RSS_FEEDS = [
     # Broad market + macro
     {"url": "https://cryptoslate.com/feed/",             "source": "CryptoSlate"},
     {"url": "https://bitcoinmagazine.com/feed",          "source": "Bitcoin Magazine"},
+    # DeFi + funding focused
+    {"url": "https://thedefiant.io/feed",                "source": "The Defiant"},
+    {"url": "https://cointelegraph.com/rss",             "source": "CoinTelegraph"},
+    {"url": "https://www.dlnews.com/arc/outboundfeeds/rss/", "source": "DL News"},
     # Fallback: CoinDesk (succeeds ~40% of the time from US IPs)
     {"url": "https://www.coindesk.com/arc/outboundfeeds/rss/", "source": "CoinDesk"},
 ]
@@ -84,12 +86,17 @@ def _fmt_amount(usd: float) -> str:
 async def _fetch_defillama_raises(client: httpx.AsyncClient) -> list:
     """
     Pull recent VC raises from DeFiLlama and convert to macro-event format.
-    This is the guaranteed baseline — DeFiLlama is always accessible on Railway.
+    Note: DeFiLlama paywalled /raises as of ~May 2026 — best-effort only.
     """
     events = []
     try:
-        r = await client.get("https://api.llama.fi/raises", timeout=15)
+        r = await client.get("https://api.llama.fi/raises", timeout=10)
         if r.status_code != 200:
+            logger.info(f"[macro_events] DeFiLlama /raises HTTP {r.status_code} (likely paywalled)")
+            return []
+        text = r.text.strip()
+        if "upgrade" in text.lower() or "paid" in text.lower():
+            logger.info("[macro_events] DeFiLlama /raises is paywalled — skipping")
             return []
         data = r.json()
         raw = data.get("raises", [])

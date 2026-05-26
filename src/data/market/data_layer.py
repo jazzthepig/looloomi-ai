@@ -636,13 +636,16 @@ async def get_protocol_revenues() -> dict:
 
 async def get_vc_raises(limit: int = 100) -> list[dict]:
     """
-    VC funding rounds via DeFiLlama /raises endpoint.
+    VC funding rounds from multiple free sources.
+    Priority: 1) DeFiLlama /raises (if available) 2) RSS headline extraction 3) CoinGecko recently added
     Returns up to `limit` rounds sorted by date desc, last 180 days.
-    Amount is returned in USD (DeFiLlama stores in $M; we multiply ×1M).
+    Amount is returned in USD.
     TTL: 1h in-memory + 1h Redis.
-    Retry: 2 attempts with fresh client on failure (handles Cloudflare 403).
     """
-    key = f"vc_raises_v3:{limit}"
+    import re as _re
+    import xml.etree.ElementTree as _ET
+
+    key = f"vc_raises_v4:{limit}"
     cached = _cache_get(key, ttl=3600)
     if cached:
         return cached
@@ -650,65 +653,290 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
     if r_cached:
         return _cache_set(key, r_cached)
 
-    _RAISES_URL = "https://api.llama.fi/raises"
+    raises: list[dict] = []
+    cutoff = datetime.now(timezone.utc).timestamp() - 180 * 86400
 
-    async def _fetch_once() -> list:
-        client = _get_llama_client()
-        resp = await client.get(_RAISES_URL, timeout=25)
-        _logger.info(f"[VC_RAISES] HTTP {resp.status_code} from {_RAISES_URL}")
-        if resp.status_code == 403:
-            _logger.warning("[VC_RAISES] 403 from DeFiLlama — Cloudflare block; returning stale cache")
+    # ── Source 1: DeFiLlama /raises (may be paywalled — best-effort) ─────────
+    async def _fetch_defillama() -> list:
+        try:
+            client = _get_llama_client()
+            resp = await client.get("https://api.llama.fi/raises", timeout=15)
+            if resp.status_code != 200:
+                _logger.info(f"[VC_RAISES] DeFiLlama /raises HTTP {resp.status_code} (likely paywalled)")
+                return []
+            data = resp.json()
+            if isinstance(data, str) and "upgrade" in data.lower():
+                _logger.info("[VC_RAISES] DeFiLlama /raises is paywalled")
+                return []
+            raw = data.get("raises") or data.get("data") or []
+            if not raw:
+                return []
+
+            items = []
+            for r in raw:
+                raw_amount = r.get("amount")
+                date_ts    = r.get("date") or 0
+                if date_ts < cutoff:
+                    continue
+                lead  = r.get("leadInvestors") or []
+                other = r.get("otherInvestors") or []
+                items.append({
+                    "name":          r.get("name") or r.get("project") or "Unknown",
+                    "amount":        int((raw_amount or 0) * 1_000_000),
+                    "amount_disclosed": raw_amount is not None and raw_amount > 0,
+                    "round":         r.get("round") or r.get("roundType") or "—",
+                    "date":          date_ts,
+                    "category":      r.get("category") or "DeFi",
+                    "categoryGroup": r.get("category") or "DeFi",
+                    "sector":        r.get("sector") or r.get("category") or "DeFi",
+                    "chains":        (r.get("chains") or [])[:3],
+                    "leadInvestors": lead,
+                    "investors":     lead + other,
+                    "description":   (r.get("description") or "")[:200],
+                    "source":        "defillama",
+                })
+            return items
+        except Exception as e:
+            _logger.warning(f"[VC_RAISES] DeFiLlama error: {e}")
             return []
-        resp.raise_for_status()
-        data = resp.json()
 
-        # DeFiLlama returns {"raises": [...]} — handle any key variation
-        raw = data.get("raises") or data.get("data") or data.get("fundraises") or []
-        if not raw:
-            _logger.warning(f"[VC_RAISES] Empty response — keys: {list(data.keys())[:10]}")
+    # ── Source 2: RSS feeds — extract structured funding data from headlines ──
+    _FUNDING_RSS = [
+        {"url": "https://www.theblock.co/rss.xml",      "source": "The Block"},
+        {"url": "https://blockworks.co/feed",            "source": "Blockworks"},
+        {"url": "https://cryptoslate.com/feed/",         "source": "CryptoSlate"},
+        {"url": "https://bitcoinmagazine.com/feed",      "source": "Bitcoin Magazine"},
+        {"url": "https://cointelegraph.com/rss",         "source": "CoinTelegraph"},
+        {"url": "https://www.coindesk.com/arc/outboundfeeds/rss/", "source": "CoinDesk"},
+        {"url": "https://thedefiant.io/feed",            "source": "The Defiant"},
+        {"url": "https://www.dlnews.com/arc/outboundfeeds/rss/", "source": "DL News"},
+    ]
+
+    # Regex patterns for extracting funding data from headlines
+    _AMOUNT_PAT = _re.compile(
+        r"\$\s*([\d,.]+)\s*(million|mln|m(?:il)?|billion|bln|b)\b",
+        _re.IGNORECASE,
+    )
+    _ROUND_PAT = _re.compile(
+        r"(seed|pre-seed|series\s*[a-f]|strategic|private|extension|bridge|token\s*sale|ido|ieo)",
+        _re.IGNORECASE,
+    )
+    _RAISE_PAT = _re.compile(
+        r"(raise[sd]?|secures?|closes?|bags?|lands?|nabs?|snags?|completes?|announces?)\s+\$",
+        _re.IGNORECASE,
+    )
+    _INVESTOR_PAT = _re.compile(
+        r"(?:led\s+by|from|backed\s+by|with\s+participation\s+from)\s+([A-Z][\w\s&',]+?)(?:\s+and\s+|,|\.|$)",
+        _re.IGNORECASE,
+    )
+
+    def _parse_amount(text: str) -> int:
+        """Extract USD amount from text. Returns 0 if not found."""
+        m = _AMOUNT_PAT.search(text)
+        if not m:
+            return 0
+        num = float(m.group(1).replace(",", ""))
+        unit = m.group(2).lower()
+        if unit.startswith("b"):
+            return int(num * 1_000_000_000)
+        return int(num * 1_000_000)
+
+    def _parse_project_name(title: str) -> str:
+        """Extract project name from a funding headline."""
+        # Common patterns: "ProjectName raises $X", "ProjectName secures $X"
+        for pat in [
+            r"^([A-Z][\w.]+(?:\s+\w+){0,3}?)\s+(?:raise|secure|close|bag|land|nab|snag|complete|announce)",
+            r"^([A-Z][\w.]+(?:\s+\w+){0,2}?)\s+(?:gets?|nets?|receives?)",
+        ]:
+            m = _re.match(pat, title, _re.IGNORECASE)
+            if m:
+                name = m.group(1).strip()
+                # Clean up trailing conjunctions/prepositions
+                name = _re.sub(r"\s+(has|have|to|in|for|the)\s*$", "", name, flags=_re.IGNORECASE)
+                if len(name) > 2 and len(name) < 60:
+                    return name
+        return ""
+
+    async def _fetch_rss_raises() -> list:
+        items = []
+        try:
+            async with httpx.AsyncClient(
+                headers={"User-Agent": "CometCloud/1.0 vc-tracker"},
+                timeout=8,
+            ) as client:
+                tasks = [client.get(f["url"], follow_redirects=True) for f in _FUNDING_RSS]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                for feed_info, result in zip(_FUNDING_RSS, results):
+                    if isinstance(result, Exception) or result.status_code != 200:
+                        continue
+                    try:
+                        root = _ET.fromstring(result.text)
+                    except Exception:
+                        continue
+
+                    channel = root.find("channel")
+                    if channel is None:
+                        continue
+
+                    for item in channel.findall("item")[:20]:
+                        title = (item.findtext("title") or "").strip()
+                        desc  = (item.findtext("description") or "").strip()
+                        # Strip HTML from description
+                        desc = _re.sub(r"<[^>]+>", " ", desc)
+                        desc = _re.sub(r"\s+", " ", desc).strip()[:250]
+
+                        # Must look like a funding headline
+                        if not _RAISE_PAT.search(title + " " + desc):
+                            continue
+
+                        amount = _parse_amount(title + " " + desc)
+                        project = _parse_project_name(title)
+                        if not project:
+                            continue
+
+                        # Parse round type
+                        round_m = _ROUND_PAT.search(title + " " + desc)
+                        round_type = round_m.group(1).strip().title() if round_m else "Funding"
+
+                        # Parse investors
+                        investors = []
+                        inv_m = _INVESTOR_PAT.search(title + " " + desc)
+                        if inv_m:
+                            inv_str = inv_m.group(1).strip()
+                            investors = [v.strip() for v in _re.split(r",\s*|\s+and\s+", inv_str) if v.strip()][:5]
+
+                        # Parse date
+                        pub_date = (item.findtext("pubDate") or "").strip()
+                        date_ts = 0
+                        if pub_date:
+                            try:
+                                from email.utils import parsedate_to_datetime
+                                date_ts = int(parsedate_to_datetime(pub_date).timestamp())
+                            except Exception:
+                                pass
+
+                        if date_ts and date_ts < cutoff:
+                            continue
+
+                        # Classify category
+                        text_lower = (title + " " + desc).lower()
+                        if any(k in text_lower for k in ["rwa", "real world", "tokeniz"]):
+                            category = "RWA"
+                        elif any(k in text_lower for k in ["defi", "dex", "lending", "yield", "amm"]):
+                            category = "DeFi"
+                        elif any(k in text_lower for k in ["l1", "l2", "layer", "chain", "rollup"]):
+                            category = "Infrastructure"
+                        elif any(k in text_lower for k in ["ai", "machine learning", "llm"]):
+                            category = "AI"
+                        elif any(k in text_lower for k in ["game", "gaming", "metaverse", "nft"]):
+                            category = "Gaming"
+                        elif any(k in text_lower for k in ["bitcoin", "btc", "mining"]):
+                            category = "Bitcoin"
+                        else:
+                            category = "DeFi"
+
+                        items.append({
+                            "name":          project,
+                            "amount":        amount,
+                            "amount_disclosed": amount > 0,
+                            "round":         round_type,
+                            "date":          date_ts or int(datetime.now(timezone.utc).timestamp()),
+                            "category":      category,
+                            "categoryGroup": category,
+                            "sector":        category,
+                            "chains":        [],
+                            "leadInvestors": investors,
+                            "investors":     investors,
+                            "description":   desc[:200] if desc else title[:200],
+                            "source":        feed_info["source"],
+                        })
+        except Exception as e:
+            _logger.warning(f"[VC_RAISES] RSS extraction error: {e}")
+        return items
+
+    # ── Source 3: CoinGecko recently added coins (proxy for funded projects) ──
+    async def _fetch_cg_recent() -> list:
+        if not CG_API_KEY:
             return []
+        items = []
+        try:
+            client = _get_cg_client()
+            resp = await client.get(
+                f"{CG_PRO_BASE}/coins/markets",
+                headers=_cg_headers(),
+                params={
+                    "vs_currency": "usd",
+                    "order": "id_asc",
+                    "per_page": 30,
+                    "page": 1,
+                    "sparkline": "false",
+                    "price_change_percentage": "7d",
+                    "category": "recently-added",
+                },
+                timeout=15,
+            )
+            if resp.status_code != 200:
+                return []
+            coins = resp.json()
+            for coin in coins:
+                mcap = coin.get("market_cap") or 0
+                if mcap < 100_000:
+                    continue  # skip dust
+                items.append({
+                    "name":          coin.get("name") or "Unknown",
+                    "amount":        0,
+                    "amount_disclosed": False,
+                    "round":         "Token Launch",
+                    "date":          int(datetime.now(timezone.utc).timestamp()),
+                    "category":      "DeFi",
+                    "categoryGroup": "DeFi",
+                    "sector":        "DeFi",
+                    "chains":        [],
+                    "leadInvestors": [],
+                    "investors":     [],
+                    "description":   f"Recently listed · Market cap ${mcap / 1e6:.1f}M" if mcap > 0 else "Recently listed on CoinGecko",
+                    "source":        "coingecko",
+                })
+        except Exception as e:
+            _logger.warning(f"[VC_RAISES] CoinGecko recent error: {e}")
+        return items
 
-        cutoff = datetime.now(timezone.utc).timestamp() - 180 * 86400
-        raises = []
-        for r in raw:
-            raw_amount = r.get("amount")        # DeFiLlama: $M — None = undisclosed
-            date_ts    = r.get("date") or 0
-            # Filter only by date — include undisclosed (amount=None/0) raises.
-            # Many recent deals are undisclosed; filtering by amount drops the whole feed.
-            if date_ts < cutoff:
-                continue
-
-            lead  = r.get("leadInvestors") or []
-            other = r.get("otherInvestors") or []
-
-            raises.append({
-                "name":          r.get("name") or r.get("project") or "Unknown",
-                # amount=None → 0 (frontend shows "—" for zero; stats skip undisclosed)
-                "amount":        int((raw_amount or 0) * 1_000_000),  # → USD
-                "amount_disclosed": raw_amount is not None and raw_amount > 0,
-                "round":         r.get("round") or r.get("roundType") or "—",
-                "date":          date_ts,                        # Unix timestamp seconds
-                "category":      r.get("category") or "DeFi",
-                "categoryGroup": r.get("category") or "DeFi",
-                "sector":        r.get("sector") or r.get("category") or "DeFi",
-                "chains":        (r.get("chains") or [])[:3],
-                "leadInvestors": lead,
-                "investors":     lead + other,
-                "description":   (r.get("description") or "")[:200],
-                "source":        "defillama",
-            })
-
-        raises.sort(key=lambda x: x.get("date", 0) or 0, reverse=True)
-        return raises[:limit]
-
+    # ── Fetch all sources concurrently ───────────────────────────────────────
     try:
-        result = await _fetch_once()
+        llama_data, rss_data, cg_data = await asyncio.gather(
+            _fetch_defillama(),
+            _fetch_rss_raises(),
+            _fetch_cg_recent(),
+            return_exceptions=True,
+        )
+        # Merge — priority: DeFiLlama > RSS > CoinGecko
+        for src in [llama_data, rss_data, cg_data]:
+            if isinstance(src, list):
+                raises.extend(src)
+
+        # Deduplicate by normalised project name
+        seen: set = set()
+        deduped = []
+        for r in raises:
+            norm = (r["name"] or "").lower().strip().replace(" ", "")[:30]
+            if norm and norm not in seen:
+                seen.add(norm)
+                deduped.append(r)
+
+        deduped.sort(key=lambda x: x.get("date", 0) or 0, reverse=True)
+        result = deduped[:limit]
+
+        sources = set()
+        for r in result:
+            sources.add(r.get("source", ""))
+        _logger.info(f"[VC_RAISES] {len(result)} raises from {sources}")
+
         if result:
-            # Write both primary cache (1h) and long-lived stale fallback (24h)
             await _redis_set(key, result, ttl=3600)
             await _redis_set(f"{key}:stale", result, ttl=86400)
             return _cache_set(key, result)
-        # Empty from API — return stale Redis if available (don't serve [] when cache exists)
+
         stale = await _redis_get(f"{key}:stale")
         return stale or []
     except Exception as e:
@@ -720,8 +948,8 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
 async def get_token_unlocks(days_ahead: int = 30) -> list[dict]:
     """
     Upcoming token unlocks from DeFiLlama /emissions endpoint.
-    Filters to events within `days_ahead` days from now, sorted by unlock date.
-    Returns [] on any error — never returns mock/fabricated data.
+    Note: DeFiLlama paywalled /emissions as of ~May 2026.
+    Returns [] gracefully — never returns mock/fabricated data.
     TTL: 2h in-memory + 2h Redis.
     """
     key = f"token_unlocks_v1:{days_ahead}"
@@ -734,10 +962,15 @@ async def get_token_unlocks(days_ahead: int = 30) -> list[dict]:
 
     try:
         client = _get_llama_client()
-        # DeFiLlama emissions endpoint returns per-protocol event arrays
-        resp = await client.get("https://api.llama.fi/emissions", timeout=20)
+        resp = await client.get("https://api.llama.fi/emissions", timeout=15)
         if resp.status_code != 200:
-            _logger.warning(f"[TOKEN_UNLOCKS] DeFiLlama /emissions status {resp.status_code}")
+            _logger.info(f"[TOKEN_UNLOCKS] DeFiLlama /emissions HTTP {resp.status_code} (likely paywalled)")
+            return _cache_set(key, [])
+
+        # Check for paywall response
+        text = resp.text.strip()
+        if "upgrade" in text.lower() or "paid" in text.lower():
+            _logger.info("[TOKEN_UNLOCKS] DeFiLlama /emissions is paywalled")
             return _cache_set(key, [])
 
         data = resp.json()
@@ -756,7 +989,6 @@ async def get_token_unlocks(days_ahead: int = 30) -> list[dict]:
                 if not ts or ts < now_ts or ts > cutoff_ts:
                     continue
                 amount_usd = ev.get("value") or ev.get("amount_usd") or 0
-                # Some fields use token amounts — skip if clearly not USD
                 days_until = int((ts - now_ts) / 86400)
                 unlocks.append({
                     "protocol":   name,
@@ -773,7 +1005,6 @@ async def get_token_unlocks(days_ahead: int = 30) -> list[dict]:
         return _cache_set(key, result)
     except Exception as e:
         _logger.warning(f"[TOKEN_UNLOCKS] Error: {e}")
-        # Return empty — never fabricated data
         return _cache_set(key, [])
 
 
