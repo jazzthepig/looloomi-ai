@@ -539,7 +539,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               flexWrap: "wrap",
             }}>
               {[
-                { label: "90d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals (${stats?.disclosedDeals ?? 0} disclosed)`, color: T.blue },
+                { label: "180d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals (${stats?.disclosedDeals ?? 0} disclosed)`, color: T.blue },
                 { label: "RWA Sector",        value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA deals`, color: T.amber },
                 { label: "Most Active VC",    value: stats?.topVC ?? null,                         sub: `${stats?.topVCDeals ?? "—"} deals`, color: T.green },
                 { label: "Source",            value: "Multi-Source",                                sub: "RSS + CoinGecko · Live", color: T.t3 },
