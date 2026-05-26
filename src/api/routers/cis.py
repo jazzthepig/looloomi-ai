@@ -8,6 +8,7 @@ from datetime import datetime
 
 import logging
 from fastapi import APIRouter, HTTPException, Header, Query, WebSocket, WebSocketDisconnect, Response, Request
+from fastapi.responses import JSONResponse
 
 from src.api.store import (
     redis_set, redis_get,
