@@ -157,6 +157,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const [heatmapLoading, setHeatmapLoading] = useState(true);
   const [vcPortfolios, setVcPortfolios] = useState([]);
   const [vcPortfoliosLoading, setVcPortfoliosLoading] = useState(true);
+  const [vcPortfoliosStatus, setVcPortfoliosStatus] = useState("loading");
   const [mounted, setMounted] = useState(false);
 
   // Page entrance animation
@@ -224,9 +225,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         const r = await fetch(`${API_BASE}/vc/portfolios`);
         const json = await r.json();
         setVcPortfolios(json.data || []);
+        setVcPortfoliosStatus(json.data_status || (json.data?.length ? "ok" : "no_data"));
       } catch (e) {
         console.error("VC portfolios fetch error:", e);
         setVcPortfolios([]);
+        setVcPortfoliosStatus("error");
       } finally {
         setVcPortfoliosLoading(false);
       }
@@ -723,7 +726,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     : vcPortfolios.length === 0
                     ? (
                         <div style={{ padding: "32px 18px", textAlign: "center", color: T.t4, fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.08em" }}>
-                          CoinGecko portfolio data unavailable · refreshing
+                          {vcPortfoliosStatus === "no_api_key"
+                            ? "CoinGecko Pro key not configured · portfolio data unavailable"
+                            : vcPortfoliosStatus === "error"
+                            ? "CoinGecko portfolio data unavailable · retrying"
+                            : "No portfolio data · refreshing"}
                         </div>
                       )
                     : vcPortfolios.map((vc, i) => {
