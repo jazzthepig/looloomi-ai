@@ -1,56 +1,76 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   CometCloud — James Turrell × 原研哉
+   Void as foundation. Light as data. Emptiness as potential.
+
+   Turrell: you don't see light objects, you're immersed in a light field.
+   Hara Kenya: nothing unnecessary. Restraint is the most precise form.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  --ff-brand:   'Syne', system-ui, sans-serif;
-  --ff-display: 'Syne', system-ui, sans-serif;
+  --ff-brand:   'Space Grotesk', system-ui, sans-serif;
+  --ff-display: 'Space Grotesk', system-ui, sans-serif;
   --ff-body:    'Exo 2', system-ui, sans-serif;
   --ff-mono:    'JetBrains Mono', monospace;
 
-  /* Vision palette — midnight navy */
-  --void:       #010812;
-  --deep:       #030f2a;
-  --navy:       #071a4a;
-  --surface:    #071a4a;
-  --raised:     #0d2255;
-  --card:       #0f2860;
-  --card-hover: #122e70;
-  --cobalt:     #1e3a8a;
-  --royal:      #2563eb;
-  --indigo:     #6366f1;
-  --lavender:   #818cf8;
-  --bloom:      #c7d2fe;
-  --white:      #f0f4ff;
-  --muted:      rgba(199,210,254,0.45);
-  --dim:        rgba(199,210,254,0.20);
+  /* Void palette */
+  --void:       #010104;
+  --deep:       #020208;
+  --surface:    #05060f;
+  --raised:     #08091a;
+  --card:       #0b0c1e;
+  --card-hover: #0f1028;
+  --overlay:    rgba(1,1,6,0.97);
 
-  --border:     rgba(37,99,235,0.14);
-  --border-md:  rgba(37,99,235,0.22);
-  --border-hi:  rgba(99,102,241,0.32);
-  --primary:    #f0f4ff;
-  --secondary:  #c7d2fe;
+  /* Light film borders — near invisible, defining space */
+  --border:     rgba(255,255,255,0.045);
+  --border-md:  rgba(255,255,255,0.075);
+  --border-hi:  rgba(180,200,230,0.14);
+
+  /* Text — cool neutral light temperature */
+  --t1:         #edf2f7;
+  --t2:         #8da5be;
+  --t3:         rgba(140,165,190,0.45);
+  --t4:         rgba(140,165,190,0.22);
+  --primary:    #edf2f7;
+  --secondary:  #8da5be;
+  --muted:      rgba(140,165,190,0.45);
+  --dim:        rgba(140,165,190,0.22);
+
+  /* Turrell ambient light */
+  --amber:      #c8a86a;
+  --amber-dim:  rgba(200,168,106,0.10);
+  --cyan:       #4aa0b8;
+  --cyan-dim:   rgba(74,160,184,0.07);
+  --green:      #4cc9a0;
+  --red:        #e05a72;
 
   font-family: var(--ff-body);
-  line-height: 1.5;
+  line-height: 1.6;
   font-weight: 400;
   color-scheme: dark;
-  color: #f0f4ff;
-  background-color: #030f2a;
+  color: var(--t1);
+  background-color: var(--deep);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Title / display headings */
+/* ─── Typography — Hara Kenya precision ────────────────────────────────── */
+/* Headings: Space Grotesk — architectural, not decorative */
 h1, h2 {
   font-family: var(--ff-brand);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-weight: 500;                     /* thinner than before — restraint */
+  letter-spacing: -0.025em;
+  color: var(--t1);
 }
 h3, h4 {
   font-family: var(--ff-display);
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-/* Monospace numbers */
+/* Monospace numbers — data as light readouts */
 .font-mono,
 [class*="price"],
 [class*="amount"],
@@ -64,15 +84,19 @@ h3, h4 {
 
 th {
   font-family: var(--ff-display) !important;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.85em;
 }
 
 a {
-  font-weight: 500;
-  color: var(--bloom);
-  text-decoration: inherit;
+  font-weight: 400;
+  color: var(--t2);
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
-a:hover { color: var(--lavender); }
+a:hover { color: var(--t1); }
 
 body {
   margin: 0;
@@ -81,67 +105,113 @@ body {
   background: var(--deep);
 }
 
-h1 { font-size: 3.2em; line-height: 1.1; }
+h1 { font-size: 2.8em; line-height: 1.1; }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  padding: 0.55em 1.2em;
+  font-size: 0.875em;
   font-weight: 500;
-  font-family: inherit;
-  background-color: rgba(255,255,255,0.04);
-  color: #f0f4ff;
+  font-family: var(--ff-display);
+  background-color: rgba(255,255,255,0.03);
+  color: var(--t2);
   cursor: pointer;
-  transition: border-color 0.25s, background 0.25s;
+  transition: border-color 0.22s ease, background 0.22s ease, color 0.22s ease;
+  letter-spacing: 0.02em;
 }
-button:hover { border-color: rgba(37,99,235,0.30); background: rgba(37,99,235,0.08); }
-button:focus, button:focus-visible { outline: 2px solid rgba(99,102,241,0.5); outline-offset: 2px; }
+button:hover {
+  border-color: var(--border-md);
+  background: rgba(255,255,255,0.05);
+  color: var(--t1);
+}
+button:focus, button:focus-visible {
+  outline: 1px solid rgba(140,165,190,0.30);
+  outline-offset: 2px;
+}
 
-/* ─── Global Reset ─────────────────────────────────────────────────────── */
+/* ─── Global Reset ──────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-font-smoothing: antialiased; }
-body { background: #030f2a; color: #f0f4ff; min-height: 100vh; }
+body { background: var(--deep); color: var(--t1); min-height: 100vh; }
 
-/* ─── Scrollbar ───────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 3px; height: 3px; }
+/* ─── Scrollbar — nearly invisible, refined ─────────────────────────────── */
+::-webkit-scrollbar { width: 2px; height: 2px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.25); border-radius: 2px; }
-
-/* ─── Animations ───────────────────────────────────────────────────────── */
-@keyframes bgBreath {
-  0%   { filter: hue-rotate(0deg) brightness(1); }
-  100% { filter: hue-rotate(-6deg) brightness(1.05); }
+::-webkit-scrollbar-thumb {
+  background: rgba(140,165,190,0.15);
+  border-radius: 1px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — Contemplative, not kinetic. Turrell's light breathes.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Background breath — very slow, barely perceptible shift */
+@keyframes bgBreath {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.85; }
+  100% { opacity: 1; }
+}
+
+/* Turrell orb drift — slow, like light through fog */
 @keyframes driftL {
-  0%   { transform: translateY(0) scale(1); }
-  100% { transform: translateY(-40px) scale(1.08); }
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(20px, -30px) scale(1.04); }
+  66%  { transform: translate(-10px, 20px) scale(0.97); }
+  100% { transform: translate(0, 0) scale(1); }
 }
 @keyframes driftR {
-  0%   { transform: translateY(0) scale(1); }
-  100% { transform: translateY(30px) scale(0.94); }
+  0%   { transform: translate(0, 0) scale(1); }
+  40%  { transform: translate(-15px, 25px) scale(1.06); }
+  70%  { transform: translate(25px, -15px) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
 }
-@keyframes fadeUp   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-@keyframes slideIn  { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
-@keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.35} }
-@keyframes shimmer  { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+@keyframes driftT {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  50%  { transform: translate(10px, 15px) scale(1.03); opacity: 1; }
+  100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+}
+
+/* Content reveal — calm, unhurried */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideIn  { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
 @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
-@keyframes slideUp  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-@keyframes scaleIn  { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
-@keyframes glowPulse { 0%,100%{box-shadow:0 0 8px rgba(99,102,241,0.15)} 50%{box-shadow:0 0 20px rgba(99,102,241,0.30)} }
-@keyframes ambientGlow { 0%,100%{opacity:0.6} 50%{opacity:1} }
+@keyframes slideUp  { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+@keyframes scaleIn  { from{opacity:0;transform:scale(0.98)} to{opacity:1;transform:scale(1)} }
 
-.fade-up    { animation: fadeUp 0.4s cubic-bezier(.16,1,.3,1) forwards; }
-.slide-in   { animation: slideIn 0.25s ease forwards; }
-.fade-in    { animation: fadeIn 0.3s ease forwards; }
-.slide-up   { animation: slideUp 0.3s ease forwards; }
-.scale-in   { animation: scaleIn 0.25s cubic-bezier(.16,1,.3,1) forwards; }
+/* Pulse — for live indicators — subtle, biological */
+@keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.25} }
 
-/* Scroll-triggered animations */
+/* Shimmer — skeleton only, refined */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+/* Ambient glow — for stat callouts */
+@keyframes ambientGlow { 0%,100%{opacity:0.5} 50%{opacity:0.9} }
+
+/* Grade badge — light pulse */
+@keyframes gradePulse {
+  0%,100% { box-shadow: 0 0 0 rgba(76,201,160,0); }
+  50%     { box-shadow: 0 0 12px rgba(76,201,160,0.15); }
+}
+
+/* ─── Animation utility classes ─────────────────────────────────────────── */
+.fade-up    { animation: fadeUp   0.5s cubic-bezier(.16,1,.3,1) forwards; }
+.slide-in   { animation: slideIn  0.3s ease forwards; }
+.fade-in    { animation: fadeIn   0.35s ease forwards; }
+.slide-up   { animation: slideUp  0.35s ease forwards; }
+.scale-in   { animation: scaleIn  0.3s cubic-bezier(.16,1,.3,1) forwards; }
+.ambient-pulse { animation: ambientGlow 4s ease-in-out infinite; }
+.pulse-dot  { animation: pulse 2.8s ease-in-out infinite; }
+
+/* Scroll-triggered reveal */
 .animate-on-scroll {
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateY(10px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 .animate-on-scroll.animate-visible {
   opacity: 1;
@@ -151,201 +221,308 @@ body { background: #030f2a; color: #f0f4ff; min-height: 100vh; }
 /* Stagger children */
 .stagger-child {
   opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(6px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 .stagger-child.animate-visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* Micro-interactions */
+/* Micro-interactions — Hara Kenya: movement as information, not decoration */
 .transition-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .transition-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 16px rgba(99,102,241,0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,255,255,0.06);
 }
 
 .transition-glow {
-  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .transition-glow:hover {
-  box-shadow: 0 0 16px rgba(99,102,241,0.25), 0 0 8px rgba(99,102,241,0.15);
-  transform: translateY(-1px);
+  box-shadow: 0 0 24px rgba(74,160,184,0.10), 0 0 8px rgba(74,160,184,0.06);
+  border-color: rgba(74,160,184,0.15) !important;
 }
 
 .transition-row {
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition: background 0.15s ease;
 }
 .transition-row:hover {
-  background: rgba(37,99,235,.06) !important;
-  border-left: 2px solid rgba(6,182,212,0.40) !important;
+  background: rgba(255,255,255,0.025) !important;
+  border-left: 1px solid rgba(74,160,184,0.25) !important;
 }
 
-/* Tab/content transitions */
-.tab-content {
-  animation: fadeIn 0.2s ease forwards;
-}
+.tab-content { animation: fadeIn 0.25s ease forwards; }
 
-.tab-content-enter {
-  opacity: 0;
-  transform: translateY(4px);
-}
-.tab-content-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.tab-content-exit {
-  opacity: 1;
-}
-.tab-content-exit-active {
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-/* Ambient pulse for widgets */
-.ambient-pulse {
-  animation: ambientGlow 3s ease-in-out infinite;
-}
-
-/* Grade badge hover */
-.grade-badge {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.grade-badge:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 12px currentColor;
-}
-
-/* ─── Vision Ambient Background ────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   VOID AMBIENT BACKGROUND — James Turrell Skyspace
+   Three light fields floating in absolute darkness.
+   Warm amber left (sunset). Cool violet right (twilight). Ice center (depth).
+   All move independently, very slowly — like breathing.
+   ═══════════════════════════════════════════════════════════════════════════ */
 .bg {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
-}
-.bg-base {
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 160% 120% at 50% 40%,
-    #071a4a 0%, #030f2a 45%, #010812 100%);
-  animation: bgBreath 24s ease-in-out infinite alternate;
-}
-.bg-left {
-  position: absolute;
-  width: 55vw; height: 55vw;
-  left: -18vw; top: 10%;
-  background: radial-gradient(ellipse, rgba(37,99,235,0.10) 0%, transparent 70%);
-  filter: blur(80px);
-  animation: driftL 18s ease-in-out infinite alternate;
-}
-.bg-right {
-  position: absolute;
-  width: 45vw; height: 45vw;
-  right: -12vw; top: 30%;
-  background: radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%);
-  filter: blur(90px);
-  animation: driftR 22s ease-in-out infinite alternate;
-}
-.bg-grain {
-  position: absolute; inset: 0; opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
+  background: #010104;   /* absolute void foundation */
 }
 
-/* Legacy aliases — keep for components that still reference these */
+/* Film grain — Turrell's installations have texture in the darkness */
+.bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.90' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  pointer-events: none;
+}
+
+/* Base — very faint radial depth field in the void */
+.bg-base {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 180% 100% at 50% 100%, rgba(8,10,28,0.80) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(5,7,18,0.60) 0%, transparent 70%),
+    #010104;
+  animation: bgBreath 40s ease-in-out infinite;
+}
+
+/* Left light field — warm amber (Turrell warm) */
+.bg-left {
+  position: absolute;
+  width: 60vw; height: 60vw;
+  left: -20vw; top: 5%;
+  background: radial-gradient(ellipse,
+    rgba(200,140,60,0.055) 0%,
+    rgba(180,100,40,0.028) 35%,
+    transparent 70%
+  );
+  filter: blur(100px);
+  animation: driftL 50s ease-in-out infinite;
+}
+
+/* Right light field — cool violet (Turrell cool) */
+.bg-right {
+  position: absolute;
+  width: 50vw; height: 50vw;
+  right: -15vw; top: 25%;
+  background: radial-gradient(ellipse,
+    rgba(80,60,180,0.045) 0%,
+    rgba(60,40,160,0.022) 35%,
+    transparent 70%
+  );
+  filter: blur(110px);
+  animation: driftR 65s ease-in-out infinite;
+}
+
+/* Upper center — ice depth field (Turrell's perceptual depth) */
+.bg-grain {
+  position: absolute;
+  width: 70vw; height: 40vw;
+  left: 15vw; top: -10%;
+  background: radial-gradient(ellipse,
+    rgba(60,100,160,0.030) 0%,
+    transparent 65%
+  );
+  filter: blur(120px);
+  animation: driftT 80s ease-in-out infinite;
+}
+
+/* Legacy — keep hidden, do not remove (some components reference) */
 .turrell-wrap { display: none; }
 .t-orb, .t-orb-1, .t-orb-2, .t-orb-3, .t-orb-4 { display: none; }
 
-/* ─── CometCloud Card System — three depth levels ─────────────────────── */
-/* L1: Section-level container (primary surface, most common card)        */
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARD SYSTEM — Three depth layers, all floating in void
+   Defined by luminosity contrast, not solid fills.
+   Borders are light films — barely visible, just enough to define space.
+   Hara Kenya: the container should not compete with its contents.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* L1: Section container — primary floating surface */
 .lm-card {
-  background: rgba(5,7,22,0.88);            /* near-void dark — no blue mask */
-  border: 1px solid rgba(6,182,212,0.10);   /* faint cyan edge — on-brand    */
-  border-radius: 10px;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 40px rgba(0,0,0,0.45);
-  transition: border-color .18s ease, box-shadow .18s ease;
+  background: rgba(8,10,22,0.88);
+  border: 1px solid rgba(255,255,255,0.045);
+  border-radius: 12px;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),  /* top light edge */
+    0 2px 8px rgba(0,0,0,0.35),
+    0 16px 64px rgba(0,0,0,0.55);
+  transition: border-color 0.28s ease, box-shadow 0.28s ease;
 }
 .lm-card:hover {
-  border-color: rgba(6,182,212,0.20);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 48px rgba(0,0,0,0.50), 0 0 0 1px rgba(6,182,212,0.06);
+  border-color: rgba(74,160,184,0.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 2px 8px rgba(0,0,0,0.35),
+    0 20px 72px rgba(0,0,0,0.60),
+    0 0 80px rgba(60,120,180,0.035);  /* Turrell: ambient halo in void */
 }
 
-/* L2: Inner card / nested content block (raised surface)                  */
+/* L2: Inner card — raised surface, slightly more present */
 .lm-card-inner {
-  background: rgba(6,9,28,0.80);            /* slightly lighter than L1      */
-  border: 1px solid rgba(6,182,212,0.12);
+  background: rgba(10,12,26,0.82);
+  border: 1px solid rgba(255,255,255,0.038);
+  border-radius: 9px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transition: border-color 0.22s ease;
+}
+.lm-card-inner:hover { border-color: rgba(255,255,255,0.07); }
+
+/* L3: Stat / data card — deepest layer, data in the foreground */
+.lm-stat-card {
+  background: rgba(12,14,30,0.90);
+  border: 1px solid rgba(255,255,255,0.042);
   border-radius: 8px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  transition: border-color .18s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  transition: border-color 0.22s ease, box-shadow 0.22s ease;
 }
-.lm-card-inner:hover { border-color: rgba(6,182,212,0.22); }
-
-/* L3: Stat/data card (deepest layer — numbers, KPIs)                      */
-.lm-stat-card {
-  background: rgba(8,11,32,0.92);           /* T.card — deepest visible      */
-  border: 1px solid rgba(99,102,241,0.16);  /* indigo tint — premium data feel */
-  border-radius: 8px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: border-color .18s ease;
+.lm-stat-card:hover {
+  border-color: rgba(255,255,255,0.07);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 32px rgba(0,0,0,0.30);
 }
-.lm-stat-card:hover { border-color: rgba(99,102,241,0.28); }
 
-/* Accent variant — left border highlight */
-.lm-card-accent { border-left: 2px solid rgba(6,182,212,0.50) !important; }
+/* Accent variant — left light edge */
+.lm-card-accent { border-left: 1px solid rgba(74,160,184,0.40) !important; }
 
-.lm-row { transition:background .12s ease; cursor:pointer; }
-.lm-row:hover { background:rgba(37,99,235,0.07) !important; border-left:2px solid rgba(6,182,212,0.40) !important; }
+/* Table rows — defined by light, not fills */
+.lm-row { transition: background 0.15s ease; cursor: pointer; }
+.lm-row:hover {
+  background: rgba(255,255,255,0.022) !important;
+  border-left: 1px solid rgba(74,160,184,0.22) !important;
+}
 
+/* ─── Tabs — Hara Kenya: generous space, extreme restraint ──────────────── */
 .lm-tab {
-  padding:5px 14px;border-radius:5px;font-size:12px;font-weight:500;
-  font-family:var(--ff-display);cursor:pointer;outline:none;
-  border:1px solid rgba(37,99,235,0.15);background:transparent;
-  color:rgba(199,210,254,0.50);transition:all .18s ease;letter-spacing:.01em;
+  padding: 5px 16px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 400;              /* thinner — restraint */
+  font-family: var(--ff-display);
+  cursor: pointer;
+  outline: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(140,165,190,0.42);
+  transition: all 0.22s ease;
+  letter-spacing: 0.04em;       /* more spacing — Hara's open air */
 }
-.lm-tab:hover { border-color:rgba(37,99,235,0.30);color:#f0f4ff; }
-.lm-tab.active { border-color:rgba(99,102,241,0.45);background:rgba(99,102,241,0.10);color:#818cf8; }
+.lm-tab:hover {
+  border-color: rgba(255,255,255,0.06);
+  color: rgba(200,215,230,0.75);
+}
+.lm-tab.active {
+  border-color: rgba(74,160,184,0.22);
+  background: rgba(74,160,184,0.06);
+  color: rgba(200,225,235,0.90);
+}
 
+/* Filter buttons */
 .filter-btn {
-  padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;
-  font-family:var(--ff-display);cursor:pointer;outline:none;
-  border:1px solid rgba(37,99,235,0.12);background:transparent;
-  color:rgba(199,210,254,0.35);transition:all .15s ease;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 400;
+  font-family: var(--ff-display);
+  cursor: pointer;
+  outline: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(140,165,190,0.35);
+  transition: all 0.18s ease;
+  letter-spacing: 0.04em;
 }
-.filter-btn:hover { border-color:rgba(37,99,235,0.25);color:rgba(199,210,254,0.65); }
-.filter-btn.active { border-color:rgba(99,102,241,0.40);background:rgba(99,102,241,0.08);color:#818cf8; }
+.filter-btn:hover {
+  border-color: rgba(255,255,255,0.06);
+  color: rgba(200,215,230,0.65);
+}
+.filter-btn.active {
+  border-color: rgba(74,160,184,0.20);
+  background: rgba(74,160,184,0.06);
+  color: rgba(180,215,230,0.85);
+}
 
+/* Action buttons */
 .lm-action-btn {
-  display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;
-  font-size:11px;font-weight:500;font-family:var(--ff-display);cursor:pointer;outline:none;
-  border:1px solid rgba(37,99,235,0.15);background:transparent;
-  color:rgba(199,210,254,0.50);transition:all .18s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 400;
+  font-family: var(--ff-display);
+  cursor: pointer;
+  outline: none;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: transparent;
+  color: rgba(140,165,190,0.50);
+  transition: all 0.22s ease;
+  letter-spacing: 0.03em;
 }
-.lm-action-btn:hover { border-color:rgba(37,99,235,0.30);color:#f0f4ff; }
+.lm-action-btn:hover {
+  border-color: rgba(255,255,255,0.09);
+  color: rgba(220,230,240,0.85);
+  background: rgba(255,255,255,0.03);
+}
 
+/* ─── Skeleton — breathes, doesn't shimmer ──────────────────────────────── */
 .sk {
-  background:linear-gradient(90deg,rgba(7,26,74,0.8) 30%,rgba(13,34,85,0.9) 50%,rgba(7,26,74,0.8) 70%);
-  background-size:400px 100%;animation:shimmer 2s ease infinite;
-  border-radius:4px;display:inline-block;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.025) 0%,
+    rgba(255,255,255,0.045) 30%,
+    rgba(255,255,255,0.055) 50%,
+    rgba(255,255,255,0.045) 70%,
+    rgba(255,255,255,0.025) 100%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 2.5s ease-in-out infinite;
+  border-radius: 3px;
+  display: inline-block;
 }
-.pulse-dot { animation:pulse 2.2s ease-in-out infinite; }
 
+/* ─── Badge — label as light inscription ─────────────────────────────────── */
 .lm-badge {
-  display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;
-  font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
-  font-family:var(--ff-display);
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-family: var(--ff-display);
 }
 
-/* ─── Section Divider ────────────────────────────────────────────────── */
+/* Grade badge */
+.grade-badge {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.grade-badge:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 10px currentColor;
+}
+
+/* ─── Section Divider — hairline of light ────────────────────────────────── */
 .section-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(37,99,235,0.08) 20%, rgba(99,102,241,0.18) 50%, rgba(37,99,235,0.08) 80%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.04) 20%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.04) 80%,
+    transparent 100%
+  );
 }
 
-/* ─── Mobile Responsive ──────────────────────────────────────────────── */
+/* ─── Mobile Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .mobile-hidden { display: none !important; }
   .mobile-full { width: 100% !important; }
