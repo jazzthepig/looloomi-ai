@@ -44,16 +44,14 @@ function StagingBanner() {
 // stats: [{ label, value, color }] — rendered inline right-aligned (Fortress pattern)
 function SectionLabel({ label, sub, stats = null }) {
   return (
-    /* Hara Kenya: the label should breathe — generous space, hairline divider */
-    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-      {/* Single pixel of light — Turrell edge */}
-      <div style={{ width: 1, height: 14, background: "rgba(74,160,184,0.55)", borderRadius: 1, flexShrink: 0 }} />
-      <span style={{ fontFamily: FONTS.display, fontSize: 17, fontWeight: 500, color: "rgba(237,242,247,0.92)", letterSpacing: "-0.01em" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingBottom: 14, borderBottom: "1px solid rgba(6,182,212,0.08)" }}>
+      <div style={{ width: 2, height: 16, background: "rgba(6,182,212,0.65)", borderRadius: 1, flexShrink: 0 }} />
+      <span style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 600, color: T.t1, letterSpacing: "-0.01em" }}>
         {label}
       </span>
       {sub && (
-        <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(140,165,190,0.40)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-          {sub}
+        <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          · {sub}
         </span>
       )}
       {stats && stats.length > 0 && (
@@ -61,11 +59,11 @@ function SectionLabel({ label, sub, stats = null }) {
           {stats.map((s, i) => (
             <div key={i} style={{
               paddingLeft: 20, paddingRight: i < stats.length - 1 ? 20 : 0,
-              borderLeft: "1px solid rgba(255,255,255,0.04)",
-              display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2,
+              borderLeft: `1px solid rgba(6,182,212,0.10)`,
+              display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1,
             }}>
-              <div style={{ fontFamily: FONTS.mono, fontSize: 8, letterSpacing: "0.14em", color: "rgba(140,165,190,0.40)", textTransform: "uppercase" }}>{s.label}</div>
-              <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: s.color || T.t2, letterSpacing: "-0.01em" }}>{s.value}</div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.12em", color: T.muted, textTransform: "uppercase" }}>{s.label}</div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: s.color || T.t2, letterSpacing: "-0.01em" }}>{s.value}</div>
             </div>
           ))}
         </div>
@@ -76,8 +74,8 @@ function SectionLabel({ label, sub, stats = null }) {
 
 function SectionLoader({ label = "LOADING…" }) {
   return (
-    <div style={{ padding: "60px 0", textAlign: "center" }}>
-      <div style={{ color: "rgba(140,165,190,0.20)", fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.14em" }}>
+    <div style={{ padding: "48px 0", textAlign: "center" }}>
+      <div style={{ color: "rgba(199,210,254,0.2)", fontFamily: FONTS.mono, fontSize: 11, letterSpacing: "0.1em" }}>
         {label}
       </div>
     </div>
@@ -96,19 +94,19 @@ function useIsMobile() {
   return isMobile;
 }
 
-/* ── Cross-Asset Class Colors — Turrell spectral, Hara restrained ──────── */
+/* ── Cross-Asset Class Colors (mirrors CISLeaderboard) ─────────────────── */
 const CA_COLORS = {
-  L1:            { bg: "rgba(74,160,184,0.08)",   text: "#4aa0b8" },
-  L2:            { bg: "rgba(120,96,200,0.08)",   text: "#7860c8" },
-  DeFi:          { bg: "rgba(74,144,204,0.08)",   text: "#4a90cc" },
-  RWA:           { bg: "rgba(200,168,106,0.08)",  text: "#c8a86a" },
-  Infrastructure:{ bg: "rgba(76,201,160,0.08)",   text: "#4cc9a0" },
-  Oracle:        { bg: "rgba(140,136,200,0.08)",  text: "#8888c8" },
-  Memecoin:      { bg: "rgba(224,90,114,0.08)",   text: "#e05a72" },
-  AI:            { bg: "rgba(200,120,90,0.08)",   text: "#c8785a" },
-  "US Equity":   { bg: "rgba(74,144,204,0.08)",   text: "#4a90cc" },
-  "US Bond":     { bg: "rgba(200,168,106,0.08)",  text: "#c8a86a" },
-  Commodity:     { bg: "rgba(180,160,80,0.08)",   text: "#b4a050" },
+  L1:           { bg: "rgba(0,200,224,.08)",    text: "#00C8E0" },
+  L2:           { bg: "rgba(107,15,204,.10)",   text: "#9945FF" },
+  DeFi:         { bg: "rgba(68,114,255,.12)",   text: "#4472FF" },
+  RWA:          { bg: "rgba(232,160,0,.12)",    text: "#E8A000" },
+  Infrastructure:{ bg: "rgba(0,217,138,.10)",   text: "#00D98A" },
+  Oracle:       { bg: "rgba(167,139,250,.10)",  text: "#A78BFA" },
+  Memecoin:     { bg: "rgba(255,16,96,.10)",    text: "#FF1060" },
+  AI:           { bg: "rgba(255,107,0,.10)",    text: "#FF6B00" },
+  "US Equity":  { bg: "rgba(68,114,255,.10)",   text: "#4B9EFF" },
+  "US Bond":    { bg: "rgba(245,158,11,.10)",   text: "#F59E0B" },
+  Commodity:    { bg: "rgba(200,168,75,.12)",   text: "#C8A84B" },
 };
 
 const GRADE_COLORS_CA = {
