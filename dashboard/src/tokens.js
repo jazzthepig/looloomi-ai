@@ -1,78 +1,83 @@
 /**
  * CometCloud Design Tokens
- * Vision palette — midnight navy + royal blue + indigo + bloom
- * Matches vision.html exactly
+ * James Turrell × 原研哉 — void as foundation, light as data
+ *
+ * Turrell: light is not decoration — it is the subject.
+ * Hara Kenya: emptiness is not absence — it is potential.
+ *
+ * From: midnight navy tech
+ * To:   void gallery — information revealed through light
  */
 
 export const FONTS = {
-  brand:   "'Syne', system-ui, sans-serif",          // display headings — Syne 700/800
-  display: "'Syne', system-ui, sans-serif",           // UI labels, nav
-  body:    "'Exo 2', system-ui, sans-serif",          // body copy, descriptions
-  mono:    "'JetBrains Mono', monospace",             // numbers, scores, prices
-  serif:   "'Syne', system-ui, sans-serif",
+  brand:   "'Space Grotesk', system-ui, sans-serif",     // display headings
+  display: "'Space Grotesk', system-ui, sans-serif",      // UI labels, nav
+  body:    "'Exo 2', system-ui, sans-serif",              // body copy
+  mono:    "'JetBrains Mono', monospace",                 // numbers, scores, prices
+  serif:   "'Space Grotesk', system-ui, sans-serif",
 };
 
 export const T = {
-  // ── Backgrounds — midnight navy (vision.html exact) ──────────────────
-  void:       "#010812",        // absolute void — nav overlay
-  deep:       "#030f2a",        // page background
-  surface:    "#071a4a",        // card / elevated surface
-  raised:     "#0d2255",        // inner card raised
-  card:       "#0f2860",        // deepest card
-  cardHover:  "#122e70",
-  overlay:    "rgba(1,8,18,0.96)",
+  // ── Backgrounds — true void, no blue cast ────────────────────────────
+  void:       "#010104",        // absolute void — the Turrell darkness
+  deep:       "#020208",        // page background — one breath from void
+  surface:    "#05060f",        // card surface — barely lifted, floating
+  raised:     "#08091a",        // inner card — slightly more present
+  card:       "#0b0c1e",        // deepest data card
+  cardHover:  "#0f1028",
+  overlay:    "rgba(1,1,6,0.97)",
 
-  // ── Borders — royal blue / indigo tint ───────────────────────────────
-  border:     "rgba(37,99,235,0.14)",
-  borderMd:   "rgba(37,99,235,0.22)",
-  borderHi:   "rgba(99,102,241,0.32)",
+  // ── Borders — light film, near invisible ─────────────────────────────
+  border:     "rgba(255,255,255,0.045)",   // ghost edge
+  borderMd:   "rgba(255,255,255,0.075)",
+  borderHi:   "rgba(180,200,230,0.14)",
 
-  // ── Text hierarchy — vision palette ──────────────────────────────────
-  t1:         "#f0f4ff",        // primary — ice white (vision --white)
-  t2:         "#c7d2fe",        // secondary — bloom lavender
-  t3:         "rgba(199,210,254,0.45)", // muted (vision --muted)
-  t4:         "rgba(199,210,254,0.20)", // dim
+  // ── Text — cool neutral light temperature (Hara: precision, no excess)
+  t1:         "#edf2f7",        // primary — clean white, no blue push
+  t2:         "#8da5be",        // secondary — recedes, calm
+  t3:         "rgba(140,165,190,0.45)",  // subdued — like text in shadow
+  t4:         "rgba(140,165,190,0.22)",  // barely perceptible
 
   // Semantic aliases
-  primary:    "#f0f4ff",
-  secondary:  "#c7d2fe",
-  muted:      "rgba(199,210,254,0.45)",
-  dim:        "rgba(199,210,254,0.20)",
+  primary:    "#edf2f7",
+  secondary:  "#8da5be",
+  muted:      "rgba(140,165,190,0.45)",
+  dim:        "rgba(140,165,190,0.22)",
 
-  // ── Brand accents ────────────────────────────────────────────────────
-  gold:       "#d4a843",        // vision --gold
-  goldLt:     "#e8c060",
-  goldDim:    "rgba(212,168,67,0.12)",
-  goldGlow:   "rgba(212,168,67,0.05)",
+  // ── Turrell light palette — warm amber field / cool ice field ────────
+  gold:       "#c8a86a",        // warm amber light — sunset through skyspace
+  goldLt:     "#d8ba7a",
+  goldDim:    "rgba(200,168,106,0.10)",
+  goldGlow:   "rgba(200,168,106,0.04)",
 
-  // ── Status colors ────────────────────────────────────────────────────
-  green:      "#00D98A",
-  greenDim:   "rgba(0,217,138,0.10)",
-  red:        "#FF3D5A",
-  redDim:     "rgba(255,61,90,0.10)",
-  blue:       "#2563eb",        // vision --royal
-  blueDim:    "rgba(37,99,235,0.10)",
+  // ── Status — light-field feel, not alarm colors ───────────────────────
+  green:      "#4cc9a0",        // sage-jade — growth signal
+  greenDim:   "rgba(76,201,160,0.10)",
+  red:        "#e05a72",        // deep rose — reduction signal
+  redDim:     "rgba(224,90,114,0.10)",
+  blue:       "#4a8fcc",        // cornflower — desaturated, calm
+  blueDim:    "rgba(74,143,204,0.10)",
 
-  // ── UI accents — vision palette ──────────────────────────────────────
-  indigo:     "#6366f1",        // vision --indigo
-  lavender:   "#818cf8",        // vision --lavender
-  bloom:      "#c7d2fe",        // vision --bloom
-  cobalt:     "#1e3a8a",        // vision --cobalt
-  royal:      "#2563eb",        // vision --royal
-  amber:      "#f59e0b",        // vision --amber
-  cyan:       "#06b6d4",        // vision --cyan
-  cyanDim:    "rgba(6,182,212,0.08)",
-  purple:     "#818cf8",
-  pink:       "#EC4899",
-  violet:     "#7C3AED",
+  // ── UI accents — void palette ────────────────────────────────────────
+  indigo:     "#7080cc",        // desaturated indigo — quiet focus
+  lavender:   "#8898c0",        // muted steel
+  bloom:      "#b0c0d8",        // pale cool — large text
+  cobalt:     "#1e2e58",
+  royal:      "#2a4a80",
+  amber:      "#c8a86a",
+  cyan:       "#4aa0b8",        // teal, desaturated — precision indicator
+  cyanDim:    "rgba(74,160,184,0.07)",
+  purple:     "#7870c8",
+  pink:       "#c070a0",
+  violet:     "#6850b8",
 };
 
-/* ─── CIS Positioning Signal Styles — shared across all components ─────── */
+/* ─── CIS Positioning Signal Styles — light-field edition ──────────────── */
 export const SIG_STYLE = {
-  "STRONG OUTPERFORM": { color: "#00D98A", bg: "rgba(0,217,138,0.14)", border: "rgba(0,217,138,0.30)" },
-  OUTPERFORM:          { color: "#00D98A", bg: "rgba(0,217,138,0.09)", border: "rgba(0,217,138,0.18)" },
-  NEUTRAL:             { color: "#d4a843", bg: "rgba(212,168,67,0.09)", border: "rgba(212,168,67,0.20)" },
-  UNDERPERFORM:        { color: "#FF3D5A", bg: "rgba(255,61,90,0.09)", border: "rgba(255,61,90,0.18)" },
-  UNDERWEIGHT:         { color: "#FF3D5A", bg: "rgba(255,61,90,0.14)", border: "rgba(255,61,90,0.28)" },
+  "STRONG OUTPERFORM": { color: "#4cc9a0", bg: "rgba(76,201,160,0.10)", border: "rgba(76,201,160,0.22)" },
+  OUTPERFORM:          { color: "#4cc9a0", bg: "rgba(76,201,160,0.07)", border: "rgba(76,201,160,0.15)" },
+  NEUTRAL:             { color: "#c8a86a", bg: "rgba(200,168,106,0.08)", border: "rgba(200,168,106,0.18)" },
+  UNDERPERFORM:        { color: "#e05a72", bg: "rgba(224,90,114,0.08)", border: "rgba(224,90,114,0.16)" },
+  UNDERWEIGHT:         { color: "#e05a72", bg: "rgba(224,90,114,0.12)", border: "rgba(224,90,114,0.24)" },
 };
 export const sigStyle = (sig) => SIG_STYLE[(sig || "").toUpperCase()] || SIG_STYLE.NEUTRAL;
