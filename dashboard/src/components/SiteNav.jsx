@@ -34,96 +34,86 @@ export default function SiteNav({
   return (
     <nav style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-      /* Void base — nav is a dark membrane, not a heavy bar */
-      background: "rgba(1,1,6,0.82)",
-      backdropFilter: "blur(32px)",
-      WebkitBackdropFilter: "blur(32px)",
-      borderBottom: "1px solid rgba(255,255,255,0.042)",
+      background: "rgba(1,8,18,0.90)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      borderBottom: `1px solid ${T.border}`,
       display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 40px", height: 52,
+      padding: "0 40px", height: 56,
     }}>
-      {/* ── Logo — restrained, typographic ── */}
+      {/* ── Logo ── */}
       <a href="/app.html" style={{
         textDecoration: "none",
-        display: "flex", alignItems: "center", gap: 10, flexShrink: 0,
+        display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
       }}>
         <span style={{
-          fontFamily: FONTS.brand, fontWeight: 600, fontSize: 13,
-          color: "rgba(237,242,247,0.92)", letterSpacing: "0.12em",
-          textTransform: "uppercase",
+          fontFamily: FONTS.brand, fontWeight: 800, fontSize: 15,
+          color: T.t1, letterSpacing: "0.04em",
         }}>
-          CometCloud
+          COMETCLOUD
         </span>
-        {/* hairline separator */}
         <span style={{
-          width: 1, height: 10,
-          background: "rgba(255,255,255,0.12)",
-          display: "inline-block",
-        }} />
-        <span style={{
-          fontFamily: FONTS.mono, fontSize: 9,
-          color: "rgba(74,160,184,0.70)",
-          letterSpacing: "0.14em",
+          fontFamily: FONTS.mono, fontSize: 9, color: T.indigo,
+          letterSpacing: "0.1em",
         }}>
           AI
         </span>
       </a>
 
-      {/* ── Centre tabs — generous spacing, thin weights (Hara Kenya) ── */}
+      {/* ── Centre: scroll tabs (platform app) OR page links (standalone pages) ── */}
       <div style={{
-        display: "flex", alignItems: "center", gap: 1,
-        background: "rgba(255,255,255,0.025)",
-        borderRadius: 8, padding: "2px 3px",
-        border: "1px solid rgba(255,255,255,0.038)",
+        display: "flex", alignItems: "center", gap: 2,
+        background: "rgba(255,255,255,0.04)",
+        borderRadius: 9, padding: 3, border: `1px solid ${T.border}`,
         overflow: "hidden",
       }}
         className="sitenav-centre"
       >
         {sections ? (
+          // Scroll-based tabs (App.jsx platform)
           sections.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => onSectionClick?.(id)}
               style={{
-                padding: "5px 14px", borderRadius: 5,
-                fontSize: 10, fontWeight: 400,
+                padding: "6px 13px", borderRadius: 6, fontSize: 11, fontWeight: 600,
                 fontFamily: FONTS.display, cursor: "pointer", outline: "none",
-                border: `1px solid ${activeSection === id ? "rgba(74,160,184,0.22)" : "transparent"}`,
-                background: activeSection === id ? "rgba(74,160,184,0.07)" : "transparent",
-                color: activeSection === id ? "rgba(180,220,235,0.90)" : "rgba(140,165,190,0.45)",
-                transition: "all 0.22s ease",
-                letterSpacing: "0.05em", whiteSpace: "nowrap",
+                border: `1px solid ${activeSection === id ? "rgba(6,182,212,0.35)" : "transparent"}`,
+                background: activeSection === id ? "rgba(6,182,212,0.10)" : "transparent",
+                color: activeSection === id ? T.cyan : T.t3,
+                transition: "all 0.18s ease",
+                letterSpacing: "0.03em", whiteSpace: "nowrap",
               }}
             >
               {label}
             </button>
           ))
         ) : (
+          // Link-based tabs (standalone pages)
           NAV_LINKS.map(({ key, label, href }) => (
             <a
               key={key}
               href={href}
               style={{
-                padding: "5px 14px", borderRadius: 5,
-                fontSize: 10, fontWeight: 400,
+                padding: "6px 13px", borderRadius: 6, fontSize: 11, fontWeight: 600,
                 fontFamily: FONTS.display, cursor: "pointer", outline: "none",
-                border: `1px solid ${activePage === key ? "rgba(74,160,184,0.22)" : "transparent"}`,
-                background: activePage === key ? "rgba(74,160,184,0.07)" : "transparent",
-                color: activePage === key ? "rgba(180,220,235,0.90)" : "rgba(140,165,190,0.45)",
+                border: `1px solid ${activePage === key ? "rgba(99,102,241,0.35)" : "transparent"}`,
+                background: activePage === key ? "rgba(99,102,241,0.10)" : "transparent",
+                color: activePage === key ? T.indigo : T.t3,
                 textDecoration: "none",
-                transition: "all 0.22s ease",
-                letterSpacing: "0.05em", whiteSpace: "nowrap",
+                transition: "all 0.18s ease",
+                letterSpacing: "0.03em", whiteSpace: "nowrap",
                 display: "block",
               }}
               onMouseEnter={e => {
                 if (activePage !== key) {
-                  e.currentTarget.style.color = "rgba(200,215,230,0.75)";
-                  e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                  e.currentTarget.style.color = T.t2;
+                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
                 }
               }}
               onMouseLeave={e => {
                 if (activePage !== key) {
-                  e.currentTarget.style.color = "rgba(140,165,190,0.45)";
+                  e.currentTarget.style.color = T.t3;
                   e.currentTarget.style.background = "transparent";
                 }
               }}
@@ -134,36 +124,28 @@ export default function SiteNav({
         )}
       </div>
 
-      {/* ── Right: slot or CTA — refined, not bold ── */}
+      {/* ── Right: rightSlot (e.g. WalletConnect) or default CTA ── */}
       {rightSlot ? rightSlot : <a href={ctaHref} style={{
-        fontFamily: FONTS.display, fontSize: 10, fontWeight: 500,
-        letterSpacing: "0.08em", textTransform: "uppercase",
+        fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+        letterSpacing: "0.07em", textTransform: "uppercase",
         textDecoration: "none", flexShrink: 0,
-        padding: "6px 16px", borderRadius: 5,
+        padding: "7px 16px", borderRadius: 7,
         ...(ctaHighlight
           ? {
-            color: "#010106",
-            background: `linear-gradient(135deg, rgba(74,160,184,0.90), rgba(112,128,204,0.85))`,
+            color: "#0a1020",
+            background: `linear-gradient(135deg, ${T.indigo}, ${T.cyan})`,
             border: "none",
           }
           : {
-            color: "rgba(140,165,190,0.65)",
+            color: T.t2,
             background: "transparent",
-            border: "1px solid rgba(255,255,255,0.08)",
+            border: `1px solid ${T.borderHi}`,
           }
         ),
-        transition: "opacity 0.22s, border-color 0.22s, color 0.22s",
+        transition: "opacity 0.18s",
       }}
-        onMouseEnter={e => {
-          e.currentTarget.style.opacity = "1";
-          e.currentTarget.style.color = "rgba(220,230,240,0.90)";
-          e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.opacity = "1";
-          e.currentTarget.style.color = "rgba(140,165,190,0.65)";
-          e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = "0.82"; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
       >
         {ctaLabel}
       </a>}
