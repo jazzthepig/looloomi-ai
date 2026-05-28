@@ -805,18 +805,40 @@ async def get_yfinance_data(symbol: str) -> Optional[dict]:
             else:
                 change_30d = 0
                 volatility_30d = 0.0
+            # market_cap: ETFs report totalNetAssets / totalAssets instead of marketCap
+            mcap = (info.get("marketCap") or
+                    info.get("totalNetAssets") or
+                    info.get("totalAssets") or 0)
+            # change_24h: regularMarketChange is dollar delta — use percent field instead
+            change_24h_pct = (info.get("regularMarketChangePercent") or
+                              info.get("regularMarketChangePct") or 0)
+            # Derive from history if yfinance percent field unavailable
+            if not change_24h_pct and len(hist) >= 2:
+                prev_close = float(hist['Close'].iloc[-2])
+                if prev_close:
+                    change_24h_pct = ((price_now - prev_close) / prev_close) * 100
+            # high/low 24h for spread penalty
+            high_24h = float(info.get("dayHigh") or info.get("regularMarketDayHigh") or 0)
+            low_24h  = float(info.get("dayLow")  or info.get("regularMarketDayLow")  or 0)
+            # ATH distance from 52-week high as a proxy
+            week52_high = float(info.get("fiftyTwoWeekHigh") or 0)
+            ath_chg = 0.0
+            if week52_high and price_now:
+                ath_chg = ((price_now - week52_high) / week52_high) * 100  # negative = below ATH
             return {
                 "symbol": symbol,
-                "price": info.get("currentPrice", info.get("regularMarketPrice", 0)),
-                "market_cap": info.get("marketCap", 0),
+                "price": info.get("currentPrice", info.get("regularMarketPrice", price_now)),
+                "market_cap": mcap,
                 "volume_24h": info.get("regularMarketVolume", 0),
-                "change_24h": info.get("regularMarketChange", 0),
+                "change_24h": round(change_24h_pct, 2),
+                "high_24h": high_24h,
+                "low_24h": low_24h,
                 "change_7d": change_7d,
                 "change_30d": change_30d,
                 "volatility_30d": round(volatility_30d, 5),
                 "circulating_supply": info.get("sharesOutstanding", 0),
                 "total_supply": info.get("sharesOutstanding", 0),
-                "ath_change_percentage": 0,  # yfinance doesn't provide this directly
+                "ath_change_percentage": round(ath_chg, 1),
             }
 
         result = await asyncio.to_thread(_fetch)
@@ -1853,10 +1875,10 @@ def calculate_las(
     else:
         liq_mult = 0.0
 
-    # Floor: any asset in the universe has at least 5% liquidity credit.
-    # Prevents near-zero LAS from CoinGecko volume data quality issues
-    # (e.g. MKR/POLYX only counting limited trading pairs).
-    liq_mult = max(liq_mult, 0.05)
+    # Floor: any asset in the curated universe has at least 15% liquidity credit.
+    # Prevents near-zero LAS from CoinGecko / yfinance volume data quality gaps
+    # (e.g. MKR reporting $42K volume when real CEX volume is $50M+).
+    liq_mult = max(liq_mult, 0.15)
 
     # Spread penalty
     spread_penalty = 1.0
@@ -2213,16 +2235,23 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 breakdown[key]["weight"] = contributions[key]["weight"]
                 breakdown[key]["contribution"] = contributions[key]["contribution"]
 
-        # Data completeness (confidence) - check what data sources we have
+        # Data completeness (confidence) — asset-class-aware.
+        # TradFi / Commodity ETFs don't have TVL or crypto FNG, so we only
+        # score them on fields that are actually available for their class.
+        _is_tradfi_class = asset_class in (
+            "US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"
+        )
         data_completeness = {
             "price": bool(market_data.get("price", 0)),
             "volume": bool(market_data.get("volume_24h", 0)),
             "market_cap": bool(market_data.get("market_cap", 0)),
-            "tvl": bool(tvl and tvl > 0),
-            "sentiment": bool(fng and fng.get("value")),
-            "circulating_supply": bool(market_data.get("circulating_supply", 0)),
         }
-        # Confidence score: 0-1 based on data completeness
+        if not _is_tradfi_class:
+            # Crypto-native fields — only penalise crypto assets for missing these
+            data_completeness["tvl"] = bool(tvl and tvl > 0)
+            data_completeness["sentiment"] = bool(fng and fng.get("value"))
+            data_completeness["circulating_supply"] = bool(market_data.get("circulating_supply", 0))
+        # Confidence score: 0-1 based on applicable data completeness
         confidence = round(sum(data_completeness.values()) / len(data_completeness), 2)
 
         # Get CIS score change from history
