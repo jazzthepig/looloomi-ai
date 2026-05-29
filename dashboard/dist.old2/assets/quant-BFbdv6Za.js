@@ -1,1 +1,0 @@
-import{c as t,j as o}from"./tokens-DaU9ucPU.js";import r from"./QuantMonitor-MfOjpJ_k.js";import"./generateCategoricalChart-DpTmf8uC.js";t.createRoot(document.getElementById("root")).render(o.jsx(r,{}));
