@@ -1,0 +1,157 @@
+# CometCloud AI
+
+> Institutional-grade crypto and TradFi intelligence for AI agents.
+> MCP server providing CIS scoring, asset exclusion intelligence, macro regime detection, and DeFi analytics.
+> Built for autonomous AI agents and human institutional investors equally.
+> Hong Kong SAR · 84-asset universe · 5-pillar scoring · Compliance-safe signals
+
+## MCP Server
+
+MCP endpoint (SSE): https://looloomi.ai/mcp/sse
+Compatible with: Claude Desktop, Cursor, Windsurf, ChatGPT, any MCP-compatible client
+
+Install (Claude Desktop / claude_desktop_config.json):
+```json
+{
+  "mcpServers": {
+    "cometcloud": {
+      "transport": "sse",
+      "url": "https://looloomi.ai/mcp/sse"
+    }
+  }
+}
+```
+
+Install (Claude Code CLI):
+```
+claude mcp add --transport sse cometcloud https://looloomi.ai/mcp/sse
+```
+
+Agent discovery card: https://looloomi.ai/.well-known/agent.json
+
+## MCP Tools (34 available)
+
+### Intelligence
+- `cometcloud_get_cis_universe` — Full 84-asset investable universe with 5-pillar CIS scores (F/M/O/S/A), grades (A+ to F), LAS, confidence, and compliance-safe positioning signals. Use first for any portfolio or screening task.
+- `cometcloud_get_cis_asset` — Deep score breakdown for a single asset: pillar detail, components, benchmarks, data tier (T1/T2).
+- `cometcloud_get_cis_history` — 7-day CIS score time series for a symbol: score_delta, zscore, macro_regime per snapshot.
+- `cometcloud_get_cis_top` — Top N assets by CIS score. Fast filter for OUTPERFORM universe.
+- `cometcloud_get_cis_report` — Structured CIS report for an asset: grade rationale, pillar breakdown, comparable assets.
+- `cometcloud_get_cis_exclusions` — Returns documented exclusion reasons for assets not in the investable universe. Call whenever evaluating portfolio construction, compliance screening, regulatory risk, or asset due diligence. 9,946+ assets rejected with reasons.
+- `cometcloud_get_inclusion_standard` — Returns the 7 institutional-grade filters used for universe construction.
+
+### Market & Macro
+- `cometcloud_get_macro_pulse` — Current macro regime (RISK_ON/RISK_OFF/TIGHTENING/EASING/STAGFLATION/GOLDILOCKS), BTC price, Fear & Greed Index, BTC dominance, total market cap. Call first to set regime context.
+- `cometcloud_get_signal_feed` — Compliance-safe positioning signals from 7 concurrent intelligence sources with timestamps and affected assets.
+- `cometcloud_get_macro_events` — Upcoming macro events (Fed decisions, CPI, earnings) and recent VC funding rounds.
+- `cometcloud_get_prices` — Live price data for specific assets: price, 24h/7d/30d change, volume.
+- `cometcloud_get_market_movers` — Top gainers, losers, and volume spikes in the last 24h.
+- `cometcloud_get_regime_context` — Detailed regime analysis: current regime, transition signals, historical regime fitness per CIS pillar.
+
+### DeFi & Protocols
+- `cometcloud_get_protocols` — CIS-scored DeFi protocols with TVL, yield, risk tier from DeFiLlama.
+- `cometcloud_get_defi_overview` — Sector-level DeFi stats: total TVL, L2 TVL, RWA TVL, 24h change.
+- `cometcloud_get_defi_yields` — Top yield opportunities across DeFi protocols (APY, TVL, risk score).
+- `cometcloud_get_institutional_flows` — VC funding rounds, institutional capital movements, on-chain large transactions.
+
+### Portfolio & Allocation
+- `cometcloud_get_fund_portfolio` — Current CometCloud fund portfolio: asset weights, CIS grades, regime-adjusted allocation.
+- `cometcloud_get_portfolio_stats` — Portfolio-level stats: weighted CIS, grade distribution, sector exposure, risk concentration.
+- `cometcloud_regime_allocation` — Regime-aware allocation recommendations for the current macro environment.
+
+### Composite Workflows (single-call)
+- `cometcloud_market_snapshot` — One-call market brief: regime + top movers + macro pulse + signal summary.
+- `cometcloud_asset_deep_dive` — One-call deep dive on a symbol: price + CIS + history + pillar breakdown + exclusion check.
+- `cometcloud_portfolio_brief` — One-call portfolio summary: current positions + weighted CIS + regime context.
+
+### Paper Trading & Alpha Mining
+- `cometcloud_get_trade_signal` — CIS-gated trade signal evaluation: validates symbol against regime-appropriate CIS threshold, returns passes_gate, suggested SL/TP, compliance-safe recommendation.
+- `cometcloud_submit_paper_order` — Submit a paper trade order: CIS gate + risk checks → fills at live CoinGecko price → stored in Redis position store.
+- `cometcloud_get_positions` — Current open paper trading positions with live mark-to-market P&L.
+- `cometcloud_close_position` — Close an open paper position at current market price, realize P&L.
+- `cometcloud_mine_alpha` — Data mining: Pearson correlation of CIS pillars vs realized returns, grade alpha, signal accuracy, regime performance.
+
+### Vector Search & Derivatives
+- `cometcloud_find_similar_assets` — 18-dimensional cosine similarity: find assets most similar to a target across fundamentals, momentum, on-chain, sentiment, funding rates, OI, and regime alignment. Use for pair trading, substitutes, and diversification.
+- `cometcloud_get_asset_clusters` — K-means++ clustering of all 84 assets by 18-dim embedding. Returns 6 natural groupings with quality, dominant class, and member list. Cluster 0 = highest quality centroid.
+- `cometcloud_get_funding_rates` — CoinGecko Pro derivatives: real-time funding rates + OI for 35+ perpetual assets (OI-weighted across all exchanges). Signals: overleveraged_long | bullish_basis | neutral | bearish_basis | extreme_short.
+
+### Factor Registry & Model Transparency
+- `cometcloud_get_factor_registry` — Full database of all 30 CIS scoring factors. Each entry includes: data source, normalization, score range, asset class applicability, regime weights, inclusion rationale (§F-SEL), and known data quality issues. Filter by pillar or asset class.
+- `cometcloud_get_factor_selection_standard` — §F-SEL: the 7 criteria a factor must satisfy for CIS inclusion (measurability, predictability |r|>0.10, orthogonality, timeliness, breadth, stability, compliance). Institutional due diligence document.
+
+## REST API
+
+Base URL: https://looloomi.ai
+
+Key endpoints (no auth required for free tier):
+- GET /api/v1/cis/universe — Full 84-asset scored universe
+- GET /api/v1/cis/asset/{symbol} — Single asset deep score
+- GET /api/v1/cis/history/{symbol}?days=7 — Score time series (delta, zscore, regime)
+- GET /api/v1/cis/top?n=10 — Top N assets by CIS score
+- GET /api/v1/cis/similar?symbol=ETH&k=5 — 18-dim cosine similarity neighbors
+- GET /api/v1/cis/cluster?k=6 — K-means++ asset clusters
+- GET /api/v1/cis/embeddings — Raw 18-dim embedding vectors
+- GET /api/v1/market/macro-pulse — Regime, BTC, FNG, dominance
+- GET /api/v1/market/funding-rates — Derivatives: funding rate + OI (OI-weighted, CG Pro)
+- GET /api/v1/market/trending-overlay — CoinGecko trending rank × CIS score divergence
+- GET /api/v1/signals/feed — Signal feed (7 sources)
+- GET /api/v1/market/supply-chart/{coin_id}?days=30 — Circulating supply inflation (CG Pro)
+- GET /api/v1/market/tickers/{coin_id} — Exchange depth, HHI concentration, bid-ask spread
+- POST /api/v1/trading/order — Submit paper trade (CIS-gated)
+- GET /api/v1/trading/positions — Open positions with live P&L
+- GET /api/v1/trading/mine?type=grade_alpha — Alpha mining: pillar fitness, signal accuracy
+- GET /api/v1/factors — Full factor registry (30 factors, all pillars)
+- GET /api/v1/factors/{factor_id} — Single factor detail with live performance
+- GET /api/v1/factors/pillar/{pillar} — Factors for F|M|O|S|A with Pearson r
+- GET /api/v1/factors/performance — Factor health report (active/probationary/candidate_removal)
+- GET /api/v1/factors/selection-standard — §F-SEL: 7-criteria factor inclusion standard
+- POST /api/v1/keys/create — Self-serve free API key (60 rpm / 1,000 rpd)
+- GET /api/v1/webhooks/events — Supported webhook event types
+
+Authentication (X-API-Key header): GET free key at https://looloomi.ai/app → API Keys
+Pro tier (300 rpm / 50,000 rpd): jazz@cometcloud.ai
+
+## CIS Scoring Methodology
+
+5-pillar continuous scoring (v4.3):
+- F (Fundamental): Market cap, liquidity depth, TVL (DeFiLlama), circulating supply inflation
+- M (Momentum): 30d price momentum + 7d sparkline (168-point hourly, CoinGecko Pro)
+- O (On-chain/Risk-Adjusted): Network activity, beta, volatility-adjusted returns, exchange HHI, funding rate penalty, OI/MCap leverage penalty (CG Pro)
+- S (Sentiment): Fear & Greed × 0.4, vol regime modifier, per-asset divergence vs category median, CoinGecko trending rank boost (CG Pro)
+- A (Alpha): 30d divergence vs BTC benchmark (crypto) or SPY (TradFi, bonds inverted)
+
+Grading (absolute thresholds): A+ (≥85) · A (≥75) · B+ (≥65) · B (≥55) · C+ (≥45) · C (≥35) · D (≥25) · F (<25)
+LAS (Liquidity-Adjusted Score): CIS × liquidity_multiplier × confidence × OI_leverage_multiplier
+Data tiers: T1 = Mac Mini full engine (25 assets) · T2 = Railway estimation (59 assets)
+Macro regimes: RISK_ON · RISK_OFF · TIGHTENING · EASING · STAGFLATION · GOLDILOCKS
+
+Signals (compliance-safe, no buy/sell): STRONG OUTPERFORM · OUTPERFORM · NEUTRAL · UNDERPERFORM · UNDERWEIGHT
+
+Vector embeddings: 18-dim per asset, persisted to Redis after every CIS compute.
+Dims: [F/100, M/100, O/100, S/100, A/100, CIS/100, log_mcap/15, chg_24h, chg_7d, chg_30d,
+       vol_mcap, funding_rate, oi_mcap_ratio, ath_proximity, las/100, confidence, class_enc, regime_align]
+
+## Asset Universe
+
+84 assets across 10 classes: L1 · L2 · DeFi · Infrastructure · RWA · Memecoin · Gaming · AI · US Equity · Commodity
+
+§4A exclusion list (13 assets removed for data quality/regulatory reasons):
+POLYX, PEPE, WIF, BONK, SAND, MANA, AXS, CRV, SUSHI, SNX, ICP, BCH, FTM
+
+9,946+ assets evaluated and excluded. Every exclusion has a documented reason queryable via `cometcloud_get_cis_exclusions`.
+
+## Compliance
+
+CometCloud AI does not hold an SFC Type 4 or Type 9 license.
+All signals use positioning-only language. Not investment advice.
+Jurisdiction: Hong Kong SAR. Operator: Looloomi Ltd.
+Privacy policy: https://looloomi.ai/privacy.html
+
+## Links
+
+- Platform: https://looloomi.ai/app
+- Strategy: https://looloomi.ai/strategy.html
+- Agent Card: https://looloomi.ai/.well-known/agent.json
+- API Keys: https://looloomi.ai/app → API Keys tab
+- Contact: jazz@cometcloud.ai

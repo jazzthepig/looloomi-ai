@@ -19,6 +19,7 @@ const MyPortfolio          = lazy(() => import("./components/MyPortfolio"));
 const SignalFeed           = lazy(() => import("./components/SignalFeed"));
 const StrategiesPage         = lazy(() => import("./components/StrategiesPage"));
 const MultiFactorStrategies  = lazy(() => import("./components/MultiFactorStrategies"));
+const CISAssetDetail         = lazy(() => import("./components/CISAssetDetail"));
 
 /* ── Staging environment banner ─────────────────────────────────────────── */
 function StagingBanner() {
@@ -463,16 +464,21 @@ function DesktopApp() {
   })();
   const [activeSection, setActiveSection] = useState(_initSection);
   const [cisUniverse, setCisUniverse]     = useState([]);
+  const [assetDetailSym, setAssetDetailSym] = useState(null);
   // Lazy-mount: track which sections have been visited — mount once, keep alive
   // "cis.leaderboard" pre-seeded so clicking CIS Engine parent mounts it immediately
   const [visited, setVisited] = useState(() => new Set([_initSection]));
 
-  const navigate = (id) => {
+  const navigate = (id, extra) => {
     // "cis" parent redirects to cis.leaderboard (canonical sub-page — avoids double CISContent mount)
     const resolved = id === "cis" ? "cis.leaderboard" : id;
+    // Asset deep dive: navigate("cis.asset", "BTC") — stores symbol in state, uses single slot
+    if (resolved === "cis.asset" && extra) {
+      setAssetDetailSym(extra.toUpperCase());
+    }
     setActiveSection(resolved);
     setVisited(prev => { const next = new Set(prev); next.add(resolved); return next; });
-    track("section_view", { section: resolved });
+    track("section_view", { section: resolved, symbol: extra || undefined });
     // Scroll content pane back to top on section switch
     const pane = document.getElementById("cc-content-pane");
     if (pane) pane.scrollTop = 0;
@@ -648,7 +654,7 @@ function DesktopApp() {
         <div style={{ display: activeSection === "cis.leaderboard" ? "block" : "none" }}>
           {visited.has("cis.leaderboard") && (
             <section style={contentPad}>
-              <CISContent onUniverseLoad={setCisUniverse} />
+              <CISContent onUniverseLoad={setCisUniverse} onNavigate={navigate} />
             </section>
           )}
         </div>
@@ -660,7 +666,24 @@ function DesktopApp() {
               <div style={{ maxWidth: 1400, margin: "0 auto" }}>
                 <SectionLabel label="Asset Radar" sub="30-asset live scoring" />
                 <Suspense fallback={<SectionLoader />}>
-                  <AssetRadar />
+                  <AssetRadar onNavigate={navigate} />
+                </Suspense>
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* cis.asset — deep dive (single slot, symbol stored in state) */}
+        <div style={{ display: activeSection === "cis.asset" ? "block" : "none" }}>
+          {visited.has("cis.asset") && assetDetailSym && (
+            <section style={contentPad}>
+              <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+                <Suspense fallback={<SectionLoader />}>
+                  <CISAssetDetail
+                    symbol={assetDetailSym}
+                    onBack={() => navigate("cis.leaderboard")}
+                    onNavigate={navigate}
+                  />
                 </Suspense>
               </div>
             </section>
@@ -977,7 +1000,7 @@ function EarningsCalendarWidget() {
    CISLeaderboard owns the single fetch; exposes raw universe via onDataLoad
    callback → CrossAssetView renders from the same data, zero extra requests
 ──────────────────────────────────────────────────────────────────────── */
-function CISContent({ onUniverseLoad }) {
+function CISContent({ onUniverseLoad, onNavigate }) {
   const [cisUniverse, setCisUniverse] = useState([]);
 
   const handleDataLoad = (data) => {
@@ -1004,7 +1027,10 @@ function CISContent({ onUniverseLoad }) {
 
       {/* Leaderboard — owns the fetch, fires onDataLoad when done */}
       <div className="lm-card" style={{ overflow: "hidden" }}>
-        <CISLeaderboard onDataLoad={handleDataLoad} />
+        <CISLeaderboard
+          onDataLoad={handleDataLoad}
+          onAssetClick={onNavigate ? (sym) => onNavigate("cis.asset", sym) : null}
+        />
       </div>
 
       {/* Cross-Asset Overview — zero additional fetches */}
