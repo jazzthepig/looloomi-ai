@@ -321,7 +321,7 @@ const CIS_CSS = `
   }
 `;
 
-export default function CISLeaderboard({ minimal = false, externalData = null, onDataLoad = null }) {
+export default function CISLeaderboard({ minimal = false, externalData = null, onDataLoad = null, onAssetClick = null }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -1399,14 +1399,29 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                   })()}
                 </div>
               </div>
-              <div style={{
-                width: 36, height: 36, borderRadius: "50%", display: "flex",
-                alignItems: "center", justifyContent: "center",
-                background: `${GRADE_COLORS[selectedAsset?.grade]}20`,
-                fontSize: 14, fontWeight: 700, fontFamily: FONTS.mono,
-                color: GRADE_COLORS[selectedAsset?.grade],
-                border: `1px solid ${GRADE_COLORS[selectedAsset?.grade]}40`
-              }}>{selectedAsset?.grade}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {onAssetClick && selectedAsset && (
+                  <button
+                    onClick={() => onAssetClick(selectedAsset.asset_id || selectedAsset.symbol)}
+                    style={{
+                      fontFamily: FONTS.display, fontSize: 9, fontWeight: 700,
+                      color: T.cyan, background: "rgba(6,182,212,0.08)",
+                      border: "1px solid rgba(6,182,212,0.25)",
+                      borderRadius: 5, padding: "4px 8px", cursor: "pointer",
+                      letterSpacing: "0.06em",
+                    }}>
+                    DEEP DIVE →
+                  </button>
+                )}
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%", display: "flex",
+                  alignItems: "center", justifyContent: "center",
+                  background: `${GRADE_COLORS[selectedAsset?.grade]}20`,
+                  fontSize: 14, fontWeight: 700, fontFamily: FONTS.mono,
+                  color: GRADE_COLORS[selectedAsset?.grade],
+                  border: `1px solid ${GRADE_COLORS[selectedAsset?.grade]}40`
+                }}>{selectedAsset?.grade}</div>
+              </div>
             </div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
               <span className="cis-score" style={{
