@@ -656,12 +656,28 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       padding: "12px 0", borderBottom: `1px solid rgba(37,99,235,0.07)`,
                       cursor: "pointer",
                     }}>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
-                        <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.10em", color: catColor, textTransform: "uppercase" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                        <span style={{
+                          fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.10em",
+                          color: catColor, textTransform: "uppercase",
+                          padding: "2px 6px", borderRadius: 3,
+                          background: `${catColor}14`, border: `1px solid ${catColor}30`,
+                        }}>
                           {event.category}
                         </span>
                         {isHigh && (
-                          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: "#FF3D5A", letterSpacing: "0.06em" }}>· HIGH</span>
+                          <span style={{
+                            fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
+                            color: "#FF3D5A", padding: "2px 6px", borderRadius: 3,
+                            background: "rgba(255,61,90,0.12)", border: "1px solid rgba(255,61,90,0.30)",
+                          }}>HIGH</span>
+                        )}
+                        {event.impact && event.impact !== "HIGH" && (
+                          <span style={{
+                            fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: "0.08em",
+                            color: T.t3, padding: "2px 6px", borderRadius: 3,
+                            background: "rgba(148,163,184,0.07)", border: "1px solid rgba(148,163,184,0.12)",
+                          }}>{event.impact}</span>
                         )}
                       </div>
                       <div style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 600, color: T.t1, lineHeight: 1.4, marginBottom: 4 }}>
@@ -1056,11 +1072,22 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       {/* Thin color accent left */}
                       <div style={{ width: 2, flexShrink: 0, background: cfg.color, borderRadius: 1, opacity: 0.55, alignSelf: "stretch" }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 5 }}>
-                          <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.10em", color: cfg.color, textTransform: "uppercase" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                          <span style={{
+                            fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.10em",
+                            color: cfg.color, textTransform: "uppercase",
+                            padding: "2px 6px", borderRadius: 3,
+                            background: `${cfg.color}14`, border: `1px solid ${cfg.color}30`,
+                          }}>
                             {cfg.label}
                           </span>
-                          {isHigh && <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.red, letterSpacing: "0.06em" }}>· HIGH</span>}
+                          {isHigh && (
+                            <span style={{
+                              fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
+                              color: "#FF3D5A", padding: "2px 6px", borderRadius: 3,
+                              background: "rgba(255,61,90,0.12)", border: "1px solid rgba(255,61,90,0.30)",
+                            }}>HIGH</span>
+                          )}
                           <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5, marginLeft: "auto" }}>
                             {ev.source} · {ev.date}
                           </span>

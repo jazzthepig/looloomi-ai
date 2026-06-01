@@ -32,7 +32,7 @@
   font-weight: 400;
   color-scheme: dark;
   color: #f0f4ff;
-  background-color: #030f2a;
+  background-color: #020208;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -101,7 +101,7 @@ button:focus, button:focus-visible { outline: 2px solid rgba(99,102,241,0.5); ou
 /* ─── Global Reset ─────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-font-smoothing: antialiased; }
-body { background: #030f2a; color: #f0f4ff; min-height: 100vh; }
+body { background: #020208; color: #f0f4ff; min-height: 100vh; }
 
 /* ─── Scrollbar ───────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 3px; height: 3px; }
