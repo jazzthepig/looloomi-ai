@@ -278,7 +278,9 @@ export default function ProtocolIntelligence() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 11, fontFamily: FONTS.mono, color: T.t3 }}>
-            {protocols.length} protocols · {totalTvl}
+            {filtered.length < protocols.length
+              ? `${filtered.length} of ${protocols.length} protocols`
+              : `${protocols.length} protocols`} · {totalTvl}
           </span>
           <span style={{
             fontFamily: FONTS.mono, fontSize: 9, color: T.green, padding: "2px 7px",
@@ -337,7 +339,7 @@ export default function ProtocolIntelligence() {
           <div>#</div>
           <div>Protocol</div>
           <div style={{ textAlign: "right" }}>TVL</div>
-          <div style={{ textAlign: "right" }}>7D Flow</div>
+          <div style={{ textAlign: "right", cursor: "help" }} title="7-day TVL change (%). Values capped at ±9,999%. Sourced from DeFiLlama.">7D Flow ⓘ</div>
           <div style={{ textAlign: "center" }}>Grade</div>
           <div style={{ textAlign: "center" }}>Signal</div>
           <div style={{ textAlign: "center" }}>Risk</div>
@@ -425,16 +427,20 @@ export default function ProtocolIntelligence() {
                     {p.live_data && <span style={{ fontSize: 9, color: dirColor, marginLeft: 4 }}>{dirIcon}</span>}
                   </div>
 
-                  {/* 7D flow */}
+                  {/* 7D flow — capped at ±9999% on backend; display N/A for zero (no history) */}
                   <div style={{ textAlign: "right" }}>
-                    {p.live_data ? (
-                      <span style={{
-                        fontFamily: FONTS.mono, fontSize: 12,
-                        color: (p.tvl_change_7d || 0) > 0 ? T.green : (p.tvl_change_7d || 0) < 0 ? T.red : T.t3,
-                      }}>
-                        {(p.tvl_change_7d || 0) > 0 ? "+" : ""}{(p.tvl_change_7d || 0).toFixed(1)}%
-                      </span>
-                    ) : (
+                    {p.live_data ? (() => {
+                      const chg = p.tvl_change_7d || 0;
+                      if (chg === 0) return <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.t3 }}>—</span>;
+                      return (
+                        <span style={{
+                          fontFamily: FONTS.mono, fontSize: 12,
+                          color: chg > 0 ? T.green : T.red,
+                        }}>
+                          {chg > 0 ? "+" : ""}{chg.toFixed(1)}%
+                        </span>
+                      );
+                    })() : (
                       <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.t3 }}>—</span>
                     )}
                   </div>
@@ -488,8 +494,8 @@ export default function ProtocolIntelligence() {
           display: "flex", justifyContent: "space-between", alignItems: "center",
           fontSize: 9, color: T.t3, fontFamily: FONTS.mono,
         }}>
-          <span>Source: DeFiLlama TVL · CIS Protocol Engine v1.0</span>
-          <span>Click row to expand · Data refreshes every 10 min</span>
+          <span>Source: DeFiLlama TVL · CIS Protocol Engine v1.0 · Sorted by {sortBy === "score" ? "CIS Score ↓" : sortBy === "tvl" ? "TVL ↓" : "7D Flow ↓"}</span>
+          <span>Showing {filtered.length} of {protocols.length} protocols · Click row to expand · Refreshes every 10 min</span>
         </div>
       </div>
     </div>

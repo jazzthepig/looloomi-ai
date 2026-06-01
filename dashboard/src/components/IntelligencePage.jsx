@@ -166,14 +166,15 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
     return () => clearTimeout(timer);
   }, []);
 
-  // Heatmap color helper
-  const getHeatmapStyle = (change) => {
+  // Heatmap color helper — design system palette (void-black base + subtle thermal tints)
+  const getHeatmapStyle = (change, noData) => {
+    if (noData) return { bg: "rgba(5,7,22,0.60)", color: "rgba(148,163,184,0.25)" }; // no data — near-void
     const val = parseFloat(change);
-    if (val >= 3) return { bg: "rgba(0,232,122,0.22)", color: T.green }; // strong-up
-    if (val >= 0.5) return { bg: "rgba(0,232,122,0.10)", color: T.green }; // up
-    if (val > -0.5) return { bg: "rgba(14,30,56,0.55)", color: T.t3 }; // flat
-    if (val > -3) return { bg: "rgba(255,61,90,0.10)", color: T.red }; // down
-    return { bg: "rgba(255,61,90,0.22)", color: T.red }; // strong-down
+    if (val >= 5)   return { bg: "rgba(16,185,129,0.18)", color: "#10b981" };  // strong up  — emerald tint
+    if (val >= 0.5) return { bg: "rgba(6,182,212,0.10)",  color: T.cyan };     // up         — cyan tint
+    if (val > -0.5) return { bg: "rgba(5,7,22,0.60)",     color: T.t3 };       // flat       — void
+    if (val > -5)   return { bg: "rgba(239,68,68,0.08)",  color: "#f87171" };  // down       — red tint subtle
+    return           { bg: "rgba(239,68,68,0.18)",        color: "#ef4444" };  // strong down
   };
 
   // Fetch sector heatmap data
@@ -608,27 +609,29 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       </div>
                     ))
                   ) : sectorData.map((sector, idx) => {
-                    const s = getHeatmapStyle(sector.change);
+                    const noData = sector.tvl === "—" && sector.change === 0;
+                    const s = getHeatmapStyle(sector.change, noData);
                     return (
                       <div key={idx} style={{
                         padding: "12px 14px",
                         background: s.bg,
+                        border: "1px solid rgba(148,163,184,0.04)",
                         transition: "filter 0.15s ease",
                         cursor: "default",
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.filter = "brightness(1.18)"; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.filter = "brightness(1.15)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.filter = "brightness(1)"; }}
                       >
                         <div style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, color: T.t3, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
                           {sector.name}
                         </div>
                         <div style={{ fontFamily: FONTS.mono, fontSize: 20, fontWeight: 400, letterSpacing: "-0.02em", color: s.color, lineHeight: 1 }}>
-                          {sector.tvl === "—" && sector.change === 0
-                            ? "—"
+                          {noData
+                            ? <span style={{ fontSize: 12, opacity: 0.4 }}>No data</span>
                             : `${sector.change > 0 ? "+" : ""}${Number(sector.change).toFixed(1)}%`}
                         </div>
-                        <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.45, marginTop: 5 }}>
-                          {sector.tvl}
+                        <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: noData ? 0.2 : 0.45, marginTop: 5 }}>
+                          {noData ? "—" : sector.tvl}
                         </div>
                       </div>
                     );

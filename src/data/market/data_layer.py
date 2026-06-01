@@ -347,7 +347,7 @@ async def get_defi_overview() -> dict:
         staking_tvl, staking_change = _sector_tvl_change({"liquid staking", "staking", "lst"})
         oracle_tvl, oracle_change   = _sector_tvl_change({"oracle"})
         gaming_tvl, gaming_change   = _sector_tvl_change({"gaming", "gamefi", "nft marketplace"})
-        dex_tvl, dex_change         = _sector_tvl_change({"dexes", "dex", "amm"})
+        dex_tvl, dex_change         = _sector_tvl_change({"dexes", "dex", "amm", "dex aggregator", "aggregator"})
         lending_tvl, lending_change = _sector_tvl_change({"lending", "cdp"})
 
         l2_change_24h = _l2_change(all_protos) if all_protos else 0.0

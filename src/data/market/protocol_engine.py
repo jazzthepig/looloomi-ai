@@ -293,8 +293,19 @@ async def _fetch_defillama_tvl(slug: str) -> dict | None:
                 if tvl_7d_ago and tvl_30d_ago:
                     break
 
-            change_7d = ((total_tvl - tvl_7d_ago) / tvl_7d_ago * 100) if tvl_7d_ago and tvl_7d_ago > 0 else 0
-            change_30d = ((total_tvl - tvl_30d_ago) / tvl_30d_ago * 100) if tvl_30d_ago and tvl_30d_ago > 0 else 0
+            # Cap 7d/30d changes — tiny denominators produce astronomical % values
+            # (e.g. Credix going from $1K to $10M = 1,000,000%). Cap at ±9999%.
+            MIN_DENOM_TVL = 100_000  # $100K min denominator to produce a meaningful %
+            if tvl_7d_ago and tvl_7d_ago >= MIN_DENOM_TVL:
+                change_7d = (total_tvl - tvl_7d_ago) / tvl_7d_ago * 100
+                change_7d = max(-999.9, min(9999.9, change_7d))
+            else:
+                change_7d = 0  # not enough history to compute a meaningful 7d change
+            if tvl_30d_ago and tvl_30d_ago >= MIN_DENOM_TVL:
+                change_30d = (total_tvl - tvl_30d_ago) / tvl_30d_ago * 100
+                change_30d = max(-999.9, min(9999.9, change_30d))
+            else:
+                change_30d = 0
 
             result = {
                 "tvl": total_tvl,
