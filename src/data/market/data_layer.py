@@ -296,8 +296,9 @@ async def get_defi_overview() -> dict:
 
         # ── L2 TVL (Arbitrum, Optimism, Base, zkSync, Scroll, Starknet, Linea, Mantle) ──
         L2_CHAINS = {
-            "arbitrum", "optimism", "base", "zksync era", "scroll",
-            "starknet", "linea", "mantle", "blast", "mode", "manta", "taiko",
+            "arbitrum", "optimism", "op mainnet", "base", "zksync era", "zksync",
+            "scroll", "starknet", "linea", "mantle", "blast", "mode", "manta", "taiko",
+            "unichain", "polygon zkevm", "metis", "loopring", "immutablex",
         }
         l2_tvl = 0.0
         chains_data = []

@@ -14,12 +14,12 @@ export const FONTS = {
 
 export const T = {
   // ── Backgrounds — midnight navy (vision.html exact) ──────────────────
-  void:       "#010812",        // absolute void — nav overlay
-  deep:       "#030f2a",        // page background
-  surface:    "#071a4a",        // card / elevated surface
-  raised:     "#0d2255",        // inner card raised
-  card:       "#0f2860",        // deepest card
-  cardHover:  "#122e70",
+  void:       "#020208",        // absolute void — page base
+  deep:       "#020208",        // page background (Turrell × ONDO void-black)
+  surface:    "#06091a",        // card / elevated surface
+  raised:     "#0a1030",        // inner card raised
+  card:       "#0d1438",        // deepest card
+  cardHover:  "#101840",
   overlay:    "rgba(1,8,18,0.96)",
 
   // ── Borders — royal blue / indigo tint ───────────────────────────────
