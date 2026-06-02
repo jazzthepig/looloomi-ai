@@ -364,87 +364,105 @@ def _score_protocol(proto: dict, tvl_data: dict | None, category_stats: dict) ->
     live_tvl = tvl_data is not None
 
     # ── F pillar (Fundamental): TVL scale + audit + age ──────────────────
-    # TVL score: log scale, max 30 at $10B+
+    # TVL score: log scale, genuinely differentiated
+    # $1M→5pts, $10M→9pts, $100M→13pts, $1B→17pts, $10B→21pts, hard cap 25
     if tvl > 0:
-        tvl_pts = min(30, max(0, int(math.log10(max(tvl, 1)) * 4 - 12)))
+        tvl_pts = min(25, max(0, int(math.log10(max(tvl, 1)) * 3.5 - 16.5)))
     else:
         tvl_pts = 0
 
-    # Audit quality (0-10 input → 0-15 points)
-    audit_pts = int(proto.get("audit_score", 5) * 1.5)
+    # Audit quality: 0-10 input → 0-10 points (no amplification)
+    audit_pts = min(10, proto.get("audit_score", 5))
 
-    # Protocol age maturity (months → points, max 15)
+    # Protocol age maturity: genuine differentiation; max 15 at 5+ years
     age = proto.get("age_months", 0)
     age_pts = min(15, int(age / 4))
 
-    # APY contribution (yield-bearing protocols get F boost)
+    # APY: only meaningful contribution for yield protocols, narrower boost
     apy = proto.get("base_apy", 0)
-    apy_pts = min(10, int(apy * 0.8)) if apy > 0 else 0
+    apy_pts = min(5, int(apy * 0.4)) if apy > 0 else 0
 
     f_score = min(40, tvl_pts + audit_pts + age_pts + apy_pts)
 
-    # ── M pillar (Momentum): TVL change direction ────────────────────────
-    m_7d = min(15, max(-15, int(chg_7d * 0.5)))
-    m_30d = min(10, max(-10, int(chg_30d * 0.2)))
-    m_base = 10 if tvl > 1e9 else 5 if tvl > 1e8 else 0
-    m_score = max(0, min(30, m_base + m_7d + m_30d))
+    # ── M pillar (Momentum): pure TVL momentum, no free size bonus ───────
+    # m_base removed — large protocols should NOT get free M points
+    m_7d  = min(20, max(-20, int(chg_7d  * 0.8)))  # ±20 from 7d
+    m_30d = min(10, max(-10, int(chg_30d * 0.3)))  # ±10 from 30d
+    m_score = max(0, min(30, 15 + m_7d + m_30d))   # neutral=15, earned via momentum
 
-    # ── O pillar (On-chain / Risk): audit + age + TVL stability ──────────
-    audit_risk = proto.get("audit_score", 5) * 2  # 0-20
-    # TVL stability: penalize large drawdowns
-    stability = 10
-    if chg_7d < -15:
+    # ── O pillar (On-chain / Risk): audit quality + TVL stability ────────
+    # audit_risk: 0-10 input → 0-15 pts (was inflated to 0-20)
+    audit_risk = min(15, int(proto.get("audit_score", 5) * 1.5))
+    # TVL stability: start from 5 (not 10) to increase sensitivity
+    stability = 5
+    if chg_7d >= 0:
+        stability += 3   # positive flow = healthier
+    if chg_7d < -10:
         stability -= 5
-    if chg_30d < -30:
+    if chg_30d < -20:
         stability -= 5
     # Age maturity for risk
     age_risk = min(10, int(age / 6))
     o_score = min(30, max(0, audit_risk + stability + age_risk))
 
-    # ── S pillar (Sentiment): TVL growth = positive market perception ────
-    s_growth = 5 if chg_7d > 5 else 0
-    s_scale = min(10, int(math.log10(max(tvl, 1)) * 1.5 - 5)) if tvl > 0 else 0
-    s_category = 5 if "RWA" in cat else 3  # RWA narrative premium 2026
-    s_score = max(0, min(20, s_growth + s_scale + s_category))
+    # ── S pillar (Sentiment): momentum signal + category narrative ────────
+    # Scale tiers: 0 for flat, meaningful for genuine TVL growth
+    if chg_7d > 15:
+        s_growth = 8
+    elif chg_7d > 5:
+        s_growth = 5
+    elif chg_7d > 0:
+        s_growth = 2
+    elif chg_7d < -10:
+        s_growth = -4
+    else:
+        s_growth = 0
+    # TVL scale: compressed range to avoid dominating
+    s_scale = min(6, max(0, int(math.log10(max(tvl, 1)) * 1.0 - 6))) if tvl > 0 else 0
+    s_category = 4 if "RWA" in cat else 2  # RWA narrative premium 2026
+    s_score = max(0, min(20, 5 + s_growth + s_scale + s_category))
 
-    # ── A pillar (Alpha): outperformance vs category average ─────────────
+    # ── A pillar (Alpha): outperformance vs category median — no free base ─
     cat_avg_chg = category_stats.get(cat, {}).get("avg_change_7d", 0)
     alpha_vs_peers = chg_7d - cat_avg_chg
-    a_outperform = min(10, max(-10, int(alpha_vs_peers * 0.5)))
-    # Small protocols with high momentum = alpha opportunity
-    a_size_bonus = 5 if tvl < 5e8 and chg_7d > 10 else 0
-    a_score = max(0, min(20, 5 + a_outperform + a_size_bonus))
+    a_outperform = min(12, max(-12, int(alpha_vs_peers * 0.7)))
+    # Emerging protocol with strong momentum = asymmetric alpha opportunity
+    a_size_bonus = 6 if tvl < 3e8 and chg_7d > 12 else 0
+    # No free +5 baseline — alpha must be earned vs peers
+    a_score = max(0, min(20, 8 + a_outperform + a_size_bonus))
 
     # ── Composite ────────────────────────────────────────────────────────
     total = f_score + m_score + o_score + s_score + a_score
-    # Normalize to 0-100
+    # Normalize to 0-100 (max_possible still 140)
     max_possible = 40 + 30 + 30 + 20 + 20  # = 140
     normalized = round(total / max_possible * 100, 1)
 
-    # Grade (protocol-specific thresholds)
-    if normalized >= 75:
+    # Grade — unified CIS absolute thresholds (matches cis_v4_engine.py)
+    if normalized >= 85:
         grade = "A+"
-    elif normalized >= 65:
+    elif normalized >= 75:
         grade = "A"
-    elif normalized >= 55:
+    elif normalized >= 65:
         grade = "B+"
-    elif normalized >= 45:
+    elif normalized >= 55:
         grade = "B"
-    elif normalized >= 35:
+    elif normalized >= 45:
         grade = "C+"
-    elif normalized >= 25:
+    elif normalized >= 35:
         grade = "C"
-    elif normalized >= 15:
+    elif normalized >= 25:
         grade = "D"
     else:
         grade = "F"
 
     # Signal — compliance-safe positioning language (no buy/sell)
-    if normalized >= 65 and chg_7d > 0:
+    if normalized >= 70 and chg_7d > 0:
+        signal = "STRONG OUTPERFORM"
+    elif normalized >= 55 and chg_7d > -2:
         signal = "OUTPERFORM"
-    elif normalized >= 50:
+    elif normalized >= 40:
         signal = "NEUTRAL"
-    elif normalized >= 35:
+    elif normalized >= 28:
         signal = "UNDERPERFORM"
     else:
         signal = "UNDERWEIGHT"
