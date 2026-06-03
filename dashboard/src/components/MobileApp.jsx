@@ -676,7 +676,7 @@ function MobileRankings({ universe, loading }) {
                                 </span>
                               </div>
                               <div style={{
-                                height: 3, background: "rgba(0,0,0,0.06)",
+                                height: 3, background: "rgba(255,255,255,0.08)",
                                 borderRadius: 2,
                               }}>
                                 <div style={{
@@ -912,7 +912,7 @@ export default function MobileApp() {
 
   return (
     <div style={{
-      background: "#FAFBFC",
+      background: T.void,
       minHeight: "100dvh",
       display: "flex",
       flexDirection: "column",
@@ -1050,7 +1050,7 @@ export default function MobileApp() {
           50%       { opacity: 0.4; }
         }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        body { background: #FAFBFC; }
+        body { background: #020208; }
       `}</style>
     </div>
   );
