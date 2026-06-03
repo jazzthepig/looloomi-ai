@@ -10,7 +10,7 @@ import os, json, time
 from datetime import datetime
 
 import logging
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Response
 
 from src.api.store import redis_set_key, redis_get_key
 
@@ -149,7 +149,7 @@ async def receive_macro_brief(payload: dict, x_internal_token: str = Header(None
 # ── Public read (with inline auto-generation fallback) ───────────────────────
 
 @router.get("/api/v1/macro/brief")
-async def get_macro_brief():
+async def get_macro_brief(response: Response):
     """
     Returns the latest macro brief from Redis.
     If empty or stale >1h, auto-generates a data-driven brief from live macro-pulse
@@ -164,6 +164,7 @@ async def get_macro_brief():
         source = data.get("source", "mac_mini")
         # Always serve Mac Mini LLM briefs until they expire (12h TTL)
         if source == "mac_mini" or age < _AUTO_STALE:
+            response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"
             return {
                 "brief":        data.get("brief"),
                 "market_data":  data.get("market_data"),
