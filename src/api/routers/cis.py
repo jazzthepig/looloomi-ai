@@ -895,6 +895,7 @@ async def get_cis_history_batch(
     symbols: str,
     days: int = Query(default=30, ge=1, le=365),
     include_historical: bool = Query(default=True),
+    response: Response = None,
 ):
     """
     Batch CIS history — single request for up to 60 symbols.
@@ -934,6 +935,8 @@ async def get_cis_history_batch(
 
     result = {"status": "success", "days": days, "count": len(data), "data": data}
     await redis_set_key(cache_key, result, ttl=120)
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=300"
     return result
 
 
@@ -2586,7 +2589,7 @@ _GRADE_RANK_STATIC = {"A+": 8, "A": 7, "B+": 6, "B": 5, "C+": 4, "C": 3, "D": 2,
 
 
 @router.get("/api/v1/cis/grade-changes")
-async def get_grade_changes(hours: int = 24):
+async def get_grade_changes(hours: int = 24, response: Response = None):
     """
     Returns assets whose CIS grade changed in the last N hours.
 
@@ -2691,4 +2694,6 @@ async def get_grade_changes(hours: int = 24):
 
     # Cache 15 min — Mac Mini pushes every ~30 min so sub-minute freshness is unnecessary
     await store.redis_set_key(cache_key, result, ttl=900)
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=900, stale-while-revalidate=1800"
     return result

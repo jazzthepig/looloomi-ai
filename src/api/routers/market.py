@@ -103,18 +103,24 @@ async def defi_protocols():
 
 
 @router.get("/api/v1/defi/overview")
-async def defi_overview():
-    return await get_defi_overview()
+async def defi_overview(response: Response):
+    result = await get_defi_overview()
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
+    return result
 
 
 @router.get("/api/v1/defi/dex-volumes")
-async def dex_volumes():
-    return await get_dex_volumes()
+async def dex_volumes(response: Response):
+    result = await get_dex_volumes()
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
+    return result
 
 
 @router.get("/api/v1/defi/revenues")
-async def protocol_revenues():
-    return await get_protocol_revenues()
+async def protocol_revenues(response: Response):
+    result = await get_protocol_revenues()
+    response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    return result
 
 
 @router.get("/api/v1/defi/stablecoins")
@@ -1347,15 +1353,16 @@ async def _fetch_macro_signals() -> list:
 # ── v4.2: Paid API endpoints ──────────────────────────────────────────────────
 
 @router.get("/api/v1/market/economic-indicators")
-async def economic_indicators():
+async def economic_indicators(response: Response):
     """
     Multi-country macro dashboard powered by EODHD.
     Returns CPI, GDP growth, interest rate, unemployment, PMI for US, HK, CN.
     Derives macro regime from real economic data (not price action).
-    Cache: 4h Redis TTL.
+    Cache: 4h Redis TTL; browser cache 30min.
     """
     try:
         data = await get_economic_dashboard()
+        response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=14400"
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Economic dashboard error: {e}")
