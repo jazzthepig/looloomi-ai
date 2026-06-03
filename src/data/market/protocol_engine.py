@@ -468,7 +468,9 @@ def _score_protocol(proto: dict, tvl_data: dict | None, category_stats: dict) ->
         signal = "UNDERWEIGHT"
 
     # Recommended weight (basis points of portfolio)
-    if signal == "OUTPERFORM":
+    if signal == "STRONG OUTPERFORM":
+        rec_weight = min(1000, max(400, int(normalized * 11)))
+    elif signal == "OUTPERFORM":
         rec_weight = min(800, max(200, int(normalized * 8)))
     elif signal == "NEUTRAL":
         rec_weight = min(500, max(100, int(normalized * 4)))
