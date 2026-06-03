@@ -1092,12 +1092,14 @@ def calculate_cis_score(
     regime: str = "Neutral",                      # v4.2: macro regime for regime-aware A pillar
     _deriv_map: Optional[dict] = None,            # v4.3: derivatives funding rate + OI (internal)
     _trend_map: Optional[dict] = None,            # v4.3: trending rank for S-pillar boost (internal)
+    narrative_modifier: float = 0.0,              # NMA-driven S-pillar adjustment from narrative engine
 ) -> Dict[str, Any]:
     """
     CIS v4.2 — Continuous scoring functions.
     All pillars use log-scale or linear interpolation for genuine differentiation.
     v4.2 additions: CG Pro dev_activity_score in F pillar for tech assets;
     EODHD PE/revenue scoring in F pillar for US Equity.
+    v4.x: NMA narrative_modifier applied to S pillar (narrative engine injection).
     """
     market_cap = market_data.get("market_cap", 0) if market_data else 0
     volume_24h = market_data.get("volume_24h", 0) if market_data else 0
@@ -1556,6 +1558,16 @@ def calculate_cis_score(
         s_components["trending_boost"] = 0
 
     s_score = round(max(0, min(100, baseline + divergence_total + dev_score + vol_regime_score + beta_score + _trend_boost)), 1)
+    # v4.x: NMA narrative modifier injection — applied after base s_score
+    # narrative_modifier: +0.10 to +0.15 (STRONG_NARRATIVE, NMA>65)
+    #                    -0.05 to -0.10 (NARRATIVE_FADE, NMA<40)
+    if narrative_modifier != 0.0:
+        s_score = round(max(0, min(100, s_score * (1 + narrative_modifier))), 1)
+        s_components["narrative_modifier"] = narrative_modifier
+        s_components["nma_injected"] = True
+    else:
+        s_components["narrative_modifier"] = 0.0
+        s_components["nma_injected"] = False
 
     # ── A — Alpha Independence ───────────────────────────────────────
     # benchmark divergence (-20 to +40) + class independence (0-20) + size efficiency (-5 to +20) + correlation (-15 to 0)
@@ -1979,6 +1991,47 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             await asyncio.gather(*tasks, return_exceptions=True)
         return _results
 
+    async def _fetch_narrative_signals() -> dict:
+        """
+        v4.x: Pre-fetch NMA narrative signals for crypto assets.
+        Feeds S-pillar modifier injection in calculate_cis_score().
+        Falls back gracefully if narrative module is unavailable.
+        """
+        try:
+            from data.narrative.narrative_engine import batch_narrative_signals
+            from data.narrative import social_collector, orderflow_collector
+        except ImportError:
+            try:
+                from src.data.narrative.narrative_engine import batch_narrative_signals
+                from src.data.narrative import social_collector, orderflow_collector
+            except ImportError:
+                _logger.debug("[CIS·NMA] narrative module unavailable — skipping")
+                return {}
+
+        _crypto_ids = ["BTC","ETH","SOL","BNB","XRP","ADA","AVAX","DOT","NEAR","SUI","APT","HYPE",
+                       "ARB","OP","LINK","UNI","AAVE","MKR","LDO","PENDLE","INJ","TIA","ONDO"]
+        try:
+            signals = await batch_narrative_signals(_crypto_ids, social_collector, orderflow_collector)
+            # Build {symbol: nma_score} map for calculate_cis_score injection
+            return {sym: sig.nma_score for sym, sig in signals.items()}
+        except Exception as e:
+            _logger.warning(f"[CIS·NMA] narrative batch failed: {e}")
+            return {}
+
+    # v4.x: NMA modifier lookup — maps NMA score → S-pillar modifier
+    def _get_narrative_modifier(symbol: str, nma_map: dict) -> float:
+        """Compute S-pillar modifier from NMA score. 0.0 if NMA unavailable."""
+        nma = nma_map.get(symbol)
+        if nma is None:
+            return 0.0
+        if nma >= 65:
+            modifier = 0.10 + (nma - 65) / (80 - 65) * 0.05
+            return round(min(0.15, modifier), 3)
+        elif nma <= 40:
+            modifier = -0.05 - (40 - nma) / (40 - 25) * 0.05
+            return round(max(-0.10, modifier), 3)
+        return 0.0
+
     # Fetch all data concurrently — including CG Pro derivatives + trending for pillar wiring
     try:
         from src.data.market.data_layer import get_derivatives_map, get_trending_map
@@ -1996,6 +2049,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         get_derivatives_map(),     # v4.3: funding rates + OI → O-pillar adjustment
         get_trending_map(),        # v4.3: trending rank → S-pillar boost
         _refresh_ic_multipliers(), # Simons: IC-based pillar weight feedback
+        # v4.x: NMA narrative signals for S-pillar injection
+        _fetch_narrative_signals() if not is_tradfi else asyncio.sleep(0),
         return_exceptions=True,
     )
     # Safe unpack — any failed coroutine returns its exception, not a crash
@@ -2013,8 +2068,10 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     _trend_map     = _safe(_raw[8], {})
     _ic_mult       = _safe(_raw[9], {"F": 1.0, "M": 1.0, "O": 1.0, "S": 1.0, "A": 1.0})
 
+    _nma_map       = _safe(_raw[10], {})   # v4.x: NMA narrative scores {symbol: nma_score}
+
     for i, name in enumerate(["binance","cg_markets","defillama","fng","github",
-                               "cg_dev","eodhd","derivatives","trending","ic_mult"]):
+                               "cg_dev","eodhd","derivatives","trending","ic_mult","nma"]):
         if isinstance(_raw[i], Exception):
             _logger.warning(f"[CIS] data source '{name}' failed: {_raw[i]}")
 
@@ -2198,6 +2255,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 regime=regime,
                 _deriv_map=_deriv_map,
                 _trend_map=_trend_map,
+                narrative_modifier=_get_narrative_modifier(asset_id, _nma_map),
             )
         except Exception as e:
             _logger.warning(f"[CIS] score calculation failed for {asset_id} ({asset_class}): {e}")

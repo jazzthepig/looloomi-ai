@@ -1,7 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { track } from "./main.jsx";
-// MarketDashboard removed (Q5 — cut market tab, reduces infra cost)
-// File can be deleted: dashboard/src/components/MarketDashboard.jsx
 import IntelligencePage from "./components/IntelligencePage";
 import WalletConnect from "./components/WalletConnect";
 import SiteNav from "./components/SiteNav";

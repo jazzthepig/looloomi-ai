@@ -220,6 +220,60 @@ async def get_ohlcv(symbol: str, interval: str = "1h", limit: int = 100) -> list
         return [{"error": str(e)}]
 
 
+async def get_orderbook_imbalance(symbol: str, limit: int = 20) -> dict:
+    """
+    Compute orderbook depth imbalance for a symbol.
+    bid_imbalance = (bid_vol - ask_vol) / (bid_vol + ask_vol)
+    Range: -1.0 (all asks) to +1.0 (all bids).
+
+    Data source: Binance Vision /api/v3/depth
+    Cache TTL: 300s (5 minutes)
+    """
+    key = f"ob_imbalance:{symbol.upper()}:{limit}"
+    cached = _cache_get(key, ttl=300)
+    if cached:
+        return cached
+
+    ticker = SYMBOL_MAP.get(symbol.upper(), f"{symbol.upper()}USDT")
+    try:
+        client = _get_binance_client()
+        r = await client.get(
+            f"{BINANCE_BASE}/depth",
+            params={"symbol": ticker, "limit": limit},
+        )
+        r.raise_for_status()
+        data = r.json()
+
+        bids = data.get("bids", [])
+        asks = data.get("asks", [])
+
+        bid_vol = sum(float(b[1]) for b in bids)
+        ask_vol = sum(float(a[1]) for a in asks)
+        total   = bid_vol + ask_vol
+
+        if total == 0:
+            imbalance = 0.0
+        else:
+            imbalance = (bid_vol - ask_vol) / total
+
+        result = {
+            "symbol":       symbol.upper(),
+            "bid_imbalance": round(imbalance, 4),
+            "bid_vol":      round(bid_vol, 2),
+            "ask_vol":      round(ask_vol, 2),
+            "total_vol":    round(total, 2),
+            "best_bid":     float(bids[0][0]) if bids else None,
+            "best_ask":     float(asks[0][0]) if asks else None,
+            "spread":       round(float(asks[0][0]) - float(bids[0][0]), 8) if (bids and asks) else None,
+            "n_levels":     limit,
+            "timestamp":    datetime.now(timezone.utc).isoformat(),
+        }
+        return _cache_set(key, result)
+
+    except Exception as e:
+        return {"symbol": symbol.upper(), "error": str(e)}
+
+
 async def get_top_gainers_losers() -> dict:
     """Get top 5 gainers and losers from Binance USDT pairs."""
     key = "gainers_losers"

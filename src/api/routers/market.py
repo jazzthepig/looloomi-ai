@@ -200,7 +200,7 @@ def _mk(base: dict, pi: dict, logic: str, horizon: str = "24H") -> dict:
 
 
 @router.get("/api/v1/signals")
-async def get_signals(background_tasks: BackgroundTasks):
+async def get_signals(background_tasks: BackgroundTasks, response: Response = None):
     """
     Market signal feed v3.0 — pillar-aware vector signals.
     Each signal carries: pillar_impact (F/M/O/S/A), logic (causal chain),
@@ -1314,6 +1314,8 @@ async def get_signals(background_tasks: BackgroundTasks):
         -x.get("signal_strength", 0),
         _ts_sort(x),
     ))
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=300"
     return {
         "status": "success",
         "version": "3.2.0",
@@ -1442,11 +1444,11 @@ async def exchange_concentration(coin_id: str):
 
 
 @router.get("/api/v1/market/earnings-calendar")
-async def earnings_calendar(symbols: str = "AAPL,MSFT,NVDA,GOOGL,AMZN,META,TSLA", days_ahead: int = 30):
+async def earnings_calendar(response: Response, symbols: str = "AAPL,MSFT,NVDA,GOOGL,AMZN,META,TSLA", days_ahead: int = 30):
     """
     Upcoming earnings dates for US Equity symbols via EODHD.
     Returns report_date, estimate EPS, period end, and days_until for each symbol.
-    Cache: 4h Redis TTL.
+    Cache: 4h Redis TTL; browser 1h.
 
     Example: /api/v1/market/earnings-calendar?symbols=AAPL,NVDA&days_ahead=14
     """
@@ -1454,6 +1456,7 @@ async def earnings_calendar(symbols: str = "AAPL,MSFT,NVDA,GOOGL,AMZN,META,TSLA"
     days_ahead = max(1, min(90, days_ahead))
     try:
         data = await get_eodhd_earnings_calendar(symbol_list, days_ahead)
+        response.headers["Cache-Control"] = "public, max-age=3600, stale-while-revalidate=14400"
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Earnings calendar error: {e}")
