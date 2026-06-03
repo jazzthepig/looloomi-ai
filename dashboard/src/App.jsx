@@ -3,20 +3,20 @@ import { track } from "./main.jsx";
 // MarketDashboard removed (Q5 — cut market tab, reduces infra cost)
 // File can be deleted: dashboard/src/components/MarketDashboard.jsx
 import IntelligencePage from "./components/IntelligencePage";
-import CISLeaderboard from "./components/CISLeaderboard";
 import WalletConnect from "./components/WalletConnect";
 import SiteNav from "./components/SiteNav";
 import { T, FONTS } from "./tokens";
 
-/* ── Lazy-loaded secondary views (below fold / conditional) ── */
-const VaultPage            = lazy(() => import("./components/VaultPage"));
-const ApiKeysPage          = lazy(() => import("./components/ApiKeysPage"));
-const ProtocolIntelligence = lazy(() => import("./components/ProtocolIntelligence"));
-const MobileApp            = lazy(() => import("./components/MobileApp"));
-const AssetRadar           = lazy(() => import("./components/AssetRadar"));
-const QuantMonitor         = lazy(() => import("./components/QuantMonitor"));
-const MyPortfolio          = lazy(() => import("./components/MyPortfolio"));
-const SignalFeed           = lazy(() => import("./components/SignalFeed"));
+/* ── Lazy-loaded views (below fold / conditional / heavy) ── */
+const CISLeaderboard         = lazy(() => import("./components/CISLeaderboard"));
+const VaultPage              = lazy(() => import("./components/VaultPage"));
+const ApiKeysPage            = lazy(() => import("./components/ApiKeysPage"));
+const ProtocolIntelligence   = lazy(() => import("./components/ProtocolIntelligence"));
+const MobileApp              = lazy(() => import("./components/MobileApp"));
+const AssetRadar             = lazy(() => import("./components/AssetRadar"));
+const QuantMonitor           = lazy(() => import("./components/QuantMonitor"));
+const MyPortfolio            = lazy(() => import("./components/MyPortfolio"));
+const SignalFeed             = lazy(() => import("./components/SignalFeed"));
 const StrategiesPage         = lazy(() => import("./components/StrategiesPage"));
 const MultiFactorStrategies  = lazy(() => import("./components/MultiFactorStrategies"));
 const CISAssetDetail         = lazy(() => import("./components/CISAssetDetail"));
@@ -1025,12 +1025,14 @@ function CISContent({ onUniverseLoad, onNavigate }) {
       {/* Section Header */}
       <SectionLabel label="CIS" sub="Intelligence Score" stats={cisStats} />
 
-      {/* Leaderboard — owns the fetch, fires onDataLoad when done */}
+      {/* Leaderboard — lazy-loaded; owns the fetch, fires onDataLoad when done */}
       <div className="lm-card" style={{ overflow: "hidden" }}>
-        <CISLeaderboard
-          onDataLoad={handleDataLoad}
-          onAssetClick={onNavigate ? (sym) => onNavigate("cis.asset", sym) : null}
-        />
+        <Suspense fallback={<SectionLoader label="LOADING LEADERBOARD…" />}>
+          <CISLeaderboard
+            onDataLoad={handleDataLoad}
+            onAssetClick={onNavigate ? (sym) => onNavigate("cis.asset", sym) : null}
+          />
+        </Suspense>
       </div>
 
       {/* Cross-Asset Overview — zero additional fetches */}

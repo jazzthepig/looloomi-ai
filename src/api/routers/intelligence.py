@@ -2,7 +2,7 @@
 Intelligence router — macro events, VC funding, token unlocks, protocol intelligence
 Endpoints: /api/v1/intelligence/*, /api/v1/vc/*, /api/v1/protocols/*
 """
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Response
 from datetime import datetime
 import logging
 import time
@@ -25,7 +25,7 @@ _MACRO_TTL = 3600
 
 
 @router.get("/api/v1/intelligence/macro-events")
-async def get_macro_events():
+async def get_macro_events(response: Response):
     """
     Fetch latest macro events from RSS feeds (CoinDesk, The Block, Decrypt, CoinTelegraph)
     + DeFiLlama Raises. Auto-classified: REGULATORY/INSTITUTIONAL/MARKET/TECH.
@@ -34,6 +34,7 @@ async def get_macro_events():
     now = time.time()
     # Serve from cache if fresh
     if _macro_cache["data"] and (now - _macro_cache["at"]) < _MACRO_TTL:
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
         return {"events": _macro_cache["data"], "cached": True, "count": len(_macro_cache["data"])}
 
     try:
@@ -43,17 +44,19 @@ async def get_macro_events():
         if events:
             _macro_cache["data"] = events
             _macro_cache["at"] = now
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
         return {"events": events, "cached": False, "count": len(events)}
     except Exception as e:
         _logger.error(f"Macro events fetch failed: {e}", exc_info=True)
         # Return stale cache or empty — never 500
+        response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=600"
         return {"events": _macro_cache["data"] or [], "cached": True, "error": "fetch_failed", "count": len(_macro_cache["data"])}
 
 
 # ── VC Deal Flow ──────────────────────────────────────────────────────────────
 
 @router.get("/api/v1/vc/funding-rounds")
-async def get_funding_rounds(limit: int = 20):
+async def get_funding_rounds(response: Response, limit: int = 20):
     """
     Recent crypto VC funding rounds via DeFiLlama /raises.
     Sorted by date desc, last 180 days, ≥$100K raises only.
@@ -62,6 +65,7 @@ async def get_funding_rounds(limit: int = 20):
     try:
         raises = await get_vc_raises(limit)
         data_status = "ok" if raises else "no_data"
+        response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=3600"
         return {"timestamp": datetime.now().isoformat(), "data": raises, "source": "defillama", "data_status": data_status}
     except Exception as e:
         _logger.error(f"Error in {__name__}: {e}", exc_info=True)
@@ -69,7 +73,7 @@ async def get_funding_rounds(limit: int = 20):
 
 
 @router.get("/api/v1/vc/portfolios")
-async def get_vc_portfolios():
+async def get_vc_portfolios(response: Response):
     """
     VC portfolio performance via CoinGecko categories.
     Returns ~16 major firms with market_cap, 24h change, volume, top_3_coins.
@@ -81,6 +85,7 @@ async def get_vc_portfolios():
     try:
         data = await get_cg_vc_portfolios()
         data_status = "ok" if data else "no_data"
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
         return {"timestamp": datetime.now().isoformat(), "data": data, "count": len(data),
                 "data_status": data_status}
     except Exception as e:
@@ -90,7 +95,7 @@ async def get_vc_portfolios():
 
 
 @router.get("/api/v1/vc/unlocks")
-async def get_upcoming_unlocks(days: int = 30):
+async def get_upcoming_unlocks(response: Response, days: int = 30):
     """
     Upcoming token unlocks from DeFiLlama /emissions.
     Returns events within `days` days, sorted by unlock date.
@@ -99,6 +104,7 @@ async def get_upcoming_unlocks(days: int = 30):
     try:
         data = await get_token_unlocks(days_ahead=days)
         data_status = "ok" if data else "no_data"
+        response.headers["Cache-Control"] = "public, max-age=3600, stale-while-revalidate=7200"
         return {"timestamp": datetime.now().isoformat(), "data": data, "source": "defillama", "data_status": data_status}
     except Exception as e:
         _logger.error(f"Token unlocks error: {e}", exc_info=True)
@@ -144,6 +150,7 @@ async def get_vc_overlap():
 
 @router.get("/api/v1/protocols/universe")
 async def get_protocols(
+    response: Response,
     category: str | None = Query(None, description="Filter by category (e.g. 'RWA', 'DeFi - Lending')"),
     min_grade: str | None = Query(None, description="Minimum CIS grade (A+, A, B+, B, C+, C, D, F)"),
 ):
@@ -154,7 +161,9 @@ async def get_protocols(
     Agent-consumable: query ?category=RWA&min_grade=B for filtered results.
     """
     try:
-        return await get_protocol_universe(category=category, min_grade=min_grade)
+        result = await get_protocol_universe(category=category, min_grade=min_grade)
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
+        return result
     except Exception as e:
         _logger.error(f"Protocol universe error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Protocol scoring failed")
