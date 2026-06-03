@@ -254,8 +254,8 @@ function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }
       {/* ── Macro Brief ────────────────────────────────────────────────────── */}
       {macro?.brief && (
         <div style={{
-          background: "#FFFFFF",
-          border: `1px solid ${T.border}`,
+          background: T.surface,
+          border: `1px solid ${T.borderMd}`,
           borderLeft: `2px solid #06B6D4`,
           borderRadius: 10,
           padding: "12px 14px",
@@ -279,7 +279,7 @@ function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }
           </div>
           <div style={{
             fontFamily: FONTS.body, fontSize: 12, lineHeight: 1.65,
-            color: T.t1, opacity: 0.85,
+            color: T.t2,
           }}>
             {briefSnippet}
           </div>
