@@ -12,7 +12,7 @@ Endpoints:
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Response
 from fastapi.responses import JSONResponse
 
 _logger = logging.getLogger(__name__)
@@ -236,7 +236,7 @@ async def get_embeddings(
 # ── /api/v1/market/funding-rates ─────────────────────────────────────────────
 
 @router.get("/api/v1/market/funding-rates")
-async def get_funding_rates():
+async def get_funding_rates(response: Response = None):
     """
     CoinGecko Pro derivatives: funding rates + OI for all CIS perpetual assets.
     Aggregated by OI-weighted average across all exchanges per symbol.
@@ -284,6 +284,8 @@ async def get_funding_rates():
     # Sort by abs(funding_rate) descending — extreme rates first
     rows.sort(key=lambda x: abs(x["funding_rate_8h"]), reverse=True)
 
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
     return {
         "count":   len(rows),
         "assets":  rows,
