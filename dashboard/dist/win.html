@@ -1,0 +1,1092 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Exo+2:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <title>How to Win — CometCloud AI</title>
+    <meta name="description" content="CometCloud solves the intelligence gap between institutional-grade analysis and AI-native execution. CIS scoring, regime detection, MCP integration." />
+    <meta property="og:title" content="How to Win — CometCloud AI Intelligence" />
+    <meta property="og:description" content="The intelligence layer for AI agents and institutional traders. 84 assets. 5-pillar CIS scoring. MCP-native. Deploy in minutes." />
+    <meta property="og:url" content="https://looloomi.ai/win.html" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --void:    #020208;
+        --surface: #06091a;
+        --raised:  #0a1030;
+        --card:    #0d1438;
+        --border:  rgba(37,99,235,0.14);
+        --borderm: rgba(37,99,235,0.22);
+        --t1:      #f0f4ff;
+        --t2:      #c7d2fe;
+        --t3:      rgba(199,210,254,0.45);
+        --t4:      rgba(199,210,254,0.20);
+        --gold:    #d4a843;
+        --green:   #00D98A;
+        --red:     #FF3D5A;
+        --blue:    #2563eb;
+        --cyan:    #06b6d4;
+        --indigo:  #6366f1;
+        --amber:   #f59e0b;
+        --f-brand: 'Syne', system-ui, sans-serif;
+        --f-body:  'Exo 2', system-ui, sans-serif;
+        --f-mono:  'JetBrains Mono', monospace;
+      }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        background: var(--void);
+        color: var(--t1);
+        font-family: var(--f-body);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+      }
+
+      /* ── Nav ── */
+      nav {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+        background: rgba(2,2,8,0.88);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 40px; height: 56px;
+      }
+      .nav-logo {
+        font-family: var(--f-brand); font-size: 14px; font-weight: 800;
+        letter-spacing: 0.16em; color: var(--gold); text-decoration: none;
+      }
+      .nav-links { display: flex; gap: 24px; align-items: center; }
+      .nav-links a {
+        font-size: 11px; letter-spacing: 0.08em; color: var(--t3);
+        text-decoration: none; font-family: var(--f-brand); font-weight: 700;
+        text-transform: uppercase; transition: color 0.2s;
+      }
+      .nav-links a:hover { color: var(--t1); }
+      .nav-cta {
+        background: var(--blue); color: white !important; padding: 6px 16px;
+        border-radius: 4px; font-size: 10px !important;
+      }
+      .nav-cta:hover { background: #1d4ed8 !important; color: white !important; }
+
+      /* ── Layout ── */
+      .page { max-width: 1160px; margin: 0 auto; padding: 0 40px; }
+
+      /* ── Hero ── */
+      .hero {
+        min-height: 100vh; display: flex; flex-direction: column;
+        justify-content: center; position: relative; overflow: hidden;
+        padding-top: 56px;
+      }
+      .hero-glow {
+        position: absolute; pointer-events: none;
+        border-radius: 50%; mix-blend-mode: screen; filter: blur(80px);
+      }
+      .glow-1 { width: 600px; height: 600px; top: -100px; right: -100px; background: radial-gradient(ellipse, rgba(37,99,235,0.12) 0%, transparent 70%); }
+      .glow-2 { width: 400px; height: 400px; bottom: 100px; left: -80px; background: radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%); }
+
+      .hero-eyebrow {
+        font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.16em;
+        color: var(--cyan); text-transform: uppercase; margin-bottom: 24px;
+        display: flex; align-items: center; gap: 10px;
+      }
+      .hero-eyebrow::before {
+        content: ''; width: 24px; height: 1px; background: var(--cyan);
+      }
+
+      h1 {
+        font-family: var(--f-brand); font-size: clamp(36px, 5vw, 72px);
+        font-weight: 800; line-height: 1.08; letter-spacing: -0.03em;
+        color: var(--t1); margin-bottom: 28px;
+      }
+      h1 .accent { color: var(--cyan); }
+      h1 .accent-gold { color: var(--gold); }
+
+      .hero-sub {
+        font-size: 18px; color: var(--t2); line-height: 1.65;
+        max-width: 640px; margin-bottom: 48px; font-weight: 300;
+      }
+
+      .hero-stats {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 1px; background: var(--border);
+        border: 1px solid var(--border); border-radius: 8px;
+        overflow: hidden; margin-bottom: 48px; max-width: 700px;
+      }
+      .stat-cell {
+        background: var(--surface); padding: 18px 20px;
+        text-align: center;
+      }
+      .stat-num {
+        font-family: var(--f-mono); font-size: 22px; font-weight: 500;
+        color: var(--t1); display: block; margin-bottom: 4px;
+      }
+      .stat-label {
+        font-size: 9px; letter-spacing: 0.12em; color: var(--t3);
+        text-transform: uppercase; font-family: var(--f-brand);
+      }
+
+      .cta-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+      .btn-primary {
+        background: var(--blue); color: white; padding: 12px 28px;
+        border-radius: 5px; font-family: var(--f-brand); font-size: 12px;
+        font-weight: 700; letter-spacing: 0.08em; text-decoration: none;
+        text-transform: uppercase; display: inline-block;
+        transition: background 0.2s, transform 0.15s;
+      }
+      .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+      .btn-ghost {
+        color: var(--t2); padding: 12px 28px; border: 1px solid var(--borderm);
+        border-radius: 5px; font-family: var(--f-brand); font-size: 12px;
+        font-weight: 700; letter-spacing: 0.08em; text-decoration: none;
+        text-transform: uppercase; display: inline-block;
+        transition: border-color 0.2s, color 0.2s;
+      }
+      .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+
+      /* ── Section shell ── */
+      section { padding: 96px 0; }
+      section:not(:last-child) { border-bottom: 1px solid var(--border); }
+
+      .section-label {
+        font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.18em;
+        color: var(--t3); text-transform: uppercase; margin-bottom: 16px;
+        display: flex; align-items: center; gap: 10px;
+      }
+      .section-label::before { content: ''; width: 20px; height: 1px; background: var(--t3); }
+
+      h2 {
+        font-family: var(--f-brand); font-size: clamp(28px, 3.5vw, 48px);
+        font-weight: 800; letter-spacing: -0.02em; line-height: 1.12;
+        color: var(--t1); margin-bottom: 20px;
+      }
+      .section-sub {
+        font-size: 16px; color: var(--t2); line-height: 1.7;
+        max-width: 600px; font-weight: 300;
+      }
+
+      /* ── Problem/Gap section ── */
+      .gap-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 16px; margin-top: 52px;
+      }
+      .gap-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 8px; padding: 28px;
+      }
+      .gap-who {
+        font-family: var(--f-mono); font-size: 9px; font-weight: 700;
+        letter-spacing: 0.12em; color: var(--t3); text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+      .gap-title {
+        font-family: var(--f-brand); font-size: 16px; font-weight: 700;
+        color: var(--t1); margin-bottom: 10px;
+      }
+      .gap-desc { font-size: 13px; color: var(--t3); line-height: 1.65; }
+      .gap-card.gap-us {
+        background: linear-gradient(135deg, rgba(6,182,212,0.06) 0%, rgba(37,99,235,0.04) 100%);
+        border-color: rgba(6,182,212,0.25);
+        grid-column: 1 / -1;
+      }
+      .gap-us .gap-title { color: var(--cyan); font-size: 18px; }
+      .gap-us .gap-desc { color: var(--t2); font-size: 14px; }
+
+      /* ── How it works ── */
+      .flow {
+        display: grid; grid-template-columns: repeat(5, 1fr);
+        gap: 0; margin-top: 52px; position: relative;
+      }
+      .flow::before {
+        content: ''; position: absolute;
+        top: 32px; left: 10%; right: 10%; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--indigo), transparent);
+        opacity: 0.4; z-index: 0;
+      }
+      .flow-step { text-align: center; padding: 0 12px; position: relative; z-index: 1; }
+      .flow-icon {
+        width: 64px; height: 64px; border-radius: 50%;
+        background: var(--surface); border: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px; font-size: 22px;
+      }
+      .flow-step.active .flow-icon {
+        border-color: var(--cyan);
+        background: rgba(6,182,212,0.08);
+        box-shadow: 0 0 24px rgba(6,182,212,0.15);
+      }
+      .flow-num {
+        font-family: var(--f-mono); font-size: 8px; letter-spacing: 0.12em;
+        color: var(--t3); text-transform: uppercase; margin-bottom: 6px;
+      }
+      .flow-label {
+        font-family: var(--f-brand); font-size: 13px; font-weight: 700;
+        color: var(--t1); margin-bottom: 8px;
+      }
+      .flow-desc { font-size: 11px; color: var(--t3); line-height: 1.55; }
+
+      /* ── Data stack ── */
+      .data-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 16px; margin-top: 52px;
+      }
+      .data-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 8px; padding: 28px; position: relative; overflow: hidden;
+      }
+      .data-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      }
+      .data-card.dc-local::before  { background: var(--gold); }
+      .data-card.dc-cloud::before  { background: var(--cyan); }
+      .data-card.dc-chain::before  { background: var(--indigo); }
+
+      .data-badge {
+        display: inline-block; font-family: var(--f-mono); font-size: 8px;
+        font-weight: 700; letter-spacing: 0.12em; padding: 2px 8px;
+        border-radius: 3px; margin-bottom: 14px; text-transform: uppercase;
+      }
+      .badge-gold  { background: rgba(212,168,67,0.12); color: var(--gold); border: 1px solid rgba(212,168,67,0.25); }
+      .badge-cyan  { background: rgba(6,182,212,0.10); color: var(--cyan); border: 1px solid rgba(6,182,212,0.25); }
+      .badge-indigo { background: rgba(99,102,241,0.10); color: var(--indigo); border: 1px solid rgba(99,102,241,0.25); }
+
+      .data-title {
+        font-family: var(--f-brand); font-size: 15px; font-weight: 700;
+        color: var(--t1); margin-bottom: 10px;
+      }
+      .data-desc { font-size: 12px; color: var(--t3); line-height: 1.65; margin-bottom: 16px; }
+      .data-specs { display: flex; flex-wrap: wrap; gap: 6px; }
+      .data-spec {
+        font-family: var(--f-mono); font-size: 9px; color: var(--t3);
+        background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+        padding: 2px 8px; border-radius: 3px;
+      }
+
+      /* ── Agent integration ── */
+      .integration-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 20px; margin-top: 52px;
+      }
+      .int-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 8px; overflow: hidden;
+      }
+      .int-header {
+        background: var(--raised); padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex; align-items: center; gap: 10px;
+      }
+      .int-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+      }
+      .int-title {
+        font-family: var(--f-brand); font-size: 12px; font-weight: 700;
+        color: var(--t1); letter-spacing: 0.06em; text-transform: uppercase;
+      }
+      .int-steps { padding: 20px; }
+      .int-step {
+        display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px;
+      }
+      .int-step:last-child { margin-bottom: 0; }
+      .step-num {
+        font-family: var(--f-mono); font-size: 10px; font-weight: 700;
+        color: var(--t4); flex-shrink: 0; width: 20px; padding-top: 2px;
+      }
+      .step-body { flex: 1; }
+      .step-label {
+        font-size: 12px; font-weight: 600; color: var(--t1);
+        margin-bottom: 4px; font-family: var(--f-brand);
+      }
+      pre.step-code {
+        font-family: var(--f-mono); font-size: 11px;
+        background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 4px; padding: 8px 12px; color: var(--cyan);
+        overflow-x: auto; margin-top: 6px; white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .step-note { font-size: 10px; color: var(--t3); margin-top: 4px; line-height: 1.5; }
+
+      /* ── Live proof ── */
+      .proof-panel {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 10px; overflow: hidden; margin-top: 52px;
+      }
+      .proof-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 16px 24px; background: var(--raised); border-bottom: 1px solid var(--border);
+      }
+      .proof-title {
+        font-family: var(--f-brand); font-size: 11px; font-weight: 700;
+        letter-spacing: 0.12em; color: var(--t1); text-transform: uppercase;
+      }
+      .live-badge {
+        font-family: var(--f-mono); font-size: 8px; font-weight: 700;
+        letter-spacing: 0.12em; padding: 3px 8px; border-radius: 3px;
+        background: rgba(0,217,138,0.12); color: var(--green);
+        border: 1px solid rgba(0,217,138,0.25); text-transform: uppercase;
+        display: flex; align-items: center; gap: 5px;
+      }
+      .live-dot {
+        width: 5px; height: 5px; border-radius: 50%;
+        background: var(--green); animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+      .proof-table {
+        width: 100%; border-collapse: collapse;
+      }
+      .proof-table thead tr {
+        background: rgba(0,0,0,0.2);
+      }
+      .proof-table th {
+        font-family: var(--f-mono); font-size: 8px; font-weight: 700;
+        letter-spacing: 0.12em; color: var(--t3); text-transform: uppercase;
+        padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border);
+      }
+      .proof-table th:not(:first-child) { text-align: right; }
+      .proof-table td {
+        padding: 11px 16px; font-size: 12px; border-bottom: 1px solid rgba(37,99,235,0.06);
+        vertical-align: middle;
+      }
+      .proof-table td:not(:first-child) { text-align: right; }
+      .proof-table tr:last-child td { border-bottom: none; }
+      .sym { font-family: var(--f-brand); font-weight: 700; color: var(--t1); font-size: 13px; }
+      .cls { font-family: var(--f-mono); font-size: 9px; color: var(--t3); margin-top: 2px; }
+      .score-val { font-family: var(--f-mono); font-weight: 500; }
+      .grade-badge {
+        display: inline-block; font-family: var(--f-mono); font-size: 9px; font-weight: 700;
+        padding: 2px 7px; border-radius: 3px;
+      }
+      .sig-badge {
+        display: inline-block; font-family: var(--f-mono); font-size: 8px; font-weight: 700;
+        letter-spacing: 0.06em; padding: 2px 7px; border-radius: 3px; white-space: nowrap;
+      }
+      .proof-footer {
+        padding: 12px 24px; font-family: var(--f-mono); font-size: 9px; color: var(--t3);
+        display: flex; align-items: center; justify-content: space-between;
+        border-top: 1px solid var(--border); background: rgba(0,0,0,0.1);
+      }
+      .loading-row { text-align: center; padding: 32px; color: var(--t3); font-family: var(--f-mono); font-size: 11px; }
+
+      /* ── Why us ── */
+      .why-grid {
+        display: grid; grid-template-columns: repeat(2, 1fr);
+        gap: 16px; margin-top: 52px;
+      }
+      .why-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 8px; padding: 28px 28px 28px 24px;
+        border-left: 3px solid;
+      }
+      .why-card:nth-child(1) { border-left-color: var(--cyan); }
+      .why-card:nth-child(2) { border-left-color: var(--gold); }
+      .why-card:nth-child(3) { border-left-color: var(--indigo); }
+      .why-card:nth-child(4) { border-left-color: var(--green); }
+      .why-title {
+        font-family: var(--f-brand); font-size: 15px; font-weight: 700;
+        color: var(--t1); margin-bottom: 10px;
+      }
+      .why-desc { font-size: 13px; color: var(--t3); line-height: 1.65; }
+      .why-detail {
+        margin-top: 14px; padding: 10px 12px;
+        background: rgba(0,0,0,0.25); border-radius: 4px;
+        font-family: var(--f-mono); font-size: 10px; color: var(--t3);
+        line-height: 1.6;
+      }
+
+      /* ── CTA ── */
+      .final-cta {
+        text-align: center; padding: 100px 40px;
+        background: linear-gradient(180deg, transparent 0%, rgba(37,99,235,0.03) 50%, transparent 100%);
+      }
+      .final-cta h2 { margin-bottom: 16px; }
+      .final-cta p { color: var(--t2); font-size: 16px; margin-bottom: 40px; font-weight: 300; }
+      .cta-cards {
+        display: flex; gap: 16px; justify-content: center;
+        flex-wrap: wrap; margin-bottom: 40px;
+      }
+      .cta-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 8px; padding: 24px 28px; text-decoration: none;
+        transition: border-color 0.2s, transform 0.15s;
+        min-width: 220px; text-align: left;
+      }
+      .cta-card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+      .cta-card-icon { font-size: 24px; margin-bottom: 12px; }
+      .cta-card-title {
+        font-family: var(--f-brand); font-size: 14px; font-weight: 700;
+        color: var(--t1); margin-bottom: 6px;
+      }
+      .cta-card-desc { font-size: 11px; color: var(--t3); line-height: 1.55; }
+
+      /* ── Responsive ── */
+      @media (max-width: 768px) {
+        nav { padding: 0 20px; }
+        .page { padding: 0 20px; }
+        .gap-grid { grid-template-columns: 1fr; }
+        .gap-card.gap-us { grid-column: 1; }
+        .flow { grid-template-columns: 1fr 1fr; gap: 20px; }
+        .flow::before { display: none; }
+        .data-grid { grid-template-columns: 1fr; }
+        .integration-grid { grid-template-columns: 1fr; }
+        .why-grid { grid-template-columns: 1fr; }
+        .hero-stats { grid-template-columns: repeat(2, 1fr); }
+        h1 { font-size: 36px; }
+        h2 { font-size: 28px; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- Nav -->
+    <nav>
+      <a class="nav-logo" href="/vision.html">COMETCLOUD</a>
+      <div class="nav-links">
+        <a href="/methodology.html">Methodology</a>
+        <a href="/app">Dashboard</a>
+        <a href="/agent.html">Agent API</a>
+        <a href="/app" class="nav-cta">Live Platform →</a>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-glow glow-1"></div>
+      <div class="hero-glow glow-2"></div>
+      <div class="page">
+        <p class="hero-eyebrow">Institutional Intelligence · AI-Native</p>
+        <h1>
+          The intelligence layer<br>
+          that <span class="accent">AI agents</span> and<br>
+          <span class="accent-gold">institutions</span> actually use
+        </h1>
+        <p class="hero-sub">
+          We solved the gap between raw market data and actionable positioning —
+          the systematic, regime-aware intelligence layer that TradFi doesn't have
+          and DeFi couldn't build without an institutional lens.
+        </p>
+
+        <div class="hero-stats">
+          <div class="stat-cell">
+            <span class="stat-num" id="stat-assets">84</span>
+            <span class="stat-label">Assets Scored</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-num">5</span>
+            <span class="stat-label">CIS Pillars</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-num" id="stat-tools">5</span>
+            <span class="stat-label">MCP Tools</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-num">30min</span>
+            <span class="stat-label">Score Refresh</span>
+          </div>
+        </div>
+
+        <div class="cta-row">
+          <a href="/app" class="btn-primary">Open Dashboard →</a>
+          <a href="#integrate" class="btn-ghost">Agent Integration</a>
+          <a href="#live-proof" class="btn-ghost">Live Scores</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem: Why others can't do this -->
+    <section id="problem">
+      <div class="page">
+        <p class="section-label">The gap nobody filled</p>
+        <h2>Why the biggest platforms still get this wrong</h2>
+        <p class="section-sub">
+          Every major player solves part of the problem. Nobody solved all of it —
+          until you combine institutional methodology with crypto-native data and local AI.
+        </p>
+
+        <div class="gap-grid">
+          <div class="gap-card">
+            <div class="gap-who">Bloomberg / Refinitiv</div>
+            <div class="gap-title">Has the framework, missing the data</div>
+            <div class="gap-desc">
+              Institutional-grade methodology and risk models.
+              Zero on-chain fundamental visibility — TVL, protocol revenue, DeFi flows,
+              and staking dynamics don't exist in their universe.
+              Regime detection built for equities, not crypto cycles.
+            </div>
+          </div>
+
+          <div class="gap-card">
+            <div class="gap-who">Nansen / Messari / Dune</div>
+            <div class="gap-title">Has the data, missing the framework</div>
+            <div class="gap-desc">
+              Rich on-chain data and wallet analytics.
+              No systematic scoring across asset classes.
+              No macro regime framework — they tell you what happened,
+              not what it means for positioning or how it interacts with TradFi risk cycles.
+            </div>
+          </div>
+
+          <div class="gap-card">
+            <div class="gap-who">Retail Traders</div>
+            <div class="gap-title">Has the intuition, missing the system</div>
+            <div class="gap-desc">
+              Good at spotting narratives early.
+              No quantified conviction framework.
+              Can't distinguish signal from noise across 84+ assets simultaneously,
+              and can't maintain regime discipline under FOMO pressure.
+            </div>
+          </div>
+
+          <div class="gap-card">
+            <div class="gap-who">AI Trading Bots</div>
+            <div class="gap-title">Has the execution, missing the intelligence</div>
+            <div class="gap-desc">
+              Fast execution and backtesting capability.
+              No understanding of macro regime — a Tightening cycle
+              changes what good looks like. A bot without regime context
+              buys alts in a rate-hike environment and wonders why it loses.
+            </div>
+          </div>
+
+          <div class="gap-card gap-us">
+            <div class="gap-who">CometCloud</div>
+            <div class="gap-title">Regime-aware · On-chain fundamental · AI-native · Systematic</div>
+            <div class="gap-desc">
+              The CIS (CometCloud Intelligence Score) combines TradFi risk factors (VIX, yield curve, SPY divergence)
+              with DeFi fundamentals (TVL, protocol revenue, liquidity depth) and on-chain sentiment —
+              scored continuously, regime-adjusted every 30 minutes, exposed via MCP for direct AI agent consumption.
+              The local Mac Mini M4 Pro runs inference without API cost ceilings, making sub-minute analysis
+              of 84 assets across 8 asset classes economically viable.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how">
+      <div class="page">
+        <p class="section-label">The intelligence pipeline</p>
+        <h2>From raw data to positioning signal in 30 minutes</h2>
+        <p class="section-sub">
+          Five stages. Every stage verified, logged, and auditable.
+          Not a black box — a documented methodology you can read, backtest, and challenge.
+        </p>
+
+        <div class="flow">
+          <div class="flow-step active">
+            <div class="flow-icon">📡</div>
+            <div class="flow-num">01 · Ingest</div>
+            <div class="flow-label">Live Data</div>
+            <div class="flow-desc">CoinGecko Pro · DeFiLlama · yfinance · EODHD · Alternative.me · Binance (local)</div>
+          </div>
+          <div class="flow-step active">
+            <div class="flow-icon">⚙️</div>
+            <div class="flow-num">02 · Score</div>
+            <div class="flow-label">CIS v4.1</div>
+            <div class="flow-desc">5-pillar scoring: Fundamental · Momentum · On-chain · Sentiment · Alpha</div>
+          </div>
+          <div class="flow-step active">
+            <div class="flow-icon">🔭</div>
+            <div class="flow-num">03 · Regime</div>
+            <div class="flow-label">Macro Context</div>
+            <div class="flow-desc">6 regimes: RISK_ON · RISK_OFF · TIGHTENING · EASING · STAGFLATION · GOLDILOCKS</div>
+          </div>
+          <div class="flow-step active">
+            <div class="flow-icon">🧠</div>
+            <div class="flow-num">04 · Synthesize</div>
+            <div class="flow-label">Local AI Brief</div>
+            <div class="flow-desc">Gemma 27B (Mac Mini M4 Pro) generates macro brief. No cloud cost, no latency cap.</div>
+          </div>
+          <div class="flow-step active">
+            <div class="flow-icon">⚡</div>
+            <div class="flow-num">05 · Expose</div>
+            <div class="flow-label">Agent API</div>
+            <div class="flow-desc">MCP server (SSE) · REST API · A2A task queue · WebSocket push · llms.txt</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data stack -->
+    <section id="data">
+      <div class="page">
+        <p class="section-label">The data moat</p>
+        <h2>Three data layers nobody else combines</h2>
+        <p class="section-sub">
+          The Mac Mini SSD is the local persistence layer — full OHLCV history,
+          TVL time series, CIS score history — without API rate limits or cloud compute costs.
+        </p>
+
+        <div class="data-grid">
+          <div class="data-card dc-local">
+            <div class="data-badge badge-gold">Local · Mac Mini M4 Pro</div>
+            <div class="data-title">On-machine inference + history</div>
+            <div class="data-desc">
+              48GB RAM, 1TB SSD. Full OHLCV history for 84 assets stored locally.
+              CIS scores logged every 30 minutes — months of history without cloud storage costs.
+              Gemma 27B inference: macro brief generation, signal synthesis, no API billing.
+            </div>
+            <div class="data-specs">
+              <span class="data-spec">OHLCV · 84 assets</span>
+              <span class="data-spec">CIS history · Supabase</span>
+              <span class="data-spec">Gemma 27B local</span>
+              <span class="data-spec">Freqtrade engine</span>
+            </div>
+          </div>
+
+          <div class="data-card dc-cloud">
+            <div class="data-badge badge-cyan">Cloud · Railway + Upstash</div>
+            <div class="data-title">Real-time scores + API layer</div>
+            <div class="data-desc">
+              CIS universe scores pushed to Upstash Redis every 30 minutes.
+              FastAPI backend serves fresh scores globally with 2h TTL failsafe.
+              Supabase stores score history, macro briefs, wallet profiles, leads.
+            </div>
+            <div class="data-specs">
+              <span class="data-spec">Redis 2h TTL</span>
+              <span class="data-spec">FastAPI REST</span>
+              <span class="data-spec">Supabase PostgreSQL</span>
+              <span class="data-spec">MCP SSE server</span>
+            </div>
+          </div>
+
+          <div class="data-card dc-chain">
+            <div class="data-badge badge-indigo">On-chain · DeFiLlama + CoinGecko</div>
+            <div class="data-title">Protocol fundamentals</div>
+            <div class="data-desc">
+              DeFiLlama TVL for 25+ protocols scored in real-time.
+              7D and 30D flow changes for sector heatmap.
+              CoinGecko Pro derivatives overlay (funding rates, OI, basis).
+              The on-chain data TradFi risk desks don't have.
+            </div>
+            <div class="data-specs">
+              <span class="data-spec">25 protocols scored</span>
+              <span class="data-spec">TVL 7D/30D flow</span>
+              <span class="data-spec">Funding rates</span>
+              <span class="data-spec">8 asset classes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Agent integration -->
+    <section id="integrate">
+      <div class="page">
+        <p class="section-label">AI-native by design</p>
+        <h2>Deploy in 3 steps. Works with any AI agent.</h2>
+        <p class="section-sub">
+          Claude, GPT-4o, any MCP-compatible agent can call our tools directly.
+          No custom integration needed — just point to our MCP endpoint.
+        </p>
+
+        <div class="integration-grid">
+
+          <!-- MCP Claude Desktop -->
+          <div class="int-card">
+            <div class="int-header">
+              <div class="int-dot" style="background:var(--cyan)"></div>
+              <div class="int-title">Claude Desktop / Any MCP Client</div>
+            </div>
+            <div class="int-steps">
+              <div class="int-step">
+                <div class="step-num">01</div>
+                <div class="step-body">
+                  <div class="step-label">Add MCP server to config</div>
+                  <pre class="step-code">{
+  "mcpServers": {
+    "cometcloud": {
+      "url": "https://looloomi.ai/mcp/sse",
+      "transport": "sse"
+    }
+  }
+}</pre>
+                  <div class="step-note">Add to ~/.claude/claude_desktop_config.json</div>
+                </div>
+              </div>
+              <div class="int-step">
+                <div class="step-num">02</div>
+                <div class="step-body">
+                  <div class="step-label">Restart Claude Desktop</div>
+                  <div class="step-note">5 tools become available: get_cis_universe, get_macro_pulse, get_cis_report, get_signal_feed, get_inclusion_standard</div>
+                </div>
+              </div>
+              <div class="int-step">
+                <div class="step-num">03</div>
+                <div class="step-body">
+                  <div class="step-label">Ask Claude anything</div>
+                  <pre class="step-code">"What's the current macro regime
+and which assets should I
+overweight right now?"</pre>
+                  <div class="step-note">Claude calls our API, synthesizes CIS scores + regime, returns a positioning recommendation</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REST API / Freqtrade -->
+          <div class="int-card">
+            <div class="int-header">
+              <div class="int-dot" style="background:var(--green)"></div>
+              <div class="int-title">REST API / Freqtrade / Custom Agent</div>
+            </div>
+            <div class="int-steps">
+              <div class="int-step">
+                <div class="step-num">01</div>
+                <div class="step-body">
+                  <div class="step-label">Get CIS universe (no auth required)</div>
+                  <pre class="step-code">GET https://looloomi.ai/api/v1/cis/universe
+
+# Returns: 84 assets with CIS score,
+# grade, signal, pillar breakdown,
+# macro_regime, data_tier</pre>
+                </div>
+              </div>
+              <div class="int-step">
+                <div class="step-num">02</div>
+                <div class="step-body">
+                  <div class="step-label">Gate your trades on CIS threshold</div>
+                  <pre class="step-code">def confirm_trade(symbol, regime):
+  threshold = {
+    "TIGHTENING": 52,
+    "RISK_OFF": 55,
+    "RISK_ON": 48,
+  }.get(regime, 50)
+
+  asset = get_cis(symbol)
+  return asset["cis_score"] >= threshold</pre>
+                  <div class="step-note">Freqtrade CISEnhancedStrategy already implements this gate</div>
+                </div>
+              </div>
+              <div class="int-step">
+                <div class="step-num">03</div>
+                <div class="step-body">
+                  <div class="step-label">Submit A2A task for full analysis</div>
+                  <pre class="step-code">POST /api/v1/agent/tasks
+{
+  "task": "portfolio_review",
+  "symbols": ["BTC","ETH","SOL"]
+}
+# → task_id, then GET to poll result</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- llms.txt / AI crawlers -->
+          <div class="int-card">
+            <div class="int-header">
+              <div class="int-dot" style="background:var(--gold)"></div>
+              <div class="int-title">AI Crawlers / LLM Discovery</div>
+            </div>
+            <div class="int-steps">
+              <div class="int-step">
+                <div class="step-num">01</div>
+                <div class="step-body">
+                  <div class="step-label">Machine-readable index at /llms.txt</div>
+                  <pre class="step-code">GET https://looloomi.ai/llms.txt
+
+# Full API index, tool descriptions,
+# authentication requirements,
+# rate limits — formatted for LLMs</pre>
+                </div>
+              </div>
+              <div class="int-step">
+                <div class="step-num">02</div>
+                <div class="step-body">
+                  <div class="step-label">Agent card at /.well-known/agent.json</div>
+                  <pre class="step-code">GET https://looloomi.ai/.well-known/agent.json
+
+# A2A protocol discovery
+# Lists all available task types
+# and capability declarations</pre>
+                  <div class="step-note">Compatible with Google A2A protocol and Glama.ai registry</div>
+                </div>
+              </div>
+              <div class="int-step">
+                <div class="step-num">03</div>
+                <div class="step-body">
+                  <div class="step-label">Auto-indexed on Glama.ai</div>
+                  <div class="step-note">glama.json in repo root enables automatic indexing in the Glama MCP marketplace — agents discover us without manual registration</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Python SDK usage -->
+          <div class="int-card">
+            <div class="int-header">
+              <div class="int-dot" style="background:var(--indigo)"></div>
+              <div class="int-title">Python / Jupyter / Research</div>
+            </div>
+            <div class="int-steps">
+              <div class="int-step">
+                <div class="step-num">01</div>
+                <div class="step-body">
+                  <div class="step-label">Single API call, full universe</div>
+                  <pre class="step-code">import requests
+
+universe = requests.get(
+  "https://looloomi.ai/api/v1/cis/universe"
+).json()
+
+regime = universe["macro_regime"]
+assets = universe["universe"]
+
+# Filter OUTPERFORM above threshold
+picks = [a for a in assets
+  if a["cis_score"] >= 52
+  and "OUTPERFORM" in a["signal"]]</pre>
+                </div>
+              </div>
+              <div class="int-step">
+                <div class="step-num">02</div>
+                <div class="step-body">
+                  <div class="step-label">Historical scores from Supabase</div>
+                  <pre class="step-code">GET /api/v1/cis/history/batch
+  ?symbols=BTC,ETH,SOL&days=30
+
+# Returns 30D score history per asset
+# for backtesting and track record</pre>
+                  <div class="step-note">Score history accumulating since April 2026 — growing daily</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Live proof -->
+    <section id="live-proof">
+      <div class="page">
+        <p class="section-label">Real scores · Right now</p>
+        <h2>Not a demo. Live CIS universe.</h2>
+        <p class="section-sub">
+          Every row below is fetched from our production API in real time.
+          These are the same scores our Freqtrade engine uses as trade gates.
+        </p>
+
+        <div class="proof-panel">
+          <div class="proof-header">
+            <div class="proof-title">CIS Universe · Top Assets</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span id="regime-badge" style="font-family:var(--f-mono);font-size:9px;color:var(--t3)">Loading regime…</span>
+              <div class="live-badge">
+                <div class="live-dot"></div>
+                LIVE
+              </div>
+            </div>
+          </div>
+
+          <table class="proof-table">
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>CIS Score</th>
+                <th>Grade</th>
+                <th>Signal</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody id="cis-tbody">
+              <tr><td colspan="5" class="loading-row">⟳ Loading live scores…</td></tr>
+            </tbody>
+          </table>
+
+          <div class="proof-footer">
+            <span>Source: CometCloud CIS Engine · Pushed every 30 min from Mac Mini M4 Pro</span>
+            <span id="last-updated">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why us -->
+    <section id="why">
+      <div class="page">
+        <p class="section-label">Structural advantages</p>
+        <h2>Four things you can't replicate without all four pieces</h2>
+
+        <div class="why-grid">
+          <div class="why-card">
+            <div class="why-title">Local inference at institutional scale</div>
+            <div class="why-desc">
+              Mac Mini M4 Pro with Gemma 27B runs 24/7. No API cost ceiling.
+              Macro briefs, signal synthesis, and pattern recognition run locally —
+              so we can analyze 84 assets every 30 minutes without a $50k/month inference bill.
+            </div>
+            <div class="why-detail">
+              Cloud inference: ~$0.01/call × 84 assets × 48 pushes/day = $40/day<br>
+              Local inference: $0/call. Hardware paid once.
+            </div>
+          </div>
+
+          <div class="why-card">
+            <div class="why-title">Regime-aware scoring, not point-in-time</div>
+            <div class="why-desc">
+              Most scoring systems are regime-agnostic — they score an asset the same way
+              in TIGHTENING as in EASING. We adjust pillar weights dynamically:
+              in Tightening, Fundamental and On-chain dominate;
+              in Risk-On, Momentum and Alpha dominate.
+            </div>
+            <div class="why-detail">
+              TIGHTENING: F×35% M×20% O×25% S×10% A×10%<br>
+              RISK_ON:     F×20% M×30% O×15% S×20% A×15%
+            </div>
+          </div>
+
+          <div class="why-card">
+            <div class="why-title">On-chain fundamental data TradFi can't see</div>
+            <div class="why-desc">
+              DeFiLlama TVL flows, protocol revenue, staking dynamics, and DeFi yield rates
+              are inputs to the Fundamental pillar. A protocol losing $500M TVL in 7 days
+              gets penalized in F score — this appears in Bloomberg 2 weeks later as "outflow."
+              We catch it when it happens.
+            </div>
+            <div class="why-detail">
+              TVL data refreshes every 30 min via DeFiLlama<br>
+              25 protocols scored with full F/M/O/S/A breakdown
+            </div>
+          </div>
+
+          <div class="why-card">
+            <div class="why-title">MCP-native: AI agents consume us directly</div>
+            <div class="why-desc">
+              We're not building for humans to read dashboards — we're building the data layer
+              that AI agents call. Claude, GPT-4o, and any MCP-compatible agent can query
+              our CIS universe, get regime context, and generate positioning recommendations
+              in one conversation turn.
+            </div>
+            <div class="why-detail">
+              /mcp/sse → 5 production tools<br>
+              /.well-known/agent.json → A2A protocol<br>
+              /llms.txt → LLM auto-discovery
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <div class="final-cta">
+      <div class="page">
+        <p class="section-label" style="justify-content:center">Ready to integrate</p>
+        <h2>Start in the next 5 minutes</h2>
+        <p>Pick your entry point. All paths lead to the same intelligence layer.</p>
+
+        <div class="cta-cards">
+          <a href="/app" class="cta-card">
+            <div class="cta-card-icon">📊</div>
+            <div class="cta-card-title">Open Dashboard</div>
+            <div class="cta-card-desc">Live CIS scores, macro regime, signal feed, protocol intelligence. No login required.</div>
+          </a>
+          <a href="/agent.html" class="cta-card">
+            <div class="cta-card-icon">🤖</div>
+            <div class="cta-card-title">Agent API Docs</div>
+            <div class="cta-card-desc">MCP endpoint, REST API reference, A2A task queue, authentication guide.</div>
+          </a>
+          <a href="/methodology.html" class="cta-card">
+            <div class="cta-card-icon">📐</div>
+            <div class="cta-card-title">CIS Methodology</div>
+            <div class="cta-card-desc">Full specification: scoring functions, grade thresholds, regime detection, pillar weights.</div>
+          </a>
+          <a href="https://looloomi.ai/llms.txt" class="cta-card" target="_blank">
+            <div class="cta-card-icon">⚡</div>
+            <div class="cta-card-title">llms.txt</div>
+            <div class="cta-card-desc">Machine-readable API index. Point your AI agent here to auto-discover all capabilities.</div>
+          </a>
+        </div>
+
+        <p style="font-size:12px;color:var(--t3);font-family:var(--f-mono)">
+          Hong Kong · Institutional Intelligence · Built on Solana · 0% Management Fee
+        </p>
+      </div>
+    </div>
+
+    <script>
+    // ── Live CIS data from production API ────────────────────────────────────
+    const GRADE_COLOR = {
+      "A+":"#00D98A","A":"#00D98A","B+":"#4B9EFF","B":"#4B9EFF",
+      "C+":"#d4a843","C":"#d4a843","D":"#FF8C42","F":"#FF3D5A"
+    };
+    const SIG_COLOR = {
+      "STRONG OUTPERFORM":"#00D98A","OUTPERFORM":"#00D98A",
+      "NEUTRAL":"#d4a843","UNDERPERFORM":"#FF3D5A","UNDERWEIGHT":"#FF3D5A"
+    };
+
+    async function loadCIS() {
+      const tbody = document.getElementById("cis-tbody");
+      const regimeBadge = document.getElementById("regime-badge");
+      const lastUpd = document.getElementById("last-updated");
+
+      try {
+        const res = await fetch("/api/v1/cis/universe");
+        const data = await res.json();
+        const assets = (data.universe || data.assets || [])
+          .sort((a,b) => (b.cis_score||0)-(a.cis_score||0))
+          .slice(0, 15);
+
+        const regime = data.macro_regime || "—";
+        const regimeColor = {
+          TIGHTENING:"#FF8C42", EASING:"#00D98A", RISK_ON:"#00D98A",
+          RISK_OFF:"#FF3D5A", STAGFLATION:"#FF3D5A", GOLDILOCKS:"#4B9EFF"
+        }[regime] || "#d4a843";
+
+        regimeBadge.innerHTML = `<span style="color:${regimeColor};font-weight:700">${regime}</span> regime`;
+        lastUpd.textContent = "Refreshed " + new Date().toLocaleTimeString();
+
+        if (!assets.length) {
+          tbody.innerHTML = `<tr><td colspan="5" class="loading-row" style="color:#FF3D5A">⚠ Mac Mini scores pending push — T2 fallback in 60s</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = assets.map(a => {
+          const score = (a.cis_score || a.score || 0).toFixed(1);
+          const grade = a.grade || "—";
+          const sig   = a.signal || "—";
+          const tier  = a.data_tier || "2";
+          const gc    = GRADE_COLOR[grade] || "#888";
+          const sc    = SIG_COLOR[sig] || "#888";
+          const cls   = a.asset_class || "";
+
+          return `<tr>
+            <td>
+              <div class="sym">${a.symbol}</div>
+              <div class="cls">${cls}</div>
+            </td>
+            <td>
+              <span class="score-val" style="color:${gc}">${score}</span>
+            </td>
+            <td>
+              <span class="grade-badge" style="background:${gc}18;color:${gc};border:1px solid ${gc}30">${grade}</span>
+            </td>
+            <td>
+              <span class="sig-badge" style="background:${sc}10;color:${sc};border:1px solid ${sc}25;font-size:8px">${sig}</span>
+            </td>
+            <td>
+              <span style="font-family:var(--f-mono);font-size:9px;color:${tier==1?'var(--green)':'var(--amber)'}">${tier==1?'T1 · PRO':'T2 · EST'}</span>
+            </td>
+          </tr>`;
+        }).join("");
+
+        // Update stat
+        document.getElementById("stat-assets").textContent = (data.universe||data.assets||[]).length;
+
+      } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="loading-row" style="color:var(--t3)">⚠ API unavailable — check /app for live data</td></tr>`;
+      }
+    }
+
+    loadCIS();
+    setInterval(loadCIS, 120_000);
+    </script>
+  </body>
+</html>

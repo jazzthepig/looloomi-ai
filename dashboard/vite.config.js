@@ -25,6 +25,7 @@ export default defineConfig({
         portfolio: resolve(__dirname, 'portfolio.html'),
         analytics: resolve(__dirname, 'analytics.html'),
         agent: resolve(__dirname, 'agent.html'),
+        win:   resolve(__dirname, 'win.html'),
       }
     }
   },
