@@ -188,15 +188,17 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         const data = await res.json();
         // Map API data to sector format — live fields from get_defi_overview v2
         const fmtB = (v) => (v && v > 1e7) ? `$${(v / 1e9).toFixed(1)}B` : (v && v > 0 ? `$${(v / 1e6).toFixed(0)}M` : "—");
+        // Clamp -0 display: Object.is(-0, v) or v === 0 → force +0
+        const fmtChg = (v) => v == null ? 0 : (Object.is(v, -0) ? 0 : (Math.abs(v) < 0.05 ? 0 : v));
         const mapped = [
-          { name: "DeFi",    change: data.defi_change_24h    ?? 0, tvl: fmtB(data.total_tvl) },
-          { name: "L2",      change: data.l2_change_24h      ?? 0, tvl: fmtB(data.l2_tvl) },
-          { name: "L1",      change: data.l1_change_24h      ?? 0, tvl: fmtB(data.l1_tvl) },
-          { name: "Staking", change: data.staking_change_24h ?? 0, tvl: fmtB(data.staking_tvl) },
-          { name: "RWA",     change: data.rwa_change_24h     ?? 0, tvl: fmtB(data.rwa_tvl) },
-          { name: "DEX",     change: data.dex_change_24h     ?? 0, tvl: fmtB(data.dex_tvl) },
-          { name: "Lending", change: data.lending_change_24h ?? 0, tvl: fmtB(data.lending_tvl) },
-          { name: "Oracle",  change: data.oracle_change_24h  ?? 0, tvl: fmtB(data.oracle_tvl) },
+          { name: "DeFi",    change: fmtChg(data.defi_change_24h),    tvl: fmtB(data.total_tvl) },
+          { name: "L2",      change: fmtChg(data.l2_change_24h),      tvl: fmtB(data.l2_tvl) },
+          { name: "L1",      change: fmtChg(data.l1_change_24h),      tvl: fmtB(data.l1_tvl) },
+          { name: "Staking", change: fmtChg(data.staking_change_24h), tvl: fmtB(data.staking_tvl) },
+          { name: "RWA",     change: fmtChg(data.rwa_change_24h),     tvl: fmtB(data.rwa_tvl) },
+          { name: "DEX",     change: fmtChg(data.dex_change_24h),     tvl: fmtB(data.dex_tvl) },
+          { name: "Lending", change: fmtChg(data.lending_change_24h), tvl: fmtB(data.lending_tvl) },
+          { name: "Oracle",  change: fmtChg(data.oracle_change_24h),  tvl: fmtB(data.oracle_tvl) },
         ];
         setSectorData(mapped);
       } catch (e) {
@@ -648,49 +650,58 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   {macroEvents.length > 0 ? macroEvents.slice(0, 5).map((event, idx) => {
                     const isInstitutional = event.category === "INSTITUTIONAL";
                     const isHigh = event.impact === "HIGH";
+                    const isMed  = event.impact === "MEDIUM";
                     const catColor = isInstitutional ? "#C8A84B" : "#4B9EFF";
                     const desc = stripHtml(event.description || "");
-                    const truncated = desc.length > 100 ? desc.slice(0, 100) + "…" : desc;
+                    const truncated = desc.length > 90 ? desc.slice(0, 90) + "…" : desc;
                     return (
                     <div key={idx} style={{
-                      padding: "12px 0", borderBottom: `1px solid rgba(37,99,235,0.07)`,
+                      padding: "10px 12px",
+                      marginBottom: 6,
+                      background: "rgba(6,9,26,0.60)",
+                      border: `1px solid rgba(37,99,235,0.12)`,
+                      borderLeft: `2px solid ${catColor}`,
+                      borderRadius: 5,
                       cursor: "pointer",
                     }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                      {/* badges row */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5, flexWrap: "wrap" }}>
                         <span style={{
-                          fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.10em",
+                          fontFamily: FONTS.mono, fontSize: 7, fontWeight: 700, letterSpacing: "0.10em",
                           color: catColor, textTransform: "uppercase",
-                          padding: "2px 6px", borderRadius: 3,
-                          background: `${catColor}14`, border: `1px solid ${catColor}30`,
+                          padding: "2px 5px", borderRadius: 3, flexShrink: 0,
+                          background: `${catColor}14`, border: `1px solid ${catColor}28`,
                         }}>
                           {event.category}
                         </span>
                         {isHigh && (
                           <span style={{
-                            fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
-                            color: "#FF3D5A", padding: "2px 6px", borderRadius: 3,
-                            background: "rgba(255,61,90,0.12)", border: "1px solid rgba(255,61,90,0.30)",
+                            fontFamily: FONTS.mono, fontSize: 7, fontWeight: 700, letterSpacing: "0.08em",
+                            color: "#FF3D5A", padding: "2px 5px", borderRadius: 3, flexShrink: 0,
+                            background: "rgba(255,61,90,0.12)", border: "1px solid rgba(255,61,90,0.28)",
                           }}>HIGH</span>
                         )}
-                        {event.impact && event.impact !== "HIGH" && (
+                        {isMed && !isHigh && (
                           <span style={{
-                            fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: "0.08em",
-                            color: T.t3, padding: "2px 6px", borderRadius: 3,
-                            background: "rgba(148,163,184,0.07)", border: "1px solid rgba(148,163,184,0.12)",
-                          }}>{event.impact}</span>
+                            fontFamily: FONTS.mono, fontSize: 7, fontWeight: 600, letterSpacing: "0.06em",
+                            color: T.amber, padding: "2px 5px", borderRadius: 3, flexShrink: 0,
+                            background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.16)",
+                          }}>MED</span>
                         )}
+                        <span style={{ fontFamily: FONTS.mono, fontSize: 7, color: T.t3, opacity: 0.4, marginLeft: "auto", whiteSpace: "nowrap" }}>
+                          {event.source}
+                        </span>
                       </div>
-                      <div style={{ fontFamily: FONTS.display, fontSize: 12, fontWeight: 600, color: T.t1, lineHeight: 1.4, marginBottom: 4 }}>
+                      {/* title */}
+                      <div style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 600, color: T.t1, lineHeight: 1.4, marginBottom: truncated ? 4 : 0 }}>
                         {event.title}
                       </div>
+                      {/* description */}
                       {truncated && (
-                        <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.t3, lineHeight: 1.55, marginBottom: 4 }}>
+                        <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.t3, lineHeight: 1.5 }}>
                           {truncated}
                         </div>
                       )}
-                      <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, opacity: 0.55 }}>
-                        {event.source}{event.date ? ` · ${event.date}` : ""}
-                      </div>
                     </div>
                     );
                   }) : (
@@ -1051,51 +1062,67 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
 
             {/* ══ MACRO EVENTS ═════════════════════════════ */}
             {(view === "all") && macroEvents.length > 0 && <div style={{ marginTop: 24, marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16, paddingBottom: 10, borderBottom: `1px solid rgba(37,99,235,0.10)` }}>
-                <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                <div style={{ width: 3, height: 14, background: T.cyan, borderRadius: 2, opacity: 0.7 }} />
+                <span style={{ fontFamily: FONTS.display, fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: T.t2, textTransform: "uppercase" }}>
                   Macro Events
                 </span>
-                <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.45 }}>
-                  Institutional &amp; regulatory
+                <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.4 }}>
+                  Institutional · Regulatory · Market
                 </span>
               </div>
-              <div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {macroEvents.map((ev, i) => {
                   const cfg = EV_TYPE[ev.type] || EV_TYPE[ev.category] || EV_TYPE[ev.category?.toLowerCase()] || EV_TYPE.protocol;
                   const isHigh = ev.impact === "HIGH";
+                  const isMed  = ev.impact === "MEDIUM";
                   return (
                     <div key={ev.id || ev.title?.slice(0, 40) || i} style={{
-                      display: "flex", gap: 16, paddingTop: 14, paddingBottom: 14,
-                      borderBottom: `1px solid rgba(37,99,235,0.07)`,
+                      display: "flex", gap: 0,
+                      background: "rgba(6,9,26,0.70)",
+                      border: `1px solid rgba(37,99,235,0.12)`,
+                      borderLeft: `3px solid ${cfg.color}`,
+                      borderRadius: 6,
+                      overflow: "hidden",
                       animation: `fadeUp .3s ease ${i*.05}s both`,
+                      transition: "border-color .15s",
                     }}>
-                      {/* Thin color accent left */}
-                      <div style={{ width: 2, flexShrink: 0, background: cfg.color, borderRadius: 1, opacity: 0.55, alignSelf: "stretch" }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                      <div style={{ flex: 1, minWidth: 0, padding: "12px 14px" }}>
+                        {/* Row 1: badges + source/date */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7, flexWrap: "wrap" }}>
                           <span style={{
                             fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.10em",
                             color: cfg.color, textTransform: "uppercase",
                             padding: "2px 6px", borderRadius: 3,
-                            background: `${cfg.color}14`, border: `1px solid ${cfg.color}30`,
+                            background: `${cfg.color}14`, border: `1px solid ${cfg.color}28`,
+                            flexShrink: 0,
                           }}>
                             {cfg.label}
                           </span>
                           {isHigh && (
                             <span style={{
                               fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
-                              color: "#FF3D5A", padding: "2px 6px", borderRadius: 3,
+                              color: "#FF3D5A", padding: "2px 6px", borderRadius: 3, flexShrink: 0,
                               background: "rgba(255,61,90,0.12)", border: "1px solid rgba(255,61,90,0.30)",
                             }}>HIGH</span>
                           )}
-                          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5, marginLeft: "auto" }}>
-                            {ev.source} · {ev.date}
+                          {isMed && !isHigh && (
+                            <span style={{
+                              fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: "0.08em",
+                              color: T.amber, padding: "2px 6px", borderRadius: 3, flexShrink: 0,
+                              background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.18)",
+                            }}>MED</span>
+                          )}
+                          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.45, marginLeft: "auto", whiteSpace: "nowrap" }}>
+                            {ev.source}{ev.date ? ` · ${ev.date}` : ""}
                           </span>
                         </div>
-                        <div style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 600, color: T.t1, letterSpacing: "-0.01em", lineHeight: 1.4, marginBottom: 5 }}>
+                        {/* Row 2: title */}
+                        <div style={{ fontFamily: FONTS.display, fontSize: 13, fontWeight: 600, color: T.t1, letterSpacing: "-0.01em", lineHeight: 1.4, marginBottom: 6 }}>
                           {ev.title}
                         </div>
-                        <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t3, lineHeight: 1.55 }}>
+                        {/* Row 3: description */}
+                        <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t3, lineHeight: 1.6 }}>
                           {stripHtml(ev.description || ev.summary)}
                         </div>
                       </div>
