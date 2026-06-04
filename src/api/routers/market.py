@@ -1541,3 +1541,111 @@ async def coin_tickers(coin_id: str, depth: int = 10):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Tickers error: {e}")
+
+
+# ── Narrative / NMA ─────────────────────────────────────────────────────────
+
+COINGECKO_IDS = {
+    "BTC": "bitcoin", "ETH": "ethereum", "SOL": "solana",
+    "BNB": "binancecoin", "XRP": "ripple", "ADA": "cardano",
+    "AVAX": "avalanche-2", "DOT": "polkadot", "NEAR": "near",
+    "SUI": "sui", "APT": "aptos", "HYPE": "hyperliquid",
+    "ARB": "arbitrum", "OP": "optimism", "LINK": "chainlink",
+    "UNI": "uniswap", "AAVE": "aave", "MKR": "maker",
+}
+
+
+@router.get("/api/v1/market/narrative/{symbol}")
+async def get_narrative_signal(symbol: str):
+    """
+    Get NMA (Narrative-Market Alignment) signal for a single asset.
+
+    Returns NarrativeSignal dataclass:
+      - nma_score: float (0-100) — weighted composite
+      - social_score: float — Twitter/Reddit/CryptoPanic (40%)
+      - trend_score: float — Google Trends (30%)
+      - orderflow_score: float — Binance depth + funding (30%)
+      - signal: STRONG_NARRATIVE / NARRATIVE_FADE / NEUTRAL
+      - confidence: float (0.0-1.0)
+      - nma_7d_delta: float — 7-day momentum change
+      - bid_imbalance: float — Binance orderbook depth imbalance
+      - funding_divergence: float — funding rate vs 7d avg
+
+    CIS S-pillar modifier:
+      NMA > 65 → S pillar +10-15%
+      NMA < 40 → S pillar -5-10%
+
+    Examples:
+      /api/v1/market/narrative/BTC
+      /api/v1/market/narrative/ETH
+    """
+    sym = symbol.upper().strip()
+    if sym not in COINGECKO_IDS:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unsupported symbol '{sym}'. Supported: {list(COINGECKO_IDS.keys())}",
+        )
+
+    try:
+        from data.narrative.narrative_engine import compute_narrative_signal
+        from data.narrative import social_collector, orderflow_collector
+    except ImportError:
+        try:
+            from src.data.narrative.narrative_engine import compute_narrative_signal
+            from src.data.narrative import social_collector, orderflow_collector
+        except ImportError:
+            raise HTTPException(status_code=503, detail="Narrative module unavailable")
+
+    try:
+        signal = await compute_narrative_signal(
+            symbol   = sym,
+            coin_id  = COINGECKO_IDS[sym],
+            social_collector  = social_collector,
+            orderflow_collector = orderflow_collector,
+        )
+        return signal.to_dict()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Narrative error: {e}")
+
+
+@router.get("/api/v1/market/narrative")
+async def get_batch_narrative(symbols: str = None):
+    """
+    Batch NMA signals for multiple assets.
+
+    Query params:
+      symbols — comma-separated list (e.g. "BTC,ETH,SOL"). Defaults to top 10 crypto.
+
+    Returns: {symbol: NarrativeSignal}
+    """
+    try:
+        from data.narrative.narrative_engine import batch_narrative_signals
+        from data.narrative import social_collector, orderflow_collector
+    except ImportError:
+        try:
+            from src.data.narrative.narrative_engine import batch_narrative_signals
+            from src.data.narrative import social_collector, orderflow_collector
+        except ImportError:
+            raise HTTPException(status_code=503, detail="Narrative module unavailable")
+
+    if symbols:
+        sym_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        # Filter to supported only
+        supported = {s: COINGECKO_IDS[s] for s in sym_list if s in COINGECKO_IDS}
+        if not supported:
+            raise HTTPException(
+                status_code=400,
+                detail=f"None of the symbols are supported. Supported: {list(COINGECKO_IDS.keys())}",
+            )
+    else:
+        supported = {k: v for k, v in list(COINGECKO_IDS.items())[:10]}
+
+    try:
+        signals = await batch_narrative_signals(
+            list(supported.keys()),
+            social_collector,
+            orderflow_collector,
+        )
+        return {sym: sig.to_dict() for sym, sig in signals.items()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Batch narrative error: {e}")
