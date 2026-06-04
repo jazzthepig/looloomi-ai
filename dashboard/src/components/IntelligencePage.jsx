@@ -974,12 +974,12 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                                 alignItems: "center",
                                 transition: "background .14s",
                                 cursor: "pointer",
-                                background: rwaTag ? "rgba(232,160,0,.018)" : "transparent",
+                                background: rwaTag ? "rgba(232,160,0,0.02)" : "transparent",
                                 animation: `slideIn .2s ease ${Math.min(i*.02,.3)}s both`,
                               }}
                               onClick={() => setSelectedVCRound(selectedVCRound?.name === r.name ? null : r)}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = rwaTag ? "rgba(232,160,0,.018)" : "transparent"; }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = rwaTag ? "rgba(232,160,0,0.05)" : "rgba(255,255,255,0.03)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = rwaTag ? "rgba(232,160,0,0.02)" : "transparent"; }}
                             >
 
                               {/* Project */}

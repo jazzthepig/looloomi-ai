@@ -200,29 +200,32 @@ const SignalRow = ({ signal, isNew, isExpanded, onToggle }) => {
       ref={rowRef}
       className={isNew ? "signal-row new" : "signal-row"}
       style={{
-        padding: "16px 16px",
-        borderBottom: `1px solid ${T.border}`,
-        transition: "background 0.14s",
+        padding: "13px 14px 13px 12px",
+        borderBottom: `1px solid rgba(37,99,235,0.10)`,
+        borderLeft: `3px solid ${isExpanded ? typeConfig.color : typeConfig.color + "60"}`,
+        transition: "background 0.14s, border-left-color 0.14s",
         cursor: hasMeta ? "pointer" : "default",
         background: isExpanded ? T.raised : "transparent",
       }}
       onClick={hasMeta ? onToggle : undefined}
-      onMouseEnter={(e) => { if (!isExpanded) e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
-      onMouseLeave={(e) => { if (!isExpanded) e.currentTarget.style.background = "transparent"; }}
+      onMouseEnter={(e) => { if (!isExpanded) { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; e.currentTarget.style.borderLeftColor = typeConfig.color; } }}
+      onMouseLeave={(e) => { if (!isExpanded) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderLeftColor = typeConfig.color + "60"; } }}
     >
       {/* ── Top row: type label (text only) + direction icon + time ──── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, gap: 4 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {/* Type — text only, no box */}
+          {/* Type badge */}
           <span style={{
-            fontFamily: FONTS.display, fontSize: 9, fontWeight: 700, letterSpacing: "0.12em",
+            fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.10em",
             color: typeConfig.color, textTransform: "uppercase",
+            padding: "2px 6px", borderRadius: 3,
+            background: typeConfig.bg, border: `1px solid ${typeConfig.border}`,
           }}>
             {typeConfig.label}
           </span>
-          {/* Direction icon only — no label, no box */}
+          {/* Direction icon */}
           {dirStyle && signal.vector_direction && signal.vector_direction !== "NEUTRAL" && (
-            <span style={{ fontSize: 10, lineHeight: 1, color: dirStyle.color, opacity: 0.7 }}>
+            <span style={{ fontSize: 10, lineHeight: 1, color: dirStyle.color, opacity: 0.8 }}>
               {dirStyle.icon}
             </span>
           )}
