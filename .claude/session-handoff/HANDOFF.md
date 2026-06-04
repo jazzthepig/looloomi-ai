@@ -1,4 +1,21 @@
-# CometCloud Session Handoff Protocol
+# CometCloud Session Handoff — Last updated 2026-06-04
+
+## Quick state for new session
+Read `current_state.md` first. Then read CLAUDE.md "Production health" and "Task matrix".
+
+## Top 3 for next session
+1. Signal outcome tracker — match signal_journal entries to OHLCV 30D later, calculate win rate
+2. QuantMonitor paper P&L auto-refresh — show live paper trading once Minimax trigger is in
+3. win.html enhancements — live regime badge, protocol scores, more proof points
+
+## Key files from Jun 2026 session
+- `MINIMAX_TRADING_TRIGGER.md` → send to Minimax, paste into cis_scheduler.py
+- `CometCloud_Investor_Deck_2026.pptx` → 10-slide LP deck (in repo root)
+- `dashboard/win.html` → How to Win page (live after git push)
+
+---
+
+# CometCloud Session Handoff Protocol (original)
 
 Every Cowork session has a finite context window. When it fills, the next session
 starts cold. This file defines how Seth and Austin leave a clean handoff so the
