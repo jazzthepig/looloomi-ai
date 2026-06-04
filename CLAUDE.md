@@ -112,24 +112,31 @@ relevant skill when working in that domain — don't rely solely on CLAUDE.md.
 ```
 looloomi-ai/
 ├── dashboard/                        # React frontend
-│   ├── src/components/
-│   │   ├── MarketDashboard.jsx        # Market / Asset Prices tab
-│   │   ├── IntelligencePage.jsx       # Intelligence + Quant GP tabs
-│   │   ├── CISLeaderboard.jsx         # CIS scoring leaderboard
-│   │   └── App.jsx
-│   └── dist/                          # Committed build output (Railway serves this)
+│   ├── src/components/               # 33 components (see Codebase metrics)
+│   │   ├── IntelligencePage.jsx      # Intelligence hub (heatmap, news, VC)
+│   │   ├── CISLeaderboard.jsx        # CIS scoring leaderboard (lazy-loaded)
+│   │   ├── SignalFeed.jsx            # Live market signal feed
+│   │   ├── ProtocolIntelligence.jsx  # DeFiLlama TVL + CIS protocol scoring
+│   │   ├── QuantMonitor.jsx          # Paper trading + IC loop dashboard
+│   │   ├── MobileApp.jsx             # H5 mobile experience (dark theme)
+│   │   └── App.jsx                   # 1,254 lines, lazy routing
+│   ├── win.html                      # How to Win positioning page
+│   ├── strategy.html                 # Investor demo page
+│   ├── methodology.html              # CIS v4.1 public spec page
+│   ├── agent.html                    # Agent API docs
+│   └── dist/                         # Committed build output (Railway serves this)
 ├── src/
 │   ├── api/
-│   │   └── main.py                    # FastAPI — single-file God File (624 lines)
-│   └── data/
-│       └── cis/
-│           └── cis_provider.py        # Railway CIS scoring engine (CoinGecko-based)
-├── Shadow/
-│   └── cometcloud-local/              # Mirror of Mac Mini code — READ-ONLY reference
-│       ├── cis_v4_engine.py           # 8-asset-class scoring engine (Minimax)
-│       ├── cis_scheduler.py           # Job manager, pushes every ~30min
-│       ├── cis_push.py                # POSTs scores to Railway /internal/cis-scores
-│       └── data_fetcher.py            # DeFiLlama + CoinGecko + Binance fetcher
+│   │   ├── main.py                   # FastAPI entry — 23 routers, 127 endpoints
+│   │   └── routers/                  # market, cis, intelligence, macro, trading,
+│   │                                 # vault, signals, vector, factors, agent, ...
+│   └── data/market/
+│       ├── data_layer.py             # DeFiLlama + CG + Redis caching
+│       ├── cis_provider.py           # Railway T2 scoring engine
+│       └── protocol_engine.py        # Protocol CIS scoring (25 protocols)
+├── Shadow/                           # READ-ONLY Mac Mini reference
+├── MINIMAX_TRADING_TRIGGER.md        # ⚡ URGENT: copy-paste code for auto paper trading
+├── CometCloud_Investor_Deck_2026.pptx # 10-slide investor deck (Jun 2026)
 └── CLAUDE.md
 ```
 
@@ -439,100 +446,98 @@ git push origin main
 - T20: Start Freqtrade dry run (CISEnhancedStrategy) — see MINIMAX_SYNC.md §4A
 - MacroBrief pipeline stability — LM Studio (Gemma4-26b) crash recovery
 
-## Production health (as of 2026-04-27)
+## Production health (as of 2026-06-04)
 
-- Railway: **ACTIVE** — HEAD = current (Week 8 full push complete) ✅
-- MCP server: **LIVE** ✅ — /mcp/sse mounted; llms.txt headers active; glama.json in repo
-- llms.txt: **LIVE** ✅ — served at /llms.txt; Link + X-Llms-Txt headers on all responses
-- MCP descriptions: **ASSERTIVE** ✅ — 7.5x EMNLP pattern on 5 tools (get_cis_exclusions, get_cis_universe, get_macro_pulse, get_cis_report, get_inclusion_standard)
-- CIS universe: **LIVE** — 84 assets (T1=25 Mac Mini + T2=59 Railway). COINGECKO_API_KEY set ✅
-- Mac Mini scheduler: **RUNNING** — cis_scheduler.py PID 33143, pushing every ~30min ✅
+- Railway: **ACTIVE** ✅ — 15 commits pending push (Jazz runs `git push origin main`)
+- MCP server: **LIVE** ✅ — /mcp/sse, 35 tools, llms.txt headers, glama.json indexed
+- CIS universe: **LIVE** ✅ — 84 assets (T1=25 Mac Mini + T2=59 Railway)
+- Mac Mini scheduler: **RUNNING** ✅ — cis_scheduler.py pushing every ~30min
 - macro_regime: **Tightening** — flowing through correctly ✅
-- DeFi overview: **LIVE** — DeFiLlama TVL, 25 protocols scored ✅
-- Macro Pulse: **LIVE** ✅ — BTC $77,995, F&G, dominance all live
-- Signal Feed: **LIVE** ✅ — correct timestamps, compliance-safe language
-- Macro Events: **LIVE** ✅ — HTML stripped from descriptions
-- Supabase: **CONNECTED** ✅ — score history writing (history_written: true) ✅
-- ScoreAnalytics: **LIVE** ✅ — heatmap populating with score history rows
-- MacroBrief: **NULL** — Mac Mini LM Studio pipeline not connected / not pushing
-- Economic Indicators: **LIVE** ✅ — EODHD key rotated ~Apr 25; static scaffold fallback added May 2026.
-- Quant Monitor (Freqtrade): **DRY RUN PENDING** 🟡 — Direction locked: TrendStrategy (PF=1.46, 169 trades,
-  MACD 4h, TP=10% SL=4%) + live CIS gate. `CISEnhancedStrategy.py` created on Mac Mini by Minimax.
-  Backtest PF<1 was methodology issue (2026 CIS scores filtering 2024 signals, time mismatch — not a strategy bug).
-  Next: Minimax confirms file, modifies CometCloudStrategy, starts dry run. See MINIMAX_SYNC.md §4A.
-- Agent harness: **DEPLOYED** ✅ — Phase A–F complete, all skills + plugin + workflows live
-- A2A discovery: **LIVE** ✅ — `/.well-known/agent.json` served from Railway
-- MCP server: **LIVE** ✅ — Phase 2.2 verified via Railway direct URL. HTTP 405 on HEAD = correct
-  (SSE endpoint is GET-only; 405 confirms route exists and is mounted)
-- A2A Task Queue: **LIVE** ✅ — Phase 2.3 confirmed working (2026-04-27). POST→pending, GET→completed in seconds.
-  84 assets returned, all C+/C grade NEUTRAL/UNDERPERFORM = correct Tightening regime behavior.
-- **CIS scoring (Tightening regime)**: No B+ assets (CIS≥65) is correct behavior — in Tightening
-  with alts down 15-30% vs BTC, S and A correctly suppress. S=12-23 (vol_regime negative, alts
-  underperform BTC), A=30-55 (benchmark divergence negative for large-caps). Not a bug.
-  Freqtrade regime-aware threshold = 52 (Tightening) → MKR (56.8) passes. ✅
-- **Beta calc fix** (2026-04-27): `calculate_asset_betas` min_len bug fixed — partial yfinance
-  failures (TNX) no longer kill the entire beta calculation; DXY+VIX compute independently.
-  T2 assets now correctly use rolling betas instead of CG proxy fallback.
+- Protocol Intelligence: **LIVE** ✅ — 25 protocols, CIS scored, DeFiLlama TVL
+- Signal Feed: **LIVE** ✅ — card design redesigned (typed badges, left accent, dark bg)
+- Macro Events: **LIVE** ✅ — card backgrounds, colored left border per type, MED badge
+- VC Funding table: **LIVE** ✅ — hover fixed (was invisible black-on-black)
+- Supabase: **CONNECTED** ✅ — 13 tables, score history accumulating since Apr 2026
+- Sector Heatmap: **LIVE** ✅ — L2 TVL fix (OP Mainnet added), -0.0% display fixed
+- MacroBrief: **NULL** 🔴 — Mac Mini LM Studio pipeline not pushing
+- Paper Trading: **ENGINE LIVE, NO AUTO-TRIGGER** 🟡 — see MINIMAX_TRADING_TRIGGER.md
+- win.html: **LIVE** ✅ — looloomi.ai/win.html (pending push)
+- H5 MobileApp: **FIXED** ✅ — dark theme root (#020208), macro brief visible
+- Investor Deck: **DONE** ✅ — CometCloud_Investor_Deck_2026.pptx (10 slides)
+- License partner: **FOUND** ✅ — Jazz negotiating terms with HK regulated partner
+- Agent harness: **DEPLOYED** ✅ — Phase A–F, A2A task queue, /.well-known/agent.json
 
-## Codebase metrics
+## Codebase metrics (Jun 2026)
 
-- Backend: ~5,200 lines across 12 routers (`src/api/routers/`) + main
-- Frontend: 26 components (`dashboard/src/components/`), 1,175 lines in `App.jsx`
-- CIS provider: `cis_provider.py` calculates scores for 65+ assets (13 §4A assets excluded)
-- Shadow/: removed from git tracking (read-only local reference, never commit)
+- Backend: ~8,000+ lines across 23 routers (`src/api/routers/`) + main, 127 endpoints
+- Frontend: 33 components (`dashboard/src/components/`), 1,254 lines in `App.jsx`
+- Supabase: 13 tables (cis_scores, signal_journal, trade_results, cis_regime_fitness,
+  cis_backtest_results, agent_call_log, webhook_subscriptions, api_keys, analytics_events,
+  macro_briefs, wallet_profiles, leads, vault_deposit_intents)
+- MCP tools: 35 production tools at /mcp/sse
+- Shadow/: removed from git tracking (never commit)
 
-## Task matrix — Week 8 (Apr 26+)
+## Done this session (Jun 2026)
 
-### Seth (Seth / Austin)
+- **Design QA pass**: H5 root background #FAFBFC → #020208 (was root cause of ALL H5 visibility bugs)
+- **H5 Macro Brief**: card background white → T.surface, text T.t1 → T.t2 (readable on dark)
+- **Protocol scoring**: grade thresholds aligned (A+≥85), STRONG OUTPERFORM added, m_base free
+  points removed, A pillar baseline removed — real differentiation across grade range
+- **L2 TVL fix**: added "op mainnet" + zksync/unichain/polygon zkevm to L2_CHAINS — ~$2B recovered
+- **Design tokens**: void-black #020208 applied platform-wide (tokens.js + index.css)
+- **News feed redesign**: card backgrounds, colored left border per type, MED badge, gap layout
+- **Signal Feed**: left accent border per type, type badge with bg/border, hover visible
+- **VC table**: hover fixed (rgba(0,0,0,0.02) → rgba(255,255,255,0.03))
+- **-0.0% fix**: fmtChg() clamps negative zero in sector heatmap
+- **Performance**: CISLeaderboard lazy-loaded (app bundle 165→117KB, -29%)
+- **Cache-Control**: all hot API endpoints covered with appropriate TTL + stale-while-revalidate
+- **Dead code removed**: ProtocolPage, MarketDashboard, PriceChart, FundDeployWizard, market.html
+- **rec_weight bug**: STRONG OUTPERFORM was falling to else:0 — fixed with proper handler
+- **win.html**: looloomi.ai/win.html — How to Win positioning page with live CIS scores
+- **Investor deck**: CometCloud_Investor_Deck_2026.pptx — 10 slides, dark theme, license partner language
+- **MINIMAX_TRADING_TRIGGER.md**: ready-to-paste code block for auto paper trading in cis_scheduler.py
 
-| Priority | Task | Est. | Status |
-|----------|------|------|-------|
-| P1 | ~~Phase 2.2 MCP sidecar — deploy `src/mcp/cometcloud_mcp.py`~~ | ~~1d~~ | ✅ DONE |
-| P1 | ~~Wallet connect auth review + E2E test script~~ | ~~1d~~ | ✅ DONE |
-| P1 | ~~Beta calc fix (calculate_asset_betas min_len bug)~~ | ~~2h~~ | ✅ DONE — 2026-04-27 |
-| P1 | Wallet connect live E2E run (Mac Mini) → re-run after Python 3.14 fix | 0.5d | T17 fix staged |
-| P2 | ~~Phase 2.3: A2A Task endpoint `/api/v1/agent/tasks`~~ | ~~4h~~ | ✅ DONE — 2026-04-27 |
-| P2 | Trading Agent P&L dashboard — Freqtrade metrics → strategy page | 2d | Blocked on Freqtrade (Seth不参与策略模块) |
-| P2 | Share card: og:image endpoint for Twitter/WeChat link previews | 1d | — |
-| P2 | My Portfolio view — after wallet connect | 3d | — |
-| P2 | Verify ScoreAnalytics heatmap populates | 0.5d | Supabase ✅ + scheduler ✅ |
+## Task matrix — Jun 2026
 
-### Minimax (Mac Mini)
+### Minimax (Mac Mini) — URGENT
 
-| Priority | Task | Est. | Status |
-|----------|------|------|------|
-| P0 | ~~Rotate EODHD + Finnhub API keys~~ | ~~30min~~ | ✅ Done ~Apr 25 |
-| P1 | ~~Add LAS calculation to local engine output~~ | ~~2h~~ | ✅ Done |
-| P1 | ~~Run T1 backtest → report results~~ | ~~2h~~ | ✅ Done — PF<1 → methodology issue, not strategy |
-| P1 | Re-run auth E2E after Seth's Python 3.14 fix | 15min | 🟡 After push |
-| P1 | Macro Brief pipeline stability — LM Studio (Gemma4-26b) crash recovery | 1d | 🟡 |
-| P1 | **CISEnhancedStrategy dry run (T20)** — confirm file path → modify CometCloudStrategy.py → start dry run | 2h | 🔴 Ready to execute |
-| P2 | DeFiLlama TVL refresh: 30min → 15min for F pillar freshness | 0.5h | 🟡 |
+| Priority | Task | Status |
+|----------|------|--------|
+| **P0** | **Add auto-trading trigger** — see `MINIMAX_TRADING_TRIGGER.md`, paste into `cis_scheduler.py` after Railway push block | 🔴 NOT DONE — every day without this = lost track record |
+| P1 | MacroBrief pipeline — LM Studio (Gemma4-26b) crash recovery | 🟡 |
+| P1 | OHLCV history pipeline — store 84 assets to /Volumes/CometCloudAI/data/ohlcv/ | 🔴 NOT STARTED |
 
-### Jazz + Nic (distribution)
+### Jazz
 
-| Priority | Task | Owner |
-|----------|------|-------|
-| P0 | Strategy.html walkthrough with Nic — collect institutional feedback | Jazz + Nic |
-| P1 | Wallet connect scope decision: Phantom only vs multi-wallet, custodial? | Jazz |
-| P1 | Identify 3-5 target family offices / HNW for soft intro | Nic |
-| P1 | Seed investor deck draft — positioning, fee, AUM targets | Jazz + Seth |
-| P2 | OSL stablecoin integration timeline — issuer API availability | Jazz |
-| P2 | HK SFC Type 9 license / compliance advisor engagement | Jazz |
-| P2 | IB association conference mapping (Q2 2026) | Nic |
+| Priority | Task | Status |
+|----------|------|--------|
+| **P0** | `git push origin main` — 15+ commits pending, all fixes not live until pushed | 🔴 Every session |
+| P0 | Negotiate license partner terms | 🟡 In progress |
+| P1 | Send deck + soft intro via Nic | ⬜ Deck ready |
+| P1 | Decide fund minimum investment amount (currently "TBD" in deck) | ⬜ |
 
-## Critical path
+### Seth (next session)
+
+| Priority | Task |
+|----------|------|
+| P1 | Signal outcome tracker — match signals to OHLCV results 30D later, calculate win rate |
+| P1 | QuantMonitor auto-refresh — show paper trading P&L as it accumulates |
+| P2 | win.html → add live regime badge + regime-adjusted threshold display |
+| P2 | MacroBrief fallback content when Mac Mini LLM offline |
+
+## Critical path (Jun 2026)
 
 ```
-CIS universe ✅ + Supabase ✅ + Mac Mini scheduler ✅
-  ├─→ Seth: verify ScoreAnalytics heatmap (24h data accumulation)
-  │     └─→ Seth: Freqtrade integration → Trading Agent P&L dashboard
-  ├─→ Minimax: Freqtrade dry run → Seth: Trading Agent P&L dashboard
-  ├─→ Seth: wallet connect E2E (1d) → My Portfolio view (3d)
-  │     └─→ Share card og:image (1d)
-  ├─→ Seth: Phase 2.2 MCP sidecar → agent ecosystem (ROADMAP_A2A)
-  └─→ Jazz + Nic: strategy.html review → seed investor deck
-        └─→ Family office soft intros
+git push (Jazz) → all fixes live on Railway
+  │
+  ├─→ Minimax: MINIMAX_TRADING_TRIGGER.md → paper trading starts accumulating
+  │     └─→ 60 days → first track record for LP conversations
+  │
+  ├─→ Jazz: license partner terms → fund structure confirmed
+  │     └─→ Nic soft intro → first LP meetings
+  │
+  └─→ Seth: signal outcome tracker → win rate data
+        └─→ "Our OUTPERFORM signals have X% 30D directional accuracy"
 ```
 
 ---
