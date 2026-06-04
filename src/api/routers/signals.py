@@ -278,6 +278,8 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
             "total_signals": len(open_signals),
             "open_signals":  len(open_signals),
             "closed_signals": 0,
+            "outcome_30d_count": 0,
+            "outcome_30d_pending": len(open_signals),
         }
 
     returns = np.array([r["return_pct"] / 100.0 for r in closed if r.get("return_pct") is not None])
@@ -415,6 +417,28 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
             "trade_count":    v["count"],
         }
 
+    # ── 30d outcome metrics ──────────────────────────────────────────────
+    #outcome_30d signals: those with outcome_30d set (computed by signal_outcome_tracker)
+    resolved_signals = [r for r in closed if r.get("outcome_30d") in ("WIN", "LOSS", "EXPIRED")]
+    pending_signals  = [r for r in open_signals if not r.get("outcome_30d")]
+    out_wins   = [r for r in resolved_signals if r.get("outcome_30d") == "WIN"]
+    out_losses = [r for r in resolved_signals if r.get("outcome_30d") == "LOSS"]
+    out_exp    = [r for r in resolved_signals if r.get("outcome_30d") == "EXPIRED"]
+
+    out_count     = len(resolved_signals)
+    out_win_rate  = round(len(out_wins) / out_count * 100, 1) if out_count > 0 else None
+    out_avg_ret   = round(float(np.mean([r.get("return_pct_30d", 0) for r in resolved_signals])) / 100.0 * 100, 3) if resolved_signals else None
+
+    outcome_stats = {
+        "outcome_30d_count":     out_count,
+        "outcome_30d_win_rate":  out_win_rate,
+        "outcome_30d_avg_return": out_avg_ret,
+        "outcome_30d_wins":       len(out_wins),
+        "outcome_30d_losses":     len(out_losses),
+        "outcome_30d_expired":    len(out_exp),
+        "outcome_30d_pending":    len(pending_signals) + sum(1 for r in closed if r.get("outcome_30d") is None and r.get("return_pct") is None),
+    }
+
     # Equity curve with dates for chart
     equity_series = []
     eq = 100_000.0
@@ -464,6 +488,8 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
         "by_regime":       regime_stats,
         "by_class":        class_stats,
         "by_grade":        grade_stats,
+        # 30d outcome metrics (populated by signal_outcome_tracker.py after 30d)
+        **outcome_stats,
     }
 
 
@@ -526,7 +552,7 @@ async def get_signal_performance():
         "exit_date": "not.is.null",
         "order":     "signal_date.asc",
         "limit":     "500",
-        "select":    "id,symbol,asset_class,grade,signal,cis_score,macro_regime,return_pct,holding_days,signal_date,exit_date,entry_price,exit_price",
+        "select":    "id,symbol,asset_class,grade,signal,cis_score,macro_regime,return_pct,holding_days,signal_date,exit_date,exit_reason,entry_price,exit_price,outcome_30d,return_pct_30d",
     })
 
     # Fetch open signals
@@ -534,7 +560,7 @@ async def get_signal_performance():
         "exit_date": "is.null",
         "order":     "signal_date.desc",
         "limit":     "100",
-        "select":    "id,symbol,asset_class,grade,signal,cis_score,macro_regime,entry_price,signal_date",
+        "select":    "id,symbol,asset_class,grade,signal,cis_score,macro_regime,entry_price,signal_date,outcome_30d",
     })
 
     result = _compute_metrics(closed, open_rows)
