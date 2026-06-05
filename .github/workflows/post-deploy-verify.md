@@ -4,6 +4,27 @@
 ## Trigger
 on: push: branches: [main]
 
+## Fast path — run the health gate script
+
+The canonical check is now a single self-contained script (stdlib only):
+
+```
+python3 scripts/deploy_health_gate.py --url https://looloomi.ai --wait 180
+```
+
+Exit 0 = all critical checks pass; exit 1 = at least one critical failure.
+Jazz can run the exact same command locally before/after `git push`. Prefer this
+over the manual endpoint walk below; the manual list is kept as a fallback +
+remediation reference.
+
+What the gate adds beyond the original 4 endpoint checks:
+- **O-pillar regression guard** — fails if every T1 asset has `pillars.O == null`
+  (the exact drift fixed 2026-06-05; must never silently return).
+- **Compliance guard** — fails if any asset `signal` is BUY/SELL/HOLD/etc.
+  (caught MANTLE="HOLD" live on first run; now sanitized at the boundary).
+- **Schema version** — `/internal/cis-scores/schema` must report `1.0`.
+- **Deploy-lag** — counts undeployed commits (live git sha vs local HEAD).
+
 ## Goal
 
 After Railway has had time to deploy (wait 3 minutes for the build to complete),
@@ -11,7 +32,7 @@ hit the CometCloud production API endpoints and verify that the deployment is
 healthy. If any endpoint fails, open a GitHub issue labeled `incident` with the
 findings.
 
-**Production URL:** `https://web-production-0cdf76.up.railway.app`
+**Production URL:** `https://looloomi.ai` (Railway direct: `https://web-production-0cdf76.up.railway.app`)
 
 ## Endpoints to check (in order)
 

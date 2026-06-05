@@ -24,10 +24,12 @@ from datetime import datetime, timezone, timedelta
 import httpx
 import numpy as np
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Header, HTTPException
 
 _logger = logging.getLogger(__name__)
 router  = APIRouter()
+
+_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 _SB_URL    = os.environ.get("SUPABASE_URL", "").rstrip("/")
@@ -573,6 +575,31 @@ async def get_signal_performance():
     except Exception:
         pass
 
+    return result
+
+
+@router.post("/internal/run-outcome-tracker")
+async def run_outcome_tracker_endpoint(
+    dry_run: bool = Query(default=False),
+    limit: int = Query(default=500, le=2000),
+    x_internal_token: str = Header(None),
+):
+    """
+    Resolve 30-day directional outcomes for matured signals (WIN/LOSS/EXPIRED).
+    Internal-only — guarded by INTERNAL_TOKEN. Idempotent; safe to call repeatedly.
+    Also runs automatically once/day via the startup background task.
+    """
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.data.signals.outcome_tracker import run_outcome_tracker
+    result = await run_outcome_tracker(dry_run=dry_run, limit=limit)
+    # bust the cached performance metrics so the new outcomes surface immediately
+    if not dry_run and result.get("rows_written"):
+        try:
+            from src.api.store import redis_set_key
+            await redis_set_key(_REDIS_PERF_KEY, {"status": "stale"}, ttl=1)
+        except Exception:
+            pass
     return result
 
 

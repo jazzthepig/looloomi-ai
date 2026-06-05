@@ -90,21 +90,42 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
         raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
-        universe  = payload.get("universe", [])
-        timestamp = payload.get("timestamp", datetime.now().isoformat())
+        # ── Normalize to canonical CIS push contract v1 (single source of truth) ──
+        # Accepts legacy shapes (flat f/m/r/s/a with r->O, int data_tier, 'assets'
+        # alias, epoch timestamps) and emits ONE canonical shape. See
+        # src/api/contracts/cis_push.py and MINIMAX_SYNC.md §2.
+        from src.api.contracts.cis_push import normalize_cis_payload, SCHEMA_VERSION
+        norm = normalize_cis_payload(payload)
+        universe   = norm["universe"]
+        timestamp  = norm["pushed_at"]
+        macro      = norm["macro"]
+        provenance = norm["provenance"]
 
-        # Forward macro regime from Mac Mini payload so agent API + signal feed
-        # can read cached.get("macro", {}).get("regime", ...) correctly
-        macro = payload.get("macro") or {}
-        if not macro and payload.get("macro_regime"):
-            macro = {"regime": payload["macro_regime"]}
+        # Loud drift alarm — silent field-drop is exactly what caused the
+        # historical front/back-end bugs. Surface it instead of swallowing it.
+        if norm["warnings"]:
+            _logger.warning(
+                "[CONTRACT] CIS push drift (schema=%s expected=%s, sha=%s): %s",
+                norm["schema_version"], SCHEMA_VERSION,
+                provenance.get("engine_git_sha"), "; ".join(norm["warnings"][:12]),
+            )
+        _logger.info(
+            "[CONTRACT] normalized %s/%s assets (T1=%s T2=%s dropped=%s) sha=%s cfg=%s",
+            norm["counts"]["normalized"], norm["counts"]["received"],
+            norm["counts"]["t1"], norm["counts"]["t2"], norm["counts"]["dropped"],
+            provenance.get("engine_git_sha"), provenance.get("config_hash"),
+        )
 
         cache_data = {
-            "universe":     universe,
-            "last_updated": time.time(),
-            "timestamp":    timestamp,
-            "source":       "local_engine",
-            "macro":        macro,
+            "universe":       universe,
+            "last_updated":   time.time(),
+            "timestamp":      timestamp,
+            "source":         "local_engine",
+            "macro":          macro,
+            # provenance + contract observability (read by /schema + ops)
+            "schema_version": norm["schema_version"],
+            "provenance":     provenance,
+            "contract_warnings": norm["warnings"][:20],
         }
 
         # 1. Write to Redis (hot cache, 2h TTL)
@@ -134,9 +155,11 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
             sb_rows = []
             for asset in universe:
                 symbol  = asset.get("symbol", "")
+                # canonical: pillars nested {F,M,O,S,A} with O recovered from r;
+                # data_tier_label is "T1"/"T2" (fixes int/str mislabel)
                 pillars = asset.get("pillars", {})
-                score   = asset.get("cis_score") or asset.get("score")
-                data_tier = "T1" if asset.get("data_tier") == "T1" else "T2"
+                score   = asset.get("cis_score")
+                data_tier = asset.get("data_tier_label", "T2")
 
                 # Score delta and Z-score from recent history
                 score_delta  = None
@@ -290,6 +313,17 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
     except Exception as e:
         _logger.warning(f"[INTERNAL] Error receiving CIS scores: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/internal/cis-scores/schema")
+async def get_cis_push_schema():
+    """
+    Live contract echo. Minimax's cis_push.py can fetch this at startup to
+    self-check the payload shape instead of relying on a (possibly stale)
+    Shadow/ copy. This endpoint — not Shadow, not markdown — is authority.
+    """
+    from src.api.contracts.cis_push import canonical_schema
+    return canonical_schema()
 
 
 # ── CIS Universe ──────────────────────────────────────────────────────────────
