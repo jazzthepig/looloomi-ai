@@ -325,31 +325,21 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
         except Exception:
             pass
 
-    # Sharpe approximation — mean / std of returns (annualized proxy)
+    # Per-signal Sharpe — mean / std of trade returns. NOTE: these are sparse,
+    # event-driven signal returns, NOT daily periods, so we do NOT annualize.
+    # (QA 2026-06-05: the old sqrt(252)/empyrical period="daily" annualization
+    # exploded this to -24.5 — a nonsensical magnitude.) This reports a unitless
+    # per-trade risk-adjusted return, which is the honest metric for a signal log.
     sharpe = None
     if len(returns) >= 5 and np.std(returns) > 0:
-        try:
-            import empyrical
-            # empyrical expects daily returns; treat each signal as one period
-            sharpe = round(float(empyrical.sharpe_ratio(returns, period="daily")), 3)
-        except Exception:
-            # fallback: manual Sharpe (excess return over 0, annualized with sqrt(252))
-            s = np.std(returns)
-            if s > 0:
-                sharpe = round(float(np.mean(returns) / s * np.sqrt(min(len(returns), 252))), 3)
+        sharpe = round(float(np.mean(returns) / np.std(returns)), 3)
 
-    # Sortino — downside deviation only
+    # Per-signal Sortino — mean / downside deviation (no annualization, same reason)
     sortino = None
     if len(returns) >= 5:
-        try:
-            import empyrical
-            sortino = round(float(empyrical.sortino_ratio(returns, period="daily")), 3)
-        except Exception:
-            neg = returns[returns < 0]
-            if len(neg) > 0:
-                downside_std = np.std(neg)
-                if downside_std > 0:
-                    sortino = round(float(np.mean(returns) / downside_std * np.sqrt(min(len(returns), 252))), 3)
+        neg = returns[returns < 0]
+        if len(neg) > 0 and np.std(neg) > 0:
+            sortino = round(float(np.mean(returns) / np.std(neg)), 3)
 
     # Calmar — CAGR / |maxDD|
     calmar = None
@@ -492,6 +482,20 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
         "by_grade":        grade_stats,
         # 30d outcome metrics (populated by signal_outcome_tracker.py after 30d)
         **outcome_stats,
+        # Honest methodology framing (QA 2026-06-05). Closed-signal returns here
+        # come from the DOWNGRADE-CLOSE path: a signal closes when its score falls
+        # below the exit threshold. Winners that never downgrade stay open, so this
+        # sample is selection-biased toward losers and is NOT a clean track record.
+        # The forward, unbiased metric is the 30-day fixed-horizon outcome
+        # (outcome_30d_*), which only becomes meaningful once signals mature
+        # (first signals logged 2026-05-25 → first 30d outcomes ~2026-06-24).
+        "methodology": {
+            "closed_basis": "downgrade_close",
+            "closed_basis_note": "selection-biased toward losers; not a track record",
+            "forward_metric": "outcome_30d (30-day fixed horizon)",
+            "forward_metric_ready": out_count >= 10,
+            "forward_metric_first_resolves": "2026-06-24",
+        },
     }
 
 
