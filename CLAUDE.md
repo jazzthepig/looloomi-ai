@@ -74,20 +74,27 @@ relevant skill when working in that domain — don't rely solely on CLAUDE.md.
    See `CIS_METHODOLOGY.md` §5 and §8.
    **Full rules + substitution tables:** `.claude/skills/compliance-language/`
 
-2. **Shadow folder is READ-ONLY.** Never `git add` or commit Shadow/ files. Shadow is
-   a local reference for Claude Cowork. All Mac Mini code changes go to
-   `/Volumes/CometCloudAI/cometcloud-local/` directly. This has been stated multiple
-   times — treat as a hard rule.
+2. **Shadow folder is READ-ONLY and is NOT authority.** Never `git add` or commit
+   Shadow/ files. Shadow is a convenience snapshot of the Mac Mini code — it drifts
+   from the live engine and must NEVER be the basis for frontend/backend correctness.
+   The authority for the Mac Mini ↔ Railway boundary is the canonical contract
+   (`src/api/contracts/cis_push.py` + `MINIMAX_SYNC.md` §2 + the live echo at
+   `GET /internal/cis-scores/schema`). When Shadow and the contract disagree, the
+   contract wins. All Mac Mini code changes go to `/Volumes/CometCloudAI/cometcloud-local/`
+   directly. Treat as a hard rule.
 
 3. **No internal implementation details in investor-facing pages.** strategy.html and
    other investor-facing content must not mention specific tech stack (FastAPI, Railway,
    Ollama, Gemma4-26b, LM Studio, etc.), hardware specs, or internal architecture.
 
-4. **Mac Mini ↔ Railway interface contract.** All schema changes to the CIS push
-   interface (`/internal/cis-scores` POST body) MUST be documented in
-   `MINIMAX_SYNC.md` BEFORE code changes. This includes: field names, grade/signal
-   enumerations, pillar keys, asset_class values, timestamp format. No unilateral
-   changes — both sides must confirm.
+4. **Mac Mini ↔ Railway interface contract (CANONICAL v1).** All schema changes to the
+   CIS push interface (`/internal/cis-scores` POST body) MUST be documented in
+   `MINIMAX_SYNC.md` §2 BEFORE code changes. The Railway receiver normalizes EVERY push
+   through `src/api/contracts/cis_push.py::normalize_cis_payload()`, which canonicalizes
+   legacy shapes (flat `f/m/r/s/a` with `r`→`O`, int/top-level `data_tier`, `assets`
+   alias, epoch timestamps) into one shape and logs drift loudly. Field names,
+   grade/signal enums, pillar keys, asset_class, timestamp format are defined there.
+   No unilateral changes — both sides confirm; bump `SCHEMA_VERSION` on any change.
 
 5. **Ownership boundaries.** Seth/Austin only modify `src/`, `dashboard/`, docs.
    Minimax only modifies `/Volumes/CometCloudAI/cometcloud-local/`. Shadow/ is

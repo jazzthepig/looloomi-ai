@@ -112,6 +112,37 @@ app.include_router(strategies_router)
 app.include_router(signals_router)
 
 
+# ── Daily signal-outcome resolver ─────────────────────────────────────────────
+# Resolves 30-day directional outcomes (WIN/LOSS/EXPIRED) for matured signals.
+# Runs ~once/day in-process so the LP track-record metrics stay current without
+# depending on the Mac Mini OHLCV pipeline. Idempotent (only touches NULL rows).
+import asyncio as _asyncio
+
+_OUTCOME_INTERVAL_S = 24 * 3600   # daily
+
+
+async def _outcome_tracker_loop():
+    # small startup delay so the app is fully up before the first run
+    await _asyncio.sleep(120)
+    while True:
+        try:
+            from src.data.signals.outcome_tracker import run_outcome_tracker
+            summary = await run_outcome_tracker(dry_run=False)
+            print(f"[OUTCOME] daily run — resolved={summary.get('resolved')} "
+                  f"win={summary.get('wins')} loss={summary.get('losses')} "
+                  f"written={summary.get('rows_written')}")
+        except Exception as _e:
+            print(f"[OUTCOME] ⚠️  daily run failed: {_e}")
+        await _asyncio.sleep(_OUTCOME_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_outcome_tracker():
+    if os.environ.get("DISABLE_OUTCOME_TRACKER", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_outcome_tracker_loop())
+        print("[OUTCOME] ✅ daily outcome-tracker loop scheduled")
+
+
 # ── MCP Server (ROADMAP_A2A Phase 2.2) ───────────────────────────────────────
 # Mounts the CometCloud MCP tool server at /mcp using streamable-HTTP transport.
 # Any MCP-compatible agent (Claude, GPT, Gemini, Cursor) can query CIS scores
@@ -168,6 +199,70 @@ async def health():
 async def health_api():
     """API-prefixed health check — bypasses Cloudflare SPA caching rules."""
     return _health_payload
+
+
+# ── Build/deploy self-introspection ───────────────────────────────────────────
+# Answers the question Jazz asks every session: "what's actually LIVE on Railway,
+# and is my local HEAD ahead of it?" The running instance reports the git sha it
+# was built from (Railway injects RAILWAY_GIT_COMMIT_SHA) so a local script can
+# diff live-sha vs `git rev-parse HEAD` and count undeployed commits. Also surfaces
+# the freshness + provenance of the last Mac Mini push, so deploy health and data
+# health are visible in one place. Public read (git sha is non-sensitive).
+import time as _time
+
+_BOOT_TS = _time.time()
+
+
+@app.get("/internal/build-state")
+async def build_state():
+    try:
+        from src.api.contracts.cis_push import SCHEMA_VERSION
+    except Exception:
+        SCHEMA_VERSION = "unknown"
+
+    git_sha = (
+        os.environ.get("RAILWAY_GIT_COMMIT_SHA")
+        or os.environ.get("GIT_COMMIT_SHA")
+        or os.environ.get("SOURCE_COMMIT")
+        or ""
+    )
+
+    # Last Mac Mini push: freshness + provenance (from the CIS hot cache)
+    last_push = {"present": False}
+    try:
+        from src.api.store import redis_get
+        cached = await redis_get()
+        if cached:
+            age = _time.time() - float(cached.get("last_updated") or 0)
+            uni = cached.get("universe") or []
+            prov = cached.get("provenance") or {}
+            last_push = {
+                "present":         True,
+                "age_seconds":     round(age, 1),
+                "stale":           age > 3600,   # pushes are ~30min; >1h = problem
+                "asset_count":     len(uni),
+                "schema_version":  cached.get("schema_version"),
+                "engine_git_sha":  prov.get("engine_git_sha"),
+                "config_hash":     prov.get("config_hash"),
+                "drift_warnings":  len(cached.get("contract_warnings") or []),
+            }
+    except Exception as _e:
+        last_push = {"present": False, "error": str(_e)}
+
+    return {
+        "service":         "looloomi-api",
+        "version":         app.version,
+        "environment":     _ENV,
+        "git_sha":         git_sha,
+        "git_sha_short":   git_sha[:8] if git_sha else None,
+        "git_branch":      os.environ.get("RAILWAY_GIT_BRANCH"),
+        "deployment_id":   os.environ.get("RAILWAY_DEPLOYMENT_ID"),
+        "contract_schema_version": SCHEMA_VERSION,
+        "route_count":     len(app.routes),
+        "uptime_seconds":  round(_time.time() - _BOOT_TS, 1),
+        "last_cis_push":   last_push,
+        "as_of":           _time.time(),
+    }
 
 
 # ── Serve React SPA ───────────────────────────────────────────────────────────

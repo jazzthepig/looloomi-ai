@@ -239,7 +239,7 @@ function SignalRow({ sig, currentPrices }) {
   return (
     <div style={{
       display: "grid",
-      gridTemplateColumns: "64px 1fr 72px 80px 72px 72px 64px",
+      gridTemplateColumns: "64px 1fr 72px 80px 72px 72px 80px",
       gap: 6,
       padding: "8px 12px",
       borderBottom: `1px solid rgba(255,255,255,0.04)`,
@@ -306,6 +306,30 @@ function SignalRow({ sig, currentPrices }) {
         <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3 }}>held</div>
       </div>
 
+      {/* 30d Outcome */}
+      <div style={{ textAlign: "center" }}>
+        {sig.outcome_30d ? (
+          <span style={{
+            fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700,
+            padding: "2px 6px", borderRadius: 2,
+            background: sig.outcome_30d === "WIN" ? "rgba(0,217,138,0.10)" :
+                        sig.outcome_30d === "LOSS" ? "rgba(255,61,90,0.10)" :
+                        "rgba(245,158,11,0.08)",
+            color: sig.outcome_30d === "WIN" ? C.green :
+                   sig.outcome_30d === "LOSS" ? C.red : C.amber,
+            border: `1px solid ${sig.outcome_30d === "WIN" ? "rgba(0,217,138,0.20)" :
+                                  sig.outcome_30d === "LOSS" ? "rgba(255,61,90,0.20)" :
+                                  "rgba(245,158,11,0.15)"}`,
+          }}>
+            {sig.outcome_30d}
+          </span>
+        ) : (
+          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.3 }}>
+            {isOpen ? "—" : "—"}
+          </span>
+        )}
+      </div>
+
       {/* Status */}
       <div style={{ textAlign: "center" }}>
         {isOpen ? (
@@ -318,12 +342,30 @@ function SignalRow({ sig, currentPrices }) {
             OPEN
           </span>
         ) : (
-          <span style={{
-            fontFamily: FONTS.mono, fontSize: 8,
-            color: T.t3, opacity: 0.6,
-          }}>
-            {sig.exit_reason || "CLOSED"}
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+            <span style={{
+              fontFamily: FONTS.mono, fontSize: 8,
+              color: T.t3, opacity: 0.6,
+            }}>
+              {sig.exit_reason || "CLOSED"}
+            </span>
+            {sig.outcome_30d && (
+              <span style={{
+                fontFamily: FONTS.mono, fontSize: 7, fontWeight: 700,
+                padding: "1px 5px", borderRadius: 2,
+                background: sig.outcome_30d === "WIN" ? "rgba(0,217,138,0.12)" :
+                            sig.outcome_30d === "LOSS" ? "rgba(255,61,90,0.12)" :
+                            "rgba(245,158,11,0.10)",
+                color: sig.outcome_30d === "WIN" ? C.green :
+                       sig.outcome_30d === "LOSS" ? C.red : C.amber,
+                border: `1px solid ${sig.outcome_30d === "WIN" ? "rgba(0,217,138,0.20)" :
+                                      sig.outcome_30d === "LOSS" ? "rgba(255,61,90,0.20)" :
+                                      "rgba(245,158,11,0.18)"}`,
+              }}>
+                {sig.outcome_30d}
+              </span>
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -516,6 +558,38 @@ export default function PerformanceDashboard() {
         />
       </div>
 
+      {/* ── 30d Outcome Summary (after first signals age out) ── */}
+      {(p.outcome_30d_win_rate != null || p.outcome_30d_count > 0) && (
+        <div style={{
+          display: "flex", gap: 10, marginBottom: 20,
+          background: C.card, border: `1px solid ${C.border}`,
+          borderRadius: 8, padding: "12px 16px",
+          flexWrap: "wrap",
+        }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 8, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, alignSelf: "center", marginRight: 4 }}>
+            30d Outcomes
+          </div>
+          {[
+            { label: "Resolved",  val: p.outcome_30d_count,        color: T.t2 },
+            { label: "Win Rate", val: isNum(p.outcome_30d_win_rate) ? `${p.outcome_30d_win_rate.toFixed(0)}%` : "—", color: isNum(p.outcome_30d_win_rate) ? (p.outcome_30d_win_rate >= 55 ? C.green : p.outcome_30d_win_rate >= 40 ? C.amber : C.red) : T.t3 },
+            { label: "Avg Ret",  val: fmtPct(p.outcome_30d_avg_return), color: pColor(p.outcome_30d_avg_return) },
+            { label: "W",        val: p.outcome_30d_wins || 0,   color: C.green },
+            { label: "L",        val: p.outcome_30d_losses || 0,  color: C.red   },
+          ].map(({ label, val, color }) => (
+            <div key={label} style={{ textAlign: "center", minWidth: 52 }}>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 14, color, fontWeight: 600 }}>{val}</div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: T.t3, opacity: 0.5, letterSpacing: ".08em" }}>{label}</div>
+            </div>
+          ))}
+          {p.outcome_30d_pending > 0 && (
+            <div style={{ textAlign: "center", minWidth: 52, alignSelf: "center", marginLeft: 4 }}>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 14, color: C.amber }}>{p.outcome_30d_pending}</div>
+              <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: T.t3, opacity: 0.5, letterSpacing: ".08em" }}>pending</div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Tab bar ── */}
       <div style={{
         display: "flex", gap: 0, marginBottom: 20,
@@ -627,7 +701,7 @@ export default function PerformanceDashboard() {
             gap: 6, padding: "6px 12px",
             borderBottom: `1px solid rgba(255,255,255,0.06)`,
           }}>
-            {["Asset","Signal","CIS","Entry","Return","Held","Status"].map(h => (
+            {["Asset","Signal","CIS","Entry","Return","Held","30d","Status"].map(h => (
               <div key={h} style={{
                 fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".10em",
                 textTransform: "uppercase", color: T.t3, opacity: 0.5,
