@@ -132,6 +132,14 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
         ok = await redis_set(cache_data)
         _logger.info(f"[INTERNAL] Received {len(universe)} CIS scores — Redis write: {ok}")
 
+        # 1b. Persist a long-lived "last known good" snapshot (7-day TTL). The hot
+        # cache expires after 2h; if the Mac Mini push stalls past that AND the
+        # Railway T2 calc is also empty, the universe endpoint would otherwise
+        # return [] and the whole leaderboard goes blank (QA P0, 2026-06-05). This
+        # LKG snapshot is the never-empty floor — served as "degraded" if needed.
+        if ok and universe:
+            await redis_set_key("cis:last_known_good", cache_data, ttl=604800)
+
         # 2. Write to Supabase (score history, persistent)
         #    Also computes score_delta and score_zscore from recent history.
         sb_ok = False
@@ -328,17 +336,44 @@ async def get_cis_push_schema():
 
 # ── CIS Universe ──────────────────────────────────────────────────────────────
 
+# Single-flight + short-TTL response cache for the universe endpoint.
+# QA P1 (2026-06-05): the homepage mounts ~7 components that each fetch
+# /api/v1/cis/universe on load. Each request recomputed the T2 Railway universe
+# (calculate_cis_universe + get_macro_pulse, both with external calls), so the
+# concurrent burst overwhelmed the worker → 503. Collapsing the burst into one
+# computation (others await/serve the cached result) removes the 503 entirely.
+_UNIVERSE_CACHE: dict = {"data": None, "ts": 0.0}
+_UNIVERSE_TTL = 30.0
+_UNIVERSE_LOCK = asyncio.Lock()
+
+
 @router.get("/api/v1/cis/universe")
 async def get_cis_universe(force_source: str = None, response: Response = None):
     """
-    CIS v4.0 Universe — priority: local_engine (Redis) → Railway calc → stale Redis fallback
+    CIS v4.0 Universe — priority: local_engine (Redis) → Railway calc → stale
+    Redis → last-known-good. Single-flight + 30s response cache so the homepage's
+    concurrent multi-component fetch burst computes once instead of N times.
     """
-    # Browser-level deduplication: 3 components hit this endpoint on load.
-    # max-age=60 means concurrent fetches within 60s return from browser cache (~0ms).
-    # stale-while-revalidate=120 keeps the UI fresh on background refresh.
     if response:
         response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
 
+    if not force_source:
+        now = time.time()
+        if _UNIVERSE_CACHE["data"] is not None and (now - _UNIVERSE_CACHE["ts"]) < _UNIVERSE_TTL:
+            return _UNIVERSE_CACHE["data"]
+        async with _UNIVERSE_LOCK:
+            now = time.time()
+            if _UNIVERSE_CACHE["data"] is not None and (now - _UNIVERSE_CACHE["ts"]) < _UNIVERSE_TTL:
+                return _UNIVERSE_CACHE["data"]
+            data = await _build_cis_universe(force_source)
+            if data and data.get("universe"):
+                _UNIVERSE_CACHE["data"] = data
+                _UNIVERSE_CACHE["ts"] = time.time()
+            return data
+    return await _build_cis_universe(force_source)
+
+
+async def _build_cis_universe(force_source: str = None):
     cached   = None
     use_local = False
 
@@ -510,7 +545,7 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         result["t2_count"] = len(railway_universe)
         return sanitize_floats(result)
 
-    # Last resort: stale Redis
+    # Last resort: stale hot-cache Redis
     if cached and cached.get("universe"):
         stale_universe = cached["universe"]
         return {
@@ -527,6 +562,35 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
             ),
             "universe":     stale_universe,
         }
+
+    # Never-empty floor: long-lived last-known-good snapshot (7-day TTL).
+    # Reached only when the hot cache has fully expired AND the Railway T2 calc
+    # returned empty — without this the leaderboard goes blank (QA P0). Clearly
+    # labeled "degraded" / source "last_known_good" so the UI can show a staleness
+    # notice, but the user always sees scores instead of an empty table.
+    try:
+        lkg = await redis_get_key("cis:last_known_good")
+    except Exception:
+        lkg = None
+    if lkg and lkg.get("universe"):
+        lkg_universe = lkg["universe"]
+        lkg_age = time.time() - lkg.get("last_updated", 0)
+        return {
+            "status":         "degraded",
+            "version":        "4.1.0",
+            "timestamp":      lkg.get("timestamp", time.time()),
+            "source":         "last_known_good",
+            "stale_age_s":    round(lkg_age, 1),
+            "t1_count":       0,
+            "t2_count":       len(lkg_universe),
+            "macro_regime": (
+                (lkg.get("macro") or {}).get("regime")
+                or lkg.get("regime")
+                or "UNKNOWN"
+            ),
+            "universe":       lkg_universe,
+        }
+
     return {"status": "error", "message": "No scoring data available", "universe": []}
 
 
