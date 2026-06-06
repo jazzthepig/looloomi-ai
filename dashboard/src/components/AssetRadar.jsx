@@ -229,6 +229,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         dataTier:   item.data_tier ?? 2,
         las:        item.las ?? null,
         confidence: item.confidence ?? null,
+        narrative:  item.narrative || null,
       };
       // For TradFi/Commodity: CIS universe has price/market_cap/volume
       if (item.price) {
@@ -477,7 +478,8 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                     return (
                       <tr key={asset.symbol}
                         className="transition-row"
-                        style={{ cursor: "pointer" }}
+                        style={{ cursor: cis?.narrative ? "help" : "pointer" }}
+                        title={cis?.narrative || undefined}
                       >
                         {/* Asset */}
                         <td style={{ padding: "9px 14px" }}>

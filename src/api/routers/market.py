@@ -1419,6 +1419,63 @@ async def price_history(coin_id: str, days: int = 365):
         raise HTTPException(status_code=500, detail=f"Price history error: {e}")
 
 
+@router.get("/api/v1/market/executability/{symbol}")
+async def executability_for_symbol(symbol: str, response: Response = None):
+    """
+    Executability for one asset — how much can an agent move, and at what cost?
+    Returns spread, a square-root-impact slippage curve, and the max notional
+    tradeable within 10/25/50/100 bps. Crypto pulls real per-exchange spread from
+    CoinGecko tickers; TradFi is treated as deep. Estimate is labeled by `source`;
+    the Mac Mini can push exact order-book depth to replace it.
+
+    Example: /api/v1/market/executability/BTC
+    """
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
+    sym = (symbol or "").upper().strip()
+    if not sym or len(sym) > 12:
+        raise HTTPException(status_code=400, detail="Invalid symbol")
+    try:
+        from src.data.cis.cis_provider import ASSETS_CONFIG
+        from src.data.market.executability import executability_detail
+        cfg = ASSETS_CONFIG.get(sym, {})
+        coin_id = cfg.get("coingecko")
+        asset_class = cfg.get("class")
+        return await executability_detail(sym, coin_id, asset_class, market_data={})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Executability error: {e}")
+
+
+@router.get("/api/v1/market/executability")
+async def executability_batch(response: Response = None):
+    """
+    Batch executability summary for the whole CIS universe — spread, liquidity
+    tier, and max notional at 25/50 bps per asset. Reads the (cached) universe so
+    it adds no extra computation. For agents sizing across the book at once.
+    """
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=300"
+    try:
+        from src.api.routers.cis import get_cis_universe
+        uni = await get_cis_universe()
+        rows = []
+        for a in (uni.get("universe") or []):
+            ex = a.get("executability") or {}
+            rows.append({
+                "symbol":                 a.get("symbol"),
+                "asset_class":            a.get("asset_class"),
+                "liquidity_tier":         ex.get("liquidity_tier"),
+                "spread_bps":             ex.get("spread_bps"),
+                "max_notional_25bps_usd": ex.get("max_notional_25bps_usd"),
+                "max_notional_50bps_usd": ex.get("max_notional_50bps_usd"),
+                "source":                 ex.get("source"),
+            })
+        rows.sort(key=lambda r: r.get("max_notional_25bps_usd") or 0, reverse=True)
+        return {"count": len(rows), "assets": rows, "model": "sqrt_impact"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Executability batch error: {e}")
+
+
 @router.get("/api/v1/market/exchange-concentration/{coin_id}")
 async def exchange_concentration(coin_id: str):
     """

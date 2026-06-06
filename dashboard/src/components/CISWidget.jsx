@@ -313,6 +313,11 @@ export function CISLeaderboardTable({ data, filter, setFilter, defaultLimit = 0 
                           </div>
                           <div style={{ flex: 1, minWidth: 200 }}>
                             <div style={{ fontSize: 11, color: T.gold, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Summary</div>
+                            {asset.narrative && (
+                              <div style={{ fontSize: 12.5, color: T.primary, lineHeight: 1.7, marginBottom: 10, fontStyle: "italic", borderLeft: `2px solid ${T.gold}`, paddingLeft: 10 }}>
+                                {asset.narrative}
+                              </div>
+                            )}
                             <div style={{ fontSize: 12, color: T.secondary, lineHeight: 1.8 }}>
                               <div>Cross-Asset Percentile: <strong style={{ color: T.primary }}>{asset.percentile != null ? `Top ${100 - asset.percentile}%` : "—"}</strong></div>
                               <div>CIS Grade: <strong style={{ color: GRADE_COLORS[asset.grade] }}>{asset.grade}</strong> ({asset.cis_score != null ? asset.cis_score.toFixed(1) : "—"}/100)</div>
