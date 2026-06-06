@@ -26,6 +26,7 @@ MORALIS_KEY   = os.getenv("MORALIS_API_KEY", "")
 ETHERSCAN_KEY = os.getenv("ETHERSCAN_API_KEY", "")
 HELIUS_KEY    = os.getenv("HELIUS_API_KEY", "")
 EODHD_KEY     = os.getenv("EODHD_API_KEY", "")
+CRYPTORANK_KEY = os.getenv("CRYPTORANK_API_KEY", "")
 
 # ── Persistent HTTP clients — one per API domain ──────────────────────────────
 # Reused across requests: eliminates TCP connect + TLS handshake overhead per call.
@@ -711,6 +712,78 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
     raises: list[dict] = []
     cutoff = datetime.now(timezone.utc).timestamp() - 180 * 86400
 
+    # ── Source 0: CryptoRank v2 (primary — DeFiLlama /raises paywalled 2026-06) ─
+    # Structured funding-round API. Gated on CRYPTORANK_API_KEY; no-ops cleanly
+    # (returns []) when the key is absent so RSS still carries the panel.
+    async def _fetch_cryptorank() -> list:
+        if not CRYPTORANK_KEY:
+            return []
+        try:
+            client = _get_misc_client()
+            resp = await client.get(
+                # Correct v2 path. NOTE: gated to paid tiers — free tier returns 403
+                # ("not available in your tariff plan"); handled below → RSS fallback.
+                # Activates automatically once the CryptoRank plan is upgraded.
+                "https://api.cryptorank.io/v2/currencies/funding-rounds",
+                headers={"X-Api-Key": CRYPTORANK_KEY},
+                params={"limit": min(limit, 100), "sortBy": "announcementDate", "sortDirection": "DESC"},
+                timeout=15,
+            )
+            if resp.status_code != 200:
+                _logger.info(f"[VC_RAISES] CryptoRank HTTP {resp.status_code} "
+                             f"({'tariff-gated — upgrade plan' if resp.status_code == 403 else 'unavailable'})")
+                return []
+            payload = resp.json()
+            rows = payload.get("data") if isinstance(payload, dict) else payload
+            if not isinstance(rows, list):
+                return []
+            items = []
+            for r in rows:
+                # Project name — CryptoRank nests it under a few possible keys
+                name = (
+                    r.get("name")
+                    or (r.get("project") or {}).get("name")
+                    or (r.get("keysData") or {}).get("name")
+                    or (r.get("coin") or {}).get("name")
+                    or "Unknown"
+                )
+                # Date — ISO string → epoch
+                date_ts = 0
+                adate = r.get("announcementDate") or r.get("date")
+                if adate:
+                    try:
+                        date_ts = int(datetime.fromisoformat(str(adate).replace("Z", "+00:00")).timestamp())
+                    except Exception:
+                        date_ts = 0
+                if date_ts and date_ts < cutoff:
+                    continue
+                amount_usd = _safe_float(r.get("raise")) or 0
+                funds = r.get("funds") or []
+                lead = [f.get("name") for f in funds if f.get("isLead") and f.get("name")]
+                allf = [f.get("name") for f in funds if f.get("name")]
+                cat = r.get("category") or (r.get("project") or {}).get("category") or "Crypto"
+                items.append({
+                    "name":             name,
+                    "amount":           int(amount_usd),
+                    "amount_disclosed": amount_usd > 0,
+                    "round":            r.get("stage") or r.get("type") or "—",
+                    "date":             date_ts,
+                    "category":         cat,
+                    "categoryGroup":    cat,
+                    "sector":           cat,
+                    "chains":           [],
+                    "leadInvestors":    lead,
+                    "investors":        allf,
+                    "valuation":        _safe_float(r.get("valuation")),
+                    "description":      "",
+                    "link":             r.get("announcementLink") or "",
+                    "source":           "cryptorank",
+                })
+            return items
+        except Exception as e:
+            _logger.warning(f"[VC_RAISES] CryptoRank error: {e}")
+            return []
+
     # ── Source 1: DeFiLlama /raises (may be paywalled — best-effort) ─────────
     async def _fetch_defillama() -> list:
         try:
@@ -978,14 +1051,15 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
 
     # ── Fetch all sources concurrently ───────────────────────────────────────
     try:
-        llama_data, rss_data, cg_data = await asyncio.gather(
+        cr_data, llama_data, rss_data, cg_data = await asyncio.gather(
+            _fetch_cryptorank(),
             _fetch_defillama(),
             _fetch_rss_raises(),
             _fetch_cg_recent(),
             return_exceptions=True,
         )
-        # Merge — priority: DeFiLlama > RSS > CoinGecko
-        for src in [llama_data, rss_data, cg_data]:
+        # Merge — priority: CryptoRank > DeFiLlama > RSS > CoinGecko
+        for src in [cr_data, llama_data, rss_data, cg_data]:
             if isinstance(src, list):
                 raises.extend(src)
 
@@ -1517,7 +1591,12 @@ async def get_cg_vc_portfolios() -> list[dict]:
         result = []
         for cat in all_cats:
             cid = cat.get("id", "")
-            if cid not in _VC_CAT_IDS:
+            # Match VC portfolio buckets resiliently: the curated whitelist OR any
+            # category whose id ends in "-portfolio" (CoinGecko's naming for VC
+            # holdings). The whitelist alone rotted as CG renamed/removed ids
+            # (animoca-brands-portfolio → animoca-brands, binance-labs gone), which
+            # silently emptied this panel. Suffix-match auto-includes new firms.
+            if cid not in _VC_CAT_IDS and not cid.endswith("-portfolio"):
                 continue
             mcap   = cat.get("market_cap") or 0
             chg24  = cat.get("market_cap_change_24h") or 0
@@ -1631,7 +1710,8 @@ async def get_macro_pulse() -> dict:
             "btc_price":             _btc_px,
             "btc_dominance":         _btc_dom,
             "fear_greed_index":      _fg_val,
-            "fear_greed_label":      _fg_lbl,
+            "fear_greed_value":     _fg_val,  # alias for backward compat
+            "fear_greed_label":     _fg_lbl,
             "total_market_cap_usd":  _mc_usd,
             "defi_tvl_usd":          _defi_tvl,
             "macro_regime":          "UNKNOWN",  # set by Mac Mini push via Redis; see below
@@ -2660,6 +2740,100 @@ async def get_eodhd_fundamentals(ticker: str, exchange: str = "US") -> dict:
         return _cache_set(key, result)
     except Exception as e:
         return {"error": str(e), "ticker": ticker}
+
+
+async def get_eodhd_eod_data(ticker: str, exchange: str = "US") -> Optional[dict]:
+    """
+    TradFi price + 30d momentum from EODHD end-of-day history.
+
+    Primary TradFi price source — replaces yfinance, which is rate-limited and has
+    blocked the portal (2026-06). Returns the SAME shape as cis_provider's
+    get_yfinance_data so it's a drop-in: price, change_24h/7d/30d, volume_24h,
+    high/low, volatility_30d, market_cap.
+
+    EODHD `/eod/{ticker}.{ex}` returns daily OHLCV: [{date, open, high, low,
+    close, adjusted_close, volume}, …] ascending by date.
+    TTL: 1h Redis.
+    """
+    if not EODHD_KEY:
+        return None
+    key = f"eodhd_eod_{ticker}_{exchange}"
+    cached = _cache_get(key, ttl=3600)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    from datetime import date, timedelta
+    frm = (date.today() - timedelta(days=50)).isoformat()
+    client = _get_misc_client()
+    try:
+        r = await client.get(
+            f"{EODHD_BASE}/eod/{ticker}.{exchange}",
+            params={"fmt": "json", "api_token": EODHD_KEY, "period": "d", "from": frm},
+            timeout=12,
+        )
+        r.raise_for_status()
+        rows = r.json()
+        if not isinstance(rows, list) or len(rows) < 2:
+            return None
+        closes = [_safe_float(x.get("adjusted_close") or x.get("close")) for x in rows]
+        closes = [c for c in closes if c is not None and c > 0]
+        if len(closes) < 2:
+            return None
+
+        price_now = closes[-1]
+
+        def _chg(n: int) -> float:
+            if len(closes) > n:
+                ref = closes[-(n + 1)]
+                return round((price_now - ref) / ref * 100, 2) if ref else 0.0
+            return 0.0
+
+        change_24h = _chg(1)
+        change_7d  = _chg(7)
+        change_30d = _chg(30)
+
+        # volatility: std of daily returns over the window
+        rets = [
+            (closes[i] - closes[i - 1]) / closes[i - 1]
+            for i in range(1, len(closes)) if closes[i - 1]
+        ]
+        if rets:
+            mean = sum(rets) / len(rets)
+            volatility_30d = (sum((x - mean) ** 2 for x in rets) / len(rets)) ** 0.5
+        else:
+            volatility_30d = 0.0
+
+        last = rows[-1]
+        high_24h = _safe_float(last.get("high")) or 0.0
+        low_24h  = _safe_float(last.get("low")) or 0.0
+        volume_24h = _safe_float(last.get("volume")) or 0.0
+        window_high = max(closes)
+        ath_chg = round((price_now - window_high) / window_high * 100, 1) if window_high else 0.0
+
+        result = {
+            "symbol":        ticker,
+            "price":         price_now,
+            "market_cap":    0,        # filled separately from EODHD fundamentals
+            "volume_24h":    volume_24h,
+            "change_24h":    change_24h,
+            "high_24h":      high_24h,
+            "low_24h":       low_24h,
+            "change_7d":     change_7d,
+            "change_30d":    change_30d,
+            "volatility_30d": round(volatility_30d, 5),
+            "circulating_supply": 0,
+            "total_supply":  0,
+            "ath_change_percentage": ath_chg,
+            "source":        "eodhd_eod",
+        }
+        await _redis_set(key, result, ttl=3600)
+        return _cache_set(key, result)
+    except Exception as e:
+        _logger.warning(f"[EODHD] eod fetch failed for {ticker}.{exchange}: {e}")
+        return None
 
 
 def _safe_float(val) -> Optional[float]:

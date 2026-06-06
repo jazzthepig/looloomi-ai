@@ -192,6 +192,8 @@ Railway (cis_provider.py) ──────────────────
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash auth token |
 | `INTERNAL_TOKEN` | Guards `/internal/cis-scores` endpoint |
 | `COINGECKO_API_KEY` | Optional Pro key for higher rate limits |
+| `EODHD_API_KEY` | TradFi prices/fundamentals — **now primary** for equities/ETFs/bonds (yfinance demoted to fallback; it rate-limited/blocked the portal) |
+| `CRYPTORANK_API_KEY` | **NEW — add to enable VC funding rounds.** Primary source after DeFiLlama `/raises` was paywalled (HTTP 402). Without it, funding panel falls back to RSS only |
 
 ## How to work with Jazz
 
