@@ -373,6 +373,16 @@ function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }
                       {asset.signal}
                     </span>
                   </div>
+                  {asset.narrative && (
+                    <div style={{
+                      fontFamily: FONTS.body, fontSize: 10, color: T.t3,
+                      lineHeight: 1.35, marginTop: 4,
+                      display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}>
+                      {asset.narrative}
+                    </div>
+                  )}
                 </div>
 
                 {/* Sparkline */}

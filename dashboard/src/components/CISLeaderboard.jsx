@@ -366,7 +366,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         data_tier: asset.data_tier ?? 2,
         las: asset.las ?? null,
         confidence: asset.confidence ?? null,
-        description: "",
+        description: asset.narrative || "",
       };});
       setData(mapped);
       setSelectedAsset(mapped[0] || null);
@@ -401,7 +401,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             data_tier: asset.data_tier ?? 2,
             las: asset.las ?? null,
             confidence: asset.confidence ?? null,
-            description: "",
+            description: asset.narrative || "",
           };});
           setData(mapped);
           setSelectedAsset(mapped[0]);

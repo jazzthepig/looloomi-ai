@@ -331,7 +331,15 @@ def canonical_schema() -> dict:
                 "asset_name", "raw_cis_score", "las", "confidence",
                 "percentile_rank", "recommended_weight", "class_rank",
                 "global_rank", "coingecko_id", "data_quality_score",
+                "narrative", "narrative_source", "executability",
             ],
+            "narrative": "optional two-sentence LLM scorecard note (compliance-safe, "
+                         "positioning language only). If absent, Railway fills a "
+                         "deterministic fallback from the pillars.",
+            "executability": "optional order-book-derived liquidity block "
+                             "{spread_bps, slippage_curve, max_notional_at, source: "
+                             "'macmini_orderbook'}. If absent, Railway fills a "
+                             "square-root-impact estimate from 24h volume.",
         },
         "accepted_legacy_aliases": {
             "universe": ["assets"],

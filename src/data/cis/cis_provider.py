@@ -2049,8 +2049,13 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         get_derivatives_map(),     # v4.3: funding rates + OI → O-pillar adjustment
         get_trending_map(),        # v4.3: trending rank → S-pillar boost
         _refresh_ic_multipliers(), # Simons: IC-based pillar weight feedback
-        # v4.x: NMA narrative signals for S-pillar injection
-        _fetch_narrative_signals() if not is_tradfi else asyncio.sleep(0),
+        # v4.x: NMA narrative signals for S-pillar injection (bulk fetch for all
+        # crypto symbols). NOTE: this is a single bulk call — there is no per-asset
+        # `is_tradfi` context here. A stray `if not is_tradfi else ...` referenced a
+        # loop-local before assignment, raising UnboundLocalError on EVERY call and
+        # silently killing the entire Railway T2 universe (blank leaderboard whenever
+        # the Mac Mini cache lapsed). Fixed 2026-06-05.
+        _fetch_narrative_signals(),
         return_exceptions=True,
     )
     # Safe unpack — any failed coroutine returns its exception, not a crash

@@ -366,11 +366,56 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
             if _UNIVERSE_CACHE["data"] is not None and (now - _UNIVERSE_CACHE["ts"]) < _UNIVERSE_TTL:
                 return _UNIVERSE_CACHE["data"]
             data = await _build_cis_universe(force_source)
+            _attach_asset_narratives(data)
             if data and data.get("universe"):
                 _UNIVERSE_CACHE["data"] = data
                 _UNIVERSE_CACHE["ts"] = time.time()
             return data
-    return await _build_cis_universe(force_source)
+    data = await _build_cis_universe(force_source)
+    _attach_asset_narratives(data)
+    return data
+
+
+def _sanitize_market_fields(universe: list) -> None:
+    """
+    Null out untrustworthy price-derived fields. When an asset's price is 0/missing
+    (e.g. the Mac Mini ships TradFi rows with price=0), change_Nd gets computed as
+    (0/ref - 1)*100 = -100 — a sentinel, not a real move. Surfacing -100 across the
+    leaderboard is worse than showing "—" (QA 2026-06-06). Frontend renders None
+    as "—". The Railway T2 path supplies real yfinance prices once it runs.
+    """
+    for a in universe:
+        if not isinstance(a, dict):
+            continue
+        price = a.get("price")
+        price_missing = price is None or price == 0
+        for k in ("change_24h", "change_7d", "change_30d"):
+            v = a.get(k)
+            if v is None:
+                continue
+            # -100 (total loss) is never a real read for these assets → sentinel
+            if price_missing or v <= -99.0:
+                a[k] = None
+
+
+def _attach_asset_narratives(data: dict) -> None:
+    """Enrich each asset with derived agent/investor data: narrative + executability."""
+    if not data or not data.get("universe"):
+        return
+    try:
+        _sanitize_market_fields(data["universe"])
+    except Exception as e:
+        _logger.warning(f"[CIS] market sanitize failed: {e}")
+    try:
+        from src.data.cis.narrative import attach_narratives
+        attach_narratives(data["universe"], data.get("macro_regime"))
+    except Exception as e:
+        _logger.warning(f"[CIS] narrative attach failed: {e}")
+    try:
+        from src.data.market.executability import attach_executability
+        attach_executability(data["universe"])
+    except Exception as e:
+        _logger.warning(f"[CIS] executability attach failed: {e}")
 
 
 async def _build_cis_universe(force_source: str = None):
