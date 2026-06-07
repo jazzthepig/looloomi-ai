@@ -64,7 +64,7 @@ const CSS = `
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 const fmt = {
   amount: (v) => {
-    if (!v && v !== 0) return "—";
+    if (!v) return "—";                       // 0 / null → "—", never a dead "$0.00M"
     if (v >= 1000) return `$${(v / 1000).toFixed(1)}B`;
     if (v >= 1)    return `$${v.toFixed(1)}M`;
     return `$${v.toFixed(2)}M`;
@@ -473,7 +473,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   {view === "macro" ? "Macro" : view === "events" ? "Events & VC" : "Intelligence"}
                 </span>
                 <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  {view === "macro" ? "· Macro Pulse & Economic Indicators" : view === "events" ? "· VC Funding & Regulatory" : "· AI Market Analysis"}
+                  {view === "macro" ? "· Macro Pulse & Economic Indicators" : view === "events" ? "· VC Funding & Regulatory" : "· Market structure, live"}
                 </span>
                 {/* Live inline stats — right-aligned, filtered by view */}
                 <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 0 }}>
@@ -545,7 +545,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 { label: "180d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals (${stats?.disclosedDeals ?? 0} disclosed)`, color: T.blue },
                 { label: "RWA Sector",        value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA deals`, color: T.amber },
                 { label: "Most Active VC",    value: stats?.topVC ?? null,                         sub: `${stats?.topVCDeals ?? "—"} deals`, color: T.green },
-                { label: "Source",            value: "Multi-Source",                                sub: "RSS + CoinGecko · Live", color: T.t3 },
+                { label: "Source",            value: "Live",                                sub: "Verified feeds · refreshed hourly", color: T.t3 },
               ].map((s, i, arr) => (
                 <div key={i} style={{
                   paddingRight: 36, paddingLeft: i === 0 ? 0 : 0,
@@ -721,7 +721,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   <Label Icon={Activity}>VC Portfolio Performance</Label>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.muted, letterSpacing: "0.06em" }}>
-                      CoinGecko · 10min
+                      Refreshed · 10 min
                     </span>
                     <span style={{
                       fontSize: 8, fontWeight: 700, letterSpacing: "0.1em",
@@ -903,7 +903,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       fontSize: '8px', fontWeight: '700', letterSpacing: '0.1em',
                       fontFamily: FONTS.display
                     }}>LIVE</span>
-                    <span>Multi-Source · RSS + CoinGecko</span>
+                    <span>Aggregated · refreshed hourly</span>
                     <span style={{color:'rgba(148,163,184,0.35)'}}>·</span>
                     <span id="vcUpdateTime">Updated {lastUpdate ? lastUpdate.toLocaleTimeString() : 'just now'}</span>
                   </div>

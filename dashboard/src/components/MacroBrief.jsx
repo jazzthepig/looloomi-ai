@@ -75,6 +75,23 @@ function renderMarkdown(text) {
       continue;
     }
 
+    // h3–h6 (model often emits ### ) — was falling through and printing literal "###"
+    if (/^#{3,6}\s/.test(line)) {
+      const txt = line.replace(/^#{3,6}\s/, "");
+      // a bare "### CometCloud Macro Brief" title is redundant with our header — drop it
+      if (/^comet ?cloud macro brief$/i.test(txt.trim())) continue;
+      nodes.push(
+        <div key={key++} style={{
+          fontFamily: FONTS.ui || FONTS.body, fontSize: 12.5, fontWeight: 700,
+          color: T.cyan, marginBottom: 4, marginTop: nodes.length ? 10 : 0,
+          textTransform: "uppercase", letterSpacing: "0.08em",
+        }}>
+          {renderInline(txt)}
+        </div>
+      );
+      continue;
+    }
+
     // horizontal rule
     if (/^---+$/.test(line.trim())) {
       nodes.push(<hr key={key++} style={{ border: "none", borderTop: `1px solid rgba(6,182,212,0.12)`, margin: "10px 0" }} />);
@@ -173,11 +190,11 @@ export default function MacroBrief() {
           }}>
             Macro Brief
           </span>
-          {data.model && (
-            <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>
-              {data.model}
-            </span>
-          )}
+          {/* internal model name removed — compliance rule #3 (no internal tech on
+              investor-facing pages) + it read as raw AI output. Brand voice instead. */}
+          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>
+            Looloomi AI
+          </span>
           {age && (
             <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: data.stale ? T.amber : T.t3, marginLeft: "auto", opacity: data.stale ? 1 : 0.5 }}>
               {data.stale ? "stale · " : ""}{age}
