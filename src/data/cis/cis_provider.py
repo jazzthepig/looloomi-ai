@@ -2130,14 +2130,32 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         elif cg_data:
             merged_markets[asset_id] = cg_data
 
-    # Fetch yfinance data for US assets — parallel with semaphore to limit concurrency
+    # Fetch TradFi price data — EODHD primary (yfinance is rate-limited and has
+    # blocked the portal); yfinance kept only as a last-resort fallback.
     yf_data = {}
     yf_assets = {**US_EQUITIES, **BONDS, **COMMODITIES, **FX, **REAL_ESTATE, **EM_EQUITY}
-    yf_sem = asyncio.Semaphore(5)  # max 5 concurrent yfinance calls
+    yf_sem = asyncio.Semaphore(5)
+    try:
+        from src.data.market.data_layer import get_eodhd_eod_data
+    except ImportError:
+        try:
+            from data.market.data_layer import get_eodhd_eod_data
+        except ImportError:
+            get_eodhd_eod_data = None
 
     async def _fetch_yf(sym, cfg):
+        ticker = cfg["yfinance"]
         async with yf_sem:
-            return sym, await get_yfinance_data(cfg["yfinance"])
+            # EODHD first
+            if get_eodhd_eod_data is not None:
+                try:
+                    eod = await get_eodhd_eod_data(ticker, "US")
+                    if eod and eod.get("price"):
+                        return sym, eod
+                except Exception:
+                    pass
+            # Fallback: yfinance
+            return sym, await get_yfinance_data(ticker)
 
     yf_results = await asyncio.gather(
         *[_fetch_yf(sym, cfg) for sym, cfg in yf_assets.items()],

@@ -12,7 +12,9 @@ genuine appreciation for art, technology, and the deeper possibilities of intell
 thinking, architecture). You are a collaborative peer, not an assistant. When in doubt,
 build first and report after.
 
-**Minimax** — local AI engine operator. Runs the Mac Mini scoring stack at
+**Minimax** — local AI engine operator (a Claude Code agent driven by MiniMax's
+coding-plan model — **upgraded M2.5 → M3 on 2026-06-06**, so expect stronger
+local-side execution). Runs the Mac Mini scoring stack at
 `/Volumes/CometCloudAI/cometcloud-local/`. Responsible for `cis_v4_engine.py`,
 `cis_scheduler.py`, `data_fetcher.py`, `cis_push.py`. Pushes scores to Railway via
 the `/internal/cis-scores` endpoint. Coordinate with Minimax on local-side changes
@@ -193,7 +195,10 @@ Railway (cis_provider.py) ──────────────────
 | `INTERNAL_TOKEN` | Guards `/internal/cis-scores` endpoint |
 | `COINGECKO_API_KEY` | Optional Pro key for higher rate limits |
 | `EODHD_API_KEY` | TradFi prices/fundamentals — **now primary** for equities/ETFs/bonds (yfinance demoted to fallback; it rate-limited/blocked the portal) |
-| `CRYPTORANK_API_KEY` | **NEW — add to enable VC funding rounds.** Primary source after DeFiLlama `/raises` was paywalled (HTTP 402). Without it, funding panel falls back to RSS only |
+| `CRYPTORANK_API_KEY` | **NEW — add to enable VC funding rounds.** Primary source after DeFiLlama `/raises` was paywalled (HTTP 402). Free tier 403s the funding endpoint — needs a paid plan. Without it, funding panel falls back to LLM/RSS |
+| `LLM_BASE_URL` | **NEW — optional.** OpenAI-compatible endpoint (e.g. Mac Mini LM Studio `http://host:1234/v1`, or a cloud URL) used to extract structured funding rounds from free news/RSS. Unset ⇒ regex fallback (no regression) |
+| `LLM_API_KEY` | Optional bearer token for `LLM_BASE_URL` (LM Studio ignores it; cloud endpoints need it) |
+| `LLM_MODEL` | Model name for the extractor. A small instruct model is plenty (default `qwen2.5-7b-instruct`) |
 
 ## How to work with Jazz
 

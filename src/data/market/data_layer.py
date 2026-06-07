@@ -904,7 +904,69 @@ async def get_vc_raises(limit: int = 100) -> list[dict]:
                     return name
         return ""
 
+    # Loose pre-filter: only items that plausibly mention funding get sent to the LLM.
+    _FUND_HINT = _re.compile(
+        r"\b(raise[sd]?|funding|round|seed|series\s*[a-f]|million|billion|backed|"
+        r"investment|secures?|closes?|strategic|venture)\b", _re.IGNORECASE)
+
+    async def _rss_llm_extract() -> list | None:
+        """LLM extraction over raw RSS items. None ⇒ unavailable → regex fallback."""
+        try:
+            from src.data.market.llm_extract import llm_extract_rounds, llm_configured
+        except ImportError:
+            from data.market.llm_extract import llm_extract_rounds, llm_configured
+        if not llm_configured():
+            return None
+        candidates = []
+        cid = 0
+        try:
+            async with httpx.AsyncClient(
+                headers={"User-Agent": "CometCloud/1.0 vc-tracker"}, timeout=8,
+            ) as client:
+                tasks = [client.get(f["url"], follow_redirects=True) for f in _FUNDING_RSS]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                for feed_info, result in zip(_FUNDING_RSS, results):
+                    if isinstance(result, Exception) or result.status_code != 200:
+                        continue
+                    try:
+                        root = _ET.fromstring(result.text)
+                    except Exception:
+                        continue
+                    channel = root.find("channel")
+                    if channel is None:
+                        continue
+                    for item in channel.findall("item")[:25]:
+                        title = (item.findtext("title") or "").strip()
+                        desc = _re.sub(r"<[^>]+>", " ", item.findtext("description") or "")
+                        desc = _re.sub(r"\s+", " ", desc).strip()[:250]
+                        if not _FUND_HINT.search(title + " " + desc):
+                            continue
+                        date_ts = 0
+                        pub_date = (item.findtext("pubDate") or "").strip()
+                        if pub_date:
+                            try:
+                                from email.utils import parsedate_to_datetime
+                                date_ts = int(parsedate_to_datetime(pub_date).timestamp())
+                            except Exception:
+                                pass
+                        if date_ts and date_ts < cutoff:
+                            continue
+                        cid += 1
+                        candidates.append({"id": cid, "title": title, "summary": desc,
+                                           "source": feed_info["source"], "date_ts": date_ts})
+        except Exception as e:
+            _logger.warning(f"[VC_RAISES] RSS raw fetch error: {e}")
+            return None
+        if not candidates:
+            return []
+        return await llm_extract_rounds(candidates[:60], cutoff)
+
     async def _fetch_rss_raises() -> list:
+        # Prefer LLM extraction (robust to phrasing); fall back to regex below.
+        llm_rows = await _rss_llm_extract()
+        if llm_rows is not None:
+            return llm_rows
+
         items = []
         try:
             async with httpx.AsyncClient(
