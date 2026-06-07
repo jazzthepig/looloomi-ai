@@ -946,10 +946,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                             display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
                           }}>
                             <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 4 }}>
-                              No funding rounds available
+                              Funding feed — awaiting data source
                             </div>
-                            <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t4, lineHeight: 1.6, maxWidth: 320 }}>
-                              Scanning RSS feeds and CoinGecko for recent rounds. Data refreshes hourly.
+                            <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t4, lineHeight: 1.6, maxWidth: 340 }}>
+                              Structured funding-round data resumes when CryptoRank Pro is enabled. Headline sources are scanned best-effort in the meantime.
                             </div>
                             <button
                               className="lm-action-btn"
