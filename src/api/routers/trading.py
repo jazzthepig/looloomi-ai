@@ -47,10 +47,16 @@ _INTERNAL_TOKEN    = os.environ.get("INTERNAL_TOKEN", "")
 _UPSTASH_URL       = os.environ.get("UPSTASH_REDIS_REST_URL", "").rstrip("/")
 _UPSTASH_TOKEN     = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
 _COINGECKO_KEY     = os.environ.get("COINGECKO_API_KEY", "")
+_EODHD_KEY         = os.environ.get("EODHD_API_KEY", "")
 
 _CG_BASE           = "https://api.coingecko.com/api/v3"
 _CG_PRO            = "https://pro-api.coingecko.com/api/v3"
 _CG_HEADERS        = {"x-cg-pro-api-key": _COINGECKO_KEY} if _COINGECKO_KEY else {}
+
+# EODHD real-time base — used as fallback for TradFi assets CoinGecko can't price.
+# Endpoint: GET /real-time/{TICKER}.{EX}?api_token=KEY&fmt=json
+# Exchanges: US (US Equity / Bond / ETF), CC (Crypto, in case CG is down).
+_EODHD_BASE        = "https://eodhd.com/api"
 
 _REDIS_POSITIONS   = "trading:positions"       # {order_id: position}
 _REDIS_SIG_QUEUE   = "trading:signal_queue"    # [signal]
@@ -98,6 +104,20 @@ _SYM_TO_CG: dict[str, str] = {
     "LTC":   "litecoin",        "DOGE":  "dogecoin",
 }
 
+# TradFi symbols priced via EODHD (US equity, bond ETF, commodity).
+# Mapped to EODHD exchange code (US = US Equity / Bond ETF / Commodity).
+_EODHD_SYM_TO_EX: dict[str, str] = {
+    # US Equity (high-volume ETFs + mega-caps)
+    "SPY": "US", "QQQ": "US", "DIA": "US", "IWM": "US", "VTI": "US",
+    "AAPL": "US", "MSFT": "US", "NVDA": "US", "GOOGL": "US", "AMZN": "US",
+    "META": "US", "TSLA": "US", "AMD": "US", "NFLX": "US", "JPM": "US",
+    "BAC":  "US", "V":    "US", "MA":   "US", "XOM":  "US",
+    # US Bond ETFs
+    "TLT": "US", "IEF": "US", "SHY": "US", "LQD": "US", "HYG": "US",
+    # Commodities
+    "GLD": "US", "SLV": "US", "USO": "US", "UNG": "US", "DBC": "US",
+}
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -112,29 +132,105 @@ async def _rset(key: str, val, ttl: int = 86400 * 7):
     return await redis_set_key(key, val, ttl=ttl)
 
 
-# ── Live price fetch (CoinGecko) ──────────────────────────────────────────────
+# ── Live price fetch (CoinGecko → EODHD fallback) ─────────────────────────────
 
-async def _fetch_price(symbol: str) -> float | None:
-    """Fetch current USD price from CoinGecko. Returns None on failure."""
-    cg_id = _SYM_TO_CG.get(symbol.upper())
-    if not cg_id:
+async def _fetch_price_eodhd(symbol: str) -> float | None:
+    """Fetch current USD price from EODHD real-time endpoint. Returns None on failure.
+
+    Used for TradFi assets (US Equity, US Bond, Commodity) that CoinGecko can't price.
+    Endpoint: GET /real-time/{TICKER}.{EX}?api_token=KEY&fmt=json
+    Response: {"code": "SPY.US", "close": 522.31, ...}
+    """
+    if not _EODHD_KEY:
         return None
-    base = _CG_PRO if _COINGECKO_KEY else _CG_BASE
+    exchange = _EODHD_SYM_TO_EX.get(symbol.upper())
+    if not exchange:
+        return None
     try:
         async with httpx.AsyncClient(timeout=8) as cl:
             r = await cl.get(
-                f"{base}/simple/price",
-                params={"ids": cg_id, "vs_currencies": "usd"},
-                headers=_CG_HEADERS,
+                f"{_EODHD_BASE}/real-time/{symbol.upper()}.{exchange}",
+                params={"fmt": "json", "api_token": _EODHD_KEY},
             )
+            r.raise_for_status()
             data = r.json()
-            return float(data[cg_id]["usd"])
+            # EODHD real-time returns: {code, timestamp, open, high, low, close, volume, previousClose, change, change_p}
+            close = data.get("close")
+            if close is None:
+                # Some responses wrap in {"data": {...}}
+                close = (data.get("data") or {}).get("close")
+            if close is None:
+                return None
+            return float(close)
     except Exception:
         return None
 
 
+async def _fetch_price(symbol: str) -> float | None:
+    """Fetch current USD price. CoinGecko for crypto, EODHD for TradFi.
+
+    Tries CoinGecko first when the symbol has a known crypto mapping, otherwise
+    falls through to EODHD. Returns None on total failure.
+    """
+    cg_id = _SYM_TO_CG.get(symbol.upper())
+    if cg_id:
+        base = _CG_PRO if _COINGECKO_KEY else _CG_BASE
+        try:
+            async with httpx.AsyncClient(timeout=8) as cl:
+                r = await cl.get(
+                    f"{base}/simple/price",
+                    params={"ids": cg_id, "vs_currencies": "usd"},
+                    headers=_CG_HEADERS,
+                )
+                data = r.json()
+                price = float(data[cg_id]["usd"])
+                if price > 0:
+                    return price
+        except Exception:
+            pass
+    # TradFi fallback (or CG failed) — try EODHD
+    return await _fetch_price_eodhd(symbol)
+
+
+async def _fetch_prices_eodhd_batch(symbols: list[str]) -> dict[str, float]:
+    """EODHD real-time batch fetch — runs concurrent /real-time calls (no batch endpoint).
+
+    EODHD doesn't have a batch endpoint like CoinGecko's /simple/price, so we fan
+    out individual requests concurrently with a small concurrency limit.
+    """
+    if not _EODHD_KEY:
+        return {}
+    tradfi_syms = [s for s in symbols if s.upper() in _EODHD_SYM_TO_EX]
+    if not tradfi_syms:
+        return {}
+    sem = asyncio.Semaphore(5)
+
+    async def _one(sym: str) -> tuple[str, float | None]:
+        async with sem:
+            return sym, await _fetch_price_eodhd(sym)
+
+    results = await asyncio.gather(*[_one(s) for s in tradfi_syms])
+    return {sym: p for sym, p in results if p is not None and p > 0}
+
+
 async def _fetch_prices_batch(symbols: list[str]) -> dict[str, float]:
-    """Batch price fetch for multiple symbols."""
+    """Batch price fetch. CoinGecko for crypto, EODHD for TradFi — both run in parallel."""
+    cg_ids = {sym: _SYM_TO_CG.get(sym.upper()) for sym in symbols}
+    cg_syms = [sym for sym, cid in cg_ids.items() if cid]
+    tradfi_syms = [s for s in symbols if s.upper() in _EODHD_SYM_TO_EX]
+
+    # Both helpers short-circuit on empty list, so safe to await unconditionally.
+    cg_res, eodhd_res = await asyncio.gather(
+        _fetch_prices_cg_batch(cg_syms),
+        _fetch_prices_eodhd_batch(tradfi_syms),
+    )
+    return {**cg_res, **eodhd_res}
+
+
+async def _fetch_prices_cg_batch(symbols: list[str]) -> dict[str, float]:
+    """CoinGecko batch price fetch for crypto symbols."""
+    if not symbols:
+        return {}
     cg_ids = {sym: _SYM_TO_CG.get(sym.upper()) for sym in symbols}
     valid_ids = {sym: cg_id for sym, cg_id in cg_ids.items() if cg_id}
     if not valid_ids:
@@ -310,7 +406,14 @@ async def submit_order(req: OrderRequest):
         cis_score, grade, regime, _asset = 0.0, "?", "Unknown", {}
 
     if not price:
-        raise HTTPException(status_code=422, detail=f"Cannot fetch live price for {symbol}. Check symbol or CoinGecko ID mapping.")
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"Cannot fetch live price for {symbol}. "
+                f"Symbol must be in CoinGecko crypto mapping (line 79) or EODHD TradFi mapping (line 100). "
+                f"Set EODHD_API_KEY env var to enable TradFi (US Equity/Bond/Commodity) pricing."
+            ),
+        )
 
     # Load portfolio state
     positions, balance = await asyncio.gather(
