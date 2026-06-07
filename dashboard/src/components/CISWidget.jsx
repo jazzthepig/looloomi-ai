@@ -119,15 +119,29 @@ function HeatCell({ value, onClick }) {
 /* ─── Macro Regime Banner ───────────────────────────────────────────── */
 
 export function CISMacroBanner({ macro }) {
-  const regimeColor = REGIME_COLORS[macro?.regime] || "#888";
-  const regime = macro?.regime || "Unknown";
+  const rawRegime = macro?.regime;
+  const known = rawRegime && rawRegime !== "Unknown" && rawRegime !== "UNKNOWN";
+  // Before the engine reports, read as a system that's *thinking*, not broken.
+  const regime = known ? rawRegime : "Calibrating";
+  const regimeColor = known ? (REGIME_COLORS[rawRegime] || "#888") : "#22D3EE";
 
   return (
-    <div className="lm-card" style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+    <div className="lm-card" style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, position: "relative", overflow: "hidden" }}>
+      {/* Turrell ambient light — regime-keyed glow that slowly breathes */}
+      <div aria-hidden="true" style={{
+        position: "absolute", left: -40, top: "50%", transform: "translateY(-50%)",
+        width: 280, height: 180, borderRadius: "50%",
+        background: `radial-gradient(circle, ${regimeColor}33 0%, ${regimeColor}00 70%)`,
+        filter: "blur(36px)", mixBlendMode: "screen", pointerEvents: "none",
+        animation: "ambientGlow 6s ease-in-out infinite",
+      }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 16, position: "relative" }}>
         <div>
           <div style={{ fontSize: 10, color: T.secondary, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>Macro Regime</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: regimeColor, fontFamily: FONTS.display }}>{regime}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: regimeColor, boxShadow: `0 0 10px ${regimeColor}`, flexShrink: 0 }} />
+            <span style={{ fontSize: 18, fontWeight: 700, color: regimeColor, fontFamily: FONTS.display }}>{regime}</span>
+          </div>
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -698,11 +712,11 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
               background: error ? "rgba(239,68,68,0.2)" : dataSource !== "loading" ? "rgba(34,197,94,0.2)" : "rgba(251,191,36,0.2)",
               color: error ? "#ef4444" : dataSource !== "loading" ? "#22c55e" : "#fbbf24"
             }}>
-              {error ? "ERROR" : dataSource === "loading" ? "LOADING" : dataSource.toUpperCase()}
+              {error ? "ERROR" : dataSource === "loading" ? "SYNCING" : "LIVE"}
             </span>
           </div>
           <p style={{ fontSize: 11, color: T.secondary, marginTop: 4 }}>
-            CIS v4.1 · Real-time API · {processedData?.universe?.length || 0} assets
+            CIS v4.1 · Live · {processedData?.universe?.length || 0} assets
             {customWeights && <span style={{ color: T.gold, marginLeft: 8 }}>Custom Weights</span>}
             {data?.timestamp && <span style={{ marginLeft: 8 }}>Updated: {new Date(data.timestamp < 1e12 ? data.timestamp * 1000 : data.timestamp).toLocaleString()}</span>}
           </p>
@@ -762,10 +776,16 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
       {/* Macro Banner */}
       <CISMacroBanner macro={{ regime: data?.macro_regime }} />
 
-      {/* Loading */}
+      {/* Loading — reads as the engine thinking, not a dead screen */}
       {loading && (
-        <div style={{ padding: 40, textAlign: "center", color: T.secondary }}>
-          Loading CIS data...
+        <div style={{ padding: 44, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <div className="ambient-pulse" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: "#22D3EE", boxShadow: "0 0 10px #22D3EE" }} />
+            <span style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", color: T.secondary }}>
+              Scoring the universe
+            </span>
+          </div>
+          <div style={{ fontSize: 11, color: T.muted || T.secondary }}>Five pillars across every asset — one moment.</div>
         </div>
       )}
 

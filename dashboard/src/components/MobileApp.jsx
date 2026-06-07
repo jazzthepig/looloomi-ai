@@ -184,9 +184,16 @@ function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }
     })
     .slice(0, 6);
 
-  /* Macro brief summary — first ~280 chars */
-  const briefSnippet = macro?.brief
-    ? macro.brief.slice(0, 280).replace(/\n/g, " ").trim() + (macro.brief.length > 280 ? "…" : "")
+  /* Macro brief summary — first ~280 chars, markdown stripped (no raw "###"/"**") */
+  const briefClean = macro?.brief
+    ? macro.brief
+        .replace(/^#{1,6}\s+.*$/gm, "")        // drop markdown header lines (incl. title)
+        .replace(/\*\*([^*]+)\*\*/g, "$1")     // unbold
+        .replace(/[*_`>#]/g, "")               // strip stray markers
+        .replace(/\s+/g, " ").trim()
+    : null;
+  const briefSnippet = briefClean
+    ? briefClean.slice(0, 280) + (briefClean.length > 280 ? "…" : "")
     : null;
 
   return (
