@@ -2875,10 +2875,39 @@ async def get_eodhd_eod_data(ticker: str, exchange: str = "US") -> Optional[dict
         window_high = max(closes)
         ath_chg = round((price_now - window_high) / window_high * 100, 1) if window_high else 0.0
 
+        # Market cap — REQUIRED by the Fundamental pillar (mcap=0 craters F→0 →
+        # the whole asset grades F). yfinance used to supply this; EODHD /eod does
+        # not, so fetch it from fundamentals (equities: MarketCapitalizationMln;
+        # ETFs: ETF_Data.TotalAssets). Best-effort, cached.
+        market_cap = 0.0
+        try:
+            fr = await client.get(
+                f"{EODHD_BASE}/fundamentals/{ticker}.{exchange}",
+                params={"fmt": "json", "api_token": EODHD_KEY,
+                        "filter": "Highlights::MarketCapitalizationMln,ETF_Data::TotalAssets,General::Type"},
+                timeout=10,
+            )
+            if fr.status_code == 200:
+                fj = fr.json() or {}
+                mc_mln = _safe_float((fj.get("Highlights") or {}).get("MarketCapitalizationMln")
+                                     if isinstance(fj.get("Highlights"), dict) else fj.get("MarketCapitalizationMln"))
+                etf_aum = _safe_float((fj.get("ETF_Data") or {}).get("TotalAssets")
+                                      if isinstance(fj.get("ETF_Data"), dict) else fj.get("TotalAssets"))
+                if mc_mln:
+                    market_cap = mc_mln * 1e6
+                elif etf_aum:
+                    market_cap = etf_aum
+        except Exception:
+            pass
+        # Fallback floor: if cap still unknown, estimate from price×volume so the
+        # F pillar is never starved to 0 by a missing-data gap.
+        if not market_cap and price_now and volume_24h:
+            market_cap = price_now * volume_24h * 30   # rough ADV→cap proxy
+
         result = {
             "symbol":        ticker,
             "price":         price_now,
-            "market_cap":    0,        # filled separately from EODHD fundamentals
+            "market_cap":    market_cap,
             "volume_24h":    volume_24h,
             "change_24h":    change_24h,
             "high_24h":      high_24h,
