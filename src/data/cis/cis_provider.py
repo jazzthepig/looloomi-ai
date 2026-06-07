@@ -1189,6 +1189,17 @@ def calculate_cis_score(
 
     f_score = round(max(0, min(100, mcap_score + tvl_score + fdv_score + supply_score + dev_bonus + emission_bonus)), 1)
 
+    # Resilience floor for listed TradFi instruments. Their Fundamental pillar
+    # rests almost entirely on market_cap; a missing data point — a closed-session
+    # weekend, an ETF with no fundamentals feed, a vendor hiccup — would otherwise
+    # crater F to ~0 and drag the whole asset to D/F (the "美股变D" failure). A
+    # listed equity/ETF/bond is structurally sound by definition, so floor F at a
+    # neutral baseline. Forward-looking: as tokenized equities trade 24/7, this
+    # keeps grades stable across the underlying's market hours.
+    _TRADFI_CLASSES_F = {"US Equity", "US Bond", "Commodity", "FX", "Real Estate", "EM Equity"}
+    if asset_class in _TRADFI_CLASSES_F:
+        f_score = max(f_score, 45.0)
+
     f_components: dict = {
         "market_cap_usd": market_cap,
         "market_cap_score": round(mcap_score, 1),
