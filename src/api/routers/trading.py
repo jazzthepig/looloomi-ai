@@ -37,6 +37,7 @@ from fastapi import APIRouter, HTTPException, Header, Query
 from pydantic import BaseModel, Field
 
 from src.api.store import redis_set_key, redis_get_key
+from src.api.notify import notify_telegram
 
 _logger = logging.getLogger(__name__)
 router  = APIRouter()
@@ -524,6 +525,10 @@ async def submit_order(req: OrderRequest):
 
     _logger.info(f"[TRADING] {req.mode} {req.side} {symbol} ${req.size_usd:.0f} @ {filled_at:.4f} | CIS={cis_score:.1f} {grade}")
 
+    # Fire-and-forget Telegram alert so Seth sees paper fills in ops channel
+    filled_pos = positions[order_id]
+    asyncio.create_task(_notify_paper_fill(filled_pos))
+
     return {
         "status":       "filled",
         "order_id":     order_id,
@@ -670,6 +675,10 @@ async def close_position(order_id: str, req: CloseRequest = None):
     await _save_balance(balance + exit_value)
 
     _logger.info(f"[TRADING] CLOSE {sym} @ {price:.4f} | P&L: {pnl_pct:+.2f}% (${pnl_abs:+.2f})")
+
+    # Fire-and-forget Telegram alert — Seth sees realized P&L accumulate
+    closed_pos = positions[order_id]
+    asyncio.create_task(_notify_paper_close(closed_pos, pnl_pct, pnl_abs))
 
     # ── Simons IC Loop — auto-mine after every 5th closed trade ──────────────
     all_closed = [p for p in positions.values() if p.get("status") == "closed"]
@@ -1134,3 +1143,49 @@ async def get_portfolio():
         "metrics":    metrics,
         "as_of":      _now(),
     }
+
+
+# ── Telegram alert helpers (paper trading) ────────────────────────────────────
+# Fires on every fill + every close, so Seth sees track record accumulate in
+# the ops channel. notify_telegram is a no-op when TELEGRAM_BOT_TOKEN unset.
+
+async def _notify_paper_fill(pos: dict) -> None:
+    """Fire-and-forget Telegram alert on a paper fill. Safe to call via create_task."""
+    try:
+        regime = pos.get("macro_regime", "?")
+        cis = pos.get("cis_score", 0)
+        grade = pos.get("cis_grade", "?")
+        signal = pos.get("cis_signal", "?")
+        size = pos.get("size_usd", 0)
+        entry = pos.get("entry_price", 0)
+        sl = pos.get("stop_loss", 0)
+        tp = pos.get("take_profit", 0)
+        sl_pct = pos.get("stop_loss_pct", 0) * 100
+        tp_pct = pos.get("take_profit_pct", 0) * 100
+        source = pos.get("note", "").split("|")[0].strip() or "manual"
+
+        text = (
+            f"📈 PAPER FILL {pos.get('side','LONG')} {pos['symbol']}\n"
+            f"  ${size:.0f} @ {entry:.4f}  |  SL ${sl:.4f} (-{sl_pct:.0f}%)  TP ${tp:.4f} (+{tp_pct:.0f}%)\n"
+            f"  CIS {cis:.1f} ({grade}) {signal}  |  regime={regime}\n"
+            f"  source: {source}\n"
+            f"  order_id: {pos.get('order_id','?')[:12]}"
+        )
+        await notify_telegram(text)
+    except Exception as e:
+        _logger.warning(f"[TRADING] notify_paper_fill failed: {e}")
+
+
+async def _notify_paper_close(pos: dict, pnl_pct: float, pnl_abs: float) -> None:
+    """Fire-and-forget Telegram alert on a paper position close."""
+    try:
+        pnl_emoji = "🟢" if pnl_abs >= 0 else "🔴"
+        text = (
+            f"{pnl_emoji} PAPER CLOSE {pos['symbol']}\n"
+            f"  exit ${pos.get('exit_price', 0):.4f}  |  P&L {pnl_pct:+.2f}% (${pnl_abs:+.2f})\n"
+            f"  reason: {pos.get('exit_reason','?')}\n"
+            f"  held: {pos.get('held_seconds', 0) / 3600:.1f}h"
+        )
+        await notify_telegram(text)
+    except Exception as e:
+        _logger.warning(f"[TRADING] notify_paper_close failed: {e}")
