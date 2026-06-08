@@ -28,7 +28,7 @@ import os, sys, json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -143,6 +143,33 @@ async def _start_outcome_tracker():
         print("[OUTCOME] ✅ daily outcome-tracker loop scheduled")
 
 
+# ── Heartbeat / observability loop ────────────────────────────────────────────
+# Polls the health verdict and alerts Telegram on a status transition (plus a
+# once-daily digest). This is the loop that turns reactive firefighting into
+# proactive alerts — it would have caught today's stale-push / drift / empty-
+# universe incidents the moment they happened.
+_HEARTBEAT_INTERVAL_S = 20 * 60   # every 20 min
+
+
+async def _heartbeat_loop():
+    await _asyncio.sleep(180)   # let the app + caches warm first
+    while True:
+        try:
+            from src.api.health import heartbeat_tick
+            summary = await heartbeat_tick()
+            print(f"[HEARTBEAT] status={summary.get('status')}")
+        except Exception as _e:
+            print(f"[HEARTBEAT] ⚠️  tick failed: {_e}")
+        await _asyncio.sleep(_HEARTBEAT_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_heartbeat():
+    if os.environ.get("DISABLE_HEARTBEAT", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_heartbeat_loop())
+        print("[HEARTBEAT] ✅ observability loop scheduled (Telegram alerts)")
+
+
 # ── MCP Server (ROADMAP_A2A Phase 2.2) ───────────────────────────────────────
 # Mounts the CometCloud MCP tool server at /mcp using streamable-HTTP transport.
 # Any MCP-compatible agent (Claude, GPT, Gemini, Cursor) can query CIS scores
@@ -211,6 +238,26 @@ async def health_api():
 import time as _time
 
 _BOOT_TS = _time.time()
+
+
+@app.get("/internal/health-summary")
+async def health_summary():
+    """One health verdict over Mac Mini push freshness, universe, contract drift,
+    and MacroBrief. Read by the heartbeat loop + ops. Public read (no secrets)."""
+    from src.api.health import compute_health_summary
+    return await compute_health_summary()
+
+
+@app.post("/internal/notify/test")
+async def notify_test(payload: dict = None, x_internal_token: str = Header(None)):
+    """Send a test Telegram alert. INTERNAL_TOKEN guarded. Confirms env wiring."""
+    _tok = os.environ.get("INTERNAL_TOKEN", "")
+    if not _tok or x_internal_token != _tok:
+        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    from src.api.notify import notify_telegram, telegram_configured
+    msg = (payload or {}).get("text") or "✅ CometCloud alerts wired — Telegram is live."
+    ok = await notify_telegram(msg)
+    return {"configured": telegram_configured(), "sent": ok}
 
 
 @app.get("/internal/build-state")
