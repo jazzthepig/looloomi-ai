@@ -13,7 +13,9 @@ const ProtocolIntelligence   = lazy(() => import("./components/ProtocolIntellige
 const MobileApp              = lazy(() => import("./components/MobileApp"));
 const AssetRadar             = lazy(() => import("./components/AssetRadar"));
 const QuantMonitor           = lazy(() => import("./components/QuantMonitor"));
+const EstAlphaSection        = lazy(() => import("./components/EstAlphaSection"));
 const MyPortfolio            = lazy(() => import("./components/MyPortfolio"));
+import DiagnoseHome from "./components/DiagnoseHome";
 const SignalFeed             = lazy(() => import("./components/SignalFeed"));
 const StrategiesPage         = lazy(() => import("./components/StrategiesPage"));
 const MultiFactorStrategies  = lazy(() => import("./components/MultiFactorStrategies"));
@@ -606,6 +608,8 @@ function DesktopApp() {
           {visited.has("portfolio") && (
             <section style={contentPad}>
               <Suspense fallback={<SectionLoader />}>
+                <DiagnoseHome embedded />
+                <div style={{ height: 36 }} />
                 <MyPortfolio cisUniverse={cisUniverse} />
               </Suspense>
             </section>
@@ -1109,140 +1113,10 @@ function QuantGPContent() {
         </Suspense>
       </div>
 
-      {/* Divider */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 14, marginBottom: 28,
-      }}>
-        <div style={{ flex: 1, height: 1, background: "rgba(200,168,75,0.10)" }} />
-        <span style={{
-          fontFamily: FONTS.mono, fontSize: 9, color: "rgba(200,168,75,0.45)",
-          letterSpacing: "0.16em", textTransform: "uppercase",
-        }}>
-          GP PARTNER
-        </span>
-        <div style={{ flex: 1, height: 1, background: "rgba(200,168,75,0.10)" }} />
-      </div>
-
-      {/* Section 2 — Partnership Banner */}
-      <div style={{
-        background: "linear-gradient(135deg, rgba(200,168,75,0.08) 0%, rgba(200,168,75,0.02) 50%, transparent 100%)",
-        border: "1px solid rgba(200,168,75,0.28)",
-        borderRadius: 12, padding: "24px 32px", marginBottom: 16,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        flexWrap: "wrap", gap: 20,
-      }}>
-        {/* Left: Logo placeholder */}
-        <div style={{
-          width: 64, height: 64, borderRadius: "50%",
-          background: "linear-gradient(135deg, rgba(13,32,56,0.9) 0%, rgba(18,45,76,0.8) 100%)",
-          border: "2px solid rgba(200,168,75,0.3)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <span style={{
-            fontFamily: FONTS.display, fontSize: 24, fontWeight: 800,
-            color: "#92722A", letterSpacing: "-0.02em",
-          }}>E</span>
-        </div>
-
-        {/* Center: Name + Partner info */}
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{
-            fontFamily: FONTS.display, fontSize: 24, fontWeight: 700,
-            color: T.primary, letterSpacing: "-0.01em", marginBottom: 4,
-          }}>
-            EST Alpha
-          </div>
-          <div style={{
-            fontFamily: FONTS.body, fontSize: 13, color: T.secondary,
-          }}>
-            CometCloud GP Partner · Since 2026
-          </div>
-        </div>
-
-        {/* Right: Status badge */}
-        <div style={{
-          background: "rgba(0,232,122,0.10)", border: "1px solid rgba(0,232,122,0.25)",
-          borderRadius: 6, padding: "6px 14px",
-          display: "flex", alignItems: "center", gap: 6,
-        }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: "50%",
-            background: "#00E87A", boxShadow: "0 0 8px rgba(0,232,122,0.5)",
-          }} />
-          <span style={{
-            fontFamily: FONTS.display, fontSize: 10, fontWeight: 700,
-            color: "#00E87A", letterSpacing: "0.1em",
-          }}>ACTIVE</span>
-        </div>
-      </div>
-
-      {/* Section 3 — Key Stats */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20,
-      }}>
-        {[
-          { label: "Partner Since", value: "2026" },
-          { label: "Classification", value: "Quant / Systematic" },
-          { label: "Domicile", value: "Singapore" },
-          { label: "Status", value: "Active · Onboarding" },
-        ].map((stat, i) => (
-          <div key={i} className="lm-stat-card" style={{ padding: "16px 20px" }}>
-            <div style={{
-              fontSize: 10, color: T.muted, letterSpacing: "0.1em",
-              textTransform: "uppercase", marginBottom: 8, fontFamily: FONTS.body,
-            }}>
-              {stat.label}
-            </div>
-            <div style={{
-              fontFamily: FONTS.mono, fontSize: 18, fontWeight: 600,
-              color: T.primary,
-            }}>
-              {stat.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Section 4 — Strategy Overview + GP Shelf */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 8 }}>
-        <div className="lm-card" style={{ padding: 24 }}>
-          <div style={{
-            fontFamily: FONTS.display, fontSize: 12, fontWeight: 700,
-            color: "#C8A84B", letterSpacing: "0.1em", marginBottom: 12,
-            textTransform: "uppercase",
-          }}>
-            Strategy Overview
-          </div>
-          <div style={{
-            fontFamily: FONTS.body, fontSize: 13, color: T.secondary,
-            lineHeight: 1.7,
-          }}>
-            EST Alpha employs quantitative strategies across digital asset markets,
-            with a focus on systematic signal extraction and risk-adjusted return generation.
-            As CometCloud's inaugural GP partner, EST Alpha provides institutional-grade
-            execution infrastructure for the Vault's fund-of-funds structure.
-          </div>
-        </div>
-
-        <div className="lm-card-inner" style={{ padding: 24 }}>
-          <div style={{
-            fontFamily: FONTS.display, fontSize: 12, fontWeight: 700,
-            color: T.muted, letterSpacing: "0.12em", marginBottom: 10,
-            textTransform: "uppercase",
-          }}>
-            GP Shelf
-          </div>
-          <p style={{
-            fontFamily: FONTS.body, fontSize: 13, color: T.secondary,
-            lineHeight: 1.7, margin: 0,
-          }}>
-            CometCloud Vault operates a GP Shelf model — a curated selection of
-            institutional-grade fund managers evaluated through the CIS framework.
-            EST Alpha is the founding GP. Additional GPs are evaluated through a
-            rigorous selection process.
-          </p>
-        </div>
-      </div>
+      {/* Section 2 — EST Alpha Strategic GP (data-driven) */}
+      <Suspense fallback={<SectionLoader />}>
+        <EstAlphaSection />
+      </Suspense>
     </div>
   );
 }
