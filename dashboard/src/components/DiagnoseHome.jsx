@@ -16,13 +16,32 @@ function radius(h) { return !h.g ? 222 + (hashAng(h.s) % 18) : Math.max(40, Math
 function posOf(h) { const a = hashAng(h.s) * Math.PI / 180, r = radius(h); return [CX + Math.cos(a) * r, CY + Math.sin(a) * r]; }
 function statsOf(b) { let wc = 0, ws = 0, off = 0; b.forEach(h => { if (h.g) { ws += h.cis * h.w; wc += h.w; if (!KEEP[h.g]) off += h.w; } else off += h.w; }); return { cis: wc ? ws / wc : 0, off: Math.round(off * 100) }; }
 
+/* Seed the diagnosis from the user's real book (MyPortfolio localStorage).
+   Position value (units × entry) becomes the weight; watchlist-only names get
+   the average position value so they're represented. Returns null if empty. */
+function seedFromBook() {
+  try {
+    const p = JSON.parse(localStorage.getItem("cc_portfolio") || "null");
+    const wl = (p && p.watchlist) || [];
+    if (!wl.length) return null;
+    const pos = p.positions || {};
+    const vals = wl.map(s => { const q = pos[s]; const v = q && q.units && q.entry ? q.units * q.entry : 0; return [s, v]; });
+    const present = vals.filter(([, v]) => v > 0);
+    if (!present.length) return wl.join(", ");           // no positions → equal weight
+    const avg = present.reduce((a, [, v]) => a + v, 0) / present.length;
+    return vals.map(([s, v]) => `${s} ${Math.round((v > 0 ? v : avg))}`).join(", ");
+  } catch { return null; }
+}
+
 export default function DiagnoseHome({ onEnter, embedded = false }) {
   const [uni, setUni] = useState(null);
-  const [text, setText] = useState("BTC 30, SPY 20, ONDO 15, NVDA 10, DOGE 15, PEPE 10");
+  const [text, setText] = useState(() => (embedded && seedFromBook()) || "BTC 30, SPY 20, ONDO 15, NVDA 10, DOGE 15, PEPE 10");
   const [book, setBook] = useState(null);
   const [orig, setOrig] = useState(null);
   const [drag, setDrag] = useState(null);
+  const [fromBook, setFromBook] = useState(() => embedded && !!seedFromBook());
   const svgRef = useRef(null);
+  const seededRef = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -74,6 +93,11 @@ export default function DiagnoseHome({ onEnter, embedded = false }) {
     setDrag(null);
   };
 
+  // Embedded in Portfolio: auto-diagnose the user's real book once the universe loads.
+  useEffect(() => {
+    if (embedded && uni && fromBook && !seededRef.current) { seededRef.current = true; run(); }
+  }, [uni]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const cur = book ? statsOf(book) : null;
 
   return (
@@ -96,12 +120,26 @@ export default function DiagnoseHome({ onEnter, embedded = false }) {
         <div style={{ fontFamily: FONTS.brand, fontSize: embedded ? 22 : 30, fontWeight: 700, color: T.t1, lineHeight: 1.1 }}>
           Diagnose your book.
         </div>
-        <div style={{ fontFamily: FONTS.body, fontSize: 14, color: T.t3, marginTop: 8, marginBottom: 22, maxWidth: 540 }}>
-          Drop your holdings. See them in the conviction field. Drag the weak ones toward the core — the engine shows the few moves toward beta+. No magic, no 500x. A good assistant.
+        <div style={{ fontFamily: FONTS.body, fontSize: 14, color: T.t3, marginTop: 8, marginBottom: fromBook ? 10 : 22, maxWidth: 540 }}>
+          {fromBook
+            ? "Your watchlist, read into the conviction field. Drag the weak ones toward the core — the engine shows the few moves toward beta+."
+            : "Drop your holdings. See them in the conviction field. Drag the weak ones toward the core — the engine shows the few moves toward beta+. No magic, no 500x. A good assistant."}
         </div>
 
+        {fromBook && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.green, background: "rgba(0,217,138,0.08)", border: `1px solid ${T.green}33`, borderRadius: 5, padding: "3px 8px" }}>
+              ◎ Loaded from My Portfolio
+            </span>
+            <button onClick={() => { setFromBook(false); setText("BTC 30, SPY 20, ONDO 15, NVDA 10, DOGE 15, PEPE 10"); }}
+              style={{ background: "transparent", border: "none", color: T.t3, fontFamily: FONTS.body, fontSize: 11, cursor: "pointer", textDecoration: "underline", padding: 0 }}>
+              use a sample instead
+            </button>
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: 8 }}>
-          <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === "Enter" && run()}
+          <input value={text} onChange={e => { setText(e.target.value); if (fromBook) setFromBook(false); }} onKeyDown={e => e.key === "Enter" && run()}
             placeholder="BTC 30, SPY 20, ONDO 15, NVDA 10, DOGE 15…"
             style={{ flex: 1, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 14px", color: T.t1, fontFamily: FONTS.mono, fontSize: 13, outline: "none" }} />
           <button onClick={run} disabled={!uni}
