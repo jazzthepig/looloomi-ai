@@ -167,6 +167,30 @@ async def supabase_insert_batch(rows: list) -> bool:
         return False
 
 
+async def supabase_insert_table(table: str, rows: list) -> bool:
+    """Generic bulk-insert into any Supabase table (REST) with retry."""
+    if not _SB_URL or not _SB_KEY or not rows or not table:
+        return False
+    url = f"{_SB_URL}/rest/v1/{table}"
+    headers = {
+        "apikey":        _SB_KEY,
+        "Authorization": f"Bearer {_SB_KEY}",
+        "Content-Type":  "application/json",
+        "Prefer":        "return=minimal",
+    }
+    try:
+        resp = await _supabase_request_with_retry("POST", url, content=json.dumps(rows), headers=headers)
+        if resp and resp.status_code in (200, 201):
+            _logger.info(f"[SUPABASE] Inserted {len(rows)} rows into {table}")
+            return True
+        if resp:
+            _logger.warning(f"[SUPABASE] Insert into {table} failed: {resp.status_code} {resp.text[:120]}")
+        return False
+    except Exception as e:
+        _logger.warning(f"[SUPABASE] Insert into {table} exception: {e}")
+        return False
+
+
 async def supabase_get_recent_scores(symbols: list, n: int = 30) -> dict:
     """Bulk-fetch last N CIS score rows per symbol from Supabase.
 
