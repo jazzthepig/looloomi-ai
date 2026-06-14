@@ -56,6 +56,9 @@ from src.api.routers.factors import router as factors_router
 from src.api.routers.discovery import router as discovery_router
 from src.api.routers.strategies import router as strategies_router
 from src.api.routers.signals import router as signals_router
+from src.api.routers.portfolio_diagnosis import router as diagnosis_router
+from src.api.routers.admin import router as admin_router
+from src.api.routers.ohlcv import router as ohlcv_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
 
 _ENV = os.environ.get("ENVIRONMENT", "production")
@@ -110,6 +113,128 @@ app.include_router(factors_router)
 app.include_router(discovery_router)
 app.include_router(strategies_router)
 app.include_router(signals_router)
+app.include_router(diagnosis_router)
+app.include_router(admin_router)
+app.include_router(ohlcv_router)
+
+
+# ── Hourly T2-only cis_scores snapshot (data-durability complement) ─────────
+# The daily loop writes the full universe once/day — but the Mac Mini push
+# has been T1-only since 2026-06-06, so T2 history has 1 datapoint/day. This
+# hourly loop pulls the T2 subset from the same universe builder and writes
+# additional snapshots, so T2 regains sub-day granularity without depending
+# on Mac Mini. Cadence env-overridable: SNAPSHOT_HOURLY_INTERVAL_S.
+_HOURLY_SNAPSHOT_S = int(os.environ.get("SNAPSHOT_HOURLY_INTERVAL_S", "3600"))
+
+
+async def _hourly_t2_snapshot_loop():
+    await _asyncio.sleep(600)   # let caches warm; defer past daily loop's first run
+    while True:
+        try:
+            from src.api.routers.cis import _build_cis_universe
+            from src.api.store import supabase_insert_batch, _SB_TABLE as _SB_T
+            data = await _build_cis_universe(force_source=None)
+            uni = (data or {}).get("universe", []) if isinstance(data, dict) else []
+            regime = (data or {}).get("macro_regime") or (data or {}).get("regime")
+            # T2-only — T1 already covered by Mac push + daily snapshot
+            t2_rows = []
+            for a in uni:
+                tier = a.get("data_tier")
+                tier_label = a.get("data_tier_label") or ("T1" if tier in (1, "1", "T1") else "T2")
+                if tier_label != "T2":
+                    continue
+                sym = a.get("symbol") or a.get("asset_id")
+                score = a.get("cis_score", a.get("score"))
+                if not sym or score is None:
+                    continue
+                pillars = a.get("pillars") if isinstance(a.get("pillars"), dict) else {}
+                t2_rows.append({
+                    "symbol":        sym,
+                    "name":          a.get("name", ""),
+                    "score":         score,
+                    "raw_cis_score": a.get("raw_cis_score") or score,
+                    "grade":         a.get("grade"),
+                    "signal":        a.get("signal"),
+                    "percentile":    a.get("percentile_rank"),
+                    "pillar_f":      pillars.get("F"),
+                    "pillar_m":      pillars.get("M"),
+                    "pillar_o":      pillars.get("O"),
+                    "pillar_s":      pillars.get("S"),
+                    "pillar_a":      pillars.get("A"),
+                    "asset_class":   a.get("asset_class", a.get("class", "")),
+                    "macro_regime":  regime,
+                    "data_tier":     "T2",
+                    "las":           a.get("las"),
+                    "confidence":    a.get("confidence", 0.8),
+                    "source":        "railway_t2_hourly",
+                })
+            if t2_rows:
+                ok = await supabase_insert_batch(t2_rows)
+                print(f"[SNAPSHOT] hourly T2 — ok={ok} rows={len(t2_rows)}")
+        except Exception as _e:
+            print(f"[SNAPSHOT] ⚠️  hourly T2 run failed: {_e}")
+        await _asyncio.sleep(_HOURLY_SNAPSHOT_S)
+
+
+@app.on_event("startup")
+async def _start_hourly_t2_snapshot():
+    if os.environ.get("DISABLE_HOURLY_SNAPSHOT", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_hourly_t2_snapshot_loop())
+        print(f"[SNAPSHOT] ✅ hourly T2 snapshot loop scheduled (every {_HOURLY_SNAPSHOT_S}s)")
+
+
+# ── Daily cis_regime_fitness compute (Simons feedback) ──────────────────────
+# Runs the existing scripts/compute_regime_fitness.py logic inline — reads
+# Supabase cis_scores, computes Pearson r(pillar, 7d_return) per regime,
+# writes to cis_regime_fitness. Independent of Mac Mini cron.
+async def _regime_fitness_loop():
+    await _asyncio.sleep(900)   # let the daily snapshot land first
+    while True:
+        try:
+            from src.api.routers.admin import trigger_regime_fitness
+            # Simulate an internal call (skip auth — already in process)
+            res = await trigger_regime_fitness(
+                x_internal_token=os.environ.get("INTERNAL_TOKEN", "loop"),
+                window_days=90,
+                dry_run=False,
+            )
+            print(f"[REGIME_FITNESS] daily — ok={res.get('ok')} rows={res.get('rows')}")
+        except Exception as _e:
+            print(f"[REGIME_FITNESS] ⚠️  daily run failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_regime_fitness():
+    if os.environ.get("DISABLE_REGIME_FITNESS", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_regime_fitness_loop())
+        print("[REGIME_FITNESS] ✅ daily compute loop scheduled")
+
+
+# ── Daily OHLCV collector (Railway safety net) ──────────────────────────────
+# Pulls daily candles for all 84 CIS universe assets from CoinGecko Pro
+# market_chart (geo-safe from Railway) and yfinance for TradFi. Mirrors the
+# role of the Mac Mini /Volumes/.../ohlcv/ parquet library but persists to
+# Supabase ohlcv_daily. Idempotent on (symbol, trade_date, source).
+async def _ohlcv_collector_loop():
+    await _asyncio.sleep(1800)   # defer past other daily loops
+    while True:
+        try:
+            from src.api.routers.ohlcv import collect_ohlcv
+            res = await collect_ohlcv(symbols=None, days=365)
+            print(f"[OHLCV] daily — rows={res.get('rows_written')} "
+                  f"syms={res.get('symbols_ok')}/{res.get('symbols_total')} "
+                  f"elapsed={res.get('elapsed_s')}s")
+        except Exception as _e:
+            print(f"[OHLCV] ⚠️  daily run failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_ohlcv_collector():
+    if os.environ.get("DISABLE_OHLCV", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_ohlcv_collector_loop())
+        print("[OHLCV] ✅ daily collector loop scheduled")
 
 
 # ── Daily signal-outcome resolver ─────────────────────────────────────────────
@@ -141,6 +266,39 @@ async def _start_outcome_tracker():
     if os.environ.get("DISABLE_OUTCOME_TRACKER", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_outcome_tracker_loop())
         print("[OUTCOME] ✅ daily outcome-tracker loop scheduled")
+
+
+# ── Daily full-universe snapshot loop (data-durability guarantee) ─────────────
+# Guarantees a daily cis_scores row for EVERY asset (T1 + T2), independent of the
+# Mac Mini push. The push only carries the assets it chooses (T1 only since the
+# 2026-06-06 engine change), which silently dropped the T2 half from history.
+_SNAPSHOT_INTERVAL_S = 24 * 3600   # daily
+
+
+async def _daily_snapshot_loop():
+    await _asyncio.sleep(300)   # let caches + universe warm first
+    while True:
+        try:
+            from src.api.routers.cis import snapshot_full_universe_to_supabase
+            res = await snapshot_full_universe_to_supabase()
+            print(f"[SNAPSHOT] daily — ok={res.get('ok')} rows={res.get('rows')} "
+                  f"T1={res.get('t1')} T2={res.get('t2')}")
+        except Exception as _e:
+            print(f"[SNAPSHOT] ⚠️  daily run failed: {_e}")
+        try:
+            from src.api.routers.macro import daily_macro_brief_snapshot
+            mres = await daily_macro_brief_snapshot()
+            print(f"[SNAPSHOT] macro brief — ok={mres.get('ok')}")
+        except Exception as _e:
+            print(f"[SNAPSHOT] ⚠️  macro brief fallback failed: {_e}")
+        await _asyncio.sleep(_SNAPSHOT_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_daily_snapshot():
+    if os.environ.get("DISABLE_DAILY_SNAPSHOT", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_daily_snapshot_loop())
+        print("[SNAPSHOT] ✅ daily full-universe snapshot loop scheduled")
 
 
 # ── Heartbeat / observability loop ────────────────────────────────────────────
@@ -238,6 +396,21 @@ async def health_api():
 import time as _time
 
 _BOOT_TS = _time.time()
+
+
+@app.post("/internal/telegram/webhook")
+async def telegram_webhook(update: dict, request: Request):
+    """Telegram bot webhook — conversational CIS agent. Verified via the secret
+    token Telegram echoes in a header (set when registering the webhook)."""
+    secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
+    if secret and request.headers.get("X-Telegram-Bot-Api-Secret-Token") != secret:
+        return JSONResponse(status_code=403, content={"ok": False})
+    try:
+        from src.api.telegram_bot import handle_update
+        await handle_update(update)
+    except Exception as e:
+        print(f"[TG] webhook error: {e}")
+    return {"ok": True}
 
 
 @app.get("/internal/health-summary")
