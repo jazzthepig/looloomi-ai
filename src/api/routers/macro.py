@@ -12,11 +12,28 @@ from datetime import datetime
 import logging
 from fastapi import APIRouter, HTTPException, Header, Response
 
-from src.api.store import redis_set_key, redis_get_key
+from src.api.store import redis_set_key, redis_get_key, supabase_insert_table
 
 _logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+async def _persist_brief(brief: str, model: str, data_snapshot: dict, source: str) -> bool:
+    """Write a macro brief to the Supabase macro_briefs table (history). Best-effort."""
+    if not brief:
+        return False
+    try:
+        return await supabase_insert_table("macro_briefs", [{
+            "brief":         brief,
+            "model":         model,
+            "data_snapshot": data_snapshot,
+            "source":        source,
+            "recorded_at":   datetime.utcnow().isoformat() + "Z",
+        }])
+    except Exception as e:
+        _logger.warning(f"[MACRO] persist failed: {e}")
+        return False
 
 _INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 _REDIS_KEY      = "macro:brief"
@@ -138,6 +155,10 @@ async def receive_macro_brief(payload: dict, x_internal_token: str = Header(None
     if not ok:
         raise HTTPException(status_code=502, detail="Redis write failed")
 
+    # Persist to Supabase history (best-effort) so macro_briefs is never empty
+    await _persist_brief(payload["brief"], payload.get("model", "mac_mini"),
+                         payload.get("market_data"), "mac_mini")
+
     _logger.info(f"[MACRO] Brief received — {len(payload['brief'])} chars, model={payload.get('model', '?')}")
     return {
         "status": "ok",
@@ -147,6 +168,24 @@ async def receive_macro_brief(payload: dict, x_internal_token: str = Header(None
 
 
 # ── Public read (with inline auto-generation fallback) ───────────────────────
+
+async def daily_macro_brief_snapshot() -> dict:
+    """Guarantee a daily macro_briefs row even if the Mac LM never pushes.
+    Generates the Railway template brief from live macro-pulse and persists it."""
+    try:
+        try:
+            from src.data.market.data_layer import get_macro_pulse
+        except ImportError:
+            from data.market.data_layer import get_macro_pulse
+        mp = await get_macro_pulse()
+        brief_text = _generate_template_brief(mp)
+        ok = await _persist_brief(brief_text, "template", mp, "auto")
+        _logger.info(f"[MACRO] daily fallback brief persisted: ok={ok}")
+        return {"ok": bool(ok), "chars": len(brief_text)}
+    except Exception as e:
+        _logger.warning(f"[MACRO] daily fallback failed: {e}")
+        return {"ok": False, "error": str(e)}
+
 
 @router.get("/api/v1/macro/brief")
 async def get_macro_brief(response: Response):
@@ -158,15 +197,18 @@ async def get_macro_brief(response: Response):
     data = await redis_get_key(_REDIS_KEY)
     now  = int(time.time())
 
+    brief_text = (data or {}).get("brief") or ""
+
     # Serve LLM brief if fresh AND has actual content
-    if data and data.get("brief"):
+    if brief_text:
         age    = now - data.get("received_at", 0)
         source = data.get("source", "mac_mini")
         # Always serve Mac Mini LLM briefs until they expire (12h TTL)
         if source == "mac_mini" or age < _AUTO_STALE:
             response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"
             return {
-                "brief":        data.get("brief"),
+                "brief":        brief_text,
+                "brief_chars":  len(brief_text),
                 "market_data":  data.get("market_data"),
                 "model":        data.get("model"),
                 "generated_at": data.get("generated_at"),
@@ -188,6 +230,7 @@ async def get_macro_brief(response: Response):
 
         payload = {
             "brief":        brief_text,
+            "brief_chars":  len(brief_text),
             "market_data":  mp,
             "model":        "template",
             "generated_at": datetime.utcnow().isoformat() + "Z",
@@ -196,7 +239,7 @@ async def get_macro_brief(response: Response):
         }
         # Cache with 1h TTL so it refreshes regularly
         await redis_set_key(_REDIS_KEY, payload, ttl=_AUTO_TTL)
-        _logger.info("[MACRO] Auto-generated brief from macro-pulse data")
+        _logger.info(f"[MACRO] Auto-generated brief from macro-pulse data — {len(brief_text)} chars")
 
         return {**payload, "age_seconds": 0, "stale": False}
 
@@ -205,10 +248,13 @@ async def get_macro_brief(response: Response):
         # Last resort: return stale data or empty
         if data:
             age = now - data.get("received_at", 0)
-            return {**data, "age_seconds": age, "stale": True, "source": data.get("source", "mac_mini")}
+            payload = {**data, "age_seconds": age, "stale": True, "source": data.get("source", "mac_mini")}
+            payload["brief_chars"] = len(payload.get("brief") or "")
+            return payload
         return {
-            "brief":   None,
-            "stale":   True,
-            "source":  "none",
-            "message": "Macro brief unavailable — data fetch failed.",
+            "brief":       None,
+            "brief_chars": 0,
+            "stale":       True,
+            "source":      "none",
+            "message":     "Macro brief unavailable — data fetch failed.",
         }

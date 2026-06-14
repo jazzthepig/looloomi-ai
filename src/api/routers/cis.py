@@ -30,8 +30,31 @@ _SB_KEY_SET     = bool(os.environ.get("SUPABASE_KEY", ""))  # guard signal loggi
 
 
 async def _log_signals_task(universe: list, regime: str, prices: dict):
-    """Fire-and-forget: log OUTPERFORM signals + close downgrades in signal_journal."""
+    """Fire-and-forget: log OUTPERFORM signals + close downgrades in signal_journal.
+
+    Backfills any missing entry prices from the merged Railway universe (CoinGecko
+    Pro / EODHD-backed, reliable on Railway) BEFORE logging — the Mac Mini push
+    often omits price for many assets, which used to log signals with a null
+    entry_price that can never be resolved into a 30d outcome. (Binance/
+    get_prices_multi is geo-blocked on Railway, so we reuse the cached universe.)"""
     try:
+        missing = [s for s in
+                   ((a.get("symbol") or a.get("asset_id") or "").upper() for a in universe)
+                   if s and s not in prices]
+        if missing:
+            try:
+                full = await get_cis_universe(force_source=None)
+                for a in (full or {}).get("universe", []):
+                    s = (a.get("symbol") or a.get("asset_id") or "").upper()
+                    if s in missing:
+                        px = a.get("price") or a.get("current_price")
+                        if px:
+                            try:
+                                prices[s] = float(px)
+                            except (TypeError, ValueError):
+                                pass
+            except Exception as e:
+                _logger.warning(f"[SIGNALS] price backfill failed: {e}")
         from src.api.routers.signals import log_cis_signals
         n = await log_cis_signals(universe, regime, prices)
         if n:
@@ -254,6 +277,24 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                     assets = upgrades,
                     regime = macro_regime_push or "",
                 ))
+                # GTM/ops Telegram alert — high-grade upgrades only (low noise).
+                # Compliance-safe: grades + positioning signals already enum-clean.
+                _notable = [a for a in upgrades if a.get("to") in ("A+", "A", "B+")]
+                if _notable:
+                    _lines = ["📈 CIS grade upgrades"] + [
+                        f"  {a.get('symbol')}: {a.get('from')}→{a.get('to')}"
+                        + (f" · {a.get('new_signal')}" if a.get('new_signal') else "")
+                        for a in _notable[:8]
+                    ]
+                    async def _tg(msg):
+                        try:
+                            from src.api.notify import notify_telegram
+                            await notify_telegram(msg)           # ops channel
+                            from src.api.telegram_bot import broadcast_subscribers
+                            await broadcast_subscribers(msg)     # opted-in users (GTM)
+                        except Exception:
+                            pass
+                    asyncio.create_task(_tg("\n".join(_lines)))
             if downgrades:
                 _logger.info(f"[INTERNAL] {len(downgrades)} GRADE_DOWNGRADE — firing webhooks")
                 asyncio.create_task(fire_grade_webhooks(
@@ -1090,25 +1131,124 @@ async def get_cis_backtest():
     """
     30d realized return results by CIS grade (Binance/OKX klines).
     Used to validate scoring — shows A/B/C return spread.
+
+    Persists the result to Supabase `cis_backtest_results` so the table is no
+    longer orphaned (read from disk or history_db, but never written). Schema
+    is tolerant — extracts whatever grade-averages exist, falls back to None.
     """
     results_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
         "data", "cis", "backtest_results.json"
     )
+    source_label = "none"
+    response_payload: dict = {}
     try:
         if os.path.exists(results_path):
             with open(results_path) as f:
                 data = _json.load(f)
-            return {"status": "success", "source": "file", **data}
+            response_payload = {"status": "success", "source": "file", **data}
+            source_label = results_path
     except Exception as e:
         _logger.warning(f"[BACKTEST] Read error: {e}")
 
+    if not response_payload:
+        try:
+            from src.data.cis.history_db import get_backtest_summary
+            summary = get_backtest_summary()
+            response_payload = {"status": "success", "source": "db", **summary}
+            source_label = "history_db"
+        except Exception as e:
+            response_payload = {"status": "empty", "message": str(e)}
+
+    # ── Persist to cis_backtest_results (best-effort, fire-and-forget) ───
     try:
-        from src.data.cis.history_db import get_backtest_summary
-        summary = get_backtest_summary()
-        return {"status": "success", "source": "db", **summary}
+        await _persist_backtest_result(response_payload, source_label)
     except Exception as e:
-        return {"status": "empty", "message": str(e)}
+        _logger.debug(f"[BACKTEST] persist skipped: {e}")
+
+    return response_payload
+
+
+def _extract_grade_avg(payload: dict, grade: str) -> float | None:
+    """Tolerantly pull a grade average out of the backtest payload shape."""
+    if not isinstance(payload, dict):
+        return None
+    # Direct key
+    direct = payload.get(f"grade_{grade.lower()}_avg") or payload.get(f"{grade}_avg")
+    if direct is not None:
+        try:
+            return float(direct)
+        except (TypeError, ValueError):
+            pass
+    # Nested `grades` dict
+    grades = payload.get("grades") or payload.get("by_grade") or {}
+    if isinstance(grades, dict):
+        g = grades.get(grade) or grades.get(grade.lower())
+        if isinstance(g, dict):
+            for k in ("avg", "mean", "avg_return", "return_pct"):
+                if k in g:
+                    try:
+                        return float(g[k])
+                    except (TypeError, ValueError):
+                        continue
+        elif isinstance(g, (int, float)):
+            return float(g)
+    # Per-grade rows
+    rows = payload.get("results") or payload.get("data") or []
+    if isinstance(rows, list):
+        vals = []
+        for r in rows:
+            if not isinstance(r, dict):
+                continue
+            if (r.get("grade") or "").upper() != grade.upper():
+                continue
+            for k in ("avg_return", "return_pct", "mean", "avg", "pnl_pct"):
+                if k in r and r[k] is not None:
+                    try:
+                        vals.append(float(r[k]))
+                    except (TypeError, ValueError):
+                        continue
+                    break
+        if vals:
+            return sum(vals) / len(vals)
+    return None
+
+
+async def _persist_backtest_result(payload: dict, source_label: str) -> bool:
+    """Write the backtest result to cis_backtest_results. Best-effort."""
+    if not isinstance(payload, dict):
+        return False
+    try:
+        from src.api.store import supabase_insert_table
+    except Exception:
+        return False
+    a = _extract_grade_avg(payload, "A")
+    b = _extract_grade_avg(payload, "B")
+    c = _extract_grade_avg(payload, "C")
+    d = _extract_grade_avg(payload, "D")
+    f = _extract_grade_avg(payload, "F")
+    spread = (a - f) if (a is not None and f is not None) else None
+    asset_count = payload.get("asset_count") or payload.get("n_assets") or (
+        len(payload["results"]) if isinstance(payload.get("results"), list) else None
+    )
+    n_klines = payload.get("n_with_klines") or payload.get("with_klines")
+    window = payload.get("window_days") or 30
+    row = {
+        "window_days":   int(window) if str(window).isdigit() else 30,
+        "grade_a_avg":   a,
+        "grade_b_avg":   b,
+        "grade_c_avg":   c,
+        "grade_d_avg":   d,
+        "grade_f_avg":   f,
+        "spread_a_to_f": spread,
+        "asset_count":   asset_count,
+        "n_with_klines": n_klines,
+        "source_file":   source_label if source_label.endswith(".json") else None,
+        "source_db":     source_label == "history_db",
+        "notes":         f"auto-persisted by /api/v1/cis/backtest source={payload.get('source','?')}",
+        "payload":       payload,
+    }
+    return await supabase_insert_table("cis_backtest_results", [row])
 
 
 # ── Agent API ─────────────────────────────────────────────────────────────────
@@ -2840,3 +2980,72 @@ async def get_grade_changes(hours: int = 24, response: Response = None):
     if response:
         response.headers["Cache-Control"] = "public, max-age=900, stale-while-revalidate=1800"
     return result
+
+
+# ── Daily full-universe snapshot (data-durability guarantee) ──────────────────
+# The Mac Mini push (/internal/cis-scores) only carries the assets it chooses to
+# push (currently T1 only since the 2026-06-06 engine change) — so relying on it
+# alone silently drops the T2 half of the universe from cis_scores. This Railway-
+# side job snapshots the FULL merged universe (T1 + T2) once a day, independent of
+# the push, so every asset has a guaranteed daily row. source='railway_snapshot'.
+async def snapshot_full_universe_to_supabase() -> dict:
+    try:
+        data = await get_cis_universe(force_source=None)
+    except Exception as e:
+        _logger.warning(f"[SNAPSHOT] universe build failed: {e}")
+        return {"ok": False, "error": str(e), "rows": 0}
+
+    universe = (data or {}).get("universe", []) if isinstance(data, dict) else []
+    if not universe:
+        # Never write nothing — an empty snapshot is a failure, not a valid day.
+        _logger.warning("[SNAPSHOT] empty universe — skipping (no write)")
+        return {"ok": False, "rows": 0, "reason": "empty_universe"}
+
+    regime = (data or {}).get("macro_regime") or (data or {}).get("regime")
+    rows = []
+    for a in universe:
+        sym = a.get("symbol") or a.get("asset_id")
+        score = a.get("cis_score", a.get("score"))
+        if not sym or score is None:
+            continue
+        tier = a.get("data_tier")
+        tier_label = a.get("data_tier_label") or ("T1" if tier in (1, "1", "T1") else "T2")
+        pillars = a.get("pillars") if isinstance(a.get("pillars"), dict) else {}
+        rows.append({
+            "symbol":             sym,
+            "name":               a.get("name", ""),
+            "score":              score,
+            "raw_cis_score":      a.get("raw_cis_score") or score,
+            "grade":              a.get("grade"),
+            "signal":             a.get("signal"),
+            "percentile":         a.get("percentile_rank"),
+            "pillar_f":           pillars.get("F"),
+            "pillar_m":           pillars.get("M"),
+            "pillar_o":           pillars.get("O"),
+            "pillar_s":           pillars.get("S"),
+            "pillar_a":           pillars.get("A"),
+            "asset_class":        a.get("asset_class", a.get("class", "")),
+            "macro_regime":       regime,
+            "data_tier":          tier_label,
+            "data_quality_score": a.get("data_quality_score"),
+            "las":                a.get("las"),
+            "confidence":         a.get("confidence", 1.0 if tier_label == "T1" else 0.8),
+            "source":             "railway_snapshot",
+        })
+
+    if not rows:
+        return {"ok": False, "rows": 0, "reason": "no_valid_rows"}
+
+    ok = await supabase_insert_batch(rows)
+    t1 = sum(1 for r in rows if r["data_tier"] == "T1")
+    _logger.warning(f"[SNAPSHOT] daily full-universe snapshot: ok={ok} rows={len(rows)} (T1={t1} T2={len(rows)-t1})")
+    return {"ok": bool(ok), "rows": len(rows), "t1": t1, "t2": len(rows) - t1}
+
+
+@router.post("/internal/cis-snapshot")
+async def trigger_cis_snapshot(x_internal_token: str = Header(None)):
+    """Manually trigger the daily full-universe snapshot (same write the daily loop
+    performs). Guarded by INTERNAL_TOKEN."""
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    return await snapshot_full_universe_to_supabase()
