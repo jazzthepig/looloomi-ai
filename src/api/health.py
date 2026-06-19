@@ -105,19 +105,31 @@ async def heartbeat_tick() -> dict:
     summary = await compute_health_summary()
     status = summary["status"]
 
-    prev = None
+    prev, prev_sha = None, None
     try:
         prevd = await redis_get_key(_LAST_KEY)
         prev = (prevd or {}).get("status")
+        prev_sha = (prevd or {}).get("sha")
     except Exception:
         pass
 
-    # Alert on any transition (e.g. healthy→down, or recovery down→healthy)
+    sha = summary.get("deploy_sha")
+
+    # Loop 3 — deploy auto-verify: a new sha means a fresh deploy went live.
+    # Verify it (the summary IS the post-deploy health check) and report to Telegram.
+    if sha and prev_sha and sha != prev_sha:
+        verdict = "✅ healthy" if status == "healthy" else f"⚠️ {status}"
+        await notify_telegram(f"🚀 Deploy live: {sha} — post-deploy check {verdict}\n"
+                              + _format_alert(summary))
+
+    # Alert on any health transition (healthy→down, or recovery down→healthy)
     if prev != status:
         await notify_telegram(_format_alert(summary)
                               + ("\n\n(recovered)" if prev and status == "healthy" else ""))
+
+    if prev != status or sha != prev_sha:
         try:
-            await redis_set_key(_LAST_KEY, {"status": status}, ttl=7 * 86400)
+            await redis_set_key(_LAST_KEY, {"status": status, "sha": sha}, ttl=7 * 86400)
         except Exception:
             pass
 

@@ -9,11 +9,36 @@ import { T, FONTS } from "../tokens";
 const GC = { "A+": "#00D98A", "A": "#00D98A", "B+": "#00D98A", "B": "#f59e0b",
   "C+": "#f59e0b", "C": "#fb923c", "D": "#FF3D5A", "F": "#FF3D5A" };
 const KEEP = { "A+": 1, "A": 1, "B+": 1 };
-const CX = 300, CY = 210;
+const CX = 300, CY = 220;
 
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function hashAng(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
-function radius(h) { return !h.g ? 222 + (hashAng(h.s) % 18) : Math.max(40, Math.min(208, 46 + ((85 - h.cis) / 60) * 162)); }
-function posOf(h) { const a = hashAng(h.s) * Math.PI / 180, r = radius(h); return [CX + Math.cos(a) * r, CY + Math.sin(a) * r]; }
+
+/* Cause-proximity (0..1) — the SECOND axis. v1 transparent proxy from CIS pillars:
+   idiosyncratic alpha (A) pulls upstream; a move that already ran (high M + high 30d)
+   and euphoric sentiment (S) push downstream; risk-adjusted quality (O) lifts slightly.
+   Roadmap: replace with traceable-decision proximity (earnings/flows/index events) for TradFi. */
+function causeProx(P, c30) {
+  if (!P) return 0.25;
+  const A = P.A ?? 50, M = P.M ?? 50, O = P.O ?? 50, S = P.S ?? 50;
+  const alphaEdge = A / 100;
+  const late = clamp((M - 60) / 40, 0, 1) * clamp((c30 || 0) / 40, 0, 1);
+  const crowd = clamp((S - 72) / 28, 0, 1);
+  const qual = clamp((O - 50) / 50, -1, 1);
+  return clamp(0.45 + 0.42 * alphaEdge - 0.34 * late - 0.22 * crowd + 0.12 * qual, 0.05, 0.95);
+}
+
+// Radius = quality (high CIS → core). Off-standard names sit at the rim.
+function radius(h) { return !h.g ? 222 + (hashAng(h.s) % 16) : clamp(46 + ((85 - h.cis) / 60) * 150, 40, 196); }
+// Position: distance = quality, vertical elevation = cause-proximity (up = upstream),
+// horizontal side spread by hash so similar-proximity names fan out instead of stacking.
+function posOf(h) {
+  const r = radius(h);
+  const side = (hashAng(h.s) % 2 === 0) ? 1 : -1;
+  const c = !h.g ? 0.12 : (h.cause ?? 0.5);   // off-standard → downstream
+  const elev = (c - 0.5) * Math.PI * 0.82;
+  return [CX + side * Math.cos(elev) * r, CY - Math.sin(elev) * r];
+}
 function statsOf(b) { let wc = 0, ws = 0, off = 0; b.forEach(h => { if (h.g) { ws += h.cis * h.w; wc += h.w; if (!KEEP[h.g]) off += h.w; } else off += h.w; }); return { cis: wc ? ws / wc : 0, off: Math.round(off * 100) }; }
 
 /* Seed the diagnosis from the user's real book (MyPortfolio localStorage).
@@ -49,13 +74,13 @@ export default function DiagnoseHome({ onEnter, embedded = false }) {
         const r = await fetch("/api/v1/cis/universe");
         const j = await r.json();
         const map = {};
-        (j.universe || []).forEach(a => { if (a.symbol) map[a.symbol.toUpperCase()] = [a.grade, a.cis_score, a.asset_class]; });
+        (j.universe || []).forEach(a => { if (a.symbol) map[a.symbol.toUpperCase()] = { g: a.grade, cis: a.cis_score, cl: a.asset_class, P: a.pillars || null, c30: a.change_30d }; });
         setUni({ map, regime: j.macro_regime || "—" });
       } catch (e) { setUni({ map: {}, regime: "—" }); }
     })();
   }, []);
 
-  const mk = (s, w) => { const u = uni && uni.map[s]; return { s, w, g: u ? u[0] : null, cis: u ? u[1] : null, cl: u ? u[2] : "—" }; };
+  const mk = (s, w) => { const u = uni && uni.map[s]; return { s, w, g: u ? u.g : null, cis: u ? u.cis : null, cl: u ? u.cl : "—", cause: u ? causeProx(u.P, u.c30) : null }; };
 
   const run = () => {
     if (!uni) return;
@@ -72,11 +97,11 @@ export default function DiagnoseHome({ onEnter, embedded = false }) {
   const bestAlt = (h) => {
     if (!uni) return null;
     const held = book.map(x => x.s);
-    const pool = Object.keys(uni.map).filter(k => held.indexOf(k) < 0 && KEEP[uni.map[k][0]]);
-    const same = pool.filter(k => uni.map[k][2] === h.cl && uni.map[k][1] > (h.cis || 0));
+    const pool = Object.keys(uni.map).filter(k => held.indexOf(k) < 0 && KEEP[uni.map[k].g]);
+    const same = pool.filter(k => uni.map[k].cl === h.cl && uni.map[k].cis > (h.cis || 0));
     const cand = same.length ? same : pool;
     if (!cand.length) return null;
-    cand.sort((a, b) => uni.map[b][1] - uni.map[a][1]);
+    cand.sort((a, b) => uni.map[b].cis - uni.map[a].cis);
     return cand[0];
   };
 
@@ -156,24 +181,30 @@ export default function DiagnoseHome({ onEnter, embedded = false }) {
               {"  ·  "}regime {uni.regime}
             </div>
 
-            <svg ref={svgRef} viewBox="0 0 600 432" onPointerMove={onMove} onPointerUp={onUp}
+            <svg ref={svgRef} viewBox="0 0 600 472" onPointerMove={onMove} onPointerUp={onUp}
               style={{ width: "100%", display: "block", touchAction: "none" }}>
-              {[48, 100, 152, 204].map((r, i) => <circle key={r} cx={CX} cy={CY} r={r} fill="none" stroke={T.blue} strokeWidth="1" strokeOpacity={0.2 - i * 0.04} />)}
+              {/* vertical cause axis guide + labels */}
+              <line x1={CX} y1="30" x2={CX} y2="412" stroke={T.t3} strokeWidth="1" strokeOpacity="0.10" strokeDasharray="2 6" />
+              <text x={CX} y="22" textAnchor="middle" fontSize="9" fill={T.green} fontFamily={FONTS.display} letterSpacing="0.12em">▲ UPSTREAM · nearer the cause</text>
+              <text x={CX} y="430" textAnchor="middle" fontSize="9" fill={T.red} fillOpacity="0.7" fontFamily={FONTS.display} letterSpacing="0.12em">▼ DOWNSTREAM · exposed, late</text>
+              {/* quality rings */}
+              {[48, 100, 152, 196].map((r, i) => <circle key={r} cx={CX} cy={CY} r={r} fill="none" stroke={T.blue} strokeWidth="1" strokeOpacity={0.2 - i * 0.04} />)}
               <circle cx={CX} cy={CY} r="5" fill={T.blue} />
-              <text x={CX} y={CY - 12} textAnchor="middle" fontSize="9" fill={T.t3} fontFamily={FONTS.display} letterSpacing="0.08em">INSTITUTIONAL CORE</text>
-              <circle cx={CX} cy={CY} r="246" fill="none" stroke={T.red} strokeWidth="1" strokeOpacity="0.18" strokeDasharray="4 5" />
+              <text x={CX} y={CY - 12} textAnchor="middle" fontSize="9" fill={T.t3} fontFamily={FONTS.display} letterSpacing="0.08em">CORE · quality</text>
+              <circle cx={CX} cy={CY} r="232" fill="none" stroke={T.red} strokeWidth="1" strokeOpacity="0.14" strokeDasharray="4 5" />
               {book.map((h, i) => {
                 const p = drag && drag.i === i ? drag.pos : posOf(h);
                 const col = h.g ? (GC[h.g] || "#888") : "#FF5577";
                 const size = 6 + Math.sqrt(h.w || 0.1) * 16;
                 const alt = drag && drag.i === i && drag.alt;
                 const ap = alt ? posOf(mk(drag.alt, h.w)) : null;
+                const altG = alt ? (uni.map[drag.alt].g) : null;
                 return (
                   <g key={h.s + i}>
                     <line x1={CX} y1={CY} x2={p[0]} y2={p[1]} stroke={col} strokeWidth="1" strokeOpacity="0.16" />
                     {alt && <>
-                      <circle cx={ap[0]} cy={ap[1]} r={size} fill="none" stroke={GC[uni.map[drag.alt][0]]} strokeWidth="1.5" strokeDasharray="3 3" strokeOpacity="0.85" />
-                      <text x={ap[0]} y={ap[1] - size - 4} textAnchor="middle" fontSize="10" fontWeight="600" fill={GC[uni.map[drag.alt][0]]}>→ {drag.alt}</text>
+                      <circle cx={ap[0]} cy={ap[1]} r={size} fill="none" stroke={GC[altG]} strokeWidth="1.5" strokeDasharray="3 3" strokeOpacity="0.85" />
+                      <text x={ap[0]} y={ap[1] - size - 4} textAnchor="middle" fontSize="10" fontWeight="600" fill={GC[altG]}>→ {drag.alt}</text>
                     </>}
                     <circle cx={p[0]} cy={p[1]} r={size + 5} fill={col} fillOpacity="0.12" />
                     <circle cx={p[0]} cy={p[1]} r={size} fill={col} fillOpacity="0.9" style={{ cursor: "grab" }} onPointerDown={onDown(i)}>
@@ -184,6 +215,12 @@ export default function DiagnoseHome({ onEnter, embedded = false }) {
                 );
               })}
             </svg>
+
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9.5, color: T.t3, marginTop: 2, display: "flex", gap: 14, flexWrap: "wrap" }}>
+              <span>Radius = quality (CIS)</span>
+              <span>Height = proximity to the cause</span>
+              <span style={{ opacity: 0.7 }}>v1 positioning read · traceable-decision model next</span>
+            </div>
 
             <div style={{ fontFamily: FONTS.body, fontSize: 14, color: T.t1, lineHeight: 1.6, margin: "10px 2px", borderLeft: `2px solid ${T.gold}`, paddingLeft: 12 }}>
               {cur.off >= 40 ? `Heavy off-standard exposure: ${cur.off}% of the book sits below the institutional bar. Drag those toward the core.`

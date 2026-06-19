@@ -56,6 +56,17 @@ other. We are early infrastructure for that meeting point.
 This shapes how we build: with patience for complexity, respect for emergence, and no
 tolerance for things that feel dead.
 
+**The soul / north star lives in `ARCHITECTURE.md`** (updated 2026-06-08) — the
+influence-propagation ontology and the iPod→OS path. The deepest object is not the
+Asset but the **Entity / Decision** and how a small set of influential decisions
+propagate into asset quality and price; CIS and momentum are *reflections*, beta+ comes
+from being closer to the cause. We ship ONE thing (the kernel), freely fusable:
+`Diagnose(Portfolio)` is Fusion #1 — the lovable, mass-market front that secretly is
+Primitive + Fusion. Anti-imposter discipline: we model one upstream cause deeply and
+prove it with 30-day outcomes; composability is a property of that one thing, never a
+claim to "do everything." Companion: `COMETCLOUD_COSMOLOGY.pdf`. Read `ARCHITECTURE.md`
+when a decision touches what we are, not just what we build.
+
 ## Skills (`.claude/skills/`)
 
 Domain knowledge is structured as skills for progressive disclosure. Load the
@@ -510,6 +521,40 @@ git push origin main
 - **win.html**: looloomi.ai/win.html — How to Win positioning page with live CIS scores
 - **Investor deck**: CometCloud_Investor_Deck_2026.pptx — 10 slides, dark theme, license partner language
 - **MINIMAX_TRADING_TRIGGER.md**: ready-to-paste code block for auto paper trading in cis_scheduler.py
+
+## Done this session (Jun 5–13 — Diagnose + harness + soul)
+
+- **`ARCHITECTURE.md` (the soul)**: influence-propagation OS — kernel (Entity/Decision/
+  Asset/Quality/Regime/Outcome) → primitives → operators (humans + agents, symmetric) →
+  fusion. iPod→OS path. `Diagnose(Portfolio)` = Fusion #1. Plus `COMETCLOUD_COSMOLOGY.pdf`.
+- **"Diagnose your book" product**: `DiagnoseHome.jsx` — live conviction-field projection
+  (high CIS → core, off-standard → rim), drag a weak holding toward the core → engine
+  rotates it into a higher-CIS same-class name and recomputes Book CIS / off-standard% live.
+  Backend `src/api/routers/portfolio_diagnosis.py` (`/api/v1/portfolio/diagnose`).
+  **Placement (final): NOT the homepage — lives in Portfolio management tab** (embedded
+  mode, off front door for stability). Auto-reads the user's real book from `cc_portfolio`
+  (MyPortfolio watchlist + positions, weight = units×entry), falls back to a sample when
+  empty. `PortfolioDiagnosis.jsx` now orphaned (kept as static reference, not imported).
+- **Observability harness**: `src/api/health.py` (heartbeat + deploy auto-verify),
+  `src/api/notify.py` + `src/api/telegram_bot.py` (Telegram alerts + conversational bot,
+  chat_id 8542373254), `/internal/build-state`, `scripts/deploy_health_gate.py`.
+  Railway env needed: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALERT_CHAT_ID`, `TELEGRAM_WEBHOOK_SECRET`.
+- **CIS contract hardening**: `src/api/contracts/cis_push.py` normalizer (legacy shapes,
+  r→O, data_tier, epoch ts) + `/internal/cis-scores/schema` echo; drift=0 confirmed live.
+- **Data layer**: EODHD now **primary** for TradFi (yfinance demoted); fixed TradFi all-D
+  bug (EODHD market_cap=0 → F-pillar craters; added F floor ≥45 for listed classes);
+  −100% sentinel fix; T2 universe UnboundLocalError fix; CryptoRank gated; LLM funding extractor.
+- **Outcome tracker**: `src/data/signals/outcome_tracker.py` — signal→OHLCV 30D match → win rate.
+- **Per-asset narratives** (`src/data/cis/narrative.py`) + **executability layer**
+  (`src/data/market/executability.py`) wired to universe.
+- **Security review** (`SECURITY_REVIEW_2026-06-07.md`): HIGH = Supabase anon-write RLS
+  exposure → assigned to Minimax via `MINIMAX_SYNC.md §SEC` PRD (drop anon write policies,
+  SECURITY DEFINER→invoker, revoke anon EXECUTE, remove committed anon key).
+- Docs: `HARNESS_DESIGN_2026-06-06.md`, `UX_PROPOSITION_REVIEW_2026-06-07.md`,
+  `ALIGNMENT_REVIEW_2026-06-06.md`, `QA_REPORT_2026-06-05.md`.
+- **Pending push**: large changeset uncommitted (frontend + backend + docs) — Jazz runs
+  `git push` (clear `.git/*.lock` first if sandbox left one). Rotate shared Telegram +
+  CryptoRank keys; set Railway env vars above.
 
 ## Task matrix — Jun 2026
 
