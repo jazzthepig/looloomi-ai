@@ -374,8 +374,8 @@ class OrderRequest(BaseModel):
     symbol: str = Field(..., description="Asset symbol e.g. BTC, ETH, SOL")
     side: Literal["LONG", "SHORT"] = Field("LONG", description="Trade direction")
     size_usd: float = Field(..., gt=10, le=100_000, description="Position size in USD")
-    stop_loss_pct: float = Field(0.04, ge=0.005, le=0.30, description="Stop loss % (e.g. 0.04 = 4%)")
-    take_profit_pct: float = Field(0.10, ge=0.01, le=2.0, description="Take profit % (e.g. 0.10 = 10%)")
+    stop_loss_pct: float = Field(0.02, ge=0.005, le=0.30, description="Stop loss % (e.g. 0.02 = 2%)")
+    take_profit_pct: float = Field(0.04, ge=0.01, le=2.0, description="Take profit % (e.g. 0.04 = 4%)")
     mode: Literal["PAPER", "SIGNAL"] = Field("PAPER", description="PAPER=simulate locally, SIGNAL=queue for Freqtrade")
     note: str = Field("", max_length=200, description="Optional agent reasoning note")
 
@@ -441,17 +441,20 @@ async def submit_order(req: OrderRequest):
 
     # ── Volatility-adjusted SL/TP ─────────────────────────────────────────────
     # Use asset's realized 30d volatility if available, otherwise fall back to
-    # caller-supplied pct (default 4% SL / 10% TP from the request schema).
+    # caller-supplied pct (default 2% SL / 4% TP from the request schema, tightened
+    # 2026-06-19 to bootstrap a paper track record — old defaults were 4%/10%
+    # which never triggered in low-vol regimes).
     # Normalize units: crypto vol = % (e.g. 3.5), TradFi = decimal (e.g. 0.03).
     vol_raw = float(_asset.get("volatility_30d") or 0)
     vol_30d = vol_raw / 100 if vol_raw > 0.5 else vol_raw   # % → decimal if >0.5
     if vol_30d > 0.005:
-        # Risk 1.5× daily vol for SL, target 2.5× for TP (reward:risk ≈ 1.67)
-        sl_pct_auto = round(max(0.02, min(0.15, 1.5 * vol_30d)), 4)
-        tp_pct_auto = round(max(0.05, min(0.50, 2.5 * vol_30d)), 4)
+        # Risk 1× daily vol for SL (was 1.5×), target 1.6× for TP (was 2.5×)
+        # reward:risk ≈ 1.6 — tighter than before to force exits
+        sl_pct_auto = round(max(0.02, min(0.10, 1.0 * vol_30d)), 4)
+        tp_pct_auto = round(max(0.04, min(0.30, 1.6 * vol_30d)), 4)
         # Only override if caller left defaults unchanged (avoid overriding intentional sizing)
-        final_sl = sl_pct_auto if req.stop_loss_pct == 0.04 else req.stop_loss_pct
-        final_tp = tp_pct_auto if req.take_profit_pct == 0.10 else req.take_profit_pct
+        final_sl = sl_pct_auto if req.stop_loss_pct == 0.02 else req.stop_loss_pct
+        final_tp = tp_pct_auto if req.take_profit_pct == 0.04 else req.take_profit_pct
     else:
         final_sl = req.stop_loss_pct
         final_tp = req.take_profit_pct
@@ -699,6 +702,113 @@ async def close_position(order_id: str, req: CloseRequest = None):
             datetime.fromisoformat(pos["opened_at"].replace("Z", "+00:00"))
         ).total_seconds() if pos.get("opened_at") else None,
     }
+
+
+# ── Aged-position sweep (paper track-record bootstrapper) ─────────────────────
+# Closes paper positions open >7 days with unrealized PnL in ±5% band.
+# Reason: tightened SL/TP (2%/4% as of 2026-06-19) still don't trigger on
+# low-vol regime grind. Without an exit path, win_rate stays null forever.
+# This is a paper-only intervention — distinct exit_reason so it can be
+# excluded from LP-facing metrics if needed, but the default is to count it.
+_AGE_SWEEP_DAYS = 7
+_AGE_SWEEP_PNL_BAND_PCT = 5.0  # ±5%
+
+
+async def sweep_aged_positions() -> dict:
+    """
+    Close paper positions >7 days old with unrealized PnL in ±5% band.
+    Returns summary: {swept, skipped, total_open, swept_symbols, errors, ran_at}.
+    """
+    from datetime import datetime, timezone, timedelta
+
+    positions = await _get_positions()
+    open_positions = {oid: p for oid, p in positions.items() if p.get("status") == "open"}
+
+    if not open_positions:
+        return {"swept": 0, "skipped": 0, "total_open": 0,
+                "swept_symbols": [], "errors": [], "ran_at": _now()}
+
+    # Refresh prices so we evaluate PnL at current market
+    symbols = list({p["symbol"] for p in open_positions.values()})
+    prices = await _fetch_prices_batch(symbols)
+
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=_AGE_SWEEP_DAYS)
+
+    swept = 0
+    skipped = 0
+    swept_symbols = []
+    errors = []
+
+    for oid, pos in list(open_positions.items()):
+        try:
+            # Age check — require opened_at > 7 days ago
+            opened_at_str = pos.get("opened_at", "")
+            if not opened_at_str:
+                skipped += 1
+                continue
+            try:
+                opened_at = datetime.fromisoformat(opened_at_str.replace("Z", "+00:00"))
+            except Exception:
+                skipped += 1
+                continue
+
+            age_days = (now - opened_at).total_seconds() / 86400
+            if age_days < _AGE_SWEEP_DAYS:
+                skipped += 1
+                continue
+
+            # PnL check at current price
+            sym = pos["symbol"]
+            price = prices.get(sym) or pos.get("current_price") or pos.get("entry_price")
+            if not price:
+                skipped += 1
+                continue
+
+            qty = pos.get("qty", 0)
+            side = pos.get("side", "LONG")
+            entry = pos.get("entry_price", 0)
+
+            if side == "LONG":
+                pnl_pct = (price / entry - 1) * 100 if entry > 0 else 0
+            else:
+                pnl_pct = (entry / price - 1) * 100 if price > 0 else 0
+
+            if abs(pnl_pct) > _AGE_SWEEP_PNL_BAND_PCT:
+                skipped += 1
+                continue
+
+            # Sweep close — recurse into close_position for realized PnL + cash return
+            req = CloseRequest(reason="sweep_aged_position")
+            await close_position(oid, req)
+            swept += 1
+            swept_symbols.append({"symbol": sym, "age_days": round(age_days, 1),
+                                  "pnl_pct": round(pnl_pct, 2)})
+            _logger.info(f"[SWEEP] {sym} age={age_days:.1f}d PnL={pnl_pct:+.2f}% — forced close")
+        except Exception as e:
+            errors.append({"order_id": oid, "error": str(e)})
+            _logger.warning(f"[SWEEP] error closing {oid}: {e}")
+
+    return {
+        "swept":         swept,
+        "skipped":       skipped,
+        "total_open":    len(open_positions),
+        "swept_symbols": swept_symbols,
+        "errors":        errors,
+        "ran_at":        _now(),
+    }
+
+
+@router.post("/internal/sweep-aged-positions")
+async def trigger_sweep_aged(x_internal_token: str = Header(default="")):
+    """
+    Manual trigger for aged-position sweep. Auth: X-Internal-Token must match
+    INTERNAL_TOKEN env var. Returns sweep summary.
+    """
+    expected = os.environ.get("INTERNAL_TOKEN", "")
+    if not expected or x_internal_token != expected:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return await sweep_aged_positions()
 
 
 # ── Simons IC Loop — auto-mine background task ───────────────────────────────
