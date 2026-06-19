@@ -178,6 +178,7 @@ async def data_landing_audit():
             "age_seconds": age,
             "freshness_s": freshness,
             "verdict":     verdict,
+            "error":       (r.get("error") if r.get("error") else None),
         })
 
     # Overall
