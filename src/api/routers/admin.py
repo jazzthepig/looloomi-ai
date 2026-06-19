@@ -58,28 +58,25 @@ def _sb_headers() -> dict:
 async def _probe_table(client: httpx.AsyncClient, table: str) -> dict:
     """
     Returns {count, last_write, error?} for a table by hitting
-    Prefer: count=exact and select=id+timestamp.
-    Fast — single round-trip, no row materialization.
+    Prefer: count=exact and selecting a tiny row.
+    Fast — single round-trip for count, one more for last_write.
+    Accepts 200 AND 206 (Supabase returns 206 for partial content with count=exact).
     """
     if not _SB_URL or not _SB_KEY:
         return {"count": None, "last_write": None, "error": "supabase_not_configured"}
-    # Pick a timestamp column heuristically
-    ts_col = None
-    for cand in ("recorded_at", "run_at", "computed_at", "created_at", "signal_date", "last_seen"):
-        # We just attempt the canonical ordering once — Supabase will 400 on bad col
-        ts_col = cand
-        break
+    # Heuristic timestamp column — first one that succeeds wins
+    ts_candidates = ("recorded_at", "run_at", "computed_at",
+                     "created_at", "signal_date", "last_seen")
     try:
-        # count
+        # count — use * to avoid id-only / wallet_address-only column issues
         r_count = await client.get(
             f"{_SB_URL}/rest/v1/{table}",
-            params={"select": "id", "limit": "1"},
+            params={"select": "*", "limit": "1"},
             headers={**_sb_headers(), "Prefer": "count=exact"},
             timeout=10,
         )
         count = None
-        if r_count.status_code == 200:
-            # Content-Range: "0-0/1234"  → /N gives total
+        if r_count.status_code in (200, 206):
             cr = r_count.headers.get("content-range", "")
             if "/" in cr:
                 try:
@@ -87,7 +84,6 @@ async def _probe_table(client: httpx.AsyncClient, table: str) -> dict:
                 except Exception:
                     count = None
             else:
-                # fallback: parse body length
                 try:
                     count = len(r_count.json())
                 except Exception:
@@ -95,16 +91,18 @@ async def _probe_table(client: httpx.AsyncClient, table: str) -> dict:
         else:
             return {"count": None, "last_write": None, "error": f"http_{r_count.status_code}"}
 
-        # last_write — single most recent row, ordering by ts_col
-        r_last = await client.get(
-            f"{_SB_URL}/rest/v1/{table}",
-            params={"select": ts_col, "order": f"{ts_col}.desc", "limit": "1"},
-            headers=_sb_headers(),
-            timeout=10,
-        )
+        # last_write — try each ts col until one returns 200
         last_write = None
-        if r_last.status_code == 200 and r_last.json():
-            last_write = r_last.json()[0].get(ts_col)
+        for ts_col in ts_candidates:
+            r_last = await client.get(
+                f"{_SB_URL}/rest/v1/{table}",
+                params={"select": ts_col, "order": f"{ts_col}.desc", "limit": "1"},
+                headers=_sb_headers(),
+                timeout=10,
+            )
+            if r_last.status_code == 200 and r_last.json():
+                last_write = r_last.json()[0].get(ts_col)
+                break
         return {"count": count, "last_write": last_write}
     except Exception as e:
         return {"count": None, "last_write": None, "error": str(e)[:120]}
