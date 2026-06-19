@@ -303,15 +303,30 @@ async def _get_cis_for_symbol(symbol: str) -> tuple[float, str, str, dict]:
         cached = await _rg("cis:local_scores")
         if cached and isinstance(cached, dict):
             assets = cached.get("assets") or cached.get("universe", [])
+            # Mac Mini canonical: regime lives in `macro.regime` (nested). Some
+            # legacy shapes / Supabase mirrors also carry flat `macro_regime`.
+            # Same nested-then-flat pattern as src/data/market/data_layer.py:1787
+            # and the IC loop at trading.py:855 — keep them in sync.
+            regime = (
+                (cached.get("macro") or {}).get("regime")
+                or cached.get("macro_regime")
+                or "Unknown"
+            )
             for a in assets:
                 sym = (a.get("symbol") or a.get("asset_id") or "").upper()
                 if sym == symbol.upper():
                     score = a.get("cis_score") or a.get("total_score") or a.get("score", 0) or 0
-                    return float(score), a.get("grade", "?"), cached.get("macro_regime", "Unknown"), a
+                    return float(score), a.get("grade", "?"), regime, a
         # Fallback: compute via Railway CIS engine
         universe_data = await calculate_cis_universe()
         assets = universe_data.get("assets") or universe_data.get("universe", [])
-        regime = universe_data.get("macro_regime", "Unknown")
+        # Same nested-then-flat pattern — /api/v1/cis/universe returns
+        # `macro.regime` nested (see cis.py:391 normalizer), not top-level
+        regime = (
+            (universe_data.get("macro") or {}).get("regime")
+            or universe_data.get("macro_regime")
+            or "Unknown"
+        )
         for a in assets:
             sym = (a.get("symbol") or a.get("asset_id") or "").upper()
             if sym == symbol.upper():
