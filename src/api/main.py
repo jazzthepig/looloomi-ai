@@ -301,6 +301,36 @@ async def _start_daily_snapshot():
         print("[SNAPSHOT] ✅ daily full-universe snapshot loop scheduled")
 
 
+# ── Daily aged-position sweep (paper track-record bootstrapper) ────────────────
+# Closes paper positions >7 days old with floating PnL in ±5% band, so the
+# win-rate stat doesn't stay null forever in low-vol regimes where tightened
+# SL/TP (2%/4%) still don't trigger. Paper-only — distinct exit_reason.
+_AGE_SWEEP_INTERVAL_S = 24 * 3600   # daily
+
+
+async def _age_sweep_loop():
+    await _asyncio.sleep(3600)   # 1h warmup; never sweep on cold start
+    while True:
+        try:
+            from src.api.routers.trading import sweep_aged_positions
+            res = await sweep_aged_positions()
+            swept = res.get("swept", 0)
+            if swept > 0:
+                syms = ", ".join(s["symbol"] for s in res.get("swept_symbols", []))
+                print(f"[SWEEP] daily — swept={swept} ({syms}) "
+                      f"skipped={res.get('skipped')} total_open={res.get('total_open')}")
+        except Exception as _e:
+            print(f"[SWEEP] ⚠️  daily run failed: {_e}")
+        await _asyncio.sleep(_AGE_SWEEP_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_age_sweep():
+    if os.environ.get("DISABLE_AGE_SWEEP", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_age_sweep_loop())
+        print("[SWEEP] ✅ daily aged-position sweep loop scheduled")
+
+
 # ── Heartbeat / observability loop ────────────────────────────────────────────
 # Polls the health verdict and alerts Telegram on a status transition (plus a
 # once-daily digest). This is the loop that turns reactive firefighting into
