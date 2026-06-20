@@ -1028,24 +1028,17 @@ async def _backfill_regime_from_history(positions: list) -> int:
 
     from datetime import datetime
     backfilled = 0
-    debug_per_pos: list = []
     for pos in unknown:
         sym = pos["symbol"].upper()
         rows = rows_by_sym.get(sym, [])
-        d = {"sym": sym,
-             "rows_for_sym": len(rows),
-             "opened_at": (pos.get("opened_at", "") or "")[:19],
-             "universe_regime": universe_regime.get(sym),
-             "matched": False, "source": None, "reason": ""}
+
         opened_at_str = pos.get("opened_at", "")
         if not opened_at_str:
-            d["reason"] = "no_opened_at"
-            debug_per_pos.append(d); continue
+            continue
         try:
             opened_at = datetime.fromisoformat(opened_at_str.replace("Z", "+00:00"))
-        except Exception as e:
-            d["reason"] = f"bad_opened_at:{e!s:.30}"
-            debug_per_pos.append(d); continue
+        except Exception:
+            continue
 
         # Tier 1: Supabase row whose recorded_at is closest to (not after) opened_at
         best_row = None
@@ -1069,10 +1062,7 @@ async def _backfill_regime_from_history(positions: list) -> int:
             pos["macro_regime"] = best_row["macro_regime"]
             pos["macro_regime_source"] = "backfilled_from_history"
             backfilled += 1
-            d.update({"matched": True, "source": "supabase_history",
-                      "regime": best_row["macro_regime"],
-                      "delta_s": int(best_delta) if best_delta else None})
-            debug_per_pos.append(d); continue
+            continue
 
         # Tier 2: coarse — current per-asset regime from /cis/universe
         coarse = universe_regime.get(sym)
@@ -1080,14 +1070,7 @@ async def _backfill_regime_from_history(positions: list) -> int:
             pos["macro_regime"] = coarse
             pos["macro_regime_source"] = "backfilled_from_universe"
             backfilled += 1
-            d.update({"matched": True, "source": "universe_fallback",
-                      "regime": coarse,
-                      "reason": "no_supabase_match_pre_history"})
-        else:
-            d["reason"] = "no_tier1_no_tier2"
-        debug_per_pos.append(d)
 
-    _backfill_regime_from_history._last_debug = debug_per_pos
     return backfilled
 
 
@@ -1106,7 +1089,6 @@ async def get_metrics():
     # nested-regime fix (2026-06-19). Cheap when no work needed; bounded by
     # closed-position count. Result is in-place on `closed` list.
     backfilled = await _backfill_regime_from_history(closed)
-    backfill_debug = getattr(_backfill_regime_from_history, "_last_debug", [])
 
     total_trades = len(closed)
     if total_trades == 0:
@@ -1155,8 +1137,7 @@ async def get_metrics():
         "worst_trade":    {"symbol": worst["symbol"], "pnl_pct": round(worst.get("realized_pct",0),2), "pnl_usd": round(worst.get("realized_pnl",0),2)},
         "by_grade":       _group_by(closed, "cis_grade", "realized_pct"),
         "by_regime":      _group_by(closed, "macro_regime", "realized_pct"),
-        "regime_backfilled": backfilled,   # debug: how many legacy positions we recovered
-        "regime_backfill_debug": backfill_debug,   # per-position trace; drop after fix confirmed
+        "regime_backfilled": backfilled,   # how many legacy positions we recovered (0 on steady-state)
         "cash_usd":       round(balance, 2),
         "open_positions": open_count,
         "open_value_usd": round(open_value, 2),
