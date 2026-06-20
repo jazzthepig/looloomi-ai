@@ -943,17 +943,16 @@ async def get_loop_state():
             ic_mult[pillar] = 1.0
 
     # ── Parse current regime ──────────────────────────────────────────────────
+    # NOTE: _rget returns a parsed dict (redis_get_key auto-json.loads), not a
+    # raw string. Earlier code did `json.loads(cis_raw)` which always failed
+    # silently and pinned regime=UNKNOWN. Use the dict directly.
     regime = "UNKNOWN"
-    if cis_raw:
-        try:
-            cis_data = json.loads(cis_raw)
-            regime = (
-                cis_data.get("macro", {}).get("regime")
-                or cis_data.get("macro_regime")
-                or "UNKNOWN"
-            )
-        except Exception:
-            pass
+    if cis_raw and isinstance(cis_raw, dict):
+        regime = (
+            (cis_raw.get("macro") or {}).get("regime")
+            or cis_raw.get("macro_regime")
+            or "UNKNOWN"
+        )
 
     gate_threshold = _REGIME_GATE.get(regime, 50)
     loop_active    = n_closed >= 5 and bool(meta.get("last_run"))
@@ -977,6 +976,71 @@ async def get_loop_state():
 
 # ── GET /api/v1/trading/metrics ────────────────────────────────────────────────
 
+async def _backfill_regime_from_history(positions: list) -> int:
+    """
+    For closed positions with macro_regime='Unknown' (legacy entries written
+    before the nested-regime fix), look up the regime from the Supabase
+    cis_scores history at the position's opened_at time.
+
+    Mutates the position dicts in-place (sets macro_regime). Returns count of
+    backfilled entries. Safe no-op if Supabase is unreachable.
+    """
+    unknown = [p for p in positions if p.get("macro_regime") in (None, "Unknown", "UNKNOWN")]
+    if not unknown:
+        return 0
+
+    try:
+        from src.api.store import supabase_get_recent_scores
+        # Batch: fetch N=200 recent rows per symbol (covers ~4 days at 30min cadence)
+        symbols = list({p["symbol"].upper() for p in unknown})
+        rows_by_sym = await supabase_get_recent_scores(symbols, n=200)
+    except Exception as e:
+        _logger.debug(f"[METRICS] regime backfill skipped: {e}")
+        return 0
+
+    from datetime import datetime
+    backfilled = 0
+    for pos in unknown:
+        sym = pos["symbol"].upper()
+        rows = rows_by_sym.get(sym, [])
+        if not rows:
+            continue
+
+        # Find the row with recorded_at closest to (but not after) opened_at
+        opened_at_str = pos.get("opened_at", "")
+        if not opened_at_str:
+            continue
+        try:
+            opened_at = datetime.fromisoformat(opened_at_str.replace("Z", "+00:00"))
+        except Exception:
+            continue
+
+        best_row = None
+        best_delta = None
+        for row in rows:
+            ts_str = row.get("recorded_at", "")
+            if not ts_str:
+                continue
+            try:
+                ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            except Exception:
+                continue
+            # Row must be at or before opened_at
+            if ts > opened_at:
+                continue
+            delta = abs((opened_at - ts).total_seconds())
+            if best_delta is None or delta < best_delta:
+                best_delta = delta
+                best_row = row
+
+        if best_row and best_row.get("macro_regime"):
+            pos["macro_regime"] = best_row["macro_regime"]
+            pos["macro_regime_source"] = "backfilled_from_history"
+            backfilled += 1
+
+    return backfilled
+
+
 @router.get("/api/v1/trading/metrics")
 async def get_metrics():
     """
@@ -987,6 +1051,11 @@ async def get_metrics():
 
     closed = [p for p in positions.values() if p.get("status") == "closed"]
     open_  = [p for p in positions.values() if p.get("status") == "open"]
+
+    # Backfill macro_regime for legacy closed positions written before the
+    # nested-regime fix (2026-06-19). Cheap when no work needed; bounded by
+    # closed-position count. Result is in-place on `closed` list.
+    backfilled = await _backfill_regime_from_history(closed)
 
     total_trades = len(closed)
     if total_trades == 0:
@@ -1035,6 +1104,7 @@ async def get_metrics():
         "worst_trade":    {"symbol": worst["symbol"], "pnl_pct": round(worst.get("realized_pct",0),2), "pnl_usd": round(worst.get("realized_pnl",0),2)},
         "by_grade":       _group_by(closed, "cis_grade", "realized_pct"),
         "by_regime":      _group_by(closed, "macro_regime", "realized_pct"),
+        "regime_backfilled": backfilled,   # debug: how many legacy positions we recovered
         "cash_usd":       round(balance, 2),
         "open_positions": open_count,
         "open_value_usd": round(open_value, 2),
