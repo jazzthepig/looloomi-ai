@@ -990,37 +990,53 @@ async def _backfill_regime_from_history(positions: list) -> int:
         return 0
 
     try:
-        # Per-symbol query — cis_scores' symbol column exists for filtering
-        # (eq./in. works) but PostgREST does NOT return it in the response
-        # payload, so we can't group by symbol client-side. Reuse the
-        # single-symbol helper and concatenate. N=200 covers ~4 days at
-        # 30min cadence — sufficient for any closed position in our history.
+        # Two-tier backfill:
+        #  Tier 1: Supabase cis_scores history — precise match to opened_at.
+        #    Limitation: cis_scores' symbol column is filterable but NOT
+        #    returned in SELECT response, so we query per-symbol with eq.
+        #    Tier 1 covers any position opened after ~2026-06-19 (history
+        #    start).
+        #  Tier 2: current /api/v1/cis/universe per-asset macro_regime.
+        #    Coarse (uses today's regime, not the regime at open) but
+        #    always-available fallback for legacy closes that pre-date
+        #    Supabase history. Better than the Unknown bucket for
+        #    by_regime metrics.
         from src.api.store import supabase_get_history
+        from src.data.cis.cis_provider import calculate_cis_universe
+
         symbols = list({p["symbol"].upper() for p in unknown})
+
         rows_by_sym: dict[str, list] = {}
-        # 7 days gives a generous window; legacy closed positions span the
-        # full deployment period.
         for sym in symbols:
-            rows_by_sym[sym] = await supabase_get_history(sym, days=7)
+            rows_by_sym[sym] = await supabase_get_history(sym, days=14)
+
+        # Tier 2: universe per-asset macro_regime (top-level on each asset,
+        # not the nested global macro.regime). Coarse but always available.
+        universe_regime: dict[str, str] = {}
+        try:
+            universe = await calculate_cis_universe()
+            for a in (universe.get("assets") or universe.get("universe", [])):
+                a_sym = (a.get("symbol") or a.get("asset_id") or "").upper()
+                a_regime = a.get("macro_regime")
+                if a_sym and a_regime and a_regime != "Unknown":
+                    universe_regime[a_sym] = a_regime
+        except Exception as e:
+            _logger.debug(f"[METRICS] universe regime fallback unavailable: {e}")
     except Exception as e:
         _logger.warning(f"[METRICS] regime backfill skipped: {e}")
         return 0
 
     from datetime import datetime
     backfilled = 0
-    debug_per_pos: list = []  # expose for metrics response — drop after fix confirmed
+    debug_per_pos: list = []
     for pos in unknown:
         sym = pos["symbol"].upper()
         rows = rows_by_sym.get(sym, [])
-        d = {"sym": sym, "rows_for_sym": len(rows),
-             "opened_at": pos.get("opened_at", "")[:19] if pos.get("opened_at") else "",
-             "rows_with_macro_regime": sum(1 for r in rows if r.get("macro_regime")),
-             "matched": False, "reason": ""}
-        if not rows:
-            d["reason"] = "no_rows_for_sym"
-            debug_per_pos.append(d); continue
-
-        # Find the row with recorded_at closest to (but not after) opened_at
+        d = {"sym": sym,
+             "rows_for_sym": len(rows),
+             "opened_at": (pos.get("opened_at", "") or "")[:19],
+             "universe_regime": universe_regime.get(sym),
+             "matched": False, "source": None, "reason": ""}
         opened_at_str = pos.get("opened_at", "")
         if not opened_at_str:
             d["reason"] = "no_opened_at"
@@ -1031,6 +1047,7 @@ async def _backfill_regime_from_history(positions: list) -> int:
             d["reason"] = f"bad_opened_at:{e!s:.30}"
             debug_per_pos.append(d); continue
 
+        # Tier 1: Supabase row whose recorded_at is closest to (not after) opened_at
         best_row = None
         best_delta = None
         for row in rows:
@@ -1041,7 +1058,6 @@ async def _backfill_regime_from_history(positions: list) -> int:
                 ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
             except Exception:
                 continue
-            # Row must be at or before opened_at
             if ts > opened_at:
                 continue
             delta = abs((opened_at - ts).total_seconds())
@@ -1053,14 +1069,24 @@ async def _backfill_regime_from_history(positions: list) -> int:
             pos["macro_regime"] = best_row["macro_regime"]
             pos["macro_regime_source"] = "backfilled_from_history"
             backfilled += 1
-            d["matched"] = True
-            d["regime"] = best_row["macro_regime"]
-            d["delta_s"] = int(best_delta) if best_delta else None
+            d.update({"matched": True, "source": "supabase_history",
+                      "regime": best_row["macro_regime"],
+                      "delta_s": int(best_delta) if best_delta else None})
+            debug_per_pos.append(d); continue
+
+        # Tier 2: coarse — current per-asset regime from /cis/universe
+        coarse = universe_regime.get(sym)
+        if coarse:
+            pos["macro_regime"] = coarse
+            pos["macro_regime_source"] = "backfilled_from_universe"
+            backfilled += 1
+            d.update({"matched": True, "source": "universe_fallback",
+                      "regime": coarse,
+                      "reason": "no_supabase_match_pre_history"})
         else:
-            d["reason"] = "no_best_row_with_macro_regime"
+            d["reason"] = "no_tier1_no_tier2"
         debug_per_pos.append(d)
 
-    # Stash debug on the function for the metrics endpoint to surface
     _backfill_regime_from_history._last_debug = debug_per_pos
     return backfilled
 
