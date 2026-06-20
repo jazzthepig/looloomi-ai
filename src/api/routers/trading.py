@@ -1003,25 +1003,33 @@ async def _backfill_regime_from_history(positions: list) -> int:
         for sym in symbols:
             rows_by_sym[sym] = await supabase_get_history(sym, days=7)
     except Exception as e:
-        _logger.debug(f"[METRICS] regime backfill skipped: {e}")
+        _logger.warning(f"[METRICS] regime backfill skipped: {e}")
         return 0
 
     from datetime import datetime
     backfilled = 0
+    debug_per_pos: list = []  # expose for metrics response — drop after fix confirmed
     for pos in unknown:
         sym = pos["symbol"].upper()
         rows = rows_by_sym.get(sym, [])
+        d = {"sym": sym, "rows_for_sym": len(rows),
+             "opened_at": pos.get("opened_at", "")[:19] if pos.get("opened_at") else "",
+             "rows_with_macro_regime": sum(1 for r in rows if r.get("macro_regime")),
+             "matched": False, "reason": ""}
         if not rows:
-            continue
+            d["reason"] = "no_rows_for_sym"
+            debug_per_pos.append(d); continue
 
         # Find the row with recorded_at closest to (but not after) opened_at
         opened_at_str = pos.get("opened_at", "")
         if not opened_at_str:
-            continue
+            d["reason"] = "no_opened_at"
+            debug_per_pos.append(d); continue
         try:
             opened_at = datetime.fromisoformat(opened_at_str.replace("Z", "+00:00"))
-        except Exception:
-            continue
+        except Exception as e:
+            d["reason"] = f"bad_opened_at:{e!s:.30}"
+            debug_per_pos.append(d); continue
 
         best_row = None
         best_delta = None
@@ -1045,7 +1053,15 @@ async def _backfill_regime_from_history(positions: list) -> int:
             pos["macro_regime"] = best_row["macro_regime"]
             pos["macro_regime_source"] = "backfilled_from_history"
             backfilled += 1
+            d["matched"] = True
+            d["regime"] = best_row["macro_regime"]
+            d["delta_s"] = int(best_delta) if best_delta else None
+        else:
+            d["reason"] = "no_best_row_with_macro_regime"
+        debug_per_pos.append(d)
 
+    # Stash debug on the function for the metrics endpoint to surface
+    _backfill_regime_from_history._last_debug = debug_per_pos
     return backfilled
 
 
@@ -1064,6 +1080,7 @@ async def get_metrics():
     # nested-regime fix (2026-06-19). Cheap when no work needed; bounded by
     # closed-position count. Result is in-place on `closed` list.
     backfilled = await _backfill_regime_from_history(closed)
+    backfill_debug = getattr(_backfill_regime_from_history, "_last_debug", [])
 
     total_trades = len(closed)
     if total_trades == 0:
@@ -1113,6 +1130,7 @@ async def get_metrics():
         "by_grade":       _group_by(closed, "cis_grade", "realized_pct"),
         "by_regime":      _group_by(closed, "macro_regime", "realized_pct"),
         "regime_backfilled": backfilled,   # debug: how many legacy positions we recovered
+        "regime_backfill_debug": backfill_debug,   # per-position trace; drop after fix confirmed
         "cash_usd":       round(balance, 2),
         "open_positions": open_count,
         "open_value_usd": round(open_value, 2),
