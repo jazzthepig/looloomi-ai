@@ -990,10 +990,18 @@ async def _backfill_regime_from_history(positions: list) -> int:
         return 0
 
     try:
-        from src.api.store import supabase_get_recent_scores
-        # Batch: fetch N=200 recent rows per symbol (covers ~4 days at 30min cadence)
+        # Per-symbol query — cis_scores' symbol column exists for filtering
+        # (eq./in. works) but PostgREST does NOT return it in the response
+        # payload, so we can't group by symbol client-side. Reuse the
+        # single-symbol helper and concatenate. N=200 covers ~4 days at
+        # 30min cadence — sufficient for any closed position in our history.
+        from src.api.store import supabase_get_history
         symbols = list({p["symbol"].upper() for p in unknown})
-        rows_by_sym = await supabase_get_recent_scores(symbols, n=200)
+        rows_by_sym: dict[str, list] = {}
+        # 7 days gives a generous window; legacy closed positions span the
+        # full deployment period.
+        for sym in symbols:
+            rows_by_sym[sym] = await supabase_get_history(sym, days=7)
     except Exception as e:
         _logger.debug(f"[METRICS] regime backfill skipped: {e}")
         return 0

@@ -223,7 +223,12 @@ async def supabase_get_recent_scores(symbols: list, n: int = 30) -> dict:
             rows = resp.json()
             result: dict = {}
             for row in rows:
-                sym = row.get("symbol", "").upper()
+                sym_raw = row.get("symbol")
+                # Supabase returns symbol=null when the column isn't in SELECT
+                # scope (or table has it as computed). Coerce None/empty to ""
+                # so .upper() never raises AttributeError, which the outer
+                # try/except was silently swallowing.
+                sym = (sym_raw or "").upper()
                 if sym:
                     result.setdefault(sym, []).append(row)
             # Each symbol list is already ordered newest-first (Supabase returns in query order)
