@@ -3,9 +3,24 @@
 # Or: bash run_reconstruction.command
 cd "$(dirname "$0")"
 
+# URL is public — keep hardcoded (matches SUPABASE_SETUP.md)
 export SUPABASE_URL="https://soupjamxlfsmgmmtoeok.supabase.co"
-export SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvdXBqYW14bGZzbWdtbXRvZW9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MzMzNjUsImV4cCI6MjA4OTMwOTM2NX0.zvdKO2Obwpb3xIyt7OWzisE9B-W8hAPjOT2zO35vC4I"
-export COINGECKO_API_KEY="CG-Rv47zv5eFuL2N9DXunbEQsrK"
+
+# Key: NEVER hardcode the anon key in this file (was: eyJ...anon JWT).
+# Reads from env: prefer SUPABASE_SERVICE_KEY (backend writes, bypasses RLS),
+# fallback SUPABASE_KEY (anon — read-only by design).
+# Source your .env file before running, or set in your shell.
+if [ -f "$(dirname "$0")/.env" ]; then
+  set -a; source "$(dirname "$0")/.env"; set +a
+fi
+export SUPABASE_KEY="${SUPABASE_KEY:-${SUPABASE_SERVICE_KEY:-}}"
+if [ -z "$SUPABASE_KEY" ]; then
+  echo "ERROR: SUPABASE_KEY or SUPABASE_SERVICE_KEY must be set."
+  echo "Add it to your .env (gitignored) or export in your shell."
+  exit 1
+fi
+
+export COINGECKO_API_KEY="${COINGECKO_API_KEY:-CG-Rv47zv5eFuL2N9DXunbEQsrK}"
 
 echo "=============================="
 echo "  CIS Historical Reconstruction"

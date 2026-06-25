@@ -3220,7 +3220,7 @@ async def get_cg_price_history(coin_id: str, days: int = 365) -> dict:
         return {"coin_id": coin_id, "available": False, "error": str(e)}
 
 
-async def get_cg_market_chart_range(coin_id: str, from_ts: int, to_ts: int) -> dict:
+async def get_cg_market_chart_range(coin_id: str, from_ts: int, to_ts: int, interval: str = None) -> dict:
     """
     CoinGecko Pro /coins/{id}/market_chart/range — prices in a precise unix timestamp window.
     Superior to the `days` endpoint for regime fitness computation: returns ONLY the data
@@ -3230,6 +3230,9 @@ async def get_cg_market_chart_range(coin_id: str, from_ts: int, to_ts: int) -> d
         coin_id:  CoinGecko coin ID (e.g. 'bitcoin')
         from_ts:  Unix timestamp (seconds) — window start
         to_ts:    Unix timestamp (seconds) — window end
+        interval: Pro-only granularity override ("daily" / "hourly"). None = CoinGecko
+                  auto (5m <1d, hourly 1–90d, daily >90d). Pass "daily" for deep
+                  multi-year backfills to force daily points + bound payload.
 
     Returns: {prices: [[ts_ms, price]], volumes: [[ts_ms, vol]], granularity}
     TTL: 2h Redis (historical data doesn't change)
@@ -3237,7 +3240,7 @@ async def get_cg_market_chart_range(coin_id: str, from_ts: int, to_ts: int) -> d
     if not CG_API_KEY:
         return {"available": False, "reason": "no_pro_key"}
 
-    key = f"cg_range_{coin_id}_{from_ts}_{to_ts}"
+    key = f"cg_range_{coin_id}_{from_ts}_{to_ts}_{interval or 'auto'}"
     cached = _cache_get(key, ttl=7200)
     if cached:
         return cached
@@ -3247,11 +3250,14 @@ async def get_cg_market_chart_range(coin_id: str, from_ts: int, to_ts: int) -> d
 
     client = _get_cg_client()
     try:
+        _params = {"vs_currency": "usd", "from": from_ts, "to": to_ts}
+        if interval:
+            _params["interval"] = interval
         r = await client.get(
             f"{CG_PRO_BASE}/coins/{coin_id}/market_chart/range",
             headers=_cg_headers(),
-            params={"vs_currency": "usd", "from": from_ts, "to": to_ts},
-            timeout=20,
+            params=_params,
+            timeout=30,
         )
         r.raise_for_status()
         raw = r.json()
