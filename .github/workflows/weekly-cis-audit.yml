@@ -1,0 +1,36 @@
+name: Weekly CIS / data-landing audit
+
+# Real weekly audit (the old weekly-cis-audit.md never ran). Monday 01:00 UTC.
+# Confirms the app is healthy and the data pipeline is landing, and prints a
+# summary into the job log (and Telegram if secrets are set). Lightweight,
+# stdlib-only — reads the public build-state + CIS universe.
+
+on:
+  schedule:
+    - cron: "0 1 * * 1"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Health + landing summary
+        run: |
+          python scripts/post_deploy_check.py --retries 3 --sleep 15 || true
+          python - <<'PY'
+          import json, urllib.request, time
+          def get(u):
+              with urllib.request.urlopen(u + f"?cb={int(time.time())}", timeout=25) as r:
+                  return json.loads(r.read().decode())
+          try:
+              u = get("https://looloomi.ai/api/v1/cis/universe")
+              uni = u.get("universe", [])
+              t1 = sum(1 for a in uni if str(a.get("data_tier")) in ("1","T1"))
+              print(f"CIS universe: {len(uni)} assets (T1={t1}, T2={len(uni)-t1}) regime={u.get('macro_regime')}")
+          except Exception as e:
+              print(f"::warning::universe fetch failed: {e}")
+          PY

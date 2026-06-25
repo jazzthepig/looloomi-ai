@@ -263,5 +263,15 @@ async def trigger_ohlcv_collect(x_internal_token: str = Header(None),
         raise HTTPException(status_code=500, detail=f"ohlcv module not built yet: {e}")
 
     sym_list = [s.strip().upper() for s in symbols.split(",") if s.strip()] or None
+
+    # Deep backfills (large windows) can exceed the gateway timeout — run them in the
+    # background and return immediately. Short top-ups stay synchronous (caller wants the result).
+    if days > 800:
+        import asyncio
+        asyncio.create_task(collect_ohlcv(symbols=sym_list, days=days))
+        return {"ok": True, "started": True, "background": True, "days": days,
+                "symbols": len(sym_list) if sym_list else "universe",
+                "note": "deep backfill running in background; check /api/v1/ohlcv/coverage"}
+
     res = await collect_ohlcv(symbols=sym_list, days=days)
     return res

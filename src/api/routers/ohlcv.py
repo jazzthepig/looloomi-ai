@@ -80,7 +80,7 @@ async def _fetch_cg_daily(client: httpx.AsyncClient, coin_id: str, days: int) ->
         # Use the range endpoint to bound the window precisely
         now = int(datetime.now(timezone.utc).timestamp())
         frm = now - days * 86400
-        hist = await get_cg_market_chart_range(coin_id, frm, now)
+        hist = await get_cg_market_chart_range(coin_id, frm, now, interval="daily")
         if not hist.get("available"):
             # Fall back to the days endpoint
             hist = await get_cg_price_history(coin_id, days)

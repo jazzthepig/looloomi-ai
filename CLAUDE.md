@@ -420,8 +420,11 @@ git push origin main
   - Phase D: Session handoff + agent memory (`.claude/session-handoff/`)
   - Phase E: Plugin structure (`cometcloud-intelligence/` — manifest + 5 skills + 2 commands
     + 1 agent + MCP config pointing to `src/mcp/cometcloud_mcp.py`)
-  - Phase F: GitHub Agentic Workflows (`.github/workflows/` — compliance-pr-check,
-    post-deploy-verify, weekly-cis-audit)
+  - Phase F: GitHub Agentic Workflows — ⚠️ **NOT REAL (audit 2026-06-25).** These were
+    written as `.md` files, never `.yml`, so GitHub never ran them. The only live
+    workflow is `ci-smoke.yml` (import+boot gate, added 2026-06-25). Treat
+    compliance-pr-check / post-deploy-verify / weekly-cis-audit as design notes, not
+    automation. Convert to real `.yml` or delete.
 - A2A agent card: `dashboard/public/.well-known/agent.json` + `dashboard/dist/.well-known/agent.json`
   — ROADMAP_A2A Phase 2.1 ✅
 - Supabase env vars confirmed set in Railway — score history writes active
@@ -517,6 +520,9 @@ git push origin main
 - **Performance**: CISLeaderboard lazy-loaded (app bundle 165→117KB, -29%)
 - **Cache-Control**: all hot API endpoints covered with appropriate TTL + stale-while-revalidate
 - **Dead code removed**: ProtocolPage, MarketDashboard, PriceChart, FundDeployWizard, market.html
+  — ⚠️ **correction (audit 2026-06-25): only UNMOUNTED, files still present** + now also
+  AssetTable, MMIGauge, PortfolioDiagnosis orphaned. Actual deletion tracked in `PR_CHECKLIST.md`
+  §PURGE. (7 true orphan components import nowhere.)
 - **rec_weight bug**: STRONG OUTPERFORM was falling to else:0 — fixed with proper handler
 - **win.html**: looloomi.ai/win.html — How to Win positioning page with live CIS scores
 - **Investor deck**: CometCloud_Investor_Deck_2026.pptx — 10 slides, dark theme, license partner language

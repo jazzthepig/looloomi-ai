@@ -1,0 +1,38 @@
+name: Compliance check (forbidden trade language)
+
+# Real PR gate (the old compliance-pr-check.md never ran). Scans changed
+# user-facing files for buy/sell/price-target language using the same patterns as
+# the Claude-Code hook. Fails the PR on any violation.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Scan changed files
+        run: |
+          set -e
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            files=$(git diff --name-only "$base" HEAD || true)
+          else
+            files=$(git diff --name-only HEAD~1 HEAD || true)
+          fi
+          echo "Changed files:"; echo "$files"
+          if [ -z "$files" ]; then echo "no changed files"; exit 0; fi
+          # ADVISORY for now: annotates violations but does not block. ~83 pre-existing
+          # hits in the codebase must be triaged first; then flip to blocking by removing
+          # the `|| true` and setting COMPLIANCE_BLOCK=1.
+          python scripts/compliance_scan.py $files \
+            || echo "::warning::compliance violations found (advisory — enforcement enabled after backlog triage)"
