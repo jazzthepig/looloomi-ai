@@ -68,7 +68,11 @@ FT_VENV = FT_ROOT / ".venv" / "bin" / "freqtrade"
 FT_STRATEGIES = FT_ROOT / "user_data" / "strategies"
 FT_BACKTEST_DIR = FT_ROOT / "user_data" / "backtest_results"
 
-REPORTS_DIR = Path("/Users/sbb/Projects/looloomi-ai/reports")
+# Reports land on the CometCloud AI drive (Minimax's territory).
+# Shadow/ in the repo is only a local mirror of /Volumes/CometCloudAI/ —
+# runtime outputs MUST go to the drive, not the repo.
+DRIVE_ROOT = Path("/Volumes/CometCloudAI/cometcloud-local")
+REPORTS_DIR = DRIVE_ROOT / "_reports" / "backtest"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Supabase (read from env at runtime, validated at first write)
@@ -418,6 +422,9 @@ def export_supabase(result: BacktestResult) -> bool:
 def write_report(result: BacktestResult) -> Path:
     today = datetime.now(timezone.utc).strftime("%Y%m%d")
     out_path = REPORTS_DIR / f"{result.strategy}_{today}.md"
+    # Subdir also serves as a screen variant when invoked via screen mode
+    # (write_report is only called from single/walk-forward, but keep the
+    # dir layout consistent).
     eq_cagr = result.vs_equal_weight if not np.isnan(result.vs_equal_weight) else 0.0
     btc_only = result.market_change
     lines = [
