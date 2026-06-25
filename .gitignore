@@ -16,3 +16,6 @@ COMMIT_READY.md
 WEEKLY_REVIEW.md
 MINIMAX_SYNC.md
 dashboard/dist.old*
+
+# Strategy reports — local working files (backtest outputs, correlation drafts, handoffs)
+reports/
