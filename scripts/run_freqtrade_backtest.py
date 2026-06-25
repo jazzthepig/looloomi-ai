@@ -205,10 +205,14 @@ def parse_zip(zip_path: Path) -> dict:
 
 
 def parse_metrics(raw: dict) -> dict:
-    """Normalise freqtrade's metric names to a flat dict."""
+    """Normalise freqtrade's metric names to a flat dict.
+
+    Note: freqtrade's `winrate` is a fraction (0-1); we convert to percentage
+    (0-100) here so the report can use `{:.1f}%` directly.
+    """
     return {
         "total_trades":      int(raw.get("total_trades", 0) or 0),
-        "win_rate":          float(raw.get("winrate", 0) or 0),
+        "win_rate":          float(raw.get("winrate", 0) or 0) * 100.0,
         "profit_factor":     float(raw.get("profit_factor", 0) or 0),
         "sharpe":            float(raw.get("sharpe", 0) or 0),
         "sortino":           float(raw.get("sortino", 0) or 0),
@@ -232,24 +236,39 @@ def parse_metrics(raw: dict) -> dict:
 # --- Benchmarks ---------------------------------------------------------------
 
 def fetch_benchmark_cagr(timerange: str, exchange_root: Path) -> float:
-    """Read BTC-hold CAGR over the timerange from local Binance .feather data."""
+    """Read BTC-hold CAGR over the timerange from local Binance .feather data.
+
+    Falls back to 4h bars (resampled to 1d) since 1d .feather isn't always
+    downloaded. Returns NaN only if no usable data is found.
+    """
     try:
-        candidates = [
-            exchange_root / "user_data" / "data" / "binance" / "futures" / "BTC_USDT-1d.feather",
-            exchange_root / "user_data" / "data" / "binance" / "BTC_USDT-1d.feather",
-        ]
-        data_path = next((p for p in candidates if p.exists()), None)
-        if not data_path:
-            return float("nan")
-        df = pd.read_feather(data_path)
-        if "date" in df.columns:
-            df = df.set_index("date")
-        if not isinstance(df.index, pd.DatetimeIndex):
-            df.index = pd.to_datetime(df.index)
         start_ts, end_ts = _parse_timerange(timerange)
-        df = df.loc[(df.index >= start_ts) & (df.index <= end_ts)]
-        if len(df) < 2:
+        # Try multiple paths/tfs
+        candidates = [
+            exchange_root / "user_data" / "data" / "binance" / "BTC_USDT-1d.feather",
+            exchange_root / "user_data" / "data" / "binance" / "BTC_USDT-4h.feather",
+            exchange_root / "user_data" / "data" / "binance" / "futures" / "BTC_USDT_USDT-1h-futures.feather",
+        ]
+        df = None
+        for data_path in candidates:
+            if data_path.exists():
+                try:
+                    df = pd.read_feather(data_path)
+                    if "date" in df.columns:
+                        df = df.set_index("date")
+                    if not isinstance(df.index, pd.DatetimeIndex):
+                        df.index = pd.to_datetime(df.index)
+                    df = df.loc[(df.index >= start_ts) & (df.index <= end_ts)]
+                    if len(df) >= 2:
+                        break
+                except Exception:
+                    df = None
+                    continue
+        if df is None or len(df) < 2:
             return float("nan")
+        # Resample to 1d close if needed (4h or 1h)
+        if len(df) > 365 * 1.5:  # likely 4h or 1h
+            df = df["close"].resample("1D").last().dropna().to_frame()
         start_px = float(df["close"].iloc[0])
         end_px = float(df["close"].iloc[-1])
         days = (df.index[-1] - df.index[0]).days
