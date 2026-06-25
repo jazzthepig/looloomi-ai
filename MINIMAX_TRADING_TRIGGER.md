@@ -1,105 +1,87 @@
-# Auto Paper Trading Trigger — Minimax Action Required
+# Auto Paper Trading Trigger — Honest Framing
 
-Add this block to `cis_scheduler.py` immediately after the Railway push block (after line ~548).
+This trigger fires paper orders hourly from fresh CIS scores. As of 2026-06-25,
+it is **deployed in `cis_scheduler.py` (commit `012022a`)** and runs every cron cycle.
 
-## Where to insert
+## What this trigger measures
 
-Find this line in `run_cis_job()`:
+**Daily-frequency long-only CIS-gated strategy.**
+
+That is the whole thing. It is a position-tilt strategy that:
+- Looks at CIS scores hourly
+- When a name crosses the regime threshold with signal OUTPERFORM/STRONG OUTPERFORM
+- Opens a small LONG position
+
+That's it. No shorting. No intraday signals. No multi-factor combination.
+
+## What this trigger is NOT
+
+- **NOT the headline edge.** Expected profile is **weak, possibly beta-like**.
+- **NOT comparable to S1.** S1 is the 4h long-short proper walk-forward backtest.
+  That is where real alpha lives (per STRATEGY_VALIDATION.md gate 3).
+- **NOT a benchmark for fund performance.** A weak return here is an honest
+  data point, not a failure. It validates the *infrastructure* (orders flow,
+  positions tracked, P&L computed) more than it validates the *strategy*.
+
+## Why we kept it conservative
+
+We could loosen the gate (NEUTRAL with CIS buffer, larger cap, more asset
+classes) to inflate trade count. We deliberately did not:
+
+1. **Cap = 2 orders/cycle.** Hourly cron × 2 = 48 worst-case/day, but steady-
+   state is ~10-15 new positions/day because most cycles have 0-2 qualifying
+   names. This keeps the record legible as a fund-style tilt, not a bot.
+
+2. **Strict gate.** Only `OUTPERFORM` and `STRONG OUTPERFORM` fire. No
+   `NEUTRAL + CIS buffer` fallbacks. A faithful null hypothesis is more
+   valuable for walk-forward comparison than a noisy inflated record.
+
+3. **Dedup against open positions.** Skips symbols already held. Prevents
+   re-adding on every cycle.
+
+## Where to find it in code
+
+`cis_scheduler.py` `run_cis_job()` → `# ── Auto paper trading ──` block.
+
 ```python
-    logger.info(f"CIS job completed: {len(scores)} assets in {duration:.1f}s")
+REGIME_THRESHOLD = {
+    "TIGHTENING": 52, "RISK_OFF": 55, "EASING": 48,
+    "RISK_ON": 48, "STAGFLATION": 58, "GOLDILOCKS": 46,
+}
+MAX_NEW_PER_CYCLE = 2
+
+# Open positions fetched to skip already-held symbols
+# Signal gate: OUTPERFORM or STRONG OUTPERFORM only
+# Sizing: conviction_bps = min(800, ...) -- bounded at 8% of portfolio
 ```
 
-Insert the block ABOVE that line.
+## Verify it's running
 
----
-
-## The code block
-
-```python
-    # ── Auto paper trading — submit orders based on fresh CIS scores ─────────
-    if RAILWAY_URL and scores:
-        try:
-            import urllib.request, json as _json
-
-            REGIME_THRESHOLD = {
-                "TIGHTENING": 52, "RISK_OFF": 55, "EASING": 48,
-                "RISK_ON": 48, "STAGFLATION": 58, "GOLDILOCKS": 46,
-            }
-            # Read regime from the scores payload (top-level macro_regime)
-            regime = "TIGHTENING"  # fallback
-            for s in scores:
-                if hasattr(s, "macro_regime") and s.macro_regime:
-                    regime = s.macro_regime
-                    break
-                if isinstance(s, dict) and s.get("macro_regime"):
-                    regime = s["macro_regime"]
-                    break
-
-            threshold = REGIME_THRESHOLD.get(regime, 52)
-
-            orders_placed = 0
-            for asset in scores:
-                # Normalise — score objects may be dataclass or dict
-                sym    = getattr(asset, "symbol",    None) or (asset.get("symbol")    if isinstance(asset, dict) else None)
-                score  = getattr(asset, "cis_score", None) or (asset.get("cis_score") if isinstance(asset, dict) else None)
-                signal = getattr(asset, "signal",    None) or (asset.get("signal")    if isinstance(asset, dict) else None)
-                tier   = getattr(asset, "data_tier", 2)    or (asset.get("data_tier", 2) if isinstance(asset, dict) else 2)
-
-                if not sym or score is None:
-                    continue
-
-                # Gate: CIS above regime threshold + positive signal + T1 preferred
-                if score >= threshold and signal in ("OUTPERFORM", "STRONG OUTPERFORM"):
-                    # Size in bps: scale with conviction above threshold
-                    conviction_bps = min(800, int((score - threshold) / (100 - threshold) * 600 + 200))
-                    if tier == 2:
-                        conviction_bps = int(conviction_bps * 0.6)  # discount T2
-
-                    order = {
-                        "symbol":   sym,
-                        "side":     "buy",
-                        "size_bps": conviction_bps,
-                        "strategy": f"CIS_AUTO_{regime}",
-                        "reason":   f"CIS={score:.1f} >= {threshold} ({regime}) | {signal}",
-                        "time_horizon": "7D",
-                    }
-
-                    try:
-                        req = urllib.request.Request(
-                            f"{RAILWAY_URL}/api/v1/trading/order",
-                            data=_json.dumps(order).encode(),
-                            headers={"Content-Type": "application/json"},
-                            method="POST",
-                        )
-                        with urllib.request.urlopen(req, timeout=10) as resp:
-                            result = _json.loads(resp.read())
-                            if result.get("status") == "filled":
-                                orders_placed += 1
-                                logger.info(f"[TRADING] {sym} {conviction_bps}bps | {signal} | CIS={score:.1f}")
-                    except Exception as order_err:
-                        logger.debug(f"[TRADING] order skip {sym}: {order_err}")
-
-            if orders_placed:
-                logger.info(f"[TRADING] {orders_placed} paper orders placed | regime={regime} threshold={threshold}")
-            else:
-                logger.info(f"[TRADING] no qualifying assets | regime={regime} threshold={threshold}")
-
-        except Exception as trading_err:
-            logger.warning(f"[TRADING] auto-trading block failed: {trading_err}")
-    # ── End auto paper trading ────────────────────────────────────────────────
-```
-
----
-
-## Verify it's working
-
-After next scheduler run, check:
 ```bash
-# Should see TRADING log lines
-tail -f /Volumes/CometCloudAI/cometcloud-local/logs/cis_scheduler_*.log | grep TRADING
-
-# Or hit the Railway endpoint
-curl https://looloomi.ai/api/v1/trading/metrics
+tail -f /Volumes/CometCloudAI/cometcloud-local/_logs/cis_scheduler.log | grep TRADING
 ```
 
-Expected: `open_positions > 0`, `portfolio_usd` moving from $10,000 baseline.
+Look for:
+- `[TRADING] N open positions: [...]` -- current open count
+- `[TRADING] N paper orders placed | regime=...` -- successful fires
+- `[TRADING] no qualifying assets | regime=...` -- gate is honest (most cycles)
+
+## Where to push next (energy allocation)
+
+**S1 -- 4h long-short proper walk-forward backtest.** This is the real alpha
+candidate. Use STRATEGY_VALIDATION.md gate 3 as the validator. Current
+freqtrade dry-run has 4 closed trades (per Railway trading/metrics) -- not
+enough for validation gate 1 (>= 100 closed trades).
+
+Tools available:
+- `scripts/run_freqtrade_backtest.py` -- wrapper with walk-forward
+- `scripts/backtest_strategies.py` -- multi-strategy screen
+- STRATEGY_VALIDATION.md -- 10 gates that gate "edge" status
+
+## Original spec (kept for reference, NOT current implementation)
+
+The original spec from 2026-06-04 was looser (no cap, `size_bps` instead of
+`size_usd`, included NEUTRAL-with-buffer fallback in early drafts). It was
+deliberately tightened before deploy per Jazz's framing: *"expected weak or
+even beta -- honest data point, not failure. Don't use it as headline edge.
+Energy goes to S1."*
