@@ -2,17 +2,22 @@ name: Post-deploy / uptime watchdog
 
 # The external watchdog the in-app heartbeat can't be (it dies with the app).
 # Would have caught the 2026-06-14 → 06-19 silent outage in minutes.
-#   - on push to main: wait for Railway to roll out, then verify the LIVE git_sha
-#     equals the just-pushed sha (catches failed deploy / silent rollback).
-#   - every 30 min: verify reachable + CIS push not stale.
-# On failure GitHub emails the repo owner; optional Telegram if secrets are set.
+#
+# ⚠️ Runs on SCHEDULE + manual dispatch ONLY — never on `push`. A push-triggered
+# post-deploy check deadlocks with Railway's "Wait for CI" (Railway waits for all
+# checks green before deploying, but this check is designed to fail until the deploy
+# is live → it can never go green → Railway never deploys). Cron catches outages
+# within 30 min; for a specific deploy, dispatch it with expect_sha.
 
 on:
-  push:
-    branches: [main]
   schedule:
     - cron: "*/30 * * * *"
   workflow_dispatch:
+    inputs:
+      expect_sha:
+        description: "Optional: verify the live deployment matches this sha"
+        required: false
+        default: ""
 
 jobs:
   watchdog:
