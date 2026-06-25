@@ -19,3 +19,20 @@ dashboard/dist.old*
 
 # Strategy reports — local working files (backtest outputs, correlation drafts, handoffs)
 reports/
+
+# ── Agent/harness churn cleanup (2026-06-25) — local operational noise, never commit ──
+health-check-*.md
+HEALTH_CHECK*.md
+health-reports/
+health-checks/
+monitor-logs/
+meditations/
+macro_brief_latest.json
+PRD*.md
+*.bak
+*.bak.*
+MINIMAX_SYNC_ARCHIVE_*.md
+*.db-journal
+.claude/settings.local.json
+# pip mis-install artifacts (files literally named "=x.y.z")
+=*
