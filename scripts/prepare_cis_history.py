@@ -76,7 +76,8 @@ def fetch_rows(start_date: str, end_date: str) -> list[dict]:
             "offset": offset,
         }
         if end_date:
-            params["recorded_at"] = f"gte.{start_date}&recorded_at=lte.{end_date}"
+            # list value → httpx expands to two `recorded_at=` params
+            params["recorded_at"] = [f"gte.{start_date}", f"lte.{end_date}"]
 
         r = httpx.get(
             f"{SUPABASE_URL}/rest/v1/{TABLE}",

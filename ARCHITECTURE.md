@@ -19,6 +19,37 @@ This is our ONE deep know-how — and the line between us and "we-can-do-anythin
 operators who have no insight in any domain: **we do not sell breadth. We model one
 upstream cause deeply (influence → quality propagation) and prove it with outcomes.**
 
+## Strategy first principle — 大象无形 (the great form is formless)
+
+*Weighs above all strategy code. It regressed once — diluted by build/agent churn in
+2026 — and must not be diluted again. Any "strategy" that is a static mechanical
+factor or a grid search violates this principle.*
+
+**The edge has no fixed form.** Mechanical rule-based systematic (Turtle-style) and
+long-window static-factor backtests are market-falsified or wash out: across long
+horizons regimes turn over countless times, edges decay and reverse (non-stationarity).
+A fixed factor averaged across all of that nets to nothing. autoresearch grid search is
+the same falsified mechanical turtle in new clothes — it finds spurious winners that die
+live. **We do not look for the edge as a frozen factor.**
+
+**Market structure forbids beating an index by trading it.** In equities >80% of the
+gain accrues *overnight* — you cannot out-trade the index intraday. Therefore:
+**beta = HOLD** (passive capture — the formless way; this is the upgraded-index / FoF
+core), and **alpha = niche** — specific inefficiencies the market is *currently*
+price-discovering, not generic momentum on a basket.
+
+**The real edge is formless and adaptive:** tracking liquidity + momentum + the
+price-discovery of quality assets, **in the current regime**, validated **per-instance by
+human + AI together** — never a factor machine. *Every time is different*, so it requires
+independent analysis and validation each time. CIS / our intelligence is this **formless
+price-discovery tracker (human + AI)**, not a static factor.
+
+**Role of the backtest (corrected):** to *validate a specific, currently-hypothesized
+niche edge* in its relevant regime, plus cost/capacity sanity — NOT to *discover* a
+universal static factor (which non-stationarity + overnight structure guarantee will
+disappoint, as the 2026-06-25 crypto-momentum-vs-ETF test proved: the same template that
+worked in crypto lost money on liquid multi-asset ETFs over 11y).
+
 ## Not an app — an OS (four composable layers)
 
 1. **Kernel — the influence-propagation ontology.**
