@@ -301,6 +301,29 @@ async def _start_daily_snapshot():
         print("[SNAPSHOT] ✅ daily full-universe snapshot loop scheduled")
 
 
+# ── D4 attention-diffusion (出圈) collector loop ──────────────────────────────
+# Logs CoinGecko free Trending daily → trending_log (service_role write). Builds the
+# attention-diffusion history forward (trending is a snapshot, not historical). Requires
+# the trending_log table (scripts/trending_collector.py CREATE_SQL, run once).
+async def _trending_loop():
+    await _asyncio.sleep(420)
+    while True:
+        try:
+            from scripts.trending_collector import collect_trending
+            res = await collect_trending()
+            print(f"[TRENDING] daily — ok={res.get('ok')} rows={res.get('rows')}")
+        except Exception as _e:
+            print(f"[TRENDING] ⚠️  daily run failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_trending():
+    if os.environ.get("DISABLE_TRENDING", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_trending_loop())
+        print("[TRENDING] ✅ daily attention-diffusion loop scheduled")
+
+
 # ── Daily aged-position sweep (paper track-record bootstrapper) ────────────────
 # Closes paper positions >7 days old with floating PnL in ±5% band, so the
 # win-rate stat doesn't stay null forever in low-vol regimes where tightened
