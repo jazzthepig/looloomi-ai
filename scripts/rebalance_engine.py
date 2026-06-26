@@ -89,6 +89,20 @@ MONTHLY_REBAL = True           # always rebalance on day-1 of month
 FEE_PER_SIDE = 0.0005          # 5bps per side (Binance futures taker)
 CASH_APR_DAILY = 0.025 / 365   # 2.5% APR → daily
 
+# Risk-Off overlay (v3) — see scripts/risk_off_overlay.py
+# Set to False to run base-only (v2 behaviour) for A/B comparison
+ENABLE_RISK_OFF_OVERLAY = True
+try:
+    from risk_off_overlay import (
+        overlay_daily_pnl, apply_naked_short_overlay,
+        RISK_OFF_REGIMES, RISK_OFF_OVERLAY_ALLOC, BASKET_OPTIONS_PARAMS,
+        NAKED_SHORT_PARAMS, sensitivity_table,
+    )
+    _OVERLAY_AVAILABLE = True
+except ImportError:
+    _OVERLAY_AVAILABLE = False
+    ENABLE_RISK_OFF_OVERLAY = False
+
 # Universe
 PRICE_DIR = Path("/Volumes/CometCloudAI/freqtrade/user_data/data/binance")
 CIS_HISTORY_DIR = Path("/Volumes/CometCloudAI/cometcloud-local/_data/cis_history")
@@ -286,13 +300,17 @@ class BacktestResult:
     tag: str
     tier: str
     leverage: float
-    nav: pd.Series                  # daily NAV
+    nav: pd.Series                  # daily NAV (base + overlay combined)
     regime: pd.Series               # daily regime
     gross_exposure: pd.Series       # daily sum(|w|)
     rebalances: list[RebalanceEvent] = field(default_factory=list)
     final_weights: dict[str, float] = field(default_factory=dict)
     start: pd.Timestamp = None
     end: pd.Timestamp = None
+    # v3 overlay fields
+    base_nav: pd.Series = None              # daily NAV without overlay
+    overlay_nav: pd.Series = None           # daily overlay P&L fraction
+    overlay_enabled: bool = False
 
     def summary_metrics(self, btc_nav: pd.Series, eq_nav: pd.Series) -> dict:
         nav = self.nav
@@ -370,11 +388,75 @@ class BacktestResult:
             if r not in seen:
                 lines.append(f"| {d.date()} | {r} |")
                 seen.add(r)
+
+        # v3 overlay section
+        if self.overlay_enabled and self.overlay_nav is not None:
+            overlay_total = (1 + self.overlay_nav.fillna(0)).cumprod().iloc[-1] - 1
+            base_only_cagr = (self.base_nav.iloc[-1] / self.base_nav.iloc[0]) ** (1 / yrs) - 1 if yrs > 0 else 0
+            overlay_yrs = (self.end - self.start).days / 365
+            overlay_cagr = (1 + overlay_total) ** (1 / overlay_yrs) - 1 if overlay_yrs > 0 else 0
+            overlay_during_riskoff = self.overlay_nav[self.regime.isin(["Risk-Off", "Tightening", "Stagflation"])].sum()
+            lines.extend([
+                "",
+                "## Risk-Off strategy overlay (v3)",
+                "",
+                f"- Overlay enabled: yes (basket options + augmented short book)",
+                f"- Base-only CAGR (no overlay): {base_only_cagr*100:.2f}%",
+                f"- Combined CAGR (with overlay): {m['CAGR']*100:.2f}%",
+                f"- Overlay total cumulative contribution: {overlay_total*100:+.2f}%",
+                f"- Overlay contribution during Risk-Off months: {overlay_during_riskoff*100:+.2f}%",
+                "",
+                "### Per-month overlay contribution",
+                "",
+                "| month | base NAV cumret | overlay cumret | combined cumret |",
+                "|---|---|---|---|",
+            ])
+            base_cumret = self.base_nav / self.base_nav.iloc[0] - 1
+            overlay_cumret = (1 + self.overlay_nav.fillna(0)).cumprod() - 1
+            combined_cumret = self.nav / self.nav.iloc[0] - 1
+            for m_key, g in pd.DataFrame({
+                "base": base_cumret, "overlay": overlay_cumret, "combined": combined_cumret,
+            }).groupby([self.nav.index.year, self.nav.index.month]):
+                last = g.iloc[-1]
+                lines.append(
+                    f"| {m_key[0]}-{m_key[1]:02d} | {last['base']*100:+.2f}% | "
+                    f"{last['overlay']*100:+.2f}% | {last['combined']*100:+.2f}% |"
+                )
+
+            # Sensitivity table
+            if _OVERLAY_AVAILABLE:
+                lines.extend([
+                    "",
+                    "### Sensitivity grid (overlay monthly EV per unit of freed-up cash)",
+                    "",
+                    "Assumes default alloc (basket_options=100%, naked_short=0%).",
+                    "To re-enable naked short EV, set RISK_OFF_SHORT_ALLOC>0.",
+                    "",
+                    "| premium yield ↓ / short mult → | 1.2× | 1.5× | 2.0× |",
+                    "|---|---|---|---|",
+                ])
+                for row in sensitivity_table():
+                    cells = [f"{r['monthly_ev']*100:+.2f}%" for r in row["results"]]
+                    lines.append(f"| {row['premium_yield']*100:.1f}% | {cells[0]} | {cells[1]} | {cells[2]} |")
+        else:
+            lines.extend([
+                "",
+                "## Risk-Off strategy overlay (v3)",
+                "",
+                "- Overlay disabled — base-only backtest (use --overlay to enable)",
+            ])
+
         return "\n".join(lines) + "\n"
 
 
-def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: float, tag: str) -> BacktestResult:
-    """Walk-forward daily rebalance backtest. Returns BacktestResult with NAV."""
+def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: float, tag: str,
+                overlay_enabled: bool = True) -> BacktestResult:
+    """Walk-forward daily rebalance backtest. Returns BacktestResult with NAV.
+
+    If overlay_enabled (default) AND risk_off_overlay module is available, the
+    base portfolio's short book is augmented in Risk-Off/Tightening/Stagflation
+    regimes and a basket-options premium-collecting overlay P&L is added daily.
+    """
     universe = [c for c in prices.columns]
     days = prices.index
     start, end = days[0], days[-1]
@@ -382,6 +464,8 @@ def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: f
     weights = {sym: 0.0 for sym in universe}
     cash = 1.0  # start with $1 NAV
     nav = pd.Series(index=days, dtype=float)
+    base_nav = pd.Series(index=days, dtype=float)
+    overlay_nav = pd.Series(index=days, dtype=float)
     regime_series = pd.Series(index=days, dtype=object)
     gross_series = pd.Series(index=days, dtype=float)
     events: list[RebalanceEvent] = []
@@ -389,27 +473,30 @@ def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: f
     last_regime: Optional[str] = None
     last_grades: dict[str, str] = {}
     prev_close = None
+    use_overlay = overlay_enabled and ENABLE_RISK_OFF_OVERLAY and _OVERLAY_AVAILABLE
+    rng = np.random.default_rng(42)  # reproducible breach draws
+    cycle_start = start  # 30-day options cycle for breach accounting
     for d in days:
         if prev_close is None or d not in prices.index:
             prev_close = prices.loc[d].to_dict() if d in prices.index else prev_close
             nav.loc[d] = cash
-            regime_series.loc[d] = last_regime or "Neutral"
+            base_nav.loc[d] = cash
+            overlay_nav.loc[d] = 0.0
+            regime_series.loc[d] = "Neutral"  # default before first CIS update
             gross_series.loc[d] = 0.0
             continue
         # Mark to market: NAV_t = sum(w_i * P_t/P_{t-1}) + cash * (1+r_cash)
         ret = 0.0
         for sym, w in weights.items():
             p_t = prices.at[d, sym] if (d in prices.index and sym in prices.columns) else None
-            p_y = prices.at[prev_close["_date"], sym] if isinstance(prev_close, dict) and "_date" in prev_close else None
-            # Simpler: track via prev_close dict
             p_y = prev_close.get(sym)
             if p_t is not None and p_y is not None and p_y > 0 and not np.isnan(p_y) and not np.isnan(p_t):
                 ret += w * (p_t / p_y - 1)
         # Cash earns yield
         cash_part = 1.0 - sum(abs(w) for w in weights.values())
         cash_yield = max(cash_part, 0.0) * CASH_APR_DAILY
-        nav.loc[d] = (1 + ret + cash_yield)
-        regime_series.loc[d] = last_regime or "Neutral"
+        base_today = (1 + ret + cash_yield)
+        base_nav.loc[d] = base_today
         gross_series.loc[d] = sum(abs(w) for w in weights.values())
         # Decide rebalance (do AFTER mark-to-market so trigger is at-close)
         if d in cis.index:
@@ -444,6 +531,9 @@ def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: f
                     triggers.append("weight_delta")
             # Apply leverage
             target_lev = {k: v * leverage for k, v in target.items()}
+            # v3: apply naked-short overlay BEFORE renormalising gross
+            if use_overlay:
+                target_lev = apply_naked_short_overlay(target_lev, regime, leverage)
             # Re-normalise gross to ≤ leverage
             gross_target = sum(abs(w) for w in target_lev.values())
             if gross_target > leverage:
@@ -470,7 +560,24 @@ def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: f
                         last_grades[sym] = str(g)
                 # Apply transaction cost on NAV (deducted from cash side)
                 cost = turnover * FEE_PER_SIDE * 2  # round-trip
-                nav.loc[d] = nav.loc[d] * (1 - cost)
+                base_today = base_today * (1 - cost)
+                base_nav.loc[d] = base_today
+        regime_series.loc[d] = last_regime or "Neutral"
+        # v3: overlay P&L — basket options premium collection in Risk-Off
+        if use_overlay:
+            freed_cash = 1.0 - REGIME_FACTOR.get(last_regime or "Neutral", 0.8)
+            # Roll options cycle every 30 days
+            if (d - cycle_start).days >= 30:
+                cycle_start = d
+            overlay_pnl, options_pnl = overlay_daily_pnl(
+                last_regime or "Neutral", freed_cash,
+                d.toordinal(), cycle_start.toordinal(), rng,
+            )
+            overlay_nav.loc[d] = overlay_pnl
+            nav.loc[d] = base_today * (1.0 + overlay_pnl)
+        else:
+            overlay_nav.loc[d] = 0.0
+            nav.loc[d] = base_today
         prev_close = prices.loc[d].to_dict()
         prev_close["_date"] = d
     return BacktestResult(
@@ -478,6 +585,7 @@ def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: f
         nav=nav, regime=regime_series, gross_exposure=gross_series,
         rebalances=events, final_weights=weights,
         start=start, end=end,
+        base_nav=base_nav, overlay_nav=overlay_nav, overlay_enabled=use_overlay,
     )
 
 
@@ -496,12 +604,15 @@ def main():
     ap.add_argument("--report", default="rebalance_v1")
     ap.add_argument("--universe", default="BTC,ETH,SOL,BNB,XRP,LINK,AVAX,DOT,LTC,ADA",
                     help="comma list of symbols (USDT pairs)")
+    ap.add_argument("--overlay", choices=["on", "off"], default="on",
+                    help="enable Risk-Off strategy overlay (basket options + augmented shorts)")
     args = ap.parse_args()
 
     start, end = parse_timerange(args.timerange)
     print(f"[rebalance] window {start.date()} → {end.date()}")
     universe = [s.strip().upper() for s in args.universe.split(",") if s.strip()]
     print(f"[rebalance] universe: {universe}")
+    print(f"[rebalance] overlay: {args.overlay} (module available={_OVERLAY_AVAILABLE})")
 
     # Load prices
     prices = load_prices(universe, start, end)
@@ -519,24 +630,32 @@ def main():
         print("ERROR: no CIS history in window")
         return 3
 
+    overlay_enabled = (args.overlay == "on")
+
     # Run both tiers
     for tier, lev in [("senior", 1.0), ("junior", 2.0)]:
         print(f"\n[rebalance] running {tier} tier ({lev}×)...")
-        result = run_backtest(prices, cis, tier=tier, leverage=lev, tag=args.report)
-        print(f"[rebalance] {tier}: CAGR={result.summary_metrics(prices['BTC'], prices.mean(axis=1))['CAGR']*100:.2f}%, "
-              f"rebalances={len(result.rebalances)}")
+        result = run_backtest(prices, cis, tier=tier, leverage=lev, tag=args.report,
+                              overlay_enabled=overlay_enabled)
+        m = result.summary_metrics(prices['BTC'], prices.mean(axis=1))
+        print(f"[rebalance] {tier}: CAGR={m['CAGR']*100:.2f}%, "
+              f"vs BTC={m['BTC_Alpha']*100:+.2f}pp, rebalances={len(result.rebalances)}")
         # Benchmarks (BTC-only & equal-weight of available universe)
         btc_nav = prices["BTC"] / prices["BTC"].iloc[0]
         eq_nav = prices.mean(axis=1) / prices.mean(axis=1).iloc[0]
         # Save CSVs
         nav_path = REPORT_DIR / f"{args.report}_{tier}_nav.csv"
-        nav_df = pd.DataFrame({
+        nav_data = {
             "nav": result.nav,
             "regime": result.regime,
             "gross_exposure": result.gross_exposure,
             "btc_nav": btc_nav,
             "eq_nav": eq_nav,
-        })
+        }
+        if result.overlay_enabled:
+            nav_data["base_nav"] = result.base_nav
+            nav_data["overlay_daily"] = result.overlay_nav
+        nav_df = pd.DataFrame(nav_data)
         nav_df.to_csv(nav_path)
         print(f"[rebalance] wrote {nav_path}")
         # Save trades log
