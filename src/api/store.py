@@ -273,6 +273,43 @@ async def supabase_get_history(symbol: str, days: int = 7) -> list:
         return []
 
 
+# ── D4 attention (trending_log) read — cached, for cause-proximity ─────────────
+_TRENDING_CACHE: dict = {"map": None, "ts": 0.0}
+_TRENDING_TTL = 1800  # 30 min — trending only refreshes daily, this is plenty fresh
+
+
+async def supabase_get_latest_trending() -> dict:
+    """Latest D4 attention snapshot as {SYMBOL_UPPER: row}. Cached 30 min; best-effort
+    (returns {} on any miss so cause-proximity falls back to its market_proxy floor)."""
+    now = time.time()
+    if _TRENDING_CACHE["map"] is not None and (now - _TRENDING_CACHE["ts"]) < _TRENDING_TTL:
+        return _TRENDING_CACHE["map"]
+    if not _SB_URL or not _SB_KEY:
+        return {}
+    url = f"{_SB_URL}/rest/v1/trending_log"
+    params = {
+        "order": "recorded_at.desc",
+        "limit": "60",   # ~4 daily snapshots of 15 coins — newest wins per symbol
+        "select": "symbol,attention_score,sentiment_up,watchlist_users,market_cap_rank,trending_rank,recorded_at",
+    }
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
+    try:
+        resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
+        if resp and resp.status_code == 200:
+            out: dict = {}
+            for row in resp.json():            # newest-first → first seen per symbol wins
+                sym = (row.get("symbol") or "").upper()
+                if sym and sym not in out:
+                    out[sym] = row
+            _TRENDING_CACHE["map"] = out
+            _TRENDING_CACHE["ts"] = now
+            return out
+        return {}
+    except Exception as e:
+        _logger.warning(f"[SUPABASE] trending read exception: {e}")
+        return {}
+
+
 # ── Float sanitizer ───────────────────────────────────────────────────────────
 def sanitize_floats(obj):
     """Recursively replace NaN/Inf numpy floats with None for JSON compliance."""

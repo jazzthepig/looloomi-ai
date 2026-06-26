@@ -90,7 +90,14 @@ a heuristic. Two checks remain before we call it a law: (a) verify smart-money *
 at date t* uses only pre-t information (not today's PnL applied backward — the subtle
 circularity an endpoint alone doesn't rule out); (b) build a transparent self-computed
 smart-set from raw on-chain (Dune/Flipside, as-of-date realized PnL) so the published
-standard does not rest on a vendor black box. See MINIMAX_SYNC §DATA-CAPTURE DC0.
+standard does not rest on a vendor black box.
+
+**ALIGN 2026-06-25 — Nansen DEFERRED; do not wire it now.** Per the source policy
+(`DATA_CAPTURE_SPEC.md`): CoinGecko Pro is primary, Dune is the one extra source (D3
+holders), Nansen (D2 wallet-level smart/retail) waits until CoinGecko is exhausted. Until
+then the γ/stage edge runs on D3 (holder dispersion, Dune) + D4 (attention diffusion,
+CoinGecko) and is published as a **declared heuristic**, not a proven law. The old "DC0
+Nansen PIT check" task is DROPPED.
 
 ## 4. Crowding / capacity decay (why alpha and capacity die together)
 

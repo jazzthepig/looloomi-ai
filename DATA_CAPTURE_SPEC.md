@@ -5,41 +5,46 @@ and who owns it. Principle: most of what we need is on-chain **sign + compositio
 (direction & who), not precise magnitude — cheaper to capture, and crypto-native
 (TradFi can't see it). Magnitude is only needed for the capacity term.*
 
-Legend — Source: 🔗 on-chain (our edge, self-compute) · 🛰 consume giant (Nansen/
-Glassnode/Kaiko/Arkham) · 🆓 free/public. Status: ✅ have · 🟡 partial · 🔴 to build.
-PIT = point-in-time history required for honest backtest (see OPEN #3).
+**SOURCE POLICY (aligned 2026-06-25): CoinGecko Pro ($129, ALREADY PAID) is the PRIMARY
+source — use it fully before adding any vendor.** It covers D1/D4/D6/D7/D9. Only two
+things it can't do: D3 holder distribution → **Dune** (the one justified extra source),
+and D2 wallet-level smart/retail → **Nansen, DEFERRED** (do not wire until we actually
+reach D2). EODHD for TradFi (D8). Glassnode/Kaiko are *later upgrades only if CoinGecko
+proves insufficient* — not now.
 
-| # | State variable | Concrete data | Source | Status | PIT? | Owner |
-|---|---|---|---|---|---|---|
-| D1 | Net marginal flow (SIGN) | exchange net in/outflow, stablecoin flow | 🔗 / 🛰Glassnode | 🔴 | yes | Minimax |
-| D2 | Participant identity (smart/retail) | smart-money net buy/sell; early-fund/whale accumulate vs distribute | 🛰Nansen/Arkham | 🔴 | **yes (hard)** | Minimax |
-| D3 | Propagation stage (出圈) | holder concentration (HHI / top-N share), holder-count growth, avg balance ↓ | 🔗 self-compute | 🔴 | yes | Minimax |
-| D4 | Attention diffusion | Google Trends, exchange App-Store rank, mainstream-media mentions | 🆓 | 🔴 | partial | Seth |
-| D5 | Retail fragility | retail share of marginal flow × realized vol | 🔗 + compute (D2,D3) | 🔴 | yes | Seth |
-| D6 | True depth / capacity | order-book depth, impact curve per venue | 🛰Kaiko / exchange | 🔴 | no | Minimax |
-| D7 | Crowding / positioning | OI, funding rate, basis | 🆓 CCXT (local) | 🟡 | partial | Minimax |
-| D8 | Value anchor V | crypto: TVL/fundamentals · tok-equity: underlying spot · RWA: NAV | ✅ EODHD/DeFiLlama | 🟡 | yes | Seth |
-| D9 | Momentum / price | OHLCV (daily have; 4h local) | ✅ | ✅ | yes | shared |
+Legend — 🦎 CoinGecko Pro · 🟫 Dune · ⏸ Nansen (deferred) · 📊 EODHD · 🔗 self-compute.
+Status: ✅ have · 🟡 partial · 🔴 to build.
 
-## Hard dependencies / risks (carry from METHODOLOGY_CORE OPEN list)
+| # | State variable | Concrete data | Source | Status | Owner |
+|---|---|---|---|---|---|
+| D1 | Net marginal flow (sign) | CG `/coins/{id}/tickers` volume by venue + GeckoTerminal DEX flow (true exchange-netflow = Glassnode, *later*) | 🦎 CoinGecko Pro | 🔴 | Seth |
+| D2 | Participant identity (smart/retail) | wallet-level smart-money net buy/sell | ⏸ **Nansen — DEFERRED** | ⏸ | (later) |
+| D3 | Propagation stage (出圈) | holder concentration (HHI / top-N / count) — `tokens_ethereum.balances_daily` | 🟫 Dune | 🟡 metric+adapter done, query_id pending | Minimax authors query |
+| D4 | Attention diffusion | CG **trending** + `/coins/{id}` community_data (twitter/reddit/tg) + sentiment_votes + watchlist_users | 🦎 CoinGecko (Pro) | 🟡 collector built, upgrading to community/sentiment | Seth |
+| D5 | Retail fragility | f(D3 dispersion-accel, D4 attention, realized vol) | 🔗 compute | 🔴 | Seth |
+| D6 | Depth / capacity (partial) | CG `/coins/{id}/tickers` bid-ask spread per market + GeckoTerminal (Kaiko = later for true book) | 🦎 CoinGecko Pro | 🔴 | Seth |
+| D7 | Crowding / positioning | CG **derivatives** (open interest, funding rate, basis) | 🦎 CoinGecko Pro | 🔴 | Seth |
+| D8 | Value anchor V | crypto: TVL/fundamentals · tok-equity: underlying spot · RWA: NAV | 📊 EODHD + DeFiLlama + CG | 🟡 | Seth |
+| D9 | Momentum / price | deep OHLCV (daily since 2013 backfilled ✅; 4h local) | 🦎 CoinGecko ✅ | ✅ | shared |
 
-- **D2 + PIT (OPEN #1, #3):** "smart" must be defined point-in-time without hindsight,
-  AND historical smart/flow labels must exist to backtest. If Nansen only exposes
-  *current* labels, we **cannot** honestly prove the γ/stage edge → we downgrade to a
-  declared reflection-layer heuristic, not a proven law. **Resolve before claiming alpha.**
-  → Action: check Nansen/Arkham historical/PIT label availability + pricing.
-- **Cross-asset (OPEN #4):** D1–D3 are crypto-native. For tokenized equity / RWA,
-  holders are off-chain → these degrade. Scope the convergence index to where the data
-  exists, or source an off-chain equivalent, before claiming cross-asset coverage.
+## Hard dependencies / risks
 
-## Capture priority (cheapest-honest-win first)
+- **D2 / Nansen — DEFERRED (not a current dependency).** Wallet-level smart/retail is the
+  one variable CoinGecko can't give. We decided 2026-06-25 to exhaust CoinGecko first and
+  only buy Nansen when we actually reach D2. Until then γ/stage runs on D3 (holder
+  dispersion) + D4 (attention) proxies and is labelled a **heuristic**, not a proven law.
+  Do NOT wire Nansen now.
+- **Cross-asset (OPEN #4):** D3 (on-chain holders) is crypto-native; tokenized equity / RWA
+  holders are off-chain → it degrades there. Scope the index to where the data exists.
 
-1. **D3 (holder concentration → dispersion)** — self-compute on-chain, no vendor cost,
-   directly the 出圈 axis. Start here.
-2. **D1 (exchange/stablecoin flow sign)** — Glassnode or on-chain; marginal-flow direction.
-3. **D4 (attention diffusion)** — free; the out-of-circle confirm.
-4. **D2 (smart/retail)** — gated on the PIT check above; do the feasibility check first.
-5. **D6 (depth/impact)** — for the honest-capacity term; Kaiko or exchange depth.
+## Capture priority (CoinGecko-first — use the paid plan fully)
+
+1. **D4 (attention)** — CoinGecko trending + community/sentiment/watchlist. Collector built; upgrade to community fields. *(Seth, now)*
+2. **D7 (crowding)** — CoinGecko derivatives (OI/funding). Cheap, already paid. *(Seth)*
+3. **D1 (marginal-flow sign)** — CoinGecko volume-by-venue + GeckoTerminal DEX. *(Seth)*
+4. **D6 (depth, partial)** — CoinGecko `/tickers` bid-ask spread. *(Seth)*
+5. **D3 (holder concentration)** — Dune query authoring (Minimax) → query_id → Seth's adapter.
+6. D2 (Nansen) — deferred. D8 EODHD/DeFiLlama ongoing.
 
 ## Build form
 

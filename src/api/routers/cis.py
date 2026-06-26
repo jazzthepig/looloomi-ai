@@ -408,13 +408,35 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
                 return _UNIVERSE_CACHE["data"]
             data = await _build_cis_universe(force_source)
             _attach_asset_narratives(data)
+            await _attach_cause_proximity_async(data)
             if data and data.get("universe"):
                 _UNIVERSE_CACHE["data"] = data
                 _UNIVERSE_CACHE["ts"] = time.time()
             return data
     data = await _build_cis_universe(force_source)
     _attach_asset_narratives(data)
+    await _attach_cause_proximity_async(data)
     return data
+
+
+async def _attach_cause_proximity_async(data: dict) -> None:
+    """Soul axis (大象无形): attach per-asset out-of-circle / propagation-stage risk.
+    D4 attention (live) upgrades the floor; D3 holder stage plugs in when Minimax-A
+    delivers the Dune query_id. Best-effort — the market_proxy floor never misses."""
+    if not data or not data.get("universe"):
+        return
+    attention_map = {}
+    try:
+        from src.api.store import supabase_get_latest_trending
+        attention_map = await supabase_get_latest_trending()
+    except Exception as e:
+        _logger.warning(f"[CIS] trending fetch failed: {e}")
+    try:
+        from src.data.cis.cause_proximity import attach_cause_proximity
+        # holder_map left None until D3-DUNE query_id lands (see MINIMAX_SYNC §BOARD)
+        attach_cause_proximity(data["universe"], attention_map, None)
+    except Exception as e:
+        _logger.warning(f"[CIS] cause_proximity attach failed: {e}")
 
 
 def _sanitize_market_fields(universe: list) -> None:
