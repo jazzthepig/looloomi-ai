@@ -16,6 +16,7 @@ const QuantMonitor           = lazy(() => import("./components/QuantMonitor"));
 const EstAlphaSection        = lazy(() => import("./components/EstAlphaSection"));
 const MyPortfolio            = lazy(() => import("./components/MyPortfolio"));
 import DiagnoseHome from "./components/DiagnoseHome";
+const RiskMeter              = lazy(() => import("./components/RiskMeter"));
 const SignalFeed             = lazy(() => import("./components/SignalFeed"));
 const StrategiesPage         = lazy(() => import("./components/StrategiesPage"));
 const MultiFactorStrategies  = lazy(() => import("./components/MultiFactorStrategies"));
@@ -609,6 +610,8 @@ function DesktopApp() {
             <section style={contentPad}>
               <Suspense fallback={<SectionLoader />}>
                 <DiagnoseHome embedded />
+                <div style={{ height: 28 }} />
+                <RiskMeter />
                 <div style={{ height: 36 }} />
                 <MyPortfolio cisUniverse={cisUniverse} />
               </Suspense>
