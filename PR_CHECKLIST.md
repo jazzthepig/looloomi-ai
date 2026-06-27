@@ -62,6 +62,36 @@ dashboard/src/App.jsx
 dashboard/dist/                   # rebuild before committing: cd dashboard && npm run build
 ```
 
+## PR-5 · Cause-proximity 出圈 axis + D4 attention + Risk Meter (2026-06-26/27)
+**Status: PUSHED** — `adf706d` (soul axis + D4), `21d5aeb` (Risk Meter), dist build.
+```
+src/data/cis/cause_proximity.py          # per-asset out-of-circle risk, evidence-tiered
+scripts/trending_collector.py            # D4 CoinGecko attention → trending_log (daily loop)
+scripts/holder_concentration.py          # D3 HHI/stage + Dune adapter (awaits query_id)
+src/data/market/risk_meter.py            # cause_proximity → meter-adjusted sizing + needle
+src/api/store.py                         # supabase_get_latest_trending (cached D4 read)
+src/api/routers/cis.py                   # _attach_cause_proximity_async + /portfolio/risk-meter
+src/api/main.py                          # _trending_loop daily
+dashboard/src/components/RiskMeter.jsx   # needle gauge + drag-contributors (Portfolio tab)
+dashboard/src/App.jsx + dist/            # mount + rebuilt dist
+DATA_CAPTURE_SPEC.md / METHODOLOGY_CORE.md  # CoinGecko-Pro-first policy, Nansen DEFERRED
+```
+Live-verified: `/api/v1/portfolio/risk-meter` returns reading 0.20 (low) in Tightening,
+58 assets. `trending_log` table created (Jazz) — D4 accumulates forward post-deploy.
+
+## PR-6 · trade_results write fix — UNBLOCKS the Learn loop (2026-06-27) ⚡
+```
+src/api/routers/trading.py   # _paper_position_to_row column-name fix
+```
+**Bug:** `_paper_position_to_row` wrote `cis_score_at_entry`/`pillar_*_at_entry`/
+`macro_regime_at_entry`/`recorded_at` — none of which exist on `trade_results`. Every
+PostgREST insert 400'd, swallowed by fire-and-forget → table stayed at 0 rows despite
+7 closes in the Redis store. Fixed to the real columns (`cis_score`, `pillar_f..a`,
+`macro_regime`, `data_tier`; dropped `recorded_at`). Verified via a test insert (schema
+now matches) then deleted. After deploy, new closes populate `trade_results` → Simons IC
+regression + track record finally accumulate. (Existing 7 Redis closes won't backfill —
+only forward closes write.)
+
 ## ⚠️ CONFIRM before committing (unknown provenance — multi-agent residue)
 - `elizaos-plugin/` — who added it? An ElizaOS agent plugin. Keep / move / drop?
 - `config_ls_futures.json` — long-short futures config? whose?
@@ -76,10 +106,13 @@ health-check-*.md · HEALTH_CHECK*.md · health-reports/ · health-checks/ · mo
 meditations/ · macro_brief_latest.json · PRD*.md · *.bak(.*) · MINIMAX_SYNC_ARCHIVE_*.md ·
 *.db-journal · .claude/settings.local.json · `=*` (pip artifacts)
 
-## Landing health snapshot (2026-06-25, for reference)
-cis_scores ✅ fresh (06-25) · railway_snapshot ✅ (754) · macro_briefs ✅ fresh ·
-ohlcv_daily 🟡 stale 06-21 (deep backfill PR-1 fixes) · signal_journal 🟡 06-19 ·
-cis_backtest_results 🔴 0 (Minimax S1) · trade_results 🔴 0 (Minimax paper trading).
+## Landing health snapshot (updated 2026-06-27)
+cis_scores ✅ (47,654 rows, growing) · ohlcv_daily ✅ (137,896) · macro_briefs ✅ (75) ·
+signal_journal 🟡 (49) · trending_log ✅ table live, 0 rows (D4 accumulates post-deploy) ·
+cis_backtest_results 🔴 0 (Minimax-C S1) ·
+trade_results 🔴 0 — **root cause found+fixed (PR-6): schema-mismatch silent-fail, not
+"Minimax hasn't done it." Engine IS running (5 open, 7 closed in Redis); writes now land
+after PR-6 deploy.**
 
 ## §PURGE — dead code (audit 2026-06-25; run by Jazz, deletions are irreversible)
 
