@@ -439,6 +439,30 @@ async def _attach_cause_proximity_async(data: dict) -> None:
         _logger.warning(f"[CIS] cause_proximity attach failed: {e}")
 
 
+@router.get("/api/v1/portfolio/risk-meter")
+async def get_risk_meter(response: Response = None):
+    """
+    Risk Meter — the judgment→behavior link. Reads the live CIS universe (already carrying
+    per-asset cause_proximity), turns grade into target weights, then de-risks each long by
+    its out-of-circle (出圈) fragility. Returns the meter-adjusted weights + one 0..1 needle
+    for the whole book + the holdings dragging it. See src/data/market/risk_meter.py.
+    """
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
+    data = await get_cis_universe()
+    universe = (data or {}).get("universe", [])
+    regime = (data or {}).get("macro_regime")
+    try:
+        from src.data.market.risk_meter import build_risk_meter
+        out = build_risk_meter(universe, regime)
+        out["universe_size"] = len(universe)
+        out["as_of"] = (data or {}).get("timestamp") or (data or {}).get("as_of")
+        return out
+    except Exception as e:
+        _logger.warning(f"[CIS] risk_meter build failed: {e}")
+        return {"error": "risk_meter_unavailable", "regime": regime, "universe_size": len(universe)}
+
+
 def _sanitize_market_fields(universe: list) -> None:
     """
     Null out untrustworthy price-derived fields. When an asset's price is 0/missing
