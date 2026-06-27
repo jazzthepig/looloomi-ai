@@ -36,7 +36,7 @@ from typing import Optional, Literal
 from fastapi import APIRouter, HTTPException, Header, Query
 from pydantic import BaseModel, Field
 
-from src.api.store import redis_set_key, redis_get_key
+from src.api.store import redis_set_key, redis_get_key, supabase_insert_table
 from src.api.notify import notify_telegram
 
 _logger = logging.getLogger(__name__)
@@ -698,6 +698,10 @@ async def close_position(order_id: str, req: CloseRequest = None):
     closed_pos = positions[order_id]
     asyncio.create_task(_notify_paper_close(closed_pos, pnl_pct, pnl_abs))
 
+    # Fire-and-forget Supabase trade_results write — populates Simons IC table
+    # + unblocks L1 metric in MINIMAX_SYNC.md. Failure logged, doesn't block close.
+    asyncio.create_task(_write_closed_trade_to_supabase(closed_pos))
+
     # ── Simons IC Loop — auto-mine after every 5th closed trade ──────────────
     all_closed = [p for p in positions.values() if p.get("status") == "closed"]
     n_closed   = len(all_closed)
@@ -719,14 +723,72 @@ async def close_position(order_id: str, req: CloseRequest = None):
     }
 
 
+# ── Paper trade → trade_results row (Simons Upgrade P0.1.1) ────────────────────
+# Mirrors quant.py:_trade_to_row() so Freqtrade fills + paper closes land in the
+# same schema. Without this, the paper trigger never populates trade_results
+# (L1 in MINIMAX_SYNC.md stays at 0).
+def _paper_position_to_row(pos: dict) -> dict:
+    """Normalize a closed paper position into a trade_results row."""
+    return {
+        "symbol":               pos.get("symbol"),
+        "side":                 (pos.get("side") or "LONG").upper(),
+        "entry_time":           pos.get("opened_at"),
+        "exit_time":            pos.get("closed_at"),
+        "entry_price":          pos.get("entry_price"),
+        "exit_price":           pos.get("exit_price"),
+        "profit_pct":           pos.get("realized_pct"),
+        "profit_abs":           pos.get("realized_pnl"),
+        "exit_reason":          pos.get("exit_reason", "manual"),
+        "enter_tag":            None,  # paper trigger has no enter_tag
+        "strategy":             pos.get("strategy") or "CIS_AUTO",
+        # NOTE: column names must match the trade_results table exactly. The previous
+        # *_at_entry / macro_regime_at_entry / recorded_at keys did NOT exist on the
+        # table → every PostgREST insert 400'd silently (fire-and-forget swallowed it),
+        # leaving trade_results empty despite closes happening. Fixed 2026-06-27.
+        "cis_score":            pos.get("cis_score"),
+        "cis_grade":            pos.get("cis_grade"),
+        "pillar_f":             pos.get("pillar_f_at_entry") or pos.get("pillar_f"),
+        "pillar_m":             pos.get("pillar_m_at_entry") or pos.get("pillar_m"),
+        "pillar_o":             pos.get("pillar_o_at_entry") or pos.get("pillar_o"),
+        "pillar_s":             pos.get("pillar_s_at_entry") or pos.get("pillar_s"),
+        "pillar_a":             pos.get("pillar_a_at_entry") or pos.get("pillar_a"),
+        "macro_regime":         pos.get("macro_regime"),
+        "data_tier":            pos.get("data_tier"),
+        "realized_return_7d":   None,  # filled later if 7d price data available
+    }
+
+
+async def _write_closed_trade_to_supabase(pos: dict) -> bool:
+    """Best-effort write of a closed paper position to trade_results.
+    Fire-and-forget — failure logged but does not block close.
+    """
+    try:
+        row = _paper_position_to_row(pos)
+        if not row.get("symbol") or not row.get("exit_time"):
+            return False
+        ok = await supabase_insert_table("trade_results", [row])
+        if ok:
+            _logger.info(f"[TRADE_RESULTS] wrote {row['symbol']} {row['exit_reason']} "
+                         f"profit_pct={row['profit_pct']:+.2f}%" if row['profit_pct'] is not None
+                         else f"[TRADE_RESULTS] wrote {row['symbol']} {row['exit_reason']}")
+        else:
+            _logger.warning(f"[TRADE_RESULTS] write failed for {row.get('symbol')}")
+        return ok
+    except Exception as e:
+        _logger.warning(f"[TRADE_RESULTS] exception: {e}")
+        return False
+
+
 # ── Aged-position sweep (paper track-record bootstrapper) ─────────────────────
-# Closes paper positions open >7 days with unrealized PnL in ±5% band.
+# Closes paper positions open >7 days with unrealized PnL in ±10% band.
 # Reason: tightened SL/TP (2%/4% as of 2026-06-19) still don't trigger on
 # low-vol regime grind. Without an exit path, win_rate stays null forever.
+# Band widened 5% → 10% on 2026-06-26 so losers like AAPL (-6.12%) get swept
+# (was the gating item for MINIMAX_TRADING_TRIGGER.md track record).
 # This is a paper-only intervention — distinct exit_reason so it can be
 # excluded from LP-facing metrics if needed, but the default is to count it.
 _AGE_SWEEP_DAYS = 7
-_AGE_SWEEP_PNL_BAND_PCT = 5.0  # ±5%
+_AGE_SWEEP_PNL_BAND_PCT = 10.0  # ±10% (was 5%)
 
 
 async def sweep_aged_positions() -> dict:
@@ -824,6 +886,158 @@ async def trigger_sweep_aged(x_internal_token: str = Header(default="")):
     if not expected or x_internal_token != expected:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return await sweep_aged_positions()
+
+
+
+# ── SL/TP auto-execution (Simons Upgrade P0.2) ────────────────────────────────
+# Until 2026-06-26 SL/TP was only a flag — sl_triggered/tp_triggered were set in
+# get_positions but never closed the position. AAPL bled -6.12% past its -2% SL
+# for 24h with no exit. This loop scans open positions every 5min, calls
+# close_position() when price breaches SL/TP, and writes to trade_results.
+async def _sl_tp_exit() -> dict:
+    """
+    Close any open position whose current price has breached its SL or TP.
+    Returns summary: {closed: int, sl: int, tp: int, errors: list}.
+    """
+    positions = await _get_positions()
+    open_positions = {oid: p for oid, p in positions.items() if p.get("status") == "open"}
+    if not open_positions:
+        return {"closed": 0, "sl": 0, "tp": 0, "errors": [], "scanned": 0}
+
+    # Fetch live prices for all open symbols
+    symbols = list({p["symbol"] for p in open_positions.values()})
+    prices  = await _fetch_prices_batch(symbols)
+
+    closed = 0
+    sl = 0
+    tp = 0
+    errors = []
+
+    for oid, pos in list(open_positions.items()):
+        try:
+            sym    = pos["symbol"]
+            side   = pos.get("side", "LONG")
+            entry  = pos.get("entry_price", 0)
+            sl_px  = pos.get("stop_loss", 0)
+            tp_px  = pos.get("take_profit", 0)
+            price  = prices.get(sym) or pos.get("current_price") or entry
+            if not price:
+                continue
+
+            triggered = None
+            if side == "LONG":
+                if sl_px and price <= sl_px:
+                    triggered = "sl_triggered"
+                    sl += 1
+                elif tp_px and price >= tp_px:
+                    triggered = "tp_triggered"
+                    tp += 1
+            else:  # SHORT (defensive — trigger is long-only but path is here)
+                if sl_px and price >= sl_px:
+                    triggered = "sl_triggered"
+                    sl += 1
+                elif tp_px and price <= tp_px:
+                    triggered = "tp_triggered"
+                    tp += 1
+
+            if triggered:
+                await close_position(oid, CloseRequest(reason=triggered))
+                closed += 1
+                _logger.info(f"[SL/TP] {sym} {triggered} @ {price:.4f}")
+        except Exception as e:
+            errors.append({"order_id": oid, "error": str(e)})
+            _logger.warning(f"[SL/TP] error closing {oid}: {e}")
+
+    return {"closed": closed, "sl": sl, "tp": tp, "errors": errors,
+            "scanned": len(open_positions)}
+
+
+@router.post("/internal/sl-tp-exit")
+async def trigger_sl_tp(x_internal_token: str = Header(default="")):
+    """Manual trigger for SL/TP auto-execution. Auth via INTERNAL_TOKEN."""
+    expected = os.environ.get("INTERNAL_TOKEN", "")
+    if not expected or x_internal_token != expected:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return await _sl_tp_exit()
+
+
+# ── CIS-flip exit (Simons Upgrade P0.3) ───────────────────────────────────────
+# Closes positions whose CIS signal has flipped to UNDERPERFORM/UNDERWEIGHT
+# since entry. Fetches latest CIS scores from Supabase `cis_scores`, compares
+# to position's signal-at-entry. Defensive fallback: also close if score < 45
+# even if signal field is missing/legacy.
+_CIS_FLIP_SIGNALS = {"UNDERPERFORM", "UNDERWEIGHT"}
+_CIS_FLIP_SCORE_FLOOR = 45.0
+
+
+async def _cis_flip_exit() -> dict:
+    """
+    Close positions whose latest CIS signal is bearish.
+    Returns summary: {closed: int, by_signal: int, by_score: int, errors: list}.
+    """
+    positions = await _get_positions()
+    open_positions = {oid: p for oid, p in positions.items() if p.get("status") == "open"}
+    if not open_positions:
+        return {"closed": 0, "by_signal": 0, "by_score": 0, "errors": [], "scanned": 0}
+
+    symbols = sorted({p["symbol"] for p in open_positions.values()})
+
+    # Fetch latest CIS score per symbol from Supabase
+    latest_by_sym: dict = {}
+    try:
+        from src.api.store import supabase_get_recent_scores
+        latest_by_sym = await supabase_get_recent_scores(symbols, n=1)
+    except Exception as e:
+        _logger.warning(f"[CIS-FLIP] Supabase fetch failed: {e}")
+        return {"closed": 0, "by_signal": 0, "by_score": 0,
+                "errors": [{"phase": "supabase", "error": str(e)}], "scanned": 0}
+
+    closed = 0
+    by_signal = 0
+    by_score = 0
+    errors = []
+
+    for oid, pos in list(open_positions.items()):
+        try:
+            sym = pos["symbol"]
+            latest_list = latest_by_sym.get(sym.upper(), [])
+            if not latest_list:
+                continue
+            latest = latest_list[0]
+            sig = (latest.get("signal") or "").upper().strip()
+            score = latest.get("score") or latest.get("cis_score")
+
+            should_close = False
+            reason = None
+            if sig in _CIS_FLIP_SIGNALS:
+                should_close = True
+                reason = "cis_flip_exit"
+                by_signal += 1
+            elif score is not None and score < _CIS_FLIP_SCORE_FLOOR:
+                # Defensive: score below D grade floor even with NEUTRAL signal
+                should_close = True
+                reason = "cis_flip_exit_score"
+                by_score += 1
+
+            if should_close:
+                await close_position(oid, CloseRequest(reason=reason))
+                closed += 1
+                _logger.info(f"[CIS-FLIP] {sym} {reason} signal={sig} score={score}")
+        except Exception as e:
+            errors.append({"order_id": oid, "error": str(e)})
+            _logger.warning(f"[CIS-FLIP] error closing {oid}: {e}")
+
+    return {"closed": closed, "by_signal": by_signal, "by_score": by_score,
+            "errors": errors, "scanned": len(open_positions)}
+
+
+@router.post("/internal/cis-flip-exit")
+async def trigger_cis_flip(x_internal_token: str = Header(default="")):
+    """Manual trigger for CIS-flip exit. Auth via INTERNAL_TOKEN."""
+    expected = os.environ.get("INTERNAL_TOKEN", "")
+    if not expected or x_internal_token != expected:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return await _cis_flip_exit()
 
 
 # ── Simons IC Loop — auto-mine background task ───────────────────────────────

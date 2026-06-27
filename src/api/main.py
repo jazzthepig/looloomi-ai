@@ -354,6 +354,65 @@ async def _start_age_sweep():
         print("[SWEEP] ✅ daily aged-position sweep loop scheduled")
 
 
+# ── SL/TP auto-execution loop (Simons Upgrade P0.2) ──────────────────────────
+# Until 2026-06-26, SL/TP was only a flag in trading.py — breached positions
+# stayed open indefinitely (AAPL bled -6% past its -2% SL for 24h before this
+# loop existed). Runs every 5min, scans all open positions for SL/TP breach,
+# closes via close_position() (which writes to trade_results).
+_SL_TP_INTERVAL_S = 5 * 60   # every 5 min
+
+
+async def _sl_tp_loop():
+    await _asyncio.sleep(180)   # 3 min warmup; let CIS scheduler push first
+    while True:
+        try:
+            from src.api.routers.trading import _sl_tp_exit
+            res = await _sl_tp_exit()
+            closed = res.get("closed", 0)
+            if closed > 0:
+                print(f"[SL/TP] closed={closed} sl={res.get('sl')} tp={res.get('tp')} "
+                      f"scanned={res.get('scanned')}")
+        except Exception as _e:
+            print(f"[SL/TP] ⚠️  run failed: {_e}")
+        await _asyncio.sleep(_SL_TP_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_sl_tp_loop():
+    if os.environ.get("DISABLE_SL_TP_LOOP", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_sl_tp_loop())
+        print("[SL/TP] ✅ 5min SL/TP auto-execution loop scheduled")
+
+
+# ── CIS-flip exit loop (Simons Upgrade P0.3) ──────────────────────────────────
+# Closes positions whose CIS signal has flipped to UNDERPERFORM/UNDERWEIGHT
+# (or score < 45 with NEUTRAL signal as defensive fallback). Reads latest
+# scores from Supabase cis_scores — fail-soft if Supabase is unreachable.
+_CIS_FLIP_INTERVAL_S = 5 * 60   # every 5 min (aligned with SL/TP loop)
+
+
+async def _cis_flip_loop():
+    await _asyncio.sleep(240)   # 4 min warmup (offset from SL/TP to avoid simultaneous calls)
+    while True:
+        try:
+            from src.api.routers.trading import _cis_flip_exit
+            res = await _cis_flip_exit()
+            closed = res.get("closed", 0)
+            if closed > 0:
+                print(f"[CIS-FLIP] closed={closed} by_signal={res.get('by_signal')} "
+                      f"by_score={res.get('by_score')} scanned={res.get('scanned')}")
+        except Exception as _e:
+            print(f"[CIS-FLIP] ⚠️  run failed: {_e}")
+        await _asyncio.sleep(_CIS_FLIP_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_cis_flip_loop():
+    if os.environ.get("DISABLE_CIS_FLIP_LOOP", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_cis_flip_loop())
+        print("[CIS-FLIP] ✅ 5min CIS-flip exit loop scheduled")
+
+
 # ── Heartbeat / observability loop ────────────────────────────────────────────
 # Polls the health verdict and alerts Telegram on a status transition (plus a
 # once-daily digest). This is the loop that turns reactive firefighting into
