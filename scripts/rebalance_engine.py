@@ -85,6 +85,15 @@ REBAL_REGIME_CHANGE = True     # regime change → rebalance
 MIN_HOLD_DAYS = 14             # churn guard (was 7)
 MONTHLY_REBAL = True           # always rebalance on day-1 of month
 
+# v4 regime conviction smoother (per 2026-06-27 direction: "regime 不一定
+# 强行持有" → soft signal instead of hard min-hold filter)
+# regime_change trigger only fires when conviction >= threshold, where
+# conviction = 1.0 - (transitions in last STABILITY_WINDOW days / window).
+# See scripts/regime_smoother.py for full algorithm + sweep grid.
+ENABLE_REGIME_SMOOTHING = True     # v4 default on; v3 behaviour when off
+REGIME_CONVICTION_THRESHOLD = 0.85  # 12/37 regime transitions fire at default
+REGIME_STABILITY_WINDOW = 14        # days of lookback for transition count
+
 # Costs / cash
 FEE_PER_SIDE = 0.0005          # 5bps per side (Binance futures taker)
 CASH_APR_DAILY = 0.025 / 365   # 2.5% APR → daily
@@ -102,6 +111,20 @@ try:
 except ImportError:
     _OVERLAY_AVAILABLE = False
     ENABLE_RISK_OFF_OVERLAY = False
+
+# Regime smoother (v4) — see scripts/regime_smoother.py
+# Computes a soft conviction score per day based on how many regime flips
+# happened in the last REGIME_STABILITY_WINDOW days. Used to gate the
+# regime_change rebalance trigger.
+try:
+    from regime_smoother import (
+        regime_with_conviction, regime_change_triggers,
+        DEFAULT_CONVICTION_THRESHOLD, DEFAULT_STABILITY_WINDOW,
+    )
+    _SMOOTHER_AVAILABLE = True
+except ImportError:
+    _SMOOTHER_AVAILABLE = False
+    ENABLE_REGIME_SMOOTHING = False
 
 # Universe
 PRICE_DIR = Path("/Volumes/CometCloudAI/freqtrade/user_data/data/binance")
@@ -293,6 +316,8 @@ class RebalanceEvent:
     weights_after: dict[str, float]
     turnover: float
     regime: str
+    # v4: regime conviction at time of rebalance (None if smoothing disabled)
+    conviction: float | None = None
 
 
 @dataclass
@@ -367,6 +392,42 @@ class BacktestResult:
         for k, v in triggers.most_common():
             lines.append(f"- {k}: {v}")
         lines.append("")
+
+        # v4: regime smoothing section
+        regime_convs = [e.conviction for e in self.rebalances if e.conviction is not None]
+        if regime_convs:
+            lines.extend([
+                "## Regime conviction smoother (v4)",
+                "",
+                f"- Smoothing enabled: yes (window=14d, threshold=0.85 default)",
+                f"- Rebalances with conviction recorded: {len(regime_convs)}",
+                f"- Mean conviction at rebal: {np.mean(regime_convs):.3f}",
+                f"- Min conviction at rebal: {np.min(regime_convs):.3f}",
+                f"- Max conviction at rebal: {np.max(regime_convs):.3f}",
+                "",
+                "Conviction histogram:",
+                "",
+            ])
+            # histogram bins
+            bins = [0, 0.5, 0.7, 0.85, 0.9, 0.95, 1.01]
+            labels = ["<0.5", "0.5-0.7", "0.7-0.85", "0.85-0.9", "0.9-0.95", "0.95-1.0"]
+            counts = {l: 0 for l in labels}
+            for c in regime_convs:
+                for i in range(len(bins) - 1):
+                    if bins[i] <= c < bins[i+1]:
+                        counts[labels[i]] += 1
+                        break
+            for label, n in counts.items():
+                bar = "█" * int(n / max(counts.values()) * 40) if max(counts.values()) > 0 else ""
+                lines.append(f"  {label}: {n:>3} {bar}")
+            lines.append("")
+        else:
+            lines.extend([
+                "## Regime conviction smoother (v4)",
+                "",
+                "- Smoothing disabled or no conviction recorded",
+            ])
+            lines.append("")
         lines.append("## Top 20 final weights")
         lines.append("")
         lines.append("| symbol | weight | grade |")
@@ -450,12 +511,19 @@ class BacktestResult:
 
 
 def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: float, tag: str,
-                overlay_enabled: bool = True) -> BacktestResult:
+                overlay_enabled: bool = True,
+                regime_smoothing: bool | None = None,
+                regime_threshold: float | None = None,
+                regime_window: int | None = None) -> BacktestResult:
     """Walk-forward daily rebalance backtest. Returns BacktestResult with NAV.
 
     If overlay_enabled (default) AND risk_off_overlay module is available, the
     base portfolio's short book is augmented in Risk-Off/Tightening/Stagflation
     regimes and a basket-options premium-collecting overlay P&L is added daily.
+
+    If regime_smoothing (v4 default on, when module available), the
+    regime_change trigger is gated by a soft conviction score — see
+    scripts/regime_smoother.py for algorithm.
     """
     universe = [c for c in prices.columns]
     days = prices.index
@@ -467,6 +535,7 @@ def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: f
     base_nav = pd.Series(index=days, dtype=float)
     overlay_nav = pd.Series(index=days, dtype=float)
     regime_series = pd.Series(index=days, dtype=object)
+    conviction_series = pd.Series(index=days, dtype=float)
     gross_series = pd.Series(index=days, dtype=float)
     events: list[RebalanceEvent] = []
     last_rebal: Optional[pd.Timestamp] = None
@@ -474,8 +543,22 @@ def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: f
     last_grades: dict[str, str] = {}
     prev_close = None
     use_overlay = overlay_enabled and ENABLE_RISK_OFF_OVERLAY and _OVERLAY_AVAILABLE
+    use_smoothing = (regime_smoothing if regime_smoothing is not None
+                     else ENABLE_REGIME_SMOOTHING) and _SMOOTHER_AVAILABLE
+    threshold = regime_threshold if regime_threshold is not None else REGIME_CONVICTION_THRESHOLD
+    window = regime_window if regime_window is not None else REGIME_STABILITY_WINDOW
     rng = np.random.default_rng(42)  # reproducible breach draws
     cycle_start = start  # 30-day options cycle for breach accounting
+
+    # v4: pre-compute regime conviction (window-stability) from CIS regime series
+    if use_smoothing:
+        regime_for_conviction = cis["regime"].ffill().bfill() if "regime" in cis.columns else pd.Series("Neutral", index=days)
+        conviction_df = regime_with_conviction(regime_for_conviction, window=window)
+        # Align index: conviction_df was built from cis.index, but our walk uses days.index
+        # Map by date — both should cover the same range
+        for d in days:
+            if d in conviction_df.index:
+                conviction_series.loc[d] = conviction_df.at[d, "conviction"]
     for d in days:
         if prev_close is None or d not in prices.index:
             prev_close = prices.loc[d].to_dict() if d in prices.index else prev_close
@@ -512,8 +595,21 @@ def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: f
                 triggers.append("init")
             elif MONTHLY_REBAL and d.month != last_rebal.month:
                 triggers.append("monthly")
-            if REBAL_REGIME_CHANGE and last_rebal is not None and regime != _normalise_regime(str(cis.loc[last_rebal]["regime"]) if "regime" in cis.loc[last_rebal] else ""):
-                triggers.append("regime_change")
+            if REBAL_REGIME_CHANGE and last_rebal is not None:
+                prev_regime_norm = _normalise_regime(
+                    str(cis.loc[last_rebal]["regime"]) if "regime" in cis.loc[last_rebal] else ""
+                )
+                regime_differs = regime != prev_regime_norm
+                if regime_differs:
+                    # v4: gate regime_change trigger by regime conviction
+                    if use_smoothing:
+                        conv = conviction_series.loc[d] if d in conviction_series.index else 0.0
+                        if conv >= threshold:
+                            triggers.append("regime_change")
+                        # else: regime flip detected but suppressed (low conviction)
+                    else:
+                        # v3 behaviour: fire on any regime change
+                        triggers.append("regime_change")
             if REBAL_GRADE_CROSS and last_rebal is not None:
                 for sym in universe:
                     new_g = cis_row.get(f"cis_{sym}_grade")
@@ -544,11 +640,16 @@ def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: f
             if triggers and (min_hold_ok or "init" in triggers or "regime_change" in triggers or "monthly" in triggers):
                 # Compute turnover
                 turnover = 0.5 * sum(abs(target_lev.get(s, 0) - weights.get(s, 0)) for s in universe)
+                # v4: capture conviction at time of rebalance (None if smoothing off)
+                conv_at_rebal = None
+                if use_smoothing and d in conviction_series.index:
+                    conv_at_rebal = float(conviction_series.loc[d])
                 events.append(RebalanceEvent(
                     date=d, reason="+".join(triggers) if triggers else "?",
                     weights_before=dict(weights),
                     weights_after=dict(target_lev),
                     turnover=turnover, regime=regime,
+                    conviction=conv_at_rebal,
                 ))
                 weights = target_lev
                 last_rebal = d
@@ -606,6 +707,12 @@ def main():
                     help="comma list of symbols (USDT pairs)")
     ap.add_argument("--overlay", choices=["on", "off"], default="on",
                     help="enable Risk-Off strategy overlay (basket options + augmented shorts)")
+    ap.add_argument("--regime-smoothing", choices=["on", "off"], default="on",
+                    help="enable v4 regime conviction smoother (gates regime_change trigger)")
+    ap.add_argument("--regime-threshold", type=float, default=REGIME_CONVICTION_THRESHOLD,
+                    help=f"conviction threshold for regime_change trigger fire (default {REGIME_CONVICTION_THRESHOLD})")
+    ap.add_argument("--regime-window", type=int, default=REGIME_STABILITY_WINDOW,
+                    help=f"stability lookback window in days (default {REGIME_STABILITY_WINDOW})")
     args = ap.parse_args()
 
     start, end = parse_timerange(args.timerange)
@@ -613,6 +720,9 @@ def main():
     universe = [s.strip().upper() for s in args.universe.split(",") if s.strip()]
     print(f"[rebalance] universe: {universe}")
     print(f"[rebalance] overlay: {args.overlay} (module available={_OVERLAY_AVAILABLE})")
+    print(f"[rebalance] regime_smoothing: {args.regime_smoothing} "
+          f"(threshold={args.regime_threshold}, window={args.regime_window}d, "
+          f"module available={_SMOOTHER_AVAILABLE})")
 
     # Load prices
     prices = load_prices(universe, start, end)
@@ -631,12 +741,16 @@ def main():
         return 3
 
     overlay_enabled = (args.overlay == "on")
+    regime_smoothing = (args.regime_smoothing == "on")
 
     # Run both tiers
     for tier, lev in [("senior", 1.0), ("junior", 2.0)]:
         print(f"\n[rebalance] running {tier} tier ({lev}×)...")
         result = run_backtest(prices, cis, tier=tier, leverage=lev, tag=args.report,
-                              overlay_enabled=overlay_enabled)
+                              overlay_enabled=overlay_enabled,
+                              regime_smoothing=regime_smoothing,
+                              regime_threshold=args.regime_threshold,
+                              regime_window=args.regime_window)
         m = result.summary_metrics(prices['BTC'], prices.mean(axis=1))
         print(f"[rebalance] {tier}: CAGR={m['CAGR']*100:.2f}%, "
               f"vs BTC={m['BTC_Alpha']*100:+.2f}pp, rebalances={len(result.rebalances)}")
@@ -655,6 +769,16 @@ def main():
         if result.overlay_enabled:
             nav_data["base_nav"] = result.base_nav
             nav_data["overlay_daily"] = result.overlay_nav
+        # v4: include conviction (if smoothing was on)
+        if _SMOOTHER_AVAILABLE and len(result.rebalances) > 0 \
+                and any(e.conviction is not None for e in result.rebalances):
+            # We don't store per-day conviction in result; only at rebal times.
+            # Recompute from CIS regime series for the CSV column.
+            if regime_smoothing:
+                from regime_smoother import regime_with_conviction
+                rs = cis["regime"].ffill().bfill() if "regime" in cis.columns else pd.Series("Neutral", index=result.nav.index)
+                cs = regime_with_conviction(rs, window=args.regime_window)
+                nav_data["conviction"] = cs["conviction"].reindex(result.nav.index)
         nav_df = pd.DataFrame(nav_data)
         nav_df.to_csv(nav_path)
         print(f"[rebalance] wrote {nav_path}")
@@ -663,6 +787,7 @@ def main():
             trades_df = pd.DataFrame([{
                 "date": e.date, "reason": e.reason, "regime": e.regime,
                 "turnover": e.turnover,
+                "conviction": e.conviction,
                 **{f"w_{k}": v for k, v in e.weights_after.items()},
             } for e in result.rebalances])
             trades_path = REPORT_DIR / f"{args.report}_{tier}_trades.csv"
