@@ -116,10 +116,15 @@ after PR-6 deploy.**
 
 ## §PURGE — dead code (audit 2026-06-25; run by Jazz, deletions are irreversible)
 
+**KEEP elizaos-plugin** (Jazz 2026-06-27): revive as the **Otter IP** — `@elizaos-plugins/
+plugin-cometcloud` is the CIS brain; `characters/cometcloud-otter.character.json` is the
+Sea Otter persona (Discord + Telegram community wedge). Do NOT delete. (node_modules is
+357MB — gitignore `elizaos-plugin/node_modules/` but commit src + character.)
+
 **Delete (confirmed dead, no live import/dependency):**
 ```bash
 cd ~/Projects/looloomi-ai
-rm -rf elizaos-plugin                          # 357MB, April crunch, untracked, no deps
+# (elizaos-plugin REMOVED from this delete list — see KEEP note above)
 # 7 true orphan components (imported NOWHERE in dashboard/src):
 rm -f dashboard/src/components/AssetTable.jsx \
       dashboard/src/components/FundDeployWizard.jsx \
