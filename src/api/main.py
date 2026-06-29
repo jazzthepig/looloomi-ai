@@ -413,6 +413,37 @@ async def _start_cis_flip_loop():
         print("[CIS-FLIP] ✅ 5min CIS-flip exit loop scheduled")
 
 
+# ── Meter-driven paper rebalance loop ─────────────────────────────────────────
+# Full-universe, out-of-circle-haircut weights → live paper book. Low-frequency
+# (the rebalance planner's own triggers gate actual trades). DISABLED by default:
+# set REBAL_LOOP_ENABLED=1 on Railway to activate, after verifying the preview
+# endpoint (GET /api/v1/trading/rebalance/preview).
+_REBAL_INTERVAL_S = 6 * 60 * 60   # check 4x/day; planner decides if it actually trades
+
+
+async def _paper_rebalance_loop():
+    await _asyncio.sleep(360)   # 6 min warmup; let CIS push + universe warm first
+    while True:
+        try:
+            from src.api.routers.trading import _run_paper_rebalance
+            res = await _run_paper_rebalance(dry_run=False)
+            if res.get("executed"):
+                print(f"[REBAL] {res.get('reason')} opened={res.get('opened')} "
+                      f"closed={res.get('closed')} regime={res.get('regime')}")
+        except Exception as _e:
+            print(f"[REBAL] ⚠️  run failed: {_e}")
+        await _asyncio.sleep(_REBAL_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_paper_rebalance_loop():
+    if os.environ.get("REBAL_LOOP_ENABLED", "").lower() in ("1", "true", "yes"):
+        _asyncio.create_task(_paper_rebalance_loop())
+        print("[REBAL] ✅ meter rebalance loop scheduled (6h cadence)")
+    else:
+        print("[REBAL] ⏸ loop disabled (set REBAL_LOOP_ENABLED=1 to activate)")
+
+
 # ── Heartbeat / observability loop ────────────────────────────────────────────
 # Polls the health verdict and alerts Telegram on a status transition (plus a
 # once-daily digest). This is the loop that turns reactive firefighting into

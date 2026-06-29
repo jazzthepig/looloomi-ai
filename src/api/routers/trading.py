@@ -799,7 +799,9 @@ async def sweep_aged_positions() -> dict:
     from datetime import datetime, timezone, timedelta
 
     positions = await _get_positions()
-    open_positions = {oid: p for oid, p in positions.items() if p.get("status") == "open"}
+    # METER_REBAL sleeve is governed by the rebalance loop, not the age sweep.
+    open_positions = {oid: p for oid, p in positions.items()
+                      if p.get("status") == "open" and p.get("strategy") != "METER_REBAL"}
 
     if not open_positions:
         return {"swept": 0, "skipped": 0, "total_open": 0,
@@ -900,7 +902,9 @@ async def _sl_tp_exit() -> dict:
     Returns summary: {closed: int, sl: int, tp: int, errors: list}.
     """
     positions = await _get_positions()
-    open_positions = {oid: p for oid, p in positions.items() if p.get("status") == "open"}
+    # METER_REBAL positions carry no SL/TP and are governed by the rebalance loop.
+    open_positions = {oid: p for oid, p in positions.items()
+                      if p.get("status") == "open" and p.get("strategy") != "METER_REBAL"}
     if not open_positions:
         return {"closed": 0, "sl": 0, "tp": 0, "errors": [], "scanned": 0}
 
@@ -976,7 +980,9 @@ async def _cis_flip_exit() -> dict:
     Returns summary: {closed: int, by_signal: int, by_score: int, errors: list}.
     """
     positions = await _get_positions()
-    open_positions = {oid: p for oid, p in positions.items() if p.get("status") == "open"}
+    # METER_REBAL sleeve is governed by the rebalance loop (weight→0 drops a decayed name).
+    open_positions = {oid: p for oid, p in positions.items()
+                      if p.get("status") == "open" and p.get("strategy") != "METER_REBAL"}
     if not open_positions:
         return {"closed": 0, "by_signal": 0, "by_score": 0, "errors": [], "scanned": 0}
 
@@ -1038,6 +1044,166 @@ async def trigger_cis_flip(x_internal_token: str = Header(default="")):
     if not expected or x_internal_token != expected:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return await _cis_flip_exit()
+
+
+# ── Meter-driven paper rebalance (full-universe, cause-proximity sized) ────────
+# A separate paper sleeve from the sparse CIS_AUTO tilt: it holds the WHOLE qualifying
+# universe at grade-driven, out-of-circle-haircut weights (src/data/market/risk_meter.py),
+# rebalanced low-frequency. Pure notional book (own SLEEVE_NAV — never touches the shared
+# paper balance). Every close writes trade_results + feeds the Simons IC loop → this is the
+# throughput that gives the Learn layer real sample size. Governed ONLY by the rebalance
+# loop (the SL/TP / CIS-flip / age-sweep loops skip strategy==METER_REBAL).
+_REDIS_REBAL_STATE = "trading:rebal_state"      # {last_rebal, last_regime}
+REBAL_SLEEVE_TAG   = "METER_REBAL"
+REBAL_SLEEVE_NAV   = 100_000.0                  # paper notional; weights × NAV = position size
+
+
+async def _get_rebal_state() -> dict:
+    raw = await _rget(_REDIS_REBAL_STATE)
+    return raw if isinstance(raw, dict) else {"last_rebal": None, "last_regime": None}
+
+
+def _open_rebal_position(sym: str, notional: float, side: str, asset: dict,
+                         regime: str, price: float) -> tuple[str, dict] | None:
+    if not price or price <= 0:
+        return None
+    pillars = asset.get("pillars") or {}
+    _p = lambda k: round(float(pillars.get(k) or 0), 1)
+    oid = "rb_" + uuid.uuid4().hex[:10]
+    pos = {
+        "order_id": oid, "symbol": sym, "side": side,
+        "size_usd": round(notional, 2), "qty": round(notional / price, 8),
+        "entry_price": round(price, 6), "stop_loss": 0, "take_profit": 0,
+        "current_price": round(price, 6), "current_value_usd": round(notional, 2),
+        "unrealized_pnl": 0.0, "unrealized_pct": 0.0,
+        "cis_score": round(float(asset.get("cis_score") or asset.get("score") or 0), 1),
+        "cis_grade": asset.get("grade") or asset.get("cis_grade") or "?",
+        "cis_signal": asset.get("signal", "NEUTRAL"),
+        "pillar_f_at_entry": _p("F"), "pillar_m_at_entry": _p("M"),
+        "pillar_o_at_entry": _p("O") or _p("R"), "pillar_s_at_entry": _p("S"),
+        "pillar_a_at_entry": _p("A"),
+        "macro_regime": regime, "strategy": REBAL_SLEEVE_TAG, "mode": "PAPER",
+        "status": "open", "opened_at": _now(), "updated_at": _now(),
+        "cause_proximity": asset.get("cause_proximity"),
+    }
+    return oid, pos
+
+
+async def _close_rebal_position(positions: dict, oid: str, reason: str, price: float) -> bool:
+    """Close a sleeve position: realized P&L + trade_results write. Does NOT touch the
+    shared paper balance (sleeve is a pure notional book)."""
+    pos = positions.get(oid)
+    if not pos or pos.get("status") != "open":
+        return False
+    qty, side, entry = pos.get("qty", 0), pos.get("side", "LONG"), pos.get("entry_price", 0)
+    if not price or price <= 0:
+        price = pos.get("current_price") or entry
+    if side == "LONG":
+        pnl_abs = (price - entry) * qty
+        pnl_pct = (price / entry - 1) * 100 if entry else 0
+    else:
+        pnl_abs = (entry - price) * qty
+        pnl_pct = (entry / price - 1) * 100 if price else 0
+    pos.update({
+        "status": "closed", "exit_price": round(price, 6),
+        "exit_value_usd": round(qty * price, 2), "realized_pnl": round(pnl_abs, 2),
+        "realized_pct": round(pnl_pct, 3), "exit_reason": reason,
+        "closed_at": _now(), "updated_at": _now(),
+    })
+    positions[oid] = pos
+    asyncio.create_task(_write_closed_trade_to_supabase(pos))
+    return True
+
+
+async def _run_paper_rebalance(dry_run: bool = True) -> dict:
+    from src.data.market.risk_meter import build_risk_meter, plan_rebalance
+    from src.api.routers.cis import get_cis_universe
+    data = await get_cis_universe()
+    universe = (data or {}).get("universe", []) or []
+    regime = (data or {}).get("macro_regime") or "Neutral"
+    rm = build_risk_meter(universe, regime)
+    target = {s: w["meter_weight"] for s, w in rm["weights"].items() if w.get("meter_weight")}
+    asset_by_sym = {(a.get("symbol") or a.get("asset_id") or "").upper(): a
+                    for a in universe if isinstance(a, dict)}
+
+    positions = await _get_positions()
+    sleeve = {oid: p for oid, p in positions.items()
+              if p.get("status") == "open" and p.get("strategy") == REBAL_SLEEVE_TAG}
+    current = {}
+    for oid, p in sleeve.items():
+        current[(p.get("symbol") or "").upper()] = {
+            "order_id": oid,
+            "notional": float(p.get("current_value_usd") or p.get("size_usd") or 0),
+            "side": p.get("side", "LONG"),
+        }
+
+    nav = REBAL_SLEEVE_NAV
+    state = await _get_rebal_state()
+    now = datetime.now(timezone.utc)
+    plan = plan_rebalance(target, current, nav, state, regime, now)
+    summary = {"dry_run": dry_run, "regime": regime, "n_target": len(target),
+               "n_held": len(current), "nav": nav, **plan}
+    if dry_run or not plan.get("triggered"):
+        return summary
+
+    # ── execute ── prices for everything we'll touch
+    touch = list({*plan["closes"], *[o["sym"] for o in plan["opens"]],
+                  *[r["sym"] for r in plan["resizes"]]})
+    # closes/resizes need price by symbol; opens already have sym
+    close_syms = [sleeve[oid]["symbol"] for oid in plan["closes"] if oid in sleeve]
+    open_syms = [o["sym"] for o in plan["opens"]] + [r["sym"] for r in plan["resizes"]]
+    prices = await _fetch_prices_batch(list({*close_syms, *open_syms}))
+
+    closed = opened = 0
+    for oid in plan["closes"]:
+        p = sleeve.get(oid)
+        if p and await _close_rebal_position(positions, oid, "rebalance",
+                                             prices.get(p["symbol"]) or p.get("current_price")):
+            closed += 1
+    for r in plan["resizes"]:
+        p = sleeve.get(r["order_id"])
+        if p:
+            await _close_rebal_position(positions, r["order_id"], "rebalance_resize",
+                                        prices.get(r["sym"]) or p.get("current_price"))
+            closed += 1
+            res = _open_rebal_position(r["sym"], r["notional"], r["side"],
+                                       asset_by_sym.get(r["sym"], {}), regime, prices.get(r["sym"]))
+            if res:
+                positions[res[0]] = res[1]; opened += 1
+    for o in plan["opens"]:
+        res = _open_rebal_position(o["sym"], o["notional"], o["side"],
+                                   asset_by_sym.get(o["sym"], {}), regime, prices.get(o["sym"]))
+        if res:
+            positions[res[0]] = res[1]; opened += 1
+
+    await _save_positions(positions)
+    await _rset(_REDIS_REBAL_STATE, {"last_rebal": _now(), "last_regime": regime})
+
+    # Feed the Simons IC loop on the now-larger closed set
+    all_closed = [p for p in positions.values() if p.get("status") == "closed"]
+    if len(all_closed) >= 5:
+        asyncio.create_task(_auto_mine_ic(all_closed, len(all_closed)))
+
+    _logger.info(f"[REBAL] {plan['reason']} — opened={opened} closed={closed} regime={regime}")
+    return {"executed": True, "regime": regime, "reason": plan["reason"],
+            "opened": opened, "closed": closed, "resized": len(plan["resizes"]),
+            "n_target": len(target)}
+
+
+@router.get("/api/v1/trading/rebalance/preview")
+async def rebalance_preview():
+    """Dry-run the meter rebalance — shows the target book + the trades it WOULD make.
+    Safe: no mutation. Use this to verify before enabling the live loop."""
+    return await _run_paper_rebalance(dry_run=True)
+
+
+@router.post("/internal/rebalance")
+async def trigger_rebalance(x_internal_token: str = Header(default="")):
+    """Execute one meter rebalance. Auth via INTERNAL_TOKEN."""
+    expected = os.environ.get("INTERNAL_TOKEN", "")
+    if not expected or x_internal_token != expected:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return await _run_paper_rebalance(dry_run=False)
 
 
 # ── Simons IC Loop — auto-mine background task ───────────────────────────────
