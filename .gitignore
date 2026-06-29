@@ -36,3 +36,7 @@ MINIMAX_SYNC_ARCHIVE_*.md
 .claude/settings.local.json
 # pip mis-install artifacts (files literally named "=x.y.z")
 =*
+
+# elizaOS Otter plugin — commit src + character, not deps
+elizaos-plugin/node_modules/
+elizaos-plugin/dist/
