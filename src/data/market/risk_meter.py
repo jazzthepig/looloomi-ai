@@ -191,6 +191,85 @@ def build_risk_meter(universe: list, regime: str | None = None) -> dict:
     return {"regime": _norm_regime(regime), "meter": meter, "weights": weights}
 
 
+# ── Rebalance planner (pure, no I/O) ──────────────────────────────────────────
+# Turns meter-adjusted target weights + the current book into a low-frequency
+# rebalance plan. Low-frequency triggers (mirrors scripts/rebalance_engine):
+#   regime change  ·  monthly (day 1 or >30d since last)  ·  any |Δweight| ≥ MIN_DW
+# Churn guard: non-critical rebalances wait MIN_HOLD_DAYS (regime change overrides).
+MIN_DW = 0.05            # 5% absolute weight move to count as a trigger / resize
+MIN_OPEN_W = 0.01        # don't open a name below 1% target weight
+MIN_TRADE_USD = 25.0     # ignore dust trades
+MIN_HOLD_DAYS = 14
+RESIZE_DW = 0.10         # only resize an existing hold if its weight drifts ≥10%
+
+
+def plan_rebalance(target: dict, current: dict, nav: float, state: dict,
+                   regime: str, now) -> dict:
+    """
+    target  : {SYM: signed_weight}      (from meter_adjusted_weights → meter_weight)
+    current : {SYM: {"order_id","notional","side"}}  open METER_REBAL positions
+    state   : {"last_rebal": iso|None, "last_regime": str|None}
+    Returns {triggered, reason, opens:[{sym,notional,side}], closes:[order_id],
+             resizes:[{sym,order_id,notional,side}]}.
+    """
+    from datetime import datetime
+    target = {s: w for s, w in (target or {}).items() if abs(w) >= MIN_OPEN_W}
+    current = current or {}
+    cur_w = {}
+    for s, p in current.items():
+        sign = 1.0 if (p.get("side", "LONG") == "LONG") else -1.0
+        cur_w[s] = sign * (float(p.get("notional") or 0) / nav if nav > 0 else 0.0)
+
+    # trigger detection
+    regime_change = bool(state.get("last_regime")) and state["last_regime"] != regime
+    last = state.get("last_rebal")
+    days_since = 999
+    if last:
+        try:
+            d0 = datetime.fromisoformat(str(last).replace("Z", "+00:00"))
+            days_since = (now - d0).days
+        except Exception:
+            days_since = 999
+    monthly = (now.day == 1 and days_since >= 25) or days_since >= 30
+    max_dw = max([abs(target.get(s, 0.0) - cur_w.get(s, 0.0))
+                  for s in set(target) | set(cur_w)] or [0.0])
+    drift_trigger = max_dw >= MIN_DW
+
+    triggered = regime_change or monthly or drift_trigger
+    if triggered and not regime_change and days_since < MIN_HOLD_DAYS and not monthly:
+        triggered = False  # churn guard
+    reason = ("regime_change" if regime_change else
+              "monthly" if monthly else
+              "drift" if drift_trigger else "none")
+    if not triggered:
+        return {"triggered": False, "reason": "churn_guard" if max_dw >= MIN_DW else "none",
+                "opens": [], "closes": [], "resizes": [], "max_dw": round(max_dw, 3)}
+
+    opens, closes, resizes = [], [], []
+    for s in set(target) | set(cur_w):
+        tw = target.get(s, 0.0)
+        held = current.get(s)
+        if not held:
+            notion = abs(tw) * nav
+            if notion >= MIN_TRADE_USD:
+                opens.append({"sym": s, "notional": round(notion, 2),
+                              "side": "LONG" if tw > 0 else "SHORT"})
+            continue
+        held_side = held.get("side", "LONG")
+        target_side = "LONG" if tw > 0 else ("SHORT" if tw < 0 else None)
+        if target_side is None or target_side != held_side:
+            closes.append(held["order_id"])          # dropped or flipped → close
+            if target_side is not None:
+                notion = abs(tw) * nav
+                if notion >= MIN_TRADE_USD:
+                    opens.append({"sym": s, "notional": round(notion, 2), "side": target_side})
+        elif abs(tw - cur_w.get(s, 0.0)) >= RESIZE_DW:
+            resizes.append({"sym": s, "order_id": held["order_id"],
+                            "notional": round(abs(tw) * nav, 2), "side": target_side})
+    return {"triggered": True, "reason": reason, "opens": opens, "closes": closes,
+            "resizes": resizes, "max_dw": round(max_dw, 3)}
+
+
 # ── self-test ───────────────────────────────────────────────────────────────
 def _selftest():
     universe = [
