@@ -41,6 +41,14 @@ ROADMAP:
     - v5: source-side `regime_confidence` field from cis_v4_engine.py
           (Minimax, next sprint — see MINIMAX_SYNC.md §REGIME-CONVICTION)
     - v5 consumers prefer the field if present, fall back to this heuristic
+
+v5 fallback chain (this iteration, ahead of Minimax):
+    regime_confidence_v5() reads `regime_confidence` from cis_history JSON
+    (already optionally present) and uses it as PRIMARY conviction source.
+    Falls back to regime_with_conviction() (this file) only when the field
+    is absent or NaN. This way the v5 consumer code is ready the moment
+    Minimax ships the field — no rebalance_engine changes needed, just
+    re-run prepare_cis_history with the new column populated.
 """
 from __future__ import annotations
 
@@ -186,6 +194,130 @@ def regime_change_triggers(
 
 
 # ---------------------------------------------------------------------------
+# v5: multi-source conviction with fallback chain
+# ---------------------------------------------------------------------------
+#
+# Per 2026-06-27 user direction: when Minimax ships `regime_confidence` in
+# the cis push payload (cis_v4_engine.py + Supabase schema bump "1.0" → "1.1"),
+# consumers should prefer the field. The fallback chain is:
+#
+#   1. source_field (cis_history JSON regime_confidence) — preferred
+#      - Today this is MISSING (Minimax hasn't shipped it yet)
+#      - Once Minimax lands it, prepare_cis_history.py will serialise it
+#        into the per-day JSON files at
+#        /Volumes/CometCloudAI/cometcloud-local/_data/cis_history/cis_*.json
+#   2. regime_with_conviction (this file) — fallback window-stability heuristic
+#
+# Why this shape?
+#   - Returns same DataFrame columns as regime_with_conviction(), PLUS a
+#     `source` column so callers / reports can see which path was used
+#     ("field" vs "heuristic") and quantify the v5 vs v4 decision delta.
+#   - When source_field is None OR all-NaN, all rows come from heuristic
+#     (source="heuristic"). This is the "pre-Minimax" state.
+#   - When source_field is populated, rows where the field is non-NaN
+#     use it; remaining rows fall back to heuristic. This handles partial
+#     pushes (Minimax backfill) gracefully.
+#   - Clamps source field to [0.0, 1.0] defensively; garbage in → 0.5 default.
+#
+# NOTE: this function does NOT use the source field to "validate" the heuristic
+# — the heuristic is the fallback, not a sanity check. If the field says 0.9
+# and the heuristic says 0.2, we trust the field (it's the model output, the
+# heuristic is just a "weather" proxy). If they disagree, the v5 verification
+# report will show it.
+
+# v5 source labels
+SOURCE_FIELD = "field"        # from cis_history regime_confidence (post-Minimax)
+SOURCE_HEURISTIC = "heuristic"  # from regime_with_conviction (always available)
+
+# When the field is present but is below this fraction of non-NaN values in the
+# window, we still call it "field" but flag it for verification. A fully-empty
+# field defaults to heuristic for ALL rows.
+V5_MIN_FIELD_COVERAGE = 0.0  # any non-NaN field value is honoured
+
+
+def regime_confidence_v5(
+    regime_series: pd.Series,
+    source_field: pd.Series | None = None,
+    window: int = DEFAULT_STABILITY_WINDOW,
+) -> pd.DataFrame:
+    """Multi-source conviction with fallback chain (v5).
+
+    Per-day conviction comes from:
+      1. source_field[date] if not NaN — clamped to [0, 1]
+      2. regime_with_conviction(regime_series)[date] — window-stability heuristic
+
+    Args:
+        regime_series: pd.Series indexed by date with regime strings (always
+            used to compute the heuristic; never ignored).
+        source_field: pd.Series indexed by date with regime_confidence values
+            in [0, 1]. None or all-NaN ⇒ heuristic only.
+        window: stability window in days for the heuristic (default 14).
+
+    Returns:
+        pd.DataFrame with columns:
+            - regime              (str, copied from regime_series)
+            - conviction          (float, in [0, 1])
+            - transitions_in_window  (int, 0 if source=field)
+            - source              (str, "field" or "heuristic")
+        Same row order as regime_series.
+    """
+    if regime_series.empty:
+        return pd.DataFrame(columns=[
+            "regime", "conviction", "transitions_in_window", "source",
+        ])
+
+    # Compute the heuristic for the whole series (cheap; ~ ms for 314 days)
+    heur = regime_with_conviction(regime_series, window=window)
+
+    # Default: all rows come from heuristic
+    out = heur.copy()
+    out["source"] = SOURCE_HEURISTIC
+
+    if source_field is None or len(source_field) == 0:
+        return out
+
+    # Coerce source field to numeric and align to regime_series index
+    sf = pd.to_numeric(source_field, errors="coerce")
+    sf = sf.reindex(regime_series.index)
+
+    # Honour non-NaN field values (clamp to [0, 1] for safety)
+    n_field = int(sf.notna().sum())
+    if n_field == 0:
+        return out  # still all heuristic
+
+    # Build a mask of which rows we can override
+    mask = sf.notna()
+    # Clamp to [0, 1]. NaN stays NaN (won't enter the override block).
+    sf_clamped = sf.clip(lower=0.0, upper=1.0)
+
+    # Override heuristic with field where present
+    out.loc[mask, "conviction"] = sf_clamped[mask].values
+    out.loc[mask, "source"] = SOURCE_FIELD
+    # When field is honoured, transitions_in_window is undefined (field is
+    # a model output, not a window count). Set to 0 for clarity.
+    out.loc[mask, "transitions_in_window"] = 0
+
+    return out
+
+
+def v5_source_coverage(v5_df: pd.DataFrame) -> dict:
+    """Summarise how many rows came from field vs heuristic. Useful for
+    the v5 verification report to show whether the source field is live."""
+    if v5_df.empty or "source" not in v5_df.columns:
+        return {"field": 0, "heuristic": 0, "field_pct": 0.0, "total": 0}
+    counts = v5_df["source"].value_counts()
+    field = int(counts.get(SOURCE_FIELD, 0))
+    heur = int(counts.get(SOURCE_HEURISTIC, 0))
+    total = field + heur
+    return {
+        "field": field,
+        "heuristic": heur,
+        "field_pct": round(field / total, 3) if total else 0.0,
+        "total": total,
+    }
+
+
+# ---------------------------------------------------------------------------
 # CLI: standalone verify / sanity-check
 # ---------------------------------------------------------------------------
 
@@ -202,6 +334,32 @@ def _load_cis_regime_series(cis_dir: Path) -> pd.Series:
             continue
     if not rows:
         return pd.Series(dtype=object)
+    s = pd.Series(rows).sort_index()
+    s.index.name = "date"
+    return s
+
+
+def _load_cis_regime_confidence(cis_dir: Path) -> pd.Series:
+    """Load per-day regime_confidence from cis_history JSON files.
+
+    Field is OPTIONAL: not all pushes have it (Minimax hasn't shipped it yet).
+    Returns pd.Series indexed by date; NaN where field is absent.
+    """
+    rows = {}
+    for f in sorted(cis_dir.glob("cis_*.json")):
+        try:
+            date_str = f.stem.replace("cis_", "")
+            d = pd.Timestamp(date_str)
+            data = json.loads(f.read_text())
+            val = data.get("regime_confidence", None)
+            if val is not None:
+                rows[d] = float(val)
+            else:
+                rows[d] = float("nan")
+        except Exception:
+            continue
+    if not rows:
+        return pd.Series(dtype=float)
     s = pd.Series(rows).sort_index()
     s.index.name = "date"
     return s
@@ -271,12 +429,87 @@ def cmd_verify(args):
     return 0
 
 
+def cmd_v5_verify(args):
+    """v5 fallback chain verification: load regime + (optional) regime_confidence
+    field, run regime_confidence_v5(), and report which source was used for
+    each row. Useful to confirm:
+      - When field is absent (today): all rows from heuristic
+      - When Minimax ships the field: N rows from field, M from heuristic
+      - Quantify v5 vs v4 (heuristic-only) decision delta
+    """
+    cis_dir = Path(args.cis_dir)
+    raw = _load_cis_regime_series(cis_dir)
+    field = _load_cis_regime_confidence(cis_dir)
+    if raw.empty:
+        print(f"ERROR: no CIS files in {cis_dir}")
+        return 1
+
+    print(f"# v5 fallback chain verify — {cis_dir}")
+    print(f"Days in series: {len(raw)}")
+    print(f"Days with regime_confidence field: {int(field.notna().sum())} "
+          f"({100*field.notna().mean():.1f}%)")
+    print()
+
+    v5 = regime_confidence_v5(raw, source_field=field, window=args.window)
+    cov = v5_source_coverage(v5)
+    print(f"## v5 conviction source coverage")
+    print(f"  field:      {cov['field']:>4} ({100*cov['field_pct']:.1f}%)")
+    print(f"  heuristic:  {cov['heuristic']:>4} ({100*(1-cov['field_pct']):.1f}%)")
+    print()
+
+    # Distribution of v5 conviction (combined)
+    print(f"## v5 conviction distribution (window={args.window}d)")
+    bins = [-0.01, 0.1, 0.3, 0.5, 0.7, 0.85, 0.9, 1.01]
+    labels = ["0.0-0.1", "0.1-0.3", "0.3-0.5", "0.5-0.7", "0.7-0.85", "0.85-0.9", "0.9-1.0"]
+    v5["_bin"] = pd.cut(v5["conviction"], bins=bins, labels=labels, include_lowest=True)
+    counts = v5["_bin"].value_counts().sort_index()
+    for label, n in counts.items():
+        bar = "█" * int(n / max(counts) * 40) if max(counts) else ""
+        print(f"  {label}: {n:>4} {bar}")
+    print()
+
+    # A/B against v4 (heuristic-only) — does v5 fire on different days?
+    if cov["field"] > 0:
+        v4_heur = regime_with_conviction(raw, window=args.window)["conviction"]
+        threshold = args.threshold
+        # Days where v4 and v5 disagree on whether regime_change would fire
+        v4_fires = v4_heur >= threshold
+        v5_fires = v5["conviction"] >= threshold
+        both_fire = (v4_fires & v5_fires).sum()
+        v4_only = (v4_fires & ~v5_fires).sum()
+        v5_only = (~v4_fires & v5_fires).sum()
+        neither = (~v4_fires & ~v5_fires).sum()
+        print(f"## v4 (heuristic) vs v5 (field+heuristic) — regime_change fires @ threshold={threshold}")
+        print(f"  both fire:    {both_fire:>4}")
+        print(f"  v4 only:      {v4_only:>4}  (heuristic fires, field suppresses)")
+        print(f"  v5 only:      {v5_only:>4}  (field fires, heuristic suppresses)")
+        print(f"  neither:      {neither:>4}")
+        print()
+        if v4_only or v5_only:
+            print("Disagreement days (showing first 15):")
+            disagree = v5[v4_fires != v5_fires].head(15)
+            for d, row in disagree.iterrows():
+                v4_val = v4_heur.loc[d] if d in v4_heur.index else float("nan")
+                direction = "v4 only" if (v4_fires.loc[d] and not v5_fires.loc[d]) else "v5 only"
+                print(f"  {d.date()}  {direction}  "
+                      f"v4={v4_val:.3f}  v5={row['conviction']:.3f}  source={row['source']}")
+        else:
+            print("No disagreement — v4 and v5 fire on identical days.")
+    else:
+        print("## v4 vs v5 A/B")
+        print("  (skipped: regime_confidence field absent from all cis_history files)")
+        print("  → v5 is identical to v4 today; this is the pre-Minimax baseline")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--verify", action="store_true",
                     help="Print regime stats + conviction distribution for a CIS dir")
     ap.add_argument("--sweep", action="store_true",
                     help="Sweep window × threshold grid; show how many regime transitions fire")
+    ap.add_argument("--v5-verify", action="store_true",
+                    help="v5 fallback chain: report source coverage + v4/v5 disagreement")
     ap.add_argument("--cis-dir", default="/Volumes/CometCloudAI/cometcloud-local/_data/cis_history")
     ap.add_argument("--threshold", type=float, default=DEFAULT_CONVICTION_THRESHOLD,
                     help="Conviction threshold for regime_change trigger fire")
@@ -291,6 +524,8 @@ def main():
         raise SystemExit(cmd_verify(args))
     if args.sweep:
         raise SystemExit(cmd_sweep(args))
+    if args.v5_verify:
+        raise SystemExit(cmd_v5_verify(args))
     ap.print_help()
 
 
