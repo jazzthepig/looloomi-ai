@@ -18,6 +18,8 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with: { python-version: "3.11" }
+      - name: Loop health — verify the whole loop end-to-end
+        run: python scripts/loop_health.py || true
       - name: Health + landing summary
         run: |
           python scripts/post_deploy_check.py --retries 3 --sleep 15 || true

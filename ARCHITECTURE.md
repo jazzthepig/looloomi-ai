@@ -101,6 +101,32 @@ the fusion network on top** — never to breadth of features.
 - The moat is **know-how + proof**, not surface area. Every new capability must
   reduce to a primitive grounded in the kernel, or it does not belong.
 
+## Our role — judgment substrate, not the executor (positioning, 2026-06-29)
+
+Full autonomy is **not our goal** — that is the executor's game (our partner / 友商 builds
+the autonomous agent). **We are the layer that makes other agents able to judge** — the
+intelligence substrate that helps *them* close *their* loop. KPI = agent-consumability and
+proximity-to-cause, **not** our own autonomy score.
+
+**The moat is what other agents can't think of and can't conveniently verify.** Anything
+an agent can self-serve cheaply (price, basic momentum, FNG) is table-stakes, not a wall —
+that is the commodity "AI-application" direction. Our wall is the **hard-to-compute,
+hard-to-verify upstream judgment**: influence → quality propagation, holder-concentration
+出圈 stage, proximity-to-cause. Hard is the point — hard is why they need us.
+
+But hard-to-verify cuts both ways: **hard to verify also means hard for the consumer to
+trust.** So the product shape is: *we take the hard-to-verify signal, verify it ourselves
+by closing our own loop end-to-end, and hand over the verification (provenance + confidence
++ source + 30-day outcome) so the consumer trusts without redoing the hard work.* Closing
+our own loop is therefore not a detour into being an executor — it is how we earn the right
+to teach user/agent how to use us. **A signal we have not run through our own loop is one we
+must not claim. Claiming it unproven is self-deception, and self-deception cannot teach.**
+
+**Prioritization filter (every task, ours and Minimax's, passes this):**
+1. Can an external agent easily fetch/compute this itself? → If yes, it's table-stakes, not moat. Minimal effort.
+2. Is it hard to verify? → If yes, it's worth building — hard is why they need us.
+3. Can we close our own loop on it and emit provenance + outcome? → If not, build that first; do **not** claim it externally until we can.
+
 ## Path: iPod → OS
 
 - **iPod (now):** `Diagnose(Portfolio)` — one lovable fusion, simple enough for the
