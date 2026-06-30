@@ -118,7 +118,7 @@ except ImportError:
 # regime_change rebalance trigger.
 try:
     from regime_smoother import (
-        regime_with_conviction, regime_change_triggers,
+        regime_with_conviction, regime_confidence_v5, regime_change_triggers,
         DEFAULT_CONVICTION_THRESHOLD, DEFAULT_STABILITY_WINDOW,
     )
     _SMOOTHER_AVAILABLE = True
@@ -217,10 +217,17 @@ def load_prices(symbols: list[str], start: pd.Timestamp, end: pd.Timestamp) -> p
 
 def load_cis_history(start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
     """Load per-day CIS history. Returns df indexed by date with columns:
-       [sym: cis_score, cis_grade, signal, macro_regime].
+       [sym: cis_score, cis_grade, signal, macro_regime, regime_confidence].
+
+    `regime_confidence` is OPTIONAL — added to top-level JSON by
+    scripts/load_cis_with_confidence.py once Minimax ships the Supabase
+    column. When absent, the column is filled with NaN and
+    regime_confidence_v5() falls back to the window-stability heuristic.
     """
     rows = []
     files = sorted(CIS_HISTORY_DIR.glob("cis_*.json"))
+    # Track per-day regime_confidence (latest value wins if multiple)
+    conf_by_date: dict[pd.Timestamp, float] = {}
     for f in files:
         try:
             date_str = f.stem.replace("cis_", "")
@@ -234,16 +241,33 @@ def load_cis_history(start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
         except Exception:
             continue
         regime = _normalise_regime(data.get("macro_regime", ""))
+        # v5: top-level regime_confidence field (preferred)
+        top_conf = data.get("regime_confidence")
+        if top_conf is not None:
+            try:
+                conf_val = float(top_conf)
+                if conf_val == conf_val:  # not NaN
+                    conf_by_date[d] = conf_val
+            except (TypeError, ValueError):
+                pass
         for s in data.get("scores", []):
             sym = s.get("symbol") or s.get("asset")
             if not sym:
                 continue
+            # Prefer per-asset regime_confidence if present (matches minimax's
+            # CISResult.to_dict() shape); fall back to top-level; else NaN
+            asset_conf = s.get("regime_confidence", top_conf)
+            try:
+                asset_conf_val = float(asset_conf) if asset_conf is not None else float("nan")
+            except (TypeError, ValueError):
+                asset_conf_val = float("nan")
             rows.append({
                 "date": d, "symbol": sym,
                 "cis_score": s.get("cis_score"),
                 "cis_grade": s.get("cis_grade") or s.get("grade") or "F",
                 "signal": s.get("signal", ""),
                 "macro_regime": regime,
+                "regime_confidence": asset_conf_val,
             })
     if not rows:
         return pd.DataFrame()
@@ -254,6 +278,11 @@ def load_cis_history(start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
     wide = pd.DataFrame(index=sorted(df["date"].unique()))
     wide.index.name = "date"
     wide["regime"] = reg_s.reindex(wide.index).ffill().bfill()
+    # v5: regime_confidence column (top-level, ffill'd across rows)
+    if conf_by_date:
+        wide["regime_confidence"] = pd.Series(conf_by_date).reindex(wide.index).ffill()
+    else:
+        wide["regime_confidence"] = float("nan")
     for sym in df["symbol"].unique():
         sub = df[df["symbol"] == sym].set_index("date")
         wide[f"cis_{sym}_score"] = sub["cis_score"].reindex(wide.index).ffill()
@@ -550,10 +579,20 @@ def run_backtest(prices: pd.DataFrame, cis: pd.DataFrame, tier: str, leverage: f
     rng = np.random.default_rng(42)  # reproducible breach draws
     cycle_start = start  # 30-day options cycle for breach accounting
 
-    # v4: pre-compute regime conviction (window-stability) from CIS regime series
+    # v5: pre-compute regime conviction via fallback chain
+    # (regime_confidence field from cis_history preferred, window heuristic fallback)
     if use_smoothing:
         regime_for_conviction = cis["regime"].ffill().bfill() if "regime" in cis.columns else pd.Series("Neutral", index=days)
-        conviction_df = regime_with_conviction(regime_for_conviction, window=window)
+        # v5 fallback chain: regime_confidence_v5 prefers the field if present,
+        # else falls back to regime_with_conviction (v4 heuristic)
+        if "regime_confidence" in cis.columns and cis["regime_confidence"].notna().any():
+            source_field = cis["regime_confidence"].copy()
+        else:
+            source_field = None
+        v5_df = regime_confidence_v5(
+            regime_for_conviction, source_field=source_field, window=window,
+        )
+        conviction_df = v5_df
         # Align index: conviction_df was built from cis.index, but our walk uses days.index
         # Map by date — both should cover the same range
         for d in days:
