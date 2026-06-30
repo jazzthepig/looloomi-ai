@@ -6,7 +6,7 @@ Endpoints:
   POST /internal/macro-brief  — Mac Mini pushes analysis (same auth as CIS)
   GET  /api/v1/macro/brief    — Dashboard reads latest brief (auto-generates if empty)
 """
-import os, json, time
+import os, json, time, re, ast
 from datetime import datetime
 
 import logging
@@ -17,6 +17,48 @@ from src.api.store import redis_set_key, redis_get_key, supabase_insert_table
 _logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _sanitize_brief(text) -> str:
+    """Clean a macro brief before it reaches users. The Mac-side push has shipped
+    malformed briefs — a stringified Python dict (`{'brief': '...'}`), placeholder
+    dates, and internal notes leaking into the card. Unwrap and strip them.
+    Defensive: any failure returns the original text untouched."""
+    if not text:
+        return ""
+    try:
+        s = text if isinstance(text, str) else str(text)
+        s = s.strip()
+        # Unwrap a stringified dict/JSON: {'brief': '...'} or {"brief": "..."}
+        if s[:1] in "{[":
+            parsed = None
+            for loader in (json.loads, ast.literal_eval):
+                try:
+                    parsed = loader(s); break
+                except Exception:
+                    continue
+            if isinstance(parsed, dict):
+                for k in ("brief", "text", "content", "analysis", "markdown"):
+                    if isinstance(parsed.get(k), str) and parsed[k].strip():
+                        s = parsed[k].strip(); break
+                else:
+                    s = " ".join(str(v) for v in parsed.values() if isinstance(v, str)).strip()
+            elif isinstance(parsed, (list, tuple)):
+                s = " ".join(str(v) for v in parsed if isinstance(v, str)).strip()
+        # Strip a surviving leading wrapper:  {'brief': '   or   brief:
+        s = re.sub(r"^\{?\s*['\"]?(?:brief|text|content)['\"]?\s*:\s*['\"]?", "", s, flags=re.I)
+        # Peel an unparseable brace/bracket literal that survived (e.g. {'# …'})
+        s = re.sub(r"^[\{\[]\s*['\"]?", "", s)
+        s = re.sub(r"['\"]?\s*[\}\]]$", "", s)
+        # Drop internal placeholders / notes that must never be user-facing
+        s = re.sub(r"\(\s*sample date\s*\)", "", s, flags=re.I)
+        s = re.sub(r"\(\s*note:[^)]*\)", "", s, flags=re.I)
+        s = re.sub(r"\b(?:market update|update)\s+\d{1,2}/\d{1,2}/\d{2,4}\s*[:\-]?\s*", "", s, flags=re.I)
+        # Trim a dangling closing quote/brace from an unwrapped dict
+        s = s.rstrip("'\"} \t")
+        return re.sub(r"\s{2,}", " ", s).strip()
+    except Exception:
+        return text if isinstance(text, str) else str(text)
 
 
 async def _persist_brief(brief: str, model: str, data_snapshot: dict, source: str) -> bool:
@@ -148,6 +190,7 @@ async def receive_macro_brief(payload: dict, x_internal_token: str = Header(None
     if not payload.get("brief"):
         raise HTTPException(status_code=400, detail="Missing 'brief' field")
 
+    payload["brief"] = _sanitize_brief(payload["brief"])  # unwrap malformed Mac-side pushes
     payload["received_at"] = int(time.time())
     payload["source"] = "mac_mini"
 
@@ -197,7 +240,7 @@ async def get_macro_brief(response: Response):
     data = await redis_get_key(_REDIS_KEY)
     now  = int(time.time())
 
-    brief_text = (data or {}).get("brief") or ""
+    brief_text = _sanitize_brief((data or {}).get("brief") or "")  # clean cached/legacy briefs too
 
     # Serve LLM brief if fresh AND has actual content
     if brief_text:
