@@ -142,6 +142,11 @@ export function CISMacroBanner({ macro }) {
             <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: regimeColor, boxShadow: `0 0 10px ${regimeColor}`, flexShrink: 0 }} />
             <span style={{ fontSize: 18, fontWeight: 700, color: regimeColor, fontFamily: FONTS.display }}>{regime}</span>
           </div>
+          {["Tightening", "Risk-Off", "Stagflation"].includes(rawRegime) && (
+            <div style={{ fontSize: 10, color: T.secondary, marginTop: 5, maxWidth: 340, lineHeight: 1.45 }}>
+              Defensive regime — grades compress by design; few assets earn high conviction. Relative rank still differentiates.
+            </div>
+          )}
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

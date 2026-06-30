@@ -520,15 +520,34 @@ export default function MyPortfolio({ cisUniverse = [] }) {
   const [searchRef, setSearchRef] = useState(null);
   const [showAllMobile, setShowAllMobile] = useState(false);
 
+  // Self-heal: if the parent prop is empty, fetch the universe ourselves so the
+  // page never gets stuck on a permanent "Loading…" banner. uniState resolves to
+  // "ready" or "empty" — the banner is transient, not perpetual.
+  const [fetchedUni, setFetchedUni] = useState([]);
+  const [uniState, setUniState] = useState(cisUniverse.length ? "ready" : "loading");
+  useEffect(() => {
+    if (cisUniverse.length) { setUniState("ready"); return; }
+    let on = true;
+    fetch("/api/v1/cis/universe")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (!on) return;
+        const u = (d && d.universe) || [];
+        setFetchedUni(u); setUniState(u.length ? "ready" : "empty");
+      })
+      .catch(() => on && setUniState("empty"));
+    return () => { on = false; };
+  }, [cisUniverse.length]);
+  const uni = cisUniverse.length ? cisUniverse : fetchedUni;
+
   // Persist on change
   useEffect(() => { savePortfolio(portfolio); }, [portfolio]);
 
   // Universe map for quick lookup
   const universeMap = useMemo(() => {
     const m = {};
-    cisUniverse.forEach(a => { m[a.symbol || a.asset_id] = a; });
+    uni.forEach(a => { m[a.symbol || a.asset_id] = a; });
     return m;
-  }, [cisUniverse]);
+  }, [uni]);
 
   // Watched assets with live CIS data — sorted by CIS score desc (top rec first)
   const watchedAssets = useMemo(() =>
@@ -619,14 +638,24 @@ export default function MyPortfolio({ cisUniverse = [] }) {
         </div>
       </div>
 
-      {/* Data tier notice */}
-      {cisUniverse.length === 0 && (
+      {/* Data tier notice — transient: shows only while genuinely loading, or a
+          soft notice if the universe truly couldn't load. Never perpetual. */}
+      {uniState === "loading" && (
         <div style={{
           background: "rgba(200,168,75,0.06)", border: "1px solid rgba(200,168,75,0.2)",
           borderRadius: 8, padding: "10px 14px", marginBottom: 20,
           fontFamily: FONTS.body, fontSize: 11, color: GOLD,
         }}>
           ⚡ Loading CIS universe… Live prices will appear shortly.
+        </div>
+      )}
+      {uniState === "empty" && (
+        <div style={{
+          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 8, padding: "10px 14px", marginBottom: 20,
+          fontFamily: FONTS.body, fontSize: 11, color: "rgba(199,210,254,0.55)",
+        }}>
+          Live CIS data is momentarily unavailable — your watchlist still works; scores will refresh automatically.
         </div>
       )}
 
@@ -640,7 +669,7 @@ export default function MyPortfolio({ cisUniverse = [] }) {
       {/* Search */}
       <div style={{ marginBottom: 24 }} ref={setSearchRef}>
         <AssetSearch
-          universe={cisUniverse}
+          universe={uni}
           watchlist={portfolio.watchlist}
           onAdd={addToWatchlist}
         />
