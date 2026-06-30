@@ -284,9 +284,14 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
             "outcome_30d_pending": len(open_signals),
         }
 
-    returns = np.array([r["return_pct"] / 100.0 for r in closed if r.get("return_pct") is not None])
+    # Sanitize: a closed signal whose price feed returned 0 produces a -100% sentinel
+    # (the known price=0 artifact). Drop those and clip extremes so one bad data point
+    # can't masquerade as a -94% blow-up. Keep only economically plausible returns.
+    _raw = [r["return_pct"] for r in closed
+            if r.get("return_pct") is not None and r["return_pct"] > -99.0]
+    returns = np.array([max(-90.0, min(500.0, float(x))) / 100.0 for x in _raw])
     if len(returns) == 0:
-        return {"status": "building", "message": "Waiting for price data on closed signals.", "total_signals": len(closed) + len(open_signals)}
+        return {"status": "building", "message": "Waiting for valid price data on closed signals.", "total_signals": len(closed) + len(open_signals)}
 
     wins        = returns[returns > 0]
     losses      = returns[returns <= 0]
@@ -300,13 +305,18 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
     gross_loss   = abs(float(np.sum(losses))) if len(losses) else 0
     profit_factor = round(gross_profit / gross_loss, 3) if gross_loss > 0 else None
 
-    # Equity curve — cumulative product of (1 + r) starting from $100k
+    # Equity curve — each signal sized as an equal slug of a diversified book, NOT a
+    # full-notional sequential bet. Compounding each signal at 100% notional made one
+    # bad signal wipe the curve (the -94% artifact). A signal-following book holds many
+    # positions concurrently; model each as a fixed fraction so the curve reflects the
+    # set's efficacy, not a single name's blow-up.
+    POSITION_FRAC = 0.10
     equity_curve = []
     equity = 100_000.0
     peak   = equity
     max_dd = 0.0
     for r in returns:
-        equity = equity * (1.0 + r)
+        equity = equity * (1.0 + POSITION_FRAC * r)
         peak   = max(peak, equity)
         dd     = (equity - peak) / peak
         max_dd = min(max_dd, dd)
