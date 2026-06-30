@@ -532,7 +532,15 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             )}
 
             {/* Stat strip — inline, no cards */}
-            {(view === "all" || view === "events") && (
+            {(view === "all" || view === "events") && stats && (stats.totalDeals ?? 0) === 0 && (
+            <div style={{
+              margin: "20px 0", paddingBottom: 20, borderBottom: `1px solid rgba(37,99,235,0.08)`,
+              fontFamily: FONTS.mono, fontSize: 11, color: "rgba(199,210,254,0.5)", letterSpacing: "0.04em",
+            }}>
+              No disclosed funding rounds in the last 180 days · verified feeds, refreshed hourly
+            </div>
+            )}
+            {(view === "all" || view === "events") && !(stats && (stats.totalDeals ?? 0) === 0) && (
             <div style={{
               display: "flex", gap: 0, margin: "20px 0",
               paddingBottom: 20, borderBottom: `1px solid rgba(37,99,235,0.08)`,
