@@ -432,7 +432,7 @@ export default function StrategyPage() {
       {/* ── Turrell ambient — 8 layers, async breathing, void with light ── */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
         {/* Base: subtle depth gradient — the void isn't flat */}
-        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 120% 100% at 50% 30%, #080c18 0%, #FAFBFC 55%, #020406 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 120% 100% at 50% 30%, #0a1430 0%, #071027 48%, #020406 100%)" }} />
         {/* L1: Top-left emerald — CIS green echo */}
         <div className="al-orb" style={{ width: 1100, height: 700, top: -220, left: -180, background: "radial-gradient(ellipse, rgba(0,232,122,0.11) 0%, transparent 60%)", filter: "blur(90px)", animation: "alA 13s ease-in-out infinite" }} />
         {/* L2: Right gold — CometCloud accent */}
