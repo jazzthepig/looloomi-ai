@@ -599,17 +599,26 @@ async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
             lines += ["", regime_note]
         lines += [
             "",
-            "| # | Symbol | Class | Grade | Score | Signal | LAS |",
-            "|---|--------|-------|-------|-------|--------|-----|",
+            "| # | Symbol | Class | Grade | Score | Signal | LAS | Out-of-Circle |",
+            "|---|--------|-------|-------|-------|--------|-----|---------------|",
         ]
         for i, a in enumerate(assets[:50], 1):
+            cp = a.get("cause_proximity") or {}
+            ooc = cp.get("out_of_circle_risk") or "—"
             lines.append(
                 f"| {i} | {a.get('symbol')} | {a.get('asset_class')} | "
                 f"**{a.get('grade')}** | {a.get('cis_score', 0):.1f} | "
-                f"{a.get('signal')} | {a.get('las', 0):.1f} |"
+                f"{a.get('signal')} | {a.get('las', 0):.1f} | {ooc} |"
             )
         if len(assets) > 50:
             lines.append(f"\n*…and {len(assets) - 50} more. Use response_format=json for full data.*")
+        lines += [
+            "",
+            "*Out-of-Circle = 出圈 fragility: how far this consensus has diffused from the informed "
+            "few toward the mass (high = crowded/late, low = still upstream). `response_format=json` "
+            "also returns per-asset `cause_proximity`, `executability` (tradeable size/slippage), and "
+            "`provenance` (source · confidence · as-of · methodology) so you can defend a decision.*",
+        ]
         return "\n".join(lines)
 
     except Exception as e:

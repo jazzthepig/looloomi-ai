@@ -64,7 +64,7 @@ def main():
         uni = _get(base, "/api/v1/cis/universe").get("universe", []) or []
         n = len(uni)
         kit = {k: sum(1 for a in uni if a.get(k) not in (None, {}, "")) for k in
-               ("grade", "cause_proximity", "executability", "las", "narrative")}
+               ("grade", "cause_proximity", "executability", "las", "narrative", "provenance")}
         missing = [k for k, c in kit.items() if c < n * 0.5]
         if n and not missing:
             results.append(_line("SYNTHESIZE", "PASS", f"{n} assets, full judgment kit ({', '.join(kit)})"))

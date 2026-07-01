@@ -503,6 +503,11 @@ def _attach_asset_narratives(data: dict) -> None:
         attach_executability(data["universe"])
     except Exception as e:
         _logger.warning(f"[CIS] executability attach failed: {e}")
+    try:
+        from src.data.cis.provenance import attach_provenance
+        attach_provenance(data["universe"], data.get("timestamp") or data.get("as_of"))
+    except Exception as e:
+        _logger.warning(f"[CIS] provenance attach failed: {e}")
 
 
 async def _build_cis_universe(force_source: str = None):
