@@ -209,7 +209,7 @@ Railway (cis_provider.py) ──────────────────
 | `CRYPTORANK_API_KEY` | **NEW — add to enable VC funding rounds.** Primary source after DeFiLlama `/raises` was paywalled (HTTP 402). Free tier 403s the funding endpoint — needs a paid plan. Without it, funding panel falls back to LLM/RSS |
 | `LLM_BASE_URL` | **NEW — optional.** OpenAI-compatible endpoint (e.g. Mac Mini LM Studio `http://host:1234/v1`, or a cloud URL) used to extract structured funding rounds from free news/RSS. Unset ⇒ regex fallback (no regression) |
 | `LLM_API_KEY` | Optional bearer token for `LLM_BASE_URL` (LM Studio ignores it; cloud endpoints need it) |
-| `LLM_MODEL` | Model name for the extractor. A small instruct model is plenty (default `qwen2.5-7b-instruct`) |
+| `LLM_MODEL` | Model name for the extractor. A small instruct model is plenty (default `qwen/qwen3.5-9b`). Local models = `qwen/qwen3.5-9b` (kept for efficiency) + `gemma-4-31b-qat` (new 2026-07-01). **qwen2.5-7b-instruct retired.** |
 
 ## How to work with Jazz
 
@@ -562,6 +562,28 @@ git push origin main
   `git push` (clear `.git/*.lock` first if sandbox left one). Rotate shared Telegram +
   CryptoRank keys; set Railway env vars above.
 
+## Done this session (Jun 30 — Grade alignment methodology)
+
+- **§GRADE-ALIGN resolution** (Jazz: "听seth的" → Option B ✅ + 5-line fix as one bump).
+  Full execution order in `MINIMAX_SYNC.md` §GRADE-ALIGN resolution:
+  1. **Minimax (Mac, blocking)** — 5-line enum→string fix in `cis_v4_engine.py`
+     `_base_weight_score` (line 878) + `_base_weight_score_calc` (line 947); verify
+     with sanity test `pillars [70,60,50,80,90] → raw_cis_score = 67.0`; push so Seth
+     can confirm the live payload.
+  2. **Seth (Railway, BLOCKED on step 1)** — verify T2 (`cis_provider.py`) computes
+     raw correctly; document `protocol_engine.py:440` accidental B-alignment
+     (already aligns by accident — leave as-is, document intent so future
+     contributors don't "fix for consistency"); frontend (CISLeaderboard /
+     AssetRadar / ProtocolIntelligence / CISWidget / H5) switch to grade on
+     `raw_cis_score` with regime as separate axis (signal + recommended_weight).
+  3. **Coordinated schema bump** — `SCHEMA_VERSION` 1.0 → 1.1 in §2 after step 1
+     verified live.
+- **Why B:** regime = lens on quality, not the quality itself. Matches
+  ARCHITECTURE.md cause-vs-reflection + Risk Meter wire-up (grade→base weight,
+  regime→gross scale) + agent consumer expectations.
+- **Why hold:** raw_cis_score currently broken on T1 (every pillar ×0.15); grading
+  on broken raw trades one incoherence for another.
+
 ## Task matrix — Jun 2026
 
 ### Minimax (Mac Mini) — URGENT
@@ -581,10 +603,11 @@ git push origin main
 | P1 | Send deck + soft intro via Nic | ⬜ Deck ready |
 | P1 | Decide fund minimum investment amount (currently "TBD" in deck) | ⬜ |
 
-### Seth (next session)
+### Seth (next session — P0 BLOCKED on Minimax's 5-line fix)
 
 | Priority | Task |
 |----------|------|
+| **P0** | **Grade alignment methodology** (BLOCKED on Minimax shipping 5-line enum→string fix in `cis_v4_engine.py:878/947`) — verify T2 (`cis_provider.py`) computes `raw_cis_score` correctly; document `protocol_engine.py:440` accidental B-alignment; switch CISLeaderboard / AssetRadar / ProtocolIntelligence / CISWidget / H5 to grade on `raw_cis_score` with regime as separate axis; coordinated `SCHEMA_VERSION` 1.0 → 1.1 bump. See `MINIMAX_SYNC.md` §GRADE-ALIGN resolution. |
 | P1 | Signal outcome tracker — match signals to OHLCV results 30D later, calculate win rate |
 | P1 | QuantMonitor auto-refresh — show paper trading P&L as it accumulates |
 | P2 | win.html → add live regime badge + regime-adjusted threshold display |

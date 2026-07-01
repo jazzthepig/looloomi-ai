@@ -24,3 +24,6 @@ tenacity>=8.0.0
 # Buy-side performance metrics — open-source institutional-grade
 empyrical-reloaded>=0.5.7
 scipy>=1.10.0
+# Strategy research framework — statistical inference + multiple-testing correction
+# (gates 3-5 of STRATEGY_VALIDATION.md: walk-forward p-values, Holm/BH-FDR)
+statsmodels>=0.14.0

@@ -437,7 +437,13 @@ def _score_protocol(proto: dict, tvl_data: dict | None, category_stats: dict) ->
     max_possible = 40 + 30 + 30 + 20 + 20  # = 140
     normalized = round(total / max_possible * 100, 1)
 
-    # Grade — unified CIS absolute thresholds (matches cis_v4_engine.py)
+    # Grade — unified CIS absolute thresholds (matches cis_v4_engine.py).
+    # GRADE-ALIGN (2026-06-30, Option B): this engine grades on ABSOLUTE quality with
+    # NO regime compression — which is exactly the target end-state. Do NOT add regime
+    # compression here "for consistency with the asset engine"; the asset engine is moving
+    # TO this model (grade = stable quality, regime = a separate exposure axis), not the
+    # other way around. This accidental alignment is intentional going forward. See
+    # MINIMAX_SYNC.md §GRADE-ALIGN.
     if normalized >= 85:
         grade = "A+"
     elif normalized >= 75:
