@@ -68,8 +68,10 @@ class TestCISProviderImports:
         assert "spread_penalty" in params
         assert isinstance(result["las"], float)
 
-    def test_las_zero_volume(self):
-        """LAS with zero volume returns zero liquidity multiplier."""
+    def test_las_zero_volume_floor(self):
+        """LAS clamps the liquidity multiplier to the curated-universe floor (0.15) when
+        reported volume is 0 — a deliberate guard against CoinGecko/yfinance false-zeros
+        (e.g. MKR reporting $42K when real CEX volume is $50M+). See calculate_las()."""
         from data.cis.cis_provider import calculate_las
 
         result = calculate_las(
@@ -79,7 +81,8 @@ class TestCISProviderImports:
             low_24h=68000,
             confidence=0.85,
         )
-        assert result["las_params"]["liquidity_multiplier"] < 0.1  # Near-zero when volume is 0
+        # The floor is the intended behavior — not a near-zero passthrough.
+        assert result["las_params"]["liquidity_multiplier"] == 0.15
 
     def test_regime_detection_exists(self):
         """Regime detection function exists."""

@@ -29,7 +29,7 @@ _log = logging.getLogger("llm_extract")
 
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "").rstrip("/")
 LLM_API_KEY  = os.getenv("LLM_API_KEY", "")
-LLM_MODEL    = os.getenv("LLM_MODEL", "qwen2.5-7b-instruct")
+LLM_MODEL    = os.getenv("LLM_MODEL", "qwen/qwen3.5-9b")  # local instruct; qwen2.5-7b retired
 
 _SYSTEM = (
     "You extract cryptocurrency VC funding rounds from news items. "

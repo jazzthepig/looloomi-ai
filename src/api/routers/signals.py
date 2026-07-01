@@ -430,11 +430,17 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
     out_count     = len(resolved_signals)
     out_win_rate  = round(len(out_wins) / out_count * 100, 1) if out_count > 0 else None
     out_avg_ret   = round(float(np.mean([r.get("return_pct_30d", 0) for r in resolved_signals])) / 100.0 * 100, 3) if resolved_signals else None
+    # Benchmark-relative: WIN/LOSS now reflect alpha vs benchmark (BTC/SPY), not absolute
+    # return — an OUTPERFORM signal is a relative claim (see outcome_tracker.py).
+    _alphas = [r.get("alpha_30d") for r in resolved_signals if r.get("alpha_30d") is not None]
+    out_avg_alpha = round(float(np.mean(_alphas)), 3) if _alphas else None
 
     outcome_stats = {
         "outcome_30d_count":     out_count,
-        "outcome_30d_win_rate":  out_win_rate,
-        "outcome_30d_avg_return": out_avg_ret,
+        "outcome_30d_win_rate":  out_win_rate,          # now benchmark-relative
+        "outcome_30d_basis":     "benchmark_relative" if _alphas else "absolute",
+        "outcome_30d_avg_return": out_avg_ret,          # absolute, reference
+        "outcome_30d_avg_alpha":  out_avg_alpha,        # avg outperformance vs benchmark
         "outcome_30d_wins":       len(out_wins),
         "outcome_30d_losses":     len(out_losses),
         "outcome_30d_expired":    len(out_exp),
@@ -568,7 +574,7 @@ async def get_signal_performance():
         "exit_date": "not.is.null",
         "order":     "signal_date.asc",
         "limit":     "500",
-        "select":    "id,symbol,asset_class,grade,signal,cis_score,macro_regime,return_pct,holding_days,signal_date,exit_date,exit_reason,entry_price,exit_price,outcome_30d,return_pct_30d",
+        "select":    "id,symbol,asset_class,grade,signal,cis_score,macro_regime,return_pct,holding_days,signal_date,exit_date,exit_reason,entry_price,exit_price,outcome_30d,return_pct_30d,alpha_30d,benchmark_symbol",
     })
 
     # Fetch open signals

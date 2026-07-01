@@ -42,23 +42,51 @@ def _sanitize_brief(text) -> str:
                     if isinstance(parsed.get(k), str) and parsed[k].strip():
                         s = parsed[k].strip(); break
                 else:
-                    s = " ".join(str(v) for v in parsed.values() if isinstance(v, str)).strip()
-            elif isinstance(parsed, (list, tuple)):
-                s = " ".join(str(v) for v in parsed if isinstance(v, str)).strip()
+                    s = "\n".join(str(v) for v in parsed.values() if isinstance(v, str)).strip()
+            elif isinstance(parsed, (list, tuple, set)):
+                s = "\n".join(str(v) for v in parsed if isinstance(v, str)).strip()
+            else:
+                # Parse failed (e.g. a multi-line repr — a raw newline in a quoted
+                # literal isn't valid Python). Regex-extract the brief value across
+                # newlines, else just peel the wrapper braces.
+                m = re.search(r"['\"](?:brief|text|content|analysis|markdown)['\"]\s*:\s*(['\"])(.*?)\1\s*[,}]", s, re.S | re.I)
+                if m:
+                    s = m.group(2).strip()
+                else:
+                    s = re.sub(r"^[\{\[]\s*['\"]?", "", s)
+                    s = re.sub(r"['\"]?\s*[\}\]]$", "", s)
         # Strip a surviving leading wrapper:  {'brief': '   or   brief:
         s = re.sub(r"^\{?\s*['\"]?(?:brief|text|content)['\"]?\s*:\s*['\"]?", "", s, flags=re.I)
-        # Peel an unparseable brace/bracket literal that survived (e.g. {'# …'})
-        s = re.sub(r"^[\{\[]\s*['\"]?", "", s)
-        s = re.sub(r"['\"]?\s*[\}\]]$", "", s)
+        # Convert any escaped newlines (from a repr) back to real ones
+        s = s.replace("\\n", "\n")
         # Drop internal placeholders / notes that must never be user-facing
         s = re.sub(r"\(\s*sample date\s*\)", "", s, flags=re.I)
         s = re.sub(r"\(\s*note:[^)]*\)", "", s, flags=re.I)
         s = re.sub(r"\b(?:market update|update)\s+\d{1,2}/\d{1,2}/\d{2,4}\s*[:\-]?\s*", "", s, flags=re.I)
         # Trim a dangling closing quote/brace from an unwrapped dict
         s = s.rstrip("'\"} \t")
-        return re.sub(r"\s{2,}", " ", s).strip()
+        # Collapse only runs of spaces/tabs (NOT newlines — preserve markdown), and
+        # cap blank-line runs at 2.
+        s = re.sub(r"[ \t]{2,}", " ", s)
+        s = re.sub(r"\n{3,}", "\n\n", s)
+        return s.strip()
     except Exception:
         return text if isinstance(text, str) else str(text)
+
+
+def _looks_like_brief(s: str) -> bool:
+    """True if the string reads like a real prose macro brief, not corrupt/structured
+    junk. Guards against malformed Mac pushes the sanitizer can't salvage."""
+    if not s or len(s) < 80:
+        return False
+    # Telltale corruption signatures seen in bad pushes
+    if re.search(r'-DAT-DAT|-fmt-|-text-text|"?action_name"?|"?action"?\s*:\s*-?\d', s, re.I):
+        return False
+    # Real prose: enough spaces + a healthy letter ratio
+    letters = sum(c.isalpha() for c in s)
+    if s.count(" ") < 12 or letters / max(len(s), 1) < 0.55:
+        return False
+    return True
 
 
 async def _persist_brief(brief: str, model: str, data_snapshot: dict, source: str) -> bool:
@@ -241,6 +269,13 @@ async def get_macro_brief(response: Response):
     now  = int(time.time())
 
     brief_text = _sanitize_brief((data or {}).get("brief") or "")  # clean cached/legacy briefs too
+
+    # Serve the Mac brief only if it reads like real prose. A corrupt push (e.g.
+    # `{"action":-1,"action_name":"-", -fmt-text-DAT…}`) can't be salvaged by the
+    # sanitizer — reject it and fall through to the data-driven template below.
+    if brief_text and not _looks_like_brief(brief_text):
+        _logger.warning(f"[MACRO] rejecting non-prose brief ({len(brief_text)} chars) → template fallback")
+        brief_text = ""
 
     # Serve LLM brief if fresh AND has actual content
     if brief_text:

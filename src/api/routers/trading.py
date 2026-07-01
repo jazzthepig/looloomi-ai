@@ -519,7 +519,9 @@ async def submit_order(req: OrderRequest):
         new_balance = balance - req.size_usd
         await _save_balance(new_balance)
 
-    # Persist position
+    # Persist position — re-read first so a concurrent close/open isn't clobbered
+    # (new order_id is unique, so this only adds our row onto the fresh snapshot).
+    positions = await _get_positions()
     positions[order_id] = position
     await _save_positions(positions)
 
@@ -685,6 +687,9 @@ async def close_position(order_id: str, req: CloseRequest = None):
         "updated_at":   _now(),
     })
 
+    # Race-safe: re-read and apply only THIS position's close onto the fresh snapshot,
+    # so a concurrent close/open (5-min exit loops, order endpoint) isn't clobbered.
+    positions = await _get_positions()
     positions[order_id] = pos
     await _save_positions(positions)
 
@@ -1146,23 +1151,25 @@ async def _run_paper_rebalance(dry_run: bool = True) -> dict:
     if dry_run or not plan.get("triggered"):
         return summary
 
-    # ── execute ── prices for everything we'll touch
-    touch = list({*plan["closes"], *[o["sym"] for o in plan["opens"]],
-                  *[r["sym"] for r in plan["resizes"]]})
-    # closes/resizes need price by symbol; opens already have sym
+    # ── execute ── one batched price fetch for everything we'll touch (no N+1)
     close_syms = [sleeve[oid]["symbol"] for oid in plan["closes"] if oid in sleeve]
     open_syms = [o["sym"] for o in plan["opens"]] + [r["sym"] for r in plan["resizes"]]
     prices = await _fetch_prices_batch(list({*close_syms, *open_syms}))
 
     closed = opened = 0
     for oid in plan["closes"]:
-        p = sleeve.get(oid)
-        if p and await _close_rebal_position(positions, oid, "rebalance",
-                                             prices.get(p["symbol"]) or p.get("current_price")):
-            closed += 1
+        try:
+            p = sleeve.get(oid)
+            if p and await _close_rebal_position(positions, oid, "rebalance",
+                                                 prices.get(p["symbol"]) or p.get("current_price")):
+                closed += 1
+        except Exception as e:
+            _logger.warning(f"[REBAL] close {oid} failed: {e}")
     for r in plan["resizes"]:
-        p = sleeve.get(r["order_id"])
-        if p:
+        try:
+            p = sleeve.get(r["order_id"])
+            if not p:
+                continue
             await _close_rebal_position(positions, r["order_id"], "rebalance_resize",
                                         prices.get(r["sym"]) or p.get("current_price"))
             closed += 1
@@ -1170,13 +1177,27 @@ async def _run_paper_rebalance(dry_run: bool = True) -> dict:
                                        asset_by_sym.get(r["sym"], {}), regime, prices.get(r["sym"]))
             if res:
                 positions[res[0]] = res[1]; opened += 1
+        except Exception as e:
+            _logger.warning(f"[REBAL] resize {r.get('sym')} failed: {e}")
     for o in plan["opens"]:
-        res = _open_rebal_position(o["sym"], o["notional"], o["side"],
-                                   asset_by_sym.get(o["sym"], {}), regime, prices.get(o["sym"]))
-        if res:
-            positions[res[0]] = res[1]; opened += 1
+        try:
+            res = _open_rebal_position(o["sym"], o["notional"], o["side"],
+                                       asset_by_sym.get(o["sym"], {}), regime, prices.get(o["sym"]))
+            if res:
+                positions[res[0]] = res[1]; opened += 1
+        except Exception as e:
+            _logger.warning(f"[REBAL] open {o.get('sym')} failed: {e}")
 
-    await _save_positions(positions)
+    # Race-safe save: re-read the live positions and re-apply ONLY our METER_REBAL
+    # mutations onto the fresh snapshot. Rebalance is the sole writer of METER_REBAL
+    # entries, so this preserves any concurrent CIS_AUTO closes the 5-min exit loops
+    # may have written during our awaits (universe + price fetch).
+    fresh = await _get_positions()
+    for oid, p in positions.items():
+        if p.get("strategy") == REBAL_SLEEVE_TAG:
+            fresh[oid] = p
+    await _save_positions(fresh)
+    positions = fresh
     await _rset(_REDIS_REBAL_STATE, {"last_rebal": _now(), "last_regime": regime})
 
     # Feed the Simons IC loop on the now-larger closed set

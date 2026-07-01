@@ -258,6 +258,43 @@ def _classify(ret: float) -> str:
     return "EXPIRED"   # flat / neutral band
 
 
+# ── Benchmark-relative (alpha) scoring ───────────────────────────────────────
+# An OUTPERFORM signal is a RELATIVE claim: it says the asset will beat its peer
+# group, not that it will rise in absolute terms. Scoring absolute return in a
+# down market makes every held name a "loss" even when it outperformed — the
+# 0%-win-rate artifact. So we score ALPHA = asset_return − benchmark_return over
+# the same 30d window. Benchmark: BTC for crypto, SPY for TradFi.
+ALPHA_WIN  = 0.005    # outperformed the benchmark by ≥0.5% → WIN
+ALPHA_LOSS = -0.005   # underperformed by ≥0.5% → LOSS ; flat band = EXPIRED
+_CRYPTO_BENCH = "BTC"
+_TRADFI_BENCH = "SPY"
+
+
+def _benchmark_for(cls: str) -> str:
+    return _TRADFI_BENCH if cls in _TRADFI_CLASSES else _CRYPTO_BENCH
+
+
+def _classify_alpha(alpha: float) -> str:
+    if alpha >= ALPHA_WIN:
+        return "WIN"
+    if alpha <= ALPHA_LOSS:
+        return "LOSS"
+    return "EXPIRED"
+
+
+async def _bench_price(bench_sym: str, target, age_days: float, cache: dict):
+    """Benchmark close nearest `target`, cached by (symbol, date) within a run."""
+    key = (bench_sym, target.date().isoformat())
+    if key in cache:
+        return cache[key]
+    if bench_sym == _TRADFI_BENCH:
+        p = await asyncio.to_thread(_tradfi_price_at_sync, bench_sym, target)
+    else:
+        p = await _crypto_price_at(bench_sym, target, age_days)
+    cache[key] = p
+    return p
+
+
 # ── Main entrypoint ──────────────────────────────────────────────────────────
 async def run_outcome_tracker(dry_run: bool = False, limit: int = 500) -> dict:
     """
@@ -274,6 +311,7 @@ async def run_outcome_tracker(dry_run: bool = False, limit: int = 500) -> dict:
         pending = await _sb_get_pending(client, limit)
         results = []
         counts = {"WIN": 0, "LOSS": 0, "EXPIRED": 0, "no_data": 0, "updated": 0}
+        bench_cache: dict = {}   # (benchmark_sym, date) → price, within this run
 
         for sig in pending:
             sid = sig.get("id")
@@ -314,21 +352,44 @@ async def run_outcome_tracker(dry_run: bool = False, limit: int = 500) -> dict:
                     results.append({"id": sid, "symbol": sym, "outcome": "PENDING", "reason": "price_not_yet_available"})
                 continue
 
-            ret = (price - entry) / entry
-            outcome = _classify(ret)
+            ret = (price - entry) / entry   # absolute 30d return (kept for reference)
+
+            # Benchmark-relative (alpha) — the honest score for an OUTPERFORM signal.
+            bench_sym = _benchmark_for(cls)
+            alpha = None
+            bench_ret = None
+            if bench_sym != sym:   # don't benchmark BTC against itself
+                b_entry = await _bench_price(bench_sym, sig_dt, age_days, bench_cache)
+                b_exit  = await _bench_price(bench_sym, target, age_days, bench_cache)
+                if b_entry and b_exit and b_entry > 0:
+                    bench_ret = (b_exit - b_entry) / b_entry
+                    alpha = ret - bench_ret
+
+            if alpha is not None:
+                outcome = _classify_alpha(alpha)          # relative: outperformed peer?
+                outcome_basis = f"{source}:vs_{bench_sym}"
+            else:
+                outcome = _classify(ret)                  # fallback: absolute (BTC itself / no bench data)
+                outcome_basis = f"{source}:absolute"
+
             counts[outcome] += 1
             update = {
                 "outcome_30d": outcome,
-                "return_pct_30d": round(ret * 100, 4),
+                "return_pct_30d": round(ret * 100, 4),    # absolute, for transparency
                 "price_at_30d": round(price, 8),
-                "outcome_source": source,
+                "benchmark_symbol": bench_sym if alpha is not None else None,
+                "benchmark_return_30d": round(bench_ret * 100, 4) if bench_ret is not None else None,
+                "alpha_30d": round(alpha * 100, 4) if alpha is not None else None,
+                "outcome_source": outcome_basis,
                 "outcome_at": started.isoformat(),
             }
             if not dry_run and await _sb_patch(client, sid, update):
                 counts["updated"] += 1
             results.append({
                 "id": sid, "symbol": sym, "outcome": outcome,
-                "return_pct_30d": round(ret * 100, 2), "source": source,
+                "return_pct_30d": round(ret * 100, 2),
+                "alpha_30d": round(alpha * 100, 2) if alpha is not None else None,
+                "source": outcome_basis,
             })
 
     resolved = counts["WIN"] + counts["LOSS"] + counts["EXPIRED"]

@@ -566,12 +566,14 @@ export default function PerformanceDashboard() {
           borderRadius: 8, padding: "12px 16px",
           flexWrap: "wrap",
         }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 8, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, alignSelf: "center", marginRight: 4 }}>
-            30d Outcomes
+          <div style={{ fontFamily: FONTS.mono, fontSize: 8, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3, alignSelf: "center", marginRight: 4 }}
+               title={p.outcome_30d_basis === "benchmark_relative" ? "OUTPERFORM is a relative claim, so wins are scored as alpha vs benchmark (BTC for crypto, SPY for TradFi) — not absolute return." : "Absolute 30-day return."}>
+            30d Outcomes{p.outcome_30d_basis === "benchmark_relative" ? " · vs BTC/SPY" : ""}
           </div>
           {[
             { label: "Resolved",  val: p.outcome_30d_count,        color: T.t2 },
-            { label: "Win Rate", val: isNum(p.outcome_30d_win_rate) ? `${p.outcome_30d_win_rate.toFixed(0)}%` : "—", color: isNum(p.outcome_30d_win_rate) ? (p.outcome_30d_win_rate >= 55 ? C.green : p.outcome_30d_win_rate >= 40 ? C.amber : C.red) : T.t3 },
+            { label: p.outcome_30d_basis === "benchmark_relative" ? "Alpha Win" : "Win Rate", val: isNum(p.outcome_30d_win_rate) ? `${p.outcome_30d_win_rate.toFixed(0)}%` : "—", color: isNum(p.outcome_30d_win_rate) ? (p.outcome_30d_win_rate >= 55 ? C.green : p.outcome_30d_win_rate >= 40 ? C.amber : C.red) : T.t3 },
+            { label: "Avg α",    val: isNum(p.outcome_30d_avg_alpha) ? fmtPct(p.outcome_30d_avg_alpha) : "—", color: pColor(p.outcome_30d_avg_alpha) },
             { label: "Avg Ret",  val: fmtPct(p.outcome_30d_avg_return), color: pColor(p.outcome_30d_avg_return) },
             { label: "W",        val: p.outcome_30d_wins || 0,   color: C.green },
             { label: "L",        val: p.outcome_30d_losses || 0,  color: C.red   },
