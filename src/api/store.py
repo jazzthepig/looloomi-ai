@@ -273,6 +273,61 @@ async def supabase_get_history(symbol: str, days: int = 7) -> list:
         return []
 
 
+# ── Track record read — cached, for the self-tuning conviction tilt ────────────
+_TRACKREC_CACHE: dict = {"rows": None, "ts": 0.0}
+_TRACKREC_TTL = 6 * 3600  # 6h — the refresh runs daily; this is fresh enough
+
+
+async def supabase_rpc(fn_name: str, payload: dict | None = None):
+    """Call a Postgres function via PostgREST RPC (uses the configured service key).
+    Returns the JSON result or None. Used by the daily track-record refresh."""
+    if not _SB_URL or not _SB_KEY:
+        return None
+    url = f"{_SB_URL}/rest/v1/rpc/{fn_name}"
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}",
+               "Content-Type": "application/json"}
+    try:
+        resp = await _supabase_request_with_retry("POST", url, json=(payload or {}), headers=headers)
+        if resp and resp.status_code in (200, 204):
+            try:
+                return resp.json()
+            except Exception:
+                return True
+        if resp:
+            _logger.warning(f"[SUPABASE] rpc {fn_name} error {resp.status_code}: {resp.text[:120]}")
+        return None
+    except Exception as e:
+        _logger.warning(f"[SUPABASE] rpc {fn_name} exception: {e}")
+        return None
+
+
+async def supabase_get_latest_track_record() -> list:
+    """Latest signal_track_record batch (list of {signal,grade,n,avg_alpha_pct,alpha_win_pct}).
+    Cached 6h; best-effort ([] on any miss → conviction falls back to the hardcoded prior)."""
+    now = time.time()
+    if _TRACKREC_CACHE["rows"] is not None and (now - _TRACKREC_CACHE["ts"]) < _TRACKREC_TTL:
+        return _TRACKREC_CACHE["rows"]
+    if not _SB_URL or not _SB_KEY:
+        return []
+    url = f"{_SB_URL}/rest/v1/signal_track_record"
+    params = {"order": "computed_at.desc", "limit": "40",
+              "select": "signal,grade,n,avg_alpha_pct,alpha_win_pct,computed_at"}
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
+    try:
+        resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
+        if resp and resp.status_code == 200:
+            allrows = resp.json()
+            latest = max((r.get("computed_at") for r in allrows), default=None)
+            rows = [r for r in allrows if r.get("computed_at") == latest]
+            _TRACKREC_CACHE["rows"] = rows
+            _TRACKREC_CACHE["ts"] = now
+            return rows
+        return []
+    except Exception as e:
+        _logger.warning(f"[SUPABASE] track_record read exception: {e}")
+        return []
+
+
 # ── D4 attention (trending_log) read — cached, for cause-proximity ─────────────
 _TRENDING_CACHE: dict = {"map": None, "ts": 0.0}
 _TRENDING_TTL = 1800  # 30 min — trending only refreshes daily, this is plenty fresh
