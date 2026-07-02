@@ -19,6 +19,47 @@ This is our ONE deep know-how — and the line between us and "we-can-do-anythin
 operators who have no insight in any domain: **we do not sell breadth. We model one
 upstream cause deeply (influence → quality propagation) and prove it with outcomes.**
 
+## Vectors & movement — the mechanics as a flow, not a still life
+
+*(2026-07-01) The kernel above is easy to read as a static ontology — a list of nouns
+(Entity, Decision, Quality, Price). It is not a list. It is a **field in motion**. The
+mechanics are vectors and flows; the objects are just where we sample the current.*
+
+- **Influence is a vector, not a label.** An influential decision is a *force*: it has a
+  **direction** (which assets/regimes it pushes) and a **magnitude** (how much capital /
+  authority / conviction is behind it), applied at a **point** (the entity) and radiating
+  outward. Two entities with the same "influence score" but opposite direction cancel; our
+  job is to read the *resultant* vector, not count influencers.
+- **Propagation is a wavefront with velocity and lag.** decision → quality → price is a
+  wave moving downstream. `beta+` is a **temporal vector**: standing *upstream in time*,
+  closer to the source before the wavefront arrives at price. CIS/momentum are the wave
+  *after* it has already passed — reflections with a lag. The edge is the lag.
+- **Consensus moves along a diffusion curve; 出圈 is its velocity.** A consensus is not
+  "concentrated" or "dispersed" — it is *travelling* from the informed few toward the mass.
+  `cause_proximity.stage` samples **position** on that curve; `dispersion-acceleration`
+  samples **velocity**; the 出圈 alarm fires on high **d(dispersion)/dt** — the wavefront
+  hitting the crowd. Danger is not a state, it is a *speed*.
+- **The moving quantities are flows.** Marginal capital flow (D1) and attention diffusion
+  (D4) are the actual currents — signed vectors (in/out) with magnitude and **acceleration**
+  (γ crowding decays as the flow saturates). Price is not a number we read; it is the
+  *integral of marginal flows over the diffusion field*, and `∂(consensus)/∂t` is the
+  fragility term. (This is the dynamic form of the "price = liquidity × current value ×
+  future-expectation × sentiment-vector" sketch — expressed as derivatives, not a static product.)
+- **The loop is circulation, not a pipeline.** Sense → Judge → Act → Learn is a *current*
+  that must keep moving; the system is a metabolism. `loop_health` measures whether the
+  current still flows; `provenance` is the **damping** that keeps it stable — verification
+  is the friction that stops the loop from oscillating into noise.
+
+**Match to Karpathy's loop:** his agentic loop is generate → **verify** → act, on an
+*autonomy slider*, with the thesis that **verification is the bottleneck** and you "keep
+the AI on a leash." Our loop is congruent — Sense/Act/Learn = perceive/act/observe; our
+Judge + validation-gates + provenance = his generation-verification loop; our human-at-deploy
+gate = his autonomy slider. The distinction is **position**: in his LLM-OS we are not the
+cognition loop — we are a **peripheral + the verification substrate** that other agents'
+loops call. Provenance is precisely "verification-ready output for someone else's loop." We
+sell the friction that makes *their* leash cheap to hold. That is the substrate role, stated
+in his own mechanics.
+
 ## Strategy first principle — 大象无形 (the great form is formless)
 
 *Weighs above all strategy code. It regressed once — diluted by build/agent churn in

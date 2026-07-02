@@ -38,7 +38,59 @@ MAX_SHORT_PCT = 0.30
 HAIRCUT = 0.60        # out-of-circle risk trims up to 60% of a long weight (× confidence)
 SHORT_BOOST = 0.30    # out-of-circle risk on a weak name boosts the short up to +30%
 
+# Conviction tilt — grounded in the 30-day benchmark-relative track record
+# (signal_track_record / TRACK_RECORD_2026-07-01.md): STRONG OUTPERFORM delivered ~+3.3%
+# alpha, plain OUTPERFORM was ~flat/negative. So we size UP the proven top-conviction tier
+# and UNDERWEIGHT the broad tier. A TILT, not a gate (CIS is never a hard gate) — plain
+# OUTPERFORM is reduced, not zeroed; unknown signal degrades to 1.0 (grade-only behavior).
+CONVICTION_FACTOR = {
+    "STRONG OUTPERFORM": 1.30,
+    "OUTPERFORM":        0.60,
+    "NEUTRAL":           0.35,
+    "UNDERPERFORM":      0.0,
+    "UNDERWEIGHT":       0.0,
+}
+
+CONVICTION_MIN_N = 50    # need this many resolved outcomes in a tier before the data overrides the prior
 _RISK_OFF = {"Risk-Off", "Tightening", "Stagflation"}
+
+
+def _conviction_of(a: dict, factors: dict | None = None) -> float:
+    sig = str(a.get("signal") or "").strip().upper()
+    return (factors or CONVICTION_FACTOR).get(sig, 1.0)
+
+
+def conviction_from_track_record(rows: list) -> dict:
+    """Derive per-signal conviction factors from the latest signal_track_record batch —
+    the SELF-TUNING step. Guardrails so a noisy window can't run the book:
+      - only override the hardcoded prior when a tier has ≥ CONVICTION_MIN_N resolved outcomes
+      - blend win-rate (vs 50% coin-flip) with avg alpha, then CLAMP to [0.2, 1.5]
+    Returns the prior with data-backed tiers overwritten. Empty/short data → pure prior."""
+    factors = dict(CONVICTION_FACTOR)
+    if not rows:
+        return factors
+    agg: dict = {}
+    for r in rows:
+        try:
+            sig = str(r.get("signal") or "").strip().upper()
+            n = int(r.get("n") or 0)
+            if not sig or n <= 0:
+                continue
+            a = float(r.get("avg_alpha_pct") or 0.0)
+            w = float(r.get("alpha_win_pct") or 0.0)
+            t = agg.setdefault(sig, {"n": 0, "aw": 0.0, "ww": 0.0})
+            t["n"] += n; t["aw"] += a * n; t["ww"] += w * n
+        except (TypeError, ValueError):
+            continue
+    for sig, t in agg.items():
+        if t["n"] < CONVICTION_MIN_N:
+            continue
+        avg_alpha = t["aw"] / t["n"]
+        avg_win = t["ww"] / t["n"]
+        # win/50 = above/below coin-flip on beating benchmark; alpha adds magnitude
+        dc = (avg_win / 50.0) * (1.0 + avg_alpha * 0.08)
+        factors[sig] = round(max(0.2, min(1.5, dc)), 3)
+    return factors
 
 
 def _norm_regime(r: str | None) -> str:
@@ -71,7 +123,7 @@ def _risk_conf(a: dict) -> tuple[float, float]:
     return max(0.0, min(1.0, risk)), max(0.0, min(1.0, conf))
 
 
-def meter_adjusted_weights(universe: list, regime: str | None = None) -> dict:
+def meter_adjusted_weights(universe: list, regime: str | None = None, conviction_override: dict | None = None) -> dict:
     """
     Signed target weights from current CIS grade, de-risked by cause-proximity.
     Returns {symbol: {raw_weight, meter_weight, grade, risk_score, haircut}}.
@@ -87,12 +139,13 @@ def meter_adjusted_weights(universe: list, regime: str | None = None) -> dict:
             continue
         g = _grade_of(a)
         risk, conf = _risk_conf(a)
-        lf = GRADE_FACTOR.get(g, 0.0)
+        conv = _conviction_of(a, conviction_override)   # self-tuning track-record conviction tilt
+        lf = GRADE_FACTOR.get(g, 0.0) * conv     # grade × proven conviction
         sf = SHORT_GRADE_FACTOR.get(g, 0.0)
         # raw (grade-only) and meter-adjusted factors
         if lf > 0:
             haircut = HAIRCUT * risk * conf
-            rows.append({"sym": sym, "grade": g, "risk": risk, "conf": conf,
+            rows.append({"sym": sym, "grade": g, "risk": risk, "conf": conf, "conviction": conv,
                          "raw": lf, "adj": lf * (1.0 - haircut), "haircut": haircut, "side": 1})
         elif sf > 0 and MAX_SHORT_PCT > 0:
             boost = SHORT_BOOST * risk * conf
@@ -118,6 +171,7 @@ def meter_adjusted_weights(universe: list, regime: str | None = None) -> dict:
     for r in rows:
         result[r["sym"]] = {
             "grade": r["grade"],
+            "conviction": r.get("conviction", 1.0),
             "raw_weight": round(raw_w.get(r["sym"], 0.0), 4),
             "meter_weight": round(adj_w.get(r["sym"], 0.0), 4),
             "risk_score": round(r["risk"], 3),
@@ -184,9 +238,9 @@ def _interpret(band: str, regime: str | None) -> str:
     return base
 
 
-def build_risk_meter(universe: list, regime: str | None = None) -> dict:
+def build_risk_meter(universe: list, regime: str | None = None, conviction_override: dict | None = None) -> dict:
     """One-shot: meter-adjusted weights + the portfolio Risk Meter reading."""
-    weights = meter_adjusted_weights(universe, regime)
+    weights = meter_adjusted_weights(universe, regime, conviction_override)
     meter = portfolio_risk_meter(weights, universe, regime)
     return {"regime": _norm_regime(regime), "meter": meter, "weights": weights}
 

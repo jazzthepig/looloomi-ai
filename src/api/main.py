@@ -268,6 +268,32 @@ async def _start_outcome_tracker():
         print("[OUTCOME] ✅ daily outcome-tracker loop scheduled")
 
 
+# ── Track-record refresh loop — self-tuning conviction ────────────────────────
+# Recomputes signal_track_record (30d benchmark-relative outcomes from our own
+# cis_scores × ohlcv_daily) daily → the Risk Meter's conviction tilt auto-recalibrates
+# from fresh outcomes instead of a static snapshot. All in-DB (one RPC), idempotent.
+_TRACKREC_INTERVAL_S = 24 * 3600
+
+
+async def _track_record_loop():
+    await _asyncio.sleep(300)   # 5 min warmup; let outcome-tracker land fresh outcomes first
+    while True:
+        try:
+            from src.api.store import supabase_rpc
+            res = await supabase_rpc("refresh_signal_track_record")
+            print(f"[TRACK-REC] refreshed signal_track_record — rows={res}")
+        except Exception as _e:
+            print(f"[TRACK-REC] ⚠️  refresh failed: {_e}")
+        await _asyncio.sleep(_TRACKREC_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_track_record_loop():
+    if os.environ.get("DISABLE_TRACK_RECORD", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_track_record_loop())
+        print("[TRACK-REC] ✅ daily track-record refresh loop scheduled")
+
+
 # ── Daily full-universe snapshot loop (data-durability guarantee) ─────────────
 # Guarantees a daily cis_scores row for EVERY asset (T1 + T2), independent of the
 # Mac Mini push. The push only carries the assets it chooses (T1 only since the

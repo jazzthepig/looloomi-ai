@@ -453,8 +453,15 @@ async def get_risk_meter(response: Response = None):
     universe = (data or {}).get("universe", [])
     regime = (data or {}).get("macro_regime")
     try:
-        from src.data.market.risk_meter import build_risk_meter
-        out = build_risk_meter(universe, regime)
+        from src.data.market.risk_meter import build_risk_meter, conviction_from_track_record
+        conv = None
+        try:
+            from src.api.store import supabase_get_latest_track_record
+            conv = conviction_from_track_record(await supabase_get_latest_track_record())
+        except Exception as _ce:
+            _logger.warning(f"[CIS] conviction load failed (using prior): {_ce}")
+        out = build_risk_meter(universe, regime, conviction_override=conv)
+        out["conviction_factors"] = conv          # self-tuning tilt in effect (from own outcomes)
         out["universe_size"] = len(universe)
         out["as_of"] = (data or {}).get("timestamp") or (data or {}).get("as_of")
         return out
