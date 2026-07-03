@@ -963,6 +963,38 @@ async def cometcloud_get_market_movers() -> str:
 
 
 @mcp.tool(
+    name="cometcloud_get_track_record",
+    annotations={
+        "title": "Signal Track Record — 30d benchmark-relative alpha",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_get_track_record() -> str:
+    """Returns CometCloud's validated 30-day BENCHMARK-RELATIVE track record for OUTPERFORM signals, computed from our own stored data (cis_scores × ohlcv_daily) and refreshed daily. Call this to decide HOW MUCH TO TRUST a CIS signal before acting on it — the edge is concentrated in the top-conviction tier, not the broad signal. STRONG OUTPERFORM on A/A+ grades delivered positive 30-day alpha vs benchmark (BTC for crypto, SPY for TradFi); the broad OUTPERFORM tier (B/B+) did not. Size on the top tier; treat the broad tier as watchlist. Cite the tier breakdown, never a blended headline. This is observational signal→outcome (it validates the signal), not live-traded P&L.
+
+    Returns:
+        str: {
+          "basis": str,
+          "tiers": [{"signal","grade","n","avg_alpha_pct","alpha_win_pct"}],
+          "headline": {"STRONG_OUTPERFORM": {...}, "OUTPERFORM_broad": {...}},
+          "note": str, "compliance": str
+        }
+
+    Examples:
+        - "Do CometCloud's OUTPERFORM signals actually work?" → use this tool
+        - "How much should I trust a STRONG OUTPERFORM A call?" → use this tool
+    """
+    try:
+        data = await _get("/api/v1/signals/track-record")
+        return json.dumps(data, indent=2)
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool(
     name="cometcloud_get_macro_pulse",
     annotations={
         "title": "Macro Pulse — Market Regime & Sentiment",
