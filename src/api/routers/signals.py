@@ -24,7 +24,7 @@ from datetime import datetime, timezone, timedelta
 import httpx
 import numpy as np
 
-from fastapi import APIRouter, Query, Header, HTTPException
+from fastapi import APIRouter, Query, Header, HTTPException, Response
 
 _logger = logging.getLogger(__name__)
 router  = APIRouter()
@@ -643,4 +643,41 @@ async def get_signal_summary():
         "closed_signals":  perf.get("closed_signals"),
         "current_equity":  perf.get("current_equity"),
         "as_of":           perf.get("as_of"),
+    }
+
+
+@router.get("/api/v1/signals/track-record")
+async def get_signal_track_record(response: Response = None):
+    """
+    The honest, defensible track record: 30-day BENCHMARK-RELATIVE outcomes of our
+    OUTPERFORM signals, computed entirely from our own data (cis_scores × ohlcv_daily),
+    refreshed daily. The finding: the edge is the top-conviction tier — STRONG OUTPERFORM
+    on A/A+ delivered positive alpha; the broad OUTPERFORM tier did not. Consuming agents
+    and investor pages should cite THIS, with the tier breakdown, not a blended headline.
+    """
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=3600"
+    from src.api.store import supabase_get_latest_track_record
+    rows = await supabase_get_latest_track_record()
+
+    def _agg(rs):
+        n = sum(int(r.get("n") or 0) for r in rs)
+        if not n:
+            return None
+        wa = sum(float(r.get("avg_alpha_pct") or 0) * int(r.get("n") or 0) for r in rs) / n
+        ww = sum(float(r.get("alpha_win_pct") or 0) * int(r.get("n") or 0) for r in rs) / n
+        return {"n": n, "avg_alpha_pct": round(wa, 2), "alpha_win_pct": round(ww, 1)}
+
+    strong = [r for r in rows if str(r.get("signal") or "").upper() == "STRONG OUTPERFORM"]
+    plain  = [r for r in rows if str(r.get("signal") or "").upper() == "OUTPERFORM"]
+    return {
+        "basis": "30d benchmark-relative alpha (BTC for crypto / SPY for TradFi), from own data (cis_scores × ohlcv_daily)",
+        "tiers": rows,
+        "headline": {
+            "STRONG_OUTPERFORM": _agg(strong),   # the proven edge
+            "OUTPERFORM_broad":  _agg(plain),     # the noise tier — shown for honesty
+        },
+        "note": "Observational signal→30d outcome (validates the signal), not live-traded P&L. "
+                "Size on the top-conviction tier; the broad tier is watchlist, not position.",
+        "compliance": "Positioning language only; not investment advice.",
     }
