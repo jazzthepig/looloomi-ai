@@ -52,7 +52,14 @@ CONVICTION_FACTOR = {
 }
 
 CONVICTION_MIN_N = 50    # need this many resolved outcomes in a tier before the data overrides the prior
-_RISK_OFF = {"Risk-Off", "Tightening", "Stagflation"}
+_RISK_OFF = {"Risk-Off", "Tightening", "Stagflation"}   # gross-scaling / interpretation set
+# Shorts are ONLY permitted in true falling-market regimes. This is deliberately STRICTER
+# than _RISK_OFF: "Tightening" is rate pressure, not a falling tape — the 2026-07-04 ADA
+# short (−24.6%, still rated UNDERPERFORM) proved shorting benchmark-underperformers bleeds
+# absolute beta when the market rallies. Our own edge map agrees: shorts only pay in deep
+# risk-off. So we gate the short book on regime (Jazz decision 2026-07-05: regime-gate shorts).
+# A live risk-gradient value can override this via the `shorts_allowed` param (future wiring).
+_SHORT_OK = {"Risk-Off", "Stagflation"}
 
 
 def _conviction_of(a: dict, factors: dict | None = None) -> float:
@@ -123,13 +130,18 @@ def _risk_conf(a: dict) -> tuple[float, float]:
     return max(0.0, min(1.0, risk)), max(0.0, min(1.0, conf))
 
 
-def meter_adjusted_weights(universe: list, regime: str | None = None, conviction_override: dict | None = None) -> dict:
+def meter_adjusted_weights(universe: list, regime: str | None = None, conviction_override: dict | None = None,
+                           shorts_allowed: bool | None = None) -> dict:
     """
     Signed target weights from current CIS grade, de-risked by cause-proximity.
     Returns {symbol: {raw_weight, meter_weight, grade, risk_score, haircut}}.
     Long gross + short gross ≤ REGIME_FACTOR[regime].
+    shorts_allowed: explicit override (e.g. from a live risk gradient). When None, derived
+      from the regime (`_SHORT_OK`) — shorts only in true falling-market regimes. When shorts
+      are disallowed a weak name simply drops out of the book (weight 0), long-only.
     """
     scale = REGIME_FACTOR.get(_norm_regime(regime), 0.80)
+    shorts_ok = shorts_allowed if shorts_allowed is not None else (_norm_regime(regime) in _SHORT_OK)
     rows = []
     for a in universe:
         if not isinstance(a, dict):
@@ -147,7 +159,7 @@ def meter_adjusted_weights(universe: list, regime: str | None = None, conviction
             haircut = HAIRCUT * risk * conf
             rows.append({"sym": sym, "grade": g, "risk": risk, "conf": conf, "conviction": conv,
                          "raw": lf, "adj": lf * (1.0 - haircut), "haircut": haircut, "side": 1})
-        elif sf > 0 and MAX_SHORT_PCT > 0:
+        elif sf > 0 and MAX_SHORT_PCT > 0 and shorts_ok:
             boost = SHORT_BOOST * risk * conf
             rows.append({"sym": sym, "grade": g, "risk": risk, "conf": conf,
                          "raw": -sf, "adj": -sf * (1.0 + boost), "haircut": -boost, "side": -1})
@@ -238,11 +250,14 @@ def _interpret(band: str, regime: str | None) -> str:
     return base
 
 
-def build_risk_meter(universe: list, regime: str | None = None, conviction_override: dict | None = None) -> dict:
+def build_risk_meter(universe: list, regime: str | None = None, conviction_override: dict | None = None,
+                     shorts_allowed: bool | None = None) -> dict:
     """One-shot: meter-adjusted weights + the portfolio Risk Meter reading."""
-    weights = meter_adjusted_weights(universe, regime, conviction_override)
+    shorts_ok = shorts_allowed if shorts_allowed is not None else (_norm_regime(regime) in _SHORT_OK)
+    weights = meter_adjusted_weights(universe, regime, conviction_override, shorts_ok)
     meter = portfolio_risk_meter(weights, universe, regime)
-    return {"regime": _norm_regime(regime), "meter": meter, "weights": weights}
+    return {"regime": _norm_regime(regime), "shorts_allowed": shorts_ok,
+            "meter": meter, "weights": weights}
 
 
 # ── Rebalance planner (pure, no I/O) ──────────────────────────────────────────
@@ -336,8 +351,11 @@ def _selftest():
         {"symbol": "DOGE", "grade": "D",           # weak + out-of-circle → short confirmed/boosted
          "cause_proximity": {"risk_score": 0.70, "confidence": 0.7, "drivers": ["late retail"]}},
     ]
-    rm = build_risk_meter(universe, "Neutral")
-    print(f"Risk Meter: reading={rm['meter']['reading']} band={rm['meter']['band']} regime={rm['regime']}")
+    # Risk-Off so shorts are permitted (regime-gated shorts, 2026-07-05) — this test
+    # validates the short-BOOST logic, which only applies when the book may go short.
+    rm = build_risk_meter(universe, "Risk-Off")
+    print(f"Risk Meter: reading={rm['meter']['reading']} band={rm['meter']['band']} regime={rm['regime']} "
+          f"shorts_allowed={rm['shorts_allowed']}")
     print(f"  → {rm['meter']['interpretation']}\n")
     print(f"  {'sym':6} {'grade':5} {'raw_w':>7} {'meter_w':>8} {'risk':>5} {'haircut':>8}")
     for sym, w in rm["weights"].items():
@@ -347,7 +365,13 @@ def _selftest():
     assert z["meter_weight"] < z["raw_weight"], "out-of-circle A+ must be trimmed below its raw grade weight"
     d = rm["weights"]["DOGE"]
     assert d["meter_weight"] < d["raw_weight"] <= 0, "weak out-of-circle name: short boosted (more negative)"
-    print("\n✓ judgment→behavior: out-of-circle A+ trimmed; weak out-of-circle short boosted; meter reads the book.")
+    # regime-gate: the SAME weak name must NOT be shorted in a non-falling regime
+    rm_t = build_risk_meter(universe, "Tightening")
+    assert rm_t["shorts_allowed"] is False and \
+        rm_t["weights"].get("DOGE", {}).get("meter_weight", 0.0) >= 0, \
+        "shorts must be gated off outside true risk-off regimes (weak name drops out, never shorted)"
+    print("\n✓ judgment→behavior: out-of-circle A+ trimmed; weak out-of-circle short boosted in Risk-Off, "
+          "gated OFF in Tightening; meter reads the book.")
 
 
 if __name__ == "__main__":

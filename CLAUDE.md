@@ -1,5 +1,11 @@
 # CLAUDE.md — CometCloud AI / Looloomi
 
+> **⭐ SESSION START: read `PROJECT_STATE.md` FIRST** — the living single source of truth
+> (north star, what we're building, validated findings, in-flight/blocked by owner, next
+> actions). **Update it LAST** before ending a work session. And before describing any
+> "pending push", run `git status` / `git rev-list origin/main..HEAD` — never trust memory
+> of what's committed.
+
 ## Who I'm working with
 
 **Jazz** — founder, sole decision-maker, and product lead. Background spans traditional
