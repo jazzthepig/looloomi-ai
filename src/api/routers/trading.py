@@ -610,16 +610,20 @@ async def get_positions():
         pos["unrealized_pct"]    = round(pnl_pct, 3)
         pos["updated_at"]        = _now()
 
-        # Check SL/TP triggers
+        # Check SL/TP triggers — guard against 0/None thresholds (METER_REBAL positions
+        # carry stop_loss=take_profit=0; without the truthiness guard `price >= 0` fires
+        # tp_triggered on every long and `price >= 0` fires sl_triggered on every short,
+        # producing bogus flags — the 2026-07-04 Loop Watch false signal).
+        sl = pos.get("stop_loss"); tp = pos.get("take_profit")
         if side == "LONG":
-            if price <= pos["stop_loss"]:
+            if sl and price <= sl:
                 pos["sl_triggered"] = True
-            elif price >= pos["take_profit"]:
+            elif tp and price >= tp:
                 pos["tp_triggered"] = True
         else:
-            if price >= pos["stop_loss"]:
+            if sl and price >= sl:
                 pos["sl_triggered"] = True
-            elif price <= pos["take_profit"]:
+            elif tp and price <= tp:
                 pos["tp_triggered"] = True
 
         total_value += current_value
@@ -1061,6 +1065,14 @@ async def trigger_cis_flip(x_internal_token: str = Header(default="")):
 _REDIS_REBAL_STATE = "trading:rebal_state"      # {last_rebal, last_regime}
 REBAL_SLEEVE_TAG   = "METER_REBAL"
 REBAL_SLEEVE_NAV   = 100_000.0                  # paper notional; weights × NAV = position size
+# Risk circuit-breaker: close any sleeve position past this adverse excursion, EVERY
+# cycle, independent of the churn-gated rotation. Rationale: the meter opens shorts on
+# benchmark-underperformers, but the sleeve trades absolute price while the signal only
+# predicts benchmark-relative alpha — so a "correct" short (still UNDERPERFORM) can bleed
+# unbounded absolute beta in a non-risk-off tape (ADA short −24.6%, 2026-07-04 Loop Watch).
+# This is a catastrophic-loss breaker, not drawdown management: risk reduction is never
+# churn-gated, and each close feeds trade_results → the Learn loop.
+REBAL_MAX_ADVERSE_PCT = -20.0                   # unrealized % that force-closes a position
 
 
 async def _get_rebal_state() -> dict:
@@ -1148,6 +1160,50 @@ async def _run_paper_rebalance(dry_run: bool = True) -> dict:
     plan = plan_rebalance(target, current, nav, state, regime, now)
     summary = {"dry_run": dry_run, "regime": regime, "n_target": len(target),
                "n_held": len(current), "nav": nav, **plan}
+
+    # ── Risk circuit-breaker (NOT churn-gated) ───────────────────────────────
+    # Close positions regardless of whether the rotation triggers, for two risk reasons:
+    #   1. adverse excursion past the cap (unbounded short bleed), and
+    #   2. a held SHORT when the regime no longer permits shorts (Jazz 2026-07-05:
+    #      regime-gate shorts — only true falling-market regimes). Both are risk
+    #      reduction, which is never churn-gated. Each close feeds the Learn loop.
+    shorts_ok = bool(rm.get("shorts_allowed", True))
+    brk_prices = await _fetch_prices_batch([p["symbol"] for p in sleeve.values()]) if sleeve else {}
+    breaker = []
+    for oid, p in sleeve.items():
+        px = brk_prices.get(p.get("symbol")) or p.get("current_price") or p.get("entry_price")
+        entry = p.get("entry_price") or 0
+        if not px or not entry:
+            continue
+        is_short = p.get("side") != "LONG"
+        upct = (entry / px - 1) * 100 if is_short else (px / entry - 1) * 100
+        if upct <= REBAL_MAX_ADVERSE_PCT:
+            breaker.append((oid, px, round(upct, 2), "risk_breaker"))
+        elif is_short and not shorts_ok:
+            breaker.append((oid, px, round(upct, 2), "regime_no_short"))
+    summary["breaker"] = [{"symbol": sleeve[o]["symbol"], "side": sleeve[o].get("side"),
+                           "unrealized_pct": u, "reason": rsn} for o, _, u, rsn in breaker]
+
+    if not dry_run and breaker:
+        for oid, px, _u, rsn in breaker:
+            try:
+                if await _close_rebal_position(positions, oid, rsn, px):
+                    current.pop((sleeve[oid].get("symbol") or "").upper(), None)
+            except Exception as e:
+                _logger.warning(f"[REBAL] breaker close {oid} failed: {e}")
+        # Race-safe persist of breaker closes even if rotation doesn't run below.
+        fresh = await _get_positions()
+        for o2, p2 in positions.items():
+            if p2.get("strategy") == REBAL_SLEEVE_TAG:
+                fresh[o2] = p2
+        await _save_positions(fresh)
+        positions = fresh
+        all_closed = [p for p in positions.values() if p.get("status") == "closed"]
+        if len(all_closed) >= 5:
+            asyncio.create_task(_auto_mine_ic(all_closed, len(all_closed)))
+        _logger.info(f"[REBAL] breaker closed {len(breaker)} positions "
+                     f"({[(sleeve[o].get('symbol'), rsn) for o,_,_,rsn in breaker]})")
+
     if dry_run or not plan.get("triggered"):
         return summary
 
