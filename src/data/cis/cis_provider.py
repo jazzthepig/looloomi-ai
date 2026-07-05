@@ -1728,20 +1728,29 @@ def calculate_total_score(
     """
 
     # Base weights per asset class
+    # CANONICAL base weights — single source of truth: CIS_BASE_WEIGHTS.md (GRADE-ALIGN 2026-07-02).
+    # T1 (cis_v4_engine.py BASE_WEIGHTS, R≡O) MUST adopt this SAME table for "same pillars → same
+    # grade across engines" to hold. Changed vs prior T2: Infrastructure, Memecoin, US Equity,
+    # US Bond, Commodity (see CIS_BASE_WEIGHTS.md reconciliations). Regime-neutral; regime is a
+    # separate multiplier applied on top (Option B).
     _BASE_WEIGHTS: Dict[str, Dict[str, float]] = {
         "Crypto":         {"F": 0.25, "M": 0.25, "O": 0.20, "S": 0.15, "A": 0.15},
         "L1":             {"F": 0.30, "M": 0.25, "O": 0.20, "S": 0.15, "A": 0.10},
         "L2":             {"F": 0.30, "M": 0.25, "O": 0.20, "S": 0.15, "A": 0.10},
         "DeFi":           {"F": 0.25, "M": 0.25, "O": 0.25, "S": 0.15, "A": 0.10},
         "RWA":            {"F": 0.35, "M": 0.20, "O": 0.20, "S": 0.15, "A": 0.10},
-        "Infrastructure": {"F": 0.30, "M": 0.20, "O": 0.25, "S": 0.10, "A": 0.15},
-        "NFT":            {"F": 0.15, "M": 0.25, "O": 0.15, "S": 0.30, "A": 0.15},
-        "Memecoin":       {"F": 0.15, "M": 0.35, "O": 0.15, "S": 0.25, "A": 0.10},
-        "Gaming":         {"F": 0.20, "M": 0.30, "O": 0.15, "S": 0.25, "A": 0.10},
+        "Infrastructure": {"F": 0.30, "M": 0.25, "O": 0.20, "S": 0.15, "A": 0.10},
         "AI":             {"F": 0.20, "M": 0.30, "O": 0.20, "S": 0.15, "A": 0.15},
-        "US Equity":      {"F": 0.30, "M": 0.25, "O": 0.10, "S": 0.20, "A": 0.15},
-        "US Bond":        {"F": 0.30, "M": 0.20, "O": 0.10, "S": 0.20, "A": 0.20},
-        "Commodity":      {"F": 0.25, "M": 0.25, "O": 0.10, "S": 0.20, "A": 0.20},
+        "Gaming":         {"F": 0.20, "M": 0.30, "O": 0.15, "S": 0.25, "A": 0.10},
+        "NFT":            {"F": 0.15, "M": 0.25, "O": 0.15, "S": 0.30, "A": 0.15},
+        "Memecoin":       {"F": 0.10, "M": 0.30, "O": 0.10, "S": 0.40, "A": 0.10},
+        "US Equity":      {"F": 0.35, "M": 0.25, "O": 0.20, "S": 0.10, "A": 0.10},
+        "US Bond":        {"F": 0.35, "M": 0.10, "O": 0.30, "S": 0.10, "A": 0.15},
+        "Commodity":      {"F": 0.25, "M": 0.30, "O": 0.15, "S": 0.20, "A": 0.10},
+        "FX":             {"F": 0.25, "M": 0.25, "O": 0.20, "S": 0.20, "A": 0.10},
+        "EM Equity":      {"F": 0.30, "M": 0.25, "O": 0.15, "S": 0.20, "A": 0.10},
+        "Real Estate":    {"F": 0.40, "M": 0.15, "O": 0.20, "S": 0.15, "A": 0.10},
+        "Alternative":    {"F": 0.25, "M": 0.20, "O": 0.25, "S": 0.15, "A": 0.15},
     }
 
     # Regime multipliers — applied to base weights, then renormalized to sum=1.
