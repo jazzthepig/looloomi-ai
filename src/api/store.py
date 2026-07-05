@@ -278,6 +278,36 @@ _TRACKREC_CACHE: dict = {"rows": None, "ts": 0.0}
 _TRACKREC_TTL = 6 * 3600  # 6h — the refresh runs daily; this is fresh enough
 
 
+_EDGEMAP_CACHE: dict = {"rows": None, "ts": 0.0}
+_EDGEMAP_TTL = 6 * 3600
+
+
+async def supabase_get_latest_edge_map() -> list:
+    """Latest signal_edge_map batch: [{signal,risk_band,n,avg_alpha_pct,alpha_win_pct,...}].
+    Cached 6h; best-effort ([] on miss)."""
+    now = time.time()
+    if _EDGEMAP_CACHE["rows"] is not None and (now - _EDGEMAP_CACHE["ts"]) < _EDGEMAP_TTL:
+        return _EDGEMAP_CACHE["rows"]
+    if not _SB_URL or not _SB_KEY:
+        return []
+    url = f"{_SB_URL}/rest/v1/signal_edge_map"
+    params = {"order": "computed_at.desc", "limit": "60",
+              "select": "signal,risk_band,n,avg_alpha_pct,alpha_win_pct,avg_abs_return_pct,computed_at"}
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
+    try:
+        resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
+        if resp and resp.status_code == 200:
+            allrows = resp.json()
+            latest = max((r.get("computed_at") for r in allrows), default=None)
+            rows = [r for r in allrows if r.get("computed_at") == latest]
+            _EDGEMAP_CACHE["rows"] = rows; _EDGEMAP_CACHE["ts"] = now
+            return rows
+        return []
+    except Exception as e:
+        _logger.warning(f"[SUPABASE] edge_map read exception: {e}")
+        return []
+
+
 async def supabase_rpc(fn_name: str, payload: dict | None = None):
     """Call a Postgres function via PostgREST RPC (uses the configured service key).
     Returns the JSON result or None. Used by the daily track-record refresh."""

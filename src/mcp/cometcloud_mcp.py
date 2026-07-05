@@ -995,6 +995,33 @@ async def cometcloud_get_track_record() -> str:
 
 
 @mcp.tool(
+    name="cometcloud_get_edge_map",
+    annotations={
+        "title": "Edge Map — expected alpha by signal tier × risk gradient",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_get_edge_map() -> str:
+    """Returns CometCloud's decision surface: the expected 30-day BENCHMARK-RELATIVE alpha of each signal tier, CONDITIONED ON THE RISK GRADIENT (how risk-on/off the tape is, = benchmark trailing 30d return). Every cell is a real historical outcome with its sample size (`n`), from our own data. Use it to decide WHEN to act on a signal, not just whether: long the top tier (STRONG OUTPERFORM) when the tape is risk-ON (bands 4/5), short the bottom tier (UNDERPERFORM) when risk-OFF (bands 1/2); both edges shrink in neutral tape. This is granular, gradient-conditional intelligence — cite the specific band, not a blended number. Observational signal→outcome, not live-traded P&L.
+
+    Returns:
+        str: {basis, risk_bands (band → range), grid {signal: {risk_band: {avg_alpha_pct, alpha_win_pct, n}}}, how_to_read, note, compliance}
+
+    Examples:
+        - "Given today's tape, should I act on this STRONG OUTPERFORM?" → use this tool
+        - "When do CometCloud's short signals work?" → use this tool
+    """
+    try:
+        data = await _get("/api/v1/signals/edge-map")
+        return json.dumps(data, indent=2)
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool(
     name="cometcloud_get_macro_pulse",
     annotations={
         "title": "Macro Pulse — Market Regime & Sentiment",
