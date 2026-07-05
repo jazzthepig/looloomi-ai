@@ -681,3 +681,38 @@ async def get_signal_track_record(response: Response = None):
                 "Size on the top-conviction tier; the broad tier is watchlist, not position.",
         "compliance": "Positioning language only; not investment advice.",
     }
+
+
+@router.get("/api/v1/signals/edge-map")
+async def get_signal_edge_map(response: Response = None):
+    """
+    The decision surface: expected 30-day benchmark-relative alpha of each signal tier,
+    conditioned on the RISK GRADIENT (benchmark trailing 30d return). This is the
+    Glassnode-tier granular product — every cell is a real outcome with its sample size,
+    from our own data. Read it as two dials: long the top tier when the tape is risk-ON,
+    short the bottom tier when the tape is risk-OFF; both edges shrink in neutral tape.
+    Refreshed daily (signal_edge_map). Risk bands (benchmark trailing 30d):
+    1_deep_off <-15% · 2_off -15..-5% · 3_neutral -5..+5% · 4_on +5..+15% · 5_deep_on >+15%.
+    """
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=3600"
+    from src.api.store import supabase_get_latest_edge_map
+    rows = await supabase_get_latest_edge_map()
+    # pivot into {signal: {risk_band: {alpha, win, n}}}
+    grid: dict = {}
+    for r in rows:
+        grid.setdefault(r.get("signal"), {})[r.get("risk_band")] = {
+            "avg_alpha_pct": r.get("avg_alpha_pct"),
+            "alpha_win_pct": r.get("alpha_win_pct"),
+            "n": r.get("n"),
+        }
+    return {
+        "basis": "30d benchmark-relative alpha by signal tier × risk gradient (benchmark trailing 30d), from own data",
+        "risk_bands": {"1_deep_off": "<-15%", "2_off": "-15..-5%", "3_neutral": "-5..+5%",
+                       "4_on": "+5..+15%", "5_deep_on": ">+15%"},
+        "grid": grid,
+        "how_to_read": "Long the top tier (STRONG OUTPERFORM) when the tape is risk-ON (bands 4/5); "
+                       "short the bottom tier (UNDERPERFORM) when risk-OFF (bands 1/2). Neutral tape → both edges shrink.",
+        "note": "Observational signal→30d outcome; sample size per cell in `n`. Not live-traded P&L.",
+        "compliance": "Positioning language only; not investment advice.",
+    }
