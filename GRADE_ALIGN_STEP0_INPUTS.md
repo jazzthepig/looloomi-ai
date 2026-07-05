@@ -66,20 +66,29 @@ to T1's enum + BASE_WEIGHTS. Two-line fix in T1 (one enum entry + one weight dic
 gives full parity.
 
 ### Recommendation
-**Adopt T2's 17-class taxonomy verbatim into T1.** T1 adds `AI` and `NFT` enum members
-+ entries in `BASE_WEIGHTS`. Both engines reference the same canonical list in
-`CIS_METHODOLOGY.md` going forward.
+**Adopt the 17-class taxonomy in T1.** T1 adds `AI` and `NFT` enum members + entries in
+`BASE_WEIGHTS` (using the canonical values from `CIS_BASE_WEIGHTS.md`):
+- `AI`: 0.20 / 0.30 / 0.20 / 0.15 / 0.15 (narrative/momentum-led, some real usage)
+- `NFT`: 0.15 / 0.25 / 0.15 / 0.30 / 0.15 (sentiment-dominant, weak fundamentals)
+
+Both engines reference the same canonical list in `CIS_METHODOLOGY.md` going forward.
 
 → **Quant sign-off needed** on:
-1. The T2 weight values for AI + NFT (do they make sense — see table below)
+1. **None** — the values are already in `CIS_BASE_WEIGHTS.md` (canonical). Minimax-A
+   will add the AI + NFT entries to T1 with those exact values this session.
 2. Whether any future class needs adding now (e.g., "Stablecoin" as separate from Crypto)
+   — punt to next revision unless there's an urgent use case.
 
 ---
 
 ## Decision 3 — Per-class weight values (the diff Seth found, now with full context)
 
-For the **15 shared classes**, T1 and T2 differ on **8/15** (was 7/11 — T2 grew and
-the diff expanded). Side-by-side:
+**Canonical source of truth: [`CIS_BASE_WEIGHTS.md`](CIS_BASE_WEIGHTS.md)** — the single
+canonical weight table both engines adopt verbatim. **T2 is already aligned with it** (verified
+2026-07-05: every class in `cis_provider.py:1736` matches `CIS_BASE_WEIGHTS.md` byte-for-byte).
+**T1 needs replacement** (8/15 shared classes still diverge + missing AI + NFT entries).
+
+For the **15 shared classes**, T1 and the canonical table differ on **8/15**:
 
 | Class | T1 (F/M/R/O/S/A) | T2 (F/M/O/S/A) | Match? | Diff source |
 |---|---|---|---|---|
@@ -100,64 +109,65 @@ the diff expanded). Side-by-side:
 | T2-only (no T1 weight) | — | AI: 20/30/20/15/15 / NFT: 15/25/15/30/15 | n/a | need to add to T1 |
 
 ### Patterns observed
-1. **T2 weights Fundamental more aggressively on TradFi** (US Equity, US Bond, EM Equity,
-   Real Estate, Commodity all +5 to +20 vs T1). Consistent with the
-   `cis_provider.py:1756–1771` regime-multiplier philosophy (fundamentals dominate in
-   Tightening/Risk-Off).
-2. **T1 weights Sentiment more on Memecoin** (35 vs 40; both high — it's the dominant
-   pillar). Both engines agree Memecoin is sentiment-driven.
-3. **US Bond is the most divergent** — T1 weights R/S 30/30 (treats it as a risk-managed
-   asset); T2 weights F 35 + R 30 (treats it as a fundamentally-driven asset). Both are
-   defensible; quant pick.
-4. **Commodity** — T1 weights S 25 (sensitivity to macro), T2 weights M 30 (momentum-led).
+1. **Canonical weights Fundamental more aggressively on TradFi** (US Equity, US Bond,
+   EM Equity, Real Estate, Commodity all +5 to +20 vs T1). Consistent with the
+   regime-multiplier philosophy in T2 (which is also canonical — T2 already matches
+   the table).
+2. **Canonical weights Sentiment more on Memecoin** (40 — the dominant pillar). T1's 35
+   under-counts how purely attention-driven memecoins are.
+3. **US Bond is the most divergent** — T1 weights R/S 30/30 (treats it as risk-managed);
+   canonical weights F+O 35+30 (treats it as fundamentals + risk-adjusted-driven). The
+   canonical story matches bond intuition: rates/credit fundamentals + risk-adjusted
+   dominate; momentum minimal.
+4. **Commodity** — T1 weights S 25 (sensitivity-led); canonical weights M 30 (momentum-led).
 
 ### Recommendation
-For the 8 mismatched classes, **adopt T2's values** in T1 (single source of truth =
-`CIS_BASE_WEIGHTS.md`). Justification:
-- T2 values are coherent with the regime-multiplier philosophy baked into T2's engine.
-- T2 is the consumer-facing engine (Railway serves the API). Adopting T2 values in T1
-  means user-visible grades stay aligned with internal scores after the SCHEMA bump.
-- T1 becomes a "Mac-side equivalent" of T2's grade output (with local-only extras like
-  `recommended_weight`, `class_rank`, `global_rank`).
+**Adopt `CIS_BASE_WEIGHTS.md` verbatim in T1** — single source of truth, no reverse
+question needed since T2 already matches. T1 replaces all 15 BASE_WEIGHTS values + adds
+AI + NFT entries (lines 308–326 in `cis_v4_engine.py`).
 
-If quant prefers the reverse (T2 adopts T1's values) the diff is larger — T1 values
-on TradFi are systematically lighter on Fundamental, which would force a regime-
-multiplier rewrite on T2.
+The rationale is documented in `CIS_BASE_WEIGHTS.md §Key reconciliations` — those
+choices are not arbitrary; each was picked to fix a known incoherence (e.g., US Bond:
+T1 over-weighted S, canonical undid that; Memecoin: T1 under-counted how purely
+sentiment-driven they are, canonical pushed S to 0.40).
 
-→ **Quant call needed:** adopt T2 verbatim in T1, or vice versa, or build a fresh
-canonical table from first principles.
+→ **No quant call needed for Decision 3** — the canonical table is already decided.
+**Minimax-A will ship the T1 replacement in this session.**
 
 ---
 
 ## What ships after these three calls land
 
 1. T1 `cis_v4_engine.py` adopts the canonical 17-class taxonomy + canonical weights
-   (5-line enum→string fix already shipped 2026-07-04 + structural edit here).
-2. T2 `cis_provider.py` keeps current weights (already canonical).
+   (enum→string fix already shipped 2026-07-04; structural edit happening this session).
+2. T2 `cis_provider.py` keeps current weights (already canonical — `cis_provider.py:1736`
+   matches `CIS_BASE_WEIGHTS.md` byte-for-byte as of 2026-07-05).
 3. `CIS_METHODOLOGY.md` becomes the single source of truth — both engines reference it.
 4. `SCHEMA_VERSION` bumps 1.0 → 1.1 in `MINIMAX_SYNC.md §2`.
 5. Seth unblocks frontend grade-on-`raw_cis_score` switch (CISLeaderboard / AssetRadar /
    ProtocolIntelligence / CISWidget / H5) with regime as a separate exposure axis
    (signal + `recommended_weight`).
 6. Acceptance test: `for asset in universe: assert grade(T1, asset) == grade(T2, asset)`
-   — passes for all 84 assets.
+   — passes for all 84 assets (assuming Decision 1 also lands; otherwise partial).
 
-**Until then:** T1 ≠ T2 by accident on 8/15 shared classes. Agents / LPs see different
-grades for the same data depending on which engine served them. Acceptable as a known
-inconsistency but documented.
+**Until then:** T1 ≠ canonical on 8/15 shared classes. Agents / LPs see different grades
+depending on which engine served them. Acceptable as a known inconsistency but documented.
 
 ---
 
 ## Acceptance criteria (proposed for quant sign-off)
 
-1. **Pillar semantics:** pick (a), (b), or (c). Document in `CIS_METHODOLOGY.md §3`.
-2. **Taxonomy:** add AI + NFT to T1 (or document if T1 explicitly drops them).
-3. **Weights:** adopt T2 values verbatim (or document reverse). Update T1's
-   `BASE_WEIGHTS` to match.
+1. **Pillar semantics (Decision 1):** pick (a), (b), or (c). Document in `CIS_METHODOLOGY.md §3`.
+   **The pillar computation in T1 still uses Sharpe/Sortino (legacy T1.R logic) — Decision 1
+   must land before T1 grade alignment with T2 is fully achieved.**
+2. **Taxonomy (Decision 2):** add AI + NFT to T1 — Min-Max-A ships this with the weights update.
+3. **Weights (Decision 3):** **already decided** — `CIS_BASE_WEIGHTS.md` is canonical, T2 matches,
+   Minimax-A applies to T1 this session. No quant sign-off needed.
 4. **Methodology doc:** `CIS_METHODOLOGY.md` lists the canonical 17 classes + weights +
    pillar semantics as a single source. Both engines reference it.
-5. **Acceptance test:** `scripts/test_grade_align.py` runs the assertion in step 6 above
-   (Seth will write; passes once decisions 1–3 land).
+5. **Acceptance test:** `scripts/test_grade_align.py` runs the assertion above
+   (Seth will write; fully passes once Decision 1 lands; partial passes for weight-only
+   alignment).
 
 ---
 
