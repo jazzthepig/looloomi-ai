@@ -50,7 +50,12 @@ other agents can trust it. Full autonomy is the partner's game, not ours. Soul: 
 - ✅ done: cause_proximity, Risk Meter, conviction tilt (self-tuning), provenance, benchmark-
   relative outcomes, outcome tracker on own-data, track record + edge map (tables+endpoints+MCP),
   P0/P1 fixes, T2 base-weight alignment.
-- 🟡 uncommitted, HELD: `cis_provider.py` T2 weights — deploy ONLY with Minimax's T1 #5.
+- ✅ HOLD RELEASED (2026-07-05): `cis_provider.py` T2 weights — Minimax-A shipped T1 #5 (17/17
+  classes canonical, MD5-identical Live↔Shadow). Seth step-2 verified: T2 `_BASE_WEIGHTS` byte-
+  identical to CIS_BASE_WEIGHTS.md AND T2 grades on regime-neutral raw = Σ base×pillar (Option B);
+  L1 test vector → raw 67.0 matches T1 acceptance. **Now URGENT to deploy** — T1 is live/next-tick
+  canonical while Railway T2 still runs the OLD table → live divergence until `cis_provider.py` ships.
+  Jazz commits it in the same push as the sleeve fix (no longer needs to be separate).
 - ✅ COMMITTED, needs push: edge-map batch (signals/store/mcp + HANDOFF) — **HEAD is 2 commits
   ahead of origin/main.** Jazz runs `git push origin main`. (Verified via git rev-list 2026-07-05,
   NOT memory — the summary wrongly said "staged/blocked".)
