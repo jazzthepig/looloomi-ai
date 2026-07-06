@@ -1022,6 +1022,33 @@ async def cometcloud_get_edge_map() -> str:
 
 
 @mcp.tool(
+    name="cometcloud_get_current_band",
+    annotations={
+        "title": "Current Band — where the tape sits on the risk gradient NOW",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_get_current_band() -> str:
+    """Returns WHERE THE MARKET SITS RIGHT NOW on CometCloud's edge-map risk gradient (BTC trailing 30d return → one of 5 bands: deep risk-off → deep risk-on), and what each signal tier is expected to do IN THAT BAND. This is the live companion to the edge map: instead of the whole grid, it tells you the single column that applies today plus a positioning read. Call it to turn a static signal into a timed decision — e.g. a STRONG OUTPERFORM in a deep-risk-on band is the highest-conviction long setup; the same signal in neutral tape is muted. Positioning language only; not investment advice.
+
+    Returns:
+        str: {ts, bench_trail_30d, current_band, macro_regime, tiers_now {signal: {avg_alpha_pct, alpha_win_pct, n}}, top_tier_alpha, action, risk_bands}
+
+    Examples:
+        - "Is now a good time to act on the top signal?" → use this tool
+        - "What band are we in right now?" → use this tool
+    """
+    try:
+        data = await _get("/api/v1/signals/current-band")
+        return json.dumps(data, indent=2)
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool(
     name="cometcloud_get_macro_pulse",
     annotations={
         "title": "Macro Pulse — Market Regime & Sentiment",

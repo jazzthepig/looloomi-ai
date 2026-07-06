@@ -2313,8 +2313,13 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         weights = total_result["weights"]
         contributions = total_result["contributions"]
 
-        grade = get_grade(total_score)
-        signal = get_signal(total_score, grade)
+        # GRADE-ALIGN Option B (SCHEMA 1.1): grade reflects QUALITY (regime-neutral raw_cis_score),
+        # NOT the regime-adjusted score. Regime is a SEPARATE exposure axis — it lives in `signal`
+        # and `recommended_weight`, never in the grade. So a B+ asset stays B+ across regimes; the
+        # regime tells you whether to *act* on it now. (T1 cis_v4_engine MUST mirror this — same
+        # pillars → same grade. See MINIMAX_SYNC §GRADE-ALIGN.)
+        grade = get_grade(raw_cis_score)                       # quality grade (regime-neutral)
+        signal = get_signal(total_score, get_grade(total_score))  # positioning (regime-aware)
 
         # 30d price change
         change_30d = market_data.get("change_30d", 0) or 0
@@ -2393,8 +2398,12 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "symbol": asset_id,
             "name": config["name"],
             "asset_class": asset_class,
-            "cis_score": total_score,
-            "raw_cis_score": raw_cis_score,  # v4.2: base pillar score (no regime adjustment)
+            # GRADE-ALIGN Option B (SCHEMA 1.1): cis_score IS the quality (regime-neutral) score,
+            # so it stays coherent with `grade` (both on raw). Regime adjustment moves to its own
+            # field `regime_adjusted_score` (the exposure lens) — never the headline quality number.
+            "cis_score": raw_cis_score,
+            "raw_cis_score": raw_cis_score,
+            "regime_adjusted_score": total_score,
             "grade": grade,
             "signal": signal,
             "confidence": confidence,

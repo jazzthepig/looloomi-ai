@@ -716,3 +716,127 @@ async def get_signal_edge_map(response: Response = None):
         "note": "Observational signal→30d outcome; sample size per cell in `n`. Not live-traded P&L.",
         "compliance": "Positioning language only; not investment advice.",
     }
+
+
+def _band_of(trail_30d: float) -> str:
+    """Bucket the benchmark trailing-30d return into the edge-map risk gradient band."""
+    if trail_30d < -15: return "1_deep_off"
+    if trail_30d < -5:  return "2_off"
+    if trail_30d < 5:   return "3_neutral"
+    if trail_30d < 15:  return "4_on"
+    return "5_deep_on"
+
+_BAND_ACTION = {
+    "1_deep_off": "Deep risk-OFF — shorting the bottom tier (UNDERPERFORM) has paid best here; long edge weakest.",
+    "2_off":      "Risk-OFF — short edge favoured, trim gross long.",
+    "3_neutral":  "Neutral tape — both edges shrink; reduce conviction sizing.",
+    "4_on":       "Risk-ON — long the top tier (STRONG OUTPERFORM); short edge fades.",
+    "5_deep_on":  "Deep risk-ON — long top-tier edge strongest; avoid shorts.",
+}
+
+# Band → default posture (net bias + gross scale), from the edge-map thesis: long the top tier
+# in risk-ON, short the bottom tier in risk-OFF, shrink to neutral in the middle. Refined by the
+# LIVE edge-map data (does this band's tier alpha actually confirm?) and sample size.
+_BAND_POSTURE = {
+    "5_deep_on":  ("long",    1.10),
+    "4_on":       ("long",    0.95),
+    "3_neutral":  ("neutral", 0.55),
+    "2_off":      ("short",   0.80),
+    "1_deep_off": ("short",   0.95),
+}
+_POSTURE_MIN_N = 30   # need this many resolved outcomes in the relevant tier to trust the edge
+
+
+def _posture_from(band: str, tiers_now: dict) -> dict:
+    """Actionable posture for the current band, grounded in the live edge-map cell. Advisory /
+    positioning language only — NOT a live sizing directive. Falls back to the band default and
+    dampens toward neutral when the confirming tier is thin (n<_POSTURE_MIN_N) or contradicts."""
+    bias, gross = _BAND_POSTURE.get(band, ("neutral", 0.55))
+    top = tiers_now.get("STRONG OUTPERFORM", {}) or {}
+    bot = tiers_now.get("UNDERPERFORM", {}) or {}
+    conf = "confirmed"
+    if bias == "long":
+        a, n = top.get("avg_alpha_pct"), top.get("n") or 0
+        if n < _POSTURE_MIN_N or (a is not None and a <= 0):   # thin or edge doesn't confirm
+            gross = round(gross * 0.6, 2); conf = "unconfirmed (thin/contradicts)"
+    elif bias == "short":
+        a, n = bot.get("avg_alpha_pct"), bot.get("n") or 0
+        if n < _POSTURE_MIN_N or (a is not None and a >= 0):   # bottom tier isn't underperforming
+            gross = round(gross * 0.6, 2); conf = "unconfirmed (thin/contradicts)"
+    return {"net_bias": bias, "gross_scale": gross, "confirmation": conf,
+            "rationale": _BAND_ACTION.get(band, "")}
+
+
+async def compute_current_band() -> dict:
+    """Where the tape sits RIGHT NOW on the edge-map risk gradient + what each signal
+    tier is expected to do in that band. Benchmark = BTC 30d (crypto). Shared by the
+    live read endpoint AND the daily snapshot logger so both are identical."""
+    from src.api.routers.cis import get_cis_universe
+    from src.api.store import supabase_get_latest_edge_map
+    data = await get_cis_universe()
+    universe = (data or {}).get("universe", []) or []
+    regime = (data or {}).get("macro_regime")
+    btc = next((a for a in universe if (a.get("symbol") or a.get("asset_id") or "").upper() == "BTC"), {})
+    trail = 0.0
+    try:
+        trail = float(btc.get("change_30d") or 0.0)
+    except (TypeError, ValueError):
+        trail = 0.0
+    band = _band_of(trail)
+    rows = await supabase_get_latest_edge_map()
+    tiers = {r.get("signal"): {"avg_alpha_pct": r.get("avg_alpha_pct"),
+                               "alpha_win_pct": r.get("alpha_win_pct"), "n": r.get("n")}
+             for r in rows if r.get("risk_band") == band}
+    top = tiers.get("STRONG OUTPERFORM", {})
+    posture = _posture_from(band, tiers)
+    return {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "bench_trail_30d": round(trail, 2),
+        "current_band": band,
+        "macro_regime": regime,
+        "tiers_now": tiers,
+        "top_tier_alpha": top.get("avg_alpha_pct"),
+        "top_tier_n": top.get("n"),
+        "posture": posture,
+        "action": _BAND_ACTION.get(band, ""),
+    }
+
+
+@router.get("/api/v1/signals/current-band")
+async def get_current_band(response: Response = None):
+    """Live read: given today's risk gradient (BTC 30d), which edge-map band are we in and
+    what is each signal tier expected to do NOW. Compliance: positioning language only."""
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1800"
+    cur = await compute_current_band()
+    cur["risk_bands"] = {"1_deep_off": "<-15%", "2_off": "-15..-5%", "3_neutral": "-5..+5%",
+                         "4_on": "+5..+15%", "5_deep_on": ">+15%"}
+    cur["compliance"] = "Positioning language only; not investment advice."
+    return cur
+
+
+async def log_regime_band() -> bool:
+    """Daily snapshot writer — persists one current-band reading to Supabase `regime_band_log`
+    so we accumulate the band time series (→ Mac warehouse via the same sync as CIS scores).
+    This is the track record of the band signal itself. Best-effort; never raises."""
+    from src.api.store import supabase_insert_table
+    try:
+        cur = await compute_current_band()
+        pos = cur.get("posture") or {}
+        row = {
+            "ts": cur["ts"],
+            "bench_trail_30d": cur["bench_trail_30d"],
+            "current_band": cur["current_band"],
+            "macro_regime": cur["macro_regime"],
+            "top_tier_alpha": cur.get("top_tier_alpha"),
+            "top_tier_n": cur.get("top_tier_n"),
+            "net_bias": pos.get("net_bias"),
+            "gross_scale": pos.get("gross_scale"),
+        }
+        ok = await supabase_insert_table("regime_band_log", [row])
+        _logger.info(f"[BAND-LOG] {cur['current_band']} trail={cur['bench_trail_30d']}% "
+                     f"regime={cur['macro_regime']} written={ok}")
+        return ok
+    except Exception as e:
+        _logger.warning(f"[BAND-LOG] snapshot failed: {e}")
+        return False

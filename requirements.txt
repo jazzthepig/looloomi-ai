@@ -27,3 +27,6 @@ scipy>=1.10.0
 # Strategy research framework — statistical inference + multiple-testing correction
 # (gates 3-5 of STRATEGY_VALIDATION.md: walk-forward p-values, Holm/BH-FDR)
 statsmodels>=0.14.0
+# NautilusTrader — engine for parity verification of freqtrade strategies (Minimax-B)
+# `python -m pip install -r requirements.txt` to set up `venv/`
+nautilus_trader>=1.229
