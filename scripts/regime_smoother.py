@@ -166,6 +166,299 @@ def regime_with_conviction(
 
 
 # ---------------------------------------------------------------------------
+# Phase 0 (Seth, H2 design §6): modal-window REGIME LABEL smoother
+# ---------------------------------------------------------------------------
+#
+# regime_with_conviction() above outputs a CONFIDENCE number but does NOT
+# change the regime label. For H2 re-test we need the LABEL itself smoothed
+# so that H1/H2a conclusions aren't artifacts of a 4-day median regime
+# detector (Minimax-A baseline verify: Days=393, runs=44, Median=4.0d, 11
+# one-day regimes in the 393d window = the noise we're trying to remove).
+#
+# Per H2 design: median regime length ≥ N days. The modal-window smoother
+# delivers that by emitting, for each day d, the most-frequent regime in
+# the prior `window` days (tie-broken by most recent occurrence). The first
+# window-1 days fall back to running accumulation.
+
+def smoothed_regime_series(
+    regime_series: pd.Series,
+    window: int = STABILITY_WINDOW,
+) -> pd.Series:
+    """Per-day modal-window regime label.
+
+    Changes the LABEL itself (not just a confidence alongside). For day d,
+    emits the modal regime in [d-window+1, d] (inclusive). Ties broken by
+    most recent occurrence. First window-1 days use running accumulation.
+
+    Args:
+        regime_series: pd.Series indexed by date with regime strings.
+        window: lookback window in days (default STABILITY_WINDOW=14).
+
+    Returns:
+        pd.Series same index as input, values are the modal regime string
+        over the prior `window` days. Empty/NaN regimes coerce to "Neutral"
+        (consistent with the heuristic path).
+    """
+    if regime_series.empty:
+        return regime_series.copy()
+    rs = regime_series.astype(str).str.strip()
+    rs = rs.where(rs != "", "Neutral").fillna("Neutral")
+
+    out = pd.Series(index=rs.index, dtype=object)
+    for i in range(len(rs)):
+        lo = max(0, i - window + 1)
+        sub = rs.iloc[lo:i + 1]
+        counts = sub.value_counts()
+        if counts.empty:
+            out.iloc[i] = "Neutral"
+            continue
+        max_count = int(counts.max())
+        candidates = set(counts[counts == max_count].index.tolist())
+        # Tie-break: most recent occurrence of any candidate
+        for j in range(len(sub) - 1, -1, -1):
+            if sub.iloc[j] in candidates:
+                out.iloc[i] = sub.iloc[j]
+                break
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Phase 0.5 (Minimax-A, H1.5 robustness): two alternative smoothers for A/B
+# ---------------------------------------------------------------------------
+#
+# B.8 robustness check: the negative IC finding in Risk-On / Risk-Off /
+# Stagflation must NOT be an artifact of the modal-window algorithm choice.
+# Add two orthogonal alternatives here and re-run H1 on each:
+#
+#   1. smoothed_regime_majority() — same modal window, but tie-break by
+#      PRIOR regime (most common regime state continues) instead of recency.
+#      Tests whether the "most recent occurrence wins" tie-break biased the
+#      label set toward the detector's most-common output.
+#
+#   2. smoothed_regime_persistence() — hard minimum-run-length filter:
+#      a regime change requires N consecutive days in the new regime before
+#      the label flips (hysteresis). Simulates what a trader-actuated
+#      regime detector would produce (no single-day signal, no 3-day
+#      flip). N=14 (2 trading weeks) is the canonical persistence minimum.
+#
+# Run H1 on each smoothed history, compare |IC| in the "loud" regimes. If
+# v1 (modal-recency), v2 (modal-priority), v3 (persistence-14) all give
+# |IC_Risk-On| > 0.2 and |IC_Risk-Off| > 0.05, the finding is robust to
+# detector algorithm and we can ship B.7 with high confidence.
+
+def smoothed_regime_majority(
+    regime_series: pd.Series,
+    window: int = STABILITY_WINDOW,
+) -> pd.Series:
+    """Variant of `smoothed_regime_series` — modal window, TIE-BREAK BY
+    PRIORITY (NOT recency). On ties, the FIRST-seen candidate in the
+    window wins (so the longest-running regime keeps the lead).
+
+    Same algorithm as v1 except the tie-breaking loop iterates forward
+    instead of backward.
+    """
+    if regime_series.empty:
+        return regime_series.copy()
+    rs = regime_series.astype(str).str.strip()
+    rs = rs.where(rs != "", "Neutral").fillna("Neutral")
+
+    out = pd.Series(index=rs.index, dtype=object)
+    for i in range(len(rs)):
+        lo = max(0, i - window + 1)
+        sub = rs.iloc[lo:i + 1]
+        counts = sub.value_counts()
+        if counts.empty:
+            out.iloc[i] = "Neutral"
+            continue
+        max_count = int(counts.max())
+        candidates = set(counts[counts == max_count].index.tolist())
+        # Tie-break: FIRST occurrence in window (i.e. longest-running regime
+        # among ties). Iterate forward.
+        for j in range(len(sub)):
+            if sub.iloc[j] in candidates:
+                out.iloc[i] = sub.iloc[j]
+                break
+    return out
+
+
+def smoothed_regime_persistence(
+    regime_series: pd.Series,
+    min_days: int = 14,
+) -> pd.Series:
+    """Hard minimum-run-length smoother: a regime change requires
+    `min_days` CONSECUTIVE days in the new regime before the label flips.
+
+    Algorithm: emit the raw regime, but require every proposed change to
+    be backed by `min_days` consecutive same-label days. If the run of
+    the proposed new regime is shorter, hold the prior label.
+
+    This is the closest analogue to a "manual regime" — a trader who
+    won't act on a regime change until it's been in place for 2 weeks.
+    Median regime length under v3 typically grows to ~30-60 days.
+
+    Args:
+        regime_series: pd.Series indexed by date with regime strings.
+        min_days: minimum consecutive-days required to accept a regime
+            change. Default 14.
+    """
+    if regime_series.empty:
+        return regime_series.copy()
+    rs = regime_series.astype(str).str.strip()
+    rs = rs.where(rs != "", "Neutral").fillna("Neutral").tolist()
+
+    out: list[str] = []
+    held: str | None = None        # the regime currently committed
+    pending: str | None = None     # a proposed new regime not yet accepted
+    pending_run: int = 0           # consecutive days of `pending` seen
+
+    for i, cur in enumerate(rs):
+        if held is None:
+            held = cur
+            out.append(cur)
+            continue
+        if cur == held:
+            # same as held; cancel any pending change
+            pending = None
+            pending_run = 0
+            out.append(held)
+        else:
+            # proposed change: cur != held
+            if pending == cur:
+                pending_run += 1
+            else:
+                pending = cur
+                pending_run = 1
+            if pending_run >= min_days:
+                held = pending
+                pending = None
+                pending_run = 0
+            out.append(held)
+    return pd.Series(out, index=regime_series.index)
+
+
+def relabel_cis_history(
+    src_dir: Path,
+    dst_dir: Path,
+    window: int = STABILITY_WINDOW,
+    *,
+    smoother: "callable | None" = None,
+    smoother_name: str = "modal_recency",
+    smoother_params: dict | None = None,
+) -> dict:
+    """Read every cis_YYYY-MM-DD.json from src_dir, replace its `macro_regime`
+    with the smoothed regime (computed over the FULL history), and write a
+    parallel cis_YYYY-MM-DD.json into dst_dir.
+
+    Other fields preserved verbatim. Original `macro_regime` saved as
+    `macro_regime_raw` in the smoothed output for A/B. Smoother algorithm +
+    parameters stamped for provenance.
+
+    Args:
+        src_dir: source dir of cis_history JSON files (e.g. .../_data/cis_history/).
+        dst_dir: destination dir (will be created; mirror structure).
+        window: smoothing window in days (default 14). Ignored if `smoother`
+            is None (modal_recency default) or a non-window smoother like
+            `smoothed_regime_persistence`.
+        smoother: callable taking a regime_series + window → smoothed_series.
+            Defaults to `smoothed_regime_series` (modal + recency tie-break).
+            Use `smoothed_regime_majority` or `smoothed_regime_persistence`
+            for H1.5 robustness A/B.
+        smoother_name: human-readable label for provenance (goes into the
+            JSON's `smoother_algorithm` field). Default `"modal_recency"`.
+        smoother_params: dict of named parameters for the smoother (e.g.
+            `{"min_days": 14}` for persistence). Ignored if not relevant.
+
+    Returns:
+        dict with src_dir, dst_dir, smoother_name, smoother_params, written
+        (int), regimes_changed (int), and smoothed_run_stats
+        ({n_runs, median/mean/min/max run length}).
+    """
+    src_dir = Path(src_dir)
+    dst_dir = Path(dst_dir)
+    if not src_dir.exists():
+        raise FileNotFoundError(f"src_dir not found: {src_dir}")
+    dst_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load all dates × regimes × src file paths
+    dates: list[pd.Timestamp] = []
+    regimes: list[str] = []
+    file_map: dict[pd.Timestamp, Path] = {}
+    for f in sorted(src_dir.glob("cis_*.json")):
+        date_str = f.stem.replace("cis_", "", 1) if f.stem.startswith("cis_") else f.stem
+        d = pd.Timestamp(date_str)
+        try:
+            data = json.loads(f.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue
+        regime = str(data.get("macro_regime", "")).strip() or "Neutral"
+        dates.append(d)
+        regimes.append(regime)
+        file_map[d] = f
+
+    if not dates:
+        return {"written": 0, "regimes_changed": 0,
+                "src_dir": str(src_dir), "dst_dir": str(dst_dir),
+                "smoother": smoother_name, "smoothed_run_stats": {}}
+
+    series = pd.Series(regimes, index=pd.DatetimeIndex(dates))
+
+    # Default smoother: modal window with recency tie-break (the Phase 0 default).
+    if smoother is None:
+        smoother = smoothed_regime_series
+    params = smoother_params or {}
+    # Decide which parameter name is the window vs other knobs
+    try:
+        if "min_days" in params and smoother is smoothed_regime_persistence:
+            smoothed = smoother(series, **params)
+        else:
+            smoothed = smoother(series, window=window)
+    except TypeError:
+        # smoother signature unknown — try without window
+        smoothed = smoother(series, **params)
+
+    changes = 0
+    written = 0
+    for d in series.index:
+        raw = str(series.loc[d])
+        sm = str(smoothed.loc[d])
+        src_data = json.loads(file_map[d].read_text())
+        src_data["macro_regime_raw"] = raw
+        src_data["macro_regime"] = sm
+        src_data["smoother_algorithm"] = smoother_name
+        src_data["smoother_window_days"] = int(window)
+        src_data["smoother_params"] = params
+        if raw != sm:
+            changes += 1
+        out_file = dst_dir / file_map[d].name
+        out_file.write_text(json.dumps(src_data, indent=2))
+        written += 1
+
+    runs = compute_regime_runs(smoothed)
+    if runs:
+        lengths = [r["length"] for r in runs]
+        run_stats = {
+            "n_runs": len(runs),
+            "median_run_length": float(np.median(lengths)),
+            "mean_run_length": float(np.mean(lengths)),
+            "min_run_length": int(min(lengths)),
+            "max_run_length": int(max(lengths)),
+        }
+    else:
+        run_stats = {}
+
+    return {
+        "src_dir": str(src_dir),
+        "dst_dir": str(dst_dir),
+        "window": int(window),
+        "smoother": smoother_name,
+        "smoother_params": params,
+        "written": int(written),
+        "regimes_changed": int(changes),
+        "smoothed_run_stats": run_stats,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Conviction-weighted trigger helper
 # ---------------------------------------------------------------------------
 
@@ -510,11 +803,25 @@ def main():
                     help="Sweep window × threshold grid; show how many regime transitions fire")
     ap.add_argument("--v5-verify", action="store_true",
                     help="v5 fallback chain: report source coverage + v4/v5 disagreement")
-    ap.add_argument("--cis-dir", default="/Volumes/CometCloudAI/cometcloud-local/_data/cis_history")
+    ap.add_argument("--relabel", action="store_true",
+                    help="Phase 0: re-write CIS history with modal-window smoothed regime "
+                         "label. Source is read-only; output goes to --dst-dir.")
+    ap.add_argument("--cis-dir", default="/Volumes/CometCloudAI/cometcloud-local/_data/cis_history",
+                    help="CIS history dir (source for verify/v5-verify/relabel)")
+    ap.add_argument("--dst-dir",
+                    default="/Volumes/CometCloudAI/cometcloud-local/_data/cis_history_smoothed/",
+                    help="Output dir for --relabel (default = cis_history_smoothed/)")
     ap.add_argument("--threshold", type=float, default=DEFAULT_CONVICTION_THRESHOLD,
                     help="Conviction threshold for regime_change trigger fire")
     ap.add_argument("--window", type=int, default=DEFAULT_STABILITY_WINDOW,
                     help="Stability window in days (default 14)")
+    ap.add_argument("--smoother", default="modal_recency",
+                    choices=["modal_recency", "modal_majority", "persistence"],
+                    help="(H1.5 robustness) Smoother algorithm — default modal_recency (Phase 0). "
+                         "modal_majority = modal + first-seen tie-break. "
+                         "persistence = hard min-days run length.")
+    ap.add_argument("--min-days", type=int, default=14,
+                    help="(persistence smoother only) Min consecutive days to accept a regime flip")
     ap.add_argument("--backtest-start", default="2025-05-03",
                     help="Backtest window start (for sweep; default 2025-05-03)")
     ap.add_argument("--backtest-end", default="2026-03-12",
@@ -526,7 +833,65 @@ def main():
         raise SystemExit(cmd_sweep(args))
     if args.v5_verify:
         raise SystemExit(cmd_v5_verify(args))
+    if args.relabel:
+        raise SystemExit(cmd_relabel(args))
     ap.print_help()
+
+
+def cmd_relabel(args) -> int:
+    """Phase 0: re-write CIS history with modal-window smoothed regime label.
+
+    Source dir is untouched; output goes to --dst-dir as a mirror structure.
+    Each output file carries:
+      - macro_regime_raw         (original label)
+      - macro_regime             (smoothed label — consumed by downstream)
+      - smoother_algorithm       (provenance — added by H1.5 robustness refactor)
+      - smoother_window_days     (provenance)
+      - smoother_params          (provenance)
+
+    After the relabel, re-run H1 / H2a with:
+        CIS_HISTORY_RESEARCH_DIR=<--dst-dir> python3 -m src.research.cis_regime_studies.h1_regime_ic
+
+    H1.5 robustness: pass `--smoother modal_majority` or `--smoother persistence
+    --min-days 14` to A/B test whether the smoothed-H1 negative IC finding is
+    robust to smoother algorithm choice.
+    """
+    src = Path(args.cis_dir)
+    dst = Path(args.dst_dir)
+    window = int(args.window)
+    smoother_name = args.smoother
+    smoother_func, params = {
+        "modal_recency":  (smoothed_regime_series,       {}),
+        "modal_majority": (smoothed_regime_majority,     {}),
+        "persistence":    (smoothed_regime_persistence,  {"min_days": args.min_days}),
+    }[smoother_name]
+
+    print(f"# Phase 0 regime smoother — relabel")
+    print(f"# src: {src}")
+    print(f"# dst: {dst}")
+    print(f"# smoother: {smoother_name}  window: {window}d  params: {params}")
+    print()
+    res = relabel_cis_history(src, dst, window=window,
+                              smoother=smoother_func,
+                              smoother_name=smoother_name,
+                              smoother_params=params)
+    print(f"  written:           {res['written']:>5}")
+    print(f"  regimes_changed:   {res['regimes_changed']:>5}  "
+          f"({100 * res['regimes_changed'] / max(1, res['written']):.1f}% of days relabeled)")
+    stats = res.get("smoothed_run_stats", {})
+    if stats:
+        print(f"  smoothed n_runs:   {stats['n_runs']:>5}")
+        print(f"  median run length: {stats['median_run_length']:>5.1f} days  "
+              f"(was 4.0d on raw — target ≥ 10d for trustworthy H1 re-test)")
+        print(f"  mean run length:   {stats['mean_run_length']:>5.1f} days")
+        print(f"  min run length:    {stats['min_run_length']:>5}d")
+        print(f"  max run length:    {stats['max_run_length']:>5}d")
+    print()
+    print(f"# Next: re-run H1 on smoothed dir")
+    print(f"#   CIS_HISTORY_RESEARCH_DIR={dst} \\")
+    print(f"#     /Volumes/CometCloudAI/cometcloud-local/venv/bin/python \\")
+    print(f"#     -m src.research.cis_regime_studies.h1_regime_ic")
+    return 0
 
 
 def cmd_sweep(args):
