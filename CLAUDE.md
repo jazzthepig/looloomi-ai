@@ -271,6 +271,16 @@ git push origin main
 # Railway auto-deploys on push
 ```
 
+> **⚠️ NEVER run git write-commands (add/commit/rebase/merge) from the Cowork sandbox.**
+> The repo is bridged in over a FUSE mount that allows create/write but **denies unlink**
+> (`rm` → "Operation not permitted"). Git can't delete `.git/index.lock`, so every
+> sandbox-side commit strands a lock that only the **Mac side** can clear. This is
+> structural, not a stale-lock-from-a-crash — don't waste time re-diagnosing it.
+> **Rule:** sandbox = edit surface (Read/Write/Edit files only); **all git happens
+> Mac-side** (Jazz's terminal or Mac Claude Code). Agent edits files, reports what to
+> commit — never commits. Unstick a stranded lock from the Mac: `git unlock` (alias:
+> `rm -f "$(git rev-parse --git-dir)/index.lock"`).
+
 ## Design principles
 
 1. Void blacks as foundation — `#020208` base, not grey-black

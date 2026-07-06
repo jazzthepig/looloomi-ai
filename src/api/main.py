@@ -294,6 +294,32 @@ async def _start_track_record_loop():
         print("[TRACK-REC] ✅ daily track-record refresh loop scheduled")
 
 
+# ── Regime-band snapshot loop ─────────────────────────────────────────────────
+# Persists the current edge-map band reading (BTC 30d gradient → band → per-tier
+# expected alpha) to Supabase `regime_band_log` daily, so the band signal accrues
+# its own track record. Flows to the Mac warehouse via the same sync as CIS scores
+# (Railway can't write the Mac fs directly — Supabase is the bridge).
+_BAND_LOG_INTERVAL_S = 24 * 3600   # daily snapshot
+
+
+async def _band_log_loop():
+    await _asyncio.sleep(420)   # 7 min warmup; let universe + edge map warm first
+    while True:
+        try:
+            from src.api.routers.signals import log_regime_band
+            await log_regime_band()
+        except Exception as _e:
+            print(f"[BAND-LOG] ⚠️  snapshot failed: {_e}")
+        await _asyncio.sleep(_BAND_LOG_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_band_log_loop():
+    if os.environ.get("DISABLE_BAND_LOG", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_band_log_loop())
+        print("[BAND-LOG] ✅ daily regime-band snapshot loop scheduled")
+
+
 # ── Daily full-universe snapshot loop (data-durability guarantee) ─────────────
 # Guarantees a daily cis_scores row for EVERY asset (T1 + T2), independent of the
 # Mac Mini push. The push only carries the assets it chooses (T1 only since the

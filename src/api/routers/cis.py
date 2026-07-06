@@ -586,7 +586,24 @@ async def _build_cis_universe(force_source: str = None):
                     la["raw_cis_score"] = round((0.25*pf + 0.25*pm + 0.20*po + 0.15*ps + 0.15*pa), 1)
                 merged.append(la)
 
-        # Sort by CIS score descending
+        # ── GRADE-ALIGN Option B (SCHEMA 1.1) — normalize the WHOLE merged universe onto
+        # raw quality, uniformly across T1 + T2. Both engines now carry raw_cis_score
+        # (Minimax T1 #5 + T2 cis_provider), so the grade + headline score reflect
+        # regime-neutral QUALITY; the regime-adjusted number is preserved as a separate
+        # exposure-lens field. This makes the switch a single Railway-side change — no
+        # cis_v4_engine lockstep. (T1 can later grade on raw natively; result is identical.)
+        from src.data.cis.cis_provider import get_grade as _get_grade
+        for _a in merged:
+            _raw = _a.get("raw_cis_score")
+            if _raw is None:
+                continue
+            _adj = _a.get("cis_score") or _a.get("score")
+            if _a.get("regime_adjusted_score") is None:
+                _a["regime_adjusted_score"] = _adj      # preserve the regime lens
+            _a["cis_score"] = round(float(_raw), 1)      # headline = quality (matches grade)
+            _a["grade"] = _get_grade(float(_raw))        # grade on quality, not regime
+
+        # Sort by CIS score descending (now regime-neutral quality)
         merged.sort(key=lambda a: a.get("cis_score") or a.get("score") or 0, reverse=True)
 
         # Get unified regime directly from get_macro_pulse() rather than via Redis.

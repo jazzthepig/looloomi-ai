@@ -67,7 +67,49 @@ other agents can trust it. Full autonomy is the partner's game, not ours. Soul: 
   - `risk_meter.py`: **regime-gated shorts** (`_SHORT_OK={Risk-Off,Stagflation}`, `shorts_allowed`
     threaded through build_risk_meter) — shorts only in true falling-market regimes. Self-test extended.
   - EXCLUDE from this commit: `cis_provider.py` (held for T1 #5), `requirements.txt` + `src/research/nautilus/` (Minimax's).
-- ⬜ next: regime-aware conviction (reads edge map, N-gated) · live "current band" on edge-map · win.html surfacing.
+- 🟡 uncommitted (2026-07-06): `cause_proximity.py` — **season lifecycle consumed** (Jazz money
+  insight + Minimax §BOARD #5): `momentum` season DEPRESSES out-of-circle risk ×0.55 (ride the
+  出圈 wealth-creation window), `stale` ELEVATES to floor 0.72 (window closed). Flows into sizing
+  via Risk Meter (verified: momentum name +19% weight vs stale). Dormant until D3 data lands
+  (query_id 7891077). No-cost strategy win. Ready to commit + push (Mac-side).
+
+**Strategy direction (no new cost — Jazz 2026-07-06 "先赚到钱再加"):**
+- **H1 finding (research lane):** composite CIS 7d forward-return IC is NEGATIVE in Risk-Off/Risk-On/
+  Stagflation, POSITIVE only in Tightening, flat in Easing → the CIS gate is directionally INVERTED
+  in 3/6 regimes; it works as a RISK FILTER, not a return predictor. Validates regime-conditioning
+  (edge map + regime-gated shorts + season already do this). **H2 = per-regime gate direction+magnitude.**
+  ⚠️ Do NOT unilaterally invert the production Risk Meter on H1 alone — wait for H2's confirmed
+  direction table (research lane in-flight); premature inversion risks the live book.
+- **H2 design DONE** (`docs/H2_REGIME_GATE_DESIGN_2026-07-06.md`): reframe = separate CIS-as-ranking
+  from regime-as-beta-timing; do NOT invert CIS in prod. Blocked on Phase 0 = fix the noisy regime
+  detector (Minimax-A). Immediate-safe changes: drop CIS floor→eligibility in Easing (flat IC),
+  shrink gross in low-confidence regimes.
+- **H2a script DONE** (`src/research/cis_regime_studies/h2a_relative_ic.py`) — benchmark-relative IC
+  test (is the sign-flip beta artifact or real reversal). Runs Mac-side (needs OHLCV panel + scipy).
+- **season lifecycle EXTENDED** (`cause_proximity.py`): full pre-出圈 accumulation stages
+  (capitulation/dry_up/spring_test/early_markup) + momentum/stale, cold→hot risk curve verified
+  (dry_up lowest 0.168 → stale highest 0.720). Season vocab contract handed to Minimax (§MINIMAX_SYNC).
+- **current-band read + posture DONE** (`signals.py` + `main.py` + MCP): `/api/v1/signals/current-band`
+  computes today's risk-gradient band (BTC 30d) → per-tier expected alpha NOW → actionable **posture**
+  (net_bias + gross_scale + confirmation), sample-size-guarded (thin cell → dampen + flag). Persisted
+  daily to Supabase `regime_band_log` (created; cols incl net_bias/gross_scale) via `_band_log_loop`
+  → flows to Mac warehouse (Minimax adds it to the drive mirror). MCP tool `cometcloud_get_current_band`.
+  Posture is ADVISORY (positioning language) — not wired to force live sizing (that needs Jazz nod).
+- ⬜ next safe self-contained: run H2a Mac-side → decide direction; regime-lens UI badge; optionally
+  wire posture.gross_scale into Risk Meter gross (opt-in, after Jazz nod).
+- 🟡 uncommitted (2026-07-06, GRADE-ALIGN Option B frontend/read switch) — BLOCKED by git lock;
+  Jazz commits `cis.py` + `cis_provider.py`:
+  - `cis.py` merge: normalizes the WHOLE universe (T1+T2) onto raw quality — `grade = get_grade(raw)`,
+    `cis_score = raw`, `regime_adjusted_score` = old adjusted (regime lens preserved), sort on raw.
+    Single Railway-side change, NO T1 cis_v4_engine lockstep (both tiers already carry raw_cis_score).
+  - `cis_provider.py`: T2 emits the same shape natively (grade on raw, cis_score=raw, +regime_adjusted_score).
+  - Verified against live universe: grade==g(cis_score) for ALL assets; 16 grades shift vs regime-baked;
+    leaderboard now quality-ranked (PENDLE B+ quality, regime tilt → signal/regime_adjusted).
+  - PRODUCT-FACING (grades move, cis_score semantics change) → needs Jazz green-light to push.
+  - Minimax note: Railway now overrides T1's pushed `grade` (re-grades on raw at merge, idempotent);
+    T1 can later grade on raw natively — identical result, no rush. SCHEMA note in §GRADE-ALIGN.
+- ⬜ next: regime-lens UI badge (surface regime_adjusted_score as the visible separate axis) ·
+  regime-aware conviction (reads edge map, N-gated) · live "current band" on edge-map · win.html surfacing.
 
 **Loop Watch finding (2026-07-05):** METER_REBAL "rotation stall" was NOT a broken exit path.
 Book is stable in flat Tightening regime (target≈held, `reason=none`). Real issue: sleeve holds
@@ -77,8 +119,11 @@ tape isn't risk-off (edge-map: shorts only pay deep-off). 12-vs-5 trade_results 
 pre-fix closes, writer healthy. **DECISION FOR JAZZ:** regime-gate shorts (only open shorts when
 risk gradient is risk-off) vs keep the −20% breaker as the only guard. Breaker shipped as safety net.
 
-**Minimax-A:** T1 #5 (per-class weights, patch in §GRADE-ALIGN) · D3-DUNE query_id (unblocks
-cause_proximity stage) · restore drive→Shadow sync · stand up local warehouse + CG/EODHD top-ups
+**D3-DUNE ✅ (Seth, 2026-07-06):** authored + saved Dune query `D3_holder_concentration` = **query_id
+7891077** (params token/start_date/end_date → day/n_holders/hhi/top10; free `erc20_ethereum.evt_Transfer`
+reconstruction; enterprise balances table confirmed gated). Minimax-A: set `DUNE_QUERY_ID_HOLDERS=7891077`
++ run `fetch_holder_concentration.py` → D3 holder tier goes live end-to-end. ETH ERC-20 only, weekly. See MINIMAX_SYNC.
+**Minimax-A:** T1 #5 (per-class weights, patch in §GRADE-ALIGN) · restore drive→Shadow sync · stand up local warehouse + CG/EODHD top-ups
 (dominance, mcap, VIX) + 11yr CIS-historical reconstruction · macro brief model (gemma-4-31b-qat +
 API thinking-off).
 **Minimax-B/C:** backtest the validated hypothesis (regime-conditional long-STRONG / short-UNDER, gradient-scaled).
