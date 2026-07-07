@@ -815,6 +815,28 @@ async def get_current_band(response: Response = None):
     return cur
 
 
+@router.get("/api/v1/signals/holder-map")
+async def get_holder_map_debug():
+    """Diagnostic: current D3 holder map + a raw Moralis probe (shows the real response shape /
+    error / whether the owners endpoint is available on this plan). Read-only."""
+    from src.data.cis.holder_provider import get_holder_map, _TOKEN_REGISTRY
+    from src.data.market.data_layer import get_token_holders, MORALIS_KEY
+    m = await get_holder_map()
+    sym, (chain, addr) = next(iter(_TOKEN_REGISTRY.items()))
+    raw = await get_token_holders(addr, chain=chain, limit=5)
+    holders = raw.get("holders") if isinstance(raw, dict) else None
+    return {
+        "map_size": len(m),
+        "map_symbols": sorted(m.keys()),
+        "moralis_key_set": bool(MORALIS_KEY),
+        "probe_symbol": sym,
+        "probe_error": raw.get("error") if isinstance(raw, dict) else None,
+        "probe_holder_count": len(holders) if isinstance(holders, list) else None,
+        "probe_first_holder_keys": list(holders[0].keys()) if holders else None,
+        "probe_sample": holders[:1] if holders else None,
+    }
+
+
 async def log_regime_band() -> bool:
     """Daily snapshot writer — persists one current-band reading to Supabase `regime_band_log`
     so we accumulate the band time series (→ Mac warehouse via the same sync as CIS scores).
