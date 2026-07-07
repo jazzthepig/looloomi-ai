@@ -320,6 +320,36 @@ async def _start_band_log_loop():
         print("[BAND-LOG] ✅ daily regime-band snapshot loop scheduled")
 
 
+# ── D3 holder-concentration refresh loop ──────────────────────────────────────
+# Warms the Moralis holder-concentration map into Redis so cause_proximity serves the
+# D3 (on-chain) tier without ever blocking the universe path on a Moralis fetch. Gated
+# on MORALIS_API_KEY (no-ops cleanly without it). Holder concentration moves slowly →
+# 6h cadence is plenty.
+_HOLDER_REFRESH_INTERVAL_S = 6 * 3600
+
+
+async def _holder_refresh_loop():
+    await _asyncio.sleep(180)   # 3 min warmup
+    while True:
+        try:
+            from src.data.cis.holder_provider import refresh_holder_map
+            m = await refresh_holder_map()
+            print(f"[HOLDER] map refreshed — {len(m)} tokens")
+        except Exception as _e:
+            print(f"[HOLDER] ⚠️  refresh failed: {_e}")
+        await _asyncio.sleep(_HOLDER_REFRESH_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_holder_refresh_loop():
+    if os.environ.get("MORALIS_API_KEY") and \
+       os.environ.get("DISABLE_HOLDER_REFRESH", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_holder_refresh_loop())
+        print("[HOLDER] ✅ D3 holder-concentration refresh loop scheduled")
+    else:
+        print("[HOLDER] ⏸ holder refresh disabled (no MORALIS_API_KEY)")
+
+
 # ── Daily full-universe snapshot loop (data-durability guarantee) ─────────────
 # Guarantees a daily cis_scores row for EVERY asset (T1 + T2), independent of the
 # Mac Mini push. The push only carries the assets it chooses (T1 only since the

@@ -431,10 +431,15 @@ async def _attach_cause_proximity_async(data: dict) -> None:
         attention_map = await supabase_get_latest_trending()
     except Exception as e:
         _logger.warning(f"[CIS] trending fetch failed: {e}")
+    holder_map = {}
+    try:
+        from src.data.cis.holder_provider import get_holder_map
+        holder_map = await get_holder_map()   # D3 via Moralis; cached, {} when cold → D4 floor
+    except Exception as e:
+        _logger.warning(f"[CIS] holder_map fetch failed: {e}")
     try:
         from src.data.cis.cause_proximity import attach_cause_proximity
-        # holder_map left None until D3-DUNE query_id lands (see MINIMAX_SYNC §BOARD)
-        attach_cause_proximity(data["universe"], attention_map, None)
+        attach_cause_proximity(data["universe"], attention_map, holder_map)
     except Exception as e:
         _logger.warning(f"[CIS] cause_proximity attach failed: {e}")
 

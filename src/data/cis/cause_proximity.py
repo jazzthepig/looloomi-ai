@@ -216,6 +216,13 @@ def estimate_inline(a: dict, attention: dict | None = None,
                 risk_score = max(risk_score, _SEASON_STALE_FLOOR)
             elif chuquan:
                 risk_score = max(risk_score, _CHUQUAN_FLOOR)
+            # Phase-1 static-concentration nudge (no dynamic season yet, e.g. Moralis snapshot):
+            # dispersed / out-of-circle (high stage) → modest risk UP; concentrated / in-circle
+            # (low stage) → modest DOWN. Bounded ±0.10 so it never dominates the driver score.
+            elif stage is not None and stage >= 0.70:
+                risk_score = min(1.0, round(risk_score + 0.10, 3))
+            elif stage is not None and stage <= 0.30:
+                risk_score = max(0.0, round(risk_score - 0.10, 3))
         except (TypeError, ValueError):
             stage = None
 
