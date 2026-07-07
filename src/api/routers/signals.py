@@ -837,6 +837,32 @@ async def get_holder_map_debug():
     }
 
 
+@router.get("/api/v1/cis/conviction")
+async def get_conviction(response: Response = None):
+    """Fusion #1 — per-asset conviction verdict: fuses regime-neutral quality (grade) +
+    cause-proximity (in-circle vs 出圈 fragility + season) + the edge map's expected alpha for
+    each tier in TODAY's band + executability, into one {conviction, direction, action} per
+    asset, ranked. Anchored on real outcomes; illiquid names discounted. Positioning language only."""
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=900"
+    from src.api.routers.cis import get_cis_universe
+    from src.data.cis.conviction import rank_universe
+    cur = await compute_current_band()
+    data = await get_cis_universe()
+    universe = (data or {}).get("universe", []) or []
+    rows = rank_universe(universe, cur.get("tiers_now") or {}, cur.get("current_band"))
+    return {
+        "current_band": cur.get("current_band"),
+        "bench_trail_30d": cur.get("bench_trail_30d"),
+        "macro_regime": cur.get("macro_regime"),
+        "posture": cur.get("posture"),
+        "basis": "quality × in-circle × (edge-map tier×band) × executability, ranked by signed edge",
+        "count": len(rows),
+        "conviction": rows,
+        "compliance": "Positioning language only; not investment advice.",
+    }
+
+
 async def log_regime_band() -> bool:
     """Daily snapshot writer — persists one current-band reading to Supabase `regime_band_log`
     so we accumulate the band time series (→ Mac warehouse via the same sync as CIS scores).

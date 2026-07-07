@@ -1049,6 +1049,33 @@ async def cometcloud_get_current_band() -> str:
 
 
 @mcp.tool(
+    name="cometcloud_get_conviction",
+    annotations={
+        "title": "Conviction — the fused per-asset verdict (quality × proximity × timing × liquidity)",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_get_conviction() -> str:
+    """Returns CometCloud's SINGLE fused verdict per asset — the one call that combines all four intelligence layers into an actionable ranking: (1) regime-neutral QUALITY (CIS grade), (2) cause-proximity — are we EARLY/upstream or LATE/出圈-fragile, (3) the edge map's expected 30d alpha for that signal tier in TODAY's risk band (real outcomes, not a guess), and (4) EXECUTABILITY (a high-grade illiquid name you can't size is correctly discounted, not top-ranked). Output is ranked by signed edge — best longs first, best shorts last — each with a conviction 0..1, a direction, and a positioning action. This is the tool to answer 'what should I actually do across the book right now', because it will not recommend a name you can't trade or a signal the current tape isn't rewarding. Positioning language only; not investment advice.
+
+    Returns:
+        str: {current_band, macro_regime, posture, conviction: [{symbol, grade, signal, quality_score, in_circle, season, expected_edge_pct, adjusted_edge_pct, executability, conviction, direction, action, drivers}], compliance}
+
+    Examples:
+        - "What's the highest-conviction position across the book right now?" → use this tool
+        - "Rank the universe by how much I should actually act on it today" → use this tool
+    """
+    try:
+        data = await _get("/api/v1/cis/conviction")
+        return json.dumps(data, indent=2)
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool(
     name="cometcloud_get_macro_pulse",
     annotations={
         "title": "Macro Pulse — Market Regime & Sentiment",

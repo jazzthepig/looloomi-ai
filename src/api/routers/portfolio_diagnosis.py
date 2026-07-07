@@ -33,7 +33,13 @@ async def diagnose(payload: dict):
     from src.api.routers.cis import get_cis_universe
     holdings = payload.get("holdings") or []
     universe = await get_cis_universe()
-    return diagnose_portfolio(holdings, universe)
+    band_ctx = None
+    try:
+        from src.api.routers.signals import compute_current_band
+        band_ctx = await compute_current_band()   # for the conviction fusion (timing + executability)
+    except Exception:
+        band_ctx = None
+    return diagnose_portfolio(holdings, universe, band_ctx)
 
 # Grade → bucket. KEEP = institutional quality; WATCH = acceptable; TRIM = below bar.
 _KEEP = {"A+", "A", "B+"}
@@ -58,15 +64,21 @@ def _best_in_class(universe: list, asset_class: str, exclude: set) -> dict | Non
     return max(pool, key=lambda a: a.get("cis_score") or 0)
 
 
-def diagnose_portfolio(holdings: list[dict], universe_data: dict) -> dict:
+def diagnose_portfolio(holdings: list[dict], universe_data: dict, band_ctx: dict | None = None) -> dict:
     """
     holdings: [{"symbol": "BTC", "weight": 0.3}, ...]  (weights optional → equal)
     universe_data: the /api/v1/cis/universe response.
+    band_ctx: optional current-band read ({current_band, tiers_now}) — enriches each holding
+      with the conviction fusion (quality × in-circle × timing × executability), so an illiquid
+      B+ name is flagged 'watch, not core' instead of a blind 'keep'.
     Returns an honest, beta+-oriented diagnosis.
     """
     universe = universe_data.get("universe") or []
     regime = universe_data.get("macro_regime") or "—"
     idx = _by_symbol(universe)
+    _band = (band_ctx or {}).get("current_band")
+    _tiers = (band_ctx or {}).get("tiers_now") or {}
+    illiquid_w = 0.0
 
     # normalize weights
     hs = [{"symbol": (h.get("symbol") or "").upper(),
@@ -104,6 +116,17 @@ def diagnose_portfolio(holdings: list[dict], universe_data: dict) -> dict:
             row = {"symbol": sym, "weight": round(w, 4), "grade": grade,
                    "cis": cis, "signal": a.get("signal"),
                    "asset_class": a.get("asset_class"), "bucket": bucket, "reason": reason}
+            if band_ctx:
+                try:
+                    from src.data.cis.conviction import compute_conviction
+                    cv = compute_conviction(a, _tiers, _band)
+                    row.update({"conviction": cv["conviction"], "direction": cv["direction"],
+                                "conviction_action": cv["action"], "executability": cv["executability"],
+                                "in_circle": cv["in_circle"], "season": cv.get("season")})
+                    if cv["executability"] in ("illiquid", "thin"):
+                        illiquid_w += w
+                except Exception:
+                    pass
             (keep if bucket == "keep" else watch if bucket == "watch" else trim).append(row)
             if bucket == "trim":
                 off_standard_w += w
@@ -141,6 +164,7 @@ def diagnose_portfolio(holdings: list[dict], universe_data: dict) -> dict:
 
     # Honest one-line verdict.
     off_pct = round(off_standard_w * 100)
+    illiquid_pct = round(illiquid_w * 100)
     if off_pct >= 40:
         verdict = (f"Heavy off-standard exposure: {off_pct}% of the book sits below the "
                    f"institutional bar. The moves below tighten it toward beta+.")
@@ -149,13 +173,20 @@ def diagnose_portfolio(holdings: list[dict], universe_data: dict) -> dict:
                    f"whole book's quality.")
     else:
         verdict = (f"Clean book — {off_pct}% off-standard. Mostly hold; minor tilts only.")
+    # Executability is a separate axis from quality: a high-grade book you can't size is a
+    # different problem than a low-grade one. Flag it honestly.
+    if illiquid_pct >= 20:
+        verdict += (f" Note: {illiquid_pct}% sits in illiquid names — quality may be fine but "
+                    f"you can't build or exit size cleanly there.")
 
     return {
         "as_of_regime": regime,
+        "current_band": _band,
         "book": {
             "avg_cis": avg_cis,
             "grade": book_grade,
             "off_standard_pct": off_pct,
+            "illiquid_pct": illiquid_pct,
             "n_holdings": len(hs),
             "keep": len(keep), "watch": len(watch), "trim": len(trim),
         },
