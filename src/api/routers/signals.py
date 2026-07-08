@@ -698,11 +698,24 @@ async def get_signal_edge_map(response: Response = None):
         response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=3600"
     from src.api.store import supabase_get_latest_edge_map
     rows = await supabase_get_latest_edge_map()
-    # pivot into {signal: {risk_band: {alpha, win, n}}}
+    # Empirical-Bayes shrinkage over the grid: `avg_alpha_pct` is the DENOISED (shrunk) value
+    # posture/conviction actually use; `avg_alpha_raw`, `shrink_weight` (0=all-prior, 1=all-own)
+    # and the prior are exposed for transparency.
+    shrink = {"cells": {}, "params": {}}
+    try:
+        from src.data.signals.edge_shrinkage import shrink_edge_map
+        shrink = shrink_edge_map(rows)
+    except Exception as _e:
+        _logger.warning(f"[EDGE] shrinkage failed (raw only): {_e}")
     grid: dict = {}
     for r in rows:
-        grid.setdefault(r.get("signal"), {})[r.get("risk_band")] = {
-            "avg_alpha_pct": r.get("avg_alpha_pct"),
+        sig, band = r.get("signal"), r.get("risk_band")
+        sc = shrink["cells"].get((sig, band), {})
+        grid.setdefault(sig, {})[band] = {
+            "avg_alpha_pct": sc.get("shrunk", r.get("avg_alpha_pct")),
+            "avg_alpha_raw": r.get("avg_alpha_pct"),
+            "prior": sc.get("prior"),
+            "shrink_weight": sc.get("weight"),
             "alpha_win_pct": r.get("alpha_win_pct"),
             "n": r.get("n"),
         }
@@ -711,9 +724,12 @@ async def get_signal_edge_map(response: Response = None):
         "risk_bands": {"1_deep_off": "<-15%", "2_off": "-15..-5%", "3_neutral": "-5..+5%",
                        "4_on": "+5..+15%", "5_deep_on": ">+15%"},
         "grid": grid,
+        "shrinkage": {**shrink.get("params", {}),
+                      "method": "empirical-Bayes, two-way additive prior (tier+band), robust MoM K",
+                      "reading": "avg_alpha_pct is denoised; shrink_weight→1 = well-sampled (own value), →0 = thin (prior)"},
         "how_to_read": "Long the top tier (STRONG OUTPERFORM) when the tape is risk-ON (bands 4/5); "
                        "short the bottom tier (UNDERPERFORM) when risk-OFF (bands 1/2). Neutral tape → both edges shrink.",
-        "note": "Observational signal→30d outcome; sample size per cell in `n`. Not live-traded P&L.",
+        "note": "Observational signal→30d outcome; thin cells shrunk to structure. Not live-traded P&L.",
         "compliance": "Positioning language only; not investment advice.",
     }
 
@@ -784,9 +800,25 @@ async def compute_current_band() -> dict:
         trail = 0.0
     band = _band_of(trail)
     rows = await supabase_get_latest_edge_map()
-    tiers = {r.get("signal"): {"avg_alpha_pct": r.get("avg_alpha_pct"),
-                               "alpha_win_pct": r.get("alpha_win_pct"), "n": r.get("n")}
-             for r in rows if r.get("risk_band") == band}
+    # Empirical-Bayes shrinkage over the WHOLE grid: thin/noisy cells (n=1..3) collapse to the
+    # two-way structural prior; well-sampled cells keep their own value. So posture/conviction
+    # read a denoised alpha, not raw thin-cell noise (e.g. −64% on n=3). Raw kept for context.
+    shrunk = {}
+    try:
+        from src.data.signals.edge_shrinkage import shrunk_grid_by_signal
+        shrunk = shrunk_grid_by_signal(rows)
+    except Exception as _e:
+        _logger.warning(f"[BAND] edge shrinkage failed (using raw): {_e}")
+    tiers = {}
+    for r in rows:
+        if r.get("risk_band") != band:
+            continue
+        sig = r.get("signal")
+        sh = (shrunk.get(sig) or {}).get(band)
+        raw = r.get("avg_alpha_pct")
+        tiers[sig] = {"avg_alpha_pct": sh if sh is not None else raw,
+                      "avg_alpha_raw": raw, "alpha_win_pct": r.get("alpha_win_pct"),
+                      "n": r.get("n"), "shrunk": sh is not None}
     top = tiers.get("STRONG OUTPERFORM", {})
     posture = _posture_from(band, tiers)
     return {
