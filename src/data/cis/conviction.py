@@ -61,10 +61,12 @@ def compute_conviction(asset: dict, band_tiers: dict, current_band: str) -> dict
     ex_factor, liq_tier = _exec_factor(asset.get("executability") or {})
 
     # ── empirical anchor: this tier's expected 30d alpha in the current band ──
+    # `avg_alpha_pct` is EB-SHRUNK upstream (thin cells pulled to the structural prior), so it's
+    # usable regardless of raw n — the sample size feeds CONFIDENCE, not a hard discard.
     cell = (band_tiers or {}).get(signal) or {}
     edge = cell.get("avg_alpha_pct")
     edge_n = int(cell.get("n") or 0)
-    edge_known = edge is not None and edge_n >= 20   # sample-size gate (AQR honesty)
+    edge_known = edge is not None
 
     # ── asset-specific tilts (multipliers around 1.0) ──
     q_mult = 0.70 + 0.60 * _clamp(quality / 100.0, 0.0, 1.0)   # 0.70 (F) .. 1.30 (A+)
