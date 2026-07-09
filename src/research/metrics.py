@@ -154,7 +154,11 @@ def sortino_ratio(pnls: Sequence[float], ann_factor: int, target: float = 0.0) -
     downside = excess[excess < 0]
     if len(downside) < 2:
         # No losing trades → perfect strategy. Cap Sortino to avoid inf.
-        return float("inf"), 0.0 if excess.mean() > 0 else 0.0, 1.0
+        # Return (cap_value, p_value) so the 2-tuple unpacking invariant holds.
+        mean_excess = float(excess.mean())
+        cap = 10.0 if mean_excess > 0 else 0.0   # cap at 10 to keep it finite
+        p_value = 0.0 if mean_excess > 0 else 1.0
+        return cap, p_value
     dd_std = np.sqrt((downside ** 2).sum() / n)  # semi-deviation uses full N
     if dd_std <= 0:
         return 0.0, 1.0
