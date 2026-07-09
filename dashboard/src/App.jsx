@@ -274,6 +274,7 @@ function CrossAssetView({ universe = [] }) {
 }
 
 const NAV_ITEMS = [
+  { id: "diagnose", label: "Diagnose", icon: "◉", sub: "Your book, read upstream of price" },
   { id: "intelligence", label: "Intelligence", icon: "◈", sub: "Signals · Events · Macro",
     children: [
       { id: "intelligence.signals", label: "Signal Feed" },
@@ -461,7 +462,7 @@ function DesktopApp() {
   const _initSection = (() => {
     const p = new URLSearchParams(window.location.search).get("section");
     if (p) window.history.replaceState({}, "", window.location.pathname);
-    return p || "intelligence";
+    return p || "diagnose";
   })();
   const [activeSection, setActiveSection] = useState(_initSection);
   const [cisUniverse, setCisUniverse]     = useState([]);
@@ -528,6 +529,20 @@ function DesktopApp() {
         className="cc-main"
         style={{ flex: 1, overflowY: "auto", height: "100vh", position: "relative", zIndex: 1 }}
       >
+        {/* Diagnose — the front door (iPod / Fusion #1). Your book, read upstream of price,
+            with the 出圈 fragility line. Everything else is depth behind this. */}
+        <div style={{ display: activeSection === "diagnose" ? "block" : "none" }}>
+          {visited.has("diagnose") && (
+            <section style={contentPad}>
+              <Suspense fallback={<SectionLoader label="READING YOUR BOOK…" />}>
+                <DiagnoseHome embedded />
+                <div style={{ height: 28 }} />
+                <RiskMeter />
+              </Suspense>
+            </section>
+          )}
+        </div>
+
         {/* Intelligence */}
         <div style={{ display: activeSection === "intelligence" ? "block" : "none" }}>
           {visited.has("intelligence") && (

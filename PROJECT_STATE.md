@@ -9,6 +9,47 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ---
 
+## Building log (terse; NOT more md — this replaces scattered docs)
+- **2026-07-06 ⚠️ FALSIFIED — edge gate CUT** (Minimax-A A2 harness, audit commit 0e868a7): OOS proved the
+  empirical edge-map-DIRECTION hypothesis overfits — edge gate took 4 straight longs into a falling BTC
+  (−$479) while the frozen CIS baseline (`REGIME_CIS_FLOOR`) MADE money (+0.59 Sharpe, PF 1.38). p=0.867,
+  no rejection of null. **Propagation:** `conviction`/`conviction_book` anchor direction on the SAME edge-map
+  signal → presumed overfit. **Seth pruned own build:** paper sleeve reverted to risk-meter; `conviction_book`
+  gated OFF (`CONVICTION_BOOK_ENABLED`, research-only) until it passes the harness. The causes (forward_supply,
+  positioning) are ALSO unvalidated — same trap — must pass B2 before any claim. VALIDATED core = the CIS
+  quality gate. The clever cause-timing = hypothesis, not fact. This is the loop earning the word.
+- **2026-07-06 FRONT DOOR = Diagnose** (App.jsx): default landing is now `DiagnoseHome` (embedded) +
+  Risk Meter — "your book, read upstream of price" — per ARCHITECTURE §iPod (Diagnose = Fusion #1, the
+  lovable front). Demoted the commodity breadth (VC/signal-feed leading). De-claimed the losing signal
+  page from green "LIVE" → "PAPER · UNVALIDATED" (doc: must not claim unproven). Needs Mac-side build
+  (FUSE deny-unlink blocks local vite; binaries wrong-arch). Full convergence (fold provenance, demote
+  rest) still to do.
+- **2026-07-06 RISK LIMIT: per-name cap** (`conviction._capped_weights`, `_MAX_NAME_FRAC=0.22`): closes
+  assessment W3 — no single name > 22% of its side's gross; thin breadth → under-deploy, never over-
+  concentrate. Verified: the 77.9%-single-name case now caps at 22%. Pre-capital blocker cleared.
+- **2026-07-06 ASSIGNMENTS distributed** to Minimax-A/B/C (MINIMAX_SYNC §ASSIGNMENTS) — all oriented to
+  VALIDATION (turn "correct"→"proven"); A2 (OOS harness vs frozen baseline) is the load-bearing one.
+- **2026-07-06 UPSTREAM CAUSE #1 = forward supply** (`src/data/cis/forward_supply.py`): forced-seller
+  overhang from CoinGecko circ/total/max supply (free; DeFiLlama unlock API now paywalled). Wired into
+  the conviction KERNEL as a BEARISH directional cause (`_FS_WEIGHT`), attached in cis.py, 6h loop in main.py.
+  Verified: it OVERRIDES the reflection — ONDO (70% overhang) flips +1.7% edge long → short. Mirror of 出圈
+  (demand-exhaustion) on the supply side. This is the first factor that is a CAUSE, not a price reflection.
+
+- **2026-07-06 UPSTREAM CAUSE #2 = positioning** (`src/data/cis/positioning.py`): reflexive leverage —
+  OI-weighted funding from free CG /derivatives → signed pressure (+ crowded-short squeeze / − crowded-long
+  liquidation). Wired into conviction (`_POS_WEIGHT`, signed), attached cis.py, 30min loop. Verified live:
+  BTC/HYPE/UNI overleveraged-long (bearish), APT/AVAX/ONDO crowded-short (bullish). The kernel now nets
+  reflection + demand-cause (出圈) + supply-cause + leverage-cause + executability into ONE conviction; when
+  causes conflict (ONDO: supply-bear vs squeeze-bull) conviction honestly stays low. The kernel is no longer
+  reflection-all-the-way-down.
+
+- **2026-07-06 KERNEL → ACT** (`conviction.conviction_book` + `trading._run_paper_rebalance`):
+  the paper sleeve now trades the CONVICTION KERNEL's signed book (reflection + 出圈 + forward-supply
+  + positioning + executability), not the narrow risk-meter weights. The forced-seller short & squeeze-
+  long plays fall out of it; illiquid names dropped; shorts regime-gated; gross regime-scaled. Verified:
+  neutral tape → 5 liquid high-conviction longs (honest — few clear the bar); shorts appear when permitted.
+  This closes Sense→Judge→ACT in paper. Real capital = the one open arc, and it's Jazz's (per the plan).
+
 ## North star (1 line)
 We are the **judgment substrate** — hard-to-verify upstream intelligence (influence → quality
 propagation, 出圈/proximity-to-cause) that we verify ourselves and hand over with provenance so
@@ -95,8 +136,58 @@ other agents can trust it. Full autonomy is the partner's game, not ours. Soul: 
   daily to Supabase `regime_band_log` (created; cols incl net_bias/gross_scale) via `_band_log_loop`
   → flows to Mac warehouse (Minimax adds it to the drive mirror). MCP tool `cometcloud_get_current_band`.
   Posture is ADVISORY (positioning language) — not wired to force live sizing (that needs Jazz nod).
-- ⬜ next safe self-contained: run H2a Mac-side → decide direction; regime-lens UI badge; optionally
-  wire posture.gross_scale into Risk Meter gross (opt-in, after Jazz nod).
+- **Conviction Fusion #1 DONE** (`src/data/cis/conviction.py` + `/api/v1/cis/conviction` +
+  `cometcloud_get_conviction` MCP): the single per-asset verdict fusing regime-neutral QUALITY ×
+  cause-proximity (in-circle vs 出圈 + season) × edge-map expected alpha (tier × TODAY's band, real
+  outcomes) × EXECUTABILITY. Ranked by signed edge; sample-size gated; illiquid names discounted
+  (a B+ you can't size ≠ a core overweight). Verified on live universe. **Flagship Diagnose enriched**
+  to consume it — per-holding conviction/direction/action + book `illiquid_pct` + verdict note
+  ("X% in illiquid names — can't build/exit size"). This is the actionable output of all the mining.
+- 🟡 Moralis D3: key works live, but holder map empty → likely `/erc20/{addr}/owners` is a premium
+  Moralis endpoint on this plan (or field mismatch). Added `/api/v1/signals/holder-map` diagnostic
+  (uncommitted) — push it, hit it, read `probe_error` to decide (upgrade Moralis vs Helius/Bitquery).
+- **Edge-map SHRINKAGE DONE** (`src/data/signals/edge_shrinkage.py`) — the hard statistical problem:
+  100 days = wildly uneven cells (n=1..1672); a raw thin cell is pure noise (OUTPERFORM/deep-off
+  −64% on n=3). Empirical-Bayes shrinkage: two-way ADDITIVE prior (tier+band, captures the monotonic
+  "rises with risk-on" structure) + James-Stein weight `n/(n+K)`, K by ROBUST (median) MoM. Result:
+  well-sampled cells keep 76–90% own value, thin/noisy cells collapse to the structural prior, grid
+  becomes monotonic + denoised (K≈184). Wired into `compute_current_band` (posture/conviction now read
+  the SHRUNK alpha) + conviction's hard n-gate relaxed (n → confidence, not discard) + edge-map endpoint
+  exposes raw/shrunk/weight/prior. This is AQR/Millennium-grade rigor making the surface honest on thin data.
+- **H3 edge-map BACKFILL DONE** (`h3_edge_map_backfill.py`) — the root-cause fix for "only 100 days"
+  (Jazz: don't use it as an excuse). Applies CURRENT signal logic across `cis_history` (393d × 40) ×
+  OHLCV → ~12k historical signal→30d-alpha pairs → backfills `signal_outcomes` (before live, no clobber)
+  → existing refresh rebuilds a robust edge map (thin cells n=1..3 → hundreds). Runs Mac-side (`--write`).
+  Phase-2 (Minimax): extend `cis_history` to 11yr OHLCV via CIS reconstruction → h3 auto-covers it.
+- **EDGE GATE bridge DONE** (`src/research/strategies/edge_gate.py` + `scripts/export_edge_gate_grid.py`)
+  — the intelligence→execution connection Jazz asked for (reference Minimax-B/C strategies). Replaces the
+  hand-tuned `REGIME_CIS_FLOOR` (H1: wrong in 3/6 regimes) with `gate(grid, tier, band, side)` reading the
+  SHRUNK edge map → allow/block + conviction-scaled size, direction from DATA (short-weak allowed only where
+  it empirically pays). Pure module (no pandas/scipy) so it runs inside Nautilus/freqtrade. Grid live at the
+  edge-map endpoint (shrinkage confirmed live, K=184). Integration recipe for Minimax-B/C in MINIMAX_SYNC.
+- **NOTE: shrinkage is LIVE** (deployed via a Minimax push) — verified on `/api/v1/signals/edge-map`.
+- **2026-07-09 EDGE GATE A/B (continuous, per-regime IC) — NEGATIVE for ship**
+  (`src/research/nautilus/ls_v1/edge_gate.py`, `src/research/cis_regime_studies/edge_gate_ab.py`,
+  `reports/EDGE_GATE_AB_2026-07-09.md`). The continuous `edge = side × IC_regime × z × sigma × sqrt(h) − cost`
+  gate (alternative to the empirical grid edge gate above) is wired into LS v1 with `use_edge_gate=True` and
+  A/B'd across 4 smoothed dirs × {IS, OOS} × {baseline, edge_gate} = 16 runs. **Edge gate loses in both
+  windows across all dirs** (ΔIS PnL −$316 to −$503, ΔOOS PnL −$23). Per-regime IC magnitudes (−0.09 to
+  −0.36 smoothed) sit below the AQR noise floor (~±0.24 at n=70); the regime-conditional reversal is
+  structurally correct but empirically underpowered. **3 negative results in a row** on per-regime gate
+  refinement (H3, H2 magnitudes, this). Keep `REGIME_CIS_FLOOR` as production gate. Phase 1 ship
+  (smoothed regime labels, no floor changes) is the correct next move. Pivot edge-gate formula to H3.2
+  sizing-multiplier when ≥6mo OOS data accumulates.
+- **2026-07-09 CAUSE-DRIVEN BACKTEST infrastructure (B2) — SHIPPED, run BLOCKED on data**
+  (`scripts/supabase_migration_cause_history.sql`, `src/data/cis/cause_persistence.py`,
+  `src/research/cis_regime_studies/cause_backtest.py`, `reports/CAUSE_BACKTEST_2026-07-09.md`).
+  First real test of whether ARCHITECTURE.md "causes predict" (forced-seller short + squeeze-long
+  + long-liq short). Cause data has only been live ~3 days — no historical record exists.
+  Built the rig (schema + persistence + backtest skeleton + smoke test) but the actual backtest
+  needs ≥180 days cause_snapshots_daily + OHLCV panel landing (Minimax-A P1, not started). Live
+  snapshot today: 5 forced_seller_short candidates (HYPE/APT/SUI/ONDO/OP), 0 squeeze_longs.
+  Discipline: we built the experiment; we cannot shortcut the 6-month waiting.
+- ⬜ next: A/B the empirical grid edge gate (separate approach) in Nautilus LS v1; run H3+H2a Mac-side;
+  conviction UI; Phase 1 ship (smoothed regime labels); cause-history accumulation (180d).
 - 🟡 uncommitted (2026-07-06, GRADE-ALIGN Option B frontend/read switch) — BLOCKED by git lock;
   Jazz commits `cis.py` + `cis_provider.py`:
   - `cis.py` merge: normalizes the WHOLE universe (T1+T2) onto raw quality — `grade = get_grade(raw)`,
@@ -119,10 +210,14 @@ tape isn't risk-off (edge-map: shorts only pay deep-off). 12-vs-5 trade_results 
 pre-fix closes, writer healthy. **DECISION FOR JAZZ:** regime-gate shorts (only open shorts when
 risk gradient is risk-off) vs keep the −20% breaker as the only guard. Breaker shipped as safety net.
 
-**D3-DUNE ✅ (Seth, 2026-07-06):** authored + saved Dune query `D3_holder_concentration` = **query_id
-7891077** (params token/start_date/end_date → day/n_holders/hhi/top10; free `erc20_ethereum.evt_Transfer`
-reconstruction; enterprise balances table confirmed gated). Minimax-A: set `DUNE_QUERY_ID_HOLDERS=7891077`
-+ run `fetch_holder_concentration.py` → D3 holder tier goes live end-to-end. ETH ERC-20 only, weekly. See MINIMAX_SYNC.
+**D3 LIVE = Moralis-on-Railway ✅ (Seth, 2026-07-06):** Jazz connected Moralis; I wired the on-chain
+holder tier on Railway — `src/data/cis/holder_provider.py` (registry symbol→contract → Moralis owners →
+top10 share + HHI → `stage`; multi-chain incl Solana Phase-2), `_holder_refresh_loop` → Redis `cis:holder_map`,
+attached into `cause_proximity` (cis.py). Activates on deploy with `MORALIS_API_KEY` (already set). Verified:
+concentrated→stage 0.08→risk down, dispersed→0.79→risk up, confidence 0.85. Covers ONDO/PENDLE/UNI/AAVE/MKR/
+LINK/LDO/ARB, graceful D4 for rest. **This SUPERSEDES the Dune path** (query 7891077 → optional Phase-2 history
+only; NO Dune purchase needed — the cost question is resolved). Phase-2 = dynamic season/chuquan from Moralis
+holder-timeseries (Minimax Wyckoff lane; season contract unchanged).
 **Minimax-A:** T1 #5 (per-class weights, patch in §GRADE-ALIGN) · restore drive→Shadow sync · stand up local warehouse + CG/EODHD top-ups
 (dominance, mcap, VIX) + 11yr CIS-historical reconstruction · macro brief model (gemma-4-31b-qat +
 API thinking-off).

@@ -1133,13 +1133,37 @@ async def _close_rebal_position(positions: dict, oid: str, reason: str, price: f
 
 
 async def _run_paper_rebalance(dry_run: bool = True) -> dict:
-    from src.data.market.risk_meter import build_risk_meter, plan_rebalance
+    from src.data.market.risk_meter import (
+        build_risk_meter, plan_rebalance, _SHORT_OK, _norm_regime, REGIME_FACTOR)
     from src.api.routers.cis import get_cis_universe
     data = await get_cis_universe()
     universe = (data or {}).get("universe", []) or []
     regime = (data or {}).get("macro_regime") or "Neutral"
-    rm = build_risk_meter(universe, regime)
-    target = {s: w["meter_weight"] for s, w in rm["weights"].items() if w.get("meter_weight")}
+    shorts_ok = _norm_regime(regime) in _SHORT_OK
+
+    # ── PRUNED 2026-07-06: conviction_book is OFF by default. ──────────────────
+    # The A2 OOS harness (Minimax-A, audit commit 0e868a7) FALSIFIED the empirical
+    # edge-map-direction hypothesis: the edge gate took 4 straight longs into a falling
+    # BTC (−$479) while the frozen CIS baseline made money (+0.59 Sharpe). conviction_book
+    # anchors direction on that SAME edge-map tier×band signal, so it is presumed overfit
+    # until it passes the same harness. Do NOT trade it until validated. Default target =
+    # the risk-meter (grade × 出圈 haircut) — unvalidated but not falsified. Opt-in for
+    # A/B research only via CONVICTION_BOOK_ENABLED=1.
+    if os.environ.get("CONVICTION_BOOK_ENABLED", "").lower() in ("1", "true", "yes"):
+        from src.data.cis.conviction import conviction_book
+        cur = {}
+        try:
+            from src.api.routers.signals import compute_current_band
+            cur = await compute_current_band()
+        except Exception as _e:
+            _logger.warning(f"[REBAL] current-band fetch failed: {_e}")
+        gross = REGIME_FACTOR.get(_norm_regime(regime), 0.80)
+        target = conviction_book(universe, cur.get("tiers_now") or {},
+                                 cur.get("current_band") or "3_neutral",
+                                 shorts_ok=shorts_ok, gross=gross)
+    else:
+        rm = build_risk_meter(universe, regime)
+        target = {s: w["meter_weight"] for s, w in rm["weights"].items() if w.get("meter_weight")}
     asset_by_sym = {(a.get("symbol") or a.get("asset_id") or "").upper(): a
                     for a in universe if isinstance(a, dict)}
 
@@ -1167,7 +1191,8 @@ async def _run_paper_rebalance(dry_run: bool = True) -> dict:
     #   2. a held SHORT when the regime no longer permits shorts (Jazz 2026-07-05:
     #      regime-gate shorts — only true falling-market regimes). Both are risk
     #      reduction, which is never churn-gated. Each close feeds the Learn loop.
-    shorts_ok = bool(rm.get("shorts_allowed", True))
+    # (shorts_ok already computed above from the regime; the conviction book only opens shorts
+    #  when it's true, so a held short with shorts_ok False means the regime just flipped → close.)
     brk_prices = await _fetch_prices_batch([p["symbol"] for p in sleeve.values()]) if sleeve else {}
     breaker = []
     for oid, p in sleeve.items():

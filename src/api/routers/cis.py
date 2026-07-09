@@ -442,6 +442,16 @@ async def _attach_cause_proximity_async(data: dict) -> None:
         attach_cause_proximity(data["universe"], attention_map, holder_map)
     except Exception as e:
         _logger.warning(f"[CIS] cause_proximity attach failed: {e}")
+    try:
+        from src.data.cis.forward_supply import get_forward_supply_map, attach_forward_supply
+        attach_forward_supply(data["universe"], await get_forward_supply_map())  # UPSTREAM cause #1
+    except Exception as e:
+        _logger.warning(f"[CIS] forward_supply attach failed: {e}")
+    try:
+        from src.data.cis.positioning import get_positioning_map, attach_positioning
+        attach_positioning(data["universe"], await get_positioning_map())        # UPSTREAM cause #2
+    except Exception as e:
+        _logger.warning(f"[CIS] positioning attach failed: {e}")
 
 
 @router.get("/api/v1/portfolio/risk-meter")
