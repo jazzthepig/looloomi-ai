@@ -1,0 +1,1187 @@
+{
+  "n_variants": 5,
+  "n_instruments": 3,
+  "n_windows": 4,
+  "variants": [
+    "frozen_baseline",
+    "alpha_only",
+    "kernel_edgegate",
+    "kernel_edgegate_strict",
+    "kernel_edgegate_loose"
+  ],
+  "per_window": {
+    "frozen_baseline": [
+      {
+        "window_idx": 0,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 9,
+        "oos_sharpe": 1.5008392641661077,
+        "oos_pnl_pct": 3.0132756611569222,
+        "oos_cagr_pct": 12.804101920520461,
+        "oos_max_dd_pct": 2.0263427888354237,
+        "oos_win_rate_pct": 55.55555555555556,
+        "oos_profit_factor": 1.695881647952473,
+        "elapsed_sec": 0.9513556957244873
+      },
+      {
+        "window_idx": 0,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 8,
+        "oos_sharpe": 0.7182503897461364,
+        "oos_pnl_pct": 0.042981153400956096,
+        "oos_cagr_pct": 0.17454652730217735,
+        "oos_max_dd_pct": 0.1020613021506969,
+        "oos_win_rate_pct": 37.5,
+        "oos_profit_factor": 1.420766423017881,
+        "elapsed_sec": 0.8201961517333984
+      },
+      {
+        "window_idx": 0,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 2,
+        "oos_sharpe": 15.810350917301214,
+        "oos_pnl_pct": 0.01096148341284131,
+        "oos_cagr_pct": 0.04449281068399369,
+        "oos_max_dd_pct": -0.0,
+        "oos_win_rate_pct": 100.0,
+        "oos_profit_factor": Infinity,
+        "elapsed_sec": 0.8508419990539551
+      },
+      {
+        "window_idx": 1,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 5,
+        "oos_sharpe": 0.5939095683301625,
+        "oos_pnl_pct": 0.9673179799971399,
+        "oos_cagr_pct": 3.9841537427199647,
+        "oos_max_dd_pct": 2.523623231428883,
+        "oos_win_rate_pct": 40.0,
+        "oos_profit_factor": 1.3833052287482044,
+        "elapsed_sec": 0.8244609832763672
+      },
+      {
+        "window_idx": 1,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 15,
+        "oos_sharpe": -1.9990549080223632,
+        "oos_pnl_pct": -0.30674956209170157,
+        "oos_cagr_pct": -1.2390648229795187,
+        "oos_max_dd_pct": 0.3899235392372793,
+        "oos_win_rate_pct": 26.666666666666668,
+        "oos_profit_factor": 0.558353758345845,
+        "elapsed_sec": 0.8299839496612549
+      },
+      {
+        "window_idx": 1,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 4,
+        "oos_sharpe": 0.7019437703586481,
+        "oos_pnl_pct": 0.005168713970826744,
+        "oos_cagr_pct": 0.020978022192208456,
+        "oos_max_dd_pct": 0.010258692693912802,
+        "oos_win_rate_pct": 50.0,
+        "oos_profit_factor": 1.5037978456048244,
+        "elapsed_sec": 0.8186979293823242
+      },
+      {
+        "window_idx": 2,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 5,
+        "oos_sharpe": -0.09588645396268954,
+        "oos_pnl_pct": -0.17151111949762488,
+        "oos_cagr_pct": -0.6942259183894905,
+        "oos_max_dd_pct": 2.0576815621193965,
+        "oos_win_rate_pct": 40.0,
+        "oos_profit_factor": 0.9520191359716144,
+        "elapsed_sec": 0.8014609813690186
+      },
+      {
+        "window_idx": 2,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 1,
+        "oos_sharpe": 0.0,
+        "oos_pnl_pct": 0.10481275034601722,
+        "oos_cagr_pct": 0.4260473277291954,
+        "oos_max_dd_pct": -0.0,
+        "oos_win_rate_pct": 100.0,
+        "oos_profit_factor": Infinity,
+        "elapsed_sec": 0.8030669689178467
+      },
+      {
+        "window_idx": 2,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 1,
+        "oos_sharpe": 0.0,
+        "oos_pnl_pct": -0.003655774860089611,
+        "oos_cagr_pct": -0.014835523599654454,
+        "oos_max_dd_pct": 0.0036557748600898774,
+        "oos_win_rate_pct": 0.0,
+        "oos_profit_factor": 0.0,
+        "elapsed_sec": 0.8065948486328125
+      },
+      {
+        "window_idx": 3,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 3,
+        "oos_sharpe": 0.17206835618316688,
+        "oos_pnl_pct": 0.167157395005324,
+        "oos_cagr_pct": 0.6801164361634582,
+        "oos_max_dd_pct": 1.0595176029028757,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 1.155835389980343,
+        "elapsed_sec": 0.8411247730255127
+      },
+      {
+        "window_idx": 3,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 3,
+        "oos_sharpe": -0.44015900251123774,
+        "oos_pnl_pct": -0.02425595144217585,
+        "oos_cagr_pct": -0.09840223004762283,
+        "oos_max_dd_pct": 0.0900959957874511,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 0.7307765874590466,
+        "elapsed_sec": 0.8386790752410889
+      },
+      {
+        "window_idx": 3,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 1,
+        "oos_sharpe": 0.0,
+        "oos_pnl_pct": 0.0,
+        "oos_cagr_pct": 0.0,
+        "oos_max_dd_pct": -0.0,
+        "oos_win_rate_pct": 0.0,
+        "oos_profit_factor": 0.0,
+        "elapsed_sec": 0.8229751586914062
+      }
+    ],
+    "alpha_only": [
+      {
+        "window_idx": 0,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 14,
+        "oos_sharpe": 1.862986081766036,
+        "oos_pnl_pct": 4.803973029574138,
+        "oos_cagr_pct": 20.976130351287537,
+        "oos_max_dd_pct": 2.9420312772173296,
+        "oos_win_rate_pct": 57.14285714285714,
+        "oos_profit_factor": 1.6789119692669734,
+        "elapsed_sec": 0.8344507217407227
+      },
+      {
+        "window_idx": 0,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 18,
+        "oos_sharpe": 0.5406486511730416,
+        "oos_pnl_pct": 0.041544137205917764,
+        "oos_cagr_pct": 0.1687070953891867,
+        "oos_max_dd_pct": 0.10205232494661565,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 1.1715131737682591,
+        "elapsed_sec": 0.8274612426757812
+      },
+      {
+        "window_idx": 0,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 15,
+        "oos_sharpe": -0.34650188212128374,
+        "oos_pnl_pct": -0.0024985644197839108,
+        "oos_cagr_pct": -0.010139619855498161,
+        "oos_max_dd_pct": 0.01578707861226852,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 0.9065927987209186,
+        "elapsed_sec": 0.8128688335418701
+      },
+      {
+        "window_idx": 1,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 16,
+        "oos_sharpe": 0.2679651330025281,
+        "oos_pnl_pct": 0.6475791168611744,
+        "oos_cagr_pct": 2.6542325937707334,
+        "oos_max_dd_pct": 4.209740806217934,
+        "oos_win_rate_pct": 37.5,
+        "oos_profit_factor": 1.0782512954861279,
+        "elapsed_sec": 0.8261990547180176
+      },
+      {
+        "window_idx": 1,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 17,
+        "oos_sharpe": -1.508594865426455,
+        "oos_pnl_pct": -0.2449087535041139,
+        "oos_cagr_pct": -0.9902053105425246,
+        "oos_max_dd_pct": 0.41703289455539955,
+        "oos_win_rate_pct": 29.411764705882355,
+        "oos_profit_factor": 0.6608105981693039,
+        "elapsed_sec": 0.8137059211730957
+      },
+      {
+        "window_idx": 1,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 20,
+        "oos_sharpe": -0.9154271101812285,
+        "oos_pnl_pct": -0.008770435212646088,
+        "oos_cagr_pct": -0.035588576271727845,
+        "oos_max_dd_pct": 0.019551482047803104,
+        "oos_win_rate_pct": 30.0,
+        "oos_profit_factor": 0.7976015188822457,
+        "elapsed_sec": 0.8318867683410645
+      },
+      {
+        "window_idx": 2,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 13,
+        "oos_sharpe": -1.6244986698065513,
+        "oos_pnl_pct": -3.963151157196698,
+        "oos_cagr_pct": -15.135286280595006,
+        "oos_max_dd_pct": 5.455384574017099,
+        "oos_win_rate_pct": 30.76923076923077,
+        "oos_profit_factor": 0.6232244452610904,
+        "elapsed_sec": 0.8652100563049316
+      },
+      {
+        "window_idx": 2,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 15,
+        "oos_sharpe": -1.4684932735805156,
+        "oos_pnl_pct": -0.2074328591934682,
+        "oos_cagr_pct": -0.8391652000343197,
+        "oos_max_dd_pct": 0.4828746682071154,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 0.666573561653824,
+        "elapsed_sec": 0.8897087574005127
+      },
+      {
+        "window_idx": 2,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 19,
+        "oos_sharpe": -4.341264768112663,
+        "oos_pnl_pct": -0.03110554122757181,
+        "oos_cagr_pct": -0.12617662246118266,
+        "oos_max_dd_pct": 0.031105541227570935,
+        "oos_win_rate_pct": 15.789473684210526,
+        "oos_profit_factor": 0.3487928038107431,
+        "elapsed_sec": 0.8230419158935547
+      },
+      {
+        "window_idx": 3,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 13,
+        "oos_sharpe": -3.4822340323940937,
+        "oos_pnl_pct": -5.916955242824895,
+        "oos_cagr_pct": -21.927104803322685,
+        "oos_max_dd_pct": 6.838960957636754,
+        "oos_win_rate_pct": 15.384615384615385,
+        "oos_profit_factor": 0.33691318444683044,
+        "elapsed_sec": 0.8153829574584961
+      },
+      {
+        "window_idx": 3,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 17,
+        "oos_sharpe": -3.647393881901221,
+        "oos_pnl_pct": -0.30630319545338347,
+        "oos_cagr_pct": -1.2372702469855223,
+        "oos_max_dd_pct": 0.3063031954533835,
+        "oos_win_rate_pct": 17.647058823529413,
+        "oos_profit_factor": 0.38593036548229764,
+        "elapsed_sec": 0.8259701728820801
+      },
+      {
+        "window_idx": 3,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 13,
+        "oos_sharpe": -0.8367020948598289,
+        "oos_pnl_pct": -0.002743568576046851,
+        "oos_cagr_pct": -0.011133848687105985,
+        "oos_max_dd_pct": 0.0059382520111034825,
+        "oos_win_rate_pct": 30.76923076923077,
+        "oos_profit_factor": 0.7739747703007165,
+        "elapsed_sec": 0.8292181491851807
+      }
+    ],
+    "kernel_edgegate": [
+      {
+        "window_idx": 0,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 5,
+        "oos_sharpe": 1.4405680362837698,
+        "oos_pnl_pct": 2.2867430461222416,
+        "oos_cagr_pct": 9.610004746832178,
+        "oos_max_dd_pct": 2.2166130691074977,
+        "oos_win_rate_pct": 60.0,
+        "oos_profit_factor": 2.031638348610385,
+        "elapsed_sec": 0.8128378391265869
+      },
+      {
+        "window_idx": 0,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 8,
+        "oos_sharpe": 0.8137614289973247,
+        "oos_pnl_pct": 0.05949360443833207,
+        "oos_cagr_pct": 0.24166462370347475,
+        "oos_max_dd_pct": 0.05241393119271379,
+        "oos_win_rate_pct": 37.5,
+        "oos_profit_factor": 1.421230906593141,
+        "elapsed_sec": 0.8344628810882568
+      },
+      {
+        "window_idx": 0,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 7,
+        "oos_sharpe": 1.0248411864880997,
+        "oos_pnl_pct": 0.0062646107774622095,
+        "oos_cagr_pct": 0.025426314357757107,
+        "oos_max_dd_pct": 0.011185721507663402,
+        "oos_win_rate_pct": 42.857142857142854,
+        "oos_profit_factor": 1.5600542417541652,
+        "elapsed_sec": 0.8233151435852051
+      },
+      {
+        "window_idx": 1,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 4,
+        "oos_sharpe": -33.84857200638326,
+        "oos_pnl_pct": -5.113306298120001,
+        "oos_cagr_pct": -19.18507650346254,
+        "oos_max_dd_pct": 5.113306298120006,
+        "oos_win_rate_pct": 0.0,
+        "oos_profit_factor": 0.0,
+        "elapsed_sec": 0.8346819877624512
+      },
+      {
+        "window_idx": 1,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 7,
+        "oos_sharpe": -0.630122839229631,
+        "oos_pnl_pct": -0.08010956433028849,
+        "oos_cagr_pct": -0.3247132698888322,
+        "oos_max_dd_pct": 0.24701363016765757,
+        "oos_win_rate_pct": 28.57142857142857,
+        "oos_profit_factor": 0.7593632508254234,
+        "elapsed_sec": 0.8155100345611572
+      },
+      {
+        "window_idx": 1,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 5,
+        "oos_sharpe": -1.2507538504050544,
+        "oos_pnl_pct": -0.007488969160662773,
+        "oos_cagr_pct": -0.030389252815921086,
+        "oos_max_dd_pct": 0.010259215713367185,
+        "oos_win_rate_pct": 20.0,
+        "oos_profit_factor": 0.5123717059719359,
+        "elapsed_sec": 0.8382630348205566
+      },
+      {
+        "window_idx": 2,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 6,
+        "oos_sharpe": 0.529949014385631,
+        "oos_pnl_pct": 1.0519414056954668,
+        "oos_cagr_pct": 4.33829883664234,
+        "oos_max_dd_pct": 1.509927037947458,
+        "oos_win_rate_pct": 50.0,
+        "oos_profit_factor": 1.267999002342547,
+        "elapsed_sec": 0.8005468845367432
+      },
+      {
+        "window_idx": 2,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 7,
+        "oos_sharpe": -1.335687356237181,
+        "oos_pnl_pct": -0.14759144516077738,
+        "oos_cagr_pct": -0.5976248112013138,
+        "oos_max_dd_pct": 0.2521399207211597,
+        "oos_win_rate_pct": 28.57142857142857,
+        "oos_profit_factor": 0.5679546281102265,
+        "elapsed_sec": 0.8118560314178467
+      },
+      {
+        "window_idx": 2,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 6,
+        "oos_sharpe": -2.4552101862671725,
+        "oos_pnl_pct": -0.009896819362931186,
+        "oos_cagr_pct": -0.040158513863630674,
+        "oos_max_dd_pct": 0.00989681936292982,
+        "oos_win_rate_pct": 16.666666666666664,
+        "oos_profit_factor": 0.338459284834452,
+        "elapsed_sec": 0.8198699951171875
+      },
+      {
+        "window_idx": 3,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 6,
+        "oos_sharpe": -0.597330460443794,
+        "oos_pnl_pct": -1.0117185276798724,
+        "oos_cagr_pct": -4.042809105781398,
+        "oos_max_dd_pct": 3.154513511781576,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 0.7602165885419614,
+        "elapsed_sec": 0.8131880760192871
+      },
+      {
+        "window_idx": 3,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 9,
+        "oos_sharpe": -2.311164066915617,
+        "oos_pnl_pct": -0.16815022384065736,
+        "oos_cagr_pct": -0.6806570038613513,
+        "oos_max_dd_pct": 0.16815022384065742,
+        "oos_win_rate_pct": 22.22222222222222,
+        "oos_profit_factor": 0.44386403698156296,
+        "elapsed_sec": 0.8271598815917969
+      },
+      {
+        "window_idx": 3,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 3,
+        "oos_sharpe": -0.8097086158632099,
+        "oos_pnl_pct": -0.0017448750767701249,
+        "oos_cagr_pct": -0.007081095745642418,
+        "oos_max_dd_pct": 0.0020598509435921443,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 0.5699265091690258,
+        "elapsed_sec": 0.8194961547851562
+      }
+    ],
+    "kernel_edgegate_strict": [
+      {
+        "window_idx": 0,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 3,
+        "oos_sharpe": 1.382961566077551,
+        "oos_pnl_pct": 1.8454481066656703,
+        "oos_cagr_pct": 7.703484664176763,
+        "oos_max_dd_pct": 1.177000285066406,
+        "oos_win_rate_pct": 66.66666666666666,
+        "oos_profit_factor": 2.567924944522459,
+        "elapsed_sec": 0.8159499168395996
+      },
+      {
+        "window_idx": 0,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 4,
+        "oos_sharpe": 1.4749833597979176,
+        "oos_pnl_pct": 0.09701824248304902,
+        "oos_cagr_pct": 0.394316886112156,
+        "oos_max_dd_pct": 0.05205416465535379,
+        "oos_win_rate_pct": 50.0,
+        "oos_profit_factor": 2.5563303967342903,
+        "elapsed_sec": 0.806326150894165
+      },
+      {
+        "window_idx": 0,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 3,
+        "oos_sharpe": 1.6604410116948034,
+        "oos_pnl_pct": 0.008375419449202504,
+        "oos_cagr_pct": 0.03399459745216937,
+        "oos_max_dd_pct": 0.003982513600003586,
+        "oos_win_rate_pct": 66.66666666666666,
+        "oos_profit_factor": 3.1030485493400315,
+        "elapsed_sec": 0.8015308380126953
+      },
+      {
+        "window_idx": 1,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 3,
+        "oos_sharpe": -28.761737659459612,
+        "oos_pnl_pct": -3.9523550151206344,
+        "oos_cagr_pct": -15.096562280587822,
+        "oos_max_dd_pct": 3.952355015120629,
+        "oos_win_rate_pct": 0.0,
+        "oos_profit_factor": 0.0,
+        "elapsed_sec": 0.8061957359313965
+      },
+      {
+        "window_idx": 1,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 7,
+        "oos_sharpe": -0.630122839229631,
+        "oos_pnl_pct": -0.08010956433028849,
+        "oos_cagr_pct": -0.3247132698888322,
+        "oos_max_dd_pct": 0.24701363016765757,
+        "oos_win_rate_pct": 28.57142857142857,
+        "oos_profit_factor": 0.7593632508254234,
+        "elapsed_sec": 0.8075792789459229
+      },
+      {
+        "window_idx": 1,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 4,
+        "oos_sharpe": -0.8270777337969363,
+        "oos_pnl_pct": -0.005092355385261094,
+        "oos_cagr_pct": -0.020664866350539324,
+        "oos_max_dd_pct": 0.010258969852312333,
+        "oos_win_rate_pct": 25.0,
+        "oos_profit_factor": 0.6071117402271877,
+        "elapsed_sec": 0.8026738166809082
+      },
+      {
+        "window_idx": 2,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 6,
+        "oos_sharpe": 0.529949014385631,
+        "oos_pnl_pct": 1.0519414056954668,
+        "oos_cagr_pct": 4.33829883664234,
+        "oos_max_dd_pct": 1.509927037947458,
+        "oos_win_rate_pct": 50.0,
+        "oos_profit_factor": 1.267999002342547,
+        "elapsed_sec": 0.8228459358215332
+      },
+      {
+        "window_idx": 2,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 6,
+        "oos_sharpe": -0.9850881160043727,
+        "oos_pnl_pct": -0.10997990019721016,
+        "oos_cagr_pct": -0.4455850255810745,
+        "oos_max_dd_pct": 0.214567756176618,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 0.6382233464105735,
+        "elapsed_sec": 0.8027703762054443
+      },
+      {
+        "window_idx": 2,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 5,
+        "oos_sharpe": -1.7930146341910975,
+        "oos_pnl_pct": -0.007304655480677713,
+        "oos_cagr_pct": -0.029641415665138116,
+        "oos_max_dd_pct": 0.007304655480675137,
+        "oos_win_rate_pct": 20.0,
+        "oos_profit_factor": 0.40939519215733206,
+        "elapsed_sec": 0.8110809326171875
+      },
+      {
+        "window_idx": 3,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 6,
+        "oos_sharpe": -0.597330460443794,
+        "oos_pnl_pct": -1.0117185276798724,
+        "oos_cagr_pct": -4.042809105781398,
+        "oos_max_dd_pct": 3.154513511781576,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 0.7602165885419614,
+        "elapsed_sec": 0.821937084197998
+      },
+      {
+        "window_idx": 3,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 8,
+        "oos_sharpe": -1.8640750327344409,
+        "oos_pnl_pct": -0.13595720828510904,
+        "oos_cagr_pct": -0.5506136248078719,
+        "oos_max_dd_pct": 0.1359572082851082,
+        "oos_win_rate_pct": 25.0,
+        "oos_profit_factor": 0.4967558126473604,
+        "elapsed_sec": 0.8230998516082764
+      },
+      {
+        "window_idx": 3,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 1,
+        "oos_sharpe": 0.0,
+        "oos_pnl_pct": -0.0019972981799232237,
+        "oos_cagr_pct": -0.00810545421908726,
+        "oos_max_dd_pct": 0.001997298179921927,
+        "oos_win_rate_pct": 0.0,
+        "oos_profit_factor": 0.0,
+        "elapsed_sec": 0.8115150928497314
+      }
+    ],
+    "kernel_edgegate_loose": [
+      {
+        "window_idx": 0,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 5,
+        "oos_sharpe": 1.4405680362837698,
+        "oos_pnl_pct": 2.2867430461222416,
+        "oos_cagr_pct": 9.610004746832178,
+        "oos_max_dd_pct": 2.2166130691074977,
+        "oos_win_rate_pct": 60.0,
+        "oos_profit_factor": 2.031638348610385,
+        "elapsed_sec": 0.8090910911560059
+      },
+      {
+        "window_idx": 0,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 8,
+        "oos_sharpe": 0.8137614289973247,
+        "oos_pnl_pct": 0.05949360443833207,
+        "oos_cagr_pct": 0.24166462370347475,
+        "oos_max_dd_pct": 0.05241393119271379,
+        "oos_win_rate_pct": 37.5,
+        "oos_profit_factor": 1.421230906593141,
+        "elapsed_sec": 0.8171427249908447
+      },
+      {
+        "window_idx": 0,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-02-22",
+          "train_end": "2025-02-21",
+          "test_start": "2025-03-17",
+          "test_end": "2025-06-15"
+        },
+        "n_trades_oos": 7,
+        "oos_sharpe": 1.0248411864880997,
+        "oos_pnl_pct": 0.0062646107774622095,
+        "oos_cagr_pct": 0.025426314357757107,
+        "oos_max_dd_pct": 0.011185721507663402,
+        "oos_win_rate_pct": 42.857142857142854,
+        "oos_profit_factor": 1.5600542417541652,
+        "elapsed_sec": 0.8444061279296875
+      },
+      {
+        "window_idx": 1,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 4,
+        "oos_sharpe": -33.84857200638326,
+        "oos_pnl_pct": -5.113306298120001,
+        "oos_cagr_pct": -19.18507650346254,
+        "oos_max_dd_pct": 5.113306298120006,
+        "oos_win_rate_pct": 0.0,
+        "oos_profit_factor": 0.0,
+        "elapsed_sec": 0.8215591907501221
+      },
+      {
+        "window_idx": 1,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 7,
+        "oos_sharpe": -0.630122839229631,
+        "oos_pnl_pct": -0.08010956433028849,
+        "oos_cagr_pct": -0.3247132698888322,
+        "oos_max_dd_pct": 0.24701363016765757,
+        "oos_win_rate_pct": 28.57142857142857,
+        "oos_profit_factor": 0.7593632508254234,
+        "elapsed_sec": 0.809539794921875
+      },
+      {
+        "window_idx": 1,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-05-22",
+          "train_end": "2025-05-22",
+          "test_start": "2025-06-15",
+          "test_end": "2025-09-13"
+        },
+        "n_trades_oos": 7,
+        "oos_sharpe": -0.8053301871177198,
+        "oos_pnl_pct": -0.005434202791798626,
+        "oos_cagr_pct": -0.022051973770786937,
+        "oos_max_dd_pct": 0.013285918992814906,
+        "oos_win_rate_pct": 28.57142857142857,
+        "oos_profit_factor": 0.7044285014560344,
+        "elapsed_sec": 0.8085169792175293
+      },
+      {
+        "window_idx": 2,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 6,
+        "oos_sharpe": 0.529949014385631,
+        "oos_pnl_pct": 1.0519414056954668,
+        "oos_cagr_pct": 4.33829883664234,
+        "oos_max_dd_pct": 1.509927037947458,
+        "oos_win_rate_pct": 50.0,
+        "oos_profit_factor": 1.267999002342547,
+        "elapsed_sec": 0.8341450691223145
+      },
+      {
+        "window_idx": 2,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 7,
+        "oos_sharpe": -1.335687356237181,
+        "oos_pnl_pct": -0.14759144516077738,
+        "oos_cagr_pct": -0.5976248112013138,
+        "oos_max_dd_pct": 0.2521399207211597,
+        "oos_win_rate_pct": 28.57142857142857,
+        "oos_profit_factor": 0.5679546281102265,
+        "elapsed_sec": 0.8204829692840576
+      },
+      {
+        "window_idx": 2,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-08-20",
+          "train_end": "2025-08-20",
+          "test_start": "2025-09-13",
+          "test_end": "2025-12-12"
+        },
+        "n_trades_oos": 7,
+        "oos_sharpe": -3.2682669555366863,
+        "oos_pnl_pct": -0.01329674093982769,
+        "oos_cagr_pct": -0.05395163580103057,
+        "oos_max_dd_pct": 0.013296740939822485,
+        "oos_win_rate_pct": 14.285714285714285,
+        "oos_profit_factor": 0.2757836960822389,
+        "elapsed_sec": 0.8310761451721191
+      },
+      {
+        "window_idx": 3,
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 6,
+        "oos_sharpe": -0.597330460443794,
+        "oos_pnl_pct": -1.0117185276798724,
+        "oos_cagr_pct": -4.042809105781398,
+        "oos_max_dd_pct": 3.154513511781576,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 0.7602165885419614,
+        "elapsed_sec": 0.8290870189666748
+      },
+      {
+        "window_idx": 3,
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 9,
+        "oos_sharpe": -2.311164066915617,
+        "oos_pnl_pct": -0.16815022384065736,
+        "oos_cagr_pct": -0.6806570038613513,
+        "oos_max_dd_pct": 0.16815022384065742,
+        "oos_win_rate_pct": 22.22222222222222,
+        "oos_profit_factor": 0.44386403698156296,
+        "elapsed_sec": 0.836655855178833
+      },
+      {
+        "window_idx": 3,
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "window": {
+          "train_start": "2024-11-18",
+          "train_end": "2025-11-18",
+          "test_start": "2025-12-12",
+          "test_end": "2026-03-12"
+        },
+        "n_trades_oos": 3,
+        "oos_sharpe": -0.8097086158632099,
+        "oos_pnl_pct": -0.0017448750767701249,
+        "oos_cagr_pct": -0.007081095745642418,
+        "oos_max_dd_pct": 0.0020598509435921443,
+        "oos_win_rate_pct": 33.33333333333333,
+        "oos_profit_factor": 0.5699265091690258,
+        "elapsed_sec": 0.8164331912994385
+      }
+    ]
+  },
+  "aggregated": {
+    "frozen_baseline": {
+      "n_windows_with_trades": 12,
+      "mean_oos_sharpe": 1.4135,
+      "median_oos_sharpe": 0.086,
+      "total_oos_pnl_pct": 3.8055,
+      "worst_max_dd_pct": 2.5236,
+      "n_trades_total": 57,
+      "p_value_sharpe": 0.155492,
+      "decay_ratio": 1.0
+    },
+    "alpha_only": {
+      "n_windows_with_trades": 12,
+      "mean_oos_sharpe": -1.2916,
+      "median_oos_sharpe": -1.192,
+      "total_oos_pnl_pct": -5.1908,
+      "worst_max_dd_pct": 6.839,
+      "n_trades_total": 190,
+      "p_value_sharpe": 0.98375,
+      "decay_ratio": 1.0
+    },
+    "kernel_edgegate": {
+      "n_windows_with_trades": 12,
+      "mean_oos_sharpe": -3.2858,
+      "median_oos_sharpe": -0.7199,
+      "total_oos_pnl_pct": -3.1356,
+      "worst_max_dd_pct": 5.1133,
+      "n_trades_total": 73,
+      "p_value_sharpe": 0.867148,
+      "decay_ratio": 1.0
+    },
+    "kernel_edgegate_strict": {
+      "n_windows_with_trades": 12,
+      "mean_oos_sharpe": -2.5342,
+      "median_oos_sharpe": -0.6137,
+      "total_oos_pnl_pct": -2.3017,
+      "worst_max_dd_pct": 3.9524,
+      "n_trades_total": 56,
+      "p_value_sharpe": 0.842256,
+      "decay_ratio": 1.0
+    },
+    "kernel_edgegate_loose": {
+      "n_windows_with_trades": 12,
+      "mean_oos_sharpe": -3.3164,
+      "median_oos_sharpe": -0.7177,
+      "total_oos_pnl_pct": -3.1369,
+      "worst_max_dd_pct": 5.1133,
+      "n_trades_total": 76,
+      "p_value_sharpe": 0.869096,
+      "decay_ratio": 1.0
+    }
+  },
+  "multiple_testing": {
+    "method": "fdr_bh",
+    "alpha": 0.05,
+    "p_values": {
+      "kernel_edgegate": 0.8671479773803474,
+      "kernel_edgegate_strict": 0.8422563143579118,
+      "kernel_edgegate_loose": 0.8690960213572678
+    },
+    "p_values_corrected": {
+      "kernel_edgegate": 0.8690960213572678,
+      "kernel_edgegate_strict": 0.8690960213572678,
+      "kernel_edgegate_loose": 0.8690960213572678
+    },
+    "rejected": {
+      "kernel_edgegate": false,
+      "kernel_edgegate_strict": false,
+      "kernel_edgegate_loose": false
+    },
+    "n_rejected": 0,
+    "summary": "fdr_bh \u03b1=0.05: 0/3 rejected  (FWER ~ 0.050)"
+  },
+  "verdicts": {
+    "frozen_baseline": "REFERENCE",
+    "alpha_only": "REFERENCE",
+    "kernel_edgegate": "PRUNE",
+    "kernel_edgegate_strict": "PRUNE",
+    "kernel_edgegate_loose": "PRUNE"
+  },
+  "report_md_path": "/Users/sbb/Projects/looloomi-ai/reports/validation/2026-07-09/harness_report.md",
+  "report_json_path": "/Users/sbb/Projects/looloomi-ai/reports/validation/2026-07-09/harness_report.json",
+  "per_window_csv_path": "/Users/sbb/Projects/looloomi-ai/reports/validation/2026-07-09/per_window.csv"
+}
