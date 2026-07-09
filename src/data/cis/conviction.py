@@ -29,6 +29,13 @@ def _num(x, default=0.0):
 
 _CONVICTION_SCALE = 8.0   # |adjusted 30d alpha %| that maps to full conviction (1.0)
 _DIR_THRESHOLD = 1.0      # |adjusted alpha %| below this → neutral (no actionable edge)
+# Forward-supply (the UPSTREAM cause): maximal forced-dilution overhang shifts the signed edge
+# down by this many alpha-points — bearish, so it trims a long and strengthens a short. This is
+# the one factor that is a cause (a decision already made), not a reflection of price. Calibratable.
+_FS_WEIGHT = 6.0
+# Positioning (upstream cause #2, reflexive): signed leverage pressure shifts the edge — a bullish
+# squeeze setup (+) adds, a bearish long-liquidation setup (−) subtracts. Faster-moving than supply.
+_POS_WEIGHT = 5.0
 
 
 def _exec_factor(ex: dict) -> tuple[float, str]:
@@ -82,6 +89,14 @@ def compute_conviction(asset: dict, band_tiers: dict, current_band: str) -> dict
         basis = "quality_fallback"
         drivers.append(f"thin edge cell (n={edge_n}) — conviction from quality, not timing")
 
+    # ── UPSTREAM CAUSE: forward supply overhang (known forced dilution) — bearish directional ──
+    fs = _clamp(_num((asset.get("forward_supply") or {}).get("forward_supply_risk")), 0.0, 1.0)
+    if fs > 0:
+        adjusted = round(adjusted - _FS_WEIGHT * fs, 3)   # shift signed edge DOWN (trim long / boost short)
+    pos = _clamp(_num((asset.get("positioning") or {}).get("positioning_pressure")), -1.0, 1.0)
+    if pos:
+        adjusted = round(adjusted + _POS_WEIGHT * pos, 3)  # + squeeze (bullish) / − long-liq (bearish)
+
     # direction + magnitude
     if adjusted >= _DIR_THRESHOLD:
         direction = "long"
@@ -112,6 +127,10 @@ def compute_conviction(asset: dict, band_tiers: dict, current_band: str) -> dict
         drivers.append("stale — post-出圈 window closed")
     if liq_tier in ("illiquid", "thin"):
         drivers.append(f"{liq_tier} — cannot size; conviction discounted")
+    if fs >= 0.3:
+        drivers.insert(0, f"UPSTREAM: {fs:.0%} forward-supply overhang — known dilution ahead (bearish)")
+    if abs(pos) >= 0.5:
+        drivers.insert(0, f"UPSTREAM: leverage {'squeeze setup (bullish)' if pos > 0 else 'long-liquidation setup (bearish)'} (pos {pos:+.2f})")
     if edge_known:
         drivers.append(f"{signal} tier in {current_band}: {edge:+.1f}% expected 30d alpha (n={edge_n})")
 
@@ -122,6 +141,8 @@ def compute_conviction(asset: dict, band_tiers: dict, current_band: str) -> dict
         "grade": grade, "signal": signal, "current_band": current_band,
         "quality_score": round(quality, 1),
         "in_circle": in_circle, "season": season, "stage": stage,
+        "forward_supply_risk": round(fs, 3),
+        "positioning_pressure": round(pos, 3),
         "expected_edge_pct": edge if edge_known else None,
         "adjusted_edge_pct": round(adjusted, 2),
         "executability": liq_tier,
@@ -161,3 +182,64 @@ def rank_universe(universe: list, band_tiers: dict, current_band: str) -> list:
             continue
     rows.sort(key=lambda r: r.get("adjusted_edge_pct", 0.0), reverse=True)
     return rows
+
+
+_MAX_NAME_FRAC = 0.22   # risk limit: no single name > 22% of its side's gross (assessment W3)
+
+
+def _capped_weights(convs: dict, budget: float, cap: float) -> dict:
+    """Water-fill conviction → weights with a hard per-name cap. Names that would breach `cap`
+    are pinned there and the remaining budget re-proportions among the rest; if capacity
+    (n × cap) < budget the book stays UNDER-deployed (honest — thin breadth ⇒ smaller gross,
+    never over-concentrated). All inputs positive; returns positive weights."""
+    out: dict = {}
+    active = {s: c for s, c in convs.items() if c > 0}
+    b = budget
+    for _ in range(len(active) + 1):
+        if not active or b <= 1e-9:
+            break
+        tot = sum(active.values())
+        prop = {s: b * c / tot for s, c in active.items()}
+        over = [s for s, w in prop.items() if w >= cap - 1e-12]
+        if not over:
+            for s, w in prop.items():
+                out[s] = round(w, 4)
+            break
+        for s in over:
+            out[s] = round(cap, 4)
+            b -= cap
+            del active[s]
+    return out
+
+
+def conviction_book(universe: list, band_tiers: dict, current_band: str,
+                    shorts_ok: bool = False, gross: float = 1.0,
+                    max_names: int = 15, min_conviction: float = 0.15,
+                    short_budget_frac: float = 0.5) -> dict:
+    """The strategy as the kernel's OUTPUT — a signed target book {SYMBOL: weight}.
+
+    This is what the paper sleeve trades: not the narrow risk-meter weighting, but the full
+    conviction (reflection + 出圈 + forward-supply + positioning + executability). The named
+    plays fall out of it for free — a high forward-supply name lands as a conviction SHORT
+    (the forced-seller short), a quality crowded-short lands as a conviction LONG (the squeeze).
+    Untradeable (illiquid/thin) names are dropped — we never target size we can't put on.
+
+    shorts_ok gates the short book on regime (only true falling-market regimes). gross is the
+    long budget; shorts get `short_budget_frac × gross`. Weights ∝ conviction, top `max_names` a side.
+    """
+    rows = rank_universe(universe, band_tiers, current_band)
+    tradeable = [r for r in rows if r.get("executability") not in ("illiquid", "thin")
+                 and r.get("conviction", 0) >= min_conviction]
+    longs = [r for r in tradeable if r["direction"] == "long"][:max_names]
+    shorts = ([r for r in tradeable if r["direction"] == "short"][:max_names] if shorts_ok else [])
+
+    book: dict = {}
+    long_conv = {r["symbol"]: r["conviction"] for r in longs}
+    for s, w in _capped_weights(long_conv, gross, _MAX_NAME_FRAC * gross).items():
+        book[s] = w
+    if shorts:
+        sbudget = gross * short_budget_frac
+        short_conv = {r["symbol"]: r["conviction"] for r in shorts}
+        for s, w in _capped_weights(short_conv, sbudget, _MAX_NAME_FRAC * sbudget).items():
+            book[s] = -w
+    return book

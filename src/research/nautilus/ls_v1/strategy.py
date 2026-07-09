@@ -59,6 +59,9 @@ from nautilus_trader.model.instruments import Instrument
 from nautilus_trader.model.objects import Quantity
 from nautilus_trader.trading.strategy import Strategy
 
+from src.research.nautilus.ls_v1.edge_gate import EdgeGate
+from src.research.nautilus.ls_v1.edge_gate import compute_z_score
+
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +149,42 @@ class LSv1Config(StrategyConfig, frozen=True):
     cis_history_dir: str = CIS_HISTORY_DIR
     cis_soft_floor: float = CIS_SOFT_FLOOR
     regime_cis_floor: dict[str, int] = None  # set in __init__ if None
+
+    # ── Edge gate (Seth, 2026-07-06 — H2 design §3 + H3 pivot) ──────────
+    # Replaces discrete REGIME_CIS_FLOOR with continuous expected-edge:
+    #   edge = side × IC_regime × z × sigma × sqrt(horizon) - cost
+    # Default OFF. Enable with LSV1_USE_EDGE_GATE=1.
+    use_edge_gate: bool = os.getenv("LSV1_USE_EDGE_GATE", "0") == "1"
+    edge_cost: float = float(os.getenv("LSV1_EDGE_COST", "0.001"))   # round-trip fee
+    edge_horizon_days: float = float(os.getenv("LSV1_EDGE_HORIZON_DAYS", "1.0"))
+    # Per-regime IC JSON override path; if unset, uses DEFAULT_PER_REGIME_IC
+    # from src/research/nautilus/ls_v1/edge_gate.py.
+    edge_ic_path: str = os.getenv("LSV1_EDGE_IC_PATH", "")
+
+    # ── H3 conviction-weighted gate (Seth, 2026-07-06) ─────────────────
+    # Path to per-day conviction JSON `{date_str: conviction ∈ [0, 1]}`.
+    # If unset (default), the gate runs without conviction scaling (H2 behaviour).
+    # If set, conviction multiplies the regime_cis_floor by `_conv_floor_multiplier()`.
+    conviction_path: str = os.getenv("LSV1_CONVICTION_PATH", "")
+    # Variant: baseline (no scaling) | linear | asymmetric | sigmoid | step
+    conv_variant: str = os.getenv("LSV1_CONV_VARIANT", "baseline")
+    # Step threshold for `step` variant
+    conv_step_threshold: float = float(os.getenv("LSV1_CONV_STEP_THRESHOLD", "0.85"))
+    # Sigmoid steepness (k) for `sigmoid` variant
+    conv_sigmoid_k: float = float(os.getenv("LSV1_CONV_SIGMOID_K", "4.0"))
+
+    # ── H3.2 conviction-weighted SIZING (Seth, 2026-07-09) ─────────────
+    # Unlike H3.1 (gate-multiplier — negative result), H3.2 scales POSITION
+    # SIZE by conviction instead of blocking trades. The H3 finding was
+    # "low conviction correlates with lower trade quality" — a real signal.
+    # H3.2 lets those trades through at half size, full-conviction days at 1.5x.
+    # Same conviction_path as the gate (re-uses the per-day conviction).
+    # Formula: trade_size_today = base_trade_size * (0.5 + conviction_today)
+    # Default OFF. Enable with LSV1_USE_H32_SIZING=1.
+    use_h32_sizing: bool = os.getenv("LSV1_USE_H32_SIZING", "0") == "1"
+    # Optional floor/cap on the multiplier (defaults: 0.5x .. 1.5x).
+    h32_size_floor: float = float(os.getenv("LSV1_H32_SIZE_FLOOR", "0.5"))
+    h32_size_cap: float = float(os.getenv("LSV1_H32_SIZE_CAP", "1.5"))
 
     request_bars: bool = True
     close_positions_on_stop: bool = True
@@ -248,6 +287,17 @@ class CometCloudNautilusLongShortV1(Strategy):
         #   LSV1_REGIME_FLOOR_RISK_OFF=40 → use 40 instead of 50 for Risk-Off
         self._env_floor_override: dict[str, int] = {}
 
+        # Edge gate (Seth, 2026-07-06) — when use_edge_gate=True, replaces
+        # the discrete regime-floor. _edge_gate_state holds the EdgeGate instance,
+        # _edge_z_by_symbol caches today's cross-sectional z-score per asset.
+        self._edge_gate = None
+        self._edge_z_by_symbol: dict[str, float] = {}
+
+        # H3 conviction-weighted gate (Seth, 2026-07-06): per-day conviction
+        # loaded from self.config.conviction_path. When empty, gate is unscaled.
+        self._conviction_by_date: dict[str, float] = {}
+        self._conv_today: float = 1.0  # default = no scaling (baseline)
+
         # Position tracking for diagnostics
         self._last_bar_ts_ns: int = 0
         self._open_pos_count: int = 0
@@ -279,9 +329,117 @@ class CometCloudNautilusLongShortV1(Strategy):
             f"[LSv1] loaded CIS history: {len(self._cis_by_date)} days "
             f"from {history_dir}"
         )
+        # H3 conviction (optional) — load per-day conviction for the gate
+        conv_path = self.config.conviction_path
+        if conv_path:
+            cp = Path(conv_path)
+            if not cp.exists():
+                logger.warning(
+                    f"[LSv1] H3 conviction_path missing: {conv_path} — "
+                    f"conviction-weighted gate DISABLED, falling back to H2 baseline"
+                )
+            else:
+                try:
+                    raw = json.loads(cp.read_text())
+                    self._conviction_by_date = {str(k): float(v) for k, v in raw.items()}
+                    logger.info(
+                        f"[LSv1] H3 loaded conviction: {len(self._conviction_by_date)} days "
+                        f"from {conv_path}; variant={self.config.conv_variant}"
+                    )
+                except Exception as exc:
+                    logger.warning(f"[LSv1] H3 conviction parse failed ({exc}): {conv_path}")
 
-    def _cis_for_symbol(self, symbol: str) -> dict:
-        """Date-keyed CIS lookup.  Falls back to latest snapshot if date missing."""
+        # Edge gate (Seth, 2026-07-06 — H2 design §3 + H3 pivot) — replaces
+        # the discrete REGIME_CIS_FLOOR when use_edge_gate=True. The gate
+        # decision becomes a continuous expected-edge test, not a hard threshold.
+        if self.config.use_edge_gate:
+            from src.research.nautilus.ls_v1.edge_gate import DEFAULT_PER_REGIME_IC
+            ic_dict = dict(DEFAULT_PER_REGIME_IC)
+            ic_path = self.config.edge_ic_path
+            if ic_path:
+                icp = Path(ic_path)
+                if icp.exists():
+                    try:
+                        raw = json.loads(icp.read_text())
+                        ic_dict.update({str(k): float(v) for k, v in raw.items()})
+                        logger.info(f"[LSv1] edge-gate IC override: {icp}")
+                    except Exception as exc:
+                        logger.warning(
+                            f"[LSv1] edge-gate IC parse failed ({exc}); using defaults"
+                        )
+                else:
+                    logger.warning(
+                        f"[LSv1] edge-gate IC path missing: {icp}; using defaults"
+                    )
+            self._edge_gate = EdgeGate(
+                per_regime_ic=ic_dict,
+                cost=self.config.edge_cost,
+                horizon_days=self.config.edge_horizon_days,
+            )
+            logger.info(
+                f"[LSv1] edge-gate ENABLED "
+                f"(cost={self.config.edge_cost:.4f} "
+                f"horizon={self.config.edge_horizon_days:.2f}d "
+                f"ic_regimes={list(ic_dict.keys())})"
+            )
+        else:
+            self._edge_gate = None
+            self._edge_z_by_symbol = {}
+
+    def _conv_floor_multiplier(self, conviction: float) -> float:
+        """H3 — conviction-weighted floor multiplier.
+
+        Maps per-day conviction ∈ [0, 1] to a multiplier ∈ [0, 1.5+] on the
+        regime_cis_floor, dispatched by `config.conv_variant`.
+
+        Variants:
+          baseline     → always 1.0 (no scaling; H2 behaviour)
+          linear       → 0.5 + conviction   ∈ [0.5, 1.5]
+          asymmetric   → conviction          ∈ [0.0, 1.0]   (low conv → relaxes gate)
+          sigmoid      → 1 / (1 + exp(-k*(c-0.5))) ∈ [0.12, 0.88]
+                          (sharper threshold; scaled to [0, 1])
+          step         → 1.0 if c >= threshold else 0.0
+                          (binary gate)
+
+        Note: in H3 'high' direction, higher floor = MORE filtering;
+        in 'inverted' direction, higher floor = LESS filtering.
+        The multiplier applies the same way (scale regime_floor), but the
+        effect on trade count is direction-flipped.
+        """
+        c = max(0.0, min(1.0, float(conviction)))
+        v = (self.config.conv_variant or "baseline").lower()
+        if v == "baseline":
+            return 1.0
+        if v == "linear":
+            return 0.5 + c                       # [0.5, 1.5]
+        if v == "asymmetric":
+            return c                             # [0.0, 1.0]
+        if v == "sigmoid":
+            import math
+            k = float(self.config.conv_sigmoid_k)
+            sig = 1.0 / (1.0 + math.exp(-k * (c - 0.5)))
+            # Map sigmoid output [0.12, 0.88] → [0.0, 1.0]
+            return max(0.0, min(1.0, (sig - (1.0 / (1.0 + math.exp(k * 0.5)))) /
+                                        (1.0 / (1.0 + math.exp(-k * 0.5)) -
+                                         1.0 / (1.0 + math.exp(k * 0.5)))))
+        if v == "step":
+            return 1.0 if c >= float(self.config.conv_step_threshold) else 0.0
+        # Unknown variant: neutral
+        logger.warning(f"[LSv1] H3 unknown conv_variant '{v}', falling back to baseline")
+        return 1.0
+
+    def _cis_snapshot_for_today(self) -> dict:
+        """Resolve today's CIS snapshot, cache it in `self._current_snapshot`.
+
+        Falls back to the latest date if today's row is missing (mirrors
+        freqtrade behaviour when the cache has gaps).
+
+        Side effects:
+          - Updates `self._current_regime` and `self._regime_floor`
+          - Updates `self._conv_today` (H3 conviction)
+        Returns the raw snapshot dict (may be empty).
+        """
+        self._current_snapshot = {}
         if not self._cis_by_date or self._last_bar_ts_ns == 0:
             return {}
         bar_dt = dt.datetime.fromtimestamp(
@@ -292,11 +450,15 @@ class CometCloudNautilusLongShortV1(Strategy):
             self._cis_by_date[max(self._cis_by_date.keys())]
             if self._cis_by_date else {}
         )
-        # Update regime from snapshot
+        if not snapshot:
+            return {}
+        self._current_snapshot = snapshot
+        self._current_snapshot_date = date_key
+
+        # Update regime
         regime = _normalise_regime(snapshot.get("macro_regime", "Neutral"))
         if regime != self._current_regime:
             self._current_regime = regime
-            # Env override takes precedence (H2 magnitude sweep)
             override = self._env_floor_override.get(regime)
             if override is not None:
                 self._regime_floor = override
@@ -304,6 +466,22 @@ class CometCloudNautilusLongShortV1(Strategy):
                 self._regime_floor = self.config.regime_cis_floor.get(
                     regime, REGIME_CIS_FLOOR["Neutral"]
                 )
+
+        # H3 conviction-weighted gate — update per-day conviction
+        if self._conviction_by_date:
+            c = self._conviction_by_date.get(date_key)
+            self._conv_today = c if c is not None else 1.0
+        else:
+            self._conv_today = 1.0
+        return snapshot
+
+    def _cis_for_symbol(self, symbol: str) -> dict:
+        """Date-keyed CIS lookup for a single symbol. Falls back to latest snapshot."""
+        snapshot = self._current_snapshot if hasattr(self, "_current_snapshot") else {}
+        if not snapshot:
+            snapshot = self._cis_snapshot_for_today()
+        if not snapshot:
+            return {}
         for s in snapshot.get("scores", []):
             if s.get("symbol") == symbol or s.get("asset") == symbol:
                 return s
@@ -313,9 +491,13 @@ class CometCloudNautilusLongShortV1(Strategy):
         """Heuristic: ≥ 30 daily CIS snapshots = full gate.  Else backtest bypass."""
         return len(self._cis_by_date) >= 30
 
-    def _cis_passes(self, symbol: str) -> bool:
+    def _cis_passes(self, symbol: str, side: int = +1) -> bool:
         """CIS gate.  Backtest-bypass when cache is sparse — mirrors freqtrade
         `CometCloudLongShortV4` `_load_cis_cache` soft-fallback behaviour.
+
+        When `use_edge_gate=True` (LSV1_USE_EDGE_GATE=1), dispatches to the
+        continuous expected-edge test instead of the discrete regime floor.
+        `side` is +1 for long entries, -1 for short entries (from EMA cross).
 
         Direction is regime-specific and env-overridable for research:
             LSV1_GATE_DIRECTION_<REGIMENAME>=high|inverted|drop
@@ -325,10 +507,21 @@ class CometCloudNautilusLongShortV1(Strategy):
         so research variants can flip to "inverted" (require LOW CIS) or "drop"
         (no gate) to test the directional hypothesis.
         """
+        # Edge gate path — replaces REGIME_CIS_FLOOR with continuous expected-edge.
+        # Falls through to the legacy floor if edge gate isn't wired up.
+        if self._edge_gate is not None:
+            return self._edge_gate_passes(symbol, side)
         cis = self._cis_for_symbol(symbol)
         # Determine the gate direction for the current regime
         env_key = f"LSV1_GATE_DIRECTION_{self._current_regime.upper().replace('-', '_')}"
         direction = os.getenv(env_key, "high").lower()
+
+        # H3 — conviction-weighted floor multiplier (per-day)
+        # Multiplier applied to regime_floor. With 'high' direction, higher
+        # multiplier = stricter gate. With 'inverted', higher multiplier = more
+        # permissive (CIS below a higher floor = easier to pass).
+        h3_mult = self._conv_floor_multiplier(self._conv_today)
+        effective_floor = self._regime_floor * h3_mult
 
         bypass = not self._cis_history_is_dense()  # freqtrade: also checks "live" freshness
         if bypass:
@@ -340,9 +533,9 @@ class CometCloudNautilusLongShortV1(Strategy):
                 return True
             if direction == "inverted":
                 # Low CIS passes; high CIS blocks (opposite of high-floor).
-                return score <= self._regime_floor
-            # "high" bypass uses regime_floor (env override already applied)
-            return score >= self._regime_floor
+                return score <= effective_floor
+            # "high" bypass uses effective_floor (H3-scaled)
+            return score >= effective_floor
         if not cis:
             return False
         score = float(cis.get("cis_score", 0) or 0)
@@ -350,9 +543,76 @@ class CometCloudNautilusLongShortV1(Strategy):
             return True
         if direction == "inverted":
             # Inverted: require CIS BELOW the floor (low-CIS names pass)
-            # Use the same numerical floor but flip the comparison.
-            return score <= self._regime_floor
-        return score >= self._regime_floor
+            # Use the H3-scaled floor.
+            return score <= effective_floor
+        return score >= effective_floor
+
+    # ── Edge gate helpers (Seth, 2026-07-06 — H2 design §3 + H3 pivot) ──
+    def _refresh_edge_z_scores(self) -> None:
+        """Recompute cross-sectional z-scores for today's CIS snapshot.
+
+        Z-score: (asset_cis - peer_mean) / peer_std, computed across all
+        assets in the snapshot's `scores` list. Cached in
+        `self._edge_z_by_symbol` keyed by symbol/asset. Recomputed on every
+        bar in case the date has rolled over.
+        """
+        self._edge_z_by_symbol = {}
+        if not self._cis_by_date or self._last_bar_ts_ns == 0:
+            return
+        # Ensure we have the latest snapshot
+        snapshot = self._current_snapshot if (
+            hasattr(self, "_current_snapshot")
+            and getattr(self, "_current_snapshot_date", None) == (
+                dt.datetime.fromtimestamp(self._last_bar_ts_ns / 1e9, tz=dt.timezone.utc)
+                .strftime("%Y-%m-%d")
+            )
+        ) else None
+        if not snapshot:
+            snapshot = self._cis_snapshot_for_today()
+        scores = snapshot.get("scores", []) if snapshot else []
+        if not scores:
+            return
+        cis_values = []
+        score_by_sym = {}
+        for s in scores:
+            sym = s.get("symbol") or s.get("asset")
+            if not sym:
+                continue
+            try:
+                v = float(s.get("cis_score") or 0)
+            except (TypeError, ValueError):
+                continue
+            score_by_sym[sym] = v
+            cis_values.append(v)
+        for sym, v in score_by_sym.items():
+            self._edge_z_by_symbol[sym] = compute_z_score(v, cis_values)
+
+    def _edge_gate_passes(self, symbol: str, side: int) -> bool:
+        """Edge gate decision (continuous expected-edge test).
+
+        Formula: edge = side × IC_regime × z × sigma × sqrt(horizon) - cost.
+        Returns True iff expected edge > 0 (i.e. expected value beats fee).
+
+        Inputs:
+          side      +1 long / -1 short (from EMA cross)
+          regime    `self._current_regime` (normalised)
+          z         cross-sectional z-score from `self._edge_z_by_symbol`
+          sigma     asset's own ATR/close (return-unit vol), same as the
+                    existing SL/TP computation
+        """
+        gate = self._edge_gate
+        if gate is None:
+            return True  # gate disabled → allow
+        # z-score: lookup or default to 0 (no signal) if peer set is missing
+        z = self._edge_z_by_symbol.get(symbol, 0.0)
+        # sigma: use this strategy's own ATR(14) / close (return-unit vol)
+        sigma = self._atr_pct_or_floor()
+        return gate.passes(
+            z=z,
+            regime=self._current_regime,
+            side=side,
+            sigma=sigma,
+        )
 
     # ── Inline ADX (DX + Wilder smoothing, Nautilus 1.229 has no ADX) ────
     def _update_adx(self, bar: Bar) -> None:
@@ -477,7 +737,14 @@ class CometCloudNautilusLongShortV1(Strategy):
         # We need the symbol for the gate.  Derive from instrument_id.
         # Convention used by data_adapter: BTCUSDT-PERP → "BTC"
         symbol = self._symbol_for_inst(self.config.instrument_id)
-        if self.config.enable_cis_gate and not self._cis_passes(symbol):
+        # Refresh today's snapshot + cross-sectional z-scores BEFORE the gate
+        # so edge-gate decisions reflect the current date's CIS distribution.
+        self._cis_snapshot_for_today()
+        if self._edge_gate is not None:
+            self._refresh_edge_z_scores()
+        # Side: +1 for long entries (EMA cross-up), -1 for short.
+        side = +1 if cross_up else -1
+        if self.config.enable_cis_gate and not self._cis_passes(symbol, side=side):
             self._skipped_cis += 1
             return
 
@@ -509,7 +776,33 @@ class CometCloudNautilusLongShortV1(Strategy):
         return raw.replace("USDT-PERP", "").replace("USD-PERP", "").replace("USDT", "")
 
     def create_order_qty(self) -> Quantity:
-        return self.instrument.make_qty(self.config.trade_size)
+        """Build the order quantity for the next entry.
+
+        H3.2 sizing (when use_h32_sizing=True): scale `trade_size` by today's
+        conviction ∈ [0, 1]. Multiplier is clamped to [h32_size_floor, h32_size_cap]
+        (defaults 0.5 .. 1.5) so worst-case is 0.5× .. 1.5× base size.
+        The actual scaling: multiplier = floor + (cap - floor) * conviction.
+        With default range: 0.5 + 1.0 * c  ∈ [0.5, 1.5].
+        """
+        size = self.config.trade_size
+        if self.config.use_h32_sizing:
+            mult = self._h32_sizing_multiplier()
+            size = size * Decimal(str(mult))
+        return self.instrument.make_qty(size)
+
+    def _h32_sizing_multiplier(self) -> float:
+        """H3.2 — per-day conviction-weighted size multiplier.
+
+        Returns the clamped multiplier. Falls back to 1.0 (no scaling) when
+        conviction data is absent or config is disabled, so a misconfigured
+        environment is safe.
+        """
+        if not self.config.use_h32_sizing:
+            return 1.0
+        c = max(0.0, min(1.0, float(self._conv_today)))
+        lo = float(self.config.h32_size_floor)
+        hi = float(self.config.h32_size_cap)
+        return lo + (hi - lo) * c
 
     # ── Entries (bracket: market + SL + TP1) ──────────────────────────────
     def _enter_long(self) -> None:
@@ -619,6 +912,11 @@ class CometCloudNautilusLongShortV1(Strategy):
         self._prev_slow = None
         self._current_regime = "Neutral"
         self._regime_floor = REGIME_CIS_FLOOR["Neutral"]
+        # Edge gate state (Seth, 2026-07-06) — preserve the gate instance
+        # (config is immutable) but clear the per-bar caches.
+        self._current_snapshot = {}
+        self._current_snapshot_date = None
+        self._edge_z_by_symbol = {}
         self._open_pos_count = 0
         self._skipped_adx = 0
         self._skipped_cis = 0
@@ -654,3 +952,6 @@ if __name__ == "__main__":
     print(f"    ENABLE_ADX_GATE={ENABLE_ADX_GATE}, ENABLE_CIS_GATE={ENABLE_CIS_GATE}, "
           f"ENABLE_FUNDING_FILTER={ENABLE_FUNDING_FILTER}")
     print(f"  regime_cis_floor: {REGIME_CIS_FLOOR}")
+    # Edge gate (LSV1_USE_EDGE_GATE=1 to enable)
+    from src.research.nautilus.ls_v1.edge_gate import DEFAULT_PER_REGIME_IC
+    print(f"  edge-gate default IC (LSV1_USE_EDGE_GATE=1 to enable): {DEFAULT_PER_REGIME_IC}")

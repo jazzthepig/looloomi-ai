@@ -468,15 +468,15 @@ export default function PerformanceDashboard() {
             <span style={{
               fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: ".06em",
               padding: "2px 7px", borderRadius: 3,
-              background: isBuilding ? "rgba(245,158,11,0.10)" : "rgba(0,217,138,0.08)",
-              color: isBuilding ? C.amber : C.green,
-              border: `1px solid ${isBuilding ? "rgba(245,158,11,0.22)" : "rgba(0,217,138,0.18)"}`,
+              background: "rgba(148,163,184,0.10)",
+              color: T.t3,
+              border: "1px solid rgba(148,163,184,0.22)",
             }}>
-              {isBuilding ? "BUILDING" : "LIVE"}
+              {isBuilding ? "BUILDING" : "PAPER · UNVALIDATED"}
             </span>
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, marginTop: 4, opacity: 0.65 }}>
-            CIS OUTPERFORM threshold crossings · empyrical risk metrics · {closedCount + openCount} total signals
+            Observational signal track record — NOT live capital · {closedCount + openCount} total signals
           </div>
         </div>
 

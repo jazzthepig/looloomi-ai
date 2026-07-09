@@ -350,6 +350,54 @@ async def _start_holder_refresh_loop():
         print("[HOLDER] ⏸ holder refresh disabled (no MORALIS_API_KEY)")
 
 
+# ── Forward-supply refresh loop (the UPSTREAM cause) ──────────────────────────
+# Warms {SYMBOL: forced-dilution overhang} into Redis from CoinGecko supply figures.
+# Supply mechanics move slowly → 6h cadence. Feeds the conviction kernel as a cause factor.
+_FWD_SUPPLY_INTERVAL_S = 6 * 3600
+
+
+async def _forward_supply_loop():
+    await _asyncio.sleep(240)   # 4 min warmup
+    while True:
+        try:
+            from src.data.cis.forward_supply import refresh_forward_supply
+            m = await refresh_forward_supply()
+            print(f"[FWD-SUPPLY] map refreshed — {len(m)} assets")
+        except Exception as _e:
+            print(f"[FWD-SUPPLY] ⚠️  refresh failed: {_e}")
+        await _asyncio.sleep(_FWD_SUPPLY_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_forward_supply_loop():
+    if os.environ.get("DISABLE_FWD_SUPPLY", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_forward_supply_loop())
+        print("[FWD-SUPPLY] ✅ upstream forward-supply refresh loop scheduled")
+
+
+# ── Positioning refresh loop (UPSTREAM cause #2 — reflexive leverage) ─────────
+_POSITIONING_INTERVAL_S = 30 * 60   # funding/OI move faster than supply → 30 min
+
+
+async def _positioning_loop():
+    await _asyncio.sleep(300)   # 5 min warmup
+    while True:
+        try:
+            from src.data.cis.positioning import refresh_positioning
+            m = await refresh_positioning()
+            print(f"[POSITIONING] map refreshed — {len(m)} assets")
+        except Exception as _e:
+            print(f"[POSITIONING] ⚠️  refresh failed: {_e}")
+        await _asyncio.sleep(_POSITIONING_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_positioning_loop():
+    if os.environ.get("DISABLE_POSITIONING", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_positioning_loop())
+        print("[POSITIONING] ✅ upstream positioning refresh loop scheduled")
+
+
 # ── Daily full-universe snapshot loop (data-durability guarantee) ─────────────
 # Guarantees a daily cis_scores row for EVERY asset (T1 + T2), independent of the
 # Mac Mini push. The push only carries the assets it chooses (T1 only since the
