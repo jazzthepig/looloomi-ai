@@ -11,9 +11,10 @@ from datetime import datetime, timezone
 
 _logger = logging.getLogger(__name__)
 
-# ── Binance Vision client (same base as data_layer.py) ─────────────────────────
+# ── Binance FUTURES client (perp signals — spot data-api 400s on perp-only tokens
+#    like HYPE and can't serve real funding/OI; fapi is the correct venue) ────────
 
-_BINANCE_BASE = "https://data-api.binance.vision/api/v3"
+_BINANCE_BASE = "https://fapi.binance.com/fapi/v1"
 _binance_client: httpx.AsyncClient | None = None
 
 def _get_binance_client() -> httpx.AsyncClient:
@@ -94,7 +95,7 @@ async def fetch_funding_rate(symbol: str) -> dict:
         client = _get_binance_client()
         # Premium index ticker for funding rate
         r = await client.get(
-            f"{_BINANCE_BASE}/premium_index",
+            f"{_BINANCE_BASE}/premiumIndex",
             params={"symbol": ticker},
         )
         r.raise_for_status()
@@ -130,45 +131,35 @@ async def fetch_funding_divergence(symbol: str) -> dict:
     import asyncio, time
 
     ticker = _to_binance_ticker(symbol)
-    now = time.time()
 
-    # Fetch last 7 funding rate snapshots (approximately one per 8h = 21 in 7d)
-    # Use klines on the perpetual ticker as a proxy for funding history
+    # Use REAL funding history (fapi/v1/fundingRate) — the actual signal, not a price proxy.
     try:
         client = _get_binance_client()
-        # Get 7d of 8h klines — approximate funding history
         r = await client.get(
-            f"{_BINANCE_BASE}/klines",
-            params={
-                "symbol":   ticker,
-                "interval": "8h",
-                "limit":   21,  # ~7 days of 8h intervals
-            },
+            f"{_BINANCE_BASE}/fundingRate",
+            params={"symbol": ticker, "limit": 21},   # ~7 days of 8h funding settlements
         )
         r.raise_for_status()
-        klines = r.json()
+        hist = r.json()
 
-        if not klines:
-            return {"symbol": symbol.upper(), "divergence_pct": 0.0, "error": "no klines"}
+        rates = [float(x.get("fundingRate", 0) or 0) for x in hist]
+        if not rates:
+            return {"symbol": symbol.upper(), "divergence_pct": 0.0, "error": "no funding history"}
 
-        # Use close price change rate as proxy for funding direction
-        # In practice, you'd use the premium_index endpoint, but klines give a proxy
-        recent_rates = [float(k[4]) for k in klines]  # close prices as proxy
-
-        current = recent_rates[-1] if recent_rates else 0
-        avg     = sum(recent_rates) / len(recent_rates) if recent_rates else 0
-
-        if avg == 0:
-            divergence_pct = 0.0
-        else:
-            divergence_pct = round((current - avg) / abs(avg) * 100, 4)
+        current = rates[-1]
+        avg     = sum(rates) / len(rates)
+        # divergence in std units — how stretched is current funding vs its own 7d distribution
+        import statistics
+        sd = statistics.pstdev(rates) if len(rates) > 1 else 0.0
+        divergence_z = round((current - avg) / sd, 4) if sd > 0 else 0.0
 
         return {
             "symbol":         symbol.upper(),
-            "divergence_pct": divergence_pct,
-            "current_proxy":  round(current, 8),
-            "avg_proxy_7d":   round(avg, 8),
-            "n_periods":      len(recent_rates),
+            "divergence_pct": round((current - avg) * 3 * 365 * 100, 4),  # annualized bps gap
+            "divergence_z":   divergence_z,
+            "current_funding": round(current, 8),
+            "avg_funding_7d":  round(avg, 8),
+            "n_periods":      len(rates),
             "timestamp":      datetime.now(timezone.utc).isoformat(),
         }
 
@@ -190,7 +181,7 @@ async def fetch_oi_change(symbol: str) -> dict:
     try:
         client = _get_binance_client()
         r = await client.get(
-            f"{_BINANCE_BASE}/open_interest",
+            f"{_BINANCE_BASE}/openInterest",
             params={"symbol": ticker},
         )
         r.raise_for_status()

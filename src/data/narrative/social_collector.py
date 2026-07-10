@@ -12,6 +12,7 @@ import json
 import time
 import asyncio
 import logging
+import os
 import httpx
 from datetime import datetime, timezone, timedelta
 from typing import Optional
@@ -67,26 +68,41 @@ async def fetch_cg_community_data(coin_id: str) -> dict:
     if cached:
         return cached
 
-    CG_BASE = "https://api.coingecko.com/api/v3"
-    headers = {}
+    # Use the PRO base + key when available (matches data_layer.py). community_data is a
+    # FIELD inside /coins/{id}, NOT a /community_data sub-route (that 404s on every tier).
+    # CG deprecated the social-media fields (twitter/telegram/facebook = null); the LIVE,
+    # real signals on this endpoint are developer_data + sentiment_votes_up_percentage.
+    _KEY = os.getenv("COINGECKO_API_KEY", "")
+    CG_BASE = "https://pro-api.coingecko.com/api/v3" if _KEY else "https://api.coingecko.com/api/v3"
+    headers = {"x-cg-pro-api-key": _KEY} if _KEY else {}
 
     try:
         client = _get_cg_client()
-        r = await client.get(f"{CG_BASE}/coins/{coin_id}/community_data")
+        r = await client.get(
+            f"{CG_BASE}/coins/{coin_id}",
+            params={"localization": "false", "tickers": "false", "market_data": "false",
+                    "community_data": "true", "developer_data": "true", "sparkline": "false"},
+            headers=headers,
+        )
         r.raise_for_status()
         data = r.json()
+        cd = data.get("community_data", {}) or {}
+        dd = data.get("developer_data", {}) or {}
 
         result = {
-            "coin_id":          coin_id,
-            "twitter_followers": data.get("twitter_followers", 0) or 0,
-            "reddit_subscribers": data.get("reddit_subscribers", 0) or 0,
-            "reddit_active_48h":  data.get("reddit_active_users", 0) or 0,
-            "telegram_users":    data.get("telegram_channel_user_count", 0) or 0,
-            "github_stars":      data.get("stars", 0) or 0,
-            "github_forks":      data.get("forks", 0) or 0,
-            "github_contributors": data.get("subscribers", 0) or 0,
-            "facebook_likes":    data.get("facebook_likes", 0) or 0,
-            "timestamp":         datetime.now(timezone.utc).isoformat(),
+            "coin_id":            coin_id,
+            # live developer momentum (the alive signal)
+            "github_stars":       dd.get("stars", 0) or 0,
+            "github_forks":       dd.get("forks", 0) or 0,
+            "github_subscribers": dd.get("subscribers", 0) or 0,
+            "commits_4w":         dd.get("commit_count_4_weeks", 0) or 0,
+            "total_issues":       dd.get("total_issues", 0) or 0,
+            # CG's own community sentiment vote (alive)
+            "sentiment_up_pct":   data.get("sentiment_votes_up_percentage") or 50.0,
+            # reddit may still carry a signal for some coins; social-media fields mostly null now
+            "reddit_subscribers": cd.get("reddit_subscribers", 0) or 0,
+            "reddit_active_48h":  cd.get("reddit_accounts_active_48h", 0) or 0,
+            "timestamp":          datetime.now(timezone.utc).isoformat(),
         }
         return _cache_set(key, result)
 
@@ -203,33 +219,36 @@ async def get_social_signals(coin_id: str) -> dict:
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-    # Normalize twitter followers to 0-100 (log scale, cap at 10M = 100)
-    twitter_raw = cg_data.get("twitter_followers", 0) or 0
-    twitter_score = min(100, round(100 * (1 - 1 / (1 + twitter_raw / 1_000_000)), 1)) if twitter_raw else 25.0
-
-    # Normalize reddit subscribers (cap at 5M = 100)
+    # LIVE signals (CG social-media fields are deprecated/null — see fetch above):
+    # 1) developer momentum — commits over 4 weeks (real dev activity)
+    commits = cg_data.get("commits_4w", 0) or 0
+    dev_score = min(100, round(100 * (1 - 1 / (1 + commits / 50.0)), 1)) if commits else 25.0
+    # 2) CoinGecko community sentiment vote (alive, 0-100)
+    sentiment_vote = float(cg_data.get("sentiment_up_pct", 50.0) or 50.0)
+    # 3) reddit activity if present (many coins now 0)
     reddit_raw  = cg_data.get("reddit_subscribers", 0) or 0
     reddit_score = min(100, round(100 * (1 - 1 / (1 + reddit_raw / 500_000)), 1)) if reddit_raw else 25.0
-
-    # News sentiment is already 0-100
+    # 4) news sentiment (CryptoPanic, already 0-100)
     news_sentiment = news.get("sentiment_score", 50.0) or 50.0
 
-    # Weighted composite
+    # Weighted composite — news + community vote + developer momentum are the live drivers
     social_score = round(
-        twitter_score  * 0.30 +
-        reddit_score   * 0.30 +
-        news_sentiment * 0.40,
+        news_sentiment * 0.40 +
+        sentiment_vote * 0.35 +
+        dev_score      * 0.20 +
+        reddit_score   * 0.05,
         1,
     )
 
     result = {
         "coin_id":        coin_id,
         "social_score":   social_score,
-        "twitter_score":  twitter_score,
+        # kept keys (twitter/reddit) for schema stability; twitter is retired → dev momentum
+        "twitter_score":  dev_score,          # repurposed: developer-momentum score
         "reddit_score":   reddit_score,
         "news_sentiment": news_sentiment,
-        "twitter_raw":    twitter_raw,
-        "reddit_raw":     reddit_raw,
+        "sentiment_vote": sentiment_vote,
+        "dev_commits_4w": commits,
         "news_total":     news.get("total_count", 0),
         "timestamp":      datetime.now(timezone.utc).isoformat(),
     }

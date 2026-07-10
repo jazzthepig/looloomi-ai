@@ -694,6 +694,15 @@ async def health_summary():
     return await compute_health_summary()
 
 
+@app.get("/internal/loop-health")
+async def loop_health():
+    """Per-stage flow check over the whole loop (ingest→compute→store→measure→feedback).
+    Makes an orphaned stage impossible to hide. Public read (no secrets). See loop_health.py."""
+    from src.api.loop_health import check_loop_health
+    base = os.environ.get("PUBLIC_BASE_URL", "https://looloomi.ai")
+    return await check_loop_health(base)
+
+
 @app.post("/internal/notify/test")
 async def notify_test(payload: dict = None, x_internal_token: str = Header(None)):
     """Send a test Telegram alert. INTERNAL_TOKEN guarded. Confirms env wiring."""
