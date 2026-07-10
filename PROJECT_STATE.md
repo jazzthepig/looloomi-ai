@@ -10,6 +10,91 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 ---
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
+- **2026-07-10 LOOP HEALTH — verified flowing end-to-end + standing instrument.** Jazz: "make sure the system
+  is working, all parts flowing." Built `src/api/loop_health.py` + `GET /internal/loop-health` — probes every
+  stage (ingest→compute→store→measure→feedback). Live result: **FLOWING (all green)** — CIS universe 58 assets,
+  Mac Mini push fresh, causes flowing, conviction feedback learned (STRONG OUTPERFORM 1.265×), NMA differentiated.
+  **CORRECTED FALSE ALARM**: my earlier "causes empty on Railway" (logged P1 to Minimax) was a measurement bug —
+  I checked flat `forward_supply_risk` but the data is NESTED under `forward_supply`/`positioning`; causes ARE
+  live (ONDO fs_risk=0.702, pos=-0.405 on all 24 crypto assets). Fixed the probe + retracted the false alarm in
+  MINIMAX_SYNC + LOOP_ENGINEERING. Real loop finding stands: ONE arc closes (signal→30d outcome→conviction→weight,
+  proven live); rest is write-heavy/read-light (88 inserts, ~1 auto read-back) — value-mining deferred/manual.
+  Doc: `LOOP_ENGINEERING.md`.
+- **2026-07-10 NARRATIVE ELEVATION — diagnosis + repair (Jazz: "we have narrative structure but you downplay it,
+  frontend doesn't show it" — correct).** Found: NMA pipeline (social+orderflow+trend→nma_score→S-pillar) EXISTS
+  with 2 live endpoints (`/api/v1/market/narrative[/{sym}]`) but is ORPHANED — (a) `apply_narrative_to_s_pillar`
+  never called → NMA doesn't actually feed CIS; (b) frontend `asset.narrative` = CIS description TEXT, NOT the
+  NMA signal → nma_score shown nowhere; (c) DATA SOURCES BROKEN: CG killed `community_data` (404 → social=35
+  fallback), orderflow used Binance SPOT (`data-api.binance.vision`) which 400s on perp-only tokens (HYPE) +
+  faked funding from spot price. Net: NMA outputs degenerate ~44 NEUTRAL for everything → that's why it's
+  dormant. FIXED: orderflow_collector → fapi.binance.com (real depth+funding history+OI, works for HYPE now);
+  __init__ defensive imports. Built the working narrative layer: `src/data/narrative/moat_map.py` (L1 structural
+  moat ontology) + `catalyst_detector.py` (L2 event→moat→on-chain-activation; validated: HYPE 2026-01-27 fires
+  at activation z=9.63, $30.79 → ran to $65). STILL TODO to fully elevate: replace CG-community social source,
+  fix/verify trend_score, then wire NMA+catalyst into CIS universe payload + S-pillar + SURFACE in frontend
+  (Mac build). Discipline: do NOT wire half-broken NMA into live CIS until social+trend repaired.
+- **2026-07-10 CONVICTION METHODOLOGY — catching the next HYPE (沉淀).** New durable methodology doc
+  `CONVICTION_METHODOLOGY.md` (companion to ARCHITECTURE + CIS_METHODOLOGY). Thesis: biggest winners come from
+  NARRATIVE inflection revealing durable STRUCTURAL VALUE → reflexive cash flow → re-rating; trend/momentum is
+  the reflection, narrative-becoming-cashflow is the cause (we trade the cause). Worked example HYPE 2026: the
+  spark was a real-world event (Trump weekend war → TradFi commodity markets closed → only Hyperliquid could
+  trade the shock 24/7 on-chain w/ leverage → proved the moat live) → 99%-fee buyback loop + 70% perp share +
+  $840M rev run-rate → institutional re-rating; price confirmed LAST (chopped down H2'25 46→25, re-accelerated
+  25→65 H1'26). Data findings: naive trend on majors weak (Sharpe ~0.2, huge DD); trend on HYPE UNDERPERFORMED
+  buy&hold (+37% vs +110% — stop chops you out of the winner) → alpha is SELECTION + CONVICTION HOLD, not the
+  indicator. 4-layer stack: L1 structural moat / L2 narrative catalyst (the missing organ to build — event→
+  structural-value detector) / L3 fundamental momentum (CIS F+O as rate-of-change + reflexive-loop flag) / L4
+  trend confirmation (timing only). Execution: convex sizing (pyramid on confirmation), let right tail run,
+  exit on THESIS break not volatility, catastrophe stop only, concentrated. This is the 3rd bet (right-tail/
+  beta-plus) alongside swing (mean-rev) + causal (market-neutral). It's the moat because it's judgment-led
+  (human+AI), not a commodity bot.
+- **2026-07-10 CAUSAL POSITIONING SLEEVE — built + validated + orthogonal (the upgrade delivered).** New
+  market-neutral cross-sectional sleeve trading the positioning cause (fade funding crowding: short
+  high-funding/crowded-longs, long negative-funding/crowded-shorts). Built on REAL Binance-perp data (24
+  assets, 668 days, 2024-01→2025-10) via `src/research/strategies/causal_positioning.py`. Results: full-sample
+  ann Sharpe +1.21 (Kwin7,5bps), +41%, 10% maxDD; survives 10bps (+1.0); Kwin monotone (not a lucky peak);
+  **chronological OOS Sharpe +1.02 — holds sign/magnitude (unlike the falsified edge gate)**. DECISIVE:
+  **correlation to swing book = +0.002** → the orthogonal sleeve the diversification math demanded; ENB
+  2.16→2.85. Honest: at swing's inflated in-sample Sharpe ~5 the optimal weight is ~5% (modest uplift), but
+  its value GROWS as swing deflates to realistic OOS (√(2²+1.2²)≈2.33 vs 2.0) + carries when swing fails +
+  it's the moat. Data reachable from research infra (Binance/Bybit/OKX funding+klines all 200). Cached:
+  outputs/causal_data.json. NEXT (Jazz: expand to other assets): widen 24→60–80 perps, stack forward-supply
+  cause in same frame, liquidity/capacity filter. Report: `reports/CAUSAL_SLEEVE_2026-07-10.md`.
+- **2026-07-10 THE UPGRADE — orthogonality finding + combiner.** Stress-tested the obvious upgrades on real
+  data: (1) price/TA meta-labeling on V7 (logistic, IS-train/OOS-test) = NULL (SR/trade 0.272→0.274, just cuts
+  trades) → swing is price-efficient; (2) naive equal/inverse-vol ensemble = WORSE than best single (dilution).
+  Real diagnosis: the 5 DSR-certified survivors are **0.67 mutually correlated (V8/V9/V10 = 0.95–1.0), ENB=2.16
+  → ~1.5 ideas in 5 costumes**. Diversification math (V7 ann Sharpe 5.6): marginal book Sharpe is driven by
+  CORRELATION not the new sleeve's own Sharpe — orthogonal(SR2.0,corr0)→5.96 vs great-but-correlated(SR2.8,
+  corr0.3)→5.73; another swing variant (corr0.95)→~nothing. **The upgrade = ONE uncorrelated sleeve, not a
+  sixth swing.** Uniquely-ours orthogonal candidates: (a) causal forced-flow (forward_supply/positioning — moat),
+  (b) delta-neutral funding_carry (shipped, market-neutral). Built `src/research/validation/portfolio_combiner.py`
+  (corr-de-duplicated inv-variance + effective-number-of-bets X-ray; honest −1.39 uplift on the lineage proves
+  no internal blend beats V7). Report: `reports/STRATEGY_UPGRADE_2026-07-10.md`.
+- **2026-07-10 DSR factory audit — built the instrument + certified the swing lineage.** Full arsenal is
+  ~50 freqtrade strategies (Swing V6→V10, CoreBasketV6, MetaV4, SMC, SmartMM, LiqAware, MVRV, Crowd,
+  AutoResearch pipeline, + signal tools: SMC/funding/polymarket/factor-miner/correlation). Built
+  `src/research/validation/deflated_sharpe.py` (Bailey-LdP Deflated Sharpe Ratio + expected-max-Sharpe,
+  pure-numpy, self-test passes: real edge DSR 0.9997 vs best-of-40 noise 0.078). Ran over live backtests:
+  full 35-way search → 0 survive DSR@0.95 (undisciplined search certifies nothing); **disciplined candidate
+  set (positive SR, ≥50 trades, N=9) → 5 SURVIVORS, all SwingOverlay lineage** (V8_Regime 0.999, V7 0.998,
+  V9_DirAware 0.994, V10_FundingAware 0.994, V10_FundingAggressive 0.981). Investor-grade claim: our swing
+  lineage survives multiple-testing correction in-sample. NEXT (real research to strengthen): DSR on
+  walk-forward OOS (certify for capital), retire ~25 negative-SR trials, meta-labeling on swing primaries,
+  regime-ensemble across the 5 survivors, wire DSR as a standing promotion gate. Report:
+  `reports/STRATEGY_DSR_AUDIT_2026-07-10.md`.
+- **2026-07-10 Strategy competitiveness review (CORRECTED).** First pass benchmarked against the GRAVEYARD
+  (dead LS_V4 −6.59%, META_V4 −5.47%, falsified edge gate) and wrongly concluded "no profitable strategies"
+  — a research miss: never opened `Shadow/freqtrade/user_data/backtest_results/`. REAL state: the
+  **SwingOverlay V6→V10 family** (MTF regime + funding-aware gates + vol-target + circuit breaker) + CoreBasketV6
+  are PROFITABLE — credible n≥500 runs: Sharpe ~6.3–9.5, CAGR ~32–54%, PF 1.9–2.6, DD 2–3%, win 66–70%
+  (small-n variants show Sharpe 10–14 = overfit-suspect). Corrected verdict: we ARE competitive on directional
+  swing, build quality above public median; the gating question is OOS/walk-forward robustness (high Sharpes +
+  window variance = overfit signature — same discipline that caught the edge gate). Only structural moat still
+  = forward-supply/unlock cause (unblock via historical unlock event study, not 180-day wait). `funding_carry.py`
+  (shipped) repositioned honestly as an OPTIONAL market-neutral sleeve, NOT a missing lane. Report:
+  `reports/STRATEGY_COMPETITIVENESS_2026-07-10.md`. NEXT: put SwingOverlay through walk-forward OOS + cost model;
+  headline only OOS-surviving numbers for LP use.
 - **2026-07-06 ⚠️ FALSIFIED — edge gate CUT** (Minimax-A A2 harness, audit commit 0e868a7): OOS proved the
   empirical edge-map-DIRECTION hypothesis overfits — edge gate took 4 straight longs into a falling BTC
   (−$479) while the frozen CIS baseline (`REGIME_CIS_FLOOR`) MADE money (+0.59 Sharpe, PF 1.38). p=0.867,
@@ -177,6 +262,22 @@ other agents can trust it. Full autonomy is the partner's game, not ours. Soul: 
   refinement (H3, H2 magnitudes, this). Keep `REGIME_CIS_FLOOR` as production gate. Phase 1 ship
   (smoothed regime labels, no floor changes) is the correct next move. Pivot edge-gate formula to H3.2
   sizing-multiplier when ≥6mo OOS data accumulates.
+- **2026-07-09 H3.2 conviction-weighted SIZING A/B — POSITIVE for ship as opt-in**
+  (`src/research/nautilus/ls_v1/strategy.py` `use_h32_sizing` config +
+  `_h32_sizing_multiplier()` + `create_order_qty` applies multiplier;
+  `src/research/cis_regime_studies/h32_sizing_ab.py`;
+  `reports/H32_SIZING_AB_2026-07-09.md`). Per H3: "conviction is a sizing signal,
+  not a gating signal." H3.1 (gate-multiplier) lost because the floor band is a
+  knife-edge. H3.2 sidesteps that by leaving the gate at `REGIME_CIS_FLOOR` unchanged
+  and scaling POSITION SIZE by today's conviction: `trade_size × (0.5 + c)` ∈ [0.5, 1.5]×.
+  A/B'd across raw + modal_recency dirs × {IS, OOS} × {baseline, h32_sizing} = 8 runs.
+  **H3.2 wins per-trade PnL in ALL 4 runs** (Δ IS $/pos +$1.79 to +$2.14, Δ OOS $/pos
+  +$0.10 to +$2.25). Trade count unchanged (gate unmodified). **First POSITIVE result
+  in the H-series** (H3 prototype / H2 magnitudes / edge gate all lost). Mechanism =
+  Millennium soft-sizing: let the signal through, weight by confidence. **Ship as opt-in
+  config, default OFF** — `LSV1_USE_H32_SIZING=1` (floor/cap configurable via env).
+  Honest caveats: OOS n=4–6 (modal_recency within AQR noise floor); no proper
+  portfolio-level MaxDD check; [0.5, 1.5] range is default not optimized.
 - **2026-07-09 CAUSE-DRIVEN BACKTEST infrastructure (B2) — SHIPPED, run BLOCKED on data**
   (`scripts/supabase_migration_cause_history.sql`, `src/data/cis/cause_persistence.py`,
   `src/research/cis_regime_studies/cause_backtest.py`, `reports/CAUSE_BACKTEST_2026-07-09.md`).
