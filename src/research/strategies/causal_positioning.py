@@ -143,9 +143,22 @@ def load_binance_panel(assets: list[str], start=(2024, 1, 1)):
     return days, close, fmean, fsum
 
 
+# Deliberately the ~24 liquid majors, NOT a wide universe. Validated finding (2026-07-10):
+# the funding-crowding signal is a LARGE-CAP phenomenon. Expanding to 50 names (adding
+# thinner/newer perps: ENA/TAO/TIA/JUP/ONDO/...) collapsed the sleeve — Sharpe +1.34 → +0.12,
+# maxDD 10% → 30% — because funding on thin names is noise, not positioning. The established
+# ~40 held ~+1.07 but still beat by the 24. LESSON: expand for CAPACITY behind a liquidity
+# gate (min OI, established history), never indiscriminately. A second signal (funding
+# ACCELERATION) also degraded it monotonically → rejected. Keep it simple and large-cap.
 DEFAULT_UNIVERSE = ["BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "LINK",
                     "DOT", "LTC", "TRX", "ATOM", "NEAR", "APT", "ARB", "OP", "SUI",
                     "UNI", "AAVE", "INJ", "FIL", "ETC", "BCH"]
+
+# Wider liquid tier (established ≥600d funding history) — use ONLY for capacity, accepting
+# a small Sharpe cost (~+1.07 vs +1.34). Anything thinner than this degrades the signal.
+ESTABLISHED_UNIVERSE = DEFAULT_UNIVERSE + [
+    "WLD", "SEI", "RUNE", "FET", "STX", "GALA", "GRT", "ALGO", "ZEC", "XLM",
+    "PENDLE", "DYDX", "ENS", "SAND", "MANA", "GMX"]
 
 
 if __name__ == "__main__":

@@ -173,18 +173,21 @@ class LSv1Config(StrategyConfig, frozen=True):
     # Sigmoid steepness (k) for `sigmoid` variant
     conv_sigmoid_k: float = float(os.getenv("LSV1_CONV_SIGMOID_K", "4.0"))
 
-    # ── H3.2 conviction-weighted SIZING (Seth, 2026-07-09) ─────────────
+    # ── H3.2 conviction-weighted SIZING (Seth, 2026-07-09, refined 2026-07-10) ──
     # Unlike H3.1 (gate-multiplier — negative result), H3.2 scales POSITION
     # SIZE by conviction instead of blocking trades. The H3 finding was
     # "low conviction correlates with lower trade quality" — a real signal.
     # H3.2 lets those trades through at half size, full-conviction days at 1.5x.
     # Same conviction_path as the gate (re-uses the per-day conviction).
-    # Formula: trade_size_today = base_trade_size * (0.5 + conviction_today)
+    # Formula: trade_size_today = base_trade_size * (floor + (cap - floor) * c)
     # Default OFF. Enable with LSV1_USE_H32_SIZING=1.
+    # 2026-07-10 SWEEP UPDATE: cap default bumped 1.5 → 1.75 per
+    # H32_SIZING_FLOORCAP_SWEEP_2026-07-10.md — Pareto-balanced choice,
+    # +37% PnL on IS (n=58 reliable) with no Sharpe penalty.
     use_h32_sizing: bool = os.getenv("LSV1_USE_H32_SIZING", "0") == "1"
-    # Optional floor/cap on the multiplier (defaults: 0.5x .. 1.5x).
+    # Optional floor/cap on the multiplier (defaults: 0.5x .. 1.75x after sweep).
     h32_size_floor: float = float(os.getenv("LSV1_H32_SIZE_FLOOR", "0.5"))
-    h32_size_cap: float = float(os.getenv("LSV1_H32_SIZE_CAP", "1.5"))
+    h32_size_cap: float = float(os.getenv("LSV1_H32_SIZE_CAP", "1.75"))
 
     request_bars: bool = True
     close_positions_on_stop: bool = True

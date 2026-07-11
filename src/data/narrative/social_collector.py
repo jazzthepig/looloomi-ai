@@ -255,61 +255,71 @@ async def get_social_signals(coin_id: str) -> dict:
     return _cache_set(key, result)
 
 
-# ── Google Trends (pytrends) — narrative heat ──────────────────────────────────
+# ── Attention / trend heat (Binance volume+price momentum — replaces dead pytrends) ──
+
+_BINANCE_FAPI = "https://fapi.binance.com/fapi/v1"
+_TREND_SYMBOL_MAP = {
+    "BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT", "BNB": "BNBUSDT",
+    "XRP": "XRPUSDT", "DOGE": "DOGEUSDT", "ADA": "ADAUSDT", "AVAX": "AVAXUSDT",
+    "LINK": "LINKUSDT", "HYPE": "HYPEUSDT", "SUI": "SUIUSDT", "APT": "APTUSDT",
+    "ARB": "ARBUSDT", "OP": "OPUSDT", "UNI": "UNIUSDT", "AAVE": "AAVEUSDT",
+}
+
+
+def _clamp(x, lo, hi):
+    return max(lo, min(hi, x))
+
 
 async def get_google_trend_score(keyword: str, days: int = 7) -> dict:
-    """
-    Fetch Google Trends interest over past N days.
-    Returns trend_score 0-100.
+    """Attention/trend heat from REAL market data (Binance volume + price momentum) —
+    the actual footprint of narrative heat. Replaces Google Trends/pytrends, which
+    rate-limits (429) and returned a flat 50 for everything. Name kept for call-site
+    compatibility; `keyword` is the asset symbol (e.g. "BTC").
 
-    NOTE: Requires `pytrends` package. Falls back gracefully if not available.
-    Cache TTL: 3600s (1 hour)
-
-    Usage:
-        await get_google_trend_score("bitcoin", days=7)
+    trend_score 0-100: 50 = neutral; rising = volume surge + positive price momentum
+    (attention building), falling = quiet + negative momentum. Cache TTL 1800s.
     """
-    key = f"gtrends:{keyword}:{days}"
-    cached = _cache_get(key, ttl=3600)
+    sym = (keyword or "").upper()
+    ticker = _TREND_SYMBOL_MAP.get(sym, f"{sym}USDT")
+    key = f"attention:{ticker}"
+    cached = _cache_get(key, ttl=1800)
     if cached:
         return cached
 
     try:
-        from pytrends.request import TrendReq
-        pt = TrendReq(hl="en-US", tz=360)
-        pt.build_payload([keyword], cat=0, timeframe=f"now {days}-d", geo="")
-        data = pt.interest_over_time()
+        client = _get_misc_client()
+        r = await client.get(f"{_BINANCE_FAPI}/klines",
+                             params={"symbol": ticker, "interval": "1d", "limit": 40})
+        r.raise_for_status()
+        kl = r.json()
+        if not kl or len(kl) < 15:
+            raise ValueError("insufficient klines")
 
-        if data.empty:
-            raise ValueError("Empty response")
+        close = [float(k[4]) for k in kl]
+        qvol  = [float(k[7]) for k in kl]          # quote (USD) volume
 
-        values = data[keyword].dropna().tolist()
-        if not values:
-            raise ValueError("No data after dropna")
+        base = qvol[:-3]
+        import statistics
+        vmean = statistics.mean(base); vstd = statistics.pstdev(base) or 1e-9
+        vol_z = (statistics.mean(qvol[-3:]) - vmean) / vstd     # recent 3d vs baseline
+        price_mom_7d = (close[-1] - close[-8]) / close[-8] if len(close) >= 8 else 0.0
 
-        # Average interest over period — normalize 0-100
-        avg_interest = sum(values) / len(values)
-        trend_score  = round(min(100, avg_interest), 1)
+        # attention rises with volume surge AND positive momentum; both directions matter
+        trend_score = round(_clamp(50 + 12.0 * _clamp(vol_z, -3, 3) + 60.0 * _clamp(price_mom_7d, -0.5, 0.5), 0, 100), 1)
 
         result = {
-            "keyword":     keyword,
-            "trend_score": trend_score,
-            "raw_values":  [round(v, 1) for v in values[-14:]],
-            "period_avg":  round(avg_interest, 2),
-            "days":        days,
-            "timestamp":  datetime.now(timezone.utc).isoformat(),
+            "keyword":      sym,
+            "trend_score":  trend_score,
+            "volume_z":     round(vol_z, 2),
+            "price_mom_7d": round(price_mom_7d * 100, 1),
+            "source":       "binance_vol_price_momentum",
+            "days":         days,
+            "timestamp":    datetime.now(timezone.utc).isoformat(),
         }
         return _cache_set(key, result)
 
-    except ImportError:
-        return {
-            "keyword": keyword,
-            "trend_score": 50.0,
-            "error": "pytrends not installed",
-            "days": days,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
     except Exception as e:
-        _logger.warning(f"[social_collector] Google Trends failed for '{keyword}': {e}")
+        _logger.warning(f"[social_collector] attention/trend fetch failed for '{keyword}': {e}")
         return {
             "keyword": keyword,
             "trend_score": 50.0,
