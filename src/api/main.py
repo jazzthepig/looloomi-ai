@@ -268,6 +268,33 @@ async def _start_outcome_tracker():
         print("[OUTCOME] ✅ daily outcome-tracker loop scheduled")
 
 
+# ── Prediction resolver loop — "resolve EVERY prediction" (causes/conviction/narrative) ──
+# Generalises the signal outcome tracker to all sources → per-source hit rate + alpha
+# written to prediction_outcomes. This is the read-back that mines the write-only logs
+# (LOOP_ENGINEERING.md: turns the 88-insert/1-read imbalance around).
+_PREDICTION_INTERVAL_S = 24 * 3600
+
+
+async def _prediction_resolver_loop():
+    await _asyncio.sleep(240)   # after the signal outcome tracker warms
+    while True:
+        try:
+            from src.data.signals.prediction_resolver import resolve_all_predictions
+            res = await resolve_all_predictions(dry_run=False)
+            hr = {s: v.get("hit_rate_pct") for s, v in res.get("sources", {}).items()}
+            print(f"[PRED] daily resolve — per-source hit_rate={hr}")
+        except Exception as _e:
+            print(f"[PRED] ⚠️  daily resolve failed: {_e}")
+        await _asyncio.sleep(_PREDICTION_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_prediction_resolver_loop():
+    if os.environ.get("DISABLE_PREDICTION_RESOLVER", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_prediction_resolver_loop())
+        print("[PRED] ✅ daily prediction-resolver loop scheduled")
+
+
 # ── Track-record refresh loop — self-tuning conviction ────────────────────────
 # Recomputes signal_track_record (30d benchmark-relative outcomes from our own
 # cis_scores × ohlcv_daily) daily → the Risk Meter's conviction tilt auto-recalibrates
@@ -692,6 +719,14 @@ async def health_summary():
     and MacroBrief. Read by the heartbeat loop + ops. Public read (no secrets)."""
     from src.api.health import compute_health_summary
     return await compute_health_summary()
+
+
+@app.get("/internal/prediction-track-record")
+async def prediction_track_record():
+    """Per-source predictive track record (hit rate + directional alpha) from
+    prediction_outcomes — the read-back that mines the write-only logs. Public read."""
+    from src.data.signals.prediction_resolver import source_track_record
+    return await source_track_record()
 
 
 @app.get("/internal/loop-health")

@@ -5,11 +5,61 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-07-02 (Seth)
+**Last updated:** 2026-07-10 (Seth + Minimax-C)
 
 ---
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
+- **2026-07-10 PREDICTION RESOLVER — "resolve EVERY prediction" (closes the 88:4 read-back gap).** Built
+  `src/data/signals/prediction_resolver.py` — generalizes outcome_tracker (signals only) to ALL 5 sources
+  (signal, positioning, forward_supply, conviction, narrative). Each source's directional claim → resolved
+  through the SAME alpha engine (price@date+horizon, BTC/SPY-relative alpha, hit=sign(alpha)==direction) →
+  `prediction_outcomes` table (`scripts/supabase_prediction_outcomes.sql`). Per-source read-back
+  {n, hit_rate, avg_directional_alpha} = the value-mining query (which sources are actually predictive → feeds
+  per-source conviction weighting). Wired: daily `_prediction_resolver_loop` in main.py + `GET
+  /internal/prediction-track-record`. Smoke-tested engine against REAL Binance prices ✅. This is the LOOP
+  automation fix — turns write-only logs (cause_snapshots/conviction_verdicts/narrative) into measured track
+  records. **DEPLOYED 2026-07-10 via Supabase connector** ✅ — 5 tables live on project soupjamxlfsmgmmtoeok:
+  cause_snapshots_daily, conviction_verdicts_daily, cause_outcomes, experiment_runs (seeded w/ certified swing
+  run), prediction_outcomes. Write verified. ⚠️ SECURITY: connector flagged `signal_outcomes` has RLS DISABLED
+  (7743 rows exposed to anon key) — matches SECURITY_REVIEW HIGH finding; needs policy decision (Minimax/Jazz),
+  not auto-fixed.
+- **2026-07-10 LOOP INDUSTRIALIZATION shipped — experiment recorder + FreqAI assignment.** Built
+  `src/research/validation/experiment_recorder.py` (Qlib-style per-run memory; Supabase `experiment_runs` +
+  JSONL fallback; the positive-results twin of REFUTATION_LEDGER) + `scripts/supabase_experiment_runs.sql`.
+  Seeded with this session's real runs → capital shortlist auto-surfaces the DSR-certified swing lineage;
+  refuted runs logged with ledger_ref. Assigned Minimax-C (MINIMAX_SYNC §LOOP-INDUSTRIALIZATION): turn on
+  FreqAI adaptive retrain on the certified swing set with CIS+causes+NMA as base indicators (not price-only),
+  historic_predictions + Tensorboard, A/B vs frozen REGIME_CIS_FLOOR on OOS → cut if it loses. Seth owns:
+  recorder (done), generalizing outcome_tracker to resolve ALL predictions, one-definition feature parity.
+  Principle: borrow the field's plumbing, keep our signal. Report: `reports/LOOP_VS_OSS_2026-07-10.md`.
+- **2026-07-10 LOOP vs OSS benchmark (Qlib / FreqAI / MLOps).** Reviewed our loop vs the field. Verdict: we're
+  AHEAD on WHAT we compute (upstream causal signal; curated Refutation Ledger) and BEHIND on HOW we operationalize
+  (no experiment recorder, manual learning, ad-hoc feature store, backtest↔live parity). Cheap adoptions, mostly
+  from tools we already run: (1) turn on FreqAI adaptive retrain + historic_predictions + Tensorboard for the swing
+  lineage (Minimax-C) → closes "manual learning" for free; (2) Qlib-style Recorder → Supabase `experiment_runs`
+  (positive-results twin of the Refutation Ledger); (3) generalize outcome_tracker to "resolve every prediction"
+  (causes/conviction/narrative, not just signals); (4) one-definition feature-store parity (Redis live + Supabase
+  history, same code path) → kills the R9/R10 "wired≠working / drift" bug class; (5) evaluate Qlib as research
+  backbone, not a rewrite. Do NOT copy their alpha source (price/feature ML = our R5 graveyard). Report:
+  `reports/LOOP_VS_OSS_2026-07-10.md`.
+- **2026-07-10 REFUTATION_LEDGER.md — failures made first-class (Jazz: "failures are more important than
+  successes").** Durable graveyard of every falsified/null/false-alarm hypothesis (R1-R10 so far), each with
+  the number that killed it + the generalizing lesson. Rule: grep before proposing a new test — if it's here,
+  don't re-run it. Aggregate lessons: (1) cleverness overfits, simple survives; (2) edge = orthogonality not
+  more-of-same; (3) "wired" ≠ "working" — verify the number+schema; (4) the loop's job is to kill our ideas
+  cheaply (9/10 died pre-capital). This is the LEARN-memory the loop was missing.
+- **2026-07-10 NMA trend source fixed + causal sleeve expansion TESTED (negative, kept simple).** (1) DATA FIX:
+  replaced dead Google-Trends/pytrends (429→flat 50) trend source with real Binance volume+price-momentum
+  attention score (`get_google_trend_score` rewritten). NMA now fully repaired — all 3 inputs real; produces
+  differentiated signals incl. HYPE=NARRATIVE_FADE (35.8). Three NMA data errors all fixed this session
+  (orderflow spot→fapi, social dead-endpoint→Pro-key+live dev/sentiment, trend pytrends→vol/price momentum).
+  (2) STRATEGY: tested expanding causal_positioning 24→50 perps — **HURTS** (Sharpe +1.34→+0.12, DD 10→30%):
+  funding-crowding is a LARGE-CAP signal, thin/new names = noise. Established-40 holds +1.07 (capacity option,
+  small Sharpe cost). Second signal (funding acceleration) also degraded it → rejected. Codified DEFAULT_UNIVERSE
+  (24) + ESTABLISHED_UNIVERSE (40, capacity-only) + liquidity-gate lesson in `causal_positioning.py`. Discipline
+  win: 2 plausible enhancements tested, both failed OOS-style, kept the simple version. Data cached
+  outputs/causal_data.json (50 assets). Report: `reports/CAUSAL_SLEEVE_2026-07-10.md`.
 - **2026-07-10 LOOP HEALTH — verified flowing end-to-end + standing instrument.** Jazz: "make sure the system
   is working, all parts flowing." Built `src/api/loop_health.py` + `GET /internal/loop-health` — probes every
   stage (ingest→compute→store→measure→feedback). Live result: **FLOWING (all green)** — CIS universe 58 assets,
@@ -83,6 +133,38 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
   walk-forward OOS (certify for capital), retire ~25 negative-SR trials, meta-labeling on swing primaries,
   regime-ensemble across the 5 survivors, wire DSR as a standing promotion gate. Report:
   `reports/STRATEGY_DSR_AUDIT_2026-07-10.md`.
+- **2026-07-10 V10 BUILD (Minimax-C) — MTF + Funding-Aware + Vol-Target; operational layer for THE UPGRADE
+  finding.** Built the next swing iteration layering P1 ground-truth (regime-conditional funding gate) +
+  MetaV4's vol-target sizing onto V9. Two files: `SwingOverlayV10_MTF_FundingAware_VolTarget.py` (5-pair,
+  815L) + `_ETH.py` (1-pair, 2.5× stakes, 783L) at
+  `/Volumes/CometCloudAI/cometcloud-local/user_data/strategies/`. V10 added two pieces: **(1) per-row
+  regime-conditional funding gate** (V9's old `FUNDING_BPS_SKIP_LONG` global flag was too coarse; P1
+  parity 2026-07-09 found funding sign MIXED 5/12 — negative funding bullish 4/4, positive bearish
+  only in bear markets). New logic: `bull & fr>3bps → block long`; `bear & fr<-3bps → block short`
+  (per-row mask, defence-in-depth also in `confirm_trade_entry`). **(2) Vol-target sizing**
+  (`stake × clip(VOL_TARGET_PCT/atr_pct, 0.5, 1.0)`) applied after naked-short mult — **calibration
+  finding**: MetaV4's `VOL_TARGET_PCT=0.04` is a no-op at 15min timescale (BTC 15min ATR% p50=0.31%, so
+  the clip pins at 1.0 always); recalibrating to `0.005` actually fires the scaler. Walk-forward 3
+  windows (TRAIN 2024 bull / VALIDATE 2025 chop / HOLD-OUT 2026 recovery):
+  **V10 = +2,572.7 USDT vs V9 +3,169.8 USDT (-18.8% P&L), trades 1,207 vs 1,297 (-7.0%), MDD
+  3.18% vs 2.72% in 2025 chop (+0.46pp), TRAIN avg stake 678→595 USDT (-12.3% — confirms vol-target
+  activation)**. Funding-gate LOGIC verified by unit test (`/tmp/v10_unit_test.py`, 4/4 cases pass)
+  but **does NOT fire in backtest** — CIS funding cache returns 0 in backtest mode (no per-bar funding
+  wired into the loader); per-bar funding = **V11 work** (extend CIS loader to read `CIS_HISTORY_DIR`).
+  V10-ETH ≈ V9-ETH (no gates fire at 2.5× scale on ETH-only; benign reversion = expected safety property
+  when no signal is present). **Verdict:** V9 retained as production, V10 retained for archival.
+  **Aligns with Seth's same-day work on three counts:** (a) **V10_FundingAware (DSR 0.994) already in DSR
+  audit survivors** above — audit pre-confirmed the lineage before walk-forward; (b) **THE UPGRADE
+  finding (orthogonality math) predicts another swing variant is dilutive** (5 DSR survivors 0.67
+  mutually correlated, V8/V9/V10=0.95-1.0) — V10 walk-forward confirms it (-18.8%); (c) **Causal
+  Positioning Sleeve** (ann Sharpe +1.21, corr +0.002 to swing, ENB 2.16→2.85) is the orthogonal
+  answer V10 isn't. Incremental value = the **vol-target calibration finding** (15min vs daily ATR%
+  timescale is transferable to any vol-target implementation) + a documented **regime-conditional
+  funding-gate pattern** (template for orthogonal causal-gated swing attempts in V11+). **V10 report
+  status = NEUTRAL per compliance language** ("more conservative but does not improve P&L"); no
+  signal-grade language used. Reports: `_data/research/V10_MTF_FundingAware_VolTarget_2026-07-09.md`,
+  `parity_w5/P1_PARITY_ASSESSMENT_2026-07-09.md`. Configs: `/tmp/config_swing_v10{,_eth}.json`. Walk-
+  forward logs: `/tmp/v10{,_eth}_{train_2024,validate_2025,holdout_2026}.txt`.
 - **2026-07-10 Strategy competitiveness review (CORRECTED).** First pass benchmarked against the GRAVEYARD
   (dead LS_V4 −6.59%, META_V4 −5.47%, falsified edge gate) and wrongly concluded "no profitable strategies"
   — a research miss: never opened `Shadow/freqtrade/user_data/backtest_results/`. REAL state: the
@@ -269,15 +351,57 @@ other agents can trust it. Full autonomy is the partner's game, not ours. Soul: 
   `reports/H32_SIZING_AB_2026-07-09.md`). Per H3: "conviction is a sizing signal,
   not a gating signal." H3.1 (gate-multiplier) lost because the floor band is a
   knife-edge. H3.2 sidesteps that by leaving the gate at `REGIME_CIS_FLOOR` unchanged
-  and scaling POSITION SIZE by today's conviction: `trade_size × (0.5 + c)` ∈ [0.5, 1.5]×.
+  and scaling POSITION SIZE by today's conviction: `trade_size × (floor + (cap−floor) × c)`.
   A/B'd across raw + modal_recency dirs × {IS, OOS} × {baseline, h32_sizing} = 8 runs.
   **H3.2 wins per-trade PnL in ALL 4 runs** (Δ IS $/pos +$1.79 to +$2.14, Δ OOS $/pos
   +$0.10 to +$2.25). Trade count unchanged (gate unmodified). **First POSITIVE result
   in the H-series** (H3 prototype / H2 magnitudes / edge gate all lost). Mechanism =
-  Millennium soft-sizing: let the signal through, weight by confidence. **Ship as opt-in
-  config, default OFF** — `LSV1_USE_H32_SIZING=1` (floor/cap configurable via env).
-  Honest caveats: OOS n=4–6 (modal_recency within AQR noise floor); no proper
-  portfolio-level MaxDD check; [0.5, 1.5] range is default not optimized.
+  Millennium soft-sizing: let the signal through, weight by confidence. Ship as opt-in
+  via `LSV1_USE_H32_SIZING=1` (floor/cap configurable via env).
+- **2026-07-10 H3.2 sizing FLOOR/CAP SWEEP — REFINED positive; bump default cap 1.5 → 1.75**
+  (`src/research/cis_regime_studies/h32_sizing_sweep.py`,
+  `src/research/nautilus/ls_v1/strategy.py` `LSv1Config.h32_size_cap` default bumped 1.5→1.75,
+  `reports/H32_SIZING_FLOORCAP_SWEEP_2026-07-10.md`). The `[0.5, 1.5]` default was ad-hoc.
+  Swept 6 (floor, cap) variants × raw + modal_recency × {IS, OOS} = 24 Nautilus runs.
+  **Key insight:** IS Sharpe is INVARIANT to (floor, cap) at this sample size — both
+  per-trade mean AND per-trade std scale linearly with size, so E[X]/SD[X] is invariant.
+  The differentiating metric is **per-trade PnL**, which scales monotonically with cap:
+  cap 1.25→1.5→1.75→2.0 gives raw IS $/pos $+5.74→$+6.85→$+8.02→$+9.01.
+  `cvx` (linear through origin) is the WORSE outcome — zero size on low-conv days removes
+  the protective trades. `d0.25` matters little (median conviction ≈ 0.93, floor rarely bites).
+  **Pareto decision:** bump production default cap 1.5 → **1.75**. Captures +37% PnL
+  on IS (n=58 reliable) with no Sharpe penalty. Cap=2.0 is research ceiling (diminishing
+  returns + Sharpe decay in modal_recency 0.066→0.061). Cap=1.25 too tight. **Re-verify
+  after ≥6mo OOS data accumulates.**
+- **2026-07-10 H3.2 PORTFOLIO-LEVEL MaxDD analysis — CORRECTIVE FINDING (linear lever, not alpha)**
+  (`src/research/cis_regime_studies/h32_sizing_portfolio_dd.py`,
+  `reports/H32_SIZING_PORTFOLIO_DD_2026-07-10.md`). Aggregated per-trade PnL from
+  the 24 sweep runs into portfolio equity curves. **Critical finding:** ALL variants
+  have DD/PnL ≈ 0.96-1.00 — capturing 1× the PnL costs ~1× the Max DD. This is the
+  expected math when only position size changes (trade list is identical across variants).
+  Per-day Sharpe is essentially flat (0.0766-0.0779 raw/IS, within noise at n=58).
+  **Revised framing:** H3.2 is a **linear sizing controller**, not an alpha source.
+  The "Pareto-balanced" framing in the previous report was misleading — the choice
+  between cap=1.0 and cap=1.75 is a **leverage decision**, not a quality decision.
+  One mitigating finding: t1.75 has the BEST per-day Sharpe (+0.0008 over def) — within
+  noise but consistent with the H3 finding. **Revised recommendation:** keep cap=1.75
+  as default but document it as a leverage bump (already shipped to strategy.py).
+  Env-var override (`LSV1_H32_SIZE_CAP`) keeps the choice tunable per deployment.
+  Corrective addendum added to `reports/H32_SIZING_FLOORCAP_SWEEP_2026-07-10.md`.
+- **2026-07-10 H2a benchmark-relative IC test — CRITICAL FINDING (genuine reversal in 3/5 regimes)**
+  (`src/research/cis_regime_studies/h2a_relative_ic.py` ran successfully today;
+  `reports/H2A_RELATIVE_IC_2026-07-10.md`, raw output `reports/cis_regime_relative_ic_2026-07-06.{md,json}`).
+  Tests if H1's sign-flips are BETA artifact (vanish under BTC-relative returns) or genuine
+  reversal (persist). **Verdict: GENUINE REVERSAL in 3/5 regimes at 7d** — Stagflation IC_abs=-0.235
+  → IC_rel=-0.326 (gets WORSE), Risk-On IC_abs=-0.166 → IC_rel=-0.101, Risk-Off IC_abs=-0.093
+  → IC_rel=-0.104. Only Tightening is consistent (both positive, n=216 small). At 30d:
+  Easing becomes genuine reversal (was flat at 7d); Risk-On becomes beta artifact (recovers
+  to flat under relative). **H2 direction-by-regime is now CONFIRMED necessary, not just
+  hypothesized.** Action items: (a) H2 design must populate per-regime × per-horizon direction
+  table, (b) H3.2 sizing remains valid as a sizing LAYER (independent of gate direction),
+  (c) Phase 1 ship (smoothed regime labels) still valid, (d) empirical-grid edge gate A/B
+  should consider per-regime direction. Honest caveats: Stagflation n=195 and Tightening n=216
+  small; OHLCV ends 2026-06-07; benchmark = BTC for all crypto (no per-asset benchmark).
 - **2026-07-09 CAUSE-DRIVEN BACKTEST infrastructure (B2) — SHIPPED, run BLOCKED on data**
   (`scripts/supabase_migration_cause_history.sql`, `src/data/cis/cause_persistence.py`,
   `src/research/cis_regime_studies/cause_backtest.py`, `reports/CAUSE_BACKTEST_2026-07-09.md`).
