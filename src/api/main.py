@@ -28,7 +28,7 @@ import os, sys, json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from fastapi import FastAPI, Request, Header
+from fastapi import FastAPI, Request, Header, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -761,6 +761,9 @@ async def causal_paper(response: Response = None):
     """Live PAPER track record of the causal positioning sleeve (walk-forward + cost
     validated market-neutral edge). NAV curve + Sharpe/DD from causal_paper_nav.
     See src/data/signals/causal_paper.py."""
+    from fastapi import Response as _Response  # defensive (also imported at module top)
+    if response is None:
+        response = _Response()
     if response:
         response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
     from src.data.signals.causal_paper import get_curve
@@ -775,6 +778,9 @@ async def dingge_board(response: Response = None):
     """Live 顶格 board — tokenized-RWA perps whose funding pinned the cap (24/7-on-chain vs
     closed-underlying blowoff), with the 量能/volume read + direction lean. Jazz-derived,
     validated (experiment_runs: funding_dingge_reversal). See src/data/signals/dingge_rwa.py."""
+    from fastapi import Response as _Response  # defensive (also imported at module top)
+    if response is None:
+        response = _Response()
     if response:
         response.headers["Cache-Control"] = "public, max-age=900, stale-while-revalidate=1800"
     import asyncio as _a, datetime as _d
