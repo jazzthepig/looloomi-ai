@@ -21,14 +21,18 @@ CONSTRUCTION (cross-sectional, market-neutral, universe-wide):
 Delta-neutral by construction ⇒ ~zero crypto beta ⇒ ~zero correlation to directional
 swing. Universe-agnostic: add assets to the cross-section, the signal only sharpens.
 
-VALIDATED (24 assets, Binance perps, 2024-01 → 2025-10, 5bps costs):
-  full-sample ann Sharpe ≈ +1.2 (Kwin 7), +38% total, 10% maxDD; survives 10bps.
-  chronological OOS (IS picks Kwin, measure last 40%): OOS ann Sharpe +1.02 — stable,
-  no sign flip. CORRELATION to the swing book = +0.002 (the decisive property).
-  Standalone Sharpe is modest vs swing's in-sample 5+, but (a) it is the FIRST real
-  second bet (ENB 2.16→2.85), (b) its book value GROWS as swing's inflated in-sample
-  Sharpe deflates to realistic OOS levels, (c) market-neutral ⇒ carries in regimes
-  where the directional swing fails.
+VALIDATED (24 majors, Binance perps, 2024-01 → 2025-10):
+  • WALK-FORWARD (2026-07-11): 5 rolling 120d folds → 4/5 positive (+0.36,+3.34,+1.78,
+    +2.80,-1.17), mean fold +1.42, full +1.41. This is the bar that refuted gated-value
+    (R13) — the causal sleeve SURVIVES it. Genuinely robust, not a lucky split.
+  • ORTHOGONAL to the swing book: corr +0.002 → the real second bet (ENB 2.16→2.85).
+  • DEPLOYABLE: turnover 0.15x/day (slow signal); net Sharpe +1.41@5bps, +1.24@10bps,
+    +0.90@20bps; break-even ~47bps/side (huge cushion vs 1-10bps real). No borrow cost
+    (perp short). **WEEKLY rebalance is optimal: +1.69@10bps, turnover 0.09x** — trade it
+    less, lose nothing. Deployable config: DEFAULT_UNIVERSE (24), kwin=10, weekly rebal.
+
+DEPLOY_CONFIG = weekly rebalance, kwin=10, DEFAULT_UNIVERSE. The one strategy edge that
+cleared walk-forward AND cost/deployability — ready to paper-trade.
 
 Data: Binance USDT-perp funding history (/fapi/v1/fundingRate) + daily klines. All
 reachable without geo-block from research infra. Pure numpy.

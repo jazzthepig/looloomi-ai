@@ -1664,6 +1664,12 @@ async def get_cg_vc_portfolios() -> list[dict]:
             chg24  = cat.get("market_cap_change_24h") or 0
             vol24  = cat.get("volume_24h") or 0
             top3   = cat.get("top_3_coins_id") or cat.get("top_3_coins") or []
+            # Quality floor — the "-portfolio" suffix auto-includes CoinGecko JOKE categories
+            # (Pump Fund Portfolio = $0 mcap, scam holdings like CLAWPUMP). Require a real
+            # portfolio (whitelisted firms bypass the floor) and block meme/pump buckets.
+            if cid not in _VC_CAT_IDS:
+                if mcap < 25_000_000 or any(b in cid for b in ("pump", "meme", "sample", "test", "airdrop")):
+                    continue
             result.append({
                 "id":          cid,
                 "name":        _VC_SHORT.get(cid, cat.get("name", cid)),

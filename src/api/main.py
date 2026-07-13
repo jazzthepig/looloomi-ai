@@ -295,6 +295,33 @@ async def _start_prediction_resolver_loop():
         print("[PRED] ✅ daily prediction-resolver loop scheduled")
 
 
+# ── Causal paper book — live NAV track record of the validated market-neutral sleeve ──
+# Daily mark, weekly rebalance (the cost-validated deployable cadence). Turns the
+# walk-forward candidate into a real, honest, LP-showable number. Binance reachable
+# from the Singapore region. See src/data/signals/causal_paper.py.
+_CAUSAL_PAPER_INTERVAL_S = 24 * 3600
+
+
+async def _causal_paper_loop():
+    await _asyncio.sleep(360)   # 6 min warmup
+    while True:
+        try:
+            from src.data.signals.causal_paper import mark_and_rebalance
+            res = await mark_and_rebalance(dry_run=False)
+            print(f"[CAUSAL-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
+                  f"rebal={res.get('rebalanced')}")
+        except Exception as _e:
+            print(f"[CAUSAL-PAPER] ⚠️  mark failed: {_e}")
+        await _asyncio.sleep(_CAUSAL_PAPER_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_causal_paper_loop():
+    if os.environ.get("DISABLE_CAUSAL_PAPER", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_causal_paper_loop())
+        print("[CAUSAL-PAPER] ✅ daily causal paper-book loop scheduled")
+
+
 # ── Track-record refresh loop — self-tuning conviction ────────────────────────
 # Recomputes signal_track_record (30d benchmark-relative outcomes from our own
 # cis_scores × ohlcv_daily) daily → the Risk Meter's conviction tilt auto-recalibrates
@@ -727,6 +754,37 @@ async def prediction_track_record():
     prediction_outcomes — the read-back that mines the write-only logs. Public read."""
     from src.data.signals.prediction_resolver import source_track_record
     return await source_track_record()
+
+
+@app.get("/api/v1/signals/causal-paper")
+async def causal_paper(response: Response = None):
+    """Live PAPER track record of the causal positioning sleeve (walk-forward + cost
+    validated market-neutral edge). NAV curve + Sharpe/DD from causal_paper_nav.
+    See src/data/signals/causal_paper.py."""
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.data.signals.causal_paper import get_curve
+    try:
+        return await get_curve()
+    except Exception as e:
+        return {"error": "causal_paper_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/signals/dingge-board")
+async def dingge_board(response: Response = None):
+    """Live 顶格 board — tokenized-RWA perps whose funding pinned the cap (24/7-on-chain vs
+    closed-underlying blowoff), with the 量能/volume read + direction lean. Jazz-derived,
+    validated (experiment_runs: funding_dingge_reversal). See src/data/signals/dingge_rwa.py."""
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=900, stale-while-revalidate=1800"
+    import asyncio as _a, datetime as _d
+    from src.data.signals.dingge_rwa import scan_live
+    try:
+        board = await _a.to_thread(scan_live)
+        active = [b for b in board if b.get("at_cap") or (b.get("days_since_cap") is not None and b["days_since_cap"] <= 45)]
+        return {"board": board, "active_or_recent": len(active), "as_of": _d.datetime.now(_d.timezone.utc).isoformat()}
+    except Exception as e:
+        return {"error": "dingge_board_unavailable", "detail": str(e)[:120]}
 
 
 @app.get("/internal/loop-health")
