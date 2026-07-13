@@ -447,6 +447,15 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
         "outcome_30d_pending":    len(pending_signals) + sum(1 for r in closed if r.get("outcome_30d") is None and r.get("return_pct") is None),
     }
 
+    # HONEST primary track record — benchmark-relative ALPHA. These are OUTPERFORM signals
+    # (relative claims); scoring their ABSOLUTE return in a down/Tightening market is what
+    # produces the −0.89-Sharpe / 2.6%-win-rate artifact. Lead the UI with alpha_*, not the
+    # absolute sleeve. (Output-layer honesty — the absolute fields are kept for reference.)
+    _aa = np.array(_alphas, dtype=float) if _alphas else np.array([])
+    alpha_sharpe = (round(float(_aa.mean() / _aa.std() * np.sqrt(12)), 3)
+                    if _aa.size > 3 and _aa.std() > 0 else None)
+    alpha_win_rate = round(float((_aa > 0).mean() * 100), 1) if _aa.size else None
+
     # Equity curve with dates for chart
     equity_series = []
     eq = 100_000.0
@@ -462,6 +471,19 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
             "return": ret,
         })
 
+    # Alpha equity curve — compounds benchmark-relative alpha (the HONEST chart). The
+    # absolute equity_series above craters because it's a long-only absolute-return sleeve
+    # in a down market; alpha is the fair curve for relative OUTPERFORM signals.
+    alpha_equity_series = []
+    aeq = 100_000.0
+    for r in sorted(resolved_signals, key=lambda x: (x.get("exit_date") or x.get("signal_date") or "")):
+        a = r.get("alpha_30d")
+        if a is None:
+            continue
+        aeq *= (1 + a / 100.0)
+        alpha_equity_series.append({"date": r.get("exit_date") or r.get("signal_date"),
+                                    "equity": round(aeq, 2), "symbol": r.get("symbol"), "alpha": a})
+
     avg_holding = None
     hold_days = [r.get("holding_days") for r in closed if r.get("holding_days") is not None]
     if hold_days:
@@ -470,7 +492,15 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
     return {
         "status":          "live",
         "as_of":           datetime.now(timezone.utc).isoformat(),
-        # Core KPIs
+        # HONEST primary track record — benchmark-relative alpha (fair measure of OUTPERFORM
+        # signals). The absolute sharpe/win_rate below reflect a doomed long-only sleeve in a
+        # down market and should NOT headline the UI.
+        "alpha_sharpe":        alpha_sharpe,
+        "alpha_win_rate_pct":  alpha_win_rate,
+        "avg_alpha_pct":       out_avg_alpha,
+        "headline_basis":      "benchmark_relative_alpha",
+        "headline_note":       "Lead with alpha_* — absolute metrics reflect a long-only sleeve in a Tightening market. Live validated market-neutral track record: /api/v1/signals/causal-paper.",
+        # Core KPIs (absolute — reference only)
         "sharpe":          sharpe,
         "sortino":         sortino,
         "cagr_pct":        round(cagr * 100, 2) if cagr is not None else None,
@@ -491,7 +521,8 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
         # Equity
         "starting_equity": 100_000,
         "current_equity":  round(equity_curve[-1], 2) if equity_curve else 100_000,
-        "equity_series":   equity_series[-120:],   # last 120 data points for chart
+        "equity_series":   equity_series[-120:],   # absolute (reference)
+        "alpha_equity_series": alpha_equity_series[-120:],   # HONEST curve — chart should use this
         # Attribution
         "by_regime":       regime_stats,
         "by_class":        class_stats,

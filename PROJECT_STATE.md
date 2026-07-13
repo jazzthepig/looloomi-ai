@@ -5,11 +5,69 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-07-10 (Seth + Minimax-C)
+**Last updated:** 2026-07-11 (Seth + Minimax-C; added V11 BUILD entry)
 
 ---
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
+- **2026-07-13 OUTPUT-LAYER QA — fixed the two broken user-facing pages (Jazz: "nowhere near our standard").**
+  (1) EVENTS & VC: funding rounds were malformed RSS extractions (project=null, investor="SBI Holdings SBI
+  Holdings was the sole investor in the round"). Added `_sanitize_raises` in intelligence.py — drops null-name
+  rounds, cleans sentence-fragment/duplicate/project-contaminated investor strings. Verified: →"SBI Holdings".
+  (2) SIGNAL PERFORMANCE (Trading Engine): headline showed −0.89 Sharpe / 2.6% win-rate — an ABSOLUTE-return
+  long-only sleeve doomed in a Tightening market. Root: scoring relative OUTPERFORM signals on absolute return.
+  Fix: signals.py now exposes honest `alpha_sharpe`/`alpha_win_rate_pct`/`avg_alpha_pct` + headline_note pointing
+  to causal-paper; PerformanceDashboard.jsx Sharpe+WinRate cards now lead with alpha (fallback absolute).
+  Also fixed: (3) VC PORTFOLIOS junk — data_layer.get_cg_vc_portfolios `-portfolio` suffix auto-included CG joke
+  categories (Pump Fund=$0/CLAWPUMP); added quality floor (non-whitelist needs ≥$25M mcap + blocks pump/meme/
+  airdrop). (4) EQUITY CHART — was plotting the absolute −26% crater; backend now emits `alpha_equity_series`
+  (compounds benchmark-relative alpha), PerformanceDashboard prefers it (same shape, chart unchanged), relabeled
+  "Cumulative Alpha vs BTC/SPY" + honest total. All backend compiles; JSX balance-checked (464/464 braces).
+  STILL TODO (needs Mac build + design): lead Trading Engine with the causal-paper NAV once it accrues marks;
+  demote the observational sleeve. Backend verified; frontend needs `npm run build` Mac-side.
+- **2026-07-11 CAUSAL SLEEVE → LIVE PAPER BOOK (the validated edge, now accruing a real track record).**
+  After walk-forward (4/5 folds +1.42) + cost/deployability (weekly-rebal net +1.69@10bps, break-even 47bps,
+  no borrow) confirmed the causal positioning sleeve as THE one build-ready edge, wired it to paper. Built
+  `src/data/signals/causal_paper.py` — NAV state machine (daily mark + WEEKLY rebalance, the validated cadence);
+  market-neutral cross-sectional book (gross 1.0, net ~0; longs low-funding, shorts crowded-longs). State→Redis
+  `causal_paper:state`, NAV curve→Supabase `causal_paper_nav` (table CREATED via connector). Daily
+  `_causal_paper_loop` in main.py + `GET /api/v1/signals/causal-paper` (curve + Sharpe/DD). Binance reachable
+  since SG region → runs on Railway directly. Verified: live weights form correctly (24 majors, ATOM/INJ long,
+  UNI/OP/BTC short). This converts "walk-forward candidate" → live-marked track record for LP conversations.
+  **Uncommitted — needs push** (causal_paper.py + main.py + causal_positioning docstring). Jazz's
+  trading signal: tokenized-RWA perps (MSTR/COIN/NVDA/TSLA/gold/silver/crude/chips) hit funding顶格 (cap,
+  500-1170% annualized) because they trade 24/7 on-chain vs a CLOSED underlying (weekend/after-hours blowoff) →
+  old trend exhausts → new trend forms → direction set by 量能/VOLUME (not price momentum). Tested: n=24 RWA
+  顶格 episodes; VOLUME predicts new-trend direction (corr +0.39 full; vol-expand beats vol-dead in BOTH IS
+  (+6.3 vs +2.8) and OOS (+5.2 vs -1.8); vol-gated strat +1.7% IS / +3.5% OOS). Corr noisy (young instrument
+  class, small n) but economics directionally consistent IS+OOS. Built `src/data/signals/dingge_rwa.py`
+  (RWA_PERPS list, live monitor scan_live() + backtest()) + `GET /api/v1/signals/dingge-board`. Live board now
+  flags SKHYNIX/SOXL/SAMSUNG (量能 expanding→watch_up), CBRS (dead→watch_down). experiment_runs updated to
+  candidate. This is a structural, differentiated lane (neither crypto nor TradFi quants sit in it) at our exact
+  thesis intersection. Needs OOS accumulation + capital-gating before sizing. **Uncommitted — needs push.**
+  **CORRECTION (Jazz caught it): 顶格 is BIDIRECTIONAL** — funding at +cap (crowded longs, flush) OR -cap
+  (crowded shorts, squeeze). Original detector was long-only → missed ~half the events. Fixed: n 24→40 (20+20);
+  short-crowded fwd +5.3%, long-crowded +4.4%; vol-expand +8.2% vs vol-dead +1.5% fullsample, OOS still weak.
+  Monitor now shows side + squeeze/flush logic (KORU=short_crowded→up_bias). Foundation corrected, verdict unchanged.
+- **2026-07-11 SECTOR VALUATION ROTATION (韭圈儿 template) — tested, naive port REFUTED, right path identified.**
+  Jazz flagged 韭圈儿's A-share sector index valuation (温度 = PE/PB percentile vs own history) + rotation as a
+  strong template. Studied + built crypto analog (8 sectors from 50 assets) + tested: naive price-based
+  temperature FAILS (long-short Sharpe +0.04, long-only −0.16/−25%/109% DD — value trap, cheap keeps falling).
+  Root cause: A-shares mean-revert because EARNINGS anchor price (PE/PB); crypto has no earnings floor → price-
+  cheap = momentum-reversion = trap (R6 again). Right adaptation: real fundamental temperature (MVRV-Z majors +
+  mcap/TVL + mcap/fees via DeFiLlama — we already integrate it) used as a SCREEN, GATED by catalyst+trend
+  (CONVICTION L2/L4) — value alone is a trap; value+catalyst is the thesis. Bonus: a legible "估值温度 board" UI
+  surface (on-brand for APAC audience). Logged R12 + refuted run in live experiment_runs (now 2 rows: certified
+  swing + this). Report: `reports/SECTOR_VALUATION_2026-07-11.md`.
+- **2026-07-11 POST-PUSH CHECK caught a prod bug: narrative trend+orderflow used geo-blocked Binance.**
+  Verified deploy (f19275c2 live, loop-health FLOWING, 5 Supabase tables live+write-verified). BUT live NMA
+  showed trend=50 orderflow=50 FLAT while social differentiated → my trend fix (Binance klines) + orderflow fix
+  (Binance fapi) hit Binance, which is GEO-BLOCKED on Railway US (works in sandbox, fails in prod → fallback 50).
+  FIXED: rerouted BOTH to CoinGecko (Railway-safe, same source positioning.py uses) — trend→CG market_chart
+  (vol+price momentum), orderflow funding→CG /derivatives (OI-weighted funding). Verified differentiated via CG.
+  bid_imbalance/depth still Binance (degrades to neutral on Railway; orderflow leans on funding). **NEW uncommitted
+  change — needs push.** Lesson (→ Refutation Ledger candidate): "works in sandbox" ≠ "works on Railway" for any
+  Binance-sourced signal; CoinGecko is the Railway-safe primary.
 - **2026-07-10 PREDICTION RESOLVER — "resolve EVERY prediction" (closes the 88:4 read-back gap).** Built
   `src/data/signals/prediction_resolver.py` — generalizes outcome_tracker (signals only) to ALL 5 sources
   (signal, positioning, forward_supply, conviction, narrative). Each source's directional claim → resolved
@@ -165,6 +223,45 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
   signal-grade language used. Reports: `_data/research/V10_MTF_FundingAware_VolTarget_2026-07-09.md`,
   `parity_w5/P1_PARITY_ASSESSMENT_2026-07-09.md`. Configs: `/tmp/config_swing_v10{,_eth}.json`. Walk-
   forward logs: `/tmp/v10{,_eth}_{train_2024,validate_2025,holdout_2026}.txt`.
+- **2026-07-10 V11 BUILD (Minimax-C) — Causal-Sized Swing (V9 + H3.2 positioning conviction); H3.2
+  does NOT transfer to swing; V12 direction = cross-sectional positioning z.** Cleanest A/B on V9:
+  layer Seth's H3.2 conviction-sizing pattern (Nautilus LS v1 winner, Δ $/pos +$1.79 to +$2.14 IS /
+  +$0.10 to +$2.25 OOS) onto swing, using the **Causal Positioning Sleeve's per-pair trailing-7-day
+  funding z-score** (Kwin=7, matches Sleeve's native window) as a **SIZING INPUT** (not a separate book).
+  Direction-aware conviction: `c_long = (1-z/3)/2`, `c_short = (1+z/3)/2`, multiplier = `clip(0.5+c, 0.5, 1.5)`.
+  Two files: `SwingOverlayV11_CausalSized.py` (5-pair, 815L) + `_ETH.py` (1-pair, 2.5× stakes) at
+  `/Volumes/CometCloudAI/cometcloud-local/user_data/strategies/`. **Data prep:** offline z-table built
+  from `causal_positioning.load_binance_panel()` (5 pairs × 4,615 obs → `/tmp/v11_funding_z.json`,
+  102KB, clip ±3σ, μ_z≈0 std≈1.0 per pair). **Sizing math unit-tested** (`/tmp/v11_unit_test.py`,
+  19/19 pass: z=-3 long→1.5, z=-3 short→0.5, z=0 both→1.0, z=+3 long→0.5, z=+3 short→1.5,
+  z=None/tiny/out-of-clip→1.0). Walk-forward 3 windows: **V11 5-pair = +2,774.6 USDT vs V9 +3,169.8
+  (-12.5% P&L), trades 1,211 vs 1,297 (-6.6%), avg stake 644 vs 678 USDT in TRAIN 2024 (-5.0%);
+  V11-ETH = +1,311.1 vs V9-ETH +1,421.2 (-7.7%), trades flat, avg stake -7.3%.** Notably V11-ETH
+  WINS in VALIDATE 2025 (+559.6 vs +234.3, +138.8%) — smaller stake enables more re-entries in
+  chop; V11-ETH also wins Sharpe in TRAIN 2024 and HOLD-OUT 2026. **Mechanism analysis (3 reasons
+  V11 loses):** (1) avg-stake effect: -5% to -7% stake × similar trades = mechanically -5-7% P&L
+  even on same trade list; (2) z-score distribution biased by market microstructure — longs μ_z
+  ≈ +1.27-1.41 (V11 cuts long stake), shorts μ_z ≈ -2.20-2.27 (V11 cuts short stake); both sides
+  shrunk on average because crypto funding is structurally positive; "fade the crowd" becomes
+  permanent downsize not tactical rebalance; (3) **H3.2 is LS-v1-specific, not swing-portable** —
+  H3.2's mechanism "let signal through, weight by confidence" works in CROSS-SECTIONAL books
+  (conviction = which name to overweight); in PER-PAIR swing entries, conviction = how much to
+  size, but swing already has regime-stake (900/600/400) doing similar work; the two conviction
+  layers stack and don't compose additively. **Not a falsification of H3.2** (still wins on LS v1)
+  but a **boundary finding**: H3.2 portability has limits; the cross-sectional allocation problem
+  is fundamentally different from per-pair sizing. **V11 vs V10:** +201.9 USDT recovery (less
+  aggressive cutting stake: avg -5% vs V10's -12.3%) but still loses to V9. **Aligns with Seth's
+  same-day work on three counts:** (a) **V11 = +1 swing variant, dilutive per orthogonality math**
+  — confirms THE UPGRADE finding (5 DSR survivors 0.67 correlated, V8/V9/V10 = 0.95-1.0);
+  another swing variant just decorates the same alpha; (b) **Causal Sleeve's signal IS orthogonal
+  to swing (corr +0.002)** but the per-pair rolling-z port does NOT transfer its edge — swing's
+  regime-stake + naked-short system already captures per-pair conviction in a different way;
+  (c) **V12 direction = cross-sectional positioning z** (Causal Sleeve native form) — would test
+  if a CROSS-SECTIONAL conviction layer (relative z across the 5-pair universe) beats V9, vs
+  V11's per-pair form which doesn't. **Verdict:** V9 retained as production, V11 retained for
+  archival + as documented counter-example for H3.2 portability. Reports:
+  `_data/research/V11_CausalSized_2026-07-10.md`. Configs: `/tmp/config_swing_v11{,_eth}.json`.
+  Walk-forward logs: `/tmp/v11{,_eth}_{train_2024,validate_2025,holdout_2026}.txt`.
 - **2026-07-10 Strategy competitiveness review (CORRECTED).** First pass benchmarked against the GRAVEYARD
   (dead LS_V4 −6.59%, META_V4 −5.47%, falsified edge gate) and wrongly concluded "no profitable strategies"
   — a research miss: never opened `Shadow/freqtrade/user_data/backtest_results/`. REAL state: the
