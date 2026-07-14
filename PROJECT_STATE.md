@@ -5,11 +5,46 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-07-11 (Seth + Minimax-C; added V11 BUILD entry)
+**Last updated:** 2026-07-13 (Seth + Minimax-C; added V11 BUILD, V12 in flight, Binance 解封, R13/R14 collision 修)
 
 ---
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
+- **2026-07-13 🚀 FRONTEND BUILDS IN-SANDBOX NOW — the real velocity unblock.** The whole session's frontend
+  work was piling up UNBUILT because I assumed the sandbox couldn't `npm run build` (FUSE deny-unlink breaks
+  vite emptyDir). SOLVED: build to `/tmp` (outside mount) → copy `dist/` back (copy=write, allowed). Built in
+  3.2s; app.html→app-CKbeEh_e.js (present, contains new code); dingge-board/open-source/alpha_equity all in the
+  built bundles. `scripts/build_frontend.sh` makes it repeatable; CLAUDE.md deploy workflow updated. IMPACT: no
+  more "wait for Mac npm build" — agent builds dist, Mac just `git add -A && commit && push`. Everything this
+  session (VC clean, honest alpha metrics + chart, open-source strategies page, 顶格 board on Events, causal-paper
+  endpoint, all backend) is now BUILT + boot-verified (SMOKE OK) + ships in ONE push. This was the bottleneck
+  behind "还不能给客户用/太慢".
+- **2026-07-13 顶格 board surfaced on Events page (live differentiated signal).** Built standalone
+  `dashboard/src/components/DinggeBoard.jsx` (fetches live `/api/v1/signals/dingge-board`, renders RWA funding
+  extremes: symbol, crowded-long/short side, peak annualized funding, 量能/volume ratio, up/down lean; 10min
+  refresh; honest "candidate, not live capital" footer). Mounted on IntelligencePage events view above VC
+  Funding. Verified vs LIVE endpoint — fields match, populated NOW (SAMSUNG/SKHYNIX at-cap 696-724%/yr vol 3.4×
+  →up_bias; KORU crowded-short 1006%/yr→squeeze). Standalone component = low blind-edit risk. JSX balanced
+  (61/61, 979/979). Needs push + Mac npm build. This is the one live, populated, uniquely-ours signal on the UI.
+- **2026-07-13 OPEN-SOURCED earlier profitable strategies on the Strategies page (Jazz ask).** Released 3
+  directional/CIS-gated strategies under MIT (NOT the moat — causal+conviction stay proprietary):
+  `strategies/open_source/` = SwingOverlayV7_MTF (profitable, honest IN-SAMPLE metrics: Sharpe 6.2/CAGR 32%/PF
+  1.9/win 66%/DD 3.3%, owes walk-forward) + ValueOnChain (F+O, reference) + Breakout (S+M, reference) + README +
+  MIT LICENSE. Backend: `OPEN_SOURCE_STRATEGIES` catalog + `GET /api/v1/strategies/open-source` (metadata, honest
+  in_sample-vs-reference labels) + `/{id}/code` (serves source). Frontend: `OpenSourceStrategies` section on
+  StrategiesPage (fetch catalog → cards w/ thesis + honest note + View-code). Honesty rule enforced in copy: no
+  invented performance, in-sample labeled as such. Verified: import+boot SMOKE OK (ran the real gate, not just
+  py_compile — post-Response-bug discipline); JSX balanced. Needs push + Mac npm build.
+- **2026-07-13 🚨 DEPLOY 502 FIXED — `Response` not imported in main.py (my bug).** Commit 41dec72 boot-failed
+  (502 every endpoint, new build never came up). ROOT CAUSE: my new endpoints `causal_paper`/`dingge_board` use
+  `response: Response = None`, but main.py imported only `FastAPI, Request, Header` — annotations eval at IMPORT
+  time → NameError at boot → app never starts. `py_compile` PASSED (syntax only, not name resolution) so my
+  "compile OK" checks missed it. FIX: `from fastapi import FastAPI, Request, Header, Response` (1 line). VERIFIED
+  by actually importing: `import src.api.main` → clean (the real test py_compile can't do). PREVENTION: pre-push
+  smoke MUST `import src.api.main`, not just py_compile — it catches annotation/name errors. Recovery: push the
+  1-line fix (boots clean, verified) OR Railway-UI rollback to f19275c first for instant uptime. Frontend
+  PerformanceDashboard.jsx (held back by Minimax) couples to the now-live alpha_* fields → push it + `npm run
+  build` dist together next.
 - **2026-07-13 OUTPUT-LAYER QA — fixed the two broken user-facing pages (Jazz: "nowhere near our standard").**
   (1) EVENTS & VC: funding rounds were malformed RSS extractions (project=null, investor="SBI Holdings SBI
   Holdings was the sole investor in the round"). Added `_sanitize_raises` in intelligence.py — drops null-name
@@ -25,6 +60,48 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
   "Cumulative Alpha vs BTC/SPY" + honest total. All backend compiles; JSX balance-checked (464/464 braces).
   STILL TODO (needs Mac build + design): lead Trading Engine with the causal-paper NAV once it accrues marks;
   demote the observational sleeve. Backend verified; frontend needs `npm run build` Mac-side.
+- **2026-07-13 🔓 BINANCE GEO-BLOCK RESOLVED (Railway US + Mac SG both reachable).** Sandbox curl to
+  `https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&limit=2` returns HTTP 200, 0.44s — verified
+  2026-07-13. Mac SG already reached it (causal_positioning.py uses it daily). **Implications:**
+  (a) **NMA pipeline stays CG-primary, Binance-fallback** — do NOT revert the post-push CoinGecko
+  reroute (commit f19275c); R11's lesson generalizes ("verify data-source reachability in TARGET
+  environment, not just sandbox"). CG-primary is the disciplined choice; Binance is the redundancy.
+  (b) **顶格 RWA monitor (commit 41dec72)** is now using live Binance data — verified live SKHYNIX/
+  SOXL/SAMSUNG/CBRS signals. (c) **V11/V12 per-bar funding unblocked** — V10 report flagged
+  "per-bar funding = V11 work (extend CIS loader to read CIS_HISTORY_DIR)" as the workaround for
+  geo-block; now we can pull directly from fapi /fundingRate (8h settlements) and pre-aggregate
+  to daily means for backtest. **V12 in flight** = V10's regime-conditional funding gate finally
+  firing in backtest (currently inert: CIS funding cache returns 0 in backtest mode). **R11
+  retained as historical record** (the specific geo-block instance is superseded, but the lesson
+  is permanent — see REFUTATION_LEDGER.md update note 2026-07-13).
+- **2026-07-13 V12 BUILD (Minimax-C) — Funding-Gate-Wired (V10 + per-bar funding table); funding gate
+  FALSIFIED when it actually fires.** Built the deferred V10 closeout: pre-compute per-pair DAILY MEAN
+  funding from fapi /fundingRate (`/tmp/v12_funding_table.json`, 92KB, 4,260 obs × 5 pairs × 926 days,
+  μ=+0.45-0.66 bps structural positive, σ=0.86-2.05 bps). V12 = V10 clone + per-bar funding lookup
+  (vectorised `_fr_bps` column in populate_indicators; `_v12_fr_for(symbol, current_time)` per-call
+  helper in confirm_trade_entry). **Unit test PASS** (table loads, lookups work, forward-fill correct,
+  sign conversion verified, gate-firing day counts: 2.6-3.8% long-block, BNB 8.6% short-block).
+  Walk-forward 3 windows: **V12 5-pair = +2,554.2 USDT vs V9 +3,169.8 (-19.4% P&L), trades 1,178 vs
+  1,297 (-9.2%); V12-ETH = +1,421.2 (FLAT vs V9), trades 242 flat.** **The CLEAN A/B vs V10 (gate
+  inert) = -0.7% P&L on -2.4% trades** — the funding gate fires ~29 times over 3 windows × 5 pairs
+  (almost all bull + fr>3bps on BTC/SOL/ETH/XRP longs) and the trades it filters are on average
+  NET PROFITABLE — bull regime pullbacks with elevated funding are exactly where V9's RSI<35 cross
+  historically works. **Three falsifying findings in a row on the funding-gate hypothesis**: (1) V10
+  vs V9 = -18.8% (gate inert but vol-target confounded); (2) V12 vs V10 = -0.7% (gate fires, gate
+  itself subtracts alpha); (3) ETH-only shows the gate essentially never fires (ETH rarely in pure
+  bull/bear + funding rarely crosses ±3bps). **The P1 ground-truth ("funding sign MIXED 5/12 in
+  regime-conditional way") was correct as a *descriptive* finding about funding signs in different
+  regimes, but it is NOT a *trading* signal.** Crowded longs in a bull market are still on the
+  right side of the trend. **Aligns with V10/V11 pattern** (a) **V10 falsified vol-target** for
+  per-pair swing; (b) **V11 falsified H3.2 conviction-sizing portability** (R13); (c) **V12
+  falsifies funding-gate portability** — three per-pair overlays all net negative. **Causal
+  Sleeve (corr +0.002 to swing, ann Sharpe +1.21, ENB 2.16→2.85) remains the orthogonal
+  answer** — its CROSS-SECTIONAL signal form is the right port, not per-pair gates. **Don't
+  propose more per-pair filters on swing without explicit cross-validation.** V9 retained as
+  production; V10/V11/V12 retained for archival + as the canonical funding-gate counter-example
+  (R15 added to REFUTATION_LEDGER). Report: `_data/research/V12_FundingGateWired_2026-07-13.md`.
+  Configs: `/tmp/config_swing_v12{,_eth}.json`. Walk-forward logs: `/tmp/v12{,_eth}_{train_2024,
+  validate_2025,holdout_2026}.txt`.
 - **2026-07-11 CAUSAL SLEEVE → LIVE PAPER BOOK (the validated edge, now accruing a real track record).**
   After walk-forward (4/5 folds +1.42) + cost/deployability (weekly-rebal net +1.69@10bps, break-even 47bps,
   no borrow) confirmed the causal positioning sleeve as THE one build-ready edge, wired it to paper. Built
@@ -499,6 +576,23 @@ other agents can trust it. Full autonomy is the partner's game, not ours. Soul: 
   (c) Phase 1 ship (smoothed regime labels) still valid, (d) empirical-grid edge gate A/B
   should consider per-regime direction. Honest caveats: Stagflation n=195 and Tightening n=216
   small; OHLCV ends 2026-06-07; benchmark = BTC for all crypto (no per-asset benchmark).
+- **2026-07-10 RESEARCH RE-PRIORITIZATION ROADMAP** (`docs/RESEARCH_ROADMAP_2026-07-10.md`)
+  — based on H3.2 + H3.2 portfolio DD + H2a findings. Tally: 3 STRONG POSITIVES (H3.2
+  sizing, DSR swing lineage, causal sleeve), 1 CRITICAL STRUCTURAL (H2a genuine reversal),
+  4 NEGATIVES (H3.1, H2 mag, edge gate continuous, A2 falsified). **Phased plan:**
+  - **Phase A (HIGHEST PRIORITY): H2b direction A/B** — applies H2a finding directly.
+    Per-regime direction table is no longer optional. 8 runs (~2-3 hr total).
+  - **Phase B: empirical-grid edge gate A/B** — production drop-in, distinct from failed
+    continuous one. Needs (tier, band) snapshot generation. 8 runs (~4 hr).
+  - **Phase C: combined gate integration** — H2b + empirical-grid + H3.2 sizing. 16 runs.
+  - **Phase D1: SwingOverlay walk-forward OOS** — turn DSR IS into investor-grade claim.
+    5 strategies × 4 quarters. (Out of scope for Seth — Minimax-C's lane.)
+  - **Phase D3: forward-supply unlock event study** — historical evidence without 180d wait.
+    5-10 events × 30d post-unlock.
+  - **Stop testing:** continuous edge gate refinements, per-regime floor mag tuning,
+    gate-multiplier prototypes, edge-map direction (all 4+ negatives).
+  - **Single most important thing this week:** apply H2a finding to production gate
+    (Phase A). Everything else stacks on top.
 - **2026-07-09 CAUSE-DRIVEN BACKTEST infrastructure (B2) — SHIPPED, run BLOCKED on data**
   (`scripts/supabase_migration_cause_history.sql`, `src/data/cis/cause_persistence.py`,
   `src/research/cis_regime_studies/cause_backtest.py`, `reports/CAUSE_BACKTEST_2026-07-09.md`).

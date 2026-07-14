@@ -264,12 +264,26 @@ is the structural fix for this.
 ## Standard deploy workflow
 
 ```bash
-cd dashboard && npm run build && cd ..
+bash scripts/preflight.sh          # MANDATORY — app must IMPORT + BOOT, not just compile
+bash scripts/build_frontend.sh     # builds dashboard/dist (works IN-SANDBOX — see below)
 git add src/ dashboard/src/ dashboard/dist/
 git commit -m "<concise description>"
-git push origin main
-# Railway auto-deploys on push
+git push origin main               # Railway auto-deploys on push (does NOT wait for GitHub CI)
 ```
+
+> **✅ The frontend CAN be built in the Cowork sandbox** (2026-07-13). The only blocker was
+> vite's `emptyDir` hitting the FUSE deny-unlink. `scripts/build_frontend.sh` builds to `/tmp`
+> (outside the mount) then copies `dist/` back in (copy = write, allowed). So frontend changes
+> no longer wait on a Mac `npm run build` — the agent builds `dist/`, and the Mac side just does
+> `git add -A && commit && push` (git write-commands still Mac-only per the FUSE rule). Old
+> hashed chunks left behind are harmless orphans (referenced by no html).
+
+> **⚠️ `py_compile` / "compile OK" is NOT sufficient.** It checks syntax only. Import-time
+> errors — a name used in a function annotation that isn't imported, a bad `from x import y` —
+> pass py_compile and 502 production on boot (happened 2026-07-13: `Response` unimported in
+> main.py). `bash scripts/preflight.sh` runs the real `import src.api.main` + boot smoke that
+> catches this class. Railway auto-deploys on push independent of GitHub CI, so the ONLY gate
+> that protects prod is running preflight BEFORE you push (and/or enabling Railway "Wait for CI").
 
 > **⚠️ NEVER run git write-commands (add/commit/rebase/merge) from the Cowork sandbox.**
 > The repo is bridged in over a FUSE mount that allows create/write but **denies unlink**
