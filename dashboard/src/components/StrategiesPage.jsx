@@ -649,6 +649,76 @@ const STRATEGIES = [
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN
    ═══════════════════════════════════════════════════════════════════════════ */
+// ── Open-source strategies (MIT) — earlier profitable/CIS-gated strategies, honestly labeled ──
+function OpenSourceStrategies() {
+  const [items, setItems] = useState([]);
+  const [openId, setOpenId] = useState(null);
+  const [code, setCode] = useState({});
+  useEffect(() => {
+    fetch("/api/v1/strategies/open-source")
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => setItems((d && d.strategies) || []))
+      .catch(() => {});
+  }, []);
+  const toggle = async (id) => {
+    if (openId === id) { setOpenId(null); return; }
+    setOpenId(id);
+    if (!code[id]) {
+      try {
+        const r = await fetch(`/api/v1/strategies/open-source/${id}/code`);
+        const d = await r.json();
+        setCode(c => ({ ...c, [id]: d.code || "" }));
+      } catch { /* leave loading */ }
+    }
+  };
+  if (!items.length) return null;
+  return (
+    <div style={{ marginTop: 34 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+        <div style={{ width: 2, height: 16, background: T.muted, borderRadius: 1 }} />
+        <span style={{ fontFamily: F.display, fontSize: 16, fontWeight: 800, color: T.t1 }}>Open Source</span>
+        <span style={{ fontFamily: F.mono, fontSize: 8, fontWeight: 700, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.05)", color: T.t2, letterSpacing: ".1em" }}>MIT · FREQTRADE</span>
+      </div>
+      <p style={{ fontFamily: F.body, fontSize: 12, color: T.t2, lineHeight: 1.6, maxWidth: 620, margin: "0 0 16px", paddingLeft: 12 }}>
+        Earlier profitable strategies, released under MIT. Directional / CIS-gated — genuinely tradeable, but
+        not our edge (the causal + conviction layer stays proprietary). Numbers are honestly labeled
+        in-sample vs reference; we never dress a backtest as a live track record.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {items.map(s => (
+          <div key={s.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${(s.color || T.cyan)}22`, borderRadius: 8, padding: "14px 16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <span style={{ fontFamily: F.display, fontSize: 15, fontWeight: 700, color: T.t1 }}>{s.icon} {s.name}</span>
+                <span style={{ fontFamily: F.mono, fontSize: 9, color: T.muted, marginLeft: 8 }}>{s.subtitle} · {s.timeframe}</span>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                {s.metrics_basis === "in_sample" && s.metrics && (
+                  <span style={{ fontFamily: F.mono, fontSize: 10, color: T.green }}>Sharpe {s.metrics.sharpe} · {s.metrics.cagr_pct}% CAGR <span style={{ color: T.muted }}>(in-sample)</span></span>
+                )}
+                {s.metrics_basis === "reference" && (
+                  <span style={{ fontFamily: F.mono, fontSize: 9, color: T.muted }}>reference impl</span>
+                )}
+                <button onClick={() => toggle(s.id)} style={{ fontFamily: F.mono, fontSize: 9, padding: "4px 10px", borderRadius: 4, border: `1px solid ${(s.color || T.cyan)}40`, background: "transparent", color: s.color || T.cyan, cursor: "pointer" }}>
+                  {openId === s.id ? "Hide code" : "View code"}
+                </button>
+              </div>
+            </div>
+            <p style={{ fontFamily: F.body, fontSize: 11.5, color: T.t2, lineHeight: 1.55, margin: "8px 0 0" }}>{s.thesis}</p>
+            <p style={{ fontFamily: F.mono, fontSize: 9, color: T.muted, margin: "6px 0 0", fontStyle: "italic" }}>{s.honest_note}</p>
+            {openId === s.id && (
+              <pre style={{ marginTop: 12, maxHeight: 340, overflow: "auto", background: "#05060f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6, padding: 12, fontFamily: F.mono, fontSize: 10, color: "#c9d1d9", lineHeight: 1.5 }}>
+                {code[s.id] || "Loading…"}
+              </pre>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 export default function StrategiesPage() {
   const [assets,    setAssets]    = useState([]);
   const [protocols, setProtocols] = useState([]);
@@ -725,6 +795,9 @@ export default function StrategiesPage() {
           />
         ))}
       </div>
+
+      {/* ── Open-source strategies ── */}
+      <OpenSourceStrategies />
 
       {/* ── Compliance footer ── */}
       <div style={{

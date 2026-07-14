@@ -450,7 +450,11 @@ export default function PerformanceDashboard() {
 
   const p = perf || {};
   const isBuilding = p.status === "building" || !p.status;
-  const equitySeries = p.equity_series || [];
+  // Prefer the HONEST benchmark-relative alpha curve; fall back to absolute. Same shape,
+  // so the chart plots it unchanged. (Absolute craters in a down market — see backend note.)
+  const usingAlpha = !!(p.alpha_equity_series && p.alpha_equity_series.length);
+  const equitySeries = usingAlpha ? p.alpha_equity_series : (p.equity_series || []);
+  const chartEnd = equitySeries.length ? equitySeries[equitySeries.length - 1].equity : 100_000;
   const closedCount  = p.closed_signals || 0;
   const openCount    = p.open_signals || 0;
 
@@ -501,11 +505,11 @@ export default function PerformanceDashboard() {
       {/* ── KPI Strip ── */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
         <KpiCard
-          label="Sharpe Ratio"
-          value={loading ? <Skeleton w={50} /> : fmtNum(p.sharpe, 2)}
-          sub="risk-adj return"
-          color={isNum(p.sharpe) ? (p.sharpe >= 1.0 ? C.green : p.sharpe >= 0 ? C.amber : C.red) : T.t3}
-          tooltip="Annualized return / volatility (0 risk-free). > 1.0 is institutional-grade."
+          label={isNum(p.alpha_sharpe) ? "Alpha Sharpe" : "Sharpe Ratio"}
+          value={loading ? <Skeleton w={50} /> : fmtNum(isNum(p.alpha_sharpe) ? p.alpha_sharpe : p.sharpe, 2)}
+          sub={isNum(p.alpha_sharpe) ? "α vs BTC/SPY" : "risk-adj return"}
+          color={(isNum(p.alpha_sharpe) ? p.alpha_sharpe : p.sharpe) >= 1.0 ? C.green : (isNum(p.alpha_sharpe) ? p.alpha_sharpe : p.sharpe) >= 0 ? C.amber : isNum(p.alpha_sharpe) || isNum(p.sharpe) ? C.red : T.t3}
+          tooltip="Benchmark-relative alpha Sharpe. OUTPERFORM signals are RELATIVE claims — scoring absolute return in a down market understates them (that's the artifact). Fair measure = alpha vs BTC/SPY."
         />
         <KpiCard
           label="Sortino"
@@ -529,11 +533,11 @@ export default function PerformanceDashboard() {
           tooltip="Largest peak-to-trough decline in cumulative signal P&L."
         />
         <KpiCard
-          label="Win Rate"
-          value={loading ? <Skeleton w={50} /> : isNum(p.win_rate_pct) ? `${p.win_rate_pct.toFixed(1)}%` : "—"}
-          sub={`${p.winning_signals || 0}W · ${p.losing_signals || 0}L`}
-          color={isNum(p.win_rate_pct) ? (p.win_rate_pct >= 55 ? C.green : p.win_rate_pct >= 45 ? C.amber : C.red) : T.t3}
-          tooltip="Percentage of closed signals with positive return."
+          label={isNum(p.alpha_win_rate_pct) ? "Alpha Win Rate" : "Win Rate"}
+          value={loading ? <Skeleton w={50} /> : isNum(p.alpha_win_rate_pct) ? `${p.alpha_win_rate_pct.toFixed(1)}%` : isNum(p.win_rate_pct) ? `${p.win_rate_pct.toFixed(1)}%` : "—"}
+          sub={isNum(p.alpha_win_rate_pct) ? "beat benchmark 30d" : `${p.winning_signals || 0}W · ${p.losing_signals || 0}L`}
+          color={(isNum(p.alpha_win_rate_pct) ? p.alpha_win_rate_pct : p.win_rate_pct) >= 55 ? C.green : (isNum(p.alpha_win_rate_pct) ? p.alpha_win_rate_pct : p.win_rate_pct) >= 40 ? C.amber : isNum(p.alpha_win_rate_pct) || isNum(p.win_rate_pct) ? C.red : T.t3}
+          tooltip="Share of signals that beat their benchmark (BTC/SPY) over 30d — the fair measure for relative OUTPERFORM calls, vs the absolute win rate which collapses in a down market."
         />
         <KpiCard
           label="Profit Factor"
@@ -620,18 +624,19 @@ export default function PerformanceDashboard() {
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
               <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: ".10em", textTransform: "uppercase", color: T.t3 }}>
-                Cumulative Signal Returns · $100k Base
+                {usingAlpha ? "Cumulative Alpha vs BTC/SPY · $100k Base" : "Cumulative Signal Returns · $100k Base"}
               </div>
-              {isNum(p.current_equity) && (
-                <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: p.current_equity >= 100_000 ? C.green : C.red }}>
-                  {fmtPct((p.current_equity - 100_000) / 1000)} total
+              {equitySeries.length > 0 && (
+                <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: chartEnd >= 100_000 ? C.green : C.red }}>
+                  {fmtPct((chartEnd - 100_000) / 1000)} total
                 </div>
               )}
             </div>
             <EquityCurve series={equitySeries} startEquity={100_000} />
             {equitySeries.length > 0 && (
               <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.4, marginTop: 8 }}>
-                Each data point = one closed signal. Curve compounds $100k starting equity.
+                {usingAlpha ? "Each point = one resolved signal. Curve compounds benchmark-relative alpha (vs BTC/SPY) on $100k."
+                            : "Each data point = one closed signal. Curve compounds $100k starting equity."}
               </div>
             )}
           </div>

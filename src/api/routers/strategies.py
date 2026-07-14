@@ -260,6 +260,89 @@ async def list_strategies():
     return {"strategies": result, "current_regime": regime, "count": len(result)}
 
 
+# ── Open-source strategy catalog ──────────────────────────────────────────────
+# Earlier, PROFITABLE strategies released under MIT. These are directional / CIS-gated —
+# genuinely tradeable but NOT our edge (the causal + conviction layer stays proprietary).
+# Honesty rule: publish measured numbers, label what's in-sample, never dress a backtest
+# as a live track record. Files live in strategies/open_source/.
+import os as _os
+
+_OSS_DIR = _os.path.join(_os.path.dirname(__file__), "..", "..", "..", "strategies", "open_source")
+
+OPEN_SOURCE_STRATEGIES: List[Dict[str, Any]] = [
+    {
+        "id": "swing_overlay_mtf", "name": "Swing Overlay (MTF)",
+        "subtitle": "4h regime · 15m RSI-cross · long/short",
+        "file": "SwingOverlayV7_MTF.py", "framework": "Freqtrade",
+        "timeframe": "15m (4h regime)", "style": "Directional multi-timeframe swing",
+        "thesis": ("4h MACD/ADX/EMA sets regime + direction; 15m RSI-cross times entries "
+                   "aligned to it. Regime direction filter + flat-mode circuit breaker."),
+        "metrics": {"sharpe": 6.2, "cagr_pct": 32, "profit_factor": 1.9,
+                    "win_rate_pct": 66, "max_dd_pct": 3.3, "n_trades": 554},
+        "metrics_basis": "in_sample",
+        "honest_note": ("Profitable in-sample (DSR-certified across a 9-strategy search). "
+                        "Directional TA — commodity, not our causal moat. Owes a walk-forward "
+                        "OOS before live sizing."),
+        "license": "MIT", "color": "#8B5CF6", "icon": "〰",
+        "tags": ["swing", "multi-timeframe", "long-short", "regime"],
+    },
+    {
+        "id": "cis_value_onchain", "name": "CIS Value / On-Chain",
+        "subtitle": "F+O quality gate · daily",
+        "file": "ValueOnChainStrategy.py", "framework": "Freqtrade",
+        "timeframe": "1d", "style": "Fundamental + on-chain value",
+        "thesis": ("Gates on CIS Fundamental + On-chain pillars (F≥60, O≥55, strat CIS≥58) "
+                   "with RSI/EMA/volume confirmation. Best in Tightening/Risk-Off/Stagflation."),
+        "metrics": None, "metrics_basis": "reference",
+        "honest_note": ("Reference implementation of a CIS-gated value strategy — shows how to "
+                        "consume the public CIS API. No standalone backtest claimed."),
+        "license": "MIT", "color": "#10B981", "icon": "◆",
+        "tags": ["value", "fundamental", "on-chain", "cis-gated"],
+    },
+    {
+        "id": "cis_breakout", "name": "CIS Breakout",
+        "subtitle": "S+M momentum gate · 4h",
+        "file": "BreakoutStrategy.py", "framework": "Freqtrade",
+        "timeframe": "4h", "style": "Sentiment + momentum breakout",
+        "thesis": ("Gates on CIS Sentiment + Momentum pillars (M≥55, S≥52, strat CIS≥62) with "
+                   "MACD/RSI/EMA confirmation. Best in Risk-On/Easing/Goldilocks."),
+        "metrics": None, "metrics_basis": "reference",
+        "honest_note": ("Reference implementation of a CIS-gated momentum strategy. Same honesty "
+                        "rule — no invented performance."),
+        "license": "MIT", "color": "#06B6D4", "icon": "⚡",
+        "tags": ["momentum", "sentiment", "breakout", "cis-gated"],
+    },
+]
+
+
+@router.get("/api/v1/strategies/open-source")
+async def list_open_source():
+    """Catalog of MIT-licensed CometCloud strategies (metadata + honest performance).
+    Code via /api/v1/strategies/open-source/{id}/code."""
+    return {
+        "strategies": [{k: v for k, v in s.items() if k != "file"} for s in OPEN_SOURCE_STRATEGIES],
+        "count": len(OPEN_SOURCE_STRATEGIES), "license": "MIT",
+        "repo_path": "strategies/open_source/", "framework": "Freqtrade",
+        "api_base": "https://looloomi.ai/api/v1",
+        "note": "Directional / CIS-gated strategies — profitable but not our causal moat. Numbers are labeled in_sample vs reference.",
+    }
+
+
+@router.get("/api/v1/strategies/open-source/{sid}/code")
+async def get_open_source_code(sid: str):
+    """Return the MIT-licensed source of an open-source strategy."""
+    s = next((x for x in OPEN_SOURCE_STRATEGIES if x["id"] == sid), None)
+    if not s:
+        raise HTTPException(status_code=404, detail=f"unknown strategy '{sid}'")
+    try:
+        with open(_os.path.join(_OSS_DIR, s["file"]), "r") as f:
+            code = f.read()
+    except Exception:
+        raise HTTPException(status_code=404, detail="source file not found")
+    return {"id": sid, "name": s["name"], "file": s["file"], "language": "python",
+            "license": "MIT", "loc": code.count("\n") + 1, "code": code}
+
+
 @router.get("/api/v1/strategies/{strategy_id}")
 async def get_strategy(strategy_id: str):
     """Single strategy definition with current regime fitness."""

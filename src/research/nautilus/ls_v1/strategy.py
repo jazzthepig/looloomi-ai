@@ -95,6 +95,26 @@ REGIME_CIS_FLOOR = {
 # Soft floor used when CIS cache is sparse (backtest-bypass mode)
 CIS_SOFT_FLOOR = 30
 
+# ── H2a per-regime direction table (Seth, 2026-07-10) ────────────────────────
+# Per H2a RELATIVE_IC_2026-07-10: the 7d IC sign-flip in 3/5 regimes is a
+# GENUINE reversal (high-CIS names underperform in relative terms), not a beta
+# artifact. This table specifies the gate direction per regime for LS v1:
+#   "high"     → require CIS >= floor  (current default; long the strongest)
+#   "inverted" → require CIS <= floor  (reversal regimes; long the weakest)
+#   "drop"     → skip CIS gate entirely
+# Default OFF — enable with LSV1_USE_H2_DIRECTION=1 (or `use_h2_direction=True`).
+# Env vars LSV1_GATE_DIRECTION_<R>=high|inverted|drop still take precedence
+# (research-script override).
+DEFAULT_PER_REGIME_DIRECTION_H2A = {
+    "Tightening":  "high",     # 7d IC_abs=+0.17, IC_rel=+0.11 — consistent
+    "Easing":      "high",     # 7d IC ≈ 0 — keep "high" as neutral default
+    "Risk-Off":    "inverted", # genuine reversal at 7d (n=5578 most reliable)
+    "Risk-On":     "inverted", # genuine reversal at 7d
+    "Stagflation": "inverted", # reversal DEEPENS under relative IC (IC_rel=-0.326)
+    "Neutral":     "high",
+    "Goldilocks":  "high",
+}
+
 # CIS history directory (env-overridable for testing)
 CIS_HISTORY_DIR = os.getenv(
     "CIS_HISTORY_DIR",
@@ -189,12 +209,29 @@ class LSv1Config(StrategyConfig, frozen=True):
     h32_size_floor: float = float(os.getenv("LSV1_H32_SIZE_FLOOR", "0.5"))
     h32_size_cap: float = float(os.getenv("LSV1_H32_SIZE_CAP", "1.75"))
 
+    # ── H2a per-regime direction table (Seth, 2026-07-10) ──────────────
+    # When use_h2_direction=True, the LS v1 CIS gate dispatches per-regime
+    # direction from `per_regime_direction` (default = DEFAULT_PER_REGIME_DIRECTION_H2A).
+    # Specifically: in 3/5 regimes at 7d horizon, the high-CIS names
+    # GENUINELY underperform — the gate must require CIS <= floor, not
+    # CIS >= floor, in those regimes.
+    # Env vars LSV1_GATE_DIRECTION_<REGIMENAME>=high|inverted|drop always win
+    # (backward-compat for research sweeps that set the env var directly).
+    # Enable with LSV1_USE_H2_DIRECTION=1.
+    use_h2_direction: bool = os.getenv("LSV1_USE_H2_DIRECTION", "0") == "1"
+    per_regime_direction: dict[str, str] = None  # set in __post_init__
+
     request_bars: bool = True
     close_positions_on_stop: bool = True
 
     def __post_init__(self) -> None:  # msgspec-friendly default
         if self.regime_cis_floor is None:
             object.__setattr__(self, "regime_cis_floor", dict(REGIME_CIS_FLOOR))
+        if self.per_regime_direction is None:
+            object.__setattr__(
+                self, "per_regime_direction",
+                dict(DEFAULT_PER_REGIME_DIRECTION_H2A),
+            )
 
 
 # ── Strategy ─────────────────────────────────────────────────────────────────
@@ -515,9 +552,22 @@ class CometCloudNautilusLongShortV1(Strategy):
         if self._edge_gate is not None:
             return self._edge_gate_passes(symbol, side)
         cis = self._cis_for_symbol(symbol)
-        # Determine the gate direction for the current regime
+        # Determine the gate direction for the current regime.
+        # Precedence (Seth, 2026-07-10 H2a):
+        #   1. Env var LSV1_GATE_DIRECTION_<R> (research-script override; most specific)
+        #   2. config.per_regime_direction[R] when use_h2_direction=True
+        #      (the H2a direction table — the new wire-up)
+        #   3. default = "high" (legacy behaviour)
         env_key = f"LSV1_GATE_DIRECTION_{self._current_regime.upper().replace('-', '_')}"
-        direction = os.getenv(env_key, "high").lower()
+        env_val = os.getenv(env_key)
+        if env_val is not None:
+            direction = env_val.lower()
+        elif self.config.use_h2_direction and self.config.per_regime_direction:
+            direction = self.config.per_regime_direction.get(
+                self._current_regime, "high"
+            ).lower()
+        else:
+            direction = "high"
 
         # H3 — conviction-weighted floor multiplier (per-day)
         # Multiplier applied to regime_floor. With 'high' direction, higher

@@ -7,6 +7,7 @@ import BottomSheet from "./ui/BottomSheet";
 import CISWidget from "./CISWidget";
 import MacroBrief from "./MacroBrief";
 import EconomicIndicators from "./EconomicIndicators";
+import DinggeBoard from "./DinggeBoard";
 import { T, FONTS } from "../tokens";
 
 // Lazy — recharts + DeFiLlama logic (~80KB); only used on Protocol tab
@@ -840,6 +841,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
             )}
 
             {/* Full width — VC Funding Table (always shown) */}
+            {(view === "all" || view === "events") && <DinggeBoard />}
+
             {(view === "all" || view === "events") && <div className="lm-card" style={{ overflow: "hidden", marginBottom: 16 }}>
                 {/* Update Drawer */}
                 <div style={{ marginBottom: 12 }}>
