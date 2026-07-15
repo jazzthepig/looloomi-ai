@@ -117,11 +117,18 @@ async def _redis_get(key: str):
     return None
 
 async def _redis_set(key: str, val, ttl: int) -> bool:
-    """Write to Upstash with TTL. Fire-and-forget style (non-blocking on failure)."""
+    """Write to Upstash with TTL. Fire-and-forget style (non-blocking on failure).
+
+    ttl <= 0 means PERSIST WITHOUT EXPIRY: we must OMIT the EX param, because Redis/
+    Upstash rejects `EX 0` as an invalid expire → the SET silently fails. This bug froze
+    the causal_paper book (state written with ttl=0 never persisted → every daily mark
+    re-inceptioned at NAV 1.0). Any long-lived state key (not a cache) relies on this.
+    """
     if not _UPSTASH_URL:
         return False
     try:
         client = _get_redis_client()
+        params = {"EX": ttl} if ttl and ttl > 0 else None
         r = await client.post(
             f"{_UPSTASH_URL}/set/{key}",
             content=json.dumps(val),
@@ -129,7 +136,7 @@ async def _redis_set(key: str, val, ttl: int) -> bool:
                 "Authorization": f"Bearer {_UPSTASH_TOKEN}",
                 "Content-Type": "application/json",
             },
-            params={"EX": ttl},
+            params=params,
         )
         return r.status_code == 200
     except Exception:

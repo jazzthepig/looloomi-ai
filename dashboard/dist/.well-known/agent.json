@@ -39,8 +39,9 @@
     "agent_tasks":  { "endpoint": "/api/v1/agent/tasks", "method": "POST", "description": "A2A async task queue" }
   },
   "mcp": {
-    "transport": "sse",
-    "url": "https://looloomi.ai/mcp/sse",
+    "transport": "streamable-http",
+    "url": "https://looloomi.ai/mcp",
+    "legacy_sse_url": "https://looloomi.ai/mcp-sse/sse",
     "tools": [
       "cometcloud_get_cis_universe",
       "cometcloud_get_cis_asset",

@@ -410,13 +410,29 @@ async def _start_holder_refresh_loop():
 _FWD_SUPPLY_INTERVAL_S = 6 * 3600
 
 
+# Once-per-day guard so the cause SNAPSHOT (resolver input) is written once/day even
+# though the live map refreshes every cycle. Upsert on (date,symbol) makes it redeploy-safe.
+_cause_persist_state: dict = {}
+
+
 async def _forward_supply_loop():
     await _asyncio.sleep(240)   # 4 min warmup
     while True:
         try:
+            import datetime as _dt
             from src.data.cis.forward_supply import refresh_forward_supply
             m = await refresh_forward_supply()
             print(f"[FWD-SUPPLY] map refreshed — {len(m)} assets")
+            # Persist ONE daily snapshot → cause_snapshots_daily. This is the resolver's
+            # input for the `forward_supply` prediction source; without it that source
+            # never resolves (was silently the case — table empty). See prediction_resolver.
+            _today = _dt.datetime.now(_dt.timezone.utc).date().isoformat()
+            if m and _cause_persist_state.get("fwd") != _today:
+                from src.data.cis.cause_persistence import persist_forward_supply_daily
+                _n = await persist_forward_supply_daily(m)
+                if _n > 0:
+                    _cause_persist_state["fwd"] = _today
+                    print(f"[FWD-SUPPLY] 📸 daily cause snapshot persisted — {_n} rows")
         except Exception as _e:
             print(f"[FWD-SUPPLY] ⚠️  refresh failed: {_e}")
         await _asyncio.sleep(_FWD_SUPPLY_INTERVAL_S)
@@ -437,9 +453,19 @@ async def _positioning_loop():
     await _asyncio.sleep(300)   # 5 min warmup
     while True:
         try:
+            import datetime as _dt
             from src.data.cis.positioning import refresh_positioning
             m = await refresh_positioning()
             print(f"[POSITIONING] map refreshed — {len(m)} assets")
+            # Daily cause snapshot (resolver input for the `positioning` source). Merges
+            # into the same (date,symbol) row as forward_supply via on_conflict upsert.
+            _today = _dt.datetime.now(_dt.timezone.utc).date().isoformat()
+            if m and _cause_persist_state.get("pos") != _today:
+                from src.data.cis.cause_persistence import persist_positioning_daily
+                _n = await persist_positioning_daily(m)
+                if _n > 0:
+                    _cause_persist_state["pos"] = _today
+                    print(f"[POSITIONING] 📸 daily cause snapshot persisted — {_n} rows")
         except Exception as _e:
             print(f"[POSITIONING] ⚠️  refresh failed: {_e}")
         await _asyncio.sleep(_POSITIONING_INTERVAL_S)
@@ -475,6 +501,43 @@ async def _daily_snapshot_loop():
             print(f"[SNAPSHOT] macro brief — ok={mres.get('ok')}")
         except Exception as _e:
             print(f"[SNAPSHOT] ⚠️  macro brief fallback failed: {_e}")
+        try:
+            # Daily conviction verdicts → conviction_verdicts_daily. This is the kernel's
+            # own directional call (the deepest source per ARCHITECTURE.md) and the resolver's
+            # input for the `conviction` prediction source — previously never persisted, so
+            # that source could never accrue a track record. Upsert on (date,symbol).
+            from src.api.routers.cis import get_cis_universe
+            from src.api.routers.signals import compute_current_band
+            from src.data.cis.conviction import rank_universe
+            from src.data.cis.cause_persistence import persist_conviction_verdicts
+            _cur = await compute_current_band()
+            _u = (await get_cis_universe() or {}).get("universe", []) or []
+            _rows = rank_universe(_u, _cur.get("tiers_now") or {}, _cur.get("current_band"))
+            _cn = await persist_conviction_verdicts(
+                _rows, band=_cur.get("current_band") or "?",
+                regime=_cur.get("macro_regime") or "Unknown")
+            print(f"[SNAPSHOT] conviction verdicts — {_cn} rows persisted")
+        except Exception as _e:
+            print(f"[SNAPSHOT] ⚠️  conviction persist failed: {_e}")
+        try:
+            # Daily narrative (NMA) snapshot → narrative_snapshots. 5th & final resolver
+            # source; STRONG_NARRATIVE/NARRATIVE_FADE resolve, NEUTRAL is skipped. Bounded
+            # to the 18 majors the engine maps to coin IDs.
+            try:
+                from src.data.narrative.narrative_engine import batch_narrative_signals
+                from src.data.narrative import social_collector as _sc, orderflow_collector as _oc
+            except ImportError:
+                from data.narrative.narrative_engine import batch_narrative_signals
+                from data.narrative import social_collector as _sc, orderflow_collector as _oc
+            from src.data.cis.cause_persistence import persist_narrative_daily
+            _nsyms = ["BTC","ETH","SOL","BNB","XRP","ADA","AVAX","DOT","NEAR",
+                      "SUI","APT","HYPE","ARB","OP","LINK","UNI","AAVE","MKR"]
+            _sigs = await batch_narrative_signals(_nsyms, _sc, _oc)
+            _nmap = {s: (v.to_dict() if hasattr(v, "to_dict") else v) for s, v in (_sigs or {}).items()}
+            _nn = await persist_narrative_daily(_nmap)
+            print(f"[SNAPSHOT] narrative NMA — {_nn} rows persisted")
+        except Exception as _e:
+            print(f"[SNAPSHOT] ⚠️  narrative persist failed: {_e}")
         await _asyncio.sleep(_SNAPSHOT_INTERVAL_S)
 
 
@@ -656,17 +719,58 @@ async def _start_heartbeat():
 
 
 # ── MCP Server (ROADMAP_A2A Phase 2.2) ───────────────────────────────────────
-# Mounts the CometCloud MCP tool server at /mcp using streamable-HTTP transport.
-# Any MCP-compatible agent (Claude, GPT, Gemini, Cursor) can query CIS scores
-# and fund data natively at https://looloomi.ai/mcp.
-# Fail-safe: if mcp[cli] dep is missing the main app still runs.
+# Serves the CometCloud MCP tool server over BOTH transports:
+#   • Streamable HTTP (MODERN, primary) at https://looloomi.ai/mcp  — POST /mcp
+#       what current clients expect (Claude Desktop, Cursor, ChatGPT, Gemini).
+#   • SSE (LEGACY, kept for back-compat) at https://looloomi.ai/mcp-sse/sse.
+#
+# Why the extra machinery: streamable HTTP runs on a session-manager task group
+# that MUST be started inside the app's async lifecycle — a bare `app.mount(...)`
+# 500s at request time with "Task group is not initialized" (the mounted sub-app's
+# lifespan is not run by the parent). We run `session_manager.run()` inside a single
+# long-lived task (anyio requires enter+exit in the same task) started on `startup`
+# and stopped on `shutdown`. `stateless_http=True` = one task group, per-request
+# sessions (no server-side session state to leak across Railway deploys).
+# Fail-safe: if the mcp dep is missing the main app still boots.
 
+_mcp_task = None
+_mcp_stop = None
 try:
+    # Transport settings (stateless_http, streamable path, DNS-rebinding off) are
+    # configured inside cometcloud_mcp.py — see note there re: sys.path shadowing.
     from src.mcp.cometcloud_mcp import mcp as _cometcloud_mcp
-    # SSE transport: GET /mcp/sse (stream), POST /mcp/messages (send)
-    # Clients: Claude Desktop, Cursor, any MCP-compatible agent
-    app.mount("/mcp", _cometcloud_mcp.sse_app())
-    print("[MCP] ✅ Mounted at /mcp/sse — ROADMAP_A2A Phase 2.2")
+
+    app.mount("/mcp", _cometcloud_mcp.streamable_http_app())   # modern (primary)
+    app.mount("/mcp-sse", _cometcloud_mcp.sse_app())           # legacy back-compat
+
+    @app.on_event("startup")
+    async def _start_mcp_streamable():
+        global _mcp_task, _mcp_stop
+        _mcp_stop = _asyncio.Event()
+        _ready = _asyncio.Event()
+
+        async def _run():
+            # session_manager.run() opens the streamable task group; keep it open
+            # for the app's lifetime, entered+exited in this one task (anyio rule).
+            async with _cometcloud_mcp.session_manager.run():
+                _ready.set()
+                await _mcp_stop.wait()
+
+        _mcp_task = _asyncio.create_task(_run())
+        await _ready.wait()
+        print("[MCP] ✅ streamable-HTTP live at /mcp  · legacy SSE at /mcp-sse/sse")
+
+    @app.on_event("shutdown")
+    async def _stop_mcp_streamable():
+        if _mcp_stop:
+            _mcp_stop.set()
+        if _mcp_task:
+            try:
+                await _mcp_task
+            except Exception:
+                pass
+
+    print("[MCP] ✅ Mounted /mcp (streamable) + /mcp-sse (sse) — ROADMAP_A2A Phase 2.2")
 except Exception as _mcp_err:
     print(f"[MCP] ⚠️  Not mounted: {_mcp_err}")
 
@@ -882,7 +986,7 @@ if os.path.exists(dashboard_path):
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
         # API/internal/ws/mcp paths that don't match any router → 404 JSON (not SPA fallback)
-        _api_prefixes = ("api/", "internal/", "ws/", "mcp/", ".env", "config", "secrets", "admin", ".git")
+        _api_prefixes = ("api/", "internal/", "ws/", "mcp/", "mcp-sse", ".env", "config", "secrets", "admin", ".git")
         if any(full_path.startswith(p) for p in _api_prefixes):
             return JSONResponse(status_code=404, content={"detail": "Not found"})
         file_path = os.path.join(dashboard_path, full_path)

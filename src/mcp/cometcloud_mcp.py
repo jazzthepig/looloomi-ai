@@ -43,6 +43,25 @@ import queue
 
 import httpx
 from cachetools import TTLCache
+
+# ── Resolve the pip `mcp` package, not our local `src/mcp/` ─────────────────────
+# main.py inserts the bare `src/` dir on sys.path[0], which makes top-level `import
+# mcp` resolve to THIS package (src/mcp) and shadow the pip SDK — so `mcp.server.*`
+# 404s. Temporarily drop the bare-src entries, import (and cache) the real SDK, then
+# restore path. No-op once cached; harmless if the bare-src entry isn't present.
+import importlib as _importlib
+import sys as _sys
+if "mcp.server.fastmcp" not in _sys.modules:
+    _shadow = [p for p in _sys.path if os.path.basename(p.rstrip("/\\")) == "src"]
+    for _p in _shadow:
+        _sys.path.remove(_p)
+    try:
+        _importlib.import_module("mcp.server.fastmcp")
+        _importlib.import_module("mcp.server.transport_security")
+    finally:
+        for _p in _shadow:
+            _sys.path.insert(0, _p)
+
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -153,6 +172,22 @@ mcp = FastMCP(
         "Never interpret signals as BUY/SELL recommendations."
     ),
 )
+
+# ── Transport config for HTTP mounting (streamable-HTTP, primary) ───────────────
+# Configured HERE (not in main.py) because main.py inserts `src/` on sys.path, which
+# shadows the pip `mcp` package with our local `src/mcp/` — so `from mcp.server...`
+# fails there. In this module's namespace `mcp.server` resolves to the real package.
+try:
+    from mcp.server.transport_security import TransportSecuritySettings
+    mcp.settings.stateless_http = True          # one task group; per-request sessions
+    mcp.settings.streamable_http_path = "/"      # endpoint = mount point (e.g. /mcp)
+    # Behind Railway's trusted domain/proxy; the DNS-rebinding host check 421s
+    # legitimate proxied Host headers, so disable it.
+    mcp.settings.transport_security = TransportSecuritySettings(
+        enable_dns_rebinding_protection=False
+    )
+except Exception as _ts_err:  # pragma: no cover
+    logging.getLogger(__name__).warning("MCP transport_security config skipped: %s", _ts_err)
 
 # ── Circuit Breaker ────────────────────────────────────────────────────────────
 

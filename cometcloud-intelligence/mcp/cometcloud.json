@@ -10,9 +10,10 @@
   },
   "note": "Local stdio mode — runs cometcloud_mcp.py against Railway production API. For remote HTTP use the 'remote' config below.",
   "remote": {
-    "type": "sse",
-    "url": "https://looloomi.ai/mcp/sse",
-    "note": "ROADMAP_A2A Phase 2.2 — live. SSE transport: GET /mcp/sse (stream), POST /mcp/messages (send). Mounted in FastAPI via ASGI."
+    "type": "http",
+    "url": "https://looloomi.ai/mcp",
+    "legacy_sse_url": "https://looloomi.ai/mcp-sse/sse",
+    "note": "Streamable-HTTP transport (modern, primary): POST https://looloomi.ai/mcp. Legacy SSE kept at https://looloomi.ai/mcp-sse/sse for back-compat. Mounted in FastAPI via ASGI with session-manager lifespan."
   },
   "tools": [
     {

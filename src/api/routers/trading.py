@@ -1567,6 +1567,36 @@ async def get_metrics():
     closed = [p for p in positions.values() if p.get("status") == "closed"]
     open_  = [p for p in positions.values() if p.get("status") == "open"]
 
+    # ── TWO SEPARATE BOOKS (do not conflate) ──────────────────────────────────
+    # 1) CASH account — the $10k paper wallet. Manual + CIS_AUTO fills DEBIT cash on
+    #    open (balance -= size) and CREDIT proceeds on close (balance += exit_value),
+    #    so `balance` already embeds realized P&L → equity = balance + value of OPEN
+    #    cash positions. Adding total_pnl on top double-counts (old bug).
+    # 2) SLEEVE (METER_REBAL) — a PURE NOTIONAL book on its own REBAL_SLEEVE_NAV; it
+    #    NEVER touches the cash balance. Summing its notional open_value into the cash
+    #    portfolio inflated it ($36.9k on a $10k start — 2026-07-15 Loop Watch). Report
+    #    it as its own book with a % return on NAV.
+    def _is_sleeve(p) -> bool:
+        return (p.get("strategy") or "") == REBAL_SLEEVE_TAG
+    _cv = lambda p: p.get("current_value_usd", p.get("size_usd", 0)) or 0
+
+    cash_open     = [p for p in open_ if not _is_sleeve(p)]
+    sleeve_open   = [p for p in open_ if _is_sleeve(p)]
+    sleeve_closed = [p for p in closed if _is_sleeve(p)]
+    cash_open_value   = sum(_cv(p) for p in cash_open)
+    sleeve_open_value = sum(_cv(p) for p in sleeve_open)
+    sleeve_unreal     = sum((p.get("unrealized_pnl") or 0) for p in sleeve_open)
+    sleeve_realized   = sum((p.get("realized_pnl") or 0) for p in sleeve_closed)
+    sleeve_book = {
+        "nav":                round(REBAL_SLEEVE_NAV, 2),
+        "open_positions":     len(sleeve_open),
+        "open_value_usd":     round(sleeve_open_value, 2),
+        "unrealized_pnl_usd": round(sleeve_unreal, 2),
+        "realized_pnl_usd":   round(sleeve_realized, 2),
+        "return_pct":         round((sleeve_realized + sleeve_unreal) / REBAL_SLEEVE_NAV * 100, 3),
+        "closed_trades":      len(sleeve_closed),
+    }
+
     # Backfill macro_regime for legacy closed positions written before the
     # nested-regime fix (2026-06-19). Cheap when no work needed; bounded by
     # closed-position count. Result is in-place on `closed` list.
@@ -1574,8 +1604,6 @@ async def get_metrics():
 
     total_trades = len(closed)
     if total_trades == 0:
-        open_count = len(open_)
-        open_value = sum(p.get("current_value_usd", p.get("size_usd", 0)) for p in open_)
         return {
             "total_trades":     0,
             "win_rate":         None,
@@ -1585,9 +1613,10 @@ async def get_metrics():
             "best_trade":       None,
             "worst_trade":      None,
             "cash_usd":         round(balance, 2),
-            "open_positions":   open_count,
-            "open_value_usd":   round(open_value, 2),
-            "portfolio_usd":    round(balance + open_value, 2),
+            "open_positions":   len(cash_open),
+            "open_value_usd":   round(cash_open_value, 2),
+            "portfolio_usd":    round(balance + cash_open_value, 2),
+            "sleeve":           sleeve_book,
             "starting_balance": _DEFAULT_BALANCE,
         }
 
@@ -1604,9 +1633,7 @@ async def get_metrics():
     best  = max(closed, key=lambda p: p.get("realized_pct", -999))
     worst = min(closed, key=lambda p: p.get("realized_pct", 999))
 
-    open_count = len(open_)
-    open_value = sum(p.get("current_value_usd", p.get("size_usd", 0)) for p in open_)
-    total_pnl  = sum(pnls)
+    total_pnl  = sum(pnls)   # realized P&L across BOTH books (per-trade % is book-agnostic)
 
     return {
         "total_trades":   total_trades,
@@ -1620,10 +1647,13 @@ async def get_metrics():
         "by_grade":       _group_by(closed, "cis_grade", "realized_pct"),
         "by_regime":      _group_by(closed, "macro_regime", "realized_pct"),
         "regime_backfilled": backfilled,   # how many legacy positions we recovered (0 on steady-state)
+        # CASH account only — balance already embeds realized P&L (no double count),
+        # sleeve notional excluded (reported under `sleeve`).
         "cash_usd":       round(balance, 2),
-        "open_positions": open_count,
-        "open_value_usd": round(open_value, 2),
-        "portfolio_usd":  round(balance + open_value + total_pnl, 2),
+        "open_positions": len(cash_open),
+        "open_value_usd": round(cash_open_value, 2),
+        "portfolio_usd":  round(balance + cash_open_value, 2),
+        "sleeve":         sleeve_book,
         "starting_balance": _DEFAULT_BALANCE,
     }
 
