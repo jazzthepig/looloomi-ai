@@ -176,7 +176,18 @@ async def get_curve(limit: int = 400) -> dict:
     rets = [x["daily_return"] for x in rows if x.get("daily_return") is not None]
     sharpe = (float(np.mean(rets) / np.std(rets) * np.sqrt(365)) if len(rets) > 5 and np.std(rets) > 0 else None)
     peak = np.maximum.accumulate(navs); dd = float((peak - navs).max() / peak.max()) if navs else 0
-    return {"status": "ok", "nucleus": NUCLEUS, "backtest_ref": {"combined_sharpe": 1.56, "enb": 3.68},
+    # honest backtest ref — prefer the weekly-recomputed OOS numbers from the factory (Redis);
+    # fall back to the last measured values. OOS (blend fit on train) is the honest expectation.
+    ref = {"oos_combined_sharpe": 1.05, "in_sample_sharpe": 1.56, "enb": 3.68, "oos_days": 296}
+    try:
+        from src.data.market.data_layer import _redis_get
+        live_ref = await _redis_get("combined_book:refs")
+        if isinstance(live_ref, dict) and live_ref.get("oos_combined_sharpe") is not None:
+            ref = live_ref
+    except Exception:
+        pass
+    ref["note"] = "OOS (blend fit on train only) is the honest expectation; in-sample inflates"
+    return {"status": "ok", "nucleus": NUCLEUS, "backtest_ref": ref,
             "days": len(rows), "inception": rows[0]["mark_date"], "nav": navs[-1],
             "return_pct": round((navs[-1] - 1) * 100, 2), "ann_sharpe_live": round(sharpe, 2) if sharpe else None,
             "max_dd_pct": round(dd * 100, 2), "latest": rows[-1], "curve": rows}

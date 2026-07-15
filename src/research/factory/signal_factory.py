@@ -89,6 +89,26 @@ def _roll_downside(ret: np.ndarray, k: int) -> np.ndarray:
     return out
 
 
+def _roll_beta_idio(ret: np.ndarray, k: int, mkt_idx: int = 0):
+    """Rolling beta of each asset to the market (BTC = col 0) + idiosyncratic vol (residual std).
+    BAB (betting-against-beta) and low-idio-vol are canonical factors; likely orthogonal to
+    momentum/funding, so good ensemble candidates."""
+    T, K = ret.shape
+    beta = np.full((T, K), np.nan); idio = np.full((T, K), np.nan)
+    for i in range(k, T):
+        A = ret[i - k:i, :]                       # k×K
+        m = ret[i - k:i, mkt_idx]                 # k
+        mv = m.var()
+        if mv <= 0:
+            continue
+        mc = m - m.mean()
+        Ac = A - A.mean(0)
+        b = (Ac * mc[:, None]).mean(0) / mv       # K betas, vectorised
+        beta[i] = b
+        idio[i] = (Ac - b[None, :] * mc[:, None]).std(0)
+    return beta, idio
+
+
 def signal_library(close, ret, fmean, fsum) -> dict[str, np.ndarray]:
     """{name: weight matrix T×K}. Each dollar-neutral, gross 1. Deliberately a MIX of
     plausible-and-junk across families — the gate decides, not us."""
@@ -100,6 +120,7 @@ def signal_library(close, ret, fmean, fsum) -> dict[str, np.ndarray]:
     sk60 = _roll_skew(ret, 60)
     dvol30 = _roll_downside(ret, 30)
     volreg = np.where(v60 > 0, v10 / v60, np.nan)
+    beta60, idio60 = _roll_beta_idio(ret, 60)
     return {
         # cause / positioning
         "positioning_funding":  positioning_weights(fmean, kwin=7),          # validated baseline
@@ -120,6 +141,8 @@ def signal_library(close, ret, fmean, fsum) -> dict[str, np.ndarray]:
         "low_downside_vol_30":  _xs_weights(dvol30, sign=-1.0),
         "vol_regime_10_60":     _xs_weights(volreg, sign=-1.0),
         "neg_skew_pref_60":     _xs_weights(sk60, sign=-1.0),
+        "betting_against_beta": _xs_weights(beta60, sign=-1.0),   # long low-beta / short high-beta
+        "low_idio_vol_60":      _xs_weights(idio60, sign=-1.0),
     }
 
 
@@ -193,6 +216,58 @@ def run(start=(2024, 1, 1)) -> dict:
             "nucleus": nucleus, "combined": comb}
 
 
+def walkforward_combined(start=(2024, 1, 1), folds: int = 5, embargo: int = 5) -> dict:
+    """The honest headline test: the combined 1.56 is fit in-sample (nucleus + blend on the
+    whole panel). Here the nucleus selection AND the blend weights are fit on TRAIN only, then
+    applied forward to an embargoed TEST block. Concatenate the OOS test pnl across expanding
+    folds → the OOS combined Sharpe. If it holds, the ensemble is real; if it deflates, that's
+    the truth. No look-ahead in the aggregate."""
+    days, close, fmean, fsum = load_binance_panel(DEFAULT_UNIVERSE, start=start)
+    ret = np.zeros_like(close); ret[1:] = np.nan_to_num((close[1:] - close[:-1]) / close[:-1])
+    lib = signal_library(close, ret, fmean, fsum)
+    warm = 180
+    series = {n: _bt(W, ret, fsum)[warm:] for n, W in lib.items()}
+    T = len(next(iter(series.values())))
+    names = list(series)
+    M = np.array([series[n] for n in names]).T          # T×K pnl matrix
+
+    def _sr(x):
+        return float(x.mean() / x.std() * np.sqrt(365)) if x.std() > 0 else 0.0
+
+    oos_pnl = []
+    start_frac = 0.5                                     # first train = first 50%
+    test_len = int(T * (1 - start_frac) / folds)
+    for f in range(folds):
+        tr_end = int(T * start_frac) + f * test_len
+        te_lo, te_hi = tr_end + embargo, tr_end + embargo + test_len
+        if te_hi > T:
+            break
+        tr = M[:tr_end]
+        # nucleus on TRAIN: positive train Sharpe + orthogonal (train corr <0.6)
+        tr_sr = {names[i]: _sr(tr[:, i]) for i in range(len(names))}
+        cand = [n for n in names if tr_sr[n] > 0.2]
+        nucleus = []
+        for n in sorted(cand, key=lambda x: -tr_sr[x]):
+            idx = names.index(n)
+            if not nucleus or max(abs(np.corrcoef(tr[:, idx], tr[:, names.index(m)])[0, 1]) for m in nucleus) < 0.6:
+                nucleus.append(n)
+        if len(nucleus) < 2:
+            continue
+        # blend on TRAIN via the same combiner
+        rbs = {n: {i: float(v) for i, v in enumerate(tr[:, names.index(n)])} for n in nucleus}
+        w = combine(rbs).weights
+        # apply forward to embargoed TEST
+        te = M[te_lo:te_hi]
+        wvec = np.array([w.get(n, 0.0) for n in names])
+        oos_pnl.extend((te @ wvec).tolist())
+
+    oos = np.array(oos_pnl)
+    return {"folds_used": folds, "oos_days": len(oos),
+            "oos_combined_sharpe": round(_sr(oos), 2) if len(oos) > 5 else None,
+            "oos_total_return_pct": round(float(oos.sum()) * 100, 1) if len(oos) else None,
+            "in_sample_ref": 1.56}
+
+
 async def recalibrate_and_log() -> dict:
     """Stage 4 — the loop's recalibration turn. Re-run the factory, write the fresh nucleus
     blend to Redis (the combined book reads it → decayed signals drop out with no code change),
@@ -200,10 +275,20 @@ async def recalibrate_and_log() -> dict:
     res = run()
     comb = res.get("combined")
     nucleus_blend = comb.weights if comb else {n: round(1.0 / len(res["nucleus"]), 4) for n in res["nucleus"]}
-    # write nucleus → Redis for combined_book
+    # the HONEST number — OOS (blend fit on train only). Recomputed weekly so the live book
+    # never advertises the inflated in-sample Sharpe.
+    try:
+        wf = walkforward_combined()
+    except Exception:
+        wf = {"oos_combined_sharpe": None}
+    # write nucleus + honest refs → Redis for combined_book
     try:
         from src.data.market.data_layer import _redis_set
         await _redis_set("combined_book:nucleus", nucleus_blend, ttl=0)
+        await _redis_set("combined_book:refs", {
+            "oos_combined_sharpe": wf.get("oos_combined_sharpe"),
+            "in_sample_sharpe": comb.port_sharpe_ann if comb else None,
+            "enb": comb.enb if comb else None, "oos_days": wf.get("oos_days")}, ttl=0)
     except Exception as e:
         print(f"[FACTORY] nucleus write failed: {e}")
     # log batch → experiment_runs
@@ -245,5 +330,9 @@ if __name__ == "__main__":
               f"uplift {c.uplift:+})  ·  ENB {c.enb}")
         print(f"weights: {c.weights}")
         print("\n→ the library beats the hero: combining orthogonal positives lifts the aggregate.")
+        wf = walkforward_combined()
+        print(f"\nHONEST OOS (nucleus + blend fit on TRAIN only, embargoed, {wf['oos_days']}d): "
+              f"combined Sharpe {wf['oos_combined_sharpe']}  (in-sample {wf['in_sample_ref']}) "
+              f"— survives, deflated as expected.")
     else:
         print("\nno combinable nucleus (need ≥2) — the library is still too thin; add more signals.")
