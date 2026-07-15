@@ -105,10 +105,13 @@ not survive as deployable alpha; the discipline's value is that this is *known a
   a resolver marks it against realized benchmark-relative alpha at horizon; per-source hit-rate and
   directional alpha feed back into conviction weighting. (Ref: `prediction_resolver.py`.)
 - **Engineering honesty for the paper:** as of 2026-07-15 only 1 of 5 sources (`signal`) had accrued
-  outcomes because the causal sources' daily snapshots were never persisted; this was fixed (the
-  cause + conviction emitters now write daily), so per-source causal track records begin accruing —
-  **measurable at horizon (~30 days), not before.** Report the fix and the honest clock; do not
-  pre-state the result.
+  outcomes — the other four (`positioning`, `forward_supply`, `conviction`, `narrative`) emitted
+  live signals but never *persisted* a dated daily snapshot, so the resolver had nothing to read
+  (two of the four target tables were empty; `narrative_snapshots` did not exist). All five are now
+  wired to write one dated row/day (upsert on `(date,symbol)`), so per-source causal track records
+  begin accruing — **measurable at horizon (~30 days), not before.** Report the fix and the honest
+  clock; do not pre-state the result. (This gap — a resolver ready but starved of inputs — is itself
+  a worked example of the proximity blindness in §1.)
 - **Live paper book** (`causal_paper.py`): market-neutral NAV, daily mark / weekly rebalance — the
   validated deployable cadence. Turns the walk-forward *candidate* into a real, LP-showable number.
 - **Agent substrate:** the whole apparatus is exposed over MCP (Streamable HTTP, 38 tools), so an
