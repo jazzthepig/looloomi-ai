@@ -322,6 +322,29 @@ async def _start_causal_paper_loop():
         print("[CAUSAL-PAPER] ✅ daily causal paper-book loop scheduled")
 
 
+# ── 顶格 RWA paper sleeve — live forward track record of the volume-gated rule ──
+# Can't be backtest-validated (instrument class all-2026); accrues forward instead.
+# See src/data/signals/dingge_paper.py.
+async def _dingge_paper_loop():
+    await _asyncio.sleep(420)   # 7 min warmup
+    while True:
+        try:
+            from src.data.signals.dingge_paper import mark_and_trade
+            res = await mark_and_trade(dry_run=False)
+            print(f"[DINGGE-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
+                  f"open={res.get('open')} +{res.get('opened_today')}/-{res.get('closed_today')}")
+        except Exception as _e:
+            print(f"[DINGGE-PAPER] ⚠️  mark failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_dingge_paper_loop():
+    if os.environ.get("DISABLE_DINGGE_PAPER", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_dingge_paper_loop())
+        print("[DINGGE-PAPER] ✅ daily 顶格 RWA paper-sleeve loop scheduled")
+
+
 # ── Track-record refresh loop — self-tuning conviction ────────────────────────
 # Recomputes signal_track_record (30d benchmark-relative outcomes from our own
 # cis_scores × ohlcv_daily) daily → the Risk Meter's conviction tilt auto-recalibrates
@@ -875,6 +898,23 @@ async def causal_paper(response: Response = None):
         return await get_curve()
     except Exception as e:
         return {"error": "causal_paper_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/signals/dingge-paper")
+async def dingge_paper(response: Response = None):
+    """Live PAPER track record of the 顶格 RWA volume-gated sleeve. Cannot be backtest-
+    validated (instrument class all-2026) → accrues forward instead. NAV curve from
+    dingge_paper_nav. See src/data/signals/dingge_paper.py."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.data.signals.dingge_paper import get_curve
+    try:
+        return await get_curve()
+    except Exception as e:
+        return {"error": "dingge_paper_unavailable", "detail": str(e)[:120]}
 
 
 @app.get("/api/v1/signals/dingge-board")
