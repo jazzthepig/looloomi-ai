@@ -449,8 +449,9 @@ function PaperTrading() {
       {metrics && (
         <div style={{ display: "flex", gap: 20, marginBottom: 16, flexWrap: "wrap" }}>
           {[
-            ["Portfolio", `$${(metrics.portfolio_usd || 10000).toFixed(0)}`],
+            ["Cash Book", `$${(metrics.portfolio_usd || 10000).toFixed(0)}`],
             ["Cash", `$${(metrics.cash_usd || 0).toFixed(0)}`],
+            ["Sleeve (NAV $100k)", metrics.sleeve ? `${metrics.sleeve.return_pct >= 0 ? "+" : ""}${(metrics.sleeve.return_pct ?? 0).toFixed(2)}%` : "—"],
             ["Trades", metrics.total_trades],
             ["Win Rate", metrics.win_rate != null ? `${metrics.win_rate}%` : "—"],
             ["Avg Return", metrics.avg_return_pct != null ? `${metrics.avg_return_pct >= 0 ? "+" : ""}${metrics.avg_return_pct?.toFixed(2)}%` : "—"],

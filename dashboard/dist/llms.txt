@@ -7,7 +7,8 @@
 
 ## MCP Server
 
-MCP endpoint (SSE): https://looloomi.ai/mcp/sse
+MCP endpoint (Streamable HTTP, primary): https://looloomi.ai/mcp
+MCP endpoint (legacy SSE): https://looloomi.ai/mcp-sse/sse
 Compatible with: Claude Desktop, Cursor, Windsurf, ChatGPT, any MCP-compatible client
 
 Install (Claude Desktop / claude_desktop_config.json):
@@ -15,8 +16,8 @@ Install (Claude Desktop / claude_desktop_config.json):
 {
   "mcpServers": {
     "cometcloud": {
-      "transport": "sse",
-      "url": "https://looloomi.ai/mcp/sse"
+      "transport": "http",
+      "url": "https://looloomi.ai/mcp"
     }
   }
 }
@@ -24,7 +25,7 @@ Install (Claude Desktop / claude_desktop_config.json):
 
 Install (Claude Code CLI):
 ```
-claude mcp add --transport sse cometcloud https://looloomi.ai/mcp/sse
+claude mcp add --transport http cometcloud https://looloomi.ai/mcp
 ```
 
 Agent discovery card: https://looloomi.ai/.well-known/agent.json

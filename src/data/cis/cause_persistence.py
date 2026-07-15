@@ -57,6 +57,11 @@ async def _post_table(table: str, rows: list[dict], on_conflict: str | None = No
     url, key = cfg
     import httpx
     base = url.rstrip("/") + f"/rest/v1/{table}"
+    # Upsert on the (snapshot_date, symbol) unique key so (a) the forward_supply and
+    # positioning writers MERGE into one row per (date,symbol) instead of colliding, and
+    # (b) a redeploy re-running the same day is idempotent (no duplicate rows). PostgREST
+    # requires the on_conflict target in the URL for merge-duplicates to actually merge.
+    params = {"on_conflict": on_conflict} if on_conflict else None
     hdr = {
         "apikey": key,
         "Authorization": f"Bearer {key}",
@@ -68,7 +73,7 @@ async def _post_table(table: str, rows: list[dict], on_conflict: str | None = No
         async with httpx.AsyncClient(timeout=60) as c:
             for i in range(0, len(rows), 500):
                 chunk = rows[i:i + 500]
-                r = await c.post(base, headers=hdr, json=chunk)
+                r = await c.post(base, headers=hdr, json=chunk, params=params)
                 if r.status_code in (200, 201, 204):
                     written += len(chunk)
                 else:
@@ -117,7 +122,7 @@ async def persist_forward_supply_daily(fmap: dict, cis_universe: list[dict] | No
             "macro_regime": cis.get("macro_regime"),
             "source": "live_refresh_fwd_supply",
         })
-    n = await _post_table("cause_snapshots_daily", rows)
+    n = await _post_table("cause_snapshots_daily", rows, on_conflict="snapshot_date,symbol")
     if n > 0:
         logger.info(f"[CAUSE-PERSIST] forward_supply: {n} rows for {today}")
     return max(n, 0)
@@ -157,7 +162,7 @@ async def persist_positioning_daily(pmap: dict, cis_universe: list[dict] | None 
             "macro_regime": cis.get("macro_regime"),
             "source": "live_refresh_positioning",
         })
-    n = await _post_table("cause_snapshots_daily", rows)
+    n = await _post_table("cause_snapshots_daily", rows, on_conflict="snapshot_date,symbol")
     if n > 0:
         logger.info(f"[CAUSE-PERSIST] positioning: {n} rows for {today}")
     return max(n, 0)
@@ -204,8 +209,41 @@ async def persist_conviction_verdicts(rows: list[dict], band: str, regime: str) 
             "macro_regime": regime,
             "source": "conviction_kernel",
         })
-    n = await _post_table("conviction_verdicts_daily", out)
+    n = await _post_table("conviction_verdicts_daily", out, on_conflict="snapshot_date,symbol")
     if n > 0:
         logger.info(f"[CAUSE-PERSIST] conviction verdicts: {n} rows for {today} "
                     f"(band={band}, regime={regime})")
+    return max(n, 0)
+
+
+# ── Narrative persistence (5th prediction source) ────────────────────────────
+
+async def persist_narrative_daily(nmap: dict, regime: str | None = None) -> int:
+    """Write today's narrative (NMA) snapshot to `narrative_snapshots`.
+
+    Args:
+        nmap:   {SYMBOL: NarrativeSignal.to_dict()} — signal ∈ STRONG_NARRATIVE /
+                NARRATIVE_FADE / NEUTRAL. Resolver input for the `narrative` source;
+                NEUTRAL rows resolve to direction 0 (skipped), only strong calls score.
+    """
+    if not nmap:
+        return 0
+    today = datetime.now(timezone.utc).date().isoformat()
+    rows = []
+    for sym, v in (nmap or {}).items():
+        if not isinstance(v, dict):
+            continue
+        rows.append({
+            "snapshot_date": today,
+            "symbol": (sym or "").upper(),
+            "signal": v.get("signal"),
+            "nma_score": v.get("nma_score"),
+            "confidence": v.get("confidence"),
+            "nma_7d_delta": v.get("nma_7d_delta"),
+            "macro_regime": regime,
+            "source": "narrative_engine",
+        })
+    n = await _post_table("narrative_snapshots", rows, on_conflict="snapshot_date,symbol")
+    if n > 0:
+        logger.info(f"[CAUSE-PERSIST] narrative: {n} rows for {today}")
     return max(n, 0)
