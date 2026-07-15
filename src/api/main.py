@@ -345,6 +345,52 @@ async def _start_dingge_paper_loop():
         print("[DINGGE-PAPER] ✅ daily 顶格 RWA paper-sleeve loop scheduled")
 
 
+# ── Combined book — live NAV of the factory's walk-forward-validated nucleus ───
+# Stage 3 of the loop-as-factory: one market-neutral book = the ensemble, marked daily.
+async def _combined_book_loop():
+    await _asyncio.sleep(480)   # 8 min warmup
+    while True:
+        try:
+            from src.data.signals.combined_book import mark_and_rebalance
+            res = await mark_and_rebalance(dry_run=False)
+            print(f"[COMBINED-BOOK] mark — status={res.get('status')} nav={res.get('nav')} "
+                  f"rebal={res.get('rebalanced')}")
+        except Exception as _e:
+            print(f"[COMBINED-BOOK] ⚠️  mark failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_combined_book_loop():
+    if os.environ.get("DISABLE_COMBINED_BOOK", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_combined_book_loop())
+        print("[COMBINED-BOOK] ✅ daily combined-book NAV loop scheduled")
+
+
+# ── Signal factory recalibration — Stage 4: the loop's learning turn (weekly) ──
+# Re-runs the factory, rewrites the nucleus blend to Redis (combined book self-recalibrates as
+# signals decay), logs the batch to experiment_runs. This is what makes it a machine, not a script.
+async def _factory_recalibrate_loop():
+    await _asyncio.sleep(900)   # 15 min warmup (heavy: loads panel + all signals)
+    while True:
+        try:
+            from src.research.factory.signal_factory import recalibrate_and_log
+            res = await recalibrate_and_log()
+            print(f"[FACTORY] recalibrated — nucleus={res.get('nucleus')} "
+                  f"combined_sharpe={res.get('combined_sharpe')} enb={res.get('enb')}")
+        except Exception as _e:
+            print(f"[FACTORY] ⚠️  recalibrate failed: {_e}")
+        await _asyncio.sleep(7 * 24 * 3600)   # weekly
+
+
+@app.on_event("startup")
+async def _start_factory_recalibrate_loop():
+    if os.environ.get("DISABLE_FACTORY", "").lower() in ("1", "true", "yes"):
+        return
+    _asyncio.create_task(_factory_recalibrate_loop())
+    print("[FACTORY] ✅ weekly signal-factory recalibration loop scheduled")
+
+
 # ── Track-record refresh loop — self-tuning conviction ────────────────────────
 # Recomputes signal_track_record (30d benchmark-relative outcomes from our own
 # cis_scores × ohlcv_daily) daily → the Risk Meter's conviction tilt auto-recalibrates
@@ -915,6 +961,24 @@ async def dingge_paper(response: Response = None):
         return await get_curve()
     except Exception as e:
         return {"error": "dingge_paper_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/signals/combined-book")
+async def combined_book(response: Response = None):
+    """Live NAV of the signal factory's walk-forward-validated nucleus — one market-neutral
+    ensemble book. Provenance: nucleus signals + backtest reference (combined Sharpe ~1.56,
+    ENB ~3.7) + the live curve, so a consumer can verify, not just trust.
+    See src/data/signals/combined_book.py + src/research/factory/signal_factory.py."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.data.signals.combined_book import get_curve
+    try:
+        return await get_curve()
+    except Exception as e:
+        return {"error": "combined_book_unavailable", "detail": str(e)[:120]}
 
 
 @app.get("/api/v1/signals/dingge-board")
