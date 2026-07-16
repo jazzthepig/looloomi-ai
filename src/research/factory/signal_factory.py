@@ -109,9 +109,20 @@ def _roll_beta_idio(ret: np.ndarray, k: int, mkt_idx: int = 0):
     return beta, idio
 
 
+def _extracted(scores: list, sign: float) -> np.ndarray:
+    """Param-ROBUST extracted feature: blend a family's weight vectors across its whole grid,
+    then renormalise gross. The economic driver (momentum exists) without the overfit knob
+    (exactly 97d). Deterministic → computable live. (Jazz: discover by overfit, trade the feature.)"""
+    Ws = [_xs_weights(s, sign=sign) for s in scores]
+    We = np.mean(Ws, axis=0)
+    g = np.abs(We).sum(1, keepdims=True); g[g == 0] = 1.0
+    return We / g
+
+
 def signal_library(close, ret, fmean, fsum) -> dict[str, np.ndarray]:
     """{name: weight matrix T×K}. Each dollar-neutral, gross 1. Deliberately a MIX of
-    plausible-and-junk across families — the gate decides, not us."""
+    plausible-and-junk across families — the gate decides, not us. Parametric families ALSO
+    enter as param-robust *_extracted features (the invariant, not the overfit point)."""
     r7, r30, r90 = _roll_ret(close, 7), _roll_ret(close, 30), _roll_ret(close, 90)
     r60, r120, r180 = _roll_ret(close, 60), _roll_ret(close, 120), _roll_ret(close, 180)
     v10, v30, v60 = _roll_std(ret, 10), _roll_std(ret, 30), _roll_std(ret, 60)
@@ -143,6 +154,11 @@ def signal_library(close, ret, fmean, fsum) -> dict[str, np.ndarray]:
         "neg_skew_pref_60":     _xs_weights(sk60, sign=-1.0),
         "betting_against_beta": _xs_weights(beta60, sign=-1.0),   # long low-beta / short high-beta
         "low_idio_vol_60":      _xs_weights(idio60, sign=-1.0),
+        # ── param-robust EXTRACTED features (discover→extract; the invariant, not the knob) ──
+        "momentum_extracted":     _extracted([r30, r60, r90, r120, _roll_ret(close, 180)], +1.0),
+        "lowvol_extracted":       _extracted([v10, v30, v60], -1.0),
+        "downside_vol_extracted": _extracted([dvol30, _roll_downside(ret, 20), _roll_downside(ret, 60)], -1.0),
+        "neg_skew_extracted":     _extracted([sk60, _roll_skew(ret, 30), _roll_skew(ret, 90)], -1.0),
     }
 
 
