@@ -438,50 +438,33 @@ function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
             {signals.slice(0, 4).map((sig, i) => {
-              const typeColors = {
-                MACRO:      { color: "#06B6D4", bg: "rgba(6,182,212,0.08)" },
-                FUNDING:    { color: "#4B9EFF", bg: "rgba(75,158,255,0.08)" },
-                REGULATORY: { color: "#FF8C42", bg: "rgba(255,140,66,0.08)" },
-                TECHNICAL:  { color: "#A78BFA", bg: "rgba(167,139,250,0.08)" },
-                ONCHAIN:    { color: "#00D98A", bg: "rgba(0,217,138,0.08)" },
-                SOCIAL:     { color: "#E8A000", bg: "rgba(232,160,0,0.08)" },
-              };
-              const tc = typeColors[sig.type] || typeColors.MACRO;
+              const dir = (sig.direction || "").toUpperCase();
+              const isUp = dir.includes("OUTPERFORM") && !dir.includes("UNDER");
+              const isDown = dir.includes("UNDERPERFORM") || dir.includes("UNDERWEIGHT");
+              const dc = isUp ? "#00D98A" : isDown ? "#FF3D5A" : T.t3;
+              const resolved = sig.status === "resolved" && sig.outcome;
               return (
-                <div key={i} style={{
+                <div key={sig.id ?? i} style={{
                   background: T.surface,
-                  border: `1px solid ${T.border}`,
-                  borderRadius: 8,
-                  padding: "10px 12px",
+                  border: `1px solid ${T.border}`, borderLeft: `3px solid ${dc}`,
+                  borderRadius: 8, padding: "10px 12px",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                    <span style={{
-                      fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700,
-                      letterSpacing: "0.08em", padding: "2px 6px",
-                      borderRadius: 3, background: tc.bg, color: tc.color,
-                      textTransform: "uppercase",
-                    }}>
-                      {sig.type}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 700, color: T.t1 }}>
+                      {sig.symbol}
                     </span>
-                    {sig.importance === "HIGH" && (
-                      <span style={{
-                        fontFamily: FONTS.mono, fontSize: 8,
-                        color: T.amber, letterSpacing: "0.06em",
-                      }}>
-                        HIGH
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, color: dc, letterSpacing: "0.05em" }}>
+                      {isUp ? "▲ " : isDown ? "▼ " : ""}{dir || "NEUTRAL"}
+                    </span>
+                    {sig.conviction_grade && (
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, color: T.t2 }}>
+                        {sig.conviction_grade}
                       </span>
                     )}
-                    <span style={{
-                      fontFamily: FONTS.mono, fontSize: 9, color: T.t3, marginLeft: "auto",
-                    }}>
-                      {sig.source}
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: resolved ? T.t3 : "#06B6D4",
+                      marginLeft: "auto", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      {resolved ? (sig.outcome.hit ? "✓ hit" : "✗ miss") : "live"}
                     </span>
-                  </div>
-                  <div style={{
-                    fontFamily: FONTS.body, fontSize: 12, lineHeight: 1.5,
-                    color: T.t1, opacity: 0.85,
-                  }}>
-                    {sig.description}
                   </div>
                 </div>
               );
@@ -764,75 +747,52 @@ function MobileSignals({ signals, loading }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {signals.map((sig, i) => {
-            const tc = TYPE_COLORS[sig.type] || TYPE_COLORS.MACRO;
-            const impHigh = sig.importance === "HIGH" || sig.importance === "CRITICAL";
+            const dir = (sig.direction || "").toUpperCase();
+            const isUp = dir.includes("OUTPERFORM") && !dir.includes("UNDER");
+            const isDown = dir.includes("UNDERPERFORM") || dir.includes("UNDERWEIGHT");
+            const dc = isUp ? "#00D98A" : isDown ? "#FF3D5A" : T.t3;
+            const resolved = sig.status === "resolved" && sig.outcome;
 
             return (
-              <div key={i} style={{
+              <div key={sig.id ?? i} style={{
                 background: T.surface,
-                border: `1px solid ${impHigh ? tc.border : T.border}`,
-                borderRadius: 10,
-                padding: "12px 14px",
+                border: `1px solid ${T.border}`, borderLeft: `3px solid ${dc}`,
+                borderRadius: 10, padding: "12px 14px",
               }}>
-                {/* Header */}
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  marginBottom: 8,
-                  flexWrap: "wrap",
-                }}>
-                  <span style={{
-                    fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700,
-                    letterSpacing: "0.1em", padding: "2px 7px",
-                    borderRadius: 3, background: tc.bg,
-                    color: tc.color, textTransform: "uppercase",
-                    border: `1px solid ${tc.border}`,
-                  }}>
-                    {sig.type}
+                {/* Header: symbol + direction + status */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontFamily: FONTS.brand || FONTS.body, fontSize: 15, fontWeight: 700, color: T.t1 }}>
+                    {sig.symbol}
                   </span>
-                  {impHigh && (
-                    <span style={{
-                      fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700,
-                      color: T.amber, letterSpacing: "0.08em",
-                      background: "rgba(245,158,11,0.08)",
-                      padding: "2px 6px", borderRadius: 3,
-                      border: "1px solid rgba(245,158,11,0.2)",
-                    }}>
-                      {sig.importance}
+                  <span style={{
+                    fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, letterSpacing: "0.06em",
+                    padding: "2px 7px", borderRadius: 100, color: dc,
+                    background: isUp ? "rgba(0,217,138,0.10)" : isDown ? "rgba(255,61,90,0.10)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${dc}40`,
+                  }}>
+                    {isUp ? "▲ " : isDown ? "▼ " : ""}{dir || "NEUTRAL"}
+                  </span>
+                  {sig.conviction_grade && (
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 10, fontWeight: 700, color: T.t2 }}>
+                      {sig.conviction_grade}
                     </span>
                   )}
-                  <span style={{
-                    fontFamily: FONTS.mono, fontSize: 9, color: T.t3,
-                    marginLeft: "auto",
-                  }}>
-                    {sig.source}
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: resolved ? T.t3 : "#06B6D4",
+                    marginLeft: "auto", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                    {resolved ? "resolved" : "live"}
                   </span>
                 </div>
-
-                {/* Body */}
-                <div style={{
-                  fontFamily: FONTS.body, fontSize: 13, lineHeight: 1.6,
-                  color: T.t1, opacity: 0.88,
-                  marginBottom: sig.affected_assets?.length ? 8 : 0,
-                }}>
-                  {sig.description}
+                {/* Meta: regime · horizon · outcome */}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+                  fontFamily: FONTS.mono, fontSize: 10, color: T.t3 }}>
+                  {sig.regime && <span>regime {sig.regime}</span>}
+                  <span>{sig.horizon || "30D"}</span>
+                  {resolved && (
+                    <span style={{ color: sig.outcome.hit ? "#00D98A" : "#FF3D5A", fontWeight: 600 }}>
+                      {sig.outcome.hit ? "✓ hit" : "✗ miss"} · α {sig.outcome.alpha_30d_pct >= 0 ? "+" : ""}{sig.outcome.alpha_30d_pct}%
+                    </span>
+                  )}
                 </div>
-
-                {/* Affected assets */}
-                {sig.affected_assets?.length > 0 && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                    {sig.affected_assets.slice(0, 6).map(a => (
-                      <span key={a} style={{
-                        fontFamily: FONTS.mono, fontSize: 9,
-                        padding: "2px 6px", borderRadius: 3,
-                        background: T.raised,
-                        border: `1px solid ${T.border}`,
-                        color: T.t2,
-                      }}>
-                        {a}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           })}
@@ -864,7 +824,7 @@ export default function MobileApp() {
         const [cisRes, macroRes, sigRes] = await Promise.allSettled([
           fetch("/api/v1/cis/universe", { signal: controller.signal }),
           fetch("/api/v1/macro/brief",  { signal: controller.signal }),
-          fetch("/api/v1/signals",      { signal: controller.signal }),
+          fetch("/api/v1/signals/feed", { signal: controller.signal }),
         ]);
 
         if (cisRes.status === "fulfilled" && cisRes.value.ok) {

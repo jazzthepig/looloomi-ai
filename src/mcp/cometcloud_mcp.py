@@ -1195,9 +1195,9 @@ async def cometcloud_get_macro_pulse() -> str:
     },
 )
 async def cometcloud_get_signal_feed(params: SignalFeedInput) -> str:
-    """Fetch the CometCloud signal feed — curated intelligence signals across
-    7 concurrent sources: CIS Score Updates, Momentum Alerts, On-chain Flows,
-    VC Funding, DeFi TVL Shifts, Macro Events, and Sentiment Shifts.
+    """Fetch the CometCloud signal feed (v4, loop-sourced) — dated directional calls drawn
+    from our own resolvable prediction stream, each carrying (once resolved) its honest 30d
+    benchmark-relative outcome, plus an aggregate verified directional accuracy.
 
     All signals use compliance-safe positioning language only.
     Do NOT interpret as BUY/SELL trade recommendations.
@@ -1227,31 +1227,33 @@ async def cometcloud_get_signal_feed(params: SignalFeedInput) -> str:
         - "Any new DeFi TVL signals?" → use this tool, filter type by client
     """
     try:
-        data = await _get("/api/v1/signals")
-        signals = data.get("signals", data if isinstance(data, list) else [])
-        signals = signals[: params.limit]
+        # v4 loop-sourced feed: each signal is a dated, resolvable call from our own prediction
+        # stream, carrying (once resolved) its honest 30d benchmark-relative outcome. Plus an
+        # aggregate directional accuracy — the only performance surfaced (the loop stays hidden).
+        data = await _get("/api/v1/signals/feed")
+        signals = (data.get("signals") or [])[: params.limit]
+        acc = data.get("accuracy") or {}
 
         if params.response_format == Fmt.JSON:
-            return json.dumps({"count": len(signals), "signals": signals}, indent=2)
+            return json.dumps({"count": len(signals), "accuracy": acc, "signals": signals}, indent=2)
 
-        lines = [f"# Signal Feed ({len(signals)} signals)", ""]
+        acc_line = ""
+        if acc.get("resolved_30d_directional_pct") is not None:
+            acc_line = (f"**Verified accuracy**: {acc['resolved_30d_directional_pct']}% 30d directional "
+                        f"(n={acc.get('n')}, avg α {acc.get('avg_alpha_30d_pct')}%) — positioning language, not advice")
+        lines = [f"# Signal Feed ({len(signals)} signals)", acc_line, ""]
         for sig in signals:
-            # API uses description/logic/affected_assets/vector_direction
-            # (not title/body/asset/signal)
-            title   = sig.get("description") or sig.get("title") or "—"
-            body    = sig.get("logic") or sig.get("body") or ""
-            assets  = sig.get("affected_assets") or ([sig.get("asset")] if sig.get("asset") else [])
-            assets_str = ", ".join(assets) if isinstance(assets, list) else str(assets)
-            signal  = sig.get("vector_direction") or sig.get("signal") or "—"
-            lines += [
-                f"### {title}",
-                f"**Type**: {sig.get('type', '—')} · **Assets**: {assets_str} · "
-                f"**Direction**: {signal} · **Horizon**: {sig.get('time_horizon', '—')} · "
-                f"**Importance**: {sig.get('importance', '—')}",
-                body,
-                f"*{sig.get('timestamp', '')}*",
-                "",
-            ]
+            sym = sig.get("symbol", "—")
+            direction = sig.get("direction", "NEUTRAL")
+            status = sig.get("status", "live")
+            head = f"### {sym} · {direction}"
+            meta = (f"**Grade**: {sig.get('conviction_grade', '—')} · **Regime**: {sig.get('regime', '—')} · "
+                    f"**Horizon**: {sig.get('horizon', '30D')} · **Status**: {status}")
+            out = sig.get("outcome")
+            if out:
+                meta += (f" · **Resolved**: {'✓ hit' if out.get('hit') else '✗ miss'}, "
+                         f"30d α {out.get('alpha_30d_pct')}%")
+            lines += [head, meta, f"*{sig.get('timestamp', '')}*", ""]
         return "\n".join(lines)
 
     except Exception as e:
@@ -2331,7 +2333,7 @@ async def cometcloud_asset_deep_dive(params: CisAssetInput) -> str:
         results = await asyncio.gather(
             _get(f"/api/v1/cis/asset/{params.symbol}"),
             _get("/api/v1/market/prices", params={"symbols": params.symbol}),
-            _get("/api/v1/signals", params={"asset": params.symbol, "limit": 5}),
+            _get("/api/v1/signals/feed", params={"symbol": params.symbol, "limit": 5}),
             return_exceptions=True,
         )
         cis = results[0] if not isinstance(results[0], Exception) else {}
