@@ -586,7 +586,8 @@ async def get_signal_journal(
 
 
 @router.get("/api/v1/signals/feed")
-async def get_signal_feed(limit: int = Query(default=40, le=100), response: Response = None):
+async def get_signal_feed(limit: int = Query(default=40, le=100),
+                          symbol: str = Query(default=None), response: Response = None):
     """Signal feed v4 (loop-sourced). Derived by reverse-engineering from what the LOOP needs:
     every card is a dated, directional prediction drawn from our own resolvable prediction stream
     (signal_journal → the resolver scores it → track record), NOT hand-authored market commentary.
@@ -598,12 +599,13 @@ async def get_signal_feed(limit: int = Query(default=40, le=100), response: Resp
     if response is not None:
         response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=600"
 
+    _sym = {"symbol": f"eq.{symbol.upper()}"} if symbol else {}
     # open (live) calls + recently resolved ones (the honest track record)
     open_rows = await _sb_query(_SB_TABLE, {
-        "exit_date": "is.null", "order": "signal_date.desc", "limit": str(limit),
+        "exit_date": "is.null", "order": "signal_date.desc", "limit": str(limit), **_sym,
         "select": "id,symbol,asset_class,grade,signal,cis_score,macro_regime,entry_price,signal_date,outcome_30d,return_pct_30d,alpha_30d"})
     closed_rows = await _sb_query(_SB_TABLE, {
-        "exit_date": "not.is.null", "order": "signal_date.desc", "limit": "300",
+        "exit_date": "not.is.null", "order": "signal_date.desc", "limit": "300", **_sym,
         "select": "id,symbol,asset_class,grade,signal,macro_regime,signal_date,outcome_30d,return_pct_30d,alpha_30d"})
 
     def _card(r, status):
