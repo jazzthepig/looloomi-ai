@@ -187,7 +187,16 @@ async def get_curve(limit: int = 400) -> dict:
     except Exception:
         pass
     ref["note"] = "OOS (blend fit on train only) is the honest expectation; in-sample inflates"
+    # ── tracking monitor (跟踪): is the LIVE book tracking its OOS expectation? ──
+    exp = ref.get("oos_combined_sharpe")
+    drift = None
+    if sharpe is not None and exp is not None and len(rets) >= 20:
+        gap = sharpe - exp
+        drift = {"live_ann_sharpe": round(sharpe, 2), "expected_oos_sharpe": exp,
+                 "gap": round(gap, 2), "n_days": len(rets),
+                 "status": ("on_track" if gap >= -0.75 else "DRIFT — live materially below OOS expectation, investigate")}
     return {"status": "ok", "nucleus": NUCLEUS, "backtest_ref": ref,
+            "pbo": ref.get("pbo"), "tracking": drift or {"status": "warming_up", "n_days": len(rets)},
             "days": len(rows), "inception": rows[0]["mark_date"], "nav": navs[-1],
             "return_pct": round((navs[-1] - 1) * 100, 2), "ann_sharpe_live": round(sharpe, 2) if sharpe else None,
             "max_dd_pct": round(dd * 100, 2), "latest": rows[-1], "curve": rows}

@@ -188,6 +188,13 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 - **Result:** Puell 180d **in-sample** is textbook (low-Puell Q1 +89.8%/80% win → high-Puell Q5 +6.3%/43% win, IC_IS −0.58) but **OOS IC = −0.02 (gone)**; 90d flips sign IS→OOS. Difficulty proxy IC is *positive* (momentum), and price-near-cost is the WORST short-term bucket (−3.6%) — refutes "buy near mining cost."
 - **Lesson:** a **published cost-basis indicator is a cycle *descriptor*, not a live edge.** Two failure modes stacked: (1) it's consensus → priced in (R1/R18 again); (2) its in-sample IC rides on only ~2–3 independent cycle bottoms in all of BTC history (huge daily n, tiny effective-n) → not certifiable. **Survives** only as a slow gross-scale context ("where are we in the miner cycle"), never as timing or cross-sectional alpha. Tradeable production-economics alpha would need the *surprise* (unabsorbed hashrate/cost shock), not the published multiple. Cheap-to-produce keeps getting cheaper without a catalyst (R6/R12).
 
+## R20 🔴 Style/factor rotation beats a static multi-strategy blend — IT DOESN'T (static wins OOS)
+- **Hypothesis (Jazz's direction):** rotating strategy weights across the style cycle (风格周期) — factor momentum and/or regime-conditional tilts — beats a static diversified blend.
+- **Test:** 17 factory signals × 24 majors, 748d, walk-forward OOS. `src/research/factory/style_rotation_study.py`; report `reports/ROTATION_STUDY_2026-07-15.md`.
+- **Result:** static 0.78 = momentum-rotation 0.78 (dead tie) ; regime-rotation **0.29** (much worse OOS). The style cycle is REAL in-sample (BAB/defensive own calm+stormy, positioning-funding peaks mid-vol, factor-momentum IC +0.076) but not profitably timeable — per-regime Sharpe is estimated on a handful of episodes and the regime label lags. Asness et al. "Contrarian Factor Timing is Deceptively Difficult" confirmed on our data; the "smarter" regime version is the more dangerous one.
+- **Also found (structural):** effective breadth — assets 4.74 of 24 (all correlate to BTC), strategies 6.74 of 17. **In crypto the diversification is on the STRATEGY axis, not the asset axis.**
+- **Lesson:** don't build a rotation overlay (felt sophisticated, loses money) — static diversification IS the edge (= the combined_book, OOS 1.05). Push breadth via more independent STRATEGIES, not more correlated assets. The regime map's only honest use is RISK (scale gross down in stormy), never rotating for alpha.
+
 ## What the graveyard says, in aggregate
 
 1. **Cleverness overfits; simple survives.** (R1, R2, R8) Every added degree of freedom lost OOS. The winners are the humble ones (REGIME_CIS_FLOOR, funding-level).
