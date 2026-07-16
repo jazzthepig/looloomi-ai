@@ -61,10 +61,22 @@ def _carry_w(fmean) -> np.ndarray:
     return _norm(-(f - f.mean()))
 
 
+TARGET_VOL_ANN = 0.10
+_MAX_LEV = 3.0
+
+
 def _target(close, ret, fmean, fsum) -> dict:
     from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE
     wf, wt, wc = _factor_w(close, ret, fmean, fsum), _trend_w(close, ret), _carry_w(fmean)
-    blended = (wf + wt + wc) / 3.0        # equal-gross risk-parity approximation
+    blended = (wf + wt + wc) / 3.0        # equal-gross risk-parity across the 3 sleeves
+    # ── genuine VOL-TARGET: scale the book to a constant ex-ante vol (constant risk = the CTA
+    # construction; this is what makes return/leverage honest and capacity-adjusted) ──
+    cov = np.cov(np.nan_to_num(ret[-60:]).T)
+    port_var = float(blended @ cov @ blended)
+    tgt_daily = TARGET_VOL_ANN / np.sqrt(365)
+    if port_var > 0:
+        scale = min(tgt_daily / np.sqrt(port_var), _MAX_LEV)
+        blended = blended * scale
     K = close.shape[1]
     return {DEFAULT_UNIVERSE[i]: float(blended[i]) for i in range(K) if abs(blended[i]) > 1e-4}
 
