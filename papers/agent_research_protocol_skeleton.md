@@ -95,6 +95,14 @@ Present `experiment_runs` verbatim — the point is the **ratio**, not a highlig
 - **R13** — a fee-value gate "validated" on a single OOS split (+0.75) was **refuted** under
   walk-forward (3/7 folds, +0.06). *Lesson (meta): we caught our own overclaim; one split is not
   validation. This is the protocol working on its authors.*
+- **R18** — the forward-supply *cause* is tradeable at the unlock event: **refuted** with a
+  control. Across 11 large 2024–25 cliff unlocks, raw 30d post-unlock alpha looked bearish
+  (−9.75%, 82% negative) — but netting each token against its own non-event window flips it:
+  control-adjusted effect **+15.8%, 9/10 positive, sign-test p=0.021** (unlock windows *beat*
+  baseline), and the biggest unlocks show the biggest relief (TIA 82% → +34.7%). *Lesson: a
+  scheduled, publicly-known cause is priced in — proximity to it is not an edge; trade the
+  surprise, not the schedule. Directly tests, and tightens, the paper's own reflection→cause
+  claim (§1): the cause survives as a **descriptor/risk-filter**, not as event-timing alpha.*
 
 The methodological point: the **refutations are the product**. Six of seven recorded hypotheses did
 not survive as deployable alpha; the discipline's value is that this is *known and permanent*.

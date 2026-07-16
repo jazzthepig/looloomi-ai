@@ -429,7 +429,10 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
 
     out_count     = len(resolved_signals)
     out_win_rate  = round(len(out_wins) / out_count * 100, 1) if out_count > 0 else None
-    out_avg_ret   = round(float(np.mean([r.get("return_pct_30d", 0) for r in resolved_signals])) / 100.0 * 100, 3) if resolved_signals else None
+    # NOTE: .get(key, 0) does NOT protect against key present with value None (EXPIRED
+    # signals have return_pct_30d=None) — np.mean([..., None]) then 500s. Filter Nones.
+    _r30 = [r.get("return_pct_30d") for r in resolved_signals if r.get("return_pct_30d") is not None]
+    out_avg_ret   = round(float(np.mean(_r30)) / 100.0 * 100, 3) if _r30 else None
     # Benchmark-relative: WIN/LOSS now reflect alpha vs benchmark (BTC/SPY), not absolute
     # return — an OUTPERFORM signal is a relative claim (see outcome_tracker.py).
     _alphas = [r.get("alpha_30d") for r in resolved_signals if r.get("alpha_30d") is not None]
@@ -582,6 +585,61 @@ async def get_signal_journal(
     }
 
 
+@router.get("/api/v1/signals/feed")
+async def get_signal_feed(limit: int = Query(default=40, le=100), response: Response = None):
+    """Signal feed v4 (loop-sourced). Derived by reverse-engineering from what the LOOP needs:
+    every card is a dated, directional prediction drawn from our own resolvable prediction stream
+    (signal_journal → the resolver scores it → track record), NOT hand-authored market commentary.
+
+    Design constraints (Jazz 2026-07-15): dual-purpose (public platform display + our own use),
+    and it must NOT expose the loop's mechanics. So we surface the CALL + an honest aggregate
+    accuracy, and hide the machine (no weights / nucleus / book / strategy internals — the source
+    is shown as a generic 'CIS Intelligence' label). Compliance: positioning language only."""
+    if response is not None:
+        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=600"
+
+    # open (live) calls + recently resolved ones (the honest track record)
+    open_rows = await _sb_query(_SB_TABLE, {
+        "exit_date": "is.null", "order": "signal_date.desc", "limit": str(limit),
+        "select": "id,symbol,asset_class,grade,signal,cis_score,macro_regime,entry_price,signal_date,outcome_30d,return_pct_30d,alpha_30d"})
+    closed_rows = await _sb_query(_SB_TABLE, {
+        "exit_date": "not.is.null", "order": "signal_date.desc", "limit": "300",
+        "select": "id,symbol,asset_class,grade,signal,macro_regime,signal_date,outcome_30d,return_pct_30d,alpha_30d"})
+
+    def _card(r, status):
+        sig = (r.get("signal") or "").upper()
+        card = {
+            "id": r.get("id"), "symbol": (r.get("symbol") or "").upper(),
+            "asset_class": r.get("asset_class"),
+            "direction": sig or "NEUTRAL",              # positioning language, compliance-safe
+            "source": "CIS Intelligence",               # generic — does NOT expose the loop
+            "conviction_grade": r.get("grade"), "regime": r.get("macro_regime"),
+            "timestamp": r.get("signal_date"), "horizon": "30D", "status": status,
+        }
+        a = r.get("alpha_30d")
+        if a is not None:                                # honest resolved outcome (self-verifying)
+            card["outcome"] = {"alpha_30d_pct": round(float(a), 2),
+                               "hit": (("OUTPERFORM" in sig and "UNDER" not in sig and a > 0)
+                                       or (("UNDERPERFORM" in sig or "UNDERWEIGHT" in sig) and a < 0))}
+        return card
+
+    signals = [_card(r, "live") for r in (open_rows or [])] + \
+              [_card(r, "resolved") for r in (closed_rows or [])[:limit]]
+
+    # aggregate accuracy — the ONLY performance we expose publicly (a trust signal, not the machine)
+    scored = [r for r in (closed_rows or []) if r.get("alpha_30d") is not None
+              and (("OUTPERFORM" in (r.get("signal") or "").upper()) or ("UNDER" in (r.get("signal") or "").upper()))]
+    hits = sum(1 for r in scored
+               if (("OUTPERFORM" in r["signal"].upper() and "UNDER" not in r["signal"].upper() and r["alpha_30d"] > 0)
+                   or (("UNDER" in r["signal"].upper()) and r["alpha_30d"] < 0)))
+    n = len(scored)
+    accuracy = {"resolved_30d_directional_pct": round(hits / n * 100, 1) if n else None,
+                "n": n, "avg_alpha_30d_pct": round(sum(r["alpha_30d"] for r in scored) / n, 2) if n else None,
+                "basis": "benchmark-relative 30d alpha on our own resolved calls; positioning language, not advice"}
+    return {"version": "4.0-loop", "generated_at": datetime.now(timezone.utc).isoformat(),
+            "accuracy": accuracy, "count": len(signals), "signals": signals}
+
+
 @router.get("/api/v1/signals/performance")
 async def get_signal_performance():
     """
@@ -616,7 +674,16 @@ async def get_signal_performance():
         "select":    "id,symbol,asset_class,grade,signal,cis_score,macro_regime,entry_price,signal_date,outcome_30d",
     })
 
-    result = _compute_metrics(closed, open_rows)
+    # Never 500 the flagship page — degrade to a graceful "building" status if the
+    # metric computation raises on some data shape (customer-facing robustness).
+    try:
+        result = _compute_metrics(closed, open_rows)
+    except Exception as e:
+        _logger.warning(f"[SIGNALS] performance compute failed: {e}", exc_info=True)
+        return {"status": "building",
+                "message": "Performance metrics are recomputing.",
+                "total_signals": len(closed) + len(open_rows),
+                "closed_signals": len(closed), "open_signals": len(open_rows)}
     result["_cached_at"] = int(time.time())
 
     # Cache result
