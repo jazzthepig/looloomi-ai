@@ -65,13 +65,32 @@ TARGET_VOL_ANN = 0.10
 _MAX_LEV = 3.0
 
 
+def _shrink_cov(X: np.ndarray) -> np.ndarray:
+    """Ledoit-Wolf-style shrinkage toward a constant-correlation target. A 60-obs sample cov over
+    many assets is noisy/ill-conditioned → the raw vol-target mis-estimates risk. Shrinking the
+    off-diagonals toward a common correlation stabilises w'Σw (institutional standard). Shrinkage
+    intensity grows when obs are scarce relative to dimension (δ ≈ K/n)."""
+    X = np.nan_to_num(X)
+    n, K = X.shape
+    S = np.cov(X.T)
+    if K < 2 or n < 3:
+        return S
+    var = np.clip(np.diag(S), 1e-12, None); std = np.sqrt(var)
+    R = S / np.outer(std, std)
+    rbar = (R.sum() - K) / (K * (K - 1))          # average pairwise correlation
+    F = rbar * np.outer(std, std)                 # constant-correlation target
+    np.fill_diagonal(F, var)
+    delta = float(min(0.8, max(0.1, K / n)))      # more shrinkage when sample is thin vs dimension
+    return (1 - delta) * S + delta * F
+
+
 def _target(close, ret, fmean, fsum) -> dict:
     from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE
     wf, wt, wc = _factor_w(close, ret, fmean, fsum), _trend_w(close, ret), _carry_w(fmean)
     blended = (wf + wt + wc) / 3.0        # equal-gross risk-parity across the 3 sleeves
-    # ── genuine VOL-TARGET: scale the book to a constant ex-ante vol (constant risk = the CTA
-    # construction; this is what makes return/leverage honest and capacity-adjusted) ──
-    cov = np.cov(np.nan_to_num(ret[-60:]).T)
+    # ── genuine VOL-TARGET on a SHRUNK covariance (constant risk = the CTA construction; shrinkage
+    # keeps the risk estimate honest on a short 60-obs window) ──
+    cov = _shrink_cov(ret[-60:])
     port_var = float(blended @ cov @ blended)
     tgt_daily = TARGET_VOL_ANN / np.sqrt(365)
     if port_var > 0:
