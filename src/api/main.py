@@ -367,6 +367,28 @@ async def _start_combined_book_loop():
         print("[COMBINED-BOOK] ✅ daily combined-book NAV loop scheduled")
 
 
+# ── Scalable book — live NAV of the profit-max multi-strategy book (FACTOR+TREND+CARRY) ──
+# The high-capacity, vol-targeted book on the deepest instruments. See src/data/signals/scalable_paper.py.
+async def _scalable_book_loop():
+    await _asyncio.sleep(540)   # 9 min warmup
+    while True:
+        try:
+            from src.data.signals.scalable_paper import mark_and_rebalance
+            res = await mark_and_rebalance(dry_run=False)
+            print(f"[SCALABLE-BOOK] mark — status={res.get('status')} nav={res.get('nav')} "
+                  f"rebal={res.get('rebalanced')}")
+        except Exception as _e:
+            print(f"[SCALABLE-BOOK] ⚠️  mark failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_scalable_book_loop():
+    if os.environ.get("DISABLE_SCALABLE_BOOK", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_scalable_book_loop())
+        print("[SCALABLE-BOOK] ✅ daily scalable-book NAV loop scheduled")
+
+
 # ── Signal factory recalibration — Stage 4: the loop's learning turn (weekly) ──
 # Re-runs the factory, rewrites the nucleus blend to Redis (combined book self-recalibrates as
 # signals decay), logs the batch to experiment_runs. This is what makes it a machine, not a script.
@@ -979,6 +1001,23 @@ async def combined_book(response: Response = None):
         return await get_curve()
     except Exception as e:
         return {"error": "combined_book_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/signals/scalable-book")
+async def scalable_book(response: Response = None):
+    """Live NAV of the profit-max, high-capacity multi-strategy book (FACTOR + TREND + CARRY,
+    vol-targeted, on the deepest instruments). Candidate — accruing an honest, capacity-honest
+    track record. See src/data/signals/scalable_paper.py."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.data.signals.scalable_paper import get_curve
+    try:
+        return await get_curve()
+    except Exception as e:
+        return {"error": "scalable_book_unavailable", "detail": str(e)[:120]}
 
 
 @app.get("/api/v1/signals/dingge-board")
