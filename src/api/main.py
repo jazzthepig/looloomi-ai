@@ -1020,6 +1020,23 @@ async def scalable_book(response: Response = None):
         return {"error": "scalable_book_unavailable", "detail": str(e)[:120]}
 
 
+@app.get("/api/v1/portfolio")
+async def portfolio(response: Response = None):
+    """The assimilated top-level book — one coherent hierarchy over all the sleeves/books:
+    CORE (scalable, deployable) · COMPONENTS (inside core) · CANDIDATES (orthogonal, accruing) ·
+    breadth · discipline. Read-only composition. See src/data/signals/portfolio.py."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=900"
+    from src.data.signals.portfolio import get_portfolio
+    try:
+        return await get_portfolio()
+    except Exception as e:
+        return {"error": "portfolio_unavailable", "detail": str(e)[:120]}
+
+
 @app.get("/api/v1/signals/dingge-board")
 async def dingge_board(response: Response = None):
     """Live 顶格 board — tokenized-RWA perps whose funding pinned the cap (24/7-on-chain vs

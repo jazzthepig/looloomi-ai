@@ -35,6 +35,22 @@ RWA_PERPS = [
     "AAPLUSDT", "GOOGLUSDT", "AMZNUSDT", "SPXUSDT", "EWYUSDT", "MARAUSDT", "PLTRUSDT",
 ]
 
+# 热点行业 / sector-thematic ETF perps (24/7 on-chain) — the industry-rotation tracking layer we
+# lacked. Distinct from single-name RWA: these are clean SECTOR / REGION / INDEX exposure, the
+# right unit for industry rotation (multi_asset_study: adds an independent bet, ENB 3.87; sector
+# sleeve orthogonal to crypto 0.13 / commodity −0.13). Tracked on the board + funding monitor.
+SECTOR_ETF_PERPS = [
+    "XLEUSDT",   # energy sector
+    "XBIUSDT",   # biotech
+    "URNMUSDT",  # uranium / nuclear
+    "EWZUSDT",   # Brazil
+    "EWJUSDT",   # Japan
+    "QQQUSDT",   # Nasdaq-100 (tech)
+    "IWMUSDT",   # small-cap (Russell 2000)
+    "DIAUSDT",   # Dow / large-cap value
+]
+RWA_PERPS = RWA_PERPS + SECTOR_ETF_PERPS
+
 _FAPI = "https://fapi.binance.com/fapi/v1"
 CAP_FUNDING = 0.004          # ≥0.4% / 8h (~440%+ annualized) = 顶格 territory (near the 0.5% clamp)
 _VOL_WINDOW = 15             # days for the 量能 read (post-event vs pre-event)
