@@ -210,7 +210,15 @@ def run(start=(2024, 1, 1)) -> dict:
         rbs = {n: {i: float(v) for i, v in enumerate(series[n])} for n in nucleus}
         comb = combine(rbs)
 
-    return {"days": len(days), "n_signals": len(lib), "evals": evals, "wf": wf,
+    # PBO — probability the in-sample-best signal is below-median OOS (selection overfitting)
+    try:
+        from src.research.validation.pbo import pbo_cscv
+        Smat = np.array([series[n] for n in series]).T
+        pbo = pbo_cscv(Smat, S=10).get("pbo")
+    except Exception:
+        pbo = None
+
+    return {"days": len(days), "n_signals": len(lib), "evals": evals, "wf": wf, "pbo": pbo,
             "ann_sharpe": {n: round(a, 2) for n, a in ann.items()},
             "corr_to_positioning": corr, "survivors": survivors,
             "nucleus": nucleus, "combined": comb}
@@ -275,22 +283,46 @@ async def recalibrate_and_log() -> dict:
     res = run()
     comb = res.get("combined")
     nucleus_blend = comb.weights if comb else {n: round(1.0 / len(res["nucleus"]), 4) for n in res["nucleus"]}
-    # the HONEST number — OOS (blend fit on train only). Recomputed weekly so the live book
-    # never advertises the inflated in-sample Sharpe.
+    # the HONEST number — OOS (blend fit on train only), never the inflated in-sample Sharpe.
     try:
         wf = walkforward_combined()
     except Exception:
         wf = {"oos_combined_sharpe": None}
-    # write nucleus + honest refs → Redis for combined_book
+    challenger_oos = wf.get("oos_combined_sharpe")
+    _pbo = res.get("pbo")
+
+    # ── CHAMPION / CHALLENGER with hysteresis (industry standard, not auto-overwrite) ──
+    # A fresh nucleus only REPLACES the incumbent if it beats it OOS by a margin. Weekly
+    # auto-overwrite would chase noise (regime-thrashing); promotion needs to clear the band.
+    from src.data.market.data_layer import _redis_get, _redis_set
+    PROMOTE_MARGIN = 0.15
+    champ = None
     try:
-        from src.data.market.data_layer import _redis_set
-        await _redis_set("combined_book:nucleus", nucleus_blend, ttl=0)
+        champ = await _redis_get("combined_book:champion")
+    except Exception:
+        pass
+    promoted = False
+    if (not isinstance(champ, dict)) or champ.get("oos_sharpe") is None \
+            or (challenger_oos is not None and challenger_oos > champ["oos_sharpe"] + PROMOTE_MARGIN):
+        new_champ = {"nucleus": nucleus_blend, "oos_sharpe": challenger_oos,
+                     "in_sample": comb.port_sharpe_ann if comb else None,
+                     "promoted_at": dt.datetime.now(dt.timezone.utc).isoformat()}
+        try:
+            await _redis_set("combined_book:champion", new_champ, ttl=0)
+            await _redis_set("combined_book:nucleus", nucleus_blend, ttl=0)
+        except Exception as e:
+            print(f"[FACTORY] champion write failed: {e}")
+        promoted = True
+        champ = new_champ
+    # publish the LIVE champion's honest refs (not the challenger's) for combined_book
+    try:
         await _redis_set("combined_book:refs", {
-            "oos_combined_sharpe": wf.get("oos_combined_sharpe"),
-            "in_sample_sharpe": comb.port_sharpe_ann if comb else None,
-            "enb": comb.enb if comb else None, "oos_days": wf.get("oos_days")}, ttl=0)
+            "oos_combined_sharpe": champ.get("oos_sharpe"),
+            "in_sample_sharpe": champ.get("in_sample"),
+            "enb": comb.enb if comb else None, "oos_days": wf.get("oos_days"),
+            "pbo": _pbo, "promoted": promoted, "challenger_oos": challenger_oos}, ttl=0)
     except Exception as e:
-        print(f"[FACTORY] nucleus write failed: {e}")
+        print(f"[FACTORY] refs write failed: {e}")
     # log batch → experiment_runs
     try:
         from src.api.store import supabase_insert_table
