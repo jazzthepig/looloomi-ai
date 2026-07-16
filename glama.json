@@ -4,10 +4,11 @@
   "url": "https://looloomi.ai",
   "repository": "https://github.com/cometcloud/looloomi-ai",
   "mcp": {
-    "transport": "sse",
-    "url": "https://looloomi.ai/mcp/sse",
-    "install_claude_desktop": "{\"mcpServers\":{\"cometcloud\":{\"transport\":\"sse\",\"url\":\"https://looloomi.ai/mcp/sse\"}}}",
-    "install_claude_code": "claude mcp add --transport sse cometcloud https://looloomi.ai/mcp/sse"
+    "transport": "streamable-http",
+    "url": "https://looloomi.ai/mcp",
+    "legacy_sse_url": "https://looloomi.ai/mcp-sse/sse",
+    "install_claude_desktop": "{\"mcpServers\":{\"cometcloud\":{\"transport\":\"http\",\"url\":\"https://looloomi.ai/mcp\"}}}",
+    "install_claude_code": "claude mcp add --transport http cometcloud https://looloomi.ai/mcp"
   },
   "tools": [
     {

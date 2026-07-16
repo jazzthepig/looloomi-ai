@@ -195,6 +195,61 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 - **Also found (structural):** effective breadth — assets 4.74 of 24 (all correlate to BTC), strategies 6.74 of 17. **In crypto the diversification is on the STRATEGY axis, not the asset axis.**
 - **Lesson:** don't build a rotation overlay (felt sophisticated, loses money) — static diversification IS the edge (= the combined_book, OOS 1.05). Push breadth via more independent STRATEGIES, not more correlated assets. The regime map's only honest use is RISK (scale gross down in stormy), never rotating for alpha.
 
+## R21 🔴 LS v1 baseline is stable as a $10M FoF — IT ISN'T (9-year rolling OOS proves fragility)
+- **Hypothesis (the unspoken assumption behind Phase B):** the LS v1 tech-only baseline (EMA9/21 cross + ADX25 + ATR bracket, CIS gate disabled) earns a stable enough return stream to carry a single-strategy fund. The Phase B empirical-grid gate was being tested as an *improvement* on top of an already-acceptable foundation.
+- **Test:** rolling walk-forward OOS, **43 windows × 70 days each**, IS=240d / OOS=70d, 9-year Binance spot 4h bars (BTC/ETH: 2017-08 → 2026-07; SOL: 2020-08 → 2026-07), tech-only baseline (`LSV1_ENABLE_CIS_GATE=0`, all gates "high"). Driver: `src/research/cis_regime_studies/multi_window_baseline.py`; sweep outputs `reports/multi_window_baseline_spot_cis_off/2026-07-16/`. Full report `reports/MULTIWINDOW_BASELINE_2026-07-16.md`.
+- **Result:** *symmetric distribution with fat tails, not a positive-bias Sharpe stream.*
+  - Win rate **55.8%** (24/43), median P&L **+$54.81**, mean **+$77.90**, **stdev $527.96**, CV **6.78**.
+  - Best window **+$1,252.70**, worst **−$1,213.71** (single-window DD matches 1.5 months of median earnings).
+  - Per-regime: 2025 mega-trend +$4,919 (5 windows × ~$1k), 2022 LUNA −$2,957 (5 windows × ~$−590), 2021 ATH → correction −$1,606 (2 windows).
+  - **Net +$2,965 over 9 years on $10k starting = +3.3%/year.** Works as a *sleeve*, cannot carry a $10M FoF on its own.
+- **Adjacent-window correlation = regime persistence.** Bad regimes cluster 4–6 consecutive windows (~1–1.5 years). A single 90-day OOS samples ~5% of a regime cycle; the Phase B 70-day OOS that motivated the empirical-grid gate was *one slice of one regime* — entirely consistent with the noise it reported.
+- **Lesson:** **a Phase B-style "improve the gate within LS v1" path is fixing the wrong layer.** EMA-cross + ADX is structurally vulnerable to BTC top/reversal regimes (2021 ATH, 2022 LUNA, 2024 halving chop). Adding a 19-cell gate on top of a fragile trend signal doesn't fix the trend signal — it adds *another* overfit surface (the grid was already K=184.5-shrunk toward the mean). The fragility is in the *direction* (long/short bias), not the *gate* (which entries to take). The right fix is **multi-strategy composition**: a regime-orthogonal sleeve (pair-trade / market-neutral mean-reversion, vol sleeve, cash/RWA) that earns in the chop regimes where LS v1 bleeds, so the *aggregate* stream is stable even when individual sleeves are not.
+- **Fallout:**
+  1. ❌ **DEPRIORITIZE Phase B as currently designed** (improve LS v1's gate). Holds for smoothed-CIS re-run but is no longer the critical path.
+  2. 📍 **ELEVATE multi-strategy composition** — pair-trade sleeve, vol sleeve, cash/RWA sleeve, each regime-orthogonal to LS v1. 9-year data is in place to backtest all of them.
+  3. ✅ **VALIDATE 9-year data pipeline** (`scripts/fetch_extended_history.py` + `scripts/build_spot_catalog.py`) — works, reproducible, fast (~22s pull, ~30s catalog, ~50s sweep).
+  4. ✅ **VALIDATE rolling OOS harness** (`multi_window_baseline.py`) — extensible to all future variant tests.
+  5. 📍 **Define the strategy grid** (Task #7) — multi-asset × multi-strategy × multi-band, with explicit regime-orthogonality expectations per cell.
+- **Carrier note:** The 9-year baseline stays the reference for all future LS v1 variants (Phase B re-run, H3.2 sweep, etc.). CIS-on variant (`reports/multi_window_baseline_spot/2026-07-16/summary.md`) is structurally useless for 9-year comparison because CIS pipeline started 2024-06-07 — pre-2024 windows had 0 trades; not a fair comparison.
+
+## R22 🔴 Cross-sectional reversal is a viable pair-trade signal on crypto — IT ISN'T (losers keep losing)
+- **Hypothesis (the implicit assumption behind the strategy grid's pair-trade sleeve):** cross-sectional 30d return reversal — long the bottom decile, short the top decile, weekly rebalance — is a documented factor (Jegadeesh/Titman 1993 for tradfi equities) that should work on a crypto universe. This was the first concrete pair-trade sleeve implementation; `reports/STRATEGY_GRID_2026-07-16.md` §7 specified it as the chosen signal.
+- **Test:** vectorized pandas backtest on 21 Binance spot 4h instruments (BTC/ETH/SOL + 18 majors/L2/DeFi), 2017-08-17 → 2026-07-16, varying lookback (10/20/30/60/90 bars) × decile (5/10/20/30%). Driver: `src/research/cis_regime_studies/pair_trade_sleeve.py`. ~290k bars total, ~650 rebalances over 9 years.
+- **Result (parameter sweep):**
+  | lookback | decile | PnL ($) | Sharpe | AnnRet | MaxDD |
+  |---:|---:|---:|---:|---:|---:|
+  | 10 bars (1.7d) | 10% | -9,999.82 | -1.195 | -91.8% | -100.0% |
+  | 20 bars (3.3d) | 10% | -9,997.25 | -0.652 | -54.9% | -100.0% |
+  | 30 bars (5.0d) | 10% | -9,999.99 | **-1.435** | -121.4% | -100.0% |
+  | 60 bars (10d) | 10% | -9,996.30 | -0.608 | -51.0% | -100.0% |
+  | 90 bars (15d) | 10% | -9,999.49 | -0.916 | -75.0% | -100.0% |
+  | 30 bars | 5% | -10,000.00 | -1.415 | -125.5% | -100.0% |
+  | 30 bars | 20% | -9,983.03 | -1.230 | -59.5% | -99.9% |
+  | 30 bars | 30% | -9,903.79 | -1.242 | -45.3% | -99.2% |
+
+  **Reversal is robustly negative across ALL parameter combinations.** Not a tuning problem; structural failure.
+
+- **What the signal was doing (the diagnosis):** at each rebalance, the bottom decile was names like MATIC (-23% in 30d before POL rebrand Sep 2024), LINK (-16% in a single 30d window mid-2023), BNB (-13.7%). These names were "losers" because they were structurally declining (deprecation, narrative rotation, drawdown in flight) — NOT transient mean-reversion candidates. Going long the worst-performing names systematically bets against the structural trend. Short the winners (BTC, ETH at ATH moments) fights the persistence.
+
+- **Momentum contrast (the same universe, flipped signal direction):**
+  | lookback | decile | Sharpe | AnnRet | MaxDD |
+  |---:|---:|---:|---:|---:|
+  | 10 bars | 10% | +1.025 | +80.1% | -82.9% |
+  | 30 bars | 10% | **+1.334** | +120.0% | -75.5% |
+  | 60 bars | 10% | +0.582 | +51.8% | -91.5% |
+  | 90 bars | 10% | +0.897 | +77.7% | -89.7% |
+
+  **Momentum dominates reversal by ~3 Sharpe points.** Equal-weight basket (no signal, long all 21 names) is +0.876 Sharpe — momentum adds 0.5 Sharpe over passive. Confirms the documented crypto factor pattern: trend/persistence > mean-reversion in crypto because structurally broken names stay broken (R6, R12 patterns).
+
+- **Lesson:** **cross-sectional reversal does not transfer from tradfi equities to crypto.** The Jegadeesh/Titman reversal factor assumes the universe is roughly stationary — names oscillate around stable fundamentals. In crypto, "losers" are often *structurally* declining (deprecation, broken projects, dilution, post-ICO decay), and the reversal signal can't distinguish "transient drawdown" from "permanent decline." This is a portable tradfi → crypto failure, not a parameter-tuning problem. **The right pair-trade signal for crypto is cointegration-based** (stationary spread between two specific cointegrated assets, e.g. ETH/BTC ratio, sector-pairs L2/DeFi), not cross-sectional ranking of relative returns.
+- **Fallout:**
+  1. ❌ **DEPRIORITIZE cross-sectional reversal as a pair-trade sleeve** — directly falsified on this universe.
+  2. 📍 **PIVOT pair-trade sleeve to cointegration-based implementation** — find pairs with stationary spread (Engle-Granger / Johansen), trade z-score of spread, target z > 2σ entry / 0.5σ exit.
+  3. 📍 **Validate orthogonality** — even if cointegration pairs work, verify they don't correlate with LS v1 (>0.3 = no orthogonality gain).
+  4. 📍 **Strategy grid revision** — `reports/STRATEGY_GRID_2026-07-16.md` §7 needs the cross-sectional reversal sketch replaced with cointegration sketch; the structural logic (regime-orthogonal complement to LS v1) still holds, the implementation needs to change.
+- **Carrier note:** The pair-trade driver (`pair_trade_sleeve.py`) stays as the reusable harness; only the signal function needs replacement. The data extension (3 → 21 instruments, 9y history) is permanent and useful for any future cross-sectional or cointegration work.
+
 ## What the graveyard says, in aggregate
 
 1. **Cleverness overfits; simple survives.** (R1, R2, R8) Every added degree of freedom lost OOS. The winners are the humble ones (REGIME_CIS_FLOOR, funding-level).
@@ -203,6 +258,8 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 4. **Portability of patterns has limits.** (R13, R15) H3.2 won on LS v1; the funding gate was descriptive-true but trading-false. A proven pattern's home is its data shape (cross-sectional vs per-pair) AND its role on the target family (swing already has its own conviction layer; the gate's blocked trades are exactly the high-probability entries the system already captures). Test portability, don't assume it.
 5. **Signal type must match the gate's role.** (R16) A cross-sectional reversal signal does NOT invert an absolute-direction eligibility filter — it needs a cross-sectional implementation (market-neutral pair, two-floor ranking, gross-scale). The architecture matters as much as the alpha. The same H2a finding, applied to the right shape (V4's two-floor model), is alive; applied to LS v1's single-floor eligibility, it was destructive.
 6. **Sparse grids need smoothed inputs.** (R17) A K=184.5 shrinkage buys us calibration against noise but not against a noisy per-day tier assignment. When the input is noisy enough that NEUTRAL flips 30% of the time, even a correctly shrunk grid has 30% of its cells in the "no data" fall-through. **The architectural pattern (gate + size_multiplier) validated; the specific signal source (raw grid) not.** Inverse of R16's lesson: R16 said cross-sectional needs a cross-sectional implementation; R17 says a calibrated gate needs a calibrated input.
-6. **The loop's job is to kill our ideas cheaply.** Nine of ten here died before a dollar was at risk. That is the system working, not failing.
+7. **A single sleeve cannot carry a multi-regime portfolio.** (R21) Trend-following earns well in trending regimes and bleeds in chop/reversal. A 70-day OOS samples ~5% of a regime cycle. The fix is NOT a smarter gate within the same strategy — it's regime-orthogonal multi-strategy composition, where the *aggregate* stream is stable even when individual sleeves are not.
+8. **Tradfi factor signals don't always transfer to crypto.** (R22) Cross-sectional reversal (Jegadeesh/Titman 1993, documented in tradfi equities) loses money robustly on a 21-name crypto universe. Reversal assumes losers oscillate around stable fundamentals; in crypto, "losers" are often *structurally* declining (deprecation, broken projects, dilution) and the signal fights the structural trend. Cross-sectional **momentum** dominates reversal by ~3 Sharpe points on the same universe — confirming the crypto factor literature (trend/persistence > mean-reversion). **Portable patterns from tradfi must be re-validated on the target market's microstructure.**
+9. **The loop's job is to kill our ideas cheaply.** Nine of ten here died before a dollar was at risk. That is the system working, not failing.
 
 *The most valuable output of this operation is a well-kept graveyard.*

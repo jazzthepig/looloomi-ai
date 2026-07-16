@@ -33,6 +33,19 @@ VOL_UP, VOL_DEAD = 1.10, 0.90
 ENTRY_LAG, HOLD = 15, 20            # enter +15d after event, hold 20d (→ event+35d)
 POS_WEIGHT = 0.10                   # 10% of NAV per position
 MAX_OPEN = 10
+COST_RT = 0.0030                   # 30bps round-trip slippage/fee (less-liquid RWA perps)
+
+
+def _funding_carry(fu, entry_date, thru_date, direction) -> float:
+    """Net funding P&L fraction over [entry, thru). Perp: funding>0 → longs pay shorts, so a
+    position accrues −direction×rate each interval. Modelled explicitly so the live NAV is
+    honest on instruments defined by extreme funding — a price-only mark would fool us."""
+    tot = 0.0
+    for ts_ms, rate in fu:
+        d = dt.date.fromtimestamp(ts_ms / 1000)
+        if entry_date <= d < thru_date:
+            tot += rate
+    return -direction * tot
 
 
 def _direction(side: int, vol_ratio: float) -> int:
@@ -79,13 +92,15 @@ async def mark_and_trade(dry_run: bool = False) -> dict:
     unreal = 0.0
     still_open = []
 
-    # ── 1) close due positions ──
+    # ── 1) close due positions (price + funding − cost, all honest) ──
     for p in state["open"]:
-        K = data.get(p["sym"], (None, {}))[1]
+        fu, K = data.get(p["sym"], ([], {}))
         px_now = _last_close(K) or p["entry_px"]
         exit_d = dt.date.fromisoformat(p["exit_date"])
         if today >= exit_d:
-            r = (px_now / p["entry_px"] - 1.0) * p["dir"] * POS_WEIGHT
+            price_r = (px_now / p["entry_px"] - 1.0) * p["dir"]
+            carry = _funding_carry(fu, dt.date.fromisoformat(p["entry_date"]), exit_d, p["dir"])
+            r = (price_r + carry - COST_RT) * POS_WEIGHT
             state["realized"] += r
             state["closed"] += 1
             closed_today += 1
@@ -130,11 +145,13 @@ async def mark_and_trade(dry_run: bool = False) -> dict:
             if len(state["open"]) >= MAX_OPEN:
                 break
 
-    # ── 3) mark unrealized on open book ──
+    # ── 3) mark unrealized on open book (price + funding accrued to date − entry cost) ──
     for p in state["open"]:
-        K = data.get(p["sym"], (None, {}))[1]
+        fu, K = data.get(p["sym"], ([], {}))
         px_now = _last_close(K) or p["entry_px"]
-        unreal += (px_now / p["entry_px"] - 1.0) * p["dir"] * POS_WEIGHT
+        price_r = (px_now / p["entry_px"] - 1.0) * p["dir"]
+        carry = _funding_carry(fu, dt.date.fromisoformat(p["entry_date"]), today, p["dir"])
+        unreal += (price_r + carry - COST_RT / 2) * POS_WEIGHT
 
     nav = 1.0 + state["realized"] + unreal
     state["nav"] = nav
@@ -185,9 +202,19 @@ async def get_curve(limit: int = 400) -> dict:
     if not rows:
         return {"status": "no_data", "note": "sleeve not yet marked"}
     navs = [x["nav"] for x in rows]
-    return {"status": "ok", "days": len(rows), "inception": rows[0]["mark_date"],
+    closed = rows[-1].get("closed_trades") or 0
+    # Honesty gate: this instrument class is all-2026, so early paper P&L is NOT proof.
+    # Do not let a good-looking curve be mistaken for validation until it clears a real bar.
+    VALIDATION_MIN_TRADES, VALIDATION_MIN_DAYS = 30, 120
+    validated = closed >= VALIDATION_MIN_TRADES and len(rows) >= VALIDATION_MIN_DAYS
+    return {"status": "ok", "validation": "candidate — accruing, NOT proven",
+            "validated": validated,
+            "validation_gate": f"needs ≥{VALIDATION_MIN_TRADES} closed trades over ≥{VALIDATION_MIN_DAYS} days "
+                               f"(now {closed} / {len(rows)}) before any edge claim",
+            "net_of": "funding carry + 30bps round-trip cost",
+            "days": len(rows), "inception": rows[0]["mark_date"],
             "nav": navs[-1], "return_pct": round((navs[-1] - 1) * 100, 2),
-            "closed_trades": rows[-1].get("closed_trades"), "latest": rows[-1], "curve": rows}
+            "closed_trades": closed, "latest": rows[-1], "curve": rows}
 
 
 if __name__ == "__main__":
