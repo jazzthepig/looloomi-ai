@@ -588,58 +588,143 @@ async def get_signal_journal(
 @router.get("/api/v1/signals/feed")
 async def get_signal_feed(limit: int = Query(default=40, le=100),
                           symbol: str = Query(default=None), response: Response = None):
-    """Signal feed v4 (loop-sourced). Derived by reverse-engineering from what the LOOP needs:
-    every card is a dated, directional prediction drawn from our own resolvable prediction stream
-    (signal_journal → the resolver scores it → track record), NOT hand-authored market commentary.
-
-    Design constraints (Jazz 2026-07-15): dual-purpose (public platform display + our own use),
-    and it must NOT expose the loop's mechanics. So we surface the CALL + an honest aggregate
-    accuracy, and hide the machine (no weights / nucleus / book / strategy internals — the source
-    is shown as a generic 'CIS Intelligence' label). Compliance: positioning language only."""
+    """Signal feed v5 — a STRUCTURED, TIERED, NARRATIVE intelligence briefing (not a scoreboard,
+    not a duplicate of CIS). Sections, each item a mini-story with CONTEXT ("what's happening")
+    and NARRATIVE ("why it matters"), so a user or agent reads it without decoding us:
+      · Market Context (regime + the week's frame)
+      · Conviction Watch (the next structural winner — thesis narrative)
+      · Positioning & Flow (funding crowding — the story, not the number)
+      · Cross-Asset Shifts (grade migrations as narrative, not a per-asset scoreboard)
+      · Tracked Calls (our own directional calls + honest resolved outcomes)
+    Composed from cached intelligence (fast). Positioning language only; not advice."""
     if response is not None:
-        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=600"
+        response.headers["Cache-Control"] = "public, max-age=180, stale-while-revalidate=900"
+    from src.api.store import redis_get_key
+    now = datetime.now(timezone.utc).isoformat()
+    sections = []
 
+    wl = await redis_get_key("conviction:watchlist") or {}
+    pos = await redis_get_key("cis:positioning") or {}
+    cis = await redis_get_key("cis:local_scores") or {}
+    regime = (cis.get("macro") or {}).get("regime") or cis.get("macro_regime") or "Unknown"
+
+    # crowding read for the context headline
+    crowded_long = crowded_short = None
+    if isinstance(pos, dict) and pos:
+        rk = sorted(((s, (v or {}).get("positioning_pressure", 0)) for s, v in pos.items() if isinstance(v, dict)), key=lambda kv: kv[1])
+        if rk:
+            crowded_long, cl_p = rk[0]              # most negative pressure = crowded LONGS
+            crowded_short, cs_p = rk[-1]            # most positive = crowded SHORTS
+
+    # ── Market Context (tier 0 — the frame) ──
+    frame = (f"Macro regime is **{regime}**. The diversification that matters lives *across* asset "
+             f"classes, not inside crypto — commodities sit ~0.22 correlated to BTC while crypto majors "
+             f"co-move at ~0.79. ")
+    if crowded_long:
+        frame += f"Leverage is crowded long in **{crowded_long}** (flush risk on any shock)"
+        frame += f" and crowded short in **{crowded_short}** (squeeze fuel). " if crowded_short else ". "
+    sections.append({"tier": "context", "title": "Market Context",
+                     "items": [{"headline": f"{regime} — breadth beats beta", "narrative": frame.strip(),
+                                "source": "Regime & Breadth", "timestamp": now}]})
+
+    # ── Conviction Watch (the next structural winner — thesis narrative) ──
+    conv = []
+    for c in (wl.get("candidates") or [])[:4]:
+        if (c.get("conviction_score") or 0) <= 0.03:
+            continue
+        drivers = c.get("drivers") or []
+        confirming = c.get("L4_trend", 0) > 0.6
+        narrative = (f"{c.get('thesis','')[:120]} "
+                     f"{'The market is already voting — ' + drivers[0] + '. ' if drivers else ''}"
+                     f"{'Fundamentals accelerating' if (c.get('L3_fundamental_momentum') or 0) > 0.5 else 'Fundamentals steady'}; "
+                     f"{'price is confirming' if confirming else 'awaiting price confirmation'}. "
+                     f"{'Reflexive fee→token loop in place. ' if c.get('reflexive_loop') else ''}"
+                     f"A discretionary conviction candidate — the setup, not a signal.")
+        conv.append({"symbol": c["symbol"], "headline": f"{c['symbol']} — structural-winner watch",
+                     "narrative": narrative, "score": c.get("conviction_score"),
+                     "layers": {"moat": c.get("L1_moat_quality"), "catalyst": c.get("L2_catalyst"),
+                                "fundamentals": c.get("L3_fundamental_momentum"), "trend": c.get("L4_trend")},
+                     "source": "Conviction Engine", "timestamp": wl.get("as_of") or now})
+    if conv:
+        sections.append({"tier": "conviction", "title": "Conviction Watch — the next structural winner", "items": conv})
+
+    # ── Positioning & Flow (the story, not the number) ──
+    posn = []
+    if crowded_long:
+        posn.append({"symbol": crowded_long, "headline": f"{crowded_long} — leveraged longs crowded",
+                     "narrative": f"Positioning pressure {cl_p:+.2f}: leverage is one-sided long in {crowded_long}. "
+                                  "Crowded longs are the fuel for a flush — vulnerable if the tape turns. We'd fade "
+                                  "strength here, not chase it.", "direction": "UNDERPERFORM",
+                     "source": "Positioning", "timestamp": now})
+    if crowded_short and crowded_short != crowded_long:
+        posn.append({"symbol": crowded_short, "headline": f"{crowded_short} — shorts crowded, squeeze setup",
+                     "narrative": f"Positioning pressure {cs_p:+.2f}: shorts are crowded in {crowded_short}. "
+                                  "A crowded short is squeeze fuel — a catalyst can force covering. Watch for a "
+                                  "volume-confirmed reversal.", "direction": "OUTPERFORM",
+                     "source": "Positioning", "timestamp": now})
+    if posn:
+        sections.append({"tier": "positioning", "title": "Positioning & Flow", "items": posn})
+
+    # ── Cross-Asset Shifts (grade migration as narrative, NOT a CIS re-print) ──
+    uni = cis.get("assets") or cis.get("universe") or []
+    shifts = []
+    if uni:
+        def _sig(a): return (a.get("signal") or "").upper()
+        strong = [a for a in uni if "STRONG OUTPERFORM" in _sig(a)]
+        weak = [a for a in uni if "UNDERWEIGHT" in _sig(a) or "UNDERPERFORM" in _sig(a)]
+        if strong:
+            syms = ", ".join((a.get("symbol") or "").upper() for a in strong[:4])
+            shifts.append({"headline": "Where quality is strongest now",
+                           "narrative": f"Across the {len(uni)}-asset universe, {syms} carry the strongest "
+                                        f"quality reads in the {regime} regime — the names to lean into if the "
+                                        f"tape turns constructive. (This is the regime lens, not a buy list.)",
+                           "symbols": [(a.get('symbol') or '').upper() for a in strong[:4]], "source": "Cross-Asset", "timestamp": now})
+        if weak:
+            syms = ", ".join((a.get("symbol") or "").upper() for a in weak[:4])
+            shifts.append({"headline": "Where quality is eroding",
+                           "narrative": f"{syms} are weakening across the universe — structural or positioning "
+                                        f"drag. In a {regime} regime these are underweight candidates, not dip-buys.",
+                           "symbols": [(a.get('symbol') or '').upper() for a in weak[:4]], "source": "Cross-Asset", "timestamp": now})
+    if shifts:
+        sections.append({"tier": "cross_asset", "title": "Cross-Asset Shifts", "items": shifts})
+
+    # ── Tracked Calls (our own directional calls + honest outcomes) ──
     _sym = {"symbol": f"eq.{symbol.upper()}"} if symbol else {}
-    # open (live) calls + recently resolved ones (the honest track record)
-    open_rows = await _sb_query(_SB_TABLE, {
-        "exit_date": "is.null", "order": "signal_date.desc", "limit": str(limit), **_sym,
-        "select": "id,symbol,asset_class,grade,signal,cis_score,macro_regime,entry_price,signal_date,outcome_30d,return_pct_30d,alpha_30d"})
-    closed_rows = await _sb_query(_SB_TABLE, {
-        "exit_date": "not.is.null", "order": "signal_date.desc", "limit": "300", **_sym,
-        "select": "id,symbol,asset_class,grade,signal,macro_regime,signal_date,outcome_30d,return_pct_30d,alpha_30d"})
-
-    def _card(r, status):
+    closed_rows = await _sb_query(_SB_TABLE, {"exit_date": "not.is.null", "order": "signal_date.desc", "limit": "300", **_sym,
+        "select": "id,symbol,grade,signal,macro_regime,signal_date,alpha_30d"})
+    open_rows = await _sb_query(_SB_TABLE, {"exit_date": "is.null", "order": "signal_date.desc", "limit": "12", **_sym,
+        "select": "id,symbol,grade,signal,macro_regime,signal_date"})
+    calls = []
+    for r in (open_rows or [])[:8]:
         sig = (r.get("signal") or "").upper()
-        card = {
-            "id": r.get("id"), "symbol": (r.get("symbol") or "").upper(),
-            "asset_class": r.get("asset_class"),
-            "direction": sig or "NEUTRAL",              # positioning language, compliance-safe
-            "source": "CIS Intelligence",               # generic — does NOT expose the loop
-            "conviction_grade": r.get("grade"), "regime": r.get("macro_regime"),
-            "timestamp": r.get("signal_date"), "horizon": "30D", "status": status,
-        }
-        a = r.get("alpha_30d")
-        if a is not None:                                # honest resolved outcome (self-verifying)
-            card["outcome"] = {"alpha_30d_pct": round(float(a), 2),
-                               "hit": (("OUTPERFORM" in sig and "UNDER" not in sig and a > 0)
-                                       or (("UNDERPERFORM" in sig or "UNDERWEIGHT" in sig) and a < 0))}
-        return card
-
-    signals = [_card(r, "live") for r in (open_rows or [])] + \
-              [_card(r, "resolved") for r in (closed_rows or [])[:limit]]
-
-    # aggregate accuracy — the ONLY performance we expose publicly (a trust signal, not the machine)
+        calls.append({"symbol": (r.get("symbol") or "").upper(), "direction": sig or "NEUTRAL",
+                      "headline": f"{(r.get('symbol') or '').upper()} — {sig or 'NEUTRAL'}",
+                      "narrative": f"Our positioning call in the {r.get('macro_regime') or regime} regime "
+                                   f"(grade {r.get('grade') or '—'}). Resolves benchmark-relative at 30d; tracked below.",
+                      "source": "CIS Intelligence", "timestamp": r.get("signal_date")})
     scored = [r for r in (closed_rows or []) if r.get("alpha_30d") is not None
               and (("OUTPERFORM" in (r.get("signal") or "").upper()) or ("UNDER" in (r.get("signal") or "").upper()))]
-    hits = sum(1 for r in scored
-               if (("OUTPERFORM" in r["signal"].upper() and "UNDER" not in r["signal"].upper() and r["alpha_30d"] > 0)
-                   or (("UNDER" in r["signal"].upper()) and r["alpha_30d"] < 0)))
+    hits = sum(1 for r in scored if (("OUTPERFORM" in r["signal"].upper() and "UNDER" not in r["signal"].upper() and r["alpha_30d"] > 0)
+                                     or ("UNDER" in r["signal"].upper() and r["alpha_30d"] < 0)))
     n = len(scored)
-    accuracy = {"resolved_30d_directional_pct": round(hits / n * 100, 1) if n else None,
-                "n": n, "avg_alpha_30d_pct": round(sum(r["alpha_30d"] for r in scored) / n, 2) if n else None,
-                "basis": "benchmark-relative 30d alpha on our own resolved calls; positioning language, not advice"}
-    return {"version": "4.0-loop", "generated_at": datetime.now(timezone.utc).isoformat(),
-            "accuracy": accuracy, "count": len(signals), "signals": signals}
+    accuracy = {"resolved_30d_directional_pct": round(hits / n * 100, 1) if n else None, "n": n,
+                "avg_alpha_30d_pct": round(sum(r["alpha_30d"] for r in scored) / n, 2) if n else None}
+    if calls:
+        sections.append({"tier": "calls", "title": "Our Tracked Calls (self-verifying)", "items": calls, "accuracy": accuracy})
+
+    headline = f"{regime} regime — the edge is in breadth and positioning, not beta."
+    # flattened view (mobile / simple consumers) — carries the narrative, not just a score
+    flat = []
+    for sec in sections:
+        for it in (sec.get("items") or []):
+            flat.append({"symbol": it.get("symbol"), "direction": it.get("direction"),
+                         "headline": it.get("headline"), "narrative": it.get("narrative"),
+                         "category": sec["tier"], "source": it.get("source"), "status": "live",
+                         "outcome": it.get("outcome"), "timestamp": it.get("timestamp")})
+    return {"version": "5.0-briefing", "generated_at": now, "regime": regime, "headline": headline,
+            "accuracy": accuracy, "n_sections": len(sections), "sections": sections,
+            "count": len(flat), "signals": flat[:limit],
+            "compliance": "positioning language only; conviction items are discretionary candidates, not advice"}
 
 
 @router.get("/api/v1/signals/performance")

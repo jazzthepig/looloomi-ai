@@ -782,9 +782,19 @@ function MobileSignals({ signals, loading }) {
                     {resolved ? "resolved" : "live"}
                   </span>
                 </div>
-                {/* Meta: regime · horizon · outcome */}
+                {/* The story: headline + narrative (why it matters), not just a score */}
+                {sig.headline && (
+                  <div style={{ fontFamily: FONTS.brand || FONTS.body, fontSize: 12.5, fontWeight: 600,
+                    color: T.t1, marginBottom: 4, lineHeight: 1.4 }}>{sig.headline}</div>
+                )}
+                {sig.narrative && (
+                  <div style={{ fontFamily: FONTS.body, fontSize: 12, lineHeight: 1.55, color: T.t2,
+                    opacity: 0.9, marginBottom: 8 }}>{sig.narrative}</div>
+                )}
+                {/* Meta: category · regime · horizon · outcome */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
                   fontFamily: FONTS.mono, fontSize: 10, color: T.t3 }}>
+                  {sig.category && <span style={{ letterSpacing: "0.06em", textTransform: "uppercase", color: T.t4 }}>{String(sig.category).replace("_", " ")}</span>}
                   {sig.regime && <span>regime {sig.regime}</span>}
                   <span>{sig.horizon || "30D"}</span>
                   {resolved && (
