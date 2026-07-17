@@ -250,6 +250,48 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
   4. 📍 **Strategy grid revision** — `reports/STRATEGY_GRID_2026-07-16.md` §7 needs the cross-sectional reversal sketch replaced with cointegration sketch; the structural logic (regime-orthogonal complement to LS v1) still holds, the implementation needs to change.
 - **Carrier note:** The pair-trade driver (`pair_trade_sleeve.py`) stays as the reusable harness; only the signal function needs replacement. The data extension (3 → 21 instruments, 9y history) is permanent and useful for any future cross-sectional or cointegration work.
 
+## R23 🔴 Cointegration pair-trade is a viable crypto sleeve — IT IS MARGINAL (best Sharpe +0.49)
+- **Hypothesis (the second attempt at pair-trade, post-R22):** if cross-sectional reversal fails because losers are structurally declining, then the right pair-trade signal is **cointegration-based**: find pairs (i, j) whose log-price spread is stationary (Engle-Granger test), trade the z-score of the rolling spread. This is the textbook "pairs trading" (Gatev, Goetzmann, Rouwenhorst 2006) approach — should work regardless of cross-sectional momentum/reversal dynamics.
+- **Test 1 — static β (full-window OLS):** test 15 hand-picked candidate pairs (ETH/BTC, LTC/BTC, BNB/ETH, AVAX/SOL, NEAR/AVAX, ARB/OP, AAVE/UNI, LINK/ETH, DOT/ATOM, MATIC/ETH, DOGE/BTC, XRP/ETH, AAVE/ETH, MKR/ETH, APT/SUI) for cointegration, backtest spread-z-score on top cointegrated. Driver: `src/research/cis_regime_studies/cointegration_pairs.py`.
+- **Test 2 — rolling β (540-bar = 90d window):** re-fit hedge ratio daily, see if regime-adaptive β improves results.
+- **Result 1 (cointegration test, full 9y):**
+  - 3 strongly cointegrated (p < 0.05): BNB/ETH (p=0.014), NEAR/AVAX (p=0.015), LTC/BTC (p=0.016)
+  - 1 borderline (p < 0.10): ARB/OP (p=0.085)
+  - 11 not cointegrated, including the canonical ETH/BTC (p=0.31)
+- **Result 2 (static-β backtest, entry z=2.0σ, exit 0.5σ, stop 4.0σ, 5bps/leg cost):**
+
+  | pair | coint p | Sharpe | AnnRet | MaxDD | Trades | WinRate |
+  |---|---:|---:|---:|---:|---:|---:|
+  | BNB/ETH | 0.014 | **+0.41** | +29% | **-93%** | 118 | 47.5% |
+  | ARB/OP | 0.085 | +0.36 | +13% | -38% | 41 | **61.0%** |
+  | NEAR/AVAX | 0.015 | +0.01 | +0.5% | -95% | 91 | 45.1% |
+  | LTC/BTC | 0.016 | -0.43 | -27% | -99% | 113 | 46.0% |
+
+- **Result 3 (rolling-β backtest, β window 540 bars):**
+
+  | pair | Sharpe | MaxDD | PnL |
+  |---|---:|---:|---:|
+  | ARB/OP | **+0.49** | -53% | +$4,358 |
+  | BNB/ETH | +0.31 | -91% | -$40 |
+  | LTC/BTC | -0.36 | -96% | -$9,508 |
+  | NEAR/AVAX | -0.41 | -98% | -$9,691 |
+
+  Rolling β doesn't materially improve; sometimes worse (NEAR/AVAX flips from +0.01 to -0.41).
+
+- **Diagnosis:** the pairs that are cointegrated are *barely* cointegrated — p-values of 0.014-0.016 mean the spread has a unit-root-ish tendency that occasionally mean-reverts but with frequent large divergences. The 2σ entry threshold catches the divergences but the 4σ stop-loss fires often (mean -93% drawdown on BNB/ETH), wiping out the gains. ARB/OP has a tighter profile (only -38% to -53% DD) but its data window is shorter (2023-03 → 2026-07, ~3.4y) — we have less than half a cycle of evidence.
+- **Lesson:** **cointegration is necessary but not sufficient for a tradeable pair.** Statistical cointegration (Engle-Granger p < 0.05) doesn't guarantee the *speed of mean-reversion* is fast enough to overcome transaction costs and stop-loss damage. The crypto pairs we tested have cointegration but slow / fragile mean-reversion — divergences are large, exits are rare, and stop-losses dominate. **ARB/OP is the only candidate with a clean profile** but its 3.4y history is too short to certify; needs more cycles. Pair-trade as a class is **marginal at best** on this 9y crypto universe.
+- **Fallout:**
+  1. ❌ **DEPRIORITIZE pair-trade sleeve as the next priority** — both cross-sectional (R22) and cointegration-based (R23) signal classes are marginal on this universe.
+  2. 📍 **PIVOT to vol sleeve** — crash-axis hedge, fundamentally different from trend (LS v1) and mean-reversion (pair-trade). Should have low correlation to both and high payoff in crash regimes where LS v1 bleeds (R21).
+  3. 📍 **Carry pair-trade as a secondary sleeve only** — if ARB/OP is the cleanest pair and it stays cointegrated for 2+ more years, it could be a 5-10% allocation in the composite. Not a primary sleeve.
+  4. 📍 **Strategy grid revision** — pair-trade is demoted from "next sleeve" to "secondary sleeve (ARB/OP only if validated over more cycles)"; vol sleeve elevated to next priority.
+
+## R21 🔴 Conviction beta-plus reduces to a systematic revenue-momentum factor — IT DOESN'T (judgment-led)
+- **Hypothesis:** the conviction/HYPE playbook can be systematized as "long tokens with accelerating fee revenue" (fundamental momentum → re-rating).
+- **Test:** 13 liquid revenue-generating tokens (AAVE/UNI/LDO/MKR/CRV/GMX/PENDLE/HYPE/JUP/RAY/ENA/AERO/CAKE/DYDX), real DeFiLlama daily revenue + Binance price, 414d, IC(30d-revenue-accel → fwd 30d return) + long-top-vs-bottom. `src/research/factory/conviction_selection.py`; experiment_runs `conviction_selection_20260715`.
+- **Result:** IC **−0.05** (mildly INVERSE); accelerating-revenue top-half returned −6.9% vs decelerating bottom-half −4.8% (top−bottom **−2.1%**), selection hit-rate 39% (< coin flip). Everything −5 to −7% (broad DeFi bear window).
+- **Lesson:** fundamental momentum alone does NOT mechanically predict crypto re-rating — it's priced in / swamped by beta, and the real conviction alpha is a SPECIFIC narrative catalyst proving a moat (HYPE: Trump-weekend-war → 24/7 on-chain moat proven), which a revenue screen can't time. Consistent with CONVICTION_METHODOLOGY's own claim: this lane is **judgment-led (moat + catalyst + reflexivity), not a systematic factor** — it's the moat *because* it can't be reduced to a commodity bot. Build it as an AI-augmented candidate-SURFACING tool for discretionary conviction, not a backtested systematic sleeve.
+
 ## What the graveyard says, in aggregate
 
 1. **Cleverness overfits; simple survives.** (R1, R2, R8) Every added degree of freedom lost OOS. The winners are the humble ones (REGIME_CIS_FLOOR, funding-level).
@@ -260,6 +302,7 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 6. **Sparse grids need smoothed inputs.** (R17) A K=184.5 shrinkage buys us calibration against noise but not against a noisy per-day tier assignment. When the input is noisy enough that NEUTRAL flips 30% of the time, even a correctly shrunk grid has 30% of its cells in the "no data" fall-through. **The architectural pattern (gate + size_multiplier) validated; the specific signal source (raw grid) not.** Inverse of R16's lesson: R16 said cross-sectional needs a cross-sectional implementation; R17 says a calibrated gate needs a calibrated input.
 7. **A single sleeve cannot carry a multi-regime portfolio.** (R21) Trend-following earns well in trending regimes and bleeds in chop/reversal. A 70-day OOS samples ~5% of a regime cycle. The fix is NOT a smarter gate within the same strategy — it's regime-orthogonal multi-strategy composition, where the *aggregate* stream is stable even when individual sleeves are not.
 8. **Tradfi factor signals don't always transfer to crypto.** (R22) Cross-sectional reversal (Jegadeesh/Titman 1993, documented in tradfi equities) loses money robustly on a 21-name crypto universe. Reversal assumes losers oscillate around stable fundamentals; in crypto, "losers" are often *structurally* declining (deprecation, broken projects, dilution) and the signal fights the structural trend. Cross-sectional **momentum** dominates reversal by ~3 Sharpe points on the same universe — confirming the crypto factor literature (trend/persistence > mean-reversion). **Portable patterns from tradfi must be re-validated on the target market's microstructure.**
-9. **The loop's job is to kill our ideas cheaply.** Nine of ten here died before a dollar was at risk. That is the system working, not failing.
+9. **Cointegration ≠ tradeable pair.** (R23) Engle-Granger p < 0.05 says the spread is stationary, not that the mean-reversion is fast enough to overcome costs and stop-loss damage. Crypto pairs have slow, fragile mean-reversion — divergences are large, exits rare, stops dominate. Pair-trade as a class is marginal on this universe.
+10. **The loop's job is to kill our ideas cheaply.** Nine of ten here died before a dollar was at risk. That is the system working, not failing.
 
 *The most valuable output of this operation is a well-kept graveyard.*
