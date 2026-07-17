@@ -1025,14 +1025,18 @@ async def _conviction_loop():
     await _asyncio.sleep(600)   # 10 min warmup
     while True:
         try:
-            from src.data.narrative.conviction_engine import get_watchlist
+            from src.data.narrative.conviction_engine import get_watchlist, persist_watchlist, resolve_and_track
             from src.data.market.data_layer import _redis_set
             wl = get_watchlist()      # narrative events (LLM half) wired in P2
             await _redis_set("conviction:watchlist", wl, ttl=2 * 24 * 3600)
-            print(f"[CONVICTION] watchlist computed — {wl.get('n')} candidates, "
-                  f"top={wl['candidates'][0]['symbol'] if wl.get('candidates') else None}")
+            n_logged = await persist_watchlist(wl)                    # P4: accrue candidates as predictions
+            tr = await resolve_and_track()                           # P4: resolve matured + score the conjunction
+            await _redis_set("conviction:track_record", tr, ttl=2 * 24 * 3600)
+            print(f"[CONVICTION] watchlist {wl.get('n')} cands (logged {n_logged}), "
+                  f"top={wl['candidates'][0]['symbol'] if wl.get('candidates') else None}; "
+                  f"track_record={tr.get('status')} resolved={tr.get('total_resolved')}")
         except Exception as _e:
-            print(f"[CONVICTION] ⚠️  watchlist compute failed: {_e}")
+            print(f"[CONVICTION] ⚠️  loop failed: {_e}")
         await _asyncio.sleep(24 * 3600)
 
 
@@ -1059,6 +1063,24 @@ async def conviction_watchlist(response: Response = None):
         return wl if isinstance(wl, dict) else {"status": "warming_up", "note": "watchlist computes daily; not yet cached"}
     except Exception as e:
         return {"error": "conviction_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/conviction/track-record")
+async def conviction_track_record(response: Response = None):
+    """P4 self-verification: does the conviction CONJUNCTION (L1∧L2∧L3∧L4) predict forward alpha
+    even though no single layer does (R21)? IC of the conviction score + each layer vs resolved
+    30d benchmark-relative outcomes. Accrues forward. See docs/CONVICTION_ENGINE_PLAN.md."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=3600"
+    from src.data.market.data_layer import _redis_get
+    try:
+        tr = await _redis_get("conviction:track_record")
+        return tr if isinstance(tr, dict) else {"status": "accruing", "note": "candidates logged daily; resolves at 30d horizon"}
+    except Exception as e:
+        return {"error": "conviction_track_record_unavailable", "detail": str(e)[:120]}
 
 
 @app.get("/api/v1/portfolio")
