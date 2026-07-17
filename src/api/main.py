@@ -1020,6 +1020,47 @@ async def scalable_book(response: Response = None):
         return {"error": "scalable_book_unavailable", "detail": str(e)[:120]}
 
 
+# ── Conviction Engine — daily watchlist compute → cache (heavy: ~20 network calls) ──
+async def _conviction_loop():
+    await _asyncio.sleep(600)   # 10 min warmup
+    while True:
+        try:
+            from src.data.narrative.conviction_engine import get_watchlist
+            from src.data.market.data_layer import _redis_set
+            wl = get_watchlist()      # narrative events (LLM half) wired in P2
+            await _redis_set("conviction:watchlist", wl, ttl=2 * 24 * 3600)
+            print(f"[CONVICTION] watchlist computed — {wl.get('n')} candidates, "
+                  f"top={wl['candidates'][0]['symbol'] if wl.get('candidates') else None}")
+        except Exception as _e:
+            print(f"[CONVICTION] ⚠️  watchlist compute failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_conviction_loop():
+    if os.environ.get("DISABLE_CONVICTION", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_conviction_loop())
+        print("[CONVICTION] ✅ daily conviction-watchlist loop scheduled")
+
+
+@app.get("/api/v1/conviction/watchlist")
+async def conviction_watchlist(response: Response = None):
+    """AI-augmented conviction watchlist — ranked structural-winner candidates (L1 moat × L2
+    catalyst × L3 fundamental momentum × L4 trend) for DISCRETIONARY conviction, NOT a signal.
+    Served from the daily cache. See docs/CONVICTION_ENGINE_PLAN.md."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=3600"
+    from src.data.market.data_layer import _redis_get
+    try:
+        wl = await _redis_get("conviction:watchlist")
+        return wl if isinstance(wl, dict) else {"status": "warming_up", "note": "watchlist computes daily; not yet cached"}
+    except Exception as e:
+        return {"error": "conviction_unavailable", "detail": str(e)[:120]}
+
+
 @app.get("/api/v1/portfolio")
 async def portfolio(response: Response = None):
     """The assimilated top-level book — one coherent hierarchy over all the sleeves/books:

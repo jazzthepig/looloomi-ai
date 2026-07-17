@@ -61,6 +61,20 @@ MOAT_MAP: dict[str, Moat] = {
                  "tokenized US treasuries / regulated RWA rail.", reflexive_loop=False),
     "GMX":  Moat("GMX", ("onchain_24_7_derivatives", "real_yield_buyback"),
                  "on-chain perp DEX with fee-share to stakers.", reflexive_loop=True),
+    "UNI":  Moat("UNI", ("permissionless_listing", "settlement_rail", "real_yield_buyback"),
+                 "dominant permissionless DEX rail; fee-switch routes revenue to token.", reflexive_loop=False),
+    "MKR":  Moat("MKR", ("compliant_rwa", "real_yield_buyback", "settlement_rail"),
+                 "RWA-collateralised stablecoin; surplus buys back + burns MKR.", reflexive_loop=True),
+    "ENA":  Moat("ENA", ("real_yield_buyback", "settlement_rail"),
+                 "synthetic-dollar yield rail; fee-share to stakers (reflexive).", reflexive_loop=True),
+    "AAVE": Moat("AAVE", ("settlement_rail", "real_yield_buyback"),
+                 "dominant on-chain lending rail; fee-switch buyback live.", reflexive_loop=True),
+    "PENDLE": Moat("PENDLE", ("permissionless_listing", "real_yield_buyback"),
+                   "permissionless yield-tokenisation market; fee-share to vePENDLE.", reflexive_loop=True),
+    "JUP":  Moat("JUP", ("settlement_rail", "permissionless_listing"),
+                 "dominant Solana swap/liquidity aggregator rail; buyback program.", reflexive_loop=True),
+    "LINK": Moat("LINK", ("data_or_compute_market", "settlement_rail"),
+                 "dominant oracle/data + cross-chain settlement network; staking fee accrual.", reflexive_loop=False),
 }
 
 
