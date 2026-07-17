@@ -120,7 +120,16 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
       {/* header — the frame */}
       <div style={{ padding: "16px 16px 13px", borderBottom: `1px solid ${T.border}` }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: FONTS.brand, fontWeight: 700, fontSize: 15, color: T.t1 }}>Intelligence Briefing</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <span style={{ fontFamily: FONTS.brand, fontWeight: 700, fontSize: 15, color: T.t1 }}>Intelligence Briefing</span>
+            {data?.narrative_source === "ai" && (
+              <span title={data?.narrative_model ? `AI analysis · ${data.narrative_model}` : "AI analysis"}
+                style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", color: T.green,
+                  border: `1px solid ${T.green}55`, background: `${T.green}12`, padding: "1px 5px", borderRadius: 4 }}>
+                AI
+              </span>
+            )}
+          </span>
           {data?.regime && (
             <span style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.08em", color: T.cyan, border: `1px solid ${T.cyan}40`, padding: "2px 8px", borderRadius: 100 }}>
               REGIME · {String(data.regime).toUpperCase()}

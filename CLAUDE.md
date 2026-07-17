@@ -216,6 +216,9 @@ Railway (cis_provider.py) ──────────────────
 | `LLM_BASE_URL` | **NEW — optional.** OpenAI-compatible endpoint (e.g. Mac Mini LM Studio `http://host:1234/v1`, or a cloud URL) used to extract structured funding rounds from free news/RSS. Unset ⇒ regex fallback (no regression) |
 | `LLM_API_KEY` | Optional bearer token for `LLM_BASE_URL` (LM Studio ignores it; cloud endpoints need it) |
 | `LLM_MODEL` | Model name for the extractor. A small instruct model is plenty (default `qwen/qwen3.5-9b`). Local models = `qwen/qwen3.5-9b` (kept for efficiency) + `gemma-4-31b-qat` (new 2026-07-01). **qwen2.5-7b-instruct retired.** |
+| `NARRATIVE_LLM_BASE_URL` | **NEW (2026-07-17) — enables AI-written signal-feed narrative.** OpenAI-compatible endpoint for the briefing narrator (`src/data/narrative/llm_narrator.py`). Point at **MiniMax** cloud (`https://api.minimaxi.com/v1`) or Mac Mini LM Studio. Falls back to `LLM_BASE_URL` if unset; if BOTH unset the feed uses deterministic template narrative (no regression). Prose is compliance-gated (positioning language only) and cached to Redis `signal:ai_briefing` by a 30-min background loop |
+| `NARRATIVE_LLM_API_KEY` | Bearer token for `NARRATIVE_LLM_BASE_URL` (MiniMax key). Falls back to `LLM_API_KEY` |
+| `NARRATIVE_LLM_MODEL` | Narrator model (default `MiniMax-Text-01`). Falls back to `LLM_MODEL` |
 
 ## How to work with Jazz
 

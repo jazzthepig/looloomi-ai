@@ -1047,6 +1047,27 @@ async def _start_conviction_loop():
         print("[CONVICTION] ✅ daily conviction-watchlist loop scheduled")
 
 
+# ── AI briefing loop — LLM (MiniMax/LM Studio) writes the signal-feed prose over the
+# deterministic facts, cached to Redis so the feed request never blocks on the model.
+# No-op when no LLM endpoint is configured (feed falls back to template narrative). ──
+async def _ai_briefing_loop():
+    await _asyncio.sleep(300)   # 5 min warmup — let conviction/positioning caches populate
+    while True:
+        try:
+            from src.api.routers.signals import refresh_ai_briefing
+            r = await refresh_ai_briefing()
+            print(f"[AI-BRIEFING] {r.get('status')} — {r.get('coverage') or r.get('reason') or ''}")
+        except Exception as _e:
+            print(f"[AI-BRIEFING] ⚠️  loop failed: {_e}")
+        await _asyncio.sleep(30 * 60)   # every 30 min
+
+
+@app.on_event("startup")
+async def _start_ai_briefing_loop():
+    _asyncio.create_task(_ai_briefing_loop())
+    print("[AI-BRIEFING] ✅ signal-feed narrative loop scheduled (LLM over facts)")
+
+
 @app.get("/api/v1/conviction/watchlist")
 async def conviction_watchlist(response: Response = None):
     """AI-augmented conviction watchlist — ranked structural-winner candidates (L1 moat × L2

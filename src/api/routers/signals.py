@@ -585,23 +585,15 @@ async def get_signal_journal(
     }
 
 
-@router.get("/api/v1/signals/feed")
-async def get_signal_feed(limit: int = Query(default=40, le=100),
-                          symbol: str = Query(default=None), response: Response = None):
-    """Signal feed v5 — a STRUCTURED, TIERED, NARRATIVE intelligence briefing (not a scoreboard,
-    not a duplicate of CIS). Sections, each item a mini-story with CONTEXT ("what's happening")
-    and NARRATIVE ("why it matters"), so a user or agent reads it without decoding us:
-      · Market Context (regime + the week's frame)
-      · Conviction Watch (the next structural winner — thesis narrative)
-      · Positioning & Flow (funding crowding — the story, not the number)
-      · Cross-Asset Shifts (grade migrations as narrative, not a per-asset scoreboard)
-      · Tracked Calls (our own directional calls + honest resolved outcomes)
-    Composed from cached intelligence (fast). Positioning language only; not advice."""
-    if response is not None:
-        response.headers["Cache-Control"] = "public, max-age=180, stale-while-revalidate=900"
+async def assemble_briefing(symbol: str = None) -> dict:
+    """Assemble the tiered briefing from cached intelligence. Returns BOTH the rendered
+    `sections` (with deterministic template narrative + a stable `id` per item) AND the
+    compact `ai_facts` the LLM narrator writes prose from. Shared by the live feed endpoint
+    and the background AI-briefing loop so both see identical structure/facts."""
     from src.api.store import redis_get_key
     now = datetime.now(timezone.utc).isoformat()
     sections = []
+    ai_items = []   # compact facts for the LLM (id + numbers, NO prose)
 
     wl = await redis_get_key("conviction:watchlist") or {}
     pos = await redis_get_key("cis:positioning") or {}
@@ -610,6 +602,7 @@ async def get_signal_feed(limit: int = Query(default=40, le=100),
 
     # crowding read for the context headline
     crowded_long = crowded_short = None
+    cl_p = cs_p = 0.0
     if isinstance(pos, dict) and pos:
         rk = sorted(((s, (v or {}).get("positioning_pressure", 0)) for s, v in pos.items() if isinstance(v, dict)), key=lambda kv: kv[1])
         if rk:
@@ -624,8 +617,12 @@ async def get_signal_feed(limit: int = Query(default=40, le=100),
         frame += f"Leverage is crowded long in **{crowded_long}** (flush risk on any shock)"
         frame += f" and crowded short in **{crowded_short}** (squeeze fuel). " if crowded_short else ". "
     sections.append({"tier": "context", "title": "Market Context",
-                     "items": [{"headline": f"{regime} — breadth beats beta", "narrative": frame.strip(),
-                                "source": "Regime & Breadth", "timestamp": now}]})
+                     "items": [{"id": "context:regime", "headline": f"{regime} — breadth beats beta",
+                                "narrative": frame.strip(), "source": "Regime & Breadth", "timestamp": now}]})
+    ai_items.append({"id": "context:regime", "kind": "market_context", "regime": regime,
+                     "crowded_long": crowded_long, "crowded_short": crowded_short,
+                     "crypto_btc_corr": 0.79, "commodity_btc_corr": 0.22,
+                     "point": "cross-asset breadth matters more than crypto beta this regime"})
 
     # ── Conviction Watch (the next structural winner — thesis narrative) ──
     conv = []
@@ -640,28 +637,43 @@ async def get_signal_feed(limit: int = Query(default=40, le=100),
                      f"{'price is confirming' if confirming else 'awaiting price confirmation'}. "
                      f"{'Reflexive fee→token loop in place. ' if c.get('reflexive_loop') else ''}"
                      f"A discretionary conviction candidate — the setup, not a signal.")
-        conv.append({"symbol": c["symbol"], "headline": f"{c['symbol']} — structural-winner watch",
+        iid = f"conviction:{c['symbol']}"
+        conv.append({"id": iid, "symbol": c["symbol"], "headline": f"{c['symbol']} — structural-winner watch",
                      "narrative": narrative, "score": c.get("conviction_score"),
                      "layers": {"moat": c.get("L1_moat_quality"), "catalyst": c.get("L2_catalyst"),
                                 "fundamentals": c.get("L3_fundamental_momentum"), "trend": c.get("L4_trend")},
                      "source": "Conviction Engine", "timestamp": wl.get("as_of") or now})
+        ai_items.append({"id": iid, "kind": "conviction_candidate", "symbol": c["symbol"],
+                         "thesis": (c.get("thesis") or "")[:200], "drivers": drivers[:3],
+                         "moat_quality": c.get("L1_moat_quality"), "catalyst": c.get("L2_catalyst"),
+                         "fundamental_momentum": c.get("L3_fundamental_momentum"), "trend": c.get("L4_trend"),
+                         "reflexive_loop": bool(c.get("reflexive_loop")),
+                         "note": "discretionary conviction candidate, not a signal"})
     if conv:
         sections.append({"tier": "conviction", "title": "Conviction Watch — the next structural winner", "items": conv})
 
     # ── Positioning & Flow (the story, not the number) ──
     posn = []
     if crowded_long:
-        posn.append({"symbol": crowded_long, "headline": f"{crowded_long} — leveraged longs crowded",
+        posn.append({"id": f"positioning:{crowded_long}", "symbol": crowded_long,
+                     "headline": f"{crowded_long} — leveraged longs crowded",
                      "narrative": f"Positioning pressure {cl_p:+.2f}: leverage is one-sided long in {crowded_long}. "
                                   "Crowded longs are the fuel for a flush — vulnerable if the tape turns. We'd fade "
                                   "strength here, not chase it.", "direction": "UNDERPERFORM",
                      "source": "Positioning", "timestamp": now})
+        ai_items.append({"id": f"positioning:{crowded_long}", "kind": "positioning", "symbol": crowded_long,
+                         "crowding": "long", "pressure": round(cl_p, 2), "direction": "UNDERPERFORM",
+                         "point": "crowded longs = flush risk if tape turns; fade strength, don't chase"})
     if crowded_short and crowded_short != crowded_long:
-        posn.append({"symbol": crowded_short, "headline": f"{crowded_short} — shorts crowded, squeeze setup",
+        posn.append({"id": f"positioning:{crowded_short}", "symbol": crowded_short,
+                     "headline": f"{crowded_short} — shorts crowded, squeeze setup",
                      "narrative": f"Positioning pressure {cs_p:+.2f}: shorts are crowded in {crowded_short}. "
                                   "A crowded short is squeeze fuel — a catalyst can force covering. Watch for a "
                                   "volume-confirmed reversal.", "direction": "OUTPERFORM",
                      "source": "Positioning", "timestamp": now})
+        ai_items.append({"id": f"positioning:{crowded_short}", "kind": "positioning", "symbol": crowded_short,
+                         "crowding": "short", "pressure": round(cs_p, 2), "direction": "OUTPERFORM",
+                         "point": "crowded shorts = squeeze fuel; watch for volume-confirmed reversal"})
     if posn:
         sections.append({"tier": "positioning", "title": "Positioning & Flow", "items": posn})
 
@@ -673,18 +685,23 @@ async def get_signal_feed(limit: int = Query(default=40, le=100),
         strong = [a for a in uni if "STRONG OUTPERFORM" in _sig(a)]
         weak = [a for a in uni if "UNDERWEIGHT" in _sig(a) or "UNDERPERFORM" in _sig(a)]
         if strong:
-            syms = ", ".join((a.get("symbol") or "").upper() for a in strong[:4])
-            shifts.append({"headline": "Where quality is strongest now",
-                           "narrative": f"Across the {len(uni)}-asset universe, {syms} carry the strongest "
+            s_syms = [(a.get('symbol') or '').upper() for a in strong[:4]]
+            shifts.append({"id": "cross:strong", "headline": "Where quality is strongest now",
+                           "narrative": f"Across the {len(uni)}-asset universe, {', '.join(s_syms)} carry the strongest "
                                         f"quality reads in the {regime} regime — the names to lean into if the "
                                         f"tape turns constructive. (This is the regime lens, not a buy list.)",
-                           "symbols": [(a.get('symbol') or '').upper() for a in strong[:4]], "source": "Cross-Asset", "timestamp": now})
+                           "symbols": s_syms, "source": "Cross-Asset", "timestamp": now})
+            ai_items.append({"id": "cross:strong", "kind": "cross_asset_strength", "symbols": s_syms,
+                             "regime": regime, "universe_size": len(uni),
+                             "point": "strongest quality reads; regime lens, not a buy list"})
         if weak:
-            syms = ", ".join((a.get("symbol") or "").upper() for a in weak[:4])
-            shifts.append({"headline": "Where quality is eroding",
-                           "narrative": f"{syms} are weakening across the universe — structural or positioning "
+            w_syms = [(a.get('symbol') or '').upper() for a in weak[:4]]
+            shifts.append({"id": "cross:weak", "headline": "Where quality is eroding",
+                           "narrative": f"{', '.join(w_syms)} are weakening across the universe — structural or positioning "
                                         f"drag. In a {regime} regime these are underweight candidates, not dip-buys.",
-                           "symbols": [(a.get('symbol') or '').upper() for a in weak[:4]], "source": "Cross-Asset", "timestamp": now})
+                           "symbols": w_syms, "source": "Cross-Asset", "timestamp": now})
+            ai_items.append({"id": "cross:weak", "kind": "cross_asset_weakness", "symbols": w_syms,
+                             "regime": regime, "point": "quality eroding; underweight candidates, not dip-buys"})
     if shifts:
         sections.append({"tier": "cross_asset", "title": "Cross-Asset Shifts", "items": shifts})
 
@@ -697,8 +714,9 @@ async def get_signal_feed(limit: int = Query(default=40, le=100),
     calls = []
     for r in (open_rows or [])[:8]:
         sig = (r.get("signal") or "").upper()
-        calls.append({"symbol": (r.get("symbol") or "").upper(), "direction": sig or "NEUTRAL",
-                      "headline": f"{(r.get('symbol') or '').upper()} — {sig or 'NEUTRAL'}",
+        sym_u = (r.get("symbol") or "").upper()
+        calls.append({"id": f"call:{sym_u}", "symbol": sym_u, "direction": sig or "NEUTRAL",
+                      "headline": f"{sym_u} — {sig or 'NEUTRAL'}",
                       "narrative": f"Our positioning call in the {r.get('macro_regime') or regime} regime "
                                    f"(grade {r.get('grade') or '—'}). Resolves benchmark-relative at 30d; tracked below.",
                       "source": "CIS Intelligence", "timestamp": r.get("signal_date")})
@@ -712,7 +730,65 @@ async def get_signal_feed(limit: int = Query(default=40, le=100),
     if calls:
         sections.append({"tier": "calls", "title": "Our Tracked Calls (self-verifying)", "items": calls, "accuracy": accuracy})
 
-    headline = f"{regime} regime — the edge is in breadth and positioning, not beta."
+    ai_facts = {"regime": regime, "accuracy": accuracy, "items": ai_items,
+                "house_view": "the edge is breadth + positioning, not beta"}
+    return {"now": now, "regime": regime, "sections": sections, "accuracy": accuracy, "ai_facts": ai_facts}
+
+
+def _overlay_ai(sections: list, ai: dict) -> str:
+    """Overlay LLM-written prose onto the deterministic sections, matched by item id. Returns
+    the narrative_source ('ai' or 'template'). Numbers/symbols/directions are never touched."""
+    items = (ai or {}).get("items") or {}
+    if not items:
+        return "template"
+    hit = False
+    for sec in sections:
+        for it in sec.get("items") or []:
+            prose = items.get(it.get("id"))
+            if prose:
+                it["narrative"] = prose
+                it["ai"] = True
+                hit = True
+    return "ai" if hit else "template"
+
+
+@router.get("/api/v1/signals/feed")
+async def get_signal_feed(limit: int = Query(default=40, le=100),
+                          symbol: str = Query(default=None), response: Response = None):
+    """Signal feed v5 — a STRUCTURED, TIERED, NARRATIVE intelligence briefing (not a scoreboard,
+    not a duplicate of CIS). Sections, each item a mini-story with CONTEXT ("what's happening")
+    and NARRATIVE ("why it matters"), so a user or agent reads it without decoding us:
+      · Market Context (regime + the week's frame)
+      · Conviction Watch (the next structural winner — thesis narrative)
+      · Positioning & Flow (funding crowding — the story, not the number)
+      · Cross-Asset Shifts (grade migrations as narrative, not a per-asset scoreboard)
+      · Tracked Calls (our own directional calls + honest resolved outcomes)
+    The PROSE is AI-written (MiniMax / LM Studio) over deterministic, compliance-safe facts,
+    cached to Redis by a background loop so the request stays fast; degrades to template
+    narrative when the model is unreachable. Positioning language only; not advice."""
+    if response is not None:
+        response.headers["Cache-Control"] = "public, max-age=180, stale-while-revalidate=900"
+    from src.api.store import redis_get_key
+    b = await assemble_briefing(symbol)
+    sections, now, regime, accuracy = b["sections"], b["now"], b["regime"], b["accuracy"]
+
+    # overlay cached AI narrative (written by the background loop / Mac-side push), if fresh
+    narrative_source = "template"
+    ai_model = None
+    headline = None
+    try:
+        ai = await redis_get_key("signal:ai_briefing")
+        if isinstance(ai, dict) and (int(time.time()) - int(ai.get("_ts", 0))) < 7200:
+            narrative_source = _overlay_ai(sections, ai)
+            ai_model = ai.get("model")
+            if narrative_source == "ai" and ai.get("headline"):
+                headline = ai["headline"]
+    except Exception as e:
+        _logger.warning(f"[FEED] AI overlay skipped: {e}")
+
+    if not headline:
+        headline = f"{regime} regime — the edge is in breadth and positioning, not beta."
+
     # flattened view (mobile / simple consumers) — carries the narrative, not just a score
     flat = []
     for sec in sections:
@@ -724,7 +800,62 @@ async def get_signal_feed(limit: int = Query(default=40, le=100),
     return {"version": "5.0-briefing", "generated_at": now, "regime": regime, "headline": headline,
             "accuracy": accuracy, "n_sections": len(sections), "sections": sections,
             "count": len(flat), "signals": flat[:limit],
+            "narrative_source": narrative_source, "narrative_model": ai_model,
             "compliance": "positioning language only; conviction items are discretionary candidates, not advice"}
+
+
+async def refresh_ai_briefing() -> dict:
+    """Background job: assemble facts → LLM writes prose → cache to Redis `signal:ai_briefing`.
+    Called by the startup loop AND on-demand via /internal/refresh-briefing. No-op (returns
+    skipped) when no LLM endpoint is configured, so the feed simply uses templates."""
+    from src.data.narrative.llm_narrator import compose_ai_briefing, configured
+    if not configured():
+        return {"status": "skipped", "reason": "no LLM endpoint (NARRATIVE_LLM_BASE_URL / LLM_BASE_URL unset)"}
+    b = await assemble_briefing()
+    ai = await compose_ai_briefing(b["ai_facts"])
+    if not ai:
+        return {"status": "unavailable", "reason": "model returned no compliant narrative; feed uses templates"}
+    ai["_ts"] = int(time.time())
+    try:
+        from src.api.store import redis_set_key
+        await redis_set_key("signal:ai_briefing", ai, ttl=7200)
+    except Exception as e:
+        _logger.warning(f"[FEED] cache AI briefing failed: {e}")
+        return {"status": "generated_uncached", "coverage": ai.get("coverage")}
+    _logger.info(f"[FEED] AI briefing refreshed — {ai.get('coverage')} items, model={ai.get('model')}")
+    return {"status": "ok", "coverage": ai.get("coverage"), "model": ai.get("model")}
+
+
+@router.post("/internal/refresh-briefing")
+async def refresh_briefing_endpoint(x_internal_token: str = Header(None)):
+    """Internal: regenerate the AI narrative now (also lets Mac-side/Minimax trigger a refresh)."""
+    if not _INTERNAL_TOKEN or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return await refresh_ai_briefing()
+
+
+@router.post("/internal/ai-briefing")
+async def push_ai_briefing(payload: dict, x_internal_token: str = Header(None)):
+    """Internal: Mac-side (Minimax) pushes an AI-written briefing directly. Body:
+    {headline?, items:{item_id: narrative}, model?}. Compliance-gated on read via _overlay_ai
+    (we still only overlay onto known ids). Stored to Redis `signal:ai_briefing`."""
+    if not _INTERNAL_TOKEN or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    items = payload.get("items")
+    if not isinstance(items, dict) or not items:
+        raise HTTPException(status_code=400, detail="items:{id:narrative} required")
+    # compliance scrub — drop any item whose prose carries advice language
+    from src.data.narrative.llm_narrator import _clean
+    clean_items = {k: _clean(v) for k, v in items.items()}
+    clean_items = {k: v for k, v in clean_items.items() if v}
+    if not clean_items:
+        raise HTTPException(status_code=422, detail="all items failed compliance scrub")
+    doc = {"headline": _clean(payload.get("headline") or ""), "items": clean_items,
+           "model": payload.get("model") or "mac-push", "coverage": f"{len(clean_items)}/{len(items)}",
+           "_ts": int(time.time())}
+    from src.api.store import redis_set_key
+    await redis_set_key("signal:ai_briefing", doc, ttl=7200)
+    return {"status": "ok", "stored": len(clean_items), "model": doc["model"]}
 
 
 @router.get("/api/v1/signals/performance")
