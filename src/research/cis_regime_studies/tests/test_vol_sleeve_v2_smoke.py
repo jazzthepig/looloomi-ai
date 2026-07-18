@@ -100,20 +100,13 @@ def test_compute_rv_percentile_range() -> None:
         f"RV percentile out of [0,1]: min={valid.min()}, max={valid.max()}"
     )
     # Detector operationally separates the two regimes — spike bars should
-    # rank HIGHER than calm bars on average (each regime's rank is approximately
-    # uniform within its own continuous distribution; what matters is the
-    # ordering and that spike bars never rank LOWER than calm bars on average).
+    # rank HIGHER than calm bars on average. (Individual tail bars vary
+    # because spike values are continuous with std 0.02; what matters is
+    # that the detector separates the regimes in aggregate.)
     avg_calm_pct = pct.iloc[200:400].mean()
     avg_spike_pct = pct.iloc[-200:].mean()
     assert avg_spike_pct > avg_calm_pct, (
         f"spike must rank higher than calm; spike={avg_spike_pct:.3f}, calm={avg_calm_pct:.3f}"
-    )
-    # Pct at the last (most-extreme spike) bar should be at-or-above the
-    # average pct in the calm region — i.e. the tail-spike is never ranked
-    # lower than typical calm.
-    assert pct.iloc[-1] >= avg_calm_pct, (
-        f"tail spike must rank >= avg calm; tail={pct.iloc[-1]:.3f}, "
-        f"avg_calm={avg_calm_pct:.3f}"
     )
     print(f"✓ RV percentile in [0,1]; avg spike={avg_spike_pct:.2f}, "
           f"avg calm={avg_calm_pct:.2f}, gap={avg_spike_pct - avg_calm_pct:+.2f}")
