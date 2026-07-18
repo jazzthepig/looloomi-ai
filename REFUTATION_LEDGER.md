@@ -404,6 +404,49 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
   3. **OOS isolation discipline is the honest gate.** The −0.05 delta is small but it's the difference between the same A/B architecture with one switch flipped — the right thing to compare. In-sample Sharpe (the in-sample diagnostic) shows phase winners; OOS shows the gate as applied doesn't survive.
 - **Reference:** `src/research/factory/phase_weighted_combined.py` (NEW, ~250 lines); OOS run 2026-07-18.
 
+## R31 🔴 Volume axis REFUTED on K=24 panel — R29 (K=5 INCONCLUSIVE) now RESOLVED
+- **Hypothesis:** the volume-axis signals (volume_price_trend, taker_buy_imbalance, volume_weighted_momentum) — different mechanism family from perp-funding — carry a real cross-sectional edge when given enough cross-section.
+- **Test:** `src/research/factory/volume_factory_universe.py` (NEW). Fetches the 19 additional symbols (`DOGE/ADA/AVAX/LINK/DOT/LTC/TRX/ATOM/NEAR/APT/ARB/OP/SUI/UNI/AAVE/INJ/FIL/ETC/BCH`) from Binance fapi klines 2025-01-01 → 2026-07-17, ~564 rows each. Same CSV schema as the A-S1 substrate. Reuses `volume_factory.signal_library` + `_bt` + `_walkforward` + `evaluate_universe` — no new mechanisms, no new logic. Just the 3 existing candidates on 5× more cross-section.
+- **Result (K=24, 564 days):**
+  - `volume_price_trend`     — annSR **−0.06**, 2/5 positive folds, NOT robust
+  - `taker_buy_imbalance`    — annSR **−0.98**, 2/5 positive folds, NOT robust
+  - `volume_weighted_mom`    — annSR **−0.77**, 1/5 positive folds, NOT robust
+  - DSR survivors (≥0.95): **0** — NONE
+- **Honest verdict: R29 RESOLVED → REFUTED.** The K=5 INCONCLUSIVE on the original substrate (statistical power ~21%) is now resolved: with 5× more cross-section, all three candidates are net-negative, none walk-forward robust, none survive DSR. The volume-axis mechanism family is REFUTED at this scale.
+- **What this means for the factory:**
+  1. **Two mechanism axes now SATURATED** (funding-axis: R8/R25/R26/R27; volume-axis: R31). The factory's only validated cross-sectional signal remains `positioning_funding` (the funding-LEVEL cross-sectional z-score on K=24 majors). All other funding/volume transformations we've tried are net-negative or barely-positive-but-correlated-to-the-baseline.
+  2. **The substrate + factory scaffolding works** — the volume_factory still produces clean results; we can re-use the loader to test other axes when a different data source (e.g. basis, on-chain, options) becomes available.
+  3. **Honest framing of the search:** we have tried funding × 5 transformations and volume × 3 candidates. That's 8 candidate generations across 2 mechanism families and ONE survived. The factory's job is to keep killing ideas cheaply so the loop doesn't pay to re-learn them — this entry is exactly that.
+- **Lessons:**
+  1. **"Inconclusive" → resolve it, don't leave it open.** R29's honest verdict explicitly called for the K=24 follow-up. Doing it produced a CLEAN REFUTATION rather than another INCONCLUSIVE — that's progress (the graveyard grew by one more fact, the substrate grew by 19 reusable files, the factory pattern is validated again).
+  2. **Substrate scaffolding pays off even when the result is null.** The `_data/strategy_revive/` directory now has OHLCV-with-volume for all 24 majors, ready for any future study that needs daily volume (e.g. capacity analysis, vol-targeted sizing, intraday-feature backtests). The cost was ~30 seconds of fetcher time; the value is reusable across future experiments.
+  3. **Sign convention / scale matters.** The −0.98 taker-buy-imbalance is large in magnitude; cross-sectional centering + `taker_buy / vquote − 0.5` produces a near-zero-mean score on most days but explodes in volatile sessions. This is the SAME family of issue as R8 (adding a second term to a clean signal) — over-engineering a simple observation into a structured signal loses its baseline.
+- **Reference:** `src/research/factory/volume_factory_universe.py` (NEW, ~180 lines, includes fetch+run CLI); substrate `_data/strategy_revive/{19 new symbols}_1d_ohlcv.csv` (564 rows each); OOS run 2026-07-18.
+
+## R31 🔴 Causal Sleeve extension — Conviction-Weighted Sizing (CW-Causal) REFUTES at Phase 2 (6 OOS windows, K=24)
+- **Hypothesis:** scaling position size by |z_i|^p (where z_i is the cross-sectional funding z-score) concentrates capital on the highest-conviction funding dislocations and improves risk-adjusted returns. p=0 reproduces the original equal-weight sleeve; p=1 is linear conviction; p=2 is quadratic ("super-conviction"). Tested p ∈ {0, 0.5, 1.0, 1.5, 2.0}.
+- **Test:** `src/research/cis_regime_studies/causal_sleeve_extension.py` (NEW). Reuses the validated 24-name Binance USDT-perp panel (2019-12-31 → 2026-01-27), IS/OOS split at 2024-01-01 (758 OOS days), kwin=10 weekly rebal, 5bps fee per side. NO modifications to `causal_positioning.py`. 9/9 sandbox smoke tests pass (`test_causal_sleeve_extension_smoke.py`). 6 × 120d non-overlapping OOS windows (2024-01 → 2025-12).
+- **Result (Phase 2 monotonic failure):**
+  - p=0 (baseline): annSR **+0.977**, total return **+44.84%**, MaxDD **−17.22%**, turnover 0.069/d.
+  - p=0.5: annSR +0.911 (Δ −0.066), MaxDD −18.11% (Δ +0.89pp).
+  - p=1.0: annSR +0.897 (Δ −0.080), MaxDD −19.40% (Δ +2.18pp).
+  - p=1.5: annSR +0.866 (Δ −0.111), MaxDD −21.38% (Δ +4.16pp).
+  - p=2.0: annSR **+0.823 (Δ −0.154)**, MaxDD **−23.53% (Δ +6.31pp)**, turnover 0.083/d.
+  - **Windows won (any p>0 over p=0): 1/6 for all alternatives** (the one win is window 4 = Dec '24-Apr '25, the most BTC-bullish period).
+- **Honest verdict: REFUTED at Phase 2.** OOS Sharpe drops monotonically as p increases (0.977 → 0.823); OOS MaxDD rises monotonically (17.22% → 23.53%); turnover rises modestly (+20%). 5/7 Phase 3 gates fail (Sharpe gain, MaxDD cap, window count all break). The hypothesis was clean; the data rejected it.
+- **Why it fails (causal reading):**
+  1. **Funding mean-reverts at the top-quantile.** A 3σ funding spike is *already* the market's signal that positioning is too crowded — by the time we measure it, the crowded side has likely *already* started to unwind. Equal-weighting the cross-section captures the signal at multiple horizons; concentration on the 3σ tail puts all eggs in the basket that's already halfway through mean-reversion.
+  2. **Concentration amplifies idiosyncratic vol without amplifying carry.** Funding carry scales with gross exposure (constant per dollar); idiosyncratic vol scales with name-level vol × sqrt(weight). So carry-to-vol ratio drops as p rises — exactly opposite of what we want.
+  3. **Window 1 (Jan-Apr '24, BTC ETF approval spike) is the biggest loser.** Conviction-scaling kills it monotonically (Sharpe 1.17 → 0.54 from p=0 to p=2). The most-concentrated funding dislocations during that period were post-event unwinds, not "live" edges.
+  4. **Window 4 (Dec '24-Apr '25, BTC $100k melt-up) is the only improver.** Conviction-scaling helps in sustained trending regimes where funding dislocations persist for weeks. But that single window doesn't offset the 5 losers.
+- **Lessons:**
+  1. **Six rounds of in-sleeve parameter testing all reject or hold at the original.** kwin {5,7,10}, rebalance {daily,weekly}, universe {24,40,50}, acceleration add-on, conviction scaling — every one of them either matches or hurts. The simplest mechanic wins.
+  2. **OOS walk-forward on 6 windows catches what in-sample wouldn't.** Window 4 (the lone improver) would have picked p=2 as the "winner" if judged in-sample; only 6/6 windows prevent the trap.
+  3. **Equal-weighting after de-meaning extracts most of the signal.** This is a general property of cross-sectional z-score signals when the underlying signal has fat tails: concentration wastes signal in the tails where the signal has already partially mean-reverted.
+  4. **Track 5 follows Track 3 (Crowd Clock) and Track 4 (composite) as a clean negative in the 2026-07-18 sprint.** The 5-track sprint closed with 3 confirmed positives (Track 1 Sleeve A parity framework / Track 3 Crowd Clock E2E / Track 4 composite mix), 1 re-confirmation (Track 2 Vol Sleeve v2 = R28), and 1 clean refutation (Track 5 R31). The Causal Sleeve composite weights in Track 4's recommended book are NOT affected — they were computed against the original validated sleeve.
+- **What IS proven:** the CW-Causal scaffolding (parameterized `positioning_weights_cw()` with `p` exponent, demean + gross=1 pipeline) is reusable for any future "scale-by-|signal|" hypothesis on a different sleeve. The driver and smoke tests are kept as research artifacts.
+- **Reference:** `src/research/cis_regime_studies/causal_sleeve_extension.py` (NEW); `src/research/cis_regime_studies/tests/test_causal_sleeve_extension_smoke.py` (9/9 PASSED); `reports/causal_sleeve_extension/2026-07-18/results.json` + `window_metrics.csv`; full report `reports/CAUSAL_SLEEVE_EXTENSION_R31_REFUTED_2026-07-18.md`.
+
 ## What the graveyard says, in aggregate
 
 1. **Cleverness overfits; simple survives.** (R1, R2, R8) Every added degree of freedom lost OOS. The winners are the humble ones (REGIME_CIS_FLOOR, funding-level).
