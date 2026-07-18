@@ -156,6 +156,20 @@ def _funding_extreme_only(fmean: np.ndarray, percentile: float = 85) -> np.ndarr
     return _xs_weights(out, sign=-1.0)   # fade: short high funding, long low/neg funding
 
 
+def _funding_volatility(fmean: np.ndarray, k: int = 30) -> np.ndarray:
+    """Minimax-A 2026-07-17 — funding VOLATILITY signal (NOT level).
+    Per-asset time-series std of fmean over k days. When funding is volatile for an asset,
+    the crowd is uncertain; when stable, the crowd is committed.
+    Cross-sectionally: LONG assets with LOW funding vol (stable consensus, persists),
+    SHORT assets with HIGH funding vol (uncertain crowd, washes out).
+    Mechanism: §TRADER_TOM_DOCTRINE — ride the committed crowd (low vol), fade the uncertain
+    crowd (high vol). Distinct from positioning_funding (level) and funding_extreme_only
+    (cross-sectional percentile), because this uses TIME-SERIES vol per asset.
+    Hypothesis: stable-funding names carry information longer; volatile-funding names churn."""
+    vol = _roll_std(fmean, k)                           # T×K per-asset time-series std
+    return _xs_weights(vol, sign=-1.0)                  # LONG low-vol, SHORT high-vol
+
+
 def _relative_reversal(close: np.ndarray, k: int = 7) -> np.ndarray:
     """Minimax-A 2026-07-17 — RELATIVE reversal vs the BTC anchor (col 0).
     Different from reversal_7d/longterm_reversal_180 which are ABSOLUTE.
@@ -216,6 +230,7 @@ def signal_library(close, ret, fmean, fsum) -> dict[str, np.ndarray]:
         "funding_momentum":     _xs_weights(fmom, sign=-1.0),
         "funding_price_disagree": _funding_price_disagreement(fmean, ret, k=7),  # fade winning crowd
         "funding_extreme_only":   _funding_extreme_only(fmean, percentile=85),  # top/bot 15% only
+        "funding_volatility":     _funding_volatility(fmean, k=30),            # time-series std (NOT level)
         # momentum family
         "momentum_30d":         _xs_weights(r30, sign=+1.0),
         "momentum_60d":         _xs_weights(r60, sign=+1.0),

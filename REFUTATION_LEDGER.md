@@ -325,6 +325,13 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 - **Lesson:** a "tighter" version of a working signal is the SAME signal with NOISE trimmed, not a NEW signal. Its orthogonal-information content is zero even when its raw Sharpe is positive. The combined-book nucleus gate (|corr|<0.6) would have rejected this automatically — better to know before shipping than to ship and ship a near-duplicate of `positioning_funding` that doubles the position-sizing on the same exposure. **Trim with care, measure with the same metric you intend to live with.** Reinforces R3/R4 (correlated ensembles destroy value; count orthogonality, not names).
 - **Reference:** `src/research/factory/signal_factory.py` `_funding_extreme_only()` + `signal_library()` entry; factory output dated 2026-07-17; annSR 1.08 / DSR 0.39 / corr 0.66.
 
+## R27 🔴 Funding VOLATILITY (time-series std) is a different-axis funding signal — REFUTED
+- **Hypothesis:** per-asset time-series std of funding (over 30d) is a different *mechanism* from cross-sectional funding *level* — LONG low-vol assets (stable crowd, persists), SHORT high-vol assets (uncertain crowd, washes out).
+- **Test:** `_funding_volatility(fmean, k=30)` → `_xs_weights(., sign=−1.0)`. Same 24-name panel, 931 days, 5bp fee, gross 1.
+- **Result:** annSR **−0.12**, DSR **0.02**, walk-forward **3/5**. The interesting structural finding: corr to `positioning_funding` = **−0.519** (highly *negatively* correlated, not redundant). Different mechanism in shape — would be a useful *hedge* if it had positive Sharpe. It doesn't. Verdict: REFUTED.
+- **Lesson:** adding a different transformation (level → vol, cross-section → time-series, level → velocity) does NOT by itself find a new edge. Each of these is a *re-expression* of the same underlying perp-crowding signal; when the underlying signal fails, every transformation fails with it. **The funding axis is saturated after R8 (velocity), R25 (price-conditioned), R26 (cross-sectional threshold), R27 (time-series vol).** To go beyond the funding axis requires a NEW data layer (intraday volume, order-book microstructure, options skew, on-chain), not another transformation of the same series.
+- **Reference:** `src/research/factory/signal_factory.py` `_funding_volatility()` + `signal_library()` entry; factory output 2026-07-17; annSR −0.12 / DSR 0.02 / corr −0.519.
+
 ## What the graveyard says, in aggregate
 
 1. **Cleverness overfits; simple survives.** (R1, R2, R8) Every added degree of freedom lost OOS. The winners are the humble ones (REGIME_CIS_FLOOR, funding-level).
