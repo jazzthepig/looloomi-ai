@@ -109,6 +109,53 @@ def _roll_beta_idio(ret: np.ndarray, k: int, mkt_idx: int = 0):
     return beta, idio
 
 
+def _funding_price_disagreement(fmean: np.ndarray, ret: np.ndarray, k: int = 7) -> np.ndarray:
+    """Minimax-A 2026-07-17 — fade the WINNING crowd. Orthogonal to positioning_funding
+    (which fades regardless of price). Two cases only:
+      (a) longs crowded (fmean>0) AND winning (r_k>0) → SHORT (positive score)
+      (b) shorts crowded (fmean<0) AND winning (r_k<0) → LONG  (negative score)
+    Cases where funding + price DISAGREE (squeeze already underway, or crowd already losing)
+    → 0. Mechanism: §TRADER_TOM_DOCTRINE — crowd-exhaustion at peak profitability
+    ("add when the crowd subtracts"; the winning crowd eventually gets punished for being
+    both crowded AND wrong-direction-bias)."""
+    T = ret.shape[0]
+    rk = np.full((T, ret.shape[1]), np.nan)
+    # Sum of last k daily returns = rolling-window price change
+    for i in range(k, T):
+        rk[i] = ret[i - k + 1: i + 1].sum(0)
+    score = np.where(
+        (fmean > 0) & (rk > 0),          np.abs(fmean * rk),     # longs crowded+winning → SHORT-signal
+        np.where((fmean < 0) & (rk < 0), -np.abs(fmean * rk),     # shorts crowded+winning → LONG-signal
+                 0.0)
+    )
+    return _xs_weights(score, sign=-1.0)   # sign=-1: positive score→SHORT; negative score→LONG
+
+
+def _funding_extreme_only(fmean: np.ndarray, percentile: float = 85) -> np.ndarray:
+    """Minimax-A 2026-07-17 — only enter on cross-sectional EXTREMES of funding (top/bottom
+    `100-percentile`%). Middle → 0. Tighter than positioning_funding (which enters on ANY
+    cross-sectional funding divergence). Hypothesis: only DEEP crowd exhaustion is tradable;
+    shallow divergences are noise. Returns T×K weights, dollar-neutral, gross 1."""
+    T, K = fmean.shape
+    out = np.full((T, K), np.nan)
+    for i in range(T):
+        row = fmean[i]
+        m = np.isfinite(row)
+        if m.sum() < 4:
+            continue
+        valid = row[m]
+        if len(valid) < 4:
+            continue
+        hi = np.percentile(valid, percentile)
+        lo = np.percentile(valid, 100 - percentile)
+        # Re-center: hi → 0+, lo → 0-. Inside the band → 0.
+        out[i] = np.where(
+            m & (row >= hi), row - hi,
+            np.where(m & (row <= lo), row - lo, 0.0)
+        )
+    return _xs_weights(out, sign=-1.0)   # fade: short high funding, long low/neg funding
+
+
 def _extracted(scores: list, sign: float) -> np.ndarray:
     """Param-ROBUST extracted feature: blend a family's weight vectors across its whole grid,
     then renormalise gross. The economic driver (momentum exists) without the overfit knob
@@ -136,6 +183,8 @@ def signal_library(close, ret, fmean, fsum) -> dict[str, np.ndarray]:
         # cause / positioning
         "positioning_funding":  positioning_weights(fmean, kwin=7),          # validated baseline
         "funding_momentum":     _xs_weights(fmom, sign=-1.0),
+        "funding_price_disagree": _funding_price_disagreement(fmean, ret, k=7),  # fade winning crowd
+        "funding_extreme_only":   _funding_extreme_only(fmean, percentile=85),  # top/bot 15% only
         # momentum family
         "momentum_30d":         _xs_weights(r30, sign=+1.0),
         "momentum_60d":         _xs_weights(r60, sign=+1.0),
