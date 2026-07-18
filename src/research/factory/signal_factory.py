@@ -156,6 +156,37 @@ def _funding_extreme_only(fmean: np.ndarray, percentile: float = 85) -> np.ndarr
     return _xs_weights(out, sign=-1.0)   # fade: short high funding, long low/neg funding
 
 
+def _relative_reversal(close: np.ndarray, k: int = 7) -> np.ndarray:
+    """Minimax-A 2026-07-17 — RELATIVE reversal vs the BTC anchor (col 0).
+    Different from reversal_7d/longterm_reversal_180 which are ABSOLUTE.
+    If asset has outperformed BTC over the last k days → SHORT asset / LONG BTC (fade).
+    If asset has underperformed BTC → LONG asset / SHORT BTC (ride the lagger).
+    BTC has weight 0 (it's the anchor, not a tradeable). The non-BTC assets are
+    weighted by their excess return vs BTC and renormalised to gross=1 across the K-1
+    non-zero columns. Custom weight scheme (NOT _xs_weights) because _xs_weights
+    subtracts the cross-sectional mean and BTC's contribution cancels — yields identical
+    results to absolute reversal. The explicit BTC=0 is the structural difference.
+    Mechanism: §TRADER_TOM_DOCTRINE — early movers exhaust, lagger catches up.
+    Tries to be orthogonal to both funding axis (no perp signal) and absolute momentum/
+    reversal families (BTC-anchored, not absolute)."""
+    T, K = close.shape
+    rk = _roll_ret(close, k)
+    rk_btc = rk[:, 0:1]                              # T×1 anchor
+    rel = rk - rk_btc                                # T×K, BTC col = 0; positive = outperformed BTC
+    rel[:, 0] = np.nan                               # BTC = NaN → zero weight
+    W = np.zeros((T, K))
+    for i in range(T):
+        row = -rel[i]                                # sign=−1: fade outperformance
+        m = np.isfinite(row)
+        if m.sum() < 4:
+            continue
+        r = np.where(m, row, 0.0)
+        g = np.abs(r).sum()
+        if g > 0:
+            W[i] = r / g
+    return W
+
+
 def _extracted(scores: list, sign: float) -> np.ndarray:
     """Param-ROBUST extracted feature: blend a family's weight vectors across its whole grid,
     then renormalise gross. The economic driver (momentum exists) without the overfit knob
@@ -196,6 +227,7 @@ def signal_library(close, ret, fmean, fsum) -> dict[str, np.ndarray]:
         "reversal_7d":          _xs_weights(r7,  sign=-1.0),
         "longterm_reversal_180":_xs_weights(r180, sign=-1.0),
         "near_high_fade_60d":   _xs_weights(close / hi60, sign=-1.0),
+        "relative_reversal_7d": _relative_reversal(close, k=7),
         # risk / distribution family
         "lowvol_30d":           _xs_weights(v30, sign=-1.0),
         "low_downside_vol_30":  _xs_weights(dvol30, sign=-1.0),
