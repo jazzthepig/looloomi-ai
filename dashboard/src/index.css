@@ -1,3 +1,7 @@
+/* Single source of truth for the brand type stack — imported by every entry so no page
+   can silently fall back to a system font. Syne (display) · Exo 2 (body) · JetBrains Mono (numbers). */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Exo+2:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
 :root {
   --ff-brand:   'Syne', system-ui, sans-serif;
   --ff-display: 'Syne', system-ui, sans-serif;
@@ -101,7 +105,12 @@ button:focus, button:focus-visible { outline: 2px solid rgba(99,102,241,0.5); ou
 /* ─── Global Reset ─────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-font-smoothing: antialiased; }
-body { background: #020208; color: #f0f4ff; min-height: 100vh; }
+/* One canonical background for every page — the void-black base + the vision navy field,
+   fixed so it never scrolls. Any page importing index.css gets the same foundation. */
+body {
+  color: #f0f4ff; min-height: 100vh;
+  background: #020208 radial-gradient(ellipse 160% 120% at 50% 40%, #071a4a 0%, #030f2a 45%, #010812 100%) fixed;
+}
 
 /* ─── Scrollbar ───────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 3px; height: 3px; }

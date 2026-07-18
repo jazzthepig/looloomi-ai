@@ -61,6 +61,9 @@ from nautilus_trader.trading.strategy import Strategy
 
 from src.research.nautilus.ls_v1.edge_gate import EdgeGate
 from src.research.nautilus.ls_v1.edge_gate import compute_z_score
+from src.research.strategies.edge_gate import EdgeDecision
+from src.research.strategies.edge_gate import gate as empirical_gate
+from src.research.strategies.edge_gate import size_multiplier as grid_size_multiplier
 
 
 logger = logging.getLogger(__name__)
@@ -221,6 +224,32 @@ class LSv1Config(StrategyConfig, frozen=True):
     use_h2_direction: bool = os.getenv("LSV1_USE_H2_DIRECTION", "0") == "1"
     per_regime_direction: dict[str, str] = None  # set in __post_init__
 
+    # ── Empirical-grid edge gate (Minimax-B, 2026-07-14 — Phase B) ─────
+    # Production drop-in: replaces the hand-tuned REGIME_CIS_FLOOR (H1:
+    # directionally wrong in 3/6 regimes) with the EMPIRICAL shrunk edge-map
+    # grid (`src/research/strategies/edge_gate.py`). Direction falls out of
+    # data: long top-tier in risk-ON (band 5) pays; long top-tier in risk-OFF
+    # (band 1) bleeds → block. Different from the continuous edge gate
+    # (`src/research/nautilus/ls_v1/edge_gate.py`) which uses IC × z × sigma
+    # and FALSIFIED in the 2026-07-09 A/B; this version reads the shrunk
+    # avg_alpha_pct per (tier, band) cell — K=184.5 shrinkage already
+    # applied on Railway.
+    # Companion to the size_multiplier (Millennium soft sizing: blocked → 0,
+    # allowed → 0.4..1.3 × conviction). Together: data-driven gate + data-
+    # driven sizing, replacing two hand-tuned levers.
+    # Required inputs (env-overridable):
+    #   LSV1_GRID_PATH — JSON from `python3 scripts/export_edge_gate_grid.py`
+    #   LSV1_BAND_SNAPSHOT_PATH — JSON from `python3 scripts/build_btc_band_snapshot.py`
+    # Enable with LSV1_USE_EMPIRICAL_GRID_GATE=1.
+    use_empirical_grid_gate: bool = os.getenv("LSV1_USE_EMPIRICAL_GRID_GATE", "0") == "1"
+    use_grid_size_multiplier: bool = os.getenv("LSV1_USE_GRID_SIZE_MULTIPLIER", "0") == "1"
+    grid_path: str = os.getenv("LSV1_GRID_PATH", "reports/edge_gate_grid.json")
+    band_snapshot_path: str = os.getenv(
+        "LSV1_BAND_SNAPSHOT_PATH", "reports/btc_band_snapshot.json"
+    )
+    grid_size_floor: float = float(os.getenv("LSV1_GRID_SIZE_FLOOR", "0.4"))
+    grid_size_cap: float = float(os.getenv("LSV1_GRID_SIZE_CAP", "1.3"))
+
     request_bars: bool = True
     close_positions_on_stop: bool = True
 
@@ -338,6 +367,16 @@ class CometCloudNautilusLongShortV1(Strategy):
         self._conviction_by_date: dict[str, float] = {}
         self._conv_today: float = 1.0  # default = no scaling (baseline)
 
+        # Empirical-grid edge gate (Minimax-B, 2026-07-14 — Phase B): pre-loaded
+        # shrunk edge map (`src/research/strategies/edge_gate.py`) keyed by
+        # (tier, band) → shrunk_alpha_pct + per-day BTC band snapshot
+        # (1_deep_off ... 5_deep_on). Both loaded once in on_start() / _load_cis_history().
+        # `_last_grid_decision` carries the per-entry EdgeDecision so create_order_qty
+        # can apply size_multiplier() to scale position size.
+        self._edge_grid: dict = {}                # {tier: {band: shrunk_alpha}}
+        self._band_by_date: dict[str, str] = {}   # {YYYY-MM-DD: band_name}
+        self._last_grid_decision: Optional[EdgeDecision] = None
+
         # Position tracking for diagnostics
         self._last_bar_ts_ns: int = 0
         self._open_pos_count: int = 0
@@ -425,6 +464,63 @@ class CometCloudNautilusLongShortV1(Strategy):
         else:
             self._edge_gate = None
             self._edge_z_by_symbol = {}
+
+        # Empirical-grid edge gate (Minimax-B, 2026-07-14 — Phase B) — load
+        # the shrunk edge-map grid and the per-day BTC band snapshot. Both
+        # are required when use_empirical_grid_gate=True. When disabled, the
+        # files are not read (zero overhead).
+        if self.config.use_empirical_grid_gate:
+            gp = Path(self.config.grid_path)
+            if not gp.exists():
+                logger.warning(
+                    f"[LSv1] empirical-grid gate ENABLED but grid_path missing: {gp} — "
+                    f"gate will let every trade through (no edge data)"
+                )
+            else:
+                try:
+                    payload = json.loads(gp.read_text())
+                    self._edge_grid = payload.get("grid") or {}
+                    logger.info(
+                        f"[LSv1] empirical-grid loaded: {len(self._edge_grid)} tiers, "
+                        f"{sum(len(b) for b in self._edge_grid.values())} cells "
+                        f"from {gp}"
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        f"[LSv1] empirical-grid parse failed ({exc}); gate inactive"
+                    )
+            bs = Path(self.config.band_snapshot_path)
+            if not bs.exists():
+                logger.warning(
+                    f"[LSv1] empirical-grid gate ENABLED but band_snapshot missing: {bs} — "
+                    f"gate will use '3_neutral' band for every bar"
+                )
+            else:
+                try:
+                    payload = json.loads(bs.read_text())
+                    self._band_by_date = payload.get("bands") or {}
+                    logger.info(
+                        f"[LSv1] band snapshot loaded: {len(self._band_by_date)} days "
+                        f"from {bs}"
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        f"[LSv1] band snapshot parse failed ({exc}); using 3_neutral"
+                    )
+
+    def _current_band(self) -> str:
+        """Return today's BTC risk-gradient band (`1_deep_off` ... `5_deep_on`).
+
+        Looks up today's UTC date in `self._band_by_date` (loaded from the band
+        snapshot in `_load_cis_history`). Falls back to `3_neutral` if the date
+        isn't in the snapshot (warmup window before 2024-01-31 or future dates).
+        """
+        if not self._band_by_date or self._last_bar_ts_ns == 0:
+            return "3_neutral"
+        bar_dt = dt.datetime.fromtimestamp(
+            self._last_bar_ts_ns / 1e9, tz=dt.timezone.utc
+        )
+        return self._band_by_date.get(bar_dt.strftime("%Y-%m-%d"), "3_neutral")
 
     def _conv_floor_multiplier(self, conviction: float) -> float:
         """H3 — conviction-weighted floor multiplier.
@@ -547,6 +643,20 @@ class CometCloudNautilusLongShortV1(Strategy):
         so research variants can flip to "inverted" (require LOW CIS) or "drop"
         (no gate) to test the directional hypothesis.
         """
+        # Empirical-grid edge gate (Minimax-B, 2026-07-14 — Phase B) — the
+        # production drop-in. Reads (tier, band) shrunk alpha from the live
+        # edge-map grid (`src/research/strategies/edge_gate.py`). Different
+        # from the continuous edge gate above (which uses IC × z × sigma and
+        # FALSIFIED in the 2026-07-09 A/B): this version reads REAL outcomes
+        # from the shrunk avg_alpha_pct, with K=184.5 shrinkage already applied.
+        # Direction falls out of the data:
+        #   LONG: pass when tier's edge in band ≥ +min_edge (data says it gains)
+        #   SHORT: pass when tier's edge in band ≤ -min_edge (data says it bleeds)
+        # The decision is stored in `self._last_grid_decision` so `create_order_qty`
+        # can apply `size_multiplier()` for data-driven sizing.
+        if self.config.use_empirical_grid_gate:
+            return self._empirical_grid_passes(symbol, side)
+
         # Edge gate path — replaces REGIME_CIS_FLOOR with continuous expected-edge.
         # Falls through to the legacy floor if edge gate isn't wired up.
         if self._edge_gate is not None:
@@ -666,6 +776,48 @@ class CometCloudNautilusLongShortV1(Strategy):
             side=side,
             sigma=sigma,
         )
+
+    def _empirical_grid_passes(self, symbol: str, side: int) -> bool:
+        """Empirical-grid gate decision (production drop-in, Phase B).
+
+        Replaces REGIME_CIS_FLOOR + direction override with a data-grounded
+        lookup against the shrunk edge-map grid:
+            grid[tier][band] = shrunk avg_alpha_pct (K=184.5)
+        plus today's BTC band from `self._band_by_date`.
+
+        The grid's `gate()` (`src/research/strategies/edge_gate.py`) takes
+        the technical engine's intended side (+1/-1) and the asset's CIS
+        signal tier (STRONG OUTPERFORM / OUTPERFORM / UNDERPERFORM /
+        UNDERWEIGHT / NEUTRAL) and returns an EdgeDecision:
+            allow       = the empirical (tier, band) cell passes our min_edge
+            conviction  = how strongly the cell agrees (0..1)
+            expected_edge_pct = shrunk alpha for transparency
+
+        NEUTRAL signals (no edge data for tier) fall through with allow=True
+        and conviction=0.0 — the technical + ADX layer is the fallback, same
+        as the freqtrade LS V4 `REGIME_CIS_FLOOR` backtest-bypass behaviour.
+
+        Stores the decision in `self._last_grid_decision` so `create_order_qty`
+        can scale position size by `size_multiplier()` (Millennium soft sizing).
+        """
+        cis = self._cis_for_symbol(symbol)
+        tier = (cis.get("signal") or "").upper() if cis else ""
+        # Defensive: drop CIS signal prefix noise
+        # ("STRONG OUTPERFORM" already in the grid; "NEUTRAL" falls through)
+        band = self._current_band()
+        side_str = "LONG" if side > 0 else "SHORT"
+        if not self._edge_grid:
+            # Gate requested but grid failed to load → tech-only.
+            self._last_grid_decision = EdgeDecision(
+                allow=True, expected_edge_pct=None, conviction=0.0,
+                reason="empirical-grid: no grid loaded, tech-only",
+            )
+            return True
+        decision = empirical_gate(self._edge_grid, tier, band, side_str)
+        self._last_grid_decision = decision
+        if not decision.allow:
+            self._skipped_cis += 1
+        return decision.allow
 
     # ── Inline ADX (DX + Wilder smoothing, Nautilus 1.229 has no ADX) ────
     def _update_adx(self, bar: Bar) -> None:
@@ -831,14 +983,35 @@ class CometCloudNautilusLongShortV1(Strategy):
     def create_order_qty(self) -> Quantity:
         """Build the order quantity for the next entry.
 
+        Empirical-grid sizing (when use_empirical_grid_gate=True): scale
+        `trade_size` by the most recent `_empirical_grid_passes()` decision's
+        conviction ∈ [0, 1]. Multiplier is clamped to [grid_size_floor,
+        grid_size_cap] (defaults 0.4 .. 1.3) — shrinking on weak-edge cells
+        and capping on strong-edge cells. The mapping is
+        `floor + (cap - floor) * conviction`, same shape as H3.2 but driven
+        by the grid's shrunk-alpha signal.
+
         H3.2 sizing (when use_h32_sizing=True): scale `trade_size` by today's
         conviction ∈ [0, 1]. Multiplier is clamped to [h32_size_floor, h32_size_cap]
         (defaults 0.5 .. 1.5) so worst-case is 0.5× .. 1.5× base size.
         The actual scaling: multiplier = floor + (cap - floor) * conviction.
         With default range: 0.5 + 1.0 * c  ∈ [0.5, 1.5].
+
+        If BOTH flags are set, the empirical-grid multiplier wins (it is the
+        more recent, more grounded signal). This preserves H3.2 as the
+        baseline-only lever and lets the grid ride on top of it.
         """
         size = self.config.trade_size
-        if self.config.use_h32_sizing:
+        if (self.config.use_empirical_grid_gate
+                and self.config.use_grid_size_multiplier
+                and self._last_grid_decision is not None):
+            mult = grid_size_multiplier(
+                self._last_grid_decision,
+                floor=float(self.config.grid_size_floor),
+                cap=float(self.config.grid_size_cap),
+            )
+            size = size * Decimal(str(mult))
+        elif self.config.use_h32_sizing:
             mult = self._h32_sizing_multiplier()
             size = size * Decimal(str(mult))
         return self.instrument.make_qty(size)
@@ -976,6 +1149,9 @@ class CometCloudNautilusLongShortV1(Strategy):
         self._skipped_already_in_pos = 0
         self._entered_long = 0
         self._entered_short = 0
+        # Empirical-grid gate state (Phase B, 2026-07-14) — clear per-bar
+        # decision so a reset bar starts with the soft fallback (no scaling).
+        self._last_grid_decision = None
 
     # ── Diagnostics (read by runner for parity_check) ─────────────────────
     def skip_summary(self) -> dict:

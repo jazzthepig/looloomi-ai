@@ -90,6 +90,18 @@ async def macro_pulse(response: Response = None):
     return await get_macro_pulse()
 
 
+@router.get("/api/v1/market/crowd-clock")
+async def crowd_clock(response: Response = None):
+    """Crowd Clock — the behavioral-phase primitive. Where the crowd sits on the emotional cycle
+    (capitulation → accumulation → markup → euphoria → distribution), from data we already cache
+    (FNG + BTC trend + funding crowding + CIS dispersion). CANDIDATE — instrumented for validation,
+    not yet outcome-proven. Positioning read only; not advice. See src/data/market/crowd_clock.py."""
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=900"
+    from src.data.market.crowd_clock import get_crowd_clock
+    return await get_crowd_clock()
+
+
 # ── DeFi (DeFiLlama) ─────────────────────────────────────────────────────────
 
 @router.get("/api/v1/defi/protocols")
@@ -244,7 +256,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "fng_1", "timestamp": fng_time,
                 "type": "RISK", "importance": "HIGH",
-                "description": f"Fear & Greed 极度恐惧 {fng_val}/100 — 情绪处于历史极端低位",
+                "description": f"Fear & Greed Extreme Fear {fng_val}/100 — sentiment at a historic extreme low",
                 "affected_assets": ["BTC", "ETH", "SOL"],
                 "source": "alternative.me", "value": fng_val,
             }, pi,
@@ -260,7 +272,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "fng_1", "timestamp": fng_time,
                 "type": "RISK", "importance": "MED",
-                "description": f"Fear & Greed 恐惧 {fng_val}/100 — 情绪偏弱，市场保守",
+                "description": f"Fear & Greed Fear {fng_val}/100 — sentiment weak, market cautious",
                 "affected_assets": ["BTC", "ETH", "CRYPTO"],
                 "source": "alternative.me", "value": fng_val,
             }, pi,
@@ -274,7 +286,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "fng_1", "timestamp": fng_time,
                 "type": "MACRO", "importance": "LOW",
-                "description": f"Fear & Greed 中性 {fng_val}/100 — 情绪均衡，无明显方向偏向",
+                "description": f"Fear & Greed Neutral {fng_val}/100 — balanced sentiment, no clear directional bias",
                 "affected_assets": ["BTC", "CRYPTO"],
                 "source": "alternative.me", "value": fng_val,
             }, pi,
@@ -287,7 +299,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "fng_1", "timestamp": fng_time,
                 "type": "MACRO", "importance": "MED",
-                "description": f"Fear & Greed 贪婪 {fng_val}/100 — 情绪乐观，风险溢价收窄",
+                "description": f"Fear & Greed Greed {fng_val}/100 — optimistic sentiment, risk premium narrowing",
                 "affected_assets": ["BTC", "ETH", "CRYPTO"],
                 "source": "alternative.me", "value": fng_val,
             }, pi,
@@ -301,7 +313,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "fng_1", "timestamp": fng_time,
                 "type": "RISK", "importance": "HIGH",
-                "description": f"Fear & Greed 极度贪婪 {fng_val}/100 — 情绪过热，波动率上升概率大",
+                "description": f"Fear & Greed Extreme Greed {fng_val}/100 — sentiment overheated, elevated odds of rising volatility",
                 "affected_assets": ["BTC", "ETH", "CRYPTO"],
                 "source": "alternative.me", "value": fng_val,
             }, pi,
@@ -348,7 +360,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     "id": f"gainer_{g['symbol']}", "timestamp": now.isoformat(),
                     "type": "MOMENTUM", "source": "coingecko",
                     "importance": imp, "value": chg,
-                    "description": f"{g['symbol']} 24h +{chg:.1f}% — 强势上涨，动能指标偏强",
+                    "description": f"{g['symbol']} 24h +{chg:.1f}% — strong advance, momentum reading firm",
                     "affected_assets": [g["symbol"]],
                 }, pi, logic, horizon))
 
@@ -387,7 +399,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     "id": f"loser_{l['symbol']}", "timestamp": now.isoformat(),
                     "type": "RISK", "source": "coingecko",
                     "importance": imp, "value": chg,
-                    "description": f"{l['symbol']} 24h {chg:.1f}% — 显著回落，下行压力增大",
+                    "description": f"{l['symbol']} 24h {chg:.1f}% — notable pullback, downside pressure building",
                     "affected_assets": [l["symbol"]],
                 }, pi, logic, horizon))
 
@@ -402,7 +414,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     "id": "defi_tvl_up", "timestamp": now.isoformat(),
                     "type": "FLOW", "source": "defillama", "value": tvl_chg,
                     "importance": "HIGH",
-                    "description": f"DeFi TVL 24h +{tvl_chg:.1f}% — 链上资金大规模净流入，总规模 ${total_tvl/1e9:.1f}B",
+                    "description": f"DeFi TVL 24h +{tvl_chg:.1f}% — large on-chain net inflows, total ${total_tvl/1e9:.1f}B",
                     "affected_assets": ["ETH", "DeFi"],
                 }, pi,
                 f"TVL surge >{tvl_chg:.0f}%: strong capital commitment to DeFi. "
@@ -418,7 +430,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     "id": "defi_tvl_up", "timestamp": now.isoformat(),
                     "type": "FLOW", "source": "defillama", "value": tvl_chg,
                     "importance": "MED",
-                    "description": f"DeFi TVL 24h +{tvl_chg:.1f}% — 链上资金净流入，总规模 ${total_tvl/1e9:.1f}B",
+                    "description": f"DeFi TVL 24h +{tvl_chg:.1f}% — on-chain net inflows, total ${total_tvl/1e9:.1f}B",
                     "affected_assets": ["ETH", "DeFi"],
                 }, pi,
                 f"Moderate TVL growth ({tvl_chg:.1f}%): positive F/O signal for DeFi sector. "
@@ -431,7 +443,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     "id": "defi_tvl_down", "timestamp": now.isoformat(),
                     "type": "RISK", "source": "defillama", "value": tvl_chg,
                     "importance": "HIGH",
-                    "description": f"DeFi TVL 24h {tvl_chg:.1f}% — 链上资金大规模流出，总规模 ${total_tvl/1e9:.1f}B",
+                    "description": f"DeFi TVL 24h {tvl_chg:.1f}% — large on-chain outflows, total ${total_tvl/1e9:.1f}B",
                     "affected_assets": ["ETH", "DeFi"],
                 }, pi,
                 f"TVL crash ({tvl_chg:.1f}%): serious capital flight from DeFi. "
@@ -446,7 +458,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     "id": "defi_tvl_down", "timestamp": now.isoformat(),
                     "type": "RISK", "source": "defillama", "value": tvl_chg,
                     "importance": "MED",
-                    "description": f"DeFi TVL 24h {tvl_chg:.1f}% — 链上资金净流出，总规模 ${total_tvl/1e9:.1f}B",
+                    "description": f"DeFi TVL 24h {tvl_chg:.1f}% — on-chain net outflows, total ${total_tvl/1e9:.1f}B",
                     "affected_assets": ["ETH", "DeFi"],
                 }, pi,
                 f"TVL decline ({tvl_chg:.1f}%): mild F/O headwind for DeFi assets. "
@@ -458,7 +470,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     "id": "defi_tvl_stable", "timestamp": now.isoformat(),
                     "type": "FLOW", "source": "defillama", "value": tvl_chg,
                     "importance": "LOW",
-                    "description": f"DeFi TVL稳定于 ${total_tvl/1e9:.1f}B，24h变化 {tvl_chg:+.1f}%",
+                    "description": f"DeFi TVL stable at ${total_tvl/1e9:.1f}B, 24h change {tvl_chg:+.1f}%",
                     "affected_assets": ["ETH", "DeFi"],
                 }, pi,
                 "TVL stable: no directional F or O pillar signal. "
@@ -478,7 +490,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "sc_usdc_lead", "timestamp": now.isoformat(),
                 "type": "FLOW", "source": "defillama", "importance": "MED",
-                "description": f"USDC主导稳定币市场 ({usdc_dom:.0f}% vs USDT {usdt_dom:.0f}%) — 机构稳定币偏好上升",
+                "description": f"USDC leads the stablecoin market ({usdc_dom:.0f}% vs USDT {usdt_dom:.0f}%) — institutional stablecoin preference rising",
                 "affected_assets": ["USDC", "ETH"],
             }, pi,
             "USDC dominance surge: signals institutional/regulated capital preference. "
@@ -491,7 +503,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "sc_dry_powder", "timestamp": now.isoformat(),
                 "type": "FLOW", "source": "defillama", "importance": "MED",
-                "description": f"稳定币总供应 ${total_sc_mcap/1e9:.0f}B — 市场干火药充足",
+                "description": f"Total stablecoin supply ${total_sc_mcap/1e9:.0f}B — ample dry powder",
                 "affected_assets": ["BTC", "ETH", "CRYPTO"],
             }, pi,
             f"${total_sc_mcap/1e9:.0f}B in stablecoin supply = significant dry powder on sidelines. "
@@ -516,7 +528,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     "id": "defi_yield_top", "timestamp": now.isoformat(),
                     "type": "FLOW", "source": "defillama",
                     "importance": "HIGH",
-                    "description": f"高收益池: {pool} ({proto}) APY {apy:.1f}% — TVL ${tvl/1e6:.0f}M",
+                    "description": f"High-yield pool: {pool} ({proto}) APY {apy:.1f}% — TVL ${tvl/1e6:.0f}M",
                     "affected_assets": [proto.upper()] if proto else ["DeFi"],
                 }, pi,
                 f"Extreme yield ({apy:.0f}% APY): likely emission-heavy or "
@@ -532,7 +544,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     "id": "defi_yield_top", "timestamp": now.isoformat(),
                     "type": "FLOW", "source": "defillama",
                     "importance": "MED",
-                    "description": f"稳健收益机会: {pool} ({proto}) APY {apy:.1f}% — TVL ${tvl/1e6:.0f}M",
+                    "description": f"Stable-yield opportunity: {pool} ({proto}) APY {apy:.1f}% — TVL ${tvl/1e6:.0f}M",
                     "affected_assets": [proto.upper()] if proto else ["DeFi"],
                 }, pi,
                 f"Healthy yield range ({apy:.0f}% APY). O pillar positive: "
@@ -549,7 +561,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             regime_signals = {
                 "RISK_ON": {
                     "pi": {"F": +3, "M": +12, "O": +5, "S": +10, "A": +5},
-                    "desc": "风险偏好模式 — Risk-On 环境，高β资产活跃",
+                    "desc": "Risk-appetite mode — Risk-On environment, high-beta assets active",
                     "type": "MACRO", "imp": "MED",
                     "logic": "Risk-On macro: M and S pillars elevated across crypto. "
                              "High-beta assets (alts, small-caps) outperform BTC in this regime. "
@@ -559,7 +571,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 },
                 "RISK_OFF": {
                     "pi": {"F": 0, "M": -15, "O": -10, "S": -18, "A": +8},
-                    "desc": "风险规避模式 — Risk-Off 环境，避险情绪主导",
+                    "desc": "Risk-aversion mode — Risk-Off environment, defensive sentiment dominant",
                     "type": "RISK", "imp": "HIGH",
                     "logic": "Risk-Off macro: M and S pillars compressed across crypto. "
                              "BTC dominance typically rises (relative store-of-value). "
@@ -570,7 +582,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 },
                 "TIGHTENING": {
                     "pi": {"F": -8, "M": -10, "O": -5, "S": -12, "A": +5},
-                    "desc": "紧缩周期 — 宏观流动性收紧，利率上行压力",
+                    "desc": "Tightening cycle — macro liquidity contracting, upward rate pressure",
                     "type": "MACRO", "imp": "HIGH",
                     "logic": "Tightening cycle: liquidity contraction weighs on F pillar "
                              "(higher discount rates compress valuations). M pillar headwinds "
@@ -582,7 +594,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 },
                 "EASING": {
                     "pi": {"F": +10, "M": +12, "O": +8, "S": +10, "A": +3},
-                    "desc": "宽松周期 — 宏观流动性改善，金融条件趋宽松",
+                    "desc": "Easing cycle — macro liquidity improving, financial conditions loosening",
                     "type": "MACRO", "imp": "MED",
                     "logic": "Easing cycle: liquidity expansion benefits all risk assets. "
                              "F pillar improves as discount rates fall (higher DCF valuations). "
@@ -593,7 +605,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 },
                 "STAGFLATION": {
                     "pi": {"F": -12, "M": -12, "O": -8, "S": -15, "A": +10},
-                    "desc": "滞胀环境 — 增长放缓叠加通胀，市场风险溢价上升",
+                    "desc": "Stagflation — slowing growth plus inflation, market risk premium rising",
                     "type": "RISK", "imp": "HIGH",
                     "logic": "Stagflation: worst macro regime for risk assets. "
                              "F pillar damage: growth slowdown reduces protocol revenue/usage. "
@@ -605,7 +617,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 },
                 "GOLDILOCKS": {
                     "pi": {"F": +10, "M": +12, "O": +5, "S": +15, "A": +5},
-                    "desc": "黄金时代 — 增长稳健、通胀可控，市场环境理想",
+                    "desc": "Goldilocks — steady growth, contained inflation, ideal market backdrop",
                     "type": "MACRO", "imp": "MED",
                     "logic": "Goldilocks: stable growth + controlled inflation = "
                              "ideal conditions for risk assets. All CIS pillars benefit. "
@@ -618,7 +630,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             }
             r = regime_signals.get(regime, {
                 "pi": {"F": 0, "M": 0, "O": 0, "S": 0, "A": 0},
-                "desc": f"当前宏观体制: {regime}",
+                "desc": f"Current macro regime: {regime}",
                 "type": "MACRO", "imp": "LOW",
                 "logic": f"Macro regime: {regime}. No specific pillar adjustment mapped.",
                 "horizon": "7D",
@@ -647,7 +659,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": f"cis_top_{sym}", "timestamp": cis_cache.get("timestamp", now.isoformat()),
                 "type": "MOMENTUM", "source": "cis_engine", "importance": "MED",
-                "description": f"CIS {grade} 评级: {sym} 综合得分 {score:.1f}/100 — {ac}类资产领先",
+                "description": f"CIS {grade} rating: {sym} composite {score:.1f}/100 — {ac} class leading",
                 "affected_assets": [sym],
                 "value": score,
             }, pi,
@@ -667,14 +679,14 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             breadth  = pct_pos - pct_neg
             if breadth > 20:
                 pi = {"F": +5, "M": +10, "O": +5, "S": +8, "A": 0}
-                struct = "偏强 — 市场广度高，多数资产技术面健康"
+                struct = "Strong — high market breadth, most assets technically healthy"
                 logic = (f"Market breadth strong: {pct_pos}% of assets graded A/B+. "
                         "Broad-based bull signal — not a narrow leadership rally. "
                         "M and S pillars benefit from positive breadth feedback loop. "
                         "Low-risk environment for diversified crypto exposure.")
             elif breadth < -10:
                 pi = {"F": -5, "M": -10, "O": -5, "S": -8, "A": 0}
-                struct = "偏弱 — 市场广度低，资产评级分化加剧"
+                struct = "Weak — low market breadth, rating dispersion widening"
                 logic = (f"Market breadth weak: {pct_neg}% of assets graded D/F. "
                         "Narrow leadership (few assets carrying the market). "
                         "M and S pillars suppressed across most assets. "
@@ -682,7 +694,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                         "warrant exposure.")
             else:
                 pi = {"F": 0, "M": 0, "O": 0, "S": 0, "A": +5}
-                struct = "分化 — 市场结构中性，个股机会分散"
+                struct = "Mixed — neutral market structure, opportunities dispersed"
                 logic = ("Neutral breadth: mixed market structure. "
                         "Alpha pillar elevated (+5): dispersion creates "
                         "stock-picking opportunities within CIS universe. "
@@ -690,7 +702,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "cis_distribution", "timestamp": cis_cache.get("timestamp", now.isoformat()),
                 "type": "MACRO", "source": "cis_engine", "importance": "MED",
-                "description": f"市场广度: {total}资产中 {pct_pos}% A/B+ · {pct_neg}% D/F — {struct}",
+                "description": f"Market breadth: {pct_pos}% A/B+ · {pct_neg}% D/F of {total} assets — {struct}",
                 "affected_assets": ["CRYPTO", "MACRO"],
             }, pi, logic, "7D"))
 
@@ -741,7 +753,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "cg_btc_dom_high", "timestamp": now.isoformat(),
                 "type": "MACRO", "source": "coingecko", "importance": "HIGH",
-                "description": f"BTC主导率 {btc_dom:.1f}% — 资金高度集中BTC，山寨季窗口关闭",
+                "description": f"BTC dominance {btc_dom:.1f}% — capital concentrated in BTC, altseason window closed",
                 "affected_assets": ["BTC", "ETH", "CRYPTO"], "value": btc_dom,
             }, pi,
             f"BTC dominance at {btc_dom:.1f}%: capital concentrated in BTC vs altcoins. "
@@ -754,7 +766,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "cg_btc_dom_low", "timestamp": now.isoformat(),
                 "type": "MACRO", "source": "coingecko", "importance": "MED",
-                "description": f"BTC主导率 {btc_dom:.1f}% — 山寨季环境，资金广泛分布",
+                "description": f"BTC dominance {btc_dom:.1f}% — altseason environment, capital broadly distributed",
                 "affected_assets": ["ETH", "SOL", "CRYPTO"], "value": btc_dom,
             }, pi,
             f"BTC dominance at {btc_dom:.1f}%: capital rotating broadly into alts. "
@@ -768,7 +780,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "cg_mcap_surge", "timestamp": now.isoformat(),
                 "type": "MOMENTUM", "source": "coingecko", "importance": "HIGH",
-                "description": f"加密总市值 24h +{mcap_chg:.1f}% — 全市场大幅拉升",
+                "description": f"Total crypto market cap 24h +{mcap_chg:.1f}% — broad-based rally",
                 "affected_assets": ["BTC", "ETH", "CRYPTO"], "value": mcap_chg,
             }, pi,
             f"Total crypto market cap +{mcap_chg:.1f}% in 24h: broad-based rally. "
@@ -782,7 +794,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "cg_mcap_crash", "timestamp": now.isoformat(),
                 "type": "RISK", "source": "coingecko", "importance": "HIGH",
-                "description": f"加密总市值 24h {mcap_chg:.1f}% — 全市场显著下跌",
+                "description": f"Total crypto market cap 24h {mcap_chg:.1f}% — broad-based decline",
                 "affected_assets": ["BTC", "ETH", "CRYPTO"], "value": mcap_chg,
             }, pi,
             f"Total market cap {mcap_chg:.1f}%: broad market selloff. "
@@ -797,7 +809,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "cg_defi_ratio", "timestamp": now.isoformat(),
                 "type": "FLOW", "source": "coingecko", "importance": "MED",
-                "description": f"DeFi占总市值 {defi_ratio:.1f}% — 链上资本比重处于高位",
+                "description": f"DeFi share of total market cap {defi_ratio:.1f}% — on-chain capital weighting elevated",
                 "affected_assets": ["ETH", "DeFi"],
             }, pi,
             f"DeFi market cap {defi_ratio:.1f}% of total crypto market. "
@@ -830,7 +842,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": f"cg_trend_{sym}", "timestamp": now.isoformat(),
                 "type": "MOMENTUM", "source": "coingecko", "importance": imp,
-                "description": f"CoinGecko 热搜 #{score+1}: {sym} — 搜索量激增，社区关注度高",
+                "description": f"CoinGecko trending #{score+1}: {sym} — search volume surging, high community attention",
                 "affected_assets": [sym],
                 "value": chg24,
             }, pi,
@@ -846,7 +858,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": "cg_trend_defi_sector", "timestamp": now.isoformat(),
                 "type": "MOMENTUM", "source": "coingecko", "importance": "MED",
-                "description": f"DeFi/L1板块集体热搜: {', '.join(trending_defi[:4])} — 板块轮动信号",
+                "description": f"DeFi/L1 sector trending together: {', '.join(trending_defi[:4])} — sector-rotation signal",
                 "affected_assets": trending_defi[:4],
             }, pi,
             f"Multiple DeFi/L1 tokens trending simultaneously ({', '.join(trending_defi)}). "
@@ -874,7 +886,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": f"gt_pool_new_{token[:8]}_{net}", "timestamp": now.isoformat(),
                 "type": "FLOW", "source": "defillama", "importance": "MED",
-                "description": f"链上新池: {name} ({net}) TVL ${tvl/1e6:.1f}M · {txns} 笔交易",
+                "description": f"New on-chain pool: {name} ({net}) TVL ${tvl/1e6:.1f}M · {txns} txns",
                 "affected_assets": [token, net],
                 "value": tvl,
             }, pi,
@@ -890,7 +902,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": f"gt_pump_{token[:8]}_{net}", "timestamp": now.isoformat(),
                 "type": "RISK", "source": "defillama", "importance": "HIGH",
-                "description": f"链上异动: {name} ({net}) 24h +{chg24:.0f}% · 成交量 ${vol24/1e3:.0f}K",
+                "description": f"On-chain move: {name} ({net}) 24h +{chg24:.0f}% · volume ${vol24/1e3:.0f}K",
                 "affected_assets": [token, net],
                 "value": chg24,
             }, pi,
@@ -906,7 +918,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": f"gt_dump_{token[:8]}_{net}", "timestamp": now.isoformat(),
                 "type": "RISK", "source": "defillama", "importance": "HIGH",
-                "description": f"链上砸盘: {name} ({net}) 24h {chg24:.0f}% · 成交量 ${vol24/1e3:.0f}K",
+                "description": f"On-chain dump: {name} ({net}) 24h {chg24:.0f}% · volume ${vol24/1e3:.0f}K",
                 "affected_assets": [token, net],
                 "value": chg24,
             }, pi,
@@ -942,7 +954,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 signals.append(_mk({
                     "id": f"deriv_fr_high_{sym}", "timestamp": now.isoformat(),
                     "type": "FUNDING", "source": "coingecko", "importance": "HIGH",
-                    "description": f"{sym} 资金费率 +{fr_pct:.3f}% — 杠杆多头严重过热",
+                    "description": f"{sym} funding rate +{fr_pct:.3f}% — leveraged longs severely overheated",
                     "affected_assets": [sym],
                     "value": fr_pct,
                 }, pi,
@@ -960,7 +972,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 signals.append(_mk({
                     "id": f"deriv_fr_neg_{sym}", "timestamp": now.isoformat(),
                     "type": "FUNDING", "source": "coingecko", "importance": "MED",
-                    "description": f"{sym} 资金费率 {fr_pct:.3f}% — 做空拥挤，逼空条件形成",
+                    "description": f"{sym} funding rate {fr_pct:.3f}% — shorts crowded, squeeze conditions forming",
                     "affected_assets": [sym],
                     "value": fr_pct,
                 }, pi,
@@ -977,7 +989,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 signals.append(_mk({
                     "id": f"deriv_oi_whale_{sym}", "timestamp": now.isoformat(),
                     "type": "WHALE", "source": "coingecko", "importance": "MED",
-                    "description": f"{sym} 合约持仓 ${total_oi/1e9:.1f}B — 大资金建仓，温和做多结构",
+                    "description": f"{sym} open interest ${total_oi/1e9:.1f}B — large positions building, mild long structure",
                     "affected_assets": [sym],
                     "value": total_oi / 1e9,
                 }, pi,
@@ -1000,7 +1012,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 signals.append(_mk({
                     "id": "whale_vol_spike", "timestamp": now.isoformat(),
                     "type": "WHALE", "source": "coingecko", "importance": "HIGH",
-                    "description": f"全市场成交量/市值比 {vol_ratio*100:.1f}% — 大资金异常活跃",
+                    "description": f"Market-wide volume/mcap ratio {vol_ratio*100:.1f}% — large flows unusually active",
                     "affected_assets": ["BTC", "ETH", "CRYPTO"],
                     "value": vol_ratio * 100,
                 }, pi,
@@ -1016,7 +1028,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 signals.append(_mk({
                     "id": "whale_vol_elevated", "timestamp": now.isoformat(),
                     "type": "WHALE", "source": "coingecko", "importance": "MED",
-                    "description": f"全市场成交量活跃度高 {vol_ratio*100:.1f}% — 机构级别换手明显",
+                    "description": f"Market-wide volume activity high {vol_ratio*100:.1f}% — institutional-level turnover evident",
                     "affected_assets": ["BTC", "ETH", "CRYPTO"],
                     "value": vol_ratio * 100,
                 }, pi,
@@ -1046,7 +1058,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             signals.append(_mk({
                 "id": f"whale_pool_{token[:8]}_{net}", "timestamp": now.isoformat(),
                 "type": "WHALE", "source": "defillama", "importance": "HIGH",
-                "description": f"鲸鱼流动: {name} ({net}) 成交量 {vol_tvl:.0f}×TVL · ${vol24/1e6:.2f}M",
+                "description": f"Whale flow: {name} ({net}) volume {vol_tvl:.0f}×TVL · ${vol24/1e6:.2f}M",
                 "affected_assets": [token, net],
                 "value": vol_tvl,
             }, pi,
@@ -1066,14 +1078,14 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             chg24 = coin.get("price_change_24h", 0) or 0
             # Low rank + extreme move = likely whale-driven
             if rank > 200 and abs(chg24) >= 25:
-                direction = "上涨" if chg24 > 0 else "下跌"
+                direction = "up" if chg24 > 0 else "down"
                 pi = ({"F": 0, "M": +15, "O": +8, "S": +12, "A": -15}
                       if chg24 > 0 else
                       {"F": -8, "M": -12, "O": -10, "S": -8, "A": +10})
                 signals.append(_mk({
                     "id": f"whale_smallcap_{sym}", "timestamp": now.isoformat(),
                     "type": "WHALE", "source": "coingecko", "importance": "HIGH",
-                    "description": f"鲸鱼扫货/出货: {sym} (MC#{rank}) 24h {'+' if chg24>0 else ''}{chg24:.1f}% 登上热搜",
+                    "description": f"Whale accumulation/distribution: {sym} (MC#{rank}) 24h {'+' if chg24>0 else ''}{chg24:.1f}% trending",
                     "affected_assets": [sym],
                     "value": chg24,
                 }, pi,

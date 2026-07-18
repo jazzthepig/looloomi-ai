@@ -609,13 +609,13 @@ async def assemble_briefing(symbol: str = None) -> dict:
             crowded_long, cl_p = rk[0]              # most negative pressure = crowded LONGS
             crowded_short, cs_p = rk[-1]            # most positive = crowded SHORTS
 
-    # ── Market Context (tier 0 — the frame) ──
-    frame = (f"Macro regime is **{regime}**. The diversification that matters lives *across* asset "
+    # ── Market Context (tier 0 — the frame) ── (plain prose — NO markdown; feed renders text as-is)
+    frame = (f"Macro regime is {regime}. The diversification that matters lives across asset "
              f"classes, not inside crypto — commodities sit ~0.22 correlated to BTC while crypto majors "
              f"co-move at ~0.79. ")
     if crowded_long:
-        frame += f"Leverage is crowded long in **{crowded_long}** (flush risk on any shock)"
-        frame += f" and crowded short in **{crowded_short}** (squeeze fuel). " if crowded_short else ". "
+        frame += f"Leverage is crowded long in {crowded_long} (flush risk on any shock)"
+        frame += f" and crowded short in {crowded_short} (squeeze fuel). " if crowded_short else ". "
     sections.append({"tier": "context", "title": "Market Context",
                      "items": [{"id": "context:regime", "headline": f"{regime} — breadth beats beta",
                                 "narrative": frame.strip(), "source": "Regime & Breadth", "timestamp": now}]})
@@ -631,12 +631,20 @@ async def assemble_briefing(symbol: str = None) -> dict:
             continue
         drivers = c.get("drivers") or []
         confirming = c.get("L4_trend", 0) > 0.6
-        narrative = (f"{c.get('thesis','')[:120]} "
-                     f"{'The market is already voting — ' + drivers[0] + '. ' if drivers else ''}"
-                     f"{'Fundamentals accelerating' if (c.get('L3_fundamental_momentum') or 0) > 0.5 else 'Fundamentals steady'}; "
-                     f"{'price is confirming' if confirming else 'awaiting price confirmation'}. "
-                     f"{'Reflexive fee→token loop in place. ' if c.get('reflexive_loop') else ''}"
-                     f"A discretionary conviction candidate — the setup, not a signal.")
+        # compose without repetition (de-stutter the shared "reflexive loop" phrasing)
+        _bits = []
+        _th = (c.get("thesis") or "").strip()
+        if _th:
+            _bits.append(_th.rstrip(".") + ".")
+        if drivers:
+            _bits.append(f"The market is already voting — {drivers[0].strip().rstrip('.')}.")
+        _fund = "Fundamentals accelerating" if (c.get("L3_fundamental_momentum") or 0) > 0.5 else "Fundamentals steady"
+        _price = "price is confirming" if confirming else "price not yet confirming"
+        _bits.append(f"{_fund}; {_price}.")
+        if c.get("reflexive_loop") and not any("reflex" in (d or "").lower() for d in drivers):
+            _bits.append("A reflexive fee→token loop reinforces it.")
+        _bits.append("A discretionary conviction candidate — the setup, not a signal.")
+        narrative = " ".join(_bits)
         iid = f"conviction:{c['symbol']}"
         conv.append({"id": iid, "symbol": c["symbol"], "headline": f"{c['symbol']} — structural-winner watch",
                      "narrative": narrative, "score": c.get("conviction_score"),

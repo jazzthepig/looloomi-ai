@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CometCloud — Proof</title>
+  <meta name="description" content="What we can defend today: two validated, orthogonal edges, a live intelligence substrate, and a research process that falsifies its own ideas before capital." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Exo+2:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --void: #020208; --surface: #06091a; --raised: #0a1030; --card: #0d1438;
+      --border: rgba(37,99,235,0.14); --borderm: rgba(37,99,235,0.22);
+      --t1: #f0f4ff; --t2: #c7d2fe; --t3: rgba(199,210,254,0.45); --t4: rgba(199,210,254,0.20);
+      --green: #00D98A; --red: #FF3D5A; --cyan: #06b6d4; --amber: #f59e0b;
+      --f-brand: 'Syne', system-ui, sans-serif; --f-body: 'Exo 2', system-ui, sans-serif;
+      --f-mono: 'JetBrains Mono', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--void); color: var(--t1); font-family: var(--f-body); font-weight: 300; line-height: 1.6; overflow-x: hidden; }
+    .orb { position: fixed; border-radius: 50%; mix-blend-mode: screen; filter: blur(80px); pointer-events: none; z-index: 0; animation: breathe 14s ease-in-out infinite; }
+    .orb1 { width: 520px; height: 520px; background: radial-gradient(circle, rgba(6,182,212,0.20), transparent 70%); top: -140px; right: -120px; }
+    .orb2 { width: 460px; height: 460px; background: radial-gradient(circle, rgba(0,217,138,0.12), transparent 70%); bottom: 8%; left: -160px; animation-delay: -7s; }
+    @keyframes breathe { 0%,100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.08); } }
+    .wrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+    nav { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 18px 28px; background: rgba(2,2,8,0.82); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+    .brand { font-family: var(--f-brand); font-size: 14px; font-weight: 800; letter-spacing: 0.02em; }
+    .brand span { color: var(--cyan); }
+    .nav-links a { font-family: var(--f-brand); font-weight: 700; font-size: 11px; letter-spacing: 0.08em; color: var(--t3); text-decoration: none; margin-left: 22px; text-transform: uppercase; transition: color .2s; }
+    .nav-links a:hover { color: var(--t1); }
+    .eyebrow { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--cyan); text-transform: uppercase; display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+    .eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--cyan); display: inline-block; }
+    section { padding: 84px 0; border-bottom: 1px solid var(--border); }
+    .hero { padding: 120px 0 96px; }
+    h1 { font-family: var(--f-brand); font-weight: 800; font-size: clamp(34px, 5vw, 66px); line-height: 1.04; letter-spacing: -0.02em; margin-bottom: 26px; }
+    h1 .hl { color: var(--cyan); }
+    .lede { font-size: clamp(16px, 2vw, 20px); color: var(--t2); font-weight: 300; max-width: 720px; }
+    h2 { font-family: var(--f-brand); font-weight: 700; font-size: clamp(24px, 3vw, 36px); letter-spacing: -0.01em; margin-bottom: 14px; }
+    .sub { color: var(--t3); font-size: 15px; max-width: 680px; margin-bottom: 40px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+    .card { background: rgba(5,7,22,0.72); border: 1px solid var(--border); border-radius: 16px; padding: 30px; transition: border-color .25s, transform .25s; }
+    .card:hover { border-color: var(--borderm); transform: translateY(-2px); }
+    .tag { font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; border: 1px solid var(--borderm); color: var(--t2); display: inline-block; margin-bottom: 18px; }
+    .tag.green { color: var(--green); border-color: rgba(0,217,138,0.35); }
+    .tag.cyan { color: var(--cyan); border-color: rgba(6,182,212,0.35); }
+    .card h3 { font-family: var(--f-brand); font-weight: 700; font-size: 21px; margin-bottom: 6px; }
+    .card .role { color: var(--t3); font-size: 13px; margin-bottom: 22px; }
+    .stat-row { display: flex; gap: 26px; flex-wrap: wrap; margin-bottom: 20px; }
+    .stat .n { font-family: var(--f-mono); font-size: 26px; font-weight: 500; color: var(--t1); letter-spacing: -0.01em; }
+    .stat .n.g { color: var(--green); }
+    .stat .l { font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.12em; color: var(--t3); text-transform: uppercase; margin-top: 4px; }
+    .card p { font-size: 14px; color: var(--t2); }
+    .note { font-size: 12px; color: var(--t3); margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); font-family: var(--f-mono); letter-spacing: 0.02em; }
+    .subgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+    @media (max-width: 800px) { .subgrid { grid-template-columns: 1fr; } }
+    .scard { background: rgba(5,7,22,0.55); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+    .scard h4 { font-family: var(--f-brand); font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+    .scard p { font-size: 13px; color: var(--t3); }
+    .scard .big { font-family: var(--f-mono); font-size: 20px; color: var(--cyan); display: block; margin-bottom: 10px; }
+    .ledger { background: rgba(5,7,22,0.72); border: 1px solid var(--border); border-radius: 16px; padding: 34px; }
+    .ledger-stats { display: flex; gap: 40px; flex-wrap: wrap; margin-bottom: 28px; }
+    .ledger-stats .n { font-family: var(--f-mono); font-size: 34px; color: var(--t1); }
+    .ledger-stats .n.r { color: var(--red); }
+    .ledger-stats .l { font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.12em; color: var(--t3); text-transform: uppercase; margin-top: 4px; }
+    .kill { border-left: 2px solid var(--red); padding: 12px 0 12px 18px; margin-bottom: 14px; }
+    .kill .h { font-family: var(--f-mono); font-size: 12px; color: var(--t2); letter-spacing: 0.02em; }
+    .kill .b { font-size: 13px; color: var(--t3); margin-top: 4px; }
+    .statusgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 800px) { .statusgrid { grid-template-columns: 1fr; } }
+    .srow { display: flex; align-items: baseline; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .srow .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+    .srow .dot.v { background: var(--green); }
+    .srow .dot.a { background: var(--amber); }
+    .srow .k { font-family: var(--f-mono); font-size: 13px; color: var(--t2); }
+    .srow .d { font-size: 13px; color: var(--t3); }
+    .foot { padding: 46px 0 70px; }
+    .foot p { font-size: 11px; color: var(--t4); font-family: var(--f-mono); letter-spacing: 0.02em; max-width: 780px; }
+    .pill-legend { font-family: var(--f-mono); font-size: 10px; color: var(--t3); letter-spacing: 0.08em; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <nav>
+    <div class="brand">COMET<span>CLOUD</span></div>
+    <div class="nav-links">
+      <a href="#edges">Edges</a>
+      <a href="#substrate">Substrate</a>
+      <a href="#discipline">Discipline</a>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="eyebrow">Proof · what we can defend today</div>
+      <h1>Two validated, <span class="hl">uncorrelated</span> edges.<br/>A substrate agents can query.<br/>A process that <span class="hl">kills its own ideas.</span></h1>
+      <p class="lede">We don't lead with a story. We lead with what survived a deliberately hostile research process — and we show you what it killed on the way, because that is what makes the survivors worth trusting.</p>
+    </section>
+
+    <!-- EDGES -->
+    <section id="edges">
+      <div class="eyebrow">The edges</div>
+      <h2>Two books that don't move together</h2>
+      <p class="sub">The hard part of a real edge isn't a high number — it's finding a return stream uncorrelated to what you already hold. These two are. That orthogonality is the diversification, and it is measured, not assumed.</p>
+      <div class="grid2">
+        <div class="card">
+          <span class="tag green">Walk-forward validated · paper NAV live</span>
+          <h3>Positioning sleeve</h3>
+          <div class="role">Market-neutral · cross-sectional · fades leverage crowding</div>
+          <div class="stat-row">
+            <div class="stat"><div class="n g">1.41</div><div class="l">walk-forward Sharpe</div></div>
+            <div class="stat"><div class="n g">+0.002</div><div class="l">corr to directional book</div></div>
+            <div class="stat"><div class="n">47bps</div><div class="l">cost break-even</div></div>
+          </div>
+          <p>Long the under-owned, short the crowded — net-zero market exposure. Survives walk-forward (4 of 5 folds positive) and a 10bps round-trip cost model at a weekly rebalance. Its ~0 correlation to our directional book is the point: it carries when the other book doesn't.</p>
+          <div class="note">Backtest + walk-forward on real perpetual-funding data; a live paper track record is now accruing. No live-capital returns claimed.</div>
+        </div>
+        <div class="card">
+          <span class="tag cyan">DSR-certified · walk-forward robust</span>
+          <h3>Directional swing lineage</h3>
+          <div class="role">Multi-timeframe regime + trend, catastrophe-stopped</div>
+          <div class="stat-row">
+            <div class="stat"><div class="n g">0.999</div><div class="l">Deflated Sharpe Ratio</div></div>
+            <div class="stat"><div class="n">4 / 4</div><div class="l">walk-forward windows robust</div></div>
+            <div class="stat"><div class="n">2–3%</div><div class="l">hold-out max drawdown</div></div>
+          </div>
+          <p>Survives a Deflated Sharpe Ratio correction for the number of variants we searched — i.e. not a lucky pick from many trials. Robust across bull, chop, and bear hold-out windows. In-sample Sharpe is high and, honestly, deflates live; the claim we stand behind is the multiple-testing survival and the drawdown control.</p>
+          <div class="note">DSR corrects for selection bias (Bailey &amp; López de Prado). We headline the survival, not the raw in-sample Sharpe.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUBSTRATE -->
+    <section id="substrate">
+      <div class="eyebrow">The substrate</div>
+      <h2>Intelligence an agent can act on</h2>
+      <p class="sub">Under the books sits the product: a scored, cross-asset view of quality and positioning that a human or an autonomous agent can query directly — with provenance, so a decision can be defended.</p>
+      <div class="subgrid">
+        <div class="scard">
+          <span class="big">84 assets</span>
+          <h4>Quality score (CIS)</h4>
+          <p>Five-pillar cross-asset score. Quality graded on its own merit; market regime carried as a separate exposure axis, not baked into the grade.</p>
+        </div>
+        <div class="scard">
+          <span class="big">Edge map</span>
+          <h4>Outcome, per gradient</h4>
+          <p>Expected 30-day benchmark-relative outcome for each signal tier across the risk gradient — every cell a real result with its own sample size, shrunk against noise.</p>
+        </div>
+        <div class="scard">
+          <span class="big">RWA Funding-Cap</span>
+          <h4>A lane no one else sits in</h4>
+          <p>Tokenized real-world-asset perpetuals trade 24/7 while their underlying is closed — a structural funding dislocation neither crypto nor equity desks are positioned for. Monitored live.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- DISCIPLINE -->
+    <section id="discipline">
+      <div class="eyebrow">The trust layer</div>
+      <h2>We keep a graveyard on purpose</h2>
+      <p class="sub">Most research shows you its winners. We show you the losers too — because a claim that survived a process designed to kill it is the only kind worth capital. Every falsified idea is recorded, with the number that killed it and the lesson it left.</p>
+      <div class="ledger">
+        <div class="ledger-stats">
+          <div><div class="n">18</div><div class="l">hypotheses stress-tested</div></div>
+          <div><div class="n r">9</div><div class="l">falsified before capital</div></div>
+          <div><div class="n r">3</div><div class="l">nulled (no edge)</div></div>
+          <div><div class="n g">2</div><div class="l">survived as tradeable</div></div>
+        </div>
+        <div class="kill">
+          <div class="h">Our own "edge map" direction signal → FALSIFIED</div>
+          <div class="b">A clever in-sample grid that looked predictive lost out-of-sample (p=0.87) while a humble quality filter made money. Cleverness overfit; we cut it.</div>
+        </div>
+        <div class="kill">
+          <div class="h">"Trade the token-unlock supply shock" → REFUTED (with a control)</div>
+          <div class="b">Raw, it looked bearish. Controlled against each token's own baseline, the effect reversed (p=0.02) and the biggest unlocks rallied — the shock is priced in before the date. A scheduled cause is not an edge. We kept it only as a risk filter.</div>
+        </div>
+        <p style="font-size:14px;color:var(--t2);margin-top:8px;">The most valuable thing we own is a well-kept graveyard. Nine of ten ideas here died before a dollar was at risk. That is the process working — and it is the reason to trust the two that lived.</p>
+      </div>
+    </section>
+
+    <!-- STATUS -->
+    <section id="status">
+      <div class="eyebrow">Honest status</div>
+      <h2>What is proven, what is accruing</h2>
+      <p class="sub">We separate the two on purpose. Backtest-and-walk-forward evidence exists today; a live-capital track record does not yet, and we will not present one until it does.</p>
+      <div class="statusgrid">
+        <div>
+          <div class="srow"><span class="dot v"></span><span class="k">Positioning edge</span><span class="d">walk-forward + cost validated</span></div>
+          <div class="srow"><span class="dot v"></span><span class="k">Swing lineage</span><span class="d">DSR-certified, walk-forward robust</span></div>
+          <div class="srow"><span class="dot v"></span><span class="k">Intelligence substrate</span><span class="d">live, agent-queryable</span></div>
+        </div>
+        <div>
+          <div class="srow"><span class="dot a"></span><span class="k">Live paper track record</span><span class="d">accruing — weeks, not yet shown</span></div>
+          <div class="srow"><span class="dot a"></span><span class="k">RWA Funding-Cap strategy</span><span class="d">phenomenon characterized, not yet sized</span></div>
+          <div class="srow"><span class="dot v"></span><span class="k">Fund structure</span><span class="d">Hong Kong regulated · zero management fee · performance-only</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOT -->
+    <section class="foot" style="border-bottom:none;">
+      <p>CometCloud AI · Hong Kong SAR. This page describes an internal research and intelligence process and is provided for information only. It is not investment advice, an offer, or a solicitation, and past or simulated performance does not indicate future results. All performance figures are backtested or paper-simulated unless explicitly stated as live; simulated results have inherent limitations. Signal language is positioning-relative only and is not a recommendation to buy or sell any asset.</p>
+    </section>
+  </div>
+</body>
+</html>

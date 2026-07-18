@@ -8,6 +8,7 @@
  * Fetches /api/v1/cis/universe once, passes data down to both tabs.
  * AuthContext provided here so MyPortfolio's useAuth works.
  */
+import "./index.css";   // shared design foundation — fonts + navy field (single source of truth)
 import { createRoot } from "react-dom/client";
 import { useState, useEffect, Suspense, lazy } from "react";
 import { AuthProvider } from "./context/AuthContext.jsx";
@@ -212,7 +213,7 @@ function PortfolioPage() {
           50%       { opacity: 1;   transform: scale(1.05); }
         }
         body {
-          background: ${T.deep};
+          /* background comes from the shared foundation (index.css) — do not override */
           margin: 0; padding: 0;
           -webkit-font-smoothing: antialiased;
         }

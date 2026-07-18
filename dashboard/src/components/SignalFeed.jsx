@@ -15,6 +15,11 @@ const TIER = {
   calls:       { color: T.t3,     label: "OUR TRACKED CALLS" },
 };
 
+// Defensive: strip markdown emphasis so **x** / *x* never render as literal asterisks.
+const clean = (s) => (typeof s === "string"
+  ? s.replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*(.+?)\*/g, "$1")
+  : s);
+
 function dirColor(d = "") {
   const s = d.toUpperCase();
   if (s.includes("OUTPERFORM") && !s.includes("UNDER")) return T.green;
@@ -66,7 +71,7 @@ const Layers = ({ l }) => {
 const Item = ({ it, tierColor }) => (
   <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(37,99,235,0.08)", borderLeft: `2px solid ${tierColor}` }}>
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 5, flexWrap: "wrap" }}>
-      <span style={{ fontFamily: FONTS.brand || FONTS.body, fontWeight: 700, fontSize: 13.5, color: T.t1 }}>{it.headline}</span>
+      <span style={{ fontFamily: FONTS.brand || FONTS.body, fontWeight: 700, fontSize: 13.5, color: T.t1 }}>{clean(it.headline)}</span>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {it.direction && <DirBadge d={it.direction} />}
         {typeof it.score === "number" && (
@@ -75,7 +80,7 @@ const Item = ({ it, tierColor }) => (
       </div>
     </div>
     {it.narrative && (
-      <div style={{ fontFamily: FONTS.body, fontSize: 12.5, lineHeight: 1.6, color: T.t2, opacity: 0.92 }}>{it.narrative}</div>
+      <div style={{ fontFamily: FONTS.body, fontSize: 12.5, lineHeight: 1.6, color: T.t2, opacity: 0.92 }}>{clean(it.narrative)}</div>
     )}
     <Layers l={it.layers} />
     {(it.source || it.symbols) && (
@@ -137,7 +142,7 @@ export default function SignalFeed({ onSignalClick, refreshTrigger = 0 }) {
           )}
         </div>
         {data?.headline && (
-          <div style={{ fontFamily: FONTS.body, fontSize: 13, color: T.t2, marginTop: 8, lineHeight: 1.5 }}>{data.headline}</div>
+          <div style={{ fontFamily: FONTS.body, fontSize: 13, color: T.t2, marginTop: 8, lineHeight: 1.5 }}>{clean(data.headline)}</div>
         )}
         {acc && acc.resolved_30d_directional_pct != null && (
           <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3, marginTop: 8 }}>

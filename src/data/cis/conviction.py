@@ -124,7 +124,7 @@ def compute_conviction(asset: dict, band_tiers: dict, current_band: str) -> dict
     if season in ("momentum", "dry_up", "spring_test", "early_markup", "capitulation"):
         drivers.append(f"{season} season — accumulation/opportunity window")
     elif season == "stale":
-        drivers.append("stale — post-出圈 window closed")
+        drivers.append("stale — post-breakout window closed")
     if liq_tier in ("illiquid", "thin"):
         drivers.append(f"{liq_tier} — cannot size; conviction discounted")
     if fs >= 0.3:

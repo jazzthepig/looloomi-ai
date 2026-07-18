@@ -1,9 +1,9 @@
 /**
- * 顶格 Monitor — tokenized-RWA perp funding extremes.
+ * Funding-Cap Monitor — tokenized-RWA perp funding extremes.
  * Data: GET /api/v1/signals/dingge-board (src/data/signals/dingge_rwa.py).
  * Structural signal: RWA perps (MSTR/NVDA/gold/silver/...) trade 24/7 on-chain vs a
  * CLOSED underlying → weekend/after-hours funding pins the cap → old trend exhausts →
- * new trend forms, direction set by 量能 (volume). Candidate, not auto-traded.
+ * new trend forms, direction set by volume. Candidate, not auto-traded.
  */
 import { useState, useEffect } from "react";
 import { T, FONTS as F } from "../tokens";
@@ -36,7 +36,7 @@ export default function DinggeBoard() {
     <div style={{ marginTop: 28 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <div style={{ width: 2, height: 16, background: T.amber || "#f59e0b", borderRadius: 1 }} />
-        <span style={{ fontFamily: F.display, fontSize: 16, fontWeight: 800, color: T.t1 }}>顶格 Monitor</span>
+        <span style={{ fontFamily: F.display, fontSize: 16, fontWeight: 800, color: T.t1 }}>Funding-Cap Monitor</span>
         <span style={{ fontFamily: F.mono, fontSize: 8, fontWeight: 700, padding: "3px 8px", borderRadius: 4, background: "rgba(245,158,11,0.10)", color: T.amber || "#f59e0b", letterSpacing: ".1em" }}>
           RWA FUNDING EXTREMES
         </span>
@@ -49,13 +49,13 @@ export default function DinggeBoard() {
       <p style={{ fontFamily: F.body, fontSize: 12, color: T.t2, lineHeight: 1.6, maxWidth: 640, margin: "0 0 14px", paddingLeft: 12 }}>
         Tokenized stock/commodity perps trade 24/7 on-chain while their underlying is closed — so a
         weekend move pins funding at the exchange cap. The old trend exhausts; a new one forms, its
-        direction set by 量能 (volume). Watch, don't auto-trade.
+        direction set by volume. Watch, don't auto-trade.
       </p>
 
       {!data ? (
         <div style={{ fontFamily: F.mono, fontSize: 10, color: T.muted, paddingLeft: 12 }}>Loading…</div>
       ) : shown.length === 0 ? (
-        <div style={{ fontFamily: F.mono, fontSize: 10, color: T.muted, paddingLeft: 12 }}>No 顶格 events in the recent window.</div>
+        <div style={{ fontFamily: F.mono, fontSize: 10, color: T.muted, paddingLeft: 12 }}>No funding-cap events in the recent window.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {shown.map(b => (
@@ -81,7 +81,7 @@ export default function DinggeBoard() {
               )}
               {b.volume_ratio != null && (
                 <span style={{ fontFamily: F.mono, fontSize: 10, color: b.volume_ratio > 1.1 ? "#10b981" : b.volume_ratio < 0.9 ? "#ef4444" : T.muted }}>
-                  量能 {b.volume_ratio}×
+                  vol {b.volume_ratio}×
                 </span>
               )}
               <span style={{

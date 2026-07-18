@@ -122,7 +122,7 @@ def monitor_symbol(client, sym: str) -> DinggeState | None:
         volpost = np.mean([K[x][1] for x in kd[-_VOL_WINDOW:]])
         vol_ratio = round(volpost / volpre, 2) if volpre > 0 else None
     lean = "neutral"
-    note = "no recent 顶格"
+    note = "no recent funding-cap event"
     if last_date and days_since is not None and days_since <= 45:
         vol_up = vol_ratio is not None and vol_ratio > 1.1
         vol_dead = vol_ratio is not None and vol_ratio < 0.9
@@ -131,11 +131,11 @@ def monitor_symbol(client, sym: str) -> DinggeState | None:
             lean = "up_bias" if not vol_dead else "neutral"      # squeeze; dead volume dampens
         else:                   # crowded longs
             lean = "up_bias" if vol_up else ("down_bias" if vol_dead else "neutral")
-        note = (f"顶格 {days_since}d ago ({side_str}) — new trend forming; "
-                f"量能 {'expanding' if vol_up else 'dead' if vol_dead else 'neutral'} → {lean}")
+        note = (f"funding cap {days_since}d ago ({side_str}) — new trend forming; "
+                f"volume {'expanding' if vol_up else 'dead' if vol_dead else 'neutral'} → {lean}")
     elif at_cap:
         s = "shorts" if cap_now[-1] < 0 else "longs"
-        note = f"AT 顶格 now (crowded {s}) — old trend exhausting; wait for reset, then read 量能"
+        note = f"AT funding cap now (crowded {s}) — old trend exhausting; wait for reset, then read volume"
     return DinggeState(sym, at_cap, side_str, round(peak_abs_ann, 0), days_since, vol_ratio, lean, note)
 
 

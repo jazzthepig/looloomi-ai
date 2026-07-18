@@ -530,7 +530,7 @@ function DesktopApp() {
         style={{ flex: 1, overflowY: "auto", height: "100vh", position: "relative", zIndex: 1 }}
       >
         {/* Diagnose — the front door (iPod / Fusion #1). Your book, read upstream of price,
-            with the 出圈 fragility line. Everything else is depth behind this. */}
+            with the out-of-circle fragility line. Everything else is depth behind this. */}
         <div style={{ display: activeSection === "diagnose" ? "block" : "none" }}>
           {visited.has("diagnose") && (
             <section style={contentPad}>

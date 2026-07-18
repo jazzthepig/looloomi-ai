@@ -40,7 +40,7 @@ const REFRESH_INTERVAL = 30000;
 
 /* ─── Signal Generation based on live CIS scores ──────────────────────── */
 // Compliance rule: ONLY use these 5 positioning signals.
-// NEVER: Buy, Sell, Hold, Accumulate, Avoid, Reduce, Overweight, 买入, 卖出, etc.
+// NEVER: Buy, Sell, Hold, Accumulate, Avoid, Reduce, Overweight, etc.
 const SIGNAL_MAP = {
   "STRONG OUTPERFORM": { color: "#00D98A" },
   "OUTPERFORM":        { color: "#4472FF" },

@@ -3,7 +3,7 @@
   "source": "CometCloudFreqtrade · 14mo backtest (2025-01 ~ 2026-03)",
   "period": "14 months",
   "strategy": "CometCloudMultiFactorV2",
-  "description": "逆人性交易 — MVRV < 0.9 + 价格位置 < 10% 入场",
+  "description": "Contrarian (fade-the-crowd) — entry on MVRV < 0.9 + price position < 10%",
 
   "spot": {
     "summary": { "trades": 91, "win_rate": 77, "avg_return": 1.67, "median_return": 3.48 },
@@ -25,7 +25,7 @@
 
   "smc_enhanced": {
     "summary": { "trades": 73, "win_rate": 75, "avg_return": 2.58, "median_return": 4.67 },
-    "description": "MVRV < 0.9 + RSI < 30 + 价格位置 < 10%",
+    "description": "MVRV < 0.9 + RSI < 30 + price position < 10%",
     "vs_original": { "avg_return_improvement": "+35%", "median_improvement": "+29%" }
   },
 

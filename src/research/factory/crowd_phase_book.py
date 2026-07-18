@@ -25,12 +25,16 @@ from __future__ import annotations
 # phase → (mean_reversion_weight, trend_weight, base_gross, net_bias, note). Weights are the
 # split WITHIN the risk book; base_gross is the exposure scale (1.0 = neutral). Caps stay humble
 # until R24 resolves — we do not lever an unvalidated phase call.
+# Recalibrated to R24 backtest evidence: markup edge VALIDATED (press), distribution bearish
+# VALIDATED (defend), capitulation contrarian REFUTED at 30d (momentum > reversal in crypto) — so
+# capitulation is NO LONGER a broad long tilt; the mean-reversion sleeve leads but sized modestly on
+# its OWN selective deep-extreme entries, net-neutral.
 _POLICY = {
-    "capitulation": (0.75, 0.25, 0.85, "long",   "Fear extreme — mean-reversion sleeve leads (contrarian window); trend stays defensive."),
+    "capitulation": (0.65, 0.35, 0.60, "neutral","Fear extreme — NOT a broad 30d long (R24: momentum beats reversal in crypto). Mean-reversion sleeve leads on its own selective deep-extreme entries, sized modestly; no directional tilt."),
     "accumulation": (0.55, 0.45, 0.55, "neutral","Basing — balanced, low gross; accumulate quality without urgency."),
-    "markup":       (0.30, 0.70, 1.05, "long",   "Trend confirmed — trend sleeve leads; press confirmed strength, mean-reversion trails."),
-    "euphoria":     (0.35, 0.65, 0.50, "reduce", "Late-cycle — trim the trend sleeve into strength; crowded longs are flush fuel."),
-    "distribution": (0.45, 0.55, 0.40, "reduce", "Topping — lowest gross, hedge; leadership narrowing."),
+    "markup":       (0.30, 0.70, 1.05, "long",   "Trend confirmed — R24 VALIDATED (+3.95% vs base): press the trend sleeve, mean-reversion trails."),
+    "euphoria":     (0.35, 0.65, 0.50, "reduce", "Late-cycle — trim the trend sleeve into strength; crowded longs are flush fuel (untested live; stay defensive)."),
+    "distribution": (0.45, 0.55, 0.38, "reduce", "Topping — R24 VALIDATED bearish (−3.72% vs base, negative median): lowest gross, hedge/defend."),
 }
 _GROSS_CAP = 1.10   # humble hard cap until R24 validates the phase edge
 

@@ -1,6 +1,6 @@
 /**
  * MobileApp.jsx — CometCloud Mobile Experience
- * 化繁为简: Three questions, answered immediately.
+ * Simplify: Three questions, answered immediately.
  * 1. Is the market safe? (Macro regime)
  * 2. What's worth watching? (Top CIS signals)
  * 3. What's moving? (Prices + signal feed)
@@ -785,11 +785,11 @@ function MobileSignals({ signals, loading }) {
                 {/* The story: headline + narrative (why it matters), not just a score */}
                 {sig.headline && (
                   <div style={{ fontFamily: FONTS.brand || FONTS.body, fontSize: 12.5, fontWeight: 600,
-                    color: T.t1, marginBottom: 4, lineHeight: 1.4 }}>{sig.headline}</div>
+                    color: T.t1, marginBottom: 4, lineHeight: 1.4 }}>{String(sig.headline).replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*(.+?)\*/g, "$1")}</div>
                 )}
                 {sig.narrative && (
                   <div style={{ fontFamily: FONTS.body, fontSize: 12, lineHeight: 1.55, color: T.t2,
-                    opacity: 0.9, marginBottom: 8 }}>{sig.narrative}</div>
+                    opacity: 0.9, marginBottom: 8 }}>{String(sig.narrative).replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*(.+?)\*/g, "$1")}</div>
                 )}
                 {/* Meta: category · regime · horizon · outcome */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
