@@ -73,6 +73,29 @@ prove it with 30-day outcomes; composability is a property of that one thing, ne
 claim to "do everything." Companion: `COMETCLOUD_COSMOLOGY.pdf`. Read `ARCHITECTURE.md`
 when a decision touches what we are, not just what we build.
 
+**Behavioral-edge doctrine lives in `docs/TRADER_TOM_DOCTRINE.md`** (2026-07-17) — Tom
+Hougaard / *Best Loser Wins*. The durable, non-decaying edge is **human crowd behavior**
+(fear/greed recur forever; indicator fits decay), harvested with loss asymmetry ("big when
+right, small when wrong"), add-to-winners-never-losers, and assume-wrong-until-proven. The
+goal of "a high percentage of wins" is achieved at the **book** level via *breadth*
+(IR = IC × √breadth → library beats hero), NOT via a high per-trade hit rate — chasing
+per-trade win-rate is the negative-skew amateur trap. Every recurring setup we keep must
+trace to a behavioral cause and survive DSR/PBO. Read it before building any strategy sleeve.
+The operating objective is **expectancy, not win-rate** (E = Σ p·payoff, right-tail dominated).
+Two-layer book: a **durable fundamental core never sold on short-term volatility** (sell only
+when the *cause* breaks, never on a price wobble) + a **tactical trend-riding overlay whose gross
+scales with regime** — defend in risk-OFF (small, hedged, cut fast), press/double-down in risk-ON
++ confirmed long-term trend (add to *confirmed* winners, never average into hope). Master skill =
+judgment of the major trend. **Asymmetry law: if you can't win big when beta is positive, you
+can't win bigger when the tape is tight and thin** — capturing the up-trend aggressively is a
+prerequisite, and our current edge-map gross (~1.10) is too timid for it.
+
+**The bar.** We do not ship mediocre, generative-filler work, and we are not building "another
+autonomous money-losing engine." Every claim is guilty until proven with out-of-sample
+outcomes (refutation ledger R1–Rn); every sleeve must have a *cause*, a base rate, and OOS
+survival before it touches the book. If a thing feels dead, generic, or unfalsifiable, it does
+not ship. Honesty over optimism — surface what's broken, never dress up a curve-fit as an edge.
+
 ## Skills (`.claude/skills/`)
 
 Domain knowledge is structured as skills for progressive disclosure. Load the

@@ -241,8 +241,8 @@ def estimate_inline(a: dict, attention: dict | None = None,
         "dry_up":       "dry-up accumulation — smart money buying in silence, crowd absent (lowest fragility)",
         "spring_test":  "spring/test — false breakdown, supply exhausting (risk depressed)",
         "early_markup": "early markup — first demand back, crowd not yet FOMO (risk depressed)",
-        "momentum":     f"出圈 momentum season (day {days_since_chuquan}) — abundant liquidity, opportunity window (risk depressed)",
-        "stale":        "post-出圈 stale — momentum window closed, marginal buyer exhausted (fragility realized)",
+        "momentum":     f"breakout momentum season (day {days_since_chuquan}) — abundant liquidity, opportunity window (risk depressed)",
+        "stale":        "post-breakout stale — momentum window closed, marginal buyer exhausted (fragility realized)",
     }
     if season in _SEASON_NOTE:
         out["drivers"].insert(0, _SEASON_NOTE[season])

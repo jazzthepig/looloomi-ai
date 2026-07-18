@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { T, FONTS } from "../tokens";
 
 /* Risk Meter — the judgment→behavior link made visible. Reads /api/v1/portfolio/risk-meter:
-   the book's exposure-weighted out-of-circle (出圈) fragility as a 0..1 needle, plus the
+   the book's exposure-weighted out-of-circle fragility as a 0..1 needle, plus the
    holdings dragging it and how much each is trimmed below its raw CIS-grade weight.
    The point: two A-grade names are NOT equally safe — the crowded, out-of-circle one is
    trimmed. beta+ from being closer to the cause, not the reflection (CIS). */
@@ -71,7 +71,7 @@ export default function RiskMeter() {
         </div>
       </div>
       <div style={{ font: `500 10.5px ${FONTS.body}`, color: T.t3, marginBottom: 12 }}>
-        Book’s out-of-circle (出圈) fragility — crowded consensus, trimmed.
+        Book’s out-of-circle fragility — crowded consensus, trimmed.
       </div>
 
       <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>

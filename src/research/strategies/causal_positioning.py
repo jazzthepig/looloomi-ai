@@ -104,8 +104,24 @@ def load_binance_panel(assets: list[str], start=(2024, 1, 1)):
     start_ms = int(dt.datetime(*start).timestamp() * 1000)
 
     def klines(sym):
-        r = c.get(f"{base}/fapi/v1/klines", params={"symbol": sym, "interval": "1d", "limit": 1000})
-        return {int(k[0]) // 86400000: float(k[4]) for k in r.json()}
+        # Paginate — single call returns at most 1000 bars; for >2.7y we need multiple.
+        # Funding has 8h cadence (3/day) so 500 records covers ~166 days. 6 calls × 500 = 3000 records
+        # = ~1000 days. Prices are 1d, so we paginate by startTime with 1000-bar chunks.
+        end_ms = int(dt.datetime.utcnow().timestamp() * 1000)
+        cur = start_ms
+        out = {}
+        for _ in range(15):  # safety cap; 15 × 1000d = 41 years
+            r = c.get(f"{base}/fapi/v1/klines",
+                      params={"symbol": sym, "interval": "1d", "startTime": cur, "limit": 1000})
+            j = r.json()
+            if not j:
+                break
+            for k in j:
+                out[int(k[0]) // 86400000] = float(k[4])
+            cur = int(j[-1][0]) + 86_400_000  # +1 day
+            if len(j) < 1000 or cur > end_ms:
+                break
+        return out
 
     def funding(sym):
         out, cur = {}, start_ms

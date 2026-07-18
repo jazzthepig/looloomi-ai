@@ -8,6 +8,7 @@ import CISWidget from "./CISWidget";
 import MacroBrief from "./MacroBrief";
 import EconomicIndicators from "./EconomicIndicators";
 import DinggeBoard from "./DinggeBoard";
+import CrowdClock from "./CrowdClock";
 import { T, FONTS } from "../tokens";
 
 // Lazy — recharts + DeFiLlama logic (~80KB); only used on Protocol tab
@@ -495,6 +496,9 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 </div>
               </div>
             )}
+
+            {/* Crowd Clock — behavioral-phase primitive (Trader Tom's durable edge) */}
+            {(view === "all" || view === "macro") && <CrowdClock />}
 
             {/* Macro Brief — AI-generated market analysis */}
             {(view === "all" || view === "macro") && (

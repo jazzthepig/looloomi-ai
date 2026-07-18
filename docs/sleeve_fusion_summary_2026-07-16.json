@@ -1,0 +1,679 @@
+{
+  "holdout_swingo_a": {
+    "pnl_pct": 6.51,
+    "dd_upper_pct": 1.3679999999999999,
+    "dd_lower_pct": 0.8892,
+    "dd_mid_pct": 1.1286,
+    "members": {
+      "V7": 0.5,
+      "V10c": 0.3,
+      "V12b": 0.2
+    }
+  },
+  "holdout_swingo_b": {
+    "pnl_pct": 7.5,
+    "dd_upper_pct": 1.5,
+    "dd_lower_pct": 0.9750000000000001,
+    "dd_mid_pct": 1.2375,
+    "members": {
+      "V7": 0.5,
+      "V12b": 0.5
+    }
+  },
+  "holdout_swingo_c": {
+    "pnl_pct": 6.09,
+    "dd_upper_pct": 1.3075,
+    "dd_lower_pct": 0.849875,
+    "dd_mid_pct": 1.0786875,
+    "members": {
+      "V7": 0.4,
+      "V10c": 0.25,
+      "V12b": 0.2,
+      "V14a": 0.15
+    }
+  },
+  "forward_swingo_a": {
+    "pnl_pct": 8.02,
+    "dd_upper_pct": 0.726,
+    "dd_lower_pct": 0.4719,
+    "dd_mid_pct": 0.59895,
+    "members": {
+      "V7": 0.5,
+      "V10c": 0.3,
+      "V12b": 0.2
+    }
+  },
+  "forward_swingo_b": {
+    "pnl_pct": 9.25,
+    "dd_upper_pct": 0.825,
+    "dd_lower_pct": 0.53625,
+    "dd_mid_pct": 0.680625,
+    "members": {
+      "V7": 0.5,
+      "V12b": 0.5
+    }
+  },
+  "forward_swingo_c": {
+    "pnl_pct": 7.59,
+    "dd_upper_pct": 0.6915,
+    "dd_lower_pct": 0.449475,
+    "dd_mid_pct": 0.5704875,
+    "members": {
+      "V7": 0.4,
+      "V10c": 0.25,
+      "V12b": 0.2,
+      "V14a": 0.15
+    }
+  },
+  "nautilus_holdout": {
+    "pnl_usd": 190.42,
+    "pnl_pct": 1.9042,
+    "n_positions": 4,
+    "per_instr": [
+      {
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "n_orders": 9,
+        "n_positions": 3,
+        "n_long_entries": 1,
+        "n_short_entries": 2,
+        "stats_pnls_USD": {
+          "PnL (total)": 183.64,
+          "PnL% (total)": 1.8363999999999943,
+          "Max Winner": 149.84,
+          "Avg Winner": 139.945,
+          "Min Winner": 130.05,
+          "Min Loser": -96.25,
+          "Avg Loser": -96.25,
+          "Max Loser": -96.25,
+          "Expectancy": 61.21333333333333,
+          "Win Rate": 0.6666666666666666
+        },
+        "positions": [
+          {
+            "id": "BINANCE-1-001",
+            "side": "1",
+            "realized_pnl": 130.05,
+            "realized_return": 0.030000501166350713,
+            "ts_opened": 1769673600000000000,
+            "ts_closed": 1769688000000000000
+          },
+          {
+            "id": "BINANCE-1-002",
+            "side": "1",
+            "realized_pnl": -96.25,
+            "realized_return": -0.027910050967201755,
+            "ts_opened": 1772827200000000000,
+            "ts_closed": 1773100800000000000
+          },
+          {
+            "id": "BINANCE-1-003",
+            "side": "1",
+            "realized_pnl": 149.84,
+            "realized_return": 0.043571932959605715,
+            "ts_opened": 1773100800000000000,
+            "ts_closed": 1773388800000000000
+          }
+        ],
+        "elapsed_sec": 0.006,
+        "elapsed_ns": 6307200,
+        "iterations": 439,
+        "summary": {
+          "iterations": "439",
+          "total_events": "24",
+          "orders.total": "9",
+          "orders.open": "0",
+          "orders.closed": "9",
+          "orders.emulated": "0",
+          "orders.inflight": "0",
+          "positions.total": "3",
+          "positions.open": "0",
+          "positions.closed": "3",
+          "positions.snapshots": "0",
+          "positions.total_with_snapshots": "3",
+          "venues.total": "1",
+          "account.BINANCE.id": "BINANCE-001",
+          "account.BINANCE.type": "MARGIN",
+          "account.BINANCE.base_currency": "USD",
+          "account.BINANCE.event_count": "16",
+          "account.BINANCE.balance.USD.total": "10183.64 USD",
+          "account.BINANCE.balance.USD.free": "10183.64 USD",
+          "account.BINANCE.balance.USD.locked": "0.00 USD"
+        },
+        "skip_summary": {
+          "skipped_adx": 6,
+          "skipped_cis": 9,
+          "skipped_already_in_pos": 0,
+          "entered_long": 1,
+          "entered_short": 2,
+          "open_pos_count_final": 3,
+          "current_regime_final": "Risk-Off",
+          "cis_history_days": 431
+        },
+        "wall_sec": 0.13
+      },
+      {
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "n_orders": 3,
+        "n_positions": 1,
+        "n_long_entries": 0,
+        "n_short_entries": 1,
+        "stats_pnls_USD": {
+          "PnL (total)": 6.78,
+          "PnL% (total)": 0.06780000000000655,
+          "Max Winner": 6.78,
+          "Avg Winner": 6.78,
+          "Min Winner": 6.78,
+          "Min Loser": NaN,
+          "Avg Loser": NaN,
+          "Max Loser": NaN,
+          "Expectancy": 6.78,
+          "Win Rate": 1.0
+        },
+        "positions": [
+          {
+            "id": "BINANCE-1-001",
+            "side": "1",
+            "realized_pnl": 6.78,
+            "realized_return": 0.048429667156749956,
+            "ts_opened": 1769688000000000000,
+            "ts_closed": 1769731200000000000
+          }
+        ],
+        "elapsed_sec": 0.006,
+        "elapsed_ns": 6307200,
+        "iterations": 439,
+        "summary": {
+          "iterations": "439",
+          "total_events": "8",
+          "orders.total": "3",
+          "orders.open": "0",
+          "orders.closed": "3",
+          "orders.emulated": "0",
+          "orders.inflight": "0",
+          "positions.total": "1",
+          "positions.open": "0",
+          "positions.closed": "1",
+          "positions.snapshots": "0",
+          "positions.total_with_snapshots": "1",
+          "venues.total": "1",
+          "account.BINANCE.id": "BINANCE-001",
+          "account.BINANCE.type": "MARGIN",
+          "account.BINANCE.base_currency": "USD",
+          "account.BINANCE.event_count": "6",
+          "account.BINANCE.balance.USD.total": "10006.78 USD",
+          "account.BINANCE.balance.USD.free": "10006.78 USD",
+          "account.BINANCE.balance.USD.locked": "0.00 USD"
+        },
+        "skip_summary": {
+          "skipped_adx": 8,
+          "skipped_cis": 13,
+          "skipped_already_in_pos": 0,
+          "entered_long": 0,
+          "entered_short": 1,
+          "open_pos_count_final": 1,
+          "current_regime_final": "Risk-Off",
+          "cis_history_days": 431
+        },
+        "wall_sec": 0.06
+      },
+      {
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "n_orders": 0,
+        "n_positions": 0,
+        "n_long_entries": 0,
+        "n_short_entries": 0,
+        "stats_pnls_USD": {
+          "PnL (total)": 0.0,
+          "PnL% (total)": 0.0,
+          "Max Winner": NaN,
+          "Avg Winner": NaN,
+          "Min Winner": NaN,
+          "Min Loser": NaN,
+          "Avg Loser": NaN,
+          "Max Loser": NaN,
+          "Expectancy": NaN,
+          "Win Rate": NaN
+        },
+        "positions": [],
+        "elapsed_sec": 0.006,
+        "elapsed_ns": 6307200,
+        "iterations": 439,
+        "summary": {
+          "iterations": "439",
+          "total_events": "0",
+          "orders.total": "0",
+          "orders.open": "0",
+          "orders.closed": "0",
+          "orders.emulated": "0",
+          "orders.inflight": "0",
+          "positions.total": "0",
+          "positions.open": "0",
+          "positions.closed": "0",
+          "positions.snapshots": "0",
+          "positions.total_with_snapshots": "0",
+          "venues.total": "1",
+          "account.BINANCE.id": "BINANCE-001",
+          "account.BINANCE.type": "MARGIN",
+          "account.BINANCE.base_currency": "USD",
+          "account.BINANCE.event_count": "1",
+          "account.BINANCE.balance.USD.total": "10000.00 USD",
+          "account.BINANCE.balance.USD.free": "10000.00 USD",
+          "account.BINANCE.balance.USD.locked": "0.00 USD"
+        },
+        "skip_summary": {
+          "skipped_adx": 3,
+          "skipped_cis": 13,
+          "skipped_already_in_pos": 0,
+          "entered_long": 0,
+          "entered_short": 0,
+          "open_pos_count_final": 0,
+          "current_regime_final": "Risk-Off",
+          "cis_history_days": 431
+        },
+        "wall_sec": 0.06
+      }
+    ]
+  },
+  "nautilus_forward": {
+    "pnl_usd": -42.76,
+    "pnl_pct": -0.4275999999999999,
+    "n_positions": 28,
+    "per_instr": [
+      {
+        "instrument": "BTCUSDT-PERP.BINANCE",
+        "n_orders": 69,
+        "n_positions": 20,
+        "n_long_entries": 12,
+        "n_short_entries": 17,
+        "stats_pnls_USD": {
+          "PnL (total)": -33.72,
+          "PnL% (total)": -0.33719999999999345,
+          "Max Winner": 134.2,
+          "Avg Winner": 113.77666666666666,
+          "Min Winner": 93.1,
+          "Min Loser": -10.97,
+          "Avg Loser": -51.17,
+          "Max Loser": -90.26,
+          "Expectancy": -1.6859999999999997,
+          "Win Rate": 0.3
+        },
+        "positions": [
+          {
+            "id": "BINANCE-1-001",
+            "side": "1",
+            "realized_pnl": -74.11,
+            "realized_return": -0.02066737481935708,
+            "ts_opened": 1774310400000000000,
+            "ts_closed": 1774526400000000000
+          },
+          {
+            "id": "BINANCE-1-002",
+            "side": "1",
+            "realized_pnl": 134.2,
+            "realized_return": 0.039239850090073344,
+            "ts_opened": 1774526400000000000,
+            "ts_closed": 1774598400000000000
+          },
+          {
+            "id": "BINANCE-1-003",
+            "side": "1",
+            "realized_pnl": -90.26,
+            "realized_return": -0.026098488456437797,
+            "ts_opened": 1774987200000000000,
+            "ts_closed": 1775088000000000000
+          },
+          {
+            "id": "BINANCE-1-004",
+            "side": "1",
+            "realized_pnl": -83.76,
+            "realized_return": -0.0249468877586483,
+            "ts_opened": 1775116800000000000,
+            "ts_closed": 1775419200000000000
+          },
+          {
+            "id": "BINANCE-1-005",
+            "side": "1",
+            "realized_pnl": -72.35,
+            "realized_return": -0.01999994370573872,
+            "ts_opened": 1776009600000000000,
+            "ts_closed": 1776096000000000000
+          },
+          {
+            "id": "BINANCE-1-006",
+            "side": "1",
+            "realized_pnl": 108.91,
+            "realized_return": 0.030112375498483657,
+            "ts_opened": 1776096000000000000,
+            "ts_closed": 1776168000000000000
+          },
+          {
+            "id": "BINANCE-1-007",
+            "side": "1",
+            "realized_pnl": -23.24,
+            "realized_return": -0.0053883399734723355,
+            "ts_opened": 1778342400000000000,
+            "ts_closed": 1778616000000000000
+          },
+          {
+            "id": "BINANCE-1-008",
+            "side": "1",
+            "realized_pnl": -39.26,
+            "realized_return": -0.009397099215769202,
+            "ts_opened": 1778616000000000000,
+            "ts_closed": 1778630400000000000
+          },
+          {
+            "id": "BINANCE-1-009",
+            "side": "1",
+            "realized_pnl": -39.3,
+            "realized_return": -0.009320697242329689,
+            "ts_opened": 1778630400000000000,
+            "ts_closed": 1778659200000000000
+          },
+          {
+            "id": "BINANCE-1-010",
+            "side": "1",
+            "realized_pnl": 119.19,
+            "realized_return": 0.029999962714438444,
+            "ts_opened": 1778659200000000000,
+            "ts_closed": 1778904000000000000
+          },
+          {
+            "id": "BINANCE-1-011",
+            "side": "1",
+            "realized_pnl": -35.83,
+            "realized_return": -0.00884821609789563,
+            "ts_opened": 1779336000000000000,
+            "ts_closed": 1779350400000000000
+          },
+          {
+            "id": "BINANCE-1-012",
+            "side": "1",
+            "realized_pnl": -22.83,
+            "realized_return": -0.005557470832350531,
+            "ts_opened": 1779350400000000000,
+            "ts_closed": 1779393600000000000
+          },
+          {
+            "id": "BINANCE-1-013",
+            "side": "1",
+            "realized_pnl": -10.97,
+            "realized_return": -0.002466933552616428,
+            "ts_opened": 1779393600000000000,
+            "ts_closed": 1779436800000000000
+          },
+          {
+            "id": "BINANCE-1-014",
+            "side": "1",
+            "realized_pnl": 114.64,
+            "realized_return": 0.029999431486353124,
+            "ts_opened": 1779436800000000000,
+            "ts_closed": 1779508800000000000
+          },
+          {
+            "id": "BINANCE-1-015",
+            "side": "1",
+            "realized_pnl": -49.4,
+            "realized_return": -0.012478406006052776,
+            "ts_opened": 1779667200000000000,
+            "ts_closed": 1779811200000000000
+          },
+          {
+            "id": "BINANCE-1-016",
+            "side": "1",
+            "realized_pnl": 112.62,
+            "realized_return": 0.029999355503148206,
+            "ts_opened": 1779811200000000000,
+            "ts_closed": 1779926400000000000
+          },
+          {
+            "id": "BINANCE-1-017",
+            "side": "1",
+            "realized_pnl": -45.3,
+            "realized_return": -0.013760302695492024,
+            "ts_opened": 1782014400000000000,
+            "ts_closed": 1782072000000000000
+          },
+          {
+            "id": "BINANCE-1-018",
+            "side": "1",
+            "realized_pnl": -64.43,
+            "realized_return": -0.019999336357646297,
+            "ts_opened": 1782072000000000000,
+            "ts_closed": 1782086400000000000
+          },
+          {
+            "id": "BINANCE-1-019",
+            "side": "1",
+            "realized_pnl": -65.34,
+            "realized_return": -0.020000654328931198,
+            "ts_opened": 1782100800000000000,
+            "ts_closed": 1782187200000000000
+          },
+          {
+            "id": "BINANCE-1-020",
+            "side": "1",
+            "realized_pnl": 93.1,
+            "realized_return": 0.03000038186643585,
+            "ts_opened": 1782187200000000000,
+            "ts_closed": 1782302400000000000
+          }
+        ],
+        "elapsed_sec": 0.01,
+        "elapsed_ns": 10454400,
+        "iterations": 727,
+        "summary": {
+          "iterations": "727",
+          "total_events": "178",
+          "orders.total": "69",
+          "orders.open": "0",
+          "orders.closed": "69",
+          "orders.emulated": "0",
+          "orders.inflight": "0",
+          "positions.total": "20",
+          "positions.open": "0",
+          "positions.closed": "20",
+          "positions.snapshots": "0",
+          "positions.total_with_snapshots": "20",
+          "venues.total": "1",
+          "account.BINANCE.id": "BINANCE-001",
+          "account.BINANCE.type": "MARGIN",
+          "account.BINANCE.base_currency": "USD",
+          "account.BINANCE.event_count": "110",
+          "account.BINANCE.balance.USD.total": "9966.28 USD",
+          "account.BINANCE.balance.USD.free": "9966.28 USD",
+          "account.BINANCE.balance.USD.locked": "0.00 USD"
+        },
+        "skip_summary": {
+          "skipped_adx": 3,
+          "skipped_cis": 13,
+          "skipped_already_in_pos": 9,
+          "entered_long": 10,
+          "entered_short": 10,
+          "open_pos_count_final": 20,
+          "current_regime_final": "Tightening",
+          "cis_history_days": 431
+        },
+        "wall_sec": 0.15
+      },
+      {
+        "instrument": "ETHUSDT-PERP.BINANCE",
+        "n_orders": 15,
+        "n_positions": 5,
+        "n_long_entries": 3,
+        "n_short_entries": 2,
+        "stats_pnls_USD": {
+          "PnL (total)": -8.7,
+          "PnL% (total)": -0.08700000000000728,
+          "Max Winner": 3.67,
+          "Avg Winner": 3.67,
+          "Min Winner": 3.67,
+          "Min Loser": -2.39,
+          "Avg Loser": -3.0925000000000002,
+          "Max Loser": -4.11,
+          "Expectancy": -1.7400000000000002,
+          "Win Rate": 0.2
+        },
+        "positions": [
+          {
+            "id": "BINANCE-1-001",
+            "side": "1",
+            "realized_pnl": -4.11,
+            "realized_return": -0.03763751368783875,
+            "ts_opened": 1774324800000000000,
+            "ts_closed": 1774512000000000000
+          },
+          {
+            "id": "BINANCE-1-002",
+            "side": "1",
+            "realized_pnl": -3.3,
+            "realized_return": -0.03168349578785573,
+            "ts_opened": 1775160000000000000,
+            "ts_closed": 1775419200000000000
+          },
+          {
+            "id": "BINANCE-1-003",
+            "side": "1",
+            "realized_pnl": -2.57,
+            "realized_return": -0.023061964192785597,
+            "ts_opened": 1776024000000000000,
+            "ts_closed": 1776096000000000000
+          },
+          {
+            "id": "BINANCE-1-004",
+            "side": "1",
+            "realized_pnl": 3.67,
+            "realized_return": 0.032327379551417866,
+            "ts_opened": 1777665600000000000,
+            "ts_closed": 1777852800000000000
+          },
+          {
+            "id": "BINANCE-1-005",
+            "side": "1",
+            "realized_pnl": -2.39,
+            "realized_return": -0.022262274763587483,
+            "ts_opened": 1779696000000000000,
+            "ts_closed": 1779811200000000000
+          }
+        ],
+        "elapsed_sec": 0.01,
+        "elapsed_ns": 10454400,
+        "iterations": 727,
+        "summary": {
+          "iterations": "727",
+          "total_events": "40",
+          "orders.total": "15",
+          "orders.open": "0",
+          "orders.closed": "15",
+          "orders.emulated": "0",
+          "orders.inflight": "0",
+          "positions.total": "5",
+          "positions.open": "0",
+          "positions.closed": "5",
+          "positions.snapshots": "0",
+          "positions.total_with_snapshots": "5",
+          "venues.total": "1",
+          "account.BINANCE.id": "BINANCE-001",
+          "account.BINANCE.type": "MARGIN",
+          "account.BINANCE.base_currency": "USD",
+          "account.BINANCE.event_count": "26",
+          "account.BINANCE.balance.USD.total": "9991.30 USD",
+          "account.BINANCE.balance.USD.free": "9991.30 USD",
+          "account.BINANCE.balance.USD.locked": "0.00 USD"
+        },
+        "skip_summary": {
+          "skipped_adx": 12,
+          "skipped_cis": 20,
+          "skipped_already_in_pos": 0,
+          "entered_long": 3,
+          "entered_short": 2,
+          "open_pos_count_final": 5,
+          "current_regime_final": "Tightening",
+          "cis_history_days": 431
+        },
+        "wall_sec": 0.07
+      },
+      {
+        "instrument": "SOLUSDT-PERP.BINANCE",
+        "n_orders": 9,
+        "n_positions": 3,
+        "n_long_entries": 1,
+        "n_short_entries": 2,
+        "stats_pnls_USD": {
+          "PnL (total)": -0.34,
+          "PnL% (total)": -0.0034000000000014557,
+          "Max Winner": NaN,
+          "Avg Winner": NaN,
+          "Min Winner": NaN,
+          "Min Loser": -0.1,
+          "Avg Loser": -0.11333333333333334,
+          "Max Loser": -0.13,
+          "Expectancy": -0.11333333333333334,
+          "Win Rate": 0.0
+        },
+        "positions": [
+          {
+            "id": "BINANCE-1-001",
+            "side": "1",
+            "realized_pnl": -0.13,
+            "realized_return": -0.029301759433440256,
+            "ts_opened": 1778673600000000000,
+            "ts_closed": 1778760000000000000
+          },
+          {
+            "id": "BINANCE-1-002",
+            "side": "1",
+            "realized_pnl": -0.1,
+            "realized_return": -0.02443100995732583,
+            "ts_opened": 1779480000000000000,
+            "ts_closed": 1779566400000000000
+          },
+          {
+            "id": "BINANCE-1-003",
+            "side": "1",
+            "realized_pnl": -0.11,
+            "realized_return": -0.026708654070445443,
+            "ts_opened": 1779696000000000000,
+            "ts_closed": 1779811200000000000
+          }
+        ],
+        "elapsed_sec": 0.01,
+        "elapsed_ns": 10454400,
+        "iterations": 727,
+        "summary": {
+          "iterations": "727",
+          "total_events": "24",
+          "orders.total": "9",
+          "orders.open": "0",
+          "orders.closed": "9",
+          "orders.emulated": "0",
+          "orders.inflight": "0",
+          "positions.total": "3",
+          "positions.open": "0",
+          "positions.closed": "3",
+          "positions.snapshots": "0",
+          "positions.total_with_snapshots": "3",
+          "venues.total": "1",
+          "account.BINANCE.id": "BINANCE-001",
+          "account.BINANCE.type": "MARGIN",
+          "account.BINANCE.base_currency": "USD",
+          "account.BINANCE.event_count": "16",
+          "account.BINANCE.balance.USD.total": "9999.66 USD",
+          "account.BINANCE.balance.USD.free": "9999.66 USD",
+          "account.BINANCE.balance.USD.locked": "0.00 USD"
+        },
+        "skip_summary": {
+          "skipped_adx": 9,
+          "skipped_cis": 22,
+          "skipped_already_in_pos": 0,
+          "entered_long": 1,
+          "entered_short": 2,
+          "open_pos_count_final": 3,
+          "current_regime_final": "Tightening",
+          "cis_history_days": 431
+        },
+        "wall_sec": 0.06
+      }
+    ]
+  }
+}

@@ -17,17 +17,17 @@ const REGIMES = ["NEUTRAL", "RISK ON", "RISK OFF"];
 
 const getRegimeConfig = (regime) => {
   switch (regime) {
-    case "RISK ON":  return { color: T.green,  glow: "rgba(0,217,138,0.07)",  label: "看涨", desc: "机构持续加仓，BTC领涨，市场风险偏好上升" };
-    case "RISK OFF": return { color: T.red,    glow: "rgba(255,61,90,0.06)",   label: "防御", desc: "机构减仓观望，避险情绪升温" };
-    default:         return { color: T.gold,   glow: "rgba(200,168,75,0.05)",  label: "中性", desc: "市场横盘整理，等待方向明确" };
+    case "RISK ON":  return { color: T.green,  glow: "rgba(0,217,138,0.07)",  label: "RISK ON",  desc: "Institutions adding, BTC leading, risk appetite rising" };
+    case "RISK OFF": return { color: T.red,    glow: "rgba(255,61,90,0.06)",   label: "RISK OFF", desc: "Institutions de-risking, defensive tone building" };
+    default:         return { color: T.gold,   glow: "rgba(200,168,75,0.05)",  label: "NEUTRAL",  desc: "Range-bound consolidation, awaiting direction" };
   }
 };
 
 const generateStatusDescription = (regime, btcDom, marketCapChange, fngValue) => {
   const configs = {
-    "RISK ON":  ["风险情绪升温，山寨币有望轮动上涨", "资金回流加密市场，牛市信号增强", "市场风险偏好上升，机构态度乐观"],
-    "RISK OFF": ["机构持续减仓，BTC主导率上升，市场防御模式", "恐慌情绪蔓延，主流币相对抗跌", "资金外流明显，市场处于观望状态"],
-    "NEUTRAL":  ["多空力量均衡，市场等待突破信号", "BTC主导率稳定，市场情绪中性", "方向选择前，建议保持谨慎"],
+    "RISK ON":  ["Risk appetite warming — altcoins positioned to rotate higher", "Capital flowing back into crypto, uptrend signal strengthening", "Risk preference rising, institutional tone constructive"],
+    "RISK OFF": ["Institutions de-risking, BTC dominance rising, defensive mode", "Fear spreading, majors relatively resilient", "Clear outflows, market in wait-and-see"],
+    "NEUTRAL":  ["Bulls and bears balanced, market awaiting a breakout", "BTC dominance stable, sentiment neutral", "Ahead of a directional move, caution warranted"],
   };
   const descriptions = configs[regime] || configs["NEUTRAL"];
   const fngComponent = (fngValue !== null && fngValue !== undefined) ? fngValue : 50;
@@ -114,14 +114,14 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
 
   if (error && !data) return (
     <div style={{ paddingBottom: 24, marginBottom: 28, borderBottom: `1px solid rgba(37,99,235,0.08)` }}>
-      <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.red }}>数据加载失败 · {error}</span>
+      <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.red }}>Failed to load data · {error}</span>
     </div>
   );
 
   return (
     <div
       onClick={handleClick}
-      title="点击切换状态"
+      title="Click to cycle state"
       style={{
         paddingBottom: 24,
         marginBottom: 28,

@@ -1,0 +1,108 @@
+{
+  "baseline_3slot": {
+    "weights": {
+      "V7": 0.5,
+      "V10c": 0.3,
+      "V12b": 0.2
+    },
+    "holdout": {
+      "pnl_pct": 6.51,
+      "dd_correl_pct": 1.1992797838703027
+    },
+    "forward": {
+      "pnl_pct": 8.02,
+      "dd_correl_pct": 0.6321890540020445
+    }
+  },
+  "variants": {
+    "4-slot A  V7+V10c+V12b+V14a (50/20/20/10)": {
+      "weights": {
+        "V7": 0.5,
+        "V10c": 0.2,
+        "V12b": 0.2,
+        "V14a": 0.1
+      },
+      "holdout_pnl_pct": 6.609999999999999,
+      "holdout_dd_correl_pct": 1.2233335603996158,
+      "forward_pnl_pct": 8.16,
+      "forward_dd_correl_pct": 0.6433234023413107,
+      "delta_holdout_pnl_pp": 0.09999999999999964,
+      "delta_holdout_dd_pp": 0.024053776529313176,
+      "delta_forward_pnl_pp": 0.14000000000000057,
+      "delta_forward_dd_pp": 0.011134348339266187,
+      "net_delta_pnl_pp": 0.2400000000000002,
+      "net_delta_dd_pp": 0.03518812486857936
+    },
+    "4-slot B  V7+V10c+V12b+V14a (45/20/20/15)": {
+      "weights": {
+        "V7": 0.45,
+        "V10c": 0.2,
+        "V12b": 0.2,
+        "V14a": 0.15
+      },
+      "holdout_pnl_pct": 6.375,
+      "holdout_dd_correl_pct": 1.16560724517309,
+      "forward_pnl_pct": 7.910000000000001,
+      "forward_dd_correl_pct": 0.6130707544810794,
+      "delta_holdout_pnl_pp": -0.1349999999999998,
+      "delta_holdout_dd_pp": -0.03367253869721276,
+      "delta_forward_pnl_pp": -0.10999999999999854,
+      "delta_forward_dd_pp": -0.01911829952096511,
+      "net_delta_pnl_pp": -0.24499999999999833,
+      "net_delta_dd_pp": -0.05279083821817787
+    },
+    "4-slot C  V7+V10c+V12b+V14a (40/20/20/20)": {
+      "weights": {
+        "V7": 0.4,
+        "V10c": 0.2,
+        "V12b": 0.2,
+        "V14a": 0.2
+      },
+      "holdout_pnl_pct": 6.140000000000001,
+      "holdout_dd_correl_pct": 1.1111453550278652,
+      "forward_pnl_pct": 7.66,
+      "forward_dd_correl_pct": 0.5844073921503733,
+      "delta_holdout_pnl_pp": -0.3699999999999992,
+      "delta_holdout_dd_pp": -0.0881344288424375,
+      "delta_forward_pnl_pp": -0.35999999999999943,
+      "delta_forward_dd_pp": -0.04778166185167121,
+      "net_delta_pnl_pp": -0.7299999999999986,
+      "net_delta_dd_pp": -0.1359160906941087
+    },
+    "4-slot D  V7+V12b+V14a (60/20/20)": {
+      "weights": {
+        "V7": 0.6,
+        "V12b": 0.2,
+        "V14a": 0.2
+      },
+      "holdout_pnl_pct": 7.279999999999999,
+      "holdout_dd_correl_pct": 1.4029754096205678,
+      "forward_pnl_pct": 8.940000000000001,
+      "forward_dd_correl_pct": 0.7339891007365164,
+      "delta_holdout_pnl_pp": 0.7699999999999996,
+      "delta_holdout_dd_pp": 0.20369562575026512,
+      "delta_forward_pnl_pp": 0.9200000000000017,
+      "delta_forward_dd_pp": 0.10180004673447185,
+      "net_delta_pnl_pp": 1.6900000000000013,
+      "net_delta_dd_pp": 0.30549567248473697
+    },
+    "4-slot E  V7+V9+V12b+V14a (50/15/20/15)": {
+      "weights": {
+        "V7": 0.5,
+        "V9": 0.15,
+        "V12b": 0.2,
+        "V14a": 0.15
+      },
+      "holdout_pnl_pct": 7.109999999999999,
+      "holdout_dd_correl_pct": 1.3024777349344594,
+      "forward_pnl_pct": 8.845,
+      "forward_dd_correl_pct": 0.6819310815617661,
+      "delta_holdout_pnl_pp": 0.5999999999999996,
+      "delta_holdout_dd_pp": 0.10319795106415675,
+      "delta_forward_pnl_pp": 0.8250000000000011,
+      "delta_forward_dd_pp": 0.04974202755972157,
+      "net_delta_pnl_pp": 1.4250000000000007,
+      "net_delta_dd_pp": 0.15293997862387831
+    }
+  }
+}

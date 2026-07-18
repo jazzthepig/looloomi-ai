@@ -89,7 +89,7 @@ async def get_portfolio() -> dict:
             },
             "candidates_orthogonal": {
                 "rwa_dingge": {**_stats(dingge),
-                               "note": "顶格 RWA + the multi-asset/industry (equity/commodity/sector-ETF) extension; validation-gated, not yet in CORE"},
+                               "note": "funding-cap RWA + the multi-asset/industry (equity/commodity/sector-ETF) extension; validation-gated, not yet in CORE"},
             },
         },
         "meta_allocation": meta or {"status": "accruing — needs ≥20d live on ≥2 books before risk-parity is meaningful"},

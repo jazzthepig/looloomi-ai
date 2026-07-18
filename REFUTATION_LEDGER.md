@@ -292,24 +292,26 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 - **Result:** IC **−0.05** (mildly INVERSE); accelerating-revenue top-half returned −6.9% vs decelerating bottom-half −4.8% (top−bottom **−2.1%**), selection hit-rate 39% (< coin flip). Everything −5 to −7% (broad DeFi bear window).
 - **Lesson:** fundamental momentum alone does NOT mechanically predict crypto re-rating — it's priced in / swamped by beta, and the real conviction alpha is a SPECIFIC narrative catalyst proving a moat (HYPE: Trump-weekend-war → 24/7 on-chain moat proven), which a revenue screen can't time. Consistent with CONVICTION_METHODOLOGY's own claim: this lane is **judgment-led (moat + catalyst + reflexivity), not a systematic factor** — it's the moat *because* it can't be reduced to a commodity bot. Build it as an AI-augmented candidate-SURFACING tool for discretionary conviction, not a backtested systematic sleeve.
 
-## R24 🟡 OPEN — Crowd Clock: behavioral phase predicts forward asymmetry (INSTRUMENTED, not yet resolved)
-- **Hypothesis (Trader Tom doctrine):** the crowd's emotional phase — capitulation / accumulation /
-  markup / euphoria / distribution, read from FNG + BTC trend + funding crowding + CIS dispersion —
-  carries a forward-return asymmetry that does NOT decay (fear/greed recur forever, unlike indicator
-  fits). Specifically: "capitulation" precedes positive forward asymmetry; "euphoria/distribution"
-  precede negative asymmetry / drawdowns.
-- **Status:** BUILT + instrumented (`src/data/market/crowd_clock.py`, `/api/v1/market/crowd-clock`,
-  `CrowdClock.jsx`). A daily snapshot is persisted (`crowd_clock_log`, `scripts/supabase_crowd_clock.sql`).
-  The archetype unit test resolves all 5 phases correctly. **NO predictive claim is made yet** — the
-  UI carries a CANDIDATE tag and the "not outcome-proven" disclaimer.
-- **Resolution plan (the test that keeps or kills it):** after ≥60–90 days of snapshots, a resolver
-  matches each day's phase → forward 30d BTC (and cross-asset) return; compute mean/median forward
-  asymmetry per phase + hit-rate, net of the obvious FNG-only baseline (does the *phase* add over just
-  "buy fear"?). If capitulation/euphoria show no forward asymmetry beyond FNG alone → **REFUTE / de-rate
-  to a display-only lens**. Guilty until proven.
-- **Why it's worth instrumenting anyway:** it's the missing *invariant* — one behavioral clock every
-  surface can read (Diagnose color, two-layer book sizing, feed narration), and it costs nothing to run
-  on data we already cache. The honest move is to measure it, not to claim it.
+## R24 🟡 PARTIAL — Crowd Clock: TREND phases carry edge; the CONTRARIAN claim is REFUTED at 30d
+- **Hypothesis (Trader Tom doctrine):** the crowd's emotional phase carries forward asymmetry —
+  "capitulation" precedes up-moves, "euphoria/distribution" precede drawdowns.
+- **Test (didn't wait — backtested history):** `src/research/crowd_clock_backtest.py` reconstructed
+  the phase from Fear&Greed (2018→) + BTC daily trend and measured forward 30d BTC return per phase,
+  3026 days, reduced inputs (no live funding-crowding / CIS-dispersion → `euphoria` never fired).
+- **Result:** baseline mean fwd-30d **+3.83%** (hit 53.5%).
+  - `markup` +7.78% (**+3.95% vs base**, hit 56.3%) — **VALIDATED**: the press-the-trend phase precedes the strongest returns.
+  - `distribution` +0.11% (**−3.72% vs base**, median −1.82%, hit 45.7%) — **VALIDATED bearish**: the defend phase.
+  - `capitulation` +1.00% (**−2.84% vs base**) — **REFUTED as a 30d long**: buying fear did NOT beat hold.
+  - FNG-only: FNG<25 **+2.91%** (BELOW base) vs FNG>75 **+13.11%** (WAY above) — the contrarian read is *backwards* at 30d.
+- **Lesson:** in crypto, at a 30d horizon, **momentum dominates reversal** (confirms R22). Extreme fear
+  is usually mid-downtrend (more downside); extreme greed usually mid-bull (more upside). So the Crowd
+  Clock is a **trend compass, not a contrarian one** at this horizon. Its usable edge = press-in-markup /
+  defend-in-distribution. `crowd_phase_book` recalibrated: capitulation is no longer a broad long tilt —
+  the mean-reversion sleeve must earn it with its OWN deeper-extreme entries + faster exit (MultiFactorV2:
+  MVRV<0.9 + price<10%, exit RSI>65), which this broad-phase 30d test does NOT cover.
+- **Still open:** euphoria (needs live crowding history); a short-horizon (3-5d) bounce edge for
+  capitulation is untested; cross-asset. Re-run with live crowding once `crowd_clock_log` accrues.
+- **The loop worked:** built it, backtested it same-day, killed the weak (contrarian) claim before it sized a dollar.
 
 ## R25 🔴 Adding a price-direction filter to a level signal degrades it — funding_price_disagreement REFUTED
 - **Hypothesis:** extending `positioning_funding` (fade the crowded side) with a price-direction filter — "fade the WINNING crowd" (longs crowded + winning → SHORT; shorts crowded + winning → LONG) — should sharpen the signal by skipping unfired triggers.
