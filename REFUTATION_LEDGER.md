@@ -309,9 +309,30 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
   defend-in-distribution. `crowd_phase_book` recalibrated: capitulation is no longer a broad long tilt —
   the mean-reversion sleeve must earn it with its OWN deeper-extreme entries + faster exit (MultiFactorV2:
   MVRV<0.9 + price<10%, exit RSI>65), which this broad-phase 30d test does NOT cover.
-- **Still open:** euphoria (needs live crowding history); a short-horizon (3-5d) bounce edge for
-  capitulation is untested; cross-asset. Re-run with live crowding once `crowd_clock_log` accrues.
-- **The loop worked:** built it, backtested it same-day, killed the weak (contrarian) claim before it sized a dollar.
+- **Follow-up 1 — multi-horizon + cross-asset (BTC/ETH/SOL, 3/5/7/14/30d):** capitulation is negative
+  at EVERY horizon on ALL assets (no 3-5d bounce — the contrarian idea is fully dead). markup is
+  positive everywhere and scales with beta (SOL +15% @30d). distribution is weakly bearish but NOT
+  robust (ETH breaks it, n≈85). The one robust, cross-asset, all-horizon edge is the TREND (markup).
+- **Follow-up 2 — does sentiment add over pure momentum? YES (the survivor).** Decomposition:
+  `uptrend + GREED` beats `uptrend alone` by **+1.64 (BTC) / +3.39 (ETH) / +7.49pp (SOL)** fwd-30d;
+  and `uptrend + FEAR` badly *underperforms* (ETH +0.09%, SOL +0.05%) — a rally the crowd distrusts is
+  a weak rally. So the Crowd Clock is NOT a momentum relabel: crowd *agreement* confirms a trend, crowd
+  *disbelief* flags a fake one. **Extracted → `src/data/signals/trend_confirmation.py`** (confirmed_up /
+  unconfirmed_up / confirmed_down states with the base rates baked in).
+- **Follow-up 3 — walk-forward OOS: the sentiment add-on FAILS.** Split TRAIN(<2023) vs HOLDOUT(≥2023):
+  the "uptrend+greed beats uptrend" edge was huge in-sample (BTC +5.53 / ETH +7.82 / SOL +34.74pp) but
+  **collapses out-of-sample** — BTC −0.35pp (gone), SOL +0.69pp (gone), only ETH +2.21pp weakly survives.
+  Plain trend/momentum persists OOS (positive, smaller); the SENTIMENT confirmation add-on does NOT
+  robustly survive. Likely decay: the 2018-2022 wild-cycle sentiment extremes were far more informative
+  than the post-2023 institutional/ETF market where sentiment is priced faster.
+- **Net verdict (honest):** the contrarian claim is REFUTED (all horizons, all assets); the
+  sentiment-confirmation add-on is REFUTED OOS (pre-2023 artifact, decayed). What survives is **plain
+  trend/momentum**, which we already had. The Crowd Clock's *incremental* value over momentum is NOT
+  established out-of-sample. `trend_confirmation.py` is kept as a DOCUMENTED NEGATIVE result (weak ETH
+  residual only) — **do NOT size it.** The clock stays a display/context lens, not a sizing input.
+- **The loop worked (twice):** built it, backtested same-day (killed contrarian), extracted the apparent
+  edge, then walk-forwarded it (killed the extract too) — all before a dollar was sized. Two dead ideas,
+  zero capital lost. This is the system functioning, not failing.
 
 ## R25 🔴 Adding a price-direction filter to a level signal degrades it — funding_price_disagreement REFUTED
 - **Hypothesis:** extending `positioning_funding` (fade the crowded side) with a price-direction filter — "fade the WINNING crowd" (longs crowded + winning → SHORT; shorts crowded + winning → LONG) — should sharpen the signal by skipping unfired triggers.
@@ -333,6 +354,34 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 - **Result:** annSR **−0.12**, DSR **0.02**, walk-forward **3/5**. The interesting structural finding: corr to `positioning_funding` = **−0.519** (highly *negatively* correlated, not redundant). Different mechanism in shape — would be a useful *hedge* if it had positive Sharpe. It doesn't. Verdict: REFUTED.
 - **Lesson:** adding a different transformation (level → vol, cross-section → time-series, level → velocity) does NOT by itself find a new edge. Each of these is a *re-expression* of the same underlying perp-crowding signal; when the underlying signal fails, every transformation fails with it. **The funding axis is saturated after R8 (velocity), R25 (price-conditioned), R26 (cross-sectional threshold), R27 (time-series vol).** To go beyond the funding axis requires a NEW data layer (intraday volume, order-book microstructure, options skew, on-chain), not another transformation of the same series.
 - **Reference:** `src/research/factory/signal_factory.py` `_funding_volatility()` + `signal_library()` entry; factory output 2026-07-17; annSR −0.12 / DSR 0.02 / corr −0.519.
+
+## R28 🔴 Vol Sleeve v2 (delta-neutral cascade long-vol + premium-harvest short-vol) — KILLED BEFORE PHASE 3
+- **Hypothesis (from `docs/VOL_SLEEVE_V2_CAUSE_2026-07-18.md` §1):** When a leveraged long crowd is paying elevated perp funding + sitting on elevated open interest, the next material drawdown in spot is mechanically amplified by cascading liquidations — this is an unfunded external liability, not a price forecast, and it surfaces as a volatility regime transition rather than a directional signal. v2 differs from v1 (realized-vol targeting overlay on BTC long) on 4 axes: delta-neutral (not directional), triple-crowding trigger (RV + OI/MCap + funding), 21-name universe (not BTC-only), two-leg structure (long-vol cascade + short-vol carry).
+- **Phase 1 verdict: 🟡 YELLOW** (proceed with explicit scope adjustments). Phase 2 built 3 runnable legs + 1 deferred leg (OI/MCap overlay — no historical OI on disk).
+- **Test — Leg 1 (`long_vol_cascade_leg_rv_only`, 21 names, 9y OHLCV 2017-08 → 2026-07):** post-cascade mean-reversion proxy. Result: aggregate Sharpe **−2.20** (21-name equal-weight), MaxDD **−39.82%**, Final NAV $6,336 from $10,000 (−36.6%). The post-cascade bounce signal fires too often (162 triggers in synthetic, 7,177 in BTC-only — ~37% of bars), slippage + options decay eat the entire premium.
+- **Test — Leg 2 (`long_vol_cascade_leg_with_funding`, 5 majors × 21mo 2025-01 → 2026-07):** true delta-neutral spot+perp offset with funding carry + cascade detection. Result: Sharpe **−1.631**, MaxDD **−0.65%**, ann vol **0.04%**. The leg barely trades — the triple-crowding trigger (RV_pct>0.9 ∧ funding_pct>0.8) fires 0 times in the 21mo panel (verified in Phase 1 Check 3: only 38 distinct RV_pct>0.9 events across 9y; with funding gate added, ~0-2 events on the 21mo subpanel). A leg that doesn't fire isn't a leg.
+- **Test — Leg 3 (`short_vol_carry_leg`, 21 names, 9y OHLCV):** delta-hedged perp short + spot long with 5% annualized IV>RV spread proxy. Result: Sharpe **+0.236**, MaxDD **−0.78%**, Final NAV $10,029 (+0.29%). Just below the +0.3 Sharpe threshold; the premium proxy is a HONEST PLACEHOLDER for Phase 4 IV data (without IV, the IV>RV spread is unmeasurable).
+- **Test — Combined NAV (30% Leg 1 + 70% Leg 3):** Sharpe **+0.012**, MaxDD −1.95%. The combination is dragged down by Leg 1's losses; the orthogonal structure can't rescue a leg that loses money.
+- **Verdict: REFUTED on Phase 3 readiness.** Gate 1 (corr to LS v1 + MaxDD) fails for Leg 1 (MaxDD −39.82% < −25% threshold). Gate 2 (Sharpe > 0.5 OOS) fails for ALL legs. Gate 3 (DSR > 0.5 over 6 walk-forward windows) untested but mathematically impossible given Leg 1's negative SR.
+- **The cause IS articulated** (the cascade mechanic is real — leveraged long crowd liquidations amplify spot drawdowns) **but the EMPIRICAL realization on RV+funding data alone is too weak** to generate tradeable alpha without options data. Phase 2 numbers are a STRUCTURAL LOWER BOUND on what Path A (no-options, RV-only proxy) can achieve. Phase 4 (with Deribit IV data → IV-RV basis trade + delta-hedged straddles) is the only path that could realize the cause's full alpha.
+- **Lessons:**
+  1. **Cause articulated ≠ cause tradeable on the data you have.** Phase 1's GREEN/YELLOW score is about CAUSE CLARITY, not EXPECTED PNL. A YELLOW does not promise a positive Phase 2 — it promises Phase 2 can run without breaking. The empirical finding is independent.
+  2. **A trigger that fires 0 times in 21 months is not a leg, it's a research artifact.** Leg 2's failure mode (insufficient trigger frequency) is distinct from Leg 1's (oversized losses) and Leg 3's (insufficient premium proxy). All three are kill-worthy for different reasons.
+  3. **Vol-of-vol is a saturated axis too.** R25/R26/R27 killed the funding axis; R28 kills the realized-vol axis. The axis saturation pattern is consistent — every re-expression of an underlying signal (level, velocity, vol, percentile, cross-sectional, time-series) faces the same ultimate constraint: the underlying signal's noise floor.
+  4. **Compounding bug R27-bis:** during Phase 2, Leg 3's premium proxy was first implemented as `notional × rv_per_bar × 0.30`, producing astronomical terminal NAV ($259 billion) over 9 years of compounding. Fixed to a constant 5% annualized spread (`notional × 5% / (252 × 6)`), giving realistic $10,029 terminal NAV. Lesson: any per-bar proxy that compounds over thousands of bars needs an annualized formulation, not a per-bar scalar — the per-bar scalar explodes under geometric compounding. Bug surfaced and fixed in the same session; no false-positive went unreported.
+- **Reference:** `src/research/cis_regime_studies/vol_sleeve_v2.py` (Phase 2 driver, 10/10 sandbox tests passing); `docs/VOL_SLEEVE_V2_CAUSE_2026-07-18.md` (Phase 1 memo, YELLOW verdict); `src/research/cis_regime_studies/tests/test_vol_sleeve_v2_smoke.py` (10 unit tests, sandbox-safe, no FUSE/Mac-only deps). Phase 2 run dates 2026-07-18; results in `/tmp/vol_sleeve_v2_smoke/summary.md`. Phase 4 (Deribit IV integration) is the only path that could revive the cause.
+
+## R29 ⚪ Volume factory — NEW data layer SCAFFOLDED; 3 candidates INCONCLUSIVE on A-S1 panel (K=5)
+- **Hypothesis:** volume + taker-buy imbalance is a NEW mechanism family orthogonal to perp-funding (realised demand vs crowd positioning). Three candidates: `volume_price_trend` (sign(rk) × vol_z), `taker_buy_imbalance` (buy-side quote ratio − 0.5), `volume_weighted_momentum` (rk × √vol).
+- **Test:** `src/research/factory/volume_factory.py` (NEW, 174 lines). Reads A-S1 cached substrate (5 symbols × 563 days, 2025-01-01 → 2026-07-17), reuses the funding factory's `_xs_weights` / `_bt` / `_walkforward` / `evaluate_universe` honest gate. NO modifications to validated `causal_positioning.py`.
+- **Result:** all three FAIL — annSR **−0.32 / −1.46 / −1.38**, walk-forward **2/5, 0/5, 1/5**, DSR=0. No DSR survivor.
+- **Honest verdict: INCONCLUSIVE, NOT REFUTED.** A-S1 panel is K=**5** (BTC/ETH/SOL/BNB/XRP); the funding factory's panel is K=**24**. Statistical power to detect a true K×N edge is roughly **5/24 ≈ 21%** of the wider panel; cross-sectional differentiation is dominated by 1-2 outlier names; in-sample fit on 4-of-5 leaves little genuine signal. The −1.46 taker-buy figure is more likely a **panel-too-small artifact** (or sign-convention check) than a real "taker-buy reverses" finding.
+- **What IS proven by this run:** the volume factory SCAFFOLDING works end-to-end — substrate loader, signal library, honest gate, structured output. To resolve R29, populate the substrate with volume + taker-buy columns for the 24-name universe (one Binance fetch per name, 1000-bar pagination, ~1 hour wall-clock) and re-run.
+- **Lessons:**
+  1. **Scaffolding a NEW data layer is honest progress even when the first result is null.** The factory didn't exist before this session; now it does and runs the gate correctly. The negative result documents the panel-size constraint, not the mechanism's failure.
+  2. **Open a new mechanism family through scaffolding, not speculation.** R25/R26/R27 saturated the funding axis by transforming the same series; volume is a genuinely different channel (realised demand, not crowd-positioning), but it needs a panel rich enough to express cross-section. K=5 is sanity-only.
+  3. **Axis-saturation extends beyond funding.** R27 found funding-axis saturated; R28 found realized-vol-axis saturated (Phase 4 IV needed). R29 marks the start of the **volume-axis investigation**, currently inconclusive on a thin panel.
+- **Reference:** `src/research/factory/volume_factory.py` (NEW, 174 lines, 3 candidates + scaffolded CLI); factory output 2026-07-17.
 
 ## What the graveyard says, in aggregate
 
