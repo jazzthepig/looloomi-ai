@@ -1402,7 +1402,10 @@ async def get_loop_state():
     n_closed = len(closed)
 
     # ── Parse factor performance ──────────────────────────────────────────────
-    fp   = json.loads(factor_raw) if factor_raw else {}
+    # _rget/redis_get_key AUTO-json.loads → factor_raw is already a dict (or None).
+    # The old `json.loads(factor_raw)` did json.loads(dict) → TypeError → 500 (same class
+    # of bug already fixed for cis_raw below). Use the dict directly.
+    fp   = factor_raw if isinstance(factor_raw, dict) else {}
     meta = fp.get("_meta", {})
 
     # Compute IC multiplier per pillar (mirrors _refresh_ic_multipliers in cis_provider.py)

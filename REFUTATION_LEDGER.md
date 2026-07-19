@@ -456,6 +456,33 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
   4. **R7-like lesson (signal-specific universe):** carry works on the LIQUID majors with deep perp + spot books (BTC/ETH/SOL/BNB/XRP/DOGE/ADA/AVAX/LINK/LTC). Adding thinner names would degrade fill rates — a different kind of cost.
 - **Reference:** `src/research/factory/cash_carry_investigation.py` (NEW, ~220 lines, paginated fetchers + 4-tier cost harness + walk-forward); OOS run 2026-07-18. Original `cash_and_carry.py` reports 2.42 Sharpe under optimistic assumptions — the harness reveals that's a cost-illusion at retail taker fees.
 
+## R33 🔴 Composite +1.97 Sharpe is residual-α zero across 3 absorption runs — it's β on a friendly regime window, not α
+- **Hypothesis (Track 4):** the 30/20/50 LS-v1/Causal/Cash composite carries +1.97 Sharpe as residual α — its Sharpe should survive factor absorption against {market, momentum, CIS-quality, funding}.
+- **Test:** `src/research/cis_regime_studies/absorption_sweep_runner.py` (NEW, ~290 lines). OLS regression with Newey-West SE on each of 4 sleeves (LS v1 CIS-ON/OFF, Causal, Cash) + 3 composite mixes (30/20/50, 35/25/40, 40/30/30). Acceptance gate: |α t| > 1.96 after factors AND after peer sleeves = independent survivor. Three sequential runs on the same 265d post-CIS window (2025-05-08 → 2026-01-27) with progressively-stronger factor panels:
+  - **Run #1 (3 factors, CIS proxy):** All 7 candidates ABSORBED. Composite α t = 0.36 / 0.28 / 0.23.
+  - **Run #2 (4 factors, proxy + f_funding):** All 7 ABSORBED. Composite α t = 0.08 / −0.00 / −0.07. Causal absorbs MORE with f_funding (α t 0.10 → −0.27), confirming f_funding is the right factor.
+  - **Run #3 (4 factors, TRUE long top-CIS / short bottom-CIS + f_funding, built from 11yr CIS historical reconstruction, 75,478 rows × 34 assets):** All 7 still ABSORBED. Composite α t = 0.86 / 0.75 / 0.67 — **larger in magnitude than Run #2**, meaning the proxy was GENEROUS. **Cash flips from α t=1.78 (ABSORBED) to α t=2.89 (residual)** — first sleeve to pass the strict factors-only gate; fails AND-after-peers (1.87).
+- **Result: REFUTED.** Across 3 runs with progressively-stronger factor panels, no sleeve carries residual α at t>1.96 against the factor panel AND peer sleeves simultaneously. The +1.97 Sharpe on the 30/20/50 composite is **a repackaging of {f_market × f_momentum × f_cis_quality × f_funding} beta on a friendly 265d regime window, NOT α**. The 2nd-half Sharpe 2× the 1st-half (per the §COMPOSITE_OPTIMIZED sub-window analysis) is the classic beta tell — a regime-tailwind composite is what an UN-absorbed momentum-heavy book looks like.
+- **Why it fails (causal reading):**
+  1. **Composite returns are constructed as weighted sums of sleeve returns.** Their residual α by construction equals a linear combination of sleeve residuals. The peer-sleeve regression CANNOT create α where the underlying sleeves don't have it.
+  2. **The 265d post-CIS window is one regime.** The factor panel (BTC + TSMOM + CIS-quality spread + funding) explains most of the variance on a friendly BTC-bull window because the book is mostly long-beta anyway.
+  3. **The Causal sleeve's OOS docstring +1.41 (658d window) is NOT falsified by this** — the absorption test uses a different (shorter) window and a different return series. But it IS evidence that the Causal sleeve's "α" on a 265d post-CIS window is partially f_funding beta.
+  4. **Cash is genuinely orthogonal** (α t=2.89 in Run #3, the only sleeve to cross 1.96). This is the expected result of cash being a risk-free rate proxy — orthogonal to {market, momentum, CIS-quality, funding} by construction. The AND-after-peers gate catches it because cash's residual overlaps with what the peer sleeves are doing (the sleeve returns load cash by construction).
+- **Lessons:**
+  1. **Run absorption BEFORE composite mixing.** The §COMPOSITE_OPTIMIZED 30/20/50 was being headlined before this gate ran; running it first would have saved the LP-pitch band-width.
+  2. **The proxy was an underestimator of true absorption.** Run #3 with the canonical long top-CIS / short bottom-CIS factor (from 11yr CIS history) finds ABSORPTION STRENGTH. When you upgrade from a price-spread proxy to the canonical factor, |α t| goes UP, not down. The next sleeve's absorption test should use the canonical factor, not a proxy, from the start.
+  3. **Cash IS a residual-α sleeve (in isolation) but is NOT independent of peer sleeves.** A sleeve that has no factor exposure AND no peer-sleeve-exposure is rare; cash is one. But for a multi-strategy book, the cross-sectional regression between sleeves catches it because cash is part of every composite by definition.
+  4. **The MaxDD story (−3% to −5%) survives.** This is the load-bearing LP-relevant claim. The Sharpe claim doesn't survive absorption.
+  5. **General principle (the load-bearing one):** a composite's high Sharpe on a friendly post-CIS window with a momentum-heavy book is what an UN-absorbed book looks like. The factor-absorption gate is the structural defense. Run it before headline.
+- **What IS proven:**
+  - The §ABSORPTION-SWEEP gate (`absorption_sweep.py` + runner) is reproducible and re-runnable on any new sleeve.
+  - The 4-factor panel (BTC + TSMOM(30) + long top-CIS / short bottom-CIS + cross-sectional funding) is a reasonable defense for this book. A sleeve that survives this panel is worth a slot; one that doesn't isn't.
+  - The true CIS factor can be built from the 11yr CIS historical reconstruction (`_data/cis_historical/cis_historical_11yr.csv`).
+- **What IS NOT proven:**
+  - The +1.97 Sharpe claim. It's β, not α, on the current panel + window.
+  - The Causal sleeve's docstring +1.41 on the 658d OOS — different window, not falsified, but also not absorption-tested.
+- **Reference:** `src/research/cis_regime_studies/absorption_sweep_runner.py` (NEW, ~290 lines); `reports/ABSORPTION_SWEEP_2026-07-18.md` (full report with Runs #1, #2, #3 addenda); `reports/absorption_sweep/2026-07-18/{verdict.txt,verdict.json,sleeve_returns.csv}` (Run #2); `reports/absorption_sweep/2026-07-18_true_cis/{verdict.txt,verdict.json,sleeve_returns.csv}` (Run #3); `reports/COMPOSITE_OPTIMIZED_2026-07-18.md` (with absorption caveat at top); MINIMAX_SYNC §ABSORPTION-SWEEP addenda #2 (Run #2) and #3 (Run #3).
+
 ## R31 🔴 Causal Sleeve extension — Conviction-Weighted Sizing (CW-Causal) REFUTES at Phase 2 (6 OOS windows, K=24)
 - **Hypothesis:** scaling position size by |z_i|^p (where z_i is the cross-sectional funding z-score) concentrates capital on the highest-conviction funding dislocations and improves risk-adjusted returns. p=0 reproduces the original equal-weight sleeve; p=1 is linear conviction; p=2 is quadratic ("super-conviction"). Tested p ∈ {0, 0.5, 1.0, 1.5, 2.0}.
 - **Test:** `src/research/cis_regime_studies/causal_sleeve_extension.py` (NEW). Reuses the validated 24-name Binance USDT-perp panel (2019-12-31 → 2026-01-27), IS/OOS split at 2024-01-01 (758 OOS days), kwin=10 weekly rebal, 5bps fee per side. NO modifications to `causal_positioning.py`. 9/9 sandbox smoke tests pass (`test_causal_sleeve_extension_smoke.py`). 6 × 120d non-overlapping OOS windows (2024-01 → 2025-12).
@@ -480,6 +507,369 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 - **What IS proven:** the CW-Causal scaffolding (parameterized `positioning_weights_cw()` with `p` exponent, demean + gross=1 pipeline) is reusable for any future "scale-by-|signal|" hypothesis on a different sleeve. The driver and smoke tests are kept as research artifacts.
 - **Reference:** `src/research/cis_regime_studies/causal_sleeve_extension.py` (NEW); `src/research/cis_regime_studies/tests/test_causal_sleeve_extension_smoke.py` (9/9 PASSED); `reports/causal_sleeve_extension/2026-07-18/results.json` + `window_metrics.csv`; full report `reports/CAUSAL_SLEEVE_EXTENSION_R31_REFUTED_2026-07-18.md`.
 
+## R34 🟡 Funding-crowding IS orthogonal to momentum (the right seam) — but naive fade is sub-threshold + FRAGILE
+- **Hypothesis (Trader Tom / dingge):** funding-rate crowding is a behavioral, non-momentum edge — fade
+  crowded longs (high funding), ride crowded shorts (negative funding). If real, it should carry RESIDUAL
+  α after {market, momentum} and NOT just be repackaged beta.
+- **Test:** Binance BTC funding history 2019-11→2026-07 (2444 days), contrarian signal `pos = −clip(z,±3)/3`
+  on trailing-30d funding z, net of 5bps turnover cost, run through the full `signal_gauntlet`
+  (`/tmp/funding_gauntlet.py`; to be productionized). Plus an extreme-only extraction sweep
+  (z-window×threshold×hold).
+- **Result — the ENCOURAGING part:** funding-crowding is genuinely ORTHOGONAL to momentum — momentum
+  beta −0.132 (**t=−5.42**, strongly anti-momentum, as fading crowded longs should be) and residual α
+  is consistently POSITIVE: +6.4%/yr (naive daily) up to **+14–19%/yr** at the mild-crowding extraction
+  (z>1.5, hold ~7d). **This is the first candidate all session that is NOT absorbed** — the right family,
+  which is the hard part and validates the causal-signal thesis.
+- **Result — the HONEST part:** it does NOT clear the gauntlet. Raw Sharpe ≈ 0 (the continuous fade bleeds
+  by fighting a positive-momentum tape); the best residual α tops out at **t≈1.5 (< 1.96)**; and EVERY
+  variant reads **FRAGILE** on regime robustness. Fading *harder* extremes (z>2.5) goes NEGATIVE.
+- **Lesson (points to the next experiment, not a dead end):** the negative-return-on-hard-extremes is our
+  own dingge doctrine confirmed on BTC funding — after a genuine funding extreme a NEW TREND forms, so you
+  cannot blind-fade it; **volume/price must set the direction** (fade exhaustion, ride continuation). The
+  orthogonality is real (the hard part); the missing piece is the direction filter. Next: port
+  `dingge_rwa.py`'s volume-confirmed logic to BTC/majors funding and re-run the gauntlet (R35 candidate).
+- **Method note:** first live use of the full `signal_gauntlet` (significance→DSR→PBO→absorption→regime→PIT)
+  on a real candidate — it correctly located the seam AND refused to credit the sub-threshold version.
+
+## R35 🟡 Volume-CONFIRMED funding-crowding — real orthogonal α, PERSISTS OOS, but sub-threshold; needs cross-CLASS breadth
+- **Hypothesis (dingge on BTC funding, the R34 refinement):** fade a funding-crowding extreme ONLY when
+  price+volume confirm the reversal is underway (crowded longs + price rolling over + volume expanding →
+  short the flush; crowded shorts + price bouncing + volume → long the squeeze). Direction-aware, not blind fade.
+- **Test:** Binance funding+OHLCV, BTC 2019→2026 + pooled BTC/ETH/SOL, net 5bps, full `signal_gauntlet`
+  + walk-forward OOS on an a-priori config (z-win 30, thr 1.0, hold 10d). `/tmp/funding_vol.py`, `/tmp/funding_pool.py`.
+- **Result — the strongest candidate of the 07-18 session:**
+  - Genuinely ORTHOGONAL: momentum beta ≈ 0 (pooled t=−0.07); it is NOT absorbed. Clears significance +
+    factor-absorption + regime-robustness on the BTC full sample (α +28.9%/yr, **t=2.42, ROBUST**).
+  - α PERSISTS out-of-sample: a-priori config holdout (≥2023) α **+22%/yr** single-asset, +15%/yr pooled —
+    it does not vanish. This is more than anything else survived all session.
+- **Why it's NOT credited (honest):**
+  1. **DSR/PBO fail** — the t=2.42 cell was the best of an 18-config sweep; multiple-testing + overfit gates
+     correctly refuse a cherry-picked config. The a-priori config's OOS significance is only t≈1.2–1.5.
+  2. **FRAGILE** — the edge concentrates in deleveraging/vol-spike events (regime-conditional by nature).
+  3. **Crypto-major pooling does NOT add breadth** — BTC/ETH/SOL co-move ~0.79 (our own `multi_asset_study`),
+     so 3 assets ≈ 1 bet; pooled significance DROPPED to t=1.65. Fake breadth can't manufacture a t-stat.
+- **The credit path (precise + actionable):** real breadth comes from **cross-CLASS** perps, not more crypto —
+  the RWA/equity/commodity perps (corr ~0.22 to BTC) we uniquely track via `dingge_rwa.SECTOR_ETF_PERPS`
+  (XLE/XBI/URNM/gold/…). The crowding mechanism is universal to any perp; pooled across uncorrelated
+  underlyings, ENB jumps 2.5→8+ (our multi_asset finding) and a per-asset t≈1.5 becomes significant.
+  **Next (Minimax lane — they have the RWA funding data): run the SAME volume-confirmed crowding on the
+  cross-class perp basket, market-neutral, through the gauntlet.** That's the real test of whether we have
+  our first credited orthogonal edge.
+- **Bottom line:** we located a genuine, persistent, momentum-orthogonal seam (the hard part) and diagnosed
+  exactly why it's sub-threshold (crypto breadth is fake breadth) and exactly where the real breadth lives.
+
+## R36 🔵 Cross-CLASS funding-crowding credit path is BLOCKED — structural venue limitation (data does not exist yet)
+
+- **Hypothesis (the R35 credit path, surgical):** run the volume-confirmed `funding_crowding.crowding_signal()`
+  on the RWA/equity/commodity perp basket (`dingge_rwa.SECTOR_ETF_PERPS`) — instruments with corr ~0.22 to
+  BTC and historically uncorrelated equity/commodity underlying — to manufacture real cross-asset breadth
+  (ENB 2.5→8+) and produce a credited orthogonal-α sleeve.
+- **Test (Minimax-A 2026-07-18 — venue inventory, the proposal-vs-data fit check):** before building any
+  backtest, surveyed THREE major venues (Binance USDT-perp, Bybit v5 USDT-linear, OKX v5 USDT-SWAP) for
+  the cross-class perp universe and probed each symbol's `fundingRate` (Binance) / `funding-rate-history`
+  (Bybit/OKX) depth. Goal: verify the substrate is rich enough to express a cross-class panel ≥1y
+  (DSR/PBO/regime-robustness all need ≥6-12 months).
+- **Result — the SUBSTRATE does NOT exist on any of the three venues (probed 2026-07-18):**
+
+  | Venue | Symbols in target list | Listing dates observed | Funding depth | Verdict |
+  |---|---|---|---|---|
+  | **Binance fapi** | 2/36 listed (DIA, SPX) | DIA 2026-04-26, SPX 2026-04-26 | DIA 500 obs / 83d, SPX 500 obs / 83d — only **2 symbols ≥30d history** | UNIVERSE COLLAPSED: 34/36 delisted/unlisted |
+  | **Bybit v5** | 36/36 RWA/equity/commodity listed | Earliest 2026-05-13 (TSLA/AAPL/NVDA/QQQ/SPY/IWM/MSFT), XAU/XAG/CL 2026-06-15, XLE 2026-07-15 | **Longest span = 66 days** (TSLA/AAPL/MSFT); majority 33-66 days | UNIVERSE TOO YOUNG for DSR/PBO |
+  | **OKX v5** | 10/10 RWA perps tested (DIA-USD-SWAP doesn't exist; rest are USDT-SWAP) | All 2026-06-15 (or later) | 100 obs each / **33 days** | UNIVERSE SAME-NEW as Bybit |
+
+  **Universal reality:** the RWA/equity/commodity perp instrument class is **~2 months old** across every
+  major venue. No symbol has more than 83 days (DIA/SPX on Binance) of continuous funding history. The
+  cross-CLASS credit-path recommendation from R35 specified that ENB 2.5→8+ requires 6-12+ months of history
+  for the DSR/PBO/regime gates to fire meaningfully — that data simply does not exist yet on any venue.
+- **What this means for R35's credit-path claim:**
+  1. **The CROSS-CLASS HYPOTHESIS cannot be tested today.** Even running the partial DIA+SPX Binance panel
+     (2 names, 83 days) returns ZERO outcome from `signal_gauntlet`: K=2 is not a cross-section, 83 days is
+     below the DSR/PBO/regime floors (need 6+ months × ~20 bars/year = ≥120 obs minimum per regime).
+  2. **The "funding-crowding" mechanism on these perps is REAL and observable** (DIA + SPX have 500 obs /
+     83d, including multiple funding-z > 1 events triggering the volume-confirmed logic) — but partial
+     panel tests on 2 names produce no interpretable p-value and can't credibly confirm or deny the
+     R35 finding. **Failing to test ≠ falsifying.**
+  3. **R35's verdict stands**: orthogonality to momentum on BTC is robust (+28.9%/yr α, t=2.42). The
+     sub-threshold verdict on crypto-major pooling stands (BTC/ETH/SOL co-move 0.79 → fake breadth).
+     The credit path recommendation ("cross-class perps, market-neutral, real breadth") is **directionally
+     correct but not yet actionable on data** — like recommending an equity factor at the SEC's EDGAR
+     founding moment, before any 10-Ks have been filed.
+- **Diagnostic read on WHY the universe is so young:**
+  - **Binance**: the `RWA_PERPS` list in `dingge_rwa.py` was likely authored from the (now stale)
+    Binance fapi symbols catalog — by 2026-07-18, Binance has issued an aggressive DELISTING sweep on
+    thin synthetic-perp books (the 34 missing symbols returned funding-history data but with limited
+    observation windows and DELISTED status on `/fapi/v1/exchangeInfo`, confirming they were active
+    briefly then removed — typical for sub-$1M daily-volume synthetic perps the exchange decided
+    aren't worth the risk-management footprint).
+  - **Bybit / OKX**: these venues listed their RWA perp books in a 6-week window (2026-05-13 → 2026-07-15)
+    — a flood of single-name equity / commodity perps in direct response to the marginal retail
+    demand for non-crypto-perp 24/7 trading. Maximum funding depth at any venue = ~66 days. The
+    instrument class is **brand new** by design.
+  - **CFTC / CME constraint**: real US-equity and commodity perps (CME ES, NQ, YM, CL, GC, SI futures)
+    have multi-year history but a fundamentally different microstructure (exchange-settled margined,
+    daily MTM, no 8h funding stream). The "crowd funding" mechanism doesn't exist there — those
+    books are dominated by institutional cash-equals and basis-trade participants, not the
+    perp-crowd that generates the signal R35 hedges.
+- **Verdict:** NOT a falsification of R35 (the BTC finding stands); NOT a confirmation (cannot test).
+  This is a **STRUCTURAL FINDING** — a venue/state-of-the-world barrier that closes the credit path
+  for a defined window of time. The data will accumulate; the test will become runnable.
+- **Fallback paths (each independently testable, in order of feasibility):**
+  1. **Time-deferred re-run** (recommended, lowest friction): re-survey venues quarterly (next probe:
+     2026-10-18 = 90 days after this finding). With current listing trajectory, the DIA-class
+     perps on Bybit will reach 6+ months around **2026-11-13** and 12+ months by **2027-05-13** —
+     enough for a meaningful cross-class gauntlet.
+  2. **Equity futures analog** (bridge methodology, not perfect replication): treat CME ES/NQ/YM/RTY
+     as the "cross-class" panel and adapt the funding-crowding signal to use **futures open interest
+     divergence** (CME publishes daily COT report) instead of perp funding. COT data has 30+ years
+     of history; the mechanism is structurally similar (crowd positioning → exhaustion → reversal).
+     This is NOT the same signal (different venue, no 8h funding, different participant pool) — it's
+     a **cousin study** to see if the *orthogonality* claim transfers, not a direct replication.
+  3. **Hyperliquid / dYdX cross-class perp survey**: those DEXs may have older synthetic-RWA perps
+     against their perpetual engine. Probing their API is a one-hour invest; if 6+ months of
+     funding data exists there, the cross-class test can run on those instruments. Lower confidence
+     on participation-pool comparability (DEXs are a different crowd) but a real breadth source.
+  4. **PIVOT to a different cross-class hypothesis**: e.g., dispersion across cross-asset-class
+     return signals (btc-eth correlation regime, dxy-btc correlation, gold-btc structural inverse)
+     using existing 5+ year datasets. These are NOT R35 but they're testable **today** with the
+     MultiAsset study infra already in place.
+- **Lessons (the durable ones, beyond R35's specific path):**
+  1. **Time-deferred hypotheses are still hypotheses, but their ticket-to-ride is the data accumulating.**
+     The signal logic is no longer the bottleneck — the substrate is. Mark it with a re-probe
+     schedule; don't kill it. R35's credit path is OPEN, just DORMANT until 2026-11 minimum.
+  2. **Venue inventory is part of the upstream architecture.** A "test a signal on these symbols"
+     recommendation is incomplete without a "do these symbols have ≥Y months of history on the venue"
+     report. Add to the standard R35-style experiment brief: "platform history duration, source-aware."
+  3. **The 34/36 delistings on Binance are ALSO a finding about venue risk.** Synthetic-RWA perps are
+     an instrument class Binance tests for retention; thin-volume books are delisted aggressively.
+     For a multi-year live-trading deployment, this venue risk needs an explicit hedge (multi-venue
+     deployments, fee-tier-arbitrage, or wait for venue stabilisation).
+- **Reference:** venue probe `rwa_venue_inventory.py` (Minimax-A, 2026-07-18), substrate stash
+  `_data/rwa_funding/{diausdt,spxusdt}_funding_8h.csv` + `_data/rwa_funding/{diausdt,spxusdt}_1d_ohlcv.csv`
+  (Binance paginated full-history pull — 500+ obs each), `src/research/funding_crowding.py` (R35 ship
+  artifact, signal itself unchanged — only the universe is too thin to apply it meaningfully).
+
+## R37 🟡 Empirical-grid gate parity-A/B on freqtrade V7 — NEUTRAL with a slight loss on the post-CIS window
+- **Hypothesis:** the empirical-grid gate (data-grounded lookup `grid[tier][band] → shrunk avg_alpha_pct`)
+  improves freqtrade V7's pre-filtered trade universe vs the legacy hand-tuned `REGIME_CIS_FLOOR`,
+  as the §C1 PARITY 2026-07-18 recipe predicted (block rate ~53%, Sharpe +0.1 to +0.3 above legacy).
+- **Test:** ran the Minimax-B `c1_parity_ab.py` driver on the 4 most recent backtest ZIPs from
+  the 2026-07-18 batch (V7 × 3 walk-forward windows + MultiFactorV2 forward). Per-trade decision
+  replay against both gates, summary stats, decision matrix.
+- **Result — mixed:**
+  | Window | n | Δ Sharpe | Verdict |
+  |---|---:|---:|---|
+  | V7 HOLD-OUT (post-CIS, 2026-Q1) | 146 | **−0.32** | Slight loss — empirical blocks 33 trades legacy allows, mean +0.38% PnL each ($55.64 sum) |
+  | V7 VALIDATE (mixed, 2025-2026) | 571 | +0.15 | Within noise |
+  | V7 TRAIN (mostly pre-CIS) | 593 | +0.84 | WIN but BIASED — pre-CIS segment defaults to NEUTRAL×3_neutral = allow, empirical becomes a no-op |
+  | MultiFactorV2 forward | 6 | −8.39 | n too small to call |
+  Aggregate Δ Sharpe (V7 only) = **+0.22**, within noise.
+
+- **Lesson (the durable one — sister finding to R17):** **the empirical-grid gate is a calibrated gate
+  with an uncalibrated input.** R17 documented the LS v1 version: synthetic PnL claim of
+  +392% did not replicate on real data because per-day CIS signal tier is noisy. R37 confirms the
+  same pattern on the freqtrade side: on the post-CIS forward window (the only window with full
+  input coverage), empirical blocks 33/146 trades that legacy allows and that turn out to be net
+  profitable. The smoke-test pre-flight (block rate 53%, Sharpe +0.1 to +0.3) was an optimistic
+  projection from synthetic data; real backtests show the gate is over-strict on neutral-band
+  UNDERPERFORM cells, killing winners.
+  **Architecturally the gate + size_multiplier pattern is sound (R17 lesson 3, validated
+  elsewhere); specifically the raw-grid signal source is the limitation. Both R17 and R37 point
+  to the same fix: feed the gate a less-noisy input — smoothed-CIS labels, or a tier assignment
+  that doesn't flip 30% of the time.**
+  Two architectural takeaways:
+  1. **Smoke-test claim ≠ production claim.** Synthetic PnL extrapolations can mislead by
+     1-2 orders of magnitude on real backtests. Always re-run on real data before cut-over,
+     even when the scaffolding is sound.
+  2. **"NEUTRAL × 3_neutral = no edge data" is a silent failure mode.** When the empirical
+     grid returns `tech-only (allow, conv=0)`, the trade passes but the size multiplier drops
+     to the floor (0.4×). On TRAIN (pre-CIS), every trade had NEUTRAL → empirical allowed
+     everything with 0.4× size — explaining the "win" that disappears once CIS coverage fills in.
+
+- **Carrier note:** `c1_parity_ab.py` driver is structurally correct and reusable. The empirical-grid
+  module (`src/research/strategies/edge_gate.py`) is unchanged. C1 deliverable status: ✅
+  PARITY VERIFIED (driver runs, both gates call shared `gate()`, decision matrix exposes the
+  gate-difference pattern). HOLD on production cut-over until smoothed-CIS re-run. Driver +
+  report retained for archival + as the regression test for any future gate variant.
+- **Reference:** `reports/C1_PARITY_AB_2026-07-19.md` (full A/B), `reports/c1_parity_ab/2026-07-18-*/`
+  (per-window outputs), `src/research/freqtrade/c1_parity_ab.py` (driver), R17 entry above
+  (LS v1 sister finding).
+
+## R38 🟡 Smoothed-CIS empirical-grid gate re-run — the R17 fallback hypothesis FALSIFIED on V7 HOLD-OUT
+- **Hypothesis (the R17 lesson pointed here):** "Sparse grids need smoothed inputs" (R17).
+  If the empirical-grid gate's failure on V7 HOLD-OUT (R37, Δ Sharpe -0.32 from blocking
+  33 winners) is caused by day-to-day NEUTRAL ↔ OUTPERFORM ↔ UNDERPERFORM tier whiplash,
+  then feeding the gate **smoothed** CIS labels should reduce decision noise → empirical
+  block rate should drop on those 33 winners → Δ Sharpe should recover toward +0.1 to +0.3.
+- **Test:** built `src/research/freqtrade/c1_parity_ab_smoothed.py` (sister driver — same
+  gate logic, same grid, same band snapshot; only the CIS source changes from
+  `_data/cis_history/` to `_data/cis_history_smoothed/`). Ran on the same V7 HOLD-OUT
+  backtest ZIP (146 trades, 2026-01 → 2026-03-14, 100% smoothed-CIS coverage).
+- **Result — falsified:**
+  | Variant | Both pass | Emp blocks (legacy passes) | Emp passes (legacy blocks) | Sharpe Δ | Total $ Δ |
+  |---|---:|---:|---:|---:|---:|
+  | Raw CIS (R37) | 102 | 33 | 7 | **−0.32** | −$46.70 |
+  | **Smoothed CIS (this run)** | 99 | 37 | 7 | **−0.42** | −$57.00 |
+  Empirical blocks 4 MORE trades under smoothed (37 vs 33) and the verdict gets slightly
+  WORSE, not better. The R17 fallback hypothesis is **falsified on V7 HOLD-OUT**.
+
+- **Why smoothed-CIS made things worse (the diagnostic):** only 4 trades changed decisions
+  between raw and smoothed, but they all hurt:
+  - **3 BTC LONG trades (2026-03-05 × 2, 2026-03-11):** raw CIS tier = NEUTRAL →
+    empirical grid returned "no edge data → tech-only ALLOW"; smoothed CIS tier flipped to
+    OUTPERFORM → empirical grid returned "OUTPERFORM × 2_off = -5.8% expected → BLOCK."
+    These 3 trades had PnL +$4.71 / -$5.83 / +$3.61 = net +$2.50 — the smoothed gate
+    correctly avoided the -$5.83 loss but threw away +$8.32 of winners in the process.
+  - **1 ETH LONG trade (2026-01-06):** raw CIS score 60.5 vs smoothed 59.8 in regime EASING
+    (floor 55). Both are above floor (PASS), but raw had BLOCK (different regime/score
+    source — the snapshot layer used `cis_scores_latest.json` not the smoothed dir).
+    Smoothed flipped this to PASS, capturing +$7.80 PnL. **The one win from smoothing.**
+
+  Net: +$7.80 (legacy flip) − $2.50 (3 BTC blocks) = +$5.30 absolute, but Δ Sharpe shifted
+  by -0.10 because the LEGACY gate improved more (+0.15 Sharpe) than the empirical gate
+  (+0.05 Sharpe). **Both gates get more selective under smoothed CIS, but only legacy's
+  selectivity is in the right place.**
+
+- **Lesson (durable — sharpens R17's):** **"smoothing" the CIS tier is NOT the same as
+  smoothing the underlying signal.** Two distinct failure modes for the empirical grid:
+  1. **Tier whiplash** (R17 framing): NEUTRAL ↔ OUTPERFORM flips on consecutive days
+     because the daily CIS recalc drifts. The grid treats each tier as a discrete state,
+     so the gate decision thrashes.
+  2. **Smoothed-tier false confidence** (this finding): when a rolling smoother crosses
+     a tier boundary (e.g. 7-day average moves from 50 to 55), the smoothed label can flip
+     NEUTRAL → OUTPERFORM even though the underlying daily scores are still noisy. The
+     gate then sees a "confident" OUTPERFORM and acts on it (e.g. blocks long in
+     OUTPERFORM × 2_off). **The smoother didn't remove noise; it created a new layer of
+     confident-noise.**
+  This is the **canonical risk of any smoothing/regularization on a noisy classifier**:
+  the smoothed output looks calmer and more "decidable," but the decisions made on it
+  inherit whatever bias the smoother introduced at boundary crossings. In a finite
+  sample, those boundary-crossing decisions are precisely where overconfidence lives.
+
+- **What this RULES OUT for the empirical-grid ship path:**
+  1. ❌ "Smooth the CIS tier first, then re-run the gate" — FALSIFIED on V7 HOLD-OUT.
+  2. ❌ "Try a different smoothing window (3d, 7d, 30d)" — likely same family of failure
+     unless the underlying input is fundamentally recalibrated (regime detection,
+     pillar weights, signal blend).
+  3. ❌ "Run more windows to disambiguate" — the R37 finding (Δ Sharpe -0.32 on a clean
+     post-CIS window with 100% CIS coverage) is the load-bearing test. Negative there
+     is the verdict.
+
+- **What remains open:** the empirical-grid gate is structurally correct and the
+  size_multiplier lever is reusable (R17 lesson 3 stands). What we DON'T have is a
+  **calibrated CIS signal source** that:
+  (a) is stable across consecutive days (no whiplash),
+  (b) has tier assignments that are unbiased at boundary crossings (no false confidence),
+  (c) covers the post-CIS window with full pillar data (currently 100% on V7 HOLD-OUT,
+      so coverage is fine; the issue is content, not coverage).
+
+  Candidates to explore next (priority order):
+  1. **Pillar-weighted composite tier** (smooth the underlying pillar scores, then derive
+     tier from the smoothed composite) — bypasses the boundary-crossing bias.
+  2. **Regime-pinned tier** (gate decides on (regime, pillar_z) not (regime, tier)) —
+     uses continuous pillar scores directly, no tier classification.
+  3. **Walk-forward tier assignment** (re-fit tier thresholds every 30d) — adapts to
+     regime drift without the smoother-bias problem.
+  All three are research-only at this stage.
+
+- **Carrier note (the durable things):**
+  - `src/research/freqtrade/c1_parity_ab_smoothed.py` (NEW driver) — reusable for any
+    smoothed-CIS variant A/B. Sandboxed-safe (~30s for 200 trades, pure Python).
+  - `reports/c1_parity_ab/2026-07-19-v7-holdout-smoothed/{per_trade.csv,summary.csv,
+    verdict.md}` — full A/B output. Compare side-by-side with R37's raw-CIS run.
+  - Decision: **HOLD production paper on `REGIME_CIS_FLOOR` (the legacy baseline).**
+    Empirical-grid gate remains research-only. R38 logged; the empirical-grid ship
+    path requires a different signal source (NOT a smoothing of the current one).
+- **Reference:** `reports/c1_parity_ab/2026-07-19-v7-holdout-smoothed/verdict.md`,
+  `src/research/freqtrade/c1_parity_ab_smoothed.py`, R37 (raw-CIS A/B), R17 (LS v1 sister).
+
+## R39 🟡 CALM-REGIME short-vol carry — clears full gauntlet + OOS on BTC, but does NOT replicate on ETH (suspect single-asset)
+- **Hypothesis:** revive the shelved vol sleeve (R28, killed for lack of real IV data) with **Deribit DVOL**;
+  a short-vol carry harvesting IV−RV should be orthogonal to momentum, and gating it by funding-crowding
+  should dodge the RV-spike tail (leveraged-long flush → vol spike, per §TRADER_TOM cascade).
+- **Test:** Deribit DVOL (30d IV, 2023-10→2026-07, one light call — no pagination) + Binance RV + funding.
+  Short-variance daily P&L (collect implied 1d variance, pay realized r²), base vs crowding-gated, through
+  absorption + regime-robustness. `/tmp/…vol` (to productionize into `src/research/vol_carry.py`).
+- **Result — the REAL part:** the vol risk premium is large + persistent: **IV richer than RV 79% of days,
+  mean spread +5.8 vol-pts**. The short-vol carry earns **SR +1.49, residual α t=1.99 (crosses 1.96),
+  momentum-β ≈ 0** — genuinely ORTHOGONAL. Second non-absorbed seam after R35 crowding, and this one
+  clears absorption significance on BTC alone. Confirms R28's cause with real data.
+- **Result — the HONEST part:** it does NOT clear the gauntlet. **FRAGILE** (3/4 subsamples positive,
+  regime-dependent) and a **−15.7σ worst day** — the textbook short-vol negative-skew tail (pennies in
+  front of a steamroller; violates "small when wrong").
+- **Refuted sub-hypothesis:** the funding-crowding gate did NOT dodge the vol tail — it cut SR (1.49→1.28)
+  AND made the worst day WORSE (−15.7→−17.4σ). Funding crowding ≠ vol-spike predictor. Clean negative.
+- **★ RESOLUTION — the calm-regime gate cracks it.** Be short vol ONLY when trailing-10d realized vol is
+  low (<55, i.e. genuinely calm — don't sell into a storm). This is the professional way to run short-vol,
+  and it transforms the sleeve: **SR +2.69, α t=3.66, ROBUST across all subsamples, momentum-β ≈ 0, worst
+  day HALVED to −8.2σ.** It then **cleared the FULL `signal_gauntlet` as a ★ SURVIVOR** — significance ✓
+  DSR ✓ PBO ✓ absorption ✓ regime-robustness ✓ — surviving the multiple-testing + overfit gates despite
+  the threshold being chosen from a small sweep. **And it holds OOS:** TRAIN(<2025-07) SR +2.96 αt +3.31,
+  **HOLDOUT(≥2025-07) SR +2.25 αt +2.66** — still significant out of sample. This is the FIRST candidate
+  all session (and in this ledger) to clear the entire gauntlet AND survive a clean holdout. Tracked as
+  `src/research/vol_carry.py`.
+- **Remaining honesty caveats (before any capital):** (1) single asset (BTC) + single vol index (DVOL) —
+  needs ETH/cross-asset confirmation; (2) the variance-swap P&L is a STYLIZED proxy — real short-vol via
+  options has bid/ask, gamma, discrete strikes → the frictionless backtest overstates it, and the −8.2σ
+  day still demands wings/position limits; (3) DVOL history only to 2023-10 (~2.7y, one holdout); (4)
+  capacity is real but bounded.
+- **⚠️ CROSS-ASSET FAILURE (same day) — the honest downgrade.** Ran the SAME calm-regime carry on ETH
+  (Deribit ETH DVOL + Binance): **SR −0.12, α t=+0.06, FRAGILE, −19.3σ tail** — it does NOT work on ETH.
+  Pooled BTC+ETH collapses to SR +0.86, α t=1.28 (insignificant). So the BTC ★-survivor is **BTC-SPECIFIC
+  and does not replicate** on the next-most-liquid asset. The gauntlet passed it because DSR/PBO test
+  overfit-to-CONFIG, not overfit-to-one-asset's-HISTORY — a real blind spot the ETH check exposed.
+  **Verdict: NOT a credited edge.** The vol risk premium is real, but a *robust cross-asset* harvest via
+  this construction is unproven; the BTC result is a suspect single-asset/single-period artifact.
+  **Gauntlet upgrade this exposed: add a CROSS-ASSET REPLICATION gate — a single-asset ★ is not credited.**
+  Do not size.
+
+## R40 🔴 Capitulation Bounce sleeve — mechanism detected, signal doesn't survive cross-section demean on 2024-2026
+- **Hypothesis (per §TRADER_TOM_DOCTRINE §5b — durable-core mean-reversion):** when an asset drops
+  >5% in 5d AND 20d vol exceeds 2× 60d vol (the "panic-sell vol-spike" signature), the position
+  should bounce +5-6% over the following 5d. Asymmetry: long only, catastrophe stop @ -10%. Cross-
+  section demean isolates idiosyncratic capitulation from market-wide drops. Prototype in
+  `src/research/cis_regime_studies/capitulation_bounce.py`.
+- **Test:** BTC/ETH/SOL/AVAX hourly OHLCV from /Volumes/CometCloudAI/data/ohlcv (2024-06-07 →
+  2026-06-07, 17520 bars). Per-asset signal + cross-section demeaned pooled book, OOS = last 20%.
+  Variants: vol_mult ∈ {0, 0.5, 1, 2}, ret_thresh ∈ {-3%, -5%, -7%, -10%}, hold ∈ {3d, 5d, 8d}.
+- **Mechanic validation:** the signal correctly identifies the **2024-08-05/06 Yen carry-trade unwind**
+  (BTC $65k → $50k, ETH/SOL/AVAX simultaneous) — all 4 assets fire at t=1435-1439. BTC fwd 5d return
+  from those fires is +2.63% mean / +2.15% median / **76% win rate** on the first 50 fires. So the
+  TRIGGER is detecting real capitulation events, and bounces DO happen on individual assets.
+- **What kills it:** the cross-section demeaned pool alpha is **negative** at every reasonable
+  config:
+  | vol_mult | OOS Sharpe | α_t | fires |
+  |---------:|-----------:|----:|------:|
+  | 0.0      | -2.09      | -1.52 | 16183 |
+  | 0.5      | -0.33      | -0.31 | 12693 |
+  | 0.7      | -0.08      | -0.11 |  2530 |
+  | 1.0+     | +0.00      | +0.00 |  1083 |
+  10-asset universe (BTC/ETH/SOL/AVAX/BNB/XRP/ADA/DOGE/LINK/DOT): OOS Sharpe -0.85, α_t -0.32,
+  ENB 1327. Even broadening the universe doesn't recover alpha.
+- **Diagnosis (two structural reasons):**
+  1. **2024-2026 has too few capitulation events.** Of 224 BTC fires at canonical config (vm=2.0),
+     ALL 224 cluster on 2024-08-05/06. The OOS window (2026-01-12 → 2026-06-07) has ZERO fires. The
+     bullish 2024-2026 tape means dips got bought back fast at the per-asset level, but the
+     market-wide correlation (BTC/ETH/SOL/AVAX all drop together) makes the demean zero out exactly
+     when it should fire.
+  2. **Cross-section demean is too punitive for highly-correlated majors.** ENB = 1320 for 4 majors
+     (effective <2 independent bets). When BTC dips, ETH/SOL/AVAX dip simultaneously — demean = 0.
+     The signal only fires on IDIOSYNCRATIC capitulation, which is rare in crypto majors.
+- **Lesson (the doctrine test):** §TRADER_TOM_DOCTRINE says "mean-reversion at extremes is a real
+  human-behavior pattern" — TRUE at the per-asset level (76% BTC bounce rate, +2.6% fwd 5d). But
+  the doctrine ALSO says "expectancy, not win-rate; breadth × IC is what compounds" — the
+  cross-section demean kills breadth precisely because crypto majors are too correlated. **A
+  per-asset capitulation signal needs a per-asset implementation (or a much broader / less
+  correlated universe) to capture the edge; the cross-section book structure is wrong for this
+  signal type.** Same architectural lesson as R16: a working signal in one frame does NOT transfer
+  to a different frame without re-validation.
+- **What to do with this:** the **PER-ASSET** trigger logic is real and reusable — the 76% win rate
+  is genuine. The RIGHT shape for it would be a per-pair swing overlay (not a cross-section
+  pooled book), with explicit position sizing and the catastrophe-stop discipline intact. That
+  would be Sleeve E-adjacent territory, but as a CROSS-SECTION MARKET-NEUTRAL sleeve, this idea
+  does not ship. Logged honest.
+- **Reference:** `src/research/cis_regime_studies/capitulation_bounce.py` (240 LoC + 200 LoC
+  selftest), `reports/cap_bounce/` (this R entry to be saved as REPORT.md when promoted).
+
 ## What the graveyard says, in aggregate
 
 1. **Cleverness overfits; simple survives.** (R1, R2, R8) Every added degree of freedom lost OOS. The winners are the humble ones (REGIME_CIS_FLOOR, funding-level).
@@ -492,5 +882,48 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 8. **Tradfi factor signals don't always transfer to crypto.** (R22) Cross-sectional reversal (Jegadeesh/Titman 1993, documented in tradfi equities) loses money robustly on a 21-name crypto universe. Reversal assumes losers oscillate around stable fundamentals; in crypto, "losers" are often *structurally* declining (deprecation, broken projects, dilution) and the signal fights the structural trend. Cross-sectional **momentum** dominates reversal by ~3 Sharpe points on the same universe — confirming the crypto factor literature (trend/persistence > mean-reversion). **Portable patterns from tradfi must be re-validated on the target market's microstructure.**
 9. **Cointegration ≠ tradeable pair.** (R23) Engle-Granger p < 0.05 says the spread is stationary, not that the mean-reversion is fast enough to overcome costs and stop-loss damage. Crypto pairs have slow, fragile mean-reversion — divergences are large, exits rare, stops dominate. Pair-trade as a class is marginal on this universe.
 10. **The loop's job is to kill our ideas cheaply.** Nine of ten here died before a dollar was at risk. That is the system working, not failing.
+11. **A correct per-asset trigger doesn't make a correct pooled book.** (R40) The trigger logic can be right (76% win rate, +2.6% fwd 5d on BTC's 2024-08-05 fire) and the pooled cross-section alpha can still be negative — because the demean is too punitive when assets are highly correlated (BTC+ETH+SOL+AVAX drop together in 2024-2026 = demean kills the signal exactly when it should fire). Architecture of the book must match the correlation structure of the signal's universe. A signal with a strong per-asset edge needs a per-asset book, not a cross-section one.
 
 *The most valuable output of this operation is a well-kept graveyard.*
+
+## R41 🔴 Sleeve A (MVRV mean-reversion) — TOM-DOCTRINE HOLDS on multi-window OOS, but the strategy itself FAILS DSR
+- **Hypothesis (per marketing backtest + §TRADER_TOM_DOCTRINE §5b):** mean-reversion via MVRV<0.9
+  AND price_position<0.10 entry, RSI>65 OR pos>0.75 exit, on BTC/ETH/SOL 4h Binance futures, returns
+  +150.2% over 14 months at 77% win. Tom-doctrine adds: bind the tail via catastrophe stop + size
+  cap, do NOT 3× naked MR.
+- **C-S2 [P0] BOUND ruin risk (single window 2025-01 → 2026-03, 14.5mo, faithful port of original
+  backtest):** tested 7 stop/leverage/cap variants. Marketing's 3× naked MR is RUIN (−84.74% maxDD).
+  A2 (1× lev, no stop) preserves MR signature at 70% WR but only +2.72% net. **R42 surfaced:**
+  marketing "+150.2%" is NOT reproducible on the same window with the same code; the −63% ETH max
+  single IS reproducible (−64.43% on same 2026-01-31 ETH entry). For LP use: cite signal profile,
+  not headline aggregate.
+- **C-S3 [P0] OOS walk-forward (6 quarterly folds + hold-out, 2024-04 → 2026-07, 7d embargo):**
+  Test A confirms R42 multi-window. Sum PnL across 7 windows: A1=−54.2%, A2=−2.7%, A3=−17.3%,
+  A4=−24.9%, **A6=+18.96%** (tight stop, ONLY positive), A7=−7.3%, A8=−7.4%. **R43 surfaced then
+  resolved:** tight −5% stop (A6) empirically WINS on multi-window OOS by PnL (+2.71% avg vs
+  −0.38% for natural-exit A2), but at cost of WR tanking 69% → 51.5%. A6 generates 70% MORE
+  trades (201 vs 118) — it's a "sharper" MR (small wins, frequent), vs A2's "patient" MR (larger
+  wins, infrequent). **Tom-doctrine's WR-tanking warning was empirically wrong on multi-window
+  PnL, but the Tom-doctrine's deeper rule "expectancy > win-rate" holds — A6 has higher expectancy
+  per trade (0.07 SR/trade vs 0.02) and positive sum PnL.**
+- **C-S3 Test B (threshold-sweep PBO):** swept 25 (mvrv_entry × pos_entry) configs per fold on
+  TRAIN → OOS. **Mean Spearman ρ = 0.172, mean PBO = 0.500.** Train-best ≠ OOS-best in 3/6 folds.
+  Fold 6 has ρ = −0.81 (anti-correlated). **Threshold-tuning overfits.** The OOS-optimal threshold
+  varies wildly (0.85-0.92 mvrv, 0.05-0.15 pos). Use the FIXED thresholds from the original; do not
+  optimize.
+- **C-S3 Test C (DSR, n_trials=8 stop variants):** per-trade SR for all variants is 0.02-0.07.
+  Expected max SR under null for 8 trials = **1.46**. PSR (single trial) reaches 0.84 for A6, but
+  **DSR = 0.00 for ALL variants**. After correcting for multiple-testing (8 stop variants tested),
+  NO variant has statistically distinguishable edge. The "win" in raw PnL terms is consistent with
+  best-of-8 random search under H0.
+- **Verdict — DE-RATE per §STRATEGY-REVIVE ("if 77% doesn't survive OOS → CUT or de-rate"):**
+  - 77% WR **does NOT survive**: drops to 69% on multi-window (within noise but lower).
+  - +150% headline **does NOT survive**: A2 at 1× lev is barely positive on OOS sum PnL.
+  - Per-trade SR **does NOT survive DSR**: 0.04-0.07 observed vs 1.46 expected max under H0.
+  - **Recommendation:** **keep Sleeve A as a low-size satellite** (5% per-symbol cap, 1× lev, no
+    leverage, wide catastrophe stop). The +18.96% sum-PnL for A6 on multi-window is suggestive of
+    edge but NOT statistically credited. C-S4 (two-layer book) and C-S5 (live paper) must
+    incorporate this as a SIZE-LIMITED allocation, not a primary sleeve. **The headline edge is
+    refuted; the structural allocation (mean-reversion as a tail-bound satellite) is kept.**
+- **References:** `reports/C_S1_HONEST_RESCORECARD_2026-07-19.md`, `reports/C_S2_SLEEVE_A_BOUND_2026-07-19.md`,
+  `reports/C_S3_OOS_WALK_FORWARD_2026-07-19.md`, `_data/research/c_s3_oos/{test_a,test_b,test_c}*.csv`.

@@ -331,6 +331,80 @@ Distinct signal extraction from shared funding-rate data → orthogonal PnL expe
 
 ---
 
+## 10. Phase 2 results (2026-07-18) — 🔴 RED KILLED BEFORE PHASE 3
+
+Phase 2 implemented `src/research/cis_regime_studies/vol_sleeve_v2.py` + 10 sandbox smoke tests
+(all passing). The three runnable legs were tested on real data with the results below:
+
+| Leg | Universe | Window | Sharpe | MaxDD | Final NAV | Ann Return | Status |
+|---|---|---|---|---|---|---|---|
+| **long_vol_rv_only** | 21 names | 9y (2017-08 → 2026-07) | **−2.20** | **−39.82%** | $6,336 | −4.97% | 🔴 FAIL |
+| **long_vol_rv_funding** | 5 majors | 21mo (2025-01 → 2026-07) | **−1.631** | −0.65% | $9,935 | −0.07% | 🔴 FAIL (0 fires) |
+| **short_vol_carry_rv** | 21 names | 9y | **+0.236** | −0.78% | $10,029 | +0.03% | 🔴 FAIL (<0.3) |
+| **combined (30% Leg1 + 70% Leg3)** | mix | mix | +0.012 | −1.95% | $9,999 | +0.03% | 🔴 FAIL |
+
+### Verdict: REFUTED — Phase 3 not advanced
+
+All three legs fail the Phase 3 readiness gates:
+- **Gate 1** (corr to LS v1 < +0.3 AND MaxDD > −25%): FAIL — Leg 1's MaxDD −39.82% violates.
+- **Gate 2** (Sharpe > 0.5 OOS in walk-forward): FAIL — best leg is +0.236, below threshold.
+- **Gate 3** (DSR > 0.5 across ≥6 walk-forward windows): untested (mathematically impossible given Leg 1's negative SR).
+
+### Cause vs outcome gap
+
+The CAUSE is real and articulated (cascade mechanic IS a documented microstructure phenomenon). The
+EMPIRICAL realization on RV + funding data alone is too weak to generate tradeable alpha. Phase 2
+numbers are a STRUCTURAL LOWER BOUND on what Path A (no-options, RV-only proxy) can achieve.
+Phase 4 (with Deribit IV data → IV-RV basis trade + delta-hedged straddles) is the only path
+that could realize the cause's full alpha.
+
+### Lessons written to refutation ledger
+
+Recorded as **R28** in `REFUTATION_LEDGER.md`. Three load-bearing lessons:
+
+1. **Cause articulated ≠ cause tradeable on the data you have.** A YELLOW verdict (Phase 1) is
+   about CAUSE CLARITY, not EXPECTED PNL. The empirical finding is independent.
+2. **A trigger that fires 0 times in 21 months is not a leg** — it's a research artifact. Leg 2's
+   failure mode (insufficient trigger frequency) is distinct from Leg 1's (oversized losses).
+3. **Vol-of-vol is a saturated axis too.** R25/R26/R27 killed the funding axis; R28 kills the
+   realized-vol axis. The axis saturation pattern is consistent — every re-expression of an
+   underlying signal faces the same noise floor.
+
+### Bug surfaced and fixed during Phase 2 (R27-bis)
+
+Leg 3's first implementation used `notional × rv_per_bar × 0.30` as the premium proxy, producing
+$259 billion terminal NAV over 9 years of compounding (geometric compounding of a per-bar scalar
+explodes). Fixed to `notional × 5% / (252 × 6)` — a constant annualized spread giving realistic
+$10,029 terminal NAV. Lesson: any per-bar proxy that compounds over thousands of bars needs an
+annualized formulation, not a per-bar scalar. Bug surfaced and fixed in the same session; no
+false-positive went unreported.
+
+### What's NOT being shipped
+
+- ❌ Vol Sleeve v2 as a deployable sleeve
+- ❌ The combined NAV (orthogonality test only, not load-bearing)
+- ❌ The OI/MCap overlay (deferred per YELLOW scope; now moot)
+
+### What IS being shipped (the work product)
+
+- ✅ `src/research/cis_regime_studies/vol_sleeve_v2.py` — Phase 2 driver (sandbox-safe)
+- ✅ `src/research/cis_regime_studies/tests/test_vol_sleeve_v2_smoke.py` — 10 unit tests, all passing
+- ✅ R28 refutation entry with full Phase 2 numbers
+- ✅ Documentation of the bug → fix → re-run path
+
+### What remains on the shelf (Phase 4 candidate)
+
+The cause itself is worth revisiting IF Deribit BTC options history (2017-12 → present) is ever
+pulled — that's a 1-2 week data engineering project. With IV data:
+- Long-vol cascade leg becomes a delta-hedged long put / call spread at cascade entry
+- Short-vol carry leg becomes a delta-hedged short straddle harvesting the IV > RV spread directly
+- OI/MCap overlay becomes the standard `top-decile OI/MCap ∧ funding > 0` cascade precondition
+- Triple-crowding state fires with full 3-gate definition (instead of 1-2 gates)
+
+This is the **only path** to realizing the cause's full alpha. Until then, R28 stands.
+
+---
+
 *Phase 2 may proceed. The cause is articulated, the data is sufficient for the RV leg, and the
 scope adjustments for funding state are explicit. Hold the discipline: Phase 2 builds, Phase 3
 gates; both are kill-or-continue points, not commitments.*

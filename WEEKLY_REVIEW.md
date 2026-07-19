@@ -5,6 +5,68 @@ Ad hoc reviews called by Jazz any time.
 
 ---
 
+## 2026-07-19 | Week ~20 | Lens: Institutional LP + Competitor (the "do we have an edge yet?" audit)
+
+*(Review cadence lapsed May 25 → July 19 while in deep build. Resuming. This entry covers the
+alpha-validation arc of the last ~2 weeks — the biggest methodological jump the project has made.)*
+
+**What actually changed (the improvement over the prior 2 weeks).** Two weeks ago we were testing
+strategy ideas one at a time and refuting them ad hoc (R18–R28: unlocks, miner-cost, conviction
+sizing, vol sleeve v1 — each a one-off kill). This week we built the thing that was missing: a
+**systematic institutional filter** — the `signal_gauntlet`: significance → deflated-Sharpe (multiple
+testing) → PBO (overfit prob) → **factor-absorption** → **regime-robustness** → **cross-asset
+replication** → **point-in-time leakage**. Two of those gates were borrowed directly from outside
+rigor (the Google/academia LLM-factor study's *absorption* filter; Tom Wellington / Two Sigma's
+*temporal-leakage* guard). The shift is from "test one idea" to "an industrial funnel every idea must
+survive." That is the single most valuable structural change since the CIS engine itself.
+
+**It's already earning its keep.** The gauntlet killed four plausible-looking things before any
+capital: the Crowd Clock (momentum in a costume, R24), the +1.97-Sharpe composite (a beta mirage on a
+friendly regime — R33, caught *before* it reached an LP deck), naive funding-crowding (R34), and the
+BTC vol-carry that looked like a ★-survivor until the *same-day* ETH check killed it (R39). Each kill
+is honest and logged. The graveyard (R1–R39) is now a real asset.
+
+### Adversarial reads
+
+- **Institutional LP (family office):** They would respect the *process* more than any Sharpe — the
+  gauntlet + the graveyard say "we won't lose your money on a mirage," which is exactly what a
+  sophisticated allocator wants to hear from a zero-fee, performance-only fund. **But the honest gap is
+  stark: we have ZERO credited alpha.** The one signal that cleared the full gauntlet (vol carry) failed
+  cross-asset replication the same day. An LP's fair verdict: "elite discipline, no demonstrated edge —
+  come back when one signal clears cross-asset." Our defensible story today is *risk* (−3–5% MaxDD) and
+  *rigor*, not returns.
+- **Competitor (copy speed):** A well-resourced quant desk copies the gauntlet in a week — it's standard
+  once articulated. Our moat is NOT the filter. It's (a) the **crypto-native orthogonal seams** the
+  equity factor zoo doesn't contain (funding-crowding, vol-risk-premium, on-chain structure), and (b) the
+  accumulated causal ontology + refutation ledger. Lean into those, not into more filter.
+- **Trader agent:** The MCP is back up (19 tools) and signals are compliance-safe positioning language —
+  but with no credited edge, an agent uses us for context/screening, not execution. And CIS data was
+  silently stale (cron down) until fixed to honestly flag `stale` — integrity restored.
+
+### Infrastructure debt check
+- ✅ Fixed this week: Railway trading-loop 500; CIS **fake-freshness** (served 22h-old scores stamped
+  "now" → now honest `stale`/`data_age_s`); crowd-clock null inputs; local MCP revived + hardened;
+  CLAUDE.md trimmed under the 40k limit; gauntlet cross-asset blind spot closed.
+- 🔴 Open (Minimax lane): cron daemon stuck (no CIS pushes); Supabase DNS/URL.
+- 🟡 Small: frontend CIS badge should consume the new `stale` flag (green→amber when old).
+
+### The one strategic priority
+
+**We have the field's-best machine for KILLING ideas and too few ideas to feed it.** Per Wellington and
+the Google paper, the scarce input is the *original orthogonal question*, not the filter — and we've run
+maybe 5 causal ideas through the gauntlet for 0 credited survivors (their funnel was 280 → 9). The risk
+is becoming a beautiful refutation engine that never ships an edge. **So the priority is to shift effort
+from filter-building to orthogonal-candidate GENERATION** — more shots on goal in the non-momentum,
+non-factor-zoo space (cross-CLASS crowding breadth on Hyperliquid; on-chain supply/holder structure;
+cross-venue basis; a cross-asset-robust vol construction). We need ~10 orthogonal candidates entering the
+gauntlet to expect 1 to clear it cross-asset. That one credited edge is the difference between "an
+institutional-grade filter" and "a fund an LP can actually back."
+
+*Next review: week of July 26. Suggested lens: Trader Agent (would it execute?) once a first edge clears
+cross-asset, or Competitor if still in candidate-generation.*
+
+---
+
 ## 2026-05-25 | Week 12 | Lens: LP (family office) + Honest product audit
 
 **Context:** Supabase migration fully fixed and applied via MCP (all 11 tables, idempotent). signal_journal live with 0 rows — track record clock started today. PerformanceDashboard.jsx deployed. Freqtrade v3 dry run live (PID=99388, Reversal mode, 20 pairs, PENDLE+UNI as candidates). HKUST co-founder candidate in discussion. T1 now 58 assets (was 25 in April).

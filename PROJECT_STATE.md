@@ -5,11 +5,75 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-07-16 (Minimax-C; Phase D2.2 4-slot sleeve validation — POSITIVE, recommended production sleeve UPDATES to 4-slot E: V7 50% + V9 15% + V12b 20% + V14a 15%; +1.43pp net PnL / +0.15pp DD vs 3-slot baseline at 9.5:1 PnL:DD ratio; Phase D2.1 V14 Option A re-tune was the building block for V14a inclusion; Track B Nautilus 30% sleeve fusion remained NEGATIVE — DO NOT execute)
-
----
+**Last updated:** 2026-07-19 (Minimax-B; §C1 PARITY addendum — smoothed-CIS R17 fallback hypothesis **FALSIFIED** on V7 HOLD-OUT (R38 logged: Δ Sharpe -0.42 vs raw -0.32; smoothed labels create confident-noise at boundary crossings, not a reduction in noise). Production paper remains on `REGIME_CIS_FLOOR`; empirical-grid gate is research-only. AND §CROWDING-BREADTH pre-staged for Mac-side HL credit test (load_hyperliquid_panel + scripts/crowding_breadth_hl.py ready to run when HL cache lands; verified on synthetic HL format). AND §ABSORPTION-SWEEP Run #3 closed with cash as the only residual survivor (α_t=2.89 factors-only, fails AND-after-peers +1.87). AND §CAPITULATION-BOUNCE sleeve prototype built + tested on real data; **R40 🔴 logged** — per-asset trigger correct (BTC 76% win rate, +2.6% fwd 5d on Yen carry-trade unwind fire), but cross-section demeaned pooled alpha is negative at every config; signal doesn't ship in pooled form, but trigger logic is reusable for per-pair overlay.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
+
+- **2026-07-19 🔴 R40 — Capitulation Bounce sleeve REFUTED on pooled cross-section (Minimax-B, doctrine test).**
+  Built `src/research/cis_regime_studies/capitulation_bounce.py` (~530 LoC) per §TRADER_TOM_DOCTRINE §5b (durable-core mean-reversion: long when 5d<-5% AND 20d vol > 2× 60d vol; catastrophe stop @ -10%; cross-section demeaned pooled book). Synthetic test fixed (deterministic event injection + helper `_inject_capitulation_event`; previous cumprod smooth-drift failed because close[t_trigger] was never modified by either drop or bounce windows — silent indexing bug, ret_5d saw only original random walk). Real data on BTC/ETH/SOL/AVAX hourly 2024-06-07→2026-06-07: signal correctly identifies 2024-08-05/06 Yen carry-trade unwind (BTC $65k→$50k, all 4 assets fire t=1435-1439); BTC fwd 5d return on first 50 fires = +2.63% mean / +2.15% median / **76% win rate** (per-asset trigger IS real). But cross-section pooled OOS alpha is **negative at every config** (vm=0.5: Sharpe -0.33/α_t -0.31; vm=0.7: -0.08/-0.11; vm=1+: 0.00). 10-asset universe OOS Sharpe -0.85, α_t -0.32, ENB 1327 — even broadening doesn't recover. Two structural reasons: (1) 2024-2026 has too few capitulation events (canonical vm=2.0: 224 BTC fires ALL on 2024-08-05/06, ZERO in OOS 2026-01-12→06-07); (2) BTC/ETH/SOL/AVAX are too correlated — cross-section demean zeroes out the signal precisely when it should fire. Architectural lesson (R16/R40 pair): a correct per-asset trigger does NOT make a correct pooled book — signal architecture must match the correlation structure of the universe. Per-asset trigger logic is reusable for a per-pair swing overlay; pooled form does not ship. Logged honest. REFUTATION_LEDGER.md → R40.
+
+- **2026-07-19 🔴 R38 — Smoothed-CIS empirical-grid gate re-run FALSIFIED the R17 fallback on V7 HOLD-OUT (Minimax-B).**
+  Built `src/research/freqtrade/c1_parity_ab_smoothed.py` (~280 LoC, sister driver — same `gate()`/grid/band; only CIS source differs to `_data/cis_history_smoothed/`). Ran on the same V7 HOLD-OUT backtest ZIP (146 trades, 100% smoothed coverage). Headline: Δ Sharpe **−0.42** (vs raw −0.32, **WORSE**); empirical blocks 4 MORE trades (37 vs 33); total PnL drops another $10.30. Per-trade diagnostic: 4 decisions changed — 3 BTC LONGs had smoothed tier flip NEUTRAL → OUTPERFORM on 2026-03-05/11 (raw: "no edge data, ALLOW"; smoothed: "OUTPERFORM × 2_off = -5.8% expected, BLOCK") costing +$2.50 of winners; 1 ETH LONG legacy flip captured +$7.80. **Two distinct failure modes for the empirical grid (this sharpens R17):** (a) tier whiplash (R17 framing) — daily CIS recalc drifts; (b) **smoothed-tier false confidence (R38 finding)** — rolling smoother crosses tier boundary, label flips NEUTRAL→OUTPERFORM, gate sees "confident" OUTPERFORM and acts on it; the smoother didn't remove noise, it created a new layer of confident-noise. Decision: HOLD production paper on `REGIME_CIS_FLOOR`; empirical-grid gate research-only until a **different signal source** is plugged in (NOT a smoothing of the current one). Three candidates to explore next (research-only): (1) pillar-weighted composite tier (smooth pillars, derive tier), (2) regime-pinned tier (gate on (regime, pillar_z) continuous, no tier), (3) walk-forward tier assignment (re-fit thresholds every 30d). Output: `reports/c1_parity_ab/2026-07-19-v7-holdout-smoothed/{per_trade.csv, summary.csv, verdict.md}`. REFUTATION_LEDGER.md → R38.
+
+- **2026-07-19 ⚙️ §CROWDING-BREADTH pre-staged for Mac-side HL credit test (Minimax-B).**
+  Added `load_hyperliquid_panel()` to `funding_crowding_breadth.py` (handles `_funding_1h.csv` hourly→daily-sum aggregation + `_1d_ohlcv.csv` daily load, same schema as RWA loader). Built `scripts/crowding_breadth_hl.py` — standalone runner that auto-detects HL cache at `/Volumes/.../hyperliquid_funding/`, runs the pooled breadth experiment + full signal gauntlet, writes summary.json + REPORT.md, prints the ★ ORTHOGONAL EDGE verdict on success. Default `min_history_days=365` (matches directive's ≥2y requirement). Smoke-tested on synthetic HL-format CSVs (5 perps × 100d → ENB=735, experiment runs cleanly, modules import OK). When Minimax-A's HL fetch lands, the credit test is one command: `python3 scripts/crowding_breadth_hl.py --source hyperliquid --out-dir reports/crowding_breadth/2026-XX-XX_hl_credit/`. Verdict logic: α_t > 1.96 + full gauntlet pass → ★ ORTHOGONAL EDGE candidate (slot into two-layer book per §TRADER_TOM_DOCTRINE); α_t < 1.96 → honest R36. No Mac-side / push implications yet — credit test depends on data landing.
+
+- **2026-07-18 🧪 §CROWDING-BREADTH RWA smoke — cross-class mechanism validated, sample too thin for credit (Minimax-B).**
+  Built `src/research/cis_regime_studies/funding_crowding_breadth.py` (~440 LoC) — `crowding_signal()`
+  UNCHANGED + cross-section-demeaned pooled book + signal_gauntlet runner. Self-test PASSES on
+  synthetic 10-perp panel. Real-data run on 21 RWA perps × 84d (corr ~0.22 to BTC, true cross-class
+  breadth): **ENB = 57** (≫ 8 expected), β_market = **−0.187** (real market-neutral, the structural
+  fix for R35's fake-neutrality trap), β_momentum = +0.023, canonical α_t = **+1.59** under 1.96
+  on 17d OOS. All 5 config variants positive Sharpe (2.16 to 5.23), canonical config lands
+  cohort-middle (no cherry-pick). **Verdict: DIED at significance_PSR — sample too small.** Mac-side
+  HL fetch script `scripts/fetch_hyperliquid_funding.py` delivered to Minimax-A (paginated
+  `/info fundingHistory` + `/info candleSnapshot`, 50+ alts × ≥2y, ~5-10 min runtime). Re-run with
+  HL cache is the load-bearing credit test: if α_t clears 1.96 + full gauntlet passes → **★
+  ORTHOGONAL EDGE** candidate for the two-layer book (market-neutral behavioral sleeve per
+  §TRADER_TOM_DOCTRINE); else → honest R36. Report: `reports/crowding_breadth/2026-07-18_rwa_smoke/`.
+
+- **2026-07-18 🧪 §ABSORPTION-SWEEP — the "old wine" gate is LIVE; sleeve verdicts pending Minimax-B/C (P0).**
+  Seth. Borrowed the killing floor from the Google/academia LLM-factor study (Jazz): most high-Sharpe
+  signals are just repackaged known premia — only RESIDUAL alpha (α t>1.96 after factors) earns a slot.
+  Built `src/research/validation/factor_absorption.py` (OLS + Newey-West, pure numpy) + the verdict
+  runner `src/research/validation/absorption_sweep.py` (one-table: raw vs α-after-factors vs α-vs-peers,
+  ★ independent survivors). Both self-tested. It already caught our own Crowd Clock: +35%/yr raw (t=2.93)
+  → α +7.5% t=1.0 after market+momentum ⇒ **ABSORBED** (matches R24: clock = momentum in a costume, a
+  display lens not a sizing input). **⚠️ SEQUENCING:** this gate runs BEFORE C-S4 composite-weighting —
+  weighting sleeves before filtering out beta-as-alpha produces a smooth-looking but uninformative Sharpe.
+  GAP (Minimax-B/C lane): per-sleeve daily-return reconstructors on Mac data (positioning / forward-supply
+  / funding-cap / MultiFactorV2 / V9) → emit the CSV contract in `absorption_sweep.py` → run the sweep.
+  Only survivors enter the two-layer book. See `MINIMAX_SYNC.md §ABSORPTION-SWEEP`.
+
+- **2026-07-18 🪝 CIS-QUALITY FACTOR — prepped for §CIS-HISTORY-BACKFILL re-run (Seth).**
+  Built `src/research/validation/cis_quality_factor.py` (long top-CIS tercile / short bottom tercile,
+  1-day forward-fill lag, no look-ahead) — pure interface, sandbox-safe. PLUS 8-test smoke suite (all
+  passing) + memory note for the cross-session trigger. Today the `f_cis_quality` column in
+  `absorption_sweep_runner.py` is a price-tercile PROXY (overlaps `f_momentum`); once Minimax-A lands
+  §CIS-HISTORY-BACKFILL (≥400 cis_YYYY-MM-DD.json at cis_history/, 2024-03-01 → 2025-05-02, per
+  MINIMAX_SYNC.md line 3471+), the helper swaps the column source — same column name, real values.
+  Re-run verdicts may shift: false survivors under the proxy collapse under true CIS, hidden
+  orthogonal edge surfaces. The remaining true-α question lives at that re-run.
+
+- **2026-07-18 🔴 VOL SLEEVE V2 — REFUTED as Phase 3 candidate (R28), KILLED BEFORE SHIP.**
+  Seth. Cause (cascade mechanic = leveraged long crowd + perp microstructure → forced selling →
+  realized-vol spike) IS articulated; empirical realization on RV + funding data alone is too weak.
+  Phase 2 implemented `src/research/cis_regime_studies/vol_sleeve_v2.py` + 10 sandbox smoke tests
+  (all passing) + ran 3 legs on real data:
+    Leg 1 (`long_vol_rv_only`, 21 names, 9y): Sharpe −2.20, MaxDD **−39.82%** — FAIL Gate 1
+    Leg 2 (`long_vol_rv_funding`, 5 majors, 21mo): Sharpe −1.631, ann vol **0.04%** — fails because
+      triple-crowding gate fires 0 times in the 21mo subpanel (only 38 RV_pct>0.9 events across
+      the full 9y panel). A leg that doesn't fire isn't a leg.
+    Leg 3 (`short_vol_carry_rv`, 21 names, 9y): Sharpe **+0.236**, just below +0.3 threshold.
+      Premium proxy is an annualized constant (5%/year) — Phase 4 will replace with real IV > RV
+      spread from Deribit data.
+    Combined NAV: Sharpe +0.012, dragged down by Leg 1.
+  Bug surfaced and fixed during Phase 2: Leg 3's first premium proxy (`notional × rv_per_bar ×
+  0.30`) gave $259B terminal NAV from compounding. Replaced with constant annualized spread
+  (`notional × 5% / (252 × 6)`) giving realistic $10,029. Lesson: per-bar proxies that compound
+  over thousands of bars need annualized formulation. Full evidence in R28 + §10 of
+  `docs/VOL_SLEEVE_V2_CAUSE_2026-07-18.md`. Phase 4 (Deribit IV integration) is the only path
+  that could realize the cause's full alpha; remains on shelf.
 
 - **2026-07-16 🧮 QUANT STACK — multi-asset/multi-strategy model, scalable CTA book, assimilation (Seth).**
   Jazz mandate: "act as a quant, find the profit-max strategy on our infra, capacity 不可以太小."
@@ -725,6 +789,12 @@ other agents can trust it. Full autonomy is the partner's game, not ours. Soul: 
   OHLCV → ~12k historical signal→30d-alpha pairs → backfills `signal_outcomes` (before live, no clobber)
   → existing refresh rebuilds a robust edge map (thin cells n=1..3 → hundreds). Runs Mac-side (`--write`).
   Phase-2 (Minimax): extend `cis_history` to 11yr OHLCV via CIS reconstruction → h3 auto-covers it.
+  **Phase-2 ✅ DONE 2026-07-18** (`scripts/reconstruct_cis_history.py --days 4015` + `scripts/cis_historical_ingest.py`)
+  — 75,478 rows, 34 assets, 2015-07-21 → 2026-07-18, ingested into local `cis_history` (run_id
+  `historical_11yr_20260718_192540`). Supabase ingest pending service-role key. Full report:
+  `reports/CIS_HISTORICAL_11YR_2026-07-18.md`. Schema migration added 4 columns (`macro_regime`,
+  `las`, `source`, `data_tier`). Honest gaps: FNG pre-2018-02-01 (neutral fallback), SEI 404 skip,
+  newer assets (ENA/STRK/ONDO/TIA/POL) only have post-2022 history.
 - **EDGE GATE bridge DONE** (`src/research/strategies/edge_gate.py` + `scripts/export_edge_gate_grid.py`)
   — the intelligence→execution connection Jazz asked for (reference Minimax-B/C strategies). Replaces the
   hand-tuned `REGIME_CIS_FLOOR` (H1: wrong in 3/6 regimes) with `gate(grid, tier, band, side)` reading the

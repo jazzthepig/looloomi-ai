@@ -42,7 +42,11 @@ from typing import Any, Dict, List, Optional
 import queue
 
 import httpx
-from cachetools import TTLCache
+try:
+    from cachetools import TTLCache
+except ImportError:  # optional enhancement — degrade to a plain dict so the server still starts
+    class TTLCache(dict):
+        def __init__(self, *a, **k): super().__init__()
 
 # ── Resolve the pip `mcp` package, not our local `src/mcp/` ─────────────────────
 # main.py inserts the bare `src/` dir on sys.path[0], which makes top-level `import
@@ -64,7 +68,14 @@ if "mcp.server.fastmcp" not in _sys.modules:
 
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from tenacity import retry, stop_after_attempt, wait_exponential
+try:
+    from tenacity import retry, stop_after_attempt, wait_exponential
+except ImportError:  # optional enhancement — degrade to no-op retry so the server still starts
+    def retry(*a, **k):
+        def _deco(fn): return fn
+        return _deco
+    def stop_after_attempt(*a, **k): return None
+    def wait_exponential(*a, **k): return None
 
 _log = logging.getLogger("cometcloud_mcp")
 

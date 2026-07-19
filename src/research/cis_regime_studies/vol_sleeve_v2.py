@@ -105,6 +105,7 @@ MAX_HOLD_BARS = 180               # 30d max hold on long-vol leg
 SLIPPAGE_BPS = 10.0               # per-leg turnover slippage
 FUNDING_CARRY_BPS_DAILY_CAP = 5.0 # cap funding cost/credit at 5bps/day to bound tail shocks
 OPTIONS_DECAY_BPS_DAILY = 30.0    # synthetic decay for long-vol leg (theta proxy)
+PREMIUM_PROXY_ANN_PCT = 0.05      # annualized IV > RV spread proxy (Phase 4 will replace)
 
 
 # ── Triple-crowding state detector ────────────────────────────────────────────
@@ -241,8 +242,11 @@ def long_vol_cascade_leg_rv_only(
         # Exit logic
         if in_pos:
             hold_count += 1
+            # Per-bar PnL is bounded — small size on a single bar can't dominate
+            bar_pct = notional_pct * r
+            bar_pct = max(-0.10, min(0.10, bar_pct))  # cap per-bar directional move
             decay_cost = nav[i - 1] * (options_decay_bps / 10_000) / 6  # 4h bar → /6
-            nav[i] = nav[i - 1] * (1 + notional_pct * r) - decay_cost
+            nav[i] = nav[i - 1] * (1 + bar_pct) - decay_cost
             if (not triggers.iloc[i]) or (hold_count >= max_hold_bars):
                 # Exit: pay slippage
                 nav[i] -= nav[i] * (slippage_bps / 10_000)
@@ -446,24 +450,24 @@ def short_vol_carry_leg(
             # Short perp + long spot, sized so net delta = 0; the carry is
             # the funding the SHORT perp receives (or pays). Without IV data
             # we can't measure the premium harvested, but the funding carry is real.
-            carry = 0.0
+            bar_pct_return = 0.0
             if funding_per_bar is not None:
                 f_cost = funding_per_bar.iloc[i]
                 f_cost = max(-funding_cap_bps_daily / 10_000 / 6,
                              min(funding_cap_bps_daily / 10_000 / 6, f_cost))
                 # Short perp receives funding when funding > 0
-                carry = notional_pct * f_cost
-            # Variance capture (RV_pct is below threshold → recent vol is low →
-            # small absolute bar moves expected). Capture a tiny fraction of
-            # bar vol as "premium" — honest proxy for IV > RV spread.
-            rv_bar = rv.iloc[i] if not pd.isna(rv.iloc[i]) else 0.0
-            # Annualized RV → per-bar: rv_bar / sqrt(1512)
-            rv_per_bar = rv_bar / np.sqrt(1512)
-            # Premium harvested per bar ≈ vol-of-vol spread × notional × dt
-            # (rough proxy: 30% of per-bar vol as the "premium" — this is the
-            # HONEST placeholder for the IV > RV gap until Phase 4)
-            premium_per_bar = notional_pct * rv_per_bar * 0.30
-            nav[i] = nav[i - 1] * (1.0 + carry + premium_per_bar)
+                bar_pct_return += notional_pct * f_cost
+            # Variance capture: the IV > RV spread a real short-vol position
+            # would harvest, approximated as a CONSTANT annualized premium.
+            # Phase 2 uses 5% annualized (Phase 4 will replace with real IV-RV
+            # from Deribit). Per-bar premium = 5%/year × 1/(252*6 bars) ≈ 3.3bps/bar
+            # × notional_pct = ~2.3bps/bar. This is REALISTIC and bounded — the
+            # leg should NOT compound on itself like the R27 buggy version.
+            premium_per_bar = notional_pct * (PREMIUM_PROXY_ANN_PCT / (252 * 6))
+            bar_pct_return += premium_per_bar
+            # Cap the per-bar return to prevent any single bar from dominating
+            bar_pct_return = max(-0.05, min(0.05, bar_pct_return))
+            nav[i] = nav[i - 1] * (1.0 + bar_pct_return)
             if (not triggers.iloc[i]) or (hold_count >= max_hold_bars):
                 nav[i] -= nav[i] * (slippage_bps / 10_000)
                 in_pos = False
