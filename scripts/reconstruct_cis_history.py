@@ -33,6 +33,7 @@ import os
 import sys
 import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Optional
 
 import httpx
@@ -233,29 +234,31 @@ async def fetch_cg_market_chart(
 async def fetch_btc_dominance_history(
     client: httpx.AsyncClient,
     days: int,
+    btc_mcaps_by_date: dict[str, float] | None = None,
 ) -> dict[str, float]:
     """
     Approximate BTC dominance history from BTC mcap / total mcap.
-    Uses CoinGecko /global/market_cap_chart (Pro only).
-    Falls back to BTC mcap / (BTC mcap * 2.0) heuristic for free tier.
+    Uses CoinGecko /global/market_cap_chart (Pro endpoint — `market_cap` is total market cap).
+    The endpoint does NOT return a `btc_dominance` field directly; we derive it ourselves
+    as `btc_mcap[date] / total_mcap[date]`. Falls back to a 52% constant for free tier
+    (or if BTC mcap is unavailable on a given date).
     """
     if CG_API_KEY:
-        data = await cg_get(client, "/global/market_cap_chart", {
-            "days": days,
-        })
+        data = await cg_get(client, "/global/market_cap_chart", {"days": days})
         await asyncio.sleep(RATE_DELAY)
-        if data and "market_cap_chart" in data:
-            btc_caps  = data["market_cap_chart"].get("btc_dominance", [])
-            return {
-                datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime("%Y-%m-%d"): val
-                for ts, val in btc_caps
-            }
+        if data and "market_cap_chart" in data and btc_mcaps_by_date:
+            total_mcaps = data["market_cap_chart"].get("market_cap", [])
+            out = {}
+            for ts_ms, total_cap in total_mcaps:
+                d = datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
+                btc_cap = btc_mcaps_by_date.get(d)
+                if btc_cap and total_cap > 0:
+                    out[d] = round(100.0 * btc_cap / total_cap, 2)
+            return out
 
-    # Free tier fallback: BTC mcap is pre-fetched; we derive dominance via
-    # a linear blend across time (historical BTC dom ranged 40-65% in 2024-2025)
-    # This is a proxy — good enough for the S pillar baseline calculation.
-    print("  [btc_dom] no Pro key — using historical proxy (±5% accuracy)")
-    return {}  # Will be handled in caller with fallback
+    # Free tier fallback: caller will use the default 52% in the scoring loop.
+    print("  [btc_dom] no Pro key — using 52% constant fallback (lower confidence for S-pillar)")
+    return {}
 
 # ── CIS Scoring Functions (v4.1 — historical version) ─────────────────────────
 
@@ -315,9 +318,20 @@ def score_asset_historical(
     Compute CIS pillars from historical daily data.
     Designed to be called per asset per day.
     Prices/mcaps/volumes should cover up to 90 days of history ending on the target date.
+
+    ROBUSTNESS: any None values in price/mcap/volume lists are treated as missing (skipped).
+    This matters for sparse days on CG Pro historical (e.g. LTC had a None mcap on 2017-04-02).
     """
-    if not prices or len(prices) < 2:
+    # Defensive filter — strip None values, require at least 2 valid prices
+    prices_clean   = [p for p in prices    if p is not None and p > 0]
+    mcaps_clean    = [m for m in market_caps if m is not None]
+    volumes_clean  = [v for v in volumes   if v is not None]
+    if len(prices_clean) < 2:
         return {}
+    prices = prices_clean
+    market_caps = mcaps_clean if mcaps_clean else [0]
+    volumes    = volumes_clean if volumes_clean else [0]
+    btc_prices = [p for p in btc_prices if p is not None and p > 0]
 
     price_now  = prices[-1]
     price_7d   = prices[-8]  if len(prices) >= 8  else prices[0]
@@ -329,8 +343,11 @@ def score_asset_historical(
     ret_30d = (price_now / price_30d - 1)  if price_30d > 0 else 0
     ret_90d = (price_now / price_90d - 1)  if price_90d > 0 else 0
 
-    mcap = market_caps[-1] if market_caps else 0
-    vol  = volumes[-1] if volumes else 0
+    # Defensive: explicit None check (a stray None mcap is treated as illiquid → 0)
+    last_mcap = next((m for m in reversed(market_caps) if m is not None), 0)
+    last_vol  = next((v for v in reversed(volumes)    if v is not None), 0)
+    mcap = last_mcap
+    vol  = last_vol
 
     # ── F Pillar: Fundamental ────────────────────────────────────────────────
     # Market cap score (log scale: $100M=0, $1T=100)
@@ -437,8 +454,9 @@ async def reconstruct(args):
     print(f"  CometCloud CIS — Historical Reconstruction")
     print(f"  Days: {args.days} | Dry run: {args.dry_run} | Resume: {args.resume}")
     print(f"  CG tier: {'Pro' if CG_API_KEY else 'Free (slower)'}")
-    if not args.dry_run and not SUPABASE_URL:
-        print("  ERROR: SUPABASE_URL not set. Use --dry-run or set env vars.")
+    print(f"  Output: {('local → ' + args.local_output) if args.local_output else 'Supabase'}")
+    if not args.dry_run and not args.local_output and not SUPABASE_URL:
+        print("  ERROR: SUPABASE_URL not set. Use --dry-run, --local-output, or set env vars.")
         sys.exit(1)
     print(f"{'='*60}\n")
 
@@ -460,12 +478,17 @@ async def reconstruct(args):
         btc_prices_ts: list[list] = btc_data.get("prices", []) if btc_data else []
         btc_mcaps_ts:  list[list] = btc_data.get("market_caps", []) if btc_data else []
         btc_by_date: dict[str, float] = {}
-        total_mcap_by_date: dict[str, float] = {}
+        btc_mcap_by_date: dict[str, float] = {}
         for ts_ms, price in btc_prices_ts:
             d = datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
             btc_by_date[d] = price
-        btc_dom_by_date = await fetch_btc_dominance_history(client, args.days + 10)
-        print(f"  BTC: {len(btc_by_date)} days | BTC dominance: {len(btc_dom_by_date)} days")
+        for ts_ms, mcap in btc_mcaps_ts:
+            d = datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
+            btc_mcap_by_date[d] = mcap
+        btc_dom_by_date = await fetch_btc_dominance_history(client, args.days + 10,
+                                                              btc_mcap_by_date)
+        print(f"  BTC: {len(btc_by_date)} days | BTC mcap: {len(btc_mcap_by_date)} days "
+              f"| BTC dominance: {len(btc_dom_by_date)} days")
 
         # ── 2. Process each asset ─────────────────────────────────────────────
         print(f"\n[2/3] Processing {len(symbols)} assets...")
@@ -598,6 +621,18 @@ async def reconstruct(args):
                 print(f"{len(rows_to_insert)} rows (dry run)")
                 if rows_to_insert and args.verbose:
                     print(f"    Sample: {json.dumps(rows_to_insert[-1], indent=2)}")
+            elif args.local_output:
+                # Append this asset's rows to the local CSV (one file for the whole run)
+                import csv as _csv
+                write_header = not Path(args.local_output).exists()
+                with open(args.local_output, "a", newline="") as f:
+                    if rows_to_insert:
+                        w = _csv.DictWriter(f, fieldnames=list(rows_to_insert[0].keys()))
+                        if write_header:
+                            w.writeheader()
+                        w.writerows(rows_to_insert)
+                print(f"{len(rows_to_insert)} rows → {args.local_output}")
+                total_inserted += len(rows_to_insert)
             else:
                 # Insert in batches of 50
                 batch_size = 50
@@ -613,9 +648,14 @@ async def reconstruct(args):
         # ── 3. Summary ────────────────────────────────────────────────────────
         print(f"\n[3/3] Done.")
         if not args.dry_run:
-            print(f"  Total rows inserted: {total_inserted}")
-            print(f"  Next: Run supabase_migration_timeseries.sql if not already done.")
-            print(f"  Then: python scripts/compute_regime_fitness.py")
+            print(f"  Total rows written: {total_inserted}")
+            if args.local_output:
+                print(f"  Local CSV: {args.local_output}")
+                print(f"  Next: ingest to Supabase cis_scores when service key is available, OR")
+                print(f"        ingest to local cis_history.db via cis_historical_ingest.py")
+            else:
+                print(f"  Next: Run supabase_migration_timeseries.sql if not already done.")
+                print(f"  Then: python scripts/compute_regime_fitness.py")
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────
@@ -627,6 +667,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true",   help="Print rows without inserting")
     parser.add_argument("--resume",  action="store_true",   help="Skip dates already stored in Supabase")
     parser.add_argument("--verbose", action="store_true",   help="Print sample rows in dry-run mode")
+    parser.add_argument("--local-output", type=str, default="",
+                        help="Write rows to a local CSV instead of Supabase (useful when creds are missing).")
     args = parser.parse_args()
     asyncio.run(reconstruct(args))
 

@@ -161,16 +161,42 @@ async def get_crowd_clock() -> dict:
     except Exception as e:
         _logger.warning(f"[CROWD-CLOCK] redis assemble failed: {e}")
 
-    # FNG — cached provider
+    # FNG — from macro-pulse (the reliable path; raw Redis get_fear_greed comes up null on Railway)
     try:
-        from src.data.market.data_layer import get_fear_greed
-        fg = await get_fear_greed()
-        if isinstance(fg, dict):
-            fng = _to_f(fg.get("value") or fg.get("fng") or fg.get("score"))
+        from src.api.routers.market import get_macro_pulse
+        mp = await get_macro_pulse()
+        if isinstance(mp, dict):
+            fng = _to_f(mp.get("fear_greed_value") or (mp.get("fng") or {}).get("value"))
     except Exception:
         pass
 
+    # BTC trend + CIS dispersion — fall back to the live CIS universe (same source the leaderboard
+    # uses) when the raw cis:local_scores Redis key is empty/absent (it is, on Railway).
+    if chg30 is None or disp_std is None:
+        try:
+            from src.api.routers.cis import get_cis_universe
+            u = await get_cis_universe()
+            uni = (u or {}).get("universe", []) or []
+            if chg30 is None:
+                btc = next((a for a in uni if (a.get("symbol") or a.get("asset_id") or "").upper() == "BTC"), None)
+                if btc:
+                    chg30 = _to_f(btc.get("change_30d") or btc.get("chg_30d") or btc.get("price_change_30d"))
+                    chg7 = chg7 if chg7 is not None else _to_f(btc.get("change_7d") or btc.get("chg_7d"))
+            if disp_std is None:
+                sc = [_to_f(a.get("cis_score") or a.get("score")) for a in uni]
+                sc = [x for x in sc if x is not None]
+                if len(sc) >= 5:
+                    mm = sum(sc) / len(sc)
+                    disp_std = (sum((x - mm) ** 2 for x in sc) / len(sc)) ** 0.5
+        except Exception as e:
+            _logger.warning(f"[CROWD-CLOCK] universe fallback failed: {e}")
+
     clock = compute_crowd_clock(fng, chg30, chg7, mean_pressure, disp_std, vol_ratio)
+    # guard: don't show a confident phase when the two core axes (sentiment + trend) are both missing
+    if fng is None and chg30 is None:
+        clock["phase"] = "insufficient_data"
+        clock["confidence"] = 0.0
+        clock["posture"] = "Warming up — sentiment and trend inputs unavailable; no phase read yet."
     clock["inputs"] = {"fng": fng, "btc_chg_30d": chg30, "btc_chg_7d": chg7,
                        "mean_positioning_pressure": round(mean_pressure, 3) if mean_pressure is not None else None,
                        "cis_dispersion_std": round(disp_std, 2) if disp_std is not None else None}

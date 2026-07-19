@@ -485,6 +485,33 @@ async def get_risk_meter(response: Response = None):
         return {"error": "risk_meter_unavailable", "regime": regime, "universe_size": len(universe)}
 
 
+def _age_seconds(ts) -> float | None:
+    """Seconds since `ts` (epoch int/float OR ISO string). None if missing/unparseable —
+    NEVER assume 'now'. Used to surface HONEST staleness instead of faking freshness."""
+    if ts is None:
+        return None
+    try:
+        if isinstance(ts, (int, float)):
+            return max(0.0, time.time() - float(ts))
+        from datetime import datetime as _dt, timezone as _tz
+        d = _dt.fromisoformat(str(ts).replace("Z", "+00:00"))
+        if d.tzinfo is None:
+            d = d.replace(tzinfo=_tz.utc)
+        return max(0.0, _dt.now(_tz.utc).timestamp() - d.timestamp())
+    except Exception:
+        return None
+
+
+_STALE_AFTER_S = 1800   # 30 min — Mac pushes ~every 30 min; older than this = stale
+
+
+def _freshness(ts) -> dict:
+    """Honest freshness block for a CIS response. Never fabricates a timestamp."""
+    age = _age_seconds(ts)
+    return {"timestamp": ts, "data_age_s": round(age, 1) if age is not None else None,
+            "stale": (age is None) or (age > _STALE_AFTER_S)}
+
+
 def _sanitize_market_fields(universe: list) -> None:
     """
     Null out untrustworthy price-derived fields. When an asset's price is 0/missing
@@ -693,7 +720,7 @@ async def _build_cis_universe(force_source: str = None):
         return sanitize_floats({
             "status":            "success",
             "version":           "4.1.0",
-            "timestamp":         cached.get("timestamp", time.time()),
+            **_freshness(cached.get("timestamp")),   # honest timestamp/data_age_s/stale — no fake "now"
             "source":            "merged",
             "t1_count":          len(local_map),
             "t2_count":          len(merged) - len(local_map),
@@ -727,7 +754,7 @@ async def _build_cis_universe(force_source: str = None):
         return {
             "status":       "degraded",
             "version":      "4.1.0",
-            "timestamp":    cached.get("timestamp", time.time()),
+            **_freshness(cached.get("timestamp")),
             "source":       "local_engine_stale",
             "t1_count":     0,
             "t2_count":     len(stale_universe),
@@ -754,7 +781,7 @@ async def _build_cis_universe(force_source: str = None):
         return {
             "status":         "degraded",
             "version":        "4.1.0",
-            "timestamp":      lkg.get("timestamp", time.time()),
+            **_freshness(lkg.get("timestamp") or lkg.get("last_updated")),
             "source":         "last_known_good",
             "stale_age_s":    round(lkg_age, 1),
             "t1_count":       0,

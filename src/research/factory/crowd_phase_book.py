@@ -32,9 +32,9 @@ from __future__ import annotations
 _POLICY = {
     "capitulation": (0.65, 0.35, 0.60, "neutral","Fear extreme — NOT a broad 30d long (R24: momentum beats reversal in crypto). Mean-reversion sleeve leads on its own selective deep-extreme entries, sized modestly; no directional tilt."),
     "accumulation": (0.55, 0.45, 0.55, "neutral","Basing — balanced, low gross; accumulate quality without urgency."),
-    "markup":       (0.30, 0.70, 1.05, "long",   "Trend confirmed — R24 VALIDATED (+3.95% vs base): press the trend sleeve, mean-reversion trails."),
+    "markup":       (0.30, 0.70, 1.00, "long",   "Uptrend — press the trend sleeve. NB: the edge here is plain MOMENTUM (survives OOS, weaker); the greed/sentiment add-on did NOT survive walk-forward (R24 F3), so do not over-credit the phase."),
     "euphoria":     (0.35, 0.65, 0.50, "reduce", "Late-cycle — trim the trend sleeve into strength; crowded longs are flush fuel (untested live; stay defensive)."),
-    "distribution": (0.45, 0.55, 0.38, "reduce", "Topping — R24 VALIDATED bearish (−3.72% vs base, negative median): lowest gross, hedge/defend."),
+    "distribution": (0.45, 0.55, 0.45, "reduce", "Topping — weakly bearish and NOT robust cross-asset (ETH broke it, R24 F1); modest defensive tilt only, do not lean hard."),
 }
 _GROSS_CAP = 1.10   # humble hard cap until R24 validates the phase edge
 
