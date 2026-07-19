@@ -782,7 +782,7 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 - **Reference:** `reports/c1_parity_ab/2026-07-19-v7-holdout-smoothed/verdict.md`,
   `src/research/freqtrade/c1_parity_ab_smoothed.py`, R37 (raw-CIS A/B), R17 (LS v1 sister).
 
-## R39 🟡 CALM-REGIME short-vol carry — clears full gauntlet + OOS on BTC, but does NOT replicate on ETH (suspect single-asset)
+## R39 🔴 CALM-REGIME short-vol carry — cleared every STATISTICAL gate on BTC, then died to cross-asset + realistic costs (premium real, uncapturable)
 - **Hypothesis:** revive the shelved vol sleeve (R28, killed for lack of real IV data) with **Deribit DVOL**;
   a short-vol carry harvesting IV−RV should be orthogonal to momentum, and gating it by funding-crowding
   should dodge the RV-spike tail (leveraged-long flush → vol spike, per §TRADER_TOM cascade).
@@ -821,6 +821,23 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
   this construction is unproven; the BTC result is a suspect single-asset/single-period artifact.
   **Gauntlet upgrade this exposed: add a CROSS-ASSET REPLICATION gate — a single-asset ★ is not credited.**
   Do not size.
+- **Decisive follow-up (same day):** to rule out "BTC-tuned threshold," re-ran with a UNIVERSAL
+  self-normalizing gate (short vol only when RV is below the asset's OWN trailing-180d percentile — no
+  per-asset tuning). Still: BTC SR +2.52 αt +3.21 ROBUST, **ETH SR −0.46 αt −0.35 FRAGILE.** So it is
+  **structurally BTC-only, not a tuning artifact** (ETH vol is higher/spikier, premium thinner; SOL has
+  no Deribit DVOL). **Final status:** the BTC vol-premium carry is a real, robust, orthogonal *BTC-specific*
+  sleeve candidate — legitimate as a standalone BTC sleeve IF validated with a REALISTIC options-execution
+  model + wings (Minimax lane), but NOT a general cross-asset factor.
+- **🔴 KILLED BY COSTS (same day) — the final, decisive test.** Stress-tested the BTC carry under realistic
+  options frictions (premium haircut for bid/ask + a continuous wing-hedge cost for the −8σ tail + roll
+  turnover). It COLLAPSES: frictionless SR +2.69 → **15% haircut SR +0.80 (αt 1.11, already sub-sig) →
+  realistic 30% haircut+wings SR −2.22 (αt −3.10, NEGATIVE) → harsh 45% SR −4.99**. The vol premium is
+  real but **NOT harvestable net of realistic crypto-options bid/ask + tail-hedge cost** — the frictionless
+  variance-swap proxy was the whole illusion. **Final verdict: REFUTED for practical use.** The premium
+  exists; capturing it does not pay. **Gauntlet lesson (2nd this entry): a realistic EXECUTION-COST model
+  must be a gate — a frictionless backtest is meaningless for wide-spread instruments (options).**
+  Vol thread closed. Net of this whole arc: two more gauntlet gates earned (cross-asset replication +
+  execution-cost), zero capital risked on a signal that cleared every *statistical* filter.
 
 ## R40 🔴 Capitulation Bounce sleeve — mechanism detected, signal doesn't survive cross-section demean on 2024-2026
 - **Hypothesis (per §TRADER_TOM_DOCTRINE §5b — durable-core mean-reversion):** when an asset drops
@@ -883,6 +900,7 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 9. **Cointegration ≠ tradeable pair.** (R23) Engle-Granger p < 0.05 says the spread is stationary, not that the mean-reversion is fast enough to overcome costs and stop-loss damage. Crypto pairs have slow, fragile mean-reversion — divergences are large, exits rare, stops dominate. Pair-trade as a class is marginal on this universe.
 10. **The loop's job is to kill our ideas cheaply.** Nine of ten here died before a dollar was at risk. That is the system working, not failing.
 11. **A correct per-asset trigger doesn't make a correct pooled book.** (R40) The trigger logic can be right (76% win rate, +2.6% fwd 5d on BTC's 2024-08-05 fire) and the pooled cross-section alpha can still be negative — because the demean is too punitive when assets are highly correlated (BTC+ETH+SOL+AVAX drop together in 2024-2026 = demean kills the signal exactly when it should fire). Architecture of the book must match the correlation structure of the signal's universe. A signal with a strong per-asset edge needs a per-asset book, not a cross-section one.
+12. **Count independent events, not trades, before crediting a conditional hit rate.** (R44) R40's "76% BTC win rate" was 224 fires that ALL clustered on a single day (2024-08-05 Yen unwind) — 1 event, not 224 observations. The per-pair overlay that inherited this trigger fired **zero times OOS** at the doctrine-faithful threshold, and lost (33% win, −2.5% avg) when the threshold was loosened enough to fire. A trigger with a great conditional hit rate on one clustered event is an anecdote, not an edge, until it fires out-of-sample. Rare-event detectors are not swing strategies.
 
 *The most valuable output of this operation is a well-kept graveyard.*
 
@@ -927,3 +945,37 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
     refuted; the structural allocation (mean-reversion as a tail-bound satellite) is kept.**
 - **References:** `reports/C_S1_HONEST_RESCORECARD_2026-07-19.md`, `reports/C_S2_SLEEVE_A_BOUND_2026-07-19.md`,
   `reports/C_S3_OOS_WALK_FORWARD_2026-07-19.md`, `_data/research/c_s3_oos/{test_a,test_b,test_c}*.csv`.
+
+## R44 🔴 Capitulation Bounce v2 — the PER-PAIR swing overlay ALSO fails (R40's "76% win" was one event)
+- **Hypothesis (R40's escape hatch):** R40's pooled cross-section was refuted on structural grounds
+  (ENB 1.18–1.51, demean kills the signal exactly when correlated majors drop together). But the
+  PER-ASSET trigger looked real (BTC 76% bounce rate, +2.6% fwd 5d). §TRADER_TOM_DOCTRINE §5c says a
+  behavioral trigger belongs in a **tactical per-pair swing overlay**, not a market-neutral book. So
+  v2 keeps R40's exact trigger (5d_ret < −5% AND 20d_vol > 2× 60d_vol), drops the demean, and sizes
+  per-pair (5% per fire, ≤8 concurrent, ≤40% gross, −10% catastrophe stop). Full 51-asset crypto
+  universe × 17,520 hourly bars, 20% OOS hold-out.
+- **What kills it — two independent failure modes, both refute:**
+  1. **Doctrine-faithful config (vm=2.0) fires ZERO times OOS.** All 270 full-sample fires cluster
+     in the 2024-08-05/06 Yen carry-trade unwind — which is entirely in-sample. The last-20% OOS
+     window (2026-01 → 2026-06) has **0 fires**. R40's "76% BTC win rate" was a *single macro event*,
+     not a recurring edge. Full-sample even so: **35.9% win, −1.69% avg_pnl, 48.5% stop-out.**
+  2. **Loosen the trigger so it fires OOS (vm=0.0) and it loses.** 4,213 full-sample trades
+     (42.2% win, −0.44% avg); **OOS 819 trades → 33.0% win, −2.48% avg_pnl, OOS Sharpe −2.19.**
+  Variant sweep (9 configs: thresh_ret −3/−5/−7%, vol_mult 1.0/1.5/2.0, hold 3/5/8d, stop −7/−10/−15%)
+  is uniformly +0.00 OOS Sharpe at canonical because none fire OOS; loosening only converts "no
+  signal" into "negative signal." No config produces positive OOS expectancy.
+- **Diagnosis:** the per-asset trigger is a **rare-event detector**, not a swing edge. Capitulation as
+  defined (−5% / 2× vol) is a once-a-cycle macro shock in crypto majors; on a 2y sample the OOS window
+  simply contains no such shock. Weakening the definition to fire on ordinary dips catches
+  *continuation*, not *reversal* — the 48% (canonical) / 30% (loose) stop-out rates say the "bounce"
+  is a knife more often than a floor. The 76% figure was survivorship on one clustered event.
+- **Lesson (added to aggregate list #12):** a trigger with a great *conditional* hit rate on one
+  clustered event is not a strategy — it's an anecdote until it fires OOS. Before crediting a
+  per-asset edge, count the *independent* events, not the trades: 224 BTC fires on ONE day = 1 event,
+  not 224 observations. R40 died on architecture (pooled/ENB); R44 kills the escape hatch on
+  empirics (per-pair form fires zero times OOS, loses when forced to fire). **Capitulation-bounce as
+  a class is dead on 2024-2026 crypto — in every book shape.** It *might* revive in a mean-reverting
+  tape with frequent 5-10% flushes (2022-2023 bottom formation), but that is a different-regime bet
+  we cannot credit now.
+- **Reference:** `src/research/cis_regime_studies/capitulation_bounce_v2.py` (per-pair overlay, 384 LoC),
+  reuses trigger from `capitulation_bounce.py`. Ties off R40 — idea does not ship in any form.
