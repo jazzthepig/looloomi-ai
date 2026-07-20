@@ -1095,3 +1095,81 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 - **Reference:** `src/research/validation/cis_quality_robustness.py` (~280 LoC),
   `reports/cis_quality_robustness/2026-07-20/{verdict.json,REPORT.md}` (gitignored, local).
 
+## R47 🔴 Pooled cross-sectional funding-crowding market-neutral book — MECHANISM REAL, F1 regime flip KILLS credit (Minimax-A, 2026-07-20)
+- **What happened:** Built + ran the §CROWDING-BREADTH HL credit test. Mac-side Hyperliquid fetch
+  brought 43 fresh perps × 805d of hourly funding + daily OHLCV into the cache
+  (`scripts/fetch_hyperliquid_funding.py`, 3 loader fixes detailed below). Ran the canonical
+  pooled-crowding book (`cross-section demean → vol-targeted → 5 bps turnover cost`) on
+  the 2024-04-02 → 2026-06-15 common window, last 20% (161d) as OOS.
+- **Headline numbers (a-priori canonical config, thr=1.0, hold=10, vol_mult=1.10, 5 bps):**
+  - **ENB = 198.38** (43 perps) — ≫ the ~8 target and ≫ RWA smoke's 57. Mechanism is
+    real, broader than any prior pooled candidate.
+  - **β_market = +0.007, β_momentum = −0.008** — truly orthogonal to both market and
+    momentum factors (the orthogonal-edge form the directive called for).
+  - **Canonical OOS α_t = +1.04** (below 1.96 ship gate).
+  - PBO = 0.698 (high — confidence is the data-depth-constrained form of this).
+  - **Walk-forward 4-fold (the failure mode lives in one fold):**
+    | Fold | Window | Days | annSR | α_t | α_ann% |
+    |---|---|---:|---:|---:|---:|
+    | F1 | 2024-04 → 2024-10 | 201 | **−4.78** | **−3.02** | **−19.98%** |
+    | F2 | 2024-10 → 2025-05 | 201 | +1.84 | +1.55 | +9.15% |
+    | F3 | 2025-05 → 2025-11 | 201 | +0.57 | +0.91 | +5.38% |
+    | F4 | 2025-11 → 2026-06 | 202 | +0.56 | +1.29 | +6.22% |
+  - 3 of 4 folds positive on α_t, but **F1 is a −3σ t-stat catastrophe**. F1's window is the
+    post-BTC-ETF-top + memecoin-rotation phase (DOGE/SHIB/WIF/PEPE running on crowded-longs
+    that the cross-sectional signal was structurally SHORTING — "fade the crowd" was wrong
+    because the crowd was right).
+  - Variant set uniformly direction-positive (5 configs, annSR range +0.08 to +1.51, no
+    cherry-pick), but no variant clears the F1 hole.
+- **Verdict:** 🔴 **Cross-sectional pooled market-neutral funding-crowding does NOT credit
+  at the standard construction.** The mechanism lives (ENB=198, βs≈0, 3/4 folds positive,
+  direction-positive variant sweep), but the 2024-04→2026-06 honest ship-gate is broken
+  by F1's regime-specific sign-flip. Direction: REGIME-CONDITIONED book is the path to
+  credit (per R46 lesson applied to this sleeve); pure pooling doesn't survive.
+- **Action items (per R46 lesson, sweep construction before crediting):**
+  1. **R48 candidate**: build a regime-conditioned pooled book — gate signal-firing on
+     (f_market-breadth-z, funding-acceleration, BTC dominance change) to skip the
+     "right-side-of-trend crowded" regime. Run the 3-check gauntlet on F2/F3/F4 only
+     after gating F1 out. (Sibling of R46's R47 candidate for pillar_O.)
+  2. **Variant-best thr_1.0_hold_15** alone delivered +1.51 annSR on canonical OOS;
+     3-check gauntlet there is the cheapest near-term test.
+  3. **Per-asset overlay** (R44/R36-style): per-perp z at t → portfolio overlay size on
+     existing book, not standalone book.
+- **Sub-aggregate lesson #14 (regime-flip family is now 4-deep):**
+  - R15 (V12 per-pair funding gate): bull 2024 — crowded longs were right.
+  - R17 → R38 (smoothed-CIS empirical grid gate): late-cycle band sign-flip.
+  - R45 → R46 (CIS L/S daily rebal): W5 = late-cycle risk-on flip.
+  - **R47 (pooled funding-crowding cross-class neutral):** F1 = meme-crowded-long regime flip.
+  - **Pattern: every pooled/per-pair directional fade on a crowd signal has lost one
+    regime window. Survived regimes are 3-5 of 6, sign-flipped regime is always
+    late-cycle-risk-on OR crowd-on-right-side-of-trend. Regime-conditioning is the
+    consistent upgrade path.**
+  - Aggregate lesson #14: **"fade the crowd" is only right when the crowd is wrong.** A
+    signal can't credit on pooled cross-section alone — it MUST condition on whether the
+    crowd's directional view is dominating the regime. This is the same insight as
+    R46's W5 finding for CIS quality.
+- **Loader/infra work (also this session, three fixes that were load-bearing):**
+  - (a) HL rate limiter: bumped per-page sleep 0.1→0.5s, per-coin 0.2→1.0s, retries
+    3→4, 30/60/120s cooldown on HTTP 429. First BTC fetch had failed on 429 in initial
+    test (`scripts/fetch_hyperliquid_funding.py::_post`).
+  - (b) HL pagination: `fundingHistory` returns OLDEST 500 in `[startTime, endTime]`
+    (ASC). The script was incrementing `endTime` not `startTime` → infinite loop on
+    first batch. Fix: cursor=start_ms, advance past last returned, break on `<500` short.
+    First BTC post-fix returned 27,390 hourly funding rows in ~10s.
+  - (c) Stale-OHLCV filter: HL `/info candleSnapshot` returns FROZEN candles for some
+    perps (RNDR ends 2024-07-21, MKR 2025-09-05, FXS 2026-01-06, TON 2026-06-15).
+    Strict-intersection collapses common window to 0 days. New `max_stale_days` arg on
+    `load_hyperliquid_panel()` (default 90) drops these.
+- **Status update for prior R36:** R36 (Minimax-B, 2026-07-18 🔵) said "Cross-CLASS
+  funding-crowding credit path is BLOCKED — data does not exist yet." That was a false
+  alarm at the structural-data-layer; the HL fetch + the three loader fixes above
+  unblocked it. The mechanism question is now answered: cross-class breadth IS real at
+  ENB=198 but the standard pooled construction does NOT credit. R36 is now
+  ✅ RESOLVED-on-infrastructure and superseded by R47's empirical finding.
+- **Reference:** `scripts/crowding_breadth_hl.py` (Minimax-B, unchanged),
+  `src/research/cis_regime_studies/funding_crowding_breadth.py` (patched: `max_stale_days`),
+  `scripts/fetch_hyperliquid_funding.py` (patched: rate-limiter + corrected pagination),
+  `/Volumes/CometCloudAI/cometcloud-local/_data/hyperliquid_funding/` (48 perps cached,
+  ~700k funding rows, ~50k OHLCV bars), `reports/crowding_breadth/2026-07-20_hl_credit/{summary.json,
+  REPORT.md}`.
+

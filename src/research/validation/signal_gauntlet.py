@@ -15,6 +15,13 @@ funnel so a candidate can't quietly skip a gate:
 Each gate is applied only when its inputs are supplied; the funnel reports pass/fail/skip per stage,
 where it stopped, and one honest verdict. This is the artifact behind an LP claim: "here is every
 filter our signals had to survive, and where each one died." Compliance: research/validation tooling.
+
+⚠️ REQUIRED INPUT DISCIPLINE (R39 lesson, 2026-07-19): the `returns` you pass MUST already be NET OF
+REALISTIC EXECUTION COSTS. The gauntlet's statistical gates are blind to frictions — the BTC vol carry
+cleared EVERY gate (DSR/PBO/absorption/regime) + held OOS, then died to a 30% options bid/ask haircut
+(SR +2.69 → −2.22). For wide-spread instruments (options, illiquid perps) run a COST-SENSITIVITY sweep
+(frictionless → mild → realistic → harsh) and require survival at the realistic level before crediting.
+A frictionless backtest is meaningless for anything that isn't cheap to trade.
 """
 from __future__ import annotations
 
