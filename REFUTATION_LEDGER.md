@@ -887,6 +887,30 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 - **Reference:** `src/research/cis_regime_studies/capitulation_bounce.py` (240 LoC + 200 LoC
   selftest), `reports/cap_bounce/` (this R entry to be saved as REPORT.md when promoted).
 
+## R49 🔴→🛠 CometCloudLongShortV4 re-validated: 100% momentum beta + 9.5%/yr churn — REFUTED as alpha; rebuilt as Trend Engine V5
+- **Context (Jazz directive):** re-validate LS V4 (EMA9/21 4h stop-and-reverse, freqtrade + Nautilus
+  `ls_v4.py` parity, 3× lev) with the modern gauntlet, then develop on that basis. Prior state: 2026-06
+  backtest "beat BTC-hold by 11.6pp in a bear" (Gate 6 fail, CAGR −6.6%); parity port confirmed the
+  EMA-cross core. The question never asked before the gauntlet existed: is the edge just momentum?
+- **Re-validation (3.5y 4h BTC/ETH/SOL, net 5bps, full gauntlet):** DIED at every gate.
+  annSR +0.18 single / **+0.08 pooled**; absorption shows **momentum β t=9→24 with NEGATIVE residual α**
+  — the entire return stream is TSMOM in an EMA-cross costume (the bear-market "outperformance" was the
+  short side of trend beta, not alpha); **95–105 flips/yr ≈ 9.5%/yr cost drag**; decaying (H1 +1.01 →
+  H2 −0.79); cross-asset replication fails. **REFUTED as an alpha source. Do not run as-is.**
+- **Development (the honest rebuild):** the trend PREMISE isn't wrong — the CONSTRUCTION was. Churn was
+  the killer. Slowing the same signal (EMA54/126 ≈ 9/21 daily): V5a symmetric flip pooled SR +0.52 @
+  ~15 flips/yr; **V5c LONG-only slow trend pooled SR +0.96 @ ~8 flips/yr, positive BOTH halves
+  (H1 +1.21 / H2 +0.67)** — crypto's trend premium is asymmetric, the long side carries the drift while
+  the short side mostly buys churn+funding. 13× less turnover for strictly better performance.
+  Tracked: `src/research/trend_engine_v5.py` (`trend_v5` + `trend_book`).
+- **Honest label:** V5 is a **momentum-beta harvesting engine, NOT alpha** (residual α ≈ 0 by
+  construction — it IS the factor). That's precisely the two-layer doctrine's tactical trend overlay:
+  size it as beta, pair with the defensive layer, never headline it as alpha. Caveats: per-quarter
+  FRAGILE (trend loses in chop — inherent), −14σ worst bar (crash exposure → cap size), funding not
+  modeled → live-paper before sizing.
+- **Lesson:** "core alpha confirmed by parity" only meant the *signal reproduced*, not that it was alpha.
+  Absorption + cost gates would have caught this in 2026-06. Every legacy sleeve needs the same re-audit.
+
 ## What the graveyard says, in aggregate
 
 1. **Cleverness overfits; simple survives.** (R1, R2, R8) Every added degree of freedom lost OOS. The winners are the humble ones (REGIME_CIS_FLOOR, funding-level).
@@ -1240,4 +1264,92 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
   + `reports/cis_quality_tradfi/2026-07-20/{verdict.json,REPORT.md}` (gitignored).
   EODHD data cached locally at `/Volumes/CometCloudAI/cometcloud-local/_cache/eodhd_history/`
   (~17 ETF JSONs, 2022-01 → 2026-07 daily).
+
+## R49 🔴 Regime-conditioned pooled book does NOT credit at any tested (signal × threshold) — F1 sign-flip is structural, not regime-detectable (Minimax-A, 2026-07-20)
+- **Hypothesis:** R47 (this session, prior entry) found pooled cross-sectional funding-
+  crowding market-neutral has ENB=198, βs≈0, 3/4 walk-forward folds positive on α_t — but
+  F1 (2024-04 → 2024-10) α_t = −3.02 destroys canonical OOS α_t = +1.04. R46's prototype
+  (5d-rebal CADENCE sweep turning W5 sign-flip into positive) suggested regime-conditioning
+  as the fix. R49 tests whether regime-conditioning at simple external signals rescues
+  the pooled book.
+- **Method:** Gate sweep matrix over 12 (signal × threshold) combinations from 3
+  candidate EXTERNAL regime signals (none look at the book itself — that's a lookup-bias
+  trap):
+  - **S1**: BTC funding z-acceleration (z-score of BTC 7d-mean minus 30d-mean funding,
+    normalized by 90d rolling std).
+  - **S2**: cross-class crowded count (fraction of non-BTC perps whose 7d-mean funding
+    is in their own 90th-pct band, smoothed).
+  - **S3**: basket vs BTC 30d spread (rolling 30d sum of equal-weight perp basket
+    return minus BTC return).
+  When the gate fires, position → 0 (skip the day). Re-cost turnover (5 bps), re-run
+  walk-forward folds + canonical OOS alpha_t. Best gated variant put through full
+  signal_gauntlet.
+- **Gate sweep matrix (43 perps × 805d, F1/F2/F3/F4 each ~201 days):**
+  | Gate | thr | frac gated | OOS α_t | F1 α_t | F2 α_t | F3 α_t | F4 α_t |
+  |---|---|---:|---:|---:|---:|---:|---:|
+  | (none — R47 baseline) | — | 0% | +1.04 | **−3.11** | +1.47 | +0.37 | +0.47 |
+  | S1 BTC z > 0.0 | 0.0 | 51% | +0.34 | −1.84 | +1.69 | +1.27 | +0.12 |
+  | S1 BTC z > 0.5 | 0.5 | 32% | +0.91 | −2.86 | +1.60 | +0.48 | +0.70 |
+  | S1 BTC z > 1.0 | 1.0 | 16% | +0.79 | −3.21 | +0.97 | +1.03 | +0.47 |
+  | S2 frac crowded > 0.10 | 0.10 | 7% | +0.95 | −3.17 | +0.39 | +1.17 | +0.37 |
+  | S2 frac crowded > 0.20 | 0.20 | 6% | +0.95 | −3.17 | +0.56 | +0.37 | +0.37 |
+  | S2 frac crowded > 0.30 | 0.30 | 5% | +0.95 | −3.17 | +0.72 | +0.29 | +0.37 |
+  | **S3 basket−BTC > 0.05** | 0.05 | 19% | **+1.14** | −2.84 | +0.29 | +1.30 | +0.58 |
+  | **S3 basket−BTC > 0.10** ★ | 0.10 | 12% | **+1.19** | −3.10 | +0.50 | +0.79 | +0.55 |
+  | S3 basket−BTC > 0.15 | 0.15 | 6% | +0.94 | −3.17 | +0.37 | +0.27 | +0.36 |
+  | S3 basket−BTC < −0.05 | −0.05 | 43% | +1.03 | −3.01 | +1.11 | −0.91 | +0.87 |
+  | S3 basket−BTC < −0.10 | −0.10 | 27% | +1.10 | −3.06 | +1.40 | −1.07 | +0.55 |
+- **Verdict:** 🔴 **No tested gate cleanly destroys F1.** Best F1 destruction is S1 z>0
+  (−1.84) but it fires 51% of days (kills half the book) and only buys 0.13 OOS α_t
+  improvement. Best OOS improvement is S3 > 0.10 (+1.04 → +1.19, +14%) but F1 is still
+  −3.10. The full signal gauntlet on S3 > 0.10: still DIED at significance_PSR (annSR
+  1.37, psr 0.824), still NOT SIGNIFICANT at factor_absorption (α_t 1.19), still
+  FRAGILE at regime_robustness (3/4 subsample flip). **Verdict unchanged: NOT a credited
+  signal.** Same DIED-stage as baseline.
+- **Structural reading (why the gate doesn't work):**
+  1. F1 wasn't a "meme rotation" regime — it was a **quality-rotation** regime (MKR
+     +27%, AAVE +21%, TRX +19%, SOL +10% at F1 mid). The pooled book voted SHORT on
+     these elevated-funding quality perps and lost. Fading elevated funding is right in
+     80% of historical regimes — but in F1, the crowd was correctly positioned in
+     quality rotation.
+  2. **No external signal uniquely identifies F1.** BTC funding was elevated in F1 but
+     equally elevated in F2. Basket outperformed BTC in F1 but equally in F3. Cross-
+     class breadth of crowded longs is similar in F1 and F3 — it doesn't distinguish.
+  3. **The signal's information advantage is in the CROSS-SECTION, not the regime.**
+     Cross-section demean isolates idiosyncratic per-perp signal. In F1, that
+     idiosyncratic signal was wrong at the panel level — even skipping 12% of "alt-
+     season" days leaves 88% of days where the cross-sectional short bias is
+     structural.
+- **Verdict consistency:** 🔴 Same DIED-at-significance_PSR stage as baseline. The
+  regime gate is a small upward nudge (annSR +0.13, α_t +0.15), NOT a fix. regime_robustness
+  FRAGILE flag persists (3/4 subsample flip on both baseline and gated).
+- **Aggregate lesson #14 (deepened):** R49 is the **5th entry in the regime-flip family**
+  (alongside R15, R17/R38, R45/R46, R47). The deepened lesson: **"fade the crowd" is only
+  right when the crowd is wrong; AND regime-conditioning with simple external signals is
+  INSUFFICIENT to make a pooled cross-sectional book regime-portable.** The F1 sign-flip
+  is structural, not regime-detectable. The next move is NOT another regime gate — it's a
+  different signal architecture.
+- **Three remaining paths to credit (none started):**
+  1. **Per-asset overlay (R44-style)** — per-perp z-score at t → portfolio overlay on
+     existing book, NOT standalone book. Highest orthogonality potential.
+  2. **Cross-section transformation** — instead of demean-then-pool, use rank-weighted,
+     vol-target, or factor-neutral pooling that may be less exposed to F1.
+  3. **Accept the regime-flip as feature, not bug** — run the pooled book AS A SATELLITE
+     around a fundamentally-driven core (per §TRADER_TOM_DOCTRINE two-layer book) with
+     hard stops during regime-detection, not just statistical gating.
+- **Action item:** Seth (next session) — picks one of the three paths above.
+  Coordination with Minimax-A on per-asset overlay infrastructure if that path is taken.
+  This closes the R47 follow-up of "credit IF/WHEN regime-conditioned" at the simple-
+  signal level. The R46 pre-condition for CIS v5 reweight ("until R47 regime-conditioned
+  sleeve AND reweight both empirically vetted") is now formally NOT met by R49 — the
+  R47 regime-conditioned variant also does NOT credit. **CIS v5 reweight remains parked.**
+- **Status update:** R47 stays as RESOLVED-on-infrastructure + empirically refuted.
+  R49 adds the regime-conditioning variant to the empirical refutation. The pooled book
+  is now **DOUBLE-REFUTED**: (1) at canonical pooled construction (R47), (2) at regime-
+  conditioned pooled construction with simple external signals (R49).
+- **Reference:** `src/research/cis_regime_studies/regime_detector_v1.py` (~165 LoC,
+  three candidate regime signals + F1-fit check), `regime_gate_sweep.py` (~310 LoC,
+  12-cell gate matrix), `regime_gate_gauntlet.py` (~150 LoC, full gauntlet + variant
+  sweep on gated book), `reports/crowding_breadth/2026-07-20_regime_gate/{REPORT.md,
+  sweep_results.json, gauntlet_results.json}` (gitignored).
 
