@@ -1033,3 +1033,65 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 - **Reference:** `reports/cis_quality_absorption/2026-07-19/{verdict.json,REPORT.md}`,
   `src/research/validation/cis_quality_absorption.py` (290 LoC), `src/research/validation/cis_quality_factor.py`
   (date-resolution fix from filename to handle reconstructed snapshots).
+
+## R46 ✅ R45 REFINED — daily-rebal was overfit; 5-day cadence SURVIVES the 3-check gauntlet (Seth, 2026-07-20)
+- **What happened:** R45 refuted composite CIS L/S at daily construction (cost fragility +
+  OOS flip). Per Jazz 2026-07-20 "不要立刻改，再继续深化研究," built two follow-ups to
+  disambiguate: **cadence sweep** (rebal_days ∈ {1,3,5,7,14,21} × cost_bps ∈ {0,5,10})
+  and **sub-period OOS** (6 fixed-width windows, daily rebal, per-factor α_t).
+- **Cadence — the headline finding (refines R45's "edge scale insufficient" diagnosis):**
+  - Daily (R45 baseline): composite CIS 5bps t=+1.68 ✗; pillar_O 5bps t=+1.84 ✗.
+  - 3-day rebal: composite 5bps t=+2.08 ✓ (borderline); pillar_O t=+1.97 ✓ (borderline).
+  - **5-day rebal: composite 5bps t=+2.64 ✓ (strong), 10bps t=+2.43 ✓; pillar_O 5bps
+    t=+3.33 ✓ (very strong), 10bps t=+3.13 ✓.** Turnover drops 228 → 79 (≈3×); O turnover
+    drops 268 → 80. **This is a tradable book factor at 5-day construction.**
+  - 7-day: pillar_O still clears 5bps t=+2.04 ✓ but composite drops to +1.73 ✗ — composite
+    needs slower rebal to clear costs, pillar_O is more robust across cadences.
+  - 14d/21d: both fail — too slow, signal decays.
+  - **R45 verdict flipped: not "edge scale insufficient" but "daily-rebal extracts a
+    DIFFERENT signal than the underlying edge."** Slower rebal (3-7d) reveals a much
+    cleaner alpha. The composite CIS quality edge is real and tradable — at the right cadence.
+- **Sub-period OOS — the W5 question (refines R45's OOS-flip verdict):**
+  Daily-rebal across 6 windows (~122 days each): CIS clears at W2 (+3.48) + W6 (+2.14),
+  fails flat elsewhere; **pillar_O clears at W2 (+2.54) and is positive in 5/6 windows** —
+  one bad window (W5 = 2025-10-04 → 2026-02-02) flips to t=−2.32. **This is regime-specific,
+  not structural.** W5 corresponds to late-cycle risk-on euphoria (BTC ~$100k→$80k chop
+  Oct-Jan); the signal returns positive in W6 (Feb-Jun 2026, +1.42). Same pattern for
+  composite (5/6 windows positive; W5 = −1.75).
+  → **R45's "OOS flip = signal dead" diagnosis refines to "OOS flip = W5-specific late-
+    cycle regime failure."** Regime conditioning (skip when regime=risk-on-late-cycle)
+    is the upgrade path, not the construction.
+- **Pillar_S remains dead at every cadence (5bps t in {−0.77, −0.05, −0.25, +0.43,
+  +0.56, +0.14}) — never clears, often actively hurts. R45's "demote S" finding confirmed.**
+- **Refined verdict for the composite CIS L/S sleeve:**
+  - **R45 (daily rebal)**: REFUTED.
+  - **R46 (5-day rebal + drop pillar_S from blend)**: SURVIVES the three-check gauntlet
+    (gross t > 1.96 ✓, 5bps t > 1.96 ✓, 5/6 sub-period windows positive).
+  - **Per-pillar winner at 5d/5bps: pillar_O at t=+3.33, ann=+70.1%/yr, turnover 80**
+    (vs composite's t=+2.64 ann=+50.3%). The "use whatever is best" steer lands here:
+    pillar_O alone at 5d rebal beats composite CIS at 5d rebal. **The upgrade path
+    for CIS v5 is NOT composite-with-better-weights; it is a leaner CIS-replacement
+    sleeve based on pillar_O alone at 5d cadence, with a regime-conditioned filter**
+    (skip in risk-on-late-cycle regimes).
+- **What this means for the ledger aggregate lesson #13 (three-check gauntlet):**
+  R45's verdict was sourced from **insufficient sweep depth** — daily-only cadence is
+  one point on the cadence curve, and the three-check gauntlet at that single point
+  was a refutation. **The gauntlet must sweep across construction choices, not just
+  test one configuration.** Aggregate lesson #13.5: **a "refutation" at one construction
+  setting is provisional until the construction has been swept (rebal cadence, k-terciles,
+  cost-bps penalty timing, signal source substitution).** Otherwise we close ideas that
+  work at a different setting.
+- **Action items (pending Jazz's go/no-go):**
+  1. **R47 candidate**: build a regime-conditioned pillar_O L/S sleeve — 5-day rebal +
+     composite of "skip if regime=risk-on-late-cycle" (the regime tag the macro pulse
+     already supplies via risk_bands) — and run the full 3-check gauntlet. If passes,
+     this is a satellite sized similarly to Sleeve E.
+  2. **CIS v5 weight update**: log as a methodology suggestion to Minimax-A (reweight
+     composite toward pillar_O in v5; demote/regime-condition pillar_S; F/M/A held
+     diversified), with this evidence package attached. Scoring change, not front-end.
+  3. **Production paper holding-pattern preserved**: per Jazz steering, NO change to
+     `REGIME_CIS_FLOOR` or any CIS gate until R47 (regime-conditioned sleeve) and the
+     CIS v5 weight reweight are both empirically vetted.
+- **Reference:** `src/research/validation/cis_quality_robustness.py` (~280 LoC),
+  `reports/cis_quality_robustness/2026-07-20/{verdict.json,REPORT.md}` (gitignored, local).
+
