@@ -901,6 +901,7 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 10. **The loop's job is to kill our ideas cheaply.** Nine of ten here died before a dollar was at risk. That is the system working, not failing.
 11. **A correct per-asset trigger doesn't make a correct pooled book.** (R40) The trigger logic can be right (76% win rate, +2.6% fwd 5d on BTC's 2024-08-05 fire) and the pooled cross-section alpha can still be negative — because the demean is too punitive when assets are highly correlated (BTC+ETH+SOL+AVAX drop together in 2024-2026 = demean kills the signal exactly when it should fire). Architecture of the book must match the correlation structure of the signal's universe. A signal with a strong per-asset edge needs a per-asset book, not a cross-section one.
 12. **Count independent events, not trades, before crediting a conditional hit rate.** (R44) R40's "76% BTC win rate" was 224 fires that ALL clustered on a single day (2024-08-05 Yen unwind) — 1 event, not 224 observations. The per-pair overlay that inherited this trigger fired **zero times OOS** at the doctrine-faithful threshold, and lost (33% win, −2.5% avg) when the threshold was loosened enough to fire. A trigger with a great conditional hit rate on one clustered event is an anecdote, not an edge, until it fires out-of-sample. Rare-event detectors are not swing strategies.
+13. **Gross in-sample + cost-failure + OOS-failure is the refutation pattern for factor sleeves.** (R45) CIS-quality L/S earns +48%/yr at t=+2.24 in-sample gross, but degrades to t=+1.68 at 5 bps turnover (Binance VIP taker is 4 bps — below the 1.96 threshold already) and to t=+0.33 OOS on the last 30%. The three checks together — gross t > 1.96, cost-t > 1.96 at 5 bps turnover, OOS t > 1.96 — belong in every factor gauntlet. Passing one is suggestive, passing all three is the bar for a real book factor. The signal architecture (daily-rebal tercile) was wrong for the scale of the edge; the edge itself is partially real (~+50%/yr gross in-sample uncorrelated to market+momentum) but not at tradable magnitude in this construction.
 
 *The most valuable output of this operation is a well-kept graveyard.*
 
@@ -979,3 +980,56 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
   we cannot credit now.
 - **Reference:** `src/research/cis_regime_studies/capitulation_bounce_v2.py` (per-pair overlay, 384 LoC),
   reuses trigger from `capitulation_bounce.py`. Ties off R40 — idea does not ship in any form.
+
+## R45 🔴 CIS-quality long/short L/S — composite survives in-sample but dies on costs + OOS
+- **Hypothesis (per §CIS-HISTORY-BACKFILL landing 2026-07-18):** when true CIS history is
+  available (870 daily `cis_YYYY-MM-DD.json` snapshots at
+  `/Volumes/CometCloudAI/cometcloud-local/_data/cis_history/`, full F/M/O/S/A pillars), the
+  composite CIS-quality factor (long top-tercile by CIS score / short bottom-tercile,
+  ranked on day d−1, applied to day d return) carries RESIDUAL α after the known premia
+  (equal-weight market, TSMOM-30). If anything SIMPLER than the composite beats the composite,
+  that's the upgrade signal: reweight CIS toward the pillar that pays.
+- **What we built:** `src/research/validation/cis_quality_absorption.py` — OLS + Newey-West
+  per-factor absorption (`factor_absorption.absorption_test`), per-pillar L/S in parallel,
+  composite-vs-best-pillar, OOS time split 70/30, turnover cost curve 0/5/10/20 bps.
+- **Window / universe:** 2024-06-07 → 2026-06-07, 731 daily bars, 41 tradeable assets
+  (CIS ∩ OHLCV). 76 assets in CIS history, 52 with hourly parquet.
+- **Result (in-sample, gross, full window):** composite CIS L/S = **+48.4%/yr, t=+2.24** →
+  RESIDUAL α (passes t > 1.96). Per-pillar decomposition shows **pillar_O dominates at
+  +51.4%/yr, t=+2.49**; pillar_F, M, A are non-significant in absolute terms (t = 0.37, 1.49,
+  1.63); **pillar_S is actively negative (−10.6%/yr, t=−0.56)**. Composite CIS adds NOTHING
+  over pillar_O once O is added as a control (composite resid-α drops to **t=+0.44**).
+- **Robustness — what kills it:**
+  1. **Cost curve (turnover-charged daily rebal):** CIS gross t=+2.24 → **5 bps t=+1.68** →
+     **10 bps t=+1.14** → **20 bps t=+0.05.** Edge evaporates at any realistic taker-fee band.
+     Same shape for pillar_O. The signal cannot pay for its own turnover.
+  2. **OOS time split (last 30% = 2025-10-31 → 2026-06-07, 220 days):** composite CIS OOS
+     t=+0.33; **pillar_O OOS t=−0.45 (sign-flipped!);** all five pillars OOS t between
+     −1.56 and +0.58. **No surviving OOS signal.**
+- **Diagnosis:** the apparent CIS-quality edge is real in-sample gross (≈+50%/yr uncorrelated to
+  market & momentum) — but the construction is wrong for a real book. (a) The day-rebalanced
+  tercile L/S turns over too much to survive realistic taker fees (even a Binance VIP taker
+  at 4 bps crosses the t=1.96 line); (b) the edge does not extend OOS — it is partly an
+  in-sample fit to 2024-2025 specific regime behavior. **The PREMIA exists (in-sample, gross) but
+  is not at the magnitude the construction extracts — what we're measuring is closer to a
+  coin-flip-with-good-bias than a tradable book factor.**
+- **Verdict — DE-RATE rather than declare dead (per §STRATEGY-REVIVE):**
+  - Composite CIS as a *quant factor* at this construction: **refuted**. Either slow the
+    rebalance (weekly or monthly tercile refresh would cut turnover 5–20× and may survive),
+    OR drop the L/S book factor framing entirely.
+  - **The pillar decomposition is the actionable methodological finding for CIS v4.x:** pillar_O
+    carries the residual α; pillar_S actively hurts. The composite dilutes the pillar that pays.
+    Jazz's steer 2026-07-19 — "use whatever is best, so CIS upgrades" — translates concretely to:
+    reweight CIS v5 toward On-Chain/Health (pillar_O) and away from Sentiment (pillar_S).
+    Composite should retain F/M/A as diversifying signals (individually not significant, but
+    their joint signal may matter in different regimes); S specifically should be demoted or
+    regime-conditioned.
+  - Composite CIS is still useful as a **quality/risk overlay** (per H1): sign the trade, size
+    by CIS rank, but don't promise alpha. That framing is consistent with the methodology doc.
+- **Lesson (added to aggregate list #13):** **Gross in-sample + cost-failure + OOS-failure is the
+  refutation pattern for factor-style sleeves.** The three checks together — gross t > 1.96,
+  cost-t > 1.96 at 5 bps turnover, OOS t > 1.96 on the last 30% — belong in every factor gauntlet.
+  Any one passing is suggestive; passing all three is the bar for a real book factor.
+- **Reference:** `reports/cis_quality_absorption/2026-07-19/{verdict.json,REPORT.md}`,
+  `src/research/validation/cis_quality_absorption.py` (290 LoC), `src/research/validation/cis_quality_factor.py`
+  (date-resolution fix from filename to handle reconstructed snapshots).
