@@ -902,6 +902,7 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
 11. **A correct per-asset trigger doesn't make a correct pooled book.** (R40) The trigger logic can be right (76% win rate, +2.6% fwd 5d on BTC's 2024-08-05 fire) and the pooled cross-section alpha can still be negative — because the demean is too punitive when assets are highly correlated (BTC+ETH+SOL+AVAX drop together in 2024-2026 = demean kills the signal exactly when it should fire). Architecture of the book must match the correlation structure of the signal's universe. A signal with a strong per-asset edge needs a per-asset book, not a cross-section one.
 12. **Count independent events, not trades, before crediting a conditional hit rate.** (R44) R40's "76% BTC win rate" was 224 fires that ALL clustered on a single day (2024-08-05 Yen unwind) — 1 event, not 224 observations. The per-pair overlay that inherited this trigger fired **zero times OOS** at the doctrine-faithful threshold, and lost (33% win, −2.5% avg) when the threshold was loosened enough to fire. A trigger with a great conditional hit rate on one clustered event is an anecdote, not an edge, until it fires out-of-sample. Rare-event detectors are not swing strategies.
 13. **Gross in-sample + cost-failure + OOS-failure is the refutation pattern for factor sleeves.** (R45) CIS-quality L/S earns +48%/yr at t=+2.24 in-sample gross, but degrades to t=+1.68 at 5 bps turnover (Binance VIP taker is 4 bps — below the 1.96 threshold already) and to t=+0.33 OOS on the last 30%. The three checks together — gross t > 1.96, cost-t > 1.96 at 5 bps turnover, OOS t > 1.96 — belong in every factor gauntlet. Passing one is suggestive, passing all three is the bar for a real book factor. The signal architecture (daily-rebal tercile) was wrong for the scale of the edge; the edge itself is partially real (~+50%/yr gross in-sample uncorrelated to market+momentum) but not at tradable magnitude in this construction.
+14. **Cross-class is a separate test, not an extrapolation.** (R48) The 5d-rebal quality-L/S mechanism that survives on the 41-asset crypto universe (R46: pillar_O 5bps t=+3.33) **does NOT generalize to a 17-ETF TradFi universe** (R48: best t across all cadences × costs = −0.63; all negative). The crypto edge is contingent on crypto microstructure (24/7 retail-driven flow, persistent cross-section dispersion) and/or the multi-dimensionality of true CIS (5 pillars) that the 2-factor proxy cannot replicate. **Cross-class validation is its own check** — running a positive result on one market does NOT entitle a "general" claim. A negative cross-class result is informative even without a matched multi-pillar TradFi score.
 
 *The most valuable output of this operation is a well-kept graveyard.*
 
@@ -1172,4 +1173,71 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
   `/Volumes/CometCloudAI/cometcloud-local/_data/hyperliquid_funding/` (48 perps cached,
   ~700k funding rows, ~50k OHLCV bars), `reports/crowding_breadth/2026-07-20_hl_credit/{summary.json,
   REPORT.md}`.
+
+## R48 🔴 Cross-class test REFUTES "general L/S quality mechanism" — R46 is crypto-specific (Seth, 2026-07-20)
+- **Hypothesis (R46 follow-up, per Jazz option C + "挖掘更远的窗口, 22年起"):** does the
+  5d-rebal quality-L/S mechanism generalize beyond crypto? Constructed a no-CIS quality
+  proxy (trailing_90d_momentum + inverse_30d_vol, cross-section z-scored) and ran the
+  same cadence × cost × 3-check gauntlet on TWO new surfaces:
+  1. **Crypto multi-regime proxy 2022-2026** (14 majors with 4h coverage back to 2022;
+     `_data/cis_history` daily JSONs only go back to 2024-03, so pre-2024 has to use
+     the proxy — not true CIS). Coverage: 2022-01 → 2026-07, 1619 days.
+  2. **TradFi 17-ETF cross-class** (SPY/QQQ/IWM/DIA/XLF/XLK/XLE/XLV/XLY/TLT/IEF/HYG/
+     LQD/GLD/USO/SLV/UUP; genuinely heterogeneous across equities / bonds / commodities
+     / currencies; 1136 trading days). Coverage: 2022-01 → 2026-07.
+- **Result (BOTH surfaces negative):**
+  | Surface | Best 5d/5bps t | Cross-section structure |
+  |---|--:|---|
+  | **Crypto, 41 assets (R46 true CIS)** | **+3.33 pillar_O / +2.64 composite** ✓✓✓ | heterogeneous, ENB high |
+  | Crypto, 14 majors (proxy, multi-regime) | **+0.28 to +0.36** | correlated, ENB low |
+  | **TradFi, 17 ETFs (proxy, R48)** | **−1.12 proxy** at 5d/5bps | heterogeneous, ENB high |
+  | TradFi, all cadences × costs | **all NEGATIVE** (−0.63 to −1.47) | — |
+- **TradFi cross-class result:** best t-stat at any cadence × cost: **−0.63** (3d,
+  0bps). At 5d/5bps across 5 calendar-year windows: **1/5 positive (+0.41 in 2025
+  S&P melt-up), 0/5 clear 1.96**. **Direction-flipped**: the long-winners/
+  short-losers pattern is mildly DESTRUCTIVE on TradFi (proxy L/S gives
+  consistently negative residual-α t across the full cadence × cost grid).
+- **Three-way comparison is the headline.** Crypto 41-asset = strong positive; crypto
+  14-major proxy = weak/marginal; TradFi 17-ETF = weakly negative. **The 5d-rebal
+  quality L/S mechanism tested is NOT market-general.** R46's strong crypto result
+  is contingent on crypto-microstructure. Two non-mutually-exclusive reasons:
+  1. **Crypto microstructure**: 24/7 trading, retail-driven order flow, news-driven
+     momentum persistence, persistent cross-sectional dispersion (low-decile
+     "losers" stay cheap for longer than TradFi losers whose fundamentals mean-revert
+     more reliably).
+  2. **True CIS is multi-dimensional**: the 5-pillar composite (F+M+O+S+A) is
+     fundamentally richer than the 2-factor (momentum + inv-vol) proxy. The
+     proxy is what failed on TradFi; true CIS may behave differently, but we have
+     no TradFi-equivalent multi-pillar quality score to test.
+- **Crypto 14-major multi-regime specifically:** even the proxy is essentially flat
+  across 3 windows (best t in any window: +0.44 bear, +0.54 CIS-coverage, +0.79
+  full). **Doesn't clear 1.96 anywhere.** Same direction as TradFi (weakly positive
+  on narrower crypto, negative on TradFi). Reads as: the proxy at 5d/5bps isn't
+  strong enough to survive a cross-section without the richness of true CIS pillars.
+- **Methodological lesson (added to aggregate list #15):** a positive factor-survival
+  result on one market does NOT imply a "general" mechanism. **Cross-class
+  validation is a separate test, not an extrapolation.** The 41-asset crypto universe
+  was sufficient for crypto-specific discovery; the same L/S idea applied to a
+  heterogeneous TradFi universe PRODUCED THE OPPOSITE SIGN. Always extend findings
+  to a different asset class before claiming generality. Negative cross-class is
+  informative even when we can't run a directly-matched TradFi multi-pillar test.
+- **What this means for the CIS v5 upgrade path (closes the original R45 "use
+  whatever is best, so CIS upgrades" thread honestly):**
+  - pillar_O beats composite **specifically in crypto** because of crypto
+    microstructure, not because pillar_O is universally superior.
+  - CIS v5 reweight toward pillar_O should be **scoped to crypto scoring only.**
+    Do NOT apply the same weights to a hypothetical future TradFi scoring engine;
+    the mechanism is different.
+  - The "regime-conditioned pillar_O sleeve" (R47 sibling idea) remains a valid
+    crypto-scoped candidate, but the trade framing must respect that this is a
+    CRYPTO SPECIALIST edge, not a market-general one.
+- **Status:** R46 stays ✅ (survives at 5d/5bps on broad crypto); this R48
+  establishes that R46 does NOT extrapolate to other markets. Together they form
+  the complete characterization of the edge.
+- **Reference:** `src/research/validation/cis_quality_multiregime.py` (~270 LoC,
+  14-major crypto 2022-2026) + `src/research/validation/cis_quality_tradfi.py`
+  (~230 LoC, 17-ETF TradFi 2022-2026); `reports/cis_quality_multiregime/2026-07-20/`
+  + `reports/cis_quality_tradfi/2026-07-20/{verdict.json,REPORT.md}` (gitignored).
+  EODHD data cached locally at `/Volumes/CometCloudAI/cometcloud-local/_cache/eodhd_history/`
+  (~17 ETF JSONs, 2022-01 → 2026-07 daily).
 
