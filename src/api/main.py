@@ -22,6 +22,8 @@ Routers:
   src/api/routers/vector.py       — /api/v1/cis/similar, /api/v1/cis/cluster, /api/v1/cis/embeddings,
                                      /api/v1/market/funding-rates, /api/v1/market/trending-overlay
   src/api/routers/factors.py      — /api/v1/factors/*, factor registry + §F-SEL + performance tracking
+  src/api/routers/strategy_vector.py — /api/v1/strategy/* (strategy vector DB; do not confuse
+                                     with strategies.py multi-factor router)
 """
 import os, sys, json
 
@@ -57,6 +59,7 @@ from src.api.routers.discovery import router as discovery_router
 from src.api.routers.strategies import router as strategies_router
 from src.api.routers.signals import router as signals_router
 from src.api.routers.portfolio_diagnosis import router as diagnosis_router
+from src.api.routers.strategy_vector import router as strategy_vector_router
 from src.api.routers.admin import router as admin_router
 from src.api.routers.ohlcv import router as ohlcv_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
@@ -114,6 +117,7 @@ app.include_router(discovery_router)
 app.include_router(strategies_router)
 app.include_router(signals_router)
 app.include_router(diagnosis_router)
+app.include_router(strategy_vector_router)
 app.include_router(admin_router)
 app.include_router(ohlcv_router)
 
@@ -387,6 +391,59 @@ async def _start_scalable_book_loop():
     if os.environ.get("DISABLE_SCALABLE_BOOK", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_scalable_book_loop())
         print("[SCALABLE-BOOK] ✅ daily scalable-book NAV loop scheduled")
+
+
+# ── §5b two-layer book — forward OOS clock for the V5c core × C regime overlay ──
+# R57 validated the ARCHITECTURE but found the V5c core structurally dead (2.7% engaged
+# since 2025-11). This sleeve marks daily anyway — a flat day is a real observation — and
+# holds ZERO size while core_state == dead. The §CORE-BAKEOFF winner hot-swaps in via the
+# Redis key `two_layer_paper:core` with no code deploy. See src/data/signals/two_layer_paper.py.
+async def _two_layer_paper_loop():
+    await _asyncio.sleep(600)   # 10 min warmup
+    while True:
+        try:
+            from src.data.signals.two_layer_paper import mark_and_rebalance
+            res = await mark_and_rebalance(dry_run=False)
+            print(f"[TWO-LAYER] mark — status={res.get('status')} nav={res.get('nav')} "
+                  f"book_state={res.get('book_state')} gross={res.get('gross')}")
+        except Exception as _e:
+            print(f"[TWO-LAYER] ⚠️  mark failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_two_layer_paper_loop():
+    if os.environ.get("DISABLE_TWO_LAYER_PAPER", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_two_layer_paper_loop())
+        print("[TWO-LAYER] ✅ daily §5b two-layer paper-book loop scheduled")
+
+
+# ── R65 fusion paper book — forward-committed live R64 cell (Seth, 2026-07-21) ──
+# R64 verified the 2-sleeve fusion (25% R46 pillar_O + 75% R62 fade-the-crowd gated) passes
+# 3/3 deployment gates. R65 deploys it as a live paper book so §P1's forward clock starts
+# running, and replaces the CRUDE $5M capacity with a real number via fill-attribution as
+# live price/ADV accumulates. Detector + cell constants are FROZEN at production time.
+# See src/data/signals/fusion_paper.py for the §P1/§P2 architecture.
+async def _fusion_paper_loop():
+    await _asyncio.sleep(660)   # 11 min warmup
+    while True:
+        try:
+            from src.data.signals.fusion_paper import mark_and_rebalance
+            res = await mark_and_rebalance(dry_run=False)
+            print(f"[FUSION-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
+                  f"gross={res.get('gross')} fill={res.get('fill_ratio_overall')} "
+                  f"cap={res.get('capacity_status')} det={res.get('detector_fired_today')} "
+                  f"n_days={res.get('n_days_marked')} validated={res.get('validated')}")
+        except Exception as _e:
+            print(f"[FUSION-PAPER] ⚠️  mark failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_fusion_paper_loop():
+    if os.environ.get("DISABLE_FUSION_PAPER", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_fusion_paper_loop())
+        print("[FUSION-PAPER] ✅ daily R64 fusion paper-book loop scheduled")
 
 
 # ── Signal factory recalibration — Stage 4: the loop's learning turn (weekly) ──
@@ -966,6 +1023,44 @@ async def causal_paper(response: Response = None):
         return await get_curve()
     except Exception as e:
         return {"error": "causal_paper_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/signals/two-layer-paper")
+async def two_layer_paper(response: Response = None):
+    """Live PAPER track record of the §5b two-layer book (V5c core × C regime overlay).
+    Starts the FORWARD out-of-sample clock R57 flagged as the missing piece. Reports
+    days_engaged vs days_flat honestly — the book holds ZERO size while the core is
+    structurally dead rather than fabricating exposure. See src/data/signals/two_layer_paper.py."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.data.signals.two_layer_paper import get_curve
+    try:
+        return await get_curve()
+    except Exception as e:
+        return {"error": "two_layer_paper_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/signals/fusion-paper")
+async def fusion_paper(response: Response = None):
+    """Live PAPER track record of the R64 fusion cell (25% R46 pillar_O + 75% R62
+    fade-the-crowd gated). §P1 forward commitment + §P2 binding capacity declaration
+    are pre-declared and locked at production time. Reports NAV curve + per-day fill
+    ratio + slippage + capacity status so the CRUDE $5M ceiling becomes a real number
+    as live price/ADV data accumulates. `validated` flag flips true after ≥60 forward
+    days. See src/data/signals/fusion_paper.py."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.data.signals.fusion_paper import get_curve
+    try:
+        return await get_curve()
+    except Exception as e:
+        return {"error": "fusion_paper_unavailable", "detail": str(e)[:120]}
 
 
 @app.get("/api/v1/signals/dingge-paper")

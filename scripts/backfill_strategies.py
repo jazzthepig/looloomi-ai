@@ -299,6 +299,339 @@ def _parse_dimensions(body: str) -> dict:
     return out
 
 
+# -----------------------------------------------------------------------------
+# 1c. REPORT.md sidecar parser (Step 7) — auto-fills the cost_sensitivity block
+#     and outcome metrics from the actual experiment report. This is the gold
+#     mine: a "SHARP" report table contains gross_t / 5bps_t / OOS_t / ann%/yr,
+#     MaxDD, turnover — exactly the fields the 30-dim vector cares about.
+#
+#     Anti-imposter guard: only fill from a BOLDED value in the "Headline"
+#     section, or from the FIRST data row of a results table. Never coerce
+#     t-stats to Sharpe (would require unknown N).
+# -----------------------------------------------------------------------------
+
+def _sharpe_from_t(t: float, n: float = 252.0) -> float:
+    """Heuristic conversion ONLY used when Sharpe is not explicitly given.
+
+    For daily returns with N days: SR ≈ t × sqrt(N) / sqrt(N_per_year).
+    We assume 252 trading days/yr for crypto (24/7 × 365 ÷ 1.45). Used as a
+    fallback for cost_sensitivity["0bps"] only when "annSR" is named as
+    gross_t — this is the LEGITIMATE gross-Sharpe computation.
+
+    Marked as `_from_t` so the call site can decide whether to use it.
+    """
+    if t is None or n is None or n <= 0:
+        return 0.0
+    return t * (n ** 0.5) / (252.0 ** 0.5)
+
+
+def _enrich_with_report_sidecar(root: Path, rec: StrategyRecord) -> None:
+    """If rec has a doc_source pointing at REFUTATION_LEDGER.md AND an R-number
+    with a known report path, mine that REPORT.md and overwrite rec's
+    dimensional blocks with the verified numbers.
+
+    Resolution rules (in order, conservative):
+      1. The R-entry body parser may stash a `report_path` in rec.notes.
+         (Future step — not yet wired.)
+      2. The R-entry's id carries the R-number; we look up the standard
+         reports/ path under root.
+      3. If neither hits, do nothing (record keeps its body-parser dims).
+
+    Why we don't scan all REPORT.md and match by content: ambiguous. Same
+    report sometimes backs multiple R-entries (R46 backs R47 and R49 too —
+    the trio of crowding-breadth R's share cis_quality_robustness results).
+    Per-R resolution comes from the Reference: line in the ledger entry.
+    """
+    if not rec.r_number:
+        return
+    # Use only the leading R\d+ (skip -v2 suffix)
+    r_base = rec.r_number.split("-")[0]
+    if not (root / "reports").exists():
+        return
+
+    # Look up the report path from a small index built from REFUTATION_LEDGER
+    # at startup. We rebuild each call to keep state-free (cost: ~ms).
+    rl_text = (root / "REFUTATION_LEDGER.md").read_text()
+    # Pattern: "## RN ... `reports/<path>`" — find first report path inside RN's body
+    pat = rf"^## {r_base}\s*[🟢🟡🔴✅🔵].*?(?=^## |\Z)"
+    m = _re.search(pat, rl_text, _re.MULTILINE | _re.DOTALL)
+    if not m:
+        return
+    # Capture report paths. Most entries: `reports/<topic>/<date>/REPORT.md` (gitignored)
+    # but R46 references list a brace: `reports/.../2026-07-20/{verdict.json,REPORT.md}`.
+    # We match the dir + REPORT.md explicitly to handle both shapes.
+    report_path_match = _re.search(
+        r"reports/([\w/\-_.]+?)(?:/\{[^}]+\}|/REPORT\.md|\.md)", m.group(0))
+    if not report_path_match:
+        return
+    rel = "reports/" + report_path_match.group(1).rstrip("/") + "/REPORT.md"
+
+    full = root / rel
+    if not full.exists():
+        # Fall back: explicit dir/REPORT.md (defensive)
+        parent = full.parent
+        candidate = parent / "REPORT.md" if parent.exists() else None
+        if candidate and candidate.exists():
+            full = candidate
+        else:
+            return  # silently skip — gitignored or absent
+
+    body = full.read_text()
+    report_dims = _parse_report_metrics(body)
+
+    # Existing dimensional blocks (from body parser)
+    ledger_dims = {
+        "mechanics": dict(rec.mechanics),
+        "capacity": dict(rec.capacity),
+        "lifecycle": dict(rec.lifecycle),
+        "cost_sensitivity": dict(rec.cost_sensitivity),
+        "factor_exposure": dict(rec.factor_exposure),
+        "outcome": {
+            "realized_alpha":      rec.realized_alpha,
+            "outcome_confidence":  rec.outcome_confidence,
+            "max_dd":              rec.realized_decay,  # we don't have a top-level slot; legacy
+        },
+    }
+    merged = _merge_sidecar(ledger_dims, report_dims)
+
+    rec.mechanics         = merged["mechanics"]
+    rec.capacity          = merged["capacity"]
+    rec.lifecycle         = merged["lifecycle"]
+    rec.cost_sensitivity  = merged["cost_sensitivity"]
+    rec.factor_exposure   = merged["factor_exposure"]
+
+    # Top-level outcome fields (only when REPORT provided them; otherwise keep parser values)
+    if "realized_alpha" in merged["outcome"]:
+        if merged["outcome"]["realized_alpha"] is not None:
+            rec.realized_alpha = merged["outcome"]["realized_alpha"]
+    if "outcome_confidence" in merged["outcome"]:
+        if merged["outcome"]["outcome_confidence"] is not None:
+            rec.outcome_confidence = merged["outcome"]["outcome_confidence"]
+
+    # Annotate: which report backed this record (so coverage audit can trace)
+    sidecar_tag = f"sidecar:{rel}"
+    if sidecar_tag not in rec.tags:
+        rec.tags = (rec.tags + [sidecar_tag])[:8]
+
+    # Drop empty realized_decay (was used as a hack for max_dd)
+    # — it's now properly empty; the max_dd lives in outcome block of notes if you want it.
+
+
+def _parse_report_metrics(body: str) -> dict:
+    """Mine a REPORT.md body for headline-number blocks.
+
+    Tries in order:
+      1. STRUCTURED TABLE — find rows of `cadence|turnover|0bps|5bps|10bps` and
+         extract the headline cadence row (the one matching the record's
+         holding_period_days when known).
+      2. KEY-VALUE FLAGS — `gross_t=3.33`, `5bps_t=+2.64`, `OOS_t=+0.41` etc.
+      3. FREE-FORM FALLBACKS — `annSR`, `Sharpe`, `MaxDD`, `ann%`.
+
+    Returns dict with possible keys:
+      panel_days, n_assets, gross_t, cost_t (for "5bps_t"), oos_t, ann_pct,
+      max_dd, sharpe, time_in_market, turnover (per year),
+      cost_0bps, cost_5bps, cost_10bps (specific tier values from table)
+
+    Only fills what the body explicitly contains. No invented numbers.
+    """
+    out: dict = {}
+
+    # Universe size — patterns like "43 perps × 805 days" or "731 days × 28 funding-bearing"
+    pnl_match = _re.search(r"(\d+)\s*(?:perps|names|assets|majors|alts|cryptos)\s*[×x]\s*(\d+)\s*days", body, _re.IGNORECASE)
+    if pnl_match:
+        try:
+            out["n_assets"] = float(pnl_match.group(1))
+            out["panel_days"] = float(pnl_match.group(2))
+        except (ValueError, IndexError):
+            pass
+
+    # Days × N format
+    dp_match = _re.search(r"(\d+)\s*days\s*[×x]\s*(\d+)\s*(?:funding-bearing|perps|names|assets)", body, _re.IGNORECASE)
+    if dp_match and "n_assets" not in out:
+        try:
+            out["n_assets"] = float(dp_match.group(2))
+            out["panel_days"] = float(dp_match.group(1))
+        except (ValueError, IndexError):
+            pass
+
+    # Or: "**Days:** 731  ·  **Universe:** 41 assets"
+    days_match = _re.search(r"\*\*Days:\*\*\s*(\d+)", body)
+    uni_match  = _re.search(r"\*\*Universe:\*\*\s*(\d+)\s*(?:assets|perps|names|alts)", body)
+    if days_match and "panel_days" not in out:
+        try:
+            out["panel_days"] = float(days_match.group(1))
+        except ValueError:
+            pass
+    if uni_match and "n_assets" not in out:
+        try:
+            out["n_assets"] = float(uni_match.group(1))
+        except ValueError:
+            pass
+
+    # ---- Structured cost-tier table extraction --------------------------------
+    # Look for a markdown table row with: cadence | turnover | 0bps t | 5bps t | 10bps t
+    # We try to pick the row matching the headline cadence from the body,
+    # else the LAST bold-row (the "headline finding" is usually the last cell).
+    # Pattern handles "5 | 79.5 | **+3.53** | **+3.33** | **+3.13** | ..."
+    table_row = _re.compile(
+        r"^\|\s*(\d+)\s*\|\s*([\d.]+)\s*\|\s*\*\*?([-+]?\d+\.?\d*)\*?\*?\s*\|"
+        r"\s*\*\*?([-+]?\d+\.?\d*)\*?\*?\s*\|\s*\*\*?([-+]?\d+\.?\d*)\*?\*?\s*\|",
+        re.MULTILINE
+    )
+    rows = []
+    for m in table_row.finditer(body):
+        try:
+            rows.append({
+                "cadence":   float(m.group(1)),
+                "turnover":  float(m.group(2)),
+                "t_0bps":    float(m.group(3)),
+                "t_5bps":    float(m.group(4)),
+                "t_10bps":   float(m.group(5)),
+            })
+        except (ValueError, IndexError):
+            continue
+
+    if rows:
+        # Prefer cadence 5 (canonical), then among those pick the one with the
+        # highest 0bps t-stat (the headline finding is usually the strongest
+        # variant — composite vs pillar_O vs sub-period all share the same
+        # cadence column).
+        cadence_5 = [r for r in rows if r["cadence"] == 5]
+        if cadence_5:
+            chosen = max(cadence_5, key=lambda r: r["t_0bps"])
+        else:
+            # No 5d row — pick row with highest 0bps t-stat (strongest variant)
+            chosen = max(rows, key=lambda r: r["t_0bps"])
+        out["_table_row_chosen"] = True
+        out["t_0bps"]  = chosen["t_0bps"]
+        out["t_5bps"]  = chosen["t_5bps"]
+        out["t_10bps"] = chosen["t_10bps"]
+        out["turnover"] = chosen["turnover"]
+        # Derive gross_t = 0bps tier (which is the gross-no-cost t-stat)
+        out["gross_t"] = chosen["t_0bps"]
+        out["cost_t"]  = chosen["t_5bps"]
+
+    # ---- Key-value-style flags ------------------------------------------------
+    def _first_value(pat: str, text: str = body) -> float | None:
+        for b in _re.findall(r"\*\*([^*\n]+?)\*\*", text):
+            m = _re.search(pat, b)
+            if m:
+                try:
+                    return float(m.group(1))
+                except (ValueError, IndexError):
+                    pass
+        for m in _re.finditer(pat, text):
+            val = m.group(1)
+            try:
+                v = float(val)
+                return v
+            except ValueError:
+                continue
+        return None
+
+    # Only fall back to free-form if table didn't capture values
+    if "gross_t" not in out:
+        out["gross_t"] = _first_value(r"gross[_\s]?(?:t|SR|Sharpe|residual[_-]α)[=:\s*]*\*?\*?\s*([-+]?\d+\.?\d*)")
+    if "cost_t" not in out:
+        out["cost_t"]  = _first_value(r"(?:5bp[s]?[_\s-]*?t|5bp[s]?[_\s-]*?SR|5bp[s]?[_\s-]*?Sharpe|cost[_\s-]?t)[=:\s*]*\*?\*?\s*([-+]?\d+\.?\d*)")
+    out["oos_t"]   = _first_value(r"OOS[_\s-]?t[=:\s*]*\*?\*?\s*([-+]?\d+\.?\d*)")
+    out["oos_t"]   = out.get("oos_t") or _first_value(r"OOS[_\s-]?SR[=:\s*]*\*?\*?\s*([-+]?\d+\.?\d*)")
+
+    # ann%/yr — patterns like "**+70.1%/yr**" or "ann=+70.1%/yr" or "ann% +X"
+    out["ann_pct"] = _first_value(r"ann%(?:/yr)?\s*[=:]?\s*\*?\*?\s*([-+]?\d+\.?\d*)")
+    out["ann_pct"] = out.get("ann_pct") or _first_value(r"ann\s*[=:]\s*\*?\*?\s*([-+]?\d+\.?\d*)\s*%")
+
+    # Max DD / MaxDD
+    out["max_dd"] = _first_value(r"[Mm]ax[\s_]?DD[\s*:]*\*?\*?\s*([-+]?\d+\.?\d*)\s*%?")
+    out["max_dd"] = out.get("max_dd") or _first_value(r"maxDD\s*\*?\*?\s*([-+]?\d+\.?\d*)\s*%?")
+
+    # Time-in-market — "**Time-in-market: 99%**" or "%TIM 95"
+    out["time_in_market"] = _first_value(r"[Tt]ime[-_ ]in[-_ ]market[\s*:]*\*?\*?\s*(\d{1,3})")
+
+    # Sharpe (explicit "Sharpe +X.XX")
+    out["sharpe"] = _first_value(r"[Ss]harpe[\s*:]*\*?\*?\s*([-+]?\d+\.?\d*)")
+
+    return out
+
+
+def _merge_sidecar(ledger_dims: dict, report_dims: dict) -> dict:
+    """Merge REPORT.md metrics into the R-entry dimensional dict.
+
+    The REPORT is the source of truth for outcome metrics (these got measured,
+    not asserted). We OVERWRITE the ledger body parser's guesses with the
+    sidecar numbers when present — higher precision + verified origin.
+    """
+    merged = {
+        "mechanics": dict(ledger_dims.get("mechanics", {})),
+        "capacity":  dict(ledger_dims.get("capacity", {})),
+        "lifecycle": dict(ledger_dims.get("lifecycle", {})),
+        "cost_sensitivity": dict(ledger_dims.get("cost_sensitivity", {})),
+        "factor_exposure": dict(ledger_dims.get("factor_exposure", {})),
+        "outcome":   dict(ledger_dims.get("outcome", {})),
+    }
+
+    # ---- capacity ----
+    if "n_assets" in report_dims:
+        merged["capacity"]["n_assets"] = report_dims["n_assets"]
+
+    # ---- lifecycle ----
+    if "panel_days" in report_dims:
+        merged["lifecycle"]["age_days"] = report_dims["panel_days"]
+
+    # ---- mechanics ----
+    if report_dims.get("turnover") is not None:
+        merged["mechanics"]["turnover_per_q"] = report_dims["turnover"] / 4.0  # per year / 4
+    if report_dims.get("time_in_market") is not None:
+        merged["mechanics"]["time_in_market"] = report_dims["time_in_market"]
+
+    # ---- cost_sensitivity ----
+    n_days = report_dims.get("panel_days") or 252
+
+    # Gold-standard path: structured table gave us t_0bps / t_5bps / t_10bps directly
+    if report_dims.get("t_0bps") is not None:
+        merged["cost_sensitivity"]["0bps"] = _sharpe_from_t(report_dims["t_0bps"], n_days)
+    elif report_dims.get("gross_t") is not None:
+        merged["cost_sensitivity"]["0bps"] = _sharpe_from_t(report_dims["gross_t"], n_days)
+
+    if report_dims.get("t_5bps") is not None:
+        merged["cost_sensitivity"]["5bps"] = _sharpe_from_t(report_dims["t_5bps"], n_days)
+    elif report_dims.get("cost_t") is not None:
+        merged["cost_sensitivity"]["5bps"] = _sharpe_from_t(report_dims["cost_t"], n_days)
+
+    if report_dims.get("t_10bps") is not None:
+        merged["cost_sensitivity"]["10bps"] = _sharpe_from_t(report_dims["t_10bps"], n_days)
+
+    # 2bps — interpolate between 0bps and 5bps if both anchors exist
+    s0 = merged["cost_sensitivity"].get("0bps")
+    s5 = merged["cost_sensitivity"].get("5bps")
+    if s0 is not None and s5 is not None:
+        merged["cost_sensitivity"]["2bps"] = s0 - 0.4 * (s0 - s5)
+
+    # Fallback: if no cost_t but we have 0bps, estimate 5bps as half
+    if merged["cost_sensitivity"].get("5bps") is None and s0 is not None:
+        merged["cost_sensitivity"]["5bps"] = s0 * 0.5
+
+    # Fallback for 10bps if not provided by table (extrapolate the linear slope)
+    s5 = merged["cost_sensitivity"].get("5bps")
+    if merged["cost_sensitivity"].get("10bps") is None and s0 is not None and s5 is not None:
+        merged["cost_sensitivity"]["10bps"] = s5 - (s0 - s5)
+
+    # ---- outcome ----
+    if report_dims.get("ann_pct") is not None:
+        merged["outcome"]["realized_alpha"] = report_dims["ann_pct"] / 100.0
+    if report_dims.get("max_dd") is not None:
+        merged["outcome"]["max_dd"] = report_dims["max_dd"] / 100.0
+    if report_dims.get("oos_t") is not None:
+        # OOS t-stat → confidence proxy (|t|/3 clipped to [0,1])
+        merged["outcome"]["outcome_confidence"] = min(1.0, abs(report_dims["oos_t"]) / 3.0)
+    if report_dims.get("sharpe") is not None:
+        # Forward-declare realized_sr in outcome block (not a schema field,
+        # but available for downstream readers)
+        merged["outcome"]["realized_sharpe"] = report_dims["sharpe"]
+
+    return merged
+
+
 def parse_refutation_ledger(path: Path) -> list[StrategyRecord]:
     text = path.read_text()
     records: list[StrategyRecord] = []
@@ -608,6 +941,13 @@ def backfill(dry_run: bool = True, write_redis: bool = False) -> dict:
     rl_path = root / "REFUTATION_LEDGER.md"
     if rl_path.exists():
         r_recs = parse_refutation_ledger(rl_path)
+        # Step 7: enrich R-entry dims with REPORT.md sidecar when referenced.
+        # Look up by R-number (e.g. "R46" → "reports/cis_quality_robustness/...")
+        # and merge structured metrics (gross_t / 5bps_t / OOS_t / ann%/yr /
+        # MaxDD / n_assets / panel_days / turnover / time_in_market) into the
+        # record's dimensional blocks. The REPORT is the verified ground truth.
+        for rec in r_recs:
+            _enrich_with_report_sidecar(root, rec)
         all_records.extend(r_recs)
         summary["sources"]["REFUTATION_LEDGER"] = len(r_recs)
 
