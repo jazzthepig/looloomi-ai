@@ -1,0 +1,196 @@
+"""
+Strategy Vector — schema (per docs/MECHANISM_SPEC.md §3)
+==========================================================
+
+A StrategyRecord is the machine-readable contract for a single trading strategy,
+sleeve, or behavioral primitive. The schema follows MECHANISM_SPEC §3:
+
+  - BINARY validity (one False = permanently disqualifying)
+      pit_clean, cost_feasible_at_5bps, forward_committed
+
+  - DIMENSIONAL (six blocks, never binary)
+      regime_domain, factor_exposure, mechanics, capacity, lifecycle,
+      cost_sensitivity
+
+  - RESOLVED outcome (auto-filled by P1 forward-commitment loop)
+      realized_alpha, realized_decay, realized_capacity, last_eval_ts
+
+Source of truth: docs/MECHANISM_SPEC.md §3 ("The strategy vector"). This module
+is its implementation. The MECHANISM_SPEC doc must be updated first if any block
+changes — the schema and the document must stay in sync.
+
+Records are stored as JSON in Upstash Redis (key: strategy:records). All fields
+are JSON-serializable. Missing fields are tolerated (default to neutral) so that
+records can be backfilled incrementally from partial sources (R-entries without
+P1 outcome, doctrinal primitives without capacity, etc.).
+
+Verdict values:
+  ship      — strategy is live-deployed (paper or real)
+  hold      — validated but parked (e.g. core-gated awaiting replacement)
+  refute    — refuted; archived for honesty (R-flag negative results)
+  doctrine  — not a tradeable strategy; a behavioral/architectural primitive
+
+The verdict is metadata; the binary validity fields are the actual disqualifier.
+A "ship" verdict with pit_clean=False is a self-contradiction that should be
+caught by `validate_record()`.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field, asdict
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Optional
+
+
+class Verdict(str, Enum):
+    SHIP = "ship"
+    HOLD = "hold"
+    REFUTE = "refute"
+    DOCTRINE = "doctrine"
+
+
+# ---------------------------------------------------------------------------
+# Constants — the 30 vector dimensions are fixed; reorder is a breaking change.
+# (See strategy_embedder.py for what each dimension holds.)
+# ---------------------------------------------------------------------------
+
+REGIME_DIMS: tuple[str, ...] = (
+    "regime_calm_vol",    # Sharpe conditional on calm vol regime
+    "regime_storm_vol",   # Sharpe conditional on stormy vol regime
+    "regime_risk_on",     # Sharpe conditional on Risk-On macro
+    "regime_risk_off",    # Sharpe conditional on Risk-Off macro
+    "regime_trend",       # Sharpe conditional on trending tape
+    "regime_chop",        # Sharpe conditional on choppy tape
+)
+
+FACTOR_DIMS: tuple[str, ...] = (
+    "beta_market",        # abs exposure to benchmark
+    "beta_momentum",      # cross-section momentum factor β
+    "beta_carry",         # funding / carry factor β
+    "beta_quality",       # CIS quality factor β
+    "residual_alpha",     # α after {market, momentum, carry, quality} absorbed
+)
+
+MECHANICS_DIMS: tuple[str, ...] = (
+    "holding_period_log",  # log scale of typical hold
+    "turnover_per_q",      # flip rate per quarter
+    "time_in_market",      # fraction of trading days with a position
+    "directionality",      # long-bias vs short-bias [-1, 1]
+)
+
+CAPACITY_DIMS: tuple[str, ...] = (
+    "adv_fraction",        # capacity as fraction of avg daily volume
+    "declared_capacity",   # declared max notional (P2)
+    "realized_fill_pct",   # % of declared capacity actually fillable
+)
+
+LIFECYCLE_DIMS: tuple[str, ...] = (
+    "age_days",            # days since record registered
+    "decay_slope",         # rolling performance slope (negative = decaying)
+    "crowding_proxy",      # crowding signal [-1, 1]
+    "half_life_days",      # estimated decay half-life in days
+)
+
+COST_DIMS: tuple[str, ...] = (
+    "sharpe_0bps",         # raw Sharpe, no cost
+    "sharpe_2bps",         # with 2bps/side round-trip spread
+    "sharpe_5bps",         # with 5bps (Binance VIP taker baseline)
+    "sharpe_10bps",        # with 10bps (retail / worst-case)
+)
+
+OUTCOME_DIMS: tuple[str, ...] = (
+    "realized_alpha",      # P1 resolved 30d benchmark-relative α
+    "realized_decay",      # rolling performance decay observed
+    "capacity_util",       # used vs declared capacity (P2)
+    "outcome_confidence",  # confidence of forward-resolution (P1)
+)
+
+
+# ---------------------------------------------------------------------------
+# Record container
+# ---------------------------------------------------------------------------
+
+@dataclass
+class StrategyRecord:
+    """One strategy / sleeve / behavioral primitive in the system of record."""
+
+    # Identity
+    id: str                                                  # unique key
+    title: str                                               # human label
+    doc_source: str                                          # file path
+    r_number: Optional[str] = None                           # e.g. "R46"
+    verdict: Verdict = Verdict.HOLD                          # ship / hold / refute / doctrine
+    tags: list[str] = field(default_factory=list)            # free-form tags
+
+    # BINARY validity (per MECHANISM_SPEC §3)
+    pit_clean: bool = False
+    cost_feasible_at_5bps: bool = False
+    forward_committed: bool = False
+
+    # DIMENSIONAL — six blocks (values clamped to schema ranges by embedder)
+    regime_domain: dict = field(default_factory=dict)        # {regime_key: sharpe_or_None}
+    factor_exposure: dict = field(default_factory=dict)      # {factor: beta}
+    mechanics: dict = field(default_factory=dict)            # {key: value}
+    capacity: dict = field(default_factory=dict)             # {key: value}
+    lifecycle: dict = field(default_factory=dict)            # {key: value}
+    cost_sensitivity: dict = field(default_factory=dict)     # {cost_bps: sharpe}
+
+    # RESOLVED outcome (P1 forward-commitment loop fills these)
+    realized_alpha: Optional[float] = None
+    realized_decay: Optional[float] = None
+    capacity_util: Optional[float] = None
+    outcome_confidence: Optional[float] = None
+    last_eval_ts: Optional[float] = None                     # epoch seconds
+
+    # Notes / free-text
+    notes: str = ""                                          # ≤1 KB; not embedded
+
+    # Bookkeeping
+    registered_at: str = ""                                  # ISO8601 UTC
+    updated_at: str = ""                                     # ISO8601 UTC
+
+    def __post_init__(self):
+        if isinstance(self.verdict, str):
+            self.verdict = Verdict(self.verdict)
+        if not self.registered_at:
+            self.registered_at = _iso_now()
+        if not self.updated_at:
+            self.updated_at = self.registered_at
+
+    # -------- JSON round-trip -------------------------------------------------
+
+    def to_dict(self) -> dict:
+        d = asdict(self)
+        d["verdict"] = self.verdict.value
+        return d
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "StrategyRecord":
+        d = dict(d)
+        if "verdict" in d and isinstance(d["verdict"], str):
+            d["verdict"] = Verdict(d["verdict"])
+        return cls(**d)
+
+    # -------- Validation -------------------------------------------------------
+
+    def validate(self) -> list[str]:
+        """Return list of validation warnings (does NOT raise)."""
+        problems: list[str] = []
+        if not self.id:
+            problems.append("missing id")
+        if not self.title:
+            problems.append("missing title")
+        if self.verdict == Verdict.SHIP:
+            if not self.pit_clean:
+                problems.append("ship verdict but pit_clean=False")
+            if not self.cost_feasible_at_5bps:
+                problems.append("ship verdict but cost_feasible_at_5bps=False")
+            if not self.forward_committed:
+                problems.append("ship verdict but forward_committed=False")
+        if self.verdict == Verdict.REFUTE and self.pit_clean and self.cost_feasible_at_5bps:
+            problems.append("refute verdict but all validity flags True — contradiction")
+        return problems
+
+
+def _iso_now() -> str:
+    return datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
