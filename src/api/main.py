@@ -1063,6 +1063,26 @@ async def fusion_paper(response: Response = None):
         return {"error": "fusion_paper_unavailable", "detail": str(e)[:120]}
 
 
+@app.get("/api/v1/signals/nav-monitor")
+async def nav_monitor(response: Response = None):
+    """R66 live NAV gap monitor — every committed paper book is checked against the
+    OOS expectation pinned in its source report. Returns a per-book gap (live
+    annualized Sharpe − OOS Sharpe) + status (warming_up / on_track / DRIFT /
+    BREAKING / OVERPERFORM). Honest read of whether the live book is tracking what
+    the report said, applied to both fusion_paper (R64/R65) and two_layer_paper
+    (C-S4 §5b). See src/data/signals/nav_monitor.py."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.data.signals.nav_monitor import run_monitor
+    try:
+        return await run_monitor()
+    except Exception as e:
+        return {"error": "nav_monitor_unavailable", "detail": str(e)[:120]}
+
+
 @app.get("/api/v1/signals/dingge-paper")
 async def dingge_paper(response: Response = None):
     """Live PAPER track record of the 顶格 RWA volume-gated sleeve. Cannot be backtest-
