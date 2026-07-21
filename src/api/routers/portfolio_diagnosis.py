@@ -12,6 +12,13 @@ This module is the brain — input-agnostic. Holdings come in as
 `[{symbol, weight?}]`; the diagnosis is the same however they arrived.
 
 Voice: honest assistant. No hype, no alpha-promises, positioning language only.
+
+Kernel integration (Step 9, 2026-07-21): every diagnosis now consults the
+strategy vector DB (`src/data/vector/`) to surface (a) analogous shipped sleeves
+relevant to the holdings' regime context, (b) refutations that look like the
+proposed action, and (c) doctrinal priors that bind. This is the kernel's
+self-honesty check — a diagnosis that ignores the refutation ledger is the
+trader agent in its worst form.
 """
 from __future__ import annotations
 
@@ -27,7 +34,10 @@ async def diagnose(payload: dict):
     """
     One object (your book) + one action (Diagnose).
     Body: {"holdings": [{"symbol": "BTC", "weight": 30}, ...]}  (weight optional)
-    Returns an honest, beta+-oriented read of the book + the few moves.
+    Returns an honest, beta+-oriented read of the book + the few moves,
+    enriched with strategy vector DB evidence (analog sleeves, prior refutes,
+    applicable doctrine).
+
     Same action a human taps and an agent calls.
     """
     from src.api.routers.cis import get_cis_universe
@@ -39,7 +49,24 @@ async def diagnose(payload: dict):
         band_ctx = await compute_current_band()   # for the conviction fusion (timing + executability)
     except Exception:
         band_ctx = None
-    return diagnose_portfolio(holdings, universe, band_ctx)
+
+    diagnosis = diagnose_portfolio(holdings, universe, band_ctx)
+
+    # Kernel integration — enrich with strategy vector DB evidence.
+    # Best-effort: if the vector layer is unavailable, return the base diagnosis unchanged.
+    try:
+        evidence = _strategy_vector_evidence(diagnosis, holdings)
+        if evidence:
+            diagnosis["strategy_evidence"] = evidence
+    except Exception as e:
+        # Kernel must NEVER crash the diagnosis; this is the silent-fallback the
+        # doctrine requires (don't paper over missing data).
+        diagnosis["strategy_evidence"] = {
+            "status": "unavailable",
+            "error": f"strategy vector enrichment failed: {type(e).__name__}",
+        }
+
+    return diagnosis
 
 # Grade → bucket. KEEP = institutional quality; WATCH = acceptable; TRIM = below bar.
 _KEEP = {"A+", "A", "B+"}
@@ -208,3 +235,112 @@ def _cis_to_rank(cis: float) -> int:
     if cis >= 35: return 3
     if cis >= 25: return 2
     return 1
+
+
+# ---------------------------------------------------------------------------
+# Kernel integration — strategy vector DB evidence (Step 9, 2026-07-21)
+# ---------------------------------------------------------------------------
+#
+# Every diagnosis is enriched by consulting the strategy vector DB:
+#   top_sleeves            — SHIP records most relevant to the book's regime/class
+#   prior_refutations      — REFUTE records whose tags overlap the book's risk profile
+#   applicable_doctrine    — DOCTRINE records that bind on the holdings
+#
+# Anti-imposter: this MUST be the same store the rest of the kernel reads
+# from. A diagnosis that overrides this with its own list is the trader agent
+# at its worst — silent override, dressed as honesty.
+#
+# Returns {} on Redis miss — caller decides whether to surface that.
+
+def _strategy_vector_evidence(
+    diagnosis: dict, holdings: list[dict]
+) -> dict:
+    """
+    Pull analogous SHIP sleeves, prior REFUTE evidence, and applicable DOCTRINE
+    rules from the strategy vector DB. Uses tag overlap with the holdings'
+    asset classes as the relevance signal (the vector cosine match is overkill
+    for the small book-level diagnosis).
+
+    Returns a dict suitable for direct injection under `strategy_evidence`.
+    Returns {} if the store layer is unreachable (caller handles the note).
+    """
+    try:
+        from src.data.vector.strategy_store import load_all_records
+    except ImportError:
+        return {}
+
+    records = load_all_records()
+    if not records:
+        return {}
+
+    # Build a relevance score per record using the holdings' tags/asset_class.
+    book_tags: set[str] = set()
+    book_classes: set[str] = set()
+    for r in diagnosis.get("holdings") or []:
+        if r.get("asset_class"):
+            book_classes.add(str(r["asset_class"]).lower())
+    # Map holdings asset_class → a coarse set of strategy tags
+    _CLASS_TAG_HINTS = {
+        "crypto":          {"cis", "regime", "funding", "crowding"},
+        "l1":              {"cis", "regime", "pillar_o", "cadence"},
+        "l2":              {"cis", "regime", "pillar_o"},
+        "defi":            {"cis", "regime", "funding"},
+        "rwa":             {"cis", "regime"},
+        "memecoin":        {"cis", "regime", "crowding", "fragility"},
+        "us equity":       {"cis", "construction"},
+        "us bond":         {"cis", "regime"},
+        "commodity":       {"cis", "regime"},
+    }
+    for c in book_classes:
+        book_tags.update(_CLASS_TAG_HINTS.get(c, set()))
+    # Always-bind tokens for the diagnosis context
+    book_tags.update({"cis", "regime"})
+
+    from src.data.vector.strategy_schema import Verdict
+
+    def _score(rec, want_tags: set[str]) -> int:
+        rec_tags = set((t.lower() for t in rec.tags))
+        # Token overlap (3 tag hits = 3 points); verdict bonus
+        s = len(rec_tags & want_tags)
+        if rec.verdict == Verdict.SHIP:
+            s += 2
+        elif rec.verdict == Verdict.DOCTRINE:
+            s += 1
+        return s
+
+    # Filter to records with at least 1 tag overlap
+    candidates = [r for r in records.values() if any(
+        t.lower() in book_tags for t in r.tags
+    )]
+
+    sleeves       = sorted([r for r in candidates if r.verdict == Verdict.SHIP],
+                           key=lambda r: -_score(r, book_tags))[:3]
+    refutes       = sorted([r for r in candidates if r.verdict == Verdict.REFUTE],
+                           key=lambda r: -_score(r, book_tags))[:3]
+    doctrine      = sorted([r for r in candidates if r.verdict == Verdict.DOCTRINE],
+                           key=lambda r: -_score(r, book_tags))[:2]
+
+    def _summarize(rec) -> dict:
+        # Compact shape — title + verdict + tags + 1-line note
+        return {
+            "id":       rec.id,
+            "title":    rec.title,
+            "verdict":  rec.verdict.value if hasattr(rec.verdict, "value") else str(rec.verdict),
+            "r_number": rec.r_number,
+            "tags":     rec.tags[:6],
+            "summary":  (rec.notes or "")[:200].replace("\n", " ").strip(),
+        }
+
+    return {
+        "status": "ok",
+        "n_candidates_searched": len(candidates),
+        "book_tags_used":        sorted(book_tags),
+        "top_sleeves":           [_summarize(r) for r in sleeves],
+        "prior_refutations":     [_summarize(r) for r in refutes],
+        "applicable_doctrine":   [_summarize(r) for r in doctrine],
+        "note": (
+            "Analogous sleeves + prior refutes + binding doctrine pulled from "
+            "the strategy vector DB. Treat prior refutes as a hard read — they "
+            "are the kernel's prior on what similar setups actually delivered."
+        ),
+    }
