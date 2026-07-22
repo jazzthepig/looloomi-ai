@@ -2484,6 +2484,97 @@ especially those from earlier in the metric chain.
 
 ---
 
+## R74 🔴 pillar_A as 3rd fusion contribution to R69 family — REFUTED (Seth, 2026-07-22)
+
+> **Status: RESEARCH RESULT, NOT A PRODUCTION CHANGE.** R74 follows R73's lesson #41
+> ("matched-cell +3.07 directional differential is real but does not survive aggregation as a
+> standalone sleeve — try as fusion contribution"). R74 tests whether pillar_A at small w_A
+> ∈ {0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30} on top of the **frozen R69 cell (w_R46=0.25)** lifts
+> OOS, eliminates W5 sign-flip, or improves Sharpe. Does NOT touch the live fusion book.
+
+**Question and anti-imposter construction.** Lesson #41's "How to apply" section proposed
+pillar_A as a candidate ~5-10% fusion contribution to the R69 family. R74 implements that test
+honestly: reuses R63's exact 28-asset strict funding ∩ CIS ∩ OHLCV universe, R63's R46
+(pillar_O 5d/5bps) and R62 (fade-the-crowd 21d/0bps gated) legs verbatim, and R73's
+pillar_A LEVEL 3d/0bps (R73's best-cadence cell) as the new Leg 3. The frozen 2-component
+baseline is **w_R46=0.25, w_R62=0.75** (R69 cell, NEVER mutated in R74). The 3-component
+fusion at each w_A is `fac_3 = (1 − w_A) × fac_2 + w_A × Leg_A`. Both Leg-A signs run
+side-by-side; sign verdict comes from matched-cell direction (R73 confirmed +Level-A direction).
+
+**Result (per-leg gauntlet on 28-asset).** R46: gross_t=+1.77, OOS_t=−0.44, maxDD=−33.62%.
+R62: gross_t=+2.03, OOS_t=+2.94, maxDD=−18.85%. R73: gross_t=+1.69, OOS_t=−0.11,
+maxDD=−33.26%. **Leg correlations: corr(R46, R73) = +0.69** (high — both are CIS-quality
+signals moving together); corr(R46, R62) = −0.05; corr(R62, R73) = −0.07.
+
+**Result (frozen baseline = R69 cell, w_A=0).** gross_t=+2.52, OOS_t=+2.44, maxDD=−11.05%,
+passes_all=True, Sharpe=+1.69. **The R69 cell is doing very well** — it clears the 3-check
+gauntlet with margin on all three (gross, costed, OOS).
+
+**Result (3-component fusion w_A sweep).**
+
+| w_A | gross_t | OOS_t | pass | maxDD | Sharpe | ΔOOS_t | W5 ann% | ΔW5 ann% |
+|---:|---:|---:|:--:|---:|---:|---:|---:|---:|
+| 0.00 (baseline) | +2.52 | +2.44 | ✓ | −11.05% | +1.69 | +0.00 | +45.6 | +0.0 |
+| 0.05 | +2.60 | +2.36 | ✓ | −10.43% | +1.74 | **−0.08** | +38.5 | −7.0 |
+| 0.10 | +2.68 | +2.25 | ✓ | −9.81% | +1.79 | **−0.19** | +31.8 | −13.8 |
+| 0.15 | +2.74 | +2.12 | ✓ | −9.33% | +1.81 | **−0.32** | +25.3 | −20.3 |
+| 0.20 | +2.79 | +1.97 | ✓ | −9.57% | +1.83 | **−0.47** | +19.1 | −26.5 |
+| 0.25 | +2.81 | +1.80 | ✗ | −10.13% | +1.82 | **−0.64** | +13.1 | −32.5 |
+| 0.30 | +2.81 | +1.62 | ✗ | −11.36% | +1.81 | **−0.82** | +7.4 | −38.2 |
+
+**Combined result: REFUTED on the fusion-contribution hypothesis.** Adding pillar_A at any
+positive w_A *monotonically degrades* OOS_t and *monotonically destroys W5 ann%*. The "best"
+cell is the smallest w_A tested (0.05) but even that gives ΔOOS_t = −0.08. At w_A ≥ 0.25 the
+fusion fails the 3-check gauntlet entirely. **The lesson #41 hypothesis was wrong.** Matched-
+cell directional differential is necessary but not sufficient for fusion contribution — the
+candidate must also be *uncorrelated enough with existing fusion legs* to add diversification.
+
+**Verdict.** 🔴 **FUSION LOSES — pillar_A does NOT carry as 3rd fusion contribution.**
+Three structural findings explain the failure:
+
+1. **corr(R46, R73) = +0.69** is the killer statistic. pillar_O and pillar_A are both
+   CIS-quality signals moving together; adding pillar_A at any weight just dilutes the
+   existing R46 leg's signal without diversification. The fusion book needs orthogonal signal
+   *sources*, not directionally-correct additional *signals* from the same source.
+2. **W5 (the late-cycle fragility window) gets WORSE, not better.** R73's W5 = −51.4% on
+   standalone; R73's matched-cell +3.07 was supposed to be a fusion lift, but at the
+   fusion level ΔW5 ann% degrades monotonically with w_A (from +0 at w_A=0 to −38.2 at
+   w_A=0.30). The late-cycle fragility that R73 suffered standalone transfers directly to
+   the fusion when pillar_A is added.
+3. **The R69 cell at w_A=0 is itself strong** — gross_t=+2.52, OOS_t=+2.44, maxDD=−11.05%,
+   Sharpe=+1.69. It is one of the strongest sleeves in the entire R-numbered ladder
+   (compares favorably to R46's standalone gross_t=+2.57 and beats R73's standalone t=+1.69).
+   Adding pillar_A doesn't *rescue* a failing baseline; it *weakens* a strong one.
+
+**Aggregate lesson #42 — REFUTED at the gauntlet → don't rescue via fusion.** The fusion book
+only works when (a) the leg independently clears enough cells AND (b) is sufficiently
+orthogonal (|corr| ≲ 0.30) to existing fusion legs. **pillar_A's matched-cell +3.07
+directional differential was real but failed condition (b)** — pillar_A and pillar_O are both
+CIS-quality signals with corr=+0.69, so adding pillar_A at any weight just adds correlated
+noise. The fusion-contribution test must include a structural-correlation gate, not just a
+direction differential test. **Read leg correlations before adding legs.**
+
+**Counterfactual / what would have saved the hypothesis.** A fusion contribution works if
+the candidate signal is *orthogonal* to existing legs. pillar_A would have been a credible
+contribution candidate had R46/R62 used a different signal source (e.g. a pure cross-sectional
+rank in funding residuals, or a regime-conditioned overlay). As a CIS-quality pillar_A
+candidate added to a CIS-quality pillar_O leg, it was structurally the wrong leg to add.
+
+**Action.**
+- ✅ Frozen R69 cell at w_R46=0.25, w_R62=0.75 **CONFIRMED optimal** (no change).
+- ✅ R65 paper book, R66 tracking: unaffected (R74 did not touch live book).
+- ✅ R74 ships no production change.
+- ✅ Lesson #42 stored in `r74-pillar-a-fusion-contribution-refuted` memory file.
+- ✅ R75 forward candidate deferred — there is no clear next fusion contribution at this time.
+  The next R-number should explore orthogonal signal sources, not more CIS-quality pillars.
+
+**Reference.** `src/research/validation/r74_pillar_a_fusion_contribution.py`;
+`src/research/validation/tests/test_r74_pillar_a_fusion_contribution_smoke.py`
+(11/11 tests pass); `reports/r74_pillar_a_fusion_contribution/2026-07-22/REPORT.md`;
+`reports/r74_pillar_a_fusion_contribution/2026-07-22/verdict.json`.
+
+---
+
 ## §LEDGER-RECONCILIATION-MAP 2026-07-22 (Seth, per Jazz decision) — the R64–R68b collision, resolved
 
 **Why this exists.** Two lanes ran in parallel and both claimed R64–R68b (the parallel-assignment hazard
@@ -2537,3 +2628,25 @@ absolute). So R72 (Seth: pillar_A *change* L/S REFUTED) being negative while R62
 β-adj edge, +2.85) is positive is **not a contradiction** — it is the R16 distinction reappearing.
 **R62 stands on its own data and never needed R46.** Minimax's R67 (R46 audit REFUTED on upgraded 22-asset
 CIS) further weakens any R46-as-corroboration claim. Net: cite R62 from its own audit; drop the R46 cross-check.
+
+---
+
+## R75 ⚪ Hourly S/O stability + Δ-quintile — CLAIMED / DATA ACCRUING (Seth, 2026-07-22)
+
+> **Pre-declared research contract; no strategy credit yet.** R73 is already occupied by the
+> pillar_A LEVEL L/S result. R75 uses genuine sub-day `cis_scores.recorded_at` snapshots to test
+> R63b's S/O stability-premium claim. Daily scores will not be forward-filled into synthetic hourly
+> observations. Minimum maturity is frozen at 30 calendar days, 720 unique hourly observations,
+> and 12 assets before any SURVIVES/PARTIAL/REFUTED verdict. Until then the only permitted verdict
+> is PREMATURE or INCONCLUSIVE, regardless of provisional t-statistics.
+
+**Frozen construction.** Pillars S and O; Δ lookbacks {1h,4h,8h,24h}; primary score `−abs(Δ)`
+(long stable quintile / short largest-move quintile); signed +Δ/−Δ matched-cell controls; k=5;
+rebalance {1h,4h,8h,24h}; cost {0,5,10}bps; strict funding ∩ hourly-CIS ∩ hourly-OHLCV universe;
+score observed at hour t may act only on return t+1; last-30% OOS; market + 24h momentum controls;
+hourly annualization 8760; Newey-West lags=24. Production CIS scores, weights, grade/signal thresholds,
+Mac Mini code, Shadow, and the CIS push contract are explicitly out of scope.
+
+**Reference (pending implementation).** `src/research/validation/r75_hourly_so_quintile.py`;
+`src/research/validation/tests/test_r75_hourly_so_quintile_smoke.py`;
+`reports/r75_hourly_so_quintile/2026-07-22/`.

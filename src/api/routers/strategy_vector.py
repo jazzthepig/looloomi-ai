@@ -298,8 +298,9 @@ async def strategy_coverage(record_id: str):
     cov = emb_mods["coverage_summary"](rec)
     emb = emb_mods["generate_embedding"](rec)
 
-    # Per-dim breakdown (which dims are nonzero)
-    nonzero = [(i, round(v, 3)) for i, v in enumerate(emb) if abs(v) > 1e-9]
+    # Per-dim breakdown of MEASURED dims (non-NaN; a measured 0 is information under I1). NaN
+    # (unmeasured) dims are skipped — and never enter the JSON response (invalid token otherwise).
+    nonzero = [(i, round(v, 3)) for i, v in enumerate(emb) if v == v]
 
     return {
         "record_id":     record_id,

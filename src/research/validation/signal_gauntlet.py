@@ -11,6 +11,12 @@ funnel so a candidate can't quietly skip a gate:
   4. factor absorption       — RESIDUAL alpha after known factors (not old wine)?        [factor_absorption]
   5. regime robustness       — broad edge, not a one-window/favorable-regime mirage?     [regime_robustness]
   6. point-in-time guard     — no temporal leakage (LLM features)?                       [pit_guard]
+  7. noise injection         — MECHANISM, or fragile feature correlations?               [noise_injection]
+
+⚠️ Gate 7 is the only one that perturbs the INPUTS. Gates 1–6 all read the output return series, so
+none of them can see a candidate propped up by incidental feature relationships that will not
+persist. It requires a RE-RUNNABLE candidate (`signal_fn` + `features`); a stored equity curve
+cannot be noise-tested, and that inability is itself research debt, not a pass.
 
 Each gate is applied only when its inputs are supplied; the funnel reports pass/fail/skip per stage,
 where it stopped, and one honest verdict. This is the artifact behind an LP claim: "here is every
@@ -42,6 +48,10 @@ try:
     from src.research.validation.pit_guard import pit_audit
 except Exception:
     pit_audit = None
+try:
+    from src.research.validation.noise_injection import noise_robustness
+except Exception:
+    noise_robustness = None
 
 
 def _stage(name, passed, metric, skipped=False, note=""):
@@ -71,6 +81,7 @@ def _cross_asset_gate(replications: dict, periods_per_year: int) -> dict:
 def run_gauntlet(name: str, returns, *, factors: dict | None = None, variants: dict | None = None,
                  n_trials: int | None = None, sr_variance: float | None = None,
                  regime_labels=None, pit_checks: list | None = None, replications: dict | None = None,
+                 signal_fn=None, features=None,
                  periods_per_year: int = 365, dsr_threshold: float = 0.95) -> dict:
     """Run a candidate return series through the full funnel. Optional inputs unlock optional gates:
     `factors` → absorption; `variants` (dict incl. this candidate) → DSR trial-variance + PBO;
@@ -135,6 +146,28 @@ def run_gauntlet(name: str, returns, *, factors: dict | None = None, variants: d
         stages.append(_stage("pit_guard", p["pit_safe"], {"failed": p["failed_checks"]}))
     else:
         stages.append(_stage("pit_guard", None, {}, skipped=True, note="not an LLM feature / no checks"))
+
+    # 8 — noise injection: does the edge rest on MECHANISM or on fragile feature correlations?
+    # The only gate that perturbs the INPUTS; every gate above reads the output series and is
+    # therefore blind to a candidate propped up by incidental feature relationships.
+    if noise_robustness and signal_fn is not None and features is not None:
+        try:
+            nz = noise_robustness(signal_fn, features, periods_per_year=periods_per_year)
+            if nz.get("skipped"):
+                stages.append(_stage("noise_injection", None, {}, skipped=True,
+                                     note=nz.get("note", "")))
+            else:
+                stages.append(_stage("noise_injection", nz["passed"],
+                                     {"degradation_at_50pct": nz["degradation_at_50pct"],
+                                      "sharpe_by_noise": nz["sharpe_by_noise"],
+                                      "verdict": nz["verdict"][:40]}))
+        except Exception as e:
+            stages.append(_stage("noise_injection", None, {}, skipped=True,
+                                 note=f"noise error: {e}"))
+    else:
+        stages.append(_stage("noise_injection", None, {}, skipped=True,
+                             note="needs a RE-RUNNABLE candidate: signal_fn + features "
+                                  "(a stored return series cannot be noise-tested)"))
 
     applicable = [st for st in stages if not st["skipped"]]
     passed_all = all(st["passed"] for st in applicable)

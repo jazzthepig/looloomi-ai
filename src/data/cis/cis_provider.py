@@ -2469,10 +2469,29 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "global_mcap_usd": macro_data.get("global_mcap_usd"),
             "btc_change_7d": btc_data.get("change_7d", 0) if btc_data else 0,
         }
+        # v2 (build-order #2): source PIT-prior pillars + a short window for deltas + O/S
+        # stability. save_cis_snapshot() ran above, so get_cis_history returns [...prior, current]
+        # (chronological); history[-2] is the strictly-prior snapshot (I2). Best-effort — any
+        # failure leaves the v2 dims NaN (I1), which cosine skips, so this can never break v1.
+        try:
+            from .history_db import get_cis_history
+        except Exception:
+            get_cis_history = None
         embeddings: dict[str, list[float]] = {}
         for asset in universe:
             try:
-                vec = generate_embedding(asset, macro_regime=regime, derivatives=_deriv_map)
+                prior_p, hist = None, None
+                if get_cis_history is not None:
+                    try:
+                        h = get_cis_history(asset.get("symbol", ""), days=6)  # oldest→newest, incl current
+                        if h and len(h) >= 2:
+                            prior_p = h[-2]        # most recent snapshot strictly before now
+                        if h and len(h) >= 3:
+                            hist = h               # trailing window (incl current) for std
+                    except Exception:
+                        prior_p, hist = None, None
+                vec = generate_embedding(asset, macro_regime=regime, derivatives=_deriv_map,
+                                         prior_pillars=prior_p, pillar_history=hist)
                 embeddings[asset["symbol"].upper()] = vec
             except Exception:
                 pass

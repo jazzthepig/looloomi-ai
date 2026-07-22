@@ -147,7 +147,11 @@ class SleeveAConfig(StrategyConfig, frozen=True):
     lookback_20: PositiveInt = LOOKBACK_20
 
     # Risk knobs
-    hard_stop_pct: float = HARD_STOP_PCT
+    # Optional[float]: default = HARD_STOP_PCT (= 0.03) preserves freqtrade
+    # `-3% stoploss` behaviour.  Pass `None` to disable the stop entirely
+    # (used by B-S1 envelope variant `A1_ORIGINAL_3X_NOSTOP` to mirror the
+    # freqtrade marketing-claim baseline: 3× lev, no stop, signal exit only).
+    hard_stop_pct: Optional[float] = HARD_STOP_PCT
     leverage: PositiveInt = LEVERAGE_DEFAULT
 
     # Position caps
@@ -494,7 +498,8 @@ class CometCloudNautilusMultiFactorV2(Strategy):
         self.log.info(
             f"SLEEVE A started: instrument={self.config.instrument_id} "
             f"bar_type={self.config.bar_type} "
-            f"lev={self.config.leverage}x stop={self.config.hard_stop_pct:.1%} "
+            f"lev={self.config.leverage}x "
+            f"stop={'NONE' if self.config.hard_stop_pct is None else f'{self.config.hard_stop_pct:.1%}'} "
             f"max_open={self.config.max_open_trades} max_daily={self.config.max_daily_trades}",
             LogColor.GREEN,
         )
@@ -609,8 +614,9 @@ class CometCloudNautilusMultiFactorV2(Strategy):
 
     # ── Position entry ───────────────────────────────────────────────────
     def _enter_long(self, bar: Bar) -> None:
-        """Enter long at market with a hard -3% stop.  Mirror freqtrade's
-        `stoploss = -0.03` — no bracket, no ATR, no take-profit.
+        """Enter long at market with a hard stop (default -3%, can be NONE).
+        Mirror freqtrade's `stoploss = -0.03` — no bracket, no ATR,
+        no take-profit.
         The Nautilus engine handles the stop via `close_positions_on_stop=True`
         + a manual `stop_loss` order on the position.
         """
@@ -624,23 +630,28 @@ class CometCloudNautilusMultiFactorV2(Strategy):
         )
         self.submit_order(order, position_id=None)  # let engine assign
 
-        # Place a hard stop at -3% from entry.  We use a STOP_MARKET
-        # order referencing the position via the position_id assigned
-        # at fill time.  Nautilus recommends using bracket orders for
-        # simultaneous entry+SL, but Sleeve A's stop is intentionally
-        # simple — mirror freqtrade's `stoploss = -0.03` exactly.
+        # Place a hard stop at -X% from entry, ONLY if hard_stop_pct is set.
+        # We use a STOP_MARKET order referencing the position via the
+        # position_id assigned at fill time.  Nautilus recommends using
+        # bracket orders for simultaneous entry+SL, but Sleeve A's stop is
+        # intentionally simple — mirror freqtrade's `stoploss = -0.03` exactly.
+        #
+        # NOSTOP variant (B-S1 envelope `A1_ORIGINAL_3X_NOSTOP`):
+        # `hard_stop_pct=None`  →  skip stop placement, signal exits only.
         entry_price = float(bar.close)
-        sl_distance = self.config.hard_stop_pct * entry_price
-        sl_price = instrument.make_price(entry_price - sl_distance)
-        stop_order = self.order_factory.stop_market(
-            instrument_id=self.config.instrument_id,
-            order_side=OrderSide.SELL,
-            quantity=self.create_order_qty(),
-            trigger_price=sl_price,
-            time_in_force=None,
-            tags=["HARD_STOP_3PCT"],
-        )
-        self.submit_order(stop_order)
+        sl_price = None
+        if self.config.hard_stop_pct is not None:
+            sl_distance = self.config.hard_stop_pct * entry_price
+            sl_price = instrument.make_price(entry_price - sl_distance)
+            stop_order = self.order_factory.stop_market(
+                instrument_id=self.config.instrument_id,
+                order_side=OrderSide.SELL,
+                quantity=self.create_order_qty(),
+                trigger_price=sl_price,
+                time_in_force=None,
+                tags=[f"HARD_STOP_{int(self.config.hard_stop_pct * 100)}PCT"],
+            )
+            self.submit_order(stop_order)
 
         # Build enter_tag (mirror freqtrade's "_".join(signals[:3]))
         signals = []
@@ -656,9 +667,13 @@ class CometCloudNautilusMultiFactorV2(Strategy):
             signals.append(f"ADX{int(self._adx)}")
         enter_tag = "_".join(signals[:3]) if signals else "BASIC"
 
+        if sl_price is not None:
+            sl_log = f"sl={sl_price}"
+        else:
+            sl_log = "sl=NONE"
         self.log.info(
             f"LONG_ENTRY {enter_tag} @ {entry_price:.2f} "
-            f"sl={sl_price} (3%) rsi={self._rsi:.1f} adx={self._adx:.1f} "
+            f"{sl_log} rsi={self._rsi:.1f} adx={self._adx:.1f} "
             f"streak={self._streak_down} vol_ratio={self._volume_ratio():.2f} "
             f"price_pos={self._price_position():.3f}",
             LogColor.GREEN,

@@ -51,3 +51,4 @@ elizaos-plugin/dist/
 # 3MB+ of raw session transcripts; regenerate with scripts/export_transcripts.py.
 # Curated knowledge lives in PROJECT_STATE / REFUTATION_LEDGER / WEEKLY_REVIEW / docs/.
 docs/transcripts/
+_data/cis_historical/

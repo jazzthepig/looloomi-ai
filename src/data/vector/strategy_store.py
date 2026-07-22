@@ -87,6 +87,24 @@ def _redis_set(key: str, value: str, ttl: int = _TTL) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# I1 NaN↔null — v-honest embeddings carry NaN for unmeasured dims; bare json.dumps(NaN)
+# emits an invalid `NaN` token that Upstash/JS JSON.parse rejects. Serialize NaN→null, restore
+# null→NaN on load so cosine's NaN-skip sees unmeasured dims.
+# ---------------------------------------------------------------------------
+
+def _nan_to_null(vec: list) -> list:
+    return [None if isinstance(v, float) and v != v else v for v in vec]
+
+
+def _null_to_nan(vec: list) -> list[float]:
+    return [float("nan") if v is None else float(v) for v in vec]
+
+
+def _dump_embeddings(embeds: dict) -> str:
+    return json.dumps({k: _nan_to_null(v) for k, v in embeds.items()}, allow_nan=False)
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
@@ -110,8 +128,8 @@ def load_all_embeddings() -> dict[str, list[float]]:
         return {}
     try:
         data = json.loads(raw)
-        # Sanity: drop any vector with wrong dim
-        return {k: v for k, v in data.items() if len(v) == VECTOR_DIMS}
+        # Sanity: drop any vector with wrong dim; restore JSON null → NaN (unmeasured dim, I1)
+        return {k: _null_to_nan(v) for k, v in data.items() if len(v) == VECTOR_DIMS}
     except Exception as e:
         _logger.warning(f"[StrategyStore] Failed to parse embeddings: {e}")
         return {}
@@ -138,7 +156,7 @@ def upsert_record(record: StrategyRecord) -> bool:
     # Same for embeddings — recompute the one new entry, keep the rest
     embeddings = load_all_embeddings()
     embeddings[record.id] = generate_embedding(record)
-    ok2 = _redis_set(_EMBED_KEY, json.dumps(embeddings))
+    ok2 = _redis_set(_EMBED_KEY, _dump_embeddings(embeddings))
 
     if ok1 and ok2:
         _logger.info(f"[StrategyStore] Upserted {record.id} ({record.verdict.value})")
@@ -162,7 +180,7 @@ def upsert_many(records: list[StrategyRecord]) -> int:
         _RECORDS_KEY,
         json.dumps({k: v.to_dict() for k, v in existing_records.items()}),
     )
-    ok2 = _redis_set(_EMBED_KEY, json.dumps(existing_embeds))
+    ok2 = _redis_set(_EMBED_KEY, _dump_embeddings(existing_embeds))
 
     # Meta
     meta = {
@@ -193,7 +211,7 @@ def delete_record(record_id: str) -> bool:
     records.pop(record_id, None)
     embeds.pop(record_id, None)
     ok1 = _redis_set(_RECORDS_KEY, json.dumps({k: v.to_dict() for k, v in records.items()}))
-    ok2 = _redis_set(_EMBED_KEY, json.dumps(embeds))
+    ok2 = _redis_set(_EMBED_KEY, _dump_embeddings(embeds))
     return ok1 and ok2
 
 
