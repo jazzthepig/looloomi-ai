@@ -9,6 +9,26 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-22 (SESSION 2) 🔴 Build-order #5 PREMISE REFUTED — price does NOT lead S/O; it's price-COINCIDENT (Seth).**
+  Before building any "related-instrument price-action nowcast" for hi-freq S/O, tested the load-bearing
+  premise (price LEADS S/O ⇒ a fast price proxy front-runs the slow CIS sample) on real data — 58 assets ∩
+  ohlcv, daily, 2025-05→2026-06, n≈8,280. **Result: REFUTED.** corr(own_ret[t], Δpillar over [t-1,t])
+  CONTEMPORANEOUS = **O +0.52 (t=56.6), S +0.44 (t=45.0)**; the LEAD+1 test = **ΔO +0.013 (t=1.1), ΔS
+  −0.010 (t=−0.9)** — zero predictive lead; lead+2/+3 mildly NEGATIVE (weak mean-reversion, wrong sign).
+  Pillar-spectrum control: M +0.82 (definitionally price), A/O/S +0.57/+0.52/+0.44, **F −0.01** (only F is
+  price-independent). **⇒ O and S largely reprice WITH price on the same daily bar; a daily price nowcast of
+  S/O adds nothing — do NOT build it.** The R63b stability premium is better read as a REGIME/RISK signal
+  (large ΔS/ΔO = large contemporaneous price moves = high-vol tape where edge degrades) — consistent with S
+  as a risk gate, NOT a sampling-latency problem. Residual: a lead could only exist SUB-DAILY (intraday
+  price → EOD snapshot), which needs hourly pillar+price (geo-blocked/absent) and has marginal payoff since
+  S/O are ~contemporaneous price transforms. Module `src/research/validation/so_price_leadlag.py` (pure,
+  runs at any resolution — re-read the LEAD row when hourly lands) + 6/6 smoke tests. **Companion to
+  Minimax's R75** (hourly S/O Δ-quintile edge): my result predicts S/O Δ is ~half price-mechanical, so R75's
+  hourly factor MUST clear an absorption test vs contemporaneous price/momentum or it's momentum-in-a-costume
+  (the R24 Crowd-Clock trap) — handed to Minimax via §SO-LEADLAG. **Ledger R-number DEFERRED** pending Jazz's
+  lane-namespacing ruling (Minimax active at R73/R74/R75; my fusion renumber at R69-72 — flat sequence keeps
+  colliding). Build order now: #1✅ #2✅ #3🟡 #4✅ **#5 premise refuted (nowcast path closed)** · #6 CIS v5 LAST.
+
 - **2026-07-22 (SESSION 2) 🟡 Build-order #5 — hourly S/O stability + Δ-quintile; **PREMATURE** with pipeline shipped (Seth).**
   Per `docs/VECTOR_SCHEMA_SPEC.md` §4 build-order #5: test R63b's S/O stability-premium claim using **genuine sub-day
   `cis_scores.recorded_at` snapshots**, not daily expansion. Module `src/research/validation/r75_hourly_so_quintile.py`

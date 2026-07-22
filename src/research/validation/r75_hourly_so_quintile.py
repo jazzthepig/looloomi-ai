@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
@@ -21,6 +22,9 @@ from typing import Iterable
 import httpx
 import numpy as np
 import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT))
 
 from src.research.validation.cis_quality_absorption import OHLCV_DIR
 from src.research.validation.factor_absorption import absorption_test
@@ -105,6 +109,8 @@ def build_hourly_pillar_panel(histories: dict[str, list[dict]], pillar: str) -> 
         if not series.empty:
             columns[symbol.upper()] = series
     panel = pd.DataFrame(columns).sort_index() if columns else pd.DataFrame()
+    if not panel.empty:
+        panel = panel.reindex(sorted(panel.columns), axis=1)
     return panel, metadata
 
 
@@ -136,9 +142,50 @@ def load_hourly_returns(assets: Iterable[str], ohlcv_dir: Path = OHLCV_DIR) -> p
     return pd.DataFrame(series).sort_index() if series else pd.DataFrame()
 
 
-def align_score_to_next_bar(score: pd.DataFrame, return_index: pd.DatetimeIndex) -> pd.DataFrame:
-    """A score observed during hour t may only act on the return at t+1."""
-    return score.reindex(return_index).shift(1)
+def fetch_hourly_returns_public(assets: Iterable[str], *, limit: int = 1000,
+                                api_base: str = DEFAULT_API_BASE) -> pd.DataFrame:
+    """Fetch real 1h OHLCV from the existing market endpoint; no simulated fallback."""
+    series = {}
+    with httpx.Client(timeout=45.0) as client:
+        for symbol in sorted({str(a).upper() for a in assets}):
+            try:
+                resp = client.get(
+                    f"{api_base.rstrip('/')}/market/ohlcv/{symbol}",
+                    params={"interval": "1h", "limit": limit},
+                )
+                resp.raise_for_status()
+                payload = resp.json()
+                rows = payload.get("data", []) if isinstance(payload, dict) else []
+                if not rows:
+                    continue
+                frame = pd.DataFrame(rows)
+                ts_col = "time" if "time" in frame.columns else "timestamp" if "timestamp" in frame.columns else None
+                if ts_col is None or "close" not in frame.columns:
+                    continue
+                ts = pd.to_datetime(frame[ts_col], utc=True, errors="coerce").dt.tz_localize(None).dt.floor("h")
+                close = pd.Series(pd.to_numeric(frame["close"], errors="coerce").values, index=ts)
+                close = close[~close.index.isna()].groupby(level=0).last().sort_index()
+                if len(close) >= 2:
+                    series[symbol] = close.pct_change(fill_method=None)
+            except Exception:
+                continue
+    return pd.DataFrame(series).sort_index() if series else pd.DataFrame()
+
+
+def align_score_to_next_bar(score: pd.DataFrame, return_index: pd.DatetimeIndex,
+                             *, max_staleness_hours: int = 4) -> pd.DataFrame:
+    """A score observed at hour t may only act on returns t+1 … t+1+staleness.
+
+    The score panel is sparse by construction (genuine Supabase snapshots only); we
+    ffill across small intra-hour gaps so a snapshot at hour t can predict returns
+    over the next ``max_staleness_hours`` bars.  Staleness limits prevent using a
+    snapshot from hours ago as if it were fresh; PIT is preserved because score[t]
+    can only act on returns strictly *after* t.
+    """
+    if max_staleness_hours < 1:
+        raise ValueError("max_staleness_hours must be >= 1")
+    aligned = score.reindex(return_index).ffill(limit=max_staleness_hours)
+    return aligned.shift(1)
 
 
 def delta_score(panel: pd.DataFrame, lookback_hours: int, mode: str = "stable") -> pd.DataFrame:
@@ -293,7 +340,13 @@ def run(*, out_dir: Path, days: int = 30, api_base: str = DEFAULT_API_BASE,
         _write_outputs(result, out_dir)
         return result
 
-    returns = load_hourly_returns(assets, ohlcv_dir)
+    returns = fetch_hourly_returns_public(assets, limit=max(days * 24 + 24, 720),
+                                        api_base=api_base)
+    returns_source = "public_ohlcv_api"
+    if returns.empty:
+        returns = load_hourly_returns(assets, ohlcv_dir)
+        returns_source = "local_parquet"
+    result["returns_source"] = returns_source
     common_assets = sorted(set(returns.columns) & set(panels["S"].columns) & set(panels["O"].columns))
     if len(common_assets) < MIN_ASSETS:
         result.update({"verdict": "INCONCLUSIVE", "reason": f"only {len(common_assets)} common assets"})
@@ -330,7 +383,15 @@ def run(*, out_dir: Path, days: int = 30, api_base: str = DEFAULT_API_BASE,
     gross = [c for c in result["cells"] if c["cost_bps"] == 0.0
              and math.isfinite(c.get("stable_alpha_t", float("nan")))]
     if not gross:
-        result.update({"verdict": "INCONCLUSIVE", "reason": "no evaluable stability cell"})
+        # No L/S cell yielded a finite alpha_t.  The maturity gate still
+        # dominates the verdict — PREMATURE if not mature, otherwise this is
+        # a data-density problem worth investigating (INCONCLUSIVE).
+        if not maturity["mature"]:
+            result.update({"verdict": "PREMATURE", "reason":
+                "pre-declared 30d/720h/12-asset gate not met and no evaluable cell; no strategy credit"})
+        else:
+            result.update({"verdict": "INCONCLUSIVE", "reason":
+                "no evaluable stability cell despite mature data — investigate intra-hour score sparsity"})
         _write_outputs(result, out_dir)
         return result
     best = max(gross, key=lambda c: c["stable_alpha_t"])
@@ -355,7 +416,8 @@ def run(*, out_dir: Path, days: int = 30, api_base: str = DEFAULT_API_BASE,
         "oos_cut": cut, "checks": checks,
     }
     if not maturity["mature"]:
-        result.update({"verdict": "PREMATURE", "reason": "pre-declared 30d/720h/12-asset gate not met; no strategy credit"})
+        result.update({"verdict": "PREMATURE", "reason":
+            "pre-declared 30d/720h/12-asset gate not met; no strategy credit (headline is provisional only)"})
     elif all(checks.values()):
         result.update({"verdict": "SURVIVES", "reason": "stability premium clears gross, cost, and OOS gates"})
     elif sum(checks.values()) == 2:
