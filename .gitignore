@@ -9,6 +9,12 @@ dashboard/node_modules/
 src/data/cis/cis_history.db
 Shadow/
 
+# Local research data — never committed.
+# _data/cis_historical/cis_historical_11yr.csv = 12 MB Phase-2 CIS backfill from 2026-07-18.
+# Regenerate via scripts/reconstruct_cis_history.py + scripts/cis_historical_ingest.py (Mac-side).
+# Other _data/* files are audit / strategy_records working artifacts. Mac-side ownership.
+_data/
+
 # Internal operational docs — never commit
 JAZZ_TODAY.md
 ATTACK_PLAN.md
