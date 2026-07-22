@@ -446,6 +446,37 @@ async def _start_fusion_paper_loop():
         print("[FUSION-PAPER] ✅ daily R64 fusion paper-book loop scheduled")
 
 
+# ── R66 fusion paper tracking — daily monitoring of the deployed R64 cell ─────
+# R65 starts the forward NAV clock; R66 adds the judgment layer: live-vs-OOS Sharpe
+# gap, detector fire-rate, measured capacity evolution, validation countdown, and
+# §P3 lifecycle events. Monitoring is read-only and never retunes the frozen cell.
+async def _fusion_paper_tracking_loop():
+    await _asyncio.sleep(900)   # 15 min warmup; let the first fusion mark settle
+    while True:
+        try:
+            from src.research.validation.fusion_paper_tracking import compute_tracking_snapshot
+            snap = await compute_tracking_snapshot()
+            v = snap.get("validation_countdown", {})
+            s = snap.get("sharpe_gap", {})
+            d = snap.get("detector_fire", {})
+            c = snap.get("capacity", {})
+            events = snap.get("lifecycle_events", [])
+            print(f"[FUSION-TRACK] day={v.get('n_days_marked')}/{v.get('validation_threshold_days')} "
+                  f"validated={v.get('validated')} sharpe_gap={s.get('status')} "
+                  f"det_fire={d.get('status')}({d.get('fire_rate')}) cap={c.get('status')} "
+                  f"events={len(events)}({[e['event_type'] for e in events]})")
+        except Exception as _e:
+            print(f"[FUSION-TRACK] ⚠️  compute failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_fusion_paper_tracking_loop():
+    if os.environ.get("DISABLE_FUSION_TRACK", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_fusion_paper_tracking_loop())
+        print("[FUSION-TRACK] ✅ daily R66 fusion-paper tracking loop scheduled")
+
+
 # ── Signal factory recalibration — Stage 4: the loop's learning turn (weekly) ──
 # Re-runs the factory, rewrites the nucleus blend to Redis (combined book self-recalibrates as
 # signals decay), logs the batch to experiment_runs. This is what makes it a machine, not a script.
@@ -1061,6 +1092,27 @@ async def fusion_paper(response: Response = None):
         return await get_curve()
     except Exception as e:
         return {"error": "fusion_paper_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/signals/fusion-paper-tracking")
+async def fusion_paper_tracking(response: Response = None):
+    """R66 monitoring surface for the live R64 fusion cell.
+
+    Returns the live-vs-OOS Sharpe gap, detector fire-rate, measured capacity
+    evolution, validation countdown, max drawdown, and §P3 lifecycle events.
+    The monitor is informational only; frozen R64 cell constants are unchanged.
+    See src/research/validation/fusion_paper_tracking.py.
+    """
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.research.validation.fusion_paper_tracking import compute_tracking_snapshot
+    try:
+        return await compute_tracking_snapshot()
+    except Exception as e:
+        return {"error": "fusion_paper_tracking_unavailable", "detail": str(e)[:120]}
 
 
 @app.get("/api/v1/signals/nav-monitor")
