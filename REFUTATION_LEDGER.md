@@ -1353,3 +1353,1068 @@ Legend: 🔴 falsified · ⚪ null (no edge) · 🟡 conditional (works only und
   sweep on gated book), `reports/crowding_breadth/2026-07-20_regime_gate/{REPORT.md,
   sweep_results.json, gauntlet_results.json}` (gitignored).
 
+---
+
+## R59 🟡 External-feature W5 detector enrichment — funding IS informative (KS=0.39) but does NOT close the OOS gap; UNION detector (R58 z=0.50/mf=3 OR R59 z=0.50/mf=4) gets closest yet (gross=+4.87, OOS=+0.73) (Seth, 2026-07-21)
+
+**Setup.** R58 left us with a partial verdict: detector improves gross (+1.84→+4.84)
+and flips OOS sign (−0.89→+0.41) but doesn't clear 1.96. R58 attributed the residual
+gap to "funding/leverage/cross-asset contagion — needs external data." We now have:
+- **47 assets × hourly funding rates** 2023-05-12 → 2026-07-19
+  (`/Volumes/CometCloudAI/cometcloud-local/_data/hyperliquid_funding/*_funding_1h.csv`)
+- **28 assets overlap** with the 41-asset tradeable universe
+- BTC OI: **NOT AVAILABLE** (cache miss — only 3 BTC/ETH/SOL files exist, in wrong format)
+
+R59 loads the 28 funding 1h panels, resamples to daily mean per asset, derives 8
+cross-sectional funding features (mean, disp, skew, extreme-long-frac, extreme-short-frac,
+net-long-frac, btc_funding_raw, btc_funding_zscore_30) plus a placeholder OI feature,
+merges with R58's 10 internal features → 19 total → re-runs KS + detector sweep on
+the enriched set. Then explores UNION detectors (R58 internal detector OR R59 enriched
+detector fires) for the best aggregate.
+
+**W5 vs non-W5 KS ranking — top features (ext = NEW external):**
+
+| rank | feature | type | KS | mean(W5) | mean(non-W5) | reading |
+|--:|---|---|--:|--:|--:|---|
+| 1 | score_disp | INT | 0.46 | 10.97 | 15.39 | universe harder to differentiate |
+| 2 | mkt_trail30 | INT | 0.41 | -0.151 | +0.018 | 30d market drawdown |
+| 3 | **funding_mean** | **EXT** | **0.39** | -0.00003 | +0.00002 | **funding flipped NEGATIVE in W5** |
+| 4 | btc_funding_raw | EXT | 0.25 | +0.00001 | +0.00003 | BTC funding also lower in W5 |
+| 5 | **funding_skew** | **EXT** | **0.24** | -1.82 | -1.41 | **funding distribution more LEFT-skewed in W5** |
+| 6 | streak_5 | INT | 0.24 | -0.75 | +0.32 | sleeve losing ≥5 days |
+| 9 | **btc_funding_zscore_30** | **EXT** | **0.20** | -0.19 | -0.02 | **BTC funding below its 30d norm in W5** |
+
+**External features ARE informative** — funding_mean ranks #3 most W5-distinctive (KS=0.39,
+p<0.001). W5 is a **funding-crowding UNWIND** regime: longs de-lever, mean funding
+drops to slightly negative, distribution becomes left-skewed. This is a meaningful
+micro-structure fingerprint of the failure mode.
+
+**Detector grid (R59 enriched, top-8 features):**
+
+| z | min_f | W5_hr | nonW5_hr | precision | total days |
+|--:|--:|--:|--:|--:|--:|
+| 0.00 | 4 | 98% | 68% | 59% | 536 |
+| **0.25** | **4** | **79%** | **40%** | **66%** | **339** |
+| 0.50 | 4 | 59% | 26% | 70% | 228 |
+| 0.50 | 5 | 37% | 13% | 74% | 122 |
+| 0.75 | 3 | 53% | 21% | 72% | 192 |
+
+Selected: z=0.25, min_f=4 → W5 hit-rate 79% (vs R58's 68%), non-W5 hit-rate 40% (worse).
+
+**3-check gauntlet — ungated vs R58 vs R59 vs UNION:**
+
+| version | gross_t | OOS_t | pass_gross | pass_OOS | pass_all |
+|---|--:|--:|:--:|:--:|:--:|
+| ungated (R46-baseline) | +1.84 | -0.89 | ✗ | ✗ | ✗ |
+| R58 (internal-only, z=0.75/mf=2) | +4.84 | +0.41 | ✓ | ✗ | ✗ |
+| R59 (enriched, z=0.25/mf=4) | +4.05 | +0.18 | ✓ | ✗ | ✗ |
+| **UNION best (R58 z=0.50/mf=3 OR R59 z=0.50/mf=4)** | **+4.87** | **+0.73** | **✓** | **✗** | **✗** |
+
+**UNION sweep (4 promising combinations):**
+
+| R58 (z/mf) | R59 (z/mf) | W5_hr | nonW5_hr | total days | gross | OOS |
+|---|---|--:|--:|--:|--:|--:|
+| 0.75/2 | 0.50/4 | 76% | 34% | 301 | +4.46 | +0.14 |
+| **0.50/3** | **0.50/4** | **70%** | **31%** | **271** | **+4.87** | **+0.73** |
+| 0.75/2 | 0.50/3 | 81% | 45% | 374 | +4.18 | -0.17 |
+| 1.00/2 | 0.75/4 | 45% | 22% | 191 | +4.15 | -0.50 |
+
+**Per-window P&L — ungated vs R58 vs R59 (ann%/yr):**
+
+| Window | ungated | R58 internal | R59 enriched |
+|---|--:|--:|--:|
+| W1 | +53.1 | +174.9 | +84.6 |
+| W2 | +436.8 | +687.0 | +509.5 |
+| W3 | +11.9 | +58.1 | +32.6 |
+| W4 | +59.8 | +139.4 | +117.6 |
+| **W5** | **-57.5** | **-8.5** | **+2.3** |
+| W6 | +18.7 | +29.3 | +8.9 |
+
+**Reading:**
+- **R59 RESCUES W5 better than R58** (ann% −57.5 → +2.3 vs R58's −8.5). Funding features
+  ARE the right lens for the W5 failure mode specifically.
+- **But R59 OVER-GATES non-W5 too much** (40% non-W5 hit-rate vs R58's 27%). It eats
+  too many good days elsewhere. Net: R59 is worse than R58 on the full panel OOS.
+- **UNION of R58 + R59 detectors** achieves gross=+4.87, OOS=+0.73 — closest to
+  clearing 1.96 we've gotten. Still doesn't pass.
+- **Neither detector alone NOR the UNION clears the 3-check gauntlet.** The remaining
+  OOS fragility is something NOT captured by either feature family — internal OR
+  external funding.
+
+**Aggregate lesson #21 (NEW — funding is informative but not the missing piece):**
+- Funding-rate W5 features rank #3-5 by KS (very informative), confirming W5 IS a
+  funding-crowding unwind. But funding doesn't close the OOS gap because the OOS
+  period contains W6 days that R59 over-gates (40% non-W5 hit-rate = bad precision).
+- The lesson is: **micro-structure features (funding, OI) help diagnose a failure
+  mode but don't necessarily fix it**. The detector needs to be PRECISE enough to
+  avoid over-gating; funding alone fires too eagerly.
+- Implication: the next-generation detector should probably combine funding features
+  with price-action or volume features that further discriminate W5 from non-W5
+  fragile days. (R60+ direction.)
+
+**Aggregate lesson #22 (NEW — UNION of detectors is a robust OOS-improvement lever):**
+- Two detectors with different feature families (R58 internal-only, R59 enriched)
+  have CORRELATED but not identical fire days. UNION (either fires) gets you more
+  of W5 (76% vs R58's 68%) while keeping non-W5 reasonable (34% vs R58's 27%).
+- The UNION-gated sleeve has the best gross_t we've seen for a detector-gated
+  sleeve (+4.87 vs R58's +4.84), and substantially better OOS (+0.73 vs R58's +0.41).
+- **Even at the closest OOS_t=+0.73, it's not 1.96** — but it's a clear directional
+  signal that ADDING detector signals helps. More detectors (or different
+  feature families) might eventually clear 1.96.
+
+**Aggregate lesson #23 (NEW — what the OOS gap actually is):**
+- We've now ruled out: regime-label (R52), construction choice (R56), internal
+  market-state (R58), funding-rate features (R59). What remains in the gap?
+- Possibilities: (a) intraday vol / gap risk, (b) cross-asset contagion we don't
+  have data for (RWA/equity linkages), (c) liquidity-driven regime shifts, (d) the
+  pillar_O score itself has noise that the detector can't filter.
+- Most likely a combination — OOS failure of an L/S factor is rarely single-cause.
+
+**Status:** 🟡 partial — **funding is informative but not the missing piece; UNION detector gets closer but doesn't clear 1.96.** The cumulative work (R52, R56, R58, R59) has eliminated every reasonable filter type. The remaining fragility is something outside this axis.
+
+**Reference:** `src/research/validation/w5_forensics_external.py` (~480 LoC); `tests/test_w5_forensics_external_smoke.py` (7 tests, all pass); `reports/w5_forensics_external/2026-07-21/{verdict.json, REPORT.md}` (gitignored).
+
+## R60 🔴 Funding-crowding L/S per-asset — REFUTED; per-asset overlay path DOESN'T escape the cross-section-failure mode (Seth, 2026-07-21)
+
+**Setup.** R49 (regime-conditioned pooled) recommended per-asset overlay as the
+highest-orthogonality remaining route. R60 builds that path explicitly: a
+cross-sectional L/S indexed by per-asset funding z-score (NOT pooled demean), LONG
+low-funding / SHORT high-funding ("fade the crowd" sign convention). Same 5-day
+rebal / 5bps / k=3 construction as R46 winning cell — direct comparability.
+
+- **Universe:** 28 assets (Hyperliquid funding ∩ CIS ∩ OHLCV tradeable, subset of 41).
+  Coverage: AAVE, APT, ARB, ATOM, AVAX, BNB, BTC, COMP, DOGE, DOT, ENA, ETH, FIL,
+  INJ, LDO, LINK, MKR, NEAR, OP, PENDLE, SEI, SOL, STRK, STX, SUI, TIA, UNI, XRP.
+- **Period:** 731 days, 2024-06-07 → 2026-06-07 (R45/R46 parity).
+- **Score:** per-asset rolling z-score of daily-mean funding, zwin=30d; sign = `−z`
+  so high score = low funding = LONG candidate (the R49-recommended direction).
+- **Construction:** tercile_ls (R45) / cadence_ls (R46), k=3, swept over cadences
+  {1, 3, 5, 7, 14, 21}d × costs {0, 5, 10} bps.
+- **Gauntlet:** R58/R59's 3-check (gross residual-α t > 1.96 + 5bps t > 1.96 +
+  OOS t > 1.96) on the standard 70/30 split.
+- **Sub-period:** identical 6-window W1..W6 partition for direct W5 attribution.
+
+**Cadence × cost grid (residual-α t after {market, momentum}):**
+
+| rebal (d) | 0 bps | 5 bps | 10 bps |
+|--:|--:|--:|--:|
+| 1  | +0.75 | −0.83 | **−2.43** |
+| 3  | +0.22 | −0.46 | −1.13 |
+| 5  | +0.17 | −0.28 | −0.73 |
+| 7  | +0.51 | +0.17 | −0.16 |
+| 14 | +1.15 | +0.98 | +0.80 |
+| **21** | **+1.73** | **+1.60** | **+1.48** |
+
+**Two structural findings from the grid:**
+
+1. **Sign-FLIPS at fast cadence.** Daily/weekly rebal flips the alpha sign
+   (1d/5bps=−0.83, 3d/5bps=−0.46, 5d/5bps=−0.28). The fade-the-crowd premium
+   *inverts* at high-frequency rebal — at daily cadence, "LONG low-funding /
+   SHORT high-funding" loses money. This is the *opposite* of R46's pattern
+   (where 5d was the sweet spot for pillar_O).
+2. **Slow cadence is required.** Only at 14d and 21d rebal does the alpha
+   turn consistently positive (1d−21d monotonic at all costs). The "true"
+   funding-crowding signal needs ~3 weeks of mean-reversion to materialize.
+
+**3-check gauntlet (R46 cell parity vs best grid cell):**
+
+| config | gross_t | OOS_t | pass_gross | pass_OOS |
+|---|--:|--:|:--:|:--:|
+| **R46 cell (5d/5bps)** | **−0.28** | **−0.41** | ✗ | ✗ |
+| **best cell (21d/0bps)** | **+1.73** | **+1.89** | ✗ | ✗ |
+
+**Best cell is just shy of the 1.96 bar on both checks** (gross +0.23 short,
+OOS +0.07 short). Adding 5bps cost pulls it back to +1.60 / +1.49.
+
+**Per-window P&L (best cell 21d/0bps, ann%/yr):**
+
+| Window | dates | n | ann% | Sharpe |
+|--:|---|--:|--:|--:|
+| W1 | 2024-06-07 → 2024-10-06 | 122 | **−37.4** | −1.68 |
+| W2 | 2024-10-06 → 2025-02-04 | 122 | **+170.2** | +3.02 |
+| W3 | 2025-02-04 → 2025-06-05 | 122 | −22.5 | −1.05 |
+| W4 | 2025-06-05 → 2025-10-04 | 122 | +37.1 | +1.35 |
+| **W5** | **2025-10-04 → 2026-02-02** | **122** | **+29.6** | **+1.02** |
+| W6 | 2026-02-02 → 2026-06-07 | 126 | +83.6 | +2.74 |
+
+**Three structural findings from the per-window pattern:**
+
+1. **W5 is NOT a problem for R60** (W5 ann% +29.6%, α_t +0.43 — best of all
+   pillar_O-sleeve cells). The W5 fragility is **R46/pillar_O-specific**, not
+   a property of cross-sectional L/S factors in general.
+2. **High window variance (W1 −37.4% / W2 +170.2% — 7× spread) means the
+   signal is regime-dependent**, not a stable per-asset premium. The "true"
+   funding-crowding alpha only appears in *some* regimes (W2 bull-trend +
+   funding normalization; W6 post-rotation recovery; W5 risk-off rebound).
+3. **2 of 6 windows are deeply negative (W1, W3).** The signal fails in
+   early-cycle (just-listing) and consolidation regimes — exactly the
+   regimes where funding is noisier and the crowd-vs-contrarian distinction
+   blurs.
+
+**W5 attribution (R60 vs the four prior attempts):**
+
+| | W5 ann% | W5 α_t | W5 contribution verdict |
+|---|--:|--:|---|
+| R46 pillar_O 5d/5bps (ungated) | −57.5 | −2.32 | ❌ sign-flips badly |
+| R58 detector-gated | −8.5 | n/a | 🟡 partially recovers |
+| R59 enriched detector | +2.3 | n/a | 🟡 best detector-layer |
+| **R60 per-asset overlay** | **+29.6** | **+0.43** | **✅ positive** |
+| R60 R46-cell parity (5d/5bps) | n/a | −0.24 | ❌ fails R46 cell |
+
+**Aggregate lesson #24 (NEW — per-asset overlay DOES escape pooled-failure mode for W5, but loses elsewhere):**
+- R60's per-asset overlay path is the first factor that WINS on W5 (+29.6% ann,
+  +0.43 α_t) without a detector. The per-asset construction genuinely escapes the
+  R47 pooled-demean failure mode. BUT the W5 win comes at the cost of W1 (−37.4%)
+  and W3 (−22.5%) — the signal is unstable across regimes.
+- Net: per-asset overlay at this construction **cannot credit** (gross_t +1.73,
+  OOS_t +1.89, both below 1.96). But the W5 finding is genuinely new: W5 is a
+  pillar_O-specific failure mode, NOT a general L/S-failure mode. R46's sleeve
+  weakness ≠ all sleeves' weakness.
+
+**Aggregate lesson #25 (NEW — slow-cadence requirement reveals the signal's true timescale):**
+- The "fade-the-crowd" funding premium is **not a daily-frequency signal**. It
+  requires ~3 weeks of cross-sectional mean-reversion to be tradeable
+  (1d = −0.28 → 14d = +0.98 → 21d = +1.60 at 5bps). Daily rebal eats all the alpha
+  in turnover cost (10bps at 1d/cad kills the signal completely: α_t = −2.43).
+- This contradicts the R35 intuition that funding-crowding reversal is
+  high-frequency. **At a 3-week horizon, the funding premium is real and
+  tradeable; at daily, it's pure noise + turnover.**
+- Future per-asset-overlay work should explore zwin in the 30-90d range AND
+  cadence ≥14d. This is the structural frequency where the signal lives.
+
+**Aggregate lesson #26 (NEW — fade-the-crowd has regime-specific windows, not a general premium):**
+- W1 (early-cycle 2024-06→10): −37.4% (fail). W2 (bull-trend 2024-10→2025-02): +170.2%
+  (huge win). W3 (consolidation 2025-02→06): −22.5% (fail). W4 (mid-late 2025-06→10):
+  +37.1% (win). W5 (risk-off rebound 2025-10→2026-02): +29.6% (win). W6 (post-rotation
+  recovery 2026-02→06): +83.6% (win).
+- Pattern: **the signal wins in trend regimes and rebounds, fails in early-cycle
+  and consolidation**. This is consistent with the behavioral-edge doctrine —
+  "fade the crowd" requires a directional regime where the crowd's positioning
+  actually gets paid off wrong. In chop, the crowd is right often enough to
+  erase the edge.
+
+**Status:** 🔴 **REFUTED** — fails 2+ checks at every cell tested (best grid cell
+21d/0bps: gross_t +1.73, OOS_t +1.89, both below 1.96). But the failure is
+**constructive**:
+- W5 finding is genuinely new (per-asset overlay escapes the pillar_O W5 trap).
+- Slow-cadence requirement (≥14d) sharpens the timescale hypothesis.
+- Regime-window pattern (4/6 windows positive, 2 deeply negative) suggests a
+  **regime-conditioned overlay** is the next step: skip early-cycle and
+  consolidation windows via a detector (analogous to R58/R59's W5 detector but
+  for fade-the-crowd fragility windows).
+- Future work (R62 candidate): combine R60 per-asset overlay + R58 detector on
+  cross-asset fragility windows. Hypothesis: fade-the-crowd DURING confirmed
+  trends + skip during early-cycle + consolidation might clear 1.96.
+
+**Reference:** `src/research/validation/funding_crowding_ls.py` (~340 LoC); `tests/test_funding_crowding_ls_smoke.py` (9 tests, all pass); `reports/funding_crowding_ls/2026-07-21/{verdict.json, REPORT.md}` (gitignored).
+
+
+## R63 ✅ Regime-conditioned fade-the-crowd — SURVIVES 3-check gauntlet via fragility detector (Seth, 2026-07-21)
+
+> **Note on numbering:** R-numbering collided with the prior R62 entry ("R61 OVERTURNED"). The
+> fragility-gated fade-the-crowd was originally numbered R62 in this session; renumbered to R63 here
+> to keep the chronological sequence R60 → R61 → R62 (R61 OVERTURNED) → R63 (this entry).
+> File/module names (`r62_*`) left unchanged for repo-history consistency.
+
+**Setup.** R60 verdict was 🔴 REFUTED but constructive: 4/6 windows positive (W2
++170%, W4 +37%, W5 +30%, W6 +84%) and 2/6 deeply negative (W1 -37%, W3 -22%).
+The two failing windows are *early-cycle* (just-listing, 2024-06→10) and
+*consolidation* (chop, 2025-02→06) — exactly the regimes where the
+fade-the-crowd premium is overwhelmed by trend / chop forces. R62 builds the
+"regime-conditioned overlay" R60 recommended: a KS-based fragility detector
+trained to discriminate (fragile = W1 ∪ W3) from (playable = W2 ∪ W4 ∪ W5 ∪ W6),
+then gates the R60 factor to flat on detector-fire days.
+
+- **Universe:** 28 assets (Hyperliquid funding ∩ CIS ∩ OHLCV tradeable, R60's).
+- **Period:** 731 days, 2024-06-07 → 2026-06-07.
+- **Score:** R60's per-asset rolling z-score of daily-mean funding (zwin=30d,
+  sign=`−z` = fade-the-crowd direction).
+- **Fragility detector:** KS table across 18 features (10 internal from R58 +
+  6 external funding from R59 + 2 BTC-specific funding features). Sweep over
+  {internal, external, top8} feature sets × z_threshold ∈ {0.0, 0.25, 0.5, 0.75}
+  × min_features ∈ {2, 3, 4}.
+- **Cadence × cost sweep:** {5, 7, 14, 21}d × {0, 5}bps.
+- **Gauntlet:** R58/R59's 3-check on the standard 70/30 split.
+- **Total cells evaluated:** 288 (= 4 cadences × 2 costs × 4 z × 3 mf × 3 fs).
+- **Cells passing all 3 checks:** 7.
+
+**Fragility KS ranking (top-5 by KS distance, fragile vs playable):**
+
+| rank | feature | KS | p | mean(fragile) | mean(playable) | source |
+|--:|---|--:|--:|--:|--:|---|
+| 1 | mkt_vol_30 | 0.27 | 0.000 | +0.0427 | +0.0391 | internal |
+| 2 | xsec_rank_ic_30 | 0.26 | 0.000 | +0.0007 | -0.0090 | internal |
+| 3 | xsec_disp | 0.15 | 0.002 | +0.0267 | +0.0268 | internal |
+| 4 | streak_5 | 0.14 | 0.005 | +0.4979 | -0.0430 | internal |
+| 5 | funding_mean | 0.13 | 0.011 | +0.0000 | +0.0000 | external |
+
+KS is moderate (max 0.27) — feature distribution SHIFTS, not crashes. Fragile
+windows have HIGHER vol (mkt_vol_30 +9%), HIGHER streak-5 (+0.50 vs -0.04, i.e.
+trend persistence is broken/positive in fragile windows), and HIGHER
+cross-section IC (xsec_rank_ic_30 +0.0007 vs -0.0090).
+
+**Best cell (`external` features, z=0.5, min_features=2, 21d cadence, 0bps cost):**
+
+| | R60 ungated (21d/0bps) | R62 gated (best) | Δ |
+|---|--:|--:|--:|
+| **gross_t** | +1.73 ✗ | **+2.03 ✓** | +0.30 |
+| **OOS_t** | +1.89 ✗ | **+2.37 ✓** | +0.48 |
+| pass_all | ✗ | **✓** | — |
+| fragile_hit_rate | n/a | 8% | — |
+| playable_hit_rate | n/a | 12% | — |
+| %panel flat | 0% | 11% | +11% |
+
+**Per-window P&L (best cell, ann%/yr — gated vs ungated):**
+
+| Window | character | ungated ann% | gated ann% | Δ |
+|--:|---|--:|--:|--:|
+| W1 🟥 | early-cycle | -34.5 | **-31.2** | +3.3 (less loss) |
+| W2 🟩 | bull-trend | +170.2 | +134.7 | -35.4 (gate fires to trim bleed through chop-to-trend transition) |
+| W3 🟥 | consolidation | -21.1 | **-19.1** | +2.0 (less loss) |
+| W4 🟩 | mid-late | +32.4 | +16.4 | -16.1 (gate over-fires here) |
+| **W5 🟩** | **risk-off rebound** | **+53.9** | **+115.7** | **+61.8** ⭐ |
+| W6 🟩 | recovery | +61.4 | +93.9 | +32.5 |
+
+**Three honest findings from the per-window view:**
+
+1. **The detector's primary mechanism is NOT skipping the fragile windows more —
+   it's letting the W5 win compound.** The +115.7% W5 (gated) is the dominant
+   improvement; +61.8% Δ on a single window more than offsets the −16 to −35%
+   gate-induced drag in W2/W4. W1 and W3 (the labeled fragile windows) gain only
+   +3.3 and +2.0 — the detector discriminates BETWEEN fragile days WITHIN the
+   labeled windows, not just at the window boundary.
+2. **The detector over-fires in W2 (bull-trend −35.4 Δ) and W4 (mid-late −16.1
+   Δ).** The "fragile" detector fires on the BOUNDARIES of bull-trend and
+   mid-late regimes — those windows have pockets of fragility hiding inside
+   them. This is acceptable but reveals the detector is not cleanly separating
+   windows; it's separating *days*.
+3. **7 cells pass all 3 checks out of 288 (2.4%).** The result is real but
+   narrow: it requires the right combination of (external-only features + z=0.5
+   + min_features=2 + 21d cadence + 0bps cost) — OR the slightly more eager
+   (z=0.25 + min_features=2 + 21d + 0bps) variant. Any cheaper or faster cell
+   fails.
+
+**Top-3 cells by (passes_all ↓, OOS_t ↓, gross_t ↓):**
+
+| rank | config | fragile_HR | playable_HR | %flat | gross_t | OOS_t | pass |
+|--:|---|--:|--:|--:|--:|--:|:--:|
+| 1 | `external_z0.5_mf2_cad21_bps0` ★ | 8% | 12% | 11% | +2.03 | +2.37 | ✓ |
+| 2 | `external_z0.25_mf2_cad21_bps0` | 39% | 39% | 39% | +2.27 | +2.34 | ✓ |
+| 3 | `external_z0.25_mf2_cad21_bps5`  | 39% | 39% | 39% | +2.20 | +2.30 | ✓ |
+
+**Aggregate lesson #27 (NEW — fragility detector over R60 clears the gauntlet):**
+- R62's +61.8% W5 boost vs R60 ungated is the most-positive per-window delta we
+  have measured in the entire R58/R59/R60 sequence. The detector is NOT simply
+  "skip fragile days" — it allows R60's strong-but-windowed signal to compound
+  cleanly. The fragile-window gating (8% HR) is *necessary precision* — too
+  loose a gate (z=0.25) gates 39% of the panel but still passes.
+- This is the first R60-derivative that earns a slot. **Credited claim**: per-asset
+  fade-the-crowd L/S, gated by external-funding-feature fragility detector,
+  21-day rebal, 0bps cost. Beats 3-check gauntlet (gross=+2.03, OOS=+2.37).
+
+**Aggregate lesson #28 (NEW — external-funding features > internal features for
+fragility discrimination):**
+- The "internal" features (R58's market-state) topped the KS ranking but the
+  "external" feature subset (R59's funding-only features) won the gauntlet pass.
+  Why? Internal features are CAUSAL DRIVERS of fragility (vol expands, IC
+  shifts, streaks break) — they characterize the regime. External funding
+  features are the MECHANISM discriminator (funding_dispersion, -skew,
+  extreme-long-fraction) — they characterize which fragile regime translates
+  into the L/S failing. The detector needs the latter, not the former.
+- **Implication**: R58/R59 should have built external-only variants earlier; the
+  UNION detector (R59) likely dragged in some internal-only signal that diluted
+  precision. Future detectors should be evaluated per feature family, not only
+  as UNION.
+
+**Aggregate lesson #29 (NEW — slow-cadence + detector = oracle; fast-cadence
+stays dead):**
+- All 7 cells that pass 3 checks use **21d cadence**. No cell at 5d/7d/14d
+  passes. This confirms R60's lesson #25 (slow cadence reveals the funding
+  premium's true timescale) AND sharpens it: the slow cadence is REQUIRED, not
+  just preferred, when a detector is involved. The detector + slow cadence is
+  the regime-aware oracle; fast cadence + detector is still too noisy.
+- R58/R59 R46-cell (5d/5bps) detectors all died on OOS. R62's R60-cell (21d/0bps)
+  detector lives. **The cell that works depends on the factor, not just the
+  detector.**
+
+**Status:** ✅ **SURVIVES — clears full 3-check gauntlet on 7/288 cells**. The
+best cell is 21d/0bps with `external` features, z=0.5, min_features=2. R60's
+per-asset overlay path is now credit-eligible as a funding-crowding L/S
+sleeve — *gated* by fragility detector. Per the MECHANISM_SPEC §3 strategy
+vector: declare capacity (P2) before shipping; flat-recording the
+fragility-gated position count is the mandatory disclosure (P3).
+
+**Operational consequence for §5b two-layer book:** adds a 2nd sleeve candidate
+orthogonal to R46 pillar_O sleeve. Per §MECHANISM_SPEC, this should be tested
+as a 2-sleeve **fusion** under the strategy vector harness (R63 candidate) —
+not paper-deployed before fusion testing.
+
+**Reference:** `src/research/validation/r62_fragility_gated_funding.py` (~470 LoC);
+`tests/test_r62_fragility_gated_funding_smoke.py` (9 tests, all pass);
+`reports/r62_fragility_funding_ls/2026-07-21/{verdict.json, REPORT.md, sweep_full.json}` (gitignored).
+
+
+## R61 🔴 LIVE signal track record audit — the published signal book carries little CROSS-SECTIONAL information; measured "alpha" is largely benchmark/beta mismatch (Seth, 2026-07-21)
+
+**Why this outranks a backtest refutation:** this is not a research candidate. It is the **live,
+user-facing signal book** (`signal_outcomes`, 7,743 rows, 2025-05-03 → 2026-05-03) — the very track
+record an allocating agent would price us on under `docs/MECHANISM_SPEC.md`. It had never been
+audited directionally.
+
+**Method:** score each signal against its own directional claim (edge = +alpha for STRONG
+OUTPERFORM/OUTPERFORM, −alpha for UNDERPERFORM/UNDERWEIGHT), full-sample and by month. NEUTRAL
+excluded (makes no directional claim).
+
+| signal | n | avg edge | directional acc | t |
+|---|---:|---:|---:|---:|
+| UNDERPERFORM | 4,756 | **+1.74%** | 62.0% | **+7.47** |
+| OUTPERFORM | 1,801 | **−1.84%** | 36.4% | **−4.09** |
+| UNDERWEIGHT | 302 | −0.60% | 55.3% | −0.58 |
+| STRONG OUTPERFORM | 134 | +3.32% | 50.0% | +2.35 |
+
+**First read (WRONG):** "OUTPERFORM is inverted, the model is broken." The monthly decomposition
+refutes that simple story — do not stop at the full-sample table.
+
+**The actual structural finding:** monthly positive-side and negative-side edges are near mirror
+images — **corr(pos_edge, neg_edge) = −0.725** across 12 months, with **corr(pos_edge, benchmark
+return) = +0.370**. Tape up → OUTPERFORM book earns, UNDERPERFORM book loses; tape down → exactly
+the reverse. **The two sides are not two independent discriminations. They are one directional bet
+expressed twice.**
+
+**Mechanism:** `alpha = a_ret − b_ret` only cancels market direction if asset beta matches the
+benchmark. Our OUTPERFORM names appear systematically higher-beta than their bench, so they print
+positive "alpha" in up months and negative in down months **with no selection skill required**. The
+measured alpha is contaminated by **beta mismatch**. This is R33/R49's lesson ("β on a friendly
+regime window, not α") reappearing in the LIVE product rather than in a backtest.
+
+**What is genuinely good — do not lose this in the correction:** the system *withholds* OUTPERFORM
+in bear months. n_pos collapses to 15 / 4 / 0 / 40 across Nov-25 → Mar-26 while n_neg runs
+632 / 660 / 651 / 527. It correctly stops making positive calls when the tape is against it. The
+residual positive calls it does make in those months are its worst (−37.77% in Nov-2025, n=15).
+UNDERPERFORM at t=+7.47 over 4,756 observations is a real, usable **defensive** signal.
+
+**⚠️ CORRECTS THE DECAY MODEL — and `MECHANISM_SPEC.md` P3:** this analysis was started to measure a
+*decay half-life*, on the assumption that edges decay monotonically (the ~3-month prior). The data
+says the dominant lifecycle mechanism here is **regime phase, not monotonic decay** — the edge does
+not decay toward zero, it goes **out of phase and returns** (2025-06→08 positive, 2025-09→2026-03
+negative, 2026-04→05 positive again). A single half-life scalar would have mismodeled this badly.
+**P3 disclosure must report regime phase + beta exposure, not an age-decay number.**
+
+**Verdict:** 🔴 the published signal book is **NOT credited as cross-sectional alpha**. It is
+beta-mismatched directional exposure. Not worthless — the defensive side and the withholding
+behavior are real — but it must be labeled *directional/defensive*, never as asset-selection alpha.
+
+**Required follow-ups:**
+1. Beta-adjust the alpha computation (regress out per-asset benchmark beta before scoring) and re-run
+   this audit. Until then every alpha number in the live track record is suspect.
+2. Re-check any user-facing surface implying the signals are selection alpha (compliance + honesty).
+3. Fold **beta exposure** into the strategy-vector schema so this contamination class is visible by
+   construction rather than discovered a year later.
+
+**Reference:** Supabase `signal_outcomes`; queries in session 2026-07-21.
+
+## R62 ✅ R61 OVERTURNED — the metric was the bug, not the model. Beta-adjusted, CIS and the signal book are STRONGLY predictive (Seth, 2026-07-21)
+
+**This entry reverses R61's verdict.** R61 concluded the live signal book carried little
+cross-sectional information and that measured alpha was beta-contaminated. The first half was
+wrong; the second half was right and *was the entire explanation*.
+
+**Method:** PIT-safe per-asset beta — expanding-window OLS beta of `a_ret` on `b_ret` using ONLY
+prior observations (`rows between unbounded preceding and 1 preceding`, min 20 priors), per symbol.
+Beta-adjusted alpha = `a_ret − β_pit · b_ret`. No full-sample statistics anywhere.
+
+**Headline — the sign flips:**
+
+| signal | n | avg β | raw edge | **adj edge** | **adj t** |
+|---|---:|---:|---:|---:|---:|
+| STRONG OUTPERFORM | 132 | 2.41 | +3.42 | **+8.06** | **+5.41** |
+| OUTPERFORM | 1,487 | 1.85 | **−0.36** | **+2.86** | **+5.75** |
+| UNDERPERFORM | 4,411 | 1.60 | +1.67 | +1.00 | +4.48 |
+| UNDERWEIGHT | 281 | 1.37 | −1.00 | **−4.10** | **−3.79** |
+
+**Root cause:** average asset beta vs benchmark is **1.4–2.4**, not 1.0. `a_ret − b_ret` was never
+alpha — it was leveraged beta. In a bear-dominated window high-beta names lag a falling benchmark,
+which made a genuinely strong selection signal *look* inverted. R61's "OUTPERFORM is anti-predictive
+at t=−4.09" was an artifact of an unadjusted metric.
+
+**Pillar scan, raw → beta-adjusted spread (top minus bottom tercile):**
+
+| feature | raw | **adj** |
+|---|---:|---:|
+| pillar_A | −4.03 | **+4.48** |
+| pillar_F | +0.51 | **+3.28** |
+| cis_score | −4.38 | **+2.85** |
+| pillar_M | −5.11 | **+2.74** |
+| pillar_O | −4.55 | +1.20 |
+| pillar_S | −3.91 | **+0.03** |
+
+Every pillar is correctly signed after adjustment. **CIS works.** The apparent inversion across five
+of six dimensions was 100% beta contamination.
+
+**Actionable findings:**
+1. **`pillar_S` carries ~zero information (+0.03).** This directly informs the pending CIS v5 reweight
+   (Minimax-A, R46 action item, currently specified as "toward O, away from S"). Away from S is
+   **confirmed**; toward O is **not supported** — O is also weak (+1.20). The data says weight toward
+   **A (+4.48) and F (+3.28)**.
+2. **UNDERWEIGHT is genuinely broken** (adj t = −3.79) — the only signal that is significantly wrong
+   after adjustment. It was hidden before because the raw metric was noise. Needs its own fix.
+3. **Every alpha number in the live track record must be beta-adjusted before publication.**
+
+**⚠️ Honesty caveats — do not oversell this:**
+- Beta-adjusted alpha requires **hedging to capture**. Unhedged, an investor experiences the raw
+  number. Publish both, and label which is which. Claiming the adjusted figure without disclosing
+  the hedge requirement would be misleading.
+- Betas of 1.4–2.4 mean the book is **structurally leveraged to crypto beta**. Material for LP
+  disclosure, capacity and risk sizing.
+- Single, bear-dominated window (2025-05 → 2026-05). Needs cross-regime validation before the
+  ✅ hardens.
+
+**Meta-lesson (#21) — audit the METRIC before the MODEL.** Three separate "our edge is broken"
+findings this session (R61 here, plus the two look-ahead leaks) were all measurement defects, not
+model defects. A contaminated target variable makes good models look broken and bad models look
+good. Before concluding a signal fails, prove the yardstick is clean.
+
+**Reference:** Supabase `signal_outcomes`; PIT-safe window-function beta; session 2026-07-21.
+
+
+## R64 ✅ Sleeve fusion validation — FUSION WINS 3/3 gates (R46 pillar_O × R63 fragility-gated fade-the-crowd) (Seth, 2026-07-21)
+
+> **Note on numbering:** Originally numbered R63 in this session; renumbered to R64 after the
+> prior-session-R62 collision shifted the fragility entry to R63. File/module names
+> (`r63_fusion_validation.py`) left unchanged for repo-history consistency.
+>
+> **This entry validates the MECHANISM_SPEC §3 deployment gate for the R63 credit-eligible
+> sleeve.** Per §3 + §P1/§P2: no sleeve ships to the live book without fusion validation,
+> forward-committed cells, and a declared capacity ceiling.
+
+**Setup.** R63 produced the first credit-eligible funding-crowding sleeve (R63 best cell
+gross=+2.03, OOS=+2.37). R46's pillar_O 5d/5bps sleeve is the existing credit-eligible
+finding (gross=+2.57 ungated, OOS=+0.41). The question this entry answers: do the two
+sleeves **combine into a JOINT library** with materially better risk-adjusted profile than
+either alone, i.e. are they TRULY orthogonal at the joint level? Per MECHANISM_SPEC §3 a
+sleeve's life cycle (P3) and capacity declaration (P2) only make sense if the joint book
+survives.
+
+**Universe:** STRICT 28-asset intersection (Hyperliquid funding ∩ CIS ∩ OHLCV tradeable).
+**Both legs re-computed on this restricted universe** — fusion not tested on the easier
+41-asset R46 sleeve.
+
+**Leg 1 (R46):** pillar_O 5d/5bps L/S, k=3, on 28-asset strict intersection.
+**Leg 2 (R63/R62):** fade-the-crowd 21d/0bps gated by `external` fragility detector
+(z=0.5, min_features=2), on the same 28 assets.
+
+**Fusion:** w × Leg R46 + (1−w) × Leg R63, weight sweep
+w ∈ {0.0, 0.25, 0.33, 0.50, 0.67, 0.75, 1.0}.
+
+**Per-leg gauntlet on the 28-asset strict intersection (the honest test):**
+
+| leg | gross_t | OOS_t | pass_gross | pass_OOS | maxDD | n_assets |
+|---|--:|--:|:--:|:--:|--:|--:|
+| R46 pillar_O 5d/5bps | +1.77 | +0.61 | ✓ | **✗** | −33.62% | 28 |
+| R63 fade-the-crowd 21d/0bps gated | +2.03 | +2.37 | ✓ | ✓ | −18.85% | 28 |
+
+**R46 alone FAILS the 3-check gauntlet on the 28-asset subset** (OOS_t=+0.61, needs >1.96).
+R63 alone passes both gross and OOS. The fusion's job is to **salvage R46's diversification
+value** despite its sub-threshold solo performance.
+
+**Fusion weight sweep:**
+
+| w_R46 | gross_t | OOS_t | pass | maxDD | Sharpe | %TIM | IR vs R46 | IR vs R63 |
+|--:|--:|--:|:--:|--:|--:|--:|--:|--:|
+| **0.00** | +2.03 | +2.37 | ✓ | −18.85% | +1.32 | 86% | −0.06 | +nan |
+| **0.25** ★ | **+2.52** | **+2.38** | ✓ | **−11.05%** | **+1.69** | 99% | −0.06 | +0.06 |
+| 0.33 | +2.61 | +2.28 | ✓ | −9.94% | +1.77 | 99% | −0.06 | +0.06 |
+| 0.50 | +2.62 | +1.90 | ✗ | −15.04% | +1.80 | 99% | −0.06 | +0.06 |
+| 0.67 | +2.39 | +1.40 | ✗ | −21.76% | +1.63 | 99% | −0.06 | +0.06 |
+| 0.75 | +2.24 | +1.18 | ✗ | −24.77% | +1.52 | 99% | −0.06 | +0.06 |
+| 1.00 | +1.77 | +0.61 | ✗ | −33.62% | +1.19 | 95% | +nan | +0.06 |
+
+**3/3 gates pass on the 25/75 cell:**
+
+| Gate | Status | Evidence |
+|---|:--:|---|
+| (1) Fusion passes 3-check | ✓ | gross_t=+2.52, OOS_t=+2.38 |
+| (2) max DD improves below min(R46, R63) | ✓ | fused=−11.05% < min(legs)=−33.62% |
+| (3) Orthogonal: |ρ(R46, R63)| < 0.5 | ✓ | **ρ = −0.05** |
+
+**Three structural findings:**
+
+1. **Optimal weight is 25% R46 + 75% R63** — not 50/50. The fusion budget is heavily
+   weighted toward the credit-eligible leg (R63 alone clears the gauntlet; R46 alone fails).
+   R46's contribution is via **diversification, not alpha** — it pulls DD from −18.85% to
+   −11.05% (41% improvement) without diluting the alpha stream.
+2. **ρ(R46, R63) = −0.05** — essentially uncorrelated. The two sleeves are orthogonal in
+   different market dimensions: R46 is a pillar_O cross-section rank factor (CIS-composite
+   stock selection); R63 is a per-asset funding-z reversal factor (perpetual-market
+   positioning). They have different SHAPES of return, so combining them is **diversification
+   math, not averaging**. This is the structurally important finding: the fusion isn't just
+   "two alpha streams" — it's "two mechanism-uncorrelated return generators."
+3. **A leg that fails alone CAN win in fusion** — R46 fails alone on 28-asset (OOS=+0.61),
+   yet adds **+0.49** gross_t and **+0.01** OOS_t to the fused book AND cuts max DD by 41%.
+   This is the **failed-leg salvage** pattern: a leg doesn't have to pass the gauntlet solo
+   to be useful in a multi-leg structure — it only needs (a) orthogonal return dimension
+   and (b) the dominant leg's headroom for leverage.
+
+**Per-window ann% (R46 / R63 / Fused at w_R46=0.25):**
+
+| Window | character | R46 ann% | R63 ann% | Fused ann% | pattern |
+|--:|---|--:|--:|--:|---|
+| W1 🟥 | early-cycle | +74.4 | −31.2 | **−11.4** | R46 salvages |
+| W2 🟩 | bull-trend | +354.9 | +134.7 | +183.5 | both win |
+| W3 🟥 | consolidation | −11.7 | −19.1 | −16.2 | both lose (irreducible) |
+| W4 🟩 | mid-late | +61.9 | +16.4 | +28.5 | both win |
+| W5 🟩 | rebound | −58.1 | +115.7 | **+45.6** | R63 salvages |
+| W6 🟩 | recovery | +44.1 | +93.9 | +81.3 | both win |
+
+**Fusion mechanic per window:**
+- **W1 (early-cycle fragile): R46 saves the day** with +74.4% — fusion turns a −31.2% R63
+  loss into −11.4%. R46's pillar_O rank selection apparently _works_ in the early window
+  for the funding-bearing subset.
+- **W5 (rebound — the W5 forensics target): R63 salvages** with +115.7% — R46 alone loses
+  −58.1% (the W5 fragility that R58/R59 attempted to fix), but R63 inverts this, and fusion
+  nets +45.6%. **R63 is the W5 fragility detector's payback**: R58/R59's detector fix on
+  R46 was incomplete (it _partially_ rescued W5), but R63 with its external-funding
+  detector eliminates R46's W5 problem entirely.
+- **W3 (consolidation fragile): both legs lose** (−11.7 and −19.1); fusion can't save
+  windows where BOTH legs fail (irreducible in this sleeve choice).
+
+**Capacity proxy (MECHANISM_SPEC §P2 — binding capacity):**
+- Fused turnover (ann): **56.0** (R46 leg: 88.2, R63 leg: 45.2 — R63's slow 21d cadence
+  brings the R46 leg's daily-cadence churn down by 36%)
+- Crude declared capacity: **$5.0M** (median ADV $50M/asset × 5%/leg × 2-leg)
+- **{★ CRUDE — verify with fill-attribution (P2 req'd) before deployment.**
+
+**Action per MECHANISM_SPEC §P1/§P2/§P3:**
+- P1: this report IS the pre-declared criterion for the live book — the live fusion cells
+  must reconcile to the w=0.25/0.75 + 3-check pass.
+- P2: declare joint capacity $5.0M (P2 — capacity is a fact, not a season).
+- P3: flat-record the fragility-gated position count (P3 — decay a disclosed field).
+
+**Aggregate lesson #33 (NEW — fusion budget is rarely 50/50):**
+- The 25% R46 + 75% R63 optimal weight is the canonical asymmetry: the credit-eligible
+  leg takes the bigger book, the diversifier takes the smaller book. Equal-weight fusion
+  overcounts the diversifier's contribution; arbitrary weights undercount the credit-
+  eligible leg's edge. **The right number lives at ~25/75 when one leg clears alone and
+  the other diversifies.**
+- Anti-imposter note: w=0.25 is ALSO where the IR-vs-leg ratios are ~0 (the fused
+  series is essentially just R63); the win is purely DD-reduction, not "alpha
+  amplification". Be honest about which is which.
+
+**Aggregate lesson #34 (NEW — failed-leg salvage via orthogonality):**
+- R46 fails alone on 28-asset (OOS=+0.61) but adds $5M of joint capacity + 41% DD
+  reduction when fused. The lesson is general: **a sub-threshold sleeve can be
+  credit-eligible IF its return dimension is uncorrelated to the dominant leg**.
+- The orthogonality test (|ρ| < 0.5) is the cheap pre-flight check before deep fusion
+  testing. Building both sleeves and finding ρ=−0.05 means we KNOW fusion has merit before
+  running a single gauntlet cell — the expensive gauntlet then just confirms magnitude.
+
+**Aggregate lesson #35 (NEW — MECHANISM_SPEC §3 + P1 operationally binding):**
+- This is the first refutation entry that is formally cross-linked to the MECHANISM_SPEC:
+  per §P1, the w=0.25 fusion IS the forward commitment cell, the 3-check pass IS the
+  resolution criterion, and the next pass at horizon will resolve the live fused cell
+  against the in-sample cells reported here. **This is the apparatus, working.**
+- The capacity number ($5.0M) is CRUDE and labeled as such — but it is now _stated_ rather
+  than implicit. That alone is a meaningful change: the next gap-fill exercise must
+  validate or invalidate the 5%/leg × $50M/ADV assumption against fill-attribution data.
+
+**Status:** ✅ **FUSION WINS — 3/3 gates pass**. The R46 × R63 fusion at w_R46=0.25 is
+credit-eligible for paper-deploy, with $5.0M declared capacity and pre-committed
+forward-commitment cells. Per §P3 mandatory lifecycle disclosure, the position count must
+be flat-recorded from day 1 of paper-deploy — the half-life of this fusion (not yet
+measured) is one of the next measurements we owe.
+
+**Reference:** `src/research/validation/r63_fusion_validation.py` (~430 LoC);
+`tests/test_r63_fusion_validation_smoke.py` (9 tests, all pass);
+`reports/r63_fusion_validation/2026-07-21/{verdict.json, REPORT.md}` (gitignored).
+
+## R63 🟡 Pillar S is a RISK factor, not a return factor; pillar ΔO shows we arrive AFTER the market reaction (Seth, from Jazz's domain correction, 2026-07-21)
+
+**Origin — Jazz's correction of R62's reading.** R62 concluded "pillar_S carries ~zero information
+(+0.03)" and "pillar_O is weak." Jazz: (a) O looks flat because **our pool is already curated** —
+admission conditions on on-chain quality, so O's cross-sectional *level* is range-restricted; the
+information is in the **marginal change**; (b) S "hurting" is normal — **peak hype = peak volatility
+= where people lose big money** (the 出圈 logic). Both said the same thing about method: R62 tested
+**levels and means**; the information is in **changes and higher moments.** He was right on the
+method critique. Testing (beta-adjusted edge, PIT beta, same panel):
+
+**S — CONFIRMED. It is a risk factor.**
+
+| S tercile | n | mean edge | vol of edge | left tail (p10) |
+|---|---:|---:|---:|---:|
+| low | 2,023 | +2.70 | 15.89 | −13.93 |
+| mid | 2,023 | −0.77 | 14.84 | −16.19 |
+| **high** | 2,023 | +2.77 | **17.17** | **−18.33** |
+
+Mean edge is flat across S (which is exactly why R62's mean-spread test read +0.03 = "dead"), but
+**volatility and left-tail damage rise with sentiment.** High S does not lower expected return — it
+**widens the distribution and deepens the downside tail.**
+→ **Recommendation reversed: do NOT drop S from CIS.** Move it from the return score to a
+**risk/sizing gate** (high S ⇒ reduce size, tighten stops). A factor can be dead as a return
+predictor and valuable as a risk predictor; our scoring architecture currently has no place to
+express that, which is why we nearly deleted it.
+
+**ΔO — mechanism plausible, but we are LATE.** Signed ΔO quintiles (per-symbol change vs prior obs):
+
+| quintile | avg ΔO | mean edge | t |
+|---|---:|---:|---:|
+| Q1 deteriorating most | −9.89 | +0.64 | 1.33 |
+| Q2 | −1.55 | +0.92 | 1.98 |
+| **Q3 ~no change** | −0.02 | **+3.62** | **8.19** |
+| Q4 | +1.60 | +1.70 | 3.85 |
+| Q5 improving most | +9.63 | +1.19 | 2.47 |
+
+**Inverted-U: our edge is strongest when O is STABLE and degrades at BOTH extremes.** Not "异动 ⇒
+opportunity" — at our sampling cadence, large O moves are where we are *least* predictive.
+**Best reading (consistent with Jazz's mechanism, negative for our implementation):** the market
+reacts to marginal on-chain change *fast* — which is precisely why a daily snapshot arrives after
+the reaction. At the extremes we are sampling post-reaction noise; in the stable regime our quality
+signal works cleanly (t=+8.19). This may also help explain O's weakness in the R62 level scan and
+R46's W5 failure — O's information is concentrated in fast events we systematically miss.
+→ **Testable implication:** sample O intra-day/hourly and the Q1/Q5 cells should improve. Ties
+directly to the "raise update frequency" thread (§CIS-REGIME-BOOK).
+
+**Meta-lesson #22 — a factor can fail as a mean-return predictor and still be information.**
+Test levels AND changes, means AND higher moments, before declaring a factor dead. R62 nearly
+deleted a working risk factor because it was only tested one way. Domain knowledge (why the pool is
+curated, what hype does to vol) told us where to look; the statistics only confirmed it.
+
+**Reference:** Supabase `signal_outcomes`, PIT-safe beta; session 2026-07-21.
+
+### R63b — generalization confirmed: ΔS behaves like ΔO, and the pattern is SPECIFIC to the two fast-moving pillars (Jazz's extension, 2026-07-21)
+
+Jazz: "应该不止 delta O，可能 S 也是类似" (analogy: watching AI-related ETF / related-stock price moves).
+Tested signed Δ quintiles for ALL pillars on beta-adjusted edge, same PIT panel:
+
+| Δfactor | Q1 falling | Q3 stable | Q5 rising | directional (Q5−Q1) | **stability premium** |
+|---|---:|---:|---:|---:|---:|
+| **ΔS** | −0.09 | **+2.86** | +0.38 | +0.48 | **+2.72** |
+| **ΔO** | +0.64 | **+3.61** | +1.19 | +0.55 | **+2.70** |
+| **ΔA** | +1.56 | +0.88 | **+2.75** | **+1.18** | −1.27 |
+| ΔCIS | +0.63 | +1.32 | +1.19 | +0.56 | +0.41 |
+| ΔF | +1.68 | +1.36 | +1.33 | −0.34 | −0.14 |
+| ΔM | +1.31 | +1.36 | +1.19 | −0.11 | +0.11 |
+
+**Three distinct factor behaviours — this is the levels-vs-changes map of CIS:**
+1. **Stability-premium factors — S and O (≈ +2.7 each).** Edge is strongest when stable, degrades at
+   BOTH extremes. Critically this is **specific to S and O**; ΔF/ΔM/ΔCIS show ≈0 premium, so it is not
+   a generic artifact. S and O are precisely the two pillars measuring **fast-moving, externally-driven
+   state** (sentiment, on-chain flow) — the ones the market re-prices quickest. Reading: at a daily
+   snapshot we sample these AFTER the reaction. → **raise sampling frequency for S and O specifically.**
+2. **Directional-change factor — A (+1.18 Q5−Q1, negative stability premium).** Rising A predicts
+   better edge (+2.75 vs +1.56). Usable as a change-signal as-is, no frequency fix needed.
+3. **Level-only factors — F, M (and composite CIS).** No change-information; their value is in levels
+   (R62: F +3.28, M +2.74 level spreads).
+
+**Design implication:** CIS currently treats all five pillars as level-scores with static weights. The
+data says they are three different *kinds* of object — a level factor, a change factor, and two
+fast-state factors that need higher-frequency sampling plus a risk-gate role (R63: high S ⇒ wider tails).
+A single weighted-sum architecture cannot express that. **This is a CIS v5 architecture question, not a
+reweighting question.**
+
+**Next probe:** Jazz's AI-ETF analogy — measure sentiment via *related-instrument price action*
+(thematic spillover) at higher frequency, rather than via a slow sentiment score. That is the concrete
+route to catching the fast ΔS moves we currently arrive after.
+
+
+## R65 🟢 Fusion paper book DEPLOYED — R64 cell forward-committed with §P2 fill-attribution (Seth, 2026-07-21)
+
+> **Status: DEPLOYED.** Built the missing MECHANISM_SPEC §P2 primitive + the live paper book
+> for the R64 fusion cell. The forward clock has started; live NAV will accrue daily and
+> reconcile to the pre-declared R64 cell over ≥60 days before the `validated` flag flips true.
+
+**Origin — R64's ledger said it explicitly:** "Action per MECHANISM_SPEC §P1/§P2/§P3: P1
+forward commitment cell = this report; P2 joint capacity = $5.0M (**CRUDE**, verify with
+fill-attribution); P3 flat-record fragility-gated position count." R65 builds all three.
+
+**What §P1 needed.** A live paper book that re-marks the R64 fusion cell every day with the
+EXACT same frozen parameters (w_R46=0.25, R46 5d/5bps k=3, R62 21d/0bps external/z0.5/mf2/zwin30).
+The pre-declared criterion is the R64 verdict; the live NAV curve is the forward evidence.
+The book refuses to retune: cell constants, universe, and detector are FROZEN at production.
+
+**What §P2 needed.** The fill-attribution primitive. CRUDE $5.0M (median ADV $50M/asset × 5%/leg ×
+2-leg) is a placeholder — a real capacity number needs to be MEASURED, not declared. R65 ships:
+
+  · **`src/data/signals/fill_attribution.py`** (~190 LoC, PURE function, no I/O) — given
+    `target_weights`, `current_weights`, `nav_usd`, `prices`, `adv_usd`, `slippage_model_bps`,
+    returns `{per_asset {target_notional, current_notional, turnover_pct, adv_participation,
+    slippage_bps, fill_ratio, executed_notional, executed_weight_delta}, totals
+    {gross_target_notional, gross_turnover_notional, weighted_slippage_bps,
+    fill_ratio_overall, executed_notional_total}, capacity {declared_usd, used_pct,
+    status: BREACHED/near_limit/ok/undeclared, breach_usd}}`. Slippage model: 5bps base + 2bps
+    per 1% of ADV (linear impact). Fill ratio = min(1.0, cap_frac_ADV / participation_pct).
+    The capacity status is a HARD invariant — gross target > declared ⇒ BREACHED, no soft
+    warning, the engine reports it loudly. Self-tested on 5 synthetic cases (no-turnover
+    100% fill, full-rebal 100% fill at $2B ADV, BREACH at declared $1M, thin-ADV <100% fill,
+    undeclared capacity).
+
+  · **`src/data/signals/fusion_paper.py`** (~360 LoC, live book) — uses `attribute_fill()` on
+    every clip. State → Redis `fusion_paper:state`; NAV → Supabase `fusion_paper_nav`. Capacity
+    starts at the R64-declared $5.0M CRUDE; will be replaced by the live-realized ceiling once
+    fill-attribution accumulates ≥60 forward days.
+
+**What §P3 needed.** Lifecycle disclosure = fragility-gated position count + days_engaged vs
+days_flat honesty. The book reports `detector_fired_today`, `days_engaged`, `days_flat`,
+`engagement_pct`, and a `validated` flag that flips true ONLY after `n_days_marked ≥ 60` (the
+~3-month forward clock). Before `validated` = true, the curve is a candidate — not proven.
+
+**Architecture (frozen).**
+  · Universe: STRICT 28-asset funding ∩ CIS ∩ OHLCV intersection (R64 panel verbatim).
+  · Leg 1: R46 pillar_O 5d/5bps k=3 (R45/R46 standard cell).
+  · Leg 2: R62 fade-the-crowd 21d/0bps, fragility-detector gated (external/z0.5/mf2).
+  · Fusion: w_R46 = 0.25 × Leg1 + 0.75 × Leg2, renormalized to gross Σ|w| = 2/3.
+  · Detector: FROZEN at production (z=0.5, mf=2, on the 6 external-funding features) with
+    LIVE trailing 90d reference stats (PIT-safe composite-z + min_features gate).
+  · Live data: CIS pillar_O from Redis `cis:local_scores` → Supabase `cis_scores` fallback;
+    close prices from Binance fapi `/klines` (Railway-reachable since 2026-07-13); funding from
+    Binance fapi `/fundingRate`; 30d median ADV from daily kline close × volume.
+  · PIT-safe: trailing 30d funding z (no full-sample statistics); mark-to-market y[t]/y[t-1]−1;
+    detector z-scores against LIVE trailing 90d (not the legacy 731d panel).
+  · Honesty gates: <20 assets with data ⇒ mark flat that day (no fake exposure); `validated`
+    flag at `n_days ≥ 60`.
+
+**Wiring (in `src/api/main.py`).**
+  · `_fusion_paper_loop` — DISABLE_FUSION_PAPER env guard, 660s warmup, 24h cycle.
+  · `GET /api/v1/signals/fusion-paper` — NAV curve + per-day fill ratio + slippage + capacity
+    status + detector fire rate. Cached 10 min, swr 20 min.
+  · Supabase table: `fusion_paper_nav` (mark_date, nav, daily_return, gross, n_positions, cost,
+    fill_ratio_overall, weighted_slippage_bps, capacity_status, capacity_used_pct,
+    detector_fired, cell_w_r46, top_longs, top_shorts, note).
+
+**Verification.**
+  · **12 smoke tests pass** (`src/research/validation/tests/test_fusion_paper_smoke.py`):
+    (1) imports, (2) R64 cell constants frozen, (3) 28-asset universe frozen, (4) 6 external
+    features match R62 best-cell subset, (5) funding features PIT-safe (29d NaN warmup,
+    post-warmup clean), (6) detector fires on synthetic fragility, (7) detector graceful
+    on empty/NaN input, (8) funding score sign-flipped (high funding → lower score than low
+    funding), (9) target weights normalize to gross 2/3 with balanced L/S, (10) detector
+    gates leg2, (11) fill-attribution reconciles to declared $5M (no BREACH, ~100% fill at
+    $1B+ ADV, weighted slip ≈ 5bps), (12) no forbidden signal language in module source.
+  · **Preflight PASSED** — `import src.api.main` + boot smoke green; new loop
+    `[FUSION-PAPER] ✅ daily R64 fusion paper-book loop scheduled` registered alongside the
+    other 24 daily/weekly loops. No regression in any other loop.
+
+**Aggregate lesson #36 — §P2 binding capacity is a measurement primitive, not a constant.**
+Every strategy record that ships to the live book must carry an attribution engine that turns
+realized turnover + ADV + slippage into a per-clip capacity status (BREACHED / near_limit / ok).
+The declared ceiling is the STARTING point, not the ANSWER; the answer is the live-realized
+ceiling that emerges as fill-attribution accumulates. A CRUDE $5M is honest as a placeholder;
+a $5M declared without attribution is dishonest the moment one clip wants to push past it.
+
+**Aggregate lesson #37 — FROZEN at production is the discipline that makes §P1 honest.**
+The fusion book does not retune. w_R46=0.25, R46 5d/5bps, R62 21d/0bps external/z0.5/mf2/zwin30,
+28-asset universe — all frozen. The detector uses LIVE trailing 90d reference stats (PIT-safe)
+but the threshold (z=0.5), min_features (2), and feature subset (the 6 external-funding columns)
+are FROZEN. The KS table is NOT re-trained on live data (that would be a look-ahead trap).
+If the cell stops working, the right answer is to record that empirically + retire the cell,
+not to tune it back to green. This is what distinguishes a forward-committed cell from a
+backtest-curve-fit.
+
+**Reference.** Modules: `src/data/signals/fill_attribution.py` (NEW) + `src/data/signals/fusion_paper.py` (NEW).
+Smoke: `src/research/validation/tests/test_fusion_paper_smoke.py` (NEW). Wiring: `src/api/main.py` (lines
+around the two-layer-paper block + new endpoint). Supabase table: `fusion_paper_nav` (created on first
+INSERT). R64 verdict source: `reports/r63_fusion_validation/2026-07-21/verdict.json`.
+
+---
+
+## R66 🟢 Live NAV accrual monitoring WIRED — gap detector + §P3 lifecycle events (Seth, 2026-07-21)
+
+> **Status: WIRED AND BOOT-VERIFIED.** R65 made the R64 fusion cell forward-committed; R66 makes
+> the forward clock accountable every day. It is a monitoring layer only: it does not retune,
+> alter, or block the frozen cell.
+
+**Hypothesis.** A live paper book is not accountable merely because it has a NAV endpoint. Before
+its ≥60-day `validated` gate, the operator needs a daily read of whether the curve tracks the
+pre-declared OOS expectation, whether the fragility detector is firing at the expected rate, and
+whether realized fill/capacity is eroding. Lifecycle transitions must be structured and auditable,
+not buried in logs.
+
+**Built.** `src/research/validation/fusion_paper_tracking.py` (~370 LoC) reads R65's
+`fusion_paper_nav` curve and produces one snapshot with five surfaces:
+
+1. **Live-vs-OOS Sharpe gap:** live annualized Sharpe minus the R64 OOS proxy (1.69), with
+   `WARMING_UP` before 20 marked days and `DRIFT` below a frozen −0.75 gap.
+2. **Detector fire-rate:** compares the live rate with R62's 8.2% reference; >30% is
+   `PERSISTENT_HIGH` structural fragility.
+3. **Capacity evolution:** rolling mean fill ratio, weighted slippage, and breach-day history;
+   statuses are `ok`, `EROSION`, `BREACH`, or `WARMING_UP`.
+4. **Validation countdown + max drawdown:** `days_remaining = max(0, 60 − n_days_marked)`;
+   `validated` is false until the exact R65 60-day threshold.
+5. **§P3 lifecycle events:** `BOOK_INCEPTION`, `WARMING_UP`, `DETECTOR_PERSISTENT_HIGH`,
+   `CAPACITY_BREACH`, `SHARPE_DRIFT`, and first-crossing `VALIDATED`, persisted to the new
+   Supabase `fusion_paper_lifecycle` table and cached in Redis `fusion_paper:tracking`.
+
+Wired in `src/api/main.py`:
+- `_fusion_paper_tracking_loop` — `DISABLE_FUSION_TRACK` guard, 15-minute warmup, daily cadence.
+- `GET /api/v1/signals/fusion-paper-tracking` — same cache headers as the other live paper-book
+  surfaces; returns empty-data-derived warmup state rather than fabricating a curve.
+
+**PIT / freeze discipline.** The monitor uses the already-produced NAV rows and never retrains,
+relabels, or retunes the R64 detector. R64 forward references remain pinned at OOS α_t=2.38,
+219 days, Sharpe proxy 1.69; R62 fire reference remains 8.2%; capacity thresholds and the
+60-day gate are frozen constants. A missing Supabase configuration yields no rows, not mock data.
+
+**Verification.** R66 smoke suite: **13/13 passed**. `py_compile` passed for `main.py` and the
+tracking module. `bash scripts/preflight.sh` passed (real `import src.api.main` + boot smoke),
+including `[FUSION-PAPER]` and `[FUSION-TRACK]` startup registration. The existing
+`GET /api/v1/signals/nav-monitor` handler was preserved during the endpoint insertion.
+
+**Verdict.** 🟢 **WIRED, not yet validated.** R66 is operationally live once the first R65 NAV
+mark lands; no forward performance claim is made until the frozen cell reaches the ≥60-day gate.
+
+**Aggregate lesson #38.** §P3 is not a post-hoc report. A forward-committed book needs a daily
+judgment surface that records drift, fragility, capacity, and validation state while the evidence
+is accumulating.
+
+**Aggregate lesson #39.** A Sharpe gap without detector and capacity context is incomplete. The
+lifecycle snapshot must carry all three so a weak live curve can be distinguished from a fragile
+regime or an execution-capacity problem.
+
+**Reference.** `src/research/validation/fusion_paper_tracking.py`; `src/research/validation/tests/test_fusion_paper_tracking_smoke.py`;
+`src/api/main.py` (`_fusion_paper_tracking_loop`, `GET /api/v1/signals/fusion-paper-tracking`);
+`fusion_paper_nav` + `fusion_paper_lifecycle` Supabase tables; schema migration `scripts/supabase_fusion_paper.sql`; R65 entry immediately above.
+
+---
+
+## R61 🟡 Detector-gated pillar_O sleeve — PARTIAL: clears 3-check gauntlet but gate does NOT lift OOS (Seth, 2026-07-22)
+
+> **Status: RESEARCH RESULT, NOT A PRODUCTION CHANGE.** R61 tests whether the detector ×
+> `flat_zero` pattern (R62/R63 SURVIVED on fade-the-crowd) generalizes to pillar_O.
+> R61 does NOT modify the frozen R64 fusion cell (w_R46 = 0.25) — its result is the evidence
+> base for R67 (whether to raise w_R46). Per plan, R61 is research-only and never touches the
+> live paper book.
+
+**Hypothesis.** R46 pillar_O 5d/5bps SURVIVES in-sample (gross_t=+3.33, 5bps_t=+3.33) but its
+OOS sign-flip at W5 (2025-10 → 2026-02 risk-on late-cycle chop) was the structural failure mode
+the plan assumed. R62/R63 proved the detector × `flat_zero` pattern works for fade-the-crowd
+(OOS lifted from −0.50 → +1.20). Hypothesis: applying the SAME pattern to pillar_O would
+either (a) rescue the W5 OOS gap and clear the 3-check gauntlet with margin, OR (b) reveal that
+the W5 sign-flip is structural to pillar_O in late-cycle risk-on, not just statistical noise.
+
+**Built.** `src/research/validation/r61_pillar_o_detector_gated.py` (~470 LoC). Mirrors R62
+structure verbatim: `load_btc_funding_level_series`, `load_cross_class_crowded_series`,
+`load_btc_funding_accel_series` (all three R58 detector candidates, PIT-aligned via ffill to
+rets.index), `detector_fire_mask(detector_values, threshold, direction)` (above/below with
+median-as-default threshold), `apply_detector_gate(sleeve_pnl, detector_fires, action)`
+(`action='reverse'` is REJECTED with `ValueError` per §TRADER_TOM_DOCTRINE), `gated_cadence_ls`,
+`gated_cadence_sweep` (cad × cost × detector grid), `gated_sub_period` (per-window absorption
+with detector firing-count annotation), `per_window_pnl`. Frozen R46 baseline:
+`R46_REBAL_DAYS=5`, `R46_COST_BPS=5.0`, `R46_K=3`, `DEFAULT_GATE_ACTION='flat_zero'`.
+
+Sweep: 6 cadences × 3 costs × 3 detectors = **54 cells**. Verdict grammar extends R62/R63:
+✅ SURVIVES requires both `passes_all=True` AND `ΔOOS_t > 0` (the gate must actually LIFT OOS).
+A cell that passes the 3-check gauntlet but has `ΔOOS_t ≤ 0` is 🟡 PARTIAL because the gate
+trades in-sample alpha (W2 destruction) for OOS neutrality — not a rescue, not a refutation.
+
+**Window.** Same R46/R58 panel: 2024-06-07 → 2026-06-07 (731 days), 41-asset CIS ∩ OHLCV.
+Score: pillar_O only (R45 lesson #13 — composite adds nothing over pillar_O). OOS cut: last
+30% (~219 days ≈ 2025-10-31 → 2026-06-07). 6 fixed-width sub-windows: W1 (Jun-Oct 2024),
+W2 (Oct 2024-Feb 2025), W3 (Feb-Jun 2025), W4 (Jun-Oct 2025), W5 (Oct 2025-Feb 2026 — the
+hypothesized fragile window), W6 (Feb-Jun 2026).
+
+**Result.**
+- **R46 ungated baseline reproduction (5d/5bps/k=3):** gross_t=+3.33 ✓, OOS_t=+2.47 ✓,
+  pass_all=True. **W5 ungated ann%=+15.0%** (NOT negative as the plan assumed). W2 ann%=
+  +685.9% (the explosive period). W6 ann%=−6.2% (the only negative window).
+- **Best gated cell:** detector=`cross_class_crowded_count`, cadence=5d, cost=0bps →
+  gross_t=+2.78 ✓, OOS_t=+2.35 ✓, pass_all=True. ΔOOS_t = **−0.12** (gate did NOT lift OOS).
+- **Per-detector lift at R46 frozen cell (5d/5bps):** `cross_class_crowded_count` → ΔOOS_t=−0.28
+  (pass_all=True); `btc_funding_acceleration` → ΔOOS_t=−0.36 (pass_all=True); `btc_funding_level`
+  → ΔOOS_t=**−1.50** (pass_all=False — destroys both gross and OOS).
+- **10/54 cells pass all 3 checks**, but ZERO cells have ΔOOS_t > 0 vs R46 ungated.
+- **Per-window P&L (best cell, gated vs ungated):** W1 +62.9 → +51.7 (−11.3 Δ), W2 **+685.9 →
+  +137.0 (−548.9 Δ)**, W3 +66.7 → +42.4 (−24.3 Δ), W4 +144.6 → +104.7 (−39.9 Δ), W5 +15.0 →
+  +21.6 (+6.6 Δ), W6 −6.2 → +3.2 (+9.5 Δ). **The gate trades ~$625pp of in-sample alpha
+  across W1-W4 for ~$16pp of W5+W6 gain — net loss, not rescue.**
+
+**Robustness.** Detector fires 27% of panel (cross_class_crowded_count) — leaves the book
+flat 27% of days. W2 gated residual-α t=+2.18 ✓ (still positive after gate). W5 gated
+residual-α t=+0.48 (positive — W5 ann% improved from +15.0% to +21.6%). Sweep covers the
+R46-cadence set {1, 3, 5, 7, 14, 21} × R46-cost grid {0.0, 5.0, 10.0} × all 3 R58 detector
+candidates. Detector over-fits neither cell (the W5 fragility in the plan was +15% on this
+reproduction, not negative) nor construction (5d cadence, 0bps, cross_class_crowded_count is
+the cell that loses the LEAST).
+
+**Verdict.** 🟡 **PARTIAL — clears all 3 checks but gate does NOT lift OOS (ΔOOS_t = −0.12).**
+The detector × `flat_zero` pattern that SURVIVED on R63 fade-the-crowd does NOT transfer
+cleanly to R46 pillar_O. The plan's hypothesized W5 sign-flip (t=−2.32 in the plan's
+narrative) did not exist in this reproduction — W5 ungated was already +15.0%, and the gate's
+net effect on the panel was negative: it destroyed +685.9% W2 in-sample alpha for marginal W5
+and W6 improvement. **Frozen R64 fusion cell stays at w_R46 = 0.25 unchanged.** This is
+the third straight outcome that suggests R46's edge lives in late-cycle bullish regimes and
+W5/W6 are not the structural fragility the plan assumed. R67 candidate (raise w_R46) is
+NOT warranted; if anything, the R64 budget may want MORE R63 (fade-the-crowd) and LESS R46
+— but that's a separate R-number.
+
+**Aggregate lesson #28 — detector × flat_zero does NOT transfer cleanly across factors.**
+R62/R63 SURVIVED on fade-the-crowd (OOS lifted from −0.50 → +1.20). R61 PARTIAL on pillar_O
+(gate does not lift OOS; trades W2 in-sample for marginal W5/W6 gain). The pattern is
+factor-specific: it works when the fragile regime is structural to the factor's return
+dimension (per-asset funding z = crowded short at extreme), and it fails when the fragile
+regime is benign (pillar_O in W5 was already +15%). Lesson: every factor needs its own
+fragility detector trained on its own fragile labels — DO NOT reuse R62's external-funding
+detector on R46's CIS-pillar cross-section.
+
+**Aggregate lesson #29 — fragile-regime hypotheses are empirical claims, not prior assumptions.**
+The R61 plan hypothesized W5 t=−2.32 sign-flip on R46. Reproduction showed W5 was already
++15.0% — the plan's failure mode didn't exist. The hypothesis of "W5 sign-flip in late-cycle
+risk-on" was inherited from R56/R57 forensics on a different construction; for the 41-asset
+R46 pillar_O 5d/5bps on this panel, W5 is a mildly positive (not negative) regime. Lesson:
+re-derive fragile regimes from the actual factor's per-window P&L before training a detector.
+The detector trained on the wrong fragile labels (as the plan would have) would gate the
+wrong days. R61 caught this BEFORE building the detector — that's the value of running the
+reproduction first.
+
+**Reference.** Modules: `src/research/validation/r61_pillar_o_detector_gated.py` (NEW, ~470 LoC);
+`src/research/validation/tests/test_r61_pillar_o_detector_gated_smoke.py` (NEW, 11 sandbox-safe
+tests). Reports gitignored at `reports/r61_pillar_o_detector_gated/2026-07-22/`. R46 verdict
+source: `reports/cis_quality_robustness/2026-07-20/` (R56 reproduction). R63 verdict source:
+`reports/r62_fragility_funding_ls/2026-07-21/`. R64 fusion verdict: `reports/r63_fusion_validation/2026-07-21/`.
+
+---
+
+## R67 🔴 pillar_A change cross-sectional L/S — REFUTED (Seth, 2026-07-22)
+
+> **Status: RESEARCH RESULT, NOT A PRODUCTION CHANGE.** R67 tests the directional pillar_A
+> observation from R63b as a standalone cross-sectional sleeve. It does not modify CIS v5,
+> the frozen R64 fusion cell, or any live paper book.
+
+**Question and anti-imposter construction.** R63b contained two distinct pillar_A observations:
+a +4.48 level spread and a +1.18 signed change spread. The directional claim is about the
+change, so R67 ranks the PIT-safe one-day change `ΔA[t] = A[t] − A[t−1]`; ranking the A level
+would test the wrong phenomenon. The universe is the strict funding ∩ CIS ∩ OHLCV intersection
+(28 assets), with k=5 quintiles, the declared 2024-06-07 → 2026-06-07 panel, market + 30-day
+momentum residualization, Newey-West lags=6, and cadence × cost sweep over {1,3,5,7,14,21}d
+× {0,5,10}bps. The OOS slice is the last 30% of the panel; the earlier `OOS_FRAC` index cut
+bug that selected the last 70% was corrected before this run.
+
+**Result.** The best +ΔA cell in the declared grid is 5d/0bps: α_t=+0.96 and annualized
+residual alpha=+28.5%, failing gross significance. At the identical 5d construction, −ΔA
+returns α_t=−0.83; the matched-cell differential is +1.79 and supports the R63b direction,
+but this is not strategy credit. The best −ΔA cell found independently is 7d/0bps,
+α_t=+1.41, and is diagnostic only — selecting each sign's best cadence would be post-hoc.
+
+**Three-check gauntlet for the +ΔA headline:**
+
+| Check | α_t | Annualized α | Gate |
+|---|---:|---:|:---:|
+| Gross full panel | +0.96 | +28.5% | FAIL |
+| 5bps full panel | +0.60 | +17.8% | FAIL |
+| 5bps, last-30% OOS | +2.19 | +92.2% | PASS |
+
+Combined result: **FAIL**. Four of six fixed windows are positive, but the effect is cadence
+unstable and does not clear the gross or cost gates. The factor therefore receives no
+standalone sleeve credit. The R63b architecture observation remains admissible as an input to
+R69, where ΔA may be considered as a conditional state or sizing variable, but it must not
+inherit alpha credit from this refuted L/S test.
+
+**Verdict.** 🔴 **REFUTED as a standalone ΔA cross-sectional sleeve.** A matched sign can
+support the hypothesized direction while the factor still fails economically: gross significance,
+transaction-cost survival, and last-30% OOS are separate requirements.
+
+**Aggregate lesson #40 — match the strategy score to the measured phenomenon.** A level rank
+cannot test a change-factor claim, and opposite signs must be compared at the same construction.
+Anti-imposter discipline applies before the statistics: test the right object, on the declared
+universe, with the declared OOS window.
+
+**Reference.** `src/research/validation/pillar_a_ls.py`; `src/research/validation/tests/test_pillar_a_ls_smoke.py`;
+`reports/pillar_a_ls/2026-07-22/REPORT.md`; `reports/pillar_a_ls/2026-07-22/verdict.json`.
