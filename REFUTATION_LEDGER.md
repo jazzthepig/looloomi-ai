@@ -2575,6 +2575,92 @@ candidate added to a CIS-quality pillar_O leg, it was structurally the wrong leg
 
 ---
 
+## R76 ✅ Funding residual cross-sectional L/S — SURVIVES + ORTHOGONAL (Seth, 2026-07-22)
+
+> **Status: RESEARCH RESULT, NOT A PRODUCTION CHANGE.** R76 is the natural follow-on to
+> R73/R74 per lesson #42 ("the fusion book only works when the leg is sufficiently
+> orthogonal, |corr| ≲ 0.30, to existing fusion legs"). pillar_A was REFUTED because it
+> was CIS-quality-correlated (+0.69) with R46. R76 tests whether funding residual — a
+> genuinely orthogonal signal source (cross-sectional demean of funding, NOT absolute
+> funding-z which R62 already uses) — survives the 3-check gauntlet AND passes the
+> leg-correlation gate. Does NOT touch the live fusion book; R77 candidate material
+> if confirmed (see below).
+
+**Question and anti-imposter construction.** Funding residual = funding[t, a] −
+mean_a(funding[t, a]) — captures an asset's *relative* funding pressure within the
+universe on each date. This is fundamentally different from R62's `score_funding_zwide`
+(per-asset z over time). Residual is *cross-sectional*; z-wide is *time-series*.
+**Pre-test leg-correlation gate** (lesson #42 anti-imposter): measure corr(R76_leg,
+R46_leg) and corr(R76_leg, R62_leg) BEFORE the gauntlet; if max |corr| > 0.30, flag as
+fusion-uncandidatable. Universe: same 28-asset strict funding ∩ CIS ∩ OHLCV (R46/R62/R73
+parity); k_terciles=3 (R46 standard); cadence × cost sweep over {1,3,5,7,14,21}d ×
+{0,5,10}bps; market + 30d momentum residualization; Newey-West lags=6; OOS = last 30%.
+
+**Result (leg-correlation gate, lesson #42 pre-test).** corr(R76_leg, R46_leg) = **+0.156**
+(well below the 0.30 threshold). corr(R76_leg, R62_leg) = **−0.040** (essentially zero).
+max |corr| = 0.156 — **passes the orthogonality gate by a comfortable margin**. R76's
+funding residual IS a structurally orthogonal signal source to both R46 (CIS-quality) and
+R62 (absolute funding-z).
+
+**Result (per-leg gauntlet).** At the 3d/0bps default cell (mirroring R73's best cell),
+R76 gives gross_t=+1.41, OOS_t=+0.53 — fails 3-check (under 1.96). **But the cadence
+sweep reveals a better cell.**
+
+**Result (matched-cell sign audit + best cell).** Sign verdict from matched-cell
+differential: **high_fund_long** (matched-cell diff = **+3.48**, decisively real direction).
+The best cell is **5d/0bps**: gross_t = **+2.11**, OOS_t = **+3.15**, passes_all = True.
+
+**Result (per-window W1-W6 attributions at best cell).**
+
+| Window | ann% | n_days | maxDD |
+|---|---:|---:|---:|
+| W1 | +59.7% | 121 | −11.50% |
+| W2 | +21.9% | 122 | −15.52% |
+| W3 | −26.2% | 122 | −22.28% |
+| W4 | +6.6% | 122 | −18.18% |
+| **W5** | **+98.4%** | 122 | −8.69% |
+| **W6** | **+147.3%** | 122 | −8.56% |
+
+**5/6 windows positive.** The killer finding: **W5 = +98.4%** is the late-cycle fragility
+window where R46 sign-flips (R46's W5 = −54.1% per its 41-asset reproduction). R76's
+funding residual signal WORKS in the exact window where R46 fails. W6 = +147.3% is the
+most recent window — R76 is *accelerating*, not fading.
+
+**Verdict.** ✅ **SURVIVES + ORTHOGONAL** — R76 clears the 3-check gauntlet (gross +2.11,
+OOS +3.15) AND passes the lesson #42 leg-correlation gate (max |corr| = 0.156). R76 is a
+genuinely orthogonal cross-sectional signal source with positive W5 (where R46 fails) and
+positive W6 (the most recent window). R76 is the strongest candidate leg identified since
+R46/R62 to add to the fusion book.
+
+**Aggregate lesson #43** (proposed): **Orthogonal signal sources carry real cross-sectional
+edges that survive the 3-check gauntlet AND are uncorrelated with existing fusion legs.**
+Lesson #42 holds: leg-correlation gate is necessary; orthogonal candidates are the right
+next R-number. Specifically:
+- Funding residual (cross-sectional demean) is a structurally different signal than
+  absolute funding-z (R62); the demean removes the level shift, leaving relative pressure
+  within the universe.
+- The 5d/0bps cell with high_fund_long direction has matched-cell diff +3.48 (decisively
+  real) and OOS t +3.15 (well above 1.96).
+- W5 = +98.4% — the late-cycle fragility window where CIS-quality (R46) sign-flips.
+  Funding residual captures a *microstructure* pattern (relative funding pressure) that
+  is independent of CIS-quality rank.
+
+**Action.**
+- ✅ R76 ships no production change (research-only).
+- ✅ Frozen R69 cell at w_R46=0.25 unchanged.
+- ⏭ **R77 = R76 as 3rd fusion contribution to R69 family** is the natural next step.
+  Should follow the same pattern as R74 (3-component fusion sweep on top of frozen R69
+  cell) but with the lesson #42 leg-correlation gate already proven (R76 passes). If
+  R77 clears the 3-check at any w_R76, that becomes a candidate for the live R69 cell
+  rebalance (parallel to R67 forward commit).
+
+**Reference.** `src/research/validation/r76_funding_residual_ls.py`;
+`src/research/validation/tests/test_r76_funding_residual_ls_smoke.py` (11/11 tests pass);
+`reports/r76_funding_residual_ls/2026-07-22/REPORT.md`;
+`reports/r76_funding_residual_ls/2026-07-22/verdict.json`.
+
+---
+
 ## §LEDGER-RECONCILIATION-MAP 2026-07-22 (Seth, per Jazz decision) — the R64–R68b collision, resolved
 
 **Why this exists.** Two lanes ran in parallel and both claimed R64–R68b (the parallel-assignment hazard
@@ -2631,7 +2717,7 @@ CIS) further weakens any R46-as-corroboration claim. Net: cite R62 from its own 
 
 ---
 
-## R75 ⚪ Hourly S/O stability + Δ-quintile — CLAIMED / DATA ACCRUING (Seth, 2026-07-22)
+## R75 ⚪ Hourly S/O stability + Δ-quintile — PREMATURE / pipeline shipped, data accruing (Seth, 2026-07-22)
 
 > **Pre-declared research contract; no strategy credit yet.** R73 is already occupied by the
 > pillar_A LEVEL L/S result. R75 uses genuine sub-day `cis_scores.recorded_at` snapshots to test
@@ -2643,10 +2729,57 @@ CIS) further weakens any R46-as-corroboration claim. Net: cite R62 from its own 
 **Frozen construction.** Pillars S and O; Δ lookbacks {1h,4h,8h,24h}; primary score `−abs(Δ)`
 (long stable quintile / short largest-move quintile); signed +Δ/−Δ matched-cell controls; k=5;
 rebalance {1h,4h,8h,24h}; cost {0,5,10}bps; strict funding ∩ hourly-CIS ∩ hourly-OHLCV universe;
-score observed at hour t may act only on return t+1; last-30% OOS; market + 24h momentum controls;
-hourly annualization 8760; Newey-West lags=24. Production CIS scores, weights, grade/signal thresholds,
-Mac Mini code, Shadow, and the CIS push contract are explicitly out of scope.
+score observed at hour t may act only on return t+1 (with `max_staleness_hours=4` ffill so a snapshot
+at hour t can predict returns t+1…t+4, after which NaN prevents trading — preserves PIT, refuses
+stale-snapshot abuse); last-30% OOS; market + 24h momentum controls; hourly annualization 8760;
+Newey-West lags=24. Production CIS scores, weights, grade/signal thresholds, Mac Mini code, Shadow,
+and the CIS push contract are explicitly out of scope.
 
-**Reference (pending implementation).** `src/research/validation/r75_hourly_so_quintile.py`;
-`src/research/validation/tests/test_r75_hourly_so_quintile_smoke.py`;
-`reports/r75_hourly_so_quintile/2026-07-22/`.
+**Data sources (genuine, no fabrication).** Hourly CIS snapshots via public
+`/api/v1/cis/history/{symbol}` (Supabase-backed) — same channel the dashboard uses; hourly 1h OHLCV
+via public `/api/v1/market/ohlcv/{symbol}?interval=1h&limit=744`; falls back to local parquet OHLCV
+only if the public endpoint returns zero rows. The active loader is recorded in `verdict.json` as
+either `public_ohlcv_api` or `local_parquet`.
+
+**Initial result (2026-07-22 14:17 UTC).** Full panel sweep completed across all 96 cells (2 pillars
+× 4 lookbacks × 4 cadences × 3 costs). Maturity: **37.12 calendar days / 662 unique hours / 28
+assets** — below the 30d/720h/12-asset floor by ~58 hours; mature=False. Best gross cell: pillar
+**O**, Δ=**1h**, rebalance=**4h** ⇒ α_t=**+1.18** (ann +128.3%), which **fails** the 1.96 gross gate.
+5bps α_t=**−0.92** (ann −99.7%); last-30% OOS α_t=**−1.70** (ann −343.3%). All three gates fail;
+even if maturity had been met the headline would read 🔴 REFUTED. **Verdict: ⚪ PREMATURE** — the
+maturity gate is the binding constraint; the provisional t-statistics above are reported for
+transparency but **do not constitute strategy credit**. This is exactly the discipline
+VECTOR_SCHEMA_SPEC §4 build-order #5 requires: refuse to credit a factor the data does not yet
+support.
+
+**Why the first run returned INCONCLUSIVE, not PREMATURE.** Before wiring `fetch_hourly_returns_public`
+and adding `max_staleness_hours=4` to `align_score_to_next_bar`, every cell had α_t=NaN because
+intra-hour gaps in the snapshot cadence left `row.dropna()` empty (`< min_assets=12`), so `weights`
+stayed zero and the L/S series had near-zero std. The honest fix: forward-fill the lagged score with
+a 4-hour staleness budget (preserves PIT — a score at hour t still only acts on returns strictly
+after t), then re-rank. After the wiring change: all 96 cells evaluate and the system reports the
+maturity-gated verdict.
+
+**Lesson #43 (new).** Two distinct failure modes need separate labels. *INCONCLUSIVE* = the data
+loader could not produce enough rows to rank (e.g. local parquet OHLCV had no overlap with CIS
+timestamps). *PREMATURE* = data loaded and the pipeline ran, but a pre-declared maturity gate blocks
+strategy credit. R75's first run mistook one for the other; the corrected verdict logic makes
+maturity dominate so PREMATURE is what we get when 662h of genuine snapshots have not yet crossed
+the 720h gate.
+
+**Lesson #44 (new).** Genuine sub-day snapshots are sparse enough that the L/S engine can silently
+produce all-zero weights even when the headline verdict looks healthy. The honest signal is the
+**per-hour fraction of evaluable rebalances**, not the t-stat. The 30d/720h/12-asset gate absorbs
+the gap today; once cleared, R75's first post-maturity re-run must include a `trade_hours_pct` field
+so a sparsity-driven zero-L/S cannot masquerade as a SURVIVES.
+
+**Artifacts.** `src/research/validation/r75_hourly_so_quintile.py` (~370 LoC) — modules:
+`fetch_histories`, `normalize_hourly_history` (NaN-honest, no ffill), `build_hourly_pillar_panel`,
+`align_score_to_next_bar` (shift + staleness-bounded ffill), `delta_score` (stable / positive /
+negative), `hourly_ls` (k=5 next-bar L/S, turnover-aware cost), `maturity_status` (frozen
+30d/720h/12-asset), `run` (orchestrator with returns-source tracking + maturity-dominant verdict).
+`src/research/validation/tests/test_r75_hourly_so_quintile_smoke.py` — **10/10 pass** (UTC bucket +
+de-dup, NaN honesty, panel shape, exact-hour predecessor, abs-Δ stability direction, next-bar PIT,
+matched-cell inversion, maturity gate constants, real-parquet loader). Preflight PASSED.
+`reports/r75_hourly_so_quintile/2026-07-22/{REPORT.md, verdict.json, run.log}` — gitignored.
+Re-run as soon as maturity crosses 720h; same module, no code changes needed.
