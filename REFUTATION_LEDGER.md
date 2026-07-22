@@ -1877,9 +1877,9 @@ good. Before concluding a signal fails, prove the yardstick is clean.
 **Reference:** Supabase `signal_outcomes`; PIT-safe window-function beta; session 2026-07-21.
 
 
-## R64 ✅ Sleeve fusion validation — FUSION WINS 3/3 gates (R46 pillar_O × R63 fragility-gated fade-the-crowd) (Seth, 2026-07-21)
+## R69 ✅ Sleeve fusion validation — FUSION WINS 3/3 gates (R46 pillar_O × R63 fragility-gated fade-the-crowd) (Seth, 2026-07-21)
 
-> **Note on numbering:** Originally numbered R63 in this session; renumbered to R64 after the
+> **Note on numbering:** Originally numbered R63 in this session; renumbered to R69 after the
 > prior-session-R62 collision shifted the fragility entry to R63. File/module names
 > (`r63_fusion_validation.py`) left unchanged for repo-history consistency.
 >
@@ -2116,23 +2116,23 @@ reweighting question.**
 route to catching the fast ΔS moves we currently arrive after.
 
 
-## R65 🟢 Fusion paper book DEPLOYED — R64 cell forward-committed with §P2 fill-attribution (Seth, 2026-07-21)
+## R70 🟢 Fusion paper book DEPLOYED — R69 cell forward-committed with §P2 fill-attribution (Seth, 2026-07-21)
 
 > **Status: DEPLOYED.** Built the missing MECHANISM_SPEC §P2 primitive + the live paper book
-> for the R64 fusion cell. The forward clock has started; live NAV will accrue daily and
-> reconcile to the pre-declared R64 cell over ≥60 days before the `validated` flag flips true.
+> for the R69 fusion cell. The forward clock has started; live NAV will accrue daily and
+> reconcile to the pre-declared R69 cell over ≥60 days before the `validated` flag flips true.
 
-**Origin — R64's ledger said it explicitly:** "Action per MECHANISM_SPEC §P1/§P2/§P3: P1
+**Origin — R69's ledger said it explicitly:** "Action per MECHANISM_SPEC §P1/§P2/§P3: P1
 forward commitment cell = this report; P2 joint capacity = $5.0M (**CRUDE**, verify with
-fill-attribution); P3 flat-record fragility-gated position count." R65 builds all three.
+fill-attribution); P3 flat-record fragility-gated position count." R70 builds all three.
 
-**What §P1 needed.** A live paper book that re-marks the R64 fusion cell every day with the
+**What §P1 needed.** A live paper book that re-marks the R69 fusion cell every day with the
 EXACT same frozen parameters (w_R46=0.25, R46 5d/5bps k=3, R62 21d/0bps external/z0.5/mf2/zwin30).
-The pre-declared criterion is the R64 verdict; the live NAV curve is the forward evidence.
+The pre-declared criterion is the R69 verdict; the live NAV curve is the forward evidence.
 The book refuses to retune: cell constants, universe, and detector are FROZEN at production.
 
 **What §P2 needed.** The fill-attribution primitive. CRUDE $5.0M (median ADV $50M/asset × 5%/leg ×
-2-leg) is a placeholder — a real capacity number needs to be MEASURED, not declared. R65 ships:
+2-leg) is a placeholder — a real capacity number needs to be MEASURED, not declared. R70 ships:
 
   · **`src/data/signals/fill_attribution.py`** (~190 LoC, PURE function, no I/O) — given
     `target_weights`, `current_weights`, `nav_usd`, `prices`, `adv_usd`, `slippage_model_bps`,
@@ -2149,7 +2149,7 @@ The book refuses to retune: cell constants, universe, and detector are FROZEN at
 
   · **`src/data/signals/fusion_paper.py`** (~360 LoC, live book) — uses `attribute_fill()` on
     every clip. State → Redis `fusion_paper:state`; NAV → Supabase `fusion_paper_nav`. Capacity
-    starts at the R64-declared $5.0M CRUDE; will be replaced by the live-realized ceiling once
+    starts at the R69-declared $5.0M CRUDE; will be replaced by the live-realized ceiling once
     fill-attribution accumulates ≥60 forward days.
 
 **What §P3 needed.** Lifecycle disclosure = fragility-gated position count + days_engaged vs
@@ -2158,7 +2158,7 @@ days_flat honesty. The book reports `detector_fired_today`, `days_engaged`, `day
 ~3-month forward clock). Before `validated` = true, the curve is a candidate — not proven.
 
 **Architecture (frozen).**
-  · Universe: STRICT 28-asset funding ∩ CIS ∩ OHLCV intersection (R64 panel verbatim).
+  · Universe: STRICT 28-asset funding ∩ CIS ∩ OHLCV intersection (R69 panel verbatim).
   · Leg 1: R46 pillar_O 5d/5bps k=3 (R45/R46 standard cell).
   · Leg 2: R62 fade-the-crowd 21d/0bps, fragility-detector gated (external/z0.5/mf2).
   · Fusion: w_R46 = 0.25 × Leg1 + 0.75 × Leg2, renormalized to gross Σ|w| = 2/3.
@@ -2182,7 +2182,7 @@ days_flat honesty. The book reports `detector_fired_today`, `days_engaged`, `day
 
 **Verification.**
   · **12 smoke tests pass** (`src/research/validation/tests/test_fusion_paper_smoke.py`):
-    (1) imports, (2) R64 cell constants frozen, (3) 28-asset universe frozen, (4) 6 external
+    (1) imports, (2) R69 cell constants frozen, (3) 28-asset universe frozen, (4) 6 external
     features match R62 best-cell subset, (5) funding features PIT-safe (29d NaN warmup,
     post-warmup clean), (6) detector fires on synthetic fragility, (7) detector graceful
     on empty/NaN input, (8) funding score sign-flipped (high funding → lower score than low
@@ -2190,7 +2190,7 @@ days_flat honesty. The book reports `detector_fired_today`, `days_engaged`, `day
     gates leg2, (11) fill-attribution reconciles to declared $5M (no BREACH, ~100% fill at
     $1B+ ADV, weighted slip ≈ 5bps), (12) no forbidden signal language in module source.
   · **Preflight PASSED** — `import src.api.main` + boot smoke green; new loop
-    `[FUSION-PAPER] ✅ daily R64 fusion paper-book loop scheduled` registered alongside the
+    `[FUSION-PAPER] ✅ daily R69 fusion paper-book loop scheduled` registered alongside the
     other 24 daily/weekly loops. No regression in any other loop.
 
 **Aggregate lesson #36 — §P2 binding capacity is a measurement primitive, not a constant.**
@@ -2212,13 +2212,13 @@ backtest-curve-fit.
 **Reference.** Modules: `src/data/signals/fill_attribution.py` (NEW) + `src/data/signals/fusion_paper.py` (NEW).
 Smoke: `src/research/validation/tests/test_fusion_paper_smoke.py` (NEW). Wiring: `src/api/main.py` (lines
 around the two-layer-paper block + new endpoint). Supabase table: `fusion_paper_nav` (created on first
-INSERT). R64 verdict source: `reports/r63_fusion_validation/2026-07-21/verdict.json`.
+INSERT). R69 verdict source: `reports/r63_fusion_validation/2026-07-21/verdict.json`.
 
 ---
 
-## R66 🟢 Live NAV accrual monitoring WIRED — gap detector + §P3 lifecycle events (Seth, 2026-07-21)
+## R71 🟢 Live NAV accrual monitoring WIRED — gap detector + §P3 lifecycle events (Seth, 2026-07-21)
 
-> **Status: WIRED AND BOOT-VERIFIED.** R65 made the R64 fusion cell forward-committed; R66 makes
+> **Status: WIRED AND BOOT-VERIFIED.** R70 made the R69 fusion cell forward-committed; R71 makes
 > the forward clock accountable every day. It is a monitoring layer only: it does not retune,
 > alter, or block the frozen cell.
 
@@ -2228,17 +2228,17 @@ pre-declared OOS expectation, whether the fragility detector is firing at the ex
 whether realized fill/capacity is eroding. Lifecycle transitions must be structured and auditable,
 not buried in logs.
 
-**Built.** `src/research/validation/fusion_paper_tracking.py` (~370 LoC) reads R65's
+**Built.** `src/research/validation/fusion_paper_tracking.py` (~370 LoC) reads R70's
 `fusion_paper_nav` curve and produces one snapshot with five surfaces:
 
-1. **Live-vs-OOS Sharpe gap:** live annualized Sharpe minus the R64 OOS proxy (1.69), with
+1. **Live-vs-OOS Sharpe gap:** live annualized Sharpe minus the R69 OOS proxy (1.69), with
    `WARMING_UP` before 20 marked days and `DRIFT` below a frozen −0.75 gap.
 2. **Detector fire-rate:** compares the live rate with R62's 8.2% reference; >30% is
    `PERSISTENT_HIGH` structural fragility.
 3. **Capacity evolution:** rolling mean fill ratio, weighted slippage, and breach-day history;
    statuses are `ok`, `EROSION`, `BREACH`, or `WARMING_UP`.
 4. **Validation countdown + max drawdown:** `days_remaining = max(0, 60 − n_days_marked)`;
-   `validated` is false until the exact R65 60-day threshold.
+   `validated` is false until the exact R70 60-day threshold.
 5. **§P3 lifecycle events:** `BOOK_INCEPTION`, `WARMING_UP`, `DETECTOR_PERSISTENT_HIGH`,
    `CAPACITY_BREACH`, `SHARPE_DRIFT`, and first-crossing `VALIDATED`, persisted to the new
    Supabase `fusion_paper_lifecycle` table and cached in Redis `fusion_paper:tracking`.
@@ -2249,16 +2249,16 @@ Wired in `src/api/main.py`:
   surfaces; returns empty-data-derived warmup state rather than fabricating a curve.
 
 **PIT / freeze discipline.** The monitor uses the already-produced NAV rows and never retrains,
-relabels, or retunes the R64 detector. R64 forward references remain pinned at OOS α_t=2.38,
+relabels, or retunes the R69 detector. R69 forward references remain pinned at OOS α_t=2.38,
 219 days, Sharpe proxy 1.69; R62 fire reference remains 8.2%; capacity thresholds and the
 60-day gate are frozen constants. A missing Supabase configuration yields no rows, not mock data.
 
-**Verification.** R66 smoke suite: **13/13 passed**. `py_compile` passed for `main.py` and the
+**Verification.** R71 smoke suite: **13/13 passed**. `py_compile` passed for `main.py` and the
 tracking module. `bash scripts/preflight.sh` passed (real `import src.api.main` + boot smoke),
 including `[FUSION-PAPER]` and `[FUSION-TRACK]` startup registration. The existing
 `GET /api/v1/signals/nav-monitor` handler was preserved during the endpoint insertion.
 
-**Verdict.** 🟢 **WIRED, not yet validated.** R66 is operationally live once the first R65 NAV
+**Verdict.** 🟢 **WIRED, not yet validated.** R71 is operationally live once the first R70 NAV
 mark lands; no forward performance claim is made until the frozen cell reaches the ≥60-day gate.
 
 **Aggregate lesson #38.** §P3 is not a post-hoc report. A forward-committed book needs a daily
@@ -2271,7 +2271,7 @@ regime or an execution-capacity problem.
 
 **Reference.** `src/research/validation/fusion_paper_tracking.py`; `src/research/validation/tests/test_fusion_paper_tracking_smoke.py`;
 `src/api/main.py` (`_fusion_paper_tracking_loop`, `GET /api/v1/signals/fusion-paper-tracking`);
-`fusion_paper_nav` + `fusion_paper_lifecycle` Supabase tables; schema migration `scripts/supabase_fusion_paper.sql`; R65 entry immediately above.
+`fusion_paper_nav` + `fusion_paper_lifecycle` Supabase tables; schema migration `scripts/supabase_fusion_paper.sql`; R70 entry immediately above.
 
 ---
 
@@ -2279,8 +2279,8 @@ regime or an execution-capacity problem.
 
 > **Status: RESEARCH RESULT, NOT A PRODUCTION CHANGE.** R61 tests whether the detector ×
 > `flat_zero` pattern (R62/R63 SURVIVED on fade-the-crowd) generalizes to pillar_O.
-> R61 does NOT modify the frozen R64 fusion cell (w_R46 = 0.25) — its result is the evidence
-> base for R67 (whether to raise w_R46). Per plan, R61 is research-only and never touches the
+> R61 does NOT modify the frozen R69 fusion cell (w_R46 = 0.25) — its result is the evidence
+> base for the w_REBALANCE candidate (whether to raise w_R46). Per plan, R61 is research-only and never touches the
 > live paper book.
 
 **Hypothesis.** R46 pillar_O 5d/5bps SURVIVES in-sample (gross_t=+3.33, 5bps_t=+3.33) but its
@@ -2339,10 +2339,10 @@ The detector × `flat_zero` pattern that SURVIVED on R63 fade-the-crowd does NOT
 cleanly to R46 pillar_O. The plan's hypothesized W5 sign-flip (t=−2.32 in the plan's
 narrative) did not exist in this reproduction — W5 ungated was already +15.0%, and the gate's
 net effect on the panel was negative: it destroyed +685.9% W2 in-sample alpha for marginal W5
-and W6 improvement. **Frozen R64 fusion cell stays at w_R46 = 0.25 unchanged.** This is
+and W6 improvement. **Frozen R69 fusion cell stays at w_R46 = 0.25 unchanged.** This is
 the third straight outcome that suggests R46's edge lives in late-cycle bullish regimes and
-W5/W6 are not the structural fragility the plan assumed. R67 candidate (raise w_R46) is
-NOT warranted; if anything, the R64 budget may want MORE R63 (fade-the-crowd) and LESS R46
+W5/W6 are not the structural fragility the plan assumed. w_REBALANCE candidate (raise w_R46) is
+NOT warranted; if anything, the R69 budget may want MORE R63 (fade-the-crowd) and LESS R46
 — but that's a separate R-number.
 
 **Aggregate lesson #28 — detector × flat_zero does NOT transfer cleanly across factors.**
@@ -2368,19 +2368,19 @@ reproduction first.
 `src/research/validation/tests/test_r61_pillar_o_detector_gated_smoke.py` (NEW, 11 sandbox-safe
 tests). Reports gitignored at `reports/r61_pillar_o_detector_gated/2026-07-22/`. R46 verdict
 source: `reports/cis_quality_robustness/2026-07-20/` (R56 reproduction). R63 verdict source:
-`reports/r62_fragility_funding_ls/2026-07-21/`. R64 fusion verdict: `reports/r63_fusion_validation/2026-07-21/`.
+`reports/r62_fragility_funding_ls/2026-07-21/`. R69 fusion verdict: `reports/r63_fusion_validation/2026-07-21/`.
 
 ---
 
-## R67 🔴 pillar_A change cross-sectional L/S — REFUTED (Seth, 2026-07-22)
+## R72 🔴 pillar_A change cross-sectional L/S — REFUTED (Seth, 2026-07-22)
 
-> **Status: RESEARCH RESULT, NOT A PRODUCTION CHANGE.** R67 tests the directional pillar_A
+> **Status: RESEARCH RESULT, NOT A PRODUCTION CHANGE.** R72 tests the directional pillar_A
 > observation from R63b as a standalone cross-sectional sleeve. It does not modify CIS v5,
-> the frozen R64 fusion cell, or any live paper book.
+> the frozen R69 fusion cell, or any live paper book.
 
 **Question and anti-imposter construction.** R63b contained two distinct pillar_A observations:
 a +4.48 level spread and a +1.18 signed change spread. The directional claim is about the
-change, so R67 ranks the PIT-safe one-day change `ΔA[t] = A[t] − A[t−1]`; ranking the A level
+change, so R72 ranks the PIT-safe one-day change `ΔA[t] = A[t] − A[t−1]`; ranking the A level
 would test the wrong phenomenon. The universe is the strict funding ∩ CIS ∩ OHLCV intersection
 (28 assets), with k=5 quintiles, the declared 2024-06-07 → 2026-06-07 panel, market + 30-day
 momentum residualization, Newey-West lags=6, and cadence × cost sweep over {1,3,5,7,14,21}d
@@ -2418,3 +2418,59 @@ universe, with the declared OOS window.
 
 **Reference.** `src/research/validation/pillar_a_ls.py`; `src/research/validation/tests/test_pillar_a_ls_smoke.py`;
 `reports/pillar_a_ls/2026-07-22/REPORT.md`; `reports/pillar_a_ls/2026-07-22/verdict.json`.
+
+---
+
+## §LEDGER-RECONCILIATION-MAP 2026-07-22 (Seth, per Jazz decision) — the R64–R68b collision, resolved
+
+**Why this exists.** Two lanes ran in parallel and both claimed R64–R68b (the parallel-assignment hazard
+in `docs/VECTOR_SCHEMA_SPEC.md` §0). Seth's fusion lane wrote R64–R67 as *ledger bodies*; Minimax's
+pillar_A / kill-register lane wrote R64–R68b as a *summary row* in `docs/MECHANISM_SPEC.md` §3. Same
+numbers, different experiments. **Jazz's ruling: Minimax keeps R64–R68b; Seth's lane renumbers to R69+.**
+
+### Canonical mapping (applied this pass to `REFUTATION_LEDGER.md` + `PROJECT_STATE.md`)
+
+| was (Seth) | now (canonical) | entry | status |
+|---|---|---|---|
+| R64 | **R69** | Sleeve fusion validation — FUSION WINS 3/3 gates (R46 pillar_O × R63 fade-the-crowd) | ✅ renumbered |
+| R65 | **R70** | Fusion paper book DEPLOYED (§P2 fill-attribution) | ✅ renumbered |
+| R66 | **R71** | Live NAV accrual monitoring WIRED (§P3 lifecycle) | ✅ renumbered |
+| R67 | **R72** | pillar_A *change* cross-sectional L/S — REFUTED | ✅ renumbered |
+
+Minimax's lane is **unchanged**: R64 (pillar_A level L/S REFUTED), R65 (cross-pillar sweep 15 cells),
+R66 (regime-conditional pillar_A L/S), R67 (R46 audit on upgraded data), R68/R68b (per-asset overlay /
+long-only). These live ONLY as one MECHANISM_SPEC §3 kill-register row.
+
+### ⚠️ Open integrity items — NOT resolved this pass (need Minimax / Jazz)
+
+1. **Minimax's R64–R68b have no ledger bodies.** The "7-deep binary-permanent kill" lineage
+   (R15/R17/R38/R45/R47/R48/R64/R65/R66/R67/R68b) is asserted in MECHANISM_SPEC but **cannot be audited
+   from this ledger** — there are no R64–R68b entries with data, method, n, OOS. Per §ALTITUDE a
+   binary-permanent kill is the strongest claim we make; it needs real bodies. **Minimax: append R64–R68b
+   bodies at EOF (append-only) with the per-cell evidence.** Until then the kill is provisional.
+
+2. **In-ledger duplicate numbers R61 and R63** (from the mid-session Mac-side rewrite, §SESSION_LOG §5) —
+   documented here, deliberately NOT renumbered (blast radius: R61/R62/R63 are the metric-bug chain cited
+   everywhere incl. the session prompt). Disambiguate by content:
+   - **R61-audit** (≈line 1757): live signal book non-predictive → OVERTURNED by R62. The metric chain.
+   - **R61-detector** (≈line 2278, 2026-07-22): detector-gated pillar_O sleeve, PARTIAL.
+   - **R63-fadecrowd** (≈line 1612): regime-conditioned fade-the-crowd SURVIVES.
+   - **R63-Srisk** (≈line 2030) + **R63b** (≈line 2083): pillar_S is a risk factor; the metric chain.
+   A future pass may relabel the *sleeve* duplicates (R61-detector→R73, R63-fadecrowd→R74) once Jazz rules.
+
+3. **Code/tests intentionally NOT swept.** The deployed fusion modules (`fusion_paper.py`,
+   `nav_monitor.py`, `fusion_paper_tracking.py`, their smoke tests, `main.py`) still label the cell "R64"
+   (e.g. `R64_OOS_ALPHA_T`, `test_nav_monitor` asserts `"R64" in ref_label`). **The code-level "R64 cell"
+   IS canonical R69** — the running concept (frozen w_R46=0.25, 28-asset universe, OOS α_t=2.38, Sharpe
+   1.69) is unchanged; only the ledger number moved. Renaming runtime labels was skipped on purpose:
+   zero runtime benefit, and it would churn preflight + a live assertion. Rename opportunistically later.
+
+### Corroboration correction (do not carry the old sentence forward)
+
+The prior session used **R46 as independent corroboration for R62** (both "remove β"). Re-derived: it does
+**not** hold as stated. R62 measures **absolute per-signal** β-adjusted edge on the live book; R46/R67(mx)/
+R68b measure **cross-sectional rank** L/S. Those are different objects (the R16 lesson: cross-sectional ≠
+absolute). So R72 (Seth: pillar_A *change* L/S REFUTED) being negative while R62 (pillar levels predict
+β-adj edge, +2.85) is positive is **not a contradiction** — it is the R16 distinction reappearing.
+**R62 stands on its own data and never needed R46.** Minimax's R67 (R46 audit REFUTED on upgraded 22-asset
+CIS) further weakens any R46-as-corroboration claim. Net: cite R62 from its own audit; drop the R46 cross-check.
