@@ -7,7 +7,7 @@ Enables cosine similarity search, k-means clustering, and regime fingerprinting.
 No external vector DB needed at 84-asset scale — all operations are in-memory
 with Redis persistence. Sub-millisecond search, numpy-only clustering.
 
-Vector dimensions (18):
+Vector dimensions — v1 (18, dims [0..17]) + v2 additions (7, dims [18..24]):
   [0]  F_score / 100            — Fundamental pillar (normalized)
   [1]  M_score / 100            — Momentum pillar
   [2]  O_score / 100            — On-chain / Risk-Adjusted pillar
@@ -26,6 +26,22 @@ Vector dimensions (18):
   [15] confidence                         — Data confidence [0-1]
   [16] asset_class_encoded / 10          — Asset class category encoding
   [17] regime_alignment                  — Regime directional alignment [-1, 1]
+  --- v2 (SCHEMA_VERSION=2, VECTOR_SCHEMA_SPEC §1.1; build-order #2, 2026-07-22) ---
+  [18] d_F  = clamp(ΔF/50, -1, 1)  — 1-step pillar CHANGE (NaN if no prior)
+  [19] d_M  = clamp(ΔM/50, -1, 1)
+  [20] d_O  = clamp(ΔO/50, -1, 1)  — fast-state pillar; R63b stability premium
+  [21] d_S  = clamp(ΔS/50, -1, 1)  — fast-state pillar; R63b stability premium
+  [22] d_A  = clamp(ΔA/50, -1, 1)  — directional-change pillar (rising ⇒ better edge)
+  [23] stability_O = clamp(std(O_window)/25, 0, 1)  — distance from the stable sweet spot
+  [24] stability_S = clamp(std(S_window)/25, 0, 1)  — large ⇒ we sampled AFTER the reprice
+
+Invariants (VECTOR_SCHEMA_SPEC §0):
+  I1  Unmeasured is NaN, never 0. v2 dims are float('nan') when prior/history is absent;
+      cosine_similarity SKIPS NaN dims and refuses below MIN_SHARED_DIMS shared coords.
+  I2  Point-in-time. Deltas/stability use ONLY prior snapshots (data < t). The caller supplies
+      PIT-ordered history; this module never reaches forward.
+  I6  Versioned. v1 dims [0..17] are byte-for-byte unchanged; v2 appends [18..24]. Old (18-dim)
+      and new (25-dim) vectors interoperate — similarity compares the shared leading prefix.
 """
 
 import math
@@ -36,6 +52,77 @@ from typing import Optional
 import numpy as np
 
 _logger = logging.getLogger(__name__)
+
+# ── v2 schema constants (build-order #2) ─────────────────────────────────────
+SCHEMA_VERSION   = 2
+ASSET_DIMS_V1    = 18          # dims [0..17] — the original dense snapshot vector
+ASSET_DIMS_V2    = 25          # + [18..24] pillar deltas (5) + stability (2)
+_DELTA_NORM      = 50.0        # a 50-pt pillar swing ⇒ ±1 (pillar moves are usually small)
+_STABILITY_NORM  = 25.0        # trailing std of 25 pillar-pts ⇒ 1.0 (very unstable)
+_STABILITY_MIN_OBS = 3         # < this many window obs ⇒ NaN (I1), never a fabricated 0
+MIN_SHARED_DIMS  = 4           # cosine refuses below this many shared non-NaN coords (I1)
+_NAN = float("nan")
+_PILLAR_KEYS = ("F", "M", "O", "S", "A")
+
+
+def _pillars_of(asset: dict) -> dict:
+    """Extract {F,M,O,S,A} from any shape we carry: T1 (`pillars` dict), an already-extracted
+    {F,M,O,S,A} dict (bare UPPERCASE), T2 (flat `f_score`…), or a history_db row (bare lowercase
+    `f`/`m`/`o`/`s`/`a`). Each pillar resolved independently — a partial dict yields the pillars it
+    has and None for the rest. Missing ⇒ None, never 0 (I1)."""
+    p = asset.get("pillars") or {}
+    out = {}
+    for k in _PILLAR_KEYS:
+        v = p.get(k)                          # T1 nested pillars dict
+        if v is None:
+            v = asset.get(k)                  # bare UPPERCASE (already-extracted pillar dict)
+        if v is None:
+            v = asset.get(f"{k.lower()}_score")  # T2 flat
+        if v is None:
+            v = asset.get(k.lower())          # history_db row: bare f/m/o/s/a
+        out[k] = None if v is None else float(v)
+    return out
+
+
+def pillar_deltas(current: dict, prior: Optional[dict]) -> list[float]:
+    """[d_F, d_M, d_O, d_S, d_A] normalized 1-step pillar changes, NaN when unmeasurable (I1).
+
+    `current`/`prior` are pillar dicts ({F,M,O,S,A}) or raw asset dicts (auto-extracted).
+    NaN — never 0 — when there is no prior or a pillar is missing on either side. Imputing 0
+    would assert "no change," a claim we did not measure.
+    """
+    if prior is None:
+        return [_NAN] * 5
+    cur = _pillars_of(current)   # canonical extractor handles every key shape, pillar-by-pillar
+    pri = _pillars_of(prior)
+    out = []
+    for k in _PILLAR_KEYS:
+        a, b = cur.get(k), pri.get(k)
+        if a is None or b is None:
+            out.append(_NAN)
+        else:
+            out.append(_clamp((float(a) - float(b)) / _DELTA_NORM, -1.0, 1.0))
+    return out
+
+
+def pillar_stability(history: Optional[list], keys: tuple = ("O", "S")) -> list[float]:
+    """[stability_O, stability_S] = normalized trailing std over the PIT window, NaN if too few
+    obs (I1). `history` is a list of pillar/asset dicts ordered oldest→newest, INCLUDING current.
+
+    Large std ⇒ the pillar just moved a lot ⇒ we are sampling AFTER the market repriced (R63b:
+    edge peaks when S/O are STABLE, degrades at both extremes). NaN below _STABILITY_MIN_OBS.
+    """
+    if not history or len(history) < _STABILITY_MIN_OBS:
+        return [_NAN] * len(keys)
+    norm_hist = [_pillars_of(h) for h in history]
+    out = []
+    for k in keys:
+        vals = [float(h[k]) for h in norm_hist if h.get(k) is not None]
+        if len(vals) < _STABILITY_MIN_OBS:
+            out.append(_NAN)
+        else:
+            out.append(_clamp(float(np.std(vals)) / _STABILITY_NORM, 0.0, 1.0))
+    return out
 
 # Asset class → encoded float (preserves clustering: L1/L2/DeFi closer than RWA/TradFi)
 _CLASS_ENC: dict[str, float] = {
@@ -76,15 +163,26 @@ def generate_embedding(
     asset: dict,
     macro_regime: str = "Neutral",
     derivatives: dict | None = None,
+    *,
+    prior_pillars: dict | None = None,
+    pillar_history: list | None = None,
 ) -> list[float]:
     """
-    Generate 18-dim normalized feature vector for an asset.
+    Generate the normalized feature vector for an asset — 18-dim (v1) or 25-dim (v2).
+
+    v1 dims [0..17] are byte-for-byte unchanged (I6). When `prior_pillars` OR `pillar_history`
+    is supplied, 7 v2 dims [18..24] are appended (pillar deltas + O/S stability). Absent inputs
+    ⇒ those dims are float('nan') (I1: unmeasured is NaN, never 0), and cosine_similarity skips
+    them — so a v2 vector with all-NaN tail ranks identically to the v1 vector.
 
     Parameters
     ----------
     asset : CIS asset dict (T1 or T2 shape)
     macro_regime : current macro regime string
     derivatives : {symbol: {funding_rate, oi_usd}} pre-fetched derivatives map
+    prior_pillars : the asset's PIT-prior pillar snapshot {F,M,O,S,A} at t-1 (or None) — deltas
+    pillar_history : list of PIT-ordered prior pillar/asset dicts INCLUDING current (or None) —
+        oldest→newest; drives O/S trailing-std stability. Must contain only data ≤ t (I2).
     """
     # Pillar scores — handle both T1 (pillars dict) and T2 (flat) shapes
     pillars = asset.get("pillars") or {}
@@ -141,13 +239,34 @@ def generate_embedding(
         _clamp(_CLASS_ENC.get(ac, 0.5), 0.0, 1.0),
         _REGIME_ALIGN.get(macro_regime, 0.0),
     ]
+
+    # ── v2 append [18..24] — pillar deltas + O/S stability (I1 NaN-honest, I2 PIT) ──
+    if prior_pillars is not None or pillar_history is not None:
+        cur_pillars = {"F": f_raw, "M": m_raw, "O": o_raw, "S": s_raw, "A": a_raw}
+        vec.extend(pillar_deltas(cur_pillars, prior_pillars))          # [18..22] d_F..d_A
+        vec.extend(pillar_stability(pillar_history, keys=("O", "S")))  # [23..24] stability_O/S
     return vec
 
 
 def cosine_similarity(v1: list[float], v2: list[float]) -> float:
-    """Cosine similarity in [−1, 1]. Returns 0 on zero vectors."""
-    a = np.array(v1, dtype=np.float32)
-    b = np.array(v2, dtype=np.float32)
+    """NaN-aware, length-tolerant cosine similarity in [−1, 1] (I1).
+
+    - Compares only the shared leading prefix, so v1 (18-dim) and v2 (25-dim) vectors interoperate
+      during rollout without a length crash.
+    - Skips any coordinate that is NaN in EITHER vector (an unmeasured dim contributes nothing
+      rather than poisoning the whole score).
+    - Refuses (returns 0.0) below MIN_SHARED_DIMS shared measured coords — a confident number from
+      one or two overlapping dims is noise, not similarity.
+    """
+    n = min(len(v1), len(v2))
+    if n == 0:
+        return 0.0
+    a = np.asarray(v1[:n], dtype=np.float64)
+    b = np.asarray(v2[:n], dtype=np.float64)
+    mask = ~(np.isnan(a) | np.isnan(b))
+    if int(mask.sum()) < MIN_SHARED_DIMS:
+        return 0.0
+    a, b = a[mask], b[mask]
     na, nb = np.linalg.norm(a), np.linalg.norm(b)
     if na < 1e-9 or nb < 1e-9:
         return 0.0
@@ -206,7 +325,16 @@ def k_means_cluster(
         k = max(1, len(embeddings))
 
     syms = list(embeddings.keys())
-    X    = np.array([embeddings[s] for s in syms], dtype=np.float32)
+    # Length-align to the shared prefix (v1 18-dim and v2 25-dim vectors may coexist), then
+    # impute NaN per column with the column mean — clustering needs dense rows, so unlike cosine
+    # it cannot skip dims pairwise; NaN ⇒ "treat as the cohort-average on this axis" for geometry
+    # only. Columns that are entirely NaN collapse to 0 (no information to cluster on).
+    dim = min(len(embeddings[s]) for s in syms)
+    X   = np.array([embeddings[s][:dim] for s in syms], dtype=np.float64)
+    if np.isnan(X).any():
+        col_mean = np.nanmean(np.where(np.isnan(X), np.nan, X), axis=0)
+        col_mean = np.where(np.isnan(col_mean), 0.0, col_mean)
+        X = np.where(np.isnan(X), col_mean, X)
 
     rng = np.random.default_rng(seed)
     # K-means++ initialization

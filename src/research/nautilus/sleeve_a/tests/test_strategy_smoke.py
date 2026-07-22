@@ -289,6 +289,29 @@ def test_risk_knobs() -> None:
 
 # ── Runner ──────────────────────────────────────────────────────────────────
 
+def test_nostop_config() -> None:
+    """L3 refactor: SleeveAConfig.hard_stop_pct is Optional[float] so the
+    A1 NOSTOP envelope variant can disable the hard stop (None) while the
+    default stays the freqtrade-parity 0.03."""
+    strat = _try_import_strategy()
+    if strat is None or isinstance(strat, ImportError):
+        print(f"⊘ SKIP: nautilus_trader not installed (run on Mac venv)")
+        return
+
+    import typing
+
+    Config = strat.SleeveAConfig
+    hints = typing.get_type_hints(Config)
+    hs = hints.get("hard_stop_pct")
+    # Optional[float] == Union[float, None] → NoneType must be an arg
+    args = typing.get_args(hs)
+    assert type(None) in args, f"hard_stop_pct not Optional: {hs!r}"
+    # Default preserved at freqtrade-parity 0.03
+    default = getattr(Config, "hard_stop_pct", None)
+    assert default == strat.HARD_STOP_PCT == 0.03, f"default={default}"
+    print("✓ NOSTOP config OK (hard_stop_pct: Optional[float], default 0.03)")
+
+
 def main() -> int:
     tests = [
         test_imports,
@@ -299,6 +322,7 @@ def main() -> int:
         test_instrument_key_normalisation,
         test_long_only_invariant,
         test_risk_knobs,
+        test_nostop_config,
     ]
     passed = 0
     skipped = 0

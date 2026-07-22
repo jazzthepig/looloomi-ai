@@ -87,17 +87,22 @@ def save_embeddings(
 
     Returns True if write succeeded.
     """
-    ok1 = _redis_set(_EMBED_KEY, json.dumps(embeddings))
+    # I1: v2 vectors carry NaN for unmeasured dims. `json.dumps` emits a bare `NaN` token
+    # (invalid JSON — Upstash/JS JSON.parse rejects it), so serialize NaN → null and restore
+    # null → NaN on load. Without this the whole embedding blob fails to parse downstream.
+    ok1 = _redis_set(_EMBED_KEY, json.dumps(_nan_to_null(embeddings), allow_nan=False))
 
     if regime_vec is not None:
-        _redis_set(_REGIME_KEY, json.dumps(regime_vec))
+        _redis_set(_REGIME_KEY, json.dumps(_nan_to_null(regime_vec), allow_nan=False))
 
+    dims = len(next(iter(embeddings.values()))) if embeddings else 0
     meta = {
         "computed_at": time.time(),
         "asset_count": len(embeddings),
         "regime": macro_regime,
         "version": "v4.3",
-        "dims": 18,
+        "schema_version": 2,      # embedder.SCHEMA_VERSION — v2 = deltas + stability appended
+        "dims": dims,             # 18 (v1) or 25 (v2) — reflects what was actually written
     }
     ok2 = _redis_set(_META_KEY, json.dumps(meta))
 
@@ -106,15 +111,33 @@ def save_embeddings(
     return ok1 and ok2
 
 
+def _nan_to_null(obj):
+    """Recursively replace float NaN with None (→ JSON null) for safe serialization (I1)."""
+    if isinstance(obj, float):
+        return None if obj != obj else obj          # NaN is the only value != itself
+    if isinstance(obj, dict):
+        return {k: _nan_to_null(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_nan_to_null(v) for v in obj]
+    return obj
+
+
+def _null_to_nan(vec: list) -> list[float]:
+    """Restore JSON null → float NaN so cosine_similarity's NaN-skip logic sees unmeasured dims."""
+    return [float("nan") if v is None else float(v) for v in vec]
+
+
 def load_embeddings() -> dict[str, list[float]]:
     """
-    Load asset embeddings from Redis. Returns {} on miss/error.
+    Load asset embeddings from Redis. Returns {} on miss/error. JSON null (an unmeasured v2 dim)
+    is restored to NaN so downstream similarity treats it as a skipped coordinate, not a 0.
     """
     raw = _redis_get(_EMBED_KEY)
     if not raw:
         return {}
     try:
-        return json.loads(raw)
+        data = json.loads(raw)
+        return {sym: _null_to_nan(vec) for sym, vec in data.items()}
     except Exception as e:
         _logger.warning(f"[VectorStore] Failed to parse embeddings: {e}")
         return {}

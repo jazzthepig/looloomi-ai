@@ -45,6 +45,11 @@ from .strategy_schema import (
 _logger = logging.getLogger(__name__)
 
 VECTOR_DIMS: int = 30
+MIN_SHARED_DIMS: int = 4          # cosine refuses below this many shared measured coords (I1)
+_NAN = float("nan")
+
+# Dimension-block offsets in the 30-dim vector (for library-level diagnostics).
+_REGIME_SLICE = slice(0, 6)       # [0..5] regime_domain — coverage_gaps operates here
 
 
 # ---------------------------------------------------------------------------
@@ -66,123 +71,112 @@ def _safe_get(d: dict, key: str, default=None):
         return None
 
 
-# Per-dim normalization functions, returning a float in [-1, 1] or [0, 1].
+# Per-dim normalization, returning a float in [-1, 1] or [0, 1] — or NaN when UNMEASURED.
+#
+# I1 (VECTOR_SCHEMA_SPEC §0): unmeasured is NaN, NEVER 0. The prior version imputed 0.0 for a
+# missing field, which asserts "average/neutral on an axis nobody measured" — with sparse records
+# (doctrine primitives, refuted R-entries) that fabricates most of the map and makes every sparse
+# record "similar to everything." NaN + NaN-aware cosine (skip shared-NaN dims) is the fix.
+# A MEASURED 0 stays 0 (e.g. a market-neutral strategy's directionality); only an ABSENT field is NaN.
 
 def _norm_sharpe(v) -> float:
-    """Sharpe, normalized. cap at 4×annualized; missing → 0."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v) / 2.0, -1.0, 1.0)
 
 
 def _norm_beta(v) -> float:
-    """Factor β, normalized. cap at ±2; missing → 0."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v) / 2.0, -1.0, 1.0)
 
 
 def _norm_holding_period_days(v) -> float:
-    """log-hold normalized to [0,1] using 365d as 1.0."""
-    if v is None or v <= 0:
-        return 0.0
+    if v is None or v <= 0:          # non-positive hold on a log axis = unmeasurable, not 0
+        return _NAN
     return _clamp(math.log1p(float(v)) / math.log(365.0 + 1), 0.0, 1.0)
 
 
 def _norm_turnover(v) -> float:
-    """Flips per quarter, normalized to [0, 1] at 4."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v) / 4.0, 0.0, 1.0)
 
 
 def _norm_time_in_market(v) -> float:
-    """Already [0, 100]%; map to [0, 1]."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v) / 100.0, 0.0, 1.0)
 
 
 def _norm_directionality(v) -> float:
-    """Already [-1, 1]."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v), -1.0, 1.0)
 
 
 def _norm_adv_fraction(v) -> float:
-    """ADV participation cap at 10% of daily volume."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v) * 10.0, 0.0, 1.0)
 
 
 def _norm_declared_capacity(v) -> float:
-    """Declared capacity. log-normalized; $10M = 0.5, $100M = 0.75, $1B = 1.0."""
+    """log-normalized; $10M = 0.5, $100M = 0.75, $1B = 1.0."""
     if v is None or v <= 0:
-        return 0.0
-    # $1M -> 0.25, $10M -> 0.5, $100M -> 0.75, $1B -> 1.0
+        return _NAN
     return _clamp(math.log10(max(float(v), 1e4)) / 8.0, 0.0, 1.0)
 
 
 def _norm_realized_fill_pct(v) -> float:
-    """Realized fill as fraction of declared, mapped to [0, 1]."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v) / 100.0, 0.0, 1.0)
 
 
 def _norm_age_days(v) -> float:
-    """log age normalized. 365d = 0.5, 1825d (5y) = 1.0."""
     if v is None or v <= 0:
-        return 0.0
+        return _NAN
     return _clamp(math.log1p(float(v)) / math.log(1825.0 + 1), 0.0, 1.0)
 
 
 def _norm_decay_slope(v) -> float:
-    """Decay slope per day. ±5%/day normalizes to ±1."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v) * 20.0, -1.0, 1.0)
 
 
 def _norm_crowding(v) -> float:
-    """Crowding signal [-1, 1]."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v), -1.0, 1.0)
 
 
 def _norm_half_life_days(v) -> float:
-    """log half-life; 90d = 0.5, 365d = 1.0."""
     if v is None or v <= 0:
-        return 0.0
+        return _NAN
     return _clamp(math.log1p(float(v)) / math.log(365.0 + 1), 0.0, 1.0)
 
 
 def _norm_outcome_alpha(v) -> float:
-    """Realized α. Cap at ±20%."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v) * 5.0, -1.0, 1.0)
 
 
 def _norm_outcome_decay(v) -> float:
-    """Same as decay slope."""
     return _norm_decay_slope(v)
 
 
 def _norm_capacity_util(v) -> float:
-    """[0, 1]."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v), 0.0, 1.0)
 
 
 def _norm_outcome_confidence(v) -> float:
-    """[0, 1]."""
     if v is None:
-        return 0.0
+        return _NAN
     return _clamp(float(v), 0.0, 1.0)
 
 
@@ -193,9 +187,9 @@ def _norm_outcome_confidence(v) -> float:
 def generate_embedding(record: StrategyRecord) -> list[float]:
     """Produce the 30-dim hand-crafted vector for a strategy record.
 
-    Missing fields → 0.0 (neutral). This is the design tradeoff for
-    incremental backfill: doctrinal primitives lack cost-sensitivity;
-    refuted R-entries lack realized_α; both produce partial vectors.
+    Missing fields → NaN (I1: unmeasured is not 0). Doctrinal primitives lack cost-sensitivity;
+    refuted R-entries lack realized_α — those dims are NaN, and cosine_similarity skips them rather
+    than pretending the strategy is average there. A MEASURED neutral (e.g. directionality 0) is 0.
     """
     vec: list[float] = []
 
@@ -256,20 +250,21 @@ def generate_embedding(record: StrategyRecord) -> list[float]:
 # ---------------------------------------------------------------------------
 
 def coverage_summary(record: StrategyRecord) -> dict:
-    """What fraction of dimensions have non-default (non-zero) values?
+    """What fraction of dimensions are actually MEASURED (non-NaN)?
 
-    Useful pre-commit to flag records that are mostly empty — they will sit
-    at origin in cosine space and be "similar to everything" by virtue of
-    being "specific to nothing." Backfill authors should aim for ≥0.40
-    coverage (12+ dimensions) before considering a record queryable.
+    Under I1, an unmeasured dim is NaN, so coverage = non-NaN count (a measured 0 still counts —
+    it is information). A low-coverage record is "specific to nothing" and similarity will refuse
+    it below MIN_SHARED_DIMS. Backfill authors should aim for ≥0.40 coverage (12+ dims) before a
+    record is queryable. `dims_nonzero` is retained as an alias for API back-compat (now = measured).
     """
     vec = generate_embedding(record)
-    n_nonzero = sum(1 for v in vec if abs(v) > 1e-9)
+    n_measured = sum(1 for v in vec if v == v)   # v==v is False only for NaN
     return {
         "id": record.id,
         "dims_total": VECTOR_DIMS,
-        "dims_nonzero": n_nonzero,
-        "coverage_pct": round(100.0 * n_nonzero / VECTOR_DIMS, 1),
+        "dims_measured": n_measured,
+        "dims_nonzero": n_measured,   # back-compat alias (semantics: measured, not literally nonzero)
+        "coverage_pct": round(100.0 * n_measured / VECTOR_DIMS, 1),
         "verdict": record.verdict.value if hasattr(record.verdict, "value") else str(record.verdict),
     }
 
@@ -279,12 +274,79 @@ def coverage_summary(record: StrategyRecord) -> dict:
 # ---------------------------------------------------------------------------
 
 def cosine_similarity(v1: list[float], v2: list[float]) -> float:
-    a = np.array(v1, dtype=np.float32)
-    b = np.array(v2, dtype=np.float32)
+    """NaN-aware, length-tolerant cosine in [−1, 1] (mirrors the asset embedder, I1).
+
+    Compares only the shared leading prefix (schema-version tolerant), skips any coordinate NaN in
+    EITHER vector, and refuses (0.0) below MIN_SHARED_DIMS shared measured coords — a confident
+    number from one or two overlapping dims is noise, not similarity.
+    """
+    n = min(len(v1), len(v2))
+    if n == 0:
+        return 0.0
+    a = np.asarray(v1[:n], dtype=np.float64)
+    b = np.asarray(v2[:n], dtype=np.float64)
+    mask = ~(np.isnan(a) | np.isnan(b))
+    if int(mask.sum()) < MIN_SHARED_DIMS:
+        return 0.0
+    a, b = a[mask], b[mask]
     na, nb = float(np.linalg.norm(a)), float(np.linalg.norm(b))
     if na < 1e-9 or nb < 1e-9:
         return 0.0
     return float(np.dot(a, b) / (na * nb))
+
+
+# ---------------------------------------------------------------------------
+# Binary validity floor + library-level diagnostics (ported from the converged
+# src/research/strategy_vector.py — build-order #3, VECTOR_SCHEMA_SPEC §2.1)
+# ---------------------------------------------------------------------------
+
+def is_disqualified(record: StrategyRecord) -> tuple[bool, str]:
+    """The BINARY validity floor (I4 / MECHANISM_SPEC §3). ONLY two conditions disqualify — they
+    are facts, not lifecycle phases: PIT/look-ahead leakage, and cost-infeasibility at declared
+    capacity (5 bps). `forward_committed` is a P1 lifecycle STATE, not a validity floor, so it does
+    NOT disqualify. Everything else (regime fit, decay, crowding) is coordinates, never a kill.
+    """
+    if not record.pit_clean:
+        return True, "PIT/look-ahead leakage — invalid, not a lifecycle phase"
+    if not record.cost_feasible_at_5bps:
+        return True, "cost-infeasible at declared capacity (5 bps)"
+    return False, ""
+
+
+def coverage_gaps(records, threshold: float = 0.25) -> list[dict]:
+    """Which regimes the CURRENT library does NOT cover — the output that says what to build next
+    instead of guessing. Disqualified sleeves are EXCLUDED (I4): a cost-infeasible sleeve cannot
+    cover a regime it cannot trade. Operates on the regime block [0..5]. NaN dims are skipped.
+    """
+    live = [r for r in records if not is_disqualified(r)[0]]
+    embeds = [generate_embedding(r) for r in live]
+    gaps = []
+    for i, dim in enumerate(REGIME_DIMS):
+        vals = np.array([e[i] for e in embeds], dtype=np.float64)
+        vals = vals[~np.isnan(vals)]
+        best = float(vals.max()) if len(vals) else float("nan")
+        gaps.append({
+            "regime": dim,
+            "n_measured": int(len(vals)),
+            "best_in_library": None if math.isnan(best) else round(best, 3),
+            "covered": bool(len(vals) and best >= threshold),
+        })
+    return gaps
+
+
+def redundancy(records, thresh: float = 0.85) -> list[dict]:
+    """Near-duplicate pairs — breadth we THINK we have but don't (R20: effective breadth was 6.74
+    of 17 strategies). Correlated sleeves are one sleeve wearing several names. Excludes disqualified.
+    """
+    live = [r for r in records if not is_disqualified(r)[0]]
+    embeds = [(r.id, generate_embedding(r)) for r in live]
+    out = []
+    for i in range(len(embeds)):
+        for j in range(i + 1, len(embeds)):
+            s = cosine_similarity(embeds[i][1], embeds[j][1])
+            if s >= thresh:
+                out.append({"a": embeds[i][0], "b": embeds[j][0], "similarity": round(s, 3)})
+    return sorted(out, key=lambda d: -d["similarity"])
 
 
 def find_similar(
