@@ -2421,6 +2421,69 @@ universe, with the declared OOS window.
 
 ---
 
+## R73 🔴 pillar_A LEVEL cross-sectional L/S — REFUTED (Seth, 2026-07-22)
+
+> **Status: RESEARCH RESULT, NOT A PRODUCTION CHANGE.** R73 tests R63b's *level*-edge claim
+> ("pillar_A (+4.48 level, +1.18 change) is the strongest untested candidate — never run at
+> strategy level, queue the L/S test"). R72 already REFUTED the change variant (k=5 ΔA); R73
+> is the open level test at k=3. Does NOT modify CIS v5, the frozen R69 fusion cell, or any
+> live paper book.
+
+**Parallel-lane note.** This Seth-lane R73 is the same claim Minimax-A documented as their
+R64 ("pillar_A level L/S REFUTED" — see §LEDGER-RECONCILIATION-MAP below the entry; only one
+MECHANISM_SPEC §3 kill-register row exists for the parallel-assignment hazard). The bodies
+are reported here in Seth's lane for the ledger; the kill claim stands whether invoked as
+R64 or R73.
+
+**Question and anti-imposter construction.** R63b contained two distinct pillar_A
+observations: a +4.48 *level* spread and a +1.18 signed *change* spread. R73 ranks the PIT-
+safe pillar_A level (one-day-lag ffill), testing "does pillar_A carry cross-sectional rank
+information beyond F + M + market?" If YES, that's a real sleeve. The universe is the strict
+funding ∩ CIS ∩ OHLCV intersection (28 assets), with k=3 terciles (R46 standard; lesson #40:
+do NOT silently re-use R72's k=5 — it may have inflated gross via thinner buckets), the
+declared 2024-06-07 → 2026-06-07 panel, market + 30-day momentum residualization,
+Newey-West lags=6, and cadence × cost sweep over {1,3,5,7,14,21}d × {0,5,10}bps. OOS slice
+is the last 30% of the panel.
+
+**Result.** The best +Level-A cell in the declared grid is 3d/0bps: α_t=+1.69, annualized
+residual α=+37.7%. **At the identical 3d construction, −Level-A matched returns α_t=−1.38;
+directional differential = +3.07** — the matched-cell sign is decisively the R63b direction.
+Independent best −Level-A cell is 14d/0bps, α_t=−0.03, diagnostic only.
+
+**Three-check gauntlet for the +Level-A headline:**
+
+| Check | α_t | Annualized α | Gate |
+|---|---:|---:|:---:|
+| Gross full panel | **+1.69** | +37.7% | **FAIL** (< 1.96) |
+| 5bps full panel | **+1.44** | +32.3% | **FAIL** (< 1.96) |
+| 5bps, last-30% OOS | **−0.22** | −6.0% | **FAIL** (sign-flipped) |
+
+Combined result: **FAIL on all 3 checks.** Per-window: W1 +119.2%, W2 +96.1%, W3 −26.5%,
+W4 +123.1%, W5 −51.4%, W6 +86.9% — 4/6 positive (matching R46's W-pattern) but W5 = −51.4%
+is the same structural fragility R46's pillar_O sleeve also exhibited; OOS sign-flips
+because W5 dominates the back third of the panel.
+
+**Verdict.** 🔴 **REFUTED as a standalone pillar_A LEVEL cross-sectional sleeve.** The R63b
++4.48 level-edge IS real (matched-cell +3.07 differential is decisively positive direction),
+but **once cost residualized via market + 30d momentum + strict funding ∩ CIS ∩ OHLCV + k=3,
+the t-statistic does not clear 1.96** — at +1.69 it's barely below, not above. The "strongest
+untested candidate" claim from R63b reduces to "thin positive IC that does not survive
+aggregation." Effect is not zero but not stand-alone-shippable; pillar_A belongs in fusion
+contributions or regime-conditioned sleeves, not as a sole sleeve.
+
+**Aggregate lesson #41 — the headline number lives in the test construction, not the data.**
+R63b's +4.48 was a *raw* level-edge spread across the universe under beta-unadjusted universe
++ non-costed panel. Once those controls are applied (R73), the t-statistic halves to +1.69
+and the OOS window sign-flips. The data's structure was correct; the headline number was
+misleading. **Read t-stats, not raw ann-spreads, when evaluating edge claims** —
+especially those from earlier in the metric chain.
+
+**Reference.** `src/research/validation/r73_pillar_a_level_ls.py`;
+`src/research/validation/tests/test_r73_pillar_a_level_ls_smoke.py` (11/11 tests pass);
+`reports/r73_pillar_a_level_ls/2026-07-22/REPORT.md`; `reports/r73_pillar_a_level_ls/2026-07-22/verdict.json`.
+
+---
+
 ## §LEDGER-RECONCILIATION-MAP 2026-07-22 (Seth, per Jazz decision) — the R64–R68b collision, resolved
 
 **Why this exists.** Two lanes ran in parallel and both claimed R64–R68b (the parallel-assignment hazard
