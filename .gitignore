@@ -40,3 +40,8 @@ MINIMAX_SYNC_ARCHIVE_*.md
 # elizaOS Otter plugin — commit src + character, not deps
 elizaos-plugin/node_modules/
 elizaos-plugin/dist/
+
+# Conversation archives — local provenance only, never committed.
+# 3MB+ of raw session transcripts; regenerate with scripts/export_transcripts.py.
+# Curated knowledge lives in PROJECT_STATE / REFUTATION_LEDGER / WEEKLY_REVIEW / docs/.
+docs/transcripts/

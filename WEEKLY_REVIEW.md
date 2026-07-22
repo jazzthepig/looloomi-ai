@@ -5,6 +5,124 @@ Ad hoc reviews called by Jazz any time.
 
 ---
 
+## 2026-07-21 | Week ~21 | Ad hoc review (Jazz) | Lens: Business model + Epistemology
+
+*The most decision-shaping session the project has had. Two threads ran in parallel and converged:
+a **business-model thread** (what we are actually building and who pays) and an **epistemology
+thread** (how we decide what is true). They met at the same conclusion from opposite ends.*
+
+### 1. The empirical spine — the metric was the bug, not the model
+
+Full chain in `REFUTATION_LEDGER.md` R61 → R62 → R63/R63b. Short version: the live signal book
+looked non-predictive (OUTPERFORM t=−4.09). It wasn't. Asset β vs benchmark is **1.4–2.4**, so
+`a_ret − b_ret` was never alpha — it was leveraged beta, and in a bear-dominated window a *good*
+signal reads as inverted. PIT-safe β adjustment flips it: **OUTPERFORM +2.86 t=+5.75, STRONG
+OUTPERFORM +8.06 t=+5.41**, every CIS pillar correctly signed. **CIS works.** UNDERWEIGHT
+(t=−3.79) is the one genuine defect. Independently corroborated by R46's market-neutral L/S, which
+removes β *by construction* — two methods, same answer.
+
+**Meta-lesson #21 — audit the METRIC before the MODEL.** All three "our edge is broken" findings
+this session were measurement defects (this, plus two look-ahead leaks: full-sample normalization in
+`interpretation_c.py`, and an unverified 4h→15m merge in the V9 audit). Two leaks in one day in
+independent code paths ⇒ treat as systemic. A contaminated target makes good models look broken and
+bad models look good.
+
+**Meta-lesson #22 — a factor can fail as a mean-return predictor and still be information.** Jazz's
+correction: S "hurting" is normal — peak hype is peak volatility, where people lose big. True: mean
+edge is flat across S, but **vol 15.89→17.17 and left tail −13.93→−18.33**. We nearly deleted a
+working *risk* factor because we only tested it as a *return* factor. Generalized (R63b): the five
+pillars are **three different kinds of object** — stability-premium (S, O), directional-change (A),
+level-only (F, M). ⇒ **CIS v5 is an architecture question, not a reweight.**
+
+### 2. The epistemology thread — binary standards are wrong for a non-stationary world
+
+Jazz: classify strategies into a vector database; don't binary-judge. "If you use binary standards
+no good strategy exists anywhere — reality keeps changing. Anything 100% working generally stops
+working in ~3 months; market-wide capacity fills, then new strategies prevail."
+
+This **indicted our own gauntlet.** Its `regime_robustness` gate *kills* anything that works in some
+regimes and not others — which is exactly what killed vol carry ("CALM-REGIME"), the crowding book
+("MECHANISM REAL, F1 regime flip"), R33 ("β on a friendly window"), V5c. Every one of those is a
+**sleeve with a domain**, not a failure. Our doctrine says `library beats hero`; our validation
+practice was enforcing *hero*. That contradiction is the bug.
+
+**Resolution adopted:** binary for **validity** (look-ahead/PIT leakage, cost-infeasibility at
+declared capacity — a leaky backtest is wrong, not "in a phase"); dimensional for **durability**
+(regime fit, decay, crowding, correlation). Without the floor, "different lifecycle phase" explains
+every bad result and nothing is falsifiable. Without the dimensional half, we discard the library.
+
+**But rotation ≠ library.** Jazz proposed rotating allocation by style cycle. We already tested that
+(**R20**, logged as "Jazz's direction"): static 0.78 = momentum-rotation 0.78, **regime-rotation
+0.29** — much worse OOS. The style cycle is real in-sample but not profitably timeable (per-regime
+Sharpe estimated on few episodes; regime label lags; Asness confirmed on our data). **Synthesis: hold
+the library statically — that harvests regime specialization without paying the timing tax.** Regime
+info → risk sizing (scale gross down), never → alpha rotation. R20's own lesson, now load-bearing.
+
+### 3. The business-model thread — vault over FoF, and who actually pays
+
+- **FoF is structurally late.** Underlying-manager liquidity is monthly/quarterly with 30–90d notice
+  ⇒ 3–6 month round trip to rotate. If edges decay in ~3 months, a FoF is *guaranteed* to hold
+  yesterday's strategy. It reproduces the "arrives late" pathology one level up and adds a fee layer.
+  A vault rotates in blocks. **Fee structure is load-bearing, not incidental:** management fees pay
+  you to stay deployed; performance-only makes honest flatness affordable. (Today's core-health gate,
+  holding zero and *recording* the flat, is behaviour a FoF structurally cannot offer.)
+- **Institutional selection is late by construction** — 5-year record, top-decile, scale, then 3–6
+  months observation, then committee, then 3–6 months terms. This is Goyal–Wahal: sponsors hire after
+  strong performance and those managers then underperform. **Sharpened diagnosis:** it is not
+  bureaucracy-for-its-own-sake — that process is highly optimized, just for the *allocator's career
+  risk*, not the client's return. Every requirement is a defensibility artifact. ⇒ the winning move is
+  making the unconventional choice **defensible**, not merely correct.
+- **Agents don't have the agency problem.** No committee, no career risk ⇒ an agent can allocate on
+  actual expected value. **The agent side is the natural buyer of precisely the product human
+  institutions structurally cannot accept.** That makes agent-first sequencing necessary, not trendy.
+- **Structure:** a three-sided marketplace (strategies × GPs × agents) with the vault as settlement.
+  Sequencing: agents first (cheapest to serve, only side that can accept our framing) → our own
+  strategies as bootstrap inventory → GPs last (slowest, follow AUM; Nic's network is the channel).
+- **Product boundary (Jazz):** CIS score is the **free** shopfront proving we built real
+  infrastructure. The **paid** value is explaining pillar *changes* × price behaviour, applied in
+  strategies. Caution logged: raw pillars are commodity (agents can difference them); the defensible
+  asset is the **mapping** — which deltas matter, at what frequency, with what β treatment, in which
+  regime. And **the paid artifact should be a conditional distribution (mean/vol/tail), not a score** —
+  R63 proves the tail is where S lives, and an agent sizing a position needs the distribution. A
+  competitor publishing a number cannot express that.
+
+**⇒ `docs/MECHANISM_SPEC.md` written** (new): the A2A capital-market mechanics — forward commitment,
+binding capacity declaration, mandatory lifecycle disclosure; the strategy-vector schema as the
+machine-readable contract; why honesty is made the profit-maximizing move. Core thesis: **in an A2A
+market the scarce resource is not capital but verifiable forward track record — so our validation
+apparatus IS the product.**
+
+### 4. Hypotheses tested against Jazz's intuitions (honest scorecard)
+
+| Jazz's claim | Verdict |
+|---|---|
+| Weekly K needed to see major-trend structure; freqtrade can't express it | ✅ weekly 20/50 flips 1.3×/yr vs daily 2.2×; **28.9% engagement in R57's dead zone vs V5c's 2.7%**. Freqtrade limit is architectural (~130 weekly bars in a 2.5y backtest). But weekly is a *mode selector*, not an entry trigger (exits 2.5 months late; standalone SR 0.64 < V5c 0.89) |
+| Marginal liquidity × marginal risk appetite resonate on weekly (共振) | 🟡 **liquidity half confirmed** — stablecoin-supply Δ gate: SR 0.83 / ann +35.4% / DD −56.5% vs buy-hold 0.64 / +22.3% / −75.2%. **Resonance as specified refuted** (both-positive → SR 0.07). Best state is *divergent* liq+/risk− (+5.62% fwd) ⇒ it's **phase/lead-lag**, not simultaneity. My alt/BTC risk proxy is the weak link |
+| High-CIS = crowded = 庄家 distributes | 🔴 refuted — after β adjustment every pillar is correctly signed; they were high-β, not crowded |
+| Peak sentiment = high vol = where people lose big | ✅ confirmed (vol +8%, left tail −32% deeper at high S) |
+| Not just ΔO — ΔS behaves similarly | ✅ confirmed, and specific: ΔS +2.72 / ΔO +2.70 stability premium, ΔF/ΔM ≈ 0 |
+| V9's Sharpe 5 is achievable, but wouldn't last at scale | ✅ both halves right. SR 5 is arithmetically coherent (32.4%/yr, 6.4% vol, ~10% time-in-market). **Capacity is the killer** — $30M ⇒ $6–9M per 15m clip; modeled drag already 17.25%/yr vs 32.4%/yr return. Inverts in the low single-digit millions |
+
+### 5. Shipped
+
+§5b two-layer paper book **live in production** (`two_layer_paper.py` + daily loop + endpoint + 7/7
+tests + preflight; Supabase table & RLS policies applied) — deliberately holds **zero size** while
+the core is dead and records the flat honestly, starting the forward-OOS clock R57 said we lacked.
+`MECHANISM_SPEC.md`. §ALTITUDE / §PIT-LEAK-C / §CORE-BAKEOFF to Minimax.
+
+### THE ONE STRATEGIC PRIORITY
+
+**Unify the production alpha metric onto the β-adjusted, PIT-safe definition — then rebuild CIS as
+three factor *kinds* rather than five weighted levels.** Everything else this session is downstream:
+the paid agent product is the pillar-change → conditional-distribution mapping, and that mapping is
+meaningless while the yardstick underneath it still measures leveraged beta as alpha. We spent weeks
+believing our edges were weak because of a measurement defect. Fix the instrument first.
+
+*(Standing caution, from §ALTITUDE: ambition raises the evidence bar, it does not lower it. A Sharpe
+of 5 gets more scrutiny, not a victory lap.)*
+
+---
+
 ## 2026-07-19 | Week ~20 | Lens: Institutional LP + Competitor (the "do we have an edge yet?" audit)
 
 *(Review cadence lapsed May 25 → July 19 while in deep build. Resuming. This entry covers the
