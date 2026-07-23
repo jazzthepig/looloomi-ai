@@ -2856,6 +2856,106 @@ also be cleared.
 
 ---
 
+## R79 🔴 Realized vol residual (σ cross-sectional demean) L/S — REFUTED (Seth, 2026-07-23)
+
+**Hypothesis (per R78 lesson #43 sharpens).** R78 (relative momentum) was
+orthogonal candidate #2 and PASSED the gate but FAILED the gauntlet. R79 opens
+orthogonal candidate #3 on the **microstructure-vol axis**: realized vol
+residual = σ[t, a] − mean_a(σ[t, a]) (annualized σ over trailing-30d return,
+demeaned cross-sectionally). Cross-sectional demean removes the universe's
+common vol regime; the residual is RELATIVE vol — which assets are MORE
+volatile than the universe on this date. Structurally different from R46
+(CIS-quality rank), R62 (crowding-z), R76 (funding residual), R78 (momentum
+residual).
+
+**Built.** `src/research/validation/r79_realized_vol_residual.py` (~470 LoC) +
+11 smoke tests (all pass). Reuses R63's exact panel + 28-asset strict funding ∩
+CIS ∩ OHLCV universe. Score = σ_annualized[t, a] − mean_a(σ_annualized[t, a]).
+k=3, cadence × cost sweep, market + momentum residualization, NW lags=6,
+OOS=30%. Both signs run; matched-cell sign verdict from R78-style audit.
+
+**Pre-test leg-correlation gate (lesson #42, extended to 4 existing legs).**
+corr(R79, R46) = **−0.003** ✓, corr(R79, R62) = **+0.069** ✓, corr(R79, R76) =
+**−0.021** ✓, corr(R79, R78) = **+0.052** ✓. max |corr| = **0.069** (well
+below 0.30 gate — even cleaner than R78's 0.113). Gate **passes** with
+substantial margin — R79 is genuinely orthogonal to all 4 existing fusion legs.
+
+**Verdict.** 🔴 **REFUTED** — gate passes cleanly, gauntlet fails.
+
+**Why refuted.** Default-cad 3d/0bps leg: gross_t = **−0.80**, OOS_t = +0.09.
+The 3-check requires gross_t > 1.96 AND 5bps_t > 1.96 AND OOS_t > 1.96. R79's
+absolute α_t stays small in magnitude across the entire 6-cadence × 3-cost
+sweep — no cell passes the gauntlet. **Sign is correct and consistent** (sign
+verdict low_vol_long, all top-3 matched-cell diffs negative) but |α_t| ≈ 0.7 is
+far from the 1.96 threshold.
+
+**Matched-cell sign audit (top-3):**
+
+| cad | bps | Δ(α_t) | hi (long) | lo (short) |
+|----:|----:|-------:|----------:|-----------:|
+| 14  |  0  | −1.28  | −0.68     | +0.60      |
+| 14  |  5  | −1.28  | −0.74     | +0.54      |
+| 14  | 10  | −1.28  | −0.79     | +0.49      |
+
+All three top differentials are decisively negative (Δ(α_t) = −1.28 across all
+top-3 cells), sign verdict **low_vol_long** (long low-vol / short high-vol is
+the correct direction). The direction is correct, the magnitude is too thin.
+
+**Per-window W1-W6 attribution (best-cad 3d/0bps, sign=high_vol_long):**
+- W1: +27.9%, W2: −28.0%, W3: −27.0%, W4: −13.0%, **W5: −78.1%**, W6: −22.8%
+- maxDD: **−65.40%** (catastrophic)
+- 1/6 windows positive (W1) — NOT the clean 5/6 R76 had
+- **W5 = −78.1%** — the late-cycle fragility window where R46 fails is
+  ACTIVELY DESTROYED by R79 (high_vol_long sign). This is the OPPOSITE of R76's
+  W5 = +98.4% lift. R79 is structurally wrong for the W5 fragility window.
+- The −65% maxDD tells you the L/S is structurally fragile — rebalances
+  every 3 days, full vol-residual exposure, no fragility filter.
+
+**Aggregate lesson #43 (FULLY ARTICULATED, 4 cases):** Of the orthogonal
+candidates tested, ONLY FUNDING-DERIVED signals carry standalone edge:
+
+- ✅ R76 (funding residual) — orthogonal + standalone edge → SURVIVES + ORTHOGONAL
+- 🔴 R78 (momentum residual) — orthogonal but no edge → REFUTED
+- 🔴 R79 (vol residual) — orthogonal but no edge → REFUTED
+- 🔴 R74 (R73 leg pillar_A) — NOT orthogonal + no edge → REFUTED
+
+The pattern is striking: the **funding/microstructure carry axis** (R76) is the
+only orthogonal axis that captured real structural edge. The **trend axis**
+(R78 = demean'd TSMOM) and the **vol axis** (R79 = demean'd σ) both fail. This
+sharpens lesson #43 with strong prior: orthogonal candidates should be sourced
+from CARRY/MICROSTRUCTURE dimensions (funding, basis, term structure, OI), not
+from TREND or VOL demean'd signals. Trend and vol demean'd signals have weak
+IC on this universe — the universe's trend and vol are largely market-driven,
+so removing the market component leaves noise.
+
+**Specifically:**
+- Lesson #42 (gate, R74): "REFUTED at the gauntlet → don't rescue via fusion;
+  read leg correlations before adding legs." Still holds.
+- Lesson #43 (R76 + R77 + R78 + R79): "Orthogonal candidates may carry — but
+  only on the funding/microstructure axis. Trend/vol demean'd signals lack
+  standalone edge in this universe. The gate-then-gauntlet discipline is
+  necessary and sufficient. Future orthogonal candidates should focus on
+  CARRY/MICROSTRUCTURE (basis, term structure, OI residual) or CROSS-ASSET /
+  INTER-CLASS signals, not just demean'd single-class factors."
+
+**Action.**
+- ✅ R79 ships no production change (research-only).
+- ✅ Frozen R77 cell at w_R46=0.25, w_R62=0.75, w_R76=0.30 **unchanged**.
+- ⏭ **R80 candidate** = orthogonal candidate #4 — should focus on the
+  CARRY/MICROSTRUCTURE axis (per the R79 sharpening): turnover residual
+  (cross-sectional demean of trailing-30d turnover) or OI residual
+  (cross-sectional demean of OI change). Turnover residual is the natural
+  R80 candidate — it's a liquidity/microstructure axis (different from
+  funding-derived R76) but still on the carry/microstructure spectrum that
+  R79's lesson identifies as the only orthogonal axis with edge.
+
+**Reference.** `src/research/validation/r79_realized_vol_residual.py`;
+`src/research/validation/tests/test_r79_realized_vol_residual_smoke.py`
+(11/11 tests pass); `reports/r79_realized_vol_residual/2026-07-23/REPORT.md`;
+`reports/r79_realized_vol_residual/2026-07-23/verdict.json`.
+
+---
+
 ## §LEDGER-RECONCILIATION-MAP 2026-07-22 (Seth, per Jazz decision) — the R64–R68b collision, resolved
 
 **Why this exists.** Two lanes ran in parallel and both claimed R64–R68b (the parallel-assignment hazard
