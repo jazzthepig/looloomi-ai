@@ -2940,3 +2940,61 @@ assets and computes staleness from max(last_hour)**). Preflight PASSED.
 `reports/r75_hourly_so_quintile/2026-07-22/{REPORT.md, verdict.json, run.log}` and
 `2026-07-23/{REPORT.md, verdict.json, run.log}` — gitignored.
 Re-run when pipeline resumes; same module, no code changes needed.
+
+---
+
+## S-76 🔴 Price does NOT lead S/O — the pillars are price-COINCIDENT, closing the build-order #5 nowcast path (Seth, 2026-07-22)
+
+*(First entry under the approved lane-prefix convention — `docs/R_NUMBERING_CONVENTION.md`, Option 2.)*
+
+**Hypothesis (build-order #5 premise):** R63b's stability premium ("edge best when ΔS/ΔO stable") was
+read as "we sample S/O AFTER the market reprices" ⇒ if price *leads* S/O, a fast related-instrument
+price proxy could nowcast S/O between the slow CIS samples. Test it before building the infrastructure.
+
+**Method:** daily lead-lag, 58 assets ∩ ohlcv_daily, 2025-05→2026-06, n≈8,280. cis_scores daily-resampled
+(last snapshot/day) joined to ohlcv close. corr(own_ret[t], Δpillar) at leads 0..3; contemporaneous as
+reference; pillar-spectrum control; BTC-excluded to avoid market-on-market contamination.
+
+**Result — REFUTED.** S/O are price-COINCIDENT, not price-leading:
+- CONTEMPORANEOUS corr(own_ret[t], Δpillar over [t-1,t]): **O +0.52 (t=56.6), S +0.44 (t=45.0)**.
+- LEAD +1 (the test): **ΔO +0.013 (t=1.1), ΔS −0.010 (t=−0.9)** — zero predictive lead. Lead +2/+3 mildly
+  NEGATIVE (ΔS lead+2 t=−6.9): a weak mean-reversion, the wrong sign for a nowcast.
+- Pillar spectrum (contemporaneous ρ): M +0.82 (definitionally price), A/O/S +0.57/+0.52/+0.44, **F −0.01**.
+  Only F is price-independent; O and S sit at the price-derived end.
+
+**Verdict:** a daily price-based S/O nowcast adds nothing — do NOT build it. The stability premium is a
+REGIME/RISK signal (large ΔS/ΔO = large contemporaneous price moves = high-vol tape where edge degrades),
+not a sampling-latency problem. Residual: a lead could only exist SUB-DAILY (intraday price → EOD snapshot),
+which needs hourly pillar+price (geo-blocked/absent) and has marginal payoff since S/O are ~contemporaneous
+price transforms even daily. Companion to Minimax's R75 (hourly S/O Δ-quintile) — my result implies R75's
+factor must clear an absorption test vs momentum or it is momentum-in-a-costume (R24 pattern). Module
+`src/research/validation/so_price_leadlag.py` (pure, any resolution; re-read the LEAD row when hourly lands),
+6/6 smoke. Handoff: `MINIMAX_SYNC §SO-LEADLAG`.
+
+## S-77 ✅ CIS v5 two-score architecture VALIDATED — F/A carry return, O is the dispersion pillar (Seth, 2026-07-22)
+
+**Hypothesis (build-order #6):** CIS v5 splits the single v4 weighted sum into a return_score {F,M,A} and
+a separate risk_score {S/O}. Prove the split on β-adjusted outcomes before proposing deployment: (1) does
+removing S/O from the return score cost predictive power? (2) do S/O predict the DISPERSION the mean-IC misses?
+
+**Method:** β-backfilled `signal_outcomes`, ex-self, n=6,207. IC = corr(pillar-combo, edge_beta_adj);
+dispersion = corr(pillar, edge²)/corr(pillar, |edge|); S/O quintile mean/vol/p10.
+
+**Result — VALIDATED, with a correction to the risk side:**
+- **Return claim ✅.** v5_return (F/M/A) IC **0.0663** ≥ v4 composite (F/M/O/S/A) IC **0.0656** — removing S/O
+  costs NOTHING (statistically indistinguishable, both t≈5). A alone = 0.0667 (the return workhorse, R62).
+  So S/O carry no return signal beyond F/M/A ⇒ they belong on the risk side. Split is free.
+- **Risk claim ✅ but O-led, not S-led.** Dispersion corr(pillar, edge²): **O +0.145** (2× any other),
+  A +0.079, S +0.040, **F −0.002** (pure return, zero risk). O quintiles escalate vol 14.3→20.8 and deepen
+  p10 −13.5→−20.9 MONOTONICALLY. **O is the dispersion pillar, not S** — S is weak on both axes and
+  contributes only via Δ-stability (R63b). This CORRECTS the v5 reference (`cis_v5_architecture.py`), whose
+  risk_score was S-led; now O-led. F is confirmed a pure-return pillar (return-IC 0.065, dispersion −0.00).
+- The load-bearing structural test (7/7): two assets identical except O have IDENTICAL return_score but the
+  high-O one's size_mult collapses; v4's single sum does the OPPOSITE (O is +0.20-weighted ⇒ high O RAISES
+  the composite, ranking the higher-dispersion asset better — the conflation v5 removes).
+
+**Verdict:** CIS v5 architecture is validated on β-adjusted data — return = {F pure, A workhorse, M weak},
+risk = {O dispersion pillar, S/O stability → confidence}. Reference module refined to O-led risk; pure, not
+deployed (adoption is a coordinated deploy with Minimax's Mac engine). Meta-lesson: build → validate →
+refine — the empirical test moved risk from S to O, which a design-only v5 would have baked in wrong.
+`src/data/cis/cis_v5_architecture.py` + 7/7 smoke.
