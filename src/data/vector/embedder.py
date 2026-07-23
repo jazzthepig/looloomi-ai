@@ -34,6 +34,8 @@ Vector dimensions — v1 (18, dims [0..17]) + v2 additions (7, dims [18..24]):
   [22] d_A  = clamp(ΔA/50, -1, 1)  — directional-change pillar (rising ⇒ better edge)
   [23] stability_O = clamp(std(O_window)/25, 0, 1)  — distance from the stable sweet spot
   [24] stability_S = clamp(std(S_window)/25, 0, 1)  — large ⇒ we sampled AFTER the reprice
+  [25] edge_vol = clamp(std(edge_β_adj)/25, 0, 1)   — dispersion of realized β-adj edge (I5)
+  [26] edge_p10 = clamp(p10(edge_β_adj)/25, -1, 1)  — LEFT TAIL, where the money is lost (R63)
 
 Invariants (VECTOR_SCHEMA_SPEC §0):
   I1  Unmeasured is NaN, never 0. v2 dims are float('nan') when prior/history is absent;
@@ -56,10 +58,13 @@ _logger = logging.getLogger(__name__)
 # ── v2 schema constants (build-order #2) ─────────────────────────────────────
 SCHEMA_VERSION   = 2
 ASSET_DIMS_V1    = 18          # dims [0..17] — the original dense snapshot vector
-ASSET_DIMS_V2    = 25          # + [18..24] pillar deltas (5) + stability (2)
+ASSET_DIMS_V2    = 27          # + [18..24] deltas(5)+stability(2) + [25..26] risk moments(2)
 _DELTA_NORM      = 50.0        # a 50-pt pillar swing ⇒ ±1 (pillar moves are usually small)
 _STABILITY_NORM  = 25.0        # trailing std of 25 pillar-pts ⇒ 1.0 (very unstable)
 _STABILITY_MIN_OBS = 3         # < this many window obs ⇒ NaN (I1), never a fabricated 0
+_EDGE_VOL_NORM   = 25.0        # β-adj edge std of 25% ⇒ 1.0 (R63 category vol ~16-17)
+_EDGE_P10_NORM   = 25.0        # β-adj edge p10 of -25% ⇒ -1.0 (catastrophic left tail)
+_RISK_MIN_OBS    = 20          # < this many edge obs ⇒ NaN (I1); std/p10 need a sample
 MIN_SHARED_DIMS  = 4           # cosine refuses below this many shared non-NaN coords (I1)
 _NAN = float("nan")
 _PILLAR_KEYS = ("F", "M", "O", "S", "A")
@@ -124,6 +129,25 @@ def pillar_stability(history: Optional[list], keys: tuple = ("O", "S")) -> list[
             out.append(_clamp(float(np.std(vals)) / _STABILITY_NORM, 0.0, 1.0))
     return out
 
+
+def edge_risk_moments(edge_history: Optional[list]) -> tuple[float, float]:
+    """(edge_vol, edge_p10) — raw dispersion + 10th-percentile left tail of a β-adjusted edge series.
+
+    I5: the mean is blind to where money is lost (R63: high S leaves the mean flat but widens vol and
+    deepens the p10 tail). Returns (NaN, NaN) below _RISK_MIN_OBS — a std/percentile from a handful of
+    points is noise, not risk. `edge_history` is a list of realized β-adjusted edges (%). Raw values;
+    normalization happens in generate_embedding. (The live provider passes precomputed moments from the
+    Supabase `asset_edge_moments` view instead of raw history — same numbers.)
+    """
+    if not edge_history:
+        return (_NAN, _NAN)
+    vals = [float(e) for e in edge_history if e is not None and e == e]
+    if len(vals) < _RISK_MIN_OBS:
+        return (_NAN, _NAN)
+    vol = float(np.std(vals, ddof=1))
+    p10 = float(np.percentile(vals, 10))
+    return (vol, p10)
+
 # Asset class → encoded float (preserves clustering: L1/L2/DeFi closer than RWA/TradFi)
 _CLASS_ENC: dict[str, float] = {
     "L1":            1.0,
@@ -166,14 +190,17 @@ def generate_embedding(
     *,
     prior_pillars: dict | None = None,
     pillar_history: list | None = None,
+    edge_moments: tuple | None = None,
 ) -> list[float]:
     """
-    Generate the normalized feature vector for an asset — 18-dim (v1) or 25-dim (v2).
+    Generate the normalized feature vector for an asset — 18-dim (v1) or 27-dim (v2).
 
-    v1 dims [0..17] are byte-for-byte unchanged (I6). When `prior_pillars` OR `pillar_history`
-    is supplied, 7 v2 dims [18..24] are appended (pillar deltas + O/S stability). Absent inputs
-    ⇒ those dims are float('nan') (I1: unmeasured is NaN, never 0), and cosine_similarity skips
-    them — so a v2 vector with all-NaN tail ranks identically to the v1 vector.
+    v1 dims [0..17] are byte-for-byte unchanged (I6). When ANY v2 input (`prior_pillars`,
+    `pillar_history`, `edge_moments`) is supplied, the full 9-dim v2 block [18..26] is appended:
+    pillar deltas [18..22], O/S stability [23..24], edge risk moments [25..26]. The block is a
+    FIXED length — whichever inputs are absent fill with float('nan') (I1: unmeasured is NaN, never
+    0), and cosine_similarity skips NaN dims, so a v2 vector with an all-NaN tail ranks identically
+    to the v1 vector.
 
     Parameters
     ----------
@@ -183,6 +210,8 @@ def generate_embedding(
     prior_pillars : the asset's PIT-prior pillar snapshot {F,M,O,S,A} at t-1 (or None) — deltas
     pillar_history : list of PIT-ordered prior pillar/asset dicts INCLUDING current (or None) —
         oldest→newest; drives O/S trailing-std stability. Must contain only data ≤ t (I2).
+    edge_moments : (edge_vol, edge_p10) raw β-adjusted-edge risk moments for this asset (or None) —
+        the live provider reads these from the Supabase `asset_edge_moments` view. I5.
     """
     # Pillar scores — handle both T1 (pillars dict) and T2 (flat) shapes
     pillars = asset.get("pillars") or {}
@@ -240,11 +269,17 @@ def generate_embedding(
         _REGIME_ALIGN.get(macro_regime, 0.0),
     ]
 
-    # ── v2 append [18..24] — pillar deltas + O/S stability (I1 NaN-honest, I2 PIT) ──
-    if prior_pillars is not None or pillar_history is not None:
+    # ── v2 append [18..26] — deltas + O/S stability + edge risk moments (fixed 9 dims; I1/I2/I5) ──
+    if prior_pillars is not None or pillar_history is not None or edge_moments is not None:
         cur_pillars = {"F": f_raw, "M": m_raw, "O": o_raw, "S": s_raw, "A": a_raw}
         vec.extend(pillar_deltas(cur_pillars, prior_pillars))          # [18..22] d_F..d_A
         vec.extend(pillar_stability(pillar_history, keys=("O", "S")))  # [23..24] stability_O/S
+        if edge_moments is not None:                                   # [25..26] edge_vol, edge_p10
+            ev, ep = edge_moments
+            vec.append(_NAN if ev is None or ev != ev else _clamp(float(ev) / _EDGE_VOL_NORM, 0.0, 1.0))
+            vec.append(_NAN if ep is None or ep != ep else _clamp(float(ep) / _EDGE_P10_NORM, -1.0, 1.0))
+        else:
+            vec.extend([_NAN, _NAN])
     return vec
 
 
