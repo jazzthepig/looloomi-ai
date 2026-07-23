@@ -2,6 +2,12 @@
 Re-embed the graveyard — refuted sleeves become LOCATED, not dead (Seth, 2026-07-21).
 ======================================================================================
 
+⚠️ SUPERSEDED (2026-07-23, build-order #3 complete). The 8 sleeves below now live in the CANONICAL
+schema at `src/research/embed_graveyard_canonical.py` (StrategyRecord + canonical coverage_gaps/
+redundancy), which also prints the strategy-library "what to build next" map. This file + its import
+target `src/research/strategy_vector.py` are both DEPRECATED — run the canonical module instead. Both
+can be `git rm`'d Mac-side (RULE 2: stage only your own paths). Kept temporarily for reference only.
+
 Turns `REFUTATION_LEDGER.md` from a record of failures into the library's opening inventory.
 Most entries there were killed for being regime-dependent — which, under the library doctrine
 (`docs/MECHANISM_SPEC.md` §3), is a *coordinate*, not a verdict. Only two things truly disqualify:
