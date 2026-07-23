@@ -2956,6 +2956,77 @@ so removing the market component leaves noise.
 
 ---
 
+## R80 🔴 Turnover residual (30d rolling-mean dollar-volume cross-sectional demean) L/S — REFUTED (Seth, 2026-07-24)
+
+**Hypothesis.** Per R79's structural finding (orthogonal candidates on TREND/VOL axes lack standalone edge;
+only the CARRY/MICROSTRUCTURE-pressure axis carries edge), R80 pivots to the carry/microstructure axis
+via a different signal: **turnover residual** = trailing-30d rolling-mean of daily dollar-volume,
+cross-sectionally demeaned. Dollar-volume = Σ(hourly volume × close). The residual is RELATIVE
+volume — which assets are running HOTTER than the universe on this date. Closest sibling to R76
+funding residual: both capture informed-flow pressure that perp market-makers unwind over days.
+Should carry edge on the carry/microstructure axis.
+
+**Built.** `src/research/validation/s80_turnover_residual.py` (~660 LoC) + 12 smoke tests (all pass;
+includes NaN-honesty I1, universe-floor enforcement, verdict grammar, and a load_daily_dollar_volume
+helper that mirrors `load_daily_returns` for the OHLCV parquet store). Reuses R63's panel +
+28-asset strict funding ∩ CIS ∩ OHLCV ∩ dollar-volume universe. Score = mean_30d(dollar_volume) −
+mean_a(mean_30d(dollar_volume)), with NaN warmup handling (dropna(how="any") on fully-observed rows
+then reindex). k=3, cadence × cost sweep, market + momentum residualization, NW lags=6, OOS=30%.
+
+**Pre-test leg-correlation gate (lesson #42, extended to 4 existing legs).** corr(R80, R46) = **+0.115** ✓,
+corr(R80, R62) = **+0.027** ✓, corr(R80, R76) = **+0.103** ✓, corr(R80, R78) = **+0.023** ✓.
+max |corr| = **0.115** (well below 0.30 gate). Gate **passes** — R80 is genuinely orthogonal to
+all 4 existing fusion legs. **Note:** corr(R80, R76) = +0.103 is the highest non-R46 correlation,
+consistent with the hypothesis that funding and turnover are sibling signals (informed-flow pressure).
+
+**Verdict.** 🔴 **REFUTED** — gate passes cleanly, gauntlet fails. Best leg (5d/0bps):
+gross_t = **+0.87** (well below 1.96), OOS_t = **−1.09** (sign-flipped). **No cell in 6-cadence
+× 3-cost sweep clears t=1.96 on all 3 checks.** Sign verdict **high_tonus_long** (matched-cell top-3
+differentials all positive +1.87 to +1.88 — directional thesis is correct, absolute edge is too thin).
+
+**Per-window W1-W6 attribution (5d/0bps, sign=high_tonus_long):**
+- W1: +32.7%, W2: **+332.1%** (dominant), W3: −26.5%, W4: +64.0%, W5: **−23.3%**, W6: **−25.3%**
+- maxDD: **−28.54%** (significant)
+- 3/6 windows positive — the +332.1% W2 carries the headline; late-cycle W5+W6 both negative
+  (NOT R76's clean W5=+98.4% lift). The shape is "big winner window, mediocre elsewhere."
+
+**Lesson #43 v3 (CONFIRMED, full articulation in 5 cases):**
+- ✅ R76 — orthogonal + standalone edge → SURVIVES + ORTHOGONAL → fusion lift (R77).
+- 🔴 R78 — orthogonal but NO standalone edge → REFUTED (TREND axis).
+- 🔴 R79 — orthogonal but NO standalone edge + W5-catastrophic → REFUTED (VOL axis).
+- 🔴 R80 — orthogonal but NO standalone edge → REFUTED (TURNOVER / CARRY axis sibling).
+- 🔴 R74 — NOT orthogonal + NO standalone edge → REFUTED (CIS-quality pillar_A).
+
+**The structural finding deepens:** cross-sectional demean of single-class microstructure axes
+(funding, momentum, vol, turnover) MOSTLY LACK EDGE on this universe. Only R76 funding residual
+survives. The carry/microstructure axis is not a guaranteed pass — the SIGNAL itself matters, not
+just the axis. R76's specific formulation (funding-level cross-sectional demean at slow cadence)
+captures perp market-maker positioning that genuinely persists; R80's turnover formulation captures
+noise on top of activity regime, and the residual is too thin to clear.
+
+**Why R76 works but R80 doesn't (structural hypothesis):** funding is a *carry payment* that
+captures perp market-maker positioning — a structural-flow signal. Turnover is a *trading volume*
+signal that captures a mix of informed flow + noise flow + exchange-specific quirks (Binance listings,
+delistings, market-maker washes). The funding-residual signal is purer because funding is
+economically meaningful (you pay/receive it), whereas volume is just activity (could be noise).
+
+**Action items.**
+1. R80 ships no production change (research-only). Frozen R77 cell at w_R46=0.25, w_R62=0.75,
+   w_R76=0.30 **unchanged**. R65 paper book, R66 tracking: unaffected.
+2. **Lesson #43 v3 (proposed, new):** cross-sectional demean of single-class microstructure axes
+   mostly lacks edge. The gate-then-gauntlet discipline catches this cleanly: R76 is the 1-in-4
+   outlier, not the rule. Future orthogonal candidates should reach for **structurally different**
+   sources — cross-asset carry (perp basis vs spot), cross-frequency (4h/24h cross-section),
+   cross-section-of-cross-section (10y curve), or **informativeness-weighted** funding/turnover
+   (where the score is corrected for noise/exchange-effects, not just demeaned).
+
+**Reference.** `src/research/validation/s80_turnover_residual.py`;
+`src/research/validation/tests/test_s80_turnover_residual_smoke.py` (12/12 tests pass);
+`reports/s80_turnover_residual/2026-07-24/REPORT.md`;
+`reports/s80_turnover_residual/2026-07-24/verdict.json`.
+
+---
+
 ## §LEDGER-RECONCILIATION-MAP 2026-07-22 (Seth, per Jazz decision) — the R64–R68b collision, resolved
 
 **Why this exists.** Two lanes ran in parallel and both claimed R64–R68b (the parallel-assignment hazard
