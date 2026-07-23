@@ -9,6 +9,23 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-23 🔴→🟢 "升级之后就乱了" DIAGNOSED — T1 engine stall broke pillars + regime labels; the regime SIGNAL is validated (Seth).**
+  Jazz asked if 周期判断/分类 are done + v5's real effect. Investigated on live data:
+  **(1) v5 can't show live effect** — `cis_scores.pillar_o` (all pillars) is **NULL since 2026-07-19** (last
+  non-null 14:54); v5/risk-moments need pillars. Same family as ohlcv stall + Minimax R75b probe = **T1
+  engine stalled ~07-19**, Railway T2 limping. **(2) 周期判断 core is VALIDATED:** on the clean UPPER_SNAKE
+  period (2025-06-18→2026-05) bucketing β-adj edge by regime separates risk cleanly — **RISK_ON +10.22/tail
+  −6.35, RISK_OFF +1.74, EASING −1.49, STAGFLATION −4.76**. The scary "Risk-On −3.45" was a TIME CONFOUND
+  (title-case `Risk-On` only existed 2025-05→06-17, pre-upgrade bad window), NOT a broken detector.
+  **(3) Label contract fixed (my lane):** two formats polluted `macro_regime` (T1 UPPER_SNAKE vs T2
+  title-case + "UNKNOWN"). Added `cis_provider.canonical_regime()` → normalizes the STORED macro_regime to
+  UPPER_SNAKE (internal `_REGIME_MULT`/`_REGIME_ALIGN` title-case lookups untouched; UNKNOWN/None→NEUTRAL).
+  Preflight PASSED. **(4) 策略分类 = DONE** (yesterday's coverage map: build a cost-feasible VOL sleeve).
+  **P0 for Minimax (`MINIMAX_SYNC §REGIME-ALIGN`): restart T1 + backfill pillars 07-19→now** — that revives
+  the whole pillar-dependent stack (v5, risk moments, edge_map) on live data. Answer to Jazz: classification
+  done · regime core validated (not "done" until T1 back + labels canonical both sides) · v5 validated
+  historically but blocked live by the stall.
+
 - **2026-07-23 ✅ Build-order #3 COMPLETE (3b done) — graveyard migrated to canonical; the library map is live (Seth).**
   Closed the last open build-order item. The 8 refuted/parked sleeves that lived in the DEPRECATED
   `src/research/strategy_vector.py` schema are re-expressed as canonical `StrategyRecord`s in
