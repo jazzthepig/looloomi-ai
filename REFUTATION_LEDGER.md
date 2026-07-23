@@ -2661,6 +2661,105 @@ next R-number. Specifically:
 
 ---
 
+## R77 ✅ R76 (funding residual) as 3rd fusion contribution to R69 family — FUSION LIFT (Seth, 2026-07-23)
+
+**Hypothesis (per lesson #43).** R76 SURVIVES + ORTHOGONAL — funding residual
+cross-sectional L/S clears 3-check (gross_t +2.11, OOS_t +3.15, 5d/0bps) AND
+passes the lesson #42 leg-correlation gate (max |corr| = 0.156). R77 tests
+whether R76's orthogonal-edge property translates to a real fusion lift on top
+of the existing R46+R62 fusion (R69 cell, frozen at w_R46=0.25).
+
+**Built.** `src/research/validation/r77_r76_as_fusion_contribution.py`
+(~340 LoC) + 11 smoke tests (all pass). Reuses R63's exact panel + 28-asset
+strict funding ∩ CIS ∩ OHLCV universe. Three legs:
+- Leg 1 (R46): pillar_O 5d/5bps (R63's existing leg_r46)
+- Leg 2 (R62): fade-the-crowd 21d/0bps gated (R63's existing leg_r62)
+- Leg 3 (R76): funding residual 5d/0bps, k=3 (R76's best cell)
+
+Frozen 2-component baseline: fac_2 = 0.25 × Leg1 + 0.75 × Leg2 (R69 cell).
+3-component fusion: fac_3 = (1-w_R76) × fac_2 + w_R76 × Leg3.
+Sweep w_R76 ∈ {0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30}.
+Pre-test leg-correlation gate (lesson #42 — R76 result: passes).
+
+**Pre-test leg-correlation gate (lesson #42).** corr(R76, R46) = **+0.103**,
+corr(R76, R62) = **+0.004**, max |corr| = **0.103** (well below 0.30 gate).
+Gate **passes** with comfortable margin — orthogonal candidate.
+
+**Verdict.** ✅ **FUSION LIFT — R76 carries as 3rd fusion contribution to R69 family.**
+
+**w_R76 sweep (frozen R69 cell baseline + 3-component fusion):**
+
+| w_R76 | gross_t | OOS_t  | pass | maxDD    | Sharpe | ΔOOS_t  | W5 ann% | ΔW5 ann% |
+|------:|--------:|-------:|:----:|---------:|-------:|--------:|--------:|---------:|
+| 0.00  | +2.52   | +2.44  | ✓    | −11.05%  | +1.69  | +0.00   | +45.6   | +0.0     |
+| 0.05  | +2.63   | +2.67  | ✓    | −10.33%  | +1.77  | +0.23   | +48.3   | +2.8     |
+| 0.10  | +2.75   | +2.90  | ✓    | −9.68%   | +1.86  | +0.46   | +51.1   | +5.6     |
+| 0.15  | +2.86   | +3.11  | ✓    | −9.03%   | +1.93  | +0.67   | +53.9   | +8.3     |
+| 0.20  | +2.96   | +3.31  | ✓    | −8.68%   | +1.99  | +0.87   | +56.6   | +11.1    |
+| 0.25  | +3.04   | +3.48  | ✓    | −8.57%   | +2.04  | +1.04   | +59.4   | +13.9    |
+| 0.30  | +3.10   | +3.61  | ✓    | −8.91%   | +2.06  | +1.17   | +62.2   | +16.6    |
+
+**All 7 grid points pass 3-check.** The lift is *monotone in w_R76* — every
+step adds positive OOS_t and reduces maxDD (until w_R76=0.30 where maxDD ticks
+up marginally to −8.91% from the w_R76=0.25 low of −8.57%).
+
+**Best w_R76 = 0.30 (capped):** gross_t = +3.10, OOS_t = +3.61, maxDD = −8.91%,
+Sharpe = +2.06. ΔOOS_t = +1.17 (vs frozen baseline OOS_t = +2.44).
+**ΔOOS_t > +0.5 lesson #43 bar passes by 2.3×**.
+
+**Per-window W1-W6 attribution (best w_R76=0.30 cell):**
+- W5 ann% = +62.2 (vs frozen baseline +45.6, ΔW5 = +16.6) — **R76's killer W5
+  lifts the W5 ann% further at the fusion level too**. R76 was already positive
+  W5 on its own; the fusion captures additional alpha from the same window.
+
+**Why the lift is real (anti-imposter checks):**
+- Lesson #42 leg-correlation gate **passes** (max |corr| = 0.103 ≪ 0.30).
+- Monotone improvement across the entire w_R76 grid — not a one-cell artifact.
+- maxDD drops (less drawdown, not more) — R76 diversifies the fusion book's tail.
+- Sharpe rises (+1.69 → +2.06) at the same time — not a return-for-volatility trade.
+- ΔOOS_t = +1.17 is large in absolute terms (almost +50% relative to baseline OOS_t).
+
+**Aggregate lesson #43 (CONFIRMED, full positive form):** **Orthogonal signal
+sources DO carry as 3rd fusion contribution to the existing R46+R62 fusion.**
+Lesson #42 + #43 form a complete pair:
+- Lesson #42 (from R74): "REFUTED at the gauntlet → don't rescue via fusion;
+  read leg correlations before adding legs."
+- Lesson #43 (from R76 + R77): "Orthogonal signal sources (max |corr| ≲ 0.10)
+  DO lift the fusion — the orthogonal-edge property translates to the fusion
+  book. W5 lift at R76 (+98.4% standalone) translates to ΔW5 = +16.6 ann%
+  at the fusion level, and ΔOOS_t = +1.17 overall."
+
+Specifically:
+- The demean operation in R76 (cross-sectional funding - cross-sectional mean)
+  removes the level shift that R62's absolute funding-z carries, leaving
+  *relative pressure* within the universe. This is structurally orthogonal to
+  R46's CIS-quality rank and R62's crowding-z.
+- The 3-component fusion at w_R76=0.30 has maxDD −8.91% (vs frozen −11.05%)
+  and Sharpe +2.06 (vs frozen +1.69) — risk-adjusted alpha LIFTS at every
+  measurement primitive, not just raw return.
+- The W5 lift at the fusion level (ΔW5 = +16.6 ann%) means the late-cycle
+  fragility window where R46 sign-flips is captured not just by R76 alone but
+  also by the fusion book — a durable, structural improvement.
+
+**Action.**
+- ✅ R77 ships no production change (research-only). R77 is the *evidence
+  base* for a forward R78 candidate that may rebalance the live R69 cell.
+- ✅ Frozen R69 cell at w_R46=0.25, w_R62=0.75, w_R76=0 **unchanged**.
+- ⏭ **R78 candidate** = rebalance w_R46 + add w_R76 to the live R69 cell.
+  Forward commit pending — not in scope for this round (R77 is the evidence,
+  R78 is the live deployment decision).
+- ⚠ Forward-commit gating (R67 / R78 candidate): needs walk-forward validation
+  on post-2026-02 marks (R65 paper book accrual) + JimmyJazz/Minimax coord for
+  any live R69 cell rebalance. Per §OWNERSHIP-BOUNDARIES, only Seth/Austin
+  modify src/ + dashboard/ + docs; Minimax owns local engine changes.
+
+**Reference.** `src/research/validation/r77_r76_as_fusion_contribution.py`;
+`src/research/validation/tests/test_r77_r76_as_fusion_contribution_smoke.py`
+(11/11 tests pass); `reports/r77_r76_as_fusion_contribution/2026-07-23/REPORT.md`;
+`reports/r77_r76_as_fusion_contribution/2026-07-23/verdict.json`.
+
+---
+
 ## §LEDGER-RECONCILIATION-MAP 2026-07-22 (Seth, per Jazz decision) — the R64–R68b collision, resolved
 
 **Why this exists.** Two lanes ran in parallel and both claimed R64–R68b (the parallel-assignment hazard
@@ -2773,13 +2872,71 @@ produce all-zero weights even when the headline verdict looks healthy. The hones
 the gap today; once cleared, R75's first post-maturity re-run must include a `trade_hours_pct` field
 so a sparsity-driven zero-L/S cannot masquerade as a SURVIVES.
 
-**Artifacts.** `src/research/validation/r75_hourly_so_quintile.py` (~370 LoC) — modules:
-`fetch_histories`, `normalize_hourly_history` (NaN-honest, no ffill), `build_hourly_pillar_panel`,
+**Update (2026-07-23, do NOT mistake for SURVIVES credit).** Same module re-executed against
+today's snapshot — the headline t-statistic did NOT move because the underlying data window did
+NOT extend forward. **Newly surfaced data-pipeline finding** (added a `_data_freshness()` probe +
+`data_freshness` block in `verdict.json`, surfaced in `REPORT.md` §3):
+
+| Signal | 2026-07-22 | 2026-07-23 |
+|---|---|---|
+| Latest data hour observed | 2026-07-19T14:00:00 | **2026-07-19T14:00:00** |
+| Earliest data hour observed | 2026-06-12T10:00:00 | 2026-06-12T18:00:00 |
+| Staleness vs run time | 71.6 h | **74.5 h** |
+| Null-pillar assets (no rows at all) | 3 (BCH, ICP, WIF) | 3 (BCH, ICP, WIF) |
+| Mature | False (37.12 d / 662 h / 28 a) | False (36.79 d / 654 h / 28 a) |
+| Best gross α_t | +1.18 | +1.18 (unchanged) |
+| 5bps / OOS / verdict | −0.92 / −1.70 / PREMATURE | −0.92 / −1.70 / PREMATURE |
+
+**Translation:** the public `/api/v1/cis/history/{symbol}` endpoint **stopped writing fresh
+non-null `pillar_s`/`pillar_o` rows at 2026-07-19T14:00** — i.e. **the upstream CIS push pipeline
+has been stalled for ~3 days** as of run time. The 200 newest rows in each asset's payload are
+skeleton / null-pillar writes (~one per hour since 2026-07-19T15:00 onward) — these suggest a
+reconnect/recovery loop without the actual pillar-write path. Three assets (BCH, ICP, WIF) have
+**no historical rows at all** (likely affected by the recent pipeline regression). The mac-side
+CIS push author is Minimax; this falls outside R75's lane.
+
+**Lesson #45 (new, infrastructure-blocking).** A research-grade factor pipeline has TWO
+necessary-but-not-sufficient gates: (1) the **calendar-coverage gate** (30d/720h/12-asset maturity)
+and (2) the **wall-clock freshness gate** (latest_data_hour must be close to run time, not just
+data-rich). R75's verdict logic now checks both via the `_data_freshness()` probe. If pipeline
+freshness stays at 74.5h or worse, **the maturity gate cannot advance even with more days of
+runtime** — the same 30-day-old window just keeps rolling forward. R75 will remain PREMATURE
+until either (a) the upstream pipeline resumes, or (b) the calendar-coverage gate is reset to a
+smaller window that the available data actually satisfies (research-only decision, not R75's call
+to make unilaterally).
+
+**Artifacts (2026-07-23 update).** `src/research/validation/r75_hourly_so_quintile.py`
+(+~85 LoC: `_data_freshness`, `data_freshness` block in `run()`, `format_report` §3) —
+**11/11 smoke tests pass** (new `test_data_freshness_surfaces_staleness_and_nulls` added);
+**preflight PASSED**. `reports/r75_hourly_so_quintile/2026-07-23/{REPORT.md, verdict.json, run.log}`
+— gitignored.
+
+**Mac-side handoff (2026-07-23).** Three-file diff (no production-code change, no contract change,
+no engine change):
+
+```
+M src/research/validation/r75_hourly_so_quintile.py   (+~85 LoC: data_freshness probe)
+M src/research/validation/tests/test_r75_hourly_so_quintile_smoke.py   (+1 test, +5 imports)
+A reports/r75_hourly_so_quintile/2026-07-23/{REPORT.md, verdict.json, run.log}   (gitignored — not for commit)
+```
+
+**Out-of-R75-lane finding for Minimax (NOT a Seth fix; flagged for Mac-side follow-up).**
+CIS-history pipeline stall since **2026-07-19T14:00 UTC**. The endpoint returns 1000 rows per
+request; the latest 200 are null-pillar skeleton writes; the underlying 800 carry real data but
+end 4 days ago. This blocks R75, R-numbered research that needs current pillar values, and
+any investor-facing surface that derives from CIS history. Reference: `REFUTATION_LEDGER.md`
+R75 §update 2026-07-23 + `data_freshness` block in `reports/r75_hourly_so_quintile/2026-07-23/verdict.json`.
+
+**Artifacts.** `src/research/validation/r75_hourly_so_quintile.py` (~370 LoC + ~85 LoC freshness probe)
+— modules: `fetch_histories`, `normalize_hourly_history` (NaN-honest, no ffill), `build_hourly_pillar_panel`,
 `align_score_to_next_bar` (shift + staleness-bounded ffill), `delta_score` (stable / positive /
 negative), `hourly_ls` (k=5 next-bar L/S, turnover-aware cost), `maturity_status` (frozen
-30d/720h/12-asset), `run` (orchestrator with returns-source tracking + maturity-dominant verdict).
-`src/research/validation/tests/test_r75_hourly_so_quintile_smoke.py` — **10/10 pass** (UTC bucket +
+30d/720h/12-asset), `_data_freshness` (latest_data_hour, staleness_hours, null_assets), `run`
+(orchestrator with returns-source tracking + maturity-dominant verdict + freshness block).
+`src/research/validation/tests/test_r75_hourly_so_quintile_smoke.py` — **11/11 pass** (UTC bucket +
 de-dup, NaN honesty, panel shape, exact-hour predecessor, abs-Δ stability direction, next-bar PIT,
-matched-cell inversion, maturity gate constants, real-parquet loader). Preflight PASSED.
-`reports/r75_hourly_so_quintile/2026-07-22/{REPORT.md, verdict.json, run.log}` — gitignored.
-Re-run as soon as maturity crosses 720h; same module, no code changes needed.
+matched-cell inversion, maturity gate constants, real-parquet loader, **freshness probe honors null
+assets and computes staleness from max(last_hour)**). Preflight PASSED.
+`reports/r75_hourly_so_quintile/2026-07-22/{REPORT.md, verdict.json, run.log}` and
+`2026-07-23/{REPORT.md, verdict.json, run.log}` — gitignored.
+Re-run when pipeline resumes; same module, no code changes needed.

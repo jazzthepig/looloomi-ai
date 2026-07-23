@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import tempfile
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -9,6 +10,7 @@ import pandas as pd
 
 from src.research.validation.r75_hourly_so_quintile import (
     MIN_ASSETS,
+    _data_freshness,
     align_score_to_next_bar,
     build_hourly_pillar_panel,
     delta_score,
@@ -117,6 +119,24 @@ def test_hourly_return_loader_uses_real_parquet_only():
         rets = load_hourly_returns(["BTC"], Path(td))
         assert list(rets.columns) == ["BTC"]
         assert abs(rets.iloc[-1, 0] - (104.0 / 102.0 - 1.0)) < 1e-12
+
+
+def test_data_freshness_surfaces_staleness_and_nulls():
+    coverage = {
+        "S": {
+            "BTC": {"last_hour": "2026-07-19T14:00:00", "first_hour": "2026-06-12T18:00:00"},
+            "ETH": {"last_hour": "2026-07-20T00:00:00", "first_hour": "2026-06-13T01:00:00"},
+            "BCH": {"last_hour": None, "first_hour": None},  # fully-null asset
+        }
+    }
+    now = datetime(2026, 7, 23, 14, 0, 0, tzinfo=timezone.utc)
+    f = _data_freshness(coverage, now=now)
+    assert f["latest_data_hour"].startswith("2026-07-20T00:00")
+    assert f["earliest_data_hour"].startswith("2026-06-12T18:00")
+    # Max(last_hour) across the universe is ETH's 2026-07-20T00:00.
+    # Staleness = 86 hours (now - latest_data_hour), not the age of the deepest asset.
+    assert f["staleness_hours"] == 86.0
+    assert f["null_assets"] == ["BCH"]
 
 
 if __name__ == "__main__":
