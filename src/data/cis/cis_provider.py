@@ -1713,6 +1713,25 @@ def detect_regime(
     return "Neutral"
 
 
+# Canonical stored regime label. The Mac T1 engine emits UPPER_SNAKE (RISK_ON/RISK_OFF/EASING/…);
+# this Railway T2 path's detect_regime returns title-case for its internal _REGIME_MULT/_REGIME_ALIGN
+# lookups. When T1 stalls and T2 becomes the fallback writer, storing title-case corrupts the
+# cross-engine `cis_scores.macro_regime` contract (2026-07: two formats + "UNKNOWN" coexisted, and a
+# title-case "Risk-On" period read as an anti-signal purely from a 2025-05 market window). Normalize
+# ONLY the stored/contract value to UPPER_SNAKE so both engines agree; internal lookups keep title-case.
+# §GRADE-ALIGN for regime — see MINIMAX_SYNC §REGIME-ALIGN; canonical set confirmed with Minimax.
+_CANONICAL_REGIMES = {"GOLDILOCKS", "RISK_ON", "EASING", "NEUTRAL", "TIGHTENING", "RISK_OFF", "STAGFLATION"}
+
+
+def canonical_regime(r: Optional[str]) -> str:
+    """Any regime label (title-case / upper-snake / 'UNKNOWN' / None) → canonical UPPER_SNAKE.
+    Unknown/failed markers collapse to NEUTRAL (a valid regime; UNKNOWN is not one consumers accept)."""
+    if not r:
+        return "NEUTRAL"
+    s = str(r).strip().upper().replace("-", "_").replace(" ", "_")
+    return s if s in _CANONICAL_REGIMES else "NEUTRAL"
+
+
 def calculate_total_score(
     pillars: Dict[str, float],
     asset_class: str,
@@ -2408,7 +2427,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "signal": signal,
             "confidence": confidence,
             "data_tier": 2,  # Railway = Tier 2
-            "macro_regime": regime,
+            "macro_regime": canonical_regime(regime),  # UPPER_SNAKE contract (align T2 fallback → T1)
             "las": las_result["las"],
             "las_params": las_result["las_params"],
             "f": pillars["F"],
