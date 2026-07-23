@@ -2760,6 +2760,102 @@ Specifically:
 
 ---
 
+## R78 🔴 Relative momentum (TSMOM cross-sectional demean) cross-sectional L/S — REFUTED (Seth, 2026-07-23)
+
+**Hypothesis (per R76 lesson #43).** R76 (funding residual) was orthogonal candidate
+#1 and cleared both leg-correlation gate AND gauntlet → fused as 3rd leg via R77
+(FUSION LIFT). R78 tests orthogonal candidate #2: **relative momentum** =
+TSMOM[t, a] − mean_a(TSMOM[t, a]) (cross-sectional demean of TSMOM sign). TSMOM
+is sign of trailing-30d return; the cross-sectional demean removes the universe's
+common trend component, leaving RELATIVE trend strength. Structurally different
+from R46 (CIS-quality rank), R62 (crowding-z), R76 (funding residual).
+
+**Built.** `src/research/validation/r78_relative_momentum_residual.py` (~430
+LoC) + 11 smoke tests (all pass). Reuses R63's exact panel + 28-asset strict
+funding ∩ CIS ∩ OHLCV universe. Score = TSMOM[t, a] − mean_a(TSMOM[t, a]).
+k=3, cadence × cost sweep, market + momentum residualization, NW lags=6, OOS=30%.
+Both signs run; matched-cell sign verdict from R76-style audit.
+
+**Pre-test leg-correlation gate (lesson #42, extended to 3 existing legs).**
+corr(R78, R46) = **+0.113** ✓, corr(R78, R62) = **−0.012** ✓, corr(R78, R76) =
+**+0.004** ✓. max |corr| = **0.113** (well below 0.30 gate). Gate **passes**
+with comfortable margin — R78 is genuinely orthogonal to all existing fusion
+legs.
+
+**Verdict.** 🔴 **REFUTED** — R78 PASSES the gate but FAILS the gauntlet.
+
+**Why refuted.** Default-cad 3d/0bps leg: gross_t = +0.32, OOS_t = +0.83. The
+3-check requires gross_t > 1.96 AND 5bps_t > 1.96 AND OOS_t > 1.96. R78's best
+in-sample α_t across the entire 6-cadence × 3-cost sweep stays below 1.96 — no
+cell passes the gauntlet.
+
+**Matched-cell sign audit (top-3):**
+
+| cad | bps | Δ(α_t) | hi (long) | lo (short) |
+|----:|----:|-------:|----------:|-----------:|
+|  7  | 10  | +2.17  | +1.34     | −0.83      |
+|  7  |  5  | +2.09  | +1.43     | −0.66      |
+|  7  |  0  | +2.00  | +1.52     | −0.48      |
+
+The matched-cell differentials ARE real (top-3 all positive) and the sign verdict
+is decisively **high_mom_long** — relative momentum DOES carry directional alpha.
+But the absolute α_t does not cross 1.96, so the edge does not survive aggregation
+into a 3-check-passing sleeve.
+
+**Per-window W1-W6 attribution (best-cad 3d/0bps, sign=high_mom_long):**
+- W1: +1.9%, W2: +4.7%, W3: +0.0%, W4: −8.2%, W5: −6.9%, W6: +18.0%
+- maxDD: −8.69% (mild)
+- 3/6 windows positive — NOT the clean 5/6 R76 had
+- W4 + W5 both negative — the late-cycle fragility window where R46 fails does
+  NOT show R78's strength (unlike R76 which had W5=+98.4%).
+
+**Aggregate lesson #43 (SHARPENS):** **Orthogonal candidate screening can PASS
+the leg-correlation gate but FAIL the gauntlet.** The gate is necessary but not
+sufficient — an orthogonal candidate must ALSO have a real standalone edge that
+crosses t=1.96 in the gauntlet. R76 was orthogonal AND had standalone edge
+(funding residual captures *microstructure* pressure → structural edge). R78 is
+orthogonal but lacks standalone edge (relative momentum is a *trend* axis, but
+TSMOM demean loses the level information that R46's pillar_O already captures;
+the remaining relative signal is too thin).
+
+Specifically:
+- The gate (lesson #42 — |corr| ≲ 0.30) tells you the candidate is NOT just a
+  duplicate of an existing leg. R78 passes (max |corr| = 0.113).
+- The gauntlet (gross + costed + OOS) tells you the candidate has REAL edge on
+  this data. R78 fails (best gross_t = +0.32 ≪ 1.96).
+- Both are required. R74 was a candidate that failed BOTH (correlated + weak).
+  R78 is a candidate that passed gate but failed gauntlet. R76 passed BOTH.
+- Future orthogonal candidates must clear BOTH bars to be fusion-candidatable.
+  If only the gate clears, the candidate is standalone-ineligible but the
+  gate-fail pattern itself is a useful prior (catches duplicates before they
+  waste a fusion sweep).
+
+**Lesson #43 is now fully articulated in 3 cases:**
+- ✅ R76 — orthogonal AND standalone edge → SURVIVES + ORTHOGONAL → fusion lift (R77).
+- 🔴 R78 — orthogonal but NO standalone edge → REFUTED → not a fusion candidate.
+- 🔴 R74 (R73 leg) — NOT orthogonal AND NO standalone edge → REFUTED.
+
+The gate-then-gauntlet pipeline is the correct discipline. R78's refutation is
+the negative evidence that the gate alone is insufficient; the gauntlet must
+also be cleared.
+
+**Action.**
+- ✅ R78 ships no production change (research-only).
+- ✅ Frozen R77 cell at w_R46=0.25, w_R62=0.75, w_R76=0.30 **unchanged**.
+- ⏭ **R79 candidate** = orthogonal candidate #3 — should look at even more
+  structurally different sources per the verdict text: "microstructure volatility
+  (realized vol cross-sectional demean) is the next most natural axis; it is
+  structurally different from R46/R62/R76/R78 (rank / crowding-z / funding-residual
+  / momentum-residual) on the microstructure-vol dimension. R79 = realized vol
+  residual cross-sectional L/S as orthogonal candidate #3."
+
+**Reference.** `src/research/validation/r78_relative_momentum_residual.py`;
+`src/research/validation/tests/test_r78_relative_momentum_residual_smoke.py`
+(11/11 tests pass); `reports/r78_relative_momentum_residual/2026-07-23/REPORT.md`;
+`reports/r78_relative_momentum_residual/2026-07-23/verdict.json`.
+
+---
+
 ## §LEDGER-RECONCILIATION-MAP 2026-07-22 (Seth, per Jazz decision) — the R64–R68b collision, resolved
 
 **Why this exists.** Two lanes ran in parallel and both claimed R64–R68b (the parallel-assignment hazard
