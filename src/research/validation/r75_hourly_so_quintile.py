@@ -246,6 +246,52 @@ def _known_factors(returns: pd.DataFrame) -> dict[str, np.ndarray]:
     return {"market": market.values, "momentum": momentum.values}
 
 
+def _data_freshness(coverage: dict, *, now: datetime | None = None) -> dict:
+    """Surface CIS-history pipeline freshness from coverage metadata.
+
+    Distinguishes three signals:
+    - ``latest_data_hour`` — most recent UTC hour with non-null pillars across the universe.
+    - ``earliest_data_hour`` — oldest UTC hour with non-null pillars.
+    - ``staleness_hours`` — how many hours the freshest valid snapshot lags ``now``.
+
+    A stalled pipeline shows up as large ``staleness_hours`` even if the panel still
+    covers enough calendar days (the data window can be deep but not current).
+    """
+    now = now or datetime.now(timezone.utc)
+    s = coverage.get("S", {}) or {}
+    latest = None
+    earliest = None
+    null_assets = []
+    for sym, meta in s.items():
+        last = meta.get("last_hour")
+        first = meta.get("first_hour")
+        if not last:
+            null_assets.append(sym)
+            continue
+        last_ts = pd.Timestamp(last).to_pydatetime()
+        first_ts = pd.Timestamp(first).to_pydatetime() if first else None
+        if latest is None or last_ts > latest:
+            latest = last_ts
+        if first_ts is not None and (earliest is None or first_ts < earliest):
+            earliest = first_ts
+    staleness_hours = None
+    if latest is not None:
+        # py datetime aware vs tz-aware ``now``: align both to UTC and use total_seconds.
+        if latest.tzinfo is None:
+            latest_utc = latest.replace(tzinfo=timezone.utc)
+        else:
+            latest_utc = latest.astimezone(timezone.utc)
+        if now.tzinfo is None:
+            now = now.replace(tzinfo=timezone.utc)
+        staleness_hours = round((now - latest_utc).total_seconds() / 3600.0, 1)
+    return {
+        "latest_data_hour": latest.isoformat() if latest else None,
+        "earliest_data_hour": earliest.isoformat() if earliest else None,
+        "staleness_hours": staleness_hours,
+        "null_assets": sorted(null_assets),
+    }
+
+
 def _absorption(series: pd.Series, known: dict, start: int = 0) -> dict:
     y = np.asarray(series, dtype=float)[start:]
     factors = {k: np.asarray(v, dtype=float)[start:] for k, v in known.items()}
@@ -322,6 +368,7 @@ def run(*, out_dir: Path, days: int = 30, api_base: str = DEFAULT_API_BASE,
     for pillar in R75_PILLARS:
         panels[pillar], coverage[pillar] = build_hourly_pillar_panel(histories, pillar)
     maturity = maturity_status(panels)
+    freshness = _data_freshness(coverage, now=datetime.now(timezone.utc))
     result = {
         "r_number": "R75", "generated_at": datetime.now(timezone.utc).isoformat(),
         "construction": {
@@ -331,7 +378,8 @@ def run(*, out_dir: Path, days: int = 30, api_base: str = DEFAULT_API_BASE,
             "oos_fraction": OOS_FRAC, "periods_per_year": PERIODS_PER_YEAR,
             "nw_lags": NW_LAGS, "universe": "funding ∩ hourly-CIS ∩ hourly-OHLCV",
         },
-        "maturity": maturity, "coverage": coverage, "cells": [], "headline": None,
+        "maturity": maturity, "coverage": coverage, "data_freshness": freshness,
+        "cells": [], "headline": None,
     }
 
     if coverage_only:
@@ -438,6 +486,7 @@ def _fmt(value, digits=2):
 
 def format_report(result: dict) -> str:
     maturity = result.get("maturity", {})
+    freshness = result.get("data_freshness", {}) or {}
     lines = [
         "# R75 — Hourly S/O Stability + Δ-Quintile",
         "", f"**Status:** **{result.get('verdict', 'INCONCLUSIVE')}**  ",
@@ -451,16 +500,35 @@ def format_report(result: dict) -> str:
     for pillar, s in maturity.get("by_pillar", {}).items():
         lines.append(f"| {pillar} | {s['calendar_days']:.2f} | {s['valid_hours']} | {s['assets']} |")
     lines += ["", f"Frozen minimum: {MIN_CALENDAR_DAYS:.0f} days / {MIN_HOURLY_OBS} hours / {MIN_ASSETS} assets. Mature={maturity.get('mature', False)}.", ""]
+    if freshness:
+        staleness = freshness.get("staleness_hours")
+        staleness_str = f"{staleness:.1f} hours" if isinstance(staleness, (int, float)) else "n/a"
+        null_assets = freshness.get("null_assets") or []
+        lines += [
+            "## 3. Pipeline freshness (CIS-history endpoint)", "",
+            f"- Latest data hour observed: **{freshness.get('latest_data_hour') or 'n/a'}**",
+            f"- Earliest data hour observed: **{freshness.get('earliest_data_hour') or 'n/a'}**",
+            f"- Staleness vs run time: **{staleness_str}**",
+            f"- Assets with no historical rows at all: **{len(null_assets)}** {('(' + ', '.join(null_assets) + ')') if null_assets else ''}",
+            "", "A large staleness number (>24h) means the upstream CIS push pipeline has stalled.",
+            "The 30d/720h maturity gate is *necessary but not sufficient* — the window must",
+            "also extend close to run time. If the pipeline is stalled, R75 cannot produce",
+            "strategy credit even after the calendar gate clears, because the wall-clock",
+            "shortfall will keep re-emerging.",
+            "",
+        ]
     headline = result.get("headline")
     if headline:
-        lines += ["## 3. Provisional headline — no credit before maturity", "",
+        sec = 4 if freshness else 3
+        lines += [f"## {sec}. Provisional headline — no credit before maturity", "",
                   f"Cell: pillar {headline['pillar']}, Δ={headline['lookback_hours']}h, rebalance={headline['cadence_hours']}h.", "",
                   "| Check | α_t | Ann. residual α | Pass |", "|---|---:|---:|:---:|",
                   f"| Gross | {_fmt(headline['gross'].get('alpha_t'))} | {_fmt(headline['gross'].get('alpha_ann_pct'))}% | {'YES' if headline['checks']['gross'] else 'NO'} |",
                   f"| 5bps | {_fmt(headline['cost_5bps'].get('alpha_t'))} | {_fmt(headline['cost_5bps'].get('alpha_ann_pct'))}% | {'YES' if headline['checks']['cost_5bps'] else 'NO'} |",
                   f"| 5bps last-30% OOS | {_fmt(headline['oos_5bps'].get('alpha_t'))} | {_fmt(headline['oos_5bps'].get('alpha_ann_pct'))}% | {'YES' if headline['checks']['oos_5bps'] else 'NO'} |", "",
                   "Signed controls are diagnostic only and are compared at this exact cell.", ""]
-    lines += ["## 4. Verdict", "", f"**{result.get('verdict', 'INCONCLUSIVE')}** — {result.get('reason', '')}.", "",
+    verdict_sec = 4 if (not freshness and not headline) else (5 if freshness or headline else 4)
+    lines += [f"## {verdict_sec}. Verdict", "", f"**{result.get('verdict', 'INCONCLUSIVE')}** — {result.get('reason', '')}.", "",
               "No CIS scoring, grade, signal, weight, Mac Mini, Shadow, or push-contract change is made by R75."]
     return "\n".join(lines) + "\n"
 
