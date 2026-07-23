@@ -243,9 +243,13 @@ async def _ohlcv_collector_loop():
         try:
             from src.api.routers.ohlcv import collect_ohlcv
             res = await collect_ohlcv(symbols=None, days=365)
-            print(f"[OHLCV] daily — rows={res.get('rows_written')} "
-                  f"syms={res.get('symbols_ok')}/{res.get('symbols_total')} "
-                  f"elapsed={res.get('elapsed_s')}s")
+            _rw = res.get("rows_written") or 0
+            _ok = res.get("symbols_ok") or 0
+            # rows=0 is a SILENT stall (both sources failing) — the exact failure that hid 06-18→07-23.
+            # Make it LOUD so it surfaces in logs + can be alerted, instead of looking like a normal run.
+            _warn = "  ⚠️⚠️ WROTE 0 ROWS — price feed DEGRADED (EODHD+yfinance+CG all empty?)" if _rw == 0 else ""
+            print(f"[OHLCV] daily — rows={_rw} syms={_ok}/{res.get('symbols_total')} "
+                  f"elapsed={res.get('elapsed_s')}s{_warn}")
         except Exception as _e:
             print(f"[OHLCV] ⚠️  daily run failed: {_e}")
         await _asyncio.sleep(24 * 3600)

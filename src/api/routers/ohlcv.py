@@ -118,8 +118,90 @@ async def _fetch_cg_daily(client: httpx.AsyncClient, coin_id: str, days: int) ->
         return []
 
 
+async def _fetch_hyperliquid_daily(client, coin: str, days: int) -> list:
+    """Fetch daily candles from Hyperliquid — the crypto FALLBACK when CoinGecko returns empty
+    (CG rate-limit/quota stalled the crypto feed 06-19). HL is a public DEX API: no key, not
+    geo-blocked (unlike Binance-US), and fresh — verified live 2026-07-23 returning today's candle.
+    coin = the ticker (BTC/ETH/SOL/…); non-HL-listed symbols return [] and fall through. Volume is
+    base volume (fine — we key off close)."""
+    import time as _t
+    end_ms = int(_t.time() * 1000)
+    start_ms = end_ms - (days + 2) * 86_400_000
+    try:
+        r = await client.post(
+            "https://api.hyperliquid.xyz/info",
+            json={"type": "candleSnapshot", "req": {
+                "coin": coin.upper(), "interval": "1d", "startTime": start_ms, "endTime": end_ms}},
+            timeout=20,
+        )
+        r.raise_for_status()
+        candles = r.json()
+        if not isinstance(candles, list):
+            return []
+        out = []
+        for k in candles:
+            t, close = k.get("t"), k.get("c")
+            if t is None or close is None:
+                continue
+            d = datetime.fromtimestamp(t / 1000, timezone.utc).date().isoformat()
+            out.append({
+                "trade_date": d,
+                "open":   float(k.get("o") or close or 0),
+                "high":   float(k.get("h") or close or 0),
+                "low":    float(k.get("l") or close or 0),
+                "close":  float(close or 0),
+                "volume": float(k.get("v") or 0),
+            })
+        return out
+    except Exception as e:
+        _logger.warning(f"[OHLCV] hyperliquid {coin} failed: {e}")
+        return []
+
+
+async def _fetch_eodhd_daily(client, symbol: str, days: int) -> list:
+    """Fetch daily candles from EODHD /eod — the TradFi PRIMARY. yfinance is rate-limited/blocked
+    (confirmed 2026-07: YFRateLimitError), which silently stalled ohlcv_daily since 06-18; the rest
+    of the system already moved TradFi to EODHD (data_layer.get_eodhd_eod_data), the collector had not.
+    Same endpoint/auth as that proven helper. Returns the collector row shape; [] on any failure so the
+    caller falls back to yfinance (no regression)."""
+    try:
+        from src.data.market.data_layer import EODHD_KEY, EODHD_BASE
+    except Exception:
+        return []
+    if not EODHD_KEY:
+        return []
+    frm = (datetime.now(timezone.utc).date() - timedelta(days=days)).isoformat()
+    try:
+        r = await client.get(
+            f"{EODHD_BASE}/eod/{symbol}.US",
+            params={"fmt": "json", "api_token": EODHD_KEY, "period": "d", "from": frm},
+            timeout=15,
+        )
+        r.raise_for_status()
+        rows = r.json()
+        if not isinstance(rows, list):
+            return []
+        out = []
+        for x in rows:
+            d, close = x.get("date"), x.get("close")
+            if not d or close is None:
+                continue
+            out.append({
+                "trade_date": d,
+                "open":   float(x.get("open")  or close or 0),
+                "high":   float(x.get("high")  or close or 0),
+                "low":    float(x.get("low")   or close or 0),
+                "close":  float(close or 0),
+                "volume": float(x.get("volume") or 0),
+            })
+        return out
+    except Exception as e:
+        _logger.warning(f"[OHLCV] EODHD {symbol} failed: {e}")
+        return []
+
+
 async def _fetch_yf_daily(client_unused, symbol: str, days: int) -> list:
-    """Fetch daily candles via yfinance (sync, run in thread)."""
+    """Fetch daily candles via yfinance (sync, run in thread). FALLBACK only — rate-limited (2026-07)."""
     def _sync():
         try:
             import yfinance as yf
@@ -179,9 +261,16 @@ async def collect_ohlcv(symbols: list = None, days: int = 365) -> dict:
                 if cg_id:
                     rows_in = await _fetch_cg_daily(client, cg_id, days)
                     source_used = "coingecko"
+                    if not rows_in:
+                        rows_in = await _fetch_hyperliquid_daily(client, sym, days)  # crypto fallback (CG rate-limited)
+                        if rows_in:
+                            source_used = "hyperliquid"
                 if not rows_in and yf_sym:
-                    rows_in = await _fetch_yf_daily(client, yf_sym, days)
-                    source_used = "yfinance"
+                    rows_in = await _fetch_eodhd_daily(client, yf_sym, days)   # PRIMARY (yfinance dead)
+                    source_used = "eodhd"
+                    if not rows_in:
+                        rows_in = await _fetch_yf_daily(client, yf_sym, days)  # fallback
+                        source_used = "yfinance"
                 if not rows_in:
                     return {"symbol": sym, "rows": 0, "source": None, "ok": False, "reason": "no_data"}
                 out_rows = [{
