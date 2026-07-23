@@ -2477,6 +2477,22 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             from .history_db import get_cis_history
         except Exception:
             get_cis_history = None
+        # v4 (build-order #4): per-asset β-adj edge risk moments (I5) from the Supabase
+        # asset_edge_moments view — one best-effort GET; missing symbol / failure ⇒ NaN dims (I1).
+        edge_moments_map: dict[str, tuple] = {}
+        try:
+            import os as _os, json as _json, urllib.request as _u
+            _sb = _os.environ.get("SUPABASE_URL", "").rstrip("/")
+            _sbk = _os.environ.get("SUPABASE_KEY", "")
+            if _sb and _sbk:
+                _req = _u.Request(
+                    f"{_sb}/rest/v1/asset_edge_moments?select=symbol,edge_vol,edge_p10",
+                    headers={"apikey": _sbk, "Authorization": f"Bearer {_sbk}"})
+                with _u.urlopen(_req, timeout=5) as _r:
+                    for _row in _json.loads(_r.read()):
+                        edge_moments_map[str(_row["symbol"]).upper()] = (_row.get("edge_vol"), _row.get("edge_p10"))
+        except Exception:
+            edge_moments_map = {}
         embeddings: dict[str, list[float]] = {}
         for asset in universe:
             try:
@@ -2491,7 +2507,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                     except Exception:
                         prior_p, hist = None, None
                 vec = generate_embedding(asset, macro_regime=regime, derivatives=_deriv_map,
-                                         prior_pillars=prior_p, pillar_history=hist)
+                                         prior_pillars=prior_p, pillar_history=hist,
+                                         edge_moments=edge_moments_map.get(asset.get("symbol", "").upper()))
                 embeddings[asset["symbol"].upper()] = vec
             except Exception:
                 pass

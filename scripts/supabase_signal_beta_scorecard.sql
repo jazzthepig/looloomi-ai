@@ -84,3 +84,31 @@ comment on view signal_beta_scorecard is
   'edge_beta_adj_t is a one-sample t of the directional beta-adjusted edge vs 0. UNDERWEIGHT is the one real defect (t<0). '
   'Raw alpha shown beside it (what an UNHEDGED holder experiences); beta-adj requires shorting the benchmark. '
   'Investor surfaces must publish BOTH, labelled. NOTE: underlying signal_outcomes is Mac-side-fed and may be stale — check max(last_d).';
+
+
+-- ---------------------------------------------------------------------------
+-- 3. VIEW: per-asset RISK MOMENTS of the beta-adjusted edge (build-order #4, I5, 2026-07-22).
+--    Feeds asset embedder v2 dims [25..26] (edge_vol, edge_p10). I5: a mean-only schema is blind
+--    to where money is lost — R63 showed high sentiment leaves the mean flat while widening vol
+--    (15.89->17.17) and deepening the p10 tail (-13.93->-18.33). n>=20 for a stable std/percentile;
+--    the embedder treats a missing symbol / low-n as NaN (I1), never 0. Verified 2026-07-22:
+--    25 symbols, mean edge_vol 17.06, mean edge_p10 -20.54 (squarely in R63's range).
+-- ---------------------------------------------------------------------------
+create or replace view asset_edge_moments as
+select
+  symbol,
+  count(edge_beta_adj)                                                                as n,
+  round(avg(edge_beta_adj)::numeric, 4)                                               as edge_mean,
+  round(stddev_samp(edge_beta_adj)::numeric, 4)                                       as edge_vol,
+  round((percentile_cont(0.10) within group (order by edge_beta_adj))::numeric, 4)    as edge_p10,
+  max(d)                                                                              as last_d
+from signal_outcomes
+where edge_beta_adj is not null and symbol <> bench
+group by symbol
+having count(edge_beta_adj) >= 20;
+
+comment on view asset_edge_moments is
+  'Per-asset risk moments of the beta-adjusted directional edge (build-order #4, 2026-07-22). '
+  'edge_vol = stddev, edge_p10 = 10th-percentile left tail. I5: a mean-only schema is blind to where '
+  'money is lost. Feeds the asset embedder v2 risk-moment dims [25..26]. n>=20; missing symbol => NaN, not 0. '
+  'NOTE: signal_outcomes is Mac-side-fed and may be stale — check max(last_d).';

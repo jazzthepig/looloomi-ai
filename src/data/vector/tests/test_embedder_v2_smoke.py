@@ -11,7 +11,8 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")))
 
 from src.data.vector.embedder import (  # noqa: E402
-    generate_embedding, pillar_deltas, pillar_stability, cosine_similarity, k_means_cluster,
+    generate_embedding, pillar_deltas, pillar_stability, edge_risk_moments,
+    cosine_similarity, k_means_cluster,
     ASSET_DIMS_V1, ASSET_DIMS_V2, SCHEMA_VERSION, MIN_SHARED_DIMS,
 )
 from src.data.vector import store  # noqa: E402
@@ -37,13 +38,30 @@ def test_v1_backward_compat():
 
 
 def test_v2_shape_and_deltas():
-    """prior_pillars ⇒ 25 dims; deltas correctly signed & normalized (/50)."""
+    """prior_pillars ⇒ fixed 27-dim v2 block; deltas correctly signed & normalized (/50);
+    risk moments [25..26] NaN when no edge_moments supplied (I1)."""
     v = generate_embedding(ASSET_NOW, macro_regime="Risk-On", prior_pillars=PRIOR)
-    assert len(v) == ASSET_DIMS_V2 == 25, f"v2 must be 25 dims, got {len(v)}"
+    assert len(v) == ASSET_DIMS_V2 == 27, f"v2 must be 27 dims, got {len(v)}"
     assert v[:18] == generate_embedding(ASSET_NOW, macro_regime="Risk-On"), "v1 prefix byte-identical (I6)"
     # d_F=+10/50=.2  d_M=0  d_O=.2  d_S=-.2  d_A=+5/50=.1
     for got, exp in zip(v[18:23], [0.2, 0.0, 0.2, -0.2, 0.1]):
         assert abs(got - exp) < 1e-6, f"delta {got} != {exp}"
+    assert _isnan(v[25]) and _isnan(v[26]), "risk moments NaN when edge_moments absent"
+
+
+def test_risk_moments():
+    """edge_moments ⇒ [25..26] finite & normalized (vol/25, p10/25); helper computes + NaN-gates."""
+    v = generate_embedding(ASSET_NOW, prior_pillars=PRIOR, edge_moments=(16.5, -13.3))
+    assert len(v) == 27
+    assert abs(v[25] - 16.5 / 25.0) < 1e-6, "edge_vol normalized /25"
+    assert abs(v[26] - (-13.3 / 25.0)) < 1e-6, "edge_p10 normalized /25, sign kept"
+    # deep tail saturates at -1.0
+    v2 = generate_embedding(ASSET_NOW, edge_moments=(40.0, -60.0))
+    assert v2[25] == 1.0 and v2[26] == -1.0, "extreme vol/tail clamp"
+    # helper: raw std + p10, NaN below min obs
+    vol, p10 = edge_risk_moments([1.0, -2.0, 3.0, -4.0] * 6)   # 24 obs
+    assert not _isnan(vol) and not _isnan(p10)
+    assert all(_isnan(x) for x in edge_risk_moments([1.0, 2.0, 3.0])), "3 obs < min ⇒ NaN"
 
 
 def test_deltas_nan_when_unmeasured():
@@ -108,7 +126,7 @@ def test_history_row_shape_deltas():
 
 
 def test_schema_version():
-    assert SCHEMA_VERSION == 2 and ASSET_DIMS_V2 - ASSET_DIMS_V1 == 7
+    assert SCHEMA_VERSION == 2 and ASSET_DIMS_V2 == 27 and ASSET_DIMS_V2 - ASSET_DIMS_V1 == 9
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
