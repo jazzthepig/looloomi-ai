@@ -3127,7 +3127,16 @@ async def snapshot_full_universe_to_supabase() -> dict:
             continue
         tier = a.get("data_tier")
         tier_label = a.get("data_tier_label") or ("T1" if tier in (1, "1", "T1") else "T2")
-        pillars = a.get("pillars") if isinstance(a.get("pillars"), dict) else {}
+        # shape-tolerant pillar extraction + canonical regime — same latent null-pillar bug as the
+        # hourly T2 loop (only read nested pillars[K]; the builder emits FLAT k → NULL pillars).
+        # Fixed 2026-07-23 so the T2 fallback keeps pillars populated through a T1 stall.
+        _pp = a.get("pillars") if isinstance(a.get("pillars"), dict) else {}
+        def _pv(K, _a=a, _p=_pp):
+            return (_p.get(K) if _p.get(K) is not None
+                    else _a.get(K.lower()) if _a.get(K.lower()) is not None
+                    else _a.get(f"pillar_{K.lower()}") if _a.get(f"pillar_{K.lower()}") is not None
+                    else _a.get(f"{K.lower()}_score"))
+        from src.data.cis.cis_provider import canonical_regime as _canon
         rows.append({
             "symbol":             sym,
             "name":               a.get("name", ""),
@@ -3136,13 +3145,13 @@ async def snapshot_full_universe_to_supabase() -> dict:
             "grade":              a.get("grade"),
             "signal":             a.get("signal"),
             "percentile":         a.get("percentile_rank"),
-            "pillar_f":           pillars.get("F"),
-            "pillar_m":           pillars.get("M"),
-            "pillar_o":           pillars.get("O"),
-            "pillar_s":           pillars.get("S"),
-            "pillar_a":           pillars.get("A"),
+            "pillar_f":           _pv("F"),
+            "pillar_m":           _pv("M"),
+            "pillar_o":           _pv("O"),
+            "pillar_s":           _pv("S"),
+            "pillar_a":           _pv("A"),
             "asset_class":        a.get("asset_class", a.get("class", "")),
-            "macro_regime":       regime,
+            "macro_regime":       _canon(regime),
             "data_tier":          tier_label,
             "data_quality_score": a.get("data_quality_score"),
             "las":                a.get("las"),

@@ -64,6 +64,29 @@ async def check_loop_health(base: str = DEFAULT_BASE) -> dict:
         else:
             out.append(StageHealth("store/hot (Mac Mini → Redis push)", "broken", str(bs)[:80]))
 
+        # ── DATA COMPLETENESS: are the PILLARS actually populated? ──────────
+        # The gap that hid the 2026-07-19 T1 stall for 4 days: the T2 fallback keeps writing rows
+        # (so universe size / push-freshness stay green) but T2 NEVER writes pillar_f/m/o/s/a — they
+        # land NULL. A liveness check ("rows flowing") cannot see this; only a completeness check can.
+        # Anything pillar-dependent (v5, asset-vector risk moments, edge_map) is silently dead while
+        # this is broken. Also surfaces the data_tier so a T1→T2 fallback is visible, not masked.
+        def _pillar_val(a):
+            if not isinstance(a, dict):
+                return None
+            v = a.get("pillar_o")
+            if v is None:
+                v = (a.get("pillars") or {}).get("O")
+            if v is None:
+                v = a.get("o")
+            return v
+        n_pillar = sum(1 for a in universe if _pillar_val(a) is not None)
+        tiers = {str(a.get("data_tier")) for a in universe if isinstance(a, dict)}
+        out.append(StageHealth(
+            "data completeness (pillars populated)",
+            "flowing" if (n and n_pillar >= 0.5 * n) else ("broken" if n else "stale"),
+            f"{n_pillar}/{n} assets have non-null pillar_O (null ⇒ T1 engine stalled / T2 fallback); "
+            f"data_tier={sorted(tiers)}"))
+
         # causes attached? (fwd-supply / positioning are NESTED blocks, not flat fields)
         def _has(a, block, inner):
             b = a.get(block) if isinstance(a, dict) else None

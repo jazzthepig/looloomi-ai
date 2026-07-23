@@ -131,12 +131,30 @@ app.include_router(ohlcv_router)
 _HOURLY_SNAPSHOT_S = int(os.environ.get("SNAPSHOT_HOURLY_INTERVAL_S", "3600"))
 
 
+def _pillar_of(asset: dict, K: str):
+    """Pillar value tolerant of every universe shape: nested pillars[K], flat lowercase a['k'],
+    or a['pillar_k']. The T2 snapshot writer only read nested pillars[K] — so when the builder emits
+    the FLAT shape it wrote NULL pillars every hour (latent since inception; exposed when the T1
+    engine stalled 2026-07-19 and T2 became the only writer). This keeps pillars populated on the
+    T2 fallback so v5 / risk-moments / edge_map survive a T1 outage."""
+    p = asset.get("pillars") if isinstance(asset.get("pillars"), dict) else {}
+    v = p.get(K)
+    if v is None:
+        v = asset.get(K.lower())
+    if v is None:
+        v = asset.get(f"pillar_{K.lower()}")
+    if v is None:
+        v = asset.get(f"{K.lower()}_score")
+    return v
+
+
 async def _hourly_t2_snapshot_loop():
     await _asyncio.sleep(600)   # let caches warm; defer past daily loop's first run
     while True:
         try:
             from src.api.routers.cis import _build_cis_universe
             from src.api.store import supabase_insert_batch, _SB_TABLE as _SB_T
+            from src.data.cis.cis_provider import canonical_regime
             data = await _build_cis_universe(force_source=None)
             uni = (data or {}).get("universe", []) if isinstance(data, dict) else []
             regime = (data or {}).get("macro_regime") or (data or {}).get("regime")
@@ -151,7 +169,6 @@ async def _hourly_t2_snapshot_loop():
                 score = a.get("cis_score", a.get("score"))
                 if not sym or score is None:
                     continue
-                pillars = a.get("pillars") if isinstance(a.get("pillars"), dict) else {}
                 t2_rows.append({
                     "symbol":        sym,
                     "name":          a.get("name", ""),
@@ -160,13 +177,13 @@ async def _hourly_t2_snapshot_loop():
                     "grade":         a.get("grade"),
                     "signal":        a.get("signal"),
                     "percentile":    a.get("percentile_rank"),
-                    "pillar_f":      pillars.get("F"),
-                    "pillar_m":      pillars.get("M"),
-                    "pillar_o":      pillars.get("O"),
-                    "pillar_s":      pillars.get("S"),
-                    "pillar_a":      pillars.get("A"),
+                    "pillar_f":      _pillar_of(a, "F"),
+                    "pillar_m":      _pillar_of(a, "M"),
+                    "pillar_o":      _pillar_of(a, "O"),
+                    "pillar_s":      _pillar_of(a, "S"),
+                    "pillar_a":      _pillar_of(a, "A"),
                     "asset_class":   a.get("asset_class", a.get("class", "")),
-                    "macro_regime":  regime,
+                    "macro_regime":  canonical_regime(regime),
                     "data_tier":     "T2",
                     "las":           a.get("las"),
                     "confidence":    a.get("confidence", 0.8),

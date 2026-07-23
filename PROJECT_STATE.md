@@ -9,6 +9,22 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-23 🟢 FIXED the null-pillar ROOT CAUSE (my lane, not just T1) + the health-check blind spot (Seth).**
+  Ran it down instead of handing off. **The null pillars were a latent T2 bug, exposed by the T1 stall.**
+  Evidence: T1 wrote full pillars until 07-19 then stalled (Mac-side); **T2 NEVER wrote pillars — 32,887
+  null rows since 2026-04-16.** Root cause found in MY lane: the T2 writers (`main.py::_hourly_t2_snapshot_loop`
+  + `cis.py` railway_snapshot) only read the NESTED `a["pillars"]["O"]`, but the universe builder emits the
+  FLAT `a["o"]` shape → `pillars={}` → NULL pillar_f/o every write. Masked for months because T1 covered it.
+  **Fixed:** shape-tolerant `_pillar_of()` (nested / flat `o` / `pillar_o` / `o_score`) in both writers, so
+  the T2 fallback now persists real pillars — **v5 / risk-moments / edge_map now survive a T1 outage**
+  instead of silently dying. Both writers also now emit `canonical_regime()` UPPER_SNAKE. **Health-check
+  blind spot fixed** (`loop_health.py`): it only checked liveness (universe size, push freshness, spreads) —
+  T2 kept those green while writing NULL pillars, so a 4-day pillar outage hid. Added a **"data completeness
+  (pillars populated)"** stage → BROKEN when <50% assets have non-null pillar_O; surfaces data_tier too.
+  Preflight PASSED; `_pillar_of` verified on all 4 shapes. **Only genuinely Mac-side item left: restart the
+  T1 engine (cis_v4_engine.py) — but with the T2 pillar fix it's no longer a hard outage.** Still open (my
+  lane, next): why `ohlcv_daily` collector (`main.py::_ohlcv_collector_loop`) is stale since 06-19.
+
 - **2026-07-23 🔴→🟢 "升级之后就乱了" DIAGNOSED — T1 engine stall broke pillars + regime labels; the regime SIGNAL is validated (Seth).**
   Jazz asked if 周期判断/分类 are done + v5's real effect. Investigated on live data:
   **(1) v5 can't show live effect** — `cis_scores.pillar_o` (all pillars) is **NULL since 2026-07-19** (last
