@@ -9,6 +9,19 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-22 (SESSION 2) ✅ S-77 — CIS v5 architecture VALIDATED on β-data; risk side corrected S→O (Seth).**
+  Proved #6's claims before proposing deploy (β-backfilled `signal_outcomes`, n=6,207). **Return claim ✅:**
+  v5_return (F/M/A) IC **0.0663** ≥ v4 composite (F/M/O/S/A) IC **0.0656** — dropping S/O from the return score
+  costs nothing (A alone 0.0667 = the workhorse). **Risk claim ✅ but O-led:** dispersion corr(pillar, edge²)
+  = **O +0.145** (2× any other), A +0.079, S +0.040, **F −0.002** (pure return). O quintiles escalate vol
+  14.3→20.8 + tail −13.5→−20.9 monotonically. **⇒ O is the dispersion pillar, NOT S** — corrected the v5
+  reference (`cis_v5_architecture.py` risk_score was S-led → now O-led; S enters only via Δ-stability→confidence).
+  7/7 smoke still pass (load-bearing test: identical-except-O ⇒ same return rank, size_mult collapses; v4 does
+  the opposite). Meta-lesson: build→validate→refine — the test moved risk S→O, which a design-only v5 would
+  have baked in wrong. Ledger **S-76** (lead-lag) + **S-77** (this) appended under the approved lane-prefix
+  convention (Jazz approved Option 2 2026-07-23; new Seth entries = `S-`, from 76). Build order COMPLETE +
+  #6 now empirically validated.
+
 - **2026-07-22 (SESSION 2) ✅ Build-order #6 — CIS v5 two-score architecture (reference) + R-numbering proposal (Seth).**
   The LAST build-order item. **CIS v5 is an architecture change, not a reweight** (R63b): v4 collapses 5
   pillars into ONE weighted sum (`calculate_total_score`: base×regime×IC), which cannot express that the
