@@ -87,6 +87,25 @@ async def check_loop_health(base: str = DEFAULT_BASE) -> dict:
             f"{n_pillar}/{n} assets have non-null pillar_O (null ⇒ T1 engine stalled / T2 fallback); "
             f"data_tier={sorted(tiers)}"))
 
+        # ── INGEST freshness: is ohlcv_daily still advancing? ───────────────
+        # The other silent stall: the daily OHLCV collector wrote 0 rows from 06-18→07-23 (yfinance
+        # rate-limited, no EODHD fallback) while every liveness metric stayed green. A price feed that
+        # stops advancing kills forward outcomes, edge_map, and any vol sleeve — check it explicitly.
+        sc, ob = await _get(c, f"{base}/api/v1/ohlcv/BTC", params={"days": 5})
+        _rows = ob if isinstance(ob, list) else (ob.get("rows") or ob.get("data") or []) if isinstance(ob, dict) else []
+        latest_d = (_rows[0] or {}).get("trade_date") if _rows else None
+        age_days = None
+        if latest_d:
+            try:
+                from datetime import datetime as _dt, timezone as _tz
+                age_days = (_dt.now(_tz.utc).date() - _dt.fromisoformat(str(latest_d)[:10]).date()).days
+            except Exception:
+                age_days = None
+        out.append(StageHealth(
+            "ingest freshness (ohlcv_daily)",
+            "flowing" if (age_days is not None and age_days <= 3) else ("broken" if age_days is None else "stale"),
+            f"BTC latest trade_date={latest_d} (age={age_days}d; >3d ⇒ price feed stalled)"))
+
         # causes attached? (fwd-supply / positioning are NESTED blocks, not flat fields)
         def _has(a, block, inner):
             b = a.get(block) if isinstance(a, dict) else None

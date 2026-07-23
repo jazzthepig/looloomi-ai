@@ -9,6 +9,23 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-23 🟢 ohlcv_daily stall — TradFi source fixed (yfinance→EODHD) + observability; crypto side scoped (Seth).**
+  Chased the 06-18/19 price-feed stall directly. Both sources stopped together (coingecko 06-19, yfinance
+  06-18). **Confirmed yfinance is dead** — sandbox test returns `YFRateLimitError: Too Many Requests`. The
+  collector's TradFi path still used yfinance even though the rest of the system moved TradFi to EODHD
+  (`afdc705`). **Fixed:** added `_fetch_eodhd_daily()` (mirrors the proven `get_eodhd_eod_data` `/eod/`
+  endpoint) and wired it as TradFi PRIMARY with yfinance FALLBACK in `collect_ohlcv` (no regression — worst
+  case = current behavior; new rows tagged source='eodhd'). **Observability (so it can't hide again):** the
+  daily loop now logs a LOUD `⚠️⚠️ WROTE 0 ROWS` on a zero-write; `loop_health` gained an **"ingest freshness
+  (ohlcv_daily)"** stage (BTC latest trade_date age >3d ⇒ broken). TradFi EODHD path can't be live-tested here (no key) but reuses the system's proven endpoint/auth.
+  **Crypto (CoinGecko) side — FIXED with Hyperliquid fallback (Jazz's suggestion).** CG stalled 06-19
+  (rate-limit/quota). Added `_fetch_hyperliquid_daily()` — HL is a public DEX API (no key, not geo-blocked
+  unlike Binance-US), wired as crypto fallback (CoinGecko primary → HL fallback). **VERIFIED LIVE from the
+  sandbox** (unlike EODHD): the exact shipped function returns BTC/ETH/SOL/HYPE daily candles, latest =
+  today 2026-07-23, real closes; unlisted coins fall through gracefully. So both feed halves are now
+  resilient: TradFi = EODHD→yfinance, crypto = CoinGecko→Hyperliquid. Preflight PASSED. Remaining Jazz/Railway
+  item: check `COINGECKO_API_KEY` quota (nice-to-restore-primary), but crypto no longer depends on it.
+
 - **2026-07-23 🟢 FIXED the null-pillar ROOT CAUSE (my lane, not just T1) + the health-check blind spot (Seth).**
   Ran it down instead of handing off. **The null pillars were a latent T2 bug, exposed by the T1 stall.**
   Evidence: T1 wrote full pillars until 07-19 then stalled (Mac-side); **T2 NEVER wrote pillars — 32,887
