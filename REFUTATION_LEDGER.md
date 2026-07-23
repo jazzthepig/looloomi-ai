@@ -3027,6 +3027,110 @@ economically meaningful (you pay/receive it), whereas volume is just activity (c
 
 ---
 
+## R81 🔴 Taker buy ratio residual (30d rolling-mean taker-buy ratio cross-sectional demean) L/S — REFUTED (Seth, 2026-07-24)
+
+**Hypothesis.** Per R80's lesson #43 v3 finding (cross-sectional demean of rate/turnover/vol axes mostly
+lacks edge; only R76 funding survives), R81 pivots to a STRUCTURALLY DIFFERENT signal: the
+**price-flow axis (NON-rate)**. Taker-buy ratio = taker_buy_quote / volume_quote captures
+ORDER-FLOW IMBALANCE — which assets have aggressive buyers (taker-buys) dominating the day's flow vs
+aggressive sellers (taker-sells). This is informed-flow pressure captured at the TRADE-INITIATION
+level, structurally distinct from any RATE/TREND/VOL/ACTIVITY axis. Score = mean_30d(taker_buy_ratio)
+− mean_a(mean_30d(taker_buy_ratio)). Per user direction 2026-07-24 ("不做费率相关的" = don't do
+rate-related), this deliberately leaves the rate axis and reaches for non-rate micro-informativeness.
+
+**Built.** `src/research/validation/r81_taker_buy_residual.py` (~530 LoC) + 11 smoke tests (all pass;
+NaN-honest I1, panel-mismatch honesty, universe-floor enforcement, verdict grammar, live-book-untouched
+flag). New helper `load_daily_taker_buy_ratio` reads A-S1 24-symbol CSVs from
+`/Volumes/CometCloudAI/cometcloud-local/_data/strategy_revive/{sym}_1d_ohlcv.csv` and computes daily
+taker-buy ratio. Reuses R73's `pillar_a_level_ls` as L/S engine (signature parity). k=3, cadence × cost
+sweep, market + momentum residualization, NW lags=6, OOS=30%, both signs supported.
+
+**Data constraint (honest disclosure).** Taker-buy data is only available at the A-S1 24-symbol panel
+(2025-01-01 → 2026-07-18, 564 days). The fusion-cell panel is the 28-asset 731-day set used by
+R46/R62/R76/R78/R80. **The two panels are STRUCTURALLY NOT COMPARABLE** — different universes,
+different windows.
+
+**Pre-test leg-correlation gate (lesson #42) — N/A.** R81 panel ≠ R46/R62/R76/R78/R80 panel.
+Lesson #42's leg-correlation gate (max |corr| ≤ 0.30 against existing legs) cannot be tested because
+the legs are not defined on a common return series. R81 is a STANDALONE gauntlet test on the A-S1
+universe. If SURVIVED, the next step would be "extend taker-buy to the 28-asset panel" (R82 candidate,
+out of scope for R81) — out of scope here, deferred to a separate work item.
+
+**Universe (derived from data, not assumed).** 24 symbols (AAVE, ADA, APT, ARB, ATOM, AVAX, BCH,
+BNB, BTC, DOGE, DOT, ETC, ETH, FIL, INJ, LINK, LTC, NEAR, OP, SOL, SUI, TRX, UNI, XRP) — discovered
+via `_discover_a_s1_symbols()` scanning the data dir at runtime, NOT hardcoded. The originally
+declared A-S1 list (HBAR, ICP, LDO, MATIC, MKR) does not match the actual data dir; switched to
+honest derivation. Strict intersection of taker-buy availability + close-price returns: 24 assets.
+
+**Verdict.** 🔴 **REFUTED** — best leg (5d/0bps, sign=high_tafi_long): gross_t = **+2.03** (just over
+1.96!), OOS_t = **+0.40** (well below 1.96). **No cell in 6-cadence × 3-cost sweep clears t=1.96
+on all 3 checks.** The default-cadence cell (3d/0bps) gives gross_t=+1.79, OOS_t=+0.29 — also
+fails. Sign verdict **high_tafi_long** (matched-cell top-3 differentials ALL positive +4.05 to
++4.06 — directional thesis is rock-solid, absolute edge is too thin).
+
+**Per-window W1-W6 attribution (3d/0bps, sign=high_tafi_long) — UNIFORMLY POSITIVE:**
+- W1: +15.4%, W2: +85.6%, W3: +66.7%, W4: +94.2%, W5: +21.9%, W6: +60.3% — **6/6 positive**
+- maxDD: −17.39% (mild)
+- This is the **CLEANEST per-window pattern** of any refuted candidate in the R78/R79/R80/R81
+  sequence — every window positive, no catastrophic late-cycle sign-flip. The directional thesis
+  is correct; the absolute edge is too thin to clear t=1.96 on the gauntlet.
+
+**Lesson #43 v3 (CONFIRMED, full articulation in 6 cases now):**
+- ✅ R76 — orthogonal + standalone edge → SURVIVES + ORTHOGONAL → fusion lift (R77). UNIQUE.
+- 🔴 R78 — orthogonal but NO standalone edge → REFUTED (TREND axis).
+- 🔴 R79 — orthogonal but NO standalone edge + W5-catastrophic → REFUTED (VOL axis).
+- 🔴 R80 — orthogonal but NO standalone edge → REFUTED (TURNOVER / CARRY axis sibling).
+- 🔴 R81 — orthogonal (panel-mismatch honesty; structurally non-rate) + NO standalone edge → REFUTED (PRICE-FLOW axis).
+- 🔴 R74 — NOT orthogonal + NO standalone edge → REFUTED (CIS-quality pillar_A).
+
+**The structural finding deepens further:** cross-sectional demean of single-class axes — REGARDLESS
+of axis (rate / trend / vol / activity / price-flow) — MOSTLY LACKS EDGE on this universe. Only R76
+funding residual survives. R81's per-window pattern is *uniquely clean* (6/6 positive, no
+catastrophe) but the magnitude is too thin to clear t=1.96 — this is the **directional-right,
+magnitude-wrong** refutation pattern. **The SIGNAL matters more than the axis** (consistent with R80's
+finding). R76's structural-flow specificity (perp-market-maker positioning, captured in the funding
+carry payment) is unique; even the price-flow axis (taker-buy residual), which has a clean
+informational interpretation, does not carry edge in cross-sectional demean form.
+
+**Anti-imposter check passed (matched-cell sign audit).** Top-3 differentials:
+- 5d/0bps: Δ(α_t) = +4.06 (hi=+2.03, lo=−2.03) — **PERFECT sign symmetry**
+- 5d/10bps: Δ(α_t) = +4.05 (hi=+1.81, lo=−2.24)
+- 5d/5bps: Δ(α_t) = +4.05 (hi=+1.92, lo=−2.13)
+All three top-3 matched cells have hi_tafi_long > 0 and lo_tafi_long < 0 with magnitudes ~matched.
+**The directional thesis is verifiable, not a fit artifact** — sign flips the entire P&L cleanly.
+
+**The "directional-right, magnitude-wrong" pattern — a NEW lesson sub-type.**
+- R76: directional-right AND magnitude-right → SURVIVES
+- R77/R78/R79/R80: directional-right BUT magnitude wrong (or sign-flip at W5) → REFUTED
+- R81: directional-right + per-window uniformly positive BUT magnitude too thin → REFUTED (cleanest
+  per-window of the refuted set; 6/6 windows positive; maxDD only −17%)
+
+**Action items.**
+1. R81 ships no production change (research-only). Frozen R77 cell at w_R46=0.25, w_R62=0.75,
+   w_R76=0.30 **unchanged**. R65 paper book, R66 tracking: unaffected.
+2. **Lesson #43 v3 v4 (CONFIRMED in 6 cases):** cross-sectional demean of single-class microstructure
+   axes (rate, price-flow, vol, trend, activity) MOSTLY LACKS EDGE. R76 funding residual is the
+   1-in-5 outlier, not the rule. **Pool of viable candidates is EXHAUSTED** for the cross-sectional
+   demean shape on this universe. Future orthogonal candidates must reach for STRUCTURALLY DIFFERENT
+   sources: cross-asset carry (perp-spot basis, term-spread), cross-frequency (4h/24h cross-section),
+   cross-section-of-cross-section, or informativeness-WEIGHTED (not just demeaned) scoring.
+3. **Lesson #43 sub-lesson (proposed, new):** the "directional-right, magnitude-wrong" refutation
+   pattern is itself informative — the matched-cell sign audit passes cleanly (all 3 top differentials
+   positive) but t-stats fail. This means the underlying economic story IS true at small magnitude,
+   and the right next step is to find a structural amplification (cross-asset basis, term-spread
+   curve) rather than another demean.
+4. **R82 candidate status: deferred.** R82 = orthogonal candidate #6, should be a STRUCTURALLY
+   DIFFERENT shape, NOT another cross-sectional demean. Top candidates: (a) perp-spot basis
+   residual (cross-asset), (b) informativeness-WEIGHTED funding (sharpened, not demeaned), (c)
+   cross-frequency funding (4h/8h vs 24h).
+
+**Reference.** `src/research/validation/r81_taker_buy_residual.py` (~530 LoC);
+`src/research/validation/tests/test_r81_taker_buy_residual_smoke.py` (11/11 tests pass);
+`reports/r81_taker_buy_residual/2026-07-24/REPORT.md`;
+`reports/r81_taker_buy_residual/2026-07-24/verdict.json`.
+
+---
+
 ## §LEDGER-RECONCILIATION-MAP 2026-07-22 (Seth, per Jazz decision) — the R64–R68b collision, resolved
 
 **Why this exists.** Two lanes ran in parallel and both claimed R64–R68b (the parallel-assignment hazard
