@@ -2534,6 +2534,16 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         regime_vec = generate_regime_embedding(macro_pulse_for_embed, universe)
         save_embeddings(embeddings, macro_regime=regime, regime_vec=regime_vec)
         _logger.info(f"[CIS] Vector store updated: {len(embeddings)} embeddings")
+        # VDB 落库 (2026-07-23): DUAL-WRITE to Supabase pgvector (the proper vector DB) beside Redis.
+        # Best-effort — a pgvector outage never breaks the CIS cycle; Redis stays belt-and-braces until
+        # reads are fully migrated to the HNSW index (match_asset_embeddings RPC).
+        try:
+            from src.data.vector.pgvector_store import upsert_embeddings as _pgv_upsert
+            _ameta = {str(a.get("symbol")).upper(): {"asset_class": a.get("asset_class", a.get("class"))}
+                      for a in universe if a.get("symbol")}
+            _pgv_upsert(embeddings, asset_meta=_ameta, macro_regime=canonical_regime(regime))
+        except Exception as _pe:
+            _logger.warning(f"[CIS] pgvector dual-write failed: {_pe}")
     except Exception as e:
         _logger.warning(f"[CIS] Vector store update failed: {e}")
 

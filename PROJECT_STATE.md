@@ -9,6 +9,34 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-23 ✅ VDB 落库 — vector store migrated Redis-JSON → Supabase pgvector (proper vector DB) (Seth, Jazz "路径不对").**
+  The Redis-JSON blob path worked but wasn't a vector DB (no index/ANN, O(n) Python cosine). Migrated to
+  **pgvector** (native to Supabase, no external Qdrant): enabled the `vector` ext; created `asset_embeddings`
+  (`vec vector(18)` dense v1 core on an **HNSW cosine index** + `vec_full jsonb` full v2 with null for NaN)
+  + `match_asset_embeddings(target,k,class_mode)` RPC (any/same/cross). **I1 preserved:** NaN never enters
+  pgvector (rejects it) — unmeasured dims live in JSONB, never fabricated as 0. **Verified end-to-end:** 72
+  assets loaded from cis_scores; ETH `any`→SOL/XRP/BTC/BNB, ETH `cross`→LINK/UNI/AAVE/POL/**AAPL** (cross-class
+  analogs). New `src/data/vector/pgvector_store.py` (REST upsert + RPC similar), 6/6 smoke. Provider
+  **dual-writes** to pgvector beside Redis (best-effort); `/api/v1/cis/similar` reads **pgvector-first, Redis
+  fallback**. Preflight PASSED. Migrations captured in `scripts/supabase_pgvector_vdb.sql`. Redis stays
+  belt-and-braces until reads fully cut over. Follow-up (Minimax): route the Mac-side embedding push + the
+  strategy vectors (`strategy_store`) through pgvector too; text/news RAG embeddings get their own table later.
+
+- **2026-07-23 ✅ S-80 — "拉长周期" (Jazz) reverses the bear-window pessimism: CIS score + F robust 12/12 years (Seth).**
+  Jazz caught it: S-77/78/79 were all mined on the bear-dominated 1-yr real-CIS window, so "signal weak / A
+  unstable" was regime confound, not refutation. Extended to the 11yr history (`cis_historical_11yr.csv`,
+  2015-2026, 34 assets): **score→fwd-return rank-IC POSITIVE every single year (12/12, +0.12…+0.18), F_IC
+  12/12 positive pooled +0.197 (2× M, 4× O/S).** The CIS signal is durable across bull/bear; F is the
+  double-confirmed durable anchor (S-79 bear + S-80 long). **⇒ CIS v5 return_score reweighted F-anchored
+  (F 0.40 / M 0.25 / A 0.35).** Corrections logged: **S-79's A-refutation DOWNGRADED to "bear-window-only,
+  unresolved"** (A absent from the 11yr proxy — untestable long-horizon); S-78 vol sleeve stays refuted on
+  available β-data but bear-scoped. Caveat: 11yr is proxy (pre-2024 momentum+vol, no A, raw fwd-ret).
+  **Dispatched Minimax `§DATA-ALIGN`** (Jazz's instruction): (A) header-align the 11yr CSV to cis_scores schema
+  + add pillar_a + β-adj; (B) **land the real-CIS 2024-bull backfill into Supabase** — the actual unlock to
+  settle A/vol across a full cycle; (C) mining spec with EVENT-COUNTING mandatory (per-pillar IC×regime×cycle,
+  vol×macro, per-class). 7/7 v5 tests. **Meta-lesson (session's biggest): a 1-year single-regime sample cannot
+  falsify a signal — need a multi-cycle window; the real fix is more real-CIS history, not more bear-mining.**
+
 - **2026-07-23 🔴 S-78 event-count — the last survivor REFUTED; no tradeable vol-sizing sleeve (Seth).**
   Applied R44 lesson #12 (count EVENTS not autocorrelated days) to the one OOS survivor, RISK_OFF×storm. Its
   day-level oos t+14.1 (n=1300) is only **4 independent episodes, 2 up / 2 down** (−7.82/+4.70/+5.62/−10.38;
