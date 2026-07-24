@@ -21,15 +21,17 @@ def test_vol_regime_terciles():
     assert vol_regime(None) is None
 
 
-def test_size_multiplier_is_oos_gated():
-    """ONLY the OOS-confirmed cell (RISK_OFF×storm) presses; in-sample-only cells stay neutral."""
+def test_size_multiplier_presses_nothing_after_event_count():
+    """No cell cleared OOS + event-count, so NOTHING presses — honest neutral 1.0 everywhere."""
+    # RISK_OFF×storm passed OOS but FAILED event-count (2/4 episodes) ⇒ event_refuted ⇒ neutral, not pressed
     rs = size_multiplier("RISK_OFF", "storm")
-    assert rs["size_mult"] == 1.5 and rs["status"] == "oos_confirmed"
-    # EASING×calm looked great in-sample but has ZERO OOS obs ⇒ NOT tradeable ⇒ neutral
-    ec = size_multiplier("EASING", "calm")
-    assert ec["size_mult"] == 1.0 and ec["status"] == "in_sample_only"
-    # consistently-negative cell ⇒ cut
-    assert size_multiplier("RISK_OFF", "normal")["size_mult"] == 0.5
+    assert rs["size_mult"] == 1.0 and rs["status"] == "event_refuted"
+    # EASING×calm: in-sample-only ⇒ neutral
+    assert size_multiplier("EASING", "calm")["size_mult"] == 1.0
+    # nothing anywhere returns an up/down multiplier
+    for mr in ("EASING", "RISK_OFF", "RISK_ON", "TIGHTENING"):
+        for v in ("calm", "normal", "storm"):
+            assert size_multiplier(mr, v)["size_mult"] == 1.0
 
 
 def test_size_multiplier_neutral_paths():
@@ -50,10 +52,10 @@ def test_stratify_reproduces_cells():
     assert m[("EASING", "normal")]["mean_edge"] == -6.0
 
 
-def test_only_riskoff_storm_survives_oos():
-    """The disciplined result: exactly ONE cell is oos_confirmed (RISK_OFF×storm)."""
-    confirmed = [k for k, v in S78_CELLS.items() if v["status"] == "oos_confirmed"]
-    assert confirmed == [("RISK_OFF", "storm")], f"only RISK_OFF×storm survives OOS, got {confirmed}"
+def test_no_cell_survives_event_count():
+    """The honest end state: NO cell is event_confirmed. RISK_OFF×storm passed OOS but is event_refuted."""
+    assert not [k for k, v in S78_CELLS.items() if v["status"] == "event_confirmed"]
+    assert S78_CELLS[("RISK_OFF", "storm")]["status"] == "event_refuted"
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

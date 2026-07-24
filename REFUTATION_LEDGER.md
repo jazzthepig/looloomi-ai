@@ -3422,3 +3422,25 @@ regime — **event-count + DSR/PBO owed before it is a live sleeve.** Module upd
 per-cell OOS status; `size_multiplier()` presses ONLY `oos_confirmed` (in-sample-only/unstable ⇒ neutral).
 Meta-lesson: an in-sample stratification with huge t-stats (t+8/+17) can still be one-regime-deep — the
 temporal split is the gate that separates "real across time" from "recent-period artifact." 5/5 smoke.
+
+### S-78 event-count — the last survivor (RISK_OFF×storm) is REFUTED; no tradeable vol-sizing sleeve (Seth, 2026-07-23)
+
+Applied R44 lesson #12 (count independent EVENTS, not autocorrelated days) to the one OOS survivor.
+RISK_OFF×storm's day-level oos t = +14.1 (n=1300) resolves to only **4 independent episodes** (gap>7d):
+
+| episode | window | n_days | avg edge |
+|---|---|---|---|
+| 1 | 2025-10-18 → 11-10 | 12 | **−7.82** |
+| 2 | 2025-11-22 → 12-21 | 28 | +4.70 |
+| 3 | 2026-02-02 → 04-04 | 62 | +5.62 |
+| 4 | 2026-04-15 → 04-20 | 6 | **−10.38** |
+
+**Episode-level: 2 up / 2 down, mean −1.97.** The t+14 was pseudo-replication of one 62-day risk-off block
+(ep3). At the independent-episode level there is no edge — coin-flip, slightly negative.
+
+**Verdict: REFUTED.** No cell of the S-78 (macro×vol) map survives the full gauntlet. The stratification is
+real DESCRIPTIVELY (in-sample) but is **NOT a tradeable sizing edge**: in-sample t+8/+17 → temporal split
+kills 5/6 → event-count kills the 6th. `size_multiplier()` now presses nothing (bar = `event_confirmed`,
+uncleared). The vol sleeve the coverage map asked for is **not born from this seed** — the honest graveyard
+entry. Aggregate lesson reaffirmed: a huge in-sample/OOS t-stat on daily rows is worthless until you count
+independent episodes; regime-conditioned cells are especially prone to it (one long regime = one event).
