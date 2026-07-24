@@ -69,9 +69,25 @@ async def get_similar_assets(
     cross_class: bool = Query(False, description="Exclude same asset class (find cross-class analogs)"),
 ):
     """
-    Return top-k most similar assets to target symbol by 18-dim cosine similarity.
-    Embeddings are recomputed after every CIS universe refresh (~30min from Mac Mini).
+    Return top-k most similar assets to target symbol by cosine similarity.
+    Served by the pgvector HNSW index (VDB 落库); falls back to Redis + in-process cosine.
     """
+    # VDB 落库: try the pgvector HNSW index first (the real vector DB). Redis+Python is the fallback
+    # so the endpoint never hard-depends on the migration being fully populated.
+    try:
+        from src.data.vector.pgvector_store import similar as _pgv_similar
+        pgv = _pgv_similar(symbol.upper(), k=k, class_mode=("cross" if cross_class else "any"))
+        if pgv:
+            return {
+                "symbol": symbol.upper(), "k": k, "cross_class": cross_class,
+                "neighbors": [{"symbol": r.get("symbol"),
+                               "similarity": round(float(r.get("cosine_sim") or 0), 4),
+                               "asset_class": r.get("asset_class")} for r in pgv],
+                "source": "pgvector_hnsw",
+            }
+    except Exception:
+        pass  # fall back to Redis + in-process cosine
+
     load_embeddings, load_meta, embedding_age_seconds = _load_store()
     find_similar, k_means_cluster, cosine_similarity = _load_embedder()
 
