@@ -9,6 +9,17 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-23 🔴 S-78 event-count — the last survivor REFUTED; no tradeable vol-sizing sleeve (Seth).**
+  Applied R44 lesson #12 (count EVENTS not autocorrelated days) to the one OOS survivor, RISK_OFF×storm. Its
+  day-level oos t+14.1 (n=1300) is only **4 independent episodes, 2 up / 2 down** (−7.82/+4.70/+5.62/−10.38;
+  episode-mean −1.97) — the t+14 was pseudo-replication of ONE 62-day risk-off block. **REFUTED.** Full arc:
+  in-sample t+8/+17 → temporal split kills 5/6 → event-count kills the 6th. **The (macro×vol) stratification
+  is real descriptively but NOT a tradeable sizing edge** — `size_multiplier()` now presses nothing (bar
+  `event_confirmed`, uncleared). The vol sleeve the coverage map wanted is not born from this seed — honest
+  graveyard. 5/5 smoke. Ledger: S-78 event-count. This is the anti-imposter gauntlet working end-to-end; the
+  graveyard is the asset. **Net today: fixed 4 silent pipeline failures (pillar/regime/TradFi/crypto feeds) +
+  2 health-check gaps; mined + honestly killed a vol sleeve.** Real remaining edge search continues elsewhere.
+
 - **2026-07-23 🟡 S-78 OOS — the map was too generous; ONLY RISK_OFF×storm survives the temporal split (Seth).**
   Ran the gauntlet on S-78's two ✅ corners. Train/OOS split 2026-02-01, vol cuts derived from TRAIN only
   (PIT). **RISK_OFF×storm SURVIVES** — train +0.98 (t+1.91) AND oos **+4.84 (t+14.1, n=1300)**, same sign both

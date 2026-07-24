@@ -31,10 +31,17 @@ OOS VERDICT (train/OOS split 2026-02-01, PIT train-derived vol cuts) — the in-
     cannot confirm ⇒ neutral, not tradeable yet.
   · RISK_OFF × normal, EASING × storm — consistently negative (the mushy middle). EASING × normal flips
     sign train↔oos (unstable). None ship.
-So the honest result is ONE OOS-robust sizing cell, not two corners. Caveat: RISK_OFF×storm's OOS window is
-risk-off-dominated, so its OOS strength may lean on one extended regime — event-count + DSR/PBO still owed
-before it is a live sleeve. `size_multiplier()` presses ONLY `oos_confirmed`. Pure/reproducible: re-run
-`stratify()` on fresh data. Compliance: internal research; a sizing multiplier, not advice.
+So OOS left ONE candidate (RISK_OFF×storm) — but the EVENT-COUNT then refuted it too:
+
+EVENT-COUNT (R44 lesson #12 — count independent episodes, not autocorrelated days): RISK_OFF×storm's
+day-level oos t+14.1 (n=1300) is only **4 independent episodes, 2 up / 2 down** (−7.82 / +4.70 / +5.62 /
+−10.38; episode-mean −1.97). The huge t was pseudo-replication of one 62-day risk-off block. ⇒ **no cell
+survives.** The (macro×vol) stratification is real DESCRIPTIVELY but is NOT a tradeable sizing edge —
+`size_multiplier()` therefore presses nothing (bar = `event_confirmed`, which no cell clears). Honest 1.0.
+
+Full arc = the anti-imposter gauntlet working end to end: in-sample t+8/+17 → temporal split kills 5/6 →
+event-count kills the 6th. The graveyard is the asset. Pure/reproducible; re-run `stratify()` on fresh data.
+Compliance: internal research; a sizing multiplier, not advice.
 """
 from __future__ import annotations
 
@@ -55,8 +62,16 @@ S78_CELLS: dict[tuple[str, str], dict] = {
     ("EASING",   "storm"):  {"train": (-3.20, -4.43), "oos": (-1.46, -0.33), "status": "negative"},
     ("RISK_OFF", "calm"):   {"train": (0.73, 0.78),   "oos": (None, None),  "status": "in_sample_only"},
     ("RISK_OFF", "normal"): {"train": (-0.40, -0.77), "oos": (-3.87, -2.61), "status": "negative"},
-    ("RISK_OFF", "storm"):  {"train": (0.98, 1.91),   "oos": (4.84, 14.12), "status": "oos_confirmed"},
+    ("RISK_OFF", "storm"):  {"train": (0.98, 1.91),   "oos": (4.84, 14.12), "status": "event_refuted"},
 }
+# EVENT-COUNT REFUTATION of the last survivor (R44 lesson #12: count EVENTS, not autocorrelated days).
+# RISK_OFF×storm's day-level oos t+14.1 (n=1300) is only 4 independent episodes, split 2 up / 2 down:
+#   2025-10-18→11-10 (−7.82) · 2025-11-22→12-21 (+4.70) · 2026-02-02→04-04 (+5.62) · 2026-04-15→20 (−10.38)
+# Episode-level mean = −1.97 (2/4 positive = coin-flip). The t+14 was pseudo-replication of one 62-day
+# risk-off block. ⇒ NO cell survives event-count. `size_multiplier` presses ONLY `event_confirmed`
+# (a bar NO cell currently clears), so it now returns neutral everywhere — the honest outcome: the
+# (macro×vol) stratification is real DESCRIPTIVELY but is NOT a tradeable sizing edge.
+_PRESS_STATUS = "event_confirmed"   # the bar: survived OOS AND independent-episode count. None yet.
 
 
 def vol_regime(prior_returns: list[float], window: int = 30) -> str | None:
@@ -92,8 +107,11 @@ def size_multiplier(macro_regime: str | None, vol: str | None,
     if cell is None:
         return {"size_mult": 1.0, "basis": "unmeasured", "status": None}
     st = cell["status"]
-    mult = up if st == "oos_confirmed" else (down if st == "negative" else 1.0)
-    return {"size_mult": mult, "basis": "oos_gated", "status": st,
+    # Press ONLY a cell that cleared BOTH the temporal split AND the independent-episode count.
+    # No cell currently clears it (RISK_OFF×storm passed OOS but failed event-count), so this stays
+    # neutral — an honest 1.0 beats sizing on a t-stat inflated by autocorrelated within-episode days.
+    mult = up if st == _PRESS_STATUS else 1.0
+    return {"size_mult": mult, "basis": "oos+event_gated", "status": st,
             "train": cell["train"], "oos": cell["oos"]}
 
 
