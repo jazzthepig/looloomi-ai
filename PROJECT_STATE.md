@@ -9,6 +9,17 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-23 ✅ VDB follow-through — "find sister sleeve" mining flow + Minimax handoff (Seth).**
+  Added `neighbours(records, id, k)` to the canonical strategy stack (NaN-aware cosine over SHARED dims) —
+  the "find sister sleeve" primitive Minimax flagged. Wired into the graveyard library report. Output on the
+  8 sleeves: **`risk_direction_score` is a redundancy HUB** (sister to cis_quality_ls_5d 0.90 AND
+  swing_overlay_v9 0.89 → adds little unique breadth); ls_v4_ema_flip ≈ trend_v5c 0.86 (the churning twin).
+  8/8 strategy + 6/6 graveyard tests, preflight green. Dispatched `MINIMAX_SYNC §VDB`: route the Mac
+  embedding push through pgvector; move strategy records to DURABLE Postgres (Redis 4h-TTL loses permanent
+  records) but keep similarity in NaN-aware Python — design rule **dense+many → pgvector HNSW; sparse+few →
+  Postgres jsonb + NaN-aware cosine** (strategy vectors are 8–20 & sparse, ANN gives nothing + dense cosine
+  over 0-imputed sparse would be WRONG). VDB thread complete: assets on pgvector (live), strategy path spec'd.
+
 - **2026-07-23 ✅ VDB 落库 — vector store migrated Redis-JSON → Supabase pgvector (proper vector DB) (Seth, Jazz "路径不对").**
   The Redis-JSON blob path worked but wasn't a vector DB (no index/ANN, O(n) Python cosine). Migrated to
   **pgvector** (native to Supabase, no external Qdrant): enabled the `vector` ext; created `asset_embeddings`
