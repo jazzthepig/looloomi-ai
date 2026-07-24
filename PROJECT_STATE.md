@@ -9,6 +9,18 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-23 🟡 S-78 OOS — the map was too generous; ONLY RISK_OFF×storm survives the temporal split (Seth).**
+  Ran the gauntlet on S-78's two ✅ corners. Train/OOS split 2026-02-01, vol cuts derived from TRAIN only
+  (PIT). **RISK_OFF×storm SURVIVES** — train +0.98 (t+1.91) AND oos **+4.84 (t+14.1, n=1300)**, same sign both
+  halves → the one OOS-robust sizing cell (size UP when risk-off + high vol). **EASING×calm FAILS the test**:
+  real in train (+3.13, t+4.52) but **zero OOS obs** (regime didn't recur) → untestable, not tradeable.
+  RISK_OFF×normal consistently negative; EASING×normal sign-flips (unstable). **So the pretty in-sample
+  2-corner map collapsed to ONE cell under time-splitting** — exactly what the gauntlet is for. Caveat logged:
+  RISK_OFF×storm's OOS window is risk-off-dominated → event-count + DSR/PBO still owed before it's a live
+  sleeve. Module now OOS-gated (`S78_CELLS` status; `size_multiplier` presses only `oos_confirmed`), 5/5 smoke.
+  Meta-lesson: in-sample t+8/+17 can still be one-regime-deep; the temporal split separates real-across-time
+  from recent-artifact. Ledger: S-78 OOS follow-up.
+
 - **2026-07-23 ✅ S-78 — VALUE MINED: volatility regime stratifies the edge (the 风格分层 / sizing layer) (Seth).**
   Mined the coverage-map gap (calm/storm uncovered) into a real finding. Market-vol regime (BTC PIT 30d
   realized-vol tercile) stratifies the β-adj signal edge, INDEPENDENTLY of macro. One-way: calm +2.52 (t+6.3),

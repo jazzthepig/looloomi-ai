@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")))
 
 from src.research.validation.regime_vol_stratification import (  # noqa: E402
-    vol_regime, size_multiplier, stratify, S78_MAP,
+    vol_regime, size_multiplier, stratify, S78_CELLS,
 )
 
 
@@ -21,21 +21,23 @@ def test_vol_regime_terciles():
     assert vol_regime(None) is None
 
 
-def test_size_multiplier_presses_winning_cells():
-    """EASING×calm and RISK_OFF×storm are the validated ✅ corners ⇒ size UP; ✗ cells ⇒ DOWN."""
-    assert size_multiplier("EASING", "calm")["size_mult"] == 1.5      # t +8.0
-    assert size_multiplier("RISK_OFF", "storm")["size_mult"] == 1.5   # t +17.6
-    assert size_multiplier("EASING", "normal")["size_mult"] == 0.5    # t −8.4
-    assert size_multiplier("EASING", "calm")["basis"] == "two_way(macro×vol)"
+def test_size_multiplier_is_oos_gated():
+    """ONLY the OOS-confirmed cell (RISK_OFF×storm) presses; in-sample-only cells stay neutral."""
+    rs = size_multiplier("RISK_OFF", "storm")
+    assert rs["size_mult"] == 1.5 and rs["status"] == "oos_confirmed"
+    # EASING×calm looked great in-sample but has ZERO OOS obs ⇒ NOT tradeable ⇒ neutral
+    ec = size_multiplier("EASING", "calm")
+    assert ec["size_mult"] == 1.0 and ec["status"] == "in_sample_only"
+    # consistently-negative cell ⇒ cut
+    assert size_multiplier("RISK_OFF", "normal")["size_mult"] == 0.5
 
 
-def test_size_multiplier_fallback_and_neutral():
-    # unmeasured macro (RISK_ON) ⇒ one-way vol fallback (storm is +15 ⇒ up)
-    r = size_multiplier("RISK_ON", "storm")
-    assert r["size_mult"] == 1.5 and r["basis"] == "one_way(vol)"
-    # weak cell (RISK_OFF×normal, t≈1.0) ⇒ neutral 1.0
-    assert size_multiplier("RISK_OFF", "normal")["size_mult"] == 1.0
-    # no vol regime ⇒ neutral, flagged
+def test_size_multiplier_neutral_paths():
+    # unmeasured macro (RISK_ON) ⇒ neutral (no OOS-confirmed evidence to press on)
+    assert size_multiplier("RISK_ON", "storm")["size_mult"] == 1.0
+    # unstable (sign-flip) cell ⇒ neutral, not pressed
+    assert size_multiplier("EASING", "normal")["size_mult"] == 1.0
+    # no vol regime ⇒ neutral
     assert size_multiplier("EASING", None)["size_mult"] == 1.0
 
 
@@ -48,8 +50,10 @@ def test_stratify_reproduces_cells():
     assert m[("EASING", "normal")]["mean_edge"] == -6.0
 
 
-def test_map_has_both_winning_corners():
-    assert S78_MAP[("EASING", "calm")][1] > 3 and S78_MAP[("RISK_OFF", "storm")][1] > 3
+def test_only_riskoff_storm_survives_oos():
+    """The disciplined result: exactly ONE cell is oos_confirmed (RISK_OFF×storm)."""
+    confirmed = [k for k, v in S78_CELLS.items() if v["status"] == "oos_confirmed"]
+    assert confirmed == [("RISK_OFF", "storm")], f"only RISK_OFF×storm survives OOS, got {confirmed}"
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

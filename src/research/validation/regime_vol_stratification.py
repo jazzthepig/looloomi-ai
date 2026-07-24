@@ -24,29 +24,39 @@ Interpretation: liquidity-returning + calm (EASING×calm) = trend the signals cl
 high vol (RISK_OFF×storm) = capitulation where CIS calls are sharply right; the mushy middle (normal vol)
 is where the book bleeds. Size UP in the two ✅ corners, FLAT/avoid in normal vol and the ✗ cross-cells.
 
-⚠️ IN-SAMPLE map. Before it sizes real capital it must survive the gauntlet (OOS split + DSR/PBO) — this
-module produces the map + a PIT vol classifier; the OOS test is the next step. Pure/reproducible: re-run
-`stratify()` when the pipeline refreshes. Compliance: internal research; sizing multiplier, not advice.
+OOS VERDICT (train/OOS split 2026-02-01, PIT train-derived vol cuts) — the in-sample map was TOO GENEROUS:
+  · **RISK_OFF × storm SURVIVES** — train +0.98 (t+1.91) AND oos +4.84 (t+14.1, n=1300), same sign both
+    halves. The one cell that holds across time ⇒ the only one that sizes capital (`status=oos_confirmed`).
+  · EASING × calm — real in train (+3.13, t+4.52) but **ZERO OOS obs** (the regime didn't recur post-02);
+    cannot confirm ⇒ neutral, not tradeable yet.
+  · RISK_OFF × normal, EASING × storm — consistently negative (the mushy middle). EASING × normal flips
+    sign train↔oos (unstable). None ship.
+So the honest result is ONE OOS-robust sizing cell, not two corners. Caveat: RISK_OFF×storm's OOS window is
+risk-off-dominated, so its OOS strength may lean on one extended regime — event-count + DSR/PBO still owed
+before it is a live sleeve. `size_multiplier()` presses ONLY `oos_confirmed`. Pure/reproducible: re-run
+`stratify()` on fresh data. Compliance: internal research; a sizing multiplier, not advice.
 """
 from __future__ import annotations
 
 import math
 
-# Validated 2-way cells (mean β-adj edge %, t-stat). None = not yet measured (I1: unmeasured ≠ neutral-claim).
-# Keyed (MACRO_UPPER, vol_regime). vol_regime ∈ {calm, normal, storm}.
-S78_MAP: dict[tuple[str, str], tuple[float, float]] = {
-    ("EASING",   "calm"):   (6.35,  8.01),
-    ("EASING",   "normal"): (-6.86, -8.44),
-    ("EASING",   "storm"):  (-2.47, -3.12),
-    ("RISK_OFF", "calm"):   (-0.96, -1.96),
-    ("RISK_OFF", "normal"): (0.48,  1.00),
-    ("RISK_OFF", "storm"):  (5.70,  17.62),
+# (macro, vol) cells with the OUT-OF-SAMPLE verdict. Train/OOS split at 2026-02-01 with PIT train-derived
+# vol tercile cuts (no full-sample look-ahead). status drives sizing — only `oos_confirmed` presses capital.
+#   oos_confirmed : same sign in train AND oos, oos strong                (the ONLY tradeable cell)
+#   in_sample_only: real in train but ZERO oos obs (regime didn't recur)  → cannot confirm ⇒ neutral
+#   unstable      : sign flips train↔oos                                  → neutral
+#   negative      : consistently loses                                    → cut
+# ⚠️ The full-sample 2-way map (which looked like TWO winning corners) did NOT survive: EASING×calm has no
+# OOS sample, and only RISK_OFF×storm holds across time. Caveat: RISK_OFF×storm's OOS window (2026-02→05) is
+# risk-off-dominated, so the OOS win may lean on one extended regime — event-count + DSR still owed.
+S78_CELLS: dict[tuple[str, str], dict] = {
+    ("EASING",   "calm"):   {"train": (3.13, 4.52),  "oos": (None, None),  "status": "in_sample_only"},
+    ("EASING",   "normal"): {"train": (-8.00, -9.66), "oos": (11.11, 2.41), "status": "unstable"},
+    ("EASING",   "storm"):  {"train": (-3.20, -4.43), "oos": (-1.46, -0.33), "status": "negative"},
+    ("RISK_OFF", "calm"):   {"train": (0.73, 0.78),   "oos": (None, None),  "status": "in_sample_only"},
+    ("RISK_OFF", "normal"): {"train": (-0.40, -0.77), "oos": (-3.87, -2.61), "status": "negative"},
+    ("RISK_OFF", "storm"):  {"train": (0.98, 1.91),   "oos": (4.84, 14.12), "status": "oos_confirmed"},
 }
-# One-way vol fallback (used when the (macro,vol) cell is unmeasured) — calm/storm favoured, normal cut.
-S78_VOL_ONEWAY: dict[str, tuple[float, float]] = {
-    "calm": (2.52, 6.33), "normal": (-0.93, -2.31), "storm": (4.09, 15.07),
-}
-_T_GATE = 3.0   # |t| below this ⇒ treat as neutral (not enough signal to move size)
 
 
 def vol_regime(prior_returns: list[float], window: int = 30) -> str | None:
@@ -70,29 +80,21 @@ def vol_regime(prior_returns: list[float], window: int = 30) -> str | None:
 
 def size_multiplier(macro_regime: str | None, vol: str | None,
                     up: float = 1.5, down: float = 0.5) -> dict:
-    """Actionable sizing from the S-78 map: press in validated-positive cells, cut in validated-negative,
-    neutral (1.0) where unvalidated. Uses the (macro×vol) cell if measured, else the one-way vol fallback.
-
-    Returns {size_mult, basis, cell_mean, cell_t} — never a bare number, so the reason is auditable.
+    """OOS-GATED sizing: press ONLY cells whose edge survived the temporal split (`oos_confirmed`), cut
+    consistently-`negative` cells, stay neutral (1.0) for `in_sample_only`/`unstable`/unmeasured — an
+    in-sample pattern that has not held OOS does not move real capital. Returns the status + train/oos
+    numbers so the decision is auditable, never a bare multiplier.
     """
     if vol is None:
-        return {"size_mult": 1.0, "basis": "no_vol_regime", "cell_mean": None, "cell_t": None}
+        return {"size_mult": 1.0, "basis": "no_vol_regime", "status": None}
     mr = (macro_regime or "").strip().upper().replace("-", "_")
-    cell = S78_MAP.get((mr, vol))
-    basis = "two_way(macro×vol)"
+    cell = S78_CELLS.get((mr, vol))
     if cell is None:
-        cell = S78_VOL_ONEWAY.get(vol)
-        basis = "one_way(vol)"
-    if cell is None:
-        return {"size_mult": 1.0, "basis": "unmeasured", "cell_mean": None, "cell_t": None}
-    mean, t = cell
-    if t >= _T_GATE:
-        mult = up
-    elif t <= -_T_GATE:
-        mult = down
-    else:
-        mult = 1.0
-    return {"size_mult": mult, "basis": basis, "cell_mean": mean, "cell_t": t}
+        return {"size_mult": 1.0, "basis": "unmeasured", "status": None}
+    st = cell["status"]
+    mult = up if st == "oos_confirmed" else (down if st == "negative" else 1.0)
+    return {"size_mult": mult, "basis": "oos_gated", "status": st,
+            "train": cell["train"], "oos": cell["oos"]}
 
 
 def stratify(rows: list[dict]) -> list[dict]:
