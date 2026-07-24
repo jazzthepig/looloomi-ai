@@ -3369,3 +3369,35 @@ risk = {O dispersion pillar, S/O stability → confidence}. Reference module ref
 deployed (adoption is a coordinated deploy with Minimax's Mac engine). Meta-lesson: build → validate →
 refine — the empirical test moved risk from S to O, which a design-only v5 would have baked in wrong.
 `src/data/cis/cis_v5_architecture.py` + 7/7 smoke.
+
+## S-78 ✅ Volatility regime stratifies the signal edge — the SIZING layer above the H2 direction table (Seth, 2026-07-23)
+
+**Hypothesis (value-mining, from the build-order #3 coverage gap):** the strategy library is all-directional —
+calm/storm vol regimes UNCOVERED. Does the MARKET VOLATILITY regime stratify the β-adjusted signal-book edge,
+independently of the macro regime?
+
+**Method:** β-backfilled `signal_outcomes` ∩ `ohlcv_daily`, ex-self. PIT market-vol regime = BTC trailing-30d
+realized-vol tercile (returns strictly before the scored day). One-way vol; two-way (macro × vol) to control
+for regime. One-sample t of edge vs 0 per cell. n≈5,937.
+
+**Result — CONFIRMED, and the interaction is the finding:**
+- One-way vol (U-shape): calm **+2.52 (t+6.3)**, normal **−0.93 (t−2.3)**, storm **+4.09 (t+15.1)** — best at
+  the EXTREMES, the mushy middle loses.
+- Two-way (× macro), edge concentrates in OPPOSITE vol corners by regime:
+  - **EASING × calm = +6.35 (t+8.0) ✅** · EASING × normal −6.86 (t−8.4) ✗ · EASING × storm −2.47 (t−3.1) ✗
+  - RISK_OFF × calm −0.96 (t−2.0) · RISK_OFF × normal +0.48 (t+1.0) · **RISK_OFF × storm +5.70 (t+17.6) ✅**
+- **Not a confound:** all vol terciles span 2025-06→2026-05 (not time-clustered); not a macro proxy (edge is
+  U-shaped in vol while RISK_OFF% is monotonic 28→65→82 across the terciles).
+
+**Verdict ✅ (in-sample):** vol regime is independent sizing information. This is the SIZE layer that
+complements Minimax's H2 DIRECTION table (H2 = which way to lean per regime; S-78 = how hard to press given
+vol) and grounds CIS v5's `risk_score` (market vol is a real sizing input, not just pillar_O). Actionable:
+size UP in EASING×calm and RISK_OFF×storm, FLAT/avoid in normal vol and the cross-cells.
+
+**Interpretation:** liquidity-returning + calm = trend the signals cleanly; risk-off flush + high vol =
+capitulation where CIS calls are sharply right; normal vol = where the book bleeds.
+
+**⚠️ IN-SAMPLE map — must survive the gauntlet (OOS split + DSR/PBO) before it sizes real capital.** Module
+`src/research/validation/regime_vol_stratification.py` ships the reproducible `stratify()` + a PIT `vol_regime()`
+classifier + `size_multiplier(macro, vol)` (presses ✅ cells, cuts ✗, neutral where unvalidated). 5/5 smoke.
+Next: run the OOS split on the two ✅ corners; this is the empirical seed of the vol sleeve the coverage map demanded.

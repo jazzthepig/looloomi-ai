@@ -9,6 +9,18 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-23 ✅ S-78 — VALUE MINED: volatility regime stratifies the edge (the 风格分层 / sizing layer) (Seth).**
+  Mined the coverage-map gap (calm/storm uncovered) into a real finding. Market-vol regime (BTC PIT 30d
+  realized-vol tercile) stratifies the β-adj signal edge, INDEPENDENTLY of macro. One-way: calm +2.52 (t+6.3),
+  normal −0.93 (t−2.3), storm +4.09 (t+15.1) — U-shape, best at extremes. **Two-way (× macro) is the finding:
+  EASING×calm +6.35 (t+8.0) ✅ and RISK_OFF×storm +5.70 (t+17.6) ✅ — edge lives in OPPOSITE vol corners by
+  regime; normal vol loses in both.** Not time-clustered (full-sample spread), not a macro proxy (U-shape vs
+  monotonic RISK_OFF%). This is the SIZE layer above Minimax's H2 DIRECTION table + grounds CIS v5 `risk_score`
+  (market vol IS a sizing input, not just pillar_O). Module `regime_vol_stratification.py` (PIT `vol_regime()`
+  + `size_multiplier(macro,vol)` + reproducible `stratify()`), 5/5 smoke. **IN-SAMPLE — needs OOS/DSR before
+  sizing capital** (the seed of the vol sleeve, not the sleeve yet). Ledger S-78. Also: `MINIMAX_SYNC
+  §FEEDS-RESILIENCE` (HL crypto fallback + EODHD TradFi + the two new health-check stages, all documented).
+
 - **2026-07-23 🟢 ohlcv_daily stall — TradFi source fixed (yfinance→EODHD) + observability; crypto side scoped (Seth).**
   Chased the 06-18/19 price-feed stall directly. Both sources stopped together (coingecko 06-19, yfinance
   06-18). **Confirmed yfinance is dead** — sandbox test returns `YFRateLimitError: Too Many Requests`. The
