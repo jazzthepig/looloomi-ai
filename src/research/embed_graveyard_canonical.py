@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 
 from src.data.vector.strategy_schema import StrategyRecord, Verdict  # noqa: E402
 from src.data.vector.strategy_embedder import (  # noqa: E402
-    coverage_gaps, redundancy, is_disqualified, coverage_summary,
+    coverage_gaps, redundancy, is_disqualified, coverage_summary, neighbours,
 )
 
 _REGIME = {"calm": "regime_calm_vol", "stormy": "regime_storm_vol", "risk_on": "regime_risk_on",
@@ -130,6 +130,7 @@ def library_map(records=LIBRARY) -> dict:
         "disqualified": dq,
         "coverage_gaps": coverage_gaps(records),
         "redundancy": redundancy(records),
+        "sisters": {r.id: neighbours(records, r.id, k=2) for r in records if not is_disqualified(r)[0]},
         "coverage_per_sleeve": {r.id: coverage_summary(r)["coverage_pct"] for r in records},
     }
 
@@ -152,3 +153,7 @@ if __name__ == "__main__":
             print(f"  {d['a']} ≈ {d['b']}  ({d['similarity']})")
     else:
         print("  (none ≥ threshold)")
+    print("\nSISTER SLEEVES (nearest neighbour per live sleeve — replace/augment candidates):")
+    for sid, sis in m["sisters"].items():
+        near = ", ".join(f"{s['id']}({s['similarity']})" for s in sis) or "(no ≥4-shared-dim neighbour)"
+        print(f"  {sid:26s} → {near}")

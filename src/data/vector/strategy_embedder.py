@@ -334,6 +334,31 @@ def coverage_gaps(records, threshold: float = 0.25) -> list[dict]:
     return gaps
 
 
+def neighbours(records, target_id: str, k: int = 3, include_disqualified: bool = False) -> list[dict]:
+    """Nearest sleeves to `target_id` by NaN-aware cosine over SHARED measured dims — the "find sister
+    sleeve" primitive. Answers "if I want to replace/augment X, what's closest?" Returns
+    [{id, similarity, verdict, shared_dims}] sorted desc; skips pairs below MIN_SHARED_DIMS (returns
+    fewer than k rather than a confident number from noise)."""
+    pool = records if include_disqualified else [r for r in records if not is_disqualified(r)[0]]
+    tgt = next((r for r in records if r.id == target_id), None)
+    if tgt is None:
+        return []
+    tv = generate_embedding(tgt)
+    out = []
+    for r in pool:
+        if r.id == target_id:
+            continue
+        rv = generate_embedding(r)
+        shared = sum(1 for a, b in zip(tv, rv) if a == a and b == b)  # both non-NaN
+        s = cosine_similarity(tv, rv)
+        if s != 0.0 or shared >= MIN_SHARED_DIMS:   # cosine returns 0 when it refuses (<MIN_SHARED)
+            if shared >= MIN_SHARED_DIMS:
+                out.append({"id": r.id, "similarity": round(s, 3),
+                            "verdict": r.verdict.value if hasattr(r.verdict, "value") else str(r.verdict),
+                            "shared_dims": shared})
+    return sorted(out, key=lambda d: -d["similarity"])[:k]
+
+
 def redundancy(records, thresh: float = 0.85) -> list[dict]:
     """Near-duplicate pairs — breadth we THINK we have but don't (R20: effective breadth was 6.74
     of 17 strategies). Correlated sleeves are one sleeve wearing several names. Excludes disqualified.
