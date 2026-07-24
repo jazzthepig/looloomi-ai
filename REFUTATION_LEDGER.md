@@ -3401,3 +3401,24 @@ capitulation where CIS calls are sharply right; normal vol = where the book blee
 `src/research/validation/regime_vol_stratification.py` ships the reproducible `stratify()` + a PIT `vol_regime()`
 classifier + `size_multiplier(macro, vol)` (presses ✅ cells, cuts ✗, neutral where unvalidated). 5/5 smoke.
 Next: run the OOS split on the two ✅ corners; this is the empirical seed of the vol sleeve the coverage map demanded.
+
+### S-78 OOS follow-up — the in-sample map was too generous; only RISK_OFF×storm survives (Seth, 2026-07-23)
+
+Ran the gauntlet's temporal split on S-78's two ✅ corners. Train/OOS boundary 2026-02-01; vol tercile cuts
+**derived from TRAIN only** (PIT — no full-sample look-ahead), applied to both halves.
+
+| cell | train edge (t) | oos edge (t) | verdict |
+|---|---|---|---|
+| **RISK_OFF × storm** | +0.98 (t+1.91) | **+4.84 (t+14.1, n=1300)** | ✅ same sign both halves → **oos_confirmed** |
+| EASING × calm | +3.13 (t+4.52) | **n=0** (regime didn't recur) | 🟡 in-sample-only — untestable OOS |
+| RISK_OFF × normal | −0.40 | −3.87 (t−2.6) | 🔴 consistently negative |
+| EASING × normal | −8.00 | +11.11 | ⚪ sign-flip, unstable |
+
+**Verdict: the full-sample "two winning corners" did NOT both survive.** EASING×calm has no OOS sample; the
+mushy-middle cells lose or flip. **Only RISK_OFF×storm holds across time** — and it strengthens OOS (t+14).
+That is the single OOS-robust sizing cell (size UP when risk-off + high market vol). **Caveat, logged honestly:**
+the OOS window (2026-02→05) is risk-off-dominated, so RISK_OFF×storm's OOS strength may lean on one extended
+regime — **event-count + DSR/PBO owed before it is a live sleeve.** Module updated: `S78_CELLS` carries the
+per-cell OOS status; `size_multiplier()` presses ONLY `oos_confirmed` (in-sample-only/unstable ⇒ neutral).
+Meta-lesson: an in-sample stratification with huge t-stats (t+8/+17) can still be one-regime-deep — the
+temporal split is the gate that separates "real across time" from "recent-period artifact." 5/5 smoke.
