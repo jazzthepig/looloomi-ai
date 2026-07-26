@@ -107,13 +107,11 @@ def load_sleeve_returns(path: Path) -> pd.Series:
     return rets
 
 
-# CIS historical CSV column layout (no header — schema documented in the build report)
-_CIS_HIST_COLS = [
-    "symbol", "name", "score", "raw_cis_score", "grade", "signal",
-    "pillar_f", "pillar_m", "pillar_o", "pillar_s", "pillar_a",
-    "asset_class", "macro_regime", "data_tier", "las", "confidence",
-    "score_delta", "score_zscore", "source", "recorded_at",
-]
+# CIS historical CSV column layout — sourced from
+# src/research.data_align.cis_history_schema.CSV_COLUMNS (single source of truth,
+# Jazz §DATA-ALIGN directive 2026-07-24). Header line is now prepended by
+# scripts/cis_historical_align.py (idempotent), so we use header=0 reads here.
+from src.research.data_align.cis_history_schema import CSV_COLUMNS as _CIS_HIST_COLS  # noqa: E402, F401
 
 
 def _build_f_cis_quality_true(
@@ -140,10 +138,13 @@ def _build_f_cis_quality_true(
         return pd.Series(0.0, index=dates, name="f_cis_quality")
 
     try:
-        # Header-less CSV per the build report
-        cis = pd.read_csv(CIS_HISTORICAL_CSV, header=None, names=_CIS_HIST_COLS)
+        # Header-aware read (post §DATA-ALIGN 2026-07-24: header line is prepended
+        # by scripts/cis_historical_align.py; headerless files still work via
+        # the loader's auto-detection, but pd.read_csv above is the fast path).
+        cis = pd.read_csv(CIS_HISTORICAL_CSV, header=0)
     except Exception:
-        return pd.Series(0.0, index=dates, name="f_cis_quality")
+        # Defensive fallback: headerless legacy file
+        cis = pd.read_csv(CIS_HISTORICAL_CSV, header=None, names=_CIS_HIST_COLS)
 
     # Parse the recorded_at timestamp to a tz-naive date
     cis["date"] = pd.to_datetime(cis["recorded_at"]).dt.tz_localize(None).dt.normalize()

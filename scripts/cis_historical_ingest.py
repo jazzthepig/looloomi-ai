@@ -43,13 +43,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Canonical CSV column order from reconstruct_cis_history.py:row
-CSV_COLUMNS = [
-    "symbol", "name", "score", "raw_cis_score", "grade", "signal",
-    "pillar_f", "pillar_m", "pillar_o", "pillar_s", "pillar_a",
-    "asset_class", "macro_regime", "data_tier", "las", "confidence",
-    "score_delta", "score_zscore", "source", "recorded_at",
-]
+# Canonical CSV column order — sourced from src/research/data_align/cis_history_schema
+# (single source of truth — Jazz §DATA-ALIGN directive 2026-07-24).
+from src.research.data_align.cis_history_schema import CSV_COLUMNS  # noqa: E402, F401
 
 LOCAL_DB = Path("/Volumes/CometCloudAI/cometcloud-local/_data/cis_history.db")
 LOCAL_TABLE = "cis_history"
