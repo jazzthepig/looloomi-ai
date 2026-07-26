@@ -3312,6 +3312,61 @@ assets and computes staleness from max(last_hour)**). Preflight PASSED.
 `2026-07-23/{REPORT.md, verdict.json, run.log}` — gitignored.
 Re-run when pipeline resumes; same module, no code changes needed.
 
+**Update (2026-07-26, R75c).** Re-ran the same module, no code change. The pipeline has RECOVERED
+(staleness 74.5h → **1.3h**), but R75 is still ⚪ PREMATURE — the binding constraint has *moved
+from freshness to density*.
+
+| Signal | 2026-07-22 | 2026-07-23 | **2026-07-26 (R75c)** |
+|---|---|---|---|
+| Latest data hour observed | 2026-07-19T14:00 | 2026-07-19T14:00 | **2026-07-26T01:00** |
+| Staleness vs run time | 71.6 h | 74.5 h | **1.3 h** |
+| Calendar days | 37.12 | 36.79 | **35.96** (above 30d floor ✓) |
+| Valid hours | 662 | 654 | **662** (below 720h floor ✗ — 58 short) |
+| Assets (panel) | 28 | 28 | **28** (above 12 floor ✓) |
+| Null-pillar assets | 3 (BCH, ICP, WIF) | 3 (BCH, ICP, WIF) | **3 (BCH, ICP, WIF)** |
+| Mature | False | False | **False** (maturity gate binds on `valid_hours`) |
+| Best gross α_t | +1.18 | +1.18 | **+1.46** (slightly up from stall-window dip) |
+| 5bps α_t | −0.92 | −0.92 | **−0.77** |
+| OOS α_t | −1.70 | −1.70 | **−1.21** |
+| Verdict | PREMATURE | PREMATURE | **PREMATURE** |
+
+**Headline cell** (same as 2026-07-22): pillar **O**, Δ=**1h**, rebalance=**4h** → gross α_t=+1.46
+(ann +150.63%, provisional / no credit), 5bps α_t=−0.77, last-30% OOS α_t=−1.21. All 3 gates
+fail — even if maturity had cleared, the t-stats would still be 🔴 REFUTED. The PREMATURE label
+remains the binding verdict.
+
+**Lesson #46 (new).** The 720h maturity gate counts hours where **≥ 12 assets have non-null
+pillars** (`panel.notna().sum(axis=1) >= 12`), NOT raw panel span. A pipeline recovery does NOT
+immediately refill this counter — the 3-day stall left a 200-hour density hole in the calendar
+span (2026-06-20 → 2026-07-26 = 863h total, but only 662h cleared the 12-asset floor). With
+fresh pipeline back at 1.3h staleness, the 720h gate should clear within ~24 hours of clean
+running (rough estimate: 24h × 1h bars = +24 valid hours to the panel; need 58 more, so the gate
+could clear by tomorrow 2026-07-27 if pipeline stays healthy). This is a distinct concept from
+**calendar-days** (which already cleared at 35.96d): the gate is panel-density-bound, not
+calendar-span-bound. Lesson is operationally relevant — when a pipeline recovers, do NOT assume
+the maturity counter refills at the rate of wall-clock; it refills at the rate of **freshly
+written hours that also clear the 12-asset non-null floor**.
+
+**Lesson #47 (new).** The headline t-stat *did* move slightly between stalls (gross +1.18 → +1.46,
+OOS −1.70 → −1.21) even though the verdict is unchanged — i.e., the cell is mildly DATA-SENSITIVE
+to the stall window. The 200 missing hours in 2026-07-19 → 2026-07-25 were over-weighted in the
+2026-07-22 estimate, dragging the OOS deeper into sign-flip. Fresh pipeline rewrites that history.
+**Implication**: R75 should be re-run *after every pipeline recovery*, not just once. Each
+recovery gives a slightly different maturity-gated headline; the first time the maturity gate
+*itself* clears is the only moment a provisional t-stat becomes a real-verdict candidate.
+
+**Run artifacts (2026-07-26 R75c).** Same module re-executed end-to-end (full sweep, not just
+coverage): 96 cells (2 pillars × 4 lookbacks × 4 cadences × 3 costs), OHLCV loader returned
+`returns_source: public_ohlcv_api`. No module change, no smoke-test change, no production code
+change. Pipeline freshness recovered cleanly per §OHLCV-DEAD recovery (Minimax's T1 push is back);
+R75 stays PREMATURE only because of the panel-density gap. Re-run tomorrow 2026-07-27 should
+clear the 720h gate on a healthy pipeline; if it does, the next sweep becomes the first
+verdict-eligible run.
+
+`reports/r75_hourly_so_quintile/2026-07-26/{REPORT.md, verdict.json, run.log}` +
+`reports/r75_hourly_so_quintile/2026-07-26_coverage/{REPORT.md, verdict.json, run.log}` (coverage-only
+dry-run before the full sweep). All gitignored.
+
 ---
 
 ## S-76 🔴 Price does NOT lead S/O — the pillars are price-COINCIDENT, closing the build-order #5 nowcast path (Seth, 2026-07-22)
@@ -3444,3 +3499,89 @@ kills 5/6 → event-count kills the 6th. `size_multiplier()` now presses nothing
 uncleared). The vol sleeve the coverage map asked for is **not born from this seed** — the honest graveyard
 entry. Aggregate lesson reaffirmed: a huge in-sample/OOS t-stat on daily rows is worthless until you count
 independent episodes; regime-conditioned cells are especially prone to it (one long regime = one event).
+
+## S-79 🔴→🛠 Event-count overturns S-77: pillar_A is NOT the stable return workhorse — F is (Seth, 2026-07-23)
+
+**Hypothesis:** S-77 credited pillar_A as the return workhorse (pooled cross-sectional IC +0.067 ≈ the whole
+composite). Apply the S-78 event-count lesson: does A's edge survive at the independent-period level?
+
+**Method:** monthly cross-sectional IC of pillar_A vs edge_beta_adj (each month ≈ one independent obs), plus
+per-macro-regime IC. β-backfilled `signal_outcomes`, ex-self.
+
+**Result — S-77 REFUTED as stated:**
+- **A monthly IC: 6 positive / 6 negative** (range −0.79 to +0.26; mean ≈ −0.09). The pooled +0.067 was
+  pseudo-replication — it averaged wildly-swinging monthly ICs, including two catastrophic months
+  (2025-05 −0.79, 2025-09 −0.66). A is a coin-flip at the month level.
+- **A per-regime:** RISK_ON **+0.249**, RISK_OFF +0.016 (~0), EASING −0.042. A's edge is **concentrated in
+  RISK_ON only**, not general — and the −0.7 months aren't explained by these regimes ⇒ idiosyncratic
+  instability, not clean regime-conditioning.
+- **F is the robust anchor:** monthly IC **9 positive / 3 negative** (mean +0.06); per-regime positive in
+  RISK_ON (+0.18) and RISK_OFF (+0.12), only mildly negative in EASING (−0.04). Weak but CONSISTENT —
+  consistent with S-76 (F is the only price-INDEPENDENT pillar, ρ=−0.01) and R63b (F = level return factor).
+
+**Verdict 🛠 (correction, not a dead end):** CIS v5's return_score should ANCHOR on F (robust), treat A as a
+**RISK_ON-conditional booster**, not a general workhorse. Reweighted `cis_v5_architecture.RETURN_WEIGHTS`
+F-anchored. **Meta-lesson (2nd time this session): pooled cross-sectional IC is systematically over-optimistic
+— require monthly/event-level sign-stability before crediting ANY pillar or signal.** S-78 (regime buckets)
+and S-79 (pillar IC) both died to the same non-independence; make event-counting a standing gate, not an
+afterthought. Module `regime_vol_stratification`-style monthly-stability check should precede every "X predicts
+edge" claim going forward.
+
+## S-80 ✅ Long-horizon (11yr) CORRECTS the bear-window pessimism — the CIS score + pillar_F are robustly positive across all regimes (Seth, 2026-07-23, Jazz's "拉长周期")
+
+**Trigger (Jazz):** S-77/S-78/S-79 were all mined on the β-backfilled `signal_outcomes` = 2025-05→2026-05,
+which is BEAR-dominated (Nov-2025 on). A signal looking weak there is expected, not refuted. Extend the period.
+
+**Method:** `_data/cis_historical/cis_historical_11yr.csv` — 75,478 rows, **2015-07 → 2026-07, 34 assets**,
+per-year cross-sectional rank-IC of score / pillars vs the recorded forward return. ⚠️ CAVEAT: this is a
+`historical_reconstruction` (pre-2024 pillars are momentum+vol PROXIES, not the live CIS engine; **no A
+pillar**; fwd_ret is RAW, not β-adjusted). Suggestive of long-horizon shape, not the live engine.
+
+**Result — the bear window was NOT representative:**
+- **score → fwd-return rank-IC is POSITIVE every single year, 2015-2026 (12/12)**: +0.122 … +0.177, no sign
+  flip across bull/bear/chop. pooled +0.138. The cross-sectional CIS signal is durable across regimes.
+- **pillar_F dominates and is the most stable: 12/12 years positive (+0.16 … +0.24), pooled +0.197** — 2× M
+  (+0.099), 4× O (+0.044) / S (+0.051). Confirms S-79's F-anchor finding on LONG data (not a bear artifact),
+  and S-76 (F is the price-independent pillar).
+
+**Verdict ✅ + corrections:**
+1. **The CIS score is a genuinely robust cross-sectional signal across 11 years** — my bear-window pessimism
+   (implied by S-78/S-79) was short-sample bias. Reversed.
+2. **F is the durable return anchor** (double-confirmed: bear-window S-79 + 11yr S-80). CIS v5 `return_score`
+   reweighted F-anchored.
+3. **S-79's A-refutation is DOWNGRADED to "bear-window-only, UNRESOLVED"** — A is not in this proxy dataset,
+   so its long-horizon behaviour is untested. Do NOT treat A as refuted; it is untested outside the bear year.
+4. **S-78 (vol sleeve) stays refuted on the AVAILABLE β-data** but is likewise bear-window-scoped — revisit
+   when real-CIS bull data exists.
+
+**Meta-lesson (the session's biggest): a 1-year, single-regime real-CIS sample cannot falsify a signal — the
+regime confound dominates. Any "X is dead" claim needs a multi-cycle window; the 11yr proxy is the only long
+lens we have and it says the score+F are alive. The real fix is more real-CIS history (bull included), not more
+mining of the bear year.**
+
+## S-81 🛠 The influence-propagation frontier — primitive BUILT; naive level-diffusion refuted; correct form gated on real data (Seth, 2026-07-23, "be water, be quantum")
+
+**Frontier (ARCHITECTURE.md §Kernel/§Vectors): CIS/momentum are downstream reflections; beta+ is a TEMPORAL
+vector — upstream of the propagation wavefront before it reaches price; "the edge is the LAG."** Built the
+diffusion-wavefront primitive over the embedding similarity graph (`src/data/vector/propagation.py`): the
+graph IS the field; a signal diffuses via personalized-PageRank `p=(1−α)s+αWp`; `entanglement_delta=p−s`
+reads the lag (positive = field ahead of a node's own reflection ⇒ upstream ⇒ beta+). 6/6 smoke; math
+verified closed-form.
+
+**Loop-closed immediately (anti-imposter). Two findings:**
+1. **Level-diffusion REFUTED.** Cross-sectional IC of `entanglement_delta` (of the CIS LEVEL) vs fwd-return
+   = **−0.16 (24% of 1,044 sampled days positive)** vs raw score +0.13. Diffusing a *reflection* just
+   re-derives inverse-level (low-score node near high-score neighbours ⇒ big +delta ⇒ and low score
+   underperforms). **Level cannot carry the lag** — the source must be the CHANGE/FLOW (the cause), not the level.
+2. **Change-diffusion UNTESTABLE on proxy.** In `cis_historical_11yr.csv` the score's Δ is reconstructed
+   FROM the return, so own-Δscore→fwd IC = **0.9999 (a leak)** — Δscore ≡ return by construction. The correct
+   test (does a neighbour's Δ LEAD a node's forward change before its own reflection updates) needs REAL CIS
+   history where Δscore is not mechanically the return.
+
+**Verdict 🛠 (frontier built, not yet proven):** the propagation layer is the right shape and is design-correct;
+the naive level form is dead; the correct **change/flow** form is the open frontier, **gated on §DATA-ALIGN
+(real multi-cycle CIS)**. Third independent confirmation (with S-80, S-79) that proxy/bear data cannot
+falsify or validate the deep signals — the real unlock is real CIS history, not more mining. Source signals
+to diffuse when data lands: Δpillar, marginal capital flow (D1), attention diffusion (D4), holder-Δ.
+Meta: "be water / be quantum" done rigorously = build the non-local field operator, run it through the loop,
+let it refute the naive form and point at the correct one. NOT claimed as alpha.
