@@ -10,6 +10,23 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-27 ✅ CLAUDE.md + MEMORY.md RESTRUCTURED (Jazz: "高价值规划整理,不做执行") (Seth).**
+  **CLAUDE.md 32.2KB → 9.1KB (−72%).** Principle: the constitution keeps only what nothing else can hold
+  — identity, boundaries, 9 hard rules, source-of-truth map, compressed loop. Everything else became
+  POINTERS to where it now actually lives: skills (compliance/cis-methodology/deploy/task-audit/completion),
+  CI (discipline suite + preflight stage 3 replaced the prose "bar"), state docs (PROJECT_STATE/LEDGER/
+  SYNC/PLAYBOOK). **Promoted to constitution (were missing!): never-`git add -A` (own paths only) + S-/M-
+  ledger prefix + no-mock-data.** Dropped: 33-line project tree (drifts), 17-row env-var história, CIS
+  v4.1 scoring detail (skill owns it), 170-line loop ceremony (→ 12 lines + handoff template + threshold
+  one-liner). All 11 safety-critical rules verified present post-cut. **MEMORY.md CREATED (3.6KB)** — the
+  file session-start always referenced but which never existed in-repo (it lived Mac-side at 30KB, OVER the
+  24.4KB auto-load truncation = Minimax's "silent memory loss"). Rules in header: ≤4KB cap, one line per
+  expensive-to-rediscover fact, evict when stale or compiled-into-code. Seeded: infra traps (FUSE/Supabase-
+  region/Binance-reachability), data layout, validated findings (R62/S-77…S-81 + meta-lessons), standing
+  coordination. **Mac-side MEMORY.md (30KB) still needs the same treatment — Minimax applies the same
+  index-only rule; flagged in §PROTOCOL adoption.** Role note: Seth shifts to planning/审计/整理 (expensive
+  tokens on judgment, not execution) per Jazz + Minimax-C's "audit/linter, not strategy generator."
+
 - **2026-07-27 ✅ Minimax-feedback P0 + P2 EXECUTED — 731-day panel ELIMINATED + philosophy compiled to CI (Seth).**
   Both Minimax lanes converged on two levers; both landed same-day. **P0 — deep panel:** discovered
   api.binance.com is reachable from Supabase itself (ap-southeast-2, not geo-blocked) ⇒ built
