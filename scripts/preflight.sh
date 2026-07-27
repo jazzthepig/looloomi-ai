@@ -14,8 +14,20 @@ cd "$(dirname "$0")/.."
 echo "→ [1/2] byte-compile all src ..."
 python3 -m py_compile $(git ls-files 'src/**/*.py') && echo "  ✓ syntax OK"
 
-echo "→ [2/2] import + boot smoke (the real gate py_compile can't do) ..."
+echo "→ [2/3] import + boot smoke (the real gate py_compile can't do) ..."
 INTERNAL_TOKEN=preflight ENVIRONMENT=ci python3 scripts/smoke_test.py
 
+echo "→ [3/3] discipline + schema-drift guard (philosophy compiled to CI, 2026-07-27) ..."
+# 3a. strategy discipline — cause/OOS/paper/regime evidence floor on every SHIP record
+python3 -m tests.test_strategy_discipline
+# 3b. contract schema echo — the drift class preflight previously couldn't see (Mac push schema
+#     changed, Railway didn't follow). Prints the canonical SCHEMA_VERSION so it's in every log,
+#     and fails loudly if the contract module stops importing.
+python3 - <<'PY'
+from src.api.contracts.cis_push import SCHEMA_VERSION
+from src.data.vector.embedder import SCHEMA_VERSION as VEC_SCHEMA, ASSET_DIMS_V2
+print(f"  ✓ cis_push contract SCHEMA_VERSION={SCHEMA_VERSION} · vector schema v{VEC_SCHEMA} ({ASSET_DIMS_V2}-dim)")
+PY
+
 echo ""
-echo "✅ PREFLIGHT PASSED — app imports + boots. Safe to push."
+echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."

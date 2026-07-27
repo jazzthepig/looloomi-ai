@@ -142,6 +142,15 @@ class StrategyRecord:
     outcome_confidence: Optional[float] = None
     last_eval_ts: Optional[float] = None                     # epoch seconds
 
+    # EVIDENCE-GRADE (2026-07-27, per Minimax feedback — "把哲学编译成约束"). Additive, optional (I6).
+    # These make "guilty until proven with OOS outcomes" machine-checkable instead of prose:
+    base_rate: Optional[str] = None          # the CAUSE + its base rate (§TRADER_TOM: every sleeve traces to a behavioral cause)
+    oos_window: Optional[str] = None         # e.g. "2026-02-01→2026-05-03" — the held-out window actually used
+    oos_survival: Optional[bool] = None      # survived OOS + independent-event count (None = untested, NOT False)
+    paper_trade_days: Optional[int] = None   # forward paper days accrued (SHIP requires ≥ 60)
+    regime_skip: list[str] = field(default_factory=list)     # regimes the sleeve is gated OFF in
+    regime_reported: Optional[bool] = None   # OOS metrics reported per-regime (RISK_OFF/NEUTRAL/RISK_ON), not aggregate-only
+
     # Notes / free-text
     notes: str = ""                                          # ≤1 KB; not embedded
 
@@ -187,6 +196,15 @@ class StrategyRecord:
                 problems.append("ship verdict but cost_feasible_at_5bps=False")
             if not self.forward_committed:
                 problems.append("ship verdict but forward_committed=False")
+            # EVIDENCE-GRADE floor for production (the compiled philosophy — 2026-07-27):
+            if not self.base_rate:
+                problems.append("ship verdict but no base_rate/cause documented (§TRADER_TOM: every sleeve needs a cause)")
+            if self.oos_survival is not True:
+                problems.append("ship verdict but oos_survival is not True (guilty until proven with OOS outcomes)")
+            if (self.paper_trade_days or 0) < 60:
+                problems.append(f"ship verdict but paper_trade_days={self.paper_trade_days} < 60 (forward paper gate)")
+            if self.regime_reported is not True:
+                problems.append("ship verdict but regime_reported is not True (aggregate-only metrics hide regime failure)")
         if self.verdict == Verdict.REFUTE and self.pit_clean and self.cost_feasible_at_5bps:
             problems.append("refute verdict but all validity flags True — contradiction")
         return problems
