@@ -77,13 +77,25 @@ def test_new_ship_record_without_evidence_is_rejected():
     assert any("oos_survival" in p for p in problems), "unproven OOS must be flagged"
     assert any("paper_trade_days" in p for p in problems), "missing 60d paper gate must be flagged"
     assert any("regime_reported" in p for p in problems), "aggregate-only reporting must be flagged"
+    assert any("max_dd_stop" in p for p in problems), "no stop rule ⇒ no production (Millennium)"
     # and a fully-evidenced record passes:
     good = StrategyRecord(id="proven", title="proven", doc_source="test",
                           verdict=Verdict.SHIP, pit_clean=True, cost_feasible_at_5bps=True,
                           forward_committed=True, base_rate="funding crowding reverts (behavioral)",
                           oos_survival=True, paper_trade_days=75, regime_reported=True,
-                          oos_window="2026-02-01→2026-05-03")
+                          oos_window="2026-02-01→2026-05-03", max_dd_stop=-0.15,
+                          capital_action_on_breach="zero_and_freeze", backtest_included_stop=True)
     assert not good.validate(), "fully-evidenced ship record must pass"
+
+
+def test_stop_added_after_the_fact_is_rejected():
+    """A stop bolted on AFTER the backtest curve is self-deception — it changes the curve's shape."""
+    r = StrategyRecord(id="post_hoc_stop", title="x", doc_source="test", verdict=Verdict.SHIP,
+                       pit_clean=True, cost_feasible_at_5bps=True, forward_committed=True,
+                       base_rate="cause", oos_survival=True, paper_trade_days=90,
+                       regime_reported=True, max_dd_stop=-0.15,
+                       capital_action_on_breach="zero_and_freeze", backtest_included_stop=False)
+    assert any("backtest_included_stop" in p for p in r.validate())
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

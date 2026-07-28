@@ -22,6 +22,119 @@ NOT trust memory of what's committed. That error happened 2026-07-02.)
 
 ## Building log (terse; NOT more md — this replaces scattered docs)
 
+- **2026-07-27 ✅ Railway/Supabase 配合项完成 + 📊 七月大 Review (Seth).**
+  **(A) Minimax 要的 Railway 侧全部落地:** `POST /internal/asset-vectors`(token + schema_version 校验 →
+  逐资产 generate_embedding(prior_pillars/pillar_history/edge_moments) → pgvector upsert)+
+  `GET /internal/asset-vectors/schema`(它要的 echo/dryrun 端点)。**edge_moments 服务端自动补**(批量读
+  `asset_edge_moments` 视图,读不到=NaN 非 0);regime 自动过 canonical_regime;返回含 **`v2_count` 诊断位**
+  (=0 说明 Mac 没送 v2 输入、拿到的是 v1 降级向量)。preflight 绿。**⚠️ Supabase 持续超时(多次重试均失败,
+  82k 深回填后一直脆弱)** ⇒ `beta_core_nav` + `risk_allocations` 两张表 DDL 写进
+  `scripts/supabase_beta_core.sql`,**请 Mac 端 apply**(已在 §ASSET-VECTORS-READY 说明,并提醒重活分批)。
+  **(B) `docs/MONTHLY_REVIEW_2026-07.md`** — 95 commits / 97 ledger 条目 / 本月 ~33 个实验 /
+  **可上线策略 0**。核心结论:**0 不是失败,是尺子终于变准了**;最贵的一课是**层级搞反**(15+ 次都在打
+  ④层 pure alpha,①层 beta capture 从未建过 —— 设定错误而非运气);三条已进 CI 的标准闸(事件计数 /
+  多周期符号稳定 / 总收益口径);4 个静默故障全是"表面绿内里死",活性检查抓不到、只有完整性检查能抓。
+  下月唯一优先级:**①层基准 + ⓪层周期闸门**(其余可等)。提前打的预防针:①层曲线出来后,过去"验证
+  通过"的东西很可能连持有都跑不赢 —— **那是我们第一次知道自己在哪。**
+
+- **2026-07-27 📐 中心风险分配器 SPEC + Millennium 纪律进 CI(Seth)—— 补上"框架有了但标准没写好"的四样.**
+  `docs/RISK_ALLOCATOR_SPEC.md`。现有 `portfolio.py` 的 meta risk-parity 是**框架**,本文是**标准**:
+  **(1) 分配单位是风险不是钱** — `capital_i = risk_budget_i/vol_i`(40%波动与8%波动分同样的钱=5倍风险),
+  组合目标年化波动 15%,新 sleeve 回测波动 ×1.3 保守系数。**(2) 回撤阶梯机械无裁量** — −8% 份额×0.5 /
+  −12% ×0.25 / −15% 归零+30日冷冻,冷冻后**必须重走晋升阶梯**;组合熔断 −20% 全体减半 / −25% 只留①层。
+  **(3) 进场慢退场快** — research→paper(60d,0资金)→试点≤10%→标准≤25%→核心≤40%,**任一关失守立即
+  退回上一级**(不是"再观察一个月")—— 这是 Millennium 与学院派的分水岭。**(4) 相关性 >0.7 的 pod 合并
+  共享一份预算**(redundancy() 已证 risk_direction_score 是枢纽,我们**以为**的分散度常不存在);
+  **ENB<2 不许把暴露开到 1.0x 以上**;ⓠ层是乘性闸门凌驾一切(CRISIS ⇒ 所有 pod ×0,无论表现多好),
+  但 EXPANSION **不自动放大**。**§0 诚实标注现状:今天可交易 sleeve 实为 0,v1 目标不是优化分配,而是
+  建立纪律让未来每个 sleeve 从第一天就活在规则里 —— 规则先于规模;§9 标明哪些条款现在生效、哪些 ≥5 pod
+  才启用。** **纪律已进 CI(不只是文档):** `StrategyRecord` 新增 `max_dd_stop` / `capital_action_on_breach`
+  / `backtest_included_stop` / `promotion_stage`,`validate()` 对 SHIP 硬失败缺止损者;
+  **新测试 `test_stop_added_after_the_fact_is_rejected`** — 事后补止损会改变曲线形状,属自欺,CI 拒绝。
+  6/6 discipline + preflight 全绿。Handoff §RISK-ALLOCATOR(点名请 minimax-b 对 §2 三因子与 §3 阈值提分歧)。
+
+- **2026-07-27 🚨 架构修订 — ⓪层 REGIME OVERRIDE 凌驾四层 + Millennium 化 + 放开空仓/裸空 (Jazz 纠正, Seth 落规格).**
+  Jazz 指出我前一版规格的两个教条错误:**(1) "全周期正交"是错的** —— 正交只是归因工具,不是建仓约束;
+  边际流动性转向时三层就该同时服从同一判断,那是正确的风险反应不是污染归因。**(2) 0.7x 下限+禁做空是
+  错的** —— "转向的时候,有时候就是空仓或者裸空的好时候";暴露放宽为 **[−0.3, 1.3]** 含空仓/裸空,
+  **①层吃 beta 是"条件性默认"非无条件义务**。⇒ **新架构:四层之上有 ⓪ REGIME OVERRIDE(风格/流动性
+  周期判断),是最该建的能力** —— 新规格 `docs/REGIME_OVERRIDE_SPEC.md`:判据与其他层完全不同(不判
+  Sharpe,判**三段崩塌 2018/2022/2025-26 是否在回撤前 1/3 内降暴露 ≥2/3 命中** + maxDD 改善≥10pp +
+  总收益≥①层85% + 切换≤6次/年 + 优于同频随机);cause = 边际流动性定价,最强先验 **O1 stablecoin 供应Δ**
+  (已验 DD −56.5% vs 持有 −75.2%,削 19pp —— 正是⓪层该有的形状);输出**只有闸门** `regime_state →
+  exposure_cap`,不输出权重;**必须内建迟滞**否则阈值附近来回切换吃光收益;防作弊 5 条(t判定t+1生效/
+  扩张窗口分位/逐段标注拟合vs样本外/随机对照/禁用含未来信息的regime标签)。**(3) Millennium 化:平台
+  edge 在中心化风险分配,不在单个 pod ⇒ 立刻强制每个组件必须有 `max_dd_stop` + `capital_action_on_breach`,
+  且回测带着止损跑(事后加会改变曲线形状),无止损不许进生产,⓪层自己也是 pod 同样要有。** 优先级:
+  M-WO-A(①基准)与 ⓪层 O1 变体**并列 P0**。已同步改 TILT_MULTIPLIER_SPEC(暴露五档含 −0.3/0.0、
+  §3.4b 裸空纪律、§3.5 止损强制)、HIGH_DIM_ONTOLOGY §5b-bis/§5b-ter、MEMORY.md、handoff §REGIME-OVERRIDE。
+
+- **2026-07-27 📐 Layer-②③ SPEC written — 三层口径全部定完,M-WO-A/B/C 可并行 (Seth).**
+  `docs/TILT_MULTIPLIER_SPEC.md`. **核心设计是正交性:②固定暴露=100%只改相对权重;③固定权重只改总
+  暴露 0.7–1.3x。** 混做则无法归因、单层失败污染全局 —— 正是过去 15 次的坑。分开建/测/归因,叠加放最后
+  且必须给归因分解(①+②+③+交互项),任一层未过则该层乘数设中性,**不许"整体跑赢"掩盖单层失败**。
+  **②:** w = ①基座 × m(CIS截面分位),**m∈[0.5,2.0] 硬约束、归一化后永远满仓、禁负权重**、NaN→m=1.0
+  (不假装有观点)。变体 T1=pillar_F(S-80 的 12/12 锚)/T2=v5 return_score/T3=return×risk。
+  **Pre-declared 通过标准:Sharpe +≥0.15 且 maxDD 不劣化≥2pp 且 ≥4/5 周期为正 且 10bps 下成立** —— 达不到
+  就诚实结论"CIS 在②层无产品价值",回落①层。**③:门槛与②根本不同(这正是 S-78 被误杀的原因)——
+  ③的任务是改善持有体验不是独立收益,主判据 maxDD 改善≥5pp 且 total_return ≥①层95%。** 三档离散
+  {0.7,1.0,1.3},余额持现金,绝不做空;**1.3x 需杠杆 ⇒ v1 先做纯减仓 {0.7,1.0},1.3x 单独报告并注明
+  融资成本**(不许把杠杆收益混进"择时有效")。信号 E1=regime×vol(S-78 正确重测)/E2=流动性Δ/E3=v5
+  risk_score,并与同频随机切换对比排除运气。统一 variant 命名入 `beta_core_nav`。Handoff §TILT-MULT-SPEC。
+
+- **2026-07-27 📐 Layer-① Beta Core SPEC written — the benchmark the whole validation apparatus rests on (Seth).**
+  `docs/BETA_CORE_SPEC.md` — M-WO-A's sole implementation basis. **Why the "boring" curve got a full spec:
+  it is the benchmark for every sleeve; a contaminated benchmark makes every future "excess" fake. Its
+  credibility = the validation system's credibility.** Locked the 5 things implementations get wrong:
+  (1) **PIT eligibility** (≥180d listed, 30d ADV ≥$5M, data-complete, no stablecoins) — never filter
+  history by "still alive today"; (2) **delisted/zeroed carried at −100%**, sold at last valid price and
+  redistributed — silent removal manufactures returns; (3) **no intervention between rebalances** (winners
+  run) — daily rebalancing is covertly short-momentum, not "holding"; (4) **CW variant capped at 30%/asset**
+  or it degenerates into a BTC chart and stops being a FoF; (5) **explicit costs** (10bps/side base, 5/20
+  sensitivity). Deliverables: 4 NAV curves (EW/CW × 0/10bps) → `beta_core_nav`, per-cycle report, **vs
+  BTC-only and ETH-only** (the first question an LP asks — "why not just hold BTC" — we answer it before
+  they ask), written answers to 4 bias traps + delisted list, forward paper accruing daily. **§6 also
+  pre-defines how layers ②/③ get tested** (CIS tilt = 0.5x–2.0x bounds, fully invested, no shorts;
+  exposure multiplier = 0.7x–1.3x, cash for the remainder, never short) so M-WO-B/C results are mutually
+  comparable instead of each inventing its own convention. Table DDL in `scripts/supabase_beta_core.sql`
+  (Supabase timed out on my side — Minimax applies it as step 1). Handoff: `MINIMAX_SYNC §BETA-CORE-SPEC`.
+
+- **2026-07-27 🚨 §BETA-FIRST — Jazz reverses the research priority order; this explains the whole graveyard (Seth).**
+  Jazz (asset manager): **"首先保证吃到 beta,然后 beta+,beta multiplier,最后才 pure alpha"** — a PRIORITY
+  ORDER. Caught my error mid-experiment: I subtracted the market baseline in S-82 and called the residual
+  "the finding". That's correct for ATTRIBUTION, wrong for PRODUCT. **The reframe explains 15 attempts:
+  R76–R94 were ALL layer ④ (cross-sectional demean = neutral BY CONSTRUCTION = beta thrown away before
+  the test starts), while layer ① (guarantee beta capture) was NEVER BUILT.** In an asset class with
+  long-run positive drift that's a specification error, not bad luck. **Everything re-slotted:** CIS is a
+  **layer-② tilt engine** (long-only overweight inside the book — S-80's F_IC 12/12 positive is exactly a
+  tilt engine's evidence shape, never given its product form), S-78 regime×vol is a **layer-③ exposure
+  multiplier** (bar = improve the held book's return/DD, NOT standalone neutral return — I refuted it
+  against the wrong bar), S-82's event continuation is a ②/③ input (raw +5.44%, no shorting anywhere).
+  Written into doctrine: `HIGH_DIM_ONTOLOGY.md` §5b (four-layer table + 3 disciplines), CLAUDE.md
+  (constitution), MEMORY.md (never-evict). **`MINIMAX_SYNC §BETA-FIRST` supersedes §DIRECTIVE's WO order:**
+  M-WO-A build the layer-① beta book (THE benchmark — "beat hold-the-panel", never 0), M-WO-B test CIS as
+  long-only tilt vs equal-weight, M-WO-C re-run S-78 as exposure multiplier; **layer-④ neutral work FROZEN**.
+  New reporting rule all lanes: total_return · vs hold-the-panel · then excess. (Supabase timed out
+  mid-study — the layer-① backtest numbers are M-WO-A's deliverable, not blocked on me.)
+
+- **2026-07-27 🔴/✅ S-82 E1 ran — field spillover REFUTED, local continuation CONFIRMED; the kernel gets sharper (Seth).**
+  First Entity/Decision experiment. **Data-premise correction first:** `forward_supply.py` holds
+  STRUCTURAL overhang (static state), NOT dated unlock events (calendars are paywalled) — E1-as-specced
+  isn't runnable on data we own. Adapted to the same mechanism with events we DO have: **volume shocks**
+  (>4× 60d avg vol AND |ret|>8%) on the 2017+ deep panel, 748 events / 41 syms / 2017-11→2026-07,
+  **market-baseline subtracted** (without it, "spillover" is pure co-movement). **Result: up-shock self
+  +2.71% excess vs neighbours −0.07% (t−1.79); down-shock self +0.35% vs nbr +0.17% (t+1.69).** The raw
+  +3.39% neighbour number was 100% market baseline. **Independence gate PASSES** — 536 up-events across
+  **381 distinct dates** (293 solo, max 8/day) = genuinely independent, not the pseudo-replication that
+  killed S-78/S-79. **⇒ 🔴 spillover refuted / ✅ local continuation real and event-counted.** **The
+  valuable part:** co-movement neighbourhoods (asset_class, and by extension price-similarity) are NOT
+  influence channels — "similar" ≠ "downstream". A field edge must be a CAUSAL channel (shared holder,
+  shared venue, governance/collateral link). This independently explains S-81's level-diffusion failure
+  (diffusing over the wrong topology) and **redirects the Entity space: build edges from holder/flow/
+  governance overlap, not price-similarity** — feeding straight into Minimax's extractor scope. Next:
+  E1b (embedding-graph neighbourhoods to confirm the topology point), then real causal edges. The
+  +2.71% continuation is logged as an OBSERVATION, not a sleeve (needs cause + cost + capacity).
+
 - **2026-07-28 ✅ 3-sleeve parallel paper phase LIVE — directional pivot from R-numbered sleeve graveyard (Seth).** Per Jazz's 2026-07-28 critical redirection ("隔壁gpt sol5.6已经开发了很多生产环境能赚钱的策略了...风格周期预判那么难嘛？我们可以容错的，你倒是好好做啊"), the 15-attempt 731-day sleeve graveyard (R82/R83/R85/R86/R87/R88/R89/R90/R91/R92/R93/R94 + earlier R76-R81) was structurally single-family (cross-sectional single-leg factor L/S). This package is a directional pivot: 3 production-grade alpha sources that top quant funds actually deploy, none of which require the 1.96 3-check gauntlet to be useful. **3 sleeves in parallel for 60d forward paper**: (1) **sleeve_1 vol_carry** — Deribit DVOL 30d − Binance BTC 30d RV → term_premium; ENTER_SELL at term_premium ≥ 5%; short ATM straddle + long OTM 1.5x put tail hedge, 30% paper NAV ($300k notional); today's signal = IV=37.82% RV=31.68% term_premium=+6.14% → ENTER_SELL. (2) **sleeve_2 regime_nowcast** — logistic P(RISK_ON | BTC 30d ret, TVL 7d Δ, USDT 7d Δ) with pre-registered heuristic coefficients → R77 tilt ∈ {0.5, 1.0, 1.5}; today's signal = btc_30d=+6.63% tvl_7d=−2.21% usdt_7d=+0.03% → P=0.508 → BASELINE 1.0x (NOT static rotation per Asness R20 lesson; smooth probability tilt). (3) **sleeve_3 macro_overlay** — 7-asset cross-section momentum z (30d+90d) via EODHD: SPY/TLT/GLD/USO/SLV/UUP/DBA, weekly rebal, long top half / short bottom half, 40% paper NAV ($400k notional); today's signal = LONGS=[USO,UUP,DBA,SPY] SHORTS=[SLV,GLD,TLT]. **Shared paper-book ledger** (`src/research/paper_books/ledger.py`, append-only CSV at `/tmp/cometcloud_data/paper_books/{sleeve_id}_positions.csv`) prevents contamination of R77's Supabase `fusion_paper_nav`. **Daily runner** (`daily_runner.py`) orchestrates all 3 sleeves + writes `daily_summary.csv` (one row/day, joined signal values). **Weekly summary** (`weekly_summary.py`) — signal-trajectory aggregation + pairwise correlation + optional R77 NAV orthogonal comparison (needs SUPABASE_URL/KEY env); operates on SIGNAL trajectories NOT mark-to-market P&L (honest scope limit — daily NAV ledger is next-phase work). **No 3-check gauntlet, no R-numbered ledger entries, no mock data** — per Jazz "我们可以容错的" the 60d verdict uses Sharpe (primary) / maxDD (secondary) / orthogonal-to-R77 (tertiary). **R77 frozen cell UNCHANGED** at w_R46=0.25/w_R62=0.75/w_R76=0.30. Mac-side cron (Minimax's lane) needs to wire 00:30 UTC daily run. Mac-side commit handoff required — FUSE blocks git-write in sandbox. New files (all NEW, ~890 LoC total): `src/research/paper_books/{ledger.py, sleeve_1_vol_carry.py, sleeve_2_regime_nowcast.py, sleeve_3_macro_overlay.py, daily_runner.py, weekly_summary.py, README.md}`. New memory: `2026-07-28-3-sleeve-parallel-paper-phase` (TBD on commit).
 
 - **2026-07-27 ✅ Entity/Decision space v1 BUILT + contract-verified — the kernel's missing object is now persisted (Seth).**
