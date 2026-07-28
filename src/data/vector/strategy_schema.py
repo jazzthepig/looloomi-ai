@@ -151,6 +151,15 @@ class StrategyRecord:
     regime_skip: list[str] = field(default_factory=list)     # regimes the sleeve is gated OFF in
     regime_reported: Optional[bool] = None   # OOS metrics reported per-regime (RISK_OFF/NEUTRAL/RISK_ON), not aggregate-only
 
+    # RISK-ALLOCATOR fields (Millennium discipline — docs/RISK_ALLOCATOR_SPEC.md, 2026-07-27).
+    # A component without a stop rule cannot go to production: the platform's edge is risk
+    # allocation, not any single pod. `backtest_included_stop` guards the self-deception of
+    # adding the stop AFTER the curve was drawn — a stop changes the curve's shape.
+    max_dd_stop: Optional[float] = None          # e.g. -0.15 → zero the pod, 30d freeze (§3 ladder)
+    capital_action_on_breach: Optional[str] = None   # halve | quarter | zero_and_freeze | observe
+    backtest_included_stop: Optional[bool] = None    # was the ladder applied DURING the backtest?
+    promotion_stage: Optional[str] = None        # research | paper | pilot | standard | core (§5)
+
     # Notes / free-text
     notes: str = ""                                          # ≤1 KB; not embedded
 
@@ -205,6 +214,13 @@ class StrategyRecord:
                 problems.append(f"ship verdict but paper_trade_days={self.paper_trade_days} < 60 (forward paper gate)")
             if self.regime_reported is not True:
                 problems.append("ship verdict but regime_reported is not True (aggregate-only metrics hide regime failure)")
+            # Millennium discipline: no stop rule ⇒ no production. Ever.
+            if self.max_dd_stop is None or not self.capital_action_on_breach:
+                problems.append("ship verdict but no max_dd_stop/capital_action_on_breach "
+                                "(RISK_ALLOCATOR §3: a component without a stop cannot go live)")
+            if self.backtest_included_stop is not True:
+                problems.append("ship verdict but backtest_included_stop is not True "
+                                "(a stop added AFTER the curve is self-deception — it changes the shape)")
         if self.verdict == Verdict.REFUTE and self.pit_clean and self.cost_feasible_at_5bps:
             problems.append("refute verdict but all validity flags True — contradiction")
         return problems
