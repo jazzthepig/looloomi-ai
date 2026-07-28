@@ -1,8 +1,20 @@
 # MEMORY.md — long-term facts index (read at session start, 30s)
 
-> **Rules:** ≤4KB hard cap (auto-load truncates ~24KB; headroom is the point). One line per fact.
-> A fact enters only if it was EXPENSIVE to discover and will be needed again. Evict when stale or
-> when compiled into code/CI (then it lives there). Detail belongs in the pointed-to file, not here.
+> **Rules:** ≤8KB cap (auto-load truncates ~24KB; headroom is the point). One line per fact — EXCEPT
+> the ontology core below, which is soul-material and never evicted (Jazz 2026-07-27). A fact enters
+> only if it was EXPENSIVE to discover and will be needed again. Evict when stale or when compiled
+> into code/CI. Detail belongs in the pointed-to file, not here.
+
+## 🧭 THE ONTOLOGY CORE — never evict (full text: `docs/HIGH_DIM_ONTOLOGY.md` + `ARCHITECTURE.md`)
+- 市场真实状态是高维的;全部工作 = 一连串**保结构的降维**;VDB 是这条链的几何基底。
+- 内核:最深对象是 **Entity/Decision**,影响力作向量场传播;CIS/价格是波前过后的**反射**;**edge = lag**。
+- **Be water**:无冻结因子 — 场算子 W 随 embedding 每周期重塑;regime 是场的**相**,只进 sizing 不做轮动 (R20)。
+- **Be quantum**:资产态是**分布**(mean/vol/p10, I5)非标量;非局域 — `entanglement_delta = p−s` 度量场超出节点自身反射的隐含;CIS 快照是带 lag 的**测量塌缩**。
+- **S-81 定理:扩散 level(反射)被证伪(IC−0.16);必须扩散 CHANGE(因)** — Δpillar/D1流/D4注意力/holder-Δ;等真·多周期 CIS 开测。
+- 压缩级联:微观态∞ → 27d embedding → pgvector 相似场 → v5 双分数(收益⊥风险) → regime×vol sizing 语法 → 1 个可审计决策。四守恒律:I1 NaN≠0 · I3 β分离 · I5 分布 · R63b 三种因子类。
+- 存储法则:**dense+many → pgvector HNSW;sparse+few → jsonb + NaN-aware 共享维余弦**(稀疏0补做稠密余弦是错误度量)。
+- 量子计算钩子:扩散算子保持**线性**(→quantum walk 直接移植);sleeve 选择是 QUBO(→QAOA);amplitude encoding 备用。今天全部 quantum-inspired classical,不声称量子优势,一切过 gauntlet。
+- **VDB 做多(Jazz)**:六对象全向量化 — Asset✅ / Strategy🔨 / Regime指纹📋 / Entity-Decision🎯frontier / Text-RAG📋 / 时序窗口📋 / Outcome📋;跨空间边=内核边;终态 = 任何 operator 的任何问题都是一次向量查询。
 
 ## Environment / infra (traps)
 - FUSE sandbox: git write-cmds strand `.git/index.lock` → ALL git Mac-side; `git unlock` to unstick.
@@ -19,6 +31,10 @@
 - pgvector: `asset_embeddings` + `match_asset_embeddings(target,k,class_mode)`; dense v1 core in `vec`, full v2 NaN→null in `vec_full`. Rule: dense+many→pgvector; sparse+few→jsonb+NaN-aware Python cosine.
 - 11yr proxy CSV (`_data/cis_historical/`): headerless 20-col, NO pillar_a, pre-2024 = momentum proxy, fwd_ret raw — cannot validate deep signals (S-80/S-81 caveats).
 - T2 writers persist pillars shape-tolerantly + `canonical_regime()` UPPER_SNAKE (fixed 2026-07-23 after T1 stall exposed null-pillar latent bug).
+
+- **pillar_O is structural anomaly detector (Jazz, 2026-07-28)** — by design fires only when anomalies are present, "not effective most of the time". R46's persistent L/S on pillar_O is a structural mis-use; correct use is CONDITIONAL (only when pillar_O is firing) or DETECTOR-gated (R62-style fragility on pillar_O). Lesson #67.
+
+- **Regime fingerprint (VDB 做多, M-WO-7.1, Seth, 2026-07-28)** — 12-dim per-trade-date vector over validated modules (S-78 vol + M-WO-2 EXT pillar IC + R75 S/O + R62 detector + R76 funding + asset_embeddings centroid). Schema v3, HNSW cosine on dense core + JSONB null for NaN. UNBLOCKS M-WO-1 ≥8 episode floor via match_regime_fingerprints RPC. Spec: docs/REGIME_FINGERPRINT_SPEC.md.
 
 ## Validated findings (cite ledger, don't re-derive)
 - R62: raw `a_ret−b_ret` = leveraged beta (β 1.4–2.4); β-adjust flips OUTPERFORM −0.36→+2.86 t5.75. CIS works. UNDERWEIGHT broken (t−3.79).
