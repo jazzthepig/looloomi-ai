@@ -1007,14 +1007,46 @@ _health_payload = {
     "sources": ["binance", "defillama", "alternative.me", "moralis", "etherscan"],
 }
 
+def _health_with_data_layer() -> dict:
+    """Health that OBSERVES the data layer instead of asserting it.
+
+    2026-07-29 incident: /health returned a hardcoded "healthy" while every
+    /api/v1/cis/* endpoint hung — Supabase was resource-exhausted and the entire
+    intelligence layer was dead for an unknown period. A check that cannot fail
+    is not a check; it manufactures false assurance (same defect class as a CI
+    test that asserts against a literal instead of the real artifact).
+
+    Cheap and non-blocking: reads in-process breaker state, issues no I/O, so it
+    stays safe to poll and cannot itself add load to a saturated backend.
+    """
+    from src.api.store import supabase_breaker_state
+    cb = supabase_breaker_state()
+    degraded = cb["open"] or cb["consecutive_failures"] > 0
+    return {
+        **_health_payload,
+        "status": "degraded" if degraded else "healthy",
+        "data_layer": {
+            "supabase": "circuit_open" if cb["open"]
+                        else ("failing" if cb["consecutive_failures"] else "ok"),
+            "breaker": cb,
+        },
+    }
+
+
 @app.get("/health")
 async def health():
-    return _health_payload
+    payload = _health_with_data_layer()
+    # 503 when degraded so uptime monitors and Railway see it, instead of a
+    # green check sitting on top of a dead intelligence layer.
+    return JSONResponse(status_code=503 if payload["status"] == "degraded" else 200,
+                        content=payload)
 
 @app.get("/api/v1/health")
 async def health_api():
     """API-prefixed health check — bypasses Cloudflare SPA caching rules."""
-    return _health_payload
+    payload = _health_with_data_layer()
+    return JSONResponse(status_code=503 if payload["status"] == "degraded" else 200,
+                        content=payload)
 
 
 # ── Build/deploy self-introspection ───────────────────────────────────────────

@@ -387,6 +387,39 @@ _UNIVERSE_CACHE: dict = {"data": None, "ts": 0.0}
 _UNIVERSE_TTL = 30.0
 _UNIVERSE_LOCK = asyncio.Lock()
 
+# ── 2026-07-29 P0: the single-flight lock became a total-outage amplifier ──────
+# The lock above fixed a 503 burst (QA P1) by collapsing N concurrent rebuilds
+# into one. But the critical section held the lock across UNBOUNDED external
+# calls. When the Supabase connection pool starved, one rebuild sat inside the
+# lock for the full retry budget (10s x 3 + backoff = 33s) and EVERY other
+# request queued behind it — turning a slow dependency into a dead endpoint.
+#
+# Three bounds, each addressing a distinct failure path:
+#   1. hard time budget on the rebuild        → the lock can never be held forever
+#   2. serve stale rather than queue          → contention degrades, not blocks
+#   3. enrichment moved outside the lock      → decoration never gates the payload
+#
+# Design rule this encodes: a single-flight lock must bound BOTH how long it can
+# be held and how long a caller will wait for it. Either one alone still hangs.
+_UNIVERSE_BUILD_BUDGET_S = float(os.environ.get("CIS_UNIVERSE_BUILD_BUDGET_S", "12"))
+_UNIVERSE_LOCK_WAIT_S    = float(os.environ.get("CIS_UNIVERSE_LOCK_WAIT_S", "3"))
+_UNIVERSE_STALE_MAX_S    = float(os.environ.get("CIS_UNIVERSE_STALE_MAX_S", "3600"))
+
+
+def _universe_stale(max_age_s: float = _UNIVERSE_STALE_MAX_S) -> dict | None:
+    """Last good payload if it exists and isn't ancient. Flagged so the caller
+    (and the UI badge) can tell served-stale from served-fresh — never silently."""
+    data = _UNIVERSE_CACHE.get("data")
+    if not data:
+        return None
+    age = time.time() - _UNIVERSE_CACHE.get("ts", 0.0)
+    if age > max_age_s:
+        return None
+    out = dict(data)
+    out["stale"] = True
+    out["stale_age_s"] = round(age, 1)
+    return out
+
 
 @router.get("/api/v1/cis/universe")
 async def get_cis_universe(force_source: str = None, response: Response = None):
@@ -402,17 +435,53 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         now = time.time()
         if _UNIVERSE_CACHE["data"] is not None and (now - _UNIVERSE_CACHE["ts"]) < _UNIVERSE_TTL:
             return _UNIVERSE_CACHE["data"]
-        async with _UNIVERSE_LOCK:
+
+        # Bound #2 — never queue indefinitely on the lock. If another request is
+        # already rebuilding and we have anything usable, serve it now.
+        try:
+            await asyncio.wait_for(_UNIVERSE_LOCK.acquire(), timeout=_UNIVERSE_LOCK_WAIT_S)
+        except asyncio.TimeoutError:
+            stale = _universe_stale()
+            if stale is not None:
+                _logger.warning("[CIS] universe lock busy — serving stale "
+                                f"({stale['stale_age_s']}s old)")
+                return stale
+            raise HTTPException(
+                status_code=503,
+                detail="CIS universe rebuilding and no cached payload available",
+                headers={"Retry-After": "5"},
+            )
+        try:
             now = time.time()
             if _UNIVERSE_CACHE["data"] is not None and (now - _UNIVERSE_CACHE["ts"]) < _UNIVERSE_TTL:
                 return _UNIVERSE_CACHE["data"]
-            data = await _build_cis_universe(force_source)
-            _attach_asset_narratives(data)
-            await _attach_cause_proximity_async(data)
+            # Bound #1 — hard budget on the rebuild itself.
+            try:
+                data = await asyncio.wait_for(
+                    _build_cis_universe(force_source), timeout=_UNIVERSE_BUILD_BUDGET_S)
+            except asyncio.TimeoutError:
+                stale = _universe_stale()
+                if stale is not None:
+                    _logger.error("[CIS] universe build exceeded "
+                                  f"{_UNIVERSE_BUILD_BUDGET_S}s — serving stale")
+                    return stale
+                raise HTTPException(
+                    status_code=503,
+                    detail="CIS universe build timed out and no cached payload available",
+                    headers={"Retry-After": "10"},
+                )
             if data and data.get("universe"):
                 _UNIVERSE_CACHE["data"] = data
                 _UNIVERSE_CACHE["ts"] = time.time()
-            return data
+        finally:
+            _UNIVERSE_LOCK.release()
+
+        # Bound #3 — enrichment is decoration; it runs OUTSIDE the lock and can
+        # never gate the core payload for other callers.
+        _attach_asset_narratives(data)
+        await _attach_cause_proximity_async(data)
+        return data
+
     data = await _build_cis_universe(force_source)
     _attach_asset_narratives(data)
     await _attach_cause_proximity_async(data)
