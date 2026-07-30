@@ -8,6 +8,7 @@ Shared state and utilities for all routers.
 """
 import logging
 import os, json, math, time
+from datetime import datetime, timezone
 import httpx
 from fastapi import WebSocket
 
@@ -101,14 +102,72 @@ _SB_TABLE = "cis_scores"
 _SB_MAX_RETRIES = 3
 _SB_BASE_DELAY = 1.0  # seconds
 
+# ── Circuit breaker (2026-07-29, P0 incident) ────────────────────────────────
+# INCIDENT: Supabase hit "exhausting multiple resources" on the free tier. Every
+# /api/v1/cis/* request then took timeout(10) × 3 attempts + backoff(1+2) = up to
+# 33s before failing, so the endpoint appeared to HANG rather than error. Worse,
+# retrying tripled the request load onto an already-saturated database — our own
+# retry policy was a retry storm keeping the DB down.
+#
+# Exponential backoff is correct for TRANSIENT faults and actively harmful for a
+# SATURATED backend. The breaker distinguishes them: after N consecutive failures
+# we stop calling for a cooldown, fail fast (None), and let callers fall back to
+# the Redis cache. Callers already handle None — before this they simply never
+# reached that path in time.
+_CB_FAIL_THRESHOLD = int(os.environ.get("SB_CB_FAIL_THRESHOLD", "5"))
+_CB_COOLDOWN_S     = float(os.environ.get("SB_CB_COOLDOWN_S", "30"))
+_cb_consecutive_failures = 0
+_cb_open_until = 0.0
+_cb_trips = 0            # lifetime count, surfaced by /health
+
+
+def supabase_breaker_state() -> dict:
+    """Observable breaker state — consumed by the health check so that health
+    reflects the real data layer instead of asserting it (see I4 / discipline)."""
+    now = time.time()
+    return {
+        "open": now < _cb_open_until,
+        "consecutive_failures": _cb_consecutive_failures,
+        "cooldown_remaining_s": max(0.0, round(_cb_open_until - now, 1)),
+        "lifetime_trips": _cb_trips,
+        "threshold": _CB_FAIL_THRESHOLD,
+    }
+
+
+def _cb_record_success() -> None:
+    global _cb_consecutive_failures, _cb_open_until
+    _cb_consecutive_failures = 0
+    _cb_open_until = 0.0
+
+
+def _cb_record_failure() -> None:
+    global _cb_consecutive_failures, _cb_open_until, _cb_trips
+    _cb_consecutive_failures += 1
+    if _cb_consecutive_failures >= _CB_FAIL_THRESHOLD and time.time() >= _cb_open_until:
+        _cb_open_until = time.time() + _CB_COOLDOWN_S
+        _cb_trips += 1
+        _logger.error(
+            f"[SUPABASE] circuit OPEN after {_cb_consecutive_failures} consecutive "
+            f"failures — failing fast for {_CB_COOLDOWN_S}s (trip #{_cb_trips})")
+
 
 async def _supabase_request_with_retry(
     method: str,
     url: str,
     **kwargs
 ) -> httpx.Response | None:
-    """Execute HTTP request with exponential backoff retry."""
+    """Execute HTTP request with backoff retry, guarded by a circuit breaker.
+
+    Returns None when the call fails or the breaker is open; every caller treats
+    None as "no data" and falls back to Redis. Never raises.
+    """
     import asyncio
+
+    # Breaker open ⇒ fail immediately. This is the whole point: no queueing, no
+    # extra load on a saturated backend, no 33s hang for the client.
+    if time.time() < _cb_open_until:
+        _logger.warning("[SUPABASE] circuit open — short-circuiting request")
+        return None
 
     client = _get_supabase_client()
     last_error = None
@@ -117,12 +176,22 @@ async def _supabase_request_with_retry(
         try:
             resp = await client.request(method, url, **kwargs)
             if resp.status_code in (200, 201):
+                _cb_record_success()
                 return resp
-            # Non-retryable error (4xx except 429)
+            # Non-retryable error (4xx except 429) — the backend is healthy and
+            # is telling us the request is wrong. Does NOT count toward the breaker.
             if 400 <= resp.status_code < 500 and resp.status_code != 429:
+                _cb_record_success()
                 _logger.warning(f"[SUPABASE] Non-retryable error {resp.status_code}: {resp.text[:100]}")
                 return resp
             last_error = f"HTTP {resp.status_code}"
+        except httpx.TimeoutException as e:
+            # A timeout under saturation must NOT be retried — retrying is what
+            # turned this incident into an outage. Trip toward the breaker and
+            # bail out of the retry loop immediately.
+            _cb_record_failure()
+            _logger.warning(f"[SUPABASE] timeout ({e!r}) — no retry, falling back")
+            return None
         except Exception as e:
             last_error = str(e)
 
@@ -131,6 +200,7 @@ async def _supabase_request_with_retry(
             _logger.warning(f"[SUPABASE] Retry {attempt + 1}/{_SB_MAX_RETRIES} after {delay}s: {last_error}")
             await asyncio.sleep(delay)
 
+    _cb_record_failure()
     _logger.warning(f"[SUPABASE] All retries exhausted: {last_error}")
     return None
 
@@ -332,16 +402,32 @@ async def supabase_rpc(fn_name: str, payload: dict | None = None):
 
 
 async def supabase_get_latest_track_record() -> list:
-    """Latest signal_track_record batch (list of {signal,grade,n,avg_alpha_pct,alpha_win_pct}).
-    Cached 6h; best-effort ([] on any miss → conviction falls back to the hardcoded prior)."""
+    """Latest signal_track_record batch (list of {signal,grade,n,avg_alpha_pct,
+    alpha_win_pct, avg_edge_beta_adj_pct, edge_beta_adj_t, avg_beta_pit,
+    n_beta_adj, computed_at}). Cached 6h; best-effort ([] on any miss →
+    conviction falls back to the hardcoded prior).
+
+    v2 (2026-07-26, MINIMAX_SYNC §BETA-METRIC-AGG): also reads the four
+    β-adjusted columns populated by refresh_signal_track_record v2.
+    The PUBLISH gate (ohlcv_daily freshness) lives in the caller
+    (src/api/routers/signals.py::get_signal_track_record) and in
+    supabase_ohlcv_daily_freshness() — this function returns the rows
+    unfiltered; the gate is the caller's responsibility. The split
+    avoids dependency cycles between the store layer and the router.
+    """
     now = time.time()
     if _TRACKREC_CACHE["rows"] is not None and (now - _TRACKREC_CACHE["ts"]) < _TRACKREC_TTL:
         return _TRACKREC_CACHE["rows"]
     if not _SB_URL or not _SB_KEY:
         return []
     url = f"{_SB_URL}/rest/v1/signal_track_record"
-    params = {"order": "computed_at.desc", "limit": "40",
-              "select": "signal,grade,n,avg_alpha_pct,alpha_win_pct,computed_at"}
+    params = {
+        "order": "computed_at.desc", "limit": "60",
+        "select": ("signal,grade,n,avg_alpha_pct,alpha_win_pct,"
+                   "avg_abs_return_pct,"
+                   "avg_edge_beta_adj_pct,edge_beta_adj_t,"
+                   "avg_beta_pit,n_beta_adj,computed_at"),
+    }
     headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
     try:
         resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
@@ -356,6 +442,77 @@ async def supabase_get_latest_track_record() -> list:
     except Exception as e:
         _logger.warning(f"[SUPABASE] track_record read exception: {e}")
         return []
+
+
+# ── ohlcv_daily freshness probe (gate input for §BETA-METRIC-AGG) ───────────
+# We do NOT publish β-adjusted investor numbers when the underlying price
+# feed is stale (MINIMAX_SYNC §BETA-METRIC-AGG spec line 6880). The simplest
+# check is to probe ohlcv_daily.last_trade_date directly via Supabase REST.
+# Cached 5 min — the freshness gate is loose enough that this is plenty.
+_OHLCV_FRESH_CACHE: dict = {"ts": 0.0, "result": None}
+_OHLCV_FRESH_TTL = 300
+# Thresholds (seconds). 1.5 day = the daily collector must have written at
+# least one row in the last 36 h to be considered "fresh." The 24 h admin
+# threshold (cis `freshness_s`) intentionally allows a 12 h buffer because
+# daily collectors can land anywhere in the 24 h window.
+_OHLCV_FRESH_OPEN_S = 36 * 3600       # gate opens if age < 36 h
+_OHLCV_FRESH_RECENT_S = 7 * 24 * 3600  # "recent" warning band
+
+
+async def supabase_ohlcv_daily_freshness() -> dict:
+    """Return the price-feed freshness block used by §BETA-METRIC-AGG gate.
+
+    Returns dict with: {gate_open: bool, age_seconds, last_trade_date,
+    verdict: "fresh"|"warning"|"stale", error?}.
+    Cached 5 min. Honest about failure: error surfaces, not silently "open."
+    """
+    now = time.time()
+    if _OHLCV_FRESH_CACHE["result"] is not None and (now - _OHLCV_FRESH_CACHE["ts"]) < _OHLCV_FRESH_TTL:
+        return _OHLCV_FRESH_CACHE["result"]
+    if not _SB_URL or not _SB_KEY:
+        return {"gate_open": False, "age_seconds": None, "last_trade_date": None,
+                "verdict": "stale", "error": "supabase_not_configured"}
+    url = f"{_SB_URL}/rest/v1/ohlcv_daily"
+    params = {"select": "trade_date", "order": "trade_date.desc", "limit": "1"}
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
+    out: dict = {"gate_open": False, "age_seconds": None,
+                 "last_trade_date": None, "verdict": "stale"}
+    try:
+        resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
+        if resp and resp.status_code == 200:
+            rows = resp.json()
+            if rows:
+                last = str(rows[0].get("trade_date"))
+                out["last_trade_date"] = last
+                # Parse and age. trade_date is a date string (YYYY-MM-DD); we
+                # assume UTC midnight — adequate for a "how stale is the feed"
+                # check; the actual close time would be more precise but adds
+                # schema coupling.
+                try:
+                    dt = datetime.fromisoformat(last.replace("Z", ""))
+                    dt = dt.replace(tzinfo=timezone.utc)
+                    age = (datetime.now(timezone.utc) - dt).total_seconds()
+                    out["age_seconds"] = round(age, 1)
+                    if age <= _OHLCV_FRESH_OPEN_S:
+                        out["gate_open"] = True
+                        out["verdict"] = "fresh"
+                    elif age <= _OHLCV_FRESH_RECENT_S:
+                        out["gate_open"] = False
+                        out["verdict"] = "warning"
+                    else:
+                        out["gate_open"] = False
+                        out["verdict"] = "stale"
+                except Exception as e:
+                    out["error"] = f"parse_failed:{e}"
+            else:
+                out["error"] = "ohlcv_daily_empty"
+        else:
+            out["error"] = f"http_{resp.status_code if resp else 'no_response'}"
+    except Exception as e:
+        out["error"] = f"exception:{str(e)[:120]}"
+    _OHLCV_FRESH_CACHE["result"] = out
+    _OHLCV_FRESH_CACHE["ts"] = now
+    return out
 
 
 # ── D4 attention (trending_log) read — cached, for cause-proximity ─────────────

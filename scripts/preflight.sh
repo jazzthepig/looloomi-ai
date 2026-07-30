@@ -20,6 +20,11 @@ INTERNAL_TOKEN=preflight ENVIRONMENT=ci python3 scripts/smoke_test.py
 echo "→ [3/3] discipline + schema-drift guard (philosophy compiled to CI, 2026-07-27) ..."
 # 3a. strategy discipline — cause/OOS/paper/regime evidence floor on every SHIP record
 python3 -m tests.test_strategy_discipline
+# 3a-bis. resilience — the 2026-07-29 P0 (Supabase saturation → 33s hangs → retry storm,
+#         while /health lied "healthy"). Guards: no retry on timeout, breaker opens, fails
+#         fast, RECOVERS after cooldown, 4xx doesn't trip it, health reflects reality.
+python3 -m tests.test_supabase_breaker
+python3 -m tests.test_cis_universe_lock
 # 3b. contract schema echo — the drift class preflight previously couldn't see (Mac push schema
 #     changed, Railway didn't follow). Prints the canonical SCHEMA_VERSION so it's in every log,
 #     and fails loudly if the contract module stops importing.
