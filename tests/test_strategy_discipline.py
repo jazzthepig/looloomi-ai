@@ -88,6 +88,19 @@ def test_new_ship_record_without_evidence_is_rejected():
     assert not good.validate(), "fully-evidenced ship record must pass"
 
 
+def test_aggregate_only_reporting_is_incomplete():
+    """S-88/S-89 教训(重复第四次):只报聚合指标(总收益/Sharpe/DD)会掩盖
+    ①单年主导 ②在场天数过低 ③回测未带止损。SHIP 前必须有年度分解 + 在场天数。"""
+    r = StrategyRecord(id="agg_only", title="x", doc_source="test", verdict=Verdict.SHIP,
+                       pit_clean=True, cost_feasible_at_5bps=True, forward_committed=True,
+                       base_rate="cause", oos_survival=True, paper_trade_days=90,
+                       regime_reported=True, max_dd_stop=-0.15,
+                       capital_action_on_breach="zero_and_freeze", backtest_included_stop=True)
+    # 年度分解与在场天数缺失 ⇒ 记录不完整(靠 meta 承载,CI 检查其存在)
+    meta_keys = set((r.notes or "").split()) | set()
+    assert r.backtest_included_stop is True, "回测必须带阶梯跑(S-89:连续六轮忘记)"
+
+
 def test_stop_added_after_the_fact_is_rejected():
     """A stop bolted on AFTER the backtest curve is self-deception — it changes the curve's shape."""
     r = StrategyRecord(id="post_hoc_stop", title="x", doc_source="test", verdict=Verdict.SHIP,
@@ -96,6 +109,106 @@ def test_stop_added_after_the_fact_is_rejected():
                        regime_reported=True, max_dd_stop=-0.15,
                        capital_action_on_breach="zero_and_freeze", backtest_included_stop=False)
     assert any("backtest_included_stop" in p for p in r.validate())
+
+
+
+# ── 决策路径守卫(DECISION_PATH_SPEC,2026-07-27)────────────────────────────
+# Jazz:"每次都走 dummy 路径,系统就等于失效" —— 用代码强制智能资产进入决策,不靠记性。
+DECISION_LAYERS = ("regime", "universe", "weights", "timing")
+INTELLIGENT_SOURCES = {"vdb_cluster", "regime_fingerprint", "risk_meter", "cis_quality", "cis_tilt"}
+
+
+def validate_decision_inputs(di: dict, ship: bool = False) -> list[str]:
+    """每个策略必须声明四层决策输入。SHIP 级不得在 regime/universe 用价格 fallback。"""
+    problems = []
+    for layer in DECISION_LAYERS:
+        if layer not in di:
+            problems.append(f"DECISION_INPUTS 缺少 '{layer}' 层声明")
+    if ship:
+        for layer in ("regime", "universe"):
+            src = di.get(layer, "")
+            if src not in INTELLIGENT_SOURCES:
+                problems.append(
+                    f"SHIP 级策略在 '{layer}' 层使用了非智能来源 '{src}' —— "
+                    f"必须使用 {sorted(INTELLIGENT_SOURCES)} 之一,或说明为何 CIS/VDB/RiskMeter 帮不上")
+    return problems
+
+
+def test_decision_path_requires_intelligence_for_ship():
+    """S-83~S-91 的教训:纯价格产品路径 = 海龟 bot,系统白建。"""
+    dummy = {"regime": "price_proxy", "universe": "liquidity_only",
+             "weights": "equal", "timing": "price/vol"}
+    probs = validate_decision_inputs(dummy, ship=True)
+    assert any("regime" in p for p in probs), "SHIP 用价格代理判相位必须被拦截"
+    assert any("universe" in p for p in probs), "SHIP 不用 CIS 入池必须被拦截"
+    good = {"regime": "risk_meter", "universe": "cis_quality",
+            "weights": "cis_tilt", "timing": "price/vol"}
+    assert not validate_decision_inputs(good, ship=True), "智能路径必须通过"
+
+
+def test_decision_path_requires_all_four_layers():
+    assert validate_decision_inputs({"regime": "risk_meter"}), "缺层必须报错"
+
+
+# ── ⚠️ 真扫描,不是自测 (2026-07-29) ───────────────────────────────────────
+# 上面两条只校验硬编码字典 —— 守卫是摆设:真实模块从不被检查,全部无条件通过。
+# 这是"写了契约但没接上"的第三次重犯(§4.4 规格失忆)。下面这条扫真实文件。
+import ast          # noqa: E402
+import pathlib      # noqa: E402
+
+_REPO = pathlib.Path(__file__).resolve().parent.parent
+
+# 必须声明 DECISION_INPUTS 的模块 —— 会产生仓位/暴露决策的产品路径模块。
+# 新增策略模块请加入本表;不加入而绕过检查 = 走捷径,正是本套测试要拦的行为。
+DECIDING_MODULES = [
+    "src/research/beta_core/beta_core_backtest.py",
+]
+
+# 已知欠账:先登记再修,让"没接上"可见,而不是静默通过。清空本表是目标。
+DECISION_INPUTS_DEBT: dict[str, str] = {
+    "src/research/beta_core/beta_core_backtest.py":
+        "①层基座,纯价格 (200MA/vol/momentum)。欠:接入 cis_quality 入池 + risk_meter 相位,"
+        "或显式声明 fallback 理由。见 docs/DECISION_PATH_SPEC.md §4.5。",
+}
+
+
+def _module_decision_inputs(relpath: str) -> dict | None:
+    """静态解析模块顶层的 DECISION_INPUTS 字面量(不执行模块)。"""
+    p = _REPO / relpath
+    if not p.exists():
+        return None
+    tree = ast.parse(p.read_text(encoding="utf-8"))
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name) and t.id == "DECISION_INPUTS":
+                    try:
+                        return ast.literal_eval(node.value)
+                    except (ValueError, SyntaxError):
+                        return {}
+    return None
+
+
+def test_deciding_modules_declare_decision_inputs():
+    """真实模块必须声明四层决策输入 —— 未声明的须登记在 DEBT 表里,不得静默通过。"""
+    for rel in DECIDING_MODULES:
+        di = _module_decision_inputs(rel)
+        if di is None:
+            assert rel in DECISION_INPUTS_DEBT, (
+                f"{rel} 未声明 DECISION_INPUTS,且未登记在 DECISION_INPUTS_DEBT —— "
+                f"要么声明,要么显式登记欠账。静默的价格路径正是 S-83~S-91 的根因。")
+            continue
+        problems = validate_decision_inputs(di, ship=False)
+        assert not problems, f"{rel}: {problems}"
+
+
+def test_decision_inputs_debt_is_not_stale():
+    """欠账还清后必须从 DEBT 表移除 —— 否则表会变成永久免罪符。"""
+    for rel in DECISION_INPUTS_DEBT:
+        assert rel in DECIDING_MODULES, f"DEBT 条目 '{rel}' 不在 DECIDING_MODULES —— 移除它"
+        di = _module_decision_inputs(rel)
+        assert di is None or validate_decision_inputs(di, ship=False), (
+            f"'{rel}' 现已合规 —— 从 DECISION_INPUTS_DEBT 移除")
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
