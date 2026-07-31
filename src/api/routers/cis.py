@@ -628,24 +628,72 @@ def _attach_asset_narratives(data: dict) -> None:
         _logger.warning(f"[CIS] provenance attach failed: {e}")
 
 
+# ── Build-phase timing (2026-07-31) ──────────────────────────────────────────
+# The external probe caught /api/v1/cis/universe at 12,602 ms — exactly the 12 s
+# build budget, i.e. the build blew its budget and degraded to stale. Correct
+# behaviour, but we could not say WHERE the 12 s went, and two hypotheses died
+# on measurement (HNSW upsert is 48 ms, not the cause; push contention unproven).
+#
+# Rather than guess a third time, record where each build actually spends its
+# time and surface it on /health. This is Lesson #70 applied forward: collect the
+# diagnostic WHILE HEALTHY so the next occurrence is one glance, not an
+# investigation. During the 10.4 h outage the query needed to diagnose it was
+# itself unavailable — a diagnostic that only exists after the fact is not a
+# diagnostic.
+_LAST_BUILD: dict = {}
+
+
+def last_universe_build() -> dict:
+    """Phase timings of the most recent universe rebuild. Read by /health."""
+    return dict(_LAST_BUILD)
+
+
+def _record_build(phase: dict, t0: float, path: str) -> None:
+    """Persist the phase breakdown of a completed build. `slowest` is precomputed
+    so the answer is readable at a glance rather than requiring arithmetic during
+    an incident — the point is a one-glance diagnosis, not a data dump."""
+    total = int((time.time() - t0) * 1000)
+    phases = {k: v for k, v in phase.items() if k.endswith("_ms")}
+    _LAST_BUILD.clear()
+    _LAST_BUILD.update({
+        "at": int(time.time()),
+        "path": path,
+        "total_ms": total,
+        **phase,
+        "slowest": max(phases, key=phases.get) if phases else None,
+        "unaccounted_ms": total - sum(phases.values()),
+    })
+
+
 async def _build_cis_universe(force_source: str = None):
+    _t0 = time.time()
+    _phase: dict = {}
     cached   = None
     use_local = False
 
     if force_source != "railway":
+        _t = time.time()
         cached = await redis_get()
+        _phase["redis_ms"] = int((time.time() - _t) * 1000)
         if cached and cached.get("universe"):
             age = time.time() - cached.get("last_updated", 0)
             if age < 7200 or force_source == "local":
                 use_local = True
 
-    # Always calculate Railway universe as T2 base (covers 65+ assets)
+    # Always calculate Railway universe as T2 base (covers 65+ assets).
+    # NOTE: this runs even when T1 is fresh, and it fans out to external providers
+    # (CoinGecko / DeFiLlama / Alternative.me). It is therefore the prime suspect
+    # for a build that overruns its budget — the timing below settles it instead
+    # of leaving it to inference.
     railway_universe = []
+    _t = time.time()
     try:
         result = await calculate_cis_universe()
         railway_universe = result.get("universe", [])
     except Exception as e:
         _logger.warning(f"[CIS] Railway calculation error: {e}")
+        _phase["railway_error"] = str(e)[:120]
+    _phase["railway_t2_ms"] = int((time.time() - _t) * 1000)
 
     # Merge: Mac Mini T1 scores override Railway T2 where available
     if use_local and cached and cached.get("universe"):
@@ -786,6 +834,7 @@ async def _build_cis_universe(force_source: str = None):
             # regime_confidence: shared across universe (same push)
             a["regime_confidence"] = regime_confidence
 
+        _record_build(_phase, _t0, "merged")
         return sanitize_floats({
             "status":            "success",
             "version":           "4.1.0",
@@ -815,6 +864,7 @@ async def _build_cis_universe(force_source: str = None):
             result["macro_regime"] = (result.get("macro") or {}).get("regime", "UNKNOWN")
         result["t1_count"] = 0
         result["t2_count"] = len(railway_universe)
+        _record_build(_phase, _t0, "railway")
         return sanitize_floats(result)
 
     # Last resort: stale hot-cache Redis

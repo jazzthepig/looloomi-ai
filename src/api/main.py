@@ -1022,6 +1022,15 @@ def _health_with_data_layer() -> dict:
     from src.api.store import supabase_breaker_state
     cb = supabase_breaker_state()
     degraded = cb["open"] or cb["consecutive_failures"] > 0
+    # Phase breakdown of the last universe rebuild (2026-07-31). The probe caught
+    # a 12,602 ms response — exactly the build budget — and nothing could say
+    # where the time went. Two hypotheses died on measurement afterwards. This
+    # makes the next occurrence a one-glance answer instead of an investigation.
+    try:
+        from src.api.routers.cis import last_universe_build
+        build = last_universe_build()
+    except Exception:
+        build = {}
     return {
         **_health_payload,
         "status": "degraded" if degraded else "healthy",
@@ -1029,6 +1038,7 @@ def _health_with_data_layer() -> dict:
             "supabase": "circuit_open" if cb["open"]
                         else ("failing" if cb["consecutive_failures"] else "ok"),
             "breaker": cb,
+            "last_universe_build": build,
         },
     }
 
