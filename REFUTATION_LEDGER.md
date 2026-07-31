@@ -5670,3 +5670,50 @@ m=16, ef_construction=64**,对 72 行表属于严重过度配置,写入成本正
 本次事故最贵的一点不是宕机 10.4 小时,而是**诊断所需的那条查询,恰好因为故障本身而不可用** ——
 `pg_stat_activity` 要连接,而没有连接才是病症。**规则:任何依赖资源 X 的诊断手段,
 都不能是排查 X 耗尽的唯一手段;健康期基线必须落库/落档。**
+
+## S-94 ✅ 安全加固已执行并逐条验证 — 匿名远程写入原语已关闭 (Seth, 2026-07-30)
+
+**执行:** `apply_migration security_hardening_revoke_anon_rpc_and_rls`(service_role)。
+**执行前做了一件救命的事:从 `pg_proc` 读真实签名而不是凭记忆写。**
+初稿写的是 `decision_source_term(text)`,实际是 `(as_of date, lookback_days integer)` ——
+**单这一条就会让整个事务回滚。** 五个函数签名全部核对后才提交。
+
+**§6a 匿名远程写入 RPC —— 已关闭:**
+```
+POST /rest/v1/rpc/backfill_binance_ohlcv
+  改前: http 200            ← 匿名可执行,所有者权限,发外部请求,写 ohlcv_daily
+  改后: http 401  42501 "permission denied for function backfill_binance_ohlcv"
+```
+
+**§6b 匿名读 —— 七张表全部封闭(改前全部返回真实数据):**
+`cis_scores` `signal_outcomes` `asset_embeddings` `ohlcv_daily` `signal_journal`
+`entities` `decisions` ⇒ **全部 `[]`**
+
+**§6e 生产不受影响(service_role 路径):**
+| 检查 | 结果 |
+|---|---|
+| `/health` | 200 / 0.25s · `supabase=ok` · `breaker.lifetime_trips=0` |
+| `/api/v1/cis/universe?force_source=railway` | **200 / 3.57s / `stale=false` / 58 资产** |
+| `/api/v1/signals/track-record` | 200(读 `cis_scores × ohlcv_daily`,两表均已启 RLS) |
+| `/internal/health-summary` | healthy · mac_mini_push ok · universe ok |
+
+**⚠️ 一次我自己的误读,记下来:** 验证时先看到合并路径 `stale=true` / 首次 7.7s,
+我的第一反应是"安全变更引入了回归"。**实际 `stale` 是构建器自己按 Mac 推送新鲜度标的字段,
+在本次改动之前就存在** —— `force_source=railway` 跳过 T1 即 `stale=false`。
+**又一次"看到一个信号就跳到因果结论"**(与 S-92 那次从横幅跳到数据量同型)。
+本次代价为零,因为下结论前做了 `force_source` 对照。**对照实验是这类错误唯一的解药,
+但它目前仍只是纪律,没有可执行检查 —— 见 `docs/AMNESIA_PROTOCOL.md §7` 的诚实标注。**
+
+**推迟项(理由随修复一起存档,防止有人"顺手"做):**
+· `vector` 扩展移出 `public` —— 会重写 `asset_embeddings.vec` 类型引用并使 HNSW 失效;
+  是加固不是漏洞,必须与索引重建同事务的独立迁移;
+· HNSW 降档(m=8/ef=32)—— 索引名 `asset_embeddings_vec_hnsw`,当前为**默认 m=16/ef=64
+  用在 72 行表上**,是 S-92 写入成本来源;**单独 commit**,免得安全回滚拖走索引重建。
+
+**Lesson #71 (NEW):安全 linter 的沉默不是安全。**
+Supabase advisor 报了 11 个 ERROR,而**四个最严重的暴露不在其中** ——
+`cis_scores`(两条重叠)/`ohlcv_daily`/`signal_journal` 的 `USING (true)` SELECT policy
+被授予 `public`,advisor **故意排除**宽松 SELECT(因为那常是有意的公开读)。
+**只读 advisor 列表,产品本身仍然全世界可读。**
+规则:安全审计必须直接查 `pg_policies` / `pg_proc` / `information_schema`,
+**把 linter 当作起点,永不当作清单。**
