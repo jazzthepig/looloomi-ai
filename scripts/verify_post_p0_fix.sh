@@ -57,18 +57,21 @@ require_tools() {
 # gt "1.234" "5.0" → "1" if 1.234 > 5.0 else "0"
 gt() { [ "$(echo "$1 > $2" | bc)" = "1" ]; }
 
-# fetch URL → echoes "<status>\n<body>\n<time>"; empty status means curl errored
+# fetch URL → echoes "<status>\n<time_s>\n<body>"; empty status means curl errored
+# Two-curl pattern: one for status+time metadata (-w), one writes body to tmpfile.
+# Avoids parsing pitfalls of "single line with embedded meta markers".
 http_get() {
-  local url="$1" out status
-  out=$(curl -sm"$CURL_TIMEOUT" -w '\n__STATUS__%{http_code}__TIME__%{time_total}' "$url" 2>&1) || {
-    echo ""; return 1
+  local url="$1" tmpfile meta status time_s body
+  tmpfile=$(mktemp -t vpf.XXXXXX) || return 1
+  meta=$(curl -sm"$CURL_TIMEOUT" -o "$tmpfile" -w '%{http_code}|%{time_total}' "$url" 2>&1) || {
+    rm -f "$tmpfile"; return 1
   }
-  status=$(echo "$out" | grep -E '^__STATUS__' | sed 's/^__STATUS__\(.*\)__TIME__.*/\1/')
-  local time_s
-  time_s=$(echo "$out" | grep -E '^__TIME__' | sed 's/^__STATUS__[0-9]*__TIME__//')
-  local body
-  body=$(echo "$out" | sed '/^__STATUS__/d')
-  printf '%s\n%s\n%s\n' "$status" "$time_s" "$body"
+  status=${meta%%|*}
+  time_s=${meta##*|}
+  body=$(cat "$tmpfile")
+  rm -f "$tmpfile"
+  printf '%s\n%s\n' "$status" "$time_s"
+  printf '%s' "$body"
 }
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -105,22 +108,19 @@ else
         warn "/health .data_layer present but .breaker field missing — store.py landed but main.py observer did not?"
         echo "  data_layer: $DL"
       else
-        BSTATE=$(echo "$BODY" | jq -r '.data_layer.breaker.state // empty')
-        BFAILS=$(echo "$BODY" | jq -r '.data_layer.breaker.failures // empty')
-        case "$BSTATE" in
-          closed)
-            ok "/health status=200 time=${TIME_S}s breaker.state='${BSTATE}' failures=${BFAILS}"
-            ;;
-          open|half_open|"half-open"|halfopen)
-            warn "/health breaker.state='${BSTATE}' failures=${BFAILS} — recovering/tripped; Lesson #68 machinery is reporting real state (good), but real state is degraded"
-            ;;
-          "")
-            warn "/health breaker exists but .state is empty: ${BREAKER}"
-            ;;
-          *)
-            warn "/health breaker.state='${BSTATE}' (unrecognized) failures=${BFAILS}"
-            ;;
-        esac
+        # NOTE: '// empty' filters out BOTH null AND false — so we use
+        # '| tostring' to coerce false/true to "false"/"true" before the
+        # fallback. Otherwise an open=false system would WARN forever.
+        BOPEN=$(echo "$BODY" | jq -r '.data_layer.breaker.open | tostring')
+        BFAILS=$(echo "$BODY" | jq -r '.data_layer.breaker.consecutive_failures // empty')
+        BTRIPS=$(echo "$BODY" | jq -r '.data_layer.breaker.lifetime_trips // empty')
+        if [ "$BOPEN" = "false" ]; then
+          ok "/health status=200 time=${TIME_S}s breaker.open=false consecutive_failures=${BFAILS} lifetime_trips=${BTRIPS}"
+        elif [ "$BOPEN" = "true" ]; then
+          warn "/health breaker.open=true consecutive_failures=${BFAILS} lifetime_trips=${BTRIPS} — Lesson #68 reports real state (good), but real state is tripped"
+        else
+          warn "/health breaker exists but .open field is empty/non-boolean: ${BREAKER}"
+        fi
       fi
     fi
   fi
