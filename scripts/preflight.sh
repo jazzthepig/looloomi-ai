@@ -25,6 +25,9 @@ python3 -m tests.test_strategy_discipline
 #         fast, RECOVERS after cooldown, 4xx doesn't trip it, health reflects reality.
 python3 -m tests.test_supabase_breaker
 python3 -m tests.test_cis_universe_lock
+# 3a-ter. cold-start contract — the amnesia path (docs/AMNESIA_PROTOCOL.md). Every agent starts
+#         every session at zero; a lesson that lives only in a 5,672-line ledger changes nothing.
+python3 -m tests.test_cold_start_contract
 # 3b. contract schema echo — the drift class preflight previously couldn't see (Mac push schema
 #     changed, Railway didn't follow). Prints the canonical SCHEMA_VERSION so it's in every log,
 #     and fails loudly if the contract module stops importing.

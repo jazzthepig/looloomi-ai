@@ -5600,7 +5600,7 @@ Mac 每 ~30min 推一次 ⇒ **被抛弃但仍存活的连接一次次累积 ⇒
 ⑥ **基线采集**:`pg_stat_activity` 分组查询 —— 事故期间这条查不到,正因为池已耗尽;
    现在恢复后必须先存一份基线,让下次能在几秒内定位
 
-**Lesson #69 (NEW):客户端超时 ≠ 超时。** 任何跨进程调用,若只在调用方设超时而
+**Lesson #69 (NEW):客户端超时 ≠ 超时。**(enforced: `tests/test_cold_start_contract.py` 引用 #69;服务端超时由 `scripts/supabase_connection_hygiene.sql` 落地,并列为 PROJECT_STATE OPEN RISK) 任何跨进程调用,若只在调用方设超时而
 被调方没有对应的取消/超时机制,那么"超时"只是**放弃了对一个仍在消耗资源的操作的可见性**。
 本次它把一个慢写入变成了永久的连接泄漏。**规则:每一个客户端 timeout 必须能指出
 它对应的服务端 timeout;指不出来的,视为泄漏。**
