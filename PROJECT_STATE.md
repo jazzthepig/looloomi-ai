@@ -8,21 +8,26 @@ the lessons lived only in a 5,672-line ledger. **Don't transmit memory, transmit
 Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 `tests/test_cold_start_contract.py`.*
 
-1. **🔴 Anonymous remote-write RPC still open** — `scripts/supabase_security_hardening.sql` written
-   and committed but **NOT executed**. `backfill_binance_ohlcv` is SECURITY DEFINER: owner
-   privileges, outbound HTTP, writes `ohlcv_daily`. Also 4 `USING (true)` SELECT policies granted to
-   `public` leave `cis_scores` / `ohlcv_daily` / `signal_journal` world-readable — **these four were
-   NOT among the advisor's 11 errors** (it excludes permissive SELECT), so never trust the linter
-   alone; query `pg_policies`.
-   VERIFY: `curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "apikey: $ANON" -H 'Content-Type: application/json' -d '{"p_symbol":"x","p_asset_class":"crypto","p_start_ms":1}' "$SB/rest/v1/rpc/backfill_binance_ohlcv"` → expect 401/403; **200 ⇒ still open**
-   OWNER: Jazz (Supabase console)
+1. **🟢 CLOSED 2026-07-30 — anonymous remote-write RPC revoked** (S-94). RPC now 401
+   `42501 permission denied`; seven tables return `[]` to a bare anon key; production unaffected
+   (`force_source=railway` → 200 / 3.57 s / `stale=false` / 58 assets). **Kept here for one cycle
+   as the worked example — **Lesson #71: a security linter's silence is not safety.** Four of the
+   worst exposures were NOT in the advisor's 11 errors: it deliberately excludes permissive SELECT
+   policies, so `cis_scores` (two overlapping `USING (true)` policies granted to `public`) was
+   world-readable and unflagged. Audit `pg_policies` / `pg_proc` / `information_schema` directly;
+   treat a linter as a starting point, never as the list.**
+   VERIFY: `curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "apikey: $ANON" -H 'Content-Type: application/json' -d '{"p_symbol":"x","p_asset_class":"crypto","p_start_ms":1}' "$SB/rest/v1/rpc/backfill_binance_ohlcv"` → expect 401; **200 ⇒ regressed**
+   OWNER: Seth (delete this item on the next PROJECT_STATE update)
 
-2. **🔴 No external alerting — the 10.4 h blind window recurs structurally** — every watchdog
-   (`_hourly_t2_snapshot_loop`, `_outcome_tracker_loop`, `compute_health_summary`, `check_loop_health`)
-   runs **inside the process it monitors**. On 2026-07-29 the workers wedged on the universe lock, so
-   the monitors wedged with them. `/health` can now go 503, but nobody watches it.
-   VERIFY: none — **being unverifiable from inside is precisely the gap** ⇒ highest priority.
-   OWNER: Seth (needs Jazz's go-ahead to create a scheduled external probe)
+2. **🟡 External probe live 2026-07-30, unproven** — `cometcloud-external-probe`, every 2 h,
+   **outside the monitored process** (5 checks: liveness · the endpoint that died · Mac-push
+   freshness · security-regression on the revoked RPC · anonymous read). Worst-case blind window
+   **10.4 h → 2 h**. Still open because: it runs only while the desktop app is open, it has never
+   fired on a real failure, and **an unfired alarm is not a proven alarm**. Downgrade to 🟢 only
+   after it catches something, or after a deliberate induced failure confirms it fires.
+   VERIFY: `ls /Users/sbb/Documents/Claude/Scheduled/cometcloud-external-probe/` and check the
+   last run reported `✅ probe OK`; no run in >3 h ⇒ the probe itself is dead.
+   OWNER: Jazz (keep the app open) / Seth (induce a failure to prove it fires)
 
 3. **🟡 `asset_embeddings` still 72 rows, single snapshot** — no time series ⇒ style rotation cannot
    be backtested ⇒ `DECISION_PATH_SPEC §3` untouched by everything shipped this week. The P0 work
