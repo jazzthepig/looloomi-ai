@@ -48,7 +48,11 @@ probe_universe() {
 }
 read -r UCODE UTIME <<<"$(probe_universe)"
 UMS=$(python3 -c "print(int(float('${UTIME:-99}')*1000))" 2>/dev/null || echo 99999)
-if [ "${UCODE:-000}" != "200" ] || [ "$UMS" -ge 8000 ]; then
+# Retry ONLY on hard failure (non-200 / timeout). Do NOT retry on "slow but
+# succeeded": a second slow sample costs another 13 s and tells us nothing the
+# first did not — the latency IS the observation. Retrying latency was making
+# this probe take 33 s, i.e. the tripwire became one of the slow things.
+if [ "${UCODE:-000}" != "200" ]; then
   sleep 3; read -r UCODE UTIME <<<"$(probe_universe)"
   UMS=$(python3 -c "print(int(float('${UTIME:-99}')*1000))" 2>/dev/null || echo 99999)
 fi
@@ -68,6 +72,26 @@ try:
     else: print(-1)
 except Exception: print(-1)' 2>/dev/null || echo -1)
 [ "${PUSH:--1}" -ge 0 ] && [ "${PUSH}" -le 180 ] || FAILS+=("macpush=${PUSH}min")
+
+# ── 3b. price-feed freshness — the hole this probe originally had ────────────
+# Added 2026-07-31 after the in-process loop watchdog (once bounded, and once
+# somebody actually read its output) reported ohlcv_daily stalled at 4 days.
+# The probe checked the Mac push and called the data layer healthy, because
+# "the pipeline I remembered to check is alive" is not "the data is fresh".
+# Silent data-pipeline death is the failure class that already cost us twice;
+# a tripwire blind to it is a tripwire with a hole shaped like the last incident.
+# Source: /internal/data-freshness — one cheap cached query, built for exactly
+# this. A first attempt read ohlcv_daily with the anon key (blocked by the RLS we
+# ourselves added, correctly) and then fell back to /internal/loop-health, which
+# coupled this fast tripwire to an 8–25 s sweep and made the probe time out. A
+# tripwire that depends on a slow watchdog is not a tripwire.
+OHLCV_D=$(curl -sm 15 "$BASE/internal/data-freshness" 2>/dev/null \
+  | python3 -c 'import sys,json
+try:
+    d=json.load(sys.stdin).get("ohlcv_daily",{})
+    a=d.get("age_days"); print(int(a) if a is not None else -1)
+except Exception: print(-1)' 2>/dev/null || echo -1)
+[ "${OHLCV_D:--1}" -ge 0 ] && [ "${OHLCV_D}" -le 3 ] || FAILS+=("ohlcv=${OHLCV_D}d")
 
 # ── 4+5. security regression — revoked 2026-07-30 (S-94), must STAY revoked ──
 RPC=$(curl -sm 15 -o /dev/null -w '%{http_code}' -X POST -H "apikey: $ANON" \

@@ -32,18 +32,56 @@ class StageHealth:
     detail: str
 
 
+# ── Watchdog budgets (2026-07-31) ────────────────────────────────────────────
+# This probe used timeout=30 per stage with no total budget, across 5 sequential
+# stages: worst case ~150 s holding a worker, for endpoints whose acceptable
+# latency is 8 s (the external probe's threshold).
+#
+# A watchdog that takes longer to give up than the thing it watches is allowed
+# to take is not detecting slowness — it is absorbing it. During the 2026-07-29
+# outage (S-92) this is why the in-process monitors never reported: they waited
+# alongside the wedged workers instead of failing and saying so.
+#
+# Rule: a probe's timeout must be SHORTER than its subject's SLO, and the whole
+# sweep must be bounded, so "the watchdog is slow" can never be indistinguishable
+# from "the system is slow".
+_PROBE_TIMEOUT_S = 10.0     # per stage — above the 8 s SLO, below anything pathological
+_SWEEP_BUDGET_S = 25.0      # whole sweep — bounded regardless of stage count
+
+
 async def _get(client: httpx.AsyncClient, url: str, **kw):
     try:
-        r = await client.get(url, timeout=30, **kw)
+        r = await client.get(url, timeout=_PROBE_TIMEOUT_S, **kw)
         return r.status_code, (r.json() if "json" in r.headers.get("content-type", "") else r.text)
     except Exception as e:
         return None, f"{type(e).__name__}: {e}"
 
 
 async def check_loop_health(base: str = DEFAULT_BASE) -> dict:
-    """Probe every loop stage. Returns {overall, stages:[...], checked_at}."""
+    """Probe every loop stage, under a hard sweep budget.
+
+    Returns {overall, stages:[...], checked_at}. If the sweep overruns
+    `_SWEEP_BUDGET_S` it returns what it has, marked `budget_exceeded` — a
+    partial answer delivered on time beats a complete one that never arrives,
+    which is precisely how the in-process monitors failed on 2026-07-29.
+    """
+    try:
+        return await asyncio.wait_for(_sweep(base), timeout=_SWEEP_BUDGET_S)
+    except asyncio.TimeoutError:
+        return {
+            "overall": "unknown",
+            "budget_exceeded": True,
+            "detail": f"loop health sweep exceeded {_SWEEP_BUDGET_S}s — the watchdog "
+                      f"itself is slow; treat as a signal, not as an absence of signal",
+            "stages": [],
+            "checked_at": int(time.time()),
+        }
+
+
+async def _sweep(base: str) -> dict:
     out: list[StageHealth] = []
-    async with httpx.AsyncClient(headers={"User-Agent": "loop-health"}) as c:
+    async with httpx.AsyncClient(headers={"User-Agent": "loop-health"},
+                                 timeout=_PROBE_TIMEOUT_S) as c:
         # ── SERVE + COMPUTE: the CIS universe is the spine ──────────────────
         sc, body = await _get(c, f"{base}/api/v1/cis/universe")
         universe = (body or {}).get("universe", []) if isinstance(body, dict) else []
