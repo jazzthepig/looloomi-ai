@@ -48,6 +48,17 @@ the scarce resource is **verifiable forward track record** — the validation ap
 product. Ambition raises the evidence bar (§ALTITUDE). Honesty over optimism; the graveyard is
 the asset. *Build things that feel alive.*
 
+**⚠️ RETURN HIERARCHY (Jazz, asset-management first principle — priority order, not a menu; full text
+`docs/HIGH_DIM_ONTOLOGY.md` §5b):** ① **capture beta** (long-only hold of the panel — the FoF core;
+the benchmark every sleeve is measured against is "hold the panel", NEVER 0) → ② **beta+** (overweight
+better assets INSIDE the book — CIS's actual job, tilt not L/S) → ③ **beta multiplier** (time total
+exposure 0.7x–1.3x, never short — regime×vol, liquidity gate, v5 risk_score) → ④ **pure alpha**
+(neutral/hedged — hardest, LAST). **We built this upside-down:** R76–R94 were all ④ (cross-sectional
+demean = beta discarded by construction) while ① was never built — that specification error, not luck,
+is the 15-attempt graveyard. **Default long-only: tilt, don't neutralize.** β-adjustment is for
+ATTRIBUTION (R62), never for neutralizing a book. Every result reports total return vs hold-the-panel,
+then excess.
+
 **The bar:** every claim is guilty until proven with out-of-sample outcomes. Every sleeve needs a
 *cause*, a base rate, and OOS survival. **This is now CI, not prose** —
 `tests/test_strategy_discipline.py` + `scripts/preflight.sh` stage 3 enforce: cause documented,
@@ -111,14 +122,26 @@ SHIP    preflight → push → wait ~90s → deploy-verifier agent (5 health cat
 END     TaskList closed/escalated → PROJECT_STATE header + log entry → MEMORY.md if new fact
 ```
 
-**Handoff block template** (last output of any cross-lane change; the handshake that makes the loop loop):
+**Handoff format — emit RUNNABLE COMMANDS, not a manifest.** Jazz pastes these into a terminal;
+a file list plus a commit message is homework, because he still has to compose the `git add` lines
+himself. Give the exact block, in order, path-scoped, with preflight first:
 
+```bash
+cd ~/Projects/looloomi-ai
+bash scripts/preflight.sh          # green before anything below
+
+git add <explicit paths — never -A>
+git commit -m "<type>(<scope>): <subject>
+
+<body: what changed and WHY it was wrong before>"
+
+git push origin main
 ```
-MAC-SIDE COMMIT HANDOFF — <date>
-  Files: <path> (M|N|R) ...
-  Commit message: <type>(<scope>): <one line>
-  Post-commit: <SQL/scripts if any>
-```
+
+Rules: one commit per concern (ledger appends ride their own — `git log` is a source-of-truth
+surface, and a commit whose title covers 9% of its diff corrupts it); any post-push verification
+as a copy-pasteable `curl`; if a step is Jazz's alone (Supabase console, restart), say so on its
+own line rather than burying it in a table.
 
 **Staleness thresholds (task-audit flags):** in_progress >3d 🟡 / >7d 🔴 · queue P0 >3d 🟡 / >7d 🔴
 · P1 >7d 🟡 / >14d 🔴 · AWAITING JAZZ >7d 🔴 · "done" claimed with dirty tree / unpushed commit /

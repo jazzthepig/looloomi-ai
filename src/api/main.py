@@ -1086,6 +1086,40 @@ async def telegram_webhook(update: dict, request: Request):
     return {"ok": True}
 
 
+@app.get("/internal/data-freshness")
+async def data_freshness():
+    """Age of every pipeline that can die silently. One cheap query per table.
+
+    Built 2026-07-31 for the external probe. The probe needs price-feed freshness
+    but can no longer read `ohlcv_daily` anonymously (RLS closed that on 2026-07-30,
+    correctly), and routing it through `/internal/loop-health` coupled a
+    fast tripwire to a slow 8–25 s sweep — the precise coupling the tripwire exists
+    to avoid. So: a dedicated endpoint that is cheap by construction.
+
+    Silent pipeline death is the failure class that has now cost us three times
+    (T2 pillars all-NULL for months; signal_outcomes dead 80 days; ohlcv_daily
+    stalled 4 days and found only by accident). Freshness must be a first-class,
+    queryable fact — not something inferred from whether some other thing looks OK.
+    """
+    # Reuses the existing §BETA-METRIC-AGG freshness helper (5 min cached, already
+    # honest about failure) rather than adding a second way to ask the same
+    # question — a duplicate freshness path is how two sources of truth start.
+    from src.api.store import supabase_ohlcv_daily_freshness
+    out: dict = {"checked_at": int(_time.time())}
+    try:
+        f = await supabase_ohlcv_daily_freshness()
+        age_s = f.get("age_seconds")
+        out["ohlcv_daily"] = {
+            "last_trade_date": f.get("last_trade_date"),
+            "age_days": round(age_s / 86400, 1) if age_s is not None else None,
+            "verdict": f.get("verdict"),
+            "error": f.get("error"),
+        }
+    except Exception as e:
+        out["ohlcv_daily"] = {"verdict": "unknown", "error": str(e)[:80]}
+    return out
+
+
 @app.get("/internal/health-summary")
 async def health_summary():
     """One health verdict over Mac Mini push freshness, universe, contract drift,
