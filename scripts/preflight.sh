@@ -28,6 +28,14 @@ python3 -m tests.test_cis_universe_lock
 # 3a-ter. cold-start contract — the amnesia path (docs/AMNESIA_PROTOCOL.md). Every agent starts
 #         every session at zero; a lesson that lives only in a 5,672-line ledger changes nothing.
 python3 -m tests.test_cold_start_contract
+# 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
+#            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
+#            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT
+#            through a +256% run while every completeness check stayed green. A
+#            populated wrong number is invisible to "is the field set?" and obvious
+#            to "do independent venues agree?". Offline/deterministic — the LIVE
+#            cross-venue probe belongs in loop_health SENSE, not in a code gate.
+python3 -m tests.test_venue_consolidation
 # 3b. contract schema echo — the drift class preflight previously couldn't see (Mac push schema
 #     changed, Railway didn't follow). Prints the canonical SCHEMA_VERSION so it's in every log,
 #     and fails loudly if the contract module stops importing.
