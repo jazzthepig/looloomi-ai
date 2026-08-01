@@ -29,30 +29,43 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    last run reported `✅ probe OK`; no run in >3 h ⇒ the probe itself is dead.
    OWNER: Jazz (keep the app open) / Seth (induce a failure to prove it fires)
 
-3. **🟡 `asset_embeddings` still 72 rows, single snapshot** — no time series ⇒ style rotation cannot
-   be backtested ⇒ `DECISION_PATH_SPEC §3` untouched by everything shipped this week. The P0 work
-   fixed delivery, not the intelligence gap.
-   VERIFY: `select count(*), count(distinct symbol) from asset_embeddings;` → expect ≫72
-   OWNER: Minimax-A (M-WO-D1)
+3. **🟡 VDB has no time series — style rotation cannot be backtested** (was #3+#4, merged: one
+   owner, one blocker). `asset_embeddings` is 72 rows / single snapshot, and `risk_meter` has code
+   with **zero persisted output**, so neither can enter a backtest. `DECISION_PATH_SPEC §3` is
+   untouched by everything shipped this week — the P0 work fixed delivery, not the intelligence gap.
+   VERIFY: `select count(*) from asset_embeddings;` → ≫72 · `select count(*) from risk_meter_history;`
+   → table missing or 0 ⇒ still open
+   OWNER: Minimax-A (M-WO-D1 embeddings history · M-WO-D2 risk-meter persistence)
 
-4. **🟡 `risk_meter` has code and zero persisted output** — cannot enter any backtest.
-   VERIFY: `select count(*) from risk_meter_history;` → table missing or 0 ⇒ still open
-   OWNER: Minimax-A (M-WO-D2)
-
-5. **🟡 MEMORY.md is 7.6 KB against its own 4 KB rule** — the one file guaranteed to be read cold.
+4. **🟡 MEMORY.md is 7.6 KB against its own 4 KB rule** — the one file guaranteed to be read cold.
    Past a few KB it stops being an index and becomes another skimmed document.
    VERIFY: `wc -c MEMORY.md` → expect ≤4096
    OWNER: Seth
 
-6. **🟡 MCP on deprecated HTTP+SSE transport** — spec `2026-07-28` retires protocol-level sessions;
+5. **🟡 MCP on deprecated HTTP+SSE transport** — spec `2026-07-28` retires protocol-level sessions;
    legacy SSE has a 12-month offramp. Same root shape as the P0: stateful, unbounded connections.
    VERIFY: `grep -c 'mcp/sse' src/mcp/*.py` → >0 ⇒ still on the deprecated transport
    OWNER: Seth (migration assessment not started)
 
-7. **🟡 Only one single-flight lock is bounded** — `_UNIVERSE_LOCK` now has both bounds; the next
-   `asyncio.Lock` in the repo can still wrap unbounded external calls with nothing to stop it.
-   VERIFY: `grep -rn 'asyncio.Lock()' src/ | wc -l` vs locks covered by tests → gap ⇒ open
-   OWNER: Seth
+6. **🔴 `ohlcv_daily` price feed stalled 4 days** — newest `trade_date` 2026-07-27 vs today
+   2026-07-31; 156 rows in the last 7d against ~280 expected. Found 2026-07-31 only because the
+   in-process loop watchdog was bounded and someone finally read its output. **The external probe
+   was blind to it** — it checked the Mac push and called the data layer healthy, but "the pipeline
+   I remembered to check is alive" is not "the data is fresh". Probe now checks it via a dedicated
+   `/internal/data-freshness`. Third occurrence of silent pipeline death (T2 pillars all-NULL for
+   months; `signal_outcomes` dead 80 days; now this).
+   VERIFY: `curl -s $BASE/internal/data-freshness | jq .ohlcv_daily` → `age_days` must be ≤3
+   OWNER: unassigned — the collector (`_ohlcv_collector_loop`) runs in-process and reported nothing
+
+7. **🟡 `/api/v1/cis/universe` hits its 12 s build budget, reproducibly** — 12,602 ms then
+   13,006 ms, both on the first call after an idle gap; back-to-back calls are 0.45 s. Degrades to
+   flagged stale (correct) but the user-visible latency is real. Cause NOT yet attributed: the
+   72-row HNSW upsert measured 48 ms and is ruled out; push contention unproven. `_build_cis_universe`
+   runs the external-provider-heavy T2 calculation on **every** rebuild even when T1 is fresh —
+   prime suspect, recorded rather than acted on. Build-phase timing now lands on `/health`.
+   **Do not tune the budget or the index before the timing gives an attribution.**
+   VERIFY: `curl -s $BASE/health | jq .data_layer.last_universe_build` → read `slowest`
+   OWNER: Seth (after deploy)
 
 ---
 
