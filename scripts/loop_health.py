@@ -59,6 +59,37 @@ def main():
     except Exception as e:
         results.append(_line("SENSE", "FAIL", f"build-state unreachable: {e}"))
 
+    # SENSE-VENUE — is the input the RIGHT ASSET? (2026-08-01)
+    # The completeness checks above ask "is the field populated". They stayed
+    # green for months while cis_provider scored Hyperliquid using Hyperlane's
+    # order book (Binance spot HYPERUSDT, $0.0558 vs $52.32 — 937x), burying
+    # HYPE at grade D through a +256% run. A populated wrong number is only
+    # visible against independent venues, so this layer asks a different
+    # question: do they agree, and does the asset still clear the liquidity
+    # floor it was admitted under?
+    try:
+        import subprocess
+        from pathlib import Path as _P
+
+        proc = subprocess.run(
+            ["python3", str(_P(__file__).resolve().parent / "check_venue_integrity.py"), "--json"],
+            capture_output=True, text=True, timeout=120,
+        )
+        payload = json.loads(proc.stdout or "{}")
+        vfails, vwarns = payload.get("fails", []), payload.get("warns", [])
+        n_ok = len(payload.get("rows", []))
+        if vfails:
+            results.append(_line("SENSE-VENUE", "FAIL",
+                                 f"{len(vfails)} integrity failure(s): {vfails[0][:120]}"))
+        elif vwarns:
+            results.append(_line("SENSE-VENUE", "WARN",
+                                 f"{n_ok} assets consolidated, {len(vwarns)} warn: {vwarns[0][:100]}"))
+        else:
+            results.append(_line("SENSE-VENUE", "PASS",
+                                 f"{n_ok} assets, cross-venue consensus clean"))
+    except Exception as e:
+        results.append(_line("SENSE-VENUE", "WARN", f"venue probe unavailable: {e}"))
+
     # SYNTHESIZE — judgment kit per asset
     try:
         uni = _get(base, "/api/v1/cis/universe").get("universe", []) or []
