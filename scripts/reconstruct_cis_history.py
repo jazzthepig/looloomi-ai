@@ -87,6 +87,12 @@ CRYPTO_UNIVERSE = {
     "HBAR":   "hedera-hashgraph",
     "SUI":    "sui",
     "APT":    "aptos",
+    # 2026-08-01: HYPE was the ONLY live-universe crypto absent from this dict.
+    # Every backtest R76-R94 ran on a panel that structurally could not see it,
+    # through a +256% run (2026-01 $20.92 -> 2026-06 $74.39). The live path was
+    # patched in e321053; this research path was never touched. Two universe
+    # definitions, no shared source -> silent drift. See docs/UNIVERSE_DECISION_HYPE.md.
+    "HYPE":   "hyperliquid",
     "SEI":    "sei",
     "ATOM":   "cosmos",
     "FIL":    "filecoin",
@@ -115,7 +121,7 @@ ASSET_CLASSES = {
     "BTC": "L1", "ETH": "L1", "SOL": "L1", "BNB": "L1", "XRP": "L1",
     "ADA": "L1", "AVAX": "L1", "DOT": "L1", "NEAR": "L1", "ALGO": "L1",
     "HBAR": "L1", "SUI": "L1", "APT": "L1", "SEI": "L1", "ATOM": "L1",
-    "FIL": "L1", "LTC": "L1",
+    "FIL": "L1", "LTC": "L1", "HYPE": "L1",
     "ARB": "L2", "OP": "L2", "POL": "L2", "MANTLE": "L2", "STRK": "L2",
     "UNI": "DeFi", "AAVE": "DeFi", "LDO": "DeFi", "PENDLE": "DeFi",
     "ENA": "DeFi", "RUNE": "DeFi", "COMP": "DeFi",
