@@ -40,6 +40,12 @@ PRD*.md
 MINIMAX_SYNC_ARCHIVE_*.md
 *.db-journal
 .claude/settings.local.json
+# Agent-local scratch — machine-specific, never shared state (2026-08-01).
+# NOTE: .claude/skills/ is deliberately NOT ignored. CLAUDE.md's skills table
+# names task-audit and completion-verification as shared discipline every lane
+# loads; ignoring them would make each agent's copy private and silently
+# divergent — the same "two sources of truth" failure as the HYPE universe.
+.claude/worktrees/
 # pip mis-install artifacts (files literally named "=x.y.z")
 =*
 
