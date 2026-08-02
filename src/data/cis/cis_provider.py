@@ -8,6 +8,7 @@ Author: Seth
 """
 
 import math
+import statistics
 import httpx
 import asyncio
 import logging
@@ -427,7 +428,12 @@ BINANCE_SYMBOLS = {
     "NEAR":  "nearusdt",
     "SUI":   "suiusdt",
     "APT":   "aptusdt",
-    "HYPE":  "hyperusdt",
+    # HYPE REMOVED 2026-08-01 — "hyperusdt" on Binance SPOT is HYPERLANE, not
+    # Hyperliquid. $0.0558 vs $52.32: a 937x wrong-asset read that produced
+    # volume_mcap_ratio=0.0002 → liquidity_score=-4.8 → LAS 3.1 → grade D →
+    # UNDERWEIGHT, held through a +256% run (2026-01 $20.92 → 2026-06 $74.39).
+    # HYPEUSDT does not exist on Binance spot at all. The real market is perps;
+    # HYPE is now sourced through VENUE_OVERLAY_ASSETS below.
     # L2
     "ARB":   "arbusdt",
     "OP":    "opusdt",
@@ -522,6 +528,104 @@ async def fetch_binance_prices() -> Dict[str, dict]:
     except Exception as e:
         _logger.warning(f"Binance API error: {e}")
         return r2 or result
+
+
+# ── Cross-venue overlay (2026-08-01) ──────────────────────────────────────────
+#
+# Assets whose real market is NOT Binance spot. Sourcing these from a single
+# spot venue is wrong twice over: it can silently resolve to a different asset
+# (HYPE → Hyperlane, 937x), and even when correct it undercounts, because each
+# venue hosts a different trader cohort. Measured on HYPE 2026-08-01:
+#   Binance perp $440.8M vol / $248.1M OI (turnover 1.78x — leverage churn)
+#   Hyperliquid  $314.4M vol / $1,174.4M OI (turnover 0.27x — position-takers)
+#   Bybit        $178.2M vol / $201.2M OI
+# Consolidated: $937M volume, $1.62B gross OI, 7bp price dispersion.
+#
+# Full rationale + aggregation rules: src/data/venues/__init__.py
+VENUE_OVERLAY_ASSETS = {"HYPE"}
+
+
+async def fetch_venue_overlay() -> Dict[str, dict]:
+    """
+    Consolidated cross-venue market data for assets Binance spot cannot serve.
+
+    Returns {asset: {price, volume_24h, open_interest_usd, funding_rate,
+                     venue_confidence, venues_used, degraded}}.
+
+    Never raises and never fabricates: on total failure it returns {} and the
+    caller falls through to whatever CoinGecko provides, exactly as before.
+    Railway is US-hosted and api.binance.com is geo-blocked there — the
+    multi-venue design degrades to Hyperliquid + Bybit rather than failing,
+    which is the operational reason for it as much as the accuracy one.
+    """
+    cache_key = "venue_overlay"
+    redis_key = "cis:venue_overlay"
+
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+    r2 = await _upstash_get(redis_key)
+    if r2:
+        _cache_set(cache_key, r2)
+        return r2
+
+    out: Dict[str, dict] = {}
+    try:
+        try:
+            from src.data.venues import fetch_consolidated
+        except ImportError:
+            from data.venues import fetch_consolidated
+
+        async with httpx.AsyncClient(timeout=10) as client:
+            results = await asyncio.gather(
+                *[fetch_consolidated(a, client=client) for a in sorted(VENUE_OVERLAY_ASSETS)],
+                return_exceptions=True,
+            )
+
+        for asset, res in zip(sorted(VENUE_OVERLAY_ASSETS), results):
+            if isinstance(res, Exception) or res is None:
+                _logger.warning("venue overlay: %s unresolved (%s)", asset, res)
+                continue
+            # A rejected venue means a mapping is pointing at the wrong asset.
+            # Refuse the value rather than pass a plausible-looking wrong number
+            # downstream — that failure mode is what this whole path exists for.
+            if res.venues_rejected:
+                _logger.error(
+                    "venue overlay: %s REJECTED venue(s) %s (dispersion %.2f%%) — "
+                    "possible wrong-asset mapping; skipping overlay",
+                    asset, res.venues_rejected, res.price_dispersion * 100,
+                )
+                continue
+            out[asset] = {
+                "price": res.price,
+                "volume_24h": res.volume_24h_usd,
+                "open_interest_usd": res.open_interest_usd,
+                # MEDIAN across venues, not any single one. The O pillar reads a
+                # scalar funding rate against fixed thresholds (>0.05%/8h =
+                # overleveraged longs), and on HYPE the venues span 8x
+                # (0.0000125 .. 0.0001) — picking one would let a single venue's
+                # cohort decide a scoring band. The full map and the spread are
+                # carried alongside; the spread is the net-positioning signal.
+                "funding_rate": (statistics.median(list(res.funding_by_venue.values()))
+                                 if res.funding_by_venue else None),
+                "funding_by_venue": res.funding_by_venue,
+                "funding_spread": res.funding_spread,
+                "venue_confidence": res.confidence,
+                "venues_used": res.venues_used,
+                "oi_concentration": res.oi_concentration,
+                "degraded": res.degraded,
+                "source": "venue_consolidated",
+            }
+
+        if out:
+            _cache_set(cache_key, out)
+            await _upstash_set(redis_key, out, ttl=300)
+        _logger.info("venue overlay: %d asset(s) consolidated", len(out))
+        return out
+
+    except Exception as e:                                        # noqa: BLE001
+        _logger.warning("venue overlay failed: %s", e)
+        return r2 or out
 
 
 async def fetch_cg_markets() -> Dict[str, dict]:
@@ -2168,6 +2272,57 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             merged_markets[asset_id] = rec
         elif cg_data:
             merged_markets[asset_id] = cg_data
+
+    # ── Cross-venue overlay ───────────────────────────────────────────────────
+    # Applied AFTER the Binance/CoinGecko merge so it wins on the two fields a
+    # single spot venue gets wrong for perp-native assets: price and volume.
+    # CoinGecko supplies market cap and supply (which it gets right); the
+    # overlay supplies traded reality. Keeping mcap from CG and volume from the
+    # venues is deliberate — mixing a correct mcap with ONE venue's volume is
+    # precisely what produced volume_mcap_ratio=0.0002 on HYPE.
+    try:
+        _venue_overlay = await fetch_venue_overlay()
+    except Exception as _e:                                        # noqa: BLE001
+        _logger.warning("venue overlay unavailable: %s", _e)
+        _venue_overlay = {}
+
+    for _aid, _v in (_venue_overlay or {}).items():
+        _rec = dict(merged_markets.get(_aid) or {})
+        _cgv = cg_markets.get(ASSETS_CONFIG.get(_aid, {}).get("coingecko", ""), {}) or {}
+        _rec.update({
+            "symbol": _aid,
+            "name": _rec.get("name") or _cgv.get("name") or _aid,
+            "price": _v["price"],
+            "volume_24h": _v["volume_24h"],
+            "source": "venue_consolidated",
+            "venue_confidence": _v.get("venue_confidence"),
+            "venues_used": _v.get("venues_used"),
+        })
+        # Fields the venues do not carry — keep CoinGecko's.
+        for _k in ("market_cap", "fdv", "circulating_supply", "total_supply",
+                   "change_7d", "change_30d", "ath_change_percentage"):
+            if not _rec.get(_k):
+                _rec[_k] = _cgv.get(_k) or _rec.get(_k) or 0
+        if _rec.get("change_24h") is None:
+            _rec["change_24h"] = _cgv.get("change_24h") or 0
+        merged_markets[_aid] = _rec
+
+        # Feed the O pillar. Before this, HYPE's breakdown carried
+        # funding_rate=null, oi_usd=null, funding_signal="N/A (no derivatives)"
+        # and funding_adj=oi_adj=0.0 — the engine believed the largest perp DEX
+        # in crypto had no derivatives market, so an entire scoring dimension
+        # was silently zeroed rather than measured.
+        if _deriv_map is not None and _v.get("open_interest_usd"):
+            _existing = dict(_deriv_map.get(_aid, {}) or {})
+            _existing.setdefault("funding_signal", "cross_venue")
+            _existing.update({
+                "funding_rate": _v.get("funding_rate"),
+                "open_interest_usd": _v.get("open_interest_usd"),
+                "funding_by_venue": _v.get("funding_by_venue"),
+                "funding_spread": _v.get("funding_spread"),
+                "source": "venue_consolidated",
+            })
+            _deriv_map[_aid] = _existing
 
     # Fetch TradFi price data — EODHD primary (yfinance is rate-limited and has
     # blocked the portal); yfinance kept only as a last-resort fallback.
