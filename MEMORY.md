@@ -5,6 +5,15 @@
 > only if it was EXPENSIVE to discover and will be needed again. Evict when stale or when compiled
 > into code/CI. Detail belongs in the pointed-to file, not here.
 
+## 💰 RETURN HIERARCHY — never evict (Jazz, 2026-07-27; full text `HIGH_DIM_ONTOLOGY.md` §5b)
+- **① 保证吃到 beta(持有 panel)→ ② beta+(持仓内超配 = CIS 的真岗位,tilt 非 L/S)→ ③ beta multiplier(择时调总暴露 0.7–1.3x,不做空)→ ④ pure alpha(中性,最难最后)。优先级,不是菜单。**
+- **我们做反了:R76–R94 全是④(demean = 构造上扔掉 beta),①从未建过。15 连败是设定错误,不是运气。**
+- 默认满仓多头:**tilt, don't neutralize**。基准永远是"等权持有本 panel",不是 0。β-adj 只用于**归因**(R62),绝不用于中性化仓位。每个结果报 total_return / vs 持有 / 再报超额。
+- **⓪层 OVERRIDE 凌驾四层(最该建的能力,`REGIME_OVERRIDE_SPEC.md`)**:风格/流动性周期转向时**空仓(0x)甚至裸空(−0.3x)优先于吃 beta** —— ①是**条件性默认**,非无条件义务。暴露区间 [−0.3, 1.3]。
+- **正交是归因工具,不是建仓约束**(我曾写错):转向时三层应同时服从ⓠ层,事后再拆归因。
+- ⓠ层判据独特:不判 Sharpe,判**三段崩塌(2018/2022/2025-26)是否在回撤前 1/3 内降暴露**(≥2/3)+ maxDD 改善≥10pp + 切换≤6次/年 + 优于随机。最强先验 O1 = stablecoin 供应Δ(已验 DD −56.5% vs 持有 −75.2%)。
+- **Millennium 模型**:平台 edge 在**中心化风险分配**,不在单个 pod。**强制:每个组件必须有 `max_dd_stop` + 触发动作,且回测时带着止损跑;无止损不许进生产**(含⓪层自己)。
+
 ## 🧭 THE ONTOLOGY CORE — never evict (full text: `docs/HIGH_DIM_ONTOLOGY.md` + `ARCHITECTURE.md`)
 - 市场真实状态是高维的;全部工作 = 一连串**保结构的降维**;VDB 是这条链的几何基底。
 - 内核:最深对象是 **Entity/Decision**,影响力作向量场传播;CIS/价格是波前过后的**反射**;**edge = lag**。
