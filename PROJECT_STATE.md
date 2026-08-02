@@ -33,9 +33,18 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    owner, one blocker). `asset_embeddings` is 72 rows / single snapshot, and `risk_meter` has code
    with **zero persisted output**, so neither can enter a backtest. `DECISION_PATH_SPEC §3` is
    untouched by everything shipped this week — the P0 work fixed delivery, not the intelligence gap.
-   VERIFY: `select count(*) from asset_embeddings;` → ≫72 · `select count(*) from risk_meter_history;`
-   → table missing or 0 ⇒ still open
-   OWNER: Minimax-A (M-WO-D1 embeddings history · M-WO-D2 risk-meter persistence)
+   **2026-08-02 — SCHEMA LANDED, DATA HAS NOT. Still 🟡, and the distinction is the whole point.**
+   D1/D2/D3 SQL applied to prod (Seth, via MCP): `asset_embeddings_history` + `risk_meter_history`
+   + both upsert RPCs + both views exist; HNSW right-sized 16/64 → 8/32 (72 rows intact, ANN plan
+   confirmed still `Index Scan using asset_embeddings_vec_hnsw`, 2.06 ms). **Both tables are EMPTY.**
+   Nothing is backtestable until Mac T1 runs the D1 backfill over `cis_scores` (104,947 pillar rows)
+   and starts the daily `upsert_risk_meter_history` call. An empty table with a correct schema
+   closes zero risk — it just moves the blocker from "no place to put it" to "nobody put it there".
+   VERIFY: `select count(*) from asset_embeddings_history;` → 0 ⇒ still open, want ≫72 ·
+   `select count(*) from risk_meter_history;` → 0 ⇒ still open
+   (superseded VERIFY `count(*) from asset_embeddings` → ≫72: mis-specified, D1 writes history to
+   `asset_embeddings_history`; the live table stays at ~72 by design and would never have passed)
+   OWNER: Minimax-A (run D1 backfill · wire D2 daily upsert into the T1 post-push step)
 
 4. **🟡 MEMORY.md is 7.6 KB against its own 4 KB rule** — the one file guaranteed to be read cold.
    Past a few KB it stops being an index and becomes another skimmed document.
