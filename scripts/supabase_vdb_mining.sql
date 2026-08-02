@@ -46,6 +46,14 @@ language sql stable as $$
   limit k;
 $$;
 
+-- ⚠️ RLS — 补于 2026-08-01,应用本文件时才发现缺失。
+-- public schema 下没有 RLS 的表会被 PostgREST 用公开 anon key 暴露出去,可读**可写**。
+-- 本库其余每一张表都是 rls on + 零 policy(对 anon/authenticated 默认拒绝;service_role
+-- 绕过 RLS)。这两张表原文件漏了,应用后是全库仅有的两个缺口 —— 正是 §P0-CLOSEOUT §3
+-- 那个 anon-write 类漏洞。任何人重跑本文件都会重新打开它,所以补在文件里而不只是补在库里。
+alter table market_state_vectors enable row level security;
+alter table strategy_response    enable row level security;
+
 comment on table market_state_vectors is
   'VDB ① 环境向量。每日市场状态高维刻画,不含策略信息。价格仅 5/24 维且只用于二阶矩与趋势相位 —— '
   '重建高维,不消费投影。';
