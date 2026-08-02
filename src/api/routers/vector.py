@@ -10,13 +10,19 @@ Endpoints:
 """
 
 import logging
+import os
+import time
 from typing import Optional
 
-from fastapi import APIRouter, Query, HTTPException, Response
+from fastapi import APIRouter, Query, HTTPException, Response, Header
 from fastapi.responses import JSONResponse
 
 _logger = logging.getLogger(__name__)
 router  = APIRouter()
+
+# Mac T1 → Railway asset-vector push contract (MINIMAX_SYNC §ASSET-VECTORS).
+ASSET_VECTOR_SCHEMA_VERSION = "1.0"
+_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 
 def _load_store():
@@ -360,4 +366,121 @@ async def get_trending_overlay():
         "count":  len(rows),
         "assets": rows,
         "note":   "Hype trap = trending rank top-15 but CIS < 45. Quality = trending + CIS ≥ 65.",
+    }
+
+
+# ── Mac T1 → Railway asset-vector push (MINIMAX_SYNC §ASSET-VECTORS contract v1.0) ──────────
+# The Mac engine computes full pillar history; Railway owns the embedding + pgvector write, so
+# the vector definition lives in ONE place (embedder.py) and both tiers can't drift apart.
+
+@router.get("/internal/asset-vectors/schema")
+async def asset_vectors_schema():
+    """Contract echo — the dryrun target both lanes verify against before the live hook fires.
+    Mirrors the /internal/cis-scores/schema pattern: the live endpoint IS the source of truth."""
+    from src.data.vector.embedder import (
+        SCHEMA_VERSION as VEC_SCHEMA, ASSET_DIMS_V1, ASSET_DIMS_V2,
+    )
+    return {
+        "schema_version": ASSET_VECTOR_SCHEMA_VERSION,
+        "vector_schema": VEC_SCHEMA,
+        "dims_v1": ASSET_DIMS_V1,      # 18 — no v2 inputs supplied
+        "dims_v2": ASSET_DIMS_V2,      # 27 — prior_pillars / pillar_history / edge_moments supplied
+        "required": ["schema_version", "macro_regime", "assets[].symbol", "assets[].pillars"],
+        "optional": ["assets[].prior_pillars", "assets[].pillar_history", "assets[].funding_rate",
+                     "assets[].open_interest_usd", "assets[].market_cap", "assets[].volume_24h",
+                     "assets[].change_24h", "assets[].change_7d", "assets[].change_30d",
+                     "assets[].ath_distance_pct", "assets[].las", "assets[].confidence",
+                     "assets[].asset_class"],
+        "notes": "edge_moments (v2 dims 25-26) are filled server-side from the asset_edge_moments "
+                 "view; absent ⇒ NaN (I1, never 0). NaN never enters pgvector `vec` — the full "
+                 "27-dim vector with nulls lives in `vec_full` jsonb.",
+    }
+
+
+@router.post("/internal/asset-vectors")
+async def receive_asset_vectors(payload: dict, x_internal_token: str = Header(None)):
+    """Receive per-asset pillar/market data from the Mac T1 engine, embed, upsert to pgvector.
+
+    Contract: MINIMAX_SYNC §ASSET-VECTORS v1.0. Best-effort by design — the CIS score push has
+    already succeeded by the time this fires, so a failure here must never look like a scoring
+    failure (Mac logs WARNING and moves on).
+    """
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    sv = str(payload.get("schema_version") or "")
+    if sv != ASSET_VECTOR_SCHEMA_VERSION:
+        raise HTTPException(status_code=400,
+                            detail=f"unknown schema_version {sv!r}; expected {ASSET_VECTOR_SCHEMA_VERSION}")
+
+    assets = payload.get("assets") or []
+    if not isinstance(assets, list) or not assets:
+        raise HTTPException(status_code=400, detail="assets[] required and must be non-empty")
+
+    try:
+        from src.data.vector.embedder import generate_embedding
+        from src.data.vector.pgvector_store import upsert_embeddings
+        from src.data.cis.cis_provider import canonical_regime
+    except Exception as e:
+        _logger.error(f"[asset-vectors] import failed: {e}")
+        raise HTTPException(status_code=500, detail="embedding modules unavailable")
+
+    regime = canonical_regime(payload.get("macro_regime"))
+
+    # v2 dims [25..26]: risk moments from the asset_edge_moments view. One bulk read; absent ⇒ NaN.
+    edge_map: dict = {}
+    try:
+        import json as _json, urllib.request as _u
+        _sb = os.environ.get("SUPABASE_URL", "").rstrip("/")
+        _k = os.environ.get("SUPABASE_KEY", "")
+        if _sb and _k:
+            req = _u.Request(f"{_sb}/rest/v1/asset_edge_moments?select=symbol,edge_vol,edge_p10",
+                             headers={"apikey": _k, "Authorization": f"Bearer {_k}"})
+            with _u.urlopen(req, timeout=5) as r:
+                for row in _json.loads(r.read()):
+                    edge_map[str(row["symbol"]).upper()] = (row.get("edge_vol"), row.get("edge_p10"))
+    except Exception as e:
+        _logger.warning(f"[asset-vectors] edge_moments read failed (dims 25-26 → NaN): {e}")
+
+    embeddings: dict = {}
+    asset_meta: dict = {}
+    derivatives: dict = {}
+    for a in assets:
+        sym = str(a.get("symbol") or "").upper()
+        if not sym:
+            continue
+        derivatives[sym] = {"funding_rate": a.get("funding_rate"),
+                            "open_interest_usd": a.get("open_interest_usd")}
+    n_v2 = 0
+    for a in assets:
+        sym = str(a.get("symbol") or "").upper()
+        if not sym:
+            continue
+        try:
+            vec = generate_embedding(
+                a, macro_regime=regime, derivatives=derivatives,
+                prior_pillars=a.get("prior_pillars"),
+                pillar_history=a.get("pillar_history"),
+                edge_moments=edge_map.get(sym),
+            )
+            embeddings[sym] = vec
+            asset_meta[sym] = {"asset_class": a.get("asset_class") or a.get("class")}
+            if len(vec) > 18:
+                n_v2 += 1
+        except Exception as e:
+            _logger.warning(f"[asset-vectors] embed {sym} failed: {e}")
+
+    if not embeddings:
+        raise HTTPException(status_code=400, detail="no embeddable assets in payload")
+
+    ok = upsert_embeddings(embeddings, asset_meta=asset_meta, macro_regime=regime, schema_version=2)
+    _logger.info(f"[asset-vectors] upsert ok={ok} count={len(embeddings)} v2={n_v2} regime={regime}")
+    return {
+        "status": "ok" if ok else "error",
+        "count": len(embeddings),
+        "v2_count": n_v2,                    # how many got the full 27-dim treatment
+        "edge_moments_available": len(edge_map),
+        "macro_regime": regime,
+        "schema_version": ASSET_VECTOR_SCHEMA_VERSION,
+        "ts": int(time.time()),
     }
