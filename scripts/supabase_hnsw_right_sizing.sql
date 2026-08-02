@@ -36,8 +36,11 @@ begin
   -- 2. Read the current build parameters (best-effort; if pg_indexes does not
   --    expose them we fall back to "always recreate").
   select
-    coalesce((regexp_match(indexdef, 'm\s*=\s*(\d+)'))[1], ''),
-    coalesce((regexp_match(indexdef, 'ef_construction\s*=\s*(\d+)'))[1], '')
+    -- NB: pg renders reloptions with QUOTED values -- WITH (m='8', ef_construction='32').
+    -- Without the optional quote these patterns never match a already-right-sized
+    -- index, so every re-run would drop and rebuild. ''? keeps the file idempotent.
+    coalesce((regexp_match(indexdef, 'm\s*=\s*''?(\d+)'))[1], ''),
+    coalesce((regexp_match(indexdef, 'ef_construction\s*=\s*''?(\d+)'))[1], '')
     into v_current_m, v_current_ef
     from pg_indexes
    where indexname = v_index_name;
