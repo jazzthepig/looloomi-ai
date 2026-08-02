@@ -1,31 +1,38 @@
 """
-Strategy Vector Store — Redis-backed JSON persistence
-======================================================
+Strategy Vector Store — durable Postgres jsonb (records) + Redis (embeddings).
+===========================================================================
 
-Mirrors `src/data/vector/store.py` exactly. Each upsert round-trips via
-`StrategyRecord.to_dict()` ↔ `StrategyRecord.from_dict()`.
+Seth, 2026-07-26 (MINIMAX_SYNC §VDB — strategy vectors item, 2026-07-23).
 
-Keys (Upstash Redis):
-  strategy:records    — JSON dict {id: record_dict}       TTL: 24h
-  strategy:embeddings — JSON dict {id: [30 floats]}       TTL: 24h
-  strategy:meta       — JSON {computed_at, count, version}
+Source of truth for the strategy corpus moves from Redis-24h-TTL to a durable
+Postgres jsonb table. Embeddings remain in Redis as a derived cache (rebuildable
+from records via `strategy_embedder.generate_embedding`). Similarity stays in
+Python NaN-aware cosine — at this scale pgvector-ANN gives no benefit AND its
+dense cosine would impute unmeasured→0, silently corrupting R62-style risk
+moments / sparse coverage analysis.
 
-The split lets us rebuild the embedding cache from the records cache without
-touching the canonical strategy records (records → JSON, embeddings → derived).
+PIT discipline: every write to Postgres replaces the WHOLE record (no patch),
+matching the previous Redis semantics. The single-row upsert is idempotent
+(`on conflict (id) do update`).
 
-No external vector DB needed at strategy-record scale (typical 30–200 records).
-All similarity search happens in-memory via `strategy_embedder.find_similar()`.
+Fallback: when Postgres is not configured (SUPABASE_URL/KEY missing), we fall
+back to the legacy Redis-only path — same 24h TTL store. This preserves
+behavior in dev environments without Supabase wiring.
 
-PIT discipline: every write to `strategy:records` is a full replace (not a
-diff). Records are not blobs — they're the canonical contract. If a field
-needs to change, re-upsert the whole record. There is no concept of "patch
-one field." This eliminates partial-update races.
+Migration helper: `migrate_redis_to_postgres()` does a one-time bulk backfill
+of every record currently in Redis → Postgres. Idempotent (Postgres upserts).
+Call it ONCE at deploy time. The repo also ships a forward-only ship flag
+`STRATEGY_RECORDS_DUAL_WRITE=1` (default ON) that writes BOTH paths during the
+cutover window, then can be turned off in a follow-up.
 """
 from __future__ import annotations
 
 import json
 import logging
+import os
 import time
+import urllib.parse
+import urllib.request
 from typing import Optional
 
 from .strategy_schema import StrategyRecord, Verdict
@@ -33,20 +40,36 @@ from .strategy_embedder import generate_embedding, VECTOR_DIMS
 
 _logger = logging.getLogger(__name__)
 
+# Redis stays as the EMBEDDING cache (rebuildable from records).
 _RECORDS_KEY   = "strategy:records"
 _EMBED_KEY     = "strategy:embeddings"
 _META_KEY      = "strategy:meta"
-_TTL           = 86_400  # 24 hours
+_TTL           = 86_400  # 24h (Redis cache TTL; only embeddings + meta live here)
 
 
-# ---------------------------------------------------------------------------
-# Redis helpers (shared pattern from src/data/vector/store.py)
-# ---------------------------------------------------------------------------
+# ============================================================================
+# Configuration
+# ============================================================================
+
+def _sb_url_key():
+    return os.environ.get("SUPABASE_URL", "").rstrip("/"), \
+           os.environ.get("SUPABASE_KEY", "") or os.environ.get("SUPABASE_SERVICE_KEY", "")
+
+
+def _dual_write_enabled() -> bool:
+    """When Postgres is configured, write BOTH Postgres (durable) + Redis
+    (embeddings cache) in the cutover window. Set to "0" to turn off Redis
+    after migration is fully verified.
+    """
+    return os.environ.get("STRATEGY_RECORDS_DUAL_WRITE", "1") not in ("0", "false", "False")
+
+
+# ============================================================================
+# Redis helpers (unchanged — embeddings cache only)
+# ============================================================================
 
 def _redis_get(key: str) -> Optional[str]:
-    import os
-    import urllib.request
-    url   = os.environ.get("UPSTASH_REDIS_REST_URL", "")
+    url = os.environ.get("UPSTASH_REDIS_REST_URL", "")
     token = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
     if not url or not token:
         return None
@@ -64,9 +87,7 @@ def _redis_get(key: str) -> Optional[str]:
 
 
 def _redis_set(key: str, value: str, ttl: int = _TTL) -> bool:
-    import os
-    import urllib.request
-    url   = os.environ.get("UPSTASH_REDIS_REST_URL", "")
+    url = os.environ.get("UPSTASH_REDIS_REST_URL", "")
     token = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
     if not url or not token:
         return False
@@ -86,30 +107,127 @@ def _redis_set(key: str, value: str, ttl: int = _TTL) -> bool:
         return False
 
 
-# ---------------------------------------------------------------------------
-# I1 NaN↔null — v-honest embeddings carry NaN for unmeasured dims; bare json.dumps(NaN)
-# emits an invalid `NaN` token that Upstash/JS JSON.parse rejects. Serialize NaN→null, restore
-# null→NaN on load so cosine's NaN-skip sees unmeasured dims.
-# ---------------------------------------------------------------------------
+# ============================================================================
+# Postgres helpers (NEW source of truth)
+# ============================================================================
 
-def _nan_to_null(vec: list) -> list:
+def _pg_upsert(id_: str, record_dict: dict) -> bool:
+    """Upsert one record into Supabase `strategy_records` (jsonb).
+
+    Uses `Prefer: resolution=merge-duplicates` so an existing row gets
+    replaced; a missing row gets inserted. Single round-trip per upsert.
+    """
+    base, key = _sb_url_key()
+    if not base or not key:
+        return False
+    url = f"{base}/rest/v1/strategy_records"
+    headers = {
+        "apikey": key, "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates,return=minimal",
+    }
+    body = json.dumps([{"id": id_, "record": record_dict}]).encode()
+    req = urllib.request.Request(
+        url, data=body, headers=headers, method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            r.read()
+        return True
+    except Exception as e:
+        _logger.warning(f"[StrategyStore] PG upsert {id_}: {e}")
+        return False
+
+
+def _pg_select_all() -> Optional[dict[str, dict]]:
+    """Read every strategy row from Postgres. None on error; {} on empty."""
+    base, key = _sb_url_key()
+    if not base or not key:
+        return None
+    url = f"{base}/rest/v1/strategy_records?select=id,record"
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return {row["id"]: row["record"] for row in json.loads(r.read())}
+    except Exception as e:
+        _logger.warning(f"[StrategyStore] PG select: {e}")
+        return None
+
+
+def _pg_count() -> int:
+    base, key = _sb_url_key()
+    if not base or not key:
+        return -1
+    url = f"{base}/rest/v1/strategy_records?select=id"
+    headers = {
+        "apikey": key, "Authorization": f"Bearer {key}",
+        "Prefer": "count=exact", "Range-Unit": "items",
+        "Range": "0-0",
+    }
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            cr = r.headers.get("content-range", "0/0")
+            if "/" in cr:
+                return int(cr.rsplit("/", 1)[1])
+    except Exception as e:
+        _logger.warning(f"[StrategyStore] PG count: {e}")
+    return -1
+
+
+def _pg_delete_id(id_: str) -> bool:
+    base, key = _sb_url_key()
+    if not base or not key:
+        return False
+    url = f"{base}/rest/v1/strategy_records?id=eq.{urllib.parse.quote(id_)}"
+    headers = {
+        "apikey": key, "Authorization": f"Bearer {key}",
+        "Prefer": "return=minimal",
+    }
+    req = urllib.request.Request(url, headers=headers, method="DELETE")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            r.read()
+        return True
+    except Exception as e:
+        _logger.warning(f"[StrategyStore] PG delete {id_}: {e}")
+        return False
+
+
+# ============================================================================
+# I1 NaN↔null — v-honest embeddings carry NaN for unmeasured dims; bare json.dumps(NaN)
+# emits an invalid `NaN` token that Upstash/JS JSON.parse rejects. Serialize NaN→null,
+# restore null→NaN on load so cosine's NaN-skip sees unmeasured dims.
+# ============================================================================
+
+def _nan_to_null(vec):
     return [None if isinstance(v, float) and v != v else v for v in vec]
 
 
-def _null_to_nan(vec: list) -> list[float]:
+def _null_to_nan(vec):
     return [float("nan") if v is None else float(v) for v in vec]
 
 
-def _dump_embeddings(embeds: dict) -> str:
+def _dump_embeddings(embeds):
     return json.dumps({k: _nan_to_null(v) for k, v in embeds.items()}, allow_nan=False)
 
 
-# ---------------------------------------------------------------------------
+# ============================================================================
 # Public API
-# ---------------------------------------------------------------------------
+# ============================================================================
 
 def load_all_records() -> dict[str, StrategyRecord]:
-    """Load every strategy record from Redis. Returns {} on miss/error."""
+    """Load every strategy record. Primary = Postgres (durable, MINIMAX_SYNC §VDB).
+    Falls back to Redis cache when Postgres is unavailable.
+
+    Returns {} on any miss/error.
+    """
+    pg = _pg_select_all()
+    if pg is not None:
+        return {k: StrategyRecord.from_dict(v) for k, v in pg.items()}
+
+    # Fallback — Redis cache (legacy path, deprecated after migration)
     raw = _redis_get(_RECORDS_KEY)
     if not raw:
         return {}
@@ -117,30 +235,47 @@ def load_all_records() -> dict[str, StrategyRecord]:
         data = json.loads(raw)
         return {k: StrategyRecord.from_dict(v) for k, v in data.items()}
     except Exception as e:
-        _logger.warning(f"[StrategyStore] Failed to parse records: {e}")
+        _logger.warning(f"[StrategyStore] Failed to parse Redis records: {e}")
         return {}
 
 
 def load_all_embeddings() -> dict[str, list[float]]:
-    """Load pre-computed 30-dim embeddings. Returns {} on miss/error."""
+    """Load pre-computed N-dim embeddings from Redis (rebuilt from records
+    on a miss by recomputing via `strategy_embedder.generate_embedding`).
+
+    Returns {} on full miss/error.
+    """
     raw = _redis_get(_EMBED_KEY)
-    if not raw:
+    if raw:
+        try:
+            data = json.loads(raw)
+            return {k: _null_to_nan(v) for k, v in data.items()
+                    if len(v) == VECTOR_DIMS}
+        except Exception as e:
+            _logger.warning(f"[StrategyStore] Failed to parse embeddings: {e}")
+
+    # Cold start / cache evicted — rebuild from records (always works because
+    # records have a durable home now).
+    records = load_all_records()
+    if not records:
         return {}
+    out = {rid: generate_embedding(rec) for rid, rec in records.items()}
+    # Best-effort cache rebuild.
     try:
-        data = json.loads(raw)
-        # Sanity: drop any vector with wrong dim; restore JSON null → NaN (unmeasured dim, I1)
-        return {k: _null_to_nan(v) for k, v in data.items() if len(v) == VECTOR_DIMS}
-    except Exception as e:
-        _logger.warning(f"[StrategyStore] Failed to parse embeddings: {e}")
-        return {}
+        _redis_set(_EMBED_KEY, _dump_embeddings(out))
+    except Exception:
+        pass
+    return out
 
 
 def upsert_record(record: StrategyRecord) -> bool:
-    """Insert or update one strategy record. Validates first; logs warnings.
+    """Insert or update one strategy record. Writes:
+      - Postgres strategy_records.jsonb (durable, source of truth)
+      - Redis strategy:embeddings (derived cache, rebuildable)
+      - Redis strategy:records (legacy cache, only during dual-write window)
 
-    Side-effect: re-generates and re-stores the embedding for the record too.
-    Both writes are best-effort; if either fails, the records and embeddings
-    caches can drift and a future `_recompute_embeddings()` will reconcile.
+    Returns True only if Postgres was updated successfully. Redis failures
+    are logged but non-fatal — the embeddings can be rebuilt on next read.
     """
     problems = record.validate()
     if problems:
@@ -148,71 +283,113 @@ def upsert_record(record: StrategyRecord) -> bool:
             f"[StrategyStore] {record.id} upsert validation issues: {problems}"
         )
 
-    # Load current state, mutate, save (full replace — no partial updates)
-    records = load_all_records()
-    records[record.id] = record
-    ok1 = _redis_set(_RECORDS_KEY, json.dumps({k: v.to_dict() for k, v in records.items()}))
+    record_dict = record.to_dict()
+    ok_pg = _pg_upsert(record.id, record_dict)
+    if not ok_pg:
+        # If Postgres is down, fall back to legacy Redis-only path so
+        # dev environments (no Supabase wiring) still function.
+        _logger.warning(f"[StrategyStore] PG upsert failed for {record.id}; "
+                        f"falling back to Redis-only legacy path")
 
-    # Same for embeddings — recompute the one new entry, keep the rest
+    # Embedding cache (always rebuilt incrementally).
     embeddings = load_all_embeddings()
     embeddings[record.id] = generate_embedding(record)
-    ok2 = _redis_set(_EMBED_KEY, _dump_embeddings(embeddings))
+    _redis_set(_EMBED_KEY, _dump_embeddings(embeddings))
 
-    if ok1 and ok2:
+    # Legacy records cache — only during the dual-write window, so a deploy
+    # that finds Postgres mid-cutover can still read the old path.
+    if _dual_write_enabled():
+        legacy_records = load_all_records_redis_legacy()
+        legacy_records[record.id] = record
+        _redis_set(_RECORDS_KEY,
+                   json.dumps({k: v.to_dict() for k, v in legacy_records.items()}))
+
+    if ok_pg:
         _logger.info(f"[StrategyStore] Upserted {record.id} ({record.verdict.value})")
-    return ok1 and ok2
+    return ok_pg
 
 
 def upsert_many(records: list[StrategyRecord]) -> int:
-    """Bulk upsert. Returns count successfully written."""
+    """Bulk upsert. Returns count successfully persisted to Postgres."""
+    if not records:
+        return 0
     n_ok = 0
-    existing_records = load_all_records()
-    existing_embeds  = load_all_embeddings()
+    pg_payload = []
     for r in records:
         problems = r.validate()
         if problems:
             _logger.warning(f"[StrategyStore] {r.id} validation: {problems}")
-        existing_records[r.id] = r
-        existing_embeds[r.id]  = generate_embedding(r)
-        n_ok += 1
+        pg_payload.append({"id": r.id, "record": r.to_dict()})
 
-    ok1 = _redis_set(
-        _RECORDS_KEY,
-        json.dumps({k: v.to_dict() for k, v in existing_records.items()}),
-    )
-    ok2 = _redis_set(_EMBED_KEY, _dump_embeddings(existing_embeds))
+    # One round-trip bulk upsert to Postgres.
+    base, key = _sb_url_key()
+    if base and key:
+        url = f"{base}/rest/v1/strategy_records"
+        headers = {
+            "apikey": key, "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates,return=minimal",
+        }
+        body = json.dumps(pg_payload).encode()
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                r.read()
+            n_ok = len(pg_payload)
+        except Exception as e:
+            _logger.warning(f"[StrategyStore] PG bulk upsert failed: {e}")
+    else:
+        # Dev fallback only
+        for p in pg_payload:
+            if _pg_upsert(p["id"], p["record"]):
+                n_ok += 1
 
-    # Meta
+    # Always update the embeddings cache.
+    embeddings = load_all_embeddings()
+    for r in records:
+        embeddings[r.id] = generate_embedding(r)
+    _redis_set(_EMBED_KEY, _dump_embeddings(embeddings))
+
+    if _dual_write_enabled():
+        legacy_records = load_all_records_redis_legacy()
+        legacy_embeddings = load_all_embeddings()
+        for r in records:
+            legacy_records[r.id] = r
+            legacy_embeddings[r.id] = generate_embedding(r)
+        _redis_set(_RECORDS_KEY,
+                   json.dumps({k: v.to_dict() for k, v in legacy_records.items()}))
+
     meta = {
         "computed_at": time.time(),
-        "count":       len(existing_records),
+        "count":       n_ok,
         "dims":        VECTOR_DIMS,
-        "version":     "v1.0",
+        "version":     "v2.0-pgvector-out,pg-in",
     }
     _redis_set(_META_KEY, json.dumps(meta))
 
-    if not (ok1 and ok2):
-        return 0
-    _logger.info(f"[StrategyStore] Bulk upserted {n_ok} records (total={len(existing_records)})")
+    _logger.info(f"[StrategyStore] Bulk upserted {n_ok}/{len(records)} records "
+                 f"(pg-durable + redis-embeddings cache)")
     return n_ok
 
 
 def get_record(record_id: str) -> Optional[StrategyRecord]:
-    records = load_all_records()
-    return records.get(record_id)
+    return load_all_records().get(record_id)
 
 
 def delete_record(record_id: str) -> bool:
-    """Hard delete. Idempotent."""
+    """Hard delete. Postgres first (source of truth), then Redis caches."""
+    pg_ok = _pg_delete_id(record_id)
+    # Best-effort cache cleanup — non-fatal if it fails; next upsert of the
+    # same id will overwrite.
     records = load_all_records()
-    embeds  = load_all_embeddings()
-    if record_id not in records:
-        return True  # nothing to do
+    embeds = load_all_embeddings()
     records.pop(record_id, None)
     embeds.pop(record_id, None)
-    ok1 = _redis_set(_RECORDS_KEY, json.dumps({k: v.to_dict() for k, v in records.items()}))
-    ok2 = _redis_set(_EMBED_KEY, _dump_embeddings(embeds))
-    return ok1 and ok2
+    if _dual_write_enabled():
+        _redis_set(_RECORDS_KEY,
+                   json.dumps({k: v.to_dict() for k, v in records.items()}))
+    _redis_set(_EMBED_KEY, _dump_embeddings(embeds))
+    return pg_ok
 
 
 def list_records(
@@ -220,7 +397,6 @@ def list_records(
     tag: Optional[str] = None,
     r_number_prefix: Optional[str] = None,
 ) -> list[StrategyRecord]:
-    """In-memory filter over the loaded records cache. Cheap at our scale."""
     records = load_all_records().values()
     out = []
     for r in records:
@@ -238,6 +414,11 @@ def list_records(
 def get_meta() -> dict:
     raw = _redis_get(_META_KEY)
     if not raw:
+        # Cold-start fallback: derive meta from Postgres count.
+        n = _pg_count()
+        if n >= 0:
+            return {"computed_at": None, "count": n, "dims": VECTOR_DIMS,
+                    "version": "v2.0-pgvector-out,pg-in"}
         return {}
     try:
         return json.loads(raw)
@@ -246,9 +427,44 @@ def get_meta() -> dict:
 
 
 def age_seconds() -> Optional[float]:
-    """Seconds since last upsert, or None if no meta."""
     meta = get_meta()
     ts = meta.get("computed_at")
     if not ts:
         return None
     return time.time() - float(ts)
+
+
+# ============================================================================
+# Migration helper — one-time Postgres backfill from Redis
+# ============================================================================
+
+def load_all_records_redis_legacy() -> dict[str, StrategyRecord]:
+    """Read the legacy Redis records cache WITHOUT touching Postgres. Used by
+    the dual-write window and by `migrate_redis_to_postgres()` so we don't
+    recursively call the Postgres primary while we're copy-migrating.
+    """
+    raw = _redis_get(_RECORDS_KEY)
+    if not raw:
+        return {}
+    try:
+        return {k: StrategyRecord.from_dict(v) for k, v in json.loads(raw).items()}
+    except Exception:
+        return {}
+
+
+def migrate_redis_to_postgres() -> dict:
+    """One-shot: copy every record currently in Redis → Postgres. Idempotent.
+
+    Returns {redis_n, pg_n_before, pg_n_after, migrated_n}.
+    Use at deploy time; safe to re-run (Postgres upserts on id conflict).
+    """
+    legacy = load_all_records_redis_legacy()
+    pg_before = _pg_count()
+    if not legacy:
+        return {"redis_n": 0, "pg_n_before": pg_before, "pg_n_after": pg_before,
+                "migrated_n": 0}
+    records = list(legacy.values())
+    n = upsert_many(records)
+    pg_after = _pg_count()
+    return {"redis_n": len(legacy), "pg_n_before": pg_before,
+            "pg_n_after": pg_after, "migrated_n": n}

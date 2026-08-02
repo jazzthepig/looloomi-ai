@@ -51,11 +51,17 @@ def _clamp(v, lo, hi):
     return max(lo, min(hi, v))
 
 
-# ── Return score — F level, M level, A level+change (the price-carrying pillars) ──────────────
-# Defaults sum to 1 over the ACTIVE (non-NaN) components — an unmeasured pillar is dropped and the
-# rest renormalized (I1), never imputed to 0. A is dual-natured (R62 strong level + R63b ΔA): it
-# contributes a level term AND a change term. S and O are ABSENT here by design (they are risk, S-76).
-RETURN_WEIGHTS = {"F": 0.30, "M": 0.30, "A_level": 0.25, "A_change": 0.15}
+# ── Return score — F-ANCHORED (F level dominant), M level, A level+change ─────────────────────
+# Weights follow the EVENT-COUNTED, LONG-HORIZON evidence, not pooled single-window IC:
+#   · F is the durable anchor — S-80: cross-sectional F_IC positive 12/12 years 2015-2026 (pooled +0.197,
+#     ~2× M, ~4× O/S), S-79 monthly 9/12, S-76 F is the only price-INDEPENDENT pillar. Highest weight.
+#   · M moderate (S-80: +0.099, 12/12 positive but weaker).
+#   · A is a BOOSTER, not the workhorse — S-79 event-count killed the pooled "A is #1": A's edge is
+#     RISK_ON-concentrated (+0.25) and coin-flip month-to-month elsewhere, and it is UNTESTED long-horizon
+#     (absent from the 11yr proxy, S-80). Modest level+change weight; ideally regime-gated (boost in RISK_ON)
+#     once real-CIS bull data exists. S and O are absent here by design (they are risk, S-76/S-77).
+# Defaults sum to 1 over ACTIVE (non-NaN) components — unmeasured pillar dropped + renormalized (I1).
+RETURN_WEIGHTS = {"F": 0.40, "M": 0.25, "A_level": 0.20, "A_change": 0.15}
 
 
 def return_score(pillars: dict, prior_pillars: dict | None = None,

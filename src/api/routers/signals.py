@@ -974,35 +974,91 @@ async def get_signal_summary():
 async def get_signal_track_record(response: Response = None):
     """
     The honest, defensible track record: 30-day BENCHMARK-RELATIVE outcomes of our
-    OUTPERFORM signals, computed entirely from our own data (cis_scores × ohlcv_daily),
-    refreshed daily. The finding: the edge is the top-conviction tier — STRONG OUTPERFORM
-    on A/A+ delivered positive alpha; the broad OUTPERFORM tier did not. Consuming agents
-    and investor pages should cite THIS, with the tier breakdown, not a blended headline.
+    DIRECTIONAL signals (STRONG OUTPERFORM / OUTPERFORM / UNDERPERFORM /
+    UNDERWEIGHT), computed entirely from our own data (cis_scores × ohlcv_daily),
+    refreshed daily by the Supabase RPC refresh_signal_track_record (v2, 2026-07-26;
+    MINIMAX_SYNC §BETA-METRIC-AGG).
+
+    Two layers, labelled. Each tier exposes both RAW and β-ADJ aggregates:
+
+      - RAW (`avg_alpha_pct`): what an UNHEDGED holder of the asset experiences,
+        computed as `a_ret − b_ret`. This is the pre-R62 metric; it conflates
+        alpha with leveraged beta in a high-β universe (our avg β ≈ 1.49 — R62).
+
+      - β-ADJ (`avg_edge_beta_adj_pct`): the HEDGED excess return. Capturing
+        it requires shorting the benchmark at the PIT-estimated β. PIT-safe
+        expanding-window OLS, ≥20 priors, NEVER default β=1.0 (insufficient
+        history → NULL — the row is honestly excluded from n_beta_adj).
+
+    SHIP GATE: when ohlcv_daily is stale (>=36 h since last_trade_date), the
+    β-ADJ headline is SUPPRESSED rather than published β-correct-but-STALE.
+    The RAW block stays published — it's a pre-R62 number either way, and the
+    ship verdict block says so explicitly. The gate auto-opens the moment
+    the daily collector writes a fresh trade_date.
+
+    Reading guide (which rows are real edges):
+      STRONG OUTPERFORM  — top conviction; β-ADJ expected positive.
+      OUTPERFORM         — broad tier; β-ADJ expected positive but smaller.
+      UNDERPERFORM       — short the asset; β-ADJ treats negative alpha as a
+                            correct call, so positive β-ADJ is the edge.
+      UNDERWEIGHT        — the one KNOWN defect (R62 t = −3.56); do not size.
+
+    Consuming agents and investor pages should cite the tier breakdown
+    under both raw AND β-ADJ headings, NOT a blended headline, and never
+    without the gate verdict block.
     """
     if response:
         response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=3600"
-    from src.api.store import supabase_get_latest_track_record
+    from src.api.store import supabase_get_latest_track_record, supabase_ohlcv_daily_freshness
+    from src.api.routers._track_record_agg import (
+        build_headline, apply_ship_gate, defect_warning as _defect_warning,
+    )
     rows = await supabase_get_latest_track_record()
+    freshness = await supabase_ohlcv_daily_freshness()
 
-    def _agg(rs):
-        n = sum(int(r.get("n") or 0) for r in rs)
-        if not n:
-            return None
-        wa = sum(float(r.get("avg_alpha_pct") or 0) * int(r.get("n") or 0) for r in rs) / n
-        ww = sum(float(r.get("alpha_win_pct") or 0) * int(r.get("n") or 0) for r in rs) / n
-        return {"n": n, "avg_alpha_pct": round(wa, 2), "alpha_win_pct": round(ww, 1)}
+    # Build the four-axis headline dict {RAW, BETA_ADJ, BETA_ADJ_T_STAT, WIN_PCT}.
+    # Pure-function aggregator — unit-tested in src/api/routers/tests/.
+    raw_headline = build_headline(rows)
+    gate_open = bool(freshness.get("gate_open"))
+    headline = apply_ship_gate(raw_headline, gate_open=gate_open)
+    warning = _defect_warning(headline, gate_open=gate_open)
 
-    strong = [r for r in rows if str(r.get("signal") or "").upper() == "STRONG OUTPERFORM"]
-    plain  = [r for r in rows if str(r.get("signal") or "").upper() == "OUTPERFORM"]
     return {
-        "basis": "30d benchmark-relative alpha (BTC for crypto / SPY for TradFi), from own data (cis_scores × ohlcv_daily)",
+        "basis": "30d benchmark-relative alpha (BTC for crypto / SPY for TradFi), "
+                 "from own data (cis_scores × ohlcv_daily), daily snapshot.",
         "tiers": rows,
-        "headline": {
-            "STRONG_OUTPERFORM": _agg(strong),   # the proven edge
-            "OUTPERFORM_broad":  _agg(plain),     # the noise tier — shown for honesty
+        "headline": headline,
+        "tier_definitions": {
+            "RAW": "raw_alpha = a_ret − b_ret. What an UNHEDGED holder of the asset "
+                   "experiences. NOT the same as alpha in a high-β universe.",
+            "BETA_ADJ": ("Point-in-time β-adjusted directional edge. "
+                         f"Computed from each row's PIT-estimated β (expanding-window "
+                         f"OLS over strictly prior (symbol, d) pairs, ≥20 priors, "
+                         f"NEVER default β=1.0; insufficient history → NULL — "
+                         f"honestly excluded from n_beta_adj). Captured by shorting "
+                         f"the benchmark at the estimated β. Mirrors "
+                         f"src/data/market/beta_adjust.py."),
+            "BETA_ADJ_T_STAT": "One-sample t-stat of BETA_ADJ vs 0. t>1.96 = "
+                               "honestly survives, regardless of point estimate.",
+            "WIN_PCT": "Share of resolved signals where the asset return beat the "
+                       "benchmark return over the same 30d window. Independent of β.",
         },
-        "note": "Observational signal→30d outcome (validates the signal), not live-traded P&L. "
-                "Size on the top-conviction tier; the broad tier is watchlist, not position.",
+        "defect_warning": warning,
+        "ship_gate": {
+            "ohlcv_daily_freshness": freshness,
+            "publish_beta_adj": gate_open,
+            "reason": ("ohlcv_daily staleness gate. β-ADJ headline is suppressed "
+                       "when last_trade_date > 36 h old — stale + β-correct is "
+                       "worse than pre-R62 raw. Gate auto-opens when the daily "
+                       "collector writes a fresh row.")
+                      if not gate_open else None,
+        },
+        "note": "Observational signal→30d outcome (validates the signal), not "
+                "live-traded P&L. Use the tier breakdown under BOTH RAW and β-ADJ "
+                "headings; do not blend. The top-conviction STRONG OUTPERFORM tier "
+                "delivers positive β-ADJ (R62); the broad OUTPERFORM tier was "
+                "previously mischaracterised by the pre-R62 RAW number — the "
+                "β-ADJ row restores it to a positive (smaller) edge.",
         "compliance": "Positioning language only; not investment advice.",
     }
 

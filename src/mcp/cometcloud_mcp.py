@@ -1019,13 +1019,31 @@ async def cometcloud_get_market_movers() -> str:
     },
 )
 async def cometcloud_get_track_record() -> str:
-    """Returns CometCloud's validated 30-day BENCHMARK-RELATIVE track record for OUTPERFORM signals, computed from our own stored data (cis_scores × ohlcv_daily) and refreshed daily. Call this to decide HOW MUCH TO TRUST a CIS signal before acting on it — the edge is concentrated in the top-conviction tier, not the broad signal. STRONG OUTPERFORM on A/A+ grades delivered positive 30-day alpha vs benchmark (BTC for crypto, SPY for TradFi); the broad OUTPERFORM tier (B/B+) did not. Size on the top tier; treat the broad tier as watchlist. Cite the tier breakdown, never a blended headline. This is observational signal→outcome (it validates the signal), not live-traded P&L.
+    """Returns CometCloud's validated 30-day BENCHMARK-RELATIVE track record for all DIRECTIONAL signals (STRONG OUTPERFORM / OUTPERFORM / UNDERPERFORM / UNDERWEIGHT), computed from our own stored data (cis_scores × ohlcv_daily) and refreshed daily by the Supabase RPC refresh_signal_track_record (v2, 2026-07-26; MINIMAX_SYNC §BETA-METRIC-AGG).
+
+    Call this to decide HOW MUCH TO TRUST a CIS signal before acting on it. Two layers are published, LABELLED:
+      - RAW (`avg_alpha_pct`): what an UNHEDGED holder experiences (pre-R62 metric).
+      - BETA_ADJ (`avg_edge_beta_adj_pct`): the HEDGED excess (requires shorting the bench at the PIT β).
+    The β-ADJ layer is suppressed by a ship-gate when ohlcv_daily is stale (see `ship_gate.publish_beta_adj`).
+
+    Cite the tier breakdown under BOTH RAW and BETA_ADJ headings, never a blended headline.
+    UNDERWEIGHT carries the documented R62 defect (β-ADJ t < 0) — `defect_warning` surfaces this explicitly.
+    Observational signal→outcome (validates the signal), not live-traded P&L.
 
     Returns:
         str: {
           "basis": str,
-          "tiers": [{"signal","grade","n","avg_alpha_pct","alpha_win_pct"}],
-          "headline": {"STRONG_OUTPERFORM": {...}, "OUTPERFORM_broad": {...}},
+          "tiers": [{"signal","grade","n","avg_alpha_pct","alpha_win_pct",
+                     "avg_edge_beta_adj_pct","edge_beta_adj_t","avg_beta_pit","n_beta_adj"}],
+          "headline": {
+              "RAW": {tier → {n, avg_alpha_pct, n_buckets}},
+              "BETA_ADJ": {tier → {n, avg_edge_beta_adj_pct, n_buckets}},     # None when gate closed
+              "BETA_ADJ_T_STAT": {tier → {n, edge_beta_adj_t, n_buckets}},       # None when gate closed
+              "WIN_PCT": {tier → {n, alpha_win_pct, n_buckets}},
+          },
+          "tier_definitions": {...},
+          "defect_warning": str | None,
+          "ship_gate": {publish_beta_adj, ohlcv_daily_freshness, reason?},
           "note": str, "compliance": str
         }
 
