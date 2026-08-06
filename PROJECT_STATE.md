@@ -67,6 +67,19 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    before shipping it, not just its top-k** — top-k always returns the closest few whether or not
    the metric discriminates.
 
+   **Data asset map (2026-08-06): `docs/DATA_ASSET_MAP.md`** — 40 tables + 10 views counted,
+   not estimated. Biggest finding was not an empty table: `signal_outcomes` (ends 2026-05-03) and
+   `signal_journal` (starts 2026-05-25) are two eras of ONE measurement, and every consumer was
+   silently reading only the older half — so the response surface was computed on data ending three
+   months ago, containing none of the current environment. Fixed with `signal_outcomes_unified`
+   (era column exposes the seam; the 3-week gap is represented, not smoothed — sampling density
+   differs 13x and the new era has no beta-adjusted alpha). **Lesson #80: a pipeline migration must
+   ship a view spanning the seam, or consumers silently downgrade to the old era.**
+   **Open judgement call: `decisions` 0 rows / `entities` 1 row.** ARCHITECTURE.md claims the
+   deepest object is the entity-and-decision, not the asset — these tables are where that ontology
+   lands, and they are empty. Either wire them or demote the claim; an empty table cannot carry an
+   ontological argument.
+
 4. **🟡 MEMORY.md is 7.6 KB against its own 4 KB rule** — the one file guaranteed to be read cold.
    Past a few KB it stops being an index and becomes another skimmed document.
    VERIFY: `wc -c MEMORY.md` → expect ≤4096
