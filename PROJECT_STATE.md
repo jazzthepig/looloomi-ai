@@ -80,6 +80,12 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    lands, and they are empty. Either wire them or demote the claim; an empty table cannot carry an
    ontological argument.
 
+   **Lesson #81 (S-101): a day-weighted alpha/Sharpe/t can vanish entirely under event
+   counting** — a 30-day good run is 30 samples by day and ONE by episode. Our flagship
+   +7.99 became +3.58 at t=1.55 across 30 episodes, and the only strongly significant
+   result was OUTPERFORM at t=−6.88, i.e. negative. **Day-weighted performance is narrative,
+   not evidence, until episodes are counted.**
+
 4. **🟡 MEMORY.md is 7.6 KB against its own 4 KB rule** — the one file guaranteed to be read cold.
    Past a few KB it stops being an index and becomes another skimmed document.
    VERIFY: `wc -c MEMORY.md` → expect ≤4096

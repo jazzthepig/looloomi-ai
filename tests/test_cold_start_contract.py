@@ -40,7 +40,7 @@ LEDGER = REPO / "REFUTATION_LEDGER.md"
 # test was written — nearly double, because the rule was never executable. A rule
 # nobody enforces is a wish. Grace allows landing this test before the cleanup;
 # lower it to 4096 once MEMORY.md is trimmed, and never raise it.
-MEMORY_HARD_CAP = 8192
+MEMORY_HARD_CAP = 6144   # lowered 8192→6144 after the 2026-08-06 trim; ratchet down only
 MEMORY_TARGET = 4096
 
 # ≤7 is a design choice, not laziness: a 30-item risk list and no list are
