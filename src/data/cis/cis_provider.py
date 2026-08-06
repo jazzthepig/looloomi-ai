@@ -2559,9 +2559,21 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         las_result = calculate_las(total_score, _vol_24h, _h24, _l24, confidence)
 
         # v4.3: Apply OI leverage penalty to LAS — high OI/MCap = systemic liquidation risk
+        #
+        # 2026-08-06: this block referenced a bare `market_cap`, which exists as a local
+        # in calculate_cis_asset() but NOT here — so every asset carrying open interest
+        # raised NameError, and because the raise happened inside the per-asset loop it
+        # killed the whole T2 universe calculation. The caller swallowed it into a
+        # warning log, so T2 had been dead silently: T1 (Mac) was carrying production
+        # alone with no working fallback, and the failed attempt still burned ~5.2 s on
+        # every rebuild — the reproducible 12 s budget overrun.
+        # Found only once /health began reporting build-phase timings; three earlier
+        # hypotheses for that latency were wrong. Use the same defensive read as the
+        # surrounding code rather than reintroducing a bare name.
+        _mcap_for_las = float(market_data.get("market_cap", 0) or 0)
         _oi_for_las = float((_deriv_map or {}).get(asset_id.upper(), {}).get("open_interest_usd") or 0)
-        if _oi_for_las > 0 and market_cap > 0:
-            _oi_ratio_las = _oi_for_las / market_cap
+        if _oi_for_las > 0 and _mcap_for_las > 0:
+            _oi_ratio_las = _oi_for_las / _mcap_for_las
             # OI > 20% MCap starts applying discount (max 30% LAS reduction at 100% OI/MCap)
             _leverage_mult = max(0.7, 1.0 - max(0.0, (_oi_ratio_las - 0.2)) * 0.375)
             las_result["las"] = round(las_result["las"] * _leverage_mult, 1)
