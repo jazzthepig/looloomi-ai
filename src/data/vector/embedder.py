@@ -180,6 +180,18 @@ _REGIME_ALIGN: dict[str, float] = {
 
 
 def _clamp(val: float, lo: float, hi: float) -> float:
+    """Clamp to [lo, hi], PRESERVING NaN.
+
+    Python's min/max silently swallow NaN — `max(0.0, min(1.0, nan))` returns 1.0,
+    because every comparison against NaN is False so the first argument survives.
+    Without this guard an unmeasured market cap would clamp to 1.0, i.e. the
+    *maximum* — an unknown presented as a trillion-dollar asset. That is worse
+    than the fabricated 0 that I1 was written to prevent, and it is invisible:
+    the vector looks perfectly well-formed. Verified before writing this
+    (`max(0.0, min(1.0, nan)) == 1.0`), not assumed.
+    """
+    if val != val:      # NaN
+        return val
     return max(lo, min(hi, val))
 
 
@@ -191,6 +203,7 @@ def generate_embedding(
     prior_pillars: dict | None = None,
     pillar_history: list | None = None,
     edge_moments: tuple | None = None,
+    unmeasured_as_nan: bool = False,
 ) -> list[float]:
     """
     Generate the normalized feature vector for an asset — 18-dim (v1) or 27-dim (v2).
@@ -224,19 +237,44 @@ def generate_embedding(
 
     # Market data
     sym       = (asset.get("symbol") or asset.get("asset_id") or "").upper()
-    mcap      = asset.get("market_cap") or asset.get("mcap_usd") or 1e6
-    chg_24h   = float(asset.get("change_24h") or asset.get("price_change_24h") or 0)
-    chg_7d    = float(asset.get("change_7d")  or asset.get("price_change_7d")  or 0)
-    chg_30d   = float(asset.get("change_30d") or asset.get("price_change_30d") or 0)
-    vol_24h   = float(asset.get("volume_24h") or 0)
-    ath_dist  = float(asset.get("ath_distance_pct") or pillars.get("ath_dist") or 50)
+    # `unmeasured_as_nan` exists for HISTORICAL backfill (M-WO-D1). The defaults
+    # below (mcap 1e6, changes 0, volume 0, ath 50) are reasonable for the live
+    # path, where a field is missing for one asset on one day. They are NOT
+    # reasonable when replaying history from `cis_scores`, which carries no market
+    # columns at all: every asset on every day would receive the SAME fabricated
+    # constants in dims [6..10] and [13]. That does not merely lose information —
+    # it pulls every historical vector artificially together, so any clustering or
+    # style-rotation backtest would discover structure that is an artifact of the
+    # fabrication. I1 exists precisely for this: unmeasured is NaN, never 0, and
+    # cosine_similarity already skips NaN dims.
+    _missing = _NAN if unmeasured_as_nan else None
+    def _num(*keys, default):
+        for k in keys:
+            v = asset.get(k)
+            if v is not None:
+                return float(v)
+        return default if _missing is None else _missing
+
+    mcap      = _num("market_cap", "mcap_usd", default=1e6)
+    chg_24h   = _num("change_24h", "price_change_24h", default=0.0)
+    chg_7d    = _num("change_7d",  "price_change_7d",  default=0.0)
+    chg_30d   = _num("change_30d", "price_change_30d", default=0.0)
+    vol_24h   = _num("volume_24h", default=0.0)
+    ath_dist  = float(asset.get("ath_distance_pct") or pillars.get("ath_dist") or 50) \
+        if not unmeasured_as_nan or (asset.get("ath_distance_pct") is not None
+                                     or pillars.get("ath_dist") is not None) else _NAN
     las       = float(asset.get("las") or 0)
     conf      = float(asset.get("confidence") or 0.8)
     ac        = asset.get("asset_class") or "Crypto"
 
-    # Derived
-    log_mcap     = math.log10(max(mcap, 1e3)) / 15.0  # 1M→0.4, 1T→0.8, 1Q→1.0
-    vol_mcap     = (vol_24h / mcap) if mcap > 0 else 0
+    # Derived. NaN must PROPAGATE rather than be swallowed: a ratio computed from
+    # an unmeasured denominator is not 0, it is unknown, and `mcap > 0` is False
+    # for NaN — which would have silently turned an unknown into a confident 0.
+    log_mcap = _NAN if mcap != mcap else math.log10(max(mcap, 1e3)) / 15.0
+    if mcap != mcap or vol_24h != vol_24h:
+        vol_mcap = _NAN
+    else:
+        vol_mcap = (vol_24h / mcap) if mcap > 0 else 0
 
     # Derivatives features
     funding_rate = 0.0
