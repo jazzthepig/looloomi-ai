@@ -64,15 +64,19 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    VERIFY: `grep -c 'mcp/sse' src/mcp/*.py` → >0 ⇒ still on the deprecated transport
    OWNER: Seth (migration assessment not started)
 
-6. **🔴 `ohlcv_daily` price feed stalled 4 days** — newest `trade_date` 2026-07-27 vs today
-   2026-07-31; 156 rows in the last 7d against ~280 expected. Found 2026-07-31 only because the
-   in-process loop watchdog was bounded and someone finally read its output. **The external probe
-   was blind to it** — it checked the Mac push and called the data layer healthy, but "the pipeline
-   I remembered to check is alive" is not "the data is fresh". Probe now checks it via a dedicated
-   `/internal/data-freshness`. Third occurrence of silent pipeline death (T2 pillars all-NULL for
-   months; `signal_outcomes` dead 80 days; now this).
-   VERIFY: `curl -s $BASE/internal/data-freshness | jq .ohlcv_daily` → `age_days` must be ≤3
-   OWNER: unassigned — the collector (`_ohlcv_collector_loop`) runs in-process and reported nothing
+6. **🟢 RETRACTED 2026-08-06 — the "price feed stalled" risk was FALSE.** A per-day breakdown
+   shows every day 07-24 → 08-06 populated (58 symbols on weekdays, ~25 on weekends because EODHD
+   is TradFi and markets are shut — correct, not a gap). The two readings that produced this 🔴
+   (`max(trade_date)` = 4 days stale on 07-31, 10.3 days on 08-06) were **transients**:
+   `collect_ohlcv` re-pulls 365 days per run and upserts, so the feed is self-healing and
+   `max(trade_date)` swings wildly mid-run. `binance_hist` stopping on 07-27 is a one-off sandbox
+   backfill (task #21), not a pipeline. **Kept visible for one cycle as the worked example: I built
+   a check on a metric the underlying system does not support, then filed its output as a red risk
+   without a second measurement. The probe's ohlcv check must key on run completion, not on
+   max(trade_date).**
+   VERIFY: `select trade_date, count(*) from ohlcv_daily where trade_date > current_date - 14 group by 1 order by 1 desc;`
+   → gaps on weekdays ⇒ real stall; weekend dips to ~25 ⇒ normal
+   OWNER: Seth (delete this item next update; fix the probe's check semantics first)
 
 7. **🟡 `/api/v1/cis/universe` hits its 12 s build budget, reproducibly** — 12,602 ms then
    13,006 ms, both on the first call after an idle gap; back-to-back calls are 0.45 s. Degrades to
@@ -91,7 +95,21 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-07-30 — **S-92/S-93 P0 CLOSED: CIS layer was dead 10.4 h; `/api/v1/cis/universe`
+**Last updated:** 2026-08-06 — **S-95: the T2 universe fallback was silently dead.** Build-phase
+timing on `/health` (added 07-31 precisely because three hypotheses had failed to explain a
+reproducible 12 s overrun) reported it on first deploy: `railway_error: name 'market_cap' is not
+defined`, 5,207 ms burned per rebuild. `calculate_cis_universe()` referenced a local belonging to a
+different function, raised on every asset with open interest, and the caller swallowed it into a
+warning — so production had **no working fallback if the Mac engine went down**, and nobody knew.
+Fixed, plus `tests/test_no_undefined_names.py` (py_compile and boot smoke are both blind to a
+NameError on a conditional branch). **In the same pass I also retracted a red risk of my own: the
+"price feed stalled 10 days" was false** — every day 07-24 → 08-06 is populated; `max(trade_date)`
+is a transient on a feed that re-pulls 365 days per run. **Lesson #72: confirm a metric measures
+what you think before you alarm on it — take two readings at different times and explain the
+difference.** Fourth causal hypothesis killed by measurement this cycle; the only one that cost
+nothing was T2, where I instrumented instead of guessing.
+
+**Previously (2026-07-30):** **S-92/S-93 P0 CLOSED: CIS layer was dead 10.4 h; `/api/v1/cis/universe`
 now 200 / 0.509 s / `stale=false` / 58 assets, `/health` reports `data_layer.supabase="ok"` with the
 breaker visible.** Two bugs multiplying: (1) client-only timeouts — `urlopen(timeout=10)` closes the
 socket but does NOT cancel the server-side statement, so abandoned-but-live queries pinned the
