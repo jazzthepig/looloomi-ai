@@ -58,7 +58,7 @@ async def _upsert_ohlcv(client: httpx.AsyncClient, rows: list) -> int:
         for i in range(0, len(rows), CHUNK):
             chunk = rows[i:i+CHUNK]
             r = await client.post(
-                f"{_SB_URL}/rest/v1/ohlcv_daily",
+                f"{_SB_URL}/rest/v1/ohlcv_daily?on_conflict=symbol,trade_date,source",
                 content=json.dumps(chunk),
                 headers=_sb_headers(write=True),
                 timeout=30,
