@@ -64,19 +64,22 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    VERIFY: `grep -c 'mcp/sse' src/mcp/*.py` → >0 ⇒ still on the deprecated transport
    OWNER: Seth (migration assessment not started)
 
-6. **🟢 RETRACTED 2026-08-06 — the "price feed stalled" risk was FALSE.** A per-day breakdown
-   shows every day 07-24 → 08-06 populated (58 symbols on weekdays, ~25 on weekends because EODHD
-   is TradFi and markets are shut — correct, not a gap). The two readings that produced this 🔴
-   (`max(trade_date)` = 4 days stale on 07-31, 10.3 days on 08-06) were **transients**:
-   `collect_ohlcv` re-pulls 365 days per run and upserts, so the feed is self-healing and
-   `max(trade_date)` swings wildly mid-run. `binance_hist` stopping on 07-27 is a one-off sandbox
-   backfill (task #21), not a pipeline. **Kept visible for one cycle as the worked example: I built
-   a check on a metric the underlying system does not support, then filed its output as a red risk
-   without a second measurement. The probe's ohlcv check must key on run completion, not on
-   max(trade_date).**
-   VERIFY: `select trade_date, count(*) from ohlcv_daily where trade_date > current_date - 14 group by 1 order by 1 desc;`
-   → gaps on weekdays ⇒ real stall; weekend dips to ~25 ⇒ normal
-   OWNER: Seth (delete this item next update; fix the probe's check semantics first)
+6. **🔴 `ohlcv_daily` multi-source duplicates — impact on past results not yet assessed.**
+   48,582 duplicate (symbol, trade_date) pairs across 57 symbols, 2017→2026 (~21 % of 229,916
+   rows). Not a schema bug: the unique key is `(symbol, trade_date, source)`, so multiple sources
+   per day is by design. The bug is that every consumer must pick one, and forgetting is invisible
+   — duplicated trading days, volume columns ~62,000× apart (CoinGecko USD notional vs Binance base
+   units), and same-day closes differing by up to 5 % (ETH 4.8 %, SOL 5.0 %). Fixed forward with
+   the `ohlcv_daily_canonical` view (229,916 → 181,334 rows, 0 remaining duplicates, deterministic
+   precedence: native venue > aggregator, paid > free). **Lesson #73: any table permitting multiple
+   rows per entity must ship a deterministic one-row-per-entity view, or the choice of source is
+   silently delegated to every reader.**
+   **Backward impact NOT yet assessed and must not be assumed either way.** S-83→S-91 used the
+   local `ohlcv_11yr.db` (direct Binance) and is probably unaffected; `asset_edge_moments`,
+   `signal_outcomes` β-adjustment and `_betas_in_thread` each need checking against the view.
+   VERIFY: `select count(*) from (select symbol,trade_date from ohlcv_daily group by 1,2 having count(*)>1) x;`
+   → non-zero is expected and fine; what matters is that no consumer reads the base table
+   OWNER: Seth (audit consumers, then re-run affected features off the view)
 
 7. **🟡 `/api/v1/cis/universe` hits its 12 s build budget, reproducibly** — 12,602 ms then
    13,006 ms, both on the first call after an idle gap; back-to-back calls are 0.45 s. Degrades to
