@@ -99,6 +99,150 @@ def fetch_panel(start: str) -> dict[str, dict[str, tuple[float, float]]]:
 
 
 SHADOW_PANEL = ROOT / "Shadow" / "cometcloud-local" / "_data" / "hyperliquid_funding"
+# The 11-year panel already lives on disk (scripts/fetch_ohlcv_11yr_binance.py).
+# Reading it over the Supabase REST API was a straightforwardly wrong choice:
+# it adds a network dependency and a credential dependency to a job whose data
+# is local, and it fails with a DNS traceback instead of a sentence.
+LOCAL_11YR = Path("/tmp/cometcloud_data/ohlcv_11yr.db")
+LOCAL_OHLCV = Path("/tmp/cometcloud_data/ohlcv.db")
+
+
+def fetch_panel_sqlite(start: str, db: Path) -> dict[str, dict[str, tuple[float, float]]]:
+    """Panel from a local sqlite OHLCV store — the preferred source.
+
+    Handles both the 11yr schema (ohlcv_11yr_daily) and the rolling one
+    (ohlcv_daily); whichever table is present wins, 11yr first since only it
+    reaches the 2022 start date.
+    """
+    warm = (date.fromisoformat(start) - timedelta(days=WARMUP)).isoformat()
+    con = sqlite3.connect(db)
+    tables = {r[0] for r in con.execute("select name from sqlite_master where type='table'")}
+    tbl = "ohlcv_11yr_daily" if "ohlcv_11yr_daily" in tables else (
+        "ohlcv_daily" if "ohlcv_daily" in tables else None)
+    if tbl is None:
+        con.close()
+        raise RuntimeError(f"{db} has no ohlcv table (found: {sorted(tables) or 'none'})")
+
+    out: dict[str, dict[str, tuple[float, float]]] = defaultdict(dict)
+    for sym, d, close, vol in con.execute(
+        f"select symbol, trade_date, close, volume from {tbl}"
+        f" where trade_date >= ? and close is not null order by trade_date", (warm,)
+    ):
+        out[str(sym).upper()][str(d)[:10]] = (float(close), float(vol or 0))
+    con.close()
+    return dict(out)
+
+
+def resolve_panel_source(explicit: str) -> tuple[str, str]:
+    """(source_name, detail). Auto mode prefers depth, then locality, then network."""
+    if explicit != "auto":
+        return explicit, ""
+    if LOCAL_11YR.exists() and LOCAL_11YR.stat().st_size > 1_000_000:
+        return "sqlite11yr", str(LOCAL_11YR)
+    if LOCAL_OHLCV.exists() and LOCAL_OHLCV.stat().st_size > 1_000_000:
+        return "sqlite", str(LOCAL_OHLCV)
+    # Only offer Supabase if its host actually resolves. Selecting a source and
+    # then discovering it is unreachable turns a config error into a stack
+    # trace; the first Mac run failed exactly this way, on a .env holding the
+    # placeholder host "xxxxx.supabase.co".
+    if SB_URL.startswith("http") and SB_KEY:
+        try:
+            import socket
+            socket.getaddrinfo(SB_URL.split("//", 1)[-1].split("/")[0], 443)
+            return "supabase", SB_URL
+        except Exception:                                         # noqa: BLE001
+            pass
+    if SHADOW_PANEL.exists():
+        return "local", str(SHADOW_PANEL)
+    return "none", ""
+
+
+def diagnose() -> int:
+    """Say what is reachable, in one screen, before anything tries to run.
+
+    Added because the first Mac run of this script produced a 60-line httpx
+    traceback ending in a DNS error, which says nothing about the actual
+    problem — a config value that was never validated. A script that cannot
+    explain its own preconditions is not finished.
+    """
+    print("panel sources")
+    for label, p in (("11yr sqlite", LOCAL_11YR), ("rolling sqlite", LOCAL_OHLCV)):
+        if p.exists():
+            try:
+                con = sqlite3.connect(p)
+                t = [r[0] for r in con.execute(
+                    "select name from sqlite_master where type='table'")]
+                tbl = "ohlcv_11yr_daily" if "ohlcv_11yr_daily" in t else (
+                    "ohlcv_daily" if "ohlcv_daily" in t else None)
+                if tbl:
+                    n, lo, hi, syms = con.execute(
+                        f"select count(*), min(trade_date), max(trade_date),"
+                        f" count(distinct symbol) from {tbl}").fetchone()
+                    print(f"  OK   {label:16} {p}")
+                    print(f"       {n:,} rows · {syms} symbols · {lo} .. {hi}")
+                else:
+                    print(f"  BAD  {label:16} {p} — no ohlcv table, has {t}")
+                con.close()
+            except Exception as e:                                # noqa: BLE001
+                print(f"  BAD  {label:16} {p} — {type(e).__name__}: {e}")
+        else:
+            print(f"  --   {label:16} {p} (absent)")
+
+    n_csv = len(list(SHADOW_PANEL.glob('*_1d_ohlcv.csv'))) if SHADOW_PANEL.exists() else 0
+    print(f"  {'OK  ' if n_csv else '--  '} shadow csv       {SHADOW_PANEL} ({n_csv} files, 2023+ only)")
+
+    print("\nsupabase rest")
+    if not SB_URL:
+        print("  BAD  SUPABASE_URL is empty — .env not loaded, or key missing from it")
+    elif not SB_URL.startswith("http"):
+        print(f"  BAD  SUPABASE_URL is not a URL: {SB_URL!r}")
+    else:
+        host = SB_URL.split("//", 1)[-1].split("/")[0]
+        try:
+            import socket
+            socket.getaddrinfo(host, 443)
+            print(f"  OK   {host} resolves")
+        except Exception as e:                                    # noqa: BLE001
+            print(f"  BAD  {host} does not resolve ({e}) — offline, DNS, or wrong host")
+        else:
+            # A key that DECODES is not a key that VERIFIES, and a key that
+            # authenticates is not a key that can READ.
+            #
+            # 2026-08-02: .env held a forged service_role token — the anon key's
+            # signature spliced onto a payload whose role claim had been edited to
+            # "service_role". It decoded perfectly (right ref, right role, 2036
+            # expiry), so the old check here — `key {'set' if SB_KEY else ...}` —
+            # called it OK. Only the server disagreed: 401 Invalid API key.
+            # Separately, the real anon key returns 200 with ZERO rows on every
+            # table since the S-94 RLS hardening, so HTTP 200 alone means nothing
+            # either. Probe for rows, not for status.
+            if not SB_KEY:
+                print("  BAD  SUPABASE_KEY is empty — dashboard > Project Settings > API Keys")
+            else:
+                try:
+                    r = httpx.get(
+                        f"{SB_URL}/rest/v1/ohlcv_daily",
+                        params={"select": "symbol", "limit": 1},
+                        headers={"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}"},
+                        timeout=15,
+                    )
+                    if r.status_code == 401:
+                        print("  BAD  key rejected (401 Invalid API key) — the token is not one "
+                              "Supabase signed for this project; re-copy it from the dashboard")
+                    elif r.status_code != 200:
+                        print(f"  BAD  key probe returned HTTP {r.status_code}: {r.text[:120]}")
+                    elif not r.json():
+                        print("  BAD  key authenticates but reads 0 rows — this is the anon key "
+                              "under RLS, not service_role; ohlcv_daily is not readable with it")
+                    else:
+                        print("  OK   key verified against ohlcv_daily (200, rows > 0)")
+                except Exception as e:                            # noqa: BLE001
+                    print(f"  BAD  key probe failed — {type(e).__name__}: {e}")
+
+    print(f"\ncis history   {'OK' if SHADOW_CIS.exists() else 'MISSING'}  {SHADOW_CIS}")
+    src, detail = resolve_panel_source("auto")
+    print(f"\nauto would use: {src} {detail}")
+    return 0 if src != "none" else 1
 
 
 def fetch_panel_local(start: str) -> dict[str, dict[str, tuple[float, float]]]:
@@ -266,8 +410,11 @@ def main() -> int:
     ap.add_argument("--start", default=START_DATE)
     ap.add_argument("--out", default=str(DEFAULT_OUT))
     ap.add_argument("--report", action="store_true")
-    ap.add_argument("--panel-source", choices=["supabase","local"], default="supabase",
-                    help="supabase = full 2022+ depth (Mac-side); local = Shadow CSVs, 2023+ only")
+    ap.add_argument("--panel-source",
+                    choices=["auto","sqlite11yr","sqlite","supabase","local"], default="auto",
+                    help="auto prefers the local 11yr sqlite; 'local' = Shadow CSVs, 2023+ only")
+    ap.add_argument("--diagnose", action="store_true",
+                    help="report which sources are reachable, then exit")
     args = ap.parse_args()
 
     if args.report:
@@ -275,15 +422,35 @@ def main() -> int:
         print(json.dumps(coverage_report(), indent=2))
         return 0
 
-    if args.panel_source == "supabase":
-        if not SB_URL or not SB_KEY:
-            print("FAIL SUPABASE_URL / SUPABASE_KEY not set", file=sys.stderr)
+    if args.diagnose:
+        return diagnose()
+
+    src, detail = resolve_panel_source(args.panel_source)
+    print(f"[1/4] panel source = {src} {detail} (warmup {WARMUP}d before {args.start})", flush=True)
+    try:
+        if src == "sqlite11yr":
+            panel = fetch_panel_sqlite(args.start, LOCAL_11YR)
+        elif src == "sqlite":
+            panel = fetch_panel_sqlite(args.start, LOCAL_OHLCV)
+        elif src == "supabase":
+            if not SB_URL.startswith("http") or not SB_KEY:
+                print("FAIL SUPABASE_URL/KEY missing or malformed. Run --diagnose.", file=sys.stderr)
+                return 2
+            panel = fetch_panel(args.start)
+        elif src == "local":
+            panel = fetch_panel_local(args.start)
+        else:
+            print("FAIL no panel source reachable. Run --diagnose.", file=sys.stderr)
             return 2
-        print(f"[1/4] panel from ohlcv_daily (warmup {WARMUP}d before {args.start}) ...", flush=True)
-        panel = fetch_panel(args.start)
-    else:
-        print(f"[1/4] panel from Shadow local CSVs (2023+ only) ...", flush=True)
-        panel = fetch_panel_local(args.start)
+    except Exception as e:
+        # One sentence, then the remedy. A stack trace is not a diagnosis.
+        print(f"FAIL panel fetch via {src}: {type(e).__name__}: {e}", file=sys.stderr)
+        print("     run: python3 scripts/build_l1_observations.py --diagnose", file=sys.stderr)
+        return 2
+
+    if not panel:
+        print(f"FAIL panel source {src} returned 0 symbols for start={args.start}", file=sys.stderr)
+        return 2
     print(f"      {len(panel)} crypto symbols")
 
     print("[2/4] panel-derived series ...", flush=True)
