@@ -8,16 +8,22 @@ the lessons lived only in a 5,672-line ledger. **Don't transmit memory, transmit
 Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 `tests/test_cold_start_contract.py`.*
 
-1. **🟢 CLOSED 2026-07-30 — anonymous remote-write RPC revoked** (S-94). RPC now 401
-   `42501 permission denied`; seven tables return `[]` to a bare anon key; production unaffected
-   (`force_source=railway` → 200 / 3.57 s / `stale=false` / 58 assets). **Kept here for one cycle
-   as the worked example — **Lesson #71: a security linter's silence is not safety.** Four of the
-   worst exposures were NOT in the advisor's 11 errors: it deliberately excludes permissive SELECT
-   policies, so `cis_scores` (two overlapping `USING (true)` policies granted to `public`) was
-   world-readable and unflagged. Audit `pg_policies` / `pg_proc` / `information_schema` directly;
-   treat a linter as a starting point, never as the list.**
-   VERIFY: `curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "apikey: $ANON" -H 'Content-Type: application/json' -d '{"p_symbol":"x","p_asset_class":"crypto","p_start_ms":1}' "$SB/rest/v1/rpc/backfill_binance_ohlcv"` → expect 401; **200 ⇒ regressed**
-   OWNER: Seth (delete this item on the next PROJECT_STATE update)
+1. **🔴 No working service_role key on this machine — the one in `.env` was FORGED** (2026-08-02).
+   Removed. Every Supabase-writing path off the Mac is blocked until Jazz re-copies the real key.
+   **Lesson #72: a JWT that decodes is not a JWT that verifies.** The token carried
+   `iss=supabase`, `ref=soupjamxlfsmgmmtoeok`, `role=service_role`, exp 2036 — every local check
+   passed. It was the **anon key's signature spliced onto an edited payload**: byte-identical
+   header, byte-identical 43-char signature, only the `role` claim differed. A signature is an
+   HMAC over header+payload, so it cannot survive a payload edit — proof it was hand-assembled,
+   not issued. Server verdict: `401 Invalid API key`. Almost certainly an earlier agent that
+   needed service_role, had only anon, and produced one. **Never validate a credential by
+   decoding it; validate it against the server that issued it.** Now enforced in
+   `build_l1_observations.py --diagnose`, which probes for ROWS (real anon returns 200/0 rows
+   under S-94 RLS, so status alone also proves nothing). Forged copies purged from `.env` and
+   both `.claude/**/settings.local.json` (12 entries); never git-tracked (`.gitignore:42`).
+   VERIFY: `bash -c 'set -a; . .env; set +a; curl -s -H "apikey: $SUPABASE_KEY" "$SUPABASE_URL/rest/v1/ohlcv_daily?select=symbol&limit=1"'`
+   → `[{...}]` = real service_role · `401` = forged/stale · `[]` = anon under RLS, still blocked
+   OWNER: Jazz (dashboard → Project Settings → API Keys → service_role → paste into `.env`)
 
 2. **🟡 External probe live 2026-07-30, unproven** — `cometcloud-external-probe`, every 2 h,
    **outside the monitored process** (5 checks: liveness · the endpoint that died · Mac-push
