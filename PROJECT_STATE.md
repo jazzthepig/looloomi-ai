@@ -25,6 +25,8 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    → `[{...}]` = real service_role · `401` = forged/stale · `[]` = anon under RLS, still blocked
    OWNER: Jazz (dashboard → Project Settings → API Keys → service_role → paste into `.env`)
 
+   **Lesson #71: a security linter's silence is not safety.** Four of the worst exposures were absent from the advisor's 11 errors — it excludes permissive SELECT policies, so `cis_scores` was world-readable and unflagged. Audit `pg_policies` / `pg_proc` directly.
+
 2. **🟡 External probe live 2026-07-30, unproven** — `cometcloud-external-probe`, every 2 h,
    **outside the monitored process** (5 checks: liveness · the endpoint that died · Mac-push
    freshness · security-regression on the revoked RPC · anonymous read). Worst-case blind window
