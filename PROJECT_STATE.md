@@ -37,22 +37,20 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    last run reported `✅ probe OK`; no run in >3 h ⇒ the probe itself is dead.
    OWNER: Jazz (keep the app open) / Seth (induce a failure to prove it fires)
 
-3. **🟡 VDB has no time series — style rotation cannot be backtested** (was #3+#4, merged: one
-   owner, one blocker). `asset_embeddings` is 72 rows / single snapshot, and `risk_meter` has code
-   with **zero persisted output**, so neither can enter a backtest. `DECISION_PATH_SPEC §3` is
-   untouched by everything shipped this week — the P0 work fixed delivery, not the intelligence gap.
-   **2026-08-02 — SCHEMA LANDED, DATA HAS NOT. Still 🟡, and the distinction is the whole point.**
-   D1/D2/D3 SQL applied to prod (Seth, via MCP): `asset_embeddings_history` + `risk_meter_history`
-   + both upsert RPCs + both views exist; HNSW right-sized 16/64 → 8/32 (72 rows intact, ANN plan
-   confirmed still `Index Scan using asset_embeddings_vec_hnsw`, 2.06 ms). **Both tables are EMPTY.**
-   Nothing is backtestable until Mac T1 runs the D1 backfill over `cis_scores` (104,947 pillar rows)
-   and starts the daily `upsert_risk_meter_history` call. An empty table with a correct schema
-   closes zero risk — it just moves the blocker from "no place to put it" to "nobody put it there".
-   VERIFY: `select count(*) from asset_embeddings_history;` → 0 ⇒ still open, want ≫72 ·
-   `select count(*) from risk_meter_history;` → 0 ⇒ still open
-   (superseded VERIFY `count(*) from asset_embeddings` → ≫72: mis-specified, D1 writes history to
-   `asset_embeddings_history`; the live table stays at ~72 by design and would never have passed)
-   OWNER: Minimax-A (run D1 backfill · wire D2 daily upsert into the T1 post-push step)
+3. **🟡 VDB decision chain is 2/3 built** (the "no time series" half is now DONE).
+   `market_state_vectors` **582 days live** (2025-01-01 → 2026-08-05 · 24 fixed dims · avg 13.9
+   measured · spread validated p05 .565 / p50 .802 / p95 .939 over 7,140 random pairs) and
+   `similar_market_states(day,k,min_shared)` answers "today's environment is most like which
+   historical days" — first real result: 2026-08-05 ≈ 07-07/07-09/07-28 at .97, **nothing from
+   2025**, i.e. regime persistence, not an artifact. **The missing third is `strategy_response`,**
+   so the chain reads environment → similar history → [WHO SURVIVED THERE: not built] →
+   allocation. Until that lands, retrieval is a fact without a decision.
+   `asset_embeddings_history` schema ready, backfill needs a service_role run (blocked by risk #1).
+   `risk_meter_history` still 0 rows.
+   VERIFY: `select count(*) from market_state_vectors;` → 582 · `select count(*) from strategy_response;`
+   → missing ⇒ chain still incomplete
+   OWNER: Seth (strategy_response) · Minimax-A (M-WO-D2 risk-meter persistence)
+   **Lesson #77: measure a similarity's SPREAD before shipping it, not just its top-k** — top-k always returns "the closest few" whether or not the metric discriminates; a collapsed spread returns confident nonsense and is invisible from the list. **Lesson #75: confirm a metric measures what you think before alarming on it** (two readings, explain the difference).
 
 4. **🟡 MEMORY.md is 7.6 KB against its own 4 KB rule** — the one file guaranteed to be read cold.
    Past a few KB it stops being an index and becomes another skimmed document.
@@ -71,7 +69,7 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    — duplicated trading days, volume columns ~62,000× apart (CoinGecko USD notional vs Binance base
    units), and same-day closes differing by up to 5 % (ETH 4.8 %, SOL 5.0 %). Fixed forward with
    the `ohlcv_daily_canonical` view (229,916 → 181,334 rows, 0 remaining duplicates, deterministic
-   precedence: native venue > aggregator, paid > free). **Lesson #73: any table permitting multiple
+   precedence: native venue > aggregator, paid > free). **Lesson #76: any table permitting multiple
    rows per entity must ship a deterministic one-row-per-entity view, or the choice of source is
    silently delegated to every reader.**
    **Backward impact NOT yet assessed and must not be assumed either way.** S-83→S-91 used the
