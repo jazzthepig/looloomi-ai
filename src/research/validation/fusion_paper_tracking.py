@@ -50,12 +50,34 @@ from typing import Optional
 
 import numpy as np
 
+# ── DECISION_INPUTS contract (per tests/test_strategy_discipline.py) ────────
+# This is a MONITOR, not a strategy — it emits information, does NOT retune,
+# does NOT block trades. Regime/universe/weights/timing declarations reflect
+# what is being MONITORED (the R64 fusion paper book + parallel ⓠ regime-
+# adjusted track), not what is being decided. Pass gate with ship=False
+# (no trading decisions are made here).
+DECISION_INPUTS = {
+    "regime": "regime_fingerprint_with_q_override_track",
+    "universe": "r64_fusion_paper_book_plus_q_parallel_track",
+    "weights": "monitoring_only_no_trade_decision",
+    "timing": "daily_nav_accrual",
+}
+
 _log = logging.getLogger("fusion_paper_tracking")
 
 # ── Persistence ──────────────────────────────────────────────────────────────
 _LIFECYCLE_TABLE = "fusion_paper_lifecycle"
 _NAV_TABLE = "fusion_paper_nav"
+_REGIME_TRACK_TABLE = "fusion_paper_regime_track"
 _STATE_KEY = "fusion_paper:tracking"
+from pathlib import Path as _Path
+_REGIME_TRACK_CSV_PATH = _Path("/tmp/cometcloud_data/paper_books/fusion_paper_regime_track/regime_track.csv")
+
+# ── ⓠ regime track reference (the new 6th surface) ──────────────────────────
+# Imports from fusion_paper_regime_track (sibling module). The track is a
+# parallel paper NAV curve under the enforcer — it is NOT a live override.
+Q_ACTIVATION_THRESHOLD_DAYS = 1   # ≥1 non-NEUTRAL day after warmup → ACTIVATED
+Q_HURT_THRESHOLD_ALPHA_PCT = -5.0  # regime_vs_flat_alpha_pct < -5% → HURT_FLAT
 
 # ── R64 forward reference (from R64 verdict) ─────────────────────────────────
 # OOS α_t = +2.38 over 219 OOS days. For a Sharpe proxy, we approximate ann Sharpe
@@ -207,6 +229,65 @@ def _validation_countdown(n_days: int) -> dict:
     }
 
 
+def _regime_override_track(regime_track_csv_path) -> dict:
+    """6th monitor surface: read the parallel ⓠ regime track CSV, return the
+    60-day aggregation stats + status.
+
+    Status values:
+      - INSUFFICIENT: <2 rows in CSV (paper track hasn't started)
+      - WARMING_UP: < WARMUP_MIN_DAYS rows (gap is not yet meaningful)
+      - INACTIVE: ≥ warmup, but ZERO non-NEUTRAL days → enforcer never fired
+      - ACTIVE_HURT_FLAT: enforcer fired, but regime_vs_flat_alpha_pct < threshold
+      - ACTIVE_HELPED: enforcer fired, regime_vs_flat_alpha_pct ≥ threshold
+      - ACTIVE_NEUTRAL: enforcer fired, alpha within ±threshold
+    """
+    from src.research.validation.fusion_paper_regime_track import (
+        aggregate_regime_track,
+    )
+    import csv as _csv
+    if not regime_track_csv_path.exists():
+        return {"status": "INSUFFICIENT", "n_days": 0,
+                "note": f"regime track CSV not found at {regime_track_csv_path}"}
+    try:
+        with open(regime_track_csv_path) as f:
+            rows = list(_csv.DictReader(f))
+    except Exception:
+        return {"status": "INSUFFICIENT", "n_days": 0,
+                "note": "failed to read regime track CSV"}
+    if not rows:
+        return {"status": "INSUFFICIENT", "n_days": 0}
+    import pandas as _pd
+    df = _pd.DataFrame(rows)
+    # Numeric coercion — CSV stores strings
+    for col in ("exposure_cap", "signal_value", "r77_daily_return",
+                "regime_daily_return", "regime_pnl_usd", "regime_nav_usd"):
+        if col in df.columns:
+            df[col] = _pd.to_numeric(df[col], errors="coerce")
+    agg = aggregate_regime_track(df)
+
+    # Augment with ACTIVATION status (enforcer never fired vs fired)
+    if agg.get("status") == "ok":
+        band_pct = agg.get("band_pct_days", {})
+        non_neutral_pct = 1.0 - band_pct.get("NEUTRAL", 0.0)
+        if non_neutral_pct == 0:
+            agg["status"] = "INACTIVE"
+            agg["activation_note"] = (
+                "ⓠ enforcer present but never triggered a non-NEUTRAL band "
+                "over the warmup window — signal stayed neutral"
+            )
+        else:
+            alpha = agg.get("regime_vs_flat_alpha_pct")
+            if alpha is not None and alpha < Q_HURT_THRESHOLD_ALPHA_PCT:
+                agg["status"] = "ACTIVE_HURT_FLAT"
+            elif alpha is not None and alpha >= abs(Q_HURT_THRESHOLD_ALPHA_PCT):
+                agg["status"] = "ACTIVE_HELPED"
+            else:
+                agg["status"] = "ACTIVE_NEUTRAL"
+            agg["non_neutral_days_pct"] = round(non_neutral_pct, 4)
+            agg["activation_threshold_days"] = Q_ACTIVATION_THRESHOLD_DAYS
+    return agg
+
+
 def _max_drawdown_pct(navs: list) -> Optional[float]:
     """Max DD as negative %. None if no data."""
     if not navs:
@@ -291,6 +372,37 @@ def detect_lifecycle_events(snapshot: dict, prev_snapshot: Optional[dict] = None
                                    "interpretation": "§P3 lifecycle gate cleared — cell credit-eligible "
                                                       "for live deployment decision"}})
 
+    # ── REGIME_OVERRIDE_ACTIVATED: ⓠ enforcer first triggered a non-NEUTRAL band
+    #     (status: ACTIVE_HELPED / ACTIVE_NEUTRAL / ACTIVE_HURT_FLAT, transitioning
+    #      from INACTIVE or WARMING_UP / INSUFFICIENT)
+    q_prev = prev.get("regime_override_track", {}).get("status")
+    q_curr = snapshot.get("regime_override_track", {}).get("status")
+    q_activation_states = {"ACTIVE_HELPED", "ACTIVE_NEUTRAL", "ACTIVE_HURT_FLAT"}
+    if q_curr in q_activation_states and q_prev not in q_activation_states:
+        q_payload = snapshot["regime_override_track"]
+        events.append({"event_type": "REGIME_OVERRIDE_ACTIVATED",
+                       "payload": {"date": today,
+                                   "q_status": q_curr,
+                                   "non_neutral_days_pct": q_payload.get("non_neutral_days_pct"),
+                                   "regime_vs_flat_alpha_pct": q_payload.get("regime_vs_flat_alpha_pct"),
+                                   "regime_vs_flat_sharpe_gap": q_payload.get("regime_vs_flat_sharpe_gap"),
+                                   "mean_realized_cap": q_payload.get("mean_realized_cap"),
+                                   "interpretation": "ⓠ enforcer first triggered a non-NEUTRAL band — "
+                                                      "regime-adjusted paper NAV diverged from flat baseline. "
+                                                      "Promote observation only; no live override."}})
+
+    # ── REGIME_OVERRIDE_HURT_FLAT: enforcer ACTIVATED but regime < flat by > threshold
+    #     (transition into ACTIVE_HURT_FLAT, indicating the enforcer would have HURT)
+    if q_curr == "ACTIVE_HURT_FLAT" and q_prev != "ACTIVE_HURT_FLAT":
+        q_payload = snapshot["regime_override_track"]
+        events.append({"event_type": "REGIME_OVERRIDE_HURT_FLAT",
+                       "payload": {"date": today,
+                                   "regime_vs_flat_alpha_pct": q_payload.get("regime_vs_flat_alpha_pct"),
+                                   "hurt_threshold_alpha_pct": Q_HURT_THRESHOLD_ALPHA_PCT,
+                                   "interpretation": "ⓠ enforcer would have HURT the paper NAV curve vs flat "
+                                                      "by more than threshold — do NOT promote to live override. "
+                                                      "Review signal quality / hysteresis parameters."}})
+
     return events
 
 
@@ -330,6 +442,8 @@ async def compute_tracking_snapshot() -> dict:
         "n_engaged_days": sum(1 for r in rows if (r.get("gross") or 0) > 0),
         "n_flat_days": sum(1 for r in rows if (r.get("gross") or 0) == 0),
         "engagement_pct": round(100.0 * sum(1 for r in rows if (r.get("gross") or 0) > 0) / max(1, n_days), 1),
+        # 6th surface: parallel ⓠ regime override track (paper-only, observation-only)
+        "regime_override_track": _regime_override_track(_REGIME_TRACK_CSV_PATH),
     }
 
     # Read previous snapshot for transition detection
@@ -429,6 +543,87 @@ def _self_test() -> int:
     evs2 = detect_lifecycle_events(snap2, prev_snap)
     types2 = {e["event_type"] for e in evs2}
     assert "VALIDATED" in types2, f"VALIDATED event missing on transition, got {types2}"
+
+    # 9. REGIME_OVERRIDE_ACTIVATED: transition into any active state
+    snap_q1 = dict(snap)
+    snap_q1["regime_override_track"] = {"status": "ACTIVE_HELPED",
+                                         "non_neutral_days_pct": 0.45,
+                                         "regime_vs_flat_alpha_pct": +12.3,
+                                         "regime_vs_flat_sharpe_gap": +0.3,
+                                         "mean_realized_cap": 1.05}
+    evs_q1 = detect_lifecycle_events(snap_q1, snap)  # prev had no regime_override_track
+    types_q1 = {e["event_type"] for e in evs_q1}
+    assert "REGIME_OVERRIDE_ACTIVATED" in types_q1, \
+        f"ACTIVATED event missing on transition into ACTIVE_HELPED, got {types_q1}"
+
+    # 10. REGIME_OVERRIDE_HURT_FLAT: transition into ACTIVE_HURT_FLAT
+    snap_q2 = dict(snap)
+    snap_q2["regime_override_track"] = {"status": "ACTIVE_HURT_FLAT",
+                                         "regime_vs_flat_alpha_pct": -8.5,
+                                         "mean_realized_cap": 0.92}
+    evs_q2 = detect_lifecycle_events(snap_q2, snap)
+    types_q2 = {e["event_type"] for e in evs_q2}
+    assert "REGIME_OVERRIDE_HURT_FLAT" in types_q2, \
+        f"HURT_FLAT event missing on transition, got {types_q2}"
+
+    # 11. No transition: status stays the same → no event
+    prev_q_active = {"regime_override_track": {"status": "ACTIVE_HELPED"}}
+    evs_q3 = detect_lifecycle_events(snap_q1, prev_q_active)
+    types_q3 = {e["event_type"] for e in evs_q3}
+    assert "REGIME_OVERRIDE_ACTIVATED" not in types_q3, \
+        f"ACTIVATED should NOT fire when status unchanged, got {types_q3}"
+
+    # 12. _regime_override_track: missing CSV → INSUFFICIENT
+    from pathlib import Path as _P
+    fake_path = _P("/tmp/does_not_exist_regime_track_xyz.csv")
+    r0 = _regime_override_track(fake_path)
+    assert r0["status"] == "INSUFFICIENT", f"missing CSV: {r0}"
+
+    # 13. _regime_override_track: empty CSV → INSUFFICIENT
+    import tempfile as _tf
+    with _tf.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as tf:
+        tf.write("date_utc,band,exposure_cap,signal_value,r77_daily_return,"
+                 "regime_daily_return,regime_pnl_usd,regime_nav_usd\n")
+        empty_path = _P(tf.name)
+    r1 = _regime_override_track(empty_path)
+    assert r1["status"] == "INSUFFICIENT", f"empty CSV: {r1}"
+    empty_path.unlink()
+
+    # 14. _regime_override_track: all-NEUTRAL flat signal → INACTIVE
+    with _tf.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as tf:
+        w = __import__("csv").DictWriter(tf, fieldnames=[
+            "date_utc","band","exposure_cap","signal_value","r77_daily_return",
+            "regime_daily_return","regime_pnl_usd","regime_nav_usd"])
+        w.writeheader()
+        for i in range(25):  # > WARMUP_MIN_DAYS
+            w.writerow({"date_utc": f"2026-07-{i+1:02d}", "band": "NEUTRAL",
+                        "exposure_cap": 1.0, "signal_value": 0.0,
+                        "r77_daily_return": 0.001, "regime_daily_return": 0.001,
+                        "regime_pnl_usd": 1000.0, "regime_nav_usd": 1_000_000.0 + i*1000})
+        inactive_path = _P(tf.name)
+    r2 = _regime_override_track(inactive_path)
+    assert r2["status"] == "INACTIVE", f"all-NEUTRAL: {r2}"
+    inactive_path.unlink()
+
+    # 15. _regime_override_track: non-NEUTRAL → ACTIVE_NEUTRAL/HELPED/HURT
+    with _tf.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as tf:
+        w = __import__("csv").DictWriter(tf, fieldnames=[
+            "date_utc","band","exposure_cap","signal_value","r77_daily_return",
+            "regime_daily_return","regime_pnl_usd","regime_nav_usd"])
+        w.writeheader()
+        # 25 days: half NEUTRAL, half HOT (cap=1.3, so regime_pnl > r77_pnl)
+        for i in range(25):
+            band = "NEUTRAL" if i < 13 else "HOT"
+            cap = 1.0 if band == "NEUTRAL" else 1.3
+            w.writerow({"date_utc": f"2026-07-{i+1:02d}", "band": band,
+                        "exposure_cap": cap, "signal_value": 0.05 if band == "HOT" else 0.0,
+                        "r77_daily_return": 0.001, "regime_daily_return": 0.001 * cap,
+                        "regime_pnl_usd": 1000.0 * cap, "regime_nav_usd": 1_000_000.0 + i*1000})
+        helped_path = _P(tf.name)
+    r3 = _regime_override_track(helped_path)
+    assert r3["status"].startswith("ACTIVE"), f"non-NEUTRAL: {r3}"
+    assert r3["non_neutral_days_pct"] > 0.4
+    helped_path.unlink()
 
     print(f"✓ fusion_paper_tracking self-test OK "
           f"(live_sharpe={s2:.3f}, gap_DRAFT_45d={g2['gap']}, fire_PERSISTENT={d3['fire_rate']}, "

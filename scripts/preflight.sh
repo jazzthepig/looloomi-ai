@@ -44,6 +44,15 @@ python3 -m tests.test_venue_consolidation
 #              logic must regress-safe; live supabase probe lives in scheduled cron,
 #              not in a code gate (offline/deterministic only here).
 python3 -m tests.test_cis_drift_detector
+# 3a-sexies. ⓠ REGIME OVERRIDE enforcer (2026-08-06, first cut): wraps research-side
+#             m_wo_q_o1_stablecoin_gate.assign_band_hysteresis into production-shape
+#             API (apply_regime_override, apply_regime_override_series). PIT-safe,
+#             allows only the v1 allowed-cap set {0.0, 0.5, 1.0, 1.3}.
+python3 -m tests.test_regime_override_enforcer
+# 3a-septies. ⓠ REGIME OVERRIDE paper track (2026-08-06, parallel paper NAV under
+#              enforcer). Tests pure backtest/aggregation logic; live paper runner
+#              is wired into daily_runner.py post-validation (60d forward paper).
+python3 -m tests.test_fusion_paper_regime_track
 # 3b. contract schema echo — the drift class preflight previously couldn't see (Mac push schema
 #     changed, Railway didn't follow). Prints the canonical SCHEMA_VERSION so it's in every log,
 #     and fails loudly if the contract module stops importing.

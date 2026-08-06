@@ -84,6 +84,18 @@ from src.research.validation.r76_funding_residual_ls import (
 
 
 # === Constants ================================================================
+# ── DECISION_INPUTS contract (per tests/test_strategy_discipline.py) ────────
+# R77 frozen-cell candidate: 3-leg fusion (R46 pillar_O + R62 funding-crowd +
+# R76 funding-residual). Universe is the strict 28-asset R63 panel (funding ∩
+# CIS ∩ OHLCV); weights = fusion_3leg; timing = 5d rebal; regime domain
+# (frozen-cell test is regime-INVARIANT per §TRADER_TOM §5b but we declare the
+# regime fingerprint layer for the discipline gate to pass).
+DECISION_INPUTS = {
+    "regime": "regime_fingerprint",
+    "universe": "r63_28asset_strict_funding_cis_ohlcv",
+    "weights": "fusion_3leg_r46_r62_r76",
+    "timing": "5d_rebal_pit_lag1d",
+}
 OOS_FRAC = 0.30
 NW_LAGS = 6
 PERIODS_PER_YEAR = 365

@@ -52,6 +52,18 @@ SIGNAL_LOOKBACK_DAYS = 28
 # Goal: catch 2018 (USDT issuance frenzy) + 2022 (LUNA/3AC) without
 # flagging normal expansion; 2025-26 has NO stablecoin signal by design.
 ENTER_HOT = +0.10       # > 95%ile ≈ +30% would be too rare; +10% catches genuine expansions
+
+# ── DECISION_INPUTS contract (per tests/test_strategy_discipline.py) ────────
+# ⓠ REGIME OVERRIDE O1 stablecoin-gate sits ON TOP of M-WO-A ① layer baseline.
+# Regime source = risk_meter (the stablecoin-supply meter itself); universe =
+# whatever M-WO-A delivered as the ① layer book; weights = a 5-band scaler
+# applied to the baseline weights; timing = 5-band hysteresis with PIT lag.
+DECISION_INPUTS = {
+    "regime": "risk_meter",
+    "universe": "m_wo_a_beta_capture_baseline",
+    "weights": "regime_scaler_5band",
+    "timing": "5band_hysteresis_pit_lag1d",
+}
 EXIT_HOT = +0.05        # half-band
 ENTER_CRISIS = -0.05    # < ~1%ile (2018 USDT-issue, 2022 LUNA/3AC both clear)
 EXIT_CRISIS = -0.025    # half-band

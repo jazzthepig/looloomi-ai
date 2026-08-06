@@ -47,6 +47,19 @@ from __future__ import annotations
 import argparse
 import json
 from dataclasses import dataclass
+
+# ── DECISION_INPUTS contract (per tests/test_strategy_discipline.py) ────────
+# R97 11yr CIS-L/S V5 candidate: dual-horizon L/S on R97's frozen 24-asset panel.
+# Universe is the r97_panel.freeze_universe() output (real 1h parquet ∩ CIS history
+# ∩ funding); regime = regime_fingerprint (informative; tested across cycles);
+# weights = cis_quality composite (B+ floor 55); timing = 5d rebal + signal exit
+# on major-trend flip (frozen; not re-tuned).
+DECISION_INPUTS = {
+    "regime": "regime_fingerprint",
+    "universe": "r97_panel_frozen_24asset",
+    "weights": "cis_quality_composite_bplus_floor",
+    "timing": "5d_rebal_signal_exit_major_flip",
+}
 from datetime import datetime
 from pathlib import Path
 from typing import Optional

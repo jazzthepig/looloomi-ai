@@ -52,6 +52,18 @@ COST_BPS_GRID = (0, 10)               # sensitivity sweep
 STARTING_NAV = 100.0
 COST_BPS_DD = {8: 0.5, 12: 0.25, 15: 0.0}  # max_dd_stop ladder (pct -> risk_share)
 
+# ── DECISION_INPUTS contract (per tests/test_strategy_discipline.py) ────────
+# ① layer beta-capture base: long-only hold of eligible 11yr crypto panel.
+# Regime domain is informative (regime_fingerprint via S-83 BTC 200MA proxy);
+# universe is the ohlcv_11yr PIT eligibility filter; weights are CW-P volume proxy
+# (no mcap field on the 11yr panel — proxy label preserved); timing is monthly.
+DECISION_INPUTS = {
+    "regime": "regime_fingerprint",
+    "universe": "ohlcv_11yr_eligibility",
+    "weights": "cw_proxy_30d_volume",
+    "timing": "monthly_rebal_21d",
+}
+
 
 # ── data load ────────────────────────────────────────────────────────────────
 def load_ohlcv_11yr(db_path: str = DB_PATH) -> pd.DataFrame:
