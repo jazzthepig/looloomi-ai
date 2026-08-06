@@ -86,6 +86,17 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    result was OUTPERFORM at t=−6.88, i.e. negative. **Day-weighted performance is narrative,
    not evidence, until episodes are counted.**
 
+   **Lesson #82 (S-102): the control experiment is often worth more than the main one.**
+   |score−median| quintiles came out monotone (−3.15→+4.29); stopping there would have
+   concluded 'the ranking works'. The percentile-rank control was NOT monotone (top
+   quintile ≈0), which located the actual mechanism: distance from the crowd carries
+   signal, being top-ranked does not. Root cause found: **absolute tier thresholds applied
+   to a distribution whose daily median swings 23→75 (sd 12.4)** — so the label tracks the
+   market's score level, not the asset's relative standing. `cis_scores.percentile` exists
+   and is all NULL. Robust across both parameterisations: **near-median underperforms**
+   (t=−2.91 / −1.96) — an EXCLUSION signal, which for a FoF is a real product and is far
+   better evidenced than any selection claim.
+
 4. **🟡 MEMORY.md is 7.6 KB against its own 4 KB rule** — the one file guaranteed to be read cold.
    Past a few KB it stops being an index and becomes another skimmed document.
    VERIFY: `wc -c MEMORY.md` → expect ≤4096
