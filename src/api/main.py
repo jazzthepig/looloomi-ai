@@ -1114,6 +1114,21 @@ async def data_freshness():
             "age_days": round(age_s / 86400, 1) if age_s is not None else None,
             "verdict": f.get("verdict"),
             "error": f.get("error"),
+            # `max(trade_date)` is a POOR staleness signal for this feed and the
+            # caveat belongs next to the number, not in someone's memory:
+            # collect_ohlcv re-pulls 365 days every run and upserts, so the feed is
+            # self-healing — a missed run is backfilled by the next one. That makes
+            # max(trade_date) look catastrophic mid-run and healthy minutes later.
+            # Measured 2026-07-31 as "4 days stale" and 2026-08-06 as "10.3 days",
+            # yet a per-day breakdown showed every day 07-24 → 08-06 populated: both
+            # readings were transients, and one of them became a false 🔴 in
+            # PROJECT_STATE. Weekends legitimately drop to crypto-only (~25 symbols)
+            # because EODHD is TradFi and markets are shut — a symbol-count check
+            # that ignores that will cry wolf every Saturday, and a check that cries
+            # wolf gets muted, which is the failure this whole layer exists to avoid.
+            "caveat": "self-healing feed: collect_ohlcv upserts 365d per run, so "
+                      "max(trade_date) is transient. Judge on run completion, not on "
+                      "this date. Weekends are crypto-only by design.",
         }
     except Exception as e:
         out["ohlcv_daily"] = {"verdict": "unknown", "error": str(e)[:80]}
