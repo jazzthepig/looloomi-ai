@@ -37,20 +37,35 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    last run reported `✅ probe OK`; no run in >3 h ⇒ the probe itself is dead.
    OWNER: Jazz (keep the app open) / Seth (induce a failure to prove it fires)
 
-3. **🟡 VDB decision chain is 2/3 built** (the "no time series" half is now DONE).
-   `market_state_vectors` **582 days live** (2025-01-01 → 2026-08-05 · 24 fixed dims · avg 13.9
-   measured · spread validated p05 .565 / p50 .802 / p95 .939 over 7,140 random pairs) and
-   `similar_market_states(day,k,min_shared)` answers "today's environment is most like which
-   historical days" — first real result: 2026-08-05 ≈ 07-07/07-09/07-28 at .97, **nothing from
-   2025**, i.e. regime persistence, not an artifact. **The missing third is `strategy_response`,**
-   so the chain reads environment → similar history → [WHO SURVIVED THERE: not built] →
-   allocation. Until that lands, retrieval is a fact without a decision.
-   `asset_embeddings_history` schema ready, backfill needs a service_role run (blocked by risk #1).
-   `risk_meter_history` still 0 rows.
-   VERIFY: `select count(*) from market_state_vectors;` → 582 · `select count(*) from strategy_response;`
-   → missing ⇒ chain still incomplete
-   OWNER: Seth (strategy_response) · Minimax-A (M-WO-D2 risk-meter persistence)
-   **Lesson #77: measure a similarity's SPREAD before shipping it, not just its top-k** — top-k always returns "the closest few" whether or not the metric discriminates; a collapsed spread returns confident nonsense and is invisible from the list. **Lesson #75: confirm a metric measures what you think before alarming on it** (two readings, explain the difference).
+3. **🟢 VDB decision chain COMPLETE 2026-08-06 — and its first answer is unflattering.**
+   `market_state_vectors` 582 days · `similar_market_states()` · `strategy_response`
+   (22 sufficient / 2 sparse / **16 `none`**). Chain now runs end to end: environment → similar
+   history → who survived there → allocation. First real query, today =
+   `trend_down|vol_low|breadth_narrow`: **no signal tier is positive-alpha here**; OUTPERFORM hits
+   **4.1 %** over 74 days; **STRONG OUTPERFORM and NEUTRAL have n=0 — never observed in this
+   environment at all.** That last line is not "poor performance", it is **we have no weapon for
+   this environment**, and it is invisible in any aggregate Sharpe.
+   **Lesson #79: "never seen in this environment" must be a ROW, not a missing row** — a coverage
+   gap is the research agenda generating itself; hidden as absence it looks like a question nobody
+   asked.
+   **Bounds — do not over-read:** alpha uncorrected for multiple testing; ~365-day window;
+   `signal_outcomes` ends 2026-05-03 while vectors run to 08-05, so **the last 3 months are not in
+   it**; cluster thresholds are fixed constants with no sensitivity analysis. **A queryable
+   capability, not a validated conclusion.**
+   Still open: `asset_embeddings_history` backfill (needs service_role, blocked by risk #1);
+   `risk_meter_history` 0 rows.
+   VERIFY: `select sample_grade, count(*) from strategy_response group by 1;` → any grade missing
+   ⇒ recompute; `select max(d) from signal_outcomes;` → far behind vectors ⇒ stale response surface
+   OWNER: Seth (extend signal_outcomes to present) · Minimax-A (M-WO-D2)
+
+   **Also live from this pass — Lesson #78: dedup and spread-preservation are two jobs, one view
+   cannot do both.** `ohlcv_daily_canonical` (one row/day, for backtests) now sits alongside
+   `ohlcv_venue_spread` (cross-source dispersion kept as a feature, with `spread_kind` typing it:
+   today's only multi-source crypto pair is a 257 bps candle-definition mismatch, NOT arbitrage).
+   Vector tables carry `price_sources`/`provenance_note` — two vectors with identical numbers but
+   different venues are not the same observation. **Lesson #77: measure a similarity's SPREAD
+   before shipping it, not just its top-k** — top-k always returns the closest few whether or not
+   the metric discriminates.
 
 4. **🟡 MEMORY.md is 7.6 KB against its own 4 KB rule** — the one file guaranteed to be read cold.
    Past a few KB it stops being an index and becomes another skimmed document.
