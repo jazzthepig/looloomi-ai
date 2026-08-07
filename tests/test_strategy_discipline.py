@@ -78,14 +78,94 @@ def test_new_ship_record_without_evidence_is_rejected():
     assert any("paper_trade_days" in p for p in problems), "missing 60d paper gate must be flagged"
     assert any("regime_reported" in p for p in problems), "aggregate-only reporting must be flagged"
     assert any("max_dd_stop" in p for p in problems), "no stop rule ⇒ no production (Millennium)"
-    # and a fully-evidenced record passes:
+    assert any("deflated_sharpe" in p for p in problems), \
+        "missing multiple-testing correction must be flagged (2026-08-06)"
+    # and a fully-evidenced record passes. Note what "fully evidenced" now means:
+    # it includes surviving the SEARCH that found the strategy, not just the
+    # backtest it produced.
     good = StrategyRecord(id="proven", title="proven", doc_source="test",
                           verdict=Verdict.SHIP, pit_clean=True, cost_feasible_at_5bps=True,
                           forward_committed=True, base_rate="funding crowding reverts (behavioral)",
                           oos_survival=True, paper_trade_days=75, regime_reported=True,
                           oos_window="2026-02-01→2026-05-03", max_dd_stop=-0.15,
-                          capital_action_on_breach="zero_and_freeze", backtest_included_stop=True)
+                          capital_action_on_breach="zero_and_freeze", backtest_included_stop=True,
+                          deflated_sharpe=0.97, n_trials=40, pbo=0.21,
+                          median_holding_days=21.0, signal_changes_per_yr=9.0,
+                          turnover_cost_pct_yr=0.9, net_effect_pct_yr=3.4)
     assert not good.validate(), "fully-evidenced ship record must pass"
+
+
+def test_multiple_testing_floor_is_enforced():
+    """The hole that produced the R76–R94 graveyard: search enough specifications
+    and one of them looks good. deflated_sharpe_ratio() and pbo_cscv() have lived
+    in src/research/validation/ for months, called by the factor factory and the
+    gauntlet — but never by THIS gate, so 'passes our bar' did not include
+    'survives the search that found it'."""
+    base = dict(id="x", title="x", doc_source="test", verdict=Verdict.SHIP,
+                pit_clean=True, cost_feasible_at_5bps=True, forward_committed=True,
+                base_rate="cause", oos_survival=True, paper_trade_days=90,
+                regime_reported=True, max_dd_stop=-0.15,
+                capital_action_on_breach="zero_and_freeze", backtest_included_stop=True)
+
+    # absent → rejected
+    assert any("deflated_sharpe" in p for p in StrategyRecord(**base).validate())
+
+    # present but below the bar → rejected, and the message must name n_trials,
+    # because a DSR without its trial count is uninterpretable.
+    low = StrategyRecord(**base, deflated_sharpe=0.62, n_trials=250).validate()
+    assert any("deflated_sharpe=0.620" in p and "n_trials=250" in p for p in low)
+
+    # PBO above 0.5 → rejected even with a good DSR: CSCV saying the in-sample
+    # winner more likely than not underperforms OOS is disqualifying on its own.
+    bad_pbo = StrategyRecord(**base, deflated_sharpe=0.99, n_trials=10, pbo=0.71).validate()
+    assert any("pbo=0.71" in p for p in bad_pbo)
+
+    # and the passing combination (executability fields supplied — see S-105)
+    assert not StrategyRecord(**base, deflated_sharpe=0.96, n_trials=30, pbo=0.30,
+                              median_holding_days=30.0, signal_changes_per_yr=12.0,
+                              turnover_cost_pct_yr=1.2, net_effect_pct_yr=2.9).validate()
+
+
+def test_executability_floor_is_enforced():
+    """S-105. We return-tested the CIS tiers three times (S-101/102/103) before
+    running the one GROUP BY that settled it: STRONG OUTPERFORM has a MEDIAN
+    HOLDING PERIOD OF 2 DAYS and the average asset switches signal 45.8x/yr —
+    4.6 %/yr of turnover cost against a largest-ever effect near 3 %/yr at |t|<2.
+
+    Persistence is therefore an ADMISSION criterion, not a performance attribute:
+    if it cannot be held long enough to pay for the trade, the return test was
+    never going to matter. This test makes that ordering non-optional."""
+    base = dict(id="x", title="x", doc_source="test", verdict=Verdict.SHIP,
+                pit_clean=True, cost_feasible_at_5bps=True, forward_committed=True,
+                base_rate="cause", oos_survival=True, paper_trade_days=90,
+                regime_reported=True, max_dd_stop=-0.15,
+                capital_action_on_breach="zero_and_freeze", backtest_included_stop=True,
+                deflated_sharpe=0.97, n_trials=40, pbo=0.2)
+
+    # absent → rejected, and the message must carry the number that taught us
+    assert any("median_holding_days" in p for p in StrategyRecord(**base).validate())
+
+    # the actual CIS tier: 2-day median → rejected as sampling noise
+    flicker = StrategyRecord(**base, median_holding_days=2.0, signal_changes_per_yr=45.8,
+                             turnover_cost_pct_yr=4.6, net_effect_pct_yr=-1.6).validate()
+    assert any("median_holding_days=2.0" in p for p in flicker)
+
+    # persistent enough to hold, but turnover still eats it → rejected.
+    # This is the case that a holding-period check ALONE would wave through.
+    eaten = StrategyRecord(**base, median_holding_days=30.0, signal_changes_per_yr=12.0,
+                           turnover_cost_pct_yr=3.1, net_effect_pct_yr=-0.4).validate()
+    assert any("net_effect_pct_yr=-0.40" in p for p in eaten)
+    assert not any("median_holding_days=" in p for p in eaten), \
+        "holding period was fine here; only the net effect should be flagged"
+
+    # gross effect reported but not net → rejected: gross is not what the fund earns
+    gross_only = StrategyRecord(**base, median_holding_days=30.0,
+                                turnover_cost_pct_yr=1.0).validate()
+    assert any("net_effect_pct_yr missing" in p for p in gross_only)
+
+    # and the passing combination: held long enough, and the edge survives the cost
+    assert not StrategyRecord(**base, median_holding_days=30.0, signal_changes_per_yr=12.0,
+                              turnover_cost_pct_yr=1.2, net_effect_pct_yr=2.9).validate()
 
 
 def test_aggregate_only_reporting_is_incomplete():
@@ -161,10 +241,20 @@ _REPO = pathlib.Path(__file__).resolve().parent.parent
 # 必须声明 DECISION_INPUTS 的模块 —— 会产生仓位/暴露决策的产品路径模块。
 # 新增策略模块请加入本表;不加入而绕过检查 = 走捷径,正是本套测试要拦的行为。
 DECIDING_MODULES = [
-    "src/research/beta_core/beta_core_backtest.py",
+    # —— Core production paths (each carries a real DECISION_INPUTS declaration) ——
+    "src/research/beta_core/beta_core_backtest.py",                      # ① beta_capture core (declared in DEBT pending migration)
+    "src/research/validation/m_wo_a_beta_capture.py",                    # ① layer base — CW-P × 10bps (long-only hold of panel)
+    "src/research/beta_core/regime_override_enforcer.py",                # ⓠ REGIME OVERRIDE enforcer — production wrapper around m_wo_q.assign_band_hysteresis (PIT-safe, v1 caps)
+    "src/research/validation/m_wo_q_o1_stablecoin_gate.py",              # ⓠ REGIME OVERRIDE — stablecoin 4w Δ scaler on ① baseline
+    "src/research/validation/fusion_paper_regime_track.py",              # ⓠ paper NAV curve under enforcer (parallel paper-only, NOT live override)
+    "src/research/validation/r77_r76_as_fusion_contribution.py",         # R77 frozen-cell — 3-leg fusion (R46+R62+R76)
+    "src/research/validation/r97_cis_ls_v5.py",                          # R97 11yr candidate — CIS-L/S V5 dual-horizon
+    "src/research/validation/fusion_paper_tracking.py",                  # R66 monitoring — daily NAV accrual for R64 paper book + ⓠ 6th surface
 ]
 
 # 已知欠账:先登记再修,让"没接上"可见,而不是静默通过。清空本表是目标。
+# DEBT 条目必须都在 DECIDING_MODULES 里 —— 否则是孤儿,删除。refuted experimental
+# modules(未在 DECIDING_MODULES 中)不需要登记,因为它们不再被 gate 监督,已归档。
 DECISION_INPUTS_DEBT: dict[str, str] = {
     "src/research/beta_core/beta_core_backtest.py":
         "①层基座,纯价格 (200MA/vol/momentum)。欠:接入 cis_quality 入池 + risk_meter 相位,"
