@@ -37,7 +37,128 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    last run reported `✅ probe OK`; no run in >3 h ⇒ the probe itself is dead.
    OWNER: Jazz (keep the app open) / Seth (induce a failure to prove it fires)
 
-3. **🟢 VDB decision chain COMPLETE 2026-08-06 — and its first answer is unflattering.**
+3. **🔴 The VDB's durable layer is not finished — and one gap was silently losing research.**
+   *(merged from two entries: "tables are empty" and "the graveyard was in a cache" are the same
+   problem seen from the data side and the mechanism side.)*
+
+   **(a) A table that was never created.** `scripts/supabase_strategy_records.sql`, written
+   2026-07-26 specifically to move the strategy record library off a 24 h-TTL Redis key, **was
+   never applied.** `_pg_upsert()` POSTed to a nonexistent table, caught the exception, logged one
+   WARNING, returned False, and `upsert_record()` fell back to Redis with `_TTL = 86_400`.
+   CLAUDE.md calls the graveyard the asset; the asset sat in a cache that expires daily, for 12
+   days. **It survived because the warning fired on EVERY write — an always-on warning carries no
+   information.** Migration now applied (RLS on, anon revoked); `/health` gained
+   `data_layer.strategy_library`; `tests/test_strategy_durability.py` 4/4 in preflight. Kept OUT of
+   `degraded` on purpose: losing durable research does not make the API unhealthy, and conflating
+   them would either 503 a healthy API or bury data loss under a green tick.
+   **Backfill still pending** (service_role, blocked by risk #1) ⇒ records remain TTL-only today.
+   **Task #20 "VDB 落库" was logged COMPLETE but only the asset half landed** — `asset_embeddings`
+   72 rows, strategy side absent. A half-migration recorded as done is how the next agent stops looking.
+
+   **(b) Tables that exist but are empty.** `asset_embeddings_history` (risk #1) ·
+   `risk_meter_history` 0 rows (M-WO-D2) · **`decisions` 0 rows / `entities` 1 row.**
+   ARCHITECTURE.md says the deepest object is the entity-and-decision, not the asset; that is where
+   the claim lands, and it is empty. **Either wire them or demote the claim — an empty table cannot
+   carry an ontological argument.** `signal_outcomes` also ends 2026-05-03, so the response surface
+   omits the last 3 months.
+   VERIFY: `select count(*) from strategy_records;` → 0 ⇒ backfill pending ·
+   `curl -s $BASE/health | jq .data_layer.strategy_library.degraded` → true ⇒ writes not durable ·
+   `select count(*) from decisions;` → 0 ⇒ ontology claim still unbacked
+   OWNER: Jazz (service_role → risk #1; judgement call on the ontology) · Seth (backfill, extend
+   signal_outcomes) · Minimax-A (M-WO-D2)
+
+4. **🔴 S-103: no cross-sectional tier signal survives neutralisation — and the benchmark
+   itself is wrong** (2026-08-07). `neutralize()` existed as prose in 71 files and 0 defs;
+   implemented it, then ran it on the full panel (7,044 rows, 366 days, per-day cross-sectional
+   `a_ret ~ 1 + beta_pit`, `max |daily mean resid| = 0.0`). **All five tiers collapse: max |t| =
+   1.54, and that is the day-weighted upper bound** (event counting per Lesson #81 shrinks it
+   further). β by tier is monotone 2.37→1.83→1.48→1.22→0.15 — **the CIS tier ordering is
+   substantially a beta sort.**
+   **The dominant term is not beta, it is the benchmark.** `bench` = **BTC** on 7,706/7,743 rows,
+   and BTC beat the panel by **+2.16pp, t=3.96, on 67 % of days**. NEUTRAL's headline −6.63 %
+   (t=−8.68) decomposes to **−5.66 wrong-benchmark / −0.70 beta / −0.27 residual (t=−0.58)**.
+   CLAUDE.md says the benchmark is "hold the panel, NEVER 0"; we used a third thing, and it was
+   the best-performing asset in the window.
+   **Blast radius is not one finding — every "outperform/underperform" conclusion drawn against
+   the BTC benchmark carries the same systematic offset.** That is the P0 re-check surface.
+   **Lesson #83: neutralisation is not a pre-publication formality, it is a unit conversion done
+   BEFORE reading the number.** An un-neutralised t is not uncorrected evidence — it is not
+   evidence. R62 found `a_ret − b_ret` was leveraged beta; S-103 is the same subtraction one layer
+   up, committed by someone who had already read R62. Also: **UNDERWEIGHT's mild +0.59 % is
+   +8.67 and −9.03 cancelling** — a small number produced by large cancellation is more dangerous
+   than a large one.
+   **S-105 closed the re-benchmark and the answer is bigger than the benchmark.** Re-ran everything
+   against hold-the-panel: the three "hugely significant" t-stats vanish (−12.42→−0.65, −7.47→−0.79,
+   −4.09→**+0.76, sign flipped**). **A wrong benchmark does not dilute evidence, it manufactures
+   significance with the wrong sign.** Then event counting + a control parameterisation: all five
+   tiers **flip sign** between mean-daily and total-episode excess — but total-episode is
+   *disqualified*, not co-equal, because `corr(episode length, total) = 0.83`; it measures duration,
+   not return. **Doing a control means deciding which statistic is contaminated, not printing both.**
+   **The real finding is that the signal cannot be held at all:** STRONG OUTPERFORM has a **2-day
+   median episode**, 11 of 30 episodes last ONE day, 67 % end within 3 days, and the average asset
+   switches signal **45.8×/yr**. At our only cost model (flat 10 bps) that is **4.6 %/yr of turnover
+   against a largest-ever tier effect near 3 %/yr at |t|<2** — **the cost of trading the signal
+   exceeds anything the signal has ever shown.** Also retracts S-101's reading: its
+   `OUTPERFORM t=−6.88` was event-counted but BTC-benchmarked; vs panel it is +0.76.
+   **Lesson #85: measure persistence and turnover cost BEFORE returns.** We ran three rounds of
+   return tests while `median_days = 2` sat one GROUP BY away. Ask "can this be held?" before "does
+   holding it pay?" — now enforced (`median_holding_days ≥ 5`, `net_effect_pct_yr > 0` on SHIP).
+   VERIFY: `python3 tests/test_neutralize.py` → 5/5 · `python3 tests/test_strategy_discipline.py`
+   → 13/13 · re-run the S-103/S-105 SQL in the ledger
+   OWNER: Seth — **①層 + vol target is the only live main line**; next is persistence-stratified
+   testing (if long episodes DO carry edge, the product is "only trade long episodes").
+
+5. **🟡 MCP on deprecated HTTP+SSE transport** — spec `2026-07-28` retires protocol-level sessions;
+   legacy SSE has a 12-month offramp. Same root shape as the P0: stateful, unbounded connections.
+   VERIFY: `grep -c 'mcp/sse' src/mcp/*.py` → >0 ⇒ still on the deprecated transport
+   OWNER: Seth (migration assessment not started)
+
+6. **🔴 `ohlcv_daily` multi-source duplicates — impact on past results not yet assessed.**
+   48,582 duplicate (symbol, trade_date) pairs across 57 symbols, 2017→2026 (~21 % of 229,916
+   rows). Not a schema bug: the unique key is `(symbol, trade_date, source)`, so multiple sources
+   per day is by design. The bug is that every consumer must pick one, and forgetting is invisible
+   — duplicated trading days, volume columns ~62,000× apart (CoinGecko USD notional vs Binance base
+   units), and same-day closes differing by up to 5 % (ETH 4.8 %, SOL 5.0 %). Fixed forward with
+   the `ohlcv_daily_canonical` view (229,916 → 181,334 rows, 0 remaining duplicates, deterministic
+   precedence: native venue > aggregator, paid > free). **Lesson #76: any table permitting multiple
+   rows per entity must ship a deterministic one-row-per-entity view, or the choice of source is
+   silently delegated to every reader.**
+   **Backward impact NOT yet assessed and must not be assumed either way.** S-83→S-91 used the
+   local `ohlcv_11yr.db` (direct Binance) and is probably unaffected; `asset_edge_moments`,
+   `signal_outcomes` β-adjustment and `_betas_in_thread` each need checking against the view.
+   VERIFY: `select count(*) from (select symbol,trade_date from ohlcv_daily group by 1,2 having count(*)>1) x;`
+   → non-zero is expected and fine; what matters is that no consumer reads the base table
+   OWNER: Seth (audit consumers, then re-run affected features off the view)
+
+7. **🟡 `/api/v1/cis/universe` was not slow — it had not completed a build in 56 min. Fixed in
+   code 2026-08-07 (S-104), UNVERIFIED IN PROD.** The 2026-07-31 timing paid off: `railway_t2_ms`
+   = 16,476 of 17,358 total. Three live calls returned `stale:true` with the payload timestamp
+   frozen at `01:03:51Z`, `data_age_s` 3,353 — every 30 s the cache expired, one request paid
+   10–14 s, the build blew its 12 s budget, and the same stale payload was re-served. **Fresh Mac
+   T1 scores arrived every ~3 min and reached nobody.** Two defects, both rules this repo had
+   already written one layer up: (a) the T2 `asyncio.gather` had **no per-branch timeout**, so the
+   caller's budget cancelled the whole fan-out and **discarded the nine branches that had already
+   succeeded** — a 24 h-cadence decoration branch (`cg_dev`: 25 coins × Semaphore(4) × 15 s) could
+   withhold a price; (b) `get_cg_developer_data` cached successes for 24 h and wrote **nothing** on
+   failure, so a down provider was re-attempted in full every build — **a TTL that only caches
+   success is an amplifier, not a guard.** Fixed: per-branch budgets (core 8 s / decoration 3 s)
+   with the build completing on partial results, `degraded_branches` + `t2_branches` timings on
+   `/health`, negative caching at 600 s. `tests/test_t2_fanout_bounds.py` 7/7, wired into preflight.
+   **Still open because none of it has run in production, and because the attribution to `cg_dev`
+   is inference (structure + arithmetic), not measurement** — the new per-branch timing is what
+   settles it. Not done: T2 still runs inside the request path, and 24 h data still runs inside
+   the build (fix-ladder steps 3 and 4).
+   VERIFY: `curl -s $BASE/health | jq .data_layer.last_universe_build.t2_branches` → read
+   `slowest_branch` + `degraded_branches` · then `curl -s $BASE/api/v1/cis/universe | jq
+   '{stale,timestamp}'` twice, 35 s apart → **`timestamp` MUST advance**; if it does not, the
+   build still never completes and the fix failed.
+   OWNER: Seth (read the attribution after deploy, then decide on ladder steps 3–4)
+
+---
+
+## LANDED — kept for the lessons, not for the status
+
+**🟢 VDB decision chain COMPLETE 2026-08-06 — and its first answer is unflattering.**
    `market_state_vectors` 582 days · `similar_market_states()` · `strategy_response`
    (22 sufficient / 2 sparse / **16 `none`**). Chain now runs end to end: environment → similar
    history → who survived there → allocation. First real query, today =
@@ -52,11 +173,7 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    `signal_outcomes` ends 2026-05-03 while vectors run to 08-05, so **the last 3 months are not in
    it**; cluster thresholds are fixed constants with no sensitivity analysis. **A queryable
    capability, not a validated conclusion.**
-   Still open: `asset_embeddings_history` backfill (needs service_role, blocked by risk #1);
-   `risk_meter_history` 0 rows.
-   VERIFY: `select sample_grade, count(*) from strategy_response group by 1;` → any grade missing
-   ⇒ recompute; `select max(d) from signal_outcomes;` → far behind vectors ⇒ stale response surface
-   OWNER: Seth (extend signal_outcomes to present) · Minimax-A (M-WO-D2)
+   *(Residual open items promoted to OPEN RISK #3.)*
 
    **Also live from this pass — Lesson #78: dedup and spread-preservation are two jobs, one view
    cannot do both.** `ohlcv_daily_canonical` (one row/day, for backtests) now sits alongside
@@ -93,46 +210,9 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    signal, being top-ranked does not. Root cause found: **absolute tier thresholds applied
    to a distribution whose daily median swings 23→75 (sd 12.4)** — so the label tracks the
    market's score level, not the asset's relative standing. `cis_scores.percentile` exists
-   and is all NULL. Robust across both parameterisations: **near-median underperforms**
-   (t=−2.91 / −1.96) — an EXCLUSION signal, which for a FoF is a real product and is far
-   better evidenced than any selection claim.
-
-4. **🟡 MEMORY.md is 7.6 KB against its own 4 KB rule** — the one file guaranteed to be read cold.
-   Past a few KB it stops being an index and becomes another skimmed document.
-   VERIFY: `wc -c MEMORY.md` → expect ≤4096
-   OWNER: Seth
-
-5. **🟡 MCP on deprecated HTTP+SSE transport** — spec `2026-07-28` retires protocol-level sessions;
-   legacy SSE has a 12-month offramp. Same root shape as the P0: stateful, unbounded connections.
-   VERIFY: `grep -c 'mcp/sse' src/mcp/*.py` → >0 ⇒ still on the deprecated transport
-   OWNER: Seth (migration assessment not started)
-
-6. **🔴 `ohlcv_daily` multi-source duplicates — impact on past results not yet assessed.**
-   48,582 duplicate (symbol, trade_date) pairs across 57 symbols, 2017→2026 (~21 % of 229,916
-   rows). Not a schema bug: the unique key is `(symbol, trade_date, source)`, so multiple sources
-   per day is by design. The bug is that every consumer must pick one, and forgetting is invisible
-   — duplicated trading days, volume columns ~62,000× apart (CoinGecko USD notional vs Binance base
-   units), and same-day closes differing by up to 5 % (ETH 4.8 %, SOL 5.0 %). Fixed forward with
-   the `ohlcv_daily_canonical` view (229,916 → 181,334 rows, 0 remaining duplicates, deterministic
-   precedence: native venue > aggregator, paid > free). **Lesson #76: any table permitting multiple
-   rows per entity must ship a deterministic one-row-per-entity view, or the choice of source is
-   silently delegated to every reader.**
-   **Backward impact NOT yet assessed and must not be assumed either way.** S-83→S-91 used the
-   local `ohlcv_11yr.db` (direct Binance) and is probably unaffected; `asset_edge_moments`,
-   `signal_outcomes` β-adjustment and `_betas_in_thread` each need checking against the view.
-   VERIFY: `select count(*) from (select symbol,trade_date from ohlcv_daily group by 1,2 having count(*)>1) x;`
-   → non-zero is expected and fine; what matters is that no consumer reads the base table
-   OWNER: Seth (audit consumers, then re-run affected features off the view)
-
-7. **🟡 `/api/v1/cis/universe` hits its 12 s build budget, reproducibly** — 12,602 ms then
-   13,006 ms, both on the first call after an idle gap; back-to-back calls are 0.45 s. Degrades to
-   flagged stale (correct) but the user-visible latency is real. Cause NOT yet attributed: the
-   72-row HNSW upsert measured 48 ms and is ruled out; push contention unproven. `_build_cis_universe`
-   runs the external-provider-heavy T2 calculation on **every** rebuild even when T1 is fresh —
-   prime suspect, recorded rather than acted on. Build-phase timing now lands on `/health`.
-   **Do not tune the budget or the index before the timing gives an attribution.**
-   VERIFY: `curl -s $BASE/health | jq .data_layer.last_universe_build` → read `slowest`
-   OWNER: Seth (after deploy)
+   and is all NULL. ~~Robust across both parameterisations: **near-median underperforms**
+   (t=−2.91 / −1.96) — an EXCLUSION signal, which for a FoF is a real product.~~
+   🔴 **RETRACTED by S-103 the next day, see risk #4.**
 
 ---
 
@@ -141,7 +221,18 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-06 — **S-95: the T2 universe fallback was silently dead.** Build-phase
+**Last updated:** 2026-08-07 — **S-105: the re-benchmark closed, and the signal turned out to be unholdable.** Against hold-the-panel the three "hugely significant" t-stats vanish and one FLIPS SIGN (−4.09 → +0.76): a wrong benchmark does not dilute evidence, it manufactures significance with the wrong sign. Event counting plus a control then showed all five tiers flip between mean-daily and total-episode excess — total-episode being disqualified, not co-equal (`corr(duration, total)=0.83`). The finding underneath: **STRONG OUTPERFORM has a 2-day median episode, 11 of 30 last ONE day, and assets switch signal 45.8×/yr = 4.6 %/yr of turnover against a ~3 %/yr effect.** The cost of trading the signal exceeds anything it has shown. Lesson #85 (now enforced in the gate): measure persistence and cost BEFORE returns. Separately, the strategy record library was found sitting in a 24 h-TTL Redis key for 12 days — its migration was written 2026-07-26 and never applied — now fixed, observable on `/health`, backfill pending. Earlier same day: **S-103: the multiple-testing floor and `neutralize()` both landed,
+and the second one refuted the main line I had written the day before.** DSR + PBO are now gate
+conditions (`test_strategy_discipline.py` 12/12; SHIP needs `deflated_sharpe ≥ 0.95`, `pbo ≤ 0.5`,
+`n_trials` — **0 of 8 existing strategies carry one**). Then `neutralize()`, which had existed as
+prose in 71 files and 0 defs, was run on the full panel: **all five signal tiers collapse to
+|t| < 2**, β by tier is monotone 2.37→0.15 (**the tier ordering is substantially a beta sort**),
+and the dominant term is not beta but **the benchmark** — `bench` = BTC on 7,706/7,743 rows, and
+BTC beat the panel by +2.16pp, t=3.96. The "near-median underperforms / build an exclusion product"
+recommendation is **withdrawn**: 85 % of it was the benchmark. **①層 + vol target is now the only
+live main line.** Also this pass: OPEN RISKS converged 8→7 by actually fixing the MEMORY.md
+overrun, and the cap was re-expressed in characters — bytes were measuring encoding, not
+readability. Prior entry: **S-95: the T2 universe fallback was silently dead.** Build-phase
 timing on `/health` (added 07-31 precisely because three hypotheses had failed to explain a
 reproducible 12 s overrun) reported it on first deploy: `railway_error: name 'market_cap' is not
 defined`, 5,207 ms burned per rebuild. `calculate_cis_universe()` referenced a local belonging to a

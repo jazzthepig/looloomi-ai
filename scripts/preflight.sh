@@ -25,6 +25,14 @@ python3 -m tests.test_strategy_discipline
 #         fast, RECOVERS after cooldown, 4xx doesn't trip it, health reflects reality.
 python3 -m tests.test_supabase_breaker
 python3 -m tests.test_cis_universe_lock
+# 3a-bis-2. T2 fan-out bounds (2026-08-07, S-104). The lock test above bounds the
+#           CALLER; this bounds the CALLEE. `/cis/universe` returned 200 for 56 min
+#           while serving a payload frozen at 01:03 — the build never completed
+#           because one 24h-cadence decoration branch (cg_dev: 25 coins, sem 4,
+#           15s each) overran the budget and cancelled the nine branches that had
+#           already succeeded. Guards: per-branch timeout, degradation reported not
+#           swallowed, failures negative-cached so a down provider costs once.
+python3 -m tests.test_t2_fanout_bounds
 # 3a-ter. cold-start contract — the amnesia path (docs/AMNESIA_PROTOCOL.md). Every agent starts
 #         every session at zero; a lesson that lives only in a 5,672-line ledger changes nothing.
 python3 -m tests.test_cold_start_contract
@@ -32,6 +40,21 @@ python3 -m tests.test_cold_start_contract
 #            invisible to py_compile AND to production when the caller logs a warning. That
 #            combination silently killed the T2 universe fallback (2026-08-06).
 python3 -m tests.test_no_undefined_names
+# 3a-quinquies. neutralisation (2026-08-07, S-103). `neutralize()` was cited in 71
+#               files and defined in none, so no claim of alpha had ever been
+#               separated from exposure. Guards both directions: pure beta must
+#               neutralise to zero, and real alpha must survive — a neutraliser
+#               that strips everything would refute every strategy including a
+#               working one.
+python3 -m tests.test_neutralize
+# 3a-sexies. strategy-library durability (2026-08-07, S-105). The record library —
+#            the graveyard CLAUDE.md calls the asset — spent 12 days in a 24h-TTL
+#            Redis key because its Postgres migration (written 2026-07-26) was
+#            never applied, so every write hit the fallback and logged a warning
+#            that fired every time and therefore carried no information.
+#            Guards: the fallback is COUNTED not just logged, and one failure is
+#            already degraded — there is no acceptable rate of losing research.
+python3 -m tests.test_strategy_durability
 # 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
 #            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
 #            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT
@@ -53,6 +76,14 @@ python3 -m tests.test_regime_override_enforcer
 #              enforcer). Tests pure backtest/aggregation logic; live paper runner
 #              is wired into daily_runner.py post-validation (60d forward paper).
 python3 -m tests.test_fusion_paper_regime_track
+# 3a-octies. build_l1_observations.py smoke (2026-08-07, Lesson #72 follow-up): the
+#             script's --diagnose probe verifies the live Supabase key against the
+#             server (the 2026-08-02 forged-key class). It cannot run inside the
+#             offline gate; this test pins the script shape (imports, constants,
+#             resolve_panel_source('none'), compute_panel_series, diagnose()
+#             contract) so a structural regression can't reach Railway. The actual
+#             network probe belongs in the scheduled cron path.
+python3 -m tests.test_build_l1_observations_smoke
 # 3b. contract schema echo — the drift class preflight previously couldn't see (Mac push schema
 #     changed, Railway didn't follow). Prints the canonical SCHEMA_VERSION so it's in every log,
 #     and fails loudly if the contract module stops importing.
