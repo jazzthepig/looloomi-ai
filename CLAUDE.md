@@ -9,7 +9,7 @@
 | Question | Read | Write discipline |
 |---|---|---|
 | What's true right now / in flight | `PROJECT_STATE.md` | update same turn work lands; header last |
-| Long-term facts index | `MEMORY.md` | ≤4KB, one line per fact; evict stale |
+| Long-term facts index | `MEMORY.md` | **≤3,400 CHARACTERS** (not bytes — the file is bilingual and CJK costs 3 B/char; reading time scales with chars). One line per fact; evict stale; **if a test already enforces it, the test is the memory** |
 | Experiment truth (R/S/M-numbers) | `REFUTATION_LEDGER.md` | APPEND-ONLY at EOF; claim heading before body |
 | Cross-lane coordination | `MINIMAX_SYNC.md` (gitignored) | append §sections; syncs Mac-side, not via git |
 | Strategy truth / frozen cells | `STRATEGY_PLAYBOOK.md` | |

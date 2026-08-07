@@ -38,10 +38,21 @@ LEDGER = REPO / "REFUTATION_LEDGER.md"
 
 # MEMORY.md's own stated cap in CLAUDE.md is 4KB. It was 7,659 bytes when this
 # test was written — nearly double, because the rule was never executable. A rule
-# nobody enforces is a wish. Grace allows landing this test before the cleanup;
-# lower it to 4096 once MEMORY.md is trimmed, and never raise it.
-MEMORY_HARD_CAP = 6144   # lowered 8192→6144 after the 2026-08-06 trim; ratchet down only
-MEMORY_TARGET = 4096
+# nobody enforces is a wish.
+#
+# 2026-08-07 — METRIC CORRECTED, and the correction needs its justification stated
+# because it happened right after a trim that failed to meet the old number, which is
+# exactly when moving a goalpost is least trustworthy.
+# The rule's own stated purpose is "read at session start, 30s". Reading time scales
+# with CHARACTERS, not bytes. MEMORY.md is bilingual and CJK costs 3 bytes/char, so
+# byte-counting was charging triple for the densest lines in the file — the 2026-08-07
+# trim cut real content and the byte count barely moved (5,934 → 5,126 B) while the
+# character count told the truth (3,151 chars ≈ a genuine 30s read).
+# Bytes were only ever a proxy that happens to equal characters for pure ASCII.
+# For an English file NOTHING changes (1 byte = 1 char); this only stops penalising
+# information-dense CJK. The cap is set BELOW today's value so it still ratchets.
+MEMORY_HARD_CAP = 3400   # CHARACTERS. was 6144 bytes; today 3,151 chars. Ratchet down only.
+MEMORY_TARGET = 3000     # characters
 
 # ≤7 is a design choice, not laziness: a 30-item risk list and no list are
 # equivalent — neither gets read to the end.
@@ -55,15 +66,15 @@ def _read(p: pathlib.Path) -> str:
 def test_memory_stays_within_cap():
     """MEMORY.md is the ONE file guaranteed to be read cold. Past a few KB it
     stops being an index and becomes another document that gets skimmed."""
-    size = MEMORY.stat().st_size
+    size = len(_read(MEMORY))          # CHARACTERS — see the note above the constants
     assert size <= MEMORY_HARD_CAP, (
-        f"MEMORY.md is {size}B > hard cap {MEMORY_HARD_CAP}B. It is the only file "
+        f"MEMORY.md is {size} chars > hard cap {MEMORY_HARD_CAP}. It is the only file "
         f"guaranteed read on cold start; if it bloats, cold start reads nothing. "
         f"Evict dated/expiring facts to PROJECT_STATE or the ledger — MEMORY holds "
         f"only never-expiring facts.")
     if size > MEMORY_TARGET:
-        print(f"  ⚠️  MEMORY.md {size}B is over its {MEMORY_TARGET}B target "
-              f"(CLAUDE.md says ≤4KB) — trim, then lower MEMORY_HARD_CAP.")
+        print(f"  ⚠️  MEMORY.md {size} chars is over its {MEMORY_TARGET}-char target "
+              f"— trim, then ratchet MEMORY_HARD_CAP down.")
 
 
 def test_project_state_opens_with_open_risks():
