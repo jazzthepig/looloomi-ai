@@ -155,6 +155,42 @@ class StrategyRecord:
     # A component without a stop rule cannot go to production: the platform's edge is risk
     # allocation, not any single pod. `backtest_included_stop` guards the self-deception of
     # adding the stop AFTER the curve was drawn — a stop changes the curve's shape.
+    # ── Multiple-testing floor (2026-08-06) ─────────────────────────────────
+    # deflated_sharpe_ratio() and pbo_cscv() have existed in
+    # src/research/validation/ for some time and are called by the factor
+    # factory, discovery and gauntlet harnesses — but NOT by this gate. So a
+    # record could be marked SHIP without any multiple-testing correction at
+    # all, which is precisely the hole that produced the R76–R94 graveyard:
+    # search enough specifications and one of them looks good.
+    #
+    # `n_trials` is the number that makes the correction honest, and it is the
+    # one people under-report. It must count EVERY specification tried on the
+    # way here — parameter grids, discarded variants, abandoned branches — not
+    # just the ones that got written up. An under-stated n_trials inflates DSR
+    # exactly the way it was designed to prevent.
+    deflated_sharpe: Optional[float] = None      # DSR ∈ [0,1]: P(true SR > 0) AFTER the N-trial correction
+    n_trials: Optional[int] = None               # specifications tried, INCLUDING discarded ones
+    pbo: Optional[float] = None                  # CSCV probability of backtest overfitting; lower is better
+
+    # ── Executability floor (2026-08-07, S-105) ─────────────────────────────
+    # We ran THREE rounds of return tests (S-101/102/103) on the CIS tiers before
+    # anyone ran the single GROUP BY that mattered: STRONG OUTPERFORM has a MEDIAN
+    # HOLDING PERIOD OF 2 DAYS, 11 of its 30 episodes last one day, and the average
+    # asset changes signal 45.8 times a year. At our only cost model (flat 10 bps)
+    # that is a 4.6 %/yr drag against a largest-ever measured tier effect of ~3 %/yr
+    # with |t| < 2. **The cost of trading the signal exceeds anything the signal has
+    # ever shown.**
+    #
+    # So: persistence is not a performance attribute, it is an ADMISSION criterion.
+    # A signal whose holding period is shorter than its cost-recovery period cannot
+    # be acted on regardless of how the return test comes out — which means running
+    # the return test first is wasted work at best and self-deception at worst.
+    # Ask "can this be held?" before "does holding it pay?".
+    median_holding_days: Optional[float] = None  # median episode length, event-counted (gap > 7d)
+    signal_changes_per_yr: Optional[float] = None    # per-asset switches/yr — the turnover driver
+    turnover_cost_pct_yr: Optional[float] = None     # modelled round-trip drag; flat bps is a FLOOR
+    net_effect_pct_yr: Optional[float] = None        # gross effect MINUS turnover_cost_pct_yr
+
     max_dd_stop: Optional[float] = None          # e.g. -0.15 → zero the pod, 30d freeze (§3 ladder)
     capital_action_on_breach: Optional[str] = None   # halve | quarter | zero_and_freeze | observe
     backtest_included_stop: Optional[bool] = None    # was the ladder applied DURING the backtest?
@@ -221,6 +257,49 @@ class StrategyRecord:
             if self.backtest_included_stop is not True:
                 problems.append("ship verdict but backtest_included_stop is not True "
                                 "(a stop added AFTER the curve is self-deception — it changes the shape)")
+            # Multiple-testing floor. The machinery existed for months and was
+            # never wired here, so "passes our gate" did not include "survives
+            # the search that found it". R76–R94 is what that costs.
+            if self.deflated_sharpe is None or self.n_trials is None:
+                problems.append(
+                    "ship verdict but no deflated_sharpe/n_trials "
+                    "(a Sharpe uncorrected for the number of specifications tried is not evidence; "
+                    "use research.validation.deflated_sharpe, and count EVERY trial including "
+                    "discarded ones — under-reporting n_trials inflates the very number it corrects)")
+            elif self.deflated_sharpe < 0.95:
+                problems.append(
+                    f"ship verdict but deflated_sharpe={self.deflated_sharpe:.3f} < 0.95 over "
+                    f"n_trials={self.n_trials} (after correcting for the search, the probability "
+                    f"that true Sharpe > 0 is below the bar)")
+            if self.pbo is not None and self.pbo > 0.5:
+                problems.append(
+                    f"ship verdict but pbo={self.pbo:.2f} > 0.50 (CSCV says the in-sample winner "
+                    f"is more likely than not to underperform out-of-sample)")
+
+            # Executability floor (S-105). Checked LAST in the code, but it is the
+            # question that should be asked FIRST in the research: if the thing
+            # cannot be held long enough to pay for the trade, the return test
+            # never mattered.
+            if self.median_holding_days is None or self.turnover_cost_pct_yr is None:
+                problems.append(
+                    "ship verdict but no median_holding_days/turnover_cost_pct_yr "
+                    "(S-105: the CIS tiers were return-tested three times before anyone "
+                    "measured that STRONG OUTPERFORM has a 2-day median holding period and "
+                    "45.8 signal changes/yr — a 4.6 %/yr cost against a ~3 %/yr effect)")
+            else:
+                if self.median_holding_days < 5:
+                    problems.append(
+                        f"ship verdict but median_holding_days={self.median_holding_days:.1f} < 5 "
+                        f"(a signal that flickers faster than it can be traded is sampling noise, "
+                        f"not an allocation signal)")
+                if self.net_effect_pct_yr is None:
+                    problems.append(
+                        "ship verdict but net_effect_pct_yr missing — report the effect NET of "
+                        "turnover, since gross effect is not what the fund earns")
+                elif self.net_effect_pct_yr <= 0:
+                    problems.append(
+                        f"ship verdict but net_effect_pct_yr={self.net_effect_pct_yr:.2f} ≤ 0 "
+                        f"(turnover_cost_pct_yr={self.turnover_cost_pct_yr:.2f} eats the whole edge)")
         if self.verdict == Verdict.REFUTE and self.pit_clean and self.cost_feasible_at_5bps:
             problems.append("refute verdict but all validity flags True — contradiction")
         return problems
