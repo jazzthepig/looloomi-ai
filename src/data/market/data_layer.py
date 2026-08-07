@@ -95,6 +95,15 @@ def _cache_set(key: str, val):
     return val
 
 
+# ── Negative-cache TTL (2026-08-07, S-104) ───────────────────────────────────
+# How long a FAILED provider call is remembered. Deliberately short: long enough
+# that one universe build's worth of retries collapses to a single attempt, short
+# enough that recovery is picked up within minutes without a deploy. The failure
+# mode this exists for: a provider that is slow-failing, a cache that only stores
+# successes, and a caller that retries the full fan-out every build.
+_NEG_TTL_S = int(os.getenv("PROVIDER_NEGATIVE_CACHE_TTL_S", "600"))   # 10 min
+
+
 # ── Upstash Redis L2 Cache (shared across workers, survives deploys) ──────────
 _UPSTASH_URL   = os.getenv("UPSTASH_REDIS_REST_URL", "")
 _UPSTASH_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
@@ -2750,6 +2759,15 @@ async def get_eodhd_fundamentals(ticker: str, exchange: str = "US") -> dict:
     r_cached = await _redis_get(key)
     if r_cached:
         return _cache_set(key, r_cached)
+    # Negative cache — same reasoning as get_cg_developer_data (S-104): the 6 h
+    # TTL above stores successes only, so a failing EODHD was re-attempted for
+    # every ticker on every build at 12 s a call.
+    neg = _cache_get(f"{key}__neg", ttl=_NEG_TTL_S)
+    if neg is None:
+        neg = await _redis_get(f"{key}__neg")
+    if neg:
+        return {"ticker": ticker,
+                "error": f"negative-cached: {str(neg.get('error'))[:80]}"}
 
     client = _get_misc_client()
     try:
@@ -2814,6 +2832,9 @@ async def get_eodhd_fundamentals(ticker: str, exchange: str = "US") -> dict:
         await _redis_set(key, result, ttl=21600)
         return _cache_set(key, result)
     except Exception as e:
+        _neg = {"error": str(e)[:200], "at": int(time.time())}
+        _cache_set(f"{key}__neg", _neg)
+        await _redis_set(f"{key}__neg", _neg, ttl=_NEG_TTL_S)
         return {"error": str(e), "ticker": ticker}
 
 
@@ -3014,7 +3035,17 @@ async def get_cg_developer_data(coin_id: str) -> dict:
     These are direct signals for the F pillar (Fundamental) — active dev = healthier protocol.
 
     coin_id: CoinGecko ID, e.g. 'solana', 'ethereum', 'chainlink'
-    TTL: 24 hours (GitHub stats update once/day on CoinGecko)
+    TTL: 24 hours success / _NEG_TTL failure (see below)
+
+    NEGATIVE CACHING (2026-08-07, S-104): failures used to return an error dict
+    WITHOUT writing any cache entry, and the bulk caller discarded results
+    containing "error". So a 24 h TTL cached successes only. When CoinGecko Pro
+    was slow or rate-limiting, all 25 tech assets were re-attempted at 15 s each,
+    behind Semaphore(4) = 7 serial waves, on EVERY universe build — and the build
+    never finished, so nothing was ever cached, so the next build repeated it.
+    A TTL that only caches success is not protection against a provider that is
+    down; it is an amplifier. Failures are now cached briefly: pay once, not once
+    per build.
     """
     if not CG_API_KEY:
         return {"coin_id": coin_id, "available": False}
@@ -3026,6 +3057,14 @@ async def get_cg_developer_data(coin_id: str) -> dict:
     r_cached = await _redis_get(key)
     if r_cached:
         return _cache_set(key, r_cached)
+    # Short-TTL failure marker — checked separately so it can expire fast while
+    # the success entry keeps its 24 h life.
+    neg = _cache_get(f"{key}__neg", ttl=_NEG_TTL_S)
+    if neg is None:
+        neg = await _redis_get(f"{key}__neg")
+    if neg:
+        return {"coin_id": coin_id, "available": False,
+                "error": f"negative-cached: {str(neg.get('error'))[:80]}"}
 
     client = _get_cg_client()
     try:
@@ -3068,6 +3107,11 @@ async def get_cg_developer_data(coin_id: str) -> dict:
         await _redis_set(key, result, ttl=86400)
         return _cache_set(key, result)
     except Exception as e:
+        # Record the failure so the next build skips this coin instead of paying
+        # the full 15 s timeout again. See NEGATIVE CACHING note in the docstring.
+        _neg = {"error": str(e)[:200], "at": int(time.time())}
+        _cache_set(f"{key}__neg", _neg)
+        await _redis_set(f"{key}__neg", _neg, ttl=_NEG_TTL_S)
         return {"coin_id": coin_id, "available": False, "error": str(e)}
 
 

@@ -685,11 +685,19 @@ async def _build_cis_universe(force_source: str = None):
     # (CoinGecko / DeFiLlama / Alternative.me). It is therefore the prime suspect
     # for a build that overruns its budget — the timing below settles it instead
     # of leaving it to inference.
+    #
+    # 2026-08-07 (S-104): it WAS the suspect, and it was guilty — 16,476 of 17,358 ms.
+    # The fan-out inside calculate_cis_universe now bounds each branch separately
+    # and reports which ones degraded, so `railway_t2_ms` is no longer an opaque
+    # number: `t2_branches` below says WHICH provider spent it.
     railway_universe = []
     _t = time.time()
     try:
         result = await calculate_cis_universe()
         railway_universe = result.get("universe", [])
+        _branch = result.get("_branch_timing") or {}
+        if _branch:
+            _phase["t2_branches"] = _branch
     except Exception as e:
         _logger.warning(f"[CIS] Railway calculation error: {e}")
         _phase["railway_error"] = str(e)[:120]
