@@ -55,6 +55,13 @@ python3 -m tests.test_neutralize
 #            Guards: the fallback is COUNTED not just logged, and one failure is
 #            already degraded — there is no acceptable rate of losing research.
 python3 -m tests.test_strategy_durability
+# 3a-septies. L0 data architecture (2026-08-07). asset_class lived on OBSERVATION rows,
+#             where it actually recorded the SOURCE - 24 symbols carried conflicting
+#             labels, and source determines candle convention (>1% open gaps: Crypto
+#             31.3% vs DeFi 83.5%). So `where asset_class=...` was a source filter in a
+#             class filter's clothing, which is how S-106 read a splice between two bar
+#             conventions as market structure. Class now lives only in `assets`.
+python3 -m tests.test_data_architecture
 # 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
 #            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
 #            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT
