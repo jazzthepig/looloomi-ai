@@ -16,6 +16,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 import sys
 import os
+import time
 
 _logger = logging.getLogger(__name__)
 
@@ -2181,47 +2182,106 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     except ImportError:
         from data.market.data_layer import get_derivatives_map, get_trending_map
 
-    _raw = await asyncio.gather(
-        fetch_binance_prices(),
-        fetch_cg_markets(),
-        fetch_defillama_tvl(),
-        fetch_fear_greed(),
-        fetch_github_activity(),   # Phase 2B: dev activity (best-effort, 2h cache)
-        _fetch_cg_dev_bulk(),      # v4.2: CG Pro developer data for tech assets
-        _fetch_eodhd_bulk(),       # v4.2: EODHD fundamentals for US Equity
-        get_derivatives_map(),     # v4.3: funding rates + OI → O-pillar adjustment
-        get_trending_map(),        # v4.3: trending rank → S-pillar boost
-        _refresh_ic_multipliers(), # Simons: IC-based pillar weight feedback
+    # ── Per-branch bounds (2026-08-07, S-104) ────────────────────────────────
+    # The gather below was already concurrent, so the build cost is the SLOWEST
+    # branch, not the sum. But it had no per-branch timeout: the only bound was
+    # the caller's 12 s build budget in cis.py, and when that fired it cancelled
+    # the WHOLE gather — discarding the nine branches that had already returned
+    # successfully. Measured 2026-08-07: total 17,358 ms of which railway_t2 was
+    # 16,476 ms, and the merged payload had not advanced for 56 minutes. Every
+    # 30 s the response cache expired, one unlucky request paid 10–14 s, the
+    # build blew its budget, and the same stale payload was served again. T2 was
+    # not slow, it was never completing.
+    #
+    # Two rules, both already stated elsewhere in this codebase and both violated
+    # here because the boundary they were written for was one layer up:
+    #   1. decoration must never gate the payload   (cis.py: "enrichment moved
+    #      outside the lock" — same rule, never carried into T2's own fan-out)
+    #   2. a bound on the whole is not a bound on the parts — an all-or-nothing
+    #      build converts one slow dependency into zero fresh data
+    #
+    # So: each branch gets its own budget sized by how much the payload actually
+    # needs it, and a branch that overruns yields its default instead of killing
+    # the build. Budgets total well under the caller's 12 s because they run
+    # concurrently — the ceiling is max(), not sum().
+    _BRANCH_BUDGET_S = {
+        # core — the payload is wrong without these
+        "binance":     float(os.environ.get("CIS_T2_BUDGET_BINANCE_S",  "8")),
+        "cg_markets":  float(os.environ.get("CIS_T2_BUDGET_CGMKT_S",    "8")),
+        "defillama":   float(os.environ.get("CIS_T2_BUDGET_LLAMA_S",    "6")),
+        # decoration — the payload is merely less rich without these
+        "fng":         float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
+        "github":      float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
+        "cg_dev":      float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
+        "eodhd":       float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
+        "derivatives": float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
+        "trending":    float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
+        "ic_mult":     float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
+        "nma":         float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
+    }
+    _branch_ms: dict = {}
+    _branch_timeouts: list = []
+
+    async def _bounded(name: str, coro, default):
+        """Run one branch under its own budget. Overrun or failure yields the
+        default and is RECORDED — a branch that silently degrades to {} is how
+        a dead provider stays invisible (Lesson: a guard must observe the real
+        artifact). Timing is kept for /health so the next slow build is one
+        glance, not an investigation."""
+        _t = time.time()
+        try:
+            return await asyncio.wait_for(coro, timeout=_BRANCH_BUDGET_S.get(name, 5.0))
+        except asyncio.TimeoutError:
+            _branch_timeouts.append(name)
+            _logger.warning(f"[CIS·T2] branch '{name}' exceeded "
+                            f"{_BRANCH_BUDGET_S.get(name, 5.0)}s — using default, build continues")
+            return default
+        except Exception as e:
+            _branch_timeouts.append(f"{name}:err")
+            _logger.warning(f"[CIS·T2] data source '{name}' failed: {e}")
+            return default
+        finally:
+            _branch_ms[f"{name}_ms"] = int((time.time() - _t) * 1000)
+
+    _t_fanout = time.time()
+    (binance_prices, cg_markets, llama_tvl, fng, github_activity, cg_dev_data,
+     eodhd_data, _deriv_map, _trend_map, _ic_mult, _nma_map) = await asyncio.gather(
+        _bounded("binance",     fetch_binance_prices(),   {}),
+        _bounded("cg_markets",  fetch_cg_markets(),       []),
+        _bounded("defillama",   fetch_defillama_tvl(),    {}),
+        _bounded("fng",         fetch_fear_greed(),       {}),
+        # Phase 2B: dev activity (best-effort, 2h cache)
+        _bounded("github",      fetch_github_activity(),  {}),
+        # v4.2: CG Pro developer data for tech assets. 25 assets behind Semaphore(4)
+        # = 7 serial waves at 15 s per call — the prime suspect for the 16.5 s and
+        # the reason this branch is capped hardest. It is 24 h-cadence data; it has
+        # no business gating a live payload at all (see fix ladder step 4).
+        _bounded("cg_dev",      _fetch_cg_dev_bulk(),     {}),
+        # v4.2: EODHD fundamentals for US Equity
+        _bounded("eodhd",       _fetch_eodhd_bulk(),      {}),
+        # v4.3: funding rates + OI → O-pillar adjustment
+        _bounded("derivatives", get_derivatives_map(),    {}),
+        # v4.3: trending rank → S-pillar boost
+        _bounded("trending",    get_trending_map(),       {}),
+        # Simons: IC-based pillar weight feedback
+        _bounded("ic_mult",     _refresh_ic_multipliers(),
+                 {"F": 1.0, "M": 1.0, "O": 1.0, "S": 1.0, "A": 1.0}),
         # v4.x: NMA narrative signals for S-pillar injection (bulk fetch for all
         # crypto symbols). NOTE: this is a single bulk call — there is no per-asset
         # `is_tradfi` context here. A stray `if not is_tradfi else ...` referenced a
         # loop-local before assignment, raising UnboundLocalError on EVERY call and
         # silently killing the entire Railway T2 universe (blank leaderboard whenever
         # the Mac Mini cache lapsed). Fixed 2026-06-05.
-        _fetch_narrative_signals(),
-        return_exceptions=True,
+        _bounded("nma",         _fetch_narrative_signals(), {}),
     )
-    # Safe unpack — any failed coroutine returns its exception, not a crash
-    def _safe(val, default):
-        return default if isinstance(val, Exception) else val
-
-    binance_prices = _safe(_raw[0], {})
-    cg_markets     = _safe(_raw[1], [])
-    llama_tvl      = _safe(_raw[2], {})
-    fng            = _safe(_raw[3], {})
-    github_activity= _safe(_raw[4], {})
-    cg_dev_data    = _safe(_raw[5], {})
-    eodhd_data     = _safe(_raw[6], {})
-    _deriv_map     = _safe(_raw[7], {})
-    _trend_map     = _safe(_raw[8], {})
-    _ic_mult       = _safe(_raw[9], {"F": 1.0, "M": 1.0, "O": 1.0, "S": 1.0, "A": 1.0})
-
-    _nma_map       = _safe(_raw[10], {})   # v4.x: NMA narrative scores {symbol: nma_score}
-
-    for i, name in enumerate(["binance","cg_markets","defillama","fng","github",
-                               "cg_dev","eodhd","derivatives","trending","ic_mult","nma"]):
-        if isinstance(_raw[i], Exception):
-            _logger.warning(f"[CIS] data source '{name}' failed: {_raw[i]}")
+    _branch_ms["fanout_total_ms"] = int((time.time() - _t_fanout) * 1000)
+    if _branch_timeouts:
+        _branch_ms["degraded_branches"] = _branch_timeouts
+    if _branch_ms:
+        _slow = {k: v for k, v in _branch_ms.items()
+                 if k.endswith("_ms") and k != "fanout_total_ms"}
+        if _slow:
+            _branch_ms["slowest_branch"] = max(_slow, key=_slow.get)
 
     # Merge: Binance as primary (speed), CoinGecko enriches missing fields
     # Binance has: price, change_24h, volume, high/low
@@ -2722,6 +2782,11 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         "data_tier": 2,
         "macro": macro,
         "universe": universe,
+        # Per-branch fan-out timings + any branch that degraded to its default.
+        # Consumed by _build_cis_universe → /health. Collected on EVERY build,
+        # not just slow ones: a diagnostic that only exists after the incident
+        # is not a diagnostic (Lesson #70, 10.4 h outage).
+        "_branch_timing": _branch_ms,
     }
 
 

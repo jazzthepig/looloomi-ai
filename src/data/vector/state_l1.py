@@ -45,7 +45,7 @@ import logging
 import os
 import sqlite3
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
@@ -223,11 +223,11 @@ def write_observations(con: sqlite3.Connection,
 
 def record_build(con: sqlite3.Connection, start: str, end: str,
                  n_days: int, n_series: int) -> str:
-    build_id = f"l1_{datetime.utcnow().strftime('%Y%m%dT%H%M%S')}"
+    build_id = f"l1_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}"
     con.execute(
         "insert into l1_builds(build_id, built_at, start_date, end_date, n_days, n_series, coverage)"
         " values (?,?,?,?,?,?,?)",
-        (build_id, datetime.utcnow().isoformat(), start, end, n_days, n_series,
+        (build_id, datetime.now(timezone.utc).isoformat(), start, end, n_days, n_series,
          json.dumps(coverage_report())),
     )
     con.commit()
