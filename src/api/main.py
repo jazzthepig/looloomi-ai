@@ -1031,6 +1031,18 @@ def _health_with_data_layer() -> dict:
         build = last_universe_build()
     except Exception:
         build = {}
+    # Strategy-library durability (2026-08-07). The record library spent 12 days
+    # persisted only to a 24h-TTL Redis key because its Postgres table had never
+    # been created — every write took the fallback and logged a warning nobody
+    # read. Deliberately NOT folded into `degraded`: losing durable research does
+    # not make the API unhealthy, and conflating the two would either 503 a
+    # perfectly serving API or bury a real data-loss signal under a green check.
+    # It gets its own field so it can be alerted on separately.
+    try:
+        from src.data.vector.strategy_store import durability_state
+        strat = durability_state()
+    except Exception as e:
+        strat = {"error": str(e)}
     return {
         **_health_payload,
         "status": "degraded" if degraded else "healthy",
@@ -1039,6 +1051,7 @@ def _health_with_data_layer() -> dict:
                         else ("failing" if cb["consecutive_failures"] else "ok"),
             "breaker": cb,
             "last_universe_build": build,
+            "strategy_library": strat,
         },
     }
 

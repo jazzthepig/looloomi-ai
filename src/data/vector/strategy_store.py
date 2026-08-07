@@ -46,6 +46,37 @@ _EMBED_KEY     = "strategy:embeddings"
 _META_KEY      = "strategy:meta"
 _TTL           = 86_400  # 24h (Redis cache TTL; only embeddings + meta live here)
 
+# ── Durability observability (2026-08-07) ───────────────────────────────────
+# The strategy record library IS the graveyard, and CLAUDE.md calls the graveyard
+# the asset. It spent 12 days persisted only to a 24h-TTL Redis key because the
+# Postgres table its writer targeted had never been created, and the only signal
+# was a WARNING emitted on every write. Counting is what makes a degraded path
+# safe: a fallback nobody measures is an outage nobody has noticed yet.
+_DURABILITY: dict = {"consecutive": 0, "total": 0, "last_ok_ts": None,
+                     "last_fail_id": None, "last_fail_ts": None}
+
+
+def _record_durability_failure(record_id: str) -> None:
+    _DURABILITY["consecutive"] += 1
+    _DURABILITY["total"] += 1
+    _DURABILITY["last_fail_id"] = record_id
+    _DURABILITY["last_fail_ts"] = time.time()
+
+
+def durability_state() -> dict:
+    """Observable durability of the record library, for /health.
+
+    `degraded` is True the moment ANY write has failed to reach Postgres since
+    boot — not after a threshold. There is no acceptable rate of silently
+    losing research; one lost record is the failure, not a symptom of it.
+    """
+    d = dict(_DURABILITY)
+    d["degraded"] = d["consecutive"] > 0
+    d["pg_configured"] = bool(_sb_url_key()[0] and _sb_url_key()[1])
+    if d["last_ok_ts"]:
+        d["seconds_since_durable_write"] = round(time.time() - d["last_ok_ts"], 1)
+    return d
+
 
 # ============================================================================
 # Configuration
@@ -288,8 +319,21 @@ def upsert_record(record: StrategyRecord) -> bool:
     if not ok_pg:
         # If Postgres is down, fall back to legacy Redis-only path so
         # dev environments (no Supabase wiring) still function.
+        #
+        # 2026-08-07: this fallback hid a 12-day durability outage. The
+        # `strategy_records` table did not exist — its migration was written
+        # 2026-07-26 and never applied — so EVERY upsert took this branch,
+        # logged one WARNING, and left the research library sitting in a Redis
+        # key with a 24h TTL. Nothing read the warning, because a warning that
+        # fires on every single write is indistinguishable from background noise.
+        # A degraded path is only safe if something COUNTS how often it is taken.
+        _record_durability_failure(record.id)
         _logger.warning(f"[StrategyStore] PG upsert failed for {record.id}; "
-                        f"falling back to Redis-only legacy path")
+                        f"falling back to Redis-only legacy path "
+                        f"(consecutive durability failures: {_DURABILITY['consecutive']})")
+    else:
+        _DURABILITY["consecutive"] = 0
+        _DURABILITY["last_ok_ts"] = time.time()
 
     # Embedding cache (always rebuilt incrementally).
     embeddings = load_all_embeddings()
