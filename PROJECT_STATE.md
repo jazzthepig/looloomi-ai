@@ -105,8 +105,31 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    holding it pay?" — now enforced (`median_holding_days ≥ 5`, `net_effect_pct_yr > 0` on SHIP).
    VERIFY: `python3 tests/test_neutralize.py` → 5/5 · `python3 tests/test_strategy_discipline.py`
    → 13/13 · re-run the S-103/S-105 SQL in the ledger
-   OWNER: Seth — **①層 + vol target is the only live main line**; next is persistence-stratified
-   testing (if long episodes DO carry edge, the product is "only trade long episodes").
+   **S-106 settled WHY, and it reframes the product (Jazz's call, then measured).** Jazz: "90 % of
+   the move is overnight or instantaneous, so excess return *after* a signal is either
+   front-running or order-book market making — we were never a chase-the-CIS-score strategy, we're
+   style-vector prediction or momentum surfing." Measured on a new hourly panel:
+   **(1)** return is delivered in **0.8 % of days** — 41 crypto assets, 1213 days: full hold
+   −0.653 log, the best 10 days alone +2.009, everything else −2.66; miss 10 days and **39 of 41
+   assets go negative**. **(2)** on top-1 % days, **45.9 % of the move happens in US 13–16 UTC**
+   (16.7 % of hours, 2.75× concentration). **(3)** big days **cluster 3.8×** — P(another within 5d)
+   = 19.8 % vs 5.2 % if independent.
+   ⇒ **"score → chase" is mechanically impossible and needs no further return testing**: the score
+   refreshes every 30 min against a payoff delivered in a 4-hour window on 10 days a year.
+   ⇒ **Surfing IS supported**: clustering means STAYING IN captures what TIMING ENTRY cannot. That
+   is ①(hold) + ③(exposure timing), **not** ② tilt. **Position must already be on before 13:00 UTC.**
+   **Direction is NOT a session property** — all four session blocks are negative in this window and
+   `taker_buy_share` is flat 48.1–49.4 % across all 24 hours. The structure is in volume and
+   volatility, not in sign; trading a session by itself has no edge.
+   **Lesson #86: establish WHEN return is delivered before choosing WHEN to decide.** We fixed the
+   scoring cadence, the tier granularity and the evaluation horizon before ever running
+   `GROUP BY extract(hour)`. Decision frequency must be faster than the payoff window or the
+   strategy is arithmetically late — a cheaper and more fundamental test than any IC or Sharpe.
+   VERIFY: `select count(*) from ohlcv_hourly;` → expect 96,000 (10 assets × 9,600) ·
+   continuity: `ts - lag(ts) <> interval '1 hour'` count must be 0
+   OWNER: Seth — **①+③ (hold the panel, time the exposure) is the main line**; ② tilt is parked.
+   Next: split big days by whether CIS upgraded the asset BEFORE them — that is the direct test of
+   whether the style vector can *predict*, which is the only remaining job for the score.
 
 5. **🟡 MCP on deprecated HTTP+SSE transport** — spec `2026-07-28` retires protocol-level sessions;
    legacy SSE has a 12-month offramp. Same root shape as the P0: stateful, unbounded connections.
@@ -221,7 +244,103 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-07 — **S-105: the re-benchmark closed, and the signal turned out to be unholdable.** Against hold-the-panel the three "hugely significant" t-stats vanish and one FLIPS SIGN (−4.09 → +0.76): a wrong benchmark does not dilute evidence, it manufactures significance with the wrong sign. Event counting plus a control then showed all five tiers flip between mean-daily and total-episode excess — total-episode being disqualified, not co-equal (`corr(duration, total)=0.83`). The finding underneath: **STRONG OUTPERFORM has a 2-day median episode, 11 of 30 last ONE day, and assets switch signal 45.8×/yr = 4.6 %/yr of turnover against a ~3 %/yr effect.** The cost of trading the signal exceeds anything it has shown. Lesson #85 (now enforced in the gate): measure persistence and cost BEFORE returns. Separately, the strategy record library was found sitting in a 24 h-TTL Redis key for 12 days — its migration was written 2026-07-26 and never applied — now fixed, observable on `/health`, backfill pending. Earlier same day: **S-103: the multiple-testing floor and `neutralize()` both landed,
+**Last updated:** 2026-08-07 — **架构层 L0 landed: identity now precedes data.** Jazz stopped the
+data expansion — "先做架构,再补充数据源,现在很多细节都不对的" — and the details being wrong was
+measurable, not a feeling. Audit A1–A4: symbol coverage differs per table (ohlcv 65 / cis 76 /
+vectors 72, 1 orphan); **24 symbols carried MULTIPLE `asset_class` values**, because class was
+stored on the OBSERVATION row where it actually recorded the SOURCE; and source determines candle
+convention (>1 % open gaps: Crypto 31.3 % vs L1 73.7 %, L2 79.5 %, **DeFi 83.5 %**). So
+`where asset_class='Crypto'` was a SOURCE filter wearing a class filter's clothes — **that is the
+root cause of the S-106 artifact**, which spliced two bar conventions and read the seam as market
+structure. Fourth finding: no way to answer "who was in the panel on date D", so survivorship bias
+was present in every backtest AND unmeasurable.
+**Also Jazz: "我们是强筛选展示,但是我们跟踪要足够广"** — tracking and investing are different
+objects, and this is a statistical requirement rather than a preference: three separate analyses
+today died of sample size (N_eff 3.1 / S-108 n=20 / S-109 13 episodes) and **every one was computed
+on the investable set**. Hence three universes with PIT membership: **coverage** (statistics),
+**investable** (allocation), **display** (LPs).
+Shipped: `docs/DATA_ARCHITECTURE.md` (L0–L5 contract, 7 invariants, 6-step migration order),
+`scripts/supabase_l0_registry.sql` applied — `assets` / `asset_aliases` / `universe_membership`,
+76 assets with **24 class conflicts RECORDED rather than silently flattened**.
+**Verified: A1 0 · A2 0 · A4 answerable** (74 in coverage on 2024-06-15; **0 in investable on that
+date, which is the correct answer** — CIS scoring began 2025-05-03, and a non-zero result would mean
+we had backfilled an investment decision into a period where none existed).
+`tests/test_data_architecture.py` 4/4 in preflight, and the scanner was **proven to fire** on a
+synthetic offender before being trusted — it had just been narrowed from file-level to
+statement-level to kill five false positives, and a narrowed scanner that detects nothing passes
+for the wrong reason.
+**Data expansion is deliberately BLOCKED until migration steps 1–4 land** (`DATA_ARCHITECTURE` §4):
+pouring 4× the symbols into the old identity model would multiply A2/A3 by four.
+
+Earlier same day: **S-108: the distribution hypothesis, one fake finding caught, and
+the real bottleneck named.** Jazz described the actual mechanics — sell-side rates it highly, but big
+money accumulated first, needs a shakeout to buy bloody chips, marks it up in waves, and "出圈"
+(going mainstream) is when retail takes the bag. That is Wyckoff with the rating in the DISTRIBUTION
+phase, and it would explain S-102's U-shape: a high score is a LATE signal, not an early one.
+One link is directly measurable — `ohlcv_hourly` carries `trades` and `quote_volume`, so **average
+trade size is a proxy for WHO is trading** (few large = size, many small = retail). A variable about
+WHO, not about price, which is the S-107 anchor shape.
+**A fake finding was caught in flight and is recorded on purpose:** the first cut of
+`after +10 % markup × ATS collapsing` printed **−9.43 %, t = −13.35** — on **n = 2**. Deepening the
+hourly panel from 400 days to 2021-01 (96k → 470k rows) collapsed it to −1.41 %, t = −0.57, n = 20.
+**It looked exactly like a real finding; the only thing separating them was n.**
+**As a continuous predictor the variable is refuted:** r = 0.0113, t = 0.35 on 967 non-overlapping
+observations, and the S-102-style control on the LEVEL gives r = −0.0448 — larger in magnitude, opposite
+in sign, both noise. The tidy monotone bucket table (+1.92 / −0.06 / −1.41 after markup) was
+pattern-seeking: **a bucket ordering is not evidence unless a continuous relationship backs it.**
+**But that does not kill the mechanism — it was the wrong test.** Jazz described a RARE STATE
+SWITCH, not a continuous relationship, and a full-sample correlation is a category error for a rare
+event. The event-form test has n = 20. Status is UNTESTED, not refuted.
+**The bottleneck is named: breadth, not length.** Going from 400 days to 4.5 years still yields only
+20 non-overlapping setups, because the sample grows with the number of ASSETS, not with time — and
+"出圈" is most visible in small/mid caps while the hourly panel holds 10 large caps, the segment
+where the cycle is faintest. Same wall as `N_eff = 3.1`. **Action: extend hourly + ATS to dozens of
+small/mid-cap names.**
+**Lesson #88: decide whether a hypothesis is a continuous relationship or a rare event BEFORE
+choosing the test** — the wrong test type produces no evidence whichever way it comes out. Corollary:
+**every grouped result table must print n on the same row**; that is the only reason t = −13.35 was
+stopped rather than shipped.
+
+Earlier same day: **S-107: the anchor criterion, and our first persisted anchor.**
+Jazz: "a rating changes and then you slowly buy" cannot work in crypto or in traditional assets —
+that is the sell-side distribution model, and S-106 already measured that we cannot be the fastest.
+Turned that into a testable criterion: **a good anchor's payoff ACCRUES rather than JUMPS**, measured
+on the same concentration ruler, BEFORE spending anything on a return test.
+**funding carry: best 10 days = 14.9 % of total, 73.6 % of days positive. Price momentum: best 10
+days = 152 % of total (everything else is net negative), 50.0 % of days positive.**
+Audit finding that outlived the result: **until today the warehouse held NO anchor series at all** —
+no funding, flows, TVL or unlocks, all fetched live and never persisted. Every test we had ever run
+was price predicting price, which is a previously unwritten explanation for the R76–R94 graveyard.
+Built `funding_history` + `backfill_binance_funding()` (10 assets × 2,700).
+**But the tempting number is fake and is called out as such:** gross Sharpe 8.75 measures a PAYMENT
+STREAM, not the basis trade's P&L — spot-perp basis, margin/liquidation tail and two legs of
+execution are all absent from the measured series. Carry is smooth; the risk is in the tail you did
+not measure. Mean pairwise corr 0.707 ⇒ **N_eff = 1.36 across 10 assets**: ONE systematic factor
+(crowd leverage demand), not ten sleeves. So funding is **not** a standalone sleeve — its job is as a
+state variable for ③ exposure timing, which S-106 had just made the main line.
+**Lesson #87: a smooth return series is not a low-risk strategy — ask whether you are measuring a
+payment stream or a P&L.** When a number is good enough that it needs no argument, it is usually
+measuring the wrong object.
+
+Earlier same day: **S-106: the product was reframed, and the reframing is measured.**
+Jazz: we were never a chase-the-CIS-score strategy. Confirmed on a new hourly panel — return is
+delivered in **0.8 % of days**, **45.9 % of a top-1 % day's move lands in US 13-16 UTC**, and big
+days **cluster 3.8×**. So *score → chase* is mechanically impossible (30-min refresh against a
+4-hour payoff window), while *surfing* is supported: staying in captures what timing entry cannot.
+**①(hold the panel) + ③(time the exposure) is the main line; ② tilt is parked.** Direction is NOT a
+session property — all four blocks negative, taker-buy share flat 48-49 % across 24 h; the structure
+is in volume and volatility, not sign. Built `ohlcv_hourly` + `backfill_binance_hourly()`
+(10 assets × 9,600 bars, 0 gaps) to make this testable at all. **Lesson #86: establish WHEN return
+is delivered before choosing WHEN to decide.** Also caught and retracted my own first cut, which
+decomposed daily overnight-vs-intraday for 24/7 assets — crypto median gap is 0.00004, so that
+decomposition measured a candle-convention artifact, not market structure.
+Earlier same day: **S-105: the re-benchmark closed and the signal turned out to be unholdable.**
+Against hold-the-panel three "hugely significant" t-stats vanish and one FLIPS SIGN (−4.09 → +0.76).
+STRONG OUTPERFORM has a 2-day median episode and assets switch signal 45.8×/yr = 4.6 %/yr turnover
+against a ~3 %/yr effect. Lesson #85 now enforced in the gate. The strategy record library was also
+found sitting in a 24 h-TTL Redis key for 12 days — migration written 2026-07-26, never applied —
+now fixed and observable on /health, backfill pending.
+Earlier same day: **S-103: the multiple-testing floor and `neutralize()` both landed,
 and the second one refuted the main line I had written the day before.** DSR + PBO are now gate
 conditions (`test_strategy_discipline.py` 12/12; SHIP needs `deflated_sharpe ≥ 0.95`, `pbo ≤ 0.5`,
 `n_trials` — **0 of 8 existing strategies carry one**). Then `neutralize()`, which had existed as
