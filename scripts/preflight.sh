@@ -62,6 +62,15 @@ python3 -m tests.test_strategy_durability
 #             class filter's clothing, which is how S-106 read a splice between two bar
 #             conventions as market structure. Class now lives only in `assets`.
 python3 -m tests.test_data_architecture
+# 3a-octies-2. ① beta-core book (2026-08-07, oversight review). All five books accruing
+#              a forward record were long/short market-neutral - the ④ construction that
+#              produced the R76-R94 graveyard - while layer ①, the FoF core AND the
+#              benchmark for every other book, had ZERO forward days. Guards the product
+#              book's invariants: long only, exposure in [0,1.3], the vol scalar may
+#              de-lever freely but never lever past the ceiling, unmeasured inputs resolve
+#              to NEUTRAL rather than to large, and the benchmark leg is structural so
+#              excess is arithmetic rather than a benchmark chosen at analysis time.
+python3 -m tests.test_beta_core_book
 # 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
 #            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
 #            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT
