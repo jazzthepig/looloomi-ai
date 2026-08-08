@@ -7113,3 +7113,138 @@ S-114 我把它标为"假设等相关" —— **那个标注本身是错的**,�
 ### 复现
 `from src.research.validation.effective_breadth import breadth_report`;
 相关矩阵取自 `_xa2` 中间表(已 drop,SQL 见 S-114)。
+
+---
+
+## S-116 — ①层 book 的第一次 mark 暴露:③层在 **47.5% 的天数上是惰性的**,而且不说
+
+**日期** 2026-08-08 · **Seth** · **状态: 上线首日自查抓到的构造缺陷**
+
+### 起因
+建完 book、写完守卫、接完探针之后,**去看它有没有真的 mark**。
+结果:1 条记录,起始 2026-08-08,NAV 1.0,基准 1.0,24 持仓,**60 天到期 2026-10-07。时钟在跑。**
+但那行写着 `exposure_cap = 1.0, regime = 'NEUTRAL'` —— 于是顺手查了 regime 的历史分布。
+
+### 发现:我的映射用的是一套自己编的词表
+`cis_provider._CANONICAL_REGIMES` 恰好 7 个:
+`GOLDILOCKS · RISK_ON · EASING · NEUTRAL · TIGHTENING · RISK_OFF · STAGFLATION`
+
+**我的 `_exposure_cap()` 匹配的是 CRISIS / CAPITULATION / DELEVERAGING / CONTRACTION /
+BEAR / EUPHORIA / EXPANSION / BULL —— 一个都不在那个集合里。**
+
+| regime | 占比 | 旧映射结果 |
+|---|---|---|
+| RISK_OFF | 40.2% | ✓ 0.5 |
+| **EASING** | **30.1%** | ✗ 落 1.0 |
+| **TIGHTENING** | **13.9%** | ✗ 落 1.0 |
+| RISK_ON | 12.3% | ✓ 1.3 |
+| **STAGFLATION** | 1.4% | ✗ 落 1.0 |
+
+**7 个里只命中 2 个;按天数 47.5% 静默落到满仓。③层在近一半时间里不存在,而且没有任何迹象。**
+
+### 根因:两套词表被合并成一套
+那些编造的名字是 **`EXPOSURE_BANDS_V1` 的 band 名**(CRISIS 0.0 / CONTRACTION 0.5 /
+NEUTRAL 1.0 / EXPANSION 1.0 / HOT 1.3)—— 我半记得它们,然后套在了 **regime 字段**上。
+**但 band 由稳定币供给 Δ28d 的 5 档滞回状态机驱动,与 regime 字符串是两个不同的输入。**
+⇒ 这与 `asset_class`(记的是数据源)、`bench`(用的是 BTC)是**同一个错误的第三次**:
+**照着想象中的词表写映射,而不是照着实际存在的那个。**
+
+### 修复
+1. `_REGIME_CAP` **精确覆盖 7 个规范 regime**,并加守卫:
+   `set(_REGIME_CAP) == set(_CANONICAL_REGIMES)` —— **以后新增一个 regime 会让 CI 红,
+   而不是静默变成满仓。**
+2. `_exposure_cap()` 返回 **(cap, source)**,`cap_source` 落到表上:
+   `regime_map` / `unmapped_regime` / `no_regime` / `stablecoin_band`(未接)。
+   **`exposure_cap = 1.0` 此前有三种含义混在一起** —— ③评估后选中性、③遇到不认识的标签、
+   ③根本没有输入。**这就是 −2 折进 0 那个混淆,上升一层。**
+3. 大小写与连字符按上游同一规则归一(实测表里同时存在 `Risk-Off` 与 `RISK_OFF`)。
+
+### 上游还留着同一个吞噬(未修,已记录)
+`canonical_regime()` 把**任何**不认识的标签折成 `NEUTRAL`。
+⇒ Mac 引擎若新增一个 regime 名,**在 book 看到它之前就已经变成中性了**,
+我的 `unmapped_regime` 只是纵深防御,不是主捕获点。
+**这是"未知 → 一个看起来合法的值"的又一实例(同 I1 的 `min/max` 吞 NaN)。**
+
+### 诚实交代:③层在本次前向窗口里大概率仍然不动
+ⓠ 的真实驱动是稳定币供给 Δ28d,而其冻结规格自己的注释写着
+**"2025-26 has NO stablecoin signal by design"**。
+⇒ **即使把那条路接上,本窗口的 cap 也会一直是 1.0,这本 book 实质是纯①。**
+**把这件事写在行里,比让映射出于错误原因给出 1.0 有价值得多。**
+
+### 教训(→ Lesson #96)
+**上线第一天要做的不是看它有没有报错,是看它写下的每个字段是否名副其实。**
+这本 book 的第一次 mark 没有任何异常:状态成功、24 持仓、NAV 1.0。
+**缺陷藏在一个"正确"的值里** —— `exposure_cap = 1.0` 是对的数字、错的理由。
+配套:**任何"默认值"都必须携带它被选中的原因**,否则默认值会吞掉它本该暴露的缺陷。
+
+### 不宣称
+- `stablecoin_band` 路径**未接线**(研究路径读 Mac 侧 JSON,Railway 看不到)。
+- 新映射中 EASING→1.0、TIGHTENING/STAGFLATION→0.5 是**我的判断,不是规格** ——
+  ⓠ 规格只定义 band→cap,不定义 regime→cap。**这一步需要 Jazz 或规格确认。**
+- regime 分布来自 `cis_scores`,而 book 读的是 Redis `cis:local_scores`;
+  今日两者一个是 `Tightening` 一个是 `NEUTRAL`,**该差异未查清**。
+
+### 复现
+`select mark_date, exposure_cap, regime, cap_source from beta_core_nav;` ·
+`tests/test_beta_core_book.py` 11/11 · regime 分布查询见正文。
+
+---
+
+## S-117 — `macro_regime` 中位持续 **3 天**:regime 本身不可持有,③层 sleeve 的地基有问题
+
+**日期** 2026-08-08 · **Seth** · **状态: 交叉核对 Minimax-C R12 时发现,影响所有 regime 驱动的构造**
+
+### 起因
+Minimax-C 提交 VDB 第 12 轮:regime transition 前 7 天的 panel 统计量有方向性
+(12A pct_A 降 5.7pp,6/6 同号;12B skew 翻负,8/9),并提议一个③层 timing sleeve。
+**方向对 —— ③是今天定下的唯一主线。** 我做交叉核对,因为我今天恰好测过 regime 标签本身。
+
+### 发现:regime 序列的中位 run 是 3 天
+`cis_scores` 逐日众数,49 个 run:
+| | runs | 平均 | **中位** | 最长 | ≤3 天 |
+|---|---|---|---|---|---|
+| 全部 | 49 | 8.9d | **3d** | 90 | **25/49** |
+| RISK_OFF | 12 | 15.0 | **3** | 90 | 8 |
+| EASING | 20 | 6.6 | 6 | 21 | 7 |
+| STAGFLATION | 4 | 1.5 | **1** | 3 | 4 |
+
+**⇒ 超过一半的 "regime transition" 是 3 天内翻回去的标签抖动,不是状态变化。**
+
+### 这是 S-105 的同构重现,换了一层
+S-105:STRONG OUTPERFORM 中位持有 **2 天**、年换手 45.8 次 ⇒ 成本 4.6%/年 > 最大效应 ~3%。
+S-117:macro_regime 中位 **3 天** ⇒ 任何以它为触发的暴露规则同样不可持有。
+**两次都是:先测了收益,后才发现那个东西根本拿不住。**
+**Lesson #85 说"先测持续期再测收益",而它显然要适用于「触发器」而不只是「持仓」。**
+
+### 顺带核对出的第二件事:样本不是 11 年
+Minimax-C 的 CSV 跨 4016 天,我的 `cis_scores` 只覆盖 ~440 天,
+**两边都数出 EASING↔RISK_OFF 各 8–9 次。**
+⇒ **11 年 CSV 里的 `macro_regime` 在早期缺失或不变;有效样本是单一周期的 14 个月。**
+这印证了他们自己标的 provenance caveat,但把它从"待确认"变成"已确认为真"。
+
+### 第三件:上游把未知标签折成 NEUTRAL(接 S-116)
+`canonical_regime()` 的词表恰好 7 个,**任何其它值 → NEUTRAL**。
+⇒ 引擎换版本或用过别的名字时,那些天不会缺失,会**伪装成中性**混进序列。
+**"未知 → 一个看起来合法的值" 今天第三次出现**(I1 的 `min/max` 吞 NaN;S-116 的 cap;此处)。
+
+### 仍然成立的部分(不要连带否定)
+**R12 的 12C「机制不对称」是形状判断,不依赖阈值:**
+RISK_OFF onset 是同步下跌,recovery 是选择性反弹。
+**即使把抖动平滑掉一半,这个不对称大概率仍在** —— 它比任何 SNR 数字稳健。
+建议:12C 保留为结论,12A/12B 的具体数值降级为"待滞回平滑后重测"。
+
+### 教训(→ Lesson #97)
+**持续期检验适用于「触发器」,不只适用于「持仓」。**
+S-105 之后我把 `median_holding_days` 写进了 SHIP 门槛,但门槛量的是 sleeve 的持仓期;
+**没有任何东西检查「驱动它的状态变量本身能持续多久」。**
+一个中位 3 天的触发器 + 一个中位 30 天的持仓 = 一本每 3 天被推翻一次的账本。
+⇒ **规则:状态变量的中位 run 必须 ≥ 它所驱动仓位的目标持有期。**
+
+### 不宣称 / 边界
+- run 长度基于**逐日众数**;若同一天不同资产 regime 不同,众数会掩盖分歧。**未测跨资产一致性。**
+- 未测:滞回平滑后 transition 还剩几次(那是 R12 能否复活的关键,属 Minimax-C lane)。
+- 未查清:今日 `cis_scores` 显示 `Tightening`,而 book 从 Redis 读到 `NEUTRAL`(S-116 遗留)。
+
+### 复现
+run 长度查询见正文;transition 计数 `lag()` over 逐日众数;
+回复已写入 `MINIMAX_SYNC.md` §VDB-R12-REPLY。

@@ -209,7 +209,70 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-08 — **S-115: the breadth formula was never wrong; quoting it without
+**Last updated:** 2026-08-08 — **The ① book marked: the clock is running (gate 2026-10-07) — and
+its first row exposed that layer ③ was inert on 47.5 % of days without saying so.**
+`beta_core_nav`: 1 mark, inception 2026-08-08, NAV 1.0, benchmark 1.0, 24 positions, regime read
+successfully (not null, so the feed is live).
+**Then I checked what that row's `exposure_cap = 1.0` actually meant.** The canonical regime
+vocabulary is exactly seven — GOLDILOCKS / RISK_ON / EASING / NEUTRAL / TIGHTENING / RISK_OFF /
+STAGFLATION — and my mapping matched CRISIS, CAPITULATION, EUPHORIA, EXPANSION, BULL, BEAR,
+**none of which exist in it**. Only RISK_OFF (40.2 % of days) and RISK_ON (12.3 %) ever hit, so
+**EASING 30.1 % + TIGHTENING 13.9 % + STAGFLATION 1.4 % fell silently through to full exposure.**
+**Root cause: two vocabularies conflated.** Those invented names are the BAND names from
+`EXPOSURE_BANDS_V1` (CRISIS 0.0 / CONTRACTION 0.5 / NEUTRAL 1.0 / EXPANSION 1.0 / HOT 1.3), which is
+driven by a stablecoin-supply Δ28d hysteresis machine — a different input entirely. **Third instance
+of the same error after `asset_class` (recorded the source) and `bench` (was BTC): a mapping written
+against an imagined vocabulary rather than the real one.**
+Fixed: `_REGIME_CAP` now covers the canonical seven EXACTLY, pinned by a test that compares against
+`_CANONICAL_REGIMES`, so **a newly added regime breaks CI instead of silently becoming full
+exposure**. `_exposure_cap()` returns (cap, source) and `cap_source` lands on the row —
+`regime_map` / `unmapped_regime` / `no_regime` / `stablecoin_band` — because `exposure_cap = 1.0`
+previously meant three different things at once, which is the −2-folded-into-0 conflation one layer up.
+**An upstream swallow remains, recorded not fixed:** `canonical_regime()` maps ANY unrecognised label
+to NEUTRAL, so a new regime name arrives already neutralised — `unmapped_regime` is defence in depth,
+not the primary catch. Same shape as `min/max` swallowing NaN (I1).
+**Honest about ③ in this window:** the ⓠ spec's real driver is the stablecoin band, and its own
+frozen comment says *2025-26 has NO stablecoin signal by design* — so even wired, the cap would sit
+at 1.0 and **this book is effectively pure ① for the forward test.** Saying so in the row beats a
+mapping that returns 1.0 for the wrong reason.
+**Lesson #96: on day one, do not check that it ran without errors — check that every field it wrote
+means what it says.** The first mark looked perfect: status ok, 24 positions, NAV 1.0. The defect hid
+inside a CORRECT value — right number, wrong reason. Corollary: **every default must carry the reason
+it was chosen**, or the default swallows the defect it should have exposed.
+**Needs Jazz or the spec:** EASING→1.0 and TIGHTENING/STAGFLATION→0.5 are MY judgement — the ⓠ spec
+defines band→cap, never regime→cap. Also unresolved: `cis_scores` says Tightening today while the
+book's Redis read says NEUTRAL.
+
+Earlier: **Supabase 449 MB → 237 MB with zero rows archived, then feeds
+gated by FREQUENCY rather than by asset count.** Jazz flagged the tier filling up and asked about
+moving data local. Measurement said the database was not full of data: **~84 MB of dead indexes**
+(176 days of accumulated statistics make a zero scan count trustworthy) plus **~128 MB of bloat I
+created hours earlier** — populating `asset_id` UPDATEd ~1M rows, autovacuum reclaimed the dead
+tuples so `n_dead_tup` was already 0, **and the waste was therefore invisible to the usual check**
+while free space stayed inside the pages. The tell was 276 B/row on hourly against 108 on daily.
+A trap avoided: four of the dropped indexes were created the SAME DAY, so their low scan counts
+reflected age rather than uselessness and were judged on structural redundancy instead. One was
+dropped for a stronger reason — it served filtering observation rows by `asset_class`, a pattern now
+BANNED, and an index serving a banned pattern is dead however heavily it was used before.
+**Then the ongoing-cost question, which is the one Jazz actually raised.** Per-feed measurement moves
+the constraint from COUNT to FREQUENCY: daily @687 = 42 MB/yr, funding @687 = 237 MB/yr,
+**hourly @687 = 1,096 MB/yr — two months to exhaustion** — against hourly @24 = 38 MB/yr. So the rule
+is **broad at low frequency, narrow at high**, which is also what the research needs: survivorship is
+only measurable on a WIDE daily panel (S-111), while intraday work was always about a handful of names.
+Hourly was then tightened from "admissible" (74) to **actually consumed** (24, the ① book's holdings)
+— nothing reads hourly today, and **a feed whose consumer list is empty is a subscription nobody
+cancelled.** The 126 delisted assets subscribe to nothing: their history is complete by definition.
+**Total 98 MB/yr against 1,375 MB/yr unbounded.**
+The flags are ENFORCED, not advisory — both backfill functions refuse with a **distinct sentinel
+(−2 = not monitored, −1 = unaddressable, 0 = nothing new)**, because collapsing −2 into 0 would let
+"we chose not to watch" read as "the market has no data", which is the S-106 conflation moved into
+the storage domain. Verified: AGIX → −2, BTC → 30 bars, 663 assets now refused hourly.
+Shipped `scripts/supabase_storage_hygiene.sql` + `scripts/supabase_monitoring_tiers.sql` +
+`tests/test_storage_hygiene.py` 7/7 in preflight — and the guard immediately caught the real culprit,
+`supabase_l2_canonical.sql`, whose UPDATEs never declared their storage cost. **A bulk UPDATE is a
+storage event, not just a data event.**
+
+Earlier: **S-115: the breadth formula was never wrong; quoting it without
 naming the book was.** Built the spectral estimator to replace `N/(1+(N-1)rho)` and the sanity check
 reversed my own S-114 caveat. Against a matrix where equicorrelation genuinely HOLDS (rho=0.3,
 N=20) the two measures still disagree — naive 2.99 vs participation ratio 7.38 — **and both are
