@@ -2,6 +2,16 @@
 Scalable Book — live NAV of the profit-max, high-capacity multi-strategy book (Seth 2026-07-15).
 ==================================================================================================
 
+STATUS (2026-08-08, OVERSIGHT §3 P0 #2): DEMOTED TO RESEARCH RECORD.
+Market-neutral L/S 3-sleeve blend (FACTOR/TREND/CARRY). S-103 measured β-confounding;
+S-105 measured cost > edge. The 22-day forward paper track is retained for SIGNAL-TRAJECTORY
+continuity (specifically: TREND sleeve capacity verification on the deepest instruments,
+which OVERSIGHT §2.3 identifies as the unique surviving shape candidate for a DIRECTIONAL
+beta sleeve, NOT this market-neutral construction). Loop continues to run — the graveyard
+is the asset. See OVERSIGHT_2026-08.md §0 + §3.
+
+────────────────────────────────────────────────────────────────────────────
+
 The strategy a quant runs for "收益最大化 with capacity": a diversified book of three orthogonal,
 scalable sleeves on the DEEPEST instruments (crypto majors), vol-targeted:
   · FACTOR — market-neutral cross-sectional (funding-crowd + extracted value/mom/vol)
