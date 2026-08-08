@@ -202,6 +202,47 @@ def test_regime_labels_normalise_the_way_the_live_table_spells_them():
     assert bc._exposure_cap("Risk-Off")[0] == bc._exposure_cap("RISK_OFF")[0]
 
 
+def test_the_dwell_length_is_imported_not_tuned():
+    """S-118 wired a 5-day dwell filter onto the regime before it sizes the book.
+    The number is NOT chosen against a return — it equals the minimum holding
+    period the SHIP gate already requires, so it is a constraint imported from
+    elsewhere. A dwell length picked for how clean the chart looks would make the
+    smoothing itself the edge, which is the R76–R94 error in new clothes."""
+    assert bc._REGIME_DWELL_DAYS == 5, (
+        "dwell must equal the gate's minimum holding period; changing it needs a "
+        "reason that is not 'the curve looked better'")
+    src = open(os.path.join(os.path.dirname(__file__), "..",
+                            "src/data/signals/beta_core_paper.py"), encoding="utf-8").read()
+    assert "NOT tuned" in src, "the provenance of the dwell length must be stated"
+    assert "dwell_filter" in src, "the filter must actually be applied, not just cited"
+
+
+def test_confirmed_and_raw_regime_are_both_carried():
+    """The filter's effect has to be visible in the row. Returning only the
+    confirmed value would make 'the filter did nothing today' indistinguishable
+    from 'the filter is not running' — the S-116 failure exactly, where an inert
+    mapping survived a whole first mark behind a correct-looking 1.0."""
+    src = open(os.path.join(os.path.dirname(__file__), "..",
+                            "src/data/signals/beta_core_paper.py"), encoding="utf-8").read()
+    assert "-> tuple[str | None, str | None]" in src, \
+        "_current_regime must return (confirmed, raw)"
+    assert "regime, regime_raw = await _current_regime()" in src
+    assert "regime != regime_raw" in src and "dwell" in src, \
+        "cap_source must record when the filter CHANGED the decision"
+    assert "return raw, raw" in src, \
+        "too little history must return them EQUAL — stated, not silent"
+
+
+def test_the_filter_is_the_one_from_the_validated_module():
+    """Not a reimplementation. `state_persistence.dwell_filter` is causal and has
+    its own guards; a second copy inside the book would drift from them, and the
+    copy that drifts is always the one running live."""
+    src = open(os.path.join(os.path.dirname(__file__), "..",
+                            "src/data/signals/beta_core_paper.py"), encoding="utf-8").read()
+    assert "from src.research.validation.state_persistence import dwell_filter" in src, \
+        "must import the guarded filter rather than reimplement it"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
