@@ -7371,3 +7371,79 @@ CI 检查的是仓库,而数据是从别处写进来的 —— 只要存在一�
 ### 复现
 `GET /internal/strategy-records/schema`(字段与 SHIP 门槛的现场回声)·
 `tests/test_strategy_intake.py` 7/7 · `tests/test_beta_core_book.py` 14/14。
+
+---
+
+## S-120 — 追一条标了两次"未查清"的差异,一个查询翻出两个 bug,其中一个**已经定错了前向记录第一天的仓位**
+
+**日期** 2026-08-09 · **Seth** · **状态: 生产缺陷,已修**
+
+### 起因
+S-116 和 S-117 我两次写下"`cis_scores` 今天是 `Tightening`,book 从 Redis 读到 `NEUTRAL`,未查清"。
+**①层 book 现在活着,③层就是照那个值定仓的** —— 所以去追。
+
+### 一个 `group by` 翻出两个 bug
+2026-08-08 当天:
+| regime | source | tier | n | 标的 | 写入时刻 |
+|---|---|---|---|---|---|
+| `Tightening` | **local_engine** | T1 | 645 | 43 | 00:01–14:02 |
+| `TIGHTENING` | railway_snapshot | T1 | 344 | 43 | 04:04–14:53 |
+| `TIGHTENING` | railway_t2_hourly | T2 | 285 | 15 | 00:58–14:45 |
+| **`NEUTRAL`** | **railway_snapshot** | T1+T2 | **58** | 58 | **全部 14:14:25.189708** |
+
+**Bug ①:同一 regime 两种拼写。** `local_engine` 写 `Tightening`,Railway 写 `TIGHTENING`。
+**归一化只发生在读取时,不发生在写入时** —— 所以 S-117 的 run-length 分析必须手工 normalize,
+而任何忘了 normalize 的消费者会把它们当成两个 regime。
+
+**Bug ②:58 行 NEUTRAL 共享同一个微秒级时间戳。**
+那是 `snapshot_full_universe_to_supabase()` 的**一次**运行:universe payload 里没有 regime,
+`canonical_regime(None)` 返回 **"NEUTRAL"**,于是它给每个标的写了一个**编造的合法值**。
+**每天一次**(08-07 08:44、08-06 10:17)。
+
+### 实时代价 —— 这不是理论问题
+**①层 book 按这个标签定暴露:`TIGHTENING → 0.5`、`NEUTRAL → 1.0`。**
+**前向记录的第一天,book 跑了满仓 1.0,而实际 regime 是 TIGHTENING 应当 0.5。**
+原因是**一个降级默认值与真实读数不可区分**。
+
+### 缺陷紧挨着一个漂亮的守卫
+出事那段代码的正上方就写着:
+```
+if not universe:
+    # Never write nothing — an empty snapshot is a failure, not a valid day.
+```
+**下一段却给所有 58 行写了一个编造的 regime。**
+**完整性被检查了,正确性没有。** 这个配对在今天已经出现过太多次
+(S-105 的 warning、S-116 的 cap=1.0、监控层的 −2 vs 0)。
+
+### 修法:一个函数,两个调用点
+新增 `canonical_regime_strict()` —— **缺失或不认识的标签返回 `None`,不返回 NEUTRAL**。
+| 输入 | 宽松版(读) | 严格版(写) |
+|---|---|---|
+| `Tightening` | TIGHTENING | TIGHTENING |
+| `Risk-Off` | RISK_OFF | RISK_OFF |
+| `None` / `''` / `UNKNOWN` / 新标签 | **NEUTRAL** | **None** |
+| `NEUTRAL`(真的中性) | NEUTRAL | **NEUTRAL** |
+
+两个写入路径都改用它,**不是各写一份内联逻辑** —— 副本会与守卫漂移,
+而**漂移的那份总是线上跑的那份**(dwell filter 那次已经立过这条规矩)。
+未确定时**记 WARNING 再写 NULL**,不静默。
+
+### 教训(→ Lesson #100)
+**一个把"未知"变成合法值的归一化函数,只属于读取侧。**
+渲染层必须显示点什么,所以宽松是对的;**存储层一旦宽松,
+每个下游消费者都会继承一个从未被观测过的事实**,而且无从分辨。
+⇒ **规则:任何 `normalize()` / `canonical()` / `coerce()` 在被用于 INSERT 之前,
+必须先问「它对未知输入返回什么」。** I1 说未测量 = NaN;
+**这条是它在「标签」上的形式:未测量 = NULL,不是一个看起来合法的默认值。**
+
+### 不宣称 / 边界
+- **历史数据未回填**:表里已有的 `Tightening` / `NEUTRAL` 污染行仍在,
+  消费者仍需 `canonical_regime()` 兜底。**清洗历史需要 service_role(OPEN RISK #1)。**
+- book 首日的错误仓位**不修正**:那是真实发生的,`beta_core_nav` 是前向记录,
+  **改它就等于伪造记录**。已在此条记明,读曲线时须知第 1 天 cap 应为 0.5。
+- 未查:`railway_snapshot` 为何每天恰好一次拿不到 regime(时间点每天不同,非固定 cron)。
+
+### 复现
+`select macro_regime, source, data_tier, count(*), min(recorded_at), max(recorded_at)
+ from cis_scores where recorded_at::date = '2026-08-08' group by 1,2,3;`
+`tests/test_regime_write_path.py` 5/5。
