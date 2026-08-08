@@ -1,9 +1,14 @@
-"""Daily paper-book runner — orchestrates 3 sleeve prototypes.
+"""Daily paper-book runner — orchestrates 3 sleeve prototypes + ⓠ regime track.
 
 Per user direction 2026-07-28 ("三件并行 paper only, 60d forward paper").
 Runs all 3 sleeve modules in sequence, then writes a daily summary row to
 /tmp/cometcloud_data/paper_books/daily_summary.csv with sleeve-level signal
 values + tilt multipliers for that day.
+
+Per Jazz direction 2026-08-06 ("接吧"): after the NAV ledger runs, also compute
+today's ⓠ regime override paper track (parallel paper NAV under the enforcer).
+This is the daily entry point for the 60-day forward paper test of the enforcer
+(per STRATEGY_PLAYBOOK.md §P3 promotion gate).
 
 Output: /tmp/cometcloud_data/paper_books/daily_summary.csv
 Schema: date, vol_carry_iv, vol_carry_rv, vol_carry_term_premium,
@@ -12,7 +17,7 @@ Schema: date, vol_carry_iv, vol_carry_rv, vol_carry_term_premium,
         macro_overlay_long_count, macro_overlay_short_count
 
 Usage:
-  python3 src/research/paper_books/daily_runner.py    # run all 3 sleeves + write daily summary
+  python3 src/research/paper_books/daily_runner.py    # run all 3 sleeves + regime track + write daily summary
   python3 src/research/paper_books/daily_runner.py --read-last   # show last daily summary
 """
 from __future__ import annotations
@@ -85,6 +90,27 @@ def main() -> int:
     rc = _run_sleeve(NAV_LEDGER_MODULE)
     if rc != 0:
         print(f"  [WARN] NAV ledger failed; continuing")
+    print()
+
+    # ⓠ REGIME OVERRIDE paper track — parallel paper NAV under the enforcer.
+    # Per Jazz 2026-08-06: 60d forward paper test of the enforcer (NOT a live override).
+    # Reads R64 NAV (just-written above) + stablecoin signal → regime-adjusted NAV.
+    # Gated: returns None if R64 NAV unavailable or signal too short (no fabrication).
+    print("--- regime_override_track (ⓠ paper track) ---")
+    try:
+        from src.research.validation.fusion_paper_regime_track import compute_today_track
+        today = datetime.now(timezone.utc).date().isoformat()
+        regime_row = compute_today_track(today_iso=today)
+        if regime_row is None:
+            print(f"  GATED — R64 NAV missing or signal too short; track not advanced "
+                  f"(no fabrication, per §CLAUDE.md no-mock-data)")
+        else:
+            print(f"  band={regime_row['band']} cap={regime_row['exposure_cap']} "
+                  f"r77_ret={regime_row['r77_daily_return']:+.4f} "
+                  f"regime_pnl={regime_row['regime_pnl_usd']:+.2f} "
+                  f"regime_nav={regime_row['regime_nav_usd']:.2f}")
+    except Exception as e:
+        print(f"  [WARN] regime_track compute failed: {type(e).__name__}: {e}")
     print()
 
     # Read last row from each sleeve
@@ -161,6 +187,10 @@ def main() -> int:
     print("  sleeve_3 — direct L/S basket return")
     print("  sleeve_1 — term_premium mean-reversion proxy")
     print("  sleeve_2 — tilt × R77 NAV (GATED on Supabase fusion_paper_nav)")
+    print()
+    print("ⓠ Regime track: /tmp/cometcloud_data/paper_books/fusion_paper_regime_track/regime_track.csv")
+    print("  parallel paper NAV under the enforcer (NOT a live override)")
+    print("  → 60d forward paper test feeds STRATEGY_PLAYBOOK.md §P3 promotion gate")
     return 0
 
 
