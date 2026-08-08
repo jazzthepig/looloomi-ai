@@ -209,7 +209,64 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-08 — **S-112: "亏得越多反向越有价值" is right about the magnitude and
+**Last updated:** 2026-08-08 — **S-114: the diversification is in TradFi, not in more coins —
+and the formula I had used three times turns out not to apply.** S-113 inferred that breadth inside
+crypto has a ceiling; this measures it. 40 crypto + all 33 TradFi assets, 2024-01 on, ≥250 common
+observations per pair:
+**crypto ↔ crypto rho-bar 0.441 with only 1 % of pairs near zero · TradFi ↔ TradFi 0.217 · crypto ↔
+TradFi 0.104 with 62 % of pairs near zero.** Cross-asset correlation is a quarter of within-crypto.
+Indicative N_eff: crypto-only 2.20, TradFi-only **4.15**, combined 4.27 — **33 TradFi names give
+nearly twice the breadth of 40 crypto names, and adding those 40 coins on top of TradFi moves N_eff
+4.15 → 4.27, i.e. forty coins contribute about a tenth of one independent bet.**
+**But I have to flag the formula, not just the result.** `N_eff = N/(1+(N−1)rho-bar)` assumes
+EQUICORRELATION. Measured on this sample: rho runs −0.853 to +0.987, sd 0.214 against a mean of
+0.224 — **dispersion equals the mean, so the assumption fails outright.** Every N_eff in S-96, S-113
+and here is therefore INDICATIVE ONLY; the block-level rho-bar comparisons (hundreds of pairs each,
+unambiguous direction) are what is trustworthy. Correct treatment under block structure is the
+eigenvalue participation ratio, which SQL cannot do and which now needs a Python-side follow-up.
+**Lesson #94: periodically re-check an estimator's PREMISES, not just its inputs.** I used this
+formula across three ledger entries, verified rho-bar each time, and never once checked whether
+equicorrelation held — it never did on a block-structured panel. Correct inputs plus a dead premise
+produce a number that looks rigorous and is wrong.
+**Strategic consequence, now measured rather than argued:** a crypto-only mandate is structurally
+capped near N_eff 2, so there is no diversification to harvest and ①+③ is not a preference but the
+only remaining path. Millennium-style multi-pod and WorldQuant-style factor spreading both require a
+TradFi leg — **not more coins** — and we already hold data for 33 such assets.
+**Bounds:** correlations computed on TradFi trading days only (~250/yr), which is the right
+convention for a joint book but understates crypto's usable observations; the 40 crypto names were
+chosen by data volume rather than at random, so 0.441 may run high; single window, and S-113 just
+showed correlation is a state variable. Cross-asset execution, custody and compliance costs for a
+FoF TradFi leg are entirely unassessed.
+
+Earlier: **S-113: `N_eff = 3.1` was never a constant, and I read the
+correction backwards before the control caught me.** Recomputed on the expanded 249-asset panel:
+rho-bar 0.435, N_eff 2.28 — against S-96's 0.310 / 3.1, which I was about to write up as
+"expanding the panel REDUCED effective breadth". **The control killed that reading:** the same
+original panel measured over the SAME window gives rho-bar **0.655**, not 0.310. Window effect,
+not asset-set effect — 2024+ is simply a high-correlation regime.
+**Clean, same-window result:** original panel N=41 rho-bar 0.655 **N_eff 1.51**; expanded N=249
+rho-bar 0.435 **N_eff 2.28**. **Breadth is real but severely sub-linear: 6.1× the names buys 1.51×
+the effective breadth.**
+Two consequences. **(1) `N_eff = 3.1` must stop being quoted as a constant** — the same assets read
+1.51 today. Correlation is a state variable, and any rho-bar or N_eff cited without its measurement
+window is narrative. **(2) Breadth inside crypto has a ceiling:** 208 extra names bought a drop from
+0.655 to 0.435, so reaching N_eff 10 would need rho-bar near 0.10, which crypto does not offer.
+WorldQuant-style stays permanently out, and **Millennium's ≥5 uncorrelated pods is equally out
+WITHIN crypto** — real diversification has to come from other asset classes. With N_eff ≈ 2 there is
+no room to raise Sharpe by diversifying, which leaves capturing beta and timing exposure: ①+③.
+**This also downgrades my own P1 from a few hours ago.** OVERSIGHT §3 P1 said unfreezing breadth
+would unlock the S-108/S-109 class of tests. Partly true and overstated: breadth did improve, but
+those tests need dozens of INDEPENDENT events, and N_eff 2.28 says the events across these names
+co-move.
+**Lesson #93: any number quoted repeatedly as a constant must be quoted with its measurement
+window.** N_eff=3.1 was used as a physical constant for two weeks; the same assets give 1.51 in
+another window. Both are correct, and they differ by 2×. Corollary: run a same-window control
+before comparing across periods — the first version of this entry subtracted two windows directly.
+**Not done:** crypto + TradFi cross-asset N_eff — the query timed out and needs sampling or a
+materialised intermediate. That is the direct test of "diversification must come from other asset
+classes", and it is the next measurement.
+
+Earlier: **S-112: "亏得越多反向越有价值" is right about the magnitude and
 wrong about the instrument — and I caught my own sampling contamination twice getting there.**
 Jazz's instinct, made testable: "will be delisted" is knowable only ex-post, so the honest question
 is whether anything observable BEFORE the collapse identifies the cohort. Two candidates, both
