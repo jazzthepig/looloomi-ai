@@ -91,7 +91,8 @@ def test_new_ship_record_without_evidence_is_rejected():
                           capital_action_on_breach="zero_and_freeze", backtest_included_stop=True,
                           deflated_sharpe=0.97, n_trials=40, pbo=0.21,
                           median_holding_days=21.0, signal_changes_per_yr=9.0,
-                          turnover_cost_pct_yr=0.9, net_effect_pct_yr=3.4)
+                          turnover_cost_pct_yr=0.9, net_effect_pct_yr=3.4,
+                          trigger_name="funding_zscore", trigger_median_run_days=28.0)
     assert not good.validate(), "fully-evidenced ship record must pass"
 
 
@@ -123,7 +124,9 @@ def test_multiple_testing_floor_is_enforced():
     # and the passing combination (executability fields supplied — see S-105)
     assert not StrategyRecord(**base, deflated_sharpe=0.96, n_trials=30, pbo=0.30,
                               median_holding_days=30.0, signal_changes_per_yr=12.0,
-                              turnover_cost_pct_yr=1.2, net_effect_pct_yr=2.9).validate()
+                              turnover_cost_pct_yr=1.2, net_effect_pct_yr=2.9,
+                              trigger_name="funding_zscore",
+                              trigger_median_run_days=35.0).validate()
 
 
 def test_executability_floor_is_enforced():
@@ -163,9 +166,52 @@ def test_executability_floor_is_enforced():
                                 turnover_cost_pct_yr=1.0).validate()
     assert any("net_effect_pct_yr missing" in p for p in gross_only)
 
-    # and the passing combination: held long enough, and the edge survives the cost
+    # and the passing combination: held long enough, edge survives the cost, and the
+    # trigger outlives the position it opens
     assert not StrategyRecord(**base, median_holding_days=30.0, signal_changes_per_yr=12.0,
-                              turnover_cost_pct_yr=1.2, net_effect_pct_yr=2.9).validate()
+                              turnover_cost_pct_yr=1.2, net_effect_pct_yr=2.9,
+                              trigger_name="funding_zscore",
+                              trigger_median_run_days=35.0).validate()
+
+
+def test_a_trigger_must_outlive_the_position_it_opens():
+    """S-117. The executability floor above measures how long a POSITION is held;
+    nothing measured how long the STATE VARIABLE opening it survives. Found by
+    cross-checking a proposed layer-③ sleeve keyed off `macro_regime`: 49 runs,
+    MEDIAN 3 DAYS, 25 of them ≤3 days — so more than half its 'regime transitions'
+    were label chatter reverting inside three days.
+
+    A 3-day trigger driving a 30-day position is not a 30-day position. It is a book
+    overturned before the position matures, and `median_holding_days=30` on the
+    record would be a fiction the gate accepted. The rule is a RELATION rather than
+    a threshold: a fast trigger is perfectly fine in a fast book, and only a lie
+    inside a slow one."""
+    base = dict(id="x", title="x", doc_source="test", verdict=Verdict.SHIP,
+                pit_clean=True, cost_feasible_at_5bps=True, forward_committed=True,
+                base_rate="cause", oos_survival=True, paper_trade_days=90,
+                regime_reported=True, max_dd_stop=-0.15,
+                capital_action_on_breach="zero_and_freeze", backtest_included_stop=True,
+                deflated_sharpe=0.97, n_trials=40, pbo=0.2,
+                median_holding_days=30.0, turnover_cost_pct_yr=1.0,
+                net_effect_pct_yr=2.5)
+
+    # absent → rejected, and the message must carry the number that taught us
+    probs = StrategyRecord(**base).validate()
+    assert any("trigger_median_run_days" in p for p in probs)
+    assert any("3 DAYS" in p or "3 days" in p.lower() for p in probs), \
+        "the rejection must cite the measurement, not just name the field"
+
+    # the actual macro_regime case: 3-day trigger, 30-day position → rejected
+    chatter = StrategyRecord(**base, trigger_name="macro_regime",
+                             trigger_median_run_days=3.0).validate()
+    assert any("overturned" in p for p in chatter)
+
+    # a FAST book with the same fast trigger is fine — the rule is relative
+    fast = {**base, "median_holding_days": 2.0}
+    assert not any("overturned" in p for p in
+                   StrategyRecord(**fast, trigger_name="macro_regime",
+                                  trigger_median_run_days=3.0).validate()), \
+        "a 3-day trigger is legitimate for a 2-day hold; only the RELATION matters"
 
 
 def test_aggregate_only_reporting_is_incomplete():
