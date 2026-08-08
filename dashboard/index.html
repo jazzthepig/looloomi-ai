@@ -461,6 +461,575 @@ html, body {
 <!-- Transition overlay -->
 <div class="transition-overlay" id="overlay"></div>
 
+<!-- ── DISCIPLINE SURFACE TRIGGER ────────────────────────
+     Seth, 2026-08-08. Renders docs/LP_FACING_2026-08-08.md
+     as a structured disclosure panel. Source-of-truth stays
+     in docs/; this is a render. Compliance: positioning
+     language only (STRONG OUTPERFORM / OUTPERFORM / NEUTRAL /
+     UNDERPERFORM / UNDERWEIGHT). No BUY/SELL/HOLD/LONG.
+───────────────────────────────────────────────────────── -->
+<button class="discipline-trigger" id="disciplineTrigger" aria-label="Open institutional disclosure">
+  <span class="ds-icon">≡</span>
+  <span class="ds-label">DISCIPLINE SURFACE</span>
+  <span class="ds-sub">制度披露·可审计</span>
+</button>
+
+<!-- ── DISCIPLINE SURFACE OVERLAY ──────────────────────── -->
+<div class="discipline-overlay" id="disciplineOverlay" aria-hidden="true">
+  <div class="discipline-shell">
+    <header class="discipline-header">
+      <div class="dh-left">
+        <div class="dh-eyebrow">INSTITUTIONAL DISCLOSURE · 2026-08-08</div>
+        <div class="dh-title">Discipline Surface — what is in CI, what is not</div>
+        <div class="dh-sub">论据来源:<code>docs/LP_FACING_2026-08-08.md</code> · 修改措辞请联系 Jazz 论点,修改源真链请联系 Seth</div>
+      </div>
+      <button class="discipline-close" id="disciplineClose" aria-label="Close disclosure">×</button>
+    </header>
+
+    <div class="discipline-body" id="disciplineBody">
+      <!-- content rendered by JS from window.LP_FACING_2026_08_08 below -->
+    </div>
+
+    <footer class="discipline-footer">
+      <div class="df-row">
+        <span class="df-key">SOURCE-OF-TRUTH</span>
+        <span class="df-val">docs/LP_FACING_2026-08-08.md §6 — every claim cites a CI test or commit</span>
+      </div>
+      <div class="df-row">
+        <span class="df-key">COMPLIANCE</span>
+        <span class="df-val">HK SFC · positioning language only · not investment advice</span>
+      </div>
+      <div class="df-row">
+        <span class="df-key">MILESTONE</span>
+        <span class="df-val">60-day forward curve unlocks 2026-10-初 (calendar-bound)</span>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<!-- ── LP-FACING CONTENT SOURCE (mirror of docs/LP_FACING_2026-08-08.md) ── -->
+<script id="lp-facing-source" type="application/json">
+{
+  "version": "2026-08-08",
+  "source_doc": "docs/LP_FACING_2026-08-08.md",
+  "sections": [
+    {
+      "n": "1",
+      "title": "One paragraph (当前定位)",
+      "zh": "我们做的是一个 AI 策展的加密 FoF,目前处于方法论阶段。我们最有价值的资产不是任何一条策略,是一套让任何策略主张都必须通过的证伪装置。第一条方法论干净的前向曲线将于 2026 年 10 月初满 60 天。在那之前 LP 看到的是 12 项编译进 CI 的纪律门禁 + 110+ 条含机制的台账 + 25.1pp/yr 测量并纠正的幸存者偏差,而不是策略业绩。",
+      "compliance": "positioning · not investment advice"
+    },
+    {
+      "n": "2.1",
+      "title": "Three things we can say honestly — 纪律编译进了 CI",
+      "zh": "14 个 category · 121+ 具名断言 · venue consolidation 18 sub-checks,每一次 push 前都是强制闸门。S-103, S-105, S-92, S-95, S-96, S-104 六个事件各自编译进了对应测试。",
+      "cite": "docs/P2_SHIPPED_DISCIPLINE_SURFACE_2026-08.md §1 · tests/test_strategy_discipline.py · tests/test_neutralize.py · tests/test_strategy_durability.py · tests/test_cold_start_contract.py"
+    },
+    {
+      "n": "2.2",
+      "title": "Three things we can say honestly — 失败被完整记录且可审计",
+      "zh": "REFUTATION_LEDGER.md 含 S-1 → S-100+ 的逐条撤回与机制说明,R76–R94 十五次连败全部留有 refuted verdict + 失败机制 + lesson,没有粉饰。S-103 β confounding across tiers · S-105 executability > returns · S-106 0.8% days carry 100% of return · S-107 funding Sharpe 8.75 measures payment flow, not P&L · S-108/S-109 sample-size constraint, not mechanism · S-111 25.1pp/yr survivorship · S-112 admission rule, not short book。",
+      "cite": "REFUTATION_LEDGER.md · commit b3dfbee (S-111/S-112)"
+    },
+    {
+      "n": "2.3",
+      "title": "Three things we can say honestly — 产品本体 = ①层 hold-the-panel + ⓠ regime override",
+      "zh": "①层是 FoF core 也是其他 sleeve 的基准。已上线 1 天,SHIP-ready 2026-10-初 — 60 天日历门槛不能加速,日历是唯一不能买的资源。",
+      "cite": "commit 121b54c + 922d0c5 (stalled-clock observability) · tests/test_beta_core_book.py · tests/test_regime_override_enforcer.py · OVERSIGHT §1.1"
+    },
+    {
+      "n": "3",
+      "title": "Three things we CANNOT say today (the firewall)",
+      "firewall": [
+        ["任何 alpha 数字", "COMPLETENESS_ASSESSMENT §1 — 事件计数未完成前,headline +7.99 不是证据"],
+        ["我们的信号排序有效", "STRONG OUTPERFORM 事件均 +3.58 (t=1.55 不显著);OUTPERFORM 反向 t=−3.62"],
+        ["任何策略已验证", "0/8 通过 oos_survival=True 的项目自身门槛"]
+      ],
+      "cite": "COMPLETENESS_ASSESSMENT_2026-08.md §1 + §2"
+    },
+    {
+      "n": "4",
+      "title": "What 60 days unlocks (the only forward milestone)",
+      "zh": "①层 beta_core_paper 60 天满 = 2026-10-初 (calendar-bound)。届时 LP 看到的会是:一条方法论干净的前向曲线(无 L/S 构造,无 BTC benchmark 偏差)· benchmark NAV 与 book NAV 同行标记,excess 是算术,不是事后挑的 · stalled-clock detection + cache-loss recovery 已编译进 CI,曲线可信 · 同时 survivorship-free(687-asset membership, was 75-alive-only)。",
+      "cite": "tests/test_beta_core_book.py · commit 121b54c + 922d0c5 · S-111 survivorship backfill · PROJECT_STATE.md OPEN RISK #4"
+    },
+    {
+      "n": "5",
+      "title": "What survives scrutiny (the differentiator)",
+      "zh": "这条不是营销话,是机制可验证。当 LP 尽调时:问'你们的信号排序有效吗' → 答:'中间档无效,底部档反转。详见 COMPLETENESS_ASSESSMENT §1 的事件计数。' 问'你们的策略过了多少关' → 答:'0/8。这是公开台账。' 问'为什么你们知道自己的测错了' → 答:'因为 25.1pp/yr 的幸存者偏差是我们自己测出来并纠正的;15 次 R-number 连败是我们自己测出来并写明机制的。'"
+    },
+    {
+      "n": "6",
+      "title": "Source-of-truth chain (每次 LP 尽调可直接引用)",
+      "cite_table": [
+        ["我们把证伪装置编译进 CI", "docs/P2_SHIPPED_DISCIPLINE_SURFACE_2026-08.md §1 + bash scripts/preflight.sh"],
+        ["X 次被自己的测量推翻", "REFUTATION_LEDGER.md R76–R94 + S-1→S-100+ · 完整可审计"],
+        ["60 天前向门槛", "tests/test_strategy_discipline.py::test_executability_floor_is_enforced"],
+        ["中性化是单位换算", "S-103 + tests/test_neutralize.py"],
+        ["执行性先于回报", "S-105 + tests/test_strategy_durability.py"],
+        ["事件计数先于 t-stat", "COMPLETENESS_ASSESSMENT §1 ⚠️ + Lesson #81"],
+        ["产品本体 = ①层 hold-the-panel", "OVERSIGHT §0 + §3 + §7.1 + tests/test_beta_core_book.py"],
+        ["calendar-bound,不能加速", "OVERSIGHT §3 P0 理由 + ①层 2026-10-初 满 60 天"],
+        ["L0 数据架构不再让 asset_class 住在观测行", "tests/test_data_architecture.py (4 项) + S-106 重构"],
+        ["Mac↔Railway 不漂移", "cis_push SCHEMA_VERSION=1.0 · vector schema v2 (27-dim) — preflight 每次 echo"]
+      ]
+    },
+    {
+      "n": "7",
+      "title": "What is NOT in this LP-facing narrative (待 Jazz 决策的结构性事项)",
+      "zh": "ARCHITECTURE.md 主张'最深对象是 Entity/Decision' — decisions 0 行, entities 1 行。要么接上,要么从对外材料里拿掉。MCP on deprecated HTTP+SSE transport (spec 2026-07-28 弃用,12-month offramp) — 不影响 LP-facing 但 LP 尽调技术审查时会问。Asset_embeddings_history 0 行 · risk_meter_history 0 行 — 决策链的另两端也是空的,OPEN RISK #3(b)。",
+      "cite": "PROJECT_STATE.md OPEN RISK #3"
+    }
+  ]
+}
+</script>
+
+<script>
+// ── Discipline Surface — render + toggle (Seth, 2026-08-08) ──
+(function () {
+  const source = JSON.parse(document.getElementById('lp-facing-source').textContent);
+  const body = document.getElementById('disciplineBody');
+  const overlay = document.getElementById('disciplineOverlay');
+  const trigger = document.getElementById('disciplineTrigger');
+  const closeBtn = document.getElementById('disciplineClose');
+
+  // Render sections
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    })[c]);
+  }
+
+  const html = source.sections.map(sec => {
+    let inner = '';
+    if (sec.zh) inner += `<p class="ds-zh">${esc(sec.zh)}</p>`;
+    if (sec.firewall) {
+      inner += '<div class="ds-firewall"><div class="ds-fw-head">防火墙 · cannot claim</div><table class="ds-fw-table"><tbody>';
+      sec.firewall.forEach(row => {
+        inner += `<tr><td class="ds-fw-cant">${esc(row[0])}</td><td class="ds-fw-why">${esc(row[1])}</td></tr>`;
+      });
+      inner += '</tbody></table></div>';
+    }
+    if (sec.cite_table) {
+      inner += '<table class="ds-cite-table"><tbody>';
+      sec.cite_table.forEach(row => {
+        inner += `<tr><td class="ds-claim">${esc(row[0])}</td><td class="ds-cite">${esc(row[1])}</td></tr>`;
+      });
+      inner += '</tbody></table>';
+    }
+    if (sec.cite) inner += `<div class="ds-cite-line">${esc(sec.cite)}</div>`;
+    if (sec.compliance) inner += `<div class="ds-compliance">${esc(sec.compliance)}</div>`;
+    return `<section class="ds-section">
+      <div class="ds-section-head">
+        <span class="ds-num">§${esc(sec.n)}</span>
+        <span class="ds-title">${esc(sec.title)}</span>
+      </div>
+      <div class="ds-section-body">${inner}</div>
+    </section>`;
+  }).join('');
+
+  // Header + meta
+  body.innerHTML = `
+    <div class="ds-meta">
+      <span class="ds-meta-key">VERSION</span><span class="ds-meta-val">${esc(source.version)}</span>
+      <span class="ds-meta-key">SOURCE</span><span class="ds-meta-val"><code>${esc(source.source_doc)}</code></span>
+    </div>
+    ${html}
+  `;
+
+  // Toggle behavior
+  function open() {
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'auto';
+    trigger.classList.add('active');
+    track('discipline_surface_open', { version: source.version });
+  }
+  function close() {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = 'hidden';
+    trigger.classList.remove('active');
+    track('discipline_surface_close', {});
+  }
+  trigger.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+  });
+
+  // Lightweight analytics — same fire-and-forget pattern as main.jsx
+  function track(event, props) {
+    try {
+      fetch('/api/v1/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event, props,
+          path: window.location.pathname,
+          ts: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+    } catch (_) {}
+  }
+})();
+</script>
+
+<style>
+/* ═══════════════════════════════════════════
+   DISCIPLINE SURFACE — disclosure panel
+   Source-of-truth: docs/LP_FACING_2026-08-08.md
+   Aesthetic: muted, JetBrains Mono, restrained,
+   matches the radar/core visual language.
+═══════════════════════════════════════════ */
+.discipline-trigger {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px 9px 12px;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: 2px;
+  color: rgba(199, 210, 254, 0.78);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  animation: labelFadeIn 1.4s ease forwards 1.2s;
+  opacity: 0;
+}
+.discipline-trigger:hover {
+  background: rgba(30, 58, 138, 0.32);
+  border-color: rgba(99, 102, 241, 0.55);
+  color: rgba(255, 255, 255, 0.95);
+}
+.discipline-trigger.active {
+  background: rgba(30, 58, 138, 0.42);
+  border-color: rgba(129, 140, 248, 0.75);
+  color: #fff;
+}
+.discipline-trigger .ds-icon {
+  font-size: 14px;
+  line-height: 1;
+  color: rgba(129, 140, 248, 0.85);
+}
+.discipline-trigger .ds-sub {
+  font-size: 8px;
+  letter-spacing: 0.10em;
+  color: rgba(99, 102, 241, 0.55);
+  text-transform: none;
+  font-weight: 400;
+}
+
+.discipline-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(1, 5, 14, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+.discipline-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.discipline-shell {
+  margin: 36px 28px;
+  width: 100%;
+  max-width: 920px;
+  background: rgba(2, 6, 23, 0.96);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 4px;
+  box-shadow:
+    0 0 60px 12px rgba(30, 58, 138, 0.30),
+    0 0 200px 60px rgba(7, 26, 74, 0.18);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 72px);
+  font-family: 'Syne', sans-serif;
+}
+
+.discipline-header {
+  padding: 22px 28px 18px;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.14);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-shrink: 0;
+}
+.dh-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.20em;
+  color: rgba(99, 102, 241, 0.65);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.dh-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.94);
+  line-height: 1.3;
+}
+.dh-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(148, 163, 184, 0.55);
+  margin-top: 6px;
+  letter-spacing: 0.02em;
+}
+.dh-sub code {
+  background: rgba(99, 102, 241, 0.10);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-size: 9px;
+  color: rgba(165, 180, 255, 0.85);
+}
+.discipline-close {
+  background: transparent;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  color: rgba(199, 210, 254, 0.65);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.discipline-close:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(129, 140, 248, 0.55);
+  color: #fff;
+}
+
+.discipline-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 28px 28px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.35) transparent;
+}
+.discipline-body::-webkit-scrollbar { width: 6px; }
+.discipline-body::-webkit-scrollbar-track { background: transparent; }
+.discipline-body::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.30);
+  border-radius: 3px;
+}
+
+.ds-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  margin-bottom: 22px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.14);
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.ds-meta-key { color: rgba(99, 102, 241, 0.55); }
+.ds-meta-val { color: rgba(199, 210, 254, 0.75); }
+.ds-meta-val code {
+  background: rgba(99, 102, 241, 0.10);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-size: 9px;
+  color: rgba(165, 180, 255, 0.85);
+}
+
+.ds-section {
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+}
+.ds-section:last-child { border-bottom: none; }
+.ds-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.ds-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: rgba(99, 102, 241, 0.85);
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  padding: 2px 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.ds-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  letter-spacing: -0.005em;
+  line-height: 1.35;
+}
+.ds-zh {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(219, 226, 246, 0.78);
+  line-height: 1.75;
+  margin: 0 0 10px;
+  max-width: 760px;
+}
+.ds-cite-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(148, 163, 184, 0.55);
+  letter-spacing: 0.02em;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(99, 102, 241, 0.15);
+}
+.ds-compliance {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(245, 158, 11, 0.55);
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.ds-firewall {
+  margin: 8px 0 4px;
+  padding: 12px 14px;
+  background: rgba(239, 68, 68, 0.04);
+  border-left: 2px solid rgba(239, 68, 68, 0.55);
+  border-radius: 0 2px 2px 0;
+}
+.ds-fw-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: rgba(239, 68, 68, 0.75);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ds-fw-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  color: rgba(219, 226, 246, 0.78);
+}
+.ds-fw-table td {
+  padding: 6px 0;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.10);
+}
+.ds-fw-table tr:last-child td { border-bottom: none; }
+.ds-fw-cant {
+  font-weight: 600;
+  color: rgba(248, 113, 113, 0.88);
+  width: 28%;
+  padding-right: 14px;
+}
+.ds-fw-why {
+  color: rgba(199, 210, 254, 0.65);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.ds-cite-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+.ds-claim, .ds-cite {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.ds-claim {
+  width: 32%;
+  color: rgba(199, 210, 254, 0.85);
+  font-weight: 500;
+  border-right: 1px solid rgba(99, 102, 241, 0.10);
+}
+.ds-cite {
+  color: rgba(148, 163, 184, 0.62);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+}
+
+.discipline-footer {
+  padding: 14px 28px 18px;
+  border-top: 1px solid rgba(99, 102, 241, 0.14);
+  background: rgba(2, 4, 12, 0.6);
+  flex-shrink: 0;
+}
+.df-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 3px 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+.df-key {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: rgba(99, 102, 241, 0.55);
+  text-transform: uppercase;
+  width: 130px;
+  flex-shrink: 0;
+}
+.df-val {
+  font-size: 10px;
+  color: rgba(199, 210, 254, 0.65);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 720px) {
+  .discipline-trigger { bottom: 14px; right: 14px; padding: 7px 11px; gap: 8px; }
+  .discipline-trigger .ds-sub { display: none; }
+  .discipline-shell { margin: 14px 10px; max-height: calc(100vh - 28px); }
+  .discipline-header { padding: 16px 18px 12px; }
+  .discipline-body { padding: 14px 18px 18px; }
+  .discipline-footer { padding: 12px 18px 14px; }
+  .dh-title { font-size: 16px; }
+  .ds-fw-cant { width: 40%; }
+  .df-key { width: 100px; font-size: 8px; }
+}
+</style>
+
 <script>
 // ── Mouse parallax ──────────────────────────────────────
 document.addEventListener('mousemove', e => {
