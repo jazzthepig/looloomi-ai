@@ -108,6 +108,56 @@ def test_benchmark_leg_is_structural_not_a_later_choice():
         "book and benchmark legs must use the same prices on the same day"
 
 
+def test_a_lost_cache_must_not_restart_the_clock():
+    """The severe failure this book can have. State lives in Redis; if that key is
+    evicted, a naive `if not state: inception` restarts the NAV at 1.0 and resets the
+    60-day gate — while every log line stays green. That is S-105 (the strategy
+    library spent 12 days in a 24h-TTL Redis key) with time as the lost object
+    instead of rows, and time cannot be re-fetched.
+
+    Supabase is the system of record and Redis is a cache, so a cache miss must read
+    through, never start over."""
+    src = open(os.path.join(os.path.dirname(__file__), "..",
+                            "src/data/signals/beta_core_paper.py"), encoding="utf-8").read()
+    assert "_recover_state_from_nav" in src, "no recovery path from the durable table"
+    # recovery must be attempted BEFORE the inception branch can be reached
+    rec = src.index("_recover_state_from_nav(px)")
+    inc = src.index('"status": "inception"')
+    assert rec < inc, "recovery must be attempted before inception is allowed"
+    assert "beta_core_nav?select=mark_date,nav" in src, \
+        "recovery must read the durable NAV table, not another cache"
+
+
+def test_a_stalled_clock_is_observable_from_outside_the_process():
+    """A daily loop that catches its exception and sleeps 24h fails by NOT WRITING.
+    Nothing inside that process can report on it, and an in-process counter resets on
+    exactly the deploy that broke it — so continuity is measured against the calendar
+    from the durable table, and surfaced where an external probe can see it.
+
+    Also asserts it stays OFF /health: that function is contractually I/O-free after
+    the 2026-07-29 P0, and a continuity check needs a Supabase read. The fix for a
+    health check sitting on a dead data layer must not become a health check that
+    loads the data layer."""
+    src = open(os.path.join(os.path.dirname(__file__), "..",
+                            "src/data/signals/beta_core_paper.py"), encoding="utf-8").read()
+    assert "def continuity_state" in src
+    for field in ("days_since_mark", "missing_days", "gate_days_remaining", "stalled"):
+        assert field in src, f"continuity must report {field}"
+
+    main = open(os.path.join(os.path.dirname(__file__), "..", "src/api/main.py"),
+                encoding="utf-8").read()
+    assert "/internal/beta-core-clock" in main, "no external-probe surface for the clock"
+    health = main[main.index("def _health_with_data_layer"):
+                  main.index("def _health_with_data_layer") + 3000]
+    assert "continuity_state" not in health, \
+        "/health must stay I/O-free — the clock check belongs on its own endpoint"
+
+    probe = open(os.path.join(os.path.dirname(__file__), "..",
+                              "scripts/external_probe.sh"), encoding="utf-8").read()
+    assert "beta-core-clock" in probe, \
+        "the external probe is the only observer that survives the deploy that breaks marking"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
