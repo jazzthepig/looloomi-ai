@@ -168,3 +168,43 @@ Jazz 之前问过"离接真钱差多少"。**今天的诚实答案:**
 ---
 
 *本文档只写实测数字。重评前重跑 §1.1 的 paper NAV 查询与 §1.2 的六条台账。*
+
+---
+
+## 7. ADDENDUM 2026-08-08 — §3 P0 执行记录
+
+> 本节是 §0–§6 的执行回执,**不是**对原数字的修改。原数字代表 2026-08-07
+> 审计当日的实测状态。本节记录当日之后发生的、与本审计直接相关的两个动作。
+
+### 7.1 §3 P0 #1 (开 ①层 paper book,今天开始 marking) — ✅ 已完成
+
+- **执行 commit:** `121b54c` (2026-08-08, Seth)
+- **产物:** `src/data/signals/beta_core_paper.py` + `src/api/main.py` `_beta_core_loop` +
+  `scripts/supabase_beta_core.sql`
+- **构造:** 等权持有 coverage 面板 → ex-ante vol target → ⓠ regime override cap {0.0, 0.5, 1.0, 1.3}。
+  不做空、不中性化、benchmark NAV 与 book NAV 同行标记。
+- **§1.1 表格修正:** ①层 hold-the-panel 行原写"**0** 天",今日起改为"**≥1 天**"。
+  60-day SHIP 门槛: 最早 2026-10-初 满 60 天(此前所有估算仍有效)。
+- **验证状态:** loop 已在 Railway 启动;今日 mark 是否落地需 Mac 侧
+  probe `beta_core_nav` 表确认(curl 已受 auto-mode 阻断;留给 Mac)。
+
+### 7.2 §3 P0 #2 (3 本 L/S book 降级为研究记录) — ✅ 已完成
+
+- **执行 commit:** (本审计日新增,紧随 7.1)
+- **范围:** `src/data/signals/{causal_paper,combined_book,scalable_paper}.py` 三件,
+  对应 §1.1 表中 causal_paper_nav / combined_book_nav / scalable_book_nav 三本。
+- **改动:** 仅 docstring STATUS 块 + `src/api/main.py` 对应三个 loop 上方注释 ——
+  loop 继续运行(graveyard 是资产),但不再被任何路由或文档当作"产品候选"。
+- **未触动的 book:** dingge_paper (RWA volume-gated, 非 L/S)、
+  two_layer_paper (two-layer architecture, 非 L/S — 详见 §5b 设计)、
+  `src/research/paper_books/{vol_carry, regime_nowcast, macro_overlay}.py`
+  (60 天 forward paper phase, 独立 prototype, 与本审计不冲突)。
+
+### 7.3 §3 P1–P3 状态
+
+- P1 (解冻广度, §DATA_ARCHITECTURE §4 第 4 步): **未开始**,仍按 §3 优先级顺序。
+- P2 (把资产讲对, 把证伪装置做差异化主张): **部分进行中** — 已在 CI 中
+  (DSR/PBO + 可执行性 + neutralize() + 锚点判据 + 事件计数 + L0 身份守卫);
+  对外材料对齐等 LP-facing 文档更新待 Jazz 决策。
+- P3 (明确不做): **已执行**,本审计本身即为不做清单的实证。
+

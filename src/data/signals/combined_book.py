@@ -2,6 +2,14 @@
 Combined Book — the live NAV of the factory's walk-forward-validated nucleus (Seth 2026-07-15).
 ================================================================================================
 
+STATUS (2026-08-08, OVERSIGHT §3 P0 #2): DEMOTED TO RESEARCH RECORD.
+Market-neutral L/S multi-signal blend. S-103 measured β-confounding; S-105 measured
+cost > edge. The 23-day forward paper track is retained for SIGNAL-TRAJECTORY continuity
+and factory self-recalibration verification, NOT as product evidence. The loop continues
+to run — the graveyard is the asset. See OVERSIGHT_2026-08.md §0 + §3.
+
+────────────────────────────────────────────────────────────────────────────
+
 Stage 3 of the loop-as-factory plan: fold the orthogonal, walk-forward-robust signals the
 factory shortlisted into ONE market-neutral live paper book, marked daily, honest on funding +
 cost. Not per-signal toys — a single NAV curve that IS the ensemble. Success = this curve

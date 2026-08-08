@@ -2,6 +2,16 @@
 Causal Positioning Sleeve — live PAPER book (Seth, 2026-07-11).
 ===============================================================
 
+STATUS (2026-08-08, OVERSIGHT §3 P0 #2): DEMOTED TO RESEARCH RECORD.
+Market-neutral L/S construction. S-103 measured the construction as β-confounded
+(tier ranks are essentially a β sort; |t| < 2 across all 5 neutralisation tiers).
+S-105 measured cost > edge (turnover 45.8×/yr × 4.6%/yr > ~3% best-case effect).
+The 25-day forward paper track is retained for SIGNAL-TRAJECTORY continuity
+(NOT as product evidence); the loop is NOT being stopped — the graveyard is
+the asset. See OVERSIGHT_2026-08.md §0 + §3 for the diagnosis that drove the demotion.
+
+────────────────────────────────────────────────────────────────────────────
+
 Turns the one walk-forward-and-cost-validated edge (causal_positioning: fade funding
 crowding, market-neutral, corr +0.002 to swing, weekly-rebal net +1.69@10bps) into a
 LIVE paper track record. This is what converts "walk-forward candidate" → "certified with

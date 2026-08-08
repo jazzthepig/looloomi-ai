@@ -320,7 +320,10 @@ async def _start_prediction_resolver_loop():
         print("[PRED] ✅ daily prediction-resolver loop scheduled")
 
 
-# ── Causal paper book — live NAV track record of the validated market-neutral sleeve ──
+# ── Causal paper book — DEMOTED 2026-08-08 to RESEARCH RECORD per OVERSIGHT §3 P0 #2 ──
+# S-103 measured β-confounding; S-105 measured cost > edge. 25-day forward paper
+# retained for signal-trajectory continuity, NOT as product evidence. Loop kept
+# running — the graveyard is the asset. See src/data/signals/causal_paper.py.
 # Daily mark, weekly rebalance (the cost-validated deployable cadence). Turns the
 # walk-forward candidate into a real, honest, LP-showable number. Binance reachable
 # from the Singapore region. See src/data/signals/causal_paper.py.
@@ -370,7 +373,10 @@ async def _start_dingge_paper_loop():
         print("[DINGGE-PAPER] ✅ daily 顶格 RWA paper-sleeve loop scheduled")
 
 
-# ── Combined book — live NAV of the factory's walk-forward-validated nucleus ───
+# ── Combined book — DEMOTED 2026-08-08 to RESEARCH RECORD per OVERSIGHT §3 P0 #2 ────
+# S-103 + S-105 refuted the L/S construction; 23-day forward paper retained for
+# signal-trajectory continuity, NOT as product evidence. Loop kept running so the
+# factory self-recalibration observation isn't dropped. Graveyard is the asset.
 # Stage 3 of the loop-as-factory: one market-neutral book = the ensemble, marked daily.
 async def _combined_book_loop():
     await _asyncio.sleep(480)   # 8 min warmup
@@ -392,7 +398,10 @@ async def _start_combined_book_loop():
         print("[COMBINED-BOOK] ✅ daily combined-book NAV loop scheduled")
 
 
-# ── Scalable book — live NAV of the profit-max multi-strategy book (FACTOR+TREND+CARRY) ──
+# ── Scalable book — DEMOTED 2026-08-08 to RESEARCH RECORD per OVERSIGHT §3 P0 #2 ──
+# S-103 + S-105 refuted the L/S construction; 22-day forward paper retained for
+# TREND-sleeve capacity verification (the only OVERSIGHT §2.3-surviving shape candidate
+# for a DIRECTIONAL beta sleeve, not this market-neutral construction). Loop kept running.
 # The high-capacity, vol-targeted book on the deepest instruments. See src/data/signals/scalable_paper.py.
 async def _scalable_book_loop():
     await _asyncio.sleep(540)   # 9 min warmup
@@ -1104,6 +1113,13 @@ def _health_with_data_layer() -> dict:
         strat = durability_state()
     except Exception as e:
         strat = {"error": str(e)}
+    # ① book clock: deliberately NOT here. This function's contract is "issues no I/O,
+    # so it stays safe to poll and cannot itself add load to a saturated backend" — that
+    # is the 2026-07-29 P0's fix, and the continuity check needs a Supabase read. Putting
+    # it here would make /health the thing that saturates the backend it reports on.
+    # It lives on /internal/beta-core-clock instead, polled by the EXTERNAL probe, which
+    # is also the only observer that survives the deploy that breaks the marking loop.
+    beta_core_note = "see /internal/beta-core-clock (kept off /health: no I/O here)"
     return {
         **_health_payload,
         "status": "degraded" if degraded else "healthy",
@@ -1113,8 +1129,30 @@ def _health_with_data_layer() -> dict:
             "breaker": cb,
             "last_universe_build": build,
             "strategy_library": strat,
+            "beta_core_clock": beta_core_note,
         },
     }
+
+
+@app.get("/internal/beta-core-clock")
+async def beta_core_clock():
+    """Is the ① book's 60-day clock actually running?
+
+    Separate from /health on purpose: this reads Supabase, and /health is contractually
+    I/O-free (the 2026-07-29 P0 was a health check sitting on top of a dead data layer;
+    the fix must not become a health check that loads the data layer).
+
+    This is the endpoint the external probe should watch, because the failure mode is
+    the loop NOT running — and an in-process signal cannot report on a process that
+    stopped, nor survive the deploy that broke it. 503 when stalled so an uptime monitor
+    can see it without parsing the body."""
+    try:
+        from src.data.signals.beta_core_paper import continuity_state
+        st = await continuity_state()
+    except Exception as e:
+        return JSONResponse(status_code=503, content={"error": str(e)[:160]})
+    stalled = bool(st.get("stalled") or st.get("started") is False)
+    return JSONResponse(status_code=503 if stalled else 200, content=st)
 
 
 @app.get("/health")
