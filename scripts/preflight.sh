@@ -108,6 +108,18 @@ python3 -m tests.test_state_persistence
 #               in CI and CI is not in the write path. Here validate() runs BEFORE
 #               the insert - a gate the writer can route around is a suggestion.
 python3 -m tests.test_strategy_intake
+# 3a-terdecies. regime write path (2026-08-09). Chasing a discrepancy flagged twice
+#               and left unchased - the table said Tightening while the ① book had
+#               read NEUTRAL - produced two bugs in one query. The daily snapshot
+#               passed a MISSING regime through the lenient canonical_regime(), which
+#               returns "NEUTRAL", and wrote it for all 58 symbols in one batch, once
+#               a day. And the push receiver stored the Mac engine's label RAW, so the
+#               table holds `Tightening` and `TIGHTENING` as if they were two regimes.
+#               Live cost: the ① book sizes off this label (TIGHTENING 0.5, NEUTRAL
+#               1.0) and ran FULL SIZE on day one of its forward record. A normaliser
+#               that turns unknown into a legitimate value belongs on the READ side
+#               only; on write, unmeasured is NULL (I1).
+python3 -m tests.test_regime_write_path
 # 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
 #            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
 #            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT

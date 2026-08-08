@@ -1830,11 +1830,45 @@ _CANONICAL_REGIMES = {"GOLDILOCKS", "RISK_ON", "EASING", "NEUTRAL", "TIGHTENING"
 
 def canonical_regime(r: Optional[str]) -> str:
     """Any regime label (title-case / upper-snake / 'UNKNOWN' / None) → canonical UPPER_SNAKE.
-    Unknown/failed markers collapse to NEUTRAL (a valid regime; UNKNOWN is not one consumers accept)."""
+    Unknown/failed markers collapse to NEUTRAL (a valid regime; UNKNOWN is not one consumers accept).
+
+    ⚠️ FOR READS ONLY. This collapses "we do not know" into a VALID REGIME, which is
+    right for a consumer that must render something and wrong for anything that
+    persists. Use `canonical_regime_strict()` on every WRITE path — see below."""
     if not r:
         return "NEUTRAL"
     s = str(r).strip().upper().replace("-", "_").replace(" ", "_")
     return s if s in _CANONICAL_REGIMES else "NEUTRAL"
+
+
+def canonical_regime_strict(r: Optional[str]) -> Optional[str]:
+    """Canonical UPPER_SNAKE, or **None when the label is missing or unrecognised**.
+
+    WHY THIS EXISTS (2026-08-09). Two bugs found in one query, both from the lenient
+    version above being used where a value gets STORED:
+
+    · The daily snapshot passed a missing regime through `canonical_regime()` and
+      wrote **NEUTRAL for all 58 symbols** in one batch — measured 2026-08-08, 58
+      rows sharing the timestamp 14:14:25.189708, while the same source wrote
+      TIGHTENING at 04:04 and 14:53. Once a day, every day.
+    · The `/internal/cis-scores` receiver stored the Mac engine's label RAW, so the
+      table carries `Tightening` (local_engine, 645 rows) and `TIGHTENING`
+      (railway, 749 rows) as if they were different regimes. Canonicalisation was
+      happening at READ time and never at WRITE time.
+
+    The first one had a live cost: the ① book sizes exposure off this label,
+    TIGHTENING maps to 0.5 and NEUTRAL to 1.0, so the book ran FULL SIZE on the
+    first day of its forward record because a fallback default was indistinguishable
+    from a real reading.
+
+    **A normaliser that turns "unknown" into a legitimate value belongs on the read
+    side only.** On the write side, unmeasured is NULL (I1) — otherwise every
+    consumer downstream inherits a fact that was never observed.
+    """
+    if r is None or str(r).strip() == "":
+        return None
+    s = str(r).strip().upper().replace("-", "_").replace(" ", "_")
+    return s if s in _CANONICAL_REGIMES else None
 
 
 def calculate_total_score(
