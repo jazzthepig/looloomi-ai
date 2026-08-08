@@ -172,6 +172,7 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
             symbols_in_push = [a.get("symbol", "") for a in universe if a.get("symbol")]
             recent_scores   = await supabase_get_recent_scores(symbols_in_push, n=30)
 
+            from src.data.cis.cis_provider import canonical_regime_strict as _canon_strict_push
             macro_regime_push = payload.get("macro_regime") or (macro or {}).get("regime")
 
             # Regime transition detection (Simons Upgrade P1.1)
@@ -222,7 +223,12 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                     "pillar_s":           pillars.get("S") if isinstance(pillars, dict) else None,
                     "pillar_a":           pillars.get("A") if isinstance(pillars, dict) else None,
                     "asset_class":        asset.get("asset_class", asset.get("class", "")),
-                    "macro_regime":       macro_regime_push,
+                    # Canonicalise at WRITE time. Without this the table holds
+                    # `Tightening` (local_engine) and `TIGHTENING` (railway) as if
+                    # they were different regimes — normalisation was happening only
+                    # on read. Strict variant: an unrecognised label becomes NULL
+                    # rather than a plausible NEUTRAL.
+                    "macro_regime":       _canon_strict_push(macro_regime_push),
                     "regime_transition":  regime_transition,
                     "previous_regime":     previous_regime,
                     "data_tier":          data_tier,
@@ -3246,6 +3252,28 @@ async def snapshot_full_universe_to_supabase() -> dict:
         return {"ok": False, "rows": 0, "reason": "empty_universe"}
 
     regime = (data or {}).get("macro_regime") or (data or {}).get("regime")
+    # I1 APPLIED TO A LABEL (fixed 2026-08-09). `canonical_regime(None)` returns
+    # "NEUTRAL" — a perfectly valid regime — so when the universe payload arrived
+    # without one, this job wrote NEUTRAL for all 58 symbols in a single batch and
+    # nothing looked wrong. Measured on 2026-08-08: 58 rows sharing the timestamp
+    # 14:14:25.189708, while the SAME source wrote TIGHTENING at 04:04 and 14:53.
+    # It happened once a day (08-07 08:44, 08-06 10:17).
+    #
+    # The live cost: the ① book reads the regime to set exposure, TIGHTENING maps to
+    # 0.5 and NEUTRAL to 1.0, so the book ran FULL SIZE on the first day of its
+    # forward record because a fallback default was indistinguishable from a real
+    # reading.
+    #
+    # Note the asymmetry this sat next to: the guard directly above refuses to write
+    # ZERO rows ("an empty snapshot is a failure, not a valid day") and then wrote a
+    # fabricated value on every row. **Completeness was checked; correctness was not.**
+    # Unmeasured must be NULL, never a valid-looking default.
+    from src.data.cis.cis_provider import canonical_regime_strict as _canon_strict
+    _canon_regime = _canon_strict(regime)
+    if _canon_regime is None:
+        _logger.warning("[SNAPSHOT] regime %r missing or unrecognised — writing NULL, "
+                        "not NEUTRAL (a default here sizes the ① book at 1.0x for a day)",
+                        regime)
     rows = []
     for a in universe:
         sym = a.get("symbol") or a.get("asset_id")
@@ -3263,7 +3291,6 @@ async def snapshot_full_universe_to_supabase() -> dict:
                     else _a.get(K.lower()) if _a.get(K.lower()) is not None
                     else _a.get(f"pillar_{K.lower()}") if _a.get(f"pillar_{K.lower()}") is not None
                     else _a.get(f"{K.lower()}_score"))
-        from src.data.cis.cis_provider import canonical_regime as _canon
         rows.append({
             "symbol":             sym,
             "name":               a.get("name", ""),
@@ -3278,7 +3305,7 @@ async def snapshot_full_universe_to_supabase() -> dict:
             "pillar_s":           _pv("S"),
             "pillar_a":           _pv("A"),
             "asset_class":        a.get("asset_class", a.get("class", "")),
-            "macro_regime":       _canon(regime),
+            "macro_regime":       _canon_regime,   # NULL when undetermined — see above
             "data_tier":          tier_label,
             "data_quality_score": a.get("data_quality_score"),
             "las":                a.get("las"),
