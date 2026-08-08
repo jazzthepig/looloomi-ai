@@ -51,8 +51,14 @@ LEDGER = REPO / "REFUTATION_LEDGER.md"
 # Bytes were only ever a proxy that happens to equal characters for pure ASCII.
 # For an English file NOTHING changes (1 byte = 1 char); this only stops penalising
 # information-dense CJK. The cap is set BELOW today's value so it still ratchets.
-MEMORY_HARD_CAP = 3400   # CHARACTERS. was 6144 bytes; today 3,151 chars. Ratchet down only.
-MEMORY_TARGET = 3000     # characters
+#
+# 2026-08-08 — the SOFT TARGET was removed, and that is a tightening, not a relaxation.
+# A 3000-char advisory sat alongside the 3400 hard cap and warned on every single run
+# for a full day without ever blocking anything. This file's own docstring says a rule
+# nobody enforces is a wish, and MEMORY.md itself now carries "an always-on warning
+# carries no information" (S-105). Keeping a permanent warning next to a real limit
+# trains everyone to read past both. One number, enforced, ratcheting down only.
+MEMORY_HARD_CAP = 3400   # CHARACTERS. Was 6144 bytes -> 3400 chars. Lower it, never raise it.
 
 # ≤7 is a design choice, not laziness: a 30-item risk list and no list are
 # equivalent — neither gets read to the end.
@@ -72,9 +78,10 @@ def test_memory_stays_within_cap():
         f"guaranteed read on cold start; if it bloats, cold start reads nothing. "
         f"Evict dated/expiring facts to PROJECT_STATE or the ledger — MEMORY holds "
         f"only never-expiring facts.")
-    if size > MEMORY_TARGET:
-        print(f"  ⚠️  MEMORY.md {size} chars is over its {MEMORY_TARGET}-char target "
-              f"— trim, then ratchet MEMORY_HARD_CAP down.")
+    # Report headroom rather than warn: a number that is printed every run should be
+    # information, not an alarm. When headroom gets thin, evict something with a guard —
+    # if a test already catches a fact, the test is the memory.
+    print(f"  · MEMORY.md {size}/{MEMORY_HARD_CAP} chars ({MEMORY_HARD_CAP - size} headroom)")
 
 
 def test_project_state_opens_with_open_risks():
