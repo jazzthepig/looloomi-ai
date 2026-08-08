@@ -209,7 +209,61 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-08 — **① beta_core live (commit 121b54c); 3 L/S paper books demoted (commit fc4d331); OVERSIGHT §7 addendum documents §3 P0 execution receipts.**
+**Last updated:** 2026-08-08 — **S-112: "亏得越多反向越有价值" is right about the magnitude and
+wrong about the instrument — and I caught my own sampling contamination twice getting there.**
+Jazz's instinct, made testable: "will be delisted" is knowable only ex-post, so the honest question
+is whether anything observable BEFORE the collapse identifies the cohort. Two candidates, both
+refuted. The bucket table looked excellent — liquidity fading alone −4.4 % excess vs panel while deep
+drawdown alone was −0.2 %, i.e. **volume carries the information and price does not**, which fits
+"price is the reflection" perfectly. **The continuous test killed it:** r(ln liquidity change,
+excess) = 0.034, t = 1.37 on n = 1,676, while the S-102-mandated control on drawdown came back
+*stronger* at t = 2.18 with the opposite sign to the buckets, and both tails were negative. Same
+pattern-seeking as S-108; caught this time because the control ran first.
+**The reframe that matters: avoiding the dying is not alpha for a FoF, it is not-dying** — it shows
+up in the LEVEL, and the level is S-111's 25.1pp/yr. So the instrument is an ADMISSION RULE, not a
+short book, and an admission rule needs a death base rate rather than a significant cross-sectional t.
+**Then I contaminated my own sample and caught it.** Death rate by liquidity quintile came out
+85 / 74 / 53 / 47 / 42 % — beautifully monotone, and entirely an artifact of MY BACKFILL ORDER: I had
+loaded 125 dead names first and only ~40 survivors, so the sample ran 60 % dead against a true base
+rate of 126/687 = 18 %. Backfilled 179k rows of survivors and re-ran on 186 assets: **39 / 27 / 24 /
+24 / 24 % — not monotone at all, a threshold effect at the very bottom.**
+⇒ **Actionable: investable-universe admission at ADV > ~$15M. Being pickier than that buys nothing**
+(quintiles 2–5 are flat), which is also why the coarse threshold cannot overfit.
+**Lesson #92: when you control the sampling order, the base rate is the first thing to check.** That
+85→42 table would pass any review — monotone, adequate n, plausible mechanism. The only thing that
+exposes it is "what is this population's true base rate", a question unrelated to the hypothesis.
+**Bounds:** death rate still runs high (28 % sample vs 18 % population — survivor backfill
+incomplete), so only the SHAPE across quintiles is usable, not the levels; `died` = current SETTLING,
+a snapshot of in-flight delistings; $15M has no sensitivity analysis and no DSR; **no shorting-cost
+model exists, so the "reverse" trade's executability is entirely unverified.**
+
+Earlier: **S-111: survivorship bias measured at 25.1 percentage points
+per year — 8× the largest effect we have ever chased.** DATA_ARCHITECTURE §4 step 4 landed and the
+answer is bigger than the step. `fapi/exchangeInfo` exposes **126 SETTLING** symbols — names being
+delisted right now, i.e. exactly the population a current-liquidity screen erases — and we had not
+looked at that field in two months. Assets **76 → 687**, 126 recorded as delisted, 125,003 rows of
+dead-name history backfilled (addressed by `venue_symbol`, because `base||'USDT'` silently 400s on
+`1000WHY` / `AI16Z`, and a 400 is indistinguishable from "no history").
+**Measured: of 302 assets alive on 2024-06-15, 63 are dead today = 20.9 %.** Equal-weight panel,
+2024-01 → 2026-08, PIT: **with the dead −211.1 % cumulative log, survivors only −146.3 % — a
++64.8pp gap over 2.58 years = 25.1pp/yr.** The largest tier effect we ever measured was ~3 %/yr.
+**We spent fifteen attempts hunting a 3 % signal on a benchmark that was wrong by 25 %.** Same error
+class as S-103 twice over: there the benchmark had the wrong ASSET, here the wrong MEMBERSHIP —
+neither was an analysis mistake, both were "compared to what".
+Also fixed quietly: `listed_at` had been the date OUR COLLECTION began, a collection artifact
+wearing a listing date's clothes, which dated every membership interval wrong. `onboardDate` is now
+the source.
+**The forward book is unaffected and this raises its value:** membership is recorded point-in-time
+from today, so a name that dies stays in the panel until it dies. `beta_core_nav` is
+survivorship-free from its first mark.
+**Lesson #91: a bias that is known to exist but cannot be quantified outranks any signal not yet
+found.** Quantify every known bias into a number before hunting; if it cannot be quantified, either
+go get the data — here, one `exchangeInfo` call — or mark the conclusions untrustworthy.
+**Bound: 25.1pp/yr is a LOWER bound** (SETTLING catches only in-flight delistings; symbols already
+removed from exchangeInfo are invisible) **and is computed on partial coverage** — ~136 of the 302.
+Not yet done: applying this correction retroactively to R76–R94 and S-101…S-109.
+
+Earlier: **① beta_core live (commit 121b54c); 3 L/S paper books demoted (commit fc4d331); OVERSIGHT §7 addendum documents §3 P0 execution receipts.**
 The decisive measurement: bar convention is a property of the SOURCE, not of the class.
 `|open/prev_close-1|` per source — binance_hist median **0.00010** (0.1 % of rows >1 %) ·
 yfinance 0.00362 (19.1 %) · eodhd 0.00355 (20.4 %) · **coingecko 0.02563 (77.2 %)**. CoinGecko's
