@@ -414,6 +414,35 @@ async def _start_scalable_book_loop():
         print("[SCALABLE-BOOK] ✅ daily scalable-book NAV loop scheduled")
 
 
+# ── ① BETA CORE — the product book, and the benchmark for every book above ──
+# Oversight review 2026-08-07: all five books accruing forward record were long/short,
+# gross ~1.0, market neutral — the ④ construction CLAUDE.md says discards beta by
+# construction, refuted again the same day by S-103 and S-105. Layer ①, which the return
+# hierarchy calls the FoF core AND the benchmark every sleeve is measured against, had
+# ZERO forward days. This loop exists because the 60-day gate is calendar-bound: the
+# cheapest possible day to start is today, and every other book lacks a benchmark until
+# this one runs. See src/data/signals/beta_core_paper.py.
+async def _beta_core_loop():
+    await _asyncio.sleep(600)   # 10 min warmup — after the panel loaders are warm
+    while True:
+        try:
+            from src.data.signals.beta_core_paper import mark_and_rebalance
+            res = await mark_and_rebalance(dry_run=False)
+            print(f"[BETA-CORE] mark — status={res.get('status')} nav={res.get('nav')} "
+                  f"bench={res.get('benchmark_nav')} excess={res.get('excess_pct')}% "
+                  f"cap={res.get('exposure_cap')} regime={res.get('regime')}")
+        except Exception as _e:
+            print(f"[BETA-CORE] ⚠️  mark failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_beta_core_loop():
+    if os.environ.get("DISABLE_BETA_CORE", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_beta_core_loop())
+        print("[BETA-CORE] ✅ daily ① beta-core NAV loop scheduled (the product book)")
+
+
 # ── §5b two-layer book — forward OOS clock for the V5c core × C regime overlay ──
 # R57 validated the ARCHITECTURE but found the V5c core structurally dead (2.7% engaged
 # since 2025-11). This sleeve marks daily anyway — a flat day is a real observation — and
