@@ -71,6 +71,14 @@ python3 -m tests.test_data_architecture
 #              to NEUTRAL rather than to large, and the benchmark leg is structural so
 #              excess is arithmetic rather than a benchmark chosen at analysis time.
 python3 -m tests.test_beta_core_book
+# 3a-nonies. effective breadth (2026-08-08, S-115). Three ledger entries quoted
+#            N/(1+(N-1)rho) as "independent bets". It is not: that formula is the
+#            exact answer for equal-weight VARIANCE REDUCTION (long-only book), while
+#            breadth in IR = IC*sqrt(breadth) is the correlation matrix's SPECTRUM
+#            (neutral book). They diverge even when equicorrelation HOLDS - 2.99 vs
+#            7.38 at rho=0.3 - so the error was never arithmetic, it was quoting a
+#            breadth number without saying which book it constrains.
+python3 -m tests.test_effective_breadth
 # 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
 #            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
 #            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT
