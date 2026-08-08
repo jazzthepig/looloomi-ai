@@ -1,6 +1,6 @@
 """Smoke tests for r77_multicycle_revalidation (Phase C, 2026-08-08).
 
-Eleven pure-function pins:
+Twelve pure-function pins:
   1. load_r77_panel() returns dict with funding / ohlcv_returns / cis_long /
      coverage; coverage has earliest/latest/n_obs/n_assets per source.
   2. earliest_funding_common_date(funding_df, r63_assets) returns a Timestamp
@@ -9,8 +9,9 @@ Eleven pure-function pins:
      mutation of the input).
   4. The funding-coverage slice len < full len and iloc[0].index >= start.
   5. compute_coverage_meta(panels) returns the coverage dict with all 3 sources.
-  6. report_r77_layered() returns three layer keys: r46_full_731d,
-     r77_full_731d, r77_funding_coverage_window.
+  6. report_r77_layered() returns four layer keys: r46_full_731d,
+     r46_funding_coverage_window, r77_full_731d,
+     r77_funding_coverage_window.
   7. Every layer carries the 3-check field set (gross_t, 5bps_t/oos_t,
      passes_gross, passes_oos, passes_all, max_dd, episodes, per_window).
   8. Verdict grammar has R77_FROZEN_WEIGHTS_UNHASHED + exactly one of
@@ -20,6 +21,11 @@ Eleven pure-function pins:
  10. Source-text honesty: top-level defines R77_FROZEN_W_R46 / W_R62 / W_R76
      AND does NOT import any FROZEN_SPEC_HASH symbol.
  11. Pure computation: no live Supabase call, no CSV write outside reports/.
+ 12. NEW: the two funding-coverage layers (r46_funding_coverage_window and
+     r77_funding_coverage_window) share the same earliest index — they were
+     both sliced at earliest_funding_common_date, so they MUST start at the
+     same date. If they don't, the "marginal contribution of R62+R76 vs
+     R46" comparison is meaningless.
 
 Each test runs standalone (no pytest) via main() at the bottom.
 """
@@ -108,14 +114,16 @@ def t_compute_coverage_meta_shape():
     print("  ✓ compute_coverage_meta returns 3 sources with n_obs>0")
 
 
-# ── Test 6: report_r77_layered emits three layer keys ────────────────────────
+# ── Test 6: report_r77_layered emits four layer keys ────────────────────────
 def t_report_layers_keys():
     panels = r.load_r77_panel()
     verdict = r.report_r77_layered(panels)
     layers = verdict["layers"]
-    for k in ("r46_full_731d", "r77_full_731d", "r77_funding_coverage_window"):
+    for k in ("r46_full_731d", "r46_funding_coverage_window",
+              "r77_full_731d", "r77_funding_coverage_window"):
         assert k in layers, f"layer {k} missing from report"
-    print("  ✓ report_r77_layered emits 3 layers (r46_full, r77_full, funding_window)")
+    print("  ✓ report_r77_layered emits 4 layers "
+          "(r46_full, r46_funding_window, r77_full, r77_funding_window)")
 
 
 # ── Test 7: each layer carries the 3-check + episode fields ──────────────────
@@ -210,6 +218,34 @@ def t_no_live_io_outside_reports():
     print("  ✓ no live Supabase, no .to_csv(); writes go to reports/")
 
 
+# ── Test 12: funding-coverage slices share the same earliest index ──────────
+def t_funding_coverage_slices_share_earliest_index():
+    panels = r.load_r77_panel()
+    verdict = r.report_r77_layered(panels)
+    r46_fc = verdict["layers"]["r46_funding_coverage_window"]
+    r77_fc = verdict["layers"]["r77_funding_coverage_window"]
+    # Both slices MUST start at the same date. R46 is reindexed to R77's
+    # funding-window index inside _layer_metrics, so the slice first_dates
+    # are equal — but the SLICE n_days must equal the funding_window's
+    # n_days_in_window (the R77 slice). If they diverge, the
+    # marginal-contribution comparison is silently broken.
+    assert r46_fc["first_date"] == r77_fc["first_date"], (
+        f"R46 funding-window starts {r46_fc['first_date']} but R77 funding-window "
+        f"starts {r77_fc['first_date']} — they must share the same slice first_date "
+        f"so the marginal-contribution comparison is meaningful."
+    )
+    assert r46_fc["n_days"] == r77_fc["n_days"], (
+        f"R46 funding-window has {r46_fc['n_days']} days but R77 has {r77_fc['n_days']} "
+        f"— they must share n_days_in_window so the marginal-contribution comparison "
+        f"is meaningful."
+    )
+    assert r77_fc["n_days"] == verdict["funding_window"]["n_days_in_window"], (
+        f"R77 funding-window has {r77_fc['n_days']} days but verdict payload says "
+        f"{verdict['funding_window']['n_days_in_window']} — they must match."
+    )
+    print("  ✓ funding-coverage slices share the same earliest index + n_days")
+
+
 # ── run all ──────────────────────────────────────────────────────────────────
 _TEST_FUNCS = [
     t_load_r77_panel_shape,
@@ -223,6 +259,7 @@ _TEST_FUNCS = [
     t_source_text_honesty,
     t_no_frozen_spec_hash_imported,
     t_no_live_io_outside_reports,
+    t_funding_coverage_slices_share_earliest_index,
 ]
 
 
