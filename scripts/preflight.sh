@@ -79,6 +79,16 @@ python3 -m tests.test_beta_core_book
 #            7.38 at rho=0.3 - so the error was never arithmetic, it was quoting a
 #            breadth number without saying which book it constrains.
 python3 -m tests.test_effective_breadth
+# 3a-decies. storage hygiene (2026-08-08). Supabase hit 90% of its tier and the
+#            obvious move was archiving rows. Measurement said otherwise: ~84 MB of
+#            dead indexes plus ~128 MB of bloat from a same-day bulk UPDATE that
+#            populated asset_id - autovacuum had already cleared the dead tuples, so
+#            the waste was invisible to the usual check while the pages stayed fat.
+#            449 -> 237 MB with zero rows archived. Guards the generalisable parts:
+#            a bulk UPDATE on a large table must declare its storage cost, index
+#            scan counts are evidence only when the stats are old enough, and the
+#            archive order is set by REFETCHABILITY rather than by size.
+python3 -m tests.test_storage_hygiene
 # 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
 #            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
 #            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT

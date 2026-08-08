@@ -31,6 +31,19 @@
 --     disappeared once identity was correct.
 -- ============================================================================
 
+-- ⚠️ STORAGE COST — the three UPDATEs below rewrite ~1M rows across two large
+-- tables. Every UPDATE writes a NEW tuple version; autovacuum will reclaim the
+-- dead ones, but the freed space stays inside the pages and is never returned to
+-- the OS. Measured consequence on 2026-08-08: hourly ran at 276 B/row against
+-- daily's 108 B/row for a comparable column set, and the database sat at 90% of
+-- its tier with n_dead_tup already at 0 — i.e. the bloat was invisible to the
+-- usual "are there dead tuples" check.
+--
+-- **A bulk UPDATE is a storage event, not just a data event.** Run VACUUM FULL as
+-- part of THIS migration rather than discovering it later at capacity:
+--     vacuum full ohlcv_daily;      -- one statement at a time; VACUUM cannot run
+--     vacuum full ohlcv_hourly;     -- inside a transaction block
+-- Recovery when this was found late: scripts/supabase_storage_hygiene.sql.
 alter table ohlcv_daily     add column if not exists asset_id text references assets(asset_id);
 alter table ohlcv_hourly    add column if not exists asset_id text references assets(asset_id);
 alter table funding_history add column if not exists asset_id text references assets(asset_id);
