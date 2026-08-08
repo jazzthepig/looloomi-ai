@@ -498,6 +498,38 @@ async def _start_fusion_paper_tracking_loop():
         print("[FUSION-TRACK] ✅ daily R66 fusion-paper tracking loop scheduled")
 
 
+# ── ⓠ REGIME OVERRIDE paper track — parallel paper NAV under the enforcer (Seth, 2026-08-08) ──
+# Per Jazz direction 2026-08-06: feed the ⓠ enforcer into the R64 fusion paper book as a
+# PARALLEL paper-only NAV curve. This is NOT a live override — it's the 60-day forward
+# paper test (per STRATEGY_PLAYBOOK.md §P3) that lets us evaluate the enforcer's value
+# before any live promotion. Runs 12 min after boot (just after FUSION-PAPER's 11 min
+# warmup, so today's R64 NAV is available) and daily thereafter.
+async def _fusion_paper_regime_track_loop():
+    await _asyncio.sleep(720)   # 12 min warmup — let FUSION-PAPER (11 min) mark first
+    while True:
+        try:
+            from src.research.validation.fusion_paper_regime_track import compute_today_track
+            from datetime import datetime, timezone
+            today = datetime.now(timezone.utc).date().isoformat()
+            row = compute_today_track(today_iso=today)
+            if row is None:
+                print(f"[FUSION-REGIME] no row for {today} (R64 NAV / signal missing) — skipping")
+            else:
+                print(f"[FUSION-REGIME] {today} band={row['band']} cap={row['exposure_cap']} "
+                      f"r77_ret={row['r77_daily_return']:+.4f} regime_pnl={row['regime_pnl_usd']:+.2f} "
+                      f"regime_nav={row['regime_nav_usd']:.2f}")
+        except Exception as _e:
+            print(f"[FUSION-REGIME] ⚠️  compute failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_fusion_paper_regime_track_loop():
+    if os.environ.get("DISABLE_FUSION_REGIME", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_fusion_paper_regime_track_loop())
+        print("[FUSION-REGIME] ✅ daily ⓠ regime override paper-track loop scheduled")
+
+
 # ── Signal factory recalibration — Stage 4: the loop's learning turn (weekly) ──
 # Re-runs the factory, rewrites the nucleus blend to Redis (combined book self-recalibrates as
 # signals decay), logs the batch to experiment_runs. This is what makes it a machine, not a script.

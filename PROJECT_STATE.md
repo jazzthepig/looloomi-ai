@@ -244,7 +244,36 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-07 — **架构层 L0 landed: identity now precedes data.** Jazz stopped the
+**Last updated:** 2026-08-07 — **L0+L2 landed, and the S-106 artifact disappeared on its own.**
+The decisive measurement: bar convention is a property of the SOURCE, not of the class.
+`|open/prev_close-1|` per source — binance_hist median **0.00010** (0.1 % of rows >1 %) ·
+yfinance 0.00362 (19.1 %) · eodhd 0.00355 (20.4 %) · **coingecko 0.02563 (77.2 %)**. CoinGecko's
+daily open is a vendor snapshot boundary, not a price, so **`open` is unusable on 48,303 rows** —
+and reading that seam as market structure is precisely what produced S-106's fake "+12.30
+cumulative overnight return". All 6 classes appear under all 4 sources, so class and source are
+orthogonal and class was never a proxy for anything.
+Rebuilt `ohlcv_daily_canonical` on the registry: class JOINED from `assets`, plus explicit
+`bar_convention` (continuous_utc / session / vendor_snapshot) and **`open_usable`**.
+**Verified: A1 0 · A2 0 · `asset_id` null 0 across all three observation tables · 181,390 canonical
+rows · A4 answerable** (74 coverage / 0 investable on 2024-06-15, the 0 being correct since CIS
+scoring began 2025-05-03). **A3 is now explained by convention, not class:** continuous_utc 0.1 %,
+session 19.2 %, vendor_snapshot 77.5 %; by class Crypto collapses 31.3 % → 0.7 %.
+**Re-running S-106 on continuous bars only: overnight +2.05 vs +12.30, i.e. +0.05 per asset — the
+≈0 that physics demands of a 24/7 instrument. The artifact was not patched out; it vanished once
+identity was correct.** Newly visible and previously invisible: **34 of 75 assets have no
+continuous-convention data at all**, so nearly half the panel cannot support intraday or
+open-based work — formerly "the data is there but the answer looks odd", now a queryable flag.
+**Lesson #90: a classification field that neither predicts behaviour nor holds one value per
+entity is recording where the data came from, not what it is.** `asset_class` did both — 24
+symbols took multiple values, and its apparent explanatory power vanished the moment `source` was
+substituted. The fix is to remove it from observation rows, not to clean it: cleaning would
+preserve the wrong abstraction.
+Still contract-only: **L3 (PIT features) / L4 (states + `episode_id`) / L5 (one-way valve)**. The
+`display` universe has no members yet — the strong-filter rule is Jazz's call. `asset_class` is
+not yet dropped from observation rows, only unused by L2. **Data expansion stays frozen** until
+§4 step 4 (membership backfill including delisted names).
+
+Earlier same day: **架构层 L0 landed: identity now precedes data.** Jazz stopped the
 data expansion — "先做架构,再补充数据源,现在很多细节都不对的" — and the details being wrong was
 measurable, not a feeling. Audit A1–A4: symbol coverage differs per table (ohlcv 65 / cis 76 /
 vectors 72, 1 orphan); **24 symbols carried MULTIPLE `asset_class` values**, because class was
