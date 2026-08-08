@@ -59,7 +59,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -437,7 +437,7 @@ def run(out_dir: Path, supabase_url: str = "", supabase_key: str = "") -> dict:
             "mac_side_runnable": True,
             "module": "src.research.validation.s113_revisit_s108_s109_on_687asset",
         }
-        report["generated_at"] = datetime.utcnow().isoformat() + "Z"
+        report["generated_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         json_path = out_dir / "verdict.json"
         with open(json_path, "w") as f:
             json.dump(report, f, indent=2, default=_json_default)
@@ -449,7 +449,7 @@ def run(out_dir: Path, supabase_url: str = "", supabase_key: str = "") -> dict:
     if "error" in panels:
         return {"status": "error", "reason": panels["error"]}
     report = build_layered_report(panels)
-    report["generated_at"] = datetime.utcnow().isoformat() + "Z"
+    report["generated_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     report["module"] = "src.research.validation.s113_revisit_s108_s109_on_687asset"
 
     json_path = out_dir / "verdict.json"
@@ -475,7 +475,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     parser.add_argument("--out-dir", type=Path,
                         default=Path(f"/Users/sbb/Projects/looloomi-ai/reports/"
-                                     f"s113_revisit/{datetime.utcnow().date().isoformat()}"))
+                                     f"s113_revisit/{datetime.now(timezone.utc).date().isoformat()}"))
     parser.add_argument("--supabase-url", default="",
                         help="If empty, emits a blocked-stub report")
     parser.add_argument("--supabase-key", default="",
