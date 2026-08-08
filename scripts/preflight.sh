@@ -89,6 +89,15 @@ python3 -m tests.test_effective_breadth
 #            scan counts are evidence only when the stats are old enough, and the
 #            archive order is set by REFETCHABILITY rather than by size.
 python3 -m tests.test_storage_hygiene
+# 3a-undecies. state persistence (2026-08-08, S-117/S-118). A layer-③ sleeve was
+#              being built on `macro_regime`, whose median run is 3 DAYS with 51%
+#              of runs ≤3d — more than half its "transitions" were label chatter.
+#              A causal 5-day dwell filter takes the median to 19d and makes the
+#              trigger legitimate, but drops EASING↔RISK_OFF from 8/8 to 3/3.
+#              Guards: the filter is CAUSAL (a centred one would leak the future and
+#              become the edge), and it reports BOTH costs — sample destroyed and
+#              latency added — because reporting only the smoother chart is a pitch.
+python3 -m tests.test_state_persistence
 # 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
 #            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
 #            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT
