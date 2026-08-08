@@ -114,6 +114,48 @@ async def _current_regime() -> str | None:
     return None                                  # worse than a day at neutral exposure
 
 
+async def _recover_state_from_nav(px: dict) -> dict | None:
+    """Rebuild book state from the durable NAV table after a Redis loss.
+
+    Returns None only when Postgres has no history either — i.e. a genuine first
+    run. Anything else is recovered, because the difference between "we never
+    started" and "we lost the cache" is 60 days of gate progress and the two look
+    identical from Redis alone.
+
+    The recovered `mark_prices` are TODAY's, not the lost day's, so the missed span
+    contributes no return rather than a fabricated one. That understates the curve
+    slightly and is the correct direction to be wrong in: a gap that shows up as
+    flat is auditable, a gap filled by interpolation is not.
+    """
+    import os
+
+    import httpx
+    base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
+    if not base or not key:
+        return None
+    url = (f"{base}/rest/v1/beta_core_nav?select=mark_date,nav,benchmark_nav,top_weights"
+           f"&order=mark_date.desc&limit=1")
+    try:
+        async with httpx.AsyncClient(timeout=10) as c:
+            r = await c.get(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+            rows = r.json() if r.status_code == 200 else []
+    except Exception as e:
+        _log.warning("[beta_core] state recovery read failed: %s", e)
+        return None
+    if not rows:
+        return None
+    last = rows[0]
+    base_w = _equal_weights(list(px))
+    return {
+        "inception": last["mark_date"], "nav": float(last["nav"]),
+        "benchmark_nav": float(last.get("benchmark_nav") or 1.0),
+        "weights": base_w, "base_weights": base_w,
+        "mark_prices": dict(px),
+        "last_rebal": last["mark_date"], "last_mark": last["mark_date"],
+        "recovered": True,
+    }
+
+
 async def mark_and_rebalance(dry_run: bool = False) -> dict:
     from src.data.market.data_layer import _redis_get, _redis_set
     today = dt.date.today()
@@ -133,6 +175,23 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     weights = {s: w * gross for s, w in base.items()}
 
     state = await _redis_get(_STATE_KEY)
+    if not isinstance(state, dict) or not state.get("weights"):
+        # Redis lost the state. Do NOT re-inception — rebuild from Postgres first.
+        #
+        # This book's entire value is calendar continuity: 60 forward days is the gate,
+        # and a silent restart at NAV 1.0 would reset the clock while looking completely
+        # healthy in the logs. That is S-105 exactly (the strategy library spent 12 days
+        # in a 24h-TTL Redis key because nothing noticed the durable write failing), and
+        # here it would be worse, because the lost thing is time rather than rows.
+        # MEMORY says Supabase is the system of record; Redis is a cache. So treat it
+        # as one: cache miss ⇒ read through, never ⇒ start over.
+        state = await _recover_state_from_nav(px)
+        if state is not None:
+            _log.warning("[beta_core] redis state missing — recovered from beta_core_nav "
+                         "(nav=%.6f, inception=%s)", state["nav"], state["inception"])
+            if not dry_run:
+                await _redis_set(_STATE_KEY, state, ttl=0)
+
     if not isinstance(state, dict) or not state.get("weights"):
         state = {"inception": today.isoformat(), "nav": 1.0, "benchmark_nav": 1.0,
                  "weights": weights, "base_weights": base,
@@ -211,6 +270,51 @@ async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
             "rebalanced": rebal, "top_weights": top, "note": note}])
     except Exception as e:
         _log.warning("[beta_core] nav write: %s", e)
+
+
+async def continuity_state() -> dict:
+    """Is the clock actually running? For /health.
+
+    A book whose only product is elapsed time fails by NOT WRITING, and a loop that
+    catches its exception and sleeps 24h fails exactly that way — silently, with a
+    green process and a log line nobody reads. So continuity is measured against the
+    calendar rather than inferred from the absence of errors: `days_since_mark` and
+    `missing_days` come from the durable table, not from in-process counters, because
+    an in-process counter resets on the deploy that broke the marking.
+
+    `gate_days_remaining` is included so that nobody reads a 20-day curve as evidence.
+    """
+    import datetime as _dt
+    import os
+
+    import httpx
+    base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
+    if not base or not key:
+        return {"configured": False}
+    url = f"{base}/rest/v1/beta_core_nav?select=mark_date&order=mark_date.asc&limit=500"
+    try:
+        async with httpx.AsyncClient(timeout=8) as c:
+            r = await c.get(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+            rows = r.json() if r.status_code == 200 else []
+    except Exception as e:
+        return {"configured": True, "error": str(e)[:120]}
+    if not rows:
+        return {"configured": True, "marks": 0, "started": False,
+                "gate_days_remaining": 60,
+                "note": "book has never marked — the clock is NOT running"}
+    days = [_dt.date.fromisoformat(x["mark_date"]) for x in rows]
+    span = (days[-1] - days[0]).days + 1
+    since = (_dt.date.today() - days[-1]).days
+    return {
+        "configured": True, "marks": len(days), "started": True,
+        "inception": days[0].isoformat(), "last_mark": days[-1].isoformat(),
+        "days_since_mark": since,
+        # calendar span minus rows written: the gap the process cannot see itself
+        "missing_days": max(0, span - len(days)),
+        "gate_days_remaining": max(0, 60 - len(days)),
+        # one skipped day is a hiccup; two means the loop is not running
+        "stalled": since >= 2,
+    }
 
 
 async def get_curve(limit: int = 400) -> dict:

@@ -103,9 +103,26 @@ case "$RPC" in 401|403) ;; *) FAILS+=("CRITICAL:anon-rpc=http:$RPC"); CRIT=1;; e
 ROWS=$(curl -sm 15 -H "apikey: $ANON" "$SB/rest/v1/cis_scores?select=id&limit=1" 2>/dev/null)
 [ "$ROWS" = "[]" ] || { FAILS+=("CRITICAL:anon-read-cis_scores"); CRIT=1; }
 
+# ── 6. the ① book's clock (2026-08-08) ───────────────────────────────────────
+# The beta-core book's only product is elapsed calendar time toward the 60-day
+# gate, so its failure mode is NOT WRITING — a daily loop that catches its own
+# exception and sleeps 24h fails exactly that way, with a green process. Nothing
+# inside the process can report on a process that stopped, or survive the deploy
+# that broke it; that is what an EXTERNAL probe is for. A stall here costs
+# calendar, and calendar is the one input that cannot be bought back.
+CLK=$(curl -sm 15 "$BASE/internal/beta-core-clock" 2>/dev/null)
+CLKINFO=$(printf '%s' "$CLK" | python3 -c 'import sys,json
+try:
+    d=json.load(sys.stdin)
+    print(d.get("marks",0), d.get("days_since_mark",-1), d.get("gate_days_remaining","?"),
+          "stalled" if d.get("stalled") or d.get("started") is False else "ok")
+except Exception: print(-1,-1,"?","unreadable")' 2>/dev/null || echo "-1 -1 ? unreadable")
+read -r BCMARKS BCSINCE BCGATE BCSTATE <<<"$CLKINFO"
+[ "$BCSTATE" = "ok" ] || FAILS+=("beta-core-clock=$BCSTATE(${BCSINCE}d since mark)")
+
 # ── verdict ──────────────────────────────────────────────────────────────────
 if [ ${#FAILS[@]} -eq 0 ]; then
-  echo "✅ probe OK — universe ${UMS}ms/${UN} assets · mac push ${PUSH}min · security intact"
+  echo "✅ probe OK — universe ${UMS}ms/${UN} assets · mac push ${PUSH}min · security intact · ①book ${BCMARKS}d marked, ${BCGATE}d to gate"
   exit 0
 fi
 printf '%s probe FAIL — %s\n' "$([ $CRIT -eq 1 ] && echo '🔴 CRITICAL' || echo '⚠️')" "$(IFS=' · '; echo "${FAILS[*]}")"
