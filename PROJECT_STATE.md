@@ -67,69 +67,34 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    OWNER: Jazz (service_role → risk #1; judgement call on the ontology) · Seth (backfill, extend
    signal_outcomes) · Minimax-A (M-WO-D2)
 
-4. **🔴 S-103: no cross-sectional tier signal survives neutralisation — and the benchmark
-   itself is wrong** (2026-08-07). `neutralize()` existed as prose in 71 files and 0 defs;
-   implemented it, then ran it on the full panel (7,044 rows, 366 days, per-day cross-sectional
-   `a_ret ~ 1 + beta_pit`, `max |daily mean resid| = 0.0`). **All five tiers collapse: max |t| =
-   1.54, and that is the day-weighted upper bound** (event counting per Lesson #81 shrinks it
-   further). β by tier is monotone 2.37→1.83→1.48→1.22→0.15 — **the CIS tier ordering is
-   substantially a beta sort.**
-   **The dominant term is not beta, it is the benchmark.** `bench` = **BTC** on 7,706/7,743 rows,
-   and BTC beat the panel by **+2.16pp, t=3.96, on 67 % of days**. NEUTRAL's headline −6.63 %
-   (t=−8.68) decomposes to **−5.66 wrong-benchmark / −0.70 beta / −0.27 residual (t=−0.58)**.
-   CLAUDE.md says the benchmark is "hold the panel, NEVER 0"; we used a third thing, and it was
-   the best-performing asset in the window.
-   **Blast radius is not one finding — every "outperform/underperform" conclusion drawn against
-   the BTC benchmark carries the same systematic offset.** That is the P0 re-check surface.
-   **Lesson #83: neutralisation is not a pre-publication formality, it is a unit conversion done
-   BEFORE reading the number.** An un-neutralised t is not uncorrected evidence — it is not
-   evidence. R62 found `a_ret − b_ret` was leveraged beta; S-103 is the same subtraction one layer
-   up, committed by someone who had already read R62. Also: **UNDERWEIGHT's mild +0.59 % is
-   +8.67 and −9.03 cancelling** — a small number produced by large cancellation is more dangerous
-   than a large one.
-   **S-105 closed the re-benchmark and the answer is bigger than the benchmark.** Re-ran everything
-   against hold-the-panel: the three "hugely significant" t-stats vanish (−12.42→−0.65, −7.47→−0.79,
-   −4.09→**+0.76, sign flipped**). **A wrong benchmark does not dilute evidence, it manufactures
-   significance with the wrong sign.** Then event counting + a control parameterisation: all five
-   tiers **flip sign** between mean-daily and total-episode excess — but total-episode is
-   *disqualified*, not co-equal, because `corr(episode length, total) = 0.83`; it measures duration,
-   not return. **Doing a control means deciding which statistic is contaminated, not printing both.**
-   **The real finding is that the signal cannot be held at all:** STRONG OUTPERFORM has a **2-day
-   median episode**, 11 of 30 episodes last ONE day, 67 % end within 3 days, and the average asset
-   switches signal **45.8×/yr**. At our only cost model (flat 10 bps) that is **4.6 %/yr of turnover
-   against a largest-ever tier effect near 3 %/yr at |t|<2** — **the cost of trading the signal
-   exceeds anything the signal has ever shown.** Also retracts S-101's reading: its
-   `OUTPERFORM t=−6.88` was event-counted but BTC-benchmarked; vs panel it is +0.76.
-   **Lesson #85: measure persistence and turnover cost BEFORE returns.** We ran three rounds of
-   return tests while `median_days = 2` sat one GROUP BY away. Ask "can this be held?" before "does
-   holding it pay?" — now enforced (`median_holding_days ≥ 5`, `net_effect_pct_yr > 0` on SHIP).
-   VERIFY: `python3 tests/test_neutralize.py` → 5/5 · `python3 tests/test_strategy_discipline.py`
-   → 13/13 · re-run the S-103/S-105 SQL in the ledger
-   **S-106 settled WHY, and it reframes the product (Jazz's call, then measured).** Jazz: "90 % of
-   the move is overnight or instantaneous, so excess return *after* a signal is either
-   front-running or order-book market making — we were never a chase-the-CIS-score strategy, we're
-   style-vector prediction or momentum surfing." Measured on a new hourly panel:
-   **(1)** return is delivered in **0.8 % of days** — 41 crypto assets, 1213 days: full hold
-   −0.653 log, the best 10 days alone +2.009, everything else −2.66; miss 10 days and **39 of 41
-   assets go negative**. **(2)** on top-1 % days, **45.9 % of the move happens in US 13–16 UTC**
-   (16.7 % of hours, 2.75× concentration). **(3)** big days **cluster 3.8×** — P(another within 5d)
-   = 19.8 % vs 5.2 % if independent.
-   ⇒ **"score → chase" is mechanically impossible and needs no further return testing**: the score
-   refreshes every 30 min against a payoff delivered in a 4-hour window on 10 days a year.
-   ⇒ **Surfing IS supported**: clustering means STAYING IN captures what TIMING ENTRY cannot. That
-   is ①(hold) + ③(exposure timing), **not** ② tilt. **Position must already be on before 13:00 UTC.**
-   **Direction is NOT a session property** — all four session blocks are negative in this window and
-   `taker_buy_share` is flat 48.1–49.4 % across all 24 hours. The structure is in volume and
-   volatility, not in sign; trading a session by itself has no edge.
-   **Lesson #86: establish WHEN return is delivered before choosing WHEN to decide.** We fixed the
-   scoring cadence, the tier granularity and the evaluation horizon before ever running
-   `GROUP BY extract(hour)`. Decision frequency must be faster than the payoff window or the
-   strategy is arithmetically late — a cheaper and more fundamental test than any IC or Sharpe.
-   VERIFY: `select count(*) from ohlcv_hourly;` → expect 96,000 (10 assets × 9,600) ·
-   continuity: `ts - lag(ts) <> interval '1 hour'` count must be 0
-   OWNER: Seth — **①+③ (hold the panel, time the exposure) is the main line**; ② tilt is parked.
-   Next: split big days by whether CIS upgraded the asset BEFORE them — that is the direct test of
-   whether the style vector can *predict*, which is the only remaining job for the score.
+4. **🔴 ① beta_core is the only book built to clear SHIP — and it is 1 day old.**
+   (OVERSIGHT_2026-08.md §0 + §3, 2026-08-08). S-103 + S-105 refuted the ④-layer
+   cross-sectional market-neutral L/S construction (β confounded across all 5 tiers,
+   cost 4.6 %/yr > ~3 % best-case effect). **3 of 5 live L/S paper books
+   (causal_paper / combined_book / scalable_paper) demoted to RESEARCH RECORDS
+   on 2026-08-08** (commit `fc4d331`). Loops still run — graveyard is the asset —
+   but no new feature work, no backtest claims, no LP-facing evidence should
+   target them. The product book `beta_core_paper` (commit `121b54c`) is the
+   only forward-clock with a SHIP floor in mind: equal-weight hold-the-panel
+   (no short, no neutralisation) + ex-ante vol target + ⓠ regime override
+   caps gross at {0.0, 0.5, 1.0, 1.3}, marked daily to Supabase `beta_core_nav`
+   with `benchmark_nav` alongside `nav` so excess is arithmetic. **Started
+   2026-08-08; SHIP-ready 2026-10-初.** Every other book lacks a benchmark
+   until this one accrues. **Forward-clock health is the single most
+   important number to watch this week.** Full audit (S-103, S-105, S-106,
+   demotion reasoning, anti-amnesia state recovery) lives in OVERSIGHT_2026-08.md
+   §0 + §3 + §7; the OPEN RISK here is the cold-start pointer, not the audit.
+   VERIFY:
+   ```
+   curl -s "$SUPABASE_URL/rest/v1/beta_core_nav?select=mark_date,nav,benchmark_nav,excess_return,exposure_cap&order=mark_date.desc&limit=5" \
+     -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+   ```
+   `[{mark_date=today, nav≈1.0, benchmark_nav≈1.0, exposure_cap∈{0,0.5,1,1.3}, ...}, ...]`
+   ⇒ loop firing today · `[]` ⇒ loop dead, escalate P0.
+   OWNER: Seth (loop wiring, anti-amnesia Postgres-from-Redis recovery,
+   `beta_core_paper.py` & `_beta_core_loop` in `src/api/main.py`) · Jazz
+   (the only honest LP-facing claim depends on this book; the 60-day
+   SHIP-ready date 2026-10-初 is the LP milestone).
 
 5. **🟡 MCP on deprecated HTTP+SSE transport** — spec `2026-07-28` retires protocol-level sessions;
    legacy SSE has a 12-month offramp. Same root shape as the P0: stateful, unbounded connections.
@@ -244,7 +209,7 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-07 — **L0+L2 landed, and the S-106 artifact disappeared on its own.**
+**Last updated:** 2026-08-08 — **① beta_core live (commit 121b54c); 3 L/S paper books demoted (commit fc4d331); OVERSIGHT §7 addendum documents §3 P0 execution receipts.**
 The decisive measurement: bar convention is a property of the SOURCE, not of the class.
 `|open/prev_close-1|` per source — binance_hist median **0.00010** (0.1 % of rows >1 %) ·
 yfinance 0.00362 (19.1 %) · eodhd 0.00355 (20.4 %) · **coingecko 0.02563 (77.2 %)**. CoinGecko's
