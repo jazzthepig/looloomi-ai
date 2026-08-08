@@ -317,6 +317,7 @@ def report_r77_layered(panels: dict, w_r76: float = R77_FROZEN_W_R76) -> dict:
 
     funding_start = earliest_funding_common_date(funding, tradeable)
     fused_3_funding_window = r77_funding_coverage_window(fused_3, funding_start)
+    leg_r46_funding_window = r77_funding_coverage_window(leg_r46, funding_start)
 
     # Restrict known factors to the funding window too — re-derive at slice time
     # so the 3-check gauntlet sees only the funding-coverage period.
@@ -334,6 +335,11 @@ def report_r77_layered(panels: dict, w_r76: float = R77_FROZEN_W_R76) -> dict:
         # R46 alone on the full 731d — honest disclosure: NOT 11yr, it is the R63
         # strict 28-asset panel (which happens to span ~731d on current data).
         "r46_full_731d": _layer_metrics(leg_r46, known_full, cut),
+        # R46 alone on the funding-coverage window — the natural counterfactual
+        # to r77_funding_coverage_window (3-leg on the same band). This isolates
+        # the marginal contribution of R62 + R76 vs R46 on the truthful band.
+        "r46_funding_coverage_window": _layer_metrics(leg_r46_funding_window,
+                                                       known_funding, cut_funding),
         # Full 3-leg fusion on the same 731d panel
         "r77_full_731d": _layer_metrics(fused_3, known_full, cut),
         # The truthful band — only what funding coverage supports
@@ -341,7 +347,8 @@ def report_r77_layered(panels: dict, w_r76: float = R77_FROZEN_W_R76) -> dict:
                                                        known_funding, cut_funding),
     }
 
-    # Verdict
+    # Verdict (the R77 funding-coverage layer carries the verdict, NOT the
+    # r46 funding-coverage layer — R46 alone is reported for context only).
     funding_layer = layers["r77_funding_coverage_window"]
     n_eps = funding_layer["episodes"]["n_episodes"]
     three_check = funding_layer["passes_all"]
@@ -371,6 +378,7 @@ def report_r77_layered(panels: dict, w_r76: float = R77_FROZEN_W_R76) -> dict:
             "earliest_funding_common_floor": str(FUNDING_EARLIEST_DATE_FLOOR.date()),
             "n_days_in_window": int(len(fused_3_funding_window)),
             "n_days_in_full": int(len(fused_3)),
+            "r46_n_days_in_window": int(len(leg_r46_funding_window)),
         },
         "layers": layers,
         "verdict": {
@@ -456,6 +464,11 @@ def run(out_dir: Path) -> dict:
         "`r85_r77_regime_gated.py:87`, `r97_cis_ls_v5.py:105`, `s82_regime_gross_overlay.py:84`)",
         "",
         "## Layers (post-2023 funding-coverage sleeve, NOT 11yr R77)",
+        "",
+        "Four layers — R46 alone × {full 731d, funding-coverage window} plus the fused",
+        "R77 × {full 731d, funding-coverage window}. The two funding-coverage layers share",
+        "the same earliest date; comparing them isolates the marginal contribution of",
+        "R62 + R76 vs R46 on the truthful band.",
         "",
         "| layer | n_days | gross_t | OOS_t | passes_all | maxDD | n_eps |",
         "|---|---:|---:|---:|:---:|---:|---:|",

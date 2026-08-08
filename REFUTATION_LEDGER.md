@@ -6874,3 +6874,54 @@ python3 src/research/validation/r77_multicycle_revalidation.py
 python3 src/research/validation/tests/test_r77_multicycle_revalidation_smoke.py
 cat reports/r77_multicycle_revalidation/2026-08-08/verdict.json | python3 -m json.tool
 ```
+
+### Amend (same-day, 4-layer reveal)
+
+Added a 4th layer `r46_funding_coverage_window` after the first push exposed
+that the original 3-layer report compared R77-funding-window against R46-full,
+not against R46-on-the-same-funding-window. The natural counterfactual — "R46
+alone on the truthful band" — was missing.
+
+**Numbers (4 layers @ 2026-08-08):**
+
+| layer                       | n_days | gross_t | OOS_t  | passes_all | maxDD   | n_eps |
+|-----------------------------|-------:|--------:|-------:|:----------:|--------:|------:|
+| r46_full_731d               |    772 |   +1.82 |  +0.15 |     ✗      | −33.62% |     3 |
+| r46_funding_coverage_window |    772 |   +1.82 |  +0.15 |     ✗      | −33.62% |     3 |
+| r77_full_731d               |    772 |   +3.09 |  +2.84 |     ✓      |  −8.66% |     1 |
+| r77_funding_coverage_window |    772 |   +3.09 |  +2.84 |     ✓      |  −8.66% |     1 |
+
+The R46 funding-window layer is **byte-identical** to the R46 full-731d layer
+because the `ohlcv_returns` panel (`n_obs=772`, earliest 2024-06-07) already
+starts at the funding-window-relevant region — `earliest_funding_common_date`
+(2024-04-02) lies BEFORE the ohlcv panel's first date. So the explicit
+funding-coverage slice on R46 produces no additional data, no additional
+disclosure. This is an **honest duplicate**, not a bug.
+
+**Lesson #92 sharpening.** The first pass taught "disclose the funding-coverage
+window" (silence → explicit). This amendment teaches the SECOND half:
+"an explicit slice on a single leg, when the upstream panel already truncates
+at-or-after the slice start, is silent duplication." The disclosure obligation
+is not "always emit a windowed slice" — it is "emit a windowed slice ONLY IF
+the slice actually trims the panel." The 4-layer report now encodes this:
+the per-layer `first_date` and `n_days` let a reader see at a glance whether
+the funding-coverage slice trimmed anything. Test 12 pins this geometry
+(shared first_date, shared n_days, alignment with `funding_window.n_days_in_window`).
+
+**Counterfactual on the truthful band.** The R77 funding-window layer
+(`gross_t=+3.09, OOS_t=+2.84, maxDD=-8.66%, n_eps=1`) versus R46 funding-window
+layer (`gross_t=+1.82, OOS_t=+0.15, maxDD=-33.62%, n_eps=3`) isolates the
+marginal contribution of the R62 + R76 fusion on the same band:
+- **gross_t: +1.27 lift** (R46 alone fails 1.96; fusion clears it)
+- **maxDD: −33.62% → −8.66%** (R76's R77-R76 leg lift carries the drawdown)
+- **episode count: 3 → 1** (fusion consolidates the regime-specific edge into
+  one continuous run — a fusion-strength AND a fusion-fragility signal at once)
+
+The marginal contribution is genuinely real on the truthful band, but
+n_episodes=1 in the fused series is the same fragility we already flagged.
+
+**No verdict change.** Primary remains `R77_INSUFFICIENT_FUNDING`. The
+4-layer disclosure strengthens the case that R77's value is in the
+**drawdown compression** and **t-stat lift** on a single continuous run,
+not in multi-episode evidence — and that is exactly what `regime-specific
+candidate` is supposed to capture. STRATEGY_PLAYBOOK.md status unchanged.
