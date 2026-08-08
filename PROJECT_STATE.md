@@ -209,7 +209,35 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-08 — **S-114: the diversification is in TradFi, not in more coins —
+**Last updated:** 2026-08-08 — **S-115: the breadth formula was never wrong; quoting it without
+naming the book was.** Built the spectral estimator to replace `N/(1+(N-1)rho)` and the sanity check
+reversed my own S-114 caveat. Against a matrix where equicorrelation genuinely HOLDS (rho=0.3,
+N=20) the two measures still disagree — naive 2.99 vs participation ratio 7.38 — **and both are
+exact.** They are not rival estimators of one quantity, they are two quantities, and which one binds
+is set by the BOOK: a long-only book rides the common factor so equal-weight variance reduction is
+its limit (naive is correct, and it is EXACT for any correlation structure — what it needs is equal
+VOLATILITIES, which crypto 0.957 vs TradFi 0.392 violates 2.4×); a market-neutral book trades the
+residual directions so the spectrum is its limit.
+⇒ **"crypto is capped near 2" is right for the ① book; 3.31 is right for a ④ book. The error was
+never arithmetic — it was a breadth number quoted with no statement of what it constrains.**
+Measured, 20 crypto + 20 TradFi: crypto naive 1.95 / participation **3.31** / top eigenvalue **53.0 %**
+of variance · TradFi 3.43 / 5.96 / 35.2 % · combined 3.81 / **7.67** / 31.1 %. Combined 7.67 against
+3.31 + 5.96 = 9.27 means **~83 % additive**, better than the naive view implied. Crypto's single
+factor at 53 % vs TradFi's 35 % is the precise form of "crypto is basically one bet".
+**The guard caught a bug in itself.** Rank-deficiency was detected by counting NEGATIVE eigenvalues
+and missed a deliberately singular 30-asset / 5-observation matrix outright, because LAPACK returns
+those directions as +1e-17 rather than negative — deficiency lives at NUMERICAL ZERO, not below it.
+**And the test asserted the same wrong thing**, so detector and assertion failed together because
+they came from one assumption. Now measured by numerical rank (rank 4, correctly flagged).
+**Lesson #95: an efficiency/breadth/degrees-of-freedom number must be quoted with the object it
+constrains.** `N_eff` alone is meaningless — 1.95 for long-only and 3.31 for neutral, both correct.
+Corollary: when a detector and its test pass or fail together, suspect a shared premise.
+Shipped `src/research/validation/effective_breadth.py` (both spectral measures plus the naive figure
+side by side, `rank_deficient`/`numerical_rank` exposed) and `tests/test_effective_breadth.py` 6/6 in
+preflight. **Bound:** the 20 crypto names came from the most-data-rich set, which my backfill order
+skewed toward delisted small caps, so rho-bar 0.486 is a SMALL-CAP reading, not the major-cap panel.
+
+Earlier: **S-114: the diversification is in TradFi, not in more coins —
 and the formula I had used three times turns out not to apply.** S-113 inferred that breadth inside
 crypto has a ceiling; this measures it. 40 crypto + all 33 TradFi assets, 2024-01 on, ≥250 common
 observations per pair:
