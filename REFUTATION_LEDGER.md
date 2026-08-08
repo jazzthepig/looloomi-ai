@@ -6637,3 +6637,240 @@ episode 数几乎没动,因为大市值资产在这段时间里就只走了这�
 
 ### 复现
 `docs/DATA_ARCHITECTURE.md` §0 的 A1–A4 四个查询 · `scripts/supabase_l0_registry.sql` 尾部 VERIFY 段。
+
+---
+
+## S-111 — 幸存者偏差实测:**25.1 个百分点/年**,是我们追过的最大效应的 8 倍
+
+**日期** 2026-08-08 · **Seth** · **状态: 已量化 —— 此前"存在但不可测量",现在有数**
+*DATA_ARCHITECTURE §4 第 4 步(成分回填含已退市)。*
+
+### 起因
+`universe_membership` 只有活着的 75 个。**幸存者偏差的问题从来不是它让结果好看,
+而是好看多少不可知** —— 死掉的标的只是"不在那里"。
+
+### 数据是可得的(此前没查过)
+Binance `fapi/exchangeInfo` 不只给"今天在交易的":
+
+| status | contractType | n | onboard 区间 |
+|---|---|---|---|
+| TRADING | PERPETUAL | 526 | 2019-09-08 → 2026-07-31 |
+| **SETTLING** | PERPETUAL | **126** | 2020-07-02 → 2025-12-21 |
+| TRADING | TRADIFI_PERPETUAL | 152 | (另一个产品,已排除) |
+
+**SETTLING 就是正在退市的 126 个** —— 恰好是"按当前流动性筛选"会抹掉的那一批。
+**顺带修掉一个我自己造的偏差:** `onboardDate` 是真实上市日,而此前
+`assets.listed_at` 用的是**我们数据开始的日子** —— 采集 artifact 冒充上市日,
+会让每一个成分区间的起点都是错的。
+
+### 建了什么
+`ingest_binance_universe()`:**资产 76 → 687,其中 126 记为已退市**,coverage 成分 688 条。
+`backfill_daily_for_asset()`:**按 `venue_symbol` 寻址而不是 `base||'USDT'`** ——
+旧函数那种拼接对 `1000WHY` / `1000X` / `AI16Z` 会静默拿到 400,而 400 和"没有历史"长得一模一样。
+回填死掉的标的 **125,003 行**,0 个不可寻址。
+
+### 结果一:幸存率
+**2024-06-15 在场 302 个,其中 63 个今天已死 ⇒ 20.9%。**
+**每五个当时存在的标的,今天有一个不见了,而我们 75 个的面板里一个都没有。**
+
+### 结果二:偏差值多少(此前算不出来的数)
+等权持有面板,2024-01 → 2026-08,PIT(死掉的一直留到它死):
+
+| | 平均标的数 | 943 天累计对数收益 |
+|---|---|---|
+| **含死掉的** | 136 | **−211.1%** |
+| 仅幸存者 | 39 | −146.3% |
+| **高估** | | **+64.8pp / 2.58 年 = 25.1pp/年** |
+
+分组看:**死亡组 126 个,均值 −197.0%、中位 −211.3%、仅 7% 为正**;
+幸存组 40 个,均值 −145.1%、中位 −167.7%、13% 为正。
+
+### 这意味着什么
+**我们量过的最大档位效应约 3%/年。幸存者偏差是它的 8 倍。**
+⇒ **所有历史结论的基准本身错了 25pp/年**,而我们一直在那个错基准上找 3% 的东西。
+这和 S-103(基准用 BTC)是同一类错误的**第二个实例**:
+S-103 是基准选错了**资产**,S-111 是基准选错了**成分**。
+**两次都不是分析出错,是"和什么比"出错。**
+
+### 但前向记录不受影响 —— 这是今天唯一的好消息
+**偏差在历史回测里,不在①层 book 里。** 从今天起成分被 PIT 记录,
+一个标的死掉时它会**留在面板里直到死**,该吃的下跌会被吃到。
+⇒ `beta_core_nav` 的曲线从第一天起就是无幸存者偏差的。**这提高了它的价值,而不是降低。**
+
+### 教训(→ Lesson #91)
+**"存在但不可测量"的偏差,优先级高于任何还没找到的信号。**
+我们花了 15 次尝试在一个被 25pp/年 污染的基准上找 3%/年 的效应。
+**在开始找信号之前,先把每一个已知偏差量化成一个数** ——
+不能量化的,要么去拿数据(本条:一个 exchangeInfo 调用),要么把结论标为不可信。
+配套:**`status='SETTLING'` 这类字段是免费的死亡样本**,而我们两个月没查过。
+
+### 不宣称 / 边界
+- **25.1pp/年 本身是下界。** SETTLING 只抓正在退市的;**已从 exchangeInfo 完全移除的看不见。**
+- 覆盖不全:302 个 2024-06-15 在场的标的里,目前有价格数据的约 136 个 ⇒
+  **这个数是在部分覆盖上算的**,补齐后需重算。
+- 死亡组与幸存组的构成不同(死亡组小市值居多),**部分差异是构成而非纯粹幸存效应** ——
+  但这正是幸存者偏差的定义:被剔除的从来不是随机样本。
+- 未做:把这个修正**回溯**应用到 R76–R94 与 S-101…S-109 的结论上(那是下一步)。
+
+### 复现
+`select * from ingest_binance_universe();` ·
+幸存率与面板对比 SQL 见正文;PIT 成分查询见 `scripts/supabase_l0_registry.sql` 尾部 VERIFY。
+
+---
+
+## S-112 — "亏得越多反向越有价值"是对的,但捕获方式是**准入规则**不是空头账本
+
+**日期** 2026-08-08 · **Seth** · **状态: 两个候选信号被证伪,一个准入阈值成立 + 两次抓到自己的抽样污染**
+*Jazz:"亏得越多,反向就很有价值啊。"*
+
+### 先拆一个必须拆的陷阱
+**"会被退市"只有事后才知道。** "做空将要退市的"不是策略,是前视偏差的纯粹形式。
+可测的版本:**有没有事前可观测的量,在崩塌之前识别出这批?**
+而它天然满足今天两条判据 —— 死亡螺旋是**累积交付**(S-107),持续期以月计而非 2 天(S-105)。
+
+### 候选一 & 二:流动性衰减 / 深度回撤 —— **都被连续检验杀掉**
+分桶(对面板超额,60 日前瞻,不重叠):
+| 状态 | n | 超额 | t |
+|---|---|---|---|
+| 流动性衰减 + 深回撤 | 80 | −3.7% | −1.20 |
+| **仅流动性衰减** | 153 | **−4.4%** | −1.40 |
+| 仅深回撤 | 557 | −0.2% | −0.19 |
+| 两者皆无 | 886 | **+2.5%** | +2.63 |
+
+看上去很漂亮:**判别力来自成交量而非价格**,与"价格是反射、流动性更靠近因"完全吻合。
+**但连续检验(n=1,676):`corr(ln 流动性变化, 超额) = 0.034,t = 1.37` —— 不显著;
+而 S-102 要求的对照(回撤)`r = 0.053,t = 2.18` 反而更强,方向与分桶表相反;
+且两端超额都是负的(−4.2% / −2.0%),不单调。**
+⇒ **分桶表又是模式识别。S-108 的同一个错,这次对照做在前面,当场抓到。**
+
+### 但问题问错了 —— 这里才是重构
+**"避开垂死"对 FoF 不是 alpha,是"不死"本身。**
+它显示在**水平**上,不在横截面超额上,而水平已经量过:**S-111 的 25.1pp/年**。
+⇒ 捕获它的东西是**准入规则**,不是空头账本;而准入规则不需要显著的横截面 t,
+**它需要的是死亡基准率。**
+
+### 两次抓到自己的抽样污染(本条最值得留下的部分)
+**第一版**按 2024-06-15 的流动性五分位算死亡率,得到 **85% → 74% → 53% → 47% → 42%**,
+完美单调,极具说服力。**但样本里 58/96 = 60% 已死,而真实基准率是 126/687 = 18%。**
+原因是**我自己的回填顺序**:先填了 125 个死掉的,幸存者只填了约 40 个。
+**死亡率的水平完全是我的操作顺序的产物,而单调性也可能是。**
+按 Lesson #91 自己的话去拿数据:补回填 179k 行幸存者数据后重跑(186 资产):
+
+| 流动性五分位 | n | 平均 ADV | 死亡率 |
+|---|---|---|---|
+| 1(最低) | 38 | $7.8M | **39%** |
+| 2 | 37 | $14.4M | 27% |
+| 3 | 37 | $24.3M | 24% |
+| 4 | 37 | $44.5M | 24% |
+| 5(最高) | 37 | $247M | 24% |
+
+**"漂亮的单调"塌成了底部的阈值效应:2–5 档全平(24–27%),只有最低档 39%(≈1.6×)。**
+
+### 结论(可执行)
+**投资域准入设 `ADV > ~$15M`(第 1 五分位之上),再挑剔买不到任何东西。**
+这是一个**粗阈值**,不是拟合曲线 —— 而"2–5 档全平"正是它不会过拟合的理由。
+**不做空头账本:两个候选信号在连续检验下都不成立,而做空垂死资产的成本
+(借券/资金费/挤压)从未被测量。**
+
+### 教训(→ Lesson #92)
+**当你自己控制了样本的构建顺序,基准率就是你必须先查的东西。**
+85%→42% 那张表在任何评审里都会过关,因为它单调、样本量够、机制讲得通;
+**唯一能揭穿它的是"这个群体的真实基准率是多少",而那和被检验的假设无关。**
+⇒ **任何按自己回填/采样得到的群体做的统计,第一行必须是该群体的基准率 vs 总体基准率。**
+
+### 不宣称 / 边界
+- 死亡率**仍然偏高**(样本 28% vs 总体 18%)—— 幸存者回填未完成,**阈值的绝对水平不可用**,
+  可用的是**档位之间的相对形状**。
+- `died` = 当前 `SETTLING`,是**在途退市的快照**,不是完整退市史。
+- 阈值 `$15M` 来自五分位边界,**未做敏感性分析,未做 DSR**;它是准入启发,不是策略。
+- 未做:做空成本模型(资金费/借券/挤压),因此"反向"的可执行性**完全未验证**。
+
+### 复现
+分桶与连续检验 SQL 见正文;回填 `backfill_daily_for_asset`;
+基准率对照必须同时报 `count(*) filter (where died)/count(*)` 与全表 `126/687`。
+
+---
+
+## R77-MULTICYCLE 🟡 INSUFFICIENT_FUNDING — R77 layered disclosure: 3-check passes, episode floor fails (Seth, 2026-08-08)
+
+**Trigger.** Phase C of the R97-11yr / R77 wild-juggling-meteor plan:
+produce an honest layered disclosure for the R77 frozen-cell (R46 pillar_O
++ R62 funding-crowd + R76 funding-residual). The previous R77 module
+(`r77_r76_as_fusion_contribution.py:36`) documents the rule "Do not silently
+widen — if funding coverage falls below R76's MIN_TRADEABLE floor, R77 must
+refuse rather than fall back to a wider CIS-only panel" but the actual
+output did not explicitly disclose the funding-coverage window vs. the full
+R63 731d panel window, nor that R77 cannot be called "11yr".
+
+**What Phase C did.**
+- New module `src/research/validation/r77_multicycle_revalidation.py` emits
+  three layers with the same 3-check + M-WO-1 audit applied to each:
+  - `r46_full_731d` — R46 leg on the R63 strict 28-asset panel (NOT 11yr;
+    honest disclosure that this is the 731d CIS ∩ OHLCV ∩ funding window).
+  - `r77_full_731d` — full 3-leg fusion on the same 731d panel.
+  - `r77_funding_coverage_window` — fused series sliced at
+    `earliest_funding_common_date` (the truthful "what we can claim" band).
+- New smoke `tests/test_r77_multicycle_revalidation_smoke.py` 11/11 pins
+  the coverage disclosure, the 3-layer shape, the verdict grammar, and two
+  honesty boundaries (no `R77_FROZEN_SPEC_HASH`, no `import hashlib`,
+  source-text contains `post-2023 funding-coverage sleeve`).
+
+**Numbers (run @ 2026-08-08, REPORT.md + verdict.json):**
+
+| layer                       | n_days | gross_t | OOS_t  | passes_all | maxDD   | n_eps |
+|-----------------------------|-------:|--------:|-------:|:----------:|--------:|------:|
+| r46_full_731d               |    772 |   +1.82 |  +0.15 |     ✗      | −33.62% |     3 |
+| r77_full_731d               |    772 |   +3.09 |  +2.84 |     ✓      |  −8.66% |     1 |
+| r77_funding_coverage_window |    772 |   +3.09 |  +2.84 |     ✓      |  −8.66% |     1 |
+
+Coverage meta: `funding` earliest=2023-05-12 latest=2026-07-19 (1165 obs,
+28 assets); `ohlcv_returns` earliest=2024-06-07 latest=2026-07-18 (772
+obs, 54 assets); `cis` earliest=2024-03-01 latest=2026-07-18.
+
+**Verdict.** 🔴 `R77_INSUFFICIENT_FUNDING` — the funding-coverage window
+clears the 3-check gauntlet (gross_t=+3.09, OOS_t=+2.84) but fails the M-WO-1
+episode floor (`n_episodes = 1 < 8`). The fused 3-leg book is therefore
+**not** eligible to graduate from `regime-specific candidate` to a
+forward-paper commit: a single continuous episode in 772 days means the
+3-check numbers are powered by one uninterrupted run, not by multiple
+independent regimes. R77 stays `regime-specific candidate` per
+STRATEGY_PLAYBOOK.md.
+
+**What Phase C did NOT do (explicit non-goals).**
+- Full-11yr R46 leg. The `/tmp/cometcloud_data/ohlcv_11yr.db` is gone
+  (post-2026-08-06 cleanup of `/tmp/cometcloud_data/`). Re-running it
+  requires §OHLCV-EXTENSION (Mac-side, Minimax). Deferred.
+- Frozen weights canonicalisation. The 4 literals stay where they are
+  (`r77_r76_as_fusion_contribution.py:104-105`,
+  `m_wo1_r77_episode_count_audit.py:87`, `r85_r77_regime_gated.py:87`,
+  `r97_cis_ls_v5.py:105`, `s82_regime_gross_overlay.py:84`). Per user
+  direction (2026-08-08): no `_r77_frozen.py` central module this pass.
+- Phase B of the original plan. **Still NOT entered.** Phase A gate is
+  `signed t > 1.96 AND ≥5 fully-covered positive cycles`; the corrected
+  baseline failed both. Adding risk hardening to a baseline that does not
+  clear 1.96 violates the "先正后硬" doctrine (Lessons #42, #43, #52-#54).
+
+**Lesson #92 (proposed).** *Honesty is a disclosure obligation, not a
+silence discipline.* The R77 module already enforced the
+"no-silent-widening" rule at the **panel-construction** level
+(`r77_r76_as_fusion_contribution.py:36`), but the output did not disclose
+which window it was reporting on. A floor can be enforced and the
+disclosure can still drift. Future R-number modules must emit the
+funding-coverage earliest date as a first-class field of the verdict
+JSON, the same way PIT dates are first-class in the daily returns. The
+"can be claimed as X" window is part of the claim, not a footnote.
+
+**Honesty marker (always on).** `R77_FROZEN_WEIGHTS_UNHASHED` is part of
+the verdict grammar; `frozen_weights.hashed = False`; the 6 literal
+sources are listed in `verdict.json["frozen_weights"]["literal_sources"]`.
+Four of them agree on `w_R76 = 0.30`, the fifth agrees implicitly through
+the 1 − w_R46 identity, and there is no hash anchoring them. A single
+edits one literal; the other three drift silently. (Filed for a future
+`_r77_frozen.py` candidate, deferred per user direction.)
+
+### 复现
+```bash
+python3 src/research/validation/r77_multicycle_revalidation.py
+python3 src/research/validation/tests/test_r77_multicycle_revalidation_smoke.py
+cat reports/r77_multicycle_revalidation/2026-08-08/verdict.json | python3 -m json.tool
+```
