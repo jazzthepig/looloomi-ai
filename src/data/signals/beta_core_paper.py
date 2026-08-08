@@ -135,16 +135,80 @@ async def _load_panel():
     return DEFAULT_UNIVERSE, close, ret, px
 
 
-async def _current_regime() -> str | None:
+_REGIME_DWELL_DAYS = 5   # see below; equals the gate's minimum holding period
+
+
+async def _regime_history(days: int = 30) -> list[str]:
+    """Last `days` days of daily-modal regime, oldest first.
+
+    Reads Supabase because Redis holds only TODAY's value, and a dwell filter needs
+    a history by construction. One small query per daily mark is affordable — this
+    is the daily loop, not /health, which is contractually I/O-free."""
+    import os
+
+    import httpx
+    base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
+    if not base or not key:
+        return []
+    since = (dt.date.today() - dt.timedelta(days=days + 5)).isoformat()
+    url = (f"{base}/rest/v1/cis_scores?select=recorded_at,macro_regime"
+           f"&recorded_at=gte.{since}&macro_regime=not.is.null"
+           f"&order=recorded_at.asc&limit=20000")
     try:
-        from src.data.cis.cis_provider import canonical_regime
+        async with httpx.AsyncClient(timeout=8) as c:
+            r = await c.get(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+            rows = r.json() if r.status_code == 200 else []
+    except Exception as e:
+        _log.warning("[beta_core] regime history unavailable: %s", e)
+        return []
+    from collections import Counter, defaultdict
+    per_day: dict[str, Counter] = defaultdict(Counter)
+    for row in rows:
+        d = str(row.get("recorded_at", ""))[:10]
+        raw = row.get("macro_regime")
+        if d and raw:
+            per_day[d][str(raw).strip().upper().replace("-", "_").replace(" ", "_")] += 1
+    return [per_day[d].most_common(1)[0][0] for d in sorted(per_day)]
+
+
+async def _current_regime() -> tuple[str | None, str | None]:
+    """Returns (confirmed, raw). CONFIRMED is what sizes the book; RAW is recorded
+    beside it so the filter's effect is visible rather than assumed.
+
+    WHY THE FILTER (S-117/S-118). The raw label has a MEDIAN RUN OF 3 DAYS and 51 %
+    of its runs last ≤3 days — more than half its "regime changes" revert inside
+    three days. Sizing a book off that is a book overturned every three days. A
+    causal 5-day dwell takes the median run to 19 days, which clears the gate's
+    5-day minimum hold and makes the trigger legitimate for the first time.
+
+    The dwell length is NOT tuned: it equals the minimum holding period the SHIP
+    gate already requires, so it is a constraint imported from elsewhere rather
+    than a parameter chosen against a return. Its cost is real and stated — every
+    accepted switch is up to 4 days late, which for a de-risking trigger is four
+    days of a drawdown taken at full size.
+
+    Falls back to the Redis single value when history is unavailable: a gap in the
+    NAV series is worse than a day sized off an unfiltered label, and the row says
+    which path was taken."""
+    from src.data.cis.cis_provider import canonical_regime
+    raw: str | None = None
+    try:
         from src.data.market.data_layer import _redis_get
         blob = await _redis_get("cis:local_scores")
         if isinstance(blob, dict):
-            return canonical_regime(blob.get("macro_regime") or blob.get("regime"))
-    except Exception as e:                       # a missing regime must not stop the mark:
-        _log.warning("[beta_core] regime unavailable: %s", e)   # a gap in the NAV series is
-    return None                                  # worse than a day at neutral exposure
+            raw = canonical_regime(blob.get("macro_regime") or blob.get("regime"))
+    except Exception as e:
+        _log.warning("[beta_core] live regime unavailable: %s", e)
+
+    hist = await _regime_history()
+    if len(hist) >= _REGIME_DWELL_DAYS:
+        from src.research.validation.state_persistence import dwell_filter
+        if raw:
+            hist = hist + [raw]          # today's live value closes the series
+        confirmed = dwell_filter(hist, _REGIME_DWELL_DAYS)[-1]
+        return canonical_regime(confirmed), raw
+    return raw, raw                      # too little history to filter — say so by
+                                         # returning them equal, not by silence
 
 
 async def _recover_state_from_nav(px: dict) -> dict | None:
@@ -201,8 +265,14 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
 
     rv = _realized_vol(ret)
     scalar = _vol_scalar(rv)
-    regime = await _current_regime()
+    regime, regime_raw = await _current_regime()
     cap, cap_source = _exposure_cap(regime)
+    # Record when the dwell filter actually CHANGED the decision. Without this the
+    # row cannot distinguish "the filter did nothing today" from "the filter is not
+    # running" — the same class as cap_source, and the reason the inert mapping in
+    # S-116 stayed invisible for a whole first mark.
+    if regime_raw is not None and regime != regime_raw:
+        cap_source = f"{cap_source}+dwell{_REGIME_DWELL_DAYS}(raw={regime_raw})"
     base = _equal_weights([s for s in symbols if s in px])
     gross = min(scalar, cap) if cap > 0 else 0.0
     weights = {s: w * gross for s, w in base.items()}
