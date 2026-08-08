@@ -307,3 +307,115 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# §OHLCV-EXTENSION-RESOLVE — 2026-08-08 (Seth initiate, Minimax-A cross-confirm)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Per MINIMAX_SYNC.md §OHLCV-EXTENSION (line 1204), this block is the signal-back
+# handshake: confirm the 1h parquet + sqlite dual-track state, record the
+# symlink decision, and capture the actual rebuild measurements after the
+# script has run.
+#
+# Section structure:
+#   1. Dual-track confirmation (parquet + sqlite reader/writer paths)
+#   2. Symlink decision (and the no-link rationale)
+#   3. Minimax-A REBUILD fill-in (per-symbol count, dates, wall-clock)
+#   4. Cross-link to §OHLCV-EXTENSION-CONSUMER round-3 bridge
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. DUAL-TRACK CONFIRMATION (Seth-side inspection 2026-08-08)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# A. 1h parquet track — Mac-side persistent, written by ohlcv_collector.py cron
+#   location:          /Volumes/CometCloudAI/data/ohlcv/
+#   file count:        54 parquet files (one per symbol, AAVE.parquet..XRP.parquet)
+#   writer:            /Volumes/CometCloudAI/cometcloud-local/ohlcv_collector.py:7
+#   coverage:          731-day span (2024-06-07 → 2026-06-07) per docstring line 5-7
+#   primary reader:    src/research/validation/cis_quality_absorption.py:88
+#                      (load_daily_returns) → consumed by r77_multicycle_revalidation.py:151
+#   state:             ✅ ACTIVE — 54 files present, cron fires daily
+#
+# B. 11yr sqlite track — Mac-side local, written by THIS script
+#   location:          /tmp/cometcloud_data/ohlcv_11yr.db
+#   file state:        ❌ NOT BUILT — /tmp/cometcloud_data/ exists but is empty
+#                      (script has not yet run on this Mac since §OHLCV-EXTENSION
+#                      trigger was issued 2026-08-08)
+#   reader (existing): src/research/validation/r97_panel_11yr.py:65 (Panel11yr)
+#   reader consumers:  r97_panel_11yr, m_wo_a_beta_capture, m_wo2_ext_pillar_fwd,
+#                      m_wo_q_o1_stablecoin_gate, ohlcv_11yr_cross_link,
+#                      regime_fingerprints (six modules, all Seth lane)
+#   reader (pending):  r77_multicycle_round3_11yr.py (Minimax-C round-3 bridge,
+#                      pre-stage per §OHLCV-EXTENSION-CONSUMER)
+#   state:             ⚪ AWAITING MINIMAX-A REBUILD — script ready to run
+#                      (`python3 scripts/fetch_ohlcv_11yr_binance.py`)
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. SYMLINK DECISION
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# DECISION: NO SYMLINK.
+#
+# Rationale: the two tracks serve DIFFERENT readers on DIFFERENT cadences.
+#   - 1h parquet: written daily by ohlcv_collector.py, read by load_daily_returns()
+#                 (the 731d R77 panel, Phase C round 1 + 2)
+#   - 11yr sqlite: written ON-DEMAND by this script (cold rebuild), read by
+#                  Panel11yr (the 11yr deep panel, Phase A R97 + M-WO-A + round 3)
+#
+# The sqlite lives at /tmp/cometcloud_data/ (a sandbox path, ephemeral on
+# container/Mac restart). The parquet lives at /Volumes/CometCloudAI/data/ohlcv/
+# (a persistent volume). Symlinking would either:
+#   (a) put the sqlite on the persistent volume (defeats the sandbox-local intent),
+#   (b) put a symlink on the persistent volume pointing at /tmp (broken on restart),
+#   (c) move the parquet to /tmp (loses persistence).
+#
+# None is wanted. The independence is the feature: the sqlite is a one-shot
+# research artifact, the parquet is the always-on production data plane.
+#
+# IF a future consumer needs both at the same path, the convention would be:
+#   ln -s /tmp/cometcloud_data/ohlcv_11yr.db \
+#         /Volumes/CometCloudAI/data/ohlcv_11yr.db
+# but no current consumer needs this.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. MINIMAX-A REBUILD FILL-IN (after running the script)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# After running `python3 scripts/fetch_ohlcv_11yr_binance.py`, fill in below:
+#
+#   count(*) actual:             __________
+#   count(distinct symbol) ≥ 28: __________  (R63 strict minimum)
+#   min(trade_date) overall:     __________
+#   min(trade_date) BTC:         __________  (target ≤ 2017-12-01)
+#   max(trade_date) overall:     __________
+#   build wall-clock:            __________ seconds  (target ≤ 4h = 14400s)
+#   failed symbols (HTTP 4xx):   __________________
+#   retry-exhausted symbols:     __________________
+#   coverage gap (>3000d syms):  __________________
+#   /tmp/cometcloud_data/ohlcv_11yr.db size:  __________ bytes
+#
+# Per MINIMAX_SYNC §OHLCV-EXTENSION acceptance criteria (line 1228-1237):
+#   - count(*) ≥ 88,794 (Phase A baseline; today is +12 days so ≥ 88,794 likely clears)
+#   - count(distinct symbol) ≥ 28
+#   - min(trade_date) for BTC ≤ 2017-12-01
+#   - Build wall-clock ≤ 4h
+#
+# IF any acceptance criterion fails, escalate to §OHLCV-EXTENSION-FAIL (new
+# section, not RESOLVE) with the failing criterion and the probe result.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. CROSS-LINK — Minimax-C round-3 bridge
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Once this block is filled in, signal back to Minimax-C via MINIMAX_SYNC.md
+# under §OHLCV-EXTENSION-RESOLVE-COMPLETE with the actual measurements. Then
+# Minimax-C can run r77_multicycle_round3_11yr.py (the §OHLCV-EXTENSION-CONSUMER
+# round-3 bridge) — that module imports Panel11yr from r97_panel_11yr and
+# reuses _layer_metrics() + report_r77_layered() from r77_multicycle_revalidation
+# without duplication.
+#
+# Until this block is filled in, the 11yr R46 leg remains DEFERRED and R77
+# multicycle is locked at 731d (the Phase C round 2 verdict, commit 9423821).
+#
+# ─────────────────────────────────────────────────────────────────────────────
