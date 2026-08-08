@@ -98,6 +98,16 @@ python3 -m tests.test_storage_hygiene
 #              become the edge), and it reports BOTH costs — sample destroyed and
 #              latency added — because reporting only the smoother chart is a pitch.
 python3 -m tests.test_state_persistence
+# 3a-duodecies. strategy intake (2026-08-08). Minimax-A asked for the service_role
+#               key to write beta-strategy records. Declined; this endpoint replaces
+#               it and is better on two counts. Blast radius: service_role bypasses
+#               RLS on every table while a scoped token appends records and rotates
+#               freely (Lesson #72 - a forged JWT passed every local check). And the
+#               gate becomes unbypassable: with a raw DB key a SHIP record failing
+#               the discipline floor can be written anyway, because the floor lives
+#               in CI and CI is not in the write path. Here validate() runs BEFORE
+#               the insert - a gate the writer can route around is a suggestion.
+python3 -m tests.test_strategy_intake
 # 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
 #            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
 #            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT

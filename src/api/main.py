@@ -62,6 +62,12 @@ from src.api.routers.portfolio_diagnosis import router as diagnosis_router
 from src.api.routers.strategy_vector import router as strategy_vector_router
 from src.api.routers.admin import router as admin_router
 from src.api.routers.ohlcv import router as ohlcv_router
+# Strategy intake — the write path that removes any need to share the DB key.
+# Minimax-A asked for service_role to write beta-strategy records; this endpoint
+# is strictly better than sharing it: the token is scoped and rotatable, AND
+# StrategyRecord.validate() runs before the insert, so the discipline floor stops
+# being a CI check the writer can route around.
+from src.api.routers.strategy_intake import router as strategy_intake_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
 
 _ENV = os.environ.get("ENVIRONMENT", "production")
@@ -120,6 +126,7 @@ app.include_router(diagnosis_router)
 app.include_router(strategy_vector_router)
 app.include_router(admin_router)
 app.include_router(ohlcv_router)
+app.include_router(strategy_intake_router)
 
 
 # ── Hourly T2-only cis_scores snapshot (data-durability complement) ─────────
