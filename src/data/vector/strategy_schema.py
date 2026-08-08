@@ -191,6 +191,22 @@ class StrategyRecord:
     turnover_cost_pct_yr: Optional[float] = None     # modelled round-trip drag; flat bps is a FLOOR
     net_effect_pct_yr: Optional[float] = None        # gross effect MINUS turnover_cost_pct_yr
 
+    # ── Trigger persistence (2026-08-08, S-117) ─────────────────────────────
+    # The floor above measures how long a POSITION is held. Nothing measured how
+    # long the STATE VARIABLE that opens it survives — and that gap was found by
+    # cross-checking a proposed layer-③ sleeve keyed off `macro_regime`:
+    #     49 regime runs, MEDIAN 3 DAYS, 25 of them ≤3 days.
+    # More than half its "regime transitions" were label chatter that reverted
+    # inside three days. A 3-day trigger driving a 30-day position is not a
+    # 30-day position — it is a book overturned every three days, and the holding
+    # period reported on the record would be a fiction the gate happily accepted.
+    #
+    # So the rule is a RELATION, not a threshold: the trigger must persist at
+    # least as long as the position it opens. A fast trigger is fine for a fast
+    # book; it is only a lie inside a slow one.
+    trigger_name: Optional[str] = None            # what opens the position, e.g. 'macro_regime'
+    trigger_median_run_days: Optional[float] = None   # median run length of THAT variable
+
     max_dd_stop: Optional[float] = None          # e.g. -0.15 → zero the pod, 30d freeze (§3 ladder)
     capital_action_on_breach: Optional[str] = None   # halve | quarter | zero_and_freeze | observe
     backtest_included_stop: Optional[bool] = None    # was the ladder applied DURING the backtest?
@@ -300,6 +316,23 @@ class StrategyRecord:
                     problems.append(
                         f"ship verdict but net_effect_pct_yr={self.net_effect_pct_yr:.2f} ≤ 0 "
                         f"(turnover_cost_pct_yr={self.turnover_cost_pct_yr:.2f} eats the whole edge)")
+
+                # Trigger persistence (S-117). Checked AFTER the holding period because
+                # it only means anything relative to it.
+                if self.trigger_name is None or self.trigger_median_run_days is None:
+                    problems.append(
+                        "ship verdict but no trigger_name/trigger_median_run_days "
+                        "(S-117: `macro_regime` has a MEDIAN RUN OF 3 DAYS across 49 runs, so a "
+                        "sleeve keyed off it cannot hold a position for 30 — the holding period "
+                        "on the record would be fiction the gate accepted)")
+                elif (self.median_holding_days is not None
+                      and self.trigger_median_run_days < self.median_holding_days):
+                    problems.append(
+                        f"ship verdict but trigger '{self.trigger_name}' persists "
+                        f"{self.trigger_median_run_days:.1f}d < the {self.median_holding_days:.1f}d "
+                        f"position it opens — the book is overturned before the position matures. "
+                        f"Either smooth the trigger (hysteresis) or shorten the target hold; a fast "
+                        f"trigger is only a lie inside a slow book")
         if self.verdict == Verdict.REFUTE and self.pit_clean and self.cost_feasible_at_5bps:
             problems.append("refute verdict but all validity flags True — contradiction")
         return problems
