@@ -63,21 +63,20 @@ def test_unmeasured_inputs_resolve_to_neutral_not_to_large():
     assert bc._vol_scalar(float("nan")) == 1.0
     assert bc._vol_scalar(0.0) == 1.0, "a zero vol reading is broken data, not calm"
     assert bc._vol_scalar(-1.0) == 1.0
-    assert bc._exposure_cap(None) == 1.0, "no regime ⇒ neutral, not a guess"
-    assert bc._exposure_cap("SOME_REGIME_WE_HAVE_NEVER_SEEN") == 1.0
+    assert bc._exposure_cap(None)[0] == 1.0, "no regime ⇒ neutral, not a guess"
+    assert bc._exposure_cap("SOME_REGIME_WE_HAVE_NEVER_SEEN")[0] == 1.0
 
 
 def test_exposure_caps_are_discrete_and_within_the_mandate():
     """Coarse on purpose: a continuous exposure function invites fitting, and the ⓠ
     spec's criterion is not Sharpe but 'did exposure come down in the first third of
     the drawdown'. Every reachable cap must also sit inside [0, 1.3] — no shorts."""
-    caps = {bc._exposure_cap(r) for r in
-            ("CRISIS", "CAPITULATION", "DELEVERAGING", "RISK_OFF", "CONTRACTION",
-             "BEAR", "EUPHORIA", "EXPANSION", "RISK_ON", "BULL", "NEUTRAL", None)}
+    caps = {bc._exposure_cap(r)[0] for r in
+            ("RISK_OFF", "TIGHTENING", "STAGFLATION", "NEUTRAL", "EASING",
+             "RISK_ON", "GOLDILOCKS", None, "A_LABEL_WE_HAVE_NEVER_SEEN")}
     assert caps <= set(bc._ALLOWED_CAPS), f"cap outside the allowed set: {caps}"
     assert min(caps) >= 0.0, "layer ① never shorts"
     assert max(caps) <= 1.3, "exposure mandate ceiling"
-    assert bc._exposure_cap("CRISIS_DELEVERAGING") == 0.0, "crisis must reach flat"
 
 
 def test_realized_vol_is_panel_level_and_nan_honest():
@@ -156,6 +155,51 @@ def test_a_stalled_clock_is_observable_from_outside_the_process():
                               "scripts/external_probe.sh"), encoding="utf-8").read()
     assert "beta-core-clock" in probe, \
         "the external probe is the only observer that survives the deploy that breaks marking"
+
+
+def test_regime_map_covers_the_canonical_vocabulary_exactly():
+    """THE bug the book's first live mark exposed. The original mapping used invented
+    labels — CRISIS, CAPITULATION, EUPHORIA, EXPANSION, BULL, BEAR — none of which
+    exist in the canonical set. Measured against the live table, only RISK_OFF
+    (40.2 % of days) and RISK_ON (12.3 %) ever matched, so **47.5 % of days silently
+    defaulted to full exposure** and layer ③ was inert without announcing it.
+
+    Those names were half-remembered from EXPOSURE_BANDS_V1, a different vocabulary
+    keyed off a different input. Same shape as `asset_class` and `bench` before it:
+    a mapping written against an imagined vocabulary instead of the real one. Pinning
+    it to the canonical set means the next added regime breaks CI rather than
+    silently becoming full exposure."""
+    from src.data.cis.cis_provider import _CANONICAL_REGIMES
+    assert set(bc._REGIME_CAP) == set(_CANONICAL_REGIMES), (
+        f"regime map must cover the canonical set exactly.\n"
+        f"  missing:  {set(_CANONICAL_REGIMES) - set(bc._REGIME_CAP)}\n"
+        f"  invented: {set(bc._REGIME_CAP) - set(_CANONICAL_REGIMES)}")
+    for regime, cap in bc._REGIME_CAP.items():
+        assert cap in bc._ALLOWED_CAPS, f"{regime} maps to {cap}, outside ALLOWED_CAPS"
+
+
+def test_layer_three_not_running_is_distinguishable_from_choosing_neutral():
+    """`exposure_cap = 1.0` carries three different meanings: ③ evaluated and chose
+    neutral, ③ met a label it does not know, or ③ got no input at all. Folding them
+    into one number is the -2-into-0 conflation one layer up — and it is exactly what
+    hid the inert mapping on the first mark."""
+    assert bc._exposure_cap("NEUTRAL")   == (1.0, "regime_map")
+    assert bc._exposure_cap(None)        == (1.0, "no_regime")
+    assert bc._exposure_cap("NEW_LABEL") == (1.0, "unmapped_regime")
+    assert len({bc._exposure_cap(r)[1] for r in ("NEUTRAL", None, "NEW_LABEL")}) == 3, \
+        "all three must be separately reportable"
+    src = open(os.path.join(os.path.dirname(__file__), "..",
+                            "src/data/signals/beta_core_paper.py"), encoding="utf-8").read()
+    assert '"cap_source"' in src, "cap_source must be WRITTEN to the row, not just computed"
+
+
+def test_regime_labels_normalise_the_way_the_live_table_spells_them():
+    """The live table carries 'Risk-Off' and 'Tightening' beside 'RISK_OFF'. Matching
+    on underscores alone misses the hyphenated variants — 0.9 % of days, small enough
+    to survive review and large enough to mis-size a book."""
+    for variant in ("Risk-Off", "risk off", "RISK_OFF", " Tightening "):
+        assert bc._exposure_cap(variant)[1] == "regime_map", f"{variant!r} not normalised"
+    assert bc._exposure_cap("Risk-Off")[0] == bc._exposure_cap("RISK_OFF")[0]
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

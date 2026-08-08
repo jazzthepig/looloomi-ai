@@ -76,20 +76,53 @@ def _vol_scalar(rv: float) -> float:
     return float(min(_VOL_TARGET / rv, _MAX_SCALAR))
 
 
-def _exposure_cap(regime: str | None) -> float:
-    """③ layer. Maps regime → one of ALLOWED_CAPS. Deliberately coarse: a continuous
-    exposure function invites fitting, and the ⓠ spec's own criterion is not Sharpe
-    but 'did exposure come down in the first third of the drawdown'."""
+# The canonical regime vocabulary is exactly these seven (cis_provider._CANONICAL_REGIMES).
+# The FIRST version of this file mapped invented labels — CRISIS, CAPITULATION,
+# EUPHORIA, EXPANSION, BULL, BEAR — none of which exist in that set. Measured on the
+# live table: only RISK_OFF (40.2 % of days) and RISK_ON (12.3 %) ever matched, so
+# **47.5 % of days silently fell through to full exposure** and layer ③ was inert
+# without saying so. The invented names were half-remembered from EXPOSURE_BANDS_V1,
+# which is a different vocabulary keyed off a different input — two label sets
+# conflated, exactly like `asset_class` and `bench` before it.
+_REGIME_CAP: dict[str, float] = {
+    "RISK_OFF":    0.5,
+    "TIGHTENING":  0.5,
+    "STAGFLATION": 0.5,
+    "NEUTRAL":     1.0,
+    "EASING":      1.0,   # supportive but not a licence to lever
+    "RISK_ON":     1.3,
+    "GOLDILOCKS":  1.3,
+}
+
+# What actually decides the cap, in priority order. Recorded on every row so the ③
+# claim is auditable rather than assumed:
+#   'stablecoin_band' — the ⓠ spec's real driver (stablecoin supply Δ28d → 5-band
+#                       hysteresis → EXPOSURE_BANDS_V1). NOT yet wired live: the
+#                       research path reads a Mac-side JSON that Railway cannot see.
+#   'regime_map'      — the seven canonical regimes above. Coarse on purpose.
+#   'unmapped_regime' — a label outside the canonical set. Caps at 1.0 but says so,
+#                       because a new regime name must never read as a neutral call.
+#   'no_regime'       — the feed returned nothing.
+# Collapsing the last two into 'regime_map' would make "③ never ran" indistinguishable
+# from "③ ran and chose 1.0" — the same conflation as a -2 sentinel folded into 0.
+
+
+def _exposure_cap(regime: str | None) -> tuple[float, str]:
+    """③ layer. Returns (cap, source). Deliberately coarse: a continuous exposure
+    function invites fitting, and the ⓠ spec's criterion is not Sharpe but 'did
+    exposure come down in the first third of the drawdown'.
+
+    HONEST STATE: the spec's real driver is the stablecoin-supply band, and its own
+    frozen comment records that 2025-26 carries NO stablecoin signal by design — so
+    during this forward window the cap would sit at 1.0 even with that path wired,
+    and the book is effectively pure ①. Saying that in the row is worth more than a
+    mapping that produces 1.0 for the wrong reason."""
     if not regime:
-        return 1.0
-    r = regime.upper()
-    if any(k in r for k in ("CRISIS", "CAPITULATION", "DELEVERAGING")):
-        return 0.0
-    if any(k in r for k in ("RISK_OFF", "CONTRACTION", "BEAR")):
-        return 0.5
-    if any(k in r for k in ("EUPHORIA", "EXPANSION", "RISK_ON", "BULL")):
-        return 1.3
-    return 1.0
+        return 1.0, "no_regime"
+    r = str(regime).strip().upper().replace("-", "_").replace(" ", "_")
+    if r in _REGIME_CAP:
+        return _REGIME_CAP[r], "regime_map"
+    return 1.0, "unmapped_regime"
 
 
 async def _load_panel():
@@ -169,7 +202,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     rv = _realized_vol(ret)
     scalar = _vol_scalar(rv)
     regime = await _current_regime()
-    cap = _exposure_cap(regime)
+    cap, cap_source = _exposure_cap(regime)
     base = _equal_weights([s for s in symbols if s in px])
     gross = min(scalar, cap) if cap > 0 else 0.0
     weights = {s: w * gross for s, w in base.items()}
@@ -200,7 +233,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         if not dry_run:
             await _redis_set(_STATE_KEY, state, ttl=0)
             await _write(today, 1.0, 1.0, 0.0, 0.0, cap, regime, scalar, rv,
-                         len(weights), gross, 0.0, True, weights, "inception")
+                         len(weights), gross, 0.0, True, weights,
+                         f"inception · cap_source={cap_source}")
         return {"status": "inception", "nav": 1.0, "gross": round(gross, 3),
                 "regime": regime, "date": today.isoformat()}
 
@@ -245,11 +279,12 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         await _redis_set(_STATE_KEY, state, ttl=0)
         await _write(today, nav, bench_nav, book_ret, bench_ret, cap, regime, scalar, rv,
                      len(new_w), sum(abs(v) for v in new_w.values()), cost, rebalanced,
-                     new_w, None)
+                     new_w, f"cap_source={cap_source}")
     return {"status": "marked", "nav": round(nav, 5), "benchmark_nav": round(bench_nav, 5),
             "daily_return_pct": round(book_ret * 100, 3),
             "excess_pct": round((book_ret - bench_ret) * 100, 3),
-            "exposure_cap": cap, "regime": regime, "realized_vol_30d": round(rv, 3),
+            "exposure_cap": cap, "cap_source": cap_source, "regime": regime,
+            "realized_vol_30d": round(rv, 3),
             "rebalanced": rebalanced, "date": today.isoformat()}
 
 
