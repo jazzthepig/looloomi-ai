@@ -7723,6 +7723,146 @@ honest disclosure per Lesson #92.
 
 ---
 
+## R77-MULTICYCLE-AXIS-SCAN 🟡 PRE-CHECK — 8-axis band-alpha: BTC-trailing axis is flat (S-82/R82 confirmed); 3 second-order axes show sign-consistent but quant-bias-fragile dependence (Minimax-C, 2026-08-09)
+
+**Trigger.** R77-MULTICYCLE-ROUND3 (above) ended with sequel: "remaining
+levers are **regime-conditioning** (the W5 fragility that R77 masks) and
+**funding-window expansion**." Per Jazz 2026-08-09: do A (regime
+conditioning), do NOT do B (funding window permanently deprioritized),
+accept C (R77 = regime-specific candidate permanently locked). This entry
+is the A-path pre-check: before designing a regime-conditioned R77
+overlay, survey whether R77 raw daily alpha is actually regime-DEPENDENT
+on any non-BTC-trend axis. S-82/R82 already proved BTC trailing-30d axis
+is flat (Lesson #44). The question is whether OTHER axes (vol level,
+vol-of-vol, funding dispersion, ETH/BTC rotation, longer-horizon trend)
+show exploitable dependence.
+
+**Pre-check design.** `src/research/validation/quick_band_alpha_scan.py` —
+scans 8 axes, for each: (a) IS-only fit of quintile edges (anti-look-ahead,
+the same discipline S-82 enforced with fixed edges), (b) report R77 raw
+daily ann% per band on full / IS / OOS slices. **The honest finding is
+not whether the panel-mean ann% can be lifted; it's whether the IS-OOS
+band-alpha pattern is sign-consistent** — if q4 is +X% IS and −Y% OOS,
+that's an artifact, not a regime effect.
+
+**8-axis scan @ 2026-08-09, panel 2024-06-07→2026-07-18 (772d, 28 assets,
+OOS cut @ 540, IS-only quintile edges):**
+
+| axis | range_full | range_IS | range_OOS | IS-OOS sign-consistent? |
+|---|---:|---:|---:|:---:|
+| btc_trail30 (S-82 axis) | +0.85pp | +0.92pp | +0.69pp | ~ (slight) |
+| btc_trail90 | +0.88pp | +1.08pp | +2.57pp | ⚠️ single-band OOS outlier |
+| btc_trail180 | +1.13pp | +1.20pp | +0.00pp | ⚠️ OOS no samples (NaN) |
+| btc_vol30 (vol level) | +0.45pp | +0.37pp | +0.57pp | ✓ |
+| **btc_vol_of_vol30** | **+1.37pp** | **+1.64pp** | **+1.28pp** | ✓ **q2 IS+OOS strong** |
+| eth_btc_ratio_trail30 | +0.56pp | +0.60pp | +2.60pp | ⚠️ q1 OOS single-day outlier |
+| **funding_disp (crowding)** | **+1.08pp** | **+1.04pp** | **+1.91pp** | ✓ **q4 dead-zone IS+OOS** |
+| btc_trail5 (short mom) | +0.36pp | +0.80pp | +0.98pp | ~ |
+
+**The 2 axes with sign-consistent IS-OOS band-dependence:**
+
+**btc_vol_of_vol30** (q2 is the sweet spot, q3 is dead):
+| band | full ann% | IS ann% | OOS ann% |
+|---|---:|---:|---:|
+| q1 (low vov) | +1.11% | +1.12% | NaN (no OOS samples) |
+| q2 | **+1.33%** | **+1.19%** | **+1.65%** ← IS+OOS both strong |
+| q3 (mid vov) | -0.04% | -0.45% | +0.42% ← IS-OOS sign mismatch |
+| q4 | +0.09% | -0.14% | +0.53% ← IS-OOS sign mismatch |
+| q5 (high vov) | +0.35% | +0.34% | +0.37% |
+
+**funding_disp (crowding)** (q2/q3 normal dispersion, q4 high crowding
+= dead zone):
+| band | full ann% | IS ann% | OOS ann% |
+|---|---:|---:|---:|
+| q1 (low disp) | +0.12% | +0.05% | +0.30% |
+| q2 | +0.98% | +1.02% | +0.92% ← IS+OOS both strong |
+| q3 | +0.75% | +0.81% | +0.63% ← IS+OOS both strong |
+| **q4 (high disp)** | **-0.10%** | **-0.02%** | **-0.35%** ← **dead zone sign-consistent** |
+| q5 | +0.39% | +0.01% | +1.56% ← IS~0, OOS single-band outlier |
+
+**Verdict.** 🟡 **PRE-CHECK FRAGILE** — there ARE second-order regime
+dependencies (vol-of-vol mid-low sweet spot; funding-disp high-crowding
+dead zone), but NONE of them are:
+1. Sign-monotonic across bands (both axes have non-monotonic band-alpha,
+   meaning a fixed-edge regime map can't represent them cleanly).
+2. Robust at the 95% confidence level (n_days per band is 30–170; the
+   spread between bands is ≤ 1.6pp on a panel mean of +0.45%; not a
+   statistically distinct edge).
+3. Pre-declared (quintile edges are IS-fit; the "fixed-edge S-82
+   discipline" was relaxed here for the survey, and the edge set is
+   somewhat circular as a result).
+
+**The honest conclusion: A path (regime-conditioning on R77) is
+DOABLE in principle but the dependencies are SECOND-ORDER. The first
+attempt would be a funding-disp dead-zone gate (skip R77 when cross-
+sectional funding dispersion is in q4 = high crowding; persist
+otherwise). Expected gross lift ≤ 0.2pp/yr (dead-zone is ~140 days =
+18% of panel; average dead-zone daily α is −0.10%/day vs panel mean
++0.45%/day; gross-t estimate ≤ 1.0, well below 1.96 threshold). The
+expected return lift is < 0.1 Sharpe improvement, which would NOT
+clear the 3-check gauntlet.
+
+**Lesson #94 (proposed).** *Regime-conditioning a market-neutral factor
+book is a category error when the band-dependence is second-order
+(< 2pp spread on a < 1% baseline ann%). The lift from a regime gate is
+bounded above by `panel_mean_ann × P(skip-band)`, which for R77 is
+`0.45% × 0.18 = 0.08pp` — an order of magnitude below 3-check
+threshold. Regime gating only works when the band-dependence is FIRST
+ORDER (> 5pp spread, > 50% band-mismatch sign across IS-OOS). R77's
+S-82 axis and 3 second-order axes from this scan are all in the
+"category error" zone. The right direction is NOT to gate R77 but to
+discover OTHER regime-specific sleeves (orthogonal to R77, regime-
+conditioned on a DIFFERENT mechanism) — that is the §STRATEGY-3
+architectural path, deferred until §STRATEGY-2 graveyard closes.*
+
+**What this entry did.**
+- New module `src/research/validation/quick_band_alpha_scan.py`:
+  - `load_r77_returns()` reproduces R77 frozen-cell returns (READ-ONLY,
+    same leg construction as S-82 line 209–242).
+  - `quantile_bands_is_oos()` enforces IS-only edge fit; OOS observations
+    fall into whatever IS-quintile their value lands in (no look-ahead).
+  - 8 axes: btc_trail30/90/180/5, btc_vol30, btc_vol_of_vol30,
+    eth_btc_ratio_trail30, funding_disp.
+  - Per-band IS/OOS split: only count bands with ≥ 3 OOS days; flag
+    bands with NaN OOS as "no samples".
+- `reports/a0_band_alpha_scan/2026-08-09/scan.json` (19045 bytes) —
+  full structured output.
+
+**What this entry did NOT do (explicit non-goals).**
+- Did NOT design an A1 gross-overlay on these axes (anti-imposter: the
+  S-82 fixed-edge discipline was relaxed for the scan; translating
+  these to a SURVIVES-able overlay would require fixed edges, which the
+  scan proves would not match the empirical band structure).
+- Did NOT design an A2 sign-gate. Same reasoning: sign gates need
+  SIGN-mismatch across bands; non-monotonic band-alpha precludes it.
+- Did NOT propose a new M-/S- number. This is a pre-check for the
+  sequel named in R77-MULTICYCLE-ROUND3, not a new experiment.
+
+**Sequel.**
+- A path (regime-conditioning on R77) is **deferred to §STRATEGY-3
+  research**: build a NEW regime-specific sleeve, not gate the existing
+  one. The right architectural move per Lesson #94 is to discover
+  orthogonal regime-specific sleeves, not to retro-fit a regime gate on
+  R77.
+- R77 frozen cell at `w_R46=0.25/w_R62=0.75/w_R76=0.30` **unchanged**
+  (this scan validates the flat-gross construction).
+- Funding-research deprioritization confirmed: this scan USED the
+  funding-disp axis (existing data) but did NOT open any new funding
+  research question.
+
+### 复现
+```bash
+PYTHONPATH=. python3 src/research/validation/quick_band_alpha_scan.py
+cat reports/a0_band_alpha_scan/2026-08-09/scan.json | python3 -m json.tool | head -100
+```
+
+### Honesty marker (always on)
+No frozen weights touched; R77 cell reproduced READ-ONLY; scan is a
+research pre-check, not a production candidate. `R77_FROZEN_WEIGHTS_UNHASHED`
+still applies to the reproduced book.
+
+---
+
 ## S-123 — 时钟是脏的:① book 用 23 天前的 regime 给自己定杠杆
 
 **日期** 2026-08-09 · **Seth** · **状态** 已修 + 已守卫 · **影响** 前向记录全部 2 天
@@ -8245,3 +8385,134 @@ with per_day as (select asset_class, recorded_at::date d, count(distinct symbol)
 select asset_class, round(avg(d_f)::numeric,2), round(avg(sd_f)::numeric,3)
   from per_day group by 1 order by 3;
 ```
+
+---
+
+## S-129 — F 单独打败 CIS 合成分(5 天,非重叠);但三条前置检验未做
+
+**日期** 2026-08-09 · **Seth** · **状态** 待检验,**不得据此改动生产**
+
+### 先说方法上的两次自纠(否则下面的数字全是幻觉)
+
+1. **第一版把类内 IC 算错了** —— 我把各类分别排名后的序混在同一天做相关,
+   类大小结构性地制造相关,得出 `IC=0.42, t=61.40`。**荒谬值本身就是证据说明算错了。**
+   类内 IC 必须按(日, 类)分别算再平均。
+2. **重叠窗口把 t 放大约 √30 倍** —— 30 天前向收益在 404 个重叠日上给出 `t_pooled=10.00`;
+   改成非重叠后 **n=14, t=0.98**。**404 个「观测」其实是 14 个。**
+   这是 S-101(按天加权的 alpha 在事件计数前不是证据)的同一形状。
+
+### 结果(5 天持有,84 个非重叠观测,439 天窗口)
+
+| 指标 | IC | t |
+|---|---|---|
+| **F 单独** | **0.0650** | **3.67** |
+| CIS 合成分 `score` | 0.0180 | 0.83 |
+| **配对差 (F − score)** | **+0.0470** | **2.03** |
+| rank corr(F, score) | 0.321 | — |
+
+各支柱分解:
+
+| 支柱 | IC 5d | t | IC 20d | t |
+|---|---|---|---|---|
+| **F** | **0.0652** | **3.68** | 0.0780 | 1.67 |
+| M | 0.0068 | 0.29 | −0.0881 | −1.48 |
+| **O** | 0.0038 | 0.20 | **−0.1133** | **−2.76** |
+| **A** | −0.0187 | −0.88 | **−0.1115** | **−2.08** |
+
+**表面读法:** 合成分把 F 的信号稀释掉了;O 与 A 在 20 天上是负向预测,却被正权重
+(0.2385 / 0.1193)加进合成分。
+
+### ⚠️ 三条前置检验,任何一条都能推翻上表 —— 全部未做
+
+1. **F 未中性化(S-103)。** F 的分量里 `market_cap_score` 占主导
+   (AMZN:`market_cap 54.4 · tvl 0 · fdv 0 · supply 0`)⇒ **F ≈ 规模因子。**
+   规模是众所周知的类 beta 暴露。**这个 IC 可能是 size,不是基本面。**
+   ⇒ 必须跑 `neutralize(r5, [size, beta])` 后再看 F 的残差 IC。
+   **未中性化的 t 不是证据 —— 这是 MEMORY 里的原话。**
+2. **多重检验。** 本轮跑了约 10 个检验。
+   F 的 t=3.67(p≈0.0004)乘 10 仍 <0.01,**能过**;
+   **配对差 t=2.03(p≈0.045)乘 10 = 0.45,过不了。**
+   ⇒ 「合成分更差」目前是**提示,不是结论**。
+3. **可执行性门槛。** IC 0.065、5 天持有 ⇒ 年换手约 50 次,
+   而实测换手成本 **4.6%/年**。**IC 0.065 在 N_eff≈3.1 上能转化多少收益,尚未计算。**
+   ⇒ 极可能净效应为负。**SHIP 门槛里的 `net_effect_pct_yr > 0` 必须先算出来。**
+
+### 单周期
+
+全部 439 天在一轮周期内。S-114 的单周期告诫适用。
+
+### 下一步(按能否推翻结论排序,不按工作量)
+
+1. **中性化后的 F 残差 IC** —— 如果 F 就是 size,整条线索作废。**这一步最先做。**
+2. 净效应:IC → IR → 扣成本后的年化。若为负,后面都不用做。
+3. 若前两条都过:再谈「F-only vs 合成分」的权重变更,并且必须走 60 天前向。
+
+**在 1 和 2 通过之前,这条不得用于任何生产改动、任何对外材料、任何实盘。**
+
+### 第 1 条前置检验的部分结果 —— F 活过了类内对照
+
+| | IC (5d) | t | n |
+|---|---|---|---|
+| 合并 | 0.0650 | 3.67 | 84 |
+| **类内**(按日按类算,再按日平均) | **0.0525** | **3.02** | 84 |
+
+去掉资产类效应,F 的 IC 只掉约 20%,t 仍 3.02。
+⇒ **F 不是资产类标签。** S-128 的担忧在 5 天维度不成立
+(S-128 讲的是 TradFi 类内离散度和 20/30 天,与此不是同一件事)。
+
+**但这不是规模中性化。** 类内仍然包含规模差异,而 F 的主导分量就是 `market_cap_score`。
+⇒ **剩下的致命检验仍未做:`neutralize(r5, [log_mcap, beta])` 后的 F 残差 IC。**
+若残差 IC 归零,F 就是规模因子换了个名字,整条线索作废。
+`cis_scores` 不含市值列 ⇒ 需从 `assets` / 行情侧取,或用 T1 payload 的 `market_cap`。
+
+**现状判定:F 通过 2 项(非重叠 t、类内),未过 2 项(规模中性化、净成本)。
+不得用于生产、对外材料或实盘。**
+
+### S-129 续 —— 全部四项前置检验已跑完,含模拟费率
+
+**规模中性化(偏相关,控制 ADV20):**
+
+| | IC (5d) | t |
+|---|---|---|
+| F 原始 | 0.0650 | 3.67 |
+| **F 规模中性** | **0.0537** | **2.97** |
+| 规模单独 | 0.0567 | 1.98 |
+| corr(F, ADV) | 0.219 | — |
+
+⇒ **F 不是规模因子。** 去掉规模只掉 17%,t 仍近 3。四项对照(非重叠 / 类内 / 规模 / 多重检验)
+F 全部通过。**IC 是真的。**
+
+**但组合实现层面,IC 不等于钱。**(84 次调仓,5 天持有)
+
+| 构造 | 毛超额年化 | t | 单次单边换手 | 成本@10bps | **净@10bps** |
+|---|---|---|---|---|---|
+| 顶五分位(selection) | +3.08% | **0.33** | 28.8% | 3.00% | **+0.08%** |
+| tilt k=0.6 | +1.68% | 0.68 | 6.5% | 0.67% | +1.00% |
+| **tilt k=1.0** | **+2.79%** | **0.68** | **9.6%** | **1.00%** | **+1.79%** |
+
+费率三档:5bps 净 +2.29% · 10bps +1.79% · 20bps +0.79%(tilt k=1.0)。
+
+### 两个结论,一正一负
+
+**正 —— 「tilt, don't select」第一次被实测验证。**
+同一个信号,五分位选股净 ≈ 0,全panel 秩加权 tilt 净 +1.79%。
+**差异 100% 来自成本:换手 28.8% → 9.6%。**
+`CLAUDE.md` 的收益层级把 ② 层定义为「持仓内超配,tilt 非 L/S」——
+**这条原来是主张,现在是测量。**
+
+**负 —— IC 显著,组合超额不显著。**
+IC t=3.67,组合超额 t 只有 0.33(五分位)/ 0.68(tilt)。
+五分位在 ~20 个标的上只有 4 个名字,特异性噪声吞掉信号 —— **这就是 N_eff≈3.1。**
+⇒ **+1.79% 是点估计,不是证据。按现有样本,t=0.68 要到 2 需要约 9 倍观测。**
+
+### 因此:广度不是研究上的锦上添花,是让这件事变得可测量的唯一约束
+
+task #27(含退市回填)/ #28(扩到 ~180 标的,仅日频)**从「P1 研究」升级为
+「让 ② 层可判定的前置条件」**。样本不随时间长而随标的数长(§2.1 早有此结论),
+而 tilt 的跟踪误差直接由标的数决定。
+
+### 仍不得据此行动
+
+- 单周期(439 天)。
+- 未做 DSR/PBO;未做 60 天前向;未过 SHIP 门槛任何一项。
+- **t=0.68 ⇒ 这是一条待检验线索,不是策略。**
