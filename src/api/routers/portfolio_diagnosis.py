@@ -131,14 +131,14 @@ def diagnose_portfolio(holdings: list[dict], universe_data: dict, band_ctx: dict
             # not in the curated universe → fails the institutional standard
             row = {"symbol": sym, "weight": round(w, 4), "grade": None,
                    "cis": None, "signal": None, "asset_class": None,
-                   "bucket": "trim", "reason": "not in the institutional universe (unrated / off-standard)"}
+                   "bucket": "underweight", "reason": "not in the institutional universe (unrated / off-standard)"}
             trim.append(row); off_standard_w += w
         else:
             grade = a.get("grade") or "—"
             cis = a.get("cis_score")
             if isinstance(cis, (int, float)):
                 wsum_cis += cis * w; w_with_score += w
-            bucket = "keep" if grade in _KEEP else ("watch" if grade in _WATCH else "trim")
+            bucket = "keep" if grade in _KEEP else ("watch" if grade in _WATCH else "underweight")
             reason = a.get("narrative") or ""
             row = {"symbol": sym, "weight": round(w, 4), "grade": grade,
                    "cis": cis, "signal": a.get("signal"),
@@ -155,7 +155,7 @@ def diagnose_portfolio(holdings: list[dict], universe_data: dict, band_ctx: dict
                 except Exception:
                     pass
             (keep if bucket == "keep" else watch if bucket == "watch" else trim).append(row)
-            if bucket == "trim":
+            if bucket == "underweight":
                 off_standard_w += w
         rows.append(row)
 
@@ -184,9 +184,9 @@ def diagnose_portfolio(holdings: list[dict], universe_data: dict, band_ctx: dict
             })
         else:
             moves.append({
-                "action": "trim",
+                "action": "underweight",
                 "from": sym,
-                "detail": f"Trim {sym} — {why}.",
+                "detail": f"{sym} screens UNDERWEIGHT — {why}.",
             })
 
     # Honest one-line verdict.
@@ -215,7 +215,7 @@ def diagnose_portfolio(holdings: list[dict], universe_data: dict, band_ctx: dict
             "off_standard_pct": off_pct,
             "illiquid_pct": illiquid_pct,
             "n_holdings": len(hs),
-            "keep": len(keep), "watch": len(watch), "trim": len(trim),
+            "keep": len(keep), "watch": len(watch), "underweight": len(trim),
         },
         "verdict": verdict,
         "moves": moves,

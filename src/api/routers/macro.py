@@ -134,7 +134,7 @@ def _generate_template_brief(mp: dict) -> str:
         "EASING":       ("Easing cycle underway.", "Risk-on conditions improve. Broader exposure warranted for assets above CIS≥60."),
         "RISK_ON":      ("Risk-on macro environment.", "Broad participation supported. Quality filter still applies — CIS≥65 preferred."),
         "RISK_OFF":     ("Risk-off macro environment.", "Capital preservation priority. High-CIS defensives and stablecoins preferred."),
-        "STAGFLATION":  ("Stagflation signals present.", "Commodities, RWA, and BTC as inflation hedges. Avoid high-beta altcoins."),
+        "STAGFLATION":  ("Stagflation signals present.", "Commodities, RWA, and BTC screen as inflation hedges. High-beta altcoins rank UNDERWEIGHT."),
         "GOLDILOCKS":   ("Goldilocks regime — growth without excess inflation.", "Full-spectrum participation. Allocate across grades B+ and above."),
     }
     regime_key = (regime or "").upper()

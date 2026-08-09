@@ -696,12 +696,12 @@ async def assemble_briefing(symbol: str = None) -> dict:
             s_syms = [(a.get('symbol') or '').upper() for a in strong[:4]]
             shifts.append({"id": "cross:strong", "headline": "Where quality is strongest now",
                            "narrative": f"Across the {len(uni)}-asset universe, {', '.join(s_syms)} carry the strongest "
-                                        f"quality reads in the {regime} regime — the names to lean into if the "
-                                        f"tape turns constructive. (This is the regime lens, not a buy list.)",
+                                        f"quality reads in the {regime} regime — the names positioned best if the "
+                                        f"tape turns constructive. (Regime lens and relative positioning only.)",
                            "symbols": s_syms, "source": "Cross-Asset", "timestamp": now})
             ai_items.append({"id": "cross:strong", "kind": "cross_asset_strength", "symbols": s_syms,
                              "regime": regime, "universe_size": len(uni),
-                             "point": "strongest quality reads; regime lens, not a buy list"})
+                             "point": "strongest quality reads; regime lens, relative positioning only"})
         if weak:
             w_syms = [(a.get('symbol') or '').upper() for a in weak[:4]]
             shifts.append({"id": "cross:weak", "headline": "Where quality is eroding",
@@ -1124,10 +1124,10 @@ def _band_of(trail_30d: float) -> str:
 
 _BAND_ACTION = {
     "1_deep_off": "Deep risk-OFF — shorting the bottom tier (UNDERPERFORM) has paid best here; long edge weakest.",
-    "2_off":      "Risk-OFF — short edge favoured, trim gross long.",
-    "3_neutral":  "Neutral tape — both edges shrink; reduce conviction sizing.",
+    "2_off":      "Risk-OFF — short edge favoured; long book screens UNDERWEIGHT.",
+    "3_neutral":  "Neutral tape — both edges shrink; conviction dispersion compresses.",
     "4_on":       "Risk-ON — long the top tier (STRONG OUTPERFORM); short edge fades.",
-    "5_deep_on":  "Deep risk-ON — long top-tier edge strongest; avoid shorts.",
+    "5_deep_on":  "Deep risk-ON — top-tier edge strongest; bottom tier disfavored.",
 }
 
 # Band → default posture (net bias + gross scale), from the edge-map thesis: long the top tier
