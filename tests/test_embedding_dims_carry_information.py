@@ -8,7 +8,11 @@ MEASURED 2026-08-09 on the live `asset_embeddings` table:
     distinct pillar blocks             1     (every asset identical)
     dim 13, dim 17                     constant across all 58
     dims 18..24 (v2 block)             null for all
-    vec_full that is not a vector      14 assets, {"note":"backfill_pillars_only"}
+    vec_full carrying a provenance note 14 assets, {"note":"backfill_pillars_only"}
+                                        (INTENTIONAL — Jazz: the note exists so a
+                                        future reader knows what a mined row was,
+                                        rather than rediscovering it after amnesia.
+                                        Not a defect; listed so nobody "fixes" it.)
 
 So the "18-dimensional embedding" that ARCHITECTURE calls the geometric substrate
 carries information in fewer than 9 dimensions, and the dead ones are the FIVE CIS
@@ -142,6 +146,45 @@ def test_the_two_pillar_resolvers_agree_on_every_shape():
     assert not disagree, (
         "the two pillar resolvers disagree — one of them is silently writing zeros:\n  "
         + "\n  ".join(disagree))
+
+
+def test_lowercase_pillar_is_source_conditional_and_stays_last():
+    """CORRECTION, 2026-08-09. An earlier draft of this file called the flat lowercase
+    `f/m/o/s/a` and the nested `pillars.F/M/O/S/A` "two contradictory pillar sets".
+    That was wrong, and Jazz said why in four words: case sensitive, different things.
+
+      T2 / cis_provider   `"f": pillars["F"]`      same quantity
+      history_db row      bare f/m/o/s/a           the pillar
+      T1 engine payload   f = breakdown.*.score    a DIFFERENT quantity
+
+    BTC in a T1 payload: f=79.7, pillars.F=50.0. The lowercase key is the raw
+    sub-score that gets weighted into the total; the nested one is the pillar.
+
+    So the danger is the opposite of what I first wrote. It is not that the data
+    contradicts itself — it is that a resolver which accepts BOTH will silently
+    substitute one quantity for the other whenever `pillars` happens to be absent.
+    A "tolerant" resolver over source-conditional keys is a type confusion.
+
+    What this pins: the nested lookup must come FIRST, so a well-formed T1 object can
+    never resolve to the raw score. The remaining exposure — an object carrying only
+    lowercase keys from a T1-shaped source — is documented at the call site rather
+    than silently collapsed, because collapsing them is the actual error."""
+    import importlib
+    emb = importlib.import_module("src.data.vector.embedder")
+    # a T1-shaped object: BOTH present, DIFFERENT quantities
+    t1 = {"pillars": {"F": 50.0, "M": 49.4, "O": 27.0, "S": 55.1, "A": 50.1},
+          "f": 79.7, "m": 44.7, "o": 61.9, "s": 19.5, "a": 34.4}
+    got = emb._pillars_of(t1)
+    assert got["F"] == 50.0, (
+        f"nested pillars must win over the lowercase raw score, got F={got['F']} "
+        "— resolving to 79.7 would put breakdown sub-scores into the pillar dims")
+    assert got["O"] == 27.0 and got["S"] == 55.1
+
+    src = (_REPO_SRC := __import__("pathlib").Path(__file__).resolve().parent.parent
+           / "src" / "data" / "vector" / "embedder.py").read_text(encoding="utf-8")
+    assert "SOURCE-CONDITIONAL" in src, (
+        "the lowercase fallback's source-dependent meaning must be recorded at the "
+        "call site — an undocumented tolerant lookup is how the two get collapsed")
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
