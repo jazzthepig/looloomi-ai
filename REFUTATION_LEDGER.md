@@ -8000,3 +8000,47 @@ ret[1:] = np.nan_to_num((close[1:] - close[:-1]) / close[:-1])   # 旧
 `python3 -m tests.test_beta_core_book` **21/21**(v1 时 14/14)。
 三处反向验证均确认会红:去掉读路径过滤 → line 462;还原 `nan_to_num` → 报错;
 把 `_redis_set` 移回 `_write` 之前 → 顺序断言失败。
+
+### S-126 追补 —— Lesson #108 的第四次实例,肇事者是我自己
+
+修完「落库先、缓存后」不到一小时,发现修复本身是空的:
+
+```python
+try:
+    await supabase_insert_table(...)   # 400 → 返回 False,不抛
+    return True                        # ← 无条件 True
+except Exception:
+    return False                       # ← 永远走不到
+```
+
+**`supabase_insert_table` 用返回值报告失败,不用异常。** PostgREST 的 400
+(未知列 / RLS 拒绝 / 约束冲突)从来不会进 except 分支。
+⇒ **我把刚写的 `if not ok` 守卫,放在了真实失败到不了的位置上。**
+写来执行 Lesson #108 的代码,自己犯了 Lesson #108。
+
+**「函数被调用了」不等于「函数生效了」** —— 这就是 Lesson #107 在代码层的形状,
+而 #108 是它的定位版:**问的不是「有没有断言」,是「违规值能不能走到断言面前」。**
+
+**修法上的方法论收获:** 新守卫改为**行为测试**(把依赖打桩成返回 False),
+而不是读源码。**读代码没发现这个洞,只有让依赖真的失败才发现。**
+这类缺陷的本质就是「看起来没问题」,所以检查它的手段必须能制造失败。
+
+顺带:原来的源码断言写的是 `"return True" in src` —— 它对**正确实现**
+(`return bool(ok)`)反而报错。**断言字符串而非行为,是脆弱守卫的典型气味。**
+
+### 其余五本 paper book 同形状(未修,已量化)
+
+`causal_paper` / `combined_book` / `scalable_paper` / `dingge_paper` / `two_layer_paper`
+各有 1 处 `await supabase_insert_table`,**返回值检查数全部为 0**。
+它们已降级为研究记录,不紧急;但同样的静默丢行随时可能发生。列入待办。
+
+### 部署顺序(重要,反了就白等 24 小时)
+
+`_beta_core_loop` 是 `sleep(600)` 预热 + `sleep(24*3600)` ⇒
+**重试绑定在进程重启上,不是定时。** 所以必须:
+
+```
+删 Redis key  →  再 push(部署重启进程)→ 等 ~10 分钟 →  查 v2 行
+```
+
+先部署再删 key,loop 已经跑完当次,要等 24 小时。

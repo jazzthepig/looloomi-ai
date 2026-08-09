@@ -473,7 +473,7 @@ async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
     from src.api.store import supabase_insert_table
     top = ",".join(f"{s}:{w:.3f}" for s, w in sorted(weights.items(), key=lambda kv: -kv[1])[:3])
     try:
-        await supabase_insert_table("beta_core_nav", [{
+        ok = await supabase_insert_table("beta_core_nav", [{
             "mark_date": d.isoformat(), "nav": round(nav, 6),
             "benchmark_nav": round(bench_nav, 6),
             "daily_return": round(dret, 6), "benchmark_return": round(bret, 6),
@@ -487,7 +487,18 @@ async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
             # incarnations by accident — which would splice a voided segment onto a
             # live one and read as continuous.
             "inception_id": _INCEPTION_ID}])
-        return True
+        # CAPTURE THE RETURN VALUE. `supabase_insert_table` reports failure by
+        # RETURNING False, not by raising — a PostgREST 400 (unknown column, RLS
+        # refusal, constraint) never reaches the except branch. The first version of
+        # this fix wrapped the call in try/except and returned True unconditionally,
+        # which put the new guard at a point the actual failure could not reach:
+        # Lesson #108 again, in the code written to enforce Lesson #108, within the
+        # hour. Checking that a function was CALLED is not checking that it WORKED.
+        if not ok:
+            _log.error("[beta_core] NAV WRITE REJECTED for %s — supabase_insert_table "
+                       "returned False (see the [SUPABASE] warning above for the "
+                       "status and body)", d.isoformat())
+        return bool(ok)
     except Exception as e:
         # Returns the outcome instead of only logging it. A caller that cannot tell a
         # failed durable write from a successful one will carry on as though the mark

@@ -363,9 +363,13 @@ def test_durable_write_precedes_the_cache_and_its_failure_is_honoured():
     separate facts. Refusing to cache an unrecorded mark costs one cycle; caching it
     costs the clock, silently, which is the only thing this book produces."""
     src = _src()
-    assert "return True" in src and "return False" in src, \
-        "_write must report the outcome, not only log it"
-    assert "NAV WRITE FAILED" in src, "a failed durable write must log at error level"
+    # NOT a string match on `return True` — that assertion failed against the CORRECT
+    # implementation (`return bool(ok)`), which is a brittle-guard smell in itself.
+    # The behavioural check lives in test_write_reports_failure_when_the_insert_RETURNS_false;
+    # this one only pins the ordering, which behaviour cannot easily observe.
+    assert "NAV WRITE FAILED" in src, "a raised durable write must log at error level"
+    assert "NAV WRITE REJECTED" in src, \
+        "a RETURNED failure must log too — it is the path a PostgREST 400 takes"
     for branch in ("inception_failed", "mark_failed"):
         assert branch in src, f"a failed durable write must surface as {branch}"
     # ordering: in both branches the _write call must appear before the _redis_set
@@ -424,6 +428,55 @@ def test_a_name_without_a_usable_price_is_excluded_not_carried_as_nan():
         "prices must be filtered for NaN and non-positive before entering the book"
     assert "have no usable price" in src, \
         "an excluded name must be logged — a silently smaller panel is a silent change of book"
+
+
+
+
+
+def test_write_reports_failure_when_the_insert_RETURNS_false():
+    """The fourth instance of Lesson #108 today, and the one I caused.
+
+    `supabase_insert_table` reports failure by RETURNING False — a PostgREST 400
+    (unknown column, RLS refusal, constraint violation) never raises. The first
+    version of the durable-write fix wrapped the call in try/except and returned True
+    unconditionally, so the brand-new `if not ok` guard sat at a point the real
+    failure could not reach. The guard written to enforce "check the target, not the
+    action" was itself checking the action.
+
+    This test is behavioural on purpose. Reading the code did not catch it; only
+    making the dependency fail did. Any guard for this class has to actually induce
+    the failure, because the whole failure mode is that it looks fine."""
+    import asyncio
+    import datetime as _dt
+    import src.api.store as store
+
+    calls = {}
+    original = store.supabase_insert_table
+
+    async def _reject(table, rows):
+        calls["table"] = table
+        return False                      # exactly how a 400 surfaces — no exception
+
+    async def _accept(table, rows):
+        return True
+
+    try:
+        store.supabase_insert_table = _reject
+        got = asyncio.run(bc._write(_dt.date(2026, 8, 9), 1.0, 1.0, 0.0, 0.0, 0.5,
+                                    "TIGHTENING", 1.0, 0.5, 3, 0.5, 0.0, True,
+                                    {"BTC": 0.5}, "probe"))
+        assert got is False, (
+            "_write returned %r when the insert returned False — the caller will "
+            "cache a mark that was never persisted" % (got,))
+        assert calls.get("table") == "beta_core_nav"
+
+        store.supabase_insert_table = _accept
+        assert asyncio.run(bc._write(_dt.date(2026, 8, 9), 1.0, 1.0, 0.0, 0.0, 0.5,
+                                     "TIGHTENING", 1.0, 0.5, 3, 0.5, 0.0, True,
+                                     {"BTC": 0.5}, "probe")) is True, \
+            "a successful insert must report True, or every mark is treated as failed"
+    finally:
+        store.supabase_insert_table = original
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
