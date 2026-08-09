@@ -84,7 +84,24 @@ def _pillars_of(asset: dict) -> dict:
         if v is None:
             v = asset.get(f"{k.lower()}_score")  # T2 flat
         if v is None:
-            v = asset.get(k.lower())          # history_db row: bare f/m/o/s/a
+            # SOURCE-CONDITIONAL, and the only genuinely dangerous entry in this list.
+            # Lowercase `f/m/o/s/a` is NOT universally the pillar (Jazz, 2026-08-09 —
+            # "case sensitive啊，不同的东西"):
+            #
+            #   T2 / cis_provider  `"f": pillars["F"]`     → same quantity, safe
+            #   history_db row     bare f/m/o/s/a           → the pillar, safe
+            #   T1 engine payload  f = breakdown.*.score    → DIFFERENT quantity
+            #
+            # In a T1 payload BTC reads f=79.7 while pillars.F=50.0: the lowercase key
+            # is the RAW sub-score that gets weighted into the total, not the pillar.
+            # The nested lookup above runs first, so a well-formed T1 object resolves
+            # correctly — this fallback only fires when `pillars` is absent, and then
+            # the value's meaning depends on who produced the object.
+            #
+            # Same family as the L0 defect: one key name carrying different quantities
+            # depending on the SOURCE. Recorded rather than "fixed", because collapsing
+            # them would be the actual error — see test_lowercase_pillar_is_source_conditional.
+            v = asset.get(k.lower())
         if v is None:
             v = asset.get(f"pillar_{k.lower()}")  # cis_scores column shape
         out[k] = None if v is None else float(v)
