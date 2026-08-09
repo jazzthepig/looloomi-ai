@@ -303,8 +303,14 @@ async def _write_nav(d, nav, dret, weights, cost, diag, core):
             "mark_date": d.isoformat(), "nav": round(nav, 6), "daily_return": round(dret, 6),
             "gross": round(sum(abs(x) for x in weights.values()), 4),
             "n_positions": len(weights), "cost": round(cost, 6),
-            "book_state": diag.get("book_state"), "core_name": core.get("name", "v5c"),
-            "positions": ",".join(f"{k}:{v:+.2f}" for k, v in sorted(weights.items())) or "FLAT",
+            # S-122. `core_name` defaulted to "v5c": an unnamed core would attribute
+            # this NAV mark to a specific model version that may not be what ran, and
+            # the whole point of the column is knowing which core produced the curve.
+            "book_state": diag.get("book_state"), "core_name": core.get("name"),
+            # "FLAT" claimed a deliberate flat book. An empty weights dict can also
+            # mean the weighting failed, and the two must stay distinguishable —
+            # n_positions carries the count, book_state carries the reason.
+            "positions": ",".join(f"{k}:{v:+.2f}" for k, v in sorted(weights.items())) or None,
             "note": diag.get("reason", "")[:200]}])
     except Exception as e:
         _log.warning("[two_layer] nav write: %s", e)
