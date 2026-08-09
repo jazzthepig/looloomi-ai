@@ -7505,3 +7505,303 @@ S-120 只修了 ③/④。但**只守住水槽,水源仍在产出一个所有其
 ### 复现
 `grep -n '"UNKNOWN"' src/api/routers/cis.py` → 剩余全部在读取侧 ·
 `tests/test_regime_write_path.py` 6/6。
+
+---
+
+## S-122 — 把 S-121 的形状编译成扫描器,顺手挖出 8 处,其中一处比 S-121 更坏
+
+**日期** 2026-08-09 · **Seth** · **状态** 已修 + 已守卫
+
+### 动机
+
+S-121 是同一天第五次「未知伪装成合法值」。**其中四次是数据写完之后才被发现的,
+三次是因为替代值恰好看起来不对**(S-121:表里 NEUTRAL,引擎 TIGHTENING)。
+靠"看起来不对"发现的能力有一个精确的失效点:**当默认值等于多数类时,永远不会看起来不对。**
+⇒ 检测不能当控制手段,必须前移成预防。
+
+### 扫描器设计(3 次收窄,每次都由一个假阴性驱动)
+
+| 版本 | 命中 | 问题 |
+|---|---|---|
+| 全局 `or "LIT"` 正则 | **296** | 绝大多数是 `"x" in y or ...`,**没人会跑的守卫等于没有守卫** |
+| dict 值位 + 函数内含写调用 | 4 | 漏 `_paper_position_to_row` —— 建行的函数和落库的函数是两个 |
+| + 模块内调用图反向传播到不动点 | 7 | 漏 `(pos.get("side") or "LONG").upper()` —— **`.upper()` 把兜底顶出了值位** |
+| + 透明包装解包(upper/round/float…) | **8** | ✅ |
+
+**读取侧自动排除**(7 处 signal_server / MCP 响应),无需人工标注 ——
+渲染层本来就需要显示点什么,把它们一起报出来就是让守卫变噪音的标准路径。
+
+### 8 处命中与判定
+
+| 位置 | 兜底 | 危害 |
+|---|---|---|
+| `trading.py:501` `cis_signal` | `"NEUTRAL"` | **这个字段就是 `_mine_signal_accuracy` 的分组键** |
+| `trading.py:1098` `cis_signal` | `"NEUTRAL"` | 同上(rebal sleeve) |
+| `trading.py:1797` `cis_signal` | `"NEUTRAL"` | **同一条路径上第三次施加同一个默认**(写、写、读) |
+| `trading.py:743` `side` | `"LONG"` | **本条最坏,见下** |
+| `trading.py:750` `exit_reason` | `"manual"` | 未记录的平仓 ≠ 人工平仓 |
+| `trading.py:752` `strategy` | `"CIS_AUTO"` | 三个 sleeve 之一,归因串台 |
+| `trading.py:1178` `side` | `"LONG"` | **实盘 sizing 输入,不是记录** |
+| `two_layer_paper.py:306/307` | `"v5c"` / `"FLAT"` | NAV 归给可能没跑的模型版本;失败与主动空仓不可分 |
+
+### 为什么 `side="LONG"` 比 S-121 更坏
+
+```
+trade_results: 212 行 · side_null = 0 · LONG 175 (82.5%)
+LONG  avg profit_pct = +0.260%   (n=175)
+SHORT avg profit_pct = -2.279%   (n=37)
+```
+
+1. **LONG 是多数类** ⇒ 被错标的行和正确的行长得一模一样,**永远不可能靠检查发现**。
+   S-121 能被抓是因为 NEUTRAL 与 TIGHTENING 矛盾;这里没有矛盾可看。
+2. **代价不对称** ⇒ 空头均值比多头低 2.54pp。错标不是加噪声,是
+   **把最差的交易搬进多头桶** —— 而多头业绩正是要拿去承销的那条曲线。
+3. **`side_null = 0` 不是证据。** 兜底正是消灭 null 的那个东西。
+   ⇒ **"该列没有空值"永远不能用来证明默认值没触发过。**
+
+### 修法
+
+全部改 NULL。三处需要额外处理,因为 NULL 不是终点只是起点:
+
+- **`_mine_signal_accuracy`**:不再并入 NEUTRAL,改为 `n_unattributed` + `coverage_pct`。
+  并入 NEUTRAL 尤其阴险 —— NEUTRAL 桶的 `accuracy_pct` 报 `None`,
+  **污染恰好落在它唯一不显示的格子里**。
+- **`_run_paper_rebalance`**:side 缺失时**拒绝再平衡并返回 `status=refused`**。
+  这是实盘 sizing:假设 LONG 会让 `plan_rebalance` 用错符号算 delta,
+  "安全默认"恰好是把错误暴露翻倍的那个。两种猜法都错 ⇒ 学 `neutralize()` 的 `min_obs`,
+  **拒绝出数**。
+- **`main.py` `_paper_rebalance_loop`**:原来只在 `executed` 时打印,
+  **拒绝会静默** —— sleeve 可以无限期停摆而一行日志都没有。
+  ⇒ **拒绝必须比空转更响,不是更轻。**
+
+### 守卫没能覆盖的(诚实记录)
+
+`trading.py:1160` `REGIME_FACTOR.get(_norm_regime(regime), 0.80)` —— 同一类,
+但兜底不在 dict 值位、且 0.80 不在"中性值"集合里。**扫描器抓的是形状不是概念**,
+这条留作已知缺口,不假装被覆盖。
+
+### Lesson #102
+
+> **能靠"值看起来不对"发现的错误,只是这类错误里最幸运的那部分。
+> 默认值越合理,越接近多数类,就越不可能被发现 —— 危害与可发现性成反比。**
+> 判据不变(下游能否分辨测出来的和兜出来的),但**验证方式必须改**:
+> 不能用"该列没有空值"自证清白,因为那正是兜底的作用。**只能靠写入路径上的守卫。**
+
+### 复现
+
+`python3 -m tests.test_degraded_value_guard` 6/6(含合成攻击样本 + 跨函数样本 +
+`.upper()` 遮蔽样本 + 读取侧不误报样本)· preflight 3a-quaterdecies。
+
+### 自反实例(同日,同一条 Lesson)
+
+交付 S-122 时我给 Jazz 的验证命令里写了
+`https://looloomi-ai-production.up.railway.app/...` —— **404,这个主机名是我编的。**
+仓库里真实主机名 `web-production-0cdf76.up.railway.app` 出现 **376 次**,我一次都没查。
+
+机制与本条完全一致:**拿不到的值,用一个"看起来合理"的替代物填上。**
+而且它同样具备"合理即难查"的性质 —— `<项目名>-production.up.railway.app` 是 Railway 的
+常见形态,读起来毫无异样,只有真正发出请求才会暴露。
+
+**推论(比 Lesson #102 更进一步):守卫只覆盖代码里的写入路径,不覆盖我自己的输出。**
+交付物里的每一个 URL / 路径 / 表名 / 命令,都是一次未经检验的写入。
+⇒ **凡是要粘进终端的东西,先在仓库里 grep 一次再交出去。**
+
+---
+
+## R77-MULTICYCLE-ROUND3 🔴 INSUFFICIENT_FUNDING_ON_11YR — 11yr R46 leg REFUTES, R77 fusion edge is 731d-panel-dependent (Minimax-C, 2026-08-09)
+
+**Trigger.** Per MINIMAX_SYNC.md §OHLCV-EXTENSION-RESOLVE (Seth, d7f265e,
+2026-08-08): the 11yr sqlite at `/tmp/cometcloud_data/ohlcv_11yr.db` was
+rebuilt 2026-08-09 11:40 by Minimax-A (95,926 rows × 48 symbols, span
+2017-08-17 → 2026-08-09, 57.3s wall-clock, all acceptance criteria met).
+This unblocks the round-3 bridge module `r77_multicycle_round3_11yr.py`
+(commit `cf96c05`, skeleton shipped 2026-08-09 same day). Round 3 re-runs
+the 4-layer honest disclosure on the longer effective panel (979–1165 days
+post funding-coverage alignment, vs 772 days on the prior 731d run).
+
+**What round 3 did.**
+- New module `src/research/validation/r77_multicycle_round3_11yr.py`:
+  - `load_r77_panel_11yr()` — same dict shape as the 731d loader, but
+    `ohlcv_returns` from `/tmp/cometcloud_data/ohlcv_11yr.db` via
+    `r97_panel_11yr.freeze_universe + to_wide + pct_change`. Funding + cis_long
+    still from their original sources.
+  - `report_r77_layered_round3()` — thin wrapper around
+    `r77_multicycle_revalidation.report_r77_layered()`. Post-processes
+    verdict strings to `_ON_11YR` grammar and flips
+    `disclosure.is_11yr_R77 = True` **only if** the funding-coverage layer
+    clears 3-check + M-WO-1 (Lesson #92).
+  - `run(out_dir)` — writes JSON + REPORT.md to
+    `reports/r77_multicycle_round3/<date>/`.
+- New smoke `tests/test_r77_multicycle_round3_11yr_smoke.py` 5/5 pins
+  skeleton shape (no panel required).
+
+**Numbers (run @ 2026-08-09, REPORT.md + verdict.json):**
+
+| layer                       | n_days | gross_t | OOS_t  | passes_all | maxDD    | n_eps |
+|-----------------------------|-------:|--------:|-------:|:----------:|---------:|------:|
+| r46_full_731d               |   1165 |   +0.23 |  −0.68 |     ✗      | −57.85%  |     3 |
+| r46_funding_coverage_window |    979 |   +0.24 |  −1.33 |     ✗      | −57.85%  |     3 |
+| r77_full_731d               |   1165 |   +1.20 |  −0.35 |     ✗      | −24.25%  |     1 |
+| **r77_funding_coverage_window** |    979 | **+1.22** | **−1.29** |    **✗** | **−24.25%** |   **1** |
+
+**Comparison vs R77-MULTICYCLE (731d run @ 2026-08-08):**
+
+| layer                       | 731d gross_t | 1165d gross_t | Δ         | 731d OOS_t | 1165d OOS_t | Δ          |
+|-----------------------------|-------------:|--------------:|----------:|-----------:|------------:|-----------:|
+| r46 alone                   |       +1.82  |        +0.23  |  −1.59 ✗  |      +0.15 |       −0.68 |   −0.83 ✗  |
+| r77 fused (funding window)  |       +3.09  |        +1.22  |  −1.87 ✗  |      +2.84 |       −1.29 |   −4.13 ✗  |
+
+Coverage meta: `funding` earliest=2023-05-12 latest=2026-08-09 (1431 obs,
+28 assets); `ohlcv_returns` earliest=2024-06-07 latest=2026-08-09
+(post-alignment 1165 obs, 48 assets in sqlite, 28 in funding ∩ CIS ∩
+ohlcv effective); `cis` earliest=2024-03-01 latest=2026-08-09.
+Effective panel_length_years = 3.19 (NOT 11 — the 11yr sqlite is the
+**data infrastructure**, the **effective trading window** is the
+funding-coverage intersection).
+
+**Verdict.** 🔴 `R77_INSUFFICIENT_FUNDING_ON_11YR` — both R46 alone AND
+R77 fusion **fail 3-check on the longer panel**. The R77 fused
+gross_t drops from +3.09 to +1.22; OOS_t flips from +2.84 to −1.29
+(breaches t = −1.96). The R46 leg gross_t drops from +1.82 to +0.23
+(was already failing 3-check on 731d; now OOS also fails). The fusion
+edge that survived 731d **does NOT survive 1165d**. `is_11yr_R77 = False`
+(per Lesson #92 — disclosure flips only on round-3 success; here it stays
+False because the run REFUTED).
+
+**What round 3 did NOT do (explicit non-goals, preserved from
+R77-MULTICYCLE).**
+- Frozen weights canonicalisation. The 4 literals stay where they are.
+- Phase B risk hardening. Still NOT entered. Same gate failure
+  (gross_t < 1.96) on R77 fusion as a 731d-window artifact AND on R46
+  alone on the 11yr-effective panel.
+
+**Lesson #93 (proposed).** *An edge that passes 3-check on window W but
+fails on window W∪Δ is a panel artifact, not a persistent phenomenon.*
+The R77 fused edge on 731d looked like a real phenomenon: gross_t +3.09,
+OOS_t +2.84, maxDD −8.66%, single Sharpe-style run. Extending the
+window to 1165d (just +50% longer) **doubles the OOS noise**, halves
+the gross, and flips OOS_t sign. The fusion was masking the fact that
+the per-leg R46 and R62 contributions are individually weak on the
+longer window — R62 funding-z scoring lacks the regime-shift it
+calibrated against, and R46 pillar_O sign-flips on the additional
+2026-Q1/Q2 regime (already noted in W5 forensics). Multi-leg fusion
+that combines regime-specific fragility legs produces **regime-locked**
+edges that look cross-regime robust on short windows but are not.
+The lesson generalizes: a fused sleeve that passes 3-check on the
+**calibration window** but fails on the **next-larger window that
+shares the calibration regime** has over-fit the calibration regime.
+Test construction: always re-run fusion sleeves on the next-larger
+window whose calibration regime is still active. The 731d → 1165d
+extension is the smallest such test; it already breaks R77.
+
+### 复现
+```bash
+python3 src/research/validation/r77_multicycle_round3_11yr.py
+python3 src/research/validation/tests/test_r77_multicycle_round3_11yr_smoke.py
+ls reports/r77_multicycle_round3/2026-08-09/
+cat reports/r77_multicycle_round3/2026-08-09/verdict.json | python3 -m json.tool
+```
+
+### Honesty marker (always on)
+`R77_FROZEN_WEIGHTS_UNHASHED` carried into round-3 verdict grammar
+(inherited from 731d module). `frozen_weights.hashed = False`; the same
+4 literals agree on `w_R76 = 0.30`. `is_11yr_R77 = False` is the
+honest disclosure per Lesson #92.
+
+### Sequel
+- R77 frozen cell at `w_R46=0.25/w_R62=0.75/w_R76=0.30` **unchanged**.
+  The frozen cell is the calibration; round 3 does not refreeze.
+- R77 status in STRATEGY_PLAYBOOK.md **unchanged**: `regime-specific
+  candidate`. Round 3 does NOT trigger demotion (it was already
+  candidate-tier, not strategy-tier).
+- §OHLCV-EXTENSION closure: panel rebuilt ✅; round 3 ran ✅; verdict
+  REFUTED on the longer window. The single lever §OHLCV-EXTENSION was
+  supposed to be (panel length) is now spent. Per Lesson #93: the
+  remaining levers are **regime-conditioning** (the W5 fragility that
+  R77 masks) and **funding-window expansion** (the 2023-05 floor that
+  caps effective panel length).
+
+---
+
+## S-123 — 时钟是脏的:① book 用 23 天前的 regime 给自己定杠杆
+
+**日期** 2026-08-09 · **Seth** · **状态** 已修 + 已守卫 · **影响** 前向记录全部 2 天
+
+### 触发
+
+Jazz 问「有没有领先进度」。查 `beta_core_nav`:2 条 mark,无断档,看起来健康。
+**但 `regime=NEUTRAL, exposure_cap=1` 正是 S-120 的签名。** 去对真相:
+
+| 日期 | local_engine | railway_snapshot | t2_hourly |
+|---|---|---|---|
+| 08-09 | TIGHTENING(172) | — | TIGHTENING(60) |
+| 08-08 | TIGHTENING / `Tightening` | TIGHTENING(580) + **NEUTRAL(58)** | TIGHTENING(420) |
+| 08-07 | `Tightening`(1032) | **NEUTRAL(58)** | TIGHTENING(375) |
+
+**所有源、所有天都是 TIGHTENING。TIGHTENING → cap 0.5,书用了 1.0。**
+`nav = benchmark = 0.99894` —— 完全相等,**③ 层对这条曲线的贡献是 0**。
+
+### 三个 bug 叠在同一个 40 行函数里
+
+```
+① order=recorded_at.asc & limit=20000,窗口内 53,250 行
+   ⇒ 上限截掉的是【最新】那一端
+   实测:limit 内能看到的最新日 = 2026-07-17,而今天 = 2026-08-09(陈旧 23 天)
+② 陈旧序列 + Redis blob 缺字段 → canonical_regime(None) = "NEUTRAL"(宽松版)
+③ _exposure_cap("NEUTRAL") = 1.0,而 TIGHTENING = 0.5
+```
+
+**任何一个单独出现都不致命;三个叠起来,书以两倍暴露记录了它的全部前向记录,
+并且在行里写下一个自信的 regime 标签。**
+
+### 两条一般性教训
+
+**Lesson #103 —— `limit` + 升序 = 静默的「最旧 N 条」。**
+分页方向和行数上限一起出现时,被丢掉的那一端从来不是随机的。
+需要近端就必须 `desc`,而不是「反正上限够大」。53,250 > 20,000,而这个比例只会越来越差 ——
+**表在长,上限不长,所以这类 bug 会随时间自己长出来。**
+
+**Lesson #104 —— 陈旧序列和新鲜序列在结构上无法区分。**
+一样的长度、一样的标签集、一样的类型,**只有覆盖的日期不同**。
+下游没有任何信息可以据以怀疑。⇒ **时间序列必须自证抵达当下**
+(`_regime_history` 现在检查 newest ≥ today−2,否则返回空并 `error` 级日志)。
+这与 I1 同源:未测量必须可分辨 —— 只不过这里「未测量」的是**时间的一端**,不是一个字段。
+
+### 顺带修掉的:宽松规范化器的其它 4 个写入路径
+
+昨天 S-120/S-121 只修了 `cis.py` 的调用点。**但修调用点不等于修契约。**
+
+| 模块 | 后果 |
+|---|---|
+| `beta_core_paper.py` | **① book —— 产品本体** |
+| `main.py`(T2 小时写) | 写的正是 ① book 要读的那张表 ⇒ **闭环** |
+| `cis_provider.py` ×2 | T2 落库 + pgvector upsert(regime 用于按相位切片向量) |
+| `vector.py` | 同上 |
+
+⇒ 守卫从「这两个调用点用 strict」升级为
+**「任何 import 了写入函数的模块,都不许出现宽松版调用」**。
+
+### 守卫自身的假阳性(值得记)
+
+第一版扫描器在两处 **散文** 上报错:`cis_provider.py:1850` 的 docstring
+(描述的正是这个 bug)和我自己引用旧查询的注释。
+⇒ 改为先用 `tokenize` 剥掉注释与字符串再匹配。
+**一个分不清代码和「关于代码的注释」的守卫,会被下一个写事故记录的人关掉 ——
+那正是最不该有的激励。**
+
+### 排期影响(交给 Jazz 决定)
+
+前向记录名义 2 天、**实际 0 天干净**。今天重起 = 滑 2 天(门槛 10-07 → 10-09);
+30 天后才发现 = 滑 30 天。**建议今天重起** —— 我们卖的就是证伪装置,
+一条需要脚注解释前两天的 60 天曲线,比一条晚两天的干净曲线更伤这个主张。
+
+### 复现
+
+```sql
+with w as (select recorded_at, macro_regime from cis_scores
+           where recorded_at >= (current_date - 35) and macro_regime is not null
+           order by recorded_at asc)
+select (select count(*) from w) total,                                    -- 53,250
+       (select max(recorded_at)::date from (select * from w limit 20000) z); -- 2026-07-17
+```
+`python3 -m tests.test_regime_write_path` 8/8。
