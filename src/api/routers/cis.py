@@ -1190,7 +1190,7 @@ _REGIME_PILLAR_WEIGHTS = {
 _REGIME_INSIGHTS = {
     "RISK_ON":     "Momentum and Alpha independence dominate. Assets breaking out vs BTC benchmark outperform. Reduce defensive allocations.",
     "RISK_OFF":    "Fundamental quality and On-Chain Risk scores matter most. Prefer deep-liquidity assets with low volatility regimes.",
-    "TIGHTENING":  "Fundamental scoring screens for fee-generating, real-yield assets. Avoid over-leveraged protocols. Alpha divergence useful for identifying safe havens.",
+    "TIGHTENING":  "Fundamental scoring screens for fee-generating, real-yield assets. Over-leveraged protocols rank UNDERWEIGHT. Alpha divergence useful for identifying safe havens.",
     "EASING":      "Momentum leads the recovery cycle. Assets with strong 30d trend and improving sentiment are early movers.",
     "STAGFLATION": "On-Chain Risk + Fundamental stability. Real-yield and RWA historically outperform. High-beta alts underperform.",
     "GOLDILOCKS":  "Broadest opportunity set. Alpha independence is key edge — look for uncorrelated return vs benchmark. Growth and quality both rewarded.",

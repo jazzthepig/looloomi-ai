@@ -428,7 +428,7 @@ export default function CISCompare({ cisUniverse = [], initialSymbols = [] }) {
           {" "}
           {regime === "RISK_ON" && "Elevated weight on Momentum and Alpha. Favor assets breaking out vs BTC benchmark."}
           {regime === "RISK_OFF" && "Elevated weight on Fundamental and On-Chain Risk. Prefer high-liquidity, low-volatility assets."}
-          {regime === "TIGHTENING" && "Fundamental quality dominates. Screen for positive cash flow proxies (fee/TVL ratios) and avoid over-leveraged protocols."}
+          {regime === "TIGHTENING" && "Fundamental quality dominates. Screen for positive cash flow proxies (fee/TVL ratios); over-leveraged protocols rank UNDERWEIGHT."}
           {regime === "EASING" && "Momentum leads recovery. Assets with strong 30d trend and improving sentiment score first."}
           {regime === "STAGFLATION" && "On-chain risk and Fundamental stability matter. Real-yield assets and RWA historically outperform."}
           {regime === "GOLDILOCKS" && "Alpha independence is key — look for assets with high uncorrelated return vs BTC. Growth and quality both rewarded."}

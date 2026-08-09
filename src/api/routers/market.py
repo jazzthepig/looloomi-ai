@@ -305,7 +305,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             }, pi,
             "Greed zone: S pillar elevated, pulling risk assets higher. "
             "A pillar compressed (-10): alpha diminishes in crowded-bullish "
-            "environments. Momentum still constructive. Avoid chasing parabolic moves. "
+            "environments. Momentum still constructive. Parabolic extensions screen as lower-quality entries. "
             "Risk-adjusted returns favor quality (A+ CIS) over speculative positions.",
             "24H"))
         else:
@@ -339,7 +339,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                         "O pillar stressed (-12): funding rates likely elevated, "
                         "OI concentrated = liquidation cascade exposure. "
                         "A pillar depleted (-18): entry alpha exhausted at these levels. "
-                        "Signal: trim position, await pullback confirmation before adding."
+                        "Positioning: UNDERWEIGHT pending pullback confirmation."
                     ), "24H"
                 elif chg >= 10:
                     pi = {"F": 0, "M": +16, "O": -5, "S": +8, "A": -8}
@@ -385,8 +385,8 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     imp, logic, horizon = "HIGH", (
                         f"{l['symbol']} {chg:.0f}%: significant correction. "
                         "M pillar breakdown. Monitor whether F pillar (TVL/revenue) "
-                        "holds — if yes, creates tactical re-entry. Avoid catching "
-                        "falling knives without on-chain confirmation of accumulation."
+                        "holds — if yes, positioning may re-rate. Absent on-chain "
+                        "confirmation of accumulation, the name stays UNDERWEIGHT."
                     ), "24H"
                 else:
                     pi = {"F": 0, "M": -10, "O": -3, "S": -6, "A": +5}
@@ -910,7 +910,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             "Extreme short-term move: high M but O pillar stressed (-10). "
             "A pillar severely depleted (-20): no alpha at these extended levels. "
             "Risk: low liquidity pumps revert fast. Check TVL vs volume ratio — "
-            "if volume > 5× TVL, likely manipulation. Avoid FOMO entry.",
+            "if volume > 5× TVL, likely manipulation. Flagged as low-confidence.",
             "24H"))
 
         elif chg24 <= -35 and vol24 > 100_000:
@@ -1092,7 +1092,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 f"{sym} (market cap rank #{rank}) {direction} {abs(chg24):.1f}% while trending. "
                 "Small-cap + trending + large move = whale-driven price action. "
                 "No organic retail volume supports this without on-chain backing. "
-                "HIGH risk: exit liquidity may be limited. Avoid chasing. "
+                "HIGH risk: exit liquidity may be limited. Disfavored on liquidity. "
                 "If accumulating: size to max 1–2% portfolio with hard stop.",
                 "IMMEDIATE"))
 
