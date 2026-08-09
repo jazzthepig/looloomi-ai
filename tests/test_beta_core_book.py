@@ -479,6 +479,32 @@ def test_write_reports_failure_when_the_insert_RETURNS_false():
         store.supabase_insert_table = original
 
 
+
+
+
+def test_the_row_key_carries_the_incarnation_not_just_the_date():
+    """2026-08-09. The v2 inception failed with a 409: `PRIMARY KEY (mark_date)` meant
+    v1's VOIDED row for the same day forbade v2's row.
+
+    The re-inception design gave a row a second dimension of identity — which
+    incarnation produced it — and deliberately kept superseded rows in place. But the
+    key still asserted that a row IS a date, so the old definition of identity vetoed
+    the new one. Same family as the L0 defect where asset_class lived on observation
+    rows: an identity recorded at the wrong grain. Here the column had the right
+    grain and the key did not.
+
+    **When an entity gains a dimension of identity, its uniqueness constraint must
+    gain it in the same change.**"""
+    p = _REPO / "scripts" / "supabase_beta_core_pk_by_incarnation.sql"
+    assert p.exists(), "scripts/supabase_beta_core_pk_by_incarnation.sql missing"
+    sql = p.read_text(encoding="utf-8").lower()
+    assert "primary key (inception_id, mark_date)" in sql, \
+        "the key must be composite — incarnation first, then date"
+    assert "set not null" in sql, \
+        "inception_id must be NOT NULL, or a null silently drops out of the key"
+    assert "23505" in sql, "record the actual error that exposed it"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
