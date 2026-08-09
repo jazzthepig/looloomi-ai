@@ -179,6 +179,50 @@ def test_amnesia_protocol_document_exists():
         assert anchor in t, f"AMNESIA_PROTOCOL.md lost its '{anchor}' section"
 
 
+def test_every_test_file_actually_runs_the_tests_it_defines():
+    """Lesson #105: a green test summary is not evidence the tests ran.
+
+    Found the hard way (S-124). `TESTS = [v for k, v in globals() ...]` sat in the
+    MIDDLE of test_beta_core_book.py, so four guards appended below it were collected
+    by nothing — and the file still printed a confident "14/14 passed". A collector
+    that runs before the things it collects fails silently and looks healthy, which
+    is the worst combination available.
+
+    Lesson #106, its companion: assert over the whole syntactic unit. The first cut of
+    one of those four guards matched a multi-line query with a single-line regex, so
+    it PASSED a query it had only read the first fragment of. Every new guard needs a
+    negative control — put the defect back and confirm it goes red.
+
+    This test is the structural fix for #105: the collector must come after the last
+    test definition in every file."""
+    import ast
+    import pathlib as _pl
+    repo = _pl.Path(__file__).resolve().parent.parent
+    offenders = []
+    for p in sorted((repo / "tests").glob("test_*.py")):
+        try:
+            tree = ast.parse(p.read_text(encoding="utf-8", errors="ignore"))
+        except SyntaxError:
+            continue
+        last_test = max((n.lineno for n in tree.body
+                         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+                         and n.name.startswith("test_")), default=None)
+        if last_test is None:
+            continue
+        collector = next((n.lineno for n in tree.body
+                          if isinstance(n, ast.Assign)
+                          and any(getattr(t, "id", None) == "TESTS" for t in n.targets)), None)
+        if collector is not None and collector < last_test:
+            skipped = sum(1 for n in tree.body
+                          if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+                          and n.name.startswith("test_") and n.lineno > collector)
+            offenders.append(f"{p.name}: TESTS at line {collector} misses "
+                             f"{skipped} test(s) defined below it")
+    assert not offenders, (
+        "test collector runs before the tests it collects — these pass silently and "
+        "the file still reports green:\n  " + "\n  ".join(offenders))
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
