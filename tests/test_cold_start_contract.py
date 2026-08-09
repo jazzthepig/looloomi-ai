@@ -107,7 +107,11 @@ def test_every_open_risk_carries_a_verify_line():
     if not m:
         return  # covered by the previous test
     block = m.group(1)
-    items = re.findall(r"^\s*\d+\.\s+(.*?)(?=^\s*\d+\.\s|\Z)", block, re.M | re.S)
+    # TOP-LEVEL only — no leading whitespace. The `\s*` version counted numbered
+    # sub-points inside a risk's own body as separate risks (7 real, 11 counted), so
+    # the cap fired on a list that was within it. A guard that miscounts the thing it
+    # caps teaches people to raise the cap, which is the opposite of its purpose.
+    items = re.findall(r"^\d+\.\s+(.*?)(?=^\d+\.\s|\Z)", block, re.M | re.S)
     assert items, "OPEN RISKS block is empty — if truly zero risks, say so explicitly"
     assert len(items) <= OPEN_RISKS_MAX, (
         f"{len(items)} open risks > {OPEN_RISKS_MAX}. Converge or close some; a list "

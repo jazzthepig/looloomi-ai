@@ -8044,3 +8044,83 @@ except Exception:
 ```
 
 先部署再删 key,loop 已经跑完当次,要等 24 小时。
+
+---
+
+## S-127 — 向量库的五个支柱维度,全是零
+
+**日期** 2026-08-09 · **Seth** · **状态** 已修 + 已守卫 · code check 第二轮
+
+### 实测(线上 `asset_embeddings`)
+
+| | |
+|---|---|
+| 有真实数组的向量 | **58** |
+| **五个支柱维度 [0..4] 全为 0** | **58 / 58** |
+| 不同的支柱块 | **1**(所有资产完全相同) |
+| dim 13 / dim 17 | 各只有 1 个取值 |
+| dims 18..24(v2 块) | 全部 null |
+| `vec_full` 根本不是向量 | **14** 个资产,`{"note":"backfill_pillars_only"}` |
+
+**号称 18 维的嵌入,实际承载信息不到 9 维。而死掉的是 CIS 的五个支柱本身 ——
+`ARCHITECTURE.md` 称之为「几何基底」的那个空间,对整个产品赖以存在的东西一无所知。**
+
+### 根因,以及为什么它比听起来更难堪
+
+```python
+pillars = asset.get("pillars") or {}
+f_raw   = pillars.get("F") or asset.get("f_score", 0) or 0
+```
+
+只认两种形状。而**同一个文件往上 150 行**就有 `_pillars_of()`,四种形状全处理,
+docstring 明写 *"Missing ⇒ None, never 0 (I1)"*。
+
+**不是「另一个文件里有正确版本」,是同一个文件里。**
+
+`or 0` 是让它静默的那一半:形状没匹配上 → 返回 `0` → 而 0 是合法的支柱分,
+所以下游永远无法分辨「没找到」和「得了 0 分」。KeyError 会在第一天就暴露,`or 0` 不会。
+
+### 更深一层:两个「权威」解析器,各自漏掉对方处理的形状
+
+| 形状 | `embedder._pillars_of` | `main._pillar_of` |
+|---|---|---|
+| `pillars["F"]` | ✓ | ✓ |
+| `asset["F"]` | ✓ | **✗** |
+| `asset["f"]` | ✓ | ✓ |
+| `asset["pillar_f"]` | **✗** | ✓ |
+| `asset["f_score"]` | ✓ | ✓ |
+
+**两个都不算错,两个都不完整,而且两个都是抱着「我是那个宽容版本」的想法写的。**
+已各自补齐,并加测试钉死二者在五种形状上逐一相等。
+
+### 零方差维度为什么比缺失维度更坏
+
+它仍然计入范数 ⇒ **把所有角度差都压向 0**。实测两两余弦:
+中位数 **0.846**,**29.9%** 的配对高于 MCP 工具文档里称为「近乎相同」的 0.95,
+BTC 的五个最近邻全部 >0.98。**排序仍然可用,但绝对数值、以及所有写死在它之上的阈值,都不可用。**
+
+### 同一轮里的另外两个发现
+
+- **`vector/store.py::_redis_set` 用 `/pipeline` 发单层数组** ⇒ Upstash 400,
+  一直在静默失败。而 `data_layer._redis_set` 是修好的版本,**注释里记的正是同类 bug**
+  (「`EX 0` 被拒 → SET 静默失败,冻结了 causal_paper book」)。
+  影响有限(向量读已迁到 pgvector,实测 `source: pgvector_hnsw` 正常),
+  但它每次 CIS 构建刷 3 条 error,**让 Error 过滤器失去信息量**。
+- **同一份 API 响应里有两套互相矛盾的支柱值**:AMZN flat `a=20.0` vs nested `A=100.0`,
+  而叙事文案说的是「strong relative alpha」—— 用的是 nested 那套。最大差 **80 分**。
+  **哪一套是「CIS 支柱」,目前没有单一答案。** 留给 Jazz 定,已开 task。
+
+### Lesson #109
+
+> **今天所有发现是同一个形状:仓库里同时存在一个操作的「已修正版」和「未修正版」,
+> 而没有任何东西从一个指向另一个。**
+> `revoke from public` / `from anon` · `data_layer._redis_set` / `store._redis_set` ·
+> `canonical_regime_strict` / `canonical_regime` · `_pillars_of` / 内联的两形状查找。
+> **判据:每次修好一个共享操作,先 grep 它的其它实现 —— 修调用点不等于修契约。**
+> 而当两个实现必须并存时,**唯一安全的形态是一个测试钉死它们逐案相等。**
+
+### 复现
+
+`python3 -m tests.test_embedding_dims_carry_information` 4/4(含三形状可达性、
+两资产可区分、缺失→NaN、两解析器一致)· preflight 3a-duodevicesimo。
+`SCHEMA_VERSION` 2 → 3(向量语义变了,旧向量不可比)。

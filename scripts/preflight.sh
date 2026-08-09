@@ -173,6 +173,21 @@ python3 -m tests.test_compliance_language
 #                nothing. This guard reads scripts, so it proves the IDIOM, never the
 #                database — the live check belongs to a scheduled probe.
 python3 -m tests.test_sql_privilege_idiom
+# 3a-duodevicesimo. embedding dimensions (2026-08-09, S-127). Measured on the live
+#                   table: all 58 stored vectors had their FIVE CIS PILLAR dims set
+#                   to exactly zero — identical for every asset — so the vector space
+#                   ARCHITECTURE calls the geometric substrate carried no information
+#                   from the thing the product is built on. `generate_embedding`
+#                   inlined its own two-shape pillar lookup while the canonical
+#                   four-shape extractor sat 150 lines above it in the SAME FILE, and
+#                   `or 0` turned "shape not matched" into "scored zero". A
+#                   zero-variance dim is worse than an absent one: it still inflates
+#                   the norm, dragging every pairwise cosine toward 1 (measured median
+#                   0.846, 29.9% of pairs above the 0.95 the MCP tool calls
+#                   "near-identical"). Also pins that the two pillar resolvers —
+#                   embedder._pillars_of and main._pillar_of — agree on all five
+#                   shapes; each previously missed one the other handled.
+python3 -m tests.test_embedding_dims_carry_information
 # 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
 #                after its v1 run was found to have sized off a 23-day-stale regime.
 #                The integrity property this pins is the product's: a forward track
