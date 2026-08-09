@@ -209,7 +209,46 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-08 — **The ① book marked: the clock is running (gate 2026-10-07) — and
+**Last updated:** 2026-08-09 — **S-123: the forward clock is dirty. The ① book sized itself off a
+regime series 23 days stale, and both marks ran at double the intended exposure.**
+Asked whether we were ahead of schedule; checked the one asset that cannot be accelerated. The
+truth is TIGHTENING on every source every day (cap 0.5); the book recorded NEUTRAL (cap 1.0), and
+`nav == benchmark == 0.99894` exactly — **layer ③ has contributed nothing to the record.** Three
+bugs compose in one 40-line function: `_regime_history` queried `order=recorded_at.asc&limit=20000`
+over a window holding **53,250 rows**, so the cap truncated the NEWEST end (newest visible day
+**2026-07-17** vs actual **2026-08-09**); the stale series plus a missing Redis field went through
+the **lenient** `canonical_regime(None) → "NEUTRAL"`; and `_exposure_cap("NEUTRAL")` is 1.0.
+Fixed all three, plus **four other modules holding their own lenient call on a write path** —
+including `main.py`, which writes the very table the ① book reads, closing the loop. Fixing the two
+call sites I was looking at yesterday was not fixing the contract.
+Lesson #103: **a row cap plus an ascending sort is a silent "oldest N", and it grows on its own —
+the table lengthens, the limit does not.** Lesson #104: **a stale series is structurally identical
+to a fresh one, so it must prove it reaches the present.**
+**🔴 AWAITING JAZZ — ① book re-inception.** Today costs 2 days (gate 2026-10-07 → 2026-10-09);
+discovering it in 30 days costs 30. Recommend re-inception today. Assignments for all four lanes:
+`docs/ASSIGNMENTS_2026-08-09.md`.
+
+**Earlier 2026-08-09 — S-122: the "unknown wearing a valid value" shape is now a
+scanner, and it found 8 more — one of them worse than the bug that motivated it.**
+S-121 was the fifth instance in one day, and four of the five were caught only *after* they had
+written data — three only because the substitute happened to look wrong. That detection route has
+a precise failure point: **a default equal to the majority value never looks wrong.**
+`trade_results.side` defaulted to `"LONG"` while **82.5 % of rows are LONG (175/212)**, and
+**shorts average −2.279 % against longs' +0.260 %** — so the failure mode silently moves the worst
+trades into the long side of the very curve we intend to underwrite. `side_null = 0` proves
+nothing: the default is what removed the nulls. Fixed 8 sites to NULL; three needed more than that
+— `_mine_signal_accuracy` now reports `n_unattributed`/`coverage_pct` instead of folding untagged
+trades into NEUTRAL (whose `accuracy_pct` is reported as `None`, so the contamination landed in the
+one cell that never displays); `_run_paper_rebalance` **refuses** on a missing side rather than
+guessing on a live sizing input; and the rebalance loop now prints refusals, which it previously
+would not have. Guard: `tests/test_degraded_value_guard.py` (preflight 3a-quaterdecies) — scoped to
+functions that persist, transitively through row builders, unwrapping `.upper()`; read-side
+rendering excluded by construction. Known gap recorded, not papered over: `trading.py:1160`
+`REGIME_FACTOR.get(..., 0.80)` is the same class and the scanner cannot see it.
+Lesson #102: **harm is inversely proportional to detectability — and "no nulls in the column" can
+never be the evidence, because that is exactly what the fallback does.**
+
+**Previously (2026-08-08):** **The ① book marked: the clock is running (gate 2026-10-07) — and
 its first row exposed that layer ③ was inert on 47.5 % of days without saying so.**
 `beta_core_nav`: 1 mark, inception 2026-08-08, NAV 1.0, benchmark 1.0, 24 positions, regime read
 successfully (not null, so the feed is live).
