@@ -161,7 +161,7 @@ async def _hourly_t2_snapshot_loop():
         try:
             from src.api.routers.cis import _build_cis_universe
             from src.api.store import supabase_insert_batch, _SB_TABLE as _SB_T
-            from src.data.cis.cis_provider import canonical_regime
+            from src.data.cis.cis_provider import canonical_regime_strict
             data = await _build_cis_universe(force_source=None)
             uni = (data or {}).get("universe", []) if isinstance(data, dict) else []
             regime = (data or {}).get("macro_regime") or (data or {}).get("regime")
@@ -190,7 +190,10 @@ async def _hourly_t2_snapshot_loop():
                     "pillar_s":      _pillar_of(a, "S"),
                     "pillar_a":      _pillar_of(a, "A"),
                     "asset_class":   a.get("asset_class", a.get("class", "")),
-                    "macro_regime":  canonical_regime(regime),
+                    # S-123: strict. These rows ARE the series the ① book reads to
+                    # size itself, so a fabricated NEUTRAL here returns as a sizing
+                    # input two hops later — the loop closes.
+                    "macro_regime":  canonical_regime_strict(regime),
                     "data_tier":     "T2",
                     "las":           a.get("las"),
                     "confidence":    a.get("confidence", 0.8),
@@ -951,7 +954,14 @@ async def _paper_rebalance_loop():
         try:
             from src.api.routers.trading import _run_paper_rebalance
             res = await _run_paper_rebalance(dry_run=False)
-            if res.get("executed"):
+            # A refusal has to be louder than a no-op, not quieter. This loop used to
+            # print only on `executed`, so the S-122 corrupt-side refusal would have
+            # stopped the sleeve rebalancing indefinitely without a single line of
+            # output — a safe decision made invisibly is how a stall becomes a finding.
+            if res.get("status") == "refused":
+                print(f"[REBAL] 🔴 REFUSED — {res.get('reason')} "
+                      f"n_corrupt={res.get('n_corrupt')} {res.get('corrupt_positions')}")
+            elif res.get("executed"):
                 print(f"[REBAL] {res.get('reason')} opened={res.get('opened')} "
                       f"closed={res.get('closed')} regime={res.get('regime')}")
         except Exception as _e:

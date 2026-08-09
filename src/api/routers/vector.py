@@ -420,12 +420,14 @@ async def receive_asset_vectors(payload: dict, x_internal_token: str = Header(No
     try:
         from src.data.vector.embedder import generate_embedding
         from src.data.vector.pgvector_store import upsert_embeddings
-        from src.data.cis.cis_provider import canonical_regime
+        from src.data.cis.cis_provider import canonical_regime_strict
     except Exception as e:
         _logger.error(f"[asset-vectors] import failed: {e}")
         raise HTTPException(status_code=500, detail="embedding modules unavailable")
 
-    regime = canonical_regime(payload.get("macro_regime"))
+    # S-123: strict — this label is stored on the embedding and later used to slice
+    # them by regime, so a fabricated NEUTRAL silently widens the NEUTRAL cohort.
+    regime = canonical_regime_strict(payload.get("macro_regime"))
 
     # v2 dims [25..26]: risk moments from the asset_edge_moments view. One bulk read; absent ⇒ NaN.
     edge_map: dict = {}

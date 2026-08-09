@@ -2688,7 +2688,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             "signal": signal,
             "confidence": confidence,
             "data_tier": 2,  # Railway = Tier 2
-            "macro_regime": canonical_regime(regime),  # UPPER_SNAKE contract (align T2 fallback → T1)
+            "macro_regime": canonical_regime_strict(regime),  # S-123: strict on write; unknown → NULL
             "las": las_result["las"],
             "las_params": las_result["las_params"],
             "f": pillars["F"],
@@ -2802,7 +2802,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             from src.data.vector.pgvector_store import upsert_embeddings as _pgv_upsert
             _ameta = {str(a.get("symbol")).upper(): {"asset_class": a.get("asset_class", a.get("class"))}
                       for a in universe if a.get("symbol")}
-            _pgv_upsert(embeddings, asset_meta=_ameta, macro_regime=canonical_regime(regime))
+            _pgv_upsert(embeddings, asset_meta=_ameta,
+                        macro_regime=canonical_regime_strict(regime))  # S-123
         except Exception as _pe:
             _logger.warning(f"[CIS] pgvector dual-write failed: {_pe}")
     except Exception as e:

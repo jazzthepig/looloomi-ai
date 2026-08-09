@@ -117,6 +117,88 @@ def test_a_failed_measurement_yields_none_not_a_placeholder_string():
         "a cached/last-known-good payload still falls back to the placeholder string"
 
 
+def _code_only(text: str) -> dict:
+    """Return {lineno: code} with comments and string literals blanked.
+
+    Needed because the first cut of the two tests below fired on PROSE — a docstring
+    in cis_provider that describes this very bug, and my own comment quoting the old
+    query. A guard that cannot tell code from a comment about code will be silenced
+    by whoever documents the next incident, which is precisely the wrong incentive.
+    """
+    import io
+    import tokenize
+    lines = {i: "" for i in range(1, text.count("\n") + 2)}
+    try:
+        toks = list(tokenize.generate_tokens(io.StringIO(text).readline))
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return {i: l for i, l in enumerate(text.splitlines(), 1)}
+    for tok in toks:
+        if tok.type in (tokenize.COMMENT, tokenize.STRING, tokenize.NL, tokenize.NEWLINE):
+            continue
+        lines[tok.start[0]] = lines.get(tok.start[0], "") + tok.string + " "
+    return lines
+
+
+def test_no_write_path_anywhere_still_uses_the_lenient_canonicaliser():
+    """S-123. Fixing the two call sites I was looking at did not fix the CONTRACT.
+    Four more modules held their own `canonical_regime()` call on a write path, and
+    one of them was `beta_core_paper` — the ① book, i.e. the product. Its regime
+    came back NEUTRAL while every source said TIGHTENING, so the book sized at 1.0
+    where the map says 0.5, and both marks of the forward record are at double the
+    intended exposure.
+
+    Scoped to modules that write. The lenient variant is correct on the read side,
+    where a renderer needs a value; this pins that it never reaches storage."""
+    import pathlib
+    repo = pathlib.Path(__file__).resolve().parent.parent
+    writers = ("supabase_insert", "upsert_embeddings", "_pgv_upsert",
+               "supabase_insert_batch", "supabase_insert_table")
+    offenders = []
+    for p in sorted((repo / "src").rglob("*.py")):
+        if ".venv" in str(p) or "/research/" in str(p):
+            continue
+        txt = p.read_text(encoding="utf-8", errors="ignore")
+        if not any(w in txt for w in writers):
+            continue
+        for i, s in _code_only(txt).items():
+            if not s or "canonical_regime_strict" in s or "def canonical_regime" in s:
+                continue
+            if re.search(r"\bcanonical_regime\s*\(", s):
+                offenders.append(f"{p.relative_to(repo)}:{i}: {s.strip()[:80]}")
+    assert not offenders, (
+        "lenient canonical_regime() on a module that writes — unknown becomes "
+        "NEUTRAL in storage:\n  " + "\n  ".join(offenders))
+
+
+def test_regime_history_reads_the_recent_end_and_proves_its_freshness():
+    """S-123, the bug underneath the bug. `_regime_history` asked PostgREST for
+    `order=recorded_at.asc&limit=20000` over a window holding 53,250 rows, so the
+    cap silently dropped the NEWEST end: the most recent day the ① book could see
+    was 2026-07-17 while the date was 2026-08-09.
+
+    Lesson #103: a row cap plus an ascending sort is a silent "oldest N", and the end
+    it drops is never the random one. This class GROWS on its own — the table gets
+    longer, the limit does not, so a query that was complete last month is truncating
+    this month with no code change and no error.
+
+    Lesson #104: a stale series is structurally indistinguishable from a fresh one —
+    same length, same label set, same types, differing only in which days it covers.
+    Nothing downstream has the information to be suspicious. So a time series must
+    PROVE it reaches the present rather than be trusted to; same family as I1, except
+    that what is unmeasured here is one end of time rather than a field."""
+    import pathlib
+    src = (pathlib.Path(__file__).resolve().parent.parent
+           / "src" / "data" / "signals" / "beta_core_paper.py").read_text(encoding="utf-8")
+    # the query lives inside an f-string, so match on source text but only where it
+    # is actually built — the comment describing the old form must not trip this
+    code = "\n".join(l for l in src.splitlines() if not l.strip().startswith("#"))
+    assert "order=recorded_at.desc" in code, \
+        "a capped regime-history query must take the RECENT end, not the oldest"
+    assert "recorded_at.asc&limit" not in code, "the truncating ascending query is back"
+    assert "STALE" in src and "refusing to size off it" in src, \
+        "the series must verify it reaches the present rather than be trusted to"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":

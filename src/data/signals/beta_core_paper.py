@@ -151,9 +151,15 @@ async def _regime_history(days: int = 30) -> list[str]:
     if not base or not key:
         return []
     since = (dt.date.today() - dt.timedelta(days=days + 5)).isoformat()
+    # S-123. This was `order=recorded_at.asc&limit=20000`, and the window holds
+    # 53,250 rows — so the limit truncated the NEWEST end. The most recent day the
+    # book could see was 2026-07-17 while today was 2026-08-09: a 23-day-stale
+    # regime, presented as current. A row cap plus an ascending sort is a silent
+    # "oldest N", and the direction that gets dropped is the one that matters.
+    # DESC + reverse keeps the recent end, which is the end a dwell filter needs.
     url = (f"{base}/rest/v1/cis_scores?select=recorded_at,macro_regime"
            f"&recorded_at=gte.{since}&macro_regime=not.is.null"
-           f"&order=recorded_at.asc&limit=20000")
+           f"&order=recorded_at.desc&limit=20000")
     try:
         async with httpx.AsyncClient(timeout=8) as c:
             r = await c.get(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
@@ -168,6 +174,17 @@ async def _regime_history(days: int = 30) -> list[str]:
         raw = row.get("macro_regime")
         if d and raw:
             per_day[d][str(raw).strip().upper().replace("-", "_").replace(" ", "_")] += 1
+    if not per_day:
+        return []
+    # Freshness is part of correctness here, not a nicety. The truncation above was
+    # invisible precisely because a stale series is shaped exactly like a fresh one:
+    # same length, same labels, same everything except which days it covers. So the
+    # series must prove it reaches the present rather than be trusted to.
+    newest = max(per_day)
+    if (dt.date.today() - dt.date.fromisoformat(newest)).days > 2:
+        _log.error("[beta_core] regime history STALE — newest day %s, today %s; "
+                   "refusing to size off it", newest, dt.date.today().isoformat())
+        return []
     return [per_day[d].most_common(1)[0][0] for d in sorted(per_day)]
 
 
@@ -190,13 +207,18 @@ async def _current_regime() -> tuple[str | None, str | None]:
     Falls back to the Redis single value when history is unavailable: a gap in the
     NAV series is worse than a day sized off an unfiltered label, and the row says
     which path was taken."""
-    from src.data.cis.cis_provider import canonical_regime
+    # S-123: STRICT, not lenient. canonical_regime(None) returns "NEUTRAL", so a
+    # missing field became a confident neutral market call that sized the book at
+    # 1.0 instead of TIGHTENING's 0.5. cis.py was fixed for this on 2026-08-09; this
+    # module holds its OWN call to the canonicaliser and was missed — fixing the two
+    # call sites I happened to be looking at is not fixing the function's contract.
+    from src.data.cis.cis_provider import canonical_regime_strict
     raw: str | None = None
     try:
         from src.data.market.data_layer import _redis_get
         blob = await _redis_get("cis:local_scores")
         if isinstance(blob, dict):
-            raw = canonical_regime(blob.get("macro_regime") or blob.get("regime"))
+            raw = canonical_regime_strict(blob.get("macro_regime") or blob.get("regime"))
     except Exception as e:
         _log.warning("[beta_core] live regime unavailable: %s", e)
 
@@ -206,7 +228,7 @@ async def _current_regime() -> tuple[str | None, str | None]:
         if raw:
             hist = hist + [raw]          # today's live value closes the series
         confirmed = dwell_filter(hist, _REGIME_DWELL_DAYS)[-1]
-        return canonical_regime(confirmed), raw
+        return canonical_regime_strict(confirmed), raw
     return raw, raw                      # too little history to filter — say so by
                                          # returning them equal, not by silence
 
