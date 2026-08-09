@@ -498,7 +498,10 @@ async def submit_order(req: OrderRequest):
         "unrealized_pct":   0.0,
         "cis_score":        round(cis_score, 1),
         "cis_grade":        grade,
-        "cis_signal":       _asset.get("signal", "NEUTRAL"),  # for _mine_signal_accuracy
+        # No default: this field IS the measurement _mine_signal_accuracy groups on,
+        # so defaulting it to NEUTRAL files an untagged trade under a signal that was
+        # never issued. NULL means "not recorded" and the miner drops it (S-122).
+        "cis_signal":       _asset.get("signal"),
         "pillar_f_at_entry": _p("F"),
         "pillar_m_at_entry": _p("M"),
         "pillar_o_at_entry": _p("O") or _p("R"),  # O (risk-adjusted) may be keyed "R" in T2
@@ -740,16 +743,25 @@ def _paper_position_to_row(pos: dict) -> dict:
     """Normalize a closed paper position into a trade_results row."""
     return {
         "symbol":               pos.get("symbol"),
-        "side":                 (pos.get("side") or "LONG").upper(),
+        # S-122. Defaulting to LONG is the worst case of the whole class, because LONG
+        # is the MAJORITY value (175/212) — a mislabelled row looks exactly like a
+        # correct one, so unlike S-121 it can never be caught by inspection. And the
+        # cost is not symmetric: shorts average -2.28% against longs' +0.26%, so the
+        # failure quietly moves the worst trades into the long side of the record.
+        "side":                 (pos.get("side") or "").upper() or None,
         "entry_time":           pos.get("opened_at"),
         "exit_time":            pos.get("closed_at"),
         "entry_price":          pos.get("entry_price"),
         "exit_price":           pos.get("exit_price"),
         "profit_pct":           pos.get("realized_pct"),
         "profit_abs":           pos.get("realized_pnl"),
-        "exit_reason":          pos.get("exit_reason", "manual"),
+        # "manual" attributes the close to a human decision. An unrecorded exit is not
+        # a manual exit, and the two must not merge in the exit-reason breakdown.
+        "exit_reason":          pos.get("exit_reason"),
         "enter_tag":            None,  # paper trigger has no enter_tag
-        "strategy":             pos.get("strategy") or "CIS_AUTO",
+        # CIS_AUTO is one of three live sleeves. Attributing an untagged position to
+        # it corrupts the per-strategy attribution rather than leaving a gap in it.
+        "strategy":             pos.get("strategy"),
         # NOTE: column names must match the trade_results table exactly. The previous
         # *_at_entry / macro_regime_at_entry / recorded_at keys did NOT exist on the
         # table → every PostgREST insert 400'd silently (fire-and-forget swallowed it),
@@ -1095,7 +1107,7 @@ def _open_rebal_position(sym: str, notional: float, side: str, asset: dict,
         "unrealized_pnl": 0.0, "unrealized_pct": 0.0,
         "cis_score": round(float(asset.get("cis_score") or asset.get("score") or 0), 1),
         "cis_grade": asset.get("grade") or asset.get("cis_grade") or "?",
-        "cis_signal": asset.get("signal", "NEUTRAL"),
+        "cis_signal": asset.get("signal"),  # S-122: no default — see submit_order
         "pillar_f_at_entry": _p("F"), "pillar_m_at_entry": _p("M"),
         "pillar_o_at_entry": _p("O") or _p("R"), "pillar_s_at_entry": _p("S"),
         "pillar_a_at_entry": _p("A"),
@@ -1170,13 +1182,29 @@ async def _run_paper_rebalance(dry_run: bool = True) -> dict:
     positions = await _get_positions()
     sleeve = {oid: p for oid, p in positions.items()
               if p.get("status") == "open" and p.get("strategy") == REBAL_SLEEVE_TAG}
-    current = {}
+    # S-122. `side` used to default to LONG here. This is a LIVE SIZING input, not a
+    # record: assuming LONG on a short makes plan_rebalance compute the delta with the
+    # wrong sign, so the "safe" default is the one that doubles the wrong exposure.
+    # Every position we write carries a side, so a missing one means the record is
+    # corrupt — and with a corrupt record BOTH available guesses are wrong (assume a
+    # side and mis-size it; drop it and re-buy something we already hold). So refuse,
+    # the way neutralize() refuses below min_obs rather than returning a number.
+    current, corrupt = {}, []
     for oid, p in sleeve.items():
+        side = (p.get("side") or "").upper()
+        if side not in ("LONG", "SHORT"):
+            corrupt.append({"order_id": oid, "symbol": p.get("symbol"), "side": p.get("side")})
+            continue
         current[(p.get("symbol") or "").upper()] = {
             "order_id": oid,
             "notional": float(p.get("current_value_usd") or p.get("size_usd") or 0),
-            "side": p.get("side", "LONG"),
+            "side": side,
         }
+    if corrupt:
+        _logger.error("[REBAL] refusing to rebalance — %d position(s) without a usable "
+                      "side: %s", len(corrupt), corrupt)
+        return {"status": "refused", "reason": "positions_missing_side",
+                "corrupt_positions": corrupt, "n_corrupt": len(corrupt)}
 
     nav = REBAL_SLEEVE_NAV
     state = await _get_rebal_state()
@@ -1792,9 +1820,17 @@ def _mine_signal_accuracy(trades: list) -> dict:
         "UNDERWEIGHT":      -1,
     }
     groups: dict[str, list] = {}
+    unattributed = 0
     for t in trades:
-        # Derive signal from grade if not stored directly
-        sig = t.get("cis_signal") or "NEUTRAL"
+        # S-122. This was `or "NEUTRAL"` — the third application of the same default
+        # on one path (write, write, read). Folding untagged trades into NEUTRAL does
+        # not merely add noise: NEUTRAL is the bucket whose accuracy is reported as
+        # None, so the contamination is invisible in the output it corrupts. Count
+        # them instead; a coverage number is information, a silent merge is not.
+        sig = t.get("cis_signal")
+        if not sig:
+            unattributed += 1
+            continue
         groups.setdefault(sig, []).append(t.get("realized_pct", 0) or 0)
     accuracy = {}
     for sig, rets in groups.items():
@@ -1805,7 +1841,12 @@ def _mine_signal_accuracy(trades: list) -> dict:
             "accuracy_pct":   round(correct / len(rets) * 100, 1) if exp != 0 else None,
             "trade_count":    len(rets),
         }
-    return {"by_signal": accuracy}
+    n_attributed = sum(len(v) for v in groups.values())
+    return {"by_signal": accuracy,
+            "n_attributed": n_attributed,
+            "n_unattributed": unattributed,
+            "coverage_pct": round(n_attributed / (n_attributed + unattributed) * 100, 1)
+                            if (n_attributed + unattributed) else None}
 
 
 def _mine_pillar_fitness(trades: list) -> dict:
