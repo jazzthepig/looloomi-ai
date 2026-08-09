@@ -7934,3 +7934,69 @@ select p.proname, p.proacl::text, has_function_privilege('anon', p.oid,'EXECUTE'
  where n.nspname='public' and p.proname like 'backfill%';
 ```
 `bash scripts/preflight.sh` → 23 套件全绿(含新增 compliance 3/3、sql-privilege 4/4)。
+
+---
+
+## S-126 — v2 起算没落库,以及顺着 state key 挖出的三件事
+
+**日期** 2026-08-09 · **Seth** · **状态** 已修 + 已守卫 · 触发:Jazz「删掉的 key 又回来了」
+
+### 诊断:key 在、v2 零行 = 缓存写成功 + 落库失败被吞
+
+Redis 值确认是 **Case A**:`nav: 1, inception: 2026-08-09`,**无 `recovered` 标志**
+⇒ 新代码确实已部署(恢复路径按 `inception_id=eq.v2` 过滤,正确地找到 0 行),
+起算分支执行,缓存落地,**落库失败且被 `except` 吞掉**。
+
+```python
+await _redis_set(_STATE_KEY, state, ttl=0)   # 缓存,先
+await _write(...)                             # 落库,后 —— except: _log.warning
+```
+
+**伤害不是少了一行。** `last_mark` 已推进 ⇒ 下一轮 `already_marked` 直接返回,
+**永不重试**;再下一天用两天前的 `mark_prices` 算收益、记成一天的涨跌 ——
+**缺口不再表现为缺口,而表现为一个收益。** 这个状态不会自愈。
+
+**修:落库先、缓存后。** `_write` 返回成败并 error 级记录;失败则拒绝写缓存,
+返回 `inception_failed` / `mark_failed`。**拒绝的代价是一个周期,缓存的代价是时钟。**
+
+### 顺带发现 1:`nan_to_num` 把「未测量」变成「平盘」,方向是加杠杆
+
+```python
+ret[1:] = np.nan_to_num((close[1:] - close[:-1]) / close[:-1])   # 旧
+```
+
+缺失 bar → 收益 0.0 → 平盘日 → 拉低已实现波动 → vol scalar 上升 → **书加仓。**
+**未测量读作平静,平静读作加杠杆许可** —— 正是 I1 要禁的那个方向。
+
+**最值得记的是守卫当时在哪:** 本文件早就断言 `_vol_scalar(nan) == 1.0`,
+`_realized_vol` 早就用 `nanmean`/`nanstd` —— **每一层都正确处理 NaN,
+唯独最上游那一行先把 NaN 消灭了。**
+
+> **Lesson #108 —— 在数据到不了的位置上执行的不变量,等于没执行。**
+> 判据:不要只问「这个不变量有没有被断言」,要问
+> **「携带违规值的数据,能不能走到那句断言面前」**。
+
+### 顺带发现 2:17 个标的在 2026-07-27 同一天集体停止采集
+
+`ALGO ATOM AXS COMP DOGE ENA FIL GALA HBAR LTC MANA PEPE POLYX RUNE SEI STX VET`
+—— 全部 `monitor_daily = true`、`delisted_at = null`,**系统认为自己在采,已经 13 天没采。**
+另外 246 个更新到 08-08,所以不是普遍故障,是**一个干净的群组、一天之内**。
+
+**这是监控分层三态之外的第四态**:−1 不可寻址 / −2 未监控 / 0 无新数据 /
+**「已标记监控、未退市、却持续为空」**,没有任何东西在报它。已开 task #31/#32。
+
+**① book 不受影响**(实测:`_load_panel` 直连 Binance,24 个价格全是当日),
+但读 `ohlcv_daily` 的研究全部受影响。
+
+### 顺带发现 3:守卫第三次在「描述 bug 的注释」上误报
+
+今天三个守卫(宽松规范化器扫描、截断查询检查、本条 `nan_to_num`)
+**首版全部命中自己的说明性注释。** 已统一改为先 `tokenize` 剥注释与字符串。
+
+> **一个分不清「使用」和「提及」的守卫,会惩罚记录事故的人 —— 激励方向完全相反。**
+
+### 复现
+
+`python3 -m tests.test_beta_core_book` **21/21**(v1 时 14/14)。
+三处反向验证均确认会红:去掉读路径过滤 → line 462;还原 `nan_to_num` → 报错;
+把 `_redis_set` 移回 `_write` 之前 → 顺序断言失败。
