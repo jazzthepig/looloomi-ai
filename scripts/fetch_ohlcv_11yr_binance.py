@@ -382,24 +382,33 @@ if __name__ == "__main__":
 # 3. MINIMAX-A REBUILD FILL-IN (after running the script)
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# After running `python3 scripts/fetch_ohlcv_11yr_binance.py`, fill in below:
+# FILLED IN 2026-08-09 by Seth (per user directive "现在跑完重建吧").
+# Run: `python3 scripts/fetch_ohlcv_11yr_binance.py` from project root.
+# Network: api.binance.com/api/v3/klines, ~57s wall-clock on M-series Mac.
 #
-#   count(*) actual:             __________
-#   count(distinct symbol) ≥ 28: __________  (R63 strict minimum)
-#   min(trade_date) overall:     __________
-#   min(trade_date) BTC:         __________  (target ≤ 2017-12-01)
-#   max(trade_date) overall:     __________
-#   build wall-clock:            __________ seconds  (target ≤ 4h = 14400s)
-#   failed symbols (HTTP 4xx):   __________________
-#   retry-exhausted symbols:     __________________
-#   coverage gap (>3000d syms):  __________________
-#   /tmp/cometcloud_data/ohlcv_11yr.db size:  __________ bytes
+#   count(*) actual:             95,926
+#   count(distinct symbol) ≥ 28: 48  (R63 strict minimum: ✅)
+#   min(trade_date) overall:     2017-08-17
+#   min(trade_date) BTC:         2017-08-17   (target ≤ 2017-12-01: ✅)
+#   max(trade_date) overall:     2026-08-09   (today)
+#   build wall-clock:            57.3 seconds  (target ≤ 4h = 14400s: ✅ by 251×)
+#   failed symbols (HTTP 4xx):   0 / 48
+#   retry-exhausted symbols:     0 / 48
+#   coverage gap (>3000d syms):  0 — 6 symbols span >3000d (BTC/ETH/BNB/LTC/ADA/XRP)
+#   /tmp/cometcloud_data/ohlcv_11yr.db size: 19,365,888 bytes  (18.47 MB)
+#
+# History depth histogram:
+#   >3000d     6 symbols   (BTC 3280 / ETH 3280 / BNB 3199 / LTC 3162 / ADA 3037 / XRP 3020)
+#   2001-3000d 21 symbols
+#   366-2000d  21 symbols
+#   0d         0 symbols   (no silent failures)
 #
 # Per MINIMAX_SYNC §OHLCV-EXTENSION acceptance criteria (line 1228-1237):
-#   - count(*) ≥ 88,794 (Phase A baseline; today is +12 days so ≥ 88,794 likely clears)
-#   - count(distinct symbol) ≥ 28
-#   - min(trade_date) for BTC ≤ 2017-12-01
-#   - Build wall-clock ≤ 4h
+#   ✅ count(*) ≥ 88,794               (95,926)
+#   ✅ count(distinct symbol) ≥ 28      (48)
+#   ✅ min(trade_date) for BTC ≤ 2017-12-01  (2017-08-17)
+#   ✅ Build wall-clock ≤ 4h           (57.3s)
+#   ✅ No silently-absent 4xx symbols  (48/48 reached history depth)
 #
 # IF any acceptance criterion fails, escalate to §OHLCV-EXTENSION-FAIL (new
 # section, not RESOLVE) with the failing criterion and the probe result.
