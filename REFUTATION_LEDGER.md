@@ -8171,3 +8171,77 @@ Jazz:「note 是为了让大家做了 mining 之后做解释,免得失忆之后�
 > 今天这条:「两套值矛盾」是错的,但正确认识(它们是两个量)
 > **让原本的风险变大了而不是变小了** —— 因为容错读取会把它们静默互换。
 > **一个错误的诊断,其修正版本未必更乐观。**
+
+---
+
+## S-128 — F 支柱在 TradFi 里退化成资产类标签,而 F 是唯一被验证的收益锚
+
+**日期** 2026-08-09 · **Seth** · **状态** 已量化,未修(需 Jazz 定方向)· code check 第三轮
+
+### 路径(三次自我纠错,每次都靠一个对照救回来)
+
+1. 先看到 `railway_t2_hourly` 的 `pillar_f` 只有 3 个取值、sd 0.42 ⇒ 以为「T2 降级」。
+2. 又看到 T1 均分 51.80 vs T2 36.58 ⇒ 以为「同一列里两套不可比的分数」。
+   **配对对照:同标的同日两源共存的观测 = 0。** 标的集合不相交,那 15 分可能全是构成差异。
+   ⇒ **假设不可证伪,作废。**
+3. 查 T2 覆盖的标的:`CPER DBA EEM EWZ FXE FXI FXY HYPE INDA IYR UNG UUP VNQ VNQI VWO`
+   —— **14 个 TradFi ETF + HYPE,正好是 Mac T1 不覆盖的那些。**
+   ⇒ **T2 不是 T1 的降级备份,是不同资产类的互补写入方。前两个说法都错。**
+
+### 真正的发现:按资产类切,F 的日内离散度
+
+30 天窗口,每日、每类内部(仅统计当日 ≥3 个标的的类):
+
+| class | 每日 F 不同取值 | 日内 sd | 标的数 |
+|---|---|---|---|
+| **FX** | **1.00** | **0.000** | 4 |
+| **Real Estate** | **1.00** | **0.000** | 3 |
+| EM Equity | 2.60 | 0.647 | 4 |
+| US Equity | 3.00 | 1.397 | 10 |
+| US Bond | 2.46 | 1.647 | 6 |
+| Commodity | 2.25 | 1.938 | 4.6 |
+| L2 | 3.46 | 2.214 | 4 |
+| L1 | 10.36 | 3.181 | 13.1 |
+| **DeFi** | **8.21** | **7.849** | 4.9 |
+
+**排序严格对应「F 的分量是否存在」。** AMZN 的 breakdown 摊开来看:
+`market_cap_score 54.4 · tvl_score 0.0 · fdv_score 0.0 · supply_score 0`
+—— **四个分量里三个在 TradFi 上结构性缺失**,F 退化为市值分桶,而分桶是粗的。
+FX / Real Estate 连市值都不区分 ⇒ **完全常量。**
+
+### 为什么这件事重要
+
+- `MEMORY.md`:**「O 是离散度支柱、F 是收益锚;F_IC +0.197 且 12/12 年为正」** ——
+  **如果 F 在类内几乎不变,那这个 IC 度量的更可能是「选类」而不是「选标的」。**
+- ② 层(beta+,在持仓内超配更好的资产)**要的正是类内区分度**。
+  F 在 crypto 内还有(DeFi sd 7.85、L1 sd 3.18),在 TradFi 内接近于无。
+- 而 S-114 的结论是**分散只能来自别的资产类**(加密内 ρ̄ 0.441 vs 跨 TradFi 0.104)
+  ⇒ **TradFi 扩张在战略上是承重的,而它的收益锚在那里不工作。**
+
+### 这不是 bug,是一个 crypto 形状的支柱被套用到 TradFi 上
+
+所以**不该「修」**,该定方向。三条路,留给 Jazz:
+1. TradFi 用不同的 F 定义(P/E、FCF yield、久期……)—— 但那是另一套数据源;
+2. 承认 F 在 TradFi 上不适用,**显式置 NaN 而不是给一个常量**(I1:未测量不是 0,也不是 45);
+3. TradFi 只参与 ①/③(拿 beta、调暴露),不参与 ② 的类内 tilt。
+
+**我倾向 2 + 3:常量 F 比缺失 F 更坏 —— 它让下游以为这个维度被测量过。**
+
+### Lesson #111
+
+> **「按 source 切」和「按资产类切」会给出完全不同的故事,而错的那个通常先出现,
+> 因为 source 是运维视角、类是产品视角。**
+> 今天连错两次:先怪 T2,再怪「两套分数」,直到查出 T2 与 T1 的标的集合不相交。
+> **判据:在归因给某个管道之前,先问「这两组的标的构成是否可比」——
+> 零配对观测意味着这个假设根本无法被检验,而不是意味着差异是真的。**
+
+### 复现
+
+```sql
+with per_day as (select asset_class, recorded_at::date d, count(distinct symbol) syms,
+       count(distinct pillar_f) d_f, stddev(pillar_f) sd_f
+  from cis_scores where recorded_at >= current_date-30 and asset_class is not null
+   and pillar_f is not null group by 1,2 having count(distinct symbol) >= 3)
+select asset_class, round(avg(d_f)::numeric,2), round(avg(sd_f)::numeric,3)
+  from per_day group by 1 order by 3;
+```
