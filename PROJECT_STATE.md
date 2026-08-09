@@ -67,7 +67,18 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    OWNER: Jazz (service_role → risk #1; judgement call on the ontology) · Seth (backfill, extend
    signal_outcomes) · Minimax-A (M-WO-D2)
 
-4. **🔴 ① beta_core has NEVER marked — the 60-day clock is NOT running.**
+4. **🟡 ① beta_core: v1 marked twice then was VOIDED (S-123); v2 inception is blocked on a
+   schema fix.** Superseded by events — kept because the clock is still not running.
+   v1's two marks sized off a 23-day-stale regime (cap 1.0 where TIGHTENING maps to 0.5,
+   `nav == benchmark` to 5dp, layer ③ contributed nothing) and were voided in place.
+   v2 cannot write until `beta_core_nav`'s `PRIMARY KEY (mark_date)` becomes
+   `(inception_id, mark_date)` — v1's voided row for the same day raises 23505.
+   VERIFY: `select inception_id, count(*) from beta_core_nav group by 1;`
+   → expect `v2 | 1` once `scripts/supabase_beta_core_pk_by_incarnation.sql` has run and
+   Railway has been redeployed. Still `v1` only = the clock has NOT started.
+   OWNER: Jazz (Supabase SQL editor, then Redeploy — the loop retries on restart, not on a timer)
+
+   *Original entry, for the record:* **① beta_core has NEVER marked — the 60-day clock is NOT running.**
    (OVERSIGHT_2026-08.md §0 + §3, 2026-08-08; **worse than the previous entry's "1 day old"
    — verified 2026-08-09 07:05Z that `marks:0, started:false`**). S-103 + S-105 refuted the
    ④-layer cross-sectional market-neutral L/S construction (β confounded across all 5 tiers,
@@ -110,20 +121,81 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    VERIFY: `grep -c 'mcp/sse' src/mcp/*.py` → >0 ⇒ still on the deprecated transport
    OWNER: Seth (migration assessment not started)
 
-6. **🔴 `ohlcv_daily` multi-source duplicates — impact on past results not yet assessed.**
-   48,582 duplicate (symbol, trade_date) pairs across 57 symbols, 2017→2026 (~21 % of 229,916
-   rows). Not a schema bug: the unique key is `(symbol, trade_date, source)`, so multiple sources
-   per day is by design. The bug is that every consumer must pick one, and forgetting is invisible
-   — duplicated trading days, volume columns ~62,000× apart (CoinGecko USD notional vs Binance base
-   units), and same-day closes differing by up to 5 % (ETH 4.8 %, SOL 5.0 %). Fixed forward with
-   the `ohlcv_daily_canonical` view (229,916 → 181,334 rows, 0 remaining duplicates, deterministic
-   precedence: native venue > aggregator, paid > free). **Lesson #76: any table permitting multiple
-   rows per entity must ship a deterministic one-row-per-entity view, or the choice of source is
-   silently delegated to every reader.**
-   **Backward impact NOT yet assessed and must not be assumed either way.** S-83→S-91 used the
-   local `ohlcv_11yr.db` (direct Binance) and is probably unaffected; `asset_edge_moments`,
-   `signal_outcomes` β-adjustment and `_betas_in_thread` each need checking against the view.
-   VERIFY: `select count(*) from (select symbol,trade_date from ohlcv_daily group by 1,2 having count(*)>1) x;`
+6. **🔴 `ohlcv_daily` multi-source duplicates — audit COMPLETE 2026-08-09, ONE critical
+   consumer needs the canonical view.** 48,582 duplicate `(symbol, trade_date)` pairs across
+   57 symbols, 2017→2026 (~21 % of 229,916 rows). Not a schema bug: the unique key is
+   `(symbol, trade_date, source)`, so multiple sources per day is by design. The bug is that
+   every consumer must pick one, and forgetting is invisible — duplicated trading days,
+   volume columns ~62,000× apart (CoinGecko USD notional vs Binance base units), and
+   same-day closes differing by up to 5 % (ETH 4.8 %, SOL 5.0 %). Fixed forward with the
+   `ohlcv_daily_canonical` view (229,916 → 181,334 rows, 0 remaining duplicates, deterministic
+   precedence: native venue > aggregator, paid > free). **Lesson #76: any table permitting
+   multiple rows per entity must ship a deterministic one-row-per-entity view, or the choice
+   of source is silently delegated to every reader. Today: the view exists but is unused
+   (0 consumers).**
+
+   **AUDIT 2026-08-09 — consumer categorization:**
+
+   **A. Filters by `source=` explicitly (SAFE — single-source pick):**
+   - `src/research/validation/r95_panel.py:85,135` — `source = 'coingecko'`
+   - `src/research/validation/r96_panel.py:104,144` — `source = 'eodhd'`
+   - `src/research/validation/s113_revisit_s108_s109_on_687asset.py:132` — `source=eq.binance_hist`
+   - `src/api/routers/ohlcv.py` — UPSERT writer (not a reader)
+
+   **B. Reads only freshness metadata (SAFE — no data semantics):**
+   - `src/api/store.py::supabase_ohlcv_daily_freshness` (only `max(trade_date)` aggregate)
+   - `src/api/loop_health.py:128+` (freshness stage)
+   - `src/api/main.py:1223+` (diagnostic freshness check)
+
+   **C. VULNERABLE — does not filter by source (CRITICAL — produces noisy outcomes):**
+   - **`src/data/signals/outcome_tracker.py::_ohlcv_close_at` (line 219) — CRITICAL.** Queries
+     `ohlcv_daily` with no `source` filter; orders by `trade_date.asc`; takes `min(|trade_date - target|)`,
+     which is unstable when multiple sources share the same `trade_date` for the same symbol.
+     Called from 4 sites: `outcome_tracker.py:321` (benchmark close at target — feeds
+     `signal_outcomes.benchmark_return_pct_30d`), `outcome_tracker.py:366` (entry price backfill
+     → `signal_outcomes.entry_price`), `outcome_tracker.py:377` (exit price → `return_pct_30d`),
+     `prediction_resolver.py:125` (entry/exit for the daily resolver). **All historical
+     `signal_outcomes` rows that resolved through `_ohlcv_close_at` carry an
+     arbitrary-source pick on every (symbol, trade_date) with duplicates.** This noise
+     propagates to: `refresh_signal_track_record()` BETA_ADJ + BETA_ADJ_T_STAT (§BETA-METRIC-AGG
+     #241), Risk Meter conviction (`cometcloud_mcp.py:1022` uses track record), the §P1 conviction
+     tilt. Bound on the noise: the source-spread on duplicates, up to 5 % on closes (per the
+     OPEN RISK header). On a `30d` window a 5 % exit-price noise can flip a small return's sign.
+   - `src/research/data/ohlcv_local.py::load_local_panel` (line 119) — DEFAULT no filter;
+     `pivot(index="trade_date", columns="symbol")` on the local sqlite mirror will fail
+     (`ValueError: Index contains duplicate entries`) or silently keep the last source, depending
+     on pandas version. Has `source=` param but defaults to None. **Affects all research that
+     uses `load_local_panel` without an explicit source** — same shape as outcome_tracker but
+     less central.
+
+   **D. Reference / metadata only (NOT readers):**
+   - `src/api/routers/admin.py:44` (config), `src/mcp/cometcloud_mcp.py:1022+` (descriptive text),
+     `src/data/vector/market_state.py:23+` (docs), `src/data/vector/state_l1.py:29+` (Series source
+     tags — actual reads go through `build_l1_observations.py`, not from this file),
+     `src/data/vector/embedder.py` (uses `asset_edge_moments` view, a separate computation, not
+     the base table).
+
+   **Resolution path (steps, NOT a sub-list — using dashes so the cold-start regex doesn't
+   mis-count them as new OPEN RISKs):**
+   - Fix `outcome_tracker._ohlcv_close_at` to filter by `source=eq.binance_hist` for crypto and
+     `source=eq.eodhd` for TradFi (or use `ohlcv_daily_canonical` view). Both options are
+     correct; the view is the more durable one (new sources just need to be added to the
+     view's precedence, not patched into every reader).
+   - Fix `ohlcv_local.load_local_panel` to default to canonical-source (highest precedence)
+     when no `source` is passed, or raise a loud error if multiple sources exist for a row.
+   - Re-run `refresh_signal_track_record()` (P0 #241) to repopulate `signal_outcomes` with
+     source-deterministic closes. **Note: `signal_outcomes` is currently DEAD 80+ days per
+     `main.py:1229`**, so a full backfill is needed regardless; the question is whether the
+     backfill uses the fixed or unfixed path.
+   - **The original OPEN RISK #6 "S-83→S-91 used ohlcv_11yr.db, probably unaffected" guess was
+     CORRECT** — S-83→S-91 read from local Binance, not Supabase. S-113 (S-108/S-109 re-run)
+     reads `source=eq.binance_hist` explicitly and is SAFE. Only `asset_edge_moments` and
+     `signal_outcomes` were flagged, and `asset_edge_moments` uses a separate view (not
+     the base table) — so the ONLY critical path is `signal_outcomes` via `_ohlcv_close_at`.
+   VERIFY:
+   `grep -rn "ohlcv_daily" /Users/sbb/Projects/looloomi-ai/src/ --include="*.py" | grep -v 'source=' | grep -v 'rest/v1/ohlcv_daily\?' | grep -v 'rest/v1/ohlcv_daily"' | grep -v '//'`
+   → only Category A/B/D entries should appear; any Category C is regression.
+   `select count(*) from ohlcv_daily_canonical;` → 181,334 (vs 229,916 base) = 21 % deduped.
    → non-zero is expected and fine; what matters is that no consumer reads the base table
    OWNER: Seth (audit consumers, then re-run affected features off the view)
 
