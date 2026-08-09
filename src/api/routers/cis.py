@@ -793,7 +793,16 @@ async def _build_cis_universe(force_source: str = None):
             except asyncio.CancelledError:
                 _logger.warning("[CIS] get_macro_pulse cancelled, using fallback regime")
                 pulse = {}
-            _cached_regime = pulse.get("macro_regime") or "UNKNOWN"
+            # ⚠️ "UNKNOWN" IS A VALUE THAT LOOKS LIKE DATA (2026-08-09, S-120/S-121).
+            # A 5s timeout here produced the literal string "UNKNOWN", which the daily
+            # snapshot then fed to canonical_regime() — and since "UNKNOWN" is not in
+            # the canonical set, it came back "NEUTRAL" and 58 fabricated rows were
+            # written. Measured: one such batch per day, at a DIFFERENT time each day,
+            # because it is a timeout rather than a schedule.
+            # The sink is now guarded (canonical_regime_strict → NULL), but the source
+            # is fixed too: a failed measurement must produce None, not a placeholder
+            # string. Downstream code cannot tell a placeholder from a reading.
+            _cached_regime = pulse.get("macro_regime") or None
         except Exception:
             # Fallback: try Redis key, then Mac Mini cached, then VIX
             try:
@@ -806,7 +815,7 @@ async def _build_cis_universe(force_source: str = None):
                         or cached.get("regime")
                         or (result.get("macro") or {}).get("regime")
                         or (result.get("regime"))
-                        or "UNKNOWN"
+                        or None          # placeholder strings look like data — S-120
                     )
             except Exception:
                 _cached_regime = (
@@ -814,7 +823,7 @@ async def _build_cis_universe(force_source: str = None):
                     or cached.get("regime")
                     or (result.get("macro") or {}).get("regime")
                     or (result.get("regime"))
-                    or "UNKNOWN"
+                    or None          # placeholder strings look like data — S-120
                 )
 
         # Normalize T1 pillars: Mac Mini sends flat keys (f/m/o/s/a).
@@ -873,9 +882,10 @@ async def _build_cis_universe(force_source: str = None):
             except (asyncio.TimeoutError, asyncio.CancelledError):
                 _logger.warning("[CIS] get_macro_pulse timed out in Railway path, using fallback regime")
                 pulse = {}
-            result["macro_regime"] = pulse.get("macro_regime") or "UNKNOWN"
+            # same placeholder trap as the merged path above — None, not a string
+            result["macro_regime"] = pulse.get("macro_regime") or None
         except Exception:
-            result["macro_regime"] = (result.get("macro") or {}).get("regime", "UNKNOWN")
+            result["macro_regime"] = (result.get("macro") or {}).get("regime") or None
         result["t1_count"] = 0
         result["t2_count"] = len(railway_universe)
         _record_build(_phase, _t0, "railway")
@@ -894,7 +904,7 @@ async def _build_cis_universe(force_source: str = None):
             "macro_regime": (
                 (cached.get("macro") or {}).get("regime")
                 or cached.get("regime")
-                or "UNKNOWN"
+                or None          # placeholder strings look like data — S-120
             ),
             "universe":     stale_universe,
         }
@@ -922,7 +932,7 @@ async def _build_cis_universe(force_source: str = None):
             "macro_regime": (
                 (lkg.get("macro") or {}).get("regime")
                 or lkg.get("regime")
-                or "UNKNOWN"
+                or None          # placeholder strings look like data — S-120
             ),
             "universe":       lkg_universe,
         }

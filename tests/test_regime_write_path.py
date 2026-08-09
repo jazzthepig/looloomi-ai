@@ -88,6 +88,35 @@ def test_both_write_paths_use_the_strict_variant():
     assert "writing NULL" in src, "an undetermined regime must be logged, not just nulled"
 
 
+def test_a_failed_measurement_yields_none_not_a_placeholder_string():
+    """THE ROOT CAUSE, found by chasing why the fabricated batch appeared once a day
+    at a DIFFERENT time each day — because it was a timeout, not a schedule.
+
+        pulse = await asyncio.wait_for(get_macro_pulse(), timeout=5.0)
+        except TimeoutError: pulse = {}
+        _cached_regime = pulse.get("macro_regime") or "UNKNOWN"
+
+    A slow FRED call produced the literal string "UNKNOWN", the snapshot fed it to
+    the lenient canonicaliser, and 58 rows of NEUTRAL were written. Guarding only
+    the sink would have left the source emitting a placeholder that every other
+    consumer still cannot distinguish from a reading.
+
+    So the paths that FEED a stored payload must yield None on failure. The
+    remaining "UNKNOWN" literals are read-side: a confidence computation and two
+    API response defaults, where a renderer legitimately needs something to show."""
+    src = open(_CIS_ROUTER, encoding="utf-8").read()
+    # every regime fallback that lands in a payload must be `or None`
+    payload_paths = [
+        '_cached_regime = pulse.get("macro_regime") or None',
+        'result["macro_regime"] = pulse.get("macro_regime") or None',
+    ]
+    for frag in payload_paths:
+        assert frag in src, f"failed measurement still yields a placeholder: {frag}"
+    # and no regime fallback chain may still end in the literal
+    assert 'or "UNKNOWN"\n            ),' not in src, \
+        "a cached/last-known-good payload still falls back to the placeholder string"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
