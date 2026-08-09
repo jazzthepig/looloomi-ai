@@ -120,6 +120,23 @@ python3 -m tests.test_strategy_intake
 #               that turns unknown into a legitimate value belongs on the READ side
 #               only; on write, unmeasured is NULL (I1).
 python3 -m tests.test_regime_write_path
+# 3a-quaterdecies. degraded-value guard (2026-08-09, S-122). S-121 was the FIFTH
+#                  instance in one day of an unmeasurable value being replaced by a
+#                  plausible one and then stored, where no consumer can tell the
+#                  substitute from a reading. Four of the five were found only after
+#                  they had written data, and three only because the substitute
+#                  happened to look wrong - which is luck that runs out exactly where
+#                  the damage is worst: a default equal to the MAJORITY value is
+#                  undetectable forever. trade_results.side defaulted to "LONG" while
+#                  82% of rows are LONG, and shorts average -2.28% against longs'
+#                  +0.26%, so the failure moved the worst trades into the long side of
+#                  the record. Scans dict-value fallbacks inside functions that
+#                  persist (transitively, so factoring the row builder out of the
+#                  writer does not launder it), and unwraps .upper()/round() so a
+#                  normalisation call cannot hide one. Read-side rendering is out of
+#                  scope by construction - globally the same pattern returns 296 hits
+#                  and a guard nobody can run is a guard nobody runs.
+python3 -m tests.test_degraded_value_guard
 # 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
 #            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
 #            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT

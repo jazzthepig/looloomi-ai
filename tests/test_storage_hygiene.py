@@ -102,6 +102,44 @@ def test_bulk_update_scripts_flag_their_storage_cost():
         + "\n  ".join(offenders[:10]))
 
 
+def test_monitoring_tiers_are_enforced_not_advisory():
+    """Jazz: we do not need to watch that many assets. The measurement relocated the
+    problem from COUNT to FREQUENCY — daily at 687 costs 42 MB/yr while hourly at 687
+    costs 1,096 MB/yr — so the rule became broad-at-low-frequency, narrow-at-high.
+
+    The failure mode this pins is a flag nothing reads. Three booleans on `assets`
+    that no feed consults would be decoration, and this repo already has a name for
+    that: prose with a green tick."""
+    f = REPO / "scripts" / "supabase_monitoring_tiers.sql"
+    assert f.exists(), "scripts/supabase_monitoring_tiers.sql missing"
+    txt = f.read_text(encoding="utf-8")
+    for col in ("monitor_daily", "monitor_hourly", "monitor_funding"):
+        assert col in txt, f"missing tier column {col}"
+    assert "1,096 MB/yr" in txt and "42 MB/yr" in txt, (
+        "the per-feed cost measurement is the whole argument — record the numbers")
+    assert "return -2" in txt, "the tier must be ENFORCED inside the feed functions"
+
+
+def test_not_monitored_is_distinguishable_from_no_data():
+    """-2 (we chose not to watch) must never collapse into 0 (the market has nothing).
+    That conflation is exactly how S-106 read a source seam as a market fact, and it
+    is just as available in the storage domain: a coverage gap that reports as an
+    empty result becomes, three months later, someone's finding."""
+    txt = (REPO / "scripts" / "supabase_monitoring_tiers.sql").read_text(encoding="utf-8")
+    assert "-1 = unaddressable" in txt and "-2 = not monitored" in txt, (
+        "each refusal reason needs its own sentinel, documented")
+    assert "0 = monitored" in txt
+
+
+def test_the_dead_are_not_polled():
+    """126 delisted assets need no feed at all — their history is complete by
+    definition. A monitoring list built from 'assets we have' rather than 'assets
+    still trading' polls the graveyard forever."""
+    txt = (REPO / "scripts" / "supabase_monitoring_tiers.sql").read_text(encoding="utf-8")
+    assert "delisted_at is null" in txt, "feeds must be gated on still-listed"
+    assert "graveyard" in txt.lower() or "complete by definition" in txt
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
