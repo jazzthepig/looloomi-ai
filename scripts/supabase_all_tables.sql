@@ -380,3 +380,7 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- SECURITY (2026-08-09): SECURITY DEFINER must never keep the default PUBLIC grant.
+revoke all on function increment_webhook_delivery(text, text, boolean) from public, anon, authenticated;
+grant execute on function increment_webhook_delivery(text, text, boolean) to service_role;
