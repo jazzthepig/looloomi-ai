@@ -56,7 +56,7 @@ import numpy as np
 _logger = logging.getLogger(__name__)
 
 # ── v2 schema constants (build-order #2) ─────────────────────────────────────
-SCHEMA_VERSION   = 2
+SCHEMA_VERSION   = 3   # v3 (2026-08-09): pillar dims 0..4 were identically zero in every stored vector; see pillar_of()
 ASSET_DIMS_V1    = 18          # dims [0..17] — the original dense snapshot vector
 ASSET_DIMS_V2    = 27          # + [18..24] deltas(5)+stability(2) + [25..26] risk moments(2)
 _DELTA_NORM      = 50.0        # a 50-pt pillar swing ⇒ ±1 (pillar moves are usually small)
@@ -85,8 +85,28 @@ def _pillars_of(asset: dict) -> dict:
             v = asset.get(f"{k.lower()}_score")  # T2 flat
         if v is None:
             v = asset.get(k.lower())          # history_db row: bare f/m/o/s/a
+        if v is None:
+            v = asset.get(f"pillar_{k.lower()}")  # cis_scores column shape
         out[k] = None if v is None else float(v)
     return out
+
+
+# THE FIFTH SHAPE, and why this list is now closed (2026-08-09).
+#
+# There were two "canonical" pillar resolvers — this one and `main.py::_pillar_of` —
+# and each handled a shape the other missed:
+#
+#     shape                  _pillars_of   _pillar_of
+#     pillars["F"]                ✓            ✓
+#     asset["F"]  bare upper      ✓            ✗
+#     asset["f"]  flat lower      ✓            ✓
+#     asset["pillar_f"]           ✗            ✓      ← added above
+#     asset["f_score"]            ✓            ✓
+#
+# Neither was wrong about the shapes it knew; both were incomplete, and each was
+# written believing it was the tolerant one. `test_embedding_dims_carry_information`
+# now pins that the two agree on every shape, so the next divergence fails CI rather
+# than showing up as a column of zeros in a vector store six months later.
 
 
 def pillar_deltas(current: dict, prior: Optional[dict]) -> list[float]:
@@ -226,13 +246,27 @@ def generate_embedding(
     edge_moments : (edge_vol, edge_p10) raw β-adjusted-edge risk moments for this asset (or None) —
         the live provider reads these from the Supabase `asset_edge_moments` view. I5.
     """
-    # Pillar scores — handle both T1 (pillars dict) and T2 (flat) shapes
+    # Pillar scores. USE THE CANONICAL EXTRACTOR — it is defined 150 lines above in
+    # this same file, handles all four key shapes, and its docstring already says
+    # "Missing ⇒ None, never 0 (I1)".
+    #
+    # This block used to inline its own two-shape lookup:
+    #     pillars.get("F") or asset.get("f_score", 0) or 0
+    # The live builder emits the FLAT lowercase shape, which neither branch matched,
+    # so `or 0` wrote five zeros. Measured 2026-08-09: all 58 stored vectors had
+    # identical all-zero pillar blocks — the five CIS pillars contributed nothing to
+    # the vector space ARCHITECTURE calls the geometric substrate.
+    #
+    # `or` is the second half of the bug: zero is a legitimate pillar score, so it
+    # cannot also mean absent. _pillars_of returns None and we resolve it explicitly.
     pillars = asset.get("pillars") or {}
-    f_raw   = pillars.get("F") or asset.get("f_score", 0) or 0
-    m_raw   = pillars.get("M") or asset.get("m_score", 0) or 0
-    o_raw   = pillars.get("O") or asset.get("o_score", 0) or 0
-    s_raw   = pillars.get("S") or asset.get("s_score", 0) or 0
-    a_raw   = pillars.get("A") or asset.get("a_score", 0) or 0
+    _p = _pillars_of(asset)
+    _missing = _NAN if unmeasured_as_nan else 0.0
+    f_raw = _missing if _p["F"] is None else _p["F"]
+    m_raw = _missing if _p["M"] is None else _p["M"]
+    o_raw = _missing if _p["O"] is None else _p["O"]
+    s_raw = _missing if _p["S"] is None else _p["S"]
+    a_raw = _missing if _p["A"] is None else _p["A"]
     cis_raw = asset.get("cis_score") or asset.get("total_score") or asset.get("score") or 0
 
     # Market data

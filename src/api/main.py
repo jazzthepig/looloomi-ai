@@ -147,6 +147,11 @@ def _pillar_of(asset: dict, K: str):
     p = asset.get("pillars") if isinstance(asset.get("pillars"), dict) else {}
     v = p.get(K)
     if v is None:
+        # bare UPPERCASE — an already-extracted {F,M,O,S,A} dict. embedder._pillars_of
+        # handled this and _pillar_of did not; the reverse was true for `pillar_k`.
+        # Two resolvers, each incomplete, each believing itself the tolerant one.
+        v = asset.get(K)
+    if v is None:
         v = asset.get(K.lower())
     if v is None:
         v = asset.get(f"pillar_{K.lower()}")
