@@ -23,6 +23,8 @@ These tests pin the properties that make the book worth the calendar it will spe
 Run: python3 -m tests.test_beta_core_book
 """
 import os
+import pathlib
+import re
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -30,6 +32,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import numpy as np  # noqa: E402
 
 from src.data.signals import beta_core_paper as bc  # noqa: E402
+
+
+_REPO = pathlib.Path(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+
+def _src() -> str:
+    return (_REPO / "src" / "data" / "signals" / "beta_core_paper.py").read_text(encoding="utf-8")
+
 
 
 def test_layer_one_is_equal_weight_and_long_only():
@@ -241,6 +251,78 @@ def test_the_filter_is_the_one_from_the_validated_module():
                             "src/data/signals/beta_core_paper.py"), encoding="utf-8").read()
     assert "from src.research.validation.state_persistence import dwell_filter" in src, \
         "must import the guarded filter rather than reimplement it"
+
+
+
+
+# ── inception identity (2026-08-09, S-123) ──────────────────────────────────
+
+def test_inception_id_is_a_code_constant_not_an_env_var():
+    """THE INTEGRITY PROPERTY OF THE WHOLE PRODUCT.
+
+    The deliverable is a forward track record. A track record whose NAV can be
+    quietly reset proves nothing — if a bad month can be erased by flipping a
+    dashboard variable or clearing a cache key, sixty green days are worth zero,
+    because the reader cannot tell sixty days of survival from the sixtieth attempt.
+
+    So re-inception has to cost a commit: reviewed, dated, attributed, permanently
+    visible in `git log` beside its reason. That friction is the feature. Reading the
+    id from the environment would move the decision to a place with no history."""
+    src = _src()
+    assert re.search(r'^_INCEPTION_ID\s*=\s*["\']', src, re.M), \
+        "_INCEPTION_ID must be a literal module constant"
+    body = re.sub(r'#.*', '', src)
+    for pat in (r'_INCEPTION_ID\s*=\s*os\.', r'_INCEPTION_ID\s*=\s*.*getenv',
+                r'_INCEPTION_ID\s*=\s*.*environ'):
+        assert not re.search(pat, body), \
+            "_INCEPTION_ID must never come from the environment — that is a reset with no git trace"
+    assert re.search(r'^_INCEPTION_REASON\s*=', src, re.M), \
+        "an incarnation must carry the reason the previous one was abandoned"
+
+
+def test_every_read_path_is_scoped_to_the_live_incarnation():
+    """Three queries read this table: state recovery, continuity, and the published
+    curve. All three must exclude other incarnations and voided rows.
+
+    Recovery is the subtle one — unscoped, the next Redis eviction would 'recover'
+    the NAV of the run the re-inception was meant to replace, resurrecting the voided
+    segment while logging a perfectly healthy recovery. The published curve is the
+    loud one: splicing a void segment onto a live one reads as a continuous 60-day
+    record containing a discontinuity at the seam, and the curve IS the claim."""
+    # The queries are built across several f-string lines, so a single-line regex
+    # sees only the first fragment and passes on a query it never actually read.
+    # Take the statement, not the line.
+    lines = _src().splitlines()
+    starts = [i for i, l in enumerate(lines) if "beta_core_nav?select=" in l]
+    assert len(starts) >= 3, f"expected the three read paths, found {len(starts)}"
+    for i in starts:
+        stmt = " ".join(lines[i:i + 5])
+        assert "inception_id=eq." in stmt, \
+            f"read path not scoped to an incarnation (line {i+1}): {stmt[:110]}"
+        assert "void_reason=is.null" in stmt, \
+            f"read path does not exclude voided rows (line {i+1}): {stmt[:110]}"
+
+
+def test_written_rows_carry_their_incarnation():
+    """A row without an id cannot be attributed to a run, so a later query cannot
+    exclude it — the stamp has to happen at write time or not at all."""
+    src = _src()
+    assert '"inception_id": _INCEPTION_ID' in src, \
+        "every written row must be stamped with the incarnation that produced it"
+
+
+def test_superseded_runs_are_voided_not_deleted():
+    """CLAUDE.md: the graveyard is the asset. The migration marks v1 with a reason and
+    leaves the rows queryable. A record that shows only survivors is precisely the
+    bias S-111 measured at 25.1 pp/yr — we do not get to apply it to ourselves."""
+    p = _REPO / "scripts" / "supabase_beta_core_reinception.sql"
+    assert p.exists(), "scripts/supabase_beta_core_reinception.sql missing"
+    sql = p.read_text(encoding="utf-8")
+    assert "void_reason" in sql and "update beta_core_nav" in sql.lower()
+    assert not re.search(r'\bdelete\s+from\s+beta_core_nav', sql, re.I), \
+        "superseded marks must be voided in place, never deleted"
+    assert "DO NOT REORDER" in sql, \
+        "the deploy-before-void ordering must be stated: voiding first hides the fault"
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

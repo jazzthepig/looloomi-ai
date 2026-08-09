@@ -40,6 +40,35 @@ import numpy as np
 
 _log = logging.getLogger("beta_core")
 _STATE_KEY = "beta_core:state"
+
+# ── INCEPTION IDENTITY ───────────────────────────────────────────────────────
+# Every row is stamped with the incarnation that produced it, and state recovery
+# only ever reads rows carrying the CURRENT id.
+#
+# WHY THIS IS A CODE CONSTANT AND NOT AN ENV VAR (this is the whole point). The
+# product is a forward track record, and a track record whose NAV can be quietly
+# reset proves nothing at all — if a bad month can be erased by clearing a Redis
+# key or flipping a dashboard variable, sixty green days are worth exactly zero.
+# So re-inception must cost a commit: changing this constant is a code change,
+# which means it is reviewed, dated, attributed, and permanently visible in
+# `git log` next to the reason. That friction IS the feature.
+#
+# Superseded rows are never deleted — `void_reason` marks them and they stay
+# queryable. CLAUDE.md: the graveyard is the asset. A record that shows what was
+# discarded and why is more credible than one that only shows what survived.
+#
+# v1 (2026-08-08 → 2026-08-09, 2 marks) — VOID, see S-123. Both marks sized off a
+#    regime series 23 days stale, so the book ran at cap 1.0 while the true regime
+#    TIGHTENING maps to 0.5. nav == benchmark to five decimals: layer ③ contributed
+#    nothing. Voided rather than kept because we sell the falsification apparatus,
+#    and a 60-day curve needing a footnote about its first two days is worth less
+#    than a clean curve starting two days later.
+_INCEPTION_ID = "v2"
+_INCEPTION_REASON = (
+    "v1 voided per S-123: regime history truncated to the OLDEST 20,000 rows of "
+    "53,250, so the book sized off a 2026-07-17 reading on 2026-08-09 and ran at "
+    "double the intended exposure for its entire life (2 marks)."
+)
 _FEE = 0.0005
 _REBAL_DAYS = 7
 _VOL_TARGET = 0.60          # annualised. Crypto panel realised vol runs 0.5–1.2.
@@ -252,7 +281,12 @@ async def _recover_state_from_nav(px: dict) -> dict | None:
     base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
     if not base or not key:
         return None
+    # Scoped to the CURRENT incarnation and to rows that are not void. Without this
+    # filter a re-inception would "recover" the NAV of the run it was meant to
+    # replace on the very next Redis eviction, silently resurrecting the voided
+    # segment — the failure would look exactly like a healthy recovery in the logs.
     url = (f"{base}/rest/v1/beta_core_nav?select=mark_date,nav,benchmark_nav,top_weights"
+           f"&inception_id=eq.{_INCEPTION_ID}&void_reason=is.null"
            f"&order=mark_date.desc&limit=1")
     try:
         async with httpx.AsyncClient(timeout=10) as c:
@@ -394,7 +428,11 @@ async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
             "vol_target_scalar": round(scalar, 4),
             "realized_vol_30d": None if rv != rv else round(rv, 4),   # I1: NaN → null
             "n_positions": n, "gross": round(gross, 4), "cost": round(cost, 6),
-            "rebalanced": rebal, "top_weights": top, "note": note}])
+            "rebalanced": rebal, "top_weights": top, "note": note,
+            # Stamped on every row so a curve can never be assembled across two
+            # incarnations by accident — which would splice a voided segment onto a
+            # live one and read as continuous.
+            "inception_id": _INCEPTION_ID}])
     except Exception as e:
         _log.warning("[beta_core] nav write: %s", e)
 
@@ -418,7 +456,12 @@ async def continuity_state() -> dict:
     base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
     if not base or not key:
         return {"configured": False}
-    url = f"{base}/rest/v1/beta_core_nav?select=mark_date&order=mark_date.asc&limit=500"
+    # Current incarnation only: continuity of the VOID run says nothing about whether
+    # the live clock is running, and counting both would report a healthy streak
+    # across a gap that includes a re-inception.
+    url = (f"{base}/rest/v1/beta_core_nav?select=mark_date"
+           f"&inception_id=eq.{_INCEPTION_ID}&void_reason=is.null"
+           f"&order=mark_date.asc&limit=500")
     try:
         async with httpx.AsyncClient(timeout=8) as c:
             r = await c.get(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
@@ -452,7 +495,12 @@ async def get_curve(limit: int = 400) -> dict:
     base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
     if not base or not key:
         return {"rows": [], "error": "supabase_unconfigured"}
-    url = (f"{base}/rest/v1/beta_core_nav?select=*&order=mark_date.asc&limit={limit}")
+    # The published curve. Splicing a voided segment onto a live one would read as a
+    # continuous 60-day record while containing a discontinuity at the seam — the
+    # single most damaging thing this table could do, since the curve IS the claim.
+    url = (f"{base}/rest/v1/beta_core_nav?select=*"
+           f"&inception_id=eq.{_INCEPTION_ID}&void_reason=is.null"
+           f"&order=mark_date.asc&limit={limit}")
     try:
         async with httpx.AsyncClient(timeout=10) as c:
             r = await c.get(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
