@@ -7447,3 +7447,61 @@ if not universe:
 `select macro_regime, source, data_tier, count(*), min(recorded_at), max(recorded_at)
  from cis_scores where recorded_at::date = '2026-08-08' group by 1,2,3;`
 `tests/test_regime_write_path.py` 5/5。
+
+---
+
+## S-121 — 根因:**一个 5 秒超时产生了字符串 `"UNKNOWN"`**,而字符串看起来像数据
+
+**日期** 2026-08-09 · **Seth** · **状态: S-120 的根因,已修到源头**
+
+### 起因
+S-120 修了末端(写入用 `canonical_regime_strict`),但留了一句"未查清:
+`railway_snapshot` 为何每天恰好一次拿不到 regime,而时间点每天不同"。
+**时间点每天不同,本身就是线索 —— 那不是 cron,是超时。**
+
+### 完整因果链(4 步,每步都合理)
+```python
+pulse = await asyncio.wait_for(get_macro_pulse(), timeout=5.0)
+except asyncio.TimeoutError:
+    pulse = {}
+_cached_regime = pulse.get("macro_regime") or "UNKNOWN"    # ① 超时 → 字面量
+```
+① `get_macro_pulse()` 含 FRED 调用,偶发 >5s → 超时
+② 兜底把 regime 设成**字符串 `"UNKNOWN"`**
+③ 快照 `canonical_regime("UNKNOWN")` → **`"NEUTRAL"`**(不在规范集里 ⇒ 折成中性)
+④ **58 行编造的 NEUTRAL 落库**,分数全部正常,只有 regime 是假的
+
+**每一步单独看都是"合理的降级"。合起来是一个从未被观测过的事实,进了库。**
+
+### 修到源头,不只是末端
+S-120 只修了 ③/④。但**只守住水槽,水源仍在产出一个所有其它消费者都无法分辨的占位符**。
+把所有**会进入 payload** 的 regime 兜底从 `or "UNKNOWN"` 改成 `or None`(5 处)。
+**保留的 `"UNKNOWN"` 只在读取侧**:一个 confidence 计算 + 两个 API 响应默认值 ——
+渲染层确实需要显示点什么。
+
+### 这是今天第五次遇到同一个形状
+| 场合 | "未知"被伪装成 |
+|---|---|
+| I1(旧) | `max(0,min(1,nan))==1.0` ⇒ 未测量市值 = 万亿 |
+| S-116 | `exposure_cap=1.0` ⇒ ③层没跑 = ③层选了中性 |
+| 监控层 | 未订阅 = 无数据(修成 −2 vs 0) |
+| S-120 | `canonical_regime(None)` ⇒ 缺失 = NEUTRAL |
+| **S-121** | **超时 ⇒ 字符串 `"UNKNOWN"` ⇒ NEUTRAL** |
+
+### 教训(→ Lesson #101)
+**降级路径的返回值,必须是一个下游无法误认为观测的值。**
+`None`、`NaN`、专用哨兵(−2)都可以;**一个字符串、一个中性值、一个"合理的默认"都不行。**
+判据很简单:**如果下游拿到这个值,能不能分辨它是测出来的还是兜出来的?**
+不能,就换一个值。
+配套:**"每天一次但时间不固定"几乎总是超时,不是调度。** 这个特征本身就是诊断线索。
+
+### 不宣称 / 边界
+- **5 秒超时本身没动。** FRED 慢是真的;缩短或加缓存是另一件事,
+  但**降级的正确性与超时的频率是两个问题**,先修前者。
+- 历史污染行仍在(需 service_role 清洗,OPEN RISK #1)。
+- 未测:改成 `None` 之后,前端/API 消费者是否有对 null regime 的空指针路径。
+  **`_compute_regime_confidence(_cached_regime or "UNKNOWN")` 已显式兜底,其余待观察。**
+
+### 复现
+`grep -n '"UNKNOWN"' src/api/routers/cis.py` → 剩余全部在读取侧 ·
+`tests/test_regime_write_path.py` 6/6。
