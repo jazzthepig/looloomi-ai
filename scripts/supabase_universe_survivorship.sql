@@ -122,8 +122,10 @@ begin
   return n_rows;
 end $$;
 
-revoke all on function ingest_binance_universe() from anon, authenticated;
-revoke all on function backfill_daily_for_asset(text, int) from anon, authenticated;
+-- `from public` is load-bearing: CREATE FUNCTION grants EXECUTE to PUBLIC and
+-- anon only INHERITS it, so revoking from anon alone succeeds and changes nothing.
+revoke all on function ingest_binance_universe() from public, anon, authenticated;
+revoke all on function backfill_daily_for_asset(text, int) from public, anon, authenticated;
 
 -- Backfill the DEAD first. They are the highest-value rows in the warehouse precisely
 -- because every prior study lacked them:

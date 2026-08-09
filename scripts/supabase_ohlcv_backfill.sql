@@ -51,3 +51,9 @@ begin
   end loop;
   return n_rows;
 end $$;
+
+-- SECURITY (2026-08-09): SECURITY DEFINER bypasses RLS, so it must not sit on the
+-- default PUBLIC grant. `from public` is the operative clause — revoking from anon
+-- alone is a successful no-op, because anon only inherits the PUBLIC grant.
+revoke all on function backfill_binance_ohlcv(text, text, bigint) from public, anon, authenticated;
+grant execute on function backfill_binance_ohlcv(text, text, bigint) to service_role;

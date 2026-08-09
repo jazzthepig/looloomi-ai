@@ -91,7 +91,9 @@ begin
   return n_rows;
 end $$;
 
-revoke all on function backfill_binance_funding(text, bigint, int) from anon, authenticated;
+-- `from public` is load-bearing: CREATE FUNCTION grants EXECUTE to PUBLIC and
+-- anon only INHERITS it, so revoking from anon alone succeeds and changes nothing.
+revoke all on function backfill_binance_funding(text, bigint, int) from public, anon, authenticated;
 
 -- VERIFY (the anchor criterion itself, runnable):
 --   with f as (select symbol, funding_time::date d, sum(funding_rate) c

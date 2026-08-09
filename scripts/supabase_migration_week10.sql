@@ -137,3 +137,11 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- SECURITY (2026-08-09): see supabase_revoke_public_execute.sql. These are
+-- SECURITY DEFINER and were left on the default PUBLIC grant in this script; the
+-- live database was locked by hand, so a rebuild from scripts would have reopened it.
+revoke all on function increment_api_key_usage(bigint) from public, anon, authenticated;
+revoke all on function increment_webhook_delivery(text, text, boolean) from public, anon, authenticated;
+grant execute on function increment_api_key_usage(bigint) to service_role;
+grant execute on function increment_webhook_delivery(text, text, boolean) to service_role;

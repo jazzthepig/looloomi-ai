@@ -100,7 +100,9 @@ begin
   return n_rows;
 end $$;
 
-revoke all on function backfill_binance_hourly(text, bigint, int) from anon, authenticated;
+-- `from public` is load-bearing: CREATE FUNCTION grants EXECUTE to PUBLIC and
+-- anon only INHERITS it, so revoking from anon alone succeeds and changes nothing.
+revoke all on function backfill_binance_hourly(text, bigint, int) from public, anon, authenticated;
 
 -- VERIFY after any backfill — a silently-skipping cursor is the failure mode this
 -- table was most at risk of, and it is invisible in a row count alone:
