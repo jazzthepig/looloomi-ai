@@ -158,9 +158,33 @@ async def _load_panel():
     from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE, load_binance_panel
     s = dt.date.today() - dt.timedelta(days=120)
     _, close, fmean, fsum = load_binance_panel(DEFAULT_UNIVERSE, start=(s.year, s.month, s.day))
-    ret = np.zeros_like(close)
-    ret[1:] = np.nan_to_num((close[1:] - close[:-1]) / close[:-1])
-    px = {DEFAULT_UNIVERSE[i]: float(close[-1, i]) for i in range(close.shape[1])}
+    # I1, and the sharpest instance of it in this file (2026-08-09). This line used
+    # to be `np.nan_to_num(...)`, which turns a MISSING return into 0.0 — a flat day.
+    # Flat days depress realised vol, the vol scalar rises, and the book SIZES UP.
+    # Unmeasured therefore read as calm, and calm reads as licence to lever: exactly
+    # the direction I1 exists to forbid.
+    #
+    # Note where the guard was. `test_beta_core_book` already asserted
+    # `_vol_scalar(nan) == 1.0`, and `_realized_vol` already used nanmean/nanstd —
+    # so the handling was correct at every level EXCEPT this one, which destroyed the
+    # NaN before any of it could run. An invariant enforced at a point the data
+    # cannot reach is not enforced.
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ret = np.full_like(close, np.nan, dtype=float)
+        ret[1:] = (close[1:] - close[:-1]) / close[:-1]
+    # A NaN price must not enter the book either: it would propagate into weights and
+    # into the benchmark leg, where it silently drops an asset from one and not the
+    # other. Absent price ⇒ absent from the panel, which the equal-weighting then
+    # renormalises over what actually exists.
+    px = {DEFAULT_UNIVERSE[i]: float(close[-1, i])
+          for i in range(close.shape[1])
+          if close[-1, i] == close[-1, i] and close[-1, i] > 0}
+    if len(px) < close.shape[1]:
+        missing = [DEFAULT_UNIVERSE[i] for i in range(close.shape[1])
+                   if DEFAULT_UNIVERSE[i] not in px]
+        _log.warning("[beta_core] %d/%d panel names have no usable price and are "
+                     "excluded from today's book: %s",
+                     len(missing), close.shape[1], ",".join(missing))
     return DEFAULT_UNIVERSE, close, ret, px
 
 

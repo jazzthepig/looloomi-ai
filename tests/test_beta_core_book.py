@@ -41,6 +41,26 @@ def _src() -> str:
     return (_REPO / "src" / "data" / "signals" / "beta_core_paper.py").read_text(encoding="utf-8")
 
 
+def _code_only_src() -> str:
+    """Source with comments and string literals stripped.
+
+    Needed because a guard that greps raw source fires on PROSE ABOUT the defect —
+    it happened three separate times on 2026-08-09 (the lenient-canonicaliser scan,
+    the truncating-query check, and this one), each time on a comment written to
+    explain the very bug being guarded. Punishing the person who documents an
+    incident is precisely the wrong incentive."""
+    import io
+    import tokenize
+    out = []
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(_src()).readline):
+            if tok.type not in (tokenize.COMMENT, tokenize.STRING):
+                out.append(tok.string)
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return _src()
+    return " ".join(out)
+
+
 
 def test_layer_one_is_equal_weight_and_long_only():
     """Layer ① holds the panel and expresses no view. The view belongs in layer ③
@@ -356,6 +376,54 @@ def test_durable_write_precedes_the_cache_and_its_failure_is_honoured():
         w = seg.rindex("await _write(")
         assert "_redis_set(_STATE_KEY" not in seg[w:], \
             f"{anchor}: the cache is still being written before the durable row"
+
+
+
+
+
+def test_a_missing_return_stays_missing_and_cannot_read_as_calm():
+    """2026-08-09. `_load_panel` used `np.nan_to_num` on the return matrix, so a
+    missing bar became a 0.0 return — a flat day. Flat days depress realised vol, the
+    vol scalar rises, and the book SIZES UP: unmeasured read as calm, and calm read
+    as licence to lever, which is the one direction I1 exists to forbid.
+
+    Lesson #108, and the instructive part is where the guard already was. This file
+    asserted `_vol_scalar(nan) == 1.0`, and `_realized_vol` already used
+    nanmean/nanstd — every level handled NaN correctly except the one that destroyed
+    it first. **An invariant enforced at a point the data cannot reach is not
+    enforced.** The question is never "is this asserted somewhere", it is "can a
+    value that violates it actually arrive at the assertion"."""
+    # Match CODE, not prose. Three guards today first fired on comments describing the
+    # very defect they check — a scanner that cannot tell use from mention punishes
+    # whoever documents the incident, which is the opposite of the incentive we want.
+    assert "nan_to_num" not in _code_only_src(), \
+        "nan_to_num on the return matrix converts unmeasured into flat, which levers up"
+
+    # behavioural: a gap must lower nothing. Build a panel where one asset has a hole
+    # and confirm the measured vol is not pulled DOWN relative to the same panel with
+    # that asset absent entirely.
+    rng = np.random.default_rng(7)
+    ret = rng.normal(0, 0.04, (60, 6))
+    holed = ret.copy()
+    holed[20:40, 3] = np.nan                     # a 20-day outage on one name
+    zeroed = ret.copy()
+    zeroed[20:40, 3] = 0.0                       # what nan_to_num used to produce
+    v_holed, v_zeroed = bc._realized_vol(holed), bc._realized_vol(zeroed)
+    assert v_holed == v_holed, "a hole must still yield a measurable panel vol"
+    assert v_holed >= v_zeroed, (
+        f"zero-filling a gap understates panel vol ({v_zeroed:.4f} vs {v_holed:.4f}) "
+        "and therefore oversizes the book")
+
+
+def test_a_name_without_a_usable_price_is_excluded_not_carried_as_nan():
+    """A NaN price would propagate into the weights and into the benchmark leg, where
+    it can drop an asset from one and not the other — turning a data gap into an
+    apparent excess return. Absent price means absent from the panel."""
+    src = _src()
+    assert "close[-1, i] == close[-1, i]" in src and "> 0" in src, \
+        "prices must be filtered for NaN and non-positive before entering the book"
+    assert "have no usable price" in src, \
+        "an excluded name must be logged — a silently smaller panel is a silent change of book"
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
