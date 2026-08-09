@@ -11,6 +11,19 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+echo "→ [0/3] test-runner dependencies ..."
+# `set -e` means the FIRST failure aborts, so a missing dependency midway through
+# silently skips every check after it. On 2026-08-09 test_venue_consolidation (one of
+# 3 files using pytest while the other 20 are stdlib self-runners) aborted the run and
+# 5 suites plus the contract echo never executed — with no indication that they had
+# not run. Fail here, loudly, with the remedy, instead of there, ambiguously.
+python3 -c "import pytest" 2>/dev/null || {
+  echo "  ✗ pytest missing — tests/{conftest,test_cis,test_factory,test_venue_consolidation}.py need it"
+  echo "    fix: pip3 install pytest --break-system-packages"
+  exit 1
+}
+echo "  ✓ pytest present"
+
 echo "→ [1/2] byte-compile all src ..."
 python3 -m py_compile $(git ls-files 'src/**/*.py') && echo "  ✓ syntax OK"
 
@@ -137,6 +150,29 @@ python3 -m tests.test_regime_write_path
 #                  scope by construction - globally the same pattern returns 296 hits
 #                  and a guard nobody can run is a guard nobody runs.
 python3 -m tests.test_degraded_value_guard
+# 3a-sexdecies. compliance language (2026-08-09). Hard rule 1 — no SFC Type 4/9
+#               licence, so user-facing surfaces carry POSITIONING language only —
+#               had never been enforced by anything. The full code check found NINE
+#               live violations across five files. Every one was HEDGING prose
+#               ("Avoid chasing parabolic moves", "not a buy list"): written to sound
+#               prudent, which is exactly why they passed human review. The words
+#               that read as caution to a colleague read as advice to a regulator,
+#               so the check has to be mechanical. Scoped to routers + dashboard +
+#               static HTML; research, tests and logs are explicitly out of scope per
+#               the skill, and the methodology page may still RENDER the banned list.
+python3 -m tests.test_compliance_language
+# 3a-septdecies. SQL privilege idiom (2026-08-09). Four SECURITY DEFINER functions
+#                that fetch over HTTP and write unbounded rows were callable by anon
+#                — public by construction — with a caller-controlled batch count.
+#                The scripts ALREADY revoked them, and had all along: `revoke ... from
+#                anon` cannot remove a grant held by PUBLIC, which anon merely
+#                inherits. It succeeds, returns nothing, and changes nothing. The
+#                correct idiom (`from public`) already existed once in this repo, on
+#                the one function that was actually locked. Same failure family as
+#                S-105/S-116/S-122: an operation that reports success while doing
+#                nothing. This guard reads scripts, so it proves the IDIOM, never the
+#                database — the live check belongs to a scheduled probe.
+python3 -m tests.test_sql_privilege_idiom
 # 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
 #                after its v1 run was found to have sized off a 23-day-stale regime.
 #                The integrity property this pins is the product's: a forward track

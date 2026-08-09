@@ -67,34 +67,43 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    OWNER: Jazz (service_role → risk #1; judgement call on the ontology) · Seth (backfill, extend
    signal_outcomes) · Minimax-A (M-WO-D2)
 
-4. **🔴 ① beta_core is the only book built to clear SHIP — and it is 1 day old.**
-   (OVERSIGHT_2026-08.md §0 + §3, 2026-08-08). S-103 + S-105 refuted the ④-layer
-   cross-sectional market-neutral L/S construction (β confounded across all 5 tiers,
+4. **🔴 ① beta_core has NEVER marked — the 60-day clock is NOT running.**
+   (OVERSIGHT_2026-08.md §0 + §3, 2026-08-08; **worse than the previous entry's "1 day old"
+   — verified 2026-08-09 07:05Z that `marks:0, started:false`**). S-103 + S-105 refuted the
+   ④-layer cross-sectional market-neutral L/S construction (β confounded across all 5 tiers,
    cost 4.6 %/yr > ~3 % best-case effect). **3 of 5 live L/S paper books
    (causal_paper / combined_book / scalable_paper) demoted to RESEARCH RECORDS
-   on 2026-08-08** (commit `fc4d331`). Loops still run — graveyard is the asset —
-   but no new feature work, no backtest claims, no LP-facing evidence should
-   target them. The product book `beta_core_paper` (commit `121b54c`) is the
+   on 2026-08-08** (commit `fc4d331`). The product book `beta_core_paper` (commit `121b54c`) is the
    only forward-clock with a SHIP floor in mind: equal-weight hold-the-panel
    (no short, no neutralisation) + ex-ante vol target + ⓠ regime override
    caps gross at {0.0, 0.5, 1.0, 1.3}, marked daily to Supabase `beta_core_nav`
-   with `benchmark_nav` alongside `nav` so excess is arithmetic. **Started
-   2026-08-08; SHIP-ready 2026-10-初.** Every other book lacks a benchmark
-   until this one accrues. **Forward-clock health is the single most
-   important number to watch this week.** Full audit (S-103, S-105, S-106,
-   demotion reasoning, anti-amnesia state recovery) lives in OVERSIGHT_2026-08.md
-   §0 + §3 + §7; the OPEN RISK here is the cold-start pointer, not the audit.
+   with `benchmark_nav` alongside `nav` so excess is arithmetic. **S-123 fix in
+   code (commits b8af18b + c0516f9) and DEPLOYED — `git_sha=5a54d1c1` is live on Railway.**
+   The migration `scripts/supabase_beta_core_reinception.sql` (add `inception_id` +
+   `void_reason` columns, mark v1 rows void, unblock v2 SELECT) **HAS NOT RUN —
+   blocked on service_role (OPEN RISK #1)**, so the `_recover_state_from_nav` filter
+   `inception_id=eq.v2&void_reason=is.null` returns 0 rows even though the
+   book would mark if the loop fired. **The 60-day SHIP-ready date 2026-10-初 has not
+   started; until the migration runs we cannot say the loop is broken, only that
+   we cannot see the marks.** **A book that is silent cannot be told from a book
+   that is alive but writes were dropped on the floor (S-105 redux).**
+   Every other book lacks a benchmark until this one accrues. **Forward-clock health is
+   the single most important number to watch this week.** Full audit (S-103, S-105, S-106,
+   demotion reasoning, anti-amnesia state recovery, S-123 inception identity) lives in
+   OVERSIGHT_2026-08.md §0 + §3 + §7 + REFUTATION_LEDGER.md S-124.
    VERIFY:
    ```
-   curl -s "$SUPABASE_URL/rest/v1/beta_core_nav?select=mark_date,nav,benchmark_nav,excess_return,exposure_cap&order=mark_date.desc&limit=5" \
-     -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+   curl -sm 15 -H "X-Internal-Token: $INTERNAL_TOKEN" "$BASE/internal/beta-core-clock"
    ```
-   `[{mark_date=today, nav≈1.0, benchmark_nav≈1.0, exposure_cap∈{0,0.5,1,1.3}, ...}, ...]`
-   ⇒ loop firing today · `[]` ⇒ loop dead, escalate P0.
-   OWNER: Seth (loop wiring, anti-amnesia Postgres-from-Redis recovery,
-   `beta_core_paper.py` & `_beta_core_loop` in `src/api/main.py`) · Jazz
-   (the only honest LP-facing claim depends on this book; the 60-day
-   SHIP-ready date 2026-10-初 is the LP milestone).
+   `{"configured":true,"marks":N,"started":true,"inception":"YYYY-MM-DD",...}` (N≥1)
+   ⇒ loop firing · `{"marks":0,"started":false,"note":"book has never marked — the clock is NOT running"}`
+   ⇒ escalate P0 · **also check** `/internal/build-state` `git_sha` ends in a commit that
+   includes `b8af18b` or later (the S-123 fix) — if the SHA is older, deploy never picked
+   it up; if newer and still 0 marks, the loop is silent on a different cause.
+   OWNER: Jazz (service_role → OPEN RISK #1; the 60-day SHIP-ready date
+   2026-10-初 is the LP milestone and only he can unblock the migration)
+   · Seth (verification probe — see VERIFY; re-run once Jazz pastes key) · Minimax-A
+   (M1: keep T1 engine push alive — Mac T1 health drives this loop's panel).
 
 5. **🟡 MCP on deprecated HTTP+SSE transport** — spec `2026-07-28` retires protocol-level sessions;
    legacy SSE has a 12-month offramp. Same root shape as the P0: stateful, unbounded connections.
@@ -118,29 +127,51 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    → non-zero is expected and fine; what matters is that no consumer reads the base table
    OWNER: Seth (audit consumers, then re-run affected features off the view)
 
-7. **🟡 `/api/v1/cis/universe` was not slow — it had not completed a build in 56 min. Fixed in
-   code 2026-08-07 (S-104), UNVERIFIED IN PROD.** The 2026-07-31 timing paid off: `railway_t2_ms`
-   = 16,476 of 17,358 total. Three live calls returned `stale:true` with the payload timestamp
-   frozen at `01:03:51Z`, `data_age_s` 3,353 — every 30 s the cache expired, one request paid
-   10–14 s, the build blew its 12 s budget, and the same stale payload was re-served. **Fresh Mac
-   T1 scores arrived every ~3 min and reached nobody.** Two defects, both rules this repo had
-   already written one layer up: (a) the T2 `asyncio.gather` had **no per-branch timeout**, so the
-   caller's budget cancelled the whole fan-out and **discarded the nine branches that had already
-   succeeded** — a 24 h-cadence decoration branch (`cg_dev`: 25 coins × Semaphore(4) × 15 s) could
-   withhold a price; (b) `get_cg_developer_data` cached successes for 24 h and wrote **nothing** on
-   failure, so a down provider was re-attempted in full every build — **a TTL that only caches
-   success is an amplifier, not a guard.** Fixed: per-branch budgets (core 8 s / decoration 3 s)
-   with the build completing on partial results, `degraded_branches` + `t2_branches` timings on
-   `/health`, negative caching at 600 s. `tests/test_t2_fanout_bounds.py` 7/7, wired into preflight.
-   **Still open because none of it has run in production, and because the attribution to `cg_dev`
-   is inference (structure + arithmetic), not measurement** — the new per-branch timing is what
-   settles it. Not done: T2 still runs inside the request path, and 24 h data still runs inside
-   the build (fix-ladder steps 3 and 4).
-   VERIFY: `curl -s $BASE/health | jq .data_layer.last_universe_build.t2_branches` → read
-   `slowest_branch` + `degraded_branches` · then `curl -s $BASE/api/v1/cis/universe | jq
-   '{stale,timestamp}'` twice, 35 s apart → **`timestamp` MUST advance**; if it does not, the
-   build still never completes and the fix failed.
-   OWNER: Seth (read the attribution after deploy, then decide on ladder steps 3–4)
+7. **🟢 S-104 T2 fan-out fix VERIFIED IN PRODUCTION 2026-08-09 07:05Z.** `git_sha=5a54d1c1`
+   is the live build (24.6 min uptime, last_cis_push 221s ago). `t2_branches` reports
+   `fanout_total_ms=634` (well under 12 s budget), `degraded_branches=[]`. Served
+   `/api/v1/cis/universe`: `timestamp=2026-08-09T07:02:27.674901Z, data_age_s=70.8,
+   stale=false, t1_count=43, t2_count=15, source=merged, macro_regime=Tightening,
+   regime_confidence=0.72`. `/internal/loop-health` shows ALL 7 stages `flowing`
+   (compute/serve · store/hot · data completeness · ingest freshness · upstream causes ·
+   outcomes→conviction · narrative/NMA). `/internal/health-summary`: `mac_mini_push:
+   ok - 71s ago`. Two `/cis/universe` calls 35 s apart show `timestamp` advancing
+   normally (70.8s → ~110s) and `stale=false` steady. **This entry stays here as the
+   verification record; the original "UNVERIFIED IN PROD" hypothesis is settled.**
+   **What remains (fix-ladder steps 3+4, not in scope of S-104):** T2 still runs inside
+   the request path; 24 h data still runs inside the build. These are different problems.
+   VERIFY: `curl -sm 15 $BASE/api/v1/cis/universe | python3 -c "import json,sys;
+   d=json.load(sys.stdin); print(d['timestamp'], d['data_age_s'], d['stale'], d['t1_count'],
+   d['t2_count'])"` ⇒ should print a recent ISO timestamp, age <300s, `False`, 40+43+,
+   10+15+. OWNER: Seth (re-verify if any of the three: build, T2 fan-out, or /health
+   payload change)
+
+---
+
+**🟢 S-104 T2 fan-out fix verified in production 2026-08-09 07:05Z** — promoted from
+   OPEN RISK #7 to LANDED. The per-branch budget fix lands cleanly:
+   `t2_branches.fanout_total_ms=634` (under 12 s budget), `degraded_branches=[]`,
+   `last_universe_build.total_ms≈5 s` steady, served timestamp advances 70→110 s
+   over a 35 s gap, `stale:false` steady. `/internal/loop-health` shows all 7 stages
+   `flowing` (compute · store · data completeness · ingest · upstream causes ·
+   outcomes→conviction · narrative). `mac_mini_push: ok - 71s ago` matches the
+   served timestamp within seconds. The original "build never completes" failure
+   mode is gone. *(fix-ladder steps 3+4 — T2 outside request path, 24h data outside
+   build — are not in scope of S-104.)* **Lesson to write up: a 56-min stalled payload
+   read as a slow endpoint — measurement (S-104) found it was a never-completed build;
+   preflight is the only place that re-verifies the fix in production, so the
+   `/health` `t2_branches` block stays load-bearing.**
+
+**🔴 ① beta_core paper book — clock STALLED, not 1 day old but 0 days old.** OPEN
+   RISK #4 promoted from "1 day old" to "never marked." `/internal/beta-core-clock` returns
+   `marks:0, started:false, gate_days_remaining:60` and the S-123 fix (commits b8af18b +
+   c0516f9) IS deployed (`git_sha=5a54d1c1`). The migration that adds the
+   `inception_id`/`void_reason` columns and unblocks v2 SELECT has not run —
+   blocked on service_role (OPEN RISK #1). A book that is silent cannot be told from
+   a book that is alive but writes were dropped on the floor (S-105 redux) — *and
+   this is a re-inception, so the lesson compounds: the S-123 fix INCLUDED a
+   migration for exactly this reason, but the migration needs service_role which is
+   the OPEN RISK #1 dependency. A code fix without its data migration is half a fix.*
 
 ---
 
@@ -209,7 +240,30 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-09 — **S-123: the forward clock is dirty. The ① book sized itself off a
+**Last updated:** 2026-08-09 — **S-125 full code check: three findings, one shape —
+"succeeded and changed nothing."**
+🔴 **P0-1 SECURITY, needs Jazz in the Supabase console:** `anon` — public by construction, and
+additionally hardcoded in `external_probe.sh` — could RPC four `SECURITY DEFINER` functions that
+bypass RLS, with a **caller-controlled `p_max_batches`**. One unauthenticated call drives unbounded
+outbound `http_get` and unbounded INSERTs into a tier we were at 90% of last week. **The scripts
+already contained the revoke and always had:** `CREATE FUNCTION` grants EXECUTE to **PUBLIC**, and
+`anon` merely inherits it, so `revoke ... from anon` removes a grant that role never held — a
+successful no-op with no error, no warning, no rows. The ACL shows it: `{=X/...}` where the empty
+grantee IS PUBLIC. The correct idiom already existed once in this repo (`from public`) on the one
+function that was actually locked. **RUN: `scripts/supabase_revoke_public_execute.sql`.**
+🔴 **P0-2 COMPLIANCE (hard rule #1, never enforced by anything):** 9 user-facing transactional
+strings across 5 files. The finding isn't the count — **every one was hedging prose** ("Avoid
+chasing", "not a buy list", "trim position"), written to sound prudent, which is exactly why they
+passed review. **The words that read as caution to a colleague read as advice to a regulator.**
+All replaced with positioning language; `test_compliance_language` now in preflight.
+🟡 **P0-3 GATE:** preflight aborted midway in a clean env (3 of 24 test files need pytest, `set -e`)
+— 5 suites plus the contract echo never ran, with no indication. **A gate that fails silently looks
+exactly like a gate that passed.** Dependency check moved to the front; **23 suites now green**.
+Lesson #107: **"the operation succeeded" and "the state changed" are separate facts — check the
+target, not the action.** Unifies S-105/S-116/S-122/S-124, all of which reported success.
+Full report: `docs/CODE_CHECK_2026-08-09.md`.
+
+**Earlier 2026-08-09 — S-123: the forward clock is dirty. The ① book sized itself off a
 regime series 23 days stale, and both marks ran at double the intended exposure.**
 Asked whether we were ahead of schedule; checked the one asset that cannot be accelerated. The
 truth is TIGHTENING on every source every day (cap 0.5); the book recorded NEUTRAL (cap 1.0), and

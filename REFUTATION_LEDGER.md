@@ -7867,3 +7867,70 @@ S-123 之后 Jazz 批准 ① book 重新起算。v1(2026-08-08 → 08-09,2 条 m
 
 `python3 -m tests.test_beta_core_book` **18/18**(v1 时为 14/14 —— 差值即被静默跳过的那 4 个)。
 反向验证:去掉任一读路径的 `inception_id=eq.` ⇒ 报 line 462。
+
+---
+
+## S-125 — 全项目 code check:三个发现,同一个形状「成功但没生效」
+
+**日期** 2026-08-09 · **Seth** · **状态** 已修 + 已守卫 · 全文 `docs/CODE_CHECK_2026-08-09.md`
+
+### P0-1 匿名可调用 4 个 SECURITY DEFINER 函数
+
+`anon`(按设计公开,且硬编码在 `external_probe.sh`)可以 RPC 调用
+`backfill_binance_hourly` 等 4 个绕过 RLS 的函数,`p_max_batches` 由调用方控制
+⇒ **一次未认证请求即可驱动无上限的 http_get + 无上限 INSERT**,
+打向上周还在 90% 容量的存储层。
+
+**根因才是重点:脚本里一直写着 revoke。**
+
+```sql
+revoke all on function backfill_binance_hourly(...) from anon, authenticated;
+```
+
+`CREATE FUNCTION` 把 EXECUTE 授给 **PUBLIC**,`anon` 只是继承。
+**从一个从未被直接授权的角色 revoke,是一次成功的空操作** —— 无错、无警告、无行数。
+
+```
+锁住   {postgres=X, service_role=X}
+没锁   {=X, postgres=X, service_role=X}      ← 空 grantee = PUBLIC
+```
+
+**本仓库里正确写法已存在一处**(`from public`),而那个函数恰恰是唯一真锁住的。
+同一作者、同一周、两种写法,文本上无从分辨。
+
+### P0-2 9 处用户可见的交易性措辞,hard rule #1 此前无任何检查
+
+真正的发现不是数量,是**它们全是「谨慎措辞」**:
+"Avoid chasing"、"not a buy list"、"trim position"。
+**写的时候是想表达克制,这正是它们通过人工审阅的原因。**
+⇒ **对同事表达审慎的词,和监管眼里构成建议的词,是同一批词。**
+这件事不能靠判断力,只能靠机器。
+
+### P0-3 preflight 在缺 pytest 时跑到一半中止
+
+21 个测试自运行,3 个依赖 pytest。`set -e` ⇒ 后面 5 个套件 + 契约回显全没跑,
+**且无任何迹象**。门禁失效时看起来像门禁通过 —— 最危险的形状。
+已前置依赖检查,修好后 **23 套件全绿**。
+
+### Lesson #107
+
+> **「操作成功」与「状态改变」是两件独立的事,必须分别验证。**
+> 判据:**不要检查你的动作是否执行,检查目标是否改变。**
+> revoke 返回成功 → 查 ACL;测试打印绿色 → 查跑了几个;写入返回 200 → 查表里有没有。
+
+这条把 S-105(写入进了 TTL 缓存)、S-116(映射词表不匹配)、S-122(默认值抹掉证据)、
+S-124(收集器在被收集者之前)统一到同一个判据下 —— 它们全部**报告了成功**。
+
+### 守卫的边界(明写,不假装)
+
+`test_sql_privilege_idiom` **读脚本,只能证明写法对,永远不能证明数据库对**。
+线上校验属于定时探针。**脚本不是授权。**
+
+### 复现
+
+```sql
+select p.proname, p.proacl::text, has_function_privilege('anon', p.oid,'EXECUTE')
+  from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+ where n.nspname='public' and p.proname like 'backfill%';
+```
+`bash scripts/preflight.sh` → 23 套件全绿(含新增 compliance 3/3、sql-privilege 4/4)。
