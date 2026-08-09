@@ -357,10 +357,29 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
                  "mark_prices": {s: px[s] for s in base if s in px},
                  "last_rebal": today.isoformat(), "last_mark": today.isoformat()}
         if not dry_run:
+            # DURABLE FIRST, CACHE SECOND — the order is load-bearing (2026-08-09).
+            #
+            # It used to be the other way round, and `_write` swallowed its own
+            # exceptions, so a failed insert left the cache asserting an inception
+            # that the record had no row for. Worse than a missing row: `last_mark`
+            # is set, so the next cycle returns "already_marked" and the day after
+            # computes a return against a mark that was never persisted. The book
+            # would look like it was running while the record stayed empty — which is
+            # S-105 exactly, and the one failure this book cannot absorb, because its
+            # entire product is the unbroken calendar.
+            #
+            # Refusing to cache an unrecorded inception costs one cycle and retries
+            # cleanly. Caching it costs the clock, silently.
+            ok = await _write(today, 1.0, 1.0, 0.0, 0.0, cap, regime, scalar, rv,
+                              len(weights), gross, 0.0, True, weights,
+                              f"inception · cap_source={cap_source}")
+            if not ok:
+                _log.error("[beta_core] INCEPTION NOT PERSISTED — refusing to cache "
+                           "state; will retry next cycle rather than run on a mark "
+                           "that has no row")
+                return {"status": "inception_failed", "reason": "durable_write_failed",
+                        "date": today.isoformat()}
             await _redis_set(_STATE_KEY, state, ttl=0)
-            await _write(today, 1.0, 1.0, 0.0, 0.0, cap, regime, scalar, rv,
-                         len(weights), gross, 0.0, True, weights,
-                         f"inception · cap_source={cap_source}")
         return {"status": "inception", "nav": 1.0, "gross": round(gross, 3),
                 "regime": regime, "date": today.isoformat()}
 
@@ -402,10 +421,21 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
              "last_rebal": today.isoformat() if rebalanced else state["last_rebal"],
              "last_mark": today.isoformat()}
     if not dry_run:
+        # DURABLE FIRST, CACHE SECOND — same ordering as the inception branch, and
+        # here the cost of getting it wrong is subtler. Advancing `last_mark` without
+        # a persisted row does not merely lose a day: the next mark computes its
+        # return from `mark_prices` two days old and books it as a one-day move, so
+        # the gap is not visible as a gap. It is visible as a return.
+        ok = await _write(today, nav, bench_nav, book_ret, bench_ret, cap, regime, scalar,
+                          rv, len(new_w), sum(abs(v) for v in new_w.values()), cost,
+                          rebalanced, new_w, f"cap_source={cap_source}")
+        if not ok:
+            _log.error("[beta_core] MARK NOT PERSISTED for %s — leaving state at the "
+                       "previous mark so the day is retried, not absorbed into "
+                       "tomorrow's return", today.isoformat())
+            return {"status": "mark_failed", "reason": "durable_write_failed",
+                    "date": today.isoformat()}
         await _redis_set(_STATE_KEY, state, ttl=0)
-        await _write(today, nav, bench_nav, book_ret, bench_ret, cap, regime, scalar, rv,
-                     len(new_w), sum(abs(v) for v in new_w.values()), cost, rebalanced,
-                     new_w, f"cap_source={cap_source}")
     return {"status": "marked", "nav": round(nav, 5), "benchmark_nav": round(bench_nav, 5),
             "daily_return_pct": round(book_ret * 100, 3),
             "excess_pct": round((book_ret - bench_ret) * 100, 3),
@@ -433,8 +463,14 @@ async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
             # incarnations by accident — which would splice a voided segment onto a
             # live one and read as continuous.
             "inception_id": _INCEPTION_ID}])
+        return True
     except Exception as e:
-        _log.warning("[beta_core] nav write: %s", e)
+        # Returns the outcome instead of only logging it. A caller that cannot tell a
+        # failed durable write from a successful one will carry on as though the mark
+        # landed — the S-105 shape, and Lesson #107: "the operation ran" and "the
+        # state changed" are separate facts.
+        _log.error("[beta_core] NAV WRITE FAILED for %s: %s", d.isoformat(), e)
+        return False
 
 
 async def continuity_state() -> dict:
