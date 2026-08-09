@@ -137,6 +137,22 @@ python3 -m tests.test_regime_write_path
 #                  scope by construction - globally the same pattern returns 296 hits
 #                  and a guard nobody can run is a guard nobody runs.
 python3 -m tests.test_degraded_value_guard
+# 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
+#                after its v1 run was found to have sized off a 23-day-stale regime.
+#                The integrity property this pins is the product's: a forward track
+#                record whose NAV can be quietly reset proves nothing, because the
+#                reader cannot distinguish sixty days of survival from the sixtieth
+#                attempt. So `_INCEPTION_ID` must be a CODE constant — re-inception
+#                costs a commit and is therefore dated, attributed and permanent in
+#                git log — never an env var, which would move the decision somewhere
+#                with no history. All three read paths (state recovery, continuity,
+#                published curve) are scoped to the live incarnation and exclude
+#                voided rows: unscoped recovery would resurrect the voided NAV on the
+#                next cache eviction while logging a healthy recovery, and an unscoped
+#                curve would splice a void segment onto a live one and read as
+#                continuous. Superseded runs are voided in place, never deleted.
+#                (Enforced by test_beta_core_book, already invoked at 3a-octies-2 —
+#                 one invocation, so there is no second copy to drift.)
 # 3a-quater. venue consolidation — the wrong-ASSET class (2026-08-01). cis_provider
 #            mapped HYPE to Binance spot HYPERUSDT, which is Hyperlane: $0.0558 vs
 #            Hyperliquid's $52.32, a 937x error that scored the asset D/UNDERWEIGHT
