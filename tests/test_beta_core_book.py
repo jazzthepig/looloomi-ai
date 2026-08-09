@@ -325,6 +325,39 @@ def test_superseded_runs_are_voided_not_deleted():
         "the deploy-before-void ordering must be stated: voiding first hides the fault"
 
 
+
+
+
+def test_durable_write_precedes_the_cache_and_its_failure_is_honoured():
+    """2026-08-09, found live. After the v2 re-inception the Redis state key
+    reappeared while beta_core_nav still held ZERO v2 rows — the signature of a cache
+    write that succeeded beside a durable write that failed and was swallowed.
+
+    `_write` logged its exception and returned None, and both call sites set the cache
+    BEFORE calling it. The consequence is not a missing row. `last_mark` advances, so
+    the next cycle reports already_marked and the day after computes its return from
+    mark_prices two days old and books it as a one-day move — the gap stops being
+    visible as a gap and becomes visible as a return.
+
+    S-105 in a new place, and Lesson #107: the operation ran and the state changed are
+    separate facts. Refusing to cache an unrecorded mark costs one cycle; caching it
+    costs the clock, silently, which is the only thing this book produces."""
+    src = _src()
+    assert "return True" in src and "return False" in src, \
+        "_write must report the outcome, not only log it"
+    assert "NAV WRITE FAILED" in src, "a failed durable write must log at error level"
+    for branch in ("inception_failed", "mark_failed"):
+        assert branch in src, f"a failed durable write must surface as {branch}"
+    # ordering: in both branches the _write call must appear before the _redis_set
+    for anchor in ("INCEPTION NOT PERSISTED", "MARK NOT PERSISTED"):
+        i = src.index(anchor)
+        seg = src[max(0, i - 900):i]
+        assert "await _write(" in seg, f"{anchor}: durable write must precede the guard"
+        w = seg.rindex("await _write(")
+        assert "_redis_set(_STATE_KEY" not in seg[w:], \
+            f"{anchor}: the cache is still being written before the durable row"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
