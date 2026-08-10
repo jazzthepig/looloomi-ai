@@ -92,7 +92,10 @@ def test_new_ship_record_without_evidence_is_rejected():
                           deflated_sharpe=0.97, n_trials=40, pbo=0.21,
                           median_holding_days=21.0, signal_changes_per_yr=9.0,
                           turnover_cost_pct_yr=0.9, net_effect_pct_yr=3.4,
-                          trigger_name="funding_zscore", trigger_median_run_days=28.0)
+                          trigger_name="funding_zscore", trigger_median_run_days=28.0,
+                          deployable_notional_usd=48_000_000.0,
+                          value_added_usd_yr=1_632_000.0,
+                          notional_basis="min over 12 legs of 5% ADV × 3d / |w|")
     assert not good.validate(), "fully-evidenced ship record must pass"
 
 
@@ -121,12 +124,17 @@ def test_multiple_testing_floor_is_enforced():
     bad_pbo = StrategyRecord(**base, deflated_sharpe=0.99, n_trials=10, pbo=0.71).validate()
     assert any("pbo=0.71" in p for p in bad_pbo)
 
-    # and the passing combination (executability fields supplied — see S-105)
+    # and the passing combination (executability fields supplied — see S-105;
+    # dollar capacity supplied — see S-132)
     assert not StrategyRecord(**base, deflated_sharpe=0.96, n_trials=30, pbo=0.30,
                               median_holding_days=30.0, signal_changes_per_yr=12.0,
                               turnover_cost_pct_yr=1.2, net_effect_pct_yr=2.9,
                               trigger_name="funding_zscore",
-                              trigger_median_run_days=35.0).validate()
+                              trigger_median_run_days=35.0,
+                              deployable_notional_usd=48_000_000.0,
+                              value_added_usd_yr=1_392_000.0,
+                              notional_basis="min over 12 legs of 5% ADV × 3d / |w|"
+                              ).validate()
 
 
 def test_executability_floor_is_enforced():
@@ -166,12 +174,18 @@ def test_executability_floor_is_enforced():
                                 turnover_cost_pct_yr=1.0).validate()
     assert any("net_effect_pct_yr missing" in p for p in gross_only)
 
-    # and the passing combination: held long enough, edge survives the cost, and the
-    # trigger outlives the position it opens
+    # and the passing combination: held long enough, edge survives the cost, the
+    # trigger outlives the position it opens, and the edge is denominated in dollars
+    # at a derived capacity (S-132 raised this bar — a clean percentage is no longer
+    # a complete record)
     assert not StrategyRecord(**base, median_holding_days=30.0, signal_changes_per_yr=12.0,
                               turnover_cost_pct_yr=1.2, net_effect_pct_yr=2.9,
                               trigger_name="funding_zscore",
-                              trigger_median_run_days=35.0).validate()
+                              trigger_median_run_days=35.0,
+                              deployable_notional_usd=48_000_000.0,
+                              value_added_usd_yr=1_392_000.0,
+                              notional_basis="min over 12 legs of 5% ADV × 3d / |w|"
+                              ).validate()
 
 
 def test_a_trigger_must_outlive_the_position_it_opens():

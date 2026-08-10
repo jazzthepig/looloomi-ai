@@ -41,6 +41,11 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
+# Below this deployable notional a sleeve cannot move the fund, whatever its
+# percentage (S-132). Defined HERE, in the schema, so the SHIP gate and
+# src.research.factory.value_added cannot drift to two different floors.
+MIN_MEANINGFUL_NOTIONAL_USD = 1_000_000.0
+
 
 class Verdict(str, Enum):
     SHIP = "ship"
@@ -191,6 +196,36 @@ class StrategyRecord:
     turnover_cost_pct_yr: Optional[float] = None     # modelled round-trip drag; flat bps is a FLOOR
     net_effect_pct_yr: Optional[float] = None        # gross effect MINUS turnover_cost_pct_yr
 
+    # ── Value added, in dollars (2026-08-10, S-132) ─────────────────────────────
+    # Every field above is a PERCENTAGE, and percentages are the quantity the
+    # literature says does not persist.
+    #
+    # Berk & Green (JPE 2004): rational flows compete percentage alpha to zero in
+    # equilibrium, so "past performance cannot be used to predict future returns, or
+    # to infer the average skill level of active managers". For an allocator that is
+    # existential — selecting on historical % is selecting on the thing that is
+    # provably not repeatable.
+    #
+    # Berk & van Binsbergen (JFE 2015) supply the measure that does survive: the
+    # DOLLARS a manager extracts from the market, gross alpha × assets. Skill so
+    # measured persists for as long as TEN YEARS, and past value added predicts
+    # future value added. Their argument in one line: a manager who earns 1 % on
+    # $10bn has more skill than one who earns 10 % on $1m.
+    #
+    # For us the second reading matters more than the first. Crypto's characteristic
+    # deception is a huge percentage on an amount that could never be deployed, and
+    # a gate denominated in percent cannot see it. Denominated in dollars it is
+    # obvious, because `deployable_notional_usd` collides with liquidity:
+    # `daily_tradeable_usd`, LAS, and the executability block already measure it.
+    #
+    # value_added_usd_yr = net_effect_pct_yr / 100 × deployable_notional_usd
+    #
+    # NOT a replacement for the percentage fields — a companion. The percentage says
+    # whether the effect is real; the dollars say whether it is worth carrying.
+    deployable_notional_usd: Optional[float] = None  # capacity-constrained, from ADV/LAS — NOT AUM ambition
+    value_added_usd_yr: Optional[float] = None       # net_effect_pct_yr × deployable notional
+    notional_basis: Optional[str] = None             # how the notional was derived; "assumed" is not a basis
+
     # ── Trigger persistence (2026-08-08, S-117) ─────────────────────────────
     # The floor above measures how long a POSITION is held. Nothing measured how
     # long the STATE VARIABLE that opens it survives — and that gap was found by
@@ -333,6 +368,43 @@ class StrategyRecord:
                         f"position it opens — the book is overturned before the position matures. "
                         f"Either smooth the trigger (hysteresis) or shorten the target hold; a fast "
                         f"trigger is only a lie inside a slow book")
+
+            # Value added in dollars (S-132). Berk & Green (JPE 2004): percentage
+            # alpha is competed away by inflows and does not predict itself. Berk &
+            # van Binsbergen (JFE 2015): gross alpha × assets DOES, out to ~10 years.
+            # A percentage-only gate cannot distinguish 30 %/yr on $200k — untradeable,
+            # and the standard crypto deception — from 2 %/yr on $50m.
+            #
+            # DELIBERATELY NOT NESTED under the holding-period block above: capacity
+            # is independent of turnover, and nesting it would mean a record that
+            # simply omitted median_holding_days skipped the dollar gate altogether.
+            if self.deployable_notional_usd is None or self.value_added_usd_yr is None:
+                problems.append(
+                    "ship verdict but no deployable_notional_usd/value_added_usd_yr "
+                    "(Berk & van Binsbergen 2015: percentage alpha does not persist, "
+                    "dollars extracted persist ~10 years; and a percentage cannot "
+                    "reveal that the capacity is too small to matter). Derive them with "
+                    "src.research.factory.value_added.assess()")
+            else:
+                if not self.notional_basis:
+                    problems.append(
+                        "ship verdict but notional_basis is empty — state HOW the "
+                        "deployable notional was derived (ADV share, LAS, "
+                        "max_notional_25bps_usd). An assumed AUM is not a basis, and "
+                        "it is the one input that can be inflated without evidence")
+                if self.value_added_usd_yr <= 0:
+                    problems.append(
+                        f"ship verdict but value_added_usd_yr="
+                        f"{self.value_added_usd_yr:,.0f} ≤ 0 — a positive percentage on "
+                        f"a notional this small adds nothing to the fund")
+                if self.deployable_notional_usd < MIN_MEANINGFUL_NOTIONAL_USD:
+                    problems.append(
+                        f"ship verdict but deployable_notional_usd="
+                        f"{self.deployable_notional_usd:,.0f} < "
+                        f"{MIN_MEANINGFUL_NOTIONAL_USD:,.0f} — the edge may be real, but at "
+                        f"this capacity it is a research result, not a sleeve. Ship it as "
+                        f"DOCTRINE, or widen the universe until it binds somewhere useful")
+
         if self.verdict == Verdict.REFUTE and self.pit_clean and self.cost_feasible_at_5bps:
             problems.append("refute verdict but all validity flags True — contradiction")
         return problems
