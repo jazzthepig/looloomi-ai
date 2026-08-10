@@ -22,6 +22,7 @@ These tests pin the properties that make the book worth the calendar it will spe
 
 Run: python3 -m tests.test_beta_core_book
 """
+import inspect
 import os
 import pathlib
 import re
@@ -547,6 +548,45 @@ def test_cap_source_is_actually_written_not_just_declared():
     assert row["cap_source"] == "regime_map", (
         f"cap_source must carry the resolver's verdict, got {row.get('cap_source')!r}")
     assert row.get("regime") == "TIGHTENING" and row.get("exposure_cap") == 0.5
+
+
+def test_the_curve_is_published_in_dollars_as_well_as_percent():
+    """S-132. Berk & van Binsbergen (JFE 2015): percentage alpha does not predict
+    itself; dollars extracted persist ~10 years. A curve published in percent alone
+    is denominated in the quantity that does not survive competition, so the ①
+    book's own surface has to carry the dollar unit too."""
+    src = inspect.getsource(bc.get_curve)
+    for field in ("value_added_usd_yr_per_1m", "excess_annualized_pct"):
+        assert field in src, f"get_curve does not publish {field}"
+
+
+def test_the_curve_refuses_to_invent_a_notional():
+    """The trap this whole item exists to avoid. Dollars require a notional, and
+    the ① book has no ADV wiring — so the ONLY honest options are 'per $1m
+    deployed' or nothing. Multiplying by a target AUM would manufacture a dollar
+    figure indistinguishable from a measured one, which is the S-122 degraded-value
+    pattern with a currency symbol in front of it.
+
+    Ambition is not a basis. If this test ever fails because someone wired real
+    ADV in, replace it with an assertion that the notional came FROM the ADV."""
+    src = inspect.getsource(bc.get_curve)
+    assert '"deployable_notional_usd": None' in src, (
+        "get_curve must publish an explicitly-unknown notional, so its absence "
+        "cannot be read as zero or as a measurement")
+    assert "notional_basis" in src, "an unknown notional must say why it is unknown"
+    for tell in ("500_000_000", "500e6", "AUM_TARGET", "assumed_aum"):
+        assert tell not in src, (
+            f"get_curve references {tell!r} — a target AUM is ambition, not capacity")
+
+
+def test_annualizing_a_short_curve_is_flagged_not_hidden():
+    """A 2-day excess annualized is a large number and not evidence of anything.
+    The figure is still published — suppressing it invites someone to recompute it
+    worse — but it must arrive carrying its own disclaimer."""
+    src = inspect.getsource(bc.get_curve)
+    assert "annualization_is_meaningful" in src, (
+        "an annualized figure from under 60 days must be marked as such")
+    assert "n >= 60" in src, "the flag must key off the 60-day forward gate"
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
