@@ -188,6 +188,23 @@ python3 -m tests.test_sql_privilege_idiom
 #                   embedder._pillars_of and main._pillar_of — agree on all five
 #                   shapes; each previously missed one the other handled.
 python3 -m tests.test_embedding_dims_carry_information
+# 3a-quaterdecies-bis. value added in DOLLARS (2026-08-10, S-132). Every sleeve we
+#                have ever measured was denominated in percent. Berk & Green (JPE
+#                2004) and Berk & van Binsbergen (JFE 2015): percentage alpha is
+#                competed away by inflows and does not predict itself, while gross
+#                alpha × assets DOES, out to ~10 years. The unit matters most in
+#                crypto, where the characteristic deception is a large percentage on
+#                a notional that could never be deployed — 40 %/yr on a $150k book
+#                bounded by a $3m/day order book passes every percentage threshold we
+#                own, because 40 is greater than all of them. So a SHIP verdict now
+#                requires deployable_notional_usd + value_added_usd_yr + a stated
+#                notional_basis ("assumed AUM" is the S-122 degraded-value pattern
+#                wearing a dollar sign), with a $1m capacity floor single-sourced from
+#                the schema. Also pins capacity(): it used to `continue` past names
+#                whose ADV lookup failed, and since book capacity is a MINIMUM over
+#                names, dropping one can only RAISE the answer — and the ones that
+#                fail to resolve are the thin names that would have bound.
+python3 -m tests.test_value_added_dollars
 # 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
 #                after its v1 run was found to have sized off a 23-day-stale regime.
 #                The integrity property this pins is the product's: a forward track

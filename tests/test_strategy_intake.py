@@ -37,6 +37,11 @@ _SHIP_OK = dict(
     backtest_included_stop=True, deflated_sharpe=0.97, n_trials=40, pbo=0.2,
     median_holding_days=30.0, turnover_cost_pct_yr=1.0, net_effect_pct_yr=2.5,
     trigger_name="funding_z", trigger_median_run_days=35.0,
+    # S-132: a SHIP record is no longer complete in percent alone. Berk & van
+    # Binsbergen — percentage alpha does not persist, dollars extracted do — so
+    # the intake floor now requires the capacity the percentage was earned on.
+    deployable_notional_usd=48_000_000.0, value_added_usd_yr=1_200_000.0,
+    notional_basis="min over 12 legs of 5% ADV × 3d / |w|",
 )
 
 
