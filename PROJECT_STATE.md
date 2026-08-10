@@ -246,6 +246,23 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 
 ## LANDED — kept for the lessons, not for the status
 
+**🟢 度量单位改成美元 — 2026-08-10 (S-132).** 我们做过的每一次测量都是百分比计价的。
+   **Berk & Green (JPE 2004):** 百分比 alpha 会被资金流入竞争掉,对自己的未来没有预测力。
+   **Berk & van Binsbergen (JFE 2015):** 但**提取的美元**(alpha × AUM)持续到约十年。
+   百分比是技能的**价格**;美元是技能的**数量**。
+   **crypto 里最典型的欺骗因此对我们的闸门完全隐形:一个巨大的百分比架在部署不进去的
+   名义本金上** —— 40 %/yr 跑在 15 万美元账本上,**大于我们拥有的每一个阈值**。
+   已改:SHIP 闸门要求 `deployable_notional_usd` + `value_added_usd_yr` + `notional_basis`
+   (「假设的 AUM」不是依据 —— 那是 S-122 的退化值模式加了个美元符号),容量下限 $1m。
+   新 `src/research/factory/value_added.py::assess()` 一次算出三者。
+   顺手:`capacity()` 过去把取不到 ADV 的腿**静默跳过** —— 容量是最小值,**丢腿只能让
+   答案变大**,而取数失败的正是本该成为约束的薄腿。现在 partial 直接拒绝。
+   ① 账本无 ADV 接线,所以发布**每 $1m 的美元增量**(纯单位换算),
+   `deployable_notional_usd` 显式 null 并附因 —— **野心不是依据**,守卫钉死。
+   **并且发现:① 账本的曲线此前没有任何 endpoint** —— 有在跑的时钟,没有办法读它在数什么。
+   已加 `GET /api/v1/beta-core/curve`。preflight 219 项全绿。
+   VERIFY: `curl -s https://web-production-0cdf76.up.railway.app/api/v1/beta-core/curve | jq '{days,excess_pct,value_added_usd_yr_per_1m,deployable_notional_usd,annualization_is_meaningful}'`
+
 **🟢 VDB decision chain COMPLETE 2026-08-06 — and its first answer is unflattering.**
    `market_state_vectors` 582 days · `similar_market_states()` · `strategy_response`
    (22 sufficient / 2 sparse / **16 `none`**). Chain now runs end to end: environment → similar
