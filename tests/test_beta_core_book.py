@@ -505,6 +505,50 @@ def test_the_row_key_carries_the_incarnation_not_just_the_date():
     assert "23505" in sql, "record the actual error that exposed it"
 
 
+
+
+
+def test_cap_source_is_actually_written_not_just_declared():
+    """S-131. `beta_core_nav.cap_source` existed from the start and NOTHING ever
+    wrote it — every row read NULL, including the two that mattered.
+
+    The column's whole job is to separate "layer ③ did not run" from "layer ③ ran and
+    chose 1.0". Those two produce an IDENTICAL `exposure_cap`, which is exactly why
+    S-116 survived a full first mark and why S-130 had to be diagnosed with live
+    queries instead of by reading a row. A column that is only ever NULL is the same
+    defect as a -2 sentinel folded into 0, one level up: the distinction was designed,
+    named, given storage — and then never populated.
+
+    Behavioural, because a source grep would have passed on the broken version too:
+    the writer's parameter list mentioned cap_source in the `note` string all along."""
+    import asyncio
+    import datetime as _dt
+    import src.api.store as store
+
+    captured = {}
+    original = store.supabase_insert_table
+
+    async def _capture(table, rows):
+        captured["table"] = table
+        captured["row"] = rows[0]
+        return True
+
+    try:
+        store.supabase_insert_table = _capture
+        asyncio.run(bc._write(_dt.date(2026, 8, 11), 1.0, 1.0, 0.0, 0.0, 0.5,
+                              "TIGHTENING", 1.0, 0.5, 3, 0.5, 0.0, True,
+                              {"BTC": 0.5}, "probe", cap_source="regime_map"))
+    finally:
+        store.supabase_insert_table = original
+
+    row = captured.get("row", {})
+    assert "cap_source" in row, (
+        "cap_source is not in the written payload — the column can only ever be NULL")
+    assert row["cap_source"] == "regime_map", (
+        f"cap_source must carry the resolver's verdict, got {row.get('cap_source')!r}")
+    assert row.get("regime") == "TIGHTENING" and row.get("exposure_cap") == 0.5
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
