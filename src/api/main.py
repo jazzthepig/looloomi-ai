@@ -1177,6 +1177,31 @@ async def beta_core_clock():
     return JSONResponse(status_code=503 if stalled else 200, content=st)
 
 
+@app.get("/api/v1/beta-core/curve")
+async def beta_core_curve(limit: int = 400):
+    """The ① book's forward curve, WITH hold-the-panel beside it.
+
+    This endpoint did not exist until 2026-08-10 (S-132), which is worth stating
+    plainly: the ① book is the layer-① claim — "we capture beta and draw down
+    less" — and its curve is the evidence for it, but nothing served that curve.
+    We had a running clock (/internal/beta-core-clock) and no way to read what the
+    clock was counting. A forward record nobody can fetch is not a track record.
+
+    Published in percent AND in dollars per $1m deployed. Berk & van Binsbergen
+    (JFE 2015): percentage alpha does not predict itself; dollars extracted do.
+    `deployable_notional_usd` is deliberately null — the ① book has no ADV wiring,
+    and an assumed AUM would manufacture a dollar figure indistinguishable from a
+    measured one.
+
+    Read `days_to_gate` and `annualization_is_meaningful` before quoting anything:
+    below 60 forward days the annualized number is arithmetic, not evidence."""
+    try:
+        from src.data.signals.beta_core_paper import get_curve
+        return await get_curve(limit=limit)
+    except Exception as e:
+        return JSONResponse(status_code=503, content={"error": str(e)[:160]})
+
+
 @app.get("/health")
 async def health():
     payload = _health_with_data_layer()

@@ -599,13 +599,38 @@ async def get_curve(limit: int = 400) -> dict:
     first, last = rows[0], rows[-1]
     cum = last["nav"] / first["nav"] - 1.0
     bcum = last["benchmark_nav"] / first["benchmark_nav"] - 1.0
+    n = len(rows)
+
+    # ── The curve in DOLLARS (S-132) ────────────────────────────────────────────
+    # Berk & van Binsbergen (JFE 2015): percentage alpha does not predict itself;
+    # dollars extracted do, out to ~10 years. So the curve should not be published
+    # in percent alone.
+    #
+    # But the ① book has no ADV wiring yet, so its deployable capacity is UNKNOWN,
+    # and multiplying by an assumed AUM would be precisely the degraded value the
+    # S-122 guard exists to catch — an unmeasured quantity replaced by a plausible
+    # one that the reader cannot distinguish from an observation.
+    #
+    # So report the unit conversion and NOT the capacity claim: dollars added per
+    # $1m deployed. That is arithmetic, true at any size, and multiplicable by the
+    # real notional the moment ADV is wired in. `deployable_notional_usd` stays
+    # explicitly None with the reason attached, so nobody reads its absence as zero.
+    ann = ((1.0 + (cum - bcum)) ** (365.0 / n) - 1.0) if n >= 2 else None
     return {
-        "rows": rows, "days": len(rows),
+        "rows": rows, "days": n,
         "inception": first["mark_date"], "as_of": last["mark_date"],
         "total_return_pct": round(100 * cum, 3),
         "benchmark_return_pct": round(100 * bcum, 3),
         "excess_pct": round(100 * (cum - bcum), 3),
+        "excess_annualized_pct": round(100 * ann, 3) if ann is not None else None,
+        "value_added_usd_yr_per_1m": round(ann * 1_000_000, 0) if ann is not None else None,
+        "deployable_notional_usd": None,
+        "notional_basis": ("not derived — ADV not yet wired into the ① book; "
+                           "dollars are reported per $1m deployed rather than at an "
+                           "assumed AUM (S-132)"),
         # the gate is 60 forward days; surfacing the shortfall stops anyone reading a
         # 20-day curve as evidence
-        "days_to_gate": max(0, 60 - len(rows)),
+        "days_to_gate": max(0, 60 - n),
+        # An annualized figure from a handful of days is arithmetic, not evidence.
+        "annualization_is_meaningful": n >= 60,
     }
