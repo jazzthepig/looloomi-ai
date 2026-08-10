@@ -55,7 +55,18 @@ async def _sb_post(table: str, payload: dict) -> dict:
             },
         )
         if r.status_code not in (200, 201):
-            _log.error(f"[keys] Supabase {table} write failed: {r.status_code} {r.text[:200]}")
+            # Name the most likely cause. `_SB_KEY` falls back from SUPABASE_SERVICE_KEY
+            # to SUPABASE_KEY, and the anon key CANNOT insert here — api_keys grants
+            # anon only SELECT, and its RLS policy `api_keys_service_only` is
+            # `ALL USING false`. So a missing SUPABASE_SERVICE_KEY surfaces as a
+            # customer-facing 500 with nothing pointing at the env var. Measured
+            # 2026-08-09: zero keys had ever been issued for exactly this reason.
+            hint = ""
+            if r.status_code in (401, 403) and not os.getenv("SUPABASE_SERVICE_KEY"):
+                hint = (" — SUPABASE_SERVICE_KEY is not set, so this fell back to the "
+                        "anon key, which has no INSERT grant on api_keys")
+            _log.error(f"[keys] Supabase {table} write failed: "
+                       f"{r.status_code} {r.text[:200]}{hint}")
             raise HTTPException(status_code=500, detail="Key storage failed")
         return r.json()
 
