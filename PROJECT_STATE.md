@@ -303,7 +303,7 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    🔴 **RETRACTED by S-103 the next day, see risk #4.**
 
 **🟢 ① forward-clock LIVE 2026-08-09 13:57Z — biggest blocker cleared.** `/internal/beta-core-clock`:
-`marks:1, started:true, inception:2026-08-09, gate_days_remaining:59`. `/health.strategy_library:
+`marks:2, started:true, inception:2026-08-09, last_mark:2026-08-10, gate_days_remaining:58`. `/health.strategy_library:
 pg_configured:true, degraded:false`. Both migrations ran (beta_core_reinception + the
 implicit signal_outcomes refresh); service_role works on Railway. §BETA-METRIC-AGG track record
 repopulated (66 signals, 60 scored, hit_rate 25%, directional alpha −3.5% — the negative alpha
@@ -322,8 +322,25 @@ docs. If it's stale, fix it. (Behavioral discipline this doc can't enforce but m
 before describing any "pending push", run `git status` / `git rev-list origin/main..HEAD` — do
 NOT trust memory of what's committed. That error happened 2026-07-02.)
 
-**Last updated:** 2026-08-09 — **S-125 full code check: three findings, one shape —
-"succeeded and changed nothing."**
+**Seth / ① book — 2026-08-10 (S-130):** v2 的曲线**按构造恒等于自己的基准**。
+两天 mark 都是 `excess_return = 0.0000`、`regime = NULL`、`cap = 1.0`,而 `cis_scores`
+每一个 source 都读 TIGHTENING(cap 0.5)。链条:`_regime_history` 拉原始行在 Python 里算
+每日众数,该表**每天 1,000–2,000 行**,而 PostgREST 的**服务端 `db-max-rows`(1000)静默
+覆盖** `limit=20000` ⇒「30 天历史」实为 1–2 天 ⇒ dwell filter 从未运行 ⇒ 落到无 regime 字段的
+Redis blob ⇒ `gross = min(1.30, 1.0) = 1.0` ⇒ 权重与基准完全相同。**60 天这样的曲线什么都
+证明不了**,而那正是这本书唯一的用途。是 S-123 下沉一层:上次上限是我们的、asc 丢掉最新端;
+这次上限属于服务端、客户端无权调大,**改大 limit 只会推迟失败日期**。
+**Lesson #112:不要搬运你马上要聚合的行** —— 把聚合交给数据库,行数上限就够不着(35 行 vs
+~49,000)。已建 `daily_macro_regime` 视图(已在生产应用,留档
+`scripts/supabase_daily_macro_regime.sql`),顺带统一标签大小写(08-08 当天 `Tightening` 与
+`TIGHTENING` 同时在表里)。视图实测 **TIGHTENING 连续 15 天** ⇒ 下一次 mark 应为 cap 0.5。
+**我早先两个诊断被推翻,已在台账更正:** `SUPABASE_KEY` 本来就是 service_role;
+`api_keys` 写不进是因为 **`id` 为 `bigint NOT NULL` 且无序列/identity 默认值**,与权限无关。
+
+**Last updated:** 2026-08-11 — **R102 REFUTED_GATE1+GATE3: §C6-DISCOVERY-SPEC 形状池
+exhausted on crypto micro-structure family ⇒ §STRATEGY-3 = R77 single-strategy
+locked (Lesson #54 path B). C1 ship complete (commit c0516f9). C2/C3/C5 still
+scheduled Sept; C6 closed early (1 candidate, 1 day).**
 🔴 **P0-1 SECURITY, needs Jazz in the Supabase console:** `anon` — public by construction, and
 additionally hardcoded in `external_probe.sh` — could RPC four `SECURITY DEFINER` functions that
 bypass RLS, with a **caller-controlled `p_max_batches`**. One unauthenticated call drives unbounded

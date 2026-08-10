@@ -194,9 +194,24 @@ _REGIME_DWELL_DAYS = 5   # see below; equals the gate's minimum holding period
 async def _regime_history(days: int = 30) -> list[str]:
     """Last `days` days of daily-modal regime, oldest first.
 
-    Reads Supabase because Redis holds only TODAY's value, and a dwell filter needs
-    a history by construction. One small query per daily mark is affordable — this
-    is the daily loop, not /health, which is contractually I/O-free."""
+    Reads the `daily_macro_regime` VIEW — one row per day, not the raw rows.
+
+    S-130. This previously fetched raw `cis_scores` rows and computed the daily modal
+    in Python. `cis_scores` carries 1,000–2,000 rows per day, and PostgREST enforces
+    a SERVER-side row cap (`db-max-rows`, 1000 by default) that silently overrides
+    our `limit=20000`. So the "30 days" of history was 1–2 days, `len(hist) < 5`
+    never reached the dwell filter, and `_current_regime` fell through to the Redis
+    blob — which carries no regime field, so the book sized off `regime = None` at
+    cap 1.0 while every source said TIGHTENING (cap 0.5). Measured: v2's first two
+    marks recorded `excess_return = 0.0000` because `gross = min(1.30, 1.0) = 1.0`
+    made the book identical to its own benchmark by construction.
+
+    This is S-123 one layer down. There the cap was ours and ascending order dropped
+    the newest end; here the cap belongs to the server and we cannot raise it. The
+    lesson generalises: **do not transport rows you are about to aggregate.** Asking
+    the database for the aggregate makes the row cap unreachable instead of merely
+    larger — 35 rows instead of ~49,000, and no configuration we do not control.
+    """
     import os
 
     import httpx
@@ -204,41 +219,32 @@ async def _regime_history(days: int = 30) -> list[str]:
     if not base or not key:
         return []
     since = (dt.date.today() - dt.timedelta(days=days + 5)).isoformat()
-    # S-123. This was `order=recorded_at.asc&limit=20000`, and the window holds
-    # 53,250 rows — so the limit truncated the NEWEST end. The most recent day the
-    # book could see was 2026-07-17 while today was 2026-08-09: a 23-day-stale
-    # regime, presented as current. A row cap plus an ascending sort is a silent
-    # "oldest N", and the direction that gets dropped is the one that matters.
-    # DESC + reverse keeps the recent end, which is the end a dwell filter needs.
-    url = (f"{base}/rest/v1/cis_scores?select=recorded_at,macro_regime"
-           f"&recorded_at=gte.{since}&macro_regime=not.is.null"
-           f"&order=recorded_at.desc&limit=20000")
+    url = (f"{base}/rest/v1/daily_macro_regime?select=d,regime"
+           f"&d=gte.{since}&order=d.asc")
     try:
         async with httpx.AsyncClient(timeout=8) as c:
             r = await c.get(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
-            rows = r.json() if r.status_code == 200 else []
+            if r.status_code != 200:
+                _log.error("[beta_core] daily_macro_regime read failed: %s %s",
+                           r.status_code, r.text[:160])
+                return []
+            rows = r.json()
     except Exception as e:
         _log.warning("[beta_core] regime history unavailable: %s", e)
         return []
-    from collections import Counter, defaultdict
-    per_day: dict[str, Counter] = defaultdict(Counter)
-    for row in rows:
-        d = str(row.get("recorded_at", ""))[:10]
-        raw = row.get("macro_regime")
-        if d and raw:
-            per_day[d][str(raw).strip().upper().replace("-", "_").replace(" ", "_")] += 1
-    if not per_day:
+    series = [(str(x.get("d", ""))[:10], x.get("regime")) for x in rows]
+    series = [(d, g) for d, g in series if d and g]
+    if not series:
         return []
-    # Freshness is part of correctness here, not a nicety. The truncation above was
-    # invisible precisely because a stale series is shaped exactly like a fresh one:
-    # same length, same labels, same everything except which days it covers. So the
-    # series must prove it reaches the present rather than be trusted to.
-    newest = max(per_day)
+    # Freshness is part of correctness here, not a nicety. A stale series is shaped
+    # exactly like a fresh one — same length, same labels, same everything except
+    # which days it covers — so it must PROVE it reaches the present.
+    newest = max(d for d, _ in series)
     if (dt.date.today() - dt.date.fromisoformat(newest)).days > 2:
         _log.error("[beta_core] regime history STALE — newest day %s, today %s; "
                    "refusing to size off it", newest, dt.date.today().isoformat())
         return []
-    return [per_day[d].most_common(1)[0][0] for d in sorted(per_day)]
+    return [g for _, g in sorted(series)]
 
 
 async def _current_regime() -> tuple[str | None, str | None]:
