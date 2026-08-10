@@ -600,6 +600,40 @@ def test_zero_excess_is_disambiguated_on_the_reading_surface():
         "the one-day lag must be stated on the surface, not left in the module")
 
 
+def test_an_already_booked_mark_is_never_retroactively_corrected():
+    """2026-08-11. A fix deployed after the day's mark cannot repair that mark, and
+    must not try. `already_marked` returning early is the correct behaviour: the ①
+    book's entire product is a forward record, and a record whose past rows can be
+    rewritten by a later deploy proves nothing — the reader cannot distinguish the
+    curve from the last deploy's opinion of the curve. Same argument as the
+    inception_id constant (S-124), one row at a time instead of one book at a time.
+
+    The COST is a two-day blind spot (fix lands on tomorrow's mark; its effect on
+    excess lands the day after, because returns book off the previous mark's
+    weights). That cost is paid by /internal/beta-core-probe, not by weakening this."""
+    src = inspect.getsource(bc.mark_and_rebalance)
+    assert 'state.get("last_mark") == today.isoformat()' in src, (
+        "the same-day guard is gone — a second run would overwrite a booked mark")
+    assert '"status": "already_marked"' in src, (
+        "re-entry must report already_marked rather than silently re-marking")
+
+
+def test_the_probe_reads_the_same_path_the_loop_will_run():
+    """The probe is only worth having if it cannot drift from the loop. It must call
+    the book's own _current_regime/_exposure_cap, never reimplement the decision —
+    a diagnostic that computes its answer differently from the thing it diagnoses is
+    a second source of truth, which is the bug class it exists to catch."""
+    main_py = (pathlib.Path(__file__).resolve().parents[1] / "src/api/main.py").read_text()
+    i = main_py.find("async def beta_core_probe")
+    assert i > 0, "the ① dry-run probe endpoint is missing"
+    body = main_py[i:i + 3000]
+    for fn in ("_current_regime", "_exposure_cap", "_regime_history"):
+        assert fn in body, f"the probe does not call the book's own {fn}"
+    assert "dry" in body.lower() and "no row written" in body, (
+        "the probe must state that it writes nothing")
+    assert "INTERNAL_TOKEN" in body, "the probe names internals — it must be guarded"
+
+
 def test_annualizing_a_short_curve_is_flagged_not_hidden():
     """A 2-day excess annualized is a large number and not evidence of anything.
     The figure is still published — suppressing it invites someone to recompute it
