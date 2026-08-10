@@ -8516,3 +8516,77 @@ task #27(含退市回填)/ #28(扩到 ~180 标的,仅日频)**从「P1 研究」
 - 单周期(439 天)。
 - 未做 DSR/PBO;未做 60 天前向;未过 SHIP 门槛任何一项。
 - **t=0.68 ⇒ 这是一条待检验线索,不是策略。**
+
+---
+
+## R77-MULTICYCLE-REVALIDATION 🟡 INSUFFICIENT_FUNDING — funding window 仅 1 个 episode,floor=8;3-check 仍 pass,frozen weights unhashed,R77 不升级也不降级
+
+**日期** 2026-08-08 · **Minimax-C** · **状态** Phase C 第一段结论;**R77 status 不变 = regime-specific candidate**
+
+### 范围
+
+按 2026-08-08 plan(§R77-MULTICYCLE 计划,Phase A 已 refuted、Phase B 显式 NOT entered):
+1. 新增 `r77_multicycle_revalidation.py` + `test_r77_multicycle_revalidation_smoke.py` 11/11 PASS
+2. 诚实披露三层(r46_full_731d / r77_full_731d / r77_funding_coverage_window)
+3. 公开声明 frozen weights 按 memory 引用,**无 hash**(用户拍板"保持现状不动")
+4. R46 full-11yr leg 显式 NOT run(等 §OHLCV-EXTENSION)
+
+### Coverage 元数据(诚实声明)
+
+| 表 | earliest | latest | n_obs | n_assets |
+|---|---|---|---|---|
+| funding(Hyperliquid) | **2023-05-12** | 2026-07-19 | 1165 | 28 |
+| ohlcv_returns | 2024-06-07 | 2026-07-18 | 772 | 54 |
+| cis | 2024-03-01 | 2026-07-18 | 30107 | 76 |
+
+**funding 共同覆盖起点 = 2024-04-02**(floor=2023-05-01)。OHLCV 才是真正的窄边(2024-06-07),
+所以 **funding-coverage-window 与 full-panel 同长度 772 天** —— funding window 不会真正缩短 R77 报告。
+
+### 三层 3-check 命中
+
+| Layer | gross_t | 5bps_t | OOS_t | maxDD | M-WO-1 episodes | 3-check |
+|---|---|---|---|---|---|---|
+| r46_full_731d | +1.82 | +0.15 | +0.15 | −33.6% | 3 | **FAIL** |
+| r77_full_731d | +3.09 | +2.84 | +2.84 | −8.7% | 1 | **PASS** |
+| r77_funding_coverage_window | +3.09 | +2.84 | +2.84 | −8.7% | 1 | **PASS** |
+
+r77_funding_coverage_window 与 r77_full_731d 完全相同 —— **funding 段并不比 full panel 更窄**,
+诚实披露反而**强化**:R77 的 3-check 不是 funding 段独有的偶然,而是 772 天 OHLCV ∩ 28-asset CIS strict
+段的稳定特征。但 M-WO-1 episode 数 = **1 < floor=8**。
+
+### Verdict 语法
+
+- primary: `R77_INSUFFICIENT_FUNDING`(episodes=1 < floor=8)
+- honesty_marker: `R77_FROZEN_WEIGHTS_UNHASHED`(恒开)
+- three_check_passes_on_funding_window: true
+- disclosure:
+  - `is_11yr_R77`: **false**(`is_post_2023_funding_coverage_sleeve`: true)
+  - `R46_full_11yr_leg_deferred_to_OHLCV_EXTENSION`: true
+  - `frozen_weights_unhashed`: true
+
+### R77 status 决策(对 §STRATEGY_PLAYBOOK 的影响)
+
+**R77 不升级,也不降级。** 仍 `regime-specific candidate`,frozen cell
+`w_R46=0.25 / w_R62=0.75 / w_R76=0.30` UNCHANGED。理由:
+- 3-check 仍 pass ⇒ 772 天 OHLCV ∩ 28-asset CIS 段的 edge 真实存在
+- episodes=1 < floor=8 ⇒ 不能宣称"多周期幸存",只是"当前 772 天幸存"
+- funding 段不缩短窗口 ⇒ 没有"funding-coverage-window 比 full-panel 更窄"这种边界
+
+### 新 lesson 候选(待 Jazz 拍板后上 MEMORY)
+
+- `funding-coverage 必须在报告中显式声明,不能沉默扩 universe` —— R62/R76 的 funding 历史只覆盖
+  ~2023-05 之后,R77 报告若不写 funding window,会给人"R77 是 11yr 多周期幸存"的错觉(它不是)。
+- `frozen weights 无 hash 是诚实漏洞,应建 canonical record 但本次不动` —— 4 个 literal
+  散布在 `r77_r76_as_fusion_contribution.py:104-105`、`m_wo1_r77_episode_count_audit.py:87`、
+  `r85_r77_regime_gated.py:87`、`r97_cis_ls_v5.py:105`、`s82_regime_gross_overlay.py:84`,
+  任意一处 typo 会静默改变 R77 cell 而无 diff 可追。R77 locked ≠ weights safe。
+
+### 不动 / 显式 NOT entered
+
+- 不动 `r77_r76_as_fusion_contribution.py`(本次直接复用 `fuse3`)
+- 不动 `r97_cis_ls_v5_11yr.py`(Phase A 已 🔴 REFUTED,ledger 锁定)
+- 不跑 R46 full-11yr leg(等 §OHLCV-EXTENSION)
+- Phase B 4 个预注册 series 不新增文件、不跑
+- 4 个 weights literal 不收口(用户拍板"保持现状不动")
+- 不引入 `_r77_frozen.py` 集中模块
+- R77 在 STRATEGY_PLAYBOOK.md 的 "regime-specific candidate" 状态不升级
