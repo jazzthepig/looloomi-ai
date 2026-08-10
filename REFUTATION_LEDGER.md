@@ -8796,3 +8796,67 @@ select d, regime from daily_macro_regime where d >= current_date - 20 order by d
 反向验证:从 payload 移除该键 → 守卫报错。
 
 `python3 -m tests.test_beta_core_book` 24/24。
+
+---
+
+### S-132 — 我们所有的度量单位都是错的:百分比不持续,美元持续
+
+**这不是一个 bug,是一个单位错误。** 我们做过的每一次测量 —— IC、Sharpe、
+`net_effect_pct_yr` —— 都是百分比计价的。文献说这是资产管理里最不该用的单位:
+
+- **Berk & Green (JPE 2004):** 百分比 alpha 会被资金流入竞争掉。管理人的过去百分比
+  alpha 对它自己的未来几乎没有预测力。
+- **Berk & van Binsbergen (JFE 2015):** 但**从市场里提取的美元**(gross alpha × AUM)
+  **持续,可测量地持续到大约十年。**
+
+机制很直接,而且**恰好适用于我们**:技能是固定的,它赚到的百分比会随着追逐它的资本
+增长而缩小,直到百分比被竞争到资金成本。竞争之后活下来的是**管理人能提取的那块饼的
+大小**。百分比是技能的价格;美元是技能的数量。
+
+**为什么在 crypto 里比在任何地方都更要紧。** 这里最典型的欺骗是:**一个巨大的百分比,
+架在一个根本部署不进去的名义本金上。** 40 %/yr 跑在一个 15 万美元的账本上,而它的
+盘口一天只有 300 万。**一个用百分比计价的闸门看不见这件事 —— 因为 40 大于我们拥有的
+每一个阈值。** 它甚至不是不诚实的:回测算术上完全正确,它只是在回答一个没有配置者
+问过的问题。
+
+**已改:**
+
+1. `StrategyRecord` 增加 `deployable_notional_usd` / `value_added_usd_yr` /
+   `notional_basis`。SHIP 闸门现在要求三者齐全,且容量 ≥ $1m —— 低于这个数,
+   edge 可能是真的,但它是一个**研究结果,不是一个 sleeve**,应该发为 DOCTRINE。
+
+2. **`notional_basis` 不能是「假设的 AUM」。** 那正是 S-122 那个
+   「未测量的量被替换成一个下游无法与观测区分的合理值」的模式,**前面加了个美元符号。**
+   闸门要求说明推导方式(ADV 份额 / LAS / `max_notional_25bps_usd`)。
+
+3. **闸门刻意没有嵌套在 holding-period 那个 `else` 里面。** 容量与换手无关,
+   而嵌套意味着**一条只是漏填了 `median_holding_days` 的记录会整个跳过美元闸门。**
+   (第一版我确实写错成嵌套的了,是 `test_strategy_discipline` 抓出来的。)
+
+4. `MIN_MEANINGFUL_NOTIONAL_USD` **定义在 schema 里,`value_added` import 它** ——
+   一个阈值的两份拷贝就是一份会过期的拷贝。守卫用 `is` 断言同一个对象。
+
+5. 新模块 `src/research/factory/value_added.py`:`assess(weights, adv, pct)` 一次
+   产出闸门要的三个字段 + 「这个容量值不值得配人」的判断。
+
+**顺手修掉的一个同类缺陷 —— `capacity()` 会把取不到 ADV 的腿静默跳过。**
+账本容量是**各腿的最小值**,所以**丢掉一条腿只能让答案变大** ——
+而取数失败的那些,不成比例地正是**本该成为约束的那些薄腿**。一个因为两条流动性
+最差的腿 404 了而报出 $80m 容量的账本,比一个什么都不报的账本更糟。现在:
+任何未定价的腿让结果变成 `partial` 并点名,`deployable_notional` 直接拒绝 partial ——
+**一个在子集上取的最小值是上界,不是容量。**
+
+**① 账本现在也用新单位发布。** 但它**没有 ADV 接线**,所以它的可部署容量是未知的,
+乘一个假设 AUM 会当场制造出上面第 2 条禁止的东西。所以发布的是
+**每部署 $1m 的美元增量** —— 这是纯单位换算,在任何规模上都为真,等 ADV 接进来
+那天直接乘真实名义本金即可。`deployable_notional_usd` 显式为 `null` 并附上原因,
+**这样它的缺席不会被读成 0**。守卫钉死了这一点:源码里出现 `500_000_000` /
+`AUM_TARGET` 之类就报错 —— **野心不是依据。**
+
+**另外发现:① 账本的曲线此前根本没有任何 endpoint。** 我们有一个在跑的时钟
+(`/internal/beta-core-clock`),却没有任何办法读出这个时钟在数什么。
+**一个没人能取到的前向记录不是前向记录。** 已加 `GET /api/v1/beta-core/curve`。
+
+`bash scripts/preflight.sh` 219 项全绿(新增 `tests/test_value_added_dollars.py` 21 项,
+`test_beta_core_book` 24 → 27)。三处既有 SHIP fixture 因为门槛抬高而需要补字段 ——
+这是闸门在按设计工作,不是回归。
