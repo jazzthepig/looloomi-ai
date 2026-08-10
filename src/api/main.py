@@ -1600,6 +1600,63 @@ async def notify_test(payload: dict = None, x_internal_token: str = Header(None)
     return {"configured": telegram_configured(), "sent": ok}
 
 
+@app.get("/internal/beta-core-probe")
+async def beta_core_probe(x_internal_token: str = Header(None)):
+    """What WOULD the ① book do right now? Dry run — computes regime, cap and gross
+    without writing a row or touching state.
+
+    WHY THIS EXISTS (2026-08-11). A mark is written once per day and
+    `mark_and_rebalance` returns `already_marked` on re-entry, so a fix deployed
+    after the day's mark cannot show up until tomorrow's mark, and its EFFECT on
+    excess cannot show up until the day after — returns are booked off the previous
+    mark's weights. That is correct behaviour: rewriting a booked mark would make
+    the forward record retroactively editable, which is the one property this book
+    cannot lose.
+
+    But it left a two-day blind spot in which the only way to learn whether layer ③
+    is biting was to wait. That is the wrong trade — the deploy is cheap to verify
+    and expensive to be wrong about. This endpoint reads the same code path the loop
+    will run tomorrow and reports its decision, so a regime-plumbing regression is
+    caught in seconds instead of after two days of flat curve.
+
+    Token-guarded: it is diagnostic, not investor-facing, and it names internals."""
+    _tok = os.environ.get("INTERNAL_TOKEN", "")
+    if not _tok or x_internal_token != _tok:
+        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    try:
+        from src.data.signals.beta_core_paper import (
+            _current_regime, _exposure_cap, _regime_history)
+        hist = await _regime_history()
+        regime, raw = await _current_regime()
+        cap, cap_source = _exposure_cap(regime)
+    except Exception as e:
+        return JSONResponse(status_code=503, content={"error": str(e)[:200]})
+    return {
+        "would_size_at_cap": cap,
+        "cap_source": cap_source,
+        "regime_confirmed": regime,
+        "regime_raw": raw,
+        "regime_history_days": len(hist),
+        "regime_history_tail": hist[-7:],
+        # The two failures this probe is meant to separate, named rather than left
+        # for the reader to infer from a null.
+        "diagnosis": (
+            "regime feed empty — daily_macro_regime returned nothing or is stale; "
+            "check the Railway log for 'daily_macro_regime read failed'"
+            if not hist else
+            "history too short to run the 5-day dwell filter; the book is sizing off "
+            "the raw label, not the confirmed one"
+            if len(hist) < 5 else
+            "③ is live and biting — cap below 1.0"
+            if cap < 1.0 else
+            "③ is live and chose full exposure — this is a decision, not a fallthrough"
+            if cap_source == "regime_map" else
+            f"③ fell through: cap_source={cap_source}"),
+        "note": ("dry run — no row written, no state touched. Today's already-booked "
+                 "mark is NOT retroactively corrected by design."),
+    }
+
+
 @app.get("/internal/build-state")
 async def build_state():
     try:
