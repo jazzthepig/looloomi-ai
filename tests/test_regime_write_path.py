@@ -185,15 +185,29 @@ def test_regime_history_reads_the_recent_end_and_proves_its_freshness():
     same length, same label set, same types, differing only in which days it covers.
     Nothing downstream has the information to be suspicious. So a time series must
     PROVE it reaches the present rather than be trusted to; same family as I1, except
-    that what is unmeasured here is one end of time rather than a field."""
+    that what is unmeasured here is one end of time rather than a field.
+
+    S-130 STRENGTHENS THIS. Switching to `desc` fixed our cap and exposed the
+    server's: PostgREST enforces `db-max-rows` (1000 by default), which silently
+    overrides `limit=20000`. At 1,000–2,000 cis_scores rows per day, "30 days" of
+    history was 1–2 days, so `len(hist) < 5` never reached the dwell filter and the
+    book sized off `regime = None` at cap 1.0 while every source read TIGHTENING.
+    Measured cost: v2's first marks recorded `excess_return = 0.0000`, because
+    `gross = min(1.30, 1.0) = 1.0` made the book identical to its own benchmark.
+
+    Lesson #112: **do not transport rows you are about to aggregate.** Asking the
+    database for the aggregate puts the row cap out of reach rather than merely
+    further away — 35 rows instead of ~49,000, and no limit we do not control. A
+    bigger `limit` would only have moved the failure date."""
     import pathlib
     src = (pathlib.Path(__file__).resolve().parent.parent
            / "src" / "data" / "signals" / "beta_core_paper.py").read_text(encoding="utf-8")
-    # the query lives inside an f-string, so match on source text but only where it
-    # is actually built — the comment describing the old form must not trip this
     code = "\n".join(l for l in src.splitlines() if not l.strip().startswith("#"))
-    assert "order=recorded_at.desc" in code, \
-        "a capped regime-history query must take the RECENT end, not the oldest"
+    assert "daily_macro_regime" in code, (
+        "regime history must read the pre-aggregated daily view — fetching raw rows "
+        "puts it back under PostgREST's db-max-rows, which we do not control")
+    assert "cis_scores?select=recorded_at,macro_regime" not in code, \
+        "the raw-row fetch is back; it is capped server-side regardless of our limit"
     assert "recorded_at.asc&limit" not in code, "the truncating ascending query is back"
     assert "STALE" in src and "refusing to size off it" in src, \
         "the series must verify it reaches the present rather than be trusted to"

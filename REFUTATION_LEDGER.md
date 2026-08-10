@@ -8590,3 +8590,189 @@ r77_funding_coverage_window 与 r77_full_731d 完全相同 —— **funding 段�
 - 4 个 weights literal 不收口(用户拍板"保持现状不动")
 - 不引入 `_r77_frozen.py` 集中模块
 - R77 在 STRATEGY_PLAYBOOK.md 的 "regime-specific candidate" 状态不升级
+
+---
+
+## R102 🔴 REFUTED_GATE1 — Cross-Frequency Funding Spread (pure cross-frequency, NON demean) per §C6-DISCOVERY-SPEC, A="现在做" (Minimax-C, 2026-08-11)
+
+### 为什么跑 R102(C6 spec 第 1 个候选)
+
+Jazz 2026-08-10 拍板 "A = 现在做",§C6-DISCOVERY-SPEC 5 形状池的
+honest 收缩:**R103/R104/R105/R106 的 cousin 形状(R91/R93/R96/未编号
+structural-break)已被 Seth REFUTED**,真正未跑的只剩 R102 cross-frequency。
+14 天时间盒,Jazz 拍 A 立刻启动。
+
+### 形状定义(纯 cross-frequency,**不**是 cross-sectional demean)
+
+```
+R102 signal[a, t] = cumsum_24h(funding_1h)[t, a]
+                    - 6 * cumsum_4h(funding_1h)[t, a]
+```
+
+**与 R76 的本质区别**:
+- R76: `funding[t, a] − mean_a(funding[t, a])` ⇒ cross-asset demean
+- R102: `cumsum_slow − scale × cumsum_fast` ⇒ cross-frequency spread
+
+R102 捕捉的是**同一 asset 内部**低频 vs 高频 funding 累计的偏离
+(perpetual market-maker positioning shifting at sub-daily cadence,或
+micro-structure arb inside the perp)。
+
+### Frozen spec
+
+| 常量 | 值 |
+|---|---|
+| R102_RESAMPLE_FREQS | ('4h','8h','24h') |
+| R102_SPREAD_FAMILY | (('4h','24h'), ('8h','24h')) |
+| R102_CADENCES | (3,5,7,14) 天 |
+| R102_COST_GRID | (0,5,10,20) bps |
+| R102_K_TERCILES | 3 |
+| R102_OOS_FRAC | 0.30 |
+| R102_MIN_DAYS | 100 |
+
+### Window
+
+- 47 Hyperliquid perps,funding_1h 27390 行 / asset(2023-05-12 → 2026-07-19)
+- 47 perps 1d OHLCV close-to-close(2023-01-01 → 2026-07-20)
+- 共同覆盖段:2023-05-12 → 2026-07-19(= 1165 天,full panel)
+
+### 3-Gate 结果
+
+| Gate | 通过 | 详情 |
+|---|---|---|
+| Gate 1 anchor-acceptance (S-107) | ❌ FAIL | best_10day_share=9.1% ✓(<60%), daily_sharpe=−0.05 ✓(<5), **pos_day_rate=48.33% ✗(<50% 阈值)** |
+| Gate 2 leg-corr (Lesson #43) | ⏭ N/A | no existing legs supplied in 1st run(本次独立验证) |
+| Gate 3 3-check | ❌ FAIL | gross_t=**−1.73**(需>1.96), 5bps_t=−4.23, OOS_t=+0.01, maxDD=−43.0% |
+
+best_cell = rebal=3d/cost=0bps(全 16 cells 的最优,其他 cell 更差)。
+
+### Verdict
+
+**🔴 R102_REFUTED_GATE1 + GATE3 DOUBLE FAIL**。信号**负向**且**pos-day
+48.33% < 50%** —— 这是个**长期亏损**的 L/S,不是"directional-right
+magnitude-wrong" 的接近边缘。R102 不需要进一步精细化(不是参数问题)。
+
+### Lesson #NEW candidate
+
+**§C6-DISCOVERY-SPEC 形状池收缩 (R103/R104/R105/R106 cousin REFUTED 后,
+真正未跑只剩 R102;R102 第一天就 REFUTED ⇒ §STRATEGY-3 orthogonal
+discovery 路线 exhausted on this universe):**
+- Lesson #43 v3 + #65 + R102 = 3-way CONFIRMATION:**纯-crypto micro-structure
+  L/S 类 orthogonal discovery 已无未尝试形状**。
+- Cross-frequency funding spread 是结构上不同于 cross-sectional demean
+  的形状,但仍属"crypto micro-structure"family。
+- **Lesson candidate**: orthogonal discovery 在 crypto 上受限于数据本身
+  (funding/perp-OHLCV/cross-section 已饱和),**必须跨资产类别**或
+  **跨数据源**(新闻/链上行为/宏观)才能找到 R76 之外的幸存者。
+- 这与 R48 cross-class refutes general mechanism 一致。
+
+### §STRATEGY-3 决策
+
+R102 第 1 天 REFUTED ⇒ **§C6-DISCOVERY-SPEC 的 70 天时间盒提前结束**。
+接受 §STRATEGY-3 = **R77 单策略书**(Lesson #54 path B 锁定)。
+
+R77 status 不变 = regime-specific candidate,frozen weights UNCHANGED。
+
+### §C6-DISCOVERY-SPEC 形状池最终状态
+
+| Shape | 状态 | 来源 |
+|---|---|---|
+| R76 funding residual cross-sec demean | ✅ SURVIVE (R77 leg) | R76/R77 |
+| R102 cross-frequency funding | ❌ REFUTED GATE1+GATE3 | R102 本次 |
+| R91 cross-asset funding pair (R103 cousin) | ❌ REFUTED 3-check | R91 (Seth, 2026-07-26) |
+| R93 informativeness-weighted funding (R105 cousin) | ❌ REFUTED 3-check | R93 (Seth, 2026-07-26) |
+| R96 cross-asset bond-equity β-residual (R106 cousin) | ❌ REFUTED 3-check | R96 (Seth, 2026-07-27) |
+| R94 directional crypto beta | ❌ REFUTED 11yr | R94 (Seth, 2026-07-26) |
+| R100 directional trend overlay | ❌ REFUTED 11yr | R100 (Seth, 2026-07-28) |
+| R82/R83/R85/R86/R87/R88/R89/R92 (12 个 directional/sleeve) | ❌ REFUTED | 12-attempt graveyard |
+
+### Files
+
+- `src/research/validation/r102_cross_frequency_funding.py` (NEW, ~330 LoC)
+- `src/research/validation/tests/test_r102_cross_frequency_funding_smoke.py` (NEW, 8/8 PASS)
+- `reports/r102_cross_frequency_funding/2026-08-11/verdict.json`
+- `MINIMAX_SYNC.md §C6-DISCOVERY-SPEC`(spec 锁)→ 形状池全 exhausted,本节 close
+
+
+---
+
+## S-130 — ① book 的曲线按构造恒等于基准;根因是服务端的行数上限
+
+**日期** 2026-08-10 · **Seth** · **状态** 已修 + 已守卫 · **影响** v2 全部已有 mark
+
+### 症状
+
+v2 起算后连续两天:
+
+| date | nav | bench | excess | cap | regime | vol_scalar | rv30 |
+|---|---|---|---|---|---|---|---|
+| 08-09 | 1.00000 | 1.00000 | **0.0000** | 1 | **NULL** | 1.300 | 0.328 |
+| 08-10 | 1.00369 | 1.00369 | **0.0000** | 1 | **NULL** | 1.300 | 0.334 |
+
+**excess 恒为 0,不是巧合,是构造:**
+
+```
+regime = None → _exposure_cap(None) = (1.0, "no_regime")
+              → gross = min(vol_scalar 1.30, cap 1.0) = 1.0
+              → 持仓权重 ≡ 等权面板权重
+              → excess ≡ 0.0000
+```
+
+**60 天之后我们会得到一条与自己基准逐日相同的曲线 —— 它无法证明「拿到 beta 且回撤更浅」,
+而那是这本书唯一的主张。**
+
+### 根因:PostgREST 的 `db-max-rows`
+
+`_regime_history` 拉 `cis_scores` 原始行、在 Python 里算每日众数。
+**该表每天 1,000–2,000 行,而 PostgREST 有服务端行数上限(`db-max-rows`,默认 1000),
+它静默地覆盖客户端的 `limit=20000`。** 于是「30 天历史」实际是 1–2 天,
+`len(hist) < 5` 永远进不了 dwell filter,`_current_regime` 落到 Redis blob,
+而 blob 没有 regime 字段 → strict 正确地返回 None。
+
+**每一层都在诚实地工作,合起来让书在 TIGHTENING(cap 0.5)下满仓运行。**
+
+### 这是 S-123 下沉一层
+
+| | S-123 | S-130 |
+|---|---|---|
+| 上限属于 | **我们**(`limit=20000` + asc) | **服务端**(`db-max-rows`) |
+| 丢掉的 | 最新的一端 | 历史的深度 |
+| 能不能调大 | 能(改成 desc) | **不能,客户端无权** |
+
+**改大 limit 只会推迟失败日期 —— 表在长,上限不长。**
+
+### Lesson #112
+
+> **不要搬运你马上要聚合的行。**
+> 把聚合交给数据库,行数上限就**够不着**,而不只是**更远**。
+> 35 行 vs ~49,000 行,且不依赖任何我们无权配置的参数。
+> 判据:**如果一个查询的结果马上要被 group by,那它就不该跨网络传输。**
+
+### 修法
+
+新建视图 `daily_macro_regime`(一天一行,跨全部 source 取众数,标签在视图里统一成
+UPPER_SNAKE —— 08-08 当天 `Tightening` 与 `TIGHTENING` 同时在表里)。
+`_regime_history` 改读该视图。**已在生产应用**,脚本留档
+`scripts/supabase_daily_macro_regime.sql`。
+
+视图实测:**TIGHTENING 连续 15 天**,之前 RISK_OFF ×2、NEUTRAL ×3。
+⇒ dwell_filter(5) 会确认 TIGHTENING ⇒ **cap 0.5,gross = min(1.30, 0.5) = 0.5**
+⇒ 书终于与基准不同,excess 开始携带信息。
+
+### 顺带确认的两件事(都推翻了我早些时候的判断)
+
+1. **`SUPABASE_KEY` 本来就是 service_role** —— 否则 `beta_core_nav`(RLS 开启无策略)
+   写不进去。我早上说「Railway 用的是 anon key」是错的。
+2. **`api_keys` 写不进去与权限无关:`id` 是 `bigint NOT NULL` 且 `column_default = null`**
+   —— 没有序列、没有 identity,INSERT 不带 id 必然违反 NOT NULL。
+   我早上给出的两个诊断(anon 无 INSERT 权限、缺 `SUPABASE_SERVICE_KEY`)**都不成立**。
+
+### 复现
+
+```sql
+select count(*) from (
+  select recorded_at::date d from cis_scores
+  where recorded_at >= current_date - 35 and macro_regime is not null
+  order by recorded_at desc limit 1000) z;   -- 服务端上限下能看到的天数
+select d, regime from daily_macro_regime where d >= current_date - 20 order by d desc;
+```
+`python3 -m tests.test_regime_write_path` 8/8,含反向验证(把原始行查询放回去 → 红)。
