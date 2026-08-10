@@ -402,7 +402,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             # cleanly. Caching it costs the clock, silently.
             ok = await _write(today, 1.0, 1.0, 0.0, 0.0, cap, regime, scalar, rv,
                               len(weights), gross, 0.0, True, weights,
-                              f"inception · cap_source={cap_source}")
+                              f"inception · cap_source={cap_source}",
+                              cap_source=cap_source)
             if not ok:
                 _log.error("[beta_core] INCEPTION NOT PERSISTED — refusing to cache "
                            "state; will retry next cycle rather than run on a mark "
@@ -458,7 +459,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         # the gap is not visible as a gap. It is visible as a return.
         ok = await _write(today, nav, bench_nav, book_ret, bench_ret, cap, regime, scalar,
                           rv, len(new_w), sum(abs(v) for v in new_w.values()), cost,
-                          rebalanced, new_w, f"cap_source={cap_source}")
+                          rebalanced, new_w, f"cap_source={cap_source}",
+                          cap_source=cap_source)
         if not ok:
             _log.error("[beta_core] MARK NOT PERSISTED for %s — leaving state at the "
                        "previous mark so the day is retried, not absorbed into "
@@ -475,7 +477,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
 
 
 async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
-                 n, gross, cost, rebal, weights, note):
+                 n, gross, cost, rebal, weights, note, cap_source=None):
     from src.api.store import supabase_insert_table
     top = ",".join(f"{s}:{w:.3f}" for s, w in sorted(weights.items(), key=lambda kv: -kv[1])[:3])
     try:
@@ -489,6 +491,14 @@ async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
             "realized_vol_30d": None if rv != rv else round(rv, 4),   # I1: NaN → null
             "n_positions": n, "gross": round(gross, 4), "cost": round(cost, 6),
             "rebalanced": rebal, "top_weights": top, "note": note,
+            # S-131. The column existed from the start and NOTHING ever wrote it, so
+            # every row read NULL. Its entire purpose is to separate "layer ③ did not
+            # run" from "layer ③ ran and chose 1.0" — the two produce the identical
+            # `exposure_cap`, which is why S-116 stayed invisible for a whole first
+            # mark and why S-130 needed a live query to diagnose rather than a row.
+            # A column that is only ever NULL is the same defect as a -2 sentinel
+            # folded into 0, one level up.
+            "cap_source": cap_source,
             # Stamped on every row so a curve can never be assembled across two
             # incarnations by accident — which would splice a voided segment onto a
             # live one and read as continuous.

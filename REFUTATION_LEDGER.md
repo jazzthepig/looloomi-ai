@@ -8776,3 +8776,23 @@ select count(*) from (
 select d, regime from daily_macro_regime where d >= current_date - 20 order by d desc;
 ```
 `python3 -m tests.test_regime_write_path` 8/8,含反向验证(把原始行查询放回去 → 红)。
+
+### S-131 — `cap_source` 列从建表起就没人写过
+
+`beta_core_nav.cap_source` 一直存在,**没有任何代码写它,每一行都是 NULL。**
+
+它的全部用途是把「③ 层没跑」和「③ 层跑了并选了 1.0」分开 ——
+**这两者产生的 `exposure_cap` 完全相同。** 这正是:
+
+- S-116 能撑过整个第一次 mark 而不被发现
+- S-130 必须靠实时查询去诊断,而不能靠读一行
+
+的原因。**一个永远为 NULL 的列,和被折叠进 0 的 −2 哨兵是同一个缺陷,只是高了一层:
+这个区分被设计过、命名过、给了存储 —— 然后从未被填充。**
+
+已修:`_write` 增加 `cap_source` 参数,两个调用点都传,payload 落库。
+守卫是**行为测试**(打桩捕获真实 payload),不是读源码 ——
+因为源码里 `note` 字符串一直包含 `cap_source=...`,**grep 会在坏版本上通过。**
+反向验证:从 payload 移除该键 → 守卫报错。
+
+`python3 -m tests.test_beta_core_book` 24/24。
