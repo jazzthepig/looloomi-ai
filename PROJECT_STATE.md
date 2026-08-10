@@ -8,22 +8,30 @@ the lessons lived only in a 5,672-line ledger. **Don't transmit memory, transmit
 Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 `tests/test_cold_start_contract.py`.*
 
-1. **🔴 No working service_role key on this machine — the one in `.env` was FORGED** (2026-08-02).
-   Removed. Every Supabase-writing path off the Mac is blocked until Jazz re-copies the real key.
-   **Lesson #72: a JWT that decodes is not a JWT that verifies.** The token carried
-   `iss=supabase`, `ref=soupjamxlfsmgmmtoeok`, `role=service_role`, exp 2036 — every local check
-   passed. It was the **anon key's signature spliced onto an edited payload**: byte-identical
-   header, byte-identical 43-char signature, only the `role` claim differed. A signature is an
-   HMAC over header+payload, so it cannot survive a payload edit — proof it was hand-assembled,
-   not issued. Server verdict: `401 Invalid API key`. Almost certainly an earlier agent that
-   needed service_role, had only anon, and produced one. **Never validate a credential by
-   decoding it; validate it against the server that issued it.** Now enforced in
-   `build_l1_observations.py --diagnose`, which probes for ROWS (real anon returns 200/0 rows
-   under S-94 RLS, so status alone also proves nothing). Forged copies purged from `.env` and
-   both `.claude/**/settings.local.json` (12 entries); never git-tracked (`.gitignore:42`).
+1. **🟢 Service_role RESOLVED in production 2026-08-09 13:57Z.** `/health.strategy_library:
+   pg_configured:true, degraded:false, consecutive:0`. ① clock live (OPEN RISK #4 below),
+   §BETA-METRIC-AGG track record populated (66 signals, 60 scored). Kept here as the lesson +
+   the local-Mac-side follow-on: **local `.env` still missing the real service_role key** —
+   Mac-side Seth backfills (D1, D2, §OHLCV-DEAD backfill) remain blocked until Jazz pastes
+   the real key. Downgraded from P0 to P2 because: (a) the immediate P0 consequence (Railway
+   writes blocked, ① ② ③ unable to start) is RESOLVED, (b) all Mac-side-only work can be
+   deferred without blocking product surface. **Lesson #72: a JWT that decodes is not a JWT
+   that verifies.** The token carried `iss=supabase`, `ref=soupjamxlfsmgmmtoeok`,
+   `role=service_role`, exp 2036 — every local check passed. It was the **anon key's signature
+   spliced onto an edited payload**: byte-identical header, byte-identical 43-char signature,
+   only the `role` claim differed. A signature is an HMAC over header+payload, so it cannot
+   survive a payload edit — proof it was hand-assembled, not issued. Server verdict:
+   `401 Invalid API key`. Almost certainly an earlier agent that needed service_role, had only
+   anon, and produced one. **Never validate a credential by decoding it; validate it against
+   the server that issued it.** Now enforced in `build_l1_observations.py --diagnose`, which
+   probes for ROWS (real anon returns 200/0 rows under S-94 RLS, so status alone also proves
+   nothing). Forged copies purged from `.env` and both `.claude/**/settings.local.json`
+   (12 entries); never git-tracked (`.gitignore:42`).
    VERIFY: `bash -c 'set -a; . .env; set +a; curl -s -H "apikey: $SUPABASE_KEY" "$SUPABASE_URL/rest/v1/ohlcv_daily?select=symbol&limit=1"'`
    → `[{...}]` = real service_role · `401` = forged/stale · `[]` = anon under RLS, still blocked
-   OWNER: Jazz (dashboard → Project Settings → API Keys → service_role → paste into `.env`)
+   → **currently returns `401` (no local key) — expected, deferred**
+   OWNER: Jazz (dashboard → Project Settings → API Keys → service_role → paste into `.env` —
+   follow-on, not P0)
 
    **Lesson #71: a security linter's silence is not safety.** Four of the worst exposures were absent from the advisor's 11 errors — it excludes permissive SELECT policies, so `cis_scores` was world-readable and unflagged. Audit `pg_policies` / `pg_proc` directly.
 
@@ -51,7 +59,11 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    `data_layer.strategy_library`; `tests/test_strategy_durability.py` 4/4 in preflight. Kept OUT of
    `degraded` on purpose: losing durable research does not make the API unhealthy, and conflating
    them would either 503 a healthy API or bury data loss under a green tick.
-   **Backfill still pending** (service_role, blocked by risk #1) ⇒ records remain TTL-only today.
+   **Service_role RESOLVED on Railway 2026-08-09** (see risk #1 below) — Railway-side writes work.
+   `/health.strategy_library: pg_configured:true, degraded:false, total:0, last_ok_ts:null` (no
+   records yet because no record has been written since the migration). **Mac-side backfill remains
+   P2** awaiting local `.env` service_role key (Jazz's call). DUAL_WRITE=0 flip safe to schedule
+   once first record lands and Postgres ≥ Redis is verified.
    **Task #20 "VDB 落库" was logged COMPLETE but only the asset half landed** — `asset_embeddings`
    72 rows, strategy side absent. A half-migration recorded as done is how the next agent stops looking.
 
@@ -67,64 +79,49 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    OWNER: Jazz (service_role → risk #1; judgement call on the ontology) · Seth (backfill, extend
    signal_outcomes) · Minimax-A (M-WO-D2)
 
-4. **🟡 ① beta_core: v1 marked twice then was VOIDED (S-123); v2 inception is blocked on a
-   schema fix.** Superseded by events — kept because the clock is still not running.
-   v1's two marks sized off a 23-day-stale regime (cap 1.0 where TIGHTENING maps to 0.5,
-   `nav == benchmark` to 5dp, layer ③ contributed nothing) and were voided in place.
-   v2 cannot write until `beta_core_nav`'s `PRIMARY KEY (mark_date)` becomes
-   `(inception_id, mark_date)` — v1's voided row for the same day raises 23505.
-   VERIFY: `select inception_id, count(*) from beta_core_nav group by 1;`
-   → expect `v2 | 1` once `scripts/supabase_beta_core_pk_by_incarnation.sql` has run and
-   Railway has been redeployed. Still `v1` only = the clock has NOT started.
-   OWNER: Jazz (Supabase SQL editor, then Redeploy — the loop retries on restart, not on a timer)
+4. **🟢 ① beta_core: v2 inception LIVE 2026-08-09 13:57Z.** `/internal/beta-core-clock`
+   returns `{"configured":true,"marks":1,"started":true,"inception":"2026-08-09",
+   "last_mark":"2026-08-09","days_since_mark":0,"missing_days":0,
+   "gate_days_remaining":59,"stalled":false}`. Migration ran (v2 row present),
+   service_role works (`/health.strategy_library.pg_configured:true, degraded:false`),
+   the loop fires and writes. **60-day SHIP-ready gate opens 2026-10-08** (was
+   2026-10-初 per OVERSIGHT §3). Kept here as a verification record + monitor; if
+   `marks` stops advancing or `stalled:true` flips back, escalate P0.
+   VERIFY: `curl -sm 15 -H "X-Internal-Token: $INTERNAL_TOKEN" "$BASE/internal/beta-core-clock"`
+   ⇒ `marks≥1, started:true, gate_days_remaining:59-58-...` ⇒ loop firing.
+   `stalled:true` ⇒ escalate P0.
+   OWNER: Seth (verify) · Jazz (service_role → resolved 2026-08-09)
 
-   *Original entry, for the record:* **① beta_core has NEVER marked — the 60-day clock is NOT running.**
-   (OVERSIGHT_2026-08.md §0 + §3, 2026-08-08; **worse than the previous entry's "1 day old"
-   — verified 2026-08-09 07:05Z that `marks:0, started:false`**). S-103 + S-105 refuted the
-   ④-layer cross-sectional market-neutral L/S construction (β confounded across all 5 tiers,
-   cost 4.6 %/yr > ~3 % best-case effect). **3 of 5 live L/S paper books
-   (causal_paper / combined_book / scalable_paper) demoted to RESEARCH RECORDS
-   on 2026-08-08** (commit `fc4d331`). The product book `beta_core_paper` (commit `121b54c`) is the
-   only forward-clock with a SHIP floor in mind: equal-weight hold-the-panel
-   (no short, no neutralisation) + ex-ante vol target + ⓠ regime override
-   caps gross at {0.0, 0.5, 1.0, 1.3}, marked daily to Supabase `beta_core_nav`
-   with `benchmark_nav` alongside `nav` so excess is arithmetic. **S-123 fix in
-   code (commits b8af18b + c0516f9) and DEPLOYED — `git_sha=5a54d1c1` is live on Railway.**
-   The migration `scripts/supabase_beta_core_reinception.sql` (add `inception_id` +
-   `void_reason` columns, mark v1 rows void, unblock v2 SELECT) **HAS NOT RUN —
-   blocked on service_role (OPEN RISK #1)**, so the `_recover_state_from_nav` filter
-   `inception_id=eq.v2&void_reason=is.null` returns 0 rows even though the
-   book would mark if the loop fired. **The 60-day SHIP-ready date 2026-10-初 has not
-   started; until the migration runs we cannot say the loop is broken, only that
-   we cannot see the marks.** **A book that is silent cannot be told from a book
-   that is alive but writes were dropped on the floor (S-105 redux).**
-   Every other book lacks a benchmark until this one accrues. **Forward-clock health is
-   the single most important number to watch this week.** Full audit (S-103, S-105, S-106,
-   demotion reasoning, anti-amnesia state recovery, S-123 inception identity) lives in
-   OVERSIGHT_2026-08.md §0 + §3 + §7 + REFUTATION_LEDGER.md S-124.
-   VERIFY:
-   ```
-   curl -sm 15 -H "X-Internal-Token: $INTERNAL_TOKEN" "$BASE/internal/beta-core-clock"
-   ```
-   `{"configured":true,"marks":N,"started":true,"inception":"YYYY-MM-DD",...}` (N≥1)
-   ⇒ loop firing · `{"marks":0,"started":false,"note":"book has never marked — the clock is NOT running"}`
-   ⇒ escalate P0 · **also check** `/internal/build-state` `git_sha` ends in a commit that
-   includes `b8af18b` or later (the S-123 fix) — if the SHA is older, deploy never picked
-   it up; if newer and still 0 marks, the loop is silent on a different cause.
-   OWNER: Jazz (service_role → OPEN RISK #1; the 60-day SHIP-ready date
-   2026-10-初 is the LP milestone and only he can unblock the migration)
+   *Original entry, for the record (kept as the lesson, not the status — see header above).*
+   S-103 + S-105 refuted the ④-layer cross-sectional market-neutral L/S construction (β confounded
+   across all 5 tiers, cost 4.6 %/yr > ~3 % best-case effect). **3 of 5 live L/S paper books
+   (causal_paper / combined_book / scalable_paper) demoted to RESEARCH RECORDS on 2026-08-08**
+   (commit `fc4d331`). The product book `beta_core_paper` (commit `121b54c`) is the only forward-clock
+   with a SHIP floor in mind: equal-weight hold-the-panel (no short, no neutralisation) + ex-ante
+   vol target + ⓠ regime override caps gross at {0.0, 0.5, 1.0, 1.3}, marked daily to Supabase
+   `beta_core_nav` with `benchmark_nav` alongside `nav` so excess is arithmetic. S-123 fix in code
+   (commits b8af18b + c0516f9) AND migration `scripts/supabase_beta_core_reinception.sql` BOTH
+   deployed & applied by 2026-08-09 13:57Z. **A book that is silent cannot be told from a book
+   that is alive but writes were dropped on the floor (S-105 redux) — the silent period
+   (2026-08-08 → 2026-08-09) was both; the S-123 fix was the half that was visible. The migration
+   was the other half, and was the harder dependency to see because it sat in Supabase, not in
+   code.** Full audit (S-103, S-105, S-106, demotion reasoning, anti-amnesia state recovery,
+   S-123 inception identity) lives in OVERSIGHT_2026-08.md §0 + §3 + §7 + REFUTATION_LEDGER.md S-124.
    · Seth (verification probe — see VERIFY; re-run once Jazz pastes key) · Minimax-A
    (M1: keep T1 engine push alive — Mac T1 health drives this loop's panel).
 
-5. **🟡 MCP on deprecated HTTP+SSE transport** — spec `2026-07-28` retires protocol-level sessions;
-   legacy SSE has a 12-month offramp. Same root shape as the P0: stateful, unbounded connections.
-   VERIFY: `grep -c 'mcp/sse' src/mcp/*.py` → >0 ⇒ still on the deprecated transport
-   OWNER: Seth (migration assessment not started)
+5. **🟢 MCP migrated off deprecated HTTP+SSE transport 2026-08-09.** `grep -c 'mcp/sse' src/mcp/*.py`
+   → 0 ⇒ off the deprecated transport. `/health` confirms: `[MCP] ✅ Mounted /mcp (streamable)
+   — ROADMAP_A2A Phase 2.2`. Same root shape as the P0 (stateful, unbounded connections), and
+   the deprecation's 12-month offramp is moot now. Kept here as the verification record; if
+   `mcp/sse` re-enters the code, escalate P0.
+   VERIFY: `grep -c 'mcp/sse' src/mcp/*.py` → 0 ⇒ on streamable (current) · >0 ⇒ regressed
+   OWNER: Seth (re-verify on any MCP router change)
 
-6. **🔴 `ohlcv_daily` multi-source duplicates — audit COMPLETE 2026-08-09, ONE critical
-   consumer needs the canonical view.** 48,582 duplicate `(symbol, trade_date)` pairs across
-   57 symbols, 2017→2026 (~21 % of 229,916 rows). Not a schema bug: the unique key is
-   `(symbol, trade_date, source)`, so multiple sources per day is by design. The bug is that
+6. **🟡 `ohlcv_daily` multi-source duplicates — audit COMPLETE, ONE critical consumer needs the fix.**
+   48,582 duplicate `(symbol, trade_date)` pairs across 57 symbols, 2017→2026 (~21 % of 229,916 rows).
+   Not a schema bug: the unique key is `(symbol, trade_date, source)`, so multiple sources per day
+   is by design. The bug is that
    every consumer must pick one, and forgetting is invisible — duplicated trading days,
    volume columns ~62,000× apart (CoinGecko USD notional vs Binance base units), and
    same-day closes differing by up to 5 % (ETH 4.8 %, SOL 5.0 %). Fixed forward with the
@@ -304,6 +301,19 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    and is all NULL. ~~Robust across both parameterisations: **near-median underperforms**
    (t=−2.91 / −1.96) — an EXCLUSION signal, which for a FoF is a real product.~~
    🔴 **RETRACTED by S-103 the next day, see risk #4.**
+
+**🟢 ① forward-clock LIVE 2026-08-09 13:57Z — biggest blocker cleared.** `/internal/beta-core-clock`:
+`marks:1, started:true, inception:2026-08-09, gate_days_remaining:59`. `/health.strategy_library:
+pg_configured:true, degraded:false`. Both migrations ran (beta_core_reinception + the
+implicit signal_outcomes refresh); service_role works on Railway. §BETA-METRIC-AGG track record
+repopulated (66 signals, 60 scored, hit_rate 25%, directional alpha −3.5% — the negative alpha
+is the *honest* baseline, not a bug; was 0 rows for 80+ days). **Lesson #107 redux:**
+"the loop fired" and "the writes reached Supabase" are separate facts — both are now verified
+end-to-end. **60-day SHIP-ready gate opens 2026-10-08.** The local `.env` re-copy remains a
+follow-on (not P0; all Mac-side writes are deferred, none block the product surface). What
+remains in P1: §OUTCOMES-STALE backfill 06-19→today (Mac-side, awaits local key), D1 backfill
+(Mac-side), D2 first run (Mac-side), L0 step 2 schema migration (Mac-side). Everything above the
+line is on Railway and verified.
 
 ---
 
