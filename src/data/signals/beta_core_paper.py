@@ -633,4 +633,27 @@ async def get_curve(limit: int = 400) -> dict:
         "days_to_gate": max(0, 60 - n),
         # An annualized figure from a handful of days is arithmetic, not evidence.
         "annualization_is_meaningful": n >= 60,
+
+        # ── Why the excess is what it is (2026-08-10) ───────────────────────────
+        # Without these, `excess_pct: 0.0` is unreadable: it looks identical whether
+        # ③ is sizing the book down correctly or has fallen through to cap 1.0. That
+        # ambiguity cost a full diagnostic round-trip through SQL, and it is the same
+        # cap_source conflation as S-131 — one layer up, on the reading surface.
+        "exposure_cap": last.get("exposure_cap"),
+        "cap_source": last.get("cap_source"),
+        "regime": last.get("regime"),
+
+        # ZERO EXCESS IS EXPECTED FOR ONE DAY AFTER A CAP MOVE, and this is the
+        # single most misreadable property of the book. Returns are booked off the
+        # PREVIOUS mark's weights, so a cap that changes today first shows up in
+        # tomorrow's return. A reader seeing 0.0000 on the day the cap correctly
+        # dropped to 0.5 would conclude ③ is inert — the exact wrong conclusion.
+        "excess_is_zero_by_construction": (
+            abs(cum - bcum) < 1e-9 and (last.get("exposure_cap") or 1.0) == 1.0),
+        "reading_note": (
+            "excess is booked off the PREVIOUS mark's weights, so a cap change shows "
+            "up one day later. Zero excess with exposure_cap=1.0 means the book and "
+            "the panel are identical BY CONSTRUCTION (③ not biting); zero excess with "
+            "exposure_cap<1.0 on the latest row means the cap has moved but its first "
+            "differentiated return has not been booked yet."),
     }

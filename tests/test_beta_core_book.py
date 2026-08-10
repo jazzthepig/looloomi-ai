@@ -579,6 +579,27 @@ def test_the_curve_refuses_to_invent_a_notional():
             f"get_curve references {tell!r} — a target AUM is ambition, not capacity")
 
 
+def test_zero_excess_is_disambiguated_on_the_reading_surface():
+    """2026-08-10. `excess_pct: 0.0` has two completely different meanings and the
+    curve could not tell them apart:
+
+      (a) ③ fell through to cap 1.0, so the book IS the panel by construction —
+          the S-130 failure, and the thing the book exists to not do;
+      (b) the cap correctly moved to 0.5 today, but returns are booked off the
+          PREVIOUS mark's weights, so the first differentiated return arrives
+          tomorrow. Zero here is correct and temporary.
+
+    Reading (b) as (a) means concluding layer ③ is inert on the very day it started
+    working. This is S-131's cap_source conflation one layer up: the distinction was
+    designed, named, and stored, and then not surfaced where anyone reads it."""
+    src = inspect.getsource(bc.get_curve)
+    for field in ("exposure_cap", "cap_source", "regime",
+                  "excess_is_zero_by_construction", "reading_note"):
+        assert field in src, f"get_curve does not surface {field}"
+    assert "PREVIOUS mark" in src, (
+        "the one-day lag must be stated on the surface, not left in the module")
+
+
 def test_annualizing_a_short_curve_is_flagged_not_hidden():
     """A 2-day excess annualized is a large number and not evidence of anything.
     The figure is still published — suppressing it invites someone to recompute it
