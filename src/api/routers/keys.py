@@ -225,6 +225,20 @@ async def create_key(body: CreateKeyRequest):
 
     _log.info(f"[keys] New {tier} key issued: {key_prefix}*** ({body.email})")
 
+    # Audit the issuance. Deliberately AFTER the durable write and deliberately
+    # non-fatal: a key that exists but was not audited is recoverable from the row
+    # itself, while refusing to issue a key because the audit table hiccuped would
+    # trade a real capability for a bookkeeping preference. The write REPORTS its
+    # outcome (Lesson #107) so a silently empty audit trail is visible in the log
+    # rather than trusted — an audit trail that fails quietly is worse than none,
+    # because it gets believed.
+    from src.api.metering import write_audit
+    if not await write_audit(actor=body.email, action="key.issue",
+                             subject=key_prefix,
+                             detail={"tier": tier, "rpm": rpm, "rpd": rpd}):
+        _log.error("[keys] AUDIT NOT WRITTEN for key.issue %s — the key exists but "
+                   "the trail does not", key_prefix)
+
     return CreateKeyResponse(
         key=key,
         key_prefix=key_prefix,

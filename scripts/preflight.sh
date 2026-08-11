@@ -258,6 +258,25 @@ python3 -m tests.test_table_columns_match_the_code
 #               ("full-model score"), so the tier and its meaning stay visible and
 #               only the part a competitor benefits from goes away.
 python3 -m tests.test_no_stack_leakage_on_user_surfaces
+# 3a-septdecies. usage metering can support an invoice (2026-08-11, S-140). Usage
+#                lived ONLY in Redis under a 24h TTL and api_keys.request_count was
+#                incremented by NOTHING — a column shown on the analytics page that
+#                had read 0 since creation. There was no substrate to bill from: not
+#                "billing is unbuilt", the usage itself did not survive a day. S-105's
+#                shape (strategy library in a 24h-TTL Redis key) moved onto revenue,
+#                and worse — research can be re-derived, a month of metered usage
+#                cannot. Also S-131's shape: "made no calls" and "we failed to meter"
+#                rendered identically.
+#                Guards the property that makes it billable: the flush is MONOTONE
+#                (requests = GREATEST(existing, incoming)) and that guarantee lives in
+#                the database function, not the caller — so a replay cannot
+#                double-count, a missed flush is recovered by the next, and a Redis
+#                reset leaves the high-water mark. We under-count on a lost counter
+#                and never over-count: a bill we can defend is a conversation, an
+#                over-bill is a refund and a reputation. Also pins Postgres OFF the
+#                request path (the 2026-07-29 saturation P0) and that the audit write
+#                REPORTS whether it landed.
+python3 -m tests.test_metering_is_billable
 # 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
 #                after its v1 run was found to have sized off a 23-day-stale regime.
 #                The integrity property this pins is the product's: a forward track
