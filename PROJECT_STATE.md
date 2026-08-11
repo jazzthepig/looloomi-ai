@@ -246,6 +246,23 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 
 ## LANDED — kept for the lessons, not for the status
 
+**🟢 HAR-RV 证伪 + ③ 的价值第一次被度量 — 2026-08-11 (S-134/S-135).**
+   933 天 OOS。HAR 把对数波动预测得**显著**更好(MSE-log p<0.0001),
+   **但账本不更好**(ret/DD:cap 1.3 上 trailing 0.580 vs HAR 0.497)。
+   QLIKE 那 3.4% 的胜幅 **p=0.269,扛不住自己的标准误**。
+   **→ 证伪。中间量的更好估计不是改进,只有决策算数(R76–R94 正向表述)。**
+   **意外发现 ①:现役 vol scalar 一直在干实事,而我们从没度量过。**
+   hold-the-panel ret/DD 0.294 → cap 1.0 **0.454** → cap 1.3 **0.580**
+   (+104.5%/−55.7% vs panel +54.6%/−63.2%)。**③ 的价值主要来自 vol targeting,不是 regime cap。**
+   ⚠️ 且在这个窗口里 **cap 收紧到 0.5 反而更差**(0.445 / +44.1%)——
+   但每个 cap 是**恒定**测的,真实 ③ 随 regime 切换。**「随 regime 切换 vs 恒定松 cap+vol targeting」
+   是这条线上最该做、还没做的测试。** 单一 split,别过度解读。
+   **意外发现 ②:设定 > 估计器。** 同一个 HAR,只改 horizon/functional,cap 1.3 的账本在
+   +37%/−76%DD 和 +74%/−48%DD 之间摆动。h=1 是我造的**单位错误**:现役是 30 天已实现波动、
+   `_VOL_TARGET=0.60` 按那个尺度标定,塞进次日预测等于改了除数的单位 ——
+   和 `asset_class` vs `bench`、f vs F 同类。
+   VERIFY: `python3 scripts/study_har_rv_vs_trailing.py`(无需凭证,读 Binance)
+
 **🟢 度量单位改成美元 — 2026-08-10 (S-132).** 我们做过的每一次测量都是百分比计价的。
    **Berk & Green (JPE 2004):** 百分比 alpha 会被资金流入竞争掉,对自己的未来没有预测力。
    **Berk & van Binsbergen (JFE 2015):** 但**提取的美元**(alpha × AUM)持续到约十年。
