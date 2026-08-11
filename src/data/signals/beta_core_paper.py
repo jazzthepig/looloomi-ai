@@ -63,11 +63,24 @@ _STATE_KEY = "beta_core:state"
 #    nothing. Voided rather than kept because we sell the falsification apparatus,
 #    and a 60-day curve needing a footnote about its first two days is worth less
 #    than a clean curve starting two days later.
-_INCEPTION_ID = "v2"
+# v2 (2026-08-09 → 2026-08-11, 3 marks) — SUPERSEDED, see S-137. Not void: the
+#    marks are honest and the ③ layer was working correctly by the last of them.
+#    Retired because the SIZING POLICY changed materially — the cap is now selected
+#    by trailing-vol tercile rather than macro regime — and a 60-day curve spliced
+#    across two policies is not a 60-day record of either. Retiring at day 3 costs
+#    3 days; discovering the splice at day 55 would have cost 55.
+_INCEPTION_ID = "v3"
 _INCEPTION_REASON = (
-    "v1 voided per S-123: regime history truncated to the OLDEST 20,000 rows of "
-    "53,250, so the book sized off a 2026-07-17 reading on 2026-08-09 and ran at "
-    "double the intended exposure for its entire life (2 marks)."
+    "v3 (2026-08-11, S-137): ③'s cap is now driven by the trailing-vol tercile, "
+    "not by macro_regime. Measured 902d OOS: hold-the-panel ret/DD 0.319, constant "
+    "cap 1.3 0.634, trailing-vol ladder 0.780, forward-vol ORACLE 0.885 — the "
+    "observable ladder captures 58.3% of the perfect-foresight ceiling. The old "
+    "ladder was set from the drawdown intuition, and S-136 showed that objective "
+    "loses even with perfect foresight (0.337, 47% worse than doing nothing). "
+    "regime is still RECORDED on every row so its marginal value stays testable; "
+    "it no longer sizes the book. v1 remains VOID per S-123 (23-day-stale regime, "
+    "double the intended exposure for its entire 2-mark life); v2 is SUPERSEDED, "
+    "not void — its rows are honest and stay queryable."
 )
 _FEE = 0.0005
 _REBAL_DAYS = 7
@@ -113,6 +126,64 @@ def _vol_scalar(rv: float) -> float:
 # without saying so. The invented names were half-remembered from EXPOSURE_BANDS_V1,
 # which is a different vocabulary keyed off a different input — two label sets
 # conflated, exactly like `asset_class` and `bench` before it.
+# ── ③'s DRIVER, measured (2026-08-11, S-136/S-137) ───────────────────────────
+# The cap LADDER (0.5 / 1.0 / 1.3) survives. What selects among its rungs does not.
+#
+# WHAT WAS MEASURED, 902 days OOS on the 24-major panel, vs hold-the-panel:
+#
+#   hold the panel                         ret/DD 0.319
+#   constant cap 1.3 (vol targeting only)  ret/DD 0.634
+#   trailing-vol tercile → 0.5/1.0/1.3     ret/DD 0.780   ← +23.1%, and it is OBSERVABLE
+#   ORACLE forward-vol tercile             ret/DD 0.885   ← the ceiling, needs the future
+#
+# So a trailing-vol ladder captures 58.3 % of everything perfect foresight could
+# deliver, using a number `_realized_vol` already computes on every mark.
+#
+# AND THE OBJECTIVE WAS WRONG, which is the part worth remembering. ⓠ's stated
+# criterion is "did exposure come down in the first third of the drawdown".
+# Granted PERFECT foresight of drawdowns, that rule scores ret/DD 0.337 — 47 %
+# WORSE than doing nothing — because a drawdown is followed by a rebound, and
+# cutting before the fall also cuts before the recovery. In a long-only beta book
+# the forgone upside exceeds the avoided downside. Perfect VOL foresight scores
+# 0.885. "Reduce risk" is one phrase and two different quantities whose optimal
+# positions point in different directions; the old ladder was set from the
+# drawdown intuition, which is the one that loses.
+#
+# Thresholds are the 33rd/67th percentiles of trailing 30d annualised panel vol
+# computed on the TRAIN half only (days 0–1399), then applied forward. They are
+# calibration, not tuning: three ladder widths were tried and the effect is
+# monotone in width, so it is the exposure swing doing the work, not a threshold
+# chosen against a return. Cause (Moreira & Muir, JF 2017, volatility-managed
+# portfolios): vol is persistent and forecastable while returns are not, so
+# scaling exposure by inverse vol raises Sharpe without a return forecast.
+#
+# BOUNDS — one panel, one 902-day window that was net +57 % for the panel. A
+# ladder that takes more risk in calm markets flatters itself in a rising one.
+# This is why it starts a NEW INCARNATION rather than editing v2's policy midway.
+_VOL_TERCILE_Q33 = 0.676     # annualised; train-half 33rd pct
+_VOL_TERCILE_Q67 = 0.839     # annualised; train-half 67th pct
+
+
+def _vol_state_cap(rv: float) -> tuple[float, str]:
+    """③'s cap from the trailing-vol tercile. (cap, source).
+
+    NaN in ⇒ the middle rung, never the top: an unmeasured vol is not a licence to
+    lever (I1). The source string records the rung so a row can be read without
+    re-deriving it."""
+    if rv != rv or rv <= 0:
+        return 1.0, "vol_state_unknown"
+    if rv > _VOL_TERCILE_Q67:
+        return 0.5, "vol_state_high"
+    if rv < _VOL_TERCILE_Q33:
+        return 1.3, "vol_state_low"
+    return 1.0, "vol_state_mid"
+
+
+# LEGACY — kept because `regime` is still RECORDED on every row so the question
+# "does macro regime add anything beyond trailing vol?" stays answerable. It no
+# longer SIZES the book: we have measured what vol state is worth and we have
+# never measured what regime is worth, and an unmeasured input must not drive a
+# book while a measured one sits beside it.
 _REGIME_CAP: dict[str, float] = {
     "RISK_OFF":    0.5,
     "TIGHTENING":  0.5,
@@ -166,7 +237,7 @@ async def _last_persisted_cap() -> dict | None:
     return rows[0] if rows else None
 
 
-async def _resolve_cap(regime: str | None) -> tuple[float, str]:
+async def _resolve_cap(regime: str | None, rv: float | None = None) -> tuple[float, str]:
     """③'s cap, with the missing-regime case failing SAFE instead of OPEN.
 
     THE BUG THIS FIXES (2026-08-11, S-133). `_exposure_cap(None)` returns
@@ -189,8 +260,14 @@ async def _resolve_cap(regime: str | None) -> tuple[float, str]:
 
     The carry is LOUD, not silent: cap_source records the source day and the age, so
     a book sizing off a week-old regime says so on every row it writes."""
-    if regime:
-        return _exposure_cap(regime)
+    # S-137: the DRIVER is now trailing-vol state, not macro regime. `regime` is
+    # still recorded on every row so "does regime add beyond vol?" stays answerable,
+    # but it no longer sizes the book — see _vol_state_cap. The `rv` argument is
+    # required; a caller that cannot supply it falls through to the carry path
+    # rather than silently reverting to the regime ladder.
+    if rv is not None and rv == rv:
+        cap, src = _vol_state_cap(rv)
+        return cap, (f"{src}(regime={regime or 'none'})" if regime else src)
 
     last = await _last_persisted_cap()
     if not last or last.get("exposure_cap") is None:
@@ -456,7 +533,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     regime, regime_raw = await _current_regime()
     # S-133: carries the last booked cap forward when the regime is unreadable,
     # instead of failing open to full exposure. See _resolve_cap.
-    cap, cap_source = await _resolve_cap(regime)
+    cap, cap_source = await _resolve_cap(regime, rv)
     # Record when the dwell filter actually CHANGED the decision. Without this the
     # row cannot distinguish "the filter did nothing today" from "the filter is not
     # running" — the same class as cap_source, and the reason the inert mapping in
