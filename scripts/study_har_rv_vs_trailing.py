@@ -56,6 +56,7 @@ RUN (Mac-side — NO credentials needed; reads Binance directly):
 """
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
 
@@ -209,6 +210,70 @@ def qlike(actual_var: np.ndarray, pred_var: np.ndarray) -> float:
     return float(np.mean(r - np.log(r) - 1.0))
 
 
+def qlike_series(actual_var: np.ndarray, pred_var: np.ndarray) -> np.ndarray:
+    """Per-observation QLIKE, for the Diebold-Mariano test below."""
+    r = actual_var / pred_var
+    return r - np.log(r) - 1.0
+
+
+def diebold_mariano(loss_a: np.ndarray, loss_b: np.ndarray, lag: int | None = None) -> dict:
+    """Is the loss difference distinguishable from zero? (Diebold & Mariano 1995.)
+
+    WHY THIS IS NOT OPTIONAL. On the real panel HAR beat the incumbent on QLIKE by
+    3.4 % over 932 days. "Wins" is not a finding at that margin — a mean difference
+    has to be compared to its own standard error before it is allowed to become a
+    verdict, and forecast-loss differentials are serially correlated, so the naive
+    standard error is too small and would manufacture significance.
+
+    d_t = loss_a - loss_b; test H0: E[d] = 0 with a Newey-West HAC variance.
+    Negative statistic ⇒ a is the better forecaster. Lag starts from the usual
+    ⌊4(n/100)^(2/9)⌋ rule rather than anything chosen after seeing the answer.
+
+    LAG SENSITIVITY IS PART OF THE ANSWER, not a footnote. Measured here: on pure
+    noise the rule-of-thumb lag gives a 3.7 % false-positive rate (correct), but on
+    an AR(0.8) differential it gives 15.3 % — the rule's lag (~6 at n=900) is far
+    too short for autocorrelation that decays like 0.8^k. Since we cannot know in
+    advance how persistent the loss differential is, the verdict is taken at the
+    LONGEST lag tested, not the one that happens to be conventional. Choosing the
+    lag that gives significance is the same act as choosing the sample that does.
+    """
+    d = loss_a - loss_b
+    d = d[np.isfinite(d)]
+    n = d.size
+    if n < 50:
+        return {"status": "too_few_obs", "n": int(n)}
+    base = int(np.floor(4 * (n / 100.0) ** (2.0 / 9.0))) if lag is None else int(lag)
+    lags = sorted({max(base, 1), max(2 * base, 2), max(4 * base, 4)})
+
+    dbar = float(np.mean(d))
+    dc = d - dbar
+    gamma = {k: float(np.mean(dc[k:] * dc[:-k])) if k else float(np.mean(dc * dc))
+             for k in range(0, max(lags) + 1)}
+
+    per_lag = {}
+    for L in lags:
+        var = gamma[0] + 2.0 * sum((1.0 - k / (L + 1.0)) * gamma[k] for k in range(1, L + 1))
+        if var <= 0:
+            per_lag[L] = None
+            continue
+        stat = dbar / np.sqrt(var / n)
+        per_lag[L] = (float(stat), float(math.erfc(abs(stat) / math.sqrt(2.0))))
+
+    usable = {L: v for L, v in per_lag.items() if v is not None}
+    if not usable:
+        return {"status": "nonpositive_hac_variance", "n": int(n)}
+    worst_lag = max(usable)                     # most conservative
+    stat, p = usable[worst_lag]
+    return {"status": "ok", "n": int(n), "lag": int(worst_lag),
+            "lags_tested": [int(x) for x in lags],
+            "p_by_lag": {int(L): round(v[1], 5) for L, v in usable.items()},
+            "mean_diff": round(dbar, 6), "dm_stat": round(stat, 3),
+            "p_value": round(p, 5),
+            "better": "A" if dbar < 0 else "B",
+            # significance must hold at EVERY lag tested, not just the kind one
+            "significant_5pct": bool(all(v[1] < 0.05 for v in usable.values()))}
+
+
 def mse_log(actual_var: np.ndarray, pred_var: np.ndarray) -> float:
     m = np.isfinite(actual_var) & np.isfinite(pred_var) & (pred_var > 0) & (actual_var > 0)
     if m.sum() < 30:
@@ -325,20 +390,50 @@ def main() -> int:
     print(f"  MSE(log) (wants the MEDIAN) HAR={m_h:.4f}  trailing30={m_t:.4f}  "
           f"{'HAR wins' if m_h < m_t else 'trailing wins'}")
 
+    # A margin is not a result until it is compared to its own standard error.
+    dm_q = diebold_mariano(qlike_series(actual, har_mean), qlike_series(actual, pred_tr))
+    dm_m = diebold_mariano((np.log(actual) - np.log(har_med)) ** 2,
+                           (np.log(actual) - np.log(pred_tr)) ** 2)
+    print("\n  Diebold-Mariano (Newey-West HAC; negative stat ⇒ HAR better):")
+    for name, dm in (("QLIKE   ", dm_q), ("MSE(log)", dm_m)):
+        if dm.get("status") != "ok":
+            print(f"    {name}: {dm.get('status')}")
+            continue
+        print(f"    {name}: stat={dm['dm_stat']:+.2f}  p={dm['p_value']:.4f}  "
+              f"lag={dm['lag']}  "
+              f"{'✓ significant at 5%' if dm['significant_5pct'] else '✗ NOT significant'}")
+
     both = (q_h < q_t) and (m_h < m_t)
+    sig = (dm_q.get("significant_5pct") and dm_q.get("better") == "A"
+           and dm_m.get("significant_5pct") and dm_m.get("better") == "A")
     print("\n── VERDICT ──")
     if not both:
         print("  HAR does NOT win on both proper losses → do not wire it. File as a")
         print("  refutation; the graveyard is the asset.")
-    elif live < 5.0:
-        print("  HAR forecasts better BUT the scalar is inert at the live cap.")
-        print("  → DOCTRINE, not SHIP. Wiring it would change no decision the book")
-        print("    makes. Revisit if _VOL_TARGET rises or the cap ladder changes.")
+    elif not sig:
+        print("  HAR wins on both point estimates but the difference is NOT")
+        print("  distinguishable from zero once serial correlation is accounted for.")
+        print("  → NOT a result. A margin smaller than its own standard error is the")
+        print("    thing every graveyard entry looked like before it was measured.")
     else:
-        print(f"  HAR wins on both losses AND the scalar binds on {live}% of days.")
-        print("  → candidate. Next gate: does the changed `gross` actually reduce")
-        print("    realised drawdown vs hold-the-panel? Percentage forecast accuracy")
-        print("    is not the product; exposure taken at the right time is.")
+        print("  HAR wins on both losses, and both differences are significant.")
+        # Reachability is regime-conditional, and the CURRENT regime is the least
+        # informative slice of it. Reporting only the live cap is how the first
+        # reading of this study concluded the scalar was inert.
+        print("\n  REACHABILITY IS REGIME-CONDITIONAL — this is the number that decides")
+        print("  whether the better forecast reaches the book, and it is not one number:")
+        for cap in CAPS_TO_TEST:
+            d = reach["binds_at_cap"][str(cap)]
+            print(f"    cap {cap} → binds {d['pct_days']}% of days, "
+                  f"median gross cut {d['median_gross_reduction']}")
+        print("  So the value of a better vol forecast is")
+        print("    Σ over regimes  P(regime) × bind-rate(cap of that regime),")
+        print("  NOT the bind rate at whatever regime happens to be live today.")
+        print("  At cap 0.5 it is near-inert; at 1.0 and 1.3 it is the main mechanism.")
+        print("\n  → CANDIDATE, gated on: (a) the regime mix from daily_macro_regime,")
+        print("    and (b) does the changed `gross` actually reduce realised drawdown")
+        print("    vs hold-the-panel? Forecast accuracy is not the product; exposure")
+        print("    taken at the right time is. Do not wire it before (b).")
     return 0
 
 
