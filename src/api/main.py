@@ -460,6 +460,36 @@ async def _beta_core_loop():
         await _asyncio.sleep(24 * 3600)
 
 
+# ── USAGE METERING — the substrate an invoice stands on ──────────────────────
+# Measured 2026-08-11: usage existed ONLY in Redis under a 24h TTL, and
+# api_keys.request_count was incremented by nothing. There was no basis to bill
+# from — not "billing is unbuilt", the usage itself did not survive a day. Same
+# shape as S-105 (the strategy library in a 24h-TTL Redis key), on revenue.
+#
+# Redis stays the hot counter; this flushes it. Writing Postgres per request would
+# put the database on the request path, which is the 2026-07-29 saturation P0.
+async def _metering_flush_loop():
+    from src.api.metering import FLUSH_INTERVAL_S, flush_usage
+    await _asyncio.sleep(120)          # let the app settle before touching Redis
+    while True:
+        try:
+            res = await flush_usage()
+            if res.get("status") == "failed":
+                print(f"[METERING] ⚠️  flush failed: {res}")
+            elif res.get("status") == "ok":
+                print(f"[METERING] flushed {res.get('n')} key-days for {res.get('date')}")
+        except Exception as _e:
+            print(f"[METERING] ⚠️  loop error: {_e}")
+        await _asyncio.sleep(FLUSH_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_metering_loop():
+    if os.environ.get("DISABLE_METERING", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_metering_flush_loop())
+        print("[METERING] ✅ usage flush loop scheduled (Redis → api_usage)")
+
+
 @app.on_event("startup")
 async def _start_beta_core_loop():
     if os.environ.get("DISABLE_BETA_CORE", "").lower() not in ("1", "true", "yes"):
