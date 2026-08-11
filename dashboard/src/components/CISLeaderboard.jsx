@@ -770,7 +770,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             color:      engineSource === "local_engine" ? "#00D98A" : "#fbbf24",
             border:    `1px solid ${engineSource === "local_engine" ? "rgba(0,217,138,0.22)" : "rgba(251,191,36,0.20)"}`,
           }}>
-            {engineSource === "local_engine" ? "LOCAL ENGINE" : "ESTIMATED"}
+            {engineSource === "local_engine" ? "FULL MODEL" : "ESTIMATED"}
           </span>
         </div>
 
@@ -830,7 +830,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
             {[
               { title: "Problem Solved", text: "Eliminates subjective analyst ratings. Algorithmic, reproducible scoring removes emotional bias and provides a continuous signal — not quarterly reviews." },
-              { title: "Methodology",   text: "F (Fundamental) · M (Market Structure) · O (On-Chain Health) · S (Sentiment) · A (Alpha Independence). Mac Mini T1 engine for full scoring, Railway T2 for market estimation." },
+              { title: "Methodology",   text: "F (Fundamental) · M (Market Structure) · O (On-Chain Health) · S (Sentiment) · A (Alpha Independence). Two-tier scoring: full-model scores where complete pillar data is available, market-based estimates elsewhere. Tier is shown on every asset." },
               { title: "Application",   text: "Grade A/B = strong composite signals. Grade C = mixed or deteriorating signals. Grade D/F = structural weakness. Applies equally across crypto and TradFi." },
             ].map(card => (
               <div key={card.title} style={{ borderLeft: `1px solid rgba(68,114,255,0.20)`, paddingLeft: 12 }}>

@@ -615,7 +615,7 @@ export default function MethodologyPage() {
               rows={[
                 ["Confidence < 0.5",      "Score compresses toward 50 (less range)", "Warning dot indicator"],
                 ["Volume data gap",        "LAS liq_mult floored at 0.15",           "LAS displayed in amber"],
-                ["Stale Mac Mini push",    "System falls back to Tier 2 estimate",   "Badge: CIS MKT · T2"],
+                ["Full-model score unavailable", "System falls back to Tier 2 estimate", "Badge: CIS MKT · T2"],
                 ["Market data unavail.",   "Asset excluded from universe",            "Not shown in leaderboard"],
                 ["Regime transition",      "T1 flags + stores previous_regime",      "Regime badge updates live"],
               ]}

@@ -177,7 +177,7 @@ function SectorRotation({ assets, historyMap }) {
 
   if (!classes.length) return (
     <div style={{ color: T.t3, fontFamily: FONTS.body, fontSize: 13, padding: "32px 0", textAlign: "center" }}>
-      Score history builds over time as Mac Mini pushes CIS scores every 30 minutes.
+      Score history builds over time as the engine publishes updates through the day.
     </div>
   );
 
@@ -382,8 +382,7 @@ export default function ScoreAnalytics({ universe: universeProp = [] }) {
             No score data yet
           </div>
           <div style={{ fontSize: 12, color: T.t3, fontFamily: FONTS.body }}>
-            History accumulates as the Mac Mini CIS engine pushes scores every 30 minutes.
-            Connect Supabase (SUPABASE_URL + SUPABASE_KEY in Railway) to persist history.
+            History accumulates as the scoring engine publishes updates through the day.
           </div>
         </div>
       )}

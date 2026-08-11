@@ -145,7 +145,7 @@ export default function MacroBrief() {
 
   if (loading) return null;
 
-  // LM Studio offline or Mac Mini not pushing — show minimal offline pill
+  // Narrative service unavailable — show minimal offline pill
   if (!data?.brief) return (
     <div style={{
       display: "flex", alignItems: "center", gap: 8,
@@ -156,7 +156,7 @@ export default function MacroBrief() {
     }}>
       <span style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,160,60,0.5)", display: "inline-block", flexShrink: 0 }} />
       <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(176,174,165,0.4)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-        Macro Brief · LM Studio offline
+        Macro Brief · narrative offline
       </span>
     </div>
   );

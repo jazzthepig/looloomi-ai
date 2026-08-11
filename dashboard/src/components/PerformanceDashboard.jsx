@@ -780,7 +780,7 @@ export default function PerformanceDashboard() {
           }}>
             <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, lineHeight: 1.8, opacity: 0.6 }}>
               <strong style={{ color: T.t2, opacity: 1 }}>Methodology</strong> · Signals logged when CIS ≥ 60 (OUTPERFORM) or CIS ≥ 75 (STRONG OUTPERFORM).
-              Signals close on downgrade (CIS &lt; 52). Entry/exit prices from Mac Mini push payload (T1) or CoinGecko (T2).
+              Signals close on downgrade (CIS &lt; 52). Entry/exit prices from the full-model feed (T1) or the market feed (T2).
               Equity curve compounds $100k notional across closed signal sequence.
               Sharpe and Sortino computed via empyrical (Quantopian open-source, period=signal).
               This is a signal track record, not a live trading account. Past signal performance does not guarantee future results.
