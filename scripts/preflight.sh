@@ -205,6 +205,25 @@ python3 -m tests.test_embedding_dims_carry_information
 #                names, dropping one can only RAISE the answer — and the ones that
 #                fail to resolve are the thin names that would have bound.
 python3 -m tests.test_value_added_dollars
+# 3a-quaterdecies-ter. HAR-RV study specification (2026-08-11, S-134). Guards a
+#                STUDY rather than a production path, which earns its place here
+#                because the study produced THREE verdicts on synthetic data where
+#                the answer is known by construction, and only the third was right:
+#                (1) exp(Xβ) predicts the MEDIAN, so QLIKE — asymmetric, punishes
+#                under-prediction — declared the incumbent the winner; (2) the
+#                textbook exp(Xβ+σ²/2) made it WORSE, because the LHS is a single
+#                squared return, so log(r²) carries log-χ²₁ noise (var ≈4.93) and
+#                the fitted σ² measures PROXY NOISE — σ²/2≈2.5 inflated every
+#                forecast ~13x, and both losses then agreed on the wrong answer;
+#                (3) Duan's smearing (JASA 1983) is nonparametric and lands ≈3.6.
+#                Plus the structural point: QLIKE identifies the conditional MEAN
+#                and MSE-on-log the MEDIAN, so "must win on both proper losses" is
+#                incoherent unless each is scored against the functional it
+#                identifies. A refutation from a mis-specified study is worse than
+#                no study, because it goes in the ledger and stops the question
+#                being asked again. Positive control: HAR must win on 5 synthetic
+#                GARCH seeds where vol is persistent by construction.
+python3 -m tests.test_har_rv_study_is_specified_correctly
 # 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
 #                after its v1 run was found to have sized off a 23-day-stale regime.
 #                The integrity property this pins is the product's: a forward track
