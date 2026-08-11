@@ -878,7 +878,7 @@ function SimonsPanel() {
         borderBottom: "1px solid rgba(37,99,235,0.10)",
       }}>
         <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
-          Simons IC Loop
+          Information-Coefficient Loop
         </span>
         <span style={{
           fontFamily: FONTS.mono, fontSize: 8, fontWeight: 600, letterSpacing: ".08em",

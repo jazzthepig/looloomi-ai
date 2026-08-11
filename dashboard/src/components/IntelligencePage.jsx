@@ -472,10 +472,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               }}>
                 <div style={{ width: 2, height: 16, background: "rgba(6,182,212,0.65)", borderRadius: 1, flexShrink: 0 }} />
                 <span style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 600, color: T.primary, letterSpacing: "-0.01em" }}>
-                  {view === "macro" ? "Macro" : view === "events" ? "Events & VC" : "Intelligence"}
+                  {view === "macro" ? "Macro" : view === "events" ? "VC Funding Flows" : "Intelligence"}
                 </span>
                 <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  {view === "macro" ? "· Macro Pulse & Economic Indicators" : view === "events" ? "· VC Funding & Regulatory" : "· Market structure, live"}
+                  {view === "macro" ? "· Macro Pulse & Economic Indicators" : view === "events" ? "· Who funded what, and when" : "· Market structure, live"}
                 </span>
                 {/* Live inline stats — right-aligned, filtered by view */}
                 <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 0 }}>
