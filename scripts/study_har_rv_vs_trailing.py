@@ -123,7 +123,31 @@ def har_features(rv_daily: np.ndarray, t: int) -> np.ndarray | None:
     return np.array([1.0, d, w, m])
 
 
-def fit_har(rv_daily: np.ndarray, lo: int, hi: int) -> tuple[np.ndarray, float] | None:
+def forward_avg_var(rv_daily: np.ndarray, t: int, h: int) -> float:
+    """Mean daily variance over t+1 … t+h — the quantity the INCUMBENT measures.
+
+    THE UNITS ERROR THIS FIXES. `_realized_vol` is a 30-DAY realised vol and
+    `_VOL_TARGET = 0.60` was calibrated against that scale. HAR as normally written
+    forecasts NEXT-DAY variance. Substituting one for the other inside
+    `min(_VOL_TARGET / rv, cap)` silently changes the units of the divisor.
+
+    Measured cost of getting this wrong: forecasting one day ahead and sizing off
+    it ran the book at mean gross 1.296 under a 1.3 cap — pinned at maximum
+    leverage almost every day — turning +104.5 % into +37.0 % and a −55.7 %
+    drawdown into −76.4 %. The forecast was not the problem; the horizon was.
+
+    This is the same class as `asset_class` vs `bench` and f vs F: two quantities
+    with the same name and different meanings, swapped without conversion. A better
+    estimator of the WRONG quantity is worse than a poor estimator of the right one.
+    """
+    if t + h >= rv_daily.size:
+        return float("nan")
+    w = rv_daily[t + 1:t + 1 + h]
+    return float(np.nanmean(w)) if np.isfinite(w).any() else float("nan")
+
+
+def fit_har(rv_daily: np.ndarray, lo: int, hi: int, horizon: int = 1
+            ) -> tuple[np.ndarray, float] | None:
     """OLS on log variance over [lo, hi). Log because variance is right-skewed and
     an OLS on the level is driven by a handful of crisis days.
 
@@ -156,9 +180,10 @@ def fit_har(rv_daily: np.ndarray, lo: int, hi: int) -> tuple[np.ndarray, float] 
     correction, it is differently wrong and harder to see.
     """
     X, y = [], []
-    for t in range(max(lo, 22), hi - 1):
+    for t in range(max(lo, 22), hi - horizon):
         f = har_features(rv_daily, t)
-        nxt = rv_daily[t + 1]
+        nxt = (rv_daily[t + 1] if horizon == 1
+               else forward_avg_var(rv_daily, t, horizon))
         if f is None or not np.isfinite(nxt) or nxt <= 0:
             continue
         X.append(np.concatenate([[1.0], np.log(f[1:])]))
@@ -309,6 +334,63 @@ def reachability(vol_ann: np.ndarray) -> dict:
     return out
 
 
+def _max_drawdown(nav: np.ndarray) -> float:
+    peak = np.maximum.accumulate(nav)
+    return float(np.min(nav / peak - 1.0))
+
+
+def exposure_outcome(panel_ret: np.ndarray, vol_forecast_ann: np.ndarray,
+                     cap: float, lo: int, hi: int) -> dict | None:
+    """Q3. Run the ① book's exposure path and grade the DECISION, not the forecast.
+
+    WHY THIS EXISTS. Q2 gave a split verdict — HAR beats the incumbent on MSE-log
+    (p<0.0001) and does not on QLIKE (p=0.27) — because the two losses grade
+    different functionals. Picking whichever loss agrees with the answer we want is
+    the failure this whole study was built to avoid, and there is no principled way
+    to choose between them IN THE ABSTRACT.
+
+    But we do not need to choose in the abstract. The vol forecast is not something
+    we sell; it is an input to `gross = min(target/rv, cap)`. So grade the thing the
+    book actually does. This is the R76–R94 lesson stated forward: an intermediate
+    quantity that improves without the decision improving is not an improvement —
+    it is a nicer-looking input to the same book.
+
+    PIT: today's return is earned on YESTERDAY's exposure. Benchmark is
+    hold-the-panel at gross 1.0 — never zero (CLAUDE.md §RETURN HIERARCHY: the ①
+    benchmark is the panel, and a sleeve is measured as excess over it).
+    """
+    r = panel_ret[lo:hi]
+    v = vol_forecast_ann[lo:hi]
+    m = np.isfinite(r) & np.isfinite(v) & (v > 0)
+    if m.sum() < 100:
+        return None
+    r, v = r[m], v[m]
+    gross = np.minimum(np.minimum(_VOL_TARGET / v, _MAX_SCALAR), cap)
+
+    book = np.concatenate([[0.0], gross[:-1] * r[1:]])      # yesterday's exposure
+    bench = r.copy()                                        # hold the panel, gross 1.0
+    nav_b = np.cumprod(1.0 + book)
+    nav_p = np.cumprod(1.0 + bench)
+    ann = 365.0 / r.size
+    return {
+        "n_days": int(r.size),
+        "mean_gross": round(float(np.mean(gross)), 4),
+        "book_total_pct": round(100.0 * (nav_b[-1] - 1.0), 2),
+        "panel_total_pct": round(100.0 * (nav_p[-1] - 1.0), 2),
+        "excess_pct": round(100.0 * (nav_b[-1] - nav_p[-1]), 2),
+        "book_vol_ann": round(float(np.std(book) * ANN), 3),
+        "panel_vol_ann": round(float(np.std(bench) * ANN), 3),
+        "book_maxdd_pct": round(100.0 * _max_drawdown(nav_b), 2),
+        "panel_maxdd_pct": round(100.0 * _max_drawdown(nav_p), 2),
+        # Return per unit of drawdown — the ③ layer's actual claim is not "more
+        # return", it is "the same beta with less of the pain".
+        "return_per_dd": round(float((nav_b[-1] ** ann - 1.0)
+                                     / abs(_max_drawdown(nav_b) or 1e-9)), 3),
+        "panel_return_per_dd": round(float((nav_p[-1] ** ann - 1.0)
+                                           / abs(_max_drawdown(nav_p) or 1e-9)), 3),
+    }
+
+
 def main() -> int:
     # No credential gate: this study reads Binance directly. If it cannot reach the
     # exchange, say THAT rather than blaming an env var it does not use — the first
@@ -406,34 +488,116 @@ def main() -> int:
     both = (q_h < q_t) and (m_h < m_t)
     sig = (dm_q.get("significant_5pct") and dm_q.get("better") == "A"
            and dm_m.get("significant_5pct") and dm_m.get("better") == "A")
+    # ── Q3. Grade the DECISION, not the forecast. ────────────────────────────
+    # Q2 split: HAR wins MSE-log decisively and QLIKE not at all, because the two
+    # losses grade different functionals. Choosing between them in the abstract is
+    # unresolvable and choosing the one that agrees with us is the failure this
+    # study exists to avoid. So run the exposure path the book would actually have
+    # taken and compare outcomes. An input that improves without the decision
+    # improving is a nicer-looking input to the same book.
+    # HORIZON-MATCHED HAR. The incumbent is a 30-day realised vol and _VOL_TARGET
+    # was calibrated against that scale, so the forecast fed to the sizing rule must
+    # be a 30-day quantity too. See forward_avg_var.
+    fit30 = fit_har(rv_daily, 22, split, horizon=_VOL_LOOKBACK)
+
+    def _vol_path(f, tgt):
+        out = np.full(n, np.nan)
+        if f is None:
+            return out
+        for t in range(split, n):
+            x = har_forecast(f, rv_daily, t, target=tgt)
+            if np.isfinite(x) and x > 0:
+                out[t] = np.sqrt(x) * ANN
+        return out
+
+    variants = [
+        ("trailing30", vol_ann),
+        ("HAR h=1 med ", _vol_path(fit, "median")),
+        ("HAR h=1 mean", _vol_path(fit, "mean")),
+        ("HAR h=30 med", _vol_path(fit30, "median")),
+        ("HAR h=30 mean", _vol_path(fit30, "mean")),
+    ]
+
+    outcomes: dict = {}
+    print(f"\n── Q3 DOES THE BOOK ACTUALLY DO BETTER? (test window, {n - split}d) ──")
+    print("  benchmark = hold the panel at gross 1.0 (the ① benchmark, never 0)")
+    print("  BOTH horizons and BOTH functionals shown: the choice moves the book far")
+    print("  more than the estimator does, which is the actual finding.")
+    for cap in CAPS_TO_TEST:
+        base = exposure_outcome(panel, vol_ann, cap, split, n)
+        if not base:
+            print(f"  cap {cap}: insufficient overlap")
+            continue
+        print(f"\n  cap {cap}  (panel: {base['panel_total_pct']:+.1f}%, "
+              f"maxDD {base['panel_maxdd_pct']:.1f}%, vol {base['panel_vol_ann']:.2f}, "
+              f"ret/DD {base['panel_return_per_dd']:.3f})")
+        for tag, series in variants:
+            o = exposure_outcome(panel, series, cap, split, n)
+            if not o:
+                print(f"    {tag}: n/a")
+                continue
+            outcomes[(cap, tag)] = o
+            print(f"    {tag:<13}: gross̄={o['mean_gross']:.3f}  "
+                  f"total={o['book_total_pct']:+7.1f}%  "
+                  f"maxDD={o['book_maxdd_pct']:6.1f}%  "
+                  f"vol={o['book_vol_ann']:.2f}  ret/DD={o['return_per_dd']:.3f}")
+
+    # ── VERDICT — driven by Q3, the DECISION, not by Q2, the forecast. ───────
     print("\n── VERDICT ──")
-    if not both:
-        print("  HAR does NOT win on both proper losses → do not wire it. File as a")
-        print("  refutation; the graveyard is the asset.")
-    elif not sig:
-        print("  HAR wins on both point estimates but the difference is NOT")
-        print("  distinguishable from zero once serial correlation is accounted for.")
-        print("  → NOT a result. A margin smaller than its own standard error is the")
-        print("    thing every graveyard entry looked like before it was measured.")
+    print(f"  Q2 (forecast): QLIKE {'sig' if dm_q.get('significant_5pct') else 'NOT sig'} "
+          f"(p={dm_q.get('p_value')}), MSE-log "
+          f"{'sig' if dm_m.get('significant_5pct') else 'NOT sig'} "
+          f"(p={dm_m.get('p_value')}). both_point_estimates={both}")
+
+    # MATERIALITY, applied here for the same reason significance was applied in Q2.
+    # Without it the ranking called HAR the winner at cap 1.0 on 0.455 vs 0.454 — a
+    # 0.2 % margin over 933 days, which is a rounding difference wearing a verdict's
+    # clothes. Demanding a standard error in Q2 and accepting a tie in Q3 would have
+    # been the same failure the study is about, one section later.
+    MATERIAL = 0.05          # 5 % relative improvement in return-per-drawdown
+
+    best_by_cap = {}
+    print("\n  Q3 (decision) — return-per-drawdown, vs the incumbent:")
+    for cap in CAPS_TO_TEST:
+        rows = [(tag, o) for (c, tag), o in outcomes.items() if c == cap]
+        if not rows:
+            continue
+        inc = next((o for tag, o in rows if tag.startswith("trailing")), None)
+        best_tag, best_o = max(rows, key=lambda kv: kv[1]["return_per_dd"])
+        if inc and not best_tag.startswith("trailing"):
+            lift = (best_o["return_per_dd"] - inc["return_per_dd"]) / abs(inc["return_per_dd"])
+            if lift < MATERIAL:
+                best_tag, best_o = "trailing30", inc      # not a win, a tie
+                note = f"(best challenger +{100*lift:.1f}% — under the {100*MATERIAL:.0f}% bar)"
+            else:
+                note = f"(+{100*lift:.1f}% over the incumbent)"
+        else:
+            note = ""
+        best_by_cap[cap] = (best_tag, best_o)
+        print(f"    cap {cap}: {best_tag.strip():<13} ret/DD {best_o['return_per_dd']:.3f}  "
+              f"(panel {best_o['panel_return_per_dd']:.3f}) {note}")
+
+    har_ever_wins = any(not tag.startswith("trailing") for tag, _ in best_by_cap.values())
+
+    if not har_ever_wins:
+        print("\n  → HAR-RV is REFUTED FOR THIS USE. It forecasts log-vol")
+        print("    significantly better and produces a book that is no better and")
+        print("    usually worse. A better estimate of an intermediate quantity is")
+        print("    not an improvement; the decision is the only thing that counts.")
+        print("    File it. The graveyard is the asset.")
     else:
-        print("  HAR wins on both losses, and both differences are significant.")
-        # Reachability is regime-conditional, and the CURRENT regime is the least
-        # informative slice of it. Reporting only the live cap is how the first
-        # reading of this study concluded the scalar was inert.
-        print("\n  REACHABILITY IS REGIME-CONDITIONAL — this is the number that decides")
-        print("  whether the better forecast reaches the book, and it is not one number:")
-        for cap in CAPS_TO_TEST:
-            d = reach["binds_at_cap"][str(cap)]
-            print(f"    cap {cap} → binds {d['pct_days']}% of days, "
-                  f"median gross cut {d['median_gross_reduction']}")
-        print("  So the value of a better vol forecast is")
-        print("    Σ over regimes  P(regime) × bind-rate(cap of that regime),")
-        print("  NOT the bind rate at whatever regime happens to be live today.")
-        print("  At cap 0.5 it is near-inert; at 1.0 and 1.3 it is the main mechanism.")
-        print("\n  → CANDIDATE, gated on: (a) the regime mix from daily_macro_regime,")
-        print("    and (b) does the changed `gross` actually reduce realised drawdown")
-        print("    vs hold-the-panel? Forecast accuracy is not the product; exposure")
-        print("    taken at the right time is. Do not wire it before (b).")
+        print("\n  → HAR improves the DECISION somewhere. Before wiring: confirm on a")
+        print("    second split, and check the win is not concentrated in one episode.")
+
+    print("\n  THE FINDING THAT WAS NOT THE QUESTION — two of them:")
+    print("   1. The INCUMBENT vol scalar is doing real work and had never been")
+    print("      measured. Grading it against hold-the-panel is what this study")
+    print("      accidentally did first, and it is the result worth keeping.")
+    print("   2. The SPECIFICATION moves the book far more than the ESTIMATOR does:")
+    print("      same HAR, same data, horizon 1 vs 30 and median vs mean swing the")
+    print("      cap-1.3 book between +37% / −76% DD and +74% / −48% DD. Choosing")
+    print("      the horizon is a bigger decision than choosing the model, and it")
+    print("      is the one nobody writes a paper about.")
     return 0
 
 

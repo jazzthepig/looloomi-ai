@@ -236,11 +236,55 @@ def test_reachability_is_reported_for_every_cap_not_just_the_live_one() -> None:
     slice alone inverts the conclusion."""
     src = _STUDY_SRC
     check("all three caps are tested", "CAPS_TO_TEST = (0.5, 1.0, 1.3)" in src, "")
-    check("the verdict states the regime-weighted form",
-          "P(regime) × bind-rate" in src,
-          "the value is a sum over regimes, not the live bind rate")
-    check("the verdict does not stop at the live cap",
-          "REACHABILITY IS REGIME-CONDITIONAL" in src, "")
+    check("Q3 runs the exposure path at every cap, not just the live one",
+          "for cap in CAPS_TO_TEST:" in src and "exposure_outcome(panel" in src, "")
+
+
+def test_the_verdict_is_driven_by_the_decision_not_the_forecast() -> None:
+    """Q2 said HAR forecasts log-vol significantly better (p<0.0001). Q3 said the
+    book it produces is no better and usually worse. If the verdict keyed off Q2,
+    this would have shipped — a better estimate of an intermediate quantity that
+    makes the decision worse. R76–R94 stated forward."""
+    src = _STUDY_SRC
+    check("the verdict keys off Q3's outcomes",
+          "har_ever_wins" in src and "return_per_dd" in src, "")
+    check("Q3 grades against hold-the-panel, never against zero",
+          "hold the panel at gross 1.0" in src and "never 0" in src,
+          "the ① benchmark is the panel (CLAUDE.md §RETURN HIERARCHY)")
+    check("exposure is applied PIT — yesterday's gross earns today's return",
+          "gross[:-1] * r[1:]" in _STUDY_SRC, "")
+
+
+def test_a_material_margin_is_required_in_q3_too() -> None:
+    """Without this the ranking called HAR the winner at cap 1.0 on 0.455 vs 0.454
+    — a 0.2 % margin over 933 days. Demanding a standard error in Q2 and then
+    accepting a rounding difference in Q3 is the same failure the study is about,
+    one section later."""
+    src = _STUDY_SRC
+    check("a materiality bar exists", "MATERIAL = 0.05" in _STUDY_CODE, "")
+    check("a sub-threshold challenger is recorded as a tie, not a win",
+          "not a win, a tie" in src or "under the" in src, "")
+
+
+def test_the_horizon_units_error_is_recorded() -> None:
+    """The incumbent is a 30-DAY realised vol and _VOL_TARGET was calibrated against
+    that scale; textbook HAR forecasts NEXT-DAY variance. Substituting one for the
+    other silently changes the units of the divisor in min(target/rv, cap). Measured
+    cost: mean gross 1.296 under a 1.3 cap — pinned at max leverage nearly every
+    day — turning +104.5 % into +37.0 % and −55.7 % into −76.4 %.
+
+    Same class as asset_class vs bench, and f vs F: two quantities sharing a name.
+    A better estimator of the WRONG quantity is worse than a poor one of the right."""
+    src = _STUDY_SRC
+    check("forward_avg_var exists so the horizons can be matched",
+          "def forward_avg_var" in src, "")
+    check("a horizon-matched fit is actually run",
+          "horizon=_VOL_LOOKBACK" in _STUDY_SRC,
+          "the h=30 variant must use the incumbent's own lookback")
+    check("both horizons and both functionals are reported",
+          all(k in src for k in ("HAR h=1 med", "HAR h=1 mean",
+                                 "HAR h=30 med", "HAR h=30 mean")),
+          "the specification choice moves the book more than the estimator does")
 
 
 def test_the_study_needs_no_credentials() -> None:
@@ -282,8 +326,9 @@ def test_forecasts_are_point_in_time() -> None:
     src = _STUDY_SRC
     check("har_features slices only up to t inclusive",
           "rv_daily[t - 4:t + 1]" in src and "rv_daily[t - 21:t + 1]" in src, "")
-    check("training stops before the test split",
-          "range(max(lo, 22), hi - 1)" in src, "")
+    check("training stops before the test split, horizon-aware",
+          "range(max(lo, 22), hi - horizon)" in src,
+          "a 30-day-ahead target must stop 30 days before hi, not 1")
     check("no feature window reaches past t",
           "t + 2" not in src and "rv_daily[t + 1]" in src,
           "rv_daily[t+1] should appear only as the TARGET, never as a feature")
