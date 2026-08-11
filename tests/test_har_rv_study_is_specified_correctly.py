@@ -192,6 +192,57 @@ def test_reachability_gates_the_forecast_question() -> None:
           r["binds_at_cap"]["0.5"]["vol_needed_to_bind"] == 1.2, "")
 
 
+def test_a_margin_must_beat_its_own_standard_error() -> None:
+    """On the real panel HAR beat the incumbent on QLIKE by 3.4 % over 932 days.
+    "Wins" is not a finding at that margin. Forecast-loss differentials are serially
+    correlated, so a naive standard error manufactures significance."""
+    rng = np.random.default_rng(0)
+    x = rng.normal(0, 1, 900)
+    r = _S.diebold_mariano(x, x + 0.4)
+    check("a real effect is detected", r["significant_5pct"] and r["better"] == "A",
+          str(r))
+    check("multiple lags are tested, not one", len(r["lags_tested"]) >= 3,
+          str(r.get("lags_tested")))
+
+    fp = sum(_S.diebold_mariano(np.random.default_rng(s).normal(0, 1, 900),
+                                np.random.default_rng(9000 + s).normal(0, 1, 900)
+                                )["significant_5pct"] for s in range(200))
+    check(f"pure-noise false-positive rate {100*fp/200:.1f}% is near 5%",
+          fp / 200 <= 0.08, f"{fp}/200")
+
+    # The reason the lag ladder exists: at the conventional lag alone this
+    # over-rejected at 15.3%.
+    hits = 0
+    for s in range(200):
+        g = np.random.default_rng(1000 + s)
+        e = g.normal(0, 1, 900); ar = np.zeros(900)
+        for t in range(1, 900):
+            ar[t] = 0.8 * ar[t - 1] + e[t]
+        hits += _S.diebold_mariano(ar, np.zeros(900))["significant_5pct"]
+    check(f"AR(0.8) differential rejects at {100*hits/200:.1f}%, not 15%",
+          hits / 200 <= 0.10, f"{hits}/200 — the lag ladder is not doing its job")
+
+    check("the verdict is taken at the LONGEST lag, not the kindest",
+          "all(v[1] < 0.05 for v in usable.values())" in _STUDY_CODE
+          or "all(v[1] < 0.05" in _STUDY_SRC,
+          "significance must hold at every lag tested")
+
+
+def test_reachability_is_reported_for_every_cap_not_just_the_live_one() -> None:
+    """The first reading of this study concluded the vol scalar was inert because it
+    looked only at the cap that happened to be live (0.5, binds 6.4 % of days). At
+    cap 1.0 it binds on 71 % of days and at 1.3 on 92 % — it is the MAIN mechanism
+    outside TIGHTENING. Reachability is regime-conditional, and reporting the live
+    slice alone inverts the conclusion."""
+    src = _STUDY_SRC
+    check("all three caps are tested", "CAPS_TO_TEST = (0.5, 1.0, 1.3)" in src, "")
+    check("the verdict states the regime-weighted form",
+          "P(regime) × bind-rate" in src,
+          "the value is a sum over regimes, not the live bind rate")
+    check("the verdict does not stop at the live cap",
+          "REACHABILITY IS REGIME-CONDITIONAL" in src, "")
+
+
 def test_the_study_needs_no_credentials() -> None:
     """The study reads Binance directly. Its first version gated on SUPABASE_URL,
     so the failure message sent the reader after a credential the study never used
