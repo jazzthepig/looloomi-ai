@@ -22,6 +22,7 @@ These tests pin the properties that make the book worth the calendar it will spe
 
 Run: python3 -m tests.test_beta_core_book
 """
+import asyncio
 import inspect
 import os
 import pathlib
@@ -154,7 +155,7 @@ def test_a_lost_cache_must_not_restart_the_clock():
     rec = src.index("_recover_state_from_nav(px)")
     inc = src.index('"status": "inception"')
     assert rec < inc, "recovery must be attempted before inception is allowed"
-    assert "beta_core_nav?select=mark_date,nav" in src, \
+    assert "beta_core_nav?select=mark_date,nav,benchmark_nav" in src, \
         "recovery must read the durable NAV table, not another cache"
 
 
@@ -302,8 +303,15 @@ def test_inception_id_is_a_code_constant_not_an_env_var():
 
 
 def test_every_read_path_is_scoped_to_the_live_incarnation():
-    """Three queries read this table: state recovery, continuity, and the published
-    curve. All three must exclude other incarnations and voided rows.
+    """FOUR queries read this table: state recovery, continuity, the published curve,
+    and (since S-133) the last-persisted-cap fallback. All must exclude other
+    incarnations and voided rows.
+
+    The fourth one is why the count is asserted rather than assumed. When it was
+    added, its URL was split so that `beta_core_nav?select=` fell on its own line —
+    and this scanner finds read paths by that literal, so the new query was INVISIBLE
+    to the check that it was scoped correctly. A read path a guard cannot see is an
+    unscoped read path waiting to happen; the count is what caught it.
 
     Recovery is the subtle one — unscoped, the next Redis eviction would 'recover'
     the NAV of the run the re-inception was meant to replace, resurrecting the voided
@@ -314,8 +322,16 @@ def test_every_read_path_is_scoped_to_the_live_incarnation():
     # sees only the first fragment and passes on a query it never actually read.
     # Take the statement, not the line.
     lines = _src().splitlines()
-    starts = [i for i, l in enumerate(lines) if "beta_core_nav?select=" in l]
-    assert len(starts) >= 3, f"expected the three read paths, found {len(starts)}"
+    # Skip comment lines. A comment EXPLAINING this scan contains the literal it
+    # scans for, and matching it makes the guard fire on its own documentation —
+    # the same defect as the S-122 guards that fired on prose describing the bug.
+    # Code is the subject; commentary about code is not.
+    starts = [i for i, l in enumerate(lines)
+              if "beta_core_nav?select=" in l and not l.lstrip().startswith("#")]
+    assert len(starts) >= 4, (
+        f"expected at least the four read paths, found {len(starts)} — either one was "
+        f"removed, or a new one split `beta_core_nav?select=` across lines and is now "
+        f"invisible to this scan")
     for i in starts:
         stmt = " ".join(lines[i:i + 5])
         assert "inception_id=eq." in stmt, \
@@ -598,6 +614,99 @@ def test_zero_excess_is_disambiguated_on_the_reading_surface():
         assert field in src, f"get_curve does not surface {field}"
     assert "PREVIOUS mark" in src, (
         "the one-day lag must be stated on the surface, not left in the module")
+
+
+def test_an_unreadable_regime_carries_the_cap_forward_instead_of_failing_open():
+    """S-133. `_exposure_cap(None)` returns (1.0, 'no_regime') — so a failed regime
+    read put the book at FULL exposure. Measured 2026-08-11: `regime_raw` is null,
+    meaning the Redis path is already dead and `daily_macro_regime` is the SOLE
+    source. One failed read and a book whose entire purpose is to bring exposure
+    down would quietly return to full size during a confirmed TIGHTENING.
+
+    A de-risking layer that fails toward risk is worse than no layer: it fails at
+    the moment it is relied upon, and the row it writes looks ordinary. The default
+    for an unreadable input is UNCHANGED, not MAXIMUM."""
+    async def _fake_last(**_):
+        return {"mark_date": "2026-08-10", "exposure_cap": 0.5,
+                "cap_source": "regime_map", "gross": 0.5, "regime": "TIGHTENING"}
+
+    orig = bc._last_persisted_cap
+    try:
+        bc._last_persisted_cap = _fake_last
+        cap, src = asyncio.run(bc._resolve_cap(None))
+    finally:
+        bc._last_persisted_cap = orig
+
+    assert cap == 0.5, f"unreadable regime failed open to {cap} instead of carrying 0.5"
+    assert "carried_forward" in src, f"the carry must be visible in cap_source, got {src!r}"
+    assert "2026-08-10" in src, "the carry must name the day it came from"
+    assert "age=" in src, "a book sizing off a stale regime must say how stale"
+
+
+def test_leverage_never_survives_an_unreadable_regime():
+    """The one asymmetry. De-risking on stale information is conservative; staying
+    LEVERED on stale information is a different act. A 1.3 cap decays to 1.0 when
+    the belief that justified it can no longer be verified — treating the two
+    directions symmetrically would be tidy rather than right."""
+    async def _fake_levered(**_):
+        return {"mark_date": "2026-08-10", "exposure_cap": 1.3,
+                "cap_source": "regime_map", "gross": 1.3, "regime": "RISK_ON"}
+
+    orig = bc._last_persisted_cap
+    try:
+        bc._last_persisted_cap = _fake_levered
+        cap, src = asyncio.run(bc._resolve_cap(None))
+    finally:
+        bc._last_persisted_cap = orig
+
+    assert cap == 1.0, f"carried leverage forward on an unverifiable belief: {cap}"
+    assert "leverage_dropped" in src, f"dropping the leverage must be stated, got {src!r}"
+
+
+def test_a_cold_start_with_no_history_still_says_no_regime():
+    """Carry-forward must not invent a cap when there is nothing to carry. With no
+    prior row, 1.0 is the only honest answer — and 'no_regime' already says it was
+    not a decision."""
+    async def _fake_none(**_):
+        return None
+
+    orig = bc._last_persisted_cap
+    try:
+        bc._last_persisted_cap = _fake_none
+        cap, src = asyncio.run(bc._resolve_cap(None))
+    finally:
+        bc._last_persisted_cap = orig
+    assert cap == 1.0 and src == "no_regime", (cap, src)
+
+
+def test_a_readable_regime_ignores_the_carry_path_entirely():
+    """The fallback must not be able to override a live reading."""
+    async def _boom(**_):
+        raise AssertionError("carry path consulted while the regime was readable")
+
+    orig = bc._last_persisted_cap
+    try:
+        bc._last_persisted_cap = _boom
+        assert asyncio.run(bc._resolve_cap("TIGHTENING")) == (0.5, "regime_map")
+        assert asyncio.run(bc._resolve_cap("RISK_ON")) == (1.3, "regime_map")
+    finally:
+        bc._last_persisted_cap = orig
+
+
+def test_recovery_restores_the_exposure_not_just_the_nav():
+    """S-133, second instance. `_recover_state_from_nav` rebuilt `weights` at FULL
+    exposure regardless of what the book held, so a Redis eviction while ③ had the
+    book at 0.5 silently doubled the exposure — and the log said 'recovered' either
+    way. The NAV was restored exactly and the positioning was not: we treated the
+    number the curve displays as the state, and the positioning that produced it as
+    incidental."""
+    src = inspect.getsource(bc._recover_state_from_nav)
+    assert '"weights": recovered_w' in src, (
+        "recovery still rebuilds weights at full size — the exposure is not restored")
+    assert "gross" in src.split('"""')[-1], (
+        "recovery must read the persisted gross, not assume 1.0")
+    assert "recovered_gross" in src, (
+        "the recovered exposure must be reported so a wrong one is auditable")
 
 
 def test_an_already_booked_mark_is_never_retroactively_corrected():

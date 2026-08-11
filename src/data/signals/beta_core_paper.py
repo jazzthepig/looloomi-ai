@@ -136,6 +136,84 @@ _REGIME_CAP: dict[str, float] = {
 # from "③ ran and chose 1.0" — the same conflation as a -2 sentinel folded into 0.
 
 
+async def _last_persisted_cap() -> dict | None:
+    """The most recent booked (cap, cap_source, gross) for this incarnation.
+
+    Read from Postgres rather than Redis on purpose: this is consulted precisely
+    when the live feed has failed, and a fallback that shares a failure domain with
+    the thing it is backing up is not a fallback."""
+    import os
+
+    import httpx
+    base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
+    if not base or not key:
+        return None
+    # NOTE: `beta_core_nav?select=` stays on ONE line. test_every_read_path_is_
+    # scoped_to_the_live_incarnation finds read paths by that literal and then reads
+    # the following lines as a statement; splitting it makes the query INVISIBLE to
+    # the scanner that checks it is scoped to the live incarnation. A read path a
+    # guard cannot see is an unscoped read path waiting to happen.
+    url = (f"{base}/rest/v1/beta_core_nav?select=mark_date,exposure_cap,cap_source,gross"
+           f"&inception_id=eq.{_INCEPTION_ID}&void_reason=is.null"
+           f"&exposure_cap=not.is.null&order=mark_date.desc&limit=1")
+    try:
+        async with httpx.AsyncClient(timeout=8) as c:
+            r = await c.get(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+            rows = r.json() if r.status_code == 200 else []
+    except Exception as e:
+        _log.warning("[beta_core] last-cap read failed: %s", e)
+        return None
+    return rows[0] if rows else None
+
+
+async def _resolve_cap(regime: str | None) -> tuple[float, str]:
+    """③'s cap, with the missing-regime case failing SAFE instead of OPEN.
+
+    THE BUG THIS FIXES (2026-08-11, S-133). `_exposure_cap(None)` returns
+    (1.0, "no_regime") — i.e. when the regime feed fails, the book goes to FULL
+    exposure. Measured the same day: `regime_raw` is null, so the Redis path is
+    already dead and the `daily_macro_regime` view is the SOLE source. One failed
+    read and a book whose entire purpose is "bring exposure down in the first third
+    of the drawdown" quietly returns to full size during a confirmed TIGHTENING.
+
+    A de-risking layer that fails toward risk is worse than no layer, because it
+    fails at exactly the moment it is being relied upon and the row looks ordinary.
+    The correct default for an unreadable input is UNCHANGED, not MAXIMUM: carry the
+    last booked cap forward.
+
+    THE ONE ASYMMETRY — leverage never carries. A cap above 1.0 (RISK_ON 1.3,
+    GOLDILOCKS 1.3) decays to 1.0 when we can no longer verify the belief that
+    justified it. De-risking on stale information is conservative; staying levered
+    on stale information is not the same act, and treating them symmetrically would
+    be tidy rather than right.
+
+    The carry is LOUD, not silent: cap_source records the source day and the age, so
+    a book sizing off a week-old regime says so on every row it writes."""
+    if regime:
+        return _exposure_cap(regime)
+
+    last = await _last_persisted_cap()
+    if not last or last.get("exposure_cap") is None:
+        # Nothing to carry — a genuine cold start with no feed. 1.0 is the only
+        # honest answer here, and "no_regime" already says it was not a decision.
+        return _exposure_cap(None)
+
+    prev = float(last["exposure_cap"])
+    carried = min(prev, 1.0)          # leverage does not survive an unknown
+    try:
+        age = (dt.date.today() - dt.date.fromisoformat(str(last["mark_date"])[:10])).days
+    except Exception:
+        age = -1
+    src = (f"carried_forward(from={str(last.get('mark_date'))[:10]}, age={age}d, "
+           f"was={prev}, orig={last.get('cap_source') or 'unknown'})")
+    if carried != prev:
+        src += "+leverage_dropped"
+    _log.error("[beta_core] REGIME UNREADABLE — carrying cap %.2f forward from %s "
+               "(%sd old) instead of failing open to 1.0", carried,
+               str(last.get("mark_date"))[:10], age)
+    return carried, src
+
+
 def _exposure_cap(regime: str | None) -> tuple[float, str]:
     """③ layer. Returns (cap, source). Deliberately coarse: a continuous exposure
     function invites fitting, and the ⓠ spec's criterion is not Sharpe but 'did
@@ -315,7 +393,8 @@ async def _recover_state_from_nav(px: dict) -> dict | None:
     # filter a re-inception would "recover" the NAV of the run it was meant to
     # replace on the very next Redis eviction, silently resurrecting the voided
     # segment — the failure would look exactly like a healthy recovery in the logs.
-    url = (f"{base}/rest/v1/beta_core_nav?select=mark_date,nav,benchmark_nav,top_weights"
+    # `beta_core_nav?select=` on one line — see the note in _last_persisted_cap.
+    url = (f"{base}/rest/v1/beta_core_nav?select=mark_date,nav,benchmark_nav,gross"
            f"&inception_id=eq.{_INCEPTION_ID}&void_reason=is.null"
            f"&order=mark_date.desc&limit=1")
     try:
@@ -329,13 +408,36 @@ async def _recover_state_from_nav(px: dict) -> dict | None:
         return None
     last = rows[0]
     base_w = _equal_weights(list(px))
+
+    # S-133, second instance of the same class. This used to restore
+    # `weights = base_w` — FULL exposure — no matter what the book was actually
+    # holding. A Redis eviction while ③ had the book at 0.5 would silently double
+    # the exposure, and the recovery log line said "recovered" either way.
+    #
+    # The NAV is restored exactly; the exposure was not. That asymmetry is the tell:
+    # we treated the number the curve displays as the state, and the positioning
+    # that produced it as incidental. Restore BOTH, and if `gross` is unreadable,
+    # keep the conservative side rather than the convenient one.
+    g = last.get("gross")
+    try:
+        gross_prev = float(g) if g is not None else None
+    except (TypeError, ValueError):
+        gross_prev = None
+    if gross_prev is None or gross_prev <= 0:
+        _log.error("[beta_core] recovery: persisted gross unreadable (%r) — restoring at "
+                   "1.0. Verify the next mark's exposure_cap before trusting the curve", g)
+        gross_prev = 1.0
+    recovered_w = {s: w * gross_prev for s, w in base_w.items()}
+    _log.warning("[beta_core] recovery: restoring exposure at gross=%.3f (cap was %r on %s), "
+                 "not at full size", gross_prev, last.get("exposure_cap"), last["mark_date"])
+
     return {
         "inception": last["mark_date"], "nav": float(last["nav"]),
         "benchmark_nav": float(last.get("benchmark_nav") or 1.0),
-        "weights": base_w, "base_weights": base_w,
+        "weights": recovered_w, "base_weights": base_w,
         "mark_prices": dict(px),
         "last_rebal": last["mark_date"], "last_mark": last["mark_date"],
-        "recovered": True,
+        "recovered": True, "recovered_gross": gross_prev,
     }
 
 
@@ -352,7 +454,9 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     rv = _realized_vol(ret)
     scalar = _vol_scalar(rv)
     regime, regime_raw = await _current_regime()
-    cap, cap_source = _exposure_cap(regime)
+    # S-133: carries the last booked cap forward when the regime is unreadable,
+    # instead of failing open to full exposure. See _resolve_cap.
+    cap, cap_source = await _resolve_cap(regime)
     # Record when the dwell filter actually CHANGED the decision. Without this the
     # row cannot distinguish "the filter did nothing today" from "the filter is not
     # running" — the same class as cap_source, and the reason the inert mapping in
