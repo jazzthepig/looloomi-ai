@@ -51,6 +51,29 @@ def check(name: str, cond: bool, detail: str = "") -> None:
 _STUDY_SRC = (_ROOT / "scripts/study_har_rv_vs_trailing.py").read_text()
 
 
+def _strip_comments_and_strings(src: str) -> str:
+    """Executable code only — comments and string literals removed.
+
+    Guards that grep raw source fire on the prose describing the bug they guard
+    against. That has now happened three times in this codebase (the S-122 batch,
+    the beta_core_nav read-path scanner, and here), so the pattern is: a guard
+    whose subject is CODE must be given code."""
+    import io
+    import tokenize
+    out = []
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(src).readline):
+            if tok.type in (tokenize.COMMENT, tokenize.STRING):
+                continue
+            out.append(tok.string)
+    except (tokenize.TokenError, IndentationError):
+        return src
+    return " ".join(out)
+
+
+_STUDY_CODE = _strip_comments_and_strings(_STUDY_SRC)
+
+
 def _load_study() -> types.ModuleType:
     """Load the study with its beta_core import stubbed — the guard must run inside
     the offline preflight, and the real import wants Supabase env."""
@@ -167,6 +190,29 @@ def test_reachability_gates_the_forecast_question() -> None:
           str(r["binds_at_cap"]["1.0"]))
     check("the vol needed to bind is reported, not left to be derived",
           r["binds_at_cap"]["0.5"]["vol_needed_to_bind"] == 1.2, "")
+
+
+def test_the_study_needs_no_credentials() -> None:
+    """The study reads Binance directly. Its first version gated on SUPABASE_URL,
+    so the failure message sent the reader after a credential the study never used
+    — and the credential in question (SUPABASE_KEY) happens to be empty on the Mac,
+    which would have looked like confirmation. An error naming the wrong cause is
+    more expensive than no error, because it is followed."""
+    # Read CODE, not commentary. The docstring explaining this very fix names
+    # SUPABASE_URL, and matching raw text would fire the guard on its own
+    # documentation — the S-122 defect, third appearance this session.
+    check("no SUPABASE gate in executable code",
+          "SUPABASE_URL" not in _STUDY_CODE and "SUPABASE_KEY" not in _STUDY_CODE,
+          "the study does not use Supabase; it must not check for it")
+    src = _STUDY_SRC
+    check("failure names reachability, not a key",
+          "fapi.binance.com" in src and "geo-blocked" in src, "")
+    check("panel loader is called with the universe it needs",
+          "load_binance_panel(DEFAULT_UNIVERSE, start=start)" in src,
+          "load_binance_panel(assets, start) takes the asset list")
+    check("the loader's 4-tuple return is unpacked correctly",
+          "days, close, _fmean, _fsum = load_binance_panel" in src,
+          "it returns (days, close, fmean, fsum), not (symbols, close)")
 
 
 def test_the_incumbent_is_imported_not_reimplemented() -> None:
