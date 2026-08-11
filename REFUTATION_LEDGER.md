@@ -9043,3 +9043,70 @@ S-135 留下的问题是「regime 切换比恒定 cap 好吗」。真实 regime 
 脚本 `scripts/study_regime_layer_upper_bound.py`(无需凭证)。
 **Bounds:单一面板、单一 split、30 天预知窗口;分位数取自 oracle 被评分的同一窗口
 (这偏袒 oracle,所以上界是保守方向的错)。**
+
+---
+
+### S-138 — 一个词的 bug 扛过了三次自信的诊断;而真因一直在一次查询之外
+
+`/api/v1/keys` 往 `api_keys` 写一个叫 `intended_use` 的列。**线上表叫 `notes`,
+从来没有过 `intended_use`。** PostgREST 对未知列返回 400,`_sb_post` 把**所有**失败
+折叠成一句 `"Key storage failed"`,于是这个端点**从上线那天起就一直返回同一个 500**。
+`api_keys` 现在 **0 行 —— 一把 key 都没发出去过。**
+
+`scripts/supabase_all_tables.sql` 也声明了 `intended_use`,所以**文件和表在「都是错的」
+这件事上达成了一致**,而没有任何东西去比对它们。
+
+**值得记的不是这个错别字,是一个词扛过了三次自信的诊断:**
+
+1. **「anon 没有 INSERT 权限」** —— 它有。
+2. **「SUPABASE_SERVICE_KEY 没设」** —— 不是原因。
+3. **「id 没有 sequence」** —— 我读到 `column_default: null` 就下了结论。
+   **对 identity 列,`information_schema` 本来就报 `column_default = NULL`** ——
+   identity 记在 `is_identity` / `identity_generation`,而我没有 select 那两列。
+   **我看的那个字段,对「配置正确的 identity 列」和「坏掉的列」返回完全一样的值。**
+   这就是 S-122 那个模式用在我自己身上:**一个看起来像观测、但没有判别力的值。**
+   我写了那条守卫,然后读了一个无判别力的字段,把它当成了证据。
+   (顺带:线上是 `GENERATED **ALWAYS**`,比 `BY DEFAULT` 更严 —— 任何显式传 id 的
+   INSERT 都会被拒。值得知道,也不是这个 bug。)
+
+**三次都是被那句无信息的错误信息「资助」出来的。**
+一个不指出原因的失败信息**不只是没帮上忙 —— 它在为自信的错误答案买单**,
+而每一个错误答案的代价是一次往返到唯一有 console 权限的人那里。
+已改:`_sb_post` 把 PostgREST 自己的报错透传出来(那句话描述的是**我们的 schema**,
+不是调用方的数据,没有需要保护的东西)。
+
+**第二条教训更便宜也更通用:线上 catalog 一直在一次查询之外(Supabase MCP)。**
+三轮猜测之所以发生,是因为**我在对 schema 做推理,而不是去问它**。
+**当权威在一次查询之外时,推理不是省事的选项,是最贵的那个。**
+
+同一个错名还在 `analytics.py` 的 select 里 —— **一个错别字,两个调用点。
+只修正在调试的那一处,不叫修好了。**
+
+守卫 `tests/test_table_columns_match_the_code.py`:写入的列必须在声明的 schema 里,
+且端点必须透传真因。
+
+---
+
+### S-139 — 硬规则 #8 早就存在,并且被违反了十处
+
+CLAUDE.md 硬规则 #8 说「不得在面向投资人的界面出现实现细节」。实际渲染出去的字符串里:
+
+- **`strategy.html`(规则里点名的那一页)**写着 `Execution → Freqtrade + CEX APIs`
+- **付费档位列表**卖 `Dedicated Mac Mini scoring lane` 和 `Historical score data (Supabase)`
+  —— **一个定价页在描述我们的硬件,等于告诉竞争者该抄什么,
+  并且告诉配置者「$500M 的目标跑在一台桌面机上」。**
+- 每个资产详情页脚:`Mac Mini local engine` / `Railway estimation`
+- 一个错误提示:`Railway may be starting up`
+
+**为什么一条散文规则不够。** #8 在 CLAUDE.md 里只有一行,而这些字符串是不同时间、
+由读过它的人写的。**只活在散文里的规则,会被每一个当时没想起它的作者重新打破** ——
+这正是当初产生 `test_compliance_language` 的同一个论证。
+**那条管我们「宣称」什么,这条管我们「暴露」什么。**
+
+替换说的是**能力**而不是**实现**:`Mac Mini local engine` → `Full-model score`。
+这不是遮掩 —— **档位、它的含义、它的新鲜度全部保留**,消失的只有竞争者才受益的那部分。
+
+守卫写第一版时把 `Hyperliquid` 列进了禁词,于是它在**我们评分的一个币**上报警。
+已改:**一个分不清供应商和持仓的泄漏清单,迟早会被它烦到的人删掉。**
+
+前端 build 通过。preflight 284 项全绿。
