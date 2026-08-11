@@ -246,6 +246,29 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 
 ## LANDED — kept for the lessons, not for the status
 
+**🟢 用户层第一步通了 — 2026-08-11 (S-138).** `/api/v1/keys/create` 从上线起就返回
+   `"Key storage failed"`,`api_keys` **0 行,一把 key 都没发出去过**。
+   真因是**一个词**:代码写 `intended_use`,线上列叫 `notes`,从来没有过前者。
+   建表脚本也写的 `intended_use`,**文件和表在「都是错的」上达成一致**,没人比对。
+   已验证:key id=1 发出、`notes` 落库、随后**撤销**(不是删除 —— 明文进过聊天记录;
+   对凭证,撤销保留审计轨迹且可逆)。`active` 在 `keys.py:161` 和 `rate_limit.py:157`
+   两处都被读,撤销真的生效。
+   **教训不是错别字:一个词扛过了三次自信的诊断**(anon 无 INSERT / SERVICE_KEY 缺失 /
+   id 无 sequence)——**每一个都是被那句无信息的错误信息「资助」出来的**,
+   而 `column_default: null` 对 identity 列本来就是 null,**我读的那个字段没有判别力**。
+   **线上 catalog 一直在一次查询之外(Supabase MCP):当权威一查即得,推理是最贵的选项。**
+   守卫 `test_table_columns_match_the_code`(写入列必须已声明 + 端点必须透传真因)。
+   ⚠️ **仍缺**:`tenants` / `billing` / `audit_log` 三张表 0 处引用 ——
+   **那才是「客户可部署」的真实距离,不是这颗扣子。**
+   VERIFY: `curl -s -X POST $API/api/v1/keys/create -H 'Content-Type: application/json' -d '{"name":"t","email":"x@y.z"}' | jq`
+
+**🟢 硬规则 #8 补上执法 — 2026-08-11 (S-139).** 规则早就存在,被违反了**十处渲染字符串**,
+   包括规则点名的 `strategy.html`(`Execution → Freqtrade + CEX APIs`)和**付费档位列表**
+   (`Dedicated Mac Mini scoring lane`)。**一个定价页在描述我们的硬件。**
+   全部改成能力表述,档位/含义/新鲜度全保留。守卫 `test_no_stack_leakage_on_user_surfaces`。
+   前端另做了两处标签修正(`Events & VC` 名不副实 → `VC Funding Flows`;导航副标题去掉执行栈)。
+   **IA 五段式重构未做** —— 落地页主张是产品决策,等 Jazz(`docs/UI_CRITIQUE_2026-08-11.md` §5)。
+
 **🟢 HAR-RV 证伪 + ③ 的价值第一次被度量 — 2026-08-11 (S-134/S-135).**
    933 天 OOS。HAR 把对数波动预测得**显著**更好(MSE-log p<0.0001),
    **但账本不更好**(ret/DD:cap 1.3 上 trailing 0.580 vs HAR 0.497)。
