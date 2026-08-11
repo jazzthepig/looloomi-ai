@@ -633,7 +633,7 @@ function DesktopApp() {
           {visited.has("quantgp") && (
             <section style={contentPad}>
               <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-                <SectionLabel label="Trading Engine" sub="Simons IC Loop · EST Alpha GP" />
+                <SectionLabel label="Research Desk" sub="Factor research · Paper books" />
                 <QuantGPContent />
               </div>
             </section>

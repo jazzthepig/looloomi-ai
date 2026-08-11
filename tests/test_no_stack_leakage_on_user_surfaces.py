@@ -125,6 +125,31 @@ def test_the_paid_tier_list_does_not_describe_our_hardware() -> None:
               f"{bad} still appears in a rendered string on strategy.html")
 
 
+def test_a_retired_label_is_retired_everywhere() -> None:
+    """2026-08-12. The nav labels were fixed and the UI did not change, because the
+    same label is written TWICE — once in NAV_ITEMS (the sidebar) and once in the
+    page's own SectionLabel heading. Renaming the menu and not the page is not a
+    partial fix; from the user's side it is no fix, because the heading is what
+    they read after clicking.
+
+    There is no single source for these strings. Until there is, the retired ones
+    are listed here — a list is a worse mechanism than a shared constant, and it is
+    a much better mechanism than remembering."""
+    retired = {
+        "Trading Engine": "Research Desk",          # also leaked the execution stack
+        "Simons IC Loop": "Information-Coefficient Loop",
+        "Events & VC": "VC Funding Flows",          # the label promised events, showed funding
+    }
+    hits: list[str] = []
+    for p in sorted(_SRC.rglob("*.jsx")) + sorted(_SRC.rglob("*.js")):
+        for lineno, s in _rendered_strings(p.read_text(encoding="utf-8")):
+            for old, new in retired.items():
+                if old in s:
+                    hits.append(f"{p.relative_to(_SRC)}:{lineno} “{s[:60]}” → should be “{new}”")
+    check("retired labels appear nowhere in rendered strings", not hits,
+          "\n      " + "\n      ".join(hits[:10]))
+
+
 def test_the_rule_is_stated_where_the_nav_is_defined() -> None:
     """The nav subtitle is where this last broke ("IC Loop · Freqtrade · Live"),
     so the reason lives next to it rather than only in CLAUDE.md — an author
