@@ -394,10 +394,16 @@ Redis blob ⇒ `gross = min(1.30, 1.0) = 1.0` ⇒ 权重与基准完全相同。
 **我早先两个诊断被推翻,已在台账更正:** `SUPABASE_KEY` 本来就是 service_role;
 `api_keys` 写不进是因为 **`id` 为 `bigint NOT NULL` 且无序列/identity 默认值**,与权限无关。
 
-**Last updated:** 2026-08-11 — **R102 REFUTED_GATE1+GATE3: §C6-DISCOVERY-SPEC 形状池
-exhausted on crypto micro-structure family ⇒ §STRATEGY-3 = R77 single-strategy
-locked (Lesson #54 path B). C1 ship complete (commit c0516f9). C2/C3/C5 still
-scheduled Sept; C6 closed early (1 candidate, 1 day).**
+**Last updated:** 2026-08-12 — **C1-C6 pipeline spec complete + R77 Phase C done.**
+**C1 SHIP** (commit c0516f9, ① book re-inception 2026-08-09 13:57Z, Day 60 = 2026-10-08).
+**C2/C3/C5 specs WRITTEN** in MINIMAX_SYNC.md (§C2-SHIP-SPEC ⓠ layer / §C3-SHIP-SPEC 2D size
+/ §C5-SHIP-SPEC VDB episode, all 2026-08-12, 9 月 ship targets). **C6 §C6-DISCOVERY-SPEC
+CLOSED day 1** — R102 cross-frequency funding REFUTED_GATE1+GATE3, micro-structure orthogonal
+pool exhausted (11-attempt graveyard), §STRATEGY-3 = R77 single-strategy locked. **R77 Phase C
+done** 2026-08-08 (Seth): `r77_multicycle_revalidation.py` 3-check passes, episode floor fails
+(§R77-MULTICYCLE 🟡 INSUFFICIENT_FUNDING) — frozen weights unchanged, R77 status
+regime-specific candidate UNCHANGED. **C2 ENTER_Q thresholds backtest calibration due 2026-08-30.**
+🔴 **P0-1 SECURITY, needs Jazz in the Supabase console:** `anon` — public by construction, and
 🔴 **P0-1 SECURITY, needs Jazz in the Supabase console:** `anon` — public by construction, and
 additionally hardcoded in `external_probe.sh` — could RPC four `SECURITY DEFINER` functions that
 bypass RLS, with a **caller-controlled `p_max_batches`**. One unauthenticated call drives unbounded
