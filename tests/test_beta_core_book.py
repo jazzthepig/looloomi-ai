@@ -679,18 +679,56 @@ def test_a_cold_start_with_no_history_still_says_no_regime():
     assert cap == 1.0 and src == "no_regime", (cap, src)
 
 
-def test_a_readable_regime_ignores_the_carry_path_entirely():
+def test_a_readable_vol_state_ignores_the_carry_path_entirely():
     """The fallback must not be able to override a live reading."""
     async def _boom(**_):
-        raise AssertionError("carry path consulted while the regime was readable")
+        raise AssertionError("carry path consulted while vol state was readable")
 
     orig = bc._last_persisted_cap
     try:
         bc._last_persisted_cap = _boom
-        assert asyncio.run(bc._resolve_cap("TIGHTENING")) == (0.5, "regime_map")
-        assert asyncio.run(bc._resolve_cap("RISK_ON")) == (1.3, "regime_map")
+        hi, _ = asyncio.run(bc._resolve_cap("TIGHTENING", rv=1.10))   # above q67
+        mid, _ = asyncio.run(bc._resolve_cap("NEUTRAL", rv=0.75))     # between
+        lo, _ = asyncio.run(bc._resolve_cap(None, rv=0.50))           # below q33
+        assert (hi, mid, lo) == (0.5, 1.0, 1.3), (hi, mid, lo)
     finally:
         bc._last_persisted_cap = orig
+
+
+def test_regime_no_longer_sizes_the_book_but_is_still_recorded():
+    """S-137. The cap ladder survives; its DRIVER does not. Measured 902d OOS:
+    trailing-vol tercile ret/DD 0.780 vs constant-cap 0.634, capturing 58.3 % of
+    the forward-vol oracle's 0.885. And S-136 showed the objective the old ladder
+    encoded — de-risk into drawdowns — LOSES with perfect foresight (0.337).
+
+    regime stays on every row so 'does macro regime add beyond trailing vol?'
+    remains answerable. It must not drive: we have measured what vol state is
+    worth and never measured what regime is worth, and an unmeasured input must
+    not size a book while a measured one sits beside it."""
+    # same regime, different vol ⇒ different cap: vol is the driver
+    a, sa = asyncio.run(bc._resolve_cap("TIGHTENING", rv=0.50))
+    b, sb = asyncio.run(bc._resolve_cap("TIGHTENING", rv=1.10))
+    assert a == 1.3 and b == 0.5, (a, b)
+    assert "vol_state" in sa and "vol_state" in sb, (sa, sb)
+    # ...and the regime is still carried in the source string for later analysis
+    assert "TIGHTENING" in sa, sa
+
+    # different regime, same vol ⇒ same cap: regime does not size
+    c, _ = asyncio.run(bc._resolve_cap("RISK_ON", rv=1.10))
+    assert c == b, "regime changed the cap — it must not"
+
+    src = inspect.getsource(bc)
+    assert '"regime": regime' in src, "regime must still be written to every row"
+
+
+def test_an_unknown_vol_takes_the_middle_rung_never_the_top():
+    """I1. An unmeasured vol is not a licence to lever. The failure direction
+    matters more than the value: defaulting to 1.3 would mean the book levers
+    hardest exactly when it knows least."""
+    cap, src = bc._vol_state_cap(float("nan"))
+    assert cap == 1.0 and src == "vol_state_unknown", (cap, src)
+    assert bc._vol_state_cap(-1.0)[0] == 1.0
+    assert bc._vol_state_cap(0.0)[0] == 1.0
 
 
 def test_recovery_restores_the_exposure_not_just_the_nav():
