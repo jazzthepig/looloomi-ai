@@ -109,6 +109,26 @@ def _realized_vol(ret: np.ndarray, lookback: int = _VOL_LOOKBACK) -> float:
     return sd * np.sqrt(365.0) if sd == sd else float("nan")
 
 
+def _realized_vol_series(ret: np.ndarray, lookback: int = _VOL_LOOKBACK) -> np.ndarray:
+    """The trailing-vol series the tercile bounds are computed FROM.
+
+    Same estimator as `_realized_vol`, applied at every day — deliberately, so the
+    thresholds and the value being classified are the same quantity. Two different
+    vol estimators on the two sides of a comparison is how a threshold silently
+    stops meaning what it says."""
+    n = ret.shape[0]
+    out = np.full(n, np.nan)
+    if n < lookback:
+        return out
+    panel = np.nanmean(ret, axis=1)
+    for t in range(lookback, n):
+        w = panel[t - lookback:t]
+        sd = float(np.nanstd(w))
+        if sd == sd and sd > 0:
+            out[t] = sd * np.sqrt(365.0)
+    return out
+
+
 def _vol_scalar(rv: float) -> float:
     """Ex-ante vol target. NaN in ⇒ 1.0 out (I1: unmeasured is not zero, and it is
     also not an excuse to lever — an unknown vol gets the neutral scalar, never a
@@ -160,23 +180,72 @@ def _vol_scalar(rv: float) -> float:
 # BOUNDS — one panel, one 902-day window that was net +57 % for the panel. A
 # ladder that takes more risk in calm markets flatters itself in a rising one.
 # This is why it starts a NEW INCARNATION rather than editing v2's policy midway.
-_VOL_TERCILE_Q33 = 0.676     # annualised; train-half 33rd pct
-_VOL_TERCILE_Q67 = 0.839     # annualised; train-half 67th pct
+# FALLBACK ONLY — the train-half (2019-01 → ~2022) values, kept so the book can
+# size on its very first mark before it has its own history. They are NOT the
+# operating thresholds; see _vol_tercile_bounds.
+_VOL_TERCILE_Q33_SEED = 0.676
+_VOL_TERCILE_Q67_SEED = 0.839
+
+# The rolling window the live thresholds are computed over. Two years is long
+# enough that a single quiet quarter cannot reclassify the whole ladder, and short
+# enough to actually track the regime turnover the doctrine warns about.
+_TERCILE_WINDOW_DAYS = 730
+_TERCILE_MIN_OBS = 250
 
 
-def _vol_state_cap(rv: float) -> tuple[float, str]:
+def _vol_tercile_bounds(vol_history: "np.ndarray | None" = None) -> tuple[float, float, str]:
+    """(q33, q67, source) for the ③ ladder — EXPANDING/ROLLING, not frozen.
+
+    WHY THIS IS NOT TWO CONSTANTS (2026-08-12, S-142). The first version of this
+    ladder hard-coded 0.676 / 0.839, calibrated once on a 2019–2022 window. That is
+    exactly what ARCHITECTURE.md §大象无形 forbids:
+
+        "Any 'strategy' that is a static mechanical factor ... violates this
+         principle. Across long horizons regimes turn over countless times, edges
+         decay and reverse (non-stationarity). A fixed factor averaged across all
+         of that nets to nothing."
+
+    A volatility TERCILE is a statement about the current distribution, and crypto's
+    volatility distribution is not stationary — the 2021 median is not the 2026
+    median. Freezing the cut points converts a relative statement ("this is a
+    high-vol regime for this market") into an absolute one ("vol above 0.839"),
+    and an absolute threshold silently becomes always-on or never-on as the
+    distribution drifts. The ladder would keep working until the market changed,
+    which is the only time it is needed.
+
+    So the bounds are recomputed from the book's own trailing window. This is also
+    PIT-honest: on any given mark the percentiles use only data up to that mark, so
+    the live book and a backtest of it see the same numbers.
+
+    Falls back to the seed constants when there is too little history — with the
+    source string saying so, because "we used the seed" and "we computed it" must
+    not look identical on the row (S-131)."""
+    if vol_history is None:
+        return _VOL_TERCILE_Q33_SEED, _VOL_TERCILE_Q67_SEED, "seed"
+    v = np.asarray(vol_history, dtype=float)
+    v = v[np.isfinite(v) & (v > 0)][-_TERCILE_WINDOW_DAYS:]
+    if v.size < _TERCILE_MIN_OBS:
+        return (_VOL_TERCILE_Q33_SEED, _VOL_TERCILE_Q67_SEED,
+                f"seed(n={v.size}<{_TERCILE_MIN_OBS})")
+    q33, q67 = (float(x) for x in np.percentile(v, [33.3, 66.7]))
+    return q33, q67, f"rolling{v.size}d"
+
+
+def _vol_state_cap(rv: float, vol_history: "np.ndarray | None" = None
+                   ) -> tuple[float, str]:
     """③'s cap from the trailing-vol tercile. (cap, source).
 
     NaN in ⇒ the middle rung, never the top: an unmeasured vol is not a licence to
-    lever (I1). The source string records the rung so a row can be read without
-    re-deriving it."""
+    lever (I1). The source string records the rung AND where the cut points came
+    from, so a row can be read without re-deriving either."""
     if rv != rv or rv <= 0:
         return 1.0, "vol_state_unknown"
-    if rv > _VOL_TERCILE_Q67:
-        return 0.5, "vol_state_high"
-    if rv < _VOL_TERCILE_Q33:
-        return 1.3, "vol_state_low"
-    return 1.0, "vol_state_mid"
+    q33, q67, src = _vol_tercile_bounds(vol_history)
+    if rv > q67:
+        return 0.5, f"vol_state_high[{src}]"
+    if rv < q33:
+        return 1.3, f"vol_state_low[{src}]"
+    return 1.0, f"vol_state_mid[{src}]"
 
 
 # LEGACY — kept because `regime` is still RECORDED on every row so the question
@@ -237,7 +306,8 @@ async def _last_persisted_cap() -> dict | None:
     return rows[0] if rows else None
 
 
-async def _resolve_cap(regime: str | None, rv: float | None = None) -> tuple[float, str]:
+async def _resolve_cap(regime: str | None, rv: float | None = None,
+                       vol_history: "np.ndarray | None" = None) -> tuple[float, str]:
     """③'s cap, with the missing-regime case failing SAFE instead of OPEN.
 
     THE BUG THIS FIXES (2026-08-11, S-133). `_exposure_cap(None)` returns
@@ -266,7 +336,7 @@ async def _resolve_cap(regime: str | None, rv: float | None = None) -> tuple[flo
     # required; a caller that cannot supply it falls through to the carry path
     # rather than silently reverting to the regime ladder.
     if rv is not None and rv == rv:
-        cap, src = _vol_state_cap(rv)
+        cap, src = _vol_state_cap(rv, vol_history)
         return cap, (f"{src}(regime={regime or 'none'})" if regime else src)
 
     last = await _last_persisted_cap()
@@ -530,10 +600,15 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
 
     rv = _realized_vol(ret)
     scalar = _vol_scalar(rv)
+    # The tercile cut points are computed from the book's OWN trailing history on
+    # every mark, not frozen (S-142). A vol tercile is a statement about the current
+    # distribution, and crypto's is not stationary — freezing it turns a relative
+    # claim into an absolute one that drifts into always-on or never-on.
+    vol_hist = _realized_vol_series(ret)
     regime, regime_raw = await _current_regime()
     # S-133: carries the last booked cap forward when the regime is unreadable,
     # instead of failing open to full exposure. See _resolve_cap.
-    cap, cap_source = await _resolve_cap(regime, rv)
+    cap, cap_source = await _resolve_cap(regime, rv, vol_hist)
     # Record when the dwell filter actually CHANGED the decision. Without this the
     # row cannot distinguish "the filter did nothing today" from "the filter is not
     # running" — the same class as cap_source, and the reason the inert mapping in

@@ -721,6 +721,51 @@ def test_regime_no_longer_sizes_the_book_but_is_still_recorded():
     assert '"regime": regime' in src, "regime must still be written to every row"
 
 
+def test_the_tercile_bounds_are_rolling_not_frozen():
+    """S-142, and it is a correction to work done the same day. The first version
+    of this ladder hard-coded q33=0.676 / q67=0.839 from one 2019–2022 window.
+
+    ARCHITECTURE.md §大象无形: "Any 'strategy' that is a static mechanical factor
+    ... violates this principle. Across long horizons regimes turn over countless
+    times, edges decay and reverse. A fixed factor averaged across all of that nets
+    to nothing."
+
+    A TERCILE is inherently a claim about the CURRENT distribution. Freezing the cut
+    points converts a relative statement ("high-vol for this market") into an
+    absolute one ("above 0.839"), and an absolute threshold drifts into always-on or
+    never-on as the distribution moves. It would keep working right up until the
+    market changed — the only moment it is needed."""
+    rng = np.random.default_rng(3)
+    calm = rng.normal(0, 0.010, (900, 10))
+    wild = rng.normal(0, 0.045, (900, 10))
+    hist = bc._realized_vol_series(np.vstack([calm, wild]))
+
+    q33, q67, src = bc._vol_tercile_bounds(hist)
+    assert "rolling" in src, f"bounds did not come from history: {src}"
+    assert abs(q67 - bc._VOL_TERCILE_Q67_SEED) > 0.05, (
+        f"rolling q67 {q67:.3f} matches the frozen seed — the history is not being used")
+    assert q33 < q67, (q33, q67)
+
+    # the seed is still reachable, and SAYS so, when history is too short
+    _, _, seed_src = bc._vol_tercile_bounds(None)
+    assert seed_src == "seed", seed_src
+    _, _, short_src = bc._vol_tercile_bounds(np.array([0.5] * 10))
+    assert short_src.startswith("seed("), (
+        f"a too-short history must fall back AND say why, got {short_src!r}")
+
+
+def test_the_row_records_where_the_cut_points_came_from():
+    """S-131 again: 'we used the seed' and 'we computed it from 730 days' produce
+    the same cap. If the row cannot tell them apart, a book running on frozen
+    fallback thresholds for a month is invisible."""
+    hi = bc._vol_state_cap(0.90)                       # no history → seed
+    assert "[seed]" in hi[1], hi
+    rng = np.random.default_rng(11)
+    hist = bc._realized_vol_series(rng.normal(0, 0.02, (900, 8)))
+    lo = bc._vol_state_cap(0.05, hist)
+    assert "[rolling" in lo[1], lo
+
+
 def test_an_unknown_vol_takes_the_middle_rung_never_the_top():
     """I1. An unmeasured vol is not a licence to lever. The failure direction
     matters more than the value: defaulting to 1.3 would mean the book levers

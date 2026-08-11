@@ -277,6 +277,23 @@ python3 -m tests.test_no_stack_leakage_on_user_surfaces
 #                request path (the 2026-07-29 saturation P0) and that the audit write
 #                REPORTS whether it landed.
 python3 -m tests.test_metering_is_billable
+# 3a-duodevicies. the moat is claimed only where it is measured (2026-08-12, S-141).
+#                ARCHITECTURE.md line 164: "A signal we have not run through our own
+#                loop is one we must not claim. Claiming it unproven is
+#                self-deception, and self-deception cannot teach." Measured live:
+#                58/58 assets returned out_of_circle_risk="low" with stage=null and
+#                source="market_proxy", and a driver reading "no out-of-circle stress
+#                DETECTED" — a negative finding asserted by a test that never ran.
+#                The band borrowed the vocabulary of a real holder/attention reading,
+#                so a never-firing indicator and a switched-off one rendered
+#                identically (S-131's cap_source, on the concept ARCHITECTURE calls
+#                the moat). Now: no diffusion input ⇒ band "unmeasured", an explicit
+#                diffusion_measured flag, and a driver naming what is missing.
+#                This one matters more than the plumbing bugs it resembles because
+#                the consumer CANNOT check us — the provenance we hand over IS the
+#                product, and provenance that says "measured" when it means "guessed"
+#                destroys the proposition rather than one endpoint.
+python3 -m tests.test_moat_claims_are_measured
 # 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
 #                after its v1 run was found to have sized off a 23-day-stale regime.
 #                The integrity property this pins is the product's: a forward track
