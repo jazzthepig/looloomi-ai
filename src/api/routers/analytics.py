@@ -137,7 +137,7 @@ async def analytics_summary(
                 client.get(
                     f"{_SB_URL}/rest/v1/api_keys",
                     params={
-                        "select": "key_prefix,email,tier,name,intended_use,active,created_at,last_used_at,request_count",
+                        "select": "key_prefix,email,tier,name,notes,active,created_at,last_used_at,request_count",
                         "order":  "created_at.desc",
                         "limit":  "500",
                     },
@@ -185,7 +185,10 @@ async def analytics_summary(
                 "key_prefix":    k.get("key_prefix", ""),
                 "email":         k.get("email", ""),
                 "name":          k.get("name", ""),
-                "intended_use":  k.get("intended_use", ""),
+                # Response field keeps the name the API already published; the LIVE
+                # column is `notes`. Reading `intended_use` here 400'd the whole
+                # PostgREST select — same one-word bug as the write path (S-138).
+                "intended_use":  k.get("notes", ""),
                 "tier":          k.get("tier", ""),
                 "request_count": k.get("request_count", 0),
                 "created_at":    k.get("created_at", ""),
