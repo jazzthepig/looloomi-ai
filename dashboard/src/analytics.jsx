@@ -102,7 +102,7 @@ function AnalyticsPage() {
         })));
       })
       .catch(e => {
-        if (e.name === "AbortError") setError("Request timed out — Railway may be starting up. Refresh in 30 seconds.");
+        if (e.name === "AbortError") setError("Request timed out. Please refresh in 30 seconds.");
         else setError(e.message);
       })
       .finally(() => { clearTimeout(timeout); setLoading(false); });

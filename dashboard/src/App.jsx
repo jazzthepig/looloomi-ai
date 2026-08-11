@@ -273,13 +273,34 @@ function CrossAssetView({ universe = [] }) {
   );
 }
 
+// NAV. Two LABEL fixes only (2026-08-11) — the ids and the render blocks are
+// untouched on purpose, because renaming a route is a different, riskier change
+// than renaming a word, and the full IA restructure is a product decision that
+// belongs to Jazz (docs/UI_CRITIQUE_2026-08-11.md §5).
+//
+// 1. "Events & VC" → "VC Funding Flows". The tab promised events and delivered a
+//    funding table. That is a naming bug, not a layout one: a visitor who clicks
+//    a label and gets something else stops trusting the other labels too.
+//
+// 2. "Trading Engine · IC Loop · Freqtrade · Live" → no execution stack in the
+//    subtitle. This one is not taste. CLAUDE.md hard rule #8 forbids naming our
+//    implementation on investor-facing surfaces, and a third-party execution
+//    framework is squarely inside it — it tells a competitor what to clone and an
+//    allocator something they did not ask to know.
+//
+// STILL WRONG, deliberately left for a product decision:
+//   · "Diagnose" is the landing page. It asks a stranger for their entire book at
+//     the point of least trust — the largest commitment we can request, first.
+//   · Nine peers, no hierarchy: every item claims equal importance, so none is
+//     the point, so a first visitor cannot tell what we sell.
+//   · "CIS Engine" / "Protocols" / "Vault" are our module names, published.
 const NAV_ITEMS = [
   { id: "diagnose", label: "Diagnose", icon: "◉", sub: "Your book, read upstream of price" },
-  { id: "intelligence", label: "Intelligence", icon: "◈", sub: "Signals · Events · Macro",
+  { id: "intelligence", label: "Intelligence", icon: "◈", sub: "Signals · Macro · Funding",
     children: [
       { id: "intelligence.signals", label: "Signal Feed" },
       { id: "intelligence.macro",   label: "Macro" },
-      { id: "intelligence.events",  label: "Events & VC" },
+      { id: "intelligence.events",  label: "VC Funding Flows" },
     ]
   },
   { id: "cis", label: "CIS Engine", icon: "◆", sub: "Scoring · Leaderboard",
@@ -291,7 +312,7 @@ const NAV_ITEMS = [
   { id: "strategies", label: "Strategies", icon: "▲", sub: "Autonomous · Multi-Factor" },
   { id: "protocol",  label: "Protocols", icon: "⬡", sub: "DeFi TVL · Selection" },
   { id: "vault",     label: "Vault",     icon: "◎", sub: "Fund of Funds" },
-  { id: "quantgp",   label: "Trading Engine", icon: "∿", sub: "IC Loop · Freqtrade · Live" },
+  { id: "quantgp",   label: "Research Desk", icon: "∿", sub: "Factor research · Paper books" },
   { id: "portfolio", label: "Portfolio", icon: "⊡", sub: "My Holdings" },
   { id: "api-keys",  label: "API Keys",  icon: "⌘", sub: "RaaS · Free · Pro" },
 ];

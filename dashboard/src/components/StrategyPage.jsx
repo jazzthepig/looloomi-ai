@@ -744,7 +744,7 @@ export default function StrategyPage() {
                 {["CIS Score Change → Signal Generation (OUTPERFORM/NEUTRAL/UNDERWEIGHT)",
                   "Macro Regime → Position Size Multiplier",
                   "Risk Limits → Max Allocation per Asset 8%",
-                  "Execution → Freqtrade + CEX APIs"].map((s, i) => (
+                  "Execution → Venue-agnostic, liquidity-gated"].map((s, i) => (
                   <div key={i} style={{ padding: "4px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none", color: T.t2, fontSize: 11 }}>
                     {s}
                   </div>
@@ -969,7 +969,7 @@ export default function StrategyPage() {
                 rpd: "50,000 req/day",
                 color: T.blue,
                 border: "rgba(75,158,255,0.35)",
-                features: ["All Free features", "Grade-change webhooks (HMAC signed)", "LAS & confidence scores", "Historical score data (Supabase)", "Supply inflation + exchange HHI", "Priority SLA"],
+                features: ["All Free features", "Grade-change webhooks (HMAC signed)", "LAS & confidence scores", "Historical score data", "Supply inflation + exchange HHI", "Priority SLA"],
                 cta: "Contact for access",
                 highlight: true,
               },
@@ -979,7 +979,7 @@ export default function StrategyPage() {
                 rpd: "Custom",
                 color: T.purple,
                 border: "rgba(167,139,250,0.35)",
-                features: ["All Pro features", "Custom regime weight tuning", "White-label data feed", "Dedicated Mac Mini scoring lane", "Co-investment in CometCloud FoF", "Quarterly strategy review"],
+                features: ["All Pro features", "Custom regime weight tuning", "White-label data feed", "Dedicated scoring lane", "Co-investment in CometCloud FoF", "Quarterly strategy review"],
                 cta: "Book a call",
               },
             ].map((plan, i) => (

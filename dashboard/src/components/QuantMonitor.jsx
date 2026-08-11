@@ -756,7 +756,7 @@ function FactorLab() {
             Weak IC detected · Awaiting Gemma4-26b analysis
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.40)" }}>
-            Pillars: {(pending?.pillars || []).join(", ")} &nbsp;·&nbsp; Regime: {pending?.regime ?? "—"} &nbsp;·&nbsp; Mac Mini will process on next push cycle
+            Pillars: {(pending?.pillars || []).join(", ")} &nbsp;·&nbsp; Regime: {pending?.regime ?? "—"} &nbsp;·&nbsp; Queued for the next scoring cycle
           </div>
         </div>
       )}

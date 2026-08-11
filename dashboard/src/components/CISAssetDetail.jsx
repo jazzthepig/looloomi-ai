@@ -288,7 +288,7 @@ export default function CISAssetDetail({ symbol, onBack, onNavigate }) {
             <h3 style={{ fontFamily: FONTS.brand, fontSize: 14, fontWeight: 700,
               color: T.t1, margin: 0, letterSpacing: "0.04em" }}>PILLAR BREAKDOWN</h3>
             <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3 }}>
-              v4.1 · {tier === 1 ? "Mac Mini local engine" : "Railway estimation"}
+              v4.1 · {tier === 1 ? "Full-model score" : "Market estimate"}
             </span>
           </div>
 
