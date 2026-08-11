@@ -234,7 +234,12 @@ CREATE TABLE IF NOT EXISTS api_keys (
     key_hash        TEXT NOT NULL UNIQUE,
     name            TEXT,
     email           TEXT,
-    intended_use    TEXT,
+    notes           TEXT,   -- NAME MATTERS: the live column is `notes`.
+                            -- This file said `intended_use` and the table never had it,
+                            -- so /api/v1/keys returned "Key storage failed" from the day
+                            -- it shipped and zero keys were ever issued. A CREATE TABLE
+                            -- script with IF NOT EXISTS never corrects an existing table —
+                            -- it silently confirms whatever is already there.
     tier            TEXT NOT NULL DEFAULT 'free',
     rate_limit_rpm  INTEGER NOT NULL DEFAULT 60,    -- matches keys.py
     rate_limit_day  INTEGER NOT NULL DEFAULT 1000,  -- matches keys.py

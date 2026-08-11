@@ -66,8 +66,30 @@ async def _sb_post(table: str, payload: dict) -> dict:
                 hint = (" — SUPABASE_SERVICE_KEY is not set, so this fell back to the "
                         "anon key, which has no INSERT grant on api_keys")
             _log.error(f"[keys] Supabase {table} write failed: "
-                       f"{r.status_code} {r.text[:200]}{hint}")
-            raise HTTPException(status_code=500, detail="Key storage failed")
+                       f"{r.status_code} {r.text[:300]}{hint}")
+            # SURFACE THE CAUSE (2026-08-11). This used to raise a bare
+            # "Key storage failed" for every failure mode, with the status and body
+            # visible only in a log nobody reads while debugging from the outside.
+            #
+            # The actual bug was one wrong column name. It was diagnosed wrong THREE
+            # times — "anon lacks INSERT", "SUPABASE_SERVICE_KEY is missing", "id has
+            # no sequence" — and every one of those was a plausible story invented to
+            # fill the space the error message left empty. A message that names no
+            # cause does not merely fail to help: it funds confident wrong answers,
+            # and each one costs a round trip through a human with console access.
+            #
+            # PostgREST's own message ("column X does not exist", "violates row-level
+            # security policy") is precise and contains no secrets — it describes OUR
+            # schema, not the caller's data. Passing it through is the difference
+            # between a five-minute fix and three wrong ones.
+            detail = "Key storage failed"
+            try:
+                body_msg = (r.json() or {}).get("message") or ""
+            except Exception:
+                body_msg = r.text[:200]
+            if body_msg:
+                detail = f"Key storage failed: {body_msg}"
+            raise HTTPException(status_code=500, detail=detail)
         return r.json()
 
 
@@ -182,7 +204,20 @@ async def create_key(body: CreateKeyRequest):
         "key_hash":       _hash_key(key),
         "name":           body.name,
         "email":          body.email,
-        "intended_use":   body.intended_use or "",
+        # The live column is `notes`, NOT `intended_use` (2026-08-11). The request
+        # model and scripts/supabase_all_tables.sql both say intended_use; the table
+        # has never had it. PostgREST answers an unknown column with a 400, `_sb_post`
+        # collapsed every failure into "Key storage failed", and so the endpoint has
+        # returned the same opaque 500 since it was written — zero keys ever issued.
+        #
+        # The bug is one word. What made it expensive is that the error message named
+        # no cause, so it was diagnosed wrong three times (anon lacks INSERT; the
+        # service key is missing; id has no sequence — id is GENERATED ALWAYS AS
+        # IDENTITY, and for identity columns information_schema reports
+        # column_default = null, which is exactly what a missing default looks like).
+        # A generic failure message does not merely fail to help; it actively funds
+        # plausible wrong answers. See the status/body now surfaced in _sb_post.
+        "notes":          body.intended_use or "",
         "tier":           tier,
         "rate_limit_rpm": rpm,
         "rate_limit_day": rpd,

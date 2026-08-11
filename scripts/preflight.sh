@@ -224,6 +224,40 @@ python3 -m tests.test_value_added_dollars
 #                being asked again. Positive control: HAR must win on 5 synthetic
 #                GARCH seeds where vol is persistent by construction.
 python3 -m tests.test_har_rv_study_is_specified_correctly
+# 3a-quindecies. written columns vs declared schema (2026-08-11, S-138). /api/v1/keys
+#                POSTed a column named `intended_use`; the live table has `notes` and
+#                never had the other. PostgREST 400s on an unknown column, _sb_post
+#                collapsed every failure into "Key storage failed", and the endpoint
+#                returned that same opaque 500 from the day it shipped — ZERO keys ever
+#                issued. supabase_all_tables.sql declared intended_use too, so the file
+#                and the table agreed with each other about being wrong.
+#                The typo is not the lesson. The lesson is that ONE WORD survived THREE
+#                confident diagnoses (anon lacks INSERT — it does not; SUPABASE_SERVICE_KEY
+#                missing — not the cause; id has no sequence — id is GENERATED ALWAYS AS
+#                IDENTITY, and information_schema reports column_default=null for identity
+#                columns, which is exactly what a missing default looks like). Each was
+#                invented to fill the space the error message left empty. A generic failure
+#                message does not merely fail to help, it FUNDS wrong answers, and each one
+#                costs a round trip through the one person with console access.
+#                Guards both halves: written columns must be declared, and the endpoint
+#                must pass PostgREST's own message through.
+python3 -m tests.test_table_columns_match_the_code
+# 3a-sexdecies. hard rule #8 — no implementation on investor-facing surfaces
+#               (2026-08-11, S-139). The rule existed and was violated in TEN
+#               rendered strings, including two the rule names directly: strategy.html
+#               shipped "Execution → Freqtrade + CEX APIs", and the PAID TIER list
+#               offered "Dedicated Mac Mini scoring lane" + "Historical score data
+#               (Supabase)". A pricing page describing our hardware tells a competitor
+#               what to clone and tells an allocator that a $500M target runs on a
+#               desktop. Every asset footer read "Mac Mini local engine / Railway
+#               estimation"; an error toast read "Railway may be starting up".
+#               A rule that lives only in prose is re-broken by every author who did
+#               not have it in mind that morning — the same argument that produced
+#               test_compliance_language. That one governs what we CLAIM; this one
+#               governs what we REVEAL. Replacements state the CAPABILITY
+#               ("full-model score"), so the tier and its meaning stay visible and
+#               only the part a competitor benefits from goes away.
+python3 -m tests.test_no_stack_leakage_on_user_surfaces
 # 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
 #                after its v1 run was found to have sized off a 23-day-stale regime.
 #                The integrity property this pins is the product's: a forward track
