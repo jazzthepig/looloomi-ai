@@ -130,12 +130,40 @@ def _euphoria_from_market(a: dict) -> float:
     return 0.3
 
 
-def _band(score: float) -> str:
+def _band(score: float, diffusion_measured: bool = True) -> str:
+    """Band the 出圈 risk — but ONLY when a diffusion input was actually observed.
+
+    THE BUG THIS FIXES (2026-08-12, S-141). Measured live: 58/58 assets returned
+    `out_of_circle_risk: "low"` and 58/58 had `stage: null`. The band was computed
+    from the market proxy — cap rank, price extension, the S pillar — none of which
+    observe diffusion. So a risk indicator that has never fired was indistinguishable
+    from a risk indicator that is switched off. That is S-131's `cap_source` (a
+    column that existed, was displayed, and only ever held one value), sitting on
+    the concept ARCHITECTURE.md calls the moat.
+
+    出圈 is a statement about a consensus TRAVELLING from the informed few to the
+    crowd. Observing it requires a diffusion input: holder stage (D3) or attention
+    diffusion (D4). Cap rank and momentum are reflections — they are what the wave
+    looks like AFTER it passed, which is precisely the thing the concept exists to
+    get upstream of. Estimating 出圈 from them and then reporting the answer in the
+    same vocabulary used when we DO have the data is the degraded-value pattern
+    (S-122) applied to our own differentiator.
+
+    ARCHITECTURE.md line 164: "A signal we have not run through our own loop is one
+    we must not claim. Claiming it unproven is self-deception, and self-deception
+    cannot teach." We were claiming it, on every asset, in production.
+
+    `unmeasured` is a fourth value rather than a null so that consumers must handle
+    it explicitly. A null would be silently falsy in most call sites and would read
+    as "no risk" — the same failure wearing a different type.
+    """
+    if not diffusion_measured:
+        return "unmeasured"
     return "low" if score < _LOW else ("elevated" if score < _ELEVATED else "high")
 
 
 def _drivers(attention: float, momentum: float, euphoria: float, smallness: float,
-             a: dict, att: dict | None) -> list[str]:
+             a: dict, att: dict | None, diffusion_measured: bool = True) -> list[str]:
     out: list[str] = []
     if smallness > 0.6 and attention > 0.5:
         out.append("small/niche-cap sitting high in retail attention (mass FOMO pattern)")
@@ -150,7 +178,20 @@ def _drivers(attention: float, momentum: float, euphoria: float, smallness: floa
         except (TypeError, ValueError):
             pass
     if not out:
-        out.append("consensus still upstream / in-circle — no out-of-circle stress detected")
+        # DO NOT ASSERT A NEGATIVE FINDING FROM AN ABSENT TEST (S-141).
+        # This used to read "consensus still upstream / in-circle — no out-of-circle
+        # stress detected". That is not "we don't know", it is "we looked and it is
+        # clear" — and nothing looked. 出圈 needs a diffusion input (holder stage D3
+        # or attention diffusion D4); with neither, the only honest sentence names
+        # what is missing. "Not detected" and "not measured" differ by exactly the
+        # thing a consumer is paying us for.
+        if diffusion_measured:
+            out.append("no diffusion stress in the observed holder/attention data")
+        else:
+            out.append("出圈 NOT MEASURED — no holder-stage (D3) or attention-diffusion "
+                       "(D4) input for this asset; the score below is a market proxy "
+                       "from cap rank, price extension and sentiment, which are "
+                       "reflections of diffusion rather than observations of it")
     return out
 
 
@@ -227,12 +268,19 @@ def estimate_inline(a: dict, attention: dict | None = None,
             stage = None
 
     out = {
-        "out_of_circle_risk": _band(risk_score),
+        # A diffusion input was actually observed only when holder stage (D3) or
+        # attention diffusion (D4) is present. `market_proxy` means neither was —
+        # cap rank, price extension and the S pillar are reflections of diffusion,
+        # not observations of it, and banding them as though they were is the claim
+        # ARCHITECTURE.md forbids. See _band.
+        "diffusion_measured": source != "market_proxy",
+        "out_of_circle_risk": _band(risk_score, source != "market_proxy"),
         "risk_score": round(risk_score, 3),
         "stage": round(stage, 3) if stage is not None else None,
         "season": season,
         "days_since_chuquan": days_since_chuquan,
-        "drivers": _drivers(attention_drv, momentum, euphoria, smallness, a, attention),
+        "drivers": _drivers(attention_drv, momentum, euphoria, smallness, a, attention,
+                            source != "market_proxy"),
         "source": source,
         "confidence": round(confidence, 2),
     }
@@ -270,9 +318,14 @@ def attach_cause_proximity(universe: list, attention_map: dict | None = None,
             )
         except Exception:
             # never break the universe on one asset
+            # The exception path must not be the ONE place that still says "low".
+            # It used to, and a per-asset crash therefore rendered as a clean bill of
+            # health — the failure mode reporting the reassuring answer (S-141).
             a["cause_proximity"] = {
-                "out_of_circle_risk": "low", "risk_score": 0.0, "stage": None,
-                "drivers": ["unavailable"], "source": "market_proxy", "confidence": 0.0,
+                "out_of_circle_risk": "unmeasured", "risk_score": None, "stage": None,
+                "diffusion_measured": False,
+                "drivers": ["出圈 NOT MEASURED — the estimator raised on this asset"],
+                "source": "error", "confidence": 0.0,
             }
 
 
