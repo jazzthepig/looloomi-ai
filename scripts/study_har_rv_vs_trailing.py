@@ -33,11 +33,13 @@ METHOD — the parts that keep this honest:
 
   * PIT. Every forecast for day t+1 uses data through day t only. The regression
     coefficients are fitted on a TRAIN window and never refitted inside TEST.
-  * QLIKE as the primary loss. MSE on variance over-weights the few largest days
-    and is dominated by how noisy the RV proxy is; QLIKE is robust to that noise
-    (Patton, J. Econometrics 2011) and is the standard choice for exactly this
-    comparison. MSE on log-variance reported beside it, because a ranking that
-    flips between two proper losses is not a ranking.
+  * TWO LOSSES, EACH ON ITS OWN ESTIMAND. QLIKE is robust to noise in the RV proxy
+    (Patton, J. Econometrics 2011) and is minimised by the conditional MEAN. MSE on
+    log-variance is minimised by the MEDIAN. Those are different numbers for a
+    skewed variable, so each is scored against the forecast it actually asks for —
+    see har_forecast. Scoring both against one forecast guarantees that one of them
+    is being asked the wrong question, which is not a second check, it is a
+    coin-flip dressed as rigour.
   * The incumbent is the REAL incumbent — `beta_core_paper._realized_vol`,
     imported, not reimplemented. A study that reimplements the thing it is trying
     to beat has already given itself an advantage it cannot account for.
@@ -49,12 +51,11 @@ on a non-trivial share of days, AND the resulting change in `gross` is large
 enough to move the book's realised drawdown. Anything less is a DOCTRINE entry,
 not a ship — the forecast may be genuinely better and still not be worth wiring.
 
-RUN (Mac-side; needs SUPABASE_URL/KEY):
+RUN (Mac-side — NO credentials needed; reads Binance directly):
     python3 scripts/study_har_rv_vs_trailing.py
 """
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 
@@ -71,15 +72,25 @@ CAPS_TO_TEST = (0.5, 1.0, 1.3)
 
 
 # ── data ─────────────────────────────────────────────────────────────────────
-def load_panel() -> tuple[list[str], np.ndarray]:
-    """The deep panel (2017+ binance_hist). Same loader the book uses."""
-    from src.research.strategies.causal_positioning import load_binance_panel
-    symbols, close = load_binance_panel()
+def load_panel(start=(2019, 1, 1)) -> tuple[list[str], np.ndarray]:
+    """Daily closes for the 24 liquid majors, straight from Binance fapi.
+
+    NO SUPABASE. `load_binance_panel` fetches from the exchange directly, so this
+    study runs with zero credentials — it just has to run somewhere Binance is
+    reachable, which is the Mac and not Railway US. The first version of this
+    script gated on SUPABASE_URL and would have sent anyone chasing a credential
+    the study never needed.
+
+    Signature note: load_binance_panel(assets, start) returns
+    (days, close, fmean, fsum) — four values, not two. Funding is unused here.
+    """
+    from src.research.strategies.causal_positioning import (
+        DEFAULT_UNIVERSE, load_binance_panel)
+    days, close, _fmean, _fsum = load_binance_panel(DEFAULT_UNIVERSE, start=start)
     close = np.asarray(close, dtype=float)
-    ret = np.zeros_like(close)
+    ret = np.full_like(close, np.nan)
     ret[1:] = (close[1:] - close[:-1]) / close[:-1]
-    ret[0] = np.nan
-    return symbols, ret
+    return list(DEFAULT_UNIVERSE), ret
 
 
 def panel_daily_returns(ret: np.ndarray) -> np.ndarray:
@@ -234,12 +245,21 @@ def reachability(vol_ann: np.ndarray) -> dict:
 
 
 def main() -> int:
-    if not os.environ.get("SUPABASE_URL"):
-        print("🔴 SUPABASE_URL not set — run this Mac-side with .env loaded:\n"
-              "   set -a; . .env; set +a; python3 scripts/study_har_rv_vs_trailing.py")
+    # No credential gate: this study reads Binance directly. If it cannot reach the
+    # exchange, say THAT rather than blaming an env var it does not use — the first
+    # version checked SUPABASE_URL and sent the reader after a key the study never
+    # needed. An error message that names the wrong cause costs more than no message.
+    try:
+        symbols, ret = load_panel()
+    except Exception as e:
+        print(f"🔴 could not load the Binance panel: {e}\n"
+              f"   This study needs NO credentials — only reachability to "
+              f"fapi.binance.com.\n"
+              f"   Railway US is geo-blocked from it; run this on the Mac.")
         return 1
-
-    symbols, ret = load_panel()
+    if ret.size == 0 or not np.isfinite(ret).any():
+        print("🔴 panel loaded but contains no finite returns — refusing to study noise.")
+        return 1
     panel = panel_daily_returns(ret)
     n = panel.shape[0]
     print(f"panel: {len(symbols)} symbols × {n} days\n")
