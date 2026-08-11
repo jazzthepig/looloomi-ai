@@ -143,6 +143,21 @@ def test_the_error_message_names_the_cause() -> None:
           "a bare 'Key storage failed' is still being raised somewhere")
 
 
+def test_the_issue_route_is_recorded_where_people_look_for_it() -> None:
+    """The verification curl in the handoff said POST /api/v1/keys. The route is
+    POST /api/v1/keys/create, so it returned 405 and cost another round trip.
+
+    405 rather than 404 because the SPA catch-all registers GET only, so a POST to
+    any unmatched path lands there and is refused by METHOD — which means the
+    status code carries no information about whether the deploy took. A wrong URL
+    asserted from memory is the same defect as a wrong column asserted from memory,
+    one layer up, and it was made in the same hour as S-138."""
+    src = (_ROOT / "src/api/routers/keys.py").read_text(encoding="utf-8")
+    check("issue endpoint is POST /create under the router prefix",
+          '@router.post("/create"' in src and 'prefix="/api/v1/keys"' in src,
+          "if this moved, every runbook and handoff quoting the old path is now wrong")
+
+
 def test_the_sql_file_records_why_the_name_matters() -> None:
     """The file is the thing a future agent will trust. If it just says `notes`
     with no history, the next person to 'tidy' it back to intended_use will have
