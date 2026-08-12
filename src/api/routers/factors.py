@@ -140,27 +140,6 @@ async def get_selection_standard():
 
 # ── GET /api/v1/factors/{factor_id} ──────────────────────────────────────────
 
-@router.get("/api/v1/factors/{factor_id}")
-async def get_factor(factor_id: str):
-    """Single factor detail by id. Includes live performance data if available."""
-    FACTORS, get_by_pillar, get_by_id, get_by_class, summary = _reg()
-    load, get_factor_health_report = _perf()
-
-    fac = get_by_id(factor_id)
-    if fac is None:
-        raise HTTPException(404, f"Factor '{factor_id}' not found. Valid ids: {[f['id'] for f in FACTORS]}")
-
-    # Attach live performance if available
-    perf_store = load()
-    perf = perf_store.get(factor_id)
-    return {
-        **fac,
-        "live_performance": perf,
-    }
-
-
-# ── GET /api/v1/factors/pillar/{pillar} ──────────────────────────────────────
-
 @router.get("/api/v1/factors/pillar/{pillar}")
 async def get_factors_by_pillar(pillar: str):
     """Factors for a single pillar with live performance."""
@@ -212,3 +191,25 @@ async def get_factor_performance():
         "selection_standard": "§F-SEL: |r| > 0.10 = active, > 0.05 = probationary, ≤ 0.05 for 3 periods = candidate_removal",
         "note": "Performance data accumulates from paper trading mine runs. Minimum 5 closed trades with pillar data required per factor.",
     }
+
+@router.get("/api/v1/factors/{factor_id}")
+async def get_factor(factor_id: str):
+    """Single factor detail by id. Includes live performance data if available."""
+    FACTORS, get_by_pillar, get_by_id, get_by_class, summary = _reg()
+    load, get_factor_health_report = _perf()
+
+    fac = get_by_id(factor_id)
+    if fac is None:
+        raise HTTPException(404, f"Factor '{factor_id}' not found. Valid ids: {[f['id'] for f in FACTORS]}")
+
+    # Attach live performance if available
+    perf_store = load()
+    perf = perf_store.get(factor_id)
+    return {
+        **fac,
+        "live_performance": perf,
+    }
+
+
+# ── GET /api/v1/factors/pillar/{pillar} ──────────────────────────────────────
+

@@ -168,31 +168,6 @@ async def strategy_list(
 # GET /api/v1/strategy/{id}
 # ---------------------------------------------------------------------------
 
-@router.get("/api/v1/strategy/{record_id}")
-async def strategy_get(record_id: str):
-    """Fetch one record by id. 404 if missing."""
-    modules = _store()
-    emb_mods = _embedder()
-
-    rec = modules["get_record"](record_id)
-    if rec is None:
-        raise HTTPException(status_code=404, detail=f"record '{record_id}' not in strategy:records")
-
-    d = rec.to_dict()
-    d["coverage"] = emb_mods["coverage_summary"](rec)
-
-    # Resolve embedding (full vector only if asked)
-    embeddings = modules["load_all_embeddings"]()
-    if record_id in embeddings:
-        d["embedding_dims_filled"] = sum(1 for v in embeddings[record_id] if abs(v) > 1e-9)
-
-    return d
-
-
-# ---------------------------------------------------------------------------
-# GET /api/v1/strategy/similar/{id}
-# ---------------------------------------------------------------------------
-
 @router.get("/api/v1/strategy/similar/{record_id}")
 async def strategy_similar(
     record_id: str,
@@ -376,3 +351,29 @@ async def strategy_stats():
         "age_s":           modules["age_seconds"](),
         "meta":            meta,
     }
+
+@router.get("/api/v1/strategy/{record_id}")
+async def strategy_get(record_id: str):
+    """Fetch one record by id. 404 if missing."""
+    modules = _store()
+    emb_mods = _embedder()
+
+    rec = modules["get_record"](record_id)
+    if rec is None:
+        raise HTTPException(status_code=404, detail=f"record '{record_id}' not in strategy:records")
+
+    d = rec.to_dict()
+    d["coverage"] = emb_mods["coverage_summary"](rec)
+
+    # Resolve embedding (full vector only if asked)
+    embeddings = modules["load_all_embeddings"]()
+    if record_id in embeddings:
+        d["embedding_dims_filled"] = sum(1 for v in embeddings[record_id] if abs(v) > 1e-9)
+
+    return d
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/strategy/similar/{id}
+# ---------------------------------------------------------------------------
+

@@ -303,31 +303,6 @@ async def collect_ohlcv(symbols: list = None, days: int = 365) -> dict:
 
 
 # ── Public read endpoints ─────────────────────────────────────────────────
-@router.get("/api/v1/ohlcv/{symbol}")
-async def get_ohlcv(symbol: str, days: int = Query(90, ge=1, le=730)):
-    """Return daily OHLCV for a symbol (newest first)."""
-    if not _SB_URL or not _SB_KEY:
-        raise HTTPException(status_code=503, detail="supabase not configured")
-    try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.get(
-                f"{_SB_URL}/rest/v1/ohlcv_daily",
-                params={
-                    "symbol":     f"eq.{symbol.upper()}",
-                    "order":      "trade_date.desc",
-                    "limit":      str(min(days, 730)),
-                    "select":     "trade_date,open,high,low,close,volume,source",
-                },
-                headers=_sb_headers(),
-                timeout=15,
-            )
-        if r.status_code != 200:
-            return {"status": "error", "code": r.status_code, "body": r.text[:200]}
-        return {"status": "ok", "symbol": symbol.upper(), "count": len(r.json()), "data": r.json()}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)[:200])
-
-
 @router.get("/api/v1/ohlcv/coverage")
 async def ohlcv_coverage():
     """
@@ -365,3 +340,29 @@ async def ohlcv_coverage():
         return {"status": "ok", "symbols": len(out), "data": out}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)[:200])
+
+@router.get("/api/v1/ohlcv/{symbol}")
+async def get_ohlcv(symbol: str, days: int = Query(90, ge=1, le=730)):
+    """Return daily OHLCV for a symbol (newest first)."""
+    if not _SB_URL or not _SB_KEY:
+        raise HTTPException(status_code=503, detail="supabase not configured")
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            r = await client.get(
+                f"{_SB_URL}/rest/v1/ohlcv_daily",
+                params={
+                    "symbol":     f"eq.{symbol.upper()}",
+                    "order":      "trade_date.desc",
+                    "limit":      str(min(days, 730)),
+                    "select":     "trade_date,open,high,low,close,volume,source",
+                },
+                headers=_sb_headers(),
+                timeout=15,
+            )
+        if r.status_code != 200:
+            return {"status": "error", "code": r.status_code, "body": r.text[:200]}
+        return {"status": "ok", "symbol": symbol.upper(), "count": len(r.json()), "data": r.json()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)[:200])
+
+
