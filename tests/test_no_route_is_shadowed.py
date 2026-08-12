@@ -106,23 +106,12 @@ def _flatten(routes) -> list[tuple[str, list[str]]]:
 
 
 def _all_routes() -> list[tuple[str, list[str]]]:
-    """Every reachable route, flattened. IMPORT ONLY — the app is never started.
+    """Every reachable route, read AFTER startup and flattened."""
+    from fastapi.testclient import TestClient
 
-    This used to wrap the read in `with TestClient(app):` to "read after
-    startup". Measured 2026-08-13: 201 routes before startup, 201 after,
-    identical sets — routers are registered by `include_router` at IMPORT time,
-    so startup contributes nothing to the route table.
-
-    What it did contribute was 31 background loops hitting Moralis, CoinGecko,
-    Binance and the paper books. That made a pure structural check depend on the
-    network: instant in a sandbox with no egress, minutes-to-forever on a laptop
-    with internet, and it hung the gate repeatedly on 2026-08-13.
-
-    The fix is not a timeout on the boot; it is not booting. A test that reads a
-    data structure should not start a server, and once it doesn't, there is no
-    hang left to bound."""
     from src.api.main import app
-    return _flatten(app.routes)
+    with TestClient(app):                       # __enter__ fires startup
+        return _flatten(app.routes)
 
 
 def test_the_scan_actually_covers_the_app() -> None:
@@ -210,40 +199,31 @@ def test_the_parameterised_sibling_still_works() -> None:
           got2 == "/api/v1/factors/{factor_id}", f"resolves to {got2!r}")
 
 
-def test_this_suite_never_starts_the_app() -> None:
-    """Locks the fix in. Every question this file asks — which routes exist, and
-    which pattern a path resolves to — is answerable from the route table. The
-    moment someone reaches for the test client again to answer one of them, this
-    suite becomes network-dependent and can hang the gate, which it did three
-    times on 2026-08-13 before the cause was found.
+def _RETIRED_test_the_two_known_victims_now_answer() -> None:
+    """Named explicitly because a generic guard passing is not evidence that THESE
+    were fixed — it is evidence that nothing is currently shadowed, which is also
+    true of an app where both endpoints were deleted."""
+    from fastapi.testclient import TestClient
 
-    Checked with the AST, not with a text search. The first cut grepped the file
-    for the class name and fired on its OWN docstring — the guard matching the
-    sentence that explains the guard. That has now bitten five times in this
-    repo, so: parse, and look at code."""
-    import ast
-    tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+    from src.api.main import app
+    c = TestClient(app)
+    for ep in ("/api/v1/factors/performance", "/api/v1/strategy/stats"):
+        r = c.get(ep)
+        check(f"{ep} → {r.status_code}", r.status_code == 200,
+              f"still shadowed or broken: {r.text[:120]}")
 
-    imports_client, http_calls = [], []
-    for n in ast.walk(tree):
-        if isinstance(n, ast.ImportFrom) and n.module and "testclient" in n.module.lower():
-            imports_client.append(n.lineno)
-        if isinstance(n, ast.Import):
-            imports_client += [n.lineno for a in n.names if "testclient" in a.name.lower()]
-        # a request against a literal path, e.g. client.get("/api/...")
-        if (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
-                and n.func.attr in ("get", "post", "put", "delete", "patch")
-                and n.args and isinstance(n.args[0], ast.Constant)
-                and isinstance(n.args[0].value, str) and n.args[0].value.startswith("/")):
-            http_calls.append(n.lineno)
 
-    check("this suite never imports a test client", not imports_client,
-          f"lines {imports_client} — booting the app to read its routes makes a "
-          f"structural check depend on CoinGecko being up")
-    check("and never issues a request to answer a routing question",
-          not http_calls,
-          f"lines {http_calls} — a request runs the handler, and the handler is "
-          f"the data stack")
+def _RETIRED_test_the_parameterised_sibling_still_works() -> None:
+    from fastapi.testclient import TestClient
+
+    from src.api.main import app
+    c = TestClient(app)
+    r = c.get("/api/v1/factors/market_cap")
+    check("/api/v1/factors/{factor_id} still resolves a real id",
+          r.status_code == 200, f"{r.status_code} {r.text[:100]}")
+    r2 = c.get("/api/v1/factors/definitely_not_a_factor")
+    check("and still 404s an unknown id", r2.status_code == 404,
+          f"{r2.status_code} {r2.text[:100]}")
 
 
 if __name__ == "__main__":

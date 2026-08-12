@@ -485,7 +485,7 @@ Redis blob ⇒ `gross = min(1.30, 1.0) = 1.0` ⇒ 权重与基准完全相同。
 **我早先两个诊断被推翻,已在台账更正:** `SUPABASE_KEY` 本来就是 service_role;
 `api_keys` 写不进是因为 **`id` 为 `bigint NOT NULL` 且无序列/identity 默认值**,与权限无关。
 
-**Last updated:** 2026-08-13 — **C2 ⓠ + C3 size + C5 episode-code SHIPPED (10 commits → origin/main 5537a8d); 79/79 smoke green.**
+**Last updated:** 2026-08-12 — **C2 ⓠ + C3 size + C5 episode-code complete; 79/79 smoke green.**
 **C1 SHIP** (commit c0516f9, ① book re-inception 2026-08-09 13:57Z, Day 60 = 2026-10-08).
 **C2/C3/C5 specs WRITTEN** in MINIMAX_SYNC.md (§C2-SHIP-SPEC ⓠ layer / §C3-SHIP-SPEC 2D size
 / §C5-SHIP-SPEC VDB episode, all 2026-08-12, 9 月 ship targets). **C6 §C6-DISCOVERY-SPEC
