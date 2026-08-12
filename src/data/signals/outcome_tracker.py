@@ -218,16 +218,24 @@ def _nearest_close(prices: list, target: datetime) -> float | None:
 
 async def _ohlcv_close_at(client: httpx.AsyncClient, symbol: str, target: datetime,
                           window_days: int = 4) -> float | None:
-    """Nearest daily close to `target` from OUR OWN ohlcv_daily table (Supabase). Returns
-    None if we didn't store it. This is the 'use our own data first' path — no external
-    fetch, no waiting. Per Jazz's mandate: anything we retrieved should be in our DB."""
+    """Nearest daily close to `target` from the `ohlcv_daily_canonical` view (Supabase).
+
+    The view is the deterministic one-row-per-(symbol, trade_date) pick — native venue >
+    aggregator > free, with coingecko grok_open snapshot artifacts marked `open_usable=false`.
+    Reads from the raw `ohlcv_daily` table would re-introduce OPEN RISK #6: identical
+    `(symbol, trade_date)` pairs across `coingecko` / `eodhd` / `yfinance` / `binance_hist`
+    sources with closes up to 5% apart for the same day, and `min(|trade_date - target|)`
+    is unstable when multiple rows share the same trade_date. The view resolves source
+    precedence server-side; this client reads one row per day. Returns None if we didn't
+    store it. The 'use our own data first' path — no external fetch, no waiting. Per
+    Jazz's mandate: anything we retrieved should be in our DB."""
     if not _SB_URL or not _SB_KEY:
         return None
     lo = (target - timedelta(days=window_days)).date().isoformat()
     hi = (target + timedelta(days=window_days)).date().isoformat()
     try:
         resp = await client.get(
-            f"{_SB_URL}/rest/v1/ohlcv_daily",
+            f"{_SB_URL}/rest/v1/ohlcv_daily_canonical",
             params=[("symbol", f"eq.{symbol.upper()}"),
                     ("trade_date", f"gte.{lo}"), ("trade_date", f"lte.{hi}"),
                     ("select", "trade_date,close"), ("order", "trade_date.asc")],
@@ -242,7 +250,7 @@ async def _ohlcv_close_at(client: httpx.AsyncClient, symbol: str, target: dateti
         best = min(rows, key=lambda r: abs(datetime.fromisoformat(r["trade_date"]).date() - tgt))
         return float(best["close"])
     except Exception as e:
-        _log.warning("[OUTCOME] ohlcv read %s: %s", symbol, e)
+        _log.warning("[OUTCOME] ohlcv_canonical read %s: %s", symbol, e)
         return None
 
 
