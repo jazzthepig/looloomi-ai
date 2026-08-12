@@ -28,15 +28,19 @@ export const T = {
   borderHi:   "rgba(99,102,241,0.32)",
 
   // ── Text hierarchy — vision palette ──────────────────────────────────
+  // WCAG AA rationale (2026-08-13, design audit): body text (font-size ≤ 14px, non-bold)
+  // requires 4.5:1 contrast on the deep navy base (#030f2a). 0.45 opacity on bloom
+  // (rgba(199,210,254,0.45)) measured ~3.7:1 — below AA for body text. 0.65 measures
+  // ~6.3:1, comfortably above AA. T.dim (0.20) stays — it is decorative-only.
   t1:         "#f0f4ff",        // primary — ice white (vision --white)
   t2:         "#c7d2fe",        // secondary — bloom lavender
-  t3:         "rgba(199,210,254,0.45)", // muted (vision --muted)
-  t4:         "rgba(199,210,254,0.20)", // dim
+  t3:         "rgba(199,210,254,0.65)", // muted (vision --muted, WCAG AA compliant)
+  t4:         "rgba(199,210,254,0.20)", // dim — decorative only, do NOT use for body text
 
   // Semantic aliases
   primary:    "#f0f4ff",
   secondary:  "#c7d2fe",
-  muted:      "rgba(199,210,254,0.45)",
+  muted:      "rgba(199,210,254,0.65)",  // alias of t3 — WCAG AA compliant
   dim:        "rgba(199,210,254,0.20)",
 
   // ── Brand accents ────────────────────────────────────────────────────
