@@ -395,6 +395,19 @@ python3 -m tests.test_universe_is_point_in_time
 #                a session). Also separates the two costs: impact vanishes with size,
 #                spread does not and is wider on exactly the thin names carrying the edge.
 python3 -m tests.test_aum_tripwire
+# 3a-quaterdecies-quinquies. execution log records the MISSES (S-155). The $10k book
+#                starting 2026-08-17 exists to measure the one input a backtest cannot
+#                have: what we actually pay to trade. R66-C assumed 10bps and showed
+#                break-even at 150bps, but that ladder priced FEES — the entire VIP0→VIP9
+#                ladder is ~3.3bps while crossing a $1-2M ADV alt perp spread is 25-50bps,
+#                which at ~28 rebalances/yr is 56%/yr against a realised ~96%/yr.
+#                Posted orders fill through ADVERSE SELECTION, so a fills-only log measures
+#                execution as excellent and deletes the tracking error — survivorship moved
+#                to the execution layer, and easier to commit here than anywhere else
+#                because an unfilled order leaves no trace in the account, the P&L or the
+#                exchange statement. An intent is written before the order exists and
+#                resolved exactly once, to a fill OR an expiry.
+python3 -m tests.test_fill_log_records_the_misses
 python3 -m src.data.signals.tests.test_beta_core_size_smoke
 python3 -m src.data.signals.tests.test_beta_core_size_hook_smoke
 python3 -m src.data.vector.tests.test_embedder_v2_smoke
