@@ -7,6 +7,8 @@ Shared state and utilities for all routers.
 - Persistent httpx client pools (avoids reconnect overhead per request)
 """
 import logging
+
+from src.api.runtime_role import note_refusal, refuse_write
 import os, json, math, time
 from datetime import datetime, timezone
 import httpx
@@ -207,6 +209,16 @@ async def _supabase_request_with_retry(
 
 async def supabase_insert_batch(rows: list) -> bool:
     """Bulk-insert CIS score rows into Supabase REST API with retry."""
+    # ROLE GATE (2026-08-12, S-149). Enforced HERE, at the write function, and not
+    # in the twenty-odd background loops that call it — because loops keep being
+    # added and a gate you have to remember is a gate that will be forgotten. Same
+    # argument as putting GREATEST inside api_usage_upsert rather than in the
+    # caller: a guarantee in one place holds for every caller, forever.
+    _refusal = refuse_write("cis_scores (batch)")
+    if _refusal:
+        note_refusal("cis_scores (batch)", _refusal)
+        return False
+
     # NAME WHICH ONE (2026-08-12, S-148). This said "missing config or empty rows"
     # — three different causes behind one sentence, so a reader could only tell
     # them apart if a NEIGHBOURING log line happened to print the row count. It did,
@@ -254,6 +266,17 @@ async def supabase_insert_batch(rows: list) -> bool:
 
 async def supabase_insert_table(table: str, rows: list) -> bool:
     """Generic bulk-insert into any Supabase table (REST) with retry."""
+    # ROLE GATE (2026-08-12, S-149). Enforced HERE, at the write function, and not
+    # in the twenty-odd background loops that call it — because loops keep being
+    # added and a gate you have to remember is a gate that will be forgotten. Same
+    # argument as putting GREATEST inside api_usage_upsert rather than in the
+    # caller: a guarantee in one place holds for every caller, forever.
+    _refusal = refuse_write(table)
+    if _refusal:
+        note_refusal(table, _refusal)
+        return False
+
+
     if not _SB_URL or not _SB_KEY or not rows or not table:
         return False
     url = f"{_SB_URL}/rest/v1/{table}"
