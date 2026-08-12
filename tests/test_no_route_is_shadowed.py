@@ -136,70 +136,7 @@ def test_no_literal_route_is_shadowed_by_a_parameter() -> None:
           not hits, "\n      " + "\n      ".join(sorted(set(hits))[:12]))
 
 
-
-def _flatten_objs(routes) -> list:
-    """Same descent as _flatten, but keeps the route OBJECTS so their compiled
-    path_regex can be used for matching."""
-    out = []
-    for r in routes:
-        # `original_router`, the same attribute _flatten uses. The first cut of
-        # this helper read `.router` — which no top-level object has — so it
-        # silently returned 5 routes out of 201 and everything "resolved" to the
-        # SPA catch-all. A wrong attribute name does not raise, it just makes the
-        # scan agree with itself about nothing.
-        inner = getattr(r, "original_router", None)
-        if inner is not None and getattr(inner, "routes", None):
-            out.extend(_flatten_objs(inner.routes))
-            continue
-        if getattr(r, "path_regex", None) is not None:
-            out.append(r)
-    return out
-
-
-def _resolves_to(path: str) -> str | None:
-    """Which route pattern does `path` actually reach? Compiled-regex matching in
-    REGISTRATION ORDER — the handler is never called.
-
-    The earlier version issued real GETs against /api/v1/factors/performance,
-    /api/v1/strategy/stats and two more. Those endpoints fetch live provider
-    data, so on a machine with network this suite took minutes; on 2026-08-13 it
-    hung preflight past 117s while the two fast ones had already answered 200
-    and 404.
-
-    The claim being tested is a ROUTING fact — does the literal path reach the
-    literal route, or does the {param} sibling swallow it. Asking the data stack
-    to answer it drags CoinGecko into a question about registration order and
-    makes the gate's runtime a property of the network. **Assert at the layer of
-    the claim.**"""
-    from src.api.main import app
-    for r in _flatten_objs(app.routes):
-        if r.path_regex.match(path):
-            return getattr(r, "path", None)
-    return None
-
-
 def test_the_two_known_victims_now_answer() -> None:
-    """Named explicitly because a generic guard passing is not evidence that THESE
-    were fixed — it is evidence that nothing is currently shadowed, which is also
-    true of an app where both endpoints were deleted."""
-    for ep in ("/api/v1/factors/performance", "/api/v1/strategy/stats"):
-        got = _resolves_to(ep)
-        check(f"{ep} reaches its own literal route", got == ep,
-              f"resolves to {got!r} instead — still shadowed, or the endpoint is gone")
-
-
-def test_the_parameterised_sibling_still_works() -> None:
-    """Reordering must not have broken the route it was moved behind. A fix that
-    trades one dead endpoint for another is not a fix."""
-    got = _resolves_to("/api/v1/factors/market_cap")
-    check("/api/v1/factors/{factor_id} still catches a non-literal id",
-          got == "/api/v1/factors/{factor_id}", f"resolves to {got!r}")
-    got2 = _resolves_to("/api/v1/factors/definitely_not_a_factor")
-    check("and an unknown id lands on the same parameterised route",
-          got2 == "/api/v1/factors/{factor_id}", f"resolves to {got2!r}")
-
-
-def _RETIRED_test_the_two_known_victims_now_answer() -> None:
     """Named explicitly because a generic guard passing is not evidence that THESE
     were fixed — it is evidence that nothing is currently shadowed, which is also
     true of an app where both endpoints were deleted."""
@@ -213,7 +150,9 @@ def _RETIRED_test_the_two_known_victims_now_answer() -> None:
               f"still shadowed or broken: {r.text[:120]}")
 
 
-def _RETIRED_test_the_parameterised_sibling_still_works() -> None:
+def test_the_parameterised_sibling_still_works() -> None:
+    """Reordering must not have broken the route it was moved behind. A fix that
+    trades one dead endpoint for another is not a fix."""
     from fastapi.testclient import TestClient
 
     from src.api.main import app
