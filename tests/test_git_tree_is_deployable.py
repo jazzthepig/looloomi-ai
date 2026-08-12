@@ -109,7 +109,7 @@ def _guarded_by_try(tree: ast.AST, node: ast.AST) -> bool:
 def _scan(root: Path):
     present = _module_index(root)
     fatal, optional = [], []
-    files = sorted(root.glob("src/**/*.py"))
+    files = sorted(root.glob("src/**/*.py")) + sorted(root.glob("scripts/**/*.py"))
     for p in files:
         try:
             tree = ast.parse(p.read_text(encoding="utf-8", errors="replace"))
@@ -123,7 +123,15 @@ def _scan(root: Path):
             elif isinstance(n, ast.Import):
                 mods = [a.name for a in n.names]
             for m in mods:
-                if not m.startswith("src."):
+                # BOTH first-party roots. The first version checked only `src.`
+                # and the same night's audit found `src/api/main.py:894` doing
+                # `from scripts.trending_collector import ...` and
+                # `routers/admin.py:217` importing `scripts.compute_regime_fitness`.
+                # Both targets happen to be tracked, so nothing was broken — but
+                # two gitignored files had just been added under scripts/, and a
+                # guard that stops at the directory where you expected the bug is
+                # the defect this repo keeps re-committing.
+                if not (m.startswith("src.") or m.startswith("scripts.")):
                     continue
                 if m in present or any(x.startswith(m + ".") for x in present):
                     continue
@@ -137,7 +145,7 @@ def _scan(root: Path):
     return len(files), fatal, optional
 
 
-def test_every_src_import_in_HEAD_resolves_inside_HEAD() -> None:
+def test_every_first_party_import_in_HEAD_resolves_inside_HEAD() -> None:
     root = _export_head()
     if root is None:
         check("git archive HEAD succeeded", False,
@@ -145,7 +153,7 @@ def test_every_src_import_in_HEAD_resolves_inside_HEAD() -> None:
         return
     n, fatal, optional = _scan(root)
     check(f"{n} files in HEAD scanned", n > 100, f"only {n} — the export looks empty")
-    check("no src.* import in HEAD points at a file missing from HEAD",
+    check("no first-party import in HEAD points at a file missing from HEAD",
           not fatal,
           "\n      " + "\n      ".join(fatal)
           + "\n      → the file exists on this disk and NOT in the repository. "
