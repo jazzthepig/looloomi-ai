@@ -37,18 +37,58 @@ export DISABLE_BACKGROUND_LOOPS=1
 
 _PF_T0=$(date +%s)
 _PF_N=0
+_PF_TIMEOUT=${PF_TIMEOUT:-180}
+
+# A HANG MUST BE VISIBLE AND BOUNDED (S-159, 2026-08-13).
+#
+# The first cut of this helper captured each suite's output so a green run would
+# be 52 lines instead of 798. It worked, and it introduced a worse failure: when
+# a suite hung, the screen showed nothing at all, so "stuck" and "thinking" and
+# "dead" were the same picture. Jazz hit it twice on the boot smoke. Making the
+# gate quiet without bounding it traded 798 lines of noise for zero lines of
+# signal, which is not an improvement, it is the same mistake in the other
+# direction.
+#
+# So: the label prints BEFORE the suite runs, so the screen always names what is
+# executing right now. Every suite gets a wall-clock limit. On timeout it is a
+# FAILURE with whatever output it managed to produce, because a check that never
+# returns has not passed — and treating it as passing is how a gate silently
+# stops gating.
 run() {
   local label="$1"; shift
   local out; out="$(mktemp)"
   _PF_N=$((_PF_N + 1))
-  if "$@" >"$out" 2>&1; then
+  printf "  %2d ⏳ %-52s" "$_PF_N" "$label"
+
+  "$@" >"$out" 2>&1 &
+  local pid=$!
+  local waited=0
+  while kill -0 "$pid" 2>/dev/null; do
+    if [ "$waited" -ge "$_PF_TIMEOUT" ]; then
+      kill -9 "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+      printf "\r  %2d 🔴 %-52s TIMEOUT after %ss\n" "$_PF_N" "$label" "$_PF_TIMEOUT"
+      echo
+      echo "════════ 🔴 TIMED OUT: $label ════════"
+      echo "  (partial output — the suite never returned; raise PF_TIMEOUT to allow longer)"
+      cat "$out"
+      echo "════════ 🔴 TIMED OUT: $label ════════"
+      rm -f "$out"
+      exit 1
+    fi
+    sleep 1; waited=$((waited + 1))
+  done
+  wait "$pid"; local rc=$?
+
+  if [ "$rc" -eq 0 ]; then
     local n; n=$(grep -c '✓' "$out" 2>/dev/null || echo 0)
-    printf "  %2d ✓ %-52s %3s checks  %3ds\n" "$_PF_N" "$label" "$n" "$(( $(date +%s) - _PF_T0 ))"
+    printf "\r  %2d ✓ %-52s %3s checks  %3ds\n" "$_PF_N" "$label" "$n" "$(( $(date +%s) - _PF_T0 ))"
     rm -f "$out"
   else
+    printf "\r  %2d 🔴 %-52s FAILED\n" "$_PF_N" "$label"
     echo
     echo "════════ 🔴 FAILED: $label ════════"
-    cat "$out"      # the whole thing, unfiltered — this is the moment you need it
+    cat "$out"
     echo "════════ 🔴 FAILED: $label ════════"
     rm -f "$out"
     exit 1
