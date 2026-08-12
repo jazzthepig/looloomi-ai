@@ -1,7 +1,7 @@
-/* Single source of truth for the brand type stack — imported by every entry so no page
-   can silently fall back to a system font. Syne (display) · Exo 2 (body) · JetBrains Mono (numbers). */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Exo+2:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
-
+/* Single source of truth for the brand type stack — Syne (display) · Exo 2 (body) · JetBrains Mono (numbers).
+   Fonts loaded via <link rel="stylesheet"> in index.html (preconnect + display=swap). Do NOT re-add
+   @import url() here — it is render-blocking AND causes a duplicate fetch since index.html already pulls
+   the same URL. Token fallbacks (system-ui, monospace) cover the brief FOIT window. */
 :root {
   --ff-brand:   'Syne', system-ui, sans-serif;
   --ff-display: 'Syne', system-ui, sans-serif;
@@ -139,6 +139,20 @@ body {
 @keyframes scaleIn  { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
 @keyframes glowPulse { 0%,100%{box-shadow:0 0 8px rgba(99,102,241,0.15)} 50%{box-shadow:0 0 20px rgba(99,102,241,0.30)} }
 @keyframes ambientGlow { 0%,100%{opacity:0.6} 50%{opacity:1} }
+
+/* ─── Reduced Motion Guard ─────────────────────────────────────────────── */
+/* OS-level accessibility: when the user has set "Reduce Motion" (System Preferences → Accessibility →
+   Display on macOS, Settings → Ease of Access → Display on Windows, or browser flag), zero out every
+   animation and transition so the page is fully static. Institutional LPs include 50+ decision-makers
+   and users with vestibular disorders; this is a hard requirement, not aesthetics. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 .fade-up    { animation: fadeUp 0.4s cubic-bezier(.16,1,.3,1) forwards; }
 .slide-in   { animation: slideIn 0.25s ease forwards; }
