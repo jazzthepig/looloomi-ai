@@ -227,8 +227,8 @@ async def _hourly_t2_snapshot_loop():
 @app.on_event("startup")
 async def _start_hourly_t2_snapshot():
     if os.environ.get("DISABLE_HOURLY_SNAPSHOT", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_hourly_t2_snapshot_loop()):
-            print(f"[SNAPSHOT] ✅ hourly T2 snapshot loop scheduled (every {_HOURLY_SNAPSHOT_S}s)")
+        _asyncio.create_task(_hourly_t2_snapshot_loop())
+        print(f"[SNAPSHOT] ✅ hourly T2 snapshot loop scheduled (every {_HOURLY_SNAPSHOT_S}s)")
 
 
 # ── Daily cis_regime_fitness compute (Simons feedback) ──────────────────────
@@ -255,8 +255,8 @@ async def _regime_fitness_loop():
 @app.on_event("startup")
 async def _start_regime_fitness():
     if os.environ.get("DISABLE_REGIME_FITNESS", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_regime_fitness_loop()):
-            print("[REGIME_FITNESS] ✅ daily compute loop scheduled")
+        _asyncio.create_task(_regime_fitness_loop())
+        print("[REGIME_FITNESS] ✅ daily compute loop scheduled")
 
 
 # ── Daily OHLCV collector (Railway safety net) ──────────────────────────────
@@ -285,8 +285,8 @@ async def _ohlcv_collector_loop():
 @app.on_event("startup")
 async def _start_ohlcv_collector():
     if os.environ.get("DISABLE_OHLCV", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_ohlcv_collector_loop()):
-            print("[OHLCV] ✅ daily collector loop scheduled")
+        _asyncio.create_task(_ohlcv_collector_loop())
+        print("[OHLCV] ✅ daily collector loop scheduled")
 
 
 # ── Daily signal-outcome resolver ─────────────────────────────────────────────
@@ -294,41 +294,6 @@ async def _start_ohlcv_collector():
 # Runs ~once/day in-process so the LP track-record metrics stay current without
 # depending on the Mac Mini OHLCV pipeline. Idempotent (only touches NULL rows).
 import asyncio as _asyncio
-
-# ── ONE SWITCH FOR EVERY BACKGROUND LOOP (S-158, 2026-08-13) ─────────────────
-# Preflight boots this app three times. On a machine WITH network egress the
-# startup loops then execute a full daily cycle — Moralis holder maps, CoinGecko
-# Pro, Binance klines, the paper-book marks — which is why the gate appeared to
-# hang after check 27 on the Mac while finishing in 48s in a sandbox with no
-# egress. A gate whose runtime depends on whether the laptop has internet is not
-# a gate; it is a coin flip you cannot read.
-#
-# Per-loop flags already existed (DISABLE_METERING, DISABLE_SL_TP_LOOP,
-# REBAL_LOOP_ENABLED...). Thirty-one of them and no way to say "none". So this
-# is the switch that covers the ones nobody has added a flag for yet, including
-# the loop somebody writes next month.
-#
-# Scoped to STARTUP schedulers only. create_task inside a request handler is the
-# request doing its job and must keep working.
-_NO_BACKGROUND_LOOPS = os.environ.get(
-    "DISABLE_BACKGROUND_LOOPS", "").lower() in ("1", "true", "yes")
-
-
-def _schedule_task(coro):
-    """Schedule a background loop, or decline and close the coroutine.
-
-    Closing matters: an un-awaited coroutine emits a RuntimeWarning per loop,
-    which would put thirty-one new warnings into the output of the very gate
-    this exists to make readable."""
-    if _NO_BACKGROUND_LOOPS:
-        try:
-            coro.close()
-        except Exception:
-            pass
-        return None
-    return _asyncio.create_task(coro)
-
-
 
 _OUTCOME_INTERVAL_S = 24 * 3600   # daily
 
@@ -351,8 +316,8 @@ async def _outcome_tracker_loop():
 @app.on_event("startup")
 async def _start_outcome_tracker():
     if os.environ.get("DISABLE_OUTCOME_TRACKER", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_outcome_tracker_loop()):
-            print("[OUTCOME] ✅ daily outcome-tracker loop scheduled")
+        _asyncio.create_task(_outcome_tracker_loop())
+        print("[OUTCOME] ✅ daily outcome-tracker loop scheduled")
 
 
 # ── Prediction resolver loop — "resolve EVERY prediction" (causes/conviction/narrative) ──
@@ -378,8 +343,8 @@ async def _prediction_resolver_loop():
 @app.on_event("startup")
 async def _start_prediction_resolver_loop():
     if os.environ.get("DISABLE_PREDICTION_RESOLVER", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_prediction_resolver_loop()):
-            print("[PRED] ✅ daily prediction-resolver loop scheduled")
+        _asyncio.create_task(_prediction_resolver_loop())
+        print("[PRED] ✅ daily prediction-resolver loop scheduled")
 
 
 # ── Causal paper book — DEMOTED 2026-08-08 to RESEARCH RECORD per OVERSIGHT §3 P0 #2 ──
@@ -408,8 +373,8 @@ async def _causal_paper_loop():
 @app.on_event("startup")
 async def _start_causal_paper_loop():
     if os.environ.get("DISABLE_CAUSAL_PAPER", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_causal_paper_loop()):
-            print("[CAUSAL-PAPER] ✅ daily causal paper-book loop scheduled")
+        _asyncio.create_task(_causal_paper_loop())
+        print("[CAUSAL-PAPER] ✅ daily causal paper-book loop scheduled")
 
 
 # ── 顶格 RWA paper sleeve — live forward track record of the volume-gated rule ──
@@ -431,8 +396,8 @@ async def _dingge_paper_loop():
 @app.on_event("startup")
 async def _start_dingge_paper_loop():
     if os.environ.get("DISABLE_DINGGE_PAPER", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_dingge_paper_loop()):
-            print("[DINGGE-PAPER] ✅ daily 顶格 RWA paper-sleeve loop scheduled")
+        _asyncio.create_task(_dingge_paper_loop())
+        print("[DINGGE-PAPER] ✅ daily 顶格 RWA paper-sleeve loop scheduled")
 
 
 # ── Combined book — DEMOTED 2026-08-08 to RESEARCH RECORD per OVERSIGHT §3 P0 #2 ────
@@ -456,8 +421,8 @@ async def _combined_book_loop():
 @app.on_event("startup")
 async def _start_combined_book_loop():
     if os.environ.get("DISABLE_COMBINED_BOOK", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_combined_book_loop()):
-            print("[COMBINED-BOOK] ✅ daily combined-book NAV loop scheduled")
+        _asyncio.create_task(_combined_book_loop())
+        print("[COMBINED-BOOK] ✅ daily combined-book NAV loop scheduled")
 
 
 # ── Scalable book — DEMOTED 2026-08-08 to RESEARCH RECORD per OVERSIGHT §3 P0 #2 ──
@@ -481,8 +446,8 @@ async def _scalable_book_loop():
 @app.on_event("startup")
 async def _start_scalable_book_loop():
     if os.environ.get("DISABLE_SCALABLE_BOOK", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_scalable_book_loop()):
-            print("[SCALABLE-BOOK] ✅ daily scalable-book NAV loop scheduled")
+        _asyncio.create_task(_scalable_book_loop())
+        print("[SCALABLE-BOOK] ✅ daily scalable-book NAV loop scheduled")
 
 
 # ── ① BETA CORE — the product book, and the benchmark for every book above ──
@@ -541,15 +506,15 @@ async def _announce_role():
 @app.on_event("startup")
 async def _start_metering_loop():
     if os.environ.get("DISABLE_METERING", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_metering_flush_loop()):
-            print("[METERING] ✅ usage flush loop scheduled (Redis → api_usage)")
+        _asyncio.create_task(_metering_flush_loop())
+        print("[METERING] ✅ usage flush loop scheduled (Redis → api_usage)")
 
 
 @app.on_event("startup")
 async def _start_beta_core_loop():
     if os.environ.get("DISABLE_BETA_CORE", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_beta_core_loop()):
-            print("[BETA-CORE] ✅ daily ① beta-core NAV loop scheduled (the product book)")
+        _asyncio.create_task(_beta_core_loop())
+        print("[BETA-CORE] ✅ daily ① beta-core NAV loop scheduled (the product book)")
 
 
 # ── §5b two-layer book — forward OOS clock for the V5c core × C regime overlay ──
@@ -573,8 +538,8 @@ async def _two_layer_paper_loop():
 @app.on_event("startup")
 async def _start_two_layer_paper_loop():
     if os.environ.get("DISABLE_TWO_LAYER_PAPER", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_two_layer_paper_loop()):
-            print("[TWO-LAYER] ✅ daily §5b two-layer paper-book loop scheduled")
+        _asyncio.create_task(_two_layer_paper_loop())
+        print("[TWO-LAYER] ✅ daily §5b two-layer paper-book loop scheduled")
 
 
 # ── R65 fusion paper book — forward-committed live R64 cell (Seth, 2026-07-21) ──
@@ -601,8 +566,8 @@ async def _fusion_paper_loop():
 @app.on_event("startup")
 async def _start_fusion_paper_loop():
     if os.environ.get("DISABLE_FUSION_PAPER", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_fusion_paper_loop()):
-            print("[FUSION-PAPER] ✅ daily R64 fusion paper-book loop scheduled")
+        _asyncio.create_task(_fusion_paper_loop())
+        print("[FUSION-PAPER] ✅ daily R64 fusion paper-book loop scheduled")
 
 
 # ── R66 fusion paper tracking — daily monitoring of the deployed R64 cell ─────
@@ -632,8 +597,8 @@ async def _fusion_paper_tracking_loop():
 @app.on_event("startup")
 async def _start_fusion_paper_tracking_loop():
     if os.environ.get("DISABLE_FUSION_TRACK", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_fusion_paper_tracking_loop()):
-            print("[FUSION-TRACK] ✅ daily R66 fusion-paper tracking loop scheduled")
+        _asyncio.create_task(_fusion_paper_tracking_loop())
+        print("[FUSION-TRACK] ✅ daily R66 fusion-paper tracking loop scheduled")
 
 
 # ── ⓠ REGIME OVERRIDE paper track — parallel paper NAV under the enforcer (Seth, 2026-08-08) ──
@@ -664,8 +629,8 @@ async def _fusion_paper_regime_track_loop():
 @app.on_event("startup")
 async def _start_fusion_paper_regime_track_loop():
     if os.environ.get("DISABLE_FUSION_REGIME", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_fusion_paper_regime_track_loop()):
-            print("[FUSION-REGIME] ✅ daily ⓠ regime override paper-track loop scheduled")
+        _asyncio.create_task(_fusion_paper_regime_track_loop())
+        print("[FUSION-REGIME] ✅ daily ⓠ regime override paper-track loop scheduled")
 
 
 # ── Signal factory recalibration — Stage 4: the loop's learning turn (weekly) ──
@@ -688,8 +653,8 @@ async def _factory_recalibrate_loop():
 async def _start_factory_recalibrate_loop():
     if os.environ.get("DISABLE_FACTORY", "").lower() in ("1", "true", "yes"):
         return
-    if _schedule_task(_factory_recalibrate_loop()):
-        print("[FACTORY] ✅ weekly signal-factory recalibration loop scheduled")
+    _asyncio.create_task(_factory_recalibrate_loop())
+    print("[FACTORY] ✅ weekly signal-factory recalibration loop scheduled")
 
 
 # ── Track-record refresh loop — self-tuning conviction ────────────────────────
@@ -714,8 +679,8 @@ async def _track_record_loop():
 @app.on_event("startup")
 async def _start_track_record_loop():
     if os.environ.get("DISABLE_TRACK_RECORD", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_track_record_loop()):
-            print("[TRACK-REC] ✅ daily track-record refresh loop scheduled")
+        _asyncio.create_task(_track_record_loop())
+        print("[TRACK-REC] ✅ daily track-record refresh loop scheduled")
 
 
 # ── Regime-band snapshot loop ─────────────────────────────────────────────────
@@ -740,8 +705,8 @@ async def _band_log_loop():
 @app.on_event("startup")
 async def _start_band_log_loop():
     if os.environ.get("DISABLE_BAND_LOG", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_band_log_loop()):
-            print("[BAND-LOG] ✅ daily regime-band snapshot loop scheduled")
+        _asyncio.create_task(_band_log_loop())
+        print("[BAND-LOG] ✅ daily regime-band snapshot loop scheduled")
 
 
 # ── D3 holder-concentration refresh loop ──────────────────────────────────────
@@ -768,8 +733,8 @@ async def _holder_refresh_loop():
 async def _start_holder_refresh_loop():
     if os.environ.get("MORALIS_API_KEY") and \
        os.environ.get("DISABLE_HOLDER_REFRESH", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_holder_refresh_loop()):
-            print("[HOLDER] ✅ D3 holder-concentration refresh loop scheduled")
+        _asyncio.create_task(_holder_refresh_loop())
+        print("[HOLDER] ✅ D3 holder-concentration refresh loop scheduled")
     else:
         print("[HOLDER] ⏸ holder refresh disabled (no MORALIS_API_KEY)")
 
@@ -811,8 +776,8 @@ async def _forward_supply_loop():
 @app.on_event("startup")
 async def _start_forward_supply_loop():
     if os.environ.get("DISABLE_FWD_SUPPLY", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_forward_supply_loop()):
-            print("[FWD-SUPPLY] ✅ upstream forward-supply refresh loop scheduled")
+        _asyncio.create_task(_forward_supply_loop())
+        print("[FWD-SUPPLY] ✅ upstream forward-supply refresh loop scheduled")
 
 
 # ── Positioning refresh loop (UPSTREAM cause #2 — reflexive leverage) ─────────
@@ -844,8 +809,8 @@ async def _positioning_loop():
 @app.on_event("startup")
 async def _start_positioning_loop():
     if os.environ.get("DISABLE_POSITIONING", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_positioning_loop()):
-            print("[POSITIONING] ✅ upstream positioning refresh loop scheduled")
+        _asyncio.create_task(_positioning_loop())
+        print("[POSITIONING] ✅ upstream positioning refresh loop scheduled")
 
 
 # ── Daily full-universe snapshot loop (data-durability guarantee) ─────────────
@@ -914,8 +879,8 @@ async def _daily_snapshot_loop():
 @app.on_event("startup")
 async def _start_daily_snapshot():
     if os.environ.get("DISABLE_DAILY_SNAPSHOT", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_daily_snapshot_loop()):
-            print("[SNAPSHOT] ✅ daily full-universe snapshot loop scheduled")
+        _asyncio.create_task(_daily_snapshot_loop())
+        print("[SNAPSHOT] ✅ daily full-universe snapshot loop scheduled")
 
 
 # ── D4 attention-diffusion (出圈) collector loop ──────────────────────────────
@@ -937,8 +902,8 @@ async def _trending_loop():
 @app.on_event("startup")
 async def _start_trending():
     if os.environ.get("DISABLE_TRENDING", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_trending_loop()):
-            print("[TRENDING] ✅ daily attention-diffusion loop scheduled")
+        _asyncio.create_task(_trending_loop())
+        print("[TRENDING] ✅ daily attention-diffusion loop scheduled")
 
 
 # ── Daily aged-position sweep (paper track-record bootstrapper) ────────────────
@@ -967,8 +932,8 @@ async def _age_sweep_loop():
 @app.on_event("startup")
 async def _start_age_sweep():
     if os.environ.get("DISABLE_AGE_SWEEP", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_age_sweep_loop()):
-            print("[SWEEP] ✅ daily aged-position sweep loop scheduled")
+        _asyncio.create_task(_age_sweep_loop())
+        print("[SWEEP] ✅ daily aged-position sweep loop scheduled")
 
 
 # ── SL/TP auto-execution loop (Simons Upgrade P0.2) ──────────────────────────
@@ -997,8 +962,8 @@ async def _sl_tp_loop():
 @app.on_event("startup")
 async def _start_sl_tp_loop():
     if os.environ.get("DISABLE_SL_TP_LOOP", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_sl_tp_loop()):
-            print("[SL/TP] ✅ 5min SL/TP auto-execution loop scheduled")
+        _asyncio.create_task(_sl_tp_loop())
+        print("[SL/TP] ✅ 5min SL/TP auto-execution loop scheduled")
 
 
 # ── CIS-flip exit loop (Simons Upgrade P0.3) ──────────────────────────────────
@@ -1026,8 +991,8 @@ async def _cis_flip_loop():
 @app.on_event("startup")
 async def _start_cis_flip_loop():
     if os.environ.get("DISABLE_CIS_FLIP_LOOP", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_cis_flip_loop()):
-            print("[CIS-FLIP] ✅ 5min CIS-flip exit loop scheduled")
+        _asyncio.create_task(_cis_flip_loop())
+        print("[CIS-FLIP] ✅ 5min CIS-flip exit loop scheduled")
 
 
 # ── Meter-driven paper rebalance loop ─────────────────────────────────────────
@@ -1062,8 +1027,8 @@ async def _paper_rebalance_loop():
 @app.on_event("startup")
 async def _start_paper_rebalance_loop():
     if os.environ.get("REBAL_LOOP_ENABLED", "").lower() in ("1", "true", "yes"):
-        if _schedule_task(_paper_rebalance_loop()):
-            print("[REBAL] ✅ meter rebalance loop scheduled (6h cadence)")
+        _asyncio.create_task(_paper_rebalance_loop())
+        print("[REBAL] ✅ meter rebalance loop scheduled (6h cadence)")
     else:
         print("[REBAL] ⏸ loop disabled (set REBAL_LOOP_ENABLED=1 to activate)")
 
@@ -1091,8 +1056,8 @@ async def _heartbeat_loop():
 @app.on_event("startup")
 async def _start_heartbeat():
     if os.environ.get("DISABLE_HEARTBEAT", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_heartbeat_loop()):
-            print("[HEARTBEAT] ✅ observability loop scheduled (Telegram alerts)")
+        _asyncio.create_task(_heartbeat_loop())
+        print("[HEARTBEAT] ✅ observability loop scheduled (Telegram alerts)")
 
 
 # ── MCP Server (ROADMAP_A2A Phase 2.2) ───────────────────────────────────────
@@ -1133,7 +1098,7 @@ try:
                 _ready.set()
                 await _mcp_stop.wait()
 
-        _mcp_task = _schedule_task(_run())
+        _mcp_task = _asyncio.create_task(_run())
         await _ready.wait()
         print("[MCP] ✅ streamable-HTTP live at /mcp  · legacy SSE at /mcp-sse/sse")
 
@@ -1790,8 +1755,8 @@ async def _conviction_loop():
 @app.on_event("startup")
 async def _start_conviction_loop():
     if os.environ.get("DISABLE_CONVICTION", "").lower() not in ("1", "true", "yes"):
-        if _schedule_task(_conviction_loop()):
-            print("[CONVICTION] ✅ daily conviction-watchlist loop scheduled")
+        _asyncio.create_task(_conviction_loop())
+        print("[CONVICTION] ✅ daily conviction-watchlist loop scheduled")
 
 
 # ── AI briefing loop — LLM (MiniMax/LM Studio) writes the signal-feed prose over the
@@ -1811,8 +1776,8 @@ async def _ai_briefing_loop():
 
 @app.on_event("startup")
 async def _start_ai_briefing_loop():
-    if _schedule_task(_ai_briefing_loop()):
-        print("[AI-BRIEFING] ✅ signal-feed narrative loop scheduled (LLM over facts)")
+    _asyncio.create_task(_ai_briefing_loop())
+    print("[AI-BRIEFING] ✅ signal-feed narrative loop scheduled (LLM over facts)")
 
 
 @app.get("/api/v1/conviction/watchlist")
