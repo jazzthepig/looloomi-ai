@@ -8,6 +8,31 @@ the lessons lived only in a 5,672-line ledger. **Don't transmit memory, transmit
 Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 `tests/test_cold_start_contract.py`.*
 
+*RETIRED 2026-08-12 to make room for #0: **#5 MCP streamable-transport migration** — closed
+2026-08-09, no open follow-on, and its VERIFY (`grep -c 'mcp/sse' src/mcp/*.py` → 0) is a
+regression check, not a risk. Moved to the ledger. Structural note while retiring it: **5 of
+the 8 entries were 🟢 closed.** A cap of 7 does not bind on risk, it binds on the list, so
+resolved items crowd out live ones and a cold agent reads eight entries to find three risks.
+The cap is doing its job only if closure is as routine as addition.*
+
+0. **🔴 C3 sizing table was INVERTED ON BOTH AXES (S-151, 2026-08-12).** Measured by
+   execution: `lookup_size(regime=5 out-of-distribution, signal=1 weakest) = 1.30` and
+   `(regime=1 in-dist, signal=5 strongest) = 0.10` — exactly backwards from the module's own
+   stated design; `compute_size(None, None) = 1.20`, i.e. **no information produced leverage**,
+   and `beta_core_size_hook` documented that 1.20 as the intended first-ship baseline.
+   It survived because table + smoke test + hook docstring all agreed with EACH OTHER; only the
+   stated intent dissented. **A frozen-value check could not have caught it — the table was
+   transposed before it was frozen, and freezing preserves it.** Fixed by making the wrong
+   ORIENTATION unable to load (`src/data/signals/strategy_params.py`, behavioural invariants
+   validated at load), not by editing Minimax-C's 25 values. Until C seeds a re-oriented table,
+   C3 runs the neutral table = ① baseline, no edge. Reversing both axes yields a passing table
+   from the SAME 25 values — the magnitudes were designed right, the assembly was not.
+   **AWAITING MINIMAX-C** (`MINIMAX_SYNC.md` §C3-SIZE-INVERSION-2026-08-12, items C6/C7).
+   VERIFY: `python3 -m tests.test_sizing_cannot_invert` → green ⇒ an inverted orientation
+   cannot load · `python3 -c "from src.data.signals.beta_core_size import compute_size as c;
+   print(c('x',None,None,1.0).size_final)"` → ≤1.0 ⇒ no information buys no leverage
+   OWNER: Seth (the gate) · Minimax-C (the 25 values + C7 polarity call)
+
 1. **🟢 Service_role RESOLVED in production 2026-08-09 13:57Z.** `/health.strategy_library:
    pg_configured:true, degraded:false, consecutive:0`. ① clock live (OPEN RISK #4 below),
    §BETA-METRIC-AGG track record populated (66 signals, 60 scored). Kept here as the lesson +
@@ -110,15 +135,7 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    · Seth (verification probe — see VERIFY; re-run once Jazz pastes key) · Minimax-A
    (M1: keep T1 engine push alive — Mac T1 health drives this loop's panel).
 
-5. **🟢 MCP migrated off deprecated HTTP+SSE transport 2026-08-09.** `grep -c 'mcp/sse' src/mcp/*.py`
-   → 0 ⇒ off the deprecated transport. `/health` confirms: `[MCP] ✅ Mounted /mcp (streamable)
-   — ROADMAP_A2A Phase 2.2`. Same root shape as the P0 (stateful, unbounded connections), and
-   the deprecation's 12-month offramp is moot now. Kept here as the verification record; if
-   `mcp/sse` re-enters the code, escalate P0.
-   VERIFY: `grep -c 'mcp/sse' src/mcp/*.py` → 0 ⇒ on streamable (current) · >0 ⇒ regressed
-   OWNER: Seth (re-verify on any MCP router change)
-
-6. **🟢 `ohlcv_daily` multi-source duplicates — FIXED 2026-08-12.** `_ohlcv_close_at` now
+5. **🟢 `ohlcv_daily` multi-source duplicates — FIXED 2026-08-12.** `_ohlcv_close_at` now
    reads `ohlcv_daily_canonical` view (the deterministic one-row-per-entity SELECT with source
    precedence binance_hist > hyperliquid > eodhd > coingecko > yfinance, computed server-side).
    Fix covers all 4 call sites at once (outcome_tracker.py:321 benchmark, :366 entry, :377 exit,
@@ -270,7 +287,7 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    → non-zero is expected and fine; what matters is that no consumer reads the base table
    OWNER: Seth (audit consumers, then re-run affected features off the view)
 
-7. **🟢 S-104 T2 fan-out fix VERIFIED IN PRODUCTION 2026-08-09 07:05Z.** `git_sha=5a54d1c1`
+6. **🟢 S-104 T2 fan-out fix VERIFIED IN PRODUCTION 2026-08-09 07:05Z.** `git_sha=5a54d1c1`
    is the live build (24.6 min uptime, last_cis_push 221s ago). `t2_branches` reports
    `fanout_total_ms=634` (well under 12 s budget), `degraded_branches=[]`. Served
    `/api/v1/cis/universe`: `timestamp=2026-08-09T07:02:27.674901Z, data_age_s=70.8,
@@ -468,7 +485,7 @@ Redis blob ⇒ `gross = min(1.30, 1.0) = 1.0` ⇒ 权重与基准完全相同。
 **我早先两个诊断被推翻,已在台账更正:** `SUPABASE_KEY` 本来就是 service_role;
 `api_keys` 写不进是因为 **`id` 为 `bigint NOT NULL` 且无序列/identity 默认值**,与权限无关。
 
-**Last updated:** 2026-08-12 — **C1-C6 pipeline spec complete + R77 Phase C done.**
+**Last updated:** 2026-08-12 — **C2 ⓠ + C3 size + C5 episode-code complete; 79/79 smoke green.**
 **C1 SHIP** (commit c0516f9, ① book re-inception 2026-08-09 13:57Z, Day 60 = 2026-10-08).
 **C2/C3/C5 specs WRITTEN** in MINIMAX_SYNC.md (§C2-SHIP-SPEC ⓠ layer / §C3-SHIP-SPEC 2D size
 / §C5-SHIP-SPEC VDB episode, all 2026-08-12, 9 月 ship targets). **C6 §C6-DISCOVERY-SPEC
