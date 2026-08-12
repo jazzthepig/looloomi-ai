@@ -294,6 +294,56 @@ python3 -m tests.test_metering_is_billable
 #                product, and provenance that says "measured" when it means "guessed"
 #                destroys the proposition rather than one endpoint.
 python3 -m tests.test_moat_claims_are_measured
+# 3a-undevicies. no route is shadowed by a path parameter (2026-08-12, S-143).
+#               FOUR endpoints were deployed and unreachable: /factors/performance,
+#               /factors/discovery, /strategy/stats, /ohlcv/coverage. FastAPI matches
+#               in REGISTRATION order, and a single-segment /{param} registered first
+#               swallows every literal sibling after it.
+#               It survived because the 404 is PLAUSIBLE — "Factor 'performance' not
+#               found" reads like a missing factor (a data question) rather than a
+#               hijacked route (a routing question), so anyone checking concluded the
+#               endpoint worked and looked in the wrong place. Same class as S-138's
+#               "Key storage failed" and S-141's "low": a believable wrong answer.
+#               /factors/discovery was shadowed ACROSS ROUTERS — factors_router's
+#               /{factor_id} eating discovery_router's literal — which is invisible
+#               when reading either file, so code review cannot catch this class.
+#               The guard flattens fastapi.routing._IncludedRouter and asserts the
+#               route COUNT: its first version scanned 31 of 197 and printed a clean
+#               result, which is the same defect committed inside its own fix.
+python3 -m tests.test_no_route_is_shadowed
+# 3a-vicies. vector schema version is single-sourced (2026-08-12, S-144). Live:
+#            asset_embeddings held 72 rows ALL stamped schema_version=2, 18 days
+#            stale, with TWO different `dims` (18 and 27) under the same version —
+#            and /api/v1/cis/embeddings answered 503.
+#            The writer was not dead. embedder.SCHEMA_VERSION went to 3 on
+#            2026-08-09 while store.py wrote the LITERAL 2 under a comment claiming
+#            it was embedder.SCHEMA_VERSION, and pgvector_store defaulted to 2. So
+#            the store stamped a version it was not producing.
+#            A version stamp that does not track the thing it versions is WORSE than
+#            no stamp: absent, a reader knows they do not know; wrong, they are
+#            confident and mistaken. Two dims under one version is the visible
+#            symptom of exactly the property a version exists to make impossible.
+#            The one test asserting the version asserted ==2 and was never wired
+#            into the gate — the check that could have caught the drift was itself
+#            holding the stale value, and never ran. Both are fixed and both now run.
+python3 -m tests.test_vector_schema_version_is_single_sourced
+# 3a-vicies-bis. the stale fallback must survive a COLD process (2026-08-12, S-146).
+#              Overnight 08-11→12 every Mac cycle logged "CIS universe build timed out
+#              and no cached payload available", and the day's writes died with it:
+#              trending_log 0, conviction_verdicts 0, narrative_snapshots 0,
+#              cause_snapshots 0, beta_core_nav 0, causal_paper_nav 0 — while
+#              cis_scores wrote 116 (it does not depend on that build). ONE SLOW BUILD
+#              STARVED EVERY WRITER DOWNSTREAM OF IT FOR A DAY.
+#              A stale fallback existed. It read _UNIVERSE_CACHE, a module-level dict,
+#              and the scheduler runs each task as a FRESH PROCESS — so the net was
+#              empty at the exact moment it was consulted. Present in the code, tested,
+#              and unreachable in the one situation it was built for.
+#              The fix is not a longer budget (that moves the failure date); it is a
+#              cross-process copy, which changes the failure MODE from "no record for a
+#              day" to "a record marked stale". Both 503 paths chain to it, and stale
+#              is never served silently (S-104).
+python3 -m tests.test_stale_fallback_survives_a_cold_process
+python3 -m src.data.vector.tests.test_embedder_v2_smoke
 # 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
 #                after its v1 run was found to have sized off a 23-day-stale regime.
 #                The integrity property this pins is the product's: a forward track

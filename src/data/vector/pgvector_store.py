@@ -21,6 +21,13 @@ from __future__ import annotations
 import json
 import logging
 import math
+import httpx
+
+# The DEFAULT must track the embedder, not a literal (2026-08-12, S-144). This
+# defaulted to 2 while the embedder produced 3, so every caller that did not pass
+# the argument explicitly stamped the wrong version — and the stamp is the only
+# thing that tells a reader whether a stored vector matches today's shape.
+from src.data.vector.embedder import SCHEMA_VERSION
 import os
 import urllib.request
 
@@ -57,8 +64,59 @@ def _full_json(vec: list):
     return [None if (isinstance(x, float) and not math.isfinite(x)) else round(float(x), 6) for x in vec]
 
 
+def load_embeddings_pg(limit: int = 500) -> tuple[dict[str, list], dict]:
+    """Read-through to the SYSTEM OF RECORD. Returns ({symbol: vec}, meta).
+
+    WHY THIS EXISTS (2026-08-12, S-144). `/api/v1/cis/embeddings` read only the
+    Redis key and answered 503 "Embeddings not yet computed" when it was empty.
+    But CLAUDE.md is explicit that Supabase is the system of record and Redis is a
+    cache, and the whole embedding write is wrapped in one broad `except Exception`
+    that degrades to a log line — so a single failure anywhere in that block left
+    the cache empty and the endpoint dark, while 72 durable rows sat in Postgres.
+
+    A cache miss must READ THROUGH, never fail. That is the same lesson the ① book
+    learned the expensive way: cache miss ⇒ read the record, never start over.
+
+    Rows superseded by a schema migration are excluded — they are kept for audit
+    (see `superseded_reason`), not for serving, and returning a vector whose shape
+    cannot be verified is worse than returning none.
+    """
+    url, key = _sb()
+    if not url or not key:
+        return {}, {"source": "unconfigured"}
+    q = (f"{url}/rest/v1/asset_embeddings"
+         f"?select=symbol,vec_full,dims,schema_version,macro_regime,computed_at"
+         f"&schema_version=eq.{SCHEMA_VERSION}&superseded_reason=is.null"
+         f"&order=computed_at.desc&limit={limit}")
+    try:
+        r = httpx.get(q, headers={"apikey": key, "Authorization": f"Bearer {key}"},
+                      timeout=10)
+        if r.status_code != 200:
+            _logger.warning("[pgvector] read %s %s", r.status_code, r.text[:160])
+            return {}, {"source": "pgvector", "error": r.status_code}
+        rows = r.json() or []
+    except Exception as e:
+        _logger.warning("[pgvector] read failed: %s", e)
+        return {}, {"source": "pgvector", "error": str(e)[:120]}
+
+    out: dict[str, list] = {}
+    newest = None
+    for row in rows:                      # newest-first → first seen per symbol wins
+        sym = str(row.get("symbol") or "").upper()
+        vec = row.get("vec_full")
+        if not sym or sym in out or not isinstance(vec, list):
+            continue
+        # JSON null is an UNMEASURED dim (I1) — restore to NaN so cosine skips it
+        # rather than treating it as a genuine zero.
+        out[sym] = [float("nan") if v is None else float(v) for v in vec]
+        newest = newest or row.get("computed_at")
+    return out, {"source": "pgvector", "asset_count": len(out),
+                 "schema_version": SCHEMA_VERSION, "computed_at": newest}
+
+
 def upsert_embeddings(embeddings: dict[str, list], *, asset_meta: dict | None = None,
-                      macro_regime: str | None = None, schema_version: int = 2) -> bool:
+                      macro_regime: str | None = None,
+                      schema_version: int = SCHEMA_VERSION) -> bool:
     """Upsert {symbol: full_vec} into pgvector. vec = 18-dim core, vec_full = full v2 (null for NaN).
 
     `asset_meta` optional {symbol: {asset_class, ...}}. Best-effort — returns False on missing config /

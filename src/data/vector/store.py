@@ -15,6 +15,11 @@ import logging
 import time
 from typing import Optional
 
+# The version the EMBEDDER produces — never a literal here. See the note at the
+# `schema_version` key below. Imported lazily-safe at module scope because the
+# embedder has no import-time dependency on the store (one-way edge).
+from src.data.vector.embedder import SCHEMA_VERSION as _EMBEDDER_SCHEMA_VERSION
+
 _logger = logging.getLogger(__name__)
 
 _EMBED_KEY  = "cis:embeddings"
@@ -101,8 +106,15 @@ def save_embeddings(
         "asset_count": len(embeddings),
         "regime": macro_regime,
         "version": "v4.3",
-        "schema_version": 2,      # embedder.SCHEMA_VERSION — v2 = deltas + stability appended
-        "dims": dims,             # 18 (v1) or 25 (v2) — reflects what was actually written
+        # IMPORTED, not typed (2026-08-12, S-144). This was the literal `2` with a
+        # comment claiming it was `embedder.SCHEMA_VERSION`. The embedder went to 3
+        # on 2026-08-09 and every vector written since was stamped 2, so the store
+        # asserted a version it was not producing and the drift was invisible in
+        # exactly the field designed to reveal it. A version stamp that does not
+        # track the thing it versions is worse than no stamp: it converts an
+        # obvious "unknown version" into a confident wrong one.
+        "schema_version": _EMBEDDER_SCHEMA_VERSION,
+        "dims": dims,             # whatever was ACTUALLY written — never a constant
     }
     ok2 = _redis_set(_META_KEY, json.dumps(meta))
 

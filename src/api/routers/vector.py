@@ -35,6 +35,37 @@ def _load_store():
         return load_embeddings, load_meta, embedding_age_seconds
 
 
+
+def _embeddings_read_through():
+    """Redis first, then the SYSTEM OF RECORD. Returns (embeddings, meta).
+
+    Redis is a CACHE and Supabase is the record (CLAUDE.md). These endpoints used
+    to read only the cache and answer 503 "Embeddings not yet computed" when it was
+    empty — while durable rows sat in Postgres. The whole embedding write in the CIS
+    cycle is wrapped in one broad `except Exception` that degrades to a log line, so
+    a single failure anywhere in that block darkened the entire vector layer with no
+    signal beyond a warning nobody was reading (S-144).
+
+    A cache miss must read through, never fail. Same lesson the ① book paid for:
+    cache miss ⇒ read the record, never start over.
+    """
+    load_embeddings, load_meta, embedding_age_seconds = _load_store()
+    emb = load_embeddings()
+    if emb:
+        meta = {}
+        try:
+            meta = dict(load_meta() or {})
+        except Exception:
+            pass
+        meta["source"] = "redis"
+        return emb, meta
+    try:
+        from src.data.vector.pgvector_store import load_embeddings_pg
+        return load_embeddings_pg()
+    except Exception as e:
+        _logger.warning("[vector] pgvector read-through failed: %s", e)
+        return {}, {"source": "none", "error": str(e)[:120]}
+
 def _load_embedder():
     try:
         from src.data.vector.embedder import find_similar, k_means_cluster, cosine_similarity
@@ -97,9 +128,11 @@ async def get_similar_assets(
     load_embeddings, load_meta, embedding_age_seconds = _load_store()
     find_similar, k_means_cluster, cosine_similarity = _load_embedder()
 
-    embeddings = load_embeddings()
+    embeddings, _emb_meta = _embeddings_read_through()
     if not embeddings:
-        raise HTTPException(503, "Embeddings not yet computed — CIS universe may not have loaded yet")
+        raise HTTPException(503, "Embeddings unavailable in BOTH the cache and "
+                                 "the record — the CIS embedding block has not "
+                                 "completed since the last schema migration")
 
     sym = symbol.upper()
     if sym not in embeddings:
@@ -149,9 +182,11 @@ async def get_asset_clusters(
     load_embeddings, load_meta, embedding_age_seconds = _load_store()
     find_similar, k_means_cluster, cosine_similarity = _load_embedder()
 
-    embeddings = load_embeddings()
+    embeddings, _emb_meta = _embeddings_read_through()
     if not embeddings:
-        raise HTTPException(503, "Embeddings not yet computed")
+        raise HTTPException(503, "Embeddings unavailable in BOTH the cache and "
+                                 "the record — the CIS embedding block has not "
+                                 "completed since the last schema migration")
 
     clusters = k_means_cluster(embeddings, k=k, seed=seed)
 
@@ -221,9 +256,11 @@ async def get_embeddings(
     """
     load_embeddings, load_meta, embedding_age_seconds = _load_store()
 
-    embeddings = load_embeddings()
+    embeddings, _emb_meta = _embeddings_read_through()
     if not embeddings:
-        raise HTTPException(503, "Embeddings not yet computed")
+        raise HTTPException(503, "Embeddings unavailable in BOTH the cache and "
+                                 "the record — the CIS embedding block has not "
+                                 "completed since the last schema migration")
 
     meta = load_meta()
     age  = embedding_age_seconds()
@@ -373,6 +410,78 @@ async def get_trending_overlay():
 # The Mac engine computes full pillar history; Railway owns the embedding + pgvector write, so
 # the vector definition lives in ONE place (embedder.py) and both tiers can't drift apart.
 
+@router.post("/internal/asset-vectors/rebuild")
+async def rebuild_asset_vectors(x_internal_token: str = Header(None)):
+    """Force a full re-embed of the live universe at the CURRENT schema version.
+
+    WHY A MANUAL TRIGGER (2026-08-12, S-144). Embeddings are written as a side
+    effect of the CIS cycle, inside one broad `except Exception` that degrades to a
+    log line. When `embedder.SCHEMA_VERSION` moved to 3 the stored rows kept being
+    stamped 2 by a hardcoded literal, so every read filtered them out and the whole
+    vector layer went dark for 18 days — with no failure anywhere, because nothing
+    was failing. It was writing the wrong version, successfully.
+
+    After a version bump there is no automatic path back: the old rows are excluded
+    by the version filter and the new ones only appear on the next successful cycle,
+    which may itself be the thing that broke. This endpoint closes that gap — it
+    runs the same embedder over the same universe and reports what it wrote, so
+    "the migration is done" is a fact you can establish rather than wait for.
+
+    Token-guarded and idempotent (upsert on symbol)."""
+    _tok = os.environ.get("INTERNAL_TOKEN", "")
+    if not _tok or x_internal_token != _tok:
+        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+
+    from src.data.vector.embedder import SCHEMA_VERSION, generate_embedding
+    from src.data.vector.pgvector_store import upsert_embeddings
+
+    try:
+        # The real name is calculate_cis_universe. The first draft imported
+        # `get_cis_universe`, which does not exist — caught here only because the
+        # endpoint reported the ImportError instead of swallowing it, which is the
+        # whole argument for not wrapping this in a bare except (S-103's class).
+        from src.data.cis.cis_provider import calculate_cis_universe
+        uni = (await calculate_cis_universe()).get("universe") or []
+    except Exception as e:
+        return JSONResponse(status_code=503,
+                            content={"detail": f"universe unavailable: {str(e)[:160]}"})
+    if not uni:
+        return JSONResponse(status_code=503, content={"detail": "universe is empty"})
+
+    embeddings, failed = {}, []
+    regime = None
+    for a in uni:
+        sym = str(a.get("symbol") or "").upper()
+        if not sym:
+            continue
+        regime = regime or a.get("macro_regime")
+        try:
+            embeddings[sym] = generate_embedding(a)
+        except Exception as e:            # per-asset, never abort the batch
+            failed.append(f"{sym}:{str(e)[:60]}")
+
+    if not embeddings:
+        return JSONResponse(status_code=500,
+                            content={"detail": "embedder produced nothing",
+                                     "failed": failed[:10]})
+
+    ameta = {str(a.get("symbol")).upper(): {"asset_class": a.get("asset_class")}
+             for a in uni if a.get("symbol")}
+    ok = upsert_embeddings(embeddings, asset_meta=ameta, macro_regime=regime)
+    return {
+        "status": "ok" if ok else "write_failed",
+        "written": len(embeddings) if ok else 0,
+        "schema_version": SCHEMA_VERSION,
+        "dims": len(next(iter(embeddings.values()))),
+        "failed_assets": failed[:10],
+        "n_failed": len(failed),
+        # Stated because a rebuild that wrote 58 rows and a rebuild that wrote 58
+        # rows OF THE WRONG SHAPE look identical in a row count.
+        "verify": "select schema_version, dims, count(*) from asset_embeddings "
+                  "where superseded_reason is null group by 1,2",
+    }
+
+
 @router.get("/internal/asset-vectors/schema")
 async def asset_vectors_schema():
     """Contract echo — the dryrun target both lanes verify against before the live hook fires.
@@ -475,7 +584,12 @@ async def receive_asset_vectors(payload: dict, x_internal_token: str = Header(No
     if not embeddings:
         raise HTTPException(status_code=400, detail="no embeddable assets in payload")
 
-    ok = upsert_embeddings(embeddings, asset_meta=asset_meta, macro_regime=regime, schema_version=2)
+    # NO EXPLICIT VERSION (2026-08-12, S-144). This passed schema_version=2,
+    # overriding the store's default and re-stamping every vector this endpoint
+    # wrote with a version the embedder stopped producing on 2026-08-09. The
+    # default now tracks embedder.SCHEMA_VERSION; passing anything here would
+    # reintroduce the same drift one layer up.
+    ok = upsert_embeddings(embeddings, asset_meta=asset_meta, macro_regime=regime)
     _logger.info(f"[asset-vectors] upsert ok={ok} count={len(embeddings)} v2={n_v2} regime={regime}")
     return {
         "status": "ok" if ok else "error",
