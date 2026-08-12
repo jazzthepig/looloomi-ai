@@ -412,9 +412,60 @@ _UNIVERSE_LOCK_WAIT_S    = float(os.environ.get("CIS_UNIVERSE_LOCK_WAIT_S", "3")
 _UNIVERSE_STALE_MAX_S    = float(os.environ.get("CIS_UNIVERSE_STALE_MAX_S", "3600"))
 
 
+async def _universe_stale_durable(max_age_s: float = _UNIVERSE_STALE_MAX_S) -> dict | None:
+    """The stale fallback, read from REDIS — i.e. one that survives a cold process.
+
+    WHY (2026-08-12, S-146). `_UNIVERSE_CACHE` is a module-level dict, so it is
+    empty in every freshly started process. The Mac-side scheduler runs each task
+    as a fresh run, which means:
+
+        build exceeds the 12s budget  →  _universe_stale() reads an EMPTY dict
+                                      →  returns None
+                                      →  503 "no cached payload available"
+
+    The fallback existed and could never fire in the exact situation it was built
+    for. Measured overnight 2026-08-11→12: the universe build timed out every
+    cycle, and because there was no cross-process stale copy, EVERY downstream
+    writer starved — trending_log, conviction_verdicts_daily, narrative_snapshots,
+    cause_snapshots_daily and both paper books all wrote 0 rows for the day while
+    cis_scores (which does not depend on this build) wrote 116. One slow build
+    became a total outage of the record.
+
+    Redis is already the cross-process cache for the CIS payload. Reading it here
+    turns "hard 503" into "degraded but serving", which is the difference between
+    a gap in the record and a day of it.
+    """
+    try:
+        from src.api.store import redis_get
+        blob = await redis_get()
+    except Exception as e:
+        _logger.warning("[CIS] durable stale read failed: %s", e)
+        return None
+    if not isinstance(blob, dict) or not blob.get("universe"):
+        return None
+    try:
+        age = time.time() - float(blob.get("last_updated") or 0)
+    except (TypeError, ValueError):
+        return None
+    if age > max_age_s:
+        return None
+    out = dict(blob)
+    # NEVER silently. A stale payload that does not announce itself is a fresh
+    # payload as far as every consumer is concerned — the whole point of S-104.
+    out["data_status"] = "stale"
+    out["stale_age_seconds"] = round(age, 1)
+    out["stale_source"] = "redis_durable"
+    _logger.error("[CIS] serving STALE universe from Redis (age %.0fs) — the build "
+                  "exceeded its budget and the in-process cache was cold", age)
+    return out
+
+
 def _universe_stale(max_age_s: float = _UNIVERSE_STALE_MAX_S) -> dict | None:
     """Last good payload if it exists and isn't ancient. Flagged so the caller
-    (and the UI badge) can tell served-stale from served-fresh — never silently."""
+    (and the UI badge) can tell served-stale from served-fresh — never silently.
+
+    IN-PROCESS ONLY. Empty on a cold start; see _universe_stale_durable for the
+    cross-process path that a fresh scheduler run actually needs."""
     data = _UNIVERSE_CACHE.get("data")
     if not data:
         return None
@@ -447,10 +498,10 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
         try:
             await asyncio.wait_for(_UNIVERSE_LOCK.acquire(), timeout=_UNIVERSE_LOCK_WAIT_S)
         except asyncio.TimeoutError:
-            stale = _universe_stale()
+            stale = _universe_stale() or await _universe_stale_durable()
             if stale is not None:
                 _logger.warning("[CIS] universe lock busy — serving stale "
-                                f"({stale['stale_age_s']}s old)")
+                                f"({stale.get('stale_age_s') or stale.get('stale_age_seconds')}s old)")
                 return stale
             raise HTTPException(
                 status_code=503,
@@ -466,7 +517,11 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
                 data = await asyncio.wait_for(
                     _build_cis_universe(force_source), timeout=_UNIVERSE_BUILD_BUDGET_S)
             except asyncio.TimeoutError:
-                stale = _universe_stale()
+                # In-process first (free), then the DURABLE Redis copy. The
+                # second is what a freshly started scheduler run actually has;
+                # without it this path 503s every time and every downstream
+                # writer starves (S-146).
+                stale = _universe_stale() or await _universe_stale_durable()
                 if stale is not None:
                     _logger.error("[CIS] universe build exceeded "
                                   f"{_UNIVERSE_BUILD_BUDGET_S}s — serving stale")
