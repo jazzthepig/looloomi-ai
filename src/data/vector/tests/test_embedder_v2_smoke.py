@@ -126,7 +126,23 @@ def test_history_row_shape_deltas():
 
 
 def test_schema_version():
-    assert SCHEMA_VERSION == 2 and ASSET_DIMS_V2 == 27 and ASSET_DIMS_V2 - ASSET_DIMS_V1 == 9
+    """Pins the SHAPE, not the number.
+
+    This asserted `SCHEMA_VERSION == 2`. The embedder went to 3 on 2026-08-09 and
+    this test would have caught the store's hardcoded 2 — except it was never wired
+    into preflight, so it never ran, and the one check that could have seen the
+    drift was itself the thing asserting the stale value (S-144).
+
+    A version-equality assertion is a maintenance tax that pays nothing: it fails on
+    every legitimate bump and tells you only that someone bumped it. What matters is
+    that the DIMENSION CONTRACT holds and that everything writing the version agrees
+    with the embedder — pinned here and in test_vector_schema_version_is_single_sourced."""
+    assert ASSET_DIMS_V2 == 27, ASSET_DIMS_V2
+    assert ASSET_DIMS_V2 - ASSET_DIMS_V1 == 9, "v2 appends 9 dims (5 deltas + 4 stability)"
+    assert SCHEMA_VERSION >= 3, (
+        f"SCHEMA_VERSION={SCHEMA_VERSION}; v3 (2026-08-09) fixed pillar dims 0..4 "
+        f"being identically zero in every stored vector — a regression below 3 would "
+        f"silently restore that")
 
 
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
