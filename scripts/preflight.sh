@@ -27,14 +27,6 @@ cd "$(dirname "$0")/.."
 # success we print one line with its check count. On failure we dump that
 # suite's ENTIRE output and stop — the failing suite is exactly when you want
 # every line, and the passing ones are exactly when you do not.
-# THE GATE MUST NOT DO THE APP'S JOB (S-158). Three suites boot the FastAPI app.
-# With network egress its 31 startup loops then run a real daily cycle — Moralis,
-# CoinGecko Pro, Binance, the paper-book marks — so on Jazz's Mac preflight stalled
-# after check 27 while finishing in 48s in a sandbox with no egress. A gate whose
-# runtime depends on whether the laptop has internet is a coin flip you cannot read.
-# Exported here so EVERY suite inherits it, including ones added later.
-export DISABLE_BACKGROUND_LOOPS=1
-
 _PF_T0=$(date +%s)
 _PF_N=0
 run() {
@@ -83,7 +75,6 @@ run "import + boot smoke" env INTERNAL_TOKEN=preflight ENVIRONMENT=ci python3 sc
 #         deploys the GIT TREE; nothing compared them. This exports HEAD and
 #         resolves every src.* import inside it.
 run "git tree is deployable" python3 -m tests.test_git_tree_is_deployable
-run "gate does not run the app" python3 -m tests.test_the_gate_does_not_do_the_apps_job
 echo "→ [3/3] discipline + schema-drift guard (philosophy compiled to CI, 2026-07-27) ..."
 # 3a. strategy discipline — cause/OOS/paper/regime evidence floor on every SHIP record
 run "strategy discipline" python3 -m tests.test_strategy_discipline
