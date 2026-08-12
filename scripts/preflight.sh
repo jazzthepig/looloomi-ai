@@ -77,15 +77,8 @@ run() {
       exit 1
     fi
     sleep 1; waited=$((waited + 1))
-    # Tick the elapsed seconds in place. Without it a live suite and a dead one
-    # look identical for three minutes, which is the whole complaint.
-    printf "\r  %2d ⏳ %-52s %3ds" "$_PF_N" "$label" "$waited"
   done
-  # `set -e` would abort the whole script the instant `wait` reports a non-zero
-  # child, before rc is ever read — so the failure branch below could never run
-  # and the run would end with no explanation at all. `|| rc=$?` keeps it local.
-  local rc=0
-  wait "$pid" || rc=$?
+  wait "$pid"; local rc=$?
 
   if [ "$rc" -eq 0 ]; then
     local n; n=$(grep -c '✓' "$out" 2>/dev/null || echo 0)
