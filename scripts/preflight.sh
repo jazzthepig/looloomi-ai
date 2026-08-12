@@ -11,43 +11,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# ── OUTPUT DISCIPLINE (S-157, 2026-08-13) ────────────────────────────────────
-# Measured before this change: 798 lines, 48s, and the app's 40-line startup
-# banner printed THREE times (smoke_test, the route-shadow guard, the breaker
-# suite each boot it). 21% of the output was boot noise repeating verbatim.
-#
-# Jazz, watching it: "preflight 不断在重复 info, 跑不到 push". He was right about
-# what he saw and wrong about the cause — it was finishing, in 48s, every time.
-# But you cannot tell a 48-second run from a hang when the same forty lines
-# scroll past three times, so the gate had become unreadable, and an unreadable
-# gate is one you start skipping. That is the same failure as a guard nobody
-# runs: not wrong, just not load-bearing any more.
-#
-# So: QUIET WHEN GREEN, COMPLETE WHEN RED. Each suite's output is captured. On
-# success we print one line with its check count. On failure we dump that
-# suite's ENTIRE output and stop — the failing suite is exactly when you want
-# every line, and the passing ones are exactly when you do not.
-_PF_T0=$(date +%s)
-_PF_N=0
-run() {
-  local label="$1"; shift
-  local out; out="$(mktemp)"
-  _PF_N=$((_PF_N + 1))
-  if "$@" >"$out" 2>&1; then
-    local n; n=$(grep -c '✓' "$out" 2>/dev/null || echo 0)
-    printf "  %2d ✓ %-52s %3s checks  %3ds\n" "$_PF_N" "$label" "$n" "$(( $(date +%s) - _PF_T0 ))"
-    rm -f "$out"
-  else
-    echo
-    echo "════════ 🔴 FAILED: $label ════════"
-    cat "$out"      # the whole thing, unfiltered — this is the moment you need it
-    echo "════════ 🔴 FAILED: $label ════════"
-    rm -f "$out"
-    exit 1
-  fi
-}
-
-
 echo "→ [0/3] test-runner dependencies ..."
 # `set -e` means the FIRST failure aborts, so a missing dependency midway through
 # silently skips every check after it. On 2026-08-09 test_venue_consolidation (one of
@@ -65,24 +28,16 @@ echo "→ [1/2] byte-compile all src ..."
 python3 -m py_compile $(git ls-files 'src/**/*.py') && echo "  ✓ syntax OK"
 
 echo "→ [2/3] import + boot smoke (the real gate py_compile can't do) ..."
-run "import + boot smoke" env INTERNAL_TOKEN=preflight ENVIRONMENT=ci python3 scripts/smoke_test.py
+INTERNAL_TOKEN=preflight ENVIRONMENT=ci python3 scripts/smoke_test.py
 
-# 3-ZERO. THE TREE THAT DEPLOYS IS THE TREE THAT GETS CHECKED (S-156, 2026-08-12).
-#         Runs FIRST because everything below it reads the working tree, and on
-#         2026-08-12 the working tree lied: store.py imported src.api.runtime_role
-#         at module level while that file had never been committed. 504 checks
-#         green, production down. Preflight validated the WORKING TREE; Railway
-#         deploys the GIT TREE; nothing compared them. This exports HEAD and
-#         resolves every src.* import inside it.
-run "git tree is deployable" python3 -m tests.test_git_tree_is_deployable
 echo "→ [3/3] discipline + schema-drift guard (philosophy compiled to CI, 2026-07-27) ..."
 # 3a. strategy discipline — cause/OOS/paper/regime evidence floor on every SHIP record
-run "strategy discipline" python3 -m tests.test_strategy_discipline
+python3 -m tests.test_strategy_discipline
 # 3a-bis. resilience — the 2026-07-29 P0 (Supabase saturation → 33s hangs → retry storm,
 #         while /health lied "healthy"). Guards: no retry on timeout, breaker opens, fails
 #         fast, RECOVERS after cooldown, 4xx doesn't trip it, health reflects reality.
-run "supabase breaker" python3 -m tests.test_supabase_breaker
-run "cis universe lock" python3 -m tests.test_cis_universe_lock
+python3 -m tests.test_supabase_breaker
+python3 -m tests.test_cis_universe_lock
 # 3a-bis-2. T2 fan-out bounds (2026-08-07, S-104). The lock test above bounds the
 #           CALLER; this bounds the CALLEE. `/cis/universe` returned 200 for 56 min
 #           while serving a payload frozen at 01:03 — the build never completed
@@ -90,21 +45,21 @@ run "cis universe lock" python3 -m tests.test_cis_universe_lock
 #           15s each) overran the budget and cancelled the nine branches that had
 #           already succeeded. Guards: per-branch timeout, degradation reported not
 #           swallowed, failures negative-cached so a down provider costs once.
-run "t2 fanout bounds" python3 -m tests.test_t2_fanout_bounds
+python3 -m tests.test_t2_fanout_bounds
 # 3a-ter. cold-start contract — the amnesia path (docs/AMNESIA_PROTOCOL.md). Every agent starts
 #         every session at zero; a lesson that lives only in a 5,672-line ledger changes nothing.
-run "cold start contract" python3 -m tests.test_cold_start_contract
+python3 -m tests.test_cold_start_contract
 # 3a-quater. undefined names on the serving path — a NameError on a rarely-taken branch is
 #            invisible to py_compile AND to production when the caller logs a warning. That
 #            combination silently killed the T2 universe fallback (2026-08-06).
-run "no undefined names" python3 -m tests.test_no_undefined_names
+python3 -m tests.test_no_undefined_names
 # 3a-quinquies. neutralisation (2026-08-07, S-103). `neutralize()` was cited in 71
 #               files and defined in none, so no claim of alpha had ever been
 #               separated from exposure. Guards both directions: pure beta must
 #               neutralise to zero, and real alpha must survive — a neutraliser
 #               that strips everything would refute every strategy including a
 #               working one.
-run "neutralize" python3 -m tests.test_neutralize
+python3 -m tests.test_neutralize
 # 3a-sexies. strategy-library durability (2026-08-07, S-105). The record library —
 #            the graveyard CLAUDE.md calls the asset — spent 12 days in a 24h-TTL
 #            Redis key because its Postgres migration (written 2026-07-26) was
@@ -112,14 +67,14 @@ run "neutralize" python3 -m tests.test_neutralize
 #            that fired every time and therefore carried no information.
 #            Guards: the fallback is COUNTED not just logged, and one failure is
 #            already degraded — there is no acceptable rate of losing research.
-run "strategy durability" python3 -m tests.test_strategy_durability
+python3 -m tests.test_strategy_durability
 # 3a-septies. L0 data architecture (2026-08-07). asset_class lived on OBSERVATION rows,
 #             where it actually recorded the SOURCE - 24 symbols carried conflicting
 #             labels, and source determines candle convention (>1% open gaps: Crypto
 #             31.3% vs DeFi 83.5%). So `where asset_class=...` was a source filter in a
 #             class filter's clothing, which is how S-106 read a splice between two bar
 #             conventions as market structure. Class now lives only in `assets`.
-run "data architecture" python3 -m tests.test_data_architecture
+python3 -m tests.test_data_architecture
 # 3a-octies-2. ① beta-core book (2026-08-07, oversight review). All five books accruing
 #              a forward record were long/short market-neutral - the ④ construction that
 #              produced the R76-R94 graveyard - while layer ①, the FoF core AND the
@@ -128,7 +83,7 @@ run "data architecture" python3 -m tests.test_data_architecture
 #              de-lever freely but never lever past the ceiling, unmeasured inputs resolve
 #              to NEUTRAL rather than to large, and the benchmark leg is structural so
 #              excess is arithmetic rather than a benchmark chosen at analysis time.
-run "beta core book" python3 -m tests.test_beta_core_book
+python3 -m tests.test_beta_core_book
 # 3a-nonies. effective breadth (2026-08-08, S-115). Three ledger entries quoted
 #            N/(1+(N-1)rho) as "independent bets". It is not: that formula is the
 #            exact answer for equal-weight VARIANCE REDUCTION (long-only book), while
@@ -136,7 +91,7 @@ run "beta core book" python3 -m tests.test_beta_core_book
 #            (neutral book). They diverge even when equicorrelation HOLDS - 2.99 vs
 #            7.38 at rho=0.3 - so the error was never arithmetic, it was quoting a
 #            breadth number without saying which book it constrains.
-run "effective breadth" python3 -m tests.test_effective_breadth
+python3 -m tests.test_effective_breadth
 # 3a-decies. storage hygiene (2026-08-08). Supabase hit 90% of its tier and the
 #            obvious move was archiving rows. Measurement said otherwise: ~84 MB of
 #            dead indexes plus ~128 MB of bloat from a same-day bulk UPDATE that
@@ -146,7 +101,7 @@ run "effective breadth" python3 -m tests.test_effective_breadth
 #            a bulk UPDATE on a large table must declare its storage cost, index
 #            scan counts are evidence only when the stats are old enough, and the
 #            archive order is set by REFETCHABILITY rather than by size.
-run "storage hygiene" python3 -m tests.test_storage_hygiene
+python3 -m tests.test_storage_hygiene
 # 3a-undecies. state persistence (2026-08-08, S-117/S-118). A layer-③ sleeve was
 #              being built on `macro_regime`, whose median run is 3 DAYS with 51%
 #              of runs ≤3d — more than half its "transitions" were label chatter.
@@ -155,7 +110,7 @@ run "storage hygiene" python3 -m tests.test_storage_hygiene
 #              Guards: the filter is CAUSAL (a centred one would leak the future and
 #              become the edge), and it reports BOTH costs — sample destroyed and
 #              latency added — because reporting only the smoother chart is a pitch.
-run "state persistence" python3 -m tests.test_state_persistence
+python3 -m tests.test_state_persistence
 # 3a-duodecies. strategy intake (2026-08-08). Minimax-A asked for the service_role
 #               key to write beta-strategy records. Declined; this endpoint replaces
 #               it and is better on two counts. Blast radius: service_role bypasses
@@ -165,7 +120,7 @@ run "state persistence" python3 -m tests.test_state_persistence
 #               the discipline floor can be written anyway, because the floor lives
 #               in CI and CI is not in the write path. Here validate() runs BEFORE
 #               the insert - a gate the writer can route around is a suggestion.
-run "strategy intake" python3 -m tests.test_strategy_intake
+python3 -m tests.test_strategy_intake
 # 3a-terdecies. regime write path (2026-08-09). Chasing a discrepancy flagged twice
 #               and left unchased - the table said Tightening while the ① book had
 #               read NEUTRAL - produced two bugs in one query. The daily snapshot
@@ -177,7 +132,7 @@ run "strategy intake" python3 -m tests.test_strategy_intake
 #               1.0) and ran FULL SIZE on day one of its forward record. A normaliser
 #               that turns unknown into a legitimate value belongs on the READ side
 #               only; on write, unmeasured is NULL (I1).
-run "regime write path" python3 -m tests.test_regime_write_path
+python3 -m tests.test_regime_write_path
 # 3a-quaterdecies. degraded-value guard (2026-08-09, S-122). S-121 was the FIFTH
 #                  instance in one day of an unmeasurable value being replaced by a
 #                  plausible one and then stored, where no consumer can tell the
@@ -194,7 +149,7 @@ run "regime write path" python3 -m tests.test_regime_write_path
 #                  normalisation call cannot hide one. Read-side rendering is out of
 #                  scope by construction - globally the same pattern returns 296 hits
 #                  and a guard nobody can run is a guard nobody runs.
-run "degraded value guard" python3 -m tests.test_degraded_value_guard
+python3 -m tests.test_degraded_value_guard
 # 3a-sexdecies. compliance language (2026-08-09). Hard rule 1 — no SFC Type 4/9
 #               licence, so user-facing surfaces carry POSITIONING language only —
 #               had never been enforced by anything. The full code check found NINE
@@ -205,7 +160,7 @@ run "degraded value guard" python3 -m tests.test_degraded_value_guard
 #               so the check has to be mechanical. Scoped to routers + dashboard +
 #               static HTML; research, tests and logs are explicitly out of scope per
 #               the skill, and the methodology page may still RENDER the banned list.
-run "compliance language" python3 -m tests.test_compliance_language
+python3 -m tests.test_compliance_language
 # 3a-septdecies. SQL privilege idiom (2026-08-09). Four SECURITY DEFINER functions
 #                that fetch over HTTP and write unbounded rows were callable by anon
 #                — public by construction — with a caller-controlled batch count.
@@ -217,7 +172,7 @@ run "compliance language" python3 -m tests.test_compliance_language
 #                S-105/S-116/S-122: an operation that reports success while doing
 #                nothing. This guard reads scripts, so it proves the IDIOM, never the
 #                database — the live check belongs to a scheduled probe.
-run "sql privilege idiom" python3 -m tests.test_sql_privilege_idiom
+python3 -m tests.test_sql_privilege_idiom
 # 3a-duodevicesimo. embedding dimensions (2026-08-09, S-127). Measured on the live
 #                   table: all 58 stored vectors had their FIVE CIS PILLAR dims set
 #                   to exactly zero — identical for every asset — so the vector space
@@ -232,7 +187,7 @@ run "sql privilege idiom" python3 -m tests.test_sql_privilege_idiom
 #                   "near-identical"). Also pins that the two pillar resolvers —
 #                   embedder._pillars_of and main._pillar_of — agree on all five
 #                   shapes; each previously missed one the other handled.
-run "embedding dims carry information" python3 -m tests.test_embedding_dims_carry_information
+python3 -m tests.test_embedding_dims_carry_information
 # 3a-quaterdecies-bis. value added in DOLLARS (2026-08-10, S-132). Every sleeve we
 #                have ever measured was denominated in percent. Berk & Green (JPE
 #                2004) and Berk & van Binsbergen (JFE 2015): percentage alpha is
@@ -249,7 +204,7 @@ run "embedding dims carry information" python3 -m tests.test_embedding_dims_carr
 #                whose ADV lookup failed, and since book capacity is a MINIMUM over
 #                names, dropping one can only RAISE the answer — and the ones that
 #                fail to resolve are the thin names that would have bound.
-run "value added dollars" python3 -m tests.test_value_added_dollars
+python3 -m tests.test_value_added_dollars
 # 3a-quaterdecies-ter. HAR-RV study specification (2026-08-11, S-134). Guards a
 #                STUDY rather than a production path, which earns its place here
 #                because the study produced THREE verdicts on synthetic data where
@@ -268,7 +223,7 @@ run "value added dollars" python3 -m tests.test_value_added_dollars
 #                no study, because it goes in the ledger and stops the question
 #                being asked again. Positive control: HAR must win on 5 synthetic
 #                GARCH seeds where vol is persistent by construction.
-run "har rv study is specified correctly" python3 -m tests.test_har_rv_study_is_specified_correctly
+python3 -m tests.test_har_rv_study_is_specified_correctly
 # 3a-quindecies. written columns vs declared schema (2026-08-11, S-138). /api/v1/keys
 #                POSTed a column named `intended_use`; the live table has `notes` and
 #                never had the other. PostgREST 400s on an unknown column, _sb_post
@@ -286,7 +241,7 @@ run "har rv study is specified correctly" python3 -m tests.test_har_rv_study_is_
 #                costs a round trip through the one person with console access.
 #                Guards both halves: written columns must be declared, and the endpoint
 #                must pass PostgREST's own message through.
-run "table columns match the code" python3 -m tests.test_table_columns_match_the_code
+python3 -m tests.test_table_columns_match_the_code
 # 3a-sexdecies. hard rule #8 — no implementation on investor-facing surfaces
 #               (2026-08-11, S-139). The rule existed and was violated in TEN
 #               rendered strings, including two the rule names directly: strategy.html
@@ -302,7 +257,7 @@ run "table columns match the code" python3 -m tests.test_table_columns_match_the
 #               governs what we REVEAL. Replacements state the CAPABILITY
 #               ("full-model score"), so the tier and its meaning stay visible and
 #               only the part a competitor benefits from goes away.
-run "no stack leakage on user surfaces" python3 -m tests.test_no_stack_leakage_on_user_surfaces
+python3 -m tests.test_no_stack_leakage_on_user_surfaces
 # 3a-septdecies. usage metering can support an invoice (2026-08-11, S-140). Usage
 #                lived ONLY in Redis under a 24h TTL and api_keys.request_count was
 #                incremented by NOTHING — a column shown on the analytics page that
@@ -321,7 +276,7 @@ run "no stack leakage on user surfaces" python3 -m tests.test_no_stack_leakage_o
 #                over-bill is a refund and a reputation. Also pins Postgres OFF the
 #                request path (the 2026-07-29 saturation P0) and that the audit write
 #                REPORTS whether it landed.
-run "metering is billable" python3 -m tests.test_metering_is_billable
+python3 -m tests.test_metering_is_billable
 # 3a-duodevicies. the moat is claimed only where it is measured (2026-08-12, S-141).
 #                ARCHITECTURE.md line 164: "A signal we have not run through our own
 #                loop is one we must not claim. Claiming it unproven is
@@ -338,7 +293,7 @@ run "metering is billable" python3 -m tests.test_metering_is_billable
 #                the consumer CANNOT check us — the provenance we hand over IS the
 #                product, and provenance that says "measured" when it means "guessed"
 #                destroys the proposition rather than one endpoint.
-run "moat claims are measured" python3 -m tests.test_moat_claims_are_measured
+python3 -m tests.test_moat_claims_are_measured
 # 3a-undevicies. no route is shadowed by a path parameter (2026-08-12, S-143).
 #               FOUR endpoints were deployed and unreachable: /factors/performance,
 #               /factors/discovery, /strategy/stats, /ohlcv/coverage. FastAPI matches
@@ -355,7 +310,7 @@ run "moat claims are measured" python3 -m tests.test_moat_claims_are_measured
 #               The guard flattens fastapi.routing._IncludedRouter and asserts the
 #               route COUNT: its first version scanned 31 of 197 and printed a clean
 #               result, which is the same defect committed inside its own fix.
-run "no route is shadowed" python3 -m tests.test_no_route_is_shadowed
+python3 -m tests.test_no_route_is_shadowed
 # 3a-vicies. vector schema version is single-sourced (2026-08-12, S-144). Live:
 #            asset_embeddings held 72 rows ALL stamped schema_version=2, 18 days
 #            stale, with TWO different `dims` (18 and 27) under the same version —
@@ -371,7 +326,7 @@ run "no route is shadowed" python3 -m tests.test_no_route_is_shadowed
 #            The one test asserting the version asserted ==2 and was never wired
 #            into the gate — the check that could have caught the drift was itself
 #            holding the stale value, and never ran. Both are fixed and both now run.
-run "vector schema version is single sourced" python3 -m tests.test_vector_schema_version_is_single_sourced
+python3 -m tests.test_vector_schema_version_is_single_sourced
 # 3a-vicies-bis. the stale fallback must survive a COLD process (2026-08-12, S-146).
 #              Overnight 08-11→12 every Mac cycle logged "CIS universe build timed out
 #              and no cached payload available", and the day's writes died with it:
@@ -387,7 +342,7 @@ run "vector schema version is single sourced" python3 -m tests.test_vector_schem
 #              cross-process copy, which changes the failure MODE from "no record for a
 #              day" to "a record marked stale". Both 503 paths chain to it, and stale
 #              is never served silently (S-104).
-run "stale fallback survives a cold process" python3 -m tests.test_stale_fallback_survives_a_cold_process
+python3 -m tests.test_stale_fallback_survives_a_cold_process
 # 3a-vicies-ter. exactly one process may WRITE the record (2026-08-12, S-149).
 #              Running the app locally starts 20+ background loops, a dozen of which
 #              write Supabase and share Redis state keys with Railway. Both would
@@ -404,7 +359,7 @@ run "stale fallback survives a cold process" python3 -m tests.test_stale_fallbac
 #              api_usage_upsert). Unset ⇒ replica; an unknown role refuses to boot;
 #              APP_ROLE=dev is refused until it has a private namespace, because a
 #              'dev' writer sharing prod state keys IS the hazard.
-run "only one process writes the record" python3 -m tests.test_only_one_process_writes_the_record
+python3 -m tests.test_only_one_process_writes_the_record
 # 3a-quaterdecies-bis. sizing cannot invert (2026-08-12, S-151). C3's 5x5 conviction
 #                table was transposed on BOTH axes: max leverage at max regime
 #                unfamiliarity with the weakest signal, and 1.20x gross with no inputs
@@ -417,7 +372,7 @@ run "only one process writes the record" python3 -m tests.test_only_one_process_
 #                oriented table and fails for every inverted one — including ones not
 #                written yet, which is the only guard worth having now that the values
 #                live in `strategy_params` and can change without a deploy.
-run "sizing cannot invert" python3 -m tests.test_sizing_cannot_invert
+python3 -m tests.test_sizing_cannot_invert
 # 3a-quaterdecies-ter. universe membership is recomputed, not inherited (S-153).
 #                Measured: universe_membership WHERE universe='investable' had 75 rows,
 #                valid_from = 2025-05-03 for EVERY asset including BTC, valid_to NULL on
@@ -428,7 +383,7 @@ run "sizing cannot invert" python3 -m tests.test_sizing_cannot_invert
 #                TRUNCATION test — the answer on the full panel must equal the answer on a
 #                panel truncated at as_of — because look-ahead enters through a window
 #                boundary or a <= that should be <, and no amount of reading catches that.
-run "universe is point in time" python3 -m tests.test_universe_is_point_in_time
+python3 -m tests.test_universe_is_point_in_time
 # 3a-quaterdecies-quater. capacity tripwire (S-154). R66-C's edge sits in names too
 #                small to hold at size: the ten clearing a $5M ADV floor summed to
 #                -21.3% of a +154.6% total. At $500M that disqualifies it; at $10k it
@@ -439,7 +394,7 @@ run "universe is point in time" python3 -m tests.test_universe_is_point_in_time
 #                $0.3M ADV in the same hour, so a stored number is wrong by 4.7x within
 #                a session). Also separates the two costs: impact vanishes with size,
 #                spread does not and is wider on exactly the thin names carrying the edge.
-run "aum tripwire" python3 -m tests.test_aum_tripwire
+python3 -m tests.test_aum_tripwire
 # 3a-quaterdecies-quinquies. execution log records the MISSES (S-155). The $10k book
 #                starting 2026-08-17 exists to measure the one input a backtest cannot
 #                have: what we actually pay to trade. R66-C assumed 10bps and showed
@@ -452,10 +407,10 @@ run "aum tripwire" python3 -m tests.test_aum_tripwire
 #                because an unfilled order leaves no trace in the account, the P&L or the
 #                exchange statement. An intent is written before the order exists and
 #                resolved exactly once, to a fill OR an expiry.
-run "fill log records the misses" python3 -m tests.test_fill_log_records_the_misses
-run "beta core size smoke" python3 -m src.data.signals.tests.test_beta_core_size_smoke
-run "beta core size hook smoke" python3 -m src.data.signals.tests.test_beta_core_size_hook_smoke
-run "embedder v2 smoke" python3 -m src.data.vector.tests.test_embedder_v2_smoke
+python3 -m tests.test_fill_log_records_the_misses
+python3 -m src.data.signals.tests.test_beta_core_size_smoke
+python3 -m src.data.signals.tests.test_beta_core_size_hook_smoke
+python3 -m src.data.vector.tests.test_embedder_v2_smoke
 # 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
 #                after its v1 run was found to have sized off a 23-day-stale regime.
 #                The integrity property this pins is the product's: a forward track
@@ -479,20 +434,20 @@ run "embedder v2 smoke" python3 -m src.data.vector.tests.test_embedder_v2_smoke
 #            populated wrong number is invisible to "is the field set?" and obvious
 #            to "do independent venues agree?". Offline/deterministic — the LIVE
 #            cross-venue probe belongs in loop_health SENSE, not in a code gate.
-run "venue consolidation" python3 -m tests.test_venue_consolidation
+python3 -m tests.test_venue_consolidation
 # 3a-quinquies. CIS drift detector (the HYPE case, 2026-07-30): pure detection
 #              logic must regress-safe; live supabase probe lives in scheduled cron,
 #              not in a code gate (offline/deterministic only here).
-run "cis drift detector" python3 -m tests.test_cis_drift_detector
+python3 -m tests.test_cis_drift_detector
 # 3a-sexies. ⓠ REGIME OVERRIDE enforcer (2026-08-06, first cut): wraps research-side
 #             m_wo_q_o1_stablecoin_gate.assign_band_hysteresis into production-shape
 #             API (apply_regime_override, apply_regime_override_series). PIT-safe,
 #             allows only the v1 allowed-cap set {0.0, 0.5, 1.0, 1.3}.
-run "regime override enforcer" python3 -m tests.test_regime_override_enforcer
+python3 -m tests.test_regime_override_enforcer
 # 3a-septies. ⓠ REGIME OVERRIDE paper track (2026-08-06, parallel paper NAV under
 #              enforcer). Tests pure backtest/aggregation logic; live paper runner
 #              is wired into daily_runner.py post-validation (60d forward paper).
-run "fusion paper regime track" python3 -m tests.test_fusion_paper_regime_track
+python3 -m tests.test_fusion_paper_regime_track
 # 3a-octies. build_l1_observations.py smoke (2026-08-07, Lesson #72 follow-up): the
 #             script's --diagnose probe verifies the live Supabase key against the
 #             server (the 2026-08-02 forged-key class). It cannot run inside the
@@ -500,7 +455,7 @@ run "fusion paper regime track" python3 -m tests.test_fusion_paper_regime_track
 #             resolve_panel_source('none'), compute_panel_series, diagnose()
 #             contract) so a structural regression can't reach Railway. The actual
 #             network probe belongs in the scheduled cron path.
-run "build l1 observations smoke" python3 -m tests.test_build_l1_observations_smoke
+python3 -m tests.test_build_l1_observations_smoke
 # 3b. contract schema echo — the drift class preflight previously couldn't see (Mac push schema
 #     changed, Railway didn't follow). Prints the canonical SCHEMA_VERSION so it's in every log,
 #     and fails loudly if the contract module stops importing.
