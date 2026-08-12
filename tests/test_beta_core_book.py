@@ -687,9 +687,16 @@ def test_a_readable_vol_state_ignores_the_carry_path_entirely():
     orig = bc._last_persisted_cap
     try:
         bc._last_persisted_cap = _boom
-        hi, _ = asyncio.run(bc._resolve_cap("TIGHTENING", rv=1.10))   # above q67
-        mid, _ = asyncio.run(bc._resolve_cap("NEUTRAL", rv=0.75))     # between
-        lo, _ = asyncio.run(bc._resolve_cap(None, rv=0.50))           # below q33
+        # Real history, so the ladder is CALIBRATED and the top rung is reachable.
+        # Without it the run is in seed mode and the low rung resolves to 1.0
+        # (S-147) — correct behaviour, but not what this test is about.
+        _h = bc._realized_vol_series(
+            np.random.default_rng(2).normal(0, 0.045, (900, 8)))
+        _q33, _q67, _src = bc._vol_tercile_bounds(_h)
+        assert "rolling" in _src, _src
+        hi, _ = asyncio.run(bc._resolve_cap("TIGHTENING", rv=_q67 * 1.5, vol_history=_h))
+        mid, _ = asyncio.run(bc._resolve_cap("NEUTRAL", rv=(_q33 + _q67) / 2, vol_history=_h))
+        lo, _ = asyncio.run(bc._resolve_cap(None, rv=_q33 * 0.5, vol_history=_h))
         assert (hi, mid, lo) == (0.5, 1.0, 1.3), (hi, mid, lo)
     finally:
         bc._last_persisted_cap = orig
@@ -705,16 +712,20 @@ def test_regime_no_longer_sizes_the_book_but_is_still_recorded():
     remains answerable. It must not drive: we have measured what vol state is
     worth and never measured what regime is worth, and an unmeasured input must
     not size a book while a measured one sits beside it."""
-    # same regime, different vol ⇒ different cap: vol is the driver
-    a, sa = asyncio.run(bc._resolve_cap("TIGHTENING", rv=0.50))
-    b, sb = asyncio.run(bc._resolve_cap("TIGHTENING", rv=1.10))
+    # same regime, different vol ⇒ different cap: vol is the driver.
+    # Calibrated history supplied so the low rung is the real 1.3 rather than
+    # seed mode's 1.0 (S-147).
+    _h = bc._realized_vol_series(np.random.default_rng(4).normal(0, 0.045, (900, 8)))
+    _q33, _q67, _ = bc._vol_tercile_bounds(_h)
+    a, sa = asyncio.run(bc._resolve_cap("TIGHTENING", rv=_q33 * 0.5, vol_history=_h))
+    b, sb = asyncio.run(bc._resolve_cap("TIGHTENING", rv=_q67 * 1.5, vol_history=_h))
     assert a == 1.3 and b == 0.5, (a, b)
     assert "vol_state" in sa and "vol_state" in sb, (sa, sb)
     # ...and the regime is still carried in the source string for later analysis
     assert "TIGHTENING" in sa, sa
 
     # different regime, same vol ⇒ same cap: regime does not size
-    c, _ = asyncio.run(bc._resolve_cap("RISK_ON", rv=1.10))
+    c, _ = asyncio.run(bc._resolve_cap("RISK_ON", rv=_q67 * 1.5, vol_history=_h))
     assert c == b, "regime changed the cap — it must not"
 
     src = inspect.getsource(bc)
@@ -752,6 +763,58 @@ def test_the_tercile_bounds_are_rolling_not_frozen():
     _, _, short_src = bc._vol_tercile_bounds(np.array([0.5] * 10))
     assert short_src.startswith("seed("), (
         f"a too-short history must fall back AND say why, got {short_src!r}")
+
+
+def test_seed_thresholds_never_take_the_top_rung():
+    """S-147, measured on v3's FIRST live mark:
+
+        cap_source = vol_state_low[seed(n=91<250)]   exposure_cap = 1.3
+        realized_vol_30d = 0.325
+
+    The book went to MAXIMUM leverage on the frozen 2019–2022 thresholds — and
+    0.325 sits BELOW the whole range that calibration was drawn from (the panel ran
+    0.5–1.2 then). "Low" was therefore not a reading of the current distribution;
+    it was an artefact of comparing today's market to a different one.
+
+    Seed mode means the FRAME OF REFERENCE is missing, not the value. I1 already
+    forbids levering on a missing value (`_vol_scalar(nan) == 1.0`); the same rule
+    has to reach one level up, to a value whose reference distribution is unknown.
+
+    De-risking on seed stays allowed: a cap below neutral cannot do worse than
+    holding the panel, and refusing to de-risk on provisional thresholds would be
+    the drawdown-intuition error running backwards."""
+    hi_seed = bc._vol_state_cap(0.90)                    # above seed q67 → de-risk
+    assert hi_seed[0] == 0.5, hi_seed
+    lo_seed = bc._vol_state_cap(0.20)                    # below seed q33 → NOT 1.3
+    assert lo_seed[0] == 1.0, (
+        f"seed mode took the top rung: {lo_seed} — this is exactly the v3 day-1 "
+        f"position, 1.3x on thresholds from a different vol regime")
+    assert "uncalibrated" in lo_seed[1], lo_seed
+
+    # ...and with real history the top rung is reachable again
+    rng = np.random.default_rng(5)
+    hist = bc._realized_vol_series(rng.normal(0, 0.02, (900, 8)))
+    lo_real = bc._vol_state_cap(0.05, hist)
+    assert lo_real[0] == 1.3 and "rolling" in lo_real[1], lo_real
+
+
+def test_the_panel_is_deep_enough_for_the_tercile_to_engage():
+    """The S-142 rolling-tercile fix was INERT IN PRODUCTION from the day it
+    shipped: `_load_panel` fetched 120 days, `_realized_vol_series` needs a 30-day
+    lookback before it emits anything, so ~91 observations reached a threshold of
+    250 and every live mark fell back to the seed.
+
+    A fix that cannot reach its own input is not a fix. The depth costs nothing —
+    load_binance_panel paginates at 1000 bars, so 120 and 900 days are the same
+    number of HTTP calls."""
+    obs = bc._PANEL_DAYS - bc._VOL_LOOKBACK
+    assert obs >= bc._TERCILE_MIN_OBS, (
+        f"panel yields {obs} vol observations, below _TERCILE_MIN_OBS="
+        f"{bc._TERCILE_MIN_OBS} — the rolling bounds can never engage")
+    assert bc._PANEL_DAYS >= bc._TERCILE_WINDOW_DAYS + bc._VOL_LOOKBACK, (
+        "the panel must cover a full tercile window plus the lookback")
+    src = inspect.getsource(bc._load_panel)
+    assert "_PANEL_DAYS" in src, "the window must come from the constant, not a literal"
 
 
 def test_the_row_records_where_the_cut_points_came_from():

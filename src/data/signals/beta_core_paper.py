@@ -189,6 +189,10 @@ _VOL_TERCILE_Q67_SEED = 0.839
 # The rolling window the live thresholds are computed over. Two years is long
 # enough that a single quiet quarter cannot reclassify the whole ladder, and short
 # enough to actually track the regime turnover the doctrine warns about.
+# Panel depth loaded on every mark. Must exceed _TERCILE_WINDOW_DAYS +
+# _VOL_LOOKBACK so the rolling bounds have a full window to sit in; see the
+# note in _load_panel for why this is free.
+_PANEL_DAYS = 900
 _TERCILE_WINDOW_DAYS = 730
 _TERCILE_MIN_OBS = 250
 
@@ -241,9 +245,31 @@ def _vol_state_cap(rv: float, vol_history: "np.ndarray | None" = None
     if rv != rv or rv <= 0:
         return 1.0, "vol_state_unknown"
     q33, q67, src = _vol_tercile_bounds(vol_history)
+
+    # SEED MODE NEVER TAKES THE TOP RUNG (2026-08-12, S-147).
+    #
+    # Measured on v3's first live mark: cap_source read
+    # `vol_state_low[seed(n=91<250)]`, exposure_cap 1.3, rv30 0.325. The book went
+    # to MAXIMUM leverage on the frozen 2019–2022 thresholds — and 0.325 is below
+    # the entire range that calibration was drawn from (the panel ran 0.5–1.2 then).
+    # So "low" was not a reading of the current distribution; it was an artefact of
+    # comparing today's market to a different one.
+    #
+    # Seed mode means WE DO NOT KNOW where this vol sits in the CURRENT
+    # distribution. I1 already says the answer to an unmeasured input is the
+    # neutral rung and never the large one — the same rule `_vol_scalar` follows
+    # for NaN. It was applied to a missing value and not to a value whose FRAME OF
+    # REFERENCE is missing, which is the same defect one level up.
+    #
+    # De-risking on seed is still allowed: a cap BELOW neutral cannot hurt more
+    # than holding the panel, and refusing to de-risk because the thresholds are
+    # provisional would be the drawdown-intuition mistake in reverse.
+    seeded = src.startswith("seed")
     if rv > q67:
         return 0.5, f"vol_state_high[{src}]"
     if rv < q33:
+        if seeded:
+            return 1.0, f"vol_state_low_but_uncalibrated[{src}]"
         return 1.3, f"vol_state_low[{src}]"
     return 1.0, f"vol_state_mid[{src}]"
 
@@ -381,7 +407,19 @@ def _exposure_cap(regime: str | None) -> tuple[float, str]:
 
 async def _load_panel():
     from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE, load_binance_panel
-    s = dt.date.today() - dt.timedelta(days=120)
+    # PANEL DEPTH IS THE TERCILE'S FUEL (2026-08-12, S-147). This was 120 days.
+    # `_realized_vol_series` needs a 30-day lookback before it emits anything, so
+    # 120 days yields ~91 vol observations — below `_TERCILE_MIN_OBS` (250). The
+    # rolling bounds therefore fell back to the frozen seed on EVERY live mark, and
+    # the S-142 fix that replaced the frozen thresholds was inert in production
+    # from the day it shipped. Measured on v3's first mark:
+    # `vol_state_low[seed(n=91<250)]`.
+    #
+    # The depth is nearly free: load_binance_panel paginates at 1000 bars per call,
+    # so 120 days and 900 days are the SAME number of HTTP calls per symbol. The
+    # old window was not buying anything — it was just short enough to starve a
+    # statistic that had not been written yet when it was chosen.
+    s = dt.date.today() - dt.timedelta(days=_PANEL_DAYS)
     _, close, fmean, fsum = load_binance_panel(DEFAULT_UNIVERSE, start=(s.year, s.month, s.day))
     # I1, and the sharpest instance of it in this file (2026-08-09). This line used
     # to be `np.nan_to_num(...)`, which turns a MISSING return into 0.0 — a flat day.
