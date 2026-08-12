@@ -330,22 +330,72 @@ def _cache_set(key: str, val: Any):
 
 
 # === Beta Calculation for S Pillar ===
+# ── The macro factors are GLOBAL — fetch them once, not once per asset ───────
+# (2026-08-12, S-148.) DXY / VIX / TNX are the same three series for every asset
+# in the panel, and `_betas_in_thread` is called PER ASSET. So 24 assets produced
+# 72 yfinance calls per cycle. When Yahoo stops answering — measured 2026-08-12,
+# all three returning "possibly delisted; no price data found" — each call still
+# burns ~10s, so one cycle spent roughly twelve minutes failing, and the Mac log
+# filled with one ERROR line every ten seconds around the clock.
+#
+# This is the third instance of the same shape today: a GLOBAL quantity fetched
+# PER ITEM. GitHub's dev-activity ran 25 repos unauthenticated; CryptoPanic's one
+# global RSS was fetched once per asset. In each case the cache sat downstream of
+# the network call, so it deduplicated the parsing and never the request.
+#
+# The breaker matters as much as the cache: without it, a Yahoo outage costs 72
+# attempts per cycle forever, and the retry pressure is indistinguishable from the
+# outage in the logs.
+_FACTOR_CACHE: dict = {}                 # name → (ts, rets|None)
+_FACTOR_TTL_S = 3600.0                   # daily bars; refetching sooner buys nothing
+_FACTOR_BREAKER: dict = {"until": 0.0}
+_FACTOR_COOLDOWN_S = 1800.0
+
+
 async def _fetch_factor_rets(symbol: str, name: str) -> tuple[str, list | None]:
-    """Fetch factor returns in thread pool (yfinance is sync-blocking)."""
+    """Fetch factor returns in thread pool (yfinance is sync-blocking).
+
+    Cached globally and breaker-guarded — see the note above. A cache MISS that
+    returns None is stored too: "we asked and Yahoo had nothing" must cost one
+    attempt per TTL, not one per asset."""
+    import time as _t
+    now = _t.time()
+    hit = _FACTOR_CACHE.get(name)
+    if hit is not None and (now - hit[0]) < _FACTOR_TTL_S:
+        return name, hit[1]
+    if now < _FACTOR_BREAKER["until"]:
+        return name, (hit[1] if hit else None)
+
     import yfinance as yf
     try:
         ticker = yf.Ticker(symbol)
         hist = ticker.history(period="35d")
         if len(hist) < 20:
+            # Negative-cache the miss. Yahoo answering "nothing" for VIX is a real
+            # answer about Yahoo, and asking 71 more times will not change it.
+            _FACTOR_CACHE[name] = (now, None)
+            _FACTOR_BREAKER["until"] = now + _FACTOR_COOLDOWN_S
+            _logger.warning(
+                "[Beta] yfinance returned no data for %s — negative-cached and "
+                "breaker open for %.0fs. These three factors are GLOBAL; without "
+                "this, a Yahoo outage costs 3 calls x every asset, every cycle.",
+                symbol, _FACTOR_COOLDOWN_S)
             return name, None
         prices = hist['Close'].values
         rets = []
         for i in range(1, len(prices)):
             if prices[i-1] > 0:
                 rets.append((prices[i] - prices[i-1]) / prices[i-1])
-        return name, rets if len(rets) >= 15 else None
+        out = rets if len(rets) >= 15 else None
+        _FACTOR_CACHE[name] = (now, out)
+        return name, out
     except Exception as e:
-        _logger.warning(f"[Beta] yfinance factor {symbol} failed: {e}")
+        # Cache the failure too, and open the breaker. Without this the next asset
+        # in the loop retries immediately and the exception rate IS the load.
+        _FACTOR_CACHE[name] = (now, None)
+        _FACTOR_BREAKER["until"] = now + _FACTOR_COOLDOWN_S
+        _logger.warning("[Beta] yfinance factor %s failed: %s — breaker open %.0fs",
+                        symbol, e, _FACTOR_COOLDOWN_S)
         return name, None
 
 

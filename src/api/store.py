@@ -207,8 +207,23 @@ async def _supabase_request_with_retry(
 
 async def supabase_insert_batch(rows: list) -> bool:
     """Bulk-insert CIS score rows into Supabase REST API with retry."""
-    if not _SB_URL or not _SB_KEY or not rows:
-        _logger.warning("[SUPABASE] Skipped: missing config or empty rows")
+    # NAME WHICH ONE (2026-08-12, S-148). This said "missing config or empty rows"
+    # — three different causes behind one sentence, so a reader could only tell
+    # them apart if a NEIGHBOURING log line happened to print the row count. It did,
+    # this time. That is luck, not observability, and the same defect as
+    # "Key storage failed" (S-138): a message that names no cause funds plausible
+    # wrong answers about which thing to go fix.
+    if not rows:
+        _logger.warning("[SUPABASE] Skipped: caller passed 0 rows (not a config problem)")
+        return False
+    if not _SB_URL or not _SB_KEY:
+        missing = " and ".join(
+            n for n, v in (("SUPABASE_URL", _SB_URL), ("SUPABASE_KEY", _SB_KEY)) if not v)
+        _logger.warning(
+            "[SUPABASE] Skipped %d row(s): %s empty IN THIS PROCESS. These are read "
+            "at import time, so a scheduled run that does not load .env sees them "
+            "blank while the main engine writes fine — which is exactly how one "
+            "writer can be dark while another is green.", len(rows), missing)
         return False
 
     url = f"{_SB_URL}/rest/v1/{_SB_TABLE}"
