@@ -74,6 +74,31 @@ function SectionLabel({ label, sub, stats = null }) {
   );
 }
 
+// ── Compact section label — for nested/subsection headers (Cross-Asset, Earnings, Asset Radar) ──
+// accent: 'cyan' (default) | 'gold' (gold is the editorial / sub-section indicator)
+function CompactSectionLabel({ label, meta, accent = "cyan" }) {
+  const lineColor = accent === "gold" ? T.gold : T.cyan;
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 14,
+      borderBottom: `1px solid ${T.border}`,
+    }}>
+      <div aria-hidden="true" style={{ width: 14, height: 1, background: lineColor, opacity: 0.5 }} />
+      <span style={{
+        fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+        letterSpacing: "0.14em", color: T.t2, textTransform: "uppercase",
+      }}>
+        {label}
+      </span>
+      {meta && (
+        <span style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.mono, marginLeft: "auto", opacity: 0.65 }}>
+          {meta}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function SectionLoader({ label = "LOADING…" }) {
   return (
     <div style={{ padding: "48px 0", textAlign: "center" }}>
@@ -140,25 +165,11 @@ function CrossAssetView({ universe = [] }) {
 
   return (
     <div style={{ marginTop: 40 }}>
-      {/* Section header */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 12, marginBottom: 20,
-        paddingBottom: 14, borderBottom: `1px solid ${T.border}`,
-      }}>
-        <div style={{ width: 14, height: 1, background: T.gold, opacity: 0.5 }} />
-        <span style={{
-          fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
-          letterSpacing: "0.14em", color: T.t2, textTransform: "uppercase",
-        }}>
-          Cross-Asset Overview
-        </span>
-        <span style={{
-          fontSize: 9, color: T.t3, fontFamily: FONTS.mono,
-          marginLeft: "auto",
-        }}>
-          {classes.length} classes · {universe.length} assets
-        </span>
-      </div>
+      <CompactSectionLabel
+        label="Cross-Asset Overview"
+        meta={`${classes.length} classes · ${universe.length} assets`}
+        accent="gold"
+      />
 
       {/* Class cards grid */}
       <div style={{
@@ -855,23 +866,11 @@ function EarningsCalendarWidget() {
 
   return (
     <div style={{ marginTop: 28 }}>
-      {/* Header */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 10, marginBottom: 12,
-      }}>
-        <div style={{ width: 14, height: 1, background: T.gold, opacity: 0.5 }} />
-        <span style={{
-          fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
-          letterSpacing: "0.12em", color: T.t2, textTransform: "uppercase",
-        }}>
-          Earnings Calendar
-        </span>
-        <span style={{
-          fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5,
-        }}>
-          EODHD · next 30 days
-        </span>
-      </div>
+      <CompactSectionLabel
+        label="Earnings Calendar"
+        meta="EODHD · next 30 days"
+        accent="gold"
+      />
 
       {loading ? (
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -1006,21 +1005,11 @@ function CISContent({ onUniverseLoad, onNavigate }) {
 
       {/* Asset Radar — 30-asset deep-scan table with category filters, LAS, dev scores */}
       <div style={{ marginTop: 40 }}>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 12, marginBottom: 16,
-          paddingBottom: 14, borderBottom: `1px solid ${T.border}`,
-        }}>
-          <div style={{ width: 14, height: 1, background: T.cyan, opacity: 0.5 }} />
-          <span style={{
-            fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
-            letterSpacing: "0.14em", color: T.t2, textTransform: "uppercase",
-          }}>
-            Asset Radar
-          </span>
-          <span style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.mono, marginLeft: "auto" }}>
-            30 assets · 10 categories · live CG Pro
-          </span>
-        </div>
+        <CompactSectionLabel
+          label="Asset Radar"
+          meta="30 assets · 10 categories · live CG Pro"
+          accent="cyan"
+        />
         <Suspense fallback={<SectionLoader />}>
           <AssetRadar />
         </Suspense>
