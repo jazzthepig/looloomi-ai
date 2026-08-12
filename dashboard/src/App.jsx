@@ -374,6 +374,9 @@ function Sidebar({ activeSection, onNavigate, bottomSlot }) {
             <div key={item.id}>
               <button
                 onClick={() => onNavigate(item.id)}
+                aria-current={active ? "page" : undefined}
+                aria-expanded={item.children ? isParentActive : undefined}
+                aria-label={item.sub ? `${item.label} — ${item.sub}` : item.label}
                 style={{
                   width: "100%", textAlign: "left",
                   display: "flex", alignItems: "center", gap: 10,
@@ -393,7 +396,7 @@ function Sidebar({ activeSection, onNavigate, bottomSlot }) {
                   transition: "background 0.14s",
                 }} />
                 {/* Icon */}
-                <span style={{ fontFamily: FONTS.mono, fontSize: 12, color: isParentActive ? T.cyan : T.t3, flexShrink: 0, lineHeight: 1, opacity: isParentActive ? 1 : 0.5 }}>
+                <span aria-hidden="true" style={{ fontFamily: FONTS.mono, fontSize: 12, color: isParentActive ? T.cyan : T.t3, flexShrink: 0, lineHeight: 1, opacity: isParentActive ? 1 : 0.5 }}>
                   {item.icon}
                 </span>
                 {/* Label + sub */}
@@ -409,13 +412,15 @@ function Sidebar({ activeSection, onNavigate, bottomSlot }) {
 
               {/* Children — shown when parent is active */}
               {item.children && isParentActive && (
-                <div style={{ marginLeft: 24, marginBottom: 4 }}>
+                <div role="group" aria-label={`${item.label} submenu`} style={{ marginLeft: 24, marginBottom: 4 }}>
                   {item.children.map(child => {
                     const childActive = activeSection === child.id;
                     return (
                       <button
                         key={child.id}
                         onClick={() => onNavigate(child.id)}
+                        aria-current={childActive ? "page" : undefined}
+                        aria-label={child.label}
                         style={{
                           width: "100%", textAlign: "left",
                           display: "flex", alignItems: "center", gap: 8,
@@ -428,7 +433,7 @@ function Sidebar({ activeSection, onNavigate, bottomSlot }) {
                         onMouseEnter={e => { if (!childActive) { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = T.t2; } }}
                         onMouseLeave={e => { if (!childActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(148,163,184,0.55)"; } }}
                       >
-                        <div style={{
+                        <div aria-hidden="true" style={{
                           width: 1, height: 12, background: childActive ? T.cyan : "rgba(6,182,212,0.25)", borderRadius: 1, flexShrink: 0,
                         }} />
                         <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: childActive ? 600 : 400, letterSpacing: "0.01em", whiteSpace: "nowrap" }}>
