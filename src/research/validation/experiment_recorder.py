@@ -18,6 +18,7 @@ sandbox with no dependencies. Idempotent on run_id.
 Pure stdlib + httpx.
 """
 from __future__ import annotations
+from src.api.runtime_role import note_refusal, refuse_write
 
 import json
 import os
@@ -62,6 +63,18 @@ class ExperimentRun:
 
 
 def _supabase_insert(row: dict) -> bool:
+    # RECORD GATE (2026-08-12, S-150). This module writes a FORWARD-RECORD table
+    # and bypasses store.py, so the S-149 gate did not reach it. The claim made
+    # yesterday — "the write side of the record has one owner" — was broader than
+    # the implementation: the gate covered two functions while five record writers
+    # went around them. That is the exact defect this session has been naming,
+    # committed inside the fix for it, and endorsed by a guard that only checked
+    # the two functions it knew about.
+    _refusal = refuse_write("experiment_runs")
+    if _refusal:
+        note_refusal("experiment_runs", _refusal)
+        return False
+
     url = os.environ.get("SUPABASE_URL") or os.environ.get("SUPABASE_REST_URL")
     key = (os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
            or os.environ.get("SUPABASE_ANON_KEY"))

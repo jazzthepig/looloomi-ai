@@ -25,6 +25,7 @@ Runs on Railway/Mac (Supabase creds). Smoke test resolves synthetic predictions 
 REAL Binance prices, so the engine is verifiable from anywhere.
 """
 from __future__ import annotations
+from src.api.runtime_role import note_refusal, refuse_write
 
 import asyncio
 import json
@@ -154,6 +155,18 @@ def _hit(direction: int, alpha: float) -> Optional[bool]:
 
 
 async def _write_outcome(client, row: dict) -> bool:
+    # RECORD GATE (2026-08-12, S-150). This module writes a FORWARD-RECORD table
+    # and bypasses store.py, so the S-149 gate did not reach it. The claim made
+    # yesterday — "the write side of the record has one owner" — was broader than
+    # the implementation: the gate covered two functions while five record writers
+    # went around them. That is the exact defect this session has been naming,
+    # committed inside the fix for it, and endorsed by a guard that only checked
+    # the two functions it knew about.
+    _refusal = refuse_write("prediction_outcomes")
+    if _refusal:
+        note_refusal("prediction_outcomes", _refusal)
+        return False
+
     if not (_SB_URL and _SB_KEY):
         return False
     try:
