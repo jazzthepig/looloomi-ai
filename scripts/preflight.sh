@@ -343,6 +343,60 @@ python3 -m tests.test_vector_schema_version_is_single_sourced
 #              day" to "a record marked stale". Both 503 paths chain to it, and stale
 #              is never served silently (S-104).
 python3 -m tests.test_stale_fallback_survives_a_cold_process
+# 3a-vicies-ter. exactly one process may WRITE the record (2026-08-12, S-149).
+#              Running the app locally starts 20+ background loops, a dozen of which
+#              write Supabase and share Redis state keys with Railway. Both would
+#              have marked beta_core_nav for the same day off different panels — the
+#              forward record, the one artefact that cannot be re-derived, becoming a
+#              function of which machine woke first. The only thing preventing it was
+#              that SUPABASE_KEY happened to be EMPTY locally. Safety by accident.
+#              And the default made it worse: ENVIRONMENT defaulted to "production",
+#              so an UNSET variable made any laptop a live writer.
+#              Boundary is WRITE, not CONNECT — reading prod from a laptop is useful
+#              and harmless. Gate sits on the two write functions, not the loops,
+#              because loops keep being added and a gate you must remember to apply
+#              is one that will be forgotten (same argument as GREATEST living inside
+#              api_usage_upsert). Unset ⇒ replica; an unknown role refuses to boot;
+#              APP_ROLE=dev is refused until it has a private namespace, because a
+#              'dev' writer sharing prod state keys IS the hazard.
+python3 -m tests.test_only_one_process_writes_the_record
+# 3a-quaterdecies-bis. sizing cannot invert (2026-08-12, S-151). C3's 5x5 conviction
+#                table was transposed on BOTH axes: max leverage at max regime
+#                unfamiliarity with the weakest signal, and 1.20x gross with no inputs
+#                at all. It survived because the table, its smoke test and the hook
+#                docstring all agreed with each other — only the module's stated design
+#                dissented, so every consistency check passed. A frozen-value check
+#                cannot catch this: the table was transposed BEFORE it was frozen, and
+#                freezing preserves it. So the guard asserts BEHAVIOUR (monotonicity;
+#                no leverage on no information), which holds for every correctly
+#                oriented table and fails for every inverted one — including ones not
+#                written yet, which is the only guard worth having now that the values
+#                live in `strategy_params` and can change without a deploy.
+python3 -m tests.test_sizing_cannot_invert
+# 3a-quaterdecies-ter. universe membership is recomputed, not inherited (S-153).
+#                Measured: universe_membership WHERE universe='investable' had 75 rows,
+#                valid_from = 2025-05-03 for EVERY asset including BTC, valid_to NULL on
+#                all of them — one birthday, no deaths. Every multi-year backtest that
+#                filtered on it was holding, in 2021, a basket selected for surviving to
+#                2026. The `coverage` universe carried the truth all along (488 listings
+#                back to 2015, 125 recorded delistings); it was never used. The guard is a
+#                TRUNCATION test — the answer on the full panel must equal the answer on a
+#                panel truncated at as_of — because look-ahead enters through a window
+#                boundary or a <= that should be <, and no amount of reading catches that.
+python3 -m tests.test_universe_is_point_in_time
+# 3a-quaterdecies-quater. capacity tripwire (S-154). R66-C's edge sits in names too
+#                small to hold at size: the ten clearing a $5M ADV floor summed to
+#                -21.3% of a +154.6% total. At $500M that disqualifies it; at $10k it
+#                is irrelevant. Both true, expiring at different times — and the sleeve
+#                will never announce that it outgrew its universe, the fills just get
+#                worse, and worse fills look exactly like a decaying edge. So the alarm
+#                is on SIZE, and the ceiling is RECOMPUTED (COMP measured $1.4M and
+#                $0.3M ADV in the same hour, so a stored number is wrong by 4.7x within
+#                a session). Also separates the two costs: impact vanishes with size,
+#                spread does not and is wider on exactly the thin names carrying the edge.
+python3 -m tests.test_aum_tripwire
+python3 -m src.data.signals.tests.test_beta_core_size_smoke
+python3 -m src.data.signals.tests.test_beta_core_size_hook_smoke
 python3 -m src.data.vector.tests.test_embedder_v2_smoke
 # 3a-quindecies. inception identity (2026-08-09, S-123). The ① book was re-inceptioned
 #                after its v1 run was found to have sized off a 23-day-stale regime.
