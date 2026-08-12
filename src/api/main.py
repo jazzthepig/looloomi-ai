@@ -2002,11 +2002,36 @@ if os.path.exists(dashboard_path):
         _api_prefixes = ("api/", "internal/", "ws/", "mcp/", "mcp-sse", ".env", "config", "secrets", "admin", ".git")
         if any(full_path.startswith(p) for p in _api_prefixes):
             return JSONResponse(status_code=404, content={"detail": "Not found"})
-        file_path = os.path.join(dashboard_path, full_path)
-        try:
-            return FileResponse(file_path)
-        except FileNotFoundError:
-            pass
+        # EXISTENCE IS CHECKED, NOT CAUGHT (S-160, 2026-08-13).
+        #
+        # This read:
+        #     try:    return FileResponse(file_path)
+        #     except FileNotFoundError: pass
+        #     return FileResponse(index.html)
+        #
+        # Starlette's FileResponse is LAZY — it does not stat the file when
+        # constructed, it stats when the response is sent. So a missing file
+        # raises nothing here, the `except` never fires, the index.html line is
+        # dead code, and the error surfaces AFTER the handler returned, as a
+        # RuntimeError that FastAPI turns into a 500.
+        #
+        # Measured 2026-08-13: every SPA deep link was 500 —
+        #     /  200 · /cis 500 · /intelligence 500 · /strategies 500
+        #     /vault 500 · /diagnose 500
+        # Only "/" worked, because it has its own explicit route. The app was
+        # usable only if you landed on "/" and navigated client-side; a refresh
+        # or a shared link showed a blank shell whose panels then rendered
+        # "API error: 500" — which sent two people hunting the API for hours
+        # while every API endpoint was returning 200.
+        #
+        # A try/except around a call that cannot raise the exception being
+        # caught is indistinguishable from no error handling at all, and reads
+        # like more.
+        safe = os.path.normpath(os.path.join(dashboard_path, full_path))
+        # normpath collapses "..", so a request for /../../etc/passwd resolves
+        # outside the build directory. Serve the SPA shell instead of the file.
+        if safe.startswith(dashboard_path) and os.path.isfile(safe):
+            return FileResponse(safe)
         return FileResponse(os.path.join(dashboard_path, "index.html"))
 
 
