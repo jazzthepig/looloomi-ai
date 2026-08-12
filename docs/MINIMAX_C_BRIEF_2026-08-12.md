@@ -61,8 +61,10 @@ n_obs         1/24   (在 24 条 factory_batch 里)
 1. **我没有可比对象。** 「R66C 比之前好」现在**无法被检验** —— 库里的「之前」没有成本、
    没有样本量、没有 ledger_ref。
 2. **证据放在会消失的地方。** 原来在 `/tmp`(macOS 会清);
-   `_data/research/r66c_pitch_2026-08-12/` 好一级,但 **`_data/` 在 `.gitignore:16`** ——
-   不会被清掉,但永远不进版本库。六个月后 LP 问「你们当时怎么压的」,答案还是文件没了。
+   `_data/research/r66c_pitch_2026-08-12/` 好一级,但 `_data/` 是 gitignored,
+   **而且按新政策它会一直是** —— 不会被系统清掉,但永远不进版本库、不进备份、
+   不进任何人的 checkout。六个月后 LP 问「你们当时怎么压的」,答案还是文件没了。
+   **所以数据库不是副本,是正本。**
 
 > 顺带:那个目录我这边看到是**空的**,拷贝可能没成功,先确认。
 
@@ -70,14 +72,28 @@ n_obs         1/24   (在 24 条 factory_batch 里)
 
 ## 三、落地位置:三层,不要混
 
+> **⚠️ 政策更新(Jazz,2026-08-12):挖掘出来的策略内容不进 git。**
+> 所以下面的表和你可能预期的不一样 —— **持久性不靠 git,靠数据库。**
+
 | 东西 | 放哪 | 为什么 |
 |---|---|---|
-| 结论 + 方法(`.md`) | **`docs/`,提交进 git** | 要能 diff,要六个月后还在 |
-| 结构化记录 | **`experiment_runs`** + **`strategy_records`** | 可查询、可比对、可被门槛评分 |
-| 原始 bootstrap 路径 711 KB | 留 `_data/`,**但 seed + git sha 写进 `experiment_runs.params`** | 大文件不进 git,**能重算就不必存** |
+| 结论 + 方法(`.md`) | **`_data/research/<M-##>/`,gitignored** | 边缘不进版本库 |
+| **结构化记录** | **`experiment_runs`** + **`strategy_records`** | ⭐ **这是唯一的持久层** |
+| 原始 bootstrap 路径 711 KB | 同上,**但 seed + git sha 写进 `experiment_runs.params`** | 大文件不存,**能重算就不必存** |
+
+**这个政策把入库从「应该做」变成「唯一的机制」。** 之前 MD 进 `docs/` 还能兜底,
+现在不进了 —— **所以一条没入库的结论,就是一条不存在的结论。**
+它只活在某台机器的某个 gitignored 目录里,换台机器 checkout 就没有了。
 
 第三行是关键:**种子和代码版本记在库里,那 711 KB 就是缓存,删了无所谓;
-没记,它就是唯一证据,而它在一个 gitignored 目录里。** 差别全在 `params` 那一列。
+没记,它就是唯一证据,而它在一个永远不会被备份的目录里。** 差别全在 `params` 那一列。
+
+> **但注意边界:「策略内容」不进 git,「production 接线」必须进。**
+> `src/data/signals/beta_core_q_overlay.py` / `beta_core_size.py` 被
+> `src/api/main.py` import,`beta_core_q_hook.py` 被 `beta_core_paper.py` import。
+> **Railway 从 git 部署 —— 不在 git 里的模块不在服务器上。**
+> 如果边缘要离开 git,它以**参数**的形式离开(阈值、cell 表 → Supabase 或 env),
+> **不是以 import 目标的形式**。已在 `.gitignore` 里写清楚。
 
 ---
 
