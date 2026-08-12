@@ -26,6 +26,7 @@ Call it ONCE at deploy time. The repo also ships a forward-only ship flag
 cutover window, then can be turned off in a follow-up.
 """
 from __future__ import annotations
+from src.api.runtime_role import note_refusal, refuse_write
 
 import json
 import logging
@@ -148,6 +149,17 @@ def _pg_upsert(id_: str, record_dict: dict) -> bool:
     Uses `Prefer: resolution=merge-duplicates` so an existing row gets
     replaced; a missing row gets inserted. Single round-trip per upsert.
     """
+    # RECORD GATE (2026-08-12, S-150). `strategy_records` is the graveyard —
+    # CLAUDE.md calls it the asset — and this module writes it directly rather than
+    # through store.py, so the S-149 gate did not reach it. Yesterday's claim
+    # ("the write side of the record has one owner") was broader than what was
+    # built: two functions gated, five record writers going around them. The same
+    # defect this session keeps naming, committed inside its own fix.
+    _refusal = refuse_write("strategy_records")
+    if _refusal:
+        note_refusal("strategy_records", _refusal)
+        return False
+
     base, key = _sb_url_key()
     if not base or not key:
         return False
@@ -208,6 +220,17 @@ def _pg_count() -> int:
 
 
 def _pg_delete_id(id_: str) -> bool:
+    # RECORD GATE (2026-08-12, S-150). `strategy_records` is the graveyard —
+    # CLAUDE.md calls it the asset — and this module writes it directly rather than
+    # through store.py, so the S-149 gate did not reach it. Yesterday's claim
+    # ("the write side of the record has one owner") was broader than what was
+    # built: two functions gated, five record writers going around them. The same
+    # defect this session keeps naming, committed inside its own fix.
+    _refusal = refuse_write("strategy_records")
+    if _refusal:
+        note_refusal("strategy_records", _refusal)
+        return False
+
     base, key = _sb_url_key()
     if not base or not key:
         return False
@@ -355,6 +378,17 @@ def upsert_record(record: StrategyRecord) -> bool:
 
 def upsert_many(records: list[StrategyRecord]) -> int:
     """Bulk upsert. Returns count successfully persisted to Postgres."""
+    # RECORD GATE (2026-08-12, S-150). `strategy_records` is the graveyard —
+    # CLAUDE.md calls it the asset — and this module writes it directly rather than
+    # through store.py, so the S-149 gate did not reach it. Yesterday's claim
+    # ("the write side of the record has one owner") was broader than what was
+    # built: two functions gated, five record writers going around them. The same
+    # defect this session keeps naming, committed inside its own fix.
+    _refusal = refuse_write("strategy_records")
+    if _refusal:
+        note_refusal("strategy_records", _refusal)
+        return 0
+
     if not records:
         return 0
     n_ok = 0
