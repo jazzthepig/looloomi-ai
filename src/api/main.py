@@ -70,7 +70,11 @@ from src.api.routers.ohlcv import router as ohlcv_router
 from src.api.routers.strategy_intake import router as strategy_intake_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
 
-_ENV = os.environ.get("ENVIRONMENT", "production")
+# Legacy label, kept for /health and the staging banner. The AUTHORITY on
+# whether this process may write is runtime_role.ROLE — see S-149. This line
+# defaulting to "production" is what made any unset laptop a live writer.
+from src.api.runtime_role import ROLE as APP_ROLE, banner as _role_banner
+_ENV = os.environ.get("ENVIRONMENT", APP_ROLE)
 
 app = FastAPI(title="Looloomi AI API", version="0.6.3")
 
@@ -118,8 +122,16 @@ app.include_router(webhooks_router)
 app.include_router(analytics_router)
 app.include_router(trading_router)
 app.include_router(vector_router)
-app.include_router(factors_router)
+# ORDER IS LOAD-BEARING (2026-08-12, S-143). factors_router registers
+# /api/v1/factors/{factor_id}, a single-segment parameter that matches
+# /api/v1/factors/discovery — which lives in discovery_router. FastAPI
+# matches in registration order, so including factors first made the whole
+# discovery API unreachable, returning a plausible "Factor 'discovery' not
+# found". CROSS-ROUTER shadowing is invisible when reading either file
+# alone; only the assembled app shows it. Guarded by
+# tests/test_no_route_is_shadowed.py.
 app.include_router(discovery_router)
+app.include_router(factors_router)
 app.include_router(strategies_router)
 app.include_router(signals_router)
 app.include_router(diagnosis_router)
@@ -481,6 +493,14 @@ async def _metering_flush_loop():
         except Exception as _e:
             print(f"[METERING] ⚠️  loop error: {_e}")
         await _asyncio.sleep(FLUSH_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _announce_role():
+    """FIRST thing in the log. The alternative is learning the process's role
+    and its missing credentials from a stack trace at 01:00, which is exactly
+    how 2026-08-11→12 was spent."""
+    print(_role_banner())
 
 
 @app.on_event("startup")
@@ -1205,6 +1225,230 @@ async def beta_core_clock():
         return JSONResponse(status_code=503, content={"error": str(e)[:160]})
     stalled = bool(st.get("stalled") or st.get("started") is False)
     return JSONResponse(status_code=503 if stalled else 200, content=st)
+
+
+@app.get("/internal/beta-core-clock-q")
+async def beta_core_clock_q():
+    """Is the C2 ⓠ regime override layer's 60-day clock actually running?
+
+    Per §C2-SHIP-SPEC 2026-08-12. PARALLEL to /internal/beta-core-clock —
+    the ① baseline keeps its own clock and continues independently. The ⓠ
+    overlay has its own 60-day clock starting at the C2 ship date
+    (target 2026-09-15, Day 60 = 2026-11-14).
+
+    503 when stalled so an uptime monitor can see it without parsing the body.
+
+    The endpoint reads from `beta_core_nav_q` (filtered by INCEPTION_ID and
+    void_reason IS NULL) and reports the same shape as the ① endpoint:
+    marks, inception, last_mark, days_since_mark, gate_days_remaining.
+    """
+    import datetime as _dt
+    import os
+    import httpx
+    from src.data.signals.beta_core_q_overlay import (
+        INCEPTION_ID,
+        clock_q_continuity,
+        state_as_of,
+    )
+    base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
+    if not base or not key:
+        return JSONResponse(status_code=200, content={
+            "configured": False,
+            "note": "supabase unconfigured — C2 ⓠ clock cannot start until Railway env set",
+        })
+    # Two-table read: count rows for clock, count events from meta.
+    # vdb_failure_count lives in beta_core_nav_q_meta (event log), not the main row.
+    url_rows = (f"{base}/rest/v1/beta_core_nav_q?select=mark_date"
+                f"&inception_id=eq.{INCEPTION_ID}&void_reason=is.null"
+                f"&order=mark_date.asc&limit=500")
+    url_meta = (f"{base}/rest/v1/beta_core_nav_q_meta?select=event_type"
+                f"&inception_id=eq.{INCEPTION_ID}&event_type=eq.vdb_failure"
+                f"&limit=500")
+    try:
+        async with httpx.AsyncClient(timeout=8) as c:
+            r1 = await c.get(url_rows, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+            r2 = await c.get(url_meta, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+            rows = r1.json() if r1.status_code == 200 else []
+            meta = r2.json() if r2.status_code == 200 else []
+    except Exception as e:
+        return JSONResponse(status_code=503, content={"error": str(e)[:160]})
+    if not rows:
+        return JSONResponse(status_code=200, content={
+            "configured": True,
+            "marks": 0,
+            "started": False,
+            "gate_days_remaining": 60,
+            "inception_id": INCEPTION_ID,
+            "day_60": "2026-11-14",
+            "note": "ⓠ overlay has never marked — the clock is NOT running",
+        })
+    vdb_failure_count = len(meta)
+    state = clock_q_continuity(rows=rows, vdb_failure_count=vdb_failure_count)
+    payload = state_as_of(state)
+    payload["inception_id"] = INCEPTION_ID
+    payload["day_60"] = "2026-11-14"
+    stalled = bool(state.stalled or state.started is False)
+    return JSONResponse(status_code=503 if stalled else 200, content=payload)
+
+
+@app.get("/internal/beta-core-clock-size")
+async def beta_core_clock_size():
+    """Is the C3 conviction-size 2D layer's 60-day clock actually running?
+
+    Per §C3-SHIP-SPEC 2026-08-12. PARALLEL to /internal/beta-core-clock (C1)
+    and /internal/beta-core-clock-q (C2). The C3 size layer ships 2026-09-10,
+    Day 60 = 2026-11-09.
+
+    503 when stalled so an uptime monitor can see it without parsing the body.
+
+    The endpoint reads from `beta_core_nav_size` (filtered by INCEPTION_ID and
+    void_reason IS NULL). Day 30 drift_audit and Day 45 cell_flip events
+    are queried from `beta_core_nav_size_meta`.
+    """
+    import os
+    import httpx
+    from src.data.signals.beta_core_size import (
+        INCEPTION_ID,
+        DAY_60,
+        clock_q_continuity,
+        state_as_of,
+    )
+    base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
+    if not base or not key:
+        return JSONResponse(status_code=200, content={
+            "configured": False,
+            "note": "supabase unconfigured — C3 size clock cannot start until Railway env set",
+        })
+    url_rows = (f"{base}/rest/v1/beta_core_nav_size?select=mark_date"
+                f"&inception_id=eq.{INCEPTION_ID}&void_reason=is.null"
+                f"&order=mark_date.asc&limit=500")
+    url_meta = (f"{base}/rest/v1/beta_core_nav_size_meta?select=event_type"
+                f"&inception_id=eq.{INCEPTION_ID}"
+                f"&event_type=in.(drift_audit,cell_flip,size_lookup_failure)"
+                f"&limit=500")
+    try:
+        async with httpx.AsyncClient(timeout=8) as c:
+            r1 = await c.get(url_rows, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+            r2 = await c.get(url_meta, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+            rows = r1.json() if r1.status_code == 200 else []
+            meta = r2.json() if r2.status_code == 200 else []
+    except Exception as e:
+        return JSONResponse(status_code=503, content={"error": str(e)[:160]})
+    if not rows:
+        return JSONResponse(status_code=200, content={
+            "configured": True,
+            "marks": 0,
+            "started": False,
+            "gate_days_remaining": 60,
+            "inception_id": INCEPTION_ID,
+            "day_60": DAY_60,
+            "note": "C3 size layer has never marked — the clock is NOT running",
+        })
+    # Reuse the C2 continuity helper for the same shape (per §C3 §3 it has
+    # the same 60-day gate, same stalled definition).
+    events_count = len(meta)
+    state = clock_q_continuity(rows=rows, vdb_failure_count=events_count)
+    payload = state_as_of(state)
+    payload["inception_id"] = INCEPTION_ID
+    payload["day_60"] = DAY_60
+    stalled = bool(state.stalled or state.started is False)
+    return JSONResponse(status_code=503 if stalled else 200, content=payload)
+
+
+@app.get("/internal/r77-forward-episodes")
+async def r77_forward_episodes():
+    """Is the C5 R77 forward episode attribution clock actually running?
+
+    Per §C5-SHIP-SPEC 2026-08-12. PARALLEL to /internal/beta-core-clock (C1),
+    /internal/beta-core-clock-q (C2), and /internal/beta-core-clock-size (C3).
+    The C5 episode layer ships 2026-09-15, Day 60 = 2026-11-14.
+
+    503 when stalled so an uptime monitor can see it without parsing the body.
+
+    The endpoint reads from `r77_forward_episodes` (filtered by INCEPTION_ID
+    and void_reason IS NULL) and reports live forward episode attribution:
+    total_episodes, positive_count, negative_count, pooled_t_mean, verdict.
+
+    DEPENDS ON D2 push backfill (Minimax-A): r77_fwd_5d_alpha_pct labels
+    must be present per day for alpha_count > 0 on episodes. Before D2 ships,
+    rows land with alpha_count=0 and verdict defaults to C5_INSUFFICIENT_EPISODES.
+    """
+    import os
+    import httpx
+    import pandas as pd
+    from src.research.validation.r77_episode_vdb_cluster import (
+        INCEPTION_ID,
+        C5_EPISODES_CLEAR,
+        C5_INSUFFICIENT_EPISODES,
+        C5_HETEROGENEOUS_REGIME,
+    )
+    base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
+    if not base or not key:
+        return JSONResponse(status_code=200, content={
+            "configured": False,
+            "note": "supabase unconfigured — C5 R77 forward episode clock cannot start",
+        })
+    url_rows = (f"{base}/rest/v1/r77_forward_episodes?select=episode_id,"
+                f"mark_date,end_date,n_days,episode_sign,mean_daily_alpha,"
+                f"episode_t_pooled,alpha_count,void_reason"
+                f"&inception_id=eq.{INCEPTION_ID}&void_reason=is.null"
+                f"&order=mark_date.asc&limit=500")
+    try:
+        async with httpx.AsyncClient(timeout=8) as c:
+            r1 = await c.get(url_rows, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+            rows = r1.json() if r1.status_code == 200 else []
+    except Exception as e:
+        return JSONResponse(status_code=503, content={"error": str(e)[:160]})
+    if not rows:
+        return JSONResponse(status_code=200, content={
+            "configured": True,
+            "marks": 0,
+            "started": False,
+            "gate_days_remaining": 60,
+            "inception_id": INCEPTION_ID,
+            "day_60": "2026-11-14",
+            "total_episodes": 0,
+            "positive_count": 0,
+            "negative_count": 0,
+            "pooled_t_mean": None,
+            "verdict": C5_INSUFFICIENT_EPISODES,
+            "note": "C5 R77 forward episode layer has never marked — clock NOT running",
+        })
+    total = len(rows)
+    pos = sum(1 for r in rows if (r.get("episode_sign") or 0) > 0)
+    neg = sum(1 for r in rows if (r.get("episode_sign") or 0) < 0)
+    pooled_ts = [r["episode_t_pooled"] for r in rows
+                 if r.get("episode_t_pooled") is not None]
+    pooled_t_mean = round(sum(pooled_ts) / len(pooled_ts), 4) if pooled_ts else None
+    # Verdict heuristic (mirror verify_episode_floor)
+    if total < 8:
+        verdict = C5_INSUFFICIENT_EPISODES
+    elif pos / max(total, 1) < (2 / 3):
+        verdict = C5_HETEROGENEOUS_REGIME
+    elif pooled_t_mean is None or pooled_t_mean < 2.0:
+        verdict = C5_HETEROGENEOUS_REGIME
+    else:
+        verdict = C5_EPISODES_CLEAR
+    # Stalled = no marks in last 7d
+    last_date = max(pd.Timestamp(r["mark_date"]) for r in rows) if rows else None
+    stalled = last_date is None or (pd.Timestamp.now().normalize() - last_date).days > 7
+    return JSONResponse(
+        status_code=503 if stalled else 200,
+        content={
+            "configured": True,
+            "started": True,
+            "inception_id": INCEPTION_ID,
+            "day_60": "2026-11-14",
+            "total_episodes": total,
+            "positive_count": pos,
+            "negative_count": neg,
+            "pooled_t_mean": pooled_t_mean,
+            "verdict": verdict,
+            "r77_status_unchanged": True,
+            "note": (f"C5 verdict={verdict}; R77 status remains 'regime-specific "
+                     "candidate' (frozen weights at w_R46=0.25/w_R62=0.75/w_R76=0.30)"),
+        },
+    )
 
 
 @app.get("/api/v1/beta-core/curve")

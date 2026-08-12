@@ -761,6 +761,39 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
                        "tomorrow's return", today.isoformat())
             return {"status": "mark_failed", "reason": "durable_write_failed",
                     "date": today.isoformat()}
+        # C2 ⓠ overlay hook (per §C2-SHIP-SPEC 2026-08-12). The hook writes a
+        # PARALLEL row to `beta_core_nav_q`; the ① baseline above is independent.
+        # First-ship invariant: with VDB matcher offline (the default), q_override=1.0
+        # and gross_total = baseline_gross, so the curve is identical to the ① book.
+        # When the matcher is wired (Mac-side D2), the hook activates and the
+        # overlay begins to diverge.
+        try:
+            from src.data.signals.beta_core_q_hook import (
+                compute_q_hook_state,
+                write_q_overlay_row,
+                log_q_meta_event,
+            )
+            q_state = compute_q_hook_state(
+                today=today, gross=sum(abs(v) for v in new_w.values()),
+                regime=regime, smoothed_distance=None,
+                vdb_matcher_live=False,
+            )
+            q_ok = await write_q_overlay_row(
+                today=today, q_state=q_state,
+                baseline_gross=sum(abs(v) for v in new_w.values()),
+                nav=nav, benchmark_nav=bench_nav,
+                daily_return=book_ret,
+                excess_return=book_ret - bench_ret,
+            )
+            if not q_ok:
+                _log.warning("[beta_core] ⓠ OVERLAY WRITE REJECTED for %s — ① baseline "
+                             "is unaffected; the ⓠ curve will have a gap at this mark",
+                             today.isoformat())
+        except Exception as qe:
+            # The ① baseline is the source of truth. A ⓠ failure must NEVER
+            # take the ① baseline down with it. Log loudly and proceed.
+            _log.error("[beta_core] ⓠ HOOK RAISED for %s: %s — ① baseline is OK",
+                       today.isoformat(), qe)
         await _redis_set(_STATE_KEY, state, ttl=0)
     return {"status": "marked", "nav": round(nav, 5), "benchmark_nav": round(bench_nav, 5),
             "daily_return_pct": round(book_ret * 100, 3),

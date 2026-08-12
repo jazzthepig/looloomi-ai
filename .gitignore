@@ -26,6 +26,23 @@ dashboard/dist.old*
 # Strategy reports — local working files (backtest outputs, correlation drafts, handoffs)
 reports/
 
+# ── Mined-strategy research: the SEARCH, not the plumbing (2026-08-12) ──
+# Calibration and mining scripts whose output is an edge. Nothing imports these
+# at runtime (verified: no importer outside their own smoke tests), so ignoring
+# them costs production nothing.
+#
+# ⚠️ THE LINE IS "IS IT IMPORTED BY TRACKED CODE", NOT "IS IT A STRATEGY".
+# Railway deploys from git: a module that is not in git is not on the server.
+# `src/data/signals/beta_core_q_overlay.py` and `beta_core_size.py` are imported
+# by `src/api/main.py` (:1248, :1310, unguarded — the endpoint would 500), and
+# `beta_core_q_hook.py` by `beta_core_paper.py` (:771, inside try/except — it
+# would fail SILENTLY and the ⓠ book's 60-day clock would simply stop accruing).
+# Those four stay tracked. If the edge must leave git, it leaves as PARAMETERS
+# (thresholds, cell tables → Supabase or env), not as import targets.
+scripts/backtest_q_override.py
+scripts/tests/test_backtest_q_override_smoke.py
+src/research/validation/r77_episode_vdb_cluster.py
+
 # ── Agent/harness churn cleanup (2026-06-25) — local operational noise, never commit ──
 health-check-*.md
 HEALTH_CHECK*.md
