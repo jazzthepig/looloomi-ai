@@ -49,6 +49,7 @@ def check(name: str, cond: bool, detail: str = "") -> None:
 
 
 _MAIN = (_ROOT / "src/api/main.py").read_text(encoding="utf-8")
+_LINES = _MAIN.splitlines()
 
 
 def test_no_startup_handler_calls_create_task_directly() -> None:
@@ -66,11 +67,21 @@ def test_no_startup_handler_calls_create_task_directly() -> None:
         if not is_startup:
             continue
         for n in ast.walk(node):
-            if isinstance(n, ast.Call) and "create_task" in ast.unparse(n.func):
-                leaks.append(f"{node.name} (line {n.lineno})")
-    check("every startup scheduler goes through _schedule_task", not leaks,
-          f"bare create_task in: {leaks} — add it to _schedule_task or the gate "
-          f"will start doing the app's job again")
+            if not (isinstance(n, ast.Call) and "create_task" in ast.unparse(n.func)):
+                continue
+            # An exemption is allowed but must be DECLARED. Infrastructure the
+            # boot awaits cannot go through the switch (see the MCP deadlock
+            # below) — but "I forgot" and "I decided" must not look the same,
+            # which is the whole lesson of the last two days.
+            preceding = "\n".join(_LINES[max(0, n.lineno - 10):n.lineno])
+            if "NOT _schedule_task" in preceding:
+                continue
+            leaks.append(f"{node.name} (line {n.lineno})")
+    check("every startup scheduler goes through _schedule_task, or declares why not",
+          not leaks,
+          f"bare create_task in: {leaks} — route it through _schedule_task, or "
+          f"write '# NOT _schedule_task' above it with the reason. An undeclared "
+          f"exemption is indistinguishable from an oversight.")
 
 
 def test_the_switch_declines_and_closes_the_coroutine() -> None:
@@ -122,6 +133,54 @@ def test_the_app_still_schedules_its_loops_by_default() -> None:
                         env=env, capture_output=True, text=True, timeout=300)
     off = (r2.stdout + r2.stderr).count("loop scheduled")
     check("and the switch actually silences them", off == 0, f"{off} still scheduled")
+
+
+
+def test_no_awaited_task_is_routed_through_the_switch() -> None:
+    """THE 2026-08-13 deadlock, generalised.
+
+    The switch was applied to all 31 startup create_tasks including the MCP
+    session manager, whose handler does:
+
+        _mcp_task = _schedule_task(_run())
+        await _ready.wait()          # _ready is set INSIDE _run()
+
+    Declining to schedule closed the coroutine, `_ready` was never set, and the
+    boot blocked forever — preflight hung on the smoke test with no output, on
+    a machine where `mcp` is installed. It passed in a sandbox where the module
+    is absent and that whole branch never runs, which is why reading the code
+    was the only thing that could find it.
+
+    THE RULE: **a task whose completion the startup path AWAITS can never be
+    optional.** Switching it off does not skip work, it deadlocks the boot. So
+    infrastructure goes through `_asyncio.create_task` directly; only
+    fire-and-forget data loops go through the switch."""
+    import ast
+    src = (_ROOT / "src/api/main.py").read_text(encoding="utf-8")
+    lines = src.splitlines()
+    offenders = []
+    for n in ast.walk(ast.parse(src)):
+        if isinstance(n, ast.Call) and getattr(n.func, "id", "") == "_schedule_task":
+            window = "\n".join(lines[n.lineno: n.lineno + 6])
+            if "await " in window and (".wait()" in window or "_ready" in window):
+                offenders.append(n.lineno)
+    check("no _schedule_task result is awaited by the startup path",
+          not offenders,
+          f"lines {offenders} — declining to schedule these deadlocks the boot "
+          f"instead of skipping work; use _asyncio.create_task directly")
+
+
+def test_the_mcp_session_manager_is_exempt() -> None:
+    """Named explicitly, because it is the one that bit and a future refactor
+    that folds it back into the switch would reproduce the deadlock exactly."""
+    src = (_ROOT / "src/api/main.py").read_text(encoding="utf-8")
+    blk = src.split("async def _run():")[1][:1200] if "async def _run():" in src else ""
+    check("MCP task uses create_task, not the switch",
+          "_mcp_task = _asyncio.create_task(_run())" in src,
+          "the MCP session manager is infrastructure the boot awaits")
+    check("and the reason is recorded at the site",
+          "deadlocks the boot" in src or "block forever" in src,
+          "a future refactor needs to know why this one is different")
 
 
 if __name__ == "__main__":

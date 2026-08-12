@@ -1133,7 +1133,16 @@ try:
                 _ready.set()
                 await _mcp_stop.wait()
 
-        _mcp_task = _schedule_task(_run())
+        # NOT _schedule_task. This is INFRASTRUCTURE, not a background data
+        # loop, and the line below AWAITS it: `_ready` is set inside `_run()`,
+        # so declining to schedule makes `await _ready.wait()` block forever.
+        # That is exactly what happened on 2026-08-13 — the kill switch was
+        # applied to all 31 startup create_tasks indiscriminately, including
+        # this one, and preflight hung on the boot smoke with no output at all.
+        #
+        # THE RULE: a task whose completion the startup path AWAITS can never be
+        # optional. Switching it off does not skip work, it deadlocks the boot.
+        _mcp_task = _asyncio.create_task(_run())
         await _ready.wait()
         print("[MCP] ✅ streamable-HTTP live at /mcp  · legacy SSE at /mcp-sse/sse")
 
