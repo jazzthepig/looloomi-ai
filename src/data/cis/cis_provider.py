@@ -20,6 +20,9 @@ import time
 
 _logger = logging.getLogger(__name__)
 
+
+# One-shot warn flag — see the GITHUB_TOKEN note in the dev-activity fetcher.
+_GH_TOKEN_WARNED = False
 # Add backend to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -842,10 +845,34 @@ async def fetch_github_activity() -> Dict[str, int]:
         return cached
 
     results: Dict[str, int] = {}
+    # AUTHENTICATE (2026-08-12, S-145). Unauthenticated GitHub allows 60 requests
+    # per HOUR per IP. This fetches ~25 repos per cycle and the cycle runs several
+    # times an hour, so the quota is gone inside the first run and every call after
+    # that returns 403 — measured in the Mac log: 25 × "403 rate limit exceeded",
+    # every cycle, all night. A token raises the limit to 5,000/hr.
+    #
+    # The cost was not only the missing data. Each 403 is still a round trip, so
+    # the dev-activity branch burned its whole 3s budget failing, which contributed
+    # to the universe build exceeding its 12s budget — and THAT is what turned a
+    # missing pillar into a total outage of every downstream writer.
+    _gh_token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN") or ""
     _gh_headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
+    if _gh_token:
+        _gh_headers["Authorization"] = f"Bearer {_gh_token}"
+    else:
+        # Say it ONCE per process, at WARNING. A per-repo log line for a condition
+        # that is identical across 25 repos is noise that hides the signal.
+        global _GH_TOKEN_WARNED
+        if not _GH_TOKEN_WARNED:
+            _GH_TOKEN_WARNED = True
+            _logger.warning(
+                "[CIS] GITHUB_TOKEN unset — GitHub allows 60 req/hr unauthenticated "
+                "and this needs ~25/cycle, so dev-activity will 403 and default. "
+                "Set GITHUB_TOKEN (a classic PAT with NO scopes is enough for "
+                "public repo stats) to restore it.")
 
     async def _fetch_one(client: httpx.AsyncClient, asset_id: str, repo: str):
         try:

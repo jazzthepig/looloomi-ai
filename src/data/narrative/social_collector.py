@@ -127,6 +127,51 @@ _NEGATIVE_KW = [
     "hack", "warning", "risk", "correction",
 ]
 
+# ── ONE feed, fetched ONCE (2026-08-12, S-145) ───────────────────────────────
+# CryptoPanic's RSS is a single GLOBAL feed — it has no per-coin variant. But
+# `fetch_news_sentiment` was called once per asset and cached under
+# `news_sentiment:{coin_id}`, so 25 assets produced 25 identical GETs of the same
+# URL within about two seconds. Measured in the Mac-side log: roughly half came
+# back 429, and the ones that succeeded made the next ones more likely to fail.
+#
+# The per-coin cache is not wrong — the SENTIMENT differs per coin because the
+# keyword filter differs. What was wrong is that the cache sat downstream of the
+# fetch, so it only ever deduplicated the parsing, never the network call.
+#
+# Two separate caches now: the FEED (global, one key) and the SENTIMENT (per
+# coin). And a breaker, because a 429 answered by an immediate retry from the
+# next asset in the loop is how a rate limit becomes an outage.
+_FEED_CACHE: dict = {"xml": None, "ts": 0.0}
+_FEED_TTL_S = 300.0
+_FEED_BREAKER: dict = {"until": 0.0}
+_FEED_COOLDOWN_S = 600.0
+
+
+async def _cryptopanic_feed() -> str | None:
+    """The RSS body, fetched at most once per TTL across ALL callers."""
+    import time as _t
+    now = _t.time()
+    if _FEED_CACHE["xml"] is not None and (now - _FEED_CACHE["ts"]) < _FEED_TTL_S:
+        return _FEED_CACHE["xml"]
+    if now < _FEED_BREAKER["until"]:
+        return None                       # cooling down after a 429; do not add load
+    try:
+        client = _get_misc_client()
+        r = await client.get(CRYPTO_PANIC_RSS, timeout=15)
+        if r.status_code == 429:
+            _FEED_BREAKER["until"] = now + _FEED_COOLDOWN_S
+            _logger.warning("[social_collector] CryptoPanic 429 — breaker open for "
+                            "%.0fs (a 429 retried by the next asset in the loop is "
+                            "how a rate limit becomes an outage)", _FEED_COOLDOWN_S)
+            return _FEED_CACHE["xml"]     # serve the last good body if we have one
+        r.raise_for_status()
+        _FEED_CACHE["xml"], _FEED_CACHE["ts"] = r.text, now
+        return r.text
+    except Exception as e:
+        _logger.warning("[social_collector] CryptoPanic fetch failed: %s", e)
+        return _FEED_CACHE["xml"]
+
+
 async def fetch_news_sentiment(coin_id: str = None, min_posts: int = 5) -> dict:
     """
     Fetch recent news from CryptoPanic RSS and compute basic sentiment score.
@@ -139,10 +184,14 @@ async def fetch_news_sentiment(coin_id: str = None, min_posts: int = 5) -> dict:
         return cached
 
     try:
-        client = _get_misc_client()
-        r = await client.get(CRYPTO_PANIC_RSS, timeout=15)
-        r.raise_for_status()
-        xml_text = r.text
+        xml_text = await _cryptopanic_feed()
+        if xml_text is None:
+            return _cache_set(key, {
+                "coin_id": coin_id, "sentiment_score": 50,
+                "positive_count": 0, "negative_count": 0, "total_count": 0,
+                "data_status": "feed_unavailable",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
 
         # Parse basic RSS — just look for <title>...</title>
         import re
