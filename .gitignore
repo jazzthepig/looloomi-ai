@@ -41,7 +41,13 @@ reports/
 # (thresholds, cell tables → Supabase or env), not as import targets.
 scripts/backtest_q_override.py
 scripts/tests/test_backtest_q_override_smoke.py
-src/research/validation/r77_episode_vdb_cluster.py
+# r77_episode_vdb_cluster.py was listed here on 2026-08-12 and REMOVED the same
+# night: src/api/main.py:1379 imports it, unguarded, for the C5 clock endpoint.
+# The rule above — "is it imported by tracked code", not "is it a strategy" —
+# was violated in the commit that introduced it, by its own author, after a grep
+# that came back empty. test_git_tree_is_deployable caught it before the push.
+# Its calibrated constants (BOUNDARY_THRESHOLD_DEFAULT etc.) belong in
+# strategy_params like C2/C3's; the MODULE stays tracked because main.py needs it.
 
 # ── Agent/harness churn cleanup (2026-06-25) — local operational noise, never commit ──
 health-check-*.md
