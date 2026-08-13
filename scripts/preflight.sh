@@ -11,6 +11,15 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# The boot probe must not run the app's daily work (S-161). Booting the app fires
+# 30 background loops into Moralis, CoinGecko Pro, Binance and the paper books —
+# instant with no network egress, a full daily cycle on a laptop with internet,
+# which is why preflight stalled with [HEARTBEAT] as its last line. Suppression
+# lives in scripts/smoke_test.py and filters by coroutine name: the 30 *_loop
+# tasks are skipped, the MCP session manager (_run) is not, because the startup
+# path awaits it and skipping it deadlocks the boot. src/api/main.py is untouched.
+export DISABLE_BACKGROUND_LOOPS=1
+
 echo "→ [0/3] test-runner dependencies ..."
 # `set -e` means the FIRST failure aborts, so a missing dependency midway through
 # silently skips every check after it. On 2026-08-09 test_venue_consolidation (one of
@@ -32,6 +41,7 @@ INTERNAL_TOKEN=preflight ENVIRONMENT=ci python3 scripts/smoke_test.py
 
 echo "→ [3/3] discipline + schema-drift guard (philosophy compiled to CI, 2026-07-27) ..."
 # 3a. strategy discipline — cause/OOS/paper/regime evidence floor on every SHIP record
+python3 -m tests.test_the_boot_probe_does_not_run_the_app
 python3 -m tests.test_strategy_discipline
 # 3a-bis. resilience — the 2026-07-29 P0 (Supabase saturation → 33s hangs → retry storm,
 #         while /health lied "healthy"). Guards: no retry on timeout, breaker opens, fails
