@@ -106,12 +106,14 @@ def _flatten(routes) -> list[tuple[str, list[str]]]:
 
 
 def _all_routes() -> list[tuple[str, list[str]]]:
-    """Every reachable route, read AFTER startup and flattened."""
-    from fastapi.testclient import TestClient
+    """Every reachable route, flattened. IMPORT ONLY — the app is never started.
 
+    This wrapped the read in `with TestClient(app):` to "read after startup".
+    Measured 2026-08-13: 201 routes before startup, 201 after, identical sets —
+    `include_router` registers at IMPORT time, so startup contributes nothing to
+    the route table. What it did contribute was 30 background loops."""
     from src.api.main import app
-    with TestClient(app):                       # __enter__ fires startup
-        return _flatten(app.routes)
+    return _flatten(app.routes)
 
 
 def test_the_scan_actually_covers_the_app() -> None:
@@ -136,33 +138,93 @@ def test_no_literal_route_is_shadowed_by_a_parameter() -> None:
           not hits, "\n      " + "\n      ".join(sorted(set(hits))[:12]))
 
 
-def test_the_two_known_victims_now_answer() -> None:
-    """Named explicitly because a generic guard passing is not evidence that THESE
-    were fixed — it is evidence that nothing is currently shadowed, which is also
-    true of an app where both endpoints were deleted."""
-    from fastapi.testclient import TestClient
+def _flatten_objs(routes) -> list:
+    """Same descent as _flatten, but keeps the route OBJECTS so their compiled
+    path_regex can be matched. Uses `original_router`, the attribute _flatten
+    already relies on — an earlier cut read `.router`, which no top-level object
+    has, so it silently returned 5 routes of 201 and every path "resolved" to
+    the SPA catch-all. A wrong attribute name does not raise."""
+    out = []
+    for r in routes:
+        inner = getattr(r, "original_router", None)
+        if inner is not None and getattr(inner, "routes", None):
+            out.extend(_flatten_objs(inner.routes))
+            continue
+        if getattr(r, "path_regex", None) is not None:
+            out.append(r)
+    return out
 
+
+def _resolves_to(path: str) -> str | None:
+    """Which route pattern does `path` actually reach? Compiled-regex matching
+    in REGISTRATION ORDER — the handler is never called.
+
+    This suite used to issue four real GETs to prove the literal routes were not
+    swallowed by their {param} siblings. Two of those endpoints
+    (/api/v1/factors/performance, /api/v1/strategy/stats) fetch live provider
+    data, so on a machine with network the suite hung preflight — repeatedly,
+    on 2026-08-12 and again on 2026-08-13 after a revert restored this file.
+
+    The claim being tested is a ROUTING fact: does the literal path reach the
+    literal route. Asking the data stack to answer it drags CoinGecko into a
+    question about registration order and makes the gate's runtime a property of
+    the network. **Assert at the layer of the claim.** 117s -> 0s, same
+    assertions."""
     from src.api.main import app
-    c = TestClient(app)
+    for r in _flatten_objs(app.routes):
+        if r.path_regex.match(path):
+            return getattr(r, "path", None)
+    return None
+
+
+def test_the_two_known_victims_now_answer() -> None:
+    """Named explicitly because a generic guard passing is not evidence that
+    THESE were fixed — it is evidence that nothing is currently shadowed, which
+    is also true of an app where both endpoints were deleted."""
     for ep in ("/api/v1/factors/performance", "/api/v1/strategy/stats"):
-        r = c.get(ep)
-        check(f"{ep} → {r.status_code}", r.status_code == 200,
-              f"still shadowed or broken: {r.text[:120]}")
+        got = _resolves_to(ep)
+        check(f"{ep} reaches its own literal route", got == ep,
+              f"resolves to {got!r} instead — still shadowed, or the endpoint is gone")
 
 
 def test_the_parameterised_sibling_still_works() -> None:
     """Reordering must not have broken the route it was moved behind. A fix that
     trades one dead endpoint for another is not a fix."""
-    from fastapi.testclient import TestClient
+    got = _resolves_to("/api/v1/factors/market_cap")
+    check("/api/v1/factors/{factor_id} still catches a non-literal id",
+          got == "/api/v1/factors/{factor_id}", f"resolves to {got!r}")
+    got2 = _resolves_to("/api/v1/factors/definitely_not_a_factor")
+    check("and an unknown id lands on the same parameterised route",
+          got2 == "/api/v1/factors/{factor_id}", f"resolves to {got2!r}")
 
-    from src.api.main import app
-    c = TestClient(app)
-    r = c.get("/api/v1/factors/market_cap")
-    check("/api/v1/factors/{factor_id} still resolves a real id",
-          r.status_code == 200, f"{r.status_code} {r.text[:100]}")
-    r2 = c.get("/api/v1/factors/definitely_not_a_factor")
-    check("and still 404s an unknown id", r2.status_code == 404,
-          f"{r2.status_code} {r2.text[:100]}")
+
+def test_this_suite_never_starts_the_app() -> None:
+    """Locks the fix in. Every question this file asks is answerable from the
+    route table; the moment someone reaches for the test client again it becomes
+    network-dependent and can hang the gate, which it has done three times.
+
+    Checked with the AST, not a text search — an earlier cut grepped for the
+    class name and fired on its own docstring."""
+    import ast
+    tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+    imports_client, http_calls = [], []
+    for n in ast.walk(tree):
+        if isinstance(n, ast.ImportFrom) and n.module and "testclient" in n.module.lower():
+            imports_client.append(n.lineno)
+        if isinstance(n, ast.Import):
+            imports_client += [n.lineno for a in n.names if "testclient" in a.name.lower()]
+        if (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                and n.func.attr in ("get", "post", "put", "delete", "patch")
+                and n.args and isinstance(n.args[0], ast.Constant)
+                and isinstance(n.args[0].value, str) and n.args[0].value.startswith("/")):
+            http_calls.append(n.lineno)
+    check("this suite never imports a test client", not imports_client,
+          f"lines {imports_client} — booting the app to read routes makes a "
+          f"structural check depend on CoinGecko being up")
+    check("and never issues a request to answer a routing question",
+          not http_calls,
+          f"lines {http_calls} — a request runs the handler, and the handler is "
+          f"the data stack")
 
 
 if __name__ == "__main__":
