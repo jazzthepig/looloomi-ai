@@ -35,7 +35,10 @@ const MobileApp             = lazy(() => import("./components/MobileApp"));
 const QuantMonitor          = lazy(() => import("./components/QuantMonitor"));
 const EstAlphaSection       = lazy(() => import("./components/EstAlphaSection"));
 const MyPortfolio           = lazy(() => import("./components/MyPortfolio"));
-import DiagnoseHome from "./components/DiagnoseHome";
+// DiagnoseHome import removed 2026-08-13 — diagnose route retired, Portfolio
+// owns the "feed your book" entry. Component preserved in components/ for
+// future single-asset diagnose view.
+// import DiagnoseHome from "./components/DiagnoseHome";
 const RiskMeter             = lazy(() => import("./components/RiskMeter"));
 const StrategiesPage        = lazy(() => import("./components/StrategiesPage"));
 const MultiFactorStrategies = lazy(() => import("./components/MultiFactorStrategies"));
@@ -181,19 +184,11 @@ function DesktopApp() {
         className="cc-main"
         style={{ flex: 1, overflowY: "auto", height: "100vh", position: "relative", zIndex: 1 }}
       >
-        {/* Diagnose — the front door (iPod / Fusion #1). Your book, read upstream of price,
-            with the out-of-circle fragility line. Everything else is depth behind this. */}
-        <div style={{ display: activeSection === "diagnose" ? "block" : "none" }}>
-          {visited.has("diagnose") && (
-            <section style={contentPad}>
-              <Suspense fallback={<SectionLoader label="READING YOUR BOOK…" />}>
-                <DiagnoseHome embedded />
-                <div style={{ height: 28 }} />
-                <RiskMeter />
-              </Suspense>
-            </section>
-          )}
-        </div>
+        {/* Diagnose route retired 2026-08-13 — overlapped 1:1 with Portfolio's
+            top section (DiagnoseHome + RiskMeter). Portfolio is now the canonical
+            entry; the "feed your book" affordance lives there. DiagnoseHome.jsx
+            is kept in components/ in case it's needed for a focused single-asset
+            diagnose view later. */}
 
         {/* Intelligence */}
         <div style={{ display: activeSection === "intelligence" ? "block" : "none" }}>

@@ -28,25 +28,24 @@ import { T, FONTS } from "../tokens";
 //    framework is squarely inside it — it tells a competitor what to clone and an
 //    allocator something they did not ask to know.
 //
-// STILL WRONG, deliberately left for a product decision (2026-08-13):
-//   · Landing is now CIS Engine (was Diagnose until today — fixed). Diagnose
-//     remains in the nav for users who arrive knowing what they want to feed.
-//   · Nine peers, no hierarchy: every item claims equal importance, so none is
-//     the point, so a first visitor cannot tell what we sell.
-//   · "CIS Engine" / "Protocols" / "Vault" are our module names, published.
+// IA order locked 2026-08-13 (post-launch review):
+//   · CIS Engine is the front door — first item, canonical landing route.
+//   · Diagnose route was retired (it duplicated Portfolio's top section).
+//     Portfolio now owns the "feed your book" affordance.
+//   · Nine peers stays "no formal hierarchy" downstream of CIS Engine — that's
+//     a depth-of-info problem for the product team, not an ordering bug.
 export const NAV_ITEMS = [
-  { id: "diagnose", label: "Diagnose", icon: "◉", sub: "Your book, read upstream of price" },
+  { id: "cis", label: "CIS Engine", icon: "◆", sub: "Scoring · Leaderboard",
+    children: [
+      { id: "cis.leaderboard", label: "Leaderboard" },
+      { id: "cis.radar",       label: "Asset Radar" },
+    ]
+  },
   { id: "intelligence", label: "Intelligence", icon: "◈", sub: "Signals · Macro · Funding",
     children: [
       { id: "intelligence.signals", label: "Signal Feed" },
       { id: "intelligence.macro",   label: "Macro" },
       { id: "intelligence.events",  label: "VC Funding Flows" },
-    ]
-  },
-  { id: "cis", label: "CIS Engine", icon: "◆", sub: "Scoring · Leaderboard",
-    children: [
-      { id: "cis.leaderboard", label: "Leaderboard" },
-      { id: "cis.radar",       label: "Asset Radar" },
     ]
   },
   { id: "strategies", label: "Strategies", icon: "▲", sub: "Autonomous · Multi-Factor" },
