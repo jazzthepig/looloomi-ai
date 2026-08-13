@@ -154,10 +154,23 @@ def test_the_rule_is_stated_where_the_nav_is_defined() -> None:
     """The nav subtitle is where this last broke ("IC Loop · Freqtrade · Live"),
     so the reason lives next to it rather than only in CLAUDE.md — an author
     editing a label should not have to have read a different file that morning."""
-    src = (_SRC / "App.jsx").read_text(encoding="utf-8")
-    check("App.jsx cites hard rule #8 at the nav definition",
-          "hard rule #8" in src and "implementation" in src,
-          "the reason must sit next to the thing it governs")
+    # FOLLOW THE NAV, do not hardcode the file (2026-08-13). This asserted the
+    # citation was in App.jsx. A design-audit refactor then moved NAV_ITEMS into
+    # Sidebar.jsx and correctly took the comment with it — so the code did the
+    # right thing and the guard failed, because the guard named a location while
+    # the rule is about ADJACENCY. A guard that points at where something used
+    # to be reports a violation when the codebase improves.
+    defining = [f for f in sorted(_SRC.rglob("*.jsx"))
+                if "NAV_ITEMS = " in f.read_text(encoding="utf-8")]
+    check("exactly one file defines NAV_ITEMS", len(defining) == 1,
+          f"{[str(f.relative_to(_SRC)) for f in defining]} — two nav definitions "
+          f"means two places a label can leak from")
+    if defining:
+        src = defining[0].read_text(encoding="utf-8")
+        check(f"{defining[0].name} cites hard rule #8 beside the nav it defines",
+              "hard rule #8" in src and "implementation" in src,
+              "the reason must sit next to the thing it governs — an author "
+              "editing a label should not have to have read CLAUDE.md that morning")
 
 
 def test_tier_meaning_survived_the_rewrite() -> None:
