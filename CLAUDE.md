@@ -8,14 +8,21 @@
 
 | Question | Read | Write discipline |
 |---|---|---|
-| What's true right now / in flight | `PROJECT_STATE.md` | update same turn work lands; header last |
+| What's true right now / in flight | `PROJECT_STATE.md` | **≤80,000 chars**; update same turn work lands; `**Last updated:**` line stays at the TOP |
 | Long-term facts index | `MEMORY.md` | **≤3,400 CHARACTERS** (not bytes — the file is bilingual and CJK costs 3 B/char; reading time scales with chars). One line per fact; evict stale; **if a test already enforces it, the test is the memory** |
-| Experiment truth (R/S/M-numbers) | `REFUTATION_LEDGER.md` | APPEND-ONLY at EOF; claim heading before body |
-| Cross-lane coordination | `MINIMAX_SYNC.md` (gitignored) | append §sections; syncs Mac-side, not via git |
+| Why a thing landed / build log | `PROJECT_STATE_LOG.md` | append-only; **NOT read at session start** — grep it, don't read it |
+| Experiment truth (R/S/M-numbers) | `REFUTATION_LEDGER.md` | APPEND-ONLY at EOF; claim heading before body; **grep, never read whole** (577k chars) |
+| Cross-lane coordination | `MINIMAX_SYNC.md` (gitignored) | **≤80,000 chars**; append §sections; syncs Mac-side, not via git. Anything dated >5d and settled → `MINIMAX_SYNC_ARCHIVE.md`; **still open ⇒ re-raise in §IN-FLIGHT, don't leave it in place** |
 | Strategy truth / frozen cells | `STRATEGY_PLAYBOOK.md` | |
 | The soul / north star | `ARCHITECTURE.md` | read when a decision touches what we ARE |
 | Behavioral-edge doctrine | `docs/TRADER_TOM_DOCTRINE.md` | read before building any sleeve |
 | Full history | `git log` | |
+
+**Cold-start budget is enforced, not advisory** (`tests/test_cold_start_contract.py`, S-165).
+Only MEMORY.md was capped, so the cost moved next door: PROJECT_STATE reached 315k chars
+(~99k tokens **per lane per session**) and MINIMAX_SYNC 150k, while both contained headings
+that already called themselves history and neither had ever been split. A cap with too narrow
+a scope doesn't just miss things — it redirects attention away from them.
 
 ## Who I'm working with
 
