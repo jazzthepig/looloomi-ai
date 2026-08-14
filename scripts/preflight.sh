@@ -18,6 +18,43 @@ cd "$(dirname "$0")/.."
 # lives in scripts/smoke_test.py and filters by coroutine name: the 30 *_loop
 # tasks are skipped, the MCP session manager (_run) is not, because the startup
 # path awaits it and skipping it deadlocks the boot. src/api/main.py is untouched.
+# ── THE GATE RUNS WITHOUT PRODUCTION CREDENTIALS (S-163, 2026-08-13) ─────────
+#
+# Jazz asked: "他们一定需要在吗? Railway 有了不就可以了吗?" — and the question
+# inverted the diagnosis. The night's story had been "Seth's sandbox lacks
+# credentials, so his green is unrepresentative". Measured, the causality runs
+# the other way:
+#
+#   .env has SUPABASE_KEY empty  → every loop fails on its first DB call → 48s
+#   a machine that HAS the key   → loops connect, proceed to Moralis /
+#                                  CoinGecko / Binance → full daily cycle → hang
+#
+# **Having the credentials is what made the gate slow and machine-dependent.**
+# Lacking them was not a deficiency, it was the correct state for a gate.
+#
+# Measured with every production credential stripped: exit 0, 49s, ZERO outbound
+# HTTP requests, and no test file reads SUPABASE_KEY from the environment. The
+# suites check code — imports, invariants, AST, pure functions. Nothing here
+# needs a live database, and anything that did would be testing the deployment,
+# not the change.
+#
+# So the gate now strips them itself. Same result on every machine, whatever is
+# in .env or exported in the shell. Deployment verification belongs AFTER the
+# push, against the deployed URL — that is a different question with a different
+# instrument.
+#
+# ⚠ THE HAZARD THIS INTRODUCES, stated so it is not discovered later: a suite
+# that silently no-ops without credentials would now pass vacuously. That is the
+# same shape as a column displayed and never written. If a check ever genuinely
+# needs a live backend, it does not belong in preflight — it belongs in the
+# post-deploy verifier, where its absence is visible.
+_PF_STRIP_CREDS=(SUPABASE_KEY SUPABASE_SERVICE_KEY UPSTASH_REDIS_REST_URL
+                 UPSTASH_REDIS_REST_TOKEN TELEGRAM_BOT_TOKEN TELEGRAM_ALERT_CHAT_ID
+                 GITHUB_TOKEN MORALIS_API_KEY COINGECKO_API_KEY ETHERSCAN_API_KEY
+                 HELIUS_API_KEY)
+for _v in "${_PF_STRIP_CREDS[@]}"; do unset "$_v"; done
+echo "  ⓘ gate runs credential-free (${#_PF_STRIP_CREDS[@]} production vars stripped)"
+
 export DISABLE_BACKGROUND_LOOPS=1
 
 echo "→ [0/3] test-runner dependencies ..."
@@ -287,6 +324,31 @@ python3 -m tests.test_no_stack_leakage_on_user_surfaces
 #                request path (the 2026-07-29 saturation P0) and that the audit write
 #                REPORTS whether it landed.
 python3 -m tests.test_metering_is_billable
+# 3a-octodecies. the research intake accepts evidence, never conclusions (2026-08-15,
+#                S-164). Measured against the live DB: strategy_records and
+#                asset_embeddings have RLS on with ZERO policies, experiment_runs has
+#                SELECT only. Every key except service_role is refused — correctly.
+#                Minimax-C was asked to land 172 mined artefacts down a path that was
+#                closed, and found out by collision, because nothing said it was
+#                closed. The service_role key is deliberately not shared with the
+#                mining lanes, so /internal/research-intake opens the write path the
+#                same way /internal/cis-scores already works: one credential boundary,
+#                one normalizer, one schema echo.
+#                WHAT THIS GUARDS is the asymmetry that makes that safe: a lane may
+#                submit evidence of any strength and may NOT submit the conclusion.
+#                SHIP is what test_strategy_discipline earns over the committed record
+#                — documented cause, oos_survival=True, >=60d paper trade,
+#                regime-conditional reporting. An intake that accepted a pre-declared
+#                verdict would be a route around the only gate we have, and a bar that
+#                can be asserted past is not a bar. Behavioural, not frozen: it asserts
+#                that NOTHING submitted authorises deployment, over spellings nobody
+#                has written yet — a frozen alias list would pass the day somebody adds
+#                the 16th, which is exactly how the C3 table passed while transposed.
+#                Also pins the upsert (retries must not duplicate — duplicates in
+#                experiment_runs corrupt every base rate we make decisions with) and
+#                that a declined write never reports accepted rows (the 80-day dead
+#                signal_outcomes pipeline, rebuilt on purpose here so it cannot recur).
+python3 -m tests.test_intake_cannot_declare_its_own_verdict
 # 3a-duodevicies. the moat is claimed only where it is measured (2026-08-12, S-141).
 #                ARCHITECTURE.md line 164: "A signal we have not run through our own
 #                loop is one we must not claim. Claiming it unproven is
