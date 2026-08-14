@@ -1992,3 +1992,29 @@ and committed but **NOT run** (OPEN RISK 1).
   neutral tape → 5 liquid high-conviction longs (honest — few clear the bar); shorts appear when permitted.
   This closes Sense→Judge→ACT in paper. Real capital = the one open arc, and it's Jazz's (per the plan).
 
+
+---
+
+- **2026-08-15 DASHBOARD UI COMMIT CHAIN (227edcd → 6abd85f → ef8f0cb) — Diagnose-route retired.** Three commits,
+  one user-facing change. (a) 227edcd extracted 5 components from `dashboard/src/App.jsx` (1046→445) and
+  shipped source changes only — but its commit message claimed landing=cis.leaderboard while `Sidebar.jsx`
+  still put Diagnose as NAV_ITEMS[0] and the diagnose route duplicated Portfolio's top section 1:1. The
+  source-only commit was the first execute mistake: **commit-message claims did not match the diff**;
+  should have grepped activeSection==="diagnose" and NAV_ITEMS pre-push. (b) 6abd85f was the corrective
+  diff (Diagnose route block removed + sidebar reordered, CIS Engine to first) — second execute mistake:
+  **source changed but `dashboard/dist/` not rebuilt**, so Railway kept serving stale `app-CuMyAShv.js`
+  with Diagnose still wired in. preflight.sh covers Python imports + boot smoke + discipline but does
+  NOT check Vite bundle freshness — a real gap. Verified by deploy-verifier after the fact (bundle
+  `grep diagnose` showed 7 hits). (c) ef8f0cb rebuilt `dashboard/dist/` (43 files, Vite 1.75s, new
+  bundle `app-DRjSSEKJ.js`), pushed; bundle now live, `grep diagnose` on the live CDN bundle = 0 hits.
+  Preserved 1 `Diagnose` hit is the lazy-imported `DiagnoseHome` wrapper inside Portfolio's chunk
+  (component kept on disk for a future single-asset diagnose view).
+  **Two lessons, not one**. Lesson #61 (provisional): commit messages that describe behavior ("landing is X")
+  need a grep verification against the diff before they're allowed to ship — the message becomes the
+  contract, and the diff is the receipt. Lesson #62 (provisional): `scripts/preflight.sh` should grow a
+  stage that runs `vite build` and diffs the new bundle hash against the latest pushed one, refusing
+  to green-light when there's a gap. Both lessons are tagged "provisional" because one near-miss each
+  is not enough to canonize a rule — re-evaluate after the second occurrence. DiagnoseHome.jsx itself
+  is preserved in components/ as a future single-asset diagnose view; the route + the import + the
+  NAV_ITEMS entry are what retired.
+

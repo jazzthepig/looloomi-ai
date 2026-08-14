@@ -4,6 +4,9 @@
 without a service_role key; SHIP verdicts refused at the boundary). **S-165 cold-start split**:
 this file 315,708 → ~50,000 chars, history in `PROJECT_STATE_LOG.md`, capped by
 `test_cold_start_contract`. **S-163** preflight strips 11 production credentials before running.
+**Diagnose-route retired** (227edcd → 6abd85f → ef8f0cb, dashboard lane): Diagnose nav/route gone,
+CIS Engine at NAV_ITEMS[0], Portfolio owns "feed your book". Bundle-freshness gap in preflight.sh
+surfaced as a cross-lane IN-FLIGHT item (`MINIMAX_SYNC.md` §IN-FLIGHT) — lesson in `PROJECT_STATE_LOG.md`.
 
 > This header used to live 150 lines deep inside `## LANDED`, which is why it went stale without
 > anyone seeing it — the one line whose job is to tell you how old the file is was itself buried
