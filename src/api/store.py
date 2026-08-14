@@ -299,6 +299,48 @@ async def supabase_insert_table(table: str, rows: list) -> bool:
         return False
 
 
+async def supabase_upsert_table(table: str, rows: list, on_conflict: str) -> bool:
+    """Bulk UPSERT into any Supabase table, resolving duplicates on `on_conflict`.
+
+    Distinct from supabase_insert_table for exactly one reason: RETRIES (S-164).
+    The research intake receives batches from mining lanes that will resubmit —
+    on timeout, on a 502, on a rerun of the same script. An INSERT-only path
+    turns a retry into duplicate rows, and duplicate rows in experiment_runs do
+    not merely inflate a count, they corrupt every base rate computed from the
+    table. "17/29 refuted" is a number we make decisions with; it must not be a
+    function of how many times somebody ran a script.
+
+    Same role gate as the insert path — enforced at the write function, never at
+    the caller, because callers keep being added.
+    """
+    _refusal = refuse_write(f"{table} (upsert)")
+    if _refusal:
+        note_refusal(table, _refusal)
+        return False
+
+    if not _SB_URL or not _SB_KEY or not rows or not table or not on_conflict:
+        return False
+    url = f"{_SB_URL}/rest/v1/{table}?on_conflict={on_conflict}"
+    headers = {
+        "apikey":        _SB_KEY,
+        "Authorization": f"Bearer {_SB_KEY}",
+        "Content-Type":  "application/json",
+        # merge-duplicates is what makes this an UPSERT rather than a conflict 409.
+        "Prefer":        "resolution=merge-duplicates,return=minimal",
+    }
+    try:
+        resp = await _supabase_request_with_retry("POST", url, content=json.dumps(rows), headers=headers)
+        if resp and resp.status_code in (200, 201, 204):
+            _logger.info(f"[SUPABASE] Upserted {len(rows)} rows into {table} on {on_conflict}")
+            return True
+        if resp:
+            _logger.warning(f"[SUPABASE] Upsert into {table} failed: {resp.status_code} {resp.text[:200]}")
+        return False
+    except Exception as e:
+        _logger.warning(f"[SUPABASE] Upsert into {table} exception: {e}")
+        return False
+
+
 async def supabase_get_recent_scores(symbols: list, n: int = 30) -> dict:
     """Bulk-fetch last N CIS score rows per symbol from Supabase.
 
