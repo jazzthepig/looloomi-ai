@@ -9542,3 +9542,86 @@ MINIMAX_SYNC.md   150,491 → 62,333   08-10 之前 → MINIMAX_SYNC_ARCHIVE.md(
 是被重新提出,不是被原地保存。这一刀强制这件事发生。
 
 **Verdict.** SHIPPED. 每 lane 每 session 省约 12 万 token。
+
+---
+
+## S-166 — 11 张活代码正在写的表根本不存在(2026-08-15)
+
+**触发.** Jazz 跑我给的 `supabase_strategy_params.sql`,炸在
+`ERROR: 42P01: relation "beta_core_nav_size" does not exist`。
+我给的命令的前置条件我没查 —— 和 S-164 同一个错误,同一天,第二次。
+
+**但一个个撞会漏掉真相。** 全量比对 `scripts/*.sql` 声明的表 vs 数据库实有的表:
+
+```
+beta_core_nav_q, beta_core_nav_q_meta          C2 ⓠ sleeve
+beta_core_nav_size, beta_core_nav_size_meta    C3 size sleeve
+strategy_params                                S-151
+execution_intents, execution_outcomes          S-155
+fusion_paper_nav, fusion_paper_lifecycle
+crowd_clock_log                                                共 11 张
+```
+
+**PROJECT_STATE 的 header 写着** "C2 ⓠ + C3 size + C5 episode-code complete;
+79/79 smoke green"(2026-08-12)。**测试全绿,而两个 sleeve 连一行都写不进去,
+从来没有过,也不可能有过。**
+
+每一次这样的写入都返回 False 然后被吞掉 —— **和"还没有数据"完全无法区分**。
+这和 signal_outcomes 死 80 天、strategy library 躺在 24h-TTL Redis key 里是同一形状:
+**这个系统失败的样子,和它"还早"的样子长得一模一样。**
+
+**最重要的一点:我们早就知道了。** OPEN RISK #3(a) 自 2026-07-26 就写着:
+"A table that was never created. `scripts/supabase_strategy_records.sql` ... was
+never applied. `_pg_upsert()` POSTed to a nonexistent table, caught the exception,
+logged one WARNING, returned False."
+
+风险被写下来了,教训被记录了,**然后它又发生了 11 次** —— 因为被修的是那一张表,
+不是"没有任何东西比对代码写入的表集合与实际存在的表集合"这件事。
+**修掉实例而不修掉类别,就是把同一个 bug 重命名 11 次。**
+
+**为什么已有的守卫没抓到 —— 用它自己的话:**
+> `test_table_columns_match_the_code`:"That catches code-vs-declared drift.
+> It does NOT catch declared-vs-live drift — only the live catalog can, and
+> preflight is offline by contract. So ... `scripts/verify_live_schema.sql` is
+> the online half."
+
+缺口是**已知的、写下来的**,逃生口是一个"要有人记得跑"的 .sql 文件。
+那个文件自己的立论就是 *a rule nobody enforces is a wish* —— 应用到它自己的逃生口上。
+没人跑过。
+
+**做法 —— 两半,哪一半都不能空洞通过:**
+
+```
+离线(preflight)     src/api/schema_manifest.py 用 AST 扫源码 → manifest
+                     tests/test_every_written_table_exists.py 断言 manifest 与源码一致
+在线(deploy-verifier) GET /internal/schema-drift 断言 live catalog 与 manifest 一致
+```
+
+manifest 过期 → 离线那半炸。表缺失 → 在线那半炸。删掉 manifest → 两半都炸。
+preflight 保持离线(S-163),需要凭据的检查放在凭据本来就在的地方。
+
+**`supabase_table_exists` 是三值的(True/False/None),这是刻意的。** 布尔会把
+"表不存在"和"连不上 Supabase"压成同一个值 —— **而那次压缩正是让 11 张表藏了几周的机制。**
+一个网络抖动就报"missing"的漂移检查,会被所有人学会忽略。
+
+**扫描器自己的两次翻车,记下来因为它们是同一种病:**
+第一版正则把 TABLE 当子串匹配,吃进了 `NS_INVESTABLE = "investable_v1"`
+(INVES-**TABLE**),断言一个 namespace 字符串必须作为 Postgres 表存在。
+修它的第二版矫枉过正,连 `_TABLE` 本身都不匹配了。
+两个方向是同一个失败:**基于模式匹配而非语义地自信报告。**
+有假阳性的守卫会被静音,而**被静音的守卫比没有守卫更糟 —— 它还占着真守卫的位置。**
+
+**顺带发现,单独记.** `scripts/supabase_fusion_paper.sql` 里:
+```sql
+CREATE POLICY "fusion_paper_nav_insert" ON fusion_paper_nav FOR INSERT WITH CHECK (true);
+```
+**任何持 anon key 的人都能往这张前向 NAV 表插行。**
+这是 Lesson #71(cis_scores 全网可读且未被 advisor 标记)的形状,外加一个写入面。
+**一个谁都能写的账本不是 track record。** 建表时故意偏离了该文件,按
+`beta_core_nav` 的姿态:RLS on,零 policy,service_role only。
+那个 .sql 文件仍需修正,否则下一个跑它的人会把公开写入加回来。
+
+**Verdict.** SHIPPED. 11 张表已建(RLS on, service_role only),22 项守卫全绿,
+preflight 全绿。
+**未决:** `scripts/supabase_fusion_paper.sql` 的公开 INSERT policy 要改掉;
+C2/C3 的参数仍需 Mac 侧带外 seed(表现在有了)。
