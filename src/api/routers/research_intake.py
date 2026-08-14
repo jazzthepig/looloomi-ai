@@ -58,6 +58,58 @@ async def research_intake_schema():
     return canonical_schema()
 
 
+@router.get("/internal/schema-drift")
+async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-Token")):
+    """The ONLINE half of the schema guard (S-166) — does every table the code
+    writes to actually exist?
+
+    Measured 2026-08-15: ELEVEN did not, including both C2 and C3 sleeve NAV
+    tables, while PROJECT_STATE read "C2 ⓠ + C3 size complete; 79/79 smoke
+    green". Green tests, and nowhere to write a row.
+
+    preflight cannot answer this — it is offline by contract (S-163), and that
+    is the right trade. This process has the credentials, so this is where the
+    question belongs. The deploy-verifier calls it after every push.
+
+    Authenticated: the table list is architecture, and CLAUDE.md #8 keeps
+    internals off surfaces a competitor reads.
+    """
+    tok = _token()
+    if not tok or not x_internal_token or x_internal_token != tok:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    import json
+    from src.api.schema_manifest import manifest_path
+
+    try:
+        expected = sorted(json.loads(manifest_path().read_text())["write_tables"])
+    except Exception as e:                            # noqa: BLE001
+        return {"ok": False, "error": f"manifest unreadable: {type(e).__name__}: {e}",
+                "note": "regenerate with tests/test_every_written_table_exists.py"}
+
+    from src.api.store import supabase_table_exists
+    live, unknown = [], []
+    for t in expected:
+        got = await supabase_table_exists(t)
+        (live if got is True else unknown).append(t)
+
+    missing = [t for t in unknown]
+    return {
+        "ok": not missing,
+        "checked": len(expected),
+        "present": len(live),
+        "missing": missing,
+        # Naming the consequence, not just the count. "3 missing" reads like a
+        # config nit; "these sleeves cannot persist anything" is the actual fact.
+        "consequence": (
+            f"{len(missing)} table(s) the code writes to do not exist. Every write "
+            f"to them returns False and is swallowed — indistinguishable from "
+            f"'no data yet'. The sleeves depending on them have no forward record "
+            f"and cannot start one." if missing else
+            "every table the code writes to exists"),
+    }
+
+
 @router.post("/internal/research-intake")
 async def receive_research_batch(
     payload: dict,

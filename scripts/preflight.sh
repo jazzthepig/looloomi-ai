@@ -349,6 +349,30 @@ python3 -m tests.test_metering_is_billable
 #                that a declined write never reports accepted rows (the 80-day dead
 #                signal_outcomes pipeline, rebuilt on purpose here so it cannot recur).
 python3 -m tests.test_intake_cannot_declare_its_own_verdict
+# 3a-undevicies. every table the code writes to must exist (2026-08-15, S-166).
+#                Measured against the live DB: ELEVEN did not — both C2 and C3
+#                sleeve NAV tables, strategy_params, the execution log, the fusion
+#                paper book, crowd_clock_log. PROJECT_STATE read "C2 ⓠ + C3 size
+#                complete; 79/79 smoke green" while neither sleeve had anywhere to
+#                write a row. Every such write returns False and is swallowed,
+#                which is indistinguishable from "no data yet" — the same shape as
+#                the 80-day dead signal_outcomes pipeline and the strategy library
+#                in a 24h-TTL Redis key. The system's way of failing looks exactly
+#                like its way of being early.
+#                AND IT WAS ALREADY WRITTEN DOWN. OPEN RISK #3(a), since
+#                2026-07-26: "A table that was never created ... POSTed to a
+#                nonexistent table, caught the exception, logged one WARNING,
+#                returned False." That got fixed for ONE table; nothing compared
+#                the SET the code writes against the SET that exists, so it
+#                recurred eleven times.
+#                This is the OFFLINE half — the manifest matches what the source
+#                actually does, extracted by AST rather than hand-maintained.
+#                The online half is GET /internal/schema-drift, called by the
+#                deploy-verifier, because preflight is offline by contract (S-163)
+#                and a check needing credentials belongs where they already are.
+#                Neither half can pass vacuously: a stale manifest fails here, a
+#                missing table fails there, deleting the manifest fails both.
+python3 -m tests.test_every_written_table_exists
 # 3a-duodevicies. the moat is claimed only where it is measured (2026-08-12, S-141).
 #                ARCHITECTURE.md line 164: "A signal we have not run through our own
 #                loop is one we must not claim. Claiming it unproven is
