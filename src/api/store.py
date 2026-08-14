@@ -299,6 +299,36 @@ async def supabase_insert_table(table: str, rows: list) -> bool:
         return False
 
 
+async def supabase_table_exists(table: str) -> bool | None:
+    """Does this table exist? True / False / None (could not tell) — S-166.
+
+    THREE-VALUED ON PURPOSE. A boolean would collapse "the table is missing"
+    into "I could not reach Supabase", and that collapse is the bug this whole
+    check exists to catch: eleven missing tables hid for weeks behind writes
+    that returned False for reasons nobody distinguished. A drift report that
+    says "missing" when the network blipped trains everyone to ignore it.
+
+    Reads only — safe on a replica, no role gate.
+    """
+    if not _SB_URL or not _SB_KEY or not table:
+        return None
+    url = f"{_SB_URL}/rest/v1/{table}?select=*&limit=0"
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
+    try:
+        resp = await _supabase_request_with_retry("GET", url, headers=headers)
+        if resp is None:
+            return None
+        if resp.status_code in (200, 206):
+            return True
+        # PostgREST answers an unknown relation with 404 + PGRST205, and a
+        # permission problem with 401/403. Only the first means "absent".
+        if resp.status_code == 404 or "PGRST205" in (resp.text or ""):
+            return False
+        return None
+    except Exception:                                  # noqa: BLE001
+        return None
+
+
 async def supabase_upsert_table(table: str, rows: list, on_conflict: str) -> bool:
     """Bulk UPSERT into any Supabase table, resolving duplicates on `on_conflict`.
 
