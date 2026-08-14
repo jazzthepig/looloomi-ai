@@ -54,6 +54,7 @@ from src.api.routers.webhooks  import router as webhooks_router
 from src.api.routers.analytics import router as analytics_router
 from src.api.routers.trading import router as trading_router
 from src.api.routers.vector import router as vector_router
+from src.api.routers.research_intake import router as research_intake_router
 from src.api.routers.factors import router as factors_router
 from src.api.routers.discovery import router as discovery_router
 from src.api.routers.strategies import router as strategies_router
@@ -122,6 +123,10 @@ app.include_router(webhooks_router)
 app.include_router(analytics_router)
 app.include_router(trading_router)
 app.include_router(vector_router)
+# S-164: the write path for lanes holding no service_role key. Registered here
+# rather than under a prefix — /internal/* is flat by convention (cis-scores,
+# macro-brief, quant-push) and the submitting lanes build URLs by hand.
+app.include_router(research_intake_router)
 # ORDER IS LOAD-BEARING (2026-08-12, S-143). factors_router registers
 # /api/v1/factors/{factor_id}, a single-segment parameter that matches
 # /api/v1/factors/discovery — which lives in discovery_router. FastAPI
