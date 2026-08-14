@@ -9625,3 +9625,70 @@ CREATE POLICY "fusion_paper_nav_insert" ON fusion_paper_nav FOR INSERT WITH CHEC
 preflight 全绿。
 **未决:** `scripts/supabase_fusion_paper.sql` 的公开 INSERT policy 要改掉;
 C2/C3 的参数仍需 Mac 侧带外 seed(表现在有了)。
+
+---
+
+## S-167 — 装作否决的 policy 不否决(2026-08-15)
+
+**Claim.** 生产库上 20 张表对 anon 可读,其中包括前向记录本身;而 07-30 的安全加固
+"修好了"它们。
+
+**实测(`set local role anon`,不是推理):**
+
+```
+api_keys              anon 可读, 1 行
+signal_track_record   anon 可读, 836 行   ← 前向 track record
+experiment_runs       anon 可读, 43 行    ← 研究账本
+cis_scores            0 行(正确关闭)
+```
+
+ARCHITECTURE.md:"the scarce resource is verifiable forward track record —
+the validation apparatus IS the product."**那就是可以用浏览器 bundle 里那把 key 读到的东西。**
+
+**为什么 07-30 的加固没关掉.** 它加了一批叫 `<table>_service_only`、写着
+`USING (false)` 的 policy —— **读起来像否决**。但 Postgres 的 PERMISSIVE policy 是 OR:
+
+```
+api_keys_service_only USING(false)   OR   api_keys_select USING(true)   =  允许
+```
+
+**permissive policy 不能做减法。** 否决需要 `AS RESTRICTIVE`,或者把授权删掉。
+
+```
+Lesson #71  = "安全 linter 的沉默不是安全"
+S-167       = "读起来像否决的 policy 不是否决"
+```
+
+**后者更贵**,因为那条假否决让这张表**看起来被审计过了** —— 而看起来被检查过的东西,
+就不会再被检查。它撑过了 16 天和一次专门的安全 pass。
+
+**另一半:文件比生产更宽松。** 8 个迁移文件里 33 条公开写 + 23 条公开读授权,
+**线上一条都没有**。漂移方向是 file-more-permissive-than-production —— 危险的那个方向,
+因为这些文件幂等、就是设计来被重跑的,而 2026-08-15 当天真的有人重跑了一个(S-166)。
+任何人跑其中任一个,都会静默地在已加固的表上重开公开写。
+
+**做法.** 线上删掉 20 条公开读 + 4 条假否决(RLS 已开 + 零 policy = 除 service_role
+外全拒,这是 cis_scores 本来就有的姿态);7 个文件里 56 条授权全部改掉;
+`tests/test_no_sql_file_grants_public_access.py` 进 preflight。
+
+**验证前端不受影响:** `dashboard/src` 从不直连 Supabase,全部走 `/api/v1/*`(service_role)。
+关闭后实测 `/health` 200、`/api/v1/signals/track-record` 200 且 n=1579,anon 侧 10 张表全 0 行。
+
+**守卫抓到的两个 bug 都是我的,同一小时内:**
+
+1. **它匹配了自己刚写的注释** —— 那些 `-- S-167: was CREATE POLICY ... USING (true)`
+   的说明行,于是报告这些表仍然开着,而它们在同一文件上方三行已经关了。
+   **这是本仓库第 6 次守卫读到解释而不是被解释物。**前 5 次是 docstring,用 AST 解决;
+   SQL 这里没有 AST,改成先剥注释。**复发本身才是结论:把修复写下来,会产生一段
+   和缺陷形状完全一样的文本,任何把文件当扁平字符串读的检查器,迟早会把两者搞混。**
+
+2. **我加的 `_no_public_write ... FOR ALL TO public USING (false)` —— 正是这条 ledger
+   正在解释的那个陷阱本身。**我在写下"permissive 的 USING(false) 什么也不否决"的
+   同一小时,往文件里写了 24 条这样的 policy。
+   **知道一个陷阱,和把它编码成检查,是两种不同的状态,只有第二种能扛住下一个作者 ——
+   包括那个一小时后的我自己。**现在守卫会拒绝任何 permissive `USING(false)`。
+
+**顺带.** `supabase_setup.sql` 里两条叫 `"Allow service insert"` 的 policy 没有 `TO` 子句,
+所以实际授给 PUBLIC。**policy 的名字是注释,只有 `TO` 子句才是授权。**
+
+**Verdict.** SHIPPED。线上已关闭并实测;文件已改;preflight 守卫在位。
