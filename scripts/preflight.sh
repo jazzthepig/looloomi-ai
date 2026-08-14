@@ -373,6 +373,29 @@ python3 -m tests.test_intake_cannot_declare_its_own_verdict
 #                Neither half can pass vacuously: a stale manifest fails here, a
 #                missing table fails there, deleting the manifest fails both.
 python3 -m tests.test_every_written_table_exists
+# 3a-vicies. no .sql file grants PUBLIC read or write (2026-08-15, S-167).
+#            Measured live with `set local role anon`: api_keys readable (1 row),
+#            signal_track_record readable (836 rows), experiment_runs readable
+#            (43 rows). The last two ARE the product — ARCHITECTURE.md: "the
+#            scarce resource is verifiable forward track record; the validation
+#            apparatus IS the product." Readable with the key that ships in the
+#            browser bundle.
+#            WHY THE 2026-07-30 HARDENING MISSED IT: it added `<table>_service_only`
+#            policies with USING (false), which READ like denials. Postgres
+#            PERMISSIVE policies are OR'd — a permissive policy cannot subtract, so
+#            USING(false) OR USING(true) = allowed. Lesson #71 was "a linter's
+#            silence is not safety"; this is "a policy that reads like a denial is
+#            not a denial", and it is worse, because the false denial made the
+#            table look audited and audited things stop being checked.
+#            Separately: 33 write grants + 23 read grants to PUBLIC across 8
+#            migration files, none of them live. Drift ran FILE-MORE-PERMISSIVE-
+#            THAN-PRODUCTION — the dangerous direction, since these files are
+#            idempotent, exist to be re-run, and one WAS re-run that same day.
+#            Two of this guard's own findings were mine: it first matched the
+#            comments it had just written (the SIXTH guard-reads-its-own-prose bug
+#            here), and it caught three permissive USING(false) policies I added
+#            in the same hour as the ledger entry explaining why they do not work.
+python3 -m tests.test_no_sql_file_grants_public_access
 # 3a-duodevicies. the moat is claimed only where it is measured (2026-08-12, S-141).
 #                ARCHITECTURE.md line 164: "A signal we have not run through our own
 #                loop is one we must not claim. Claiming it unproven is

@@ -55,8 +55,14 @@ CREATE INDEX IF NOT EXISTS idx_cause_snapshots_pos_liq
 ALTER TABLE cause_snapshots_daily ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "cause_snapshots_select" ON cause_snapshots_daily;
 DROP POLICY IF EXISTS "cause_snapshots_insert" ON cause_snapshots_daily;
-CREATE POLICY "cause_snapshots_select" ON cause_snapshots_daily FOR SELECT USING (true);
-CREATE POLICY "cause_snapshots_insert" ON cause_snapshots_daily FOR INSERT WITH CHECK (true);
+-- S-167: was `CREATE POLICY "cause_snapshots_select" ON cause_snapshots_daily FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "cause_snapshots_select" ON cause_snapshots_daily;
+-- S-167: was `CREATE POLICY "cause_snapshots_insert" ON cause_snapshots_daily FOR INSERT` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "cause_snapshots_insert" ON cause_snapshots_daily;
 
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -110,8 +116,14 @@ CREATE INDEX IF NOT EXISTS idx_conviction_squeeze_long
 ALTER TABLE conviction_verdicts_daily ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "conviction_verdicts_select" ON conviction_verdicts_daily;
 DROP POLICY IF EXISTS "conviction_verdicts_insert" ON conviction_verdicts_daily;
-CREATE POLICY "conviction_verdicts_select" ON conviction_verdicts_daily FOR SELECT USING (true);
-CREATE POLICY "conviction_verdicts_insert" ON conviction_verdicts_daily FOR INSERT WITH CHECK (true);
+-- S-167: was `CREATE POLICY "conviction_verdicts_select" ON conviction_verdicts_daily FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "conviction_verdicts_select" ON conviction_verdicts_daily;
+-- S-167: was `CREATE POLICY "conviction_verdicts_insert" ON conviction_verdicts_daily FOR INSERT` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "conviction_verdicts_insert" ON conviction_verdicts_daily;
 
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -171,5 +183,34 @@ CREATE INDEX IF NOT EXISTS idx_cause_outcomes_date
 ALTER TABLE cause_outcomes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "cause_outcomes_select" ON cause_outcomes;
 DROP POLICY IF EXISTS "cause_outcomes_insert" ON cause_outcomes;
-CREATE POLICY "cause_outcomes_select" ON cause_outcomes FOR SELECT USING (true);
-CREATE POLICY "cause_outcomes_insert" ON cause_outcomes FOR INSERT WITH CHECK (true);
+-- S-167: was `CREATE POLICY "cause_outcomes_select" ON cause_outcomes FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "cause_outcomes_select" ON cause_outcomes;
+-- S-167: was `CREATE POLICY "cause_outcomes_insert" ON cause_outcomes FOR INSERT` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "cause_outcomes_insert" ON cause_outcomes;
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- WRITE POLICIES CORRECTED 2026-08-15 (S-167). DO NOT RE-ADD PUBLIC WRITES.
+--
+-- This file granted INSERT/UPDATE/DELETE to PUBLIC (a `CREATE POLICY ... FOR
+-- INSERT WITH CHECK (true)` with no `TO` clause is granted to PUBLIC, and the
+-- anon key is public — it ships inside the browser bundle).
+--
+-- The LIVE database does not have these grants; the 2026-07-30 hardening
+-- replaced them. So the drift was file-more-permissive-than-production, which
+-- is the dangerous direction: these files are idempotent, they are meant to be
+-- re-run, and on 2026-08-15 one of them WAS re-run. Anybody running this file
+-- would have silently re-opened public writes on a hardened table.
+--
+-- Posture below matches live: RLS on, writes denied to PUBLIC. service_role
+-- bypasses RLS, so the app is unaffected — production writes through
+-- SUPABASE_KEY and never needed these policies at all.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+DROP POLICY IF EXISTS "cause_outcomes_no_public_write" ON cause_outcomes;
+DROP POLICY IF EXISTS "cause_snapshots_daily_no_public_write" ON cause_snapshots_daily;
+DROP POLICY IF EXISTS "conviction_verdicts_daily_no_public_write" ON conviction_verdicts_daily;

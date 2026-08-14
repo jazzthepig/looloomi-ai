@@ -37,8 +37,14 @@ CREATE INDEX IF NOT EXISTS idx_cbr_window ON cis_backtest_results(window_days);
 ALTER TABLE cis_backtest_results ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "cbr_select" ON cis_backtest_results;
 DROP POLICY IF EXISTS "cbr_insert" ON cis_backtest_results;
-CREATE POLICY "cbr_select" ON cis_backtest_results FOR SELECT USING (true);
-CREATE POLICY "cbr_insert" ON cis_backtest_results FOR INSERT WITH CHECK (true);
+-- S-167: was `CREATE POLICY "cbr_select" ON cis_backtest_results FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "cbr_select" ON cis_backtest_results;
+-- S-167: was `CREATE POLICY "cbr_insert" ON cis_backtest_results FOR INSERT` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "cbr_insert" ON cis_backtest_results;
 
 
 -- ── 2. CIS Regime Fitness (Simons feedback) ───────────────────────────────
@@ -65,8 +71,14 @@ CREATE INDEX IF NOT EXISTS idx_crf_regime_pillar ON cis_regime_fitness(regime, p
 ALTER TABLE cis_regime_fitness ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "crf_select" ON cis_regime_fitness;
 DROP POLICY IF EXISTS "crf_insert" ON cis_regime_fitness;
-CREATE POLICY "crf_select" ON cis_regime_fitness FOR SELECT USING (true);
-CREATE POLICY "crf_insert" ON cis_regime_fitness FOR INSERT WITH CHECK (true);
+-- S-167: was `CREATE POLICY "crf_select" ON cis_regime_fitness FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "crf_select" ON cis_regime_fitness;
+-- S-167: was `CREATE POLICY "crf_insert" ON cis_regime_fitness FOR INSERT` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "crf_insert" ON cis_regime_fitness;
 
 
 -- ── 3. OHLCV Daily (CoinGecko Pro market_chart) ───────────────────────────
@@ -98,6 +110,37 @@ ALTER TABLE ohlcv_daily ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "od_select" ON ohlcv_daily;
 DROP POLICY IF EXISTS "od_insert" ON ohlcv_daily;
 DROP POLICY IF EXISTS "od_update" ON ohlcv_daily;
-CREATE POLICY "od_select" ON ohlcv_daily FOR SELECT USING (true);
-CREATE POLICY "od_insert" ON ohlcv_daily FOR INSERT WITH CHECK (true);
-CREATE POLICY "od_update" ON ohlcv_daily FOR UPDATE USING (true);
+-- S-167: was `CREATE POLICY "od_select" ON ohlcv_daily FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "od_select" ON ohlcv_daily;
+-- S-167: was `CREATE POLICY "od_insert" ON ohlcv_daily FOR INSERT` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "od_insert" ON ohlcv_daily;
+-- S-167: was `CREATE POLICY "od_update" ON ohlcv_daily FOR UPDATE` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "od_update" ON ohlcv_daily;
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- WRITE POLICIES CORRECTED 2026-08-15 (S-167). DO NOT RE-ADD PUBLIC WRITES.
+--
+-- This file granted INSERT/UPDATE/DELETE to PUBLIC (a `CREATE POLICY ... FOR
+-- INSERT WITH CHECK (true)` with no `TO` clause is granted to PUBLIC, and the
+-- anon key is public — it ships inside the browser bundle).
+--
+-- The LIVE database does not have these grants; the 2026-07-30 hardening
+-- replaced them. So the drift was file-more-permissive-than-production, which
+-- is the dangerous direction: these files are idempotent, they are meant to be
+-- re-run, and on 2026-08-15 one of them WAS re-run. Anybody running this file
+-- would have silently re-opened public writes on a hardened table.
+--
+-- Posture below matches live: RLS on, writes denied to PUBLIC. service_role
+-- bypasses RLS, so the app is unaffected — production writes through
+-- SUPABASE_KEY and never needed these policies at all.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+DROP POLICY IF EXISTS "cis_backtest_results_no_public_write" ON cis_backtest_results;
+DROP POLICY IF EXISTS "cis_regime_fitness_no_public_write" ON cis_regime_fitness;
+DROP POLICY IF EXISTS "ohlcv_daily_no_public_write" ON ohlcv_daily;
