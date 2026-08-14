@@ -1,6 +1,11 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-15 — **S-164 research intake shipped** (mining lanes can land results
+**Last updated:** 2026-08-15 — **S-166: 11 tables the code writes to did not exist** — both C2 ⓠ
+and C3 size sleeve NAV tables, `strategy_params`, the execution log, the fusion paper book,
+`crowd_clock_log`. All created (RLS on, service_role only); verified live `23/23 present,
+missing: []`. **The sleeves this file called "complete, 79/79 smoke green" on 08-12 had nowhere
+to write a row and never had.** Guarded in two halves now: AST manifest offline in preflight +
+`GET /internal/schema-drift` online in the deploy-verifier. **S-164 research intake shipped** (mining lanes can land results
 without a service_role key; SHIP verdicts refused at the boundary). **S-165 cold-start split**:
 this file 315,708 → ~50,000 chars, history in `PROJECT_STATE_LOG.md`, capped by
 `test_cold_start_contract`. **S-163** preflight strips 11 production credentials before running.
@@ -94,7 +99,25 @@ The cap is doing its job only if closure is as routine as addition.*
    WARNING, returned False, and `upsert_record()` fell back to Redis with `_TTL = 86_400`.
    CLAUDE.md calls the graveyard the asset; the asset sat in a cache that expires daily, for 12
    days. **It survived because the warning fired on EVERY write — an always-on warning carries no
-   information.** Migration now applied (RLS on, anon revoked); `/health` gained
+   information.**
+
+   **🔴→🟢 THE CLASS, NOT THE INSTANCE (S-166, 2026-08-15).** This entry described ONE table
+   that was never created. On 2026-08-15 the same check run across the whole codebase found
+   **ELEVEN more** — `beta_core_nav_q(_meta)`, `beta_core_nav_size(_meta)`, `strategy_params`,
+   `execution_intents/outcomes`, `fusion_paper_nav/lifecycle`, `crowd_clock_log`. This file's
+   own header had called C2 and C3 "complete; 79/79 smoke green" while neither sleeve had
+   anywhere to write a row. **The risk was written here, the lesson was recorded, and it still
+   recurred eleven times — because what got fixed was that table, not the absence of any
+   comparison between the set of tables the code writes and the set that exists.** Fixing an
+   instance and calling the class closed is how one bug gets renamed eleven times.
+   All 11 created; verified live `23/23 present, missing: []`.
+   VERIFY: `python3 -m tests.test_every_written_table_exists` (offline: manifest matches source)
+   · `curl -s -H "X-Internal-Token: $INTERNAL_TOKEN" $RAILWAY/internal/schema-drift` → `missing: []`
+   OWNER: Seth (both halves shipped) · still open: `scripts/supabase_fusion_paper.sql` grants
+   `FOR INSERT WITH CHECK (true)` to PUBLIC on a forward NAV table — the DB was built without it,
+   the file still needs correcting or the next person to run it re-opens public writes.
+
+   Migration now applied (RLS on, anon revoked); `/health` gained
    `data_layer.strategy_library`; `tests/test_strategy_durability.py` 4/4 in preflight. Kept OUT of
    `degraded` on purpose: losing durable research does not make the API unhealthy, and conflating
    them would either 503 a healthy API or bury data loss under a green tick.
