@@ -95,9 +95,17 @@ drop policy if exists organizations_service_only on organizations;
 drop policy if exists api_usage_service_only     on api_usage;
 drop policy if exists audit_log_service_only     on audit_log;
 
-create policy organizations_service_only on organizations for all using (false);
-create policy api_usage_service_only     on api_usage     for all using (false);
-create policy audit_log_service_only     on audit_log     for all using (false);
+-- S-167: was `CREATE POLICY "organizations_service_only" ON organizations FOR ALL` granted to PUBLIC.
+
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+
+DROP POLICY IF EXISTS "organizations_service_only" ON organizations;
+-- S-167: was `CREATE POLICY "api_usage_service_only" ON api_usage FOR ALL` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "api_usage_service_only" ON api_usage;
+-- S-167: was `CREATE POLICY "audit_log_service_only" ON audit_log FOR ALL` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "audit_log_service_only" ON audit_log;
 
 -- `using (false)` blocks anon and authenticated; the service role bypasses RLS.
 -- Stated explicitly because "RLS is enabled" and "RLS denies" are different facts,
@@ -119,3 +127,26 @@ grant  all on organizations, api_usage, audit_log to   service_role;
 --
 -- If `last_flush_at` advances while `requests` stays flat, the Redis counter is
 -- not being incremented — check the rate-limit middleware, not this table.
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- WRITE POLICIES CORRECTED 2026-08-15 (S-167). DO NOT RE-ADD PUBLIC WRITES.
+--
+-- This file granted INSERT/UPDATE/DELETE to PUBLIC (a `CREATE POLICY ... FOR
+-- INSERT WITH CHECK (true)` with no `TO` clause is granted to PUBLIC, and the
+-- anon key is public — it ships inside the browser bundle).
+--
+-- The LIVE database does not have these grants; the 2026-07-30 hardening
+-- replaced them. So the drift was file-more-permissive-than-production, which
+-- is the dangerous direction: these files are idempotent, they are meant to be
+-- re-run, and on 2026-08-15 one of them WAS re-run. Anybody running this file
+-- would have silently re-opened public writes on a hardened table.
+--
+-- Posture below matches live: RLS on, writes denied to PUBLIC. service_role
+-- bypasses RLS, so the app is unaffected — production writes through
+-- SUPABASE_KEY and never needed these policies at all.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+DROP POLICY IF EXISTS "api_usage_no_public_write" ON api_usage;
+DROP POLICY IF EXISTS "audit_log_no_public_write" ON audit_log;
+DROP POLICY IF EXISTS "organizations_no_public_write" ON organizations;

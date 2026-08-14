@@ -35,9 +35,17 @@ ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "api_keys_insert" ON api_keys;
 DROP POLICY IF EXISTS "api_keys_select" ON api_keys;
 DROP POLICY IF EXISTS "api_keys_update" ON api_keys;
-CREATE POLICY "api_keys_insert" ON api_keys FOR INSERT WITH CHECK (true);
-CREATE POLICY "api_keys_select" ON api_keys FOR SELECT USING (true);
-CREATE POLICY "api_keys_update" ON api_keys FOR UPDATE USING (true);
+-- S-167: was `CREATE POLICY "api_keys_insert" ON api_keys FOR INSERT` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "api_keys_insert" ON api_keys;
+-- S-167: was `CREATE POLICY "api_keys_select" ON api_keys FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "api_keys_select" ON api_keys;
+-- S-167: was `CREATE POLICY "api_keys_update" ON api_keys FOR UPDATE` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "api_keys_update" ON api_keys;
 
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -61,8 +69,14 @@ ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "analytics_insert" ON analytics_events;
 DROP POLICY IF EXISTS "analytics_select" ON analytics_events;
-CREATE POLICY "analytics_insert" ON analytics_events FOR INSERT WITH CHECK (true);
-CREATE POLICY "analytics_select" ON analytics_events FOR SELECT USING (true);
+-- S-167: was `CREATE POLICY "analytics_insert" ON analytics_events FOR INSERT` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "analytics_insert" ON analytics_events;
+-- S-167: was `CREATE POLICY "analytics_select" ON analytics_events FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "analytics_select" ON analytics_events;
 
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -92,10 +106,20 @@ DROP POLICY IF EXISTS "webhook_subs_insert" ON webhook_subscriptions;
 DROP POLICY IF EXISTS "webhook_subs_select" ON webhook_subscriptions;
 DROP POLICY IF EXISTS "webhook_subs_update" ON webhook_subscriptions;
 DROP POLICY IF EXISTS "webhook_subs_delete" ON webhook_subscriptions;
-CREATE POLICY "webhook_subs_insert" ON webhook_subscriptions FOR INSERT WITH CHECK (true);
-CREATE POLICY "webhook_subs_select" ON webhook_subscriptions FOR SELECT USING (true);
-CREATE POLICY "webhook_subs_update" ON webhook_subscriptions FOR UPDATE USING (true);
-CREATE POLICY "webhook_subs_delete" ON webhook_subscriptions FOR DELETE USING (true);
+-- S-167: was `CREATE POLICY "webhook_subs_insert" ON webhook_subscriptions FOR INSERT` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "webhook_subs_insert" ON webhook_subscriptions;
+-- S-167: was `CREATE POLICY "webhook_subs_select" ON webhook_subscriptions FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "webhook_subs_select" ON webhook_subscriptions;
+-- S-167: was `CREATE POLICY "webhook_subs_update" ON webhook_subscriptions FOR UPDATE` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "webhook_subs_update" ON webhook_subscriptions;
+-- S-167: was `CREATE POLICY "webhook_subs_delete" ON webhook_subscriptions FOR DELETE` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "webhook_subs_delete" ON webhook_subscriptions;
 
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -145,3 +169,26 @@ revoke all on function increment_api_key_usage(bigint) from public, anon, authen
 revoke all on function increment_webhook_delivery(text, text, boolean) from public, anon, authenticated;
 grant execute on function increment_api_key_usage(bigint) to service_role;
 grant execute on function increment_webhook_delivery(text, text, boolean) to service_role;
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- WRITE POLICIES CORRECTED 2026-08-15 (S-167). DO NOT RE-ADD PUBLIC WRITES.
+--
+-- This file granted INSERT/UPDATE/DELETE to PUBLIC (a `CREATE POLICY ... FOR
+-- INSERT WITH CHECK (true)` with no `TO` clause is granted to PUBLIC, and the
+-- anon key is public — it ships inside the browser bundle).
+--
+-- The LIVE database does not have these grants; the 2026-07-30 hardening
+-- replaced them. So the drift was file-more-permissive-than-production, which
+-- is the dangerous direction: these files are idempotent, they are meant to be
+-- re-run, and on 2026-08-15 one of them WAS re-run. Anybody running this file
+-- would have silently re-opened public writes on a hardened table.
+--
+-- Posture below matches live: RLS on, writes denied to PUBLIC. service_role
+-- bypasses RLS, so the app is unaffected — production writes through
+-- SUPABASE_KEY and never needed these policies at all.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+DROP POLICY IF EXISTS "analytics_events_no_public_write" ON analytics_events;
+DROP POLICY IF EXISTS "api_keys_no_public_write" ON api_keys;
+DROP POLICY IF EXISTS "webhook_subscriptions_no_public_write" ON webhook_subscriptions;

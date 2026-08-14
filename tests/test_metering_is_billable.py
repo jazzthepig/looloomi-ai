@@ -156,7 +156,35 @@ def test_the_new_tables_are_service_role_only() -> None:
         norm = re.sub(r"\s+", " ", _SQL)
         check(f"{t}: RLS enabled",
               f"alter table {t} enable row level security" in norm, "")
-    check("policies deny by default", _SQL.count("for all using (false)") >= 3, "")
+    # WAS: check(..., _SQL.count("for all using (false)") >= 3)
+    #
+    # That required the dead denial. `CREATE POLICY ... FOR ALL USING (false)` is
+    # PERMISSIVE, and permissive policies are OR'd — it cannot subtract, so it
+    # denies nothing while reading exactly like a lock. Measured 2026-08-15
+    # (S-167): api_keys carried `api_keys_service_only USING(false)` AND
+    # `api_keys_select USING(true)`, and anon could read the table.
+    #
+    # So this guard was enforcing the mechanism that did not work, which is how
+    # the exposure survived a dedicated security pass: the check passed, the
+    # table looked audited, and audited things stop being looked at. **A guard
+    # that pins the WRONG mechanism is worse than a missing one — it certifies
+    # the defect.**
+    #
+    # The intent (service_role only) was right. The property that delivers it is
+    # RLS enabled plus NO permissive grant to public: service_role bypasses RLS,
+    # everyone else is denied by the absence of a policy.
+    norm_all = re.sub(r"\s+", " ", _SQL).lower()
+    check("no permissive USING(false) 'denials' remain",
+          "for all using (false)" not in norm_all and
+          "for all to public using (false)" not in norm_all,
+          "a permissive USING(false) policy denies nothing; delete it — RLS on "
+          "with zero policies is the honest expression of service_role-only")
+    for t in ("organizations", "api_usage", "audit_log"):
+        granted = re.search(
+            rf"create policy[^;]*on {t}\b(?![^;]*to service_role)[^;]*using \(true\)",
+            norm_all)
+        check(f"{t}: nothing grants it to public", granted is None,
+              f"found: {granted.group(0)[:90] if granted else ''}")
     check("anon and authenticated are revoked",
           "revoke all on organizations, api_usage, audit_log from anon, authenticated" in _SQL, "")
 

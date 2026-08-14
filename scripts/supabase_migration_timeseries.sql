@@ -128,5 +128,32 @@ CREATE INDEX IF NOT EXISTS idx_backtest_regime
     ON cis_backtest_results (macro_regime_entry, entry_time DESC);
 
 ALTER TABLE cis_backtest_results ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "backtest_select" ON cis_backtest_results FOR SELECT USING (true);
-CREATE POLICY "backtest_insert" ON cis_backtest_results FOR INSERT WITH CHECK (true);
+-- S-167: was `CREATE POLICY "backtest_select" ON cis_backtest_results FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "backtest_select" ON cis_backtest_results;
+-- S-167: was `CREATE POLICY "backtest_insert" ON cis_backtest_results FOR INSERT` granted to PUBLIC.
+-- Removed. service_role bypasses RLS; nothing legitimate needed it.
+DROP POLICY IF EXISTS "backtest_insert" ON cis_backtest_results;
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- WRITE POLICIES CORRECTED 2026-08-15 (S-167). DO NOT RE-ADD PUBLIC WRITES.
+--
+-- This file granted INSERT/UPDATE/DELETE to PUBLIC (a `CREATE POLICY ... FOR
+-- INSERT WITH CHECK (true)` with no `TO` clause is granted to PUBLIC, and the
+-- anon key is public — it ships inside the browser bundle).
+--
+-- The LIVE database does not have these grants; the 2026-07-30 hardening
+-- replaced them. So the drift was file-more-permissive-than-production, which
+-- is the dangerous direction: these files are idempotent, they are meant to be
+-- re-run, and on 2026-08-15 one of them WAS re-run. Anybody running this file
+-- would have silently re-opened public writes on a hardened table.
+--
+-- Posture below matches live: RLS on, writes denied to PUBLIC. service_role
+-- bypasses RLS, so the app is unaffected — production writes through
+-- SUPABASE_KEY and never needed these policies at all.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+DROP POLICY IF EXISTS "cis_backtest_results_no_public_write" ON cis_backtest_results;

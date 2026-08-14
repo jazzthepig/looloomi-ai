@@ -34,12 +34,17 @@ CREATE INDEX IF NOT EXISTS idx_cis_scores_class_time
 ALTER TABLE cis_scores ENABLE ROW LEVEL SECURITY;
 
 -- Allow anonymous SELECT (dashboard reads)
-CREATE POLICY "Allow anon read" ON cis_scores
-    FOR SELECT USING (true);
+-- S-167: was `CREATE POLICY "Allow anon read" ON cis_scores FOR SELECT USING (true)`
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+DROP POLICY IF EXISTS "Allow anon read" ON cis_scores;
 
 -- Allow service-role INSERT (Mac Mini pushes via Railway)
-CREATE POLICY "Allow service insert" ON cis_scores
-    FOR INSERT WITH CHECK (true);
+-- S-167: was `CREATE POLICY "Allow service insert" ON cis_scores FOR INSERT WITH CHECK (true)`.
+-- The NAME said "service"; the policy had no TO clause, so Postgres granted it
+-- to PUBLIC. A policy name is a comment — only the TO clause is the grant.
+DROP POLICY IF EXISTS "Allow service insert" ON cis_scores;
 
 -- 3. Auto-cleanup: drop rows older than 90 days (pg_cron)
 -- NOTE: pg_cron must be enabled in Supabase Dashboard → Database → Extensions
@@ -66,11 +71,20 @@ CREATE INDEX IF NOT EXISTS idx_macro_briefs_time
 
 ALTER TABLE macro_briefs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow anon read briefs" ON macro_briefs
-    FOR SELECT USING (true);
+-- S-167: was `CREATE POLICY "Allow anon read briefs" ON macro_briefs FOR SELECT USING (true)`
 
-CREATE POLICY "Allow service insert briefs" ON macro_briefs
-    FOR INSERT WITH CHECK (true);
+-- granted to PUBLIC. Measured 2026-08-15: the anon key could read this.
+
+-- Removed live and here. Nothing we ship reads through anon — the frontend
+
+-- goes through /api/v1/* on FastAPI, which holds service_role.
+
+DROP POLICY IF EXISTS "Allow anon read briefs" ON macro_briefs;
+
+-- S-167: was `CREATE POLICY "Allow service insert briefs" ON macro_briefs FOR INSERT WITH CHECK (true)`.
+-- The NAME said "service"; the policy had no TO clause, so Postgres granted it
+-- to PUBLIC. A policy name is a comment — only the TO clause is the grant.
+DROP POLICY IF EXISTS "Allow service insert briefs" ON macro_briefs;
 
 -- ═══════════════════════════════════════════════════════════════════
 -- DONE. Next steps:
