@@ -1147,6 +1147,45 @@ async def agent_card():
 # ── Health ────────────────────────────────────────────────────────────────────
 # Two endpoints: /health for Railway direct, /api/v1/health to bypass Cloudflare SPA cache.
 
+def _writes_block() -> dict:
+    """Can this process write the system of record? (S-168)
+
+    WHY THIS IS ON /health AND NOT IN A LOG. Measured 2026-08-15: the live
+    deployment reported `environment: replica`, which under S-149's role gate
+    means `is_writer() == False`, which means every supabase_insert_table and
+    supabase_upsert_table returns False on its first line. Production could not
+    write to Supabase, and had not since 2026-08-12 — cis_scores, beta_core_nav
+    and experiment_runs all stop on that date.
+
+    The Mac T1 engine was pushing the whole time (last_cis_push age 38 min, 43
+    assets, stale=false). The push arrived; the persistence was refused. Those
+    two look identical from outside, which is the entire failure.
+
+    runtime_role.py stated the assumption in a comment — "Railway sets
+    ENVIRONMENT=production explicitly, so the mapping preserves the live
+    deployment" — and the assumption was false. A load-bearing belief about
+    another system's configuration, written down and never probed.
+
+    `refuse_write()` logs once per target on purpose (an every-loop warning
+    buries the boot banner), so nothing recurring said it. `environment:
+    replica` WAS on /health the whole time and nobody read it as "writes are
+    off", because it names the role rather than the consequence. So this block
+    names the consequence, and the deploy-verifier fails on it.
+    """
+    from src.api.runtime_role import ROLE, is_writer
+    ok = is_writer()
+    return {
+        "enabled": ok,
+        "role": ROLE,
+        "verdict": "ok" if ok else "READ-ONLY — nothing is being persisted",
+        "why": None if ok else (
+            "APP_ROLE is not 'production' on this deployment, so the S-149 role "
+            "gate refuses every write to the shared record. Pushes still arrive "
+            "and still return 200; they are simply not stored. Fix: set "
+            "APP_ROLE=production in the Railway service variables."),
+    }
+
+
 _health_payload = {
     "status":  "healthy",
     "version": "0.6.3",
@@ -1199,6 +1238,10 @@ def _health_with_data_layer() -> dict:
     beta_core_note = "see /internal/beta-core-clock (kept off /health: no I/O here)"
     return {
         **_health_payload,
+        # S-168. First-screen, because a read-only production is invisible from
+        # every other field on this page — the API is genuinely healthy, it just
+        # stores nothing.
+        "writes": _writes_block(),
         "status": "degraded" if degraded else "healthy",
         "data_layer": {
             "supabase": "circuit_open" if cb["open"]
