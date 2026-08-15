@@ -17,7 +17,7 @@
 //   EarningsCalendarWidget                              → EarningsCalendarWidget.jsx
 //   CISContent                                         → CISContent.jsx
 
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, Component } from "react";
 import { track } from "./main.jsx";
 import IntelligencePage from "./components/IntelligencePage";
 import WalletConnect from "./components/WalletConnect";
@@ -62,6 +62,46 @@ function StagingBanner() {
       ⚠ STAGING ENVIRONMENT — NOT PRODUCTION
     </div>
   );
+}
+
+/* ── Section error boundary ────────────────────────────────────────────── */
+/* Default behavior for a thrown render in any lazy section is an uncaught
+   React error that blanks the page AND kills the sidebar (since the throw
+   happens inside DesktopApp). Wrap every section so the user gets an inline
+   error card IN PLACE of the broken view — keeps the sidebar + nav usable,
+   so they can recover without a hard reload. Added 2026-08-15 after the
+   DiagnoseHome dead-reference regression on the Portfolio route. */
+class SectionErrorBoundary extends Component {
+  constructor(p) { super(p); this.state = { err: null }; }
+  static getDerivedStateFromError(err) { return { err }; }
+  componentDidCatch(err, info) {
+    // surface to console for diagnosis — silent swallow would defeat the test
+    // that a future bug catches via the boundary rather than via blank pages
+    console.error("[SectionErrorBoundary]", err, info && info.componentStack);
+  }
+  render() {
+    if (this.state.err) {
+      return (
+        <div style={{
+          margin: "32px 0", padding: "32px 24px",
+          border: "1px solid rgba(239,68,68,0.30)", borderRadius: 12,
+          background: "rgba(239,68,68,0.04)",
+          fontFamily: FONTS.mono, fontSize: 12, color: "rgba(239,68,68,0.90)",
+        }}>
+          <div style={{ fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
+            ⚠ This section failed to render
+          </div>
+          <div style={{ color: "rgba(199,210,254,0.7)", marginBottom: 14, fontSize: 11 }}>
+            Other sections and the sidebar still work — you can navigate away. The error was logged to the console for diagnosis.
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(199,210,254,0.45)", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+            {String(this.state.err && (this.state.err.message || this.state.err))}
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 /* ── Mobile detection ─────────────────────────────────────────────────────── */
@@ -184,11 +224,13 @@ function DesktopApp() {
         className="cc-main"
         style={{ flex: 1, overflowY: "auto", height: "100vh", position: "relative", zIndex: 1 }}
       >
+        <SectionErrorBoundary>
         {/* Diagnose route retired 2026-08-13 — overlapped 1:1 with Portfolio's
             top section (DiagnoseHome + RiskMeter). Portfolio is now the canonical
             entry; the "feed your book" affordance lives there. DiagnoseHome.jsx
             is kept in components/ in case it's needed for a focused single-asset
             diagnose view later. */}
+
 
         {/* Intelligence */}
         <div style={{ display: activeSection === "intelligence" ? "block" : "none" }}>
@@ -271,8 +313,6 @@ function DesktopApp() {
           {visited.has("portfolio") && (
             <section style={contentPad}>
               <Suspense fallback={<SectionLoader />}>
-                <DiagnoseHome embedded />
-                <div style={{ height: 28 }} />
                 <RiskMeter />
                 <div style={{ height: 36 }} />
                 <MyPortfolio cisUniverse={cisUniverse} />
@@ -365,6 +405,7 @@ function DesktopApp() {
             </Suspense>
           )}
         </div>
+        </SectionErrorBoundary>
       </main>
 
       <style>{`
