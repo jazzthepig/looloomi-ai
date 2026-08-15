@@ -64,9 +64,28 @@ DEV = "dev"
 
 _VALID = (PRODUCTION, REPLICA, DEV)
 
-# Legacy `ENVIRONMENT` values mapped onto roles. `production` here is deliberate
-# and load-bearing: Railway sets ENVIRONMENT=production explicitly, so the mapping
-# preserves the live deployment. Everything else — ci, staging, unset — reads.
+# Legacy `ENVIRONMENT` values mapped onto roles. Everything not listed — ci,
+# staging, unset — resolves to REPLICA, i.e. reads only.
+#
+# THIS COMMENT USED TO SAY: "`production` here is deliberate and load-bearing:
+# Railway sets ENVIRONMENT=production explicitly, so the mapping preserves the
+# live deployment."
+#
+# MEASURED FALSE, 2026-08-15 (S-168). Railway sets neither variable. The live
+# service resolved to REPLICA the moment this gate shipped, and production could
+# not write the system of record for three days: cis_scores, beta_core_nav and
+# experiment_runs all stop on 2026-08-12. The Mac T1 engine kept pushing the
+# whole time and every push was accepted, returned 200, and discarded.
+#
+# The sentence is kept here rather than deleted because of HOW it failed. It was
+# emphatic — "deliberate and load-bearing" — and that emphasis is what stopped
+# anyone checking. A confident claim about another system's configuration is
+# still a claim about another system's configuration, and this file had no way
+# to verify it. Prose cannot probe an environment variable.
+#
+# Railway now needs APP_ROLE=production set explicitly. That is louder than
+# relying on a legacy value, and /health reports the consequence in words
+# ("READ-ONLY — nothing is being persisted") rather than the role.
 _LEGACY_MAP = {
     "production": PRODUCTION,
     "staging": REPLICA,

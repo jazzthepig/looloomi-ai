@@ -396,6 +396,29 @@ python3 -m tests.test_every_written_table_exists
 #            here), and it caught three permissive USING(false) policies I added
 #            in the same hour as the ledger entry explaining why they do not work.
 python3 -m tests.test_no_sql_file_grants_public_access
+# 3a-unvicies. a read-only production must be impossible to miss (2026-08-15,
+#              S-168). The live deployment reported `environment: replica`, so
+#              S-149's role gate refused EVERY write to the system of record —
+#              cis_scores, beta_core_nav and experiment_runs all stop on
+#              2026-08-12, three days before anyone noticed. The Mac T1 engine
+#              was pushing the entire time (last_cis_push age 38 min, 43 assets,
+#              stale=false): the push arrived, returned 200, and was discarded.
+#              Arriving-and-discarded looks exactly like arriving-and-stored.
+#              ROOT: a belief about another system, written down and never
+#              probed. runtime_role.py said "Railway sets ENVIRONMENT=production
+#              explicitly, so the mapping preserves the live deployment". It does
+#              not. The sentence was emphatic — "deliberate and load-bearing" —
+#              and that emphasis is what stopped anyone checking. Confidence in
+#              prose is not evidence, and a comment cannot probe an env var.
+#              `environment: replica` was on /health the whole time; it names the
+#              ROLE, not the CONSEQUENCE. Every failure this week had that shape:
+#              the state was visible and the consequence was not. So /health now
+#              carries a `writes` block that says "READ-ONLY — nothing is being
+#              persisted" in words and names the exact fix.
+#              Also pins the gate FAILING CLOSED: unset must stay replica.
+#              Defaulting to production would let any laptop write the LP-facing
+#              record, which is worse than the outage it would prevent.
+python3 -m tests.test_production_can_write
 # 3a-duodevicies. the moat is claimed only where it is measured (2026-08-12, S-141).
 #                ARCHITECTURE.md line 164: "A signal we have not run through our own
 #                loop is one we must not claim. Claiming it unproven is
