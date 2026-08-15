@@ -11,7 +11,11 @@ import { T, FONTS } from "../tokens";
 /* stats: [{ label, value, color }] — rendered inline right-aligned (Fortress pattern) */
 export function SectionLabel({ label, sub, stats = null }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingBottom: 14, borderBottom: "1px solid rgba(6,182,212,0.08)" }}>
+    <div style={{
+      display: "flex", alignItems: "center", gap: 10,
+      marginTop: 8, marginBottom: 22, paddingBottom: 14,
+      borderBottom: "1px solid rgba(6,182,212,0.08)",
+    }}>
       <div style={{ width: 2, height: 16, background: "rgba(6,182,212,0.65)", borderRadius: 1, flexShrink: 0 }} />
       <span style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 600, color: T.t1, letterSpacing: "-0.01em" }}>
         {label}
@@ -45,7 +49,8 @@ export function CompactSectionLabel({ label, meta, accent = "cyan" }) {
   const lineColor = accent === "gold" ? T.gold : T.cyan;
   return (
     <div style={{
-      display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingBottom: 14,
+      display: "flex", alignItems: "center", gap: 12,
+      marginTop: 6, marginBottom: 18, paddingBottom: 14,
       borderBottom: `1px solid ${T.border}`,
     }}>
       <div aria-hidden="true" style={{ width: 14, height: 1, background: lineColor, opacity: 0.5 }} />

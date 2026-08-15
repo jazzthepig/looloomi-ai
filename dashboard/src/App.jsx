@@ -371,6 +371,20 @@ function DesktopApp() {
           {visited.has("cis.radar") && (
             <section style={contentPad}>
               <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+                <button
+                  onClick={() => navigate("cis.leaderboard")}
+                  aria-label="Back to CIS Engine"
+                  style={{
+                    background: "transparent", border: "none", padding: "6px 0",
+                    marginBottom: 14, color: T.t3, cursor: "pointer",
+                    fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.14em",
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  <span aria-hidden="true">←</span>
+                  <span>Back to CIS Engine</span>
+                </button>
                 <SectionLabel label="Asset Radar" sub="30-asset live scoring" />
                 <Suspense fallback={<SectionLoader />}>
                   <AssetRadar onNavigate={navigate} />

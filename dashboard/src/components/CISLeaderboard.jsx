@@ -1029,9 +1029,19 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
 
               {/* Upgrades */}
               {movers.upgrades.length > 0 && (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.green, letterSpacing: "0.12em", fontWeight: 700, marginBottom: 8, opacity: 0.85 }}>
-                    ▲ UPGRADES ({movers.upgrades.length})
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{
+                    fontFamily: FONTS.display, fontSize: 11, color: T.green,
+                    letterSpacing: "0.14em", fontWeight: 700,
+                    marginBottom: 12, paddingBottom: 8,
+                    borderBottom: `1px solid rgba(0,217,138,0.15)`,
+                    display: "flex", alignItems: "center", gap: 8,
+                  }}>
+                    <span aria-hidden="true">▲</span>
+                    <span style={{ textTransform: "uppercase" }}>Upgrades</span>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, fontWeight: 400, letterSpacing: "0.1em" }}>
+                      ({movers.upgrades.length})
+                    </span>
                   </div>
                   {movers.upgrades.map((m, i) => (
                     <MoverRow key={m.symbol + i} mover={m} direction="up" />
@@ -1042,8 +1052,18 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
               {/* Downgrades */}
               {movers.downgrades.length > 0 && (
                 <div>
-                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.red, letterSpacing: "0.12em", fontWeight: 700, marginBottom: 8, opacity: 0.85 }}>
-                    ▼ DOWNGRADES ({movers.downgrades.length})
+                  <div style={{
+                    fontFamily: FONTS.display, fontSize: 11, color: T.red,
+                    letterSpacing: "0.14em", fontWeight: 700,
+                    marginBottom: 12, paddingBottom: 8,
+                    borderBottom: `1px solid rgba(239,68,68,0.15)`,
+                    display: "flex", alignItems: "center", gap: 8,
+                  }}>
+                    <span aria-hidden="true">▼</span>
+                    <span style={{ textTransform: "uppercase" }}>Downgrades</span>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, fontWeight: 400, letterSpacing: "0.1em" }}>
+                      ({movers.downgrades.length})
+                    </span>
                   </div>
                   {movers.downgrades.map((m, i) => (
                     <MoverRow key={m.symbol + i} mover={m} direction="down" />

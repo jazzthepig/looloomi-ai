@@ -388,7 +388,10 @@ export function CISHeatmap({ data, filter, setFilter }) {
   return (
     <div>
       {/* Filters */}
-      <div style={{ padding: "12px 0", display: "flex", gap: 4, flexWrap: "wrap" }}>
+      <div style={{
+        padding: "14px 0 18px", display: "flex", gap: 6, flexWrap: "wrap",
+        marginBottom: 8, borderBottom: `1px solid ${T.border}`,
+      }}>
         {ASSET_CLASSES.slice(0, 6).map(ac => (
           <button
             key={ac}
@@ -406,7 +409,7 @@ export function CISHeatmap({ data, filter, setFilter }) {
       </div>
 
       {/* Heatmap */}
-      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", marginTop: 18 }}>
         <table style={{ width: "100%", borderSpacing: "2px", minWidth: 560 }}>
           <thead>
             <tr>
