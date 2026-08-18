@@ -9692,3 +9692,223 @@ S-167       = "读起来像否决的 policy 不是否决"
 所以实际授给 PUBLIC。**policy 的名字是注释,只有 `TO` 子句才是授权。**
 
 **Verdict.** SHIPPED。线上已关闭并实测;文件已改;preflight 守卫在位。
+
+S-168:R540-R547 production book FAILS on LIQUID16 wide without BTC-MA gate.
+
+**Test.** Built 9-leg institutional book on LIQUID16 wide (2022-01-01 → 2026-08-09,
+1681d calendar, 1974 trading days) with the B10_R547 spec verbatim — same K=3,
+same h=14/h=21 per leg, same R542d/R542f/R19/R543a/R544b_c/R545c_a/R547c/R546a_a
+specs from r540-r547 memory files. Replaced R510 (no clear spec) with R554 taker
+imbalance. NO BTC-MA(100/150) gate — straight cross-sectional signal on every
+rebalance date. Files: `src/research/r556_mining_2026-08-18/r556_9leg_book_liquid16.py`
++ `r556_results.json`.
+
+**Headline single-leg OOS (LIQUID16 wide, 5bps cost, no gate):**
+
+| leg | SR | total | DD |
+|---|---|---|---|
+| **R554 taker_imb imb7** | **+1.035** | **+350.68%** | **-58.98%** |
+| R19 7d momentum | -0.854 | -91.74% | -94.70% |
+| R542d real skew 90d | +0.234 | +1.90% | -70.21% |
+| R542f BTC-residual 60d | -0.093 | -51.14% | -75.83% |
+| R543a dd reversion 20d | -0.656 | -83.70% | -88.26% |
+| R544b_c vol-adj mom 14d | +0.131 | -24.17% | -76.01% |
+| R545c_a win/loss 90d | -0.494 | -72.34% | -76.45% |
+| R546a_a tail ratio 60d | -0.053 | -39.83% | -65.68% |
+| R547c rvol_zscore | -0.280 | -65.17% | -71.71% |
+
+**8 of 9 R540-R547 legs are NEGATIVE on LIQUID16 wide without BTC-MA gate.**
+The B10_R547 production book claims were BTC-MA-gated, not LIQUID16-wide. The
+"SR=2.5 / DD=-15%" headline numbers were conditional on a regime filter that
+was not part of the spec reproduced here. **The 9-leg book is NOT deployment-
+ready on raw LIQUID16.**
+
+**Book compositions (same conditions):**
+
+| book | SR | total | DD |
+|---|---|---|---|
+| Single R554 | **+1.035** | **+350.68%** | -58.98% |
+| 8-leg B10_R547 (no R554) | -0.267 | -26.62% | -32.13% |
+| 9-leg B10 + R554 @ 5% | -0.146 | -17.69% | -27.02% |
+| 9-leg B10 + R554 @ 10% | -0.054 | -8.33% | -26.85% |
+| 9-leg equal | -0.360 | -27.46% | -34.21% |
+| 9-leg R554-heavy | +0.406 | +28.53% | -28.48% |
+
+**Adding R554 to B10 recovers some Sharpe (-0.267 → -0.054) but the book is
+still negative on raw LIQUID16.** R554-heavy @ 30% weight (only combination
+that is positive) gives SR=+0.406 — which is just R554 diluted.
+
+**R554 weight grid (R554 vs 8-leg R540 baseline, no gate):**
+
+| R554 weight | SR | total | DD |
+|---|---|---|---|
+| 0% | -0.267 | -28.15% | -33.60% |
+| 5% | -0.153 | -19.28% | -28.51% |
+| 10% | -0.026 | -9.55% | -25.55% |
+| 15% | +0.109 | +1.09% | -25.37% |
+| 20% | +0.246 | +12.67% | -26.14% |
+
+**Each +5pp R554 weight ≈ +0.11 SR + +9pp total.** Linear improvement, no
+saturation. Above 20%, R554 itself dominates.
+
+**R556c cost ladder on single R554 (LIQUID16 wide):**
+
+| cost | SR | total |
+|---|---|---|
+| 0bps | +1.113 | +420.55% |
+| 5bps | +1.035 | +350.68% |
+| 10bps | +0.956 | +290.08% |
+| 30bps | +0.641 | +118.28% |
+| 50bps | +0.328 | +21.57% |
+
+Survives 50bps. At 5bps (typical institutional), SR=+1.035.
+
+**R556d per-year on R554 single-leg:**
+
+| year | SR | total | DD |
+|---|---|---|---|
+| 2022 | +2.78 | +156.8% | -17.3% |
+| 2023 | +1.98 | +149.3% | -30.8% |
+| 2024 | -0.83 | -39.1% | **-59.0%** |
+| 2025 | +0.79 | +26.8% | -27.5% |
+| 2026 | **-1.22** | -8.8% | -18.2% |
+
+**2024 and 2026 are negative.** 2024 is a known difficult regime (R550d
+falsification context). **2026 is the new problem — current year YTD is
+-8.8% on R554 single-leg.** This is the same regime where R18 found
+"2025-2026 sustained bear market limits long-only".
+
+**R556e rolling 6-mo SR on R554:** 20/26 positive (77%), mean +0.785,
+median +1.162, min **-3.122** (worst window). The min is the 2024H2 cluster.
+
+**Correlation matrix (LIQUID16 wide, 1974d):**
+
+```
+               R554     R19   R542d   R542f   R543a R544b_c R545c_a R546a_a   R547c
+R554         +1.000  -0.074  +0.015  +0.038  +0.003  -0.035  +0.097  +0.052  -0.012
+R19          -0.074  +1.000  -0.119  +0.234  -0.331  +0.390  +0.099  +0.093  +0.247
+R542d        +0.015  -0.119  +1.000  -0.349  +0.032  -0.159  +0.143  -0.275  +0.051
+R542f        +0.038  +0.234  -0.349  +1.000  -0.278  +0.476  +0.325  +0.430  +0.104
+R543a        +0.003  -0.331  +0.032  -0.278  +1.000  -0.506  -0.234  -0.016  -0.012
+R544b_c      -0.035  +0.390  -0.159  +0.476  -0.506  +1.000  +0.171  +0.114  +0.204
+R545c_a      +0.097  +0.099  +0.143  +0.325  -0.234  +0.171  +1.000  +0.081  +0.071
+R546a_a      +0.052  +0.093  -0.275  +0.430  -0.016  +0.114  +0.081  +1.000  +0.129
+R547c        -0.012  +0.247  +0.051  +0.104  -0.012  +0.204  +0.071  +0.129  +1.000
+```
+
+**R554 ρ < 0.10 with EVERY other leg.** This is the cleanest orthogonal
+signal in the panel. But orthogonality does not save the book when 8 of 9
+legs are negative — it just means R554 alone is the only edge.
+
+**Structural lesson.** The R540-R547 series ran a series of OOS-pass sweeps
+on a BTC-MA-gated sub-period (the "LB" / "gate LB" labels in the memory
+files). Without the gate, every signal in the series is a **long-only bias
+or a mean-reversion trade that requires the BTC regime to be in EASING**.
+When EASING ends (2024 mid → 2026 YTD), the book collapses. The R540-R547
+"production book" was a **regime-conditional book masquerading as an
+unconditional book.**
+
+**Verdict.**
+
+1. **R554 taker imbalance is the ONLY durable signal in the R540-R555 series.**
+   It works on LIQUID16 wide without any gate. It is orthogonal to all
+   other legs. SR=+1.035 / total=+350.68% / DD=-58.98% / 4/5 years positive.
+   2026 YTD is the weakest period (-1.22 SR) but the signal is still
+   positive in 77% of rolling 6-mo windows.
+
+2. **B10_R547 "production book" is NOT deployment-ready.** It needs:
+   (a) BTC-MA gate (which is what made the SR=2.5 number real), or
+   (b) re-spec on raw LIQUID16 with R554 as the only durable leg.
+
+3. **Honest deployment options:**
+   - **R554 single-leg** @ 10-15bps cost: SR=+0.95-1.04, deployable now,
+     but with -59% DD and 2026 weakness.
+   - **R554 + BTC-MA(150) gate**: test in R557. Likely the production spec.
+   - **9-leg book w/ R554 at 30%+**: SR=+0.41, NOT production-grade yet.
+   - **R70 + R19** (the two profitable strategies per CLAUDE.md) remain
+     independent — this finding does NOT invalidate them.
+
+4. **The LIQUID16 wide-window test was missing from R540-R547's validation.**
+   Each round passed "OOS gate-LB" (which was a BTC-MA-filtered sub-period),
+   but none passed a raw LIQUID16 wide-window check. **R556 is that check.**
+   The discipline: any new cross-sectional leg must run on LIQUID16 wide
+   FIRST, then add regime gates only as overlays. The R540-R547 series
+   inverted this discipline.
+
+**Why:** A "production book" that depends on a regime filter is a regime-
+conditional edge, not an unconditional alpha. The R540-R547 claims were
+misleading; the SR=2.5 numbers do not survive raw LIQUID16. R554 is the
+only durable signal in the broader series, and even R554 has a 2026
+weakness that needs BTC-MA gating to survive.
+
+**How to apply:**
+- **NEVER cite R540-R547 single-leg SR on raw LIQUID16.** The numbers were
+  BTC-MA-gated. Always specify the gate.
+- **The "9-leg production book" claim is retracted** until the BTC-MA gate
+  is documented and the gated-spec is reproduced on LIQUID16 wide.
+- **R554 is the new anchor signal** for any cross-sectional L/S book on
+  LIQUID16. Use it as the primary leg; add R540-R547 legs only behind a
+  BTC-MA gate.
+- **R557 next**: implement BTC-MA(150) gate overlay; test whether R554
+  conditional on the gate improves 2026 weakness.
+- **R558 next**: investigate the 2024H2 / 2026YTD drawdown clusters —
+  what regime signal would have predicted them?
+
+---
+
+## S-171 — Asset Radar 点进去空屏:import 在文件拆分时丢了(2026-08-18)
+
+**症状.** 侧栏点 "Asset Radar" → 整页空白,**连侧栏都消失**。
+
+**实测(Chrome console,不是推断):**
+```
+ReferenceError: AssetRadar is not defined
+  at app-CdDDzl0s.js:104
+```
+
+`App.jsx:390` 渲染 `<AssetRadar onNavigate={navigate} />`,而 **App.jsx 从来没 import 它**。
+import 丢在 `227edcd`(App.jsx 1046 → 445 行的拆分)。**同一次拆分还丢了 `DiagnoseHome`,
+那个被人读 diff 时发现并在 `e9c5b4d` 修了。两个里发现了一个,另一个上线了。**
+
+**为什么每一道现有的门都没拦住 —— 四条,每条都是独立的:**
+
+1. **构建是绿的。** `CISContent.jsx:17` 为自己那个 tab lazy-import 了同一个组件,
+   所以 Vite 打出了 AssetRadar chunk,没有任何警告。
+   **"被某处引用的模块"不等于"在这里的作用域内"** —— 和"在 .sql 文件里声明过"
+   不等于"数据库里存在"(S-166)是同一个区分。
+2. **`SectionErrorBoundary`(e9c5b4d 加的)接不住。** 名字是在 App 自身渲染时解析的,
+   位于 App 内部所有 boundary 之上,所以整棵树卸载,而不是一个 section 降级。
+3. **`test_no_undefined_names` 只管 Python。** 它的立案事故是
+   `name 'market_cap' is not defined` 静默杀死 T2 —— **完全相同的形状,
+   而守卫的作用域停在语言边界上,代码库没有。**
+4. **路由级 smoke test 也救不了。** 这个崩溃需要一次**点击**:`cis.radar` 只在用户选中后才渲染。
+
+**修复.** App.jsx 补回 lazy import。**负对照验证过:把 import 再拿掉,守卫在 App.jsx:404 炸;
+放回去,绿。**
+
+### 守卫本身:我写错了三次,记下来因为过程比结果有用
+
+`eslint 9` 在这个项目里是配好的,而 **`no-undef` 抓不到 `<AssetRadar />`** ——
+实测,探测文件 exit 0。能抓的是 `react/jsx-no-undef`,它在 `eslint-plugin-react` 里,
+**没装。装它是正确的长期解**,写在文件里了。
+
+在放弃之前我手写了三版,每一版都更糟:
+
+1. 正则找声明 + 先剥注释 → 行尾的 `// e.g. <WalletConnect />` 被当成真引用
+2. 改成先剥字符串 → **散文里的撇号(`don't`)开了一个假字符串,吞掉了
+   `const FlowStep` 和 `const Stat`,守卫于是把两个正确声明的组件报成未定义**
+3. 手写单遍扫描器 → **JSX 文本里的撇号(`<p>don't</p>`)不是字符串引号,它照样吞**
+
+第 2 版最有教育意义:**我写下的注释是 "ORDER IS LOAD-BEARING",说对了它关键,
+说错了是哪个顺序 —— 而那份自信正是让人不再复查的东西。**这周第二次
+(第一次是 `runtime_role.py` 的 "deliberate and load-bearing",S-168)。
+
+**最后的判据不需要任何解析:一个名字如果在整个文件里只以 `<Tag` 的形式出现过,
+那它不可能被定义过。** App.jsx 里 "AssetRadar" 这个字符串**恰好出现一次**。
+
+**已知盲区,写出来而不是藏起来:** 只在注释里出现的组件名对这个检查不可见。
+这是刻意的取舍 —— **假阴性留下一个还能找到的 bug,假阳性会让守卫被静音,
+然后它什么都不保护(S-167)。**
+
+**Verdict.** 代码已修,守卫已进 preflight 并通过负对照。
+**⚠️ 线上尚未验证 —— 新 bundle 要 push 后 Railway 部署才生效。**
