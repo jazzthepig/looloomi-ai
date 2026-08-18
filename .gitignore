@@ -81,3 +81,21 @@ elizaos-plugin/dist/
 # Curated knowledge lives in PROJECT_STATE / REFUTATION_LEDGER / WEEKLY_REVIEW / docs/.
 docs/transcripts/
 _data/cis_historical/
+
+# ── Mined-strategy output directories (2026-08-18, S-170) ──────────────────────
+# Jazz, 2026-08-12: "我是要ignore我们挖掘的最终成果,不可以免费暴露了".
+# The named-file list above does not scale — Minimax-C lands a new directory per
+# run, and on 2026-08-18 three (r553/r554/r555) arrived UNTRACKED-but-not-ignored,
+# i.e. one `git add -A` away from being published. Hence a pattern.
+#
+# THE RULE FROM ABOVE STILL BINDS AND WAS APPLIED, NOT ASSUMED: "is it imported
+# by tracked code", not "is it a strategy". Checked before adding this — no file
+# outside these directories references r553/r554/r555 by module or by path, and
+# each script imports only stdlib. Nothing on Railway can break by their absence.
+#
+# If a mining run ever produces something production imports, it does NOT belong
+# here. It leaves git as PARAMETERS (thresholds, tables → strategy_params /
+# Supabase), never as an import target. r77_episode_vdb_cluster.py is the
+# cautionary tale directly above.
+src/research/r*_mining_*/
+_data/research/
