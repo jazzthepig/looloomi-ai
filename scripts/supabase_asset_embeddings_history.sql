@@ -70,31 +70,50 @@ as $$
 declare
   v_count int;
 begin
+  -- S-169 (2026-08-18): the last four columns used to be DROPPED here while the
+  -- table carried them and the Mac computed them ("16.9 measured dims/row" in
+  -- its own push log). measured_dims / source_completeness are how a consumer
+  -- tells a vector built from 4 measured dims from one built from 18 — the
+  -- NaN-honesty rule (I1) this repo already enforced twice inside the embedder,
+  -- reappearing at the persistence layer. Two writers into one table:
+  -- backfill_embedding_history.py wrote them, the daily path silently did not.
+  --
+  -- schema_version no longer defaults to 2. The embedder is at 3, so an
+  -- unstamped row was being labelled v2 — a guess presented as provenance. NULL
+  -- is answerable; a wrong 2 is not. (Same argument as S-151 refusing to
+  -- back-fill param_version.)
   insert into asset_embeddings_history
-    (d, symbol, asset_class, macro_regime, schema_version, dims, vec, vec_full)
+    (d, symbol, asset_class, macro_regime, schema_version, dims, vec, vec_full,
+     measured_dims, source_completeness, price_source, provenance_note)
   select
     (r->>'d')::date,
     upper(r->>'symbol'),
     r->>'asset_class',
     r->>'macro_regime',
-    coalesce((r->>'schema_version')::int, 2),
+    (r->>'schema_version')::int,
     (r->>'dims')::int,
     (r->>'vec')::vector(18),
-    (r->>'vec_full')::jsonb
+    (r->>'vec_full')::jsonb,
+    (r->>'measured_dims')::int,
+    (r->>'source_completeness')::real,
+    r->>'price_source',
+    r->>'provenance_note'
   from jsonb_array_elements(p_rows) as r
   on conflict (d, symbol) do update set
-    asset_class    = excluded.asset_class,
-    macro_regime   = excluded.macro_regime,
-    schema_version = excluded.schema_version,
-    dims           = excluded.dims,
-    vec            = excluded.vec,
-    vec_full       = excluded.vec_full,
-    computed_at    = now();
-
+    asset_class         = excluded.asset_class,
+    macro_regime        = excluded.macro_regime,
+    schema_version      = excluded.schema_version,
+    dims                = excluded.dims,
+    vec                 = excluded.vec,
+    vec_full            = excluded.vec_full,
+    measured_dims       = excluded.measured_dims,
+    source_completeness = excluded.source_completeness,
+    price_source        = excluded.price_source,
+    provenance_note     = excluded.provenance_note,
+    computed_at         = now();
   get diagnostics v_count = row_count;
   return v_count;
-end;
-$$;
+end $$;
 
 comment on function upsert_asset_embeddings_history(jsonb) is
   'M-WO-D1: idempotent daily upsert. p_rows is jsonb array of {d, symbol, '
