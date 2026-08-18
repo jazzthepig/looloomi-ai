@@ -35,6 +35,20 @@ const MobileApp             = lazy(() => import("./components/MobileApp"));
 const QuantMonitor          = lazy(() => import("./components/QuantMonitor"));
 const EstAlphaSection       = lazy(() => import("./components/EstAlphaSection"));
 const MyPortfolio           = lazy(() => import("./components/MyPortfolio"));
+// AssetRadar: restored 2026-08-18. It is rendered at the `cis.radar` section
+// below but its import was lost in the 227edcd split (App.jsx 1046 -> 445), so
+// clicking "Asset Radar" in the sidebar threw
+//     ReferenceError: AssetRadar is not defined
+// and unmounted the ENTIRE tree — blank page, sidebar gone. The SectionErrorBoundary
+// added in e9c5b4d could not catch it: the name is resolved while App itself
+// renders, which is above every boundary inside App.
+//
+// The build stayed green because CISContent.jsx:17 lazy-imports the same
+// component for its own tab, so Vite emitted the chunk and no bundler warning
+// fired. A module that is referenced somewhere is not a module that is in scope
+// here — same distinction as "declared in a .sql file" vs "exists in the
+// database" (S-166).
+const AssetRadar            = lazy(() => import("./components/AssetRadar"));
 // DiagnoseHome import removed 2026-08-13 — diagnose route retired, Portfolio
 // owns the "feed your book" entry. Component preserved in components/ for
 // future single-asset diagnose view.

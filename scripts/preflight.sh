@@ -450,6 +450,34 @@ python3 -m tests.test_mac_push_wrappers
 #               from a machine that never looked (the S-163 vacuous-pass hazard).
 #               Flip with NO_DIRECT_SUPABASE_STRICT=1 once step 3 lands.
 bash scripts/check_no_direct_supabase.sh
+# 3a-quattuorvicies. every <Component> used in .jsx is in scope (2026-08-18,
+#                    S-171). Clicking "Asset Radar" gave a BLANK page, sidebar
+#                    and all: `ReferenceError: AssetRadar is not defined`.
+#                    App.jsx:390 rendered it; App.jsx never imported it. The
+#                    import was lost in 227edcd (App.jsx 1046 -> 445); the same
+#                    split dropped DiagnoseHome, which a human caught in e9c5b4d.
+#                    One of the two was noticed. The other shipped.
+#                    NOTHING ELSE COULD HAVE CAUGHT IT: the Vite build stayed
+#                    green because CISContent.jsx lazy-imports the same component
+#                    for its own tab, so the chunk was emitted and no warning
+#                    fired — a module referenced somewhere is not a module in
+#                    scope here, the same distinction as "declared in a .sql
+#                    file" vs "exists in the database" (S-166). The
+#                    SectionErrorBoundary could not help: the name resolves while
+#                    App itself renders, above every boundary inside App, so the
+#                    whole tree unmounted. test_no_undefined_names is PYTHON ONLY
+#                    — its founding incident was `market_cap is not defined`
+#                    silently killing T2, the identical shape, and the guard's
+#                    scope stopped at the language boundary while the code did not.
+#                    ESLint 9 IS configured here and `no-undef` does NOT flag it
+#                    (measured: exit 0 on a probe). react/jsx-no-undef would;
+#                    it needs eslint-plugin-react, which is not installed —
+#                    installing it is the correct long-term fix. Until then this
+#                    uses a criterion that needs no parser: a name occurring ONLY
+#                    as `<Tag` and nowhere else in the file cannot have been
+#                    defined. Verified by negative control — removing the restored
+#                    import makes it fail on App.jsx again.
+python3 -m tests.test_no_undefined_jsx_components
 # 3a-duodevicies. the moat is claimed only where it is measured (2026-08-12, S-141).
 #                ARCHITECTURE.md line 164: "A signal we have not run through our own
 #                loop is one we must not claim. Claiming it unproven is
