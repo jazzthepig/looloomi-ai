@@ -511,6 +511,53 @@ async def supabase_rpc(fn_name: str, payload: dict | None = None):
         return None
 
 
+async def supabase_rpc_write(fn_name: str, payload: dict | None = None):
+    """RPC that WRITES — role-gated. Returns (ok, result_or_reason). (S-169)
+
+    WHY A SECOND FUNCTION. `supabase_rpc` above has no role gate. It predates
+    S-149 and is used for reads, so gating it would break replicas that
+    legitimately read. But an ungated RPC is a hole straight through the write
+    boundary: a replica calling `upsert_*` writes the shared record while
+    `supabase_insert_table` right next to it refuses. One door locked, the door
+    beside it not.
+
+    Found while wiring the Mac lane's writes through Railway (S-169), which is
+    the moment it would have mattered — those pushes are RPC calls, so routing
+    them through an ungated helper would have moved the write out from behind
+    the gate rather than behind it.
+
+    TWO-VALUED RETURN, deliberately. `supabase_rpc` returns None for "not
+    configured", "declined", "network error" and "function raised" alike. That
+    collapse is the same one that hid eleven missing tables (S-166) and a
+    read-only production (S-168). The caller needs to tell the operator WHICH,
+    because the fixes are different: set a variable, redeploy, or fix a payload.
+    """
+    _refusal = refuse_write(f"rpc {fn_name}")
+    if _refusal:
+        note_refusal(f"rpc:{fn_name}", _refusal)
+        return False, _refusal
+    if not _SB_URL or not _SB_KEY:
+        return False, "SUPABASE_URL / SUPABASE_KEY not configured on this process"
+    url = f"{_SB_URL}/rest/v1/rpc/{fn_name}"
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}",
+               "Content-Type": "application/json"}
+    try:
+        resp = await _supabase_request_with_retry("POST", url, json=(payload or {}), headers=headers)
+        if resp is None:
+            return False, "no response from Supabase after retries"
+        if resp.status_code in (200, 201, 204):
+            try:
+                return True, resp.json()
+            except Exception:
+                return True, None
+        # PostgREST puts OUR schema's own message here. Pass it through: a
+        # generic failure string does not merely fail to help, it funds wrong
+        # answers (S-138, the api_keys intended_use column).
+        return False, f"HTTP {resp.status_code}: {(resp.text or '')[:300]}"
+    except Exception as e:                                  # noqa: BLE001
+        return False, f"{type(e).__name__}: {e}"
+
+
 async def supabase_get_latest_track_record() -> list:
     """Latest signal_track_record batch (list of {signal,grade,n,avg_alpha_pct,
     alpha_win_pct, avg_edge_beta_adj_pct, edge_beta_adj_t, avg_beta_pit,

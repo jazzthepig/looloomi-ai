@@ -419,6 +419,37 @@ python3 -m tests.test_no_sql_file_grants_public_access
 #              Defaulting to production would let any laptop write the LP-facing
 #              record, which is worse than the outage it would prevent.
 python3 -m tests.test_production_can_write
+# 3a-duovicies. Mac-lane writes come through Railway, and cannot report a write
+#               that did not happen (2026-08-18, S-169 / Mac-A's
+#               §NO-DIRECT-SUPABASE step 2). Confirmed 2026-08-16 on the Mac:
+#                 [M-WO-D1] built 58 rows ... ERROR SUPABASE_KEY missing ...
+#                 [M-WO-D1] push complete
+#               Build succeeded, write did not, script said "complete". Measured
+#               2026-08-18: asset_embeddings_history 0 rows, risk_meter_history
+#               0 rows — that path never landed a single row. Mechanism: the Mac
+#               .env holds the ANON key and both RPCs are SECURITY INVOKER, so
+#               they run with the caller's privileges and RLS denies the tables.
+#               service_role is deliberately in no .env, so the write is routed
+#               to the process that already holds it rather than the key handed out.
+#               PINS: ok=false always carries rows_written=0 and a NAMED reason
+#               (role gate vs Supabase rejection — different owners, different
+#               fixes, and collapsing them sent us down the wrong one twice this
+#               week); and the write uses supabase_rpc_write, not the ungated
+#               supabase_rpc, which predates S-149 and would have put Mac writes
+#               OUTSIDE the boundary while supabase_insert_table beside it refuses.
+python3 -m tests.test_mac_push_wrappers
+# 3a-trevicies. §NO-DIRECT-SUPABASE step 5, INFO-ONLY for now. Sequence is
+#               (1) Mac sweep → (2) wrappers → (3) Mac switches callers →
+#               (4) backfill → (5) this goes hard-fail. Step 2 landed today;
+#               step 3 has not, so failing now would block every push on a
+#               violation that is expected, and a gate that fires on known-and-
+#               planned state teaches people to use --no-verify.
+#               Three-valued: violations / clean / NOT-CHECKED-because-unmounted.
+#               The third state is said out loud — this greps a Mac volume absent
+#               from the sandbox and CI, and a silent skip would report "clean"
+#               from a machine that never looked (the S-163 vacuous-pass hazard).
+#               Flip with NO_DIRECT_SUPABASE_STRICT=1 once step 3 lands.
+bash scripts/check_no_direct_supabase.sh
 # 3a-duodevicies. the moat is claimed only where it is measured (2026-08-12, S-141).
 #                ARCHITECTURE.md line 164: "A signal we have not run through our own
 #                loop is one we must not claim. Claiming it unproven is
