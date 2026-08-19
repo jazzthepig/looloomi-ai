@@ -124,12 +124,56 @@ async def get_funding_rounds(response: Response, limit: int = 20):
     """
     try:
         raises = _sanitize_raises(await get_vc_raises(limit))
-        data_status = "ok" if raises else "no_data"
         response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=3600"
-        return {"timestamp": datetime.now().isoformat(), "data": raises, "source": "defillama", "data_status": data_status}
+        return {"timestamp": datetime.now().isoformat(), "data": raises,
+                **_raises_provenance(raises)}
     except Exception as e:
         _logger.error(f"Error in {__name__}: {e}", exc_info=True)
-        return {"timestamp": datetime.now().isoformat(), "data": [], "source": "defillama", "data_status": "error"}
+        return {"timestamp": datetime.now().isoformat(), "data": [],
+                "source": "unavailable", "sources": [], "data_status": "error",
+                "degraded": True,
+                "note": "the funding-round fetch raised; see the deploy log"}
+
+
+def _raises_provenance(rows: list) -> dict:
+    """Report which source ACTUALLY produced these rows (2026-08-19).
+
+    `"source": "defillama"` was hardcoded into all four return paths of this
+    router. It has been false since June: the code's own comment reads
+    "DeFiLlama /raises paywalled 2026-06", CryptoRank v2 is the intended primary
+    and its free tier answers 403, so the rows that arrive come from RSS headline
+    extraction. The endpoint has been attributing RSS-scraped headlines to a
+    structured funding-round API on a page an LP can read.
+
+    A label is not evidence. Every row already carries its own `source`; this
+    reads them instead of asserting one.
+
+    DEGRADED IS A THIRD STATE. `data_status` was ok/no_data — two values for
+    three situations. "1 round from an RSS fallback" is not the same as "the
+    market had a quiet week", and the UI cannot tell them apart unless the API
+    does. Same collapse as no-signal vs no-data everywhere else in this repo.
+    """
+    srcs = sorted({(r.get("source") or "unknown") for r in rows if isinstance(r, dict)})
+    primary = srcs[0] if len(srcs) == 1 else ("mixed" if srcs else "unavailable")
+    # RSS is a fallback, not a funding-round feed. Saying so is the whole point.
+    fallback_only = bool(srcs) and all(s.startswith(("rss", "coingecko")) for s in srcs)
+    if not rows:
+        status, degraded = "no_data", True
+    elif fallback_only or len(rows) < 5:
+        status, degraded = "degraded", True
+    else:
+        status, degraded = "ok", False
+    note = None
+    if degraded and rows:
+        note = ("structured funding-round feeds are gated — DeFiLlama /raises went "
+                "paywalled 2026-06 and CryptoRank v2 needs a paid tier. These rows "
+                "are best-effort from a fallback source and are not a complete "
+                "picture of the week's raises.")
+    elif degraded:
+        note = ("no funding rounds available from any configured source. This is "
+                "a feed outage, not a quiet market.")
+    return {"source": primary, "sources": srcs, "data_status": status,
+            "degraded": degraded, "note": note, "count": len(rows)}
 
 
 @router.get("/api/v1/vc/portfolios")
@@ -163,12 +207,26 @@ async def get_upcoming_unlocks(response: Response, days: int = 30):
     """
     try:
         data = await get_token_unlocks(days_ahead=days)
-        data_status = "ok" if data else "no_data"
         response.headers["Cache-Control"] = "public, max-age=3600, stale-while-revalidate=7200"
-        return {"timestamp": datetime.now().isoformat(), "data": data, "source": "defillama", "data_status": data_status}
+        # Measured 2026-08-19: this returns ZERO rows for a 30-day window. There
+        # are always unlocks in a 30-day window, so an empty list is a feed
+        # problem, not a calm calendar — and `data_status: "no_data"` reads like
+        # the calendar. Named as degraded so the surface can say which it is.
+        degraded = not data
+        return {"timestamp": datetime.now().isoformat(), "data": data,
+                "source": "defillama" if data else "unavailable",
+                "count": len(data),
+                "data_status": "ok" if data else "degraded",
+                "degraded": degraded,
+                "note": None if data else
+                        (f"no unlocks returned for the next {days} days. A 30-day "
+                         f"window is never genuinely empty — treat this as a "
+                         f"DeFiLlama /emissions outage, not a quiet calendar.")}
     except Exception as e:
         _logger.error(f"Token unlocks error: {e}", exc_info=True)
-        return {"timestamp": datetime.now().isoformat(), "data": [], "source": "defillama", "data_status": "error"}
+        return {"timestamp": datetime.now().isoformat(), "data": [], "count": 0,
+                "source": "unavailable", "data_status": "error", "degraded": True,
+                "note": "the unlocks fetch raised; see the deploy log"}
 
 
 @router.get("/api/v1/vc/overlap")

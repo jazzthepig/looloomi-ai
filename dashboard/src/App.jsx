@@ -28,7 +28,10 @@ import { CISContent } from "./components/CISContent";
 import { T, FONTS } from "./tokens";
 
 /* ── Lazy-loaded views (below fold / conditional / heavy) ── */
-const VaultPage             = lazy(() => import("./components/VaultPage"));
+// Vault UNPUBLISHED 2026-08-19 (Jazz): content down, "in progress" up with a GP
+// contact. VaultPage.jsx stays in the tree untouched — unpublishing is a routing
+// decision, deleting is a loss. Restoring is swapping the component back below.
+const VaultInProgress       = lazy(() => import("./components/VaultInProgress"));
 const ApiKeysPage           = lazy(() => import("./components/ApiKeysPage"));
 const ProtocolIntelligence  = lazy(() => import("./components/ProtocolIntelligence"));
 const MobileApp             = lazy(() => import("./components/MobileApp"));
@@ -58,6 +61,7 @@ const StrategiesPage        = lazy(() => import("./components/StrategiesPage"));
 const MultiFactorStrategies = lazy(() => import("./components/MultiFactorStrategies"));
 const CISAssetDetail        = lazy(() => import("./components/CISAssetDetail"));
 const SignalFeed            = lazy(() => import("./components/SignalFeed"));
+const ResearchTrackRecord   = lazy(() => import("./components/ResearchTrackRecord"));
 
 /* ── Staging environment banner ─────────────────────────────────────────── */
 function StagingBanner() {
@@ -304,7 +308,7 @@ function DesktopApp() {
           {visited.has("vault") && (
             <section style={contentPad}>
               <Suspense fallback={<SectionLoader />}>
-                <VaultPage isSection={true} />
+                <VaultInProgress isSection={true} />
               </Suspense>
             </section>
           )}
@@ -315,7 +319,16 @@ function DesktopApp() {
           {visited.has("quantgp") && (
             <section style={contentPad}>
               <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-                <SectionLabel label="Research Desk" sub="Factor research · Paper books" />
+                <SectionLabel label="Research Desk" sub="Validated backtest · Paper books" />
+                {/* The one leg of nine that survived the wide, un-gated test — with its
+                    losing years and its cost ladder on the page. Added 2026-08-19.
+                    Performance is published; construction is not (Jazz 2026-08-12:
+                    挖掘的最终成果不可以免费暴露). */}
+                <div style={{ marginBottom: 44 }}>
+                  <Suspense fallback={<SectionLoader />}>
+                    <ResearchTrackRecord />
+                  </Suspense>
+                </div>
                 <QuantGPContent />
               </div>
             </section>
