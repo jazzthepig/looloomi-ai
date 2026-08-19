@@ -31,12 +31,41 @@ ANON="${COMET_ANON:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
 FAILS=(); CRIT=0
 
-# ── 1. liveness ──────────────────────────────────────────────────────────────
+# ── 1. liveness + WRITE CAPABILITY ───────────────────────────────────────────
+# The writes check was added 2026-08-18 (S-174) because THIS PROBE MISSED THE
+# BIGGEST OUTAGE OF THE WEEK. From 08-12 to 08-17 production ran with
+# APP_ROLE unset, so the S-149 role gate refused every write to Supabase:
+# cis_scores, beta_core_nav and experiment_runs all stop dead on 08-12.
+#
+# Throughout those five days this probe returned ✅ every three hours — forty
+# consecutive green readings over a total write outage — because a read-only
+# deployment answers 200 on absolutely everything. `status` was "healthy",
+# `data_layer.supabase` was "ok", the universe endpoint served 58 assets, and
+# the Mac engine kept pushing and kept getting 200s back. Every check this
+# script had was measuring the read path.
+#
+# **A probe that only exercises reads cannot see a system that has stopped
+# writing.** Reads are what a monitor naturally does, so the blind spot is the
+# default, not an oversight — which is why it needs to be named in the file.
+# Same curl, same response, no extra cost: /health now carries the block.
 H=$(curl -sm 15 "$BASE/health" 2>/dev/null)
-HS=$(printf '%s' "$H" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(d.get("status","?"),d.get("data_layer",{}).get("supabase","?"))' 2>/dev/null || echo "? ?")
-read -r STATUS SBSTATE <<<"$HS"
+HS=$(printf '%s' "$H" | python3 -c 'import sys,json
+d=json.load(sys.stdin)
+w=d.get("writes") or {}
+# "absent" is a THIRD state, not a pass: an older deployment predating S-168 has
+# no writes block, and reporting that as enabled would rebuild the exact silence
+# this check exists to break.
+print(d.get("status","?"),
+      d.get("data_layer",{}).get("supabase","?"),
+      ("yes" if w.get("enabled") is True else
+       "absent" if not w else "NO"),
+      (w.get("role") or "?"))' 2>/dev/null || echo "? ? ? ?")
+read -r STATUS SBSTATE WRITES WROLE <<<"$HS"
 [ "$STATUS" = "healthy" ] || FAILS+=("health=$STATUS")
 [ "$SBSTATE" = "ok" ]     || FAILS+=("supabase=$SBSTATE")
+# A read-only production is not "degraded", it is a silent data-loss outage: the
+# API looks perfect while nothing is being persisted. Loud on purpose.
+[ "$WRITES" = "yes" ]     || FAILS+=("WRITES=$WRITES(role=$WROLE)")
 
 # ── 2. the endpoint that died (THE check) ────────────────────────────────────
 # Retry once before failing: a probe that cries wolf gets muted, and a muted
