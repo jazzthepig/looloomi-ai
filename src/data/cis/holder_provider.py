@@ -116,9 +116,66 @@ async def refresh_holder_map() -> dict:
 
     await asyncio.gather(*[_go(s, c, a) for s, (c, a) in _TOKEN_REGISTRY.items()])
     await _redis_set(_HOLDER_MAP_KEY, out, ttl=_MAP_TTL)
+    await _persist_history(out)
     logger.info(f"[HOLDER] refreshed: {len(out)}/{len(_TOKEN_REGISTRY)} tokens "
                 f"({', '.join(sorted(out)) or 'none'})")
     return out
+
+
+async def _persist_history(rows: dict) -> bool:
+    """Append today's concentration snapshot to `holder_concentration_history` (S-173).
+
+    WHY THIS DID NOT EXIST. `_stage_from` above says it plainly: the static top-10
+    share is a "provisional" proxy and "the dynamic timeseries (Phase 2)
+    supersedes it with real diffusion velocity". `_fetch_one` returns
+    `"chuquan": False,  # Phase 2 (needs timeseries)`.
+
+    The timeseries never arrived because nothing ever stored one. Every refresh
+    computed concentration, wrote it into a TTL'd Redis map, and let the previous
+    day's value expire. **A velocity cannot be computed from a single snapshot**,
+    so the entire holder-cohort direction — which is what ARCHITECTURE.md calls
+    the deepest object, the Entity/Decision — was gated behind a table that was
+    never created.
+
+    This is the same defect as activation_z (computed, discarded), the strategy
+    library in a 24h-TTL Redis key (S-105), and the eleven tables the code wrote
+    to that did not exist (S-166). The pattern is not carelessness: it is that
+    computing something FEELS like having it, and only a schema disagrees.
+
+    Best-effort by design. A failure here degrades tomorrow's velocity study; it
+    must not break today's CIS scoring, which reads the Redis map and is
+    unaffected. But the failure is REPORTED — a silent False is what made the
+    other four invisible.
+    """
+    if not rows:
+        return False
+    from datetime import date
+    from src.api.store import supabase_upsert_table
+
+    today = date.today().isoformat()
+    payload = [{
+        "d": today,
+        "symbol": sym.upper(),
+        "top10_share": r.get("top10"),
+        "hhi": r.get("hhi"),
+        "stage": r.get("stage"),
+        "n_top": r.get("n_top"),
+        "source": r.get("source"),
+    } for sym, r in rows.items() if isinstance(r, dict)]
+
+    ok = await supabase_upsert_table("holder_concentration_history", payload,
+                                     on_conflict="d,symbol")
+    if ok:
+        logger.info("[HOLDER] history: %d snapshots persisted for %s "
+                    "(velocity computable once >=2 days exist)", len(payload), today)
+    else:
+        # Named loudly. The whole point of this function is that the previous
+        # arrangement lost data quietly for months.
+        logger.warning("[HOLDER] history NOT persisted (%d rows). Either this "
+                       "process is not APP_ROLE=production or Supabase declined. "
+                       "Diffusion velocity stays uncomputable until this lands.",
+                       len(payload))
+    return ok
 
 
 async def get_holder_map() -> dict:
