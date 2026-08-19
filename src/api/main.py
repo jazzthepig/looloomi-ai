@@ -299,6 +299,41 @@ async def _start_ohlcv_collector():
         print("[OHLCV] ✅ daily collector loop scheduled")
 
 
+async def _forward_record_loop():
+    """Winds the forward-record clocks and pages when a book stops (S-175).
+
+    WHY THIS EXISTS. `refresh_depth_divergence()` shipped 2026-08-18 with ZERO
+    callers — its only two mentions in the repo were a test docstring and a
+    preflight comment, both describing it, neither running it. And the ① book
+    went 5 days without a mark in August while `/internal/beta-core-clock`
+    reported that accurately to nobody, because a status endpoint only speaks
+    when asked.
+
+    Deferred 40 min past boot so it lands after the OHLCV collector: computing
+    depth_z against a panel that is mid-refresh would write a thin day and then
+    look like a quiet market.
+    """
+    await _asyncio.sleep(2400)
+    while True:
+        try:
+            from src.data.signals.forward_record_keeper import run_once
+            r = await run_once()
+            flag = "" if r["ok"] else "  ⚠️"
+            print(f"[FWD] depth={r['depth_divergence']['written']}w/"
+                  f"{r['depth_divergence']['resolved']}r · "
+                  f"books={[b['status'] for b in r['books']]}{flag}")
+        except Exception as _e:
+            # Loud: the whole point of this loop is that silence was the bug.
+            print(f"[FWD] ⚠️  forward-record pass FAILED: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_forward_record_loop():
+    _asyncio.create_task(_forward_record_loop())
+    print("[FWD] ✅ forward-record keeper scheduled (writes the log, pages on a stalled book)")
+
+
 # ── Daily signal-outcome resolver ─────────────────────────────────────────────
 # Resolves 30-day directional outcomes (WIN/LOSS/EXPIRED) for matured signals.
 # Runs ~once/day in-process so the LP track-record metrics stay current without
