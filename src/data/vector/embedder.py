@@ -556,3 +556,80 @@ def generate_regime_embedding(
         0.0,   # avg_oi_mcap_ratio placeholder
     ]
     return vec
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NaN-honesty helpers — ONE definition, for every writer (S-178, 2026-08-19)
+# ─────────────────────────────────────────────────────────────────────────────
+# WHY THESE MOVED HERE. `asset_embeddings_history` has two writers:
+# scripts/backfill_embedding_history.py and the Mac-side daily push. The backfill
+# computed measured_dims / source_completeness inline and filtered thin rows; the
+# Mac push wrote neither and filtered nothing. Same table, one honest writer and
+# one not — S-169's shape, and the reason the daily path would have quietly filled
+# the table with vectors nobody could tell apart from complete ones.
+#
+# THE THRESHOLD IS 10, AND THAT NUMBER WAS ALMOST GOT WRONG. Minimax-A's migration
+# plan proposed MIN_MEASURED_DIMS = 4, having read `MIN_SHARED_DIMS = 4` above —
+# a DIFFERENT quantity (the point at which cosine refuses to compare two vectors).
+# The write floor is 10 of 27, from backfill_embedding_history.py:64. Acked as
+# written it would have given the two writers two thresholds, which is precisely
+# the hole the shared helpers exist to close. He asked for the value to be
+# confirmed rather than assuming his own reading — that instinct is what caught it.
+#
+# DELIBERATELY NOT INCLUDED: a `nan_honest: True` column. A field that can only
+# ever be True carries no information; it is the always-on warning of S-105 in
+# column form. `measured_dims` and `source_completeness` already say how honest a
+# row is, in numbers a consumer can filter on.
+
+MIN_MEASURED_DIMS = 10   # of ASSET_DIMS_V2 (27). Below this the row is not written.
+
+
+def measured_dims(vec) -> int:
+    """How many dims are actually measured. NaN != NaN is the test (I1)."""
+    return sum(1 for x in vec if x == x)
+
+
+def source_completeness(vec) -> float:
+    """Measured fraction, 0..1. The number a consumer filters on when it wants
+    stricter than the write floor."""
+    n = len(vec) if vec is not None else 0
+    return round(measured_dims(vec) / n, 3) if n else 0.0
+
+
+def is_thin(vec) -> bool:
+    """True ⇒ do not write. backfill_embedding_history.py:60 states the reason:
+    'Writing it would put a mostly-NaN vector in the same table as a good one,
+    and the next person to query the table would have no reason to suspect the
+    difference.'"""
+    return measured_dims(vec) < MIN_MEASURED_DIMS
+
+
+def vec_to_pg_row(d, symbol, vec, asset_class=None, macro_regime=None,
+                  price_source=None, provenance_note=None) -> dict:
+    """The single serialisation of a vector into an asset_embeddings_history row.
+
+    Every writer uses this. Two serialisation paths is how the two writers drifted
+    in the first place.
+
+    `vec` is stored as NULL in the pgvector column and authoritatively in
+    `vec_full` jsonb: pgvector rejects NaN, and coercing NaN to 0.0 to satisfy it
+    would turn 'unmeasured' into 'measured zero' — the exact I1 violation this
+    whole layer exists to prevent.
+
+    `schema_version` is read from the module constant, never passed in. A caller
+    that can supply the version is a caller that can supply the wrong one.
+    """
+    return {
+        "d": d,
+        "symbol": str(symbol).upper(),
+        "asset_class": asset_class,
+        "macro_regime": macro_regime,
+        "schema_version": SCHEMA_VERSION,
+        "dims": len(vec),
+        "vec": None,
+        "vec_full": [None if x != x else round(x, 6) for x in vec],
+        "measured_dims": measured_dims(vec),
+        "source_completeness": source_completeness(vec),
+        "price_source": price_source,
+        "provenance_note": provenance_note,
+    }
