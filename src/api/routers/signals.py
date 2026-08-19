@@ -459,14 +459,22 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
                     if _aa.size > 3 and _aa.std() > 0 else None)
     alpha_win_rate = round(float((_aa > 0).mean() * 100), 1) if _aa.size else None
 
-    # Equity curve with dates for chart
+    # Equity curve with dates for chart.
+    #
+    # Sized by POSITION_FRAC like every other compounding loop in this function
+    # (2026-08-19). It was not, and the omission is the interesting part: the
+    # correction that introduced POSITION_FRAC landed on `equity_curve` above —
+    # which feeds max_drawdown and CAGR — and on NEITHER of the two dated series
+    # the chart actually renders. **The fix reached the statistics and missed the
+    # picture.** Found only because a guard written for the alpha series swept
+    # every compounding loop instead of the one that prompted it.
     equity_series = []
     eq = 100_000.0
     for r in closed:
         ret = r.get("return_pct")
         if ret is None:
             continue
-        eq  = eq * (1 + ret / 100.0)
+        eq  = eq * (1 + POSITION_FRAC * (ret / 100.0))
         equity_series.append({
             "date":   r.get("exit_date") or r.get("signal_date"),
             "equity": round(eq, 2),
@@ -474,16 +482,45 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
             "return": ret,
         })
 
-    # Alpha equity curve — compounds benchmark-relative alpha (the HONEST chart). The
-    # absolute equity_series above craters because it's a long-only absolute-return sleeve
-    # in a down market; alpha is the fair curve for relative OUTPERFORM signals.
+    # Alpha equity curve — compounds benchmark-relative alpha. Alpha is the fair
+    # curve for relative OUTPERFORM signals: the absolute series craters simply for
+    # being long in a down market.
+    #
+    # ── SAME SIZING AS THE ABSOLUTE CURVE, AND IT WAS MISSING (2026-08-19) ──────
+    # The absolute `equity_curve` above was fixed to size each signal as a fraction
+    # of a diversified book, with a comment naming the failure it removed: "one bad
+    # signal wipe[s] the curve (the -94% artifact)". THAT FIX WAS NEVER APPLIED
+    # HERE. This loop compounded each signal at FULL notional, and the frontend
+    # explicitly prefers this series and labels it "the HONEST curve".
+    #
+    # Measured on the live page 2026-08-19: 84 resolved signals, average 30d alpha
+    # −4.09%. Compounded at full notional, 0.9591^84 = 0.030 → the chart read
+    # **−97.45%**, while the MAX DRAWDOWN stat on the same screen read −37.31%
+    # because that one comes from the fixed curve. Two curves, one page,
+    # contradicting each other — and the wrong one is the one on the chart.
+    #
+    # The defect class is the point: the fix was applied to the INSTANCE, not the
+    # class. Same shape as eleven missing tables, a probe that only checked reads,
+    # and a schema_version defaulted in one writer and not the other. Whenever a
+    # correction lands, the question is which OTHER call sites share the flaw.
+    #
+    # 84 resolved signals over ~85 days at 8.3 days average hold means roughly ten
+    # positions are open at once — they are concurrent, not sequential, so a signal
+    # can only ever move a slice of the book. POSITION_FRAC is defined once above
+    # and reused here on purpose: two curves on one page must not disagree about
+    # how large a position is.
+    #
+    # ⚠️ THIS DOES NOT MAKE THE SIGNALS GOOD. At 0.10 the curve reads about −29%
+    # instead of −97%. The chart was wrong AND the underlying is negative: 26.6%
+    # alpha win rate, −4.09% average 30d alpha. Fixing an artifact on top of a real
+    # problem must not be mistaken for fixing the problem.
     alpha_equity_series = []
     aeq = 100_000.0
     for r in sorted(resolved_signals, key=lambda x: (x.get("exit_date") or x.get("signal_date") or "")):
         a = r.get("alpha_30d")
         if a is None:
             continue
-        aeq *= (1 + a / 100.0)
+        aeq *= (1 + POSITION_FRAC * (a / 100.0))
         alpha_equity_series.append({"date": r.get("exit_date") or r.get("signal_date"),
                                     "equity": round(aeq, 2), "symbol": r.get("symbol"), "alpha": a})
 
