@@ -666,5 +666,32 @@ from src.data.vector.embedder import SCHEMA_VERSION as VEC_SCHEMA, ASSET_DIMS_V2
 print(f"  ✓ cis_push contract SCHEMA_VERSION={SCHEMA_VERSION} · vector schema v{VEC_SCHEMA} ({ASSET_DIMS_V2}-dim)")
 PY
 
+# 3a-quinvicies. the two forward records actually record (2026-08-18, S-173).
+#                S-172 measured -1.85% 20d excess (t=-5.23) for depth-up/price-flat
+#                IN SAMPLE; depth_divergence_log tests it forward, inception
+#                2026-08-18, gate 2026-10-17. holder_concentration_history is the
+#                timeseries holder_provider.py has been deferring since inception
+#                — its own code reads `"chuquan": False,  # Phase 2 (needs
+#                timeseries)` and every refresh wrote concentration into a TTL'd
+#                Redis map and let yesterday expire. A velocity cannot be computed
+#                from one snapshot, so the entire holder-cohort direction was
+#                gated behind a table nobody created.
+#                GUARDS TWO PROPERTIES, both learned the hard way this week:
+#                (1) a row records how much of the panel it saw. The FIRST call to
+#                refresh_depth_divergence() wrote 25 rows against a 262-symbol
+#                panel — the Crypto feed is 10 days stale while the other classes
+#                are current. Unrecorded, the log fills with 25 rows a day and
+#                looks healthy.
+#                (2) an outcome column is never written at creation time, and a
+#                failed persist is REPORTED. Six incidents this week were all the
+#                same shape — computed and discarded, healthy from outside:
+#                activation_z (no write path), the strategy library in a 24h Redis
+#                key, signal_outcomes dead 104 days, eleven missing tables, a
+#                read-only production, asset_embeddings_history at 0 rows.
+#                Also pins compliance (#1): the emitted vocabulary is
+#                UNDERWEIGHT/NEUTRAL only — a negative conditional in a long-only
+#                book is a WEIGHT decision, never a direction.
+python3 -m tests.test_forward_records_actually_record
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."
