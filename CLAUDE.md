@@ -16,7 +16,16 @@
 | Strategy truth / frozen cells | `STRATEGY_PLAYBOOK.md` | |
 | The soul / north star | `ARCHITECTURE.md` | read when a decision touches what we ARE |
 | Behavioral-edge doctrine | `docs/TRADER_TOM_DOCTRINE.md` | read before building any sleeve |
+| **Mining output — where the research actually IS** | `Shadow/cometcloud-local/_reports/` (`absorb_input/` = R-number + vector_mine summaries, 217 files) | Minimax lane writes it; Seth/Austin **READ it before claiming a result does not exist** |
 | Full history | `git log` | |
+
+**⚠️ "NOT authority" ≠ "not worth reading" — this cost real work (2026-08-19).** Rule #2 below
+says Shadow is read-only and drifts, and that is about the *contract*: never take a schema or a
+config from it. It says nothing about the RESEARCH in it, and the source-of-truth table did not
+mention `_reports/` at all. Reading the rule as "ignore Shadow" led Seth to survey four
+directories, find one verifiable backtest, and tell Jazz we did not have more — while
+`_reports/absorb_input/` held 14 R-number summaries including R70's held-out OOS grid, the single
+best-disciplined result we own. **Before saying a result does not exist, grep `_reports/`.**
 
 **Cold-start budget is enforced, not advisory** (`tests/test_cold_start_contract.py`, S-165).
 Only MEMORY.md was capped, so the cost moved next door: PROJECT_STATE reached 315k chars
