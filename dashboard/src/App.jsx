@@ -399,7 +399,14 @@ function DesktopApp() {
                   <span aria-hidden="true">←</span>
                   <span>Back to CIS Engine</span>
                 </button>
-                <SectionLabel label="Asset Radar" sub="30-asset live scoring" />
+                {/* Was `sub="30-asset live scoring"` — a hardcoded count sitting
+                    directly above a live one. Measured 2026-08-19: the header said
+                    30 while the table said 31, on the same screen. It is a small
+                    thing and it is the same class as everything else found this
+                    week — a number written down instead of measured, already wrong,
+                    and wrong by more every time the universe grows. AssetRadar owns
+                    the count; the label should not have a second opinion. */}
+                <SectionLabel label="Asset Radar" sub="live scoring" />
                 <Suspense fallback={<SectionLoader />}>
                   <AssetRadar onNavigate={navigate} />
                 </Suspense>

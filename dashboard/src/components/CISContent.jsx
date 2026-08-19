@@ -93,7 +93,10 @@ export function CISContent({ onUniverseLoad, onNavigate }) {
       <div style={{ marginTop: 40 }}>
         <CompactSectionLabel
           label="Asset Radar"
-          meta="30 assets · 10 categories · live CG Pro"
+          /* hardcoded "30 assets" removed 2026-08-19 — the live table renders 31.
+             A count in a label that no longer tracks the thing it counts is
+             worse than no count: it reads as authoritative. */
+          meta="10 categories · live CG Pro"
           accent="cyan"
         />
         <Suspense fallback={<SectionLoader />}>
