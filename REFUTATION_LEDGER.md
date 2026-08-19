@@ -9856,6 +9856,101 @@ weakness that needs BTC-MA gating to survive.
 
 ---
 
+---
+
+## ⚠️ 编号冲突待仲裁(2026-08-18)
+
+**`S-168` 被两处不同的工作使用:**
+
+- **本 ledger(下方)** = 生产只读 5 天(`APP_ROLE` 未设,角色闸门拒绝所有写入)。
+  这个号已经嵌进 `scripts/preflight.sh`、`tests/test_production_can_write.py`、
+  `src/api/runtime_role.py` 约 30 处注释。
+- **`PROJECT_STATE.md` header** = R540-R547 production book 在 LIQUID16 上失败。
+
+**两边都没有在 ledger 里 claim 过 heading** —— CLAUDE.md 的规矩是"先占标题再写正文",
+所以在这一刻之前号是空的,两个 lane 各自以为拿到了。
+
+**我没有单方面给对方改号。** 我按代码里已存在的引用补写下方两条(S-168 / S-169),
+另一条需要一个新号。**Jazz 或 dashboard lane 定。**
+
+**这暴露了一个真问题:`docs/R_NUMBERING_CONVENTION.md` 把号按 lane 前缀分开
+(Seth/Austin = S,Minimax = M),但 Seth/Austin 这条 lane 现在同时有两个 agent 在跑。
+前缀分到 lane 不够,要分到 agent,或者占号必须先落 ledger。**
+
+---
+
+## S-168 — 生产是只读的,而每一次推送都返回 200(2026-08-18)
+
+**实测.** `GET /health` → `"environment": "replica"`。S-149 的角色闸门:
+`ROLE != production` ⇒ `supabase_insert_table` / `supabase_upsert_table`
+**在第一行就返回 False**。
+
+```
+cis_scores       最后写入 2026-08-12 14:42Z    66 小时
+beta_core_nav    最后 mark 2026-08-12          81 小时  (① 时钟 marks:0)
+experiment_runs  最后      2026-08-12 02:16Z   78 小时
+```
+
+**而 Mac T1 引擎一直在推** —— `last_cis_push: age 38min, 43 assets, stale:false`。
+**推送到了、返回 200、被丢掉了。到达并丢弃,和到达并存储,从外面看一模一样。**
+
+**根因是一个关于别的系统的信念,写下来了,从没验证过。** `runtime_role.py`:
+
+> `# production here is deliberate and load-bearing: Railway sets ENVIRONMENT=production explicitly`
+
+Railway 上两个变量都没有。**这句话语气很重 —— "deliberate and load-bearing" ——
+而正是那个语气让人不再去查。自信的措辞不是证据,注释探测不了环境变量。**
+本周第二次(另一次是 S-171 里我自己写的 "ORDER IS LOAD-BEARING")。
+
+**为什么没有任何东西报警.** `refuse_write()` 每个目标只警告一次(S-149 刻意的设计,
+每五分钟一条会淹掉启动横幅)。而 `environment: replica` **一直在 /health 上** ——
+它报的是角色,不是后果,没人把 "replica" 读成"我们什么都没在存"。
+
+> **本周每一个故障都是这个形状:状态可见,后果不可见。**
+
+**修复.** Jazz 设 `APP_ROLE=production`;`/health` 增加 `writes` 块,用文字说后果
+("READ-ONLY — nothing is being persisted")并给出确切修法。
+闸门仍然 fail-closed:未设 = replica,**因为往 production 猜会让任何一台笔记本写 LP 面向的记录。**
+
+**Verdict.** SHIPPED,已验证 `{"enabled": true, "role": "production"}`,① 账本 08-17 恢复 mark。
+
+---
+
+## S-169 — Mac lane 的写入改走 Railway,顺带发现 RPC 一直在丢诚实度字段(2026-08-18)
+
+**Mac-A 的 §NO-DIRECT-SUPABASE,2026-08-16 实测:**
+```
+[M-WO-D1] built 58 rows (live), 16.9 measured dims/row
+[M-WO-D1] ERROR — SUPABASE_URL or SUPABASE_KEY missing in .env
+[M-WO-D1] push complete
+```
+构建成功,写入没有,脚本说 "complete"。
+**而两张目标表实测都是 0 行 —— 不是"停了三周",是从来没落过一行。**
+
+机制:Mac `.env` 持 anon key,两个 RPC 都是 `SECURITY INVOKER`(用调用方权限执行),
+底层表的 RLS 挡掉。service_role 刻意不放进任何 `.env`,**所以修法不是发 key,
+是把写入路由到已经持有 key 的那个进程。**
+
+**没等 Mac 侧 grep 就建了,理由:RPC 签名本身就是契约**,它在我能访问的数据库里,
+比 grep 调用方更权威。sweep 决定的是"还有没有别的调用方"(第 5 项守卫要的)。
+
+**读函数体时发现的真问题:** `upsert_asset_embeddings_history` 只插 12 列里的 8 列,
+丢掉 `measured_dims` / `source_completeness` / `price_source` / `provenance_note`。
+**Mac 的日志正在算其中一个("16.9 measured dims/row"),没地方放。**
+
+`backfill_embedding_history.py` 把契约写得很清楚:
+> "Every row records `measured_dims` so a consumer can filter instead of guessing."
+
+**同一张表两个写入方,backfill 脚本诚实,日线 RPC 不诚实,没有任何东西比对过两者。**
+没有 `measured_dims`,4 维实测和 18 维实测算出的向量在库里长得一样 ——
+这是 embedder 内部已修过两次的 NaN-honesty(I1),在持久层重现。
+
+`schema_version` 也不再默认成 2(embedder 是 3)——
+**一个被当作 provenance 呈现的猜测。NULL 是可回答的,错的 2 不是。**
+
+**Verdict.** SHIPPED。真实往返验证:写入 1 行,读回 `measured_dims=7`、
+`source_completeness=0.39` 完整,探测行已删。
+
 ## S-171 — Asset Radar 点进去空屏:import 在文件拆分时丢了(2026-08-18)
 
 **症状.** 侧栏点 "Asset Radar" → 整页空白,**连侧栏都消失**。
@@ -9912,3 +10007,184 @@ import 丢在 `227edcd`(App.jsx 1046 → 445 行的拆分)。**同一次拆分�
 
 **Verdict.** 代码已修,守卫已进 preflight 并通过负对照。
 **⚠️ 线上尚未验证 —— 新 bundle 要 push 后 Railway 部署才生效。**
+
+---
+
+## S-172 — 「深度先于价格」的共振窗口不存在,而且是反向的(2026-08-18)
+
+**Claim(Jazz 提出的框架).** 可交易区不是一条线,是 `deployable(a,t) × heat(a,t)` 的交集 ——
+找"能上仓位"和"热度共振"同时成立的点。第一个可证伪的推论:
+**深度是否领先价格?** 若领先,那个窗口存在;若同时到,窗口不存在。
+
+**Panel.** `ohlcv_daily` 中 crypto 类 262 个符号,2017-08-17 起,386,189 行。
+**含已死的币** —— 没有按今天的名单回溯筛选。
+
+**PIT 纪律.** 所有输入窗口**严格结束于 t 之前**(offset 1 行):
+`adv20` = t 前 20 日美元成交额均值,`adv_base` = 再往前 60 日,
+`depth_z = (adv20 − adv_base)/sd`,`px20` = t 前一日相对 21 日前。
+前向 `f20 = close(t+20)/close(t) − 1`。
+**基准 = 当日全 panel 等权前向收益(hold-the-panel),永远不是 0。**
+
+### 结果(2023-2026,唯一有真实广度的时代)
+
+以**天**为独立单位(日截面相关,把每个 (符号,日) 当独立会让 t 值虚高):
+
+```
+格子                          天数      20日超额     日SD       t
+depth_UP + price_FLAT       1,134    −1.848%    11.89%    −5.23    ← 假设中的窗口
+depth_UP + price_UP         1,255    −0.751%    17.07%    −1.56
+其余 panel                   1,305    +0.046%     0.71%    +2.35
+```
+
+**REFUTED,而且是强方向的否定:那个窗口不是中性,是显著为负。**
+成交量放大而价格没跟上,预示的是**跑输**,不是即将启动。
+
+### AUM 情景轴(Jazz 要的"多种情况",不是一个 Sharpe)
+
+```
+AUM      depthUP_priceFLAT        depthUP_priceUP      其余 panel
+$10k      −2.31%  (233 符号)       −0.08%  (240)       +0.05%  (260)
+$100k     −2.31%  (233)            −0.24%  (240)       +0.05%  (260)
+$1M       −2.27%  (233)            −0.17%  (239)       +0.22%  (258)
+$10M      −4.03%  (179)            −0.20%  (206)       +0.23%  (200)
+$100M     −7.54%  ( 34)            +0.21%  ( 55)       +1.07%  ( 44)
+```
+
+(deployable 判据:20 个仓位,单仓 ≤ 1% ADV20 ⇒ 需要 adv20 ≥ AUM×5)
+
+**信号随规模变得更差,不是更好。** −2.31% → −4.03% → −7.54%。
+在只剩深度足够的大票时,一次无价格确认的深度尖峰是 −7.5% 的信号。
+
+### 时代衰减 —— 以及一个不能读的数字
+
+```
+时代        depthUP_priceUP    符号数
+2017-19      +6.63%             11      ← 不能读
+2020-22      +0.98%            125
+2023-26      −0.02%            240
+```
+
+**2017-19 那个 +6.63% 建立在 11 个符号上** —— 那是 panel 的早期覆盖,不是当时的市场。
+把它读成"以前有效、后来失效"就是又一次幸存者偏差,只不过藏在数据覆盖度里而不是选股里。
+
+### 我没有做的一件事,记下来因为它是纪律
+
+**我没有去扫阈值找一个正的格子。** `depth_z ≥ 1.5` 和 `|px20| < 10%` 是先定的,跑一次。
+如果现在回去调这两个数直到某个格子转正,那就不是发现,是拟合 ——
+而 `experiment_runs.dsr`(deflated Sharpe,专治多重检验)至今 43 行里一个都没填过。
+
+### Jazz 的框架仍然成立,失效的是这个 heat 代理
+
+`deployable × heat` 作为对象是对的 —— **它失败在 heat 用成交量深度来代理这一点上,
+不是失败在框架上。** 深度和价格是一起到的(depth_UP 伴随 price_UP 是伴随 price_FLAT 的 3.3 倍),
+所以"深度先到"那一段不存在;而当深度到了价格没到,通常意味着有人在派发。
+
+### 可用的产出(两个,都不是新 sleeve)
+
+1. **一个合规的减配条件,不是加仓条件。** `depth_z ≥ 1.5 ∧ |px20| < 10%` →
+   该资产 20 日大概率跑输 panel。long-only 书里的用法是**不要在这种时候加仓**
+   (UNDERWEIGHT / 不 OUTPERFORM),而不是做空。t=−5.23,跨 5 个 AUM 档一致。
+2. **`rest of panel` 在 $100M 档 +1.07%、胜率 53.2%** —— 但**这个数字要打折**:
+   基准是全资产等权,里面含大量归零的小币,所以"流动性好的票跑赢全等权"部分是机械的。
+   **不能当作 alpha 报告。** 它顶多说明:在机构规模上,流动性约束不是纯成本。
+
+**Verdict.** REFUTED(共振窗口不存在)。**省掉一条 sleeve,graveyard +1。**
+Mac-A 的 P3 NarrativeMomentum sleeve 失去了它最主要的 cause 支撑。
+
+---
+
+## S-173 — 两条前向记录开始了,而它们堵在同一个地方(2026-08-18)
+
+**Claim.** S-172 那个减配条件、和 holder-cohort 方向,第一步是同一步:**先开始记录。**
+
+**为什么是同一步.** `holder_provider.py` 自己的代码写着:
+
+```python
+"chuquan": False,      # Phase 2 (needs timeseries)
+# "Static proxy — provisional ... the dynamic timeseries (Phase 2)
+#  supersedes it with real diffusion velocity"
+```
+
+**扩散速度需要时间序列,而时间序列从来没有过 —— 因为每次刷新都把浓度算出来、
+写进一个带 TTL 的 Redis map、让昨天的值过期。** 一个速度不可能从单张快照算出来,
+所以整条 holder-cohort 路线(ARCHITECTURE.md 称之为最深的对象 Entity/Decision)
+被卡在一张没人建的表后面。
+
+这和本周找到的每一件事是同一形状:
+
+```
+activation_z                无任何写入路径
+strategy library            24h-TTL Redis key (S-105)
+signal_outcomes             死了 104 天,调用方报告成功
+11 张表                     不存在,写入返回 False (S-166)
+生产                        只读 5 天,推送返回 200 (S-168)
+asset_embeddings_history    0 行,推送脚本记录 "complete" (S-169)
+```
+
+**这个模式不是粗心。是"算出来了"感觉上就等于"拥有了",而只有 schema 会不同意。**
+
+### 建了什么
+
+```
+depth_divergence_log           S-172 条件的前向记录,inception 2026-08-18,gate 2026-10-17
+holder_concentration_history   holder_provider 一直推迟的那条时间序列
+refresh_depth_divergence()     纯 SQL,在数据所在的地方算,不搬数据、不跨 lane
+resolve_depth_divergence()     20 交易日后填一次 fwd/bench/excess,基准是 hold-the-panel
+depth_divergence_unresolved    把"该结算还没结算"的缺口变成可见,不是可推断
+```
+
+两个函数都是 **SECURITY INVOKER**。`supabase_ohlcv_backfill.sql` 曾经上线过一个
+SECURITY DEFINER、任何匿名用户可调、会发外部 HTTP 并写 `ohlcv_daily` 的函数 ——
+一个匿名远程写入原语。不重复。
+
+### 第一次调用就抓到一件事
+
+`refresh_depth_divergence()` 返回 **25 行,而 panel 有 262 个符号**。
+
+```
+Crypto           最后一天 2026-08-08   已 10 天未更新   262 个符号
+L1/L2/DeFi/...   最后一天 2026-08-17   1 天            25 个符号
+```
+
+**如果不看,这条日志会每天填 25 行,看起来完全健康。**
+这就是 TaskList #31(17 个符号 07-27 停止采集)和 #32(monitor_daily=true 配上陈旧数据
+是第三种状态,没有东西能检测)的形状,在记录建立不到一天时就到了。
+
+**修法不是修 feed(那是 Mac lane),是让薄的一天在数据里自己说出来:**
+每行记 `n_symbols_day` 和 `n_symbols_p90`(trailing 90 天的 90 分位)。
+
+```
+2026-08-08   246/263 = 94%    125 已测 / 121 未测    5 个 UNDERWEIGHT
+2026-08-17    25/263 = 10%     25 已测 /   0 未测    0 个
+```
+
+**顺带一个和 Jazz 的判断吻合的数字:08-08 那天 246 个符号里 121 个是"未测"** ——
+近半个 crypto panel 当天没有 80 天干净的成交量历史。
+**小票不是"不能投",是它们在当时确实没有足够历史 —— 现在记录会直说,
+而不是默默把它们排除掉,后者正是我 S-153 那个二元 investable 门的做法。**
+
+### 输出的是减配,不是方向
+
+`UNDERWEIGHT / NEUTRAL` 两个值,来自合规枚举。
+**long-only 书里的 −1.85% 条件是一个权重决定,不是方向决定** —— "这时候不要加仓",
+不是"卖出"。我们没有投顾牌照,而且 CLAUDE.md 的收益层级本来就是 tilt 不 neutralize。
+
+### 声明是有界的
+
+`summarise()` 每天输出里带一句:
+> IN-SAMPLE ONLY. S-172 measured −1.85% 20d excess (t=−5.23) over 2023-2026.
+> This log exists to test that forward; no forward claim is made before
+> 2026-08-18 + 60d.
+
+阈值 `1.5` / `0.10` 是 S-172 跑之前定的,跑完没有回去调。
+**如果后来有人拿结果去调它们,那是拟合 —— 而 `experiment_runs.dsr`
+(专治多重检验的 deflated Sharpe)43 行里一个都没填过。**
+
+### 我自己在这次里犯的一个错
+
+把新检查 `cat >>` 追加到了 `preflight.sh` 末尾,**于是它跑在 "PREFLIGHT PASSED"
+横幅之后** —— 失败会印在"通过"下面。已移到横幅前。
+**一个印在成功之后的失败,和没有这个检查是一回事。**
+
+**Verdict.** SHIPPED。两条时钟都在走。
+**60 天后(2026-10-17)才有资格谈 SHIP,在那之前 `depth_divergence_log` 只是证据。**

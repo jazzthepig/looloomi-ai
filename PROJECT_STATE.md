@@ -1,17 +1,21 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-15 — **S-166: 11 tables the code writes to did not exist** — both C2 ⓠ
-and C3 size sleeve NAV tables, `strategy_params`, the execution log, the fusion paper book,
-`crowd_clock_log`. All created (RLS on, service_role only); verified live `23/23 present,
-missing: []`. **The sleeves this file called "complete, 79/79 smoke green" on 08-12 had nowhere
-to write a row and never had.** Guarded in two halves now: AST manifest offline in preflight +
-`GET /internal/schema-drift` online in the deploy-verifier. **S-164 research intake shipped** (mining lanes can land results
-without a service_role key; SHIP verdicts refused at the boundary). **S-165 cold-start split**:
-this file 315,708 → ~50,000 chars, history in `PROJECT_STATE_LOG.md`, capped by
-`test_cold_start_contract`. **S-163** preflight strips 11 production credentials before running.
-**Diagnose-route retired** (227edcd → 6abd85f → ef8f0cb, dashboard lane): Diagnose nav/route gone,
-CIS Engine at NAV_ITEMS[0], Portfolio owns "feed your book". Bundle-freshness gap in preflight.sh
-surfaced as a cross-lane IN-FLIGHT item (`MINIMAX_SYNC.md` §IN-FLIGHT) — lesson in `PROJECT_STATE_LOG.md`.
+**Last updated:** 2026-08-18 (Seth/Cowork lane) — **S-172 REFUTED the resonance window.**
+"Depth arrives before price so you can size in early" is false and *backwards*:
+depth-up/price-flat = **−1.85% 20d excess vs hold-the-panel, t = −5.23**, and it gets worse with
+size (−2.31% at $10k → −7.54% at $100M). Depth accompanies price 3.3× more often than it precedes
+it. **One sleeve saved, graveyard +1** — Mac-A's P3 NarrativeMomentum loses its main cause.
+**S-173** started two forward clocks (`depth_divergence_log` inception 08-18 gate 10-17,
+`holder_concentration_history`): both directions were blocked on the same thing — *nothing was
+ever stored*. The first write exposed that the **Crypto feed is 10 days stale** (25 of 262
+symbols). **S-171** Asset Radar blank page (import lost in the App.jsx split). **S-169** Mac-lane
+write wrappers + the RPC was dropping `measured_dims`. **S-168** production was READ-ONLY
+08-12→08-17 until `APP_ROLE=production`; ① book marks again.
+> ⚠️ **S-168 is used twice** — here for the read-only production and, below, by the dashboard
+> lane for R540-R547. Neither had claimed a ledger heading. See the collision note at the top of
+> `REFUTATION_LEDGER.md`; one of them needs a new number. Not renumbered unilaterally.
+
+**Last updated:** 2026-08-18 — **S-168: R540-R547 "production book" FAILS on raw LIQUID16 wide** (8 of 9 legs negative without BTC-MA gate; B10_R547 SR=+2.5 claim was BTC-MA-conditional, not unconditional). **★ NEW ANCHOR: R554 taker imbalance (imb7 K3 h21) on LIQUID16** — only signal in R540-R555 series that survives LIQUID16-wide-no-gate (SR=+1.035, +350.68%, DD=-58.98%, ρ<0.10 with every other leg, cost breakeven >50bps). **R70 + R19 strategies UNAFFECTED** — the CLAUDE.md "two profitable" pair remains valid. **S-166** Supabase tables fixed. **S-165 cold-start split**: this file ~50,000 chars, history in `PROJECT_STATE_LOG.md`, capped by `test_cold_start_contract`. **S-164 research intake shipped** (mining lanes land without service_role key; SHIP verdicts refused at boundary). **Diagnose-route retired** (dashboard lane): CIS Engine at NAV_ITEMS[0]. **R557**: BTC-MA(150) gate on R554 (next production-spec candidate). **R558**: regime signal for 2024H2/2026YTD weakness clusters. **R559**: re-test R540-R547 legs WITH the gate.
 
 > This header used to live 150 lines deep inside `## LANDED`, which is why it went stale without
 > anyone seeing it — the one line whose job is to tell you how old the file is was itself buried
