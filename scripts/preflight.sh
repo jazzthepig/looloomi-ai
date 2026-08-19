@@ -693,5 +693,23 @@ PY
 #                book is a WEIGHT decision, never a direction.
 python3 -m tests.test_forward_records_actually_record
 
+# 3a-sesvicies. the page's two curves must size a position the same way
+#               (2026-08-19, S-176). The Signal Performance page showed
+#               "CUMULATIVE ALPHA −97.45%" on the chart and "MAX DRAWDOWN −37.31%"
+#               in the stat strip — same book, one page, 60 points apart.
+#               _compute_metrics builds THREE compounding loops. The POSITION_FRAC
+#               correction (whose own comment names "the -94% artifact") had landed
+#               on the one feeding max_drawdown and CAGR, and on NEITHER of the two
+#               dated series the chart renders. **The fix reached the statistics
+#               and missed the picture.** Instance, not class — the same shape as
+#               eleven tables made one at a time, a probe that checked reads only,
+#               and a schema_version defaulted in one writer and not its twin.
+#               The third loop was found only because this guard sweeps EVERY
+#               compounding loop rather than the one that prompted it.
+#               ⚠️ It protects the arithmetic, not the strategy: alpha win rate is
+#               26.6% and average 30d alpha −4.09%. Removing an artifact that sat
+#               on top of a real problem is not fixing the problem.
+python3 -m tests.test_both_equity_curves_agree_on_position_size
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."
