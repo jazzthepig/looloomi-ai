@@ -153,8 +153,34 @@ async def push_asset_vectors_history(
         raise HTTPException(status_code=400, detail={
             "error": "body must carry a non-empty 'rows' list",
             "schema": "GET /internal/mac-push/schema"})
-    return await _call("upsert_asset_embeddings_history", {"p_rows": rows},
-                       "asset_embeddings_history", len(rows))
+
+    res = await _call("upsert_asset_embeddings_history", {"p_rows": rows},
+                      "asset_embeddings_history", len(rows))
+
+    # ── ECHO WHAT WE RECEIVED (S-178, Minimax-A's request) ───────────────────
+    # The sender asserts a schema_version; this reflects back what actually
+    # arrived so the sender can compare rather than trust. It catches the case
+    # where a writer runs a v3 embedder but something between them — a cached
+    # module, a stale deploy, a hand-edited payload — puts a different number on
+    # the wire. Minimax-A's own words on why he wants it: he read
+    # SCHEMA_VERSION = 3 and "以為對的,沒從源頭 verify". An echo removes the need
+    # to remember to verify.
+    #
+    # Reported, never enforced. Rejecting a version mismatch here would mean a
+    # receiver deciding which of two deployments is correct, and the honest
+    # answer is that it cannot know. It reports; the sender decides.
+    seen = sorted({r.get("schema_version") for r in rows
+                   if isinstance(r, dict) and r.get("schema_version") is not None})
+    res["schema_version_echo"] = seen[0] if len(seen) == 1 else (seen or None)
+    res["schema_version_mixed"] = len(seen) > 1
+    # Same treatment for the honesty columns: reflect the range that arrived so a
+    # writer filtering at a different floor than ours is visible in one number
+    # rather than discovered months later in a query.
+    md = [r.get("measured_dims") for r in rows
+          if isinstance(r, dict) and isinstance(r.get("measured_dims"), int)]
+    res["measured_dims_range"] = [min(md), max(md)] if md else None
+    res["rows_missing_measured_dims"] = len(rows) - len(md)
+    return res
 
 
 @router.post("/internal/risk-meter-history")

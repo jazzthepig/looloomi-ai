@@ -711,5 +711,25 @@ python3 -m tests.test_forward_records_actually_record
 #               on top of a real problem is not fixing the problem.
 python3 -m tests.test_both_equity_curves_agree_on_position_size
 
+# 3a-septvicies. one definition of "how honest is this vector" (2026-08-19, S-178).
+#                asset_embeddings_history has two writers: backfill_embedding_history.py
+#                computed measured_dims / source_completeness inline and dropped thin
+#                rows; the Mac daily push wrote neither and dropped nothing. One table,
+#                one honest writer and one not — S-169's shape, and the daily path
+#                would have filled it with vectors nobody could tell from complete ones.
+#                THE NUMBER WAS ALMOST WRONG: Minimax-A's plan proposed
+#                MIN_MEASURED_DIMS = 4, having read MIN_SHARED_DIMS = 4 — a different
+#                quantity (cosine's refusal threshold). The write floor is 10 of 27.
+#                Acked as written, the two writers would have run two thresholds, which
+#                is exactly the hole the shared helpers were closing. He asked for it to
+#                be confirmed from source rather than trusting his own reading; that
+#                request is what caught it.
+#                Pins: one owner for the floor · writers import SCHEMA_VERSION and never
+#                assign it · pgvector column stays NULL so unmeasured never becomes
+#                measured-zero (I1) · no always-True honesty flag (S-105 in column form)
+#                · the receiver ECHOES what arrived and does not reject on mismatch,
+#                because a receiver cannot know which of two deployments is right.
+python3 -m tests.test_one_definition_of_honesty
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."

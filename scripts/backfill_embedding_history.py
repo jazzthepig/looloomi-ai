@@ -51,6 +51,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from src.data.vector.embedder import (  # noqa: E402
     ASSET_DIMS_V2, SCHEMA_VERSION, generate_embedding,
+    # S-178: honesty rules owned by embedder.py so both writers of
+    # asset_embeddings_history share one definition (see the note at
+    # MIN_MEASURED_DIMS below).
+    measured_dims, source_completeness, is_thin, vec_to_pg_row,
+    MIN_MEASURED_DIMS as _EMBEDDER_MIN_MEASURED_DIMS,
 )
 
 SB_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
@@ -61,7 +66,18 @@ HEAD = {"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}",
 # A row whose measured dims fall below this is not written at all. Writing it
 # would put a mostly-NaN vector in the same table as a good one, and the next
 # person to query the table would have no reason to suspect the difference.
-MIN_MEASURED_DIMS = 10
+#
+# S-178: this file is where the value ORIGINATED, and it is no longer where it
+# LIVES — embedder.py owns it so both writers of asset_embeddings_history share
+# one floor. Kept here as a name, asserted against the owner rather than
+# re-declared: a second constant that merely happens to agree today is how two
+# writers drift tomorrow.
+MIN_MEASURED_DIMS = _EMBEDDER_MIN_MEASURED_DIMS
+assert MIN_MEASURED_DIMS == 10, (
+    f"MIN_MEASURED_DIMS moved to embedder.py and is now {MIN_MEASURED_DIMS}. "
+    f"This file documented 10 of 27 dims as the write floor; if the owner changed "
+    f"it, the change is real and this assertion is the place to acknowledge it — "
+    f"do not silently follow.")
 
 
 def _get(path: str, params: dict) -> list:
@@ -192,20 +208,21 @@ def main() -> int:
         )
         hist[sym].append(asset)
 
-        measured = sum(1 for x in vec if x == x)
-        if measured < MIN_MEASURED_DIMS:
+        # S-178: honesty rules moved to embedder.py so BOTH writers of this table
+        # share one definition. This file computed them inline and the Mac daily
+        # push computed none — one honest writer and one not, on one table, which
+        # is S-169's shape. The local MIN_MEASURED_DIMS above is kept only as the
+        # documented origin of the value; the helpers are now the source.
+        measured = measured_dims(vec)
+        if is_thin(vec):
             skipped_thin += 1
             continue
 
-        out_rows.append({
-            "d": d, "symbol": sym, "asset_class": r.get("asset_class"),
-            "macro_regime": r.get("macro_regime"),
-            "schema_version": SCHEMA_VERSION, "dims": len(vec),
-            "vec": None,   # pgvector rejects NaN; jsonb is authoritative (I1)
-            "vec_full": [None if x != x else round(x, 6) for x in vec],
-            "measured_dims": measured,
-            "source_completeness": round(measured / len(vec), 3),
-        })
+        out_rows.append(vec_to_pg_row(
+            d, sym, vec,
+            asset_class=r.get("asset_class"),
+            macro_regime=r.get("macro_regime"),
+        ))
 
     print(f"  built {len(out_rows)} rows · skipped {skipped_nopillar} (no pillars) "
           f"· {skipped_thin} (<{MIN_MEASURED_DIMS} measured dims)")
