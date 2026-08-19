@@ -334,6 +334,44 @@ async def _start_forward_record_loop():
     print("[FWD] ✅ forward-record keeper scheduled (writes the log, pages on a stalled book)")
 
 
+async def _deep_panel_loop():
+    """Keeps the 262-symbol research panel current (S-179).
+
+    That panel is what every historical study runs on and it had NO daily
+    collector — `collect_ohlcv` covers the 58-symbol CIS universe and always
+    did. Measured 2026-08-19 it was 11 days stale, which silently blocked the
+    depth-divergence forward record and any embedding rebuild.
+
+    Binance, not CoinGecko, because nine years of this panel are Binance bars and
+    bar convention is a property of the SOURCE (S-106/S-107: >1% open gaps run
+    31.3% on Crypto vs 83.5% on DeFi). Splicing a second convention on from
+    2026-08-08 would put a discontinuity in the middle of every study that
+    crosses the join.
+
+    Runs 20 min after the CIS collector so the two are not competing, and its
+    result is LOGGED WITH THE FRACTION — a run that reaches 40 of 262 must not
+    read like a normal day.
+    """
+    await _asyncio.sleep(3000)
+    while True:
+        try:
+            from src.data.market.deep_panel_collector import collect_deep_panel
+            r = await collect_deep_panel()
+            flag = "" if r.get("ok") else "  ⚠️ " + r.get("diagnosis", "")
+            print(f"[DEEP] {r.get('symbols_ok')}/{r.get('symbols_total')} symbols · "
+                  f"{r.get('rows_upserted')} rows · {r.get('elapsed_s')}s{flag}")
+        except Exception as _e:
+            print(f"[DEEP] ⚠️  deep-panel collection FAILED: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_deep_panel_loop():
+    if os.environ.get("DISABLE_DEEP_PANEL", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_deep_panel_loop())
+        print("[DEEP] ✅ deep-panel daily collector scheduled (262 symbols, Binance, capped concurrency)")
+
+
 # ── Daily signal-outcome resolver ─────────────────────────────────────────────
 # Resolves 30-day directional outcomes (WIN/LOSS/EXPIRED) for matured signals.
 # Runs ~once/day in-process so the LP track-record metrics stay current without
