@@ -1,5 +1,25 @@
 # PROJECT_STATE.md — the living single source of truth
 
+**Last updated:** 2026-08-19 (Seth/Cowork lane) — **S-175: the forward record I shipped on 08-18
+had ZERO callers.** `refresh_depth_divergence()` existed only in a test docstring and a preflight
+comment; the rows in the log were written by hand. Same defect as its own ledger entry, by its
+author, one day later — *building the thing feels like finishing it, and a scheduler disagrees.*
+Now wound by `_forward_record_loop`, which also **pages when any book stops marking**
+(`MAX_SILENT_DAYS = 1` — the ① book's 5-day August gap was reported accurately by
+`/internal/beta-core-clock` to nobody, because a status endpoint only speaks when asked).
+Refresh now **fails closed on a thin day**: the auto-target hit 2 symbols because the Crypto feed
+is 11 days behind the other classes, and a 60-day record containing 2-row days has a sample size
+nobody can state. **S-174** the external probe reported ✅ every 3 h for the five days production
+was read-only — it only ever exercised READS; write capability is now checked, three-valued.
+Probe moved to 6 h (its prompt had claimed 4×/day while cron said 8×). **Frontend sweep**: 11
+entries + 8 nav items, **zero console errors**, AssetRadar fix confirmed live; open items are
+Asset Radar's ~9 s skeleton, a `SYNCING · 0 assets` transient that reads as "nothing found", and
+**three different universe sizes on one screen** (58 / 58 / 31).
+> 🔴 **Blocked on Mac lane:** Crypto OHLCV stale 11 days — it is the input to the depth record and
+> to any embedding rebuild, so `asset_embeddings` (26 d stale) is deliberately NOT being rebuilt:
+> rebuilding off a stale panel yields vectors that look fresh and are not. See `MINIMAX_SYNC.md`
+> §IN-FLIGHT-2026-08-19.
+
 **Last updated:** 2026-08-18 (Seth/Cowork lane) — **S-172 REFUTED the resonance window.**
 "Depth arrives before price so you can size in early" is false and *backwards*:
 depth-up/price-flat = **−1.85% 20d excess vs hold-the-panel, t = −5.23**, and it gets worse with
