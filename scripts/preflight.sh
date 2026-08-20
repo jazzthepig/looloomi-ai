@@ -731,5 +731,20 @@ python3 -m tests.test_both_equity_curves_agree_on_position_size
 #                because a receiver cannot know which of two deployments is right.
 python3 -m tests.test_one_definition_of_honesty
 
+# ── S-180/S-181: the T1↔T2 boundary ──────────────────────────────────────────
+# A Redis read failure was indistinguishable from "the Mac has not pushed", so
+# one dropped request demoted all 58 assets to T2 at once — a ~13-point score
+# shift that crosses the grade AND positioning boundaries — and the hourly loop
+# wrote those rows into cis_scores as the permanent record. 8 of 266 hours
+# affected (3.0%), 473 rows, most recently inside the 08-19 rally window.
+# Pins: the read reports WHY it is empty · the tier decision uses that status ·
+# the T2 writer checks the table before shadowing a live T1 · not-knowing blocks
+# the write · two views of one number refresh on one clock · no UI box promises
+# an indicator no endpoint produces · no SWR window outlives what it caches.
+# Each assertion verified to FAIL under a reintroduction of its bug.
+python3 -m pytest tests/test_tier_integrity.py -q || {
+  echo "  ✗ tier-integrity suite FAILED — do not push"; exit 1; }
+echo "  ✓ tier integrity (S-180/S-181)"
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."
