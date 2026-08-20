@@ -1,28 +1,18 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-20 (Seth/Cowork lane) — **S-180: 一次 Redis 读失败可以整体改写评级历史.**
-`redis_get_key` 的 docstring 自己写着 "Returns None on miss/error";builder 把这个 None 读成
-"Mac 没推送",**一次丢包让 58 个资产同时 T1→T2**(BTC 同刻 F 50↔80, O 27↔59, S 59↔20,
-系统性差 13.5 分,跨 grade 和 signal 边界),每小时快照 loop 随即把它们写进永久记录。
-266h 里 8h 受影响(3.0%,473 行),最近一次 08-19 11:00 —— **正落在 Jazz 问的那波行情里**。
-**missing-vs-unreachable 这个类的第三例**(S-166 → S-179 → S-180),前两次都只修了实例。
-三层:读携带状态 · error 时保留 last-good T1 · **写入端查表拒绝遮蔽活着的 T1**(刻意不信任前两层)。
-同批 S-181/182/183 见 ledger。**S-184 扫了全部 49 个 redis 调用点**,又找到三个同类:
-quant 读失败会用这次推送替换掉 100 条交易历史 · crowd_clock 幂等键失败插重复行 · 日快照缺同一守卫。
-⚠️ **守卫自己失败了三轮**:第一版七变异只抓到四个,因为它匹配名字,而我写的注释里就有那个名字
-——**解释 bug 的注释废掉了抓这个 bug 的测试**。终版 7 变异 7 抓、0 误报、13 断言,preflight 绿。
-🔴 **S-185(部署后核对时发现,已修):S-180 的占用查询过滤了 `created_at` —— `cis_scores` 没有这个列
-(是 `recorded_at`)。PostgREST 400 → helper 说"问不到" → fail-closed 写入端拒写 →
-`railway_t2_hourly` 静默停写 115 分钟,而 `/health` 全绿、无任何报错。** 设计是对的,
-**fail-closed 把一个拼写错误变成了不产生错误信号的停机**;守卫本身需要守卫。损失 ≈30 行,可恢复。
-新增 `schema/public_columns.json`(information_schema 快照)+ AST URL 解析,28 过滤器/11 表核过 0 误报。
-(第一版守卫用 `scripts/*.sql` 当权威 → 报了 4 个正确的地方、0 个真 bug:**.sql 已和数据库漂移**。)
-**S-186/187 macro brief:** 要升级的 prompt 不是在跑的那个 —— 在跑的在 Mac lane(6h/次),我这边那个
-`macro_brief_v2.py` **零调用者、07-08 标为死代码留了六周**,而我第一个打开的就是它。已删+守卫。
-新 prompt `src/api/contracts/macro_brief.py`(mb-2):**给 delta 不只给 level** · 缺失字段禁止叙述(I1 文字版)
-· **禁前瞻表述**(比 BUY/SELL 更大的敞口,我们没投顾牌照)。门控 5min 轮询/30min 天花板。
-prompt 里每条规则都只是"请求",故加 `validate_brief()`,接收端 **422 拒绝**。交接见 MINIMAX_SYNC §MACRO-BRIEF-V2。
-🟡 **需 Jazz 决定:473 行已污染历史是否清理(那是改写历史)。**
+**Last updated:** 2026-08-20 (Seth/Cowork lane) — **本轮一句话:五个缺陷,一个类。**
+每一个都是"某个东西无法说出它不知道",而每一个的保险都装在会坏的东西自己内部。全部 preflight 绿。
+
+| # | 缺陷 | 关键教训 |
+|---|---|---|
+| **S-180** | `redis_get_key` 的 miss 和 error 同一个返回值 → **一次丢包让 58 个资产同时 T1→T2**(支柱整体换一套,系统性差 13.5 分,跨 grade 与 signal),每小时快照随即写进永久记录。266h 中 8h(3.0%,473 行),最近一次正落在 Jazz 问的那波行情里 | **missing-vs-unreachable 的第三例**(S-166→S-179→S-180),前两次都只修了实例。三层修:读携带状态 · error 保留 last-good · **写入端查表拒绝遮蔽**(刻意不信任前两层) |
+| **S-181/182/183** | 两页 grade 是同一字段(差异来自一页从不刷新)· 五个宏观框自上线起每天渲染破折号(后端产出者=0)· SWR 窗口比它缓存的东西活得久 | 见 ledger |
+| **S-184** | 扫全部 49 个 redis 调用点,又找到三个:quant 读失败会用这次推送替换 100 条交易历史 · crowd_clock 幂等键失败插重复行 · 日快照缺同一守卫 | **修实例不是修类** |
+| **S-185** | S-180 的守卫过滤了不存在的列 → PostgREST 400 → "问不到" → fail-closed 拒写 → **静默停写 115 分钟,`/health` 全绿无任何报错** | **fail-closed 把拼写错误变成不产生信号的停机;守卫本身需要守卫** |
+| **S-186/187/188** | 要升级的 prompt 是死代码(零调用者、六周前已标记),我第一个打开的就是它 · prompt 里每条规则都只是"请求" · loop 内的年龄天花板挡不住 loop 自己死掉 | **一个仓两个 prompt 是抛硬币** · P0 靠请求模型不算执行(加 `validate_brief` + 422 拒绝) · **装在会坏的东西内部的保险不是保险** |
+
+⚠️ **守卫本身失败了五轮**,原因两类:匹配名字而非构造(**解释 bug 的注释废掉了抓这个 bug 的测试**,一 session 内四次,已抽成 `tests/_source.py`);测试样本过度确定(踩中多条规则,删掉任一条仍全绿)。终版:三套件 **48 断言**(13+4+31),**20 变异 20 抓**,0 误报。(初稿我在这行写了 73/26 —— 没数就写,同一个 session 里我纠正了五次的那个毛病。)
+🟡 **需 Jazz 决定:S-180 那 473 行已污染历史是否清理(那是改写历史)。**
 
 <details><summary>上一条 (2026-08-19, S-175 前向记录零调用者 + S-174 探针写盲区) — 详见 REFUTATION_LEDGER</summary>
 </details>

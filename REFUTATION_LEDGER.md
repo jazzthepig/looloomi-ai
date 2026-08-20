@@ -10771,3 +10771,81 @@ Mac 侧复制并回报版本,漂移可见。生成留在 Mac(模型在 127.0.0.1
 交接见 MINIMAX_SYNC §MACRO-BRIEF-V2。**未验证:9B 模型对"缺失字段保持沉默"这条的实际服从度 ——
 LM Studio MCP 超时,没跑成。这是整个升级里最可能被无视的一条规则,已列为 Minimax 回帖的第 3 问。**
 
+
+---
+
+## S-188 — 装在"会坏的东西"内部的保险,不是保险
+
+**背景。** Minimax 回了 §MACRO-BRIEF-V2 的三个问题,并提出架构:
+常驻 `--loop` 进程 + launchd(而非 cron 每次 spawn)。理由成立,已 ACK。
+
+**但常驻进程有 cron 没有的失败模式,而我设计的保险挡不住它。**
+
+`MAX_BRIEF_AGE_S = 1800` 是我加的天花板 —— 死水也要 30 分钟重写一次,
+理由写在代码里:"一个永不重写的 brief,和一条死掉的生成管线无法区分"。
+**这个理由是对的,实现的位置是错的:天花板在 loop 内部执行,loop 死了,天花板跟着死。**
+
+挂起的 LM Studio 调用 / 崩溃的进程 / 被 unload 的 launchd job —— 三种情况下:
+最后一版 brief 躺在 12 小时 TTL 的 Redis 里 → 页面完全正常 → 半天后整个消失。
+
+而 Railway 侧 `/health` 的 `macro_brief` 检查是 `bool(mb and mb.get("brief"))` ——
+**只查存在,不查时效。三天前的 brief 报 "present",全绿。**
+
+**这是 S-175 / S-185 的同一个形状的第三次:**
+
+| | 保险装在哪 | 它挡不住的 |
+|---|---|---|
+| S-175 | 前向记录的 refresher | refresher 自己没有调用者 |
+| S-185 | fail-closed 写入守卫 | 守卫本身不产生错误信号 |
+| S-188 | loop 内部的年龄天花板 | loop 本身死掉 |
+
+**修法:检测必须在线的另一头。** `/health` 改为带时效,超过 `MAX_BRIEF_AGE_S × 2` 报 STALE
+并把整体拉成 degraded。阈值**从生成端的天花板派生**,不另写一个数 —— 两个数会漂。
+
+---
+
+### 顺带纠正 Minimax 的负载估算:地板和天花板说反了,差 6 倍
+
+他写"最坏 30min 打一次 LM Studio",据此判定 T1 不会饿死。
+
+`MAX_BRIEF_AGE_S=1800` 是**天花板**,保证的是**最低**活动频率。
+决定**最高**频率的是**地板** `MIN_REGEN_GAP_S=300`。
+
+```
+最省(死水,只有天花板推)   30 min → 48 次/天    ← 他算的这个
+最忙(持续越阈值,地板绑定)  5 min → 288 次/天   ← 真实上限
+```
+
+**结论仍成立**(288 × 5-10s ≈ 2-3% duty cycle,LM Studio 独立进程走 HTTP 不抢 GIL),
+**但引用的数字差 6 倍,而且有一个不利相关:地板正好在行情剧烈时绑定** ——
+brief 负载最高的时刻,恰是 T1 输出最要紧的时刻。余量够,不改;记下来是因为
+以后 T1 若出现调度抖动,第一个该看的旋钮是 `MIN_REGEN_GAP_S`。
+
+---
+
+### 拒掉他的第 2 条边界:不要在 Mac 侧做 template fallback
+
+他提议:本地 validate 违规 → 重跑一次 → 仍不合规则走 template。前两步 ACK,第三步拒。
+
+1. **provenance 会烂。** Mac 推的 template brief 带 `source=mac_mini`,
+   Railway 再也分不出"本地模型写的"和"模板兜的" —— **和 S-180 里 T1/T2 混写同一列同构。**
+2. **Railway 已经有一个 template fallback。** 再加一个就是两个模板生成器 ——
+   **和我今天刚删掉的"两个 prompt"完全同构**,下次改文案的人会改错那一个。
+
+改成:两次都不合规就不推。Railway 15 分钟后自动出模板版,`/health` 同时看得到 brief 在变旧。
+**少一版 brief 可恢复;分不清来源不可恢复。**
+
+---
+
+### 第三件:`/api/v1/cis/top` 的 top-8 里三个是美股
+
+实测 `XLF #1 / NVDA #4 / MSFT #6`。CIS 给 TradFi 打分是对的,那几行没错 ——
+但这个 prompt 写的是 "a read of the **crypto** market",measured 区块全是 crypto。
+把 XLF 和 BTC dominance 一起给模型,要么它忽略,要么它在 crypto brief 里写金融股。
+
+`select_top_assets()` 加在**契约里**而不是 Mac 的 fetch 里,理由和 prompt 本身一样:
+**两台机器一分,单边就会被漏掉。** 并且 `limit` 必须传 20 而非 8 —— 要 8 条再砍 3 条只剩 5 条。
+
+**Verdict.** 31 断言,14 变异 14 抓。**未验证仍未验证:** 9B 模型对"NOT MEASURED 字段保持沉默"
+的服从度 —— **校验器抓不到它,因为对一个字段的沉默无法从文本本身检测。** 已请 Minimax 构造缺失跑一版。
+
