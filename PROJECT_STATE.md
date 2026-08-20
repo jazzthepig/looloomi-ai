@@ -11,6 +11,12 @@
 quant 读失败会用这次推送替换掉 100 条交易历史 · crowd_clock 幂等键失败插重复行 · 日快照缺同一守卫。
 ⚠️ **守卫自己失败了三轮**:第一版七变异只抓到四个,因为它匹配名字,而我写的注释里就有那个名字
 ——**解释 bug 的注释废掉了抓这个 bug 的测试**。终版 7 变异 7 抓、0 误报、13 断言,preflight 绿。
+🔴 **S-185(部署后核对时发现,已修):S-180 的占用查询过滤了 `created_at` —— `cis_scores` 没有这个列
+(是 `recorded_at`)。PostgREST 400 → helper 说"问不到" → fail-closed 写入端拒写 →
+`railway_t2_hourly` 静默停写 115 分钟,而 `/health` 全绿、无任何报错。** 设计是对的,
+**fail-closed 把一个拼写错误变成了不产生错误信号的停机**;守卫本身需要守卫。损失 ≈30 行,可恢复。
+新增 `schema/public_columns.json`(information_schema 快照)+ AST URL 解析,28 过滤器/11 表核过 0 误报。
+(第一版守卫用 `scripts/*.sql` 当权威 → 报了 4 个正确的地方、0 个真 bug:**.sql 已和数据库漂移**。)
 🟡 **需 Jazz 决定:473 行已污染历史是否清理(那是改写历史)。**
 
 <details><summary>上一条 (2026-08-19, S-175 前向记录零调用者 + S-174 探针写盲区) — 详见 REFUTATION_LEDGER</summary>

@@ -10619,3 +10619,62 @@ Supabase `trade_results`;猜的代价是整个缓存)。crowd_clock:**fail CLOSE
 **Verdict.** 类已封:任何"从 redis 读来的值经过字面空值兜底后写回 redis"的新代码,
 在 preflight 挡下。同时封住的还有:幂等键必须 fail closed · 两个快照写者必须用同一个守卫。
 
+
+---
+
+## S-185 — fail-closed 的守卫把一个拼写错误变成了无声停机
+
+**怎么发现的。** Jazz 说 "check it"。部署后核对生产,`railway_t2_hourly` **115 分钟没写过**
+(应该每小时一次)。`/health` 健康、进程健康、`redis_status = hit`、Supabase `ok` ——
+**没有任何一个地方报错。**
+
+**根因,一个列名。**
+
+```python
+url = (f"{_SB_URL}/rest/v1/{_SB_TABLE}"
+       f"?select=symbol&data_tier=eq.T1"
+       f"&created_at=gte.{cutoff}&limit=5000")   # cis_scores 没有 created_at,是 recorded_at
+```
+
+PostgREST 对未知过滤列返回 **400** → `supabase_fresh_t1_symbols` 正确地映射成 `None`
+("问不到") → S-180 的写入端正确地把 `None` 当作"不许写" → 整批 hold。
+
+**每一层都完全按设计行事,合起来是这张表停止填充。**
+这就是 fail-closed 的代价,而且这个代价我在 S-180 里明确选择过("缺一小时可恢复,
+脏一小时不可恢复")。设计是对的;**代价的形状我低估了**:
+fail-closed 把一个拼写错误变成了一次**不产生任何错误信号**的停机 ——
+这比它防的那个 bug 更难被发现。**守卫本身需要守卫。**
+
+**最刺的一点。** 同一个 session 里,大约一小时前,我自己的一条即席查询就已经报过
+`ERROR: 42703: column "created_at" does not exist`。**知道一个事实和把它编码进系统是两件事,
+只有后者能活过下一个 session。** 所以这次落成测试,不是笔记。
+
+**损失。** 2 个周期 × 15 个 T2-only symbol ≈ 30 行缺失。按设计可恢复,无污染。
+
+---
+
+### 守卫写了两版,第一版报了 4 个正确的地方、0 个真 bug
+
+**v1 用 `scripts/*.sql` 当权威 → 3 个误报。**
+`asset_embeddings.superseded_reason` 和 `beta_core_nav.exposure_cap` **线上都存在**,
+但任何 CREATE TABLE 里都没有 —— **.sql 文件早已和数据库漂移。**
+> 拿一份过期的定义去校验,比不校验更糟:它会拦下正确的代码,
+> 而**拦下正确代码的守卫,会被下一个撞上它的人关掉。**
+
+**v1 还用了 5 行文本窗口 → 第 4 个误报。** 窗口把相邻的两个 URL 粘在一起,
+把 `event_type`(`beta_core_nav_q_meta` 的真列)算到了 `beta_core_nav_q` 头上。
+
+**v2。** 权威改成 `schema/public_columns.json`(从 `information_schema` 快照,76 表 881 列);
+URL 用 **AST** 还原,f-string / 隐式拼接 / `+` 都当成一个完整字符串,每个过滤器只和**自己的**表配对。
+
+**结果。** 28 个过滤器 / 11 张表全部核过,**0 误报**;盲区被显式命名
+(`r77_forward_episodes` 不在快照里、18 处表名无法静态解析)——
+**空的检查和通过的检查从外面看是一样的**,所以覆盖数字本身是断言的一部分。
+变异验证:把 `recorded_at` 改回 `created_at`,两个测试同时 FAIL,并提示 "did you mean: recorded_at"。
+
+**快照过期的方向是安全的:** 新加的列会让测试对着正确代码报错 —— 很吵,会被立刻修;
+危险的方向(一个从来不存在的列)不可能由过期产生。
+
+**Verdict.** 已修并封住。这也是本轮第三次同一个元教训:
+**守卫必须匹配构造本身,并且必须用变异验证过 —— 没被变异验证过的守卫,默认是装饰品。**
+
