@@ -251,3 +251,37 @@ def test_prompt_version_is_declared_and_echoed():
     assert "prompt_version" in recv, (
         "the Mac must report which prompt built the brief, or the two codebases "
         "drift with nowhere for the drift to show (cis_push SCHEMA_VERSION pattern)")
+
+
+# ── Review of Minimax's Mac-side plan (2026-08-20) ───────────────────────────
+
+def test_top_assets_are_crypto_only():
+    """`/api/v1/cis/top` is canonical and correctly includes TradFi — measured
+    live, three of the top eight were US equities (XLF #1, NVDA #4, MSFT #6).
+    But this prompt opens 'a read of the CRYPTO market' and its whole measured
+    block is crypto. Handing the model XLF beside BTC dominance either wastes
+    the row or produces a paragraph about financials in a crypto brief."""
+    items = [
+        {"symbol": "XLF",  "asset_class": "US Equity",      "cis_score": 68.7},
+        {"symbol": "LINK", "asset_class": "Infrastructure", "cis_score": 67.7},
+        {"symbol": "NVDA", "asset_class": "US Equity",      "cis_score": 67.4},
+        {"symbol": "AAVE", "asset_class": "DeFi",           "cis_score": 67.7},
+        {"symbol": "MSFT", "asset_class": "US Equity",      "cis_score": 65.2},
+        {"symbol": "ETH",  "asset_class": "L1",             "cis_score": 64.1},
+    ]
+    got = [a["symbol"] for a in mb.select_top_assets(items)]
+    assert got == ["LINK", "AAVE", "ETH"], got
+    assert mb.TOP_ASSET_FETCH > mb.TOP_ASSET_SHOW, (
+        "over-fetch then filter — asking for exactly 8 and dropping 3 leaves 5")
+
+
+def test_health_fails_on_a_stale_brief_not_just_a_missing_one():
+    """The Mac loop's own MAX_BRIEF_AGE_S ceiling cannot fire when the loop is
+    what died. Detection must live on the other side of the wire."""
+    src = code_only((ROOT / "src/api/health.py").read_text())
+    block = src.split('"macro_brief"')[0][-2000:] + src.split('"macro_brief"')[1][:2000]
+    assert "MAX_BRIEF_AGE_S" in block, (
+        "the freshness limit must derive from the generator's own ceiling, not "
+        "be restated — restating is how two numbers drift apart")
+    assert "received_at" in block, "must compare against the arrival time"
+    assert "STALE" in src, "a stale brief must report as stale, not as present"
