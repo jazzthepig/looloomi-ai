@@ -220,7 +220,22 @@ async def _persist_daily(clock: dict) -> None:
         from src.api.store import redis_get_key, redis_set_key
         await redis_set_key("crowd:clock", clock, ttl=3 * 3600)
         day = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d")
-        if await redis_get_key(f"crowd:clock:logged:{day}"):
+        # S-184, same class as S-180. This is an idempotency key, and
+        # `redis_get_key` answers None for a MISS and None for an ERROR alike —
+        # so a transport failure reads as "not logged yet" and we insert a
+        # SECOND row for the same day. A dedup check whose failure mode is a
+        # duplicate is not a dedup check.
+        #
+        # Fail CLOSED: if we could not ask, assume it was logged and skip. A
+        # missing day is a visible gap someone can backfill; a duplicate day is
+        # a silent double-count in every aggregate built on this table.
+        from src.api.store import redis_get_key_status
+        _logged, _st = await redis_get_key_status(f"crowd:clock:logged:{day}")
+        if _logged or _st in ("error", "unconfigured"):
+            if _st == "error":
+                _logger.warning("[CROWD-CLOCK] dedup read errored for %s — "
+                                "skipping the insert rather than risking a "
+                                "duplicate row", day)
             return
         row = {"date": day, "phase": clock["phase"], "confidence": clock["confidence"],
                "angle": clock["angle"], **{f"in_{k}": v for k, v in (clock.get("inputs") or {}).items()}}

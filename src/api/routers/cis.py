@@ -3372,6 +3372,21 @@ async def snapshot_full_universe_to_supabase() -> dict:
         _logger.warning("[SNAPSHOT] regime %r missing or unrecognised — writing NULL, "
                         "not NEUTRAL (a default here sizes the ① book at 1.0x for a day)",
                         regime)
+    # S-184: the same T1-shadowing guard the hourly loop got in S-180. This job
+    # writes BOTH tiers by design ("every asset has a guaranteed daily row"), so
+    # it cannot simply skip T2 — but a T2 row for a symbol that already has a
+    # fresh T1 row today is not filling a gap, it is overwriting a better answer
+    # with a worse one. Under the S-180 misclassification the whole universe
+    # presents as T2, and this job would then write 58 shadow rows in one batch
+    # instead of the 43 T1 + 15 T2 it exists to produce.
+    #
+    # Deliberately the SAME mechanism and the same helper as the hourly loop.
+    # Two guards with different shapes against one failure is how you end up
+    # maintaining two mental models and trusting the wrong one.
+    from src.api.store import supabase_fresh_t1_symbols
+    _fresh_t1 = await supabase_fresh_t1_symbols(max_age_minutes=1440)
+    _shadowed: list[str] = []
+
     rows = []
     for a in universe:
         sym = a.get("symbol") or a.get("asset_id")
@@ -3380,6 +3395,11 @@ async def snapshot_full_universe_to_supabase() -> dict:
             continue
         tier = a.get("data_tier")
         tier_label = a.get("data_tier_label") or ("T1" if tier in (1, "1", "T1") else "T2")
+        if tier_label == "T2" and _fresh_t1 and sym.upper() in _fresh_t1:
+            # A T1 row for this symbol landed within the day. Writing T2 on top
+            # of it does not guarantee a daily row — there already is one.
+            _shadowed.append(sym)
+            continue
         # shape-tolerant pillar extraction + canonical regime — same latent null-pillar bug as the
         # hourly T2 loop (only read nested pillars[K]; the builder emits FLAT k → NULL pillars).
         # Fixed 2026-07-23 so the T2 fallback keeps pillars populated through a T1 stall.
@@ -3416,8 +3436,20 @@ async def snapshot_full_universe_to_supabase() -> dict:
 
     ok = await supabase_insert_batch(rows)
     t1 = sum(1 for r in rows if r["data_tier"] == "T1")
-    _logger.warning(f"[SNAPSHOT] daily full-universe snapshot: ok={ok} rows={len(rows)} (T1={t1} T2={len(rows)-t1})")
-    return {"ok": bool(ok), "rows": len(rows), "t1": t1, "t2": len(rows) - t1}
+    _logger.warning(f"[SNAPSHOT] daily full-universe snapshot: ok={ok} rows={len(rows)} "
+                    f"(T1={t1} T2={len(rows)-t1} shadow-suppressed={len(_shadowed)})")
+    if len(_shadowed) >= 10:
+        # Suppressing a handful is routine. Suppressing ten-plus means the tier
+        # resolver called a T1 universe T2 — S-180 live — and the fact that this
+        # job still produced a clean result must not hide that.
+        _logger.error("[SNAPSHOT] ⚠️  %s symbols presented as T2 while carrying a "
+                      "fresh T1 row: %s%s — tier resolution is wrong wholesale, "
+                      "not per-symbol. Check `redis_status` in the universe payload.",
+                      len(_shadowed), sorted(_shadowed)[:12],
+                      " …" if len(_shadowed) > 12 else "")
+    return {"ok": bool(ok), "rows": len(rows), "t1": t1, "t2": len(rows) - t1,
+            "shadow_suppressed": len(_shadowed),
+            "t1_occupancy_known": _fresh_t1 is not None}
 
 
 @router.post("/internal/cis-snapshot")
