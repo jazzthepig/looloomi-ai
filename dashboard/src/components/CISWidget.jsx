@@ -149,20 +149,45 @@ export function CISMacroBanner({ macro }) {
           )}
         </div>
       </div>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {[
-          { label: "Fed", value: macro?.fed_funds ? `${macro.fed_funds}%` : "—" },
-          { label: "10Y", value: macro?.treasury_10y ? `${macro.treasury_10y}%` : "—" },
-          { label: "VIX", value: macro?.vix ?? "—" },
-          { label: "DXY", value: macro?.dxy ?? "—" },
-          { label: "CPI", value: macro?.cpi_yoy ? `${macro.cpi_yoy}%` : "—" },
-        ].map((m, i) => (
-          <div key={i} style={{ textAlign: "center", padding: "6px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6, border: "1px solid rgba(255,255,255,0.06)" }}>
-            <div style={{ fontSize: 9, color: T.secondary, textTransform: "uppercase" }}>{m.label}</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{m.value}</div>
+      {/* S-180 (2026-08-20). This row used to hold five fixed boxes — Fed, 10Y,
+          VIX, DXY, CPI — each falling back to an em-dash. They had rendered an
+          em-dash every day since launch, because NO endpoint in the backend has
+          ever emitted `fed_funds`, `treasury_10y`, `vix`, `dxy` or `cpi_yoy`
+          (grepped 2026-08-20: zero producers). The caller passed one field,
+          `{ regime }`, and the component read six.
+
+          That is not a data outage with a fallback doing its job. It is five
+          labelled boxes asserting that we track five macro series we do not
+          track, on a page an allocator reads — and the em-dash makes it look
+          like a feed hiccup rather than an absence, so it never got fixed.
+          "Data always present — skeletons, never empty states" was being
+          satisfied cosmetically while being violated in substance.
+
+          Now: render only what we actually have, and render nothing when we
+          have nothing. Any indicator wired later appears here by itself; none
+          announces itself before it exists. */}
+      {(() => {
+        const boxes = [
+          macro?.regime_confidence != null && {
+            label: "Confidence", value: `${Math.round(macro.regime_confidence * 100)}%` },
+          macro?.fed_funds     != null && { label: "Fed",  value: `${macro.fed_funds}%` },
+          macro?.treasury_10y  != null && { label: "10Y",  value: `${macro.treasury_10y}%` },
+          macro?.vix           != null && { label: "VIX",  value: macro.vix },
+          macro?.dxy           != null && { label: "DXY",  value: macro.dxy },
+          macro?.cpi_yoy       != null && { label: "CPI",  value: `${macro.cpi_yoy}%` },
+        ].filter(Boolean);
+        if (!boxes.length) return null;
+        return (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {boxes.map((m, i) => (
+              <div key={i} style={{ textAlign: "center", padding: "6px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6, border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ fontSize: 9, color: T.secondary, textTransform: "uppercase" }}>{m.label}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.primary, fontFamily: FONTS.mono }}>{m.value}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        );
+      })()}
     </div>
   );
 }
@@ -782,7 +807,12 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
       </div>
 
       {/* Macro Banner */}
-      <CISMacroBanner macro={{ regime: data?.macro_regime }} />
+      <CISMacroBanner macro={{
+        regime: data?.macro_regime,
+        // S-180: `regime_confidence` is on the payload and was never read. It is
+        // the one macro number we genuinely compute, so it is the one shown.
+        regime_confidence: data?.regime_confidence,
+      }} />
 
       {/* Loading — reads as the engine thinking, not a dead screen */}
       {loading && (
