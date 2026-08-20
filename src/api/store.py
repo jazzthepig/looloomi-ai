@@ -761,9 +761,20 @@ async def supabase_fresh_t1_symbols(max_age_minutes: int = 90) -> set[str] | Non
     if not _SB_URL or not _SB_KEY:
         return None
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=max_age_minutes)
+    # `recorded_at`, NOT `created_at`. cis_scores has no created_at column, and
+    # PostgREST answers a 400 for an unknown filter column — which this function
+    # correctly maps to None ("could not ask"), which the hourly T2 writer
+    # correctly treats as "do not write". Correct all the way down, and the net
+    # effect was that the hourly loop silently wrote nothing for two cycles.
+    #
+    # Shipped 2026-08-20 in the same session where the identical mistake had
+    # already thrown `column "created_at" does not exist` in an ad-hoc query an
+    # hour earlier. Knowing a fact and encoding it are different acts; only the
+    # second one survives, which is why the column name is now pinned by
+    # `test_occupancy_query_filters_on_a_column_that_exists`.
     url = (f"{_SB_URL}/rest/v1/{_SB_TABLE}"
            f"?select=symbol&data_tier=eq.T1"
-           f"&created_at=gte.{cutoff.isoformat()}&limit=5000")
+           f"&recorded_at=gte.{cutoff.isoformat()}&limit=5000")
     try:
         r = await _supabase_request_with_retry(
             "GET", url, headers={"apikey": _SB_KEY,
