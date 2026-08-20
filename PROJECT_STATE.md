@@ -7,25 +7,13 @@
 266h 里 8h 受影响(3.0%,473 行),最近一次 08-19 11:00 —— **正落在 Jazz 问的那波行情里**。
 **missing-vs-unreachable 这个类的第三例**(S-166 → S-179 → S-180),前两次都只修了实例。
 三层:读携带状态 · error 时保留 last-good T1 · **写入端查表拒绝遮蔽活着的 T1**(刻意不信任前两层)。
-同批 S-181/182/183 见 ledger。7 断言经重新引入 bug 验证会 FAIL;preflight 绿。
+同批 S-181/182/183 见 ledger。**S-184 扫了全部 49 个 redis 调用点**,又找到三个同类:
+quant 读失败会用这次推送替换掉 100 条交易历史 · crowd_clock 幂等键失败插重复行 · 日快照缺同一守卫。
+⚠️ **守卫自己失败了三轮**:第一版七变异只抓到四个,因为它匹配名字,而我写的注释里就有那个名字
+——**解释 bug 的注释废掉了抓这个 bug 的测试**。终版 7 变异 7 抓、0 误报、13 断言,preflight 绿。
 🟡 **需 Jazz 决定:473 行已污染历史是否清理(那是改写历史)。**
 
-<details><summary>上一条 (2026-08-19, S-175)</summary>
-**S-175: the forward record I shipped on 08-18 had ZERO callers.** `refresh_depth_divergence()` existed only in a test docstring and a preflight
-comment; the rows in the log were written by hand. Same defect as its own ledger entry, by its
-author, one day later — *building the thing feels like finishing it, and a scheduler disagrees.*
-Now wound by `_forward_record_loop`, which also **pages when any book stops marking**
-(`MAX_SILENT_DAYS = 1` — the ① book's 5-day August gap was reported accurately by
-`/internal/beta-core-clock` to nobody, because a status endpoint only speaks when asked).
-Refresh now **fails closed on a thin day**: the auto-target hit 2 symbols because the Crypto feed
-is 11 days behind the other classes, and a 60-day record containing 2-row days has a sample size
-nobody can state. **S-174** the external probe reported ✅ every 3 h for the five days production
-was read-only — it only ever exercised READS; write capability is now checked, three-valued.
-Probe moved to 6 h (its prompt had claimed 4×/day while cron said 8×). **Frontend sweep**: 11
-entries + 8 nav items, **zero console errors**, AssetRadar fix confirmed live; open items are
-Asset Radar's ~9 s skeleton, a `SYNCING · 0 assets` transient that reads as "nothing found", and
-**three different universe sizes on one screen** (58 / 58 / 31).
-
+<details><summary>上一条 (2026-08-19, S-175 前向记录零调用者 + S-174 探针写盲区) — 详见 REFUTATION_LEDGER</summary>
 </details>
 
 > 🔴 **Blocked on Mac lane:** Crypto OHLCV stale 11 days — it is the input to the depth record and
