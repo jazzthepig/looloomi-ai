@@ -746,5 +746,18 @@ python3 -m pytest tests/test_tier_integrity.py -q || {
   echo "  ✗ tier-integrity suite FAILED — do not push"; exit 1; }
 echo "  ✓ tier integrity (S-180/S-181)"
 
+# ── S-185: PostgREST filter columns must exist ───────────────────────────────
+# The S-180 occupancy guard filtered cis_scores on `created_at`, which has never
+# existed (it is `recorded_at`). PostgREST 400s → the helper says "could not ask"
+# → the fail-closed writer declines → the hourly T2 snapshot silently wrote
+# nothing for two cycles, with no error raised anywhere. A fail-closed guard
+# converts a typo into a SILENT outage, so the guard needs a guard.
+# Authority is schema/public_columns.json (live information_schema), NOT
+# scripts/*.sql — those have drifted, and validating against them produced three
+# false positives and zero true ones.
+python3 -m pytest tests/test_postgrest_columns_exist.py -q || {
+  echo "  ✗ a PostgREST filter names a column that does not exist — do not push"; exit 1; }
+echo "  ✓ postgrest columns exist (S-185)"
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."
