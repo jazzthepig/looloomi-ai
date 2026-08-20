@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException, Header, Query, WebSocket, WebSocke
 from fastapi.responses import JSONResponse
 
 from src.api.store import (
-    redis_set, redis_get,
+    redis_set, redis_get, redis_get_status,
     redis_set_key, redis_get_key,
     supabase_insert_batch, supabase_get_history,
     supabase_get_recent_scores,
@@ -391,6 +391,13 @@ async def get_cis_push_schema():
 # computation (others await/serve the cached result) removes the 503 entirely.
 _UNIVERSE_CACHE: dict = {"data": None, "ts": 0.0}
 _UNIVERSE_TTL = 30.0
+
+# S-180: the last T1 payload we successfully READ, kept so that a failed Redis
+# read cannot masquerade as an absent Mac push. Deliberately in-process and
+# deliberately NOT persisted: its whole job is to cover a blip measured in
+# seconds. Surviving a restart would let it cover a real outage instead, which
+# is the failure it exists to distinguish from.
+_T1_LAST_GOOD: dict = {"payload": None, "ts": 0.0}
 _UNIVERSE_LOCK = asyncio.Lock()
 
 # ── 2026-07-29 P0: the single-flight lock became a total-outage amplifier ──────
@@ -734,12 +741,38 @@ async def _build_cis_universe(force_source: str = None):
 
     if force_source != "railway":
         _t = time.time()
-        cached = await redis_get()
+        # S-180: status-carrying read. A transport failure must NOT be read as
+        # "the Mac has not pushed" — that demotes all 58 assets to T2 at once,
+        # swapping the entire pillar set and flipping grades and positioning.
+        cached, _redis_status = await redis_get_status()
         _phase["redis_ms"] = int((time.time() - _t) * 1000)
+        _phase["redis_status"] = _redis_status
         if cached and cached.get("universe"):
             age = time.time() - cached.get("last_updated", 0)
             if age < 7200 or force_source == "local":
                 use_local = True
+                _T1_LAST_GOOD["payload"] = cached
+                _T1_LAST_GOOD["ts"] = time.time()
+        elif _redis_status == "error":
+            # We could not ask. Serve the last T1 payload we DID read rather
+            # than manufacturing a universe-wide tier demotion out of a network
+            # blip. Bounded by the same 2h window a live read gets, so a genuine
+            # prolonged outage still falls through to T2 — the difference is that
+            # it now takes two hours of real failure instead of one dropped packet.
+            _lg = _T1_LAST_GOOD.get("payload")
+            if _lg and (time.time() - _T1_LAST_GOOD.get("ts", 0)) < 7200:
+                cached = _lg
+                use_local = True
+                _phase["t1_source"] = "last_good_after_redis_error"
+                _logger.warning(
+                    "[CIS] Redis read ERRORED — holding last-good T1 (%.0fs old) "
+                    "instead of demoting the universe to T2",
+                    time.time() - _T1_LAST_GOOD.get("ts", 0))
+            else:
+                _phase["t1_source"] = "redis_error_no_last_good"
+                _logger.error("[CIS] Redis read ERRORED and no last-good T1 in "
+                              "memory — universe will report T2. Rows written "
+                              "from this build are suspect.")
 
     # Always calculate Railway universe as T2 base (covers 65+ assets).
     # NOTE: this runs even when T1 is fresh, and it fans out to external providers

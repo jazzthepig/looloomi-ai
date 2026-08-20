@@ -10,7 +10,7 @@ import logging
 
 from src.api.runtime_role import note_refusal, refuse_write
 import os, json, math, time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import httpx
 from fastapi import WebSocket
 
@@ -48,8 +48,18 @@ async def redis_set(data: dict) -> bool:
 
 
 async def redis_get() -> dict | None:
-    """Read CIS payload from Upstash. Returns None on miss/error."""
+    """Read the T1 CIS payload from Upstash. None on miss OR error.
+
+    ⚠️ If you are deciding T1-vs-T2 tier, use `redis_get_status()` — the tier
+    decision must not be made on a value that cannot tell an absent Mac push
+    from an unreachable Redis. S-180.
+    """
     return await redis_get_key(_REDIS_KEY)
+
+
+async def redis_get_status() -> tuple[dict | None, str]:
+    """The T1 CIS payload plus WHY it is empty. See `redis_get_key_status`."""
+    return await redis_get_key_status(_REDIS_KEY)
 
 
 # ── Generic key-based Redis helpers ──────────────────────────────────────────
@@ -75,24 +85,70 @@ async def redis_set_key(key: str, data: dict, ttl: int = 7200) -> bool:
         return False
 
 
-async def redis_get_key(key: str) -> dict | None:
-    """Read any JSON payload from Upstash. Returns None on miss/error."""
+async def redis_get_key_status(key: str) -> tuple[dict | None, str]:
+    """Read a JSON payload from Upstash, SAYING WHY when it comes back empty.
+
+    Returns (payload, status) with status one of:
+        "hit"        payload is present
+        "miss"       Upstash answered, and the key genuinely is not there
+        "error"      we could not ask — transport failure, non-200, bad JSON
+        "unconfigured"  no Upstash URL in the environment
+
+    WHY THIS EXISTS (S-180, 2026-08-20). `redis_get_key` documented its own bug
+    in its docstring — "Returns None on miss/error" — and `_build_cis_universe`
+    read that None as "the Mac engine has not pushed", demoting **the entire
+    58-asset universe** from T1 to T2 in one step. A T1→T2 demotion is not a
+    small precision change: it swaps the whole pillar set (measured on BTC,
+    2026-08-19: F 50→80, O 27→59, S 59→20), moves the score ~10 points, and
+    crosses both the grade boundary and the positioning boundary. The hourly
+    snapshot loop then wrote those rows into `cis_scores` as the permanent
+    record, because its guard is `tier_label == "T2"` and every asset now
+    claimed to be T2.
+
+    So a single Redis blip did not degrade the read — it rewrote history. And
+    it was invisible, because a genuine Mac outage produces byte-identical
+    rows. The system's way of failing looked exactly like its way of being
+    correct, which is the third instance of this same collapse in one week
+    (`supabase_table_exists` missing-vs-unreachable, S-166; the loop-health
+    "flowing" report off one fresh row, S-179). Two-valued returns keep
+    re-manufacturing it: the fix is not another `if` at the call site, it is
+    making the read itself carry the distinction it always had and discarded.
+    """
     if not _UPSTASH_URL:
-        return None
+        return None, "unconfigured"
     try:
         client = _get_redis_client()
         resp = await client.get(
             f"{_UPSTASH_URL}/get/{key}",
             headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
         )
-        if resp.status_code == 200:
-            raw = resp.json().get("result")
-            if raw:
-                return json.loads(raw)
-        return None
-    except Exception as e:
-        _logger.warning(f"[REDIS] GET {key} error: {e}")
-        return None
+        if resp.status_code != 200:
+            # An HTTP error is NOT a miss. Upstash returns 200 with
+            # result=null for an absent key; anything else means we failed to
+            # ask, and callers must not read that as "the key is gone".
+            _logger.warning("[REDIS] GET %s → HTTP %s (treated as ERROR, not miss)",
+                            key, resp.status_code)
+            return None, "error"
+        raw = resp.json().get("result")
+        if raw is None or raw == "":
+            return None, "miss"
+        return json.loads(raw), "hit"
+    except Exception as e:                                       # noqa: BLE001
+        _logger.warning("[REDIS] GET %s error: %s (treated as ERROR, not miss)", key, e)
+        return None, "error"
+
+
+async def redis_get_key(key: str) -> dict | None:
+    """Read any JSON payload from Upstash. Returns None on miss OR error.
+
+    Kept for the many callers where the distinction genuinely does not matter
+    (decoration, enrichment, best-effort caches). If a caller's behaviour on
+    None is a FALLBACK THAT WRITES — anything that persists a different value
+    because the read came back empty — it must use `redis_get_key_status`
+    instead. See that function for what this one cost.
+    """
+    payload, _status = await redis_get_key_status(key)
+    return payload
 
 
 # ── Supabase ──────────────────────────────────────────────────────────────────
@@ -670,6 +726,57 @@ async def supabase_ohlcv_daily_freshness() -> dict:
     _OHLCV_FRESH_CACHE["result"] = out
     _OHLCV_FRESH_CACHE["ts"] = now
     return out
+
+
+# ── S-180: T1 occupancy, so a T2 writer can refuse to overwrite a live T1 ─────
+_T1_OCCUPANCY_CACHE: dict = {"syms": None, "ts": 0.0}
+_T1_OCCUPANCY_TTL = 120.0
+
+
+async def supabase_fresh_t1_symbols(max_age_minutes: int = 90) -> set[str] | None:
+    """Symbols that already have a T1 row in `cis_scores` inside the window.
+
+    Returns None when the question could not be ASKED (Supabase unreachable,
+    breaker open). None is not an empty set: an empty set means "no T1 rows
+    exist, T2 is genuinely the only source"; None means "we do not know", and a
+    writer must not treat not-knowing as permission.
+
+    WHY (S-180). The hourly T2 snapshot loop guards itself with
+    `tier_label == "T2"`, which is correct only if the tier label is correct.
+    On 2026-08-19 it was not: a Redis read failure demoted the whole universe,
+    so every asset presented as T2 and the loop wrote all of them — six minutes
+    after a T1 row for the same symbol, with a different pillar set and a
+    grade one letter away. Whichever landed last is what an allocator saw.
+
+    The builder-side fix (holding last-good T1 across a blip) removes the cause.
+    This removes the CONSEQUENCE, and it does so without trusting the builder:
+    a receiver that checks the table cannot be talked into a bad write by an
+    upstream that is confidently wrong. Both halves, because the cause will
+    recur in a form the first fix does not cover — it already has, three times.
+    """
+    now = time.time()
+    if (_T1_OCCUPANCY_CACHE["syms"] is not None
+            and now - _T1_OCCUPANCY_CACHE["ts"] < _T1_OCCUPANCY_TTL):
+        return _T1_OCCUPANCY_CACHE["syms"]
+    if not _SB_URL or not _SB_KEY:
+        return None
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=max_age_minutes)
+    url = (f"{_SB_URL}/rest/v1/{_SB_TABLE}"
+           f"?select=symbol&data_tier=eq.T1"
+           f"&created_at=gte.{cutoff.isoformat()}&limit=5000")
+    try:
+        r = await _supabase_request_with_retry(
+            "GET", url, headers={"apikey": _SB_KEY,
+                                 "Authorization": f"Bearer {_SB_KEY}"})
+        if r is None or r.status_code != 200:
+            return None
+        syms = {row["symbol"].upper() for row in r.json() if row.get("symbol")}
+        _T1_OCCUPANCY_CACHE["syms"] = syms
+        _T1_OCCUPANCY_CACHE["ts"] = now
+        return syms
+    except Exception as e:                                       # noqa: BLE001
+        _logger.warning("[T1-OCC] could not read T1 occupancy: %s", e)
+        return None
 
 
 # ── D4 attention (trending_log) read — cached, for cause-proximity ─────────────
