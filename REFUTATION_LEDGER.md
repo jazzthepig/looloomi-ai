@@ -10333,3 +10333,227 @@ AssetRadar (S-171 的修复)     ✅ 已上线并正常,31 资产全量
 先等 Mac 侧的采集恢复。已写进 §IN-FLIGHT-2026-08-19。
 
 **Verdict.** SHIPPED。时钟上了发条,告警在位,薄日被拒,前端零控制台错误。
+
+---
+
+## S-177 — 管子通不通:通的都通,而研究面板从来没在管子上(2026-08-19)
+
+**Jazz 要求:挖矿之前先证明 loop / 数据读写 / 交易是通的。**
+
+### 一、`loop-health` 说 flowing,而 5 张表是 DEAD
+
+```
+loop-health: "ingest freshness (ohlcv_daily)": flowing — BTC latest 2026-08-18 (age=1d)
+实际:        asset_class='Crypto' 最后 trade_date = 2026-08-08(262 个符号,11 天)
+```
+
+**它抽查 BTC 一个符号,然后宣布整条摄入管线 flowing。** 而 BTC 在 `L1` 类
+(coingecko,日更),不在那 262 个里。**一个符号的新鲜度被当成了整个面板的新鲜度。**
+
+### 二、根因不是"坏了",是"从来没建过"
+
+```
+asset_class    符号   最新         来源
+Crypto          262  2026-08-08   binance_hist   ← 一次性 2017+ 深度回填
+L1/L2/DeFi/...   25  2026-08-18   coingecko      ← _ohlcv_collector_loop 日更
+US Equity/...    33  2026-08-18   eodhd          ← 同上
+```
+
+`collect_ohlcv` 的 universe = `ASSETS_CONFIG` = **58 个符号**。
+**那 262 个深度面板符号根本不在日更任务里,也从来没在过。**
+
+它是为研究回填的(S-21),而**没有人给它接日更**。所以:
+- S-172 用它做历史挖掘 —— **完全正确,那就是它的用途**
+- 但任何前向记录都不能挂在它上面,因为没有东西推进它
+
+### 三、于是我发现了自己昨天代码里的错
+
+`refresh_depth_divergence` 的 50% 覆盖率地板,拿今天的活跃符号数去比一个
+**包含一次性回填的 p90**:
+
+```
+今天维护中的:  25 个
+p90 基线:      263(含 262 个回填日)
+25/263 = 10% → 拒绝,而且会永远拒绝
+```
+
+**我把「回填曾经写过 263 个符号」当成了「每天应该有 263 个符号」。**
+一个覆盖率地板只有对着**真正被维护的总体**才有意义;对着一次历史导入去量,
+它就是一个自己造出来的、永久的、看起来还很像在工作的停摆。
+
+### 四、修完之后还是 −1,而地板是对的
+
+```
+2026-08-19    2 个符号   ← 今天,还在采集中
+2026-08-18   25 个符号   ← 完整
+```
+
+`max(trade_date)` 是今天,**而今天永远是半截的**。所以默认目标日是一个
+永远无法满足覆盖率地板的日子 —— 地板对、范围对,记录照样永久停摆。
+
+**前向记录应该标记在「最后一个它有完整画面的日子」。** 别的做法要么是标半天,
+要么是把标准降到半天能通过。现在目标是「最新的、覆盖率达标的那一天」,
+所以采集延迟或不完整之后它会自愈,不需要人。
+
+### 五、清掉混在一起的两个总体
+
+日志里 08-08 是深度面板(246 符号),08-18 是维护面板(25)。
+**一个 60 天承诺里混两个总体,就是「样本量没人能说清」。** 删掉我自己那个种子行,
+时钟从维护面板干净起步。
+
+```
+2026-08-18   25/25 覆盖 100%   25 已测   0 个 UNDERWEIGHT
+```
+
+0 个不是"没看" —— `measured=25` 证明看了 25 个,那天确实没有信号触发。
+
+### 结论:管子的真实状态
+
+```
+✅ 通    Railway loops · T1 推送(0.1h)· ① 账本 · C2 ⓠ · holder 时间序列 · 写入闸门
+✅ 通    58 符号 CIS universe 日更(coingecko + eodhd)
+✅ 通    depth_divergence 前向记录(修完之后,25 符号)
+⚠️ 30h   trade_results —— METER_REBAL,间隔待确认
+🔴 无源  262 符号深度面板 —— 不是坏了,是没有日更任务。历史挖掘可用,前向不可用
+🔴 死    asset_embeddings(26 天)· market_state_vectors(14 天)· signal_outcomes(108 天)
+```
+
+**Verdict.** 已建的管子通了。深度面板需要一个**决定**(接日更 vs 只做历史),不是一个修复。
+
+---
+
+## S-180 — 一次 Redis 读失败,可以整体改写评级历史
+
+**触发。** Jazz 从另一台手机看,评级和 macro brief 滞后;macro regime 那一栏"感觉是坏的"。
+三个症状,查下去是三个独立缺陷,其中一个不是显示问题。
+
+**测到的。** `cis_scores` 里同一个 symbol、同一小时,两套完全不同的支柱:
+
+```
+08-19 09:02  45.1  C+  UNDERPERFORM  T1  local_engine       F=50 M=43 O=27 S=59 A=48
+08-19 09:08  53.8  C+  NEUTRAL       T2  railway_t2_hourly  F=80 M=46 O=59 S=20 A=36
+```
+
+F、O、S 三个支柱方向相反。14 天全量:T1 均分 50.8,T2 均分 37.3 —— **T2 系统性低 13.5 分**,
+足够跨 grade 边界和 signal 边界。
+
+**根因,一行。** `store.py` 的 `redis_get_key` 自己的 docstring 写着 "Returns None on
+miss/error"。`_build_cis_universe:737` 把这个 None 读成"Mac 没推送":
+
+```python
+cached = await redis_get()                      # miss 和 error 同一个返回值
+if use_local and cached and ...:                # 假 ⇒ 【整个 universe】降 T2
+```
+
+判定是 all-or-nothing 的:**一次丢包 → 58 个资产同时换一套支柱。** 而每小时的快照 loop
+守卫是 `tier_label == "T2"`,此刻每个资产都"诚实地"自称 T2,于是它把 43 行全写进永久记录。
+
+**基础率(266 小时)。** 8 小时受影响 = **3.0%**,473 行。不是慢性病,是罕见但整批发作 ——
+最近一次 08-19 11:00,正落在 Jazz 问的那波行情里。
+
+**为什么之前没被发现。** 真实的 Mac 停机产生的行,和一次网络抖动产生的行,**逐字节相同**。
+系统出错的样子和它正常工作的样子长得一模一样。
+
+**这是同一个类的第三例。** S-166 `supabase_table_exists` 的 missing-vs-unreachable;
+S-179 loop-health 拿一行新鲜 BTC 报"flowing";现在是 S-180。三次都在实例上修好了。
+**修实例不是修类** —— 两值返回会一直重新制造它。
+
+**修法,三层(缺一层都不够)。**
+
+| 层 | 改动 | 挡住什么 |
+|---|---|---|
+| 读 | `redis_get_key_status()` → `(payload, "hit"/"miss"/"error"/"unconfigured")`;非 200 一律 `error`,绝不当 miss | 让"问不到"和"没有"不再是同一个值 |
+| 判定 | error 时保留 last-good T1(内存,2h 上限),不整体降级 | 抖动不再改写 tier |
+| 写 | T2 写入前查表:该 symbol 90 分钟内有 T1 行就拒写;查不到(None)则**整批不写** | 就算上游判错,永久记录也不脏 |
+
+第三层刻意不信任前两层:一个会查表的接收方,不会被一个自信但错误的上游说服。
+
+**Verdict.** REFUTED —— "T1/T2 fallback 是安全的降级"不成立。降级路径没有 hysteresis,
+且其产物与正常产物在表里无法区分。7 个断言,每个都用重新引入 bug 验证过会 FAIL。
+
+**遗留(未做,需决定)。** 473 行已污染的历史行还在表里。可以按 (symbol, hour) 有 T1 就删同
+小时的 t2_hourly 行来清,但那是改写历史,要 Jazz 点头。
+
+---
+
+## S-181 — 两个页面显示同一个数字,却被读成两套评级体系
+
+**Jazz 的原话。** "asset radar 和 cis grade 两个页面的 grade 不一样……我知道我们设计是有所
+区分的,因为权重和流动性加权不一样。"
+
+**测到的:grade 没有任何设计差异。**
+
+```
+AssetRadar.jsx:218      fetch("/api/v1/cis/universe") → item.grade    逐字
+CISLeaderboard.jsx:383  fetch("/api/v1/cis/universe") → asset.grade   逐字
+```
+
+同 endpoint,同字段,零加工。**唯一能不一样的方式是取值时刻不同:**
+
+```
+AssetRadar        setInterval(loadData, 120_000)
+CISLeaderboard    setInterval 出现次数 = 0        ← 挂载后永不刷新
+```
+
+BTC 在 08-19 从 44 走到 58。一个开着不动的标签页,radar 跟着走,leaderboard 冻在挂载那一刻,
+两页差整整一个 grade。**叠加 S-180 的整批降级,leaderboard 会把一个坏掉的分钟一直显示到手动刷新。**
+
+**Jazz 把功劳记给了一个系统没有做的区分。** 真正按设计不同的是 **LAS**(流动性×置信度加权),
+它就在 grade 旁边一列 —— 但它的解释写在 `title=` 属性里。**H5 是触摸屏,没有 hover。**
+手机上那一列是一个没有任何解释的裸数字。这个区分一直是真的,只是被记录在手机够不到的地方。
+
+**顺带查出两个前端在断言它没核对过的事实(`AssetRadar` footer):**
+
+- `"60s refresh"` —— 实际 interval 是 120_000。
+- `"T2 Market Est."` —— **硬编码**,不看数据。08-20 实测 58 个 symbol 里 **43 个是 T1**。
+  一个读者把这行 footer 和 CIS 页的 T1 badge 一对比,合理地得出"两页评分不同"的结论 ——
+  两页并没有不同,是其中一页在错误地描述自己。
+
+**修法。** leaderboard 接上同一个 120s 时钟(两个视图看同一个数字,必须用同一个钟);
+footer 的 tier 声明从行里推导,不再硬编码;加一段**常驻可见**的 CIS / LAS / T1·T2 图例,
+不依赖 hover。
+
+**Verdict.** REFUTED —— "两页 grade 不同是权重设计差异"不成立。grade 是同一个数;
+不同的是刷新时刻。设计上真正不同的 LAS,此前在移动端完全没有解释。
+
+---
+
+## S-182 — 五个宏观指标框,自上线起每天渲染一个破折号
+
+`CISWidget.jsx:785` 传一个字段,`CISMacroBanner:154-158` 读六个:
+
+```jsx
+<CISMacroBanner macro={{ regime: data?.macro_regime }} />        // 传 1
+macro?.fed_funds · treasury_10y · vix · dxy · cpi_yoy            // 读 5
+```
+
+**grep 全后端:`fed_funds` / `treasury_10y` / `vix` / `dxy` / `cpi_yoy` 的生产者数量 = 0。**
+不是"调用方忘了传",是这五个数在系统里从不存在。
+
+**为什么它能活这么久。** 破折号读起来像 feed 抖了一下,不像"这个东西不存在"。
+**缺席伪装成了故障**,于是没人去修。"data always present — skeletons, never empty states"
+在形式上被满足,在实质上被违反。而这是给 allocator 看的页面,五个带标签的框在宣称我们跟踪
+五条我们并不跟踪的宏观序列。
+
+**修法。** 只渲染真有值的框,一个都没有就整行不渲染。补上 `regime_confidence` ——
+我们唯一真的在算的宏观数字,而它一直在 payload 里没被读。以后接上任何指标会自己出现;
+没接上的不会提前宣称自己存在。
+
+**Verdict.** 显示层缺陷,已修。守卫 `test_no_ui_box_promises_an_indicator_no_endpoint_produces`
+把"UI 读的字段"和"后端产出的字段"对账,未来任何一个新的死框都会在 preflight 挡下。
+
+---
+
+## S-183 — 跨设备滞后:SWR 窗口比它缓存的东西活得还久
+
+`/api/v1/macro/brief` 发的是 `public, max-age=600, stale-while-revalidate=3600`。
+SWR 允许 CDN 边缘在过期后**继续发一小时的旧副本**,后台再刷。
+
+常用的手机边缘是热的,察觉不到;**别的手机命中冷边缘,最多拿到 70 分钟前的副本** ——
+正是 Jazz 报的现象。而 brief 的生产节奏是 30 分钟,**一小时的陈旧窗口能跨过一整次更新**。
+
+SWR 适合陈旧性只是观感问题的内容。macro brief 会被当作"市场此刻怎么样"来读,陈旧性不是观感。
+
+**修法。** SWR 降到 300s。守卫:任何 `swr > max-age` 在 preflight 失败 —— 陈旧副本不允许比
+新鲜副本活得久。
+

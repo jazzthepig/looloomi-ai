@@ -1,7 +1,17 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-19 (Seth/Cowork lane) — **S-175: the forward record I shipped on 08-18
-had ZERO callers.** `refresh_depth_divergence()` existed only in a test docstring and a preflight
+**Last updated:** 2026-08-20 (Seth/Cowork lane) — **S-180: 一次 Redis 读失败可以整体改写评级历史.**
+`redis_get_key` 的 docstring 自己写着 "Returns None on miss/error";builder 把这个 None 读成
+"Mac 没推送",**一次丢包让 58 个资产同时 T1→T2**(BTC 同刻 F 50↔80, O 27↔59, S 59↔20,
+系统性差 13.5 分,跨 grade 和 signal 边界),每小时快照 loop 随即把它们写进永久记录。
+266h 里 8h 受影响(3.0%,473 行),最近一次 08-19 11:00 —— **正落在 Jazz 问的那波行情里**。
+**missing-vs-unreachable 这个类的第三例**(S-166 → S-179 → S-180),前两次都只修了实例。
+三层:读携带状态 · error 时保留 last-good T1 · **写入端查表拒绝遮蔽活着的 T1**(刻意不信任前两层)。
+同批 S-181/182/183 见 ledger。7 断言经重新引入 bug 验证会 FAIL;preflight 绿。
+🟡 **需 Jazz 决定:473 行已污染历史是否清理(那是改写历史)。**
+
+<details><summary>上一条 (2026-08-19, S-175)</summary>
+**S-175: the forward record I shipped on 08-18 had ZERO callers.** `refresh_depth_divergence()` existed only in a test docstring and a preflight
 comment; the rows in the log were written by hand. Same defect as its own ledger entry, by its
 author, one day later — *building the thing feels like finishing it, and a scheduler disagrees.*
 Now wound by `_forward_record_loop`, which also **pages when any book stops marking**
@@ -15,6 +25,9 @@ Probe moved to 6 h (its prompt had claimed 4×/day while cron said 8×). **Front
 entries + 8 nav items, **zero console errors**, AssetRadar fix confirmed live; open items are
 Asset Radar's ~9 s skeleton, a `SYNCING · 0 assets` transient that reads as "nothing found", and
 **three different universe sizes on one screen** (58 / 58 / 31).
+
+</details>
+
 > 🔴 **Blocked on Mac lane:** Crypto OHLCV stale 11 days — it is the input to the depth record and
 > to any embedding rebuild, so `asset_embeddings` (26 d stale) is deliberately NOT being rebuilt:
 > rebuilding off a stale panel yields vectors that look fresh and are not. See `MINIMAX_SYNC.md`
