@@ -107,9 +107,28 @@ async def _persist_brief(brief: str, model: str, data_snapshot: dict, source: st
 
 _INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 _REDIS_KEY      = "macro:brief"
-_REDIS_TTL      = 43200   # 12 hours — briefs are twice daily
-_AUTO_TTL       = 3600    # 1 hour TTL for auto-generated briefs
-_AUTO_STALE     = 3600    # regenerate auto-brief after 1 hour
+# S-187 (2026-08-20). These were sized for "briefs are twice daily". The Mac now
+# polls every 5 minutes and regenerates on material change (see
+# `contracts/macro_brief.py`), so a 12-hour TTL and a 1-hour staleness window
+# are no longer describing the system — they are the ceiling that would hide it.
+#
+# The TTL stays generous on purpose: it is the LAST-RESORT survival window for
+# the brief if the Mac goes dark, and shortening it would turn a Mac outage into
+# a blank panel. Staleness, which decides when Railway generates its own
+# template fallback, is what has to track the real cadence.
+_REDIS_TTL      = 43200   # 12h — survival window only, NOT the refresh cadence
+_AUTO_TTL       = 900     # 15 min — an auto-generated (template) brief is a
+                          # stopgap; it must not outlive a Mac recovery by much
+_AUTO_STALE     = 900     # regenerate the template fallback after 15 min
+
+# Must be ≤ the Mac's poll interval, or the CDN becomes the binding constraint
+# and the 5-minute target is silently a 10-minute one. Imported rather than
+# restated so the two cannot drift (this is exactly how `max-age=600` survived
+# alongside a 5-minute requirement in the first draft of this change).
+from src.api.contracts.macro_brief import POLL_INTERVAL_S as _POLL_S
+_BRIEF_MAX_AGE  = min(300, _POLL_S)
+_BRIEF_SWR      = 120     # brief SWR: a cold edge may serve up to 2 min past
+                          # expiry, never the hour that caused S-183
 
 
 # ── Template brief generator (no LLM required) ───────────────────────────────
@@ -222,6 +241,39 @@ async def receive_macro_brief(payload: dict, x_internal_token: str = Header(None
     payload["received_at"] = int(time.time())
     payload["source"] = "mac_mini"
 
+    # ── S-186: validate before it can reach a reader ────────────────────────
+    # Every compliance rule in the prompt is a REQUEST to a 9B local model.
+    # "Usually obeyed" is not a compliance posture for a firm with no 投顾
+    # licence publishing to allocators, so the request is now also enforced.
+    #
+    # This REJECTS, unlike the cis_push receiver which echoes and never rejects
+    # (S-178). The difference is not inconsistency: that receiver faces a schema
+    # disagreement where it cannot know which of two deployments is right. Here
+    # there is no ambiguity — CLAUDE.md #1 makes BUY/SELL vocabulary a P0. The
+    # previous brief keeps serving, which is a stale page; the alternative is a
+    # compliance breach on an investor page, and only one of those is
+    # recoverable.
+    from src.api.contracts.macro_brief import validate_brief, PROMPT_VERSION
+    verdict = validate_brief(payload["brief"], payload.get("market_data"))
+    payload["validation"] = verdict
+    payload["prompt_version"] = payload.get("prompt_version") or "unknown"
+    if payload["prompt_version"] != PROMPT_VERSION:
+        # Recorded, never rejected — the Mac may legitimately be a deploy behind.
+        _logger.warning("[MACRO] brief arrived with prompt_version=%s, contract is %s",
+                        payload["prompt_version"], PROMPT_VERSION)
+
+    if not verdict["ok"]:
+        _logger.error("[MACRO] REJECTED brief from Mac — %s", verdict["violations"])
+        raise HTTPException(
+            status_code=422,
+            detail={"error": "brief failed compliance validation; not published",
+                    "violations": verdict["violations"],
+                    "prompt_version_seen": payload["prompt_version"],
+                    "prompt_version_expected": PROMPT_VERSION,
+                    "note": "the previously published brief remains in force"})
+    if verdict["warnings"]:
+        _logger.warning("[MACRO] brief warnings: %s", verdict["warnings"])
+
     ok = await redis_set_key(_REDIS_KEY, payload, ttl=_REDIS_TTL)
     if not ok:
         raise HTTPException(status_code=502, detail="Redis write failed")
@@ -283,19 +335,15 @@ async def get_macro_brief(response: Response):
         source = data.get("source", "mac_mini")
         # Always serve Mac Mini LLM briefs until they expire (12h TTL)
         if source == "mac_mini" or age < _AUTO_STALE:
-            # S-180 (2026-08-20). Was `stale-while-revalidate=3600`, which lets a
-            # CDN edge keep serving an expired brief for a further HOUR while it
-            # refreshes behind the scenes. On a warm edge (the phone you use every
-            # day) you never notice; on a cold one you get a copy up to 70 minutes
-            # old, which is exactly the "从别的手机登陆看是滞后的" report.
-            #
-            # SWR is the right tool for content whose staleness is cosmetic. A
-            # macro brief is read as a statement about the market right now, so
-            # its staleness is not cosmetic — and an hour of it is longer than the
-            # 30-minute cadence that produces it, meaning the window could span an
-            # entire missed update. Cut to 5 minutes: still absorbs a thundering
-            # herd, no longer outlives the thing it caches.
-            response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=300"
+            # S-183 → S-187. This was `max-age=600, swr=3600`: a cold CDN edge
+            # could serve a brief 70 minutes past expiry, which is exactly the
+            # "从别的手机登陆看是滞后的" report. Cut to 5 min, and now DERIVED
+            # from the Mac's poll interval rather than restated — a hand-written
+            # 600 next to a 5-minute requirement is how the CDN quietly becomes
+            # the binding constraint on freshness.
+            response.headers["Cache-Control"] = (
+                f"public, max-age={_BRIEF_MAX_AGE}, "
+                f"stale-while-revalidate={_BRIEF_SWR}")
             return {
                 "brief":        brief_text,
                 "brief_chars":  len(brief_text),
