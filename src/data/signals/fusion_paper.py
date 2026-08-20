@@ -59,6 +59,12 @@ _log = logging.getLogger("fusion_paper")
 # ── Persistence keys ──────────────────────────────────────────────────────────
 _STATE_KEY = "fusion_paper:state"
 _NAV_TABLE = "fusion_paper_nav"
+# 2026-08-19, S-176: durable state in Supabase. Redis is the cache, not the
+# system of record — the live book showed 5 identical NAV=0.9995 marks because
+# Redis state was lost between cycles (root cause still being diagnosed:
+# UPSTASH_REDIS_REST_URL config vs key path vs TTL). Schema lives in
+# `/tmp/cometcloud_reports/strategy2_redis_state_fix_proposal_2026-08-19.md`.
+_STATE_TABLE = "fusion_paper_state"
 
 # ── R64 frozen cell constants ────────────────────────────────────────────────
 # Match src/research/validation/r63_fusion_validation.py exactly.
@@ -359,24 +365,134 @@ def _target_weights(
     return w
 
 
-# ── State management (Redis) ─────────────────────────────────────────────────
+# ── State management (Redis cache + Supabase system of record) ────────────────
+# 2026-08-19, S-176. Redis was the only writer and 5 days of daily marks showed
+# identical NAV=0.9995 — the state did not survive between cycles, so each day
+# re-inceptioned from nav=1.0 and lost all compounding. Per CLAUDE.md / MEMORY
+# the system of record is Supabase and Redis is a cache. The new order is
+# durable-first, cache-second, so a missing Redis key falls through to Supabase
+# instead of re-inceptioning. The fusion paper book is the SHIP GATE for §P1
+# (R64/R65 forward clock), and losing 5 days of compounding to a missing cache
+# key is the same defect class as S-105 (24h-TTL Redis for 12 days) — only the
+# failure mode is different.
+async def _fetch_state_from_supabase() -> dict:
+    """Durable state from Supabase. Slower than Redis, but the system of record.
+
+    Returns the most recent row from `fusion_paper_state`. JSONB columns
+    (weights / mark_prices / prev_prices / cell) come back as dicts already
+    when the column is JSONB; if PostgREST returns them as strings (depends
+    on the content negotiation), this normalizes them.
+
+    Returns {} on any failure — same convention as `_load_state`'s cache path,
+    so the caller cannot distinguish a missing table from a missing row from
+    a network blip. The diagnostic log line is what makes that distinguishable
+    in the row-level telemetry (S-131 again).
+    """
+    import os
+    import httpx
+    base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
+    if not (base and key):
+        return {}
+    url = (f"{base}/rest/v1/{_STATE_TABLE}"
+           f"?select=inception,nav,weights,mark_prices,prev_prices,last_mark,"
+           f"n_days_marked,cell,detector_fired_today"
+           f"&order=last_mark.desc&limit=1")
+    try:
+        async with httpx.AsyncClient(timeout=8) as c:
+            r = await c.get(
+                url,
+                headers={"apikey": key, "Authorization": f"Bearer {key}"},
+            )
+            if r.status_code != 200:
+                _log.warning("[fusion] supabase state read: %s %s",
+                             r.status_code, r.text[:120])
+                return {}
+            rows = r.json()
+    except Exception as e:
+        _log.warning("[fusion] supabase state read exception: %s", e)
+        return {}
+    if not rows:
+        return {}
+    row = rows[0]
+    # Normalize JSONB columns that some PostgREST versions return as strings.
+    for col in ("weights", "mark_prices", "prev_prices", "cell"):
+        v = row.get(col)
+        if isinstance(v, str):
+            try:
+                row[col] = json.loads(v)
+            except Exception:
+                pass
+    return row
+
+
 async def _load_state() -> dict:
+    """Load state. Fast path: Redis. Durable fallback: Supabase.
+
+    The 5 identical marks at NAV=0.9995 (S-176) were the result of this
+    function returning {} when Redis was empty, after which `nav` defaulted to
+    1.0 and `w_held` to {} — exactly the no-compounding placeholder the live
+    table was showing. The Supabase fallback is the fix: when the cache misses,
+    fall through to the durable row that was written at the end of the
+    previous mark, not to a fresh inception.
+    """
+    # Fast path: Redis cache
     try:
         from src.api.store import redis_get_key
         s = await redis_get_key(_STATE_KEY)
-        if isinstance(s, dict):
+        if isinstance(s, dict) and s:
             return s
-    except Exception:
-        pass
-    return {}
+    except Exception as e:
+        _log.warning("[fusion] redis state read: %s", e)
+    # Durable fallback: Supabase
+    s = await _fetch_state_from_supabase()
+    if s:
+        # Refresh the cache so the next cycle is fast again.
+        try:
+            from src.api.store import redis_set_key
+            await redis_set_key(_STATE_KEY, s, ttl=0)
+        except Exception:
+            pass
+    return s
 
 
 async def _save_state(s: dict) -> None:
+    """Persist state. Durable first (Supabase), cache second (Redis).
+
+    The order is load-bearing: if the durable write fails, the cache is NOT
+    updated, so the next cycle's `_load_state` falls through to the LAST
+    successfully persisted state, not to a half-written row that never made
+    it to the system of record. That is the same S-105 discipline as
+    `beta_core_paper.mark_and_rebalance` (DURABLE FIRST, CACHE SECOND).
+    """
+    # Durable: Supabase
+    try:
+        from src.api.store import supabase_insert_table
+        ok = await supabase_insert_table(_STATE_TABLE, [{
+            "inception": s.get("inception"),
+            "last_mark": s.get("last_mark"),
+            "nav": s.get("nav"),
+            "weights": s.get("weights", {}),
+            "mark_prices": s.get("mark_prices", {}),
+            "prev_prices": s.get("prev_prices", {}),
+            "n_days_marked": s.get("n_days_marked", 0),
+            "cell": s.get("cell", {}),
+            "detector_fired_today": bool(s.get("detector_fired_today", False)),
+        }])
+        if not ok:
+            _log.warning("[fusion] supabase state save returned False — "
+                         "cache NOT updated; next cycle will re-fetch durable state")
+            return
+    except Exception as e:
+        _log.warning("[fusion] supabase state save exception: %s — "
+                     "cache NOT updated", e)
+        return
+    # Cache: Redis (best-effort, only after durable write succeeded)
     try:
         from src.api.store import redis_set_key
-        await redis_set_key(_STATE_KEY, s, ttl=0)  # no expiry
+        await redis_set_key(_STATE_KEY, s, ttl=0)
     except Exception as e:
-        _log.warning("[fusion] state save: %s", e)
+        _log.warning("[fusion] redis state cache write: %s "
+                     "(durable write succeeded; cache stale until next cycle)", e)
 
 
 # ── Daily mark ───────────────────────────────────────────────────────────────
