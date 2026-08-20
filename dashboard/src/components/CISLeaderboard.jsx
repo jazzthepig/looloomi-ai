@@ -431,6 +431,22 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
     };
 
     fetchData();
+
+    // S-181 (2026-08-20). This effect used to call fetchData() once and stop.
+    // AssetRadar refreshes the SAME endpoint every 120 s. Both read `asset.grade`
+    // verbatim — identical field, identical source, no weighting difference — so
+    // the only way they could ever disagree was by holding samples from different
+    // moments. On 2026-08-19 BTC moved 44 → 58 over a day; a tab left open across
+    // that showed C on this page and B on the radar, and the mismatch read as
+    // "the two pages score differently" when it was one page having stopped.
+    //
+    // Matched to AssetRadar's 120 s on purpose: the fix is not "refresh more", it
+    // is that two views of one number must sample on the same clock. A silent
+    // refresh also means the leaderboard no longer needs a manual reload to leave
+    // a bad minute — which matters because a T1→T2 misclassification (S-180) used
+    // to persist on screen until the user happened to reload.
+    const iv = setInterval(fetchData, 120_000);
+    return () => clearInterval(iv);
   }, [externalData]);
 
   // Inject responsive CSS

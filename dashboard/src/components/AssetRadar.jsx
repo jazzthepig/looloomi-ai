@@ -693,17 +693,67 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         </div>
       </div>
 
+      {/* ── Column legend ───────────────────────────────────────────
+          S-181 (2026-08-20). Every explanation on this table lived in a
+          `title=` attribute — the tier dot, the confidence dot, LAS. Tooltips
+          require hover, and H5 is a touch surface, so on a phone these render
+          as bare numbers with no way to learn what they are. A reader then
+          reasonably assumes the CIS column here differs from the CIS page's
+          grade, when in fact GRADE IS THE SAME NUMBER on both (same endpoint,
+          same field) and LAS is the column that actually differs by design.
+          Stating that plainly is the whole fix: the distinction was real and
+          only ever documented where a phone cannot reach it. */}
+      <div style={{
+        marginTop: 14, paddingTop: 10, borderTop: `1px solid ${T.border}`,
+        fontFamily: FONTS.mono, fontSize: 9, lineHeight: 1.7,
+        color: T.t3, letterSpacing: "0.04em",
+      }}>
+        <div>
+          <span style={{ color: T.t2 }}>CIS</span> — composite score and grade.
+          Identical to the CIS Engine page; same engine, same number.
+        </div>
+        <div>
+          <span style={{ color: T.t2 }}>LAS</span> — the same score after
+          liquidity and confidence weighting. Thinly-traded assets score lower
+          here than on CIS. <span style={{ color: T.t3 }}>LAS = CIS × liquidity × confidence.</span>
+        </div>
+        <div>
+          <span style={{ color: T.green }}>●</span> T1 local engine
+          {" · "}<span style={{ color: T.amber }}>●</span> T2 market estimate
+          {" — "}the dot beside each grade.
+        </div>
+      </div>
+
       {/* ── Footer ──────────────────────────────────────────────── */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        marginTop: 16, paddingTop: 12, borderTop: `1px solid ${T.border}`,
+        marginTop: 12, paddingTop: 10, borderTop: `1px solid ${T.border}`,
         fontFamily: FONTS.mono, fontSize: 9, color: T.t3, letterSpacing: "0.06em",
       }}>
+        {/* S-181 (2026-08-20). Two things here were literals asserting facts the
+            page had not checked:
+              · "60s refresh" — the interval is 120 s (line ~313).
+              · "T2 Market Est." — hardcoded, so the footer announced T2 for the
+                whole table even while most rows were T1. Measured 2026-08-20:
+                43 of 58 symbols carry a local-engine T1 score. A reader
+                comparing this footer to the CIS page's T1 badge concluded the
+                two pages score differently; they do not — one of them was
+                simply describing itself wrongly.
+            Both are now derived from the rows on screen. */}
         <span>
           Data: <span style={{ color: T.t2 }}>CoinGecko Pro</span>
           {" · "}Signals: <span style={{ color: T.blue }}>CIS v4.1</span>
-          {" · "}60s refresh
-          {" · "}<span style={{ color: T.amber }}>T2</span> Market Est.
+          {" · "}120s refresh
+          {(() => {
+            const tiers = Object.values(cisData).map(c => c?.dataTier);
+            const t1 = tiers.filter(t => t === 1 || t === "1" || t === "T1").length;
+            const n = tiers.length;
+            if (!n) return null;
+            if (t1 === n) return <>{" · "}<span style={{ color: T.green }}>T1</span> Engine</>;
+            if (t1 === 0) return <>{" · "}<span style={{ color: T.amber }}>T2</span> Market Est.</>;
+            return <>{" · "}<span style={{ color: T.green }}>T1</span> {t1}/{n}
+                    {" · "}<span style={{ color: T.amber }}>T2</span> {n - t1}/{n}</>;
+          })()}
         </span>
         {lastUpdate && (
           <span>Updated {lastUpdate.toLocaleTimeString()}</span>
