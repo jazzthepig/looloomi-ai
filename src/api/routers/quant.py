@@ -14,7 +14,8 @@ from pathlib import Path
 import logging
 from fastapi import APIRouter, HTTPException, Header
 
-from src.api.store import redis_set_key, redis_get_key, supabase_insert_batch
+from src.api.store import (redis_set_key, redis_get_key, redis_get_key_status,
+                           supabase_insert_batch)
 
 _logger = logging.getLogger(__name__)
 
@@ -110,12 +111,32 @@ async def receive_quant_status(payload: dict, x_internal_token: str = Header(Non
     if status_data:
         await redis_set_key(_REDIS_KEY_STATUS, {**status_data, "_ts": ts}, ttl=_REDIS_TTL)
     if trades_data:
-        # Append to trade history (keep last 100)
-        existing = await redis_get_key(_REDIS_KEY_TRADES)
-        if not isinstance(existing, list):
-            existing = []
-        updated = trades_data + existing
-        await redis_set_key(_REDIS_KEY_TRADES, updated[:100], ttl=_REDIS_TTL * 10)
+        # Append to trade history (keep last 100).
+        #
+        # S-184 (2026-08-20), same class as S-180. This used to be
+        # `existing = await redis_get_key(...)` and coerce a non-list to []. But
+        # `redis_get_key` returns None for a MISS and None for an ERROR, so on a
+        # transport failure `existing` became [] and the very next line wrote
+        # `trades_data + []` back over the key — silently REPLACING up to 100
+        # trades with however many arrived in this push. A read-append-write
+        # cycle over a two-valued read is not a degraded read; it is data loss,
+        # and it is indistinguishable from a genuinely empty history.
+        #
+        # Now: only an answered read may be appended to. If we could not ask,
+        # the history is left exactly as it is. The cost of skipping is this
+        # push's trades missing from a 100-entry cache whose durable copy is
+        # Supabase `trade_results` below; the cost of guessing is the cache.
+        existing, _tr_status = await redis_get_key_status(_REDIS_KEY_TRADES)
+        if _tr_status == "error":
+            _logger.warning(
+                "[QUANT] trade-history read ERRORED — skipping the append rather "
+                "than overwriting %s existing trades with %s new ones",
+                "an unknown number of", len(trades_data))
+        else:
+            if not isinstance(existing, list):
+                existing = []
+            updated = trades_data + existing
+            await redis_set_key(_REDIS_KEY_TRADES, updated[:100], ttl=_REDIS_TTL * 10)
 
         # Simons Upgrade P0.1: write closed trades to Supabase trade_results
         # Only write closed trades (have close_time); open trades have no realized return yet
