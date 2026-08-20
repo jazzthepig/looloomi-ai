@@ -771,5 +771,17 @@ python3 -m pytest tests/test_macro_brief_contract.py -q || {
   echo "  ✗ macro-brief contract FAILED — do not push"; exit 1; }
 echo "  ✓ macro brief contract (S-186/S-187)"
 
+# ── S-189: the search discount ───────────────────────────────────────────────
+# `experiment_runs.dsr` existed from the day the table was created and was never
+# populated once, while R70's best-of-grid Sharpe sat on an investor page with no
+# multiple-testing correction. Computed: DSR 0.27 at the honest N of 216 against
+# a 0.95 bar, and the observed 1.58 is BELOW the 2.38 that chance alone is
+# expected to produce as the best of 216 draws. Pins: the page reports what the
+# module computes · no forward promise on an investor surface · the finding
+# itself, so a future re-run that "passes" stops the push instead of shipping.
+python3 -m pytest tests/test_deflated_sharpe.py -q || {
+  echo "  ✗ deflated-Sharpe suite FAILED — do not push"; exit 1; }
+echo "  ✓ search discount (S-189)"
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."
