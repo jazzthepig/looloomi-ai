@@ -226,9 +226,54 @@ async def _hourly_t2_snapshot_loop():
                     "confidence":    a.get("confidence", 0.8),
                     "source":        "railway_t2_hourly",
                 })
+            # ── S-180: refuse to shadow a live T1 ────────────────────────────
+            # `tier_label == "T2"` above is only as trustworthy as the tier
+            # label, and on 2026-08-19 the label was wrong for the entire
+            # universe at once (a failed Redis read read as "Mac has not
+            # pushed"). These rows then landed six minutes after a T1 row for
+            # the same symbol, carrying a different pillar set and a grade one
+            # letter away — and cis_scores is the series the ratings history,
+            # signal_outcomes and the forward record are all built on.
+            #
+            # So the writer checks the TABLE rather than trusting the payload.
+            # Three-valued on purpose: None means Supabase could not be asked,
+            # and not-knowing is not permission — we hold the write, because a
+            # missing hour is recoverable and a corrupted hour is not.
+            from src.api.store import supabase_fresh_t1_symbols
+            fresh_t1 = await supabase_fresh_t1_symbols(max_age_minutes=90)
+            shadowed = []
+            if fresh_t1 is None:
+                print("[SNAPSHOT] hourly T2 — HELD: could not read T1 occupancy; "
+                      "declining to write rows that may shadow a live T1")
+                t2_rows = []
+            elif fresh_t1:
+                kept = []
+                for r in t2_rows:
+                    if (r.get("symbol") or "").upper() in fresh_t1:
+                        shadowed.append(r.get("symbol"))
+                    else:
+                        kept.append(r)
+                t2_rows = kept
+
+            if shadowed:
+                print(f"[SNAPSHOT] hourly T2 — suppressed {len(shadowed)} rows that "
+                      f"would have shadowed a fresh T1: {sorted(shadowed)[:12]}"
+                      f"{' …' if len(shadowed) > 12 else ''}")
+                # A large suppression is not routine housekeeping — it means the
+                # builder believed the universe was T2 while the table says it is
+                # T1, i.e. the S-180 misclassification is live again.
+                if len(shadowed) >= 10:
+                    print(f"[SNAPSHOT] ⚠️  {len(shadowed)} suppressions in one run — "
+                          f"the tier resolver is misclassifying wholesale, not "
+                          f"per-symbol. Check redis_status in /api/v1/cis/universe.")
+
             if t2_rows:
                 ok = await supabase_insert_batch(t2_rows)
-                print(f"[SNAPSHOT] hourly T2 — ok={ok} rows={len(t2_rows)}")
+                print(f"[SNAPSHOT] hourly T2 — ok={ok} rows={len(t2_rows)}"
+                      f" (suppressed={len(shadowed)})")
+            else:
+                print(f"[SNAPSHOT] hourly T2 — nothing to write "
+                      f"(suppressed={len(shadowed)})")
         except Exception as _e:
             print(f"[SNAPSHOT] ⚠️  hourly T2 run failed: {_e}")
         await _asyncio.sleep(_HOURLY_SNAPSHOT_S)
