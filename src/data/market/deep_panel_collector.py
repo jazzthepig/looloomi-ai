@@ -147,6 +147,45 @@ async def collect_deep_panel(days: int = _DEFAULT_DAYS,
 
     ok_n = len(syms) - len(failures)
     frac = ok_n / len(syms) if syms else 0.0
+
+    # ── S-190 (2026-08-20): the floor must BLOCK, not annotate ───────────────
+    # This function's own docstring says "a run that reaches 40 of 262 must not
+    # read like a quiet day", citing the eleven days the panel sat stale while
+    # loop-health reported "flowing" off one fresh BTC row. `_MIN_OK_FRACTION`
+    # was then wired only into `out["ok"]` — the write went ahead regardless.
+    #
+    # Measured 2026-08-20, one day after shipping: exactly ONE symbol (BCH) has
+    # a bar since 08-14. The collector had been writing that single symbol every
+    # run, reporting ok=False to a print statement nobody reads, and leaving
+    # `max(trade_date)` at today — so every freshness check in the system saw a
+    # current panel. I diagnosed the failure in the docstring and reproduced it
+    # one function later.
+    #
+    # A partial panel day is not a thin panel day, it is a DIFFERENT OBJECT: any
+    # cross-sectional study reading 2026-08-20 gets a one-symbol universe and no
+    # way to know. A visible gap is recoverable; a day that silently contains
+    # one asset corrupts every study that crosses it.
+    if all_rows and frac < _MIN_OK_FRACTION:
+        _log.error(
+            "[DEEP] REFUSING TO WRITE — only %s/%s symbols returned data (%.0f%%, "
+            "floor %.0f%%). Writing them would leave max(trade_date) at today and "
+            "make the panel read as current. Sample failures: %s",
+            ok_n, len(syms), frac * 100, _MIN_OK_FRACTION * 100,
+            dict(list(failures.items())[:5]))
+        return {
+            "ok": False,
+            "symbols_total": len(syms), "symbols_ok": ok_n,
+            "symbols_failed": len(failures), "ok_fraction": round(frac, 3),
+            "rows_built": len(all_rows), "rows_upserted": 0, "written": False,
+            "refused": True,
+            "elapsed_s": round((datetime.now(timezone.utc) - started).total_seconds(), 1),
+            "failure_sample": dict(list(failures.items())[:8]),
+            "diagnosis": (
+                f"only {ok_n}/{len(syms)} symbols ({frac:.0%}) — below the "
+                f"{_MIN_OK_FRACTION:.0%} floor. Write REFUSED so the gap stays "
+                f"visible rather than being papered over by a partial day."),
+        }
+
     written = False
     if all_rows:
         # Chunked: a single 250k-row body is a timeout, not a write.
