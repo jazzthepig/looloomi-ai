@@ -759,5 +759,17 @@ python3 -m pytest tests/test_postgrest_columns_exist.py -q || {
   echo "  ✗ a PostgREST filter names a column that does not exist — do not push"; exit 1; }
 echo "  ✓ postgrest columns exist (S-185)"
 
+# ── S-186/S-187: the macro brief ─────────────────────────────────────────────
+# Pins: ONE prompt in the repo (a second one had zero callers for six weeks and
+# was the file an "upgrade the prompt" request landed on first) · compliance
+# rules ENFORCED not merely requested, because a P0 asked politely of a 9B local
+# model is not a P0 · the receiver rejects before publishing · unmeasured inputs
+# named absent, never narrated (I1 in prose) · the CDN window derived from the
+# poll interval so the cache cannot silently become the freshness ceiling.
+# 12 mutations, 12 caught.
+python3 -m pytest tests/test_macro_brief_contract.py -q || {
+  echo "  ✗ macro-brief contract FAILED — do not push"; exit 1; }
+echo "  ✓ macro brief contract (S-186/S-187)"
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."
