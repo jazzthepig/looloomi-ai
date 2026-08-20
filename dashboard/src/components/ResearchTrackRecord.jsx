@@ -7,9 +7,25 @@
  * these numbers are worth showing at all:
  *
  *   "_oos_isolation_discipline": Forward β-adj SR computed ONLY on the held-out
- *   window. β estimated only on the in-sample period.
+ *   window. β estimated only on the OOS portion (no look-back into IS).
  *   "_honest_boundary": PIT-safe: pillar signal uses value as-of recorded date.
  *   Costs 5/10/20 bps round-trip. Weights forward-shifted.
+ *
+ * ⚠️ AND THAT IS THE SENTENCE THIS PAGE FIRST GOT WRONG. The first version of
+ * this file paraphrased it as "β estimated only on the IN-SAMPLE period" — the
+ * opposite — and so published R70's 1.580 as a production figure without
+ * questioning it. R71 (2026-07-23) tested exactly that: estimating β inside the
+ * held-out window uses information a live book does not have at the moment it
+ * acts. Same OOS net returns, four estimators:
+ *
+ *     β fixed from in-sample     1.083   R71: "the rigorous ship-gate test"
+ *     β expanding, recursive     1.018   R71: "production-realistic"
+ *     β = 0                      1.083   reference
+ *     β rolling inside OOS       1.580   reference — what R70 published
+ *
+ * The headline is 1.08. R71 sat in _reports/ the whole time; R70 was read and
+ * the next file was not — the same failure as never opening _reports/ at all,
+ * one directory deeper.
  *
  * WHY THIS AND NOT A NICER CURVE. Three properties almost no published backtest
  * has, all three present here:
@@ -38,7 +54,46 @@ const OOS_DAYS = 151;
 const N_SURVIVED = 17;
 const N_TESTED = 72;
 
+/* S-189 (2026-08-20). Computed by `src/research/validation/deflated_sharpe.py`
+   from R70's full 72-configuration grid. Bailey & López de Prado (2014).
+
+   N is 216, not 72: R70's grid was the SURVIVOR SET of R69's 216 cells, and
+   every configuration ever run against this data belongs in the trial count.
+   Reporting 72 would have been the flattering choice and would still have
+   failed — DSR 0.36 at N=72, 0.27 at N=216. Neither is close to 0.95.
+
+   To pass at this dispersion the strategy would have needed an OOS Sharpe of
+   roughly 4.2–4.6 annualised. That is not a near miss. */
+const DSR = {
+  value: "0.27",
+  threshold: 0.95,
+  observed: "1.58",           // the grid's own units (β estimated inside OOS)
+  luckThreshold: "2.38",      // expected max under the null, N=216
+  nTrialsFunnel: 216,
+  gridMean: "−0.45",
+};
+
 /* The contiguous survivor region: pillar A, fast cadence, unsmoothed. */
+/* R71 β-sensitivity, 2026-07-23. Same OOS net returns, four β estimators.
+   R71's own words: Method 2 (IS-fixed) is "the rigorous ship-gate test";
+   Method 3 (expanding) is "the production-realistic recursive estimate";
+   Methods 1 and 4 are "reference / worst-case". R70 published Method 1. */
+const BETA_METHODS = [
+  { name: "β fixed from in-sample", sr: 1.083, role: "ship-gate test", headline: true },
+  { name: "β expanding, recursive", sr: 1.018, role: "production-realistic" },
+  { name: "β = 0 (unadjusted)",     sr: 1.083, role: "identical — β_IS was 0.00" },
+  { name: "β rolling inside OOS",   sr: 1.580, role: "reference — uses OOS data" },
+];
+
+/* R71 method 2: `beta_value = 0.0`. The in-sample estimate came out at exactly
+   zero, which is WHY methods 2 and 4 give the same number — not a coincidence,
+   the same computation. It also means the β adjustment does no work at the
+   headline: with β = 0 the adjusted Sharpe IS the raw Sharpe. That is a real
+   property (the sleeve carried no market exposure in this window) and calling
+   the figure "β-adjusted" without saying so implies an adjustment that did not
+   happen. Minimax-C's INDEX row said it plainly — "β_IS=0 so M2≡M4" — and this
+   page shipped before that line was absorbed. */
+
 const SURVIVORS = [
   { cfg: "cadence 3",  bps: 5,  oos: 1.580, is: 1.894, ann: 14.47, turn: 69.7 },
   { cfg: "cadence 3",  bps: 10, oos: 1.493, is: 1.769, ann: 12.64, turn: 69.7 },
@@ -77,7 +132,7 @@ export default function ResearchTrackRecord() {
         <span style={{ padding: "4px 10px", borderRadius: 5, border: `1px solid ${T.border}`,
                        fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.14em",
                        textTransform: "uppercase", color: T.amber || T.t2 }}>
-          Held-out backtest · not a live record
+          Held-out backtest · fails the search discount · not a live record
         </span>
         <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.t3 }}>
           OOS {OOS_WINDOW} · {OOS_DAYS} days · β-adjusted · PIT-safe
@@ -86,30 +141,127 @@ export default function ResearchTrackRecord() {
 
       <h2 style={{ fontFamily: FONTS.display, fontWeight: 700, fontSize: 30, letterSpacing: "-0.02em",
                    color: T.t1, margin: "0 0 6px" }}>
-        Held-out out-of-sample
+        A result that failed our own bar
       </h2>
       <p style={{ fontFamily: FONTS.body, fontSize: 15, lineHeight: 1.6, color: T.t2,
-                  margin: "0 0 24px", maxWidth: 660 }}>
-        Seventy-two configurations were tested. Sharpe is <strong style={{ color: T.t1 }}>β-adjusted</strong> —
-        it measures excess over market exposure, not the exposure itself — and it is
-        computed only on a window the search never saw. Costs are re-run at each
-        assumption rather than quoted gross.
+                  margin: "0 0 24px", maxWidth: 680 }}>
+        This is the strongest backtest we own. It was run on a window the search
+        never saw, with costs re-run at each assumption rather than quoted gross,
+        and with β fixed from in-sample so the figure is one a live book could
+        have produced. It still does not clear the multiple-testing discount, and
+        we are showing it anyway — because what an allocator cannot get elsewhere
+        is not another Sharpe ratio, it is a manager who publishes the arithmetic
+        that kills one.
       </p>
 
       <div style={{ display: "flex", gap: 32, flexWrap: "wrap", padding: "20px 0 22px",
                     borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`,
                     marginBottom: 26 }}>
-        <Stat label="OOS Sharpe" value="1.58" sub="β-adjusted · net of 5 bps" tone={pos(1)} />
-        <Stat label="In-sample" value="1.89" sub="degradation −17%" />
-        <Stat label="Net annualised" value="+14.5%" sub="after costs" tone={pos(1)} />
+        <Stat label="OOS Sharpe" value="1.08" sub="β_IS = 0.00 ⇒ unadjusted" tone={pos(1)} />
+        <Stat label="Deflated Sharpe" value={DSR.value} sub={`fails · bar is ${DSR.threshold}`} tone={T.red || "#f87171"} />
+        <Stat label="Configurations run" value={String(DSR.nTrialsFunnel)} sub="R69 grid → R70 survivors" />
         <Stat label="Survived OOS" value={`${N_SURVIVED} / ${N_TESTED}`} sub="configurations" />
         <Stat label="Held-out days" value={String(OOS_DAYS)} sub="never searched" />
+      </div>
+
+      {/* ── The finding. S-189, 2026-08-20. ─────────────────────────────────
+          This page previously led with 1.08 and stopped there. The number was
+          correct and the discipline behind it was real — β fixed from in-sample,
+          PIT-safe, cost-laddered, failures published. It was still an
+          unsupported claim, because nothing had discounted it for the SEARCH
+          that produced it, and `experiment_runs.dsr` had never been populated
+          once since the column was created.
+          Publishing this rather than quietly removing the page: the arithmetic
+          below is the thing an allocator cannot get elsewhere. */}
+      <div style={{ padding: "18px 20px", borderRadius: 10, marginBottom: 28,
+                    border: `1px solid ${T.red || "#f87171"}44`,
+                    background: "rgba(248,113,113,0.05)", maxWidth: 720 }}>
+        <div style={{ fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.16em",
+                      textTransform: "uppercase", color: T.red || "#f87171", marginBottom: 10 }}>
+          This result does not clear our bar
+        </div>
+        <div style={{ fontFamily: FONTS.body, fontSize: 14, lineHeight: 1.65, color: T.t2 }}>
+          Search {DSR.nTrialsFunnel} configurations against a market and the best
+          one looks good even when none of them has any skill — you have selected
+          the maximum of {DSR.nTrialsFunnel} noisy draws. The Deflated Sharpe
+          Ratio prices that in. With this grid's dispersion, chance alone is
+          expected to produce a best-of-set Sharpe of{" "}
+          <strong style={{ color: T.t1 }}>{DSR.luckThreshold}</strong>.
+          We observed <strong style={{ color: T.t1 }}>{DSR.observed}</strong>{" "}
+          — <strong style={{ color: T.red || "#f87171" }}>below the level luck
+          alone would be expected to reach</strong>. Deflated Sharpe comes out at{" "}
+          <strong style={{ color: T.t1 }}>{DSR.value}</strong> against a
+          conventional bar of {DSR.threshold}.
+        </div>
+        <div style={{ fontFamily: FONTS.body, fontSize: 13, lineHeight: 1.6,
+                      color: T.t3, marginTop: 12 }}>
+          There is a second problem the deflation cannot repair. The window below
+          was genuinely held out — and then the configuration to publish was
+          chosen by ranking on it. Selecting on held-out data spends the very
+          property that made it held out. A clean read needs a further window
+          that the choice never touched, and that window does not exist yet; it
+          is being accumulated forward, dated, in public.
+        </div>
+        <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3, marginTop: 12,
+                      lineHeight: 1.7, borderTop: `1px solid ${T.border}`, paddingTop: 10 }}>
+          mean Sharpe across the grid {DSR.gridMean} · {N_SURVIVED} of {N_TESTED} above zero ·
+          normal moments assumed, which flatters the result — real crypto returns
+          are negatively skewed and fat tailed, and both push this lower
+        </div>
+      </div>
+
+      {/* R71 — the number depends on how beta is estimated, so all four are shown. */}
+      <div style={{ fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.16em",
+                    textTransform: "uppercase", color: T.t3, marginBottom: 10 }}>
+        How the headline moves with the β estimator
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))",
+                    gap: 8, marginBottom: 14 }}>
+        {BETA_METHODS.map((m) => (
+          <div key={m.name} style={{
+            padding: "11px 10px", borderRadius: 6,
+            border: `1px solid ${m.headline ? (T.cyan || T.border) : T.border}`,
+            background: m.headline ? "rgba(34,211,238,0.05)" : "transparent",
+          }}>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 17, color: pos(m.sr) }}>
+              {m.sr.toFixed(2)}
+            </div>
+            <div style={{ fontFamily: FONTS.body, fontSize: 12, color: T.t2, marginTop: 4 }}>
+              {m.name}
+            </div>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, marginTop: 3 }}>
+              {m.role}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ padding: "14px 16px", borderRadius: 8, border: `1px solid ${T.border}`,
+                    background: "rgba(255,255,255,0.015)", marginBottom: 30, maxWidth: 660 }}>
+        <div style={{ fontFamily: FONTS.body, fontSize: 14, lineHeight: 1.6, color: T.t2 }}>
+          <strong style={{ color: T.t1 }}>The headline is 1.08, not 1.58.</strong>{" "}
+          The higher figure estimates β inside the held-out window, which a live
+          book cannot do — at the moment it acts it knows only its own history.
+          Fixing β from in-sample is what production would actually have, and it
+          costs a third of the Sharpe. The spread across four estimators is shown
+          because a result that moves this much with a methodological choice
+          should be presented with the choice visible, not with the best number
+          picked out of it.
+        </div>
       </div>
 
       <div style={{ fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.16em",
                     textTransform: "uppercase", color: T.t3, marginBottom: 12 }}>
         The survivors · in-sample vs held-out
       </div>
+      <p style={{ fontFamily: FONTS.body, fontSize: 12, lineHeight: 1.55, color: T.t3,
+                  margin: "0 0 12px", maxWidth: 660 }}>
+        This table is the original grid — both its Sharpe AND its annualised
+        column use β estimated inside the held-out window (the 1.58 method).
+        R71 re-ran the Sharpe under four estimators but not the annualised
+        figure, so no ship-gate version of that column exists to show. It is kept
+        because the SHAPE is what this table is for — which settings survive and
+        how they rank, unchanged by the estimator. For the level, read 1.08.
+      </p>
       <div style={{ marginBottom: 12 }}>
         <div style={{ display: "flex", gap: 10, fontFamily: FONTS.mono, fontSize: 9,
                       color: T.t3, letterSpacing: "0.1em", textTransform: "uppercase",
