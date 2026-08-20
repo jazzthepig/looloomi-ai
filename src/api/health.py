@@ -63,13 +63,43 @@ async def compute_health_summary() -> dict:
         checks.append(_check("universe", has,
                              "serving last-known-good" if has else "EMPTY", warn=has))
 
-    # 4. MacroBrief present
+    # 4. MacroBrief present AND FRESH
+    #
+    # S-187 (2026-08-20). This used to check only that a brief EXISTED, so a
+    # three-day-old brief reported "present" and /health stayed green.
+    #
+    # That gap became load-bearing when generation moved to a resident Mac loop
+    # on a 5-minute tick. The loop carries its own MAX_BRIEF_AGE_S ceiling — it
+    # regenerates after 30 minutes even on a flat tape, precisely so that a
+    # frozen brief is impossible. But **that ceiling is enforced inside the loop,
+    # so it cannot fire when the loop is what died.** A hung LM Studio call, a
+    # crashed process, a launchd job that stopped being loaded: in every case the
+    # ceiling goes with it, the last brief sits in Redis under a 12-hour TTL, and
+    # the page looks fine until the brief vanishes entirely half a day later.
+    #
+    # A fail-safe inside the thing that fails is not a fail-safe. Detection has
+    # to live on the other side of the wire — which is here. Same lesson as
+    # S-175 (a forward record whose refresher had no caller) and S-185 (a
+    # fail-closed guard whose outage emitted no signal).
     try:
+        from src.api.contracts.macro_brief import MAX_BRIEF_AGE_S
         mb = await redis_get_key("macro:brief")
-        checks.append(_check("macro_brief", bool(mb and mb.get("brief")),
-                             "present" if (mb and mb.get("brief")) else "missing", warn=True))
-    except Exception:
-        checks.append(_check("macro_brief", False, "unreadable", warn=True))
+        if not (mb and mb.get("brief")):
+            checks.append(_check("macro_brief", False, "missing", warn=True))
+        else:
+            age = int(time.time()) - int(mb.get("received_at") or 0)
+            # Two ceilings of slack: one missed cycle is a blip, two is a
+            # pattern. Anything past that and the generator is not running.
+            limit = MAX_BRIEF_AGE_S * 2
+            fresh = age <= limit
+            checks.append(_check(
+                "macro_brief", fresh,
+                f"fresh ({age // 60}m)" if fresh else
+                f"STALE {age // 60}m (limit {limit // 60}m) — the Mac generator "
+                f"has stopped; its own 30-min ceiling cannot fire if the loop is dead",
+                warn=True))
+    except Exception as _e:
+        checks.append(_check("macro_brief", False, f"unreadable: {_e}", warn=True))
 
     # Overall verdict = worst state present
     states = {c["state"] for c in checks}
