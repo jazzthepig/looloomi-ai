@@ -283,7 +283,19 @@ async def get_macro_brief(response: Response):
         source = data.get("source", "mac_mini")
         # Always serve Mac Mini LLM briefs until they expire (12h TTL)
         if source == "mac_mini" or age < _AUTO_STALE:
-            response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"
+            # S-180 (2026-08-20). Was `stale-while-revalidate=3600`, which lets a
+            # CDN edge keep serving an expired brief for a further HOUR while it
+            # refreshes behind the scenes. On a warm edge (the phone you use every
+            # day) you never notice; on a cold one you get a copy up to 70 minutes
+            # old, which is exactly the "从别的手机登陆看是滞后的" report.
+            #
+            # SWR is the right tool for content whose staleness is cosmetic. A
+            # macro brief is read as a statement about the market right now, so
+            # its staleness is not cosmetic — and an hour of it is longer than the
+            # 30-minute cadence that produces it, meaning the window could span an
+            # entire missed update. Cut to 5 minutes: still absorbs a thundering
+            # herd, no longer outlives the thing it caches.
+            response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=300"
             return {
                 "brief":        brief_text,
                 "brief_chars":  len(brief_text),
