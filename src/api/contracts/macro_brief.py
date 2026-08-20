@@ -165,6 +165,46 @@ def should_regenerate(current: dict, previous: dict | None,
     return False, "inputs unchanged within thresholds"
 
 
+# ── Asset selection (S-186 follow-up, 2026-08-20) ────────────────────────────
+#
+# Minimax proposed sourcing top_assets from `/api/v1/cis/top?limit=8`. The shape
+# is right and the endpoint is canonical, so the answer is yes — with one filter,
+# because measured live that endpoint returns:
+#
+#   XLF  US Equity   68.7 B+  OUTPERFORM     ← #1
+#   LINK Infrastructure 67.7
+#   AAVE DeFi        67.7
+#   NVDA US Equity   67.4 B+  OUTPERFORM     ← #4
+#   ...  MSFT US Equity 65.2                 ← #6
+#
+# Three of eight are US equities. CIS scores TradFi deliberately and those rows
+# are correct — but this prompt opens "a short read of the CRYPTO market" and its
+# entire measured block is crypto (BTC, dominance, DeFi TVL, Fear & Greed). Hand
+# a model XLF alongside BTC dominance and it either ignores the row or writes
+# about financials in a crypto brief. Neither is what anyone asked for.
+#
+# Filtering lives HERE rather than in the Mac's fetch, so it cannot be forgotten
+# on one side of a two-machine split — the same reason the prompt itself lives
+# here. Ask for more than you need and filter; `limit=8` after filtering can
+# leave three.
+TRADFI_CLASSES = {"US Equity", "Equity", "Commodity", "FX", "Bond", "Index"}
+TOP_ASSET_FETCH = 20            # over-fetch, then filter
+TOP_ASSET_SHOW = 8
+
+
+def select_top_assets(items: list, n: int = TOP_ASSET_SHOW) -> list:
+    """Crypto-only, highest CIS first. `items` is the `top` array from
+    /api/v1/cis/top — fetch TOP_ASSET_FETCH of them, not n."""
+    out = []
+    for a in items or []:
+        if (a.get("asset_class") or "") in TRADFI_CLASSES:
+            continue
+        if not a.get("symbol"):
+            continue
+        out.append(a)
+    return out[:n]
+
+
 # ── The prompt ───────────────────────────────────────────────────────────────
 
 _ABSENT = ("—", "", None, "N/A", "n/a")
