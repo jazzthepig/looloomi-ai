@@ -17,6 +17,11 @@ quant 读失败会用这次推送替换掉 100 条交易历史 · crowd_clock �
 **fail-closed 把一个拼写错误变成了不产生错误信号的停机**;守卫本身需要守卫。损失 ≈30 行,可恢复。
 新增 `schema/public_columns.json`(information_schema 快照)+ AST URL 解析,28 过滤器/11 表核过 0 误报。
 (第一版守卫用 `scripts/*.sql` 当权威 → 报了 4 个正确的地方、0 个真 bug:**.sql 已和数据库漂移**。)
+**S-186/187 macro brief:** 要升级的 prompt 不是在跑的那个 —— 在跑的在 Mac lane(6h/次),我这边那个
+`macro_brief_v2.py` **零调用者、07-08 标为死代码留了六周**,而我第一个打开的就是它。已删+守卫。
+新 prompt `src/api/contracts/macro_brief.py`(mb-2):**给 delta 不只给 level** · 缺失字段禁止叙述(I1 文字版)
+· **禁前瞻表述**(比 BUY/SELL 更大的敞口,我们没投顾牌照)。门控 5min 轮询/30min 天花板。
+prompt 里每条规则都只是"请求",故加 `validate_brief()`,接收端 **422 拒绝**。交接见 MINIMAX_SYNC §MACRO-BRIEF-V2。
 🟡 **需 Jazz 决定:473 行已污染历史是否清理(那是改写历史)。**
 
 <details><summary>上一条 (2026-08-19, S-175 前向记录零调用者 + S-174 探针写盲区) — 详见 REFUTATION_LEDGER</summary>
