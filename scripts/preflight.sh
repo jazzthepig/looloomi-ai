@@ -783,5 +783,19 @@ python3 -m pytest tests/test_deflated_sharpe.py -q || {
   echo "  ✗ deflated-Sharpe suite FAILED — do not push"; exit 1; }
 echo "  ✓ search discount (S-189)"
 
+# ── S-191/S-192: the price source ────────────────────────────────────────────
+# Asked whether the book caught the 08-19 rally, our stored CoinGecko bars said
+# BTC +0.30% and Hyperliquid said +7.15%. Ours were right about the number and
+# wrong about the DAY: `trade_date=2026-08-19` holds HL's 08-18 close, because
+# the CoinGecko writer stamps rows with the WRITE date rather than the bar date.
+# Hyperliquid ships the epoch with the candle, is not geo-blocked (Binance is,
+# from Railway US — 1 of 262 panel symbols had a bar), and is the venue we will
+# execute on. Pins: the date comes from the bar not the clock · a separate
+# source label so two bar conventions never splice · the coverage floor blocks
+# the write · the loop is actually registered.
+python3 -m pytest tests/test_hyperliquid_source.py -q || {
+  echo "  ✗ hyperliquid source suite FAILED — do not push"; exit 1; }
+echo "  ✓ price source integrity (S-191/S-192)"
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."

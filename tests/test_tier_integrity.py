@@ -441,3 +441,34 @@ def test_swr_window_does_not_exceed_the_refresh_cadence(path):
             f"{path}: max-age={max_age} but stale-while-revalidate={swr}. A SWR "
             f"window longer than the freshness window means the stale copy "
             f"outlives the fresh one — readers on cold edges see the past.")
+
+
+# ── 5. A partial day must not be written as a day (S-190) ────────────────────
+
+def test_deep_panel_refuses_to_write_below_the_floor():
+    """`_MIN_OK_FRACTION` was wired only into the RETURN VALUE; the write went
+    ahead regardless. Measured one day after shipping: exactly one symbol (BCH)
+    had a bar since 08-14, written every run, reported ok=False to a print
+    statement nobody reads — and `max(trade_date)` sat at today, so every
+    freshness check in the system saw a current 262-symbol panel.
+
+    The module's own docstring had diagnosed this exact failure ("a run that
+    reaches 40 of 262 must not read like a quiet day") one function earlier.
+
+    A partial panel day is not a thin day, it is a different object: a
+    cross-sectional study reading it gets a one-symbol universe with no way to
+    know. A visible gap is recoverable; a silently one-asset day is not."""
+    src = code_only((ROOT / "src/data/market/deep_panel_collector.py").read_text())
+    fn = src.split("async def collect_deep_panel")[1]
+
+    guard_at = fn.find("frac < _MIN_OK_FRACTION")
+    write_at = fn.find("await supabase_upsert_table(")
+    assert guard_at > 0, "the floor must be checked inside collect_deep_panel"
+    assert write_at > 0, "expected an upsert call"
+    assert guard_at < write_at, (
+        "the floor is checked AFTER the write — that is annotation, not a gate")
+
+    between = fn[guard_at:write_at]
+    assert "return" in between, (
+        "below the floor the function must RETURN before writing; falling "
+        "through with a flag set is what made a 1/262 run look like a fresh day")

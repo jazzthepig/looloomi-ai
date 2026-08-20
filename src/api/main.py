@@ -417,6 +417,51 @@ async def _start_deep_panel_loop():
         print("[DEEP] ✅ deep-panel daily collector scheduled (262 symbols, Binance, capped concurrency)")
 
 
+async def _hyperliquid_loop():
+    """Daily bars from the venue we will trade on (S-192).
+
+    Jazz, 2026-08-20: "不是有用 hyperliquid 吗?之后我们要接 hyperliquid 去交易的呀"
+    — and that answers a question I had been failing to answer for two days.
+
+    The Binance collector above reaches ONE of 262 symbols (measured 08-20):
+    api.binance.com is geo-blocked from Railway US and the data-api.binance.vision
+    mirror is not filling the gap. Hyperliquid is a public DEX API, unblocked,
+    and `routers/ohlcv.py` has documented that since 2026-07-23.
+
+    More than a workaround, it is the correct source: marks that will be executed
+    on Hyperliquid should be measured on Hyperliquid. A book marked on CoinGecko
+    spot and filled on HL perps is a splice that surfaces as unexplained slippage.
+
+    Every candle carries its own epoch, so rows are dated by the BAR — unlike the
+    CoinGecko writer, whose rows are stamped with the write date and are
+    therefore all one day early (S-191).
+
+    Runs 40 min after boot, then every 6 h. More often than daily because these
+    bars are what the paper books mark against, and a book that marks at 00:05
+    against a bar written at 23:00 the previous day is a day behind by
+    construction.
+    """
+    await _asyncio.sleep(2400)
+    while True:
+        try:
+            from src.data.market.hyperliquid_collector import collect_hyperliquid
+            r = await collect_hyperliquid()
+            flag = "" if r.get("ok") else "  ⚠️ " + str(r.get("diagnosis", r.get("error", "")))
+            print(f"[HL] {r.get('symbols_ok')}/{r.get('symbols_total')} symbols · "
+                  f"{r.get('rows_upserted')} rows · latest {r.get('latest_bar')} · "
+                  f"{r.get('elapsed_s')}s{flag}")
+        except Exception as _e:
+            print(f"[HL] ⚠️  hyperliquid collection FAILED: {_e}")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_hyperliquid_loop():
+    if os.environ.get("DISABLE_HYPERLIQUID", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_hyperliquid_loop())
+        print("[HL] ✅ hyperliquid daily collector scheduled (232 perps, 6h, the execution venue)")
+
+
 # ── Daily signal-outcome resolver ─────────────────────────────────────────────
 # Resolves 30-day directional outcomes (WIN/LOSS/EXPIRED) for matured signals.
 # Runs ~once/day in-process so the LP track-record metrics stay current without
