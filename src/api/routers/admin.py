@@ -227,7 +227,24 @@ async def trigger_regime_fitness(x_internal_token: str = Header(None),
         enriched = compute_7d_returns(rows, trades)
         fitness = compute_fitness(enriched, window_days)
         if not fitness:
-            return {"ok": True, "rows": 0, "note": "no fitness rows computed (insufficient data)"}
+            # ── S-202 (2026-08-23): this used to return ok=True ─────────────
+            # `{"ok": True, "rows": 0}` printed as
+            # `[REGIME_FITNESS] daily — ok=True rows=0`, which reads as a normal
+            # run. It ran that way for four months while `cis_regime_fitness`
+            # stayed at zero rows, the IC multiplier could not load, and CIS
+            # scored every asset on NEUTRAL weights — the "Simons upgrade" was
+            # never once energised and nothing said so.
+            #
+            # Seventh instance this session of one shape: an absence rendered as
+            # a plausible value. ok=True with rows=0 is the same lie as
+            # `sum(())` returning 0.0 for an unpriceable book (S-194) and a
+            # partial panel day written as a day (S-190).
+            return {"ok": False, "degraded": True, "rows": 0,
+                    "reason": "no fitness rows computed — inputs present but no "
+                              "(pillar, forward-return) pair cleared the sample floor",
+                    "consequence": "cis_regime_fitness stays empty ⇒ IC multipliers "
+                                   "cannot load ⇒ CIS scores on NEUTRAL weights",
+                    "window_days": window_days}
 
         if dry_run:
             return {"ok": True, "dry_run": True, "would_insert": len(fitness), "sample": fitness[:3]}
