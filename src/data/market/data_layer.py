@@ -3277,6 +3277,81 @@ async def get_cg_price_history(coin_id: str, days: int = 365) -> dict:
         return {"coin_id": coin_id, "available": False, "error": str(e)}
 
 
+async def get_cg_ohlc_range(coin_id: str, from_ts: int, to_ts: int,
+                            interval: str = "daily") -> list[dict]:
+    """CoinGecko Pro /coins/{id}/ohlc/range — REAL OHLC candles (S-195, 2026-08-23).
+
+    ⚠️ THIS IS THE ENDPOINT WE SHOULD HAVE BEEN USING ALL ALONG, and not using it
+    is what made four months of CoinGecko Pro largely wasted.
+
+    Jazz, 2026-08-23: "coingecko pro 这个数据源还是要价值最大化,现在我们 way
+    underused". Measured the same day, that is exactly right and worse than it
+    sounds. Every daily bar we store from CoinGecko comes from
+    `market_chart/range`, which returns PRICE SAMPLE POINTS, not candles — and
+    for short windows it returns them HOURLY regardless of `interval=daily`.
+    Collapsing those to a date keeps whichever hour landed last, so our "daily
+    close" was never a close. That is why our 08-19 row said BTC +0.30% while
+    the venue said +7.15%.
+
+    `/ohlc/range` returns `[ts, open, high, low, close]` — actual candles, and
+    `interval=daily` is a PRO-ONLY parameter that is honoured. We pay for it
+    monthly and have never called it once.
+
+    WHAT COINGECKO IS FOR, now that Hyperliquid prices execution (S-193). Not
+    marks — HL is the venue and its bars are what fills happen against. CG's
+    value is BREADTH: ~17,000 assets against HL's 232 perps, plus market cap,
+    dominance, categories and trending that no venue provides. It is the
+    research and universe-construction source. Those are different jobs and
+    conflating them is what produced a price route that could not agree with
+    itself.
+
+    Returns [] on any failure — callers must treat empty as "no data", never as
+    a flat series.
+    """
+    if not CG_API_KEY:
+        return []
+
+    key = f"cg_ohlc_{coin_id}_{from_ts}_{to_ts}_{interval}"
+    cached = _cache_get(key, ttl=7200)
+    if cached is not None:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached is not None:
+        return _cache_set(key, r_cached)
+
+    client = _get_cg_client()
+    try:
+        r = await client.get(
+            f"{CG_PRO_BASE}/coins/{coin_id}/ohlc/range",
+            headers=_cg_headers(),
+            params={"vs_currency": "usd", "from": from_ts, "to": to_ts,
+                    "interval": interval},
+            timeout=30,
+        )
+        r.raise_for_status()
+        raw = r.json()
+        if not isinstance(raw, list):
+            return []
+        out = []
+        for k in raw:
+            if not isinstance(k, (list, tuple)) or len(k) < 5:
+                continue
+            try:
+                # The DATE COMES FROM THE CANDLE. Never from the write clock —
+                # that is the mistake this whole endpoint switch exists to end.
+                d = datetime.fromtimestamp(float(k[0]) / 1000, tz=timezone.utc).date()
+                out.append({"trade_date": d.isoformat(),
+                            "open": float(k[1]), "high": float(k[2]),
+                            "low": float(k[3]), "close": float(k[4])})
+            except (TypeError, ValueError):
+                continue
+        await _redis_set(key, out, ttl=7200)
+        return _cache_set(key, out)
+    except Exception as e:                                    # noqa: BLE001
+        _logger.warning(f"[CG] ohlc/range {coin_id} failed: {e}")
+        return []
+
+
 async def get_cg_market_chart_range(coin_id: str, from_ts: int, to_ts: int, interval: str = None) -> dict:
     """
     CoinGecko Pro /coins/{id}/market_chart/range — prices in a precise unix timestamp window.

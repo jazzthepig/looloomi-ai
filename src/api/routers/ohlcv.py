@@ -77,12 +77,42 @@ async def _fetch_cg_daily(client: httpx.AsyncClient, coin_id: str, days: int) ->
     """Fetch daily candles from CoinGecko Pro market_chart/range."""
     try:
         from src.data.market.data_layer import get_cg_market_chart_range, get_cg_price_history
-        # Use the range endpoint to bound the window precisely
         now = int(datetime.now(timezone.utc).timestamp())
         frm = now - days * 86400
+
+        # ── S-195 (2026-08-23): real candles, not price samples ─────────────
+        # `market_chart/range` returns PRICE SAMPLE POINTS, and for short windows
+        # it returns them HOURLY however `interval=daily` is set. Collapsing
+        # those to a date keeps whichever hour landed last, so the "daily close"
+        # was never a close — which is why our 08-19 row said BTC +0.30% against
+        # the venue's +7.15%.
+        #
+        # `/ohlc/range` with `interval=daily` is a Pro-only parameter that
+        # returns actual OHLC candles. We have paid for it monthly and never
+        # called it. Jazz, 2026-08-23: "way underused".
+        from src.data.market.data_layer import get_cg_ohlc_range
+        candles = await get_cg_ohlc_range(coin_id, frm, now, interval="daily")
+        if candles:
+            vol_by_date = {}
+            try:
+                _h = await get_cg_market_chart_range(coin_id, frm, now, interval="daily")
+                for v in (_h.get("volumes") or []):
+                    if len(v) >= 2:
+                        _d = datetime.fromtimestamp(float(v[0]) / 1000, tz=timezone.utc).date()
+                        vol_by_date[_d.isoformat()] = float(v[1])
+            except Exception:
+                pass          # volume is decoration; the candle is the point
+            for c in candles:
+                c["volume"] = vol_by_date.get(c["trade_date"])
+            return candles
+
+        # Only if the Pro candle endpoint gave nothing. Kept because no data is
+        # worse than sample-point data — but the caller must know which it got,
+        # so this path is logged rather than silently equivalent.
+        _logger.warning("[OHLCV] %s: ohlc/range empty, falling back to price "
+                        "samples (NOT true closes)", coin_id)
         hist = await get_cg_market_chart_range(coin_id, frm, now, interval="daily")
         if not hist.get("available"):
-            # Fall back to the days endpoint
             hist = await get_cg_price_history(coin_id, days)
         prices = hist.get("prices") or []
         volumes = hist.get("volumes") or []
