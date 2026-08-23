@@ -1,50 +1,46 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-20 (Seth/Cowork lane) — **本轮一句话:五个缺陷,一个类。**
-每一个都是"某个东西无法说出它不知道",而每一个的保险都装在会坏的东西自己内部。全部 preflight 绿。
+**Last updated:** 2026-08-23 (Seth/Cowork lane)
 
-| # | 缺陷 | 关键教训 |
+## 本轮一句话:**一个形状,九次**
+
+每一次都是**「拿不到」被渲染成一个合理的数字**,而不是被渲染成「拿不到」。
+一个 0 在合法区间内、看起来正常、是空累加的天然产物 —— 所以九次都没人发现。
+
+| # | 哪里 | 缺失变成了什么 |
 |---|---|---|
-| **S-180** | `redis_get_key` 的 miss 和 error 同一个返回值 → **一次丢包让 58 个资产同时 T1→T2**(支柱整体换一套,系统性差 13.5 分,跨 grade 与 signal),每小时快照随即写进永久记录。266h 中 8h(3.0%,473 行),最近一次正落在 Jazz 问的那波行情里 | **missing-vs-unreachable 的第三例**(S-166→S-179→S-180),前两次都只修了实例。三层修:读携带状态 · error 保留 last-good · **写入端查表拒绝遮蔽**(刻意不信任前两层) |
-| **S-181/182/183** | 两页 grade 是同一字段(差异来自一页从不刷新)· 五个宏观框自上线起每天渲染破折号(后端产出者=0)· SWR 窗口比它缓存的东西活得久 | 见 ledger |
-| **S-184** | 扫全部 49 个 redis 调用点,又找到三个:quant 读失败会用这次推送替换 100 条交易历史 · crowd_clock 幂等键失败插重复行 · 日快照缺同一守卫 | **修实例不是修类** |
-| **S-185** | S-180 的守卫过滤了不存在的列 → PostgREST 400 → "问不到" → fail-closed 拒写 → **静默停写 115 分钟,`/health` 全绿无任何报错** | **fail-closed 把拼写错误变成不产生信号的停机;守卫本身需要守卫** |
-| **S-186/187/188** | 要升级的 prompt 是死代码(零调用者、六周前已标记),我第一个打开的就是它 · prompt 里每条规则都只是"请求" · loop 内的年龄天花板挡不住 loop 自己死掉 | **一个仓两个 prompt 是抛硬币** · P0 靠请求模型不算执行(加 `validate_brief` + 422 拒绝) · **装在会坏的东西内部的保险不是保险** |
-| **S-189** | **我们发布在投资人页面上的 Sharpe 连运气门槛都没到。** 72 配置网格均值 **−0.45**、17/72 为正,我们发布了最大值 1.58。真实漏斗 N=216(R70 是 R69 那 216 格的幸存者),运气门槛 **2.38**,**DSR 0.27**(bar 0.95)。要通过需 4.2–4.6。`experiment_runs.dsr` 从建表起一次没写过 | **在 held-out 上做选择,就把 held-out 这个属性花掉了** —— DSR 也修不了,只有一个选择从未碰过的新窗口能。页面没撤,改成把杀死自己最好结果的算术公开 |
+| S-180 | `redis_get_key` miss=error | 一次丢包 → 58 资产 T1→T2,评级写进永久记录 |
+| S-184 | quant / crowd_clock / 日快照 | 交易历史被覆盖 · 重复行 · 影子行 |
+| S-185 | 占用查询用了不存在的列 | fail-closed 拒写 → **静默停机 115 分钟,`/health` 全绿** |
+| S-190 | 深度面板覆盖率下限只标注不拦截 | 1/262 的运行照写,`max(trade_date)` 显示当天 |
+| S-194 | 五本账本 `pnl = 0.0` + 条件累加 | **面板 +23.99% 期间账本记 0.00%** |
+| S-195 | CoinGecko 用错端点四个月 | 小时点塌缩成"日收盘",08-19 BTC 记 +0.30%(实际 +7.15%) |
+| S-200 | T2 构建 110s / 预算 12s | 缓存永远填不上 → 永久降级,`regime=None` |
+| S-201 | `NAV_TABLE` 声明了没写入者 | 表存在、永远空、看起来这项有人管 |
+| S-202 | `{"ok": True, "rows": 0}` | **CIS 四个月用中性权重打分,日志每天说正常** |
 
-⚠️ **守卫本身失败了五轮**,原因两类:匹配名字而非构造(**解释 bug 的注释废掉了抓这个 bug 的测试**,一 session 内四次,已抽成 `tests/_source.py`);测试样本过度确定(踩中多条规则,删掉任一条仍全绿)。终版:三套件 **48 断言**(13+4+31),**20 变异 20 抓**,0 误报。(初稿我在这行写了 73/26 —— 没数就写,同一个 session 里我纠正了五次的那个毛病。)
-🟡 **需 Jazz 决定:S-180 那 473 行已污染历史是否清理(那是改写历史)。**
+⚠️ **守卫自己失败了六轮**,两类:匹配名字而非构造(**解释 bug 的注释废掉了抓这个 bug 的测试**,已抽成 `tests/_source.py`);测试样本过度确定。每个守卫现在都用重新引入 bug 验证过。
 
-<details><summary>上一条 (2026-08-19, S-175 前向记录零调用者 + S-174 探针写盲区) — 详见 REFUTATION_LEDGER</summary>
+## 现在能跑的 / 不能跑的
+
+```
+✅ CIS T1        43 symbol,每天在写,今天还在
+✅ T2 universe   58 个,regime=Tightening,11s(110s 是 provider 降级,已恢复;预计算已下请求路径)
+✅ Hyperliquid   232 永续,日线自带 epoch,已是价格锚
+✅ 五本账本      定不了价就拒绝标记,不再记假平盘
+🔴 IC 权重       中性 —— 只有 6 个独立交易日,门槛 20。**诚实地不通,不是坏了**
+🔴 signal_outcomes  停 112 天(Mac lane),卡住投资人页面的 track record
+🟡 HL 采集器     最新 08-21,静默原因未查证
+```
+
+## 三个等你的决定
+
+1. **① 账本 v4 已升(HL 是价格锚,不是成交场所)** —— 08-21/22 假 mark 已 void 并附原因。**void = 标记不是删除,行永远可查。**
+2. **② 面板 262 里只有 88 个能在 HL 成交** —— 另外 174 个的回测执行不了。要不要把研究宇宙收敛到可执行的那 88 个?
+3. **③ `_nav` 两张表没有写入者** —— 一周后还空就补写入者或删常量。
+
+<details><summary>历史 header (08-18 / 08-19) — 详见 REFUTATION_LEDGER 与 PROJECT_STATE_LOG</summary>
 </details>
-
-> 🔴 **Blocked on Mac lane:** Crypto OHLCV stale 11 days — it is the input to the depth record and
-> to any embedding rebuild, so `asset_embeddings` (26 d stale) is deliberately NOT being rebuilt:
-> rebuilding off a stale panel yields vectors that look fresh and are not. See `MINIMAX_SYNC.md`
-> §IN-FLIGHT-2026-08-19.
-
-**Last updated:** 2026-08-18 (Seth/Cowork lane) — **S-172 REFUTED the resonance window.**
-"Depth arrives before price so you can size in early" is false and *backwards*:
-depth-up/price-flat = **−1.85% 20d excess vs hold-the-panel, t = −5.23**, and it gets worse with
-size (−2.31% at $10k → −7.54% at $100M). Depth accompanies price 3.3× more often than it precedes
-it. **One sleeve saved, graveyard +1** — Mac-A's P3 NarrativeMomentum loses its main cause.
-**S-173** started two forward clocks (`depth_divergence_log` inception 08-18 gate 10-17,
-`holder_concentration_history`): both directions were blocked on the same thing — *nothing was
-ever stored*. The first write exposed that the **Crypto feed is 10 days stale** (25 of 262
-symbols). **S-171** Asset Radar blank page (import lost in the App.jsx split). **S-169** Mac-lane
-write wrappers + the RPC was dropping `measured_dims`. **S-168** production was READ-ONLY
-08-12→08-17 until `APP_ROLE=production`; ① book marks again.
-> ⚠️ **S-168 is used twice** — here for the read-only production and, below, by the dashboard
-> lane for R540-R547. Neither had claimed a ledger heading. See the collision note at the top of
-> `REFUTATION_LEDGER.md`; one of them needs a new number. Not renumbered unilaterally.
-
-**Last updated:** 2026-08-18 — **S-168: R540-R547 "production book" FAILS on raw LIQUID16 wide** (8 of 9 legs negative without BTC-MA gate; B10_R547 SR=+2.5 claim was BTC-MA-conditional, not unconditional). **★ NEW ANCHOR: R554 taker imbalance (imb7 K3 h21) on LIQUID16** — only signal in R540-R555 series that survives LIQUID16-wide-no-gate (SR=+1.035, +350.68%, DD=-58.98%, ρ<0.10 with every other leg, cost breakeven >50bps). **R70 + R19 strategies UNAFFECTED** — the CLAUDE.md "two profitable" pair remains valid. **S-166** Supabase tables fixed. **S-165 cold-start split**: this file ~50,000 chars, history in `PROJECT_STATE_LOG.md`, capped by `test_cold_start_contract`. **S-164 research intake shipped** (mining lanes land without service_role key; SHIP verdicts refused at boundary). **Diagnose-route retired** (dashboard lane): CIS Engine at NAV_ITEMS[0]. **R557**: BTC-MA(150) gate on R554 (next production-spec candidate). **R558**: regime signal for 2024H2/2026YTD weakness clusters. **R559**: re-test R540-R547 legs WITH the gate.
-
-> This header used to live 150 lines deep inside `## LANDED`, which is why it went stale without
-> anyone seeing it — the one line whose job is to tell you how old the file is was itself buried
-> in the part of the file nobody reads to the end. It sits at the top now, and
-> `test_project_state_header_not_older_than_newest_ledger_entry` fails if it falls behind the
-> ledger. (S-165)
 
 ## OPEN RISKS  (≤7 · cold-start first screen · every item ships a VERIFY command)
 
