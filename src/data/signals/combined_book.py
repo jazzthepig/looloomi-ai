@@ -119,12 +119,15 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         return {"status": "already_marked", "nav": state["nav"], "date": today.isoformat()}
 
     w = state["weights"]; mp = state["mark_prices"]
-    price_pnl = funding_pnl = 0.0
-    for s, wi in w.items():
-        if s in px and s in mp and mp[s] > 0:
-            price_pnl += wi * (px[s] / mp[s] - 1.0)
-        fr = fund.get(s, 0.0) * 3          # ~daily funding (3× 8h)
-        funding_pnl += -wi * fr
+    # S-194: refuse rather than mark a flat day. `price_pnl = 0.0` followed by a
+    # conditional accumulate makes "could not price" and "did not move" the same
+    # number — measured 2026-08-23 across four books while the panel ran +23.99%.
+    from src.data.signals.mark_coverage import weighted_mark
+    _mk = weighted_mark(w, px, mp, book="combined")
+    if not _mk.ok:
+        return _mk.as_skip("combined")
+    price_pnl = _mk.pnl
+    funding_pnl = sum(-wi * (fund.get(s, 0.0) * 3) for s, wi in w.items())
     daily_ret = price_pnl + funding_pnl
     nav = state["nav"] * (1.0 + daily_ret)
 

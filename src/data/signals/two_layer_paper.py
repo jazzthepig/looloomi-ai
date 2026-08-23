@@ -275,10 +275,13 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         return {"status": "already_marked", "nav": state["nav"], "date": today.isoformat()}
 
     w_held, mp = state.get("weights", {}) or {}, state.get("mark_prices", {}) or {}
-    price_pnl = 0.0
-    for c, wi in w_held.items():
-        if c in last_px and mp.get(c, 0) > 0:
-            price_pnl += wi * (last_px[c] / mp[c] - 1.0)
+    # S-194. This book recorded 0.00% on SIX of six marks in the week the panel
+    # ran +23.99% — the most complete instance of the class.
+    from src.data.signals.mark_coverage import weighted_mark
+    _mk = weighted_mark(w_held, last_px, mp, book="two_layer")
+    if not _mk.ok:
+        return _mk.as_skip("two_layer")
+    price_pnl = _mk.pnl
 
     turn = sum(abs(w_tgt.get(c, 0.0) - w_held.get(c, 0.0)) for c in set(w_tgt) | set(w_held))
     cost = _FEE * turn

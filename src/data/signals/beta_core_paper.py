@@ -69,9 +69,43 @@ _STATE_KEY = "beta_core:state"
 #    by trailing-vol tercile rather than macro regime — and a 60-day curve spliced
 #    across two policies is not a 60-day record of either. Retiring at day 3 costs
 #    3 days; discovering the splice at day 55 would have cost 55.
-_INCEPTION_ID = "v3"
+# v3 (2026-08-11 → 2026-08-22, 11 marks) — SUPERSEDED, see S-194/S-196. Two
+#    reasons, either alone sufficient:
+#    (a) PRICE SOURCE. v3 marked off `load_binance_panel`, a live call to
+#        `fapi.binance.com` — geo-blocked from Railway US. From 08-21 the panel's
+#        most recent row was unusable, `px` came back empty, and the book marked
+#        **0.00% on 08-21 and 08-22 while the equal-weight panel moved +11.03%
+#        and −1.43%**. v4 takes its price REFERENCE from Hyperliquid's oracle
+#        (median basis to mark +0.088%) — a spot anchor, not an execution venue.
+#        The first draft of this note said "the venue we will execute on"; that
+#        was wrong for ① and is corrected in S-197: beta = HOLD, and a long perp
+#        pays +23.07% annualised carry on this very panel.
+#    (b) MARK DISCIPLINE. v3 could not tell "no prices" from "no movement" —
+#        `sum(())` is 0.0. v4 refuses to mark below 80% of held weight priceable.
+#    Jazz, 2026-08-23: "既然可以升级又没有成本为什么不呢" — correct, and the cost
+#    is not money, it is forward-record days. v3 had ~9 honest marks before the
+#    feed broke; restarting costs those nine. Discovering the splice at day 55
+#    would have cost fifty-five.
+_INCEPTION_ID = "v4"
 _INCEPTION_REASON = (
-    "v3 (2026-08-11, S-137): ③'s cap is now driven by the trailing-vol tercile, "
+    "v4 (2026-08-23, S-194/S-196/S-197): price REFERENCE moved from a live Binance "
+    "call (geo-blocked from Railway US) to Hyperliquid's oracle price. NOT its "
+    "execution venue — that distinction is the correction. ① is the FoF core and "
+    "ARCHITECTURE.md says beta = HOLD; a long perpetual is a synthetic long that "
+    "pays carry, and the ① panel's own 24 names run +23.07% equal-weight annualised "
+    "funding (AAVE +110.8%, NEAR +94.4%), i.e. ~26.5%/yr at gross 1.15 — larger than "
+    "any alpha we have demonstrated. ① holds SPOT on whichever chain has the depth "
+    "(Jazz 2026-08-23: chain-agnostic, follow the liquidity). HL's oracle price is a "
+    "legitimate spot ANCHOR: median basis to mark is +0.088%, p90 +0.327%. The book "
+    "now REFUSES to mark "
+    "below 80% of held weight priceable: v3 recorded 0.00% on 2026-08-21 and "
+    "08-22 while the equal-weight panel moved +11.03% and −1.43%, because an "
+    "empty price dict makes `sum(())` = 0.0, which is indistinguishable in the "
+    "table from a flat market. Those two rows are VOIDED, not deleted — they "
+    "stay queryable with the reason attached, because a track record that hides "
+    "its own broken days is not evidence of anything. v3's earlier marks are "
+    "SUPERSEDED (honest, but priced off a source we are leaving). "
+    "PRIOR: v3 (2026-08-11, S-137): ③'s cap is driven by the trailing-vol tercile, "
     "not by macro_regime. Measured 902d OOS: hold-the-panel ret/DD 0.319, constant "
     "cap 1.3 0.634, trailing-vol ladder 0.780, forward-vol ORACLE 0.885 — the "
     "observable ladder captures 58.3% of the perfect-foresight ceiling. The old "
@@ -88,6 +122,12 @@ _VOL_TARGET = 0.60          # annualised. Crypto panel realised vol runs 0.5–1
 _VOL_LOOKBACK = 30
 _ALLOWED_CAPS = (0.0, 0.5, 1.0, 1.3)
 _MAX_SCALAR = 1.3           # the vol scalar alone may never lever past the ③ ceiling
+
+#: S-194. Below this fraction of holdings priceable, the book REFUSES to mark.
+#: Not 1.0: a single delisted name should not stop a 24-name book. Not 0.0
+#: either, which is what `sum(())` silently implemented — and which recorded two
+#: flat days across a +11% and a −1.4% session.
+_MIN_MARK_COVERAGE = 0.80
 
 
 def _equal_weights(symbols: list[str]) -> dict[str, float]:
@@ -636,6 +676,51 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     if len(px) < 5:
         return {"status": "skipped", "reason": "insufficient_live_data"}
 
+    _venue_excluded = 0
+    # ── S-193: this book may only hold what the venue lists ─────────────────
+    # Jazz, 2026-08-20: 交易和读取的 route 都要写死啊 — "不然就是回测好看,实盘根本
+    # 没办法用". The panel comes from `load_binance_panel`, and measured the same
+    # day only 88 of its 262 symbols are listed on Hyperliquid, the venue we will
+    # execute on. Marking a book across all of them produces a NAV for a
+    # portfolio that could not be held at any price.
+    #
+    # This EXCLUDES rather than refuses, unlike `assert_book_universe`: the ①
+    # book's job is to hold the panel, and halting it entirely on the first
+    # unlisted name would stop the forward record that is the whole point. But
+    # the exclusion is COUNTED and returned, because a book that quietly shrinks
+    # from 24 names to 9 still reports a NAV and nobody would know which
+    # portfolio it belongs to.
+    try:
+        from src.data.market.price_route import split_universe
+        _split = await split_universe(list(symbols))
+        _dropped = _split["research_only"]
+    except Exception as _e:                                   # noqa: BLE001
+        # Cannot reach the venue listing. Do NOT silently mark the full panel —
+        # that is the substitute-instead-of-refuse pattern this module is fixing.
+        return {"status": "skipped",
+                "reason": f"venue listing unavailable, refusing to mark an "
+                          f"unverified universe: {str(_e)[:100]}"}
+    _venue_excluded = len(_dropped)
+    if _dropped:
+        _drop = {s.upper() for s in _dropped}
+        keep = [i for i, s in enumerate(symbols) if s.upper() not in _drop]
+        if len(keep) < 5:
+            return {"status": "skipped",
+                    "reason": f"only {len(keep)} of {len(symbols)} panel symbols are "
+                              f"listed on the execution venue — too few to mark"}
+        # `close` and `ret` are 2-D (days, symbols) numpy arrays — the symbol axis
+        # is COLUMNS. The first version of this sliced rows (`close[i] for i in
+        # keep`), which would have silently reindexed the book onto a handful of
+        # trading days and still produced a NAV. Verified against `_load_panel`:
+        # `ret = np.full_like(close, ...)`, `close[-1, i]` indexes [day, symbol].
+        symbols = [symbols[i] for i in keep]
+        close = close[:, keep]
+        ret = ret[:, keep]
+        px = {s: v for s, v in px.items() if s.upper() not in _drop}
+        _log.warning("[beta_core] %d panel names are not listed on the execution "
+                     "venue and are excluded from the book: %s",
+                     _venue_excluded, ",".join(sorted(_dropped)[:12]))
+
     rv = _realized_vol(ret)
     scalar = _vol_scalar(rv)
     # The tercile cut points are computed from the book's OWN trailing history on
@@ -718,10 +803,59 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     # BOOK leg and BENCHMARK leg are computed from the SAME prices on the SAME day.
     # Any divergence between them is exposure timing and nothing else, which is the
     # only claim layer ③ makes.
-    book_ret = sum(w * (px[s] / mp[s] - 1.0) for s, w in prev_w.items()
-                   if s in px and s in mp and mp[s] > 0)
-    bench_ret = sum(w * (px[s] / mp[s] - 1.0) for s, w in prev_base.items()
-                    if s in px and s in mp and mp[s] > 0)
+    # ── S-194 (2026-08-23): an empty sum is not a flat day ──────────────────
+    # These two lines silently produced 0.00% on 2026-08-21 and 2026-08-22 while
+    # the equal-weight panel moved +11.03% and −1.43%. `px` is built from
+    # `close[-1]` with NaN filtered out, so when the most recent panel row is
+    # unusable `px` is EMPTY, the generator yields nothing, and `sum(())` is
+    # 0.0 — arithmetically correct and indistinguishable in the table from "the
+    # market did not move".
+    #
+    # Nothing else showed it. `realized_vol_30d` kept rising (0.302 → 0.586)
+    # because nanmean/nanstd skip the bad row, so the vol scalar correctly cut
+    # gross 1.30 → 1.00 and every field on the row looked like a working book
+    # having a quiet couple of days. Over 08-18 → 08-23 the panel ran +23.99%
+    # and NAV sat at 1.0470 instead of roughly 1.16–1.23.
+    #
+    # A book that cannot price its holdings must REFUSE TO MARK. Same shape as
+    # S-180 (miss read as absence), S-185 (fail-closed with no signal), S-190
+    # (partial day written as a day): the missing thing produced a plausible
+    # number instead of a stop.
+    # ONE implementation of this guard for all five books — `mark_coverage`.
+    # A bespoke copy here and a loop-shaped one in each of the other four is how
+    # the floors drift apart, and the whole finding was that four books had the
+    # same defect written four different ways.
+    from src.data.signals.mark_coverage import weighted_mark
+    _mk = weighted_mark(prev_w, px, mp, book="beta_core",
+                        min_coverage=_MIN_MARK_COVERAGE)
+    if not _mk.ok:
+        return {**_mk.as_skip("beta_core"), "date": today.isoformat()}
+    book_ret = _mk.pnl
+    bench_ret = weighted_mark(prev_base, px, mp, book="beta_core/bench",
+                              min_coverage=_MIN_MARK_COVERAGE).pnl
+
+    # ── S-197 (2026-08-23): carry must be a FIELD, even when it is zero ──────
+    # ① holds SPOT, so carry is structurally nil and this is 0.0 every day. The
+    # field exists anyway, because the absence of the field is what let a
+    # perpetual-futures venue nearly become ①'s execution venue without anyone
+    # computing the cost.
+    #
+    # Measured on this exact panel, 2026-08-23: the 24 names carry +23.07%
+    # equal-weight annualised funding on Hyperliquid (AAVE +110.8%, NEAR +94.4%).
+    # At gross 1.15 a perp-based ① bleeds ~26.5%/yr — larger than any alpha this
+    # shop has demonstrated, and it would not have appeared anywhere in this row.
+    # `grep -c funding beta_core_paper.py` returned 0 while the other three books
+    # returned 6, 11 and 56: ① was the only book that could not have noticed.
+    #
+    # ARCHITECTURE.md: **beta = HOLD**. A long perpetual is not a hold, it is a
+    # synthetic long that pays carry. If this field is ever non-zero, ① has
+    # stopped being ① and the inception id must change with it.
+    funding_ret = 0.0        # spot hold — no carry by construction
+    if funding_ret:
+        _log.error("[beta_core] NON-ZERO CARRY (%.4f) on a book whose thesis is "
+                   "HOLD — ① is no longer holding spot. Re-inception required.",
+                   funding_ret)
+    book_ret += funding_ret
 
     nav = state["nav"] * (1.0 + book_ret)
     bench_nav = state.get("benchmark_nav", 1.0) * (1.0 + bench_ret)
@@ -800,6 +934,17 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             "excess_pct": round((book_ret - bench_ret) * 100, 3),
             "exposure_cap": cap, "cap_source": cap_source, "regime": regime,
             "realized_vol_30d": round(rv, 3),
+            # S-193: how many names the venue filter removed. Reported because a
+            # book that quietly shrinks still returns a NAV, and the NAV then
+            # belongs to a different portfolio than the one anyone believes they
+            # are reading. Non-zero here is not an error — it is the panel and
+            # the executable universe disagreeing, which is a fact worth seeing.
+            "venue_excluded": _venue_excluded,
+            "n_positions_marked": len(symbols),
+            # S-197: reported so "① pays no carry" is an observable claim rather
+            # than an assumption nobody can see from outside.
+            "funding_return_pct": round(funding_ret * 100, 4),
+            "instrument": "spot",
             "rebalanced": rebalanced, "date": today.isoformat()}
 
 
