@@ -133,10 +133,28 @@ def test_benchmark_leg_is_structural_not_a_later_choice():
                             "src/data/signals/beta_core_paper.py"), encoding="utf-8").read()
     assert "benchmark_nav" in src and "benchmark_return" in src
     assert "excess_return" in src, "excess must be written, not recomputed downstream"
-    # both legs must be priced off the SAME snapshot; two price sources would make the
-    # difference an artifact of timing rather than of exposure
-    assert src.count("px[s] / mp[s] - 1.0") >= 2, \
-        "book and benchmark legs must use the same prices on the same day"
+    # Both legs must be priced off the SAME snapshot; two price sources would make
+    # the difference an artifact of timing rather than of exposure.
+    #
+    # This used to assert `src.count("px[s] / mp[s] - 1.0") >= 2` — two copies of
+    # one expression. S-194 moved that arithmetic into `mark_coverage.weighted_mark`
+    # (all five books shared a defect where an unpriceable holding produced 0.0,
+    # indistinguishable from a flat day), so the literal is gone while the property
+    # it defended is STRONGER: one implementation, called twice with the same two
+    # dicts, cannot diverge the way two hand-written copies can.
+    #
+    # Asserted on the construct rather than the old syntax: both calls present,
+    # both passed `px` and `mp`.
+    import re
+    calls = re.findall(r"weighted_mark\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)", src)
+    assert len(calls) >= 2, \
+        "book and benchmark legs must both be marked (found %d calls)" % len(calls)
+    price_args = {(c[1], c[2]) for c in calls}
+    assert len(price_args) == 1, \
+        f"legs are priced from different snapshots: {price_args}"
+    weight_args = {c[0] for c in calls}
+    assert len(weight_args) >= 2, \
+        f"book and benchmark must use DIFFERENT weights: {weight_args}"
 
 
 def test_a_lost_cache_must_not_restart_the_clock():

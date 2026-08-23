@@ -102,13 +102,16 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
 
     w = state["weights"]; mp = state["mark_prices"]
     # daily P&L of the held book: price move + funding carry (short +funding receives)
-    price_pnl = funding_pnl = 0.0
-    for s, wi in w.items():
-        if s not in live or s not in mp or mp[s] <= 0:
-            continue
-        price_pnl += wi * (live[s]["close"] / mp[s] - 1.0)
-        fund_today = live[s]["fmean"][-1] * 3 if live[s]["fmean"] else 0.0   # ~daily funding
-        funding_pnl += -wi * fund_today
+    # S-194: see mark_coverage — an empty accumulation is not a flat day.
+    from src.data.signals.mark_coverage import weighted_mark
+    _px = {s: v["close"] for s, v in live.items() if v.get("close")}
+    _mk = weighted_mark(w, _px, mp, book="causal")
+    if not _mk.ok:
+        return _mk.as_skip("causal")
+    price_pnl = _mk.pnl
+    funding_pnl = sum(
+        -wi * ((live[s]["fmean"][-1] * 3) if live.get(s, {}).get("fmean") else 0.0)
+        for s, wi in w.items() if s in _mk.priced)
     daily_ret = price_pnl + funding_pnl
     nav = state["nav"] * (1.0 + daily_ret)
 
