@@ -835,5 +835,46 @@ python3 -m pytest tests/test_t2_off_request_path.py -q || {
   echo "  ✗ T2-off-request-path suite FAILED — do not push"; exit 1; }
 echo "  ✓ T2 precomputed off the request path (S-200)"
 
+# ── S-202: the IC-weight chain must be honest about being empty ──────────────
+# `trigger_regime_fitness` returned ok=True with rows=0 for four months while
+# cis_regime_fitness stayed empty, the IC multiplier could not load, and CIS
+# scored every asset on NEUTRAL weights. Nothing said so — the log line read
+# like a normal run. Backfilling realized_return_7d then showed the samples span
+# SIX days (and one day for RISK_ON, whose five pillar ICs came out identical at
+# -0.017 — a collapsed cross-section). The old floor passed on five pairs from
+# one day. Pins: empty is degraded not ok · the floor counts DAYS · a skip says
+# why · neutral weights announce themselves.
+python3 -m pytest tests/test_ic_weight_chain.py -q || {
+  echo "  ✗ IC-weight-chain suite FAILED — do not push"; exit 1; }
+echo "  ✓ IC weight chain honest when empty (S-202)"
+
+# ── S-197: pod aggregator guards (Strategy 3) ────────────────────────────────
+# The aggregator wraps three cross-sectional legs (R46/R62/R76) inside a single
+# book with three safety properties: (1) cross-pod correlation gate drops the
+# LOWEST-Sharpe pod on breach (lesson #42, max |corr| < 0.30) so a structural
+# surprise that turns two pods into one factor is detected as one, not three;
+# (2) vol targeting at 12% ann, with the unit-test bound at 13% so the test
+# itself cannot drift the target; (3) per-pod DD circuit breaker at -15% PERMANENTLY
+# zeros a pod's contribution, monotonic — recovery is impossible by construction
+# because a breached pod is an opinion about regime that has now been falsified.
+# Pure-Python + synthetic-data smoke — sandbox-safe and offline.
+python3 -m src.research.validation.tests.test_pod_aggregator_smoke || {
+  echo "  ✗ pod-aggregator smoke FAILED — do not push"; exit 1; }
+echo "  ✓ pod aggregator guards (S-197)"
+
+# ── S-198: cross-asset factor tilt guards (Strategy 4) ────────────────────────
+# The long-only tilt is built from three pillars (quality + momentum + low-vol)
+# that share three hard properties: (1) tilt_weights NEVER produces a negative
+# weight, and the bottom quartile by RANK gets exactly 1/N each so a long-only
+# claim is auditable from one DataFrame; (2) PIT-safe z-score — z(t) uses only
+# data through t-lag, so a target-day observation cannot influence its own rank
+# and the entire claim to "no look-ahead" reduces to one assertion; (3) H3.2
+# conviction sizing is hard-clipped to [0.5, 1.75], so the worst-case notional
+# exposure is bounded regardless of conviction input.
+# Pure-Python + synthetic-data smoke — sandbox-safe and offline.
+python3 -m src.research.validation.tests.test_factor_tilt_smoke || {
+  echo "  ✗ factor-tilt smoke FAILED — do not push"; exit 1; }
+echo "  ✓ cross-asset factor tilt guards (S-198)"
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."

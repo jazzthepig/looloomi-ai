@@ -50,6 +50,13 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY", os.getenv("SUPABASE_KEY", ""))
 CG_API_KEY = os.getenv("COINGECKO_API_KEY", "")
 
+#: S-202. Minimum DISTINCT DAYS before an IC is reported. Not a pair count —
+#: assets co-move, so N names on one day is closer to one observation than to N.
+#: 20 is chosen to be plainly insufficient-until-it-is-not rather than tuned:
+#: with 6 days available today the honest output is "not yet", and that is the
+#: output we want, stated, rather than a number nobody can defend.
+MIN_INDEPENDENT_DAYS = 20
+
 PILLARS = ["pillar_f", "pillar_m", "pillar_o", "pillar_s", "pillar_a"]
 PILLAR_LABELS = {"pillar_f": "F", "pillar_m": "M", "pillar_o": "O", "pillar_s": "S", "pillar_a": "A"}
 
@@ -385,6 +392,30 @@ def compute_fitness(rows: list[dict], window_days: int) -> list[dict]:
                       if r.get(pillar_col) is not None and r["return_7d"] is not None]
                 pairs = [(x, y) for x, y in zip(xs, ys) if y is not None]
                 if len(pairs) < 5:
+                    continue
+
+                # ── S-202: the unit of independence is the DAY ───────────────
+                # `len(pairs) >= 5` passes on five observations from ONE day.
+                # Measured 2026-08-23 after backfilling realized_return_7d: the
+                # RISK_ON bucket held 23 observations spanning a single day, and
+                # its five pillar ICs came out IDENTICAL at −0.017 — the
+                # signature of a collapsed cross-section, not five findings.
+                # TIGHTENING held 64 observations across six days.
+                #
+                # Assets move together. Twenty-three names on one day is closer
+                # to one observation than to twenty-three, so a pair count
+                # overstates the sample by roughly the width of the panel. An IC
+                # computed on it is noise, and feeding it into a weight
+                # multiplier would tilt CIS on that noise — worse than the
+                # neutral weights it replaces, because neutral is at least
+                # honest about knowing nothing.
+                _days = {r.get("recorded_at", "")[:10] for r in filtered
+                         if r.get(pillar_col) is not None and r.get("return_7d") is not None}
+                _days.discard("")
+                if len(_days) < MIN_INDEPENDENT_DAYS:
+                    print(f"    Pillar {label} ({source}): SKIPPED — {len(pairs)} pairs "
+                          f"but only {len(_days)} independent day(s), floor is "
+                          f"{MIN_INDEPENDENT_DAYS}")
                     continue
                 xs_c = [p[0] for p in pairs]
                 ys_c = [p[1] for p in pairs]
