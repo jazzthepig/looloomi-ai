@@ -797,5 +797,43 @@ python3 -m pytest tests/test_hyperliquid_source.py -q || {
   echo "  ✗ hyperliquid source suite FAILED — do not push"; exit 1; }
 echo "  ✓ price source integrity (S-191/S-192)"
 
+# ── S-193: ONE pinned price route ────────────────────────────────────────────
+# Jazz: 交易和读取的 route 都要写死啊,不可以乱来啊 — "不然就是回测好看,实盘根本
+# 没办法用,就算给你接 TradingView 和 Hyperliquid 就是浪费钱."
+# The read path resolved a fallback chain while the trade path is one venue; the
+# two disagreed about ETH on 08-19 by seventeen points. Pinned: tradeable symbols
+# price from the venue or REFUSE — never a substitute. And the ① book may only
+# hold what the venue lists (88 of the 262-name panel), because a NAV for an
+# unholdable portfolio is exactly the backtest-good/live-impossible failure.
+python3 -m pytest tests/test_price_route.py -q || {
+  echo "  ✗ price-route suite FAILED — do not push"; exit 1; }
+echo "  ✓ pinned price route (S-193)"
+
+# ── S-194: a dead feed is not a flat day ─────────────────────────────────────
+# All five paper books computed daily return as `pnl = 0.0` then a conditional
+# accumulate, so "could not price" and "did not move" were the same number.
+# Measured while the panel ran +23.99% over five sessions: two_layer 6/6 marks
+# at 0.00%, beta_core/causal 3/6, combined+scalable stopped entirely. Nothing
+# caught it because realized_vol kept rising correctly off the same data.
+# One shared guard, weighted by held notional, refusing below 80%.
+python3 -m pytest tests/test_mark_coverage.py -q || {
+  echo "  ✗ mark-coverage suite FAILED — do not push"; exit 1; }
+echo "  ✓ books refuse to mark unpriceable holdings (S-194)"
+
+# ── S-199/S-200: the gate must finish, and T2 must not run behind a request ──
+# The direct-write sweep was an unbounded recursive grep over a MOUNTED external
+# volume — 0.002s in the sandbox where the volume is absent, minutes on the Mac
+# where it is not. It hung a deploy. Now scoped, excluded and hard-bounded, and
+# a sweep that cannot finish reports NOT-CHECKED rather than clean.
+#
+# T2: railway_t2_ms measured 110,390 against a 12,000 budget. Only a COMPLETED
+# build writes the cache, so a build that always overruns means the cache never
+# fills and every request rebuilds and is cancelled — a deadlock that served 43
+# T1-only assets with macro_regime=None. T2 now precomputes off the request path
+# with a real budget, exactly as T1 has for months.
+python3 -m pytest tests/test_t2_off_request_path.py -q || {
+  echo "  ✗ T2-off-request-path suite FAILED — do not push"; exit 1; }
+echo "  ✓ T2 precomputed off the request path (S-200)"
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."
