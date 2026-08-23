@@ -16,7 +16,7 @@
 | Strategy truth / frozen cells | `STRATEGY_PLAYBOOK.md` | |
 | The soul / north star | `ARCHITECTURE.md` | read when a decision touches what we ARE |
 | Behavioral-edge doctrine | `docs/TRADER_TOM_DOCTRINE.md` | read before building any sleeve |
-| **Mining output — where the research actually IS** | `Shadow/cometcloud-local/_reports/` (`absorb_input/` = R-number + vector_mine summaries, 217 files) | Minimax lane writes it; Seth/Austin **READ it before claiming a result does not exist** |
+| **Mining output — where the research actually IS** | `Shadow/cometcloud-local/_reports/INDEX.md` (reader's guide, 14 R-numbers + status) → then `absorb_input/` (217 files) | Minimax-C writes both; **read the WHOLE lineage, not the first hit** — R70 read alone gave a number R71 corrected by 32% |
 | Full history | `git log` | |
 
 **⚠️ "NOT authority" ≠ "not worth reading" — this cost real work (2026-08-19).** Rule #2 below
@@ -52,9 +52,20 @@ Coordinate via `MINIMAX_SYNC.md` before touching anything Mac-side.
 ## What we're building
 
 **CometCloud AI** — crypto Fund-of-Funds platform + intelligence ecosystem for institutional /
-family-office / HNW across APAC; HK base. AI-curated on-chain FoF on Solana, OSL-stablecoin
-denominated. Target $500M AUM, 1% mgmt + performance. Built for human LPs and AI agents equally.
+family-office / HNW across APAC; HK base. AI-curated **on-chain FoF, venue- and chain-agnostic**
+— we go where the on-chain liquidity is. OSL-stablecoin denominated. Target $500M AUM, 1% mgmt +
+performance. Built for human LPs and AI agents equally.
 **Looloomi** — the AI-agent / Web3 tech arm powering it.
+
+> **Chain-agnostic ≠ instrument-agnostic (Jazz, 2026-08-23).** "On Solana" was the original
+> framing and is retired: the chain follows liquidity. What did NOT change is ①'s instrument.
+> ARCHITECTURE.md says **beta = HOLD**, and a long perpetual is not a hold — it is a synthetic
+> long that pays carry. Measured on the ① panel's own 24 names, 2026-08-23: **equal-weight
+> funding +23.07% annualised** (AAVE +110.8%, NEAR +94.4%), so at gross 1.15 a perp-based ①
+> bleeds **~26.5%/yr** — larger than any alpha we have ever demonstrated (R70's best was 14.5%
+> annualised and failed its DSR). ① holds SPOT, on whichever chain has the depth. Perps belong
+> to the ②③④ sleeves, which already carry funding accounting; ① did not, which is how this
+> nearly shipped unnoticed.
 
 **Philosophy (full text: ARCHITECTURE.md):** technology and art are one impulse; we build early
 infrastructure for human+AI convergence. The deepest object is not the Asset but the
