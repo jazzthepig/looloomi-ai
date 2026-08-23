@@ -511,6 +511,46 @@ async def _t2_precompute_loop():
         await _asyncio.sleep(_interval)
 
 
+async def _forward_return_backfill_loop():
+    """Fill realized_return_7d as trades age past the horizon (S-203).
+
+    This column being empty is what disabled the entire IC-weighting mechanism:
+    234 of 234 rows NULL → compute_fitness returns [] → cis_regime_fitness stays
+    at 0 rows → the IC multiplier cannot load → CIS scores on NEUTRAL weights.
+    Four months, and the daily log said `ok=True rows=0` throughout.
+
+    Hourly rather than daily on purpose. The gate that matters downstream is
+    INDEPENDENT DAYS (MIN_INDEPENDENT_DAYS = 20 in compute_regime_fitness), and
+    each calendar day contributes at most one regardless of how often this runs
+    — so the cadence buys recovery from a missed run, not extra sample. Six days
+    are measurable today; the mechanism energises at twenty.
+    """
+    import time as _time
+    await _asyncio.sleep(1200)
+    while True:
+        try:
+            from src.data.signals.forward_return_backfill import (
+                backfill_forward_returns, coverage_report)
+            r = await backfill_forward_returns()
+            cov = await coverage_report()
+            if r.get("ok"):
+                print(f"[FWD] filled {r.get('filled')} rows · coverage "
+                      f"{cov.get('coverage_pct')}% · independent_days="
+                      f"{cov.get('independent_days')} (IC gate needs 20)")
+            else:
+                print(f"[FWD] ⚠️  {r.get('reason')}")
+        except Exception as _e:
+            print(f"[FWD] ⚠️  backfill failed: {_e}")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_forward_return_backfill():
+    if os.environ.get("DISABLE_FWD_BACKFILL", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_forward_return_backfill_loop())
+        print("[FWD] ✅ forward-return backfill scheduled (IC weights energise at 20 days)")
+
+
 @app.on_event("startup")
 async def _start_t2_precompute():
     if os.environ.get("DISABLE_T2_PRECOMPUTE", "").lower() not in ("1", "true", "yes"):
