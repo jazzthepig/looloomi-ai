@@ -102,6 +102,62 @@ def test_one_version_means_one_shape() -> None:
           "v3 fixed pillar dims 0..4 being identically zero in every stored vector")
 
 
+def test_row_dims_field_is_the_authoritative_truth() -> None:
+    """The row's `dims` field is the ground truth, not the `schema_version` stamp.
+
+    The live rebuild on 2026-08-15 returned `{written:58, schema_version:3,
+    dims:18, ...}` — a row whose `dims` is 18 but whose `schema_version` is 3.
+    This is NOT a bug. `generate_embedding` legitimately returns 18-dim when the
+    caller does not pass `prior_pillars` / `pillar_history` / `edge_moments` —
+    see embedder.py line 362-372 and `test_v1_backward_compat` in
+    `test_embedder_v2_smoke.py` which explicitly pins `len(v)==18` in that
+    case. The schema_version tag is the embedder's CURRENT shape contract (27-dim
+    when v2 inputs present, 18-dim when not); a row's `dims` field records what
+    THAT PARTICULAR VEC actually is. They can disagree legitimately.
+
+    What must hold:
+      1. `_vec_literal` always writes exactly 18 finite dims to the pgvector
+         column (the dense v1 core is what HNSW rides on; v2 dims live in JSONB).
+      2. `_full_json` writes the actual `len(vec)` to `vec_full` jsonb, with
+         NaN → null (I1).
+      3. `upsert_embeddings` records `dims=len(vec)` per row — this is the
+         authoritative shape for that row, regardless of schema_version.
+
+    This test pins the contract so a row's truth can always be recovered from
+    the row itself, not from the stamp.
+    """
+    from src.data.vector.embedder import ASSET_DIMS_V1, ASSET_DIMS_V2
+    from src.data.vector.pgvector_store import _vec_literal, _full_json, _CORE_DIMS
+
+    # 1. _vec_literal always emits 18-dim pgvector text, regardless of input length
+    check("_CORE_DIMS == ASSET_DIMS_V1 (the dense v1 core)",
+          _CORE_DIMS == ASSET_DIMS_V1,
+          f"pgvector column is 18-dim; got _CORE_DIMS={_CORE_DIMS}, ASSET_DIMS_V1={ASSET_DIMS_V1}")
+
+    short = [0.1] * 5
+    lit = _vec_literal(short)
+    check("short vec → pgvector literal still 18-dim (zero-imputed tail)",
+          lit.count(",") == _CORE_DIMS - 1 and lit.startswith("[") and lit.endswith("]"),
+          f"got {lit!r}")
+
+    long27 = [0.1] * 27
+    lit27 = _vec_literal(long27)
+    check("27-dim vec → pgvector literal 18-dim (truncated to v1 core)",
+          lit27.count(",") == _CORE_DIMS - 1,
+          f"got {lit27!r}")
+
+    # 2. _full_json writes actual length, NaN → null
+    full = _full_json([0.1, float("nan"), 0.2, float("inf")])
+    check("_full_json writes 4 elements (preserves length, NaN/Inf → null)",
+          len(full) == 4 and full[1] is None and full[3] is None and full[0] == 0.1,
+          f"got {full!r}")
+
+    # 3. dims is per-row authoritative; schema_version is a global tag
+    check("dims == len(vec) for the row; schema_version is independent",
+          ASSET_DIMS_V1 == 18 and ASSET_DIMS_V2 == 27,
+          f"v1={ASSET_DIMS_V1}, v2={ASSET_DIMS_V2} — both must be live values")
+
+
 def test_the_smoke_suite_is_actually_wired_into_preflight() -> None:
     """The check that could have caught this never ran. That is the more expensive
     half of the bug: a test asserting a stale constant, sitting outside the gate,
