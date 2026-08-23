@@ -398,6 +398,23 @@ _UNIVERSE_TTL = 30.0
 # seconds. Surviving a restart would let it cover a real outage instead, which
 # is the failure it exists to distinguish from.
 _T1_LAST_GOOD: dict = {"payload": None, "ts": 0.0}
+
+
+# S-200: the precomputed T2 universe. Written by `_t2_precompute_loop` in
+# main.py, read here. Max age is generous on purpose — a stale T2 blended under
+# a fresh T1 is far better than no T2 at all, which is what a cancelled build
+# produces. When it IS too old the code falls through to an inline compute, so
+# the slow path still exists; it is just no longer the only path.
+_T2_PRECOMPUTE_KEY = "cis:t2_universe"
+_T2_PRECOMPUTE_MAX_AGE_S = float(os.environ.get("CIS_T2_MAX_AGE_S", "1800"))
+
+
+class _T2FromCache(Exception):
+    """Control-flow marker: the precomputed T2 was usable, skip the inline build.
+
+    An exception rather than a flag because the inline path is a long try-block
+    whose except-clause already records timings; threading a boolean through it
+    would mean two ways to leave the block and one of them untimed."""
 _UNIVERSE_LOCK = asyncio.Lock()
 
 # ── 2026-07-29 P0: the single-flight lock became a total-outage amplifier ──────
@@ -787,15 +804,44 @@ async def _build_cis_universe(force_source: str = None):
     railway_universe = []
     _t = time.time()
     try:
+        # ── S-200 (2026-08-23): read the precomputed T2, do not compute it ───
+        # Measured in production: railway_t2_ms = 110,390 against a 12,000 ms
+        # budget. That is not "slow", it is a DEADLOCK — only a build that
+        # COMPLETES writes `_UNIVERSE_CACHE`, so a build that always exceeds its
+        # budget means the cache can never fill, so the next request rebuilds
+        # from scratch and is cancelled again. Permanent degradation, and every
+        # request burns twelve seconds and a full round of external provider
+        # calls before throwing the work away.
+        #
+        # The endpoint served 43 T1-only assets with macro_regime=None, which is
+        # why /internal/loop-health read `broken` and two books stopped marking.
+        #
+        # T1 has not been on the request path for months — the Mac computes it
+        # and pushes to Redis. T2 is now the same shape. A 110-second fan-out to
+        # ten external providers does not belong behind a web request at any
+        # budget; the budget was only ever hiding that.
+        _t2_cached = await redis_get_key(_T2_PRECOMPUTE_KEY)
+        if _t2_cached and _t2_cached.get("universe"):
+            _age = time.time() - float(_t2_cached.get("computed_at") or 0)
+            if _age < _T2_PRECOMPUTE_MAX_AGE_S:
+                railway_universe = _t2_cached["universe"]
+                _phase["t2_source"] = f"precomputed({int(_age)}s)"
+                _phase["t2_branches"] = _t2_cached.get("branch_timing") or {}
+                _phase["railway_t2_ms"] = 0
+                raise _T2FromCache()      # skip the inline compute below
+            _phase["t2_precompute_age_s"] = int(_age)
         result = await calculate_cis_universe()
         railway_universe = result.get("universe", [])
         _branch = result.get("_branch_timing") or {}
         if _branch:
             _phase["t2_branches"] = _branch
+    except _T2FromCache:
+        pass          # railway_universe already populated from Redis
     except Exception as e:
         _logger.warning(f"[CIS] Railway calculation error: {e}")
         _phase["railway_error"] = str(e)[:120]
-    _phase["railway_t2_ms"] = int((time.time() - _t) * 1000)
+    if "railway_t2_ms" not in _phase:
+        _phase["railway_t2_ms"] = int((time.time() - _t) * 1000)
 
     # Merge: Mac Mini T1 scores override Railway T2 where available
     if use_local and cached and cached.get("universe"):

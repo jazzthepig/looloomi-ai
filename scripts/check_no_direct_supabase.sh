@@ -45,7 +45,47 @@ if [ ! -d "$MAC_ROOT" ]; then
     exit 0
 fi
 
-HITS=$(grep -rnE "$PATTERN" "$MAC_ROOT" 2>/dev/null | grep -v __pycache__ || true)
+# ── S-199 (2026-08-23): this line hung a push ────────────────────────────────
+# It was `grep -rnE "$PATTERN" "$MAC_ROOT"` — an unbounded recursive grep over a
+# MOUNTED EXTERNAL VOLUME with no file-type filter, no directory exclusions and
+# no timeout. In the sandbox it returns in 0.002s because the volume is absent,
+# so the cost was invisible from every machine that could test it. On the Mac,
+# where the volume IS mounted, it walks `_logs/`, `_reports/` (217 files, one
+# ledger of 577k chars) and the parquet data dirs. Jazz's deploy sat on this
+# stage.
+#
+# A gate that cannot finish is not a gate — it is an outage with good intentions,
+# and it teaches people to reach for --no-verify, which disables every OTHER
+# check in this file too.
+#
+# Scoped to source files, heavy directories excluded, and hard-bounded: if the
+# sweep cannot finish in 20s it says so rather than hanging. NOT-FINISHED is
+# reported as its own state, never as clean — same three-valued discipline as
+# the unmounted case above.
+_SWEEP_TIMEOUT="${NO_DIRECT_SUPABASE_TIMEOUT:-20}"
+_timeout_bin="$(command -v timeout || command -v gtimeout || true)"
+
+_sweep() {
+    grep -rnE --include='*.py' --include='*.sh' --include='*.ts' --include='*.js' \
+         --exclude-dir=__pycache__ --exclude-dir=.git --exclude-dir=_logs \
+         --exclude-dir=_reports --exclude-dir=node_modules --exclude-dir=.venv \
+         --exclude-dir=venv --exclude-dir=data --exclude-dir=_archive \
+         "$PATTERN" "$MAC_ROOT" 2>/dev/null || true
+}
+
+if [ -n "$_timeout_bin" ]; then
+    HITS=$("$_timeout_bin" "$_SWEEP_TIMEOUT" bash -c "$(declare -f _sweep); PATTERN='$PATTERN' MAC_ROOT='$MAC_ROOT' _sweep" 2>/dev/null || echo "__SWEEP_TIMED_OUT__")
+else
+    HITS=$(_sweep)
+fi
+
+if [ "$HITS" = "__SWEEP_TIMED_OUT__" ]; then
+    echo "  ⊘ NOT CHECKED — sweep exceeded ${_SWEEP_TIMEOUT}s over $MAC_ROOT."
+    echo "    This is NOT a pass. Narrow the scan or raise"
+    echo "    NO_DIRECT_SUPABASE_TIMEOUT, then re-run. A gate that cannot"
+    echo "    finish must not report clean."
+    exit 0
+fi
 
 if [ -z "$HITS" ]; then
     echo "  ✓ no direct Supabase writes under $MAC_ROOT"
