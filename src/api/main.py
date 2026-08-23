@@ -455,6 +455,69 @@ async def _hyperliquid_loop():
         await _asyncio.sleep(6 * 3600)
 
 
+async def _t2_precompute_loop():
+    """Compute the T2 universe OFF the request path and cache it (S-200).
+
+    WHY. Measured 2026-08-23 in production: `railway_t2_ms = 110,390` against a
+    12,000 ms budget, with every timed branch summing to 19,250 — so 91 seconds
+    had no owner and the build was cancelled every single time. Only a COMPLETED
+    build writes the response cache, so a build that always overruns means the
+    cache can never fill; the next request rebuilds from zero and is cancelled
+    again. That is a deadlock, not slowness, and it had `/cis/universe` serving
+    43 T1-only assets with `macro_regime=None` while `/internal/loop-health`
+    read `broken`.
+
+    T1 stopped being computed on the request path months ago — the Mac builds it
+    and pushes to Redis. This gives T2 the same shape. A fan-out to ten external
+    providers does not belong behind a web request at ANY budget; the budget was
+    only ever concealing that it was there.
+
+    The loop gets a real budget because nobody is waiting on it. If it overruns
+    even this, the failure is loud and the previous value keeps serving — which
+    is the opposite of today, where overrunning silently produced a broken page.
+    """
+    import time as _time          # module-level alias lands later in this file;
+                                  # importing locally removes the ordering
+                                  # dependency rather than relying on it
+    await _asyncio.sleep(90)          # let the app finish booting
+    _interval = int(os.environ.get("CIS_T2_PRECOMPUTE_S", "600"))
+    _budget = float(os.environ.get("CIS_T2_PRECOMPUTE_BUDGET_S", "240"))
+    while True:
+        try:
+            from src.data.cis.cis_provider import calculate_cis_universe
+            from src.api.store import redis_set_key
+            _t0 = _time.time()
+            result = await _asyncio.wait_for(calculate_cis_universe(), timeout=_budget)
+            uni = (result or {}).get("universe") or []
+            took = _time.time() - _t0
+            if uni:
+                await redis_set_key("cis:t2_universe", {
+                    "universe": uni,
+                    "computed_at": _time.time(),
+                    "took_s": round(took, 1),
+                    "branch_timing": result.get("_branch_timing") or {},
+                }, ttl=7200)
+                print(f"[T2] precomputed {len(uni)} assets in {took:.1f}s")
+            else:
+                # Empty is NOT a quiet day — it is a failed build. Do not
+                # overwrite the last good copy with it (S-190).
+                print(f"[T2] ⚠️  build returned 0 assets in {took:.1f}s — "
+                      f"keeping the previous cached universe")
+        except _asyncio.TimeoutError:
+            print(f"[T2] ⚠️  precompute exceeded {_budget}s — previous value "
+                  f"still serving. Check t2_branches in /health.")
+        except Exception as _e:
+            print(f"[T2] ⚠️  precompute failed: {_e}")
+        await _asyncio.sleep(_interval)
+
+
+@app.on_event("startup")
+async def _start_t2_precompute():
+    if os.environ.get("DISABLE_T2_PRECOMPUTE", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_t2_precompute_loop())
+        print("[T2] ✅ universe precompute scheduled (off the request path)")
+
+
 @app.on_event("startup")
 async def _start_hyperliquid_loop():
     if os.environ.get("DISABLE_HYPERLIQUID", "").lower() not in ("1", "true", "yes"):

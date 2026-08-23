@@ -2451,11 +2451,23 @@ async def calculate_cis_universe() -> Dict[str, Any]:
     # overlay supplies traded reality. Keeping mcap from CG and volume from the
     # venues is deliberate — mixing a correct mcap with ONE venue's volume is
     # precisely what produced volume_mcap_ratio=0.0002 on HYPE.
+    # ── S-198 (2026-08-23): time what happens AFTER the fanout ──────────────
+    # S-104 added per-branch timing for the fan-out and the bottleneck promptly
+    # moved outside it. Measured in production 2026-08-23: railway_t2_ms =
+    # 110,390 against a 12,000 ms budget, while every timed branch summed to
+    # 19,250 — **91 seconds with no owner**. The build blew its budget, was
+    # cancelled, and `/cis/universe` served 43 T1-only assets with
+    # macro_regime=None instead of the merged 58.
+    #
+    # The measurement has to follow the failure. Everything from here to the
+    # per-asset loop is now attributed.
+    _t_post = time.time()
     try:
         _venue_overlay = await fetch_venue_overlay()
     except Exception as _e:                                        # noqa: BLE001
         _logger.warning("venue overlay unavailable: %s", _e)
         _venue_overlay = {}
+    _branch_ms["post_venue_overlay_ms"] = int((time.time() - _t_post) * 1000)
 
     for _aid, _v in (_venue_overlay or {}).items():
         _rec = dict(merged_markets.get(_aid) or {})
@@ -2522,6 +2534,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             # Fallback: yfinance
             return sym, await get_yfinance_data(ticker)
 
+    _t_yf = time.time()
     yf_results = await asyncio.gather(
         *[_fetch_yf(sym, cfg) for sym, cfg in yf_assets.items()],
         return_exceptions=True
@@ -2534,7 +2547,10 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             yf_data[sym] = data
 
     # Macro data fetch — VIX needed for regime detection + S pillar
+    _branch_ms["post_yfinance_ms"] = int((time.time() - _t_yf) * 1000)
+    _t_macro = time.time()
     macro_data_early = await fetch_macro_data()
+    _branch_ms["post_macro_ms"] = int((time.time() - _t_macro) * 1000)
     live_vix = macro_data_early.get("vix")
 
     # Macro regime determination — 7-state classifier using 4 signals
@@ -2582,7 +2598,9 @@ async def calculate_cis_universe() -> Dict[str, Any]:
             if ac not in ["US Equity", "US Bond", "Commodity"] and aid in BINANCE_SYMBOLS:
                 sym = BINANCE_SYMBOLS[aid].upper().replace("USDT", "") + "USDT"
                 _kline_tasks[aid] = _gk(sym, months=1)
+    _t_kl = time.time()
     _kline_results = await asyncio.gather(*_kline_tasks.values(), return_exceptions=True) if _kline_tasks else []
+    _branch_ms["post_klines_ms"] = int((time.time() - _t_kl) * 1000)
     _kline_map = {}
     for aid, result in zip(_kline_tasks.keys(), _kline_results):
         if not isinstance(result, Exception) and result and len(result) >= 20:
@@ -2620,7 +2638,14 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         if not is_tradfi and asset_id in _kline_map:
             try:
                 prices = _kline_map[asset_id]
+                _t_b = time.time()
                 asset_betas = await calculate_asset_betas(asset_id, prices)
+                # ACCUMULATED, not overwritten — this sits inside the per-asset
+                # loop, so one call's duration says nothing. 43 sequential awaits
+                # is exactly the shape that hides in an unattributed total.
+                _branch_ms["post_betas_ms_total"] = (
+                    _branch_ms.get("post_betas_ms_total", 0)
+                    + int((time.time() - _t_b) * 1000))
             except Exception as e:
                 _logger.warning(f"[CIS] beta calculation failed for {asset_id}: {e}")
 
