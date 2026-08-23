@@ -45,6 +45,7 @@ from src.research.validation.w5_forensics import (
     partition_into_windows, gauntlet_3check,
 )
 from src.research.validation.w5_forensics_external import load_funding_daily
+from src.research.validation.funding_crowding_ls import score_funding_zwide
 from src.research.validation.r62_fragility_gated_funding import (
     compute_combined_features, build_fragility_ks_table,
     DEFAULT_FRAGILE_WINDOWS, DEFAULT_PLAYABLE_WINDOWS,
@@ -52,6 +53,7 @@ from src.research.validation.r62_fragility_gated_funding import (
 from src.research.validation.r63_fusion_validation import (
     build_r46_sleeve_28, build_r62_sleeve_28,
     fuse, max_drawdown, per_window,
+    _build_r62_detector,
     R46_CAD, R46_BPS, R62_CAD, R62_BPS,
     R62_FEATURE_SET, R62_Z, R62_MF,
 )
@@ -96,8 +98,10 @@ def build_pods(cis_long: pd.DataFrame, rets: pd.DataFrame,
     # Pod 1: R46 pillar_O 5d/5bps
     leg_r46, pillar_o_w = build_r46_sleeve_28(cis_long, rets, tradeable)
     # Pod 2: R62 fade-the-crowd gated
-    features = compute_combined_features(funding_daily[tradeable])
-    score = features["funding_z"]
+    features = compute_combined_features(
+        cis_long, rets, tradeable, tradeable, funding_daily
+    )
+    score = score_funding_zwide(funding_daily[tradeable], sign="fade_crowd")
     det, _ = build_fragility_ks_table(features,
                                       fragile_labels=DEFAULT_FRAGILE_WINDOWS,
                                       playable_labels=DEFAULT_PLAYABLE_WINDOWS,
