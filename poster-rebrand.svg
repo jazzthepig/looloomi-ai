@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 3000"
+     width="100%" height="100%" preserveAspectRatio="xMidYMid meet"
+     font-family="'Syne', 'Space Grotesk', 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Source Han Sans SC', 'Noto Sans SC', sans-serif">
+
+  <!-- ============================================================= -->
+  <!-- DEFS                                                          -->
+  <!-- ============================================================= -->
+  <defs>
+    <radialGradient id="fieldGlow1" cx="50%" cy="0%" r="80%">
+      <stop offset="0%"   stop-color="#1e3a8a" stop-opacity="0.65"/>
+      <stop offset="50%"  stop-color="#071a4a" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#010812" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="fieldGlow2" cx="0%" cy="50%" r="60%">
+      <stop offset="0%"   stop-color="#1e1b4b" stop-opacity="0.40"/>
+      <stop offset="100%" stop-color="#010812" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="fieldGlow3" cx="100%" cy="100%" r="70%">
+      <stop offset="0%"   stop-color="#1e3a8a" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#010812" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#6366f1" stop-opacity="0"/>
+      <stop offset="50%"  stop-color="#a5b4fc" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </linearGradient>
+
+    <radialGradient id="nodeBlue">
+      <stop offset="0%"   stop-color="#a5b4fc" stop-opacity="0.95"/>
+      <stop offset="40%"  stop-color="#6366f1" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nodePurple">
+      <stop offset="0%"   stop-color="#c4b5fd" stop-opacity="0.9"/>
+      <stop offset="40%"  stop-color="#7c3aed" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nodeAmber">
+      <stop offset="0%"   stop-color="#fbbf24" stop-opacity="0.85"/>
+      <stop offset="40%"  stop-color="#d4a843" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#d4a843" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" seed="11"/>
+      <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.025 0"/>
+    </filter>
+  </defs>
+
+  <!-- BACKGROUND -->
+  <rect width="800" height="3000" fill="#010812"/>
+  <rect width="800" height="3000" fill="url(#fieldGlow1)"/>
+  <rect width="800" height="3000" fill="url(#fieldGlow2)"/>
+  <rect width="800" height="3000" fill="url(#fieldGlow3)"/>
+
+  <!-- CONSTELLATION FIELD -->
+  <g id="field">
+    <circle cx="80"  cy="220"  r="6" fill="url(#nodeBlue)"/>
+    <circle cx="80"  cy="220"  r="1.5" fill="#a5b4fc"/>
+
+    <circle cx="720" cy="180"  r="5" fill="url(#nodePurple)"/>
+    <circle cx="720" cy="180"  r="1.5" fill="#c4b5fd"/>
+
+    <circle cx="640" cy="380"  r="7" fill="url(#nodeBlue)"/>
+    <circle cx="640" cy="380"  r="2"   fill="#a5b4fc"/>
+
+    <circle cx="120" cy="520"  r="4" fill="url(#nodeAmber)"/>
+    <circle cx="120" cy="520"  r="1" fill="#fbbf24"/>
+
+    <circle cx="700" cy="700"  r="5" fill="url(#nodeBlue)"/>
+    <circle cx="700" cy="700"  r="1.5" fill="#a5b4fc"/>
+
+    <circle cx="180" cy="820"  r="6" fill="url(#nodePurple)"/>
+    <circle cx="180" cy="820"  r="1.5" fill="#c4b5fd"/>
+
+    <circle cx="640" cy="980"  r="4" fill="url(#nodeBlue)"/>
+    <circle cx="640" cy="980"  r="1" fill="#a5b4fc"/>
+
+    <circle cx="100" cy="1140" r="5" fill="url(#nodeBlue)"/>
+    <circle cx="100" cy="1140" r="1.5" fill="#a5b4fc"/>
+
+    <circle cx="700" cy="1280" r="6" fill="url(#nodePurple)"/>
+    <circle cx="700" cy="1280" r="2" fill="#c4b5fd"/>
+
+    <circle cx="160" cy="1460" r="4" fill="url(#nodeAmber)"/>
+    <circle cx="160" cy="1460" r="1" fill="#fbbf24"/>
+
+    <circle cx="660" cy="1620" r="5" fill="url(#nodeBlue)"/>
+    <circle cx="660" cy="1620" r="1.5" fill="#a5b4fc"/>
+
+    <circle cx="80"  cy="1840" r="6" fill="url(#nodeBlue)"/>
+    <circle cx="80"  cy="1840" r="2" fill="#a5b4fc"/>
+
+    <circle cx="720" cy="2000" r="5" fill="url(#nodePurple)"/>
+    <circle cx="720" cy="2000" r="1.5" fill="#c4b5fd"/>
+
+    <circle cx="140" cy="2220" r="4" fill="url(#nodeBlue)"/>
+    <circle cx="140" cy="2220" r="1" fill="#a5b4fc"/>
+
+    <circle cx="660" cy="2440" r="5" fill="url(#nodeAmber)"/>
+    <circle cx="660" cy="2440" r="1.5" fill="#fbbf24"/>
+
+    <circle cx="100" cy="2640" r="6" fill="url(#nodeBlue)"/>
+    <circle cx="100" cy="2640" r="2" fill="#a5b4fc"/>
+
+    <circle cx="700" cy="2820" r="4" fill="url(#nodePurple)"/>
+    <circle cx="700" cy="2820" r="1" fill="#c4b5fd"/>
+
+    <!-- Subtle connecting hairlines -->
+    <line x1="80"  y1="220"  x2="720" y2="180"  stroke="#6366f1" stroke-opacity="0.10" stroke-width="0.5"/>
+    <line x1="640" y1="380"  x2="180" y2="820"  stroke="#6366f1" stroke-opacity="0.08" stroke-width="0.5"/>
+    <line x1="700" y1="700"  x2="100" y2="1140" stroke="#6366f1" stroke-opacity="0.08" stroke-width="0.5"/>
+    <line x1="700" y1="1280" x2="160" y2="1460" stroke="#6366f1" stroke-opacity="0.08" stroke-width="0.5"/>
+    <line x1="660" y1="1620" x2="80"  y2="1840" stroke="#6366f1" stroke-opacity="0.08" stroke-width="0.5"/>
+    <line x1="720" y1="2000" x2="140" y2="2220" stroke="#6366f1" stroke-opacity="0.08" stroke-width="0.5"/>
+    <line x1="660" y1="2440" x2="100" y2="2640" stroke="#6366f1" stroke-opacity="0.08" stroke-width="0.5"/>
+  </g>
+
+  <rect width="800" height="3000" filter="url(#grain)" opacity="0.6"/>
+
+  <!-- Spine -->
+  <line x1="56" y1="180" x2="56" y2="2900" stroke="#a5b4fc" stroke-opacity="0.10" stroke-width="1"/>
+
+  <!-- TOP FRAME -->
+  <g font-family="'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace">
+    <text x="56"  y="64" font-size="10" letter-spacing="2.5" fill="rgba(165,180,255,0.55)">◐  COMETCLOUD  ·  AI AGENT MANIFESTO</text>
+    <text x="744" y="64" text-anchor="end" font-size="10" letter-spacing="2.5" fill="rgba(165,180,255,0.55)">VOL.01  /  MMXXVI</text>
+  </g>
+
+  <!-- ============================================================= -->
+  <!-- HERO  (y: 130 – 540)                                          -->
+  <!-- ============================================================= -->
+  <g transform="translate(56, 160)">
+    <text x="0" y="0" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="3" fill="#a5b4fc">MANIFESTO  —  RECONSTRUCT WORKFLOW</text>
+
+    <text x="0" y="74"  font-family="'Syne', 'PingFang SC', sans-serif" font-size="56" font-weight="600" letter-spacing="-1" fill="#f5f5f5">智能体重构</text>
+    <text x="0" y="138" font-family="'Syne', 'PingFang SC', sans-serif" font-size="56" font-weight="600" letter-spacing="-1" fill="#f5f5f5">业务流程<tspan fill="#a5b4fc">.</tspan></text>
+
+    <text x="0" y="184" font-size="18" fill="rgba(199,210,254,0.85)">电商、金融与经济场景的 AI 自动化实践。</text>
+    <text x="0" y="210" font-size="12" fill="rgba(165,180,255,0.55)" letter-spacing="0.5">智能体驱动的业务自动化实战  /  Agentic Automation, End&#8209;to&#8209;End.</text>
+
+    <line x1="0" y1="240" x2="180" y2="240" stroke="url(#accent)" stroke-width="2"/>
+
+    <g transform="translate(0, 272)" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="2" fill="rgba(199,210,254,0.85)">
+      <text x="0"   y="0">电商运营</text>
+      <text x="86"  y="0" fill="rgba(99,102,241,0.55)">·</text>
+      <text x="100" y="0">金融服务</text>
+      <text x="186" y="0" fill="rgba(99,102,241,0.55)">·</text>
+      <text x="200" y="0">经济研究</text>
+      <text x="286" y="0" fill="rgba(99,102,241,0.55)">·</text>
+      <text x="300" y="0">宏观决策</text>
+    </g>
+  </g>
+
+  <!-- Hero mark: orbital -->
+  <g transform="translate(640, 250)">
+    <circle cx="0" cy="0" r="70" fill="none" stroke="#a5b4fc" stroke-opacity="0.25" stroke-width="1"/>
+    <circle cx="0" cy="0" r="50" fill="none" stroke="#a5b4fc" stroke-opacity="0.18" stroke-width="1"/>
+    <circle cx="0" cy="-50" r="3" fill="#a5b4fc"/>
+    <circle cx="0" cy="-50" r="8" fill="url(#nodeBlue)"/>
+    <circle cx="0" cy="0" r="3" fill="#a5b4fc"/>
+    <circle cx="0" cy="0" r="12" fill="url(#nodeBlue)" opacity="0.6"/>
+    <line x1="-80" y1="0" x2="-62" y2="0" stroke="#a5b4fc" stroke-opacity="0.4" stroke-width="1"/>
+    <line x1="62"  y1="0" x2="80"  y2="0" stroke="#a5b4fc" stroke-opacity="0.4" stroke-width="1"/>
+    <line x1="0" y1="-80" x2="0" y2="-62" stroke="#a5b4fc" stroke-opacity="0.4" stroke-width="1"/>
+    <line x1="0" y1="62"  x2="0" y2="80"  stroke="#a5b4fc" stroke-opacity="0.4" stroke-width="1"/>
+    <text x="0" y="98" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" letter-spacing="2" fill="rgba(165,180,255,0.55)">FOCUS / DEPTH / INTENT</text>
+  </g>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 01 — STATEMENT  (y: 660)                              -->
+  <!-- ============================================================= -->
+  <g transform="translate(56, 660)">
+    <text x="0" y="120" font-family="'Syne', serif" font-style="italic" font-weight="500" font-size="120" fill="#6366f1" opacity="0.85">01</text>
+
+    <g transform="translate(180, 0)">
+      <text x="0" y="22" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="3" fill="rgba(165,180,255,0.55)">STATEMENT  —  WHAT AGENTS DO</text>
+      <text x="0" y="68" font-family="'Syne', 'PingFang SC', sans-serif" font-size="32" font-weight="500" fill="#f5f5f5">智能体不只回答问题</text>
+      <text x="0" y="96" font-size="13" fill="rgba(165,180,255,0.55)">更能理解目标,也能按目标执行流程。</text>
+
+      <g transform="translate(0, 138)" font-size="14" fill="rgba(199,210,254,0.85)">
+        <line x1="0" y1="0"   x2="488" y2="0"   stroke="#a5b4fc" stroke-opacity="0.10"/>
+        <text x="0" y="28">电商运营<tspan fill="rgba(99,102,241,0.55)">  ——  </tspan>选品、内容与客服</text>
+        <line x1="0" y1="48"  x2="488" y2="48"  stroke="#a5b4fc" stroke-opacity="0.10"/>
+        <text x="0" y="76">金融服务<tspan fill="rgba(99,102,241,0.55)">  ——  </tspan>研究、风控与合规</text>
+        <line x1="0" y1="96"  x2="488" y2="96"  stroke="#a5b4fc" stroke-opacity="0.10"/>
+        <text x="0" y="124">经济场景<tspan fill="rgba(99,102,241,0.55)">  ——  </tspan>数据监测与趋势研判</text>
+        <line x1="0" y1="144" x2="488" y2="144" stroke="#a5b4fc" stroke-opacity="0.10"/>
+        <text x="0" y="172" fill="#f5f5f5">让 AI <tspan fill="#a5b4fc">→</tspan> 从辅助工具升级为业务执行者</text>
+        <line x1="0" y1="192" x2="488" y2="192" stroke="#a5b4fc" stroke-opacity="0.10"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 02 — WORKFLOW  (y: 1100)                              -->
+  <!-- ============================================================= -->
+  <g transform="translate(56, 1100)">
+    <text x="0" y="120" font-family="'Syne', serif" font-style="italic" font-weight="500" font-size="120" fill="#6366f1" opacity="0.85">02</text>
+
+    <g transform="translate(180, 0)">
+      <text x="0" y="22" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="3" fill="rgba(165,180,255,0.55)">WORKFLOW  —  FOUR&#8209;STAGE PIPELINE</text>
+      <text x="0" y="68" font-family="'Syne', 'PingFang SC', sans-serif" font-size="32" font-weight="500" fill="#f5f5f5">智能体重构业务流程</text>
+      <text x="0" y="96" font-size="13" fill="rgba(165,180,255,0.55)">智能体业务自动化实战计划  /  From signal to execution</text>
+    </g>
+
+    <!-- Vertical timeline -->
+    <g transform="translate(220, 140)">
+      <path d="M 0,0 C 20,80 -20,160 0,240 S 20,400 0,480"
+            fill="none" stroke="#6366f1" stroke-width="2" stroke-opacity="0.6"/>
+      <line x1="0" y1="0" x2="0" y2="480" stroke="#a5b4fc" stroke-opacity="0.10" stroke-width="1"/>
+
+      <circle cx="0" cy="0"   r="10" fill="url(#nodeBlue)"/>
+      <circle cx="0" cy="0"   r="2.5" fill="#a5b4fc"/>
+      <circle cx="0" cy="120" r="10" fill="url(#nodeBlue)"/>
+      <circle cx="0" cy="120" r="2.5" fill="#a5b4fc"/>
+      <circle cx="0" cy="240" r="10" fill="url(#nodeBlue)"/>
+      <circle cx="0" cy="240" r="2.5" fill="#a5b4fc"/>
+      <circle cx="0" cy="360" r="10" fill="url(#nodeBlue)"/>
+      <circle cx="0" cy="360" r="2.5" fill="#a5b4fc"/>
+      <circle cx="0" cy="480" r="12" fill="url(#nodeAmber)"/>
+      <circle cx="0" cy="480" r="3" fill="#fbbf24"/>
+    </g>
+
+    <g transform="translate(280, 140)" font-size="13">
+      <g transform="translate(0, -10)">
+        <text x="0" y="0" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="2" fill="#a5b4fc">01  /  MONITOR</text>
+        <text x="0" y="22" font-size="15" font-weight="500" fill="#f5f5f5">趋势智能监控与增长</text>
+        <text x="0" y="42" font-size="11" fill="rgba(165,180,255,0.55)">智能工具驱动采集</text>
+      </g>
+      <g transform="translate(0, 110)">
+        <text x="0" y="0" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="2" fill="#a5b4fc">02  /  RESEARCH</text>
+        <text x="0" y="22" font-size="15" font-weight="500" fill="#f5f5f5">金融研究、风控与合规</text>
+        <text x="0" y="42" font-size="11" fill="rgba(165,180,255,0.55)">智能工具驱动生成</text>
+      </g>
+      <g transform="translate(0, 230)">
+        <text x="0" y="0" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="2" fill="#a5b4fc">03  /  JUDGE</text>
+        <text x="0" y="22" font-size="15" font-weight="500" fill="#f5f5f5">宏观经济监测与研判</text>
+        <text x="0" y="42" font-size="11" fill="rgba(165,180,255,0.55)">智能工具驱动生成</text>
+      </g>
+      <g transform="translate(0, 350)">
+        <text x="0" y="0" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="2" fill="#a5b4fc">04  /  EXECUTE</text>
+        <text x="0" y="22" font-size="15" font-weight="500" fill="#f5f5f5">跨系统流程编排与执行</text>
+        <text x="0" y="42" font-size="11" fill="rgba(165,180,255,0.55)">智能工具驱动生成</text>
+      </g>
+    </g>
+
+    <!-- YOU WILL OBTAIN — moved further right of timeline to avoid column clash -->
+    <g transform="translate(280, 580)">
+      <text x="0" y="0" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="3" fill="rgba(165,180,255,0.55)">YOU WILL OBTAIN</text>
+      <g transform="translate(0, 24)" font-size="12" fill="rgba(199,210,254,0.85)">
+        <text x="0"   y="0"><tspan fill="#a5b4fc">→</tspan>  智能体业务自动化实战</text>
+        <text x="0"   y="22"><tspan fill="#a5b4fc">→</tspan>  业务场景复盘内化方案</text>
+        <text x="0"   y="44"><tspan fill="#a5b4fc">→</tspan>  AI 自动化落地能力</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 03 — VALUES  (y: 1820)                                -->
+  <!-- ============================================================= -->
+  <g transform="translate(56, 1820)">
+    <text x="0" y="120" font-family="'Syne', serif" font-style="italic" font-weight="500" font-size="120" fill="#6366f1" opacity="0.85">03</text>
+
+    <g transform="translate(180, 0)">
+      <text x="0" y="22" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="3" fill="rgba(165,180,255,0.55)">VALUES  —  WHAT YOU TAKE AWAY</text>
+      <text x="0" y="68" font-family="'Syne', 'PingFang SC', sans-serif" font-size="32" font-weight="500" fill="#f5f5f5">四大价值</text>
+      <text x="0" y="96" font-size="13" fill="rgba(165,180,255,0.55)">重构业务流转  /  Reframing how work flows</text>
+    </g>
+
+    <!-- 2x2 grid: cells 250w each, gap 24, total 524, fits within 800 -->
+    <g transform="translate(180, 144)">
+      <!-- 01 -->
+      <g transform="translate(0, 0)">
+        <rect x="0" y="0" width="250" height="170" fill="rgba(99,102,241,0.04)" stroke="#a5b4fc" stroke-opacity="0.18"/>
+        <g transform="translate(28, 28)">
+          <circle cx="10" cy="10" r="9" fill="none" stroke="#a5b4fc" stroke-width="1.2"/>
+          <circle cx="10" cy="10" r="2" fill="#a5b4fc"/>
+          <circle cx="19" cy="10" r="1.2" fill="#a5b4fc"/>
+        </g>
+        <text x="226" y="40" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="500" fill="#a5b4fc">01</text>
+        <text x="24" y="92" font-size="15" font-weight="500" fill="#f5f5f5">电商运营智能化</text>
+        <text x="24" y="118" font-size="11" fill="rgba(165,180,255,0.65)">选品、内部管理、</text>
+        <text x="24" y="134" font-size="11" fill="rgba(165,180,255,0.65)">自动决策</text>
+        <line x1="24" y1="150" x2="60" y2="150" stroke="#a5b4fc" stroke-width="1.5"/>
+      </g>
+
+      <!-- 02 -->
+      <g transform="translate(274, 0)">
+        <rect x="0" y="0" width="250" height="170" fill="rgba(99,102,241,0.04)" stroke="#a5b4fc" stroke-opacity="0.18"/>
+        <g transform="translate(28, 28)">
+          <line x1="0" y1="3"  x2="22" y2="3"  stroke="#a5b4fc" stroke-width="1.5"/>
+          <line x1="0" y1="9"  x2="16" y2="9"  stroke="#a5b4fc" stroke-width="1.5"/>
+          <line x1="0" y1="15" x2="22" y2="15" stroke="#a5b4fc" stroke-width="1.5"/>
+          <circle cx="3" cy="3"  r="1.5" fill="#a5b4fc"/>
+          <circle cx="14" cy="15" r="1.5" fill="#a5b4fc"/>
+        </g>
+        <text x="226" y="40" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="500" fill="#a5b4fc">02</text>
+        <text x="24" y="92" font-size="15" font-weight="500" fill="#f5f5f5">金融服务自动化</text>
+        <text x="24" y="118" font-size="11" fill="rgba(165,180,255,0.65)">数据研究、风控合规、</text>
+        <text x="24" y="134" font-size="11" fill="rgba(165,180,255,0.65)">提升决策效率</text>
+        <line x1="24" y1="150" x2="60" y2="150" stroke="#a5b4fc" stroke-width="1.5"/>
+      </g>
+
+      <!-- 03 -->
+      <g transform="translate(0, 194)">
+        <rect x="0" y="0" width="250" height="170" fill="rgba(99,102,241,0.04)" stroke="#a5b4fc" stroke-opacity="0.18"/>
+        <g transform="translate(28, 28)">
+          <path d="M 0,16 L 6,12 L 12,14 L 18,8 L 24,4" fill="none" stroke="#a5b4fc" stroke-width="1.5"/>
+          <circle cx="24" cy="4" r="2" fill="#a5b4fc"/>
+          <line x1="0" y1="18" x2="24" y2="18" stroke="#a5b4fc" stroke-opacity="0.3"/>
+        </g>
+        <text x="226" y="40" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="500" fill="#a5b4fc">03</text>
+        <text x="24" y="92" font-size="15" font-weight="500" fill="#f5f5f5">经济研究数据化</text>
+        <text x="24" y="118" font-size="11" fill="rgba(165,180,255,0.65)">从数据获取到趋势</text>
+        <text x="24" y="134" font-size="11" fill="rgba(165,180,255,0.65)">预测与研判</text>
+        <line x1="24" y1="150" x2="60" y2="150" stroke="#a5b4fc" stroke-width="1.5"/>
+      </g>
+
+      <!-- 04 -->
+      <g transform="translate(274, 194)">
+        <rect x="0" y="0" width="250" height="170" fill="rgba(99,102,241,0.04)" stroke="#a5b4fc" stroke-opacity="0.18"/>
+        <g transform="translate(28, 26)" stroke="#a5b4fc" stroke-width="1" fill="none">
+          <line x1="3"  y1="3"  x2="17" y2="3"/>
+          <line x1="17" y1="3"  x2="17" y2="17"/>
+          <line x1="17" y1="17" x2="3"  y2="17"/>
+          <line x1="3"  y1="17" x2="3"  y2="3"/>
+        </g>
+        <g fill="#a5b4fc">
+          <circle cx="31" cy="29" r="2"/>
+          <circle cx="45" cy="29" r="2"/>
+          <circle cx="45" cy="43" r="2"/>
+          <circle cx="31" cy="43" r="2"/>
+        </g>
+        <text x="226" y="40" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="500" fill="#a5b4fc">04</text>
+        <text x="24" y="92" font-size="15" font-weight="500" fill="#f5f5f5">跨系统自动化执行</text>
+        <text x="24" y="118" font-size="11" fill="rgba(165,180,255,0.65)">让智能体理解意图、</text>
+        <text x="24" y="134" font-size="11" fill="rgba(165,180,255,0.65)">规划流程、跨工具执行</text>
+        <line x1="24" y1="150" x2="60" y2="150" stroke="#a5b4fc" stroke-width="1.5"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 04 — AUDIENCE  (y: 2360)                              -->
+  <!-- ============================================================= -->
+  <g transform="translate(56, 2360)">
+    <text x="0" y="120" font-family="'Syne', serif" font-style="italic" font-weight="500" font-size="120" fill="#6366f1" opacity="0.85">04</text>
+
+    <g transform="translate(180, 0)">
+      <text x="0" y="22" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="3" fill="rgba(165,180,255,0.55)">AUDIENCE  —  WHO SHOULD JOIN</text>
+      <text x="0" y="68" font-family="'Syne', 'PingFang SC', sans-serif" font-size="32" font-weight="500" fill="#f5f5f5">谁适合参加</text>
+    </g>
+
+    <!-- Constellation -->
+    <g transform="translate(180, 144)">
+      <line x1="60"  y1="20" x2="252" y2="20"  stroke="#6366f1" stroke-opacity="0.30"/>
+      <line x1="60"  y1="20" x2="156" y2="80"  stroke="#6366f1" stroke-opacity="0.30"/>
+      <line x1="252" y1="20" x2="156" y2="80"  stroke="#6366f1" stroke-opacity="0.30"/>
+      <line x1="156" y1="80" x2="348" y2="80"  stroke="#6366f1" stroke-opacity="0.30"/>
+
+      <g transform="translate(60, 20)">
+        <circle cx="0" cy="0" r="16" fill="url(#nodeBlue)"/>
+        <circle cx="0" cy="0" r="3" fill="#a5b4fc"/>
+        <text x="0" y="-26" text-anchor="middle" font-size="11" fill="#f5f5f5">电商运营</text>
+        <text x="0" y="34" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" letter-spacing="1.5" fill="rgba(165,180,255,0.55)">TEAM</text>
+      </g>
+      <g transform="translate(252, 20)">
+        <circle cx="0" cy="0" r="16" fill="url(#nodeBlue)"/>
+        <circle cx="0" cy="0" r="3" fill="#a5b4fc"/>
+        <text x="0" y="-26" text-anchor="middle" font-size="11" fill="#f5f5f5">金融服务</text>
+        <text x="0" y="34" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" letter-spacing="1.5" fill="rgba(165,180,255,0.55)">TEAM</text>
+      </g>
+      <g transform="translate(156, 80)">
+        <circle cx="0" cy="0" r="22" fill="url(#nodeBlue)"/>
+        <circle cx="0" cy="0" r="5" fill="#a5b4fc"/>
+        <text x="0" y="-32" text-anchor="middle" font-size="11" fill="#f5f5f5">经济研究</text>
+        <text x="0" y="42" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" letter-spacing="1.5" fill="rgba(165,180,255,0.55)">DESK</text>
+      </g>
+      <g transform="translate(348, 80)">
+        <circle cx="0" cy="0" r="16" fill="url(#nodeBlue)"/>
+        <circle cx="0" cy="0" r="3" fill="#a5b4fc"/>
+        <text x="0" y="-26" text-anchor="middle" font-size="11" fill="#f5f5f5">AI 与数字化</text>
+        <text x="0" y="34" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" letter-spacing="1.5" fill="rgba(165,180,255,0.55)">TEAM</text>
+      </g>
+    </g>
+
+    <!-- Priority invite (sized to fit: 504 wide) -->
+    <g transform="translate(180, 264)">
+      <rect x="0" y="0" width="504" height="56" fill="rgba(99,102,241,0.10)"/>
+      <rect x="0" y="0" width="2"   height="56" fill="#6366f1"/>
+      <text x="20" y="22" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="3" fill="#a5b4fc">PRIORITY INVITE</text>
+      <text x="20" y="42" font-size="13" fill="#f5f5f5">电商、金融与经济领域负责人  ·  企业 AI 领导与核心决策者</text>
+    </g>
+  </g>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 05/06 — RECRUITMENT + AGENDA  (y: 2740)               -->
+  <!-- ============================================================= -->
+  <g transform="translate(56, 2740)">
+    <line x1="0" y1="-20" x2="688" y2="-20" stroke="#a5b4fc" stroke-opacity="0.12"/>
+    <line x1="344" y1="-10" x2="344" y2="120" stroke="#a5b4fc" stroke-opacity="0.15"/>
+
+    <!-- Left: Recruitment -->
+    <text x="0" y="0" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="3" fill="rgba(165,180,255,0.55)">05  —  RECRUITMENT</text>
+    <text x="0" y="26" font-size="20" font-weight="500" fill="#f5f5f5">招募安排</text>
+    <g transform="translate(0, 56)" font-size="12" fill="rgba(165,180,255,0.65)">
+      <text x="0" y="0">智能体实战</text>
+      <text x="0" y="20">计划回顾</text>
+      <text x="0" y="40">活动时间及地点</text>
+      <text x="0" y="60">参与说明</text>
+    </g>
+
+    <!-- Right: Agenda -->
+    <g transform="translate(376, 0)">
+      <text x="0" y="0" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="3" fill="rgba(165,180,255,0.55)">06  —  AGENDA</text>
+      <text x="0" y="26" font-size="20" font-weight="500" fill="#f5f5f5">当日议程</text>
+
+      <g transform="translate(0, 56)" font-size="12">
+        <text x="0"   y="0"  font-family="'JetBrains Mono', monospace" font-size="14" fill="#a5b4fc">09:30</text>
+        <text x="60"  y="0"  fill="rgba(165,180,255,0.55)">上午</text>
+        <text x="100" y="0"  fill="#f5f5f5">智能体基础及实战流程</text>
+        <line x1="0" y1="10" x2="280" y2="10" stroke="#a5b4fc" stroke-opacity="0.08"/>
+
+        <text x="0"   y="30" font-family="'JetBrains Mono', monospace" font-size="14" fill="#a5b4fc">13:30</text>
+        <text x="60"  y="30" fill="rgba(165,180,255,0.55)">下午</text>
+        <text x="100" y="30" fill="#f5f5f5">经济研究与流程对谈</text>
+        <line x1="0" y1="40" x2="280" y2="40" stroke="#a5b4fc" stroke-opacity="0.08"/>
+
+        <text x="0"   y="60" font-family="'JetBrains Mono', monospace" font-size="14" fill="#a5b4fc">17:00</text>
+        <text x="60"  y="60" fill="rgba(165,180,255,0.55)">晚场</text>
+        <text x="100" y="60" fill="#f5f5f5">成果展示 · AMA · 资源对接</text>
+        <line x1="0" y1="70" x2="280" y2="70" stroke="#a5b4fc" stroke-opacity="0.08"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- BOTTOM FRAME -->
+  <line x1="56" y1="2900" x2="744" y2="2900" stroke="#a5b4fc" stroke-opacity="0.10"/>
+  <g transform="translate(0, 2920)" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="2.5" fill="rgba(99,102,241,0.55)">
+    <text x="56"  y="0">© COMETCLOUD  ·  AGENT OPERATIONS</text>
+    <text x="744" y="0" text-anchor="end">01 / 01</text>
+  </g>
+
+</svg>

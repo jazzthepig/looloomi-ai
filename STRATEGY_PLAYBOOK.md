@@ -243,8 +243,201 @@ verdicts as a single batched R/S-86 entry once the user signs off.
 
 ---
 
-## Cross-strategy production checklist (Strategy 1 only, for now)
+## Strategy 3 — Pod Aggregator (Millennium flavor) — 🟡 SPEC LOCKED, BACKTEST PENDING
 
+**Minimax-B, 2026-08-20** — A pod-style meta-strategy that aggregates
+already-validated sleeves (R46 / R62 / R76) as independent alpha "pods".
+
+### Why this is the right next move
+
+Millennium Management runs ~280 independent pods on a shared risk/financing
+platform. The architecture is:
+- Each pod has its own strategy, sizing, kill switch.
+- Aggregate is constructed by **OOS-Sharpe-weighted** combination.
+- Cross-pod correlation is bounded — pods share risk only when their
+  return streams are genuinely orthogonal (lesson #42, max |corr| < 0.30).
+- **Capital efficiency** comes from aggregation; **alpha** comes from each pod
+  independently; the platform does NOT manufacture new alpha, it just
+  allocates it well.
+
+Our frozen R77 fusion cell (w_R46=0.25 / w_R62=0.75 / w_R76=0.30) is already
+a 3-leg aggregation with the same flavor. Strategy 3 generalises:
+- Same 3 legs as pods.
+- Generalised to N pods (a future R-N candidate can be added as Pod N+1).
+- Cross-pod correlation gate formalised.
+- Vol-targeting moved up to the aggregator (not the pod).
+- Per-pod DD circuit breaker.
+
+### Frozen cell (PLACEHOLDER — pending backtest result)
+
+```
+w_Pod1_R46 = TBD   # placeholder; replace with shrinkage-Sharpe weight
+w_Pod2_R62 = TBD
+w_Pod3_R76 = TBD
+VOL_TARGET_ANN = 0.12
+POD_DD_CIRCUIT_BREAKER = -0.15
+REBAL_DAYS = 5
+COST_BPS = 5.0
+LEG_CORR_GATE = 0.30   # lesson #42
+SHRINKAGE_K = 50        # James-Stein shrinkage constant
+```
+
+**Frozen weights are filled in by `pod_aggregator.py` after Mac-side backtest
+runs** — see §FROZEN-WEIGHT-FILL in the spec.
+
+### Construction
+- **Pod 1**: R46 pillar_O 5d/5bps — score = pillar_O LEVEL (PIT-safe ffill,
+  1d lag), k=3 terciles, long top / short bottom.
+- **Pod 2**: R62 fragility-gated fade-the-crowd 21d/0bps — score = −funding_z
+  (long uncrowded / short crowded), gated by R62 fragility detector.
+- **Pod 3**: R76 funding residual 5d/0bps — score = funding − mean_a(funding),
+  k=3 terciles, long high-residual / short low.
+
+### Performance (target thresholds)
+| Metric | Target | Why |
+|---|---|---|
+| OOS Sharpe | ≥ 1.5 | better than any single pod (R77 OOS Sharpe ≈ 2.06) |
+| maxDD | ≤ −15% | vol-targeting should bound this |
+| W5 ann% | ≥ 0 | aggregator should not inherit W5 sign-flip |
+| max \|corr(pods)\| | ≤ 0.30 | lesson #42 gate |
+| gross_t | ≥ 2.0 | 3-check gauntlet |
+| OOS_t | ≥ 2.0 | 3-check gauntlet |
+
+### Falsification criteria (pre-registered)
+- Aggregator OOS Sharpe < best single pod → REFUTED (no diversification benefit).
+- max |corr(pods)| > 0.30 → REFUTED (lesson #42).
+- Aggregator maxDD > any pod's maxDD + 5pp → REFUTED (vol-targeting doesn't help).
+- W5 ann% flips sign vs single-pod best → REFUTED (per-window stability fails).
+
+### Files
+- **Spec**: `docs/STRATEGY_3_POD_AGGREGATOR.md`
+- **Backtest rig**: `src/research/validation/pod_aggregator.py` (Mac-side)
+- **Output**: `reports/POD_AGGREGATOR_2026-08-NN.md`
+
+### Pre-flight (before SHIP)
+- [ ] `tests/test_strategy_discipline.py` 13/13 green.
+- [ ] `tests/test_pod_aggregator_smoke.py` 3/3 — correlation gate, vol targeting, DD breaker.
+- [ ] Backtest result cleared `oos_survival=True`, ≥60d paper trade.
+- [ ] Regime-conditional reporting landed.
+- [ ] Strategy 1 monitoring loop not regressed.
+
+### What this is NOT
+- Not a new alpha source — capital-efficiency + risk discipline on top of validated sleeves.
+- Not a replacement for R77 — Strategy 3 generalises R77; if SHIP, R77 stays frozen.
+- Not a substitute for §OHLCV-EXTENSION — runs on 731-day panel; 11yr extension re-validates.
+
+---
+
+## Strategy 4 — Cross-Asset Quality-Momentum-LowVol Tilt (AQR flavor) — 🟡 SPEC LOCKED, BACKTEST PENDING
+
+**Minimax-B, 2026-08-20** — An AQR-style long-only factor tilt across
+crypto + TradFi. CLAUDE.md is explicit: *"默认 long-only: tilt, 不要 neutralize."*
+Strategy 4 implements this directly.
+
+### Why this is the right next move
+
+AQR's foundational contribution was demonstrating that **value / momentum /
+quality / low-risk** factors are robust across decades and asset classes.
+The architecture is:
+- **Multi-asset** (equities, bonds, commodities, FX) — not crypto-only.
+- **Long-only or modest L/S** with explicit beta exposure (the "tilt" in
+  "factor tilt" — capture beta first, then add factor premium).
+- **Vol-targeted** so the factor premium is comparable across sleeves.
+- **Long holding periods** (1+ months rebalance) — factor premia are slow.
+
+The graveyard (12-attempt) was about **cross-sectional market-neutral L/S
+shapes**. Strategy 4 explicitly avoids that by construction — it's a tilt,
+not a neutralisation. The W5 fragility that breaks single-leg market-neutral
+factor books does NOT apply to a long-only tilt, because we're not betting
+against the market; we're betting on relative quality + momentum.
+
+### Frozen cell (PLACEHOLDER — pending backtest result)
+
+```
+FACTOR_WEIGHTS = {
+    "quality": 1/3,    # cis_pillar_o[t-1], PIT-lag1d
+    "momentum": 1/3,   # close[t-1] / close[t-31] - 1
+    "lowrisk": 1/3,    # -(σ_30d - μ_σ) / σ_σ
+}
+REBAL_DAYS = 5
+COST_BPS = 5.0
+VOL_TARGET_ANN = 0.12
+H32_FLOOR = 0.5        # conviction-scaled sizing floor
+H32_CAP = 1.75         # conviction-scaled sizing cap
+UNIVERSE_SIZE = 58     # 41 crypto + 17 TradFi ETFs
+```
+
+**Frozen weights are filled in by `cross_asset_factor_tilt.py` after Mac-side
+backtest runs** — see §FROZEN-WEIGHT-FILL in the spec.
+
+### Construction
+- **Universe**: 41-asset crypto (R46 panel) + 17 TradFi ETFs (SPY/QQQ/IWM/
+  DIA/XLF/XLK/XLE/XLV/XLY/TLT/IEF/HYG/LQD/GLD/USO/SLV/UUP) = 58 assets.
+- **Factor scoring (per asset, per day, PIT-safe)**:
+  - `z_quality_t = (cis_pillar_o[t-1, a] − μ_quality[t-1]) / σ_quality[t-1]`
+  - `z_momentum_t = close[t-1, a] / close[t-31, a] − 1`
+  - `z_lowrisk_t = −(σ_30d[t-1, a] − μ_σ[t-1]) / σ_σ[t-1]`
+  - `score_t = (z_quality + z_momentum + z_lowrisk) / 3`
+- **Tilt weights (long-only, NO shorting)**:
+  - Rank by score, linear top-heavy weights, floor at 1/N.
+  - Worst-quartile assets get the floor weight, not negative weight.
+- **H3.2 conviction-scaled sizing** at each rebalance (floor 0.5, cap 1.75).
+- **5d rebalance**, **5bps round-trip cost**, **12% annualized vol target**.
+
+### Performance (target thresholds)
+| Metric | Target | Why |
+|---|---|---|
+| OOS Sharpe | ≥ 1.0 | factor tilt must beat simple long-only benchmark |
+| maxDD | ≤ −20% | factor-tilt-class max DD; tighter than −25% crypto-shop |
+| W5 ann% | ≥ 0 | long-only fixes the L/S W5 sign-flip |
+| Hit rate | ≥ 55% | direction-of-tilt correctness |
+| 5bps ann cost | ≤ 2%/yr | cost efficiency |
+
+### Falsification criteria (pre-registered)
+- OOS Sharpe < 1.0 → REFUTED (factor tilt doesn't beat simple long-only).
+- maxDD > −25% → REFUTED (factor-tilt-class threshold breached).
+- W5 ann% < 0 → REFUTED (long-only tilt doesn't fix fragility, the factor
+  itself is regime-specific).
+- 5bps cost round-trip kills the gross edge → REFUTED (cost structure hostile).
+
+### Files
+- **Spec**: `docs/STRATEGY_4_CROSS_ASSET_FACTOR_TILT.md`
+- **Backtest rig**: `src/research/validation/cross_asset_factor_tilt.py` (Mac-side)
+- **Output**: `reports/CROSS_ASSET_FACTOR_TILT_2026-08-NN.md`
+
+### Pre-flight (before SHIP)
+- [ ] `tests/test_strategy_discipline.py` 13/13 green.
+- [ ] `tests/test_factor_tilt_smoke.py` 3/3 — long-only constraint, PIT-safe z-score, vol targeting.
+- [ ] Backtest result cleared `oos_survival=True`, ≥60d paper trade.
+- [ ] Regime-conditional reporting landed (4 regimes × composite).
+- [ ] Factor decomposition Sharpe attribution (no single factor > 70%).
+
+### What this is NOT
+- Not a market-neutral L/S — explicitly long-only tilt per CLAUDE.md.
+- Not a new alpha source — quality/momentum/low-risk are well-known factors;
+  we are NOT discovering them, we are applying them within our CIS-quality framework.
+- Not a replacement for R77 — R77 is a market-neutral L/S sleeve;
+  Strategy 4 is a long-only tilt. They are complementary, not substitutes.
+- Not a substitute for §OHLCV-EXTENSION — runs on 731-day panel.
+
+### Why now (and not earlier)
+
+Three preconditions that JUST landed:
+1. CIS pillar_O is now OOS-validated at t=+3.33 (R46, 2026-07-20) — quality
+   factor has a defensible base.
+2. H3.2 sizing is shipped (2026-07-10) — vol-targeting layer is production-ready.
+3. The 731-day bear-dominated graveyard finding (2026-07-26, lesson #54) tells
+   us single-leg L/S is dead — but long-only tilt is structurally different
+   and unencumbered by the L/S sign-flip fragility.
+
+Combined, this is the first time in the project's history that Strategy 4's
+preconditions are ALL met simultaneously.
+
+---
+
+## Cross-strategy production checklist (Strategy 1 LOCKED; Strategies 3 + 4 SPEC LOCKED, backtest pending)
+
+### Strategy 1 — R77 fusion cell (LOCKED)
 - [x] R77 module (`r77_r76_as_fusion_contribution.py`)
 - [x] R63 module (R46/R62 leg builders)
 - [x] R76 module (R76 leg builder)
@@ -256,6 +449,26 @@ verdicts as a single batched R/S-86 entry once the user signs off.
 - [ ] Live Sharpe at paper-par after n_days ≥ 60
 - [ ] User sign-off on live deployment
 
+### Strategy 3 — Pod Aggregator (SPEC LOCKED, backtest pending)
+- [x] Spec written (`docs/STRATEGY_3_POD_AGGREGATOR.md`)
+- [x] Backtest rig written (`src/research/validation/pod_aggregator.py`)
+- [ ] Mac-side backtest run + report (`reports/POD_AGGREGATOR_2026-08-NN.md`)
+- [ ] Frozen cell filled (weights w_Pod1/w_Pod2/w_Pod3)
+- [ ] 3-check gauntlet + per-window W1-W6 cleared
+- [ ] `tests/test_pod_aggregator_smoke.py` 3/3 green
+- [ ] ≥60d paper trade (post-SHIP)
+- [ ] User sign-off on live deployment
+
+### Strategy 4 — Cross-Asset Factor Tilt (SPEC LOCKED, backtest pending)
+- [x] Spec written (`docs/STRATEGY_4_CROSS_ASSET_FACTOR_TILT.md`)
+- [x] Backtest rig written (`src/research/validation/cross_asset_factor_tilt.py`)
+- [ ] Mac-side backtest run + report (`reports/CROSS_ASSET_FACTOR_TILT_2026-08-NN.md`)
+- [ ] 3-check gauntlet cleared + per-window W5 ≥ 0
+- [ ] `tests/test_factor_tilt_smoke.py` 3/3 green
+- [ ] Factor decomposition Sharpe attribution (no single factor > 70%)
+- [ ] ≥60d paper trade (post-SHIP)
+- [ ] User sign-off on live deployment
+
 ---
 
 ## References
@@ -264,6 +477,10 @@ verdicts as a single batched R/S-86 entry once the user signs off.
 - **R77 verdict**: `reports/r77_r76_as_fusion_contribution/2026-07-23/verdict.json`
 - **R62 fragility detector**: `src/research/validation/r62_fragility_gated_funding.py`
 - **R76 funding residual**: `src/research/validation/r76_funding_residual_ls.py`
+- **Strategy 3 spec**: `docs/STRATEGY_3_POD_AGGREGATOR.md`
+- **Strategy 3 backtest rig**: `src/research/validation/pod_aggregator.py`
+- **Strategy 4 spec**: `docs/STRATEGY_4_CROSS_ASSET_FACTOR_TILT.md`
+- **Strategy 4 backtest rig**: `src/research/validation/cross_asset_factor_tilt.py`
 - **§DATA-ALIGN pipeline**: `src/research/data_align/`
 - **§TRADER_TOM_DOCTRINE**: `docs/TRADER_TOM_DOCTRINE.md`
 - **Refutation ledger**: `REFUTATION_LEDGER.md`
