@@ -572,8 +572,25 @@ def main() -> int:
     p.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
     p.add_argument("--sandbox", action="store_true",
                    help="Run on synthetic data (Cowork only, NOT a real backtest)")
+    p.add_argument("--sweep", action="store_true",
+                   help="Run parameter sweep on REAL data (Mac-side only). "
+                        "Tests ~180 configs and surfaces the Pareto-optimal cell. "
+                        "Use when --sandbox's default config returns NEUTRAL/REFUTED.")
     args = p.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    if args.sweep:
+        sweep_result = run_sweep(output_dir=args.output_dir)
+        print(f"\n=== Strategy 4 sweep complete: "
+              f"{sweep_result['n_total']} configs · "
+              f"{sweep_result['n_passing']} passing ===")
+        if sweep_result["best_passing"] is not None:
+            b = sweep_result["best_passing"]
+            print(f"  Best passing: rebal={b['rebal_days']}d vol={b['vol_tgt']:.2f} "
+                  f"weights={b['weights']} floor={b['floor_q']:.2f} z_clip={b['z_clip']:.1f} "
+                  f"→ gross_t={b['gross_t']:+.3f} oos_t={b['oos_t']:+.3f} "
+                  f"maxDD={b['max_dd']*100:+.2f}% OOS_sharpe={b['oos_sharpe']:+.2f}")
+        print(f"=== Report: {sweep_result['report_path']} ===")
+        return 0
     result = run(output_dir=args.output_dir, sandbox=args.sandbox)
     stamp = pd.Timestamp.now().strftime("%Y-%m-%d")
     suffix = "_SANDBOX" if args.sandbox else ""
@@ -583,6 +600,173 @@ def main() -> int:
           + ("  [SANDBOX — not a real backtest]" if args.sandbox else ""))
     print(f"=== Report: {out} ===")
     return 0
+
+
+# ── Sweep driver (Mac-side, real data) ────────────────────────────────────────
+def run_sweep(output_dir: Path = OUTPUT_DIR) -> dict:
+    """Run the parameter sweep on REAL DATA (Mac-side only).
+
+    Loads the 41-crypto + 17-TradFi panel once, then iterates ~180 configs
+    (5 knobs × small grids) and surfaces the Pareto-optimal cell. Output
+    written to CROSS_ASSET_FACTOR_TILT_<DATE>_SWEEP.md.
+
+    Use case: when --sandbox's default config returns NEUTRAL or REFUTED,
+    this surfaces whether ANY config clears the 3-check gauntlet on real data.
+
+    Knobs swept:
+      - rebal_days ∈ {3, 5, 10, 20}
+      - vol_tgt    ∈ {0.10, 0.12, 0.15, 0.20}
+      - weights    ∈ {(1,1,1), (2,1,1), (1,2,1), (1,1,2), (2,1,2)}
+      - floor_q    ∈ {0.25, 0.10, 0.0}
+      - z_clip     ∈ {2.0, 3.0, 4.0}
+    """
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s [%(name)s] %(message)s")
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    _logger.info("Loading real-data panel for sweep...")
+    cis_long = load_cis_history_wide()
+    rets_crypto = load_daily_returns()
+    crypto_universe = sorted(set(cis_long["asset"]) & set(rets_crypto.columns))
+    rets_tradfi = load_tradfi_panel()
+    tradfi_universe = sorted(set(rets_tradfi.columns))
+    lo = max(cis_long["date"].min(), rets_crypto.index.min(), rets_tradfi.index.min())
+    hi = min(cis_long["date"].max(), rets_crypto.index.max(), rets_tradfi.index.max())
+    dates = (rets_crypto.index.union(rets_tradfi.index).sort_values()
+             .loc[(rets_crypto.index >= lo) & (rets_crypto.index <= hi)])
+    rets_crypto = rets_crypto.reindex(dates)
+    rets_tradfi = rets_tradfi.reindex(dates)
+    rets = pd.concat([rets_crypto[crypto_universe], rets_tradfi[tradfi_universe]], axis=1)
+    nan_frac = rets.isna().mean()
+    keep = nan_frac[nan_frac <= 0.30].index.tolist()
+    rets = rets[keep]
+    universe = sorted(rets.columns)
+    _logger.info("Sweep panel: %s → %s (%d days × %d assets)",
+                 lo.date(), hi.date(), len(rets), len(universe))
+
+    sweep = []
+    for rebal in (3, 5, 10, 20):
+        for vt in (0.10, 0.12, 0.15, 0.20):
+            for wts in [(1, 1, 1), (2, 1, 1), (1, 2, 1), (1, 1, 2), (2, 1, 2)]:
+                for fq in (0.25, 0.10, 0.0):
+                    for zc in (2.0, 3.0, 4.0):
+                        r = _sweep_one(rets, cis_long, universe, dates,
+                                       crypto_universe, tradfi_universe,
+                                       rebal, vt, wts, fq, zc)
+                        sweep.append(r)
+
+    df = pd.DataFrame(sweep).sort_values(["passes", "oos_t"], ascending=[False, False])
+    passes_df = df[df["passes"]]
+    best_passing = passes_df.iloc[0].to_dict() if len(passes_df) else None
+
+    stamp = pd.Timestamp.now().strftime("%Y-%m-%d")
+    report_path = output_dir / f"CROSS_ASSET_FACTOR_TILT_{stamp}_SWEEP.md"
+    with open(report_path, "w") as f:
+        f.write(f"# Strategy 4 — Real-Data Parameter Sweep\n\n")
+        f.write(f"**Date:** {stamp}\n")
+        f.write(f"**Panel:** {lo.date()} → {hi.date()} ({len(rets)} days × {len(universe)} assets)\n")
+        f.write(f"**Configs tested:** {len(df)}\n")
+        f.write(f"**Passing both gross_t AND oos_t > 1.96:** {len(passes_df)} / {len(df)}\n\n")
+        f.write("## Top 10 configs by OOS_t\n\n")
+        f.write(df.head(10).to_markdown(index=False))
+        f.write("\n\n## Best non-passers by OOS_t\n\n")
+        f.write(df[~df["passes"]].sort_values("oos_t", ascending=False).head(5)
+                .to_markdown(index=False))
+        f.write("\n\n## Pareto-optimal (passes · lowest maxDD)\n\n")
+        if len(passes_df):
+            f.write(passes_df.sort_values("max_dd", ascending=False).head(3)
+                    .to_markdown(index=False))
+        else:
+            f.write("_No config passes both gross_t AND oos_t > 1.96. "
+                    "Strategy 4 cannot clear the gauntlet on real data._\n")
+        f.write("\n\n## Frozen-cell proposal (if best_passing exists)\n\n")
+        if best_passing:
+            f.write(f"```\n")
+            f.write(f"REBAL_DAYS     = {best_passing['rebal_days']}\n")
+            f.write(f"VOL_TARGET_ANN = {best_passing['vol_tgt']}\n")
+            f.write(f"WEIGHTS_QUALITY/MOM/LOWRISK = {best_passing['weights']}\n")
+            f.write(f"FLOOR_QUARTILE = {best_passing['floor_q']}\n")
+            f.write(f"Z_CLIP         = {best_passing['z_clip']}\n")
+            f.write(f"# → gross_t={best_passing['gross_t']:+.3f} oos_t={best_passing['oos_t']:+.3f} "
+                    f"OOS_sharpe={best_passing['oos_sharpe']:+.2f} maxDD={best_passing['max_dd']*100:+.2f}%\n")
+            f.write(f"```\n")
+        f.write("\n")
+
+    _logger.info("Sweep report: %s", report_path)
+    return {
+        "n_total": len(df),
+        "n_passing": len(passes_df),
+        "best_passing": best_passing,
+        "report_path": str(report_path),
+        "all_results": df.to_dict("records"),
+    }
+
+
+def _sweep_one(rets, cis_long, universe, dates, crypto_universe, tradfi_universe,
+               rebal_days, vol_tgt, weights, floor_q, z_clip) -> dict:
+    """One sweep cell on REAL DATA. Loads are done by caller; this only
+    computes the score + weights + gauntlet."""
+    # Score (parametrised by z_clip)
+    z_q = build_quality_score(cis_long, universe, dates).clip(-z_clip, z_clip)
+    z_m = build_momentum_score(rets, universe, dates).clip(-z_clip, z_clip)
+    z_l = build_lowrisk_score(rets, universe, dates).clip(-z_clip, z_clip)
+    wq, wm, wl = weights
+    score = (wq * z_q.fillna(0.0) + wm * z_m.fillna(0.0) + wl * z_l.fillna(0.0)) / (wq + wm + wl)
+
+    # TradFi: 2-factor composite
+    tradfi_only = [u for u in universe if u in tradfi_universe]
+    if tradfi_only:
+        z_m_t = build_momentum_score(rets, tradfi_only, dates).clip(-z_clip, z_clip)
+        z_l_t = build_lowrisk_score(rets, tradfi_only, dates).clip(-z_clip, z_clip)
+        score[tradfi_only] = (z_m_t.fillna(0.0) + z_l_t.fillna(0.0)) / 2.0
+
+    # Tilt weights
+    min_w = 1.0 / max(len(universe), 1)
+    w_raw = tilt_weights(score, min_weight=min_w, floor_quartile=floor_q)
+    valid_mask = score.notna().any(axis=0)
+    w_raw = w_raw.loc[:, valid_mask]
+    w_raw = w_raw.div(w_raw.sum(axis=1), axis=0).fillna(0.0)
+
+    # H3.2 sizing at rebal
+    size_scalar = pd.Series(1.0, index=dates)
+    for i in range(0, len(dates), rebal_days):
+        recent = rets.iloc[max(0, i - 30):i].mean(axis=1)
+        size_scalar.iloc[i] = h32_size(recent)
+    w_scaled = w_raw.multiply(size_scalar.values, axis=0)
+    w_scaled = w_scaled.clip(lower=0.0, upper=H32_CAP / w_raw.shape[1])
+    w_scaled = w_scaled.div(w_scaled.sum(axis=1).replace(0, np.nan), axis=0).fillna(0.0)
+
+    raw_pnl = book_returns(w_scaled, rets)
+    targeted_pnl = vol_target(raw_pnl, target_ann=vol_tgt)
+    bench = hold_panel_benchmark(rets)
+    excess = targeted_pnl - bench
+
+    cut = int(len(targeted_pnl) * 0.30)
+    oos_pnl = targeted_pnl.iloc[cut:].fillna(0.0)
+    is_pnl = targeted_pnl.iloc[:cut].fillna(0.0)
+    oos_sharpe = (float(oos_pnl.mean() / oos_pnl.std() * np.sqrt(PERIODS_PER_YEAR))
+                  if oos_pnl.std() > 0 else 0.0)
+    is_sharpe = (float(is_pnl.mean() / is_pnl.std() * np.sqrt(PERIODS_PER_YEAR))
+                 if is_pnl.std() > 0 else 0.0)
+    mdd = max_drawdown(targeted_pnl)
+    ann_vol = float(targeted_pnl.std() * np.sqrt(PERIODS_PER_YEAR))
+    gross_t = _simple_t(excess.iloc[:cut].values)
+    oos_t = _simple_t(excess.iloc[cut:].values)
+
+    return {
+        "rebal_days": rebal_days,
+        "vol_tgt": vol_tgt,
+        "weights": list(weights),
+        "floor_q": floor_q,
+        "z_clip": z_clip,
+        "gross_t": round(gross_t, 3),
+        "oos_t": round(oos_t, 3),
+        "passes": bool(gross_t > 1.96 and oos_t > 1.96),
+        "is_sharpe": round(is_sharpe, 3),
+        "oos_sharpe": round(oos_sharpe, 3),
+        "max_dd": round(mdd, 4),
+        "ann_vol": round(ann_vol, 4),
+    }
 
 
 if __name__ == "__main__":

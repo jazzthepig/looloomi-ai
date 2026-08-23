@@ -869,6 +869,64 @@ async def _start_fusion_paper_regime_track_loop():
         print("[FUSION-REGIME] ✅ daily ⓠ regime override paper-track loop scheduled")
 
 
+# ── Strategy 3 — Pod Aggregator paper book (Seth, 2026-08-23, M-79 frozen cell) ──
+# Aggregates the three frozen cross-sectional legs (R46 pillar_O + R62 funding-z + R76
+# funding residual) inside a single book with three safety properties the sandbox
+# verdict cleared — cross-pod correlation gate (max |corr| < 0.30), vol targeting
+# (12% ann), per-pod DD circuit breaker (-15%). Pure PAPER — no live orders.
+# Daily mark + rebalance; idempotent per calendar day in pod_aggregator_paper.py.
+# Spec: docs/STRATEGY_3_POD_AGGREGATOR.md · frozen cell: w_R46=0.34/w_R62=0.33/w_R76=0.33
+async def _pod_aggregator_loop():
+    await _asyncio.sleep(720)   # 12 min warmup — same offset as FUSION-REGIME
+    while True:
+        try:
+            from src.data.signals.pod_aggregator_paper import mark_and_rebalance
+            res = await mark_and_rebalance(dry_run=False)
+            print(f"[POD-AGG] mark — status={res.get('status')} nav={res.get('nav')} "
+                  f"weights={res.get('weights')} max_corr={res.get('max_corr_retained')} "
+                  f"survivors={res.get('survivors')} breakers={res.get('breakers_tripped')} "
+                  f"n_days={res.get('n_days_marked')}")
+        except Exception as _e:
+            print(f"[POD-AGG] ⚠️  mark failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_pod_aggregator_loop():
+    if os.environ.get("DISABLE_POD_AGGREGATOR", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_pod_aggregator_loop())
+        print("[POD-AGG] ✅ daily pod-aggregator paper-book loop scheduled")
+
+
+# ── Strategy 4 — Cross-Asset Factor Tilt paper book (Seth, 2026-08-23, M-80 frozen cell) ──
+# Long-only tilt over the 58-asset universe (41 crypto + 17 TradFi ETFs) ranked by composite
+# z_quality + z_momentum + z_lowrisk, sized by H3.2 conviction [0.5, 1.75], vol-targeted to
+# 12% ann. Default long-only posture (CLAUDE.md canonical); zero shorts. Pure PAPER.
+# Daily mark + rebalance; idempotent per calendar day in factor_tilt_paper.py.
+# Spec: docs/STRATEGY_4_FACTOR_TILT.md · sandbox verdict NEUTRAL (gross_t=+3.86 ✓, OOS_t=+1.11 ✗)
+async def _factor_tilt_loop():
+    await _asyncio.sleep(780)   # 13 min warmup — one minute after POD-AGG
+    while True:
+        try:
+            from src.data.signals.factor_tilt_paper import mark_and_rebalance
+            res = await mark_and_rebalance(dry_run=False)
+            print(f"[FACTOR-TILT] mark — status={res.get('status')} nav={res.get('nav')} "
+                  f"today_ret={res.get('today_return')} "
+                  f"factor_sharpe={res.get('factor_sharpe_attribution')} "
+                  f"max_share={res.get('max_single_factor_sharpe_share')} "
+                  f"n_days={res.get('n_days_marked')}")
+        except Exception as _e:
+            print(f"[FACTOR-TILT] ⚠️  mark failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_factor_tilt_loop():
+    if os.environ.get("DISABLE_FACTOR_TILT", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_factor_tilt_loop())
+        print("[FACTOR-TILT] ✅ daily factor-tilt paper-book loop scheduled")
+
+
 # ── Signal factory recalibration — Stage 4: the loop's learning turn (weekly) ──
 # Re-runs the factory, rewrites the nucleus blend to Redis (combined book self-recalibrates as
 # signals decay), logs the batch to experiment_runs. This is what makes it a machine, not a script.
@@ -1916,6 +1974,48 @@ async def fusion_paper(response: Response = None):
         return await get_curve()
     except Exception as e:
         return {"error": "fusion_paper_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/signals/pod-aggregator")
+async def pod_aggregator(response: Response = None):
+    """Strategy 3 — Live PAPER track record of the pod aggregator book (frozen cell
+    w_R46=0.34/w_R62=0.33/w_R76=0.33). Three safety properties the sandbox verdict
+    cleared: cross-pod correlation gate (max |corr| < 0.30), 12% ann vol target,
+    per-pod -15% DD circuit breaker (monotonic disable). Returns NAV curve +
+    surviving pods + dropped pods + tripped breakers + max retained correlation.
+    `validated` flag flips true after ≥60 forward days. See
+    src/data/signals/pod_aggregator_paper.py."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.data.signals.pod_aggregator_paper import get_curve
+    try:
+        return await get_curve()
+    except Exception as e:
+        return {"error": "pod_aggregator_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/signals/factor-tilt")
+async def factor_tilt(response: Response = None):
+    """Strategy 4 — Live PAPER track record of the cross-asset factor tilt book.
+    Long-only tilt over the 58-asset universe (41 crypto + 17 TradFi ETFs) ranked by
+    composite z_quality + z_momentum + z_lowrisk, sized by H3.2 conviction [0.5, 1.75],
+    vol-targeted to 12% ann. Zero shorts (CLAUDE.md canonical default long-only).
+    Returns NAV curve + per-factor Sharpe attribution + max single-factor share
+    + today return + today excess vs hold-the-bench. `validated` flag flips true
+    after ≥60 forward days. See src/data/signals/factor_tilt_paper.py."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.data.signals.factor_tilt_paper import get_curve
+    try:
+        return await get_curve()
+    except Exception as e:
+        return {"error": "factor_tilt_unavailable", "detail": str(e)[:120]}
 
 
 @app.get("/api/v1/signals/fusion-paper-tracking")
