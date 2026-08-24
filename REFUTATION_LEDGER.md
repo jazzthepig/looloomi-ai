@@ -11313,3 +11313,125 @@ CIS 周期的**副作用**,包在一个宽 `except Exception` 里降级成一行
 **运维缺陷**,读不到是**第三件事**。三者的 owner 和修法都不同,合并成"没有数据"就把修法丢了。
 并且**新鲜的行 + 关键列全 NULL 判为 stale 而不是 flowing** —— 那正是 S-207 那 9 天
 (score/grade 满覆盖、五根 pillar 全 NULL)的同一个形状,低一层。
+
+---
+
+## S-217 — "继续模拟两个赚钱的策略的运行 不用60day真实记录" 意味着 60d gate 被废,不是被绕过
+
+Jazz 2026-08-24 显式指令:模拟两个策略的运行,不需要 60 天真实记录。这不是「R76 没跑过
+60d 我把它写成跑过」—— 是 **§STRATEGY-DISCIPLINE gate #3 ("≥60d paper trade") 被替换成
+"≥60d simulated marks on real historical data, frozen cell, PIT-safe"**。两条要求的差别:
+
+| 维度 | 60d live forward-clock | 60d SIMULATED marks |
+|---|---|---|
+| 数据 | Binance fapi 当天 push | Binance fapi 1h parquet 历史切片 |
+| 时间 | wall-clock 60d | 60 个 calendar day 的 daily marks |
+| 引擎 | `mark_and_rebalance()` 真实调用 | `_cadence_ls_sim()` 用同一份 score + weights |
+| PIT safety | 真实 | 真实(同款 score_lag = score.shift(1)) |
+| 失败模式 | 缺数据 skip 当天 | reindex 失败 → 0 mark(诚实记 0) |
+| 可重跑 | 否 | 是(`python3 -m src.research.validation.simulate_paper_trade`) |
+| live supersession | — | live marks 累积到 ≥60d 自动取代 SIM |
+
+**SIM 不是为了好看,是为了把"两个赚钱策略的运行"从 60d 的物理时钟下解耦**:backtest 通过
+(3-check)≠ 已经赚钱,这个 gap 现在用 60d SIM 而不是 60d live 来填,后者在 Cowork sandbox
+里**物理上不可达**(MAC-side push + Railway deploy + 真实 fapi fetch)。两个策略的活样本:
+
+- R77 fusion @ SIM 2026-05-20 → 2026-07-19 (61d): ann% +5.24%, Sharpe +0.42, maxDD 4.30%
+- R76 standalone @ SIM 2026-05-20 → 2026-07-19 (61d): ann% +5.93%, Sharpe +0.36, maxDD 12.27%
+- sanity check (re-run R76 on 770d backtest window): OOS_t = +2.27 vs reported +2.47(±8%,
+  NW-lag 窗化差异)
+
+**诚实标注**:`summary.json` 的 `validated_simulated=true` 字段明确标记这是 SIM,不是 live;
+honest_framing 字段写明「一旦 live marks 在 Railway 上累积到 ≥60d,这些 SIM 自动作废」。
+PLAYBOOK §STRATEGY-DISCIPLINE 4-gate 表里 gate #3 改写成「60d SIM ✅ + live forward-clock
+accumulating」—— 不写「60d live ✅」,因为那是下一段(下一次 Mac-side push + 真实
+fapi 接入)的事。
+
+lesson #67: **「≥60d paper trade」 是一个 wall-clock gate,任何对此 gate 的「满足」都必须
+诚实标记 satisfied-by-simulation vs satisfied-by-live**,两者在 §STRATEGY-DISCIPLINE 里
+权重不同:SIM 证明「同样的 frozen cell 在历史数据上能跑 60d」,live 证明「在真实 push /
+真实 fapi / 真实 Railway deploy 下能跑 60d」。**满足 SIM 不等于满足 live**,把 SIM 写成
+"shipped / validated" 是把 §TRADER_TOM §5b 的「honesty over optimism」吃掉。
+
+---
+
+## S-223 — 试错价值等于它被强制执行的那一部分:今天是 75%
+
+Jazz:「趁我们还在新的认知记忆周期里面做好规划……**这几个月的试错价值不要丢失了。**」
+
+MEMORY.md 已经给了判据 —— **if a test already enforces it, the test is the memory**。
+于是这件事可以被量,而不是被承诺。量完:
+
+```
+台账里写下的教训 (S-* 标题)        102 条
+其中有测试 / preflight 关卡强制的    76 条   ← 真正不会丢
+只以散文形式存在的                   26 条   ← 会被重新学一遍
+                                  ─────────
+                            强制执行率  75%
+```
+
+**其中 S-214 / S-215 / S-216 是我今天写的。今天写下的教训,今天就已经在"会丢"的那一栏。**
+
+这否掉了一个很自然的解释:「记录不够详细」。台账 11,000 行、577k 字符,详细得不能再详细。
+真正的机制是 —— **散文不会在缺陷复发时失败。** 一段解释 bug 的注释,和一个在 bug 复发时
+变红的测试,在文档质量上无法区分,在防御能力上相差全部。本 session 更极端的版本:
+我写的守卫**六次**匹配到了我自己解释性注释里的字符串,于是"注释写得越好,测试被废得越彻底"。
+
+也否掉了「缺纪律」:「要记得补测试」这条约定我们一直有,它今天产出了三条未强制的教训。
+**缺的是让"写下"和"强制"不能脱节的机制。**
+
+`scripts/check_lesson_enforcement.sh` + preflight,与 `check_ledger_citations.sh` 同形:
+**一个只能朝好的方向移动的数字,不要求任何人记得任何事。** 涨上去就锁基线(棘轮),
+掉下来就 fail 并列出掉的是哪几条。
+
+**它检查的性质很窄,这正是它能成立的原因:某条教训的编号出现在某个测试或 preflight 关卡里。**
+它判断不了那个测试是否守住了真意 —— 那要靠 mutation 测试。但它能判断**有没有人试过**,
+而 26 条的答案是没有。窄而真的守卫,胜过宽而空的意图 —— 这条本身就是 S-188。
+
+规划全文:`docs/PLAN_2026-08-24_ENFORCEMENT_AND_LOOP.md`,含 26 条的三分类与 Minimax 任务包。
+其中给 Minimax-C 的 C1 是同一命题在研究侧的镜像:**`experiment_runs` 60 条里 dsr 只有 2 条**,
+没有折价就分不清 survivor 和搜出来的运气,**这几个月的挖掘无法结算。**
+
+---
+
+## S-210 — 【已占号,未完成】重启存活:断电/断网/重部署后 loop 必须自愈
+
+Jazz 2026-08-24:「各种系统功能得通过结构化工程来保证,然后也在每次电脑和网络重启后保证不发生问题。」
+
+四条:**幂等 · 状态在 Postgres 不在进程内存 · 启动时 reconcile 回补停机空洞 · 心跳 + `days_since_mark > 1` 告警**。
+
+**先审计再设计** —— 还没查 Mac 侧 scheduler 断电后是否自启、Railway 各 loop 重部署后从哪一天接上。
+在有那份审计之前给方案,就是本 session 反复犯的"不核实就断言"。规划见
+`docs/PLAN_2026-08-24_ENFORCEMENT_AND_LOOP.md` §T3。
+
+---
+
+## S-220 — 【已占号,未完成】`asset_embeddings` 没有调度写者
+
+停 31 天。`rebuild_asset_vectors` 自己的 docstring(S-144)写着 embeddings 是 CIS 周期的**副作用**,
+包在宽 `except` 里降级成一行日志;`/internal/asset-vectors/rebuild` 存在但**只能手动触发**,
+`main.py` 里没有任何调度。所以 31 天不是故障,是**预期行为** —— 没有人在写。
+
+（原编号与 §SIMULATION-60D 的 S-217 撞车,按 MEMORY「先到先得,后写者让号」让至 S-220。）
+
+---
+
+## S-221 — 【已占号,未完成】`strategy_records` 0 行:RLS 开着,0 条 policy
+
+`contracts/research_intake.py:7` 与 `schema_manifest.py:19` 都记着:该表的 SQL **从未 apply**,
+RLS 开启且 0 policies ⇒ 除 `service_role` 外全部拒绝。策略向量库 —— 墓地的几何形态 ——
+**一行都没有**,而决策链 `market_state_vectors → similar_market_states() → strategy_response`
+的一端就在这里。一条 migration。
+
+---
+
+## S-222 — 【已占号,未完成】风格平衡度量不存在
+
+Jazz 的 lane 定义里点名「风格平衡」。实测:`grep -rl "cross_book\|book_correlation\|style_balance"`
+**零个文件**。`factor_tilt` 有单账本的 `max_single_factor_sharpe_share`,组合层什么都没有。
+
+MEMORY.md:加密内 ρ̄ **0.441** vs 跨 TradFi **0.104**,且「**分散只能来自别的资产类**」。
+**七本账若都是加密横截面,它们是一个赌注,不是七个** —— 而没有任何东西在测这件事。
+
+**它是度量,不是选股**:跨账本 NAV 相关矩阵 + 风格暴露分解 → 接进 `loop_health`。
+写在这里是为了防止它再一次被我做成因子讨论。
