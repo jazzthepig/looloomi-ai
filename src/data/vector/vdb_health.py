@@ -125,6 +125,24 @@ def classify(store: str, rows: int | None, age_days: int | None,
     return StoreHealth(store, status, rows, age_days, "; ".join(bits))
 
 
+#: ⚠️ THE PROBE MUST QUERY THE WAY THE CONSUMER QUERIES (S-225, 2026-08-24).
+#:
+#: `asset_embeddings` held 72 rows and this module cheerfully reported "72 rows,
+#: 31d old". The read path in `pgvector_store` filters
+#: `schema_version=eq.3 & superseded_reason=is.null`, and every stored row is
+#: `schema_version = 2` — written before the v3 bump on 2026-08-09 and never
+#: rewritten. **Readable rows: zero.** The vector layer has been fully dark for
+#: two weeks while the freshness probe reported a merely stale table.
+#:
+#: A count over a SUPERSET of what consumers can see is not a health metric; it
+#: is the same false comfort as a NAV that is flat because nothing was priceable.
+#: So each store carries the consumer's own filter, and the probe reports
+#: `readable_rows` next to `rows` — when they differ, that gap IS the finding.
+READ_FILTERS: dict[str, str] = {
+    "asset_embeddings": "&schema_version=eq.{schema_version}&superseded_reason=is.null",
+}
+
+
 async def vdb_health() -> dict[str, Any]:
     """Read every VDB store's freshness. Never raises."""
     from src.api.store import _SB_URL, _SB_KEY, _supabase_request_with_retry
@@ -169,7 +187,33 @@ async def vdb_health() -> dict[str, Any]:
                 age = None
         pop = (sum(1 for x in rows if x.get(comp_col) is not None)
                if comp_col else None)
-        out.append(classify(table, n, age, pop).as_dict())
+        h = classify(table, n, age, pop).as_dict()
+
+        # How many of those rows can a CONSUMER actually see? See READ_FILTERS.
+        filt = READ_FILTERS.get(table)
+        if filt and n:
+            try:
+                from src.data.vector.embedder import SCHEMA_VERSION
+                rurl = (f"{_SB_URL}/rest/v1/{table}?select={ts_col}"
+                        + filt.format(schema_version=SCHEMA_VERSION) + "&limit=2000")
+                rr = await _supabase_request_with_retry(
+                    "GET", rurl, headers={"apikey": _SB_KEY,
+                                          "Authorization": f"Bearer {_SB_KEY}"})
+                readable = len(rr.json()) if (rr is not None and rr.status_code == 200
+                                              and isinstance(rr.json(), list)) else None
+            except Exception:                                     # noqa: BLE001
+                readable = None
+            h["readable_rows"] = readable
+            if readable == 0:
+                # Rows present, none visible to the consumer. Strictly worse than
+                # stale: stale data still answers a query.
+                h["status"] = "unreadable"
+                h["detail"] = (f"{n} rows stored but 0 pass the consumer's filter "
+                               f"({filt.strip('&')}) — the layer is DARK, not merely "
+                               f"stale; a count over a superset is not a health metric")
+            elif readable is not None and readable < n:
+                h["detail"] += f"; readable {readable}/{n}"
+        out.append(h)
 
     # ⚠️ RLS RETURNS 200 AND AN EMPTY LIST, NOT AN ERROR (S-220 follow-up).
     # All four tables have RLS on with ZERO policies, so a non-service key reads
@@ -191,7 +235,7 @@ async def vdb_health() -> dict[str, Any]:
 
     worst = "flowing"
     for s in out:
-        if s["status"] in ("empty", "unknown"):
+        if s["status"] in ("empty", "unknown", "unreadable"):
             worst = "broken"
             break
         if s["status"] == "stale":

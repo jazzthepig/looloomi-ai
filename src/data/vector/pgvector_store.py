@@ -34,6 +34,12 @@ import urllib.request
 _logger = logging.getLogger(__name__)
 
 _TABLE = "asset_embeddings"
+
+
+def _utc_now_iso() -> str:
+    """Write time, stated explicitly. See the note at the `computed_at` row key."""
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat()
 _RPC = "match_asset_embeddings"
 _CORE_DIMS = 18   # the finite v1 core that goes into the pgvector column
 
@@ -139,6 +145,18 @@ def upsert_embeddings(embeddings: dict[str, list], *, asset_meta: dict | None = 
             "dims": len(vec),
             "vec": _vec_literal(vec),
             "vec_full": _full_json(vec),
+            # ⚠️ EXPLICIT, NOT DEFAULTED (S-225, 2026-08-24). `computed_at` has
+            # DEFAULT now(), and a DEFAULT fires on INSERT ONLY. This is an
+            # `on_conflict=symbol` merge, so every write to a symbol we already
+            # hold is an UPDATE — and the column never moved. All 72 rows still
+            # read 2026-07-24.
+            #
+            # The consequence is the nasty part: a perfectly working daily
+            # rebuild would have left the freshness signal frozen at 31 days
+            # forever, so S-220's loop could run green every night and
+            # /internal/vdb-health would keep reporting it dead. A staleness
+            # metric on a column the writer does not write measures nothing.
+            "computed_at": _utc_now_iso(),
         })
     if not rows:
         return False
