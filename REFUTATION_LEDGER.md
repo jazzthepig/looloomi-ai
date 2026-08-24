@@ -11647,3 +11647,45 @@ version 3 下重演,而我们本来又会用同一个聚合去看它。** `vdb_h
 本地 `rev-parse --short` 给 7 位,线上 `git_sha_short` 给 8 位,字符串直比 → 假红。
 **一个把相同判成不同的比较,会让人去查一个不存在的部署问题** —— 和那三次来回同一种浪费。
 比较改在共同前缀上,并写进守卫。
+
+---
+
+## S-228 — 决定整个进程能不能写的那个开关,在生产里看不见
+
+Jazz 看到 boot banner:`role: replica · writes shared record: no · SUPABASE_KEY EMPTY`,
+问「railway 应该通的,这是 local 直连的问题吧?」
+
+**大概率对,而且本地那份确实是设计如此** —— preflight 按 S-163 主动剥掉全部生产凭证,
+`.env` 的 `SUPABASE_KEY` 为空,`APP_ROLE` 未设 ⇒ fail-closed 成 `replica`。本地实测确认
+`ROLE = replica`。线上读也正常(`vdb-health` 读到 72/582/60 真实行)。
+
+**但这个问题挖出了一件我无法从外面判断的事,而"无法判断"本身就是缺陷。**
+
+`APP_ROLE` 未设 ⇒ `replica` ⇒ **每一个经过 role gate 的写入被静默拒绝**,而拒绝
+`note_refusal` 只 **log-once**、只进 Railway 日志。于是两个世界从外面完全一样:
+
+```
+(a) 线上是 primary,strategy_records 空是因为【没人调那个写入端点】
+(b) 线上是 replica,每一次写入都在被【拒绝】
+```
+
+**修法毫不相干 —— 而我在 S-221 里直接断言了 (a)。我断言的时候没有能力知道。**
+
+而且证据其实是**同时符合两者**的:`asset_embeddings` 今天 13:30 写进去了,
+`strategy_records` 是 0 —— 而 `upsert_embeddings` 用裸 `urllib`,**根本不经过 role gate**;
+`_pg_upsert` 经过。**"一个写成功一个没写成功"恰好是 replica 下的预期图景。**
+
+修(两处,都在我 lane):
+
+**① 计数与日志分开。** `note_refusal` 现在**先计数再 log-once**。日志是给人看的,一次够;
+计数是给探针看的,必须全量 —— **「有没有发生过」和「发生了多少次」是两个问题**,
+只有后者能告诉你某个循环是不是每天都在撞同一堵墙。守卫用 AST 断言计数在早返回**之前**
+(把它挪到 return 之后是最容易犯、最难发现的改法,mutation 已验)。
+
+**② `/internal/build-state` 回显 `runtime_role`** —— role、可否写、拒绝计数。
+凭证只报存在与否,值永远不出现。`postdeploy_verify.sh` 第 1 步现在直接判:
+**`may_write_shared_record != true` → 红**,并写明 `APP_ROLE` 未设会 fail-closed。
+
+⚠️ **S-221 的结论降级为「未验证」,不是「已确认」。** 推上去之后,
+`curl -s $BASE/internal/build-state | jq .runtime_role` 一眼就能定 (a) 还是 (b) ——
+**这正是今天该建而一直没建的那种东西:让两个假设不再需要争论的一次读取。**
