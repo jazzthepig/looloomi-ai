@@ -144,6 +144,30 @@ async def _sweep(base: str) -> dict:
             "flowing" if (age_days is not None and age_days <= 3) else ("broken" if age_days is None else "stale"),
             f"BTC latest trade_date={latest_d} (age={age_days}d; >3d ⇒ price feed stalled)"))
 
+        # ── SUBSTRATE: is the vector layer still being written? (S-216) ─────
+        # This probe existed for six weeks and never looked at the VDB, so the
+        # geometric substrate sat 31 days stale, market_state_vectors 19 days
+        # with regime_label NULL on all 582 rows, and strategy_records at 0 —
+        # all found by hand. An instrument built to make an orphaned stage
+        # impossible to hide had four orphaned stages outside its field of view.
+        sc, vh = await _get(c, f"{base}/internal/vdb-health")
+        if isinstance(vh, dict) and vh.get("stores"):
+            stores = vh["stores"]
+            bad = [s for s in stores if s.get("status") != "flowing"]
+            out.append(StageHealth(
+                "substrate (vector stores)",
+                # `empty` and `unknown` are BROKEN, not stale: a store that was
+                # never written and one that stopped being written have
+                # different owners, and collapsing them loses the fix.
+                "flowing" if not bad else
+                ("broken" if any(s.get("status") in ("empty", "unknown") for s in bad)
+                 else "stale"),
+                "; ".join(f"{s['store']}={s['status']}"
+                          f"({s.get('age_days')}d)" for s in stores)))
+        else:
+            out.append(StageHealth("substrate (vector stores)", "broken",
+                                   f"/internal/vdb-health unreadable: {str(vh)[:70]}"))
+
         # causes attached? (fwd-supply / positioning are NESTED blocks, not flat fields)
         def _has(a, block, inner):
             b = a.get(block) if isinstance(a, dict) else None
