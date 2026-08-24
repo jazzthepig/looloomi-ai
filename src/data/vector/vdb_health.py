@@ -171,6 +171,24 @@ async def vdb_health() -> dict[str, Any]:
                if comp_col else None)
         out.append(classify(table, n, age, pop).as_dict())
 
+    # ⚠️ RLS RETURNS 200 AND AN EMPTY LIST, NOT AN ERROR (S-220 follow-up).
+    # All four tables have RLS on with ZERO policies, so a non-service key reads
+    # every one of them as empty. `rows == 0` therefore cannot, on its own,
+    # distinguish "never written" from "not visible to this credential" — and
+    # this probe would confidently report four independent build defects.
+    #
+    # One table empty is a build defect. FOUR empty at once is one credential.
+    # The joint pattern carries information no single reading does, which is why
+    # the cross-check lives here and not in classify().
+    if out and all(s["status"] == "empty" for s in out):
+        for s in out:
+            s["status"] = "unknown"
+            s["detail"] = ("all four stores read empty at once — RLS is on with 0 "
+                           "policies on each, so this is one credential problem, "
+                           "not four build defects")
+        return {"ok": True, "overall": "unknown", "stores": out,
+                "note": "every store empty ⇒ suspect the key, not the writers"}
+
     worst = "flowing"
     for s in out:
         if s["status"] in ("empty", "unknown"):
