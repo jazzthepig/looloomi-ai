@@ -11513,3 +11513,91 @@ src/data/market/exchange_data.py 未带 interval,短窗口返回小时点
 **顺手补上一个我自己制造的误诊模式:** RLS 拒绝返回 200 + 空列表,不是错误。所以
 `rows == 0` 单看分不出"从未写过"和"这把钥匙看不见"。**一张表空是构建缺陷;四张同时空是一把钥匙。**
 `vdb_health` 现在做这个联合判断,全空时整体报 `unknown` 而不是四个独立的构建缺陷。
+
+---
+
+## S-225 — 三个缺陷叠着,而最上面那个是我的探针自己造的假安心
+
+Jazz 部署后查:`asset_embeddings` 仍然 `31d`。**不是没部署**(同一个 payload 里
+`market_state_vectors` 已经带上了新版的 `(0%, need 90%)`),是下面三件事叠在一起:
+
+**① `computed_at` 永远不会前进。** 该列 `DEFAULT now()`,而 **DEFAULT 只在 INSERT 触发**。
+写入走 `on_conflict=symbol` 的 merge,对已存在的 72 个 symbol 全是 UPDATE,而 payload 里
+没有 `computed_at`。**所以 S-220 那个日循环就算每晚跑绿,这个数字也永远停在 07-24。**
+一个建立在写者不写的列上的新鲜度指标,measure 的是零。
+
+**② 向量层其实已经全黑,不是"有点旧"。** 读路径过滤
+`schema_version=eq.3 & superseded_reason is null`(`pgvector_store.py:89`),
+而存量 72 行全是 `schema_version=2`、`dims=18` —— 写于 07-24,而 v3 的 bump 是 08-09,
+之后**一次成功写入都没有**。**可读行数:0。已经黑了两周。**
+
+**③ 而我的探针报的是「72 rows, 31d old」。** 它数的是全表,消费者数的是过滤后的子集。
+**一个对消费者可见集合的【超集】做的计数,不是健康指标** —— 和"因为定不了价所以 NAV 平"
+是同一种假安心,只不过这次假安心是我今天亲手造的,而且是在我写完 §S-216「让掉队的环节
+无处可藏」之后的两小时内。
+
+修:`upsert_embeddings` 显式写 `computed_at`;`vdb_health` 引入 `READ_FILTERS`,
+按**消费者自己的过滤条件**再查一次,报 `readable_rows`,两者不等时那个差值本身就是结论;
+存量行有而可读行为 0 → 新状态 **`unreadable`**,整体判 broken(比 stale 严重:
+stale 的数据至少还能回答查询)。
+
+### 守卫 mutation:第一版又被同一个东西打穿
+
+`"READ_FILTERS" not in source`。把**定义**改名成 `READ_FILTERZ` —— 存活,
+因为 `READ_FILTERS.get(table)` 那个**用法**还在,子串照样命中。
+**子串分不出定义和使用,这是今天第四次**(S-214 常量被读 vs 被写、S-216 docstring 里的表名、
+S-220 定义 vs `create_task`、现在这条)。四次的共同点:
+**断言查「名字出现」,而要守的性质是「某个构造成立」。**
+
+⚠️ **遗留(不是我这轮能修的):72 行 v2/18-dim 存量与 v3/27-dim 不兼容。**
+新循环会以 v3 覆盖写入,但在第一次成功写入之前,读路径仍然返回 0 行。
+VERIFY: 部署后查 `select schema_version, dims, count(*) from asset_embeddings group by 1,2` ——
+应该出现 `3 | 27 | 58`。若仍是 `2 | 18 | 72`,是写入失败而不是循环没跑。
+
+### 顺带:冷启动预算变红,我搬了 MINIMAX_SYNC
+
+`test_cold_start_contract` 在 82,913 字符处红(上限 80,000)。按 CLAUDE.md 把 08-18 / 08-19
+的 10 节移入 `MINIMAX_SYNC_ARCHIVE.md`,**82,913 → 45,028**。§IN-FLIGHT 留了指针,
+并写明**归档不等于关闭:其中若有仍未结的,在 §IN-FLIGHT 重新提出**。
+
+---
+
+## S-226 — S-225 的结论对、机制错,而错法是 `min()` 盖住了分布
+
+我在 S-225 里写:「存量 72 行全是 `schema_version=2`、`dims=18`,读路径过滤 v3 所以可读行数 0。」
+
+**结论(层是黑的)对。机制**(全是 v2)**错。** 实际:
+
+```
+superseded_reason                                    sv  dims   n   readable
+"S-144 2026-08-12: stamped schema_version=2 by
+ store.py's hardcoded literal ... 保留供审计,
+ 从读取中排除"                                        3    27   58      0
+ 同上                                                2    18   14      0
+```
+
+**58 行本来就是 v3/27-dim。挡住读取的不是版本过滤,是 `superseded_reason is null` ——
+所有 72 行在 2026-08-12 被【有意隔离】了。**
+
+我怎么错的:上一条查询里我写的是 `min(schema_version), min(dims)`,然后把最小值当成了整个总体。
+**`min()` 对一个混合总体的读数不是那个总体。** 一次聚合把分布压平,我就在压平后的数字上下了因果结论。
+
+**而"结论对、机制错"比单纯错更危险:它有说服力,并且把修复指向错的地方。**
+照着我那条台账去修的人会去改版本戳,而层照黑不误。散文台账挡不住这个 —— 它读起来完全可信。
+
+**真正的链条,以及它为什么重要:**
+
+```
+2026-08-12  S-144 把全部 72 行隔离,正确 —— 形状无法验证
+            后续动作应该是「按 v3 重建」= task #35
+            → 而重建从未发生,因为【没有调度写者】(S-220,我今天刚补)
+2026-08-24  隔离 12 天,任务 #35 一直 pending,层一直黑
+```
+
+**所以隔离是对的,S-220 也是对的修法 —— 缺的只是把它推上去。**
+(实测:最后一个 commit 未推送,所以线上仍是旧代码,`31d` 不是谜。)
+
+VERIFY: 推送后 24h,`select superseded_reason is null, schema_version, dims, count(*)
+from asset_embeddings group by 1,2,3` 应出现一行 `true | 3 | 27 | ~58`。
+**若没有新行,是写入失败;若有新行但 `computed_at` 仍是 07-24,是 S-225 那条没生效。**
+两种情况的修法不同,所以要分开看。
