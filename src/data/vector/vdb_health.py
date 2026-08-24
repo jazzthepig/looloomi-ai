@@ -204,6 +204,29 @@ async def vdb_health() -> dict[str, Any]:
             except Exception:                                     # noqa: BLE001
                 readable = None
             h["readable_rows"] = readable
+
+            # 形状分布,不是聚合 (S-226/S-227)。今天 13:30 写入的 58 行里,
+            # 35 行是 dims=18 而 schema_version=3 —— 而 v3 的含义是 27 维。
+            # 18 维和 27 维不是同一个向量空间,把它们混在一张被相似度检索读的表里
+            # 没有意义,而【任何单一聚合都看不见这件事】:行数一样、版本一样、
+            # 新鲜度一样。S-144 当初隔离的理由原话就是"dims 18 和 27 同时存在于
+            # version 2 之下" —— 同一件事正在 version 3 下重演。
+            try:
+                surl = (f"{_SB_URL}/rest/v1/{table}?select=dims,schema_version&limit=2000")
+                sr = await _supabase_request_with_retry(
+                    "GET", surl, headers={"apikey": _SB_KEY,
+                                          "Authorization": f"Bearer {_SB_KEY}"})
+                if sr is not None and sr.status_code == 200:
+                    shape: dict[str, int] = {}
+                    for x in sr.json():
+                        k = f"v{x.get('schema_version')}/{x.get('dims')}d"
+                        shape[k] = shape.get(k, 0) + 1
+                    h["shape_distribution"] = shape
+                    if len(shape) > 1:
+                        h["detail"] += f"; MIXED SHAPES {shape} — one table, several vector spaces"
+            except Exception:                                     # noqa: BLE001
+                pass
+
             if readable == 0:
                 # Rows present, none visible to the consumer. Strictly worse than
                 # stale: stale data still answers a query.

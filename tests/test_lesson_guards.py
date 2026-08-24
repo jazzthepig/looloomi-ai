@@ -209,6 +209,25 @@ else:
              "a count over a superset of what consumers can see is not a health "
              "metric (72 stored, 0 readable, reported as merely stale)")
 
+# ── S-227 · 「太早」是一个独立结论,不是「坏了」 ──────────────────────────────
+# 2026-08-24 一个问题来回三次,全部内容是在区分四个状态:没推送 / 推了没部署 /
+# 部署了没跑到 / 跑了但写失败。把它们合并成"红或绿",就是那三次来回。
+_pdv = (ROOT / "scripts/postdeploy_verify.sh")
+if not _pdv.exists():
+    fail("S-227: scripts/postdeploy_verify.sh 不存在 —— preflight 拦 push,"
+         "没有任何东西拦「它在生产里到底跑了没有」")
+else:
+    _pdv_src = _pdv.read_text()
+    for _needle, _why in [
+        ("origin/main..HEAD", "没有查未推送 commit —— 那是三次来回里的第三次"),
+        ("uptime_seconds", "没有读 uptime —— 分不出「太早」和「坏了」"),
+        ("FIRST_RUN", "没有每个 loop 的首次延迟表 —— uptime 无从比较"),
+        ("TOO_EARLY", "没有独立的「太早」判决 —— 它会被并进失败"),
+        ("${LOCAL_SHA:0:7}", "SHA 比较没有取共同前缀 —— 会把相同判成不同"),
+    ]:
+        if _needle not in _pdv_src:
+            fail(f"S-227: postdeploy_verify {_why}")
+
 _lh = code_only((SRC / "api/loop_health.py").read_text())
 if "vdb-health" not in _lh:
     fail("S-216: loop_health does not probe the vector substrate — the instrument "
@@ -274,5 +293,5 @@ if _fails:
     for f in _fails:
         print("   ·", f)
     sys.exit(1)
-print(f"  ✓ lesson guards: S-119/194/195/207/214/215/216/225 enforced "
+print(f"  ✓ lesson guards: S-119/194/195/207/214/215/216/225/227 enforced "
       f"({len(_declared_stores)} vdb stores watched)")

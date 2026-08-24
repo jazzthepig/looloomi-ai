@@ -157,6 +157,16 @@ def upsert_embeddings(embeddings: dict[str, list], *, asset_meta: dict | None = 
             # /internal/vdb-health would keep reporting it dead. A staleness
             # metric on a column the writer does not write measures nothing.
             "computed_at": _utc_now_iso(),
+            # ⚠️ 一个刚算出来的向量不是 superseded 的 (S-227, 2026-08-24)。
+            # S-144 在 08-12 把全部 72 行隔离,理由是"形状无法验证,保留供审计,
+            # 从读取中排除" —— 正确。后续动作是重建,而 `on_conflict=symbol` 的
+            # merge 会【并进那些被隔离的行】,payload 里又没有这一列,
+            # 于是隔离标记原样留下。
+            #
+            # 后果:今天 13:30 真的写进了 58 个新鲜向量,readable 仍然是 0。
+            # **重建永远解不开隔离** —— 循环每晚跑绿,层每晚照黑。
+            # 部署后验证器上线几分钟就看见了这个;在此之前它完全不可见。
+            "superseded_reason": None,
         })
     if not rows:
         return False
