@@ -904,6 +904,21 @@ python3 -m src.research.validation.tests.test_r76_strategy2_smoke || {
   echo "  ✗ r76-strategy-2 smoke FAILED — do not push"; exit 1; }
 echo "  ✓ R76 strategy-2 paper-book guards (S-205)"
 
+# ── S-217: simulate-paper-trade harness guards (§SIMULATION-60D, Seth 2026-08-24)
+# Per user directive "继续模拟两个赚钱的策略的运行 不用60day真实记录", the 60d
+# forward-clock gate on §STRATEGY-DISCIPLINE is WAIVED in favor of SIMULATED
+# marks produced by simulate_paper_trade.py. This harness re-uses the same
+# frozen cells as R77 (fusion) and R76 (standalone) and runs the actual L/S
+# engine on real historical data. Five hard properties the simulation
+# depends on: (1) score_r76 is mean-zero per time; (2) _cadence_ls_sim
+# returns a Series aligned to rets.index; (3) R76 frozen cell matches
+# the backtest (5d/0bps/k=3/high_fund_long on 28 assets); (4) R77 frozen
+# weights match the backtest (w_R46=0.25/w_R62=0.75/w_R76=0.30); (5) the
+# output directory exists.
+python3 -m src.research.validation.tests.test_simulate_paper_trade_smoke || {
+  echo "  ✗ simulate-paper-trade smoke FAILED — do not push"; exit 1; }
+echo "  ✓ simulate-paper-trade harness guards (S-217)"
+
 # ── S-206: a citation must point at something ────────────────────────────────
 # Measured 2026-08-24: 30 S-numbers were cited in code and in this file's own
 # stage banners with NO ledger entry anywhere — including nine written the same
@@ -911,6 +926,12 @@ echo "  ✓ R76 strategy-2 paper-book guards (S-205)"
 # follow is a justification that exists only inside the head of whoever wrote it.
 bash scripts/check_ledger_citations.sh || {
   echo "  ✗ dangling ledger citation — do not push"; exit 1; }
+
+# ── S-223: 试错价值 = 被强制执行的那一部分 ───────────────────────────────────
+# 一条只被写下来的教训,在下一个失忆的 session 里和不存在没有区别。这个关卡把
+# "写下 → 强制"的脱节变成一个只能升的数字。今天 76/102。
+bash scripts/check_lesson_enforcement.sh || {
+  echo "  ✗ lesson enforcement regressed — do not push"; exit 1; }
 
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."
