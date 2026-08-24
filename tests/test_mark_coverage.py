@@ -54,9 +54,14 @@ def test_coverage_is_weighted_not_counted():
     # 3 of 4 names present, but only 30% of weight → must refuse
     r = weighted_mark(w, {"A": 110.0, "B": 110.0, "C": 110.0}, mp, book="t")
     assert not r.ok, f"30% of weight priced should refuse, got coverage {r.coverage}"
-    # 1 of 4 names missing, 90% of weight → must mark
+    # 1 of 4 names missing, 90% of weight → must mark.
     r2 = weighted_mark(w, {"BTC": 110.0, "A": 110.0, "B": 110.0}, mp, book="t")
-    assert r2.ok and r2.coverage == 0.9
+    # Tolerance, not equality: coverage is a SUM of floats (0.7+0.1+0.1 lands on
+    # 0.8999999999999999), so `== 0.9` tests IEEE-754 rounding rather than the
+    # property under test. The property is "the weighted share was measured and
+    # cleared the floor" — and an exact-equality assert on a computed float is a
+    # test that fails for a reason unrelated to what it claims to check.
+    assert r2.ok and abs(r2.coverage - 0.9) < 1e-9, r2
 
 
 def test_zero_and_negative_and_nan_prices_are_unpriceable():
