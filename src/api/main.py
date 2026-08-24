@@ -2490,8 +2490,36 @@ async def build_state():
         "route_count":     len(app.routes),
         "uptime_seconds":  round(_time.time() - _BOOT_TS, 1),
         "last_cis_push":   last_push,
+        # ⚠️ ROLE 是决定这个进程能不能写系统记录的唯一开关,而在今天之前它在生产里
+        # 完全不可见 (S-228)。`APP_ROLE` 未设 ⇒ fail-closed 成 `replica` ⇒ 每一次
+        # 经过 role gate 的写入都被【静默拒绝】,只在 Railway 日志里留下一行、
+        # 而且每个目标只留一次。
+        #
+        # 于是两个世界从外面看一模一样:
+        #   (a) primary,而某张表空是因为没人调那个写入端点
+        #   (b) replica,而每一次写入都在被拒
+        # 修法毫不相干。凭证只报存在与否,值永远不出现。
+        "runtime_role":    _role_echo(),
         "as_of":           _time.time(),
     }
+
+
+def _role_echo() -> dict:
+    """角色 + 写入能力 + 拒绝计数。不含任何凭证值。"""
+    try:
+        from src.api.runtime_role import ROLE, is_writer, refusal_counts
+        counts = refusal_counts()
+        return {
+            "role": ROLE,
+            "may_write_shared_record": is_writer(),
+            "write_refusals": counts,
+            # 空字典有两个意思,所以把它们分开写出来,不要让读的人去猜。
+            "refusals_note": ("no write has been refused" if not counts else
+                              f"{sum(counts.values())} refusals across "
+                              f"{len(counts)} targets — gated writes are NOT landing"),
+        }
+    except Exception as e:                                        # noqa: BLE001
+        return {"role": "unknown", "error": f"{type(e).__name__}: {str(e)[:80]}"}
 
 
 # ── Serve React SPA ───────────────────────────────────────────────────────────
