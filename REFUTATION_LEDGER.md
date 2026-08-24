@@ -11275,3 +11275,41 @@ harness 强制 `BLOCKED ≠ FLAT`:规则跑了并拒绝 = FLAT(机器是好的),
 和 `ok=True rows=0`、和"定不了价所以 NAV 平"是同一个缺陷。
 
 `/trading` 现在同时给出 `ic_pillars_measured`、`ic_multiplier_source`(每根支柱:measured n=… / 无因子清过门槛 / 该支柱无因子)、`ic_layer_active`。**先读这三个再读乘数:0 measured 意味着每一个 1.0 都是默认值,CIS 加权层是死的。**
+
+---
+
+## S-216 — 我建了这个 loop 的每一段,一段也没让它继续流动
+
+Jazz 定义 lane:「你要管好的是**矢量数据库**还有价值挖掘后,**系统工程打通**风格平衡的 loop。」
+于是去量了这条 loop 的每一段 —— 这是本 session 第一次有人量它:
+
+```
+① 挖掘 (Minimax-C)          93 个文件 / 16 个 R-number 已索引      ✅ 在跑
+② intake → experiment_runs  60 行 / 18 个 ledger_ref               ⚠️ 部分
+                            但 dsr 只有 2/60 —— S-189 的问题是普遍的,不是 R70 一个
+③ asset_embeddings          72 行,最后写入 2026-07-24,停 31 天    ❌
+④ market_state_vectors      582 行,停 19 天,regime_label 0/582    ❌
+⑤ strategy_records          0 行,从未写入                          ❌
+⑥ 决策链 similar_market_states() → strategy_response               ❌ 上游全死,跑不了
+⑦ 风格平衡                  跨账本相关性/风格集中度:零个文件        ❌ 不存在
+```
+
+**③④⑤ 全部是我自己已关闭的绿色任务**(「VDB 落库」「embedder v2」「canonical strategy_embedder」
+「asset_edge_moments」)。ARCHITECTURE.md 说 *the loop is circulation, not a pipeline; the system
+is a metabolism*。**我造了器官,没造代谢。**
+
+**为什么停摆天生不可见。** `rebuild_asset_vectors` 自己的 docstring(S-144)写着:embeddings 是
+CIS 周期的**副作用**,包在一个宽 `except Exception` 里降级成一行日志。一个在成功的循环内部
+静默失败的副作用,产出的就是这个:到处是绿的,基底冻结在一个月前。**读路径照样返回行 ——
+只是旧的**,所以下游也不报错。
+
+**而 loop_health 是六周前我为了「让掉队的环节无处可藏」造的仪器,它的视野里没有这四张表。**
+仪器在,朝向错了。
+
+修:`vdb_health.py` + `GET /internal/vdb-health`(公开读,只有行数和天数,没有向量没有密钥 ——
+**需要 token 的健康探针就是那个会被跳过的探针**)+ loop_health 新增 substrate 段。
+
+判定上 **`empty` / `stale` / `unknown` 三分,不合并**:从未写过是**构建缺陷**,写过之后停了是
+**运维缺陷**,读不到是**第三件事**。三者的 owner 和修法都不同,合并成"没有数据"就把修法丢了。
+并且**新鲜的行 + 关键列全 NULL 判为 stale 而不是 flowing** —— 那正是 S-207 那 9 天
+(score/grade 满覆盖、五根 pillar 全 NULL)的同一个形状,低一层。
