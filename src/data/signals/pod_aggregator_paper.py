@@ -56,6 +56,8 @@ VALIDATION_MIN_DAYS = 60
 PAPER_NOTIONAL_USD = 1_000_000.0
 
 # Live state persistence (mirrors fusion_paper_state)
+from src.data.signals.nav_persist import NavWrite, write_nav_row
+
 STATE_TABLE = "pod_aggregator_state"
 NAV_TABLE = "pod_aggregator_nav"
 
@@ -309,11 +311,30 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
         "breakers_tripped": breakers,
         "n_days_marked": n_days_marked,
     }
+    # NAV_TABLE was declared at line 60 and never written to — 0 rows for weeks
+    # while this function returned "ok" every day (S-214). The state row carried
+    # the NAV, so the book looked alive from inside and had no curve outside.
+    nav_write = NavWrite(True, NAV_TABLE, "dry_run")
     if not dry_run:
         await _save_state(new_state)
+        nav_write = await write_nav_row(NAV_TABLE, {
+            "mark_date": str(today),
+            "nav": new_nav,
+            "daily_return": today_ret,
+            "n_days_marked": n_days_marked,
+            "validated": validated,
+            "weights": weights,
+            "survivors": [p.name for p in survivors],
+            "pods_dropped": gate_log["dropped"],
+            "breakers_tripped": breakers,
+            "max_corr_retained": gate_log["max_corr_retained"],
+        })
 
     return {
-        "status": "ok",
+        # A failed NAV write is not an "ok" mark. The status reflects what landed,
+        # not what was attempted — otherwise the endpoint reports health for a
+        # book that is persisting nothing, which is how this got missed.
+        "status": "ok" if nav_write.ok else "degraded",
         "date": str(today),
         "nav": new_nav,
         "today_return": today_ret,
@@ -324,6 +345,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
         "pods_dropped": gate_log["dropped"],
         "breakers_tripped": breakers,
         "max_corr_retained": gate_log["max_corr_retained"],
+        **nav_write.as_payload(),
     }
 
 

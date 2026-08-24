@@ -1437,7 +1437,17 @@ async def get_loop_state():
     meta = fp.get("_meta", {})
 
     # Compute IC multiplier per pillar (mirrors _refresh_ic_multipliers in cis_provider.py)
+    #
+    # ⚠️ 1.0 HAS TWO MEANINGS AND THEY MUST BE TOLD APART (S-215, Minimax-A 2026-08-23).
+    # A pillar with no usable factors gets 1.0, and a pillar whose IC genuinely
+    # came out flat also gets 1.0. For four months every pillar read 1.0 because
+    # `realized_return_7d` was NULL on all 234 rows — the weighting mechanism had
+    # never once been energised — and the payload was indistinguishable from a
+    # healthy engine that had measured neutrality. Same defect as `ok=True rows=0`,
+    # same defect as a NAV that is flat because nothing could be priced.
+    # So the count of MEASURED pillars ships alongside the multipliers.
     ic_mult: dict[str, float] = {}
+    ic_source: dict[str, str] = {}
     for pillar in ("F", "M", "O", "S", "A"):
         factors = [
             v for k, v in fp.items()
@@ -1452,8 +1462,13 @@ async def get_loop_state():
         if active:
             mean_r = sum(f["pearson_r"] for f in active) / len(active)
             ic_mult[pillar] = round(1.0 + max(-0.30, min(0.30, mean_r * 2.5)), 4)
+            ic_source[pillar] = f"measured (n={len(active)})"
         else:
             ic_mult[pillar] = 1.0
+            ic_source[pillar] = ("no factor cleared |r|>0.10 with n>=10"
+                                 if factors else "no factors for this pillar")
+
+    n_measured = sum(1 for v in ic_source.values() if v.startswith("measured"))
 
     # ── Parse current regime ──────────────────────────────────────────────────
     # NOTE: _rget returns a parsed dict (redis_get_key auto-json.loads), not a
@@ -1476,6 +1491,11 @@ async def get_loop_state():
         "closed_trades":    n_closed,
         "open_positions":   len(open_),
         "ic_multipliers":   ic_mult,
+        # Read these two BEFORE reading the multipliers above. 0 measured means
+        # every 1.0 is a default, and the CIS weighting layer is inert.
+        "ic_pillars_measured": n_measured,
+        "ic_multiplier_source": ic_source,
+        "ic_layer_active":  n_measured > 0,
         "mine_last_run":    meta.get("last_run"),
         "mine_periods":     meta.get("periods_computed", 0),
         "mine_total_trades":meta.get("total_trades_analysed", 0),

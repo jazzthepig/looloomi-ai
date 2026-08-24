@@ -52,6 +52,8 @@ VALIDATION_MIN_DAYS = 60
 PAPER_NOTIONAL_USD = 1_000_000.0
 
 # Live state persistence
+from src.data.signals.nav_persist import NavWrite, write_nav_row
+
 STATE_TABLE = "factor_tilt_state"
 NAV_TABLE = "factor_tilt_nav"
 
@@ -314,11 +316,28 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
         "n_days_marked": n_days_marked,
         "factor_sharpe_attribution": factor_attribution,
     }
+    max_share = max(
+        (abs(s) / max(sum(abs(v) for v in factor_attribution.values()), 1e-9))
+        for s in factor_attribution.values()) if factor_attribution else 0.0
+
+    # NAV_TABLE was declared at line 56 and never written to — same defect as
+    # pod_aggregator (S-214). Both books marked into their state row only.
+    nav_write = NavWrite(True, NAV_TABLE, "dry_run")
     if not dry_run:
         await _save_state(new_state)
+        nav_write = await write_nav_row(NAV_TABLE, {
+            "mark_date": str(today),
+            "nav": new_nav,
+            "daily_return": today_ret,
+            "excess_vs_bench": excess,
+            "n_days_marked": n_days_marked,
+            "validated": validated,
+            "factor_attribution": factor_attribution,
+            "max_single_factor_sharpe_share": max_share,
+        })
 
     return {
-        "status": "ok",
+        "status": "ok" if nav_write.ok else "degraded",
         "date": str(today),
         "nav": new_nav,
         "today_return": today_ret,
@@ -326,9 +345,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
         "n_days_marked": n_days_marked,
         "validated": validated,
         "factor_attribution": factor_attribution,
-        "max_single_factor_sharpe_share": max(
-            (abs(s) / max(sum(abs(v) for v in factor_attribution.values()), 1e-9))
-            for s in factor_attribution.values()) if factor_attribution else 0.0,
+        "max_single_factor_sharpe_share": max_share,
+        **nav_write.as_payload(),
     }
 
 
