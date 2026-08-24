@@ -11435,3 +11435,81 @@ MEMORY.md:加密内 ρ̄ **0.441** vs 跨 TradFi **0.104**,且「**分散只能�
 
 **它是度量,不是选股**:跨账本 NAV 相关矩阵 + 风格暴露分解 → 接进 `loop_health`。
 写在这里是为了防止它再一次被我做成因子讨论。
+
+---
+
+## S-224 — A 类教训补关卡:七条,其中两条第一版被 mutation 打穿
+
+S-223 量出 26 条教训只是散文。这一批补上有明显可执行形式的:
+**S-119**(role gate 在写入函数头部,不在调用方)· **S-194**(覆盖率按权重不按名字个数)·
+**S-195**(`market_chart` 不得出现在收益/mark 路径)· **S-207**(BLOCKED ≠ FLAT)·
+**S-214**(`*_TABLE` 常量必须被某个写调用接收)· **S-215**(中性默认值必须带伴随字段)·
+**S-216**(每个 store 在 loop_health 视野内)。
+
+**七条全部做了 mutation 测试,两条第一版存活:**
+
+**S-214 第一版**查的是「这个常量在文件里被读过没有」。把 `write_nav_row(NAV_TABLE, …)`
+换成 `write_nav_row("pod_aggregator_nav", …)` 照样通过 —— 因为 `get_curve()` 也读这个常量。
+**「被读过」不是那个承诺的内容,「被写」才是。** 改成 AST 查:常量名出现在写调用的**实参位置**。
+
+**S-216 第一版**扫全文件的 `ast.Constant` 找四张表名。**而 docstring 本身就是 Constant 节点** ——
+我在模块 docstring 里列出那四张表的行为,满足了这条守卫;删掉 `specs` 里一项照样通过。
+**这是同一个 session 里第七次踩到 `tests/_source.py` 记录的那个失败**,而这次踩的人是写那份
+记录的我。改成只读 `vdb_health()` 内部 `specs` 列表字面量的首元素。
+
+**教训:守卫写完不 mutation,就只是一段更贵的散文。** 它会通过,会进 CI,会让强制执行率上涨,
+而缺陷复发时它不会变红 —— 一个假绿勾比没有守卫更糟,因为它同时消耗了注意力和信任。
+
+### 顺带:守卫第一次跑就抓到两处【活的】S-195 违规
+
+```
+src/data/market/data_layer.py    get_cg_price_history → 喂 A 支柱(90d alpha)+ 波动率 regime
+src/data/market/exchange_data.py 未带 interval,短窗口返回小时点
+```
+
+**S-195 早就写在台账里,而调用还在。** `market_chart` 返回采样点不是 K 线,即使
+`interval=daily` 也不是收盘 —— **A 支柱与 vol regime 建立在一个不是收盘价的序列上。**
+这就是"只被写下来的教训"的样子:文档齐全,缺陷仍在,而且它喂着五根支柱之一。
+
+已冻结这两处并在名单里写明**后果而非借口**,新增的直接 fail,名单只能减(某文件修好了却
+还留在名单上同样 fail)。修复归 Minimax-B/C:换 `/ohlc/range`。
+
+---
+
+## S-220 补记 — 写者补上了;而"它真的被调度了"这条断言第一版是假的
+
+`asset_embeddings` 停 31 天不是故障,是**没有写者**:embeddings 只作为 CIS 周期的副作用产生,
+包在宽 `except` 里降级成日志(S-144),`/internal/asset-vectors/rebuild` 是手动触发,`main.py`
+什么都没排。所以「几何基底」是七月某一天的快照,而消费方一直读到行 —— 只是旧的 —— 于是无人报错。
+
+实现要点:**rebuild 从 router 提到 `embedding_loop.rebuild_once()`,router 与 loop 共用一份**
+(本 session 已经为"一条规则两份实现"付过三次账);**地板在写入之前 return**(S-190 的原形是
+只标注返回值而写照常进行);拒绝报 `degraded` 且带原因,不报 `ok`。
+
+**五条 mutation,存活的偏偏是最关键那条。** v1 断言 `"_embedding_rebuild_loop" in main.py`
+外加 hook 名字后 400 字符内出现 `create_task`。把 `create_task(_embedding_rebuild_loop())`
+换成 `pass` —— **通过**:函数定义仍带着那个名字,而邻近的 hook 提供了一个 `create_txsk`。
+
+**子串断言分不出【定义】和【调用】,而这里全部的区别就在这。31 天停摆 = 一个被定义、
+从没被调用的写者。** 改成 AST:startup hook 内必须存在
+`create_task(_embedding_rebuild_loop())`,且该 loop 内必须调用 `rebuild_once`。
+
+**这是今天第三次"守卫写完不 mutation 就是假绿"** —— S-214、S-216、现在这条。
+三次的共同点:**断言查的是"名字出现",而要守的性质是"某个构造成立"。**
+
+### 顺带:S-221 的诊断是我错的,而且差点因此加安全面
+
+我按 2026-08-15 的 docstring 断言 `strategy_records` 0 行是 RLS 挡的,准备 apply 一条 policy。
+查完:四张 VDB 表**都是** RLS on / 0 policies,而 `/internal/vdb-health` 用同一个 `SUPABASE_KEY`
+读到了 72 / 582 / 60 真实行 —— **Railway 那把 key 是 service key,RLS 对它根本不生效。**
+
+真因:`upsert_many` 的唯一调用点是 `/internal/strategy-records`,**一个没人 POST 过的入站端点**。
+
+**并且不能自动桥接 `experiment_runs` → `strategy_records`**:`StrategyRecord` 的六个维度块
+(regime_domain / factor_exposure / mechanics / capacity / lifecycle / cost_sensitivity)
+在 runs 表里根本不存在,机械桥接产出的是维度几乎全空的"向量" —— **那是噪音穿着向量的衣服**(I1)。
+内容必须由研究方给,改归 Minimax-C。
+
+**顺手补上一个我自己制造的误诊模式:** RLS 拒绝返回 200 + 空列表,不是错误。所以
+`rows == 0` 单看分不出"从未写过"和"这把钥匙看不见"。**一张表空是构建缺陷;四张同时空是一把钥匙。**
+`vdb_health` 现在做这个联合判断,全空时整体报 `unknown` 而不是四个独立的构建缺陷。
