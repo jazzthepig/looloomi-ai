@@ -58,9 +58,15 @@ BUDGETS: dict[str, int] = {
 #: Columns that must be POPULATED, not merely present. A row whose distinguishing
 #: field is NULL is the "score and grade fine, all five pillars NULL" shape (S-207)
 #: one layer down: the row count looks healthy and the content is not there.
-COMPLETENESS: dict[str, str] = {
-    "market_state_vectors": "regime_label",
-    "experiment_runs": "dsr",
+#:
+#: Each entry is (column, minimum populated FRACTION). The fraction is not
+#: decoration — the live probe's first run returned `experiment_runs: flowing,
+#: dsr populated on 2/60`, and an exact-zero test passes that happily. 2 of 60 is
+#: worse than 0 of 60: it looks like the field is in use. MEMORY.md states the
+#: rule directly — 危害与可发现性成反比.
+COMPLETENESS: dict[str, tuple[str, float]] = {
+    "market_state_vectors": ("regime_label", 0.90),
+    "experiment_runs": ("dsr", 0.50),
 }
 
 
@@ -100,14 +106,22 @@ def classify(store: str, rows: int | None, age_days: int | None,
     bits = [f"{rows} rows, {age_days}d old (budget {budget}d)"]
     status = "flowing" if age_days <= budget else "stale"
 
-    col = COMPLETENESS.get(store)
-    if col is not None and populated is not None:
-        bits.append(f"{col} populated on {populated}/{rows}")
-        if populated == 0:
-            # Fresh rows with the distinguishing column empty is worse than stale
-            # rows: the loop looks alive AND the content consumers need is absent.
+    spec = COMPLETENESS.get(store)
+    if spec is not None and populated is not None:
+        col, min_frac = spec
+        frac = populated / rows if rows else 0.0
+        bits.append(f"{col} populated on {populated}/{rows} ({frac:.0%}, need {min_frac:.0%})")
+        if frac < min_frac:
+            # Fresh rows with the distinguishing column mostly empty is worse than
+            # stale rows: the loop looks alive AND the content consumers need is
+            # absent. A handful of populated rows is the most dangerous case,
+            # because it also defeats an is-it-ever-set check.
             status = "stale"
-            bits.append(f"⚠ {col} is NULL on every row — anything keyed on it is dead")
+            bits.append(
+                f"⚠ {col} is NULL on every row — anything keyed on it is dead"
+                if populated == 0 else
+                f"⚠ {col} is set on only {populated} rows — present enough to look "
+                f"wired, sparse enough to be unusable")
     return StoreHealth(store, status, rows, age_days, "; ".join(bits))
 
 
