@@ -482,6 +482,27 @@ async def rebuild_asset_vectors(x_internal_token: str = Header(None)):
     }
 
 
+@router.get("/internal/vdb-health")
+async def vdb_health_endpoint():
+    """Freshness of every vector store — the stage loop_health was not watching (S-216).
+
+    Public read: row counts and ages, no vectors and no secrets. Unauthenticated
+    on purpose, because a health probe that needs a token is a probe that will be
+    skipped by whoever is trying to find out why the substrate went dark.
+
+    Measured the day this was written: asset_embeddings 31 days stale,
+    market_state_vectors 19 days stale with regime_label NULL on all 582 rows,
+    strategy_records 0 rows. All three were discovered by hand.
+    """
+    from src.data.vector.vdb_health import vdb_health
+    try:
+        return await vdb_health()
+    except Exception as e:                                        # noqa: BLE001
+        # "unknown" — never an empty-looking success. See vdb_health.classify.
+        return {"ok": False, "overall": "unknown",
+                "reason": f"{type(e).__name__}: {str(e)[:120]}"}
+
+
 @router.get("/internal/asset-vectors/schema")
 async def asset_vectors_schema():
     """Contract echo — the dryrun target both lanes verify against before the live hook fires.
