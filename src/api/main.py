@@ -551,6 +551,48 @@ async def _start_forward_return_backfill():
         print("[FWD] ✅ forward-return backfill scheduled (IC weights energise at 20 days)")
 
 
+# ── S-220: the asset_embeddings writer that never existed ────────────────────
+# Measured 2026-08-24: 72 rows, last written 2026-07-24 — 31 days. Not a
+# failure: there was NO scheduled writer. Embeddings were a side effect of the
+# CIS cycle inside a broad except that degrades to a log line (S-144), and
+# /internal/asset-vectors/rebuild is a manual trigger. The substrate MEMORY.md
+# calls 「几何基底」 was a snapshot of one day in July, and every consumer kept
+# reading rows — just old ones — so nothing errored.
+async def _embedding_rebuild_loop():
+    await _asyncio.sleep(900)          # let the CIS universe warm first
+    while True:
+        try:
+            from src.data.vector.embedding_loop import (
+                rebuild_once, INTERVAL_S, BUDGET_S)
+            res = await _asyncio.wait_for(rebuild_once(), timeout=BUDGET_S)
+            if res.ok:
+                print(f"[VEC] rebuilt {res.written} embeddings · v{res.schema_version} "
+                      f"· {res.dims}d · {res.elapsed_s}s · failed={len(res.failed_assets)}")
+            else:
+                # Printed as a REFUSAL, not an error: below the floor the loop is
+                # working correctly by declining to overwrite a complete history
+                # with a partial one. /internal/vdb-health is the observer that
+                # says whether the table is actually advancing (S-188 — the alarm
+                # does not live inside the thing that breaks).
+                print(f"[VEC] ⚠️  no write: {res.reason}")
+        except _asyncio.TimeoutError:
+            print("[VEC] ⚠️  rebuild exceeded its budget — reporting, not hanging")
+        except Exception as _e:
+            print(f"[VEC] ⚠️  rebuild failed: {_e}")
+        try:
+            from src.data.vector.embedding_loop import INTERVAL_S as _iv
+        except Exception:
+            _iv = 24 * 3600
+        await _asyncio.sleep(_iv)
+
+
+@app.on_event("startup")
+async def _start_embedding_rebuild():
+    if os.environ.get("DISABLE_EMBEDDING_REBUILD", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_embedding_rebuild_loop())
+        print("[VEC] ✅ embedding rebuild scheduled (the writer asset_embeddings never had)")
+
+
 @app.on_event("startup")
 async def _start_t2_precompute():
     if os.environ.get("DISABLE_T2_PRECOMPUTE", "").lower() not in ("1", "true", "yes"):
@@ -875,6 +917,34 @@ async def _start_fusion_paper_tracking_loop():
     if os.environ.get("DISABLE_FUSION_TRACK", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_fusion_paper_tracking_loop())
         print("[FUSION-TRACK] ✅ daily R66 fusion-paper tracking loop scheduled")
+
+
+# ── Strategy-2 R76 paper book — forward-committed live R76 cell (Seth, 2026-08-24) ──
+# R76 verified as a standalone L/S clears 3/3 deployment gates on the 770-day panel
+# (gross_t=+2.06, OOS_t=+2.47, 5/6 windows positive). R76 is the ONLY survivor of
+# the cross-sectional funding-residual family (LEVEL=✓ / IVOL=PARTIAL / MOMENTUM=PARTIAL)
+# and is the leg that made R77 fusion work. Mark-to-market from live Binance fapi
+# close + funding data; file-based state to avoid Supabase auth complexity.
+# See src/data/signals/r76_strategy2_paper.py for the §Strategy-2 architecture.
+async def _r76_paper_loop():
+    await _asyncio.sleep(720)   # 12 min warmup (stagger from fusion_paper's 11 min)
+    while True:
+        try:
+            from src.data.signals.r76_strategy2_paper import mark_and_rebalance
+            res = await mark_and_rebalance(dry_run=False)
+            print(f"[R76-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
+                  f"gross={res.get('gross')} n={res.get('n')} "
+                  f"n_days={res.get('n_days_marked')} validated={res.get('validated')}")
+        except Exception as _e:
+            print(f"[R76-PAPER] ⚠️  mark failed: {_e}")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_r76_paper_loop():
+    if os.environ.get("DISABLE_R76_PAPER", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_r76_paper_loop())
+        print("[R76-PAPER] ✅ daily R76 strategy-2 paper-book loop scheduled")
 
 
 # ── ⓠ REGIME OVERRIDE paper track — parallel paper NAV under the enforcer (Seth, 2026-08-08) ──
@@ -2014,6 +2084,28 @@ async def fusion_paper(response: Response = None):
         return await get_curve()
     except Exception as e:
         return {"error": "fusion_paper_unavailable", "detail": str(e)[:120]}
+
+
+@app.get("/api/v1/signals/r76-paper")
+async def r76_paper(response: Response = None):
+    """Strategy 2 — Live PAPER track record of the R76 standalone funding-residual L/S
+    cell (5d/0bps, k=3, sign=high_fund_long). The only survivor of the cross-sectional
+    funding-residual family on the 770-day panel (R76 LEVEL ✓ / R95 IVOL PARTIAL /
+    R96 MOMENTUM PARTIAL). R76 is the leg that made R77 fusion's lesson #43 work
+    in the first place. §Strategy-2 forward commitment + §P2 binding capacity
+    declaration (start: $1M) are pre-declared and locked at production time.
+    Reports NAV curve + cell config + validation countdown. `validated` flag
+    flips true after ≥60 forward days. See src/data/signals/r76_strategy2_paper.py."""
+    from fastapi import Response as _Response
+    if response is None:
+        response = _Response()
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1200"
+    from src.data.signals.r76_strategy2_paper import get_curve
+    try:
+        return get_curve()
+    except Exception as e:
+        return {"error": "r76_paper_unavailable", "detail": str(e)[:120]}
 
 
 @app.get("/api/v1/signals/pod-aggregator")

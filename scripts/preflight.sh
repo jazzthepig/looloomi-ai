@@ -927,6 +927,21 @@ echo "  ✓ simulate-paper-trade harness guards (S-217)"
 bash scripts/check_ledger_citations.sh || {
   echo "  ✗ dangling ledger citation — do not push"; exit 1; }
 
+# ── S-220: asset_embeddings 的调度写者 ───────────────────────────────────────
+# 缺陷不是 loop 坏了,是【没有 loop】。所以最要紧的一条断言是"这个写者真的被
+# 调度了" —— 而它的第一版 mutation 存活:查名字出现分不出【定义】和【调用】,
+# 而 31 天停摆正是一个被定义、从没被调用的写者。改成 AST 查
+# create_task(_embedding_rebuild_loop())。
+python3 -m tests.test_embedding_loop || {
+  echo "  ✗ embedding-loop guards FAILED — do not push"; exit 1; }
+
+# ── S-224: A 类教训补关卡 ────────────────────────────────────────────────────
+# S-223 量出 26 条教训只是散文。这一批把有明显可执行形式的补上,每条都过了
+# mutation 测试(其中两条第一版存活,S-216 那条被我自己的 docstring 满足 —— 
+# 同一 session 第七次踩到 tests/_source.py 记录的那个失败)。
+python3 -m tests.test_lesson_guards || {
+  echo "  ✗ lesson guards FAILED — do not push"; exit 1; }
+
 # ── S-223: 试错价值 = 被强制执行的那一部分 ───────────────────────────────────
 # 一条只被写下来的教训,在下一个失忆的 session 里和不存在没有区别。这个关卡把
 # "写下 → 强制"的脱节变成一个只能升的数字。今天 76/102。

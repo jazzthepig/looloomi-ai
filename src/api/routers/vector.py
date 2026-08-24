@@ -432,54 +432,14 @@ async def rebuild_asset_vectors(x_internal_token: str = Header(None)):
     if not _tok or x_internal_token != _tok:
         return JSONResponse(status_code=401, content={"detail": "Invalid token"})
 
-    from src.data.vector.embedder import SCHEMA_VERSION, generate_embedding
-    from src.data.vector.pgvector_store import upsert_embeddings
-
-    try:
-        # The real name is calculate_cis_universe. The first draft imported
-        # `get_cis_universe`, which does not exist — caught here only because the
-        # endpoint reported the ImportError instead of swallowing it, which is the
-        # whole argument for not wrapping this in a bare except (S-103's class).
-        from src.data.cis.cis_provider import calculate_cis_universe
-        uni = (await calculate_cis_universe()).get("universe") or []
-    except Exception as e:
-        return JSONResponse(status_code=503,
-                            content={"detail": f"universe unavailable: {str(e)[:160]}"})
-    if not uni:
-        return JSONResponse(status_code=503, content={"detail": "universe is empty"})
-
-    embeddings, failed = {}, []
-    regime = None
-    for a in uni:
-        sym = str(a.get("symbol") or "").upper()
-        if not sym:
-            continue
-        regime = regime or a.get("macro_regime")
-        try:
-            embeddings[sym] = generate_embedding(a)
-        except Exception as e:            # per-asset, never abort the batch
-            failed.append(f"{sym}:{str(e)[:60]}")
-
-    if not embeddings:
-        return JSONResponse(status_code=500,
-                            content={"detail": "embedder produced nothing",
-                                     "failed": failed[:10]})
-
-    ameta = {str(a.get("symbol")).upper(): {"asset_class": a.get("asset_class")}
-             for a in uni if a.get("symbol")}
-    ok = upsert_embeddings(embeddings, asset_meta=ameta, macro_regime=regime)
-    return {
-        "status": "ok" if ok else "write_failed",
-        "written": len(embeddings) if ok else 0,
-        "schema_version": SCHEMA_VERSION,
-        "dims": len(next(iter(embeddings.values()))),
-        "failed_assets": failed[:10],
-        "n_failed": len(failed),
-        # Stated because a rebuild that wrote 58 rows and a rebuild that wrote 58
-        # rows OF THE WRONG SHAPE look identical in a row count.
-        "verify": "select schema_version, dims, count(*) from asset_embeddings "
-                  "where superseded_reason is null group by 1,2",
-    }
+    # ONE implementation, two callers (S-220). The rebuild used to live only here,
+    # so the daily loop would have had to re-implement it — and two versions of
+    # one rule is a failure this session already paid for three times over.
+    from src.data.vector.embedding_loop import rebuild_once
+    res = await rebuild_once()
+    if not res.ok:
+        return JSONResponse(status_code=503, content=res.as_payload())
+    return res.as_payload()
 
 
 @router.get("/internal/vdb-health")
