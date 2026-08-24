@@ -927,6 +927,9 @@ echo "  ✓ simulate-paper-trade harness guards (S-217)"
 bash scripts/check_ledger_citations.sh || {
   echo "  ✗ dangling ledger citation — do not push"; exit 1; }
 
+# ── S-227: 部署后验证器必须存在,且能分开四个状态 ────────────────────────────
+# 这个关卡不跑验证器(preflight 离线),只保证它没被删/没被削掉那四个区分。
+# 验证器本体在 push 之后跑:bash scripts/postdeploy_verify.sh
 # ── S-220: asset_embeddings 的调度写者 ───────────────────────────────────────
 # 缺陷不是 loop 坏了,是【没有 loop】。所以最要紧的一条断言是"这个写者真的被
 # 调度了" —— 而它的第一版 mutation 存活:查名字出现分不出【定义】和【调用】,
