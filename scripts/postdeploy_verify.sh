@@ -73,6 +73,28 @@ echo ""
 
 # ── 2/5 「太早」不是「坏了」 ─────────────────────────────────────────────────
 # 每个 loop 都有自己的首次延迟。uptime 小于它的时候,表没动是【正确的】。
+ROLE=$(echo "$BS" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin).get('runtime_role') or {}
+    print(f\"{d.get('role')}|{d.get('may_write_shared_record')}|{d.get('refusals_note','')}\")
+except Exception: print('|||')")
+R_NAME="${ROLE%%|*}"; R_REST="${ROLE#*|}"; R_WRITE="${R_REST%%|*}"; R_NOTE="${R_REST#*|}"
+if [[ "$R_NAME" == "None" || -z "$R_NAME" ]]; then
+  echo "  ⚠ build-state 没有 runtime_role —— 线上还是旧版,这一项无法判断"
+  WARN=1
+elif [[ "$R_WRITE" != "True" ]]; then
+  # 这是最贵的一种沉默:role 未设 fail-closed 成 replica,每个经过 role gate 的
+  # 写入都被拒,而拒绝只在日志里留一行、每个目标只留一次。
+  echo "  ✗ role=$R_NAME 且【不能写】共享记录 —— 所有经过 role gate 的写入都在被拒"
+  echo "    $R_NOTE"
+  echo "    APP_ROLE 未设时 fail-closed 成 replica。生产必须显式 APP_ROLE=production。"
+  FAIL=1
+else
+  echo "  ✓ role=$R_NAME,可写共享记录 · $R_NOTE"
+fi
+echo ""
+
 echo "[2/5] 时间窗"
 declare -A FIRST_RUN=( ["embedding_rebuild"]=900 ["forward_return_backfill"]=1200
                        ["t2_precompute"]=600 ["forward_record"]=300 )

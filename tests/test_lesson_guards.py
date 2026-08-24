@@ -228,6 +228,32 @@ else:
         if _needle not in _pdv_src:
             fail(f"S-227: postdeploy_verify {_why}")
 
+# ── S-228 · 角色与拒绝计数必须能从外面看见 ───────────────────────────────────
+# APP_ROLE 未设 ⇒ fail-closed 成 replica ⇒ 每个经过 role gate 的写入被静默拒绝,
+# 而拒绝只 log-once。于是两个世界从外面一模一样:primary 但没人调那个端点 /
+# replica 但每次写入都被拒。修法毫不相干,而我在 S-221 里直接断言了前者。
+_rr = ast.parse((SRC / "api/runtime_role.py").read_text())
+if not any(isinstance(n, ast.FunctionDef) and n.name == "refusal_counts"
+           for n in ast.walk(_rr)):
+    fail("S-228: runtime_role 没有 refusal_counts() —— 一次拒绝和一万次拒绝"
+         "在外面看起来一样")
+else:
+    _nr = next(n for n in ast.walk(_rr)
+               if isinstance(n, ast.FunctionDef) and n.name == "note_refusal")
+    # 计数必须在 log-once 的早返回【之前】,否则第二次起就不计了。
+    _body = _nr.body
+    _first_return = next((i for i, x in enumerate(_body)
+                          if any(isinstance(y, ast.Return) for y in ast.walk(x))), len(_body))
+    _counts_early = any("_REFUSALS" in ast.dump(x) for x in _body[:_first_return])
+    if not _counts_early:
+        fail("S-228: note_refusal 在 log-once 的早返回之后才计数 —— 第二次起就丢了,"
+             "而「发生过」和「发生了多少次」是两个问题")
+
+_ms = ast.parse((SRC / "api/main.py").read_text())
+if not any(isinstance(n, ast.FunctionDef) and n.name == "_role_echo" for n in ast.walk(_ms)):
+    fail("S-228: /internal/build-state 不回显 runtime_role —— 决定整个进程能否写"
+         "系统记录的那个开关,在生产里不可见")
+
 _lh = code_only((SRC / "api/loop_health.py").read_text())
 if "vdb-health" not in _lh:
     fail("S-216: loop_health does not probe the vector substrate — the instrument "
@@ -293,5 +319,5 @@ if _fails:
     for f in _fails:
         print("   ·", f)
     sys.exit(1)
-print(f"  ✓ lesson guards: S-119/194/195/207/214/215/216/225/227 enforced "
+print(f"  ✓ lesson guards: S-119/194/195/207/214/215/216/225/227/228 enforced "
       f"({len(_declared_stores)} vdb stores watched)")

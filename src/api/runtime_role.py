@@ -147,14 +147,42 @@ def refuse_write(what: str) -> str | None:
 
 _WARNED: set[str] = set()
 
+#: 每个目标被拒了多少次 (S-228, 2026-08-24)。
+#:
+#: WHY COUNT AND NOT JUST LOG. 原来只 log-once,理由是对的(每五分钟一条会淹没
+#: boot banner)。但 log-once 的代价是:**一次拒绝和一万次拒绝在外面看起来一样,
+#: 而且都只是 Railway 日志里的一行。**
+#:
+#: 今天这让两个完全不同的世界无法区分:
+#:   (a) 线上是 primary,`strategy_records` 空是因为【没人调那个端点】
+#:   (b) 线上是 replica,每一次写入都在被【静默拒绝】
+#: 两者的修法毫不相干,而我在 S-221 里直接断言了 (a)。**我断言的时候没有能力知道。**
+#:
+#: 计数不写日志,所以不会淹没任何东西;它只是让"拒绝了多少次"变成可查的事实。
+_REFUSALS: dict[str, int] = {}
+
 
 def note_refusal(what: str, reason: str) -> None:
-    """Log a refusal ONCE per target. A background loop refusing every five minutes
-    would bury the boot banner that explains why."""
+    """Count every refusal; log the first one per target.
+
+    计数与日志分开:日志是给人看的,一次就够;计数是给探针看的,必须全量 ——
+    「有没有发生过」和「发生了多少次」是两个问题,而只有后者能告诉你一个循环
+    是不是每天都在撞同一堵墙。
+    """
+    _REFUSALS[what] = _REFUSALS.get(what, 0) + 1
     if what in _WARNED:
         return
     _WARNED.add(what)
     _log.warning("[ROLE] %s", reason)
+
+
+def refusal_counts() -> dict[str, int]:
+    """{目标: 被拒次数}。空字典 = 从未有过写入尝试被拒。
+
+    ⚠️ 空字典**不等于**"写入都成功了" —— 它也可能是"根本没人尝试过写"。
+    这两件事要靠调用方的写入计数去分,不要在这里合并。
+    """
+    return dict(_REFUSALS)
 
 
 def describe() -> dict:
