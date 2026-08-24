@@ -890,5 +890,13 @@ python3 -m src.research.validation.tests.test_factor_tilt_smoke || {
   echo "  ✗ factor-tilt smoke FAILED — do not push"; exit 1; }
 echo "  ✓ cross-asset factor tilt guards (S-198)"
 
+# ── S-206: a citation must point at something ────────────────────────────────
+# Measured 2026-08-24: 30 S-numbers were cited in code and in this file's own
+# stage banners with NO ledger entry anywhere — including nine written the same
+# week. The banner above says "(S-197)"; there is no S-197. A citation nobody can
+# follow is a justification that exists only inside the head of whoever wrote it.
+bash scripts/check_ledger_citations.sh || {
+  echo "  ✗ dangling ledger citation — do not push"; exit 1; }
+
 echo ""
 echo "✅ PREFLIGHT PASSED — imports + boots + discipline green. Safe to push."
