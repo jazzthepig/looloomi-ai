@@ -848,6 +848,20 @@ python3 -m pytest tests/test_ic_weight_chain.py -q || {
   echo "  ✗ IC-weight-chain suite FAILED — do not push"; exit 1; }
 echo "  ✓ IC weight chain honest when empty (S-202)"
 
+# ── S-205: bulk fan-out belongs on a paid source ─────────────────────────────
+# Jazz had said this before and it was violated twice in one week: 262 symbols
+# against Binance's free mirror (panel dead for days), then 232 against a free
+# DEX endpoint at ~53 req/s (429 on 57 including BTC, write refused two days).
+# Both were "fixed" at the symptom — a floor that blocks, a gentler pace —
+# neither touched the rule. A reminder given and violated twice has to become
+# something that fails a build.
+# And the real lesson was cheaper than either fix: metaAndAssetCtxs returns
+# mark/oracle/funding/OI for ALL 232 perps in ONE request. The 232-call loop
+# existed because nobody looked for a bulk endpoint.
+python3 -m pytest tests/test_source_policy.py -q || {
+  echo "  ✗ source-policy suite FAILED — do not push"; exit 1; }
+echo "  ✓ bulk fan-out on paid sources only (S-205)"
+
 # ── S-197: pod aggregator guards (Strategy 3) ────────────────────────────────
 # The aggregator wraps three cross-sectional legs (R46/R62/R76) inside a single
 # book with three safety properties: (1) cross-pod correlation gate drops the

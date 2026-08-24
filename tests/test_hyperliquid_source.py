@@ -95,3 +95,49 @@ def test_coingecko_writer_is_flagged_for_the_date_bug():
     assert "S-191" in state, (
         "the CoinGecko off-by-one must stay on the first screen until fixed — "
         "every return series from that source is shifted one day")
+
+
+# ── S-204: the collector throttled itself into refusing to write ─────────────
+
+def test_pacing_stays_inside_the_venue_budget():
+    """Concurrency 8 at a 0.15s pause is ~53 req/s. Hyperliquid answered 429 to
+    57 of 232 symbols INCLUDING BTC, coverage fell to 56%, the 70% floor fired,
+    and the collector refused to write for two days. Every step was correct; the
+    collector had caused the condition it then correctly refused through."""
+    from src.data.market import hyperliquid_collector as hc
+    rate = hc._CONCURRENCY / max(hc._BATCH_PAUSE_S, 1e-9)
+    assert rate <= 10, (
+        f"~{rate:.0f} req/s — measured 429s above this. A collector that takes "
+        f"two minutes and finishes beats one that takes twenty seconds and is "
+        f"throttled into silence.")
+
+
+def test_throttling_and_delisting_are_different_outcomes():
+    """A 429 is transient and must be retried; an empty body is a delisting and
+    never will be. Collapsing them made a self-inflicted rate limit look like
+    45% of the venue disappearing — S-180's miss-vs-error, one layer down."""
+    src = code_only((ROOT / "src/data/market/hyperliquid_collector.py").read_text())
+    fn = src.split("async def _fetch_one")[1].split("\nasync def ")[0]
+    assert "429" in fn and "throttled" in fn, "a 429 must be named as throttling"
+    assert "delisted" in fn, "an empty body must be named as a delisting"
+    assert "_MAX_RETRIES" in fn, "throttling must be retried"
+    # and the retry must NOT cover the delisted path
+    delist_line = [l for l in fn.split("\n") if '"delisted"' in l][0]
+    assert "return" in delist_line, "a delisting must return immediately, not retry"
+
+
+def test_the_floor_denominator_excludes_permanent_absences():
+    """45 delisted perps are still in the venue's `meta` list. Counting them as
+    failures drags a health signal down every run with a permanent fact."""
+    src = code_only((ROOT / "src/data/market/hyperliquid_collector.py").read_text())
+    fn = src.split("async def collect_hyperliquid")[1]
+    assert "reachable" in fn, "the floor must divide by symbols that COULD answer"
+    frac_line = [l for l in fn.split("\n") if "frac =" in l][0]
+    assert "reachable" in frac_line, (
+        f"coverage still divides by the full list: {frac_line.strip()}")
+
+
+def test_the_report_separates_the_three_outcomes():
+    src = code_only((ROOT / "src/data/market/hyperliquid_collector.py").read_text())
+    for key in ("symbols_reachable", "symbols_delisted", "symbols_throttled"):
+        assert f'"{key}"' in src, f"{key} must be reported — 'failed: 102' is not actionable"

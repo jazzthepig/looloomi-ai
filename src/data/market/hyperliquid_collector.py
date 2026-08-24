@@ -52,8 +52,23 @@ _log = logging.getLogger("hyperliquid")
 _INFO_URL = "https://api.hyperliquid.xyz/info"
 SOURCE = "hyperliquid"
 
-_CONCURRENCY = 8
-_BATCH_PAUSE_S = 0.15
+# ── S-204 (2026-08-23): the collector rate-limited ITSELF into refusing ─────
+# Measured: concurrency 8 with a 0.15s pause is roughly 53 req/s. Hyperliquid
+# answered HTTP 429 to 57 of 232 symbols — including BTC — which dropped coverage
+# to 56%, below the 70% floor, so the collector refused to write and said so only
+# to a print statement. Two days of silence, self-inflicted, and the refusal was
+# CORRECT at every step: the throttling was real, the floor did its job, the
+# write was rightly withheld. The defect is that the collector caused the
+# condition it then correctly refused to write through.
+#
+# ~6 req/s stays well inside the documented budget. A collector that takes two
+# minutes and finishes beats one that takes twenty seconds and gets banned —
+# the same trade `deep_panel_collector` states and then set too aggressively.
+_CONCURRENCY = 3
+_BATCH_PAUSE_S = 0.5
+_MAX_RETRIES = 3            # 429 is transient; a delisted symbol is not
+_RETRY_BACKOFF_S = 2.0
+
 _MIN_OK_FRACTION = 0.70
 _DEFAULT_DAYS = 10
 _TIMEOUT = 25.0
@@ -80,17 +95,31 @@ async def _fetch_one(client: httpx.AsyncClient, coin: str,
     """One symbol's daily candles. Never raises."""
     end_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     start_ms = end_ms - (days + 2) * 86_400_000
-    try:
-        r = await client.post(_INFO_URL, json={
-            "type": "candleSnapshot",
-            "req": {"coin": coin, "interval": "1d",
-                    "startTime": start_ms, "endTime": end_ms}})
-        r.raise_for_status()
-        candles = r.json()
-    except Exception as e:                                    # noqa: BLE001
-        return coin, [], f"{type(e).__name__}: {str(e)[:80]}"
+    # 429 is a THROTTLE (retry) and an empty body is a DELISTING (never retry).
+    # Collapsing them is what made a self-inflicted rate limit look like 45% of
+    # the venue disappearing — the same miss-vs-error collapse as S-180, one
+    # protocol layer down.
+    candles = None
+    for attempt in range(_MAX_RETRIES):
+        try:
+            r = await client.post(_INFO_URL, json={
+                "type": "candleSnapshot",
+                "req": {"coin": coin, "interval": "1d",
+                        "startTime": start_ms, "endTime": end_ms}})
+            if r.status_code == 429:
+                if attempt == _MAX_RETRIES - 1:
+                    return coin, [], "throttled(429)"
+                await asyncio.sleep(_RETRY_BACKOFF_S * (2 ** attempt))
+                continue
+            r.raise_for_status()
+            candles = r.json()
+            break
+        except Exception as e:                                # noqa: BLE001
+            if attempt == _MAX_RETRIES - 1:
+                return coin, [], f"{type(e).__name__}: {str(e)[:80]}"
+            await asyncio.sleep(_RETRY_BACKOFF_S * (2 ** attempt))
     if not isinstance(candles, list) or not candles:
-        return coin, [], "empty"
+        return coin, [], "delisted"
 
     rows = []
     for k in candles:
@@ -118,6 +147,56 @@ async def _fetch_one(client: httpx.AsyncClient, coin: str,
     return coin, rows, None
 
 
+async def venue_snapshot() -> dict[str, Any]:
+    """Every perp's mark, oracle, funding, OI and day volume — in ONE request.
+
+    ⚠️ S-205. This replaces a 232-request `candleSnapshot` fan-out that existed
+    only because I never looked for a bulk endpoint. Jazz, 2026-08-23:
+    「不可以那么依赖任何免费 api,大量多资产会被封啊」— and he had said it before.
+    The 429s were not a wall to pace against; they were the venue telling me I
+    was asking the wrong question 232 times.
+
+    What this returns that CoinGecko cannot: FUNDING (the carry that decides
+    whether a perp sleeve is viable — measured +23.07% annualised equal-weight on
+    the ① panel), the oracle-vs-mark basis, open interest, and the tradeable
+    listing itself. Those are venue facts. Bulk price history is CoinGecko Pro's
+    job, which we pay for.
+    """
+    out: dict[str, Any] = {"ok": False, "assets": {}}
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as c:
+            r = await c.post(_INFO_URL, json={"type": "metaAndAssetCtxs"})
+            if r.status_code == 429:
+                return {**out, "reason": "throttled — one call should never be; "
+                                         "check for another fan-out in this process"}
+            r.raise_for_status()
+            meta, ctxs = r.json()
+    except Exception as e:                                    # noqa: BLE001
+        return {**out, "reason": f"{type(e).__name__}: {str(e)[:100]}"}
+
+    def _f(v):
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return None          # I1: unmeasured is None, never 0.0
+
+    assets = {}
+    for a, c in zip(meta.get("universe", []), ctxs):
+        name = a.get("name")
+        if not name:
+            continue
+        assets[name.upper()] = {
+            "mark": _f(c.get("markPx")),
+            "oracle": _f(c.get("oraclePx")),
+            "prev_day": _f(c.get("prevDayPx")),
+            "funding_1h": _f(c.get("funding")),
+            "open_interest": _f(c.get("openInterest")),
+            "day_notional_volume": _f(c.get("dayNtlVlm")),
+        }
+    return {"ok": True, "assets": assets, "n": len(assets),
+            "fetched_at": datetime.now(timezone.utc).isoformat()}
+
+
 async def collect_hyperliquid(days: int = _DEFAULT_DAYS,
                               symbols: list[str] | None = None) -> dict[str, Any]:
     """Refresh Hyperliquid daily bars. Idempotent; safe to run repeatedly."""
@@ -129,6 +208,17 @@ async def collect_hyperliquid(days: int = _DEFAULT_DAYS,
         if not syms:
             return {"ok": False, "error": "no Hyperliquid symbols resolved",
                     "note": "meta endpoint unreachable or empty"}
+
+        # ── S-205: a fan-out over a free source must justify itself ─────────
+        # `venue_snapshot()` answers mark/oracle/funding/OI for ALL perps in one
+        # request. This per-symbol path exists only for CANDLE HISTORY, which
+        # that endpoint does not carry — and history in bulk belongs on
+        # CoinGecko Pro, which we pay for. Reaching here with the full listing
+        # is the error S-204 diagnosed as a pacing problem and S-205 corrected
+        # to a source-choice problem.
+        from src.data.market.source_policy import assert_bulk_source
+        assert_bulk_source(len(syms), "hyperliquid",
+                           job="hyperliquid daily candle backfill")
 
         sem = asyncio.Semaphore(_CONCURRENCY)
         all_rows: list[dict] = []
@@ -146,7 +236,24 @@ async def collect_hyperliquid(days: int = _DEFAULT_DAYS,
         await asyncio.gather(*[_go(s) for s in syms])
 
     ok_n = len(syms) - len(failures)
-    frac = ok_n / len(syms) if syms else 0.0
+    # ── S-204: the floor measures REACHABILITY, not listing churn ────────────
+    # A delisted perp returns an empty body and will do so forever — MATIC, RNDR,
+    # FTM and 42 others sit in the venue's `meta` list under names it no longer
+    # serves candles for. Counting them as failures lets a PERMANENT fact drag a
+    # health signal down on every run: on 2026-08-21 the combination (45 delisted
+    # + 57 throttled) put coverage at 56%, tripped the 70% floor, and withheld
+    # the write for two days.
+    #
+    # The denominator is symbols that COULD have answered. Delistings are
+    # reported, not counted — inventory news, not an outage.
+    delisted = {s for s, why in failures.items() if why == "delisted"}
+    throttled = {s for s, why in failures.items() if why and why.startswith("throttled")}
+    reachable = [s for s in syms if s not in delisted]
+    frac = ok_n / len(reachable) if reachable else 0.0
+    if throttled:
+        _log.warning("[HL] %s symbols throttled after %s retries — the collector "
+                     "is pacing itself too fast for the venue, not the venue "
+                     "being down", len(throttled), _MAX_RETRIES)
     elapsed = round((datetime.now(timezone.utc) - started).total_seconds(), 1)
 
     # S-190: the floor BLOCKS. A partial panel day is not a thin day, it is a
@@ -158,7 +265,9 @@ async def collect_hyperliquid(days: int = _DEFAULT_DAYS,
                    "Sample: %s", ok_n, len(syms), frac * 100,
                    _MIN_OK_FRACTION * 100, dict(list(failures.items())[:5]))
         return {"ok": False, "refused": True, "written": False,
-                "symbols_total": len(syms), "symbols_ok": ok_n,
+                "symbols_total": len(syms), "symbols_reachable": len(reachable),
+                "symbols_delisted": len(delisted), "symbols_throttled": len(throttled),
+                "symbols_ok": ok_n,
                 "symbols_failed": len(failures), "ok_fraction": round(frac, 3),
                 "rows_built": len(all_rows), "rows_upserted": 0,
                 "elapsed_s": elapsed,
@@ -179,6 +288,9 @@ async def collect_hyperliquid(days: int = _DEFAULT_DAYS,
     out = {
         "ok": written and frac >= _MIN_OK_FRACTION,
         "symbols_total": len(syms),
+        "symbols_reachable": len(reachable),
+        "symbols_delisted": len(delisted),
+        "symbols_throttled": len(throttled),
         "symbols_ok": ok_n,
         "symbols_failed": len(failures),
         "ok_fraction": round(frac, 3),
