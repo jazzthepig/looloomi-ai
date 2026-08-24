@@ -1,0 +1,44 @@
+# S-numbers cited in code with NO ledger entry, as measured 2026-08-24.
+#
+# This file is a DEBT REGISTER, not an amnesty. Rules enforced by
+# check_ledger_citations.sh:
+#   · a number NOT in this file and not in the ledger → build fails
+#   · a number in this file that now HAS an entry     → build fails until the
+#     line is deleted (so the list cannot quietly become permanent)
+#
+# It is frozen rather than backfilled because writing these entries now would
+# mean reconstructing diagnoses from memory — indistinguishable, to any later
+# reader, from ones that were actually verified. That substitution is the exact
+# defect this check exists to stop.
+#
+# 2026-08-24 baseline: 30.
+S-1     # docs/ prose, likely not a ledger citation at all — verify then drop
+S-76    # appears in ledger BODY 5x and PROJECT_STATE_LOG 3x, never as a heading
+S-137
+S-141
+S-142
+S-143
+S-144
+S-145
+S-146
+S-147
+S-148
+S-149
+S-150
+S-154
+S-155
+S-160
+S-161
+S-176
+S-178
+S-179
+S-190
+S-197   # this session — evidence in hand, entry owed
+S-198   # this session
+S-199   # this session
+S-200   # this session
+S-201   # this session
+S-202   # this session
+S-203   # this session
+S-204   # this session
+S-205   # this session
