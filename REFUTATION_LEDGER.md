@@ -11193,3 +11193,85 @@ v3 在 feed 坏掉前只有 ~9 个诚实的 mark;现在重开损失九天,第 55
 已作废并附原因:`beta_core_nav` / `beta_core_nav_q` 的 08-21、08-22;
 `two_layer_paper_nav` 08-17→08-22 六行(NAV 自始至终 1.00000)加了 note。
 
+
+---
+
+## S-206 — 代码里引用了 30 个不存在的台账号
+
+Jazz:「你发生错误的时候没有和我们项目资料进行核实,然后就自己主观臆断了。」去查了,比他说的更难看。
+
+```
+hyperliquid_collector.py  "see S-204"   → 没有 S-204
+source_policy.py          "(S-205)"     → 没有 S-205
+preflight.sh 自己打印     "✓ ... (S-197)" → 没有 S-197
+S-137/141/143/148/160/176 → ledger、PROJECT_STATE_LOG、PROJECT_STATE 三处全查,零命中
+```
+
+规则 #7 写着 claim the heading BEFORE writing the body。**九个 body,零个 heading**,而 S-137 那批远早于本 session —— 这条纪律漏了很久。
+
+**引用是一个承诺:这段推理写在了某个后来人能审计的地方。** 三十个悬空引用 = 三十个决定,理由只存在于同一个作者、同一小时写下的 docstring 里,没有独立记录。这正是"先断言,再把断言当成已核实"的形状。
+
+`scripts/check_ledger_citations.sh` + preflight 末段。baseline 冻结当时的 30 条,**只能减不能加**;某号补上了却没删 baseline 行 → 同样 fail(否则欠账清单会变成永久豁免)。旧的 21 条**没有回填** —— 凭记忆重建一个诊断,读起来和真核实过的一模一样,那正是要挡的东西。
+
+---
+
+## S-207 — 重放不是回测:70 天里 R70 有 9 天根本跑不起来
+
+Jazz:「重点是看我们的组合和工程是否通,程序是否运作中,而不单是结果。」并指出 60 天是**机构合规时钟**,不是技术门槛 —— 我把两者焊成一个 blocker,那是我的设定错误。
+
+| | 回测 | 重放 |
+|---|---|---|
+| 决策函数 | 在这段数据上被**选出来** | 今天**冻结** |
+| 输入 | 完整历史表 | 只有 `recorded_at <= D` |
+| 问的 | 回报多少 | **有没有输出决策,哪天没有,为什么** |
+| 失败的样子 | 曲线难看 | **曲线不存在** |
+
+R70 冻结成可执行规则,在 70 天存量上重放:
+
+```
+FLAT  regime gate TIGHTENING   55 天      FIRED                 2 天
+FLAT  regime gate RISK_OFF      2 天      FLAT  off-cadence     2 天
+BLOCKED  panel 0 < 12           9 天  ←
+```
+
+**那 9 天是新发现。** `2026-06-20→06-23`、`2026-07-18→07-22`:`cis_scores` 有 1450–1566 行、58 symbol、**score 100% 有、grade 100% 有、五根 pillar 全部 NULL**,source=`railway_t2_hourly`。**Mac T1 掉线时 T2 顶上,写出的分数和评级完全正常,但没有 pillar 分解。** 行数、评分覆盖、评级覆盖三个指标全绿。
+
+**PIT 必须卡 `recorded_at`,不是 `trade_date`:** `ohlcv_daily.binance_hist` 的 recorded_at 中位数比 trade_date 晚 **28.2 天**。所以 marks 那半边现在做不了重放 —— 价格当时不在库里。**「会不会触发」可答,「NAV 多少」不可答。**
+
+harness 强制 `BLOCKED ≠ FLAT`:规则跑了并拒绝 = FLAT(机器是好的),规则跑不起来 = BLOCKED(工程坏了)。两值报告会把这 9 天和那 57 天算成同一件事 —— 而那正是 `two_layer` 28 个 0.00%、IC 链四个月 `ok=True rows=0` 的同一个形状。
+
+⚠️ **重放的收益仍是样本内**,替代不了合规 60 天;`summary()` 里 `return_pct` 恒为 None 并附原因(payload 里出现的数字一定会被引用)。且 R70 的 DSR 0.27 未过 0.95 —— 把规则写成可执行不等于背书。
+
+---
+
+## S-209 — `RISK-OFF` 和 `RISK_OFF` 同时在库,是两个市场
+
+`cis_scores.macro_regime` 实测同时存在 `RISK-OFF`(4 天)与 `RISK_OFF`(2 天)。`canonical_regime()` 存在但**没有在写入端生效**,任何按 regime 分组的统计都会把同一个状态切成两半。
+
+**R70 的 `skip_regimes` 里两种拼法都列了** —— 当时那个人已经撞到这个问题,选择了绕过而不是修。绕过是可以的(MEMORY §协作),但它没有留下带 `VERIFY:` 的条目,于是绕行本身变成了配置的一部分。
+
+`r70_rule.py` 改为**读取侧 canonicalise**,不枚举变体:一份需要每来一个新拼法就扩一次的 skip 名单,总有一天会漏一个,而漏一个意味着**交易了本来说要跳过的 regime**。
+
+---
+
+## S-214 — 两个常量命名了两张表,谁也没往里写
+
+`pod_aggregator_paper.py:62` 和 `factor_tilt_paper.py:58` 各自声明 `NAV_TABLE = "..."`,**从未调用过写入**。两张表 0 行数周,两本账每天照常返回 `status: "ok"` —— NAV 记在 state 行里,**从进程内部看一切健康,从外面看没有曲线**。Minimax-A 是**读表**发现的,不是读代码。
+
+**一个命名了表的常量是一个承诺。** 表建了、迁移跑了、文档写了,一次没被写过。这比没有这张表更糟:空表读起来像"这个策略没产出",那是一个结果 —— 而它从来不是结果,是一行没写的代码。
+
+**决定(我拖了三次,现在定):补写入者,不删常量。** 会 mark 的账本是**可证伪的**,六十天的行可以判它死刑;不 mark 的账本既不活也不死。CLAUDE.md 说 the graveyard is the asset —— **没有脉搏的东西没法下葬。**
+
+并且**写入被检查**:`supabase_insert_table` 返回 bool 而五本账把它扔掉(task #33)。被丢弃的 False 就是账本报 `ok` 却什么也没持久化的原因。新的 `nav_persist.write_nav_row` 返回结果,调用方必须放进 payload:`nav_persisted: false` + 原因,并且 `status` 改为 `degraded` —— **写失败的 mark 不是 ok 的 mark。**
+
+⚠️ 未验证:这两本账的行情都取自 `fapi.binance.com`,而该 host 从 Railway US 被地理封锁。**写入者补上不等于会有行。** VERIFY: 部署后查这两张表是否真的开始长行;若仍 0 行,问题在数据源不在写入者。
+
+---
+
+## S-215 — `ic_multiplier = 1.0` 有两个意思
+
+无可用因子 → 1.0;IC 真的算出来是平的 → 也是 1.0。四个月里每根支柱都读 1.0,因为 `realized_return_7d` 234 行全 NULL,**加权机制从未被通电过**,而 payload 和一个测出了中性的健康引擎完全无法区分。
+
+和 `ok=True rows=0`、和"定不了价所以 NAV 平"是同一个缺陷。
+
+`/trading` 现在同时给出 `ic_pillars_measured`、`ic_multiplier_source`(每根支柱:measured n=… / 无因子清过门槛 / 该支柱无因子)、`ic_layer_active`。**先读这三个再读乘数:0 measured 意味着每一个 1.0 都是默认值,CIS 加权层是死的。**
