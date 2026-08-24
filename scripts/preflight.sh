@@ -890,6 +890,20 @@ python3 -m src.research.validation.tests.test_factor_tilt_smoke || {
   echo "  ✗ factor-tilt smoke FAILED — do not push"; exit 1; }
 echo "  ✓ cross-asset factor tilt guards (S-198)"
 
+# ── S-205: R76 strategy-2 paper-book guards (Strategy 2) ─────────────────────
+# R76 is the only survivor of the cross-sectional funding-residual family
+# (LEVEL=✓ / IVOL=PARTIAL / MOMENTUM=PARTIAL). Three hard properties the
+# 770-day-panel verdict (gross_t=+2.06, OOS_t=+2.47, 5/6 windows positive)
+# depends on: (1) the score is cross-sectionally demeaned (mean-zero per
+# time) so the long/short legs balance to zero gross; (2) the target
+# weights split into 3 terciles with gross=2/3 (R76 standard); (3) the
+# cell constants are frozen at the validated best cell
+# (5d/0bps/k=3/high_fund_long on 28-asset strict universe) so live
+# execution cannot drift from the verdict.
+python3 -m src.research.validation.tests.test_r76_strategy2_smoke || {
+  echo "  ✗ r76-strategy-2 smoke FAILED — do not push"; exit 1; }
+echo "  ✓ R76 strategy-2 paper-book guards (S-205)"
+
 # ── S-206: a citation must point at something ────────────────────────────────
 # Measured 2026-08-24: 30 S-numbers were cited in code and in this file's own
 # stage banners with NO ledger entry anywhere — including nine written the same
