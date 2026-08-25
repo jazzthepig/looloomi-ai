@@ -284,6 +284,31 @@ else:
             fail("S-230: coingecko 出现在可信收益源里 —— 它的日收盘是小时采样点"
                  "塌缩,不是收盘 (S-195)")
 
+# ── S-232 · 两次 z-scoring 的行不可比,而余弦照样返回一个数 ──────────────────
+# market_state_vectors 存的是跨整段历史标准化后的值,原始值不存。均值/标准差随
+# 历史增长而变,所以增量写一天 = 把它放进另一个坐标系。similar_market_states()
+# 不会报错,只会返回一个没有意义的邻居集 —— 没有 NULL、没有 0、没有停滞。
+_vh_src = (SRC / "data/vector/vdb_health.py").read_text()
+_vh_mod2 = ast.parse(_vh_src)
+if not any(isinstance(n, (ast.Assign, ast.AnnAssign))
+           and any(isinstance(t, ast.Name) and t.id == "COHERENCE_KEYS"
+                   for t in (n.targets if isinstance(n, ast.Assign) else [n.target]))
+           for n in _vh_mod2.body):
+    fail("S-232: vdb_health 没有 COHERENCE_KEYS —— 混了两次 z-scoring 的表看起来"
+         "完全健康,而它返回的邻居是错的")
+_vh2 = next((n for n in ast.walk(_vh_mod2)
+             if isinstance(n, ast.AsyncFunctionDef) and n.name == "vdb_health"), None)
+if _vh2 is not None:
+    _uses = any(isinstance(n, ast.Name) and n.id == "COHERENCE_KEYS"
+                and isinstance(n.ctx, ast.Load) for n in ast.walk(_vh2))
+    _emits = any(isinstance(n, ast.Constant) and n.value == "incoherent"
+                 for n in ast.walk(_vh2))
+    if not (_uses and _emits):
+        fail("S-232: vdb_health() 没有应用 COHERENCE_KEYS / 没有 incoherent 状态")
+# incoherent 必须进 overall 的 broken 分支,否则它只是一个没人看的字段
+if '"incoherent"' not in _vh_src.split("worst = \"flowing\"", 1)[-1][:400]:
+    fail("S-232: incoherent 没有进 overall 判定 —— 一个不影响总判的状态位等于注释")
+
 _lh = code_only((SRC / "api/loop_health.py").read_text())
 if "vdb-health" not in _lh:
     fail("S-216: loop_health does not probe the vector substrate — the instrument "
@@ -349,5 +374,5 @@ if _fails:
     for f in _fails:
         print("   ·", f)
     sys.exit(1)
-print(f"  ✓ lesson guards: S-119/194/195/207/214/215/216/225/227/228/230 enforced "
+print(f"  ✓ lesson guards: S-119/194/195/207/214/215/216/225/227/228/230/232 enforced "
       f"({len(_declared_stores)} vdb stores watched)")
