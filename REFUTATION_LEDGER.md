@@ -12157,3 +12157,43 @@ fail 是正确的,它防止冻结名单变成永久豁免。
   这个关卡在两台机器上会给出相反结论。
 - `beta_core_backtest` 两边都复现顶层 I/O(相对路径 `panel.json` 依赖 cwd),
   **那才是机器无关的那一半**,留在名单里正确。
+
+---
+
+## S-239 — 禁词表枚举了这个概念的一种说法,而违规用的是另一种
+
+Minimax-A 报的 S-P1-1:`routers/signals.py` 有 long/short 动词。**属实,而且它在
+`/api/v1/signals/edge-map` 的【响应体】里** —— 不是 docstring,是谁调谁拿到的字段:
+
+```json
+"how_to_read": "Long the top tier (STRONG OUTPERFORM) when the tape is risk-ON (bands 4/5);
+                short the bottom tier (UNDERPERFORM) when risk-OFF (bands 1/2)."
+"2_off": "Risk-OFF — short edge favoured; long book screens UNDERWEIGHT."
+"4_on":  "Risk-ON — long the top tier (STRONG OUTPERFORM); short edge fades."
+```
+
+规则 #1 是这份仓库唯一带**监管后果**的硬规则(无 SFC Type 4/9 牌照)。
+
+### 而守卫一直在看着这个文件
+
+`tests/test_compliance_language.py` **早就在 preflight 里**,`_SURFACES` 第一条就是
+`src/api/routers/*.py`,`signals.py` 确实在被扫的 99 个文件里。
+
+**缺口只在禁词表:有 `go long`,没有裸的祈使 `Long the …`。**
+
+这是第三次同一族:S-209(一个 regime 两种拼法)· S-229(只守我刚看见的那个病例)·
+现在这条。**列举实例,而不是刻画构造。** 而列举永远差一种说法。
+
+### 构造是「祈使动词 + 定冠词」
+
+`(?:long|short)\s+the\b` —— 它抓到全部 6 处真违规,而**不碰**:
+`admin.py` 的 "Short top-ups stay synchronous"(形容词)· `long-only` / `long/short`
+(策略类型名词)· `longer` / `short window` / `the shorter the horizon`。
+
+**假阳性会杀死这条守卫** —— 一条对合法技术散文报警的合规检查,一周内会被人加豁免、
+再一周被删掉。所以构造必须窄到只命中祈使句。
+
+mutation 双向都验:把违规原句放回 → **抓到**(报出行号和原文);
+六种合法用法一起放进去 → **零误报**。
+
+顺带补了个不对称:表里有 `go long` 没有 `go short`。
