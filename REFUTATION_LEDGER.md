@@ -11893,3 +11893,267 @@ pass ⇒ 新状态 **`incoherent`**,并进 `overall` 的 broken 分支。
 
 验收不变:`vdb-health` 的 `market_state_vectors` 连续 7 天 `flowing`,
 且 `coherence` 只有一个 pass。
+
+---
+
+## S-233 — 同一个向量的两种形状,而唯一的消费者只读得懂其中一种
+
+继续建日写者。为了让重建的覆盖不低于存量,去看那 582 行实际测到了哪些维度 ——
+**结果先撞到第三个潜伏陷阱。**
+
+`similar_market_states()` 的定义(Postgres,不是 Python):
+
+```sql
+join lateral jsonb_array_elements_text(m.vec_full) with ordinality a(val, i) on true
+join lateral jsonb_array_elements_text(t.vec_full) with ordinality b(val, i) on b.i = a.i
+```
+
+**它按【下标】配对两天的向量。所以 `vec_full` 是有序数组,顺序是 `DIMS`。**
+库里 582 行确实是数组(`jsonb_typeof` = array)。
+
+**而 `StateVector.to_vec_full()` 返回的是 dict,`build_rows_for_upsert` 把它直接塞进这一列。**
+
+没人发现,因为**这个函数没有调用者** —— 表是仓库之外的东西一次性写的。
+**第一个使用这个 helper 的写者(也就是我这一轮本来要写的那个)会往一个按下标索引的列里
+写进 24 个字典,而邻居查询会降级,不会报错。**
+
+这是 S-214 把箭头掉过来:那次是**命名了表却没有写者**,这次是
+**有写者、但它指向一份没人核对过的契约**。两次的共同点是 —— **没有调用者的代码
+不会被任何测试、任何运行、任何监控碰到,而它随时可以被调用。**
+
+修:`to_vec_full_array()` 按 `DIMS` 顺序序列化,null 保留(I1);
+`build_rows_for_upsert` 同时补上 `measured_dims` 与 `zscore_pass`(S-232)。
+守卫两条 mutation 都过:换回 `to_vec_full()` 被抓,去掉 `zscore_pass` 被抓。
+
+### 这一轮的形状,值得单独记
+
+要建一个日写者,连续撞到三个此前无人记录的约束:
+
+```
+S-231  链是活的,我以为它死了 —— grep 不到 Python 是因为它是 Postgres RPC
+S-232  增量写在数学上不可能 —— z-score 跨全史,而余弦不会因此报错
+S-233  vec_full 是位置数组不是字典 —— 唯一的消费者只读得懂数组
+```
+
+**三个都只有在动手之前去读消费者才会发现,而三个都足以让写者静默产出错误结果。**
+如果按第一直觉直接写,今天会多出一个每天跑绿、每天污染邻居空间的循环 ——
+而它会比停摆的那个更难发现,因为它有输出。
+
+**"先读消费者,再写生产者"** 是今天唯一真正学到的方法论,而它不是我想出来的,
+是被这三次连续撞击教出来的。
+
+---
+
+## S-234 — 我把结论写得比证据宽,而 C 忠实地照着它推出了"结构性不可能"
+
+C 回应我的 §M-83-BASELINE-SPLICE,自己审计了 M-82:**6 个价格点里 5 个跨源**,
+并据此得出三条结论,其中第二条是:
+
+> **60d forward-test 在 single-source discipline 下 structurally infeasible**
+> for any hold > 18d(M-82 hold=21d, R70 hold=21d, R19 hold=21d)
+
+推导完全正确 —— **给定他被告知的约束。** 而那个约束是我写宽的。
+
+S-195 的证据部分写得很准:
+
+```
+我们在用:  /coins/{id}/market_chart/range   → 采样点,短窗口返回小时点
+Pro 提供:  /coins/{id}/ohlc/range           → 真 OHLC K 线,interval=daily 是 Pro 专属
+调用统计:  market_chart 大量 · ohlc 【0 次】
+```
+
+**证据禁的是那个端点。而我在同一条的结尾写了「CoinGecko……不是定价源」** ——
+一句比证据宽的概括。C 读到的是那句,于是把整个 CoinGecko 从可用源里划掉,
+剩下 binance_hist(44d)和 hyperliquid(15d)两段不重合的窗口,自然得出 infeasible。
+
+实测(2026-08-25):`pro-api.coingecko.com/.../ohlc/range` **可达**(401 = 缺 key,不是被封),
+公开 `/ohlc` 返回的是真 `[ts, open, high, low, close]`。**端点在,格式对,我们付着钱,调用 0 次。**
+
+**所以那个"结构性约束"不是结构性的,是一次我拖了一天没做的回填(S-208)。**
+
+### 这条教训比这次事故大
+
+**一个比证据宽的概括,会被下游当成约束照做,而下游不会回头核对证据 ——
+他们没有理由怀疑一条写在台账里的结论。**
+
+我今天反复要求别人"先读消费者"、"先 grep 再断言",而这条错误的形状是:
+**我在一条本身准确的记录末尾,加了一句更好记、更顺口、也更宽的总结。**
+散文的危险不止在于"只被写下来",还在于**它会被精确地执行**。
+
+修:S-195 正文补一句边界 —— **禁的是 `market_chart`,不是 CoinGecko;
+`/ohlc/range` + `interval=daily` 是允许的收益源,且是付费源(source_policy 合规)。**
+`single_source.TRUSTED_RETURN_SOURCES` 增加 `coingecko_pro_ohlc`(与存量的
+`coingecko` 标签区分 —— 同一个 vendor,两个端点,两种数据,必须两个标签)。
+
+### 顺带:C 自己抓到的第二个真 bug,值得单独记
+
+M-85 在 binance_hist 单源下重跑 M-83 V0,得到 **+439.37%**,而 C 正确地把它诊断为
+**权重归一化 artifact**:06-13 只有 DOGE/ATOM 有数据 → nav 按 2/11 计;07-10 其余 9 个进来,
+**权重没有重新归一化** → nav 跳涨。
+
+**成分在窗口中途进出而不重新归一化,和跨源拼接是同一个病** —— 组合的定义在时间轴上变了,
+而曲线把这个变化记成了收益。C 自己发现并说破了它,这是对的做法。
+
+---
+
+## S-235 — 用一个存在的量,顶替一个不存在的量
+
+Minimax-A 审计报的 S-P1-4:`oos_total_pnl` 是回撤和不是盈亏。**属实,而且比 A 评的重,
+文件路径也不对**(不是 `validation/walk_forward.py`,那个文件不存在;是 `src/research/walk_forward.py:176`)。
+
+```python
+"oos_total_pnl": float(sum(r.oos_max_dd_pct for r in rolls)),  # placeholder, real sum from PnLs
+```
+
+而 `report.py:242` 把它渲染成 **`- **OOS total PnL:** … USDT`** —— **两个不同量纲,
+一个被印成另一个,单位还写着 USDT。**
+
+A 建议"改名即可"。不行:**`WalkForwardRoll` 根本没有 PnL 字段**。这个量不存在,
+所以那不是"暂时不准的占位",是**拿一个存在的量顶替一个不存在的量** ——
+和 `sum(())=0`、和"定不了价所以 NAV 平"是同一族。
+
+修:`oos_total_pnl = None` 并带 `oos_total_pnl_reason`;`report.py` 在 None 时印
+"not measured — WalkForwardRoll carries no PnL field"。空 rolls 分支同样是 None 而不是 0.0 ——
+**0.0 读成"跑了但没赚",真相是没跑。**
+
+---
+
+## S-236 — 我在写下「先读消费者」的同一个 session 里,把自己的模块整份换掉了
+
+改 `report.py` 一行渲染,顺手 import 它,炸了。追下去发现的东西比那行大得多。
+
+### 8 个模块 import 不了,而原因是我
+
+`git log` 该文件两个提交:`5841dd8`(原版)和 **`fb95570`(我的,S-189「给 R70 算 DSR」)**。
+`--stat`:**-178 / +137**。我删掉的有:
+
+```
+SharpeStats · sharpe_stats() · probabilistic_sharpe_ratio()
+deflated_sharpe_ratio() · StrategyEval · evaluate_universe()
+```
+
+**8 个 `src/research` 模块 import 这些名字,其中包括 `signal_factory.py`** ——
+每天产出 `signal_factory_*` 那批 `experiment_runs`(sharpe ~1.5)的那个。
+
+**S-233 我刚写完「先读消费者,再写生产者」。那条说的是一个没有调用者的函数指向
+没核对的契约。这次更糟:一个【有 8 个调用者】的模块被我整份换掉。**
+
+### 还有一个更隐蔽的:同名函数,参数顺序相反
+
+```
+旧: expected_max_sharpe(sr_variance, n_trials)
+我: expected_max_sharpe(n_trials, sharpe_variance)
+```
+
+**两个都是 float,传反了不报错,只是算出另一个数。** 合并后改成 **keyword-only** ——
+位置调用直接 TypeError,而不是静默给出不同答案。
+
+### 为什么没有任何东西发现
+
+```
+py_compile 只查语法              → 绿
+app boot smoke 不碰 src/research → 碰不到
+我没有 import 过消费者            → 没人看
+```
+
+**而 `src/research/` 正是每一条策略主张被算出来的地方。**
+
+`tests/test_research_imports.py` + preflight,**三值不是两值**:`ok` /
+`missing`(依赖已在 requirements.txt 但本环境没装 —— 环境问题不是代码问题)/
+`broken`(真错)。**只有 broken 让构建失败**,否则它在沙箱里会因为一个已声明的依赖常红,
+而常红的关卡等于没有关卡。
+
+修完:**190 ok · 17 skipped · 0 broken**(修复前 11 broken)。
+
+### 顺带第三类:模块顶层做 I/O
+
+剩下 2 个不是 import 错,是**顶层就读文件 / 断言数据目录**
+(`beta_core_backtest` 读相对路径 `panel.json`;`r81_taker_buy_residual` 顶层 assert 数据)。
+**import 一个模块不该有副作用** —— 那让"能不能 import"和"数据在不在"变成同一件事。
+冻结名单,附原因,只能减(修好了还留在名单上同样 fail)。
+
+### 对 A 那条审计的更正
+
+A 记的是「装 statsmodels,解锁 pytest 收集」。**`statsmodels>=0.14.0` 就在
+`requirements.txt:29`** —— 声明是对的,生产装得上,是沙箱没装。
+**真正的问题不是那个包,是没有任何关卡会 import 这些模块。**
+一条正确的观察,归因到了错的地方,而正确的归因价值大一个数量级。
+
+---
+
+## S-237 — 硬规则 #8 写了几个月,没有任何东西检查它
+
+Minimax-A 的审计报 `QuantMonitor.jsx` 有 4 处模型名。查实,**两处是真的上屏文本**:
+
+```
+"Weak IC detected · Awaiting Gemma4-26b analysis"
+"|r| < 0.05 × 3 mine runs → Gemma4-26b hypothesis generation → test → evolve"
+```
+
+而 `App.jsx:154` 把 QuantMonitor 渲染在「**Section 1 — Live Trading Engine — FIRST**」——
+**主面板首屏,没有任何 devMode 门控。**
+
+另两处在注释里,不上屏,但一并清了:**留着模型名等于给下一个人一个把它放回屏幕的模板。**
+
+### 查全了范围,而不是只修 A 点到的那个文件
+
+全前端 13 处内部名词命中,逐条查过:
+- **只有 QuantMonitor 那两处上屏。**
+- `CISLeaderboard.jsx` 的 `"railway"` 是**内部枚举值** —— 实测只用于配色和
+  `"FULL MODEL"/"ESTIMATED"` 两值标签,**原值不渲染**,合规。
+- 其余全在 `//` 注释里。
+
+**如果按 A 的清单只改那一个文件,会漏掉"其它文件有没有同样问题"这个问题本身。**
+
+### 守卫怎么写才不会自己变成噪音
+
+**先剥注释。** 一条写着「此处禁止出现模型名」的注释本身含有模型名 ——
+`tests/_source.py` 记的正是这个失败,**今天第五次**。JSX 用不了 Python AST,
+所以做括号安全的注释剥离再匹配。
+
+**代码内合法出现的值冻结,不一刀切。** 一刀切会把 `engineSource === "railway"`
+判成违规,而人会学会忽略这条守卫 —— 那比没有守卫更糟。
+
+mutation 两条都过,而且第二条是反向的:
+- 把模型名放回上屏文本 → **抓到**
+- 在注释里写模型名 → **不误报**(剥注释生效)
+
+**并且冻结名单的「只能减」条款第一次跑就自己触发了** —— 我把 `MobileApp.jsx` 放进了
+名单,而它那三处 railway 全在注释里,剥掉后根本不存在。**一条多余的豁免,
+被守卫自己抓了出来。**
+
+---
+
+## S-238 — 棘轮只对机器无关的属性成立
+
+S-236 的守卫在我的沙箱绿,**在 Mac 上红**:
+
+```
+✗ src.research.validation.r81_taker_buy_residual:
+    已能干净 import —— 从 _MODULE_LEVEL_IO 里删掉这一行
+```
+
+模块本身没问题。**它在沙箱抛异常、在 Mac 干净通过,因为那台机器挂着数据卷。**
+
+### 我怎么错的:把一个正确的模式搬到了它不适用的地方
+
+`_S195_KNOWN` 的「只能减」棘轮是对的:它守的是**「某文件是否调用某端点」**——
+一个**机器无关的代码属性**。所以"名单里的条目已经不再违规"必然意味着条目过期,
+fail 是正确的,它防止冻结名单变成永久豁免。
+
+我照搬到 `_MODULE_LEVEL_IO`,而它守的是**「import 时的 I/O 会不会失败」**——
+那**取决于这台机器有没有那份数据**。于是棘轮把「环境不同」误报成「状态变了」,
+并且**在唯一有完整数据的那台机器上挂掉构建** —— 数据越全,越容易红。
+
+**棘轮的前提是被测属性在所有环境里取同一个值。** 我没有检查这个前提就复用了模式,
+而模式复用的诱惑正在于它上一次是对的。
+
+改:名单内模块在本机干净 import → **ⓘ 上报,不失败**(「本机有那份数据」是信息不是缺陷)。
+`_S195_KNOWN` 的棘轮保留 —— 它的前提成立。
+
+### 这轮 Mac 输出里另外两条,都印证了三值设计是对的
+
+- `missing` 从 17 变成 **30**(Mac 少 `scipy`),而构建**没有因此变红** —— 若当初写成两值,
+  这个关卡在两台机器上会给出相反结论。
+- `beta_core_backtest` 两边都复现顶层 I/O(相对路径 `panel.json` 依赖 cwd),
+  **那才是机器无关的那一半**,留在名单里正确。
