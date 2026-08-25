@@ -11689,3 +11689,52 @@ Jazz 看到 boot banner:`role: replica · writes shared record: no · SUPABASE_K
 ⚠️ **S-221 的结论降级为「未验证」,不是「已确认」。** 推上去之后,
 `curl -s $BASE/internal/build-state | jq .runtime_role` 一眼就能定 (a) 还是 (b) ——
 **这正是今天该建而一直没建的那种东西:让两个假设不再需要争论的一次读取。**
+
+---
+
+## S-229 — 均匀且错误,比混合更隐蔽;而我的守卫只查了「混合」
+
+推上去之后,向量层**自 08-12 以来第一次活过来**:
+
+```
+asset_embeddings: flowing · rows=72 · readable=58 · age=0d
+role=production · may_write=true · write_refusals={}
+```
+
+`superseded_reason=None` 那条修复生效了,隔离解开了。**并且 role 回显把 S-221 从
+「未验证」升为「已验证」:线上是 primary、零拒绝,所以 `strategy_records` 空确实是
+「没人调那个写入端点」**,两张 nav 表的 0 行也随之定性 —— 不是 role gate,是数据源。
+
+**但同一次读取暴露了下一层,而我上一轮的守卫看不见它:**
+
+```
+readable=true · schema_version=3 · dims=18 · n=58
+```
+
+**58 行全部是 v3/18d,而 v3 的含义是 27 维。** 缺的 9 维(deltas 5 + stability 2 +
+risk moments 2)**正是 v3 存在的理由** —— v2 输入(prior_pillars / pillar_history /
+edge_moments)没有到达 embedder,于是每个向量都缺着这个版本为之而生的那部分。
+
+**我上一轮写的是 `if len(shape) > 1: 报 MIXED SHAPES`。** 部署前那一刻的分布确实是混合
+(35 个 18d + 23 个 27d),我就照着**我刚看见的那个病例**写了守卫。现在分布变成均匀的
+58 个 18d,`len(shape) > 1` 为假,**于是什么都不报。**
+
+> **均匀且错误比混合更危险:混合至少有一个不一致可以被发现,均匀连不一致都没有。**
+> 而我守的是"上次出问题的样子",不是那个性质本身。**一个版本号是一个关于形状的承诺,
+> 承诺必须对着它承诺的东西查。**
+
+改成拿 `embedder.SCHEMA_VERSION` / `ASSET_DIMS_V2` 当契约比对,报 `expected_shape` 与
+`wrong_shape_rows`,并把 status 打成 stale。三种分布都验过:
+`{v3/27d:58}→None` · `{v3/18d:58}→58` · `{v3/18d:35, v3/27d:23}→35`。
+
+**顺带修掉一个我自己刚制造的静默失效:** 那两个常量原本在**另一个 try 块**里 import,
+若那个 try 先失败,这里就是 NameError,而它会被本块的 `except: pass` 吞掉 ——
+**一个静默失效的守卫,和没有守卫读起来一模一样。** 提到 `_embedder_contract()` 里。
+
+⚠️ 归属:v2 输入为什么没到 embedder,要查 `calculate_cis_universe` 的 payload 有没有带
+`prior_pillars` / `pillar_history` / `edge_moments`。**这是数据完整度问题,不是探针问题** ——
+探针现在只负责让它不再隐形。
+
+### 顺带:Minimax-C 已经在动了
+
+`experiment_runs` 60 → **67 行,age 0d**。§C1-DSR-BACKFILL 发出去不到一小时。
