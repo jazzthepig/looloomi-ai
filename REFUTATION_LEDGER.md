@@ -12197,3 +12197,57 @@ mutation 双向都验:把违规原句放回 → **抓到**(报出行号和原文
 六种合法用法一起放进去 → **零误报**。
 
 顺带补了个不对称:表里有 `go long` 没有 `go short`。
+
+---
+
+## S-240 — 丢失被表示成"更少",而不是"丢了";顺带纠正我自己一条说宽的断言
+
+Minimax-A 报 P0-5:10 个 Seth 文件里有 `/Volumes/CometCloudAI` 字面量。逐个查完,
+**三个在生产 import 路径上,而三个各不相同 —— "删掉字面量"对哪个都不是修法:**
+
+| 文件 | 实况 | 判定 |
+|---|---|---|
+| `cis_provider.py:1038` | `os.getenv("MACRO_CACHE_PATH", "/Volumes/…")` —— **已经可配**,注释写着"Railway 要设这个变量" | 真问题是那个变量在生产设了没有,不是字面量 |
+| `outcome_tracker.py:10` | 在 **docstring** 里,解释"为什么要有 Railway 侧的 tracker"(对照 Mac 侧那个) | **假阳性** |
+| `factor_tilt_paper.py:93` | 真硬编码,**无 env var**,而且文件名带冻结日期区间 `_2024-01-01_2026-08-20.json` | 真问题,但比路径大 |
+
+### 第三个的真问题:`_fetch_close_live` 只返回成功的那一半
+
+```python
+if cache_fp.exists():  out[sym] = ...        # 不存在 → 跳过,无痕迹
+if kl.status_code == 200: out[sym] = ...     # 非 200 → 跳过,无痕迹
+except Exception:  _logger.debug(...); continue   # debug 级,生产默认不可见
+```
+
+**返回值是一个更短的 dict,而调用方只看 `len(data) < 20`。** 于是
+「这些资产今天没有数据」和「价源整个不可达」是同一个数字 —— 而两者的修法在不同的 lane。
+
+改成 `FetchCoverage(prices, missing)`:缺的带着**原因**回来,`coverage` 进 payload,
+**原因分组**保留(一百个符号同一个原因是一个事实,一百个符号一百个原因是另一个)。
+异常从 `debug` 提到 `warning` —— **丢一个符号是这本账宇宙的变化,不是调试细节。**
+路径同时改成 `EODHD_CACHE_DIR` 环境变量。
+
+沙箱实测(正是 Railway 的处境):`priced 2 / unpriced 2 / coverage 0.5`,
+两个 TradFi 符号带着 "EODHD cache absent under …" 回来。**旧版本会静默返回 2 个。**
+
+### ⚠️ 而我在这里撞掉了自己今天说了多次的一句话
+
+我今天反复说:「这两本账取数走 `fapi.binance.com`,**该 host 从 Railway US 被地理封锁**」,
+并据此把 `pod_aggregator_nav` / `factor_tilt_nav` 的 0 行归因给数据源,还写进了给 A 的
+`VERIFY:` 条目。
+
+**沙箱实测:`fapi.binance.com` 返回了真实的 BTCUSDT / ETHUSDT 收盘序列。**
+
+而我引用的那句 docstring 原文是:
+
+> `data-api.binance.vision` is what `deep_panel_collector` uses because
+> **`api.binance.com`** is geo-blocked from Railway US
+
+**`api` 和 `fapi` 是两个 host,我从来没测过后者。** 又一次把一条关于 A 的证据
+推广成关于 B 的结论 —— 和 S-234(把"禁 market_chart 端点"写成"禁 CoinGecko")
+是同一个动作,间隔不到两小时。
+
+线上现况:`/api/v1/signals/factor-tilt` 返回 `n_days_marked: 0`、
+`inception_date: 2026-08-25`(今天重开)。**所以 0 行的原因仍未确定** ——
+新的 `FetchCoverage` 会在下一次 mark 时直接说出是哪一半缺、为什么。
+**这正是该建的东西:不再需要我猜。**
