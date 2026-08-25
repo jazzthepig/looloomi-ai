@@ -74,37 +74,91 @@ _logger = logging.getLogger("factor_tilt_paper")
 
 
 # ── Live data fetchers ───────────────────────────────────────────────────────
+#: TradFi 缓存目录。原本是硬编码的 `/Volumes/CometCloudAI/...`(S-240)。
+#: Railway 上那个路径不存在,于是 `cache_fp.exists()` 恒 False,TradFi 符号
+#: **静默地不进结果** —— 而调用方拿到的只是一个更短的 dict。
+EODHD_CACHE_DIR = os.environ.get(
+    "EODHD_CACHE_DIR", "/Volumes/CometCloudAI/cometcloud-local/_cache/eodhd_history")
+
+
+@dataclass(frozen=True)
+class FetchCoverage:
+    """取回来的价格 + 【没取到的是谁、为什么】(S-240)。
+
+    原来的 `_fetch_close_live` 只返回成功的那部分:TradFi 缓存文件不存在 → 跳过;
+    Binance 非 200 → 跳过;任何异常 → `_logger.debug` 然后 `continue`。
+    **debug 级日志在生产默认不可见**,而返回值里没有任何痕迹。
+
+    于是调用方无法区分「这些资产没有数据」和「我一个都没取到」 —— 而这两件事
+    会让同一本账要么缩小宇宙、要么记一条基于三个资产的曲线,两种都不报错。
+    这是本 session 反复出现的形状:**丢失被表示成"更少",而不是"丢了"。**
+    """
+
+    prices: dict[str, list[float]]
+    missing: dict[str, str]        # symbol → 为什么没有
+
+    @property
+    def coverage(self) -> float:
+        n = len(self.prices) + len(self.missing)
+        return round(len(self.prices) / n, 4) if n else 0.0
+
+    def as_payload(self) -> dict[str, Any]:
+        return {
+            "priced": len(self.prices),
+            "unpriced": len(self.missing),
+            "coverage": self.coverage,
+            # 只列前几个,但**原因分组**要全 —— 一百个符号同一个原因是一个事实,
+            # 一百个符号一百个原因是另一个。
+            "missing_reasons": _group(self.missing),
+        }
+
+
+def _group(missing: dict[str, str]) -> dict[str, int]:
+    out: dict[str, int] = {}
+    for reason in missing.values():
+        out[reason] = out.get(reason, 0) + 1
+    return dict(sorted(out.items(), key=lambda kv: -kv[1]))
+
+
 async def _fetch_close_live(symbols: list[str],
-                            lookback_days: int = 60) -> dict[str, list[float]]:
+                            lookback_days: int = 60) -> FetchCoverage:
     """Fetch live daily close for crypto (Binance) + TradFi (EODHD cache).
 
-    Falls back to cached data on API failure (graceful degradation).
+    返回 FetchCoverage —— 缺的那部分带着原因一起回来,不再只是"更短的 dict"。
     """
     try:
         import httpx
     except ImportError:
-        return {}
+        return FetchCoverage({}, {s: "httpx unavailable" for s in symbols})
+
     out: dict[str, list[float]] = {}
+    missing: dict[str, str] = {}
     async with httpx.AsyncClient(timeout=20) as client:
         for sym in symbols:
             try:
                 if sym in TRADFI_UNIVERSE:
-                    # Try EODHD cache first (no live TradFi feed wired yet)
-                    cache_fp = (Path("/Volumes/CometCloudAI/cometcloud-local/_cache/eodhd_history")
+                    cache_fp = (Path(EODHD_CACHE_DIR)
                                 / f"{sym}_2024-01-01_2026-08-20.json")
                     if cache_fp.exists():
                         rows = json.loads(cache_fp.read_text())
                         out[sym] = [float(r["close"]) for r in rows[-lookback_days:]]
+                    else:
+                        # ⚠️ 文件名里的日期区间是冻结的,所以这条即使在 Mac 上
+                        # 也会随时间失效 —— 缓存"存在"和缓存"是当前的"是两件事。
+                        missing[sym] = f"EODHD cache absent under {EODHD_CACHE_DIR}"
                 else:
                     kl = await client.get(
-                        f"https://fapi.binance.com/fapi/v1/klines",
+                        "https://fapi.binance.com/fapi/v1/klines",
                         params={"symbol": sym, "interval": "1d", "limit": lookback_days})
                     if kl.status_code == 200:
                         out[sym] = [float(k[4]) for k in kl.json()]
-            except Exception as ex:
-                _logger.debug("factor_tilt fetch failed for %s: %s", sym, ex)
-                continue
-    return out
+                    else:
+                        missing[sym] = f"binance fapi HTTP {kl.status_code}"
+            except Exception as ex:                               # noqa: BLE001
+                # 不再是 debug。丢一个符号是这本账宇宙的变化,不是调试细节。
+                missing[sym] = f"{type(ex).__name__}: {str(ex)[:60]}"
+                _logger.warning("factor_tilt fetch failed for %s: %s", sym, ex)
+    return FetchCoverage(out, missing)
 
 
 async def _fetch_cis_pillar_o_live(symbols: list[str]) -> pd.Series:
@@ -214,10 +268,16 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
                 "date": str(today), "nav": state.get("nav", 1.0)}
 
     universe = FULL_UNIVERSE
-    data = await _fetch_close_live(universe, lookback_days=60)
+    fetched = await _fetch_close_live(universe, lookback_days=60)
+    data = fetched.prices
     if len(data) < 20:
+        # ⚠️ 拒绝时把【谁缺、为什么】一起带出去 (S-240)。原来只报
+        # `n_assets_with_data`,那个数字分不出"这些资产今天没交易"和
+        # "价源整个不可达" —— 而两者的修法在不同的 lane。
         return {"status": "skipped", "reason": "insufficient_live_data",
-                "n_assets_with_data": len(data)}
+                "n_assets_with_data": len(data),
+                "universe_size": len(universe),
+                **fetched.as_payload()}
 
     pillar_o = await _fetch_cis_pillar_o_live(
         [s for s in data.keys() if s in CRYPTO_UNIVERSE])
@@ -346,6 +406,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
         "validated": validated,
         "factor_attribution": factor_attribution,
         "max_single_factor_sharpe_share": max_share,
+        **fetched.as_payload(),
         **nav_write.as_payload(),
     }
 
