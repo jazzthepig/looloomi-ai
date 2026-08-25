@@ -153,6 +153,18 @@ READ_FILTERS: dict[str, str] = {
     "asset_embeddings": "&schema_version=eq.{schema_version}&superseded_reason=is.null",
 }
 
+#: 同一张表里,这一列出现多个值 ⇒ 这些行不在同一个坐标系 (S-232)。
+#:
+#: `market_state_vectors` 存的是跨整段历史标准化后的值,原始值不存。**两次不同
+#: z-scoring 产出的行不可比** —— 均值和标准差随历史增长而变。而
+#: `similar_market_states()` 的余弦【照样返回一个数】,只是那个数没有意义。
+#:
+#: 这比本 session 之前几个缺陷更隐蔽:没有 NULL、没有 0、没有停滞,
+#: 只有一个静默错误的邻居集。所以它必须被观测,而不是等到有人依据错的邻居做决定。
+COHERENCE_KEYS: dict[str, str] = {
+    "market_state_vectors": "zscore_pass",
+}
+
 
 def _embedder_contract() -> tuple[int, int]:
     """(SCHEMA_VERSION, 该版本承诺的维度)。一个版本号是一个关于形状的承诺。"""
@@ -217,6 +229,29 @@ async def vdb_health() -> dict[str, Any]:
             h["rows"] = n
             h["completeness_window_days"] = win
             h["completeness_scope_rows"] = len(scope)
+
+        # 坐标系一致性 (S-232)。多个 pass ⇒ 余弦不可解读。
+        ckey = COHERENCE_KEYS.get(table)
+        if ckey and n:
+            try:
+                curl = f"{_SB_URL}/rest/v1/{table}?select={ckey}&limit=2000"
+                cr = await _supabase_request_with_retry(
+                    "GET", curl, headers={"apikey": _SB_KEY,
+                                          "Authorization": f"Bearer {_SB_KEY}"})
+                if cr is not None and cr.status_code == 200:
+                    passes: dict[str, int] = {}
+                    for x in cr.json():
+                        passes[str(x.get(ckey))] = passes.get(str(x.get(ckey)), 0) + 1
+                    h["coherence"] = {ckey: passes}
+                    if len(passes) > 1:
+                        h["status"] = "incoherent"
+                        h["detail"] += (
+                            f"; ⚠ {len(passes)} distinct {ckey} values {passes} — these "
+                            f"rows are not in one coordinate system, so the cosine "
+                            f"similar_market_states returns is a number without a "
+                            f"meaning. Rebuild the whole history in one pass.")
+            except Exception:                                     # noqa: BLE001
+                pass
 
         # How many of those rows can a CONSUMER actually see? See READ_FILTERS.
         filt = READ_FILTERS.get(table)
@@ -315,7 +350,7 @@ async def vdb_health() -> dict[str, Any]:
 
     worst = "flowing"
     for s in out:
-        if s["status"] in ("empty", "unknown", "unreadable"):
+        if s["status"] in ("empty", "unknown", "unreadable", "incoherent"):
             worst = "broken"
             break
         if s["status"] == "stale":
