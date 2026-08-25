@@ -1036,7 +1036,7 @@ async def get_signal_track_record(response: Response = None):
     Reading guide (which rows are real edges):
       STRONG OUTPERFORM  — top conviction; β-ADJ expected positive.
       OUTPERFORM         — broad tier; β-ADJ expected positive but smaller.
-      UNDERPERFORM       — short the asset; β-ADJ treats negative alpha as a
+      UNDERPERFORM       — negative-edge tier; β-ADJ treats negative alpha as a
                             correct call, so positive β-ADJ is the edge.
       UNDERWEIGHT        — the one KNOWN defect (R62 t = −3.56); do not size.
 
@@ -1106,8 +1106,8 @@ async def get_signal_edge_map(response: Response = None):
     The decision surface: expected 30-day benchmark-relative alpha of each signal tier,
     conditioned on the RISK GRADIENT (benchmark trailing 30d return). This is the
     Glassnode-tier granular product — every cell is a real outcome with its sample size,
-    from our own data. Read it as two dials: long the top tier when the tape is risk-ON,
-    short the bottom tier when the tape is risk-OFF; both edges shrink in neutral tape.
+    from our own data. Read it as two dials: the top tier carries the widest positive edge when the tape is
+    risk-ON, the bottom tier the widest negative edge when risk-OFF; both shrink in neutral tape.
     Refreshed daily (signal_edge_map). Risk bands (benchmark trailing 30d):
     1_deep_off <-15% · 2_off -15..-5% · 3_neutral -5..+5% · 4_on +5..+15% · 5_deep_on >+15%.
     """
@@ -1144,8 +1144,9 @@ async def get_signal_edge_map(response: Response = None):
         "shrinkage": {**shrink.get("params", {}),
                       "method": "empirical-Bayes, two-way additive prior (tier+band), robust MoM K",
                       "reading": "avg_alpha_pct is denoised; shrink_weight→1 = well-sampled (own value), →0 = thin (prior)"},
-        "how_to_read": "Long the top tier (STRONG OUTPERFORM) when the tape is risk-ON (bands 4/5); "
-                       "short the bottom tier (UNDERPERFORM) when risk-OFF (bands 1/2). Neutral tape → both edges shrink.",
+        "how_to_read": "The top tier (STRONG OUTPERFORM) has shown the widest positive edge when the "
+                       "tape is risk-ON (bands 4/5); the bottom tier (UNDERPERFORM) has shown the "
+                       "widest negative edge when risk-OFF (bands 1/2). Neutral tape → both edges shrink.",
         "note": "Observational signal→30d outcome; thin cells shrunk to structure. Not live-traded P&L.",
         "compliance": "Positioning language only; not investment advice.",
     }
@@ -1161,14 +1162,14 @@ def _band_of(trail_30d: float) -> str:
 
 _BAND_ACTION = {
     "1_deep_off": "Deep risk-OFF — shorting the bottom tier (UNDERPERFORM) has paid best here; long edge weakest.",
-    "2_off":      "Risk-OFF — short edge favoured; long book screens UNDERWEIGHT.",
+    "2_off":      "Risk-OFF — the negative-edge tier is widest; the positive-edge book screens UNDERWEIGHT.",
     "3_neutral":  "Neutral tape — both edges shrink; conviction dispersion compresses.",
-    "4_on":       "Risk-ON — long the top tier (STRONG OUTPERFORM); short edge fades.",
+    "4_on":       "Risk-ON — top tier (STRONG OUTPERFORM) edge widest; negative-edge tier fades.",
     "5_deep_on":  "Deep risk-ON — top-tier edge strongest; bottom tier disfavored.",
 }
 
-# Band → default posture (net bias + gross scale), from the edge-map thesis: long the top tier
-# in risk-ON, short the bottom tier in risk-OFF, shrink to neutral in the middle. Refined by the
+# Band → default posture (net bias + gross scale), from the edge-map thesis: top-tier edge is
+# widest in risk-ON, bottom-tier edge widest in risk-OFF, shrinking to neutral in the middle. Refined by the
 # LIVE edge-map data (does this band's tier alpha actually confirm?) and sample size.
 _BAND_POSTURE = {
     "5_deep_on":  ("long",    1.10),
