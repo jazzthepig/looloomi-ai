@@ -64,9 +64,20 @@ BUDGETS: dict[str, int] = {
 #: dsr populated on 2/60`, and an exact-zero test passes that happily. 2 of 60 is
 #: worse than 0 of 60: it looks like the field is in use. MEMORY.md states the
 #: rule directly — 危害与可发现性成反比.
+#:
+#: ⚠️ 完整度必须在【可达到】的总体上测 (S-231)。`market_state_vectors` 有 582 天,
+#: 其中 147 天早于 CIS 覆盖 —— 那些天的 regime_label **永远填不上**,不是缺陷。
+#: 拿全表做分母,这个指标的上限就是 74.7%,而门槛是 90%:**一个永远达不到的门槛
+#: 会永远亮黄灯,而 MEMORY.md 写着「永远在响的 warning 不携带信息」。**
+#: 所以对这张表只测最近 `COMPLETENESS_WINDOW` 天 —— 那也正是消费者查询的范围。
 COMPLETENESS: dict[str, tuple[str, float]] = {
     "market_state_vectors": ("regime_label", 0.90),
     "experiment_runs": ("dsr", 0.50),
+}
+
+#: 只对时间序列表生效:完整度只在这个窗口内计算。None = 全表。
+COMPLETENESS_WINDOW: dict[str, int] = {
+    "market_state_vectors": 180,
 }
 
 
@@ -191,9 +202,21 @@ async def vdb_health() -> dict[str, Any]:
                 age = (today - _dt.date.fromisoformat(raw)).days
             except ValueError:
                 age = None
-        pop = (sum(1 for x in rows if x.get(comp_col) is not None)
+        # 完整度的分母:可达到的那部分。见 COMPLETENESS_WINDOW —— 一个永远达不到
+        # 的门槛只会训练人忽略它,而被忽略的告警等于没有告警。
+        win = COMPLETENESS_WINDOW.get(table)
+        scope = rows
+        if comp_col and win:
+            cutoff = (today - _dt.timedelta(days=win)).isoformat()
+            scope = [x for x in rows if str(x.get(ts_col) or "")[:10] >= cutoff]
+        pop = (sum(1 for x in scope if x.get(comp_col) is not None)
                if comp_col else None)
-        h = classify(table, n, age, pop).as_dict()
+        # classify 的 rows 仍是全表(那是新鲜度的分母),完整度用 scope 的规模。
+        h = classify(table, len(scope) if (comp_col and win) else n, age, pop).as_dict()
+        if comp_col and win:
+            h["rows"] = n
+            h["completeness_window_days"] = win
+            h["completeness_scope_rows"] = len(scope)
 
         # How many of those rows can a CONSUMER actually see? See READ_FILTERS.
         filt = READ_FILTERS.get(table)
