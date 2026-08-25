@@ -45,8 +45,21 @@ _STATIC_HTML = ("strategy.html", "vision.html", "index.html")
 # Transactional verbs from .claude/skills/compliance-language/SKILL.md. `HOLD` is
 # excluded: the skill permits it in prose and bans it only as a signal LABEL, and a
 # guard that fires on prose gets disabled.
+# ⚠️ `go long` 在,而裸的祈使 `Long the …` 不在 —— 这个缺口让下面这句在
+# `/api/v1/signals/edge-map` 的【响应体】里活了很久 (S-239):
+#
+#     "how_to_read": "Long the top tier (STRONG OUTPERFORM) when the tape is
+#                     risk-ON …; short the bottom tier (UNDERPERFORM) when risk-OFF"
+#
+# 禁词表**枚举了这个概念的一种说法**。和 S-209(一个 regime 两种拼法)、
+# S-229(只守我刚看见的那个病例)同一族:列举实例,而不是刻画构造。
+#
+# 构造是【祈使动词 + 定冠词】:`long the` / `short the`。它抓到了全部 6 处真违规,
+# 而不会碰 `admin.py` 的 "Short top-ups stay synchronous"(short 是形容词)、
+# 也不碰 `long-only` / `long/short`(策略类型名词)/ `longer` / `short window`。
 _FORBIDDEN = re.compile(
-    r"\b(buy|sell|accumulate|liquidate|avoid|trim|stop out|load up|go long|"
+    r"\b(buy|sell|accumulate|liquidate|avoid|trim|stop out|load up|"
+    r"go long|go short|(?:long|short)\s+the\b|"
     r"we recommend|you should|investors should|price target|top pick)\b", re.I)
 
 # Substrings that are the same letters in a non-transactional role.
