@@ -254,6 +254,36 @@ if not any(isinstance(n, ast.FunctionDef) and n.name == "_role_echo" for n in as
     fail("S-228: /internal/build-state 不回显 runtime_role —— 决定整个进程能否写"
          "系统记录的那个开关,在生产里不可见")
 
+# ── S-230 · 一条收益序列只能来自一个源,而且必须说出是哪个 ──────────────────
+# 这条规则本来写在 forward_return_backfill 的 docstring 里,写得对而且完整,
+# 但 C 的模拟器 import 不到一句散文,于是 M-83 把一个上涨的市场测成 -86%。
+_ss = SRC / "data/market/single_source.py"
+if not _ss.exists():
+    fail("S-230: single_source.py 不存在 —— 单源规则又只剩 docstring")
+else:
+    _ss_tree = ast.parse(_ss.read_text())
+    _fns = {n.name for n in ast.walk(_ss_tree) if isinstance(n, ast.FunctionDef)}
+    for _need in ("assert_single_source", "sanity_check_curve", "coverage_gap_warning"):
+        if _need not in _fns:
+            fail(f"S-230: single_source 缺 {_need}()")
+    # 跨源必须【抛】不是【警告】—— 警告会被记进日志然后被忽略。
+    _asrt = next((n for n in ast.walk(_ss_tree) if isinstance(n, ast.FunctionDef)
+                  and n.name == "assert_single_source"), None)
+    if _asrt is not None and not any(isinstance(n, ast.Raise) for n in ast.walk(_asrt)):
+        fail("S-230: assert_single_source 不抛异常 —— 一个只警告的守卫等于没有")
+    # CoinGecko 必须【不在】可信收益源里(S-195:日收盘是小时点塌缩)
+    _trusted = next((n for n in _ss_tree.body if isinstance(n, ast.Assign)
+                     and any(isinstance(t, ast.Name) and t.id == "TRUSTED_RETURN_SOURCES"
+                             for t in n.targets)), None)
+    if _trusted is None:
+        fail("S-230: 没有 TRUSTED_RETURN_SOURCES 名单")
+    else:
+        _names = {e.value for e in getattr(_trusted.value, "elts", [])
+                  if isinstance(e, ast.Constant)}
+        if "coingecko" in _names:
+            fail("S-230: coingecko 出现在可信收益源里 —— 它的日收盘是小时采样点"
+                 "塌缩,不是收盘 (S-195)")
+
 _lh = code_only((SRC / "api/loop_health.py").read_text())
 if "vdb-health" not in _lh:
     fail("S-216: loop_health does not probe the vector substrate — the instrument "
@@ -319,5 +349,5 @@ if _fails:
     for f in _fails:
         print("   ·", f)
     sys.exit(1)
-print(f"  ✓ lesson guards: S-119/194/195/207/214/215/216/225/227/228 enforced "
+print(f"  ✓ lesson guards: S-119/194/195/207/214/215/216/225/227/228/230 enforced "
       f"({len(_declared_stores)} vdb stores watched)")
