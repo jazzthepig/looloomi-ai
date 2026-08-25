@@ -143,6 +143,12 @@ READ_FILTERS: dict[str, str] = {
 }
 
 
+def _embedder_contract() -> tuple[int, int]:
+    """(SCHEMA_VERSION, 该版本承诺的维度)。一个版本号是一个关于形状的承诺。"""
+    from src.data.vector.embedder import SCHEMA_VERSION, ASSET_DIMS_V2
+    return SCHEMA_VERSION, ASSET_DIMS_V2
+
+
 async def vdb_health() -> dict[str, Any]:
     """Read every VDB store's freshness. Never raises."""
     from src.api.store import _SB_URL, _SB_KEY, _supabase_request_with_retry
@@ -193,7 +199,7 @@ async def vdb_health() -> dict[str, Any]:
         filt = READ_FILTERS.get(table)
         if filt and n:
             try:
-                from src.data.vector.embedder import SCHEMA_VERSION
+                SCHEMA_VERSION, _ = _embedder_contract()
                 rurl = (f"{_SB_URL}/rest/v1/{table}?select={ts_col}"
                         + filt.format(schema_version=SCHEMA_VERSION) + "&limit=2000")
                 rr = await _supabase_request_with_retry(
@@ -224,6 +230,34 @@ async def vdb_health() -> dict[str, Any]:
                     h["shape_distribution"] = shape
                     if len(shape) > 1:
                         h["detail"] += f"; MIXED SHAPES {shape} — one table, several vector spaces"
+
+                    # ⚠️ 均匀且错误,比混合更隐蔽 (S-229)。上一版只查「形状是否混合」——
+                    # 那是我刚看见的那个病例,不是要守的性质。部署后实测:58 行全部
+                    # `v3/18d` 统一,`len(shape) > 1` 为假,于是【什么都不报】,而 v3
+                    # 的含义是 27 维。**缺的 9 维正是 v3 存在的理由**(deltas 5 +
+                    # stability 2 + risk moments 2)。
+                    #
+                    # 一个版本号是一个关于形状的承诺。承诺必须对着它承诺的东西查,
+                    # 不是对着"上次出问题的样子"查。
+                    # 两个名字都在函数顶部导入(见 _embedder_contract),不在这里 ——
+                    # 上一版把 SCHEMA_VERSION 的导入放在另一个 try 里,若那个 try
+                    # 先失败,这里就是 NameError,而它会被本块的 except 吞掉:
+                    # 一个静默失效的守卫,和没有守卫读起来一模一样。
+                    SCHEMA_VERSION, ASSET_DIMS_V2 = _embedder_contract()
+                    wrong = {k: v for k, v in shape.items()
+                             if k.startswith(f"v{SCHEMA_VERSION}/")
+                             and k != f"v{SCHEMA_VERSION}/{ASSET_DIMS_V2}d"}
+                    if wrong:
+                        h["expected_shape"] = f"v{SCHEMA_VERSION}/{ASSET_DIMS_V2}d"
+                        h["wrong_shape_rows"] = sum(wrong.values())
+                        h["status"] = "stale"
+                        h["detail"] += (
+                            f"; ⚠ {sum(wrong.values())} rows stamped v{SCHEMA_VERSION} "
+                            f"carry {sorted(wrong)} but v{SCHEMA_VERSION} means "
+                            f"{ASSET_DIMS_V2}d — the v2 inputs (prior_pillars / "
+                            f"pillar_history / edge_moments) are not reaching the "
+                            f"embedder, so every vector is missing the dimensions "
+                            f"this version exists for")
             except Exception:                                     # noqa: BLE001
                 pass
 
