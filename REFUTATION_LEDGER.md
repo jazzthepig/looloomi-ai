@@ -11794,3 +11794,60 @@ M-83 拿它得出「§5b doctrine 被结构性验证」,而那条结论此刻建
 R70 在 TIGHTENING 下 70 天只开火 2 天,`n_obs=4`。**+1.58 和 −5.34 都建立在 4 个观测上,
 两个都不是证据**(S-101:事件计数之前,按天加权的数字是叙事)。
 R70 的正确结论不是「它坏了」,是**「在这个 regime 下它无法被评估」**。
+
+---
+
+## S-231 — 决策链是活的,我说它死了;它缺的是标签,不是能力
+
+Jazz:「现在做吧,有不少东西只有你可以做。」于是去动 VDB 的 ④ 环节。**而我先撞掉了自己的一条断言。**
+
+我在规划文档和 T1 表里写:`⑥ similar_market_states() 决策链 ❌ 上游全死`。
+**实测(2026-08-25):**
+
+```
+select * from similar_market_states('2026-08-05', 5, 8)
+  → 5 个邻居, cosine 0.9652–0.9701, shared_dims 15, n_symbols 58–75
+strategy_response → 48 行
+market_state_vectors.measured_dims > 0 → 582/582
+```
+
+**链能跑。**`similar_market_states` 是 Postgres 里的 RPC,不是 Python —— 我在 `src/` 里
+grep 不到就差点写下"它不存在"。**第三次了:`_reports/`、`cause_proximity.py`、现在这个。
+在 Python 里找不到 ≠ 不存在。**
+
+`vec` 全 NULL 也不是缺陷:设计就是 **NaN 不进 pgvector 的 `vec`,带 null 的完整向量住在
+`vec_full` jsonb 里**(I1),而 RPC 读的正是 `vec_full`。我又差点把一个正确的设计读成故障。
+
+**真实状态:链是通的,19 天没人喂它,而且 582 天没有 regime 标签** —— 于是
+「在相似且同 regime 的日子里,策略表现如何」这类问题**问不出来**,不是答案不好,是问不出。
+
+### 已做:regime_label 回填 + 写入端规范化
+
+标签取自 `cis_scores` 当天众数,**读取时规范化为 UPPER_SNAKE**(S-209:库里
+`RISK-OFF` 与 `RISK_OFF` 并存,规范化后合并成 RISK_OFF 180 天)。只填 NULL,不覆盖。
+
+```
+RISK_OFF 180 · EASING 132 · TIGHTENING 58 · RISK_ON 54 · STAGFLATION 6 · NEUTRAL 5
+(NULL) 147   ← 早于 CIS 覆盖,永远填不上,保持 NULL(I1:未测量不猜)
+```
+
+**回填完立刻能问一个之前问不出的问题,而答案是一个独立验证:**
+
+```
+2026-08-05 的 20 个最近邻:  TIGHTENING 18 个(avg cos 0.9562) · RISK_OFF 2 个
+```
+
+**24 维几何自己把 regime 标签恢复出来了** —— 向量空间和宏观标签独立同意。
+这是这个基底第一次被验证成"它确实编码了它声称编码的东西"。
+
+### 顺带修掉一个我刚要制造的永久黄灯
+
+完整度门槛 90%,而 147 天永远填不上 ⇒ 全表分母的上限是 74.7%,**这个指标会永远亮黄**。
+MEMORY.md:**永远在响的 warning 不携带信息。** 所以完整度只在最近 180 天内计算 ——
+**那也正是消费者查询的范围**(和 S-225「按消费者的查询方式查」同一条原则)。
+新鲜度的分母仍是全表,两个分母各归各的问题。
+
+⚠️ **仍未做:日写者。** 24 维横跨 cis_scores / 面板横截面 / 稳定币供给 / 成交量 / funding /
+F&G / OI / 价格波动与趋势,`market_state.py` 有全部算子却**没有任何一处组装当天的向量**,
+`src/` 与 `Shadow/` 都搜不到调用者。这是真活,不能赶 —— **今天最大的教训就是赶出来的守卫是假绿。**
+下一轮做,验收:`/internal/vdb-health` 的 `market_state_vectors` 连续 7 天 flowing。
