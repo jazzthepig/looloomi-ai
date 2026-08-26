@@ -1,8 +1,8 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-23 (Seth/Cowork lane)
+**Last updated:** 2026-08-26 (Seth/Cowork lane)
 
-## 本轮一句话:**一个形状,九次**
+## 本轮一句话:**一个形状,十次**
 
 每一次都是**「拿不到」被渲染成一个合理的数字**,而不是被渲染成「拿不到」。
 一个 0 在合法区间内、看起来正常、是空累加的天然产物 —— 所以九次都没人发现。
@@ -18,6 +18,15 @@
 | S-200 | T2 构建 110s / 预算 12s | 缓存永远填不上 → 永久降级,`regime=None` |
 | S-201 | `NAV_TABLE` 声明了没写入者 | 表存在、永远空、看起来这项有人管 |
 | S-202 | `{"ok": True, "rows": 0}` | **CIS 四个月用中性权重打分,日志每天说正常** |
+| S-242 | 接收端漏写顶层 `macro_regime` | HIGH 级 regime 信号**从 feed 里消失**(守卫是 `if regime:`);CIS gate 落到 58 默认值而非 TIGHTENING 的 52 → **27 个过闸报成 20 个** |
+
+**S-242 是第十次,也是第一次由定时任务而不是人发现的** —— daily-market-meditation 拉数据时撞见
+同一次 push 的两个端点自相矛盾(universe 说 Tightening 0.85,signals 说 "in UNKNOWN regime")。
+新增的一课:**沉默也是一种渲染**。前九次是「拿不到」被渲染成一个合理的数字;这次它被渲染成
+**什么都没有** —— 一条缺席的 HIGH 信号,和「当前没有这个状况」在输出上完全一样。所以修复里
+`cis_regime_unmeasured` 那条 DATA_QUALITY 信号(pillar impact 全 0)不是装饰:**未测量必须占一个位置。**
+第二课:读对了 key 还不够。引擎发 `Tightening`,所有 regime 表是 UPPER_SNAKE ——
+`/api/v1/trading/loop-state` 就是读对了 `macro.regime` 却仍然 miss 到 50 默认闸的那一处。
 
 ⚠️ **守卫自己失败了六轮**,两类:匹配名字而非构造(**解释 bug 的注释废掉了抓这个 bug 的测试**,已抽成 `tests/_source.py`);测试样本过度确定。每个守卫现在都用重新引入 bug 验证过。
 
@@ -26,6 +35,7 @@
 ```
 ✅ CIS T1        43 symbol,每天在写,今天还在
 ✅ T2 universe   58 个,regime=Tightening,11s(110s 是 provider 降级,已恢复;预计算已下请求路径)
+🟡 signal feed   regime 已修(S-242),**代码在 sandbox,未 push** —— preflight + 部署后按 ledger VERIFY 段复核
 ✅ Hyperliquid   232 永续,日线自带 epoch,已是价格锚
 ✅ 五本账本      定不了价就拒绝标记,不再记假平盘
 🔴 IC 权重       中性 —— 只有 6 个独立交易日,门槛 20。**诚实地不通,不是坏了**
