@@ -139,12 +139,43 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
             provenance.get("engine_git_sha"), provenance.get("config_hash"),
         )
 
+        # ⚠️ STORE THE REGIME AT THE TOP LEVEL, CANONICALISED (S-242, 2026-08-26).
+        # The contract (`normalize_cis_payload`) emits BOTH `macro` and a top-level
+        # `macro_regime`, and lists `macro_regime` under `recommended_top_level` —
+        # but this receiver only ever wrote `macro`. Every consumer that reads the
+        # Redis blob directly instead of going through /api/v1/cis/universe therefore
+        # saw NO regime at all. Measured cost in /api/v1/signals on 2026-08-26:
+        #   · the whole regime signal (TIGHTENING: F-8/M-10/O-5/S-12/A+5, HIGH,
+        #     30D horizon) was skipped, because its guard is `if regime:` — a
+        #     HIGH-importance macro signal silently absent from the feed;
+        #   · the CIS gate fell back to 58 instead of the Tightening threshold 52,
+        #     so 7 assets (NVDA, INJ, LDO, SLV, TLT, SHY, GOOGL) were reported as
+        #     failing the gate when they pass it.
+        # Canonicalised on the way in for the same reason the Supabase write is
+        # (line ~231): the engine sends `Tightening`, every threshold/regime table
+        # downstream is keyed UPPER_SNAKE, so a raw label misses the lookup and
+        # lands on the fallback — which is indistinguishable from a real reading.
+        # Strict variant: an unrecognised label becomes None, never a plausible
+        # NEUTRAL (S-120).
+        from src.data.cis.cis_provider import canonical_regime_strict as _canon_strict_cache
+        _macro_regime_cached = _canon_strict_cache(
+            norm.get("macro_regime") or (macro or {}).get("regime")
+        )
+        if _macro_regime_cached is None:
+            _logger.warning(
+                "[CONTRACT] CIS push carried no recognisable macro_regime "
+                "(macro_regime=%r macro.regime=%r) — regime-conditional signals "
+                "will not fire this cycle",
+                norm.get("macro_regime"), (macro or {}).get("regime"),
+            )
+
         cache_data = {
             "universe":       universe,
             "last_updated":   time.time(),
             "timestamp":      timestamp,
             "source":         "local_engine",
             "macro":          macro,
+            "macro_regime":   _macro_regime_cached,
             # provenance + contract observability (read by /schema + ops)
             "schema_version": norm["schema_version"],
             "provenance":     provenance,

@@ -33,6 +33,40 @@ _STATIC_UNIVERSE: frozenset[str] = frozenset(_CIS_ASSETS_CONFIG.keys())
 router = APIRouter()
 
 
+def _cache_regime(cis_cache: dict | None) -> str | None:
+    """Canonical UPPER_SNAKE regime from the T1 Redis blob, or None if unmeasured.
+
+    WHY THIS EXISTS (S-242, 2026-08-26). The signal feed read
+    `cis_cache.get("macro_regime")` — a key the `/internal/cis-scores` receiver
+    never wrote; it stored only the nested `macro` dict. Both of the feed's
+    regime consumers then failed, in the two ways a missing label can fail:
+
+      · `if regime:` (the regime→pillar-impact signal) evaluated False, so the
+        HIGH-importance macro signal was omitted from the feed entirely — an
+        absence, which reads as "no such condition" rather than "not measured";
+      · `thresholds.get(regime, 58)` hit its default, running the CIS gate at 58
+        while the actual regime (TIGHTENING) calls for 52. Measured 2026-08-26:
+        20 assets reported passing instead of 27.
+
+    Reading `macro.regime` alone would not have been enough. The engine sends
+    `Tightening`; every regime table here is keyed UPPER_SNAKE, so the raw label
+    misses the lookup and lands on the same fallback — a second, quieter version
+    of the same bug. Canonicalise, then look up.
+
+    Strict: an unrecognised or absent label returns None, never a plausible
+    NEUTRAL. Callers must treat None as "unmeasured" and say so, rather than
+    scoring against a regime nobody observed (S-120).
+    """
+    if not cis_cache:
+        return None
+    from src.data.cis.cis_provider import canonical_regime_strict
+    return canonical_regime_strict(
+        cis_cache.get("macro_regime")
+        or (cis_cache.get("macro") or {}).get("regime")
+        or cis_cache.get("regime")
+    )
+
+
 # ── Market (Binance / CoinGecko) ─────────────────────────────────────────────
 
 @router.get("/api/v1/market/prices")
@@ -555,7 +589,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
     # ── 6. CIS engine signals → multi-pillar ─────────────────────────────────
     if cis_cache and cis_cache.get("universe"):
         universe = cis_cache["universe"]
-        regime   = cis_cache.get("macro_regime") or cis_cache.get("regime")
+        regime   = _cache_regime(cis_cache)
 
         if regime:
             regime_signals = {
@@ -641,6 +675,27 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 "description": r["desc"],
                 "affected_assets": ["MACRO"],
             }, r["pi"], r["logic"], r["horizon"]))
+        else:
+            # AN UNMEASURED REGIME MUST BE VISIBLE, NOT ABSENT (S-242).
+            # The `if regime:` above is right to withhold pillar impacts we cannot
+            # justify — but for weeks it withheld the SIGNAL too, and a feed with no
+            # regime entry is indistinguishable from a feed reporting a calm one.
+            # That is how this went unnoticed: the failure mode was silence.
+            # Zero pillar impact, so nothing downstream is scored off a guess.
+            signals.append(_mk({
+                "id": "cis_regime_unmeasured",
+                "timestamp": (cis_cache or {}).get("timestamp", now.isoformat()),
+                "type": "DATA_QUALITY", "source": "cis_engine", "importance": "MED",
+                "description": "Macro regime unmeasured this cycle — regime-conditional signals withheld",
+                "affected_assets": ["MACRO"],
+            }, {"F": 0, "M": 0, "O": 0, "S": 0, "A": 0},
+            "The T1 CIS push carried no recognisable macro_regime, so no regime→pillar "
+            "adjustment is applied and the CIS gate falls back to its regime-neutral "
+            "default (58) rather than a regime-specific threshold. This is a data-quality "
+            "notice, NOT a neutral-regime reading: treat regime-conditional positioning as "
+            "stale until the next Mac Mini push lands. Check /internal/cis-scores payload "
+            "and the [CONTRACT] warning in Railway logs.",
+            "24H"))
 
         # Top A+ assets
         top_assets = [
@@ -1099,11 +1154,20 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
     # ── CIS universe: asset-specific positioning signals ─────────────────────────
     if cis_cache:
         universe = cis_cache.get("universe") or cis_cache.get("assets") or []
-        macro_regime = cis_cache.get("macro_regime", "UNKNOWN")
+        # Canonical UPPER_SNAKE, or None when genuinely unmeasured — see
+        # `_cache_regime`. The default below is a REGIME-NEUTRAL fallback, not a
+        # regime reading, and the copy says so rather than naming a regime we did
+        # not observe ("in UNKNOWN regime" shipped for weeks and read like data).
+        macro_regime = _cache_regime(cis_cache)
+        regime_label = (macro_regime or "").replace("_", "-").title() or "unmeasured"
 
         # Threshold by regime
         thresholds = {"TIGHTENING": 52, "GOLDILOCKS": 65, "RISK_ON": 60, "EASING": 58}
-        threshold = thresholds.get(macro_regime, 58)
+        threshold = thresholds.get(macro_regime or "", 58)
+        regime_clause = (
+            f"in {regime_label} regime" if macro_regime
+            else "on the regime-neutral default gate (macro regime unmeasured this cycle)"
+        )
 
         # Top passing assets — signal: OUTPERFORM
         passing = [a for a in universe if (a.get("cis_score") or a.get("score") or 0) >= threshold]
@@ -1119,13 +1183,13 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 "timestamp": now.isoformat(),
                 "type": "CIS",
                 "importance": "HIGH",
-                "description": f"{len(passing)} assets pass CIS ≥{threshold} in {macro_regime} regime: {summary}",
+                "description": f"{len(passing)} assets pass CIS ≥{threshold} {regime_clause}: {summary}",
                 "affected_assets": top_symbols,
                 "source": "cometcloud_cis",
                 "value": len(passing),
             }, pi,
             f"CIS universe scan: {len(passing)} of {len(universe)} assets meet institutional threshold "
-            f"({threshold}) for current {macro_regime} regime. T1 Mac Mini scores. "
+            f"({threshold}) {regime_clause}. T1 Mac Mini scores. "
             f"Top assets by composite CIS: {summary}. "
             f"Regime-aware weights applied — tighter thresholds in Tightening, wider in Goldilocks.",
             "24H"))
@@ -1140,13 +1204,13 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 "timestamp": now.isoformat(),
                 "type": "CIS",
                 "importance": "MED",
-                "description": f"{len(failing)} assets below CIS threshold in {macro_regime}: {', '.join(fail_symbols[:5])}{'...' if len(failing) > 5 else ''}",
+                "description": f"{len(failing)} assets below CIS ≥{threshold} {regime_clause}: {', '.join(fail_symbols[:5])}{'...' if len(failing) > 5 else ''}",
                 "affected_assets": fail_symbols,
                 "source": "cometcloud_cis",
                 "value": len(failing),
             }, pi_neg,
             f"{len(failing)} tracked assets fail CIS ≥{threshold}. S and A pillars most suppressed. "
-            f"Common causes in {macro_regime}: momentum breakdown (M pillar), vol regime negative (S pillar), "
+            f"Common causes {regime_clause}: momentum breakdown (M pillar), vol regime negative (S pillar), "
             f"underperformance vs BTC benchmark (A pillar). Do not override with manual entry.",
             "24H"))
 

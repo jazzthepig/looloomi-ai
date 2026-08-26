@@ -1375,12 +1375,15 @@ async def _auto_mine_ic(closed: list, n_closed: int) -> None:
         # 4. Check for weak IC pillars → queue Gemma4-26b discovery if needed
         try:
             cis_raw = await _rget("cis:local_scores")
-            regime  = "UNKNOWN"
+            # Canonical UPPER_SNAKE or None — see the note at `_REGIME_GATE`.
+            # Discovery buckets its results by regime; `Tightening` and
+            # `TIGHTENING` filed as two regimes is the S-120 duplicate all over.
+            from src.data.cis.cis_provider import canonical_regime_strict
+            regime = None
             if cis_raw and isinstance(cis_raw, dict):
-                regime = (
-                    cis_raw.get("macro", {}).get("regime")
-                    or cis_raw.get("macro_regime")
-                    or "UNKNOWN"
+                regime = canonical_regime_strict(
+                    cis_raw.get("macro_regime")
+                    or (cis_raw.get("macro") or {}).get("regime")
                 )
             fp = _fp_load()
             if fp:
@@ -1474,15 +1477,23 @@ async def get_loop_state():
     # NOTE: _rget returns a parsed dict (redis_get_key auto-json.loads), not a
     # raw string. Earlier code did `json.loads(cis_raw)` which always failed
     # silently and pinned regime=UNKNOWN. Use the dict directly.
-    regime = "UNKNOWN"
+    # CANONICALISE BEFORE THE LOOKUP (S-242, 2026-08-26). Reading the right key
+    # was only half the fix: `_REGIME_GATE` below is keyed UPPER_SNAKE and the
+    # engine sends `Tightening`, so the raw label missed and silently took the
+    # 50 default where TIGHTENING calls for 52. Same defect the signal feed had,
+    # one endpoint over — a threshold quietly moved by a string's letter case.
+    from src.data.cis.cis_provider import canonical_regime_strict
+    regime = None
     if cis_raw and isinstance(cis_raw, dict):
-        regime = (
-            (cis_raw.get("macro") or {}).get("regime")
-            or cis_raw.get("macro_regime")
-            or "UNKNOWN"
+        regime = canonical_regime_strict(
+            cis_raw.get("macro_regime")
+            or (cis_raw.get("macro") or {}).get("regime")
         )
 
-    gate_threshold = _REGIME_GATE.get(regime, 50)
+    # None = unmeasured, and 50 is a regime-neutral default rather than a gate
+    # anyone chose for the current regime. Surfaced as `regime_measured` below
+    # so a consumer can tell the two apart.
+    gate_threshold = _REGIME_GATE.get(regime or "", 50)
     loop_active    = n_closed >= 5 and bool(meta.get("last_run"))
     next_mine_at   = max(0, 5 - n_closed) if n_closed < 5 else (5 - (n_closed % 5)) % 5 or 5
 
@@ -1500,6 +1511,7 @@ async def get_loop_state():
         "mine_periods":     meta.get("periods_computed", 0),
         "mine_total_trades":meta.get("total_trades_analysed", 0),
         "regime":           regime,
+        "regime_measured":  regime is not None,
         "gate_threshold":   gate_threshold,
         "next_mine_at":     next_mine_at,
         "auto_mine_every":  5,
