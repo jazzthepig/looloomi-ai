@@ -370,9 +370,15 @@ async def run_outcome_tracker(dry_run: bool = False, limit: int = 500) -> dict:
             # Entry — backfill from OUR ohlcv_daily if the signal was logged without one
             # (fixes the aged null-entry gap: the data is in our DB, use it).
             entry_backfilled = False
+            # ⚠️ entry 的来源必须被记录 (S-241)。原来只记 exit 的 source,
+            # 而 `ret = (price - entry)/entry` 是**两条腿**;只标一条腿的源,
+            # 等于宣称另一条腿无所谓。
+            entry_source = "signal_entry_price" if (entry and entry > 0) else None
             if not (entry and entry > 0):
                 entry = await _ohlcv_close_at(client, sym, sig_dt)
                 entry_backfilled = bool(entry and entry > 0)
+                if entry_backfilled:
+                    entry_source = "ohlcv_daily"
             if not (entry and entry > 0):
                 if age_days > OUTCOME_LOOKBACK_DAYS + GRACE_DAYS and not dry_run:
                     await _sb_patch(client, sid, {"outcome_30d": "EXPIRED",
@@ -411,6 +417,30 @@ async def run_outcome_tracker(dry_run: bool = False, limit: int = 500) -> dict:
                     results.append({"id": sid, "symbol": sym, "outcome": "PENDING", "reason": "price_not_yet_available"})
                 continue
 
+            # ⚠️ 跨源的收益是拼接,不是收益 (S-230/S-241)。
+            #
+            # entry 可能来自 signal 落库时的 `entry_price`(来源未记)或
+            # `ohlcv_daily_canonical`;exit 在 canonical 缺失时会 fallback 到
+            # yfinance / coingecko。而 coingecko 的"日收盘"是小时采样点塌缩
+            # (S-195),yfinance 已 63 天不更新。
+            #
+            # 这条收益进 `signal_outcomes` → IC 链 → CIS 权重。**一个拼接出来的
+            # 数字在这里不会报错,只会变成一个略微不同的权重,然后被用在每一个资产上。**
+            if entry_source and source and entry_source != source:
+                if not dry_run:
+                    await _sb_patch(client, sid, {
+                        "outcome_30d": "UNMEASURABLE",
+                        "return_pct_30d": None,
+                        "price_at_30d": None,
+                        "outcome_source": f"cross_source:{entry_source}->{source}",
+                        "outcome_at": started.isoformat(),
+                    })
+                    counts["updated"] += 1
+                counts["no_data"] = counts.get("no_data", 0) + 1
+                results.append({"id": sid, "symbol": sym, "outcome": "UNMEASURABLE",
+                                "reason": f"cross-source return {entry_source}->{source}"})
+                continue
+
             ret = (price - entry) / entry   # absolute 30d return (kept for reference)
 
             # Benchmark-relative (alpha) — the honest score for an OUTPERFORM signal.
@@ -426,7 +456,7 @@ async def run_outcome_tracker(dry_run: bool = False, limit: int = 500) -> dict:
 
             if alpha is not None:
                 outcome = _classify_alpha(alpha)          # relative: outperformed peer?
-                outcome_basis = f"{source}:vs_{bench_sym}"
+                outcome_basis = f"{entry_source or '?'}->{source}:vs_{bench_sym}"
             else:
                 outcome = _classify(ret)                  # fallback: absolute (BTC itself / no bench data)
                 outcome_basis = f"{source}:absolute"
