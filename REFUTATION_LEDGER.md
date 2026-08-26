@@ -12251,3 +12251,117 @@ except Exception:  _logger.debug(...); continue   # debug 级,生产默认不可
 `inception_date: 2026-08-25`(今天重开)。**所以 0 行的原因仍未确定** ——
 新的 `FetchCoverage` 会在下一次 mark 时直接说出是哪一半缺、为什么。
 **这正是该建的东西:不再需要我猜。**
+
+---
+
+## S-241 — 95 条已测结果里,83 条的退出腿用的是被禁的价源
+
+Minimax-A 的 P0-4 说 `outcome_tracker` 静默融合 binance_hist + yfinance。
+**方向对,位置要修正**:Railway 侧的 tracker **已经**读 `ohlcv_daily_canonical`
+(服务端解析源优先级,docstring 写得很清楚,是好设计)。**病在 fallback。**
+
+```python
+price = await _ohlcv_close_at(...);  source = "ohlcv_daily"
+if price is None:
+    price = yfinance / coingecko;    source = "yfinance" / "coingecko"
+...
+ret = (price - entry) / entry
+```
+
+`entry` 来自落库时的 `entry_price`(**来源从未被记录**)或 canonical 视图。
+所以 `ret` 是**两条腿**,而 `outcome_source` **只标了一条**。
+
+### 实测 `signal_journal`,不是推测
+
+```
+yfinance:vs_SPY       44 行,44 条有 return   ← yfinance 已 63 天不更新
+coingecko:vs_BTC      36 行,36 条有 return   ← coingecko 日收盘是小时点塌缩 (S-195)
+ohlcv_daily:vs_SPY     6 行
+ohlcv_daily:vs_BTC     5 行
+coingecko:absolute     2 · yfinance:absolute 1 · ohlcv_daily:absolute 1
+```
+
+**95 条已测结果里,只有 12 条的退出腿来自 canonical 视图。83 条用的是收益序列
+明确禁用的两个源之一** —— 而入口腿的源根本没记,所以其中大部分几乎必然是跨源。
+
+**这条链是:`signal_journal` → `signal_outcomes` → IC 链 → CIS 权重。**
+一个拼接出来的收益在这里不会报错,**只会变成一个略微不同的权重,然后被用在每一个资产上。**
+
+修:记录 `entry_source`;两条腿不同源 → 写 `outcome_30d = "UNMEASURABLE"`、
+`return_pct_30d = None`、`outcome_source = "cross_source:{entry}->{exit}"`,
+**不算那个数**;`outcome_basis` 改成 `{entry}->{exit}:vs_{bench}`,两条腿都在。
+
+⚠️ **存量 83 行没有回溯改写** —— 它们的入口源不可考,而**猜一个来源比留着更糟**。
+下一轮 tracker 跑过之后,新的判定会把仍然跨源的那些标成 UNMEASURABLE,
+覆盖率会掉,**而那个下降是真实的**:我们本来就没有 95 条可用观测。
+
+VERIFY: 下次 tracker 跑完,`select outcome_source, count(*) from signal_journal
+where outcome_at::date = current_date group by 1` 应出现 `cross_source:*` 分组。
+
+## S-242 · Regime 标签在 Mac push → signal feed 的路上被丢掉了（2026-08-26，FIXED）
+
+**发现方式**：daily-market-meditation 定时任务拉数据时,同一次 push、相隔几秒,
+两个端点自相矛盾：
+
+```
+/api/v1/cis/universe  → macro_regime "Tightening", regime_confidence 0.85
+/api/v1/signals       → "17 assets pass CIS ≥58 in UNKNOWN regime"
+```
+
+三个缺陷叠在一起,单独看每一个都像小事：
+
+**① 接收端把字段丢了。** `normalize_cis_payload()` 同时产出 `macro` 和顶层
+`macro_regime`（contract 里 `recommended_top_level` 明确列了它），但
+`receive_local_cis_scores` 的 `cache_data` 只写了 `macro`。任何直接读 Redis blob
+而不走 `/api/v1/cis/universe` 的消费者,看到的 regime 是**不存在**。
+
+**② 缺失表现为静默,不是报错。** signal feed 的守卫是 `if regime:` —— 于是整条
+regime 信号（TIGHTENING: F-8/M-10/O-5/S-12/A+5, HIGH, 30D）**从 feed 里消失**。
+一个 HIGH 级宏观信号缺席,和"当前没有这个状况"在输出上完全一样。这就是它能活这么久
+的原因：**它的失败方式是沉默。**
+
+**③ 缺失的标签悄悄挪动了一个阈值。** CIS gate 按 UPPER_SNAKE 索引
+（`TIGHTENING → 52`），拿不到标签就落到 58 默认值。实测 2026-08-26 面板：
+
+```
+threshold 52 (TIGHTENING, 正确) → 27 passing
+threshold 58 (默认, 实际发生)   → 20 passing
+被误报为未过闸的 7 个：NVDA 56.1 · INJ 55.6 · LDO 55.4 · SLV 54.4
+                      TLT 53.7 · SHY 53.7 · GOOGL 52.6
+```
+
+**③ 是这条不属于"文案问题"的原因**：一个字符串的缺失,改变了 positioning 的门槛。
+
+**只修 ① 不够。** 引擎发的是 `Tightening`（title-case），而所有 regime 表都是
+UPPER_SNAKE —— 读对了 key 仍然 miss,落到同一个 fallback,只是位置更深、更难看见。
+`canonical_regime()` 的存在意义正在于此,而这三处 consumer 一处都没调用它。
+
+**第三处同病**：`/api/v1/trading/loop-state` 读对了 `macro.regime`,但没有
+canonicalise,`_REGIME_GATE.get("Tightening", 50)` → 50,而 TIGHTENING 应为 52。
+
+**修复**（S-120 的原则再用一次：unmeasured 是 None,不是 NEUTRAL,更不是 "UNKNOWN"）：
+- `cis.py` 接收端：顶层写入 `macro_regime`,经 `canonical_regime_strict()`；
+  取不到时 `_logger.warning` 明说"regime-conditional signals will not fire"。
+- `market.py`：新增 `_cache_regime()`,顶层 / `macro.regime` / `regime` 三处兜底
+  后 canonicalise。**因此不必等下一次 push 就已生效**（旧 blob 的 `macro.regime` 可读）。
+- `market.py`：regime 缺失时不再静默 —— emit `cis_regime_unmeasured`
+  （DATA_QUALITY, pillar impact 全 0）。**未测量必须可见,而不是缺席。**
+- `market.py`：文案不再命名一个没观测到的 regime；`in UNKNOWN regime` →
+  `on the regime-neutral default gate (macro regime unmeasured this cycle)`。
+- `trading.py`：两处 canonicalise；响应新增 `regime_measured: bool`,让"默认闸"
+  和"选定闸"可区分。
+
+**回归测试**：`tests/test_regime_reaches_the_signal_feed.py`（19 passed）—— 钉住
+两端契约：接收端写顶层 canonical regime；feed 能从 blob 曾经有过的任何形状里解析出来；
+unmeasured 一律 None；`UNKNOWN` 不得回到 regime 文案；TIGHTENING=52 与 58 默认值的
+差距被显式记录（若二者收敛,该测试应被**主动删除**,而不是靠巧合继续通过）。
+
+VERIFY（部署后）：
+```
+curl -s .../api/v1/signals | jq '[.signals[]|select(.type=="MACRO" or .type=="DATA_QUALITY")|{id,description}]'
+# 期望出现 id="cis_regime"（Tightening 文案），且不再有任何 "UNKNOWN regime"
+curl -s .../api/v1/signals | jq -r '.signals[]|select(.id=="cis_passing").description'
+# 期望 "27 assets pass CIS ≥52 in Tightening regime: ..."
+curl -s .../api/v1/trading/loop-state | jq '{regime,regime_measured,gate_threshold}'
+# 期望 {"regime":"TIGHTENING","regime_measured":true,"gate_threshold":52}
+```
