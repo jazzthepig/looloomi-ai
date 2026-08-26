@@ -33,11 +33,18 @@ CLAIMED=$(grep -E '^#{2,3} .*S-[0-9]+' "$LEDGER" | grep -oE 'S-[0-9]+' | sort -u
 
 # Citations in code. Excludes build artefacts and vendored trees — a vendored
 # licence file matching `S-201` is not a citation of ours (measured: it does).
-CITED=$(grep -rhoE '\bS-[0-9]+\b' src/ scripts/ tests/ docs/ 2>/dev/null \
+# ⚠️ 台账号从 76 起(CLAUDE.md 规则 #7:Seth/Austin = S-76+,R1–R75 冻结),
+# 所以 `S-` 后面小于 76 的数【不是】引用。这条不是权宜,是编号约定本身。
+#
+# 实测 2026-08-25:`routers/cis.py:148` 的 `F-8/M-10/O-5/S-12/A+5` 是**支柱
+# delta 记法**(S = Sensitivity 支柱,-12 是它的变化),而检查器把它当成了
+# 一个不存在的台账号并挂了构建。**匹配了模式,不是构造** —— 和今天 mutation
+# 打回我六次的是同一课,这次踩的人是这条守卫。
+CITED=$(grep -rhoE '\bS-[0-9]{2,}\b' src/ scripts/ tests/ docs/ 2>/dev/null \
           --include='*.py' --include='*.sh' --include='*.sql' --include='*.md' \
           --exclude-dir=__pycache__ --exclude-dir=.venv --exclude-dir=node_modules \
           --exclude='check_ledger_citations.sh' \
-        | sort -u)
+        | awk -F- '$2 >= 76' | sort -u)
 
 DANGLING=$(comm -13 <(echo "$CLAIMED") <(echo "$CITED"))
 
