@@ -12365,3 +12365,162 @@ curl -s .../api/v1/signals | jq -r '.signals[]|select(.id=="cis_passing").descri
 curl -s .../api/v1/trading/loop-state | jq '{regime,regime_measured,gate_threshold}'
 # 期望 {"regime":"TIGHTENING","regime_measured":true,"gate_threshold":52}
 ```
+
+## S-243 · 同一份响应里报了两个不同的 regime（2026-08-26，FIXED）
+
+**起因**：S-242 收尾时问 Jazz 要不要统一 `Tightening` / `TIGHTENING` 的大小写。
+去清点前端消费者,发现的不是大小写问题：
+
+```
+GET /api/v1/cis/universe
+  顶层    macro_regime  →  "Tightening"
+  每资产  macro_regime  →  "RISK_ON"    (全部 58 个)
+```
+
+**这不是拼写差异,是两个互相矛盾的市场判断装在同一份文档里。**
+
+`_normalize_asset()` 明确把 canonical 字段 overlay 到资产的 **copy** 上,注释写着
+"preserves every display field" —— 于是引擎给每个资产盖的 `macro_regime` 原样穿过,
+既没 canonicalise 也没和顶层对账。
+
+**代价是投资人可见的**：`PortfolioAllocation.jsx` 读的是**每资产**那个字段
+（`for (const a of universe) { if (a.macro_regime) return a.macro_regime; }`），
+其余组件读顶层。于是在一个 Tightening 读数下,配置面板对投资人显示：
+
+> Regime · RISK ON —— "Risk appetite elevated. Full allocation eligible."
+
+**大小写是同一道伤口的小的那一半。** `Tightening` 上线、所有查表 UPPER_SNAKE：
+
+| 组件 | key 写法 | 修复前 |
+|---|---|---|
+| `CISWidget` | title-case | ✅ 能用（只因为 API 恰好发这个方言）|
+| `PortfolioAllocation` | UPPER_SNAKE | ❌ 灰色默认色 + 六条 regime 说明**一条都不渲染** |
+| `CISCompare` / `ShareCard` | UPPER_SNAKE | ❌ miss |
+| `MobileApp` | 自带 normalize | ✅ |
+
+**两边各对一半,从任何一个屏幕看都像是好的** —— 这是它活下来的原因。
+而且 miss 的表现是「灰色默认」,不是报错。
+
+**修复**：
+- `cis.py` 新增 `_unify_regime(universe, authoritative)` —— 返回 canonical 顶层值,
+  并把它盖到**每一个资产**上。四条出口全部经过它（merged / railway / degraded /
+  last_known_good）。**degraded 和 LKG 是最容易烂的两条**：只有别的东西已经坏了才会走到,
+  等到它重要的那天才发现不一致。
+- 矛盾**不静默调和**：`_logger.error("[REGIME] engine contradicted itself ...")`。
+  这是 Mac lane 的缺陷,Railway 修不了引擎,但可以拒绝转发一份自相矛盾的文档。
+- `authoritative=None` 时资产上的旧标签也一并清空 —— 资产留着昨天的 regime 而响应说
+  "unmeasured",是同一个 split 挪了一个字段,而且更难发现（那个值单看完全合理）。
+- `data_layer.get_macro_pulse()` 出口 canonicalise；`"UNKNOWN"` → None（S-120）。
+- 前端：`CISWidget` 改 UPPER_SNAKE + 独立的 `REGIME_LABEL` 显示映射（**显示用 title-case
+  没问题,查表不行**）；`agent.jsx` 的 `|| 'Risk-Off'` 硬编码兜底删掉 —— 那是在
+  "live" 标签下显示一个编造的 regime,S-120 的 UI 版本。
+
+**回归测试**：`tests/test_one_regime_one_spelling.py`（13 passed）。
+
+⚠️ **守卫自己第一版是错的,而且错法和 bug 同构。** 初版按 `if "regime" in line` 过滤行,
+但出问题的 key 长这样：
+
+```js
+const REGIME_COLORS = {
+  "Tightening": "#f59e0b",     // ← 这一行没有 "regime" 这个词
+```
+
+**过滤器恰好跳过了唯一重要的那些行,在真实的坏文件上通过。** 改成跟踪所属代码块,
+并加了 `test_the_frontend_guard_actually_catches_the_shape_it_is_guarding` ——
+用 fixture 重新引入 bug 验证守卫会响。对旧版 CISWidget 实测：7 处全部捕获。
+这是守卫失败的第七轮,同一类:**匹配名字而不是匹配构造。**
+
+VERIFY（部署后）：
+```
+curl -s .../api/v1/cis/universe?asset_class=all \
+  | jq '{top: .macro_regime, per_asset: ([.universe[].macro_regime]|unique)}'
+# 期望 {"top":"TIGHTENING","per_asset":["TIGHTENING"]} —— 两者必须一致且只有一个值
+curl -s .../api/v1/market/macro-pulse | jq .macro_regime
+# 期望 "TIGHTENING"（与上面逐字符相同）
+```
+Railway 日志出现 `[REGIME] engine contradicted itself` ⇒ Mac 引擎每资产戳的 regime
+与自己的 macro block 不一致,**转 Minimax lane 处理**（MINIMAX_SYNC §2）。
+
+---
+
+## S-244 · 台账说它是回归测试,而它一次也没跑过（2026-08-27，FIXED）
+
+**主张**：S-243 的条目末尾写着「**回归测试**：`tests/test_one_regime_one_spelling.py`
+（13 passed）」。这句话在写下的那一刻是真的 —— 文件存在,13 条断言确实全绿。
+
+**实测**：`scripts/preflight.sh` 里**没有任何一行提到这个文件**。preflight 是手写枚举
+的（`python3 -m pytest tests/xxx.py -q` 一行一个），没有 `pytest tests/` 的全量扫。
+所以那 13 条断言从写完那天起没有再跑过一次,以后也不会。
+
+顺着这条查下去,`tests/` 75 个文件里 **9 个从未被 preflight 引用**：
+
+```
+test_one_regime_one_spelling         13 passed   ← 台账称它为「回归测试」
+test_regime_reaches_the_signal_feed  19 passed
+test_strategy_vector_smoke           14 passed
+test_cis                              8 passed
+test_outcome_canonical                8 passed
+test_two_layer_paper_smoke            7 passed
+test_spa_deep_links_resolve           5 passed
+test_pit_replay                      12 properties  ← S-207 的守卫,自跑式
+test_factory                          9 FAILED      ← 烂了,没人知道
+```
+
+**74 条绿断言在守护空气;9 条红断言在无声地烂着。**
+
+### 为什么这是第 32 条,不是一条新缺陷
+
+`docs/PLAN_2026-08-25_STRUCTURE_PRESERVING.md` 数出的 31 条,全部是「两个不同的状态
+被压进同一个表示」。这条压的是**验证装置自己**：
+
+> **守卫写了** vs **守卫被执行** → 一个「有测试」
+
+S-233 说「没有调用者的代码不会被任何东西碰到」。preflight 就是测试的调用者,
+而它是手写的 —— 漏掉一个**没有任何征兆**：测试全绿、文件在仓库里、台账上写着
+它是回归测试。三个信号全部为真,而它不运行。
+
+### 修复
+
+`tests/test_every_test_is_registered.py`（S-244）。三值 + 一个额外维度：
+
+```
+registered   preflight 点名运行
+exempt       明确豁免 + 写下原因（名单只能减）
+orphan       既没注册也没豁免 → 失败
+```
+
+第四件事是**调用方式必须匹配文件形式**。`tests/` 里混着三种文件：
+
+```
+dual        顶层 def test_* ＋ 能跑的 __main__ 块   两种调用都执行断言
+pytest      只有 def test_*,没有 __main__ 运行块   以 -m 调用 = 零断言、退出码 0
+selfrunner  模块体断言 ＋ sys.exit                   以 pytest 调用 = 收集 0 个
+```
+
+棘轮合法性（S-238）：这里守的是「preflight.sh 的文本里有没有提到这个文件名」——
+**纯代码属性,机器无关**。测试本身的通过与否才是机器相关的,所以 `test_factory`
+（沙箱里 9 个 503/403,缺凭证）进豁免名单并写明原因,而不是让关卡常红。
+
+### 而这条守卫的分类器,我连错两次
+
+**第一版**：看到顶层有 `def test_*` 就判「pytest 式」→ 报出 50 条假阳性。
+实测那些文件是**双模式**的,`__main__` 块会遍历 `globals()` 跑完所有 test 函数。
+
+**第二版**：要求 `__main__` 块里有 `sys.exit` → 仍有 8 条假阳性,其中包括
+`test_strategy_discipline`（CLAUDE.md 称之为「philosophy compiled to CI」）。
+实测它的块是 `for t in TESTS: t()` —— **没有 sys.exit,而它照样正确失败**,
+因为裸调用抛出的 AssertionError 一路传到解释器,退出码就是 1。
+
+两次都是同一个错法,也就是 `tests/_source.py` 记的那一条:**匹配了模式,不是构造。**
+第一次我把「能被 pytest 收集」当成「只能被 pytest 跑」；第二次我把「用退出码说话」
+这个属性,错认成「字面写了 sys.exit」这个拼写。
+
+所以这个文件带**合成样本负控制**（`_CONTROL` / `_negative_control()`）：四个钉死
+的样本覆盖 dual / dual-without-exit / pytest-only / selfrunner,分类器坏了先响,
+不报结论。一个会误报的守卫比没有守卫更糟 —— 人会学会忽略它,然后连真阳性一起忽略。
+
+**注册后**：73 个在 preflight 里 · 1 个已豁免并写明原因 · 0 孤儿。
+
+**未了项**：`test_factory` 需要一个不依赖真实凭证的 fixture,然后从 EXEMPT 移除。
+`src/research/validation/tests/` 另有 55 个实验冒烟,preflight 只引用 4 个 —— 那
+**不是缺陷**（研究草稿面,不是 CI 面）,但这个数字现在被打印出来,不再是沉默事实。
