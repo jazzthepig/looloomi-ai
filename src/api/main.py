@@ -1985,7 +1985,48 @@ async def data_freshness():
     # honest about failure) rather than adding a second way to ask the same
     # question — a duplicate freshness path is how two sources of truth start.
     from src.api.store import supabase_ohlcv_daily_freshness
+
+    async def _ohlcv_source_coverage() -> list | None:
+        """调 `ohlcv_source_coverage()` RPC。**返回 None 表示读不到,不是"都健康"。**
+
+        RPC 是 SECURITY INVOKER 且只授给 service_role —— 同一天 S-247 刚把 8 个
+        SECURITY DEFINER 视图翻回 invoker(它们让 anon 绕过 RLS 读到 485,352 行
+        价格),不要再造一个。
+        """
+        from src.api.store import supabase_rpc
+        from src.data.market.source_freshness import COVERAGE_PARAMS
+        try:
+            rows = await supabase_rpc("ohlcv_source_coverage", {
+                "recent_crypto": COVERAGE_PARAMS["recent_crypto"],
+                "recent_tradfi": COVERAGE_PARAMS["recent_tradfi"],
+                "base_lo": COVERAGE_PARAMS["base_lo"],
+                "base_hi": COVERAGE_PARAMS["base_hi"],
+            })
+        except Exception:                                         # noqa: BLE001
+            return None
+        return rows if isinstance(rows, list) else None
+
     out: dict = {"checked_at": int(_time.time())}
+
+    # ── S-251:全表 max 看不见管道死亡,补一层按源的覆盖率判活 ──────────────
+    # 上面那句 `order=trade_date.desc limit 1` 取的是**混合总体上的一个 max**。
+    # 实测 2026-08-27:binance_hist 自 08-09 起每天只写 BCH 一个标的,连写 19 天,
+    # 于是 max 天天前进,而 260 个标的已经停了;这个端点照报 verdict="fresh"。
+    # 一个还活着的写入者掩护了 260 个死掉的。
+    #
+    # 不替换上面的判据(它对"这一轮跑完没有"仍然有效,而且 caveat 说得对),
+    # 而是**并排给出第二个维度**:每个源最近还在写几个标的,对比它一个月前的常态。
+    # 「某个东西是新的」和「这个管道是活的」从此是两个字段。
+    try:
+        from src.data.market.source_freshness import (
+            from_rows, overall as _src_overall)
+        _cov = await _ohlcv_source_coverage()
+        out["by_source"] = (_src_overall(from_rows(_cov)) if _cov is not None else
+                            {"verdict": "unknown",
+                             "note": "覆盖率查询没有返回 —— 读不到 ≠ 都健康 (S-180)"})
+    except Exception as _e:                                       # noqa: BLE001
+        out["by_source"] = {"verdict": "unknown", "note": f"{type(_e).__name__}"}
+
     try:
         f = await supabase_ohlcv_daily_freshness()
         age_s = f.get("age_seconds")
