@@ -323,9 +323,22 @@ The cap is doing its job only if closure is as routine as addition.*
    同时触发三条地板、分不出是哪条在起作用。第三版每条地板配独立夹具 + upsert 探针,
    五个变异全数打回。
 
-**下一步**:写者需在真实凭证下先 `--dry-run` 看 PanelSpec 再正式跑
-(沙箱没有 SUPABASE_KEY,我不读 `.env`)。判据:`/internal/vdb-health` 连续 7 天
-`overall: flowing`,且 `coherence` 只有一个 pass。
+4. **S-246:我写的错误信息说不出错在哪。** dry-run 回来是
+   `error / reason: "Supabase 读不到,offset=0"` —— **四个原因塌成一个 None**
+   (凭证没设 / 断路器打开 / HTTP 4xx / 传输失败),而那句话里我**当场引用了
+   `(S-180)`**,也就是「读失败 ≠ 读到空」那一课。引用一条教训和执行它是两件事。
+
+   根因在环境:**仓库里没有任何代码为 `src/api/store.py` 加载 `.env`** ——
+   Railway 上是真环境变量,Mac 上裸跑 `python3 -c` 时 `os.getenv` 读到空。
+   修成 `SbRead(rows, reason)`,四条失败四句互不相同的话,凭证那条直接给补救命令。
+   变异(四句压回一句)打红 5 条。
+
+   **今天第十次同一个形状,而这次是我一小时前写的代码。** 结论不是「要更小心」,
+   是:**每写一个返回 Optional 的读函数,当场问一次调用方需要分开几种失败。**
+
+**下一步**:在 Mac 上 `set -a; source .env; set +a` 后重跑 dry-run,先看
+`panel` 的三个数(`n_symbols` / `coverage` / `excluded`)再跑真的。
+判据:`/internal/vdb-health` 连续 7 天 `overall: flowing`,且 `coherence` 只有一个 pass。
 
 ---
 

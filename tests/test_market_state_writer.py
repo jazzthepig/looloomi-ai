@@ -166,6 +166,98 @@ def test_floor_refuses_without_ever_calling_upsert():
         _check(f"{label} → rows_written = 0", ok.rows == 0, str(ok.rows))
 
 
+def test_read_failure_says_which_kind_of_failure():
+    """读不到的四个原因必须给出四句不同的话 (S-245 第二轮)。
+
+    实测 2026-08-27:Jazz 在 Mac 上跑 dry-run 拿到
+    「Supabase 读不到 —— offset=0,已取 0 行」。这句话对排查毫无帮助 ——
+    **凭证没设 / 断路器打开 / HTTP 4xx / 传输失败**,四个原因长得一模一样,
+    而最可能的那个(裸 `python3 -c` 没导出 .env)本来一句话就能说清。
+
+    第十次「两个状态压进一个表示」,而且是我一小时前刚写的 `Optional[list]`。
+    """
+    import asyncio
+    import os
+
+    import src.api.store as store
+
+    def read(**patch):
+        """在给定环境下跑一次 _sb_get,返回 (ok, reason)。"""
+        saved = {k: os.environ.pop(k, None)
+                 for k in ("SUPABASE_URL", "SUPABASE_KEY", "SUPABASE_SERVICE_KEY")}
+        orig_brk, orig_req = store.supabase_breaker_state, store._supabase_request_with_retry
+        os.environ.update({k: v for k, v in patch.get("env", {}).items()})
+        if "breaker" in patch:
+            store.supabase_breaker_state = lambda: patch["breaker"]
+        if "resp" in patch:
+            async def fake(*a, **k):                       # noqa: ANN001
+                return patch["resp"]
+            store._supabase_request_with_retry = fake
+        try:
+            r = asyncio.new_event_loop().run_until_complete(W._sb_get("t", {}))
+        finally:
+            store.supabase_breaker_state, store._supabase_request_with_retry = orig_brk, orig_req
+            for k in ("SUPABASE_URL", "SUPABASE_KEY", "SUPABASE_SERVICE_KEY"):
+                os.environ.pop(k, None)
+            for k, v in saved.items():
+                if v is not None:
+                    os.environ[k] = v
+        return r.ok, r.reason
+
+    class _Resp:
+        def __init__(self, code, text="denied by RLS"):
+            self.status_code, self.text = code, text
+
+        def json(self):
+            return [{"x": 1}]
+
+    live = {"SUPABASE_URL": "https://x.supabase.co", "SUPABASE_KEY": "k"}
+    cases = {
+        "no_creds":  read(env={}),
+        "breaker":   read(env=live, breaker={"open": True, "cooldown_remaining_s": 12.0}),
+        "http_4xx":  read(env=live, breaker={"open": False}, resp=_Resp(403)),
+        "transport": read(env=live, breaker={"open": False}, resp=None),
+        "ok":        read(env=live, breaker={"open": False}, resp=_Resp(200)),
+    }
+
+    _check("凭证缺失被单独识别",
+           not cases["no_creds"][0] and ".env" in cases["no_creds"][1],
+           cases["no_creds"][1][:90])
+    _check("断路器打开被单独识别",
+           not cases["breaker"][0] and "断路器" in cases["breaker"][1],
+           cases["breaker"][1][:90])
+    _check("HTTP 4xx 带上后端原话",
+           not cases["http_4xx"][0] and "403" in cases["http_4xx"][1]
+           and "RLS" in cases["http_4xx"][1],
+           cases["http_4xx"][1][:90])
+    _check("传输失败被单独识别",
+           not cases["transport"][0] and "传输" in cases["transport"][1],
+           cases["transport"][1][:90])
+    _check("成功路径 ok=True", cases["ok"][0], cases["ok"][1][:90])
+
+    reasons = [v[1] for k, v in cases.items() if k != "ok"]
+    _check(f"四种失败给出四句【互不相同】的话({len(set(reasons))}/4)",
+           len(set(reasons)) == 4,
+           "有两种失败说了同一句 —— 那就等于没有分开")
+
+
+def test_env_presence_never_leaks_a_value():
+    """凭证只报存在性。这是硬约束,不是风格。"""
+    import os
+    saved = os.environ.get("SUPABASE_KEY")
+    os.environ["SUPABASE_KEY"] = "sb-secret-do-not-leak-0123456789"
+    try:
+        p = W.env_presence()
+        _check("env_presence 只返回布尔",
+               all(isinstance(v, bool) for v in p.values()), str(p))
+        _check("值不出现在任何字段里",
+               "sb-secret-do-not-leak-0123456789" not in repr(p), repr(p)[:80])
+    finally:
+        os.environ.pop("SUPABASE_KEY", None)
+        if saved is not None:
+            os.environ["SUPABASE_KEY"] = saved
+
+
 def _run_recompute(n_symbols: int, n_days: int):
     """跑一次 `recompute_all`,给 upsert 装探针。返回 (结果, 探针记录)。"""
     import asyncio
