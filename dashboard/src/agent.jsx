@@ -311,7 +311,12 @@ function LiveStats() {
     { label: 'Universe', value: '54+', unit: 'assets rated' },
     { label: 'Exclusion records', value: '14', unit: 'structured rejections' },
     { label: 'Score refresh', value: '30', unit: 'min cadence' },
-    { label: 'Macro regime', value: pulse?.macro_regime || 'Risk-Off', unit: 'live' },
+    // Was `|| 'Risk-Off'` — a hardcoded regime rendered under the label "live".
+    // An unmeasured regime shows as "—"; inventing one is the S-120 pattern in
+    // the UI, and this panel is investor-facing.
+    { label: 'Macro regime',
+      value: pulse?.macro_regime ? String(pulse.macro_regime).replace(/_/g, ' ') : '—',
+      unit: pulse?.macro_regime ? 'live' : 'awaiting engine' },
     { label: 'MCP tools', value: '19', unit: 'available' },
   ];
 
