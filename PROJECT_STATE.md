@@ -274,6 +274,27 @@ The cap is doing its job only if closure is as routine as addition.*
 
 ---
 
+## 🟢 四层账本已填满(2026-08-27)—— 数字在这里,MEMORY 只留指针
+
+| 层 | R# | OOS 结果 | 状态 |
+|---|---|---|---|
+| ① capture beta | **M-93** regime-gated BTC spot | **+33.10%** / SR +0.559 / MaxDD −28.11% / **walk-forward 7/11 = 63.6% ✅ 过 60% doctrine 门槛** | LIVE,待接 daily runner |
+| ② beta+ | **M-87** cluster tilt | **+19.94%** / SR **+2.270** / hit 51.0% / MaxDD −6.80% / IS→OOS transfer 0.71;15bps 失效 | spec 已 ship,**执行未接**(family 未接线) |
+| ③ beta multiplier | **M-88** BTC regime switch | **+29.90%** / SR +1.912 / hit 61.5% / MaxDD −28.08%(止损收紧至 −20%) | spec 已 ship,**执行未接** |
+| ④ pure alpha | R70 / R71 | production β-adj SR **+1.083**(R70 唯一通过 held-out OOS 的横截面 L/S) | LIVE |
+| ④ 卫星 | **M-86** R22 K=1 hold14/ret3d | n=1 +4.21%(单源 18d 窗口,OOS PENDING) | **执行已接**(S-254) |
+
+**方法论资产**:M-92 用 CG Pro 5 年深盘(1811d×10)把 M-90 从 REFUTED 翻成
+PARTIAL SURVIVE —— **① 是 regime-conditional,不是结构上不可行**;
+M-89/M-90 是诚实的 kill,各挡掉一次坏升级;S-111 的 25.1pp/yr 幸存者偏差自测自纠。
+
+**⚠️ 给未来的自己(S-255)**:2026-08-27 我花一整天量缺陷,把产出框成
+「我们什么都不能声称」—— 而四层账本在同一天填满了。根因是没读
+`Shadow/cometcloud-local/_reports/INDEX.md`(CLAUDE.md 源真表里就有,
+旁边还有一段 08-19 同一误读的警告)。**下"不能声称"的判断前,先 grep `_reports/`。**
+
+---
+
 ## 2026-08-27 收口 — 跨 lane 半成品做完 + S-244
 
 周末 token 用尽时 Minimax 以 Seth 身份接手,留了一批未提交的改动在同一个工作树里。

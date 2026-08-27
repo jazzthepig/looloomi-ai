@@ -994,6 +994,7 @@ async def _build_cis_universe(force_source: str = None):
         # regime-neutral QUALITY; the regime-adjusted number is preserved as a separate
         # exposure-lens field. This makes the switch a single Railway-side change — no
         # cis_v4_engine lockstep. (T1 can later grade on raw natively; result is identical.)
+        from src.data.cis.cis_provider import display_score as _display_score
         from src.data.cis.cis_provider import get_grade as _get_grade
         for _a in merged:
             _raw = _a.get("raw_cis_score")
@@ -1002,7 +1003,18 @@ async def _build_cis_universe(force_source: str = None):
             _adj = _a.get("cis_score") or _a.get("score")
             if _a.get("regime_adjusted_score") is None:
                 _a["regime_adjusted_score"] = _adj      # preserve the regime lens
-            _a["cis_score"] = round(float(_raw), 1)      # headline = quality (matches grade)
+            # ── S-252:显示值不得落进比自己评级更高的带 ──────────────────────
+            # 这里原本是 `round(float(_raw), 1)`。实测 2026-08-27 排行榜首屏:
+            #     Aave    75.7  A
+            #     Uniswap 75.0  B+   ← UNI 的 raw 是 74.97
+            # `get_grade(74.97)` 给 B+ 是**对的**(74.97 < 75),而
+            # `round(74.97, 1) = 75.0` **四舍五入跨过了 grade 自己遵守的那条线**。
+            # 同一行里数字说 A 档、徽章说 B+ 档,而它就在产品首屏。
+            #
+            # 不把 grade 改成按显示值算 —— 那等于让呈现层决定评级。
+            # 反过来:显示值退到本带内最大的 1 位小数(74.97 → 74.9)。
+            # 穷举 0.00–100.00 每 0.01:矛盾 0 处,受影响 34 个点,最大偏离 0.1。
+            _a["cis_score"] = _display_score(float(_raw))
             _a["grade"] = _get_grade(float(_raw))        # grade on quality, not regime
 
         # Sort by CIS score descending (now regime-neutral quality)
