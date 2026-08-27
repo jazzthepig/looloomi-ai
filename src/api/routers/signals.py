@@ -356,10 +356,30 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
     if cagr is not None and max_dd < 0:
         calmar = round(cagr / abs(max_dd), 3)
 
-    # Attribution by regime
+    # Attribution by regime — CANONICALISE FIRST (S-248).
+    #
+    # 这里原本是 `reg = r.get("macro_regime") or "Unknown"`,拿原始字符串分组。
+    # 实测 2026-08-27,库里同一个 regime 存着两种拼写:
+    #
+    #     EASING  n=1475 α=−1.43  ‖  Easing  n=1185 α=−5.43   差  4.00pp
+    #     RISK_ON n= 856 α=+5.83  ‖  Risk-On n= 330 α=−6.17   差 12.01pp,符号相反
+    #
+    # 而拼写切换发生在 **2025-06-17**(`Risk-On` 覆盖 05-24→06-17,
+    # `RISK_ON` 覆盖 06-29→10-09)。所以那不是两个 regime,是**两段相邻时间窗** ——
+    # 这张「按 regime 归因」的表,有一部分在测时代而不是在测 regime,
+    # 而标题不会告诉读者这件事。
+    #
+    # 合并了哪几种拼写要跟着结果走(`merged_spellings`),否则读者无从判断
+    # 某一行是不是刚被合并过 —— 那是可审计性,不是装饰。
+    # 写者路径必须用 strict:未知拼写返回 None → "UNKNOWN" 桶,而不是被悄悄折成
+    # NEUTRAL(那是合法 regime,会让不可测的量冒充可测的 — S-123 / seth-vdb-r12-reply)。
+    from src.data.cis.cis_provider import canonical_regime_strict
+
     by_regime: dict = {}
+    _regime_spellings: dict = {}
     for r in closed:
-        reg = r.get("macro_regime") or "Unknown"
+        raw = r.get("macro_regime")
+        reg = canonical_regime_strict(raw) or "UNKNOWN"
         ret = r.get("return_pct")
         if ret is None:
             continue
@@ -367,6 +387,7 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
             by_regime[reg] = {"returns": [], "count": 0}
         by_regime[reg]["returns"].append(ret)
         by_regime[reg]["count"] += 1
+        _regime_spellings.setdefault(reg, set()).add(str(raw))
 
     regime_stats = {}
     for reg, v in by_regime.items():
@@ -375,7 +396,16 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
             "avg_return_pct": round(float(np.mean(rets)), 2),
             "win_rate_pct":   round(len(rets[rets > 0]) / len(rets) * 100, 1),
             "trade_count":    v["count"],
+            # 每个数自报它测在什么上面 (S-248)。这一格用的是 return_pct ——
+            # entry→exit 的绝对收益,持仓期由 exit_reason 决定(实测均值 8-12 天),
+            # 【不是】同屏那个 30 天窗口的 α。同一块面板上两个数说着不同的话时,
+            # 至少要让读者看得出它们说的不是同一件事。
+            "measure": "exit_return_pct",
         }
+        spellings = sorted(_regime_spellings.get(reg, ()))
+        if len(spellings) > 1:
+            # 这一行是合并出来的 —— 说出来,否则读者无从判断它是不是刚被合并过。
+            regime_stats[reg]["merged_spellings"] = spellings
 
     # Attribution by asset class
     by_class: dict = {}
@@ -535,6 +565,33 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
         # HONEST primary track record — benchmark-relative alpha (fair measure of OUTPERFORM
         # signals). The absolute sharpe/win_rate below reflect a doomed long-only sleeve in a
         # down market and should NOT headline the UI.
+        # ── 每个头条数字的度量口径 (S-248) ──────────────────────────────────
+        # 实测 2026-08-27,同一条统计条上四个数用了三种度量,而 UI 没有逐项标注:
+        #
+        #     ALPHA SHARPE  −1.31    ← alpha_30d(30 天窗口,已减基准)
+        #     ALPHA WIN     28.2%    ← outcome_30d(30 天窗口)
+        #     MAX DRAWDOWN  −38.30%  ← 绝对 equity_curve(8 天退出价复利)
+        #     AVG RETURN    −3.44%   ← return_pct(8 天退出,不含基准)
+        #
+        # 而 `signals.py` 上方的注释自己就写着「Two curves, one page,
+        # contradicting each other」—— 问题被记录过,没有被消除,也没有标出来。
+        #
+        # 更要紧的是持仓期不一致:退出规则平均 8 天(exit_reason 几乎全是
+        # DOWNGRADE),而判定窗口是 30 天。实测 23 个 WIN 行里 **12 个**
+        # `return_pct<0` 而 `return_pct_30d>0` —— 曲线和胜率在同一批样本上符号相反。
+        #
+        # 这个 map 不改任何数,只让前端能逐项标注,读者不再把三种度量读成一种。
+        "measure_basis": {
+            "alpha_sharpe":        "alpha_30d · 30d window · benchmark-relative",
+            "alpha_win_rate_pct":  "outcome_30d · 30d window · benchmark-relative",
+            "avg_alpha_pct":       "alpha_30d · 30d window · benchmark-relative",
+            "sharpe":              "return_pct · exit-based (~8d hold) · absolute",
+            "win_rate_pct":        "return_pct · exit-based (~8d hold) · absolute",
+            "max_drawdown_pct":    "return_pct · exit-based (~8d hold) · absolute",
+            "avg_return_pct":      "return_pct · exit-based (~8d hold) · absolute",
+            "_note": ("持仓期与判定窗口不一致:退出规则均值约 8 天,判定窗口 30 天。"
+                      "23 个 WIN 样本里 12 个两种度量符号相反 (S-248)。"),
+        },
         "alpha_sharpe":        alpha_sharpe,
         "alpha_win_rate_pct":  alpha_win_rate,
         "avg_alpha_pct":       out_avg_alpha,
