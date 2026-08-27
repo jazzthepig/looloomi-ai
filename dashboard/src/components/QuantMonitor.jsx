@@ -754,7 +754,7 @@ function FactorLab() {
           background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)",
         }}>
           <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: "#f59e0b", marginBottom: 3, fontWeight: 700 }}>
-            Weak IC detected · Awaiting hypothesis generation
+            Weak IC detected · Awaiting alpha generation
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.40)" }}>
             Pillars: {(pending?.pillars || []).join(", ")} &nbsp;·&nbsp; Regime: {pending?.regime ?? "—"} &nbsp;·&nbsp; Queued for the next scoring cycle
@@ -779,7 +779,7 @@ function FactorLab() {
                 PILLAR {pillar}
               </span>
               <span style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.25)" }}>
-                {hyps.length} hypothesis{hyps.length !== 1 ? "es" : ""}
+                {hyps.length} alpha{hyps.length !== 1 ? "s" : ""}
                 {age != null ? ` · generated ${age}h ago` : ""}
               </span>
             </div>
@@ -818,7 +818,7 @@ function FactorLab() {
       })}
 
       <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.15)", marginTop: 4 }}>
-        |r| &lt; 0.05 × 3 mine runs → hypothesis generation → test → evolve
+        |r| &lt; 0.05 × 3 mine runs → alpha generation → test → evolve
       </div>
     </div>
   );

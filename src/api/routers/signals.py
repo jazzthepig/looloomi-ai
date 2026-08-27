@@ -1161,7 +1161,7 @@ def _band_of(trail_30d: float) -> str:
     return "5_deep_on"
 
 _BAND_ACTION = {
-    "1_deep_off": "Deep risk-OFF — shorting the bottom tier (UNDERPERFORM) has paid best here; long edge weakest.",
+    "1_deep_off": "Deep risk-OFF — negative-edge tier at maximum width; positive-edge book screens UNDERWEIGHT.",
     "2_off":      "Risk-OFF — the negative-edge tier is widest; the positive-edge book screens UNDERWEIGHT.",
     "3_neutral":  "Neutral tape — both edges shrink; conviction dispersion compresses.",
     "4_on":       "Risk-ON — top tier (STRONG OUTPERFORM) edge widest; negative-edge tier fades.",
