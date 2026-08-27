@@ -189,21 +189,68 @@ class RecomputeResult:
 
 # ── 取数 ──────────────────────────────────────────────────────────────────────
 
-async def _sb_get(path: str, params: dict[str, str]) -> Optional[list[dict]]:
-    """一次 PostgREST 读。返回 None 表示【读不到】,不是【读到空】(S-180)。"""
-    from src.api.store import _supabase_request_with_retry
+@dataclass(frozen=True)
+class SbRead:
+    """一次读的结果 + **它为什么没成**。
+
+    ⚠️ 第一版 `_sb_get` 返回 `Optional[list]`,于是四个不同的原因塌成同一个 None:
+
+        凭证没设 · 断路器打开 · HTTP 4xx(RLS/角色/查询写错) · 传输失败
+
+    实测 2026-08-27,Jazz 在 Mac 上跑 dry-run 拿到的是
+    「Supabase 读不到,offset=0,已取 0 行」—— 这句话**对排查毫无帮助**,
+    因为四个原因里每一个都长这样。而最可能的那个(裸 `python3 -c` 没有导出
+    `.env`,`os.getenv` 读到空)本来一句话就能说清。
+
+    这是今天第十次「两个状态压进一个表示」,而且是我一小时前刚写的代码。
+    一个说得出"我为什么读不到"的读,比一个 None 有用得多。
+    """
+
+    rows: Optional[list[dict]]
+    reason: str = "ok"
+
+    @property
+    def ok(self) -> bool:
+        return self.rows is not None
+
+
+def env_presence() -> dict[str, bool]:
+    """哪些凭证变量【存在】—— 只报存在性,永远不报值。"""
+    return {k: bool(os.getenv(k)) for k in
+            ("SUPABASE_URL", "SUPABASE_KEY", "SUPABASE_SERVICE_KEY")}
+
+
+async def _sb_get(path: str, params: dict[str, str]) -> SbRead:
+    """一次 PostgREST 读。**读不到 ≠ 读到空** (S-180),而且要说出是哪一种。"""
+    from src.api.store import _supabase_request_with_retry, supabase_breaker_state
+
     base = (os.getenv("SUPABASE_URL") or "").rstrip("/")
     key = os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_SERVICE_KEY") or ""
     if not base or not key:
-        return None
+        missing = [k for k, v in env_presence().items() if not v]
+        return SbRead(None, (
+            f"凭证不在进程环境里(缺 {', '.join(missing)})。"
+            f"注意:这个仓库【没有任何代码加载 .env】—— Railway 上是真的环境变量,"
+            f"而裸跑 `python3 -c` 时 os.getenv 读到空。"
+            f"跑之前先 `set -a; source .env; set +a`。"))
+
+    brk = supabase_breaker_state()
+    if brk.get("open"):
+        return SbRead(None, f"Supabase 断路器打开({brk}) —— 后端在降级,不是查询写错了")
+
     resp = await _supabase_request_with_retry(
         "GET", f"{base}/rest/v1/{path}",
         params=params,
         headers={"apikey": key, "Authorization": f"Bearer {key}"},
     )
-    if resp is None or resp.status_code >= 300:
-        return None
-    return resp.json()
+    if resp is None:
+        # store 层对超时/重试耗尽返回 None,并且已经记了日志。
+        return SbRead(None, "传输失败或重试耗尽(超时/网络)—— 不是 0 行,也不是权限")
+    if resp.status_code >= 300:
+        # 4xx 是后端在说"你的请求不对":RLS 拒绝、表不存在、查询语法错。
+        # 把 body 的前 200 字带上 —— PostgREST 的错误信息本身就是诊断。
+        return SbRead(None, f"HTTP {resp.status_code}: {resp.text[:200]}")
+    return SbRead(resp.json())
 
 
 async def fetch_panel(start: str, *, source: str = PANEL_SOURCE
@@ -223,17 +270,20 @@ async def fetch_panel(start: str, *, source: str = PANEL_SOURCE
     offset = 0
 
     while True:
-        batch = await _sb_get("ohlcv_daily", {
+        read = await _sb_get("ohlcv_daily", {
             "select": "symbol,trade_date,close,volume,source",
             "source": f"eq.{source}",
             "trade_date": f"gte.{warm}",
             "order": "trade_date.asc",
             "limit": str(PAGE), "offset": str(offset),
         })
-        if batch is None:
+        if not read.ok:
+            # 原因原样往上传。把它压回一句"读不到"就等于没查过 —— 这一句
+            # 正是 2026-08-27 dry-run 给出的、对排查毫无帮助的那一句。
             raise CrossSourceError(
-                f"panel fetch: Supabase 读不到 —— 这不等于 0 行 (S-180)。"
-                f"offset={offset},已取 {len(seen)} 行")
+                f"panel fetch 在 offset={offset} 读不到(已取 {len(panel)} 个标的)。"
+                f"**读不到 ≠ 0 行** (S-180)。原因:{read.reason}")
+        batch = read.rows or []
         for row in batch:
             cl = row.get("close")
             if cl is None:
@@ -361,7 +411,7 @@ def compute_vectors(panel: dict[str, dict[str, tuple[float, float]]],
     return out
 
 
-async def attach_cis_and_funding(vectors: list[StateVector]) -> dict[str, int]:
+async def attach_cis_and_funding(vectors: list[StateVector]) -> dict[str, Any]:
     """把 CIS 横截面与资金费维贴到已有向量上。返回每一维实际填上的天数。
 
     分开做,是因为它们的覆盖窗口和面板**不重合**:CIS 从 2025-05-03 起,
@@ -373,10 +423,15 @@ async def attach_cis_and_funding(vectors: list[StateVector]) -> dict[str, int]:
     lo, hi = (min(by_day), max(by_day)) if by_day else ("9999-12-31", "0000-01-01")
     filled: dict[str, int] = {}
 
-    rows = await _sb_get("cis_scores", {
+    read = await _sb_get("cis_scores", {
         "select": "symbol,score,grade,recorded_at",
         "recorded_at": f"gte.{lo}", "order": "recorded_at.asc", "limit": str(PAGE * 5),
     })
+    # 读不到 CIS 维不是致命的(早年本来就没有),但【读不到】和【那几天真的没有】
+    # 必须分开报,否则一次凭证问题会长得像一段真实的历史空白。
+    if not read.ok:
+        filled["cis_error"] = read.reason
+    rows = read.rows if read.ok else None
     if rows:
         daily: dict[str, list[dict]] = {}
         for r in rows:
@@ -401,10 +456,13 @@ async def attach_cis_and_funding(vectors: list[StateVector]) -> dict[str, int]:
             prev_mean = m if m is not None else prev_mean
         filled["cis"] = sum(1 for sv in vectors if sv.values.get("cis_mean") is not None)
 
-    rows = await _sb_get("funding_history", {
+    read = await _sb_get("funding_history", {
         "select": "symbol,funding_rate,funding_time",
         "funding_time": f"gte.{lo}", "order": "funding_time.asc", "limit": str(PAGE * 5),
     })
+    if not read.ok:
+        filled["funding_error"] = read.reason
+    rows = read.rows if read.ok else None
     if rows:
         daily_f: dict[str, list[float]] = {}
         for r in rows:
@@ -426,8 +484,12 @@ async def attach_cis_and_funding(vectors: list[StateVector]) -> dict[str, int]:
 async def attach_regime(vectors: list[StateVector]) -> int:
     """贴 `regime_label`。没有读数的日子留 None —— 那是 2025-05 之前的真实情况。"""
     by_day = {sv.d: sv for sv in vectors}
-    rows = await _sb_get("daily_macro_regime", {
+    read = await _sb_get("daily_macro_regime", {
         "select": "d,regime", "order": "d.asc", "limit": str(PAGE)})
+    if not read.ok:
+        log.warning("[MSV] regime 读不到 —— %s", read.reason)
+        return 0
+    rows = read.rows or []
     if not rows:
         return 0
     n = 0
