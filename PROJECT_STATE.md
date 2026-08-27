@@ -395,6 +395,38 @@ The cap is doing its job only if closure is as routine as addition.*
    是两件事。** 给它写守卫时又被自己的 docstring 打红(引用了反面例子),
    `tests/_source.py` 那一课今天踩了两种拼写。
 
+7. **🔴 S-251:两个可信加密价源已死,而探针报 `fresh`。** 做价源回填时撞到的。
+
+   ```
+   2026-07-27  binance_hist 261 标的 → 07-28 掉到 221 → 08-09 掉到 1(只剩 BCH)
+   08-09 起连续 19 天,每天只写一个标的
+   ```
+
+   `supabase_ohlcv_daily_freshness()` 的全部查询是
+   `order=trade_date.desc limit 1` —— **全表一行,不分源不分标的**。
+   BCH 天天把 max 推着走,coingecko 也在写,于是 `/internal/data-freshness`
+   报 **`verdict:"fresh", age_days:0.5`**。那个探针的 docstring 写着自己
+   就是为 silent pipeline death 建的,并列了三次前科 —— **它抓不到第四次。**
+
+   ```
+   coingecko    0d  25/25  flowing  ← 但 S-195 禁它做收益
+   eodhd        1d  33/33  flowing  ← TradFi,可信
+   hyperliquid  4d   0/177 DEAD
+   binance_hist 7d   0/212 DEAD
+   ```
+
+   **加密侧没有任何可用于收益的价源在更新。** 后果:S-245 的写者跑通也只能
+   产出 7 天前的基底(budget 2 天);S-248 里 41 个 crypto 行只有 20 个可重算。
+
+   已建 `source_freshness.py`(按覆盖率判活 · 按域给判决 · 五值)+ RPC
+   `ohlcv_source_coverage()`(**SECURITY INVOKER,只授 service_role**,
+   anon 实测被拒 42501)。同一模块我犯了三次同样的错:全局 ok 掩盖整个域、
+   差点每周六狼来了(`main.py` 里那段警告一字不差地描述了我正在写的 bug)、
+   变异测试打穿一条"验占位符而非验属性"的断言。
+
+   **🔴 P0 给 Jazz/Minimax:采集为什么在 07-28 和 08-09 两次掉档。这不是工程活。
+   在它恢复之前,`/quant` 上任何加密数字都还是噪声上的数字。**
+
 **分工(Jazz 2026-08-27)**:价源回填我做;**退出规则对比发 Minimax-C**。
 
 **下一步**:在 Mac 上 `set -a; source .env; set +a` 后重跑 dry-run,先看

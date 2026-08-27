@@ -1030,6 +1030,19 @@ python3 -m tests.test_exception_text_never_reaches_the_client || {
 python3 -m tests.test_track_record_measures || {
   echo "  ✗ 战绩度量守卫 — do not push"; exit 1; }
 
+# ── S-251: 价源判活按【覆盖标的数】,不按 max(trade_date) ─────────────────────
+# supabase_ohlcv_daily_freshness() 的全部查询是 `order=trade_date.desc limit 1`
+# —— 全表一行,不分源不分标的。实测 2026-08-27:binance_hist 自 08-09 起每天
+# 只写 BCH 一个标的,连写 19 天,于是全表 max 天天前进,而 260 个标的已经死了;
+# /internal/data-freshness 照报 verdict="fresh", age_days=0.5。
+# 那个探针的 docstring 写着自己是为 silent pipeline death 建的,并列了三次前科。
+# 加密侧当前三个源:binance_hist DEAD · hyperliquid DEAD · coingecko 在写但被
+# S-195 禁用于收益 ⇒ **没有可用价源**,而任何全局判决都会说 ok(eodhd 活着)。
+# 窗口按域给:加密 3 天,TradFi 6 天 —— main.py 那段"周末会狼来了"的警告
+# 正对着这个模块,我第一版全局 3 天就会在周二早上把 eodhd 报成 DEAD。
+python3 -m tests.test_source_freshness || {
+  echo "  ✗ 价源判活守卫 — do not push"; exit 1; }
+
 # ── S-227: 部署后验证器必须存在,且能分开四个状态 ────────────────────────────
 # 这个关卡不跑验证器(preflight 离线),只保证它没被删/没被削掉那四个区分。
 # 验证器本体在 push 之后跑:bash scripts/postdeploy_verify.sh
