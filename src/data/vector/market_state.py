@@ -82,6 +82,27 @@ assert PRICE_DIMS <= set(DIMS)
 # informative value, not a fabricated measurement. vec_full keeps the null.
 NEUTRAL_FILL = 0.0
 
+#: 【没有源】的维,区别于【今天没测到】的维 (S-231/S-245)。
+#:
+#: 实测 2026-08-27:Supabase 全库 81 张表里,**没有任何一张**持有 Fear&Greed、
+#: 未平仓合约或稳定币供给的历史序列。这三维不是"今天缺",是"根本没有源"。
+#:
+#: 把它们留在 `source_completeness` 的分母里,这个指标的上限就永远是 19/22
+#: (86.4%),而它是一个**永远达不到的上限** —— MEMORY.md 写着「永远在响的
+#: warning 不携带信息」,一个永远到不了 100% 的完整度分数同理:人会先学会
+#: 忽略这个数,然后连真正的下降一起忽略。
+#:
+#: ⚠️ 名单**只能减**。任何一维接上源之后必须从这里删掉,否则这个集合会变成
+#: 「我们不打算测的东西」的永久藏身处 —— 和 `KNOWN_CODE_ONLY`、
+#: `DECISION_INPUTS_DEBT` 同一个设计,同一个失效模式。
+#: `tests/test_lesson_guards.py` 钉住"名单里的维必须真的没有表"。
+UNWIRED_DIMS: frozenset[str] = frozenset({
+    "fng",                # Alternative.me 只在实时路径调用,没有落库
+    "oi_mcap",            # 未平仓合约:无表
+    "stable_supply_chg",  # 稳定币供给:无表(模块 docstring 早写着 "not wired at all")
+})
+assert UNWIRED_DIMS <= set(DIMS), "UNWIRED_DIMS 必须是 DIMS 的子集"
+
 
 @dataclass
 class StateVector:
@@ -91,11 +112,25 @@ class StateVector:
 
     @property
     def source_completeness(self) -> float:
-        """Fraction of the 24 dims actually measured. Reserved dims are excluded
-        from the denominator so they cannot silently depress every day's score."""
-        live = [k for k in DIMS if not k.startswith("_reserved")]
+        """已测量维 / **可达到**维。
+
+        分母排除两类:`_reserved_*`(契约占位,定义未定)与 `UNWIRED_DIMS`
+        (没有源,S-245 实测)。两类都不是"这天没测到" —— 把它们算进分母,
+        这个分数的上限就是一个永远达不到的数,而那样的指标不携带信息。
+
+        剩下的 19 维是**今天真的可以测到**的,所以 1.0 是可达的,
+        而低于 1.0 就确实是一次缺失,值得看。
+        """
+        live = [k for k in DIMS
+                if not k.startswith("_reserved") and k not in UNWIRED_DIMS]
         got = sum(1 for k in live if self.values.get(k) is not None)
         return round(got / len(live), 4)
+
+    @property
+    def attainable_dims(self) -> int:
+        """分母本身也要能被读出来 —— 否则 0.84 是"缺了三维"还是"分母变了"分不出。"""
+        return sum(1 for k in DIMS
+                   if not k.startswith("_reserved") and k not in UNWIRED_DIMS)
 
     @property
     def price_share(self) -> float:
