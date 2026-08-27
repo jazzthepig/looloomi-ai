@@ -478,6 +478,28 @@ bash scripts/check_no_direct_supabase.sh
 #                    defined. Verified by negative control — removing the restored
 #                    import makes it fail on App.jsx again.
 python3 -m tests.test_no_undefined_jsx_components
+# 3a-undevicesimo-bis. dashboard/dist/ freshness vs dashboard/src/ (B-4, 2026-08-25,
+#                       Minimax-B authored). Same shape as the S-171 incident but a
+#                       different cause: the build was SKIPPED. `git add src/ ...`
+#                       without `cd dashboard && npm run build` and a follow-up
+#                       `git add dashboard/dist/` lands a stale bundle on Railway,
+#                       which auto-deploys regardless of CI. The guard compares the
+#                       newest src mtime to the newest dist mtime; one-way (src
+#                       newer → fail). The fix is mechanical and given in the
+#                       failure message. Second incident of this shape in 2026-08.
+python3 -m tests.test_vite_bundle_freshness
+# 3a-undevicesimo-ter. Millennium DD-stop floor (2026-08-25, Minimax-B, §5b-ter).
+#                         Every SHIP-verdict StrategyRecord MUST carry
+#                         max_dd_stop + capital_action_on_breach +
+#                         backtest_included_stop=True. StrategyRecord.validate()
+#                         already enforces this at write time (src/data/vector/
+#                         strategy_schema.py:305-310) — this test is the backstop
+#                         against legacy hand-edited Redis rows and against the
+#                         verdict-change-without-revalidate class. Pin the schema
+#                         fields exist (a rename without a parallel guard is the
+#                         next failure mode). Vacuous-pass logged, not silenced
+#                         (S-163 hazard).
+python3 -m tests.test_ship_records_have_dd_stop
 # 3a-duodevicies. the moat is claimed only where it is measured (2026-08-12, S-141).
 #                ARCHITECTURE.md line 164: "A signal we have not run through our own
 #                loop is one we must not claim. Claiming it unproven is
@@ -926,6 +948,51 @@ echo "  ✓ simulate-paper-trade harness guards (S-217)"
 # follow is a justification that exists only inside the head of whoever wrote it.
 bash scripts/check_ledger_citations.sh || {
   echo "  ✗ dangling ledger citation — do not push"; exit 1; }
+
+# ── S-237: 规则 #8 —— 投资人可见的前端不出现实现细节 ─────────────────────────
+# CLAUDE.md 硬规则 #8 写了几个月,从来没有任何东西检查它。实测 2026-08-25:
+# QuantMonitor.jsx 两处上屏文本带模型名,而 App.jsx 把它渲染在主面板首屏。
+# 守卫先剥注释再匹配 —— 否则一条"此处禁止模型名"的注释自己就会命中。
+python3 -m tests.test_no_investor_facing_internals || {
+  echo "  ✗ 规则 #8 违规 — do not push"; exit 1; }
+
+# ── S-236: src/research 必须真的能 import ────────────────────────────────────
+# py_compile 只查语法,app boot smoke 不碰 research —— 于是一个 import 就炸的模块
+# 可以躺任意久。实测 2026-08-25:11 个模块 import 失败,其中 8 个是因为我在
+# S-189 整份重写 deflated_sharpe 时删掉了 8 个模块依赖的名字(含 signal_factory)。
+# 三值:ok / missing(已声明依赖本环境没装)/ broken(真错)。只有 broken 让构建失败。
+python3 -m tests.test_research_imports || {
+  echo "  ✗ src/research import 失败 — do not push"; exit 1; }
+
+# ── S-244: 存在的测试必须真的被运行,而且调用方式要对 ────────────────────────
+# S-243 的台账写着「回归测试:tests/test_one_regime_one_spelling.py(13 passed)」。
+# 文件在,13 条断言全绿 —— 而 preflight 里没有一行提到它,所以它从写完那天起
+# 一次也没跑过。实测 2026-08-27:tests/ 75 个文件里 9 个从未被引用,
+# 合计 74 条绿断言守护空气,外加 test_factory 的 9 条红断言无声地烂着。
+#
+# 这条守卫的分类器我连错两次(先"有 def test_ 就算 pytest 式",再"__main__ 里
+# 必须有 sys.exit"),两次都刷出几十条假阳性 —— 所以它自带合成样本负控制,
+# 分类器坏了先响,不报结论。
+python3 -m tests.test_every_test_is_registered || {
+  echo "  ✗ 有测试文件从不被运行,或调用方式执行不到断言 — do not push"; exit 1; }
+
+# 下面九条是 S-244 补注册的。它们此前全部存在、全部有断言、全部从不运行。
+python3 -m pytest tests/test_one_regime_one_spelling.py -q || {          # S-243 回归
+  echo "  ✗ 一份响应里出现了两个 regime — do not push"; exit 1; }
+python3 -m pytest tests/test_regime_reaches_the_signal_feed.py -q || {
+  echo "  ✗ regime 没有走到 signal feed — do not push"; exit 1; }
+python3 -m pytest tests/test_outcome_canonical.py -q || {
+  echo "  ✗ outcome 规范化 — do not push"; exit 1; }
+python3 -m pytest tests/test_cis.py -q || {
+  echo "  ✗ CIS 核心 — do not push"; exit 1; }
+python3 -m tests.test_pit_replay || {                                    # S-207 自跑式
+  echo "  ✗ PIT 重放守卫 — do not push"; exit 1; }
+python3 -m tests.test_strategy_vector_smoke || {
+  echo "  ✗ strategy vector — do not push"; exit 1; }
+python3 -m tests.test_two_layer_paper_smoke || {
+  echo "  ✗ two-layer paper book — do not push"; exit 1; }
+python3 -m tests.test_spa_deep_links_resolve || {
+  echo "  ✗ SPA 深链 — do not push"; exit 1; }
 
 # ── S-227: 部署后验证器必须存在,且能分开四个状态 ────────────────────────────
 # 这个关卡不跑验证器(preflight 离线),只保证它没被删/没被削掉那四个区分。
