@@ -12524,3 +12524,133 @@ selfrunner  模块体断言 ＋ sys.exit                   以 pytest 调用 = �
 **未了项**：`test_factory` 需要一个不依赖真实凭证的 fixture,然后从 EXEMPT 移除。
 `src/research/validation/tests/` 另有 55 个实验冒烟,preflight 只引用 4 个 —— 那
 **不是缺陷**（研究草稿面,不是 CI 面）,但这个数字现在被打印出来,不再是沉默事实。
+
+---
+
+## S-245 · 几何基底的 582 行是拼出来的,而它没有写者（2026-08-27，FIXED）
+
+**背景**：`docs/PLAN_2026-08-25_STRUCTURE_PRESERVING.md` 轨 A 第一件是
+「`market_state_vectors` 全量重算写者（增量在数学上不可行，S-232）」。
+按「先读消费者，再写生产者」先去读现状，读出来的东西比预想的严重。
+
+### 实测一：仓库里没有任何代码写这张表
+
+`scripts/build_l1_observations.py` 写的是本地 sqlite，而且读 `Shadow/`
+（规则 #2：不是权威；且 Railway 上不存在）。那 582 行来自仓库之外的 Mac 侧工具。
+**几何基底是这套系统里唯一一张没有可复现写者的表。**
+
+### 实测二：97.6% 的天数混了价源，而这张表自己记着
+
+`price_sources` 列（2026-08-27 全表）：
+
+```
+binance_hist+coingecko+eodhd+yfinance   229 天
+binance_hist+coingecko                  330 天
+单一源                                    23 天   ← 582 天里只有 23 天
+```
+
+`yfinance` 在 229 天里（`single_source.py`：「63 天不更新，已死」），
+`coingecko` 在 568 天里（S-195：market_chart 采样点塌缩成日期，不是收盘）。
+
+而这些源彼此差得很大。2025-01 之后 `ohlcv_daily`：
+
+```
+17,876  个 symbol-day 有 ≥2 个源（59 个标的）
+ 190.6  bps  平均价差
+5,505.8 bps  最大价差
+ 7,848  个 symbol-day 差 >100bps
+```
+
+### 实测三：入口是一句没有 source 过滤的查询
+
+`build_l1_observations.py::fetch_panel()`：
+
+```python
+"select": "symbol,trade_date,close,volume",   # 没有 source 条件
+...
+out[row["symbol"]][row["trade_date"][:10]] = (float(cl), ...)
+```
+
+按 `trade_date.asc` 分页写进 dict —— **同一天同一标的，后到的源静默覆盖先到的。**
+哪个源「赢」取决于分页顺序。于是 `vol_mkt` / `vol_of_vol` / `downside_ratio`
+量到的是**换源时的跳变**，不是市场的二阶矩。S-106 原话：
+**两种 bar 约定之间的拼接会被读成市场结构。**
+
+`spread_kinds` 列里写着 `definition_mismatch: 24` —— **写者当时就知道 24 个标的的
+源定义不一致，然后照写。** 记录了，没有拒绝。和今天的 S-244 同一个形状：
+**记下来 ≠ 被执行。**
+
+### 实测四：面板成员在动，而横截面维不知道
+
+`live = [s for s in panel if d in closes[s]]` 每天现算成员，实测 `n_symbols`
+在 **25 ↔ 75** 之间摆动。`breadth_200ma` / `corr_mean` / `disp_return` 是横截面
+统计量，在不同成员集上算出来的值不可跨日比较：**「广度下降」与「面板少了 30 个
+标的」被压成同一个数。**
+
+### 修复：`src/data/vector/market_state_writer.py`
+
+1. **单源。** 服务端 `source=eq.binance_hist`，取回再 `assert_single_source()`
+   断言一次（S-230）。两道都要：服务端省流量，客户端防的是过滤条件被改掉。
+   **不做回退** ——「哪个源有这天的价就用哪个」正是造出拼接表的逻辑。
+2. **定盘。** `PanelSpec` 记下入选标的、被剔除的标的**和原因**，`n_symbols` 恒定。
+3. **一次标准化。** z-score 跨全史，一个 `zscore_pass` 戳（S-232）。
+4. **写前地板。** 标的/天数不足 → `RecomputeResult(refused=True)`，**不写**（S-220）。
+
+### 地板逼出了一个我本来会静默做错的选择
+
+我最初的默认起点是 `2018-06-01`（模块 docstring 说「三个周期才够」）。
+`MIN_SYMBOLS` 一挡，实测立刻给出取舍表（单源，覆盖率门槛 90%）：
+
+```
+起点        天数     达标标的
+2018-06     3,003        8    ← 低于地板，写者【拒绝】
+2022-01     1,693      127
+2024-01       963      194
+```
+
+**回到 2018 就只剩 8 个标的**，而 8 个标的上的 breadth/corr/dispersion 不是环境
+读数。取 2022-01：1,693 天（2022 熊 / 2023-24 修复 / 2025-26 回撤，三个环境），
+127 个标的 —— 相对现表深度 ×2.9，宽度定盘在 ×1.7。
+
+**没有那条地板，我会选 2018 并得到一张 8 个标的的表，而它长得和一张好表一样。**
+
+### 附带：`source_completeness` 的分母（S-231 的应用）
+
+实测 Supabase 全库 81 张表，**没有任何一张**持有 Fear&Greed / 未平仓合约 /
+稳定币供给的历史序列。这三维不是「今天缺」，是「没有源」。留在分母里，
+这个指标上限永远是 19/22，而**一个永远达不到的上限会让人先忽略这个数，
+再忽略真正的下降**。新增 `market_state.UNWIRED_DIMS`（只能减），分母降到 19，
+1.0 变成可达；同时加 `attainable_dims` 属性，让「缺了三维」和「分母变了」分得开。
+
+### 变异测试：五个变异，其中一个打穿了我两次
+
+```
+去掉 source 过滤          → 红 ✓
+拒绝改报 ok               → 红 ✓
+定盘退化成"谁有价算谁"      → 红 ✓
+UNWIRED_DIMS 清空          → 红 ✓
+`if False:` 掉地板         → 【第一版和第二版都绿】
+```
+
+**第一版**是 AST 版：比较 `refused=True` 的 return 与 `supabase_upsert_table`
+调用的行号。把条件改成 `if False:`，**那个 return 语句仍然在 AST 里**，行号也
+仍然更早，守卫全绿 —— 而地板没了。我验的是「那行代码在不在」，要验的是
+「那条路走不走得到」。**语法树能告诉你结构，告诉不了你可达性。**
+这是今天第九次 `tests/_source.py` 记的那个错法。
+
+**第二版**改成行为验 + upsert 探针，仍然绿。原因值得单独记：我的夹具是
+「5 标的 × 20 天」，两条地板都不满足 —— 但即使两条都 `if False:`，
+`compute_vectors` 内部还有第三道 `len(live) < MIN_SYMBOLS: continue`，
+于是 0 个向量，被 `if not vectors` 兜住，照样 refused、照样没写。
+**测试通过了，但通过的原因不是我以为的那条。** 一个夹具同时触发三条地板，
+就分不出是哪条在起作用 —— 又一次「两个状态压成一个」，这次压的是**测试自己**。
+
+**第三版**：每条地板配一个只触发它自己的夹具（5×500 / 25×20），并断言拒绝原因
+指名了是哪一条。五个变异全部打回；其中"去掉天数地板"这一变异下写者**真的写了**，
+探针抓到 —— 这条测试现在确实在测它声称在测的东西。
+
+**未了项**：写者尚未在真实凭证下跑过（沙箱没有 SUPABASE_KEY，且不读 `.env`）。
+落地顺序：Mac 侧 `--dry-run` 看 PanelSpec → 正式跑 → `/internal/vdb-health`
+连续 7 天 `overall: flowing` 且 `coherence` 只有一个 pass。
+`build_l1_observations.py::fetch_panel()` 的无过滤查询**仍在原处**，
+归研究流程，需要单独一轮（它写的是本地 sqlite，不进生产路径）。
