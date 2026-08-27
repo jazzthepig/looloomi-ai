@@ -23,6 +23,18 @@ WEEKLY_REVIEW.md
 MINIMAX_SYNC.md
 dashboard/dist.old*
 
+# Jackson Hole internal reports — team-only decision frameworks and ops manuals.
+# Per Jazz 2026-08-24: 不开源，我们自己用. (decision tree + ops manual + ops deck PPTX.)
+# These describe pre-positioning actions tied to live paper book state — sharing
+# the rules is sharing the alpha.
+docs/JH_2026_*.md
+JH_2026_OPS_DECK.pptx
+
+# Crypto independent-momentum thesis (2026-08-25): describes CIS v5 MLM-factor
+# upgrade candidate + "allocation migration > money supply" framing. Sharing the
+# factor idea = giving away the edge.
+docs/CRYPTO_INDEPENDENT_MOMENTUM_2026.md
+
 # Strategy reports — local working files (backtest outputs, correlation drafts, handoffs)
 reports/
 

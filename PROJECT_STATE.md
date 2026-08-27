@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-26 (Seth/Cowork lane)
+**Last updated:** 2026-08-27 (Seth/Cowork lane — S-244，测试注册缺口)
 
 ## 本轮一句话:**一个形状,十次**
 
@@ -19,14 +19,19 @@
 | S-201 | `NAV_TABLE` 声明了没写入者 | 表存在、永远空、看起来这项有人管 |
 | S-202 | `{"ok": True, "rows": 0}` | **CIS 四个月用中性权重打分,日志每天说正常** |
 | S-242 | 接收端漏写顶层 `macro_regime` | HIGH 级 regime 信号**从 feed 里消失**(守卫是 `if regime:`);CIS gate 落到 58 默认值而非 TIGHTENING 的 52 → **27 个过闸报成 20 个** |
+| S-243 | 每资产 regime 从没和顶层对过账 | 同一份响应顶层 `Tightening` / 每资产 `RISK_ON`(58/58)→ 配置面板对投资人显示 **"Risk appetite elevated. Full allocation eligible."** |
 
-**S-242 是第十次,也是第一次由定时任务而不是人发现的** —— daily-market-meditation 拉数据时撞见
-同一次 push 的两个端点自相矛盾(universe 说 Tightening 0.85,signals 说 "in UNKNOWN regime")。
-新增的一课:**沉默也是一种渲染**。前九次是「拿不到」被渲染成一个合理的数字;这次它被渲染成
-**什么都没有** —— 一条缺席的 HIGH 信号,和「当前没有这个状况」在输出上完全一样。所以修复里
-`cis_regime_unmeasured` 那条 DATA_QUALITY 信号(pillar impact 全 0)不是装饰:**未测量必须占一个位置。**
-第二课:读对了 key 还不够。引擎发 `Tightening`,所有 regime 表是 UPPER_SNAKE ——
-`/api/v1/trading/loop-state` 就是读对了 `macro.regime` 却仍然 miss 到 50 默认闸的那一处。
+**S-242/243 三课**(细节见 ledger,别在这里展开):① **沉默也是一种渲染** —— 前九次是「拿不到」
+渲染成一个合理的数字,这次渲染成**什么都没有**,一条缺席的 HIGH 信号和「没这个状况」在输出上
+一样;所以 `cis_regime_unmeasured` 那条 pillar 全 0 的信号不是装饰,**未测量必须占一个位置**。
+② **读对 key 还不够** —— 引擎发 `Tightening`,所有表是 UPPER_SNAKE,miss 的表现是默认值不是报错。
+③ **「两处写法不一致」要当缺陷查,不是当风格容忍** —— S-243 正是问「要不要统一大小写」问出来的,
+表层不一致底下压着一个不一致的**事实**。四条出口(含最易烂的 degraded/LKG)统一走 `_unify_regime()`,
+矛盾一律 `_logger.error`,**不静默调和**(引擎侧归 Minimax lane)。
+
+⚠️ 守卫失败第七轮,同一类(匹配名字而非构造):S-243 前端守卫初版按 `if "regime" in line` 过滤,
+而出问题的 key 所在行**恰好没有这个词** —— **在真实的坏文件上通过**。已改成跟踪代码块 +
+补「用 fixture 重新引入 bug 确认守卫会响」的测试;旧版 CISWidget 实测 7 处全捕获。
 
 ⚠️ **守卫自己失败了六轮**,两类:匹配名字而非构造(**解释 bug 的注释废掉了抓这个 bug 的测试**,已抽成 `tests/_source.py`);测试样本过度确定。每个守卫现在都用重新引入 bug 验证过。
 
@@ -35,7 +40,7 @@
 ```
 ✅ CIS T1        43 symbol,每天在写,今天还在
 ✅ T2 universe   58 个,regime=Tightening,11s(110s 是 provider 降级,已恢复;预计算已下请求路径)
-🟡 signal feed   regime 已修(S-242),**代码在 sandbox,未 push** —— preflight + 部署后按 ledger VERIFY 段复核
+🟡 regime        S-242 已部署验证(`cis_regime` 回到 feed,闸=52);S-243 全链路 UPPER_SNAKE + 每资产对账**未 push**(含 dashboard,需 rebuild)
 ✅ Hyperliquid   232 永续,日线自带 epoch,已是价格锚
 ✅ 五本账本      定不了价就拒绝标记,不再记假平盘
 🔴 IC 权重       中性 —— 只有 6 个独立交易日,门槛 20。**诚实地不通,不是坏了**
@@ -266,6 +271,36 @@ The cap is doing its job only if closure is as routine as addition.*
    this is a re-inception, so the lesson compounds: the S-123 fix INCLUDED a
    migration for exactly this reason, but the migration needs service_role which is
    the OPEN RISK #1 dependency. A code fix without its data migration is half a fix.*
+
+---
+
+## 2026-08-27 收口 — 跨 lane 半成品做完 + S-244
+
+周末 token 用尽时 Minimax 以 Seth 身份接手,留了一批未提交的改动在同一个工作树里。
+本轮把它们**做完并推齐**,而不是绕过关卡:
+
+1. **重建 Vite bundle。** `dashboard/src` 最新 08-27 00:33（S-243 的 regime 拼写
+   修复 + `agent.jsx` 去掉硬编码 `'Risk-Off'`），`dist` 停在 08-25 16:30 ——
+   **修好的东西一次也没被打包。** Minimax-B 的 bundle-freshness 关卡拦对了。
+
+2. **S-244:测试注册缺口。** S-243 台账写着「回归测试:
+   `tests/test_one_regime_one_spelling.py`（13 passed）」,而 preflight 里**没有
+   一行提到它**。顺查:`tests/` 75 个文件里 **9 个从未被引用** —— 74 条绿断言
+   守护空气,`test_factory` 9 条红断言无声地烂着。全部注册,并加
+   `tests/test_every_test_is_registered.py`（registered / exempt / orphan 三值 ＋
+   「调用方式必须匹配文件形式」）。现在 **73 registered · 1 exempt · 0 orphan**。
+
+   这是「一个形状」的**第 32 条**,压的是验证装置自己:
+   **守卫写了 vs 守卫被执行 → 一个「有测试」**。
+
+   那条守卫的分类器**我连错两次**（先"有 def test_ 就算 pytest 式"刷出 50 条假
+   阳性,再"__main__ 必须有 sys.exit"刷出 8 条,含 `test_strategy_discipline`）。
+   两次都是 `tests/_source.py` 记的同一个错法:**匹配了模式,不是构造。**
+   所以它自带合成样本负控制,分类器坏了先响,不报结论。
+
+**下一步（轨 A）**:`market_state_vectors` 全量重算写者 —— 三个约束
+（S-231/232/233）已钉死,可以一次写对。判据:`/internal/vdb-health` 连续 7 天
+`overall: flowing`,且 `coherence` 只有一个 pass。
 
 ---
 
