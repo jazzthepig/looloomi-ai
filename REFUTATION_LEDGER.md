@@ -12819,3 +12819,201 @@ CORS 非通配且未开 credentials；安全响应头齐全；无字符串拼 SQ
    （经 recharts）；`ws` / `axios` / `form-data` / `@solana/web3.js` /
    `follow-redirects` **均不在 `dist/` 里**，其余是构建期依赖。
 5. **`pip-audit` 未能完成**（沙箱网络超时）—— **未检查 ≠ 干净**，需在 Mac 上补跑。
+
+---
+
+## S-248 · 「我们不是有几个赚钱的吗」—— 有，而且页面把它盖掉了（2026-08-27，度量层 FIXED，展示层待决策）
+
+Jazz 看到 `/quant` 的 −1.31 Sharpe / −26.19% 累计后问的。**问题指对了地方，
+但答案只对一半，两半都必须说。**
+
+### 四条缺陷叠在一起
+
+**① ~~面板标题写的是 α，曲线复利的是绝对收益。~~ 【我说错了，2026-08-27 当场更正】**
+
+我最初断言页面那条「CUMULATIVE ALPHA VS BTC/SPY」复利的是 `return_pct`。
+**查证后不成立。** 那条曲线来自 `/signals/track-record` 的 `alpha_equity_series`
+（`signals.py:517-525`），复利的确实是 `alpha_30d`，标签与数据一致。
+我看的是**另一个端点**（`/signals/performance` 的 `_compute_metrics`）里的
+`equity_curve`，然后把它安到了页面那张图上。
+
+**这正是 Jazz 在本 session 开头批评的那件事**：「你发生错误的时候没有和我们
+项目资料进行核实，然后就自己主观臆断了。」我在同一天写了一整天关于"先核实"的
+守卫，然后在一个跨端点的归属上又犯一次。**两个端点各有一条 equity 曲线，
+而我没有确认页面读的是哪一条就下了结论。**
+
+**① 的正确形式**：**统计条把两套度量并排放着，而没有逐项标明哪个是哪个。**
+
+    ALPHA SHARPE  −1.31   ← alpha_30d 算的（正确）
+    MAX DRAWDOWN  −38.30% ← 绝对 equity_curve 算的
+    AVG RETURN    −3.44%  ← return_pct（8 天退出）
+    ALPHA WIN     28.2%   ← outcome_30d（30 天窗口）
+
+四个数,三种度量,一个标题。而 `signals.py:499-500` 的注释**自己就写着**
+「Two curves, one page, contradicting each other」—— 这个问题被记录过，
+没有被消除，也没有在 UI 上标出来。
+
+**② 曲线的持仓期与判定窗口不是同一个东西。**
+
+```
+outcome_30d=WIN   n=23   持仓 8.0 天   return_pct=−2.46   return_pct_30d=+6.01
+                         其中 12/23【退出时是亏的，30 天时是赚的】
+```
+
+`exit_reason` 几乎全是 `DOWNGRADE` —— 评级一降就平仓，平均 8 天；而 WIN/LOSS
+来自固定 30 天窗口。**曲线用 8 天的数，胜率用 30 天的数，两者在 12 个样本上
+符号相反。** 同一块面板，两套度量。
+
+**③ 出口价源 83/95 是被禁的源。**
+
+```
+coingecko:vs_BTC   n=38   ret30=−13.38%   ← S-195：market_chart 采样点塌缩，不是收盘
+yfinance:vs_SPY    n=45   ret30= −1.78%   ← S-230：63 天不更新，已死
+ohlcv_daily:*      n=12   ret30= +1.64%   ← 唯一可信
+```
+
+**可信子集 +1.64%，coingecko 那 38 行 −13.38%，差 15pp。** 强烈提示那段负数里
+有相当部分是采样塌缩的产物，不是真实亏损。
+
+**④ regime 分组不规范化，把一个 regime 拆成两个。**
+
+```
+EASING  n=1475 α=−1.43  ‖  Easing  n=1185 α=−5.43   合并 −3.21  差  4.00pp
+RISK_ON n= 856 α=+5.83  ‖  Risk-On n= 330 α=−6.17   合并 +2.49  差 12.01pp（符号相反）
+```
+
+拼写在 **2025-06-17 切换**（`Risk-On` 覆盖 05-24→06-17，`RISK_ON` 覆盖
+06-29→10-09）。所以这两个「regime」其实是**两段相邻时间窗**：
+那张「按 regime 归因」的表，有一部分在测时代。`signals.py:360`
+`reg = r.get("macro_regime") or "Unknown"` 无规范化。
+
+### 「赚钱的那几个」在哪，以及为什么现在还不能声称
+
+```
+STRONG_OUTPERFORM  n=  7   α30=+4.99%   ret30=+7.32%   α 胜率 71.4%
+OUTPERFORM         n= 84   α30=−4.13%   ret30=−8.41%   α 胜率 26.0%
+```
+
+legacy era 独立复现：`STRONG OUTPERFORM` n=134，`alpha_beta_adj`=**+7.99%**，胜率 50%。
+
+**但那 7 个信号没有一个用可信价源测出来** —— 全部 barred/none。
+可信子集只有 12 行，而它的 α 仍是 −2.97%（3/12 为正）。
+
+诚实的结论是三句，缺一不可：
+
+1. **有一档是正的，而且在两个 era 独立出现** —— 不是噪声里的偶然。
+2. **它是用被禁的价源测的** —— 按我们自己的规则（S-195/S-230），这个数不能声称。
+3. **可信样本只有 12 个** —— 不足以支持任何方向的结论，**包括「我们不行」**。
+
+> **页面现在展示的 −26.19% 既不是坏消息也不是好消息 —— 它是一个不可测量的量，
+> 被渲染成了一个可信的数。**
+
+这和今天其余全部缺陷是同一件事：**「测不了」被投影成了「测出来是负的」。**
+而这次投影的方向恰好指向自我贬低，所以没有人怀疑它 —— 一个说自己不行的数字
+不会引发审查，这正是它危险的地方。
+
+### 修复（度量层）
+
+`src/data/signals/track_record.py`：
+
+- `MEASURE_EXIT` / `MEASURE_ALPHA30` 分开，结果自报用的是哪一种，串用抛异常
+- `classify_source()` 四值：trusted / barred / cross_source / unsourced。
+  判据是**前缀不是子串** —— `cross_source:...->coingecko` 含 "coingecko"，
+  子串判会把跨源（S-241）误分进 barred，而那是两种不同的失败
+- 可信样本 < 30 → `verdict="insufficient"`，**给原因不给数**
+- `by_regime()` 先 canonicalise 再分组，并把 `merged_spellings` 写进 payload（可审计）
+
+### 变异测试：⑤ 存活过一次
+
+```
+① 门槛拆到 1        → 3 红 ✓      ② 跨源不再单独识别  → 1 红 ✓
+③ regime 不规范化   → 5 红 ✓      ④ 无源当成可信      → 2 红 ✓
+⑤ payload 不再抑制数字 → 【绿】✗
+```
+
+⑤ 把 `out["mean_pct"] = None` 改成 `= self.mean_pct` 之后测试仍全绿，
+因为 insufficient 分支里 `self.mean_pct` **本来就是 None** —— 那个变异是空操作。
+**我验的是「结果里没有数」，要验的是「即使算出了数，payload 也不放它出去」。**
+值存在 ≠ 值被发布，这两件事今天在别处已经分开过。补了直接构造
+`MeasureResult(verdict="insufficient", mean_pct=-3.31)` 的断言后，⑤ 变红。
+
+**待 Jazz 决策（展示层，不是工程决策）**：`/quant` 是继续展示那条不可测量的
+曲线、改成分层展示（可信 n=12 单列 + 被禁的标注出来）、还是在可信样本够用前
+只展示 `insufficient`。这决定 LP 看到什么，不该由我定。
+
+---
+
+## S-249 · 我写了仓库里的第四个 regime 规范化实现（2026-08-27，FIXED）
+
+修 S-248 ④ 时，我在 `src/data/signals/track_record.py` 里写了
+
+```python
+return s.upper().replace("-", "_").replace(" ", "_")
+```
+
+**仓库里已经有三个**：`cis_provider.canonical_regime`、
+`cis_provider.canonical_regime_strict`、`r70_rule.canonical_regime`。我把它变成第四个。
+
+**不是我发现的** —— 是 `tests/test_regime_write_path.py` 挡下来的（它扫"含写入调用的
+模块里出现宽松版"）。我当时的第一反应是"这条守卫是文件级的，我这处是读侧，
+算误报" —— 那个反应本身就是绕过守卫的开头。
+
+### 而同一天早些时候我刚在同一件事上做对过
+
+修 `test_strategy_vector_smoke` 的路由断言时，我发现 `test_no_route_is_shadowed`
+已经有 `_flatten()` 会下降进 `original_router.routes`，于是**复用而没有重写**，
+理由写在代码里：**两个展平器会各自漂移，而漂移的那一个会静默地少看几十条路由。**
+
+半天之后，我在 regime 上原样犯了一遍。**知道一条规则和在下一个场景里认出它，
+是两件事** —— 而认出它的不是我，是关卡。
+
+### 我那版还更差
+
+只做大小写与连字符替换，**不校验是否属于已知 regime 集**：
+
+```
+canonical_regime("garbage_label")  我的版本 → "GARBAGE_LABEL"（一个合法分组桶）
+                                   strict   → None（归 UNKNOWN）
+```
+
+一个拼错的标签会安静地在归因表里变成一个新 regime。而 `canonical_regime_strict`
+的 docstring 记着宽松版的实际代价：它把"没读到"变成 `NEUTRAL`，
+而 ① 账本按这个标签定仓位（TIGHTENING→0.5，NEUTRAL→1.0），
+**前向记录头两个 mark 都在双倍敞口上**。
+
+修法：本模块只转发，不实现；`signals.py` 直接用 `canonical_regime_strict`。
+
+### 守卫被自己的说明文字打红
+
+给这条写守卫时，我用 `ast.unparse(fn)` 扫函数体找 `.upper(` / `.replace(`。
+**红了** —— 因为该函数的 docstring 里**引用了** `.upper().replace("-","_")`
+作为反面例子。
+
+`tests/_source.py` 记的正是这个：**一条解释"此处禁止 X"的注释本身含有 X。**
+今天在 `test_no_investor_facing_internals` 里刚处理过一次（先剥 `//` 注释再匹配），
+这次是 Python docstring —— **同一课的两种拼写，隔了几小时各踩一次。**
+
+剥掉 docstring 后：原样绿；把转发改回自己实现 → 3 条红。
+
+---
+
+## S-250 · 一个标题只覆盖 3% 自身 diff 的提交（2026-08-27，记录，不改历史）
+
+`e5b045f` 标题写 `fix(compliance): S-123 + P0-3 + S-P1-1 + S-P1-5`，
+实际内容是 `signals.py` **+59 / −2**，而那 59 行**几乎全部是 S-248 的**
+（`measure_basis`、`canonical_regime_strict` 分组、`merged_spellings`）——
+我当时还在同一个工作树里改这个文件。合规那部分大概就是那 2 行删除。
+
+CLAUDE.md 交接规则的原话：**「`git log` 是一个源真面，
+一个标题只覆盖自身 diff 9% 的提交会腐蚀它。」** 这次是 3%。
+
+规则 #6 说「只暂存你自己的路径，永远不要 `git add -A`」。这是今天第四次
+跨 lane 碰撞（前三次：S-243 台账缺标题、bundle 未重建、工作树里 12 个非我改动），
+**而每一次关卡都拦对了，不工作的始终是协调。**
+
+**不改历史**：已经推上去了，重写已推历史比一个错标题更糟。
+在这里留一条指针，让将来 `git blame` 到那 59 行的人能找到它真正的出处。
+
+**结构性问题仍未解决**：两条 Seth lane 共用一个工作树，`git status` 分不出谁改的。
+今天四次碰撞全部由关卡兜住，但那是运气好在关卡覆盖到了 —— S-248 这次
+是**改动被吞进别人的提交**，没有任何关卡会检查"提交标题是否描述了它的 diff"。
