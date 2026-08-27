@@ -72,7 +72,7 @@ class WalkForwardResult:
     oos_sharpe_std: float = 0.0
     oos_cagr_mean: float = 0.0
     oos_max_dd_max: float = 0.0
-    oos_total_pnl: float = 0.0
+    oos_total_pnl: float | None = None
     oos_n_trades_total: int = 0
     # Aggregate IS (in-sample) metrics
     is_sharpe_mean: float = 0.0
@@ -160,7 +160,9 @@ def aggregate_walk_forward(rolls: list[WalkForwardRoll]) -> dict:
             "oos_sharpe_std": 0.0,
             "oos_cagr_mean": 0.0,
             "oos_max_dd_max": 0.0,
-            "oos_total_pnl": 0.0,
+            # 没有 roll 时同样是 None:0.0 会读成"跑了但没赚",而真相是没跑。
+            "oos_total_pnl": None,
+            "oos_total_pnl_reason": "no rolls",
             "oos_n_trades_total": 0,
             "is_sharpe_mean": 0.0,
             "is_cagr_mean": 0.0,
@@ -173,7 +175,19 @@ def aggregate_walk_forward(rolls: list[WalkForwardRoll]) -> dict:
         "oos_sharpe_std": float(oos_sharpes.std(ddof=1)) if len(oos_sharpes) > 1 else 0.0,
         "oos_cagr_mean": float(oos_cagrs.mean()),
         "oos_max_dd_max": float(oos_maxdds.max()),
-        "oos_total_pnl": float(sum(r.oos_max_dd_pct for r in rolls)),  # placeholder, real sum from PnLs
+        # ⚠️ None,不是一个占位数 (S-235)。
+        #
+        # 原本是 `float(sum(r.oos_max_dd_pct for r in rolls))` 带一句
+        # `# placeholder, real sum from PnLs` —— **它把最大回撤百分比求和,
+        # 当成总盈亏**,而 `report.py` 把结果渲染成 `**OOS total PnL:** … USDT`。
+        # 两个不同量纲的东西,一个被印成了另一个,单位还是错的。
+        #
+        # 更根本的是:`WalkForwardRoll` **根本没有 PnL 字段**。这个量不存在,
+        # 所以占位符不是"暂时不准",是拿一个存在的量顶替一个不存在的量。
+        # I1:未测量 = None 且必须传播。占位数会被读、被引用、被写进报告,
+        # 而 None 会在渲染处逼出一句"未测量"。
+        "oos_total_pnl": None,
+        "oos_total_pnl_reason": "WalkForwardRoll 不携带 PnL;要报这个数,先给 roll 加 PnL 字段",
         "oos_n_trades_total": int(sum(r.oos_n_trades for r in rolls)),
         "is_sharpe_mean": float(np.mean([r.is_sharpe for r in rolls])),
         "is_cagr_mean": float(np.mean([r.is_cagr_pct for r in rolls])),

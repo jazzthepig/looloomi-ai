@@ -16,10 +16,13 @@ from src.research.validation.deflated_sharpe import (
     deflated_sharpe, expected_max_sharpe, required_sharpe, DSR_THRESHOLD)
 
 
+# ⚠️ keyword-only 是修复不是回归 (S-236)。两个历史版本的 expected_max_sharpe
+# 参数顺序相反,而两个参数都是 float —— 传反了不报错,只是算出另一个数。
+# 位置调用现在 TypeError,所以这里改成关键字调用。
 def test_searching_more_raises_the_luck_bar():
     """The whole point: the more you try, the better the best looks by chance."""
     v = (0.85 / math.sqrt(252)) ** 2
-    bars = [expected_max_sharpe(n, v) for n in (2, 10, 72, 216, 1000)]
+    bars = [expected_max_sharpe(n_trials=n, sr_variance=v) for n in (2, 10, 72, 216, 1000)]
     assert bars == sorted(bars), f"bar must rise with N: {bars}"
     assert bars[0] < bars[-1] / 2
 

@@ -147,7 +147,10 @@ def compute_dsr(daily_ret: pd.Series, n_trials: int = 3) -> dict:
         "T": s.T, "skew": s.skew, "kurt": s.kurt,
         "psr_vs_zero": probabilistic_sharpe_ratio(s, 0.0),
         "dsr_at_N3": dsr,
-        "expected_max_sr": expected_max_sharpe(sr_var, n_trials),
+        # S-236: keyword-only。这一行原本是位置调用,用的是【旧】参数顺序
+        # (sr_variance, n_trials);而我 S-189 的版本是 (n_trials, ...)。
+        # 两个都是 float,传反不报错 —— keyword-only 让它变成 TypeError。
+        "expected_max_sr": expected_max_sharpe(sr_variance=sr_var, n_trials=n_trials),
         "passes_0p95": dsr >= 0.95,
     }
 

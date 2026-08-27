@@ -39,9 +39,28 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
 
-#: 可用于收益序列的源。CoinGecko 的「日收盘」是小时采样点塌缩(S-195),
-#: yfinance 已死(63 天不更新)—— 两者都不在此列。
-TRUSTED_RETURN_SOURCES = ("binance_hist", "hyperliquid", "eodhd")
+#: 可用于收益序列的源。
+#:
+#: ⚠️ 禁的是【端点】,不是 vendor (S-234)。S-195 的证据是
+#: `/coins/{id}/market_chart/range` 返回采样点(短窗口下是小时点),而
+#: `/coins/{id}/ohlc/range` + `interval=daily`(Pro 专属)返回真 K 线 ——
+#: 端点实测可达,我们付了四个月,调用 0 次。
+#:
+#: 我在 S-195 结尾写的「CoinGecko 不是定价源」比证据宽,Minimax-C 照着它把整个
+#: vendor 划掉,于是只剩 binance_hist(44d)和 hyperliquid(15d)两段不重合的窗口,
+#: 得出「60d 在单源下 structurally infeasible」。**推导是对的,前提是我写宽的。**
+#:
+#: 所以标签按【端点】分,不按 vendor 分:同一个 vendor 的两个端点是两种数据。
+#: 存量行标 `coingecko`(来自 market_chart,不可用于收益);
+#: 回填行必须标 `coingecko_pro_ohlc`。
+TRUSTED_RETURN_SOURCES = ("binance_hist", "hyperliquid", "eodhd", "coingecko_pro_ohlc")
+
+#: 明确不可用于收益序列,附原因 —— 让拒绝的信息量大于一个布尔值。
+BARRED_RETURN_SOURCES = {
+    "coingecko": "market_chart 采样点塌缩成日期,不是收盘 (S-195);"
+                 "改用 /ohlc/range interval=daily 并标为 coingecko_pro_ohlc",
+    "yfinance":  "63 天不更新,已死",
+}
 
 
 class CrossSourceError(RuntimeError):
@@ -98,7 +117,8 @@ def assert_single_source(rows: Sequence[Mapping[str, Any]], *,
         raise CrossSourceError(
             f"{job}: 源 '{src}' 不可用于收益序列 "
             f"(允许: {', '.join(TRUSTED_RETURN_SOURCES)})。"
-            f"CoinGecko 的日收盘是小时采样点塌缩,不是收盘 (S-195)。")
+            + (f" 原因:{BARRED_RETURN_SOURCES[src]}" if src in BARRED_RETURN_SOURCES
+               else " 未知源 —— 先声明它的 bar 约定再用。"))
 
     return SeriesSource(src, len(rows), min(days) if days else "?",
                         max(days) if days else "?", len(syms))
