@@ -394,9 +394,8 @@ def run(output_dir: Path = OUTPUT_DIR, sandbox: bool = False) -> dict:
              rets_tradfi.index.max())
     dates = (rets_crypto.index.union(rets_tradfi.index)
              .sort_values()
-             .loc[(rets_crypto.index >= lo) & (rets_crypto.index <= hi)])
-    dates = dates[dates >= pd.Timestamp(lo)]
-    dates = dates[dates <= pd.Timestamp(hi)]
+             .unique())
+    dates = dates[(dates >= lo) & (dates <= hi)]
 
     rets_crypto = rets_crypto.reindex(dates)
     rets_tradfi = rets_tradfi.reindex(dates)
@@ -610,8 +609,8 @@ def run_sweep(output_dir: Path = OUTPUT_DIR) -> dict:
     (5 knobs × small grids) and surfaces the Pareto-optimal cell. Output
     written to CROSS_ASSET_FACTOR_TILT_<DATE>_SWEEP.md.
 
-    Use case: when --sandbox's default config returns NEUTRAL or REFUTED,
-    this surfaces whether ANY config clears the 3-check gauntlet on real data.
+    Use case: when the default config returns NEUTRAL or REFUTED, this
+    surfaces whether ANY config clears the 3-check gauntlet on real data.
 
     Knobs swept:
       - rebal_days ∈ {3, 5, 10, 20}
@@ -619,10 +618,13 @@ def run_sweep(output_dir: Path = OUTPUT_DIR) -> dict:
       - weights    ∈ {(1,1,1), (2,1,1), (1,2,1), (1,1,2), (2,1,2)}
       - floor_q    ∈ {0.25, 0.10, 0.0}
       - z_clip     ∈ {2.0, 3.0, 4.0}
+
+    Args:
+        output_dir: directory for the sweep report.
     """
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s [%(name)s] %(message)s")
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     _logger.info("Loading real-data panel for sweep...")
     cis_long = load_cis_history_wide()
@@ -632,8 +634,8 @@ def run_sweep(output_dir: Path = OUTPUT_DIR) -> dict:
     tradfi_universe = sorted(set(rets_tradfi.columns))
     lo = max(cis_long["date"].min(), rets_crypto.index.min(), rets_tradfi.index.min())
     hi = min(cis_long["date"].max(), rets_crypto.index.max(), rets_tradfi.index.max())
-    dates = (rets_crypto.index.union(rets_tradfi.index).sort_values()
-             .loc[(rets_crypto.index >= lo) & (rets_crypto.index <= hi)])
+    dates = (rets_crypto.index.union(rets_tradfi.index).sort_values().unique())
+    dates = dates[(dates >= lo) & (dates <= hi)]
     rets_crypto = rets_crypto.reindex(dates)
     rets_tradfi = rets_tradfi.reindex(dates)
     rets = pd.concat([rets_crypto[crypto_universe], rets_tradfi[tradfi_universe]], axis=1)

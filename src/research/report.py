@@ -233,13 +233,22 @@ def _render_walk_forward(inp: ReportInput) -> str:
         ["Roll", "Train", "Test", "IS Sharpe", "OOS Sharpe", "OOS CAGR", "OOS MaxDD", "OOS n"],
         rows,
     )
+    # S-235:这个量 WalkForwardRoll 不携带。印一个占位数比不印更糟 —— 它会被读、
+    # 被引用、被拿去比较,而它的量纲是回撤不是盈亏,单位还写着 USDT。
+    _pnl_line = (
+        f"- **OOS total PnL:** {_fmt(wf.oos_total_pnl, ',.2f')} USDT\n"
+        if wf.oos_total_pnl is not None else
+        "- **OOS total PnL:** not measured — WalkForwardRoll carries no PnL field "
+        "(S-235; the previous figure summed max-drawdown percentages and labelled "
+        "them USDT)\n"
+    )
     summary = (
         f"## Walk-forward (gate 3) — {len(wf.rolls)} rolls\n\n"
         f"- **OOS Sharpe mean ± std:** {_fmt(wf.oos_sharpe_mean, '+.3f')} ± {_fmt(wf.oos_sharpe_std, '.3f')}\n"
         f"- **OOS CAGR mean:** {_fmt(wf.oos_cagr_mean, '+.2f')}%\n"
         f"- **OOS MaxDD worst:** {_fmt(wf.oos_max_dd_max, '.2f')}%\n"
         f"- **OOS total trades:** {wf.oos_n_trades_total}\n"
-        f"- **OOS total PnL:** {_fmt(wf.oos_total_pnl, ',.2f')} USDT\n"
+        + _pnl_line +
         f"- **IS Sharpe mean:** {_fmt(wf.is_sharpe_mean, '+.3f')}\n"
         f"- **IS CAGR mean:** {_fmt(wf.is_cagr_mean, '+.2f')}%\n"
         f"- **Decay ratio (OOS/IS):** {_fmt(wf.decay_ratio, '+.3f')}  "

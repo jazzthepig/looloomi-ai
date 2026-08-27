@@ -298,15 +298,45 @@ def zscore_columns(rows: list[StateVector], min_obs: int = 60) -> list[StateVect
     return rows
 
 
-def build_rows_for_upsert(vectors: list[StateVector]) -> list[dict]:
-    """Shape for market_state_vectors. Assumes z-scoring already applied."""
+def to_vec_full_array(sv: "StateVector") -> list[Optional[float]]:
+    """`vec_full` as the DB actually stores it: a POSITIONAL array (S-233).
+
+    ⚠️ `similar_market_states()` reads this column with
+    `jsonb_array_elements_text(vec_full) with ordinality` and joins the target
+    day's array **by index**. So the column is an ordered array, and the order is
+    `DIMS`. The stored 582 rows are arrays; `to_vec_full()` returns a **dict**.
+
+    `build_rows_for_upsert` was handing the dict straight to the column. Nothing
+    had caught it because the function has no callers — the table was written
+    once by something outside this repo. The first writer to use this helper
+    would have written 24 dicts into a column the RPC indexes positionally, and
+    the neighbour query would have degraded without raising.
+
+    Two shapes of one vector, one of which the only consumer cannot read: that is
+    S-214 (a constant naming a table nobody wrote) with the arrow reversed —
+    a writer nobody had run, pointed at a contract nobody had checked.
+    """
+    return [sv.values.get(k) for k in DIMS]
+
+
+def build_rows_for_upsert(vectors: list[StateVector],
+                          zscore_pass: Optional[str] = None) -> list[dict]:
+    """Shape for market_state_vectors. Assumes z-scoring already applied.
+
+    `zscore_pass` identifies the standardisation batch (S-232). Rows from two
+    passes are not in one coordinate system, and the RPC's cosine will not say
+    so — it returns a number either way. Stamping it is what makes a mixed table
+    detectable instead of quietly wrong.
+    """
     return [
         {
             "d": sv.d,
             "vec": sv.to_vec(),
-            "vec_full": sv.to_vec_full(),
+            "vec_full": to_vec_full_array(sv),
             "regime_label": sv.regime_label,
             "source_completeness": sv.source_completeness,
+            "measured_dims": sum(1 for k in DIMS if sv.values.get(k) is not None),
+            "zscore_pass": zscore_pass,
         }
         for sv in vectors
     ]

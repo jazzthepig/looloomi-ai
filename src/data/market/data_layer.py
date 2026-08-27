@@ -1859,6 +1859,20 @@ async def get_macro_pulse() -> dict:
         except Exception:
             pass  # regime stays UNKNOWN — non-blocking
 
+        # ONE SPELLING ON THE WIRE (S-243, 2026-08-26). Every branch above can
+        # land a different dialect here: the Mac push sends `Tightening`, the
+        # EODHD/FRED derivations send their own, and the initial value is the
+        # literal "UNKNOWN". This endpoint is one of two public regime surfaces
+        # (the other is /api/v1/cis/universe) and they must agree character for
+        # character — every regime lookup table in this codebase and in
+        # dashboard/src is keyed UPPER_SNAKE, so a title-case label does not
+        # error, it just misses and takes a default nobody chose.
+        # "UNKNOWN" collapses to None here for the same reason it does on the
+        # write path: a placeholder that reads like a reading is worse than an
+        # honest absence (S-120).
+        from src.data.cis.cis_provider import canonical_regime_strict
+        result["macro_regime"] = canonical_regime_strict(result.get("macro_regime"))
+
         await _redis_set(key, result, ttl=300)
         return _cache_set(key, result)
     except Exception as e:

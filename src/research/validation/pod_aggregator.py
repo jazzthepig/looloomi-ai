@@ -97,19 +97,28 @@ def build_pods(cis_long: pd.DataFrame, rets: pd.DataFrame,
     pod's returns into IS (first 70%) and OOS (last 30%) for shrinkage weights."""
     # Pod 1: R46 pillar_O 5d/5bps
     leg_r46, pillar_o_w = build_r46_sleeve_28(cis_long, rets, tradeable)
-    # Pod 2: R62 fade-the-crowd gated
+    # Pod 2: R62 fade-the-crowd gated — need fragile_mask + ranges for the detector
     features = compute_combined_features(
         cis_long, rets, tradeable, tradeable, funding_daily
-    )
-    score = score_funding_zwide(funding_daily[tradeable], sign="fade_crowd")
-    det, _ = build_fragility_ks_table(features,
-                                      fragile_labels=DEFAULT_FRAGILE_WINDOWS,
-                                      playable_labels=DEFAULT_PLAYABLE_WINDOWS,
-                                      z_threshold=R62_Z, min_features=R62_MF)
+    ).reindex(rets.index)
+    score = score_funding_zwide(
+        funding_daily[tradeable], sign="fade_crowd"
+    ).reindex(rets.index).ffill()
+    # Build fragile_mask from DEFAULT_FRAGILE_WINDOWS via 6-window partition
+    windows = partition_into_windows(rets.index, 6)
+    fragile_ranges = [(s, e) for label_, s, e in windows
+                      if label_ in DEFAULT_FRAGILE_WINDOWS]
+    playable_ranges = [(s, e) for label_, s, e in windows
+                       if label_ in DEFAULT_PLAYABLE_WINDOWS]
+    fragile_mask = pd.Series(False, index=rets.index)
+    for s, e in fragile_ranges:
+        fragile_mask.loc[(rets.index >= s) & (rets.index <= e)] = True
+    det, _ = _build_r62_detector(features, fragile_mask,
+                                  fragile_ranges, playable_ranges)
     leg_r62 = build_r62_sleeve_28(score, rets, tradeable, det)
     # Pod 3: R76 funding residual 5d/0bps
     fr_score = score_funding_residual(funding_daily, tradeable)
-    leg_r76 = funding_residual_ls(fr_score, rets[tradeable], k=3, cost_bps=0.0)
+    leg_r76 = funding_residual_ls(fr_score, rets[tradeable], k_terciles=3, cost_bps=0.0)
     leg_r76 = leg_r76.reindex(rets.index).fillna(0.0)
 
     cut = int(len(rets) * split_frac)
