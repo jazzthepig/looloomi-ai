@@ -697,6 +697,67 @@ def _freshness(ts) -> dict:
             "stale": (age is None) or (age > _STALE_AFTER_S)}
 
 
+def _unify_regime(universe: list, authoritative: str | None) -> str | None:
+    """ONE REGIME PER RESPONSE, ONE SPELLING, EVERY TIME (S-243, 2026-08-26).
+
+    Returns the canonical UPPER_SNAKE regime (or None if unmeasured) and stamps
+    it onto every asset, so no consumer can read two different answers out of one
+    payload.
+
+    WHY. Measured on the live payload, 2026-08-26, minutes apart in the same
+    response:
+
+        top-level  macro_regime  ->  "Tightening"
+        per-asset  macro_regime  ->  "RISK_ON"   (all 58 assets)
+
+    That is not a formatting difference — it is two contradictory readings of the
+    market shipped as one document. The contract normaliser overlays canonical
+    fields onto a COPY of each asset specifically to preserve display fields, so
+    a per-asset `macro_regime` from the engine rides through untouched and
+    unreconciled. `PortfolioAllocation.jsx` reads the per-asset one; everything
+    else reads the top-level. During a Tightening reading the allocation panel
+    was therefore telling investors "Risk appetite elevated. Full allocation
+    eligible."
+
+    The case split is the smaller half of the same wound. `Tightening` on the
+    wire, UPPER_SNAKE in every lookup table, means components keyed correctly
+    (PortfolioAllocation, CISCompare, ShareCard) silently missed and fell to a
+    grey default, while the one keyed title-case (CISWidget) worked — so the
+    codebase looked half-right from either side and nobody could see the split
+    from one screen.
+
+    A disagreement is a MAC-ENGINE defect we cannot fix from Railway, so it is
+    logged loudly rather than quietly harmonised: the caller keeps serving one
+    coherent answer, and the log says the engine contradicted itself.
+    """
+    from src.data.cis.cis_provider import canonical_regime_strict
+
+    canon = canonical_regime_strict(authoritative)
+
+    seen: dict[str, int] = {}
+    for a in universe:
+        if isinstance(a, dict) and a.get("macro_regime"):
+            k = canonical_regime_strict(a["macro_regime"]) or str(a["macro_regime"])
+            seen[k] = seen.get(k, 0) + 1
+
+    conflicting = {k: n for k, n in seen.items() if k != canon}
+    if conflicting and canon:
+        _logger.error(
+            "[REGIME] engine contradicted itself — authoritative=%s but assets carry %s. "
+            "Serving the authoritative label on every asset. This is a Mac-lane defect: "
+            "the per-asset stamp and the macro block came from one push (MINIMAX_SYNC §2).",
+            canon, conflicting,
+        )
+
+    # Stamp unconditionally, including None: an asset keeping a stale label while
+    # the response says "unmeasured" is the same split one field over.
+    for a in universe:
+        if isinstance(a, dict):
+            a["macro_regime"] = canon
+
+    return canon
+
+
 def _sanitize_market_fields(universe: list) -> None:
     """
     Null out untrustworthy price-derived fields. When an asset's price is 0/missing
@@ -1007,6 +1068,9 @@ async def _build_cis_universe(force_source: str = None):
         # regime_confidence: computed from push count in current regime + BTC dominance 20d MA
         # data_quality_score: passed through from Mac Mini push payload
         # pillar_velocity: z-score of each pillar vs 30d rolling mean (from Mac Mini push payload)
+        # One regime, one spelling, stamped onto every asset — see `_unify_regime`.
+        _cached_regime = _unify_regime(merged, _cached_regime)
+
         regime_confidence = _compute_regime_confidence(_cached_regime or "UNKNOWN")
 
         # Attach velocity/quality fields to each asset (from Mac Mini push payload)
@@ -1051,6 +1115,7 @@ async def _build_cis_universe(force_source: str = None):
             result["macro_regime"] = pulse.get("macro_regime") or None
         except Exception:
             result["macro_regime"] = (result.get("macro") or {}).get("regime") or None
+        result["macro_regime"] = _unify_regime(railway_universe, result["macro_regime"])
         result["t1_count"] = 0
         result["t2_count"] = len(railway_universe)
         _record_build(_phase, _t0, "railway")
@@ -1066,11 +1131,11 @@ async def _build_cis_universe(force_source: str = None):
             "source":       "local_engine_stale",
             "t1_count":     0,
             "t2_count":     len(stale_universe),
-            "macro_regime": (
+            "macro_regime": _unify_regime(stale_universe, (
                 (cached.get("macro") or {}).get("regime")
                 or cached.get("regime")
                 or None          # placeholder strings look like data — S-120
-            ),
+            )),
             "universe":     stale_universe,
         }
 
@@ -1094,11 +1159,11 @@ async def _build_cis_universe(force_source: str = None):
             "stale_age_s":    round(lkg_age, 1),
             "t1_count":       0,
             "t2_count":       len(lkg_universe),
-            "macro_regime": (
+            "macro_regime": _unify_regime(lkg_universe, (
                 (lkg.get("macro") or {}).get("regime")
                 or lkg.get("regime")
                 or None          # placeholder strings look like data — S-120
-            ),
+            )),
             "universe":       lkg_universe,
         }
 

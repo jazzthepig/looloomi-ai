@@ -4,14 +4,33 @@ import { T, FONTS } from "../tokens";
 const API_BASE = "/api/v1";
 
 /* ─── Constants ──────────────────────────────────────────────────────── */
+/* Keyed UPPER_SNAKE — the one spelling the API now emits (S-243).
+   These keys used to be title-case ("Tightening"), which worked only because
+   /api/v1/cis/universe happened to emit that dialect. Every OTHER regime-aware
+   component (PortfolioAllocation, CISCompare, ShareCard) keys UPPER_SNAKE, so
+   exactly one of the two was ever correct at a time and the mismatch showed up
+   as a grey default rather than an error. */
 const REGIME_COLORS = {
-  "Risk-On": "#22c55e",
-  "Risk-Off": "#ef4444",
-  "Tightening": "#f59e0b",
-  "Easing": "#3b82f6",
-  "Stagflation": "#dc2626",
-  "Goldilocks": "#a855f7",
+  RISK_ON:     "#22c55e",
+  RISK_OFF:    "#ef4444",
+  TIGHTENING:  "#f59e0b",
+  EASING:      "#3b82f6",
+  STAGFLATION: "#dc2626",
+  GOLDILOCKS:  "#a855f7",
+  NEUTRAL:     "#94a3b8",
 };
+
+/* Wire format is UPPER_SNAKE; humans read title-case. Display only — never key
+   a lookup off this. */
+const REGIME_LABEL = {
+  RISK_ON: "Risk-On", RISK_OFF: "Risk-Off", TIGHTENING: "Tightening",
+  EASING: "Easing", STAGFLATION: "Stagflation", GOLDILOCKS: "Goldilocks",
+  NEUTRAL: "Neutral",
+};
+
+/* Defensive: tolerate any dialect a cached or degraded payload may still carry. */
+const canonRegime = (r) =>
+  r ? String(r).trim().toUpperCase().replace(/[-\s]/g, "_") : null;
 
 const GRADE_COLORS = {
   "A+": "#22c55e",
@@ -119,11 +138,11 @@ function HeatCell({ value, onClick }) {
 /* ─── Macro Regime Banner ───────────────────────────────────────────── */
 
 export function CISMacroBanner({ macro }) {
-  const rawRegime = macro?.regime;
-  const known = rawRegime && rawRegime !== "Unknown" && rawRegime !== "UNKNOWN";
+  const rawRegime = canonRegime(macro?.regime);
+  const known = rawRegime && rawRegime !== "UNKNOWN" && REGIME_COLORS[rawRegime];
   // Before the engine reports, read as a system that's *thinking*, not broken.
-  const regime = known ? rawRegime : "Calibrating";
-  const regimeColor = known ? (REGIME_COLORS[rawRegime] || "#888") : "#22D3EE";
+  const regime = known ? (REGIME_LABEL[rawRegime] || rawRegime) : "Calibrating";
+  const regimeColor = known ? REGIME_COLORS[rawRegime] : "#22D3EE";
 
   return (
     <div className="lm-card" style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, position: "relative", overflow: "hidden" }}>
@@ -142,7 +161,7 @@ export function CISMacroBanner({ macro }) {
             <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: regimeColor, boxShadow: `0 0 10px ${regimeColor}`, flexShrink: 0 }} />
             <span style={{ fontSize: 18, fontWeight: 700, color: regimeColor, fontFamily: FONTS.display }}>{regime}</span>
           </div>
-          {["Tightening", "Risk-Off", "Stagflation"].includes(rawRegime) && (
+          {["TIGHTENING", "RISK_OFF", "STAGFLATION"].includes(rawRegime) && (
             <div style={{ fontSize: 10, color: T.secondary, marginTop: 5, maxWidth: 340, lineHeight: 1.45 }}>
               Defensive regime — grades compress by design; few assets earn high conviction. Relative rank still differentiates.
             </div>

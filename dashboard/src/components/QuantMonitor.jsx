@@ -699,7 +699,8 @@ function computeMultiplier(factors) {
 }
 
 /* ─── Factor Lab ─────────────────────────────────────────────────────────── */
-// Shows pending Gemma4-26b discovery requests and active factor hypotheses.
+// Shows pending discovery requests and active factor hypotheses.
+// Rule #8: no model/vendor/infra names in this file — investor-visible surface.
 // Rendered at the bottom of SimonsPanel when discovery data is present.
 function FactorLab() {
   const [disc, setDisc] = useState(null);
@@ -753,7 +754,7 @@ function FactorLab() {
           background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)",
         }}>
           <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: "#f59e0b", marginBottom: 3, fontWeight: 700 }}>
-            Weak IC detected · Awaiting Gemma4-26b analysis
+            Weak IC detected · Awaiting hypothesis generation
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.40)" }}>
             Pillars: {(pending?.pillars || []).join(", ")} &nbsp;·&nbsp; Regime: {pending?.regime ?? "—"} &nbsp;·&nbsp; Queued for the next scoring cycle
@@ -817,7 +818,7 @@ function FactorLab() {
       })}
 
       <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: "rgba(199,210,254,0.15)", marginTop: 4 }}>
-        |r| &lt; 0.05 × 3 mine runs → Gemma4-26b hypothesis generation → test → evolve
+        |r| &lt; 0.05 × 3 mine runs → hypothesis generation → test → evolve
       </div>
     </div>
   );
@@ -1089,7 +1090,7 @@ function SimonsPanel() {
         </div>
       )}
 
-      {/* Factor Lab — LLM hypothesis generation */}
+      {/* Factor Lab — hypothesis generation */}
       {!loading && <FactorLab />}
     </div>
   );
