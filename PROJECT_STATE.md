@@ -298,8 +298,33 @@ The cap is doing its job only if closure is as routine as addition.*
    两次都是 `tests/_source.py` 记的同一个错法:**匹配了模式,不是构造。**
    所以它自带合成样本负控制,分类器坏了先响,不报结论。
 
-**下一步（轨 A）**:`market_state_vectors` 全量重算写者 —— 三个约束
-（S-231/232/233）已钉死,可以一次写对。判据:`/internal/vdb-health` 连续 7 天
+3. **S-245:几何基底的写者。** 轨 A 第一件。按「先读消费者再写生产者」先读现状,
+   读出来的比预想严重:
+
+   - **仓库里没有任何代码写 `market_state_vectors`** —— 那 582 行来自 Mac 侧工具。
+     它是唯一一张没有可复现写者的表。
+   - **582 行里 568 行(97.6%)混了价源**,229 行含 `yfinance`(已死),
+     568 行含 `coingecko`(S-195 禁用)。入口是 `build_l1_observations.fetch_panel()`
+     里一句**没有 source 过滤**的查询 —— 同一天同一标的,后到的源静默覆盖先到的。
+   - 2025-01 之后 `ohlcv_daily` 有 **17,876 个 symbol-day 存在 ≥2 个源**,
+     **平均差 190.6bps**,最大 5,506bps。所以 `vol_mkt`/`vol_of_vol`/`downside_ratio`
+     量的是**换源跳变**,不是二阶矩(S-106 原话)。
+   - `n_symbols` 在 **25↔75** 摆动 —— 横截面维在变动成员上算,
+     「广度下降」与「面板少了 30 个标的」同一个数。
+
+   新写者 `src/data/vector/market_state_writer.py`:单源 · 定盘 · 一次标准化 ·
+   **写前地板**。而地板当场逼出一个我本来会静默做错的选择:默认起点从 2018-06
+   (只剩 **8 个达标标的**,写者拒绝)改到 2022-01(1,693 天 / 127 标的,
+   深度 ×2.9)。另把 `fng`/`oi_mcap`/`stable_supply_chg` 从完整度分母摘出
+   (全库 81 张表,**没有任何一张**持有它们)—— 一个永远达不到的上限不携带信息。
+
+   变异测试:五个变异,**「`if False:` 掉地板」连着打穿我两版守卫** ——
+   第一版验「那行代码在不在」(AST 能看结构,看不到可达性),第二版的夹具
+   同时触发三条地板、分不出是哪条在起作用。第三版每条地板配独立夹具 + upsert 探针,
+   五个变异全数打回。
+
+**下一步**:写者需在真实凭证下先 `--dry-run` 看 PanelSpec 再正式跑
+(沙箱没有 SUPABASE_KEY,我不读 `.env`)。判据:`/internal/vdb-health` 连续 7 天
 `overall: flowing`,且 `coherence` 只有一个 pass。
 
 ---

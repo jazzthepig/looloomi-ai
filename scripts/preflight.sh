@@ -994,6 +994,17 @@ python3 -m tests.test_two_layer_paper_smoke || {
 python3 -m tests.test_spa_deep_links_resolve || {
   echo "  ✗ SPA 深链 — do not push"; exit 1; }
 
+# ── S-245: 几何基底的写者 —— 单源 · 定盘 · 写前地板 ──────────────────────────
+# 实测 2026-08-27:`market_state_vectors` 的 582 行里 **568 行(97.6%)混了价源**
+# (229 行含 yfinance,568 行含 coingecko,两者都被 S-195/S-230 禁用于收益序列),
+# 而 2025-01 之后 ohlcv_daily 有 17,876 个 symbol-day 存在 ≥2 个源,平均差 190.6bps。
+# 入口是 build_l1_observations.fetch_panel() 里一句没有 source 过滤的查询 ——
+# 同一天同一标的,后到的源静默覆盖先到的。
+# 五个变异全部被打回,其中"地板"那条第一版是 AST 版,被 `if False:` 打穿(第九次
+# 「匹配构造存在,而非可达」),改成行为验 + upsert 探针。
+python3 -m tests.test_market_state_writer || {
+  echo "  ✗ 几何基底写者守卫 — do not push"; exit 1; }
+
 # ── S-227: 部署后验证器必须存在,且能分开四个状态 ────────────────────────────
 # 这个关卡不跑验证器(preflight 离线),只保证它没被删/没被削掉那四个区分。
 # 验证器本体在 push 之后跑:bash scripts/postdeploy_verify.sh
