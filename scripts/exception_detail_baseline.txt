@@ -1,0 +1,24 @@
+# S-247 冻结:异常原文进入 HTTP detail 的已知位置。**只能减。**
+# 键 = 路径::detail 表达式,【不含行号】—— 行号键会让任何一次无关的插行
+# 变成假的"新增",而假阳性会训练人去盲刷基线,连真新增一起吞掉(变异 A 实测)。
+# 每修好一处删掉一行;新增一处会让 preflight 直接红。
+# 已修(不在此表):auth.py 钱包资料路由、cis.py 内部摄取 —— 原本是无截断 str(e)。
+src/api/routers/admin.py::f'import failed: {e}'
+src/api/routers/admin.py::f'ohlcv module not built yet: {e}'
+src/api/routers/admin.py::str(e)[:200]
+src/api/routers/auth.py::f'Signature verification unavailable: {e}. Install PyNaCl + base58.'
+src/api/routers/market.py::f'Batch narrative error: {e}'
+src/api/routers/market.py::f'Developer data error: {e}'
+src/api/routers/market.py::f'Earnings calendar error: {e}'
+src/api/routers/market.py::f'Economic dashboard error: {e}'
+src/api/routers/market.py::f'Exchange concentration error: {e}'
+src/api/routers/market.py::f'Executability batch error: {e}'
+src/api/routers/market.py::f'Executability error: {e}'
+src/api/routers/market.py::f'Narrative error: {e}'
+src/api/routers/market.py::f'Price history error: {e}'
+src/api/routers/market.py::f'Supply chart error: {e}'
+src/api/routers/market.py::f'Tickers error: {e}'
+src/api/routers/ohlcv.py::str(e)[:200]
+src/api/routers/ohlcv.py::str(e)[:200]
+src/api/routers/social.py::f'OG image unavailable: {e}'
+src/api/routers/strategy_intake.py::f'validated {len(to_write)} but could not persist: {str(e)[:120]}'

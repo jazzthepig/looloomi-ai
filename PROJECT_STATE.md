@@ -336,6 +336,37 @@ The cap is doing its job only if closure is as routine as addition.*
    **今天第十次同一个形状,而这次是我一小时前写的代码。** 结论不是「要更小心」,
    是:**每写一个返回 Optional 的读函数,当场问一次调用方需要分开几种失败。**
 
+5. **S-247:安全检测 —— 8 个 SECURITY DEFINER 视图把数据层交给了 anon。已修。**
+
+   RLS 本身全绿(67 表全开、零 anon 写权限、11 个 SECURITY DEFINER 函数对 anon
+   全部 EXECUTE=false)。**而 8 个视图以属主身份执行,RLS 不适用。** 切到 anon 实跑:
+
+   ```
+   底表 signal_outcomes        0 行  │  视图 signal_outcomes_unified   7,834 行
+   底表 ohlcv_daily            0 行  │  视图 ohlcv_daily_canonical   485,352 行
+                                     │  视图 ohlcv_venue_spread      488,607 行
+   ```
+
+   负控制:同一 anon 角色下 5 个 `security_invoker` 视图**全部返回 0** ——
+   原因隔离到 SECURITY DEFINER 这一个属性。`signal_outcomes_unified` /
+   `asset_embeddings_latest` 正是「不可以免费暴露」的挖掘成果。
+
+   已 `alter view … set (security_invoker = on)` × 8。前置验证:前端不直连
+   Supabase、后端持 service_role;改完 service_role 视角行数**逐个不变**。
+
+   **更正既有记载**:`CODE_CHECK_2026-08-09.md` 说 anon key「打包进前端」——
+   实测 `dist/*.js` 里没有任何 JWT,只剩 `external_probe.sh` 一处。
+
+   **次发现**:`test_no_stack_leakage_on_user_surfaces.py` 每次都绿,而它的 5 条
+   断言**全在扫前端厂商名**,Python API 不在范围内 —— `src/api/` 里 21 处
+   `HTTPException(detail=str(e))` 从没被看过。S-244 的形状落在安全面上。
+   两处无截断的已修,其余 19 处冻结,新增 `test_exception_text_never_reaches_the_client`。
+
+   **未修留档(按严重度)**:① webhook SSRF(认证后,带 120 字节读取预言机)
+   ② `INTERNAL_TOKEN` 用 `!=` 非恒定时间比较 ③ 依赖 23/24 行 `>=` 不固定
+   ④ npm 14 条中仅 `lodash` 真进 bundle ⑤ **`pip-audit` 沙箱超时未完成 ——
+   未检查 ≠ 干净,需 Mac 上补跑**。
+
 **下一步**:在 Mac 上 `set -a; source .env; set +a` 后重跑 dry-run,先看
 `panel` 的三个数(`n_symbols` / `coverage` / `excluded`)再跑真的。
 判据:`/internal/vdb-health` 连续 7 天 `overall: flowing`,且 `coherence` 只有一个 pass。

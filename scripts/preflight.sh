@@ -1005,6 +1005,17 @@ python3 -m tests.test_spa_deep_links_resolve || {
 python3 -m tests.test_market_state_writer || {
   echo "  ✗ 几何基底写者守卫 — do not push"; exit 1; }
 
+# ── S-247: 异常原文不得进入 HTTP 响应 ────────────────────────────────────────
+# 仓库里已有 tests/test_no_stack_leakage_on_user_surfaces.py,名字写着"不泄漏栈信息",
+# preflight 每次都跑、每次都绿 —— 实测它的 5 条断言【全部】在扫 dashboard/src 里的
+# 厂商名,Python API 不在扫描范围内。于是 src/api/ 里 21 处把异常原文塞进
+# HTTPException(detail=...) 从来没被任何东西看过(auth.py 钱包路由是无截断 str(e))。
+# 名字宣称了一个属性,而没有任何东西检查它 —— S-244 的形状,落在安全面上。
+# 键用"路径::表达式"而非行号:变异 A 证明行号键会因无关插行而误报,
+# 而误报会训练人盲刷基线,连真新增一起吞掉。
+python3 -m tests.test_exception_text_never_reaches_the_client || {
+  echo "  ✗ 异常原文进入了 HTTP 响应 — do not push"; exit 1; }
+
 # ── S-227: 部署后验证器必须存在,且能分开四个状态 ────────────────────────────
 # 这个关卡不跑验证器(preflight 离线),只保证它没被删/没被削掉那四个区分。
 # 验证器本体在 push 之后跑:bash scripts/postdeploy_verify.sh
