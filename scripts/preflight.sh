@@ -1043,6 +1043,28 @@ python3 -m tests.test_track_record_measures || {
 python3 -m tests.test_source_freshness || {
   echo "  ✗ 价源判活守卫 — do not push"; exit 1; }
 
+# ── S-252: 显示的分数不得落进比它评级更高的带 ────────────────────────────────
+# 实测 2026-08-27 排行榜首屏:Aave 75.7 = A,Uniswap 75.0 = B+。
+# UNI 的 raw 是 74.97 —— get_grade 给 B+ 是【对的】,而 round(74.97,1)=75.0
+# 四舍五入跨过了 grade 自己遵守的那条线。数字在 A 档,徽章在 B+ 档,就在产品首屏。
+# 修的方向是把【数字让下去】(74.97→74.9),不是让 grade 按显示值算 ——
+# 后者等于让呈现层决定评级,四舍五入变成升级机制。
+# 守卫用【穷举】0.00–100.00 每 0.01:我的第一版查错了边界,手挑的例子全过,
+# 穷举当场显示 34 处矛盾、一个都没修。边界 bug 只在边界上,抽样碰不到。
+python3 -m tests.test_score_never_contradicts_grade || {
+  echo "  ✗ 分数与评级矛盾 — do not push"; exit 1; }
+
+# ── S-254: paper-trade 执行器 —— 拒绝比成交更有信息 ──────────────────────────
+# M-86-SHIP 的签核栏写着「Seth/Austin (execution): PENDING」,而 paper_trading/
+# 目录根本不存在。三个 OOS 验证过的 spec(M-86 ④ / M-87 ② +19.94% SR+2.27 /
+# M-88 ③ +29.90% SR+1.91)ship 到 Mac 侧后没有执行路径。
+# 关键行为:M-86 的价源是 binance_hist,而它最近 3 天 0/212 标的(S-251)——
+# 照 spec 跑会用 7 天前的价开仓,产生一条看起来正常、不可分辨的污染记录。
+# 所以 panel 超龄 → BLOCKED。三值:ENTERED / SKIPPED(规则)/ BLOCKED(算不了)。
+# 守卫本身是四值:第四态 NOT CHECKED —— Shadow 未挂载时不得静默报绿(S-163)。
+python3 -m tests.test_spec_runner || {
+  echo "  ✗ paper-trade 执行器守卫 — do not push"; exit 1; }
+
 # ── S-227: 部署后验证器必须存在,且能分开四个状态 ────────────────────────────
 # 这个关卡不跑验证器(preflight 离线),只保证它没被删/没被削掉那四个区分。
 # 验证器本体在 push 之后跑:bash scripts/postdeploy_verify.sh
