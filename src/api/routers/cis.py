@@ -397,8 +397,11 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
 
         return {"status": "success", "received": len(universe), "cached": ok, "history_written": sb_ok}
     except Exception as e:
+        # 日志已经拿到了原文;响应不需要再带一份 (S-247)。
+        # 这条虽然在 X-Internal-Token 后面,但 401 之前的任何路径错误都会走到这里,
+        # 而 `str(e)` 无截断 —— 拼错 token 的探测者仍可能读到 schema 细节。
         _logger.warning(f"[INTERNAL] Error receiving CIS scores: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="cis-scores ingest failed")
 
 
 @router.get("/internal/cis-scores/schema")

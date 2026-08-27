@@ -273,4 +273,8 @@ async def get_profile(address: str, authorization: str = Header(None)):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # 异常原文只进日志,不进响应 (S-247)。这条在【钱包资料】路由上,
+        # 而 `str(e)` 无截断:一次 httpx.ConnectError 就会把内部主机名和端口
+        # 原样回给调用方,一次 PostgREST 错误会回一份列名清单。
+        _logger.warning("[auth] profile lookup failed: %s", e)
+        raise HTTPException(status_code=500, detail="Profile lookup unavailable")
