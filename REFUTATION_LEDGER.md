@@ -13017,3 +13017,95 @@ CLAUDE.md 交接规则的原话：**「`git log` 是一个源真面，
 **结构性问题仍未解决**：两条 Seth lane 共用一个工作树，`git status` 分不出谁改的。
 今天四次碰撞全部由关卡兜住，但那是运气好在关卡覆盖到了 —— S-248 这次
 是**改动被吞进别人的提交**，没有任何关卡会检查"提交标题是否描述了它的 diff"。
+
+---
+
+## S-251 · 管道死亡探针看不见管道死亡（2026-08-27，FIXED —— 但上游仍然是死的）
+
+回填 S-248 的价源时撞到的。原本只想量"83 行里有几行能用 binance_hist 重算"，
+量出来的是一件更大的事。
+
+### 两阶段静默死亡，日期精确
+
+```
+2026-07-27   binance_hist 写 261 个标的
+2026-07-28                  221          ← 掉 40
+2026-08-08                  221
+2026-08-09                    1          ← 掉 220，只剩 BCH
+2026-08-20                    1          ← 至今
+```
+
+**08-09 之后整整 19 天，binance_hist 每天只写一个标的。**
+
+### 而探针报 fresh
+
+`supabase_ohlcv_daily_freshness()` 的全部查询是
+
+```python
+params = {"select": "trade_date", "order": "trade_date.desc", "limit": "1"}
+```
+
+**一行。全表最新的 `trade_date`，不分源，不分标的。** BCH 每天把那个 max
+往前推，coingecko 也在写到 08-27，于是 `/internal/data-freshness` 报
+**`verdict: "fresh", age_days: 0.5`**，而 260 个标的已经死了 19 天。
+
+那个探针的 docstring 写着自己就是为 **silent pipeline death** 建的（2026-07-31），
+并列了三次前科：T2 pillars 全 NULL 数月 · signal_outcomes 死 80 天 ·
+ohlcv_daily 停 4 天靠偶然发现。**它抓不到第四次，因为它取的是混合总体上的 max。**
+
+> **「某个东西是新的」和「这个管道是活的」被压成了同一个数。**
+> 一个 max 不携带它是在多少个成员上取到的。
+
+### 当前实测状态（这条比修复本身重要）
+
+```
+coingecko     08-27   0d   25/25    flowing   ← 但 S-195 禁它做收益序列
+eodhd         08-26   1d   33/33    flowing   ← TradFi，可信
+hyperliquid   08-23   4d    0/177   DEAD
+binance_hist  08-20   7d    0/212   DEAD
+yfinance      06-18  70d    0/—     DEAD
+```
+
+**加密侧没有任何可用于收益的价源在更新。** 三个源：两个死了，第三个被禁用。
+
+后果不是抽象的：
+
+- **S-245 的 `market_state_writer` 默认用 `binance_hist`。** 历史数据还在，
+  所以地板会过、写者会"成功" —— 但它产出的是一个 **7 天前的基底**，
+  而 `vdb_health` 的 budget 是 2 天。**上游死着，写者修不好下游。**
+- **S-248 里 41 个 crypto 行只有 20 个能重算 30 天出口价**，直接因为这次停摆。
+  我原以为是"+30 天还没到"，查证后 d30 全在 08-01→08-14 范围内 —— 是覆盖没了。
+
+### 修复：按覆盖率判活，按域给判决
+
+`src/data/market/source_freshness.py` + RPC `ohlcv_source_coverage()`
+（**SECURITY INVOKER，只授 service_role** —— 同一天 S-247 刚把 8 个 DEFINER 视图
+翻回来，不要再造一个；anon 调用实测被拒 42501）。
+
+判据是**每个源最近还在写几个标的 vs 它一个月前的常态**，五值：
+`flowing / degraded / COLLAPSED / DEAD / no_baseline`。
+`/internal/data-freshness` 并排多一个 `by_source` 字段，不替换旧判据
+（旧的对"这一轮跑完没有"仍有效，它的 caveat 是对的）。
+
+### 我在这个模块上犯了三次同一个错
+
+**① 全局 ok 掩盖了一整个域。** 第一版 `overall()` 只数"有没有能用于收益的源在流"，
+拿实测数据跑出来是 **`verdict: "ok"`** —— 因为 eodhd 活着。而 eodhd 只有 TradFi。
+**我在修「一个 max 掩盖一个总体」的同时，把"某域有可用源"压成了"系统有可用源"。**
+改成按 `DOMAIN_OF_SOURCE` 分域给判决。
+
+**② 差点每个周六都狼来了。** `main.py` 里有一段写给未来的人的警告：
+「周末合法地掉到只剩加密（~25 个标的），因为 EODHD 是 TradFi 而市场关门 ——
+一个忽略这件事的标的数检查会每个周六都狼来了，而一个狼来了的检查会被静音，
+那正是这一整层存在要避免的失败。」我第一版全局 `RECENT_DAYS = 3`，周四实测没事，
+但**周二早上**（上周五收盘 + 周六日 + 周一假期）窗口里一根 eodhd bar 都没有 → DEAD。
+**那段警告一字不差地描述了我正在写的 bug。** 改成按域给窗口：加密 3 天，TradFi 6 天。
+
+**③ 变异测试打穿一条断言。** 我断言 SQL 里"出现了 `%(base_lo)s` / `%(base_hi)s`"，
+而把 `45,15` 改成 `30,0`（基线含当前衰减，缓慢死亡的源永远不告警）之后测试仍全绿。
+**验的是占位符在不在，要验的是那两个数把最近窗口排除在外。** 改成直接断言
+`BASELINE_HI_DAYS > RECENT_DAYS`。
+
+**未了项（P0，不是工程活）**：binance_hist 与 hyperliquid 的采集为什么在
+07-28 和 08-09 两次掉档 —— 那是 Mac 侧 / 调度侧的事，需要 Jazz 或 Minimax 去看。
+**在它恢复之前，`/quant` 上任何加密数字都还是噪声上的数字，S-245 的写者也白跑。**
