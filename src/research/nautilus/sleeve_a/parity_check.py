@@ -49,11 +49,13 @@ logger = logging.getLogger(__name__)
 
 # Default locations for the freqtrade MultiFactorV2 baseline.
 # Minimax-C writes the baseline as part of B-S1 C-S1 ("honest re-scorecard").
+# Path root from src.research.paths.BACKTEST_DIR (env-overridable via COMETCLOUD_BACKTEST_DIR).
+from src.research.paths import BACKTEST_DIR
 DEFAULT_FREQTRADE_PATHS = [
-    Path("/Volumes/CometCloudAI/cometcloud-local/_reports/backtest/multi_factor_v2_latest.json"),
-    Path("/Volumes/CometCloudAI/cometcloud-local/_reports/backtest/CometCloudMultiFactorV2_latest.json"),
-    Path("/Volumes/CometCloudAI/cometcloud-local/_reports/backtest/multi_factor_v2_latest.csv"),
-    Path("/Volumes/CometCloudAI/cometcloud-local/_reports/backtest/CometCloudMultiFactorV2_latest.csv"),
+    BACKTEST_DIR / "multi_factor_v2_latest.json",
+    BACKTEST_DIR / "CometCloudMultiFactorV2_latest.json",
+    BACKTEST_DIR / "multi_factor_v2_latest.csv",
+    BACKTEST_DIR / "CometCloudMultiFactorV2_latest.csv",
 ]
 
 

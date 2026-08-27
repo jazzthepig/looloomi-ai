@@ -77,13 +77,12 @@ DEFAULT_TRADE_SIZE = Decimal("0.05")
 DEFAULT_LEVERAGE = 3.0
 DEFAULT_STARTING_BALANCE = "10000 USD"
 
-# Output root — env-overridable for the CI smoke run
-OUT_DIR = Path(
-    os.getenv(
-        "SLEEVE_A_OUT_DIR",
-        "/Volumes/CometCloudAI/cometcloud-local/_reports/nautilus/sleeve_a",
-    )
-)
+# Output root — env-overridable for the CI smoke run.
+# Default from src.research.paths.SLEEVE_A_OUT_DIR (env-overridable via
+# COMETCLOUD_SLEEVE_A_OUT_DIR). Local SLEEVE_A_OUT_DIR env still wins for
+# per-run overrides.
+from src.research.paths import SLEEVE_A_OUT_DIR as _DEFAULT_SLEEVE_A_OUT_DIR
+OUT_DIR = Path(os.getenv("SLEEVE_A_OUT_DIR", str(_DEFAULT_SLEEVE_A_OUT_DIR)))
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 INSTRUMENTS = [

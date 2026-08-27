@@ -105,10 +105,14 @@ LEVERAGE_DEFAULT = 3               # 3× leverage (PROFITABLE_STRATEGY_REPORT)
 MAX_OPEN_TRADES = 2
 MAX_DAILY_TRADES = 2
 
-# Path to 1h feather files (env-overridable for testing on Mac)
+# Path to 1h feather files (env-overridable for testing on Mac).
+# Default from src.research.paths.SLEEVE_A_DATA_DIR (env-overridable via
+# COMETCLOUD_SLEEVE_A_DATA_DIR). Local SLEEVE_A_FEATHER_DIR env still wins
+# for per-run overrides.
+from src.research.paths import SLEEVE_A_DATA_DIR as _DEFAULT_SLEEVE_A_DATA_DIR
 FEATHER_DIR = os.getenv(
     "SLEEVE_A_FEATHER_DIR",
-    "/Volumes/CometCloudAI/cometcloud-local/user_data/data/binance/futures/",
+    str(_DEFAULT_SLEEVE_A_DATA_DIR) + "/",
 )
 
 # Path to Nautilus catalog (built by data_adapter from feather)

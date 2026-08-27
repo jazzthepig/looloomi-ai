@@ -37,7 +37,7 @@ from pathlib import Path
 
 # Load EODHD key from Mac-side env (same pattern as fetch_ohlcv_to_local.py)
 from dotenv import dotenv_values
-_MAC_ENV = Path("/Volumes/CometCloudAI/cometcloud-local/.env")
+from src.research.paths import MAC_ENV as _MAC_ENV
 _keys = dotenv_values(_MAC_ENV) if _MAC_ENV.exists() else {}
 EODHD_API_KEY = _keys.get("EODHD_API_KEY", "")
 

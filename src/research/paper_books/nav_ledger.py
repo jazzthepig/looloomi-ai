@@ -58,7 +58,7 @@ sys.path.insert(0, str(_REPO_ROOT / "src" / "research" / "paper_books"))
 from ledger import LEDGER_DIR, read_sleeve, append_paper_position, PaperPosition  # noqa: E402
 
 # Reuse sleeve_3's EODHD fetcher (no duplicate code)
-_MAC_ENV = Path("/Volumes/CometCloudAI/cometcloud-local/.env")
+from src.research.paths import MAC_ENV as _MAC_ENV
 _keys = dotenv_values(_MAC_ENV) if _MAC_ENV.exists() else {}
 EODHD_API_KEY = _keys.get("EODHD_API_KEY", "")
 
