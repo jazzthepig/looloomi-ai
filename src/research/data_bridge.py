@@ -2,7 +2,8 @@
 Nautilus data bridge — read OHLCV parquet → resample 1h→4h → nautilus Bars.
 
 Source:
-  /Volumes/CometCloudAI/data/ohlcv/{SYMBOL}.parquet  (1h, 17,520 rows ~2yr)
+  See ``src/research/paths.py::OHLCV_DIR`` (default
+  ``/Volumes/CometCloudAI/data/ohlcv/{SYMBOL}.parquet``).
   Schema: [timestamp (datetime64[ms, UTC]), open, high, low, close, volume]
 
 Output:
@@ -32,9 +33,9 @@ from nautilus_trader.model.data import (
 from nautilus_trader.model.enums import AggregationSource, PriceType
 from nautilus_trader.model.instruments import CryptoPerpetual
 
-logger = logging.getLogger(__name__)
+from src.research.paths import OHLCV_DIR
 
-OHLCV_DIR = Path("/Volumes/CometCloudAI/data/ohlcv")
+logger = logging.getLogger(__name__)
 
 
 def load_1h_parquet(symbol: str) -> pd.DataFrame:

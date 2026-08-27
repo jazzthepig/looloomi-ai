@@ -1,7 +1,8 @@
 """
 Universe loader — multi-asset, multi-timeframe data source for the framework.
 
-Wraps the on-disk parquet data at /Volumes/CometCloudAI/data/ohlcv/{SYMBOL}.parquet
+Wraps the on-disk parquet data at ``src.research.paths.OHLCV_DIR``
+(default ``/Volumes/CometCloudAI/data/ohlcv/{SYMBOL}.parquet``)
 with selection helpers and Binance contract-spec precision tables.
 
 Provides:
@@ -24,10 +25,7 @@ from src.research.data_bridge import (
     PRICE_PRECISION, SIZE_PRECISION,
 )
 from src.research.indicators import precompute_indicators
-
-
-# ── Data location ───────────────────────────────────────────────────────────
-OHLCV_DIR = Path("/Volumes/CometCloudAI/data/ohlcv")
+from src.research.paths import OHLCV_DIR
 
 
 # ── Active universe ─────────────────────────────────────────────────────────

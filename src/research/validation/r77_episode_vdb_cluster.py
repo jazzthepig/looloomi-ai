@@ -112,7 +112,7 @@ class Episode:
     max_daily_distance: float
     mean_daily_distance: float
     regime_centroid: list[float]
-    n_neighbors: int = 0                                         # VDB k=20 placeholder
+    n_neighbors: int = 20                                        # VDB k=20 (per §C5) — was 0 placeholder, fixed 2026-08-27
     episode_t_pooled: float | None = None
     episode_sign: int = 0                                        # +1, -1, 0
     mean_daily_alpha: float | None = None

@@ -58,9 +58,10 @@ logger = logging.getLogger(__name__)
 # ── Defaults ─────────────────────────────────────────────────────────────────
 
 # Freqtrade envelope CSV (Minimax-C emitted 2026-07-20 14:36 UTC).
-FREQTRADE_ENVELOPE_CSV = Path(
-    "/Volumes/CometCloudAI/cometcloud-local/_data/research/"
-    "c_s5_b_s1_parity_metrics_envelope.csv"
+# Path root from src.research.paths.MAC_DATA (env-overridable via COMETCLOUD_MAC_DATA).
+from src.research.paths import MAC_DATA
+FREQTRADE_ENVELOPE_CSV = (
+    MAC_DATA / "research" / "c_s5_b_s1_parity_metrics_envelope.csv"
 )
 
 # Gate tolerances (sourced from the envelope summary JSON at the same path).
