@@ -452,6 +452,37 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
     # ── 30d outcome metrics ──────────────────────────────────────────────
     #outcome_30d signals: those with outcome_30d set (computed by signal_outcome_tracker)
     resolved_signals = [r for r in closed if r.get("outcome_30d") in ("WIN", "LOSS", "EXPIRED")]
+
+    def _measurable_block(rows: list) -> dict:
+        """能被声称的那一部分 —— 按价源分层,样本不足时给原因不给数 (S-252)。
+
+        `track_record.measure()` 已经做完全部判断;这里只是把它接上,
+        不在这里重实现 —— 今天已经因为"写了第四个 regime 规范化实现"
+        被守卫抓过一次 (S-249)。
+        """
+        try:
+            from src.data.signals.track_record import (
+                MEASURE_ALPHA30, MIN_MEASURABLE, measure)
+            trusted = measure(rows, which=MEASURE_ALPHA30, trusted_only=True)
+            allrows = measure(rows, which=MEASURE_ALPHA30, trusted_only=False)
+            out = trusted.as_payload()
+            out["min_measurable"] = MIN_MEASURABLE
+            # 被禁价源那部分【也报】,但明确标成不可声称 —— 藏起来等于假装没测过,
+            # 而 CLAUDE.md 说 the graveyard is the asset。
+            out["including_barred_sources"] = {
+                "mean_pct": allrows.mean_pct,
+                "win_rate_pct": allrows.win_rate_pct,
+                "n": allrows.n_measurable,
+                "claimable": False,
+                "why_not": "83/95 行的出口价来自 coingecko market_chart(S-195,"
+                           "采样点塌缩不是收盘)或 yfinance(S-230,已死)。"
+                           "按我们自己的规则,这个数不能对外声称。",
+            }
+            return out
+        except Exception as e:                                    # noqa: BLE001
+            _logger.warning("[SIGNALS] measurable block failed: %s", e)
+            # 算不出来时说算不出来,不要退回一个数
+            return {"verdict": "unknown", "reason": "分层计算失败,详见日志"}
     pending_signals  = [r for r in open_signals if not r.get("outcome_30d")]
     out_wins   = [r for r in resolved_signals if r.get("outcome_30d") == "WIN"]
     out_losses = [r for r in resolved_signals if r.get("outcome_30d") == "LOSS"]
@@ -565,6 +596,19 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
         # HONEST primary track record — benchmark-relative alpha (fair measure of OUTPERFORM
         # signals). The absolute sharpe/win_rate below reflect a doomed long-only sleeve in a
         # down market and should NOT headline the UI.
+        # ── 可测量的那一部分 (S-252) ────────────────────────────────────────
+        # 页面此前用 95 行算出 −1.31 Sharpe / −26.19% 并把它当作战绩展示。
+        # 而那 95 行里 **83 行用被禁价源**(coingecko market_chart S-195 /
+        # yfinance 已死 S-230),可信的只有 12 行。12 个样本上的 Sharpe
+        # 是噪声的名字,不是结论。
+        #
+        # 更糟的是它指向自我贬低,所以没人怀疑过它 —— 一个说自己不行的数字
+        # 不会引发审查。**那个 −26.19% 既不是坏消息也不是好消息,
+        # 它是一个不可测量的量被渲染成了一个可信的数。**
+        #
+        # 这里不改任何算法,只把"能声称的"和"不能声称的"分开报,
+        # 让前端能先说可测样本有多少,再谈数字。
+        "measurable": _measurable_block(resolved_signals),
         # ── 每个头条数字的度量口径 (S-248) ──────────────────────────────────
         # 实测 2026-08-27,同一条统计条上四个数用了三种度量,而 UI 没有逐项标注:
         #
