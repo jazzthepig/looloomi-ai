@@ -367,6 +367,36 @@ The cap is doing its job only if closure is as routine as addition.*
    ④ npm 14 条中仅 `lodash` 真进 bundle ⑤ **`pip-audit` 沙箱超时未完成 ——
    未检查 ≠ 干净,需 Mac 上补跑**。
 
+6. **S-248/S-249:「我们不是有几个赚钱的吗」—— 有,而且页面把它盖掉了。**
+
+   ```
+   STRONG_OUTPERFORM  n=  7  α30=+4.99%  胜率 71.4%   ← journal era
+   STRONG OUTPERFORM  n=134  α_beta_adj=+7.99%  胜率 50%  ← legacy era 独立复现
+   ```
+
+   **但那 7 个没有一个用可信价源测出来。** 出口价源 83/95 被禁
+   (coingecko market_chart S-195 / yfinance 已死 S-230);可信子集只有 12 行,
+   而它的 ret30 是 **+1.64%** vs coingecko 那 38 行的 **−13.38%(差 15pp)**。
+
+   加上两个测量错误:**退出规则均值 8 天而判定窗口 30 天**
+   (23 个 WIN 里 12 个两者符号相反 —— 我们在赢的仓位赚钱前砍掉了它);
+   **统计条四个数用三种度量而不标注**。
+
+   > **那个 −26.19% 既不是坏消息也不是好消息 —— 它是一个不可测量的量,
+   > 被渲染成了一个可信的数。** 而它指向自我贬低,所以没人怀疑过它。
+
+   已建 `src/data/signals/track_record.py`(两种度量分开 · 价源四分类 ·
+   可信样本 <30 给原因不给数)、`signals.py` regime 分组前强制 strict 规范化、
+   响应加 `measure_basis` 逐项声明口径。
+
+   **S-249:修 ④ 时我写了仓库里的第四个 regime 规范化实现**,是
+   `test_regime_write_path` 挡下来的,不是我发现的 —— 而同一天早些时候我刚在
+   路由展平上正确复用过既有实现。**知道一条规则,和在下一个场景里认出它,
+   是两件事。** 给它写守卫时又被自己的 docstring 打红(引用了反面例子),
+   `tests/_source.py` 那一课今天踩了两种拼写。
+
+**分工(Jazz 2026-08-27)**:价源回填我做;**退出规则对比发 Minimax-C**。
+
 **下一步**:在 Mac 上 `set -a; source .env; set +a` 后重跑 dry-run,先看
 `panel` 的三个数(`n_symbols` / `coverage` / `excluded`)再跑真的。
 判据:`/internal/vdb-health` 连续 7 天 `overall: flowing`,且 `coherence` 只有一个 pass。

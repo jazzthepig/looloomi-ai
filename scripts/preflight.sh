@@ -1016,6 +1016,20 @@ python3 -m tests.test_market_state_writer || {
 python3 -m tests.test_exception_text_never_reaches_the_client || {
   echo "  ✗ 异常原文进入了 HTTP 响应 — do not push"; exit 1; }
 
+# ── S-248: 战绩面板 —— 一次只用一种度量,拒绝比数字更有信息 ──────────────────
+# Jazz 2026-08-27:「我们不是有几个赚钱的吗?」有,而且指对了地方。实测四条叠加:
+#   ① 面板标题写「CUMULATIVE ALPHA VS BTC/SPY」,而 _compute_metrics 复利的是
+#      return_pct(绝对收益,不含基准)—— 标签与数据不是一回事
+#   ② 曲线用 8 天退出价,胜率用固定 30 天窗口;23 个 WIN 行里 12 个两者符号相反
+#   ③ 出口价源 83/95 被禁(coingecko market_chart S-195 / yfinance 已死 S-230),
+#      可信子集只有 12 行,而它的 ret30 是 +1.64% vs coingecko 的 −13.38%(差 15pp)
+#   ④ regime 分组不规范化,EASING/Easing 与 RISK_ON/Risk-On 各拆成两行(差 12pp,
+#      符号相反),而拼写切换发生在 2025-06-17 —— 那是时代边界,不是 regime 边界
+# 变异⑤曾存活:改 payload 抑制逻辑而测试不红,因为该分支里那个值本来就是 None。
+# 已补"即使算出了数也不得放出"的直接断言。
+python3 -m tests.test_track_record_measures || {
+  echo "  ✗ 战绩度量守卫 — do not push"; exit 1; }
+
 # ── S-227: 部署后验证器必须存在,且能分开四个状态 ────────────────────────────
 # 这个关卡不跑验证器(preflight 离线),只保证它没被删/没被削掉那四个区分。
 # 验证器本体在 push 之后跑:bash scripts/postdeploy_verify.sh
