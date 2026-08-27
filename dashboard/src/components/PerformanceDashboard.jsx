@@ -502,8 +502,48 @@ export default function PerformanceDashboard() {
         openSignals={openCount}
       />
 
+      {/* ── Provenance banner (S-252) ─────────────────────────────────────
+          页面此前直接以 8 个红数字开场:−1.31 Sharpe · −38.30% DD · −26.19% 累计。
+          而那些数是用 95 行算的,其中 83 行的出口价来自被禁价源
+          (coingecko market_chart S-195 / yfinance 已死 S-230),可信的只有 12 行。
+
+          12 个样本上的 Sharpe 是噪声的名字,不是战绩。那个 −26.19% 既不是坏消息
+          也不是好消息 —— 它是一个不可测量的量被渲染成了一个可信的数,而它恰好
+          指向自我贬低,所以从来没有人怀疑过它。
+
+          不藏数字(the graveyard is the asset),但要先说清楚它测在什么上面。 */}
+      {p.measurable && p.measurable.verdict !== "measured" && (
+        <div style={{
+          marginBottom: 16, padding: "12px 16px", borderRadius: 6,
+          border: `1px solid ${C.amber}33`, background: `${C.amber}0a`,
+        }}>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: C.amber,
+                        fontWeight: 700, marginBottom: 6, letterSpacing: 0.4 }}>
+            可测样本 {p.measurable.n_measurable} / {p.measurable.n_total}
+            {" · "}不足以给出结论
+          </div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, lineHeight: 1.6 }}>
+            下方数字用全部 {p.measurable.n_total} 条算出,其中{" "}
+            <strong style={{ color: T.t2 }}>
+              {(p.measurable.source_mix?.barred ?? 0) + (p.measurable.source_mix?.unsourced ?? 0)} 条
+            </strong>{" "}
+            的出口价来自我们自己规则里已禁用的价源,
+            <strong style={{ color: T.t2 }}> {p.measurable.source_mix?.trusted ?? 0} 条</strong> 可信。
+            按 ≥{p.measurable.min_measurable} 个可信样本的门槛,
+            <strong style={{ color: C.amber }}> 我们现在既不能声称有效,也不能声称无效。</strong>
+          </div>
+        </div>
+      )}
+
       {/* ── KPI Strip ── */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
+      {p.measurable && p.measurable.verdict !== "measured" && (
+        <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, marginBottom: 6 }}>
+          以下为<strong style={{ color: T.t2 }}>含被禁价源</strong>的计算结果 ·
+          留作可审计记录 · <strong style={{ color: C.amber }}>不可对外声称</strong>
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24,
+                    opacity: p.measurable && p.measurable.verdict !== "measured" ? 0.72 : 1 }}>
         <KpiCard
           label={isNum(p.alpha_sharpe) ? "Alpha Sharpe" : "Sharpe Ratio"}
           value={loading ? <Skeleton w={50} /> : fmtNum(isNum(p.alpha_sharpe) ? p.alpha_sharpe : p.sharpe, 2)}
