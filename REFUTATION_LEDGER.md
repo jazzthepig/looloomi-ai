@@ -12709,3 +12709,113 @@ HTTP 4xx               ← RLS 拒绝 / 表不存在 / 查询写错
 写了一整天关于这个形状的守卫、文档和台账，然后在新代码的第一个函数里又犯一次。
 结论不是「要更小心」——是**新写的每一个返回 Optional 的读函数，都要在写下它的
 那一刻问一次：调用方需要分开几种失败。**
+
+---
+
+## S-247 · 8 个 SECURITY DEFINER 视图把整个数据层交给了 anon（2026-08-27，FIXED）
+
+Jazz：「现在认真做安全检测」。以下每条都是**切到 anon 角色实跑出来的**，
+不是顾问告警的转述。
+
+### 主发现：RLS 全绿，而 8 个视图从旁边绕了过去
+
+先看好消息，全部实测：67 张表 **RLS 全开**、零 anon 写权限；11 个
+`SECURITY DEFINER` 函数对 anon/authenticated **全部 EXECUTE=false**
+（`PROJECT_STATE_LOG.md:167` 记的「anon 可 RPC 四个 SECURITY DEFINER 函数」已闭合）；
+API key 是 `secrets.token_hex(16)` + SHA-256 存储、按 hash 查而非逐字节比对；
+CORS 非通配且未开 credentials；安全响应头齐全；无字符串拼 SQL、无
+`shell=True`/`eval`/`pickle`、无调用方可控的出站 URL；`.env` 从未进过 git 历史。
+
+**而 `public` 里 8 个视图是 SECURITY DEFINER，它们以视图属主身份执行，RLS 不适用。**
+
+```
+角色 = anon（实跑）              修复前          修复后
+底表 signal_outcomes                  0 行          0 行     ← RLS 一直是对的
+视图 signal_outcomes_unified      7,834 行          0 行
+底表 ohlcv_daily                      0 行          0 行
+视图 ohlcv_daily_canonical      485,352 行     DENIED(42501)
+视图 ohlcv_venue_spread         488,607 行          0 行
+视图 asset_embeddings_latest         59 行          0 行
+视图 daily_macro_regime             455 行          0 行
+```
+
+**负控制**：同一个 anon 角色下，5 个 `security_invoker` 视图
+（`cis_score_latest` / `cis_score_history_7d` / `signal_beta_scorecard` /
+`asset_edge_moments` / `regime_transitions`）**全部返回 0**。
+原因因此被隔离到 `SECURITY DEFINER` 这一个属性上，不是别的授权路径。
+
+`signal_outcomes_unified` 与 `asset_embeddings_latest` 正是 Jazz 说过
+「不可以免费暴露」的挖掘成果；`ohlcv_daily_canonical` 是整份价格面板。
+
+### 一处我必须更正的既有记载
+
+`docs/CODE_CHECK_2026-08-09.md:28` 写着 anon key「打包进前端」。
+**实测 `dashboard/dist/assets/*.js` 里没有任何 JWT。** 硬编码只剩
+`scripts/external_probe.sh` 一处（anon 按设计公开）。暴露面比文档写的窄，
+但 anon key 本就属于"迟早会被拿到"的东西，所以结论不变：**风险完全由 RLS 决定。**
+
+### 修复与它的前置验证
+
+`alter view … set (security_invoker = on)` × 8（迁移 `s247_…`，回滚把 on 改成 off）。
+
+动手前先验了两件事，否则修的就是产品不是漏洞：
+
+1. **前端不直连 Supabase** —— `dashboard/src` 里 0 处 `createClient` / `/rest/v1/`。
+2. **后端持 service_role** —— `cis_scores` 有 RLS 且**零策略**，anon 直读为 0，
+   而线上 API 出得了数，所以它不可能靠 anon 读。
+
+改完复验 `service_role` 视角：8 个视图行数**与修复前逐个相同**
+（7834 / 485352 / 488607 / 59 / 455 …）。**关的是 anon，没碰后端。**
+
+### 次发现：一个安全守卫的名字宣称了它不检查的东西
+
+`tests/test_no_stack_leakage_on_user_surfaces.py` 每次 preflight 都绿。
+实测它的 5 条断言**全部**在扫 `dashboard/src/*.jsx` 里的厂商名/硬件名——
+那是规则 #8 的地盘。**Python API 不在它的扫描范围内。**
+
+于是 `src/api/` 里 **21 处**把异常原文塞进 `HTTPException(detail=…)`，
+其中 `auth.py`（钱包资料路由）与 `cis.py`（内部摄取）是**无截断的 `str(e)`**。
+一个 `httpx.ConnectError` 会把内部主机名与端口原样回给调用方；一次 PostgREST
+错误会回一份列名清单 —— 后者比今早刚修掉的那两个模型名（规则 #8）说得多得多。
+
+**这是 S-244 的形状落在安全面上**：名字宣称了一个属性，而没有任何东西检查它，
+读的人以为「有守卫 = 被检查」。没有改那个文件的名字（属另一条 lane，
+且它自己的 5 条断言各自有效，只是名字取错），另写
+`tests/test_exception_text_never_reaches_the_client.py`。
+两处无截断 `str(e)` 已修，其余 19 处冻结（只能减）。
+
+**顺带抓到自己一个 bug**：`auth.py` 的修复我写了 `_log.warning`，
+而该文件用的是 `_logger` —— **`NameError` 会在 except 块里炸**，
+也就是只在错误路径上炸，而错误路径没人测。`import` 能过、`py_compile` 能过。
+是查了一眼变量名才发现的，不是测出来的。
+
+### 变异测试逼出了守卫本身的一个设计缺陷
+
+第一版基线键是 `路径:行号`。变异 A（在某个 offender 上方插一行）让
+**两条无关的欠账变成"新增"** —— 那不是抓到缺陷，是一个假阳性发生器：
+任何人加一行注释都会让 preflight 红，而修法是"重新生成基线"，
+于是基线变成每次盲刷的东西，棘轮就废了。
+
+> **一个会因无关改动而误报的安全守卫，比没有守卫更糟**：它训练人去绕过它，
+> 而绕过的动作恰好也会把真正的新增一起吞掉。
+
+改成 `路径::detail 表达式` 后：插行位移 → 绿；真的改写一处 detail → 红。
+已知代价写在代码里：同文件内两处**完全相同**的表达式会合并成一个键
+（19 处坍成 18 个键），保守方向。
+
+### 未修，按严重度排序留档
+
+1. **Webhook SSRF（认证后）**：`webhooks.py` 只校验 `startswith("https://")`，
+   不解析域名、不拦私有/环回/链路本地网段。`https` 要求挡住了
+   `169.254.169.254`（元数据是 HTTP），`follow_redirects` 默认 False 也挡住了跳转，
+   但 `last_error` 会存 `f"HTTP {code}: {r.text[:120]}"` ——
+   **把内部服务的响应体前 120 字节写进订阅者读得到的字段**，
+   加上异常原文可探测端口，这是一个带读取预言机的 SSRF，不是纯盲的。
+2. **`INTERNAL_TOKEN` 用 `!=` 比较**（约 10 处）：非恒定时间，应换
+   `hmac.compare_digest`。
+3. **Python 依赖 23/24 行是 `>=`**：Railway push 即部署，等于每次上线都在
+   未审阅地拉新版本。
+4. **npm 14 条（9 高危）**：实测只有 `lodash` 真的进了浏览器 bundle
+   （经 recharts）；`ws` / `axios` / `form-data` / `@solana/web3.js` /
+   `follow-redirects` **均不在 `dist/` 里**，其余是构建期依赖。
+5. **`pip-audit` 未能完成**（沙箱网络超时）—— **未检查 ≠ 干净**，需在 Mac 上补跑。
