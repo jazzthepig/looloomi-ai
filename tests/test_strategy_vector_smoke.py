@@ -82,6 +82,32 @@ def test_schema_construction_and_roundtrip() -> None:
         cost_sensitivity={"0bps": 4.5, "5bps": 3.33, "10bps": 1.9},
         mechanics={"holding_period_days": 5, "turnover_per_q": 80.0/3},
         capacity={"adv_fraction": 0.01},
+        # ── 证据地板 (S-244 修订) ────────────────────────────────────────────
+        # 这个 fixture 停在 2026-07 的 SHIP 定义上。此后 `validate()` **加了九道
+        # 证据门**(cause/OOS/60d 纸面/分 regime 报告/DD 止损/止损入回测/
+        # DSR+n_trials/持仓期+换手成本/可部署规模+美元增值),而这个文件从没被
+        # preflight 运行过 —— 所以「有效的 SHIP 记录应当通过校验」这条断言,
+        # 在地板每抬高一次的时候都变得更红,一次也没有人看见。
+        #
+        # 补齐它不只是让测试变绿:**它证明那道地板是可满足的**,并且把「一条
+        # SHIP 记录必须带哪些证据」写成了一份可执行的清单。
+        base_rate="R46 funding-carry residual; cause: 永续资金费在拥挤度高时对未来收益有负向偏斜",
+        oos_survival=True,
+        paper_trade_days=73,
+        regime_reported=True,
+        max_dd_stop=-0.12,
+        capital_action_on_breach="halve_notional_then_review",
+        backtest_included_stop=True,
+        deflated_sharpe=0.972,
+        n_trials=48,
+        median_holding_days=5.0,
+        turnover_cost_pct_yr=1.4,
+        net_effect_pct_yr=1.9,          # 毛 3.33% − 换手 1.4% = 净 1.9%
+        deployable_notional_usd=1_000_000,
+        notional_basis="max_notional_25bps_usd（ADV 1% 上限,28 名标的的中位深度）",
+        value_added_usd_yr=19_000,
+        trigger_name="funding_crowding_z",
+        trigger_median_run_days=11.0,   # > 5 天持仓期(S-117:触发器要活得比仓位久)
     )
     _check("verdict enum coerced", r.verdict == Verdict.SHIP)
     _check("registered_at auto-set", len(r.registered_at) > 10)
@@ -119,36 +145,81 @@ def test_embedder_dim_and_coverage() -> None:
     _check("coverage_summary has nonzero count",
            cov["dims_nonzero"] >= 2, detail=str(cov))
 
-    # All values in [-1, 1] (since we clamp)
-    all_clamped = all(-1.0 <= v <= 1.0 for v in emb)
-    _check("all dimensions in [-1, 1]", all_clamped)
+    # 未测量的维度是 NaN,不是 0.0 (S-244 修订)。
+    #
+    # 旧断言是 `all(-1.0 <= v <= 1.0 for v in emb)`,而 NaN 的所有比较都为 False,
+    # 所以嵌入器改成「缺失 → NaN」之后这条必然红 —— **它红了一段时间没人知道,
+    # 因为这个文件从来没被 preflight 运行过**。
+    #
+    # 而改动本身是对的,正是 S-180/S-194 那一课:未测量的量不能被渲染成一个
+    # 落在合法区间里的数。一个 0.0 会被余弦当成"测到了,值为零"。
+    # 所以断言改成:每一维要么是 NaN(未测量),要么在 [-1, 1] 内。
+    import math as _math
+    bad = [(i, v) for i, v in enumerate(emb)
+           if not (isinstance(v, float) and _math.isnan(v)) and not (-1.0 <= v <= 1.0)]
+    _check("每一维要么 NaN(未测量)要么在 [-1, 1] 内", not bad, detail=str(bad[:5]))
+
+    # 而且这条稀疏记录的未测量维必须真的是 NaN —— 如果它们是 0.0,上面那条
+    # 也会通过,而语义已经错了。这是负控制,不是重复断言。
+    n_nan = sum(1 for v in emb if isinstance(v, float) and _math.isnan(v))
+    _check("稀疏记录的未测量维是 NaN 而非 0.0",
+           n_nan >= 20, detail=f"NaN 维数={n_nan}/30(两个字段的记录应大面积缺失)")
 
 
 def test_cosine_similarity_properties() -> None:
+    """余弦的数学性质,在 MIN_SHARED_DIMS 之上验证 (S-244 修订)。
+
+    旧版用 3 维玩具向量。`cosine_similarity` 后来加了 `MIN_SHARED_DIMS = 4`
+    的下限 —— 「一两个重叠维给出的自信数字是噪声,不是相似度」—— 于是
+    identity / opposite / scale 三条全部返回 0.0 而红。**下限是对的,玩具向量
+    太短。** 但这个文件从没被运行,所以红了也没人知道。
+
+    改法:向量升到 MIN_SHARED_DIMS 以上(数学性质不变),并**把那个下限本身
+    补一条断言** —— 它是被静默加进来的,此前没有任何守卫钉住它。
+    """
     print("\n[test_cosine_similarity_properties]")
-    a = [1.0, 0.0, 0.0]
-    b = [1.0, 0.0, 0.0]
-    _check("cosine(a, a) == 1.0",
-           abs(cosine_similarity(a, b) - 1.0) < 1e-6)
+    from src.data.vector.strategy_embedder import MIN_SHARED_DIMS
 
-    b = [0.0, 1.0, 0.0]
+    n = MIN_SHARED_DIMS + 1
+    a = [1.0] + [0.0] * (n - 1)
+    _check(f"cosine(a, a) == 1.0（{n} 维,在下限之上）",
+           abs(cosine_similarity(a, list(a)) - 1.0) < 1e-6,
+           detail=str(cosine_similarity(a, list(a))))
+
+    orth = [0.0, 1.0] + [0.0] * (n - 2)
     _check("cosine orthogonal == 0",
-           abs(cosine_similarity(a, b)) < 1e-6)
+           abs(cosine_similarity(a, orth)) < 1e-6)
 
-    b = [-1.0, 0.0, 0.0]
+    opp = [-1.0] + [0.0] * (n - 1)
     _check("cosine opposite == -1",
-           abs(cosine_similarity(a, b) + 1.0) < 1e-6)
+           abs(cosine_similarity(a, opp) + 1.0) < 1e-6,
+           detail=str(cosine_similarity(a, opp)))
 
     # Invariant to scale
-    a2 = [2.0, 0.0, 0.0]
-    b2 = [3.0, 0.0, 0.0]
+    a2 = [2.0] + [0.0] * (n - 1)
+    b2 = [3.0] + [0.0] * (n - 1)
     _check("cosine invariant to scale",
            abs(cosine_similarity(a2, b2) - 1.0) < 1e-6)
 
     # Zero vector → 0.0 (not divide-by-zero)
-    z = [0.0, 0.0, 0.0]
+    z = [0.0] * n
     _check("zero vector returns 0.0",
            cosine_similarity(a, z) == 0.0)
+
+    # ── 下限本身 ────────────────────────────────────────────────────────────
+    # 共享维不足时必须【拒绝】(0.0),而不是给一个自信的 1.0。这条此前没有守卫:
+    # 下限被加进来,把三条老断言变红,而没有一条新断言接住它的语义。
+    short = [1.0] * (MIN_SHARED_DIMS - 1)
+    _check(f"共享维 < {MIN_SHARED_DIMS} 时拒绝(返回 0.0)而非给出自信的 1.0",
+           cosine_similarity(short, list(short)) == 0.0,
+           detail=str(cosine_similarity(short, list(short))))
+
+    # NaN 维要被跳过,而不是污染整条相似度 —— 稀疏记录之间的比较依赖这一点。
+    na = [1.0, float("nan"), 1.0, 1.0, 1.0]
+    nb = [1.0, 0.5, 1.0, 1.0, 1.0]
+    got = cosine_similarity(na, nb)
+    _check("NaN 维被跳过而非污染结果", got == got and abs(got - 1.0) < 1e-6,
+           detail=str(got))
 
 
 def test_find_similar_ranking() -> None:
@@ -342,8 +413,23 @@ def test_step8_router_registered_with_correct_paths() -> None:
         import sys as _s
         if str(ROOT) not in _s.path:
             _s.path.insert(0, str(ROOT))
-        from src.api.main import app
-        paths = sorted({r.path for r in app.routes})
+        # `app.routes` 不是同质的,而且**它不是完整的路由表**。
+        #
+        # 旧版写 `{r.path for r in app.routes}`。实测 2026-08-27:67 个条目里
+        # 29 个是 `_IncludedRouter`(FastAPI 保留 include 上下文的包装器,不把
+        # 子路由拼进 `app.routes`),它们没有 `.path`,于是整个 try 块被一个
+        # AttributeError 吞掉 —— **五条路由断言一条都没跑**,只报了一句
+        # "main app import failed"。一个异常把五个判定压成了一个。
+        #
+        # 而就算改成 `getattr(r, "path", None)` 也只是把红色换成静默:只能看见
+        # 38 条,strategy/* 五条一条都不在里面,因为它们在包装器内部。
+        #
+        # `tests/test_no_route_is_shadowed.py` **已经解决过这个问题** ——
+        # 它的 `_flatten()` 会下降进 `original_router.routes`,docstring 里写着
+        # 「朴素读法只看见 16% 并把它报成通过」。所以这里**复用它**,不写第二个
+        # 展平器:两个展平器会各自漂移,而漂移的那一个会静默地少看几十条路由。
+        from tests.test_no_route_is_shadowed import _all_routes
+        paths = sorted({p for p, _methods in _all_routes()})
         required = {
             "/api/v1/strategy/list",
             "/api/v1/strategy/similar/{record_id}",

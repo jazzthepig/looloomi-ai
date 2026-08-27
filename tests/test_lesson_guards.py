@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ast
 import pathlib
+import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
@@ -117,7 +118,13 @@ _RETURN_PATHS = ("src/data/signals", "src/data/market")
 _s195_seen: set[str] = set()
 for p in py_files(*_RETURN_PATHS):
     body = code_only(p.read_text())
-    if "market_chart" not in body:
+    # ⚠️ 匹配【端点路径】,不匹配这个词 (S-234)。single_source.py 的
+    # BARRED_RETURN_SOURCES 里有一条【说明】为什么 market_chart 不能用 —— 那是
+    # 一个字符串字面量,不是注释,所以 code_only 剥不掉,而它把守卫触发了。
+    # 「解释某个 bug 的文字触发守卫」正是 tests/_source.py 记的那个失败,
+    # 这次以数据结构的形式出现。要守的性质是【到达这个端点】,不是提到它。
+    if not re.search(r"/coins/[^\s\"']*/market_chart|market_chart/range\?|"
+                     r"coingecko_base\}[^\s]*market_chart", body):
         continue
     rel = str(p.relative_to(ROOT))
     if rel in _S195_KNOWN:
@@ -309,6 +316,44 @@ if _vh2 is not None:
 if '"incoherent"' not in _vh_src.split("worst = \"flowing\"", 1)[-1][:400]:
     fail("S-232: incoherent 没有进 overall 判定 —— 一个不影响总判的状态位等于注释")
 
+# ── S-233 · vec_full 是位置数组,不是字典 ────────────────────────────────────
+# similar_market_states() 用 jsonb_array_elements_text(vec_full) with ordinality
+# 按【下标】配对两天的向量。所以这一列是有序数组,顺序是 DIMS。
+# 而 to_vec_full() 返回 dict —— build_rows_for_upsert 原本把 dict 直接塞进这一列,
+# 没人发现是因为这个函数没有调用者。第一个用它的写者会写进 24 个字典,
+# 邻居查询会降级而不报错。
+_ms_src = (SRC / "data/vector/market_state.py").read_text()
+_ms_tree = ast.parse(_ms_src)
+_brfu = next((n for n in ast.walk(_ms_tree) if isinstance(n, ast.FunctionDef)
+              and n.name == "build_rows_for_upsert"), None)
+if _brfu is None:
+    fail("S-233: build_rows_for_upsert 不见了")
+else:
+    _called = {getattr(n.func, "attr", getattr(n.func, "id", None))
+               for n in ast.walk(_brfu) if isinstance(n, ast.Call)}
+    if "to_vec_full" in _called:
+        fail("S-233: build_rows_for_upsert 仍在用 to_vec_full()(dict)—— RPC 按下标"
+             "读这一列,字典会让邻居查询静默降级")
+    if "to_vec_full_array" not in _called:
+        fail("S-233: build_rows_for_upsert 没有用位置数组序列化 vec_full")
+    # zscore_pass 必须被写出去,否则 S-232 的一致性检查永远只看到一个值
+    _keys3: set[str] = set()
+    for _d3 in ast.walk(_brfu):
+        if isinstance(_d3, ast.Dict):
+            _keys3 |= {k.value for k in _d3.keys if isinstance(k, ast.Constant)}
+    for _need3 in ("vec_full", "zscore_pass", "measured_dims"):
+        if _need3 not in _keys3:
+            fail(f"S-233: build_rows_for_upsert 的 payload 缺 {_need3}")
+
+# 运行时:数组、24 长、null 保留
+from src.data.vector.market_state import (                        # noqa: E402
+    DIMS as _DIMS, StateVector as _SV, build_rows_for_upsert as _brf)
+_row = _brf([_SV(d="2026-01-01", values={"cis_mean": 0.5})], zscore_pass="p")[0]
+if not isinstance(_row["vec_full"], list) or len(_row["vec_full"]) != len(_DIMS):
+    fail("S-233: vec_full 不是长度 24 的位置数组")
+elif _row["vec_full"][_DIMS.index("cis_skew")] is not None:
+    fail("S-233: 未测量的维度被填了值 —— null 必须保留 (I1)")
+
 _lh = code_only((SRC / "api/loop_health.py").read_text())
 if "vdb-health" not in _lh:
     fail("S-216: loop_health does not probe the vector substrate — the instrument "
@@ -374,5 +419,5 @@ if _fails:
     for f in _fails:
         print("   ·", f)
     sys.exit(1)
-print(f"  ✓ lesson guards: S-119/194/195/207/214/215/216/225/227/228/230/232 enforced "
+print(f"  ✓ lesson guards: S-119/194/195/207/214/215/216/225/227/228/230/232/233 enforced "
       f"({len(_declared_stores)} vdb stores watched)")
