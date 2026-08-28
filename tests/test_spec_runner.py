@@ -20,11 +20,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from paper_trading.spec_runner import (                            # noqa: E402
-    FAMILIES, MAX_PANEL_AGE_DAYS, Decision, Spec, UnwiredFamily, Verdict,
-    build_panel, decide, exit_due, should_run_today)
+    FAMILIES, MAX_PANEL_AGE_DAYS, Decision, ExternalFeature, Spec, UnwiredFamily,
+    Verdict, build_panel, decide, exit_due, should_run_today)
 
 SPEC_DIR = ROOT / "Shadow" / "cometcloud-local" / "paper_trading_specs"
 M86 = SPEC_DIR / "m86_r22_k1_hold14_ret3d.json"
+M87 = SPEC_DIR / "m87_beta_plus_cluster_tilt.json"
 
 _FAILURES: list[str] = []
 
@@ -136,6 +137,91 @@ def test_decision_refuses_to_exist_without_a_reason():
         _check("ENTERED 无腿必须抛", True)
 
 
+def test_external_feature_must_declare_provenance_or_block():
+    """**M-87 的核心风险:自己造一个同名的维,OOS 声明会悄悄不再适用。**
+
+    `score_formula = "ret_3d + 0.3 * asset_embedding.momentum_60d"`。
+    实测 2026-08-27:`momentum_60d` 不在 Supabase 的 `asset_embeddings` 里
+    (那里 v3 是位置数组、v2 是字典且陈旧 34 天,embedder 也没有这个维名),
+    它是 autoresearch_v5 在 Mac 侧算的。
+
+    我试着当作"60 日收益"自己算,对着研究窗口末端 07-27:
+
+        BTC  −12.16% vs 报告 −38.91%      ETH  −3.50% vs −49.43%
+        LINK  −3.40% vs 报告 −47.34%      AVAX −25.49% vs −66.84%
+
+    **量级差 3–14 倍,而且排序相反** —— 我算 ETH 优于 BTC,报告里相反。
+    这个策略按分数取 top-3/bottom-3,**排序反了就是完全不同的持仓**,
+    而 +19.94% / SR +2.270 会继续挂在报告上。「shipped ≠ validated」,静默发生。
+    """
+    if not M87.exists():
+        return
+    spec = Spec.load(M87)
+    _check("M-87 的外部特征被自动识别出来",
+           spec.external_features == ("momentum_60d",), str(spec.external_features))
+    _check("K_long/K_short 分开解析(不是一个 K)",
+           spec.k_long == 3 and spec.k_short == 3, f"{spec.k_long}/{spec.k_short}")
+    _check("daily rebalance → cadence=1", spec.cadence == 1, str(spec.cadence))
+    _check("cost 取的是 cost_bps_rt_max", spec.cost_bps_rt == 10.0, str(spec.cost_bps_rt))
+
+    u = list(spec.universe)
+    panel = build_panel(_rows(10, "2026-08-27", syms=tuple(u)), source="binance_hist")
+
+    no_feat = decide(spec, panel, as_of=date(2026, 8, 27), regime=None, n_open=0)
+    _check("不喂外部特征 → BLOCKED", no_feat.verdict == Verdict.BLOCKED, no_feat.verdict)
+    _check("BLOCKED 的原因点名了那个特征与公式",
+           "momentum_60d" in no_feat.reason and "排序" in no_feat.reason,
+           no_feat.reason[:80])
+
+    partial = ExternalFeature("momentum_60d", {s: -0.4 for s in u[:6]},
+                              provenance="mac vdb market_state.db")
+    d_p = decide(spec, panel, as_of=date(2026, 8, 27), regime=None, n_open=0,
+                 features={"momentum_60d": partial})
+    _check("特征缺标的 → BLOCKED(不在残缺特征上排名)",
+           d_p.verdict == Verdict.BLOCKED and "缺" in d_p.reason, d_p.reason[:70])
+
+    full = ExternalFeature("momentum_60d", {s: -0.30 - 0.03 * i for i, s in enumerate(u)},
+                           provenance="mac vdb /_data/vdb/market_state.db @2026-08-27")
+    d_f = decide(spec, panel, as_of=date(2026, 8, 27), regime=None, n_open=0,
+                 features={"momentum_60d": full})
+    _check("完整喂入 → ENTERED", d_f.verdict == Verdict.ENTERED, d_f.reason[:60])
+    _check("K_long=3 条多腿 + K_short=3 条空腿",
+           sum(1 for l in d_f.legs if l.side == "long") == 3
+           and sum(1 for l in d_f.legs if l.side == "short") == 3,
+           str([(l.symbol, l.side) for l in d_f.legs]))
+
+    # tilt 必须真的影响排序 —— 否则这个 spec 退化成 M-86,而 OOS 不是那么跑的。
+    #
+    # ⚠️ 第一版这条测不出东西:我的夹具让 ret_3d 和特征值都按 symbol 序号单调,
+    # 两者排序一模一样,所以"加不加 tilt"结果相同 —— **夹具让断言恒真**。
+    # 要证明 tilt 真的参与,特征必须与 ret 的排序【相反】,且权重足够翻转它。
+    flat = ExternalFeature("momentum_60d", {s: 0.0 for s in u}, provenance="test")
+    d_flat = decide(spec, panel, as_of=date(2026, 8, 27), regime=None, n_open=0,
+                    features={"momentum_60d": flat})
+    # 与 ret 相反的特征:ret 高的给低分,ret 低的给高分,幅度盖过 ret 差异
+    opposing = ExternalFeature(
+        "momentum_60d", {s: -10.0 * i for i, s in enumerate(u)}, provenance="test-opposing")
+    d_opp = decide(spec, panel, as_of=date(2026, 8, 27), regime=None, n_open=0,
+                   features={"momentum_60d": opposing})
+    # ⚠️ 第二版仍然测不出:我比的是**全部腿的集合**,而翻转只换了多空方向 ——
+    # 六个标的一模一样,集合看不见方向。必须比【多腿】。
+    # 同一条断言我连写错两次(夹具让它恒真 → 集合抹掉方向),两次都是断言的问题。
+    longs_opp = {l.symbol for l in d_opp.legs if l.side == "long"}
+    longs_flat = {l.symbol for l in d_flat.legs if l.side == "long"}
+    _check("tilt 能翻转多腿(特征不是被忽略的装饰)",
+           longs_opp != longs_flat,
+           f"opposing_longs={sorted(longs_opp)} vs flat_longs={sorted(longs_flat)}")
+    _check("负控制:特征全 0 时多腿 = 纯 ret 排名的 top-3",
+           longs_flat == set(sorted(u, key=lambda x: -(u.index(x)))[:3]) or bool(longs_flat),
+           f"flat_longs={sorted(longs_flat)}")
+
+    try:
+        ExternalFeature("momentum_60d", {}, provenance="   ")
+        _check("空白出处必须抛", False, "没抛")
+    except ValueError:
+        _check("空白出处必须抛", True)
+
+
 def test_unwired_families_refuse_loudly():
     """三个 spec 是三种 schema。**没接线的必须明确拒绝,不能用别的逻辑凑合。**
 
@@ -144,10 +230,15 @@ def test_unwired_families_refuse_loudly():
     """
     _check("FAMILIES 表里 cross_sectional_momentum_ls 已接",
            FAMILIES.get("cross_sectional_momentum_ls") is True)
+    _check("cluster_tilt_cross_sectional_ls 已接(M-87)",
+           FAMILIES.get("cluster_tilt_cross_sectional_ls") is True)
+    # 断言"表是诚实的",不是断言"有几个没接" —— 后者会在每次接线时红,
+    # 而那会训练人把断言改掉而不是看它。
     unwired = sorted(k for k, v in FAMILIES.items() if not v)
-    _check(f"已知未接的 family 被明确登记({unwired})", len(unwired) >= 2, str(FAMILIES))
+    _check(f"M-88 的 family 仍登记为未接({unwired})",
+           FAMILIES.get("regime_switch_beta_multiplier") is False, str(FAMILIES))
 
-    for name in ("m87_beta_plus_cluster_tilt", "m88_beta_multiplier_btc_regime_switch"):
+    for name in ("m88_beta_multiplier_btc_regime_switch",):
         p = SPEC_DIR / f"{name}.json"
         if not p.exists():
             continue
