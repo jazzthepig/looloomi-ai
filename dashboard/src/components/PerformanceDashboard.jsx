@@ -535,15 +535,19 @@ export default function PerformanceDashboard() {
         </div>
       )}
 
-      {/* ── KPI Strip ── */}
-      {p.measurable && p.measurable.verdict !== "measured" && (
-        <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, marginBottom: 6 }}>
-          以下为<strong style={{ color: T.t2 }}>含被禁价源</strong>的计算结果 ·
-          留作可审计记录 · <strong style={{ color: C.amber }}>不可对外声称</strong>
-        </div>
-      )}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24,
-                    opacity: p.measurable && p.measurable.verdict !== "measured" ? 0.72 : 1 }}>
+      {/* ── KPI Strip ──
+          Jazz 2026-08-27:「数据和矢量还有基建还不全,跑得不好的可以先不展示」。
+
+          这条是对的,而且比"展示 + 标注"干净:一个我们不能背书的数字,
+          降到 0.72 透明度仍然是在展示它 —— 读者会读到那个数,然后才读到标注。
+          **不发布不可测量的量,和隐藏亏损,是两件事。**
+          前者是纪律(不能声称就不声称),后者是粉饰。而基建补齐之前,
+          这块面板测的不是策略,是价源的死活。
+
+          所以:可测样本不足 → 整块 KPI 与曲线【不渲染】,只留状态。
+          可测样本够了 → 正常展示,无论数字好看不好看。判据是【可测】,不是【好看】。 */}
+      {!(p.measurable && p.measurable.verdict !== "measured") && (
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
         <KpiCard
           label={isNum(p.alpha_sharpe) ? "Alpha Sharpe" : "Sharpe Ratio"}
           value={loading ? <Skeleton w={50} /> : fmtNum(isNum(p.alpha_sharpe) ? p.alpha_sharpe : p.sharpe, 2)}
@@ -601,9 +605,11 @@ export default function PerformanceDashboard() {
           tooltip="Simulated $100k portfolio tracking cumulative signal returns."
         />
       </div>
+      )}
 
       {/* ── 30d Outcome Summary (after first signals age out) ── */}
-      {(p.outcome_30d_win_rate != null || p.outcome_30d_count > 0) && (
+      {!(p.measurable && p.measurable.verdict !== "measured")
+        && (p.outcome_30d_win_rate != null || p.outcome_30d_count > 0) && (
         <div style={{
           display: "flex", gap: 10, marginBottom: 20,
           background: C.card, border: `1px solid ${C.border}`,
@@ -636,6 +642,29 @@ export default function PerformanceDashboard() {
         </div>
       )}
 
+      {/* ── 基建未齐时,曲线与分页一并不渲染 ──────────────────────────────────
+          曲线是这块面板上最有说服力也最容易被误读的东西。83/95 行的出口价来自
+          被禁价源、加密价源全部停写(S-251)时,那条线画的是价源的死活,不是策略。
+          **不能背书的曲线,不展示。** 基建补齐、可测样本 ≥ 门槛后自动回来。 */}
+      {p.measurable && p.measurable.verdict !== "measured" ? (
+        <div style={{
+          padding: "20px 24px", borderRadius: 8,
+          border: `1px dashed ${C.border}`, background: C.card,
+          fontFamily: FONTS.mono, fontSize: 10, color: T.t3, lineHeight: 1.8,
+        }}>
+          <div style={{ color: T.t2, fontWeight: 700, marginBottom: 8 }}>
+            曲线与明细在基建补齐后展示
+          </div>
+          可测样本 {p.measurable.n_measurable}/{p.measurable.n_total} ·
+          门槛 ≥{p.measurable.min_measurable}。
+          价源层正在重建中,当前多数出口价来自已停用的源 ——
+          在那之前画出来的曲线测的是价源的死活,不是策略。
+          <div style={{ marginTop: 8, color: T.t3 }}>
+            四层策略账本(①②③④)的 OOS 验证结果不在此页 —— 它们各自有独立记录。
+          </div>
+        </div>
+      ) : (
+      <>
       {/* ── Tab bar ── */}
       <div style={{
         display: "flex", gap: 0, marginBottom: 20,
@@ -827,6 +856,8 @@ export default function PerformanceDashboard() {
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
 
       {/* Footer */}
