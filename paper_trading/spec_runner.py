@@ -87,13 +87,55 @@ MIN_UNIVERSE_FOR_RANK = 3
 #: 这里是它的反面 —— **没写的必须说出来自己没写。**
 FAMILIES: dict[str, bool] = {
     "cross_sectional_momentum_ls": True,        # M-86:本模块实现
-    "cluster_tilt_cross_sectional_ls": False,   # M-87:K_long/K_short + score_formula,待接
+    "cluster_tilt_cross_sectional_ls": True,    # M-87:实现于此;外部特征须带出处
     "regime_switch_beta_multiplier": False,     # M-88:regime 开关切两个子策略,机制不同
 }
 
 
 class UnwiredFamily(NotImplementedError):
     """这个 spec 的机制还没有实现 —— 明确拒绝,不要用别的 family 的逻辑凑合。"""
+
+
+@dataclass(frozen=True)
+class ExternalFeature:
+    """spec 的打分公式里引用的、**不由本模块计算**的特征 + 它的出处。
+
+    ## 为什么这必须带出处,而不是我自己算一个
+
+    M-87 的 `score_formula = "ret_3d + 0.3 * asset_embedding.momentum_60d"`。
+    `momentum_60d` **不在 Supabase 的 `asset_embeddings` 里** —— 那张表的
+    `vec_full` 是位置数组(v3)或字典(v2,已陈旧 34 天),而 embedder 的维度里
+    根本没有这个名字。它是 autoresearch_v5 在 Mac 侧算的资产特征,
+    spec 的 `data_source.vdb_path` 指的就是那个 sqlite。
+
+    我试过把它当作"60 日收益"自己算。实测 2026-08-27,对着研究窗口末端 07-27:
+
+        symbol   60 日收益(我算)   报告的 momentum_60d
+        BTC        −12.16%            −38.91%
+        ETH         −3.50%            −49.43%
+        LINK        −3.40%            −47.34%
+        AVAX       −25.49%            −66.84%
+
+    **不只是量级差 3–14 倍,排序是反的** —— 我算 ETH 优于 BTC,报告里 ETH 劣于 BTC。
+    而这个策略就是按分数取 top-3/bottom-3,**排序反了就是完全不同的持仓**。
+
+    > **自己定义这一维,跑出来的就不是那个被 OOS 验证过 +19.94% / SR +2.270 的 M-87。**
+
+    那个数字会继续挂在报告上,而实际在跑的是另一个策略 —— 「shipped spec ≠
+    validated spec」,并且**静默发生**。所以:特征必须显式喂进来并声明出处,
+    拿不到就 BLOCK。宁可不跑,不可跑一个名字对、内容不对的策略。
+    """
+
+    name: str
+    values: Mapping[str, float]
+    provenance: str          # 这些数从哪来 —— 空字符串不接受
+    as_of: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if not self.provenance.strip():
+            raise ValueError(
+                f"外部特征 '{self.name}' 必须声明出处 —— 一个说不出自己从哪来的"
+                f"打分项,会让 OOS 声明悄悄地不再适用于正在跑的东西")
 
 
 class Verdict:
@@ -166,6 +208,12 @@ class Spec:
     raw: Mapping[str, Any] = field(default_factory=dict)
 
     family: str = "cross_sectional_momentum_ls"
+    #: cluster_tilt 专用。cross_sectional 家族里 k_long == k_short == k。
+    k_long: int = 0
+    k_short: int = 0
+    tilt_weight: float = 0.0
+    #: 打分公式里引用的外部特征名(本模块不计算,必须带出处喂进来)。
+    external_features: tuple[str, ...] = ()
 
     @classmethod
     def load(cls, path: str | Path) -> "Spec":
@@ -196,6 +244,35 @@ class Spec:
                 raise ValueError(f"spec 缺 {where}.{key} —— 不填默认值 (S-122)")
             return container[key]
 
+        if fam == "cluster_tilt_cross_sectional_ls":
+            # M-87 的 schema 与 M-86 不同 —— 逐字段映射,不猜。
+            formula = str(need(p, "score_formula", "parameters"))
+            # 公式里 `asset_embedding.X` 的 X 就是外部特征名。
+            import re as _re
+            ext = tuple(sorted(set(_re.findall(r"asset_embedding\.([a-z_0-9]+)", formula))))
+            kl, ks = int(need(p, "K_long", "parameters")), int(need(p, "K_short", "parameters"))
+            return cls(
+                name=need(raw, "spec_name", "spec"),
+                universe=tuple(need(raw, "universe", "spec")),
+                rank_by=formula,
+                n_lookback=int(need(p, "lookback_ret_n", "parameters")),
+                hold=0,                       # daily rebalance:没有固定持仓期
+                cadence=1,                    # rebalance="daily"
+                k=max(kl, ks),
+                k_long=kl, k_short=ks,
+                tilt_weight=float(need(p, "tilt_weight", "parameters")),
+                external_features=ext,
+                weight_per_leg=float(need(p, "weight_per_leg", "parameters")),
+                cost_bps_rt=float(need(p, "cost_bps_rt_max", "parameters")),
+                dd_stop_pct=float(need(p, "dd_stop_pct", "parameters")),
+                max_open_trades=int(need(p, "max_open_trades", "parameters")),
+                skip_regimes=frozenset(str(r).upper() for r in (p.get("skip_regimes") or [])),
+                source=str(need(ds, "primary", "data_source")),
+                family=fam,
+                dry_run=bool(ex.get("dry_run", True)),
+                raw=raw,
+            )
+
         return cls(
             name=need(raw, "spec_name", "spec"),
             universe=tuple(need(raw, "universe", "spec")),
@@ -204,6 +281,8 @@ class Spec:
             hold=int(need(p, "hold", "parameters")),
             cadence=int(need(p, "cadence", "parameters")),
             k=int(need(p, "K", "parameters")),
+            k_long=int(need(p, "K", "parameters")),
+            k_short=int(need(p, "K", "parameters")),
             weight_per_leg=float(need(p, "weight_per_leg", "parameters")),
             cost_bps_rt=float(need(p, "cost_bps_rt", "parameters")),
             dd_stop_pct=float(need(p, "dd_stop_pct", "parameters")),
@@ -265,8 +344,9 @@ def _return_over(closes: Mapping[str, float], upto: str, n: int) -> Optional[flo
 
 # ── 决策 ──────────────────────────────────────────────────────────────────────
 
-def decide(spec: Spec, panel: Panel, *, as_of: date,
-           regime: Optional[str], n_open: int) -> Decision:
+def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
+           n_open: int,
+           features: Optional[Mapping[str, "ExternalFeature"]] = None) -> Decision:
     """一天的判定。**不写任何东西** —— 纯函数,便于重放与测试。
 
     顺序有意为之:**先判我们能不能算(BLOCKED),再判规则说什么(SKIPPED)。**
@@ -312,6 +392,24 @@ def decide(spec: Spec, panel: Panel, *, as_of: date,
                         reason=f"已有 {n_open} 笔未平仓 >= max_open_trades "
                                f"{spec.max_open_trades}")
 
+    # ③ 外部特征:spec 引用了本模块不计算的维,必须带出处喂进来 ─────────────
+    feats = dict(features or {})
+    for fname in spec.external_features:
+        f = feats.get(fname)
+        if f is None:
+            return Decision(**base, verdict=Verdict.BLOCKED,
+                            reason=f"打分公式引用了外部特征 '{fname}',而它没有被提供。"
+                                   f"公式:{spec.rank_by}。"
+                                   f"自己造一个同名的维会让 OOS 声明悄悄不再适用于"
+                                   f"正在跑的东西 —— 实测该维与 60 日收益【排序相反】。"
+                                   f"要跑这个 spec,必须由 Mac 侧 VDB 提供并声明出处。")
+        missing_f = [s for s in spec.universe if s not in f.values]
+        if missing_f:
+            return Decision(**base, verdict=Verdict.BLOCKED,
+                            reason=f"外部特征 '{fname}'(出处:{f.provenance})缺 "
+                                   f"{len(missing_f)}/{len(spec.universe)} 个标的:"
+                                   f"{missing_f} —— 在残缺特征上排名不是这个 spec")
+
     rets = {s: _return_over(panel.closes[s], d, spec.n_lookback) for s in spec.universe}
     usable = {s: v for s, v in rets.items() if v is not None}
     if len(usable) < MIN_UNIVERSE_FOR_RANK:
@@ -320,8 +418,16 @@ def decide(spec: Spec, panel: Panel, *, as_of: date,
                                f"{spec.n_lookback}d 收益(需要 >= {MIN_UNIVERSE_FOR_RANK})"
                                f" —— 算不出名次不等于名次是平的")
 
-    ranked = sorted(usable, key=lambda s: usable[s], reverse=True)
-    longs, shorts = ranked[: spec.k], ranked[-spec.k:]
+    # 打分。cross_sectional 家族就是 ret_n 本身;cluster_tilt 加外部特征的 tilt。
+    if spec.family == "cluster_tilt_cross_sectional_ls" and spec.external_features:
+        fname = spec.external_features[0]
+        fv = feats[fname].values
+        score = {s: usable[s] + spec.tilt_weight * float(fv[s]) for s in usable}
+    else:
+        score = dict(usable)
+
+    ranked = sorted(score, key=lambda s: score[s], reverse=True)
+    longs, shorts = ranked[: spec.k_long], ranked[-spec.k_short:]
     if set(longs) & set(shorts):
         return Decision(**base, verdict=Verdict.SKIPPED,
                         reason=f"K={spec.k} 在 {len(ranked)} 个标的上让多空腿重叠")
