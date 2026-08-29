@@ -23,10 +23,14 @@ import logging
 from datetime import datetime, timezone, timedelta, date
 
 import httpx
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Query
 
 _logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+#: 内部端点的令牌 —— 与其他 /internal/ 路由同源。
+_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 _SB_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 _SB_KEY = os.environ.get("SUPABASE_KEY", "") or os.environ.get("SUPABASE_SERVICE_KEY", "")
@@ -396,3 +400,47 @@ async def get_ohlcv(symbol: str, days: int = Query(90, ge=1, le=730)):
         raise HTTPException(status_code=500, detail=str(e)[:200])
 
 
+
+
+# ── S-258: CoinGecko Pro 深盘回填 ─────────────────────────────────────────────
+
+@router.post("/internal/backfill-cg-pro")
+async def backfill_cg_pro(
+    dry_run: bool = Query(default=True, description="默认 dry_run —— 写入要显式要求"),
+    days: int = Query(default=1825, ge=90, le=3650, description="回看天数,默认 5 年"),
+    x_internal_token: str = Header(None),
+):
+    """把 CoinGecko Pro 的真 K 线落进 `ohlcv_daily`,标为 `coingecko_pro_ohlc`。
+
+    **为什么需要这个端点而不是 Mac 侧直写**:§NO-DIRECT-SUPABASE —— 写入走
+    持 service_role 的 Railway。Mac 的 `.env` 是 anon key,RLS 会拒,
+    而脚本会打印 "push complete" 覆盖一次从未发生的写入(S-166/S-168)。
+
+    **为什么现在做**(S-251 实测):binance_hist 最近 3 天 0/212 标的、
+    hyperliquid 0/177 —— **加密侧没有任何可用于收益的价源在更新**。
+    而 M-91 量过 binance_hist 天花板是 343 天,M-92 用 CG Pro 拿到 1811 天,
+    并因此把 ① 从「结构上不可行」翻成「regime-conditional」。
+
+    `dry_run` **默认 True**:一个默认写库的回填端点,按错一次就是几万行。
+    """
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    from datetime import date as _date
+    from datetime import timedelta as _td
+
+    from src.data.market.cg_pro_backfill import backfill
+
+    # symbol → coingecko coin_id。**显式表,不猜** —— 猜错一个映射会把另一个币
+    # 的价格写进这个标的的历史,而那条曲线看起来完全正常。
+    # 先覆盖 M-87 的 10 个宇宙成员(② beta+ 的标的),其余后续按需扩。
+    pairs = [
+        ("BTC", "bitcoin"), ("ETH", "ethereum"), ("SOL", "solana"),
+        ("BNB", "binancecoin"), ("XRP", "ripple"), ("ADA", "cardano"),
+        ("DOGE", "dogecoin"), ("AVAX", "avalanche-2"), ("LINK", "chainlink"),
+        ("DOT", "polkadot"),
+    ]
+    end = _date.today()
+    res = await backfill(pairs, start=end - _td(days=days), end=end,
+                         asset_class="L1", dry_run=dry_run)
+    return res.as_payload()

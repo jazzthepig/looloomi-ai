@@ -448,6 +448,25 @@ M-89/M-90 是诚实的 kill,各挡掉一次坏升级;S-111 的 25.1pp/yr 幸存�
    **🔴 P0 给 Jazz/Minimax:采集为什么在 07-28 和 08-09 两次掉档。这不是工程活。
    在它恢复之前,`/quant` 上任何加密数字都还是噪声上的数字。**
 
+8. **S-258:价源层切 CG Pro —— 一件事解三个堵点。已建,待 Mac 侧跑。**
+
+   `get_cg_ohlc_range()` 早就存在且被 `/api/v1/ohlcv` 调用,而 `ohlcv_daily` 里
+   `coingecko_pro_ohlc` **0 行** —— 能力接通、被读过、从未被持久化。
+
+   ```
+   binance_hist   天花板 343 天(M-91)· 当前 0/212 标的(S-251)
+   hyperliquid    当前 0/177 标的
+   CG Pro         1811 天 × 10 标的(M-92)· 端点已付费两年,调用 0 次
+   ```
+
+   新端点 `POST /internal/backfill-cg-pro`(token 门控,**dry_run 默认 True**)。
+   四个查实才敢写的点:唯一键含 `source`(少写会覆盖 48,853 行旧数据,不可逆)·
+   标签按端点分不按 vendor 分 · 分块 175 天且重叠一天(接缝丢的 bar 不报错)·
+   volume 留 NULL 不跨源拼。
+
+   **落地**:`dry_run=true` 看 per-symbol 覆盖窗口 → 确认后 `dry_run=false`。
+   跑完之后 S-245 的写者可以从 343 天换到 1811 天重跑,M-86/M-87 的面板解除 BLOCKED。
+
 **分工(Jazz 2026-08-27)**:价源回填我做;**退出规则对比发 Minimax-C**。
 
 **下一步**:在 Mac 上 `set -a; source .env; set +a` 后重跑 dry-run,先看
