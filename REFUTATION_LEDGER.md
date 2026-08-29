@@ -13352,3 +13352,64 @@ Jazz：「我们现在数据和矢量还有基建还不全，如果跑得不好�
 所以：`measurable.verdict != "measured"` 时，KPI 条 / 30d 摘要 / 曲线 / 分页
 **整块不渲染**，只留一句状态（可测 n/N · 门槛 · 价源重建中）。
 基建补齐后自动回来，不需要人去改代码。
+
+---
+
+## S-258 · Pro 端点接通了两年，没有任何东西把它写下来（2026-08-27，FIXED）
+
+### 缺的不是能力
+
+`get_cg_ohlc_range()` 早就在 `data_layer.py` 里，`/api/v1/ohlcv` 也在调它 ——
+S-195 那条修复（「用错端点四个月」）把问题纠正在**读取路径**上。
+
+实测 2026-08-27，Supabase `ohlcv_daily`：
+
+```
+coingecko            48,853 行   2015-07-14 → 2026-08-28   ← market_chart,S-195 禁用
+coingecko_pro_ohlc          0 行                            ← 一行都没有
+```
+
+**能力接通、被读过、从未被持久化。** S-214 的形状第 N 次出现。
+
+### 为什么现在是紧的
+
+S-251 实测：binance_hist 最近 3 天 **0/212 标的**、hyperliquid **0/177** ——
+**加密侧没有任何可用于收益的价源在更新**。而：
+
+- M-91 量过 binance_hist 的天花板：**343 天**（9/10 标的）
+- M-92 用 CG Pro 拿到 **1811 天 × 10 标的**，并因此把 M-90 从 REFUTED 翻成
+  PARTIAL SURVIVE —— **① 是 regime-conditional，不是结构上不可行**
+
+一件事解三个堵点：S-245 的写者（现在只能拿 343 天）· M-86/M-87 的 paper 面板
+（现在 BLOCKED）· signal_journal 的价源回填（83/95 行出口价被禁）。
+
+### 四个必须查实才敢写的点
+
+**① 唯一键。** `UNIQUE (symbol, trade_date, source)` —— 实测确认。
+`on_conflict` **少写 `source`**，新行就会按 `(symbol, trade_date)` 撞上那
+48,853 行并覆盖它们。**不可逆**：删掉它们会让「我们用错端点四个月」
+从数据里消失，而那批行本身就是 S-195 的证据。
+
+**② 标签按端点分不按 vendor 分**（S-234）。`coingecko` 在 BARRED 里，
+`coingecko_pro_ohlc` 在 TRUSTED 里。标错就是把被禁的数据洗成可信的。
+
+**③ 分块 175 天，相邻窗口重叠一天。** Pro 上限 180（M-92 实测）。
+不重叠会在每个接缝丢一根 bar —— **丢的那根不会报错**，只会让某个 60 日窗口
+变成 59 根。唯一键吃掉重复，重叠的代价是零。
+
+**④ `/ohlc/range` 不返回成交量 → volume 留 NULL。**
+从别的端点拼一个量进来就是跨源（S-230），而拼进来的量看不出是拼的。
+**缺的量是 NULL 不是 0** —— 一个 0 会让流动性维度读到「没人交易」。
+
+### 写入路径
+
+新端点 `POST /internal/backfill-cg-pro`（token 门控，**`dry_run` 默认 True** ——
+一个默认写库的回填端点按错一次就是几万行）。走 Railway 是因为
+§NO-DIRECT-SUPABASE：Mac 的 `.env` 是 anon key，RLS 会拒，而脚本会打印
+"push complete" 覆盖一次从未发生的写入（S-166/S-168）。
+
+symbol→coin_id 是**显式表，不猜**：猜错一个映射会把另一个币的价格写进这个标的
+的历史，而那条曲线看起来完全正常，没有任何下游检查能发现。
+
+**未验**：沙箱无任意出网，端点未在真实 API 下跑过。落地顺序：Mac 侧
+`dry_run=true` 看 per-symbol 覆盖窗口 → 确认后 `dry_run=false`。
