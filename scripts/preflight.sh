@@ -1065,6 +1065,17 @@ python3 -m tests.test_score_never_contradicts_grade || {
 python3 -m tests.test_spec_runner || {
   echo "  ✗ paper-trade 执行器守卫 — do not push"; exit 1; }
 
+# ── S-258: CG Pro 深盘落库 —— 不覆盖旧数据,不伪造成交量 ─────────────────────
+# get_cg_ohlc_range() 早就存在且被 /api/v1/ohlcv 调用,而 ohlcv_daily 里
+# coingecko_pro_ohlc 是 0 行 —— 能力接通、被读过、从未被持久化(S-214 形状)。
+# 现在紧:binance_hist 0/212、hyperliquid 0/177(S-251),加密侧无可用价源;
+# 而 M-91 量过 binance_hist 天花板 343 天,M-92 用 CG Pro 拿到 1811 天。
+# 最要命的一条:ohlcv_daily 唯一键是 (symbol, trade_date, source),
+# on_conflict 少写 source 会让新行覆盖 48,853 行旧数据 —— 不可逆,
+# 而那批行本身就是 S-195「用错端点四个月」的证据。
+python3 -m tests.test_cg_pro_backfill || {
+  echo "  ✗ CG Pro 回填守卫 — do not push"; exit 1; }
+
 # ── S-227: 部署后验证器必须存在,且能分开四个状态 ────────────────────────────
 # 这个关卡不跑验证器(preflight 离线),只保证它没被删/没被削掉那四个区分。
 # 验证器本体在 push 之后跑:bash scripts/postdeploy_verify.sh
