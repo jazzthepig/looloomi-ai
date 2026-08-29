@@ -179,6 +179,104 @@ def to_rows(symbol: str, candles: Iterable[dict], *,
     return rows
 
 
+#: coin_id 校验:同一天、同一 vendor 的两个端点,收盘价该有多接近。
+#:
+#: `/ohlc/range` 与 `market_chart/range` 都来自 CoinGecko,但一个是真 K 线、
+#: 一个是采样点(S-195),所以**不会完全相等**。允许 5% 是给采样时刻差异的余量;
+#: 一个错的 coin_id(把 BCH 写进 BTC)会差几十倍,一眼可辨。
+MAPPING_TOLERANCE_PCT = 5.0
+
+
+@dataclass(frozen=True)
+class MappingCheck:
+    """symbol→coin_id 的实证校验结果。"""
+
+    symbol: str
+    coin_id: str
+    ok: bool
+    pro_close: Optional[float] = None
+    existing_close: Optional[float] = None
+    gap_pct: Optional[float] = None
+    reason: str = ""
+
+    def as_payload(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"symbol": self.symbol, "coin_id": self.coin_id,
+                               "verified": self.ok}
+        if self.gap_pct is not None:
+            out["gap_pct"] = round(self.gap_pct, 2)
+            out["pro"] = self.pro_close
+            out["existing"] = self.existing_close
+        if not self.ok:
+            out["reason"] = self.reason
+        return out
+
+
+def check_mapping(symbol: str, coin_id: str, *, pro_close: Optional[float],
+                  existing_close: Optional[float],
+                  tolerance_pct: float = MAPPING_TOLERANCE_PCT) -> MappingCheck:
+    """把「不猜映射」从一条政策变成一个**检查**。
+
+    ## 为什么这条比它看起来重要
+
+    一个错的 `symbol → coin_id` 会把**另一个币的整段价格历史**写进这个标的,
+    而**那条曲线看起来完全正常** —— 没有任何下游检查能发现 BTC 的历史里
+    混进了 BCH 的价格。它不会让任何断言变红,只会让每一个用到它的结论变错。
+
+    校验方法:同一天,拿 `/ohlc/range` 的收盘价对 `ohlcv_daily` 里既有的
+    `coingecko`(market_chart)收盘价。**同一个 vendor 的两个端点**,
+    价格必须接近 —— 不完全相等(一个是真 K 线一个是采样点,S-195),
+    但差 5% 以内。coin_id 错了会差几十倍。
+
+    ⚠️ 这是**唯一**能用现有数据做的映射校验:库里没有 CG coin_id 的映射表,
+    `asset_aliases` 存的是 binance venue symbol。所以校验只能是实证的。
+
+    三值:verified / mismatch / not_checkable(没有对照行 —— **不是通过**)。
+    """
+    if pro_close is None:
+        return MappingCheck(symbol, coin_id, False,
+                            reason="Pro 端点没返回这一天的收盘 —— 无法校验映射")
+    if existing_close is None or existing_close == 0:
+        # 没有对照不是通过。S-163:not-checked 必须说出来。
+        return MappingCheck(symbol, coin_id, False, pro_close, None, None,
+                            reason="库里没有同日的 coingecko 对照行 —— "
+                                   "【未校验】,不是通过。人工确认 coin_id 后再写。")
+    gap = abs(pro_close / existing_close - 1.0) * 100.0
+    if gap > tolerance_pct:
+        return MappingCheck(symbol, coin_id, False, pro_close, existing_close, gap,
+                            reason=f"同日收盘差 {gap:.1f}% > {tolerance_pct}% —— "
+                                   f"同一 vendor 两个端点不该差这么多,"
+                                   f"极可能 coin_id 指向了另一个币。不写。")
+    return MappingCheck(symbol, coin_id, True, pro_close, existing_close, gap)
+
+
+async def _verify_mapping(symbol: str, coin_id: str, row: dict) -> MappingCheck:
+    """拿库里同日的 `coingecko` 收盘做对照。读不到 → 未校验(不是通过)。"""
+    try:
+        from src.api.store import _supabase_request_with_retry
+        import os as _os
+        base = (_os.getenv("SUPABASE_URL") or "").rstrip("/")
+        key = _os.getenv("SUPABASE_KEY") or _os.getenv("SUPABASE_SERVICE_KEY") or ""
+        if not base or not key:
+            return check_mapping(symbol, coin_id, pro_close=row.get("close"),
+                                 existing_close=None)
+        resp = await _supabase_request_with_retry(
+            "GET", f"{base}/rest/v1/ohlcv_daily",
+            params={"select": "close", "symbol": f"eq.{symbol}",
+                    "trade_date": f"eq.{row['trade_date']}",
+                    "source": "eq.coingecko", "limit": "1"},
+            headers={"apikey": key, "Authorization": f"Bearer {key}"})
+        existing = None
+        if resp is not None and resp.status_code < 300:
+            js = resp.json()
+            if isinstance(js, list) and js:
+                existing = js[0].get("close")
+        return check_mapping(symbol, coin_id, pro_close=row.get("close"),
+                             existing_close=existing)
+    except Exception as e:                                        # noqa: BLE001
+        return MappingCheck(symbol, coin_id, False,
+                            reason=f"校验查询失败({type(e).__name__})—— 未校验,不是通过")
+
+
 async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
                           asset_class: Optional[str] = None,
                           dry_run: bool = False) -> SymbolResult:
@@ -192,6 +290,17 @@ async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
             all_candles.extend(got)
 
     rows = to_rows(symbol, all_candles, asset_class=asset_class)
+
+    # ── 映射校验在写之前 ────────────────────────────────────────────────────
+    # 一个错的 coin_id 会把另一个币的整段历史写进这个标的,而曲线看起来完全正常。
+    # 拿最后一根 bar 对库里同日的 coingecko 收盘 —— 同 vendor 两端点,必须接近。
+    if rows:
+        chk = await _verify_mapping(symbol, coin_id, rows[-1])
+        if not chk.ok:
+            return SymbolResult(symbol, coin_id, False, len(rows),
+                                rows[0]["trade_date"], rows[-1]["trade_date"],
+                                reason=f"映射未通过校验:{chk.reason}")
+
     if len(rows) < MIN_CANDLES_PER_SYMBOL:
         # 少量 bar 通常是窗口错了或额度用尽。写进去会在面板上留下一段
         # 看起来正常的稀疏区间,而稀疏和"这段时间没交易"在下游长得一样。
@@ -246,5 +355,6 @@ async def backfill(pairs: Sequence[tuple[str, str]], *, start: date, end: date,
 
 
 __all__ = ["SOURCE_TAG", "CHUNK_DAYS", "ON_CONFLICT", "MIN_CANDLES_PER_SYMBOL",
+           "MAPPING_TOLERANCE_PCT", "MappingCheck", "check_mapping",
            "SymbolResult", "BackfillResult", "chunk_windows", "to_rows",
            "backfill_symbol", "backfill"]
