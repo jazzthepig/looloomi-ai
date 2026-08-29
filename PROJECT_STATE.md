@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-27 (Seth/Cowork lane — S-244，测试注册缺口)
+**Last updated:** 2026-08-29 (Seth/Cowork lane — S-244→S-259;台账 S-244→258 误标 08-27,见 S-259)
 
 ## 本轮一句话:**一个形状,十次**
 
@@ -273,6 +273,19 @@ The cap is doing its job only if closure is as routine as addition.*
    the OPEN RISK #1 dependency. A code fix without its data migration is half a fix.*
 
 ---
+
+## ⚠️ 价源现状(2026-08-29 实测,S-251/S-259)
+
+```
+binance_hist  最后 08-20  已 9 天  最近 3 天 0/195 标的   ← 上游没恢复,更旧了
+hyperliquid   最后 08-23  已 6 天  最近 3 天 0/177
+eodhd         最后 08-28  已 1 天  33/33 ✅
+coingecko     最后 08-29  已 0 天  25/25(S-195 禁用于收益)
+```
+
+**加密侧无可用于收益的价源。** 后果实测:Minimax-C 的 `book_trader.py` 冒烟用
+**20 天前的价**成交(BTC $64,866 vs 最新 $80,268,**差 +23.7%**)并持久化了仓位 ——
+已发 §SETH-TO-C-2026-08-29 急件。解法是 S-258 的 CG Pro 回填(1811 天深盘)。
 
 ## 🟢 四层账本已填满(2026-08-27)—— 数字在这里,MEMORY 只留指针
 

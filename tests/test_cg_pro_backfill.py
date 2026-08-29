@@ -20,8 +20,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.data.market.cg_pro_backfill import (                     # noqa: E402
-    CHUNK_DAYS, MIN_CANDLES_PER_SYMBOL, ON_CONFLICT, SOURCE_TAG,
-    BackfillResult, SymbolResult, chunk_windows, to_rows)
+    CHUNK_DAYS, MAPPING_TOLERANCE_PCT, MIN_CANDLES_PER_SYMBOL, ON_CONFLICT,
+    SOURCE_TAG, BackfillResult, SymbolResult, check_mapping, chunk_windows, to_rows)
 from src.data.market.single_source import (                       # noqa: E402
     BARRED_RETURN_SOURCES, TRUSTED_RETURN_SOURCES)
 
@@ -125,6 +125,45 @@ def test_floor_refuses_sparse_writes():
     ok = SymbolResult("BTC", "bitcoin", True, 500, "2021-09-01", "2026-08-27")
     _check("成功的不带 skipped_because", "skipped_because" not in ok.as_payload())
     _check("成功的带覆盖窗口", "coverage" in ok.as_payload(), str(ok.as_payload()))
+
+
+def test_wrong_coin_id_is_caught_empirically():
+    """**「不猜映射」从政策变成检查。**
+
+    一个错的 `symbol → coin_id` 会把另一个币的整段价格历史写进这个标的,
+    而**那条曲线看起来完全正常** —— 没有任何下游检查能发现 BTC 的历史里
+    混进了 BCH 的价格。它不会让任何断言变红,只会让每个用到它的结论变错。
+
+    库里没有 CG coin_id 映射表(`asset_aliases` 存的是 binance venue symbol),
+    所以校验只能是**实证的**:同一天,拿 `/ohlc/range` 的收盘对既有的
+    `coingecko`(market_chart)收盘。同 vendor 两端点必须接近。
+    """
+    ok = check_mapping("BTC", "bitcoin", pro_close=80268.4, existing_close=80100.0)
+    _check("同 vendor 两端点小差 → 通过", ok.ok and ok.gap_pct < 1.0,
+           str(ok.as_payload()))
+
+    # coin_id 指向 BCH:实测 2026-08-29 BTC $80,268 vs BCH 量级几百
+    bad = check_mapping("BTC", "bitcoin-cash", pro_close=640.0, existing_close=80100.0)
+    _check("coin_id 指错币 → 不通过", not bad.ok, str(bad.as_payload()))
+    _check("原因点明是映射问题",
+           "coin_id" in bad.reason and "另一个币" in bad.reason, bad.reason[:70])
+
+    # 没有对照行【不是通过】(S-163:not-checked ≠ pass)
+    nc = check_mapping("XYZ", "xyz", pro_close=100.0, existing_close=None)
+    _check("没有对照行 → 不通过(未校验 ≠ 通过)", not nc.ok, str(nc.as_payload()))
+    _check("原因明说'未校验,不是通过'", "不是通过" in nc.reason, nc.reason[:60])
+
+    none_pro = check_mapping("BTC", "bitcoin", pro_close=None, existing_close=80100.0)
+    _check("Pro 没返回收盘 → 不通过", not none_pro.ok, none_pro.reason[:50])
+
+    # 边界:容差本身要能挡住"刚好超一点",也要放行"刚好不到"
+    just_in = check_mapping("BTC", "bitcoin", pro_close=100.0,
+                            existing_close=100.0 / (1 + (MAPPING_TOLERANCE_PCT - 0.5) / 100))
+    just_out = check_mapping("BTC", "bitcoin", pro_close=100.0,
+                             existing_close=100.0 / (1 + (MAPPING_TOLERANCE_PCT + 2) / 100))
+    _check(f"容差内({MAPPING_TOLERANCE_PCT}%)放行", just_in.ok, str(just_in.gap_pct))
+    _check("容差外拦截", not just_out.ok, str(just_out.gap_pct))
+    _check("容差不为 0(否则同 vendor 两端点永远过不了)", MAPPING_TOLERANCE_PCT > 0)
 
 
 def test_no_pairs_refuses_instead_of_guessing_coin_ids():
