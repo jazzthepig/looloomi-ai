@@ -87,6 +87,77 @@ def _panel(spec: dict[str, int], days: list[str]):
             for s, n in spec.items()}
 
 
+def test_source_is_explicit_and_never_falls_back():
+    """**换源可以,自动回退不行** (S-260)。
+
+    两层意思,别混:
+
+    **① 同一次运行内不能跨源** —— 那是造出 582 行拼接表的逻辑 (S-230)。
+    **② 运行之间也不能自动回退** —— 一个「用 CG Pro,不行就退 binance_hist」
+    的写者,第一次跑出 CG Pro 基底、第二次跑出 binance_hist 基底,
+    而 **z-score 跨全史**,两次的坐标系不同而表里看不出来。
+    `zscore_pass` 戳记事后能发现,但那时已经写进去了。
+
+    我在上一条消息里正是这么提议的(「默认 CG Pro,回退 binance_hist」),
+    写之前才想清楚它错在哪 —— 记在这里,因为它听起来非常合理。
+    """
+    import ast
+    import inspect
+
+    import src.data.vector.market_state_writer as W
+
+    sig = inspect.signature(W.recompute_all)
+    _check("recompute_all 接受显式 source 参数", "source" in sig.parameters,
+           str(list(sig.parameters)))
+    _check("fetch_panel 也接受 source", "source" in inspect.signature(W.fetch_panel).parameters)
+
+    # 按构造查:recompute_all 里不得出现"换一个源再试"的形状 ——
+    # 即对 fetch_panel 的第二次调用,或 except 里带 source= 的调用。
+    tree = ast.parse(inspect.getsource(W.recompute_all))
+    fetch_calls = [n for n in ast.walk(tree)
+                   if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+                   and n.func.id == "fetch_panel"]
+    _check(f"recompute_all 只调用一次 fetch_panel(实际 {len(fetch_calls)} 次)",
+           len(fetch_calls) == 1, ast.unparse(tree)[:200])
+
+    # 异常处理里不得重新取数 —— 那就是回退
+    in_handler = []
+    for n in ast.walk(tree):
+        if isinstance(n, ast.ExceptHandler):
+            for sub in ast.walk(n):
+                if isinstance(sub, ast.Call) and isinstance(sub.func, ast.Name) \
+                        and sub.func.id in ("fetch_panel", "survey_depth_breadth"):
+                    in_handler.append(sub.func.id)
+    _check("except 块里不重新取数(那就是回退)", not in_handler, str(in_handler))
+
+    # 默认值必须是一个【库里有数据】的源。切到 0 行的源,写者只会天天拒绝,
+    # 而那读起来像"写者坏了"。
+    _check("默认源仍是 binance_hist(CG Pro 回填未落地前)",
+           W.PANEL_SOURCE == "binance_hist", W.PANEL_SOURCE)
+
+
+def test_depth_breadth_table_is_computed_not_hardcoded():
+    """取舍表必须能按源在运行时算 —— 一次测量不能当成常数 (S-260)。
+
+    `DEFAULT_START = "2022-01-01"` 是在**只有 binance_hist** 时算出来的:
+    2018-06 → 3,003 天但只剩 8 个标的;2022-01 → 1,693 天 / 127 标的。
+    换成 CG Pro(1811 天 × 10 标的),这张表整个不同 —— **深度大得多,
+    宽度小得多**,取舍点不在同一个位置。
+    """
+    import inspect
+
+    import src.data.vector.market_state_writer as W
+
+    _check("存在 survey_depth_breadth", hasattr(W, "survey_depth_breadth"))
+    sig = inspect.signature(W.survey_depth_breadth)
+    _check("它按 source 量", "source" in sig.parameters, str(list(sig.parameters)))
+    _check("候选起点可传入(不写死)", "candidates" in sig.parameters)
+    src_txt = inspect.getsource(W.survey_depth_breadth)
+    _check("它真的去查库(不是返回一张写死的表)",
+           "_sb_get" in src_txt and "ohlcv_daily" in src_txt)
+    _check("它按 source 过滤", 'f"eq.{source}"' in src_txt, "没有 source 过滤")
+
+
 def test_pin_panel_excludes_low_coverage_with_a_reason():
     days = [f"2025-01-{i:02d}" for i in range(1, 21)]          # 20 天
     panel = _panel({"FULL": 20, "MOSTLY": 19, "HALF": 10, "THIN": 2}, days)

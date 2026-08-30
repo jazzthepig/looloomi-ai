@@ -99,6 +99,9 @@ class BackfillResult:
     rows_written: int
     per_symbol: tuple[SymbolResult, ...] = ()
     reason: str = ""
+    #: 写到哪了 —— local(研究面)还是 supabase(系统记录)。
+    #: 一个不说明目的地的回填结果,读者无从判断它有没有动生产库。
+    dest: str = "local"
 
     def as_payload(self) -> dict[str, Any]:
         wrote = [s for s in self.per_symbol if s.ok]
@@ -106,6 +109,7 @@ class BackfillResult:
         out: dict[str, Any] = {
             "status": "ok" if self.ok else "degraded",
             "source": SOURCE_TAG,
+            "dest": self.dest,
             "rows_written": self.rows_written,
             "symbols_written": len(wrote),
             "symbols_skipped": len(skipped),
@@ -249,6 +253,70 @@ def check_mapping(symbol: str, coin_id: str, *, pro_close: Optional[float],
     return MappingCheck(symbol, coin_id, True, pro_close, existing_close, gap)
 
 
+#: 本地研究面的 sqlite。**复用 `src/research/data/ohlcv_local.py` 的那一个,
+#: 不建第三个 store** —— 今天已经因为「两个展平器 / 四个 regime 规范化实现」
+#: 被守卫抓过两次 (S-249)。表结构相同(`ohlcv_daily`,含 `source` 列),
+#: 所以 `load_local_panel(source="coingecko_pro_ohlc")` 直接可用。
+LOCAL_DB = "/tmp/cometcloud_data/ohlcv.db"
+
+
+def write_local(rows: Sequence[dict], *, db_path: str = LOCAL_DB) -> int:
+    """把行写进**本地** sqlite。返回写入行数。
+
+    ## 为什么先本地 (S-261)
+
+    Jazz 2026-08-30:「supabase 我们是免费版的,能不增加用量就不增加。」
+
+    实测当天:库 **253 MB / 500 MB = 50.7%**。
+    而这次回填按 `ohlcv_daily` 的密度(90.2MB / 533,989 行 ≈ 177 B/行)
+    只有 **约 3.2 MB**,占库 0.6% —— **担心的方向其实反了**:
+    真正压着额度的是 `ohlcv_hourly` **85.6 MB(全库 34%)**,
+    而它被 DATA-EXPANSION-HOLD 明令「不得用于统计结论」、
+    `src/` 里没有任何代码读它、且已陈旧 22 天。
+
+    但「先本地」这条本身是对的,而且理由比省额度更硬:
+
+    **研究面和系统记录是两种东西。** 研究要反复重算、试错、丢弃;
+    系统记录要稳定、可审计、被生产读。把研究中间产物写进 Supabase,
+    等于让每一次试错都变成一条永久记录 —— 而**删掉它们又会破坏
+    「the graveyard is the asset」**。两个都不想要,所以分开放。
+
+    Supabase 只收**生产真正会读的东西**,而且是显式的一步。
+    """
+    import sqlite3
+    from datetime import datetime as _dt
+    from pathlib import Path as _P
+
+    if not rows:
+        return 0
+    _P(db_path).parent.mkdir(parents=True, exist_ok=True)
+    now_iso = _dt.now(timezone.utc).isoformat()
+    conn = sqlite3.connect(db_path)
+    try:
+        # 表可能还不存在(全新机器)。字段与 `ohlcv_local.py` 读的那套对齐。
+        conn.execute("""
+            create table if not exists ohlcv_daily (
+                symbol text, asset_class text, source text, trade_date text,
+                open real, high real, low real, close real, volume real,
+                fetched_at text,
+                primary key (symbol, trade_date, source)
+            )""")
+        n = 0
+        for r in rows:
+            conn.execute(
+                "INSERT OR REPLACE INTO ohlcv_daily "
+                "(symbol, asset_class, source, trade_date, open, high, low, "
+                " close, volume, fetched_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (r["symbol"], r.get("asset_class"), r["source"], r["trade_date"],
+                 r.get("open"), r.get("high"), r.get("low"), r.get("close"),
+                 r.get("volume"), now_iso))
+            n += 1
+        conn.commit()
+        return n
+    finally:
+        conn.close()
+
+
 async def _verify_mapping(symbol: str, coin_id: str, row: dict) -> MappingCheck:
     """拿库里同日的 `coingecko` 收盘做对照。读不到 → 未校验(不是通过)。"""
     try:
@@ -279,8 +347,13 @@ async def _verify_mapping(symbol: str, coin_id: str, row: dict) -> MappingCheck:
 
 async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
                           asset_class: Optional[str] = None,
+                          dest: str = "local",
                           dry_run: bool = False) -> SymbolResult:
-    """回填一个标的。**地板在写之前** (S-220)。"""
+    """回填一个标的。**地板在写之前** (S-220)。
+
+    `dest`:`"local"`(默认,写本地 sqlite)| `"supabase"`(显式,才进生产库)。
+    **默认是 local** —— Supabase 是免费版,而研究面不该占系统记录的额度 (S-261)。
+    """
     from src.data.market.data_layer import get_cg_ohlc_range
 
     all_candles: list[dict] = []
@@ -311,7 +384,17 @@ async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
     if dry_run:
         return SymbolResult(symbol, coin_id, True, len(rows),
                             rows[0]["trade_date"], rows[-1]["trade_date"],
-                            reason="dry_run — 未写入")
+                            reason=f"dry_run(dest={dest})— 未写入")
+
+    if dest == "local":
+        n = write_local(rows)
+        return SymbolResult(symbol, coin_id, True, n,
+                            rows[0]["trade_date"], rows[-1]["trade_date"])
+
+    if dest != "supabase":
+        return SymbolResult(symbol, coin_id, False, len(rows),
+                            reason=f"未知 dest '{dest}' —— 只有 local / supabase,"
+                                   f"不猜")
 
     from src.api.store import supabase_upsert_table
     ok = await supabase_upsert_table("ohlcv_daily", rows, on_conflict=ON_CONFLICT)
@@ -325,6 +408,7 @@ async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
 
 async def backfill(pairs: Sequence[tuple[str, str]], *, start: date, end: date,
                    asset_class: Optional[str] = None,
+                   dest: str = "local",
                    dry_run: bool = False) -> BackfillResult:
     """`pairs` = [(symbol, coin_id), ...]。逐个回填,一个失败不拖垮其余。
 
@@ -332,14 +416,16 @@ async def backfill(pairs: Sequence[tuple[str, str]], *, start: date, end: date,
     标的的历史,而那条曲线看起来完全正常 —— 调用方必须显式给出映射。
     """
     if not pairs:
-        return BackfillResult(False, 0, (), "没有给任何 (symbol, coin_id) —— 不猜映射")
+        return BackfillResult(False, 0, (), "没有给任何 (symbol, coin_id) —— 不猜映射",
+                              dest=dest)
 
     results: list[SymbolResult] = []
     total = 0
     for symbol, coin_id in pairs:
         try:
             r = await backfill_symbol(symbol, coin_id, start=start, end=end,
-                                      asset_class=asset_class, dry_run=dry_run)
+                                      asset_class=asset_class, dest=dest,
+                                      dry_run=dry_run)
         except Exception as e:                                    # noqa: BLE001
             r = SymbolResult(symbol, coin_id, False, 0,
                              reason=f"{type(e).__name__}: {str(e)[:120]}")
@@ -351,10 +437,12 @@ async def backfill(pairs: Sequence[tuple[str, str]], *, start: date, end: date,
     wrote = [r for r in results if r.ok]
     return BackfillResult(
         ok=bool(wrote), rows_written=total, per_symbol=tuple(results),
-        reason="" if wrote else "所有标的都没能回填 —— 逐个原因见 detail")
+        reason="" if wrote else "所有标的都没能回填 —— 逐个原因见 detail",
+        dest=dest)
 
 
 __all__ = ["SOURCE_TAG", "CHUNK_DAYS", "ON_CONFLICT", "MIN_CANDLES_PER_SYMBOL",
            "MAPPING_TOLERANCE_PCT", "MappingCheck", "check_mapping",
+           "LOCAL_DB", "write_local",
            "SymbolResult", "BackfillResult", "chunk_windows", "to_rows",
            "backfill_symbol", "backfill"]

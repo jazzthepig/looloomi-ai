@@ -407,6 +407,8 @@ async def get_ohlcv(symbol: str, days: int = Query(90, ge=1, le=730)):
 @router.post("/internal/backfill-cg-pro")
 async def backfill_cg_pro(
     dry_run: bool = Query(default=True, description="默认 dry_run —— 写入要显式要求"),
+    dest: str = Query(default="local", pattern="^(local|supabase)$",
+                      description="local=本地研究面(默认)· supabase=系统记录(显式)"),
     days: int = Query(default=1825, ge=90, le=3650, description="回看天数,默认 5 年"),
     x_internal_token: str = Header(None),
 ):
@@ -441,6 +443,9 @@ async def backfill_cg_pro(
         ("DOT", "polkadot"),
     ]
     end = _date.today()
+    # `dest` 默认 local:Supabase 是免费版(实测 253MB/500MB = 50.7%),
+    # 而研究面不该占系统记录的额度 (S-261)。写生产库要显式要求两次:
+    # dry_run=false 且 dest=supabase。
     res = await backfill(pairs, start=end - _td(days=days), end=end,
-                         asset_class="L1", dry_run=dry_run)
+                         asset_class="L1", dest=dest, dry_run=dry_run)
     return res.as_payload()

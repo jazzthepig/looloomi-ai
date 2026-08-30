@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-29 (Seth/Cowork lane — S-244→S-259;台账 S-244→258 误标 08-27,见 S-259)
+**Last updated:** 2026-08-30 (Seth/Cowork lane — S-244→S-261;台账 S-244→258 误标 08-27,见 S-259)
 
 ## 本轮一句话:**一个形状,十次**
 
@@ -273,6 +273,24 @@ The cap is doing its job only if closure is as routine as addition.*
    the OPEN RISK #1 dependency. A code fix without its data migration is half a fix.*
 
 ---
+
+## 💾 Supabase 免费版额度(2026-08-30 实测,S-261)
+
+```
+DB 253 MB / 500 MB = 50.7%
+├─ ohlcv_daily    90.2 MB   在用
+├─ ohlcv_hourly   85.6 MB   ← 全库 34%,DATA-EXPANSION-HOLD 明令禁用、
+│                              src/ 里无人读、陈旧 22 天
+└─ cis_scores     41.1 MB   在用
+```
+
+**CG Pro 回填只要 ~3.2 MB(0.6%)—— 真正压额度的是 `ohlcv_hourly`,是它的 27 倍。**
+导出到本地后删表可降到约 168MB(33.6%)。**删表不可逆,等 Jazz 决定。**
+`VERIFY: select pg_size_pretty(pg_database_size(current_database()));`
+
+**新方针**:研究面 = 本地 sqlite(`/tmp/cometcloud_data/ohlcv.db`),
+系统记录 = Supabase 只收生产要读的。回填 `dest` 默认 `local`,
+写生产库要显式两次(`dry_run=false` 且 `dest=supabase`)。
 
 ## ⚠️ 价源现状(2026-08-29 实测,S-251/S-259)
 
