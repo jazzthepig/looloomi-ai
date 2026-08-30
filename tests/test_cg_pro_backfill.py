@@ -20,8 +20,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.data.market.cg_pro_backfill import (                     # noqa: E402
-    CHUNK_DAYS, MAPPING_TOLERANCE_PCT, MIN_CANDLES_PER_SYMBOL, ON_CONFLICT,
-    SOURCE_TAG, BackfillResult, SymbolResult, check_mapping, chunk_windows, to_rows)
+    CHUNK_DAYS, LOCAL_DB, MAPPING_TOLERANCE_PCT, MIN_CANDLES_PER_SYMBOL,
+    ON_CONFLICT, SOURCE_TAG, BackfillResult, SymbolResult, check_mapping,
+    chunk_windows, to_rows, write_local)
 from src.data.market.single_source import (                       # noqa: E402
     BARRED_RETURN_SOURCES, TRUSTED_RETURN_SOURCES)
 
@@ -164,6 +165,70 @@ def test_wrong_coin_id_is_caught_empirically():
     _check(f"容差内({MAPPING_TOLERANCE_PCT}%)放行", just_in.ok, str(just_in.gap_pct))
     _check("容差外拦截", not just_out.ok, str(just_out.gap_pct))
     _check("容差不为 0(否则同 vendor 两端点永远过不了)", MAPPING_TOLERANCE_PCT > 0)
+
+
+def test_local_is_the_default_destination():
+    """**默认写本地,Supabase 是显式的一步** (S-261)。
+
+    Jazz 2026-08-30:「supabase 我们是免费版的,能不增加用量就不增加。」
+
+    实测当天:库 253 MB / 500 MB = **50.7%**。而这次回填按 ohlcv_daily 的密度
+    (90.2MB / 533,989 行 ≈ 177 B/行)只有约 **3.2 MB**,占库 0.6% ——
+    **担心的方向其实反了**:真正压额度的是 `ohlcv_hourly` **85.6 MB(全库 34%)**,
+    而它被 DATA-EXPANSION-HOLD 明令禁用、`src/` 里无人读、陈旧 22 天。
+
+    但「先本地」这条本身是对的,理由比省额度更硬:**研究面和系统记录是两种东西。**
+    研究要反复重算、试错、丢弃;系统记录要稳定、可审计、被生产读。
+    把研究中间产物写进 Supabase,等于让每次试错变成永久记录 ——
+    而删掉它们又破坏「the graveyard is the asset」。两个都不要,所以分开放。
+    """
+    import inspect
+
+    from src.data.market import cg_pro_backfill as B
+
+    for fn in (B.backfill, B.backfill_symbol):
+        sig = inspect.signature(fn)
+        _check(f"{fn.__name__} 有 dest 参数", "dest" in sig.parameters, str(list(sig.parameters)))
+        _check(f"{fn.__name__} 的 dest 默认是 local",
+               sig.parameters["dest"].default == "local",
+               str(sig.parameters["dest"].default))
+
+    _check("结果里报出 dest(读者能判断动没动生产库)",
+           BackfillResult(True, 1, (), "", dest="supabase").as_payload()["dest"] == "supabase")
+    _check("复用既有的本地 sqlite,不建第三个 store",
+           LOCAL_DB == "/tmp/cometcloud_data/ohlcv.db", LOCAL_DB)
+
+
+def test_write_local_is_idempotent_and_keeps_volume_null():
+    """本地写必须幂等(主键去重)且不伪造成交量。
+
+    幂等很重要:研究面会被反复重跑,一个每次追加的写者会让同一天有 N 行,
+    而下游按日期取值时拿到哪一行取决于查询顺序 —— 那正是 S-245 里
+    「后到的源静默覆盖先到的」那个形状,只是换到了本地。
+    """
+    import os
+    import sqlite3
+    import tempfile
+
+    db = tempfile.mktemp(suffix=".db")
+    rows = to_rows("BTC", [{"trade_date": f"2026-01-{d:02d}", "open": 1, "high": 2,
+                            "low": 0.5, "close": 100 + d} for d in range(1, 21)],
+                   asset_class="L1")
+    try:
+        n1 = write_local(rows, db_path=db)
+        n2 = write_local(rows, db_path=db)          # 再写一次
+        c = sqlite3.connect(db)
+        total = c.execute("select count(*) from ohlcv_daily").fetchone()[0]
+        srcs = [r[0] for r in c.execute("select distinct source from ohlcv_daily")]
+        nulls = c.execute("select count(*) from ohlcv_daily where volume is null").fetchone()[0]
+        c.close()
+        _check(f"两次各写 {n1}/{n2} 行,表里仍是 {total} 行(幂等)", total == 20, str(total))
+        _check("源标签是 pro", srcs == [SOURCE_TAG], str(srcs))
+        _check("volume 全 NULL(不伪造成交量)", nulls == total, f"{nulls}/{total}")
+        _check("空输入写 0 行", write_local([], db_path=db) == 0)
+    finally:
+        if os.path.exists(db):
+            os.unlink(db)
 
 
 def test_no_pairs_refuses_instead_of_guessing_coin_ids():

@@ -76,7 +76,7 @@ import logging
 import os
 from dataclasses import dataclass, field
 from datetime import date, timedelta
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 
 from src.data.market.single_source import (
     CrossSourceError, SeriesSource, assert_single_source)
@@ -87,10 +87,25 @@ from src.data.vector.market_state import (
 
 log = logging.getLogger("market_state_writer")
 
-#: 唯一可用于面板的价源。深度 2017-08-17→2026-08-20,262 标的,386k 行。
+#: 默认的面板价源。**可以换,但换是显式的 —— 永远不自动回退。**
 #:
-#: ⚠️ 这里【不能】做回退。「哪个源有这天的价就用哪个」正是造出那 582 行的逻辑,
-#: 而它必然在窗口中间跨源。宁可少几天,不可跨源 (S-230)。
+#: ⚠️ 两层意思,别混:
+#:
+#: **① 同一次运行内不能跨源。**「哪个源有这天的价就用哪个」正是造出那 582 行
+#: 拼接表的逻辑,它必然在窗口中间跨源(S-230)。
+#:
+#: **② 运行之间也不能自动回退。** 一个「用 CG Pro,不行就退 binance_hist」的
+#: 写者,会在第一次跑出一个 CG Pro 基底、第二次跑出一个 binance_hist 基底,
+#: 而 z-score 跨全史 —— **两次的坐标系不同,而表里看不出来**。`zscore_pass`
+#: 戳记能事后发现,但那时已经写进去了。所以源不满足地板时**拒绝,不换源**。
+#:
+#: 现状(2026-08-29 实测):
+#:
+#:     binance_hist        天花板 343 天(M-91)· 当前 0/195 标的,已死 9 天
+#:     coingecko_pro_ohlc  1811 天 × 10 标的(M-92)· 库里 0 行,等 S-258 回填
+#:
+#: 回填落地前默认仍是 binance_hist —— 把默认切到一个 0 行的源,写者只会天天拒绝,
+#: 而那读起来像"写者坏了"。落地后由调用方显式切,并重跑一次全量。
 PANEL_SOURCE = "binance_hist"
 
 #: 200 日均线需要 200 天热身,再留 40 天给趋势年龄的连续计数。
@@ -503,8 +518,57 @@ async def attach_regime(vectors: list[StateVector]) -> int:
 
 # ── 编排 ──────────────────────────────────────────────────────────────────────
 
-async def recompute_all(start: str = DEFAULT_START, *, dry_run: bool = False
-                        ) -> RecomputeResult:
+async def survey_depth_breadth(source: str, *, candidates: Sequence[str] = (),
+                               min_coverage: float = MIN_COVERAGE) -> list[dict]:
+    """给定源,量出「起点 → 天数 × 达标标的数」的取舍表。
+
+    ## 为什么这必须是运行时算的,不是写死的
+
+    `DEFAULT_START = "2022-01-01"` 是我在**只有 binance_hist**的前提下算出来的:
+
+        起点        天数     达标标的
+        2018-06     3,003        8    ← 低于地板,拒绝
+        2022-01     1,693      127
+        2024-01       963      194
+
+    换一个源,这张表整个变。CG Pro 是 1811 天 × 10 标的(M-92)——
+    **深度大得多,宽度小得多**,取舍点完全不在同一个位置。
+    把一个源上算出的常数用在另一个源上,是今天反复出现的那个形状:
+    **一次测量被当成了一个常数。**
+
+    所以:候选起点在运行时逐个量,把表**报出来**,让选择可审计。
+    """
+    from datetime import date as _date
+
+    out: list[dict] = []
+    today = _date.today().isoformat()
+    for st in (candidates or ("2017-01-01", "2020-01-01", "2022-01-01", "2024-01-01")):
+        rows = await _sb_get("ohlcv_daily", {
+            "select": "symbol,trade_date", "source": f"eq.{source}",
+            "trade_date": f"gte.{st}", "order": "trade_date.asc",
+            "limit": str(PAGE * 5)})
+        if not rows.ok:
+            out.append({"start": st, "error": rows.reason[:120]})
+            continue
+        days: set[str] = set()
+        per_sym: dict[str, int] = {}
+        for r in (rows.rows or []):
+            d = str(r.get("trade_date") or "")[:10]
+            if not d:
+                continue
+            days.add(d)
+            per_sym[str(r.get("symbol"))] = per_sym.get(str(r.get("symbol")), 0) + 1
+        n_days = len(days)
+        need = n_days * min_coverage
+        out.append({"start": st, "end": today, "n_days": n_days,
+                    "symbols_meeting_coverage": sum(1 for v in per_sym.values() if v >= need),
+                    "symbols_total": len(per_sym)})
+    return out
+
+
+async def recompute_all(start: str = DEFAULT_START, *,
+                        source: str = PANEL_SOURCE,
+                        dry_run: bool = False) -> RecomputeResult:
     """全量重算并 upsert。**增量在数学上不可行** (S-232)。
 
     z-score 跨整段历史 —— 多一天就改变每一个历史 z 值,所以"只算今天再插一行"
@@ -514,7 +578,9 @@ async def recompute_all(start: str = DEFAULT_START, *, dry_run: bool = False
     from datetime import datetime, timezone
 
     try:
-        panel, src = await fetch_panel(start)
+        # 源是显式的。**不做回退** —— 见 PANEL_SOURCE 上的说明:
+        # 运行之间换源会让两批行落在不同的坐标系里,而表里看不出来。
+        panel, src = await fetch_panel(start, source=source)
     except CrossSourceError as e:
         return RecomputeResult(False, False, 0, None, None, str(e))
 
