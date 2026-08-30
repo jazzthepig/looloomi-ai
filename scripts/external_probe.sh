@@ -96,7 +96,10 @@ PUSH=$(curl -sm 15 "$BASE/internal/health-summary" 2>/dev/null \
 try:
     d=json.load(sys.stdin)
     for c in d.get("checks",[]):
-        if c.get("name")=="mac_mini_push":
+        # S-262 改名过渡:API 与探针是分开部署的,先后顺序不定。
+        # 只认新名字会在部署间隙报 macpush=-1(假警报),只认旧名字则改完就瞎。
+        # **两个都认一个周期**,等 API 稳定后再删掉旧名。
+        if c.get("name") in ("upstream_scores_push","mac_mini_push"):
             m=re.search(r"(\d+)s",c.get("detail","")); print(int(m.group(1))//60 if m else -1); break
     else: print(-1)
 except Exception: print(-1)' 2>/dev/null || echo -1)
