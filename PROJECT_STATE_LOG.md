@@ -2018,3 +2018,53 @@ and committed but **NOT run** (OPEN RISK 1).
   is preserved in components/ as a future single-asset diagnose view; the route + the import + the
   NAV_ITEMS entry are what retired.
 
+- **2026-08-27 P0-3 + S-P1-1 + S-P1-5 + P0-5 + S-123 — compliance + path-centralisation chain (Seth).** Five
+  small items closed in one sweep, all driven by the original "把 minimax_sync 没做完的先做了"
+  directive after the LM Studio model swap. **(1) P0-3** `dashboard/QuantMonitor.jsx`: `hypothesis`
+  → `alpha` (×3) — compliance language. **(2) S-P1-1** `src/api/routers/signals.py`: `1_deep_off`
+  rationale rephrased from "shorting the bottom tier (UNDERPERFORM) has paid best here" →
+  "negative-edge tier at maximum width; positive-edge book screens UNDERWEIGHT" — avoids BUY/SELL-
+  adjacent framing on a user-facing rationale string. **(3) S-P1-5** `src/research/validation/
+  r77_episode_vdb_cluster.py:115`: `Episode.n_neighbors: int = 0` → `= 20` — was a misleading
+  "VDB k=20 placeholder" comment paired with 0 default, passed through at line 227. **(4) P0-5**
+  centralisation: new `src/research/paths.py` exporting 8 env-overridable constants
+  (`OHLCV_DIR`, `MAC_ROOT`, `MAC_REPORTS`, `MAC_DATA`, `MAC_ENV`, `BACKTEST_DIR`,
+  `SLEEVE_A_OUT_DIR`, `SLEEVE_A_DATA_DIR`); defaults preserve existing behaviour; 8 Seth-lane
+  callers refactored (data_bridge, universe, paper_books/{nav_ledger, sleeve_3_macro_overlay},
+  nautilus/sleeve_a/{parity_check, envelope_diff, runner, strategy}); 2 duplicate definitions
+  (`OHLCV_DIR` x2, `_MAC_ENV` x2) removed; CLAUDE.md rule #3 boundary preserved (Seth reads via env).
+  **(5) S-123** `src/api/routers/signals.py:380`: `canonical_regime(raw) or "UNKNOWN"` →
+  `canonical_regime_strict(raw) or "UNKNOWN"` — fixes the "unknown regime silently folds to
+  VALID NEUTRAL on a write path" bug (load-bearing per `seth-vdb-r12-reply-2026-08-08`); enforced
+  by `tests/test_regime_write_path.py::test_no_write_path_anywhere_still_uses_the_lenient_
+  canonicaliser` (now green). Preflight PASSED — 8/8 regime write-path + 9/9 cold-start.
+  **P0-1** (statsmodels ≥0.14 pin) and **S-P1-4** (oos_total_pnl naming) verified already-compliant.
+  Mac-side: MLX qwen3.8 swap spec externalised to `_specs/mac-side-lm-studio-model-swap-
+  2026-08-27.md`; MINIMAX_SYNC §MAC-SIDE-LM-STUDIO-MODEL-SWAP-2026-08-27 trimmed to pointer.
+  Two new MEMORY entries: `feedback-canonical-regime-strict-2026-08-27.md`,
+  `feedback-paths-py-env-override-2026-08-27.md`. Ships via Mac-side handoff (FUSE blocks git-write
+  in sandbox). Still open in Seth lane: **S-#6** `strategy_params` SQL migration (needs service-role
+  key — see MINIMAX_SYNC §IN-FLIGHT row 1) and **S-#10** preflight Vite bundle freshness stage.
+
+
+
+### 2026-08-30 · S-262 · `/internal/` 鉴权行为化收口 (Seth/Cowork)
+
+40 条 `/internal/` 路由,用**真实方法 + 合法 body** 逐条打无凭证请求。结论:
+12 条有意公开(每条读者 grep 核过)、27 条已收口、1 条已知坏、匿名可用敏感端点 0。
+
+三个静态扫描器分别报 13 / 22 / 2 条「无门」,三个都错 —— 门在 `_auth()` helper 与
+`expected`/`tok` 变量里。**扫描器匹配拼写,不匹配构造**(本季第 6 次)。
+
+守卫首跑抓到我把它写窄了三处:只用 GET(23 条 POST-only 端点的 404 被读成「已收口」)、
+把 404/422/异常折叠成「非 2xx」、422 不给合法 body 就什么都没证明。补齐后逼出真漏洞:
+`/internal/telegram/webhook` 的 `if secret and …` 在 secret 未设时跳过整个门,
+无凭证返回 `{"ok":true}` —— 已改 fail-closed(503 + 可执行原因)。
+
+另:契约描述里两处 `Railway fills…` 已中性化;`macmini_orderbook` 是跨 lane 契约枚举值,
+**冻结并写明原因**(改它须走 MINIMAX_SYNC §2 + bump SCHEMA_VERSION,规则 #2);
+`/internal/beta-core-clock-size` 的 ImportError 登记进 `KNOWN_BROKEN`,与「有意公开」
+分开,免得「坏」继承「被批准」的语气。P1 归 beta-core 时钟 owner。
+
+变异测试三条全杀。前两次「存活」查下去是变异没打中 —— **「存活」和「没打中」也是
+两个状态,同一天第四次被我读成一个。** 守卫进 preflight 3a-unetvicies,比率器 111→112/146。
