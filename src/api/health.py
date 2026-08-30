@@ -44,7 +44,17 @@ async def compute_health_summary() -> dict:
         pass
     if cache and cache.get("universe"):
         age = now - float(cache.get("last_updated") or 0)
-        checks.append(_check("mac_mini_push", age < _PUSH_STALE_S,
+        # ── S-262:检查名不得描述硬件 ──────────────────────────────────────
+        # `/internal/health-summary` **无鉴权、公网可读**(实测 2026-08-29 用浏览器
+        # 不带任何凭证拿到)。而检查名叫 `mac_mini_push` —— 规则 #8:
+        # 「投资人可见的地方不出现实现细节 …… hardware」。
+        # 一个 LP 从这里能读出我们的评分引擎跑在一台 Mac Mini 上。
+        #
+        # 改成描述**它在测什么**(上游评分推送),而不是**谁在跑它**。
+        # 我今早刚修掉 QuantMonitor 上两处模型名(S-237),而那条守卫只扫
+        # `dashboard/src/*.jsx` —— **API 响应不在它的扫描范围内**,
+        # 所以这一处从未被检查过。守卫检查的面比它名字宣称的窄,今天第四次。
+        checks.append(_check("upstream_scores_push", age < _PUSH_STALE_S,
                              f"{int(age)}s ago", warn=age >= _PUSH_STALE_S))
         n = len(cache.get("universe") or [])
         checks.append(_check("universe", n >= _MIN_UNIVERSE, f"{n} assets",
@@ -58,7 +68,8 @@ async def compute_health_summary() -> dict:
             lkg = await redis_get_key("cis:last_known_good")
         except Exception:
             pass
-        checks.append(_check("mac_mini_push", False, "no fresh push in cache", warn=bool(lkg)))
+        checks.append(_check("upstream_scores_push", False,
+                             "no fresh push in cache", warn=bool(lkg)))
         has = bool(lkg and lkg.get("universe"))
         checks.append(_check("universe", has,
                              "serving last-known-good" if has else "EMPTY", warn=has))

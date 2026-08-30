@@ -1803,7 +1803,7 @@ async def beta_core_clock_size():
 
 
 @app.get("/internal/r77-forward-episodes")
-async def r77_forward_episodes():
+async def r77_forward_episodes(x_internal_token: str = Header(None)):
     """Is the C5 R77 forward episode attribution clock actually running?
 
     Per §C5-SHIP-SPEC 2026-08-12. PARALLEL to /internal/beta-core-clock (C1),
@@ -1820,6 +1820,29 @@ async def r77_forward_episodes():
     must be present per day for alpha_count > 0 on episodes. Before D2 ships,
     rows land with alpha_count=0 and verdict defaults to C5_INSUFFICIENT_EPISODES.
     """
+    # S-262:策略内部状态(起始日、第 60 天倒计时)不公开。
+    # 查实无消费者:仓库 / Shadow / dashboard 全部 grep 无引用。
+    # ⚠️ 这里【不能】写 `_INTERNAL_TOKEN` —— 那个常量只在 `src/api/routers/*.py` 里,
+    # `main.py` 没有。我第一版从 routers 抄了模式,结果是 NameError,
+    # **而且只在鉴权分支上抛** —— import 能过、py_compile 能过、正常路径能过,
+    # 只有真的有人不带 token 来打时才炸,然后返回 500 而不是 401。
+    # 今天第二次踩「只在错误路径上炸」(auth.py 的 _log vs _logger)。
+    # `main.py` 也【没有】导入 HTTPException —— 它自己的 /internal/ 路由用的是
+    # `JSONResponse(status_code=401, ...)`。这是同一个改动里第三次
+    # 「只在错误路径上炸」:先是 _INTERNAL_TOKEN 不存在,再是 HTTPException 不存在。
+    # 三次都是**跨模块抄惯用法而不查导入**,三次都是 import/py_compile 全过、
+    # 正常路径全过,只有真的有人不带 token 来打时才 500。
+    # 静态扫描抓不到任何一次 —— 抓到它们的是 TestClient 打了一次真请求。
+    # ⚠️ 用 `_os` 别名,不用裸 `os`:这两个函数体里**后面有局部 `import os`**,
+    # 那会让 `os` 在整个函数作用域内变成局部名,于是鉴权分支上的
+    # `os.environ` 抛 `UnboundLocalError`。这是同一个改动里的**第四次**
+    # 「只在错误路径上炸」:_INTERNAL_TOKEN 不存在 → HTTPException 不存在 →
+    # os 被遮蔽。四次的共同点是**静态检查一次都抓不到**,
+    # 而每一次都是 TestClient 打一个真请求抓到的。
+    import os as _os
+    _tok = _os.environ.get("INTERNAL_TOKEN", "")
+    if not _tok or not x_internal_token or x_internal_token != _tok:
+        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
     import os
     import httpx
     import pandas as pd
@@ -1954,9 +1977,29 @@ _BOOT_TS = _time.time()
 @app.post("/internal/telegram/webhook")
 async def telegram_webhook(update: dict, request: Request):
     """Telegram bot webhook — conversational CIS agent. Verified via the secret
-    token Telegram echoes in a header (set when registering the webhook)."""
+    token Telegram echoes in a header (set when registering the webhook).
+
+    **Fail CLOSED when the secret is unset (S-262).** The previous guard read
+    `if secret and header != secret: 403`, which collapses two states into one
+    branch: *no secret configured* took the same path as *secret matched*. So a
+    deploy that simply never set `TELEGRAM_WEBHOOK_SECRET` served an open
+    endpoint that anyone could POST arbitrary Telegram updates to and puppet the
+    bot with — and it looked identical, from the outside, to a correctly
+    configured one. Found by sending a real anonymous POST, not by reading the
+    line; three static scanners had passed over it.
+
+    Unconfigured now answers 503, not 200: a bot that is down is a visible
+    problem, a bot anyone can drive is an invisible one.
+    """
     secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
-    if secret and request.headers.get("X-Telegram-Bot-Api-Secret-Token") != secret:
+    if not secret:
+        return JSONResponse(status_code=503, content={
+            "ok": False,
+            "error": "TELEGRAM_WEBHOOK_SECRET is not configured",
+            "detail": ("Refusing to accept unverified updates. Set the variable and "
+                       "re-register the webhook with the same secret_token."),
+        })
+    if request.headers.get("X-Telegram-Bot-Api-Secret-Token") != secret:
         return JSONResponse(status_code=403, content={"ok": False})
     try:
         from src.api.telegram_bot import handle_update
@@ -2065,9 +2108,50 @@ async def health_summary():
 
 
 @app.get("/internal/prediction-track-record")
-async def prediction_track_record():
-    """Per-source predictive track record (hit rate + directional alpha) from
-    prediction_outcomes — the read-back that mines the write-only logs. Public read."""
+async def prediction_track_record(x_internal_token: str = Header(None)):
+    """Per-source predictive track record (hit rate + directional alpha).
+
+    ── S-262:原本是 "Public read",现在收进 token 门 ────────────────────────
+    实测 2026-08-29,我用浏览器不带任何凭证拿到:
+
+        {"status":"ok","sources":{"signal":{"n":99,"scored":91,
+         "hit_rate_pct":28.6,"avg_directional_alpha_pct":-2.817}}}
+
+    **它把命中率和负超额公开在一个 `/internal/` 路径上。**
+
+    收它不是因为难看 —— 是因为**它和我们刚定的展示口径矛盾**。
+    Jazz 2026-08-30 对 `/quant` 的决定是「跑得不好的可以先不展示」,
+    而那块面板现在会在可测样本不足时整块不渲染(S-257)。
+    同一批数字在这里却是**无鉴权公开**的。
+
+    > 一个地方说「不能声称就不声称」,另一个地方把同类数字裸奔 ——
+    > 不一致本身就是问题,无论选哪一边。
+
+    这里选与 S-257 一致的那边。查实无消费者后收口:
+    仓库 / `Shadow/`(Mac 侧)/ `dashboard/src` 全部 grep 无引用,
+    只有 `main.py` 自身和一份 transcript。
+    """
+    # ⚠️ 这里【不能】写 `_INTERNAL_TOKEN` —— 那个常量只在 `src/api/routers/*.py` 里,
+    # `main.py` 没有。我第一版从 routers 抄了模式,结果是 NameError,
+    # **而且只在鉴权分支上抛** —— import 能过、py_compile 能过、正常路径能过,
+    # 只有真的有人不带 token 来打时才炸,然后返回 500 而不是 401。
+    # 今天第二次踩「只在错误路径上炸」(auth.py 的 _log vs _logger)。
+    # `main.py` 也【没有】导入 HTTPException —— 它自己的 /internal/ 路由用的是
+    # `JSONResponse(status_code=401, ...)`。这是同一个改动里第三次
+    # 「只在错误路径上炸」:先是 _INTERNAL_TOKEN 不存在,再是 HTTPException 不存在。
+    # 三次都是**跨模块抄惯用法而不查导入**,三次都是 import/py_compile 全过、
+    # 正常路径全过,只有真的有人不带 token 来打时才 500。
+    # 静态扫描抓不到任何一次 —— 抓到它们的是 TestClient 打了一次真请求。
+    # ⚠️ 用 `_os` 别名,不用裸 `os`:这两个函数体里**后面有局部 `import os`**,
+    # 那会让 `os` 在整个函数作用域内变成局部名,于是鉴权分支上的
+    # `os.environ` 抛 `UnboundLocalError`。这是同一个改动里的**第四次**
+    # 「只在错误路径上炸」:_INTERNAL_TOKEN 不存在 → HTTPException 不存在 →
+    # os 被遮蔽。四次的共同点是**静态检查一次都抓不到**,
+    # 而每一次都是 TestClient 打一个真请求抓到的。
+    import os as _os
+    _tok = _os.environ.get("INTERNAL_TOKEN", "")
+    if not _tok or not x_internal_token or x_internal_token != _tok:
+        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
     from src.data.signals.prediction_resolver import source_track_record
     return await source_track_record()
 

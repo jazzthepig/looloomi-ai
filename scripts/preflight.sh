@@ -534,6 +534,24 @@ python3 -m tests.test_moat_claims_are_measured
 #               route COUNT: its first version scanned 31 of 197 and printed a clean
 #               result, which is the same defect committed inside its own fix.
 python3 -m tests.test_no_route_is_shadowed
+# 3a-unetvicies. /internal/ rejects anonymous callers — BEHAVIOURALLY (2026-08-30, S-262).
+#            Three static scanners answered "how many /internal/ routes lack a token
+#            gate" with 13, then 22, and both were wrong: four of the 22 "new" finds
+#            (rebalance, sl-tp-exit, research-intake, asset-vectors/rebuild) are gated
+#            via helpers named `expected`/`tok`/`_auth()`. A scanner matches SPELLING,
+#            not "will this route refuse an unauthenticated caller".
+#            In the same hour I gated two endpoints and wrote FOUR consecutive bugs
+#            that only fire on the error path (undefined _INTERNAL_TOKEN, unimported
+#            HTTPException, `os` shadowed by a later local import). All four passed
+#            import, py_compile and the happy path; each returned 500 instead of 401
+#            to the exact caller the gate exists to stop.
+#            So this guard sends REAL requests, with each route's REAL methods —
+#            its own first version only sent GET, read the 404s from 23 POST-only
+#            endpoints as "closed", and thereby committed the defect its docstring
+#            describes. It found /internal/telegram/webhook accepting anonymous POSTs
+#            (`if secret and ...` skipped the whole gate when the secret was unset:
+#            absent and correct took the same branch), now fail-closed.
+python3 -m tests.test_internal_routes_reject_anonymous
 # 3a-vicies. vector schema version is single-sourced (2026-08-12, S-144). Live:
 #            asset_embeddings held 72 rows ALL stamped schema_version=2, 18 days
 #            stale, with TWO different `dims` (18 and 27) under the same version —
