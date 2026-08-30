@@ -13594,3 +13594,116 @@ Jazz 跑 dry-run,输出停在标题行。原因:**端点还没推上去,返回 4
 
 而且正式写入那条 curl **原本漏了 `dest` 参数** —— 会写到默认目的地而不是
 用户选的那个。这正是那类**静默写错地方**的缺陷:它不会报错。
+
+---
+
+## S-262 — `/internal/` 的鉴权:三个静态扫描器都答错,一个真请求答对了
+
+**日期** 2026-08-30 · **lane** Seth · **状态** 已落地,守卫进 preflight 3a-unetvicies
+
+### 主张
+
+`/internal/` 下有 40 条路由。哪些会拒绝一个不带凭证的调用者?
+
+### 我先后写了三个扫描器,三个都错
+
+| 版本 | 判据 | 报出「无门」 |
+|---|---|---|
+| ① | `'x_internal_token' in blk` | 13 条 |
+| ② | `'x_internal_token != _INTERNAL_TOKEN'` | 22 条 |
+| ③ | 取 decorator 后 25 行,数「头」与「比较」 | 2 条 |
+
+②比①多出的 9 条里有 `/internal/rebalance`、`/internal/sl-tp-exit`、
+`/internal/research-intake`、`/internal/asset-vectors/rebuild` —— **动作端点**,
+看着像重大暴露。逐条打开:**四条全有门**,只是变量叫 `expected` / `tok`。
+
+③报的 2 条(`asset-vectors-history`、`risk-meter-history`)第一行就是
+`_auth(x_internal_token)` —— **门在 helper 里,内联比较的正则看不见**。
+
+> **扫描器匹配的是拼写,不是「这条路由会不会拒绝无凭证的调用者」。**
+> 这是本季第 6 次栽在同一句话上(`tests/_source.py` 记了前 5 次)。
+
+### 同一小时,四个只在错误路径上炸的 bug
+
+给两条端点加门,十行代码里连续写出:
+
+1. `_INTERNAL_TOKEN` 在 main.py 不存在(常量只在 routers/) → NameError
+2. `HTTPException` 在 main.py 没导入(它用 JSONResponse) → NameError
+3. 函数体后面有局部 `import os`,`os` 在整个作用域变成局部名 → UnboundLocalError
+
+**三次全部:import 过、py_compile 过、正常路径过。** 只有真的有人不带 token 来打
+才炸 —— 而那时返回的是 **500,不是 401**。抓到它们的是 TestClient 打了一个真请求。
+
+### 于是写了行为守卫。它第一次跑,抓到我把它写窄了 —— 三处
+
+**① 只用 GET 探。** 23 条 POST-only 端点回 404,我读成「收好口了」。
+**404 不是「有门」,是「这条路由不接受这个方法」。**
+一条 POST 端点的暴露面只有用 POST 才测得出来。
+**守卫的面比它名字宣称的窄 —— 发生在为这句话写的守卫里。**
+
+**② 把 404 / 422 / 抛异常折叠成「非 2xx」。** 四个状态,一个表示。改成四值裁决:
+
+    401/403  有门,拒了            ← 唯一算安全
+    404      方法不对              ← 什么都没证明
+    422      body 先炸,鉴权跑没跑不知道
+    EXC/5xx  处理器自己炸          ← 最危险的伪装
+
+**③ 422 必须用合法 body 逼出真相。** 11 条 422 端点补上合法 body 后:
+9 条其实是 401,1 条我 key 猜错(补对 → 403),**1 条真的返回 200**。
+
+### 真正的漏洞:`/internal/telegram/webhook` 无凭证 `{"ok":true}`
+
+```python
+if secret and request.headers.get("X-Telegram-Bot-Api-Secret-Token") != secret:
+    return 403
+```
+
+`TELEGRAM_WEBHOOK_SECRET` **未设时整个门被跳过**。缺席的 secret 和正确的 secret
+走同一个放行分支 —— 一个从没设过这个变量的部署,对外看起来跟配好的一模一样,
+任何人都能 POST 任意 update 驱动这个 bot。已改 fail-closed(503 + 可执行的原因)。
+
+> 一个宕了的 bot 是看得见的问题,一个谁都能开的 bot 是看不见的。
+
+### 其余发现,按「能不能我一个人改」分开
+
+- **可改,已改**:契约描述里两处 `"Railway fills…"` → `"the API fills…"`
+- **不可单方改,已冻结**:`executability.source='macmini_orderbook'` 是
+  Mac↔Railway 契约的枚举值,两侧都在读。改名 = 契约变更,须先进 MINIMAX_SYNC §2、
+  两侧确认、bump SCHEMA_VERSION(规则 #2)。**冻结并写明原因,比偷偷改掉诚实。**
+- **坏了,不归本次**:`/internal/beta-core-clock-size` 抛 ImportError
+  (`clock_q_continuity` 不在 `src/data/signals/*`,main.py:1697/1760)。
+  它返回 500 不是 401,探针不读它,所以没人发现。登记进 `KNOWN_BROKEN`
+  —— 与「有意公开」分开,因为一条死掉的路由不是被批准公开的,
+  合在一起会让「坏」悄悄继承「被批准」的语气。**P1,归 beta-core 时钟的 owner。**
+
+### 我编过的理由
+
+allowlist 初版给 5 条路由都写了「external_probe.sh 无凭证读」。grep 一遍探针脚本:
+它读 14 条,**其中三条根本不在里面**。
+**写下一个看起来合理的理由,和核过一个理由,在文件里长得一模一样。**
+现在每条的读者都是 grep 出来的。
+
+### 变异测试(交付条件)
+
+| 变异 | 结果 |
+|---|---|
+| telegram 还原成 fail-open | ✓ 杀死 |
+| 拆掉 prediction-track-record 的门 | ✓ 杀死(3 条断言同时红) |
+| 往公开 payload 塞 `ollama` | ✓ 杀死 |
+
+前两次尝试「存活」,查下去是**变异没打中**(①留了第二道比较照样 403;
+③只替换了第一处而那处在不执行的分支)。
+**「变异存活」和「变异没打中」也是两个状态,我又读成了一个 —— 同一天第四次。**
+
+### 环境相关性(S-238)
+
+`telegram/webhook` 的裁决随机器变:生产有 secret ⇒ 403,沙箱没有 ⇒ 503。
+一条随环境变的断言不是比率器。登记进 `FAIL_CLOSED_WHEN_UNCONFIGURED`,
+两个码都接受,且都算「拒绝了」。
+
+### 结论
+
+40 条 `/internal/` 路由,现状:**12 条有意公开**(契约回声 + 无凭证脚本读的运维健康,
+逐条 grep 核过读者)· **27 条已收口** · **1 条已知坏**(登记,P1)。
+匿名可用的敏感端点:**0**。
+

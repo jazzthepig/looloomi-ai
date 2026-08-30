@@ -1,8 +1,18 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-30 (Seth/Cowork lane — S-244→S-261;台账 S-244→258 误标 08-27,见 S-259)
+**Last updated:** 2026-08-30 (Seth/Cowork lane — S-244→S-262;台账 S-244→258 误标 08-27,见 S-259)
 
 ## 本轮一句话:**一个形状,十次**
+
+> **S-262 收尾(2026-08-30):`/internal/` 40 条路由全部行为验过。**
+> 三个静态扫描器分别报 13 / 22 / 2 条「无门」,**三个都错** —— 门写在
+> `_auth()` helper 和叫 `expected`/`tok` 的变量里,正则看不见。真请求打完:
+> **12 条有意公开**(契约回声 + 无凭证脚本读的运维健康,读者逐条 grep 核过)·
+> **27 条已收口** · **1 条已知坏**(`beta-core-clock-size` ImportError → 500,
+> 探针不读所以没人发现;P1,归 beta-core 时钟 owner)· **匿名可用的敏感端点 0**。
+> 真漏洞一个:`/internal/telegram/webhook` 在 `TELEGRAM_WEBHOOK_SECRET` 未设时
+> **fail-open**(`if secret and …` 让缺席与正确走同一分支),无凭证 `{"ok":true}`,
+> 已改 fail-closed。守卫进 preflight 3a-unetvicies,三条变异全杀,比率器 111→**112/146**。
 
 每一次都是**「拿不到」被渲染成一个合理的数字**,而不是被渲染成「拿不到」。
 一个 0 在合法区间内、看起来正常、是空累加的天然产物 —— 所以九次都没人发现。
