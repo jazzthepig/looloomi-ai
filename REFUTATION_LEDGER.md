@@ -13931,3 +13931,83 @@ world 买入」,发行方正是「在哪买」这个维度。市值序列是流�
 付费源必须登记 entitlement + VERIFY 命令,每条端点必须声明摄取状态,
 **未落库的必须被列出来且只能减。**
 
+
+---
+
+## S-265 — 兜底把自己的报警清掉了
+
+**日期** 2026-09-01 · **lane** Seth · **状态** 已落地,守卫进 preflight
+
+### 现象:两件互相矛盾的事同时为真
+
+部署 `7dc81c1f` 后 health 报 `macro_brief: missing` / status=degraded,
+而同一时刻 `GET /api/v1/macro/brief` 返回 200 且内容完整。
+
+### 机制
+
+`macro.py` 的模板兜底在生成后执行 `redis_set_key(_REDIS_KEY, payload)` ——
+而 `health.py` 判活读的就是 `macro:brief` 这把钥匙。
+
+    Mac 生成器死 → health 报 missing → 兜底跑一次 → 把自己写进 macro:brief
+                 → **health 变绿,而 Mac 仍然是死的**
+
+那次之所以看得见 `missing`,只是因为兜底那份 15 分钟 TTL 刚好过期。
+**它会自己「好」,而没有人修过任何东西。**
+
+> **一个会把自己的报警清掉的兜底,比没有兜底更危险:**
+> 没有兜底时故障是可见的,有它时故障是可见的**一小会儿**。
+
+修:兜底写 `macro:brief:fallback`,上游摄取仍写 `macro:brief`。分键之后,
+health 才谈得上分状态 —— 新增「upstream dark — FALLBACK serving」这一条,
+与「上游与兜底都没有内容」分开。
+
+### 同源的第二处:四条返回路径,四种写法
+
+    上游新鲜   source: "mac_mini"
+    模板兜底   source: "auto"   + model: "template"
+    最后一搏   source: data.get("source", "mac_mini")
+    全部失败   source: "none"
+
+**两条路径用两个不同的字段名报告同一件事**,所以下游没有任何一个字段可以问
+「这是第几层」,前端因此也不可能标出来。CLAUDE.md 里「T1 绿 / T2 琥珀」那个
+契约早就写着,只是没有可读的字段去实现它。
+
+改成一个 `tier`,封闭取值 `upstream / fallback / stale / none`,加 `tier_reason`
+(只给 `tier: "fallback"` 的响应,读的人还得翻代码才知道上游为什么没顶上)。
+`tier` 与内容分开 —— 一个 FALLBACK 的 brief 仍然是一个 brief,与 S-263 里
+`regime`/`verdict` 分开是同一条理由。
+
+### 第三处:硬件名出现在面向用户的响应里
+
+`source: "mac_mini"` 直接返回给 `/api/v1/macro/brief` 的调用者。规则 #8 的守卫
+只扫 `dashboard/src/*.jsx`;S-262 已在 `/internal/` 上发现同一个盲区,
+**这是它在公开 API 上的第二例。**
+
+`public_source()` 做映射,且**未知取值原样返回** —— 一个没见过的来源名应该在
+响应里显眼地出现,而不是被静默伪装成权威层。
+
+### 写守卫时我又把它写得比要保护的性质粗,两次
+
+**① 按文件搜,不按函数作用域。** `macro.py` 里对 `_REDIS_KEY` 的写入有两种,
+对错相反:`receive_macro_brief`(上游推进来)写它是**正确的**,
+`get_macro_brief`(兜底)写它是错的。初版按整个文件搜,把正确的那处也报成违规。
+补了一条判别性断言:**上游摄取路径必须写上游键** —— 少了它,把两处写入一起
+删掉也能让第一条变绿,而那是把上游的存储整个拆掉。
+
+**② 守卫被它自己解释的反例绊倒。** 我在修复处写了注释「原本是
+`redis_set_key(_REDIS_KEY, ...)`」,而扫描器把这行注释算作违规,于是代码已经
+修好之后断言仍然红。**S-249 同一课** —— 那次是 docstring 里引用的
+`.upper().replace()` 绊倒了禁止重复实现 canonical_regime 的守卫。剥掉注释再扫。
+
+### 还有一个 `mac_mini` 的误报
+
+初版查「函数体里有没有 `mac_mini` 字面量」。但 `get_macro_brief` 里的
+`source = data.get("source", "mac_mini")` 和 `if source == "mac_mini"` 是对
+**内部标记**的读取与比较,返回值已经过 `public_source()`。
+要查的性质是「**返回出去的** source 是否经过映射」,不是「文件里有没有这个词」。
+
+### 结论
+
+上游死掉时,兜底顶上是对的。**兜底顶上时假装上游还活着,是错的。**
+这两件事之间只隔一个 Redis 键的名字。
+
