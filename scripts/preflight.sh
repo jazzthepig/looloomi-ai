@@ -1123,6 +1123,25 @@ python3 -m tests.test_paid_capability_is_known || {
 python3 -m tests.test_serving_tier || {
   echo "  ✗ 服务层级守卫 — do not push"; exit 1; }
 
+# ── S-266: 代币化 RWA 面板 —— 高维对象在前,标量在后 ─────────────────────────
+# Jazz 2026-09-01:「多重判断来决定股票和 etf 全市场持仓量」→「**往高维度走**」。
+# HIGH_DIM_ONTOLOGY §5 的空间表里 Entity/Decision 一行写着「待定义 · frontier ·
+# **内核的缺失层;从 holder/flow/治理事件起步**」——  发行方 = Entity,
+# 把一只传统资产搬上链 = 它的 Decision,那只代币的链上市值 = 这个决策吸到的 flow。
+# CG Pro 的 /rwas/* 正好按这个形状给数据(且明说 tokenized_market_data 反映的是
+# 链上代币化市场,**不是标的的现货市场** —— 那正是「相对不影响那边」的可观测形式)。
+#
+# 守卫盯两件事,都不是聚合算得对不对:
+#   ① **market_cap: null 不得塌成 0。** 市场数据嵌在 tokenized_market_data 里,
+#      顶层没有 market_cap;取错层会拿到 250 个 null,而 sum(null→0) 会给出一个
+#      「$0 全市场持仓量」并且不报错 —— 一个静默的 0 会一路流进图表。(I1)
+#   ② **标量必须带着裁决一起走。** 公开来源几周内给过 $2.3B/$2.4B/$2.6B/「破 $3B」
+#      四个说法,成因是口径边界、重复计暴露、背书模型、时点。一个不带成色的
+#      「持仓量」是在假装这个分歧不存在。裁决 agree/dispersed/single_source/no_data。
+# 五条变异全部杀死(含「未测当已测」「离散超限仍判 AGREE」「外部锚掺进计算」)。
+python3 -m tests.test_rwa_panel || {
+  echo "  ✗ RWA 面板守卫 — do not push"; exit 1; }
+
 # ── S-252: 显示的分数不得落进比它评级更高的带 ────────────────────────────────
 # 实测 2026-08-27 排行榜首屏:Aave 75.7 = A,Uniswap 75.0 = B+。
 # UNI 的 raw 是 74.97 —— get_grade 给 B+ 是【对的】,而 round(74.97,1)=75.0

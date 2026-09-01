@@ -69,8 +69,10 @@ INGEST_STATE: dict[str, str] = {
     "/coins/markets": "persisted",
     "/global": "ephemeral",
     "/coins/categories": "ephemeral",
-    "/rwas/markets": "unwired",
-    "/rwas/issuers/list": "unwired",
+    # S-266 已接:src/data/rwa/collect.py → 本地 rwa.db(rwa_daily +
+    # rwa_panel_daily)。判据是**落库产生历史**,而这条路径产生历史 ⇒ persisted。
+    "/rwas/markets": "persisted",
+    "/rwas/issuers/list": "persisted",
     "/global/market_cap_chart": "ephemeral",
     "/exchanges/{id}/volume_chart": "unwired",
 }
@@ -78,12 +80,6 @@ INGEST_STATE: dict[str, str] = {
 #: 尚未落库的端点 + 用途。**只能减。**
 #: 一个没有用途说明的闲置端点,下一个人无法判断该接它还是该把它删掉。
 UNWIRED_BUDGET: dict[str, str] = {
-    "/rwas/markets":
-        "代币化 RWA 的市值序列 = 该资产的 AUM。这是 Jazz 的 TradFi→tokenized "
-        "边际流论点唯一的直接观测量,其余全是价格倒影。待接。",
-    "/rwas/issuers/list":
-        "按发行方拆流。「同样的传统资产在 tokenized world 买入」——"
-        "发行方是那个『在哪买』的维度。待接。",
     "/global/market_cap_chart":
         "历史全局市值+成交量,做分母。Analyst 档已含。**已有调用点但只在 "
         "scripts/reconstruct_cis_history.py 里,不在日常路径 ⇒ ephemeral。**",
