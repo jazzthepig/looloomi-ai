@@ -13819,3 +13819,115 @@ TIGHTENING,把不可信的标签换成 None 会让「没有标签」和「标签
 `daily_macro_regime` 的票数字段存在了不知多久,没有一个消费者读过。
 **一个已经算好的诊断信号,和一个不存在的诊断信号,在下游是同一回事。**
 
+
+---
+
+## S-264 — 我说「我们测不了流」,而答案写在我自己 lane 的模块里
+
+**日期** 2026-09-01 · **lane** Seth · **状态** 已落地,守卫进 preflight
+
+### 事情经过
+
+Jazz 给了一个结构性论点:T1 的 TIGHTENING 是对的,宏观确实紧;BTC 的涨来自
+**TradFi 往加密的边际转换** —— 同样的传统资产在 tokenized world 买入,会抬相关
+infra 的价格,而相对不影响那边。他要的是:找到这个环境对应的叙事。
+
+我测了它的价格含义(见下),然后报告:**「我们测不了流,库里没有任何持久化的
+流量序列」**,并提议建一个 DeFiLlama 落库层。
+
+他的回答:「coingecko pro 应该是有的」。再一次:「**这点已经说过好多次了**,
+我买了 139 刀每月的 pro api 应该都有的」。
+
+### 他是对的,而且这件事本来就在仓库里
+
+`src/data/market/source_policy.py` 的 S-205 正文(2026-08-23,源自 Jazz 上一次
+说同一件事)写着:
+
+> CoinGecko Pro — bulk daily bars, market caps, dominance, **categories**,
+> trending, breadth across ~17,000 assets. **We pay monthly for exactly this and
+> were using the free-shaped endpoints (S-195).**
+
+**我没读自己 lane 里的这个模块,就断言了缺失。** 与 2026-08-19 那次同一个动作
+—— CLAUDE.md 为那次专门加了一整段:「Before saying a result does not exist,
+grep `_reports/`」。一年第二次。
+
+### 实测的额度,和它说明的事
+
+```
+plan                Analyst($139/月)
+monthly_call_credit 500,000
+current_total_calls 2,074          ← 0.4%
+```
+
+我整个 session 在为 Supabase 免费版的 500MB 做取舍(S-261 把 CG Pro 回填改成
+本地优先,就为了不动那 50.7%),而旁边这个付费额度几乎全新。
+
+> **一个被珍惜的免费额度和一个被闲置的付费额度同时存在,说明约束被找错了地方。**
+
+### 漏掉的不只是分类:Pro 有一整个 RWA 端点族
+
+```
+/rwas/markets              代币化 RWA 的价格/市值/成交量
+/rwas/{id}/market_chart    历史市值 = 该代币化资产的 AUM
+/rwas/issuers/list         发行方
+/rwas/issuers/{id}         按发行方的市场数据 + 它发的所有 token
+```
+
+**`/rwas/issuers/{id}` 就是 Jazz 那句话的仪器** ——「同样的传统资产在 tokenized
+world 买入」,发行方正是「在哪买」这个维度。市值序列是流本身,不是价格倒影。
+一次都没调过。
+
+而且缺口有我自己造的一份:**S-258 我选了 `/ohlc/range`,它不带成交量**
+(代码里 `volume=None always`)。为了拿干净的 OHLC 把流量变量整个放弃了,
+而 `market_chart` 一直同时给价格、市值、24h 成交量。
+
+### 二值不够,实测逼出第三个状态
+
+初版守卫只有 unwired / wired。于是 `/coins/categories` 因为「有调用点」判过 ——
+而它在 `data_layer.py:1662` 只取 ~16 家 VC 组合、10 分钟 TTL、**从不落库**。
+
+    unwired    没有调用点
+    ephemeral  **调了,缓存几分钟就扔,不落库**   ← 真实的缺口形状
+    persisted  落进表,有历史
+
+「我们没有叙事层的历史」是真的,原因不是拿不到,是**拿了就扔**。
+当前:persisted 1 · ephemeral 3 · unwired 3。
+
+### 写这条守卫时我又犯了两次同一类错
+
+**① 扫描片段不够判别性。** `_repo_mentions` 取路径最后一段,`/rwas/markets` →
+`markets`,而 `/coins/markets` 满仓库都是 → 全部判「已接」,守卫报「0 条未接」。
+**而我的判别性对照通过了** —— 它的反例是 `/zzz_not_a_real_endpoint_xyz`,
+一个明显不存在的串。**只测欠匹配的对照,抓不到过匹配。**
+补了一条与真端点共享末段的杜撰路径(`/zzz_fake_family/markets`)才有判别力。
+
+**② 注册表自己在 `src/` 里。** `source_policy.py` 匹配到它自己声明的每一条端点。
+「声明了这个能力」和「用了这个能力」是两个状态,扫描器把它们合并了。
+
+**③ 我在预算表里写「`/coins/categories` 至今仍未接」—— 没核,是错的。**
+它一直在调。同一个文件里,批评「没 grep 就断言」的那段文字下面三十行。
+
+### 价格侧测了什么(仅研究读数,不可发布)
+
+单源 coingecko(S-230),窗口自 08-22 起 —— BTC 那之后 −0.8%,所以那段的超额不是 beta:
+
+| 篮子 | n | 自 08-22 | 相对 beta |
+|---|---:|---:|---:|
+| 发行侧 infra(ONDO/MKR/PENDLE/LINK/INJ) | 5 | −5.7% | **−2.5pp** |
+| 场所/流动性 infra(UNI/AAVE/HYPE/ARB/OP) | 5 | **+5.8%** | **+9.0pp** |
+| 一般 beta | 6 | −3.2% | 0 |
+| 其余 L1/L2 | 9 | −11.0% | −7.8pp |
+
+最纯的代币化标的 ONDO 是全篮子最差(−16.8%)。读法:流先抬**它经过的地方**
+(撮合、借贷、跨链),不是**它变成的东西**(发行方)。
+
+**但这是价格,是倒影。** n=5、五周、标签我拍的、无 OOS、无显著性。
+`/rwas/*` 才是那个因,而它一次没调过 —— 这正是本条目的全部意义。
+
+### 结论
+
+「我们没有 X」这句话,在这个项目里已经错了两次,两次的代价都是提议去建一个
+已经买好的东西。所以它不再是一句提醒,而是一张会红的表:
+付费源必须登记 entitlement + VERIFY 命令,每条端点必须声明摄取状态,
+**未落库的必须被列出来且只能减。**
+
