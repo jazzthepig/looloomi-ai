@@ -1089,6 +1089,23 @@ python3 -m tests.test_source_freshness || {
 python3 -m tests.test_regime_quorum || {
   echo "  ✗ regime 配额守卫 — do not push"; exit 1; }
 
+# ── S-264: 我们买了什么、用了多少、哪些买了没用 ──────────────────────────────
+# 2026-09-01 我告诉 Jazz「我们测不了流,没有任何持久化的流量序列」。他的回答是
+# 「coingecko pro 应该是有的 …… 这点已经说过好多次了,我买了 139 刀每月的 pro api」。
+# 他是对的,而且**这件事本来就写在 src/data/market/source_policy.py 里** ——
+# S-205 的正文明写着 CG Pro 给 "market caps, dominance, categories, trending,
+# breadth across ~17,000 assets. We pay monthly for exactly this and were using
+# the free-shaped endpoints"。我没读自己 lane 的模块就断言了缺失,与 2026-08-19
+# 那次(CLAUDE.md 为它加了「说不存在之前先 grep」一整段)是同一个动作。
+# 实测:Analyst 档 500,000 次/月,已用 2,074 = **0.4%**。整个 session 我在为
+# Supabase 免费版的 500MB 做取舍,而旁边这个付费额度几乎全新。
+# 守卫测两件可机械化的事:① 付费源必须登记 entitlement + VERIFY;
+# ② **摄取状态三值** —— unwired / ephemeral(调了就扔)/ persisted。
+# 第三个值是实测逼出来的:/coins/categories 有调用点,但只取 16 家 VC 组合、
+# 10 分钟 TTL、从不落库。「有调用点」和「有历史」是两回事,而二值把它们合并了。
+python3 -m tests.test_paid_capability_is_known || {
+  echo "  ✗ 付费能力登记守卫 — do not push"; exit 1; }
+
 # ── S-252: 显示的分数不得落进比它评级更高的带 ────────────────────────────────
 # 实测 2026-08-27 排行榜首屏:Aave 75.7 = A,Uniswap 75.0 = B+。
 # UNI 的 raw 是 74.97 —— get_grade 给 B+ 是【对的】,而 round(74.97,1)=75.0

@@ -57,6 +57,45 @@ BULK_THRESHOLD = 6
 #: Sources we pay for. Their rate limits are contractual and generous.
 PAID_SOURCES = frozenset({"coingecko_pro", "eodhd"})
 
+#: 我们买到了什么,以及用掉了多少 (S-264, 2026-09-01 实测)。
+#:
+#: **为什么这必须是代码而不是记忆。** 2026-09-01 我告诉 Jazz「我们测不了流,
+#: 没有任何持久化的流量序列」。他的回答是「coingecko pro 应该是有的」,
+#: 然后:「这点已经说过好多次了,我买了 139 刀每月的 pro api」。
+#:
+#: 他是对的,而且这件事**本来就写在这个文件里** —— 上面那段 S-205 的正文
+#: 明写着 CoinGecko Pro 给 "market caps, dominance, categories, trending,
+#: breadth across ~17,000 assets. We pay monthly for exactly this and were
+#: using the free-shaped endpoints"。我没读自己 lane 里的这个模块就断言了缺失。
+#:
+#: 这跟 2026-08-19 那次是同一个动作:**在说「我们没有 X」之前没有 grep**。
+#: CLAUDE.md 为那次加了一整段警告。一年里第二次,所以这次不写成警告 ——
+#: 写成一个可以被查询、且被测试盯住的表。
+#:
+#: 最刺眼的一个数:**额度用了 0.4%。** 我整个 session 都在为 Supabase 免费版
+#: 的 500MB 做取舍(S-261 把回填改成本地优先),而旁边这个付费额度几乎全新。
+#: 一个被珍惜的免费额度和一个被闲置的付费额度同时存在,说明约束被找错了地方。
+PAID_ENTITLEMENTS: dict[str, dict] = {
+    "coingecko_pro": {
+        "plan": "Analyst",                    # $139/月
+        "monthly_call_credit": 500_000,
+        "measured_on": "2026-09-01",
+        "calls_used_at_measurement": 2_074,   # = 0.4%
+        # Analyst 解锁文档里标 💼 的全部端点;只差 👑 Enterprise。
+        "unlocks_analyst_tier": True,
+        "verify": "GET /api/v3/key → {plan, monthly_call_credit, "
+                  "current_remaining_monthly_calls}",
+    },
+}
+
+
+def utilisation(source: str) -> float | None:
+    """已用额度占比。`None` = 没量过 —— **不等于 0,也不等于健康**(S-246)。"""
+    e = PAID_ENTITLEMENTS.get(source)
+    if not e or not e.get("monthly_call_credit"):
+        return None
+    return e["calls_used_at_measurement"] / e["monthly_call_credit"]
+
 #: Free/public. Fine for a single question, never for a fan-out.
 FREE_SOURCES = frozenset({"hyperliquid", "binance", "binance_vision",
                           "yfinance", "alternative_me", "defillama"})
@@ -68,7 +107,14 @@ BULK_ENDPOINTS = {
     "coingecko_pro": {
         "/coins/markets": "250 assets/call — price, mcap, volume, %change",
         "/global": "total mcap, BTC dominance, one call",
-        "/coins/categories": "sector breadth, one call",
+        "/coins/categories": "sector breadth 叙事层,一次调用 — 每个分类的市值+成交量",
+        # ── 以下四条 2026-09-01 补入。它们一直存在于 Analyst 档,我们一次没调过。
+        "/rwas/markets": (
+            "所有代币化 RWA 的价格/市值/成交量,一次调用。**这是流本身,不是倒影** —— "
+            "市值序列即该代币化资产的 AUM"),
+        "/rwas/issuers/list": "RWA 发行方全表,一次调用",
+        "/global/market_cap_chart": "💼 历史全局市值 + 成交量(Analyst 档已含)",
+        "/exchanges/{id}/volume_chart": "场所成交量历史 — 检验「场所 infra 被买」的直接读数",
     },
     "hyperliquid": {
         "/info metaAndAssetCtxs": (
