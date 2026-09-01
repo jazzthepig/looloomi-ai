@@ -88,10 +88,6 @@ UNWIRED_BUDGET: dict[str, str] = {
         "历史全局市值+成交量,做分母。Analyst 档已含。**已有调用点但只在 "
         "scripts/reconstruct_cis_history.py 里,不在日常路径 ⇒ ephemeral。**",
     "/global":
-        "总市值 + BTC 主导率,一次调用。**ephemeral**:实时读了给页面,不落库,"
-        "所以主导率没有历史 —— 而「TradFi 边际流进加密」这类论点恰恰要看主导率的"
-        "轨迹,不是它此刻的值。",
-    "/global":
         "总市值 + BTC 主导率,一次调用。ephemeral:读了给页面,不落库,"
         "所以主导率没有历史 —— 而「TradFi 边际流进加密」这类论点要看的是主导率的"
         "轨迹,不是它此刻的值。",
@@ -137,7 +133,12 @@ def _repo_mentions(needle: str) -> bool:
             ["grep", "-rqE", frag, "src/", "scripts/",
              "--include=*.py", "--include=*.sh",
              # 注册表不是调用点 —— 不排除它,它会证明自己已接
-             "--exclude=source_policy.py"],
+             "--exclude=source_policy.py",
+             # ⚠️ 探针脚本也不是摄取路径。`scripts/rwa_probe.sh` 调了
+             # /rwas/markets 去问「面板多大」,那是**诊断**,不是落库。
+             # 不排除它,写一个 curl 就能让「未接」这条清单变短,而一行数据
+             # 都没有多。**「探过」和「接了」是两个状态。**
+             "--exclude=*_probe.sh"],
             cwd=ROOT, capture_output=True, timeout=30)
         return r.returncode == 0
     except Exception:                                          # noqa: BLE001

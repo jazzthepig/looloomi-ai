@@ -279,7 +279,16 @@ def test_health_fails_on_a_stale_brief_not_just_a_missing_one():
     """The Mac loop's own MAX_BRIEF_AGE_S ceiling cannot fire when the loop is
     what died. Detection must live on the other side of the wire."""
     src = code_only((ROOT / "src/api/health.py").read_text())
-    block = src.split('"macro_brief"')[0][-2000:] + src.split('"macro_brief"')[1][:2000]
+    # 取【整段】macro_brief 检查,不是「头两次出现前后各 2000 字符」。
+    #
+    # 初版按窗口切:`split(...)[0][-2000:] + split(...)[1][:2000]`。它默认
+    # `"macro_brief"` 只出现两次。S-265 给这段加了「上游暗着但兜底在顶」这条
+    # 分支(多两次出现),`received_at` 就被挤出了窗口 —— 断言在代码更完整之后
+    # 反而变红。**一个随被检查代码长度而失效的窗口,不是一个判据。**
+    first = src.find('"macro_brief"')
+    last = src.rfind('"macro_brief"')
+    assert first >= 0, "health.py 里找不到 macro_brief 检查"
+    block = src[max(0, first - 2000):last + 2000]
     assert "MAX_BRIEF_AGE_S" in block, (
         "the freshness limit must derive from the generator's own ceiling, not "
         "be restated — restating is how two numbers drift apart")

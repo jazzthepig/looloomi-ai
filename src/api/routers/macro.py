@@ -126,6 +126,7 @@ _AUTO_STALE     = 900     # regenerate the template fallback after 15 min
 # restated so the two cannot drift (this is exactly how `max-age=600` survived
 # alongside a 5-minute requirement in the first draft of this change).
 from src.api.contracts.macro_brief import POLL_INTERVAL_S as _POLL_S
+from src.api.contracts import serving_tier as _tier
 _BRIEF_MAX_AGE  = min(300, _POLL_S)
 _BRIEF_SWR      = 120     # brief SWR: a cold edge may serve up to 2 min past
                           # expiry, never the hour that caused S-183
@@ -353,7 +354,10 @@ async def get_macro_brief(response: Response):
                 "received_at":  data.get("received_at"),
                 "age_seconds":  age,
                 "stale":        age > _REDIS_TTL,
-                "source":       source,
+                # S-265:`source` 原本直接吐 "mac_mini" —— 面向用户的响应里的硬件名
+                # (规则 #8;那条守卫只扫 dashboard/*.jsx,API 响应从不在范围内)。
+                "source":       _tier.public_source(source),
+                **_tier.describe(_tier.UPSTREAM, age_s=age),
             }
 
     # Auto-generate from live macro-pulse data
@@ -373,10 +377,18 @@ async def get_macro_brief(response: Response):
             "model":        "template",
             "generated_at": datetime.utcnow().isoformat() + "Z",
             "received_at":  now,
-            "source":       "auto",
+            "source":       _tier.FALLBACK,
+            **_tier.describe(
+                _tier.FALLBACK,
+                reason="上游 macro:brief 缺失或过期,这份由 Railway 用 macro-pulse "
+                       "现算的模板顶上 —— 它的 regime 来自阈值兜底,不是引擎的判断"),
         }
-        # Cache with 1h TTL so it refreshes regularly
-        await redis_set_key(_REDIS_KEY, payload, ttl=_AUTO_TTL)
+        # S-265:**兜底不得写回上游那把钥匙。**
+        # 原本是 `redis_set_key(_REDIS_KEY, ...)`,而 health.py 判活读的就是
+        # `macro:brief`。于是 Mac 死 → health 报 missing → 兜底跑一次把自己写进去
+        # → **health 变绿而 Mac 仍然是死的**。缓解措施抹掉了自己存在的证据。
+        # 分开存,判活才分得开「上游活着」和「兜底顶着」。
+        await redis_set_key(_tier.fallback_key(_REDIS_KEY), payload, ttl=_AUTO_TTL)
         _logger.info(f"[MACRO] Auto-generated brief from macro-pulse data — {len(brief_text)} chars")
 
         return {**payload, "age_seconds": 0, "stale": False}
@@ -386,13 +398,17 @@ async def get_macro_brief(response: Response):
         # Last resort: return stale data or empty
         if data:
             age = now - data.get("received_at", 0)
-            payload = {**data, "age_seconds": age, "stale": True, "source": data.get("source", "mac_mini")}
+            payload = {**data, "age_seconds": age, "stale": True,
+                       "source": _tier.public_source(data.get("source")),
+                       **_tier.describe(_tier.STALE, age_s=age,
+                                        reason="上游旧值 + 兜底生成也失败了")}
             payload["brief_chars"] = len(payload.get("brief") or "")
             return payload
         return {
             "brief":       None,
             "brief_chars": 0,
             "stale":       True,
-            "source":      "none",
+            "source":      _tier.NONE,
+            **_tier.describe(_tier.NONE, reason="上游缺失,且兜底生成抛异常"),
             "message":     "Macro brief unavailable — data fetch failed.",
         }

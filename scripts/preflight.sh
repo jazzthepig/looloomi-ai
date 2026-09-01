@@ -1106,6 +1106,23 @@ python3 -m tests.test_regime_quorum || {
 python3 -m tests.test_paid_capability_is_known || {
   echo "  ✗ 付费能力登记守卫 — do not push"; exit 1; }
 
+# ── S-265: 兜底不得抹掉自己的报警;服务层级必须可见 ──────────────────────────
+# 2026-09-01 部署后 health 报 `macro_brief: missing`,而 /api/v1/macro/brief 正常
+# 返回内容。两件事同时为真,因为服务的是【兜底】:Mac 生成器暗着,Railway 用
+# macro-pulse 现算一份模板顶上 —— 而它生成后 `redis_set_key(_REDIS_KEY, ...)`
+# **写回了 health 判活读的那把钥匙**。
+#     Mac 死 → health 报 missing → 兜底跑一次 → 把自己写进 macro:brief
+#            → health 变绿,而 Mac 仍然是死的
+# 那次之所以看得见 missing,只是因为兜底那份 15 分钟 TTL 刚好过期。
+# **一个会把自己的报警清掉的兜底,比没有兜底更危险** —— 没有它时故障是可见的,
+# 有它时故障是可见的一小会儿。
+# 另两处同源:四条返回路径用四种 `source` 写法(mac_mini/auto/回落/none)外加一条
+# `model:"template"`,下游没有任何字段可以问「这是第几层」;而 "mac_mini" 直接出现在
+# 面向用户的 /api/v1/ 响应里(规则 #8 的守卫只扫 dashboard/*.jsx —— S-262 在
+# /internal/ 上发现过同一个盲区,这是它在公开 API 上的第二例)。
+python3 -m tests.test_serving_tier || {
+  echo "  ✗ 服务层级守卫 — do not push"; exit 1; }
+
 # ── S-252: 显示的分数不得落进比它评级更高的带 ────────────────────────────────
 # 实测 2026-08-27 排行榜首屏:Aave 75.7 = A,Uniswap 75.0 = B+。
 # UNI 的 raw 是 74.97 —— get_grade 给 B+ 是【对的】,而 round(74.97,1)=75.0
