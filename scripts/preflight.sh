@@ -80,6 +80,17 @@ echo "→ [3/3] discipline + schema-drift guard (philosophy compiled to CI, 2026
 # 3a. strategy discipline — cause/OOS/paper/regime evidence floor on every SHIP record
 python3 -m tests.test_the_boot_probe_does_not_run_the_app
 python3 -m tests.test_strategy_discipline
+# 3a.1 — lag-discipline regression guard (M-114, 2026-08-31). M-95c book Sharpe +8.2
+#         was a same-bar look-ahead (`m95c_book_assembly.py:134-147` selected on p[d]
+#         then earned day d). M-112 found that 13 rounds (M-95c..M-111) shipped with
+#         the leak because every diagnostic (DSR / walk-forward / stress / cost models)
+#         accepts a leaked book. M-114 codifies the right test: a sleeve whose Sharpe
+#         decays >50% when shifted from lag-0 to lag-1 fails automatically. Synthetic
+#         data, sandbox-safe, no DB / network / secrets. Gold-standard test asserts the
+#         guard catches the M-95c retention 0.072 (well below 0.5 floor).
+python3 -m src.research.validation.tests.test_m114_lag_discipline_smoke || {
+  echo "  ✗ M-114 lag-discipline guard FAILED — do not push"; exit 1; }
+echo "  ✓ M-114 lag-discipline regression guard"
 # 3a-bis. resilience — the 2026-07-29 P0 (Supabase saturation → 33s hangs → retry storm,
 #         while /health lied "healthy"). Guards: no retry on timeout, breaker opens, fails
 #         fast, RECOVERS after cooldown, 4xx doesn't trip it, health reflects reality.
@@ -1060,6 +1071,23 @@ python3 -m tests.test_track_record_measures || {
 # 正对着这个模块,我第一版全局 3 天就会在周二早上把 eodhd 报成 DEAD。
 python3 -m tests.test_source_freshness || {
   echo "  ✗ 价源判活守卫 — do not push"; exit 1; }
+
+# ── S-263: regime 标签要看【几票通过】,不只看它多新 ──────────────────────────
+# S-251 上面那段修的是价源:标的数从 261 掉到 1 而探针报 fresh。同一个形状在
+# regime 上又来一次,而这次连修法都是现成的却没人用:`daily_macro_regime` 这个
+# VIEW 每天算出 n_obs 与 n_sources,**两个消费者都只 select d,regime**
+# (beta_core_paper._regime_history / market_state_writer),把票数直接扔了。
+# 实测 2026-09-01 的 Supabase:08-17/08-21/08-22 的 n_sources=1,标签自 07-27
+# 起 36 天没翻过,而 _regime_history 的新鲜度检查全绿 —— 新鲜度证明的是
+# "这行是今天写的",不是"这行今天被想过"。一致性由减员产生,不是由共识产生。
+#
+# 这条守卫里最容易写错的两处,都不是阈值:
+#   · 当天那行还在填(09-01 上午 n_obs=86 vs 基线 1450 = 6%),按它判会每天
+#     早上误报一次 COLLAPSED。区分"写完了"和"塌了"的不是行数,是日期。
+#   · 基线必须排除近端,否则慢速塌陷把自己的基线一起拖下去,判据永不触发。
+#     实测:近端 20 天中位信源数 = 1,排除近端 = 3。差别来自窗口,不来自数值。
+python3 -m tests.test_regime_quorum || {
+  echo "  ✗ regime 配额守卫 — do not push"; exit 1; }
 
 # ── S-252: 显示的分数不得落进比它评级更高的带 ────────────────────────────────
 # 实测 2026-08-27 排行榜首屏:Aave 75.7 = A,Uniswap 75.0 = B+。
