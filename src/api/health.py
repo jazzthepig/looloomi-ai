@@ -94,9 +94,27 @@ async def compute_health_summary() -> dict:
     # fail-closed guard whose outage emitted no signal).
     try:
         from src.api.contracts.macro_brief import MAX_BRIEF_AGE_S
+        from src.api.contracts import serving_tier as _tier
         mb = await redis_get_key("macro:brief")
         if not (mb and mb.get("brief")):
-            checks.append(_check("macro_brief", False, "missing", warn=True))
+            # S-265:「上游暗着」和「上游暗着但兜底在顶」是两个状态,
+            # 而 `missing` 把它们说成一个。差别对运维是决定性的 ——
+            # 前者用户看到空白,后者用户看到一份**由阈值兜底算出的 regime**,
+            # 页面完全正常,而引擎的判断根本没参与。
+            #
+            # 这个区分在今天之前是不可能做出的:兜底会把自己写进 `macro:brief`,
+            # 也就是这里读的这把钥匙 —— 于是它一跑,这条检查就自动变绿,
+            # 而 Mac 仍然是死的。分键之后才谈得上分状态。
+            fb = await redis_get_key(_tier.fallback_key("macro:brief"))
+            if fb and fb.get("brief"):
+                checks.append(_check(
+                    "macro_brief", False,
+                    "upstream dark — FALLBACK serving. 用户看到的是阈值兜底算的 "
+                    "regime,不是引擎的判断;页面正常不代表这条链路正常",
+                    warn=True))
+            else:
+                checks.append(_check("macro_brief", False,
+                                     "missing — 上游与兜底都没有内容", warn=True))
         else:
             age = int(time.time()) - int(mb.get("received_at") or 0)
             # Two ceilings of slack: one missed cycle is a blip, two is a
