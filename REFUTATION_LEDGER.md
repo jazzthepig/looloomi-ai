@@ -13707,3 +13707,115 @@ allowlist 初版给 5 条路由都写了「external_probe.sh 无凭证读」。g
 逐条 grep 核过读者)· **27 条已收口** · **1 条已知坏**(登记,P1)。
 匿名可用的敏感端点:**0**。
 
+
+---
+
+## S-263 — 一个 regime 标签的可信度不只看它多新,还看它几票通过
+
+**日期** 2026-09-01 · **lane** Seth · **状态** 已落地(只报不拦),守卫进 preflight
+
+### 起因:M-120 的根因诊断错了,而它错得很有信息量
+
+Minimax 报 `narrative_daily.macro_regime` 停滞 42 天,根因写作「Railway
+`_daily_snapshot_loop()` (main.py:1227) 把 narrative_daily 写到 Supabase,
+producer 自 7-20 停写」。
+
+实测:**那个循环活着**,它写的四张表全部 0–1 天新鲜。
+
+| 表 | 最后写入 | 停滞 |
+|---|---|---|
+| `cis_scores` | 2026-09-01 | 0d |
+| `macro_briefs` | 2026-08-31 | 1d |
+| `conviction_verdicts_daily` | 2026-08-31 | 1d |
+| `narrative_snapshots` | 2026-08-31 | 1d |
+
+误诊来自一个名字:**`persist_narrative_daily()` 写的是 `narrative_snapshots`**。
+grep `narrative_daily` 命中 main.py:1271,离 1227 只有 44 行,于是那个循环被认成
+producer。而 `narrative_daily` 在 **Supabase 里根本不存在** —— 它是 Mac 本地
+sqlite 的表,另有 producer。
+
+> **一个名字指一张表,函数体写另一张表。** 整条错误因果链就是这么来的。
+
+### 真正的问题:多数票的选民从 3 个掉到 1 个,而票面结果没变
+
+`daily_macro_regime` 是 **VIEW**:每天对 `cis_scores.macro_regime` 取众数,
+同时算出 `n_obs` 与 `n_sources`。**两个消费者都只 `select d,regime`**
+(`beta_core_paper._regime_history` / `market_state_writer`)—— 票数被扔了。
+
+实测(Supabase,2026-09-01):
+
+```
+08-16  TIGHTENING  n_obs=1272  n_sources=2
+08-17  TIGHTENING  n_obs=1032  n_sources=1     ← 独裁
+08-19  TIGHTENING  n_obs=1564  n_sources=3     ← 且 08-18/19 另有 NEUTRAL 少数票
+08-21  TIGHTENING  n_obs=1032  n_sources=1
+08-22  TIGHTENING  n_obs=1032  n_sources=1
+08-31  TIGHTENING  n_obs=1090  n_sources=2
+09-01  TIGHTENING  n_obs=  86  n_sources=1     ← 今天还没写完
+```
+
+标签自 07-27 起 **36 天没翻过**,而 `_regime_history` 的新鲜度检查全绿。
+
+> **新鲜度证明的是「这行是今天写的」,不是「这行今天被想过」。**
+
+这是 S-251 的同一形状(binance_hist 261→1 而探针报 fresh),而这次连修法都是
+现成的:view 每天都把票数算好放在那里,没有一个消费者去取。
+
+### 两份 regime 在同一台机器上打架
+
+M-120 往 Mac 本地 `narrative_daily` 回填的是 **EASING**,由 BTC 30d 收益导出
+(实测 coingecko:+24.6%,M-120 的 23.6% 对得上)。Supabase 系统记录是
+**TIGHTENING**。book_trader 读本地那份。
+
+**两份都不该全信**:本地那份把单资产动量叫作宏观 regime;Supabase 那份是一个
+选民数掉到过 1 的多数票。M-120 还写「修复后 M-93 会正确识别 EASING stay long BTC,
+避免类似爆仓」—— 那是拿一个未经复核的本地标签去覆盖生产引擎的判断。
+
+### 建了什么:五值裁决,不是「够不够新鲜」
+
+`src/data/market/regime_quorum.py`:`ok / thin / COLLAPSED / frozen / no_baseline`。
+`regime` 与 `verdict` 是两个字段 —— 一个 COLLAPSED 的 TIGHTENING **仍然是**
+TIGHTENING,把不可信的标签换成 None 会让「没有标签」和「标签不可信」再次同形。
+
+今日实测:**thin**(信源 2/基线 3,票数 1090/基线 1450)。
+
+### 写这个守卫时,最容易错的两处都不是阈值
+
+**① 当天那行还在填。** 09-01 上午 `n_obs=86`,基线 1450 → 6% → COLLAPSED。
+**那会变成每天早上一次误报**,而误报的代价是下游拒绝定仓。
+「一天写完了」和「一天塌了」在行数上长得一样;**区分它们的不是行数,是日期。**
+所以裁决落在最新的**完整**一天上,今天那行的数字另外带出。
+判别性验证:同一批 86 票,把 `today` 前移一天让它成为完整的一天 → 判 COLLAPSED。
+
+**② 基线必须排除近端。** 慢速塌陷会把自己的基线一起拖下去。实测同一序列:
+近端 20 天中位信源数 = **1**,排除近端的基线 = **3**。**差别来自窗口,不来自数值。**
+
+### frozen 的第一版在真实数据上直接错了
+
+初版拿「翻转间隔的中位数」:六月底到七月底是高频震荡(间隔 1/2/3 天),
+中位数被压到 2.5 天,于是 `36 > 2.5×3` 触发 frozen —— 而同一段历史里明摆着有一个
+**25 天的 TIGHTENING 连续段**。36 天和 25 天是同一量级,不是异常。
+
+> **「平均多久翻一次」回答不了「这段持续得反常吗」。** 前者被震荡期支配;
+> 后者要问的是**这个面板见过多长的段**。
+
+改成对**历史最长已完成段**取 1.5 倍(且排除进行中的那段,否则当前段成为自己的
+基线)。今天 36 vs 24×1.5=36,**不触发**;再过一天触发 —— 两个都是对的答案。
+
+### 测试里我又写了一个没核过的断言
+
+「只喂最近 30 天 → 判不出 COLLAPSED」跑出来照样 COLLAPSED:那 30 天里还含 5 天
+塌陷前的数据,中位数是 2,门槛仍过得去。改成直接对比两个窗口的中位数 ——
+那才是那句话的内容。**S-262 同一课,隔了一天。**
+
+### 为什么只报不拦
+
+`book_trader.py` 因 M-112 P0 处于 HALT。在它停着、且正被复核时改变定仓行为,
+等于在没人看的情况下换掉一个正在复核的部件。**要不要拦,跟恢复 book 一起签。**
+但在此之前它必须可见 —— 不可见正是它上一次能瞒 42 天的原因。
+
+### 结论
+
+`daily_macro_regime` 的票数字段存在了不知多久,没有一个消费者读过。
+**一个已经算好的诊断信号,和一个不存在的诊断信号,在下游是同一回事。**
+

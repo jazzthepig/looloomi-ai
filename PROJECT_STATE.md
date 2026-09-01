@@ -4,15 +4,8 @@
 
 ## 本轮一句话:**一个形状,十次**
 
-> **S-262 收尾(2026-08-30):`/internal/` 40 条路由全部行为验过。**
-> 三个静态扫描器分别报 13 / 22 / 2 条「无门」,**三个都错** —— 门写在
-> `_auth()` helper 和叫 `expected`/`tok` 的变量里,正则看不见。真请求打完:
-> **12 条有意公开**(契约回声 + 无凭证脚本读的运维健康,读者逐条 grep 核过)·
-> **27 条已收口** · **1 条已知坏**(`beta-core-clock-size` ImportError → 500,
-> 探针不读所以没人发现;P1,归 beta-core 时钟 owner)· **匿名可用的敏感端点 0**。
-> 真漏洞一个:`/internal/telegram/webhook` 在 `TELEGRAM_WEBHOOK_SECRET` 未设时
-> **fail-open**(`if secret and …` 让缺席与正确走同一分支),无凭证 `{"ok":true}`,
-> 已改 fail-closed。守卫进 preflight 3a-unetvicies,三条变异全杀,比率器 111→**112/146**。
+> **S-262/S-263(2026-08-30→09-01)。** `/internal/` 40 条路由全部行为验过:12 条有意公开 ·
+> 27 条已收口 · 1 条已知坏 · 匿名可用的敏感端点 **0**。详见台账。**危险项已进 OPEN RISKS。**
 
 每一次都是**「拿不到」被渲染成一个合理的数字**,而不是被渲染成「拿不到」。
 一个 0 在合法区间内、看起来正常、是空累加的天然产物 —— 所以九次都没人发现。
@@ -58,15 +51,6 @@
 🟡 HL 采集器     最新 08-21,静默原因未查证
 ```
 
-## 三个等你的决定
-
-1. **① 账本 v4 已升(HL 是价格锚,不是成交场所)** —— 08-21/22 假 mark 已 void 并附原因。**void = 标记不是删除,行永远可查。**
-2. **② 面板 262 里只有 88 个能在 HL 成交** —— 另外 174 个的回测执行不了。要不要把研究宇宙收敛到可执行的那 88 个?
-3. **③ `_nav` 两张表没有写入者** —— 一周后还空就补写入者或删常量。
-
-<details><summary>历史 header (08-18 / 08-19) — 详见 REFUTATION_LEDGER 与 PROJECT_STATE_LOG</summary>
-</details>
-
 ## OPEN RISKS  (≤7 · cold-start first screen · every item ships a VERIFY command)
 
 *Why this block is first: measured on 2026-07-30, a cold agent following CLAUDE.md exactly could
@@ -81,6 +65,29 @@ regression check, not a risk. Moved to the ledger. Structural note while retirin
 the 8 entries were 🟢 closed.** A cap of 7 does not bind on risk, it binds on the list, so
 resolved items crowd out live ones and a cold agent reads eight entries to find three risks.
 The cap is doing its job only if closure is as routine as addition.*
+
+0. **🔴 两份 regime 标签在同一台机器上打架,而 book 读的是没人复核的那一份 (S-263, 2026-09-01)。**
+   Supabase 侧(系统记录)`daily_macro_regime` = **TIGHTENING**,自 07-27 起 36 天未翻;
+   M-120 往 Mac 本地 `_data/cis_history.db::narrative_daily` 回填的是 **EASING**,由 BTC 30d
+   收益(+24.6%)导出 —— **那不是宏观判定,是单资产动量换了个名字**。book_trader 读本地那份。
+   两份都不可全信:本地那份没有宏观内容;Supabase 那份是**一个多数票,而选民从 3 个掉到过 1 个**
+   (08-17/21/22 `n_sources=1`),而 `daily_macro_regime` 这个 VIEW **每天都算出 `n_obs`/`n_sources`,
+   两个消费者却只 `select d,regime`** —— 票数被扔了,所以「3 票一致」和「1 票独裁」在下游同形。
+   已建 `src/data/market/regime_quorum.py` 五值裁决(ok/thin/COLLAPSED/frozen/no_baseline),
+   今日实测 **thin**(信源 2/基线 3);**只报不拦**,因为 book 正处 M-112 HALT,在没人看时改定仓
+   行为等于换掉一个正在复核的部件。**要不要拦,跟恢复 book 一起签。**
+   VERIFY: `python3 -m tests.test_regime_quorum` → green ·
+   `select d,regime,n_obs,n_sources from daily_macro_regime order by d desc limit 10;`
+   → `n_sources` 连续 ≤1 即为塌陷
+   OWNER: Seth(配额层 + 拦截决策)· Minimax(本地 `narrative_daily` 的 producer 与定义)
+
+0b. **🔴 M-120 的待办第 4 条会重启 M-112 明令必须停的东西。**
+   M-112(08-30,P0)：`book_trader.py` HALT,Sharpe +8.2 是 same-bar look-ahead,诚实值 +1.25/+1.63。
+   M-120(08-31)：「book_trader 自 08-29 18:06 起未运行 —— **process 死了,需 restart**」。
+   而时间线是 18:04:46 触发 DD-STOP **-60.07%**、18:06:35 停止 —— 相差 109 秒,
+   **它不是崩溃,是回撤止损按设计停的**。「崩溃」与「正确地拒绝继续」被读成了同一个状态。
+   VERIFY: 恢复前必须先有 M-116(train/test split)+ M-93 的 OOS;两者目前都不存在。
+   OWNER: **AWAITING JAZZ**(HALT 还是用 Book B 恢复 paper)
 
 0. **🔴 C3 sizing table was INVERTED ON BOTH AXES (S-151, 2026-08-12).** Measured by
    execution: `lookup_size(regime=5 out-of-distribution, signal=1 weakest) = 1.30` and
@@ -236,53 +243,20 @@ The cap is doing its job only if closure is as routine as addition.*
    两者应当同日同价;若我们的 D 等于 HL 的 D−1,bug 仍在。
    OWNER: Seth(写入端 + 是否回补历史 → 需 Jazz 决定)
 
-6. **🟢 S-104 T2 fan-out fix VERIFIED IN PRODUCTION 2026-08-09 07:05Z.** `git_sha=5a54d1c1`
-   is the live build (24.6 min uptime, last_cis_push 221s ago). `t2_branches` reports
-   `fanout_total_ms=634` (well under 12 s budget), `degraded_branches=[]`. Served
-   `/api/v1/cis/universe`: `timestamp=2026-08-09T07:02:27.674901Z, data_age_s=70.8,
-   stale=false, t1_count=43, t2_count=15, source=merged, macro_regime=Tightening,
-   regime_confidence=0.72`. `/internal/loop-health` shows ALL 7 stages `flowing`
-   (compute/serve · store/hot · data completeness · ingest freshness · upstream causes ·
-   outcomes→conviction · narrative/NMA). `/internal/health-summary`: `mac_mini_push:
-   ok - 71s ago`. Two `/cis/universe` calls 35 s apart show `timestamp` advancing
-   normally (70.8s → ~110s) and `stale=false` steady. **This entry stays here as the
-   verification record; the original "UNVERIFIED IN PROD" hypothesis is settled.**
-   **What remains (fix-ladder steps 3+4, not in scope of S-104):** T2 still runs inside
-   the request path; 24 h data still runs inside the build. These are different problems.
-   VERIFY: `curl -sm 15 $BASE/api/v1/cis/universe | python3 -c "import json,sys;
-   d=json.load(sys.stdin); print(d['timestamp'], d['data_age_s'], d['stale'], d['t1_count'],
-   d['t2_count'])"` ⇒ should print a recent ISO timestamp, age <300s, `False`, 40+43+,
-   10+15+. OWNER: Seth (re-verify if any of the three: build, T2 fan-out, or /health
-   payload change)
+***RETIRED 2026-09-01 为 #0 腾位:🟢 S-104 T2 fan-out fix** — 2026-08-09 已在生产验证(`git_sha=5a54d1c1`, `fanout_total_ms=634`, `degraded_branches=[]`),其 VERIFY 是回归检查而非风险。正文进 `PROJECT_STATE_LOG.md` / 台账。**它带的那句教训单独留下:***
+   *代码修好而它的数据迁移没跑,是修了一半* —— S-123 的修复本身就带了迁移,
+   而迁移要 service_role,于是修复挂在另一条 OPEN RISK 上。
 
 ---
 
-**🟢 S-104 T2 fan-out fix verified in production 2026-08-09 07:05Z** — promoted from
-   OPEN RISK #7 to LANDED. The per-branch budget fix lands cleanly:
-   `t2_branches.fanout_total_ms=634` (under 12 s budget), `degraded_branches=[]`,
-   `last_universe_build.total_ms≈5 s` steady, served timestamp advances 70→110 s
-   over a 35 s gap, `stale:false` steady. `/internal/loop-health` shows all 7 stages
-   `flowing` (compute · store · data completeness · ingest · upstream causes ·
-   outcomes→conviction · narrative). `mac_mini_push: ok - 71s ago` matches the
-   served timestamp within seconds. The original "build never completes" failure
-   mode is gone. *(fix-ladder steps 3+4 — T2 outside request path, 24h data outside
-   build — are not in scope of S-104.)* **Lesson to write up: a 56-min stalled payload
-   read as a slow endpoint — measurement (S-104) found it was a never-completed build;
-   preflight is the only place that re-verifies the fix in production, so the
-   `/health` `t2_branches` block stays load-bearing.**
+## 三个等你的决定
 
-**🔴 ① beta_core paper book — clock STALLED, not 1 day old but 0 days old.** OPEN
-   RISK #4 promoted from "1 day old" to "never marked." `/internal/beta-core-clock` returns
-   `marks:0, started:false, gate_days_remaining:60` and the S-123 fix (commits b8af18b +
-   c0516f9) IS deployed (`git_sha=5a54d1c1`). The migration that adds the
-   `inception_id`/`void_reason` columns and unblocks v2 SELECT has not run —
-   blocked on service_role (OPEN RISK #1). A book that is silent cannot be told from
-   a book that is alive but writes were dropped on the floor (S-105 redux) — *and
-   this is a re-inception, so the lesson compounds: the S-123 fix INCLUDED a
-   migration for exactly this reason, but the migration needs service_role which is
-   the OPEN RISK #1 dependency. A code fix without its data migration is half a fix.*
+1. **① 账本 v4 已升(HL 是价格锚,不是成交场所)** —— 08-21/22 假 mark 已 void 并附原因。**void = 标记不是删除,行永远可查。**
+2. **② 面板 262 里只有 88 个能在 HL 成交** —— 另外 174 个的回测执行不了。要不要把研究宇宙收敛到可执行的那 88 个?
+3. **③ `_nav` 两张表没有写入者** —— 一周后还空就补写入者或删常量。
 
----
+<details><summary>历史 header (08-18 / 08-19) — 详见 REFUTATION_LEDGER 与 PROJECT_STATE_LOG</summary>
+</details>
 
 ## 💾 Supabase 免费版额度(2026-08-30 实测,S-261)
 
