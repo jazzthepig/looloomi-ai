@@ -89,6 +89,9 @@ FAMILIES: dict[str, bool] = {
     "cross_sectional_momentum_ls": True,        # M-86:本模块实现
     "cluster_tilt_cross_sectional_ls": True,    # M-87:实现于此;外部特征须带出处
     "regime_switch_beta_multiplier": False,     # M-88:regime 开关切两个子策略,机制不同
+    "survivors_only_lag1_book": True,           # M-113 V3 / M-115 Book B:2-sleeve book
+                                                # (① regime-gated BTC + ④ cross-section L/S)
+    "survivors_only_lag1_book_bookB": True,     # M-115 Book B alias (specs use either name)
 }
 
 
@@ -273,6 +276,51 @@ class Spec:
                 raw=raw,
             )
 
+        if fam in ("survivors_only_lag1_book", "survivors_only_lag1_book_bookB"):
+            # M-113 V3 (M-93 + R19-Lite) / M-115 Book B (M-93 + R14-Lite):
+            # 2-sleeve book combining ① regime-gated BTC long + ④ cross-section L/S.
+            # Per M-115: R14-Lite retention 0.614 PASSES M-114, R19-Lite 0.493
+            # borderline FAIL — Book B is the clean honest baseline.
+            sleeve_weights = need(p, "sleeve_weights", "parameters")
+            sleeve_m93 = need(p, "sleeve_M93", "parameters")
+            sleeve_xs = need(p, "sleeve_R14-Lite", "parameters") if "sleeve_R14-Lite" in p \
+                else need(p, "sleeve_R19-Lite", "parameters")
+            xs_rank_by = need(sleeve_xs, "rank_by", "parameters.sleeve_R*-Lite")
+            xs_k_long = int(need(sleeve_xs, "K_long", "parameters.sleeve_R*-Lite"))
+            xs_k_short = int(need(sleeve_xs, "K_short", "parameters.sleeve_R*-Lite"))
+            xs_cadence = int(need(sleeve_xs, "cadence_days", "parameters.sleeve_R*-Lite"))
+            xs_hold = int(need(sleeve_xs, "hold_days", "parameters.sleeve_R*-Lite"))
+            xs_w = float(need(sleeve_xs, "weight_per_leg", "parameters.sleeve_R*-Lite"))
+            # n_lookback: derive from rank_by "ret_Nd" → N
+            n_lookback = 14
+            if xs_rank_by.startswith("ret_") and xs_rank_by.endswith("d"):
+                try:
+                    n_lookback = int(xs_rank_by[4:-1])
+                except ValueError:
+                    pass
+            # M-93 skip_regimes = cash_when_regime_in
+            m93_skip = frozenset(str(r).upper() for r in
+                                 sleeve_m93.get("cash_when_regime_in", []))
+            return cls(
+                name=need(raw, "spec_name", "spec"),
+                universe=tuple(need(raw, "universe", "spec")),
+                rank_by=xs_rank_by,            # sub-sleeve ranking source
+                n_lookback=n_lookback,
+                hold=xs_hold,
+                cadence=xs_cadence,
+                k=max(xs_k_long, xs_k_short),
+                k_long=xs_k_long, k_short=xs_k_short,
+                weight_per_leg=xs_w,
+                cost_bps_rt=float(need(p, "cost_bps_rt_max", "parameters")),
+                dd_stop_pct=float(need(p, "dd_stop_pct", "parameters")),
+                max_open_trades=int(need(p, "max_open_trades", "parameters")),
+                skip_regimes=m93_skip,
+                source=str(need(ds, "primary", "data_source")),
+                family=fam,
+                dry_run=bool(ex.get("dry_run", True)),
+                raw=raw,
+            )
+
         return cls(
             name=need(raw, "spec_name", "spec"),
             universe=tuple(need(raw, "universe", "spec")),
@@ -353,6 +401,12 @@ def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
     反过来的话,一个价源死掉的日子会被记成"regime 跳过",
     而那会让停摆看起来像纪律。
     """
+    # Multi-sleeve book (M-113 V3 / M-115 Book B) routes to its own decide().
+    # 2-sleeve book needs different BLOCKED checks (BTC presence for M-93 sleeve)
+    # and different leg composition (regime-gated long + cross-section L/S).
+    if spec.family in ("survivors_only_lag1_book", "survivors_only_lag1_book_bookB"):
+        return decide_survivors_book(spec, panel, as_of=as_of, regime=regime,
+                                      n_open=n_open, features=features)
     d = as_of.isoformat()
     base = dict(d=d, spec_name=spec.name, panel_source=panel.source,
                 panel_last_bar=panel.last_bar)
@@ -418,7 +472,8 @@ def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
                                f"{spec.n_lookback}d 收益(需要 >= {MIN_UNIVERSE_FOR_RANK})"
                                f" —— 算不出名次不等于名次是平的")
 
-    # 打分。cross_sectional 家族就是 ret_n 本身;cluster_tilt 加外部特征的 tilt。
+    # 打分。cross_sectional 家族就是 ret_n 本身;cluster_tilt 加外部特征的 tilt;
+    # survivors_only_lag1_book 在此分支之前已经返回 (见下)。
     if spec.family == "cluster_tilt_cross_sectional_ls" and spec.external_features:
         fname = spec.external_features[0]
         fv = feats[fname].values
@@ -438,6 +493,100 @@ def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
     legs = tuple(
         [Leg(s, "long", spec.weight_per_leg, px(s)) for s in longs]
         + [Leg(s, "short", spec.weight_per_leg, px(s)) for s in shorts])
+    return Decision(**base, verdict=Verdict.ENTERED, legs=legs)
+
+
+# ── Multi-sleeve book (M-113 V3 / M-115 Book B) ─────────────────────────────
+# 2-sleeve book combining:
+#   ① regime-gated BTC long (M-93): long when regime ∉ skip_regimes; cash otherwise
+#   ④ cross-section L/S (R19-Lite or R14-Lite): K_long long + K_short short on
+#     rank_by (= ret_Nd momentum), weekly cadence, hold = hold_days
+# Legs are combined in a single Decision with the cross-section weight_per_leg
+# for the L/S sleeve and an explicit M-93 BTC long leg when regime permits.
+# Spec-level dd_stop / max_open_trades apply at the book.
+
+def decide_survivors_book(spec: Spec, panel: Panel, *, as_of: date,
+                          regime: Optional[str], n_open: int,
+                          features: Optional[Mapping[str, "ExternalFeature"]] = None
+                          ) -> Decision:
+    """Multi-sleeve book: ① regime-gated BTC long + ④ cross-section L/S.
+
+    Mirrors the upstream BLOCKED / SKIPPED checks from `decide()` to honor the
+    spec_runner discipline (no same-bar look-ahead, panel freshness, etc.).
+
+    Returns Decision with combined legs from both sleeves when ENTERED.
+    """
+    d = as_of.isoformat()
+    base = dict(d=d, spec_name=spec.name, panel_source=panel.source,
+                panel_last_bar=panel.last_bar)
+
+    # BLOCKED checks (same shape as decide())
+    if panel.n_symbols == 0:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"面板 0 个标的 —— 源 {spec.source} 没有返回任何行。"
+                               f"这不等于'今天没有机会' (S-180)")
+    age = panel.age_days(as_of)
+    if age is None:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason="面板没有可读的最后一根 bar")
+    if age > MAX_PANEL_AGE_DAYS:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"面板最后一根 bar 是 {panel.last_bar},已 {age} 天 "
+                               f"> {MAX_PANEL_AGE_DAYS} 天。用旧价开的仓会产生一条"
+                               f"看起来正常、而不可分辨的污染记录 (S-251)")
+    if "BTC" not in panel.closes:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"M-93 sleeve 需要 BTC —— 不在面板里。"
+                               f"book 不能在残缺宇宙上开仓")
+
+    # ② 规则说
+    canon = None
+    if regime is not None:
+        from src.data.cis.cis_provider import canonical_regime_strict
+        canon = canonical_regime_strict(regime)
+    base["regime"] = canon
+
+    def px(s: str) -> float:
+        return panel.closes[s][max(x for x in panel.closes[s] if x <= d)]
+
+    # ① M-93 sleeve: regime-gated BTC long (50% book weight)
+    m93_in_pos = canon is None or canon not in spec.skip_regimes
+    m93_legs: list[Leg] = []
+    if m93_in_pos:
+        m93_legs = [Leg("BTC", "long", 0.5, px("BTC"))]
+
+    # ④ R*-Lite sleeve: cross-section 14d (or N-day) momentum, K_long/K_short
+    if len(spec.universe) < max(MIN_UNIVERSE_FOR_RANK, spec.k_long + spec.k_short):
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"universe={len(spec.universe)} 不足以排 "
+                               f"{spec.k_long}+{spec.k_short} 条腿")
+    rets_xs = {s: _return_over(panel.closes[s], d, spec.n_lookback)
+               for s in spec.universe}
+    usable_xs = {s: v for s, v in rets_xs.items() if v is not None}
+    if len(usable_xs) < MIN_UNIVERSE_FOR_RANK:
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"只有 {len(usable_xs)}/{len(spec.universe)} 个标的"
+                               f"算得出 {spec.n_lookback}d 收益 —— 不开仓")
+    ranked = sorted(usable_xs, key=lambda s: usable_xs[s], reverse=True)
+    xs_longs = ranked[: spec.k_long]
+    xs_shorts = ranked[-spec.k_short:] if spec.k_short > 0 else []
+    if set(xs_longs) & set(xs_shorts):
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"K={spec.k} 在 {len(ranked)} 个标的上让多空腿重叠")
+    xs_legs = ([Leg(s, "long", spec.weight_per_leg, px(s)) for s in xs_longs]
+               + [Leg(s, "short", spec.weight_per_leg, px(s)) for s in xs_shorts])
+
+    # Book-level DD-stop / max_open_trades check
+    if n_open >= spec.max_open_trades:
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"已有 {n_open} 笔未平仓 >= max_open_trades "
+                               f"{spec.max_open_trades}")
+
+    legs = tuple(m93_legs + xs_legs)
+    if not legs:
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"regime {canon} 让 M-93 sleeve 在 cash,"
+                               f"且 R*-Lite sleeve 也无腿 —— book 当天空仓")
     return Decision(**base, verdict=Verdict.ENTERED, legs=legs)
 
 
@@ -463,5 +612,6 @@ def exit_due(spec: Spec, *, entry_date: date, as_of: date,
 
 
 __all__ = ["Spec", "Panel", "Decision", "Leg", "Verdict",
-           "build_panel", "decide", "should_run_today", "exit_due",
+           "build_panel", "decide", "decide_survivors_book",
+           "should_run_today", "exit_due",
            "MAX_PANEL_AGE_DAYS", "MIN_UNIVERSE_FOR_RANK"]
