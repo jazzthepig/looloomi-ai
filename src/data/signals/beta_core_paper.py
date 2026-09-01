@@ -493,6 +493,11 @@ async def _load_panel():
 
 _REGIME_DWELL_DAYS = 5   # see below; equals the gate's minimum holding period
 
+#: 最近一次 regime 配额裁决 (S-263)。健康端点读它,好让「标签几票通过」
+#: 成为可观测量而不是只存在于日志里。空 dict = 还没读过 —— 与「读过且健康」
+#: 不同,消费者须自行区分(`verdict` 键缺失 ⇒ 未测量)。
+LAST_REGIME_QUORUM: dict = {}
+
 
 async def _regime_history(days: int = 30) -> list[str]:
     """Last `days` days of daily-modal regime, oldest first.
@@ -521,8 +526,14 @@ async def _regime_history(days: int = 30) -> list[str]:
     base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
     if not base or not key:
         return []
-    since = (dt.date.today() - dt.timedelta(days=days + 5)).isoformat()
-    url = (f"{base}/rest/v1/daily_macro_regime?select=d,regime"
+    # S-263: 取的列里必须含票数。这个 view 每天都算出 `n_obs` 与 `n_sources`,
+    # 而这里原本只取 `d,regime` —— 于是「3 个信源一致」和「1 个信源独裁」在下游
+    # 长成同一个字符串。实测 2026-08-17/21/22 的 n_sources=1,而新鲜度检查全绿。
+    # 窗口也放宽到能覆盖配额基线(60 天),否则基线永远算不出来。
+    from src.data.market import regime_quorum as _rq
+    lookback = max(days + 5, _rq.BASELINE_LO_DAYS + 5)
+    since = (dt.date.today() - dt.timedelta(days=lookback)).isoformat()
+    url = (f"{base}/rest/v1/daily_macro_regime?select={_rq.SELECT_COLS}"
            f"&d=gte.{since}&order=d.asc")
     try:
         async with httpx.AsyncClient(timeout=8) as c:
@@ -535,6 +546,22 @@ async def _regime_history(days: int = 30) -> list[str]:
     except Exception as e:
         _log.warning("[beta_core] regime history unavailable: %s", e)
         return []
+    # ── 配额:标签有多少票 (S-263) ────────────────────────────────────────
+    # 只报,不拦。book_trader 现在因 M-112 P0 处于 HALT,在它停着的时候改变
+    # 定仓行为等于在没人看的情况下换掉一个正在复核的部件。要拦,等 Jazz 对
+    # 恢复 book 签字时一起定 —— 但**在此之前它必须是可见的**,因为不可见正是
+    # 它上一次能瞒 42 天的原因。
+    try:
+        _q = _rq.classify(rows)
+        LAST_REGIME_QUORUM.update(_q.__dict__)
+        if _q.verdict in (_rq.COLLAPSED, _rq.FROZEN):
+            _log.error("[beta_core] regime 配额 %s — %s", _q.verdict, _q.reason)
+        elif not _q.usable:
+            _log.warning("[beta_core] regime 配额 %s — %s", _q.verdict, _q.reason)
+    except Exception as _qe:                                   # noqa: BLE001
+        # 配额层出错不得拖垮读历史这条主路径 —— 它是观测,不是前置条件。
+        _log.warning("[beta_core] regime 配额层不可用: %s", _qe)
+
     series = [(str(x.get("d", ""))[:10], x.get("regime")) for x in rows]
     series = [(d, g) for d, g in series if d and g]
     if not series:
