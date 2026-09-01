@@ -338,6 +338,11 @@ def snapshot(rows: Iterable[RwaRow], *, d: Optional[dt.date] = None) -> dict:
         "equity_like_total": est.value,
         "equity_like_verdict": est.verdict,
         "equity_like_reason": est.reason,
-        "n_measured": est.n_measured,
-        "n_unmeasured": est.n_unmeasured,
+        # ⚠️ 这两个是**股票/ETF 口径**的计数,不是全面板的。
+        # 初版叫 `n_measured`/`n_unmeasured`,与同一个 dict 里的 `n_rows`(全面板)
+        # 并排,读的人会算 646−644=2 并以为有 2 条未测 —— 实际 644 是股票+ETF
+        # 全部已测,那 2 条是商品(不进这个口径)。
+        # **两个不同的分母并排报告而不标注,就是让人算出一个错的差。**
+        "equity_like_n_measured": est.n_measured,
+        "equity_like_n_unmeasured": est.n_unmeasured,
     }

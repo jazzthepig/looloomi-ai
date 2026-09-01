@@ -186,7 +186,7 @@ def t_snapshot_carries_the_verdict_with_the_number():
     """标量单独落库 = 下一个读它的人无从判断成色。"""
     s = snapshot(parse_rows(REAL_SHAPED))
     for k in ("equity_like_total", "equity_like_verdict", "equity_like_reason",
-              "by_asset_type", "by_issuer", "n_unmeasured"):
+              "by_asset_type", "by_issuer", "equity_like_n_unmeasured"):
         _check(f"快照含 {k}", k in s, str(sorted(s)))
     _check("裁决是封闭取值之一",
            s["equity_like_verdict"] in (AGREE, DISPERSED, SINGLE, NO_DATA),
@@ -210,10 +210,38 @@ def t_pagination_stops_on_short_page_not_on_a_page_count():
            C.MAX_PAGES * C.PER_PAGE >= 5000, f"{C.MAX_PAGES}x{C.PER_PAGE}")
 
 
+def t_two_denominators_are_never_reported_unlabelled():
+    """`n_rows`(全面板)与股票/ETF 口径的计数并排 ⇒ 必须各自带前缀。
+
+    实测 2026-09-01 首跑:`n_rows=646` / `n_measured=644` / `n_unmeasured=0`。
+    读的人会算 646−644=2 并以为有 2 条未测 —— 实际 644 是股票+ETF 全部已测,
+    那 2 条是商品,**根本不在这个口径里**。
+    **两个不同的分母并排报告而不标注,就是让人算出一个错的差。**
+    """
+    s = snapshot(parse_rows(REAL_SHAPED))
+    _check("全面板计数叫 n_rows", s.get("n_rows") == 7, str(s.get("n_rows")))
+    _check("口径内计数带 equity_like_ 前缀",
+           "equity_like_n_measured" in s and "equity_like_n_unmeasured" in s,
+           str(sorted(k for k in s if "measur" in k)))
+    _check("没有裸的 n_measured / n_unmeasured 与 n_rows 混在一起",
+           "n_measured" not in s and "n_unmeasured" not in s,
+           str(sorted(s)))
+    # 判别性:两个分母确实不同,所以标注是必需的而不是装饰。
+    _check("两个分母确实不同(7 vs 5)—— 不标注就会被相减",
+           s["n_rows"] != s["equity_like_n_measured"],
+           f'{s["n_rows"]} vs {s["equity_like_n_measured"]}')
+
+
 def t_missing_issuer_map_is_empty_not_invented():
     """拿不到发行方映射 → 全落 unknown 桶(可见),而不是猜一个(不可见)。"""
     src = (ROOT / "src/data/rwa/collect.py").read_text()
     _check("issuer 拉取失败返回空 dict", "return {}" in src)
+    # 真实形状核过了:/rwas/issuers/list 只给 [{id, name}],没有资产清单。
+    # 正确路径是拿 id 去 /rwas/markets?issuer= 反查。
+    _check("按发行方反查,而不是从清单里读资产",
+           '"issuer": iid' in src, "还在假设 issuers/list 自带资产清单")
+    _check("一资产多发行方 → 记冲突,不后写覆盖",
+           "__conflict__" in src, "覆盖会把集中度悄悄归到最后遍历到的那家")
     _check("落库 schema 注明 market_cap NULL ≠ 0",
            "NULL = 未测" in src, "I1 没有写进表定义")
     _check("裁决与数值同表同行", "equity_like_verdict  TEXT NOT NULL" in src,

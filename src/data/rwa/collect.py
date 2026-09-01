@@ -48,8 +48,11 @@ CREATE TABLE IF NOT EXISTS rwa_daily (
 CREATE TABLE IF NOT EXISTS rwa_panel_daily (
     d                    TEXT PRIMARY KEY,
     n_rows               INTEGER,
-    n_measured           INTEGER,
-    n_unmeasured         INTEGER,
+    -- ⚠️ 这两列是**股票/ETF 口径**,不是 n_rows 那个全面板口径。
+    -- 实测 2026-09-01:n_rows=646、equity 已测=644、商品 2 条不进这个口径。
+    -- 不标注就会有人算 646−644=2 并以为有 2 条未测。
+    equity_n_measured    INTEGER,
+    equity_n_unmeasured  INTEGER,
     equity_like_total    REAL,
     equity_like_verdict  TEXT NOT NULL,   -- 裁决与数值同行落库(S-263 同一形状)
     equity_like_reason   TEXT,
@@ -97,32 +100,61 @@ async def fetch_markets(*, client=None) -> list[dict]:
 
 
 async def fetch_issuer_map(*, client=None) -> dict[str, str]:
-    """rwa_id → issuer。**拿不到就返回空 dict,不编。**
+    """rwa_id → issuer_id。**按发行方反查,不是从一个清单里读出来。**
 
-    空映射会让所有行落进 `unknown` 桶 —— 那是一个可见的状态,
-    而猜一个发行方是一个不可见的错误。
+    ⚠️ 第一版猜错了形状:我假设 `/rwas/issuers/list` 会带每个发行方的资产清单,
+    去读 `it["rwas"]`。实测 2026-09-01 返回 `issuer_map_size: 0` —— 因为该端点
+    **只返回 `[{id, name}]`**,没有资产清单。文档写明它的用途是:
+    「get issuer IDs for endpoints that require an `issuer` parameter」。
+
+    所以正确路径是拿到 id 之后,用 `/rwas/markets?issuer=<id>` 逐个过滤反查。
+
+    **这次猜错没有造成脏数据**,因为第一版在形状不符时返回空 dict 而不是猜 ——
+    于是所有行落进可见的 `unknown` 桶,`issuer_map_size: 0` 直接把问题报了出来。
+    一个诚实的空值比一个编出来的映射便宜得多:错的映射会把某个发行方的集中度
+    算到另一家头上,而曲线看起来完全正常。
+
+    调用成本:发行方数 N 次(+1 次拿清单)。N 约几十 ⇒ 日频 ~30 次
+    ⇒ 月 ~900 次 ⇒ 占 500,000 额度的 0.18%。
     """
     import httpx
     own = client is None
     client = client or httpx.AsyncClient(timeout=30)
+    out: dict[str, str] = {}
     try:
         r = await client.get(f"{CG_BASE}/rwas/issuers/list", headers=_headers())
         r.raise_for_status()
         issuers = r.json() or []
+        if not isinstance(issuers, list):
+            return {}
+        for it in issuers:
+            if not isinstance(it, dict):
+                continue
+            iid = str(it.get("id") or "").strip()
+            if not iid:
+                continue
+            try:
+                m = await client.get(
+                    f"{CG_BASE}/rwas/markets", headers=_headers(),
+                    params={"issuer": iid, "per_page": PER_PAGE})
+                m.raise_for_status()
+                for row in m.json() or []:
+                    rid = str((row or {}).get("id") or "").strip()
+                    if not rid:
+                        continue
+                    # 一只资产可能被多家发行方代币化。**先到先得 + 记冲突**,
+                    # 而不是后写覆盖 —— 覆盖会让集中度悄悄归到最后遍历到的那家。
+                    if rid in out and out[rid] != iid:
+                        out[f"__conflict__{rid}"] = f"{out[rid]}|{iid}"
+                        continue
+                    out[rid] = iid
+            except Exception:                                  # noqa: BLE001
+                continue        # 单个发行方失败不拖垮整张映射
     except Exception:                                          # noqa: BLE001
         return {}
     finally:
         if own:
             await client.aclose()
-    # 形状未在生产上核过 —— 只接受明确带 rwa 列表的条目,其余跳过而不是猜。
-    out: dict[str, str] = {}
-    for it in issuers if isinstance(issuers, list) else []:
-        if not isinstance(it, dict):
-            continue
-        iid = str(it.get("id") or it.get("name") or "").strip()
-        for rid in (it.get("rwas") or it.get("rwa_ids") or []):
-            if iid and isinstance(rid, str):
-                out[rid] = iid
     return out
 
 
@@ -141,7 +173,8 @@ def write_local(rows: list[RwaRow], snap: dict, *, db_path: str = LOCAL_DB) -> i
              for r in rows])
         con.execute(
             "INSERT OR REPLACE INTO rwa_panel_daily VALUES (?,?,?,?,?,?,?,?,?)",
-            (d, snap["n_rows"], snap["n_measured"], snap["n_unmeasured"],
+            (d, snap["n_rows"], snap["equity_like_n_measured"],
+             snap["equity_like_n_unmeasured"],
              snap["equity_like_total"], snap["equity_like_verdict"],
              snap["equity_like_reason"],
              json.dumps(snap["by_asset_type"], ensure_ascii=False),
@@ -158,7 +191,13 @@ async def collect(*, dry_run: bool = True, db_path: str = LOCAL_DB) -> dict:
     issuer_of = await fetch_issuer_map()
     rows = parse_rows(payload, issuer_of=issuer_of)
     snap = snapshot(rows)
-    snap["issuer_map_size"] = len(issuer_of)
+    # 冲突键不是映射,单独计数 —— 一只资产被多家代币化是真实现象,
+    # 而把它混进 map 大小会让「覆盖率」虚高。
+    conflicts = [k for k in issuer_of if k.startswith("__conflict__")]
+    snap["issuer_map_size"] = len(issuer_of) - len(conflicts)
+    snap["issuer_conflicts"] = len(conflicts)
+    snap["issuer_coverage"] = (
+        round(snap["issuer_map_size"] / snap["n_rows"], 3) if snap["n_rows"] else None)
     snap["dry_run"] = dry_run
     if not dry_run:
         snap["rows_written"] = write_local(rows, snap, db_path=db_path)
