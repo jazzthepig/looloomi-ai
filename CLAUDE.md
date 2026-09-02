@@ -17,21 +17,23 @@
 | The soul / north star | `ARCHITECTURE.md` | read when a decision touches what we ARE |
 | Behavioral-edge doctrine | `docs/TRADER_TOM_DOCTRINE.md` | read before building any sleeve |
 | **Mining output — where the research actually IS** | `Shadow/cometcloud-local/_reports/INDEX.md` (reader's guide, 14 R-numbers + status) → then `absorb_input/` (217 files) | Minimax-C writes both; **read the WHOLE lineage, not the first hit** — R70 read alone gave a number R71 corrected by 32% |
+| **How deep we already hold a symbol** (before ANY backfill) | `curl /internal/data-coverage?symbol=X` — no creds | Baseline is **`deepest_start` = union across sources**, never one source's start. S-276: M-118 used binance_hist and re-fetched 820 days of PENDLE we already had |
 | Full history | `git log` | |
 
-**⚠️ "NOT authority" ≠ "not worth reading" — this cost real work (2026-08-19).** Rule #2 below
-says Shadow is read-only and drifts, and that is about the *contract*: never take a schema or a
-config from it. It says nothing about the RESEARCH in it, and the source-of-truth table did not
-mention `_reports/` at all. Reading the rule as "ignore Shadow" led Seth to survey four
-directories, find one verifiable backtest, and tell Jazz we did not have more — while
-`_reports/absorb_input/` held 14 R-number summaries including R70's held-out OOS grid, the single
-best-disciplined result we own. **Before saying a result does not exist, grep `_reports/`.**
+**⚠️ "NOT authority" ≠ "not worth reading" (2026-08-19, cost real work).** Rule #2 is about the
+*contract* — never take a schema or config from Shadow. It says nothing about the RESEARCH in it.
+Reading it as "ignore Shadow" led Seth to tell Jazz we had one verifiable backtest, while
+`_reports/absorb_input/` held 14 R-number summaries including R70's held-out OOS grid.
+**Before saying a result does not exist, grep `_reports/`.**
 
-**Cold-start budget is enforced, not advisory** (`tests/test_cold_start_contract.py`, S-165).
-Only MEMORY.md was capped, so the cost moved next door: PROJECT_STATE reached 315k chars
-(~99k tokens **per lane per session**) and MINIMAX_SYNC 150k, while both contained headings
-that already called themselves history and neither had ever been split. A cap with too narrow
-a scope doesn't just miss things — it redirects attention away from them.
+**Caps above are CI, not advice** (`tests/test_cold_start_contract.py`, S-165) — the test is the
+memory. The lesson that outlived the incident: capping only MEMORY.md pushed the cost next door
+(PROJECT_STATE hit 315k), because **a cap with too narrow a scope redirects attention away from
+what it misses.**
+
+**A lane can only judge what it can see.** When another lane gets something wrong about our data,
+ask what it could read before asking it to be more careful — S-276 was an interface gap
+(no Supabase access ⇒ single-source baseline), not a discipline failure.
 
 ## Who I'm working with
 
@@ -105,6 +107,13 @@ then excess.
 
 3. **Ownership lanes.** Seth/Austin: `src/`, `dashboard/`, `docs/`, `scripts/`. Minimax:
    `/Volumes/CometCloudAI/cometcloud-local/`. When unsure, `MINIMAX_SYNC.md` §1.
+
+3b. **Ingestion is ONE lane (Seth), by function not by path.** Fetching and persisting price data
+   goes through the guarded path only (S-251/S-258 CG Pro→Supabase, S-269 `deep_walk`); Minimax
+   *consumes* — mining, backtests, VDB upkeep. Path-based lanes alone permitted M-118: it stayed
+   inside minimax paths and still built a 3rd fetcher over data we already had. **Two ingesters
+   means two series that look like the same quantity and are not** — the defect that produced
+   S-273/S-274/S-275 in one day. Backfill request → say so in `MINIMAX_SYNC`, Seth's lane runs it.
 
 4. **NEVER run git write-commands from the Cowork sandbox** (FUSE denies unlink → stranded
    `.git/index.lock`). Sandbox = edit surface only; ALL git happens Mac-side. Agent edits files
