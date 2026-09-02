@@ -2009,6 +2009,101 @@ async def telegram_webhook(update: dict, request: Request):
     return {"ok": True}
 
 
+@app.get("/internal/data-coverage")
+async def data_coverage(symbol: str | None = None):
+    """每个 symbol×source 我们**实际**持有多深 —— 跨 lane 的共享基线 (S-276).
+
+    ## 为什么存在:一次可查证的重复劳动
+
+    M-118(minimax-c,2026-09-02)用 CG Pro 回填 5 个标的,报「PENDLE +820 天,
+    大赢家」。查证:Supabase 里 `coingecko` 源的 PENDLE **1940 行、2021-04-28 起**
+    —— 与他抓到的起始日一模一样。那 820 天我们早就有了。
+
+    根因不是粗心:**minimax-c 读不到 Supabase**,只能拿 Mac 侧单一个源
+    (`binance_hist`,PENDLE 2023-07-03 起)当基线。于是两个状态在他那里同形 ——
+    「我们真的只有 2023 年起的数据」和「有更深的源,只是不是他在看的那个」。
+
+    **让他更小心解决不了;给他一个可查的基线才能。**
+
+    所以本端点回答的是他真正的问题:*如果我去回填 X,实际能新增多少?*
+    答案取**跨源并集的最深起点**(`deepest_start`),不是任一个源的。
+
+    与 `/internal/data-freshness` 的分工:那个回答「哪个管道死了」,
+    这个回答「我们有多深」。**两个问题,两个答案** —— S-272 的教训是
+    一个响应里若有两个裁决而顶层没有,告警会挑更眼熟的那个。
+
+    无凭证可读(与该族其余端点一致,见 tests/test_internal_routes_reject_anonymous
+    的 PUBLIC_BY_DESIGN):它只有覆盖形状,没有价格数值,而 minimax-c 需要它
+    且不该拿到 service_role(Jazz 2026-08-30)。
+    """
+    import time as _t
+    from src.api.store import redis_get_key, redis_set_key, supabase_rpc
+    from src.data.market.coverage import CONSUMER_NOTE, as_json, build, lookup
+
+    CACHE_KEY = "ohlcv:symbol_coverage"
+
+    cached = None
+    try:
+        cached = await redis_get_key(CACHE_KEY)
+    except Exception:                                             # noqa: BLE001
+        cached = None
+
+    rows, served_from = None, None
+    if isinstance(cached, dict) and cached.get("rows"):
+        rows, served_from = cached["rows"], "cache"
+    else:
+        try:
+            raw = await supabase_rpc("ohlcv_symbol_coverage", {})
+            if isinstance(raw, list):
+                rows = [{"symbol": r.get("symbol"), "source": r.get("source"),
+                         "n": r.get("n"),
+                         "first": r.get("first_date"), "last": r.get("last_date")}
+                        for r in raw]
+                served_from = "upstream"
+                try:
+                    # 6h TTL:覆盖度是慢变量,而 Supabase 是免费档
+                    # (Jazz:「能不增加用量就不增加」)。一次全表聚合,不按标的 fan-out。
+                    await redis_set_key(CACHE_KEY, {"rows": rows}, ttl=21600)
+                except Exception:                                 # noqa: BLE001
+                    pass
+        except Exception as e:                                    # noqa: BLE001
+            # **读不到 ≠ 没有数据** (S-180)。RPC 未部署时必须说出来,
+            # 否则下游会把空当成「这些标的都不存在」—— 而那正是
+            # 本端点要修的那个误读。
+            return {"verdict": "unavailable", "served_from": None,
+                    "error": f"{type(e).__name__}",
+                    "note": ("ohlcv_symbol_coverage RPC 读取失败 —— "
+                             "**读不到不等于库里没有**。在它恢复之前,"
+                             "不要把任何标的当成缺失来回填"),
+                    "consumer_note": CONSUMER_NOTE}
+
+    if not rows:
+        return {"verdict": "unavailable", "served_from": served_from,
+                "note": "RPC 返回空 —— 读不到 ≠ 库里没有",
+                "consumer_note": CONSUMER_NOTE}
+
+    cov = build(rows)
+    if symbol:
+        c = lookup(cov, symbol.upper())
+        return {"verdict": c.verdict, "served_from": served_from,
+                "symbol": c.symbol, "deepest_start": c.deepest_start,
+                "best_source": c.best_source, "latest": c.latest,
+                "per_source": [
+                    {"source": s.source, "n": s.n, "first": s.first, "last": s.last}
+                    for s in c.per_source],
+                "reason": c.reason, "consumer_note": CONSUMER_NOTE}
+
+    j = as_json(cov)
+    return {
+        "verdict": "ok", "served_from": served_from,
+        "checked_at": int(_t.time()),
+        "n_symbols": len(j),
+        "n_pairs": sum(x["n_sources"] for x in j.values()),
+        "consumer_note": CONSUMER_NOTE,
+        "coverage": j,
+    }
+
+
 @app.get("/internal/data-freshness")
 async def data_freshness():
     """Age of every pipeline that can die silently. One cheap query per table.
