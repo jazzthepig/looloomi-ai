@@ -1268,6 +1268,17 @@ python3 -m tests.test_asset_index || {
 python3 -m tests.test_coverage || {
   echo "  ✗ 跨 lane 覆盖基线守卫 — do not push"; exit 1; }
 
+# ── S-277: 未知列必须拒绝,不能静默丢弃 ────────────────────────────────────
+# Mac 侧 4 个 daily writer 等我开代理端点等了 18 天(risk_meter_history 自 08-15)。
+# 「不许直写 Supabase」的原则是对的,但只立原则不开口子等于把对方逼回直写。
+#
+# 守卫的那一条:先做「挑出已知列」的过滤,一个拼错的字段(regime vs macro_regime)
+# 会被悄悄丢掉 → 写进一行看起来正常、实际缺列的数据,两边都以为成功了。
+# 而 risk_meter_history 用 `regime`、asset_embeddings_history 用 `macro_regime` ——
+# **这正是会写错的地方**。列名取自 information_schema 实查,不抄 Mac 侧代码。
+python3 -m tests.test_mac_writes || {
+  echo "  ✗ Mac 代理写入守卫 — do not push"; exit 1; }
+
 # ── S-272: 判活响应必须在【顶层】给一个裁决 ─────────────────────────────────
 # 2026-09-02 Jazz 问「系统检测说 ohlcv 又停了,是否如此」。查下来:
 # **没有任何东西是新停的** —— coingecko 完整日连续 12 天 25/25、eodhd 33/33;
