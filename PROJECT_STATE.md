@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-02 (Seth/Cowork lane — S-262…S-276 十五条;S-276 查实 M-118 的「PENDLE +820 天」是与 Supabase 已有数据的重复,根因是 minimax-c 读不到 Supabase ⇒ 已开 /internal/data-coverage 作跨 lane 基线;S-275 ETF≠资产、S-274 数字已挂 ERRATUM;5 项 JAZZ 决策仍挂)
+**Last updated:** 2026-09-02 (Seth/Cowork lane — S-262…S-277 十六条;S-277 开了 Mac 侧 4 个 writer 的代理端点——他们等了我 18 天,不是在等指令;S-276 data-coverage 跨 lane 基线已上线验证;CLAUDE.md 加 rule 3b 摄取归一;MINIMAX_SYNC 77k→29k;指令已下 §SETH-DISPATCH-2026-09-02)
 
 ## 本轮一句话:**一个形状,十次**
 
@@ -248,6 +248,21 @@ The cap is doing its job only if closure is as routine as addition.*
    而迁移要 service_role,于是修复挂在另一条 OPEN RISK 上。
 
 ---
+
+## 2026-09-02 追加:S-277 —— 我欠 Minimax 的 18 天
+
+Jazz:「minimax 都在等你修完和下指令」。查 §IN-FLIGHT:**他们不是在等指令,
+是在等我。** 四行「等 Seth 开 endpoint」,`risk_meter_history` 自 **08-15**。
+
+> **一条只有禁令没有出口的规则,考验的是对方的耐心,不是系统的正确性。**
+
+已开 `POST /internal/mac-write/{dataset}`(4 张表,逐条裁决,X-Internal-Token)
++ `GET /internal/mac-write/schema`(契约回声)。守卫那一条:**未知列拒绝不丢弃** ——
+`risk_meter_history` 用 `regime`、`asset_embeddings_history` 用 `macro_regime`,
+写错一字就是一行静默的坏数据。列名取自 information_schema 实查,不抄 Mac 侧代码。
+
+**指令已下** `MINIMAX_SYNC §SETH-DISPATCH-2026-09-02`:A 切四个 writer(一个一个,
+先发 1 行试);C 回三个问题 + 跑全panель覆盖表(M-123)、**停止建抓取器**(rule 3b)。
 
 ## 2026-09-02 追加:S-276 —— 跨 lane 基线(统筹)
 
