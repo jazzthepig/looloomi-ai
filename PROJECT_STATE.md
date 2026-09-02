@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-08-30 (Seth/Cowork lane — S-244→S-262;台账 S-244→258 误标 08-27,见 S-259)
+**Last updated:** 2026-09-02 (Seth/Cowork lane — S-262…S-274 十三条未推;跨资产分位层落地,Jazz 的 2019 切点把 spread 0.52→0.033;S-273 三角套利假说被自己的判据推翻(测错了层,缺口=利率差/swap points/GOFO);5 项 JAZZ 决策仍挂;book_trader.py HALT 未解)
 
 ## 本轮一句话:**一个形状,十次**
 
@@ -248,6 +248,25 @@ The cap is doing its job only if closure is as routine as addition.*
    而迁移要 service_role,于是修复挂在另一条 OPEN RISK 上。
 
 ---
+
+## 2026-09-02 追加:S-273 / S-274 —— 一次证伪 + 一层跨资产读数
+
+**S-273(证伪,本日最有价值的一条):** Jazz 的「传统三角套利今年失效」按**跑前写死的判据**
+检验 ⇒ **不支持,且双向不支持**。历史窗口三对全不协整(所以谈不上失效),
+唯一较强的反而在近期窗口。真正产出是**「测错了层」**:日元套息的收益来自
+利率差与 swap points,不是 ETF 价格协整。Jazz 确认「那个层面在 fx 市场」。
+⇒ **具体采购清单:美日利率差 / forward points / GOFO。三样一样都没有。**
+
+**S-274(新层):** `src/data/market/cross_asset.py` —— 相对估值 / 相关性 / 历史分位,
+核心产出是 `spread`(同一值在多窗口下分位的极差)而不是分位数本身。
+实测 GLD/UUP:1y 43% vs 11y 95%,**52pp 的差纯粹来自窗口选择**。
+Jazz 指出 2019 是新周期起点后,spread 0.52 → **0.033(robust)** ——
+三个黄金比价对 2019 前是 **100.0%**,那段对当下零信息量。
+⇒ **spread 大不一定是数据脏,也可能是切点没找对;后者是体制边界,是信息。**
+
+读数(**不是信号**):黄金对债/日元/美元同时贴在体制内 ~93 分位,
+债券对日元贴在 11 分位 —— 形状与「拿套息收益换黄金」一致,但无因、无基础率、
+无 OOS,只作 S-271 `divergence()` 的输入,不进定仓。
 
 ## 三个等你的决定
 
