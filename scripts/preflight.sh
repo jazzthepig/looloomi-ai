@@ -1241,6 +1241,33 @@ python3 -m tests.test_crypto_macro || {
 python3 -m tests.test_cross_asset || {
   echo "  ✗ 跨资产分位守卫 — do not push"; exit 1; }
 
+# ── S-275: ETF 是产品,不是资产 ────────────────────────────────────────────
+# Jazz 2026-09-02:「要找对资产的指数先,etf 是产品,所以你现在的逻辑不对的,
+# 价格也不会对。」
+#
+# 实测:TradFi 面板 14 个 symbol 全部是 ETF,规范对象 0 个。TLT 按月付息 ——
+# 票息是债券回报的主体,而它不在价格里;USO 是期货 ETF,展期拖累可达 −30%/年。
+#
+# 但「ETF 不能用」太粗:泄漏可量化,所以约束是**这个代理最多撑多长的窗口**
+# (容差 2%)。GLD 撑 1260 天、TLT 126 天、USO 16 天。S-274 用了 1926/2801 天,
+# 差一个数量级 —— 该条已挂 ERRATUM。
+#
+# 守卫里最重要的一条是我自己犯的:第一版只比 convention,GLD/TLT 判 True,
+# 因为两者都是 price_return —— **而泄漏 40 vs 400,差十倍**。
+# 一个标签装着两个差异巨大的状态,正是这个模块要修的形状。
+python3 -m tests.test_asset_index || {
+  echo "  ✗ 资产/产品守卫 — do not push"; exit 1; }
+
+# ── S-276: 回填的基线是跨源并集,不是任一个源 ──────────────────────────────
+# M-118(minimax-c)拿 binance_hist(PENDLE 2023-07-03)当基线,把 Supabase
+# 已有的 coingecko(PENDLE **2021-04-28**,起始日一模一样)报成「+820 天大赢家」。
+# 判别性测试证明陷阱可复现:只看 binance 会算出 +796 天。
+#
+# 根因不是粗心,是他读不到 Supabase。修法是给基线,不是要求更小心 ——
+# /internal/data-coverage + ohlcv_symbol_coverage RPC。
+python3 -m tests.test_coverage || {
+  echo "  ✗ 跨 lane 覆盖基线守卫 — do not push"; exit 1; }
+
 # ── S-272: 判活响应必须在【顶层】给一个裁决 ─────────────────────────────────
 # 2026-09-02 Jazz 问「系统检测说 ohlcv 又停了,是否如此」。查下来:
 # **没有任何东西是新停的** —— coingecko 完整日连续 12 天 25/25、eodhd 33/33;

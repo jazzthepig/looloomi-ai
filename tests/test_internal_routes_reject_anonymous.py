@@ -98,6 +98,10 @@ PUBLIC_BY_DESIGN: dict[str, str] = {
     "/internal/build-state":
         "smoke_test / post_deploy_check / deploy_health_gate / postdeploy_verify 四个脚本无凭证读",
     "/internal/data-freshness": _PROBE + ";docstring 写明它就是为该探针建的",
+    "/internal/data-coverage":
+        "S-276:minimax-c 跨 lane 读的回填基线。只有覆盖形状没有价格数值,"
+        "而他不该拿到 service_role(Jazz 2026-08-30)。收口等于逼他继续"
+        "拿单一个源当基线 —— 那正是 M-118 重复劳动的根因",
     "/internal/health-summary": _PROBE + ";S-262 已把 mac_mini_push 改名去掉硬件泄漏",
     "/internal/loop-health": _PROBE + " / loop_health.py",
     "/internal/vdb-health": "postdeploy_verify.sh 无凭证读",
