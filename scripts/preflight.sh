@@ -1208,6 +1208,24 @@ python3 -m tests.test_deep_walk || {
 python3 -m tests.test_regime_granularity || {
   echo "  ✗ regime 颗粒度守卫 — do not push"; exit 1; }
 
+# ── S-271: 加密圈自己的宏观 —— 与美元宏观分层,不合并 ─────────────────────────
+# Jazz 2026-09-02:「现在的 macro regime 主要判断全球、以美元资金主导的宏观,
+# 需要分层细化出加密圈的宏观,这是新的边际增长。crypto 是 ai native 的 money。」
+# 这解释了今天那次 GOLDILOCKS/TIGHTENING 混乱:data_layer:2410 的分类器吃的是
+# CPI/GDP/利率 —— 纯美元宏观,而同期 BTC +24.6%。**两件事从来不矛盾,
+# 它们是两个货币体系上的两个 regime,而我们只有一个标签描述它们两个。**
+#
+# 守卫盯的第一条是**这一层不发标签**,而且「不发标签」被做成可测的性质:
+# 断言 label is None + 模块里不得出现加密 regime 枚举常量。发一个枚举需要
+# 因 + 基础率 + OOS 存活,三样都没有 —— R76–R94 那 15 次连败正是
+# 「先发明分类器、后找证据」。从五个连续量塌成六值枚举,是这条链上最贵的降维。
+#
+# 第二条:**「没读数」不等于「平静」。** 五维里今天只有 funding_rate 与
+# btc_dominance 落了库(完备度 0.4 < 门槛 0.6),而缺的 stablecoin_supply
+# 是这套框架的货币基数 —— 没有它,「加密宏观」这个词不成立。
+python3 -m tests.test_crypto_macro || {
+  echo "  ✗ 加密宏观守卫 — do not push"; exit 1; }
+
 # ── S-252: 显示的分数不得落进比它评级更高的带 ────────────────────────────────
 # 实测 2026-08-27 排行榜首屏:Aave 75.7 = A,Uniswap 75.0 = B+。
 # UNI 的 raw 是 74.97 —— get_grade 给 B+ 是【对的】,而 round(74.97,1)=75.0
