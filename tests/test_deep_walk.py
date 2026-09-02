@@ -187,6 +187,51 @@ def t_summary_reports_the_shortest_not_just_the_average():
     _check("原因指向 coin_id", "coin_id" in empty["reason"], empty["reason"])
 
 
+def t_the_fetcher_must_raise_not_swallow():
+    """**2026-09-02 活数据咬到的那条。**
+
+    `data_layer.get_cg_ohlc_range` 是 `except Exception → return []`。
+    拿它当回填原语,一次网络失败会以「空块」的身份进入连续空块计数 ——
+    于是一个标的的真实历史在一次网络抖动上被截断,**而裁决仍是
+    `reached_genesis`**。实测 ONDO 的 `Event loop is closed` 就是这样进去的。
+
+    同一个函数服务两个对失败要求相反的调用者:请求路径要 fail-soft,
+    回填路径要 fail-loud。所以本模块自带会抛的取数器。
+    """
+    import inspect
+    from src.data.market import deep_walk as D
+    src = inspect.getsource(D.make_cg_fetcher)
+    _check("自带取数器调用 raise_for_status", "raise_for_status" in src)
+    body = src.split("raise_for_status")[1]
+    _check("raise 之后没有把异常吞成空列表",
+           "except" not in body or "return []" not in body.split("except")[-1],
+           "取数器在吞异常 —— 那会让 FAILED 裁决永远不触发")
+    _check("持有单一 client(每块新建连接正是 Event loop is closed 的成因)",
+           src.count("AsyncClient") == 1)
+    _check("docstring 写明不复用 get_cg_ohlc_range 及其原因",
+           "get_cg_ohlc_range" in src and "fail-soft" in src)
+
+    # 判别性:一个【会吞】的取数器,会让空块与失败同形 —— 用它跑,
+    # 一个纯失败的标的会被判成 no_data/genesis 而不是 FAILED。
+    async def swallowing(cid, s_, e_):
+        try:
+            raise RuntimeError("网络失败")
+        except Exception:
+            return []            # ← 正是 data_layer 的形状
+
+    r = _run(walk_symbol("X", "x", fetch_chunk=swallowing, end=TODAY))
+    _check("吞异常的取数器 → 失败被误判成 NO_DATA(这就是要避免的)",
+           r.verdict == NO_DATA, r.verdict)
+
+    async def raising(cid, s_, e_):
+        raise RuntimeError("网络失败")
+
+    r2 = _run(walk_symbol("X", "x", fetch_chunk=raising, end=TODAY))
+    _check("会抛的取数器 → 正确判 FAILED", r2.verdict == FAILED, r2.verdict)
+    _check("两者裁决不同 —— 这就是取数器契约的全部作用",
+           r.verdict != r2.verdict)
+
+
 if __name__ == "__main__":
     print("── 深度回溯守卫 (S-269) ──")
     for name, fn in sorted(globals().items()):

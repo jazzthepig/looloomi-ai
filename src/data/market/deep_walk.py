@@ -24,6 +24,28 @@ Analyst 档给日线 **from 2013**(Basic 只给 2 年),所以理论上可以走 
 代价是每个标的多花 `MAX_EMPTY_CHUNKS - 1` 次调用。取 2:多花一次,
 换掉「一个缺口就把十年历史截断」这个静默错误。
 
+## ⚠️ 不能拿 `get_cg_ohlc_range` 当回填原语(2026-09-02 活数据咬到)
+
+首次真跑,ONDO 那一列出现:
+
+    [CG] ohlc/range ondo-finance failed: Event loop is closed
+    ONDO  reached_genesis  最早 2023-10-24 · 787 根 · 8 次调用
+
+`data_layer.get_cg_ohlc_range` **捕获一切异常、打一条 warning、返回 `[]`**。
+于是一次传输失败在调用点上和一个空窗口**完全同形** —— 它进了连续空块计数,
+而那次 `reached_genesis` 因此不可信:真正的起点可能更早,
+它是被一个关闭的事件循环截断的。
+
+**那个 fail-soft 在它自己的场景里是对的**:请求路径上,一个标的的历史打嗝
+不该让页面 500。错的是把它当回填原语用 ——
+
+> **同一个函数服务两个对失败要求相反的调用者。**
+> 请求路径要 fail-soft(宁可少一段也别炸),回填路径要 fail-loud
+> (宁可炸也别把失败记成「这里没有数据」)。
+
+所以本模块自带 `make_cg_fetcher()`,**它抛,不吞**。
+`walk_symbol` 的 `FAILED` 裁决只有在取数器会抛的前提下才有意义。
+
 ## 深度是量出来的,不是设定的
 
 `DeepResult.earliest_reached` 是**实际拿到数据的最早日期**,不是我们要求的
@@ -228,3 +250,44 @@ def summarise(results: Sequence[DeepResult]) -> dict:
                   f"{depths[len(depths) // 2]} 天、p10 {depths[max(0, len(depths) // 10)]} 天、"
                   f"最短 {depths[0]} 天。**横截面窗口由最短的那批决定,不由中位数决定**",
     }
+
+
+def make_cg_fetcher(*, timeout: float = 30.0):
+    """给 `walk_symbol` 用的取数器。**失败时抛,不返回空。**
+
+    不复用 `data_layer.get_cg_ohlc_range`:那个函数 `except Exception → return []`,
+    是为请求路径设计的 fail-soft。在回填路径上,它会把一次网络失败记成
+    「这段时间没有数据」,而连续两次就会终止回溯 —— **把一个标的的真实历史
+    在一次网络抖动上截断,且裁决仍然是 `reached_genesis`。**
+
+    实测 2026-09-02:ONDO 的一次 `Event loop is closed` 就是这样进的空块计数。
+
+    返回的取数器持有**一个** httpx client(调用方负责关闭),因为每块新建一个
+    连接正是上面那次 `Event loop is closed` 的成因。
+    """
+    import os
+
+    import httpx
+    key = os.environ.get("COINGECKO_API_KEY", "")
+    if not key:
+        raise RuntimeError("COINGECKO_API_KEY 未设置(S-246:仓库不加载 .env)")
+    client = httpx.AsyncClient(timeout=timeout,
+                               headers={"x-cg-pro-api-key": key})
+
+    async def fetch_chunk(coin_id: str, start: dt.date, end: dt.date) -> list:
+        r = await client.get(
+            f"https://pro-api.coingecko.com/api/v3/coins/{coin_id}/ohlc/range",
+            params={"vs_currency": "usd",
+                    "from": int(dt.datetime.combine(
+                        start, dt.time(), tzinfo=dt.timezone.utc).timestamp()),
+                    "to": int(dt.datetime.combine(
+                        end, dt.time(), tzinfo=dt.timezone.utc).timestamp()),
+                    "interval": "daily"})
+        # **不吞。** 429/5xx/超时都要冒到 walk_symbol,让它判 FAILED 而不是
+        # 把这一块当成「这里没有数据」。
+        r.raise_for_status()
+        out = r.json()
+        return out if isinstance(out, list) else []
+
+    fetch_chunk.aclose = client.aclose        # 调用方负责关
+    return fetch_chunk
