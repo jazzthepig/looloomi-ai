@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-02 (Seth/Cowork lane — S-262…S-274 十三条未推;跨资产分位层落地,Jazz 的 2019 切点把 spread 0.52→0.033;S-273 三角套利假说被自己的判据推翻(测错了层,缺口=利率差/swap points/GOFO);5 项 JAZZ 决策仍挂;book_trader.py HALT 未解)
+**Last updated:** 2026-09-02 (Seth/Cowork lane — S-262…S-276 十五条;S-276 查实 M-118 的「PENDLE +820 天」是与 Supabase 已有数据的重复,根因是 minimax-c 读不到 Supabase ⇒ 已开 /internal/data-coverage 作跨 lane 基线;S-275 ETF≠资产、S-274 数字已挂 ERRATUM;5 项 JAZZ 决策仍挂)
 
 ## 本轮一句话:**一个形状,十次**
 
@@ -248,6 +248,47 @@ The cap is doing its job only if closure is as routine as addition.*
    而迁移要 service_role,于是修复挂在另一条 OPEN RISK 上。
 
 ---
+
+## 2026-09-02 追加:S-276 —— 跨 lane 基线(统筹)
+
+**查实:** M-118 报「PENDLE +820 天大赢家」——Supabase 里 coingecko 源
+**1940 行、2021-04-28 起,与他抓到的起始日一模一样**。+933 天里最大那项是重复,
+其余是 binance_hist 停更后的近期天数,非历史深度。
+
+**根因不是粗心 —— minimax-c 读不到 Supabase**,只能拿单一个源当基线。
+⇒ 已开 `/internal/data-coverage`(无凭证)+ Supabase RPC `ohlcv_symbol_coverage`
+(已应用,405 标的/530 组合)。主字段 `deepest_start` = **跨源并集**。
+
+**分工定案(回答 Jazz「让他多承担」):**
+抓取/落库归一到 Seth lane 一条路(有守卫/schema/preflight);
+minimax-c 多承担的是**用**——挖掘、回测、VDB 维护。
+「多承担」若变成「各建各的抓取」,代价就是今天咬了我们两次的那个形状:
+两个看起来一样的序列其实不是同一个量。**不要把他的 fetcher 接进 cis_scheduler。**
+
+**待他回:** fetcher 的 retry 耗尽路径返回什么(可能带着 S-269 修掉的缺陷)。
+
+## 2026-09-02 追加:S-275 —— ETF 是产品,不是资产(并作废 S-274 的数字)
+
+**Jazz:**「要找对资产的指数先,etf 是产品,所以你现在的逻辑不对的,价格也不会对。」
+
+实测:`ohlcv_daily` 的 TradFi 面板 **14 个 symbol 全部是 ETF** —— 没有一个指数、
+一个现货、一个收益率。TLT 按月付息(票息**是债券回报的主体**,不在价格里),
+USO 是期货 ETF(展期拖累可达 −30%/年)。
+
+**约束是窗口不是禁令**(容差 2%):GLD 撑 1260 天 · TLT 126 天 · USO **16 天**。
+S-274 用的是 1926/2801 天 ⇒ **差一个数量级,该条已挂 ERRATUM**。
+方法层(spread 主产出、pre-anchor 单列、相关报离散)与 2019 切点仍然成立。
+
+**两次自咬:** ① 第一版 `can_ratio` 只比 convention,GLD/TLT 判 True —— 两者
+都是 price_return 而泄漏 40 vs 400,**差十倍**(同一个标签装两个状态,
+正是这模块要修的形状)。② `abs(400-400)=0 → 上限 3968 年` 是假精确,
+**估计值相等不是相等** ⇒ 差值下界 50bp。
+
+**缺口是后缀,不是数据源:** 代码每处硬编码 `.US`,EODHD(已付费)的
+`.INDX/.FOREX/.GBOND/.COMM` 从未用过。`scripts/probe_eodhd_index.py`
+需 **Mac 侧跑**确认后才谈落库。
+**其中 `USDJPY.FOREX` + `US10Y/JP10Y.GBOND` 正是 S-273 结论那份采购单** ——
+两条独立的路走到同一个缺口。
 
 ## 2026-09-02 追加:S-273 / S-274 —— 一次证伪 + 一层跨资产读数
 
