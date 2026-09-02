@@ -14992,3 +14992,55 @@ minimax-c 只能读 Mac 侧,于是拿**单一个源**当基线:
 3. **不要把他的 fetcher 接进 cis_scheduler**(他的 follow-up #1)。
    接了就是第三个抓取实现(S-251/S-258 CG Pro→Supabase、S-269 deep_walk、
    他的 cg_pro_history_fetcher)。**抓取归一到一条路;他多承担的是「用」不是「抓」。**
+
+---
+
+## S-277 — Mac 侧四个 daily writer 的代理写入(这条 lane 欠的 18 天债) (2026-09-02)
+
+**触发:** Jazz「minimax 都在等你修完和下指令」。查 §IN-FLIGHT 发现:
+**他们不是在等指令,是在等我。**
+
+    risk_meter_history          🟡 自 2026-08-15 —— 18 天
+    asset_embeddings_history    🟡 M-WO-D1
+    signal_journal              🟡 signal_outcome_tracker.py
+    trade_results               🟡 export_backtest_to_supabase.py
+
+四行全部写着「等 Seth 开 endpoint」。`memory/local-no-supabase-write.md`
+的原则是对的(blast radius + 让门无法绕过,见 `strategy_intake.py`),
+但**只立原则不开口子,等于把对方逼回直写**。Minimax-A 老实等了 18 天 ——
+那是他的纪律,不是他的问题。
+
+> **一条只有禁令没有出口的规则,考验的是对方的耐心,不是系统的正确性。**
+> 而它总有一天会被绕过,那时错的会记在绕过的人头上。
+
+### 交付
+
+`src/api/routers/mac_writes.py` + `tests/test_mac_writes.py`(preflight 已注册)
+
+    POST /internal/mac-write/{dataset}   X-Internal-Token
+    GET  /internal/mac-write/schema      契约回声(无凭证,已入 PUBLIC_BY_DESIGN)
+
+沿用 `strategy_intake` 的模式而非发明第二种:逐条裁决(20 条里 3 条坏,
+落 17 条并报 3 条)· 拒绝带原文理由 · 校验在插入之前。
+
+### 本模块唯一新增的守卫:**未知列拒绝,不丢弃**
+
+若先做一次「挑出已知列」的过滤,一个拼错的字段会被悄悄丢掉,于是写进一行
+**看起来正常、实际缺列**的数据,而两边都以为成功了。
+
+    静默丢弃 → 一行带 NULL 的记录,没有任何东西报错
+    显式拒绝 → 「未知列 ['bandd'];你可能是想写 `bandd`→`band`」
+
+**同一个形状,今天第五次**(S-273 测错层 / S-274 窗口藏假设 /
+S-275 convention 藏十倍泄漏 / S-276 单源当基线 / 本条)。
+
+而这里的具体陷阱是真的:**`risk_meter_history` 用 `regime`,
+`asset_embeddings_history` 用 `macro_regime`** —— 两张表两个名字,
+写错一个字就是一行静默的坏数据。所以列名取自 `information_schema` 实查
+(2026-09-02),**不从 Mac 侧代码抄** —— 抄来的列名会把对方的笔误一起抄过来,
+那时守卫会为笔误背书。
+
+### 未做
+
+Mac 侧四个 writer 的切换由 Minimax-A 执行(他的 lane)。
+本条只保证端点在、契约可读、坏数据进不来。
