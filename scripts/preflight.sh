@@ -1192,6 +1192,22 @@ python3 -m tests.test_global_history || {
 python3 -m tests.test_deep_walk || {
   echo "  ✗ 深度回溯守卫 — do not push"; exit 1; }
 
+# ── S-270: regime 的日内颗粒度 —— 标签之外还有它有多确定 ─────────────────────
+# 实测 2026-09-02:cis_scores 每天写约 22.6 个小时槽,而 daily_macro_regime
+# 把它压成每天一个众数。压掉的是:13/59 天(22%)日内出现 >1 种 regime,
+# 其中 4 天(7%)众数占比 < 80%,最低的一天只有 62.5%。
+# cis_scores 有 pillar_f/m/o/s/a、confidence、score_zscore —— **没有任何一列
+# 是 regime 的置信度或边界距离**。一个 51/49 的判断和一个 95/5 的判断,
+# 在下游是同一个字符串,而 ⓪ 层的拐点恰恰发生在一致度塌下去的时候。
+#
+# 守卫盯两条:
+#   ① **一致度必须与观测数一起给。** 2/2 的「100% 一致」不是共识,是只有一个
+#      投票人 —— S-263 的 n_sources 塌陷同一个陷阱:分母消失时比例假装健康。
+#   ② **缺测不是一个标签。** 把 None 计进类别数会把停机说成分歧,
+#      而且是往「看起来更有信息」的方向虚增。
+python3 -m tests.test_regime_granularity || {
+  echo "  ✗ regime 颗粒度守卫 — do not push"; exit 1; }
+
 # ── S-252: 显示的分数不得落进比它评级更高的带 ────────────────────────────────
 # 实测 2026-08-27 排行榜首屏:Aave 75.7 = A,Uniswap 75.0 = B+。
 # UNI 的 raw 是 74.97 —— get_grade 给 B+ 是【对的】,而 round(74.97,1)=75.0
