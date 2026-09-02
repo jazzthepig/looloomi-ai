@@ -77,14 +77,51 @@ PAID_SOURCES = frozenset({"coingecko_pro", "eodhd"})
 #: 一个被珍惜的免费额度和一个被闲置的付费额度同时存在,说明约束被找错了地方。
 PAID_ENTITLEMENTS: dict[str, dict] = {
     "coingecko_pro": {
-        "plan": "Analyst",                    # $139/月
+        "plan": "Analyst",                    # $103.2/月(年付)· $139 月付
         "monthly_call_credit": 500_000,
+        "rate_limit_per_min": 500,
+        "websockets": 10,
+        "webhooks": 5,
+        "data_freshness": "real-time",
         "measured_on": "2026-09-01",
         "calls_used_at_measurement": 2_074,   # = 0.4%
         # Analyst 解锁文档里标 💼 的全部端点;只差 👑 Enterprise。
         "unlocks_analyst_tier": True,
         "verify": "GET /api/v3/key → {plan, monthly_call_credit, "
                   "current_remaining_monthly_calls}",
+        # ── Analyst 档独有、Basic 没有的能力(2026-09-01 从定价表核过)──────
+        # Jazz:「现在我们缺的 infra 其实 139 这个 plan 都有,整起来吧。
+        #        我觉得不要降级,降级之后我不敢做营销的。」
+        # 记在这里的作用不是清单,是**让「我们缺 X」这句话在说出口之前先被检查一次**
+        # —— S-264 就是因为这句话说错过两次才存在的。
+        "analyst_only": {
+            "/coins/{id}/ohlc/range": "自定义区间 OHLC —— **已接**(S-258 深盘回填)",
+            "coin_history_depth": "日线 from 2013 / 小时线 from 2018(Basic 只给 2 年)"
+                                  " —— 这是深盘面板的真正解药:binance_hist 死了、"
+                                  "market_state_writer 只拿到 343 天,而这里有 4000+ 天",
+            "/global/market_cap_chart": "历史全局市值 + 成交量 ⇒ **BTC 主导率的轨迹**。"
+                                        "⓪ 层(流动性周期判断)要的正是轨迹不是当前值",
+            "/coins/top_gainers_losers": "涨跌幅榜,横截面极值",
+            "/coins/list/new": "新上币 —— 叙事萌芽的最早观测点",
+            "/exchanges/{id}/volume_chart/range": "场所成交量历史区间 ⇒ "
+                                                  "「场所 infra 被买」的成交量对照",
+            "/onchain/.../tokens/{addr}/trades": "**成交分类的原料**(散户/机构/TWAP)",
+            "/onchain/.../tokens/{addr}/top_holders": "持有人结构 —— Entity 层的直接观测",
+            "/onchain/.../tokens/{addr}/holders_chart": "持有人历史 ⇒ 谁在进谁在出",
+            "/onchain/.../top_traders": "谁在交易,不只是交易了多少",
+            "/onchain/pools/megafilter": "跨链池筛选,一次调用",
+            "onchain_ohlcv_depth": "池/代币 OHLCV from 2021(Basic 只给 6 个月)",
+            "public_treasury_history": "上市公司持币历史 from 2020 —— "
+                                       "**这是 Entity/Decision 层最干净的样本**:"
+                                       "MicroStrategy 买 BTC 是一个有主体、有时点、"
+                                       "有金额的企业决策,不需要我们推断",
+            "websocket": "10 路实时流 —— 可替代轮询",
+        },
+        # ⚠️ 全部档位都【没有】的:历史流通量/总供应量(Coin Historical
+        # Circulating & Total Supply 三档全 ✗)。所以加密侧的「渗透率分母」
+        # 不能指望 CG;代币化 RWA 那侧的分母走 EODHD fundamentals(S-267)。
+        "not_available_any_tier": ["coin_historical_circulating_supply",
+                                   "coin_historical_total_supply"],
     },
 }
 
