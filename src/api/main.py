@@ -2093,9 +2093,38 @@ async def data_freshness():
             "caveat": "self-healing feed: collect_ohlcv upserts 365d per run, so "
                       "max(trade_date) is transient. Judge on run completion, not on "
                       "this date. Weekends are crypto-only by design.",
+            # S-272:声明自己回答的是哪个问题。两块并排是有意的(见上面 S-251
+            # 的注释),错的是**它们看起来在回答同一个问题** —— 这一块的
+            # `verdict:"fresh"` 用了一个像整体健康判断的词。
+            "answers": "这一轮跑完没有(max(trade_date) 是否新鲜)—— "
+                       "**不回答「这个管道是活的吗」**,那个在 by_source 里",
         }
     except Exception as e:
-        out["ohlcv_daily"] = {"verdict": "unknown", "error": str(e)[:80]}
+        out["ohlcv_daily"] = {"verdict": "unknown", "error": str(e)[:80],
+                              "answers": "这一轮跑完没有 —— 本次读取失败"}
+
+    # ── S-272:顶层裁决,因为消费者读的是顶层 ────────────────────────────────
+    # 实测 2026-09-02:这个响应有两个嵌套裁决而**顶层一个都没有**。
+    #
+    #     by_source.verdict    "domain_without_usable_source"   ← 权威
+    #     ohlcv_daily.verdict  "fresh"                          ← 更浅、词更眼熟
+    #
+    # 于是告警只能在两者里挑一个,而 "fresh" 更像一个整体健康判断。
+    # 那天的真实状态是:coingecko 25/25 连续 12 天健康、eodhd 33/33,
+    # 而 hyperliquid 停 10 天、binance_hist 停 13 天 ⇒ **加密域没有可用于收益的源**,
+    # 且这个状态自 08-23 起就在,不是新发生的。两个裁决都没说错,
+    # **错的是没有一个字段回答「所以我该担心吗」。**
+    #
+    # 与 S-265 的 `tier` 同一个做法:一个字段,封闭取值,放在消费者真正读的层级。
+    _bs = out.get("by_source") or {}
+    _bs_verdict = _bs.get("verdict")
+    out["verdict"] = _bs_verdict or "unknown"
+    out["verdict_source"] = "by_source"
+    out["verdict_note"] = (
+        "**顶层裁决取自 by_source(每源 × 覆盖标的数),不是 ohlcv_daily。**"
+        "后者回答的是「这一轮跑完没有」,它的 max(trade_date) 在自愈式回填下是"
+        "瞬态值 —— 两块并排是有意的(S-251),但只有这一个回答"
+        "「我该担心吗」。取值见 by_source.by_domain。")
     return out
 
 
