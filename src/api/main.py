@@ -70,6 +70,7 @@ from src.api.routers.ohlcv import router as ohlcv_router
 # StrategyRecord.validate() runs before the insert, so the discipline floor stops
 # being a CI check the writer can route around.
 from src.api.routers.strategy_intake import router as strategy_intake_router
+from src.api.routers.mac_writes import router as mac_writes_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
 
 # Legacy label, kept for /health and the staging banner. The AUTHORITY on
@@ -149,6 +150,9 @@ app.include_router(strategy_vector_router)
 app.include_router(admin_router)
 app.include_router(ohlcv_router)
 app.include_router(strategy_intake_router)
+# S-277:Mac 侧 4 个 daily writer 的代理写入 —— 这条 lane 欠了 18 天的债。
+# 只立「不许直写 Supabase」的原则而不开口子,等于把对方逼回直写。
+app.include_router(mac_writes_router)
 
 
 # ── Hourly T2-only cis_scores snapshot (data-durability complement) ─────────

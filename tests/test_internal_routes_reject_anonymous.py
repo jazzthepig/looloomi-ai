@@ -94,6 +94,7 @@ PUBLIC_BY_DESIGN: dict[str, str] = {
     "/internal/asset-vectors/schema": "契约回声,只有形状。探针不读,但同族契约,公开一致",
     "/internal/strategy-records/schema": "契约回声,只有形状。探针不读",
     "/internal/research-intake/schema": "契约回声,只有形状。探针不读",
+    "/internal/mac-write/schema": "契约回声,只有形状。S-277:Mac 侧照它构造 payload,不要照 Mac 侧代码猜列名 —— 抄来的列名会把笔误一起抄过来",
     # ── 部署/运维健康:被无凭证的脚本读,收口会打断部署门 ──────────────
     "/internal/build-state":
         "smoke_test / post_deploy_check / deploy_health_gate / postdeploy_verify 四个脚本无凭证读",
