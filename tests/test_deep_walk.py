@@ -39,7 +39,16 @@ def _check(label: str, ok: bool, detail: str = "") -> None:
 
 
 def _run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
+    """⚠️ 曾是 `asyncio.get_event_loop().run_until_complete(coro)`。
+
+    在 **Python 3.14** 上那句直接抛 `RuntimeError: There is no current event
+    loop`(3.12 起 DeprecationWarning,3.14 变硬错)。而 Cowork 沙箱是 3.10、
+    Mac 是 3.14.3 —— **preflight 在 Mac 把门,我却在 3.10 上验证它**,
+    于是「PREFLIGHT PASSED」这句话没有声明它的适用环境。
+
+    `asyncio.run()` 在 3.7+ 一致可用,自己建自己关。
+    """
+    return asyncio.run(coro)
 
 
 def _fetcher(*, genesis: dt.date = None, holes: set = None, fail_at: int = None):

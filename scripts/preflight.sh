@@ -9,6 +9,12 @@
 #
 #   bash scripts/preflight.sh   &&   git push origin main
 set -euo pipefail
+
+# ── S-280:每次运行先报解释器。**「通过」必须带上它在哪通过的。** ──────────
+# 2026-09-02:test_deep_walk 用 asyncio.get_event_loop(),在沙箱的 3.10 上通过、
+# 在 Mac 的 3.14.3 上 RuntimeError。我报了「PREFLIGHT PASSED」而那句话没有声明
+# 适用环境 —— 与「一个不带窗口的分位数」是同一种东西(S-274)。
+echo "  · preflight 运行于 $(python3 -V 2>&1) @ $(uname -s)-$(uname -m)"
 cd "$(dirname "$0")/.."
 
 # The boot probe must not run the app's daily work (S-161). Booting the app fires
@@ -1308,6 +1314,16 @@ python3 -m tests.test_producer_freshness || {
 # 坏掉的灯在行为上是同一个东西,那正是这个模块要修的病。改为给裁决加范围声明。
 python3 -m tests.test_watch_census || {
   echo "  ✗ 覆盖清册守卫 — do not push"; exit 1; }
+
+# ── S-280: 跨 Python 版本的地雷 ────────────────────────────────────────────
+# 沙箱 3.10.12 / Mac 3.14.3,差四个小版本,而 **preflight 是在 Mac 把门的**。
+# asyncio.get_event_loop() 在 3.12 是 DeprecationWarning、3.14 是硬错 ——
+# 于是一个测试在我这里绿、在把门的地方红。
+#
+# 硬错零容忍;datetime.utcnow()(3.12 弃用,3.14 仍可跑)走**只减不增预算**,
+# 不逼一次大改,但不许新增 —— 一个不能变大的数比一句「以后要改」有用。
+python3 -m tests.test_python_version_landmines || {
+  echo "  ✗ Python 版本地雷守卫 — do not push"; exit 1; }
 
 # ── S-272: 判活响应必须在【顶层】给一个裁决 ─────────────────────────────────
 # 2026-09-02 Jazz 问「系统检测说 ohlcv 又停了,是否如此」。查下来:
