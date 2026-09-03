@@ -2150,6 +2150,29 @@ async def data_freshness():
 
     out: dict = {"checked_at": int(_time.time())}
 
+    # ── S-278:生产者表判活 —— 数据源活着不代表生产者活着 ──────────────────
+    # 本端点原本只看 ohlcv_daily 的【数据源】。而静默死亡这个失败类
+    # (下面 docstring 说「已经代价三次」)大多发生在【生产者表】上。
+    # 实测 2026-09-02:signal_outcomes 停 122 天、market_state_vectors 停 27 天、
+    # risk_meter_history 有一行 d=2099-12-31 —— **未来日期让 max() 永远报新鲜**。
+    try:
+        from src.api.store import supabase_rpc
+        from src.data.market.producer_freshness import assess as _p_assess
+        from src.data.market.producer_freshness import overall as _p_overall
+        _rows = await supabase_rpc("producer_freshness", {})
+        if isinstance(_rows, list) and _rows:
+            out["producers"] = _p_overall([
+                _p_assess(r.get("t"), int(r.get("n") or 0),
+                          r.get("w"), r.get("e")) for r in _rows])
+        else:
+            out["producers"] = {"verdict": "unknown",
+                                "note": "producer_freshness RPC 未返回 —— "
+                                        "**读不到 ≠ 都健康** (S-180)"}
+    except Exception as _pe:                                      # noqa: BLE001
+        out["producers"] = {"verdict": "unknown",
+                            "note": f"{type(_pe).__name__} —— 读不到 ≠ 都健康"}
+
+
     # ── S-251:全表 max 看不见管道死亡,补一层按源的覆盖率判活 ──────────────
     # 上面那句 `order=trade_date.desc limit 1` 取的是**混合总体上的一个 max**。
     # 实测 2026-08-27:binance_hist 自 08-09 起每天只写 BCH 一个标的,连写 19 天,
@@ -2219,6 +2242,38 @@ async def data_freshness():
     _bs_verdict = _bs.get("verdict")
     out["verdict"] = _bs_verdict or "unknown"
     out["verdict_source"] = "by_source"
+
+    # S-278:生产者死了也必须能把顶层拉红。**否则又回到 S-272 那个毛病** ——
+    # 一个响应里有两个裁决,而顶层只反映其中一个。
+    _pv = (out.get("producers") or {}).get("verdict")
+    if _pv in ("dead", "future_dated"):
+        out["verdict"] = f"producers_{_pv}"
+        out["verdict_source"] = "producers"
+
+    # ── S-279:裁决必须申报自己的适用范围 ────────────────────────────────────
+    # Jazz:「怎么都说健康,但就是有东西停了?」查下来端点没撒谎 —— 是覆盖缺口:
+    # 它们回答的是一个比「系统健康吗」小得多的问题,而名字承诺了全景。
+    # 库里 67 张表,被判活的 11 张;**9 张 NAV 表只有 1 张在看**。
+    #
+    # 覆盖不全**不把裁决压红** —— 那会造出一盏永久红灯,而常亮的灯等于坏灯,
+    # 正是这里要修的病本身。改为:裁决照旧,但带上 `covers` 与 `unqualified`。
+    try:
+        from src.api.store import supabase_rpc as _srpc
+        from src.data.market.watch_census import census as _census
+        from src.data.market.watch_census import qualify_verdict as _qual
+        _tbls = await _srpc("watch_census", {})
+        if isinstance(_tbls, list) and _tbls:
+            _c = _census([r.get("table_name") for r in _tbls if r.get("table_name")])
+            out["coverage"] = {k: _c[k] for k in (
+                "n_not_covered", "n_blocking", "n_total", "n_covered",
+                "not_covered_by_tier", "verdict", "reason")}
+            out["verdict_scope"] = _qual(out.get("verdict", "unknown"), _c)
+        else:
+            out["coverage"] = {"verdict": "unknown",
+                               "reason": "watch_census RPC 未返回 —— 读不到 ≠ 全覆盖"}
+    except Exception as _ce:                                      # noqa: BLE001
+        out["coverage"] = {"verdict": "unknown",
+                           "reason": f"{type(_ce).__name__} —— 读不到 ≠ 全覆盖"}
     out["verdict_note"] = (
         "**顶层裁决取自 by_source(每源 × 覆盖标的数),不是 ohlcv_daily。**"
         "后者回答的是「这一轮跑完没有」,它的 max(trade_date) 在自愈式回填下是"
