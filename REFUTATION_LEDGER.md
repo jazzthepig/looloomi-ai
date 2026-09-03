@@ -15175,3 +15175,50 @@ ARCHITECTURE 说产品是**可验证的前向记录**,而 NAV 表就是那个记
 38 个缺口只是被数出来了。补覆盖是接下来一周的主线,
 **而 17 个 track_record 缺口排在最前** —— 在它们补上之前,
 任何「前向记录完整」的说法都只对我们看得见的那一张表成立。
+
+---
+
+## S-280 — 一个不声明运行环境的「通过」 (2026-09-02)
+
+**Jazz 在 Mac 上跑 preflight,`tests/test_deep_walk.py` 抛:**
+
+    RuntimeError: There is no current event loop in thread 'MainThread'
+
+    Cowork 沙箱   Python 3.10.12
+    Jazz 的 Mac   Python 3.14.3     ← **preflight 真正把门的地方**
+
+`asyncio.get_event_loop()` 在 3.12 起是 DeprecationWarning、**3.14 变硬错**。
+于是这个测试在我这里绿、在决定能不能推的地方红。
+
+> **一个不声明运行环境的「PREFLIGHT PASSED」,和一个不声明窗口的分位数
+> 是同一种东西**(S-274)。今天第七次的同一个形状,而这次在我自己的验收上。
+
+### 修
+
+- `_run()` 改用 `asyncio.run()`(3.7+ 一致,自建自关)
+- **preflight 开头打出解释器与平台** —— 每次「通过」都带上它在哪通过
+- `tests/test_python_version_landmines.py`:
+  硬错(`get_event_loop` / `asyncio.coroutine` / `imp` / `distutils`)**零容忍**;
+  `datetime.utcnow()`(28 处,3.12 弃用但 3.14 仍可跑)走**只减不增预算** ——
+  不逼一次大改,但不许新增。**一个不能变大的数比一句「以后要改」有用**
+  (S-264 `UNWIRED_BUDGET`、S-262 `PUBLIC_BY_DESIGN` 同一模式)。
+- 低于 3.12 运行时,守卫**主动打印警告**:本机通过不代表 Mac 通过。
+
+### 自咬:守卫被自己的文字绊倒,**今天第四次**
+
+`HARD_ERRORS` 的键里就写着那些模式,`test_deep_walk._run` 的新 docstring 里
+也引用了那句调用 —— 于是守卫为自己的说明文字报警。
+(S-249 docstring / S-265 注释 / S-271 枚举名 / 本条模式字符串。)
+
+修法用仓里已有的两件东西,**不再手写第五个版本**:
+`tests/_source.py:code_only`(AST 剥注释与 docstring)+ 排除守卫自身
+(S-264 排除 `source_policy.py` 的先例)。
+
+### 未做 / 风险
+
+**a1bc0d3 是在 preflight 失败的情况下推上去的**(绕过了分支保护)。
+main 上因此曾有一个在 3.14 上必然失败的测试。本条修复需要尽快跟上。
+
+**更根本的:我无法在 3.14 上验证任何东西。** 这条守卫只能提醒,
+不能替代在 Mac 上跑一次 —— 真正的修法是把 preflight 的 Python 版本
+写进契约,或让沙箱与 Mac 对齐。**这一条留着,不假装解决了。**
