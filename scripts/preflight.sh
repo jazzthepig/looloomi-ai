@@ -1325,6 +1325,22 @@ python3 -m tests.test_watch_census || {
 python3 -m tests.test_python_version_landmines || {
   echo "  ✗ Python 版本地雷守卫 — do not push"; exit 1; }
 
+# ── S-282: 一个只进 stdout 的失败等于没有发生 ──────────────────────────────
+# 查 signal_outcomes 为什么死 123 天,答案是四行代码:
+#     except Exception as _e:
+#         print(f"[OUTCOME] ⚠️  daily run failed: {_e}")   ← 只进 stdout
+#     await _asyncio.sleep(_OUTCOME_INTERVAL_S)             ← 然后继续睡
+# 循环活着、每天准时跑、每天失败,而没有任何监控知道。
+#
+# 实测 39 个真实循环、28 个是这个形状(第一次报 67/64 是把 _start_* 包装
+# 函数也数进去了 —— 夸大动机数字,当天第二次)。已接 11 个,覆盖全部 9 张
+# NAV 表的写入者;其余走**只减不增预算**。
+#
+# 三个状态不是一个 bool:never_ran(可能根本没被调度,market_state_vectors
+# 就是)/ ok / failing(带连续次数)。**两者在 max() 上同形而修法完全不同。**
+python3 -m tests.test_loop_beat || {
+  echo "  ✗ 循环心跳守卫 — do not push"; exit 1; }
+
 # ── S-272: 判活响应必须在【顶层】给一个裁决 ─────────────────────────────────
 # 2026-09-02 Jazz 问「系统检测说 ohlcv 又停了,是否如此」。查下来:
 # **没有任何东西是新停的** —— coingecko 完整日连续 12 天 25/25、eodhd 33/33;

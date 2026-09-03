@@ -620,6 +620,19 @@ import asyncio as _asyncio
 _OUTCOME_INTERVAL_S = 24 * 3600   # daily
 
 
+# ── S-282:后台循环的心跳 —— 一个只进 stdout 的失败等于没有发生 ──────────
+# 实测 39 个真实循环里 **28 个**的失败只 print(第一次报的 67/64 把
+# `_start_*` 包装函数也数进去了 —— 夸大动机数字,今天第二次)。_outcome_tracker_loop 是最干净的
+# 样本:循环活着、每天准时跑、每天失败,而 signal_outcomes 因此死了 123 天无人知。
+# 心跳只记录,不重试不终止 —— 一个顺手改行为的记录器,下一个人就不敢用。
+async def _beat(name: str, *, ok: bool, error: str | None = None) -> None:
+    try:
+        from src.api.loop_beat import beat
+        await beat(name, ok=ok, error=error)
+    except Exception:            # 心跳失败绝不能影响业务循环
+        pass
+
+
 async def _outcome_tracker_loop():
     # small startup delay so the app is fully up before the first run
     await _asyncio.sleep(120)
@@ -630,8 +643,10 @@ async def _outcome_tracker_loop():
             print(f"[OUTCOME] daily run — resolved={summary.get('resolved')} "
                   f"win={summary.get('wins')} loss={summary.get('losses')} "
                   f"written={summary.get('rows_written')}")
+            await _beat("_outcome_tracker_loop", ok=True)
         except Exception as _e:
             print(f"[OUTCOME] ⚠️  daily run failed: {_e}")
+            await _beat("_outcome_tracker_loop", ok=False, error=str(_e))
         await _asyncio.sleep(_OUTCOME_INTERVAL_S)
 
 
@@ -687,8 +702,10 @@ async def _causal_paper_loop():
             res = await mark_and_rebalance(dry_run=False)
             print(f"[CAUSAL-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"rebal={res.get('rebalanced')}")
+            await _beat("_causal_paper_loop", ok=True)
         except Exception as _e:
             print(f"[CAUSAL-PAPER] ⚠️  mark failed: {_e}")
+            await _beat("_causal_paper_loop", ok=False, error=str(_e))
         await _asyncio.sleep(_CAUSAL_PAPER_INTERVAL_S)
 
 
@@ -710,8 +727,10 @@ async def _dingge_paper_loop():
             res = await mark_and_trade(dry_run=False)
             print(f"[DINGGE-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"open={res.get('open')} +{res.get('opened_today')}/-{res.get('closed_today')}")
+            await _beat("_dingge_paper_loop", ok=True)
         except Exception as _e:
             print(f"[DINGGE-PAPER] ⚠️  mark failed: {_e}")
+            await _beat("_dingge_paper_loop", ok=False, error=str(_e))
         await _asyncio.sleep(24 * 3600)
 
 
@@ -735,8 +754,10 @@ async def _combined_book_loop():
             res = await mark_and_rebalance(dry_run=False)
             print(f"[COMBINED-BOOK] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"rebal={res.get('rebalanced')}")
+            await _beat("_combined_book_loop", ok=True)
         except Exception as _e:
             print(f"[COMBINED-BOOK] ⚠️  mark failed: {_e}")
+            await _beat("_combined_book_loop", ok=False, error=str(_e))
         await _asyncio.sleep(24 * 3600)
 
 
@@ -760,8 +781,10 @@ async def _scalable_book_loop():
             res = await mark_and_rebalance(dry_run=False)
             print(f"[SCALABLE-BOOK] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"rebal={res.get('rebalanced')}")
+            await _beat("_scalable_book_loop", ok=True)
         except Exception as _e:
             print(f"[SCALABLE-BOOK] ⚠️  mark failed: {_e}")
+            await _beat("_scalable_book_loop", ok=False, error=str(_e))
         await _asyncio.sleep(24 * 3600)
 
 
@@ -789,8 +812,10 @@ async def _beta_core_loop():
             print(f"[BETA-CORE] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"bench={res.get('benchmark_nav')} excess={res.get('excess_pct')}% "
                   f"cap={res.get('exposure_cap')} regime={res.get('regime')}")
+            await _beat("_beta_core_loop", ok=True)
         except Exception as _e:
             print(f"[BETA-CORE] ⚠️  mark failed: {_e}")
+            await _beat("_beta_core_loop", ok=False, error=str(_e))
         await _asyncio.sleep(24 * 3600)
 
 
@@ -852,8 +877,10 @@ async def _two_layer_paper_loop():
             res = await mark_and_rebalance(dry_run=False)
             print(f"[TWO-LAYER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"book_state={res.get('book_state')} gross={res.get('gross')}")
+            await _beat("_two_layer_paper_loop", ok=True)
         except Exception as _e:
             print(f"[TWO-LAYER] ⚠️  mark failed: {_e}")
+            await _beat("_two_layer_paper_loop", ok=False, error=str(_e))
         await _asyncio.sleep(24 * 3600)
 
 
@@ -880,8 +907,10 @@ async def _fusion_paper_loop():
                   f"gross={res.get('gross')} fill={res.get('fill_ratio_overall')} "
                   f"cap={res.get('capacity_status')} det={res.get('detector_fired_today')} "
                   f"n_days={res.get('n_days_marked')} validated={res.get('validated')}")
+            await _beat("_fusion_paper_loop", ok=True)
         except Exception as _e:
             print(f"[FUSION-PAPER] ⚠️  mark failed: {_e}")
+            await _beat("_fusion_paper_loop", ok=False, error=str(_e))
         await _asyncio.sleep(24 * 3600)
 
 
@@ -1000,8 +1029,10 @@ async def _pod_aggregator_loop():
                   f"weights={res.get('weights')} max_corr={res.get('max_corr_retained')} "
                   f"survivors={res.get('survivors')} breakers={res.get('breakers_tripped')} "
                   f"n_days={res.get('n_days_marked')}")
+            await _beat("_pod_aggregator_loop", ok=True)
         except Exception as _e:
             print(f"[POD-AGG] ⚠️  mark failed: {_e}")
+            await _beat("_pod_aggregator_loop", ok=False, error=str(_e))
         await _asyncio.sleep(24 * 3600)
 
 
@@ -1029,8 +1060,10 @@ async def _factor_tilt_loop():
                   f"factor_sharpe={res.get('factor_sharpe_attribution')} "
                   f"max_share={res.get('max_single_factor_sharpe_share')} "
                   f"n_days={res.get('n_days_marked')}")
+            await _beat("_factor_tilt_loop", ok=True)
         except Exception as _e:
             print(f"[FACTOR-TILT] ⚠️  mark failed: {_e}")
+            await _beat("_factor_tilt_loop", ok=False, error=str(_e))
         await _asyncio.sleep(24 * 3600)
 
 
@@ -1079,8 +1112,10 @@ async def _track_record_loop():
             from src.api.store import supabase_rpc
             res = await supabase_rpc("refresh_signal_track_record")
             print(f"[TRACK-REC] refreshed signal_track_record — rows={res}")
+            await _beat("_track_record_loop", ok=True)
         except Exception as _e:
             print(f"[TRACK-REC] ⚠️  refresh failed: {_e}")
+            await _beat("_track_record_loop", ok=False, error=str(_e))
         await _asyncio.sleep(_TRACKREC_INTERVAL_S)
 
 
@@ -2163,7 +2198,9 @@ async def data_freshness():
         if isinstance(_rows, list) and _rows:
             out["producers"] = _p_overall([
                 _p_assess(r.get("t"), int(r.get("n") or 0),
-                          r.get("w"), r.get("e")) for r in _rows])
+                          r.get("w"), r.get("e"),
+                          n_future=int(r.get("n_future") or 0))
+                for r in _rows])
         else:
             out["producers"] = {"verdict": "unknown",
                                 "note": "producer_freshness RPC 未返回 —— "
@@ -2257,6 +2294,21 @@ async def data_freshness():
     #
     # 覆盖不全**不把裁决压红** —— 那会造出一盏永久红灯,而常亮的灯等于坏灯,
     # 正是这里要修的病本身。改为:裁决照旧,但带上 `covers` 与 `unqualified`。
+    # ── S-282:循环心跳 —— 「循环还在」和「循环还在成功」是两件事 ─────────────
+    # signal_outcomes 死 123 天的机制:循环活着、每天跑、每天失败,
+    # 而失败只进 stdout。**一个只进 stdout 的失败等于没有发生。**
+    try:
+        from src.api.loop_beat import overall as _b_overall
+        from src.api.loop_beat import read_beats
+        out["loops"] = _b_overall(await read_beats())
+        _lv = out["loops"].get("verdict")
+        if _lv == "failing" and out.get("verdict_source") != "producers":
+            out["verdict"] = "loops_failing"
+            out["verdict_source"] = "loops"
+    except Exception as _be:                                      # noqa: BLE001
+        out["loops"] = {"verdict": "unknown",
+                        "note": f"{type(_be).__name__} —— 读不到 ≠ 都在跑"}
+
     try:
         from src.api.store import supabase_rpc as _srpc
         from src.data.market.watch_census import census as _census
