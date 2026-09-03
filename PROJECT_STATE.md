@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-02 (Seth/Cowork lane — S-262…S-279 十八条;S-279 覆盖清册给出「还差多少」的整数:**67 个对象,已覆盖 11,未覆盖 38,其中 track_record 层 17**(9 张 NAV 表只有 1 张在被判活);端点没撒谎——它们此刻正在报 degraded/stale,病在覆盖不在告警;Jazz 目标:一周内收敛,之后 1000u 跑 ①)
+**Last updated:** 2026-09-03 (Seth/Cowork lane — S-262…S-282;**查到了「都说健康却总有东西停」的根因**:39 个循环里 28 个的失败只进 stdout,signal_outcomes 因此死 123 天(循环活着、每天跑、每天失败);已建 loop_beat 心跳并接入 11 个(覆盖全部 9 张 NAV 表);S-281 一行 d=2099 的冒烟测试把判活器静默关了 10 天,已改为修读的一边)
 
 ## 本轮一句话:**一个形状,十次**
 
@@ -248,6 +248,35 @@ The cap is doing its job only if closure is as routine as addition.*
    而迁移要 service_role,于是修复挂在另一条 OPEN RISK 上。
 
 ---
+
+## 2026-09-03:S-281 / S-282 —— 根因找到了
+
+**「怎么都说健康,但总有东西停了?」的完整答案是四行代码:**
+
+```python
+except Exception as _e:
+    print(f"[OUTCOME] ⚠️  daily run failed: {_e}")   # ← 只进 stdout
+await _asyncio.sleep(_OUTCOME_INTERVAL_S)             # ← 然后继续睡
+```
+
+循环**活着**、启动打了 ✅、每天准时跑、**每天失败一次**,而 `signal_outcomes`
+从 2026-05-03 起死了 **123 天**,没有任何监控知道。
+
+    写入者悄悄失败 (S-282) × 表无人判活 (S-279) = 静默死亡
+
+**39 个循环里 28 个是这个形状。** 已接心跳 11 个(覆盖全部 9 张 NAV 表),
+其余走只减不增预算。
+
+**两张死表两个诊断:** `market_state_vectors` 每行 computed_at 精确到微秒相同
+⇒ **从未被调度**(要加日程);`signal_outcomes` 是跑着天天失败(要查错)。
+**两者在 max() 上同形。**
+
+**S-281:** `risk_meter_history` 那行 `d=2099-12-31` 的 interpretation 写着
+"[smoke test from D2 swap verification]" —— 一个「用远期日期以免撞车」的合理
+直觉,把判活器**静默关了 10 天**。没删数据,改为让 max() 只看已发生的行
+(判活器要对污染鲁棒,否则下一个冒烟行会再关一次)。
+
+⚠️ **我当天第二次夸大动机数字**(先报 67/64,真实 39/28;上一次是 27%→22%)。
 
 ## 2026-09-02 追加:S-279 —— 「还差多少」终于是一个整数
 
