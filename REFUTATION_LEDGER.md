@@ -15044,3 +15044,134 @@ S-275 convention 藏十倍泄漏 / S-276 单源当基线 / 本条)。
 
 Mac 侧四个 writer 的切换由 Minimax-A 执行(他的 lane)。
 本条只保证端点在、契约可读、坏数据进不来。
+
+---
+
+## S-278 — 生产者表判活:未来日期不是新鲜,是污染 (2026-09-02)
+
+**任务 #33。** `/internal/data-freshness` 只看 `ohlcv_daily` 的**数据源**,
+而静默死亡这个失败类(该端点自己的 docstring:「**已经代价三次**」)
+大多发生在**生产者表**上 —— 而没有一张生产者表在被判活。
+
+### 实测:三个活的故障,此前无人监视
+
+| 表 | 写时钟 | 事件时钟 | |
+|---|---|---|---|
+| `risk_meter_history` | 2026-09-02 | **2099-12-31** | 未来日期 |
+| `signal_outcomes` | (无) | **2026-05-03** | 停 **122 天** |
+| `market_state_vectors` | **2026-08-06** | 2026-08-05 | 停 **27 天** |
+
+`signal_outcomes` 那条尤其刺眼:data-freshness 的 docstring 把
+「signal_outcomes 死 80 天」当成建它的理由之一,而**它现在死了 122 天**。
+`market_state_vectors` 是我自己在 S-任务#7/#8 建的 writer。
+
+### ① 未来日期会让判活器被数据本身关掉
+
+`d = 2099-12-31` 之后,任何 `max(d)` 判活**永远报新鲜**。
+
+> **一个判活器最坏的失败不是漏报,是被它监视的数据本身关掉。**
+
+所以 `future_dated` 是独立裁决,不折进 `fresh`。容差 1 天(时区/结算)。
+
+### ② 两个时钟,因为是两种故障
+
+    写时钟 computed_at/recorded_at/created_at  → 写入者还活着吗
+    事件时钟 d/mark_date/signal_date           → 内容是当期的吗
+
+    两个都停            → 写入者死了
+    写时钟新、事件时钟旧 → **写入者活着但在写陈旧内容** ← 单一数字漏掉它
+
+后者最阴:进程在跑、日志在滚、指标在动。`signal_journal` 有**四个**时间列,
+选错一个会给出一个看起来完全正常的错答案 —— 所以 SQL 是显式 union all,
+**不是猜时间列的通用循环**。
+
+### ③ 自咬一次:「按设计没有」不是「不知道」
+
+第一版把 `event_col=None` 也判 `unknown`,于是 **`cis_scores`
+(系统里最健康的表)被报成 unknown**,而 unknown 在总裁决里压过 fresh。
+规格里显式写着 `event_col=None` **本身就是知识**。
+新增 `NOT_APPLICABLE`(rank −1,不拉低总裁决),`UNKNOWN` 留给真正的无知
+(不在 `EXPECTED` 里的表)。**同一个形状,今天第六次。**
+
+### 交付
+
+- `src/data/market/producer_freshness.py` + `tests/test_producer_freshness.py`
+- Supabase RPC `producer_freshness()`(**已应用**,SECURITY INVOKER,只授 service_role)
+- 挂进 `/internal/data-freshness` 的 `producers` 字段,**并且生产者死亡会把顶层
+  `verdict` 拉红**(`producers_dead`)—— 否则又回到 S-272 那个毛病:
+  一个响应里两个裁决而顶层只反映其中一个。
+
+### 未做(需要另一轮)
+
+三个故障本身**只是被看见了,没有被修**:
+`risk_meter_history` 的 2099 行要删 · `signal_outcomes` 与
+`market_state_vectors` 的 writer 要重启并查因。
+**看见不等于修好** —— 这一条只保证下次不会再是 122 天才被发现。
+
+---
+
+## S-279 — 「没有颜色」比「是红色」更危险:覆盖清册 (2026-09-02)
+
+**Jazz:**「怎么都说健康,都说没问题,但就是没有做完?总发现有东西停了?」
+
+### 先推翻我自己的假设:端点没有撒谎
+
+实测此刻:
+
+    /internal/health-summary   degraded   (macro_brief STALE 582m)
+    /internal/loop-health      stale
+    /internal/data-freshness   domain_without_usable_source
+
+**三个里三个都在报警。** 我原以为是「都说健康」,不是。
+
+### 真正的机制是覆盖缺口
+
+`health-summary` **只查 4 件事**;S-278 的生产者判活只看 **10 张表** ——
+而库里有 **67 张**。它们回答的是一个比「系统健康吗」小得多的问题,
+**而名字承诺了全景**,于是读的人(包括我)把局部读成整体。
+
+今天查出的三张死表(signal_outcomes 122d / market_state_vectors 27d /
+risk_meter_history 的 2099 行)**在今天之前不在任何检查的视野里**。
+不是警报失灵,是**没装传感器的地方着火了**。
+
+> **一个东西是红色的,至少它有颜色。没有颜色的东西,永远不会让任何裁决变坏。**
+
+### 最刺眼的一条:9 张 NAV 表,1 张在被判活
+
+ARCHITECTURE 说产品是**可验证的前向记录**,而 NAV 表就是那个记录本身。
+`beta_core_nav_q/_size/_meta` · `causal_paper_nav` · `combined_book_nav` ·
+`dingge_paper_nav` · `factor_tilt_nav` · `fusion_paper_nav` ·
+`pod_aggregator_nav` · `scalable_book_nav` · `two_layer_paper_nav`
+—— **8 张没人看。记录可能有洞而我们不知道。**
+
+### 交付:一个能收敛到零的整数
+
+    n_total 67 · 已覆盖 11 · 显式排除 18 · **未覆盖 38(其中 track_record 层 17)**
+
+`n_not_covered` 是 Jazz 那个「还差多少」的答案。**它能收敛;守卫的数量不会。**
+
+设计三条:
+- **清册现查 `information_schema`** —— 明天新建的表明天就在缺口里,不靠人记得。
+  一份手写清单本身就是抽样,而抽样正是要修的毛病。
+- **按层报,不按总数报。** 「少看 38 张」是误导:`api_tiers` 没人看不要紧,
+  NAV 表没人看要命。只有 `track_record` 层未覆盖算阻塞。
+- **排除逐条带理由,禁止模式匹配。** 一个 `endswith('_log')` 会把明天某张
+  重要的表静默吞掉。分级可以用模式(猜错只是排错顺序),排除不行(猜错会让它消失)
+  —— **两者失败的代价不同,所以规则不同。**
+
+### 自咬两次
+
+**① 差点用一盏永久红灯去修一盏永久黄灯。** 第一版让覆盖不全把总裁决压成
+`blocked`。而覆盖不全会持续数周 ⇒ 那盏灯永久是红的,
+**而一盏常亮的灯和一盏坏掉的灯在行为上是同一个东西** —— 正是本条要修的病。
+改为 `qualify_verdict()`:裁决不动,加 `covers` 与 `unqualified` 两个字段。
+**「我不知道」是诚实的裁决,「健康」不是;但「永远报警」也不是。**
+
+**② 「同上」不是理由,是指针,而指针会断。** 四条排除写成「同上」,
+守卫拒收 —— 有人重排字典或只读到其中一条时,它什么也没说。
+
+### 未做
+
+38 个缺口只是被数出来了。补覆盖是接下来一周的主线,
+**而 17 个 track_record 缺口排在最前** —— 在它们补上之前,
+任何「前向记录完整」的说法都只对我们看得见的那一张表成立。

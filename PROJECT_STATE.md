@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-02 (Seth/Cowork lane — S-262…S-277 十六条;S-277 开了 Mac 侧 4 个 writer 的代理端点——他们等了我 18 天,不是在等指令;S-276 data-coverage 跨 lane 基线已上线验证;CLAUDE.md 加 rule 3b 摄取归一;MINIMAX_SYNC 77k→29k;指令已下 §SETH-DISPATCH-2026-09-02)
+**Last updated:** 2026-09-02 (Seth/Cowork lane — S-262…S-279 十八条;S-279 覆盖清册给出「还差多少」的整数:**67 个对象,已覆盖 11,未覆盖 38,其中 track_record 层 17**(9 张 NAV 表只有 1 张在被判活);端点没撒谎——它们此刻正在报 degraded/stale,病在覆盖不在告警;Jazz 目标:一周内收敛,之后 1000u 跑 ①)
 
 ## 本轮一句话:**一个形状,十次**
 
@@ -248,6 +248,44 @@ The cap is doing its job only if closure is as routine as addition.*
    而迁移要 service_role,于是修复挂在另一条 OPEN RISK 上。
 
 ---
+
+## 2026-09-02 追加:S-279 —— 「还差多少」终于是一个整数
+
+**Jazz:**「怎么都说健康,但就是有东西停了?」→ 查证:**端点没撒谎**,
+它们此刻正在报 degraded / stale / domain_without_usable_source。
+病在**覆盖**:health-summary 只查 4 件事,S-278 只看 10 张表,而库里有 67 张。
+
+```
+n_total 67 · 已覆盖 11 · 显式排除 18 · 未覆盖 38(track_record 层 17)
+```
+
+**9 张 NAV 表只有 `beta_core_nav` 一张在被判活** —— 而产品就是可验证的前向记录。
+
+🔑 **跑实盘要写的 `execution_intents` / `execution_outcomes` 恰好在那 17 张里。**
+所以补 track_record 覆盖不是官僚流程,**它就是 1000u 的前置条件**。
+
+设计:清册现查 information_schema(明天新建的表明天就在缺口里)· 按层报不按总数报 ·
+排除逐条带理由禁止模式匹配 · **覆盖不全不把裁决压红**(常亮的灯 = 坏灯,
+那正是要修的病)而是给裁决加 `covers` / `unqualified`。
+
+## 2026-09-02 追加:S-278 —— 生产者判活,查出三个活故障
+
+任务 #33。data-freshness 只看 ohlcv 的**数据源**,而静默死亡大多发生在**生产者表**上,
+且**没有一张在被判活**。实测:
+
+| 表 | 写时钟 | 事件时钟 | |
+|---|---|---|---|
+| `risk_meter_history` | 09-02 | **2099-12-31** | 未来日期 ⇒ max() 永远报新鲜 |
+| `signal_outcomes` | (无) | **2026-05-03** | 停 **122 天** |
+| `market_state_vectors` | **2026-08-06** | 08-05 | 停 **27 天**(我自己建的 writer) |
+
+`signal_outcomes` 尤其刺眼:data-freshness 的 docstring 把「它曾死 80 天」
+当成建那个端点的理由,而**它现在死了 122 天**。
+
+> **一个判活器最坏的失败不是漏报,是被它监视的数据本身关掉。**
+
+🔴 **看见 ≠ 修好。** 三个故障只是被看见了:2099 行要删、两个 writer 要重启查因。
+已上提 §IN-FLIGHT。
 
 ## 2026-09-02 追加:S-277 —— 我欠 Minimax 的 18 天
 
