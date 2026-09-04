@@ -91,7 +91,7 @@ if [ -n "$OTHER_DIRTY" ]; then
   echo "$OTHER_DIRTY" | sed 's/^/    /'
   echo ""
   echo "These are likely mixed-hunk files (my hunks + another session's hunks)."
-  echo "Per CLAUDE.md rule #6 I will NOT `git add -A` them."
+  echo "Per CLAUDE.md rule #6 I will NOT 'git add -A' them."
   echo "If you want them in THIS commit, run:"
   echo "    git add -p <file>            # stage ONLY your hunks"
   echo "    bash scripts/push_session.sh # re-run"
