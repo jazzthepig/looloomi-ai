@@ -788,6 +788,10 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     except Exception as e:
         return {"status": "error", "reason": str(e)[:120]}
     if len(px) < 5:
+        await _record_exception(
+            "coverage", "refused",
+            f"only {len(px)} panel names have a usable price (<5) — refusing to mark",
+            mark_date=today, detail={"priceable": len(px)})
         return {"status": "skipped", "reason": "insufficient_live_data"}
 
     _venue_excluded = 0
@@ -811,6 +815,10 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     except Exception as _e:                                   # noqa: BLE001
         # Cannot reach the venue listing. Do NOT silently mark the full panel —
         # that is the substitute-instead-of-refuse pattern this module is fixing.
+        await _record_exception(
+            "venue_listing", "refused",
+            f"venue listing unavailable — refusing to mark an unverified "
+            f"universe: {str(_e)[:200]}", mark_date=today)
         return {"status": "skipped",
                 "reason": f"venue listing unavailable, refusing to mark an "
                           f"unverified universe: {str(_e)[:100]}"}
@@ -819,6 +827,11 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         _drop = {s.upper() for s in _dropped}
         keep = [i for i, s in enumerate(symbols) if s.upper() not in _drop]
         if len(keep) < 5:
+            await _record_exception(
+                "venue_listing", "refused",
+                f"only {len(keep)} of {len(symbols)} panel symbols are listed on "
+                f"the execution venue — too few to mark", mark_date=today,
+                detail={"listed": len(keep), "panel": len(symbols)})
             return {"status": "skipped",
                     "reason": f"only {len(keep)} of {len(symbols)} panel symbols are "
                               f"listed on the execution venue — too few to mark"}
@@ -902,6 +915,17 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
                 _log.error("[beta_core] INCEPTION NOT PERSISTED — refusing to cache "
                            "state; will retry next cycle rather than run on a mark "
                            "that has no row")
+                # THIS IS THE PATH THAT WENT DARK ON 2026-09-04. v5 deployed ahead
+                # of the migration adding `interval_hours`; every insert 400'd and
+                # the only trace was one stdout line on a container nobody was
+                # tailing. The curve read `{"days": 0}` — indistinguishable from a
+                # book that had never been asked to run.
+                await _record_exception(
+                    "durable_write", "refused",
+                    "INCEPTION not persisted — the NAV insert failed. Most likely a "
+                    "schema drift: code deployed ahead of its migration. Check that "
+                    "every column in the beta_core_nav payload exists on the table.",
+                    mark_date=today, detail={"phase": "inception"})
                 return {"status": "inception_failed", "reason": "durable_write_failed",
                         "date": today.isoformat()}
             await _redis_set(_STATE_KEY, state, ttl=0)
@@ -990,6 +1014,19 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
 
     new_w = weights if rebalanced else prev_w
     iv_h = _interval_hours(state)
+    if iv_h is not None and not (_DAILY_INTERVAL_MIN_H <= iv_h <= _DAILY_INTERVAL_MAX_H):
+        # NOT a refusal. The mark is real and the prices are real; what is wrong is
+        # the LABEL "daily" on a row that covers 10.6h or 35.9h. Refusing here would
+        # throw away a genuine observation to protect a naming convention. Flagging
+        # here is what lets get_curve suppress the annualized figures instead.
+        await _record_exception(
+            "valuation_point", "flagged",
+            f"mark struck {iv_h:.1f}h after the previous one, outside "
+            f"[{_DAILY_INTERVAL_MIN_H:.0f}h, {_DAILY_INTERVAL_MAX_H:.0f}h] — this row "
+            f"is not a daily observation and annualized figures are suppressed while "
+            f"it is in the window",
+            mark_date=today, detail={"interval_hours": iv_h,
+                                     "valuation_point_utc": "%02d:%02d" % _VALUATION_POINT_UTC})
     state = {**state, "nav": nav, "benchmark_nav": bench_nav,
              "weights": new_w, "base_weights": base,
              "mark_prices": {s: px[s] for s in base if s in px},
@@ -1013,6 +1050,18 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             _log.error("[beta_core] MARK NOT PERSISTED for %s — leaving state at the "
                        "previous mark so the day is retried, not absorbed into "
                        "tomorrow's return", today.isoformat())
+            # Same path as the inception branch above; same 2026-09-04 outage.
+            # Leaving state un-advanced is correct (the day retries rather than
+            # folding into tomorrow's return), but on its own it is INVISIBLE:
+            # the table simply stops growing, which reads as "nothing happened".
+            await _record_exception(
+                "durable_write", "refused",
+                "MARK not persisted — the NAV insert failed, state deliberately not "
+                "advanced so the day retries rather than being absorbed into the "
+                "next return. Check beta_core_nav columns against the insert payload.",
+                mark_date=today,
+                detail={"phase": "mark", "nav_would_have_been": round(nav, 6),
+                        "interval_hours": iv_h})
             return {"status": "mark_failed", "reason": "durable_write_failed",
                     "date": today.isoformat()}
         # C2 ⓠ overlay hook (per §C2-SHIP-SPEC 2026-08-12). The hook writes a
@@ -1066,6 +1115,51 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             "funding_return_pct": round(funding_ret * 100, 4),
             "instrument": "spot",
             "rebalanced": rebalanced, "date": today.isoformat()}
+
+
+async def _record_exception(control: str, action: str, reason: str, *,
+                            mark_date: dt.date | None = None,
+                            symbol: str | None = None,
+                            detail: dict | None = None) -> None:
+    """Write one row to `nav_exceptions` (S-285, NAV_POLICY §10).
+
+    WHY THIS EXISTS, and why it is a SEPARATE TABLE from beta_core_nav. On
+    2026-09-04 the ① book went dark: `_INCEPTION_ID` moved to v5 and deployed
+    while the migration adding `interval_hours` had not run, so every insert got
+    a PostgREST 400, `_write` returned False, and the book logged
+    "MARK NOT PERSISTED" and stopped. `/api/v1/beta-core/curve` returned
+    `{"days": 0}` — and **nothing anywhere recorded that a mark had been
+    attempted and refused.** An empty curve and a curve that was never asked for
+    look identical, which is the miss-vs-error collapse this codebase keeps
+    rediscovering, arriving this time in the module written to stop it.
+
+    A REFUSED MARK MUST NOT WRITE A beta_core_nav ROW. NAV_POLICY §3 v1 said the
+    refusal should be recorded there with a `void_reason`, and that was wrong:
+    a row in the NAV table ASSERTS that a NAV was struck, and the whole point of
+    a refusal is that none was. Worse, when the reason for refusing is that the
+    NAV write path itself is broken, the record of the failure would travel the
+    path that just failed. So refusals go to a different table, reached by a
+    different insert, and §3 is corrected to match (see the doc's §3 note).
+
+    Never raises. A logger that can take the caller down is a logger nobody
+    dares call from an error path, which is exactly where this one lives.
+    """
+    try:
+        from src.api.store import supabase_insert_table
+        await supabase_insert_table("nav_exceptions", [{
+            "book": "beta_core",
+            "inception_id": _INCEPTION_ID,
+            "mark_date": mark_date.isoformat() if mark_date else None,
+            "symbol": symbol,
+            "control": control,
+            "action": action,
+            "actor": "system",
+            "detail": detail or {},
+            "reason": reason[:800],
+        }])
+    except Exception as e:                                    # noqa: BLE001
+        _log.error("[beta_core] exception log FAILED (%s/%s): %s — the refusal "
+                   "itself is now only in stdout", control, action, e)
 
 
 def _interval_hours(state: dict) -> float | None:
