@@ -116,9 +116,6 @@ def main() -> int:
     # Read last row from each sleeve
     vol_carry = _read_last_row("vol_carry")
     regime = _read_last_row("regime_nowcast")
-    macro = [r for r in (
-        _read_last_row("macro_overlay"),
-    )] if False else []  # noqa
     macro_path = LEDGER_DIR / "macro_overlay_positions.csv"
     macro_rows = []
     if macro_path.exists():

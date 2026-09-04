@@ -1065,6 +1065,12 @@ python3 -m tests.test_exception_text_never_reaches_the_client || {
 python3 -m tests.test_track_record_measures || {
   echo "  ✗ 战绩度量守卫 — do not push"; exit 1; }
 
+# ── S-284 O fix: display_score 默认 dp 常量守住 (2026-09-04) ────────────────
+# 把 dp=1 从签名默认值提到模块级 DISPLAY_SCORE_DP 常量;契约 = 默认值与常量
+# 必须一致,且显示值不跨 grade band (S-252 74.97 → 74.9 不跨 75)。
+python3 -m tests.test_display_score_dp || {
+  echo "  ✗ display_score dp 常量守卫 — do not push"; exit 1; }
+
 # ── S-251: 价源判活按【覆盖标的数】,不按 max(trade_date) ─────────────────────
 # supabase_ohlcv_daily_freshness() 的全部查询是 `order=trade_date.desc limit 1`
 # —— 全表一行,不分源不分标的。实测 2026-08-27:binance_hist 自 08-09 起每天
@@ -1077,6 +1083,25 @@ python3 -m tests.test_track_record_measures || {
 # 正对着这个模块,我第一版全局 3 天就会在周二早上把 eodhd 报成 DEAD。
 python3 -m tests.test_source_freshness || {
   echo "  ✗ 价源判活守卫 — do not push"; exit 1; }
+
+# ── S-283: NAV 估值政策即 CI(docs/NAV_POLICY.md)─────────────────────────────
+# 三个 P0 同时存在于 ① 这本"产品账本"上,而它是所有其他账本的 benchmark:
+#   ① _STATE_KEY 未按 _INCEPTION_ID 分版本。Postgres 侧的 inception 过滤是对的,
+#     漏的是它前面那层缓存 —— v3→v4 切换时 Redis 里旧 state 还在,
+#     `state.get("weights")` 为真,受保护的 recovery 分支根本没跑。v4 第一行因此
+#     从 v3 的 NAV 1.047005 起算,并对着 v3 停在 08-20 的 mark_prices 求收益,
+#     把 3 天压成一个 +20.187% 的"日"收益。**守住了持久层、漏掉了先应答的那层。**
+#   ② get_curve 用 last/first 而非从单位 NAV 起算。仓库里其余每一本账都写
+#     `(navs[-1] - 1)`,只有 ① 用浮动基数 —— 于是发布的 −0.177% 是 12 天窗口
+#     收益冒充账本收益,并且正好把被污染的第一行排除在标题之外。两个缺陷互相
+#     抵消比任何一个单独存在更糟:读者看到一个像样的小数字,没有理由去看。
+#   ③ 没有 elected valuation point。`sleep(24*3600)` 锚在进程启动上,Railway
+#     每次 push 都重锚一次,实测 12 个 mark 间隔 10.6h–35.9h(3.38 倍)。这些行
+#     标着 daily,喂给 realized_vol_30d → vol_target_scalar → gross。
+#     **未选定的估值时点不是报表瑕疵,它一路走到了仓位大小。**
+# 加密没有收盘,所以估值时点必须"选",不选不等于没有 —— 等于让调度器替你选。
+python3 -m pytest tests/test_nav_policy.py -q || {
+  echo "  ✗ NAV 估值政策守卫 — do not push"; exit 1; }
 
 # ── S-263: regime 标签要看【几票通过】,不只看它多新 ──────────────────────────
 # S-251 上面那段修的是价源:标的数从 261 掉到 1 而探针报 fresh。同一个形状在
@@ -1274,7 +1299,7 @@ python3 -m tests.test_asset_index || {
 python3 -m tests.test_coverage || {
   echo "  ✗ 跨 lane 覆盖基线守卫 — do not push"; exit 1; }
 
-# ── S-277: 未知列必须拒绝,不能静默丢弃 ────────────────────────────────────
+# ── S-283: 未知列必须拒绝,不能静默丢弃 ────────────────────────────────────
 # Mac 侧 4 个 daily writer 等我开代理端点等了 18 天(risk_meter_history 自 08-15)。
 # 「不许直写 Supabase」的原则是对的,但只立原则不开口子等于把对方逼回直写。
 #

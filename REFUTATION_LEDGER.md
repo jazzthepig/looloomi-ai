@@ -15301,3 +15301,148 @@ Minimax-A 在验证端点切换时**用了一个很远的未来日期以免撞�
 - **`signal_outcomes` 的真实错误还没看到** —— 心跳上线后第一轮就会记下来,
   那才是修它的起点。**看见 ≠ 修好**,这条只保证下次不用等 123 天
 - `market_state_vectors` 需要的是**加日程**,不是重启;尚未加
+
+---
+
+## S-283
+
+**NAV 读数的三个 P0,全在 ① 这本 benchmark 账上 —— 以及为什么"基金行政"是一门手艺**
+
+2026-09-04。Jazz 问「为什么这周的 beta 没有捕捉到」,追下去发现 beta **捕捉到了**
+(12 行里 `excess_return` 除第一行外全是 0.000000,近 7 mark book 与 benchmark 都是
++3.14%),错的是**读数**。然后他说了一句把这件事从 bug 变成课题的话:
+
+> 读数读不准不是偶发的,很多基金都会有类似问题。
+
+对。行业数据里**定价错误是 NAV 重述的最大单一类别**,而最常见的两个成因正是我们踩过的:
+**过期价格**与**错误价源**。fund administration 这门手艺存在的全部理由就是系统性消灭它,
+手段不是更好的算术,是**一组具名控制、固定顺序、由不产出这个数的人执行**。
+
+### 三个缺陷
+
+**P0-1 · inception 继承(缓存未分版本)。** `_recover_state_from_nav` 按
+`inception_id=eq.v4` 过滤 Postgres —— 正确,而且**从来不是漏洞**。漏洞在它前面那层缓存:
+`_STATE_KEY = "beta_core:state"` 没有版本后缀。08-23 `_INCEPTION_ID` v3→v4 时 Redis 里
+v3 的 state 还在且带 `weights`,`if not state.get("weights")` 判 False,**受保护的
+recovery 分支和全新 inception 分支都没跑**。反推:
+
+```
+nav 1.258366 / 1.201872 = 1.047005   ← v3 最后一个 NAV,六位吻合
+bmk 1.200400 / 1.155286 = 1.039050
+```
+
+**P0-2 · 过期 mark_prices,同一条路径继承。** v3 因 geo-block 从 08-21 起 mark 0.00%,
+有效价格停在 08-20。于是 v4 第一天的 `daily_return` = **+20.187%**
+≈ 1.1103 × 0.9857 × 1.098,**三天压成一行、标着一天**。那行 +4.66% 的 `excess`
+是 12 行里唯一非零的 —— 它读起来像 ③ 创造了价值,实际是同一个 artifact。
+
+**v4 是为修 v3 这两个缺陷才建的,两个缺陷都烤进了 v4 的第一行。**
+
+**P0-3 · 没有 elected valuation point(新发现,最严重)。** `sleep(24 * 3600)` 锚在
+**进程启动**上,Railway 每次 push 重锚一次。实测 12 个 mark:
+
+```
+间隔  min 10.6h   max 35.9h   ratio 3.38x   mean 23.8h
+```
+
+这些行标着 daily,喂 `realized_vol_30d` → `vol_target_scalar` → **gross exposure**。
+**未选定的估值时点不是报表瑕疵,它一路走到了仓位大小。** 加密没有收盘,估值时点必须
+"选"(AICPA 对连续交易资产的原话);不选不等于没有 —— 等于让调度器替你选。
+
+### 形状:控制的**作用域**比控制本身更容易错
+
+三个里有两个不是"没有控制",是**控制的作用域差一格**:
+
+| 控制 | 覆盖了 | 漏掉了 |
+|---|---|---|
+| inception 身份 | 持久层 | **先应答的缓存层** |
+| `test_table_columns_match_the_code` | `api_keys` | 其余所有表(本次新增列本可静默杀死 ① 账) |
+
+MEMORY.md 里已经有这条的另一个实例:只给 MEMORY.md 加上限,成本搬到隔壁
+(PROJECT_STATE 涨到 315k)。**一个作用域太窄的控制,会把注意力从它漏掉的地方引开** ——
+因为它看起来是"已经有守卫了"。
+
+### 自咬
+
+第一版 `test_cumulative_return_is_measured_from_unit_nav` 是对源文件做正则,结果
+**红在了我自己写来解释这个修复的注释上**。在一个"每个修复旁边都写清楚为什么"的仓库里,
+文本匹配的守卫迟早会被自己的文档绊倒,然后被下一个人放宽以求安静。改成走 AST。
+第二个:新增列的守卫第一版用 `^\s*"(\w+)"\s*:`,**变异测试立刻证明它漏掉同一行追加的键**
+—— 一个读格式而不读结构的守卫。也改成 AST。**四个守卫全部用变异测试验证过会红。**
+
+### 做了什么
+
+- `docs/NAV_POLICY.md` —— 估值政策 v1。13 条控制(C1–C13)对照 SEC Rule 2a-5 /
+  AICPA 数字资产 practice aid / CSSF 24/856 / GIPS 2020,逐条标出我们的实现与缺口。
+  重要性阈值:① **0.25%**、其余账本 **0.50%**、shadow-NAV 方差 **0.10%**,外加
+  **定性覆盖**(改变符号、改变闸门裁决、由控制缺失而非数据修订引起、改变读者结论 ⇒
+  无论量级一律 significant)。纯百分比阈值对"小误差、翻结论"是瞎的。
+- ① **v4 整段 VOID,v5 从 1.0 起步**,代价 12 天 forward record。按 §6 三个缺陷各自
+  独立触发定性覆盖;(a)(b) 在行级不可恢复 —— 真实的 08-23 NAV 需要那个 feed 从未
+  给出的价格才能重建。**Void 不删**,`void_reason` 留档,`get_curve` 已过滤。
+- `_STATE_KEY = f"beta_core:state:{_INCEPTION_ID}"`;`cum = last["nav"] - 1.0`;
+  10 个 NAV 循环改 `_sleep_until_utc(00:05 UTC)`;`interval_hours` 落到每一行
+  (**首行为 NULL,不填 24.0** —— 把未知渲染成正常数字正是这列要暴露的失败);
+  `annualization_is_meaningful` 现在还要求 `daily_series_ok`。
+- `/api/v1/trading/positions` 拆成 `cash_book` / `sleeve_book`,**不再发布混合百分比**
+  (`total_pnl / _DEFAULT_BALANCE` 曾把 +1.55% 的账报成 **65.509%**)。
+  `/trading/metrics` 自 2026-07-15 Loop Watch 起就拆对了,positions 这条路径漏了修 ——
+  **同一个缺陷在同一个文件里活了七周,因为修复只覆盖了发现它的那个端点。**
+- `tests/test_nav_policy.py`(15 passed,已注册进 preflight)+
+  `migrations/2026-09-04_nav_policy_s283.sql`(含 `nav_exceptions` 表)。
+
+### 未做 / 已知缺口
+
+- **C5 独立价格复核(IPV)不存在** —— 每本账仍是单一价源。v3 静默 mark 0.00% 三天,
+  第二价源第一天就会抓到;这正是 IPV 作为行业控制的全部论据。
+- **C9 shadow NAV 不存在**。需要给 Minimax 开 NAV 表读权限 —— 这是**接口缺口,不是
+  纪律问题**(S-276 同款)。
+- **C4 mark-coverage 只在 ① 上**,其余 6 本账仍是 initialise-to-zero-then-accumulate。
+- `interval_hours` 只在 ①。
+- 迁移**必须先于代码上线**:PostgREST 对未知列答 400 → 写入返回 False → ① 账停止
+  marking,进程健康、端点健康、一张表悄悄不再增长(S-138/S-185 同款)。
+
+## S-284
+
+**Seth 12 commits 残留纰漏 + trading  module 补缺 (2026-09-04)**
+
+承接今日 plan(`/Users/sbb/.claude/plans/seth-temporal-cloud.md`)的 audit:用户问
+"Seth 最近检修的是否还存在纰漏,包括 trading 模块是否需要补充"。Plan 用 Explore agents
+跑了两个独立轴(Seth 12 commits per-commit gap + trading module cross-cut),合并出
+**P0:4 / P1:6 / P2:6** 共 16 项 finding,落地**今日** 8 项:
+
+### 今日落地的 8 项修补
+
+| Fix | 文件 | 一句话 |
+|---|---|---|
+| **H** | `paper_trading/__init__.py` | 填 `__version__="2026.09.04"` + `__all__` 16 项 |
+| **I** | `src/research/paper_books/daily_runner.py` | 删 `if False else []  # noqa` 死代码 |
+| **J** | `paper_trading/spec_runner.py` | `Decision.as_payload()` 加 `verdict_kind` 字段(S-207 SKIPPED vs BLOCKED 分桶) |
+| **K** | `paper_trading/spec_runner.py` | 退役 `survivors_only_lag1_book_bookB`,改单名 + 加载时拒绝 |
+| **O** | `src/data/cis/cis_provider.py` + `tests/test_display_score_dp.py` | `DISPLAY_SCORE_DP=1` 抽出常量 + 单测 |
+| **F** | `src/data/signals/track_record.py` + `tests/test_track_record_measures.py` | `MIN_MEASURABLE` 30→12 + `why_hidden` JSON |
+| **B** | `src/api/main.py` | `/health.data_layer.regime_quorum` 暴露 `LAST_REGIME_QUORUM` |
+| **E** | `PROJECT_STATE.md` + `CLAUDE.md` | OPEN RISKS §0c 决策 ticket + lane 归属同 turn |
+
+### 留待 NEXT SESSION / DEFER
+
+- **A** (`decide_survivors_book` 6-branch test,M-115 Book B 验证缺口) —— NEXT SESSION
+- **C** (`regime_quorum` 接入 `spec_runner` 作 `decide_gated()` wrapper) —— NEXT SESSION
+- **D** (`--require-regime=ok --book=b --dry-run` CLI) —— NEXT SESSION,depends on C
+- **G** (M-88 spec)—— DEFER,独立 R-number 决策
+- **E mechanics**(fold vs acknowledge `paper_books/` vs `paper_trading/`)—— 决策
+  ticket 今日开,mechanics 等 Jazz 拍 A/B
+
+### 关键教训
+
+**「写了的未必被执行,被执行的未必可观测」** —— 12 commits 里 S-263 把
+`LAST_REGIME_QUORUM` 落到模块层、本意是「让标签几票通过成为可观测量」,但**全 repo
+0 reader**(grep 出 2 个 write 0 个 read)。今日 B 修把它从日志搬到 `/health`,consumer
+不必 import 也不必解析字符串。同一个形状在 spec_runner 上出现一次:`FAMILIES`
+字典说 `survivors_only_lag1_book_bookB=True`,但 S-249 双名字本身就是一个漂移
+hazard;今日 K 修把它退役,改单名字 + 加载时拒绝,载入会抛带原因的 `ValueError`。
+**「诚实即知错处」** —— 11 行 docstring + 4 个引用,值一改日志一改,preflight 抓得到。
+
+**「spec_runner book 块是它最该 gating 的的地方」** —— C 还没接,但**plan 与 J/K 都
+已经在等它**(J 加 verdict_kind,C 加 quorum verdict kind)。NEXT SESSION 见 A+C+D,
+预计 ~1d 落地。

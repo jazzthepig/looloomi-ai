@@ -2092,7 +2092,13 @@ GRADE_FLOORS: tuple[tuple[str, float], ...] = (
 )
 
 
-def display_score(raw: float, dp: int = 1) -> float:
+#: 2026-09-04 O fix: 显示分数默认保留 1 位小数。**模块级常量**,而不是
+#: display_score 默认值处的字面量 —— 前者文档可查,后者是行尾的小括号;
+#: 测试也不必 import 整个签名,直接 import 这个常量。
+DISPLAY_SCORE_DP = 1
+
+
+def display_score(raw: float, dp: int = DISPLAY_SCORE_DP) -> float:
     """给人看的分数,**保证它不会落进比自己评级更高的带里** (S-252).
 
     实测 2026-08-27 的排行榜首屏:

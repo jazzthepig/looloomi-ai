@@ -105,7 +105,12 @@ then excess.
    live echo `GET /internal/cis-scores/schema`. Contract wins on any disagreement. Schema changes
    documented in MINIMAX_SYNC §2 BEFORE code; both sides confirm; bump `SCHEMA_VERSION`.
 
-3. **Ownership lanes.** Seth/Austin: `src/`, `dashboard/`, `docs/`, `scripts/`. Minimax:
+3. **Ownership lanes.** Seth/Austin: `src/`, `dashboard/`, `docs/`, `scripts/`,
+   **`paper_trading/`** (spec library, top-level — re-exported via
+   `paper_trading.__all__`, 2026-09-04 S-284 H fix), and
+   **`src/research/paper_books/`** (older sleeve+ledger prototypes,
+   pre-spec_runner — reconciliation pending, see
+   PROJECT_STATE.md OPEN RISKS §0c). Minimax:
    `/Volumes/CometCloudAI/cometcloud-local/`. When unsure, `MINIMAX_SYNC.md` §1.
 
 3b. **Ingestion is ONE lane (Seth), by function not by path.** Fetching and persisting price data
