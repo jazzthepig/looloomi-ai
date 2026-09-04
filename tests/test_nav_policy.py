@@ -317,6 +317,86 @@ def test_beta_core_nav_insert_writes_only_columns_that_exist():
     )
 
 
+# ── §3/§10 A refusal must leave a trace, on a different path ─────────────────
+
+def test_every_refusal_path_records_an_exception():
+    """Each `status: skipped / mark_failed / inception_failed` must log first.
+
+    THE INCIDENT (2026-09-04). `_INCEPTION_ID` moved to v5 and deployed while the
+    migration adding `interval_hours` had not run. Every insert 400'd, `_write`
+    returned False, the book logged one line to stdout and stopped. The curve
+    endpoint answered `{"days": 0}` — **identical to a book that had never been
+    asked to run.** Refusing correctly and recording nothing is still a silent
+    failure; the refusal was right and its invisibility was the defect.
+    """
+    src = _src("beta_core_paper.py")
+    tree = ast.parse(src)
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.AsyncFunctionDef) and n.name == "mark_and_rebalance")
+
+    bad = []
+    for node in ast.walk(fn):
+        if not isinstance(node, ast.Return) or not isinstance(node.value, ast.Dict):
+            continue
+        keys = {k.value for k in node.value.keys
+                if isinstance(k, ast.Constant) and isinstance(k.value, str)}
+        if "status" not in keys:
+            continue
+        status = next((v.value for k, v in zip(node.value.keys, node.value.values)
+                       if isinstance(k, ast.Constant) and k.value == "status"
+                       and isinstance(v, ast.Constant)), None)
+        if status not in ("skipped", "mark_failed", "inception_failed"):
+            continue
+        # Walk back through the enclosing statements for a _record_exception await.
+        seg = ast.get_source_segment(src, fn) or ""
+        idx = seg.find(ast.unparse(node)[:60])
+        window = seg[max(0, idx - 1400):idx]
+        if "_record_exception(" not in window:
+            bad.append(status + " @ " + ast.unparse(node)[:70])
+    assert not bad, (
+        "refusal paths that record nothing: " + "; ".join(bad) + "\n"
+        "A refused mark must write to nav_exceptions BEFORE returning — on a "
+        "different table via a different insert, because the commonest reason to "
+        "refuse is that the NAV write path itself is broken (NAV_POLICY §3/§10)."
+    )
+
+
+def test_refusals_do_not_write_a_nav_row():
+    """A refusal must not be recorded as a beta_core_nav row.
+
+    A row in the NAV table asserts a NAV was struck; the content of a refusal is
+    that none was. Recording "no NAV" as a NAV row with an annotation is the S-194
+    shape one table over. NAV_POLICY §3 said to do this in v1 and was corrected
+    the same day — by writing the code.
+    """
+    # Check the TABLE `_record_exception` inserts into, not whether the string
+    # "beta_core_nav" appears anywhere in the call. The first version asserted the
+    # latter and went red on the diagnostic text inside a reason message ("Check
+    # beta_core_nav columns against the insert payload") — the THIRD text-matching
+    # guard in this file to trip on prose rather than behaviour. In a codebase that
+    # explains itself in place, a guard that reads strings will eventually fail on
+    # its own documentation, and the next person weakens it to restore green.
+    # House rule for this file: assert on the AST, never on the source text.
+    src = _src("beta_core_paper.py")
+    tree = ast.parse(src)
+    fn = next((n for n in ast.walk(tree)
+               if isinstance(n, ast.AsyncFunctionDef) and n.name == "_record_exception"), None)
+    assert fn is not None, "beta_core must expose _record_exception()"
+    targets = [c.args[0].value for c in ast.walk(fn)
+               if isinstance(c, ast.Call)
+               and getattr(c.func, "id", None) == "supabase_insert_table"
+               and c.args and isinstance(c.args[0], ast.Constant)]
+    assert targets == ["nav_exceptions"], (
+        f"_record_exception inserts into {targets!r}; refusals belong in "
+        "nav_exceptions ONLY, reached by a different insert than the one that "
+        "may have just failed (NAV_POLICY §3)."
+    )
+    doc = _POLICY.read_text()
+    assert "nav_exceptions" in doc.split("## §3")[1].split("## §4")[0], (
+        "NAV_POLICY §3 must name nav_exceptions as the refusal record."
+    )
+
+
 # ── §8 The two-book separation on the trading surface ────────────────────────
 
 def test_positions_endpoint_does_not_publish_a_blended_return():
