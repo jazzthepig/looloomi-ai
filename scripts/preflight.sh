@@ -1430,6 +1430,18 @@ python3 -m tests.test_paid_capability_is_used || {
 python3 -m tests.test_treasury_decisions || {
   echo "  ✗ 决策流守卫 — do not push"; exit 1; }
 
+# ── S-292: 一块没连线的卡,和没买这块卡是一样的 ────────────────────────────
+# Jazz:「我们建了那么多东西,必须要连通呀,现在就像买了显卡、存储、网卡,
+# 但是服务器不是连通的。」所以这个循环必须同时插进四个面:
+#   心跳 (S-282) · 判活 (S-278) · 覆盖清册 (S-279) · Supabase 落库
+# signal_outcomes 死 123 天 = 循环有了但心跳没接;market_state_vectors 停 27 天
+# = 写了一次但从没上日程。**两个前车都在这张表的隔壁。**
+#
+# 实跑发现:BTC 按家数 19.4% / 按持仓 87.0%;ETH 按家数 61.8% / **按持仓 22.9%**
+# —— 最大的 BitMine 解析不出 id。只报一个口径,这个洞看不见。
+python3 -m tests.test_treasury_writer || {
+  echo "  ✗ 决策流落库守卫 — do not push"; exit 1; }
+
 # ── S-272: 判活响应必须在【顶层】给一个裁决 ─────────────────────────────────
 # 2026-09-02 Jazz 问「系统检测说 ohlcv 又停了,是否如此」。查下来:
 # **没有任何东西是新停的** —— coingecko 完整日连续 12 天 25/25、eodhd 33/33;

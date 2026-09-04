@@ -97,6 +97,8 @@ COVERAGE: dict[str, str] = {
     "market_state_vectors": "data-freshness:producers (S-278)",
     "trade_results": "data-freshness:producers (S-278)",
     "strategy_records": "data-freshness:producers (S-278)",
+    "treasury_decisions": "data-freshness:producers (S-292)",
+    "treasury_entities": "data-freshness:producers (S-292,随 decisions 一起判)",
 }
 
 #: **不需要判活的东西,逐条带理由。** 不许模式匹配 ——
