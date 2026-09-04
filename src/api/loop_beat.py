@@ -76,6 +76,22 @@ def _now() -> int:
     return int(time.time())
 
 
+def build_sha() -> str:
+    """当前进程跑的是哪个构建。**与 `/internal/build-state` 同源。**
+
+    ⚠️ S-295:没有这个字段时,「修了还在失败」和「修完之后还没再跑过」
+    **完全同形**。这些循环大多 24 小时一轮 —— 一个修复上线后,心跳条目
+    仍带着旧构建记下的那次失败,而 TTL 是 3 天,足够让人反复误读三次。
+
+    实际发生过:`_pod_aggregator_loop` 的 R62_Z 修复推上去之后,
+    读到的仍是同一条 ImportError —— 分不清是没修好,还是没轮到它跑。
+    """
+    import os
+    return (os.environ.get("RAILWAY_GIT_COMMIT_SHA")
+            or os.environ.get("GIT_COMMIT_SHA")
+            or os.environ.get("SOURCE_COMMIT") or "")[:8]
+
+
 async def beat(name: str, *, ok: bool, error: Optional[str] = None,
                detail: Optional[dict] = None, refused: bool = False) -> None:
     """记一次循环的结果。**只记录,不改变行为。**
@@ -108,6 +124,8 @@ async def beat(name: str, *, ok: bool, error: Optional[str] = None,
             "last_ok_at": _now() if (ok and not refused) else prev.get("last_ok_at"),
             "last_error": None if (ok or refused) else (error or "")[:200],
             "last_refusal": (error or "")[:200] if refused else None,
+            # **哪个构建记的这一条** —— 见 `build_sha()` 的 docstring。
+            "build": build_sha(),
         }
         if detail:
             entry["detail"] = detail
@@ -128,6 +146,13 @@ async def read_beats() -> dict:
         return {}
 
 
+def _stale(entry: dict) -> bool:
+    """这条心跳是不是旧构建记的。**两者都有 sha 才判得了** ——
+    否则返回 False 而不是 True(未知不该伪装成一个确定的答案)。"""
+    cur, was = build_sha(), (entry or {}).get("build")
+    return bool(cur and was and cur != was)
+
+
 def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
            now: Optional[int] = None) -> dict:
     """一个循环的裁决。**「没有心跳」不等于「健康」。**"""
@@ -142,6 +167,8 @@ def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
     if e.get("refused"):
         n = int(e.get("n_consecutive_refusals") or 1)
         return {"loop": name, "verdict": REFUSED,
+                "build": e.get("build"),
+                "stale_build": _stale(e),
                 "n_consecutive_refusals": n,
                 "last_refusal": e.get("last_refusal"),
                 "last_ok_at": e.get("last_ok_at"),
@@ -152,15 +179,24 @@ def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
     if not e.get("ok"):
         n = int(e.get("n_consecutive_failures") or 1)
         return {"loop": name, "verdict": FAILING,
+                "build": e.get("build"),
+                # **True = 这条是旧构建记的,该循环还没在当前构建下跑过。**
+                # 不是「修了还在失败」,是「还没轮到它」。
+                "stale_build": _stale(e),
                 "n_consecutive_failures": n,
                 "last_error": e.get("last_error"),
                 "last_ok_at": e.get("last_ok_at"),
                 "reason": (f"连续失败 **{n}** 次,最后一次:"
                            f"{(e.get('last_error') or '')[:120]}。"
-                           f"**一次失败和连续 {n} 次是两个状态**")}
+                           f"**一次失败和连续 {n} 次是两个状态**"
+                           + ("。⚠️ **这条是旧构建 "
+                              f"{e.get('build')} 记的,当前构建 {build_sha()} "
+                              f"下它还没跑过** —— 不是「修了还在失败」,"
+                              f"是「还没轮到它」" if _stale(e) else ""))}
     age = now - int(e.get("last_run_at") or 0)
     late = expect_every_s and age > expect_every_s * 2
     return {"loop": name, "verdict": OK, "age_s": age,
+            "build": e.get("build"),
             "late": bool(late),
             "reason": (f"上次成功 {age // 60} 分钟前"
                        + ("(**已超过预期间隔的两倍**)" if late else ""))}
@@ -180,6 +216,9 @@ def overall(beats: dict, expected: Optional[dict] = None) -> dict:
         "verdict": ("failing" if failing else "never_ran" if never else OK),
         "n": len(rows), "n_failing": len(failing), "n_never_ran": len(never),
         "n_refusing": len(refused),
+        # **旧构建记下的失败** —— 它们还没在当前构建下跑过,
+        # 把它们和「修了还在失败」混在一起会让人重复误读三天(TTL)。
+        "n_failing_on_stale_build": sum(1 for r in failing if r.get("stale_build")),
         "failing": [{"loop": r["loop"],
                      "n": r.get("n_consecutive_failures"),
                      "err": (r.get("last_error") or "")[:80]} for r in failing],
