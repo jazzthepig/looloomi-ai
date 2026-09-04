@@ -658,6 +658,36 @@ async def _sleep_until_utc(hour: int, minute: int = 0) -> None:
     await _asyncio.sleep((target - now).total_seconds())
 
 
+async def _await_valuation_point(tolerance_min: int = 30) -> None:
+    """Wait for the valuation point BEFORE the first mark of a process (S-286).
+
+    S-283 changed the *trailing* sleep to a wall-clock target and stopped there,
+    so marks 2..N landed on the point and mark 1 — the one right after every
+    deploy — did not. Railway redeploys on every push, so "mark 1" happens often.
+    Measured: v5's inception row struck 07:00:52 UTC against a 00:05 point.
+
+    Fixing the trailing sleep and leaving the leading one is the same partial
+    move as scoping the inception filter to Postgres and not to Redis: the guard
+    covers the path you were looking at, and the miss is on the path that runs
+    first. **The first iteration of a loop is a path.**
+
+    If the process happens to boot near the point, mark immediately — a restart
+    at 00:03 should not cost the day. Otherwise wait for the next one.
+    """
+    if _minutes_from_valuation_point_utc(*_NAV_VALUATION_POINT_UTC) <= tolerance_min:
+        return
+    await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)
+
+
+def _minutes_from_valuation_point_utc(hour: int, minute: int) -> float:
+    """Absolute minutes to the NEAREST occurrence of the point (23:50 → 15, not 1425)."""
+    now = _dt.datetime.now(_dt.timezone.utc)
+    point = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    return min(abs((now - point).total_seconds()),
+               abs((now - (point + _dt.timedelta(days=1))).total_seconds()),
+               abs((now - (point - _dt.timedelta(days=1))).total_seconds())) / 60.0
+
+
 # ── S-282:后台循环的心跳 —— 一个只进 stdout 的失败等于没有发生 ──────────
 # 实测 39 个真实循环里 **28 个**的失败只 print(第一次报的 67/64 把
 # `_start_*` 包装函数也数进去了 —— 夸大动机数字,今天第二次)。_outcome_tracker_loop 是最干净的
@@ -669,6 +699,54 @@ async def _beat(name: str, *, ok: bool, error: str | None = None) -> None:
         await beat(name, ok=ok, error=error)
     except Exception:            # 心跳失败绝不能影响业务循环
         pass
+
+
+_TREASURY_INTERVAL_S = 24 * 3600
+
+
+async def _treasury_decisions_loop():
+    """企业/主权持币的决策流 (S-292)。
+
+    Jazz:「我们建了那么多东西,必须要连通呀,现在就像买了显卡、存储、网卡,
+    但是服务器不是连通的。」所以这个循环**同时插进四个面**:心跳 (S-282)、
+    判活 (S-278)、覆盖清册 (S-279)、Supabase 落库。任何一个不接就是没连线。
+    """
+    await _asyncio.sleep(300)
+    while True:
+        try:
+            import httpx as _httpx
+
+            from src.api.store import supabase_rpc, supabase_upsert_table
+            from src.data.entity.writer import _cg_headers, run_once
+
+            async def _q(table, cols):
+                # 读走 RPC —— 仓里没有通用 select,而临时造一个通用读取
+                # 会绕过 RLS 姿态。`treasury_known_entities` 与其余 RPC 同姿态
+                # (SECURITY INVOKER,只授 service_role)。
+                rows = await supabase_rpc("treasury_known_entities", {})
+                return rows if isinstance(rows, list) else []
+
+            async def _up(table, rows, on_conflict):
+                return await supabase_upsert_table(table, rows, on_conflict)
+
+            async with _httpx.AsyncClient(headers=_cg_headers(),
+                                          timeout=30) as _c:
+                res = await run_once(client=_c, supabase_query=_q,
+                                     supabase_upsert=_up)
+            print(f"[TREASURY] {res['reason'][:160]}")
+            await _beat("_treasury_decisions_loop", ok=bool(res.get("ok")),
+                        error=None if res.get("ok") else str(res.get("errors"))[:180])
+        except Exception as _e:
+            print(f"[TREASURY] ⚠️  run failed: {_e}")
+            await _beat("_treasury_decisions_loop", ok=False, error=str(_e))
+        await _asyncio.sleep(_TREASURY_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_treasury_loop():
+    if os.environ.get("DISABLE_TREASURY_LOOP", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_treasury_decisions_loop())
+        print("[TREASURY] ✅ decision-stream loop scheduled")
 
 
 async def _outcome_tracker_loop():
@@ -734,6 +812,8 @@ _CAUSAL_PAPER_INTERVAL_S = 24 * 3600
 
 async def _causal_paper_loop():
     await _asyncio.sleep(360)   # 6 min warmup
+    # S-286: wait for the valuation point BEFORE the first mark, not only after it.
+    await _await_valuation_point()
     while True:
         try:
             from src.data.signals.causal_paper import mark_and_rebalance
@@ -759,6 +839,8 @@ async def _start_causal_paper_loop():
 # See src/data/signals/dingge_paper.py.
 async def _dingge_paper_loop():
     await _asyncio.sleep(420)   # 7 min warmup
+    # S-286: wait for the valuation point BEFORE the first mark, not only after it.
+    await _await_valuation_point()
     while True:
         try:
             from src.data.signals.dingge_paper import mark_and_trade
@@ -786,6 +868,8 @@ async def _start_dingge_paper_loop():
 # Stage 3 of the loop-as-factory: one market-neutral book = the ensemble, marked daily.
 async def _combined_book_loop():
     await _asyncio.sleep(480)   # 8 min warmup
+    # S-286: wait for the valuation point BEFORE the first mark, not only after it.
+    await _await_valuation_point()
     while True:
         try:
             from src.data.signals.combined_book import mark_and_rebalance
@@ -813,6 +897,8 @@ async def _start_combined_book_loop():
 # The high-capacity, vol-targeted book on the deepest instruments. See src/data/signals/scalable_paper.py.
 async def _scalable_book_loop():
     await _asyncio.sleep(540)   # 9 min warmup
+    # S-286: wait for the valuation point BEFORE the first mark, not only after it.
+    await _await_valuation_point()
     while True:
         try:
             from src.data.signals.scalable_paper import mark_and_rebalance
@@ -843,6 +929,8 @@ async def _start_scalable_book_loop():
 # this one runs. See src/data/signals/beta_core_paper.py.
 async def _beta_core_loop():
     await _asyncio.sleep(600)   # 10 min warmup — after the panel loaders are warm
+    # S-286: wait for the valuation point BEFORE the first mark, not only after it.
+    await _await_valuation_point()
     while True:
         try:
             from src.data.signals.beta_core_paper import mark_and_rebalance
@@ -909,6 +997,8 @@ async def _start_beta_core_loop():
 # Redis key `two_layer_paper:core` with no code deploy. See src/data/signals/two_layer_paper.py.
 async def _two_layer_paper_loop():
     await _asyncio.sleep(600)   # 10 min warmup
+    # S-286: wait for the valuation point BEFORE the first mark, not only after it.
+    await _await_valuation_point()
     while True:
         try:
             from src.data.signals.two_layer_paper import mark_and_rebalance
@@ -937,6 +1027,8 @@ async def _start_two_layer_paper_loop():
 # See src/data/signals/fusion_paper.py for the §P1/§P2 architecture.
 async def _fusion_paper_loop():
     await _asyncio.sleep(660)   # 11 min warmup
+    # S-286: wait for the valuation point BEFORE the first mark, not only after it.
+    await _await_valuation_point()
     while True:
         try:
             from src.data.signals.fusion_paper import mark_and_rebalance
@@ -999,6 +1091,8 @@ async def _start_fusion_paper_tracking_loop():
 # See src/data/signals/r76_strategy2_paper.py for the §Strategy-2 architecture.
 async def _r76_paper_loop():
     await _asyncio.sleep(720)   # 12 min warmup (stagger from fusion_paper's 11 min)
+    # S-286: wait for the valuation point BEFORE the first mark, not only after it.
+    await _await_valuation_point()
     while True:
         try:
             from src.data.signals.r76_strategy2_paper import mark_and_rebalance
@@ -1059,6 +1153,8 @@ async def _start_fusion_paper_regime_track_loop():
 # Spec: docs/STRATEGY_3_POD_AGGREGATOR.md · frozen cell: w_R46=0.34/w_R62=0.33/w_R76=0.33
 async def _pod_aggregator_loop():
     await _asyncio.sleep(720)   # 12 min warmup — same offset as FUSION-REGIME
+    # S-286: wait for the valuation point BEFORE the first mark, not only after it.
+    await _await_valuation_point()
     while True:
         try:
             from src.data.signals.pod_aggregator_paper import mark_and_rebalance
@@ -1089,6 +1185,8 @@ async def _start_pod_aggregator_loop():
 # Spec: docs/STRATEGY_4_FACTOR_TILT.md · sandbox verdict NEUTRAL (gross_t=+3.86 ✓, OOS_t=+1.11 ✗)
 async def _factor_tilt_loop():
     await _asyncio.sleep(780)   # 13 min warmup — one minute after POD-AGG
+    # S-286: wait for the valuation point BEFORE the first mark, not only after it.
+    await _await_valuation_point()
     while True:
         try:
             from src.data.signals.factor_tilt_paper import mark_and_rebalance
@@ -2195,7 +2293,7 @@ async def data_coverage(symbol: str | None = None):
 
 
 @app.get("/internal/data-freshness")
-async def data_freshness():
+async def data_freshness(x_internal_token: str = Header(None, alias="X-Internal-Token")):
     """Age of every pipeline that can die silently. One cheap query per table.
 
     Built 2026-07-31 for the external probe. The probe needs price-feed freshness
@@ -2212,6 +2310,12 @@ async def data_freshness():
     # Reuses the existing §BETA-METRIC-AGG freshness helper (5 min cached, already
     # honest about failure) rather than adding a second way to ask the same
     # question — a duplicate freshness path is how two sources of truth start.
+    # Public by design (external probe), so the token only ADDS detail — it
+    # never gates the verdict. A probe that starts 401-ing is a probe that
+    # gets deleted, and then nothing watches the pipelines at all.
+    _expected_tok = os.environ.get("INTERNAL_TOKEN")
+    _tok_ok = bool(_expected_tok) and x_internal_token == _expected_tok
+
     from src.api.store import supabase_ohlcv_daily_freshness
 
     async def _ohlcv_source_coverage() -> list | None:
@@ -2382,6 +2486,59 @@ async def data_freshness():
         "后者回答的是「这一轮跑完没有」,它的 max(trade_date) 在自愈式回填下是"
         "瞬态值 —— 两块并排是有意的(S-251),但只有这一个回答"
         "「我该担心吗」。取值见 by_source.by_domain。")
+
+    # ── §BOOKS: 每本 paper book 的最后一次 mark(S-288)────────────────────
+    # 2026-09-04,Minimax-C 审计交易模块,判定「没有任何 book 在 live/paper trade
+    # 跑」。实测当天:6 本在 mark,而**他没点名的两本真的死了** ——
+    # `two_layer_paper_nav` 停在 08-22,`pod_aggregator_nav` / `factor_tilt_nav`
+    # 各 0 行(表建了,writer 从未生效)。三条事实错、两条真缺陷漏掉。
+    #
+    # 原因不是他不小心:**他没有 Supabase 读权限**,只能从端点反推,而他抽查的
+    # 那一小时恰好是 ① 熄火的窗口(S-285),于是从一本推广到十本。S-276 同款 ——
+    # 一条 lane 只能判断它看得见的东西,答案是给视野,不是要求更谨慎。
+    #
+    # 这块用 X-Internal-Token 就能读,不需要发数据库凭证,所以它是**最低成本的
+    # 那条视野**。`n_rows` 与 `last_mark` 并列:0 行和「停更」是两种病,一个是
+    # writer 从未接通,一个是接通后死了,混在一起会把前者当成后者去重启。
+    #
+    # ⚠️ TOKEN-GATED, and I nearly shipped it ungated. **This endpoint is
+    # deliberately PUBLIC** — its docstring says so: it was built 2026-07-31 for
+    # an external uptime probe that cannot authenticate. Book names and their
+    # health are architecture, and CLAUDE.md #8 keeps architecture off surfaces a
+    # competitor reads. So the freshness verdict stays public and the book roster
+    # appears only with the internal token.
+    #
+    # Worth naming the near-miss: I was adding VISIBILITY, which felt like a pure
+    # good, and "who else can see this" is not a question visibility work prompts
+    # you to ask. The same shape as every other defect this week — the change was
+    # right and its SCOPE was wrong.
+    # ⚠️ `books` 永远存在,哪怕被 token 挡住。
+    #
+    # 第一版是 `if _tok_ok:` 包住整块 —— 于是没带 token 时字段**不存在**,而一个
+    # 还没部署这段代码的旧版本同样**不存在**。Jazz 2026-09-04 跑 `jq '.books'`
+    # 拿到 `null`,而那个 null 无法区分三件事:没部署 / token 不对 / RPC 失败。
+    #
+    # 这正是我这一整轮在修的 miss-vs-error 塌缩(S-180 · S-185 · S-194 · S-285),
+    # **由我在修它的同一天亲手又造了一个**。写守卫的人不会自动免疫于守卫防的东西;
+    # 唯一有效的是把「三值」当默认反射,而不是当一条要想起来的规则。
+    _books_key = "books"
+    if not _tok_ok:
+        out[_books_key] = {
+            "verdict": "gated",
+            "reason": ("book 名册需要 X-Internal-Token —— 本端点对外部探针公开,"
+                       "而 book 名字与存活状态是架构信息(规则 8)。"
+                       "**看到这一行就说明这段代码已经部署**;字段整个缺失才是没部署。"),
+        }
+    else:
+        try:
+            from src.api.store import supabase_rpc as _srpc2
+            _books = await _srpc2("paper_book_freshness", {})
+            out[_books_key] = _books if isinstance(_books, list) else {
+                "verdict": "unknown",
+                "reason": "paper_book_freshness RPC 未返回 —— 读不到 ≠ 都在跑"}
+        except Exception as _bfe:                                 # noqa: BLE001
+            out[_books_key] = {"verdict": "unknown",
+                               "reason": f"{type(_bfe).__name__} —— 读不到 ≠ 都在跑"}
     return out
 
 

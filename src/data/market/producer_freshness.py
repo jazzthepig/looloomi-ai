@@ -105,6 +105,10 @@ EXPECTED: dict[str, ProducerSpec] = {
     "trade_results": ProducerSpec(
         "trade_results", "created_at", "entry_time", 7, 30,
         "回测导出,按需"),
+    "treasury_decisions": ProducerSpec(
+        "treasury_decisions", "recorded_at", "decision_date", 7, 21,
+        "企业决策流 (S-292)。事件时钟是【披露日】——**没有新披露是正常的**"
+        "(企业不是每天买),所以死亡线放到 21 天;而写时钟停 7 天就是循环坏了"),
     "strategy_records": ProducerSpec(
         "strategy_records", "created_at", None, 21, 60,
         "按需写(一轮研究一条)—— 长间隔是正常的,不是故障"),
@@ -251,4 +255,5 @@ union all select 'asset_embeddings', count(*), max(computed_at)::date::text, nul
 union all select 'market_state_vectors', count(*), max(computed_at)::date::text, max(d)::text from market_state_vectors
 union all select 'trade_results', count(*), max(created_at)::date::text, max(entry_time)::date::text from trade_results
 union all select 'strategy_records', count(*), max(created_at)::date::text, null from strategy_records
+union all select 'treasury_decisions', count(*), max(recorded_at)::date::text, max(decision_date)::text from treasury_decisions
 """
