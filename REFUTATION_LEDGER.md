@@ -16192,3 +16192,59 @@ MARA(35,303 枚)、BitMine(占企业 ETH 74.6%)这些解析不出 id 的大户,
 
 - **心跳仍是「尚无」** —— 需部署后 5 分钟以上再读一次才算验证通过
 - ETH 侧按持仓仅 22.9%,BitMine 等大户仍需人工补 `MANUAL_IDS`
+
+---
+
+## S-294 — 心跳上线第一天:一个误报、两个真发现 (2026-09-04)
+
+S-292 的心跳部署后第一轮就抓到 3 个循环在失败。**其中一个是我自己的误报。**
+
+### 误报:正确的拒绝被记成故障
+
+    _deep_panel_loop  err: "only 1/3 symbols (33%) — below the 70% floor.
+                            Write REFUSED so the gap stays visible"
+
+**那是地板守卫在正确工作**(S-245:覆盖率不足就拒绝写,让缺口保持可见)。
+而 `deep_panel_collector` **自己早就返回 `refused: True`** ——
+**是心跳这一层把它折叠进了 `ok=False`**。
+
+> **我刚建的那层,犯了本周反复在修的那个错:两个不同的状态塌进一个表示。**
+> 而且塌的方向最坏 —— 把「按规矩拒绝」记成故障,会让告警常亮,
+> 常亮等于坏灯,那正是 S-279 刚论证过的东西。
+
+`_hyperliquid_loop` 同一个毛病(`hyperliquid_collector` 也返回 `refused`)。
+**全仓只有这两个采集器会拒绝,两个都误报了。**
+
+修:`loop_beat` 加第三个状态 `REFUSED`。
+
+- 拒绝**不计入** `n_consecutive_failures`(循环没坏)
+- 但**自己计数** `n_consecutive_refusals` —— **连续拒绝 30 轮说明上游一直
+  没恢复,那是它自己的信号,不是健康**
+- `overall` 单列 `refusing`,**不进总裁决的坏值**
+
+### 真发现:`_pod_aggregator_loop` 连续失败 5 次,ImportError
+
+    cannot import name 'R62_Z' from 'src.research.validation.r62_fragility_gated_funding'
+
+`R62_Z` / `R62_MF` **不在 r62 模块里** —— 它们是 R62 最优单元的参数,
+但定义在 `r63_fusion_validation`(注释:「R62 best detector config
+(from R62 ledger, "external" subset)」)。
+
+> **名字带 R62 而住在 r63** —— 这是导错的直接原因,
+> 而 r77/r79 都正确地分成了两个 import,**只有 `pod_aggregator_paper` 没分**。
+
+后果:`pod_aggregator_nav`(**一张 NAV 表**)停写,而在心跳上线前
+那 5 次失败只进 stdout,没有任何东西知道。全仓复扫:**只此一处**。
+
+### 这三条是心跳的第一份产出
+
+在昨天之前它们**全部不可见**。S-282 那句「一个只进 stdout 的失败等于没有发生」
+在部署后第一轮就兑现了 —— 而它自己第一轮也犯了同一个形状的错,
+**这两件事都该记下来**。
+
+### 未做
+
+- `R62_Z` / `R62_MF` 在 `r63_fusion_validation.py` 与 `fusion_paper.py`
+  **各定义了一份**(值相同 0.5 / 2 / "external")。两个真值源是下一个
+  同形缺陷的温床,但它们目前一致,不在这轮改
+- `_pod_aggregator_loop` 修好后需观察下一轮是否真的写入 `pod_aggregator_nav`
