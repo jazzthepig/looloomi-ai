@@ -27,7 +27,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.api.loop_beat import (                                # noqa: E402
-    BEAT_TTL_S, FAILING, NEVER_RAN, OK, REFUSED, assess, overall,
+    BEAT_TTL_S, FAILING, NEVER_RAN, OK, REFUSED, assess, build_sha, overall,
 )
 
 _FAIL: list = []
@@ -159,6 +159,45 @@ def t_a_correct_refusal_is_not_a_failure():
            f"refusing={o.get('n_refusing')} failing={o.get('n_failing')}")
     _check("只有拒绝时总裁决不是 failing",
            overall(ref)["verdict"] != "failing", overall(ref)["verdict"])
+
+
+def t_a_stale_build_failure_is_not_a_persisting_failure():
+    """**S-295。** 这些循环大多 24 小时一轮。
+
+    一个修复上线后,心跳条目仍带着**旧构建**记下的那次失败,而 TTL 是 3 天 ——
+    足够让人反复误读三次。实际发生过:`_pod_aggregator_loop` 的 R62_Z 修复
+    推上去之后,读到的仍是同一条 ImportError,**分不清是没修好还是没轮到它跑**。
+
+    > **「修了还在失败」和「修完之后还没再跑过」是两个状态。**
+    """
+    import os
+    import time
+    os.environ["GIT_COMMIT_SHA"] = "newbuild123"
+    now = int(time.time())
+    old = {"_x": {"last_run_at": now, "ok": False, "n_consecutive_failures": 5,
+                  "last_error": "ImportError", "build": "oldbuild"}}
+    cur = {"_y": {"last_run_at": now, "ok": False, "n_consecutive_failures": 2,
+                  "last_error": "real", "build": build_sha()}}
+    a, b = assess("_x", old), assess("_y", cur)
+    _check("旧构建记的 → stale_build True", a["stale_build"] is True, str(a))
+    _check("当前构建记的 → stale_build False", b["stale_build"] is False, str(b))
+    _check("两者可分(这就是这个字段的全部作用)",
+           a["stale_build"] != b["stale_build"])
+    _check("理由点破「还没轮到它」", "还没轮到它" in a["reason"], a["reason"][-60:])
+    _check("而当前构建那条不带这句", "还没轮到它" not in b["reason"])
+
+    o = overall({**old, **cur})
+    _check("面板层单独数出旧构建的失败",
+           o["n_failing_on_stale_build"] == 1, str(o.get("n_failing_on_stale_build")))
+    _check("但它们仍计入 n_failing(不是被藏起来)", o["n_failing"] == 2,
+           str(o["n_failing"]))
+
+    # 判别性:缺 sha 时不能假装知道
+    no_sha = {"_z": {"last_run_at": now, "ok": False,
+                     "n_consecutive_failures": 1, "last_error": "e"}}
+    _check("没有 build 字段 → 不判 stale(未知不伪装成确定)",
+           assess("_z", no_sha)["stale_build"] is False)
+    os.environ.pop("GIT_COMMIT_SHA", None)
 
 
 def t_the_wrapper_signature_matches_the_callee():
