@@ -68,6 +68,15 @@ _REDIS_ORDERS      = "trading:orders"          # full order log
 _PAPER_BALANCE_KEY = "trading:paper_balance"
 _DEFAULT_BALANCE   = 10_000.0
 
+# ── The sleeve's identity, hoisted here from ~L1128 (S-283) ───────────────────
+# These were defined 550 lines BELOW the positions endpoint that has to divide by
+# them. Python resolves module globals at call time so it ran, but a denominator
+# that lives half a file away from its numerator is how the endpoint ended up
+# dividing sleeve P&L by the cash wallet for months. Definitions belong above
+# first use when the thing being defined is a unit of measurement.
+REBAL_SLEEVE_TAG   = "METER_REBAL"
+REBAL_SLEEVE_NAV   = 100_000.0                  # paper notional; weights × NAV = position size
+
 # Risk controls
 _CIS_GATE_BY_REGIME = {
     "Tightening":  52,
@@ -639,16 +648,66 @@ async def get_positions():
     await _save_positions(positions)
 
     balance = await _get_balance()
-    portfolio_usd = balance + total_value
+
+    # ── TWO BOOKS, NOT ONE (S-283) ────────────────────────────────────────────
+    # `/api/v1/trading/metrics` has separated these correctly since the 2026-07-15
+    # Loop Watch ("$36.9k on a $10k start"), and THIS endpoint never got the fix —
+    # so the same conflation the metrics comment warns about was still being served
+    # here, and through the MCP tool that wraps it. Two defects in one line:
+    #
+    #   1. `portfolio_usd` added the METER_REBAL sleeve's NOTIONAL market value to
+    #      the $10k cash wallet. The sleeve never debits cash (it runs on its own
+    #      REBAL_SLEEVE_NAV), so cash sat at exactly 10,000.00 with $42,080 of cost
+    #      basis deployed, and the sum described no portfolio that exists.
+    #   2. `unrealized_pct` divided sleeve P&L by `_DEFAULT_BALANCE`. On 2026-09-04
+    #      that published **65.509%** for $6,550 of unrealized P&L on a $100,000
+    #      notional book whose actual return, realized plus unrealized, was +1.55%.
+    #
+    # A wrong denominator is the most quotable kind of error: the number is in range,
+    # it is precise to three decimals, and nothing about it looks broken.
+    sleeve_open   = [p for p in updated_positions if (p.get("strategy") or "") == REBAL_SLEEVE_TAG]
+    cash_open     = [p for p in updated_positions if (p.get("strategy") or "") != REBAL_SLEEVE_TAG]
+    _cv           = lambda p: p.get("current_value_usd", p.get("size_usd", 0)) or 0
+    cash_value    = sum(_cv(p) for p in cash_open)
+    sleeve_value  = sum(_cv(p) for p in sleeve_open)
+    sleeve_pnl    = sum((p.get("unrealized_pnl") or 0) for p in sleeve_open)
+    cash_pnl      = sum((p.get("unrealized_pnl") or 0) for p in cash_open)
 
     return {
         "positions":     sorted(updated_positions, key=lambda x: x["opened_at"], reverse=True),
         "count":         len(updated_positions),
+        # The cash wallet — cash is debited on open and credited on close, so
+        # `balance` already embeds realized P&L (see the note in /trading/metrics).
         "cash_usd":      round(balance, 2),
+        "cash_book": {
+            "open_positions":     len(cash_open),
+            "open_value_usd":     round(cash_value, 2),
+            "unrealized_pnl_usd": round(cash_pnl, 2),
+            "equity_usd":         round(balance + cash_value, 2),
+        },
+        # The notional sleeve — its own NAV, never mixed with cash.
+        "sleeve_book": {
+            "nav_usd":            round(REBAL_SLEEVE_NAV, 2),
+            "open_positions":     len(sleeve_open),
+            "open_value_usd":     round(sleeve_value, 2),
+            "unrealized_pnl_usd": round(sleeve_pnl, 2),
+            "unrealized_pct":     round(sleeve_pnl / REBAL_SLEEVE_NAV * 100, 3),
+            "basis":              "return on sleeve NAV; excludes realized P&L — see /api/v1/trading/metrics",
+        },
         "positions_usd": round(total_value, 2),
-        "portfolio_usd": round(portfolio_usd, 2),
+        # RETAINED, CORRECTED. These two keys were being read as one portfolio; they
+        # are now explicitly the sum across two books that do not share a currency of
+        # meaning, with the denominator named rather than assumed.
+        "portfolio_usd": round(balance + cash_value + sleeve_value, 2),
+        "portfolio_basis": ("cash wallet equity + sleeve notional market value. These "
+                            "are SEPARATE books: the sleeve never debits cash. Do not "
+                            "compute a return from this figure — use cash_book or "
+                            "sleeve_book (S-283, docs/NAV_POLICY.md §8)."),
         "unrealized_pnl":round(total_pnl, 2),
-        "unrealized_pct":round(total_pnl / _DEFAULT_BALANCE * 100, 3) if _DEFAULT_BALANCE else 0,
+        # No blended percentage is served. There is no denominator that is correct for
+        # both books, and inventing one is how 65.509% got published.
+        "unrealized_pct": None,
+        "unrealized_pct_basis": "see cash_book / sleeve_book — a blended % has no valid denominator",
         "updated_at":    _now(),
     }
 
@@ -1075,8 +1134,7 @@ async def trigger_cis_flip(x_internal_token: str = Header(default="")):
 # throughput that gives the Learn layer real sample size. Governed ONLY by the rebalance
 # loop (the SL/TP / CIS-flip / age-sweep loops skip strategy==METER_REBAL).
 _REDIS_REBAL_STATE = "trading:rebal_state"      # {last_rebal, last_regime}
-REBAL_SLEEVE_TAG   = "METER_REBAL"
-REBAL_SLEEVE_NAV   = 100_000.0                  # paper notional; weights × NAV = position size
+# REBAL_SLEEVE_TAG / REBAL_SLEEVE_NAV are defined at the top of this module (S-283).
 # Risk circuit-breaker: close any sleeve position past this adverse excursion, EVERY
 # cycle, independent of the churn-gated rotation. Rationale: the meter opens shorts on
 # benchmark-underperformers, but the sleeve trades absolute price while the signal only

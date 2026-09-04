@@ -150,7 +150,7 @@ app.include_router(strategy_vector_router)
 app.include_router(admin_router)
 app.include_router(ohlcv_router)
 app.include_router(strategy_intake_router)
-# S-277:Mac 侧 4 个 daily writer 的代理写入 —— 这条 lane 欠了 18 天的债。
+# S-283:Mac 侧 4 个 daily writer 的代理写入 —— 这条 lane 欠了 18 天的债。
 # 只立「不许直写 Supabase」的原则而不开口子,等于把对方逼回直写。
 app.include_router(mac_writes_router)
 
@@ -409,8 +409,11 @@ async def _deep_panel_loop():
             flag = "" if r.get("ok") else "  ⚠️ " + r.get("diagnosis", "")
             print(f"[DEEP] {r.get('symbols_ok')}/{r.get('symbols_total')} symbols · "
                   f"{r.get('rows_upserted')} rows · {r.get('elapsed_s')}s{flag}")
+            await _beat("_deep_panel_loop", ok=bool(r.get("ok")),
+                        error=None if r.get("ok") else r.get("diagnosis"))
         except Exception as _e:
             print(f"[DEEP] ⚠️  deep-panel collection FAILED: {_e}")
+            await _beat("_deep_panel_loop", ok=False, error=str(_e))
         await _asyncio.sleep(24 * 3600)
 
 
@@ -454,8 +457,11 @@ async def _hyperliquid_loop():
             print(f"[HL] {r.get('symbols_ok')}/{r.get('symbols_total')} symbols · "
                   f"{r.get('rows_upserted')} rows · latest {r.get('latest_bar')} · "
                   f"{r.get('elapsed_s')}s{flag}")
+            await _beat("_hyperliquid_loop", ok=bool(r.get("ok")),
+                        error=None if r.get("ok") else str(r.get("diagnosis", r.get("error", ""))))
         except Exception as _e:
             print(f"[HL] ⚠️  hyperliquid collection FAILED: {_e}")
+            await _beat("_hyperliquid_loop", ok=False, error=str(_e))
         await _asyncio.sleep(6 * 3600)
 
 
@@ -616,8 +622,40 @@ async def _start_hyperliquid_loop():
 # Runs ~once/day in-process so the LP track-record metrics stay current without
 # depending on the Mac Mini OHLCV pipeline. Idempotent (only touches NULL rows).
 import asyncio as _asyncio
+import datetime as _dt
 
 _OUTCOME_INTERVAL_S = 24 * 3600   # daily
+
+# The elected valuation point, single-sourced from the ① book so the loop and the
+# book can never disagree about when NAV is struck (docs/NAV_POLICY.md §3).
+_NAV_VALUATION_POINT_UTC = (0, 5)   # 00:05 UTC, marking the 00:00 UTC observation
+
+
+# ── S-283: SLEEP TO A WALL-CLOCK TIME, NOT FOR A DURATION ────────────────────
+# `await sleep(24 * 3600)` anchors the schedule to PROCESS START. Railway redeploys
+# on every push, so each deploy re-anchors every daily loop, and the mark time walks.
+# Measured on the ① beta-core book over 12 marks: intervals of 10.6h to 35.9h —
+# a 3.38x spread on rows that are labelled daily and feed realized_vol_30d, which
+# feeds vol_target_scalar, which sets gross exposure. The unelected valuation point
+# was not a reporting defect; it reached position size.
+#
+# Fund administration solved this a long time ago and the answer is a VALUATION
+# POINT: one elected instant per day, the same instant every day, and a mark that
+# cannot be struck near it is refused rather than struck late (docs/NAV_POLICY.md §3).
+# Crypto has no close, so the instant must be chosen; `sleep(24h)` chose it by
+# accident, differently after every deploy.
+async def _sleep_until_utc(hour: int, minute: int = 0) -> None:
+    """Sleep until the next occurrence of hour:minute UTC.
+
+    Deliberately NOT jittered. Jitter is right for load-spreading and wrong for a
+    valuation point: the whole property being bought is that two marks are exactly
+    24h apart, so a book's daily return is a day of market.
+    """
+    now = _dt.datetime.now(_dt.timezone.utc)
+    target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if target <= now:
+        target += _dt.timedelta(days=1)
+    await _asyncio.sleep((target - now).total_seconds())
 
 
 # ── S-282:后台循环的心跳 —— 一个只进 stdout 的失败等于没有发生 ──────────
@@ -731,7 +769,7 @@ async def _dingge_paper_loop():
         except Exception as _e:
             print(f"[DINGGE-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_dingge_paper_loop", ok=False, error=str(_e))
-        await _asyncio.sleep(24 * 3600)
+        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -758,7 +796,7 @@ async def _combined_book_loop():
         except Exception as _e:
             print(f"[COMBINED-BOOK] ⚠️  mark failed: {_e}")
             await _beat("_combined_book_loop", ok=False, error=str(_e))
-        await _asyncio.sleep(24 * 3600)
+        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -785,7 +823,7 @@ async def _scalable_book_loop():
         except Exception as _e:
             print(f"[SCALABLE-BOOK] ⚠️  mark failed: {_e}")
             await _beat("_scalable_book_loop", ok=False, error=str(_e))
-        await _asyncio.sleep(24 * 3600)
+        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -816,7 +854,7 @@ async def _beta_core_loop():
         except Exception as _e:
             print(f"[BETA-CORE] ⚠️  mark failed: {_e}")
             await _beat("_beta_core_loop", ok=False, error=str(_e))
-        await _asyncio.sleep(24 * 3600)
+        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
 
 
 # ── USAGE METERING — the substrate an invoice stands on ──────────────────────
@@ -881,7 +919,7 @@ async def _two_layer_paper_loop():
         except Exception as _e:
             print(f"[TWO-LAYER] ⚠️  mark failed: {_e}")
             await _beat("_two_layer_paper_loop", ok=False, error=str(_e))
-        await _asyncio.sleep(24 * 3600)
+        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -911,7 +949,7 @@ async def _fusion_paper_loop():
         except Exception as _e:
             print(f"[FUSION-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_fusion_paper_loop", ok=False, error=str(_e))
-        await _asyncio.sleep(24 * 3600)
+        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -942,7 +980,7 @@ async def _fusion_paper_tracking_loop():
                   f"events={len(events)}({[e['event_type'] for e in events]})")
         except Exception as _e:
             print(f"[FUSION-TRACK] ⚠️  compute failed: {_e}")
-        await _asyncio.sleep(24 * 3600)
+        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -970,7 +1008,7 @@ async def _r76_paper_loop():
                   f"n_days={res.get('n_days_marked')} validated={res.get('validated')}")
         except Exception as _e:
             print(f"[R76-PAPER] ⚠️  mark failed: {_e}")
-        await _asyncio.sleep(24 * 3600)
+        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1033,7 +1071,7 @@ async def _pod_aggregator_loop():
         except Exception as _e:
             print(f"[POD-AGG] ⚠️  mark failed: {_e}")
             await _beat("_pod_aggregator_loop", ok=False, error=str(_e))
-        await _asyncio.sleep(24 * 3600)
+        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1064,7 +1102,7 @@ async def _factor_tilt_loop():
         except Exception as _e:
             print(f"[FACTOR-TILT] ⚠️  mark failed: {_e}")
             await _beat("_factor_tilt_loop", ok=False, error=str(_e))
-        await _asyncio.sleep(24 * 3600)
+        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1674,6 +1712,16 @@ def _health_with_data_layer() -> dict:
     # It lives on /internal/beta-core-clock instead, polled by the EXTERNAL probe, which
     # is also the only observer that survives the deploy that breaks the marking loop.
     beta_core_note = "see /internal/beta-core-clock (kept off /health: no I/O here)"
+    # 2026-09-04 B fix: 暴露 LAST_REGIME_QUORUM。这一信息以前**写在日志里、
+    # 全 repo 0 reader** —— 「不可观测即不存在」,S-244 / S-263 的同一个形状。
+    # 现在在 /health.data_layer.regime_quorum 同步露面,consumer 不必 import
+    # beta_core_paper.py 也不必解析日志。注意:dict 空(无 `verdict` 键) =
+    # "还没读历史",与"读过且裁决 ok"是不同的两个状态 —— 后者有 verdict。
+    try:
+        from src.data.signals.beta_core_paper import LAST_REGIME_QUORUM as _lrq
+        regime_quorum_block = dict(_lrq) if _lrq else {}
+    except Exception:
+        regime_quorum_block = {}
     return {
         **_health_payload,
         # S-168. First-screen, because a read-only production is invisible from
@@ -1688,6 +1736,9 @@ def _health_with_data_layer() -> dict:
             "last_universe_build": build,
             "strategy_library": strat,
             "beta_core_clock": beta_core_note,
+            # B fix (2026-09-04): 见上面注释。空 dict + `_measured=False` 让
+            # consumer 一眼分辨"还没跑"与"跑了且裁决 ok"。
+            "regime_quorum": regime_quorum_block,
         },
     }
 

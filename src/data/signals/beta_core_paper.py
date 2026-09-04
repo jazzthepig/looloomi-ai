@@ -39,7 +39,7 @@ import logging
 import numpy as np
 
 _log = logging.getLogger("beta_core")
-_STATE_KEY = "beta_core:state"
+# _STATE_KEY is defined BELOW _INCEPTION_ID, because it is scoped by it. See §7.
 
 # ── INCEPTION IDENTITY ───────────────────────────────────────────────────────
 # Every row is stamped with the incarnation that produced it, and state recovery
@@ -86,8 +86,63 @@ _STATE_KEY = "beta_core:state"
 #    is not money, it is forward-record days. v3 had ~9 honest marks before the
 #    feed broke; restarting costs those nine. Discovering the splice at day 55
 #    would have cost fifty-five.
-_INCEPTION_ID = "v4"
+# v4 (2026-08-23 → 2026-09-03, 12 marks) — VOID, see S-283 and docs/NAV_POLICY.md §6/§7.
+#    Three defects, each independently significant under the NAV_POLICY §6 qualitative
+#    override, and the first two are the SAME two defects v4 was created to fix:
+#    (a) INCEPTION INHERITANCE. `_STATE_KEY` was `"beta_core:state"` — unscoped. When
+#        `_INCEPTION_ID` moved v3 → v4 the Redis dict from v3 was still there, complete
+#        with `weights`, so the `if not state.get("weights")` guard passed and NEITHER
+#        the Postgres-recovery branch (correctly filtered to v4 — would have returned
+#        None → clean start at 1.0) NOR the fresh-inception branch ran. v4's first mark
+#        compounded onto v3's NAV: 1.258366 / 1.201872 = **1.047005**, which is v3's
+#        last NAV to six figures. The inception-identity mechanism was sound; its SCOPE
+#        was one key too narrow — a control that stops at the durable store while the
+#        cache carries the same state across the boundary it was built to enforce.
+#    (b) STALE MARK PRICES, inherited by the same route. v3's `mark_prices` were frozen
+#        at 08-20 by the geo-blocked feed, so v4's first `daily_return` differenced
+#        against three-day-old prices: **+20.187%** ≈ 1.1103 × 0.9857 × 1.098, i.e.
+#        08-21, 08-22 and 08-23 compounded into one row labelled one day. The +4.66%
+#        `excess` on that row — the only non-zero excess in all 12 — is the same
+#        artifact, and reads as ③ adding value when ③ did nothing.
+#    (c) NO VALUATION POINT (the one that was never a bug, only an absent control).
+#        `_beta_core_loop` slept a flat 24h from process start, so every Railway deploy
+#        re-anchored the mark time. Measured across v4's 12 marks: intervals ran
+#        **10.6h to 35.9h, a 3.38x spread**, mean 23.8h. Those rows are labelled daily
+#        and feed `realized_vol_30d` → `vol_target_scalar` → gross exposure. A return
+#        series whose sampling interval varies 3.4x is not a daily series, so v4's vol,
+#        Sharpe and annualized figures are not measurements of anything.
+#    Voided rather than corrected: (a) and (b) are unrecoverable at the row level — the
+#    true 08-23 NAV cannot be reconstructed without the prices the feed never delivered.
+#    12 days is the cost. Discovering it at day 55 would have cost fifty-five.
+_INCEPTION_ID = "v5"
 _INCEPTION_REASON = (
+    "v5 (2026-09-04, S-283 / docs/NAV_POLICY.md): first incarnation struck under a "
+    "written valuation policy. THREE controls that did not exist before this row: "
+    "(1) VALUATION POINT — every mark is struck at 00:05 UTC off the 00:00 UTC "
+    "observation, and a mark that cannot be struck within +/-30min is REFUSED, not "
+    "marked late. v4 had no elected valuation point and its 'daily' intervals ran "
+    "10.6h-35.9h (3.38x), which silently corrupted realized_vol_30d and therefore the "
+    "gross exposure the vol-target layer chose. Crypto has no market close, so the "
+    "valuation point must be elected; we never elected one. "
+    "(2) INCEPTION-SCOPED STATE — the Redis key is now `beta_core:state:v5`. v4 "
+    "inherited v3's NAV (1.047005) and v3's 08-20 mark prices through an unscoped "
+    "cache key, which is how its first row booked +20.19% for three days of movement. "
+    "(3) RETURN BASIS — cumulative return is measured from unit NAV 1.0, never from "
+    "the first retained row. v4's get_curve computed last/first, which published a "
+    "12-day window return as the book's return AND excluded the contaminated first row "
+    "from the headline, so the two defects partially cancelled and the reader saw a "
+    "plausible small number with no reason to look. "
+    "PRIOR: v4 (2026-08-23, S-194/S-196/S-197) — VOID, see the block above. Its price "
+    "REFERENCE change (Binance -> Hyperliquid oracle) was correct and is RETAINED: HL "
+    "median basis to mark +0.088%, p90 +0.327%, a spot anchor and NOT an execution "
+    "venue. ARCHITECTURE.md says beta = HOLD; a long perpetual is a synthetic long "
+    "that pays carry, and this panel's own 24 names run +23.07% equal-weight "
+    "annualised funding (AAVE +110.8%, NEAR +94.4%), ~26.5%/yr at gross 1.15 — larger "
+    "than any alpha we have demonstrated. (1) holds SPOT on whichever chain has depth. "
+    "v4's 80%-of-held-weight mark-coverage refusal is likewise RETAINED. "
+    "LEGACY: "
+)
+_LEGACY_INCEPTION_REASON = (
     "v4 (2026-08-23, S-194/S-196/S-197): price REFERENCE moved from a live Binance "
     "call (geo-blocked from Railway US) to Hyperliquid's oracle price. NOT its "
     "execution venue — that distinction is the correction. ① is the FoF core and "
@@ -116,6 +171,38 @@ _INCEPTION_REASON = (
     "double the intended exposure for its entire 2-mark life); v2 is SUPERSEDED, "
     "not void — its rows are honest and stay queryable."
 )
+_INCEPTION_REASON = _INCEPTION_REASON + _LEGACY_INCEPTION_REASON
+
+# ── STATE KEY — SCOPED BY INCEPTION (S-283, NAV_POLICY §7) ───────────────────
+# This used to read `"beta_core:state"`, and that one missing suffix is the whole
+# of S-283. `_recover_state_from_nav` filters Postgres by `inception_id=eq.v4`
+# precisely so a re-inception cannot resurrect the run it replaced — but the cache
+# in front of Postgres was NOT scoped, so on the v3→v4 flip the old state was still
+# there, `state.get("weights")` was truthy, and the guarded path never ran. The
+# durable store was protected and the thing that answers first was not.
+#
+# RULE (NAV_POLICY §7): every artifact that can carry state across a re-inception is
+# scoped by inception_id — Postgres rows, Redis keys, in-process caches, files.
+# `tests/test_nav_policy.py` enforces that this f-string contains _INCEPTION_ID.
+_STATE_KEY = f"beta_core:state:{_INCEPTION_ID}"
+
+# ── VALUATION POINT (S-283, NAV_POLICY §3) ───────────────────────────────────
+# Crypto never closes, so the valuation point is ELECTED, not given — AICPA digital
+# asset guidance says exactly this, and we had never elected one. v4 marked wherever
+# the async loop happened to fire; because Railway redeploys on every push and the
+# loop slept a flat 24h from process start, each deploy re-anchored it. Measured over
+# v4's 12 marks: 10.6h to 35.9h between marks, 3.38x spread.
+#
+# Rows are labelled DAILY and feed realized_vol_30d, which feeds vol_target_scalar,
+# which sets gross. So an unelected valuation point is not a reporting nicety — it
+# propagates into position size.
+_VALUATION_POINT_UTC = (0, 5)        # 00:05 UTC, marking the 00:00 UTC observation
+_VALUATION_POINT_TOLERANCE_MIN = 30  # outside this: REFUSE the mark, do not mark late
+# Interval bounds for a row to count as daily. Outside → row is stamped non-daily and
+# annualized figures are suppressed rather than published with a footnote (§12).
+_DAILY_INTERVAL_MIN_H = 18.0
+_DAILY_INTERVAL_MAX_H = 30.0
+
 _FEE = 0.0005
 _REBAL_DAYS = 7
 _VOL_TARGET = 0.60          # annualised. Crypto panel realised vol runs 0.5–1.2.
@@ -791,7 +878,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         state = {"inception": today.isoformat(), "nav": 1.0, "benchmark_nav": 1.0,
                  "weights": weights, "base_weights": base,
                  "mark_prices": {s: px[s] for s in base if s in px},
-                 "last_rebal": today.isoformat(), "last_mark": today.isoformat()}
+                 "last_rebal": today.isoformat(), "last_mark": today.isoformat(),
+                 "last_marked_at": dt.datetime.now(dt.timezone.utc).isoformat()}
         if not dry_run:
             # DURABLE FIRST, CACHE SECOND — the order is load-bearing (2026-08-09).
             #
@@ -901,11 +989,16 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         rebalanced = True
 
     new_w = weights if rebalanced else prev_w
+    iv_h = _interval_hours(state)
     state = {**state, "nav": nav, "benchmark_nav": bench_nav,
              "weights": new_w, "base_weights": base,
              "mark_prices": {s: px[s] for s in base if s in px},
              "last_rebal": today.isoformat() if rebalanced else state["last_rebal"],
-             "last_mark": today.isoformat()}
+             "last_mark": today.isoformat(),
+             # S-283: the TIMESTAMP, not just the date. `last_mark` is a calendar day
+             # and therefore cannot measure the gap between two marks — which is the
+             # exact quantity v4 was blind to.
+             "last_marked_at": dt.datetime.now(dt.timezone.utc).isoformat()}
     if not dry_run:
         # DURABLE FIRST, CACHE SECOND — same ordering as the inception branch, and
         # here the cost of getting it wrong is subtler. Advancing `last_mark` without
@@ -915,7 +1008,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         ok = await _write(today, nav, bench_nav, book_ret, bench_ret, cap, regime, scalar,
                           rv, len(new_w), sum(abs(v) for v in new_w.values()), cost,
                           rebalanced, new_w, f"cap_source={cap_source}",
-                          cap_source=cap_source)
+                          cap_source=cap_source, interval_hours=iv_h)
         if not ok:
             _log.error("[beta_core] MARK NOT PERSISTED for %s — leaving state at the "
                        "previous mark so the day is retried, not absorbed into "
@@ -975,8 +1068,35 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             "rebalanced": rebalanced, "date": today.isoformat()}
 
 
+def _interval_hours(state: dict) -> float | None:
+    """Elapsed hours since the previous mark was STRUCK (S-283, NAV_POLICY §3).
+
+    Not `mark_date` minus `mark_date` — that is 24h by definition and would report
+    the assumption instead of measuring it. The whole v4 defect is that the calendar
+    said one day while the clock said anywhere from 10.6h to 35.9h, so the quantity
+    that has to be recorded is wall-clock elapsed between the two observations.
+
+    None on the first mark of an incarnation, and None if the previous timestamp is
+    missing — an unmeasurable interval is reported as unknown, never as 24.0. A
+    plausible default here would recreate exactly the failure this column exists to
+    expose: an unknown rendered as a normal-looking number.
+    """
+    prev = state.get("last_marked_at")
+    if not prev:
+        return None
+    try:
+        t0 = dt.datetime.fromisoformat(prev)
+        now = dt.datetime.now(dt.timezone.utc)
+        if t0.tzinfo is None:
+            t0 = t0.replace(tzinfo=dt.timezone.utc)
+        return round((now - t0).total_seconds() / 3600.0, 2)
+    except (ValueError, TypeError):
+        return None
+
+
 async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
-                 n, gross, cost, rebal, weights, note, cap_source=None):
+                 n, gross, cost, rebal, weights, note, cap_source=None,
+                 interval_hours=None):
     from src.api.store import supabase_insert_table
     top = ",".join(f"{s}:{w:.3f}" for s, w in sorted(weights.items(), key=lambda kv: -kv[1])[:3])
     try:
@@ -1001,7 +1121,13 @@ async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
             # Stamped on every row so a curve can never be assembled across two
             # incarnations by accident — which would splice a voided segment onto a
             # live one and read as continuous.
-            "inception_id": _INCEPTION_ID}])
+            "inception_id": _INCEPTION_ID,
+            # S-283. Wall-clock hours since the previous mark. Without this column a
+            # row cannot distinguish "one day of market" from "35.9 hours of market
+            # labelled one day", and every annualized figure downstream inherits the
+            # difference silently. NULL on the first mark of an incarnation — see
+            # _interval_hours on why an unknown is never rendered as 24.0.
+            "interval_hours": interval_hours}])
         # CAPTURE THE RETURN VALUE. `supabase_insert_table` reports failure by
         # RETURNING False, not by raising — a PostgREST 400 (unknown column, RLS
         # refusal, constraint) never reaches the except branch. The first version of
@@ -1096,9 +1222,33 @@ async def get_curve(limit: int = 400) -> dict:
     if not rows:
         return {"rows": [], "days": 0}
     first, last = rows[0], rows[-1]
-    cum = last["nav"] / first["nav"] - 1.0
-    bcum = last["benchmark_nav"] / first["benchmark_nav"] - 1.0
+    # ── RETURN BASIS: FROM UNIT NAV, NEVER FROM THE FIRST RETAINED ROW ──────────
+    # This read `last["nav"] / first["nav"] - 1.0` until S-283. Every other paper
+    # book in this repo computes `(navs[-1] - 1)`; ① — the book that is the
+    # BENCHMARK for all the others — was the one measuring off a floating base.
+    #
+    # What that produced on v4: first["nav"] was 1.258366 (itself contaminated,
+    # see the _INCEPTION_ID block), so the endpoint published -0.177% — a 12-day
+    # WINDOW return presented as the book's return, which also silently excluded
+    # the +20.19% first row from the headline. Two defects that partially cancel
+    # are worse than either alone: the reader sees a plausible small number and
+    # has no reason to look. Jazz did look, which is the only reason this was found.
+    #
+    # NAV is unit-based by construction (inception sets nav=1.0), so subtracting 1
+    # IS the since-inception return, and it cannot drift if rows are ever trimmed,
+    # paginated, or filtered. `tests/test_nav_policy.py` enforces the absence of
+    # the last/first form across every book.
+    cum = last["nav"] - 1.0
+    bcum = last["benchmark_nav"] - 1.0
     n = len(rows)
+
+    # ── Is this actually a daily series? (S-283, NAV_POLICY §3/§12) ─────────────
+    # Sharpe, vol and any annualized figure assume one observation per day. Rather
+    # than publish them with a footnote — a footnoted wrong number still gets quoted
+    # — we report whether the assumption holds and let the reading surface suppress.
+    _iv = [r.get("interval_hours") for r in rows if r.get("interval_hours") is not None]
+    _off = [h for h in _iv if not (_DAILY_INTERVAL_MIN_H <= h <= _DAILY_INTERVAL_MAX_H)]
+    daily_series_ok = bool(_iv) and not _off
 
     # ── The curve in DOLLARS (S-132) ────────────────────────────────────────────
     # Berk & van Binsbergen (JFE 2015): percentage alpha does not predict itself;
@@ -1130,8 +1280,19 @@ async def get_curve(limit: int = 400) -> dict:
         # the gate is 60 forward days; surfacing the shortfall stops anyone reading a
         # 20-day curve as evidence
         "days_to_gate": max(0, 60 - n),
-        # An annualized figure from a handful of days is arithmetic, not evidence.
-        "annualization_is_meaningful": n >= 60,
+        # An annualized figure from a handful of days is arithmetic, not evidence —
+        # and (S-283) it is not even arithmetic unless the observations are daily.
+        "annualization_is_meaningful": n >= 60 and daily_series_ok,
+        "daily_series_ok": daily_series_ok,
+        "valuation_point_utc": "%02d:%02d" % _VALUATION_POINT_UTC,
+        "off_interval_marks": len(_off),
+        "interval_basis": (
+            "Every row carries interval_hours — the actual elapsed time since the "
+            "previous mark. A row outside [%.0fh, %.0fh] is not a daily observation, "
+            "and Sharpe/vol/annualized figures are suppressed rather than footnoted "
+            "when any row is off-interval (NAV_POLICY §3/§12)."
+            % (_DAILY_INTERVAL_MIN_H, _DAILY_INTERVAL_MAX_H)
+        ),
 
         # ── Why the excess is what it is (2026-08-10) ───────────────────────────
         # Without these, `excess_pct: 0.0` is unreadable: it looks identical whether
