@@ -1,6 +1,30 @@
-"""
-VC Deal Flow Tracker
-Track funding rounds, VC portfolios, and token unlocks
+"""VC Deal Flow Tracker —— 融资轮次 / VC 组合 / 代币解锁。
+
+## ⚠️ 2026-09-04 (S-288):删除了全部编造数据
+
+本文件原有三个 `_get_mock_*()`,在 **10 个返回点**上把失败替换成假数据。
+CLAUDE.md 规则 #9 点名过这条(「audit standing: DeFiLlama-402 fallbacks」)。
+
+最坏的一个不是 402 那条,是:
+
+    return rounds if rounds else self._get_mock_funding_rounds()
+
+**一个成功但为空的响应(今天真的没有融资)会被替换成虚构的融资。**
+真实的「没有」变成虚构的「有」—— 而调用方无从分辨。
+
+而这些假数据**署了真实机构的名**:
+"Pump.fun $45M Series A / Paradigm, a16z"、"Soneium $80M / Sony"。
+一般的假数据是噪声;**署名的假数据是关于真实公司的虚构事实**。
+本模块当时无人 import(死代码),所以没有流到用户面前 ——
+但一旦有人接上去,我们就在发布那种东西。
+
+现在:**取不到就返回空。** 空是一个诚实的答案,编造不是。
+
+## ⚠️ 上游状态未验证
+
+`api.llama.fi/raises` 的免费可用性**尚未实测**(代码里那句
+"paywalled as of ~May 2026" 是注释,不是观测)。在实测之前,
+本模块的产出应视为 `unknown`,不是 `empty`。
 """
 import logging
 import requests
@@ -39,10 +63,10 @@ class VCDealFlowTracker:
             # 402 = paid plan — return mock instead of raising
             if response.status_code == 402:
                 _logger.warning("DeFiLlama /raises requires paid plan — using fallback")
-                return self._get_mock_funding_rounds()
+                return []            # S-288:宁可空,不可编造
             if response.status_code != 200:
                 _logger.warning(f"DeFiLlama /raises status {response.status_code}")
-                return self._get_mock_funding_rounds()
+                return []            # S-288:宁可空,不可编造
             data = response.json()
             raises = data.get("raises", [])
 
@@ -73,14 +97,14 @@ class VCDealFlowTracker:
                     "chains":      item.get("chains", []),
                 })
 
-            return rounds if rounds else self._get_mock_funding_rounds()
+            return rounds        # 空就是空 —— 见模块顶部 S-288
 
         except requests.RequestException as e:
             _logger.warning(f"DeFiLlama /raises network error: {e}")
-            return self._get_mock_funding_rounds()
+            return []            # S-288:宁可空,不可编造
         except Exception as e:
             _logger.warning(f"DeFiLlama /raises error: {e}")
-            return self._get_mock_funding_rounds()
+            return []            # S-288:宁可空,不可编造
     
     def get_top_vcs(self, limit: int = 20) -> List[Dict]:
         """
@@ -108,11 +132,11 @@ class VCDealFlowTracker:
                 
                 return vcs
             else:
-                return self._get_mock_top_vcs()
+                return []            # S-288:宁可空,不可编造
                 
         except Exception as e:
             _logger.warning(f"Error fetching VCs: {e}")
-            return self._get_mock_top_vcs()
+            return []            # S-288:宁可空,不可编造
     
     def get_token_unlocks(self, days_ahead: int = 30) -> List[Dict]:
         """
@@ -147,11 +171,11 @@ class VCDealFlowTracker:
                 unlocks.sort(key=lambda x: x["date"])
                 return unlocks[:30]
             else:
-                return self._get_mock_unlocks()
+                return []            # S-288:宁可空,不可编造
                 
         except Exception as e:
             _logger.warning(f"Error fetching unlocks: {e}")
-            return self._get_mock_unlocks()
+            return []            # S-288:宁可空,不可编造
     
     def get_vc_portfolio_overlap(self, vc_names: List[str]) -> Dict:
         """
@@ -190,46 +214,6 @@ class VCDealFlowTracker:
             "data_source": "funding_rounds",
             "available": len(overlaps) > 0,
         }
-    
-    def _get_mock_funding_rounds(self) -> List[Dict]:
-        """Curated recent funding rounds (updated Mar 2026)"""
-        return [
-            {"project": "Ethereum Foundation", "amount": 200000000, "round_type": "Grant", "date": "2026-02-15", "investors": ["Vitalik", "ETH Foundation"], "category": "Infrastructure"},
-            {"project": "Pump.fun", "amount": 45000000, "round_type": "Series A", "date": "2026-01-22", "investors": ["Paradigm", "a16z"], "category": "MemeFi"},
-            {"project": "Soneium", "amount": 80000000, "round_type": "Series A", "date": "2026-01-18", "investors": ["Sony", "DN Capital"], "category": "Gaming"},
-            {"project": "Abstract", "amount": 35000000, "round_type": "Series A", "date": "2026-01-10", "investors": ["a16z", "Paradigm"], "category": "Layer 2"},
-            {"project": "ZetaChain", "amount": 60000000, "round_type": "Series B", "date": "2025-12-20", "investors": ["Darren Lau", "Vue Capital"], "category": "Interoperability"},
-            {"project": "Grass", "amount": 28000000, "round_type": "Series A", "date": "2025-12-15", "investors": ["Polychain", "Dragonfly"], "category": "Data"},
-            {"project": "Gomble", "amount": 22000000, "round_type": "Series A", "date": "2025-12-08", "investors": ["Binance Labs", "IDG"], "category": "Gaming"},
-            {"project": "Movement Labs", "amount": 100000000, "round_type": "Series B", "date": "2025-11-25", "investors": ["Founders Fund", "Polychain"], "category": "Layer 2"},
-            {"project": "Initia", "amount": 55000000, "round_type": "Series A", "date": "2025-11-15", "investors": ["Delphi Digital", "Hack VC"], "category": "Layer 1"},
-            {"project": "MegaETH", "amount": 20000000, "round_type": "Seed", "date": "2025-11-01", "investors": ["Vitalik", "Jane Street"], "category": "Layer 2"},
-        ]
-    
-    def _get_mock_top_vcs(self) -> List[Dict]:
-        """Mock VC data"""
-        return [
-            {"name": "a16z crypto", "deals_count": 125, "portfolio_size": 500, "focus": ["Infrastructure", "DeFi", "Gaming"]},
-            {"name": "Paradigm", "deals_count": 89, "portfolio_size": 120, "focus": ["Infrastructure", "DeFi", "MEV"]},
-            {"name": "Polychain Capital", "deals_count": 156, "portfolio_size": 180, "focus": ["Layer 1", "DeFi", "Interoperability"]},
-            {"name": "Coinbase Ventures", "deals_count": 400, "portfolio_size": 450, "focus": ["Infrastructure", "DeFi", "Payments"]},
-            {"name": "Dragonfly", "deals_count": 78, "portfolio_size": 100, "focus": ["DeFi", "Infrastructure", "Asia"]},
-            {"name": "Pantera Capital", "deals_count": 210, "portfolio_size": 250, "focus": ["Infrastructure", "DeFi", "Bitcoin"]},
-            {"name": "Framework Ventures", "deals_count": 65, "portfolio_size": 80, "focus": ["DeFi", "Gaming", "Infrastructure"]},
-            {"name": "Hack VC", "deals_count": 95, "portfolio_size": 110, "focus": ["Infrastructure", "AI", "DeFi"]},
-        ]
-    
-    def _get_mock_unlocks(self) -> List[Dict]:
-        """Mock token unlock data"""
-        now = datetime.now()
-        return [
-            {"protocol": "Arbitrum", "date": (now + timedelta(days=3)).isoformat(), "amount_usd": 85000000, "type": "team", "days_until": 3},
-            {"protocol": "Optimism", "date": (now + timedelta(days=7)).isoformat(), "amount_usd": 42000000, "type": "investor", "days_until": 7},
-            {"protocol": "Aptos", "date": (now + timedelta(days=12)).isoformat(), "amount_usd": 120000000, "type": "foundation", "days_until": 12},
-            {"protocol": "Sui", "date": (now + timedelta(days=15)).isoformat(), "amount_usd": 95000000, "type": "team", "days_until": 15},
-            {"protocol": "Celestia", "date": (now + timedelta(days=21)).isoformat(), "amount_usd": 180000000, "type": "investor", "days_until": 21},
-            {"protocol": "Starknet", "date": (now + timedelta(days=25)).isoformat(), "amount_usd": 65000000, "type": "team", "days_until": 25},
-        ]
     
     def generate_report(self) -> None:
         """Generate VC deal flow report"""
