@@ -157,6 +157,32 @@ async def run_once(*, client, supabase_query, supabase_upsert,
                      "last_seen": today} for k, v in newly.items()],
                     "entity_id")
 
+        # ── 快照:全部 180 家的当日状态 ──────────────────────────────────
+        # **不是冗余。** 决策流只覆盖解析得出 id 的那 57%;快照覆盖全部,
+        # 包括 MARA / BitMine 那些解析不出的大户。
+        #     decisions  谁在哪天买卖了多少(事件)—— 仅已解析
+        #     snapshot   今天谁持有多少、占总供应多少(状态)—— 全部
+        # 复用上面那次聚合调用,不额外花额度。
+        try:
+            from src.data.entity.treasury import parse as _parse_snap
+            snap = _parse_snap(coin, {"companies": companies}, d=today)
+            snap_rows = [{
+                "d": h.d, "coin": h.coin, "name": h.name, "country": h.country,
+                "symbol": h.symbol, "total_holdings": h.total_holdings,
+                "pct_of_supply": h.pct_of_supply,
+                # **None 是未披露,不是 0** —— 见 treasury.py 的 I1 那条
+                "entry_value_usd": h.entry_value_usd,
+                "current_value_usd": h.current_value_usd,
+                "source": "coingecko_analyst",
+            } for h in snap]
+            if snap_rows:
+                if await supabase_upsert("corporate_treasury_history", snap_rows,
+                                         "d,coin,name"):
+                    out["coins"].setdefault(coin, {})["n_snapshot"] = len(snap_rows)
+                    out["n_snapshot"] = out.get("n_snapshot", 0) + len(snap_rows)
+        except Exception as e:                                  # noqa: BLE001
+            out["errors"].append(f"{coin} 快照: {type(e).__name__}: {str(e)[:70]}")
+
         # ── 决策流 ────────────────────────────────────────────────────────
         async def get(path, params=None):
             rr = await client.get(CG_PRO_BASE + path, params=params or {})
@@ -185,9 +211,11 @@ async def run_once(*, client, supabase_query, supabase_upsert,
         out["coins"].setdefault(coin, {})["n_written"] = written
         out["n_written"] += written
 
-    out["ok"] = bool(out["n_written"]) or not out["errors"]
+    out.setdefault("n_snapshot", 0)
+    out["ok"] = bool(out["n_written"] or out["n_snapshot"]) or not out["errors"]
     out["reason"] = (
-        f"{out['n_entities_fetched']} 个实体 · 落库 {out['n_written']} 条"
+        f"{out['n_entities_fetched']} 个实体 · 决策 {out['n_written']} 条 · "
+        f"快照 {out['n_snapshot']} 行"
         + (f" · {len(out['errors'])} 个问题" if out["errors"] else "")
         + "。**0 条是合法的**(今天没有披露),而「内容陈旧」由 "
           "producer_freshness 的事件时钟判,不由这里判")

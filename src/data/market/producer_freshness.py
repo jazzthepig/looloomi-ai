@@ -105,6 +105,11 @@ EXPECTED: dict[str, ProducerSpec] = {
     "trade_results": ProducerSpec(
         "trade_results", "created_at", "entry_time", 7, 30,
         "回测导出,按需"),
+    "corporate_treasury_history": ProducerSpec(
+        "corporate_treasury_history", "recorded_at", "d", 2, 5,
+        "全部 180 家的当日状态快照 (S-293)。与 treasury_decisions 互补:"
+        "决策流只覆盖解析得出 id 的 57%,**快照覆盖全部**(含 MARA/BitMine "
+        "那些解析不出的大户)。每天该写,断 5 天就是循环坏了"),
     "treasury_decisions": ProducerSpec(
         "treasury_decisions", "recorded_at", "decision_date", 7, 21,
         "企业决策流 (S-292)。事件时钟是【披露日】——**没有新披露是正常的**"
@@ -256,4 +261,5 @@ union all select 'market_state_vectors', count(*), max(computed_at)::date::text,
 union all select 'trade_results', count(*), max(created_at)::date::text, max(entry_time)::date::text from trade_results
 union all select 'strategy_records', count(*), max(created_at)::date::text, null from strategy_records
 union all select 'treasury_decisions', count(*), max(recorded_at)::date::text, max(decision_date)::text from treasury_decisions
+union all select 'corporate_treasury_history', count(*), max(recorded_at)::date::text, max(d)::text from corporate_treasury_history
 """
