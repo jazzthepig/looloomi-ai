@@ -27,7 +27,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.api.loop_beat import (                                # noqa: E402
-    BEAT_TTL_S, FAILING, NEVER_RAN, OK, assess, overall,
+    BEAT_TTL_S, FAILING, NEVER_RAN, OK, REFUSED, assess, overall,
 )
 
 _FAIL: list = []
@@ -125,6 +125,55 @@ def t_loops_without_a_beat_is_shrink_only():
             "_pod_aggregator_loop", "_factor_tilt_loop",
             "_dingge_paper_loop"} <= beat,
            str(sorted(beat)))
+
+
+def t_a_correct_refusal_is_not_a_failure():
+    """**心跳上线第一天的误报 (S-294)。**
+
+    `_deep_panel_loop` 被记成 failing,而它的错误原文是
+    `Write REFUSED so the gap stays visible` —— **那是地板守卫在正确工作**
+    (S-245)。`deep_panel_collector` 自己早就返回 `refused: True`,
+    **是心跳这一层把它折叠进了 ok=False** —— 我刚建的那层犯了本周同一个错。
+    """
+    import time
+    now = int(time.time())
+    ref = {"_deep": {"last_run_at": now, "ok": True, "refused": True,
+                     "n_consecutive_refusals": 7,
+                     "last_refusal": "only 1/3 symbols (33%) — Write REFUSED"}}
+    r = assess("_deep", ref)
+    _check("判 refused 而不是 failing", r["verdict"] == REFUSED, r["verdict"])
+    _check("连续拒绝轮数被带出", r["n_consecutive_refusals"] == 7,
+           str(r.get("n_consecutive_refusals")))
+    _check("理由说明循环没坏", "循环没坏" in r["reason"], r["reason"][:70])
+    _check("但也说明连续拒绝不是健康", "不是健康" in r["reason"], r["reason"][-40:])
+
+    fail = {"_x": {"last_run_at": now, "ok": False, "refused": False,
+                   "n_consecutive_failures": 5, "last_error": "ImportError"}}
+    _check("真故障仍判 failing", assess("_x", fail)["verdict"] == FAILING)
+    _check("两者可分(这就是第三个状态的全部作用)",
+           assess("_deep", ref)["verdict"] != assess("_x", fail)["verdict"])
+
+    o = overall({**ref, **fail})
+    _check("总裁决只被真故障拉红", o["verdict"] == "failing", o["verdict"])
+    _check("拒绝单列,不混进 failing", o["n_refusing"] == 1 and o["n_failing"] == 1,
+           f"refusing={o.get('n_refusing')} failing={o.get('n_failing')}")
+    _check("只有拒绝时总裁决不是 failing",
+           overall(ref)["verdict"] != "failing", overall(ref)["verdict"])
+
+
+def t_loops_that_can_refuse_actually_pass_the_flag():
+    """采集器返回 `refused` 而调用点不传,等于没修。"""
+    main = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
+    for name in ("_deep_panel_loop", "_hyperliquid_loop"):
+        i = main.find(f'_beat("{name}"')
+        seg = main[i:i + 260] if i > 0 else ""
+        _check(f"{name} 传了 refused", "refused=" in seg, seg[:120])
+    import pathlib as _pl
+    for mod in ("src/data/market/deep_panel_collector.py",
+                "src/data/market/hyperliquid_collector.py"):
+        body = (ROOT / mod).read_text(encoding="utf-8")
+        _check(f"{_pl.Path(mod).name} 确实会返回 refused",
+               '"refused": True' in body)
 
 
 def t_the_beat_never_breaks_the_business_loop():

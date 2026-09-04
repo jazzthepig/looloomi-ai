@@ -410,7 +410,8 @@ async def _deep_panel_loop():
             print(f"[DEEP] {r.get('symbols_ok')}/{r.get('symbols_total')} symbols · "
                   f"{r.get('rows_upserted')} rows · {r.get('elapsed_s')}s{flag}")
             await _beat("_deep_panel_loop", ok=bool(r.get("ok")),
-                        error=None if r.get("ok") else r.get("diagnosis"))
+                        refused=bool(r.get("refused")),
+                        error=r.get("diagnosis") or r.get("error"))
         except Exception as _e:
             print(f"[DEEP] ⚠️  deep-panel collection FAILED: {_e}")
             await _beat("_deep_panel_loop", ok=False, error=str(_e))
@@ -458,6 +459,7 @@ async def _hyperliquid_loop():
                   f"{r.get('rows_upserted')} rows · latest {r.get('latest_bar')} · "
                   f"{r.get('elapsed_s')}s{flag}")
             await _beat("_hyperliquid_loop", ok=bool(r.get("ok")),
+                        refused=bool(r.get("refused")),
                         error=None if r.get("ok") else str(r.get("diagnosis", r.get("error", ""))))
         except Exception as _e:
             print(f"[HL] ⚠️  hyperliquid collection FAILED: {_e}")

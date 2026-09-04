@@ -59,17 +59,36 @@ BEAT_TTL_S = 3 * 24 * 3600
 
 NEVER_RAN, OK, FAILING = "never_ran", "ok", "failing"
 
+#: ⚠️ **第三个状态 (S-294)。** 心跳上线第一天就误报:`_deep_panel_loop` 被记成
+#: failing,而它的错误原文是 `Write REFUSED so the gap stays visible` ——
+#: **那是地板守卫在正确工作**(S-245),不是故障。
+#:
+#: `deep_panel_collector` 自己早就返回 `refused: True`;**是心跳这一层把它
+#: 折叠进了 ok=False**。又是本周那个形状:两个不同的状态塌进一个表示,
+#: 而这次塌的是我自己刚建的那层。
+#:
+#: 拒绝**不计入连续失败**(循环没坏),但**自己计数** ——
+#: 连续拒绝 30 天意味着数据一直没恢复,那是它自己的信号,不是健康。
+REFUSED = "refused"
+
 
 def _now() -> int:
     return int(time.time())
 
 
 async def beat(name: str, *, ok: bool, error: Optional[str] = None,
-               detail: Optional[dict] = None) -> None:
+               detail: Optional[dict] = None, refused: bool = False) -> None:
     """记一次循环的结果。**只记录,不改变行为。**
 
+    三个状态,不是两个:
+
+        ok       跑完并写了
+        refused  跑完并**正确地拒绝写**(地板/覆盖率不达标)—— 不是故障
+        failing  真的坏了
+
     `ok=False` 时累加 `n_consecutive_failures` —— 一次失败和连续 123 次失败
-    是两个状态,而只记「上次失败了」会把它们抹成一个。
+    是两个状态。而 `refused` **另外计数**:连续拒绝 30 天说明数据一直没恢复,
+    那是它自己的信号,把它记成失败会让真故障淹没在里面。
     """
     try:
         from src.api.store import redis_get_key, redis_set_key
@@ -78,12 +97,17 @@ async def beat(name: str, *, ok: bool, error: Optional[str] = None,
             cur = {}
         prev = cur.get(name) or {}
         n_fail = int(prev.get("n_consecutive_failures") or 0)
+        n_ref = int(prev.get("n_consecutive_refusals") or 0)
+        # 拒绝是「跑通了但按规矩没写」—— 它清零失败计数,自己另计。
         entry = {
             "last_run_at": _now(),
-            "ok": bool(ok),
-            "n_consecutive_failures": 0 if ok else n_fail + 1,
-            "last_ok_at": _now() if ok else prev.get("last_ok_at"),
-            "last_error": None if ok else (error or "")[:200],
+            "ok": bool(ok) or bool(refused),
+            "refused": bool(refused),
+            "n_consecutive_failures": 0 if (ok or refused) else n_fail + 1,
+            "n_consecutive_refusals": n_ref + 1 if refused else 0,
+            "last_ok_at": _now() if (ok and not refused) else prev.get("last_ok_at"),
+            "last_error": None if (ok or refused) else (error or "")[:200],
+            "last_refusal": (error or "")[:200] if refused else None,
         }
         if detail:
             entry["detail"] = detail
@@ -115,6 +139,16 @@ def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
                            "(market_state_vectors 就是这种:一次性回填、"
                            "从未上日程),也可能死得比 TTL 还久。"
                            "**两者都不是健康**")}
+    if e.get("refused"):
+        n = int(e.get("n_consecutive_refusals") or 1)
+        return {"loop": name, "verdict": REFUSED,
+                "n_consecutive_refusals": n,
+                "last_refusal": e.get("last_refusal"),
+                "last_ok_at": e.get("last_ok_at"),
+                "reason": (f"**正确地拒绝写入**,连续 {n} 轮:"
+                           f"{(e.get('last_refusal') or '')[:110]}。"
+                           f"循环没坏 —— 但**连续 {n} 轮拒绝说明上游一直没恢复**,"
+                           f"那是它自己的信号,不是健康")}
     if not e.get("ok"):
         n = int(e.get("n_consecutive_failures") or 1)
         return {"loop": name, "verdict": FAILING,
@@ -138,17 +172,27 @@ def overall(beats: dict, expected: Optional[dict] = None) -> dict:
     names = sorted(set(beats) | set(expected))
     rows = [assess(n, beats, expect_every_s=expected.get(n)) for n in names]
     failing = [r for r in rows if r["verdict"] == FAILING]
+    refused = [r for r in rows if r["verdict"] == REFUSED]
     never = [r for r in rows if r["verdict"] == NEVER_RAN]
     return {
+        # **拒绝不进总裁决的坏值** —— 一个按规矩拒绝的循环不是故障,
+        # 而把它算进去会让告警常亮,常亮等于坏灯。
         "verdict": ("failing" if failing else "never_ran" if never else OK),
         "n": len(rows), "n_failing": len(failing), "n_never_ran": len(never),
+        "n_refusing": len(refused),
         "failing": [{"loop": r["loop"],
                      "n": r.get("n_consecutive_failures"),
                      "err": (r.get("last_error") or "")[:80]} for r in failing],
+        # 单列 —— 它是信息,不是警报。**连续轮数才是它的严重度。**
+        "refusing": [{"loop": r["loop"],
+                      "n": r.get("n_consecutive_refusals"),
+                      "why": (r.get("last_refusal") or "")[:80]} for r in refused],
         "never_ran": [r["loop"] for r in never],
         "rows": rows,
         "reason": (
-            f"{len(failing)} 个循环正在连续失败、{len(never)} 个这一轮没有心跳。"
+            f"{len(failing)} 个循环正在连续失败、{len(never)} 个这一轮没有心跳"
+            + (f"、{len(refused)} 个在**正确地拒绝写入**(不是故障)" if refused else "")
+            + "。"
             f"**一个只进 stdout 的失败等于没有发生** —— 实测 39 个循环里 "
             f"28 个是那个形状,而 signal_outcomes 因此死了 123 天无人知"
             if failing or never else
