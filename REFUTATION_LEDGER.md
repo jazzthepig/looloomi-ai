@@ -15446,3 +15446,90 @@ hazard;今日 K 修把它退役,改单名字 + 加载时拒绝,载入会抛带�
 **「spec_runner book 块是它最该 gating 的的地方」** —— C 还没接,但**plan 与 J/K 都
 已经在等它**(J 加 verdict_kind,C 加 quorum verdict kind)。NEXT SESSION 见 A+C+D,
 预计 ~1d 落地。
+
+---
+
+## S-285
+
+**① 账本上线即熄火 —— 政策写了、代码没写、迁移没跑,三件事在同一天各错一次**
+
+2026-09-04。S-283 交付后约 4 分钟,`897861b` 把代码推上生产。三个后果同时发生。
+
+### 一、生产事故:v5 上线,迁移没跑
+
+`_INCEPTION_ID = "v5"` 已部署,`interval_hours` 列不存在 ⇒ 每次 insert 被 PostgREST
+答 400 ⇒ `supabase_insert_table` 返 False ⇒ `_write` 返 False ⇒ `MARK NOT PERSISTED`。
+
+```
+/api/v1/beta-core/curve  →  {"days": 0}
+beta_core_nav            →  v1(2) v2(3) v3(9) v4(12,未 void) · v5 = 0 行
+```
+
+**这段警告我写在 migration 文件头第一行,它被读到了 —— 但它不是一个「步骤」,只是一段文字。**
+一个必须先于代码执行的动作,如果只以注释形式存在,它的执行与否不由任何东西保证。
+下一步:迁移必须挂进 preflight 的可执行检查(见「未做」)。
+
+已用 Supabase MCP 补跑并现场验证:`interval_hours` ✓ · `nav_exceptions` ✓ ·
+v4 12 行全部 voided ✓ · v5 0 行(下一个估值点 00:05 UTC 09-05,**接受空档**,不补 mark ——
+补一个不在估值点上的 mark,等于 v5 第一行就破自己的规矩,和 v4 第一行同类)。
+
+### 二、更糟的是:失败**完全不可见**
+
+`_write` 返 False 时只 log 一行到 stdout,**一行记录都不写**。于是:
+
+> **空曲线,和一个从来没被要求运行过的账本,长得一模一样。**
+
+这是 S-180/S-185/S-194 同一个形状 —— 「拿不到」被渲染成一个合理的值(这次是「什么都没有」)
+—— **而它这次出现在为了消灭这个形状而写的模块里。** 拒绝是对的,拒绝的隐形才是缺陷。
+
+已建 `_record_exception()` → `nav_exceptions`,接进 6 个拒绝/失败路径。
+**刻意写到另一张表、走另一次 insert**:最常见的拒绝理由就是 NAV 写入路径本身坏了,
+一条走在刚失败的路径上的失败记录,会和它一起消失。
+
+### 三、政策 §3 v1 写错了,是**写代码时发现的**
+
+§3 v1 说:错过估值点要在 `beta_core_nav` 写一行带 `void_reason` 的记录。两处错:
+
+1. **NAV 表里的一行断言「NAV 被 struck 过」**,而拒绝的全部内容是「没有」。
+   把「没有 NAV」记成一行带注释的 NAV,就是 S-194 的形状换了一张表。
+2. 最常见的拒绝理由是写入路径坏了,见上。
+
+§3 已更正。**注意方向:是文档错了,实现把它找出来的。** 一个从未被实现的政策
+也从未被检验 —— 与 `_INCEPTION_REASON` 描述一条代码里不存在的 Hyperliquid 取价路径
+**是同一种缺陷**,只是那次是代码没跟上文档,这次是文档没跟上现实。
+
+### 四、提交卫生:2,379 行塞进一个覆盖 4 行的标题
+
+```
+897861b  feat(api): expose LAST_REGIME_QUORUM on /health (S-284 B fix)
+  标题实际覆盖    4 行
+  S-283(我)     1,119 行  NAV_POLICY + 三个 P0 + migration + test
+  另一条 lane     1,149 行  asset_index / producer_freshness / probe_eodhd / BOOK_TRADER
+  未被任何标题覆盖  2,268 行 (95.3%)
+```
+
+规则 6 写的就是这个:blind sweep 把另一条 lane 未完成的工作塞进你的 message。
+**已 push,不重写历史** —— `git log` 是一个真相面,重写它比污染它更糟。此条即更正记录。
+真正的教训不是「别用 -A」(规则已经写了),是**两条 lane 同时在同一个工作树里编辑,
+而工作树没有任何东西表示「这些文件属于另一个人」。** 规则靠人记住;工作树不设防。
+
+### 五、自咬:第三次,同一个形状
+
+本轮新写的两个守卫里,`test_refusals_do_not_write_a_nav_row` 第一版断言
+「`_record_exception` 的调用里不许出现 `beta_core_nav`」—— **它红在了 reason 文案里的
+诊断句上**("Check beta_core_nav columns against the insert payload")。
+
+这是本文件第三个栽在自己文档上的文本匹配守卫(前两个见 S-283)。
+**在一个「每个修复旁边都写清楚为什么」的仓库里,读字符串的守卫迟早会红在自己的解释上,
+然后被下一个人放宽以求安静。** 已在 `tests/test_nav_policy.py` 立下本文件的家规:
+**只断言 AST,不断言源文本。** 四个新守卫全部用变异测试验证过会红。
+
+### 未做
+
+- **迁移与代码的先后顺序仍靠人记。** 需要 preflight 阶段检查:凡 insert payload 里
+  出现 schema 快照没有的列,且存在对应 migration 文件 ⇒ **要求先确认迁移已执行**。
+  现有 `test_beta_core_nav_insert_writes_only_columns_that_exist` 只证明「有迁移文件」,
+  不证明「迁移跑了」。
+- PostgREST schema cache 是否已重载未现场验证 —— 09-05 00:05 UTC 第一个 v5 mark 见分晓,
+  而这次**失败会写进 `nav_exceptions`**,不再只是一行 stdout。
+- S-286(价格新鲜度)、S-287(接缝登记册)未开始。
