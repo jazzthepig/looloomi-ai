@@ -81,8 +81,25 @@ start being policy.
 
 **Rule.** Every book marks at exactly one instant per calendar day: **00:05 UTC**, using the
 price observed at **00:00 UTC**. A mark that cannot be struck within ±30 minutes of the
-valuation point is **not marked late — it is refused**, and the row records `void_reason =
-"missed_valuation_point"`.
+valuation point is **not marked late — it is refused**, and the refusal is recorded in
+`nav_exceptions` (§10).
+
+> **§3 CORRECTION, 2026-09-04 (same day as v1).** This rule first said the refusal should be
+> recorded as a `beta_core_nav` row carrying a `void_reason`. That was wrong on two counts, and
+> writing the code is what exposed it:
+>
+> 1. **A row in the NAV table asserts that a NAV was struck.** The entire content of a refusal is
+>    that none was. Recording "no NAV" as a NAV row with an annotation is the same shape as
+>    recording "no price" as 0.00% — the defect S-194 exists to prevent, one table over.
+> 2. **The commonest reason to refuse is that the NAV write path itself is broken.** On
+>    2026-09-04 the ① book went dark exactly this way, and a refusal record travelling the path
+>    that had just failed would have been lost with it.
+>
+> Refusals therefore go to a **different table, reached by a different insert**. The policy was
+> corrected rather than the code bent to match it — but note which way round that had to happen:
+> **the document was wrong and the implementation found it.** A policy that is never implemented
+> is never tested, which is the same failure as `_INCEPTION_REASON` describing a Hyperliquid
+> price path that the code does not contain.
 
 **Why.** Crypto trades continuously, so a valuation point is not given by a market close — it
 must be *elected*, and the AICPA guidance says exactly that. We never elected one. The ① book's
