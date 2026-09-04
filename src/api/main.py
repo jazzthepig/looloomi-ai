@@ -695,10 +695,24 @@ def _minutes_from_valuation_point_utc(hour: int, minute: int) -> float:
 # `_start_*` 包装函数也数进去了 —— 夸大动机数字,今天第二次)。_outcome_tracker_loop 是最干净的
 # 样本:循环活着、每天准时跑、每天失败,而 signal_outcomes 因此死了 123 天无人知。
 # 心跳只记录,不重试不终止 —— 一个顺手改行为的记录器,下一个人就不敢用。
-async def _beat(name: str, *, ok: bool, error: str | None = None) -> None:
+async def _beat(name: str, *, ok: bool, error: str | None = None,
+                refused: bool = False) -> None:
+    """转发到 `loop_beat.beat`。**签名必须与它一致。**
+
+    ⚠️ S-294 的第二个错:我给 `beat()` 和**调用点**都加了 `refused`,
+    唯独漏了中间这层薄包装 —— 线上立刻报
+    `_beat() got an unexpected keyword argument 'refused'`。
+
+    而我为此写的守卫只检查**调用点里有没有 `refused=` 这个字符串**,
+    从没真的调用过 `_beat`。**一个只看调用方、不看被调方的守卫,
+    作用域小于问题** —— 而它恰恰是我用来修「作用域小于问题」的那个守卫。
+
+    `tests/test_loop_beat.py:t_the_wrapper_signature_matches_the_callee`
+    现在真的调用它,三个关键字都传。
+    """
     try:
         from src.api.loop_beat import beat
-        await beat(name, ok=ok, error=error)
+        await beat(name, ok=ok, error=error, refused=refused)
     except Exception:            # 心跳失败绝不能影响业务循环
         pass
 

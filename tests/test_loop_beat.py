@@ -161,8 +161,49 @@ def t_a_correct_refusal_is_not_a_failure():
            overall(ref)["verdict"] != "failing", overall(ref)["verdict"])
 
 
+def t_the_wrapper_signature_matches_the_callee():
+    """**S-294 的第二个错,也是这个文件之前漏掉的那一半。**
+
+    我给 `loop_beat.beat()` 和调用点都加了 `refused`,**唯独漏了中间那层
+    薄包装 `main._beat`** —— 线上立刻报
+    `_beat() got an unexpected keyword argument 'refused'`。
+
+    而当时的守卫只检查**调用点里有没有 `refused=` 这个字符串**,
+    从没真的调用过 `_beat`。**一个只看调用方、不看被调方的守卫,
+    作用域小于问题** —— 而它恰恰是我用来修那个形状的守卫。
+
+    所以这条**真的调它**,并逐字比对两个签名。
+    """
+    import asyncio as _a
+    import inspect
+
+    from src.api import main as _m
+    from src.api.loop_beat import beat as _beat_impl
+
+    wrapper = set(inspect.signature(_m._beat).parameters)
+    callee = set(inspect.signature(_beat_impl).parameters)
+    # `detail` 是 beat 的可选扩展,包装不转发它是有意的
+    missing = callee - wrapper - {"detail"}
+    _check("包装转发了被调方的每个关键字", not missing,
+           f"缺 {sorted(missing)} —— 线上会 TypeError,而字符串检查看不出来")
+
+    # **真的调一次。** 上面那条比对若哪天被绕过,这条仍会炸。
+    try:
+        _a.run(_m._beat("_guard_smoke", ok=True, refused=True, error="x"))
+        ok = True
+    except TypeError as e:
+        ok, err = False, str(e)
+    _check("用三个关键字实调 _beat 不抛 TypeError", ok,
+           err if not ok else "")
+
+
 def t_loops_that_can_refuse_actually_pass_the_flag():
-    """采集器返回 `refused` 而调用点不传,等于没修。"""
+    """采集器返回 `refused` 而调用点不传,等于没修。
+
+    ⚠️ **这一条只看调用方。** 被调方由
+    `t_the_wrapper_signature_matches_the_callee` 覆盖 ——
+    两条缺一不可,而 S-294 的线上错误正是只有前者时漏掉的。
+    """
     main = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
     for name in ("_deep_panel_loop", "_hyperliquid_loop"):
         i = main.find(f'_beat("{name}"')
@@ -181,9 +222,22 @@ def t_the_beat_never_breaks_the_business_loop():
     src = (ROOT / "src/api/loop_beat.py").read_text()
     _check("beat() 吞掉自己的异常", "except Exception:" in src)
     _check("并写明理由", "比没有记录器更糟" in src)
-    main = (ROOT / "src/api/main.py").read_text()
-    _check("main 的 _beat 包装也吞异常",
-           "async def _beat(" in main and "pass" in main.split("async def _beat(")[1][:400])
+    # ⚠️ 原本这条切 400 个字符找 `pass` —— 而我给 `_beat` 补了一段 docstring
+    # 之后,`pass` 被挤出窗口,守卫就红了。**固定字符窗口的断言会被文档增长
+    # 弄坏**,它测的是「排版」不是「行为」。改成解析真实函数体。
+    import ast as _ast
+
+    tree = _ast.parse((ROOT / "src/api/main.py").read_text(encoding="utf-8"))
+    fn = next((n for n in _ast.walk(tree)
+               if isinstance(n, _ast.AsyncFunctionDef) and n.name == "_beat"), None)
+    _check("main 里有 _beat", fn is not None)
+    if fn:
+        handlers = [h for n in _ast.walk(fn) if isinstance(n, _ast.Try)
+                    for h in n.handlers]
+        swallows = any(all(isinstance(st, _ast.Pass) for st in h.body)
+                       for h in handlers)
+        _check("main 的 _beat 包装也吞异常(AST 判定,不看排版)", swallows,
+               f"{len(handlers)} 个 except,没有一个是纯 pass")
 
 
 def main() -> int:
