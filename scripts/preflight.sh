@@ -1103,6 +1103,22 @@ python3 -m tests.test_source_freshness || {
 python3 -m pytest tests/test_nav_policy.py -q || {
   echo "  ✗ NAV 估值政策守卫 — do not push"; exit 1; }
 
+# ── S-289: 摄入只有一条 lane —— 规则 3b 不能只活在散文里 ─────────────────────
+# M-118 是在规则写下之后、完全待在 minimax 自己的路径里、又建了第三个 fetcher,
+# 去抓我们已经有的数据(S-276:PENDLE 820 天被重抓)。判据是**写**不是**抓**:
+# 抓价格的地方很多而且大多对的(研究面板、请求路径取行情),真正的危险是持久化 ——
+# **两个摄入器 = 两条看起来是同一个量、实际不是的序列**,S-273/274/275 同日三发。
+# 本守卫看不见 Mac 侧,已在文件里写明作用域边界(第七次「作用域差一格」的预防)。
+python3 -m tests.test_one_ingestion_lane || {
+  echo "  ✗ 摄入 lane 守卫 — do not push"; exit 1; }
+
+# ── S-289: 交接块必须能直接粘贴 ────────────────────────────────────────────
+# Jazz 说过几次:git add/commit/push 行后面不能跟注释,终端认不到。反复发生的原因
+# 不是没人记住,是 **CLAUDE.md 的模板自己带着注释** —— 规则在模板下面,而被复制的
+# 是模板。守卫的对象因此是 CLAUDE.md 自己:散文管不住散文,测试可以。
+python3 -m tests.test_handoff_commands_are_runnable || {
+  echo "  ✗ 交接命令守卫 — do not push"; exit 1; }
+
 # ── S-263: regime 标签要看【几票通过】,不只看它多新 ──────────────────────────
 # S-251 上面那段修的是价源:标的数从 261 掉到 1 而探针报 fresh。同一个形状在
 # regime 上又来一次,而这次连修法都是现成的却没人用:`daily_macro_regime` 这个
@@ -1365,6 +1381,54 @@ python3 -m tests.test_python_version_landmines || {
 # 就是)/ ok / failing(带连续次数)。**两者在 max() 上同形而修法完全不同。**
 python3 -m tests.test_loop_beat || {
   echo "  ✗ 循环心跳守卫 — do not push"; exit 1; }
+
+# ── S-288: 宁可空且标记,不可编造(规则 #9 那条 audit standing 终于清了) ────
+# src/data/vc/deal_flow.py 有三个 _get_mock_*(),在 10 个返回点上把失败替换成
+# 假数据。最坏的不是 402 那条,是:
+#     return rounds if rounds else self._get_mock_funding_rounds()
+# **一个成功但为空的响应会被替换成虚构的融资** —— 真实的「没有」变成虚构的
+# 「有」。而那些假数据署了真实机构的名(Paradigm/a16z/Sony):
+# 一般的假数据是噪声,**署名的假数据是关于真实公司的虚构事实**。
+#
+# 守卫用 tests/_source.py:code_only 剥注释与 docstring —— 说明文字里就写着
+# 那些模式名,不剥会被自己的解释绊倒(当天第五次)。
+python3 -m tests.test_no_fabricated_data || {
+  echo "  ✗ 编造数据守卫 — do not push"; exit 1; }
+
+# ── S-290: 未披露的成本不是零成本 ──────────────────────────────────────────
+# Jazz 问「CG Analyst 有没有 VC 融资」。答:**任何档都没有**;DeFiLlama 的
+# /raises 与 /emissions 实测 HTTP 402(对照组 /protocols 200/8179 证明不是网络)。
+# 但 /companies/public_treasury 免费可用,而且它比 VC 轮次更适合 Entity/Decision:
+# **有披露义务背书**,不是自我披露的新闻稿。
+#
+# 实测 BTC 180 家持 6.15% 供应,**88 家没披露成本**。把 entry_value=0 当成
+# 零成本,current/entry 会变成 +∞,而那个数会一路走进「抛压强度」的排序。
+# I1:未测 ≠ 0 —— 所以浮盈是 Optional,且披露率与它永远一起给
+# (ETH 侧 47% 披露 ⇒ 判 thin,守卫在活数据上验证过)。
+python3 -m tests.test_treasury || {
+  echo "  ✗ 企业持币守卫 — do not push"; exit 1; }
+
+# ── S-291: 付费能力必须真的被调用,否则那是白付的钱 ────────────────────────
+# Jazz 2026-09-04:「我们有 coingecko analyst 是 139 刀一个月的。。。你又把他
+# 忽略了?**这件事已经被失忆了很多次**,你害我浪费多少钱了!」他是对的:
+# S-264 我自己写下那 14 项能力清单,此后 Entity 那批**零调用**;S-290 我还用
+# 免费端点建了快照层并写下「历史买不来,今天开始攒」—— 而付费档直接给到
+# 2020-08-11。我判「不可用」的依据是一次 HTTP 403,那是 **Cloudflare 1010
+# 客户端指纹拦截**(裸 urllib),不是权限。换 httpx 立刻 200。
+# **「我探测失败」和「我们没有这个能力」是两个状态。**
+#
+# 台账、注释、CLAUDE.md 都已经存在过而失忆照样发生 —— 因为那些要人主动去读。
+# 这个守卫不需要谁记得它:每项付费能力要么有真实调用点,要么显式登记未接并
+# 带理由,未接数只减不增。
+python3 -m tests.test_paid_capability_is_used || {
+  echo "  ✗ 付费能力使用守卫 — do not push"; exit 1; }
+
+# ── S-291: 覆盖率两个口径 + 未解析不静默丢 ─────────────────────────────────
+# entity_id 推导不出来(microstrategy 404 / strategy 200 —— 改名了)。
+# 按家数 57%、**按持仓 88.9%** —— 差 32 个百分点,回答的是不同的问题。
+# 未解析的 13 家显式列出(MARA 35,303 枚…)—— **未解析 ≠ 没有数据**。
+python3 -m tests.test_treasury_decisions || {
+  echo "  ✗ 决策流守卫 — do not push"; exit 1; }
 
 # ── S-272: 判活响应必须在【顶层】给一个裁决 ─────────────────────────────────
 # 2026-09-02 Jazz 问「系统检测说 ohlcv 又停了,是否如此」。查下来:
