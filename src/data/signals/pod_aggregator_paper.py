@@ -238,8 +238,18 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
         build_pods, apply_correlation_gate, shrink_weights,
         vol_target, apply_dd_circuit_breaker, aggregate,
     )
+    # ⚠️ S-294:`R62_Z` / `R62_MF` **不在 r62 模块里** —— 它们是 R62 最优单元的
+    # 参数,但定义在 `r63_fusion_validation`(那里的注释:「R62 best detector
+    # config (from R62 ledger, "external" subset)」)。名字带 R62 而住在 r63,
+    # 是这次导错的直接原因。r77/r79 都是分成两个 import 的,只有这里没分。
+    #
+    # 后果:`_pod_aggregator_loop` **连续 5 轮 ImportError**,而在心跳上线前
+    # 那 5 次失败只进 stdout —— `pod_aggregator_nav`(一张 NAV 表)因此停写,
+    # 没有任何东西知道。
     from src.research.validation.r62_fragility_gated_funding import (
         DEFAULT_FRAGILE_WINDOWS, DEFAULT_PLAYABLE_WINDOWS,
+    )
+    from src.research.validation.r63_fusion_validation import (
         R62_Z, R62_MF,
     )
 
