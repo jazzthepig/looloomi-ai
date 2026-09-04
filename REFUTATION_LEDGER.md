@@ -16277,3 +16277,39 @@ S-282 之前,这个 TypeError 会每天发生一次、只进 stdout、无人知�
   **各定义了一份**(值相同 0.5 / 2 / "external")。两个真值源是下一个
   同形缺陷的温床,但它们目前一致,不在这轮改
 - `_pod_aggregator_loop` 修好后需观察下一轮是否真的写入 `pod_aggregator_nav`
+
+---
+
+## S-295 — 「修了还在失败」和「还没轮到它跑」是两个状态 (2026-09-05)
+
+推送 R62_Z 修复后再读,`_pod_aggregator_loop` 仍是同一条 ImportError。
+**而我判断不了它是没修好,还是没轮到它跑** —— 这些循环大多 **24 小时一轮**,
+心跳条目的 TTL 是 3 天。**一个修复上线后,旧构建记下的失败会挂满三天。**
+
+> 同一个形状,而这次它藏在时间维度里:
+> **一条心跳不说自己是哪个构建记的,它就同时是这两句话。**
+
+### 修
+
+`beat()` 每条带 `build`(与 `/internal/build-state` 同源的 git sha)。
+`assess()` 增加 `stale_build`:**True = 这条是旧构建记的,当前构建下它还没跑过**。
+`overall()` 单列 `n_failing_on_stale_build` —— **仍计入 `n_failing`,不藏起来**,
+但读的人立刻知道该等下一轮还是该去查代码。
+
+缺 sha 时判 `False` 而非 `True` —— **未知不该伪装成一个确定的答案**。
+
+### 这一轮的三条,现在可以分开读了
+
+    _deep_panel_loop      `_beat() got an unexpected keyword argument 'refused'`
+                          ← **我自己的 bug**,修复未部署(S-294 追加)
+    _hyperliquid_loop     `fanning out over 233 assets` ← 与 refused 无关,
+                          我按「采集器返回 refused」就接上了,**但这条具体的
+                          失败可能是真故障** —— 待它在新构建下再跑一轮才知道
+    _pod_aggregator_loop  R62_Z —— 修复已提交,**待新构建下的下一轮**
+
+### 未做
+
+- **沙箱跑不完 preflight**(>178s + 后台进程随调用结束被杀)。
+  本条只跑了改动到的子集;**完整的门在 Mac 侧**
+- `_hyperliquid_loop` 的 `refused` 接法待验证 —— 如果它在新构建下仍判 failing,
+  说明那条失败不是拒绝,我接错了

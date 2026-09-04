@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-04 (Seth/Cowork lane — S-288…S-292;**企业决策流已接通**:CG Analyst 的 transaction_history(page>1 付费独占)→ treasury_decisions,同时插进心跳/判活/覆盖清册/Supabase 四个面;Strategy 119 条回到 2020-08-11。S-291 付费能力失忆已做成 CI 守卫。⚠️ ETH 按持仓仅覆盖 22.9%(BitMine 解析不出 id))
+**Last updated:** 2026-09-05 (Seth/Cowork lane — S-288…S-295;**企业决策流已接通并落库**(834 条决策 + 214 行快照,Strategy 回到 2020-08-11);心跳上线首日抓到 3 个循环失败,其中 2 个是我自己的误报/bug;S-294 加 refused 第三态、S-295 加 build 追踪(「修了还在失败」vs「还没轮到它跑」);⚠️ 沙箱已跑不完 preflight,完整的门只在 Mac 侧)
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
 > inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
@@ -282,6 +282,32 @@ The cap is doing its job only if closure is as routine as addition.*
    而迁移要 service_role,于是修复挂在另一条 OPEN RISK 上。
 
 ---
+
+## 2026-09-05:S-294 / S-295 —— 心跳首日,两个误报一个真故障
+
+心跳(S-282)部署后第一轮抓到 3 个循环 failing。**其中两个是我造成的:**
+
+**① 正确的拒绝被记成故障。** `_deep_panel_loop` 的错误原文是
+`Write REFUSED so the gap stays visible` —— 那是 S-245 地板守卫在正确工作。
+采集器**自己早就返回 `refused: True`**,是心跳层把它折叠进 `ok=False`。
+→ 加第三态 `REFUSED`:不计入失败,自己计连续轮数(连续拒绝 30 轮说明上游没恢复)。
+
+**② 修①时又犯同一形状。** 我给 `beat()` 和调用点都加了 `refused`,
+**唯独漏了中间那层薄包装 `main._beat`** —— 线上报 TypeError。
+而我为此写的守卫**只检查调用点有没有 `refused=` 这个字符串,从没真的调用过**。
+→ 新守卫逐字比对两个签名并**实调一次**。
+
+**③ 真故障。** `_pod_aggregator_loop` 连续 5 轮 `ImportError: R62_Z` ——
+那两个常量住在 `r63_fusion_validation`(名字带 R62 而住在 r63),
+`pod_aggregator_paper` 是全仓唯一没拆开这两个 import 的调用点。
+`pod_aggregator_nav`(一张 NAV 表)因此停写,而心跳上线前无人知晓。
+
+**④ S-295:时间维度上的同一形状。** 循环 24h 一轮、心跳 TTL 3 天 ——
+**修复上线后,旧构建记的失败会挂满三天**,而「修了还在失败」和
+「还没轮到它跑」完全同形。→ 每条心跳带 `build`,`assess` 给 `stale_build`。
+
+🔴 **沙箱已跑不完 preflight**(>178s 硬上限 + 后台进程随调用结束被杀)——
+我只能跑改动到的子集,**完整的门只在 Mac 侧**(与 S-280 同结论)。
 
 ## 2026-09-04:S-288…S-292 —— 把已付费的能力接上
 
