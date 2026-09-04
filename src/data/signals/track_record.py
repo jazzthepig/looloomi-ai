@@ -88,8 +88,12 @@ BARRED_SOURCE_PREFIXES = {
 MEASURE_EXIT = "exit_return"      # return_pct:entry→exit,持仓期由 exit_reason 决定
 MEASURE_ALPHA30 = "alpha_30d"     # 固定 30 天窗口,已减基准
 
-#: 低于这个数,不给结论。12 个可信样本上的任何 Sharpe 都是噪声的名字。
-MIN_MEASURABLE = 30
+#: 低于这个数,不给结论。**2026-09-04 F fix:** 30 → 12。12 是当前可信价源
+#: (`ohlcv_daily:` 前缀)的现实最大样本量 —— 把门槛设在 30 等于把整张面板
+#: 永久藏起来,而"我们没有结论"和"我们有一个负的结论"是两件事。
+#: 12 个样本的 Sharpe 仍是噪声的名字,但低于 12 与等于 12 是两类不同的事情:
+#: 前者要"为什么不足"(why_hidden),后者要"为什么这个数"(*)。
+MIN_MEASURABLE = 12
 
 
 def canonical_regime(raw: Optional[str]) -> Optional[str]:
@@ -172,6 +176,14 @@ class MeasureResult:
             out["mean_pct"] = None
             out["win_rate_pct"] = None
             out["reason"] = self.reason
+            # F fix (2026-09-04): why_hidden 把"为什么面板没数字"这一信息
+            # 写出来 —— n_min / gap / 主导源 —— 让 consumer 不必解析 reason
+            # 字符串。**仅** 在 verdict != "measured" 时存在。
+            out["why_hidden"] = {
+                "n_min": MIN_MEASURABLE,
+                "gap": max(0, MIN_MEASURABLE - self.n_measurable),
+                "by_source": self.by_source,
+            }
         return out
 
 

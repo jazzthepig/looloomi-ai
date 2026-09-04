@@ -91,7 +91,16 @@ FAMILIES: dict[str, bool] = {
     "regime_switch_beta_multiplier": False,     # M-88:regime 开关切两个子策略,机制不同
     "survivors_only_lag1_book": True,           # M-113 V3 / M-115 Book B:2-sleeve book
                                                 # (① regime-gated BTC + ④ cross-section L/S)
-    "survivors_only_lag1_book_bookB": True,     # M-115 Book B alias (specs use either name)
+}
+#: 2026-09-04 K fix: 双名字 `survivors_only_lag1_book_bookB` 在 S-249 形状下
+#: 是一个漂移 hazard —— bookB 和 bookA 在运行时只是同一个家族的两个 alias,
+#: 但 report / config / spec JSON 三处都会各自写一份,各自漂移。统一为单名字;
+#: 任何带 `_bookB` 后缀的 spec JSON 在加载时就拒绝。
+_RETIRED_FAMILIES: dict[str, str] = {
+    "survivors_only_lag1_book_bookB": (
+        "spec_family 'survivors_only_lag1_book_bookB' 已退役 (2026-09-04 K fix)。"
+        " 改用 'survivors_only_lag1_book' —— 它现在是 M-113 V3 / M-115 Book B 的单名字。"
+    ),
 }
 
 
@@ -147,6 +156,18 @@ class Verdict:
     BLOCKED = "BLOCKED"
 
 
+#: verdict → verdict_kind 分桶映射(J fix,2026-09-04)。分开了「规则拒绝」
+#: 与「数据算不出」(S-207)。**模块级**而不是 Decision 类属性 —— Decision 是
+#: `@dataclass(frozen=True)`,把可变 dict 放成字段会让 dataclass 抛
+#: "mutable default <class 'dict'> for field VERDICT_KIND"。模块级常量的
+#: lifetime 等于进程,等价。
+VERDICT_KIND: dict[str, str] = {
+    Verdict.ENTERED: "entered",
+    Verdict.SKIPPED: "skipped",
+    Verdict.BLOCKED: "blocked",
+}
+
+
 @dataclass(frozen=True)
 class Leg:
     symbol: str
@@ -176,9 +197,15 @@ class Decision:
         if self.verdict == Verdict.ENTERED and not self.legs:
             raise ValueError("ENTERED 却没有腿 —— 那不是开仓")
 
+    # verdict_kind 分开了「规则拒绝」与「数据算不出」(S-207,2026-09-04 J fix)。
+    # 之前 SKIPPED 和 BLOCKED 都被压进同一个 `reason` 字段,
+    # 下游拿到 JSON 分不清"规则说不开"和"我们瞎了"。
+    # 现在 verdict_kind 在 verdict 同层,consumer 可以按 kind 分桶。
+    # VERDICT_KIND 是模块级常量(见 class Verdict 之后)。
     def as_payload(self) -> dict[str, Any]:
         out: dict[str, Any] = {
             "date": self.d, "spec": self.spec_name, "verdict": self.verdict,
+            "verdict_kind": VERDICT_KIND[self.verdict],
             "regime": self.regime,
             "panel": {"source": self.panel_source, "last_bar": self.panel_last_bar},
         }
@@ -227,6 +254,11 @@ class Spec:
         """
         raw = json.loads(Path(path).read_text())
         fam = str(raw.get("spec_family") or "")
+        # K fix (2026-09-04): 拒绝已退役的 family 名,带原因。S-249 形状下双名字
+        # 会让 spec JSON、report、config 三处各自漂移 —— 在加载时拒绝比让它静默
+        # 跑到 produce 一个错误家族的成交要好。
+        if fam in _RETIRED_FAMILIES:
+            raise ValueError(_RETIRED_FAMILIES[fam])
         if fam not in FAMILIES:
             raise UnwiredFamily(
                 f"spec_family '{fam}' 还没有接线(spec={raw.get('spec_name')})。"
@@ -276,7 +308,7 @@ class Spec:
                 raw=raw,
             )
 
-        if fam in ("survivors_only_lag1_book", "survivors_only_lag1_book_bookB"):
+        if fam == "survivors_only_lag1_book":
             # M-113 V3 (M-93 + R19-Lite) / M-115 Book B (M-93 + R14-Lite):
             # 2-sleeve book combining ① regime-gated BTC long + ④ cross-section L/S.
             # Per M-115: R14-Lite retention 0.614 PASSES M-114, R19-Lite 0.493
@@ -404,7 +436,7 @@ def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
     # Multi-sleeve book (M-113 V3 / M-115 Book B) routes to its own decide().
     # 2-sleeve book needs different BLOCKED checks (BTC presence for M-93 sleeve)
     # and different leg composition (regime-gated long + cross-section L/S).
-    if spec.family in ("survivors_only_lag1_book", "survivors_only_lag1_book_bookB"):
+    if spec.family == "survivors_only_lag1_book":
         return decide_survivors_book(spec, panel, as_of=as_of, regime=regime,
                                       n_open=n_open, features=features)
     d = as_of.isoformat()

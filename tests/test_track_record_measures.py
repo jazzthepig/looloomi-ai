@@ -86,21 +86,33 @@ def test_insufficient_sample_returns_a_reason_not_a_number():
 
     这是本条最重要的行为:页面现在展示的 −26.19% 既不是坏消息也不是好消息,
     **它是一个不可测量的量被渲染成了可信的数**。
+
+    2026-09-04 F fix: MIN_MEASURABLE 30 → 12。把门槛降到当前可信价源的最大样
+    本量,这样面板才有"measured"路径;但门槛之下的 insufficient 路径仍要被
+    守住 —— 用 MIN_MEASURABLE - 1 行即可触发,而不是硬编码 12。
     """
     rows = ([{"outcome_source": "coingecko:vs_BTC", "alpha_30d": -4.78}] * 83
-            + [{"outcome_source": "ohlcv_daily:vs_BTC", "alpha_30d": -2.97}] * 12)
+            + [{"outcome_source": "ohlcv_daily:vs_BTC", "alpha_30d": -2.97}] * (MIN_MEASURABLE - 1))
     m = measure(rows, which=MEASURE_ALPHA30, trusted_only=True)
     p = m.as_payload()
     _check("可信样本不足 → verdict=insufficient", p["verdict"] == "insufficient", p["verdict"])
     _check("不足时【不给】均值", p["mean_pct"] is None, str(p["mean_pct"]))
     _check("不足时【不给】胜率", p["win_rate_pct"] is None, str(p["win_rate_pct"]))
     _check("原因里点明了样本数与门槛",
-           "12" in p["reason"] and str(MIN_MEASURABLE) in p["reason"], p.get("reason", ""))
+           str(MIN_MEASURABLE - 1) in p["reason"]
+           and str(MIN_MEASURABLE) in p["reason"], p.get("reason", ""))
     _check("原因明确说了'也不能得出我们不行'",
            "不行" in p["reason"], p.get("reason", ""))
     _check("source_mix 把混入了什么写在脸上",
-           p["source_mix"].get("barred") == 83 and p["source_mix"].get("trusted") == 12,
+           p["source_mix"].get("barred") == 83
+           and p["source_mix"].get("trusted") == MIN_MEASURABLE - 1,
            str(p["source_mix"]))
+    _check("why_hidden JSON 字段存在,带 n_min / gap / by_source",
+           isinstance(p.get("why_hidden"), dict)
+           and p["why_hidden"]["n_min"] == MIN_MEASURABLE
+           and p["why_hidden"]["gap"] == 1
+           and p["why_hidden"]["by_source"] == p["source_mix"],
+           str(p.get("why_hidden")))
     # 负控制:样本够了就必须给数,否则这条守卫等于把面板永久关掉
     enough = [{"outcome_source": "ohlcv_daily:x", "alpha_30d": 1.0}] * (MIN_MEASURABLE + 1)
     _check("负控制:样本足够时 verdict=measured 且给出数",
@@ -115,9 +127,9 @@ def test_insufficient_sample_returns_a_reason_not_a_number():
     # 所以直接构造一个"算出了数但判定不足"的结果 —— 那正是未来某次重构会
     # 制造出来的形状(先算均值,再判样本量)。
     from src.data.signals.track_record import MeasureResult
-    leaky = MeasureResult(MEASURE_ALPHA30, "insufficient", 12, 95,
+    leaky = MeasureResult(MEASURE_ALPHA30, "insufficient", MIN_MEASURABLE - 1, 95,
                           mean_pct=-3.31, win_rate_pct=25.0,
-                          by_source={"trusted": 12}, reason="样本不足")
+                          by_source={"trusted": MIN_MEASURABLE - 1}, reason="样本不足")
     lp = leaky.as_payload()
     _check("即使内部算出了数,insufficient 的 payload 也不得放出均值",
            lp["mean_pct"] is None, str(lp["mean_pct"]))

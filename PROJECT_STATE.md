@@ -1,6 +1,12 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-03 (Seth/Cowork lane — S-262…S-282;**查到了「都说健康却总有东西停」的根因**:39 个循环里 28 个的失败只进 stdout,signal_outcomes 因此死 123 天(循环活着、每天跑、每天失败);已建 loop_beat 心跳并接入 11 个(覆盖全部 9 张 NAV 表);S-281 一行 d=2099 的冒烟测试把判活器静默关了 10 天,已改为修读的一边)
+**Last updated:** 2026-09-04 (Seth/Cowork lane — **S-284:今日 8 个修补落地(H/I/J/K/O/F + B 修 + E 决策 ticket)。** quick-win batch(单 commit):`paper_trading/__init__.py` 填 `__version__` + `__all__` 16 项;`spec_runner.Decision.as_payload()` 加 `verdict_kind` 字段;`survivors_only_lag1_book_bookB` 退役,改单名 + 加载时拒绝;`daily_runner.py` 删 `if False` 死代码;`MIN_MEASURABLE` 30→12 + `why_hidden` JSON;`DISPLAY_SCORE_DP=1` 抽出常量 + 新单测。B 修:`/health.data_layer.regime_quorum` 暴露 `LAST_REGIME_QUORUM`,**空 dict = 未测量**(消费者须知)。S-283:NAV 读数三个 P0,全在 ① 这本 benchmark 账上。Jazz 问「为什么这周 beta 没捕捉到」→ beta 捕捉到了(excess 逐行 0.000000),错的是读数;他接着指出「读数读不准不是偶发的,很多基金都有类似问题」,于是补了整套 fund-admin 控制。① **v4 整段 VOID,v5 从 1.0 起步(代价 12 天 forward record)**;新增 `docs/NAV_POLICY.md` v1(13 条控制对照 SEC 2a-5 / AICPA / CSSF 24/856 / GIPS)+ `tests/test_nav_policy.py`(已进 preflight)+ migration。**⚠️ migration 必须先于代码上线**,否则 ① 账静默停止 marking。前一轮:S-262…S-283)
+
+> **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
+> inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
+> 只覆盖 `api_keys`,于是新增一列本可静默杀死 ① 账。**作用域太窄的控制会把注意力从它漏掉的
+> 地方引开 —— 因为它看起来「已经有守卫了」。** 与 MEMORY.md 那条(只给 MEMORY 加上限,成本
+> 搬到 PROJECT_STATE)是同一个形状。
 
 ## 本轮一句话:**一个形状,十次**
 
@@ -88,6 +94,34 @@ The cap is doing its job only if closure is as routine as addition.*
    **它不是崩溃,是回撤止损按设计停的**。「崩溃」与「正确地拒绝继续」被读成了同一个状态。
    VERIFY: 恢复前必须先有 M-116(train/test split)+ M-93 的 OOS;两者目前都不存在。
    OWNER: **AWAITING JAZZ**(HALT 还是用 Book B 恢复 paper)
+
+0c. **🟡 两 paper-book 系统零 interop (S-284, 2026-09-04)。** `paper_trading/spec_runner.py`
+   (S-254 起,Seth lane,spec 库)与 `src/research/paper_books/`(S-265 之前,Seth lane,
+   sleeve + ledger 原型)**从未 reconciliation**:`daily_runner.py:50-58` 用
+   `subprocess.run` 不 import `spec_runner`;`paper_trading/__init__.py` 已 0 bytes
+   直至 2026-09-04 填 `__all__`(S-284 H fix)但仍未 re-export `paper_books/*`。
+   `paper_books/sleeve_1/2/3` 是 pre-spec_runner 的 prototype,**机制与
+   spec_runner 不同**(各自一条独立 sleeve,而不是 spec-driven dispatch),
+   而两条路径都标"Seth lane"、都跑 daily —— 一份 bench 在没有 bridge 的
+   情况下被两份互不通气的代码重复算。daily_runner 现在日志输出"sleeve_1
+   term_premium" / "sleeve_2 tilt" / "sleeve_3 long/short count",它们**完全不
+   是 spec_runner 的口径**(spec_runner 没写这条 NAV)—— 两套数在不同文件里各自
+   增长,各自漂移,而 bench 在两边都被声称。
+   两个选项,选哪个先说,mechanics 后做:
+   **(A) fold**:`paper_books/sleeve_*.py` 折进 `spec_runner`,变成
+   `spec_family="sleeve_1_vol_cvol_ls"` 等新 family;mechanics ~半天,需要新
+   fixture + new FAMILIES 表条目 + `Spec.load` 派发。**好**因为一份 bench,
+   一份口径。**(B) acknowledge 并存**:在 CLAUDE.md source-of-truth table 正式
+   加一行 `paper_books/` 与 `paper_trading/` 都归 Seth lane,但 `paper_books/`
+   是 "older sleeve+ledger prototypes, pre-spec_runner";`daily_runner.py` 加
+   一句 module-level docstring 说明它**不是** spec_runner 的入口。mechanics
+   ~10min。**好**因为今天的 audit 还没看到 paper_books 有活跃消费者
+   (`daily_runner.py` 是它唯一自启路径,且上次跑成功是 2026-08-28)—— 承认
+   它是 deprecated 比假装它活着更便宜。**先做决策,mechanics 后做。**
+   VERIFY: 决策后 → `git ls-files src/research/paper_books/ | wc -l`(A: 应减少;
+   B: 不变);`grep -rn "from paper_books" src/ tests/ | wc -l`(A: 应减少;
+   B: 应保持 0 或显式 docstring)
+   OWNER: **AWAITING JAZZ**(A 还是 B;今日仅写 ticket,mechanics NEXT SESSION)
 
 0. **🔴 C3 sizing table was INVERTED ON BOTH AXES (S-151, 2026-08-12).** Measured by
    execution: `lookup_size(regime=5 out-of-distribution, signal=1 weakest) = 1.30` and
