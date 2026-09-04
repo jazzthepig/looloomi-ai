@@ -15533,3 +15533,554 @@ v4 12 行全部 voided ✓ · v5 0 行(下一个估值点 00:05 UTC 09-05,**接�
 - PostgREST schema cache 是否已重载未现场验证 —— 09-05 00:05 UTC 第一个 v5 mark 见分晓,
   而这次**失败会写进 `nav_exceptions`**,不再只是一行 stdout。
 - S-286(价格新鲜度)、S-287(接缝登记册)未开始。
+
+## S-288
+
+**`scripts/push_session.sh:94` — 反引号转义修正(S-284 follow-up, 2026-09-04)**
+
+[S-284](#s-284) 把 `scripts/push_session.sh` 改写成通用 helper(handoff block、env-var API、
+refuse-dirty + paths-to-stage + mixed-hunk detection)。**改写当漏审了一处反引号**:
+
+```bash
+# scripts/push_session.sh:94 (修前)
+echo "Per CLAUDE.md rule #6 I will NOT \`git add -A\` them."
+```
+
+bash 把反引号视为命令替换 → 这条 echo 在执行时,内含的 `git add -A` 被
+求值(空输出,因为缺参),字面文本"不要 git add -A"在终端里**变成"不要 "**
+—— 提醒用户不要做某事的消息,执行时恰恰用上那个动作的语法糖写就。
+
+修法:换 single quote 包住字面意图,保住字面:
+
+```bash
+# scripts/push_session.sh:94 (修后)
+echo "Per CLAUDE.md rule #6 I will NOT 'git add -A' them."
+```
+
+零功能改动,纯字符转义。preflight 当前已绿;push 后 working tree 全清。
+
+### 教训
+
+**「提醒不要 X」的消息用 X 的语法糖写就 = 自咬的最小版本**。S-285「### 五」
+第三次栽在文本匹配守卫上(本文件已三次,见 S-283),与本次同源 —— 在一个
+「每个修复旁边都写清楚为什么」的仓库里,**字面文本迟早会吃自己的解释**。
+
+CI 这次没抓到,因为 preflight 只跑 `bash -n` 语法检查 + import + discipline
+suite;**没有「脚本里的 echo/printf 字面量 lint」**这一档。下一版可考虑:
+`tests/test_script_echo_lint.py`,对 `scripts/*.sh` 做静态扫描,凡文字里出现
+`` ` `` + 高危动词(`git add -A` / `rm -rf` / `dd if=`)⇒ fail。这条守卫
+成本低、信号明确,且对所有未来的 helper 类脚本都生效。
+
+**本文件的家规 + 1**:`只断言 AST,不断断言源文本`(`tests/test_nav_policy.py`,
+S-285) ⇒ 同样适用于 `scripts/*.sh`:lint 命令替换,不断言「脚本应该说 X」。
+
+---
+
+## S-286
+
+> **顺序说明:** 本条在 `## S-288` 之后落盘。另一条 lane 在我写作期间跳号占了 288
+> (`push_session.sh` 反引号修正,S-284 follow-up),把 286/287 留给了我 —— 这是对的,
+> 因为 `MINIMAX_SYNC` 里我已经把 286/287 排进队列。规则 7 是 append-only,
+> **不重排** ——重写一个 append-only 文件比它非单调更糟。号唯一即可,顺序靠 grep。
+
+**声明 ≠ 执行 —— 一条只被自己的测试读过的规则,和一个只查表不查列的回声**
+
+2026-09-04,S-285 上线后当天。Jazz 转述:「audit 说 minimax-c 的 S-285 没做完」。
+号是我的(规则 7:Seth = S-76+,Minimax = M-76+),Minimax-C 没有 S- 号,ledger 里
+S-285 只有一处。但**「没做完」这个判断是对的**,查下去有两处,形状相同。
+
+### 一、`_VALUATION_POINT_TOLERANCE_MIN` 全生命周期只有一个 reader:断言它被拼写了的那个测试
+
+S-283 声明了估值点和 ±30 分钟容差,`tests/test_nav_policy.py` 断言两个常量**出现在文件里**。
+它们确实出现了 —— 作为定义和注释,**零 reader**。于是:
+
+```
+v5 inception row   marked_at = 2026-09-04 07:00:52 UTC
+elected point      00:05 UTC
+偏离               6h55m
+所有守卫           全绿
+```
+
+**v5 的第一行,破的正是 v5 被创建出来要立的那条规矩** —— 和 v4 第一行同一个位置、
+同一个原因:**每次部署后的第一次 mark,发生在循环还没来得及睡到估值点之前。**
+S-283 只把**尾部** sleep 指向了墙钟,mark 2..N 落在点上,mark 1 没有。
+而 Railway 每次 push 都重启 ⇒ **mark 1 是常态,不是边角。**
+
+这与「inception 过滤只作用到 Postgres、没作用到 Redis」是同一个残缺动作:
+**守卫覆盖了你正在看的那条路径,漏的是先跑的那条。循环的第一次迭代是一条路径。**
+
+S-263(`LAST_REGIME_QUORUM`,2 写 0 读)是同一形状。更锋利的版本,来自这次:
+**被假守卫守着的规则,比没有守卫的规则更糟。** 没守卫会招来守卫;
+查拼写的守卫把问题**关掉**,把下一个人送去别处。
+
+**已修:** `_minutes_from_valuation_point()` 实际比较并拒绝(写 `nav_exceptions`);
+10 个 NAV 循环在 `while True` 之前加 `_await_valuation_point()`(启动时若已在容差内则
+立即 mark —— 00:03 重启不该赔掉一天)。
+
+### 二、守卫自己被绕过四次,最后靠**行为测试**才关掉
+
+| 变异 | 静态守卫 |
+|---|---|
+| 常量换成硬编码 999999 | 第 1 版漏(f-string 里的 `{TOLERANCE}` 也是一次 `Load`)|
+| `if False and _off_by > TOLERANCE:` | 第 2 版漏(Compare 节点还在,分支是死的)|
+| 拒绝改措辞 | 抓到 |
+| 去掉首次等待 | 抓到 |
+
+**四个守卫栽在「看起来像使用」的东西上:源文本、f-string 插值、死分支。**
+每次的答案都是更细的静态检查,而下一个花招绕过去了。所以停止打磨 reader,
+**直接调用函数**:注入 415 分钟偏离,断言返回 `outside_valuation_point`、
+断言 `_load_panel` 从未被调用、断言 `nav_exceptions` 收到了行。
+行为断言只能被行为满足。—— 这正是仓库对 `/internal/cis-scores/schema` 早已做过的选择:
+**回声胜过声明,因为声明是主张,回声是观测。**
+
+### 三、`/internal/schema-drift` 只查表不查列 —— 昨天的事故正是缺一个列
+
+那个端点建于 S-166(2026-08-15,**11 张表**不存在),**继承了那次事故的作用域**。
+2026-09-04 ① 熄火是 `beta_core_nav.interval_hours` 缺失 —— 表一直在,
+所以端点报 ok,**对一个更窄的问题诚实地回答了 ok**。
+
+> **作用域比手头问题窄一格的覆盖,读起来就是覆盖。**
+
+本周第四次同一形状(前三次:inception 只护 Postgres · `mark_coverage` 只在 ① ·
+`test_table_columns_match_the_code` 只查 `api_keys`)。
+
+**已修:** `schema_manifest.write_columns()`(AST 解析字面 payload,动态 payload
+是记录在案的盲点)+ `supabase_missing_columns()`(`select=cols&limit=0`,PostgREST
+在取行之前就解析投影,未知列答 42703;三值,「拿不到」不塌进「缺失」)+
+`/internal/schema-drift` 现在同时报 `column_drift`。deploy-verifier 每次 push 后调它。
+
+**现场核对全部 8 张表 84 个列:0 漂移。** 两小时前同一条查询会返回 `interval_hours`。
+
+### 关键教训
+
+**离线只能证明「迁移文件存在」,只有线上探针能证明「迁移跑过」。**
+`test_beta_core_nav_insert_writes_only_columns_that_exist`(S-283 写的)证明的是前者,
+而杀死账本的是后者。契约 + 回声,两个都要 —— 单有契约就是今天。
+
+### 未做
+
+- 列清单只覆盖 8 张表:只解析字面 dict payload,变量构造的 payload 不可见(已记录的盲点)
+- S-287 价格新鲜度(`mark_coverage` 判存在不判新鲜;`load_binance_panel` 的 forward-fill)
+- S-288 IPV 第二价源 · S-289 接缝登记册(按 `cis_push` 模板推到全部内部接缝)
+
+---
+
+## S-287
+
+**「有没有价」不等于「今天有没有价」—— forward-fill 让昨天的价通过了所有检查**
+
+2026-09-04。承 S-283「发现二」。Minimax 昨天判定 10 本账 missed beta 是「数据 stale」,
+机制猜错了(books 走实时 HTTP,不读 `ohlcv_daily`),**但直觉是对的,只是管道不同。**
+
+### 缺陷
+
+`causal_positioning.load_binance_panel` L162–166:
+
+```python
+for j in range(K):
+    for i in range(1, T):
+        if np.isnan(close[i, j]):
+            close[i, j] = close[i - 1, j]     # 缺价 = 昨价
+```
+
+`_load_panel` 用 `close[-1, i]` 建 `px`,条件是 **not-NaN 且 > 0**。
+**一个被 forward-fill 出来的值两条全满足。** 于是:
+
+```
+symbol 停更 → 值被昨天填上 → 进 px → mark_coverage 记为 priceable
+            → 计入 80% 权重底线 → 账本照 mark
+```
+
+守卫问的是**「这里有没有一个数」**,而问题是**「这个数是不是今天观测到的」**。
+
+### 形状:这是 S-194 的下面一层
+
+| | 混淆了什么 |
+|---|---|
+| S-194 | **「没有数据」** vs **「没有变动」** |
+| S-287 | **「过期数据」** vs **「数据」** |
+
+S-194 教会账本「不能定价就拒绝 mark」,而它下面一层仍在把**能定价**当成**定的是今天的价**。
+本周第五次「作用域差一格」。
+
+### 为什么 fill 不能删
+
+它对研究侧是**对的** —— vol 估计需要连续序列,一个 NaN 洞比一次重复更糟。
+删掉会打断 13 个调用点的 backtest。**问题从来不是 fill,是 fill 不可见。**
+
+所以:`load_binance_panel(..., with_fill_mask=True)` 追加第 5 个返回值(bool 掩码),
+**默认 arity 不变** —— 14 个调用点解包 4 个值,而**一个逼着全仓库改一遍的守卫,
+是一个会被回滚的守卫。** 需要新鲜度的调用方要掩码,需要连续序列的不要,互不干涉。
+
+### 做了什么
+
+- `filled` 掩码;`_load_panel` 用 `with_fill_mask=True`,**最后一行被填充的 name 直接排除**
+  —— 与 NaN 同等待遇。等权over 实际可观测的名字重新归一;若因此跌破 80%,
+  coverage floor 拒绝 mark,**那正是它存在的意义**。
+- 排除事件写 `nav_exceptions`(`control=price_freshness`),**即使 mark 随后成功也写** ——
+  「今天面板完整吗」必须事后可答。
+- 三个守卫,全部变异测试验证:去掉 `with_fill_mask` / `px` 不再排除 / 不记录排除,三种都红。
+- NAV_POLICY §4 新增「Priceable is not the same as priced today」。
+
+### 未做
+
+- **只在 ① 上。** `combined_book` / `scalable_paper` 同样调 `load_binance_panel`,
+  仍拿 forward-fill 的价格 mark。它们也仍未接 `mark_coverage`(S-283 §14 第 2 条)。
+  两件事应该一起做,而不是再补一层。
+- 掩码只覆盖 Binance 面板;CoinGecko / EODHD 路径的新鲜度未处理。
+- S-289 IPV 第二价源 · S-290 接缝登记册。
+
+---
+
+## S-289 — 摄入只有一条 lane,而这件事必须可强制 (2026-09-04)
+
+**⚠️ 本条是补记:** `tests/test_one_ingestion_lane.py` 与
+`tests/test_handoff_commands_are_runnable.py` 先落了地,台账标题后补 ——
+**规则 #7 的顺序反了**(claim heading BEFORE body)。
+
+**⚠️ 而我补记时又错了一次:** 我写下「它既没 claim 台账标题、也没注册进 preflight」,
+并据此推出「三个缺口同一个习惯」。**查证后:两个测试本来就注册好了**
+(preflight 1112 / 1119 行,注释写得比我补的那份还清楚)。
+真正缺的**只有台账标题一项**,而我把一个未查证的推论写成了三项。
+
+> **一个听起来更有解释力的诊断,不会因此更真。**
+> 我还据此加了一份重复的 preflight 注册(已删)。当天第二次:
+> 先断言、后查证。
+
+### 理由
+
+CLAUDE.md 规则 3b 写着「摄入按功能划一条 lane」。**它是散文,而散文守不住:**
+M-118 就是在规则写下之后、完全待在 minimax 自己的路径里、又建了第三个 fetcher,
+去抓我们已经有的数据(S-276:PENDLE 820 天被重抓)。规则没错,
+错在它只存在于一份要人去读的文件里。
+
+### 判据是「写」,不是「抓」
+
+抓价格的地方很多而且**大部分是对的**(`load_binance_panel` 直连 fapi 做研究面板、
+`get_cg_ohlc_range` 在请求路径上取一段)—— 它们不产生第二份记录。
+真正的危险是**持久化**:
+
+> **两个摄入器 = 两条看起来是同一个量、实际不是的序列。**
+
+一天里 S-273/S-274/S-275 三条都出自这个形状。所以守卫只问一件事:
+**谁在往 `ohlcv_daily` 写?** 白名单加人 = 改代码 + 留台账,
+不能是「顺手加个 upsert」。
+
+### 它拦不住什么(写在守卫自己的 docstring 里)
+
+M-118 的 fetcher 活在 `/Volumes/CometCloudAI/cometcloud-local/`,**不在本仓库,
+这个测试看不见它**。所以它保证的是「第四个不会在**本仓库里**长出来」,
+不是「不会再有第四个」。
+
+> **一个作用域小于问题的守卫,读起来就是覆盖**(本周第六次)。
+
+Mac 侧的等价保证要么靠 A 的 preflight,要么靠把摄入彻底收回本仓库 ——
+后者是规则 3b 的字面意思,也是这条债最终该还的方式。**尚未还。**
+
+---
+
+## S-288 — 署名的假数据:规则 #9 那条 audit standing 终于清了 (2026-09-04)
+
+**Jazz:**「vc funding flow、investment events 这个位置可以解决了吧?现在也有很多
+免费的 skill 可以用吧?」
+
+### 先纠正前提:那是另一个域,而且我们从来没有过源
+
+昨天解决的是**价格域**(S-275 ETF≠资产 / S-276 覆盖基线 / S-278 判活)。
+VC 融资是完全不同的域。查下来有两份代码,**都不能用**:
+
+| 实现 | 状态 |
+|---|---|
+| `src/backend/macro_events_scraper.py` | 取了**不落库**(ephemeral) |
+| `src/data/vc/deal_flow.py` | **无人 import 的死代码 + 编造数据** |
+
+**现成的免费 connector/plugin:查了 MCP registry 与 plugin 目录,这个域都是空结果。**
+
+### 清掉的东西:10 个返回点上的编造数据
+
+CLAUDE.md 规则 #9 点名过这条(「audit standing: DeFiLlama-402 fallbacks」),
+一直挂着。三个 `_get_mock_*()`,10 个返回点。**最坏的不是 402 那条:**
+
+    return rounds if rounds else self._get_mock_funding_rounds()
+
+**一个成功但为空的响应(今天真的没有融资)会被替换成虚构的融资。**
+真实的「没有」变成虚构的「有」,调用方无从分辨 —— 与本周反复出现的形状同源:
+**两个不同的状态塌进一个返回值。**
+
+而那些假数据**署了真实机构的名**:
+`Pump.fun $45M Series A / Paradigm, a16z`、`Soneium $80M / Sony`。
+
+> **一般的假数据是噪声;署名的假数据是关于真实公司的虚构事实。**
+
+本模块当时**无人 import**,所以没有流到用户面前 —— 但一旦有人接上去,
+我们就在发布那种东西。对一个基金平台,那不是 bug,是信誉事件。
+
+### 交付
+
+- 10 个返回点 → `return []`;三个 mock 函数删除
+- `tests/test_no_fabricated_data.py`(preflight 已注册),**现扫 `src/`**
+  而非手写清单 —— 明天新加的文件明天就在范围内
+- 守卫用 `tests/_source.py:code_only` 剥注释与 docstring:
+  说明文字里就写着那些模式名,**不剥会被自己的解释绊倒(当天第五次)**
+- 全仓复扫:剥掉注释后 `src/` 已无 mock 生成函数
+
+### 未做 / 已知未验证
+
+**`api.llama.fi/raises` 的免费可用性尚未实测。** 代码里那句
+"paywalled as of ~May 2026" 是**注释,不是观测**;我的 web_fetch 返回空,
+不能判定。在实测之前,本模块的产出应视为 `unknown` 而非 `empty`。
+**需要 Mac 侧一条 curl 才能settle。**
+
+---
+
+## S-289
+
+**规则和它旁边的例子矛盾时,输的总是规则 —— 三方对账 + 摄入 lane + 交接块**
+
+2026-09-04。Jazz 让我统筹 Minimax-C(交易模块审计)与 Minimax-A(反馈)。
+
+### 一、三方对账:C 的 8 条里 3 条事实错,而且他漏了两个真死的
+
+| C 的说法 | 实测 |
+|---|---|
+| 没有任何 book 在跑 | **6 本今天都 mark 了**(causal 50 · combined 45 · scalable 45 · dingge 48 · fusion 21 · beta_core v5)|
+| —— | **C 漏了真死的**:`two_layer` 停在 08-22(13 天)· `pod_aggregator` + `factor_tilt` **各 0 行** |
+| sleeve 停了 / DD-stop 3/3 fire | 21 持仓在跑,`trade_results` 最新当天 03:31。`_MAX_DRAWDOWN_PCT` 只挡新开仓,分母写死 10k ⇒ 58k 组合永不触发 |
+| `narrative_daily` stale 42d | **表不存在**;真名 `narrative_snapshots`,当天有数据 |
+| `cycle_clusters` stale 42d | **表不存在** |
+| `binance_hist` 死 11d | **死 39 天** |
+| S-283 P0-3 没修 | 估值点/forward-fill 已修待推;**但 C 对的那一半更重要**:`interval_hours` 只在 ①,其余 6 本的 Sharpe/vol 依然脏且**测不出多脏** |
+
+**C 出错不是不小心。** 他抽查的那一小时正好是 ① 熄火窗口(S-285),又**没有 Supabase 读权限**
+交叉验证,于是从一本推广到十本;并且用 Mac 本地表名查系统记录。S-276 同款:
+**一条 lane 只能判断它看得见的东西 —— 答案是给视野,不是要求更谨慎。**
+
+已建 `paper_book_freshness()` RPC + `/internal/data-freshness` 的 `books` 块。
+**`never_wrote`(0 行,缺一次调用)与 `stale`(接通后死了,要重启)刻意不合并** ——
+混在一起会把从未接通的 writer「重启」好几周。
+
+**自咬:第一版裸奔上线。** 该端点是**故意公开**的(外部探针不能鉴权),而 book 名字是架构信息
+(规则 8)。已加 token gate。**我当时在做「增加可见性」,而「还有谁能看见」不是可见性工作
+会提醒你问的问题** —— 改动对,作用域错。
+
+### 二、摄入 lane:规则 3b 只活在散文里
+
+M-118 是在规则写下**之后**、完全待在 minimax 自己的路径里、又建了第三个 fetcher。
+路径划分拦不住它;规则说的是功能,而没有任何东西执行这句话。
+
+`tests/test_one_ingestion_lane.py`:判据是**写**不是**抓**。抓价格的地方很多而且大多是对的
+(研究面板直连、请求路径取行情),真正的危险是**持久化** ——
+**两个摄入器 = 两条看起来是同一个量、实际不是的序列**,S-273/274/275 同日三发就是这个形状。
+白名单 3 个模块,加人要改代码 + 留台账。
+
+**守卫看不见 Mac 侧的 M-118 本体,这句话写进了守卫自己**(`test_the_guard_states_what_it_cannot_see`)——
+本周第六次「作用域差一格」之后,沉默的边界本身成了要防的东西。
+
+### 三、交接块:根因是模板自己带着注释
+
+Jazz 说过「几次」:`git add/commit/push` 行后不能跟注释,终端认不到。我反复犯。
+查下去,`CLAUDE.md` 的 handoff 模板里写着:
+
+```
+bash scripts/preflight.sh          # green before anything below
+```
+
+**规则在模板下面,模板在规则上面,而被复制的是模板。**
+这是第七次同一形状 —— 规则存在,它旁边的例子和它矛盾。
+
+已删模板里的注释、把禁令提到模板正下方,并建 `tests/test_handoff_commands_are_runnable.py`
+**守卫 CLAUDE.md 自己**。散文管不住散文。
+
+### 关键教训
+
+前六次是「控制的作用域差一格」。这一次更前一步:
+**一条规则和一个就在它旁边的反例并存时,反例赢。** 因为规则要被读、被记住、被应用,
+而例子只要被复制。**所以模板、示例、docstring 里的样板,和被守卫的代码是同一等级的对象。**
+
+### 未做
+
+- **S-290**:`fusion_paper_state` 表不存在(fusion 每天照 mark,持久化状态一直静默失败,
+  只靠 Redis 活着)· `two_layer` 死 13d · `pod_aggregator`/`factor_tilt` 0 行
+- **S-291**:`interval_hours` + `mark_coverage` 推到其余 6 本 —— C 指出的那半条
+- M-118 B(路由 `deep_walk`)/ A(删)在 Mac 侧,指令已进 `MINIMAX_SYNC`
+
+### 补记 · 同一天,我自己又造了一个 miss-vs-error 塌缩
+
+上面第一节刚写完「一条 lane 只能判断它看得见的东西」,我给 `books` 加 token gate 时
+写的是 `if _tok_ok:` 包住整块 —— **没带 token 时字段整个不存在,而一个还没部署这段
+代码的旧版本同样不存在。**
+
+Jazz 当天跑 `curl .../internal/data-freshness | jq '.books'` 拿到 `null`,
+而那个 null 无法区分三件事:**没部署 / token 不对 / RPC 失败**。
+同一次他拿到的 `column_drift: null` 也一样 —— 旧构建里字段不存在,新构建里干净是 `{}`,
+**差一个字符,意思相反。**
+
+这就是 S-180 / S-185 / S-194 / S-285 的形状,**由我在修它的同一天亲手复制了一份**。
+
+**教训不是「要更小心」。** 写守卫的人不会自动免疫于守卫防的东西 ——
+把「三值」当成**默认反射**才有用,当成一条要想起来的规则就没用。所以:
+
+- `books` 永远存在;被挡住时 `verdict: "gated"` 并写明「看到这一行就说明代码已部署」
+- `/internal/schema-drift` 增加 `checks: ["tables","columns"]` ——
+  **回声必须说出它检查了什么,而不只是它发现了什么。** 一个说不出自己检查了什么的响应,
+  逼着读者去知道构建版本,而这正是回声存在要消除的东西。
+- 两条都加了守卫,变异测试验过会红。
+
+---
+
+## S-290 — 我们要的 Entity 数据不是 VC 融资,是企业持币 (2026-09-04)
+
+**Jazz:**「vc funding flow、investment events 这个位置可以解决了吧?
+我现在付费的 coingecko analyst 没有吗?有哪些免费的 api 或者 skill 可以实现呢?」
+
+### 三个都实测了,不再靠注释推断
+
+| 目标 | 实测 | |
+|---|---|---|
+| `defillama:/protocols` | **200 · 8,179 条** | ⚠️ 对照组 —— 证明网络无碍 |
+| `defillama:/raises` | **HTTP 402** | 确实要钱($300/mo Pro) |
+| `defillama:/emissions` | **HTTP 402** | 同上 |
+| CG Analyst 的 14 项能力 | **没有任何 raises/funding 端点** | CoinGecko 不发布这个 |
+| MCP registry / plugin 目录 | **空结果** | 这个域没有现成 connector |
+
+**代码里那三处「paywalled as of ~May 2026」的注释是对的。** 我本来怀疑它们
+(本周注释与现实分叉过多次),**这次注释赢了** —— 记下来,免得把「怀疑注释」
+变成一条无差别的启发式。
+
+### 但有一个更好的源,免费,而且已验证
+
+`/companies/public_treasury/{coin}` —— **CoinGecko 免费档直接 200**:
+
+    BTC   180 家   1,293,205 枚   **占总供应 6.15%**
+    ETH    34 家   7,914,466 枚   **占总供应 6.48%**
+
+字段含 `total_entry_value_usd` / `total_current_value_usd` /
+**`percentage_of_total_supply`** —— 最后这个正是 Jazz 2026-09-02 纠正过我的量
+(「多少比例和资产的发行占总流通盘才更重要」)。
+
+**它比 VC 融资更适合 Entity/Decision 层:**
+
+    VC 融资       别人对某项目的决策 —— 自我披露的新闻稿,无披露义务
+    上市公司持币   **有主体、有时点、有金额、有披露义务**(8-K / 年报背书)
+
+S-264 我自己就写下过这句:「MicroStrategy 买 BTC 是一个有主体、有时点、
+有金额的企业决策,不需要我们推断」—— **写完之后一次没调用**
+(四项 analyst_only 的 Entity 能力全部零调用)。
+
+### 第一次读数(2026-09-04)
+
+    BTC   披露成本 92/180 (51%) → ok     浮盈中位数 **0.86x**
+          Strategy 占企业持仓 65.4% / 占总供应 4.02%,浮盈 **1.066x**
+          HHI 0.434
+    ETH   披露成本 16/34 (47%) → **thin**  浮盈中位数 0.85x
+          BitMine 占企业持仓 74.6% / 占总供应 4.84%,浮盈 **None**(未披露)
+          HHI 0.573
+
+> **中位数企业持有者在水下 14%,而占 65% 企业持仓的那家只浮盈 6.6%。**
+> 这个结构的抛压特征,与「大家都赚三倍」完全不同。
+
+### 守卫:`entry_value = 0` 是「未披露」,不是「零成本」
+
+180 家里 **88 家没披露成本**。把 0 当零成本,`current/entry` 会变成 **+∞**,
+而那个数会一路走进「抛压强度」的排序里。**I1:未测 ≠ 0。**
+所以 `unrealized_multiple` 是 `Optional`,且披露率与它永远一起给 ——
+**ETH 侧 47% ⇒ 判 `thin`,两个设计判断都在活数据上被验证。**
+
+集中度按**占总供应**算而非占企业持仓 —— 后者会把「企业总共只有 0.1% 供应」
+和「有 30%」说成同样集中。
+
+### 交付
+
+- `src/data/entity/treasury.py` + `tests/test_treasury.py`(preflight 已注册)
+- Supabase `corporate_treasury_history`(**已建**,`entry_value_usd` 可 NULL
+  且列注释写明 NULL≠0,RLS 开,只授 service_role)
+- `scripts/probe_entity_sources.py` —— 三状态分离(ok/empty/paywalled/error)
+  + **已知免费的对照组**,因为付费墙与网络故障混起来正是本周的形状
+
+### 未做
+
+- **每日快照写入还没接** —— 表建好了,循环没建。历史买不来,
+  但今天开始存就等于开始积累(与 `beta_core_nav` 的 60 天同理)
+- **CG Analyst 的 `public_treasury_history`(from 2020)可用性未验证** ——
+  需 Mac 侧跑探针。通了就能一次回填到 2020,不用等
+
+---
+
+## S-291 — 付了几个月的钱没用:企业决策流 (2026-09-04)
+
+**Jazz:**「我们有 coingecko analyst api 是 139 刀一个月的。。。你又把他忽略了?
+**这件事已经被失忆了很多次**,你害我浪费多少钱了!」
+
+**他是对的,而时间线让这条无可辩驳:**
+
+    S-264   我自己写下 `PAID_ENTITLEMENTS`,列 14 项 analyst_only 能力,
+            并为 public_treasury 写了理由:「MicroStrategy 买 BTC 是一个
+            有主体、有时点、有金额的企业决策,不需要我们推断」
+    此后     **那批 Entity 能力零调用**
+    S-290   我用**免费**端点建了快照层,并写下「历史买不来,今天开始攒」
+    S-291   实测:付费档直接给到 **2020-08-11**。
+            **那句话对免费档成立,对我们付的这档不成立。**
+
+### 我判「不可用」的依据是错的
+
+一次 **HTTP 403** —— 而那是 **Cloudflare 1010 客户端指纹拦截**(我用裸 urllib),
+不是权限。换成代码库同款 httpx 立刻 200:
+
+    plan=Analyst · 月额度 500,000 · 本月剩余 482,574
+
+> **「我探测失败」和「我们没有这个能力」是两个状态。**
+> 本周第 N 次同一个形状 —— 而这次的代价是几个月订阅费买的东西没被用。
+
+判别性证据:同一个 key 打免费 base 返回
+`400 "If you are using Pro API key..."` —— **CoinGecko 自己说这是 Pro key。**
+
+### 付费档解锁的正是关键那一段
+
+    page=1   100 条   2026-08-31 → 2022-01-31
+    page=2    19 条   2021-12-30 → **2020-08-11**   ← Analyst 独占
+    page=3     0 条
+
+**Strategy 完整决策史 119 条,回到 MicroStrategy 买入第一笔 BTC 那天。**
+每行:`date · type(buy/sell) · holding_net_change · transaction_value_usd
+· holding_balance · avg_entry_value_usd · source_url → 8-K 原文`。
+
+**有主体、有时点、有方向、有金额、有凭证** —— 这是 `decisions`(0 行)要装的东西。
+
+### 覆盖率:两个口径,差 32 个百分点
+
+    按家数    57%
+    **按持仓  88.9%**   ← 对我们要的东西,这个才是对的口径
+
+一家持 12 枚而解析不出 id 的公司不重要,Strategy 的 845,050 枚重要。
+**两个必须一起报**:只看家数以为覆盖很差,只看持仓以为已全覆盖。
+未解析的 13 家(MARA 35,303 / Galaxy 25,723 / SpaceX 18,712…)**显式列出** ——
+`microstrategy` 404 而 `strategy` 200,公司改名会让 slug 静默失配。
+**未解析 ≠ 没有数据。**
+
+### 防复发:不靠台账,靠 CI
+
+台账、注释、CLAUDE.md **都已经存在过**,而失忆照样发生 —— 因为那些要人主动读。
+
+`tests/test_paid_capability_is_used.py`:每项付费能力**要么有真实调用点,
+要么显式登记未接并带理由**,未接数只减不增。守卫上线当场抓到两条:
+
+- `/onchain/.../top_traders` 的理由写成「同上批次」——
+  **「同上」是指针,而指针会断**(当天第二次学到这条)
+- `coin_history_depth` 被误报未接 —— 它是**标签不是路径**,
+  模糊匹配对它无效。加 `LABEL_PROOFS` 显式证明指针
+  (`deep_walk.FLOOR = 2013`),且指针本身当场可验。
+  **一个匹配不到就报「未接入」的守卫,会把已接入的说成没接。**
+
+### 交付
+
+- `src/data/entity/collect.py` + `tests/test_treasury_decisions.py`
+- `tests/test_paid_capability_is_used.py`(防复发守卫)
+- Supabase `treasury_entities` + `treasury_decisions`(**已建**,RLS 开,
+  `resolved_from` 记录 id 是猜的还是查的)
+- 实跑:strategy 119 条 / metaplanet 54 条,共 174 条可落库
+
+### 未做
+
+- **落库循环还没接**(表和采集层都在,循环没建)
+- 未解析的 13 家需要人工补 id —— 每补一条是 `MANUAL_IDS` 加一行 + 台账
+- ETH 侧同样可跑,尚未跑
