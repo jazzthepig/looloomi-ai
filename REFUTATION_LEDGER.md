@@ -16809,3 +16809,81 @@ NAV 完全正常、没有任何东西报错**。比任何一次采集失败都�
 然后在一个专门讲「不要骗自己」的文件里点了两盏。已拆,
 并顺手修好一个真缺陷:`ambiguous` 条目原本不带理由,
 下一个人只能重新调查一遍,**而调查结果本来就在产生它的那一行有过**。
+
+---
+
+## S-304 · 把回填接上电,以及我的可测性写法把清单守卫打瞎了 (2026-09-05)
+
+### 一、`_cg_panel_loop` —— Railway 常驻,不是脚本不是手动路由
+
+Jazz 问「Railway 还是 sandbox」。答案不是偏好,是今晚的根因推出来的:
+
+    cg_pro_backfill 只有一个手动 API 路由,没有循环
+      → coingecko_pro_ohlc 表 0 行
+        → 账本读不到可信价格
+          → 24 条私有取数路径
+
+> **一件事如果只在某个操作者在线时才发生,它最终就不会发生。**
+
+沙箱随会话消失、手动路由需要有人记得、Cowork 需要我在线 —— 三样都不常在。
+所以定期工作的归宿只有 Railway 循环或 Mac launchd。
+
+已落地:`cg_coin_map` 表 + `cg_known_coin_map()` RPC + `_cg_panel_loop`(6h)。
+**56 个面板标的的映射从 `trending_log` 免费种进去了**,`ok` 从 `rows_written` 推导。
+
+### 二、注入式写入对清单守卫不可见 —— 而注入是我整晚的写法
+
+加 `cg_coin_map` 时顺手核对,发现比我的新表严重得多的事:
+
+    treasury_entities            ❌ 不在清单
+    treasury_decisions           ❌ 不在清单
+    corporate_treasury_history   ❌ 不在清单
+
+**这三张表从 S-292 起每天都在写,而 `test_every_written_table_exists` 一直是绿的。**
+
+原因:`_tables_in` 找的是字面的 `supabase_upsert_table("t", ...)`。
+而为了能离线测试,这些 writer 把写入函数**注入**进来
+(`supabase_upsert(table, rows, on_conflict)`),于是表名在调用点是一个**参数**,
+AST 看不到它是哪张表。
+
+> **我为了可测性用的注入,把清单守卫打瞎了。**
+> 而且是静默地瞎 —— 守卫每次都绿,因为它「没看到任何未声明的表」。
+
+这条比今晚其它几条更难发现,因为**两个都是好实践**:注入让逻辑可测,
+AST 扫描让清单自动。它们各自都对,合在一起产生一个看不见的洞。
+
+### 修:推断靠不住的地方改成声明
+
+    WRITES_TABLES = ("treasury_entities", "treasury_decisions",
+                     "corporate_treasury_history")
+
+`write_tables()` 现在读两条来源:AST 推断的字面调用 + 模块级声明。
+清单 33 → **37** 张表。
+
+**为什么声明比推断好(在这里):** 声明会漏(有人忘了写),
+但漏了是**沉默的已知缺口**;推断漏了是**一张看起来完整的清单**——
+后者更糟,因为它会变成人们信任的东西。这跟 `producer_freshness` 里
+「没声明的表判 unknown,不判 ok」是同一条。
+
+### 顺带:A 的检测找到一条我和 B 都漏的接缝
+
+`signal_outcome_tracker.py`(Mac,50 天没跑,文档谎称 daily cron)
+与 `_outcome_tracker_loop`(Railway,天天跑写 0 行)
+**是同一张表的两个写入者,一个死透一个空转。**
+
+这解释了我一直没答上来的那个问题「Railway 那个循环为什么写 0 行」——
+可能它根本不该由它写。**修哪一个之前,先定哪一个是规范的**,
+与 `entities` vs `treasury_entities` 同类。
+
+### 决定:signal_outcomes 只接今天往前
+
+A 倾向 forward-only,理由是「补历史要走 OOS 验证」。同意结论,但有更硬的理由 ——
+实测表结构:**`signal_outcomes` 没有来源列。**
+
+回填会让「当时前向记录的」与「今天事后重算的」混进同一张表且完全同形,
+而 ARCHITECTURE.md 说产品就是「**可验证的前向** track record」。
+**一张分不出前向与事后的表,恰好把产品本身毁掉。**
+
+那 125 天没丢(`cis_scores × ohlcv_daily` 可重算)。顺序:
+① 先加 `source` 列 → ② 接今天往前只写 `live_forward` → ③ 需要时重算并标 `recomputed`。
+**① 落地之前不回填任何一行。**
