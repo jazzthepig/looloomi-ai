@@ -143,5 +143,54 @@ def write_tables() -> list[str]:
     return sorted(t for t in out if t and not t.startswith("_"))
 
 
+def _columns_in(path: Path) -> dict[str, set[str]]:
+    """table -> column names this file passes to a write helper (S-286).
+
+    Only literal `dict` payloads with literal string keys count. A payload built
+    from a variable is invisible here, which is the same blind spot `_tables_in`
+    records for dynamic table names — noted rather than papered over, because a
+    manifest that looks more complete than it is becomes the thing people trust
+    instead of the database.
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, SyntaxError):
+        return {}
+    out: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        name = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+        if name not in _WRITE_FUNCS or len(node.args) < 2:
+            continue
+        first = node.args[0]
+        if not (isinstance(first, ast.Constant) and isinstance(first.value, str)):
+            continue
+        for d in ast.walk(node.args[1]):
+            if isinstance(d, ast.Dict):
+                out.setdefault(first.value, set()).update(
+                    k.value for k in d.keys
+                    if isinstance(k, ast.Constant) and isinstance(k.value, str))
+    return out
+
+
+def write_columns() -> dict[str, list[str]]:
+    """Every column a production module writes, per table. Sorted, deduped.
+
+    THE HALF THAT WAS MISSING. `write_tables()` answers "does the table exist",
+    which is the S-166 question. On 2026-09-04 the ① book was taken down by a
+    missing COLUMN on a table that existed — `interval_hours`, code deployed
+    ahead of its migration — and every existing guard stayed green. The offline
+    guard can only prove a migration FILE exists; only a live probe can prove it
+    RAN. This is the contract half of that probe (see `/internal/schema-drift`).
+    """
+    out: dict[str, set[str]] = {}
+    for p in sorted(_ROOT.rglob("*.py")):
+        if _is_prod(p):
+            for t, cols in _columns_in(p).items():
+                out.setdefault(t, set()).update(cols)
+    return {t: sorted(c) for t, c in sorted(out.items()) if t and not t.startswith("_")}
+
+
 def manifest_path() -> Path:
     return _ROOT / "src" / "api" / "schema_manifest.json"
