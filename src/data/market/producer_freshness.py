@@ -117,6 +117,46 @@ EXPECTED: dict[str, ProducerSpec] = {
     "strategy_records": ProducerSpec(
         "strategy_records", "created_at", None, 21, 60,
         "按需写(一轮研究一条)—— 长间隔是正常的,不是故障"),
+
+    # ── S-299 (2026-09-05):其余 8 本纸面账 ──────────────────────────────────
+    #
+    # 在此之前,9 本账里**只有 `beta_core_nav` 被判活**。架构核对实测:
+    #
+    #     factor_tilt_nav       0 行     心跳 ok
+    #     pod_aggregator_nav    0 行     心跳 ok
+    #     two_layer_paper_nav   停 14 天  心跳 ok
+    #
+    # 三本都在生产者集之外,所以事件时钟看不见它们;而心跳写死 `ok=True`,
+    # 所以写时钟也看不见。**两块表都在,而这三张表恰好落在两块表的缝里。**
+    #
+    # > 这就是 `verdict_scope` 那句「这个裁决只对 14/71 个对象成立」的代价 ——
+    # > 它诚实地声明了范围,而范围外的东西照样在死。
+    # > **一个诚实的范围声明不等于覆盖。**
+    #
+    # 门限与 `beta_core_nav` 同(2 / 5 天):前向记录断一天就少一天,补不回来。
+    "causal_paper_nav": ProducerSpec(
+        "causal_paper_nav", "marked_at", "mark_date", 2, 5, "前向记录"),
+    "combined_book_nav": ProducerSpec(
+        "combined_book_nav", "marked_at", "mark_date", 2, 5, "前向记录"),
+    "dingge_paper_nav": ProducerSpec(
+        "dingge_paper_nav", "marked_at", "mark_date", 2, 5, "前向记录"),
+    "scalable_book_nav": ProducerSpec(
+        "scalable_book_nav", "marked_at", "mark_date", 2, 5, "前向记录"),
+    "fusion_paper_nav": ProducerSpec(
+        "fusion_paper_nav", "created_at", "mark_date", 2, 5, "前向记录"),
+    "factor_tilt_nav": ProducerSpec(
+        "factor_tilt_nav", "marked_at", "mark_date", 2, 5,
+        "**实测 0 行**(2026-09-05),而 `_factor_tilt_loop` 报 ok —— "
+        "空表与「今天还没写」在 max() 上同形,只有 empty 这个判决能分开"),
+    "pod_aggregator_nav": ProducerSpec(
+        "pod_aggregator_nav", "marked_at", "mark_date", 2, 5,
+        "**实测 0 行**(2026-09-05)。R62_Z 的 ImportError 修过之后仍无行 —— "
+        "修了导入不等于修了写入"),
+    "two_layer_paper_nav": ProducerSpec(
+        "two_layer_paper_nav", "mark_date", "mark_date", 2, 5,
+        "⚠️ **这张表没有独立的写时钟** —— 只有 `mark_date` 一个时间列,"
+        "所以两个时钟在这里必然同值,「写入者活着」和「内容是当期的」分不开。"
+        "**已知的局限,不是隐藏的** —— 要分开就得给表加 `marked_at`"),
 }
 
 
@@ -250,16 +290,66 @@ def overall(healths: list) -> dict:
 #: 一次查完所有生产者的 SQL。**每张表的时间列不同**,所以不能写成一个通用循环 ——
 #: 一个「猜时间列」的通用实现会在 signal_journal 上选错(它有四个)。
 PRODUCER_SQL = """
-select 'cis_scores' t, count(*) n, max(recorded_at)::date::text w, null::text e from cis_scores
-union all select 'signal_journal', count(*), max(recorded_at)::date::text, max(signal_date)::date::text from signal_journal
-union all select 'signal_outcomes', count(*), null, max(d)::text from signal_outcomes
-union all select 'risk_meter_history', count(*), max(computed_at)::date::text, max(d)::text from risk_meter_history
-union all select 'beta_core_nav', count(*), max(marked_at)::date::text, max(mark_date)::text from beta_core_nav
-union all select 'asset_embeddings_history', count(*), max(computed_at)::date::text, max(d)::text from asset_embeddings_history
-union all select 'asset_embeddings', count(*), max(computed_at)::date::text, null from asset_embeddings
-union all select 'market_state_vectors', count(*), max(computed_at)::date::text, max(d)::text from market_state_vectors
-union all select 'trade_results', count(*), max(created_at)::date::text, max(entry_time)::date::text from trade_results
-union all select 'strategy_records', count(*), max(created_at)::date::text, null from strategy_records
-union all select 'treasury_decisions', count(*), max(recorded_at)::date::text, max(decision_date)::text from treasury_decisions
-union all select 'corporate_treasury_history', count(*), max(recorded_at)::date::text, max(d)::text from corporate_treasury_history
+-- ⚠️ **线上的 `producer_freshness()` 函数才是权威,这里是镜像。**
+-- 2026-09-05 实测两者已经漂开:线上有第五列 `n_future`(S-293 的 2099 污染行
+-- 计数),而这份镜像没有。**测试只比对表名,比对不出列** —— 又是作用域差一格。
+-- 改这里的同时必须改线上函数,反之亦然。
+--
+-- 每行五列:t, n, w(写时钟), e(事件时钟), n_future(未来日期行数)
+-- 事件时钟一律 `filter (where col <= current_date)` —— 一条 2099 的污染行
+-- 会让 max() 永远是当期,那正是 S-293 抓到的形状。
+select 'cis_scores', count(*)::bigint, max(recorded_at)::date::text, null::text, 0::bigint from cis_scores
+union all select 'signal_journal', count(*)::bigint, max(recorded_at)::date::text,
+  max(signal_date) filter (where signal_date::date <= current_date)::date::text,
+  count(*) filter (where signal_date::date > current_date)::bigint from signal_journal
+union all select 'signal_outcomes', count(*)::bigint, null::text,
+  max(d) filter (where d <= current_date)::text,
+  count(*) filter (where d > current_date)::bigint from signal_outcomes
+union all select 'risk_meter_history', count(*)::bigint, max(computed_at)::date::text,
+  max(d) filter (where d <= current_date)::text,
+  count(*) filter (where d > current_date)::bigint from risk_meter_history
+union all select 'beta_core_nav', count(*)::bigint, max(marked_at)::date::text,
+  max(mark_date) filter (where mark_date <= current_date)::text,
+  count(*) filter (where mark_date > current_date)::bigint from beta_core_nav
+union all select 'asset_embeddings_history', count(*)::bigint, max(computed_at)::date::text,
+  max(d) filter (where d <= current_date)::text,
+  count(*) filter (where d > current_date)::bigint from asset_embeddings_history
+union all select 'asset_embeddings', count(*)::bigint, max(computed_at)::date::text, null::text, 0::bigint from asset_embeddings
+union all select 'market_state_vectors', count(*)::bigint, max(computed_at)::date::text,
+  max(d) filter (where d <= current_date)::text,
+  count(*) filter (where d > current_date)::bigint from market_state_vectors
+union all select 'trade_results', count(*)::bigint, max(created_at)::date::text,
+  max(entry_time) filter (where entry_time::date <= current_date)::date::text,
+  count(*) filter (where entry_time::date > current_date)::bigint from trade_results
+union all select 'strategy_records', count(*)::bigint, max(created_at)::date::text, null::text, 0::bigint from strategy_records
+union all select 'treasury_decisions', count(*)::bigint, max(recorded_at)::date::text,
+  max(decision_date) filter (where decision_date <= current_date)::text,
+  count(*) filter (where decision_date > current_date)::bigint from treasury_decisions
+union all select 'corporate_treasury_history', count(*)::bigint, max(recorded_at)::date::text,
+  max(d) filter (where d <= current_date)::text,
+  count(*) filter (where d > current_date)::bigint from corporate_treasury_history
+union all select 'causal_paper_nav', count(*)::bigint, max(marked_at)::date::text,
+  max(mark_date) filter (where mark_date <= current_date)::text,
+  count(*) filter (where mark_date > current_date)::bigint from causal_paper_nav
+union all select 'combined_book_nav', count(*)::bigint, max(marked_at)::date::text,
+  max(mark_date) filter (where mark_date <= current_date)::text,
+  count(*) filter (where mark_date > current_date)::bigint from combined_book_nav
+union all select 'dingge_paper_nav', count(*)::bigint, max(marked_at)::date::text,
+  max(mark_date) filter (where mark_date <= current_date)::text,
+  count(*) filter (where mark_date > current_date)::bigint from dingge_paper_nav
+union all select 'scalable_book_nav', count(*)::bigint, max(marked_at)::date::text,
+  max(mark_date) filter (where mark_date <= current_date)::text,
+  count(*) filter (where mark_date > current_date)::bigint from scalable_book_nav
+union all select 'fusion_paper_nav', count(*)::bigint, max(created_at)::date::text,
+  max(mark_date) filter (where mark_date <= current_date)::text,
+  count(*) filter (where mark_date > current_date)::bigint from fusion_paper_nav
+union all select 'factor_tilt_nav', count(*)::bigint, max(marked_at)::date::text,
+  max(mark_date) filter (where mark_date <= current_date)::text,
+  count(*) filter (where mark_date > current_date)::bigint from factor_tilt_nav
+union all select 'pod_aggregator_nav', count(*)::bigint, max(marked_at)::date::text,
+  max(mark_date) filter (where mark_date <= current_date)::text,
+  count(*) filter (where mark_date > current_date)::bigint from pod_aggregator_nav
+union all select 'two_layer_paper_nav', count(*)::bigint, max(mark_date)::text,
+  max(mark_date) filter (where mark_date <= current_date)::text,
+  count(*) filter (where mark_date > current_date)::bigint from two_layer_paper_nav
 """
