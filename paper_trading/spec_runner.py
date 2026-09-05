@@ -67,7 +67,10 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Mapping, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence
+
+if TYPE_CHECKING:
+    from src.data.market.regime_quorum import RegimeQuorum
 
 log = logging.getLogger("spec_runner")
 
@@ -424,6 +427,50 @@ def _return_over(closes: Mapping[str, float], upto: str, n: int) -> Optional[flo
 
 # ── 决策 ──────────────────────────────────────────────────────────────────────
 
+def decide_gated(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
+                 n_open: int,
+                 features: Optional[Mapping[str, "ExternalFeature"]] = None,
+                 quorum: Optional["RegimeQuorum"] = None) -> Decision:
+    """`decide()` 的 wrapper,加 regime_quorum 闸 (S-284 C fix, 2026-09-04)。
+
+    ## 为什么 book 该被 quorum 卡住
+
+    M-115 Book B 的 M-93 sleeve 按 regime 决定 BTC long / long / cash。一个
+    「全票通过」的 regime 标签如果**票数本身已经塌了**(`verdict=COLLAPSED`),
+    它通过 SKIPPED 看起来像「regime 在 TIGHTENING 不开仓」—— 而真相是
+    「regime 这个标签今天不可信,不该用来定仓位」。S-263 把不可信的标签换
+    `None` 是错的:它让「没有标签」和「标签不可信」共用一个表示,纸面账分不出
+    「regime 被纪律地跳过」与「regime 标签死了」。
+
+    `RegimeQuorum.usable` 是 `verdict in (OK, THIN)` —— `thin` 是「可用但须
+    标注」,不放行会让「高源数低票数」的好日子被误杀。这条闸只挡 COLLAPSED /
+    frozen / no_baseline / no_data。
+
+    ## 调用约定
+
+    `quorum=None` → 不加闸,直接调 `decide()`(向后兼容,旧 caller 不变)。
+    `quorum` 传了但 `not quorum.usable` → 返回 SKIPPED,reason 写出 verdict
+    与 quorum 自己写的 reason;consumer 可从 reason 反向定位。
+
+    调用者如果想自己 fetch:
+        from src.data.market.regime_quorum import classify, SELECT_COLS
+        rows = supabase_fetch(daily_macro_regime, ...)
+        quorum = classify(rows, today=as_of)
+        decide_gated(spec, panel, ..., quorum=quorum)
+    """
+    if quorum is not None and not quorum.usable:
+        d = as_of.isoformat()
+        base = dict(d=d, spec_name=spec.name,
+                    panel_source=panel.source, panel_last_bar=panel.last_bar,
+                    regime=regime)
+        return Decision(
+            **base, verdict=Verdict.SKIPPED,
+            reason=(f"regime quorum={quorum.verdict} — {quorum.reason}"
+                    f" (S-263: 一个标签的可信度不只看它多新,还看它几票通过)"))
+    return decide(spec, panel, as_of=as_of, regime=regime,
+                  n_open=n_open, features=features)
+
+
 def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
            n_open: int,
            features: Optional[Mapping[str, "ExternalFeature"]] = None) -> Decision:
@@ -643,7 +690,123 @@ def exit_due(spec: Spec, *, entry_date: date, as_of: date,
     return None
 
 
+# ── CLI (S-284 D fix, 2026-09-04) ──────────────────────────────────────────
+# 让 BOOK_TRADER_DECISION_2026-09-01.md:119 那条 VERIFY 真正能跑:
+#
+#     python3 paper_trading/spec_runner.py --spec <path> --as-of YYYY-MM-DD \
+#         [--regime EASING] [--n-open N] \
+#         [--require-regime {ok|thin|COLLAPSED|frozen|no_baseline|no_data}] \
+#         [--book {a|b}] [--dry-run] \
+#         [--panel-json <path>] [--quorum-rows-json <path>]
+#
+# 输出:Decision 的 JSON payload(`as_payload()`)。
+#
+# --require-regime 是测试闸:它合成一个 RegimeQuorum(verdict=所传值)传给
+# decide_gated。要看「quorum=COLLAPSED 时 book 是不是真被挡住」:
+#     --require-regime=COLLAPSED --spec <book_b.json> --as-of 2026-09-01
+# 默认 panel 是合成的(20 天 / spec.universe 标的);传 --panel-json 覆盖。
+# 默认 quorum 是不传(no gate);传 --require-regime 才有闸。
+#
+# --book {a,b} 是信息性的 —— 当前 spec_runner 不分 a/b;它由 spec JSON 的
+# spec_family 决定。保留这个 flag 是因为 BOOK_TRADER_DECISION 用它;留个
+# 校验,让命令行错配早失败。
+if __name__ == "__main__":                                  # noqa: C901
+    import argparse
+    import sys as _sys
+    # CLI 直跑时 src/ 不在 path 上(Mac-side 从 repo 根目录跑);
+    # 调到 repo 根加入 path。
+    _here = Path(__file__).resolve().parent
+    _root = _here.parent if (_here.name == "paper_trading") else _here
+    if str(_root) not in _sys.path:
+        _sys.path.insert(0, str(_root))
+
+    from src.data.market.regime_quorum import (
+        RegimeQuorum, OK, THIN, COLLAPSED, FROZEN, NO_BASELINE, NO_DATA)
+
+    VERDICT_CHOICES = [OK, THIN, COLLAPSED, FROZEN, NO_BASELINE, NO_DATA]
+
+    _p = argparse.ArgumentParser(
+        description="paper_trading spec_runner CLI (S-284 D)")
+    _p.add_argument("--spec", required=True,
+                    help="path to spec JSON file")
+    _p.add_argument("--as-of", required=True,
+                    help="as-of date YYYY-MM-DD")
+    _p.add_argument("--regime", default=None,
+                    help="regime label (canonical: EASING / TIGHTENING / "
+                         "RISK_OFF / RISK_ON / STAGFLATION / NEUTRAL)")
+    _p.add_argument("--n-open", type=int, default=0,
+                    help="currently open trades (default 0)")
+    _p.add_argument("--require-regime", default=None, choices=VERDICT_CHOICES,
+                    help="regime_quorum verdict to synthesize (test mode); "
+                         "COLLAPSED/frozen/no_baseline/no_data → SKIPPED")
+    _p.add_argument("--book", default=None, choices=("a", "b"),
+                    help="book a (M-113 V3) or b (M-115 Book B); "
+                         "informational, spec_family in JSON is the dispatcher")
+    _p.add_argument("--dry-run", action="store_true",
+                    help="do not write (informational; spec_runner is pure)")
+    _p.add_argument("--panel-json", default=None,
+                    help="optional panel rows JSON; default = synthetic 20-day")
+    _p.add_argument("--quorum-rows-json", default=None,
+                    help="optional regime_quorum input rows JSON; passed to "
+                         "regime_quorum.classify() instead of synthesizing")
+
+    _args = _p.parse_args()
+
+    _spec = Spec.load(_args.spec)
+    _as_of = date.fromisoformat(_args.as_of)
+
+    # ── Panel
+    if _args.panel_json:
+        _rows_in = json.loads(Path(_args.panel_json).read_text())
+        _panel = build_panel(_rows_in, source=_spec.source)
+    else:
+        # Synthetic: 20 天 daily bars for spec.universe (BTC 必须在场 for book family)
+        _syms = list(_spec.universe)
+        if _spec.family == "survivors_only_lag1_book" and "BTC" not in _syms:
+            print(json.dumps({"_warning": "synthetic panel: BTC 不在 universe,"
+                              " book family 会 BLOCKED 缺 BTC"}, indent=2))
+        _end = _as_of
+        _rows_syn: list[dict] = []
+        for _i in range(20):
+            _d = (_end - timedelta(days=19 - _i)).isoformat()
+            for _j, _s in enumerate(_syms):
+                _rows_syn.append({"symbol": _s, "trade_date": _d,
+                                  "close": 100 + _i * (_j + 1),
+                                  "source": _spec.source})
+        _panel = build_panel(_rows_syn, source=_spec.source)
+
+    # ── Quorum
+    _quorum = None
+    if _args.quorum_rows_json:
+        from src.data.market.regime_quorum import classify as _classify
+        _qrows = json.loads(Path(_args.quorum_rows_json).read_text())
+        _quorum = _classify(_qrows, today=_as_of)
+    elif _args.require_regime:
+        _quorum = RegimeQuorum(
+            d=_args.as_of, regime=_args.regime or "EASING",
+            n_obs=100, n_sources=2, verdict=_args.require_regime,
+            reason="CLI synthetic — --require-regime 测试闸",
+        )
+
+    # ── Decide
+    _decision = decide_gated(_spec, _panel, as_of=_as_of,
+                             regime=_args.regime, n_open=_args.n_open,
+                             quorum=_quorum)
+
+    # ── 输出 (含 book 信息 + dry-run 标记,便于人读)
+    _payload = _decision.as_payload()
+    _payload["_meta"] = {
+        "spec_family": _spec.family,
+        "book_flag": _args.book,
+        "dry_run": _args.dry_run or _spec.dry_run,
+        "synthetic_panel": _args.panel_json is None,
+        "synthetic_quorum": _args.require_regime is not None
+                            and _args.quorum_rows_json is None,
+    }
+    print(json.dumps(_payload, indent=2, ensure_ascii=False))
+
+
 __all__ = ["Spec", "Panel", "Decision", "Leg", "Verdict",
-           "build_panel", "decide", "decide_survivors_book",
+           "build_panel", "decide", "decide_gated", "decide_survivors_book",
            "should_run_today", "exit_due",
            "MAX_PANEL_AGE_DAYS", "MIN_UNIVERSE_FOR_RANK"]
