@@ -186,8 +186,31 @@ def _pillar_of(asset: dict, K: str):
     return v
 
 
+
+#: 启动延迟的上限 (S-305)。**部署会重置每个循环的启动计时器**,
+#: 而我们一小时部署好几次 —— 一个睡 3600 秒的循环在这种节奏下**永远不跑**。
+#:
+#: 2026-09-05 实测:41 个循环里 **20 个启动延迟 ≥ 600 秒**,
+#: `_age_sweep_loop` 睡整整一小时。整晚四次「还没在当前构建下跑过」
+#: 都是这个,而它看起来像「循环坏了」——**两个状态,一个表象**。
+#:
+#: 启动延迟本来只有两个目的:让应用先启动完、让 41 个循环别同时开火。
+#: 两个都不需要一小时。
+_BOOT_DELAY_CAP_S = 180
+
+
+def _boot_delay(want_s: float) -> float:
+    """封顶到 `_BOOT_DELAY_CAP_S`,**但保持原有的先后次序**。
+
+    次序是有意义的(`_track_record_loop` 要排在 `_outcome_tracker_loop` 之后),
+    所以不能一律改成同一个数。加一个与原值成正比的小偏移即可保序,
+    最坏情况 4 分钟,而不是 60 分钟。
+    """
+    return min(float(want_s), _BOOT_DELAY_CAP_S) + (float(want_s) / 3600.0) * 60.0
+
+
 async def _hourly_t2_snapshot_loop():
-    await _asyncio.sleep(600)   # let caches warm; defer past daily loop's first run
+    await _asyncio.sleep(_boot_delay(600))   # let caches warm; defer past daily loop's first run
     while True:
         try:
             from src.api.routers.cis import _build_cis_universe
@@ -295,7 +318,7 @@ async def _start_hourly_t2_snapshot():
 # Supabase cis_scores, computes Pearson r(pillar, 7d_return) per regime,
 # writes to cis_regime_fitness. Independent of Mac Mini cron.
 async def _regime_fitness_loop():
-    await _asyncio.sleep(900)   # let the daily snapshot land first
+    await _asyncio.sleep(_boot_delay(900))   # let the daily snapshot land first
     while True:
         try:
             from src.api.routers.admin import trigger_regime_fitness
@@ -324,7 +347,7 @@ async def _start_regime_fitness():
 # role of the Mac Mini /Volumes/.../ohlcv/ parquet library but persists to
 # Supabase ohlcv_daily. Idempotent on (symbol, trade_date, source).
 async def _ohlcv_collector_loop():
-    await _asyncio.sleep(1800)   # defer past other daily loops
+    await _asyncio.sleep(_boot_delay(1800))   # defer past other daily loops
     while True:
         try:
             from src.api.routers.ohlcv import collect_ohlcv
@@ -362,7 +385,7 @@ async def _forward_record_loop():
     depth_z against a panel that is mid-refresh would write a thin day and then
     look like a quiet market.
     """
-    await _asyncio.sleep(2400)
+    await _asyncio.sleep(_boot_delay(2400))
     while True:
         try:
             from src.data.signals.forward_record_keeper import run_once
@@ -401,7 +424,7 @@ async def _deep_panel_loop():
     result is LOGGED WITH THE FRACTION — a run that reaches 40 of 262 must not
     read like a normal day.
     """
-    await _asyncio.sleep(3000)
+    await _asyncio.sleep(_boot_delay(3000))
     while True:
         try:
             from src.data.market.deep_panel_collector import collect_deep_panel
@@ -452,7 +475,7 @@ async def _hyperliquid_loop():
 
     每 6 小时一轮:funding 是 1 小时结算的,日频会错过 carry 的形状。
     """
-    await _asyncio.sleep(2400)
+    await _asyncio.sleep(_boot_delay(2400))
     while True:
         try:
             from src.data.market.hyperliquid_collector import collect_venue_marks
@@ -497,7 +520,7 @@ async def _t2_precompute_loop():
     import time as _time          # module-level alias lands later in this file;
                                   # importing locally removes the ordering
                                   # dependency rather than relying on it
-    await _asyncio.sleep(90)          # let the app finish booting
+    await _asyncio.sleep(_boot_delay(90))          # let the app finish booting
     _interval = int(os.environ.get("CIS_T2_PRECOMPUTE_S", "600"))
     _budget = float(os.environ.get("CIS_T2_PRECOMPUTE_BUDGET_S", "240"))
     while True:
@@ -544,7 +567,7 @@ async def _forward_return_backfill_loop():
     are measurable today; the mechanism energises at twenty.
     """
     import time as _time
-    await _asyncio.sleep(1200)
+    await _asyncio.sleep(_boot_delay(1200))
     while True:
         try:
             from src.data.signals.forward_return_backfill import (
@@ -577,7 +600,7 @@ async def _start_forward_return_backfill():
 # calls 「几何基底」 was a snapshot of one day in July, and every consumer kept
 # reading rows — just old ones — so nothing errored.
 async def _embedding_rebuild_loop():
-    await _asyncio.sleep(900)          # let the CIS universe warm first
+    await _asyncio.sleep(_boot_delay(900))          # let the CIS universe warm first
     while True:
         try:
             from src.data.vector.embedding_loop import (
@@ -736,7 +759,7 @@ async def _treasury_decisions_loop():
     但是服务器不是连通的。」所以这个循环**同时插进四个面**:心跳 (S-282)、
     判活 (S-278)、覆盖清册 (S-279)、Supabase 落库。任何一个不接就是没连线。
     """
-    await _asyncio.sleep(300)
+    await _asyncio.sleep(_boot_delay(300))
     while True:
         try:
             import httpx as _httpx
@@ -787,7 +810,7 @@ async def _cg_panel_loop():
 
     所以它在这里:Railway,常在,不依赖任何人的机器。
     """
-    await _asyncio.sleep(900)
+    await _asyncio.sleep(_boot_delay(900))
     while True:
         try:
             import httpx as _httpx
@@ -835,7 +858,7 @@ async def _start_treasury_loop():
 
 async def _outcome_tracker_loop():
     # small startup delay so the app is fully up before the first run
-    await _asyncio.sleep(120)
+    await _asyncio.sleep(_boot_delay(120))
     while True:
         try:
             from src.data.signals.outcome_tracker import run_outcome_tracker
@@ -866,7 +889,7 @@ _PREDICTION_INTERVAL_S = 24 * 3600
 
 
 async def _prediction_resolver_loop():
-    await _asyncio.sleep(240)   # after the signal outcome tracker warms
+    await _asyncio.sleep(_boot_delay(240))   # after the signal outcome tracker warms
     while True:
         try:
             from src.data.signals.prediction_resolver import resolve_all_predictions
@@ -896,7 +919,7 @@ _CAUSAL_PAPER_INTERVAL_S = 24 * 3600
 
 
 async def _causal_paper_loop():
-    await _asyncio.sleep(360)   # 6 min warmup
+    await _asyncio.sleep(_boot_delay(360))   # 6 min warmup
     # S-286: wait for the valuation point BEFORE the first mark, not only after it.
     await _await_valuation_point()
     while True:
@@ -924,7 +947,7 @@ async def _start_causal_paper_loop():
 # Can't be backtest-validated (instrument class all-2026); accrues forward instead.
 # See src/data/signals/dingge_paper.py.
 async def _dingge_paper_loop():
-    await _asyncio.sleep(420)   # 7 min warmup
+    await _asyncio.sleep(_boot_delay(420))   # 7 min warmup
     # S-286: wait for the valuation point BEFORE the first mark, not only after it.
     await _await_valuation_point()
     while True:
@@ -954,7 +977,7 @@ async def _start_dingge_paper_loop():
 # factory self-recalibration observation isn't dropped. Graveyard is the asset.
 # Stage 3 of the loop-as-factory: one market-neutral book = the ensemble, marked daily.
 async def _combined_book_loop():
-    await _asyncio.sleep(480)   # 8 min warmup
+    await _asyncio.sleep(_boot_delay(480))   # 8 min warmup
     # S-286: wait for the valuation point BEFORE the first mark, not only after it.
     await _await_valuation_point()
     while True:
@@ -984,7 +1007,7 @@ async def _start_combined_book_loop():
 # for a DIRECTIONAL beta sleeve, not this market-neutral construction). Loop kept running.
 # The high-capacity, vol-targeted book on the deepest instruments. See src/data/signals/scalable_paper.py.
 async def _scalable_book_loop():
-    await _asyncio.sleep(540)   # 9 min warmup
+    await _asyncio.sleep(_boot_delay(540))   # 9 min warmup
     # S-286: wait for the valuation point BEFORE the first mark, not only after it.
     await _await_valuation_point()
     while True:
@@ -1017,7 +1040,7 @@ async def _start_scalable_book_loop():
 # cheapest possible day to start is today, and every other book lacks a benchmark until
 # this one runs. See src/data/signals/beta_core_paper.py.
 async def _beta_core_loop():
-    await _asyncio.sleep(600)   # 10 min warmup — after the panel loaders are warm
+    await _asyncio.sleep(_boot_delay(600))   # 10 min warmup — after the panel loaders are warm
     # S-286: wait for the valuation point BEFORE the first mark, not only after it.
     await _await_valuation_point()
     while True:
@@ -1045,7 +1068,7 @@ async def _beta_core_loop():
 # put the database on the request path, which is the 2026-07-29 saturation P0.
 async def _metering_flush_loop():
     from src.api.metering import FLUSH_INTERVAL_S, flush_usage
-    await _asyncio.sleep(120)          # let the app settle before touching Redis
+    await _asyncio.sleep(_boot_delay(120))          # let the app settle before touching Redis
     while True:
         try:
             res = await flush_usage()
@@ -1086,7 +1109,7 @@ async def _start_beta_core_loop():
 # holds ZERO size while core_state == dead. The §CORE-BAKEOFF winner hot-swaps in via the
 # Redis key `two_layer_paper:core` with no code deploy. See src/data/signals/two_layer_paper.py.
 async def _two_layer_paper_loop():
-    await _asyncio.sleep(600)   # 10 min warmup
+    await _asyncio.sleep(_boot_delay(600))   # 10 min warmup
     # S-286: wait for the valuation point BEFORE the first mark, not only after it.
     await _await_valuation_point()
     while True:
@@ -1117,7 +1140,7 @@ async def _start_two_layer_paper_loop():
 # live price/ADV accumulates. Detector + cell constants are FROZEN at production time.
 # See src/data/signals/fusion_paper.py for the §P1/§P2 architecture.
 async def _fusion_paper_loop():
-    await _asyncio.sleep(660)   # 11 min warmup
+    await _asyncio.sleep(_boot_delay(660))   # 11 min warmup
     # S-286: wait for the valuation point BEFORE the first mark, not only after it.
     await _await_valuation_point()
     while True:
@@ -1148,7 +1171,7 @@ async def _start_fusion_paper_loop():
 # gap, detector fire-rate, measured capacity evolution, validation countdown, and
 # §P3 lifecycle events. Monitoring is read-only and never retunes the frozen cell.
 async def _fusion_paper_tracking_loop():
-    await _asyncio.sleep(900)   # 15 min warmup; let the first fusion mark settle
+    await _asyncio.sleep(_boot_delay(900))   # 15 min warmup; let the first fusion mark settle
     while True:
         try:
             from src.research.validation.fusion_paper_tracking import compute_tracking_snapshot
@@ -1182,7 +1205,7 @@ async def _start_fusion_paper_tracking_loop():
 # close + funding data; file-based state to avoid Supabase auth complexity.
 # See src/data/signals/r76_strategy2_paper.py for the §Strategy-2 architecture.
 async def _r76_paper_loop():
-    await _asyncio.sleep(720)   # 12 min warmup (stagger from fusion_paper's 11 min)
+    await _asyncio.sleep(_boot_delay(720))   # 12 min warmup (stagger from fusion_paper's 11 min)
     # S-286: wait for the valuation point BEFORE the first mark, not only after it.
     await _await_valuation_point()
     while True:
@@ -1211,7 +1234,7 @@ async def _start_r76_paper_loop():
 # before any live promotion. Runs 12 min after boot (just after FUSION-PAPER's 11 min
 # warmup, so today's R64 NAV is available) and daily thereafter.
 async def _fusion_paper_regime_track_loop():
-    await _asyncio.sleep(720)   # 12 min warmup — let FUSION-PAPER (11 min) mark first
+    await _asyncio.sleep(_boot_delay(720))   # 12 min warmup — let FUSION-PAPER (11 min) mark first
     while True:
         try:
             from src.research.validation.fusion_paper_regime_track import compute_today_track
@@ -1244,7 +1267,7 @@ async def _start_fusion_paper_regime_track_loop():
 # Daily mark + rebalance; idempotent per calendar day in pod_aggregator_paper.py.
 # Spec: docs/STRATEGY_3_POD_AGGREGATOR.md · frozen cell: w_R46=0.34/w_R62=0.33/w_R76=0.33
 async def _pod_aggregator_loop():
-    await _asyncio.sleep(720)   # 12 min warmup — same offset as FUSION-REGIME
+    await _asyncio.sleep(_boot_delay(720))   # 12 min warmup — same offset as FUSION-REGIME
     # S-286: wait for the valuation point BEFORE the first mark, not only after it.
     await _await_valuation_point()
     while True:
@@ -1277,7 +1300,7 @@ async def _start_pod_aggregator_loop():
 # Daily mark + rebalance; idempotent per calendar day in factor_tilt_paper.py.
 # Spec: docs/STRATEGY_4_FACTOR_TILT.md · sandbox verdict NEUTRAL (gross_t=+3.86 ✓, OOS_t=+1.11 ✗)
 async def _factor_tilt_loop():
-    await _asyncio.sleep(780)   # 13 min warmup — one minute after POD-AGG
+    await _asyncio.sleep(_boot_delay(780))   # 13 min warmup — one minute after POD-AGG
     # S-286: wait for the valuation point BEFORE the first mark, not only after it.
     await _await_valuation_point()
     while True:
@@ -1308,7 +1331,7 @@ async def _start_factor_tilt_loop():
 # Re-runs the factory, rewrites the nucleus blend to Redis (combined book self-recalibrates as
 # signals decay), logs the batch to experiment_runs. This is what makes it a machine, not a script.
 async def _factory_recalibrate_loop():
-    await _asyncio.sleep(900)   # 15 min warmup (heavy: loads panel + all signals)
+    await _asyncio.sleep(_boot_delay(900))   # 15 min warmup (heavy: loads panel + all signals)
     while True:
         try:
             from src.research.factory.signal_factory import recalibrate_and_log
@@ -1336,7 +1359,7 @@ _TRACKREC_INTERVAL_S = 24 * 3600
 
 
 async def _track_record_loop():
-    await _asyncio.sleep(300)   # 5 min warmup; let outcome-tracker land fresh outcomes first
+    await _asyncio.sleep(_boot_delay(300))   # 5 min warmup; let outcome-tracker land fresh outcomes first
     while True:
         try:
             from src.api.store import supabase_rpc
@@ -1374,7 +1397,7 @@ _BAND_LOG_INTERVAL_S = 24 * 3600   # daily snapshot
 
 
 async def _band_log_loop():
-    await _asyncio.sleep(420)   # 7 min warmup; let universe + edge map warm first
+    await _asyncio.sleep(_boot_delay(420))   # 7 min warmup; let universe + edge map warm first
     while True:
         try:
             from src.api.routers.signals import log_regime_band
@@ -1400,7 +1423,7 @@ _HOLDER_REFRESH_INTERVAL_S = 6 * 3600
 
 
 async def _holder_refresh_loop():
-    await _asyncio.sleep(180)   # 3 min warmup
+    await _asyncio.sleep(_boot_delay(180))   # 3 min warmup
     while True:
         try:
             from src.data.cis.holder_provider import refresh_holder_map
@@ -1433,7 +1456,7 @@ _cause_persist_state: dict = {}
 
 
 async def _forward_supply_loop():
-    await _asyncio.sleep(240)   # 4 min warmup
+    await _asyncio.sleep(_boot_delay(240))   # 4 min warmup
     while True:
         try:
             import datetime as _dt
@@ -1467,7 +1490,7 @@ _POSITIONING_INTERVAL_S = 30 * 60   # funding/OI move faster than supply → 30 
 
 
 async def _positioning_loop():
-    await _asyncio.sleep(300)   # 5 min warmup
+    await _asyncio.sleep(_boot_delay(300))   # 5 min warmup
     while True:
         try:
             import datetime as _dt
@@ -1503,7 +1526,7 @@ _SNAPSHOT_INTERVAL_S = 24 * 3600   # daily
 
 
 async def _daily_snapshot_loop():
-    await _asyncio.sleep(300)   # let caches + universe warm first
+    await _asyncio.sleep(_boot_delay(300))   # let caches + universe warm first
     while True:
         try:
             from src.api.routers.cis import snapshot_full_universe_to_supabase
@@ -1570,7 +1593,7 @@ async def _start_daily_snapshot():
 # attention-diffusion history forward (trending is a snapshot, not historical). Requires
 # the trending_log table (scripts/trending_collector.py CREATE_SQL, run once).
 async def _trending_loop():
-    await _asyncio.sleep(420)
+    await _asyncio.sleep(_boot_delay(420))
     while True:
         try:
             from scripts.trending_collector import collect_trending
@@ -1596,7 +1619,7 @@ _AGE_SWEEP_INTERVAL_S = 24 * 3600   # daily
 
 
 async def _age_sweep_loop():
-    await _asyncio.sleep(3600)   # 1h warmup; never sweep on cold start
+    await _asyncio.sleep(_boot_delay(3600))   # 1h warmup; never sweep on cold start
     while True:
         try:
             from src.api.routers.trading import sweep_aged_positions
@@ -1627,7 +1650,7 @@ _SL_TP_INTERVAL_S = 5 * 60   # every 5 min
 
 
 async def _sl_tp_loop():
-    await _asyncio.sleep(180)   # 3 min warmup; let CIS scheduler push first
+    await _asyncio.sleep(_boot_delay(180))   # 3 min warmup; let CIS scheduler push first
     while True:
         try:
             from src.api.routers.trading import _sl_tp_exit
@@ -1656,7 +1679,7 @@ _CIS_FLIP_INTERVAL_S = 5 * 60   # every 5 min (aligned with SL/TP loop)
 
 
 async def _cis_flip_loop():
-    await _asyncio.sleep(240)   # 4 min warmup (offset from SL/TP to avoid simultaneous calls)
+    await _asyncio.sleep(_boot_delay(240))   # 4 min warmup (offset from SL/TP to avoid simultaneous calls)
     while True:
         try:
             from src.api.routers.trading import _cis_flip_exit
@@ -1686,7 +1709,7 @@ _REBAL_INTERVAL_S = 6 * 60 * 60   # check 4x/day; planner decides if it actually
 
 
 async def _paper_rebalance_loop():
-    await _asyncio.sleep(360)   # 6 min warmup; let CIS push + universe warm first
+    await _asyncio.sleep(_boot_delay(360))   # 6 min warmup; let CIS push + universe warm first
     while True:
         try:
             from src.api.routers.trading import _run_paper_rebalance
@@ -1724,7 +1747,7 @@ _HEARTBEAT_INTERVAL_S = 20 * 60   # every 20 min
 
 
 async def _heartbeat_loop():
-    await _asyncio.sleep(180)   # let the app + caches warm first
+    await _asyncio.sleep(_boot_delay(180))   # let the app + caches warm first
     while True:
         try:
             from src.api.health import heartbeat_tick
@@ -2916,7 +2939,7 @@ async def scalable_book(response: Response = None):
 
 # ── Conviction Engine — daily watchlist compute → cache (heavy: ~20 network calls) ──
 async def _conviction_loop():
-    await _asyncio.sleep(600)   # 10 min warmup
+    await _asyncio.sleep(_boot_delay(600))   # 10 min warmup
     while True:
         try:
             from src.data.narrative.conviction_engine import get_watchlist, persist_watchlist, resolve_and_track
@@ -2945,7 +2968,7 @@ async def _start_conviction_loop():
 # deterministic facts, cached to Redis so the feed request never blocks on the model.
 # No-op when no LLM endpoint is configured (feed falls back to template narrative). ──
 async def _ai_briefing_loop():
-    await _asyncio.sleep(300)   # 5 min warmup — let conviction/positioning caches populate
+    await _asyncio.sleep(_boot_delay(300))   # 5 min warmup — let conviction/positioning caches populate
     while True:
         try:
             from src.api.routers.signals import refresh_ai_briefing
