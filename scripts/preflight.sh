@@ -1109,6 +1109,11 @@ python3 -m pytest tests/test_nav_policy.py -q || {
 # 抓价格的地方很多而且大多对的(研究面板、请求路径取行情),真正的危险是持久化 ——
 # **两个摄入器 = 两条看起来是同一个量、实际不是的序列**,S-273/274/275 同日三发。
 # 本守卫看不见 Mac 侧,已在文件里写明作用域边界(第七次「作用域差一格」的预防)。
+python3 -m tests.test_cg_universe || {
+  echo "🔴 coin_id 解析守卫 — do not push"
+  exit 1
+}
+
 python3 -m tests.test_sense_entrypoints || {
   echo "🔴 Sense 入口预算越界 — do not push"
   exit 1
