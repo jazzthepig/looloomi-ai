@@ -236,24 +236,108 @@ def t_the_wrapper_signature_matches_the_callee():
            err if not ok else "")
 
 
-def t_loops_that_can_refuse_actually_pass_the_flag():
-    """采集器返回 `refused` 而调用点不传,等于没修。
+#: 循环名 → 它调用的采集器模块。**这张表说的是「谁供数」,不是「谁会拒绝」** ——
+#: 后者由采集器源码回答,见下。
+_LOOP_COLLECTOR = {
+    "_deep_panel_loop": "src/data/market/deep_panel_collector.py",
+    "_hyperliquid_loop": "src/data/market/hyperliquid_collector.py",
+}
+
+
+def _fn_source(path, name: str) -> str:
+    """模块里某个函数的源码。**粒度必须是函数,不是模块。**
+
+    ⚠️ 这条本身踩过一次(2026-09-05):第一版按**模块**判「会不会 refused」,
+    于是 `hyperliquid_collector.py` 判为「会」—— 因为
+    `collect_hyperliquid`(成交集蜡烛,带覆盖率地板)确实会。
+    但循环调的是 `collect_venue_marks`,它一次请求、没有地板、永远不 refuse。
+
+    **一个模块里两个函数,一个有地板一个没有,在模块粒度上完全同形。**
+    又是本周那个形状 —— 而这次是我为了修那个形状而写的守卫自己犯的。
+    """
+    import ast as _ast
+    src = path.read_text(encoding="utf-8")
+    try:
+        tree = _ast.parse(src)
+    except SyntaxError:
+        return ""
+    for n in _ast.walk(tree):
+        if isinstance(n, (_ast.FunctionDef, _ast.AsyncFunctionDef)) and n.name == name:
+            return _ast.get_source_segment(src, n) or ""
+    return ""
+
+
+def _collector_called_by(main_src: str, loop: str) -> str:
+    """循环体里被调用的那个采集器函数名。**从代码读,不从清单读。**"""
+    import ast as _ast
+    try:
+        tree = _ast.parse(main_src)
+    except SyntaxError:
+        return ""
+    fn = next((n for n in _ast.walk(tree)
+               if isinstance(n, _ast.AsyncFunctionDef) and n.name == loop), None)
+    if fn is None:
+        return ""
+    # 循环体里 `from ... import X` 的 X,就是它的采集器。
+    for n in _ast.walk(fn):
+        if isinstance(n, _ast.ImportFrom) and "collector" in (n.module or ""):
+            return n.names[0].name
+    return ""
+
+
+def t_refused_is_forwarded_iff_the_collector_can_refuse():
+    """`refused=` 该不该传,由**采集器会不会返回它**决定,不由一张手写清单决定 (S-298).
+
+    ## 这条守卫自己错过一次
+
+    原文把 `_hyperliquid_loop` 硬编码进「必须传 refused」的清单里 ——
+    而那张清单是 S-294 我**把它接错的那一天**写下的。当天 HL 的失败是
+    `SourcePolicyError`(源选错了,设计错误),不是覆盖率拒绝;
+    我按「采集器返回 refused」接了上去,顺手把这个错误写进了守卫。
+
+    于是 S-296 把接法改对之后,**守卫红了,而红的是对的那一边**。
+
+    > **一张手写的「应该如此」清单,会把写它那天的错误固化成规范。**
+    > 清单不会随代码漂移,它让代码不敢漂回正确。
+
+    ## 两个方向都要判
+
+    - 采集器**会**返回 `refused` 而调用点不传 → 拒绝被记成故障,告警常亮
+    - 采集器**不会**返回 而调用点传了 → **设计错误被伪装成「正确的拒绝」**,
+      告警常绿。S-294 就是这一种,而它比前一种危险:
+      前者吵得没道理,后者安静得没道理。
 
     ⚠️ **这一条只看调用方。** 被调方由
     `t_the_wrapper_signature_matches_the_callee` 覆盖 ——
-    两条缺一不可,而 S-294 的线上错误正是只有前者时漏掉的。
+    两条缺一不可,而 S-294 的线上 TypeError 正是只有前者时漏掉的。
     """
-    main = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
-    for name in ("_deep_panel_loop", "_hyperliquid_loop"):
-        i = main.find(f'_beat("{name}"')
-        seg = main[i:i + 260] if i > 0 else ""
-        _check(f"{name} 传了 refused", "refused=" in seg, seg[:120])
     import pathlib as _pl
-    for mod in ("src/data/market/deep_panel_collector.py",
-                "src/data/market/hyperliquid_collector.py"):
-        body = (ROOT / mod).read_text(encoding="utf-8")
-        _check(f"{_pl.Path(mod).name} 确实会返回 refused",
-               '"refused": True' in body)
+
+    main = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
+    for name, mod in _LOOP_COLLECTOR.items():
+        called = _collector_called_by(main, name)
+        _check(f"{name} 的采集器可从代码解析出来", bool(called),
+               "循环体里找不到 `from ...collector import X` —— "
+               "解析不出来就只能回到手写清单,而清单会固化写它那天的错误")
+        if not called:
+            continue
+        # 采集器有没有一条**返回 refused 为真**的路径。**判这个函数,不判整个模块** ——
+        # 同一个文件里 `collect_hyperliquid` 有地板、`collect_venue_marks` 没有。
+        body = _fn_source(ROOT / mod, called)
+        can_refuse = '"refused": True' in body
+        i = main.find(f'_beat("{name}"')
+        _check(f"{name} 的心跳调用点存在", i > 0)
+        if i <= 0:
+            continue
+        seg = main[i:i + 300]
+        forwards = "refused=" in seg
+        _check(f"{name} → {called}() 的 refused 接法一致",
+               forwards == can_refuse,
+               (f"采集器会返回 refused 但调用点没传 —— 正确的拒绝会被记成故障"
+                if can_refuse else
+                f"采集器**不会**返回 refused,调用点却传了 —— "
+                f"真故障会被记成「正确地拒绝写」,告警常绿(S-294 原样)")
+               + f" :: {seg[:110]}")
 
 
 def t_the_beat_never_breaks_the_business_loop():
