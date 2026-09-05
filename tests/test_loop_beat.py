@@ -381,6 +381,49 @@ def t_no_loop_reports_ok_without_looking_at_its_own_result():
            f"报的是「我没崩」不是「我干完了」**")
 
 
+def t_no_loop_can_be_outrun_by_the_deploy_cadence():
+    """启动延迟必须封顶 (S-305)。
+
+    **部署重置每个循环的启动计时器**,而我们一小时部署好几次。
+    2026-09-05 实测:41 个循环里 20 个启动延迟 ≥ 600 秒,
+    `_age_sweep_loop` 睡整整一小时 —— **在这个部署节奏下它永远不跑**。
+
+    整晚四次「还没在当前构建下跑过」都是它,而它读起来像「循环坏了」:
+    **又是两个状态一个表象。**
+
+    判据是构造:第一条 sleep 必须走 `_boot_delay()`,不能是裸常数。
+    裸常数会随时间被人调大,而封顶函数不会。
+    """
+    import ast as _ast
+    src = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
+    tree = _ast.parse(src)
+    bare = []
+    for n in _ast.walk(tree):
+        if not (isinstance(n, _ast.AsyncFunctionDef) and n.name.endswith("_loop")):
+            continue
+        for st in n.body[:3]:
+            hit = False
+            for c in _ast.walk(st):
+                if (isinstance(c, _ast.Call)
+                        and getattr(c.func, "attr", None) == "sleep" and c.args):
+                    a = c.args[0]
+                    if isinstance(a, _ast.Constant) and isinstance(a.value, (int, float)):
+                        if a.value > 300:
+                            bare.append(f"{n.name}({a.value}s)")
+                    hit = True
+                    break
+            if hit:
+                break
+    _check("没有循环的启动延迟是裸常数且 > 300s", not bare,
+           f"{bare} —— 走 _boot_delay() 封顶。**部署比它睡得勤,它就永远不跑**")
+    from src.api.main import _BOOT_DELAY_CAP_S, _boot_delay
+    _check(f"封顶 {_BOOT_DELAY_CAP_S}s 且保序",
+           _boot_delay(3600) > _boot_delay(900) > _boot_delay(120)
+           and _boot_delay(3600) <= _BOOT_DELAY_CAP_S + 60,
+           f"3600→{_boot_delay(3600):.0f} 900→{_boot_delay(900):.0f} "
+           f"120→{_boot_delay(120):.0f}")
+
+
 def t_classify_separates_progress_from_no_work_from_broken():
     """`classify` 是三值的,而且**未知不判健康**。"""
     from src.api.loop_beat import classify
