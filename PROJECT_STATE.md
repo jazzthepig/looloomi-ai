@@ -79,9 +79,13 @@ symbol→coin_id 映射表** —— `cg_pro_backfill` 与 `deep_walk` 都要求
 的整段历史写进这个标的,而曲线看起来完全正常。
 
 ```
-curl -s 'https://web-production-0cdf76.up.railway.app/internal/data-coverage' | \
-  python3 -c 'import sys,json;d=json.load(sys.stdin);print(d.get("n_covered"),"/",d.get("n_total"))'
+curl -s 'https://web-production-0cdf76.up.railway.app/internal/data-freshness' | python3 -c 'import sys,json;d=json.load(sys.stdin)["by_source"];print(json.dumps(d,ensure_ascii=False)[:400])'
 ```
+
+⚠️ **用 `d["key"]` 不要用 `d.get("key")`。** 2026-09-05 我给 Jazz 的两条验证命令
+都问错了字段(`loop-health` 上问 `n_failing`,`data-coverage` 上问 `n_covered`),
+两条都打印 `None` —— **而「字段不存在」和「系统健康但没什么可报」在 `None` 上同形**。
+心跳面板在 `/internal/data-freshness` 的 `loops` 键下,不在 `/internal/loop-health`。
 
 *RETIRED 2026-08-12 to make room for #0: **#5 MCP streamable-transport migration** — closed
 2026-08-09, no open follow-on, and its VERIFY (`grep -c 'mcp/sse' src/mcp/*.py` → 0) is a

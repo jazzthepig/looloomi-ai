@@ -16387,3 +16387,51 @@ symbol→coin_id 的面板级映射表**,`cg_pro_backfill` 和 `deep_walk`
 都要求调用方传 `(symbol, coin_id)` 对。
 
 这是下一步,不是这一条的一部分。**本条只把源选对了,没有把面板补上。**
+
+---
+
+## S-297 · 我给的两条验证命令,字段全问错了 (2026-09-05)
+
+### 现象
+
+Jazz 粘完交接块,回来的是:
+
+    失败 None · 拒绝 None · 旧构建 None
+
+### 两条都错,错法不同
+
+| 我写的 | 真实位置 |
+|---|---|
+| `/internal/loop-health` 上取 `n_failing` | 心跳面板在 **`/internal/data-freshness` 的 `loops` 键**下;`loop-health` 是另一个东西,返回 `{overall, stages[]}`,没有这些字段 |
+| `/internal/data-coverage` 上取 `n_covered` / `n_total` | 那个端点的键是 `n_symbols`(405)/ `n_pairs`(530)/ `verdict` |
+
+第二条是我**在同一次回复里**刚写进 PROJECT_STATE 的,写完没验。
+如果 Jazz 没先跑第一条,这条会是第三次。
+
+### 为什么两条都「跑通了」
+
+两条都用 `d.get("k")`。问错的字段返回 `None`,命令退出码 0。
+
+> **「这个字段不存在」和「系统健康,没什么可报」在 `None` 上完全同形。**
+
+本周那个形状的第 N 次 —— 但这次它长在**验证工具本身**上。
+一个测不出问题的探针比没有探针更糟:没有探针,你知道自己不知道。
+
+### 修
+
+`tests/test_handoff_commands_are_runnable.py::test_verification_snippets_fail_loudly_on_a_wrong_field`
+—— 扫 CLAUDE.md 与 PROJECT_STATE.md 的 ```bash 围栏,任何
+`json.load(...)` 后跟 `.get(` 的行判失败。要 `d["k"]`,要 KeyError,**要它吵**。
+
+S-289 守的是这些命令的**语法**(行尾注释被终端吃掉);
+这一条守**语义**。语法对、字段错的命令,粘贴进终端一样能跑,一样什么都没验到。
+
+### 顺带:preflight 确实拦住了我
+
+`🔴 1 FAILED: ['manifest lists every table the source writes to']` ——
+`collect_venue_marks` 新写 `funding_history`,S-166/S-286 的清单守卫抓到了。
+**我没跑到这一关就发了交接块**(沙箱跑不完完整 preflight,我只跑了改动到的子集,
+而这条守卫不在那个子集里)。清单已重生成:32 → 33 张表。
+
+**沙箱跑不完 preflight,不是「可以只跑子集」的理由 ——
+是「我的验证覆盖不到的地方要显式说出来」的理由。**
