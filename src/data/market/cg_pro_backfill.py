@@ -348,6 +348,7 @@ async def _verify_mapping(symbol: str, coin_id: str, row: dict) -> MappingCheck:
 async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
                           asset_class: Optional[str] = None,
                           dest: str = "local",
+                          min_candles: Optional[int] = None,
                           dry_run: bool = False) -> SymbolResult:
     """回填一个标的。**地板在写之前** (S-220)。
 
@@ -374,11 +375,26 @@ async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
                                 rows[0]["trade_date"], rows[-1]["trade_date"],
                                 reason=f"映射未通过校验:{chk.reason}")
 
-    if len(rows) < MIN_CANDLES_PER_SYMBOL:
+    # ⚠️ **地板要相对于请求的窗口,不能是绝对值** (S-306)。
+    # 2026-09-05:`_cg_panel_loop` 用 7 天窗口做增量刷新,每个标的正常拿回
+    # ~7 根 bar,而这里的绝对地板是 30 —— **57 个标的全部被拒,写入 0 行**,
+    # 而每一次拒绝的理由都是对的。
+    #
+    # 地板本身没错,它防的是「窗口错了或额度用尽」。错的是它**假设调用方
+    # 总是在做长窗口回填**。同一个数字在两种用途下含义相反:
+    # 回填时 7 根 = 出错了;增量刷新时 7 根 = 完全正常。
+    #
+    # 所以判据改成「拿回的 bar 数 vs 这个窗口应该有的天数」,
+    # 调用方也可以显式传 `min_candles` 说明自己的用途。
+    _expected = max(1, (end - start).days)
+    _floor = (min_candles if min_candles is not None
+              else min(MIN_CANDLES_PER_SYMBOL, max(5, int(_expected * 0.7))))
+    if len(rows) < _floor:
         # 少量 bar 通常是窗口错了或额度用尽。写进去会在面板上留下一段
         # 看起来正常的稀疏区间,而稀疏和"这段时间没交易"在下游长得一样。
         return SymbolResult(symbol, coin_id, False, len(rows),
-                            reason=f"只取到 {len(rows)} 根 bar < {MIN_CANDLES_PER_SYMBOL},"
+                            reason=f"只取到 {len(rows)} 根 bar < 地板 {_floor}"
+                                   f"(窗口 {_expected} 天),"
                                    f"不写 —— 稀疏区间在下游与'没有交易'不可分辨")
 
     if dry_run:
@@ -409,6 +425,7 @@ async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
 async def backfill(pairs: Sequence[tuple[str, str]], *, start: date, end: date,
                    asset_class: Optional[str] = None,
                    dest: str = "local",
+                   min_candles: Optional[int] = None,
                    dry_run: bool = False) -> BackfillResult:
     """`pairs` = [(symbol, coin_id), ...]。逐个回填,一个失败不拖垮其余。
 
@@ -425,6 +442,7 @@ async def backfill(pairs: Sequence[tuple[str, str]], *, start: date, end: date,
         try:
             r = await backfill_symbol(symbol, coin_id, start=start, end=end,
                                       asset_class=asset_class, dest=dest,
+                                      min_candles=min_candles,
                                       dry_run=dry_run)
         except Exception as e:                                    # noqa: BLE001
             r = SymbolResult(symbol, coin_id, False, 0,
