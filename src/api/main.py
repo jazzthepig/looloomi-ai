@@ -701,6 +701,9 @@ def _minutes_from_valuation_point_utc(hour: int, minute: int) -> float:
 # `_start_*` 包装函数也数进去了 —— 夸大动机数字,今天第二次)。_outcome_tracker_loop 是最干净的
 # 样本:循环活着、每天准时跑、每天失败,而 signal_outcomes 因此死了 123 天无人知。
 # 心跳只记录,不重试不终止 —— 一个顺手改行为的记录器,下一个人就不敢用。
+from src.api.loop_beat import classify as _classify  # noqa: E402  (S-299)
+
+
 async def _beat(name: str, *, ok: bool, error: str | None = None,
                 refused: bool = False) -> None:
     """转发到 `loop_beat.beat`。**签名必须与它一致。**
@@ -781,7 +784,8 @@ async def _outcome_tracker_loop():
             print(f"[OUTCOME] daily run — resolved={summary.get('resolved')} "
                   f"win={summary.get('wins')} loss={summary.get('losses')} "
                   f"written={summary.get('rows_written')}")
-            await _beat("_outcome_tracker_loop", ok=True)
+            _ok, _ref, _why = _classify(summary)
+            await _beat("_outcome_tracker_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[OUTCOME] ⚠️  daily run failed: {_e}")
             await _beat("_outcome_tracker_loop", ok=False, error=str(_e))
@@ -842,7 +846,8 @@ async def _causal_paper_loop():
             res = await mark_and_rebalance(dry_run=False)
             print(f"[CAUSAL-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"rebal={res.get('rebalanced')}")
-            await _beat("_causal_paper_loop", ok=True)
+            _ok, _ref, _why = _classify(res)
+            await _beat("_causal_paper_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[CAUSAL-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_causal_paper_loop", ok=False, error=str(_e))
@@ -869,7 +874,8 @@ async def _dingge_paper_loop():
             res = await mark_and_trade(dry_run=False)
             print(f"[DINGGE-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"open={res.get('open')} +{res.get('opened_today')}/-{res.get('closed_today')}")
-            await _beat("_dingge_paper_loop", ok=True)
+            _ok, _ref, _why = _classify(res)
+            await _beat("_dingge_paper_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[DINGGE-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_dingge_paper_loop", ok=False, error=str(_e))
@@ -898,7 +904,8 @@ async def _combined_book_loop():
             res = await mark_and_rebalance(dry_run=False)
             print(f"[COMBINED-BOOK] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"rebal={res.get('rebalanced')}")
-            await _beat("_combined_book_loop", ok=True)
+            _ok, _ref, _why = _classify(res)
+            await _beat("_combined_book_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[COMBINED-BOOK] ⚠️  mark failed: {_e}")
             await _beat("_combined_book_loop", ok=False, error=str(_e))
@@ -927,7 +934,8 @@ async def _scalable_book_loop():
             res = await mark_and_rebalance(dry_run=False)
             print(f"[SCALABLE-BOOK] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"rebal={res.get('rebalanced')}")
-            await _beat("_scalable_book_loop", ok=True)
+            _ok, _ref, _why = _classify(res)
+            await _beat("_scalable_book_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[SCALABLE-BOOK] ⚠️  mark failed: {_e}")
             await _beat("_scalable_book_loop", ok=False, error=str(_e))
@@ -960,7 +968,8 @@ async def _beta_core_loop():
             print(f"[BETA-CORE] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"bench={res.get('benchmark_nav')} excess={res.get('excess_pct')}% "
                   f"cap={res.get('exposure_cap')} regime={res.get('regime')}")
-            await _beat("_beta_core_loop", ok=True)
+            _ok, _ref, _why = _classify(res)
+            await _beat("_beta_core_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[BETA-CORE] ⚠️  mark failed: {_e}")
             await _beat("_beta_core_loop", ok=False, error=str(_e))
@@ -1027,7 +1036,8 @@ async def _two_layer_paper_loop():
             res = await mark_and_rebalance(dry_run=False)
             print(f"[TWO-LAYER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"book_state={res.get('book_state')} gross={res.get('gross')}")
-            await _beat("_two_layer_paper_loop", ok=True)
+            _ok, _ref, _why = _classify(res)
+            await _beat("_two_layer_paper_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[TWO-LAYER] ⚠️  mark failed: {_e}")
             await _beat("_two_layer_paper_loop", ok=False, error=str(_e))
@@ -1059,7 +1069,8 @@ async def _fusion_paper_loop():
                   f"gross={res.get('gross')} fill={res.get('fill_ratio_overall')} "
                   f"cap={res.get('capacity_status')} det={res.get('detector_fired_today')} "
                   f"n_days={res.get('n_days_marked')} validated={res.get('validated')}")
-            await _beat("_fusion_paper_loop", ok=True)
+            _ok, _ref, _why = _classify(res)
+            await _beat("_fusion_paper_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[FUSION-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_fusion_paper_loop", ok=False, error=str(_e))
@@ -1185,7 +1196,8 @@ async def _pod_aggregator_loop():
                   f"weights={res.get('weights')} max_corr={res.get('max_corr_retained')} "
                   f"survivors={res.get('survivors')} breakers={res.get('breakers_tripped')} "
                   f"n_days={res.get('n_days_marked')}")
-            await _beat("_pod_aggregator_loop", ok=True)
+            _ok, _ref, _why = _classify(res)
+            await _beat("_pod_aggregator_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[POD-AGG] ⚠️  mark failed: {_e}")
             await _beat("_pod_aggregator_loop", ok=False, error=str(_e))
@@ -1218,7 +1230,8 @@ async def _factor_tilt_loop():
                   f"factor_sharpe={res.get('factor_sharpe_attribution')} "
                   f"max_share={res.get('max_single_factor_sharpe_share')} "
                   f"n_days={res.get('n_days_marked')}")
-            await _beat("_factor_tilt_loop", ok=True)
+            _ok, _ref, _why = _classify(res)
+            await _beat("_factor_tilt_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[FACTOR-TILT] ⚠️  mark failed: {_e}")
             await _beat("_factor_tilt_loop", ok=False, error=str(_e))
@@ -1270,7 +1283,16 @@ async def _track_record_loop():
             from src.api.store import supabase_rpc
             res = await supabase_rpc("refresh_signal_track_record")
             print(f"[TRACK-REC] refreshed signal_track_record — rows={res}")
-            await _beat("_track_record_loop", ok=True)
+            # S-299:这个循环没有 `status`,它的工作量就是**行数**。
+            # `None` 是 RPC 失败,`0` 是跑通了没算出行 —— 两者都不是健康,
+            # 但修法不同,所以分成 failing 与 refused。
+            _n = res if isinstance(res, int) else (
+                len(res) if isinstance(res, (list, tuple)) else None)
+            await _beat("_track_record_loop", ok=bool(_n),
+                        refused=(_n == 0),
+                        error=(None if _n else
+                               ("RPC 返回 None —— 刷新没跑成" if _n is None
+                                else "刷新跑通但 0 行 —— 上游 cis_scores × ohlcv 没有可解析的对")))
         except Exception as _e:
             print(f"[TRACK-REC] ⚠️  refresh failed: {_e}")
             await _beat("_track_record_loop", ok=False, error=str(_e))

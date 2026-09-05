@@ -340,6 +340,67 @@ def t_refused_is_forwarded_iff_the_collector_can_refuse():
                + f" :: {seg[:110]}")
 
 
+#: 写死 `ok=True` 的心跳调用点。**只减不增,现在是 0。**
+HARDCODED_OK_BUDGET = 0
+
+
+def t_no_loop_reports_ok_without_looking_at_its_own_result():
+    """**架构核对的头条 (S-299)。** 14 个循环里 11 个写死 `ok=True`。
+
+    只要采集函数没抛异常,心跳就报健康 —— 它从不看返回值。
+    实测的四条假绿灯(2026-09-05):
+
+        _outcome_tracker_loop   ok   signal_outcomes      停 125 天
+        _factor_tilt_loop       ok   factor_tilt_nav      0 行
+        _pod_aggregator_loop    ok   pod_aggregator_nav   0 行
+        _two_layer_paper_loop   ok   two_layer_paper_nav  停 14 天
+
+    9 本纸面账里 4 本的表是空的或陈旧的,而面板写着「12/14 健康」。
+
+    > **「循环成功」和「工作完成」是两个状态,而心跳只测了第一个。**
+
+    这是 Jazz 反复问的那句话的机器可读版本 ——
+    「怎么都说健康,都说没问题,但就是没有做完?」
+    """
+    import ast as _ast
+    src = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
+    hard = []
+    for n in _ast.walk(_ast.parse(src)):
+        if not isinstance(n, _ast.Call):
+            continue
+        f = getattr(n.func, "id", None) or getattr(n.func, "attr", None)
+        if f != "_beat" or not n.args:
+            continue
+        kw = {k.arg: k.value for k in n.keywords}
+        ok = kw.get("ok")
+        if isinstance(ok, _ast.Constant) and ok.value is True:
+            hard.append(getattr(n.args[0], "value", "?"))
+    _check(f"写死 ok=True 的调用点 {len(hard)} ≤ 预算 {HARDCODED_OK_BUDGET}(只减不增)",
+           len(hard) <= HARDCODED_OK_BUDGET,
+           f"新增了 {sorted(set(hard))} —— **一个不看返回值的心跳,"
+           f"报的是「我没崩」不是「我干完了」**")
+
+
+def t_classify_separates_progress_from_no_work_from_broken():
+    """`classify` 是三值的,而且**未知不判健康**。"""
+    from src.api.loop_beat import classify
+    for st in ("marked", "already_marked", "ok", "inception"):
+        _check(f"'{st}' → 进展", classify({"status": st}) == (True, False, None))
+    for st in ("skipped", "no_data", "warming_up"):
+        ok, ref, why = classify({"status": st})
+        _check(f"'{st}' → 拒绝(不是故障,但也不是进展)",
+               (ok, ref) == (False, True) and st in (why or ""), str((ok, ref, why)))
+    ok, ref, why = classify({"status": "error", "error": "boom"})
+    _check("'error' → 故障", (ok, ref) == (False, False) and "boom" in why, why or "")
+    ok, ref, why = classify({"status": "brand_new_thing"})
+    _check("未知 status → 故障,不是健康", (ok, ref) == (False, False), str((ok, ref)))
+    _check("并说明未知为什么不能判健康", "未知不是健康" in (why or ""), why or "")
+    # `already_marked` 是进展 —— **今天的行存在是目的本身**,
+    # 把它判成「没干活」会让一个已完成的账每天报拒绝。
+    _check("already_marked 不被误判成没干活",
+           classify({"status": "already_marked"})[1] is False)
+
+
 def t_the_beat_never_breaks_the_business_loop():
     """一个为了记录健康而弄死循环的记录器,比没有记录器更糟。"""
     src = (ROOT / "src/api/loop_beat.py").read_text()
