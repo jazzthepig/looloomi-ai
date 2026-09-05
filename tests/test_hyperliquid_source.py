@@ -83,7 +83,10 @@ def test_the_loop_is_registered():
     assert "create_task(_hyperliquid_loop())" in main.replace(" ", ""), (
         "the loop must be started, not merely defined")
     loop = main.split("async def _hyperliquid_loop")[1].split("\n@app")[0]
-    assert "collect_hyperliquid" in loop
+    # S-296:循环取的是场馆事实(funding / mark / OI),不是面板日线。
+    # 面板日线是 market_data 用途,归 CoinGecko Pro —— 见
+    # tests/test_source_policy.py::test_the_loop_reads_the_venue_only_for_what_only_the_venue_knows
+    assert "collect_venue_marks" in loop
 
 
 def test_coingecko_writer_is_flagged_for_the_date_bug():

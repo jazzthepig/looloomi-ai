@@ -197,28 +197,110 @@ async def venue_snapshot() -> dict[str, Any]:
             "fetched_at": datetime.now(timezone.utc).isoformat()}
 
 
-async def collect_hyperliquid(days: int = _DEFAULT_DAYS,
-                              symbols: list[str] | None = None) -> dict[str, Any]:
-    """Refresh Hyperliquid daily bars. Idempotent; safe to run repeatedly."""
+async def collect_venue_marks() -> dict[str, Any]:
+    """把 `venue_snapshot()` 落进 `funding_history` —— **接上那块从没插线的卡** (S-296).
+
+    ## 这个函数存在的原因
+
+    `venue_snapshot()` 是 S-205 为了替掉 233 次 candleSnapshot 而写的正确答案:
+    一次请求拿到全部永续的 mark / oracle / funding / OI。写完之后
+    **它的调用点是零个** —— 我 grep 过,全仓只有测试和一句注释提到它。
+
+    于是 2026-08-23 起的两周是这样的:数量守卫正确地拦住了蜡烛扇出,
+    循环每 6 小时抛一次 `SourcePolicyError`,而**替代路径就在同一个文件里、
+    没人调用**。Jazz 的话:「买了显卡、存储、网卡,但是服务器不是连通的。」
+    这次连显卡都是自己买的。
+
+    ## 为什么这是 execution 用途,不是 market_data
+
+    funding 是**只有场馆知道的事实**,CoinGecko 给不了。而它正是决定
+    永续 sleeve 能不能成立的量 —— ① 面板 24 个名字实测等权 funding
+    **年化 +23.07%**,所以毛 1.15 的永续版 ① 每年漏 ~26.5%。
+    这个数字比我们证明过的任何 alpha 都大,它必须每天有人量。
+
+    ## 一次请求,所以没有资产集口径问题
+
+    用途轴要求 execution 扇出必须显式传名单。**这里不是扇出** ——
+    一次 `metaAndAssetCtxs` 覆盖全部永续,`n_assets` 对策略层就是 1。
+    这正是 S-205 那句「the venue telling me I was asking the wrong question」
+    的落地形态。
+
+    ## 时间戳取整到小时
+
+    循环每 6 小时一轮,PK 是 `(symbol, funding_time, venue)`。取整到小时
+    让同一小时内的重跑幂等,一天落 4 个时点 × ~233 个标的。
+    **不取整的话每次重跑都是新行**,Supabase 免费档撑不了几周。
+    """
     from src.api.store import supabase_upsert_table
 
     started = datetime.now(timezone.utc)
+    snap = await venue_snapshot()
+    if not snap.get("ok"):
+        return {"ok": False, "error": snap.get("reason", "venue_snapshot failed"),
+                "diagnosis": ("场馆快照拿不到 —— **这是一次请求就失败**,"
+                              "不是限流。先查 api.hyperliquid.xyz 可达性")}
+
+    ts = started.replace(minute=0, second=0, microsecond=0).isoformat()
+    rows, n_no_funding = [], 0
+    for sym, a in (snap.get("assets") or {}).items():
+        # I1:funding 是 None 表示**没量到**,不是 0。一个 0 funding 的永续
+        # 和一个我们没读到 funding 的永续,在 carry 计算上是两个完全不同的结论。
+        if a.get("funding_1h") is None:
+            n_no_funding += 1
+            continue
+        rows.append({"symbol": sym, "funding_time": ts, "venue": SOURCE,
+                     "funding_rate": a["funding_1h"], "mark_price": a.get("mark")})
+
+    written = 0
+    for i in range(0, len(rows), 2000):
+        if await supabase_upsert_table("funding_history", rows[i:i + 2000],
+                                       on_conflict="symbol,funding_time,venue"):
+            written += len(rows[i:i + 2000])
+        else:
+            break
+
+    elapsed = round((datetime.now(timezone.utc) - started).total_seconds(), 1)
+    return {
+        "ok": bool(rows) and written == len(rows),
+        "n_perps": snap.get("n"), "rows_written": written,
+        "n_missing_funding": n_no_funding,
+        "funding_time": ts, "elapsed_s": elapsed,
+        "reason": (f"{snap.get('n')} 个永续一次请求 · 写入 {written} 行 funding"
+                   + (f" · {n_no_funding} 个没读到 funding(记为未量到,不是 0)"
+                      if n_no_funding else "")),
+    }
+
+
+async def collect_hyperliquid(days: int = _DEFAULT_DAYS,
+                              symbols: list[str] | None = None) -> dict[str, Any]:
+    """Refresh Hyperliquid daily bars **for an explicitly named execution set**.
+
+    ⚠️ S-296:`symbols` 从「可选」变成**实质必填**。默认拿场馆挂牌当名单,
+    正是 S-204 那次 233 个标的扇出的来源 —— 而「HL 挂了什么」是场馆的库存,
+    「我们会在哪里下单」是我们的决定,两者塌进一个默认值就会得到那次事故。
+
+    面板行情不走这里,走 CoinGecko Pro(付费,fan-out 是买来的权利)。
+    这里只服务成交标记。
+    """
+    from src.api.store import supabase_upsert_table
+
+    started = datetime.now(timezone.utc)
+    explicit = bool(symbols)
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         syms = symbols or await hyperliquid_universe(client)
         if not syms:
             return {"ok": False, "error": "no Hyperliquid symbols resolved",
                     "note": "meta endpoint unreachable or empty"}
 
-        # ── S-205: a fan-out over a free source must justify itself ─────────
-        # `venue_snapshot()` answers mark/oracle/funding/OI for ALL perps in one
-        # request. This per-symbol path exists only for CANDLE HISTORY, which
-        # that endpoint does not carry — and history in bulk belongs on
-        # CoinGecko Pro, which we pay for. Reaching here with the full listing
-        # is the error S-204 diagnosed as a pacing problem and S-205 corrected
-        # to a source-choice problem.
-        from src.data.market.source_policy import assert_bulk_source
-        assert_bulk_source(len(syms), "hyperliquid",
-                           job="hyperliquid daily candle backfill")
+        # ── S-296: 用途 + 数量,两道 ────────────────────────────────────────
+        # 数量守卫(S-205)问「这么多资产能不能在这个源上取」;用途守卫问
+        # 「这件事本来该在哪个源上做」,并且要求 execution 扇出的名单是
+        # 调用方显式给的。**S-205 只拦不导,结果是把违规变成了两周的缺口。**
+        from src.data.market.source_policy import (
+            EXECUTION, assert_purpose_source)
+        assert_purpose_source(EXECUTION, "hyperliquid", n_assets=len(syms),
+                              job="hyperliquid execution-set candles",
+                              explicit_set=explicit)
 
         sem = asyncio.Semaphore(_CONCURRENCY)
         all_rows: list[dict] = []

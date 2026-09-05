@@ -57,6 +57,47 @@ BULK_THRESHOLD = 6
 #: Sources we pay for. Their rate limits are contractual and generous.
 PAID_SOURCES = frozenset({"coingecko_pro", "eodhd"})
 
+# ── S-296 (2026-09-05): 用途轴 —— 数量守卫拦不住的那一半 ────────────────────
+#
+# Jazz:**「我们实时数据和前端应该优先走 coingecko 的付费 api,
+# 是接入交易生产的才读 hyperliquid。」**
+#
+# S-205 的守卫只问「几个资产」。它拦住了 233 个标的的蜡烛扇出 —— 拦对了,
+# 而且从 2026-08-23 起一直在拦。**但拦住之后没有人接手**:hyperliquid 的
+# 日线停在 08-23,CG Pro 那边只接了 25 个标的,面板 262 个里有 237 个
+# 从那天起没有任何日线来源。
+#
+# > **一个只拦不导的守卫,会把违规变成缺口。** 数量守卫说「别在这里取」,
+# > 它没说「去哪里取」,于是两周里没有人去取。
+#
+# 用途轴补的就是这一句。它不是「HL 是坏源」——
+#
+#     market_data  面板、前端、研究、回测的价格与历史
+#                  → 付费源(CG Pro / EODHD)。可以 fan-out,我们为此付钱。
+#
+#     execution    只有场馆自己知道的:资金费、oracle vs mark、未平仓、挂牌
+#                  → Hyperliquid。**但资产集是「我们真会在那里下单的」,
+#                    不是「那里挂了什么」。**
+#
+# 最后那句是这条规则的全部重量。HL 挂了 233 个永续;那是**场馆的库存**,
+# 不是我们的成交集。把「挂牌」当成「要交易」,就是本周反复的那个形状 ——
+# 两个不同的状态塌进一个表示 —— 而它塌出来的结果,正好是 S-204 那次
+# 233 个标的的扇出。
+MARKET_DATA, EXECUTION = "market_data", "execution"
+
+#: 每个用途的主源。**这是路由表,不是偏好。**
+PURPOSE_PRIMARY: dict[str, str] = {
+    MARKET_DATA: "coingecko_pro",
+    EXECUTION: "hyperliquid",
+}
+
+#: 每个用途允许的**资产集口径**,写成人话是为了让违规在 code review 时就刺眼。
+PURPOSE_SCOPE: dict[str, str] = {
+    MARKET_DATA: "整个研究面板(262)—— 付费源,fan-out 是买来的权利",
+    EXECUTION: "**我们真会下单的标的**,不是场馆挂牌的全部。今天这个集合是空的"
+               "(① 还是纸面),所以任何 execution 扇出都必须显式传入名单",
+}
+
 #: 我们买到了什么,以及用掉了多少 (S-264, 2026-09-01 实测)。
 #:
 #: **为什么这必须是代码而不是记忆。** 2026-09-01 我告诉 Jazz「我们测不了流,
@@ -193,6 +234,47 @@ def assert_bulk_source(n_assets: int, source: str, *, job: str) -> None:
         f"a free source. Bulk access belongs on a paid source "
         f"({', '.join(sorted(PAID_SOURCES))}) — we pay monthly and were using the "
         f"free-shaped endpoints anyway (S-195).{hint}")
+
+
+class PurposeMismatch(SourcePolicyError):
+    """用途和源对不上。**继承 SourcePolicyError,所以现有的处理路径不用改。**"""
+
+
+def assert_purpose_source(purpose: str, source: str, *, n_assets: int,
+                          job: str, explicit_set: bool = False) -> None:
+    """按**用途**而不是只按数量来判源 (S-296)。
+
+    数量守卫回答「这么多资产能不能在这个源上取」;这一层回答
+    「**这件事本来该在哪个源上做**」。两个问题的答案可以不同 ——
+    HL 上取 5 个标的的蜡烛能过数量守卫,但如果那 5 个是拿来画前端的,
+    它仍然走错了源。
+
+    >>> assert_purpose_source(MARKET_DATA, "hyperliquid", n_assets=262,
+    ...                       job="panel bars")
+    Traceback (most recent call last):
+    PurposeMismatch: ...
+
+    `explicit_set=True` 是 execution 扇出的**唯一**通行方式:调用方必须
+    自己传入成交名单。默认拿场馆挂牌当名单的,正是 S-204 那次。
+    """
+    want = PURPOSE_PRIMARY.get(purpose)
+    if want is None:
+        raise PurposeMismatch(
+            f"{job}: 未知用途 '{purpose}'。用途必须是 "
+            f"{sorted(PURPOSE_PRIMARY)} 之一 —— **说不出用途,就还没想清楚该问谁**")
+    if source != want:
+        raise PurposeMismatch(
+            f"{job}: 用途是 '{purpose}',主源应为 '{want}',实际用了 '{source}'。"
+            f"Jazz 2026-09-05:实时数据与前端走 CoinGecko 付费 API,"
+            f"接入交易生产的才读 Hyperliquid。"
+            f"这个用途的资产集口径:{PURPOSE_SCOPE.get(purpose, '')}")
+    if purpose == EXECUTION and n_assets > BULK_THRESHOLD and not explicit_set:
+        raise PurposeMismatch(
+            f"{job}: 在 execution 用途下扇出 {n_assets} 个标的,而调用方"
+            f"**没有显式传入成交名单** —— 这说明名单是从场馆挂牌来的。"
+            f"「挂牌」不等于「我们要交易」:{PURPOSE_SCOPE[EXECUTION]}。"
+            f"S-204 那次 233 个标的的扇出就是这么来的")
+    assert_bulk_source(n_assets, source, job=job)
 
 
 def bulk_endpoint_for(source: str) -> dict[str, str]:

@@ -76,10 +76,60 @@ def test_the_venue_bulk_endpoint_is_recorded():
 def test_the_hyperliquid_fanout_is_gated():
     src = code_only((ROOT / "src/data/market/hyperliquid_collector.py").read_text())
     fn = src.split("async def collect_hyperliquid")[1]
-    gate = fn.find("assert_bulk_source(")
+    # S-296: 用途守卫内部调用数量守卫,所以这里认它。**两道都要在扇出之前。**
+    gate = fn.find("assert_purpose_source(")
     loop = fn.find("asyncio.gather(")
     assert gate > 0, "the per-symbol path must consult the policy"
     assert gate < loop, "the gate must run BEFORE the fan-out, not alongside it"
+
+
+def test_execution_fanout_must_carry_an_explicit_symbol_list():
+    """S-296:名单从哪来,是这条规则的全部重量。
+
+    HL 挂 233 个永续 —— 那是**场馆的库存**,不是我们的成交集。
+    默认值等于把「挂牌」当「要交易」,而 S-204 那次 233 个标的的扇出
+    正是这么来的。所以 execution 用途下的扇出必须由调用方显式传名单。
+    """
+    from src.data.market.source_policy import (
+        EXECUTION, MARKET_DATA, PurposeMismatch, SourcePolicyError,
+        assert_purpose_source)
+
+    # 拿场馆挂牌当名单 —— 正是 S-204
+    with pytest.raises(PurposeMismatch, match="没有显式传入成交名单"):
+        assert_purpose_source(EXECUTION, "hyperliquid", n_assets=233,
+                              job="daily bars", explicit_set=False)
+    # ⚠️ 显式传名单**只解决出处,不解决体量**。233 个显式标的照样被数量守卫拦下 ——
+    # 因为一份「233 个名字的成交集」就是把场馆挂牌换了个标签重新提交。
+    # 两道守卫回答两个问题:名单从哪来 / 这个源扛不扛得住。
+    with pytest.raises(SourcePolicyError, match="free source"):
+        assert_purpose_source(EXECUTION, "hyperliquid", n_assets=233,
+                              job="marks", explicit_set=True)
+    # 真正的成交集是一小把名字 —— 自由源的定价方式就是「一次调用或者一小把」
+    assert_purpose_source(EXECUTION, "hyperliquid", n_assets=5,
+                          job="execution marks", explicit_set=True)
+    # 面板行情走 HL —— 用途错了,数量再小也不该过
+    with pytest.raises(PurposeMismatch, match="coingecko_pro"):
+        assert_purpose_source(MARKET_DATA, "hyperliquid", n_assets=3,
+                              job="frontend prices")
+
+
+def test_the_loop_reads_the_venue_only_for_what_only_the_venue_knows():
+    """S-296:`_hyperliquid_loop` 不再取面板日线。
+
+    S-205 的数量守卫从 2026-08-23 起正确地拦住了那个扇出,而**没有人接手** ——
+    hyperliquid 停在 08-23,CG Pro 只覆盖 25 个标的,面板 262 个里 237 个
+    两周没有日线来源。**一个只拦不导的守卫,会把违规变成缺口。**
+    """
+    main = code_only((ROOT / "src/api/main.py").read_text())
+    loop = main.split("async def _hyperliquid_loop")[1].split("\nasync def ")[0]
+    assert "collect_venue_marks" in loop, (
+        "场馆循环必须走一次请求的 venue_snapshot 路径")
+    assert "collect_hyperliquid" not in loop, (
+        "面板日线不走 HL —— 那是 market_data 用途,归 CoinGecko Pro")
+    # S-294 接错过一次:SourcePolicyError 是设计错误,不是覆盖率拒绝。
+    assert "refused=" not in loop, (
+        "本循环没有覆盖率地板,它的失败都是真故障。把设计错误记成"
+        "「正确地拒绝写」,等于把它伪装成健康")
 
 
 def test_the_one_call_snapshot_exists_and_does_not_loop():
@@ -133,7 +183,11 @@ def test_no_new_module_fans_out_over_a_free_endpoint_uncounted():
                     fans_out = True
                 if name == "Semaphore":
                     fans_out = True
-            gated = "assert_bulk_source" in body
+            # S-296:用途守卫内部就调数量守卫,两者都算「已闸」。
+            # 只认 `assert_bulk_source` 会把正确升级过的调用点判成违规 ——
+            # **一个守卫认不出比自己更严的守卫,就是在惩罚修复。**
+            gated = ("assert_bulk_source" in body
+                     or "assert_purpose_source" in body)
             if fans_out and not gated:
                 offenders.append(f"{path.relative_to(ROOT)}::{fn.name}")
     assert not offenders, (
