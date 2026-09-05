@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-05 (Seth/Cowork lane — S-288…S-296;**企业决策流已接通并落库**(834 条决策 + 214 行快照,Strategy 回到 2020-08-11);S-294 加 refused 第三态、S-295 加 build 追踪;**S-296 用途轴 —— 心跳第一次让 HL 的失败离开 stdout,而我的第一个动作是把它接成 `refused` 即把灯改绿。已撤回。** `_hyperliquid_loop` 改走一次请求的 `venue_snapshot`(实测 233 永续/1 次调用/funding 缺 0);⚠️ **面板 262 里 237 个仍无日线来源**,见 OPEN RISKS;⚠️ 沙箱已跑不完 preflight,完整的门只在 Mac 侧)
+**Last updated:** 2026-09-05 (Seth/Cowork lane — S-288…S-296;**企业决策流已接通并落库**(834 条决策 + 214 行快照,Strategy 回到 2020-08-11);S-294 加 refused 第三态、S-295 加 build 追踪;**S-296 用途轴 —— 心跳第一次让 HL 的失败离开 stdout,而我的第一个动作是把它接成 `refused` 即把灯改绿。已撤回。** `_hyperliquid_loop` 改走一次请求的 `venue_snapshot`(实测 233 永续/1 次调用/funding 缺 0);⚠️ **面板 262 里 237 个仍无日线来源**,见 OPEN RISKS;⚠️ 沙箱已跑不完 preflight,完整的门只在 Mac 侧;**S-297/S-298 — book_trader 决策 C 拍板 + 闸 ship,等 Mac 切 decide_gated**(OPEN RISK 0/0b 由 🔴→🟢,0 升 status=Seth 闸 ready,0b status=Option C signed 待 Minimax-C wire;详见 §SETH-DISPATCH-2026-09-05))
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
 > inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
@@ -102,20 +102,43 @@ The cap is doing its job only if closure is as routine as addition.*
    (08-17/21/22 `n_sources=1`),而 `daily_macro_regime` 这个 VIEW **每天都算出 `n_obs`/`n_sources`,
    两个消费者却只 `select d,regime`** —— 票数被扔了,所以「3 票一致」和「1 票独裁」在下游同形。
    已建 `src/data/market/regime_quorum.py` 五值裁决(ok/thin/COLLAPSED/frozen/no_baseline),
-   今日实测 **thin**(信源 2/基线 3);**只报不拦**,因为 book 正处 M-112 HALT,在没人看时改定仓
-   行为等于换掉一个正在复核的部件。**要不要拦,跟恢复 book 一起签。**
+   今日实测 **thin**(信源 2/基线 3)。**Seth 侧闸已 ship**(2026-09-04 S-284 C fix →
+   `paper_trading/spec_runner.py:430 decide_gated()`,commit 62133ad;22 守卫绿 +
+   24 CLI 守卫绿,全部 wired preflight)。thin/COLLAPSED/frozen/no_baseline/no_data
+   现在**真的拦 book**(Seth 侧全链路 ready,等 Mac 切到新入口)。原来的
+   「只报不拦」是 HALT 期主动选择 —— 跟 OPEN RISK 0b 同源。
+   **Mac 侧 `book_trader.py` 仍读裸 label,没接 decide_gated —— 闸 Seth 侧 ship 了,
+   Mac 侧要接才生效**(见 §SETH-DISPATCH-2026-09-05)。
    VERIFY: `python3 -m tests.test_regime_quorum` → green ·
+   `python3 -m tests.test_regime_quorum_blocks_book` → green ·
+   `python3 paper_trading/spec_runner.py --book=b --dry-run --require-regime=ok --as-of=2026-09-01` →
+   `ENTERED`,regime=EASING,synthetic_quorum=true ·
+   `python3 paper_trading/spec_runner.py --book=b --dry-run --require-regime=COLLAPSED --as-of=2026-09-01` →
+   `SKIPPED`,reason 引用 S-263 ·
    `select d,regime,n_obs,n_sources from daily_macro_regime order by d desc limit 10;`
    → `n_sources` 连续 ≤1 即为塌陷
-   OWNER: Seth(配额层 + 拦截决策)· Minimax(本地 `narrative_daily` 的 producer 与定义)
+   OWNER: Seth(闸 + 闸守卫 + ingestion guard,shipped)· Minimax-C(Mac book_trader 接 decide_gated)·
+   Minimax(本地 `narrative_daily` 的 producer 与定义)
 
-0b. **🔴 M-120 的待办第 4 条会重启 M-112 明令必须停的东西。**
+0b. **🟢 Option C signed 2026-09-05 (BOOK_TRADER_DECISION_2026-09-01.md)。**
    M-112(08-30,P0)：`book_trader.py` HALT,Sharpe +8.2 是 same-bar look-ahead,诚实值 +1.25/+1.63。
-   M-120(08-31)：「book_trader 自 08-29 18:06 起未运行 —— **process 死了,需 restart**」。
-   而时间线是 18:04:46 触发 DD-STOP **-60.07%**、18:06:35 停止 —— 相差 109 秒,
-   **它不是崩溃,是回撤止损按设计停的**。「崩溃」与「正确地拒绝继续」被读成了同一个状态。
-   VERIFY: 恢复前必须先有 M-116(train/test split)+ M-93 的 OOS;两者目前都不存在。
-   OWNER: **AWAITING JAZZ**(HALT 还是用 Book B 恢复 paper)
+   M-120(08-31)：「book_trader 自 08-29 18:06 起未运行」—— 时间线是 18:04:46 触发
+   DD-STOP **-60.07%**、18:06:35 停止,**109 秒 by design 不是崩溃**。
+   M-115 Book B(M-93 + R14-Lite,lag-1,SR +1.629 / cum +321.5% / MaxDD -22.9%,beats
+   Book A by Δ +0.380 SR)over M-113 Book A;**Seth lane 闸已 ship**:regime_quorum 5-value
+   arbiter + `decide_gated()` wrapper(spec_runner.py:430)+ 22 闸守卫(test_regime_quorum_blocks_book)+
+   24 CLI 守卫(test_spec_runner_cli --require-regime=ok/thin 放行,COLLAPSED/frozen/no_baseline/no_data SKIPPED)
+   + ingestion lane guard(test_one_ingestion_lane,§M-118,待 commit)。**下一步 Minimax-C**:
+   `book_trader.py` 切到 `decide_gated` 入口,regime_quorum 闸把 verdict=COLLAPSED/frozen/no_baseline/no_data
+   全部拦截成 SKIPPED(thin 放行,但带 `verdict_kind=skipped` 标注);恢复时走 Book B config(M-93+R14-Lite)。
+   **不在 OPEN RISK 0 重抄「要不要拦,跟恢复 book 一起签」** —— 那一句在 OPEN RISK 0 顶部已升级为
+   「闸已 ship 等 Mac 切」,本条只剩 Mac 侧 wiring 一件事。
+   VERIFY(Mac 切完): `python3 paper_trading/spec_runner.py --book=b --dry-run --require-regime=ok` →
+   `ENTERED` · 同上 COLLAPSED → `SKIPPED` · `bash scripts/preflight.sh` 绿 ·
+   `ps aux | grep book_trader` → 1 line · `select max(trade_date) from beta_core_nav` ≥ 恢复日 ·
+   `python3 -m tests.test_regime_quorum_blocks_book` 绿 ·
+   `python3 -m tests.test_spec_runner_cli` 绿
+   OWNER: Seth(闸 + 守卫全部 shipped)· Minimax-C(book_trader 切 decide_gated + 恢复 Book B config)· JAZZ(已签 C)
 
 0c. **🟡 两 paper-book 系统零 interop (S-284, 2026-09-04)。** `paper_trading/spec_runner.py`
    (S-254 起,Seth lane,spec 库)与 `src/research/paper_books/`(S-265 之前,Seth lane,
