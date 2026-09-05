@@ -16435,3 +16435,60 @@ S-289 守的是这些命令的**语法**(行尾注释被终端吃掉);
 
 **沙箱跑不完 preflight,不是「可以只跑子集」的理由 ——
 是「我的验证覆盖不到的地方要显式说出来」的理由。**
+
+---
+
+## S-298 · 守卫把「写它那天的错误」固化成了规范 (2026-09-05)
+
+### 现象
+
+S-296 把 `_hyperliquid_loop` 的 `refused=` 拿掉之后,preflight 红:
+
+    ✗ _hyperliquid_loop 传了 refused
+    ✗ 循环心跳守卫 — do not push
+
+**红的是对的那一边。**
+
+### 原因
+
+`t_loops_that_can_refuse_actually_pass_the_flag` 里有一张手写清单:
+
+    for name in ("_deep_panel_loop", "_hyperliquid_loop"):
+        _check(f"{name} 传了 refused", "refused=" in seg)
+
+那张清单是 **S-294 我把 `refused` 接错的那一天**写的。当天 HL 的失败是
+`SourcePolicyError`(源选错了),不是覆盖率拒绝;我按「采集器会 refuse」接了上去,
+**顺手把这个判断写进了守卫**。
+
+> **一张手写的「应该如此」清单,会把写它那天的错误固化成规范。**
+> 清单不随代码漂移 —— 它让代码不敢漂回正确。
+
+### 修:从代码推,不从清单读
+
+    _collector_called_by(main, loop)   循环体里 `from ...collector import X` 的 X
+    _fn_source(module, X)              那个函数的源码
+    can_refuse = '"refused": True' in body
+    要求 forwards == can_refuse        **双向**
+
+双向是关键:
+
+- 会 refuse 而不传 → 正确的拒绝被记成故障,**告警常亮**
+- 不会 refuse 而传了 → 设计错误被记成正确的拒绝,**告警常绿**(S-294 原样)
+
+后者更危险:前者吵得没道理,后者**安静得没道理**。
+
+### 这条修法自己也踩了一次,同一个形状
+
+第一版按**模块**判 can_refuse,于是 `hyperliquid_collector.py` 判为「会」——
+因为 `collect_hyperliquid`(成交集蜡烛,有覆盖率地板)确实会。
+但循环调的是 `collect_venue_marks`:一次请求、没有地板、永远不 refuse。
+
+**同一个文件里两个函数,一个有地板一个没有,在模块粒度上完全同形。**
+粒度改到函数后通过:
+
+    ✓ _deep_panel_loop  → collect_deep_panel()  的 refused 接法一致
+    ✓ _hyperliquid_loop → collect_venue_marks() 的 refused 接法一致
+
+一天之内,同一个形状出现在:业务代码(S-296)、验证命令(S-297)、
+守卫本身(S-298)、以及守卫的第一版修法(本节)。
+**它不是某一处的 bug,是我默认的粗粒度。**
