@@ -47,7 +47,15 @@ MAX_RESOLVE_PER_RUN = 300
 
 #: 增量回填往回看多少天。**不是「今天一天」** —— 一次失败会留一个洞,
 #: 而一个洞在 `max(trade_date)` 上完全不可见(S-190 那次的形状)。
-BACKFILL_LOOKBACK_DAYS = 7
+#:
+#: ⚠️ 首版取 7 天,结果 **57 个标的全部被拒、写入 0 行** (S-306):
+#: `cg_pro_backfill` 的地板是绝对值 30 根 bar,而 7 天窗口正常就只有 ~7 根。
+#: **地板没错,是我把一个为长窗口回填写的函数用在增量刷新上** ——
+#: 同一个数字在两种用途下含义相反:回填时 7 根 = 出错了,刷新时 7 根 = 正常。
+#:
+#: 现在 60 天:既让地板自然满足,也真的实现上面那句「补洞」——
+#: 7 天窗口补不了一个 10 天前的洞,而我当时就是这么写的。
+BACKFILL_LOOKBACK_DAYS = 60
 
 #: 注入式写入,显式声明 (S-304)。`ohlcv_daily` 由 cg_pro_backfill 写,
 #: 它自己是字面调用,已在清单里。
@@ -89,6 +97,10 @@ async def run_once(*, client, supabase_query, supabase_upsert,
 
     # ── ① 解析 ──────────────────────────────────────────────────────────────
     idx: dict[str, list[str]] = {}
+    # ⚠️ **已知缺口,显式记下来:** 我们不取市值,所以任何 symbol 撞名都会
+    # 永久停在 `ambiguous`,不会自己好。实测面板上有 4 个。
+    # 要解它们需要对候选 id 打一次 `/coins/markets` 取市值 —— 那是下一步,
+    # 而在它落地之前,这 4 个是**已知不覆盖**,不是「暂时没解析出来」。
     mcap: dict[str, float] = {}
     if missing:
         try:
@@ -134,7 +146,9 @@ async def run_once(*, client, supabase_query, supabase_upsert,
         from src.data.market.cg_pro_backfill import backfill
         end = dt.date.fromisoformat(today)
         start = end - dt.timedelta(days=BACKFILL_LOOKBACK_DAYS)
-        r = await backfill(pairs, start=start, end=end, dest="supabase")
+        # 显式说明用途:窗口 60 天,地板按窗口比例算(S-306)。
+        r = await backfill(pairs, start=start, end=end, dest="supabase",
+                           min_candles=max(5, int(BACKFILL_LOOKBACK_DAYS * 0.5)))
         out["rows_written"] = int(getattr(r, "rows_written", 0) or 0)
         out["backfill_ok"] = bool(getattr(r, "ok", False))
         if not out["backfill_ok"]:
@@ -149,6 +163,10 @@ async def run_once(*, client, supabase_query, supabase_upsert,
         out["status"] = "ok"
     elif out["errors"]:
         out["status"] = "error"
+        # ⚠️ 首版只报「1 个问题」**不说是哪个问题** —— `classify()` 读的是
+        # `error`(单数),而这里只填了 `errors`(复数),于是心跳上是一句
+        # 没有原因的失败。一个不带原因的失败,排查成本等于从零开始 (S-306)。
+        out["error"] = str(out["errors"][0])[:200]
     else:
         # 0 行且无错:面板已经是最新的。**合法,但不是进展** —— 记为 refused,
         # 连续多轮 0 行由 producer_freshness 的事件时钟去判。
