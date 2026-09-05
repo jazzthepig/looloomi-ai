@@ -16575,3 +16575,77 @@ S-278 建了事件时钟,S-282 建了写时钟,**两个都对**。
 
 我没查就写了 —— **就在那份开头写着「每一条结论必须有一次探针支撑」的文档里。**
 已订正。真正的缺口不是「没接」,是「只覆盖 14/71」。
+
+---
+
+## S-300 · 扫描把「扇出」定义成了 asyncio 的两个构件 (2026-09-05)
+
+### 起因:我的 P0 判断是错的
+
+我用 `ohlcv_daily` 查出 ① 面板 24 个标的里 7 个停 13 天,判定 v5 可能已被污染。
+**用错表了。** `_load_panel` 调 `load_binance_panel`,它直接打
+`https://fapi.binance.com` 现拉 —— ① 的价格**根本不经过 `ohlcv_daily`**。
+`n_positions=24` 没有矛盾,v5 没有被陈旧价格污染。
+
+**结论对不对不重要,重要的是我拿一张不相干的表去判一个生产路径,
+而且差点让 Jazz 据此作废一本账。**
+
+### 但那条路径本身有两个真问题
+
+**一、它是一个 24 标的 × 2 端点 ≈ 48 次/天的免费源扇出,从没被守卫看见。**
+
+S-296 的静态扫描扫的是 `src/data`,而 `causal_positioning.py` 在 `src/research`。
+**作用域比问题小一格。** 这次它漏掉的,恰好是要拿真钱去跑的那本账的价格源。
+
+**二、v5 的 inception reason 与代码不符。**
+
+作废 v4 的文档里写着:
+
+> "Its price REFERENCE change (Binance -> Hyperliquid oracle) was correct and
+> **is RETAINED**"
+
+而 `beta_core_paper.py` 里 `hyperliquid` 只出现在**注释**里,没有任何代码路径 ——
+`_load_panel` 打的仍是 Binance。**散文说换了源,代码在打 Binance。**
+一个前向记录最要紧的属性就是「它按什么价格记的」,而文档和代码在这一点上不一致。
+**这条动到记录的定义,需 Jazz 定夺:改文档,还是改代码。**
+
+### 修:三次收窄,每次都是同一个形状
+
+放宽范围到 `src/` 之后扫描**仍然通过** —— 因为它把扇出定义成
+`gather(*[...])` 或 `Semaphore`,而 `load_binance_panel` 是个**同步 for 循环**。
+
+> **守卫对目标的定义比目标窄,和没有守卫的区别只是它让人放心。**
+> 一个 for 循环打 48 次和一个 gather 打 48 次,对被打的那一端完全一样 ——
+> 而 429 是那一端发的。
+
+三次收窄,每次都被同一个形状咬:
+
+    ① 只认 gather/Semaphore          → 同步循环隐形
+    ② 改成「循环体里有 host 字面量」   → 仍然漏。`base = "https://fapi.binance.com"`
+                                        在外层,循环里只有 `klines(sym)` ——
+                                        **URL 被赋给变量就从字符串匹配里消失了**
+    ③ 改成「循环体里有任何调用」       → 抓到了,但 `collect_venue_marks` 被误报:
+                                        `a.get("funding_1h")` 和 `client.get(url)`
+                                        在 AST 上只差一个接收者。**dict.get 被当成
+                                        了 HTTP get。**
+
+最终判据:免费 host + 循环体里有**客户端接收者**的 HTTP 方法调用
+(或调用了本函数内定义的、内部打网络的取数函数)。
+
+### 浮出 7 处,登记为只减不增
+
+**不是新出现的,是一直在那里而扫描看不见。** 一次全修会让这条守卫变成
+一次大重构的门,而一个逼人做大重构的守卫会被绕过。所以按仓里既有模式登记:
+
+    ⚠️ causal_positioning.load_binance_panel        ① 的价格源
+    ⚠️ factor_tilt_paper._fetch_close_live          factor_tilt_nav 至今 0 行
+    ⚠️ pod_aggregator_paper._fetch_close_funding_live  pod_aggregator_nav 至今 0 行
+       crowd_clock_backtest.run                     离线
+       causal_sleeve_extension.fetch_binance_panel  离线
+       volume_factory_universe.fetch_symbol_ohlcv   离线
+
+**后两本账「从没写过一行」和「在免费源上扇出」很可能是同一件事的两面** ——
+这是今晚第一次有一条线索把那两本空账连到一个具体原因上。
+
+表里每条带理由、名字全部可见、修好一条必须删一条
+(留幽灵会让人学会忽略整张表)。**这张表是工作队列,不是豁免。**
