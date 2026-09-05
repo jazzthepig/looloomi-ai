@@ -147,8 +147,15 @@ async def run_once(*, client, supabase_query, supabase_upsert,
         end = dt.date.fromisoformat(today)
         start = end - dt.timedelta(days=BACKFILL_LOOKBACK_DAYS)
         # 显式说明用途:窗口 60 天,地板按窗口比例算(S-306)。
+        # `vendor_paired`:映射是 CoinGecko 自己成对给的(`/coins/list` 里唯一,
+        # 或 trending 接口一并返回),**不是我们猜的**。对这些,当库里没有
+        # 对照行时「不可校验」应当放行并记为未校验,而不是拒写 —— 否则面板
+        # 结构上永远扩不出已有的 25 个标的 (S-307)。
+        # 市值裁决出来的不在这个集合里,它们仍然必须先过校验。
+        _vendor = {s_ for s_, _ in pairs}
         r = await backfill(pairs, start=start, end=end, dest="supabase",
-                           min_candles=max(5, int(BACKFILL_LOOKBACK_DAYS * 0.5)))
+                           min_candles=max(5, int(BACKFILL_LOOKBACK_DAYS * 0.5)),
+                           vendor_paired=_vendor)
         out["rows_written"] = int(getattr(r, "rows_written", 0) or 0)
         out["backfill_ok"] = bool(getattr(r, "ok", False))
         if not out["backfill_ok"]:

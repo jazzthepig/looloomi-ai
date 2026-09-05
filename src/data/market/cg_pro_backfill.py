@@ -120,6 +120,23 @@ class BackfillResult:
         return out
 
 
+
+def _why_all_failed(results) -> str:
+    """全军覆没时,**把最常见的那条理由带出来**,而不是指向 detail (S-307)。
+
+    理由按出现次数排 —— 57 个标的全挂时,通常是同一个原因,
+    而知道那个原因是「35 个没有对照行」还是「额度用尽」,决定了修法完全不同。
+    """
+    from collections import Counter
+    c = Counter((r.reason or "unknown").split("——")[0].strip()[:70]
+                for r in results)
+    top = c.most_common(3)
+    head = f"{len(results)} 个标的全部未写入。"
+    body = " · ".join(f"{n}× {why}" for why, n in top)
+    more = f"(共 {len(c)} 种原因)" if len(c) > 3 else ""
+    return head + body + more
+
+
 def chunk_windows(start: date, end: date, *, days: int = CHUNK_DAYS
                   ) -> list[tuple[int, int]]:
     """把 [start, end] 切成不超过 `days` 天的 unix 时间戳窗口。
@@ -349,6 +366,7 @@ async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
                           asset_class: Optional[str] = None,
                           dest: str = "local",
                           min_candles: Optional[int] = None,
+                          vendor_paired: bool = False,
                           dry_run: bool = False) -> SymbolResult:
     """回填一个标的。**地板在写之前** (S-220)。
 
@@ -370,7 +388,19 @@ async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
     # 拿最后一根 bar 对库里同日的 coingecko 收盘 —— 同 vendor 两端点,必须接近。
     if rows:
         chk = await _verify_mapping(symbol, coin_id, rows[-1])
-        if not chk.ok:
+        # ⚠️ **不可校验 ≠ 校验不通过** (S-307)。
+        #
+        # 2026-09-05 实测:57 个映射里 **35 个库里没有 coingecko 对照行**,
+        # 于是全部判「未校验,不是通过」而不写。而对照行只能来自那 25 个
+        # coingecko 标的 —— **面板结构上永远扩不出已有的范围**。
+        # 一个防止写错的守卫,变成了一个禁止增长的守卫。
+        #
+        # 校验存在的目的是抓**我们猜出来的**映射。而 vendor 成对给出的
+        # (symbol, id)——`/coins/list` 里唯一的、或 trending 接口一并返回的——
+        # **不是猜**。对它们,校验能做则做、不能做就记为未校验并放行;
+        # 只有 `mcap_tiebreak`(我们自己按市值裁决的)必须先过校验。
+        _not_checkable = "库里没有同日" in (chk.reason or "")
+        if not chk.ok and not (_not_checkable and vendor_paired):
             return SymbolResult(symbol, coin_id, False, len(rows),
                                 rows[0]["trade_date"], rows[-1]["trade_date"],
                                 reason=f"映射未通过校验:{chk.reason}")
@@ -426,6 +456,7 @@ async def backfill(pairs: Sequence[tuple[str, str]], *, start: date, end: date,
                    asset_class: Optional[str] = None,
                    dest: str = "local",
                    min_candles: Optional[int] = None,
+                   vendor_paired: Optional[set] = None,
                    dry_run: bool = False) -> BackfillResult:
     """`pairs` = [(symbol, coin_id), ...]。逐个回填,一个失败不拖垮其余。
 
@@ -443,6 +474,7 @@ async def backfill(pairs: Sequence[tuple[str, str]], *, start: date, end: date,
             r = await backfill_symbol(symbol, coin_id, start=start, end=end,
                                       asset_class=asset_class, dest=dest,
                                       min_candles=min_candles,
+                                      vendor_paired=(symbol in (vendor_paired or set())),
                                       dry_run=dry_run)
         except Exception as e:                                    # noqa: BLE001
             r = SymbolResult(symbol, coin_id, False, 0,
@@ -455,7 +487,11 @@ async def backfill(pairs: Sequence[tuple[str, str]], *, start: date, end: date,
     wrote = [r for r in results if r.ok]
     return BackfillResult(
         ok=bool(wrote), rows_written=total, per_symbol=tuple(results),
-        reason="" if wrote else "所有标的都没能回填 —— 逐个原因见 detail",
+        # ⚠️ **「逐个原因见 detail」是一个指针,不是一个原因** (S-307)。
+        # 心跳只带 `reason`,`detail` 留在返回值里没人看得到,于是面板上是
+        # 一句「都失败了,原因在别处」—— 排查成本和没有原因一样。
+        # 把最常见的那条理由带出来,并说明还有几种别的。
+        reason="" if wrote else _why_all_failed(results),
         dest=dest)
 
 
