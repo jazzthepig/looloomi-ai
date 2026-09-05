@@ -3362,9 +3362,19 @@ async def get_cg_ohlc_range(coin_id: str, from_ts: int, to_ts: int,
             timeout=30,
         )
         if strict and r.status_code != 200:
+            # ⚠️ **不要贴 body 前缀** (S-309)。CoinGecko 的错误信封是
+            # `{"status":{"timestamp":…,"error_code":…,"error_message":…}}` ——
+            # 有用的 `error_message` **排在 timestamp 后面**,而截 160 字
+            # 恰好只留下时间戳。上一轮我就是这么把唯一有用的部分截掉的:
+            # 诊断信息存在,但没能活着走到面板上。
+            _msg = ""
+            try:
+                _st = (r.json() or {}).get("status") or {}
+                _msg = str(_st.get("error_message") or _st.get("error_code") or "")
+            except Exception:                                 # noqa: BLE001
+                _msg = str(r.text)[:200]
             raise CGRangeError(
-                f"HTTP {r.status_code} · {coin_id} · "
-                f"body={str(r.text)[:160]}")
+                f"HTTP {r.status_code} · {coin_id} · {_msg[:220]}")
         r.raise_for_status()
         raw = r.json()
         if not isinstance(raw, list):
