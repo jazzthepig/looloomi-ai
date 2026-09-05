@@ -1482,6 +1482,29 @@ python3 -m tests.test_score_never_contradicts_grade || {
 python3 -m tests.test_spec_runner || {
   echo "  ✗ paper-trade 执行器守卫 — do not push"; exit 1; }
 
+# ── S-284/S-288 A fix: 多 sleeve book 6-branch 守卫 (M-115 验证缺口, 2026-09-04) ──
+# decide_survivors_book 是 M-113 V3 / M-115 Book B 的执行入口 —— ① regime-gated
+# BTC long + ④ cross-section L/S 两条 sleeve 合一。覆盖 4 BLOCKED + 5 SKIPPED +
+# 3 ENTERED = 12 分支;每条配 mutation 测试(改一个参 → 翻转),避免 vacuous pass。
+# 同时确认 verdict_kind 三值不互相污染(J fix):消费者按 kind 分桶不能撞。
+python3 -m tests.test_decide_survivors_book || {
+  echo "  ✗ 多 sleeve book 守卫 — do not push"; exit 1; }
+
+# ── S-284/S-288 C fix: regime_quorum 闸 (S-263 redux) ──────────────────────────
+# decide_gated 是 decide() 的 wrapper —— quorum=COLLAPSED/frozen/no_baseline/
+# no_data → SKIPPED(不是 ENTERED)。一个「全票通过」的 regime 标签如果票数本身
+# 已经塌了,它通过 SKIPPED 看起来像「regime 被纪律地跳过」,而真相是「这个标签
+# 今天不可信,不该用来定仓位」。五裁决 + 闸先于 BLOCKED 都测。
+python3 -m tests.test_regime_quorum_blocks_book || {
+  echo "  ✗ regime_quorum 闸守卫 — do not push"; exit 1; }
+
+# ── S-284/S-288 D fix: spec_runner CLI (BOOK_TRADER_DECISION 验证入口) ──────────
+# `python3 paper_trading/spec_runner.py --spec X --as-of Y --require-regime=Z --book=b --dry-run`
+# 让 BOOK_TRADER_DECISION_2026-09-01.md:119 那条 VERIFY 真正能跑。覆盖 --require-regime
+# 五裁决 / 缺必填参 / 非法 verdict / --book 限 a,b / 输出 _meta 标记。
+python3 -m tests.test_spec_runner_cli || {
+  echo "  ✗ spec_runner CLI 守卫 — do not push"; exit 1; }
+
 # ── S-258: CG Pro 深盘落库 —— 不覆盖旧数据,不伪造成交量 ─────────────────────
 # get_cg_ohlc_range() 早就存在且被 /api/v1/ohlcv 调用,而 ohlcv_daily 里
 # coingecko_pro_ohlc 是 0 行 —— 能力接通、被读过、从未被持久化(S-214 形状)。

@@ -24,6 +24,7 @@ from paper_trading.spec_runner import (
     Verdict,
     build_panel,
     decide,
+    decide_gated,
     decide_survivors_book,
     exit_due,
     should_run_today,
@@ -49,6 +50,7 @@ __all__ = [
     # entry points
     "build_panel",
     "decide",
+    "decide_gated",
     "decide_survivors_book",
     "should_run_today",
     "exit_due",
