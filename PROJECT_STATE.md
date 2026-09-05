@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-05 (Seth/Cowork lane — S-288…S-295;**企业决策流已接通并落库**(834 条决策 + 214 行快照,Strategy 回到 2020-08-11);心跳上线首日抓到 3 个循环失败,其中 2 个是我自己的误报/bug;S-294 加 refused 第三态、S-295 加 build 追踪(「修了还在失败」vs「还没轮到它跑」);⚠️ 沙箱已跑不完 preflight,完整的门只在 Mac 侧)
+**Last updated:** 2026-09-05 (Seth/Cowork lane — S-288…S-296;**企业决策流已接通并落库**(834 条决策 + 214 行快照,Strategy 回到 2020-08-11);S-294 加 refused 第三态、S-295 加 build 追踪;**S-296 用途轴 —— 心跳第一次让 HL 的失败离开 stdout,而我的第一个动作是把它接成 `refused` 即把灯改绿。已撤回。** `_hyperliquid_loop` 改走一次请求的 `venue_snapshot`(实测 233 永续/1 次调用/funding 缺 0);⚠️ **面板 262 里 237 个仍无日线来源**,见 OPEN RISKS;⚠️ 沙箱已跑不完 preflight,完整的门只在 Mac 侧)
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
 > inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
@@ -64,6 +64,24 @@ not reach S-92 or the still-open security hole — the header was dated older th
 the lessons lived only in a 5,672-line ledger. **Don't transmit memory, transmit verification.**
 Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 `tests/test_cold_start_contract.py`.*
+
+### #0a · 面板 262 个标的里 **237 个没有日线来源** (S-296, 2026-09-05)
+
+HL 那条路已正确关闭(用途轴:面板行情是 market_data,归 CG Pro)。
+CG Pro 那条路只覆盖 `ASSETS_CONFIG` 的 25 个,因为**全仓没有面板级的
+symbol→coin_id 映射表** —— `cg_pro_backfill` 与 `deep_walk` 都要求
+调用方传 `(symbol, coin_id)` 对,而那份对照表从来没有被建过。
+
+**这不是「源选错了」的残留,是一个独立的缺口。** 修法是一次 CG Pro
+`/coins/list` 调用(~17,000 条 symbol+id)落成映射表,再用 S-258 的
+实证校验(收盘价对比,错的 coin_id 会差几十倍)逐个确认后写入。
+**不要在没有校验的情况下按 symbol 猜 id** —— 一个错的映射会把另一个币
+的整段历史写进这个标的,而曲线看起来完全正常。
+
+```
+curl -s 'https://web-production-0cdf76.up.railway.app/internal/data-coverage' | \
+  python3 -c 'import sys,json;d=json.load(sys.stdin);print(d.get("n_covered"),"/",d.get("n_total"))'
+```
 
 *RETIRED 2026-08-12 to make room for #0: **#5 MCP streamable-transport migration** — closed
 2026-08-09, no open follow-on, and its VERIFY (`grep -c 'mcp/sse' src/mcp/*.py` → 0) is a
