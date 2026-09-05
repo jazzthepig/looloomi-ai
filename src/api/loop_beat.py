@@ -72,6 +72,93 @@ NEVER_RAN, OK, FAILING = "never_ran", "ok", "failing"
 REFUSED = "refused"
 
 
+# ── S-299 (2026-09-05):从「函数没崩」改成「活干完了」 ────────────────────────
+#
+# 架构自上而下核对的头条:**14 个有心跳的循环里,11 个写死 `ok=True`。**
+# 只要采集函数没抛异常,心跳就报健康 —— 它从不看返回值。
+#
+# `_outcome_tracker_loop` 是最干净的样本,整个机制在三行里:
+#
+#     summary = await run_outcome_tracker(dry_run=False)
+#     print(f"[OUTCOME] ... written={summary.get('rows_written')}")
+#     await _beat("_outcome_tracker_loop", ok=True)     # ← 无条件
+#
+# **`rows_written` 被打印出来,然后被丢掉。它就在那一行的上一行。**
+#
+# 实测的四条假绿灯(2026-09-05):
+#
+#     _outcome_tracker_loop   ok   signal_outcomes      停 125 天
+#     _factor_tilt_loop       ok   factor_tilt_nav      0 行
+#     _pod_aggregator_loop    ok   pod_aggregator_nav   0 行
+#     _two_layer_paper_loop   ok   two_layer_paper_nav  停 14 天
+#
+# 9 本纸面账里 4 本的表是空的或陈旧的,而面板写着「12/14 健康」。
+#
+# > **「循环成功」和「工作完成」是两个状态,而心跳只测了第一个。**
+#
+# ## 为什么复用 REFUSED 而不是加第五个状态
+#
+# `skipped` / `no_data` / `warming_up` 的语义是「跑通了,按规矩没干活」——
+# 与地板拒绝**同类**。REFUSED 已经带 `n_consecutive_refusals`,
+# 而「连续 N 轮没进展」正是我们要的那个信号。加新状态等于重造它。
+#
+# ## 未知状态判 failing,不判 ok
+#
+# 一个没被枚举的 status,**我们不知道它有没有干活**。
+# 判 ok 就是让未知伪装成健康 —— 这个 session 排了二十几条,全是这个形状。
+# 词表由实测得来(AST 抽 11 个循环实际调用的函数里的 status 字面量),
+# 不是猜的,所以「未知」是真的未知。
+
+#: 真的产生了工作。`already_marked` 也算 —— 今天的行**存在**是目的本身。
+PROGRESS_STATUS = frozenset({
+    "ok", "marked", "already_marked", "inception", "accruing", "success",
+    "closed", "filled", "live", "generated_uncached", "on_track",
+})
+
+#: 跑通了、按规矩没干活。**不是故障,但也不是进展** —— 单独计数。
+NO_WORK_STATUS = frozenset({
+    "skipped", "no_data", "warming_up", "not_yet_marked", "nothing_to_flush",
+    "insufficient_episodes", "insufficient_data", "pending", "building",
+    "empty", "stale", "accruing_only",
+})
+
+#: 真的坏了。
+BROKEN_STATUS = frozenset({
+    "error", "mark_failed", "inception_failed", "no_supabase", "undeclared",
+    "failed", "unavailable", "rejected", "unconfigured", "unknown",
+})
+
+
+def classify(res: object) -> tuple[bool, bool, Optional[str]]:
+    """采集器的返回值 → `(ok, refused, error)`。**纯函数,可离线测。**
+
+    判据是 `status`,不是「有没有抛异常」。三条出口:
+
+        progress  → (True,  False, None)   干了活
+        no_work   → (False, True,  why)    跑通了但按规矩没干活 —— 计数,不报错
+        broken    → (False, False, why)    真故障
+
+    **未知 status 走 broken**,理由见上面那段注释:未知不是健康。
+    返回值不是 dict(旧式调用点)时给 `(True, False, None)` ——
+    那是「这个调用点还没迁移」,由 `HARDCODED_OK_BUDGET` 只减不增地收口,
+    而不是在这里假装判过。
+    """
+    if not isinstance(res, dict):
+        return True, False, None
+    st = str(res.get("status") or "").strip().lower()
+    if not st:
+        return True, False, None
+    if st in PROGRESS_STATUS:
+        return True, False, None
+    if st in NO_WORK_STATUS:
+        return False, True, f"status={st} —— 跑通但没有产生工作"
+    if st in BROKEN_STATUS:
+        return False, False, f"status={st} :: {str(res.get('error') or res.get('reason') or '')[:120]}"
+    return False, False, (
+        f"未知 status '{st}' —— **未知不是健康**。它没有出现在实测词表里,"
+        f"所以我们不知道这一轮有没有干活;判健康等于让未知伪装成健康")
+
+
 def _now() -> int:
     return int(time.time())
 
