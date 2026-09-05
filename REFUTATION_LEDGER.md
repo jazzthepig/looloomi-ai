@@ -16492,3 +16492,86 @@ S-296 把 `_hyperliquid_loop` 的 `refused=` 拿掉之后,preflight 红:
 一天之内,同一个形状出现在:业务代码(S-296)、验证命令(S-297)、
 守卫本身(S-298)、以及守卫的第一版修法(本节)。
 **它不是某一处的 bug,是我默认的粗粒度。**
+
+---
+
+## S-299 · 11 个循环把「我没崩」报成了「我干完了」 (2026-09-05)
+
+架构自上而下核对(`docs/ARCHITECTURE_REVIEW_2026-09-05.md`)的头条。
+
+### 实测
+
+`src/api/main.py` 的 14 个有心跳的循环,**11 个写死 `ok=True`**(AST 统计)。
+只要采集函数没抛异常,心跳就报健康 —— 它从不看返回值。
+
+最干净的样本,整个机制在三行里:
+
+    summary = await run_outcome_tracker(dry_run=False)
+    print(f"[OUTCOME] ... written={summary.get('rows_written')}")
+    await _beat("_outcome_tracker_loop", ok=True)
+
+**`rows_written` 被打印出来,然后被丢掉。它就在那一行的上一行。**
+
+四条已经在发生的假绿灯:
+
+| 循环 | 心跳 | 表 |
+|---|---|---|
+| `_outcome_tracker_loop` | ok | `signal_outcomes` 停 **125 天** |
+| `_factor_tilt_loop` | ok | `factor_tilt_nav` **0 行** |
+| `_pod_aggregator_loop` | ok | `pod_aggregator_nav` **0 行** |
+| `_two_layer_paper_loop` | ok | 停 **14 天** |
+
+9 本纸面账里 4 本的表是空的或陈旧的,面板写着「12/14 健康」。
+
+> **「循环成功」和「工作完成」是两个状态,而心跳只测了第一个。**
+
+Jazz 从 09-03 起反复问的那句 ——「怎么都说健康,都说没问题,但就是没有做完?
+总发现有东西停了?」—— 现在有了数字:**11/14**。
+
+### 为什么两个时钟都在,却漏了这三本
+
+S-278 建了事件时钟,S-282 建了写时钟,**两个都对**。
+但 9 本账里只有 `beta_core_nav` 在生产者集内。另外三本:
+
+    事件时钟看不见它们  不在 EXPECTED 集内
+    写时钟看不见它们    心跳写死 ok=True
+
+**它们恰好落在两块表的缝里。** 端点自己诚实地写着
+「这个裁决只对 14/71 个对象成立」——
+**而一个诚实的范围声明不等于覆盖。**
+
+### 修
+
+**① `classify()`(纯函数,`loop_beat.py`)** —— 从 `status` 判三值,
+词表由 AST 从 11 个循环实际调用的函数里抽出来,不是猜的:
+
+    progress  ok/marked/already_marked/inception   → ok
+    no_work   skipped/no_data/warming_up           → refused(计数)
+    broken    error/mark_failed/...                → failing
+    未知      → **failing**,不是 ok
+
+复用 REFUSED 而不加第五个状态:`skipped` 的语义就是「跑通了,按规矩没干活」,
+与地板拒绝同类,而 `n_consecutive_refusals` 正是「连续 N 轮没进展」那个信号。
+
+**未知判 failing** —— 判 ok 就是让未知伪装成健康,
+这个 session 排的二十几条全是这个形状。
+
+**② 11 个调用点全部改成从返回值推导。** 剩余写死 `ok=True`:**0**。
+`HARDCODED_OK_BUDGET = 0`,只减不增。
+
+**③ 8 本账加进生产者集**(12 → 20 张表),线上 `producer_freshness()` 同步重建。
+加完立刻可见:两本 `empty`、一本 `dead`。
+
+### 副产品:仓里的 PRODUCER_SQL 与线上函数已经漂开
+
+线上有第五列 `n_future`(S-293 的 2099 污染行计数),仓里的镜像没有。
+守卫只比对**表名**,比对不出列 —— 又是作用域差一格。已同步。
+
+### 我在这条里又错了一次,记下来
+
+架构核对文档第一版我写「事件时钟没有接到总裁决上」。
+**实测顶层 `verdict` 就是 `producers_dead`,`verdict_source` 就是 `producers`。**
+接上了,而且已经抓到 `signal_outcomes` 死。
+
+我没查就写了 —— **就在那份开头写着「每一条结论必须有一次探针支撑」的文档里。**
+已订正。真正的缺口不是「没接」,是「只覆盖 14/71」。
