@@ -375,11 +375,20 @@ async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
     """
     from src.data.market.data_layer import get_cg_ohlc_range
 
+    # ⚠️ `strict=True` (S-308)。摄取路径上,**「读不到」和「没有数据」必须可分**:
+    # 原来这个函数把 401 / 404 / 429 / schema 变更全部塌成 `[]`,理由只进
+    # stdout,于是 `coingecko_pro_ohlc` 从 S-258 起一直是 0 行而没人知道为什么。
+    # 这里把它变成一个带原文的异常,让它能走到心跳上。
     all_candles: list[dict] = []
-    for frm, to in chunk_windows(start, end):
-        got = await get_cg_ohlc_range(coin_id, frm, to, interval="daily")
-        if got:
-            all_candles.extend(got)
+    try:
+        for frm, to in chunk_windows(start, end):
+            got = await get_cg_ohlc_range(coin_id, frm, to, interval="daily",
+                                          strict=True)
+            if got:
+                all_candles.extend(got)
+    except Exception as e:                                        # noqa: BLE001
+        return SymbolResult(symbol, coin_id, False, 0,
+                            reason=f"读取失败(不是没有数据):{str(e)[:150]}")
 
     rows = to_rows(symbol, all_candles, asset_class=asset_class)
 

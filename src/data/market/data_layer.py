@@ -3291,8 +3291,25 @@ async def get_cg_price_history(coin_id: str, days: int = 365) -> dict:
         return {"coin_id": coin_id, "available": False, "error": str(e)}
 
 
+class CGRangeError(RuntimeError):
+    """`/ohlc/range` 读取失败 —— **不是「这段时间没有数据」** (S-308)。
+
+    这个异常存在的理由:原来的实现把 401 / 404 / 429 / schema 变更**全部
+    塌成 `[]`**,而真正的原因只进 `_logger.warning`。于是 `coingecko_pro_ohlc`
+    从 S-258 起一直是 0 行,**而没有任何东西知道为什么** ——
+    调用方读到的是「0 根 bar」,真相是「读不到」。
+
+    > **一个只进 stdout 的失败,对任何监控来说等于没有发生。**
+
+    摄取路径传 `strict=True`:在那里,静默的空列表会变成一段
+    看起来正常的缺口,而缺口在 `max(trade_date)` 上不可见。
+    读取路径保持宽松,因为那里一个空结果只是少显示一点东西。
+    """
+
+
 async def get_cg_ohlc_range(coin_id: str, from_ts: int, to_ts: int,
-                            interval: str = "daily") -> list[dict]:
+                            interval: str = "daily", *,
+                            strict: bool = False) -> list[dict]:
     """CoinGecko Pro /coins/{id}/ohlc/range — REAL OHLC candles (S-195, 2026-08-23).
 
     ⚠️ THIS IS THE ENDPOINT WE SHOULD HAVE BEEN USING ALL ALONG, and not using it
@@ -3323,6 +3340,8 @@ async def get_cg_ohlc_range(coin_id: str, from_ts: int, to_ts: int,
     a flat series.
     """
     if not CG_API_KEY:
+        if strict:
+            raise CGRangeError("COINGECKO_API_KEY 未配置 —— **这不是没有数据**")
         return []
 
     key = f"cg_ohlc_{coin_id}_{from_ts}_{to_ts}_{interval}"
@@ -3342,9 +3361,17 @@ async def get_cg_ohlc_range(coin_id: str, from_ts: int, to_ts: int,
                     "interval": interval},
             timeout=30,
         )
+        if strict and r.status_code != 200:
+            raise CGRangeError(
+                f"HTTP {r.status_code} · {coin_id} · "
+                f"body={str(r.text)[:160]}")
         r.raise_for_status()
         raw = r.json()
         if not isinstance(raw, list):
+            if strict:
+                raise CGRangeError(
+                    f"{coin_id}: 响应不是 list,是 {type(raw).__name__} —— "
+                    f"schema 变了?body={str(raw)[:140]}")
             return []
         out = []
         for k in raw:
@@ -3361,8 +3388,12 @@ async def get_cg_ohlc_range(coin_id: str, from_ts: int, to_ts: int,
                 continue
         await _redis_set(key, out, ttl=7200)
         return _cache_set(key, out)
+    except CGRangeError:
+        raise
     except Exception as e:                                    # noqa: BLE001
         _logger.warning(f"[CG] ohlc/range {coin_id} failed: {e}")
+        if strict:
+            raise CGRangeError(f"{coin_id}: {type(e).__name__}: {str(e)[:160]}")
         return []
 
 
