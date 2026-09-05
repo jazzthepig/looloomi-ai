@@ -767,6 +767,65 @@ async def _treasury_decisions_loop():
         await _asyncio.sleep(_TREASURY_INTERVAL_S)
 
 
+#: 面板日线同步的间隔。6 小时 —— 日线一天一根,多跑几轮是为了**一次失败
+#: 不留一个洞**,而洞在 `max(trade_date)` 上完全不可见(S-190 的形状)。
+_CG_PANEL_INTERVAL_S = 6 * 3600
+
+
+async def _cg_panel_loop():
+    """面板日线走 CG Pro,常驻 —— **给那个从没被调度的回填接上电** (S-304).
+
+    Jazz 2026-09-05 问「Railway 还是 sandbox」。答案不是偏好,是这条推出来的:
+
+        cg_pro_backfill 只有一个手动 API 路由,没有循环
+          → coingecko_pro_ohlc 表里 0 行
+            → 账本从库里读不到可信价格
+              → 24 个模块各自打外网
+
+    **一件事如果只在某个操作者在线时才发生,它最终就不会发生。**
+    沙箱随会话消失,手动路由需要有人记得 —— 两样我们都已经付过学费。
+
+    所以它在这里:Railway,常在,不依赖任何人的机器。
+    """
+    await _asyncio.sleep(900)
+    while True:
+        try:
+            import httpx as _httpx
+
+            from src.api.store import supabase_rpc, supabase_upsert_table
+            from src.data.entity.writer import _cg_headers
+            from src.data.market.cg_panel_sync import run_once
+
+            async def _q(table, cols):
+                rows = await supabase_rpc("cg_known_coin_map", {})
+                return rows if isinstance(rows, list) else []
+
+            async def _up(table, rows, on_conflict):
+                return await supabase_upsert_table(table, rows, on_conflict)
+
+            from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE
+            async with _httpx.AsyncClient(headers=_cg_headers(),
+                                          timeout=45) as _c:
+                res = await run_once(client=_c, supabase_query=_q,
+                                     supabase_upsert=_up,
+                                     panel_symbols=list(DEFAULT_UNIVERSE))
+            print(f"[CG-PANEL] {str(res.get('reason'))[:170]}")
+            # S-299:ok 从 `status` 推导,**不写死**。
+            _ok, _ref, _why = _classify(res)
+            await _beat("_cg_panel_loop", ok=_ok, refused=_ref, error=_why)
+        except Exception as _e:
+            print(f"[CG-PANEL] ⚠️  run failed: {_e}")
+            await _beat("_cg_panel_loop", ok=False, error=str(_e))
+        await _asyncio.sleep(_CG_PANEL_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_cg_panel_loop():
+    if os.environ.get("DISABLE_CG_PANEL_LOOP", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_cg_panel_loop())
+        print("[CG-PANEL] ✅ panel daily-bar sync loop scheduled")
+
+
 @app.on_event("startup")
 async def _start_treasury_loop():
     if os.environ.get("DISABLE_TREASURY_LOOP", "").lower() not in ("1", "true", "yes"):
