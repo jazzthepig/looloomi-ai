@@ -426,43 +426,49 @@ async def _start_deep_panel_loop():
 
 
 async def _hyperliquid_loop():
-    """Daily bars from the venue we will trade on (S-192).
+    """场馆事实:资金费 / mark / oracle / 未平仓 —— **一次请求** (S-192 → S-296).
 
-    Jazz, 2026-08-20: "不是有用 hyperliquid 吗?之后我们要接 hyperliquid 去交易的呀"
-    — and that answers a question I had been failing to answer for two days.
+    Jazz, 2026-09-05:**「我们实时数据和前端应该优先走 coingecko 的付费 api,
+    是接入交易生产的才读 hyperliquid。」**
 
-    The Binance collector above reaches ONE of 262 symbols (measured 08-20):
-    api.binance.com is geo-blocked from Railway US and the data-api.binance.vision
-    mirror is not filling the gap. Hyperliquid is a public DEX API, unblocked,
-    and `routers/ohlcv.py` has documented that since 2026-07-23.
+    这条改掉了本循环的职责。原来它每 6 小时对 233 个永续各打一次
+    `candleSnapshot` 取日线 —— 那是 market_data 用途走了 execution 源。
+    S-205 的数量守卫从 **2026-08-23** 起一直正确地拦着它,于是:
 
-    More than a workaround, it is the correct source: marks that will be executed
-    on Hyperliquid should be measured on Hyperliquid. A book marked on CoinGecko
-    spot and filled on HL perps is a splice that surfaces as unexplained slippage.
+        hyperliquid  177 个标的,最新 2026-08-23  ← 被拦了两周
+        coingecko*    25 个标的,最新 2026-09-04  ← 活着,但只有 25 个
 
-    Every candle carries its own epoch, so rows are dated by the BAR — unlike the
-    CoinGecko writer, whose rows are stamped with the write date and are
-    therefore all one day early (S-191).
+    **守卫只拦不导,违规就变成了缺口。** 而替代路径 `venue_snapshot()`
+    早在 S-205 就写好了,`metaAndAssetCtxs` 一次请求覆盖全部永续 ——
+    全仓调用点为零。自己买的卡,自己没插线。
 
-    Runs 40 min after boot, then every 6 h. More often than daily because these
-    bars are what the paper books mark against, and a book that marks at 00:05
-    against a bar written at 23:00 the previous day is a day behind by
-    construction.
+    现在这个循环取的是 **CoinGecko 给不了的东西**:funding 决定永续 sleeve
+    能不能成立(① 面板等权年化 +23.07%,毛 1.15 每年漏 ~26.5%),
+    oracle-vs-mark 是基差,OI 是拥挤度。这些是场馆事实。
+
+    面板日线不在这里 —— 走 CG Pro(付费,fan-out 是买来的权利)。
+    成交标记的蜡烛也不在这里:那要一份**显式的成交名单**,而 ① 还是纸面,
+    今天那份名单是空的(见 `source_policy.PURPOSE_SCOPE`)。
+
+    每 6 小时一轮:funding 是 1 小时结算的,日频会错过 carry 的形状。
     """
     await _asyncio.sleep(2400)
     while True:
         try:
-            from src.data.market.hyperliquid_collector import collect_hyperliquid
-            r = await collect_hyperliquid()
+            from src.data.market.hyperliquid_collector import collect_venue_marks
+            r = await collect_venue_marks()
             flag = "" if r.get("ok") else "  ⚠️ " + str(r.get("diagnosis", r.get("error", "")))
-            print(f"[HL] {r.get('symbols_ok')}/{r.get('symbols_total')} symbols · "
-                  f"{r.get('rows_upserted')} rows · latest {r.get('latest_bar')} · "
-                  f"{r.get('elapsed_s')}s{flag}")
+            print(f"[HL] {r.get('n_perps')} perps · {r.get('rows_written')} funding rows · "
+                  f"@{r.get('funding_time')} · {r.get('elapsed_s')}s{flag}")
+            # ⚠️ 这里**不接 `refused=`**。本循环没有覆盖率地板,它的失败只有
+            # 两种:场馆不可达,或写库失败 —— 两种都是故障。S-294 那次我把
+            # `refused` 接了上来,而它当时的失败是 `SourcePolicyError`:
+            # **「按规矩拒绝写」和「这个任务的源选错了」是两个状态**,
+            # 后者记成正常拒绝,就等于把设计错误伪装成健康。
             await _beat("_hyperliquid_loop", ok=bool(r.get("ok")),
-                        refused=bool(r.get("refused")),
                         error=None if r.get("ok") else str(r.get("diagnosis", r.get("error", ""))))
         except Exception as _e:
-            print(f"[HL] ⚠️  hyperliquid collection FAILED: {_e}")
+            print(f"[HL] ⚠️  venue marks FAILED: {_e}")
             await _beat("_hyperliquid_loop", ok=False, error=str(_e))
         await _asyncio.sleep(6 * 3600)
 
