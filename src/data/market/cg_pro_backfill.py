@@ -127,9 +127,20 @@ def _why_all_failed(results) -> str:
     理由按出现次数排 —— 57 个标的全挂时,通常是同一个原因,
     而知道那个原因是「35 个没有对照行」还是「额度用尽」,决定了修法完全不同。
     """
+    # ⚠️ **归一化后再计数** (S-309)。理由里带 symbol / coin_id,
+    # 所以 57 条各不相同,`most_common` 退化成 `1× … 1× …` ——
+    # 一个为了聚合而写的计数器,被它要聚合的那个字段里的标识符打败了。
+    import re as _re
     from collections import Counter
-    c = Counter((r.reason or "unknown").split("——")[0].strip()[:70]
-                for r in results)
+
+    def _norm(r) -> str:
+        t = (r.reason or "unknown")
+        t = t.replace(str(r.symbol or ""), "{sym}").replace(str(r.coin_id or ""), "{id}")
+        t = _re.sub(r"\d{4}-\d{2}-\d{2}[^\s]*", "{ts}", t)
+        t = _re.sub(r"\b\d+\b", "N", t)
+        return t.strip()[:110]
+
+    c = Counter(_norm(r) for r in results)
     top = c.most_common(3)
     head = f"{len(results)} 个标的全部未写入。"
     body = " · ".join(f"{n}× {why}" for why, n in top)
@@ -148,13 +159,24 @@ def chunk_windows(start: date, end: date, *, days: int = CHUNK_DAYS
     """
     if end < start:
         return []
+    # ⚠️ **不要向 API 要未来的数据** (S-309)。
+    #
+    # `datetime.max.time()` 把窗口末端设成当天 23:59:59 UTC,而循环在 UTC
+    # 早上跑 —— 实测 `to` 落在**未来 10.8 小时**。历史回填(`deep_walk`)的
+    # `to` 都在过去所以从没撞上;只有「取到今天」这条会,而
+    # `coingecko_pro_ohlc` 恰好就是那条路,恰好一直是 0 行。
+    #
+    # 这一条独立于它是不是本次 HTTP 400 的成因 —— 向数据源要一段还没发生的
+    # 时间,本身就没有正确答案。
+    _now = int(datetime.now(timezone.utc).timestamp())
     out: list[tuple[int, int]] = []
     cur = start
     while cur <= end:
         stop = min(cur + timedelta(days=days), end)
         out.append((
             int(datetime.combine(cur, datetime.min.time(), timezone.utc).timestamp()),
-            int(datetime.combine(stop, datetime.max.time(), timezone.utc).timestamp()),
+            min(_now,
+                int(datetime.combine(stop, datetime.max.time(), timezone.utc).timestamp())),
         ))
         if stop >= end:
             break
