@@ -52,6 +52,11 @@ RESOLVE_RETRY_DAYS = 7
 #: 见 `producer_freshness` 的事件时钟 —— 那才是「内容陈旧」的判据。
 COINS = ("bitcoin", "ethereum")
 
+#: ⚠️ **本模块用注入式写入,AST 扫描看不见表名** —— 所以显式声明 (S-304)。
+#: 这三张表从 S-292 起每天都在写,而清单守卫一直没看见它们。
+WRITES_TABLES = ("treasury_entities", "treasury_decisions",
+                 "corporate_treasury_history")
+
 LOOP_NAME = "_treasury_decisions_loop"
 
 

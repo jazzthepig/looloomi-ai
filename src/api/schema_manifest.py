@@ -134,12 +134,53 @@ def _tables_in(path: Path) -> set[str]:
     return found
 
 
+#: 注入式写入者自报的表 (S-304)。
+#:
+#: ⚠️ **`_tables_in` 看不见注入式写入。** 它找的是字面的
+#: `supabase_upsert_table("t", ...)`,而为了可离线测试,本仓库的几个 writer
+#: 把写入函数作为参数注入(`supabase_upsert(table, rows, on_conflict)`),
+#: 于是表名在调用点是一个**参数**,AST 看不到它是哪张表。
+#:
+#: 2026-09-05 实测后果:`treasury_entities` / `treasury_decisions` /
+#: `corporate_treasury_history` **三张每天都在写的表从 S-292 起就不在清单里**,
+#: 而清单守卫一直是绿的。**我为了可测性用的注入,把清单守卫打瞎了。**
+#:
+#: 推断在这里靠不住,所以改成**声明**:注入式写入者在模块级写
+#: `WRITES_TABLES = ("t1", "t2")`,这里读它。声明会漏(有人忘了写),
+#: 但漏了是**沉默的已知缺口**,而推断漏了是**看起来完整的清单**——
+#: 后者更糟,因为它会变成人们信任的东西。
+_DECLARED = "WRITES_TABLES"
+
+
+def _declared_tables_in(path: Path) -> set[str]:
+    """模块级 `WRITES_TABLES = (...)` 里声明的表名。"""
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, SyntaxError):
+        return set()
+    out: set[str] = set()
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        names = {getattr(t, "id", None) for t in node.targets}
+        if _DECLARED not in names:
+            continue
+        for el in getattr(node.value, "elts", []):
+            if isinstance(el, ast.Constant) and isinstance(el.value, str):
+                out.add(el.value)
+    return out
+
+
 def write_tables() -> list[str]:
-    """Every table name a production module writes to. Sorted, deduped."""
+    """Every table name a production module writes to. Sorted, deduped.
+
+    两条来源:AST 推断出的字面调用,加上注入式写入者的显式声明。
+    """
     out: set[str] = set()
     for p in sorted(_ROOT.rglob("*.py")):
         if _is_prod(p):
             out |= _tables_in(p)
+            out |= _declared_tables_in(p)
     return sorted(t for t in out if t and not t.startswith("_"))
 
 
