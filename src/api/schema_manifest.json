@@ -17,6 +17,7 @@
     "execution_outcomes",
     "factor_tilt_nav",
     "factor_tilt_state",
+    "funding_history",
     "fusion_paper_nav",
     "fusion_paper_state",
     "holder_concentration_history",
@@ -32,5 +33,109 @@
     "trade_results",
     "two_layer_paper_nav",
     "wallet_profiles"
-  ]
+  ],
+  "write_columns": {
+    "beta_core_nav": [
+      "benchmark_nav",
+      "benchmark_return",
+      "cap_source",
+      "cost",
+      "daily_return",
+      "excess_return",
+      "exposure_cap",
+      "gross",
+      "inception_id",
+      "interval_hours",
+      "mark_date",
+      "n_positions",
+      "nav",
+      "note",
+      "realized_vol_30d",
+      "rebalanced",
+      "regime",
+      "top_weights",
+      "vol_target_scalar"
+    ],
+    "causal_paper_nav": [
+      "cost",
+      "daily_return",
+      "funding_pnl",
+      "gross",
+      "mark_date",
+      "n_positions",
+      "nav",
+      "price_pnl",
+      "rebalanced",
+      "top_longs",
+      "top_shorts"
+    ],
+    "combined_book_nav": [
+      "cost",
+      "daily_return",
+      "funding_pnl",
+      "gross",
+      "mark_date",
+      "n_positions",
+      "nav",
+      "nucleus",
+      "price_pnl",
+      "rebalanced",
+      "top_longs",
+      "top_shorts"
+    ],
+    "dingge_paper_nav": [
+      "closed_today",
+      "closed_trades",
+      "detail",
+      "mark_date",
+      "nav",
+      "open_positions",
+      "opened_today",
+      "realized_pnl",
+      "unrealized_pnl"
+    ],
+    "macro_briefs": [
+      "brief",
+      "data_snapshot",
+      "model",
+      "recorded_at",
+      "source"
+    ],
+    "nav_exceptions": [
+      "action",
+      "actor",
+      "book",
+      "control",
+      "detail",
+      "inception_id",
+      "mark_date",
+      "reason",
+      "symbol"
+    ],
+    "scalable_book_nav": [
+      "daily_return",
+      "funding_pnl",
+      "gross",
+      "mark_date",
+      "n_positions",
+      "nav",
+      "price_pnl",
+      "rebalanced",
+      "sleeves",
+      "top_longs",
+      "top_shorts"
+    ],
+    "two_layer_paper_nav": [
+      "book_state",
+      "core_name",
+      "cost",
+      "daily_return",
+      "gross",
+      "mark_date",
+      "n_positions",
+      "nav",
+      "note",
+      "positions"
+    ]
+  }
 }
