@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-05 (Seth/Cowork lane — S-288…S-296;**企业决策流已接通并落库**(834 条决策 + 214 行快照,Strategy 回到 2020-08-11);S-294 加 refused 第三态、S-295 加 build 追踪;**S-296 用途轴 —— 心跳第一次让 HL 的失败离开 stdout,而我的第一个动作是把它接成 `refused` 即把灯改绿。已撤回。** `_hyperliquid_loop` 改走一次请求的 `venue_snapshot`(实测 233 永续/1 次调用/funding 缺 0);⚠️ **面板 262 里 237 个仍无日线来源**,见 OPEN RISKS;⚠️ 沙箱已跑不完 preflight,完整的门只在 Mac 侧;**S-297/S-298 — book_trader 决策 C 拍板 + 闸 ship,等 Mac 切 decide_gated**(OPEN RISK 0/0b 由 🔴→🟢,0 升 status=Seth 闸 ready,0b status=Option C signed 待 Minimax-C wire;详见 §SETH-DISPATCH-2026-09-05))
+**Last updated:** 2026-09-06 (Seth/Cowork lane — S-296…S-311;**Sense 链条打通**:`coingecko_pro_ohlc` 从 S-258 起的 0 行 → 732 行/12 标的,映射对照偏差 0.25–0.50%(容忍 5%);`_cg_panel_loop` 常驻 Railway;**S-299 心跳从「函数没崩」改成「活干完了」,写死 ok=True 11 → 0**;S-305 启动延迟封顶(20 个循环 ≥600s,`_age_sweep_loop` 睡一小时,部署比它勤 ⇒ 永不跑);S-306…S-310 五条同形缺陷:**好代码假设了一个它没说出口的调用场景**;S-311 `_forward_record_loop` 接心跳,`NO_BEAT_BUDGET` 28 → 25。⚠️ 仍缺:Sense 入口 24 未降 · 面板 12/57 · Learn 段断路)
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
 > inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
