@@ -17172,3 +17172,54 @@ S-307 那条「不可校验 ≠ 校验不通过」是这 7 个能进来的唯一
 
 > **一个系统排查自己的能力,和它本身的正确性是两件独立的事。**
 > 今晚花在第一件上的时间,远多于第二件。
+
+---
+
+## S-311 · 一个因为「沉默是那个 bug」而建的循环,把失败只报给了 stdout (2026-09-06)
+
+### 告警自己写了排查顺序,按它走
+
+Telegram:
+
+> 🔴 depth-divergence forward record has not marked in 17 day(s).
+> **Check /health .writes first**: production ran read-only for 5 days in August
+> under an unset APP_ROLE and this exact silence was the symptom.
+
+查了,**排除掉了**:
+
+    writes: {"enabled": true, "role": "production", "verdict": "ok"}
+
+这条告警值得记一笔:**它把「上次这个症状是什么原因」写进了自己**,
+所以排除第一假设只花了一次 curl。一个只报「X 停了」的告警会让人从零开始。
+
+### 真实原因
+
+`depth_divergence_log` 最后写入 **2026-08-21**(16 天)。写它的是
+`_forward_record_loop`,而那个循环:
+
+    没有心跳         —— 它是 25 个未接之一
+    失败只 print     —— `[FWD] ⚠️ forward-record pass FAILED: {e}`
+    启动延迟 2400s   —— 在部署节奏下可能从 08-21 起就没跑过（S-305 今天才封顶）
+
+而它的 docstring 第一段写着:
+
+> *"Loud: the whole point of this loop is that silence was the bug."*
+
+**一个因为「沉默就是那个 bug」而建的循环,把自己的失败只报给了 stdout。**
+所以「它没跑」和「它跑了失败」这两件事,16 天里没有任何东西能分开 ——
+而这正是它被建出来要解决的那个问题。
+
+### 修
+
+接心跳,`ok` 由 `run_once` 自己的判据推导(stalled / unknown / problems 三者皆空),
+写 0 行但无问题 → `refused`(今天没有新的背离是合法的),不是 failing。
+
+### 顺带:棘轮没上紧
+
+`NO_BEAT_BUDGET = 28`,而实测**已经是 25** —— 预算比现实松 3 个。
+
+> **一个只减不增的预算,如果在变好之后不跟着收紧,
+> 就给回退留了 3 格空间,而回退不会被任何东西发现。**
+
+那 3 格是别人(或我)之前接好的,没有人做「降到实测值」这个例行动作。
+已收紧到 25(接上 `_forward_record_loop` 之后)。
