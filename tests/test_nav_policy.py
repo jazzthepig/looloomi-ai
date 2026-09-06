@@ -141,6 +141,144 @@ def test_beta_core_declares_a_valuation_point():
     )
 
 
+def test_the_valuation_point_tolerance_is_obeyed_not_merely_spelled():
+    """`_VALUATION_POINT_TOLERANCE_MIN` must be READ by marking code.
+
+    THE REASON THIS TEST EXISTS IS THAT ITS PREDECESSOR WAS WORSE THAN NOTHING.
+    `test_beta_core_declares_a_valuation_point` asserted the constant appeared in
+    the file. It did — as a definition and a comment, with **zero readers**. So
+    on 2026-09-04 v5's inception row was struck at 07:00:52 UTC against a 00:05
+    point, 6h55m out, and every guard stayed green.
+
+    S-263 is the same shape (`LAST_REGIME_QUORUM`: 2 writes, 0 reads) and the
+    S-284 entry names it: *written is not executed, executed is not observable*.
+    The sharper version, from this one: **a rule that is falsely guarded is worse
+    than an unguarded rule.** An unguarded rule invites a guard; a guard that
+    checks spelling closes the question and sends the next reader elsewhere.
+    """
+    src = _src("beta_core_paper.py")
+    tree = ast.parse(src)
+    fn = next((n for n in ast.walk(tree)
+               if isinstance(n, ast.AsyncFunctionDef) and n.name == "mark_and_rebalance"), None)
+    assert fn is not None, "beta_core must expose mark_and_rebalance()"
+    # Must appear in a COMPARISON, not merely be loaded. The first version of
+    # this check accepted any `Load` of the name — and an f-string interpolation
+    # (`f"tolerance is {_VALUATION_POINT_TOLERANCE_MIN} min"`) is a genuine Load.
+    # Mutating the real threshold to `> 999999` therefore left the guard green,
+    # because the constant was still *mentioned* in the refusal message.
+    #
+    # Fourth guard in this file fooled by prose (see S-283, S-285). The pattern is
+    # now explicit: **a control is used when it constrains a branch, not when it
+    # appears in a string describing the branch.** Assert on the Compare node.
+    compared = [
+        n for n in ast.walk(fn)
+        if isinstance(n, ast.Compare)
+        and any(isinstance(x, ast.Name) and x.id == "_VALUATION_POINT_TOLERANCE_MIN"
+                for x in [n.left, *n.comparators])
+    ]
+    assert compared, (
+        "_VALUATION_POINT_TOLERANCE_MIN is never COMPARED against in "
+        "mark_and_rebalance — the constant is spelled, not obeyed. Mentioning it "
+        "in a log or refusal message does not count. The mark path must compare "
+        "its own strike time against the point and REFUSE outside tolerance "
+        "(NAV_POLICY §3)."
+    )
+    # ...and the refusal must be a refusal, not a warning.
+    seg = ast.get_source_segment(src, fn) or ""
+    assert "outside_valuation_point" in seg, (
+        "the tolerance is read but nothing returns a refusal — a control that "
+        "logs and proceeds is the substitute-instead-of-refuse pattern S-194 "
+        "exists to forbid."
+    )
+
+
+def test_a_mark_far_from_the_valuation_point_is_actually_refused():
+    """Behavioural, not structural — because the structural version has a hole.
+
+    The AST guard above requires `_VALUATION_POINT_TOLERANCE_MIN` to appear in a
+    Compare. Mutation testing found that `if False and _off_by > TOLERANCE:` keeps
+    the Compare node, keeps the refusal string, and disables the control. Four
+    guards in this file have now been fooled by something that *looks* like use
+    (source text, an f-string interpolation, a dead branch), and each time the
+    answer was a finer static check that the next trick walked around.
+
+    So stop refining the reader and CALL THE FUNCTION. A behavioural assertion
+    cannot be satisfied by anything except the behaviour. This is the same move
+    the codebase already made for `/internal/cis-scores/schema`: a live echo beats
+    a declaration, because a declaration is a claim and an echo is an observation.
+    """
+    import asyncio
+    import src.data.signals.beta_core_paper as bc
+
+    recorded, loaded = [], []
+
+    async def _fake_record(control, action, reason, **kw):
+        recorded.append((control, action))
+
+    async def _fake_load_panel():
+        loaded.append(1)                      # must NEVER run — refusal comes first
+        raise AssertionError("panel loaded despite being outside the valuation point")
+
+    orig_rec, orig_load, orig_off = (
+        bc._record_exception, bc._load_panel, bc._minutes_from_valuation_point)
+    bc._record_exception = _fake_record
+    bc._load_panel = _fake_load_panel
+    bc._minutes_from_valuation_point = lambda *a, **k: 415.0   # v5's actual 6h55m
+    try:
+        res = asyncio.run(bc.mark_and_rebalance(dry_run=False))
+    finally:
+        bc._record_exception, bc._load_panel, bc._minutes_from_valuation_point = (
+            orig_rec, orig_load, orig_off)
+
+    assert res.get("status") == "skipped" and res.get("reason") == "outside_valuation_point", (
+        f"a mark struck 415 min from the valuation point returned {res!r} instead "
+        "of refusing. This is the exact condition that produced v5's inception row "
+        "at 07:00:52 UTC against a 00:05 point (NAV_POLICY §3)."
+    )
+    assert not loaded, "the panel was loaded before the valuation-point check"
+    assert ("valuation_point", "refused") in recorded, (
+        "the refusal was not written to nav_exceptions — refusing invisibly is "
+        "still a silent failure (S-285)."
+    )
+
+
+def test_the_first_mark_after_a_deploy_also_waits_for_the_point():
+    """The leading sleep matters as much as the trailing one.
+
+    S-283 pointed the *trailing* sleep at a wall-clock target and stopped, so
+    marks 2..N landed on the point and mark 1 did not. Railway redeploys on every
+    push, which makes "mark 1" the common case, not the edge case.
+
+    Same partial move as scoping the inception filter to Postgres but not Redis:
+    the guard covers the path you were looking at and misses the path that runs
+    first. **The first iteration of a loop is a path.**
+    """
+    src = (_ROOT / "src" / "api" / "main.py").read_text()
+    lines = src.split("\n")
+    nav_loops = [
+        "_causal_paper_loop", "_dingge_paper_loop", "_combined_book_loop",
+        "_scalable_book_loop", "_beta_core_loop", "_two_layer_paper_loop",
+        "_fusion_paper_loop", "_r76_paper_loop", "_pod_aggregator_loop",
+        "_factor_tilt_loop",
+    ]
+    offenders = []
+    for name in nav_loops:
+        start = next((i for i, l in enumerate(lines)
+                      if l.startswith(f"async def {name}(")), None)
+        if start is None:
+            continue
+        head = "\n".join(lines[start:start + 12])
+        pre_loop = head.split("while True")[0]
+        if "_await_valuation_point" not in pre_loop:
+            offenders.append(name)
+    assert not offenders, (
+        f"NAV loops that mark once on boot before waiting for the valuation "
+        f"point: {offenders}.\n"
+        "Add `await _await_valuation_point()` after the warmup sleep and before "
+        "`while True` (S-286 / NAV_POLICY §3)."
+    )
+
+
 def test_nav_loops_sleep_to_a_wall_clock_time_not_a_duration():
     """No NAV-marking loop may sleep a bare 24h.
 
@@ -317,6 +455,87 @@ def test_beta_core_nav_insert_writes_only_columns_that_exist():
     )
 
 
+# ── §4/§5 Priceable is not the same as priced today ──────────────────────────
+
+def test_the_panel_loader_can_report_which_closes_were_carried():
+    """`load_binance_panel` must be able to say which cells it forward-filled.
+
+    The fill is CORRECT for research — a vol estimate needs a contiguous series
+    and a NaN hole is worse than a repeat. It is wrong for a book striking a NAV,
+    and for its whole life it was indistinguishable: `close[-1, j]` held a value
+    carried from days ago with nothing to mark it, so a symbol that stopped
+    updating arrived as a live quote.
+
+    Not a new signature for everyone — fourteen call sites unpack four values,
+    and a guard that forces a repo-wide edit is a guard that gets reverted.
+    """
+    src = (_ROOT / "src" / "research" / "strategies" / "causal_positioning.py").read_text()
+    fn = next((n for n in ast.walk(ast.parse(src))
+               if isinstance(n, ast.FunctionDef) and n.name == "load_binance_panel"), None)
+    assert fn is not None, "load_binance_panel is gone — update this guard"
+    kwonly = {a.arg for a in fn.args.kwonlyargs}
+    assert "with_fill_mask" in kwonly, (
+        "load_binance_panel cannot report its forward-fill. Without the mask a "
+        "carried close is indistinguishable from an observed one, which is how a "
+        "stale symbol passes the 80% coverage floor (S-287 / NAV_POLICY §4)."
+    )
+    arities = {len(r.value.elts) for r in ast.walk(fn)
+               if isinstance(r, ast.Return) and isinstance(r.value, ast.Tuple)}
+    assert arities == {4, 5}, (
+        f"expected both a 4-tuple (default, existing callers) and a 5-tuple "
+        f"(with the mask); got arities {sorted(arities)}"
+    )
+
+
+def test_beta_core_excludes_stale_closes_from_its_price_dict():
+    """A carried close must not enter `px`.
+
+    `px` fed two conditions — not-NaN and positive — and a forward-filled value
+    satisfies both. S-194 stopped the book confusing "no data" with "no movement";
+    the layer beneath it was still confusing "stale data" with "data". Excluding
+    the name lets equal-weighting renormalise over what is actually observable,
+    and lets the coverage floor refuse when too much of the book goes that way —
+    which is what the floor is for.
+    """
+    src = _src("beta_core_paper.py")
+    fn = next((n for n in ast.walk(ast.parse(src))
+               if isinstance(n, ast.AsyncFunctionDef) and n.name == "_load_panel"), None)
+    assert fn is not None, "_load_panel is gone — update this guard"
+    seg = ast.get_source_segment(src, fn) or ""
+    assert "with_fill_mask=True" in seg, (
+        "_load_panel does not request the fill mask, so it cannot tell a carried "
+        "close from an observed one (S-287)."
+    )
+    # The exclusion must actually constrain the comprehension building `px`.
+    px_assign = next((n for n in ast.walk(fn)
+                      if isinstance(n, ast.Assign)
+                      and any(getattr(t, "id", None) == "px" for t in n.targets)), None)
+    assert px_assign is not None, "px is no longer a simple assignment — update this guard"
+    conds = ast.unparse(px_assign)
+    assert "_stale_idx" in conds, (
+        "px is built without excluding forward-filled closes. A stale price that "
+        "passes not-NaN and positive is exactly what the coverage floor cannot "
+        "see (S-287 / NAV_POLICY §4)."
+    )
+
+
+def test_stale_exclusions_are_recorded_even_when_the_mark_succeeds():
+    """Dropping names for staleness is an event, not a detail.
+
+    It used to be invisible in both directions: the book marked the stale name,
+    and once excluded it would have vanished into a log line. "Was the panel
+    whole today" has to be answerable after the fact, which means a row.
+    """
+    src = _src("beta_core_paper.py")
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.AsyncFunctionDef) and n.name == "mark_and_rebalance")
+    seg = ast.get_source_segment(src, fn) or ""
+    assert "price_freshness" in seg and "stale_names" in seg, (
+        "mark_and_rebalance does not record stale-name exclusions to "
+        "nav_exceptions (S-287 / NAV_POLICY §10)."
+    )
+
+
 # ── §3/§10 A refusal must leave a trace, on a different path ─────────────────
 
 def test_every_refusal_path_records_an_exception():
@@ -397,6 +616,60 @@ def test_refusals_do_not_write_a_nav_row():
     )
 
 
+# ── An absent field cannot report anything ───────────────────────────────────
+
+def test_a_gated_field_is_present_and_says_it_is_gated():
+    """Token-gated detail must still emit a field, not vanish.
+
+    2026-09-04: `books` was wrapped in `if _tok_ok:`, so without a token the key
+    was ABSENT — and a deploy that predates the feature is also absent. Jazz ran
+    `jq '.books'`, got `null`, and that null could mean not-deployed, wrong token,
+    or RPC failure. Three states, one output.
+
+    That is the miss-vs-error collapse of S-180/S-185/S-194/S-285, **committed by
+    me on the day I was fixing it.** Writing the guard does not immunise you
+    against what the guard prevents; only making three-valued the default reflex
+    does. Hence this test rather than another note.
+    """
+    src = (_ROOT / "src" / "api" / "main.py").read_text()
+    fn = next((n for n in ast.walk(ast.parse(src))
+               if isinstance(n, ast.AsyncFunctionDef) and n.name == "data_freshness"), None)
+    assert fn is not None, "data_freshness is gone — update this guard"
+    seg = ast.get_source_segment(src, fn) or ""
+    assert '"verdict": "gated"' in seg, (
+        "the token-gated branch does not emit a field. An absent key is "
+        "indistinguishable from an old deploy — say 'gated' out loud."
+    )
+    # The gate must not wrap the assignment away entirely.
+    assigns = [n for n in ast.walk(fn)
+               if isinstance(n, ast.Assign)
+               and any(isinstance(t, ast.Subscript) and getattr(t.value, "id", None) == "out"
+                       for t in n.targets)]
+    assert len(assigns) >= 2, (
+        "expected both a gated and an ungated assignment to out[...] for the "
+        "book roster; found fewer, so one path emits nothing"
+    )
+
+
+def test_schema_drift_names_the_checks_it_ran():
+    """The echo must say WHAT it checked, not only what it found.
+
+    `column_drift: null` on a pre-S-286 deploy and `column_drift: {}` on a clean
+    one differ by one character and mean opposite things. A response that cannot
+    name its own checks forces the reader to know the build — which is the thing
+    an echo exists to remove.
+    """
+    src = (_ROOT / "src" / "api" / "routers" / "research_intake.py").read_text()
+    fn = next((n for n in ast.walk(ast.parse(src))
+               if isinstance(n, ast.AsyncFunctionDef) and n.name == "schema_drift"), None)
+    assert fn is not None, "schema_drift is gone — update this guard"
+    seg = ast.get_source_segment(src, fn) or ""
+    assert '"checks"' in seg and '"columns"' in seg, (
+        "/internal/schema-drift does not report which checks this build runs, so "
+        "a missing field cannot be told apart from a clean result."
+    )
+
+
 # ── §8 The two-book separation on the trading surface ────────────────────────
 
 def test_positions_endpoint_does_not_publish_a_blended_return():
@@ -419,3 +692,60 @@ def test_positions_endpoint_does_not_publish_a_blended_return():
         "positions endpoint must report the two books separately, each with its "
         "own named denominator."
     )
+
+
+def test_there_is_exactly_one_valuation_point_in_the_whole_repo() -> None:
+    """**估值点只能有一个。** (S-314, Jazz 裁定 2026-09-06)
+
+    Jazz:「crypto 世界没有 close 这个概念吧,我们只能姑且按…为限制到天的节点。」
+
+    原则完全正确,而且 S-283 已经按这条做了 —— 代码里的注释写的是同一句:
+    *"Crypto has no close, so the instant must be chosen; `sleep(24h)` chose it
+    by accident, differently after every deploy."*
+
+    他先提的是**美东 12 点**,权衡之后裁定 **保持 UTC 日界不动**。三个代价:
+
+      1. ① 已按 00:05 UTC 记账。第二个估值点 = 一本账在一个点标记、研究在
+         另一个点做 —— 正是 S-193 的 splice。① 跟着改 = 第 6 次 inception，
+         60 天前向记录从头。
+      2. **没有任何厂商的「日线」是美东 12 点。** CoinGecko / Hyperliquid 的
+         daily candle 都以 UTC 日为界。选美东 12 点意味着要用小时线自己合成日线，
+         而那是一条新的摄取路径（Sense 入口正是我们要往下降的数）。
+      3. **夏令时。** 美东 12 点一年里对应两个 UTC 时刻，而「两次标记恰好相差
+         24 小时」正是 S-283 买来的那条性质。
+
+    > **标记用 UTC 日界，执行用流动性时段 —— 这是两件事。**
+    > UTC 的好处不是它更「对」，是**它和所有数据源的原生边界重合**，
+    > 我们不必重新推导任何一根 bar，也不会在边界上拼接。
+
+    **这条守卫防的不是我们改主意,是第二个估值点悄悄出现。** 现有测试查
+    「常量存在」「常量被读」,都不查「只有一个」—— 而今晚拆掉的每一个接缝,
+    都是同一个量有了两个载体。
+    """
+    import ast as _ast
+
+    SUSPECT = ("VALUATION_POINT", "MARK_HOUR", "DAY_BOUNDARY", "CUTOFF_HOUR",
+               "DAILY_CUT", "MARK_UTC")
+    sites = []
+    for path in (_ROOT / "src").rglob("*.py"):
+        if "__pycache__" in str(path) or ".venv" in str(path):
+            continue
+        try:
+            tree = _ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+        except SyntaxError:
+            continue
+        for node in _ast.walk(tree):
+            if not isinstance(node, (_ast.Assign, _ast.AnnAssign)):
+                continue
+            targets = (node.targets if isinstance(node, _ast.Assign)
+                       else [node.target])
+            for t in targets:
+                nm = getattr(t, "id", "") or ""
+                if any(k in nm.upper() for k in SUSPECT):
+                    sites.append(f"{path.relative_to(_ROOT)}::{nm}")
+    # 容差常量与估值点是同一条政策的两半，允许并存；其余重名即为第二个估值点。
+    points = [s for s in sites if "TOLERANCE" not in s.upper()]
+    assert len(points) <= 1, (
+        f"发现 {len(points)} 个估值点定义:{points}\n"
+        f"**估值点必须单一来源**（docs/NAV_POLICY.md §3）。两个估值点意味着"
+        f"两本账的「一天」不是同一天，而它们的日收益会被当成可比的。")

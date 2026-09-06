@@ -673,9 +673,22 @@ import datetime as _dt
 
 _OUTCOME_INTERVAL_S = 24 * 3600   # daily
 
-# The elected valuation point, single-sourced from the ① book so the loop and the
-# book can never disagree about when NAV is struck (docs/NAV_POLICY.md §3).
-_NAV_VALUATION_POINT_UTC = (0, 5)   # 00:05 UTC, marking the 00:00 UTC observation
+# ⚠️ **这里原来有第二个字面量** (S-314)。注释写着「single-sourced from the ①
+# book so the loop and the book can never disagree」—— 而它其实是一个独立的
+# `(0, 5)`,不是 import。**两个常量,而注释断言它们是一个。**
+# 两边今天都等于 (0,5),所以谁也发现不了;改一个,另一个不会知道,
+# 而那时两本账的「一天」就不是同一天了。
+#
+# 单一来源必须是**代码上的单一来源**,不是注释里声称的。
+# 现在从 ① 的账里取(docs/NAV_POLICY.md §3 指定的那个)。做成**函数**而不是
+# 别名常量:别名仍然是一个模块级赋值,读起来像第二个定义,而惰性导入还能
+# 避开启动期的循环依赖。
+def _valuation_point_utc() -> tuple:
+    """① 账本里那个唯一的估值点。**这里不定义,只转发。**"""
+    from src.data.signals.beta_core_paper import _VALUATION_POINT_UTC
+    return _VALUATION_POINT_UTC
+
+
 
 
 # ── S-283: SLEEP TO A WALL-CLOCK TIME, NOT FOR A DURATION ────────────────────
@@ -721,9 +734,9 @@ async def _await_valuation_point(tolerance_min: int = 30) -> None:
     If the process happens to boot near the point, mark immediately — a restart
     at 00:03 should not cost the day. Otherwise wait for the next one.
     """
-    if _minutes_from_valuation_point_utc(*_NAV_VALUATION_POINT_UTC) <= tolerance_min:
+    if _minutes_from_valuation_point_utc(*_valuation_point_utc()) <= tolerance_min:
         return
-    await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)
+    await _sleep_until_utc(*_valuation_point_utc())
 
 
 def _minutes_from_valuation_point_utc(hour: int, minute: int) -> float:
@@ -977,7 +990,7 @@ async def _dingge_paper_loop():
         except Exception as _e:
             print(f"[DINGGE-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_dingge_paper_loop", ok=False, error=str(_e))
-        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
+        await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1007,7 +1020,7 @@ async def _combined_book_loop():
         except Exception as _e:
             print(f"[COMBINED-BOOK] ⚠️  mark failed: {_e}")
             await _beat("_combined_book_loop", ok=False, error=str(_e))
-        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
+        await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1037,7 +1050,7 @@ async def _scalable_book_loop():
         except Exception as _e:
             print(f"[SCALABLE-BOOK] ⚠️  mark failed: {_e}")
             await _beat("_scalable_book_loop", ok=False, error=str(_e))
-        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
+        await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1071,7 +1084,7 @@ async def _beta_core_loop():
         except Exception as _e:
             print(f"[BETA-CORE] ⚠️  mark failed: {_e}")
             await _beat("_beta_core_loop", ok=False, error=str(_e))
-        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
+        await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
 # ── USAGE METERING — the substrate an invoice stands on ──────────────────────
@@ -1139,7 +1152,7 @@ async def _two_layer_paper_loop():
         except Exception as _e:
             print(f"[TWO-LAYER] ⚠️  mark failed: {_e}")
             await _beat("_two_layer_paper_loop", ok=False, error=str(_e))
-        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
+        await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1172,7 +1185,7 @@ async def _fusion_paper_loop():
         except Exception as _e:
             print(f"[FUSION-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_fusion_paper_loop", ok=False, error=str(_e))
-        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
+        await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1203,7 +1216,7 @@ async def _fusion_paper_tracking_loop():
                   f"events={len(events)}({[e['event_type'] for e in events]})")
         except Exception as _e:
             print(f"[FUSION-TRACK] ⚠️  compute failed: {_e}")
-        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
+        await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1233,7 +1246,7 @@ async def _r76_paper_loop():
                   f"n_days={res.get('n_days_marked')} validated={res.get('validated')}")
         except Exception as _e:
             print(f"[R76-PAPER] ⚠️  mark failed: {_e}")
-        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
+        await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1299,7 +1312,7 @@ async def _pod_aggregator_loop():
         except Exception as _e:
             print(f"[POD-AGG] ⚠️  mark failed: {_e}")
             await _beat("_pod_aggregator_loop", ok=False, error=str(_e))
-        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
+        await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
 @app.on_event("startup")
@@ -1333,7 +1346,7 @@ async def _factor_tilt_loop():
         except Exception as _e:
             print(f"[FACTOR-TILT] ⚠️  mark failed: {_e}")
             await _beat("_factor_tilt_loop", ok=False, error=str(_e))
-        await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   # S-283 valuation point
+        await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
 @app.on_event("startup")
