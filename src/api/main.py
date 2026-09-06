@@ -394,9 +394,25 @@ async def _forward_record_loop():
             print(f"[FWD] depth={r['depth_divergence']['written']}w/"
                   f"{r['depth_divergence']['resolved']}r · "
                   f"books={[b['status'] for b in r['books']]}{flag}")
+            # ⚠️ **这个循环没有心跳,而它的 docstring 写着「Loud: the whole
+            # point of this loop is that silence was the bug」** (S-311)。
+            # 一个因为「沉默就是那个 bug」而建的循环,把自己的失败只报给了
+            # stdout —— 于是 `depth_divergence_log` 停 16 天,告警是 Telegram
+            # 发的,而 loop 面板上它根本不存在。
+            #
+            # `ok` 由 `run_once` 自己算(stalled / unknown / problems 三者皆空),
+            # 不是写死的。写了 0 行但没问题 = 今天没有新的背离,是合法的,
+            # 所以判 refused 而不是 failing —— 连续多轮 0 行由事件时钟去判。
+            _w = int((r.get("depth_divergence") or {}).get("written") or 0)
+            await _beat("_forward_record_loop", ok=bool(r.get("ok")) and _w > 0,
+                        refused=bool(r.get("ok")) and _w == 0,
+                        error=None if r.get("ok") else
+                        f"stalled={[b['book'] for b in r['books'] if b['status']=='stalled']} "
+                        f"problems={str((r.get('depth_divergence') or {}).get('problems'))[:90]}")
         except Exception as _e:
             # Loud: the whole point of this loop is that silence was the bug.
             print(f"[FWD] ⚠️  forward-record pass FAILED: {_e}")
+            await _beat("_forward_record_loop", ok=False, error=str(_e)[:200])
         await _asyncio.sleep(24 * 3600)
 
 
