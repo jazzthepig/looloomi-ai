@@ -17223,3 +17223,123 @@ Telegram:
 
 那 3 格是别人(或我)之前接好的,没有人做「降到实测值」这个例行动作。
 已收紧到 25(接上 `_forward_record_loop` 之后)。
+
+---
+
+## S-312 / S-313 · depth divergence:崩溃是保护性的,而数据落了却没人看得见 (2026-09-06)
+
+### S-312 · 16 天沉默的真原因,心跳一上就出来了
+
+接上心跳(S-311)后第一轮就给出:
+
+    stalled=['depth-divergence forward record']
+    problems=['refresh: no response from Supabase after retries']
+
+在库里直接跑那个 RPC:
+
+    ERROR 21000: ON CONFLICT DO UPDATE command cannot affect row a second time
+
+`base` CTE 从 `ohlcv_daily` 取 `source is distinct from 'binance_hist'` ——
+**它跨源取数**,而表的键是 `(symbol, trade_date, source)` **三列**。
+同一天同一标的在 `coingecko` 与 `hyperliquid` 各有一行 ⇒ `upper(symbol)` 撞键
+⇒ 整条语句被拒。而 hyperliquid 恰好 2026-08-09 开始写,**08-21 起重叠成立**。
+
+> **崩溃是保护性的。** 如果它没崩,算出来的就是**跨源的 depth_z 与 px20**,
+> 而 `single_source.py` 明令禁止跨源序列。
+> 一个我们没写的守卫,被 Postgres 的唯一键替我们执行了。
+
+**修:** 排除 barred 源(`coingecko` 的 close 被 S-195 禁、`yfinance` 已死),
+按 `hyperliquid > eodhd > coingecko_pro_ohlc` 的优先级
+**每个 (symbol, trade_date) 只取一行**,并把选中的源写进 `problems`。
+`rule_version` 升到 `v2` —— 口径变了就不能沿用旧版本号。
+
+### 结果是 177 行,而**全部 `is_measured = false`**
+
+    2026-08-23 · 177 行 · insufficient history: needs >=80 prior bars
+                          (had 14) on source hyperliquid
+
+**这是诚实的结果,不是能用的信号。** 排除 barred 源之后有广度的只剩
+hyperliquid,而它 08-09 才开始写、08-23 就按 S-296 退役了,只有 14 天历史。
+
+**暴露出一个真实的能力缺口:没有任何一个源同时具备可信收盘与成交量。**
+
+    hyperliquid          可信 + 有量，但只有 14 天且已退役
+    coingecko_pro_ohlc   可信，**没有量**（/ohlc/range 不返回）
+    coingecko            有量，但 close 被 S-195 禁用于收益
+    eodhd                可信 + 有量，但只有 TradFi 33 个
+
+depth divergence 需要「可信收盘 × 成交量 × ≥80 天」,而这三者当前没有交集。
+**记 177 行「量不到,原因如下」比记 177 个数字诚实** —— 后者会是跨源的。
+
+### S-313 · 3,520 行落库了,而消费者一行都看不见
+
+顺手核对时发现:`coingecko_pro_ohlc` 已有 **3,520 行 / 57 标的**
+(比首轮的 732/12 好很多,循环后续几轮补上了),
+**但 `asset_class` 全部为 NULL。**
+
+`to_rows` 只在 `if asset_class:` 时才写这一列,而 `cg_panel_sync` 从没传。
+于是**任何按 `asset_class in (...)` 过滤的消费者一行都看不见它们** ——
+包括刚修好的 depth divergence。
+
+> **数据落进去了,而需要它的人看不到它。**
+> 表在长、`loop_status` 会说 Sense 变好了,而下游的查询全部跳过。
+
+已修两侧:存量 3,520 行按 `assets.class` 回填(49 Crypto / 3 L1 / 2 DeFi /
+各 1 个 L2·Infrastructure·RWA);`cg_known_coin_map()` RPC 带出 asset_class;
+回填**按 class 分组调用** —— `backfill` 一次只接受一个 class,
+传一个统一值会给 8 个非 Crypto 标的贴错标签,**而错的标签比缺失的更难发现**。
+
+---
+
+## S-314 · 「单一来源」写在注释里,而代码里是两个字面量 (2026-09-06)
+
+### Jazz 的裁定
+
+> 「crypto 世界没有 close 这个概念吧,我们只能姑且按…为限制到天的节点,并给出注释。」
+> …
+> 「那就按照 UTC 日为界,不用动。」
+
+**原则完全正确,而且 S-283 已经按这条做了** —— 代码里的注释是同一句话:
+*"Crypto has no close, so the instant must be chosen; `sleep(24h)` chose it by
+accident, differently after every deploy."*
+
+他先提美东 12 点,听完三个代价后裁定保持 UTC:① 已按 00:05 UTC 记账(改 = 第 6 次
+inception,60 天重来)· 没有任何厂商的日线是美东 12 点(要用小时线自己合成,
+而那是一条新的摄取路径)· 夏令时让美东 12 点一年对应两个 UTC 时刻,
+而「两次标记恰好相差 24 小时」正是 S-283 买来的性质。
+
+**决定不需要改一行代码。所以我改的是别的东西:加一条守卫。**
+
+### 守卫第一次跑就抓到一个真的
+
+现有测试查「常量存在」「常量被读」,**都不查「只有一个」**:
+
+    src/api/main.py::_NAV_VALUATION_POINT_UTC
+    src/data/signals/beta_core_paper.py::_VALUATION_POINT_UTC
+
+而 `main.py` 那一行的注释写着:
+
+> *"The elected valuation point, **single-sourced from the ① book so the loop and
+> the book can never disagree** about when NAV is struck"*
+
+**它不是 import,是一个独立的 `(0, 5)`。两个常量,而注释断言它们是一个。**
+两边今天都等于 `(0,5)`,所以谁也发现不了 —— 改一个,另一个不会知道,
+而那时两本账的「一天」就不是同一天,它们的日收益却仍会被当成可比的。
+
+> **单一来源必须是代码上的单一来源,不是注释里声称的。**
+
+### 而我修它的时候差点杀掉 10 本账
+
+删掉那个常量之后 `py_compile` **通过了**,于是我差点就发了。
+实际还有 **10 处活引用**,全在纸面账循环里:
+
+    await _sleep_until_utc(*_NAV_VALUATION_POINT_UTC)   × 10
+
+每一处都会 NameError,**直接杀掉 10 本账的标记**。
+
+`py_compile` 只查语法不解析名字 —— **我的编译检查有着我整晚在记录的那个
+作用域问题**:它检查的东西比它给人的信心窄。真正的检查是 `import src.api.main`,
+一行,而我做了整晚的守卫工作却一直用一个更弱的。
+
+最终做成**函数**而不是别名常量:别名仍是模块级赋值,读起来像第二个定义,
+而惰性导入还能避开启动期的循环依赖。
