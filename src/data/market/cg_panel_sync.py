@@ -158,6 +158,17 @@ async def run_once(*, client, supabase_query, supabase_upsert,
                            vendor_paired=_vendor)
         out["rows_written"] = int(getattr(r, "rows_written", 0) or 0)
         out["backfill_ok"] = bool(getattr(r, "ok", False))
+        # ⚠️ **写了几行 ≠ 写全了** (S-310)。首轮实测写入 12/57 个标的,
+        # 而心跳报 `ok` —— 因为 `rows_written > 0` 就算进展。进展是真的,
+        # 但**「写了 12 个」和「写了 57 个」在 ok 上完全同形**,
+        # 而 45 个没成功这件事不该只存在于 detail 里。
+        _per = getattr(r, "per_symbol", ()) or ()
+        out["n_symbols_written"] = sum(1 for x in _per if getattr(x, "ok", False))
+        out["n_symbols_failed"] = len(_per) - out["n_symbols_written"]
+        if out["n_symbols_failed"]:
+            from src.data.market.cg_pro_backfill import _why_all_failed
+            out["shortfall"] = _why_all_failed(
+                [x for x in _per if not getattr(x, "ok", False)])[:220]
         if not out["backfill_ok"]:
             out["errors"].append(str(getattr(r, "reason", ""))[:150])
     except Exception as e:                                      # noqa: BLE001
@@ -182,6 +193,9 @@ async def run_once(*, client, supabase_query, supabase_upsert,
     out["reason"] = (
         f"映射 {len(known)} 已知 + {out['n_resolved_new']} 新解析;"
         f"回填 {len(pairs)} 对 · 写入 {out['rows_written']} 行"
+        + (f" · **标的 {out.get('n_symbols_written')}/{len(pairs)}**"
+           f"({out.get('shortfall') or ''})"
+           if out.get("n_symbols_failed") else "")
         + (f";撞名未决 {len(res['ambiguous'])}、未解析 {len(res['unresolved'])}"
            f"(**显式列出,不静默丢弃**)" if res["ambiguous"] or res["unresolved"]
            else "")
