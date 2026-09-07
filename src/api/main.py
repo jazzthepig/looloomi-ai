@@ -403,9 +403,17 @@ async def _forward_record_loop():
             # `ok` 由 `run_once` 自己算(stalled / unknown / problems 三者皆空),
             # 不是写死的。写了 0 行但没问题 = 今天没有新的背离,是合法的,
             # 所以判 refused 而不是 failing —— 连续多轮 0 行由事件时钟去判。
+            # S-315:**Learn 的判决进心跳的 detail** —— 一条只在被请求时
+            # 计算的曲线不是闭环,而心跳是唯一一个不用人问就说话的地方。
+            _rec = r.get("forward_record") or {}
+            print(f"[FWD] record={_rec.get('verdict')} · {_rec.get('reason', '')[:110]}")
             _w = int((r.get("depth_divergence") or {}).get("written") or 0)
             await _beat("_forward_record_loop", ok=bool(r.get("ok")) and _w > 0,
                         refused=bool(r.get("ok")) and _w == 0,
+                        detail={"forward_record": {
+                            k: _rec.get(k) for k in
+                            ("verdict", "n_days", "n_gaps", "tracking_diff",
+                             "days_to_threshold", "inception")}},
                         error=None if r.get("ok") else
                         f"stalled={[b['book'] for b in r['books'] if b['status']=='stalled']} "
                         f"problems={str((r.get('depth_divergence') or {}).get('problems'))[:90]}")
