@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-06 (Seth/Cowork lane — S-296…S-311;**Sense 链条打通**:`coingecko_pro_ohlc` 从 S-258 起的 0 行 → 732 行/12 标的,映射对照偏差 0.25–0.50%(容忍 5%);`_cg_panel_loop` 常驻 Railway;**S-299 心跳从「函数没崩」改成「活干完了」,写死 ok=True 11 → 0**;S-305 启动延迟封顶(20 个循环 ≥600s,`_age_sweep_loop` 睡一小时,部署比它勤 ⇒ 永不跑);S-306…S-310 五条同形缺陷:**好代码假设了一个它没说出口的调用场景**;S-311 `_forward_record_loop` 接心跳,`NO_BEAT_BUDGET` 28 → 25。⚠️ 仍缺:Sense 入口 24 未降 · 面板 12/57 · Learn 段断路)
+**Last updated:** 2026-09-07 (Seth/Cowork lane — S-296…S-315;**Learn 的 ① 那条边接上了** —— `evaluate_forward_record()` 每轮判决前向记录(accruing/qualified/gapped/not_daily,门槛用 CLAUDE.md 的 ≥60 天),进心跳 detail;**断路 loop 段 1 → 0**(另有 1 段半通:②的 signal_outcomes 仍无数据);Sense 链条打通:`coingecko_pro_ohlc` 0 → 3,520 行/57 标的,在流的源覆盖 58 → 115 标的;S-299 写死 ok=True 11 → 0 · S-305 启动延迟封顶 · S-314 估值点真正单一来源(曾是两个字面量);⚠️ 仍缺:**Sense 入口 24 未降** · 无判决对象 40/72 · 3 本账空或陈 · ②的 Learn 无数据)
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
 > inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
