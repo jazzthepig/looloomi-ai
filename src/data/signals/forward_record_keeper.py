@@ -184,17 +184,129 @@ async def _days_since(table: str, col: str) -> int | None:
         return None
 
 
+#: SHIP 门槛(CLAUDE.md「≥60d 纸面交易」)。**这个数不在这里定义,
+#: 它在 tests/test_strategy_discipline.py 里被强制;这里只是引用它的值。**
+FORWARD_RECORD_MIN_DAYS = 60
+
+ACCRUING, QUALIFIED, GAPPED, NOT_DAILY = (
+    "accruing", "qualified", "gapped", "not_daily")
+
+
+async def evaluate_forward_record() -> dict[str, Any]:
+    """Job 3:**对记录本身下判断**,每一轮,不等人来问 (S-315).
+
+    ## 这条边缺了什么
+
+    我们有两样东西,而它们之间是断的:
+
+        check_book_continuity()   ① **有没有在标记**（活性）
+        get_curve()               ① 的曲线 —— **只在被请求时计算**
+
+    而本模块自己的 docstring 早就写过那句话:*"the ① book went 5 days without
+    a mark in August while `/internal/beta-core-clock` reported that accurately
+    to nobody, **because a status endpoint only speaks when asked**."*
+
+    > **一条可以 fetch 的曲线不是闭环。** Sense → Judge → Act → Learn 里,
+    > Learn 是那条**回来的**边,而「有人访问时才算」不是一条边。
+
+    所以这里按时算一次,并给出一个**判决**,而不是一堆数字。
+
+    ## 判决的门槛就是 SHIP 的门槛
+
+    CLAUDE.md 要求任何 SHIP 裁决前 **≥60 天纸面**。那正是「能不能上实盘」
+    的前提,而在此之前**从来没有任何东西自动算过它** —— 每次都是有人去问。
+
+        accruing   < 60 天，正常累积中（**不是故障**）
+        qualified  ≥ 60 天、无缺口、确为日频
+        gapped     span 内有缺日 —— 告警原话:「一个有无法解释缺口的 60 天
+                   前向承诺不是一段更短的记录，是一段缺口需要被论证的记录」
+        not_daily  interval_hours 越界（S-283：10.6h–35.9h 曾经出现过）
+
+    **缺口与天数是两个维度。** 一段 70 天里缺 6 天的记录,不是 64 天的记录 ——
+    它是一段需要解释的记录,而把它报成 64 天正是在替它解释。
+    """
+    from src.api.store import _SB_KEY, _SB_URL
+
+    out: dict[str, Any] = {"verdict": "unknown", "n_days": None}
+    if not _SB_URL or not _SB_KEY:
+        out["reason"] = "Supabase 未配置 —— **未测,不是合格**"
+        return out
+    try:
+        import httpx
+        from src.data.signals.beta_core_paper import _INCEPTION_ID
+        url = (f"{_SB_URL}/rest/v1/beta_core_nav"
+               f"?select=mark_date,nav,benchmark_nav,interval_hours"
+               f"&inception_id=eq.{_INCEPTION_ID}&void_reason=is.null"
+               f"&order=mark_date.asc")
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get(url, headers={"apikey": _SB_KEY,
+                                          "Authorization": f"Bearer {_SB_KEY}"})
+        rows = r.json() if r.status_code == 200 else None
+    except Exception as e:                                      # noqa: BLE001
+        out["reason"] = f"读不到 beta_core_nav:{type(e).__name__} —— **读不到 ≠ 没有记录**"
+        return out
+    if rows is None:
+        out["reason"] = "beta_core_nav 读取非 200 —— **未测,不是合格**"
+        return out
+    if not rows:
+        out.update(verdict=ACCRUING, n_days=0,
+                   reason="当前 inception 下还没有任何一行 —— 记录从 0 开始")
+        return out
+
+    from datetime import date as _date
+    days = [_date.fromisoformat(str(x["mark_date"])[:10]) for x in rows]
+    span = (days[-1] - days[0]).days + 1
+    n = len(set(days))
+    gaps = span - n                       # span 内缺了几个日历日
+
+    ivs = [x.get("interval_hours") for x in rows if x.get("interval_hours") is not None]
+    off = [h for h in ivs if not (20.0 <= h <= 28.0)]
+
+    cum = float(rows[-1]["nav"]) - 1.0
+    bcum = float(rows[-1]["benchmark_nav"]) - 1.0
+
+    if off:
+        verdict = NOT_DAILY
+    elif gaps > 0:
+        verdict = GAPPED
+    elif n >= FORWARD_RECORD_MIN_DAYS:
+        verdict = QUALIFIED
+    else:
+        verdict = ACCRUING
+
+    out.update(
+        verdict=verdict, n_days=n, span_days=span, n_gaps=gaps,
+        inception=_INCEPTION_ID,
+        cum_return=round(cum, 6), benchmark_return=round(bcum, 6),
+        # ① 的职责是吃到 beta,所以它的 outcome 是**跟踪差**,不是绝对收益。
+        tracking_diff=round(cum - bcum, 6),
+        days_to_threshold=max(0, FORWARD_RECORD_MIN_DAYS - n),
+        n_off_interval=len(off),
+        reason=(
+            f"inception {_INCEPTION_ID} · {n} 天"
+            + (f"(span {span} 天,**缺 {gaps} 天**)" if gaps else "")
+            + f" · 累计 {cum:+.2%} vs 基准 {bcum:+.2%} · 跟踪差 {cum - bcum:+.2%}"
+            + (f" · **{len(off)} 次间隔越界**" if off else "")
+            + (f" · 距 {FORWARD_RECORD_MIN_DAYS} 天门槛还差 "
+               f"{FORWARD_RECORD_MIN_DAYS - n} 天" if verdict == ACCRUING else "")
+            + ("。**缺口需要被论证,不能当成一段更短的记录**" if gaps else "")),
+    )
+    return out
+
+
 async def run_once() -> dict[str, Any]:
     """One full pass. Safe to call from a loop, a startup hook, or by hand."""
     started = datetime.now(timezone.utc).isoformat()
     log = await refresh_depth_divergence_log()
     books = await check_book_continuity()
+    record = await evaluate_forward_record()          # S-315: Learn 的那条边
     stalled = [b["book"] for b in books if b["status"] == "stalled"]
     unknown = [b["book"] for b in books if b["status"] == "unknown"]
     return {
         "ran_at": started,
         "depth_divergence": log,
         "books": books,
+        "forward_record": record,
         "stalled": stalled,
         "unknown": unknown,
         "ok": not stalled and not unknown and not log["problems"],

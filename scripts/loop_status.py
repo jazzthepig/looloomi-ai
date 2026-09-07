@@ -140,12 +140,30 @@ def loop_segments(fresh: dict | None) -> list[tuple[str, str, str]]:
            f"{len(navs)} 本账的表空或陈:{','.join(navs) or '—'}")
 
     # Learn 是两件事,不是一件 —— 在 max() 上同形,修法完全不同。
-    learn_bits = []
+    #
+    # ⚠️ 这里原来把 Learn **写死成「断路」** (S-315)。一个写死的判据和一个
+    # 写死的 `ok=True` 是同一个东西:它在缺陷存在时是对的,而在缺陷修好之后
+    # 仍然说同一句话。**一个不会变绿的判据,和一个不会变红的判据一样坏。**
+    learn_bits, n_broken_halves = [], 0
     if "signal_outcomes" in dead + stale:
         learn_bits.append("②信号级 outcome 断供(signal_outcomes)")
-    learn_bits.append("①的 outcome 已在流(beta_core_nav.excess_return)"
-                      "但**没有消费点**")
-    learn = ("断路", " · ".join(learn_bits))
+        n_broken_halves += 1
+    # ① 那一半:outcome 有没有**按时被判决**,而不是只能按需 fetch。
+    _kpr = (ROOT / "src/data/signals/forward_record_keeper.py")
+    _main = (ROOT / "src/api/main.py")
+    try:
+        _has_eval = "def evaluate_forward_record" in _kpr.read_text(encoding="utf-8")
+        _wired = "forward_record" in _main.read_text(encoding="utf-8")
+    except OSError:
+        _has_eval = _wired = False
+    if _has_eval and _wired:
+        learn_bits.append("①的 outcome 每轮被判决并进心跳 ✓")
+    else:
+        learn_bits.append("①的 outcome 在流但**没有消费点**")
+        n_broken_halves += 1
+    learn = ("断路" if n_broken_halves == 2 else
+             "半通" if n_broken_halves == 1 else "通",
+             " · ".join(learn_bits))
 
     return [("Sense", *sense), ("Judge", *judge), ("Act", *act), ("Learn", *learn)]
 
@@ -160,6 +178,10 @@ def main() -> int:
     covers = scope.get("covers")
     n_uncov = scope.get("n_not_covered")
     n_broken = sum(1 for _, v, _ in segs if v in ("断路", "断"))
+    # ⚠️ **半通不能被四舍五入成 0** (S-315)。Learn 的 ② 那一半仍然没有数据,
+    # 而把「一段半通」报成「零段断」,就是我的仪表在替我美化 ——
+    # 今晚拆掉的每一条,都是某个表示把两个状态合成了一个。
+    n_half = sum(1 for _, v, _ in segs if v == "半通")
 
     print(f"\n{BOLD}══ CometCloud loop status ══{OFF}")
     if build:
@@ -173,7 +195,9 @@ def main() -> int:
           f"{GREY}生产代码里各自发 HTTP 取价的文件（规则 3b 要求 1）{OFF}")
     print(f"  无判决对象        {BOLD}{n_uncov if n_uncov is not None else '?'}{OFF}"
           f"   {GREY}census 覆盖 {covers or '?'}{OFF}")
-    print(f"  断路 loop 段      {BOLD}{n_broken}{OFF} / 4")
+    print(f"  断路 loop 段      {BOLD}{n_broken}{OFF} / 4"
+          + (f"   {AMBER}+{n_half} 段半通（不算断，但也不是通）{OFF}"
+             if n_half else ""))
 
     print(f"\n{BOLD}四段电流{OFF}  {GREY}Sense → Judge → Act → Learn 是循环，不是流水线{OFF}")
     for name, verdict, why in segs:
