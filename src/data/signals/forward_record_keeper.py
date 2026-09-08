@@ -294,12 +294,79 @@ async def evaluate_forward_record() -> dict[str, Any]:
     return out
 
 
+async def check_pit_lag() -> dict[str, Any]:
+    """Job 4:**今天的 bar 今天在不在库里** (S-319)。
+
+    ## S-207 的第二个 blocker,以及它为什么悄悄消失了
+
+    S-207(2026-08 月中)写下:
+
+    > *"PIT 必须卡 `recorded_at`,不是 `trade_date`:`ohlcv_daily.binance_hist` 的
+    > recorded_at 中位数比 trade_date 晚 **28.2 天**。所以 marks 那半边现在
+    > 做不了重放 —— 价格当时不在库里。**「会不会触发」可答,「NAV 多少」不可答。**"*
+
+    2026-09-08 实测,`coingecko_pro_ohlc` 自 09-05 起 **lag = 0 天**:
+    今天的 bar 今天就在库里。**那句「不可答」从三天前起不再成立** ——
+    而没有任何东西注意到,因为没有任何东西在查。
+
+    > **我们卡了好多天的不是工程,是我们对工程状态的记忆。**
+
+    ⚠️ **不要过度声称。** 历史那 70 天的滞后写在旧行里,补不回来。
+    变的是**前向**:从 09-05 起每一天都是 PIT 干净的,而前向恰好是
+    ARCHITECTURE.md 说的那个产品。
+
+    ## 所以这条必须被持续检查
+
+    滞后不是一次性修好的属性,它是**循环还在按时跑**的副产品。
+    循环一停,滞后立刻回来,而 `max(trade_date)` 上完全看不出来 ——
+    与 S-190 的洞同形。所以每轮量一次,进心跳。
+    """
+    from src.api.store import _SB_KEY, _SB_URL
+
+    out: dict[str, Any] = {"verdict": "unknown", "lag_days": None}
+    if not _SB_URL or not _SB_KEY:
+        out["reason"] = "Supabase 未配置 —— **未测,不是合格**"
+        return out
+    try:
+        import httpx
+        from datetime import date as _date
+        url = (f"{_SB_URL}/rest/v1/ohlcv_daily"
+               f"?select=trade_date,recorded_at&source=eq.coingecko_pro_ohlc"
+               f"&order=trade_date.desc&limit=400")
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get(url, headers={"apikey": _SB_KEY,
+                                          "Authorization": f"Bearer {_SB_KEY}"})
+        rows = r.json() if r.status_code == 200 else None
+    except Exception as e:                                      # noqa: BLE001
+        out["reason"] = f"读不到:{type(e).__name__} —— **读不到 ≠ 滞后为 0**"
+        return out
+    if not rows:
+        out["reason"] = "coingecko_pro_ohlc 没有行 —— 面板源停了"
+        return out
+
+    newest = max(str(x["trade_date"])[:10] for x in rows)
+    first_seen = min(str(x["recorded_at"])[:10] for x in rows
+                     if str(x["trade_date"])[:10] == newest)
+    lag = (_date.fromisoformat(first_seen) - _date.fromisoformat(newest)).days
+    out.update(
+        newest_bar=newest, first_written=first_seen, lag_days=lag,
+        # 0–1 天是 PIT 干净的(时区边界允许 1 天)。
+        verdict="pit_clean" if lag <= 1 else "lagging",
+        reason=(f"最新 bar {newest},首次写入 {first_seen},滞后 {lag} 天"
+                + ("(**PIT 干净** —— marks 可重放)" if lag <= 1 else
+                   f"(**滞后 {lag} 天 ⇒ marks 不可重放**,S-207 的那个 blocker "
+                   f"回来了;循环停了或者源换了)")),
+    )
+    return out
+
+
 async def run_once() -> dict[str, Any]:
     """One full pass. Safe to call from a loop, a startup hook, or by hand."""
     started = datetime.now(timezone.utc).isoformat()
     log = await refresh_depth_divergence_log()
     books = await check_book_continuity()
     record = await evaluate_forward_record()          # S-315: Learn 的那条边
+    pit = await check_pit_lag()                       # S-319: S-207 的第二个 blocker
     stalled = [b["book"] for b in books if b["status"] == "stalled"]
     unknown = [b["book"] for b in books if b["status"] == "unknown"]
     return {
@@ -307,6 +374,7 @@ async def run_once() -> dict[str, Any]:
         "depth_divergence": log,
         "books": books,
         "forward_record": record,
+        "pit_lag": pit,
         "stalled": stalled,
         "unknown": unknown,
         "ok": not stalled and not unknown and not log["problems"],
