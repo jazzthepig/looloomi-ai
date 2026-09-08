@@ -244,6 +244,36 @@ async def collect_deep_panel(days: int | None = None,
             _log.warning("[DEEP] healing window %sd (gap detected) — not the usual %sd",
                          days, _DEFAULT_DAYS)
 
+    # ── S-323i: 这个扇出违反 source_policy,而 source_policy 就是为它写的 ──────
+    #
+    # `src/data/market/source_policy.py` 的开篇第一个例子,一字不改:
+    #
+    #     · `deep_panel_collector` — 262 symbols against Binance's free mirror.
+    #       Result: one symbol reachable, panel dead for days (S-190).
+    #
+    # 而它的规则是 `fan-out over > BULK_THRESHOLD assets → a PAID source. Always.`,
+    # 它的 `PURPOSE_SCOPE[market_data]` 写着「整个研究面板(262)—— **付费源**,
+    # fan-out 是买来的权利」。**策略文件点名了这个采集器,而这个采集器从来没有
+    # 调用过那个策略** —— 全文件 0 处 `source_policy`。
+    #
+    # Jazz 已经说过很多次(2026-09-05 记在 `_hyperliquid_loop` 的 docstring 里,
+    # S-296 据此修好了 hyperliquid),而**同一个文件里隔 40 行的这个循环没有跟着改**。
+    # 规则被当成一次事故的补丁执行了,没有被当成一条会自己巡查的策略。
+    #
+    # 2026-09-08 的实测后果:binance_hist 覆盖 **4/123**,而 docstring 第 28 行
+    # 早就写着「262 symbols fired at once is a burst that gets an IP banned,
+    # **and the ban would look exactly like the stale feed this replaces**」——
+    # 塌陷不是待修的故障,**就是那个 ban**。
+    #
+    # ⚠️ 最难看的一条:S-323e 之前挡住这一切的,是 `deep_panel_symbol_list()`
+    # 的 42501 权限错误。**那个「bug」是当时唯一在执行这条策略的东西**,
+    # 而我花了五轮把它诊断成故障、然后修好了它 —— 等于亲手恢复了违规。
+    # 所以拦截必须落在**代码里**,不能只落在 env 开关上:
+    # 一个只靠 env 拦住的违规,下一个把 loop 判成「坏了」的人还会再打开一次。
+    from src.data.market.source_policy import MARKET_DATA, assert_purpose_source
+    assert_purpose_source(MARKET_DATA, "binance_hist", n_assets=len(syms),
+                          job="deep panel daily bars")
+
     started = datetime.now(timezone.utc)
     sem = asyncio.Semaphore(_CONCURRENCY)
     all_rows: list[dict] = []
