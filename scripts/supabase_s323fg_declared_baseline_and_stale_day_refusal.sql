@@ -1,0 +1,86 @@
+-- S-323f + S-323g (2026-09-08) — applied to production as migrations
+-- `s323f_declared_coverage_baseline` and
+-- `s323g_refuse_silently_rewriting_a_stale_day`.
+--
+-- JAZZ decision 2026-09-08: pin the baseline, keep the forward record BLOCKED.
+-- Resuming becomes a deliberate act instead of something that happens by
+-- calendar.
+--
+-- ── S-323f: a guard may not derive its baseline from the series it guards ───
+--
+-- `refresh_depth_divergence` computed its coverage floor against
+-- `percentile_disc(0.9)` of the trailing 90 days OF THE VERY SERIES IT GUARDS.
+--
+-- Measured 2026-09-08:
+--     p90 = 194            <- a fossil: computed when hyperliquid still wrote
+--                             daily bars, a role S-296 retired on 2026-08-23
+--     maintained feed = 61 <- coingecko_pro_ohlc alone
+--     ratio 0.314 < 0.50   <- refusing, correctly
+--
+-- But the retirement ages INTO the trailing window. As it does, p90 falls
+-- 194 -> 61; once more than 81 of the 90 days are 61-symbol days, ratio = 1.000
+-- and the floor PASSES. Around 2026-11-12, with nobody doing anything, a guard
+-- that is refusing correctly today would have begun accepting a 23%-coverage
+-- panel, silently.
+--
+-- Worse: exclude hyperliquid and recompute TODAY and the ratio is ALREADY
+-- 1.000. The floor's discriminating power is already zero. It can catch a
+-- sudden collapse and never a sustained one — which is exactly why
+-- binance_hist sat at 4/123 for weeks and never tripped it.
+--
+-- A GUARD THAT DERIVES ITS BASELINE FROM THE SERIES IT GUARDS WILL EVENTUALLY
+-- NORMALISE ANY STATE INTO "FINE". The baseline must be DECLARED, and changing
+-- it must be an act.
+--
+-- 262 = the deep panel. The floor asks "does the maintained feed cover enough
+-- OF THE PANEL", so the panel is the honest denominator. Hardcoded rather than
+-- derived on purpose: deriving it from the live panel would re-open the same
+-- self-heal path through a different series. Changing it needs a migration.
+--
+-- Today 61/262 = 0.233 -> still refuses. It now unblocks only when OPEN RISK
+-- #0a (237 panel symbols with no daily source) actually closes.
+--
+-- `depth_divergence_log.baseline_source` added so rows computed under the old
+-- trailing-p90 regime are distinguishable from rows computed under the
+-- declared one. Two provenances in one column with no marker is the defect the
+-- column exists to prevent.
+--
+-- ── S-323g: the success path was hiding the stall ──────────────────────────
+--
+-- After S-323f the function returned **194**, not -1. The auto-select path
+-- picks the LATEST day clearing the floor, and days 2026-08-09..08-23 still
+-- carry hyperliquid's bars, so they clear it. Every run re-upserted 08-23 and
+-- returned a healthy-looking 194 while `max(d)` had not moved in 16 days.
+--
+-- 194 matched none of the refusal codes `forward_record_keeper` tests for
+-- (-1 / -2 / 0), so `problems` stayed EMPTY and the loop reported success.
+--
+--     "wrote 194 rows for today"
+--     "wrote 194 rows for a day 16 days ago"
+--     ... are the same integer.
+--
+-- The return value carried a row count and no date, so the single fact that
+-- would have exposed the stall was the one fact not returned. This is the same
+-- shape as the rest of the S-323 chain, but in the SUCCESS path — which is
+-- worse, because nobody investigates a success.
+--
+-- It would also have "fixed itself" on 2026-09-23, when 08-23 ages out of the
+-- 30-day window and the function starts returning -1. A defect that resolves
+-- on a date nobody knows is not resolved; it is a defect with a fuse.
+--
+-- Auto path now returns -3 rather than rewriting a day more than 3 days old.
+-- An EXPLICIT p_date is operator intent and still backfills any date.
+--
+-- Python side (src/data/signals/forward_record_keeper.py) handles -3 AND adds
+-- a catch-all: any unrecognised or non-int return is now a problem, because
+-- teaching the list one more number would leave the identical defect for the
+-- next unenumerated code.
+--
+-- Verified after applying:
+--     select public.refresh_depth_divergence();                  -> -3
+--     select public.refresh_depth_divergence('2026-08-23'::date); -> 194
+--
+-- The full function bodies live in the two migrations named at the top of this
+-- file; they are not duplicated here on purpose. A second copy of a function
+-- definition is a second thing to drift (the reason S-323's own RPC was built
+-- as a wrapper rather than a re-implementation).
