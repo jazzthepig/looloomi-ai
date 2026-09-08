@@ -18000,3 +18000,72 @@ S-296 做了一个正确的决定,而依赖旧世界的那个 cohort 定义没�
 Python 侧同步:处理 -3,**并且加了兜底** —— 任何未枚举的返回码或非 int
 一律记为 problem。**只教这张清单多认一个数字,会把同样的缺陷留给下一个新码。**
 实测 `refresh_depth_divergence()` → -3,`refresh_depth_divergence('2026-08-23')` → 194。
+
+### S-323h — 我自己的修复里,GRANT 是加法,REVOKE 才是收窄,而我漏了后者
+
+preflight 的 `test_security_definer_functions_are_revoked_at_all` 抓到了。**它是对的。**
+
+Postgres 建函数时默认 `EXECUTE TO PUBLIC`,Supabase 的 `ALTER DEFAULT
+PRIVILEGES` 再叠一层 anon/authenticated/service_role。所以
+「`grant execute to <我想要的角色>`」**不收窄任何东西** —— 它是加在一个已经
+全开的默认之上。收窄的那一步是 `REVOKE`,而那正是我没写的一步。
+
+实测(S-323e 第一版之后):
+
+    deep_panel_symbol_list   SECURITY DEFINER + EXECUTE TO PUBLIC   ← 提权面
+    rpc_reachability_audit   我只 grant 了 service_role,实际带着 authenticated
+                             —— 默认权限放进去的,我从没回头看过
+
+而 S-323e 的脚本头上我写着这个包装器「keeps exactly one door open and it is
+the narrow one」。**那句话在写下的当刻就是假的**:它描述的是 GRANT 的意图,
+而默认把每一扇门都开着。**把想要的终态写下来,不等于到达了它** ——
+和这整条链是同一个缺陷,这次发生在我自己的修复里面。
+
+已修:12 个 SECURITY DEFINER 函数现在全部无 PUBLIC。
+
+### S-323i — 被我修好的那个「bug」,是当时唯一在执行策略的东西
+
+**这条是本次会话最重要的一条,而且它推翻我自己在 S-323e 里的结论。**
+
+Jazz(2026-09-08,并注明「我说过很多次」):
+**免费 API(Binance / Hyperliquid)只能用于我们筛选过的、拿来交易的少量资产。**
+
+而 `src/data/market/source_policy.py` —— **这个文件就是为这个采集器写的** ——
+开篇第一个例子一字不改就是:
+
+    · `deep_panel_collector` — 262 symbols against Binance's free mirror.
+      Result: one symbol reachable, panel dead for days (S-190).
+
+它的规则:`fan-out over > BULK_THRESHOLD assets → a PAID source. Always.`
+它的 `PURPOSE_SCOPE[market_data]`:「整个研究面板(262)—— **付费源**,
+fan-out 是买来的权利」。
+
+**而 `deep_panel_collector.py` 全文 0 处 `source_policy`。**
+策略点名了这个采集器,采集器从来没调用过这个策略。
+S-296 把用途轴应用到了 hyperliquid,**同一个文件里隔 40 行的 Binance 循环没跟着改** ——
+规则被当成一次事故的补丁执行了,没有被当成一条会自己巡查的策略。
+
+实测后果:binance_hist 覆盖 **4/123**。而 `deep_panel_collector` docstring 第 28 行
+早就写着:「262 symbols fired at once is a burst that gets an IP banned,
+**and the ban would look exactly like the stale feed this replaces**」——
+**塌陷不是待修的故障,它就是那个 ban**,而且是这个文件自己预言的那一个。
+
+⚠️ **最难看的一条:** S-323e 之前挡住这整件事的,是
+`deep_panel_symbol_list()` 的 42501 权限错误。
+**那个「bug」是当时唯一在执行这条策略的东西。**
+我花了五轮把它诊断成故障,然后修好了它 —— **等于亲手恢复了违规**,
+并且在脚本里把这次恢复记成了成功。
+
+> **一个没有被接住的策略,会以 bug 的形态存在;
+> 而修 bug 的人,会把执行策略的那个东西当成故障移除掉。**
+
+已修:`assert_purpose_source(MARKET_DATA, "binance_hist", ...)` 接进
+`collect_deep_panel` 的扇出决策点。实测抛 `PurposeMismatch`,
+而同样 262 个标的走 `coingecko_pro` **放行** —— 拦违规,不拦修法。
+拦截落在代码里而不是只落在 `DISABLE_DEEP_PANEL` 这个 env 开关上,
+因为**只靠 env 拦住的违规,下一个把 loop 判成「坏了」的人还会再打开一次**
+(这一次那个人就是我)。
+
+面板的真正修法是 **OPEN RISK #0a**(CG Pro 的 symbol→coin_id 映射),不是这个 RPC。
+S-106 的口径顾虑仍然成立,但它反对的是**把 CG Pro 的 bar 追加进 binance_hist 那条序列**;
+两个 source 标签各自成序列就不存在拼接 —— `binance_hist` 就此冻结为历史。
