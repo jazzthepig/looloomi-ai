@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-08 (Seth/Cowork lane — S-296…S-320;**S-320 面板扩到 262 后映射只有 59** —— 203 个因 symbol 撞名判 ambiguous,根因是 S-304 标记为「下一步」的市值缺口(那条注释的「4 个」是在 24 标的面板上量的);已接 `/coins/markets` 批量取前 1000 市值(4 次调用,付费源);`classify()` 补带调用方 reason —— **第五次「信息在传递中被削掉一层」,而这次在我为消灭它而写的函数里**;S-319:S-207 两个 blocker 三天前已不成立(pillar NULL 0.0% · PIT lag=0);⚠️ 仍缺:Sense 入口 24 · 无判决对象 40/72 · 3 本账空或陈(S-214 的 VERIFY 从没跑过))
+**Last updated:** 2026-09-08 (Seth/Cowork lane — S-296…S-321;**S-321 两本 0 行账的根因**:`degraded` 不在状态词表(故障被报成未知)· state 在写之前存(写失败仍声称成功)· 当天重跑撞 `already_marked_today` 把真失败盖掉 —— 三个叠起来 = 永远 0 行、永远报「跳过」、而理由听起来完全合理;**S-214 的 VERIFY 前提是错的**(fapi 从 Railway 通,① 每天在用)—— **一条前提未被验证的 VERIFY 会把人精确地送到错误的地方**;S-320 面板撞名接 `/coins/markets` 批量市值 · S-319 S-207 两个 blocker 已不成立;⚠️ 仍缺:Sense 入口 24 · 无判决对象 40/72 · ②的 Learn 无数据)
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
 > inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
