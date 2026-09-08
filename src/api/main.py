@@ -863,12 +863,22 @@ async def _cg_panel_loop():
             async def _up(table, rows, on_conflict):
                 return await supabase_upsert_table(table, rows, on_conflict)
 
-            from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE
+            # ⚠️ **面板不是 ① 的宇宙** (S-318)。首版传了 `DEFAULT_UNIVERSE`
+            # (24 个 —— ① 的持仓面板),于是映射只解析 24 个,而回填只覆盖
+            # 那 57 个从 trending_log 免费种进来的。
+            #
+            # 实测后果:`refresh_depth_divergence` 的覆盖地板要求 ≥97 标的
+            # (近 90 天 p90=193 的一半),而我们只有 57 → 地板正确地拒绝,
+            # 回落到 2026-08-23,**Telegram 持续报 15 天没标记**。
+            # 地板没错,是我喂给它的面板太窄。
+            #
+            # `deep_panel_symbols()` 早就存在并返回全部 262 —— 又一个建好没用的。
+            from src.data.market.deep_panel_collector import deep_panel_symbols
             async with _httpx.AsyncClient(headers=_cg_headers(),
                                           timeout=45) as _c:
                 res = await run_once(client=_c, supabase_query=_q,
                                      supabase_upsert=_up,
-                                     panel_symbols=list(DEFAULT_UNIVERSE))
+                                     panel_symbols=await deep_panel_symbols())
             print(f"[CG-PANEL] {str(res.get('reason'))[:170]}")
             # S-299:ok 从 `status` 推导,**不写死**。
             _ok, _ref, _why = _classify(res)
