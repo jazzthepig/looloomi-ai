@@ -18069,3 +18069,66 @@ S-296 把用途轴应用到了 hyperliquid,**同一个文件里隔 40 行的 Bin
 面板的真正修法是 **OPEN RISK #0a**(CG Pro 的 symbol→coin_id 映射),不是这个 RPC。
 S-106 的口径顾虑仍然成立,但它反对的是**把 CG Pro 的 bar 追加进 binance_hist 那条序列**;
 两个 source 标签各自成序列就不存在拼接 —— `binance_hist` 就此冻结为历史。
+
+---
+
+## S-323j/k/l — 我差一点第六次修一个没确认过的原因 (2026-09-09)
+
+推完 S-323e/h/i 之后 loop 仍然 failing。我先去优化延迟,**而延迟从来不是原因。**
+
+### 先说结论:panel loop 不是在失败,是在睡觉
+
+    熔断器实测   open=false · consecutive_failures=0 · lifetime_trips=0
+    anon key     HTTP 200 · 262 行
+    publishable  HTTP 200 · 262 行
+
+**超时会让 `consecutive_failures` 增加;4xx 才会被记成 success。
+`lifetime_trips=0` 证明 app 从来没有在这里超时过。** RPC 是通的。
+
+真相在 `main.py:913`:每个循环 `except` 之后都是 `sleep(<成功间隔>)`。
+`_cg_panel_loop` 失败一次 → 睡 **6 小时**;深盘/前向 → **24 小时**。
+所以库里修好之后,心跳上仍然写着 `failing` —— **它不是还在失败,是在等**。
+
+而心跳只记 `n_consecutive_failures` 和 `last_error`,**没有「最后一次失败在什么时候」**,
+于是「9 小时前失败过、现在在睡」和「刚刚失败」在这条记录上完全同形 ——
+**而我正是拿这条记录判断修复有没有生效的。**
+这一整条链的形状,长到了我用来诊断这条链的那个仪表上。
+
+**间隔的意义是「成功之后隔多久再做一次」,不是「失败之后罚站多久」。
+写成同一个数,等于让系统在最需要重试的时候重试得最慢。**
+修:`_RETRY_AFTER_FAILURE_S = 600`,失败 10 分钟后重试;
+**refused 算成功**(跑通了但没活干,不该被罚)。
+
+### 顺带把性能查清楚了,而三次里有两次是我搞错
+
+    baseline(S-323e 包装器)                  1720 ms   7904 buffers
+    S-323j  `where p_source is null or ...`   3187 ms   7900 buffers  ← 更慢
+    S-323k  分支 + quote_literal              2027 ms   7935 buffers
+    + VACUUM (ANALYZE) ohlcv_daily            1315 ms   2406 buffers
+
+① S-323e 我写「the narrow surface(262 行)」—— **窄的是输出,不是开销**。
+`ohlcv_symbol_coverage()` 是全表 `group by`,包装器**先付全部再丢掉**。
+**行数描述响应,buffers 描述代价;我查了前者,却写了一句关于后者的断言。**
+
+② S-323j 把谓词塞进查询文本,我以为那就等于「索引能用的谓词」。
+`p_source is null or source = p_source` 不可 sarg。**buffers 一点没动** ——
+那个数(不是耗时)才是在说「计划根本没变」。
+
+③ S-323k 换成字面量,**buffers 还是没动**,这才逼出我一开始就该问的问题:
+
+    binance_hist = 386,257 行 = 全表的 71.3%
+
+**选择 71% 的谓词本来就不该走索引 —— 顺序扫描一直是正确计划。**
+三个迁移追一个永远不会被选中的索引,只因为我从没量过自己要加的那个过滤的选择度。
+
+④ 真正有用的是维护,不是计划:`Index Only Scan` 上写着
+`Heap Fetches: 386257` —— 可见性图是冷的,所谓 index-only 每行仍然回堆。
+`VACUUM (ANALYZE)` 之后 buffers 7904 → 2406。
+
+**EXPLAIN 里我该先看 buffers 和 Heap Fetches,而不是 Execution Time。
+耗时会因为负载而抖动,buffers 不会 —— 它直接说计划有没有变。**
+
+### 未修,已记:心跳缺 `last_failure_at`
+
+`loop_beat` 需要记录最后一次失败的时刻,否则「在睡」和「在坏」永远同形。
+这次我靠 `stale_build` 和推理绕过去了,**下一个人不会有这段上下文。**
