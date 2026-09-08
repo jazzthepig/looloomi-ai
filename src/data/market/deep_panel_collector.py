@@ -55,6 +55,12 @@ _BATCH_PAUSE_S = 0.25
 # attrition (a handful of delisted pairs 404) and well above a throttle event.
 _MIN_OK_FRACTION = 0.70
 
+#: 深盘 universe 的**分母**地板 (S-323)。覆盖率地板量的是分子,量不了分母。
+#: 库里实测 262 个 binance_hist 符号 (2026-09-08)。地板取 200 —— 留出正常的
+#: 下架流失空间,但任何一次「掉到 200 以下」都是符号表本身出了事,不是行情。
+#: **这个数只能往上调,不能往下调**:调低它等于把一次塌陷重新定义成正常。
+_MIN_PANEL_SYMBOLS = 200
+
 _DEFAULT_DAYS = 14   # a fortnight of overlap; upsert makes re-writes free
 
 
@@ -66,22 +72,33 @@ async def deep_panel_symbols() -> list[str]:
     zero of them are fresh, because nothing can route a symbol whose class is
     unknown. Fixing that registry is worth doing and is not a prerequisite for
     keeping the panel current — the panel knows what it is.
+
+    ⚠️ **S-323:这里原本靠「把行拉回来再去重」得到符号集** ——
+    `?select=symbol&source=eq.binance_hist&limit=100000`。PostgREST 有服务端
+    `max-rows` 上限(默认 1000):请求 100000 只回 1000 行,**并且返回 200**。
+    38 万行表的头 1000 行在物理顺序上几乎全属同一个 symbol,所以这个函数
+    实测回了 **2** 个,而库里是 **262**。
+
+    「拿到了一页」和「拿到了全部」是两个状态,HTTP 200 对这两个的回答一样。
+    截断在这里不是「少了点数据」,是**把一个 262 元的集合换成一个 2 元的集合**;
+    下游(`collect_deep_panel`,以及 S-318 起的 `_cg_panel_loop`)拿到 2 个照跑,
+    照报 ok —— **一个覆盖 2 个资产的成功,和覆盖 262 个的成功,输出完全一样。**
+
+    改为调 `deep_panel_symbol_list()` RPC:去重在数据库里做,回来的是 262 行
+    而不是 38 万行,**结构上不可能再被 max-rows 截断**。
     """
-    from src.api.store import _SB_URL, _SB_KEY, _supabase_request_with_retry
-    if not _SB_URL or not _SB_KEY:
-        return []
-    url = (f"{_SB_URL}/rest/v1/ohlcv_daily"
-           f"?select=symbol&source=eq.binance_hist&limit=100000")
+    from src.api.store import supabase_rpc
     try:
-        r = await _supabase_request_with_retry(
-            "GET", url, headers={"apikey": _SB_KEY,
-                                 "Authorization": f"Bearer {_SB_KEY}"})
-        if not r or r.status_code != 200:
-            return []
-        return sorted({row["symbol"].upper() for row in r.json() if row.get("symbol")})
+        rows = await supabase_rpc("deep_panel_symbol_list")
     except Exception as e:                                   # noqa: BLE001
         _log.warning("[DEEP] symbol list failed: %s", e)
         return []
+    # `supabase_rpc` 调用失败返 None,空结果返 []。**这是两个状态** ——
+    # 「读不到」不等于「库里没有」,而后者会让上面的 universe 地板判成塌陷。
+    if rows is None:
+        _log.warning("[DEEP] symbol list RPC unreachable — returning [] (not empty panel)")
+        return []
+    return sorted({str(r["symbol"]).upper() for r in rows if r.get("symbol")})
 
 
 async def _fetch_one(symbol: str, days: int) -> tuple[str, list[dict], str | None]:
@@ -128,6 +145,29 @@ async def collect_deep_panel(days: int = _DEFAULT_DAYS,
     if not syms:
         return {"ok": False, "error": "no deep-panel symbols resolved",
                 "note": "either Supabase is unreachable or binance_hist is empty"}
+
+    # ── S-323:**universe 塌了** 和 **抓取失败** 是两个状态 ──────────────────
+    # 2026-09-08 线上:`deep_panel_symbols()` 被 PostgREST 的 max-rows 截断,
+    # 回了 2 个符号(库里 262)。下面的 `_MIN_OK_FRACTION` 地板照常工作,
+    # 报出来是「only 0/2 symbols returned data」—— 读起来像「两个标的抓不到」,
+    # 而真相是「我们弄丢了 260 个标的」。**报错文本把一个 99% 的覆盖塌陷
+    # 讲成了一次小失败**,所以它在心跳里躺了不知道多少轮没人看出来。
+    #
+    # 覆盖率地板量的是「拿到的这些里成功几个」,量不了「拿到的这些够不够全」。
+    # 分母自己也需要一个地板 —— 否则分母缩到 2,100% 成功依然是空的。
+    if symbols is None and len(syms) < _MIN_PANEL_SYMBOLS:
+        _log.error("[DEEP] REFUSING TO RUN — universe resolved to %s symbols, "
+                   "floor %s. This is not a fetch failure: the SYMBOL LIST is "
+                   "short. Check deep_panel_symbol_list() / max-rows truncation.",
+                   len(syms), _MIN_PANEL_SYMBOLS)
+        return {
+            "ok": False, "status": "error", "written": False,
+            "symbols_total": len(syms), "symbols_ok": 0, "rows_upserted": 0,
+            "universe_collapsed": True,
+            "error": (f"深盘 universe 只解析出 {len(syms)} 个标的(地板 "
+                      f"{_MIN_PANEL_SYMBOLS})—— **这不是抓取失败,是符号表本身短了**。"
+                      f"分母塌了的时候,100% 成功率依然是空的。"),
+        }
 
     started = datetime.now(timezone.utc)
     sem = asyncio.Semaphore(_CONCURRENCY)

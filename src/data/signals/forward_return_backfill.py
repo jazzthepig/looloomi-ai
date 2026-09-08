@@ -96,27 +96,37 @@ async def coverage_report(horizon: int = HORIZON_DAYS) -> dict[str, Any]:
     unfillable rows cluster in one asset class or one date range, the IC computed
     on the remainder is an IC of that subset. A number nobody can decompose is a
     number nobody should weight on.
+
+    ⚠️ **S-323:这个函数原本自己把行拉回来再统计** ——
+    `?select=...&entry_time=lte.X&limit=10000`。PostgREST 服务端 `max-rows`
+    上限(默认 1000)会把响应截到 1000 行**并返回 200**。实测 2026-09-08:
+    合格行 **1759**,所以 `coverage_pct` 一直是**在一个任意 1000 行切片上算出来、
+    却当作总体在用的统计量** —— 而这正是决定「能不能报 IC」的那个数。
+    真值当天 92.0%。
+
+    比丢数据更糟的是:分子分母**同时**被同一次截断改写,所以比值看上去总是
+    合理的,没有任何一个数会显得离谱。**一个被截断的样本不会说自己被截断了。**
+    改为调 `forward_return_coverage(p_horizon)` RPC —— 计数在库里做,回来是
+    一行聚合,结构上不可能被 max-rows 截断。
     """
-    from src.api.store import _SB_URL, _SB_KEY, _supabase_request_with_retry
-    if not _SB_URL or not _SB_KEY:
-        return {"ok": False, "reason": "no Supabase credentials"}
+    from src.api.store import supabase_rpc
+    try:
+        rows = await supabase_rpc("forward_return_coverage",
+                                  {"p_horizon": int(horizon)})
+    except Exception as e:                                   # noqa: BLE001
+        return {"ok": False, "reason": f"coverage rpc failed: {str(e)[:120]}"}
+    # None = RPC 没通;[] = 通了但没有行。**「读不到」和「没有」是两个状态**,
+    # 而 coverage_pct 的下游会把后者当成「确实 0% 覆盖」去封 IC。
+    if rows is None:
+        return {"ok": False, "reason": "coverage rpc unreachable (not: zero coverage)"}
+    if not rows:
+        return {"ok": False, "reason": "coverage rpc returned no row"}
 
-    cutoff = (datetime.now(timezone.utc).date() - timedelta(days=horizon)).isoformat()
-    url = (f"{_SB_URL}/rest/v1/trade_results"
-           f"?select=symbol,entry_time,realized_return_7d"
-           f"&entry_time=lte.{cutoff}&limit=10000")
-    r = await _supabase_request_with_retry(
-        "GET", url, headers={"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"})
-    if r is None or r.status_code != 200:
-        return {"ok": False, "reason": f"read failed: {getattr(r,'status_code','none')}"}
-
-    rows = r.json()
-    eligible = len(rows)
-    measured = sum(1 for x in rows if x.get("realized_return_7d") is not None)
-    days = {str(x.get("entry_time"))[:10] for x in rows
-            if x.get("realized_return_7d") is not None}
-    unmeasured_syms = sorted({x["symbol"] for x in rows
-                              if x.get("realized_return_7d") is None})
+    agg = rows[0] if isinstance(rows, list) else rows
+    eligible = int(agg.get("eligible_rows") or 0)
+    measured = int(agg.get("measured_rows") or 0)
+    n_days = int(agg.get("measured_days") or 0)
+    unmeasured_syms = sorted(agg.get("unmeasured_symbols") or [])
     return {
         "ok": True,
         "eligible_rows": eligible,
@@ -125,7 +135,7 @@ async def coverage_report(horizon: int = HORIZON_DAYS) -> dict[str, Any]:
         # THE number that decides whether an IC may be reported at all — see
         # MIN_INDEPENDENT_DAYS in compute_regime_fitness. Assets co-move, so the
         # row count overstates the sample by roughly the width of the panel.
-        "independent_days": len(days),
+        "independent_days": n_days,
         "unmeasured_symbols": unmeasured_syms[:20],
         "n_unmeasured_symbols": len(unmeasured_syms),
     }

@@ -225,19 +225,30 @@ def t_the_wrapper_signature_matches_the_callee():
 
     wrapper = set(inspect.signature(_m._beat).parameters)
     callee = set(inspect.signature(_beat_impl).parameters)
-    # `detail` 是 beat 的可选扩展,包装不转发它是有意的
-    missing = callee - wrapper - {"detail"}
-    _check("包装转发了被调方的每个关键字", not missing,
+    # S-323:这里原本豁免了 `detail`,理由是「包装不转发它是有意的」。
+    # 那句话写下时为真,后来 `_forward_record_loop` 开始传 detail=,
+    # 线上连续 7 轮 TypeError,而守卫全程是绿的。
+    # **一条豁免记的是「当时不需要」,它不会自己过期。** 豁免删除,不再补新的。
+    missing = callee - wrapper
+    _check("包装转发了被调方的**每个**关键字(无豁免)", not missing,
            f"缺 {sorted(missing)} —— 线上会 TypeError,而字符串检查看不出来")
 
-    # **真的调一次。** 上面那条比对若哪天被绕过,这条仍会炸。
+    # **真的调一次,且关键字从被调方签名里取** —— 不再写死三个。
+    # 写死的参数表只能挡住写下来的那几个;下次给 beat 加参数,这条自己会红。
+    kw = {}
+    for pname, par in inspect.signature(_beat_impl).parameters.items():
+        if pname == "name" or par.kind is not par.KEYWORD_ONLY:
+            continue
+        ann = str(par.annotation)
+        kw[pname] = ({"k": "v"} if "dict" in ann
+                     else True if "bool" in ann else "x")
+    err = ""
     try:
-        _a.run(_m._beat("_guard_smoke", ok=True, refused=True, error="x"))
+        _a.run(_m._beat("_guard_smoke", **kw))
         ok = True
     except TypeError as e:
         ok, err = False, str(e)
-    _check("用三个关键字实调 _beat 不抛 TypeError", ok,
-           err if not ok else "")
+    _check(f"用被调方全部 {len(kw)} 个关键字实调 _beat 不抛 TypeError", ok, err)
 
 
 #: 循环名 → 它调用的采集器模块。**这张表说的是「谁供数」,不是「谁会拒绝」** ——
@@ -479,6 +490,39 @@ def main() -> int:
     for f in _FAIL:
         print("   " + f)
     return 1 if _FAIL else 0
+
+
+def t_a_stale_ok_says_so_too():
+    """**陈旧的 ok 比陈旧的 failing 更危险** (S-322)。
+
+    `stale_build` 从 S-295 就存在,但只被写进 `failing` 的 reason。
+    2026-09-08 我**五次**读着旧构建记的 `ok` / `refused`,当成对当前构建的确认,
+    然后顺着不存在的问题查下去。
+
+    > 失败读起来像「还没修好」——人会继续查;
+    > 成功读起来像「已经修好了」——**人会停止查**。
+
+    **一个字段存在而不出现在人读的那句话里,等于不存在。**
+    """
+    import os
+    import time
+    os.environ["GIT_COMMIT_SHA"] = "curbuild1"
+    now = int(time.time())
+    for label, ent in (
+        ("ok", {"ok": True, "n_consecutive_failures": 0}),
+        ("refused", {"ok": True, "refused": True,
+                     "n_consecutive_refusals": 2, "last_refusal": "x"}),
+        ("failing", {"ok": False, "n_consecutive_failures": 3,
+                     "last_error": "boom"}),
+    ):
+        old = assess("_x", {"_x": {**ent, "last_run_at": now, "build": "oldbuild"}})
+        cur = assess("_y", {"_y": {**ent, "last_run_at": now, "build": build_sha()}})
+        _check(f"{label}:旧构建时 stale_build=True", old.get("stale_build") is True,
+               str(old.get("stale_build")))
+        _check(f"{label}:**理由里说出它是化石**", "化石" in old["reason"],
+               old["reason"][:70])
+        _check(f"{label}:当前构建时不加那句话", "化石" not in cur["reason"],
+               cur["reason"][:70])
 
 
 if __name__ == "__main__":

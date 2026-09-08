@@ -251,6 +251,25 @@ def _stale(entry: dict) -> bool:
     return bool(cur and was and cur != was)
 
 
+def _fossil_note(entry: dict) -> str:
+    """旧构建记下的条目要**自己说出来** (S-322)。
+
+    `stale_build` 这个字段从 S-295 起就存在,但它只被写进 `failing` 分支的
+    `reason`。今晚我有**五次**读着一条旧构建记下的 `ok` 或 `refused`,
+    把它当成对当前构建的确认,然后顺着一个不存在的问题查下去。
+
+    > **一个陈旧的 `ok` 比一个陈旧的 `failing` 更危险。**
+    > 失败读起来像「还没修好」——人会继续查;
+    > 成功读起来像「已经修好了」——**人会停止查**。
+
+    字段存在而不出现在人读的那句话里,等于不存在。
+    """
+    if not _stale(entry):
+        return ""
+    return (f"⚠️ **旧构建 {entry.get('build')} 记的,当前 {build_sha()} 下"
+            f"还没跑过 —— 这不是对当前构建的判断,是化石。** ")
+
+
 def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
            now: Optional[int] = None) -> dict:
     """一个循环的裁决。**「没有心跳」不等于「健康」。**"""
@@ -270,10 +289,11 @@ def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
                 "n_consecutive_refusals": n,
                 "last_refusal": e.get("last_refusal"),
                 "last_ok_at": e.get("last_ok_at"),
-                "reason": (f"**正确地拒绝写入**,连续 {n} 轮:"
-                           f"{(e.get('last_refusal') or '')[:110]}。"
-                           f"循环没坏 —— 但**连续 {n} 轮拒绝说明上游一直没恢复**,"
-                           f"那是它自己的信号,不是健康")}
+                "reason": _fossil_note(e) + (
+                    f"**正确地拒绝写入**,连续 {n} 轮:"
+                    f"{(e.get('last_refusal') or '')[:110]}。"
+                    f"循环没坏 —— 但**连续 {n} 轮拒绝说明上游一直没恢复**,"
+                    f"那是它自己的信号,不是健康")}
     if not e.get("ok"):
         n = int(e.get("n_consecutive_failures") or 1)
         return {"loop": name, "verdict": FAILING,
@@ -284,20 +304,28 @@ def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
                 "n_consecutive_failures": n,
                 "last_error": e.get("last_error"),
                 "last_ok_at": e.get("last_ok_at"),
-                "reason": (f"连续失败 **{n}** 次,最后一次:"
-                           f"{(e.get('last_error') or '')[:120]}。"
-                           f"**一次失败和连续 {n} 次是两个状态**"
-                           + ("。⚠️ **这条是旧构建 "
-                              f"{e.get('build')} 记的,当前构建 {build_sha()} "
-                              f"下它还没跑过** —— 不是「修了还在失败」,"
-                              f"是「还没轮到它」" if _stale(e) else ""))}
+                # 三个分支共用 `_fossil_note` —— **同一个判断不能有两套措辞**
+                # (S-322)。这里原本自己写了一遍「还没轮到它」,而 ok / refused
+                # 说的是「化石」。同一个量两个载体的文本版。
+                "reason": _fossil_note(e) + (
+                    f"连续失败 **{n}** 次,最后一次:"
+                    f"{(e.get('last_error') or '')[:120]}。"
+                    f"**一次失败和连续 {n} 次是两个状态**"
+                    + ("(所以这不是「修了还在失败」,是「还没轮到它」)"
+                       if _stale(e) else ""))}
     age = now - int(e.get("last_run_at") or 0)
     late = expect_every_s and age > expect_every_s * 2
+    # ⚠️ **一个陈旧的 ok 比一个陈旧的 failing 更危险** (S-322)。
+    # `stale_build` 原本只在 failing 分支被写进 reason,而今晚有五次是
+    # 我读着一条旧构建记下的 `ok` 或 `refused`,以为那是对当前构建的确认。
+    # **失败读起来像「还没修好」,而成功读起来像「已经修好了」** ——
+    # 后者会让人停止排查,所以它更贵。
     return {"loop": name, "verdict": OK, "age_s": age,
             "build": e.get("build"),
+            "stale_build": _stale(e),
             "late": bool(late),
-            "reason": (f"上次成功 {age // 60} 分钟前"
-                       + ("(**已超过预期间隔的两倍**)" if late else ""))}
+            "reason": _fossil_note(e) + f"上次成功 {age // 60} 分钟前" + (
+                "(**已超过预期间隔的两倍**)" if late else "")}
 
 
 def overall(beats: dict, expected: Optional[dict] = None) -> dict:

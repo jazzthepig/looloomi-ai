@@ -1392,6 +1392,15 @@ python3 -m tests.test_python_version_landmines || {
 python3 -m tests.test_loop_beat || {
   echo "  ✗ 循环心跳守卫 — do not push"; exit 1; }
 
+# ── S-323: 「拿到了一页」和「拿到了全部」是两个状态,200 对两者的回答一样 ──
+# PostgREST 服务端 db-max-rows(默认 1000)会把 limit=100000 静默截到 1000,
+# 不报错不加警告。实测:深盘 universe 262 → 读出 2,而下游拿着 2 个报 ok;
+# forward coverage 的分子分母被同一次截断同时改写,比值永远看着合理。
+# 这条教训 S-130 就写在 beta_core_paper 的 docstring 里,两个新站点照犯 ——
+# **知道一件事和把它编码进去是两个动作,只有第二个能活下来。**
+python3 -m tests.test_a_truncated_page_is_not_the_whole_set || {
+  echo "  ✗ 截断守卫 — do not push"; exit 1; }
+
 # ── S-288: 宁可空且标记,不可编造(规则 #9 那条 audit standing 终于清了) ────
 # src/data/vc/deal_flow.py 有三个 _get_mock_*(),在 10 个返回点上把失败替换成
 # 假数据。最坏的不是 402 那条,是:
