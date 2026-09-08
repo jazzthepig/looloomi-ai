@@ -454,6 +454,7 @@ async def _deep_panel_loop():
     result is LOGGED WITH THE FRACTION — a run that reaches 40 of 262 must not
     read like a normal day.
     """
+    from src.data.market.source_policy import SourcePolicyError
     await _asyncio.sleep(_boot_delay(3000))
     while True:
         try:
@@ -465,6 +466,18 @@ async def _deep_panel_loop():
             await _beat("_deep_panel_loop", ok=bool(r.get("ok")),
                         refused=bool(r.get("refused")),
                         error=r.get("diagnosis") or r.get("error"))
+        except SourcePolicyError as _e:
+            # S-323i/l:**这不是故障,是策略拒绝。**
+            # `collect_deep_panel` 对 262 个标的扇出 Binance 免费镜像,
+            # 违反 `source_policy`(面板属于 market_data → 付费源)。
+            # 把它记成 `failing`,等于把「我们决定不这么做」显示成
+            # 「有东西坏了」—— 而这两者的处理方式完全相反:
+            # 前者不用修,后者要查。**S-294 我在别处犯过同一个错。**
+            #
+            # 真正的修法是 OPEN RISK #0a(CG Pro 的 symbol→coin_id 映射),
+            # 不是让这个循环重新跑起来。
+            print(f"[DEEP] ⛔ refused by source policy: {_e}")
+            await _beat("_deep_panel_loop", ok=False, refused=True, error=str(_e))
         except Exception as _e:
             print(f"[DEEP] ⚠️  deep-panel collection FAILED: {_e}")
             await _beat("_deep_panel_loop", ok=False, error=str(_e))
@@ -844,6 +857,23 @@ async def _treasury_decisions_loop():
 #: 不留一个洞**,而洞在 `max(trade_date)` 上完全不可见(S-190 的形状)。
 _CG_PANEL_INTERVAL_S = 6 * 3600
 
+#: S-323l — **失败之后不要睡完整个成功间隔。**
+#:
+#: 每个循环原来都是 `except: _beat(ok=False)` 然后 `sleep(<成功间隔>)`。
+#: 于是一次**瞬时**故障要花 6 小时(面板)或 24 小时(深盘/前向)才会重试,
+#: 而这段时间里心跳上写着 `failing` —— 与「正在持续失败」一模一样。
+#:
+#: 2026-09-09 实测这条的代价:`deep_panel_symbol_list` 在库里修好之后,
+#: 三个 key 实测全部 200/262 行,而 `_cg_panel_loop` 仍然显示 failing ——
+#: **它不是还在失败,它是在睡觉**。心跳只记 `n_consecutive_failures` 和
+#: `last_error`,没有「最后一次失败是什么时候」,所以
+#: **「9 小时前失败过、现在在等」和「刚刚失败」在这条记录上同形**,
+#: 而我正是拿这条记录判断修复有没有生效的。
+#:
+#: 间隔的意义是「成功之后隔多久再做一次」,不是「失败之后罚站多久」。
+#: 把两者写成同一个数,等于让系统在最需要重试的时候重试得最慢。
+_RETRY_AFTER_FAILURE_S = 600
+
 
 async def _cg_panel_loop():
     """面板日线走 CG Pro,常驻 —— **给那个从没被调度的回填接上电** (S-304).
@@ -862,6 +892,9 @@ async def _cg_panel_loop():
     """
     await _asyncio.sleep(_boot_delay(900))
     while True:
+        # S-323l:这一轮算不算「跑成功了」。**拒绝(refused)算成功** ——
+        # 它是「跑通了但没活干」,不是故障,不该被罚成 10 分钟重试。
+        _round_ok = False
         try:
             import httpx as _httpx
 
@@ -896,7 +929,7 @@ async def _cg_panel_loop():
                 await _beat("_cg_panel_loop", ok=False,
                             error="深盘符号表**没读到**(RPC 不通/熔断)—— "
                                   "**不是「映射没解析出来」**,是这一轮没问到")
-                await _asyncio.sleep(_CG_PANEL_INTERVAL_S)
+                await _asyncio.sleep(_RETRY_AFTER_FAILURE_S)
                 continue
             async with _httpx.AsyncClient(headers=_cg_headers(),
                                           timeout=45) as _c:
@@ -906,11 +939,13 @@ async def _cg_panel_loop():
             print(f"[CG-PANEL] {str(res.get('reason'))[:170]}")
             # S-299:ok 从 `status` 推导,**不写死**。
             _ok, _ref, _why = _classify(res)
+            _round_ok = bool(_ok or _ref)
             await _beat("_cg_panel_loop", ok=_ok, refused=_ref, error=_why)
         except Exception as _e:
             print(f"[CG-PANEL] ⚠️  run failed: {_e}")
             await _beat("_cg_panel_loop", ok=False, error=str(_e))
-        await _asyncio.sleep(_CG_PANEL_INTERVAL_S)
+        await _asyncio.sleep(_CG_PANEL_INTERVAL_S if _round_ok
+                             else _RETRY_AFTER_FAILURE_S)
 
 
 @app.on_event("startup")
