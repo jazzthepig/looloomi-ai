@@ -17828,3 +17828,61 @@ limit 上限预算(只减不增)· 两个站点走 RPC · 三值不得折叠(含
 **这是本 session 第 N 次遇到的同一个形状,而且它在最底层。** 未修,已记 ——
 `src/api/store.py` 与 `src/api/routers/research_intake.py` 当前带着一份未提交的
 S-286 在途改动(`supabase_missing_columns`),不属于本次 concern,不混提。
+
+---
+
+## S-323d — 三循环故障的共同根因:PostgREST schema cache + partial index + breaker blind spot (2026-09-08)
+
+**CLAIM:** `_cg_panel_loop`(连续 2 次)、`_deep_panel_loop`(连续 3 次)、
+`_forward_record_loop`(连续 10 次)全部 failing,错误信息分别是「RPC 不通/熔断」
+和「no response from Supabase after retries」。根因不在网络,在三层叠加的
+「两个状态,一个表示」。
+
+**诊断 — 三层:**
+
+**Layer 1: PostgREST schema cache 未重载。**
+S-323 新建的两个 RPC(`deep_panel_symbol_list`、`forward_return_coverage`)
+在 `pg_proc` 里存在,但 PostgREST 还在用旧的 schema cache — 调用返回 404。
+`_supabase_request_with_retry` 把 404 当 4xx non-retryable → `_cb_record_success()`
+→ 熔断器报 0 failures。**PostgREST 说「没这个函数」,熔断器说「一切正常」。**
+修:`NOTIFY pgrst, 'reload schema'`。
+
+**Layer 2: breaker 对 404 盲。**
+`_supabase_request_with_retry` line 212-263:
+```python
+if 400 <= resp.status_code < 500 and resp.status_code != 429:
+    _cb_record_success()  # NOT a backend failure
+    return resp
+```
+404 是 4xx → 走这条路 → 记 SUCCESS → 返回 resp。
+`supabase_rpc()` 拿到 resp,status_code=404,不在 (200, 204) → 返回 None。
+**调用方看到的是 None(「不通」),熔断器看到的是 SUCCESS(「通了」)。**
+这是结构债,未修 — 区分 404-function-not-found 与 404-row-not-found
+需要解析 PostgREST 响应体,排在 loop 复活之后。
+
+**Layer 3: `refresh_depth_divergence` 5238ms → 超时被杀。**
+函数扫 `ohlcv_daily`(464k 行)4 次,`source NOT IN (...)` 过滤条件
+命中 6533 行(1.4%),但没有索引以 negation 打头 → 4 次 parallel seq scan。
+暖机空载 5238ms,接近 anon 的 8s `statement_timeout`;生产 I/O 争用下超线 →
+PostgREST 500 → 重试也超 → 全部耗尽 → 报「no response」。
+修 1: partial index `ohlcv_daily_depth_divergence_idx ON ohlcv_daily
+(trade_date, symbol, source) WHERE source NOT IN (...) AND asset_class IN (...)`
+→ **5238ms → 106ms(49×)**。
+修 2: `ALTER FUNCTION refresh_depth_divergence(date) SET statement_timeout = '30s'`
+及 `resolve_depth_divergence()` 同理。
+⚠️ 后者签名查错过一次:`resolve_depth_divergence(date)` 不存在,
+用 `pg_get_function_identity_arguments(oid)` 确认真实签名是无参。
+
+**VERDICT:** 三层修复均已在 Supabase 侧直接应用。迁移记录
+`scripts/supabase_s323d_depth_divergence_perf.sql`。
+等推送触发 Railway 重部署后三循环应自愈(循环 fire on start then sleep)。
+
+**这是 S-323 链的第四层,和前三层形状完全一样:**
+S-323: missing index → timeout → "no response"
+S-323b: truncated panel → stale divergence → S-207 stalled 3 weeks
+S-323c: source index → slow query → timeout → "no response"
+S-323d: schema cache + partial index + breaker blind → "RPC 不通" + "no response"
+
+**每一次,一个慢查询或缺配置被报成一个网络故障。**
+错误信息描述症状(沉默),藏起原因(太慢/没重载/breaker 盲),
+而症状本身不含任何能指向原因的线索 — 所以调查方向永远是「连接」而不是「性能」。
