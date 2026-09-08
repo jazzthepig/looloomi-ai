@@ -119,18 +119,44 @@ async def deep_panel_state() -> list[dict] | None:
     (08-18 起每天只进 1–4 个标的),固定窗口够不着,只能靠人手跑一次。
     **一个需要人手补的自动循环,下次出事还是要人手。**
     """
-    from src.api.store import supabase_rpc
-    try:
-        rows = await supabase_rpc("deep_panel_symbol_list")
-    except Exception as e:                                   # noqa: BLE001
-        _log.warning("[DEEP] symbol list RPC raised: %s", e)
-        return None
-    if rows is None or rows is True or not isinstance(rows, list):
-        # `supabase_rpc` 把「熔断/超时/4xx」全折成 None,把「200 但不是 JSON」
-        # 折成 True。两者都是**没读到**,往上传 None 而不是 []。
-        _log.warning("[DEEP] symbol list RPC unreachable — None (NOT an empty panel)")
-        return None
+    rows, _detail = await deep_panel_state_detailed()
     return rows
+
+
+async def deep_panel_state_detailed() -> tuple[list[dict] | None, dict]:
+    """Same, but also returns WHAT HAPPENED (S-323m).
+
+    ⚠️ 上一版把「熔断/超时/4xx/非 JSON」全折成一个 None,然后调用方把这个 None
+    渲染成一句写死的「RPC 不通/熔断/超时」。**那句话里列的是当年作者的三个猜测,
+    不是这次的响应** —— 而真凶(`permission denied for function
+    ohlcv_symbol_coverage`)的名字在里面一个字都没有,于是它把连续五轮诊断
+    全部送回了那三个猜测。
+
+    真实证据一直都在:`store.py` 用 `_logger.warning` 打了状态码和 body,
+    然后**扔掉**。没有任何东西把它们送到 `_beat(error=...)`,
+    而 `/internal/data-freshness` 是所有人真正会读的那个面。
+
+    **诊断字段只能装观测,不能装假设。**
+    """
+    from src.api.rpc_diagnostics import rpc_with_detail, render_detail
+    rows, detail = await rpc_with_detail("deep_panel_symbol_list")
+    if detail.get("outcome") != "ok" or not isinstance(rows, list):
+        if detail.get("outcome") == "ok":
+            # 200 且能解析,但不是 list —— 仍然是**没读到**,不是空面板。
+            detail["outcome"] = "not_a_list"
+            detail["body"] = f"{type(rows).__name__}: {str(rows)[:120]}"
+        _log.warning("[DEEP] %s", render_detail(detail, prefix="symbol list "))
+        return None, detail
+    return rows, detail
+
+
+async def deep_panel_symbols_detailed() -> tuple[list[str] | None, dict]:
+    """`deep_panel_symbols()` + the detail, for callers that report health."""
+    rows, detail = await deep_panel_state_detailed()
+    if rows is None:
+        return None, detail
+    return sorted({str(r["symbol"]).upper()
+                   for r in rows if r.get("symbol")}), detail
 
 
 async def _fetch_one(symbol: str, days: int) -> tuple[str, list[dict], str | None]:
@@ -176,7 +202,11 @@ async def collect_deep_panel(days: int | None = None,
     """
     from src.api.store import supabase_upsert_table
 
-    state = None if symbols is not None else await deep_panel_state()
+    _state_detail: dict = {}
+    if symbols is not None:
+        state = None
+    else:
+        state, _state_detail = await deep_panel_state_detailed()
     syms = (symbols if symbols is not None
             else (None if state is None
                   else sorted({str(r["symbol"]).upper() for r in state
@@ -186,11 +216,14 @@ async def collect_deep_panel(days: int | None = None,
     # 上一版这里是 `either Supabase is unreachable or binance_hist is empty`:
     # **一句话把两个修法完全不同的状态并列,读的人两边都不能动。**
     if syms is None:
+        # S-323m:不再写死「RPC 不通/熔断/超时」这三个嫌疑人 —— 那句话里
+        # 没有真凶的名字,而它把五轮诊断送回了作者当年的猜测。装观测。
+        from src.api.rpc_diagnostics import render_detail
         return {"ok": False, "status": "error", "written": False,
                 "symbols_total": None, "rows_upserted": 0,
-                "error": ("深盘符号表**没读到**(RPC 不通/熔断/超时)—— "
-                          "**这不是「面板空了」**,是这一轮没问到。等下一轮;"
-                          "若连续多轮,查 Supabase 熔断器与 deep_panel_symbol_list 授权。")}
+                "rpc_detail": _state_detail,
+                "error": render_detail(_state_detail,
+                                       prefix="深盘符号表没读到 — ")}
     if not syms:
         return {"ok": False, "status": "error", "written": False,
                 "symbols_total": 0, "rows_upserted": 0,

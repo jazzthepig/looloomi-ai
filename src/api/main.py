@@ -919,16 +919,23 @@ async def _cg_panel_loop():
             # 地板没错,是我喂给它的面板太窄。
             #
             # `deep_panel_symbols()` 早就存在并返回全部 262 —— 又一个建好没用的。
-            from src.data.market.deep_panel_collector import deep_panel_symbols
+            from src.data.market.deep_panel_collector import (
+                deep_panel_symbols_detailed)
+            from src.api.rpc_diagnostics import render_detail
             # S-323:`deep_panel_symbols()` 是三值。None = 这一轮没读到,
             # **不是「面板空了」** —— 拿 [] 往下跑会让本轮报「一个可回填的
             # 对都没有」,那句话把一次读取故障说成了一个映射结论。
-            _panel = await deep_panel_symbols()
+            #
+            # S-323m:**error 里装观测,不装猜测。** 这里原来写死
+            # 「RPC 不通/熔断」—— 三个嫌疑人,而真凶(一个 GRANT)的名字
+            # 一个字都没出现,连续五轮诊断全被这句话送回了那三个猜测。
+            # 现在传的是状态码 + PostgREST 的 body + 调用时的熔断器状态。
+            _panel, _detail = await deep_panel_symbols_detailed()
             if _panel is None:
-                print("[CG-PANEL] symbol list unreachable this round — skipping")
-                await _beat("_cg_panel_loop", ok=False,
-                            error="深盘符号表**没读到**(RPC 不通/熔断)—— "
-                                  "**不是「映射没解析出来」**,是这一轮没问到")
+                _why = render_detail(_detail, prefix="深盘符号表没读到 — ")
+                print(f"[CG-PANEL] {_why}")
+                await _beat("_cg_panel_loop", ok=False, error=_why,
+                            detail=_detail)
                 await _asyncio.sleep(_RETRY_AFTER_FAILURE_S)
                 continue
             async with _httpx.AsyncClient(headers=_cg_headers(),
