@@ -77,9 +77,38 @@ as $$
   order by c.symbol
 $$;
 
+-- ⚠️ THE REVOKE IS THE NARROWING STEP, AND I LEFT IT OUT (S-323h).
+-- preflight's `test_security_definer_functions_are_revoked_at_all` caught it.
+-- Postgres grants EXECUTE to PUBLIC on creation and Supabase's ALTER DEFAULT
+-- PRIVILEGES adds anon/authenticated/service_role on top, so a bare GRANT is
+-- ADDITIVE to a default that is already open. Measured after the first version
+-- of this script: deep_panel_symbol_list was SECURITY DEFINER **with EXECUTE to
+-- PUBLIC**, and rpc_reachability_audit had picked up `authenticated` even though
+-- I granted service_role only.
+--
+-- The header above claimed this "keeps exactly one door open and it is the
+-- narrow one". That sentence was false the moment it was written: it described
+-- what the GRANT intended while the DEFAULT left every door open. Writing down
+-- the intended end state is not reaching it -- the same defect as the rest of
+-- this chain, this time inside my own fix.
+revoke all on function public.deep_panel_symbol_list() from public;
 grant execute on function public.deep_panel_symbol_list() to anon, authenticated, service_role;
 
 notify pgrst, 'reload schema';
+
+-- ⚠️⚠️ S-323i — READ THIS BEFORE TREATING THE ABOVE AS "THE FIX".
+--
+-- Restoring this RPC restores a 262-symbol fan-out to Binance's FREE mirror,
+-- which `src/data/market/source_policy.py` forbids and names as its FIRST
+-- example. JAZZ has said this many times; S-296 applied it to hyperliquid and
+-- left the Binance loop 40 lines away untouched.
+--
+-- **The 42501 this script "fixed" was the only thing enforcing that policy.**
+-- Five rounds went into diagnosing the enforcement as a fault and repairing it.
+--
+-- Enforcement now lives in code (`assert_purpose_source` wired into
+-- `collect_deep_panel`, S-323i), so the panel's real fix is OPEN RISK #0a --
+-- the CG Pro symbol->coin_id mapping -- and not this RPC.
 
 -- Verified after applying, all three roles:
 --     anon           -> OK rows=262
