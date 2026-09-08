@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-08 (Seth/Cowork lane — S-296…S-319;**S-319:S-207 的两个 blocker 三天前就已不成立而无人发现** —— pillar NULL 近 14 天 0.0%,`coingecko_pro_ohlc` 自 09-05 起 PIT lag=0(marks 可前向重放);`check_pit_lag()` 每轮进心跳,防它随循环停摆悄悄回来;**S-317 `signal_outcomes` 加 `source` 列**并给两条读它的 RPC 加过滤;**S-318 面板循环从 24 改成 262**(depth-divergence 卡在覆盖地板 97,只有 57);Learn ① 已闭环(S-315)· 写死 ok=True 11→0(S-299);⚠️ 仍缺:Sense 入口 24 · 无判决对象 40/72 · 3 本账空或陈(**S-214 的 VERIFY 从没跑过**))
+**Last updated:** 2026-09-08 (Seth/Cowork lane — S-296…S-320;**S-320 面板扩到 262 后映射只有 59** —— 203 个因 symbol 撞名判 ambiguous,根因是 S-304 标记为「下一步」的市值缺口(那条注释的「4 个」是在 24 标的面板上量的);已接 `/coins/markets` 批量取前 1000 市值(4 次调用,付费源);`classify()` 补带调用方 reason —— **第五次「信息在传递中被削掉一层」,而这次在我为消灭它而写的函数里**;S-319:S-207 两个 blocker 三天前已不成立(pillar NULL 0.0% · PIT lag=0);⚠️ 仍缺:Sense 入口 24 · 无判决对象 40/72 · 3 本账空或陈(S-214 的 VERIFY 从没跑过))
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
 > inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
