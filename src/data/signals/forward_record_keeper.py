@@ -103,6 +103,24 @@ async def refresh_depth_divergence_log() -> dict[str, Any]:
     # Measured 2026-08-19: the default target is the panel's max(trade_date),
     # and the asset classes update on different clocks — Crypto (262 symbols) was
     # 11 days behind five small classes, so "the latest day" had 2 symbols in it.
+    # ⚠️ S-323g — THE ENUMERATION USED TO BE THE WHOLE CHECK, AND THAT WAS THE BUG.
+    # Measured 2026-09-08: `refresh_depth_divergence` returned **194** on every
+    # run for sixteen days while `max(d)` never moved off 2026-08-23. Days
+    # 08-09..08-23 still carry hyperliquid's retired daily bars, so they cleared
+    # the coverage floor, and the auto-select path re-upserted 08-23 forever.
+    #
+    # 194 matched none of `-1 / -2 / 0`, so `problems` stayed EMPTY and this
+    # function reported success — for sixteen days, on a record that had not
+    # advanced. **「给今天写了 194 行」和「给 16 天前那天写了 194 行」是同一个整数**,
+    # and the return value carried the row count but not the date, so the single
+    # fact that would have exposed the stall was the one fact not returned.
+    #
+    # Fixed on the SQL side (auto path now returns -3 rather than rewriting a
+    # stale day; an explicit p_date still backfills any date deliberately). But
+    # a fix that only teaches this list one more number would leave the SAME
+    # defect: the next unenumerated code reads as success again.
+    # **未知的返回码必须是问题,不能是沉默。** So the catch-all below is the
+    # actual guard; the named cases exist only to say something more useful.
     w = out["written"]
     if w == -1:
         out["problems"].append(
@@ -111,9 +129,26 @@ async def refresh_depth_divergence_log() -> dict[str, Any]:
             "class stopped collecting before overriding with an explicit date.")
     elif w == -2:
         out["problems"].append("refresh REFUSED: no panel data at all")
+    elif w == -3:
+        out["problems"].append(
+            "refresh REFUSED: the newest day clearing the coverage floor is more "
+            "than 3 days old, so writing it would return a positive row count and "
+            "advance nothing (S-323g). The maintained feed is not reaching the "
+            "panel — OPEN RISK #0a. Waiting will not clear this.")
     elif w == 0:
         out["problems"].append(
             "refresh wrote 0 rows — the panel has no data for the target date")
+    elif not isinstance(w, int):
+        out["problems"].append(
+            f"refresh returned {type(w).__name__} {w!r}, not an int — the SQL "
+            f"contract says this is a row count or a negative refusal code. "
+            f"Unrecognised is NOT success.")
+    elif w < 0:
+        out["problems"].append(
+            f"refresh REFUSED with unrecognised code {w} — the SQL side added a "
+            f"refusal this file has not been taught. Treating it as a problem on "
+            f"purpose: an unenumerated code that reads as success is exactly how "
+            f"S-323g hid a 16-day stall.")
 
     if out["problems"]:
         _log.warning("[FWD] depth_divergence: %s", "; ".join(out["problems"]))
