@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-07 (Seth/Cowork lane — S-296…S-315;**Learn 的 ① 那条边接上了** —— `evaluate_forward_record()` 每轮判决前向记录(accruing/qualified/gapped/not_daily,门槛用 CLAUDE.md 的 ≥60 天),进心跳 detail;**断路 loop 段 1 → 0**(另有 1 段半通:②的 signal_outcomes 仍无数据);Sense 链条打通:`coingecko_pro_ohlc` 0 → 3,520 行/57 标的,在流的源覆盖 58 → 115 标的;S-299 写死 ok=True 11 → 0 · S-305 启动延迟封顶 · S-314 估值点真正单一来源(曾是两个字面量);⚠️ 仍缺:**Sense 入口 24 未降** · 无判决对象 40/72 · 3 本账空或陈 · ②的 Learn 无数据)
+**Last updated:** 2026-09-08 (Seth/Cowork lane — S-296…S-318;**Learn ① 已闭环**(`evaluate_forward_record` 每轮判决,门槛 ≥60d,进心跳);**S-317 `signal_outcomes` 加 `source` 列**(live_forward/recomputed)解开 C 的 lane ——并同时给 `refresh_signal_edge_map`(统计不混口径)与 `producer_freshness`(活性只看活写入者)加过滤;**S-318 `_cg_panel_loop` 从 ① 的 24 个改成面板 262 个** —— depth-divergence 卡在覆盖地板(需 ≥97 标的,只有 57),**地板没错是输入太窄**;⚠️ 仍缺:Sense 入口 24 未降(账本等 HL funding 攒够 16 天,还差 ~12 天)· 无判决对象 40/72 · 3 本账空或陈)
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
 > inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
