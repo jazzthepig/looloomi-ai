@@ -137,9 +137,108 @@ def t_the_two_fixed_call_sites_aggregate_in_the_database():
                f"{rel} 里找不到 {rpc} —— 可能退回了拉行去重")
 
 
+def t_deep_panel_symbols_is_three_valued():
+    """`None`(没读到)不得和 `[]`(读通了是空的)折成一个值。
+
+    第一轮修复正是在这里翻的车:日志里区分了两者,`return []` 又把区分丢掉,
+    于是 `_deep_panel_loop` 报 `no deep-panel symbols resolved` ——
+    一句话同时 covers「Supabase 没应答」(等下一轮)和「面板真空了」(改配置)。
+    **在修「两个状态一个表示」的补丁里,又做了一次「两个状态一个表示」。**
+    """
+    import asyncio as _a
+    import inspect
+
+    from src.data.market import deep_panel_collector as dpc
+
+    ann = str(inspect.signature(dpc.deep_panel_symbols).return_annotation)
+    _check("deep_panel_symbols 声明可能返回 None", "None" in ann,
+           f"返回标注是 {ann} —— 三值必须写进签名,否则调用方不会去分")
+
+    async def _unreachable(*a, **k):
+        return None
+
+    async def _empty(*a, **k):
+        return []
+
+    import src.api.store as _store
+    orig = _store.supabase_rpc
+    try:
+        _store.supabase_rpc = _unreachable
+        _check("RPC 不通 → None(不是 [])",
+               _a.run(dpc.deep_panel_symbols()) is None,
+               "读不到被当成了「面板是空的」")
+        _store.supabase_rpc = _empty
+        _check("RPC 通但零行 → [](不是 None)",
+               _a.run(dpc.deep_panel_symbols()) == [],
+               "真的空被当成了「读不到」")
+    finally:
+        _store.supabase_rpc = orig
+
+    # 两个状态在**报错文本**里也必须分开 —— 一个 None 传到下游若仍渲染成
+    # 「面板空了」,三值就白分了。
+    src = (ROOT / "src/data/market/deep_panel_collector.py").read_text(encoding="utf-8")
+    _check("collect_deep_panel 对 None 与 [] 分别措辞",
+           "没读到" in src and "读通了,但是空的" in src,
+           "两个分支的文案没有分开 —— 读的人两边都不能动")
+
+
+def t_the_overlap_window_can_reach_the_hole_it_has_to_repair():
+    """固定 14 天的重叠窗**同时是一个上限**:循环永远修不了 14 天以外的洞。
+
+    实测 2026-09-08:洞 21 天(08-18 起每天只进 1–4 个标的),固定窗口够不着,
+    只能人手跑一次。**一个需要人手补的自动循环,下次出事还是要人手。**
+
+    窗口改为从 `latest` 的**中位数**推。用 min 会被一个 2017 年就下架的符号
+    绑架,把窗口永久钉在上限 —— 那是「一个离群点决定全局策略」,和覆盖率
+    被 2 个标的的分母绑架是同一个形状。
+    """
+    import asyncio as _a
+    import datetime as _dt
+
+    import src.api.store as _store
+    from src.data.market import deep_panel_collector as dpc
+
+    today = _dt.date.today()
+
+    def _state(days_ago: int, n: int = 262, fresh: int = 2) -> list[dict]:
+        return [{"symbol": f"S{i}", "n_rows": 100,
+                 "latest": (today if i < fresh
+                            else today - _dt.timedelta(days=days_ago)).isoformat()}
+                for i in range(n)]
+
+    seen: dict = {}
+    orig_fetch, orig_rpc = dpc._fetch_one, _store.supabase_rpc
+
+    async def _stub(sym, days):
+        seen["days"] = days
+        return sym, [], "stub"
+
+    def _window(rows: list[dict]) -> int:
+        async def _rpc(name, payload=None):
+            return rows
+        _store.supabase_rpc = _rpc
+        _a.run(dpc.collect_deep_panel())
+        return seen["days"]
+
+    try:
+        dpc._fetch_one = _stub
+        _check("洞 21 天 → 窗口伸到 23 天", _window(_state(21)) == 23,
+               f"窗口 {seen.get('days')} —— 够不到的窗口等于没有自愈")
+        _check("没有洞 → 窗口留在 14 天", _window(_state(0)) == 14,
+               f"窗口 {seen.get('days')} —— 无事也全量拉是浪费")
+        _outlier = _state(0)
+        _outlier[5]["latest"] = "2017-01-01"
+        _check("一个 2017 的离群点不绑架窗口", _window(_outlier) == 14,
+               f"窗口 {seen.get('days')} —— 用了 min 而不是中位数?")
+    finally:
+        dpc._fetch_one, _store.supabase_rpc = orig_fetch, orig_rpc
+
+
 def main() -> int:
     for fn in (t_no_postgrest_read_asks_for_more_rows_than_the_server_will_give,
-               t_the_two_fixed_call_sites_aggregate_in_the_database):
+               t_the_two_fixed_call_sites_aggregate_in_the_database,
+               t_deep_panel_symbols_is_three_valued,
+               t_the_overlap_window_can_reach_the_hole_it_has_to_repair):
         print(f"\n▸ {fn.__name__}")
         fn()
     print()

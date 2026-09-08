@@ -887,11 +887,22 @@ async def _cg_panel_loop():
             #
             # `deep_panel_symbols()` 早就存在并返回全部 262 —— 又一个建好没用的。
             from src.data.market.deep_panel_collector import deep_panel_symbols
+            # S-323:`deep_panel_symbols()` 是三值。None = 这一轮没读到,
+            # **不是「面板空了」** —— 拿 [] 往下跑会让本轮报「一个可回填的
+            # 对都没有」,那句话把一次读取故障说成了一个映射结论。
+            _panel = await deep_panel_symbols()
+            if _panel is None:
+                print("[CG-PANEL] symbol list unreachable this round — skipping")
+                await _beat("_cg_panel_loop", ok=False,
+                            error="深盘符号表**没读到**(RPC 不通/熔断)—— "
+                                  "**不是「映射没解析出来」**,是这一轮没问到")
+                await _asyncio.sleep(_CG_PANEL_INTERVAL_S)
+                continue
             async with _httpx.AsyncClient(headers=_cg_headers(),
                                           timeout=45) as _c:
                 res = await run_once(client=_c, supabase_query=_q,
                                      supabase_upsert=_up,
-                                     panel_symbols=await deep_panel_symbols())
+                                     panel_symbols=_panel)
             print(f"[CG-PANEL] {str(res.get('reason'))[:170]}")
             # S-299:ok 从 `status` 推导,**不写死**。
             _ok, _ref, _why = _classify(res)
