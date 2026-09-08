@@ -18132,3 +18132,79 @@ S-106 的口径顾虑仍然成立,但它反对的是**把 CG Pro 的 bar 追加�
 
 `loop_beat` 需要记录最后一次失败的时刻,否则「在睡」和「在坏」永远同形。
 这次我靠 `stale_build` 和推理绕过去了,**下一个人不会有这段上下文。**
+
+---
+
+## S-323m — 根因是「诊断层」本身;Minimax-A 查得比我准 (2026-09-09)
+
+**Minimax-A 在通读整个项目之后独立提出:Seth 修不好的原因不是某一个 bug,
+是诊断层崩塌。这个判断是对的,而且它比我自己四次记录同一个症状都更准。**
+
+我在 S-323e/i/l 里三次写下「错误信息列的是作者的猜测」这句话,
+**却一次都没有去修产生这句话的那一层。**
+把教训写进台账和把它编码进系统是两个动作 —— 这条 repo 的 S-130 就写着这句,
+而我这几轮正是它的又一个实例。
+
+### 事实
+
+`main.py` 在 `deep_panel_symbols()` 返回 None 时打的是一句**硬编码**的:
+
+    "深盘符号表**没读到**(RPC 不通/熔断/超时)"
+
+三个嫌疑人。而这五轮的真凶依次是:缺索引 → PostgREST schema cache 冷 →
+4xx 被记成熔断器 SUCCESS → **一个 GRANT(`ohlcv_symbol_coverage`,名字在那句话里
+一个字都没有)** → 最后是循环**在睡觉**。
+
+**真实证据一直都在。** `store.py:617` 把状态码和 body 用 `_logger.warning` 打出来,
+然后**扔掉**:
+
+    _logger.warning(f"[SUPABASE] rpc {fn} error {resp.status_code}: {resp.text[:120]}")
+
+没有任何东西把它送到 `_beat(error=...)`,
+而 `/internal/data-freshness` 才是所有人真正会读的那个面。
+**证据被打印到了一个没有人在读的地方,然后在读的地方放了一句猜测。**
+
+### 修法
+
+新增 `src/api/rpc_diagnostics.py`:`rpc_with_detail()` 把互斥的结局分开 ——
+`not_configured` / `breaker_open` / `no_response` / `http_error`(**带 PostgREST body**)
+/ `not_json` / `ok`,各自的修法完全不同(设变量 / 等冷却 / 看执行计划 / 改授权 / 改 payload),
+**而把它们折成一个 None 再折成一句话,正是这五轮的成本本身。**
+
+实测渲染,五轮里的每一轮都变成一行:
+
+    HTTP 403 [120ms] — permission denied for function ohlcv_symbol_coverage
+    HTTP 404 [90ms] — Could not find the function ... in the schema cache
+    no response (timeout or retries exhausted) [31000ms]. breaker(open=False,fails=1,trips=0)
+    circuit breaker OPEN — no request was sent. breaker(open=True,fails=5,trips=2)
+    ok, 262 rows [1300ms]
+
+**规则:诊断字段只能装观测,不能装假设。**
+不知道为什么失败时,诚实的渲染是状态码和 body,哪怕它看起来没用 ——
+**一个装成诊断的猜测比「未知」更糟,因为「未知」会逼人去测量。**
+
+### 我要更正自己的两处过度断言
+
+① 我说「`lifetime_trips=0` 证明 app 从来没有在这里超时过」—— **错。**
+`_cb_record_success()` 会把 `consecutive_failures` 清零,而 `_cb_trips` 只在熔断器
+**真的打开**(连续 5 次)时才加。所以 `trips=0` 只证明**熔断器没开过**,
+零散的超时穿插在成功之间完全可以留下 `trips=0, consecutive=0`。
+**我用一个只排除了「熔断器开过」的证据,去否定了「超时」这个假设。**
+
+② **app 到底用哪个 key / 哪个 role,至今没有被证实过。**
+我从「`refresh_depth_divergence` 写成功了」推 `authenticated`;
+Minimax-A 从「`SUPABASE_KEY` 通常配 service_role」推 `service_role`。
+**两边都是推测。** 而如果是 service_role,S-323e 那个 42501 对 app 根本不会发生,
+我那一轮的因果就是错的(修好的是一个真实的潜在缺陷,但未必是 app 的阻塞点)。
+**这件事本身就是诊断层缺失最干净的证据:两条 lane 争论一个本该被打印出来的事实。**
+
+`rpc_with_detail` 现在会把 PostgREST 的 body 带回来,而 PostgREST 的权限错误里
+就含角色名 —— 下一轮失败会自己说出它是谁。
+
+### Minimax-A 判断里我不同意的一处(记录以免下一轮再争)
+
+「binance_hist 4/123 是 ban 在工作」——对;
+但「Seth S-323e 修了 42501 可能把这条 ban 解禁了一部分,等于恢复违规」这句,
+**方向对,时序不对**:S-323e 之后我在 S-323i 里已经把 `assert_purpose_source`
+接进了扇出决策点,`_deep_panel_loop` 现在抛 `PurposeMismatch` 并记 **refused**,
+不会再打 Binance。**违规是被恢复过一小段,然后在同一轮里被代码级拦回去了。**
