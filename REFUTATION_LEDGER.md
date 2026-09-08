@@ -17774,3 +17774,57 @@ S-207 我们查了三周,查的一直是地板和 forward record 本身。
 `tests/test_a_truncated_page_is_not_the_whole_set.py` 四组:
 limit 上限预算(只减不增)· 两个站点走 RPC · 三值不得折叠(含实调)·
 自愈窗口够得到洞(21 天洞→23 天窗 / 无洞→14 天 / 离群点不绑架)。
+
+---
+
+## S-323c · 「没有应答」不是原因,是症状 —— 而它把我挡在原因外面两轮 (2026-09-08)
+
+三值上线后,`_cg_panel_loop` 终于说了实话:「深盘符号表**没读到**(RPC 不通/
+熔断)」。于是问题变成:为什么读不到。
+
+`/health` 说熔断器 `lifetime_trips=0` —— 从没跳过。排除。
+剩下的只有超时。量:
+
+    per-role statement_timeout      anon / authenticated = 8s · service_role = 30s
+    deep_panel_symbol_list()        3476 ms
+    refresh_depth_divergence()      5518 ms
+
+暖缓存、空载,两条都在 8 秒内。生产里争 I/O 就不是了 —— PostgREST 回 5xx,
+客户端重试三次,`supabase_rpc_write` 报:
+
+    "no response from Supabase after retries"
+
+**这句话描述的是症状(没声音),藏起来的是原因(查询跑不完)。**
+`_forward_record_loop` 连续失败九轮,每一轮都在说这句话,而这句话里没有
+任何一个字能让人往「太慢」的方向想。我自己就被它带着,推测了两轮 key 的角色、
+熔断器、schema cache —— 全都不是。
+
+### 原因
+
+`ohlcv_daily`(46 万行)只有两个索引:`id` 主键,和 `(symbol, trade_date, source)`
+唯一键。**没有一个以 `source` 打头**,所以任何按 source 过滤的分组读都是全表扫描。
+
+    create index concurrently ohlcv_daily_source_symbol_date_idx
+      on ohlcv_daily (source, symbol, trade_date);
+
+    deep_panel_symbol_list()      3476 ms → 181 ms    19×
+    refresh_depth_divergence()    5518 ms → 1367 ms    4×
+
+这也解释了为什么原来那个被截断的 `limit=100000` 读一直很慢 —— 它扫的是同一张
+没有索引的表。**慢和错在这里是同一件事的两面:慢让它撞上超时,截断让它在没撞上
+的时候给出错的答案。**
+
+### 我在这一轮学到的
+
+> **一条只说「没有应答」的错误,会把每一个读它的人送去查连接,而不是查时长。**
+
+这和本 session 开头那句是同一条:
+「一个只进 stdout 的失败,对任何监控来说等于没有发生。」
+现在多一层:**一个说错了自己是什么的失败,比没有失败信息更贵** ——
+前者让人停下来,后者让人往错的方向跑。
+
+`src/api/store.py` 里 `_supabase_request_with_retry` 把三个状态折成同一个 None
+(熔断开 / 超时 / 5xx 重试耗尽),`supabase_rpc_write` 再把它折成那一句话。
+**这是本 session 第 N 次遇到的同一个形状,而且它在最底层。** 未修,已记 ——
+`src/api/store.py` 与 `src/api/routers/research_intake.py` 当前带着一份未提交的
+S-286 在途改动(`supabase_missing_columns`),不属于本次 concern,不混提。
