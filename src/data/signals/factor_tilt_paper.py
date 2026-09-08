@@ -254,6 +254,34 @@ async def _save_state(state: dict[str, Any]) -> None:
 
 
 # ── Daily mark (mirror fusion_paper.py mark_and_rebalance) ───────────────────
+async def _row_exists_for(table: str, day: str) -> bool | None:
+    """表里今天有没有行。**三值:True / False / None(读不到)** (S-321)。
+
+    `already_marked_today` 原本只问 Redis state。而 state 与表可以不一致 ——
+    实测 `factor_tilt_nav` / `pod_aggregator_nav` **0 行数周**,
+    而每轮都返回 `skipped: already_marked_today`:
+    **state 记得做过,表说从来没有。**
+
+    > **「我记得我做过」和「它确实在那里」是两个状态。**
+    > 跳过与否是关于后者的判断,所以要问后者。
+
+    读不到时返回 `None`,调用方**不得当成「有」** —— 读不到 ≠ 已经写过。
+    """
+    try:
+        import httpx
+        from src.api.store import _SB_KEY, _SB_URL
+        if not _SB_URL or not _SB_KEY:
+            return None
+        async with httpx.AsyncClient(timeout=10) as c:
+            r = await c.get(
+                f"{_SB_URL}/rest/v1/{table}?select=mark_date&mark_date=eq.{day}&limit=1",
+                headers={"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"})
+        if r.status_code != 200:
+            return None
+        return bool(r.json())
+    except Exception:                                           # noqa: BLE001
+        return None
+
 async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
     """Daily mark of the cross-asset factor tilt paper book. Idempotent per day."""
     from src.research.validation.cross_asset_factor_tilt import (
@@ -264,7 +292,11 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
     today = dt.date.today()
     state = await _load_state()
     if state.get("last_mark_date") == str(today):
-        return {"status": "skipped", "reason": "already_marked_today",
+        # ⚠️ **state 说做过不算数,表说有才算** (S-321)。
+        # 读不到(None)时**不跳过** —— 读不到 ≠ 已经写过,重跑是幂等的。
+        _has = await _row_exists_for(NAV_TABLE, str(today))
+        if _has:
+            return {"status": "skipped", "reason": "already_marked_today",
                 "date": str(today), "nav": state.get("nav", 1.0)}
 
     universe = FULL_UNIVERSE
@@ -384,7 +416,13 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
     # pod_aggregator (S-214). Both books marked into their state row only.
     nav_write = NavWrite(True, NAV_TABLE, "dry_run")
     if not dry_run:
-        await _save_state(new_state)
+        # ⚠️ **先写行,再存 state** (S-321)。原来的顺序是反的:state 先被标成
+        # 「今天已 mark」,而 `write_nav_row` 随后失败 —— 于是 state 声称成功、
+        # 表里 0 行,**而当天任何一次重跑都会撞上 `already_marked_today` 并
+        # 返回 skipped**,把真正的失败盖掉。部署一天好几次,重跑是常态。
+        #
+        # 「我记得我做过」和「它确实在那里」是两个状态,而这里让前者
+        # 覆盖了后者。state 是给自己看的,表是给所有人看的 —— **以表为准。**
         nav_write = await write_nav_row(NAV_TABLE, {
             "mark_date": str(today),
             "nav": new_nav,
@@ -395,6 +433,11 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
             "factor_attribution": factor_attribution,
             "max_single_factor_sharpe_share": max_share,
         })
+
+        # 只有真的写进去了才记「今天做过」。写失败时**不存 state**,
+        # 下一轮会重试 —— 而这正是我们要的。
+        if nav_write.ok:
+            await _save_state(new_state)
 
     return {
         "status": "ok" if nav_write.ok else "degraded",

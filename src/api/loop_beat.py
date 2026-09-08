@@ -126,6 +126,10 @@ NO_WORK_STATUS = frozenset({
 BROKEN_STATUS = frozenset({
     "error", "mark_failed", "inception_failed", "no_supabase", "undeclared",
     "failed", "unavailable", "rejected", "unconfigured", "unknown",
+    # ⚠️ `degraded` = 算完了但**NAV 行没写进去** (S-321)。它原本不在任何词表里,
+    # 于是走「未知 status」分支 —— 判 failing 是对的,但理由说的是「我们不认识
+    # 这个状态」,而真相是「写失败了」。**一个我们认识的故障,被报成了未知。**
+    "degraded",
 })
 
 
