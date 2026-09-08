@@ -151,7 +151,14 @@ def classify(res: object) -> tuple[bool, bool, Optional[str]]:
     if st in PROGRESS_STATUS:
         return True, False, None
     if st in NO_WORK_STATUS:
-        return False, True, f"status={st} —— 跑通但没有产生工作"
+        # ⚠️ **带上调用方的 reason** (S-320)。首版只造一句通用话,
+        # 把 `res["reason"]` 里的全部细节丢掉,于是面板上是
+        # 「跑通但没有产生工作」—— 而**没干活的原因才是要修的东西**。
+        # 与「1 个问题」不说哪个、「见 detail」而 detail 不跟着走同一个家族:
+        # **关于缺陷的信息在传递中被削掉一层。**
+        _why = str(res.get("reason") or "")[:230]
+        return False, True, (f"status={st} —— 跑通但没有产生工作"
+                             + (f":{_why}" if _why else ""))
     if st in BROKEN_STATUS:
         return False, False, f"status={st} :: {str(res.get('error') or res.get('reason') or '')[:120]}"
     return False, False, (
