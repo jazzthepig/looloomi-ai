@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-08 (Seth/Cowork lane — S-296…S-321;**S-321 两本 0 行账的根因**:`degraded` 不在状态词表(故障被报成未知)· state 在写之前存(写失败仍声称成功)· 当天重跑撞 `already_marked_today` 把真失败盖掉 —— 三个叠起来 = 永远 0 行、永远报「跳过」、而理由听起来完全合理;**S-214 的 VERIFY 前提是错的**(fapi 从 Railway 通,① 每天在用)—— **一条前提未被验证的 VERIFY 会把人精确地送到错误的地方**;S-320 面板撞名接 `/coins/markets` 批量市值 · S-319 S-207 两个 blocker 已不成立;⚠️ 仍缺:Sense 入口 24 · 无判决对象 40/72 · ②的 Learn 无数据)
+**Last updated:** 2026-09-08 (Seth/Cowork lane — S-296…S-323;**S-323 最贵的一条**:PostgREST 服务端 `db-max-rows`=1000 把 `limit=100000` 静默截断**并返回 200** —— 深盘 universe 库里 262、读出 **2**,而 `collect_deep_panel` 与 S-318 刚接上的 `_cg_panel_loop` 拿着 2 个照报 ok(**覆盖 2 个资产的成功和覆盖 262 个的成功输出完全一样**);`coverage_report` 同形,合格行 1759 截在 1000,**分子分母被同一次截断同时改写所以比值永远看着合理** —— 而这条教训 S-130 就写在 `beta_core_paper` 的 docstring 里:**知道一件事和把它编码进去是两个动作,只有第二个能活下来**;`_beat()` 漏转发 `detail` 令 `_forward_record_loop` 连续 7 轮 TypeError,守卫全程绿灯因为它里面写着一行豁免 —— **豁免记的是「当时不需要」,它不会自己过期**;S-322 `_fossil_note` 归一三个分支,**陈旧的 ok 比陈旧的 failing 更危险**(前者读作「已修好」→ 停止查);⚠️ 仍缺:Sense 入口 24 · 无判决对象 40/72 · ②的 Learn 无数据)
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
 > inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`

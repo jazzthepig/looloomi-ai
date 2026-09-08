@@ -771,7 +771,7 @@ from src.api.loop_beat import classify as _classify  # noqa: E402  (S-299)
 
 
 async def _beat(name: str, *, ok: bool, error: str | None = None,
-                refused: bool = False) -> None:
+                refused: bool = False, detail: dict | None = None) -> None:
     """转发到 `loop_beat.beat`。**签名必须与它一致。**
 
     ⚠️ S-294 的第二个错:我给 `beat()` 和**调用点**都加了 `refused`,
@@ -782,12 +782,19 @@ async def _beat(name: str, *, ok: bool, error: str | None = None,
     从没真的调用过 `_beat`。**一个只看调用方、不看被调方的守卫,
     作用域小于问题** —— 而它恰恰是我用来修「作用域小于问题」的那个守卫。
 
+    ⚠️ **S-323:同一个形状又低一层。** `detail` 是后加的,包装同样没跟上,
+    线上 `_forward_record_loop` 连续 7 轮报
+    `_beat() got an unexpected keyword argument 'detail'`。守卫当时是**绿的** ——
+    因为它里面写着一行豁免:「detail 是可选扩展,包装不转发是有意的」。
+    那句话写下时为真,后来我加了用 `detail=` 的调用点,**豁免不会自己过期**。
+    现在守卫从 `beat` 的签名推导关键字,不再逐个写死,也不再有豁免。
+
     `tests/test_loop_beat.py:t_the_wrapper_signature_matches_the_callee`
-    现在真的调用它,三个关键字都传。
+    真的调用它,且**每个关键字都从被调方签名里取**。
     """
     try:
         from src.api.loop_beat import beat
-        await beat(name, ok=ok, error=error, refused=refused)
+        await beat(name, ok=ok, error=error, refused=refused, detail=detail)
     except Exception:            # 心跳失败绝不能影响业务循环
         pass
 
