@@ -406,14 +406,20 @@ async def _forward_record_loop():
             # S-315:**Learn 的判决进心跳的 detail** —— 一条只在被请求时
             # 计算的曲线不是闭环,而心跳是唯一一个不用人问就说话的地方。
             _rec = r.get("forward_record") or {}
-            print(f"[FWD] record={_rec.get('verdict')} · {_rec.get('reason', '')[:110]}")
+            _pit = r.get("pit_lag") or {}
+            print(f"[FWD] record={_rec.get('verdict')} · pit={_pit.get('verdict')}"
+                  f"(lag={_pit.get('lag_days')}d) · {_rec.get('reason', '')[:90]}")
             _w = int((r.get("depth_divergence") or {}).get("written") or 0)
             await _beat("_forward_record_loop", ok=bool(r.get("ok")) and _w > 0,
                         refused=bool(r.get("ok")) and _w == 0,
                         detail={"forward_record": {
                             k: _rec.get(k) for k in
                             ("verdict", "n_days", "n_gaps", "tracking_diff",
-                             "days_to_threshold", "inception")}},
+                             "days_to_threshold", "inception")},
+                            # S-319:S-207 的第二个 blocker。滞后不是一次性修好的
+                            # 属性,是循环还在按时跑的副产品 —— 停了就回来。
+                            "pit_lag": {k: _pit.get(k) for k in
+                                        ("verdict", "lag_days", "newest_bar")}},
                         error=None if r.get("ok") else
                         f"stalled={[b['book'] for b in r['books'] if b['status']=='stalled']} "
                         f"problems={str((r.get('depth_divergence') or {}).get('problems'))[:90]}")
