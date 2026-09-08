@@ -64,15 +64,28 @@ WRITES_TABLES = ("cg_coin_map",)
 LOOP_NAME = "_cg_panel_loop"
 
 
-async def _known_map(supabase_query) -> dict[str, str]:
-    """`cg_coin_map` 里已解析的。**解析结果是缓存的,不是每天重算的。**"""
+async def _known_map(supabase_query) -> tuple[dict[str, str], dict[str, str]]:
+    """`cg_coin_map` 里已解析的 → `({symbol: coin_id}, {symbol: asset_class})`。
+
+    **解析结果是缓存的,不是每天重算的。**
+
+    ⚠️ `asset_class` 一起取 (S-313)。`to_rows` 只在拿到它时才写这一列,
+    而首版没传 —— 实测 **3,520 行全部 `asset_class = NULL`**,
+    于是任何按 `asset_class in (...)` 过滤的消费者(包括
+    `refresh_depth_divergence`)**一行都看不见**。
+    数据落进去了,而需要它的人看不到它:又一个「写了但没连线」。
+    """
     try:
         rows = await supabase_query(
-            "cg_coin_map", "symbol,coin_id,resolved_from,verified_at") or []
-        return {r["symbol"]: r["coin_id"] for r in rows
-                if r.get("symbol") and r.get("coin_id")}
+            "cg_coin_map",
+            "symbol,coin_id,resolved_from,verified_at,asset_class") or []
+        ids = {r["symbol"]: r["coin_id"] for r in rows
+               if r.get("symbol") and r.get("coin_id")}
+        cls = {r["symbol"]: (r.get("asset_class") or "Crypto") for r in rows
+               if r.get("symbol")}
+        return ids, cls
     except Exception:                                           # noqa: BLE001
-        return {}
+        return {}, {}
 
 
 async def run_once(*, client, supabase_query, supabase_upsert,
@@ -90,17 +103,13 @@ async def run_once(*, client, supabase_query, supabase_upsert,
     out: dict[str, Any] = {"today": today, "status": "ok", "errors": [],
                            "n_resolved_new": 0, "rows_written": 0}
 
-    known = await _known_map(supabase_query)
+    known, klass = await _known_map(supabase_query)
     missing = [s for s in panel_symbols if s.upper() not in known]
     out["n_known"] = len(known)
     out["n_missing"] = len(missing)
 
     # ── ① 解析 ──────────────────────────────────────────────────────────────
     idx: dict[str, list[str]] = {}
-    # ⚠️ **已知缺口,显式记下来:** 我们不取市值,所以任何 symbol 撞名都会
-    # 永久停在 `ambiguous`,不会自己好。实测面板上有 4 个。
-    # 要解它们需要对候选 id 打一次 `/coins/markets` 取市值 —— 那是下一步,
-    # 而在它落地之前,这 4 个是**已知不覆盖**,不是「暂时没解析出来」。
     mcap: dict[str, float] = {}
     if missing:
         try:
@@ -111,6 +120,37 @@ async def run_once(*, client, supabase_query, supabase_upsert,
                 idx = index_listing(r.json() or [])
         except Exception as e:                                  # noqa: BLE001
             out["errors"].append(f"/coins/list {type(e).__name__}: {str(e)[:70]}")
+
+        # ── 市值:撞名裁决的唯一依据 (S-320) ──────────────────────────────
+        #
+        # ⚠️ 我在 S-304 把这个标成「已知缺口,下一步」,而它成了**绑定约束**:
+        # 面板从 24 扩到 262 之后,映射只从 57 涨到 **59** ——
+        # **203 个标的解析不出来,因为撞名在 262 的规模上是常态不是例外**,
+        # 而没有市值就永远判 ambiguous。
+        #
+        # 「已知缺口」和「不重要」是两个状态,而我把前者写成了后者的语气。
+        #
+        # `/coins/markets` 是 CG Pro 的**批量**端点(250/次,付费源,合规):
+        # 取市值前 1000 名 = 4 次调用,覆盖任何我们会交易的标的。
+        # 这不是扇出 —— 是 4 次批量读。
+        for _page in range(1, 5):
+            try:
+                mr = await client.get(
+                    f"{CG_PRO_BASE}/coins/markets",
+                    params={"vs_currency": "usd", "order": "market_cap_desc",
+                            "per_page": 250, "page": _page})
+                if mr.status_code != 200:
+                    out["errors"].append(f"/coins/markets p{_page} HTTP {mr.status_code}")
+                    break
+                for c in (mr.json() or []):
+                    cid, mc = c.get("id"), c.get("market_cap")
+                    if cid and mc:
+                        mcap[str(cid)] = float(mc)
+            except Exception as e:                              # noqa: BLE001
+                out["errors"].append(
+                    f"/coins/markets p{_page} {type(e).__name__}: {str(e)[:60]}")
+                break
+        out["n_mcap"] = len(mcap)
 
     res = resolve(missing[:MAX_RESOLVE_PER_RUN], known=known,
                   listing_index=idx, mcap=mcap)
@@ -153,9 +193,25 @@ async def run_once(*, client, supabase_query, supabase_upsert,
         # 结构上永远扩不出已有的 25 个标的 (S-307)。
         # 市值裁决出来的不在这个集合里,它们仍然必须先过校验。
         _vendor = {s_ for s_, _ in pairs}
-        r = await backfill(pairs, start=start, end=end, dest="supabase",
-                           min_candles=max(5, int(BACKFILL_LOOKBACK_DAYS * 0.5)),
-                           vendor_paired=_vendor)
+        # **按 asset_class 分组** (S-313) —— `backfill` 一次只接受一个 class,
+        # 而面板里有 6 个。传一个统一值会给 8 个非 Crypto 标的贴错标签,
+        # 而错的标签比缺失的标签更难发现。
+        _groups: dict[str, list] = {}
+        for s_, cid in pairs:
+            _groups.setdefault(klass.get(s_, "Crypto"), []).append((s_, cid))
+        _rows, _ok_all, _per_all = 0, True, []
+        for _cls, _grp in _groups.items():
+            _r = await backfill(_grp, start=start, end=end, dest="supabase",
+                                asset_class=_cls,
+                                min_candles=max(5, int(BACKFILL_LOOKBACK_DAYS * 0.5)),
+                                vendor_paired=_vendor)
+            _rows += int(getattr(_r, "rows_written", 0) or 0)
+            _ok_all = _ok_all and bool(getattr(_r, "ok", False))
+            _per_all.extend(getattr(_r, "per_symbol", ()) or ())
+        r = type("_Agg", (), {"rows_written": _rows, "ok": _ok_all,
+                              "per_symbol": tuple(_per_all),
+                              "reason": "" if _ok_all else "见 per_symbol"})()
+        out["n_classes"] = len(_groups)
         out["rows_written"] = int(getattr(r, "rows_written", 0) or 0)
         out["backfill_ok"] = bool(getattr(r, "ok", False))
         # ⚠️ **写了几行 ≠ 写全了** (S-310)。首轮实测写入 12/57 个标的,
@@ -191,7 +247,9 @@ async def run_once(*, client, supabase_query, supabase_upsert,
         out["status"] = "skipped"
 
     out["reason"] = (
-        f"映射 {len(known)} 已知 + {out['n_resolved_new']} 新解析;"
+        f"映射 {len(known)} 已知 + {out['n_resolved_new']} 新解析"
+        + (f"(市值表 {out.get('n_mcap')} 条)" if out.get("n_mcap") else "")
+        + ";"
         f"回填 {len(pairs)} 对 · 写入 {out['rows_written']} 行"
         + (f" · **标的 {out.get('n_symbols_written')}/{len(pairs)}**"
            f"({out.get('shortfall') or ''})"
