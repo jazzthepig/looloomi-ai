@@ -91,10 +91,27 @@ RECENT_DAYS = 3  # 加密口径;保留供不带域的调用点使用
 #: 我在修「一个 max 掩盖了一个总体」的时候,自己又做了一次同样的投影:
 #: 把"某个域有可用源"压成了"系统有可用源"。**一个全局的 ok,和每个域都 ok,
 #: 不是同一件事** —— 而前者读起来像后者。
+#: ⚠️ **第三遍,而这次是「没登记」而不是「投影错」** (S-323n, 2026-09-09)。
+#: `coingecko_pro_ohlc` 在 S-251/S-304 加进管道,**从来没有加进这张表**。
+#: 于是它落进 `"unknown"` 域,而 2026-09-09 实测:
+#:
+#:     coingecko_pro_ohlc   flowing  171/171  usable_for_returns=True
+#:     by_domain.crypto     usable=[]  verdict="no_usable_source"   ← 假的
+#:     by_domain.unknown    usable=["coingecko_pro_ohlc"]
+#:
+#: 加密侧唯一在流、且**能用于收益**的源,被判进了一个没有人看的域,
+#: 于是顶层 `verdict` 报 `domain_without_usable_source` —— **整个端点的
+#: 头条判决是错的**,而它错在「一个新组件加进了系统,却没加进给它分类的注册表」。
+#:
+#: **`.get(source, "unknown")` 的默认值把「我不认识这个源」渲染成了
+#: 「这个源属于一个叫 unknown 的域」** —— 前者是注册表有洞,后者读起来像一个事实。
+#: 未登记的源现在会被显式报出来(见 `overall()` 的 `unregistered_sources`),
+#: 因为一盏常亮的假红灯,和一盏坏灯是同一个东西。
 DOMAIN_OF_SOURCE = {
     "binance_hist": "crypto",
     "hyperliquid": "crypto",
     "coingecko": "crypto",
+    "coingecko_pro_ohlc": "crypto",
     "eodhd": "tradfi",
     "yfinance": "tradfi",
 }
@@ -188,6 +205,10 @@ def overall(healths: Iterable[SourceHealth]) -> dict[str, Any]:
     都 DEAD ⇒ **crypto 域无可用价源**;tradfi 域有 eodhd ⇒ ok。
     """
     hs = list(healths)
+    # S-323n:**未登记的源要吵,不能默默变成一个叫 "unknown" 的域。**
+    # `coingecko_pro_ohlc` 就是这么消失的:它是加密侧唯一可用于收益的源,
+    # 却因为没进 DOMAIN_OF_SOURCE 而让 crypto 报 no_usable_source 半天。
+    unregistered = sorted({h.source for h in hs if h.source not in DOMAIN_OF_SOURCE})
     domains: dict[str, dict[str, Any]] = {}
     for h in hs:
         d = DOMAIN_OF_SOURCE.get(h.source, "unknown")
@@ -209,15 +230,29 @@ def overall(healths: Iterable[SourceHealth]) -> dict[str, Any]:
         }
 
     broken = [d for d, v in per_domain.items() if v["verdict"] != "ok"]
+    # 「unknown」不是一个资产域,是注册表的一个洞。它绝不能让顶层判决变绿,
+    # 也不该被当成一个坏掉的域去报警 —— 它要按它本来的样子报:**没登记**。
+    broken = [d for d in broken if d != "unknown"]
+    note = ""
+    if broken:
+        note = ("以下资产域没有【能用于收益】的价源:" + ", ".join(broken)
+                + "。有源在写 ≠ 有能用于收益的源在写 (S-195/S-230)。")
+    if unregistered:
+        note += (("　" if note else "")
+                 + "⚠️ 未登记到 DOMAIN_OF_SOURCE 的源:" + ", ".join(unregistered)
+                 + " —— **这不是「属于 unknown 域」,是注册表有洞**;"
+                 "在补上之前,它对任何按域给出的判决都不算数 (S-323n)。")
     return {
         "sources": [h.as_dict() for h in hs],
         "by_domain": per_domain,
         "domains_without_usable_source": broken,
-        # 任何一个域没有可用源 → 整体不是 ok。
-        "verdict": "ok" if not broken else "domain_without_usable_source",
-        "note": ("以下资产域没有【能用于收益】的价源:" + ", ".join(broken)
-                 + "。有源在写 ≠ 有能用于收益的源在写 (S-195/S-230)。"
-                 if broken else ""),
+        "unregistered_sources": unregistered,
+        # 任何一个域没有可用源 → 整体不是 ok。未登记的源同样不许放行:
+        # 一个没被分类的源意味着按域的判决本身是不完整的。
+        "verdict": ("ok" if not broken and not unregistered
+                    else ("unregistered_source" if unregistered and not broken
+                          else "domain_without_usable_source")),
+        "note": note,
     }
 
 
