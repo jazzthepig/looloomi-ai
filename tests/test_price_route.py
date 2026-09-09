@@ -301,3 +301,29 @@ def test_an_empty_listing_is_not_an_unreachable_venue(monkeypatch):
     assert "EMPTY listing" in str(ei.value), (
         "'the venue lists nothing' and 'we could not ask the venue' have "
         "different fixes and must not render identically")
+
+
+def test_something_warms_the_persisted_listing_before_the_mark_needs_it():
+    """S-323p. Persistence only helps if a WRITE precedes the read.
+
+    S-323o persisted the venue listing so ① could still mark through a venue
+    blip at 00:05. But the only callers of split_universe/venue_symbols were
+    beta_core_paper (the mark itself) and panel_read — so on a freshly deployed
+    process the first read happens before any write, and the persisted copy is
+    empty in exactly the scenario it exists for.
+
+    A cache with no writer is not a cache. `_hyperliquid_loop` runs every 6h,
+    already talks to the venue, and boots within ~180s of a deploy, so it warms
+    the copy long before the next valuation point.
+    """
+    main_src = (ROOT / "src" / "api" / "main.py").read_text()
+    hl = main_src.split("async def _hyperliquid_loop")[1].split("\nasync def ")[0]
+    assert "venue_symbols_detailed" in hl, (
+        "nothing refreshes the persisted venue listing on a schedule — the "
+        "S-323o fallback would be empty on every cold process, which is the "
+        "only time it is needed"
+    )
+    assert "force=True" in hl, (
+        "warming must bypass the in-memory TTL, or a warm process never "
+        "refreshes the persisted copy"
+    )
