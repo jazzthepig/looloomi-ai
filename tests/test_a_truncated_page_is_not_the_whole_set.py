@@ -154,25 +154,35 @@ def t_deep_panel_symbols_is_three_valued():
     _check("deep_panel_symbols 声明可能返回 None", "None" in ann,
            f"返回标注是 {ann} —— 三值必须写进签名,否则调用方不会去分")
 
-    async def _unreachable(*a, **k):
-        return None
+    # ⚠️ S-323q:这个 mock 原来打在 `store.supabase_rpc` 上。S-323m 把读取的
+    # 接缝换成了 `rpc_with_detail`(为了让错误信息带上真实状态码与 body),
+    # 于是 mock 打空了 —— 测试跑的是**没有凭据的真实路径**,
+    # 两条断言都不再测它们声称要测的东西,而其中一条**因为巧合仍然是绿的**
+    # (`not_configured` 也返回 None)。
+    #
+    # **一个打在旧接缝上的 mock,不会报错,只会安静地测别的东西。**
+    # 换接缝时必须同时换 mock —— 这和「豁免不会自己过期」是同一类。
+    import src.api.rpc_diagnostics as _rd
 
-    async def _empty(*a, **k):
-        return []
+    async def _unreachable(fn_name, payload=None):
+        return None, {"fn": fn_name, "outcome": "no_response",
+                      "status": None, "body": None}
 
-    import src.api.store as _store
-    orig = _store.supabase_rpc
+    async def _empty(fn_name, payload=None):
+        return [], {"fn": fn_name, "outcome": "ok", "status": 200, "n_rows": 0}
+
+    orig = _rd.rpc_with_detail
     try:
-        _store.supabase_rpc = _unreachable
+        _rd.rpc_with_detail = _unreachable
         _check("RPC 不通 → None(不是 [])",
                _a.run(dpc.deep_panel_symbols()) is None,
                "读不到被当成了「面板是空的」")
-        _store.supabase_rpc = _empty
+        _rd.rpc_with_detail = _empty
         _check("RPC 通但零行 → [](不是 None)",
                _a.run(dpc.deep_panel_symbols()) == [],
                "真的空被当成了「读不到」")
     finally:
-        _store.supabase_rpc = orig
+        _rd.rpc_with_detail = orig
 
     # 两个状态在**报错文本**里也必须分开 —— 一个 None 传到下游若仍渲染成
     # 「面板空了」,三值就白分了。
