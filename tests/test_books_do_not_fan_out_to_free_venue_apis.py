@@ -19,6 +19,21 @@ code that broke it.
 
 **A rule that lives in prose gets re-broken. This one now fails the build.**
 
+⚠️ WHAT THIS TEST DELIBERATELY DOES *NOT* CHECK (S-323w). An earlier version of
+this file also banned `/Volumes/CometCloudAI/...` as a "hardcoded operator
+path". That was wrong, and wrong in the way this repo punishes: it was a
+judgement made without reading the project structure. That volume is the
+**Minimax-lane data root**, documented in CLAUDE.md (#52, #117), resolved
+centrally in `src/research/paths.py` since P0-5, and Seth-lane code is
+*supposed* to read it. A test banning it would have failed correct Mac-side
+code and pushed the next person to delete a working path.
+
+The real defect in that area is a LANE MISMATCH, not a path: factor_tilt_paper
+declares "Mac-side daily loop" in its own header while `_factor_tilt_loop`
+executes it on Railway, where that volume is legitimately not mounted. Where a
+module RUNS is a scheduling fact this test cannot see, so it does not pretend
+to.
+
 Bulk prices come from `panel_closes` (coingecko_pro_ohlc / eodhd — paid),
 funding from `panel_funding` (our stored venue collection, gathered ONCE per
 6h in a single metaAndAssetCtxs call, not re-fetched per symbol).
@@ -29,7 +44,6 @@ from __future__ import annotations
 
 import ast
 import pathlib
-import re
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SIGNALS = ROOT / "src" / "data" / "signals"
@@ -108,25 +122,6 @@ def _venue_calls(path: pathlib.Path) -> list[int]:
     return hits
 
 
-def _inside_docstring(body: str, line: int) -> bool:
-    """True when `line` falls inside a module/class/function docstring."""
-    try:
-        tree = ast.parse(body)
-    except SyntaxError:                                   # pragma: no cover
-        return False
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.Module, ast.ClassDef,
-                             ast.FunctionDef, ast.AsyncFunctionDef)):
-            b = getattr(node, "body", None) or []
-            if b and isinstance(b[0], ast.Expr) and \
-                    isinstance(b[0].value, ast.Constant) and \
-                    isinstance(b[0].value.value, str):
-                d = b[0].value
-                if d.lineno <= line <= (d.end_lineno or d.lineno):
-                    return True
-    return False
-
-
 def test_no_paper_book_prices_its_universe_off_a_free_venue():
     offenders = {}
     for p in sorted(SIGNALS.glob("*.py")):
@@ -157,41 +152,6 @@ def test_the_two_repaired_books_use_the_paid_loader():
     for name in ("factor_tilt_paper.py", "pod_aggregator_paper.py"):
         body = (SIGNALS / name).read_text(encoding="utf-8")
         assert "paid_close_loader" in body, f"{name} must load closes from paid sources"
-
-
-def test_no_book_reads_prices_off_a_hardcoded_operator_path():
-    """/Volumes/CometCloudAI is one operator's Mac. On Railway it is simply absent,
-    so 17 TradFi names went 'missing' every single run and nobody was told."""
-    bad = {}
-    for p in sorted(SIGNALS.glob("*.py")):
-        body = p.read_text(encoding="utf-8")
-        try:
-            docs = _docstring_nodes(ast.parse(body))
-            doc_lines = set()
-            for node in ast.walk(ast.parse(body)):
-                if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                    seg = body.splitlines()[node.lineno - 1:
-                                            (node.end_lineno or node.lineno)]
-                    if any("/Volumes/CometCloudAI" in x for x in seg):
-                        # only exempt it if this constant IS a docstring
-                        for d in docs:
-                            pass
-            _ = docs
-        except SyntaxError:                               # pragma: no cover
-            pass
-        for m in re.finditer(r"/Volumes/CometCloudAI[^\"'\s]*", body):
-            line = body[:m.start()].count("\n") + 1
-            src_line = body.splitlines()[line - 1].strip()
-            # a comment or a docstring explaining the retirement is not a dependency
-            if src_line.startswith("#") or src_line.startswith("--"):
-                continue
-            if _inside_docstring(body, line):
-                continue
-            bad.setdefault(p.name, []).append(line)
-    assert not bad, (
-        f"hardcoded operator paths still on a price path: {bad} — "
-        "absent on Railway, and absence renders as 'this asset has no data'"
-    )
 
 
 def test_the_migration_backlog_only_shrinks():
