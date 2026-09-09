@@ -97,34 +97,52 @@ class DailyMark:
 
 # ── Live panel loaders (mirror fusion_paper.py _fetch_close_funding) ─────────
 async def _fetch_close_funding_live(symbols: list[str]) -> dict[str, dict]:
-    """Fetch live close + funding for the universe.
+    """Close + funding for the universe. **Two RPCs, not 2N venue requests.**
 
-    Falls back to cached data on Binance API failure (graceful degradation,
-    not mock — uses the last successful fetch).
+    ⚠️ S-323u/v。上一版对每个符号打**两次** `fapi.binance.com`
+    (fundingRate + klines),失败一律 `_logger.debug` 然后 `continue` ——
+    **debug 在生产默认不可见**,所以一次全域失败和一个安静的日子长得一样。
+
+    Jazz(2026-09-09,讲过很多次):
+    **「不可以那么多资产打向免费 api。多资产重复调取要走付费 api。
+      binance 和 hyperliquid 这些是进入交易之后才调取。」**
+
+    价格走付费源(`panel_closes` → coingecko_pro_ohlc / eodhd)。
+    资金费**本来就是场馆事实**,我们采集它是对的 —— 而且已经在对着采:
+    `_hyperliquid_loop` 每 6 小时用**一次** `metaAndAssetCtxs` 把全部永续写进
+    `funding_history`。逐符号再去公网拉一遍,是把自己已经拥有的东西
+    重新买了 N 次(`panel_funding` 从库里读回来)。
+
+    缺失不再静默:没有价格的符号不进结果,而**原因**进日志与返回摘要。
     """
-    try:
-        import httpx
-    except ImportError:
-        return {}
+    from src.data.market.paid_close_loader import load_paid_closes
+    from src.api.rpc_diagnostics import rpc_with_detail, render_detail
+
+    paid = await load_paid_closes(symbols, lookback_days=60)
+
+    funding: dict[str, list[float]] = {}
+    rows, detail = await rpc_with_detail(
+        "panel_funding", {"p_symbols": [s.upper() for s in symbols],
+                          "p_points": 60})
+    if detail.get("outcome") == "ok" and isinstance(rows, list):
+        for r in rows:
+            sym = str(r.get("symbol") or "").upper()
+            if sym:
+                funding[sym] = [float(x) for x in (r.get("rates") or [])
+                                if x is not None]
+    else:
+        # **拿不到资金费 ≠ 资金费是 0。** 空 dict 会让下游把 carry 当成零,
+        # 而 ① 面板等权年化 +23.07% 的教训就是 carry 不能默认成 0。
+        _log_msg = render_detail(detail, prefix="panel_funding ")
+        _logger.warning("[POD] %s — funding unavailable this round", _log_msg)
+
     out: dict[str, dict] = {}
-    async with httpx.AsyncClient(timeout=20) as client:
-        for sym in symbols:
-            try:
-                # Funding history
-                fr = await client.get(
-                    f"https://fapi.binance.com/fapi/v1/fundingRate",
-                    params={"symbol": sym, "limit": 60})
-                funding = [float(r["fundingRate"]) for r in fr.json()] if fr.status_code == 200 else []
-                # Klines
-                kl = await client.get(
-                    f"https://fapi.binance.com/fapi/v1/klines",
-                    params={"symbol": sym, "interval": "1d", "limit": 60})
-                close = [float(k[4]) for k in kl.json()] if kl.status_code == 200 else []
-                if close:
-                    out[sym] = {"close": close, "funding": funding}
-            except Exception as ex:
-                _logger.debug("pod_aggregator fetch failed for %s: %s", sym, ex)
-                continue
+    for sym, closes in paid.prices.items():
+        out[sym] = {"close": closes, "funding": funding.get(sym, []),
+                    "close_source": paid.sources.get(sym)}
+    if paid.missing:
+        _logger.warning("[POD] %s/%s priced · %s", len(out), len(list(symbols)),
+                        paid.as_payload()["missing_reasons"])
     return out
 
 

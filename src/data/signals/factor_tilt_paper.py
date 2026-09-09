@@ -75,10 +75,10 @@ _logger = logging.getLogger("factor_tilt_paper")
 
 # ── Live data fetchers ───────────────────────────────────────────────────────
 #: TradFi 缓存目录。原本是硬编码的 `/Volumes/CometCloudAI/...`(S-240)。
-#: Railway 上那个路径不存在,于是 `cache_fp.exists()` 恒 False,TradFi 符号
-#: **静默地不进结果** —— 而调用方拿到的只是一个更短的 dict。
-EODHD_CACHE_DIR = os.environ.get(
-    "EODHD_CACHE_DIR", "/Volumes/CometCloudAI/cometcloud-local/_cache/eodhd_history")
+#: ⚠️ S-323u:这里原来有一个 EODHD_CACHE_DIR,默认值是某台 Mac 的本地路径。
+#: Railway 上它根本不存在,于是 17 个 TradFi 符号每一轮都静默地不进结果 ——
+#: **「这台机器上没有那个目录」被渲染成「这些资产没有数据」**。
+#: TradFi 现在和 crypto 走同一条路:`panel_closes`(eodhd,付费源,库里)。
 
 
 @dataclass(frozen=True)
@@ -122,43 +122,26 @@ def _group(missing: dict[str, str]) -> dict[str, int]:
 
 async def _fetch_close_live(symbols: list[str],
                             lookback_days: int = 60) -> FetchCoverage:
-    """Fetch live daily close for crypto (Binance) + TradFi (EODHD cache).
+    """Daily closes from the sources we PAY for. **One request, no fan-out.**
 
-    返回 FetchCoverage —— 缺的那部分带着原因一起回来,不再只是"更短的 dict"。
+    ⚠️ S-323u。上一版是:crypto 逐个符号打 `fapi.binance.com`,
+    TradFi 读一个写死的 Mac 路径 `/Volumes/CometCloudAI/.../eodhd_history`。
+
+    Jazz(2026-09-09,而且这条他讲过很多次):
+    **「不可以那么多资产打向免费 api。多资产重复调取要走付费 api。
+      binance 和 hyperliquid 这些是进入交易之后才调取。」**
+
+    实测后果:Railway 上那个 Mac 路径不存在 → 17 个 TradFi 每轮全部 missing
+    → 只剩 28 个 crypto 对 >=20 的地板 → **这本账连续数周拒绝打标,
+    而它要的价格一直就在我们自己的库里**(28/28 crypto 在 coingecko_pro_ohlc,
+    11/17 tradfi 在 eodhd,都是付费源)。
+
+    改为一次 `panel_closes` RPC:不扇出、单一来源每符号(S-106 口径不拼接)、
+    缺失带原因回来。**取不到就报缺,绝不退回免费端点去补。**
     """
-    try:
-        import httpx
-    except ImportError:
-        return FetchCoverage({}, {s: "httpx unavailable" for s in symbols})
-
-    out: dict[str, list[float]] = {}
-    missing: dict[str, str] = {}
-    async with httpx.AsyncClient(timeout=20) as client:
-        for sym in symbols:
-            try:
-                if sym in TRADFI_UNIVERSE:
-                    cache_fp = (Path(EODHD_CACHE_DIR)
-                                / f"{sym}_2024-01-01_2026-08-20.json")
-                    if cache_fp.exists():
-                        rows = json.loads(cache_fp.read_text())
-                        out[sym] = [float(r["close"]) for r in rows[-lookback_days:]]
-                    else:
-                        # ⚠️ 文件名里的日期区间是冻结的,所以这条即使在 Mac 上
-                        # 也会随时间失效 —— 缓存"存在"和缓存"是当前的"是两件事。
-                        missing[sym] = f"EODHD cache absent under {EODHD_CACHE_DIR}"
-                else:
-                    kl = await client.get(
-                        "https://fapi.binance.com/fapi/v1/klines",
-                        params={"symbol": sym, "interval": "1d", "limit": lookback_days})
-                    if kl.status_code == 200:
-                        out[sym] = [float(k[4]) for k in kl.json()]
-                    else:
-                        missing[sym] = f"binance fapi HTTP {kl.status_code}"
-            except Exception as ex:                               # noqa: BLE001
-                # 不再是 debug。丢一个符号是这本账宇宙的变化,不是调试细节。
-                missing[sym] = f"{type(ex).__name__}: {str(ex)[:60]}"
-                _logger.warning("factor_tilt fetch failed for %s: %s", sym, ex)
-    return FetchCoverage(out, missing)
+    from src.data.market.paid_close_loader import load_paid_closes
+    paid = await load_paid_closes(symbols, lookback_days=lookback_days)
+    return FetchCoverage(paid.prices, paid.missing)
 
 
 async def _fetch_cis_pillar_o_live(symbols: list[str]) -> pd.Series:
