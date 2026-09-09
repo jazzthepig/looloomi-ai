@@ -293,6 +293,71 @@ def _classify_books(producers: dict) -> list[dict]:
     return sorted(out, key=lambda x: (SEV[x["remedy_class"]], -x["rows"]))
 
 
+def _panel_symbol_reconciliation() -> dict | None:
+    """S-323x: two RPCs now answer "which symbols are the panel". Reconcile them.
+
+    `deep_panel_symbols_fast()` (loose index scan, ~200ms) serves the loop that
+    only needs names; `deep_panel_symbol_list()` (full aggregate) still serves
+    the healing window, which needs `latest`. That is a SECOND IMPLEMENTATION OF
+    ONE QUANTITY, and S-323 is explicit that those drift — the wrapper existed
+    in the first place to avoid exactly this.
+
+    Splitting them was still right (paying a 386k-row aggregate for 262 strings
+    is what put 53s on the console). The obligation that comes with it is that
+    somebody compares them, every day, mechanically. Remembering they should
+    agree is not a control.
+
+    Needs SUPABASE_URL / SUPABASE_ANON_KEY in the environment; absent, this
+    returns None and the console says the check did not run — **not** that it
+    passed.
+    """
+    import json as _json
+    import os
+    import urllib.request as _rq
+
+    url = (os.environ.get("SUPABASE_URL") or "").rstrip("/")
+    key = (os.environ.get("SUPABASE_ANON_KEY")
+           or os.environ.get("SUPABASE_KEY") or "")
+    if not url or not key:
+        return None
+
+    def _rpc(fn: str) -> list:
+        req = _rq.Request(
+            f"{url}/rest/v1/rpc/{fn}", data=b"{}",
+            headers={"apikey": key, "Authorization": f"Bearer {key}",
+                     "Content-Type": "application/json"}, method="POST")
+        with _rq.urlopen(req, timeout=TIMEOUT) as r:
+            return _json.loads(r.read().decode())
+
+    try:
+        fast = {str(r.get("symbol", "")).upper() for r in _rpc("deep_panel_symbols_fast")}
+        full = {str(r.get("symbol", "")).upper() for r in _rpc("deep_panel_symbol_list")}
+    except Exception as e:                                   # noqa: BLE001
+        return {"id": "panel:reconcile", "name": "panel symbol reconciliation",
+                "kind": "check", "verdict": "unknown",
+                "remedy_class": "unregistered",
+                "detail": f"{type(e).__name__}: {str(e)[:160]}",
+                "note": "the two panel RPCs could not be compared — unknown is "
+                        "not agreement",
+                "verify": "select count(*) from deep_panel_symbols_fast();"}
+
+    only_fast, only_full = sorted(fast - full), sorted(full - fast)
+    agree = not only_fast and not only_full
+    return {
+        "id": "panel:reconcile", "name": "panel symbol reconciliation",
+        "kind": "check", "verdict": "ok" if agree else "DRIFT",
+        "remedy_class": "ok" if agree else "act_now",
+        "detail": f"fast={len(fast)} full={len(full)}"
+                  + ("" if agree else f" · only_fast={only_fast[:6]}"
+                                      f" only_full={only_full[:6]}"),
+        "note": ("the two panel RPCs agree" if agree else
+                 "TWO IMPLEMENTATIONS OF ONE QUANTITY HAVE DRIFTED (S-323x) — "
+                 "the loop and the healing window are now looking at different "
+                 "panels, and neither of them will say so"),
+        "verify": "select count(*) from deep_panel_symbols_fast();",
+    }
+
+
 def build_state() -> dict:
     try:
         f = _get(FRESHNESS)
@@ -306,6 +371,9 @@ def build_state() -> dict:
     sources = _classify_sources(f.get("by_source") or {})
     books = _classify_books(f.get("producers") or {})
     items = loops + sources + books
+    recon = _panel_symbol_reconciliation()
+    if recon:
+        items.append(recon)
     cov = f.get("coverage") or {}
 
     counts: dict[str, int] = {}
