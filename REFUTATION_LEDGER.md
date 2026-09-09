@@ -18208,3 +18208,60 @@ Minimax-A 从「`SUPABASE_KEY` 通常配 service_role」推 `service_role`。
 **方向对,时序不对**:S-323e 之后我在 S-323i 里已经把 `assert_purpose_source`
 接进了扇出决策点,`_deep_panel_loop` 现在抛 `PurposeMismatch` 并记 **refused**,
 不会再打 Binance。**违规是被恢复过一小段,然后在同一轮里被代码级拦回去了。**
+
+---
+
+## S-323n — 12 小时后复测:链条真的通了;而顶层判决是假的 (2026-09-09)
+
+### 先记结果(实测,不是判决字段的自述)
+
+    断路 loop 段            3 → 0        _cg_panel_loop ok · _forward_record_loop ok
+    _deep_panel_loop        refused      抛 PurposeMismatch,不再打 Binance(S-323i 生效)
+    cg_coin_map              61 → 207    +146
+    coingecko_pro_ohlc       61 → 172 个标的 · 3878 → 10563 行
+    depth_divergence_log    2026-08-23 → 2026-09-08   **前向记录推进了 16 天**
+    baseline_source         declared_panel_262_s323f  (S-323f 的声明基线在用)
+
+**S-323f 的地板是自己让开的,不是被我调松的**:维护源从 61 涨到 171,
+171/262 = 0.65 ≥ 0.50,地板按原样通过。**这正是「钉住基线」想要的那个结局** ——
+它没有随日历漂移,它等到覆盖真的够了。
+
+### 然后:crypto 域报「没有可用价源」,而这句话是假的
+
+    coingecko_pro_ohlc   flowing 171/171   usable_for_returns=True
+    by_domain.crypto     usable=[]  verdict="no_usable_source"    ← 假
+    by_domain.unknown    usable=["coingecko_pro_ohlc"]
+
+`DOMAIN_OF_SOURCE` 里只有 5 个源。**`coingecko_pro_ohlc` 在 S-251/S-304 加进了管道,
+从来没有加进这张分类表**,于是 `.get(src, "unknown")` 把它放进了 `unknown`,
+crypto 域因此判 `no_usable_source`,并一路顶到端点的**头条 verdict**。
+
+**加密侧唯一在流、且能用于收益的源,被判进了一个没有人看的域。**
+
+`.get(source, "unknown")` 的默认值,把「**我不认识这个源**」渲染成了
+「**这个源属于一个叫 unknown 的域**」。前者是注册表有洞,后者读起来像一个事实 ——
+**又一次「两个状态,一个表示」,而这次它就长在判活器自己身上。**
+
+而这张表正上方的注释,写的正是我在这个模块里犯过的前两次同类错误
+(「一个全局的 ok,和每个域都 ok,不是同一件事」)。**警告写在洞的旁边,洞还在。**
+
+修:① 补 `coingecko_pro_ohlc: "crypto"`;
+② **未登记的源必须吵** —— 新增 `unregistered_sources`,`unknown` 不再被当成
+一个坏掉的域去报警(那是假红灯),而是按它本来的样子报「注册表有洞」,
+并且**不允许顶层判绿**(没被分类的源意味着按域的判决本身不完整)。
+
+已用**重新引入 bug** 验证守卫会响:把 `coingecko_pro_ohlc` 从表里删掉,
+`unregistered_sources` 立刻列出它、note 说「注册表有洞」;补回则整体 `ok`。
+`test_source_freshness` / `test_freshness_has_one_top_verdict` 全绿。
+
+### 还在的(不是这一轮的债)
+
+    binance_hist  COLLAPSED 4/114   ← 已按策略冻结,但判活器仍把它读成故障
+    hyperliquid   DEAD 0/177        ← S-296 主动退役日线角色,同上
+    signal_outcomes 死 129 天        ← C1,等 source 列迁移
+    trade_results entry_time 停 08-23
+    无判决对象 40/72(18 个 track_record)
+
+⚠️ **「按策略冻结」和「坏了」在 `by_source` 上仍然同形。** 这条这一轮没修 ——
+但它现在是这份台账里第三次记同一个形状(hyperliquid、binance_hist、unknown 域),
+**说明该有的不是第四条记录,是一个 `retired_by_policy` 的判决值。**
