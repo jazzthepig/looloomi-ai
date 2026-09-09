@@ -290,12 +290,16 @@ def test_no_new_module_fans_out_over_a_free_endpoint_uncounted():
         # 散文说换了源,代码在打 Binance。这条动到前向记录的定义,需 Jazz 定夺。
         "src/research/strategies/causal_positioning.py::load_binance_panel":
             "① beta_core 的价格源;与 v5 inception reason 声称的 HL oracle 不一致",
-        # 这两本账的 NAV 表**至今 0 行**(2026-09-05 实测),而心跳报 ok。
-        # 「从没写过一行」和「在免费源上扇出」很可能是同一件事的两面。
-        "src/data/signals/factor_tilt_paper.py::_fetch_close_live":
-            "factor_tilt_nav 至今 0 行 —— 疑与此扇出同因",
-        "src/data/signals/pod_aggregator_paper.py::_fetch_close_funding_live":
-            "pod_aggregator_nav 至今 0 行 —— 疑与此扇出同因",
+        # ✅ 2026-09-09 已修,从表里删除(S-323u/v)。
+        #
+        # 上面这条 2026-09-05 写下的猜测**是对的**:
+        # 「从没写过一行」和「在免费源上扇出」确实是同一件事的两面。
+        # 实测:`factor_tilt` 的 TradFi 读一个写死的 Mac 路径
+        # (`/Volumes/CometCloudAI/...`,Railway 上不存在)→ 17 个符号每轮
+        # 静默 missing → 只剩 28 crypto 对 >=20 地板 → 连续数周拒绝打标;
+        # 而它要的价格**一直在我们自己的库里**(28/28 在 coingecko_pro_ohlc)。
+        # 两本账现在都走 `panel_closes` / `panel_funding`(付费源 + 我们已
+        # 采集的场馆数据),一次 RPC,不扇出。
         # 以下为离线研究脚本:不在任何循环里,跑一次要人手动起。
         # 优先级低,但**不是零** —— 它们照样会把我们的 IP 打进 429。
         "src/research/crowd_clock_backtest.py::run": "离线回测脚本",

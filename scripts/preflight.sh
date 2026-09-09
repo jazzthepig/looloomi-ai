@@ -885,6 +885,17 @@ echo "  ✓ book loops retry inside the valuation window (S-323r)"
 # crash. The console therefore requires every refusal it calls "correct" to
 # declare clears_when / owner / stale_after_days, and to become an alarm again
 # when it overruns. Guards the classifier, not the display.
+# ── S-323u/v: bulk prices come from PAID sources, never a free venue ────────
+# JAZZ, repeatedly: 「不可以那么多资产打向免费 api。多资产重复调取要走付费 api。
+# binance 和 hyperliquid 这些是进入交易之后才调取。」
+# Measured 2026-09-09: EIGHT paper books looped their universe against
+# fapi.binance.com; pod_aggregator twice per symbol. source_policy documented
+# the rule and named the first violator, in the same repo, for weeks — and the
+# violator never called it. A rule in prose gets re-broken; this one fails here.
+python3 -m pytest tests/test_books_do_not_fan_out_to_free_venue_apis.py -q || {
+  echo "  ✗ a book is pricing its universe off a FREE venue API — do not push"; exit 1; }
+echo "  ✓ bulk prices on paid sources; venue reads are post-trade (S-323u/v)"
+
 python3 -m pytest tests/test_ops_console_classifies_by_remedy.py -q || {
   echo "  ✗ ops-console classifier FAILED — do not push"; exit 1; }
 echo "  ✓ console sorts by remedy; refusals carry an expiry (S-323s)"
