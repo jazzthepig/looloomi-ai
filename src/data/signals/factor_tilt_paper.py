@@ -74,11 +74,33 @@ _logger = logging.getLogger("factor_tilt_paper")
 
 
 # ── Live data fetchers ───────────────────────────────────────────────────────
-#: TradFi 缓存目录。原本是硬编码的 `/Volumes/CometCloudAI/...`(S-240)。
-#: ⚠️ S-323u:这里原来有一个 EODHD_CACHE_DIR,默认值是某台 Mac 的本地路径。
-#: Railway 上它根本不存在,于是 17 个 TradFi 符号每一轮都静默地不进结果 ——
-#: **「这台机器上没有那个目录」被渲染成「这些资产没有数据」**。
-#: TradFi 现在和 crypto 走同一条路:`panel_closes`(eodhd,付费源,库里)。
+#: TradFi 本地缓存目录 —— **Mac 侧数据根,不是「写死的错路径」**。
+#:
+#: ⚠️ S-323w 更正我自己在 S-323u 里写错的一条。我把
+#: `/Volumes/CometCloudAI/...` 说成是「某台 Mac 的私有路径 / 硬编码债」,
+#: **那是错的,而且是没看清工程结构就下的判断**。它是 CLAUDE.md
+#: 第 52/117 行写明的 **Minimax lane 数据根**,是这套架构的固定件;
+#: `src/research/paths.py`(P0-5, 2026-08-27)早就把它收成了唯一来源,
+#: 并写着 lane 纪律:「These are READ paths into Minimax's lane.」
+#: 我不但判错了,还差点用一条测试去禁止它 —— 那会把**正确的 Mac 侧代码**判红。
+#:
+#: **真正的缺陷不是这个路径,是 lane 不匹配**:本模块开头自己声明
+#: 「Lane: Seth/Austin. **Mac-side daily loop.**」,而 `_factor_tilt_loop`
+#: 是在 **Railway** 上跑它的。Railway 没有挂载那个卷 —— 这是对的,
+#: 不是故障 —— 所以在 Railway 上这条读路必然落空,而落空被渲染成
+#: 「这些资产没有数据」。**一个模块在它声明之外的 lane 里被执行,
+#: 那是调度的问题,不是它所读的那个路径的问题。**
+#:
+#: 于是两条路都保留,按**运行在哪条 lane** 决定:
+#:   Mac 侧(卷挂着)→ 读本地 EODHD 缓存,快且是同一份厂商数据
+#:   Railway(卷不在)→ `panel_closes` 取库里已入库的 eodhd
+#: 走 `paths.py` 而不是再写一个字面量 —— 重复那个字面量才是真正的债。
+try:                                     # research/ 不在最小运行时里时降级
+    from src.research.paths import MAC_ROOT as _MAC_ROOT
+    _EODHD_DEFAULT = str(_MAC_ROOT / "_cache" / "eodhd_history")
+except Exception:                                             # noqa: BLE001
+    _EODHD_DEFAULT = ""
+EODHD_CACHE_DIR = os.environ.get("EODHD_CACHE_DIR", _EODHD_DEFAULT)
 
 
 @dataclass(frozen=True)
@@ -138,10 +160,39 @@ async def _fetch_close_live(symbols: list[str],
 
     改为一次 `panel_closes` RPC:不扇出、单一来源每符号(S-106 口径不拼接)、
     缺失带原因回来。**取不到就报缺,绝不退回免费端点去补。**
+
+    ⚠️ S-323w:TradFi 的本地 EODHD 缓存**保留**。它在 Mac 侧是对的
+    (那是 Minimax lane 的数据根,见上方常量注释),只是本模块被调度到
+    Railway 上跑,而那里没有挂载那个卷。所以按 lane 选路,不是二选一地
+    否定其中一条:卷在就读本地(同一份厂商数据,更快),不在就走库里的
+    eodhd。**两条路的数据同源,所以不存在 S-106 的口径拼接问题。**
     """
     from src.data.market.paid_close_loader import load_paid_closes
-    paid = await load_paid_closes(symbols, lookback_days=lookback_days)
-    return FetchCoverage(paid.prices, paid.missing)
+
+    local: dict[str, list[float]] = {}
+    if EODHD_CACHE_DIR and Path(EODHD_CACHE_DIR).is_dir():
+        for sym in [s for s in symbols if s in TRADFI_UNIVERSE]:
+            try:
+                hits = sorted(Path(EODHD_CACHE_DIR).glob(f"{sym}_*.json"))
+                if not hits:
+                    continue
+                rows = json.loads(hits[-1].read_text())
+                closes = [float(r["close"]) for r in rows[-lookback_days:]]
+                if len(closes) >= 2:
+                    local[sym] = closes
+            except Exception as ex:                           # noqa: BLE001
+                # 不再是 debug。少一个符号是这本账宇宙的变化,不是调试细节。
+                _logger.warning("factor_tilt local EODHD read failed for %s: %s",
+                                sym, ex)
+        if local:
+            _logger.info("[FACTOR-TILT] %s TradFi names from the Mac-side EODHD "
+                         "cache (%s)", len(local), EODHD_CACHE_DIR)
+
+    paid = await load_paid_closes(
+        [s for s in symbols if s not in local], lookback_days=lookback_days)
+    prices = {**paid.prices, **local}
+    missing = {s: r for s, r in paid.missing.items() if s not in local}
+    return FetchCoverage(prices, missing)
 
 
 async def _fetch_cis_pillar_o_live(symbols: list[str]) -> pd.Series:
