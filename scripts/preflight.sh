@@ -866,6 +866,29 @@ python3 -m pytest tests/test_price_route.py -q || {
   echo "  ✗ price-route suite FAILED — do not push"; exit 1; }
 echo "  ✓ pinned price route (S-193)"
 
+# ── S-323r: the valuation window is 30 min wide; we were using one second ────
+# §3 gives an INTERVAL — 00:05 UTC, tolerance ±30 min, refused rather than
+# marked late. All eight book loops were "wake, try once, fail, sleep 24h", so
+# 29 of those 30 minutes were never used. On 2026-09-09 the venue listing
+# blipped at 00:05:39 and cost ① an unrepeatable day of the forward record.
+# The boundary is untouched: past tolerance it still refuses and never marks
+# late. What is guarded here is that all seven loops share the retry, and that
+# outside the window it still attempts exactly once.
+python3 -m pytest tests/test_mark_retries_inside_the_valuation_window.py -q || {
+  echo "  ✗ valuation-window retry suite FAILED — do not push"; exit 1; }
+echo "  ✓ book loops retry inside the valuation window (S-323r)"
+
+# ── S-323s: a refusal with no expiry is how a guard becomes an outage ────────
+# S-296: 「一个只拦不导的守卫,会把违规变成缺口」. Every outage in the S-323
+# chain was a CORRECT refusal that then never cleared, and for a product made of
+# a continuous daily record a refusal that persists is outcome-identical to a
+# crash. The console therefore requires every refusal it calls "correct" to
+# declare clears_when / owner / stale_after_days, and to become an alarm again
+# when it overruns. Guards the classifier, not the display.
+python3 -m pytest tests/test_ops_console_classifies_by_remedy.py -q || {
+  echo "  ✗ ops-console classifier FAILED — do not push"; exit 1; }
+echo "  ✓ console sorts by remedy; refusals carry an expiry (S-323s)"
+
 # ── S-194: a dead feed is not a flat day ─────────────────────────────────────
 # All five paper books computed daily return as `pnl = 0.0` then a conditional
 # accumulate, so "could not price" and "did not move" were the same number.
