@@ -521,6 +521,27 @@ async def _hyperliquid_loop():
     await _asyncio.sleep(_boot_delay(2400))
     while True:
         try:
+            # ── S-323p:**给挂牌缓存预热,否则 S-323o 的持久副本永远是空的** ──
+            # S-323o 让场馆挂牌落 Redis,好让 ① 在 00:05 遇到场馆抖动时还能打标。
+            # 但实测调用方只有两个:`beta_core_paper`(就是那次打标本身)和
+            # `panel_read`。**于是在一个刚部署的进程里,第一次「读」发生在
+            # 任何一次「写」之前 —— 持久副本恰恰在它被设计来救的那个场景里是空的。**
+            #
+            # 我修了读路径,没修那条必须先发生的写路径。**这和这一周反复出现的
+            # 形状是同一个:补丁打在出事的那个调用点上,而不是打在让它成立的那条链上。**
+            #
+            # 这个循环每 6 小时跑一次、本来就在跟 HL 说话,是天然的预热点:
+            # 任何一次部署之后 ~3 分钟(`_boot_delay` 封顶 180s)副本就存在了,
+            # 远早于下一个 00:05。
+            try:
+                from src.data.market.price_route import venue_symbols_detailed
+                _vs, _vmeta = await venue_symbols_detailed(force=True)
+                print(f"[HL] venue listing warmed: {len(_vs)} symbols "
+                      f"(source={_vmeta.get('source')})")
+            except Exception as _we:                          # noqa: BLE001
+                # 预热失败不该拖垮资金费采集 —— 它自己有兜底与拒绝路径。
+                print(f"[HL] ⚠️  venue listing warm failed: {_we}")
+
             from src.data.market.hyperliquid_collector import collect_venue_marks
             r = await collect_venue_marks()
             flag = "" if r.get("ok") else "  ⚠️ " + str(r.get("diagnosis", r.get("error", "")))
