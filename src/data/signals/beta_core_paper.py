@@ -198,6 +198,31 @@ _STATE_KEY = f"beta_core:state:{_INCEPTION_ID}"
 # propagates into position size.
 _VALUATION_POINT_UTC = (0, 5)        # 00:05 UTC, marking the 00:00 UTC observation
 _VALUATION_POINT_TOLERANCE_MIN = 30  # outside this: REFUSE the mark, do not mark late
+
+
+def _minutes_from_valuation_point(now: dt.datetime | None = None) -> float:
+    """Absolute minutes between `now` and today's valuation point.
+
+    S-286. This function exists because `_VALUATION_POINT_TOLERANCE_MIN` had
+    exactly ONE reader for its whole life: the test asserting the constant was
+    spelled. Nothing enforced it. So on 2026-09-04 v5's inception row was struck
+    at **07:00:52 UTC — 6h55m off the 00:05 point it was created to enforce** —
+    and every guard stayed green, because the guard was checking that the rule
+    was written down.
+
+    That is S-263 exactly (`LAST_REGIME_QUORUM`: 2 writers, 0 readers), and the
+    S-284 ledger entry names the shape: *written is not executed, executed is not
+    observable*. My test made an unenforced constant LOOK enforced, which is
+    strictly worse than not having the test — an unguarded rule invites a guard,
+    a falsely-guarded rule closes the question.
+    """
+    now = now or dt.datetime.now(dt.timezone.utc)
+    h, m = _VALUATION_POINT_UTC
+    point = now.replace(hour=h, minute=m, second=0, microsecond=0)
+    # Nearest occurrence, so 23:50 is 15 min from tomorrow's 00:05, not 1,425.
+    return min(abs((now - point).total_seconds()),
+               abs((now - (point + dt.timedelta(days=1))).total_seconds()),
+               abs((now - (point - dt.timedelta(days=1))).total_seconds())) / 60.0
 # Interval bounds for a row to count as daily. Outside → row is stamped non-daily and
 # annualized figures are suppressed rather than published with a footnote (§12).
 _DAILY_INTERVAL_MIN_H = 18.0
@@ -547,7 +572,8 @@ async def _load_panel():
     # old window was not buying anything — it was just short enough to starve a
     # statistic that had not been written yet when it was chosen.
     s = dt.date.today() - dt.timedelta(days=_PANEL_DAYS)
-    _, close, fmean, fsum = load_binance_panel(DEFAULT_UNIVERSE, start=(s.year, s.month, s.day))
+    _, close, fmean, fsum, _filled = load_binance_panel(
+        DEFAULT_UNIVERSE, start=(s.year, s.month, s.day), with_fill_mask=True)
     # I1, and the sharpest instance of it in this file (2026-08-09). This line used
     # to be `np.nan_to_num(...)`, which turns a MISSING return into 0.0 — a flat day.
     # Flat days depress realised vol, the vol scalar rises, and the book SIZES UP.
@@ -566,16 +592,33 @@ async def _load_panel():
     # into the benchmark leg, where it silently drops an asset from one and not the
     # other. Absent price ⇒ absent from the panel, which the equal-weighting then
     # renormalises over what actually exists.
+    # ── A CARRIED PRICE IS NOT A PRICE (S-287) ─────────────────────────────
+    # `close[-1, i]` used to enter `px` on two conditions: not-NaN and positive.
+    # Both are satisfied by a value FORWARD-FILLED from days ago, so a symbol that
+    # stopped updating still arrived as a live quote, `mark_coverage` counted it
+    # toward the 80% floor, and the book marked it. The guard was asking "is there
+    # a number here", and the question is "was this observed today".
+    #
+    # This is the same distinction S-194 drew one layer up — it stopped the book
+    # confusing "no data" with "no movement" — and the layer under it was still
+    # confusing "stale data" with "data". A name whose last close was filled is
+    # EXCLUDED, exactly as a NaN is: equal-weighting renormalises over what is
+    # actually observable, and if too much of the book goes that way the coverage
+    # floor refuses the mark, which is what it is for.
+    _stale_idx = {i for i in range(close.shape[1]) if bool(_filled[-1, i])}
     px = {DEFAULT_UNIVERSE[i]: float(close[-1, i])
           for i in range(close.shape[1])
-          if close[-1, i] == close[-1, i] and close[-1, i] > 0}
+          if close[-1, i] == close[-1, i] and close[-1, i] > 0 and i not in _stale_idx}
     if len(px) < close.shape[1]:
         missing = [DEFAULT_UNIVERSE[i] for i in range(close.shape[1])
                    if DEFAULT_UNIVERSE[i] not in px]
+        stale = sorted(DEFAULT_UNIVERSE[i] for i in _stale_idx)
         _log.warning("[beta_core] %d/%d panel names have no usable price and are "
-                     "excluded from today's book: %s",
-                     len(missing), close.shape[1], ",".join(missing))
-    return DEFAULT_UNIVERSE, close, ret, px
+                     "excluded from today's book: %s%s",
+                     len(missing), close.shape[1], ",".join(missing),
+                     f" · of which STALE (last close forward-filled): {','.join(stale)}"
+                     if stale else "")
+    return DEFAULT_UNIVERSE, close, ret, px, sorted(DEFAULT_UNIVERSE[i] for i in _stale_idx)
 
 
 _REGIME_DWELL_DAYS = 5   # see below; equals the gate's minimum holding period
@@ -783,10 +826,54 @@ async def _recover_state_from_nav(px: dict) -> dict | None:
 async def mark_and_rebalance(dry_run: bool = False) -> dict:
     from src.data.market.data_layer import _redis_get, _redis_set
     today = dt.date.today()
+
+    # ── THE VALUATION POINT, ENFORCED (S-286, NAV_POLICY §3) ────────────────
+    # Declared in S-283, obeyed from here. A mark struck away from the elected
+    # point is not a slightly-late mark: it changes the WINDOW the return covers,
+    # and the window is the thing that makes a daily series daily.
+    #
+    # Measured cost of not enforcing it: v5's own inception row, 07:00:52 UTC,
+    # 6h55m off — the first row of the incarnation created to fix exactly this,
+    # for the second incarnation running. v4's first row was contaminated; v5's
+    # was off-point. Same position, same reason: **the first mark after a deploy
+    # runs before the loop has ever slept to the point.**
+    #
+    # `dry_run` is exempt: callers use it to inspect the book at arbitrary times,
+    # and refusing there would make the book unobservable rather than disciplined.
+    _off_by = _minutes_from_valuation_point()
+    if not dry_run and _off_by > _VALUATION_POINT_TOLERANCE_MIN:
+        await _record_exception(
+            "valuation_point", "refused",
+            f"struck {_off_by:.0f} min from the {_VALUATION_POINT_UTC[0]:02d}:"
+            f"{_VALUATION_POINT_UTC[1]:02d} UTC valuation point, tolerance is "
+            f"{_VALUATION_POINT_TOLERANCE_MIN} min — refusing rather than marking "
+            f"a window that is not a day. Usually a deploy: the loop marks once "
+            f"on boot before it has slept to the point.",
+            mark_date=today,
+            detail={"off_by_min": round(_off_by, 1),
+                    "tolerance_min": _VALUATION_POINT_TOLERANCE_MIN})
+        return {"status": "skipped", "reason": "outside_valuation_point",
+                "off_by_min": round(_off_by, 1), "date": today.isoformat()}
+
     try:
-        symbols, close, ret, px = await _load_panel()
+        symbols, close, ret, px, stale_names = await _load_panel()
     except Exception as e:
         return {"status": "error", "reason": str(e)[:120]}
+    # S-287: a name dropped for staleness is a DIFFERENT event from a name that
+    # never had a price, and it is the one that used to be invisible — the book
+    # marked it happily. Recorded even when the mark then succeeds, because the
+    # question "was the panel whole today" must be answerable after the fact.
+    if stale_names:
+        await _record_exception(
+            "price_freshness", "flagged",
+            f"{len(stale_names)} panel name(s) had a forward-filled last close and "
+            f"were excluded from today's book: {','.join(stale_names[:12])}. A "
+            f"carried price satisfies every not-NaN/positive check and is not an "
+            f"observation.",
+            mark_date=today,
+            detail={"stale": stale_names[:40], "n_stale": len(stale_names),
+                    "priceable": len(px)})
+
     if len(px) < 5:
         await _record_exception(
             "coverage", "refused",
@@ -822,6 +909,19 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         return {"status": "skipped",
                 "reason": f"venue listing unavailable, refusing to mark an "
                           f"unverified universe: {str(_e)[:100]}"}
+    # S-323o:挂牌是**沿用的**还是**当场观测的**,必须留痕。
+    # 这和 S-287 对「被前向填充的收盘价」立的规矩是同一条:
+    # **一个被沿用的值满足所有 not-NaN 检查,而它不是一次观测。**
+    _lmeta = (_split or {}).get("listing_meta") or {}
+    if _lmeta.get("source") in ("memory", "persisted"):
+        await _record_exception(
+            "venue_listing", "flagged",
+            f"marked on a CARRIED venue listing ({_lmeta.get('source')}, "
+            f"{_lmeta.get('age_s')}s old, {_lmeta.get('n')} symbols) because the "
+            f"venue was unreachable this round"
+            + (f": {_lmeta.get('error')}" if _lmeta.get("error") else "")
+            + ". The mark is honest but the tradeable set was not observed today.",
+            mark_date=today, detail=_lmeta)
     _venue_excluded = len(_dropped)
     if _dropped:
         _drop = {s.upper() for s in _dropped}

@@ -187,3 +187,117 @@ def test_positioning_is_chain_agnostic_but_names_the_instrument():
     assert "beta = HOLD" in claude and "perpetual" in claude, (
         "releasing the chain must not silently release the instrument — the doc "
         "has to say which one moved")
+
+
+# ── S-323o: the venue listing must survive a deploy ──────────────────────────
+# 2026-09-09 00:05:39, measured: ① `beta_core` refused to mark at the valuation
+# point — "cannot reach the execution venue's listing, and no cached copy
+# exists." The refusal was correct. The reason there was no cached copy is that
+# `_VENUE_CACHE` was a module-level dict, and we had redeployed several times
+# that day; every deploy reset it to None.
+#
+# So the last-good fallback was empty in the one situation it exists for, and a
+# day of ①'s forward record — the product — was lost to one HTTP blip at
+# midnight. A venue listing changes weekly; the record is daily. Trading an
+# unrepeatable day for a transient is a bad trade.
+
+def _reset_route(pr):
+    pr._VENUE_CACHE.update(symbols=None, ts=0.0)
+
+
+def test_a_deploy_does_not_destroy_the_venue_listing(monkeypatch):
+    """The exact 2026-09-09 sequence: memory wiped, venue down, mark must live."""
+    import time
+    import src.data.market.hyperliquid_collector as hc
+    import src.api.store as store
+    import src.data.market.price_route as pr
+
+    async def _down(client=None):
+        return [], "ReadTimeout: venue blipped at the valuation point"
+
+    async def _persisted(key):
+        return {"symbols": ["BTC", "ETH", "SOL"], "ts": time.time() - 3600}
+
+    monkeypatch.setattr(hc, "hyperliquid_universe_detailed", _down)
+    monkeypatch.setattr(store, "redis_get_key", _persisted)
+    _reset_route(pr)                      # ← this IS the deploy
+
+    syms, meta = asyncio.run(
+        pr.venue_symbols_detailed(force=True))
+    assert syms == {"BTC", "ETH", "SOL"}
+    assert meta["source"] == "persisted", (
+        "after a deploy the in-memory copy is gone; the persisted one is the "
+        "only thing standing between a venue blip and a lost day of ①")
+
+
+def test_marking_on_a_carried_listing_is_recorded_not_silent(monkeypatch):
+    """A carried listing satisfies every check and is not an observation (S-287)."""
+    import time
+    import src.data.market.hyperliquid_collector as hc
+    import src.api.store as store
+    import src.data.market.price_route as pr
+
+    async def _down(client=None):
+        return [], "ReadTimeout: boom"
+
+    async def _persisted(key):
+        return {"symbols": ["BTC", "ETH"], "ts": time.time() - 7200}
+
+    monkeypatch.setattr(hc, "hyperliquid_universe_detailed", _down)
+    monkeypatch.setattr(store, "redis_get_key", _persisted)
+    _reset_route(pr)
+
+    split = asyncio.run(
+        pr.split_universe(["BTC", "ETH"]))
+    assert split["listing_meta"]["source"] == "persisted"
+    src_txt = (ROOT / "src" / "data" / "signals" / "beta_core_paper.py").read_text()
+    assert "listing_meta" in src_txt and "CARRIED venue listing" in src_txt, (
+        "the book must record that it marked on a carried listing — otherwise "
+        "'observed today' and 'reused from last week' are the same NAV row")
+
+
+def test_a_stale_persisted_listing_still_refuses(monkeypatch):
+    """NEGATIVE CONTROL. Persistence must not become 'guess forever'."""
+    import time
+    import src.data.market.hyperliquid_collector as hc
+    import src.api.store as store
+    import src.data.market.price_route as pr
+
+    async def _down(client=None):
+        return [], "ReadTimeout: boom"
+
+    async def _ancient(key):
+        return {"symbols": ["BTC"], "ts": time.time() - 99 * 24 * 3600}
+
+    monkeypatch.setattr(hc, "hyperliquid_universe_detailed", _down)
+    monkeypatch.setattr(store, "redis_get_key", _ancient)
+    _reset_route(pr)
+
+    with pytest.raises(pr.PriceRouteError):
+        asyncio.run(
+            pr.venue_symbols_detailed(force=True))
+
+
+def test_an_empty_listing_is_not_an_unreachable_venue(monkeypatch):
+    """`hyperliquid_universe` used to return [] for BOTH — the S-180 collapse,
+    and the fix for it was already written 20 lines below, in `_fetch_one`."""
+    import src.data.market.hyperliquid_collector as hc
+    import src.api.store as store
+    import src.data.market.price_route as pr
+
+    async def _empty(client=None):
+        return [], None                      # venue answered: nothing listed
+
+    async def _no_cache(key):
+        return None
+
+    monkeypatch.setattr(hc, "hyperliquid_universe_detailed", _empty)
+    monkeypatch.setattr(store, "redis_get_key", _no_cache)
+    _reset_route(pr)
+
+    with pytest.raises(pr.PriceRouteError) as ei:
+        asyncio.run(
+            pr.venue_symbols_detailed(force=True))
+    assert "EMPTY listing" in str(ei.value), (
+        "'the venue lists nothing' and 'we could not ask the venue' have "
+        "different fixes and must not render identically")
