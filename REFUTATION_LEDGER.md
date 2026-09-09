@@ -18453,3 +18453,82 @@ preflight 拦下了这次 push:
 **这条元守卫(S-244)是这个仓里最值钱的东西之一**:它是唯一一条
 「检查检查本身是否存在」的规则,而本周的教训反复是
 **缺陷不在被检查的地方,在没有人检查的地方**。
+
+---
+
+## S-323u/v — 两本 0 行的账:价格一直在库里,而账在打免费 API (2026-09-09)
+
+Jazz(2026-09-09,并注明**讲过无数次**):
+**「不可以那么多资产打向免费 api。多资产重复调取要走付费 api。
+Binance 和 Hyperliquid 这些是进入交易之后才调取。」**
+
+### 实测
+
+**八本 paper book** 逐个符号打 `fapi.binance.com`;`pod_aggregator` 每符号**两次**
+(fundingRate + klines),失败一律 `_logger.debug` 然后 `continue` ——
+**debug 在生产不可见**,所以「全域取不到」和「安静的一天」长得一样。
+
+`factor_tilt` 的 TradFi 读的是 `EODHD_CACHE_DIR`,默认值
+`/Volumes/CometCloudAI/cometcloud-local/_cache/eodhd_history` —— **某台 Mac 的本地路径**。
+Railway 上它不存在,于是 `cache_fp.exists()` 恒 False,
+**17 个 TradFi 符号每一轮静默地不进结果**,只剩 28 crypto 对 `>=20` 的地板。
+
+    「这台机器上没有那个目录」被渲染成「这些资产没有数据」。
+
+而它要的价格**一直在我们自己的库里,来自我们付钱的源**:
+
+    28/28 crypto  在 coingecko_pro_ohlc,60 天里都有 >=40 根
+    11/17 tradfi  在 eodhd
+
+**两本账连续数周拒绝打标,守着一个空手,而钱已经付过了。**
+
+### 修法:一次 RPC,零扇出
+
+`panel_closes(symbols, days)` / `panel_funding(symbols, points)`:
+
+* **一符号一行(数组),不是一 bar 一行** —— 45×60=2700 行远超 PostgREST
+  静默的 1000 行上限(S-323)。按 bar 返回会被截成一段**更短但看起来合理**的
+  历史,下游无从察觉。聚合成数组让截断在**结构上不可能**,而不只是不太可能。
+* **每符号单一来源**(S-106:口径是源的属性,拼接会把接缝读成一次波动),
+  并且**把选中的源返回**,让调用方看见自己拿到的是哪种口径。
+* 资金费本来就是场馆事实,我们采集它是对的 —— 而且已经在正确地采:
+  `_hyperliquid_loop` 每 6h **一次** `metaAndAssetCtxs` 覆盖全部永续。
+  逐符号再去公网拉一遍,是**把自己已经拥有的东西重新买 N 次**。
+
+⚠️ **接线之前先探,而不是之后**:
+
+    anon           OK symbols=0
+    authenticated  OK symbols=0
+    service_role   OK symbols=39
+
+`ohlcv_daily` 有 RLS,app 角色读到的是**零行而不是报错** ——
+**比 S-323e 的 42501 更糟:权限失败至少会说「拒绝」,这个说「没有数据」。**
+若照此接线,两本账会每天继续拒绝、理由写着「数据不足」,
+而数据就在那儿。改 SECURITY DEFINER + revoke PUBLIC(S-323h)后 39/39。
+
+### 而这条规则**早就写在仓里了**
+
+`source_policy.py` 的规则、`test_source_policy.py` 的 `KNOWN_UNGATED` 预算表,
+里面**一字不差地记着这两个函数**,旁边的注释(2026-09-05)写着:
+
+> 这两本账的 NAV 表至今 0 行,而心跳报 ok。
+> **「从没写过一行」和「在免费源上扇出」很可能是同一件事的两面。**
+
+**那个猜测是对的,而它在表里躺了四天没有人去验。**
+今天验了:是同一件事。两条已从 `KNOWN_UNGATED` 删除(只减不增)。
+
+### 新守卫 + 棘轮
+
+`tests/test_books_do_not_fan_out_to_free_venue_apis.py`:
+book 模块里出现免费场馆域名(**AST 判定,docstring 不算** ——
+为了解释「为什么删掉它」而写下那个域名,不能反过来被判成使用它)、
+以及价格路径上的 `/Volumes/...` 操作者私有路径,一律红。
+
+剩余五本(causal / dingge_rwa / fusion / r76 / two_layer)进 `MIGRATION_BACKLOG`,
+**只减不增**,并且**修好后必须从表里删掉**(一张留着幽灵的豁免表会让人学会忽略它)。
+不在同一轮里改它们,理由不是懒:**这五本正在产出前向记录**
+(causal 55 · dingge 53 · fusion 26),而 §3 说丢掉的一天补不回来;
+数据不是障碍(它们要的 28 个符号 100% 已覆盖),
+**障碍是五个 fetcher 形状各不相同,而我在这里无法端到端跑它们。**
+
+反向控制:给一本**没有**前科的账加上那个域名 → 守卫立刻红。
