@@ -18265,3 +18265,67 @@ crypto 域因此判 `no_usable_source`,并一路顶到端点的**头条 verdict*
 ⚠️ **「按策略冻结」和「坏了」在 `by_source` 上仍然同形。** 这条这一轮没修 ——
 但它现在是这份台账里第三次记同一个形状(hyperliquid、binance_hist、unknown 域),
 **说明该有的不是第四条记录,是一个 `retired_by_policy` 的判决值。**
+
+---
+
+## S-323o — ① 少了一天,因为一个进程内缓存在部署时归零 (2026-09-09)
+
+**判据换了:不再是「LP 会不会信」,是「Jazz 敢不敢放一小笔真钱进去」。**
+按这个判据,第一件要修的是 ①,因为它昨天停止打标了。
+
+### 现场
+
+`nav_exceptions` 里只有一条,时间是 **00:05:39 —— 估值点**:
+
+    book=beta_core  control=venue_listing  action=refused
+    "venue listing unavailable — 拒绝对一个未经核实的 universe 打标:
+     cannot reach the execution venue's listing, and no cached copy exists."
+
+**拒绝本身是对的**(NAV_POLICY:打不出就拒绝,不迟打)。
+问题是那句「no cached copy」—— 我们**有**兜底,`venue_symbols()` 里写着
+last-good 分支。它是空的,因为 `_VENUE_CACHE` 是一个**模块级 dict**,
+而昨天为了修 loop 推了好几次,**每推一次它就回到 `None`**。
+
+> **兜底在唯一需要它的场合恰好是空的 —— 因为「需要它」和「它被清空」
+> 是同一个事件的两面:部署。**
+
+场馆挂牌是**慢变量**(永续上新以周计),① 的前向记录是**日频**、且不可补。
+拿一次午夜的瞬时抖动换一天不可补的记录,是个坏交易。
+而 S-283 早就记过同一形状(「部署会重置每个循环的启动计时器」)——
+**同一个「进程内状态活不过部署」的教训,在另一个模块上重来了一遍。**
+
+### 第二个缺陷:同一个文件里,教训隔二十行没被应用第二遍
+
+`hyperliquid_universe()` 任何异常都 `return []`,于是
+**「场馆一个永续都没挂」和「我们没问到场馆」是同一个值**。
+
+而这个缺陷的修法,**就写在同一文件下面 20 行**的 `_fetch_one` 里:
+
+    429 is a THROTTLE (retry) and an empty body is a DELISTING (never retry).
+    Collapsing them is what made a self-inflicted rate limit look like 45% of
+    the venue disappearing — the same miss-vs-error collapse as S-180.
+
+**同一个文件、同一个教训、隔二十行,只应用了一次。**
+和 S-323i(用途轴修了 hyperliquid loop、没修隔 40 行的 Binance loop)完全同形。
+**教训是按「出事的那个调用点」修的,不是按「这一类调用点」修的。**
+
+### 修法
+
+① `hyperliquid_universe_detailed() -> (list, err)` 三值化,旧函数保留为包装;
+② 挂牌落 Redis(跨部署存活),**7 天硬上限** —— 持久化不能变成「永远猜」;
+③ `split_universe()` 返回 `listing_meta`(`venue`/`memory`/`persisted` + 年龄),
+④ ① 用的是**沿用的**挂牌时,记一条 `flagged` 异常 ——
+**和 S-287 对「被前向填充的收盘价」立的规矩是同一条:
+一个被沿用的值满足所有 not-NaN 检查,而它不是一次观测。**
+
+五条路径实测:reachable→`venue` · 场馆挂但内存有→`memory` ·
+**部署清空+持久副本→`persisted`(昨天就是这条抛的异常)** ·
+副本过期→仍然拒绝 · 场馆真的空→报文明确区分「EMPTY listing」与取不到。
+
+**守卫已用重新引入 bug 验证会响**:把持久兜底关掉 → 那两条测试立刻红;
+恢复 → 18/18 绿。
+
+⚠️ 顺带查出:`python3 -m tests.test_price_route` **退出码 0 但一条断言都没跑** ——
+那是个 pytest 文件,没有 `__main__`。**一个「跑了、绿了、什么都没测」的命令**,
+正是这条链一直在修的那个形状,而它就在我用来验证这条链的工具里。
+本轮所有 pytest 文件改用 `python3 -m pytest` 跑。
