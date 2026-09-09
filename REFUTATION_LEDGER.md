@@ -18469,11 +18469,35 @@ Binance 和 Hyperliquid 这些是进入交易之后才调取。」**
 **debug 在生产不可见**,所以「全域取不到」和「安静的一天」长得一样。
 
 `factor_tilt` 的 TradFi 读的是 `EODHD_CACHE_DIR`,默认值
-`/Volumes/CometCloudAI/cometcloud-local/_cache/eodhd_history` —— **某台 Mac 的本地路径**。
+`/Volumes/CometCloudAI/cometcloud-local/_cache/eodhd_history`。
 Railway 上它不存在,于是 `cache_fp.exists()` 恒 False,
 **17 个 TradFi 符号每一轮静默地不进结果**,只剩 28 crypto 对 `>=20` 的地板。
 
     「这台机器上没有那个目录」被渲染成「这些资产没有数据」。
+
+> **⚠️ S-323w — 上一段我原本写的是「某台 Mac 的本地路径 / 硬编码债」。那是错的,
+> Jazz 当场指出。这条更正留在原地,不改写历史。**
+>
+> `/Volumes/CometCloudAI/` 是 **Minimax lane 的数据根**,CLAUDE.md 第 52/117 行
+> 写明,`src/research/paths.py`(P0-5,2026-08-27)早已把它收成唯一来源并写着
+> 「These are READ paths into Minimax's lane」。**它是架构的固定件,不是债。**
+> 我不但判错,还写了一条测试去禁止它 —— 那会把**正确的 Mac 侧代码判红**,
+> 并且教下一个人删掉一条能用的路。测试已删。
+>
+> **真正的缺陷是 lane 不匹配,不是路径**:`factor_tilt_paper` 的文件头自己写着
+> 「Lane: Seth/Austin. **Mac-side daily loop.**」,而 `_factor_tilt_loop` 在
+> **Railway** 上执行它。Railway 不挂那个卷是对的,不是故障。
+> **一个模块在它声明之外的 lane 里被执行,那是调度的问题,
+> 不是它所读的那个路径的问题。**
+>
+> 修法因此从「删掉本地路径」变成「按 lane 选路」:卷挂着就读本地 EODHD 缓存
+> (同一份厂商数据,更快),不在就走库里已入库的 eodhd。两条同源,不存在
+> S-106 的口径拼接。常量改走 `paths.py` —— **重复那个字面量才是真正的债,
+> 字面量本身不是。**
+>
+> 教训与本周其余各条同形,只是这次主语是我:**我在没看清工程结构的情况下,
+> 把一个架构决定判成了一个缺陷。** 而这条链一直在讲的就是
+> 「按策略退役」和「坏了」不能同形 —— 我对一条路径犯了同一个错。
 
 而它要的价格**一直在我们自己的库里,来自我们付钱的源**:
 
