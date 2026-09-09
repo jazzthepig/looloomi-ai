@@ -18556,3 +18556,54 @@ book 模块里出现免费场馆域名(**AST 判定,docstring 不算** ——
 **障碍是五个 fetcher 形状各不相同,而我在这里无法端到端跑它们。**
 
 反向控制:给一本**没有**前科的账加上那个域名 → 守卫立刻红。
+
+---
+
+## S-323x — 53 秒。指挥台第一次给出的是数字,不是嫌疑人 (2026-09-09)
+
+    _cg_panel_loop  深盘符号表没读到 — deep_panel_symbol_list:
+      no response (timeout or retries exhausted) [52960ms].
+      breaker(open=False,fails=0,trips=0)
+
+**这一行就是 S-323m 的全部意义。** 三天前同一个故障显示的是
+「RPC 不通/熔断/超时」—— 三个嫌疑人,而真凶不在其中。现在它给出
+**52960ms** 和**熔断器实测三元组**,一眼就能排除熔断、直指延迟。
+
+### 但延迟从外面量是 0.6–1.3 秒
+
+同一个 RPC,anon key,连打三次:1.32s / 0.64s / 0.62s。
+差别不是这个函数慢,是**争用**:所有循环都在开机后 180 秒内起跑,
+同时打向一个**每次调用都重算 386,257 行**(binance_hist 占全表 71%)
+的函数,而它们要的只是同样的 262 个名字。
+
+### 而这个调用方从来不需要那个聚合
+
+`_cg_panel_loop` 调 `deep_panel_symbols()`,拿到 state 之后
+**把 n_rows 和 latest 全丢掉**,只留名字。
+我们为了一串 262 个字符串,付了一次全表分组的钱 —— 每一轮。
+
+松散索引扫描(skip-scan,每个 DISTINCT symbol 走一条索引项):
+
+    deep_panel_symbol_list()      1315 ms   2406 buffers
+    deep_panel_symbols_fast()      203 ms    793 buffers   Heap Fetches: 0
+    载荷                          14.8 KB → 5.4 KB
+
+两者返回的符号集合实测**完全相同**(262/262)。
+
+### 这确实制造了「同一个量的第二个实现」
+
+S-323 当初把 `deep_panel_symbol_list` 写成 wrapper,理由正是
+**「两个实现会漂移」**。我现在做的就是它警告过的那件事。
+
+拆开仍然是对的(为 262 个字符串付 38 万行的账,是把 53 秒摆上台面的原因),
+但**拆开就必须承担对账义务**:指挥台每轮把两个 RPC 的符号集合摆在一起,
+不一致即 `act_now`,并明说「the loop and the healing window are now looking at
+different panels, and neither of them will say so」。
+实测当前 `fast=262 full=262 · agree`。
+
+**「记得它们应该一致」不是一个控制。每天有人把它们摆在一起看,才是。**
+读不到两个 RPC 时判 `unregistered` 而不是 `ok` —— **unknown 不是 agreement。**
+
+⚠️ 一处自我更正:`rpc_with_detail` 里熔断器三元组是在**发请求之前**采的,
+所以失败行上显示的是「进去时」的状态而不是「出来时」。
+`trips=0` 因此不能读成「这次没有计入失败」。未修,已记。
