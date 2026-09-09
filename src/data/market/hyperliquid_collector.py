@@ -74,20 +74,45 @@ _DEFAULT_DAYS = 10
 _TIMEOUT = 25.0
 
 
-async def hyperliquid_universe(client: httpx.AsyncClient | None = None) -> list[str]:
-    """Every perp currently listed. This IS our tradeable universe."""
+async def hyperliquid_universe_detailed(
+        client: httpx.AsyncClient | None = None) -> tuple[list[str], str | None]:
+    """Every perp currently listed, **plus why the list is empty if it is**.
+
+    ⚠️ S-323o:上一版任何异常都 `return []`,于是
+    **「场馆一个永续都没挂」和「我们没问到场馆」是同一个值**。
+
+    而这个缺陷的修法,就写在本文件下面 20 行的 `_fetch_one` 里:
+
+        429 is a THROTTLE (retry) and an empty body is a DELISTING (never retry).
+        Collapsing them is what made a self-inflicted rate limit look like 45%
+        of the venue disappearing — the same miss-vs-error collapse as S-180.
+
+    **同一个文件、同一个教训、隔二十行没有被应用第二遍。**
+    2026-09-09 的代价:HL 在 00:05 抖了一下 → `[]` → `venue_symbols` 分不清
+    是「空挂牌」还是「没问到」→ ① 的 `beta_core` 拒绝打标 → 前向记录少一天。
+    """
     own = client is None
     client = client or httpx.AsyncClient(timeout=_TIMEOUT)
     try:
         r = await client.post(_INFO_URL, json={"type": "meta"})
         r.raise_for_status()
-        return [a["name"] for a in r.json().get("universe", []) if a.get("name")]
+        return [a["name"] for a in r.json().get("universe", []) if a.get("name")], None
     except Exception as e:                                    # noqa: BLE001
         _log.warning("[HL] universe fetch failed: %s", e)
-        return []
+        return [], f"{type(e).__name__}: {str(e)[:160]}"
     finally:
         if own:
             await client.aclose()
+
+
+async def hyperliquid_universe(client: httpx.AsyncClient | None = None) -> list[str]:
+    """Every perp currently listed. This IS our tradeable universe.
+
+    Kept for existing callers; prefer `hyperliquid_universe_detailed()` when the
+    difference between "empty" and "unreachable" changes what you do next.
+    """
+    syms, _err = await hyperliquid_universe_detailed(client)
+    return syms
 
 
 async def _fetch_one(client: httpx.AsyncClient, coin: str,

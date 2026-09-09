@@ -75,27 +75,97 @@ class PriceRouteError(RuntimeError):
 _VENUE_CACHE: dict[str, Any] = {"symbols": None, "ts": 0.0}
 _VENUE_TTL = 3600.0
 
+#: S-323o — **进程内缓存在部署时归零,而部署恰恰是最可能错过打标的时刻。**
+#:
+#: 2026-09-09 00:05:39 实测:① 的 `beta_core` 在估值点拒绝打标,理由是
+#: 「cannot reach the execution venue's listing, and no cached copy exists」。
+#: 那句话是对的 —— 但「no cached copy」不是因为我们没缓存,是因为
+#: `_VENUE_CACHE` 是一个模块级 dict,**昨天推了好几次,每推一次它就回到 None**。
+#: 于是那条 last-good 兜底在**唯一需要它的场合**恰好是空的。
+#:
+#: 场馆挂牌是**慢变量**(永续上新以周计),而 ① 的前向记录是按天计的产品本身。
+#: 拿一个慢变量的一次瞬时抖动去换一天不可补的记录,是个坏交易。
+#: 落到 Redis(跨部署存活),并且**用了缓存必须说出来**——
+#: 见 `split_universe()["listing_meta"]`,调用方据此记一条 flagged 异常。
+_VENUE_REDIS_KEY = "route:venue_symbols"
+#: 挂牌可以旧,但不能无限旧。超过这个年龄就不再算「已知」,退回拒绝。
+_VENUE_PERSIST_MAX_AGE_S = 7 * 24 * 3600
 
-async def venue_symbols(force: bool = False) -> set[str]:
-    """Everything listed on the execution venue. Cached 1 h."""
+
+async def venue_symbols_detailed(force: bool = False) -> tuple[set[str], dict]:
+    """场馆挂牌 + **它是从哪来的**。
+
+    `meta["source"]` ∈ `venue` / `memory` / `persisted`,并带 `age_s`。
+    打标用的是不是当场取回来的挂牌,是一件必须能事后回答的事 ——
+    S-287 已经为「被前向填充的价格」立过同样的规矩:
+    **一个被沿用的值满足所有 not-NaN 检查,而它不是一次观测。**
+    """
     import time
     now = time.time()
+    meta: dict[str, Any] = {"source": None, "age_s": 0.0, "n": 0, "error": None}
+
     if not force and _VENUE_CACHE["symbols"] is not None \
             and now - _VENUE_CACHE["ts"] < _VENUE_TTL:
-        return _VENUE_CACHE["symbols"]
-    from src.data.market.hyperliquid_collector import hyperliquid_universe
-    syms = {s.upper() for s in await hyperliquid_universe()}
+        meta.update(source="memory", age_s=round(now - _VENUE_CACHE["ts"], 1),
+                    n=len(_VENUE_CACHE["symbols"]))
+        return _VENUE_CACHE["symbols"], meta
+
+    from src.data.market.hyperliquid_collector import hyperliquid_universe_detailed
+    raw, err = await hyperliquid_universe_detailed()
+    syms = {s.upper() for s in (raw or [])}
+    meta["error"] = err
     if syms:
         _VENUE_CACHE["symbols"] = syms
         _VENUE_CACHE["ts"] = now
-        return syms
+        try:
+            from src.api.store import redis_set_key
+            await redis_set_key(_VENUE_REDIS_KEY,
+                                {"symbols": sorted(syms), "ts": now},
+                                ttl=_VENUE_PERSIST_MAX_AGE_S)
+        except Exception as _e:                              # noqa: BLE001
+            _log.warning("[ROUTE] venue listing not persisted: %s", _e)
+        meta.update(source="venue", age_s=0.0, n=len(syms))
+        return syms, meta
+
+    # 取不到。**注意 `err is None` 与 `err` 是两件事**:前者表示场馆确实回了
+    # 一个空挂牌(那是场馆的事实,不该被兜底掩盖),后者是我们没问到。
     if _VENUE_CACHE["symbols"] is not None:
-        _log.warning("[ROUTE] venue listing unreachable — holding last-good (%s syms)",
-                     len(_VENUE_CACHE["symbols"]))
-        return _VENUE_CACHE["symbols"]
+        age = round(now - _VENUE_CACHE["ts"], 1)
+        _log.warning("[ROUTE] venue listing unreachable (%s) — holding in-memory "
+                     "last-good (%s syms, %ss old)", err, len(_VENUE_CACHE["symbols"]), age)
+        meta.update(source="memory", age_s=age, n=len(_VENUE_CACHE["symbols"]))
+        return _VENUE_CACHE["symbols"], meta
+
+    try:
+        from src.api.store import redis_get_key
+        payload = await redis_get_key(_VENUE_REDIS_KEY)
+    except Exception as _e:                                  # noqa: BLE001
+        payload = None
+        _log.warning("[ROUTE] persisted venue listing unreadable: %s", _e)
+    if isinstance(payload, dict) and payload.get("symbols"):
+        age = now - float(payload.get("ts") or 0.0)
+        if age <= _VENUE_PERSIST_MAX_AGE_S:
+            syms = {str(s).upper() for s in payload["symbols"]}
+            _VENUE_CACHE["symbols"] = syms
+            _VENUE_CACHE["ts"] = now - age
+            _log.warning("[ROUTE] venue listing unreachable (%s) — using PERSISTED "
+                         "copy (%s syms, %.0fs old)", err, len(syms), age)
+            meta.update(source="persisted", age_s=round(age, 1), n=len(syms))
+            return syms, meta
+        _log.warning("[ROUTE] persisted venue listing too old (%.0fs) — refusing", age)
+
     raise PriceRouteError(
         "cannot reach the execution venue's listing, and no cached copy exists. "
-        "Refusing to guess which symbols are tradeable.")
+        "Refusing to guess which symbols are tradeable."
+        + (f" (fetch error: {err})" if err else
+           " (the venue answered with an EMPTY listing — that is the venue's"
+           " fact, not a fetch failure)"))
+
+
+async def venue_symbols(force: bool = False) -> set[str]:
+    """Everything listed on the execution venue. Cached 1 h, persisted 7 d."""
+    syms, _meta = await venue_symbols_detailed(force=force)
+    return syms
 
 
 async def is_tradeable(symbol: str) -> bool:
@@ -128,7 +198,7 @@ async def split_universe(symbols: list[str]) -> dict[str, Any]:
     our panel are not a rounding error — they are 66% of it, and a sleeve built
     across all 262 is a sleeve that cannot be run.
     """
-    venue = await venue_symbols()
+    venue, listing_meta = await venue_symbols_detailed()
     up = [s.upper() for s in symbols]
     tradeable = [s for s in up if s in venue]
     research_only = [s for s in up if s not in venue]
@@ -138,6 +208,9 @@ async def split_universe(symbols: list[str]) -> dict[str, Any]:
         "tradeable_pct": round(100 * len(tradeable) / len(up), 1) if up else 0.0,
         "venue": EXECUTION_VENUE,
         "venue_listed": len(venue),
+        # S-323o:**打标用的挂牌是不是当场取回来的,必须能事后回答。**
+        # `source="venue"` 才是一次观测;memory/persisted 是沿用。
+        "listing_meta": listing_meta,
     }
 
 
