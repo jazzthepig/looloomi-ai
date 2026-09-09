@@ -787,6 +787,63 @@ async def _await_valuation_point(tolerance_min: int = 30) -> None:
     await _sleep_until_utc(*_valuation_point_utc())
 
 
+#: S-323r — **窗口有 30 分钟宽,而我们只用了其中 1 秒。**
+#:
+#: NAV_POLICY §3 给的是一个**区间**:估值点 00:05 UTC,容差 ±30 分钟,
+#: 打不出就拒绝、不迟打。八个 book 循环全是「醒来 → 打一次 → 失败就睡 24 小时」,
+#: 于是窗口里剩下的 29 分钟从来没有被用过。
+#:
+#: 2026-09-09 实测代价:HL 挂牌在 00:05:39 抖了一下,① 的 `beta_core` 拒绝打标,
+#: 下一次尝试在 24 小时后 —— **一次两秒的抖动,换掉一天不可补的前向记录**,
+#: 而那条记录就是产品本身。
+#:
+#: ⚠️ 这**不是**放宽 §3。窗口边界一分钟都没有动:超出容差仍然拒绝、仍然不迟打。
+#: 改的只是「在允许的时间里试几次」—— 把「拒绝」和「只试一次」这两件
+#: 一直被绑在一起、其实无关的事分开。
+#:
+#: 这条修的是**类**,不是 ①:八个循环同一个骨架,只修出事的那一个,
+#: 正是本周反复出现的那个错误(S-323i / S-323o 都是这么来的)。
+_MARK_RETRY_S = 120
+
+
+async def _mark_within_valuation_window(
+        name: str, attempt, *, tolerance_min: int = 30):
+    """打标 + **在容差窗口内**重试。返回 `(res, ok, refused, why, attempts)`。
+
+    第一次就成功时,行为与改动前**完全一致**(立即返回,不多睡一秒)——
+    只有失败路径的行为变了,而失败路径原本的代价是「丢一天」。
+
+    `refused` 视为成功:那是「跑通了,按规矩没活干」,不是故障,不该重试。
+    """
+    attempts = 0
+    while True:
+        attempts += 1
+        try:
+            res = await attempt()
+            _ok, _ref, _why = _classify(res)
+        except Exception as _e:                              # noqa: BLE001
+            _ok, _ref = False, False
+            _why = f"{type(_e).__name__}: {_e}"
+            # ⚠️ **不要返回 None。** 七个调用点接着就 `res.get('status')` ——
+            # 返回 None 会让那一行抛 AttributeError,被外层 except 接住,
+            # 然后把 `'NoneType' object has no attribute 'get'` 当作失败原因记进心跳,
+            # **把真正的原因 `_why` 顶掉**。那正是这一周一直在修的形状,
+            # 而我差点在修它的那个补丁里又做了一次。
+            res = {"status": "error", "error": _why}
+        if _ok or _ref:
+            return res, _ok, _ref, _why, attempts
+
+        left_min = tolerance_min - _minutes_from_valuation_point_utc(
+            *_valuation_point_utc())
+        if left_min <= (_MARK_RETRY_S / 60.0):
+            # 窗口要关了。**到此为止就是拒绝** —— 迟打比不打更糟(§3)。
+            return res, _ok, _ref, _why, attempts
+        print(f"[{name}] attempt {attempts} failed with {left_min:.1f} min left "
+              f"in the valuation window — retrying in {_MARK_RETRY_S}s: "
+              f"{str(_why)[:160]}")
+        await _asyncio.sleep(_MARK_RETRY_S)
+
+
 def _minutes_from_valuation_point_utc(hour: int, minute: int) -> float:
     """Absolute minutes to the NEAREST occurrence of the point (23:50 → 15, not 1425)."""
     now = _dt.datetime.now(_dt.timezone.utc)
@@ -1059,11 +1116,12 @@ async def _causal_paper_loop():
     while True:
         try:
             from src.data.signals.causal_paper import mark_and_rebalance
-            res = await mark_and_rebalance(dry_run=False)
+            res, _ok, _ref, _why, _tries = await _mark_within_valuation_window(
+                "_causal_paper_loop", lambda: mark_and_rebalance(dry_run=False))
             print(f"[CAUSAL-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"rebal={res.get('rebalanced')}")
-            _ok, _ref, _why = _classify(res)
-            await _beat("_causal_paper_loop", ok=_ok, refused=_ref, error=_why)
+            await _beat("_causal_paper_loop", ok=_ok, refused=_ref, error=_why,
+                        detail={"attempts": _tries})
         except Exception as _e:
             print(f"[CAUSAL-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_causal_paper_loop", ok=False, error=str(_e))
@@ -1087,11 +1145,12 @@ async def _dingge_paper_loop():
     while True:
         try:
             from src.data.signals.dingge_paper import mark_and_trade
-            res = await mark_and_trade(dry_run=False)
+            res, _ok, _ref, _why, _tries = await _mark_within_valuation_window(
+                "_dingge_paper_loop", lambda: mark_and_trade(dry_run=False))
             print(f"[DINGGE-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"open={res.get('open')} +{res.get('opened_today')}/-{res.get('closed_today')}")
-            _ok, _ref, _why = _classify(res)
-            await _beat("_dingge_paper_loop", ok=_ok, refused=_ref, error=_why)
+            await _beat("_dingge_paper_loop", ok=_ok, refused=_ref, error=_why,
+                        detail={"attempts": _tries})
         except Exception as _e:
             print(f"[DINGGE-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_dingge_paper_loop", ok=False, error=str(_e))
@@ -1117,11 +1176,12 @@ async def _combined_book_loop():
     while True:
         try:
             from src.data.signals.combined_book import mark_and_rebalance
-            res = await mark_and_rebalance(dry_run=False)
+            res, _ok, _ref, _why, _tries = await _mark_within_valuation_window(
+                "_combined_book_loop", lambda: mark_and_rebalance(dry_run=False))
             print(f"[COMBINED-BOOK] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"rebal={res.get('rebalanced')}")
-            _ok, _ref, _why = _classify(res)
-            await _beat("_combined_book_loop", ok=_ok, refused=_ref, error=_why)
+            await _beat("_combined_book_loop", ok=_ok, refused=_ref, error=_why,
+                        detail={"attempts": _tries})
         except Exception as _e:
             print(f"[COMBINED-BOOK] ⚠️  mark failed: {_e}")
             await _beat("_combined_book_loop", ok=False, error=str(_e))
@@ -1147,11 +1207,12 @@ async def _scalable_book_loop():
     while True:
         try:
             from src.data.signals.scalable_paper import mark_and_rebalance
-            res = await mark_and_rebalance(dry_run=False)
+            res, _ok, _ref, _why, _tries = await _mark_within_valuation_window(
+                "_scalable_book_loop", lambda: mark_and_rebalance(dry_run=False))
             print(f"[SCALABLE-BOOK] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"rebal={res.get('rebalanced')}")
-            _ok, _ref, _why = _classify(res)
-            await _beat("_scalable_book_loop", ok=_ok, refused=_ref, error=_why)
+            await _beat("_scalable_book_loop", ok=_ok, refused=_ref, error=_why,
+                        detail={"attempts": _tries})
         except Exception as _e:
             print(f"[SCALABLE-BOOK] ⚠️  mark failed: {_e}")
             await _beat("_scalable_book_loop", ok=False, error=str(_e))
@@ -1180,12 +1241,13 @@ async def _beta_core_loop():
     while True:
         try:
             from src.data.signals.beta_core_paper import mark_and_rebalance
-            res = await mark_and_rebalance(dry_run=False)
+            res, _ok, _ref, _why, _tries = await _mark_within_valuation_window(
+                "_beta_core_loop", lambda: mark_and_rebalance(dry_run=False))
             print(f"[BETA-CORE] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"bench={res.get('benchmark_nav')} excess={res.get('excess_pct')}% "
                   f"cap={res.get('exposure_cap')} regime={res.get('regime')}")
-            _ok, _ref, _why = _classify(res)
-            await _beat("_beta_core_loop", ok=_ok, refused=_ref, error=_why)
+            await _beat("_beta_core_loop", ok=_ok, refused=_ref, error=_why,
+                        detail={"attempts": _tries})
         except Exception as _e:
             print(f"[BETA-CORE] ⚠️  mark failed: {_e}")
             await _beat("_beta_core_loop", ok=False, error=str(_e))
@@ -1249,11 +1311,12 @@ async def _two_layer_paper_loop():
     while True:
         try:
             from src.data.signals.two_layer_paper import mark_and_rebalance
-            res = await mark_and_rebalance(dry_run=False)
+            res, _ok, _ref, _why, _tries = await _mark_within_valuation_window(
+                "_two_layer_paper_loop", lambda: mark_and_rebalance(dry_run=False))
             print(f"[TWO-LAYER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"book_state={res.get('book_state')} gross={res.get('gross')}")
-            _ok, _ref, _why = _classify(res)
-            await _beat("_two_layer_paper_loop", ok=_ok, refused=_ref, error=_why)
+            await _beat("_two_layer_paper_loop", ok=_ok, refused=_ref, error=_why,
+                        detail={"attempts": _tries})
         except Exception as _e:
             print(f"[TWO-LAYER] ⚠️  mark failed: {_e}")
             await _beat("_two_layer_paper_loop", ok=False, error=str(_e))
@@ -1280,13 +1343,14 @@ async def _fusion_paper_loop():
     while True:
         try:
             from src.data.signals.fusion_paper import mark_and_rebalance
-            res = await mark_and_rebalance(dry_run=False)
+            res, _ok, _ref, _why, _tries = await _mark_within_valuation_window(
+                "_fusion_paper_loop", lambda: mark_and_rebalance(dry_run=False))
             print(f"[FUSION-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"gross={res.get('gross')} fill={res.get('fill_ratio_overall')} "
                   f"cap={res.get('capacity_status')} det={res.get('detector_fired_today')} "
                   f"n_days={res.get('n_days_marked')} validated={res.get('validated')}")
-            _ok, _ref, _why = _classify(res)
-            await _beat("_fusion_paper_loop", ok=_ok, refused=_ref, error=_why)
+            await _beat("_fusion_paper_loop", ok=_ok, refused=_ref, error=_why,
+                        detail={"attempts": _tries})
         except Exception as _e:
             print(f"[FUSION-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_fusion_paper_loop", ok=False, error=str(_e))
