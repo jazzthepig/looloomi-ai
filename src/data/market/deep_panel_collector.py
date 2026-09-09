@@ -151,11 +151,36 @@ async def deep_panel_state_detailed() -> tuple[list[dict] | None, dict]:
 
 
 async def deep_panel_symbols_detailed() -> tuple[list[str] | None, dict]:
-    """`deep_panel_symbols()` + the detail, for callers that report health."""
-    rows, detail = await deep_panel_state_detailed()
-    if rows is None:
+    """`deep_panel_symbols()` + the detail, for callers that report health.
+
+    ⚠️ S-323x:走 `deep_panel_symbols_fast()`,**不再为了一串名字去付一次
+    38 万行的聚合**。
+
+    实测 2026-09-09,指挥台上第一次拿到真数字(而不是三个嫌疑人):
+
+        _cg_panel_loop  deep_panel_symbol_list: no response
+                        (timeout or retries exhausted) [52960ms]
+
+    53 秒。同一个调用从外面量是 0.6–1.3s —— 差别是**争用**:所有循环都在
+    开机后 180s 内起跑,同时打向一个每次都重算 386,257 行(binance_hist 占
+    全表 71%)的函数,只为得到同样的 262 个名字。
+
+    而这个调用方**从来不需要那个聚合** —— 它拿到 state 之后把 n_rows 和
+    latest 全丢掉,只留名字。松散索引扫描(skip-scan)每个 DISTINCT symbol
+    走一条索引项而不是每一行:**1315ms/2406 buffers → 203ms/793 buffers**。
+
+    ⚠️ **这确实是「同一个量的第二个实现」,而 S-323 明确警告过它会漂移。**
+    两者的口径必须永远一致,所以指挥台每轮对账两个 RPC 的符号集合,
+    不一致即 act_now(见 `scripts/ops_console.py`)——
+    **不是靠「记得它们要一致」,是靠每天有人把它们摆在一起看。**
+    需要 `latest`(自愈窗口)的调用方仍然走 `deep_panel_state_detailed()`。
+    """
+    from src.api.rpc_diagnostics import rpc_with_detail, render_detail
+    rows, detail = await rpc_with_detail("deep_panel_symbols_fast")
+    if detail.get("outcome") != "ok" or not isinstance(rows, list):
+        _log.warning("[DEEP] %s", render_detail(detail, prefix="symbol list "))
         return None, detail
-    return sorted({str(r["symbol"]).upper()
+    return sorted({str(r.get("symbol") or "").upper()
                    for r in rows if r.get("symbol")}), detail
 
 
