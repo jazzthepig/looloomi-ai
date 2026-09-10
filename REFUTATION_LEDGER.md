@@ -18635,3 +18635,59 @@ different panels, and neither of them will say so」。
 
 判据也收紧了:`/api/ping` 必须回 `console == "looloomi-ops"` 才算我们自己;
 任何其它回应(包括另一个 HTTP 服务)都归「不是我们」。
+
+---
+
+## S-323z — Supabase 真的挂了一次,而这次系统说的是实话 (2026-09-09)
+
+    deep_panel_symbols_fast:  HTTP 503  15.7s
+    deep_panel_symbols_fast:  HTTP 503  39.2s
+
+`/internal/data-freshness` 因此降级,**而且降得诚实**:
+
+    producers: {"verdict":"unknown",
+                "note":"producer_freshness RPC 未返回 —— **读不到 ≠ 都健康** (S-180)"}
+    coverage : {"verdict":"unknown",
+                "reason":"watch_census RPC 未返回 —— 读不到 ≠ 全覆盖"}
+
+**这是这一周所有工作的验收**:后端真的倒了的时候,系统说的是「我读不到」,
+不是「一切正常」。`_track_record_loop` / `_forward_record_loop` 的失败全在这条下游。
+
+### 而我的指挥台把这份诚实洗成了绿色和一句假话
+
+`producers.tables` 整个不存在,上一版 `.get("tables") or {}` 拿到空 dict,
+于是**一次「读不到」被渲染成「一本账都没有问题」**。
+`n_not_covered` 是 None,牌子上印了一个大大的 **`null`**,底下还写着一句
+**从 None 编出来的假话**:「None of them are track_record」。
+
+> **端点诚实地降级,我的台子把它翻译回了那个谎。**
+> 我花了一周做「读不到 ≠ 没有」,然后在展示层又做了一次「读不到 = 没问题」。
+
+修:`producers.tables` 缺失 → 一条 `unregistered` 卡片明说「本轮所有 book
+状态未知,不要据此下结论」;coverage 读不到 → 显示 **读不到** 和真实 reason,
+**不显示数字、不生成断言**。
+
+### 两条真的坏了,与 503 无关
+
+**① `_beta_core_loop`:`load_binance_panel() got an unexpected keyword
+argument 'with_fill_mask'`。** 查实:
+
+    origin/main  beta_core_paper.py:576   调用方**已上线**,带 with_fill_mask=True
+    origin/main  causal_positioning.py    被调方**没有这个参数**
+    本地工作区    causal_positioning.py    有(未提交, M)
+
+**一个两文件的改动只推了一半。** ① 因此每天以 TypeError 死,
+而它跟 09-09 那次 venue listing 完全是两回事 —— 前一个是瞬时抖动,
+这个是确定性错误。**Jazz 提交 `causal_positioning.py` 即解。**
+
+⚠️ 顺带修:`_mark_within_valuation_window` 会把这个 TypeError 在窗口里重试 14 次。
+**编程错误不是瞬时故障** —— 重试它只是用同一个异常填满窗口,
+并把唯一有用的那行埋进十几行相同的日志。
+`TypeError/AttributeError/NameError/ImportError/KeyError/IndexError/SyntaxError`
+现在**立即返回**,原因原样进心跳。反向控制:瞬时错误仍然重试(实测 3 次成功)。
+
+**② `_hyperliquid_loop` failing,而 `last_error` 是空的。**
+一个不记录原因的失败,正是这整条链要消灭的东西。
+台子现在把「failing 且没有 reason」单独说出来:
+「fix the beat call before diagnosing the loop; you cannot debug a blank.」
+未修,已记 —— 那要改 `_hyperliquid_loop` 的 beat 调用。
