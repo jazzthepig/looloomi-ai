@@ -803,6 +803,12 @@ async def _await_valuation_point(tolerance_min: int = 30) -> None:
 #:
 #: 这条修的是**类**,不是 ①:八个循环同一个骨架,只修出事的那一个,
 #: 正是本周反复出现的那个错误(S-323i / S-323o 都是这么来的)。
+#: 确定性错误:重试它们没有意义,因为它们每次都会以完全相同的方式失败。
+#: 把它们和「场馆抖了一下」放进同一个重试循环,只会用同一个异常填满窗口,
+#: 并且把真正的原因埋在十几行相同的日志里。
+_DETERMINISTIC_ERRORS = (TypeError, AttributeError, NameError,
+                         ImportError, KeyError, IndexError, SyntaxError)
+
 _MARK_RETRY_S = 120
 
 
@@ -821,6 +827,15 @@ async def _mark_within_valuation_window(
         try:
             res = await attempt()
             _ok, _ref, _why = _classify(res)
+        except _DETERMINISTIC_ERRORS as _e:                  # noqa: BLE001
+            # S-323z:**编程错误不是瞬时故障,重试它只是把同一个异常再抛 14 次。**
+            # 2026-09-09 实测 ① 打的是
+            # `load_binance_panel() got an unexpected keyword argument
+            # 'with_fill_mask'` —— 调用方已上线、被调方还没提交,
+            # 一个两文件的改动只推了一半。这种失败在窗口内重试一百次也一样。
+            # 立即返回,让真实原因原样进心跳。
+            _why = f"{type(_e).__name__}: {_e}"
+            return {"status": "error", "error": _why}, False, False, _why, attempts
         except Exception as _e:                              # noqa: BLE001
             _ok, _ref = False, False
             _why = f"{type(_e).__name__}: {_e}"

@@ -153,3 +153,48 @@ def test_outside_the_window_it_does_not_retry_at_all(monkeypatch):
         "outside the tolerance window the mark must be refused, not retried — "
         "retrying there is marking late, which §3 forbids"
     )
+
+
+def test_a_programming_error_is_not_retried(monkeypatch):
+    """S-323z. A TypeError fails identically every time.
+
+    Measured 2026-09-09: ① was dying on
+        load_binance_panel() got an unexpected keyword argument 'with_fill_mask'
+    because a two-file change shipped only its caller. Retrying that inside the
+    window would raise the same exception fourteen more times and bury the one
+    line that names the cause under identical log noise.
+    """
+    import src.api.main as m
+    _inside_window(m, monkeypatch)
+
+    calls = {"n": 0}
+
+    async def _boom():
+        calls["n"] += 1
+        raise TypeError("unexpected keyword argument 'with_fill_mask'")
+
+    m._MARK_RETRY_S = 0
+    _res, ok, _ref, why, tries = asyncio.run(
+        m._mark_within_valuation_window("_test_loop", _boom, tolerance_min=30))
+    assert tries == 1, "a deterministic error was retried"
+    assert ok is False
+    assert "with_fill_mask" in why, "the real reason must survive"
+
+
+def test_a_transient_error_is_still_retried(monkeypatch):
+    """NEGATIVE CONTROL: don't let 'do not retry' swallow the whole feature."""
+    import src.api.main as m
+    _inside_window(m, monkeypatch)
+
+    calls = {"n": 0}
+
+    async def _flaky():
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise RuntimeError("venue blipped")
+        return {"status": "ok"}
+
+    m._MARK_RETRY_S = 0
+    _res, ok, _ref, _why, tries = asyncio.run(
+        m._mark_within_valuation_window("_test_loop", _flaky, tolerance_min=30))
+    assert ok is True and tries == 3
