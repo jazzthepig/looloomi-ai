@@ -74,8 +74,38 @@ def test_zero_and_negative_and_nan_prices_are_unpriceable():
 
 
 def test_an_empty_book_refuses_rather_than_returning_zero():
+    """S-194: an empty book must never mark 0.00%.
+
+    ⚠️ This assertion used to read `"no positions" in r.reason` — it matched the
+    WORDING, not the behaviour, so rephrasing the message broke a test whose
+    subject (ok is False) had not changed. That is the repo's own recurring
+    guard defect: 匹配名字而非构造. The invariant is the refusal.
+    """
     r = weighted_mark({}, {"BTC": 1.0}, {"BTC": 1.0}, book="t")
-    assert not r.ok and "no positions" in r.reason
+    assert not r.ok, "an empty book marking 0.00% is S-194 itself"
+    assert r.coverage == 0.0
+
+
+def test_an_empty_book_says_WHICH_kind_of_empty_it_cannot_tell_apart():
+    """S-326. `{}` arrives from two places with opposite remedies.
+
+    A sleeve that deliberately holds zero (two_layer while core_state == dead)
+    should record a FLAT day — zero positions times any move is zero, which is
+    arithmetic, not a lie. A sleeve whose state failed to load should refuse.
+    `state.get("weights", {}) or {}` yields `{}` for both.
+
+    This layer cannot distinguish them, so it refuses (the conservative side).
+    What it must not do is call that refusal "no positions held", which reads
+    as benign and hid the fact that two_layer_paper_nav has recorded NOTHING
+    since 2026-08-22 while its loop's docstring promises a mark every day.
+    """
+    r = weighted_mark({}, {"BTC": 1.0}, {"BTC": 1.0}, book="two_layer")
+    assert not r.ok
+    assert "S-326" in r.reason, "the refusal must point at the open question"
+    assert "按设计持零" in r.reason and "状态没读到" in r.reason, (
+        "the message has to name BOTH causes — naming one makes the reader "
+        "stop looking for the other"
+    )
 
 
 def test_the_skip_payload_names_what_was_missing():
