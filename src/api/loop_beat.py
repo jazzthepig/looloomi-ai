@@ -281,6 +281,12 @@ def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
                            "(market_state_vectors 就是这种:一次性回填、"
                            "从未上日程),也可能死得比 TTL 还久。"
                            "**两者都不是健康**")}
+                # ⚠️ **S-325:失败分支从来不带 `last_run_at`,而它一直存着。**
+                # 于是「6 小时前在一次 Supabase 故障里失败过、之后还没轮到它重跑」
+                # 和「此刻正在坏」在这条记录上完全同形 —— 读的人只能看到
+                # `failing`,看不到那是多久以前的事。2026-09-09 Supabase 503
+                # 之后,六个循环同时挂上 failing,而其中大部分只是**还没到下一轮**。
+                # `age_s` 在 ok 分支给了,失败分支没给 —— **恰恰是最需要它的那条路。**
     if e.get("refused"):
         n = int(e.get("n_consecutive_refusals") or 1)
         return {"loop": name, "verdict": REFUSED,
@@ -289,6 +295,9 @@ def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
                 "n_consecutive_refusals": n,
                 "last_refusal": e.get("last_refusal"),
                 "last_ok_at": e.get("last_ok_at"),
+                "last_run_at": e.get("last_run_at"),
+                "age_s": (now - int(e.get("last_run_at") or 0))
+                          if e.get("last_run_at") else None,
                 "reason": _fossil_note(e) + (
                     f"**正确地拒绝写入**,连续 {n} 轮:"
                     f"{(e.get('last_refusal') or '')[:110]}。"
@@ -304,6 +313,9 @@ def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
                 "n_consecutive_failures": n,
                 "last_error": e.get("last_error"),
                 "last_ok_at": e.get("last_ok_at"),
+                "last_run_at": e.get("last_run_at"),
+                "age_s": (now - int(e.get("last_run_at") or 0))
+                          if e.get("last_run_at") else None,
                 # 三个分支共用 `_fossil_note` —— **同一个判断不能有两套措辞**
                 # (S-322)。这里原本自己写了一遍「还没轮到它」,而 ok / refused
                 # 说的是「化石」。同一个量两个载体的文本版。

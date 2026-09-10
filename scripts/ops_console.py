@@ -202,6 +202,15 @@ def _classify_loops(loops: dict) -> list[dict]:
             note = ("recorded on an older build — it has not run under the "
                     "current one yet, so this is not 'still failing'"
                     if stale else "failing on the current build")
+            # S-325: 失败**多久之前**发生的,决定它是新闻还是旧闻。
+            # 2026-09-09 Supabase 503 之后六个循环同时挂 failing,
+            # 而其中大部分只是「在那次故障里失败过一次,还没轮到下一轮」。
+            _age = r.get("age_s")
+            if isinstance(_age, (int, float)) and _age > 0:
+                _h = _age / 3600.0
+                note += (f"  ·  最后一次运行在 **{_h:.1f} 小时前**"
+                         + ("(**这是旧闻** —— 之后它还没再跑过,"
+                            "别把它当成此刻正在坏)" if _h >= 1.5 else ""))
             if not stale and not err:
                 # S-323z: 2026-09-09 `_hyperliquid_loop` showed FAILING with an
                 # EMPTY error. A failure that records no reason is the thing
