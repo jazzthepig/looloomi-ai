@@ -18691,3 +18691,67 @@ argument 'with_fill_mask'`。** 查实:
 台子现在把「failing 且没有 reason」单独说出来:
 「fix the beat call before diagnosing the loop; you cannot debug a blank.」
 未修,已记 —— 那要改 `_hyperliquid_loop` 的 beat 调用。
+
+
+---
+
+## S-324 — hyperliquid 那条 loop:**不是被封,是写库失败,而原因被名字弄丢了** (2026-09-09)
+
+Jazz 问:是不是一次拉太多资产被 ban 了?
+
+**不是。实测 Hyperliquid 完全正常:**
+
+    POST /info {"type":"metaAndAssetCtxs"}   HTTP 200 · 0.40-0.49s · 234 个永续
+    POST /info {"type":"meta"}               HTTP 200 · 0.32s
+
+而且 S-296 早就把扇出修掉了:这个采集器**一次请求覆盖全部 234 个永续**,
+正是 source_policy 要的形状。**没有 ban,没有限流。**
+
+### 真正发生的事
+
+`collect_venue_marks()` 从场馆读到了数据,**写 Supabase 失败**
+(当时 Supabase 正在 503,见 S-323z),于是
+`ok = bool(rows) and written == len(rows)` → False。
+
+而它的成功路径 return 里只有 `reason`:
+
+    return {"ok": ..., "n_perps": ..., "rows_written": written,
+            "reason": "234 个永续一次请求 · 写入 0 行 funding"}
+
+调用点读的却是:
+
+    error = None if r.get("ok") else str(r.get("diagnosis", r.get("error", "")))
+
+**`diagnosis` 没有,`error` 没有 → `str("")` → 空字符串。**
+面板上于是出现一个**没有任何原因的 failing**,而原因就在同一个 dict 里,
+只是叫另一个名字。
+
+> **生产者与消费者对同一件事用了两个名字,信息就在最需要它的那条路上被丢掉。**
+> 与 S-242(引擎发 `Tightening`、接收端读别的 key)完全同形。
+
+### 两层修
+
+① 调用点补读 `reason`(那一个循环)。
+
+② **但修调用点只修了一个循环。** `_beat` 是所有循环的必经之路,
+所以兜底放在那一层:**`ok=False` 且 error 为空时,写一句明确的
+「报告失败但没有给出原因,先修那个 `_beat` 调用」,绝不写空串。**
+
+**一个空的 error 在面板上读起来像「小问题」,
+而它的真实含义是「我们连它为什么坏都不知道」—— 那是更严重的状态,不是更轻的。**
+
+`refused` 不受这条兜底影响(它有自己的措辞),`ok=True` 也不被污染。
+守卫用**关掉那条兜底**验证会响(3 条红)。
+
+### ⚠️ 而这个守卫我第一次写的时候,它自己不会跑
+
+我把新测试追加到了 `tests/test_loop_beat.py` 的**文件末尾** ——
+而那个文件的 `if __name__ == "__main__": raise SystemExit(main())` 在它上面。
+Python 自上而下执行,`main()` 在我的函数定义之前就退出了,
+`main()` 又是靠 `globals()` 里 `t_` 前缀自动发现的 —— **于是它永远不在 globals 里。**
+
+**这是本周第三次:一个「存在但不会被执行」的守卫。**
+(前两次:pytest 文件用 `python3 -m tests.X` 跑出退出码 0 而零断言;
+两个新测试没进 preflight 的手写枚举。)
+
+**「我写了一个测试」和「那个测试会跑」是两件事,而前者读起来像后者。**
