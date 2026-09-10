@@ -88,7 +88,30 @@ def weighted_mark(weights: dict[str, float],
     does not.
     """
     if not weights:
-        return MarkResult(ok=False, reason=f"{book}: no positions held", coverage=0.0)
+        # ⚠️ S-326:**空的 weights 有两个来源,而这里分不出来。**
+        #
+        #   ① 这本账**按设计**就持零(two_layer 在 core_state==dead 时如此)
+        #   ② 状态**没读到**(Redis 丢了/没起来),`state.get("weights", {}) or {}`
+        #      同样得到 `{}`
+        #
+        # ① 的正确处置是**记一个平的一天**(持零 × 任何行情 = 0,那是算术,
+        # 不是谎);② 的正确处置是**拒绝**。两者的修法相反,而在这一层
+        # 它们是同一个值 —— 所以这里只能拒绝,**拒绝是保守的那一边**。
+        #
+        # 但拒绝的代价要说清楚:`_two_layer_paper_loop` 的 docstring 写着
+        # 「This sleeve marks daily anyway — a flat day is a real observation」,
+        # 而这条拒绝让它从 2026-08-22 起**一行都没再记**。
+        # **一本设计上会持零的账,因此拿不到连续的前向记录,而 §3 说洞补不回来。**
+        #
+        # 修法不在这一层:调用方知道自己是不是「按设计持零」(core_state 可读、
+        # 状态确实加载成功),只有它能把 ① 和 ② 分开。见 MINIMAX_SYNC §S-326。
+        # ⚠️ 不要在这里改成「空就记 0.00%」—— 这本账正是 S-194 的原案例
+        # (面板 +23.99% 的那周它六次记 0.00%),在这一层放行等于把它复活。
+        return MarkResult(
+            ok=False, coverage=0.0,
+            reason=(f"{book}: holds nothing — **两种可能,修法相反**:"
+                    f"按设计持零(应记平的一天)vs 状态没读到(应拒绝)。"
+                    f"这一层分不出来,所以保守拒绝;调用方要自己判(S-326)"))
 
     total_w = sum(abs(w) for w in weights.values())
     if total_w <= 0:
