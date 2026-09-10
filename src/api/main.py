@@ -552,8 +552,19 @@ async def _hyperliquid_loop():
             # `refused` 接了上来,而它当时的失败是 `SourcePolicyError`:
             # **「按规矩拒绝写」和「这个任务的源选错了」是两个状态**,
             # 后者记成正常拒绝,就等于把设计错误伪装成健康。
+            # ⚠️ S-324:**采集器把原因写在 `reason`,心跳读的是 `diagnosis`/`error`。**
+            # 成功路径的 return 里只有 `reason`,所以当 Supabase 写失败
+            # (`written != len(rows)` → ok=False)时,
+            # `str(r.get("diagnosis", r.get("error", "")))` 求值成 **空字符串** ——
+            # 面板上于是出现一个**没有任何原因的 failing**。
+            #
+            # 2026-09-09 实测就是这一条:HL 侧完全正常(一次 metaAndAssetCtxs、
+            # 200、0.4s、234 个永续),**失败的是写库**,而 Supabase 当时 503。
+            # 生产者与消费者对同一件事用了两个名字,信息就在最需要它的那条路上被丢掉。
+            # 与 S-242(接收端漏写顶层 `macro_regime`)同形。
+            _why = (r.get("diagnosis") or r.get("error") or r.get("reason") or "")
             await _beat("_hyperliquid_loop", ok=bool(r.get("ok")),
-                        error=None if r.get("ok") else str(r.get("diagnosis", r.get("error", ""))))
+                        error=None if r.get("ok") else str(_why))
         except Exception as _e:
             print(f"[HL] ⚠️  venue marks FAILED: {_e}")
             await _beat("_hyperliquid_loop", ok=False, error=str(_e))
@@ -898,6 +909,21 @@ async def _beat(name: str, *, ok: bool, error: str | None = None,
     `tests/test_loop_beat.py:t_the_wrapper_signature_matches_the_callee`
     真的调用它,且**每个关键字都从被调方签名里取**。
     """
+    # ⚠️ **S-324:一次 ok=False 而没有原因的心跳,是不允许存在的。**
+    #
+    # 2026-09-09 实测 `_hyperliquid_loop` 在面板上是 `failing`,而 `last_error`
+    # 是**空字符串** —— 采集器把原因写进 `reason`,调用点读的是 `diagnosis`/
+    # `error`,两个名字指同一件事,于是原因在失败路径上被丢掉。
+    #
+    # 修调用点只修了那一个循环。**这一层是所有循环的必经之路**,所以在这里
+    # 兜底:失败必须带原因,拿不到原因就说「拿不到原因」,
+    # **绝不写一个空串**。一个空的 error 在面板上读起来像「小问题」,
+    # 而它其实是「我们连它为什么坏都不知道」—— 那是更严重的状态,不是更轻的。
+    if not ok and not refused and not (error or "").strip():
+        error = (f"{name} 报告失败但**没有给出原因** —— 调用点把 ok=False 和一个空 "
+                 f"error 一起写了进来。先修那个 `_beat(...)` 调用(通常是生产者把"
+                 f"原因放在 `reason`,而调用点只读 `diagnosis`/`error`),"
+                 f"**在那之前这一条无法诊断**。")
     try:
         from src.api.loop_beat import beat
         await beat(name, ok=ok, error=error, refused=refused, detail=detail)

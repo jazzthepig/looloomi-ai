@@ -524,6 +524,49 @@ def t_a_stale_ok_says_so_too():
         _check(f"{label}:当前构建时不加那句话", "化石" not in cur["reason"],
                cur["reason"][:70])
 
+def t_a_failure_may_never_be_recorded_without_a_reason():
+    """S-324. `_hyperliquid_loop` showed `failing` with an EMPTY last_error.
+
+    The collector wrote its explanation into `reason`; the call site read
+    `diagnosis`/`error`. Two names for one thing, so the message was discarded
+    on precisely the path where it was needed. Measured 2026-09-09: Hyperliquid
+    itself was fine (one metaAndAssetCtxs call, HTTP 200, 0.4s, 234 perps) —
+    the SUPABASE WRITE failed, and nothing said so.
+
+    Fixing the one call site fixes one loop. `_beat` is the path every loop
+    takes, so the floor lives here: a failure without a reason gets an explicit
+    'no reason was given', never an empty string. An empty error reads on the
+    panel like a minor problem, when it actually means we do not know why it
+    broke — which is worse, not milder.
+    """
+    import asyncio
+    import src.api.main as m
+    import src.api.loop_beat as lb
+
+    seen = []
+
+    async def _fake(name, *, ok, error=None, refused=False, detail=None):
+        seen.append((name, ok, refused, error))
+
+    orig, lb.beat = lb.beat, _fake
+    try:
+        asyncio.run(m._beat("_x_loop", ok=False, error=""))
+        _check("ok=False + 空 error → 兜底成一句明确的话",
+               bool((seen[-1][3] or "").strip()),
+               "一个失败被记成了空原因 —— 面板上无法诊断")
+        _check("兜底文案指向调用点而不是循环本身",
+               "_beat" in (seen[-1][3] or ""),
+               "没有告诉读的人先去修哪里")
+
+        asyncio.run(m._beat("_y_loop", ok=True))
+        _check("成功不被兜底污染", seen[-1][3] is None, "ok=True 也被写了 error")
+
+        asyncio.run(m._beat("_z_loop", ok=False, refused=True, error=""))
+        _check("拒绝不被当成无原因故障", (seen[-1][3] or "") == "",
+               "refused 走的是自己的措辞,不该被这条兜底改写")
+    finally:
+        lb.beat = orig
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
