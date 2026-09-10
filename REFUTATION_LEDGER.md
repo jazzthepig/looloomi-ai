@@ -18805,3 +18805,54 @@ Supabase 恢复(实测 200 / 0.5s),`producers` 又能读了(20 张表),
 **一个不带时间的失败,读起来永远像刚刚发生。**
 这是 S-323l 记过的那条债(心跳缺 `last_failure_at`)的另一半 ——
 当时我写「未修,已记」,今天它就让我把一次恢复读成了一次恶化。
+
+---
+
+## S-326 — 一本「设计上每天都记」的账,三周没记过一行 (2026-09-10)
+
+`_two_layer_paper_loop` 的 docstring:
+
+> This sleeve **marks daily anyway** — a flat day is a real observation —
+> and holds ZERO size while `core_state == dead`.
+
+`two_layer_paper.py:281` 调用的 `weighted_mark()` 第一行:
+
+    if not weights: return MarkResult(ok=False, reason="no positions held")
+
+**声明与实现直接矛盾**,而实现赢了:`two_layer_paper_nav` 停在 2026-08-22,
+28 marks,三周零产出。**一本以前向记录为目的的 sleeve,正在丢掉它唯一的产出**,
+而 §3 说那些天补不回来。
+
+### 为什么这条不能在共用层「顺手修掉」
+
+`w_held = state.get("weights", {}) or {}` 的 `{}` 有两个来源:
+
+    ① 按设计持零(core_state == dead)   → 应该记一个平的一天
+    ② 状态没读到(Redis 丢了)            → 应该拒绝
+
+**持零 × 任何行情 = 0,那是算术不是谎**;而「我不知道自己持了什么」记 0.00%
+就是谎。两者在 `weighted_mark` 那一层**是同一个值**。
+
+而且 —— **`two_layer` 正是 S-194 的原案例**:面板 +23.99% 的那一周它六次记 0.00%。
+在共用层放行等于把 S-194 复活,而且是在它被命名的那本账上。
+**所以这里拒绝是对的;错的是它对上层说的话。**
+
+### 我做了什么,没做什么
+
+做:把 `no positions held` 改成明说**两种可能、修法相反**
+(原话读起来太像良性,而它掩盖了一本账三周没记);加守卫。
+**`ok=False` 一个字没动 —— S-194 的保护完整。**
+
+没做:替 Minimax-C 改那本账。分开 ①②**只有调用方能做**
+(它知道 core_state、知道状态有没有真的加载成功),
+而判据必须是「能证明状态读到了」,不能是「weights 是空的」——
+后者正是分不出来的那个东西。已写进 `MINIMAX_SYNC §S-326`。
+
+### ⚠️ 那条守卫原本断言的是措辞,不是行为
+
+    assert not r.ok and "no positions" in r.reason
+
+我只改了一句话,一条**主张完全没变**的测试就红了。
+**匹配名字而非构造** —— 本仓记过多次的那个守卫缺陷,这次撞在我手上。
+已改成:断言拒绝(行为)+ 断言两个原因都被说出来(新不变量)。
+反向控制:把 `if not weights` 关掉 → 立刻红。
