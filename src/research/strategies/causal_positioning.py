@@ -94,9 +94,19 @@ def backtest(close: np.ndarray, fmean: np.ndarray, fsum: np.ndarray,
 
 # ── Panel loader (Binance perps) ─────────────────────────────────────────────
 
-def load_binance_panel(assets: list[str], start=(2024, 1, 1)):
+def load_binance_panel(assets: list[str], start=(2024, 1, 1), *, with_fill_mask: bool = False):
     """Fetch aligned (dates, close, fmean, fsum) panels from Binance USDT perps.
-    fmean = daily mean funding (signal), fsum = daily summed funding (carry)."""
+    fmean = daily mean funding (signal), fsum = daily summed funding (carry).
+
+    `with_fill_mask=True` appends a 5th element: a bool array, True wherever the
+    close was FORWARD-FILLED from the previous day rather than observed. Default
+    False so the fourteen existing call sites keep working unchanged.
+
+    Ask for the mask whenever the answer depends on the price being CURRENT — any
+    paper book striking a NAV. Do not ask for it when the answer depends on the
+    series being contiguous — vol, correlation, backtests. The two needs are
+    genuinely different, which is why the fill exists and why it must be visible
+    (S-287)."""
     import datetime as dt
     import httpx
     c = httpx.Client(timeout=25, headers={"User-Agent": "research"})
@@ -156,10 +166,32 @@ def load_binance_panel(assets: list[str], start=(2024, 1, 1)):
             fmean[di[d], j] = v
         for d, v in fs[a].items():
             fsum[di[d], j] = v
+    # ── FORWARD-FILL, NOW OBSERVABLE (S-287) ────────────────────────────────
+    # A missing price is carried from the previous day. That is right for the
+    # research callers — a vol estimate needs a contiguous series, and a NaN hole
+    # is worse than a repeated price — and it is DANGEROUS for the paper books,
+    # because `close[-1, j]` then holds yesterday's price with nothing to say so.
+    #
+    # Measured consequence: `_load_panel` builds `px` from `close[-1]`, so a
+    # carried price arrives as a real one, `mark_coverage` sees a positive float
+    # and counts the name as PRICEABLE, and the book marks a symbol that stopped
+    # updating days ago. S-194 taught the book to refuse when it cannot price its
+    # holdings; this is one layer under that: **priceable is not the same as
+    # priced today**, and the coverage guard could not tell them apart.
+    #
+    # The fill stays. What changes is that it stops being invisible: callers that
+    # need freshness ask for the mask, callers that need a contiguous series do
+    # not, and neither has to know about the other. Arity is unchanged by default
+    # because fourteen call sites unpack exactly four values, and a guard that
+    # forces a repo-wide edit is a guard that gets reverted.
+    filled = np.zeros_like(close, dtype=bool)
     for j in range(K):
         for i in range(1, T):
             if np.isnan(close[i, j]):
                 close[i, j] = close[i - 1, j]
+                filled[i, j] = True
+    if with_fill_mask:
+        return days, close, fmean, fsum, filled
     return days, close, fmean, fsum
 
 
