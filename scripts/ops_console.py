@@ -202,6 +202,15 @@ def _classify_loops(loops: dict) -> list[dict]:
             note = ("recorded on an older build — it has not run under the "
                     "current one yet, so this is not 'still failing'"
                     if stale else "failing on the current build")
+            if not stale and not err:
+                # S-323z: 2026-09-09 `_hyperliquid_loop` showed FAILING with an
+                # EMPTY error. A failure that records no reason is the thing
+                # this whole console exists to surface — say so on the card
+                # rather than showing a blank and letting it read as "minor".
+                note = ("failing on the current build, and **the heartbeat "
+                        "recorded NO reason** — the loop beat ok=False with an "
+                        "empty error. Fix the beat call before diagnosing the "
+                        "loop; you cannot debug a blank.")
         elif verdict == "ok":
             cls = "ok"
             note = "fossil verdict (older build)" if stale else ""
@@ -263,7 +272,22 @@ def _classify_sources(by_source: dict) -> list[dict]:
 
 def _classify_books(producers: dict) -> list[dict]:
     """The forward record. This IS the product (ARCHITECTURE §validation)."""
-    out = []
+    out: list[dict] = []
+    # ⚠️ S-323z:`producers.tables` 可以整个不存在。2026-09-09 实测 Supabase
+    # 503,端点**正确地**降级成 `{"verdict":"unknown","note":"producer_freshness
+    # RPC 未返回 —— 读不到 ≠ 都健康"}`。上一版这里 `.get("tables") or {}`
+    # 直接得到空 dict,于是**一次「读不到」被渲染成「一本账都没有问题」** ——
+    # 端点诚实地降级,而我的台子把它洗成了绿色。
+    if not isinstance(producers.get("tables"), dict):
+        return [{
+            "id": "producers:unreadable", "name": "producer freshness",
+            "kind": "check", "verdict": "unknown",
+            "remedy_class": "unregistered",
+            "detail": str(producers.get("note") or producers.get("verdict") or "")[:300],
+            "note": ("上游没能读到生产者判活 —— **这不是「都健康」**。"
+                     "本轮所有 book 的状态未知,不要据此下结论。"),
+            "verify": f"curl -s {BASE}{FRESHNESS} | python3 -m json.tool | head -40",
+        }]
     for name, t in (producers.get("tables") or {}).items():
         if not name.endswith("_nav"):
             continue
@@ -382,12 +406,26 @@ def build_state() -> dict:
     for it in items:
         counts[it["remedy_class"]] = counts.get(it["remedy_class"], 0) + 1
 
+    # ⚠️ S-323z:一个读不到的数,**不能渲染成一个数**。
+    # 实测 2026-09-09 Supabase 503:`coverage` 降级成
+    # `{"verdict":"unknown","reason":"watch_census RPC 未返回 —— 读不到 ≠ 全覆盖"}`,
+    # 而这块牌子显示了大大的 `null`,底下还写着一句从 None 编出来的
+    # **假话**:「None of them are track_record」。
+    # **端点诚实地说了「我读不到」,我的台子把它印成了一个值和一个断言。**
+    _ncov = cov.get("n_not_covered")
+    if isinstance(_ncov, int):
+        _cov_num = {"label": "无判决对象", "value": _ncov, "of": cov.get("n_total"),
+                    "hint": f"{cov.get('n_blocking')} of them are track_record — "
+                            f"the product itself"}
+    else:
+        _cov_num = {"label": "无判决对象", "value": "读不到",
+                    "hint": str(cov.get("reason")
+                               or "coverage unreadable — NOT the same as full coverage")[:120]}
+
     numbers = [
         {"label": "断路 loop 段", "value": sum(1 for i in loops if i["remedy_class"] == "act_now"),
          "hint": "loops broken on the CURRENT build (fossils and policy refusals excluded)"},
-        {"label": "无判决对象", "value": cov.get("n_not_covered"),
-         "of": cov.get("n_total"),
-         "hint": f"{cov.get('n_blocking')} of them are track_record — the product itself"},
+        _cov_num,
         {"label": "需要有人处理", "value": counts.get("act_now", 0) + counts.get("unregistered", 0),
          "hint": "act_now + unregistered; everything else is the system working"},
     ]
