@@ -129,6 +129,8 @@ REFUSAL_POLICY = {
 #: The forward-paper gate every sleeve must clear (tests/test_strategy_discipline).
 PAPER_GATE_DAYS = 60
 
+_STARTED_AT = datetime.now(timezone.utc).isoformat()
+
 SEV = {"act_now": 0, "unregistered": 1, "waiting": 2, "no_action": 3, "ok": 4}
 
 
@@ -482,6 +484,32 @@ load(); setInterval(load,60000);
 </script></body></html>"""
 
 
+def _already_our_console(port: int) -> str | None:
+    """Is the thing holding `port` this same console? Returns its timestamp.
+
+    Asked rather than assumed, because "my own console is already up" and
+    "some unrelated process owns this port" have opposite remedies — open the
+    browser, versus go and look at what it is. Telling someone to `kill` a
+    process we have not identified is how a console becomes a footgun.
+
+    ⚠️ Probes /api/ping, NOT /api/state. The first version asked for
+    /api/state with a 2s timeout — but /api/state fetches Railway and routinely
+    takes longer than that, so a live console of our own timed out, returned
+    None, and got reported as "some other process". **A slow answer became a
+    wrong answer**, which is the same collapse this console exists to prevent,
+    committed inside the console's own diagnostics. /api/ping touches nothing.
+    """
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/ping")
+        with urllib.request.urlopen(req, timeout=2) as r:
+            payload = json.loads(r.read().decode()) or {}
+        if payload.get("console") != "looloomi-ops":
+            return None
+        return payload.get("started_at")
+    except Exception:                                        # noqa: BLE001
+        return None
+
+
 def serve(port: int) -> None:
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -490,7 +518,14 @@ def serve(port: int) -> None:
             pass
 
         def do_GET(self):
-            if self.path.startswith("/api/state"):
+            if self.path.startswith("/api/ping"):
+                # Deliberately touches NOTHING — no Railway call, no DB. Its
+                # only job is to answer instantly so "is that my own console?"
+                # is decidable. A liveness probe that can time out is not one.
+                body = json.dumps({"console": "looloomi-ops",
+                                   "started_at": _STARTED_AT}).encode()
+                ct = "application/json; charset=utf-8"
+            elif self.path.startswith("/api/state"):
                 body = json.dumps(build_state(), ensure_ascii=False).encode()
                 ct = "application/json; charset=utf-8"
             else:
@@ -501,8 +536,37 @@ def serve(port: int) -> None:
             self.end_headers()
             self.wfile.write(body)
 
+    # S-323y: `Address already in use` has (at least) two causes with different
+    # remedies — this console is already running, or something else took the
+    # port — and a raw traceback renders them identically. Same defect this
+    # whole chain is about, in the tool built to expose it.
+    class _Server(HTTPServer):
+        # A console restarted inside TIME_WAIT should just bind, not lecture.
+        allow_reuse_address = True
+
+    try:
+        srv = _Server(("127.0.0.1", port), H)
+    except OSError as e:
+        if getattr(e, "errno", None) not in (48, 98):        # EADDRINUSE
+            raise
+        mine = _already_our_console(port)
+        print(f"\n  端口 {port} 已被占用。")
+        if mine:
+            print(f"  → 那是**这个指挥台自己**,已经在跑了(generated_at="
+                  f"{mine}).\n"
+                  f"    直接开 http://127.0.0.1:{port} 就行,不用再起一个。")
+        else:
+            print("  → 占用它的**不是**这个指挥台。别盲目 kill,先看是谁:\n"
+                  f"      lsof -nP -iTCP:{port} -sTCP:LISTEN")
+        print(f"\n  换一个端口:  python3 scripts/ops_console.py --port {port + 1}")
+        if mine:
+            print(f"  或者停掉它:  lsof -ti:{port} | xargs kill\n")
+        else:
+            print()
+        raise SystemExit(1)
+
     print(f"指挥台 → http://127.0.0.1:{port}    (agent surface: /api/state)")
-    HTTPServer(("127.0.0.1", port), H).serve_forever()
+    srv.serve_forever()
 
 
 def main() -> int:
