@@ -18856,3 +18856,72 @@ Supabase 恢复(实测 200 / 0.5s),`producers` 又能读了(20 张表),
 **匹配名字而非构造** —— 本仓记过多次的那个守卫缺陷,这次撞在我手上。
 已改成:断言拒绝(行为)+ 断言两个原因都被说出来(新不变量)。
 反向控制:把 `if not weights` 关掉 → 立刻红。
+
+---
+
+## S-327 — 五个 loop 连续两天报 ok,而账本一行没长 (2026-09-11)
+
+Jazz:「现在坏得更多了。」**这次是真的,而且比屏幕上显示的更糟。**
+
+    _causal_paper_loop    ok  n=0   causal_paper_nav    last 2026-09-09
+    _combined_book_loop   ok  n=0   combined_book_nav   last 2026-09-09
+    _dingge_paper_loop    ok  n=0   dingge_paper_nav    last 2026-09-09
+    _fusion_paper_loop    ok  n=0   fusion_paper_nav    last 2026-09-09
+    _scalable_book_loop   ok  n=0   scalable_book_nav   last 2026-09-09
+
+**五个循环,当前构建,零连续失败,两天四次漏标,每一次都报成功。**
+这就是 S-202(`{"ok": True, "rows": 0}`)本身,活在产品的前向记录上。
+
+### 机制
+
+`already_marked` 在 `loop_beat.PROGRESS_STATUS` 里 → 判 ok、不带 error。
+而六本账是**只凭 Redis state** 返回它的:
+
+    if state.get("last_mark") == today.isoformat():
+        return {"status": "already_marked", ...}
+
+一次写失败之后,state 说「标过了」,表里没有那一行,
+**此后每一轮都是一次静默的成功。**
+
+`beta_core` 是唯一说实话的(`durable_write_failed`)—— 因为它写失败时
+**故意不推进 state**,所以每天重试、每天诚实地失败。
+
+### 而这个缺陷,在 beta_core 自己的注释里写着
+
+`beta_core_paper.py:999-1004`:
+
+> a failed insert left the cache asserting an inception that the record had no
+> row for. Worse than a missing row: `last_mark` is set, so the next cycle
+> returns "already_marked" … The book would look like it was running while the
+> record stayed empty.
+
+**写下这段话的人,没有在同一个文件里加上那道检查。**
+
+### S-321 修过这条,只修了两本
+
+    _row_exists_for   factor_tilt ✓   pod_aggregator ✓
+                      其余七本      ✗
+
+而且是**复制粘贴**进那两个文件的两份私有实现,不是共享的。
+S-321 的原话正是「**state 说做过不算数,表说有才算**」——
+这条教训被应用到了当时在查的那两个调用点,**没有被应用到这一类**。
+
+修:`nav_persist.nav_row_exists()`(共享、三值);
+七本账全部接上;读不到(None)**不跳过** ——
+读不到 ≠ 已经写过,重跑幂等,而被静默跳过的那天按 §3 补不回来。
+`r76_strategy2_paper` 走文件状态、没有 NAV 表,**写明理由豁免**,
+并且守卫会检查「它是否仍然是文件状态」,免得豁免活得比它的理由久。
+
+### ⚠️ 而我第一版守卫的 scope 是手写的,漏了四本
+
+我手写了 6 个文件名,漏了 `beta_core_paper` / `dingge_paper` /
+`fusion_paper` / `r76_strategy2_paper` —— **守卫通过,而它要抓的四个
+根本不在名单上。**
+
+改成从源码**推导** scope(扫所有返回 `already_marked` 的模块),
+立刻抓出那四个。
+
+> **一个 scope 由我手工维护的守卫,和它所守护的代码有同一个盲点。**
+
+这是 S-244(preflight 手写枚举)的形状,出现在一个**专门为了「别只修出事的那几个」
+而写的测试**里面。本周第四次。
