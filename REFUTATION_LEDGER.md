@@ -18925,3 +18925,54 @@ S-321 的原话正是「**state 说做过不算数,表说有才算**」——
 
 这是 S-244(preflight 手写枚举)的形状,出现在一个**专门为了「别只修出事的那几个」
 而写的测试**里面。本周第四次。
+
+---
+
+## S-328 — 别再用「等 UTC 0 点」当验收 (2026-09-11)
+
+Jazz:「你不要搞 utc 0 点这种验收了。」**他是对的,而这个习惯是我的。**
+
+S-323…S-327 每一条修完我都说「等估值点之后再看」——
+**那是一个 24 小时的反馈回路,而这个产品的价值单位就是一天一标。**
+猜错一次的代价是一天不可补的记录,而唯一的观测方式是让故障发生在真账上。
+
+### 而这条教训 2026-08-11 就写在仓里了
+
+`/internal/beta-core-probe` 的 docstring:
+
+> it left a two-day blind spot in which the only way to learn whether layer ③
+> is biting was to wait. **That is the wrong trade — the deploy is cheap to
+> verify and expensive to be wrong about.**
+
+**写得比我清楚。而它只做了 ①,只算 regime/cap/gross,不碰写入路径。**
+又一次:教训被应用到当时在查的那一个地方,没有被推广。
+
+### 两个端点
+
+    GET /internal/write-probe    这个进程现在到底写不写得进去
+    GET /internal/book-dryrun    九本账此刻若打标会发生什么(dry_run,不写)
+
+`write-probe` 走 `insert_with_detail` —— 与 `supabase_insert_table` **同一把
+key、同一组 header、同一层重试、同一个 role gate**,目标是 `_write_probe`
+(RLS 与授权和 NAV 表完全一致),写完即删。绿了就代表**账本的写路径是绿的**,
+而不是「另一条路是绿的」。
+
+它返回状态码和 PostgREST body —— 而 `supabase_insert_table` 返回的那个 bool,
+`nav_persist` 自己说得最清楚:「returns False for a role refusal, missing
+credentials, an empty payload AND a transport error. It does not say which」。
+`durable_write_failed` 查不出原因,就是因为那句话只存在于一行没人读的 Railway 日志里。
+
+**它不会替我打标。** 用「写一条真 NAV 行来证明写得进去」当验证,
+等于在估值点之外落一个标记 —— §3 存在的全部理由就是不许这么做。
+
+### ⚠️ 而我在验证这次改动时,自己的量具是坏的
+
+我列 `app.routes` 检查端点有没有注册,得到 **39 条、一个 router 路由都没有**,
+于是差一点报出「31 个 router 在生产里全部没注册」这种 P0。
+
+真相:FastAPI 0.139 把 include 的路由包在 `_IncludedRouter.original_router` 下,
+**naive 的 `.path` 遍历看不见它们**。正确遍历后 **219 条,两个端点都在**。
+
+> **一个坏掉的量具不会说自己坏了,它会讲一个很有说服力的故事。**
+
+这周第 N 次,这次发生在我用来验证「别再等 0 点」的那个动作上。
