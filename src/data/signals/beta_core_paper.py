@@ -1033,7 +1033,19 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
                 "regime": regime, "date": today.isoformat()}
 
     if state.get("last_mark") == today.isoformat():
-        return {"status": "already_marked", "nav": state["nav"], "date": today.isoformat()}
+        # ⚠️ **state 说做过不算数,表说有才算** (S-321 / S-327)。
+        # 2026-09-11 实测:五个 book loop 连续两天报 ok、零失败,而 NAV 表自
+        # 09-09 起一行没长 —— `already_marked` 在 PROGRESS_STATUS 里,
+        # 「我记得我做过」被渲染成了「这一轮成功了」。
+        # 读不到(None)时**不跳过**:读不到 ≠ 已经写过,重跑幂等,
+        # 而被静默跳过的那天按 §3 补不回来。
+        from src.data.signals.nav_persist import nav_row_exists
+        if not await nav_row_exists("beta_core_nav", today.isoformat()):
+            _log.warning("[beta_core] state says marked for %s but the table has no "
+                         "such row — re-marking rather than trusting the cache "
+                         "(S-327)", today.isoformat())
+        else:
+            return {"status": "already_marked", "nav": state["nav"], "date": today.isoformat()}
 
     mp = state["mark_prices"]
     prev_w = state["weights"]
