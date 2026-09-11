@@ -110,7 +110,15 @@ def compute_funding_features(funding_daily: pd.DataFrame,
     feats["funding_net_long_frac"] = feats["funding_extreme_long_frac"] - feats["funding_extreme_short_frac"]
 
     if "BTC" in f.columns:
-        btc_f = f["BTC"].fillna(method="ffill")
+        # ⚠️ S-332:`fillna(method="ffill")` 在 pandas 3 里**已被移除**,
+        # 抛 `TypeError: NDFrame.fillna() got an unexpected keyword argument`。
+        # 这一行在 `pod_aggregator` / `r62` / `r63` 三条链上都被 import,
+        # 所以一个研究工具模块里的一行,打掉了一本账的每日打标。
+        # `.ffill()` 在 1.x / 2.x / 3.x 上语义相同且都受支持。
+        #
+        # ⚠️ 沙箱是 pandas 2.3.3(该写法只是 deprecated,仍能跑),生产是 3.x ——
+        # **本地跑通不等于线上跑通**,而这条差异只有在真环境里调一次才会出现。
+        btc_f = f["BTC"].ffill()
         feats["btc_funding_raw"] = btc_f
         feats["btc_funding_zscore_30"] = (
             (btc_f - btc_f.rolling(30, min_periods=10).mean())
