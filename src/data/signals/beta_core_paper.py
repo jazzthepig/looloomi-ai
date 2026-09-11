@@ -1007,7 +1007,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             #
             # Refusing to cache an unrecorded inception costs one cycle and retries
             # cleanly. Caching it costs the clock, silently.
-            ok = await _write(today, 1.0, 1.0, 0.0, 0.0, cap, regime, scalar, rv,
+            ok, _wwhy = await _write(today, 1.0, 1.0, 0.0, 0.0, cap, regime, scalar, rv,
                               len(weights), gross, 0.0, True, weights,
                               f"inception · cap_source={cap_source}",
                               cap_source=cap_source)
@@ -1027,6 +1027,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
                     "every column in the beta_core_nav payload exists on the table.",
                     mark_date=today, detail={"phase": "inception"})
                 return {"status": "inception_failed", "reason": "durable_write_failed",
+                        "error": f"durable_write_failed :: {_wwhy}",
+                        "write_detail": _wwhy,
                         "date": today.isoformat()}
             await _redis_set(_STATE_KEY, state, ttl=0)
         return {"status": "inception", "nav": 1.0, "gross": round(gross, 3),
@@ -1154,7 +1156,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         # a persisted row does not merely lose a day: the next mark computes its
         # return from `mark_prices` two days old and books it as a one-day move, so
         # the gap is not visible as a gap. It is visible as a return.
-        ok = await _write(today, nav, bench_nav, book_ret, bench_ret, cap, regime, scalar,
+        ok, _wwhy = await _write(today, nav, bench_nav, book_ret, bench_ret, cap, regime, scalar,
                           rv, len(new_w), sum(abs(v) for v in new_w.values()), cost,
                           rebalanced, new_w, f"cap_source={cap_source}",
                           cap_source=cap_source, interval_hours=iv_h)
@@ -1175,6 +1177,9 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
                 detail={"phase": "mark", "nav_would_have_been": round(nav, 6),
                         "interval_hours": iv_h})
             return {"status": "mark_failed", "reason": "durable_write_failed",
+                    # S-329:把真因带到心跳,而不是让它停在一行日志里。
+                    "error": f"durable_write_failed :: {_wwhy}",
+                    "write_detail": _wwhy,
                     "date": today.isoformat()}
         # C2 ⓠ overlay hook (per §C2-SHIP-SPEC 2026-08-12). The hook writes a
         # PARALLEL row to `beta_core_nav_q`; the ① baseline above is independent.
@@ -1303,10 +1308,10 @@ def _interval_hours(state: dict) -> float | None:
 async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
                  n, gross, cost, rebal, weights, note, cap_source=None,
                  interval_hours=None):
-    from src.api.store import supabase_insert_table
+    from src.api.rpc_diagnostics import insert_with_detail
     top = ",".join(f"{s}:{w:.3f}" for s, w in sorted(weights.items(), key=lambda kv: -kv[1])[:3])
     try:
-        ok = await supabase_insert_table("beta_core_nav", [{
+        ok, _detail = await insert_with_detail("beta_core_nav", [{
             "mark_date": d.isoformat(), "nav": round(nav, 6),
             "benchmark_nav": round(bench_nav, 6),
             "daily_return": round(dret, 6), "benchmark_return": round(bret, 6),
@@ -1342,17 +1347,34 @@ async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
         # Lesson #108 again, in the code written to enforce Lesson #108, within the
         # hour. Checking that a function was CALLED is not checking that it WORKED.
         if not ok:
-            _log.error("[beta_core] NAV WRITE REJECTED for %s — supabase_insert_table "
-                       "returned False (see the [SUPABASE] warning above for the "
-                       "status and body)", d.isoformat())
-        return bool(ok)
+            # ⚠️ S-329:原来这里只说「returned False (see the [SUPABASE] warning
+            # above)」—— 而那行 warning 在 Railway 日志里,没有任何面读它。
+            # 2026-09-11 我们为此做了一整轮排除法(role gate / schema drift /
+            # 早退 / 204 全部逐个否掉)才把 `durable_write_failed` 缩到「瞬时」。
+            # **原因装观测,不装指路。** 现在它带着状态码和 PostgREST 的原话回去。
+            _o = _detail.get("outcome")
+            if _o == "role_refusal":
+                _why = f"role gate refused: {_detail.get('role_refusal')}"
+            elif _o == "not_configured":
+                _why = "SUPABASE_URL / SUPABASE_KEY not set on this process"
+            elif _o == "no_response":
+                _why = (f"no response after retries [{_detail.get('elapsed_ms')}ms]"
+                        + (" — breaker OPEN" if _detail.get("breaker_open") else ""))
+            elif _o == "http_error":
+                _why = f"HTTP {_detail.get('status')} — {_detail.get('body')}"
+            else:
+                _why = f"outcome={_o!r} (unrecognised — NOT success)"
+            _log.error("[beta_core] NAV WRITE REJECTED for %s — %s",
+                       d.isoformat(), _why)
+            return False, _why
+        return True, ""
     except Exception as e:
         # Returns the outcome instead of only logging it. A caller that cannot tell a
         # failed durable write from a successful one will carry on as though the mark
         # landed — the S-105 shape, and Lesson #107: "the operation ran" and "the
         # state changed" are separate facts.
         _log.error("[beta_core] NAV WRITE FAILED for %s: %s", d.isoformat(), e)
-        return False
+        return False, f"{type(e).__name__}: {str(e)[:160]}"
 
 
 async def continuity_state() -> dict:

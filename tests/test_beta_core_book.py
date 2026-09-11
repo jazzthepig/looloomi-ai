@@ -483,35 +483,52 @@ def test_write_reports_failure_when_the_insert_RETURNS_false():
     the failure, because the whole failure mode is that it looks fine."""
     import asyncio
     import datetime as _dt
-    import src.api.store as store
+    import src.api.rpc_diagnostics as diag
 
+    # ⚠️ S-329: the seam moved. `_write` used to call
+    # `store.supabase_insert_table` (bare bool); it now calls
+    # `insert_with_detail`, which returns (ok, detail) so the REASON reaches the
+    # heartbeat instead of dying in a Railway log line. Patching the old seam
+    # here would silently exercise the real path — a mock aimed at a moved seam
+    # does not error, it tests something else (S-323q).
     calls = {}
-    original = store.supabase_insert_table
+    original = diag.insert_with_detail
 
     async def _reject(table, rows):
         calls["table"] = table
-        return False                      # exactly how a 400 surfaces — no exception
+        # exactly how a 400 surfaces — no exception, and now with the reason
+        return False, {"outcome": "http_error", "status": 400,
+                       "body": 'column "x" does not exist'}
 
     async def _accept(table, rows):
-        return True
+        return True, {"outcome": "ok", "status": 201}
 
     try:
-        store.supabase_insert_table = _reject
+        diag.insert_with_detail = _reject
         got = asyncio.run(bc._write(_dt.date(2026, 8, 9), 1.0, 1.0, 0.0, 0.0, 0.5,
                                     "TIGHTENING", 1.0, 0.5, 3, 0.5, 0.0, True,
                                     {"BTC": 0.5}, "probe"))
-        assert got is False, (
-            "_write returned %r when the insert returned False — the caller will "
-            "cache a mark that was never persisted" % (got,))
+        assert got[0] is False, (
+            "_write returned %r when the insert returned False — the caller "
+            "will cache a mark that was never persisted" % (got,))
         assert calls.get("table") == "beta_core_nav"
+        # S-329: reporting failure is necessary but no longer sufficient — the
+        # REASON has to come back too, or durable_write_failed is undiagnosable
+        # from outside, which is precisely what cost a full round on 2026-09-11.
+        assert got[1], "_write reported failure with no reason"
+        assert "400" in got[1] and "does not exist" in got[1], (
+            "the reason must carry the status and the PostgREST body verbatim, "
+            "not a paraphrase: %r" % (got[1],))
 
-        store.supabase_insert_table = _accept
-        assert asyncio.run(bc._write(_dt.date(2026, 8, 9), 1.0, 1.0, 0.0, 0.0, 0.5,
-                                     "TIGHTENING", 1.0, 0.5, 3, 0.5, 0.0, True,
-                                     {"BTC": 0.5}, "probe")) is True, \
-            "a successful insert must report True, or every mark is treated as failed"
+        diag.insert_with_detail = _accept
+        ok2 = asyncio.run(bc._write(_dt.date(2026, 8, 9), 1.0, 1.0, 0.0, 0.0, 0.5,
+                                    "TIGHTENING", 1.0, 0.5, 3, 0.5, 0.0, True,
+                                    {"BTC": 0.5}, "probe"))
+        assert ok2[0] is True, (
+            "a successful insert must report True, or every mark is treated "
+            "as failed")
     finally:
-        store.supabase_insert_table = original
+        diag.insert_with_detail = original
 
 
 
@@ -558,10 +575,11 @@ def test_cap_source_is_actually_written_not_just_declared():
     the writer's parameter list mentioned cap_source in the `note` string all along."""
     import asyncio
     import datetime as _dt
-    import src.api.store as store
+    import src.api.rpc_diagnostics as diag
 
+    # S-329: seam moved to insert_with_detail (see the note in the sibling test).
     captured = {}
-    original = store.supabase_insert_table
+    original = diag.insert_with_detail
 
     async def _capture(table, rows):
         captured["table"] = table
@@ -569,12 +587,12 @@ def test_cap_source_is_actually_written_not_just_declared():
         return True
 
     try:
-        store.supabase_insert_table = _capture
+        diag.insert_with_detail = _capture
         asyncio.run(bc._write(_dt.date(2026, 8, 11), 1.0, 1.0, 0.0, 0.0, 0.5,
                               "TIGHTENING", 1.0, 0.5, 3, 0.5, 0.0, True,
                               {"BTC": 0.5}, "probe", cap_source="regime_map"))
     finally:
-        store.supabase_insert_table = original
+        diag.insert_with_detail = original
 
     row = captured.get("row", {})
     assert "cap_source" in row, (
