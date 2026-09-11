@@ -56,10 +56,26 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parents[2]
 
 # Call sites that mean "this string is a table we write to".
+#
+# ⚠️ S-330:这张表本身是一个**手写枚举**,所以它会随着写入函数的演化而失明。
+# 2026-09-11 实测:`beta_core._write()` 从 `supabase_insert_table` 改到
+# `insert_with_detail`(为了把状态码和 PostgREST body 带回心跳,S-329),
+# 于是扫描器**看不见 `beta_core_nav` 被写入了**,preflight 立刻报
+# 「manifest lists nothing the source no longer writes」。
+#
+# 那条报警是对的,但它描述的是症状。真正的事实是:
+# **一个「哪些函数算写入」的清单,和它所守护的代码是分开演化的** ——
+# 换一个写入函数,覆盖面就静默地少一块,而少的那一块恰恰是新代码。
+#
+# 加新写入函数时必须同时加到这里。`test_every_written_table_exists` 两半
+# (离线 manifest + 线上 schema-drift)都建立在这张表之上。
 _WRITE_FUNCS = {
     "supabase_insert_table",
     "supabase_upsert_table",
     "supabase_delete_table",
+    # S-328/S-329 write path — same semantics, returns (ok, detail) so the
+    # failure reason reaches the heartbeat instead of a log line nobody reads.
+    "insert_with_detail",
 }
 
 # `_TABLE = "foo"` / `_NAV_TABLE = "foo"` module constants.
