@@ -172,7 +172,7 @@ async def _fetch_cis_pillar_o_live(symbols: list[str]) -> pd.Series:
             async with httpx.AsyncClient(timeout=15) as client:
                 r = await client.get(
                     f"{_SB_URL}/rest/v1/cis_scores",
-                    params={"select": "symbol,pillar_o", "order": "ts.desc",
+                    params={"select": "symbol,pillar_o", "order": "recorded_at.desc",
                             "limit": len(symbols) * 2},
                     headers={"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"})
                 if r.status_code == 200:
@@ -197,7 +197,7 @@ async def _load_state() -> dict[str, Any]:
             async with httpx.AsyncClient(timeout=15) as client:
                 r = await client.get(
                     f"{_SB_URL}/rest/v1/{STATE_TABLE}",
-                    params={"select": "*", "order": "ts.desc", "limit": 1},
+                    params={"select": "*", "order": "updated_at.desc", "limit": 1},
                     headers={"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"})
                 if r.status_code == 200 and r.json():
                     row = r.json()[0]
@@ -319,6 +319,31 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
                 "n_assets_with_data": len(data)}
 
     pillar_o = await _fetch_cis_pillar_o_live(list(data.keys()))
+
+    # ⚠️ S-330:**空的 pillar_O 必须在这里拒绝,不能带着空表往下走。**
+    #
+    # 2026-09-11 实测:`_fetch_cis_pillar_o_live` 的查询写的是
+    # `order=ts.desc`,而 `cis_scores` 根本没有 `ts` 列 —— PostgREST 每次
+    # 回 400 `column cis_scores.ts does not exist`,而调用点把它
+    # `_logger.debug` 掉了(生产默认不可见),于是返回一个空 Series。
+    #
+    # 空 Series 一路走到 `build_quality_score()` 的
+    # `cis_long.pivot(index="date", ...)`,在一个**空 DataFrame** 上取不到
+    # `date` 列,最后以 `KeyError: 'date'` 的形式炸在 pandas 里三层之外。
+    #
+    # > **一个「上游没有数据」的事实,被渲染成了一个「代码有 bug」的样子。**
+    # > 前者要去查数据源,后者会让人去读 pandas 的调用栈 —— 修法完全不同。
+    #
+    # 数据是在的(实测 948 行 / 58 个标的 / pillar_o 全非空 / 10 分钟前)。
+    # 所以这里拒绝,并且**说出是哪一个上游空了**。
+    if pillar_o is None or len(pillar_o) == 0:
+        return {"status": "skipped", "reason": "insufficient_data",
+                "detail": ("CIS pillar_O came back empty — the book cannot "
+                           "score quality without it. This is an UPSTREAM "
+                           "emptiness, not a bug in the weighting: check "
+                           "cis_scores freshness and the Redis key "
+                           "`cis:local_scores` (S-330)."),
+                "n_priced": len(data), "date": today.isoformat()}
 
     # Build return panels
     today_ts = pd.Timestamp(today)
