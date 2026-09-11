@@ -85,3 +85,52 @@ async def write_nav_row(table: str, row: Mapping[str, Any]) -> NavWrite:
 
     _log.info("[NAV] %s ← %s", table, row.get("mark_date"))
     return NavWrite(True, table)
+
+
+async def nav_row_exists(table: str, day: str) -> bool | None:
+    """Is there a row for `day` in `table`? **Three-valued: True / False / None.**
+
+    S-321 discovered this on `factor_tilt_nav` / `pod_aggregator_nav`: both were
+    0 rows for weeks while every run returned `already_marked_today`, because
+    the check asked Redis state and never asked the table.
+
+    > **「我记得我做过」和「它确实在那里」是两个状态。**
+    > Whether to skip is a judgement about the SECOND one, so ask the second one.
+
+    ⚠️ S-327: that fix was written into the two books being debugged at the time
+    and into NO others, and it was copy-pasted rather than shared — two private
+    `_row_exists_for` definitions, in two files. Measured 2026-09-11: five book
+    loops reported `ok` with zero consecutive failures for two days while their
+    NAV tables had not grown since 09-09, because `already_marked` sits in
+    `PROGRESS_STATUS` and was being returned on the strength of state alone.
+
+    **A lesson applied to the call sites that broke, and not to the class, is a
+    lesson that will be re-learned by the next call site.**
+
+    `None` means we could not read the table. Callers **must not** treat it as
+    True: 读不到 ≠ 已经写过, and re-marking is idempotent while a silently
+    skipped day is not recoverable (§3).
+    """
+    if not table or not day:
+        return None
+    try:
+        import httpx
+
+        from src.api.store import _SB_KEY, _SB_URL
+        if not _SB_URL or not _SB_KEY:
+            return None
+        async with httpx.AsyncClient(timeout=10) as c:
+            r = await c.get(
+                f"{_SB_URL}/rest/v1/{table}"
+                f"?select=mark_date&mark_date=eq.{day}&limit=1",
+                headers={"apikey": _SB_KEY,
+                         "Authorization": f"Bearer {_SB_KEY}"})
+        if r.status_code != 200:
+            _log.warning("[NAV] %s existence check HTTP %s — returning None, "
+                         "which the caller must NOT read as 'already written'",
+                         table, r.status_code)
+            return None
+        return bool(r.json())
+    except Exception as e:                                        # noqa: BLE001
+        _log.warning("[NAV] %s existence check raised: %s", table, e)
+        return None
