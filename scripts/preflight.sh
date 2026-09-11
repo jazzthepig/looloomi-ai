@@ -892,6 +892,17 @@ echo "  ✓ book loops retry inside the valuation window (S-323r)"
 # fapi.binance.com; pod_aggregator twice per symbol. source_policy documented
 # the rule and named the first violator, in the same repo, for weeks — and the
 # violator never called it. A rule in prose gets re-broken; this one fails here.
+# ── S-327: a book must ask the TABLE, not its own cache ─────────────────────
+# Measured 2026-09-11: five book loops reported ok with zero failures for two
+# days while their NAV tables had not grown since 09-09. `already_marked` is in
+# PROGRESS_STATUS, and six books returned it on cached state alone, so one
+# failed write made every later run a silent success.
+# S-321 fixed exactly the two books then under investigation, by copy-pasting a
+# private helper into each. The scope of a lesson has to be the class.
+python3 -m pytest tests/test_a_book_asks_the_table_not_the_cache.py -q || {
+  echo "  ✗ a book trusts its cache over the record — do not push"; exit 1; }
+echo "  ✓ books verify the NAV row exists before skipping (S-327)"
+
 python3 -m pytest tests/test_books_do_not_fan_out_to_free_venue_apis.py -q || {
   echo "  ✗ a book is pricing its universe off a FREE venue API — do not push"; exit 1; }
 echo "  ✓ bulk prices on paid sources; venue reads are post-trade (S-323u/v)"
