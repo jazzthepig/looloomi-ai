@@ -36,10 +36,11 @@ symptom in the ledger four times without once fixing the layer that produced it.
 """
 from __future__ import annotations
 
+import json
 import time
 from typing import Any
 
-__all__ = ["rpc_with_detail", "render_detail"]
+__all__ = ["rpc_with_detail", "render_detail", "insert_with_detail"]
 
 
 async def rpc_with_detail(fn_name: str,
@@ -151,3 +152,79 @@ def render_detail(detail: dict, *, prefix: str = "") -> str:
     if o == "exception":
         return f"{prefix}{fn}: {detail.get('body')}{took}"
     return f"{prefix}{fn}: outcome={o!r} (unrecognised — this is not success)"
+
+
+async def insert_with_detail(table: str, rows: list) -> tuple[bool, dict]:
+    """Insert rows and return `(ok, detail)` — the WRITE-path twin of
+    `rpc_with_detail` (S-328).
+
+    WHY. `supabase_insert_table` returns a bare bool, and `nav_persist` says so
+    itself: it "returns False for a role refusal, missing credentials, an empty
+    payload AND a transport error. It does not say which, so neither do we."
+
+    Measured 2026-09-11: ① reported `durable_write_failed` every day and the
+    cause could not be determined from outside — the status code and body exist
+    only in a Railway log line that nothing surfaces. Five other books hid the
+    same failure entirely behind a cached `already_marked` (S-327).
+
+    Same collapse as the RPC path before S-323m, one layer over. This returns
+    the status and the PostgREST body, which is the sentence that names the
+    cause.
+    """
+    from src.api import store
+
+    detail: dict[str, Any] = {
+        "table": table, "n_rows": len(rows or []), "outcome": None,
+        "status": None, "body": None, "elapsed_ms": None,
+        "role_refusal": None,
+    }
+    if not table or not rows:
+        detail["outcome"] = "empty_payload"
+        return False, detail
+
+    # The role gate first — it is the one cause that never reaches the network,
+    # and reporting it as a transport failure sends the reader to the wrong lane.
+    try:
+        from src.api.runtime_role import refuse_write
+        refusal = refuse_write(table)
+    except Exception:                                           # noqa: BLE001
+        refusal = None
+    if refusal:
+        detail["outcome"] = "role_refusal"
+        detail["role_refusal"] = str(refusal)[:300]
+        return False, detail
+
+    if not store._SB_URL or not store._SB_KEY:
+        detail["outcome"] = "not_configured"
+        return False, detail
+
+    url = f"{store._SB_URL}/rest/v1/{table}"
+    headers = {"apikey": store._SB_KEY,
+               "Authorization": f"Bearer {store._SB_KEY}",
+               "Content-Type": "application/json",
+               "Prefer": "return=minimal"}
+    t0 = time.time()
+    try:
+        resp = await store._supabase_request_with_retry(
+            "POST", url, content=json.dumps(rows), headers=headers)
+    except Exception as e:                                      # noqa: BLE001
+        detail["outcome"] = "exception"
+        detail["body"] = f"{type(e).__name__}: {str(e)[:200]}"
+        detail["elapsed_ms"] = int((time.time() - t0) * 1000)
+        return False, detail
+    detail["elapsed_ms"] = int((time.time() - t0) * 1000)
+
+    if resp is None:
+        detail["outcome"] = "no_response"
+        detail["breaker_open"] = bool(time.time() < store._cb_open_until)
+        return False, detail
+
+    detail["status"] = resp.status_code
+    if resp.status_code in (200, 201, 204):
+        detail["outcome"] = "ok"
+        return True, detail
+
+    # THE BODY IS THE POINT — PostgREST puts our own schema's message here.
+    detail["outcome"] = "http_error"
+    detail["body"] = (resp.text or "")[:400]
+    return False, detail
