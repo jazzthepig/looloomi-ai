@@ -473,7 +473,15 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
 
     # NAV_TABLE was declared at line 56 and never written to — same defect as
     # pod_aggregator (S-214). Both books marked into their state row only.
-    nav_write = NavWrite(True, NAV_TABLE, "dry_run")
+    # ⚠️ S-332:这里原来是 `NavWrite(True, ...)` —— 于是 `as_payload()` 的
+    # `nav_persisted` 渲染成 **true**,而 dry run 一行都没写。
+    # 实测 2026-09-12:`/internal/book-dryrun` 返回 `nav_persisted: true`
+    # 而 `factor_tilt_nav` 是 **0 行**。
+    #
+    # **一个字段声称发生过的事,没有发生。** 而 `nav_persist` 的 docstring
+    # 自己写着「`nav_persisted` is a fact, not an aspiration」——
+    # 这一行正是把它变回了 aspiration。
+    nav_write = NavWrite(False, NAV_TABLE, "dry_run — nothing was written")
     if not dry_run:
         # ⚠️ **先写行,再存 state** (S-321)。原来的顺序是反的:state 先被标成
         # 「今天已 mark」,而 `write_nav_row` 随后失败 —— 于是 state 声称成功、
