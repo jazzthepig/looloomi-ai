@@ -64,24 +64,45 @@ async def write_nav_row(table: str, row: Mapping[str, Any]) -> NavWrite:
         # not a mark — it is a number in a table.
         return NavWrite(False, table, "row has no mark_date")
 
+    # ⚠️ S-329:这里原来调 `supabase_insert_table`,拿到一个**裸 bool**,
+    # 然后照实说「不知道是哪一种」。那句话是诚实的,但代价是:
+    # 2026-09-11 ① 每天报 `durable_write_failed`,而真因(状态码 + PostgREST
+    # 的原话)只存在于一行没人读的 Railway 日志里 —— 我们花了一整轮排除法,
+    # 逐个否掉 role gate / schema drift / 早退 / 204,才把它缩到「瞬时」。
+    #
+    # `insert_with_detail` 是 S-323m 那个 `(data, detail)` 模式搬到写路径:
+    # **同一把 key、同一组 header、同一层重试、同一个 role gate**,
+    # 但把互斥的结局分开报,并带回 body。Minimax-A 在 §PHASE-B 里独立提了同一条。
+    #
+    # **原因装观测,不装假设。** 下一次失败会自己说出它是谁。
     try:
-        from src.api.store import supabase_insert_table
+        from src.api.rpc_diagnostics import insert_with_detail
     except Exception as e:                                        # noqa: BLE001
-        return NavWrite(False, table, f"store import failed: {type(e).__name__}")
+        return NavWrite(False, table, f"diagnostics import failed: {type(e).__name__}")
 
     try:
-        ok = await supabase_insert_table(table, [dict(row)])
+        ok, detail = await insert_with_detail(table, [dict(row)])
     except Exception as e:                                        # noqa: BLE001
         _log.warning("[NAV] %s write raised: %s", table, e)
         return NavWrite(False, table, f"{type(e).__name__}: {str(e)[:120]}")
 
     if not ok:
-        # supabase_insert_table returns False for a role refusal, missing
-        # credentials, an empty payload AND a transport error. It does not say
-        # which, so neither do we — inventing a cause here would be worse.
-        _log.warning("[NAV] %s write returned False", table)
-        return NavWrite(False, table, "insert returned False "
-                                      "(role gate, credentials, or transport)")
+        outcome = detail.get("outcome")
+        # Each of these has a DIFFERENT owner. Collapsing them is what made
+        # durable_write_failed undiagnosable from outside.
+        if outcome == "role_refusal":
+            why = f"role gate refused: {detail.get('role_refusal')}"
+        elif outcome == "not_configured":
+            why = "SUPABASE_URL / SUPABASE_KEY not set on this process"
+        elif outcome == "no_response":
+            why = (f"no response after retries [{detail.get('elapsed_ms')}ms]"
+                   f"{' — breaker OPEN' if detail.get('breaker_open') else ''}")
+        elif outcome == "http_error":
+            why = (f"HTTP {detail.get('status')} — {detail.get('body')}")
+        else:
+            why = f"outcome={outcome!r} (unrecognised — NOT success)"
+        _log.warning("[NAV] %s write failed: %s", table, why)
+        return NavWrite(False, table, why)
 
     _log.info("[NAV] %s ← %s", table, row.get("mark_date"))
     return NavWrite(True, table)
