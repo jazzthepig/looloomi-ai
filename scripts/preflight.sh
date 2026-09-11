@@ -899,6 +899,16 @@ echo "  ✓ book loops retry inside the valuation window (S-323r)"
 # failed write made every later run a silent success.
 # S-321 fixed exactly the two books then under investigation, by copy-pasting a
 # private helper into each. The scope of a lesson has to be the class.
+# ── S-332: pandas 3 removed APIs — a helper can kill a book's daily mark ────
+# 2026-09-12 via book-dryrun: pod_aggregator died on
+#   TypeError: NDFrame.fillna() got an unexpected keyword argument 'method'
+# from ONE line in w5_forensics_external.py, imported by pod_aggregator, r62 and
+# r63 alike. The sandbox runs pandas 2.x where it is merely deprecated;
+# production runs 3.x where it is gone — passing locally was not passing.
+python3 -m pytest tests/test_pandas3_removed_apis.py -q || {
+  echo "  ✗ a live module uses an API pandas 3 removed — do not push"; exit 1; }
+echo "  ✓ no pandas-3-removed APIs on a live path (S-332)"
+
 python3 -m pytest tests/test_a_book_asks_the_table_not_the_cache.py -q || {
   echo "  ✗ a book trusts its cache over the record — do not push"; exit 1; }
 echo "  ✓ books verify the NAV row exists before skipping (S-327)"
