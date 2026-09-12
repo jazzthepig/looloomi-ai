@@ -576,6 +576,48 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
                     "date": today.isoformat(), "n": len(w_tgt),
                     "gross": round(sum(abs(x) for x in w_tgt.values()), 4)}
 
+    # ── An empty book is not a flat day (S-336) ──────────────────────────────
+    # THE 26 IDENTICAL MARKS. Measured 2026-09-12: `fusion_paper_nav` held 26
+    # rows spanning 08-15…09-09 with ONE distinct value in every column that
+    # constitutes a record — nav 0.9995 every day, daily_return exactly -cost
+    # every day, NAV never compounding (26 days of -5bps would be 0.9871).
+    # Only `top_longs` varied, because w_tgt is computed from live data while
+    # w_held came back empty.
+    #
+    # The loop below used to start at `price_pnl = 0.0` and iterate `w_held`.
+    # With `w_held == {}` it never executed, and **an empty accumulation was
+    # written as a flat day** — S-194 exactly, in the one book that never called
+    # `mark_coverage.weighted_mark`, the function built to refuse this.
+    #
+    # AND IT WAS DIAGNOSED BEFORE, AT THE SAME NUMBER. `_load_state`'s docstring
+    # says "The 5 identical marks at NAV=0.9995 (S-176) were the result of this
+    # function returning {}". The remedy then was a Supabase fallback — which
+    # makes the state read less likely to fail. **It never made the failure
+    # visible**, so the book kept its licence to record a flat day when it did
+    # not know what it held, and did so 26 more times.
+    #
+    # S-326 said the ①/② split belongs to the caller, because only the caller
+    # can tell "holds nothing by design" from "state was not read". Here is that
+    # split, decided against the TABLE rather than against the cache:
+    from src.data.signals.nav_persist import nav_table_has_any_rows
+
+    if not w_held:
+        _has_history = await nav_table_has_any_rows(_NAV_TABLE)
+        if _has_history is None:
+            return {"status": "skipped", "date": today.isoformat(),
+                    "reason": "state is empty and the NAV table could not be read "
+                              "— cannot tell inception from lost state, refusing "
+                              "rather than marking a day we cannot justify"}
+        if _has_history:
+            return {"status": "skipped", "date": today.isoformat(),
+                    "reason": f"state is empty but {_NAV_TABLE} already has marks "
+                              "— this book held a position yesterday and cannot say "
+                              "what. A flat mark here is not arithmetic, it is a "
+                              "claim we did not observe (S-194/S-326/S-336)"}
+        # Table empty AND state empty: genuine inception. Holding nothing times
+        # any market really is zero, and that IS arithmetic.
+        _log.info("[fusion] inception — no prior marks and no state, NAV 1.0")
+
     # Mark-to-market PnL: Σ w_held × (price[t]/price[t-1] - 1)
     price_pnl = 0.0
     for sym, wi in w_held.items():

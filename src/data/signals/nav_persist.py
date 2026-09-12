@@ -155,3 +155,57 @@ async def nav_row_exists(table: str, day: str) -> bool | None:
     except Exception as e:                                        # noqa: BLE001
         _log.warning("[NAV] %s existence check raised: %s", table, e)
         return None
+
+
+async def nav_table_has_any_rows(table: str) -> bool | None:
+    """Has this book EVER marked? **Three-valued: True / False / None** (S-336).
+
+    THE QUESTION THIS ANSWERS, and why it needs its own function. When a book
+    loads empty state, `weights` is `{}` — and S-326 recorded that `{}` has two
+    sources with opposite remedies:
+
+        ① the book holds nothing BY DESIGN      → mark a flat day (arithmetic)
+        ② the state could not be read           → refuse (a flat mark is a lie)
+
+    `mark_coverage.weighted_mark` cannot separate them and therefore refuses,
+    which is correct at that layer and is why `two_layer` has not marked since
+    2026-08-22. The comment there says the split belongs to the CALLER.
+
+    This is the fact the caller needs. A book whose table is empty and whose
+    state is empty is at a genuine inception — nothing was lost, mark flat at
+    NAV 1.0. A book whose table HAS rows and whose state is empty has lost its
+    position: it held something yesterday and cannot say what. Those are the two
+    cases, and only the table can tell them apart.
+
+    Measured 2026-09-12 on `fusion_paper_nav`: 26 rows, every one NAV 0.9995,
+    `daily_return` exactly `-cost`, NAV never compounding — 26 marks produced by
+    case ② and recorded as case ①. `_load_state`'s own docstring already named
+    this at 5 marks (S-176) and the remedy chosen then was a Supabase fallback,
+    which makes the failure less LIKELY without making it VISIBLE.
+
+    `None` means we could not read. Callers must not read it as False: "I could
+    not check whether this book has history" is not "this book has no history",
+    and treating it as inception would reset a live NAV to 1.0.
+    """
+    if not table:
+        return None
+    try:
+        import httpx
+
+        from src.api.store import _SB_KEY, _SB_URL
+        if not _SB_URL or not _SB_KEY:
+            return None
+        async with httpx.AsyncClient(timeout=10) as c:
+            r = await c.get(
+                f"{_SB_URL}/rest/v1/{table}?select=mark_date&limit=1",
+                headers={"apikey": _SB_KEY,
+                         "Authorization": f"Bearer {_SB_KEY}"})
+        if r.status_code != 200:
+            _log.warning("[NAV] %s history check HTTP %s — returning None, which "
+                         "the caller must NOT read as 'never marked'",
+                         table, r.status_code)
+            return None
+        return bool(r.json())
+    except Exception as e:                                        # noqa: BLE001
+        _log.warning("[NAV] %s history check raised: %s", table, e)
+        return None
