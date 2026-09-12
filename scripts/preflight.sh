@@ -924,6 +924,15 @@ python3 -m tests.test_a_failed_write_cannot_report_marked || {
   echo "  ✗ a book can report a mark it never persisted — do not push"; exit 1; }
 echo "  ✓ a failed write cannot report marked (S-334)"
 
+# ── S-335: the failure path S-334 added must actually execute ────────────────
+# /internal/book-dryrun returned six clean `marked` results minutes after S-334
+# landed, and `dry_run=True` skips the entire `if not dry_run:` branch — which is
+# everything S-334 changed. Six green results, zero lines of the new code run.
+# This drives each writer with a FAILING insert, the branch no other check reaches.
+python3 -m tests.test_the_write_failure_path_actually_runs || {
+  echo "  ✗ a book cannot report its own write failure — do not push"; exit 1; }
+echo "  ✓ the write failure path actually runs (S-335)"
+
 python3 -m pytest tests/test_books_do_not_fan_out_to_free_venue_apis.py -q || {
   echo "  ✗ a book is pricing its universe off a FREE venue API — do not push"; exit 1; }
 echo "  ✓ bulk prices on paid sources; venue reads are post-trade (S-323u/v)"
