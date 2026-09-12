@@ -19200,3 +19200,48 @@ S-334 修复整个还原了。已重做。**我在给「守卫放错位置」写
 另:第一次变异测试我用 `grep -E "✗|discard"` 判定结果,
 而它匹配到了测试自己名字里的 "discard" —— **量具读到了自己的名字并报告成功**,
 与本条主题同形。改用 exit code。
+
+
+---
+
+## S-335 — 六个绿色的 dry run,零行被验证的代码 (2026-09-12)
+
+S-334 落地后几分钟,`/internal/book-dryrun` 回来:**六本 `marked`,零 error**。
+看起来像验收。不是。
+
+    if not dry_run:
+        _ok, _why = await _write_nav(...)      # ← S-334 改的全部内容
+        if not _ok:
+            return {"status": "mark_failed", ...}
+        await _redis_set(...)
+
+`dry_run=True` **整段跳过**。dry run 证明的是「这本账算得出一个 mark」,
+它对「写失败时这本账会做什么」**一个字都没说** —— 而那是 S-334 唯一动过的东西。
+
+> **六个绿色结果,而被验证的代码一行都没执行。**
+
+这与 S-334 修的缺陷同形(守卫放在故障到不了的位置),
+也与 S-334 自己第一版守卫的洞同形(反向控制测的是我想到的那层)。
+**一天之内第三次**,所以它拿到的是一个测试,不是一条备注。
+
+修:`test_the_write_failure_path_actually_runs` 用**失败的 insert** 直接驱动每个 writer ——
+那是其他任何检查都到不了的分支。断言三件事:返回 `(False, why)` 而非 None / 裸 False;
+`why` 非空且**带着被观测到的状态码与 PostgREST body**(S-323m:装观测不装假设);
+成功时返回 `(True, "")`(反向控制 —— 如果两种情况都返回 False,这个守卫什么也没证明)。
+实测七本全部输出 `HTTP 403 [12ms] — permission denied for table`。
+顺序(调用方先看 `_ok` 再推进 state)由 S-334 的结构守卫断言,两者合起来覆盖两半:
+**这个文件证明 writer 会说,那个文件证明调用方会听。**
+
+⚠️ **它第一次运行抓到三件事,两件是我的测试自己的**:
+① fusion 的 `det` 我给了个 dict,而 writer 读 `det.loc[ts]` / `ts in det.index` ——
+writer 正确地返回了 `(False, "AttributeError: 'dict' object has no attribute 'index'")`,
+**但坏掉的是我的 fixture,而一个 fixture 写错的测试会把自己的缺陷算在代码头上**;
+② 覆盖范围检查(从源码推导「哪些模块有 `(ok, why)` writer」)当场报出
+**`beta_core_paper` 没被覆盖** —— 我是按「我改了哪六本」手写的清单,
+**漏掉了那本早就有这个模式的**;这正是 S-327 手写 scope 漏四本的同一形状,
+只是这次那个守卫在同一分钟内就抓住了它。
+
+⚠️ 另记(未修,已记):六本账的 `try:` 同时包住**载荷构造**与**写入**,
+所以构造期的 bug 会以 `durable_write_failed` 的名义上报 ——
+「行建不出来」与「行写不进去」修法不同。
+当前 reason 里带着 `AttributeError:` 所以实践中可分,但两者在状态名上仍然同形。
