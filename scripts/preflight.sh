@@ -933,6 +933,17 @@ python3 -m tests.test_the_write_failure_path_actually_runs || {
   echo "  ✗ a book cannot report its own write failure — do not push"; exit 1; }
 echo "  ✓ the write failure path actually runs (S-335)"
 
+# ── S-336: a curve that never moves is not a track record ────────────────────
+# fusion_paper_nav, live 2026-09-12: 26 marks, ONE distinct value in every column
+# that constitutes a record. nav 0.9995 every day, daily_return exactly -cost,
+# NAV never compounding. w_held came back empty, the P&L loop never executed, and
+# an empty accumulation was written as a flat day — S-194, in the one book that
+# never called weighted_mark. `validated` flips true at 60 days; at mark 60 this
+# would have certified sixty identical rows.
+python3 -m tests.test_a_curve_that_never_moves_is_not_a_record || {
+  echo "  ✗ a book records a curve it cannot have observed — do not push"; exit 1; }
+echo "  ✓ a curve that never moves is not a record (S-336)"
+
 python3 -m pytest tests/test_books_do_not_fan_out_to_free_venue_apis.py -q || {
   echo "  ✗ a book is pricing its universe off a FREE venue API — do not push"; exit 1; }
 echo "  ✓ bulk prices on paid sources; venue reads are post-trade (S-323u/v)"
