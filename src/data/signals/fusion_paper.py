@@ -57,13 +57,53 @@ import pandas as pd
 _log = logging.getLogger("fusion_paper")
 
 # ── Persistence keys ──────────────────────────────────────────────────────────
-_STATE_KEY = "fusion_paper:state"
+# S-336. Stamped on every NAV row so a curve can never be assembled across a
+# voided segment and a live one — that would splice fabricated marks onto real
+# ones and read as continuous. Same mechanism as beta_core's `_INCEPTION_ID`,
+# adopted here for the same reason it was adopted there.
+#
+# v1 (2026-08-15 .. 2026-09-09, 26 marks) IS VOIDED. `fusion_paper_state` never
+# existed in Postgres, so every `_save_state` returned False and every
+# `_load_state` returned {} — `nav` reset to 1.0 and `w_held` to {} on each
+# cycle, the P&L loop over an empty dict never ran, and the empty accumulation
+# was recorded as a flat day. Those 26 rows carry ONE distinct NAV (0.9995), a
+# daily_return identically equal to -cost, and no compounding, while asserting
+# 18 positions at 0.667 gross. Both claims cannot be true.
+#
+# Not corrected, because there is nothing to correct from: the book never knew
+# what it held, so the true NAVs are unrecoverable. Voided instead.
+_INCEPTION_ID = "v2"
+
+# Scoped by the inception, so a cached state from the voided segment cannot be
+# read back into the live one. beta_core learned this the hard way (its §7 note:
+# moving v3 → v4 left the v3 Redis dict in place, complete and wrong).
+_STATE_KEY = f"fusion_paper:state:{_INCEPTION_ID}"
 _NAV_TABLE = "fusion_paper_nav"
 # 2026-08-19, S-176: durable state in Supabase. Redis is the cache, not the
 # system of record — the live book showed 5 identical NAV=0.9995 marks because
-# Redis state was lost between cycles (root cause still being diagnosed:
-# UPSTASH_REDIS_REST_URL config vs key path vs TTL). Schema lives in
-# `/tmp/cometcloud_reports/strategy2_redis_state_fix_proposal_2026-08-19.md`.
+# state was lost between cycles.
+#
+# ⚠️ S-336, 2026-09-12 — THE ROOT CAUSE, MEASURED. The line above used to end
+# "(root cause still being diagnosed: UPSTASH_REDIS_REST_URL config vs key path
+# vs TTL)". **None of those three was it, and listing them sent every later
+# reader back to Redis.** Checked against the live catalog:
+#
+#     select to_regclass('public.fusion_paper_state')  ->  NULL
+#
+# **The table has never existed.** Every `_save_state` POSTed to a table that was
+# not there, got False back, correctly declined to update the cache, and logged
+# one warning. Every `_load_state` then fell through to the same missing table
+# and returned {}. So the Supabase fallback added in S-176 to fix the 5 identical
+# marks could not work, and the count ran 5 -> 26 before anyone looked.
+#
+# This is S-166 (eleven tables the code wrote to did not exist). Its offline half
+# checks the manifest; its ONLINE half needs the live catalog and is the half
+# somebody has to remember to run. Swept all 37 declared tables on 2026-09-12:
+# this was the only one missing. Created by migration
+# `s336_fusion_paper_state_the_table_that_never_existed`.
+#
+# A comment that names the author's suspects is worse than no comment: it reads
+# like a diagnosis (S-323m).
 _STATE_TABLE = "fusion_paper_state"
 
 # ── R64 frozen cell constants ────────────────────────────────────────────────
@@ -702,6 +742,8 @@ async def _write_nav(d, nav, dret, weights, cost, fill, det, today_ts):
             "capacity_used_pct": fill["capacity"]["used_pct"],
             "detector_fired": bool(det.loc[today_ts]) if today_ts in det.index else False,
             "cell_w_r46": FUSION_W_R46,
+            # S-336: which incarnation produced this row. See _INCEPTION_ID.
+            "inception_id": _INCEPTION_ID,
             "top_longs": longs,
             "top_shorts": shorts,
             "note": f"fill={fill['totals']['fill_ratio_overall']:.3f} slip={fill['totals']['weighted_slippage_bps']:.1f}bps cap={fill['capacity']['status']}",
@@ -730,6 +772,12 @@ async def get_curve(limit: int = 400) -> dict:
                                               "fill_ratio_overall,weighted_slippage_bps,"
                                               "capacity_status,capacity_used_pct,detector_fired,"
                                               "cell_w_r46,top_longs,top_shorts,note",
+                                    # S-336: the live segment only. A voided row
+                                    # must never reach a curve, a Sharpe, or the
+                                    # `validated` countdown — `days` is computed
+                                    # from len(rows) directly below.
+                                    "inception_id": f"eq.{_INCEPTION_ID}",
+                                    "void_reason": "is.null",
                                     "order": "mark_date.asc", "limit": str(limit)},
                             headers={"apikey": key, "Authorization": f"Bearer {key}"})
             rows = r.json() if r.status_code == 200 else []
