@@ -19245,3 +19245,89 @@ writer 正确地返回了 `(False, "AttributeError: 'dict' object has no attribu
 所以构造期的 bug 会以 `durable_write_failed` 的名义上报 ——
 「行建不出来」与「行写不进去」修法不同。
 当前 reason 里带着 `AttributeError:` 所以实践中可分,但两者在状态名上仍然同形。
+
+
+---
+
+## S-336 — 26 个「前向记录」,是同一天抄了 26 遍 (2026-09-12)
+
+我给 Jazz 的那条 curl 用了猜的字段名,回来 `n_days_marked: None, rows: 0` ——
+**那不是发现,那是我的查询写错了**(表里有 26 行)。
+**我交出去的量具,失败时长得像一个结论。** 换成真字段名之后:
+
+    GET /api/v1/signals/fusion-paper   days: 26 · 08-15 → 09-09 · validated: false
+
+    nav                  distinct = 1   [0.9995]
+    daily_return         distinct = 1   [-0.0005]
+    gross                distinct = 1   [0.6667]
+    n_positions          distinct = 1   [18]
+    fill_ratio_overall   distinct = 1   [0.9259]
+    top_longs            distinct = 23
+
+一本市场中性账,26 天的加密行情,**构成记录的每一个量都是同一个数字**。
+`daily_return` 每天精确等于 `-cost` —— 市场 P&L 恒为零。
+NAV 不复利:第 1 天和第 26 天都是 0.9995(26 天 -5bps 应该是 0.9871)。
+**只有权重在变** —— 那正是线索:`w_tgt` 来自实时数据,而 `w_held` 是空的。
+
+    price_pnl = 0.0
+    for sym, wi in w_held.items():      # w_held == {} → 循环从不执行
+        ...
+    daily_ret = price_pnl - cost_frac   # = -0.0005
+    nav_new = nav * (1.0 + daily_ret)   # nav 每次都是 1.0 → 0.9995
+
+**空的累加被写成了平的一天。** 这是 S-194,发生在**唯一一本从不调用
+`mark_coverage.weighted_mark` 的账**上 —— 而那个函数存在的全部理由就是拒绝这个。
+
+### 而它被诊断过,在同一个数字上
+
+`_load_state` 自己的 docstring 写着:
+> "The **5 identical marks at NAV=0.9995 (S-176)** were the result of this
+> function returning {} when Redis was empty"
+
+**同一本账,同一个数字,已经查清过一次。** 当时的修法是给状态读加一条 Supabase 兜底 ——
+让状态读**更不容易失败**,而**完全没有改变它失败时这本账记什么**。
+于是它复发了,从 5 条跑到 26 条,没有任何人发现。
+
+> **一个降低故障概率、却不改变故障发生时系统如何上报的修法,买到的是时间,不是信息。**
+
+⚠️ 而 `validated` 在 `VALIDATION_MIN_DAYS = 60` 翻 true ——
+**到第 60 个 mark,这条曲线会在 60 行一模一样的记录上报告 `validated: true`。**
+这是本周唯一一条会自己生产假证据的缺陷。
+
+### 修
+
+S-326 说 ①/② 的切分属于调用方,因为只有调用方分得清「按设计持零」和「状态没读到」。
+这里就是那个切分,而且**是对着表判的不是对着缓存判的**:
+新增三值 `nav_table_has_any_rows()` —— 表空 + 状态空 = 真 inception(记平的一天,那是算术);
+**表有行 + 状态空 = 昨天持着仓而今天说不出持了什么 → 拒绝**;读不到 → 拒绝(不是 False)。
+
+守卫看**产出**不看成因:无论是状态丢了、价格源死了、还是某个 stub 返回常数 ——
+**一条不动的曲线不是记录**,而产品就是可验证的前向记录。
+
+### ⚠️ 我的守卫第一版制造了一个假阳性,而且打在唯一诚实的那本账上
+
+拿实时数据一跑,冻结检测器标出**两本**:`fusion`(26)和 `two_layer`(28)。
+只有第一本是缺陷。two_layer 每一行都写着 `book_state: core_dead` / `positions: FLAT` /
+`n_positions: None` / `gross: 0` —— **它明说自己什么都没持**,
+持零 × 任何行情 = 0,那是算术不是谎,读的人一眼能看出它为什么不动。
+
+**标它等于指控唯一一本说实话的账,而一个会在诚实数据上报警的守卫会被静音** ——
+静音之后它还占着一个本该放真守卫的位置。
+
+真正的判据是**自相矛盾**,不是「平」:
+fusion 的行同时主张「持 18 个仓、gross 0.667」和「连续 26 天市场 P&L 恰好为零」,
+**这两件事不可能同时为真**;two_layer 什么都不主张,也什么都不报。
+改成 `curve_verdict()` 四值:`moves / flat_by_declaration / fabricated / unknown`。
+
+**这正是 S-326 的 ①/② 之分,第三次出现,这次出现在我自己的检测器里面。**
+
+### 实测全部六本
+
+    ✅ causal 55 · combined 50 · dingge 53 · scalable 50   moves(真记录)
+    ⚪ two_layer 28                                        flat_by_declaration(诚实)
+    🔴 fusion 26                                           fabricated
+
+⚠️ **这同时更正 S-326 对 two_layer 的判断**:PROJECT_STATE 写着它「正在丢掉唯一的产出」。
+它那 28 行是 `core_dead` 的平记录 —— **拒绝没有让我们损失一份记录**,
+两者都诚实,而 08-22 之后的拒绝是过度保守(调用方本可以像 fusion 现在这样自己判)。
+真正在丢东西的从来不是 two_layer。
