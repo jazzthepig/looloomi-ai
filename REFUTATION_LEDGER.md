@@ -19331,3 +19331,52 @@ fusion 的行同时主张「持 18 个仓、gross 0.667」和「连续 26 天市
 它那 28 行是 `core_dead` 的平记录 —— **拒绝没有让我们损失一份记录**,
 两者都诚实,而 08-22 之后的拒绝是过度保守(调用方本可以像 fusion 现在这样自己判)。
 真正在丢东西的从来不是 two_layer。
+
+
+### S-336 续:根因查到了 —— 那张表**从来没有存在过**
+
+Jazz 去 Supabase 跑 `select ... from fusion_paper_state limit 100;`,**报错**。
+他同时问:Supabase 改版后 SQL 不按 Save 就不会存,**是不是以前用 MCP 跑的表都没存过?**
+
+先分开两件事:**「存」和「跑」不是一回事。** Save 只保存那段 SQL 文本,
+Run 才是对数据库执行。没存 ≠ 没生效。但**跑失败了**就是另一回事了。直接查目录:
+
+    select to_regclass('public.fusion_paper_state')   ->   NULL
+
+**这张表从来没有存在过。** 于是整条链是:
+`_save_state` POST 到一张不存在的表 → 返回 False → **它正确地拒绝更新缓存**并打了一行 warning →
+`_load_state` 回落到同一张不存在的表 → 返回 `{}` →
+`nav` 重置 1.0、`w_held` 空 → 空累加写成平的一天 → 26 次。
+
+**每一层都在正确地工作,而合起来生产了一份假记录。**
+
+⚠️ 而 S-176 当时给这个症状开的药正是「加一条 Supabase 兜底」——
+**兜底到了一张不存在的表上**。那条注释还写着「root cause still being diagnosed:
+UPSTASH_REDIS_REST_URL config vs key path vs TTL」——
+**三个嫌疑人,没有一个是真凶**,而它把之后每一个读到的人都送回了 Redis(S-323m 同形,已改写)。
+
+**把 37 张声明表全扫了一遍:只有这一张缺。**
+所以 Jazz 担心的「MCP 跑的迁移可能都没生效」**不成立** —— 36/37 都在。
+
+### 处置(Jazz 拍板:加 inception_id 作废这一段)
+
+`fusion_paper_nav` 加 `inception_id` / `void_reason`,26 行全部标 `v1` + 作废理由;
+代码 `_INCEPTION_ID = "v2"`,写入带戳、读取按 `inception_id=eq.v2 & void_reason=is.null` 过滤,
+`_STATE_KEY` 也按 inception 分段(否则作废段的 Redis 状态会被读回活段 —— beta_core §7 吃过这个亏)。
+
+**作废而不删除,也不修正:书从来不知道自己持了什么,真实 NAV 无从重建。**
+26 天是代价。**在第 60 天发现,代价是 60 天,而且会连带发出一个 `validated: true`。**
+
+### 真正该补的控制:S-166 的**线上那一半**
+
+`schema_manifest.py` 自己写着:
+> "The gap was known, documented, and handed to a .sql file somebody has to
+> remember to run. **Nobody ran it.**"
+
+**这次就是那句话的账单。** 一个 `to_regclass` 在第一天就能说出答案。
+已把线上那一半接进指挥台(`_panel_declared_tables_exist`):每次刷新对 37 张声明表逐个探;
+**404 判「不存在」,401/403 判 unknown 不判缺失**(权限问题和存在问题混为一谈就是 S-323e 重演);
+没有 SUPABASE_* 时返回 None,台子说「这项没跑」——**不是「通过」**。
+
+> **一个要靠人记得去执行的控制,不是控制。** 这句话是这台子建起来的理由(S-323s 的拒绝超期),
+> 今天原样适用到 schema 上。
