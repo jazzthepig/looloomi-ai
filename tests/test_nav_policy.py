@@ -425,15 +425,31 @@ def test_beta_core_nav_insert_writes_only_columns_that_exist():
     Adding `interval_hours` to this payload is precisely the change that would
     have killed the ① book had the migration not landed first — so the guard is
     written from inside the change that needed it.
+
+    ⚠️ S-334: THE WRITE FUNCTION'S NAME WAS HARDCODED HERE, and S-329 moved it.
+    `_write()` changed from `supabase_insert_table` to `insert_with_detail` (so a
+    failed write's status code reaches the heartbeat instead of a log line). This
+    guard matched the old literal, found nothing, and went red — **and going red
+    was luck**: the only thing standing between "blind" and "blind and green" was
+    the `assert written` floor on the line below, added for an unrelated reason.
+
+    The name now comes from `schema_manifest._WRITE_FUNCS`, which is the same list
+    the manifest scanner uses, so the next time the write path moves, both move
+    together or neither does. **Two hand-written copies of "what counts as a write"
+    is one copy too many** — S-330 hit the other copy in the same week.
     """
     # Parsed, not regexed. The first version matched `"key":` at line start and
     # therefore missed a key appended to an existing line — a guard that reads
     # formatting instead of structure. Caught by mutation-testing the guard.
+    from src.api.schema_manifest import _WRITE_FUNCS
+
     src = _src("beta_core_paper.py")
     written: set[str] = set()
     for node in ast.walk(ast.parse(src)):
-        if not (isinstance(node, ast.Call)
-                and getattr(node.func, "id", None) == "supabase_insert_table"):
+        if not isinstance(node, ast.Call):
+            continue
+        fname = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+        if fname not in _WRITE_FUNCS:
             continue
         if not (node.args and isinstance(node.args[0], ast.Constant)
                 and node.args[0].value == "beta_core_nav"):
@@ -442,7 +458,11 @@ def test_beta_core_nav_insert_writes_only_columns_that_exist():
             if isinstance(row, ast.Dict):
                 written.update(k.value for k in row.keys
                                if isinstance(k, ast.Constant) and isinstance(k.value, str))
-    assert written, "could not parse the beta_core_nav insert payload"
+    assert written, (
+        "could not parse the beta_core_nav insert payload. Either the payload "
+        "stopped being a literal dict, or the write function moved again and is "
+        f"not in schema_manifest._WRITE_FUNCS (currently {sorted(_WRITE_FUNCS)})."
+    )
     known = _snapshot_columns("beta_core_nav") | _migration_added_columns("beta_core_nav")
     if not known:
         pytest.skip("beta_core_nav absent from the schema snapshot")
