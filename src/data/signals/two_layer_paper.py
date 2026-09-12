@@ -266,8 +266,15 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
                  "mark_prices": last_px, "last_mark": today.isoformat(),
                  "core_name": core.get("name", "v5c")}
         if not dry_run:
+            # S-334: write FIRST, advance state only on a durable write. Advancing
+            # first leaves the cache asserting a mark the table does not have — the
+            # state then says "done" about a day that was never recorded, and §3
+            # forbids backfilling it.
+            _ok, _why = await _write_nav(today, 1.0, 0.0, w_tgt, 0.0, diag, core)
+            if not _ok:
+                return {"status": "mark_failed", "date": today.isoformat(),
+                        "error": f"durable_write_failed :: {_why}"}
             await _redis_set(_STATE_KEY, state, ttl=0)
-            await _write_nav(today, 1.0, 0.0, w_tgt, 0.0, diag, core)
         return {"status": "inception", "nav": 1.0, "book_state": diag["book_state"],
                 "n": len(w_tgt), "date": today.isoformat()}
 
@@ -304,8 +311,15 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     state = {**state, "nav": nav, "weights": w_tgt, "mark_prices": last_px,
              "last_mark": today.isoformat(), "core_name": core.get("name", "v5c")}
     if not dry_run:
+        # S-334: write FIRST, advance state only on a durable write. Advancing
+        # first leaves the cache asserting a mark the table does not have — the
+        # state then says "done" about a day that was never recorded, and §3
+        # forbids backfilling it.
+        _ok, _why = await _write_nav(today, nav, daily_ret, w_tgt, cost, diag, core)
+        if not _ok:
+            return {"status": "mark_failed", "date": today.isoformat(),
+                    "error": f"durable_write_failed :: {_why}"}
         await _redis_set(_STATE_KEY, state, ttl=0)
-        await _write_nav(today, nav, daily_ret, w_tgt, cost, diag, core)
     return {"status": "marked", "nav": round(nav, 5),
             "daily_return_pct": round(daily_ret * 100, 3),
             "book_state": diag["book_state"], "gross": round(sum(abs(x) for x in w_tgt.values()), 3),
@@ -313,9 +327,25 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
 
 
 async def _write_nav(d, nav, dret, weights, cost, diag, core):
-    from src.api.store import supabase_insert_table
+    """Persist one NAV row. Returns (ok, why) — S-334.
+
+    ⚠️ THIS FUNCTION USED TO DISCARD ITS OWN RESULT, and that is why this book
+    reported `marked` for days while `two_layer_paper_nav` stood still.
+
+    `supabase_insert_table` reports failure by RETURNING False, not by raising,
+    so the `except Exception` below could never see a PostgREST 400, an RLS
+    refusal or an open breaker: **the guard sat at a point the failure could not
+    reach.** The value went nowhere, the caller advanced its Redis state anyway,
+    and the loop reported ok — 2026-09-12 live: `breaker OPEN`, six books.
+
+    beta_core fixed exactly this for itself and wrote the reason down in place
+    ("CAPTURE THE RETURN VALUE … never reaches the except branch"). **The lesson
+    stayed in the file where it was learned.** Now on `insert_with_detail`, so
+    the status code and PostgREST body reach the heartbeat (S-329).
+    """
+    from src.api.rpc_diagnostics import insert_with_detail, render_detail
     try:
-        await supabase_insert_table("two_layer_paper_nav", [{
+        ok, _wdet = await insert_with_detail("two_layer_paper_nav", [{
             "mark_date": d.isoformat(), "nav": round(nav, 6), "daily_return": round(dret, 6),
             "gross": round(sum(abs(x) for x in weights.values()), 4),
             "n_positions": len(weights), "cost": round(cost, 6),
@@ -330,6 +360,12 @@ async def _write_nav(d, nav, dret, weights, cost, diag, core):
             "note": diag.get("reason", "")[:200]}])
     except Exception as e:
         _log.warning("[two_layer] nav write: %s", e)
+        return False, f"{type(e).__name__}: {e}"
+    if not ok:
+        why = render_detail(_wdet, prefix="two_layer_paper_nav")
+        _log.warning("[two_layer] MARK NOT PERSISTED :: %s", why)
+        return False, why
+    return True, ""
 
 
 async def get_curve(limit: int = 400) -> dict:

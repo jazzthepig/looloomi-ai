@@ -171,9 +171,16 @@ async def mark_and_trade(dry_run: bool = False) -> dict:
     state["traded"] = state["traded"][-500:]     # bound memory
 
     if not dry_run:
+        # S-334: write FIRST, advance state only on a durable write. Advancing
+        # first leaves the cache asserting a mark the table does not have — the
+        # state then says "done" about a day that was never recorded, and §3
+        # forbids backfilling it.
+        _ok, _why = await _write_nav(today, nav, state["realized"], unreal, len(state["open"]),
+                                     state["closed"], opened_today, closed_today, state["open"])
+        if not _ok:
+            return {"status": "mark_failed", "date": today.isoformat(),
+                    "error": f"durable_write_failed :: {_why}"}
         await _redis_set(_STATE_KEY, state, ttl=0)
-        await _write_nav(today, nav, state["realized"], unreal, len(state["open"]),
-                         state["closed"], opened_today, closed_today, state["open"])
     return {"status": "marked", "nav": round(nav, 5),
             "realized_pct": round(state["realized"] * 100, 2),
             "unrealized_pct": round(unreal * 100, 2),
@@ -182,11 +189,27 @@ async def mark_and_trade(dry_run: bool = False) -> dict:
 
 
 async def _write_nav(d, nav, realized, unreal, n_open, closed, opened_today, closed_today, book):
-    from src.api.store import supabase_insert_table
+    """Persist one NAV row. Returns (ok, why) — S-334.
+
+    ⚠️ THIS FUNCTION USED TO DISCARD ITS OWN RESULT, and that is why this book
+    reported `marked` for days while `dingge_paper_nav` stood still.
+
+    `supabase_insert_table` reports failure by RETURNING False, not by raising,
+    so the `except Exception` below could never see a PostgREST 400, an RLS
+    refusal or an open breaker: **the guard sat at a point the failure could not
+    reach.** The value went nowhere, the caller advanced its Redis state anyway,
+    and the loop reported ok — 2026-09-12 live: `breaker OPEN`, six books.
+
+    beta_core fixed exactly this for itself and wrote the reason down in place
+    ("CAPTURE THE RETURN VALUE … never reaches the except branch"). **The lesson
+    stayed in the file where it was learned.** Now on `insert_with_detail`, so
+    the status code and PostgREST body reach the heartbeat (S-329).
+    """
+    from src.api.rpc_diagnostics import insert_with_detail, render_detail
     detail = [{"sym": p["sym"], "dir": p["dir"], "vr": p.get("vol_ratio"),
                "entry": p["entry_date"], "exit": p["exit_date"]} for p in book]
     try:
-        await supabase_insert_table("dingge_paper_nav", [{
+        ok, _wdet = await insert_with_detail("dingge_paper_nav", [{
             "mark_date": d.isoformat(), "nav": round(nav, 6),
             "realized_pnl": round(realized, 6), "unrealized_pnl": round(unreal, 6),
             "open_positions": n_open, "closed_trades": closed,
@@ -194,6 +217,12 @@ async def _write_nav(d, nav, realized, unreal, n_open, closed, opened_today, clo
             "detail": detail}])
     except Exception as e:
         _log.warning("[dingge_paper] nav write: %s", e)
+        return False, f"{type(e).__name__}: {e}"
+    if not ok:
+        why = render_detail(_wdet, prefix="dingge_paper_nav")
+        _log.warning("[dingge_paper] MARK NOT PERSISTED :: %s", why)
+        return False, why
+    return True, ""
 
 
 async def get_curve(limit: int = 400) -> dict:
