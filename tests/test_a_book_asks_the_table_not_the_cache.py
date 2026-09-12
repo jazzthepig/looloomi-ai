@@ -85,15 +85,29 @@ def test_no_book_skips_on_cached_state_without_checking_the_table():
 
 
 def test_the_table_checked_is_the_table_written():
-    """A check against the wrong table is worse than no check: it passes."""
+    """A check against the wrong table is worse than no check: it passes.
+
+    ⚠️ S-334: THIS GUARD HARDCODED `supabase_insert_table` AND WENT RED when the
+    books moved to `insert_with_detail` — the THIRD copy of "which function is a
+    write" to break on that one move, after `schema_manifest._WRITE_FUNCS`
+    (S-330) and `test_nav_policy` (S-334). Written by me, in the week I was
+    fixing the other two.
+
+    The name now comes from `schema_manifest._WRITE_FUNCS`, the single list, so
+    the next move breaks nothing. **A fact worth writing down twice is a fact
+    worth importing once.**
+    """
+    from src.api.schema_manifest import _WRITE_FUNCS
+    writers = "|".join(sorted(re.escape(f) for f in _WRITE_FUNCS))
     bad = {}
     for name in ("causal_paper.py", "combined_book.py",
                  "scalable_paper.py", "two_layer_paper.py"):
         src = (SIGNALS / name).read_text(encoding="utf-8")
         chk = re.search(r'nav_row_exists\(\s*"([^"]+)"', src)
-        wrt = re.search(r'supabase_insert_table\(\s*"([^"]+)"', src)
+        wrt = re.search(rf'(?:{writers})\(\s*"([^"]+)"', src)
         if not chk or not wrt:
-            bad[name] = "could not locate both table names"
+            bad[name] = (f"could not locate both table names "
+                         f"(checked writers: {sorted(_WRITE_FUNCS)})")
         elif chk.group(1) != wrt.group(1):
             bad[name] = f"checks {chk.group(1)} but writes {wrt.group(1)}"
     assert not bad, bad

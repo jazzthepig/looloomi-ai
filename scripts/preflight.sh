@@ -913,6 +913,17 @@ python3 -m pytest tests/test_a_book_asks_the_table_not_the_cache.py -q || {
   echo "  ✗ a book trusts its cache over the record — do not push"; exit 1; }
 echo "  ✓ books verify the NAV row exists before skipping (S-327)"
 
+# ── S-334: a failed write may not be reported as a mark ──────────────────────
+# S-327 made the books stop trusting their cache about whether they had written.
+# It did NOT make them look at whether the write they then performed SUCCEEDED.
+# Measured live 2026-09-12: six books reported marked/ok for three days with
+# `breaker OPEN` and their NAV tables frozen at 09-09, because every one of them
+# discarded the return value of its own insert — and `supabase_insert_table`
+# reports failure by RETURNING False, so the surrounding try/except never fired.
+python3 -m tests.test_a_failed_write_cannot_report_marked || {
+  echo "  ✗ a book can report a mark it never persisted — do not push"; exit 1; }
+echo "  ✓ a failed write cannot report marked (S-334)"
+
 python3 -m pytest tests/test_books_do_not_fan_out_to_free_venue_apis.py -q || {
   echo "  ✗ a book is pricing its universe off a FREE venue API — do not push"; exit 1; }
 echo "  ✓ bulk prices on paid sources; venue reads are post-trade (S-323u/v)"
