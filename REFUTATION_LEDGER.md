@@ -19107,3 +19107,96 @@ preflight 拦下:
 Required status check "smoke" is expected`)。
 preflight 红了、commit 仍然落地、push 仍然成功 ——
 **一个可以被绕过的门,在统计上等于没有门。** 归 Jazz 决定是否收紧。
+
+---
+
+## S-334 — 六本账连报三天 `marked`,而写入从来没成功过 (2026-09-12)
+
+指挥台 12 条待处理,读起来像十二个故障。实测只有**一个根因**,和一个让它
+在六个地方长得像成功的报告缺陷。
+
+`/internal/data-freshness` 给出了这一行:
+
+    _beta_core_loop: durable_write_failed :: no response after retries [0ms] — breaker OPEN
+
+**`[0ms]` + `breaker OPEN`** —— 写请求根本没发出去。这正是 S-329 要的东西:
+① 说出了自己为什么坏。而另外五本账在同一时刻报 `ok`。
+
+### 机制:一行,重复六次
+
+    await supabase_insert_table("causal_paper_nav", [{...}])
+
+**返回值被丢掉了。** `supabase_insert_table` 的失败是**返回 False,不是抛异常** ——
+PostgREST 400、RLS 拒绝、熔断器打开,全都是返回值。
+六处调用每一处都包在 `try/except Exception` 里,而那个 except **永远不可能触发**:
+**守卫被放在了故障到不了的位置。**
+写失败 → 没人看 → 函数正常返回 → 循环记一次成功。
+
+### 而调用方让它变成永久的
+
+    await _redis_set(_STATE_KEY, state, ttl=0)   # 先推进状态
+    await _write_nav(...)                         # 再写,失败不可见
+    return {"status": "marked", ...}              # 无条件报 marked
+
+状态先走,于是一次失败的写留下一个**声称打过标而表里没有那一行**的缓存。
+§3 说洞补不回来 —— 09-10 / 09-11 / 09-12 三天,六本账,没了。
+
+> **产品是可验证的前向记录,NAV 表就是那个记录本身。**
+> 一本账在没写成的那天报 `marked`,不只是失败,
+> 是在产品被检验的那个面上**生产了一条「我成功了」的假记录**。
+
+### 本该拦住它的东西
+
+`beta_core_paper` 撞过同一个 bug、修好了,并把理由写在调用点上:
+
+> "CAPTURE THE RETURN VALUE. `supabase_insert_table` reports failure by RETURNING
+> False, not by raising — a PostgREST 400 … never reaches the except branch."
+
+**教训留在了它被学会的那个文件里。** 另外五本账保持原样好几个月。
+这是本仓最贵的复发形状:**修补打在当时在查的调用点上,不是打在这一类上** ——
+而 S-327 正是这条链的上一环,它让账本不再轻信缓存「我写过了」,
+**却没让它们去看那次写到底成没成功**。修一半的形状,本周第二次。
+
+### 修
+
+六本账的 writer 改为返回 `(ok, why)` 并走 `insert_with_detail`(状态码 + PostgREST
+body 进心跳);调用方**先写后推进状态**,失败返回 `status="mark_failed"`
+(在 `BROKEN_STATUS` 里,循环会报红)带原因。
+`fusion_paper` 另有一条更锋利的:`n_days_marked` 存在它先保存的那个 state 里,
+而 `validated = n_days_marked >= VALIDATION_MIN_DAYS` ——
+**静默的写失败会把验证闸门读的那个计数器灌水**。
+
+⚠️ `beta_core._record_exception` 显式豁免并写明理由:它是最后一层拒绝记录器、
+不能抛,**但「不能上报」不是「不用去看」** —— 已改为接住返回值并单独打
+`NOT PERSISTED`,否则 `nav_exceptions` 会有一个没人报的洞,
+而它本身就在「40 个无判决对象」里。
+
+### ⚠️ 守卫第一版有洞,是拿真账本做变异测试才发现的
+
+第一版只看直接的 `supabase_*` 调用,于是能抓住 writer 丢掉 store 的返回值,
+**却完全看不见调用方丢掉 writer 的返回值** —— 而后者正是六本账实际坏掉的那一层。
+**守卫通过了它自己的反向控制,而真 bug 从它旁边走了过去**,
+因为那个控制测的是我想到的那一层,不是会坏的那一层。
+改成从源码推导本模块的 writer(任何返回 `(bool, ...)` 的 `_write*`),
+反向控制改为覆盖真正失败的那一层,并用**真账本变异**验证会红(exit 1)、修复后绿(exit 0)。
+
+### ⚠️ 同一次移动,打瞎了第三份手写清单
+
+`insert_with_detail` 这一次迁移先后打断:`schema_manifest._WRITE_FUNCS`(S-330)、
+`test_nav_policy` 的硬编码函数名(本条)、以及 `test_a_book_asks_the_table_not_the_cache`
+的正则(**S-327 我自己写的,就在修前两份的同一周**)。
+三份清单编码同一个事实「哪些函数算写入」,分开演化。
+后两份已改为 import 单一来源,新守卫加了漂移检查让两份互相对账 ——
+**而那个漂移检查第一次运行就红了**(manifest 有 `supabase_delete_table`,我的没有),
+它在任何人需要记性之前就挣到了自己的位置。
+**一个值得写两遍的事实,是一个值得 import 一次的事实。**
+
+### ⚠️ 我自己的操作错误
+
+做变异测试收尾时我在沙箱跑了 `git checkout src/data/signals/causal_paper.py` ——
+**规则 4 明令禁止从沙箱跑任何碰 index 的 git 命令**,而它当场把我刚写好的
+S-334 修复整个还原了。已重做。**我在给「守卫放错位置」写守卫的同一轮里,
+用一条被禁止的命令删掉了自己的修复。**
+另:第一次变异测试我用 `grep -E "✗|discard"` 判定结果,
+而它匹配到了测试自己名字里的 "discard" —— **量具读到了自己的名字并报告成功**,
+与本条主题同形。改用 exit code。
