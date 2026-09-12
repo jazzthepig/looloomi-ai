@@ -393,6 +393,89 @@ def _panel_symbol_reconciliation() -> dict | None:
     }
 
 
+def _panel_declared_tables_exist() -> dict | None:
+    """S-336: does every table the code writes to actually exist in Postgres?
+
+    THE CHECK THAT EXISTED AND NOBODY RAN. S-166 split this deliberately: the
+    OFFLINE half (`schema_manifest` vs the source) runs in preflight, and the
+    ONLINE half needs the live catalog, so it was handed to a `.sql` file and,
+    later, to `/internal/schema-drift`. `schema_manifest.py` says so in its own
+    words — "The gap was known, documented, and handed to a .sql file somebody
+    has to remember to run. Nobody ran it."
+
+    On 2026-09-12 that cost 26 fabricated NAV marks. `fusion_paper_state` had
+    never existed, so every state save failed, every load returned {}, and the
+    book recorded an empty position as a flat day for twenty-six days while
+    reporting `ok`. One `to_regclass` would have said so on day one.
+
+    So the online half goes on the board that actually gets looked at. A control
+    whose execution depends on somebody remembering is not a control — that is
+    the same sentence this console was built around (S-323s refusals), applied
+    now to the schema.
+
+    Returns None when SUPABASE_* is absent: the console then says the check did
+    not run, which is **not** the same as saying it passed.
+    """
+    import os
+    import pathlib as _pl
+    import urllib.request as _rq
+
+    url = (os.environ.get("SUPABASE_URL") or "").rstrip("/")
+    key = (os.environ.get("SUPABASE_SERVICE_KEY")
+           or os.environ.get("SUPABASE_KEY") or "")
+    if not url or not key:
+        return None
+    try:
+        sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+        from src.api.schema_manifest import write_tables
+        declared = write_tables()
+    except Exception as e:                                   # noqa: BLE001
+        return {"id": "schema:declared", "name": "declared tables exist",
+                "kind": "check", "verdict": "unknown",
+                "remedy_class": "unregistered",
+                "detail": f"manifest unreadable: {type(e).__name__}: {str(e)[:120]}",
+                "note": "could not build the declared-table list — unknown is not 'all present'",
+                "verify": "python3 -c \"from src.api.schema_manifest import write_tables; print(write_tables())\""}
+
+    missing, unknown = [], []
+    for t in declared:
+        try:
+            req = _rq.Request(
+                f"{url}/rest/v1/{t}?select=*&limit=0",
+                headers={"apikey": key, "Authorization": f"Bearer {key}"})
+            with _rq.urlopen(req, timeout=TIMEOUT):
+                pass
+        except urllib.error.HTTPError as e:
+            # 404 / PGRST205 == the relation is not in the schema cache at all.
+            # 401/403 is a GRANT question, not an existence question, and
+            # conflating them would re-create the S-323e confusion.
+            (missing if e.code == 404 else unknown).append(t)
+        except Exception:                                    # noqa: BLE001
+            unknown.append(t)
+
+    if missing:
+        return {"id": "schema:declared", "name": "declared tables exist",
+                "kind": "check", "verdict": "MISSING", "remedy_class": "act_now",
+                "detail": f"{len(missing)}/{len(declared)} declared tables do not "
+                          f"exist: {missing}",
+                "note": "THE CODE WRITES TO A TABLE THAT IS NOT THERE (S-166/S-336). "
+                        "Every write returns False without raising, so the book "
+                        "keeps running and records whatever an empty state implies.",
+                "verify": "select to_regclass('public." + missing[0] + "');"}
+    if unknown:
+        return {"id": "schema:declared", "name": "declared tables exist",
+                "kind": "check", "verdict": "unknown", "remedy_class": "unregistered",
+                "detail": f"{len(unknown)}/{len(declared)} could not be checked: "
+                          f"{unknown[:6]}",
+                "note": "读不到 ≠ 都在 — these were not confirmed either way",
+                "verify": "select to_regclass('public." + unknown[0] + "');"}
+    return {"id": "schema:declared", "name": "declared tables exist",
+            "kind": "check", "verdict": "ok", "remedy_class": "ok",
+            "detail": f"{len(declared)}/{len(declared)} declared tables present",
+            "note": "every table the source writes to exists in Postgres",
+            "verify": "select count(*) from information_schema.tables where table_schema='public';"}
+
+
 def build_state() -> dict:
     try:
         f = _get(FRESHNESS)
@@ -409,6 +492,9 @@ def build_state() -> dict:
     recon = _panel_symbol_reconciliation()
     if recon:
         items.append(recon)
+    schema = _panel_declared_tables_exist()
+    if schema:
+        items.append(schema)
     cov = f.get("coverage") or {}
 
     counts: dict[str, int] = {}
