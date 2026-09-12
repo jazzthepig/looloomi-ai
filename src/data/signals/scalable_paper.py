@@ -137,8 +137,15 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
                  "mark_prices": {s: px[s] for s in w if s in px},
                  "last_rebal": today.isoformat(), "last_mark": today.isoformat()}
         if not dry_run:
+            # S-334: write FIRST, advance state only on a durable write. Advancing
+            # first leaves the cache asserting a mark the table does not have — the
+            # state then says "done" about a day that was never recorded, and §3
+            # forbids backfilling it.
+            _ok, _why = await _write(today, 1.0, 0.0, 0.0, 0.0, len(w), True, w)
+            if not _ok:
+                return {"status": "mark_failed", "date": today.isoformat(),
+                        "error": f"durable_write_failed :: {_why}"}
             await _redis_set(_STATE_KEY, state, ttl=0)
-            await _write(today, 1.0, 0.0, 0.0, 0.0, len(w), True, w)
         return {"status": "inception", "nav": 1.0, "n": len(w), "date": today.isoformat()}
 
     if state.get("last_mark") == today.isoformat():
@@ -179,24 +186,53 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
              "last_rebal": today.isoformat() if rebalanced else state["last_rebal"],
              "last_mark": today.isoformat()}
     if not dry_run:
+        # S-334: write FIRST, advance state only on a durable write. Advancing
+        # first leaves the cache asserting a mark the table does not have — the
+        # state then says "done" about a day that was never recorded, and §3
+        # forbids backfilling it.
+        _ok, _why = await _write(today, nav, dret, price_pnl, funding_pnl, len(new_w), rebalanced, new_w)
+        if not _ok:
+            return {"status": "mark_failed", "date": today.isoformat(),
+                    "error": f"durable_write_failed :: {_why}"}
         await _redis_set(_STATE_KEY, state, ttl=0)
-        await _write(today, nav, dret, price_pnl, funding_pnl, len(new_w), rebalanced, new_w)
     return {"status": "marked", "nav": round(nav, 5), "daily_return_pct": round(dret * 100, 3),
             "rebalanced": rebalanced, "n": len(new_w), "date": today.isoformat()}
 
 
 async def _write(d, nav, dret, ppnl, fpnl, n, rebal, weights):
-    from src.api.store import supabase_insert_table
+    """Persist one NAV row. Returns (ok, why) — S-334.
+
+    ⚠️ THIS FUNCTION USED TO DISCARD ITS OWN RESULT, and that is why this book
+    reported `marked` for days while `scalable_book_nav` stood still.
+
+    `supabase_insert_table` reports failure by RETURNING False, not by raising,
+    so the `except Exception` below could never see a PostgREST 400, an RLS
+    refusal or an open breaker: **the guard sat at a point the failure could not
+    reach.** The value went nowhere, the caller advanced its Redis state anyway,
+    and the loop reported ok — 2026-09-12 live: `breaker OPEN`, six books.
+
+    beta_core fixed exactly this for itself and wrote the reason down in place
+    ("CAPTURE THE RETURN VALUE … never reaches the except branch"). **The lesson
+    stayed in the file where it was learned.** Now on `insert_with_detail`, so
+    the status code and PostgREST body reach the heartbeat (S-329).
+    """
+    from src.api.rpc_diagnostics import insert_with_detail, render_detail
     longs = ",".join(f"{s}:{w:+.2f}" for s, w in sorted(weights.items(), key=lambda kv: -kv[1])[:3])
     shorts = ",".join(f"{s}:{w:+.2f}" for s, w in sorted(weights.items(), key=lambda kv: kv[1])[:3])
     try:
-        await supabase_insert_table("scalable_book_nav", [{
+        ok, _wdet = await insert_with_detail("scalable_book_nav", [{
             "mark_date": d.isoformat(), "nav": round(nav, 6), "daily_return": round(dret, 6),
             "gross": round(sum(abs(x) for x in weights.values()), 4), "n_positions": n,
             "price_pnl": round(ppnl, 6), "funding_pnl": round(fpnl, 6), "rebalanced": rebal,
             "sleeves": ["FACTOR", "TREND", "CARRY"], "top_longs": longs, "top_shorts": shorts}])
     except Exception as e:
         _log.warning("[scalable_book] nav write: %s", e)
+        return False, f"{type(e).__name__}: {e}"
+    if not ok:
+        why = render_detail(_wdet, prefix="scalable_book_nav")
+        _log.warning("[scalable_book] MARK NOT PERSISTED :: %s", why)
+        return False, why
+    return True, ""
 
 
 async def get_curve(limit: int = 400) -> dict:

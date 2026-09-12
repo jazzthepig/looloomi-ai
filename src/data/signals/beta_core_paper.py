@@ -1263,7 +1263,7 @@ async def _record_exception(control: str, action: str, reason: str, *,
     """
     try:
         from src.api.store import supabase_insert_table
-        await supabase_insert_table("nav_exceptions", [{
+        _exc_ok = await supabase_insert_table("nav_exceptions", [{
             "book": "beta_core",
             "inception_id": _INCEPTION_ID,
             "mark_date": mark_date.isoformat() if mark_date else None,
@@ -1274,6 +1274,18 @@ async def _record_exception(control: str, action: str, reason: str, *,
             "detail": detail or {},
             "reason": reason[:800],
         }])
+        # S-334. CAPTURE IT EVEN HERE. This function cannot propagate — it lives on
+        # an error path and must never raise — but "cannot propagate" is not a reason
+        # to not LOOK. `supabase_insert_table` returns False on a PostgREST 400 / RLS
+        # refusal / open breaker without raising, so the except branch below could
+        # only ever see transport errors, and the most likely failure (the write path
+        # is broken, which is often WHY we are recording a refusal) returned quietly.
+        # The effect is a hole in nav_exceptions that nothing reports — and
+        # nav_exceptions is itself one of the objects no liveness check watches.
+        if not _exc_ok:
+            _log.error("[beta_core] exception log NOT PERSISTED (%s/%s) — the refusal "
+                       "itself is now only in stdout, and nav_exceptions has a hole "
+                       "no check will report", control, action)
     except Exception as e:                                    # noqa: BLE001
         _log.error("[beta_core] exception log FAILED (%s/%s): %s — the refusal "
                    "itself is now only in stdout", control, action, e)

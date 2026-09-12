@@ -602,8 +602,16 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     }
 
     if not dry_run:
+        # S-334: write FIRST, save state only on a durable write. Saving first
+        # leaves the state asserting a mark the table does not have — and
+        # `n_days_marked` is incremented in that state, so a silent write failure
+        # inflates the very counter VALIDATION_MIN_DAYS gates on.
+        _ok, _why = await _write_nav(today, nav_new, daily_ret, w_tgt, cost_frac,
+                                     fill, det, today_ts)
+        if not _ok:
+            return {"status": "mark_failed", "date": today.isoformat(),
+                    "error": f"durable_write_failed :: {_why}"}
         await _save_state(new_state)
-        await _write_nav(today, nav_new, daily_ret, w_tgt, cost_frac, fill, det, today_ts)
 
     validated = new_state["n_days_marked"] >= VALIDATION_MIN_DAYS
     return {
@@ -622,12 +630,24 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
 
 
 async def _write_nav(d, nav, dret, weights, cost, fill, det, today_ts):
-    """Persist one NAV row to Supabase. Graceful skip if unconfigured."""
-    from src.api.store import supabase_insert_table
+    """Persist one NAV row to Supabase. Returns (ok, why) — S-334.
+
+    ⚠️ THIS USED TO DISCARD ITS OWN RESULT. `supabase_insert_table` reports
+    failure by RETURNING False, not by raising, so the `except Exception` below
+    could never see a PostgREST 400, an RLS refusal or an open breaker: **the
+    guard sat at a point the failure could not reach.** The caller saved its
+    state and returned `marked` regardless — 2026-09-12 live: `breaker OPEN`,
+    six books, `fusion_paper_nav` frozen at 09-09 while the loop reported ok.
+
+    "Graceful skip if unconfigured" was the intent; silence on EVERY failure was
+    the behaviour. Now on `insert_with_detail`, so the status code and PostgREST
+    body reach the heartbeat instead of a log line nobody reads (S-329).
+    """
+    from src.api.rpc_diagnostics import insert_with_detail, render_detail
     longs = ",".join(f"{s}:{w:+.3f}" for s, w in sorted(weights.items(), key=lambda kv: -kv[1])[:3])
     shorts = ",".join(f"{s}:{w:+.3f}" for s, w in sorted(weights.items(), key=lambda kv: kv[1])[:3])
     try:
-        await supabase_insert_table(_NAV_TABLE, [{
+        ok, _wdet = await insert_with_detail(_NAV_TABLE, [{
             "mark_date": d.isoformat(),
             "nav": round(nav, 6),
             "daily_return": round(dret, 6),
@@ -646,6 +666,12 @@ async def _write_nav(d, nav, dret, weights, cost, fill, det, today_ts):
         }])
     except Exception as e:
         _log.warning("[fusion] nav write: %s", e)
+        return False, f"{type(e).__name__}: {e}"
+    if not ok:
+        why = render_detail(_wdet, prefix=_NAV_TABLE)
+        _log.warning("[fusion] MARK NOT PERSISTED :: %s", why)
+        return False, why
+    return True, ""
 
 
 async def get_curve(limit: int = 400) -> dict:
