@@ -2713,10 +2713,15 @@ async def data_freshness(x_internal_token: str = Header(None, alias="X-Internal-
     # 实测 2026-09-02:signal_outcomes 停 122 天、market_state_vectors 停 27 天、
     # risk_meter_history 有一行 d=2099-12-31 —— **未来日期让 max() 永远报新鲜**。
     try:
-        from src.api.store import supabase_rpc
+        # S-323m / S-340:对读路径同样暴露 outcome —— `supabase_rpc` 把
+        # not_configured / breaker_open / no_response / http_error / not_json
+        # 全部塌成 None,这是五次错判同一句「RPC 未返回」的根(S-323m 引文)。
+        # 写路径已用 `insert_with_detail` 修过;读路径用 sibling `rpc_with_detail`。
+        from src.api.rpc_diagnostics import rpc_with_detail as _rpc_read
+        from src.api.rpc_diagnostics import render_detail as _render_rpc
         from src.data.market.producer_freshness import assess as _p_assess
         from src.data.market.producer_freshness import overall as _p_overall
-        _rows = await supabase_rpc("producer_freshness", {})
+        _rows, _rpc_detail = await _rpc_read("producer_freshness", {})
         if isinstance(_rows, list) and _rows:
             out["producers"] = _p_overall([
                 _p_assess(r.get("t"), int(r.get("n") or 0),
@@ -2724,12 +2729,20 @@ async def data_freshness(x_internal_token: str = Header(None, alias="X-Internal-
                           n_future=int(r.get("n_future") or 0))
                 for r in _rows])
         else:
-            out["producers"] = {"verdict": "unknown",
-                                "note": "producer_freshness RPC 未返回 —— "
-                                        "**读不到 ≠ 都健康** (S-180)"}
+            out["producers"] = {
+                "verdict": "unknown",
+                "note": (f"{_render_rpc(_rpc_detail)} —— "
+                         f"**读不到 ≠ 都健康** (S-180)"),
+                "diagnostic": _rpc_detail,
+            }
     except Exception as _pe:                                      # noqa: BLE001
-        out["producers"] = {"verdict": "unknown",
-                            "note": f"{type(_pe).__name__} —— 读不到 ≠ 都健康"}
+        out["producers"] = {
+            "verdict": "unknown",
+            "note": f"{type(_pe).__name__} —— 读不到 ≠ 都健康",
+            "diagnostic": {"outcome": "endpoint_exception",
+                           "exc_type": type(_pe).__name__,
+                           "exc_msg": str(_pe)[:200]},
+        }
 
 
     # ── S-251:全表 max 看不见管道死亡,补一层按源的覆盖率判活 ──────────────
@@ -2832,10 +2845,13 @@ async def data_freshness(x_internal_token: str = Header(None, alias="X-Internal-
                         "note": f"{type(_be).__name__} —— 读不到 ≠ 都在跑"}
 
     try:
-        from src.api.store import supabase_rpc as _srpc
+        # S-340 同上:`watch_census` 也走 `rpc_with_detail`(S-323m),把 outcome + body
+        # 透出;同一类「读不到 ≠ 全覆盖」的假 unknown(S-180)。
+        from src.api.rpc_diagnostics import rpc_with_detail as _rpc_read_census
+        from src.api.rpc_diagnostics import render_detail as _render_rpc
         from src.data.market.watch_census import census as _census
         from src.data.market.watch_census import qualify_verdict as _qual
-        _tbls = await _srpc("watch_census", {})
+        _tbls, _rpc_detail = await _rpc_read_census("watch_census", {})
         if isinstance(_tbls, list) and _tbls:
             _c = _census([r.get("table_name") for r in _tbls if r.get("table_name")])
             out["coverage"] = {k: _c[k] for k in (
@@ -2843,11 +2859,20 @@ async def data_freshness(x_internal_token: str = Header(None, alias="X-Internal-
                 "not_covered_by_tier", "verdict", "reason")}
             out["verdict_scope"] = _qual(out.get("verdict", "unknown"), _c)
         else:
-            out["coverage"] = {"verdict": "unknown",
-                               "reason": "watch_census RPC 未返回 —— 读不到 ≠ 全覆盖"}
+            out["coverage"] = {
+                "verdict": "unknown",
+                "reason": (f"{_render_rpc(_rpc_detail)} —— "
+                           f"**读不到 ≠ 全覆盖**"),
+                "diagnostic": _rpc_detail,
+            }
     except Exception as _ce:                                      # noqa: BLE001
-        out["coverage"] = {"verdict": "unknown",
-                           "reason": f"{type(_ce).__name__} —— 读不到 ≠ 全覆盖"}
+        out["coverage"] = {
+            "verdict": "unknown",
+            "reason": f"{type(_ce).__name__} —— 读不到 ≠ 全覆盖",
+            "diagnostic": {"outcome": "endpoint_exception",
+                           "exc_type": type(_ce).__name__,
+                           "exc_msg": str(_ce)[:200]},
+        }
     out["verdict_note"] = (
         "**顶层裁决取自 by_source(每源 × 覆盖标的数),不是 ohlcv_daily。**"
         "后者回答的是「这一轮跑完没有」,它的 max(trade_date) 在自愈式回填下是"
@@ -2898,14 +2923,26 @@ async def data_freshness(x_internal_token: str = Header(None, alias="X-Internal-
         }
     else:
         try:
-            from src.api.store import supabase_rpc as _srpc2
-            _books = await _srpc2("paper_book_freshness", {})
+            # S-340 同上:`paper_book_freshness` 走 `rpc_with_detail`,把 outcome
+            # + body 透出。让 Jazz 09-04 那次 `jq '.books'` 拿到 null、不知道是
+            # 没部署/token 错/RPC 失败(S-285 教训)的同类问题 —— 现在三值落地。
+            from src.api.rpc_diagnostics import rpc_with_detail as _rpc_read_books
+            from src.api.rpc_diagnostics import render_detail as _render_rpc
+            _books, _rpc_detail = await _rpc_read_books("paper_book_freshness", {})
             out[_books_key] = _books if isinstance(_books, list) else {
                 "verdict": "unknown",
-                "reason": "paper_book_freshness RPC 未返回 —— 读不到 ≠ 都在跑"}
+                "reason": (f"{_render_rpc(_rpc_detail)} —— "
+                           f"**读不到 ≠ 都在跑**"),
+                "diagnostic": _rpc_detail,
+            }
         except Exception as _bfe:                                 # noqa: BLE001
-            out[_books_key] = {"verdict": "unknown",
-                               "reason": f"{type(_bfe).__name__} —— 读不到 ≠ 都在跑"}
+            out[_books_key] = {
+                "verdict": "unknown",
+                "reason": f"{type(_bfe).__name__} —— 读不到 ≠ 都在跑",
+                "diagnostic": {"outcome": "endpoint_exception",
+                               "exc_type": type(_bfe).__name__,
+                               "exc_msg": str(_bfe)[:200]},
+            }
     return out
 
 
