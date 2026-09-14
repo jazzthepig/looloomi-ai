@@ -155,6 +155,29 @@ Every position resolves to exactly one tier. The tier used is recorded on the ro
 integrity, no wash-volume signature, and a documented basis study before a source enters the
 table. Adding or reordering a source is a **code change plus a ledger entry**, never a config flip.
 
+### Priceable is not the same as priced today (S-287)
+
+**Rule.** A price that was **carried forward** from a previous day is not an observation and
+must not enter a book's mark. The name is excluded exactly as a missing price is; equal-weighting
+renormalises over what is actually observable, and if too much of the book goes that way the
+coverage floor (C4) refuses the mark.
+
+`load_binance_panel` forward-fills a missing close from the previous day. That is **correct for
+research** — a vol estimate needs a contiguous series, and a NaN hole is worse than a repeat —
+and **wrong for a NAV**, and for its whole life the two were indistinguishable: `close[-1]` held
+a value carried from days ago with nothing marking it, so a symbol that had stopped updating
+arrived as a live quote, satisfied not-NaN and positive, counted toward the 80% floor, and got
+marked.
+
+This is one layer beneath S-194. That lesson stopped a book confusing **"no data" with "no
+movement"**; the layer under it was still confusing **"stale data" with "data"**. The guard was
+asking *is there a number here*; the question is *was this observed today*.
+
+Callers therefore declare which they need — `with_fill_mask=True` for anything striking a NAV,
+the default for anything needing a contiguous series. Exclusions are recorded to `nav_exceptions`
+**even when the mark then succeeds**, because "was the panel whole today" must be answerable
+after the fact.
+
 **Binance is not an eligible source** — geo-blocked from Railway US, which is what produced the
 v3 failure (S-194/S-196). Retained here explicitly so the exclusion is a policy, not an accident.
 
