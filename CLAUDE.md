@@ -1,8 +1,11 @@
 # CLAUDE.md — CometCloud AI / Looloomi
 
 > **⭐ SESSION START: read `MEMORY.md` (facts index, 30s) then `PROJECT_STATE.md` (living state) FIRST.
-> Update PROJECT_STATE LAST.** Never trust memory of what's committed — run `git status` /
-> `git rev-list origin/main..HEAD` before describing any "pending push".
+> Update PROJECT_STATE LAST.** Never trust memory of what's committed — run
+> `git --no-optional-locks status --porcelain` / `git rev-list origin/main..HEAD` before
+> describing any "pending push". **The `--no-optional-locks` is not optional** (rule 4): plain
+> `git status` refreshes the index, creates `.git/index.lock`, and FUSE will not let the sandbox
+> delete it — which silently blocks every later `git add` Mac-side.
 
 ## Source-of-truth map (one table, no scattered prose)
 
@@ -120,9 +123,17 @@ then excess.
    means two series that look like the same quantity and are not** — the defect that produced
    S-273/S-274/S-275 in one day. Backfill request → say so in `MINIMAX_SYNC`, Seth's lane runs it.
 
-4. **NEVER run git write-commands from the Cowork sandbox** (FUSE denies unlink → stranded
-   `.git/index.lock`). Sandbox = edit surface only; ALL git happens Mac-side. Agent edits files
-   and reports the commit list; Jazz/Mac commits. Unstick: `git unlock`.
+4. **NEVER run ANY git command from the Cowork sandbox that touches the index** — and that
+   includes `git status` and `git diff`, which *refresh* the index and therefore create
+   `.git/index.lock`, which FUSE then refuses to unlink. "Write-commands" was too narrow a
+   scope and cost a whole batch on 2026-09-04: the agent ran `git status`, the stranded lock
+   made every later `git add` fail with "Unable to create .git/index.lock", and `git push`
+   answered "Everything up-to-date" on 16 uncommitted files.
+   **Sandbox read-only alternatives:** `git --no-optional-locks status --porcelain`, or compare
+   against `git show origin/main:<path>` — both leave the index alone. ALL writes happen
+   Mac-side. **Every handoff block puts `rm -f .git/index.lock` immediately before the first
+   `git add`, after preflight** — `scripts/preflight.sh` itself calls `git ls-files`, so
+   unlocking before preflight unlocks the wrong side of the thing that re-locks.
 
 5. **`bash scripts/preflight.sh` before EVERY push.** Railway auto-deploys on push; preflight is
    the ONLY prod gate. `py_compile` is NOT sufficient (2026-07-13: import-time error 502'd prod).
@@ -169,15 +180,20 @@ himself. Give the exact block, in order, path-scoped, with preflight first:
 
 ```bash
 cd ~/Projects/looloomi-ai
-bash scripts/preflight.sh          # green before anything below
-
+bash scripts/preflight.sh
+rm -f .git/index.lock
 git add <explicit paths — never -A>
 git commit -m "<type>(<scope>): <subject>
 
 <body: what changed and WHY it was wrong before>"
-
 git push origin main
 ```
+
+**NO TRAILING `#` COMMENTS ON ANY COMMAND LINE. NO INLINE ANNOTATION. EVER.** Jazz has raised
+this repeatedly and it kept recurring because **the template above used to carry them itself** —
+the rule and its own example disagreed, and the example is what gets copied. Explanation goes in
+prose *outside* the fenced block; inside the block, only lines that paste and run. Same for blank
+lines used as visual grouping: they invite a partial paste that runs half the sequence.
 
 Rules: one commit per concern (ledger appends ride their own — `git log` is a source-of-truth
 surface, and a commit whose title covers 9% of its diff corrupts it); any post-push verification
