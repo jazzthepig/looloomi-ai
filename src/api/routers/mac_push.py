@@ -79,32 +79,33 @@ def _auth(tok: str | None) -> None:
 async def _call(fn: str, payload: dict, label: str, n_rows: int | None) -> dict:
     """One place where 'did the write land' is decided and reported."""
     from src.api.store import supabase_rpc_write
-    ok, result = await supabase_rpc_write(fn, payload)
-    if not ok:
-        _log.warning("[MAC-PUSH] %s → NOT WRITTEN: %s", label, result)
+    r = await supabase_rpc_write(fn, payload)
+    if not r.ok:
+        reason = r.why or "unknown"
+        _log.warning("[MAC-PUSH] %s → NOT WRITTEN: %s", label, reason)
         return {
             "ok": False,
             "schema_version": SCHEMA_VERSION,
             "target": label,
             "rows_submitted": n_rows,
             "rows_written": 0,
-            "reason": result,
+            "reason": reason,
             # Named because the two causes have different owners and different
             # fixes, and "write failed" alone sent us down the wrong one twice
             # this week.
             "diagnosis": (
                 "role gate: this process is not APP_ROLE=production"
-                if isinstance(result, str) and "may not write" in result else
+                if "may not write" in reason else
                 "Supabase rejected the call — the message above is from our own "
                 "schema, not from your data"),
         }
-    _log.info("[MAC-PUSH] %s ← %s rows, rpc returned %s", label, n_rows, result)
+    _log.info("[MAC-PUSH] %s ← %s rows, rpc returned %s", label, n_rows, r.value)
     return {
         "ok": True,
         "schema_version": SCHEMA_VERSION,
         "target": label,
         "rows_submitted": n_rows,
-        "rows_written": result if isinstance(result, int) else None,
+        "rows_written": r.value if isinstance(r.value, int) else None,
         "note": ("rows_written is the RPC's own count. If it is lower than "
                  "rows_submitted the upsert deduplicated — that is expected on "
                  "a re-run and is not an error."),

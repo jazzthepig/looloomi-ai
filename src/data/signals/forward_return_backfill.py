@@ -69,7 +69,7 @@ async def backfill_forward_returns(horizon: int = HORIZON_DAYS) -> dict[str, Any
 
     started = datetime.now(timezone.utc)
     try:
-        ok, payload = await supabase_rpc_write(
+        r = await supabase_rpc_write(
             "exec_backfill_forward_returns", {"horizon_days": horizon})
     except Exception as e:                                     # noqa: BLE001
         _log.warning("[FWD] backfill RPC unavailable (%s) — reporting, not guessing", e)
@@ -77,9 +77,10 @@ async def backfill_forward_returns(horizon: int = HORIZON_DAYS) -> dict[str, Any
                 "note": "the RPC must exist server-side; see "
                         "scripts/supabase_forward_return_backfill.sql"}
 
+    payload = r.value
     filled = len(payload) if isinstance(payload, list) else (payload or 0)
     out = {
-        "ok": bool(ok),
+        "ok": r.ok,
         "filled": filled,
         "horizon_days": horizon,
         "trusted_sources": list(TRUSTED_SOURCES),

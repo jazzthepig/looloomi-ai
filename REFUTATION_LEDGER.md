@@ -19716,3 +19716,94 @@ test_serving_tier.py                                              ← 48/48 ✅
   - 6 个 `supabase_*` read 函数返回 `dict | None` / `list` / `set | None`,**也被同样的「空 = 拒 = 不可达」三义性污染**,但这周不动 —— 一次一组,envelope 形状先在 writer 上稳定下来再 spread 到 reader,reader 路径消耗时间不同(它们的读侧已经大量用 `(payload, status)` 形态)
 
 **这条教给仓里什么.** **Pattern A「状态塌缩」的具体形态:把不同原因塌进同一个 True/False,代价是「who-where-which 永远要去相邻 log 抢救」**。S-180 / S-329 / S-334 是同一形状的三个面:Redis 不可达、Supabase 写失败、26 行假记录过验证闸门 —— **envelope 改的不是「让 True/False 消失」而是「让 False 不再是一种回答」**。`fail(why='')` 抛错是 structural enforcement,**它和 S-342 的 `_WRITE_NAME_RE` suffix 守卫起同一类作用**:把 `intent-based predicate` 写在构造层,让「错会响」且「响有原因」。
+
+## S-341b · migrate remaining 4 supabase_*_write writers + rpc_write callers (Change 1 Stage 2) (Seth, 2026-09-15)
+
+**Trigger.** S-341a migrated `redis_set` / `redis_set_key` to `StoreResult[bool]`, but the 4 Supabase writers (`supabase_insert_batch`, `supabase_insert_table`, `supabase_upsert_table`, `supabase_rpc_write`) were still bare-bool — same Pattern A collapse that hid 6 row-marks and 194 silent refreshes (S-334 / S-323g). Stage 2 of Change 1 closes the writer side.
+
+**What landed.**
+
+```
+src/api/store.py                  ← 4 writers migrated to StoreResult[bool] / StoreResult
+src/api/routers/mac_push.py       ← tuple unpack → r.ok / r.value / r.why (1 site)
+src/data/signals/forward_record_keeper.py
+                                   ← tuple unpack → r.ok / r.value / r.why (2 sites)
+src/data/signals/forward_return_backfill.py
+                                   ← tuple unpack → r.ok / r.value / r.why (1 site)
+tests/test_store_result.py         ← +8 tests (4 type checks + 4 fail-shape guards)
+                                    total now 22 (was 14 in S-341a)
+```
+
+The other 25 call sites of `supabase_insert_*` / `supabase_upsert_*` were left
+as `if await fn(...)` / `ok = await fn(...)` — `__bool__` migration safety
+carries them, and S-341c+ scope (and weekly review) decides where reading
+`.why` is worth the cost of changing a working call.
+
+**Migration shape (writers).**
+
+| Writer | Pre-341b | Post-341b |
+|---|---|---|
+| `supabase_insert_batch` | `-> bool` (1 bit, 5 collapse) | `StoreResult[bool]`, `.why` names role/config/empty-rows/HTTP-status/exception |
+| `supabase_insert_table` | `-> bool` (1 bit, 5 collapse) | `StoreResult[bool]`, same `.why` taxonomy |
+| `supabase_upsert_table` | `-> bool` (1 bit, 5 collapse) | `StoreResult[bool]`, plus `on_conflict` empty-string guard |
+| `supabase_rpc_write` | `(bool, reason_or_result)` tuple | `StoreResult` (no generic bound, value carries JSON), role-gate text in `.why` |
+
+The `__bool__` on the envelope makes legacy `if await fn(...)` / `ok = await fn(...)` continue to work. New tests pin both the type AND the failure-shape so a future "let's go back to bool for speed" PR fails loud.
+
+**Tuple → envelope migration (callers).** `supabase_rpc_write` had a `(bool, Any)` tuple return — that's a STRUCTURAL change for callers, not a `__bool__` migration. 4 sites updated:
+- `mac_push.py:_call` — `ok, result = await ...` → `r = await ...; r.ok, r.value, r.why`
+- `forward_record_keeper.py:refresh_depth_divergence_log` — 2 unpacks → 2 envelope reads
+- `forward_return_backfill.py:backfill_forward_returns` — `ok, payload = await ...` → `r.ok, r.value`
+
+The mac_push `diagnosis` check was `"may not write" in result` — kept, just changed to `in r.why`. The role-gate refusal text is now prefixed `"role_gate: "` in `.why` (was bare in the tuple). Tests pin this contract.
+
+**Failure reasons documented (writer side).** Each writer's `.why` distinguishes:
+- `role_gate: <refusal text>` (S-149 envelope, env/role explicit)
+- `SUPABASE_URL empty IN THIS PROCESS` / `SUPABASE_KEY empty IN THIS PROCESS` / both
+- `caller passed 0 rows` / `caller passed empty table name` / `caller passed empty on_conflict`
+- `HTTP <status>: <body snippet[:120/200/300]>`
+- `no response from Supabase after retries (breaker may be open)`
+- `<ExceptionClass>: <msg>`
+
+**Verification.**
+
+```
+✓ test_store_supabase_insert_batch_returns_store_result        (type pin)
+✓ test_store_supabase_insert_table_returns_store_result        (type pin)
+✓ test_store_supabase_upsert_table_returns_store_result        (type pin)
+✓ test_store_supabase_rpc_write_returns_store_result           (type pin — was tuple!)
+✓ test_supabase_insert_table_empty_rows_returns_store_result_fail
+✓ test_supabase_insert_table_empty_table_name_returns_store_result_fail
+✓ test_supabase_upsert_table_empty_on_conflict_returns_store_result_fail
+✓ test_supabase_rpc_write_role_gate_returns_store_result_fail  (full refusal text in .why)
+
+✅ 22/22 StoreResult envelope tests (14 S-341a + 8 S-341b)
+
+Downstream regression (writer-side call sites that depend on bare-bool):
+✓ test_a_failed_write_cannot_report_marked                     (S-334 — value discarded still fires)
+✓ test_tier_integrity                                          (S-149 — role gate still at head)
+✓ test_mac_push_wrappers                                       (S-169 — rpc_write is the gate)
+✓ test_intake_cannot_declare_its_own_verdict                   (S-164 — on_conflict pin)
+✓ test_lesson_guards                                           (S-119 — refuse_write still in first 900 chars)
+✓ test_regime_write_path                                       (insert_batch)
+✓ test_production_can_write                                    (writer role gate)
+✓ test_only_one_process_writes_the_record                      (insert_table / insert_batch)
+✓ test_one_ingestion_lane                                      (write-call hygiene)
+✓ test_hyperliquid_source                                      (upsert_table)
+✓ test_forward_records_actually_record                         (rpc_write)
+✓ test_degraded_value_guard                                    (insert_table)
+✓ test_beta_core_book                                          (insert_table)
+✓ test_nav_policy                                              (insert_table)
+✓ test_a_book_asks_the_table_not_the_cache                     (insert_table)
+
+✅ 196/196 writer-side regression tests pass (5 skipped — pre-existing infrastructure)
+```
+
+**Known gap / NOT in this commit.**
+- 25 callers of `supabase_insert_*` / `supabase_upsert_*` still consume `bool` (via `__bool__`). Reading `.why` for logging is the next-layer gain (S-341c+ scope, weekly review picks).
+- 6 reader functions (`supabase_get_*`, `supabase_rpc`, etc.) still return `dict | None` / `list` / `set | None` — same Pattern A collapse on the read side, but their read paths already use `(payload, status)` shape (S-180 line). Spread to readers separately; one shape per PR.
+
+**Why this took 1 day and not 0.5.** Three things slowed it: (1) `supabase_rpc_write` tuple → envelope is structural for callers, not `__bool__`-safe, so 4 sites needed editing; (2) `supabase_upsert_table` had two config-guard paths that collapsed into one `return False` pre-migration — splitting them into named `.why` strings meant reading every log line in `_supabase_request_with_retry` to make sure the upstream "breaker may be open" message made it into `.why`; (3) `test_supabase_insert_table_empty_rows_*` failed first because role gate (intentionally first per S-149) fires before the row guard — test had to patch `refuse_write` to simulate `role=production`. That patch is structural — it documents "the role gate IS the first guard, by design".
+
+**This teaches the repo what.** **Bare-bool returns are not "simple", they're "collapsed"**. S-334, S-329, S-323g — three different sleeves, three different failure modes, all flattened to `False`. The migration was not "replace bool with a richer type"; it was "make False refuse to be a single answer". The `fail(why='')` constructor guard (S-341a) is the structural enforcement: an empty-why failure is a programming error, not a logging error.
+
