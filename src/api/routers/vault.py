@@ -305,3 +305,114 @@ async def get_portfolio_stats(assets: str = "BTC,ETH,SOL"):
     except Exception as e:
         _logger.error(f"Error in {__name__}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# ── A-21 · CometCloud Layer II vault NAV tick (ETH ERC-20, NOT Drift) ─────────
+#
+# Different product from fund NAV (`*_paper_nav`, 24h valuation point).
+# Vault ticks per-minute. The whole point of these endpoints is the
+# validation loop:
+#
+#   POST /internal/vault-tick/{vault_id}   → run one tick NOW
+#                                            → write one row to vault_nav_tick
+#                                            → return full diagnostic
+#                                            → update loop_beat last_ok_at
+#
+#   GET  /api/v1/vault/{vault_id}/nav      → recent NAV series (last 60 ticks)
+#
+# No cron binding. No "wait for the next minute". Caller fires it,
+# reads the response, decides.
+def _internal_token() -> str:
+    import os
+    return os.getenv("INTERNAL_TOKEN", "")
+
+
+def _vault_auth(tok: str | None) -> None:
+    t = _internal_token()
+    if not t or not tok or tok != t:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+@router.post("/internal/vault-tick/{vault_id}")
+async def force_vault_tick(
+    vault_id: str,
+    dry_run: bool = False,
+    x_internal_token: str = Header(None, alias="X-Internal-Token"),
+) -> dict:
+    """Force one tick of one vault. The validation primitive.
+
+    NOT bound to any schedule. Caller invokes, reads result. This is the
+    end of the 24h "did anything happen?" loop for vault NAV — the operator
+    can ask "did this vault tick just now?" and get the answer in one HTTP
+    call.
+
+    Args:
+        vault_id: vault slug matching vault_state.vault_id
+        dry_run:  if True, compute and return NAV but don't write.
+                  Use this to inspect "what would the tick write?" before
+                  committing.
+
+    Returns:
+        Full diagnostic from `tick_vault_nav()` — see src/data/vault/tick.py.
+        HTTP 200 in both ok=True and ok=False cases (the failure shape is
+        the information; HTTP-level errors are for protocol problems, not
+        for "vault_positions table missing").
+
+    Auth: X-Internal-Token. Same as /internal/write-probe.
+    """
+    _vault_auth(x_internal_token)
+    from src.data.vault.tick import tick_vault_nav
+    return await tick_vault_nav(vault_id, dry_run=dry_run, source="manual")
+
+
+@router.get("/api/v1/vault/{vault_id}/nav")
+async def get_vault_nav_series(
+    vault_id: str,
+    limit: int = 60,
+) -> dict:
+    """Read recent NAV ticks for one vault (default last 60 = ~1 hour).
+
+    Public — vault NAV is a product feature, not a back-office metric.
+    No auth required.
+
+    Returns:
+        {
+          "vault_id": str,
+          "n": int,
+          "ticks": [{tick_ts, nav_usd, share_count, nav_per_share, source}, ...]
+        }
+
+    DESC by tick_ts. limit is clamped to [1, 1440] (max 1 day of minutes).
+    """
+    limit = max(1, min(1440, int(limit)))
+    import httpx
+    from src.api.store import _SB_KEY, _SB_URL
+    try:
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get(
+                f"{_SB_URL}/rest/v1/vault_nav_tick"
+                f"?vault_id=eq.{vault_id}&order=tick_ts.desc&limit={limit}"
+                f"&select=tick_ts,nav_usd,share_count,nav_per_share,source",
+                headers={"apikey": _SB_KEY,
+                         "Authorization": f"Bearer {_SB_KEY}",
+                         "Accept": "application/json"})
+        if r.status_code == 404:
+            return {"vault_id": vault_id, "n": 0, "ticks": [],
+                    "note": "vault_nav_tick 表不存在 —— 先跑 migrations/2026-09-14_vault_nav_tick.sql"}
+        if r.status_code != 200:
+            raise HTTPException(status_code=502,
+                                detail=f"vault_nav_tick 读失败 {r.status_code}: {r.text[:200]}")
+        rows = r.json()
+        ticks = [{
+            "tick_ts":       row.get("tick_ts"),
+            "nav_usd":       row.get("nav_usd"),
+            "share_count":   row.get("share_count"),
+            "nav_per_share": row.get("nav_per_share"),
+            "source":        row.get("source"),
+        } for row in rows]
+        return {"vault_id": vault_id, "n": len(ticks), "ticks": ticks}
+    except HTTPException:
+        raise
+    except Exception as e:
+        _logger.error(f"Error in {__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
