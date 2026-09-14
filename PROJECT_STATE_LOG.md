@@ -2087,3 +2087,184 @@ and committed but **NOT run** (OPEN RISK 1).
 — **2026-09-14 P2 (A-28 + A-29) — schema-drift split into tables vs RPC functions.** A-28 已落地 (`scripts/schema_drift_check.py` + `scripts/preflight.sh` stage),**正确抓到 9 张表 drift**;A-29 把 manifest 一分为二:`write_tables` (38) 是被写入的表,`rpc_functions` (7) 是被调用的 Postgres 函数,两端不再混淆。**根因**:S-342 regex 把 `_with_detail` 后缀一股脑当 writer,7 个 RPC 调用的首参(函数名)被吸进 `write_tables`,online probe 查 pg_class 自然 404;新谓词 `_is_table_write_name` / `_is_rpc_call_name` 分边;`_rpc_write` 也归到 `_RPC_SUFFIX` —— 它首参是函数名不是表。**`vault_positions` 顺手清掉**:tick.py:40 有个 dead `rpc_with_detail("vault_positions", {})` placeholder,返回值 `_rows` 直接丢 —— AST 看见字面量就误归 rpc,实际工作走的是下面 httpx GET;移除后 manifest 与代码一致。**`supabase_function_exists()` 加在 store.py**:POST `/rest/v1/rpc/<fn>` 空 payload,200/204/argument-error-400 = exists,404/PGRST202 = missing,网络/5xx = unknown(同 `supabase_table_exists` 三值语义;详见 S-166/S-323m 的「missing ≠ unreachable」纪律)。**`/internal/schema-drift` 同时探表和探函数**,response 增 `rpc_checked/rpc_present/rpc_missing`,`ok` 现在需要三段全绿。**本地 preflight 仍 RED (1 missing: vault_nav_tick)**,那是 A-21 留下的真尾巴,等 Jazz 在 Supabase SQL Editor 跑 `migrations/2026-09-14_vault_nav_tick.sql` (CREATE TABLE vault_state / vault_positions / vault_nav_tick + RLS) —— 跑完即可绿,无需再改代码。**offline test `test_every_written_table_exists.py` 24/24 绿**,JSON 重新生成 38 tables / 7 RPCs / 8 tables with column map。
 
 — **2026-09-14 P2.HOTFIX — `store_result.py` 漏 push,Railway 502 ~6 min**。e61a7ad 改了 `src/api/store.py` 让它 `from src.api.store_result import StoreResult`(S-341a 之前 dirty tree 留的债),但 commit 时只 stage 了 store.py **没有** store_result.py —— Railway 重启时 ImportError → 502。fix-up commit 79e7495 只加 `src/api/store_result.py`,不动 S-341a 的实质(那是 Austin lane 的活,我只是把 boot path 接回来);**教训:同一个 PR 改一个模块又 import 一个新模块时,git add 必须同时把两者 stage,`git add -A` 是 CLAUDE.md #6 禁的、path-scoped 时手必须稳**。**post-deploy schema-drift 又抓到 3 个真缺**:`exec_backfill_forward_returns` / `panel_closes` / `panel_funding` —— 代码调用但 Postgres 里不存在;`exec_backfill_forward_returns` SQL 在 `scripts/supabase_forward_return_backfill.sql` (header 写着「Applied to production the same day via MCP; written here because applying without recording deepens the .sql-vs-database drift」,**那正是 fusion_paper_state 同型:** 「MCP 跑的不留存」),`panel_closes` / `panel_funding` **本仓没有 CREATE FUNCTION SQL**——比 exec 那个还糟,是**没记录、也没文件可还原**,这是 P0 的 MCP-不存债的第三例。P2 (A-28 + A-29) 闭环态 = 表 38/38 + RPC 7/7 + 0 column drift;**当前真缺 = 1 表 (vault_nav_tick) + 3 RPC (exec_backfill_forward_returns / panel_closes / panel_funding)**,全部归 Jazz 用 Supabase SQL Editor 跑对应 SQL 即可,代码无需再改;`panel_closes`/`panel_funding` 的 SQL 必须先写出来(参考 `paid_close_loader.py:101` 调用点的 `p_symbols`/`p_days` 入参 + `pod_aggregator_paper.py:125` 的 `p_symbols`/`p_start`/`p_end` 入参)。
+
+## 2026-08-27-RECEIPT (PROJECT_STATE.md "2026-08-27 收口" body) — MOVED HERE 2026-09-15 FOR CAP
+
+
+周末 token 用尽时 Minimax 以 Seth 身份接手,留了一批未提交的改动在同一个工作树里。
+本轮把它们**做完并推齐**,而不是绕过关卡:
+
+1. **重建 Vite bundle。** `dashboard/src` 最新 08-27 00:33（S-243 的 regime 拼写
+   修复 + `agent.jsx` 去掉硬编码 `'Risk-Off'`），`dist` 停在 08-25 16:30 ——
+   **修好的东西一次也没被打包。** Minimax-B 的 bundle-freshness 关卡拦对了。
+
+2. **S-244:测试注册缺口。** S-243 台账写着「回归测试:
+   `tests/test_one_regime_one_spelling.py`（13 passed）」,而 preflight 里**没有
+   一行提到它**。顺查:`tests/` 75 个文件里 **9 个从未被引用** —— 74 条绿断言
+   守护空气,`test_factory` 9 条红断言无声地烂着。全部注册,并加
+   `tests/test_every_test_is_registered.py`（registered / exempt / orphan 三值 ＋
+   「调用方式必须匹配文件形式」）。现在 **73 registered · 1 exempt · 0 orphan**。
+
+   这是「一个形状」的**第 32 条**,压的是验证装置自己:
+   **守卫写了 vs 守卫被执行 → 一个「有测试」**。
+
+   那条守卫的分类器**我连错两次**（先"有 def test_ 就算 pytest 式"刷出 50 条假
+   阳性,再"__main__ 必须有 sys.exit"刷出 8 条,含 `test_strategy_discipline`）。
+   两次都是 `tests/_source.py` 记的同一个错法:**匹配了模式,不是构造。**
+   所以它自带合成样本负控制,分类器坏了先响,不报结论。
+
+3. **S-245:几何基底的写者。** 轨 A 第一件。按「先读消费者再写生产者」先读现状,
+   读出来的比预想严重:
+
+   - **仓库里没有任何代码写 `market_state_vectors`** —— 那 582 行来自 Mac 侧工具。
+     它是唯一一张没有可复现写者的表。
+   - **582 行里 568 行(97.6%)混了价源**,229 行含 `yfinance`(已死),
+     568 行含 `coingecko`(S-195 禁用)。入口是 `build_l1_observations.fetch_panel()`
+     里一句**没有 source 过滤**的查询 —— 同一天同一标的,后到的源静默覆盖先到的。
+   - 2025-01 之后 `ohlcv_daily` 有 **17,876 个 symbol-day 存在 ≥2 个源**,
+     **平均差 190.6bps**,最大 5,506bps。所以 `vol_mkt`/`vol_of_vol`/`downside_ratio`
+     量的是**换源跳变**,不是二阶矩(S-106 原话)。
+   - `n_symbols` 在 **25↔75** 摆动 —— 横截面维在变动成员上算,
+     「广度下降」与「面板少了 30 个标的」同一个数。
+
+   新写者 `src/data/vector/market_state_writer.py`:单源 · 定盘 · 一次标准化 ·
+   **写前地板**。而地板当场逼出一个我本来会静默做错的选择:默认起点从 2018-06
+   (只剩 **8 个达标标的**,写者拒绝)改到 2022-01(1,693 天 / 127 标的,
+   深度 ×2.9)。另把 `fng`/`oi_mcap`/`stable_supply_chg` 从完整度分母摘出
+   (全库 81 张表,**没有任何一张**持有它们)—— 一个永远达不到的上限不携带信息。
+
+   变异测试:五个变异,**「`if False:` 掉地板」连着打穿我两版守卫** ——
+   第一版验「那行代码在不在」(AST 能看结构,看不到可达性),第二版的夹具
+   同时触发三条地板、分不出是哪条在起作用。第三版每条地板配独立夹具 + upsert 探针,
+   五个变异全数打回。
+
+4. **S-246:我写的错误信息说不出错在哪。** dry-run 回来是
+   `error / reason: "Supabase 读不到,offset=0"` —— **四个原因塌成一个 None**
+   (凭证没设 / 断路器打开 / HTTP 4xx / 传输失败),而那句话里我**当场引用了
+   `(S-180)`**,也就是「读失败 ≠ 读到空」那一课。引用一条教训和执行它是两件事。
+
+   根因在环境:**仓库里没有任何代码为 `src/api/store.py` 加载 `.env`** ——
+   Railway 上是真环境变量,Mac 上裸跑 `python3 -c` 时 `os.getenv` 读到空。
+   修成 `SbRead(rows, reason)`,四条失败四句互不相同的话,凭证那条直接给补救命令。
+   变异(四句压回一句)打红 5 条。
+
+   **今天第十次同一个形状,而这次是我一小时前写的代码。** 结论不是「要更小心」,
+   是:**每写一个返回 Optional 的读函数,当场问一次调用方需要分开几种失败。**
+
+5. **S-247:安全检测 —— 8 个 SECURITY DEFINER 视图把数据层交给了 anon。已修。**
+
+   RLS 本身全绿(67 表全开、零 anon 写权限、11 个 SECURITY DEFINER 函数对 anon
+   全部 EXECUTE=false)。**而 8 个视图以属主身份执行,RLS 不适用。** 切到 anon 实跑:
+
+   ```
+   底表 signal_outcomes        0 行  │  视图 signal_outcomes_unified   7,834 行
+   底表 ohlcv_daily            0 行  │  视图 ohlcv_daily_canonical   485,352 行
+                                     │  视图 ohlcv_venue_spread      488,607 行
+   ```
+
+   负控制:同一 anon 角色下 5 个 `security_invoker` 视图**全部返回 0** ——
+   原因隔离到 SECURITY DEFINER 这一个属性。`signal_outcomes_unified` /
+   `asset_embeddings_latest` 正是「不可以免费暴露」的挖掘成果。
+
+   已 `alter view … set (security_invoker = on)` × 8。前置验证:前端不直连
+   Supabase、后端持 service_role;改完 service_role 视角行数**逐个不变**。
+
+   **更正既有记载**:`CODE_CHECK_2026-08-09.md` 说 anon key「打包进前端」——
+   实测 `dist/*.js` 里没有任何 JWT,只剩 `external_probe.sh` 一处。
+
+   **次发现**:`test_no_stack_leakage_on_user_surfaces.py` 每次都绿,而它的 5 条
+   断言**全在扫前端厂商名**,Python API 不在范围内 —— `src/api/` 里 21 处
+   `HTTPException(detail=str(e))` 从没被看过。S-244 的形状落在安全面上。
+   两处无截断的已修,其余 19 处冻结,新增 `test_exception_text_never_reaches_the_client`。
+
+   **未修留档(按严重度)**:① webhook SSRF(认证后,带 120 字节读取预言机)
+   ② `INTERNAL_TOKEN` 用 `!=` 非恒定时间比较 ③ 依赖 23/24 行 `>=` 不固定
+   ④ npm 14 条中仅 `lodash` 真进 bundle ⑤ **`pip-audit` 沙箱超时未完成 ——
+   未检查 ≠ 干净,需 Mac 上补跑**。
+
+6. **S-248/S-249:「我们不是有几个赚钱的吗」—— 有,而且页面把它盖掉了。**
+
+   ```
+   STRONG_OUTPERFORM  n=  7  α30=+4.99%  胜率 71.4%   ← journal era
+   STRONG OUTPERFORM  n=134  α_beta_adj=+7.99%  胜率 50%  ← legacy era 独立复现
+   ```
+
+   **但那 7 个没有一个用可信价源测出来。** 出口价源 83/95 被禁
+   (coingecko market_chart S-195 / yfinance 已死 S-230);可信子集只有 12 行,
+   而它的 ret30 是 **+1.64%** vs coingecko 那 38 行的 **−13.38%(差 15pp)**。
+
+   加上两个测量错误:**退出规则均值 8 天而判定窗口 30 天**
+   (23 个 WIN 里 12 个两者符号相反 —— 我们在赢的仓位赚钱前砍掉了它);
+   **统计条四个数用三种度量而不标注**。
+
+   > **那个 −26.19% 既不是坏消息也不是好消息 —— 它是一个不可测量的量,
+   > 被渲染成了一个可信的数。** 而它指向自我贬低,所以没人怀疑过它。
+
+   已建 `src/data/signals/track_record.py`(两种度量分开 · 价源四分类 ·
+   可信样本 <30 给原因不给数)、`signals.py` regime 分组前强制 strict 规范化、
+   响应加 `measure_basis` 逐项声明口径。
+
+   **S-249:修 ④ 时我写了仓库里的第四个 regime 规范化实现**,是
+   `test_regime_write_path` 挡下来的,不是我发现的 —— 而同一天早些时候我刚在
+   路由展平上正确复用过既有实现。**知道一条规则,和在下一个场景里认出它,
+   是两件事。** 给它写守卫时又被自己的 docstring 打红(引用了反面例子),
+   `tests/_source.py` 那一课今天踩了两种拼写。
+
+7. **🔴 S-251:两个可信加密价源已死,而探针报 `fresh`。** 做价源回填时撞到的。
+
+   ```
+   2026-07-27  binance_hist 261 标的 → 07-28 掉到 221 → 08-09 掉到 1(只剩 BCH)
+   08-09 起连续 19 天,每天只写一个标的
+   ```
+
+   `supabase_ohlcv_daily_freshness()` 的全部查询是
+   `order=trade_date.desc limit 1` —— **全表一行,不分源不分标的**。
+   BCH 天天把 max 推着走,coingecko 也在写,于是 `/internal/data-freshness`
+   报 **`verdict:"fresh", age_days:0.5`**。那个探针的 docstring 写着自己
+   就是为 silent pipeline death 建的,并列了三次前科 —— **它抓不到第四次。**
+
+   ```
+   coingecko    0d  25/25  flowing  ← 但 S-195 禁它做收益
+   eodhd        1d  33/33  flowing  ← TradFi,可信
+   hyperliquid  4d   0/177 DEAD
+   binance_hist 7d   0/212 DEAD
+   ```
+
+   **加密侧没有任何可用于收益的价源在更新。** 后果:S-245 的写者跑通也只能
+   产出 7 天前的基底(budget 2 天);S-248 里 41 个 crypto 行只有 20 个可重算。
+
+   已建 `source_freshness.py`(按覆盖率判活 · 按域给判决 · 五值)+ RPC
+   `ohlcv_source_coverage()`(**SECURITY INVOKER,只授 service_role**,
+   anon 实测被拒 42501)。同一模块我犯了三次同样的错:全局 ok 掩盖整个域、
+   差点每周六狼来了(`main.py` 里那段警告一字不差地描述了我正在写的 bug)、
+   变异测试打穿一条"验占位符而非验属性"的断言。
+
+   **🔴 P0 给 Jazz/Minimax:采集为什么在 07-28 和 08-09 两次掉档。这不是工程活。
+   在它恢复之前,`/quant` 上任何加密数字都还是噪声上的数字。**
+
+8. **S-258:价源层切 CG Pro —— 一件事解三个堵点。已建,待 Mac 侧跑。**
+
+   `get_cg_ohlc_range()` 早就存在且被 `/api/v1/ohlcv` 调用,而 `ohlcv_daily` 里
+   `coingecko_pro_ohlc` **0 行** —— 能力接通、被读过、从未被持久化。
+
+   ```
+   binance_hist   天花板 343 天(M-91)· 当前 0/212 标的(S-251)
+   hyperliquid    当前 0/177 标的
+   CG Pro         1811 天 × 10 标的(M-92)· 端点已付费两年,调用 0 次
+   ```
+
+   新端点 `POST /internal/backfill-cg-pro`(token 门控,**dry_run 默认 True**)。
+   四个查实才敢写的点:唯一键含 `source`(少写会覆盖 48,853 行旧数据,不可逆)·
+   标签按端点分不按 vendor 分 · 分块 175 天且重叠一天(接缝丢的 bar 不报错)·
+   volume 留 NULL 不跨源拼。
+
+   **落地**:`dry_run=true` 看 per-symbol 覆盖窗口 → 确认后 `dry_run=false`。
+   跑完之后 S-245 的写者可以从 343 天换到 1811 天重跑,M-86/M-87 的面板解除 BLOCKED。
+
+**分工(Jazz 2026-08-27)**:价源回填我做;**退出规则对比发 Minimax-C**。
+
+**下一步**:在 Mac 上 `set -a; source .env; set +a` 后重跑 dry-run,先看
+`panel` 的三个数(`n_symbols` / `coverage` / `excluded`)再跑真的。
+判据:`/internal/vdb-health` 连续 7 天 `overall: flowing`,且 `coherence` 只有一个 pass。
+
+---

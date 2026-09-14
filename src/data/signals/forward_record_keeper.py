@@ -85,17 +85,17 @@ async def refresh_depth_divergence_log() -> dict[str, Any]:
 
     out: dict[str, Any] = {"written": None, "resolved": None, "problems": []}
 
-    ok, res = await supabase_rpc_write("refresh_depth_divergence", {})
-    if ok:
-        out["written"] = res
+    r1 = await supabase_rpc_write("refresh_depth_divergence", {})
+    if r1.ok:
+        out["written"] = r1.value
     else:
-        out["problems"].append(f"refresh: {res}")
+        out["problems"].append(f"refresh: {r1.why}")
 
-    ok2, res2 = await supabase_rpc_write("resolve_depth_divergence", {})
-    if ok2:
-        out["resolved"] = res2
+    r2 = await supabase_rpc_write("resolve_depth_divergence", {})
+    if r2.ok:
+        out["resolved"] = r2.value
     else:
-        out["problems"].append(f"resolve: {res2}")
+        out["problems"].append(f"resolve: {r2.why}")
 
     # Negative codes are REFUSALS, not row counts. The SQL side fails closed
     # rather than writing a day whose coverage has collapsed, because a forward

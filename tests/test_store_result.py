@@ -176,6 +176,144 @@ def test_store_redis_set_key_returns_store_result() -> None:
     )
 
 
+# ── S-341b: 4 SUPABASE WRITERS MIGRATED ──────────────────────────────────────
+
+def test_store_supabase_insert_batch_returns_store_result() -> None:
+    """supabase_insert_batch return type is StoreResult[bool] (S-341b)."""
+    from src.api.store import supabase_insert_batch
+    sig = inspect.signature(supabase_insert_batch)
+    anno = sig.return_annotation
+    assert "StoreResult" in str(anno), (
+        f"supabase_insert_batch return annotation {anno!r} does not reference StoreResult"
+    )
+
+
+def test_store_supabase_insert_table_returns_store_result() -> None:
+    """supabase_insert_table return type is StoreResult[bool] (S-341b)."""
+    from src.api.store import supabase_insert_table
+    sig = inspect.signature(supabase_insert_table)
+    anno = sig.return_annotation
+    assert "StoreResult" in str(anno), (
+        f"supabase_insert_table return annotation {anno!r} does not reference StoreResult"
+    )
+
+
+def test_store_supabase_upsert_table_returns_store_result() -> None:
+    """supabase_upsert_table return type is StoreResult[bool] (S-341b)."""
+    from src.api.store import supabase_upsert_table
+    sig = inspect.signature(supabase_upsert_table)
+    anno = sig.return_annotation
+    assert "StoreResult" in str(anno), (
+        f"supabase_upsert_table return annotation {anno!r} does not reference StoreResult"
+    )
+
+
+def test_store_supabase_rpc_write_returns_store_result() -> None:
+    """supabase_rpc_write return type is StoreResult (S-341b — was tuple)."""
+    from src.api.store import supabase_rpc_write
+    sig = inspect.signature(supabase_rpc_write)
+    anno = sig.return_annotation
+    assert "StoreResult" in str(anno), (
+        f"supabase_rpc_write return annotation {anno!r} does not reference StoreResult "
+        f"— S-341b migration broke the shape contract"
+    )
+
+
+def test_supabase_insert_table_empty_rows_returns_store_result_fail() -> None:
+    """S-341b: a 0-rows insert MUST return a StoreResult failure with a non-empty
+    why. Pre-341b shape returned `False` (collapsed 4 failure causes into one bit).
+
+    This is a direct regression guard for S-334 / S-329 — the same writers whose
+    bare-bool returns swallowed a 6-row day of unmarked books. We don't need a
+    network; the row-count guard fires BEFORE the request.
+
+    We patch refuse_write because the role gate (S-149) is INTENTIONALLY the
+    first guard in every writer — its refusal would mask the row-count check
+    we're testing here. Production runs in role=production, where refuse_write
+    returns "" and the row-count guard fires as documented. We also set
+    SUPABASE_URL/KEY so the URL-missing guard doesn't fire first.
+    """
+    import asyncio
+    import os
+    import src.api.store as st
+    from src.api.store import supabase_insert_table
+    orig_refuse, orig_url, orig_key = st.refuse_write, st._SB_URL, st._SB_KEY
+    st.refuse_write = lambda label: ""
+    st._SB_URL, st._SB_KEY = "http://test.supabase", "test-key"
+    try:
+        r = asyncio.run(supabase_insert_table("any_table", []))
+    finally:
+        st.refuse_write = orig_refuse
+        st._SB_URL, st._SB_KEY = orig_url, orig_key
+    assert isinstance(r, StoreResult), f"got {type(r).__name__}, expected StoreResult"
+    assert r.ok is False
+    assert "0 rows" in r.why, (
+        f"empty-rows failure did not name the cause: {r.why!r}"
+    )
+
+
+def test_supabase_insert_table_empty_table_name_returns_store_result_fail() -> None:
+    """S-341b: empty `table` arg MUST fail loud with a why, not silent False."""
+    import asyncio
+    import src.api.store as st
+    from src.api.store import supabase_insert_table
+    orig_refuse, orig_url, orig_key = st.refuse_write, st._SB_URL, st._SB_KEY
+    st.refuse_write = lambda label: ""
+    st._SB_URL, st._SB_KEY = "http://test.supabase", "test-key"
+    try:
+        r = asyncio.run(supabase_insert_table("", [{"x": 1}]))
+    finally:
+        st.refuse_write = orig_refuse
+        st._SB_URL, st._SB_KEY = orig_url, orig_key
+    assert r.ok is False
+    assert "table" in r.why.lower(), f"why did not name the cause: {r.why!r}"
+
+
+def test_supabase_upsert_table_empty_on_conflict_returns_store_result_fail() -> None:
+    """S-341b: empty `on_conflict` MUST fail loud — without it, an UPSERT path
+    silently degenerates to an INSERT and a duplicate-key 409 on retry (S-164
+    territory)."""
+    import asyncio
+    import src.api.store as st
+    from src.api.store import supabase_upsert_table
+    orig_refuse, orig_url, orig_key = st.refuse_write, st._SB_URL, st._SB_KEY
+    st.refuse_write = lambda label: ""
+    st._SB_URL, st._SB_KEY = "http://test.supabase", "test-key"
+    try:
+        r = asyncio.run(supabase_upsert_table("any_table", [{"x": 1}], ""))
+    finally:
+        st.refuse_write = orig_refuse
+        st._SB_URL, st._SB_KEY = orig_url, orig_key
+    assert r.ok is False
+    assert "on_conflict" in r.why, f"why did not name the cause: {r.why!r}"
+
+
+def test_supabase_rpc_write_role_gate_returns_store_result_fail() -> None:
+    """S-341b: supabase_rpc_write's role gate MUST surface via .why with the
+    full refusal text (was the second tuple element). Without the full text,
+    the operator cannot tell role-gate from network-failure from payload-error.
+    """
+    import asyncio
+    import src.api.store as st
+    from src.api.store import supabase_rpc_write
+    # Patch refuse_write to simulate a role-gate refusal; this exercises the
+    # failure path without needing a real Supabase roundtrip.
+    orig = st.refuse_write
+    st.refuse_write = lambda label: "this process may not write cis_scores (env=railway, role=anon)"
+    try:
+        r = asyncio.run(supabase_rpc_write("exec_backfill_forward_returns", {"horizon_days": 1}))
+    finally:
+        st.refuse_write = orig
+    assert r.ok is False, f"role-gate refusal did not produce failure: {r}"
+    assert "may not write" in r.why, (
+        f"role-gate failure did not carry refusal reason: {r.why!r}"
+    )
+    # The first tuple element was the bool, second was the reason. Confirm the
+    # reason is in `why` — `.value` would be None (which is correct; role-gate
+    # refusal produces no payload).
+    assert r.value is None
+
+
 # ── BARE-INIT TRAP DOCUMENTATION ─────────────────────────────────────────────
 
 def test_bare_init_still_works_with_why_but_mypy_will_complain() -> None:

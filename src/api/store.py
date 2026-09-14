@@ -320,8 +320,21 @@ async def _supabase_request_with_retry(
     return None
 
 
-async def supabase_insert_batch(rows: list) -> bool:
-    """Bulk-insert CIS score rows into Supabase REST API with retry."""
+async def supabase_insert_batch(rows: list) -> StoreResult[bool]:
+    """Bulk-insert CIS score rows into Supabase REST API with retry.
+
+    Returns `StoreResult[bool]` (S-341b). Failure reasons a caller can read
+    off `.why`:
+      - role-gate refusal text (env: railway / role: anon / etc.)
+      - "caller passed 0 rows (not a config problem)"
+      - "SUPABASE_URL is empty" / "SUPABASE_KEY is empty" / both
+      - "HTTP <status>"
+      - "<ExceptionClass>: <msg>"
+
+    Legacy `if await supabase_insert_batch(...)` continues to work via
+    `__bool__` on the envelope. New callers should branch on `.ok` and log
+    `.why` — bare-bool swallowed failures were the root cause of S-329/S-334.
+    """
     # ROLE GATE (2026-08-12, S-149). Enforced HERE, at the write function, and not
     # in the twenty-odd background loops that call it — because loops keep being
     # added and a gate you have to remember is a gate that will be forgotten. Same
@@ -330,7 +343,7 @@ async def supabase_insert_batch(rows: list) -> bool:
     _refusal = refuse_write("cis_scores (batch)")
     if _refusal:
         note_refusal("cis_scores (batch)", _refusal)
-        return False
+        return StoreResult[bool].fail(f"role_gate: {_refusal}")
 
     # NAME WHICH ONE (2026-08-12, S-148). This said "missing config or empty rows"
     # — three different causes behind one sentence, so a reader could only tell
@@ -340,7 +353,7 @@ async def supabase_insert_batch(rows: list) -> bool:
     # wrong answers about which thing to go fix.
     if not rows:
         _logger.warning("[SUPABASE] Skipped: caller passed 0 rows (not a config problem)")
-        return False
+        return StoreResult[bool].fail("caller passed 0 rows (not a config problem)")
     if not _SB_URL or not _SB_KEY:
         missing = " and ".join(
             n for n, v in (("SUPABASE_URL", _SB_URL), ("SUPABASE_KEY", _SB_KEY)) if not v)
@@ -349,7 +362,7 @@ async def supabase_insert_batch(rows: list) -> bool:
             "at import time, so a scheduled run that does not load .env sees them "
             "blank while the main engine writes fine — which is exactly how one "
             "writer can be dark while another is green.", len(rows), missing)
-        return False
+        return StoreResult[bool].fail(f"{missing} empty IN THIS PROCESS")
 
     url = f"{_SB_URL}/rest/v1/{_SB_TABLE}"
     headers = {
@@ -368,17 +381,24 @@ async def supabase_insert_batch(rows: list) -> bool:
         )
         if resp and resp.status_code in (200, 201):
             _logger.info(f"[SUPABASE] Inserted {len(rows)} rows (attempt 1)")
-            return True
+            return StoreResult.ok_(value=True)
         if resp:
             _logger.warning(f"[SUPABASE] Insert failed after retries: {resp.status_code}")
-        return False
+            return StoreResult[bool].fail(f"HTTP {resp.status_code} after retries")
+        return StoreResult[bool].fail("no response from Supabase after retries (breaker may be open)")
     except Exception as e:
         _logger.warning(f"[SUPABASE] Insert exception: {e}")
-        return False
+        return StoreResult[bool].fail(f"{type(e).__name__}: {e}")
 
 
-async def supabase_insert_table(table: str, rows: list) -> bool:
-    """Generic bulk-insert into any Supabase table (REST) with retry."""
+async def supabase_insert_table(table: str, rows: list) -> StoreResult[bool]:
+    """Generic bulk-insert into any Supabase table (REST) with retry.
+
+    Returns `StoreResult[bool]` (S-341b). Failure reasons include role-gate
+    refusal, "0 rows" / empty table name, "SUPABASE_URL is empty" /
+    "SUPABASE_KEY is empty", "HTTP <status>: <body snippet>", and the
+    exception class+message. Callers can use `.ok` / `.why` for logging.
+    """
     # ROLE GATE (2026-08-12, S-149). Enforced HERE, at the write function, and not
     # in the twenty-odd background loops that call it — because loops keep being
     # added and a gate you have to remember is a gate that will be forgotten. Same
@@ -387,11 +407,17 @@ async def supabase_insert_table(table: str, rows: list) -> bool:
     _refusal = refuse_write(table)
     if _refusal:
         note_refusal(table, _refusal)
-        return False
+        return StoreResult[bool].fail(f"role_gate: {_refusal}")
 
 
-    if not _SB_URL or not _SB_KEY or not rows or not table:
-        return False
+    if not _SB_URL or not _SB_KEY:
+        missing = " and ".join(
+            n for n, v in (("SUPABASE_URL", _SB_URL), ("SUPABASE_KEY", _SB_KEY)) if not v)
+        return StoreResult[bool].fail(f"{missing} empty IN THIS PROCESS")
+    if not rows:
+        return StoreResult[bool].fail("caller passed 0 rows")
+    if not table:
+        return StoreResult[bool].fail("caller passed empty table name")
     url = f"{_SB_URL}/rest/v1/{table}"
     headers = {
         "apikey":        _SB_KEY,
@@ -403,13 +429,15 @@ async def supabase_insert_table(table: str, rows: list) -> bool:
         resp = await _supabase_request_with_retry("POST", url, content=json.dumps(rows), headers=headers)
         if resp and resp.status_code in (200, 201):
             _logger.info(f"[SUPABASE] Inserted {len(rows)} rows into {table}")
-            return True
+            return StoreResult.ok_(value=True)
         if resp:
             _logger.warning(f"[SUPABASE] Insert into {table} failed: {resp.status_code} {resp.text[:120]}")
-        return False
+            return StoreResult[bool].fail(
+                f"HTTP {resp.status_code}: {(resp.text or '')[:120]}")
+        return StoreResult[bool].fail("no response from Supabase after retries (breaker may be open)")
     except Exception as e:
         _logger.warning(f"[SUPABASE] Insert into {table} exception: {e}")
-        return False
+        return StoreResult[bool].fail(f"{type(e).__name__}: {e}")
 
 
 async def supabase_table_exists(table: str) -> bool | None:
@@ -545,7 +573,7 @@ async def supabase_missing_columns(table: str, columns: list[str]) -> list[str] 
     return missing
 
 
-async def supabase_upsert_table(table: str, rows: list, on_conflict: str) -> bool:
+async def supabase_upsert_table(table: str, rows: list, on_conflict: str) -> StoreResult[bool]:
     """Bulk UPSERT into any Supabase table, resolving duplicates on `on_conflict`.
 
     Distinct from supabase_insert_table for exactly one reason: RETRIES (S-164).
@@ -556,16 +584,27 @@ async def supabase_upsert_table(table: str, rows: list, on_conflict: str) -> boo
     table. "17/29 refuted" is a number we make decisions with; it must not be a
     function of how many times somebody ran a script.
 
+    Returns `StoreResult[bool]` (S-341b). Same failure-shape contract as
+    `supabase_insert_table` plus an `on_conflict` empty-string check.
+
     Same role gate as the insert path — enforced at the write function, never at
     the caller, because callers keep being added.
     """
     _refusal = refuse_write(f"{table} (upsert)")
     if _refusal:
         note_refusal(table, _refusal)
-        return False
+        return StoreResult[bool].fail(f"role_gate: {_refusal}")
 
-    if not _SB_URL or not _SB_KEY or not rows or not table or not on_conflict:
-        return False
+    if not _SB_URL or not _SB_KEY:
+        missing = " and ".join(
+            n for n, v in (("SUPABASE_URL", _SB_URL), ("SUPABASE_KEY", _SB_KEY)) if not v)
+        return StoreResult[bool].fail(f"{missing} empty IN THIS PROCESS")
+    if not rows:
+        return StoreResult[bool].fail("caller passed 0 rows")
+    if not table:
+        return StoreResult[bool].fail("caller passed empty table name")
+    if not on_conflict:
+        return StoreResult[bool].fail("caller passed empty on_conflict")
     url = f"{_SB_URL}/rest/v1/{table}?on_conflict={on_conflict}"
     headers = {
         "apikey":        _SB_KEY,
@@ -578,13 +617,15 @@ async def supabase_upsert_table(table: str, rows: list, on_conflict: str) -> boo
         resp = await _supabase_request_with_retry("POST", url, content=json.dumps(rows), headers=headers)
         if resp and resp.status_code in (200, 201, 204):
             _logger.info(f"[SUPABASE] Upserted {len(rows)} rows into {table} on {on_conflict}")
-            return True
+            return StoreResult.ok_(value=True)
         if resp:
             _logger.warning(f"[SUPABASE] Upsert into {table} failed: {resp.status_code} {resp.text[:200]}")
-        return False
+            return StoreResult[bool].fail(
+                f"HTTP {resp.status_code}: {(resp.text or '')[:200]}")
+        return StoreResult[bool].fail("no response from Supabase after retries (breaker may be open)")
     except Exception as e:
         _logger.warning(f"[SUPABASE] Upsert into {table} exception: {e}")
-        return False
+        return StoreResult[bool].fail(f"{type(e).__name__}: {e}")
 
 
 async def supabase_get_recent_scores(symbols: list, n: int = 30) -> dict:
@@ -745,8 +786,9 @@ async def supabase_rpc(fn_name: str, payload: dict | None = None):
         return None
 
 
-async def supabase_rpc_write(fn_name: str, payload: dict | None = None):
-    """RPC that WRITES — role-gated. Returns (ok, result_or_reason). (S-169)
+async def supabase_rpc_write(fn_name: str, payload: dict | None = None) -> StoreResult:
+    """RPC that WRITES — role-gated. Returns StoreResult with `value` carrying
+    the JSON result on success (S-169 + S-341b).
 
     WHY A SECOND FUNCTION. `supabase_rpc` above has no role gate. It predates
     S-149 and is used for reads, so gating it would break replicas that
@@ -760,36 +802,45 @@ async def supabase_rpc_write(fn_name: str, payload: dict | None = None):
     them through an ungated helper would have moved the write out from behind
     the gate rather than behind it.
 
-    TWO-VALUED RETURN, deliberately. `supabase_rpc` returns None for "not
-    configured", "declined", "network error" and "function raised" alike. That
-    collapse is the same one that hid eleven missing tables (S-166) and a
-    read-only production (S-168). The caller needs to tell the operator WHICH,
-    because the fixes are different: set a variable, redeploy, or fix a payload.
+    MIGRATION (S-341b). Pre-341b shape was `(ok: bool, why_or_result)` — a
+    tuple. The envelope upgrade is structural: callers that did `ok, result =
+    await supabase_rpc_write(...)` MUST be updated to `r = await ...; r.ok,
+    r.value, r.why`. Callers doing just `if await fn(...)` keep working via
+    `__bool__`. Affected call sites are listed in the S-341b ledger entry.
+
+    Failure reasons in `.why`:
+      - role-gate refusal text (env: railway / role: anon / etc.)
+      - "SUPABASE_URL / SUPABASE_KEY not configured on this process"
+      - "no response from Supabase after retries"
+      - "HTTP <status>: <body snippet>"  (PostgREST's own message passes through)
+      - "<ExceptionClass>: <msg>"
+
+    Success: `.ok=True`, `.why=""`, `.value` is the parsed JSON or None.
     """
     _refusal = refuse_write(f"rpc {fn_name}")
     if _refusal:
         note_refusal(f"rpc:{fn_name}", _refusal)
-        return False, _refusal
+        return StoreResult.fail(f"role_gate: {_refusal}")
     if not _SB_URL or not _SB_KEY:
-        return False, "SUPABASE_URL / SUPABASE_KEY not configured on this process"
+        return StoreResult.fail("SUPABASE_URL / SUPABASE_KEY not configured on this process")
     url = f"{_SB_URL}/rest/v1/rpc/{fn_name}"
     headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}",
                "Content-Type": "application/json"}
     try:
         resp = await _supabase_request_with_retry("POST", url, json=(payload or {}), headers=headers)
         if resp is None:
-            return False, "no response from Supabase after retries"
+            return StoreResult.fail("no response from Supabase after retries")
         if resp.status_code in (200, 201, 204):
             try:
-                return True, resp.json()
+                return StoreResult.ok_(value=resp.json())
             except Exception:
-                return True, None
+                return StoreResult.ok_(value=None)
         # PostgREST puts OUR schema's own message here. Pass it through: a
         # generic failure string does not merely fail to help, it funds wrong
         # answers (S-138, the api_keys intended_use column).
-        return False, f"HTTP {resp.status_code}: {(resp.text or '')[:300]}"
+        return StoreResult.fail(f"HTTP {resp.status_code}: {(resp.text or '')[:300]}")
     except Exception as e:                                  # noqa: BLE001
-        return False, f"{type(e).__name__}: {e}"
+        return StoreResult.fail(f"{type(e).__name__}: {e}")
 
 
 async def supabase_get_latest_track_record() -> list:
