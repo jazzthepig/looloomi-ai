@@ -2844,6 +2844,28 @@ async def data_freshness(x_internal_token: str = Header(None, alias="X-Internal-
         out["loops"] = {"verdict": "unknown",
                         "note": f"{type(_be).__name__} —— 读不到 ≠ 都在跑"}
 
+    # ── A-13:每个循环的 liveness SLO(「最近一次成功」+「最后心跳」双时钟) ───
+    # 「心跳还活着」(loops.verdict) ≠「最近跑成功过」。一个循环可以每 6h 跑
+    # 一次、连续 5 天每次都失败 —— 心跳表面正常,但 last_ok_at 已经 5 天前。
+    # 这次 09-14 估值点没起来就是这个形状的 4 个 marker loop 叠加 (S-323)。
+    # 用 `src.api.liveness` 给每行附 live / stale / dead 三值,再在顶层裁决
+    # 上把 marker 死 / 僵当成 critical —— 因为 NAV 表能不能 mark 是这堆循环
+    # 里唯一的硬指标。
+    try:
+        from src.api.liveness import compute_liveness_summary as _liveness
+        _loop_rows = (out.get("loops") or {}).get("rows") or []
+        out["liveness"] = _liveness(_loop_rows)
+        _lv_overall = out["liveness"].get("overall")
+        if _lv_overall == "critical":
+            # 顶层 override,和 producers_dead 同级:不是「loops 也 failing」,
+            # 而是「marker 循环超时 / 死亡 —— NAV 没在 mark」。
+            if not (out.get("verdict") or "").startswith("producers_"):
+                out["verdict"] = "liveness_critical"
+                out["verdict_source"] = "liveness"
+    except Exception as _le:                                      # noqa: BLE001
+        out["liveness"] = {"overall": "unknown",
+                           "note": f"{type(_le).__name__} —— 读不到 ≠ 都健康"}
+
     try:
         # S-340 同上:`watch_census` 也走 `rpc_with_detail`(S-323m),把 outcome + body
         # 透出;同一类「读不到 ≠ 全覆盖」的假 unknown(S-180)。
