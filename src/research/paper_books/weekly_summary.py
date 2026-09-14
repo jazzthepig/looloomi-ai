@@ -175,9 +175,13 @@ def _try_fetch_r77_nav() -> list[tuple[str, float]] | None:
     try:
         import urllib.request
         import json
+        # S-336 reader discipline: filter voided v1 rows. See nav_ledger.py
+        # for the same change — without this filter, weekly_summary's R77
+        # baseline would splice fabricated v1 marks onto real v2 marks.
         url = (
             f"{SUPABASE_URL.rstrip('/')}/rest/v1/{R77_NAV_TABLE}"
-            f"?select=date_utc,nav&order=date_utc.asc&limit=200"
+            f"?select=date_utc,nav&inception_id=eq.v2&void_reason=is.null"
+            f"&order=date_utc.asc&limit=200"
         )
         req = urllib.request.Request(
             url,

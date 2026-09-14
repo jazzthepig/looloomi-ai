@@ -294,9 +294,17 @@ def _fetch_r77_nav_close_to(today_iso: str) -> tuple[Optional[float], Optional[f
     if not SUPABASE_URL or not SUPABASE_KEY:
         return None, None
     try:
+        # S-336 reader discipline: filter voided v1 rows. The 26 rows from
+        # 2026-08-15..2026-09-09 are PRESERVED in the table but flagged
+        # voided; they must not appear in any R77 paper NAV curve because
+        # the state was fabricated (w_held was empty every cycle). Without
+        # this filter, sleeve_2's `r77_today - r77_yest` arithmetic quietly
+        # splices fabricated marks onto real ones — the exact failure mode
+        # the void_reason column exists to prevent.
         url = (
             f"{SUPABASE_URL.rstrip('/')}/rest/v1/{R77_NAV_TABLE}"
-            f"?select=date_utc,nav&order=date_utc.desc&limit=2"
+            f"?select=date_utc,nav&inception_id=eq.v2&void_reason=is.null"
+            f"&order=date_utc.desc&limit=2"
         )
         req = urllib.request.Request(
             url,

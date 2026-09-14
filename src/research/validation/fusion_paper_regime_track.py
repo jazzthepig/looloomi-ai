@@ -364,9 +364,14 @@ def _fetch_r64_nav_close_to(today_iso: str) -> tuple[Optional[float], Optional[f
         # NOTE: the actual R64 paper NAV table is 'fusion_paper_nav'.
         # _SUPABASE_TABLE holds 'fusion_paper_regime_track' for our writes; the
         # READ side targets the R64 source.
+        # S-336 reader discipline: filter voided v1 rows. Same as the other
+        # two fusion_paper_nav readers (nav_ledger, weekly_summary). Without
+        # this filter, R64 baseline comparison would splice fabricated marks
+        # onto real ones.
         url = (
             f"{SUPABASE_URL.rstrip('/')}/rest/v1/fusion_paper_nav"
-            f"?select=mark_date,nav&order=mark_date.desc&limit=2"
+            f"?select=mark_date,nav&inception_id=eq.v2&void_reason=is.null"
+            f"&order=mark_date.desc&limit=2"
         )
         req = urllib.request.Request(
             url,
