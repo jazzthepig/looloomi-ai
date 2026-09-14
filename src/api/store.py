@@ -14,6 +14,8 @@ import os, json, math, time
 from datetime import datetime, timezone, timedelta
 import httpx
 from fastapi import WebSocket
+from fastapi.websockets import WebSocketState
+from typing import Any, cast
 
 _logger = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ _REDIS_KEY     = "cis:local_scores"
 _REDIS_TTL     = 7200  # 2 hours
 
 
-async def redis_set(data: dict) -> StoreResult[bool]:
+async def redis_set(data: dict[str, Any]) -> StoreResult[bool]:
     """Write CIS payload to Upstash with 2 h TTL.
 
     Returns `StoreResult[bool]` (S-341a). The envelope carries the failure
@@ -55,7 +57,7 @@ async def redis_set(data: dict) -> StoreResult[bool]:
     return await redis_set_key(_REDIS_KEY, data, ttl=_REDIS_TTL)
 
 
-async def redis_get() -> dict | None:
+async def redis_get() -> dict[str, Any] | None:
     """Read the T1 CIS payload from Upstash. None on miss OR error.
 
     ⚠️ If you are deciding T1-vs-T2 tier, use `redis_get_status()` — the tier
@@ -65,14 +67,14 @@ async def redis_get() -> dict | None:
     return await redis_get_key(_REDIS_KEY)
 
 
-async def redis_get_status() -> tuple[dict | None, str]:
+async def redis_get_status() -> tuple[dict[str, Any] | None, str]:
     """The T1 CIS payload plus WHY it is empty. See `redis_get_key_status`."""
     return await redis_get_key_status(_REDIS_KEY)
 
 
 # ── Generic key-based Redis helpers ──────────────────────────────────────────
 
-async def redis_set_key(key: str, data: dict, ttl: int = 7200) -> StoreResult[bool]:
+async def redis_set_key(key: str, data: dict[str, Any], ttl: int = 7200) -> StoreResult[bool]:
     """Write any JSON payload to Upstash with TTL.
 
     Returns `StoreResult[bool]` (S-341a). Failure reasons a caller can read
@@ -107,7 +109,7 @@ async def redis_set_key(key: str, data: dict, ttl: int = 7200) -> StoreResult[bo
         return StoreResult[bool].fail(f"UPSTASH request raised: {type(e).__name__}: {e}")
 
 
-async def redis_get_key_status(key: str) -> tuple[dict | None, str]:
+async def redis_get_key_status(key: str) -> tuple[dict[str, Any] | None, str]:
     """Read a JSON payload from Upstash, SAYING WHY when it comes back empty.
 
     Returns (payload, status) with status one of:
@@ -160,7 +162,7 @@ async def redis_get_key_status(key: str) -> tuple[dict | None, str]:
         return None, "error"
 
 
-async def redis_get_key(key: str) -> dict | None:
+async def redis_get_key(key: str) -> dict[str, Any] | None:
     """Read any JSON payload from Upstash. Returns None on miss OR error.
 
     Kept for the many callers where the distinction genuinely does not matter
@@ -209,7 +211,7 @@ _cb_consecutive_4xx = 0
 _CB_4XX_ALERT_THRESHOLD = 20       # alert once we have 20 cumulative 4xx
 
 
-def supabase_breaker_state() -> dict:
+def supabase_breaker_state() -> dict[str, Any]:
     """Observable breaker state — consumed by the health check so that health
     reflects the real data layer instead of asserting it (see I4 / discipline)."""
     now = time.time()
@@ -266,7 +268,7 @@ def _cb_record_caller_error(status_code: int, body_snippet: str) -> None:
 async def _supabase_request_with_retry(
     method: str,
     url: str,
-    **kwargs
+    **kwargs: Any,
 ) -> httpx.Response | None:
     """Execute HTTP request with backoff retry, guarded by a circuit breaker.
 
@@ -320,7 +322,7 @@ async def _supabase_request_with_retry(
     return None
 
 
-async def supabase_insert_batch(rows: list) -> StoreResult[bool]:
+async def supabase_insert_batch(rows: list[Any]) -> StoreResult[bool]:
     """Bulk-insert CIS score rows into Supabase REST API with retry.
 
     Returns `StoreResult[bool]` (S-341b). Failure reasons a caller can read
@@ -391,7 +393,7 @@ async def supabase_insert_batch(rows: list) -> StoreResult[bool]:
         return StoreResult[bool].fail(f"{type(e).__name__}: {e}")
 
 
-async def supabase_insert_table(table: str, rows: list) -> StoreResult[bool]:
+async def supabase_insert_table(table: str, rows: list[Any]) -> StoreResult[bool]:
     """Generic bulk-insert into any Supabase table (REST) with retry.
 
     Returns `StoreResult[bool]` (S-341b). Failure reasons include role-gate
@@ -573,7 +575,7 @@ async def supabase_missing_columns(table: str, columns: list[str]) -> list[str] 
     return missing
 
 
-async def supabase_upsert_table(table: str, rows: list, on_conflict: str) -> StoreResult[bool]:
+async def supabase_upsert_table(table: str, rows: list[Any], on_conflict: str) -> StoreResult[bool]:
     """Bulk UPSERT into any Supabase table, resolving duplicates on `on_conflict`.
 
     Distinct from supabase_insert_table for exactly one reason: RETRIES (S-164).
@@ -628,7 +630,7 @@ async def supabase_upsert_table(table: str, rows: list, on_conflict: str) -> Sto
         return StoreResult[bool].fail(f"{type(e).__name__}: {e}")
 
 
-async def supabase_get_recent_scores(symbols: list, n: int = 30) -> dict:
+async def supabase_get_recent_scores(symbols: list[Any], n: int = 30) -> dict[str, Any]:
     """Bulk-fetch last N CIS score rows per symbol from Supabase.
 
     Returns dict keyed by symbol (uppercase) → list of rows ordered newest-first.
@@ -658,7 +660,7 @@ async def supabase_get_recent_scores(symbols: list, n: int = 30) -> dict:
         resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
         if resp and resp.status_code == 200:
             rows = resp.json()
-            result: dict = {}
+            result: dict[str, Any] = {}
             for row in rows:
                 sym_raw = row.get("symbol")
                 # Supabase returns symbol=null when the column isn't in SELECT
@@ -678,7 +680,7 @@ async def supabase_get_recent_scores(symbols: list, n: int = 30) -> dict:
         return {}
 
 
-async def supabase_get_history(symbol: str, days: int = 7) -> list:
+async def supabase_get_history(symbol: str, days: int = 7) -> list[dict[str, Any]]:
     """Read CIS score history for one symbol from Supabase with retry."""
     if not _SB_URL or not _SB_KEY:
         _logger.warning("[SUPABASE] History read skipped: missing config")
@@ -701,7 +703,7 @@ async def supabase_get_history(symbol: str, days: int = 7) -> list:
         if resp and resp.status_code == 200:
             data = resp.json()
             _logger.warning(f"[SUPABASE] History {symbol}: {len(data)} records (last 7d)")
-            return data
+            return cast("list[dict[str, Any]]", data)
         if resp:
             _logger.warning(f"[SUPABASE] History error {resp.status_code}: {resp.text[:100]}")
         return []
@@ -711,20 +713,20 @@ async def supabase_get_history(symbol: str, days: int = 7) -> list:
 
 
 # ── Track record read — cached, for the self-tuning conviction tilt ────────────
-_TRACKREC_CACHE: dict = {"rows": None, "ts": 0.0}
+_TRACKREC_CACHE: dict[str, Any] = {"rows": cast("list[dict[str, Any]] | None", None), "ts": 0.0}
 _TRACKREC_TTL = 6 * 3600  # 6h — the refresh runs daily; this is fresh enough
 
 
-_EDGEMAP_CACHE: dict = {"rows": None, "ts": 0.0}
+_EDGEMAP_CACHE: dict[str, Any] = {"rows": cast("list[dict[str, Any]] | None", None), "ts": 0.0}
 _EDGEMAP_TTL = 6 * 3600
 
 
-async def supabase_get_latest_edge_map() -> list:
+async def supabase_get_latest_edge_map() -> list[dict[str, Any]]:
     """Latest signal_edge_map batch: [{signal,risk_band,n,avg_alpha_pct,alpha_win_pct,...}].
     Cached 6h; best-effort ([] on miss)."""
     now = time.time()
     if _EDGEMAP_CACHE["rows"] is not None and (now - _EDGEMAP_CACHE["ts"]) < _EDGEMAP_TTL:
-        return _EDGEMAP_CACHE["rows"]
+        return cast("list[dict[str, Any]]", _EDGEMAP_CACHE["rows"])
     if not _SB_URL or not _SB_KEY:
         return []
     url = f"{_SB_URL}/rest/v1/signal_edge_map"
@@ -745,7 +747,7 @@ async def supabase_get_latest_edge_map() -> list:
         return []
 
 
-async def supabase_rpc(fn_name: str, payload: dict | None = None):
+async def supabase_rpc(fn_name: str, payload: dict[str, Any] | None = None) -> Any:
     """Call a Postgres function via PostgREST RPC (uses the configured service key).
     Returns the JSON result or None. Used by the daily track-record refresh.
 
@@ -786,7 +788,7 @@ async def supabase_rpc(fn_name: str, payload: dict | None = None):
         return None
 
 
-async def supabase_rpc_write(fn_name: str, payload: dict | None = None) -> StoreResult:
+async def supabase_rpc_write(fn_name: str, payload: dict[str, Any] | None = None) -> StoreResult[Any]:
     """RPC that WRITES — role-gated. Returns StoreResult with `value` carrying
     the JSON result on success (S-169 + S-341b).
 
@@ -843,7 +845,7 @@ async def supabase_rpc_write(fn_name: str, payload: dict | None = None) -> Store
         return StoreResult.fail(f"{type(e).__name__}: {e}")
 
 
-async def supabase_get_latest_track_record() -> list:
+async def supabase_get_latest_track_record() -> list[dict[str, Any]]:
     """Latest signal_track_record batch (list of {signal,grade,n,avg_alpha_pct,
     alpha_win_pct, avg_edge_beta_adj_pct, edge_beta_adj_t, avg_beta_pit,
     n_beta_adj, computed_at}). Cached 6h; best-effort ([] on any miss →
@@ -859,7 +861,7 @@ async def supabase_get_latest_track_record() -> list:
     """
     now = time.time()
     if _TRACKREC_CACHE["rows"] is not None and (now - _TRACKREC_CACHE["ts"]) < _TRACKREC_TTL:
-        return _TRACKREC_CACHE["rows"]
+        return cast("list[dict[str, Any]]", _TRACKREC_CACHE["rows"])
     if not _SB_URL or not _SB_KEY:
         return []
     url = f"{_SB_URL}/rest/v1/signal_track_record"
@@ -891,7 +893,7 @@ async def supabase_get_latest_track_record() -> list:
 # feed is stale (MINIMAX_SYNC §BETA-METRIC-AGG spec line 6880). The simplest
 # check is to probe ohlcv_daily.last_trade_date directly via Supabase REST.
 # Cached 5 min — the freshness gate is loose enough that this is plenty.
-_OHLCV_FRESH_CACHE: dict = {"ts": 0.0, "result": None}
+_OHLCV_FRESH_CACHE: dict[str, Any] = {"ts": 0.0, "result": cast("dict[str, Any] | None", None)}
 _OHLCV_FRESH_TTL = 300
 # Thresholds (seconds). 1.5 day = the daily collector must have written at
 # least one row in the last 36 h to be considered "fresh." The 24 h admin
@@ -901,7 +903,7 @@ _OHLCV_FRESH_OPEN_S = 36 * 3600       # gate opens if age < 36 h
 _OHLCV_FRESH_RECENT_S = 7 * 24 * 3600  # "recent" warning band
 
 
-async def supabase_ohlcv_daily_freshness() -> dict:
+async def supabase_ohlcv_daily_freshness() -> dict[str, Any]:
     """Return the price-feed freshness block used by §BETA-METRIC-AGG gate.
 
     Returns dict with: {gate_open: bool, age_seconds, last_trade_date,
@@ -910,14 +912,14 @@ async def supabase_ohlcv_daily_freshness() -> dict:
     """
     now = time.time()
     if _OHLCV_FRESH_CACHE["result"] is not None and (now - _OHLCV_FRESH_CACHE["ts"]) < _OHLCV_FRESH_TTL:
-        return _OHLCV_FRESH_CACHE["result"]
+        return cast("dict[str, Any]", _OHLCV_FRESH_CACHE["result"])
     if not _SB_URL or not _SB_KEY:
         return {"gate_open": False, "age_seconds": None, "last_trade_date": None,
                 "verdict": "stale", "error": "supabase_not_configured"}
     url = f"{_SB_URL}/rest/v1/ohlcv_daily"
     params = {"select": "trade_date", "order": "trade_date.desc", "limit": "1"}
     headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
-    out: dict = {"gate_open": False, "age_seconds": None,
+    out: dict[str, Any] = {"gate_open": False, "age_seconds": None,
                  "last_trade_date": None, "verdict": "stale"}
     try:
         resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
@@ -958,7 +960,7 @@ async def supabase_ohlcv_daily_freshness() -> dict:
 
 
 # ── S-180: T1 occupancy, so a T2 writer can refuse to overwrite a live T1 ─────
-_T1_OCCUPANCY_CACHE: dict = {"syms": None, "ts": 0.0}
+_T1_OCCUPANCY_CACHE: dict[str, Any] = {"syms": cast("set[str] | None", None), "ts": 0.0}
 _T1_OCCUPANCY_TTL = 120.0
 
 
@@ -986,7 +988,7 @@ async def supabase_fresh_t1_symbols(max_age_minutes: int = 90) -> set[str] | Non
     now = time.time()
     if (_T1_OCCUPANCY_CACHE["syms"] is not None
             and now - _T1_OCCUPANCY_CACHE["ts"] < _T1_OCCUPANCY_TTL):
-        return _T1_OCCUPANCY_CACHE["syms"]
+        return cast("set[str] | None", _T1_OCCUPANCY_CACHE["syms"])
     if not _SB_URL or not _SB_KEY:
         return None
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=max_age_minutes)
@@ -1020,16 +1022,16 @@ async def supabase_fresh_t1_symbols(max_age_minutes: int = 90) -> set[str] | Non
 
 
 # ── D4 attention (trending_log) read — cached, for cause-proximity ─────────────
-_TRENDING_CACHE: dict = {"map": None, "ts": 0.0}
+_TRENDING_CACHE: dict[str, Any] = {"map": cast("dict[str, dict[str, Any]] | None", None), "ts": 0.0}
 _TRENDING_TTL = 1800  # 30 min — trending only refreshes daily, this is plenty fresh
 
 
-async def supabase_get_latest_trending() -> dict:
+async def supabase_get_latest_trending() -> dict[str, Any]:
     """Latest D4 attention snapshot as {SYMBOL_UPPER: row}. Cached 30 min; best-effort
     (returns {} on any miss so cause-proximity falls back to its market_proxy floor)."""
     now = time.time()
     if _TRENDING_CACHE["map"] is not None and (now - _TRENDING_CACHE["ts"]) < _TRENDING_TTL:
-        return _TRENDING_CACHE["map"]
+        return cast("dict[str, dict[str, Any]]", _TRENDING_CACHE["map"])
     if not _SB_URL or not _SB_KEY:
         return {}
     url = f"{_SB_URL}/rest/v1/trending_log"
@@ -1042,7 +1044,7 @@ async def supabase_get_latest_trending() -> dict:
     try:
         resp = await _supabase_request_with_retry("GET", url, params=params, headers=headers)
         if resp and resp.status_code == 200:
-            out: dict = {}
+            out: dict[str, Any] = {}
             for row in resp.json():            # newest-first → first seen per symbol wins
                 sym = (row.get("symbol") or "").upper()
                 if sym and sym not in out:
@@ -1057,7 +1059,7 @@ async def supabase_get_latest_trending() -> dict:
 
 
 # ── Float sanitizer ───────────────────────────────────────────────────────────
-def sanitize_floats(obj):
+def sanitize_floats(obj: Any) -> Any:
     """Recursively replace NaN/Inf numpy floats with None for JSON compliance."""
     if isinstance(obj, float):
         return None if not math.isfinite(obj) else obj
@@ -1076,25 +1078,25 @@ def sanitize_floats(obj):
 
 # ── WebSocket connection manager ─────────────────────────────────────────────
 class ConnectionManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_connections: list[WebSocket] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket) -> None:
         await websocket.accept()
         self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket) -> None:
         try:
             if websocket in self.active_connections:
                 self.active_connections.remove(websocket)
         except (ValueError, RuntimeError) as e:
             _logger.warning(f"[WS] disconnect error: {e}")
 
-    async def broadcast(self, message: dict):
+    async def broadcast(self, message: dict[str, Any]) -> None:
         # Remove dead connections before broadcasting
         self.cleanup_dead()
 
-        dead = []
+        dead: list[WebSocket] = []
         for connection in self.active_connections:
             try:
                 await connection.send_json(message)
@@ -1103,14 +1105,14 @@ class ConnectionManager:
         for conn in dead:
             self.disconnect(conn)
 
-    def cleanup_dead(self):
+    def cleanup_dead(self) -> None:
         """Remove dead connections that raised errors during send."""
         self.active_connections = [c for c in self.active_connections if self._is_alive(c)]
 
     def _is_alive(self, websocket: WebSocket) -> bool:
         """Check if WebSocket is still connected."""
         try:
-            return websocket.client_state == 1  # State.CONNECTED
+            return websocket.client_state == WebSocketState.CONNECTED
         except Exception:
             return False
 
@@ -1119,4 +1121,4 @@ class ConnectionManager:
 ws_manager = ConnectionManager()
 
 # Last CIS broadcast payload — sent to new subscribers on connect
-last_cis_broadcast: dict | None = None
+last_cis_broadcast: dict[str, Any] | None = None

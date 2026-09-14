@@ -474,6 +474,24 @@ python3 -m pytest tests/test_store_result.py -q || {
     echo "✗ preflight stage: S-341a StoreResult envelope red" >&2
     exit 1
 }
+# 3a-undevicesima-sexies. S-341c (Change 1 Stage 3): mypy --strict on the
+#                    two-file scope (store.py + store_result.py ONLY). The
+#                    discipline is the locked-in envelope contract: any future
+#                    writer MUST return StoreResult[T], not bare bool — the
+#                    50-error pile-up that lived in store.py was fixed in this
+#                    commit (cast() for cache lookups, explicit -> None on
+#                    ConnectionManager methods, WebSocketState.CONNECTED instead
+#                    of int literal 1). Scope doctrine (per plan evaluation):
+#                    --strict on the WHOLE repo would surface ~thousand
+#                    unrelated typing errors; the two-file scope is the
+#                    contract that's worth the lock-in. Reader-side typing
+#                    (supabase_get_*) was deliberately OUT of this commit —
+#                    they go in a separate PR when reader-side envelope
+#                    migration lands.
+mypy --strict src/api/store.py src/api/store_result.py || {
+    echo "✗ preflight stage: S-341c mypy --strict (store + store_result) red" >&2
+    exit 1
+}
 # 3a-vicies. no .sql file grants PUBLIC read or write (2026-08-15, S-167).
 #            Measured live with `set local role anon`: api_keys readable (1 row),
 #            signal_track_record readable (836 rows), experiment_runs readable
