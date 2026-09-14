@@ -414,6 +414,36 @@ python3 -m pytest tests/test_lessons.py -q || {
     echo "✗ preflight stage: S-343 lesson walker red" >&2
     exit 1
 }
+# 3a-undevicesima-ter. S-345: paper_books/daily_runner.py uses direct
+#                    imports (importlib.import_module + mod.main()), NOT
+#                    subprocess. The pre-S-345 shape (subprocess.run with
+#                    capture_output) hid tracebacks behind the stdout pipe,
+#                    depended on the on-disk path layout, and blocked unit
+#                    tests. Five static + runtime guards: no subprocess
+#                    AST call/import, importlib dispatch present, every
+#                    sleeve + nav_ledger has main(), CLAUDE.md acknowledges
+#                    paper_books as older prototype, orchestrator imports
+#                    cleanly. OPEN RISK 0c resolved by the plan-evaluation
+#                    option-(a) bridge.
+python3 -m pytest tests/test_paper_books_uses_direct_imports.py -q || {
+    echo "✗ preflight stage: S-345 paper_books bridge red" >&2
+    exit 1
+}
+# 3a-undevicesima-quater. Task #113 (§S-RATE-DAILY): the 14-day post-plan
+#                    rate-decline metric, NOT optional. The script
+#                    (`scripts/s_rate_daily.py`) parses REFUTATION_LEDGER.md
+#                    with 4 strategies (trailing parens / author trailer /
+#                    body `**日期**` / heading fallback) + sub-ID expansion
+#                    (S-323j/k/l → 3 entries). Tests cover each strategy via
+#                    fixture + a live-ledger regression guard. Without this,
+#                    the post-plan "rate dropped from 6/day to <2/day"
+#                    verification claim has no read-side discipline — and
+#                    the metric would silently under-count, the same family
+#                    of bug as S-244 (silent regression of the watcher).
+python3 -m pytest tests/test_s_rate_daily.py -q || {
+    echo "✗ preflight stage: s-rate-daily counter red" >&2
+    exit 1
+}
 # 3a-vicies. no .sql file grants PUBLIC read or write (2026-08-15, S-167).
 #            Measured live with `set local role anon`: api_keys readable (1 row),
 #            signal_track_record readable (836 rows), experiment_runs readable
