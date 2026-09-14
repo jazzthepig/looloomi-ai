@@ -107,6 +107,43 @@ def test_the_manifest_matches_what_the_source_actually_does() -> None:
           f"and a noisy check is one people learn to skip")
 
 
+def test_the_manifest_carries_columns_not_only_tables() -> None:
+    """S-286. The table half answers the S-166 question ("does it exist"); the
+    2026-09-04 outage was one notch finer — a missing COLUMN on a table that
+    existed, so every existing guard stayed green while the ① book stopped
+    writing. **A control whose scope is one notch too narrow reads as coverage.**
+
+    This half is what `/internal/schema-drift` probes live after each deploy.
+    Offline we can only prove a migration FILE exists; only the live probe proves
+    it RAN, and that ordering is what took the book down.
+    """
+    m = _manifest()
+    if not m:
+        return
+    declared = m.get("write_columns", {})
+    check("manifest carries a column map", isinstance(declared, dict) and declared,
+          "write_columns is missing or empty — regenerate the manifest with "
+          "schema_manifest.write_columns(); without it the online drift check "
+          "can only see missing tables, which is not how the book went down")
+    if not isinstance(declared, dict) or not declared:
+        return
+    from src.api.schema_manifest import write_columns   # noqa: PLC0415
+    actual = write_columns()
+    stale = sorted(
+        f"{t}.{c}" for t, cols in actual.items()
+        for c in cols if c not in set(declared.get(t, []))
+    )
+    check("column map lists every column the source writes", not stale,
+          f"code writes {stale[:8]} which the manifest does not declare — "
+          f"regenerate it, and make sure the migration adding them has RUN "
+          f"(a migration file is not a migration)")
+    # The book that took the outage must stay covered, by name.
+    check("beta_core_nav columns are tracked",
+          len(declared.get("beta_core_nav", [])) >= 15,
+          "beta_core_nav dropped out of the column map — that is the exact "
+          "table whose missing column produced the 2026-09-04 outage")
+
+
 def test_the_manifest_is_not_empty_and_covers_the_known_regressions() -> None:
     """The ten tables that were missing on 2026-08-15 must stay in scope. Not a
     frozen list of everything — a floor. If a future refactor drops these from

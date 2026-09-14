@@ -87,18 +87,61 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
         return {"ok": False, "error": f"manifest unreadable: {type(e).__name__}: {e}",
                 "note": "regenerate with tests/test_every_written_table_exists.py"}
 
-    from src.api.store import supabase_table_exists
+    from src.api.store import supabase_missing_columns, supabase_table_exists
     live, unknown = [], []
     for t in expected:
         got = await supabase_table_exists(t)
         (live if got is True else unknown).append(t)
 
     missing = [t for t in unknown]
+
+    # ── COLUMNS, not only tables (S-286) ────────────────────────────────────
+    # This endpoint was built for S-166, where eleven TABLES were missing, and it
+    # inherited that incident's scope. On 2026-09-04 the ① book went dark on a
+    # missing COLUMN of a table that existed: `interval_hours`, code deployed
+    # ahead of its migration. Every insert 400'd, `_write` returned False, the
+    # book stopped, and this endpoint said ok — truthfully, about the wrong
+    # question. **Coverage that answers a narrower question than the one you have
+    # reads as coverage.**
+    #
+    # Only tables that exist are probed: asking which columns a missing table
+    # lacks produces noise that buries the real finding.
+    try:
+        expected_cols = json.loads(manifest_path().read_text()).get("write_columns", {})
+    except Exception:                                 # noqa: BLE001
+        expected_cols = {}
+    col_drift, col_unknown = {}, []
+    for t in live:
+        cols = expected_cols.get(t) or []
+        if not cols:
+            continue
+        got = await supabase_missing_columns(t, cols)
+        if got is None:
+            col_unknown.append(t)                     # could not tell ≠ missing
+        elif got:
+            col_drift[t] = got
+
     return {
-        "ok": not missing,
+        "ok": not missing and not col_drift,
+        # WHICH CHECKS THIS BUILD RUNS. Without it, `column_drift: null` from a
+        # deploy that predates the column check is indistinguishable from
+        # `column_drift: {}` on a clean one — Jazz hit exactly this on 2026-09-04
+        # and neither of us could tell "not deployed" from "nothing wrong" without
+        # reading git. A response that cannot say what it checked forces the reader
+        # to know the build, and that knowledge is exactly what an echo exists to
+        # remove.
+        "checks": ["tables", "columns"],
         "checked": len(expected),
         "present": len(live),
         "missing": missing,
+        "column_drift": col_drift,
+        "column_check_unavailable": col_unknown,
+        "column_consequence": (
+            "code writes column(s) the live table does not have. PostgREST answers "
+            "400, the insert helper returns False, and the writer logs one line and "
+            "stops — the table simply stops growing, which reads as 'no data yet'. "
+            "Almost always a deploy that outran its migration."
+            if col_drift else "every column the code writes exists"),
         # Naming the consequence, not just the count. "3 missing" reads like a
         # config nit; "these sleeves cannot persist anything" is the actual fact.
         "consequence": (
