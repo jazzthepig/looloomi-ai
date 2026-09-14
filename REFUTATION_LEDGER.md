@@ -19620,3 +19620,99 @@ def _run_module(module_name: str) -> int:
 **OPEN RISK 0c 的处置.** 选项 (A) fold(sleeve_* 折进 spec_runner)与 (B) acknowledge(CLAUDE.md 加一行)都是这个 plan 的两个候选;**(a) bridge 是 C 的 plan 第 5 项,既不 (A) 也不 (B),而是第三条路 —— 承认二者并存但删掉 subprocess 这块会让它们各走各的方向的胶水**。A-17 + M-117g 已经把新 spec family 装到 spec_runner,paper_books 的 prototype 跑 60d forward paper 不需要被打扰 —— **S-345 关掉了 0c,而不是解决了 0c**(解决要等 60d verdict 出来后或 Jazz 拍板 fold 才到)。
 
 **这条教给仓里什么.** Pattern A(状态塌缩)与 Pattern F(probe != consequence)的具体形态:**当 orchestrator 与被 orchestrator 的代码有「看起来安全的桥」时,那桥就是会被滥用的形状**。subprocess 的 capture_output 给的是「可以独立跑/可以单独 timeout/可以单独 rc」的便利,**代价是不可见**;direct-import 把代价砍掉、把可见性还回来,**这就是 S-345 的全部内容**。
+
+---
+
+## S-341a — `StoreResult[T]` envelope,Stage 1 of Minimax-C Change 1(2026-09-14,Seth)
+
+**日期** 2026-09-14 · **Seth** · **状态: 工程,非实验。记录是因这条结束了延续两周的「失败原因走不到日志中心」问题。**
+
+**Bug.** `src/api/store.py` 的 6 个写函数全部返回裸 `bool`:`redis_set_key` / `redis_set` / `supabase_insert_batch` / `supabase_insert_table` / `supabase_upsert_table` / `supabase_rpc_write`。`False` 等价于五个不同原因:
+  (a) **Role refuse** —— `anon` 不能写(S-149)
+  (b) **Config missing** —— `SUPABASE_URL`/`SUPABASE_KEY` 在本进程空(S-138 同形)
+  (c) **Transport 503** —— 5 次重试全败(S-323z 同形)
+  (d) **0-row payload** —— 调用方传空 list(S-148 同形)
+  (e) **Network exception** —— 抓不到的 transport error
+
+读的人只看到 `False`,**who-where-which 必须靠相邻 `logger.warning` 抢救**;而 26 本账本里有 23 本 logger.warning 在 catch 块里被吞(S-334)。**envelope 改为 `StoreResult[T]`,失败时必带 `why`**,新调用方读 `.ok` / `.why`,旧 `if not await fn():` 经 `__bool__` 仍能跑。
+
+**Plan 决策.** C 的 plan 把「preflight fail 任何 `x: bool = await supabase_*()`」作为 Change 1 目标;plan evaluation(2026-09-14)把它拆成 3 阶段以避免「envelope 是 contract 升级,不是 behavior 升级」被读成「所有 typing 错误一并修了」的 big-bang refactor:
+  - S-341a(本条):skeleton + `redis_set` / `redis_set_key` 两个最常用 writer。callers 不动。
+  - S-341b:其余 4 个 writer + call-site `.ok` / `.why` 消费。
+  - S-341c:`mypy --strict src/api/store.py src/api/store_result.py`,**限定这俩文件**(全仓会触发上千个无关错误 —— 过去的「one-typing-fix-PReverything」scope-creep 撞过 S-244/S-327/S-333)。
+
+**修复.**
+
+```python
+@dataclass(frozen=True)
+class StoreResult(Generic[T]):
+    ok: bool
+    why: str = ""
+    value: T | None = None
+
+    def __bool__(self) -> bool:           # 迁移期:`if not (await fn()):` 仍工作
+        return self.ok
+
+    @classmethod
+    def ok_(cls, value: T | None = None) -> "StoreResult[T]":
+        return cls(ok=True, why="", value=value)
+
+    @classmethod
+    def fail(cls, why: str) -> "StoreResult[T]":
+        if not why:
+            raise ValueError("StoreResult.fail(why='') is a programming error")
+        return cls(ok=False, why=why, value=None)
+```
+
+`fail(why='')` 抛 `ValueError` —— 这一条是结构性 enforcement:**一个能「返回 False 但忘记说原因」的接缝,会让「who-where-which」再次走回 `logger.warning` 抢救**,而那正是 S-334 让 26 行假记录过 60 天验证闸门的形状。
+
+`redis_set_key` 三个 early-return 全部改为:
+  - `StoreResult[bool].fail("UPSTASH_REDIS_REST_URL is unset in this process")`
+  - `StoreResult.ok_(value=True)`
+  - `StoreResult[bool].fail("UPSTASH returned status=<code> for key=<key>")`
+  - `StoreResult[bool].fail("UPSTASH request raised: <ExcClass>: <msg>")`
+
+`__bool__` 仍然返回 `self.ok`,所以现有 20+ 调用点(`await redis_set_key(...)`,return value 丢弃 —— 那本身就是 S-323 同形的「甩掉返回值」)继续工作;**S-341b 把这些调用点的返回值也消费起来**(读到 `why` 上日志),那是 Stage 2。
+
+**为什么不是 tuple**。`(ok, why)` pair 已经在 `paper_books/daily_runner._run_module` 出现过(S-345)。named-record > tuple 的原因是 mypy 把 `result.ok` / `result.why` 当作离散类型;tuple 会被 silently 拆包,字段错位又是 silent failure —— 与 S-244 / S-323x 同形。
+
+**为什么不用 `Result` 类型字**。`Result` / `Outcome` 来自第三方类型库(returns / result),本仓目前不依赖,**入一个第三方库只为 envelope 是 over-spec**。
+
+**验证.**
+
+```
+✓ test_ok_constructor
+✓ test_ok_constructor_with_value
+✓ test_fail_constructor_requires_nonempty_why        ← fail('') 抛错
+✓ test_fail_constructor_with_reason
+✓ test_bool_legacy_truthy_on_ok
+✓ test_bool_legacy_falsy_on_failure
+✓ test_bool_legacy_inside_if_statement
+✓ test_frozen_dataclass_rejects_mutation
+✓ test_value_carries_bool_payload
+✓ test_value_carries_str_payload
+✓ test_value_carries_dict_payload
+✓ test_store_redis_set_returns_store_result          ← 回归:实际是 StoreResult
+✓ test_store_redis_set_key_returns_store_result
+✓ test_bare_init_still_works_with_why_but_mypy_will_complain
+
+✅ 14/14 S-341a StoreResult envelope tests passed
+```
+
+下游回归(`__bool__` 让旧 callers 不破):
+```
+test_t2_off_request_path.py
+test_t2_fanout_bounds.py
+test_a_failed_write_cannot_report_marked.py
+test_macro_brief_contract.py
+test_serving_tier.py                                              ← 48/48 ✅
+```
+
+登记到 preflight stage 3a-undevicesima-quinquies。`test_every_test_is_registered` 报 **127 注册 · 0 orphan**(从 126+1)。
+
+**已知 gap / 未在本条修复的:**
+  - S-341b:其余 4 个 supabase_*_write 返回类型 + callers 消费 `.why`
+  - S-341c:mypy --strict (限定 store.py + store_result.py)
+  - 6 个 `supabase_*` read 函数返回 `dict | None` / `list` / `set | None`,**也被同样的「空 = 拒 = 不可达」三义性污染**,但这周不动 —— 一次一组,envelope 形状先在 writer 上稳定下来再 spread 到 reader,reader 路径消耗时间不同(它们的读侧已经大量用 `(payload, status)` 形态)
+
+**这条教给仓里什么.** **Pattern A「状态塌缩」的具体形态:把不同原因塌进同一个 True/False,代价是「who-where-which 永远要去相邻 log 抢救」**。S-180 / S-329 / S-334 是同一形状的三个面:Redis 不可达、Supabase 写失败、26 行假记录过验证闸门 —— **envelope 改的不是「让 True/False 消失」而是「让 False 不再是一种回答」**。`fail(why='')` 抛错是 structural enforcement,**它和 S-342 的 `_WRITE_NAME_RE` suffix 守卫起同一类作用**:把 `intent-based predicate` 写在构造层,让「错会响」且「响有原因」。
