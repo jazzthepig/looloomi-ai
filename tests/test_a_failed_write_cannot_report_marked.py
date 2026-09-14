@@ -53,6 +53,9 @@ _SIGNALS = _ROOT / "src" / "data" / "signals"
 #: `test_the_write_function_list_has_not_drifted` below — S-330 and S-334 were
 #: both caused by a hand-written copy of this same knowledge going stale, so the
 #: two copies are made to check each other rather than trusted to agree.
+#: S-342 added three catch-ups (`write_nav_row`, `supabase_insert_batch`,
+#: `supabase_rpc_write`) so the manifest's writer scope now matches the
+#: book's view of "what counts as a durable write".
 _WRITE_FUNCS = {
     "supabase_insert_table",
     "supabase_upsert_table",
@@ -61,10 +64,16 @@ _WRITE_FUNCS = {
     # anyone had to be disciplined about remembering.
     "supabase_delete_table",
     "insert_with_detail",
-    # Not in the manifest (it wraps one of the above rather than being a call
-    # site the AST scanner counts), but it IS a durable write from a book's
-    # point of view, which is what this file guards.
+    # S-342 catch-ups. ``write_nav_row`` wraps ``insert_with_detail`` — a
+    # call site the AST scanner does count via the inner helper, but this
+    # guard watches the book's view; if a book discards ``write_nav_row``'s
+    # return value, the failure mode is identical to discarding the inner
+    # writer's, so both are watched. ``supabase_insert_batch`` is a direct
+    # Router-level batch writer; ``supabase_rpc_write`` is the role-gated
+    # Mac-side push RPC.
     "write_nav_row",
+    "supabase_insert_batch",
+    "supabase_rpc_write",
 }
 
 #: Discards that are correct, each with the reason it is correct.

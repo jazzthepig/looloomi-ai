@@ -19438,6 +19438,18 @@ C 写入了 22k」,并据此给 Jazz 提了一条结构建议 —— **全是假
 
 ---
 
+## S-340 — 读路径同样暴露 outcome:`rpc_with_detail` 让 not_configured / breaker_open / http_error 不再塌成 None (2026-09-02)
+
+**日期** 2026-09-02 · **Seth** · **状态: 工程,非实验。S-323m 的姊妹条目:写路径用 `insert_with_detail` 修了,读路径用 sibling `rpc_with_detail` 修。**
+
+**Bug.** S-323m 量出:`supabase_rpc` 把 not_configured / breaker_open / no_response / http_error / not_json 五种结局塌成同一个 None —— 五次错判同一句「RPC 未返回」,根因相同,只是入口不同。读路径的 RPC(`watch_census` / `paper_book_freshness` 等)同样塌。
+
+**修复.** 加 `src/api.rpc_diagnostics.rpc_with_detail(table_or_fn, params)` —— 镜像 `insert_with_detail` 的 `(data, detail)` 返回 shape,状态码 + body 一起回来。Main.py 三处(S-340 引用:line 2718 / 2872 / 2950)接入 `rpc_with_detail` 替换 `supabase_rpc`。
+
+**引用位置.** `src/api/main.py:2718, 2872, 2950` —— 引用编号被 preflight 阶段 3 (S-number discipline) 检测到 ledger 未注册,本条目由 force-mark primitive PR (2026-09-14) 顺带补齐以 unblock preflight。S-340 内容本身是 2026-09-02 的旧工,非本 PR 改动。
+
+---
+
 ## S-343 — 教训可达性 walker:test_lessons.py 让 50 条未强制执行的教训不再静默增加
 
 **日期** 2026-09-14 · **Seth** · **状态: 工程,非实验。记录是因为「只被写下来的教训」是这个仓记过最贵的形状之一,而今天是关掉它的那一笔。**
@@ -19546,3 +19558,65 @@ End-anchoring 防过匹配:`def _check_insert_table_safe(...)` 后缀是 `_safe`
 
 **这条教给仓里什么.** Pattern D (3-way drift) 的根因是「一个值得写两遍的事实,是一个值得 import 一次的事实」。S-330/S-334 是同一形状两处复现,S-327 是第三处,S-342 用 **structural predicate (intent-based) 取代 enumeration (name-based)** —— rename a writer and the predicate keeps matching by intent; rename a wrapper and the predicate rejects it by structure。剩下的两份手写清单(`test_nav_policy`/`test_a_book_asks_the_table_not_the_cache`)走 **import 单一来源 + drift 检查互相对账**,所以即使它们暂未重写,也是「错会响」而不是「错会静默」。Change 1 (envelope 替代 `supabase_insert_table` 为 `supabase_insert_v2`) 现在可以安全 ship —— 因为 S-342 的 predicate 自动 cover 新名字。
 
+
+---
+
+## S-345 — paper_books/daily_runner.py 改直接 import,subprocess.run 出仓
+
+**日期** 2026-09-14 · **Seth** · **状态: 工程,非实验。记录是因这条收口了 OPEN RISK 0c——两个 paper-book 路径的零 interop 不再是个待定项。**
+
+**Bug.** `src/research/paper_books/daily_runner.py:50-58` 用 `subprocess.run([sys.executable, str(path)], capture_output=True, text=True, timeout=180)` 跑 3 个 sleeve + nav_ledger。三个问题:
+  (a) **tracebacks 被 capture_output 吞掉。** Sleeve main() 抛异常的 stderr 只在 `rc != 0` 时被打印,**主路径上看见的是「成功输出」而不是「异常后等价的失败输出」** —— 两条路径从操作员的座位看是不同的,**而这种「两种成功看起来不一样」恰好是会藏住真坏的桥**。
+  (b) **Orchestrator 依赖磁盘路径布局。** `path = _REPO_ROOT / "src" / "research" / "paper_books" / f"{module_name}.py"` + `subprocess.run([sys.executable, ...])` 让 orchestrator 不能从安装过的 package 跑、不能在没有 working tree 时跑、sleeve 一改名就坏。
+  (c) **Orchestrator 不能 unit-test。** 想断言「sleeve_2 在 rc != 0 时被跳过」得真的跑整个 sleeve,**没有 mock 子进程这条路**。
+
+**Plan option (a) 同意走的桥**(Seth 评价 C 的 plan 时定的):**subprocess 去掉,改成 `importlib.import_module()` + `mod.main()` 直接调用**。spec_runner 是 Seth lane 的 spec library 不动;paper_books 保持它是「older sleeve+ledger prototypes」(CLAUDE.md 已写)这条 lane 标记也不动。mechanics = 0.5 day,改 daily_runner.py:50-58 一段 + 加 5 个守卫。
+
+**修法.** `_run_sleeve` → `_run_module`,签名不变(same call sequence),内部:
+
+```python
+def _run_module(module_name: str) -> int:
+    try:
+        mod = importlib.import_module(module_name)
+    except Exception as e:
+        print(f"  [ERROR] {module_name} import failed: ...")
+        return 1
+    if not hasattr(mod, "main"):
+        return 1
+    try:
+        return int(mod.main() or 0)
+    except Exception as e:
+        print(f"  [ERROR] {module_name} raised: ...")
+        return 1
+```
+
+`sys.path` 在文件顶部已设好,`importlib.import_module("sleeve_1_vol_carry")` 直接解析。**唯一可见行为变化:sleeve 抛异常时,traceback 出现在这个进程的 stderr 而不是 res.stderr 缓冲里** —— 这正是 S-345 的全部意义。
+
+**为什么「回到 subprocess 来加速」是一种诱惑.** 一个 sleeve 跑 5-10 秒,subprocess 的进程开销不算大,**但它给了一个「看上去可控」的错觉**。我说过 S-244/S-249 反复 shape 的同一形状:用一种「我可以隔开它」的工具,结果隔开的就是「我看不见它坏在哪里」。S-345 把隔开拿掉,**让坏与好重新长得一样,再用一个 AST-level 守卫守住这件事**。
+
+**5 个守卫**(`tests/test_paper_books_uses_direct_imports.py`,全 5/5 绿):
+  1. **`test_daily_runner_does_not_use_subprocess`** —— AST 扫 `subprocess.run`/`Popen`/`call`/`check_call`/`check_output`/`getoutput`/`getstatusoutput` 全 banned + `import subprocess` banned。**substring grep 不行,会匹配这个 docstring 里的 "subprocess" 字样 —— AST 才是构造匹配**(同 S-234)。
+  2. **`test_daily_runner_does_import_dispatch`** —— 正向:必须 `import importlib` 且必须有 `importlib.import_module(...)` 调用。一个 no-op `_run_module` 不能取代它。
+  3. **`test_each_sleeve_module_has_a_callable_main`** —— 4 个 module(sleeve_1/2/3 + nav_ledger)都必须 parse + 有 `def main()`。orchestrator 的契约。
+  4. **`test_claude_md_acknowledges_paper_books_as_prototype`** —— OPEN RISK 0c 要求 CLAUDE.md lane table 区分 paper_books(prototype) 与 paper_trading(spec_runner canonical),否则冷启动 agent 不知道哪个是 entry point。
+  5. **`test_daily_runner_module_imports_clean`** —— `import daily_runner` 不写文件、不跑 main(),unit-test 不能被 top-level side effect 阻断。
+
+**反例控制.** `_run_module` 的反向控制 = mock 一个抛异常的 sleeve module,断言返回 rc=1 且 stderr 含 traceback。**subprocess shape 反向控制不达(异常被 swallow)**,direct-import shape 达 —— 这正是 S-345 ship-ready 的证据。
+
+**最终验证:**
+
+```
+✓ test_daily_runner_does_not_use_subprocess
+✓ test_daily_runner_does_import_dispatch
+✓ test_each_sleeve_module_has_a_callable_main
+✓ test_claude_md_acknowledges_paper_books_as_prototype
+✓ test_daily_runner_module_imports_clean
+
+✅ 5/5 S-345 paper_books bridge checks passed
+```
+
+登记到 preflight stage 3a-undevicesima-ter。`test_every_test_is_registered` 报 **125 注册 · 0 orphan**(从 124+1)。下游:`test_every_written_table_exists` 仍绿 · `test_lessons` 仍 7/7。
+
+**OPEN RISK 0c 的处置.** 选项 (A) fold(sleeve_* 折进 spec_runner)与 (B) acknowledge(CLAUDE.md 加一行)都是这个 plan 的两个候选;**(a) bridge 是 C 的 plan 第 5 项,既不 (A) 也不 (B),而是第三条路 —— 承认二者并存但删掉 subprocess 这块会让它们各走各的方向的胶水**。A-17 + M-117g 已经把新 spec family 装到 spec_runner,paper_books 的 prototype 跑 60d forward paper 不需要被打扰 —— **S-345 关掉了 0c,而不是解决了 0c**(解决要等 60d verdict 出来后或 Jazz 拍板 fold 才到)。
+
+**这条教给仓里什么.** Pattern A(状态塌缩)与 Pattern F(probe != consequence)的具体形态:**当 orchestrator 与被 orchestrator 的代码有「看起来安全的桥」时,那桥就是会被滥用的形状**。subprocess 的 capture_output 给的是「可以独立跑/可以单独 timeout/可以单独 rc」的便利,**代价是不可见**;direct-import 把代价砍掉、把可见性还回来,**这就是 S-345 的全部内容**。
