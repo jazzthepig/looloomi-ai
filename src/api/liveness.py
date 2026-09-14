@@ -54,6 +54,12 @@ LIVENESS_SLOS: dict[str, dict] = {
     # Fan-out — 168h (weekly) budget
     "_cg_panel_loop":            {"max_age_h": 168, "kind": "fanout"},
     "_deep_panel_loop":          {"max_age_h": 168, "kind": "fanout"},
+    # A-21 · vault tick (per-minute mark-to-market). ETH ERC-20 vault,
+    # not Drift. _vault_tick_<vault_id>_loop is the dynamic name per
+    # vault_id; the liveness module accepts loop names not in this dict
+    # via DEFAULT_MAX_AGE_H. We register the family-shape entry here so
+    # the kind is correctly "vault" (not "unknown").
+    "_vault_tick_loop":          {"max_age_h": 1, "kind": "vault"},  # family entry
 }
 
 DEFAULT_MAX_AGE_H = 48
@@ -113,6 +119,13 @@ def compute_liveness_for_loop(
         LivenessVerdict with verdict ∈ {"live", "stale", "dead"}.
     """
     slo = LIVENESS_SLOS.get(loop_name, {"max_age_h": DEFAULT_MAX_AGE_H, "kind": "unknown"})
+    # Force-mark family — the 9 paper-book beat keys look like `_book_<name>_loop`
+    # (set by POST /internal/force-mark/{book} on each call). Match by prefix
+    # so we don't need 9 explicit entries and so future books inherit the same
+    # budget. Same 48h / marker-kind as the daily cron beats — the cadence IS
+    # 24h, the 48h is the operational tolerance (1 missed day = stale, not dead).
+    if loop_name.startswith("_book_") and loop_name.endswith("_loop"):
+        slo = {"max_age_h": 48, "kind": "marker"}
     max_age_h = slo["max_age_h"]
     max_age_s = max_age_h * 3600
 

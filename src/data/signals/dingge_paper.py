@@ -64,8 +64,17 @@ def _last_close(K: dict):
     return K[max(K)][0]
 
 
-async def mark_and_trade(dry_run: bool = False) -> dict:
-    """Daily: close due positions, open new 顶格 entries, mark NAV. Idempotent per day."""
+async def mark_and_trade(dry_run: bool = False, force: bool = False,
+                        source: str = "cron") -> dict:
+    """Daily: close due positions, open new 顶格 entries, mark NAV. Idempotent per day.
+
+    Args:
+        dry_run: if True, compute and return NAV but DON'T write.
+        force:   operator override — mark NOW (no timing guard in this book;
+                 reserved for future use). Passed through for uniform signature.
+        source:  'cron' for the 24h scheduled mark, 'manual' for force-mark
+                 via POST /internal/force-mark/{book}. Written to NAV row's
+                 mark_source column."""
     from src.data.market.data_layer import _redis_get, _redis_set
     today = dt.date.today()
 
@@ -176,7 +185,8 @@ async def mark_and_trade(dry_run: bool = False) -> dict:
         # state then says "done" about a day that was never recorded, and §3
         # forbids backfilling it.
         _ok, _why = await _write_nav(today, nav, state["realized"], unreal, len(state["open"]),
-                                     state["closed"], opened_today, closed_today, state["open"])
+                                     state["closed"], opened_today, closed_today, state["open"],
+                                     source=source)
         if not _ok:
             return {"status": "mark_failed", "date": today.isoformat(),
                     "error": f"durable_write_failed :: {_why}"}
@@ -188,7 +198,8 @@ async def mark_and_trade(dry_run: bool = False) -> dict:
             "closed_today": closed_today, "date": today.isoformat()}
 
 
-async def _write_nav(d, nav, realized, unreal, n_open, closed, opened_today, closed_today, book):
+async def _write_nav(d, nav, realized, unreal, n_open, closed, opened_today, closed_today, book,
+                    source: str = "cron"):
     """Persist one NAV row. Returns (ok, why) — S-334.
 
     ⚠️ THIS FUNCTION USED TO DISCARD ITS OWN RESULT, and that is why this book
@@ -214,7 +225,8 @@ async def _write_nav(d, nav, realized, unreal, n_open, closed, opened_today, clo
             "realized_pnl": round(realized, 6), "unrealized_pnl": round(unreal, 6),
             "open_positions": n_open, "closed_trades": closed,
             "opened_today": opened_today, "closed_today": closed_today,
-            "detail": detail}])
+            "detail": detail,
+            "mark_source": source}])
     except Exception as e:
         _log.warning("[dingge_paper] nav write: %s", e)
         return False, f"{type(e).__name__}: {e}"

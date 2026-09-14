@@ -14,7 +14,10 @@
     "combined_book_nav",
     "corporate_treasury_history",
     "crowd_clock_log",
+    "deep_panel_symbol_list",
+    "deep_panel_symbols_fast",
     "dingge_paper_nav",
+    "exec_backfill_forward_returns",
     "execution_intents",
     "execution_outcomes",
     "factor_tilt_nav",
@@ -27,15 +30,21 @@
     "market_state_vectors",
     "nav_exceptions",
     "ohlcv_daily",
+    "panel_closes",
+    "panel_funding",
     "pod_aggregator_nav",
     "pod_aggregator_state",
+    "refresh_depth_divergence",
     "regime_band_log",
+    "resolve_depth_divergence",
     "scalable_book_nav",
     "signal_journal",
     "trade_results",
     "treasury_decisions",
     "treasury_entities",
     "two_layer_paper_nav",
+    "vault_nav_tick",
+    "vault_positions",
     "wallet_profiles"
   ],
   "write_columns": {
@@ -51,6 +60,7 @@
       "inception_id",
       "interval_hours",
       "mark_date",
+      "mark_source",
       "n_positions",
       "nav",
       "note",
@@ -66,6 +76,7 @@
       "funding_pnl",
       "gross",
       "mark_date",
+      "mark_source",
       "n_positions",
       "nav",
       "price_pnl",
@@ -79,6 +90,7 @@
       "funding_pnl",
       "gross",
       "mark_date",
+      "mark_source",
       "n_positions",
       "nav",
       "nucleus",
@@ -92,11 +104,45 @@
       "closed_trades",
       "detail",
       "mark_date",
+      "mark_source",
       "nav",
       "open_positions",
       "opened_today",
       "realized_pnl",
       "unrealized_pnl"
+    ],
+    "exec_backfill_forward_returns": [
+      "horizon_days"
+    ],
+    "factor_tilt_nav": [
+      "daily_return",
+      "excess_vs_bench",
+      "factor_attribution",
+      "mark_date",
+      "mark_source",
+      "max_single_factor_sharpe_share",
+      "n_days_marked",
+      "nav",
+      "validated"
+    ],
+    "fusion_paper_nav": [
+      "capacity_status",
+      "capacity_used_pct",
+      "cell_w_r46",
+      "cost",
+      "daily_return",
+      "detector_fired",
+      "fill_ratio_overall",
+      "gross",
+      "inception_id",
+      "mark_date",
+      "mark_source",
+      "n_positions",
+      "nav",
+      "note",
+      "top_longs",
+      "top_shorts",
+      "weighted_slippage_bps"
     ],
     "macro_briefs": [
       "brief",
@@ -116,11 +162,35 @@
       "reason",
       "symbol"
     ],
+    "panel_closes": [
+      "p_days",
+      "p_symbols"
+    ],
+    "panel_funding": [
+      "p_points",
+      "p_symbols"
+    ],
+    "pod_aggregator_nav": [
+      "breakers_tripped",
+      "daily_return",
+      "mark_date",
+      "mark_source",
+      "max_corr_retained",
+      "n_days_marked",
+      "nav",
+      "pods_dropped",
+      "survivors",
+      "validated",
+      "weights"
+    ],
+    "refresh_depth_divergence": [],
+    "resolve_depth_divergence": [],
     "scalable_book_nav": [
       "daily_return",
       "funding_pnl",
       "gross",
       "mark_date",
+      "mark_source",
       "n_positions",
       "nav",
       "price_pnl",
@@ -136,10 +206,28 @@
       "daily_return",
       "gross",
       "mark_date",
+      "mark_source",
       "n_positions",
       "nav",
       "note",
       "positions"
+    ],
+    "vault_nav_tick": [
+      "holdings",
+      "mark_date",
+      "nav_per_share",
+      "nav_usd",
+      "share_count",
+      "source",
+      "tick_ts",
+      "vault_id"
+    ],
+    "vault_positions": [
+      "entry_px",
+      "qty",
+      "side",
+      "symbol",
+      "vault_id"
     ]
   }
 }

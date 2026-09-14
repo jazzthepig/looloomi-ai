@@ -536,8 +536,18 @@ async def _save_state(s: dict) -> None:
 
 
 # ── Daily mark ───────────────────────────────────────────────────────────────
-async def mark_and_rebalance(dry_run: bool = False) -> dict:
+async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
+                           source: str = "cron") -> dict:
     """Daily mark of the R64 fusion paper book. Idempotent per calendar day.
+
+    Args:
+        dry_run: if True, compute and return NAV but DON'T write.
+        force:   operator override — mark NOW (currently no timing guard
+                 in this book; reserved for future use). Passed through
+                 for uniform signature.
+        source:  'cron' for the 24h scheduled mark, 'manual' for force-mark
+                 via POST /internal/force-mark/{book}. Written to NAV row's
+                 mark_source column.
 
     Pipeline:
       1. Fetch live close + funding from Binance fapi (28-asset universe).
@@ -689,7 +699,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         # `n_days_marked` is incremented in that state, so a silent write failure
         # inflates the very counter VALIDATION_MIN_DAYS gates on.
         _ok, _why = await _write_nav(today, nav_new, daily_ret, w_tgt, cost_frac,
-                                     fill, det, today_ts)
+                                     fill, det, today_ts, source=source)
         if not _ok:
             return {"status": "mark_failed", "date": today.isoformat(),
                     "error": f"durable_write_failed :: {_why}"}
@@ -711,7 +721,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     }
 
 
-async def _write_nav(d, nav, dret, weights, cost, fill, det, today_ts):
+async def _write_nav(d, nav, dret, weights, cost, fill, det, today_ts,
+                    source: str = "cron"):
     """Persist one NAV row to Supabase. Returns (ok, why) — S-334.
 
     ⚠️ THIS USED TO DISCARD ITS OWN RESULT. `supabase_insert_table` reports
@@ -746,6 +757,7 @@ async def _write_nav(d, nav, dret, weights, cost, fill, det, today_ts):
             "inception_id": _INCEPTION_ID,
             "top_longs": longs,
             "top_shorts": shorts,
+            "mark_source": source,
             "note": f"fill={fill['totals']['fill_ratio_overall']:.3f} slip={fill['totals']['weighted_slippage_bps']:.1f}bps cap={fill['capacity']['status']}",
         }])
     except Exception as e:

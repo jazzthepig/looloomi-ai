@@ -248,8 +248,17 @@ def target_weights(data: dict, core: dict) -> tuple[dict, dict]:
 
 
 # ── daily mark ────────────────────────────────────────────────────────────────
-async def mark_and_rebalance(dry_run: bool = False) -> dict:
-    """Daily NAV mark of the §5b book. Idempotent per calendar day. Marks flat days too."""
+async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
+                           source: str = "cron") -> dict:
+    """Daily NAV mark of the §5b book. Idempotent per calendar day. Marks flat days too.
+
+    Args:
+        dry_run: if True, compute and return NAV but DON'T write.
+        force:   operator override — mark NOW (no timing guard in this book;
+                 reserved for future use). Passed through for uniform signature.
+        source:  'cron' for the 24h scheduled mark, 'manual' for force-mark
+                 via POST /internal/force-mark/{book}. Written to NAV row's
+                 mark_source column."""
     from src.data.market.data_layer import _redis_get, _redis_set
     today = dt.date.today()
     data = await _fetch_daily(UNIVERSE)
@@ -270,7 +279,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             # first leaves the cache asserting a mark the table does not have — the
             # state then says "done" about a day that was never recorded, and §3
             # forbids backfilling it.
-            _ok, _why = await _write_nav(today, 1.0, 0.0, w_tgt, 0.0, diag, core)
+            _ok, _why = await _write_nav(today, 1.0, 0.0, w_tgt, 0.0, diag, core, source=source)
             if not _ok:
                 return {"status": "mark_failed", "date": today.isoformat(),
                         "error": f"durable_write_failed :: {_why}"}
@@ -315,7 +324,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         # first leaves the cache asserting a mark the table does not have — the
         # state then says "done" about a day that was never recorded, and §3
         # forbids backfilling it.
-        _ok, _why = await _write_nav(today, nav, daily_ret, w_tgt, cost, diag, core)
+        _ok, _why = await _write_nav(today, nav, daily_ret, w_tgt, cost, diag, core, source=source)
         if not _ok:
             return {"status": "mark_failed", "date": today.isoformat(),
                     "error": f"durable_write_failed :: {_why}"}
@@ -326,7 +335,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             "n": len(w_tgt), "date": today.isoformat()}
 
 
-async def _write_nav(d, nav, dret, weights, cost, diag, core):
+async def _write_nav(d, nav, dret, weights, cost, diag, core,
+                    source: str = "cron"):
     """Persist one NAV row. Returns (ok, why) — S-334.
 
     ⚠️ THIS FUNCTION USED TO DISCARD ITS OWN RESULT, and that is why this book
@@ -357,6 +367,7 @@ async def _write_nav(d, nav, dret, weights, cost, diag, core):
             # mean the weighting failed, and the two must stay distinguishable —
             # n_positions carries the count, book_state carries the reason.
             "positions": ",".join(f"{k}:{v:+.2f}" for k, v in sorted(weights.items())) or None,
+            "mark_source": source,
             "note": diag.get("reason", "")[:200]}])
     except Exception as e:
         _log.warning("[two_layer] nav write: %s", e)

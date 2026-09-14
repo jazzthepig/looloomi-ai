@@ -823,7 +823,8 @@ async def _recover_state_from_nav(px: dict) -> dict | None:
     }
 
 
-async def mark_and_rebalance(dry_run: bool = False) -> dict:
+async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
+                           source: str = "cron") -> dict:
     from src.data.market.data_layer import _redis_get, _redis_set
     today = dt.date.today()
 
@@ -841,7 +842,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     # `dry_run` is exempt: callers use it to inspect the book at arbitrary times,
     # and refusing there would make the book unobservable rather than disciplined.
     _off_by = _minutes_from_valuation_point()
-    if not dry_run and _off_by > _VALUATION_POINT_TOLERANCE_MIN:
+    if not dry_run and not force and _off_by > _VALUATION_POINT_TOLERANCE_MIN:
         await _record_exception(
             "valuation_point", "refused",
             f"struck {_off_by:.0f} min from the {_VALUATION_POINT_UTC[0]:02d}:"
@@ -1010,7 +1011,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             ok, _wwhy = await _write(today, 1.0, 1.0, 0.0, 0.0, cap, regime, scalar, rv,
                               len(weights), gross, 0.0, True, weights,
                               f"inception · cap_source={cap_source}",
-                              cap_source=cap_source)
+                              cap_source=cap_source, source=source)
             if not ok:
                 _log.error("[beta_core] INCEPTION NOT PERSISTED — refusing to cache "
                            "state; will retry next cycle rather than run on a mark "
@@ -1159,7 +1160,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         ok, _wwhy = await _write(today, nav, bench_nav, book_ret, bench_ret, cap, regime, scalar,
                           rv, len(new_w), sum(abs(v) for v in new_w.values()), cost,
                           rebalanced, new_w, f"cap_source={cap_source}",
-                          cap_source=cap_source, interval_hours=iv_h)
+                          cap_source=cap_source, interval_hours=iv_h, source=source)
         if not ok:
             _log.error("[beta_core] MARK NOT PERSISTED for %s — leaving state at the "
                        "previous mark so the day is retried, not absorbed into "
@@ -1319,7 +1320,7 @@ def _interval_hours(state: dict) -> float | None:
 
 async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
                  n, gross, cost, rebal, weights, note, cap_source=None,
-                 interval_hours=None):
+                 interval_hours=None, source: str = "cron"):
     from src.api.rpc_diagnostics import insert_with_detail
     top = ",".join(f"{s}:{w:.3f}" for s, w in sorted(weights.items(), key=lambda kv: -kv[1])[:3])
     try:
@@ -1350,7 +1351,8 @@ async def _write(d, nav, bench_nav, dret, bret, cap, regime, scalar, rv,
             # labelled one day", and every annualized figure downstream inherits the
             # difference silently. NULL on the first mark of an incarnation — see
             # _interval_hours on why an unknown is never rendered as 24.0.
-            "interval_hours": interval_hours}])
+            "interval_hours": interval_hours,
+            "mark_source": source}])
         # CAPTURE THE RETURN VALUE. `supabase_insert_table` reports failure by
         # RETURNING False, not by raising — a PostgREST 400 (unknown column, RLS
         # refusal, constraint) never reaches the except branch. The first version of
