@@ -60,12 +60,15 @@ async def research_intake_schema():
 
 @router.get("/internal/schema-drift")
 async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-Token")):
-    """The ONLINE half of the schema guard (S-166) — does every table the code
-    writes to actually exist?
+    """The ONLINE half of the schema guard (S-166 + A-29) — does every table
+    the code writes to AND every RPC function the code calls actually exist?
 
-    Measured 2026-08-15: ELEVEN did not, including both C2 and C3 sleeve NAV
-    tables, while PROJECT_STATE read "C2 ⓠ + C3 size complete; 79/79 smoke
-    green". Green tests, and nowhere to write a row.
+    Measured 2026-08-15: ELEVEN tables did not, including both C2 and C3
+    sleeve NAV tables, while PROJECT_STATE read "C2 ⓠ + C3 size complete;
+    79/79 smoke green". Green tests, and nowhere to write a row. Measured
+    2026-09-14 (A-29): the same drift probe flagged 7 RPC function names as
+    MISSING TABLES, because the offline walker could not tell a function call
+    from a table write. Both halves of the probe now exist.
 
     preflight cannot answer this — it is offline by contract (S-163), and that
     is the right trade. This process has the credentials, so this is where the
@@ -82,18 +85,33 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
     from src.api.schema_manifest import manifest_path
 
     try:
-        expected = sorted(json.loads(manifest_path().read_text())["write_tables"])
+        manifest = json.loads(manifest_path().read_text())
     except Exception as e:                            # noqa: BLE001
         return {"ok": False, "error": f"manifest unreadable: {type(e).__name__}: {e}",
                 "note": "regenerate with tests/test_every_written_table_exists.py"}
 
-    from src.api.store import supabase_missing_columns, supabase_table_exists
+    expected_tables = sorted(manifest.get("write_tables") or [])
+    expected_rpcs = sorted(manifest.get("rpc_functions") or [])
+
+    from src.api.store import (
+        supabase_function_exists, supabase_missing_columns, supabase_table_exists,
+    )
     live, unknown = [], []
-    for t in expected:
+    for t in expected_tables:
         got = await supabase_table_exists(t)
         (live if got is True else unknown).append(t)
 
     missing = [t for t in unknown]
+
+    # ── RPC FUNCTIONS (A-29) ─────────────────────────────────────────────────
+    # Same drift class as tables: the manifest says "we call panel_funding",
+    # the live DB says "no such function", the caller gets None, and the
+    # failure reads as "no data yet". One catalog entry per function name.
+    rpc_live, rpc_unknown = [], []
+    for fn in expected_rpcs:
+        got = await supabase_function_exists(fn)
+        (rpc_live if got is True else rpc_unknown).append(fn)
+    rpc_missing = [t for t in rpc_unknown]
 
     # ── COLUMNS, not only tables (S-286) ────────────────────────────────────
     # This endpoint was built for S-166, where eleven TABLES were missing, and it
@@ -122,7 +140,7 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
             col_drift[t] = got
 
     return {
-        "ok": not missing and not col_drift,
+        "ok": not missing and not col_drift and not rpc_missing,
         # WHICH CHECKS THIS BUILD RUNS. Without it, `column_drift: null` from a
         # deploy that predates the column check is indistinguishable from
         # `column_drift: {}` on a clean one — Jazz hit exactly this on 2026-09-04
@@ -130,10 +148,13 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
         # reading git. A response that cannot say what it checked forces the reader
         # to know the build, and that knowledge is exactly what an echo exists to
         # remove.
-        "checks": ["tables", "columns"],
-        "checked": len(expected),
+        "checks": ["tables", "rpc_functions", "columns"],
+        "checked": len(expected_tables),
         "present": len(live),
         "missing": missing,
+        "rpc_checked": len(expected_rpcs),
+        "rpc_present": len(rpc_live),
+        "rpc_missing": rpc_missing,
         "column_drift": col_drift,
         "column_check_unavailable": col_unknown,
         "column_consequence": (
@@ -145,11 +166,15 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
         # Naming the consequence, not just the count. "3 missing" reads like a
         # config nit; "these sleeves cannot persist anything" is the actual fact.
         "consequence": (
-            f"{len(missing)} table(s) the code writes to do not exist. Every write "
-            f"to them returns False and is swallowed — indistinguishable from "
-            f"'no data yet'. The sleeves depending on them have no forward record "
-            f"and cannot start one." if missing else
-            "every table the code writes to exists"),
+            (f"{len(missing)} table(s) the code writes to do not exist. "
+             if missing else "")
+            + (f"{len(rpc_missing)} RPC function(s) the code calls do not exist. "
+             if rpc_missing else "")
+            + ("Every write to them returns False and is swallowed — "
+               "indistinguishable from 'no data yet'. The sleeves depending on "
+               "them have no forward record and cannot start one."
+             if missing or rpc_missing else
+            "every table the code writes to and every RPC it calls exists")),
     }
 
 
