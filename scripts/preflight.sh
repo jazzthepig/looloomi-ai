@@ -390,6 +390,30 @@ python3 -m tests.test_intake_cannot_declare_its_own_verdict
 #                Neither half can pass vacuously: a stale manifest fails here, a
 #                missing table fails there, deleting the manifest fails both.
 python3 -m tests.test_every_written_table_exists
+# 3a-undevicesima. S-342: AST-derived _WRITE_FUNCS predicate, replacing the
+#                    hand-maintained writer list (S-330/S-334 root cause).
+#                    Three legs — POSITIVE: every shipping writer matches;
+#                    NEGATIVE: helpers + getters do NOT match; MUTATION:
+#                    the predicate is a structural suffix, not enumeration.
+#                    A drift between the legacy _WRITE_FUNCS snapshot and
+#                    the predicate is captured here — S-244 made watching
+#                    the watcher costly, so the watcher watches itself.
+python3 -m pytest tests/test_s342_ast_writer_walker.py -q || {
+    echo "✗ preflight stage: S-342 AST writer walker red" >&2
+    exit 1
+}
+# 3a-undevicesima-bis. S-343: lesson reachability walker — keeps the
+#                    unenforced-lesson gap from growing (S-223 baseline).
+#                    Two caps: UNREACHABLE count must stay ≤ EXEMPT size;
+#                    BASELINE_REACHABLE count must not shrink (test/STATE
+#                    citations are the cold-start reminder, not noise).
+#                    test_lessons.py self-excludes from the tests/ scan to
+#                    avoid letting the walker count its own EXEMPT
+#                    citations as enforcement (see _tests_blob docstring).
+python3 -m pytest tests/test_lessons.py -q || {
+    echo "✗ preflight stage: S-343 lesson walker red" >&2
+    exit 1
+}
 # 3a-vicies. no .sql file grants PUBLIC read or write (2026-08-15, S-167).
 #            Measured live with `set local role anon`: api_keys readable (1 row),
 #            signal_track_record readable (836 rows), experiment_runs readable
