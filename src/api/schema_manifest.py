@@ -69,14 +69,60 @@ _ROOT = Path(__file__).resolve().parents[2]
 #
 # 加新写入函数时必须同时加到这里。`test_every_written_table_exists` 两半
 # (离线 manifest + 线上 schema-drift)都建立在这张表之上。
-_WRITE_FUNCS = {
+_WRITE_FUNCS = frozenset({
+    # Pattern A — table-as-args[0](AST walker 直接摘 args[0]):
     "supabase_insert_table",
     "supabase_upsert_table",
     "supabase_delete_table",
     # S-328/S-329 write path — same semantics, returns (ok, detail) so the
     # failure reason reaches the heartbeat instead of a log line nobody reads.
     "insert_with_detail",
-}
+    # S-342 catch-up: production callers exist at
+    # factor_tilt_paper.py:493 + pod_aggregator_paper.py:411, but the prior
+    # hand-maintained set did not list the writer. Table is reached via the
+    # NAV_TABLE module constant, see _CONST_RX below.
+    "write_nav_row",
+    # Pattern B — rows-as-args[0] (no static table; args[0] = list of rows
+    # whose `_table` field carries the destination, OR an RPC function name).
+    # S-342 catch-up: present in src/api/store.py + cited by Agent 3 §1.2
+    # as visible-to-writers but invisible-to-manifest prior to this refactor.
+    "supabase_insert_batch",
+    "supabase_rpc_write",
+})
+
+
+# S-342: AST-derived writer detection. Suffix-token regex, end-anchored.
+#
+# Anchored at end so a function like `def _check_insert_table_safe(...)`
+# (suffix `_safe`) does NOT match — only the LEAF writer is recognized.
+_WRITE_NAME_RE = re.compile(
+    r"^(?:.*_insert_(?:table|batch)"
+    r"|.*_upsert_table"
+    r"|.*_delete_table"
+    r"|.*_with_detail"
+    r"|.*_rpc_write"
+    r"|write_nav_row"
+    r")$"
+)
+
+
+def _is_writer_name(name: str | None) -> bool:
+    """S-342: AST-derived writer detection. Replaces ``name in _WRITE_FUNCS``.
+
+    A function is a writer iff its name ENDS with a structural-suffix token
+    (``_insert_table``, ``_insert_batch``, ``_upsert_table``, ``_delete_table``,
+    ``_with_detail``, ``_rpc_write``), OR equals ``write_nav_row``.
+
+    End-anchoring prevents over-matching: ``def _validate_insert_table_safe(...)``
+    does NOT count as a writer because its suffix is ``_safe``, not ``_insert_table``.
+
+    S-330 was a hand-maintained literal set; S-342 is a predicate. Rename a
+    writer and the predicate keeps matching by intent; rename a wrapper and
+    the predicate rejects it by structure.
+    """
+    if not name:
+        return False
+    return bool(_WRITE_NAME_RE.match(name))
 
 # `_TABLE = "foo"` / `_NAV_TABLE = "foo"` module constants.
 #
@@ -138,7 +184,10 @@ def _tables_in(path: Path) -> set[str]:
             continue
         fn = node.func
         name = getattr(fn, "id", None) or getattr(fn, "attr", None)
-        if name not in _WRITE_FUNCS or not node.args:
+        # S-342: predicate replaces `name not in _WRITE_FUNCS`. Detection by
+        # suffix-token (intent) instead of enumeration, so a renamed writer
+        # automatically stays in the manifest's scan (S-330 shape: stop).
+        if not _is_writer_name(name) or not node.args:
             continue
         first = node.args[0]
         if isinstance(first, ast.Constant) and isinstance(first.value, str):
@@ -218,7 +267,8 @@ def _columns_in(path: Path) -> dict[str, set[str]]:
         if not isinstance(node, ast.Call):
             continue
         name = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
-        if name not in _WRITE_FUNCS or len(node.args) < 2:
+        # S-342: see _tables_in — same predicate, same rationale.
+        if not _is_writer_name(name) or len(node.args) < 2:
             continue
         first = node.args[0]
         if not (isinstance(first, ast.Constant) and isinstance(first.value, str)):
