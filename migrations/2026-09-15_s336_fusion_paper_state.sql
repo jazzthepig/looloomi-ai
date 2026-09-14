@@ -30,6 +30,22 @@
 -- Rollback: DROP TABLE public.fusion_paper_state; ALTER TABLE fusion_paper_nav
 -- DROP COLUMN inception_id, DROP COLUMN void_reason. (Do NOT unvoid the 26
 -- rows — there is nothing to recover.)
+-- ⚠️  RUN THE WHOLE FILE — DO NOT "Run selected".
+--     The Supabase SQL Editor lets you highlight a portion and run only that
+--     portion. This migration is NOT safe to partial-run: lines 97-117 add
+--     the inception_id column AND stamp the existing rows in dependent
+--     statements, and the UPDATE on line 110 errors 42703 "column
+--     inception_id does not exist" if you skip the ALTER TABLE on line 97.
+--     Click "Run" (NOT "Run selected"), or press Cmd/Ctrl+Enter with no
+--     text highlighted. The BEGIN/COMMIT wrapper at the top/bottom means
+--     either ALL of the migration runs, or NONE of it.
+--
+-- Idempotent. Safe to re-run. Safe to apply BEFORE the code changes (the
+-- `inception_id='v2'` filter is enforced by the reader only, not the writer).
+--
+-- Rollback: DROP TABLE public.fusion_paper_state; ALTER TABLE fusion_paper_nav
+-- DROP COLUMN inception_id, DROP COLUMN void_reason. (Do NOT unvoid the 26
+-- rows — there is nothing to recover.)
 BEGIN;
 
 -- ════════════════════════════════════════════════════════════════════════════
