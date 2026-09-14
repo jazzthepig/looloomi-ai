@@ -30,17 +30,10 @@ from src.data.vault.positions import positions_value, load_share_count
 async def _load_positions(vault_id: str) -> list[dict]:
     """Latest (as_of) per (vault_id, symbol, side) from vault_positions.
 
-    Uses supabase rpc_with_detail for read-path honesty (S-323m) — same
-    pattern the rest of the project adopted for read-side errors.
+    Direct httpx select (PostgREST doesn't expose DISTINCT ON, and we need
+    the latest row per (symbol, side) without a client-side sort-and-cull
+    over thousands of rows once v1 production lands).
     """
-    from src.api.rpc_diagnostics import rpc_with_detail
-    # PostgREST doesn't have DISTINCT ON, so we read all and dedupe in code.
-    # For v1 (low position count per vault) this is fine; for production
-    # scale (>1000 rows) swap for a server-side view.
-    _rows, detail = await rpc_with_detail(
-        "vault_positions",
-        {})  # placeholder; we use a direct select instead
-    # Fall through to a direct select via httpx for honesty
     import httpx
     from src.api.store import _SB_KEY, _SB_URL
     async with httpx.AsyncClient(timeout=15) as c:

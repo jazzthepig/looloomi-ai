@@ -9,6 +9,7 @@ Shared state and utilities for all routers.
 import logging
 
 from src.api.runtime_role import note_refusal, refuse_write
+from src.api.store_result import StoreResult
 import os, json, math, time
 from datetime import datetime, timezone, timedelta
 import httpx
@@ -42,8 +43,15 @@ _REDIS_KEY     = "cis:local_scores"
 _REDIS_TTL     = 7200  # 2 hours
 
 
-async def redis_set(data: dict) -> bool:
-    """Write CIS payload to Upstash with 2 h TTL."""
+async def redis_set(data: dict) -> StoreResult[bool]:
+    """Write CIS payload to Upstash with 2 h TTL.
+
+    Returns `StoreResult[bool]` (S-341a). The envelope carries the failure
+    reason in `why` so callers can distinguish "missing config" from
+    "transport refused". Legacy `if await redis_set(...)` continues to work
+    via `__bool__` during migration; new callers should read `.ok` /
+    `.why` directly.
+    """
     return await redis_set_key(_REDIS_KEY, data, ttl=_REDIS_TTL)
 
 
@@ -64,10 +72,20 @@ async def redis_get_status() -> tuple[dict | None, str]:
 
 # ── Generic key-based Redis helpers ──────────────────────────────────────────
 
-async def redis_set_key(key: str, data: dict, ttl: int = 7200) -> bool:
-    """Write any JSON payload to Upstash with TTL."""
+async def redis_set_key(key: str, data: dict, ttl: int = 7200) -> StoreResult[bool]:
+    """Write any JSON payload to Upstash with TTL.
+
+    Returns `StoreResult[bool]` (S-341a). Failure reasons a caller can read
+    off `.why`:
+      - "UPSTASH_REDIS_REST_URL is unset in this process"
+      - "UPSTASH returned status=<code> for key=<key>"
+      - "UPSTASH request raised: <ExceptionClass>: <message>"
+
+    Legacy `if await redis_set_key(...)` continues to work via `__bool__`
+    on the envelope. New callers should branch on `.ok` and log `.why`.
+    """
     if not _UPSTASH_URL:
-        return False
+        return StoreResult[bool].fail("UPSTASH_REDIS_REST_URL is unset in this process")
     try:
         client = _get_redis_client()
         resp = await client.post(
@@ -79,10 +97,14 @@ async def redis_set_key(key: str, data: dict, ttl: int = 7200) -> bool:
             },
             params={"EX": ttl},
         )
-        return resp.status_code == 200
+        if resp.status_code == 200:
+            return StoreResult.ok_(value=True)
+        return StoreResult[bool].fail(
+            f"UPSTASH returned status={resp.status_code} for key={key}"
+        )
     except Exception as e:
         _logger.warning(f"[REDIS] SET {key} error: {e}")
-        return False
+        return StoreResult[bool].fail(f"UPSTASH request raised: {type(e).__name__}: {e}")
 
 
 async def redis_get_key_status(key: str) -> tuple[dict | None, str]:
@@ -416,6 +438,56 @@ async def supabase_table_exists(table: str) -> bool | None:
         if resp.status_code == 404 or "PGRST205" in (resp.text or ""):
             return False
         return None
+    except Exception:                                  # noqa: BLE001
+        return None
+
+
+async def supabase_function_exists(fn_name: str) -> bool | None:
+    """Does this Postgres function exist (in pg_proc, exposed via PostgREST)? S-342 + A-29.
+
+    The TABLE side has a clean GET probe (limit=0 returns the column shape
+    without reading rows). The FUNCTION side does NOT — RPC endpoints need
+    POST, and the response to an empty payload is shaped by the function's
+    own signature, not by PostgREST's introspection. So this looks noisier
+    than `supabase_table_exists` but the three outcomes still separate
+    cleanly:
+
+      - 200, 204                 — function exists, no args required → True
+      - 4xx with PGRST202/404    — function not in pg_proc cache     → False
+      - 4xx other (e.g. argument error, missing arg) — function exists,
+        payload is wrong                                         → True
+      - 5xx, network, timeout    — could not tell                  → None
+
+    Three-valued for the same reason as `supabase_table_exists`: a missing
+    function and a network blip MUST NOT collapse, or the deploy guard
+    trains everyone to ignore the real signal.
+
+    Note on `accept-profile` not set: PostgREST's RPC endpoint accepts a
+    single function name per URL segment. There's no way to ask "do you
+    know about function X" without POSTing to it — there's no HEAD method
+    in the spec, and the OpenAPI doc only describes POST.
+    """
+    if not _SB_URL or not _SB_KEY or not fn_name:
+        return None
+    url = f"{_SB_URL}/rest/v1/rpc/{fn_name}"
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}",
+               "Content-Type": "application/json"}
+    try:
+        resp = await _supabase_request_with_retry("POST", url, json={}, headers=headers)
+        if resp is None:
+            return None
+        if resp.status_code in (200, 204):
+            return True
+        body = resp.text or ""
+        # PGRST202 = PostgREST's "could not find function in schema cache".
+        # PGRST205 is the table equivalent — different catalog, same shape.
+        # 404 is what PostgREST returns when the function isn't exposed.
+        if resp.status_code == 404 or "PGRST202" in body or "PGRST205" in body:
+            return False
+        # Anything else (argument errors, type mismatches, permission denied
+        # on the underlying tables) means the function is known to the
+        # schema cache — it just rejected our empty payload.
+        return True
     except Exception:                                  # noqa: BLE001
         return None
 

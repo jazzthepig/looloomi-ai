@@ -390,6 +390,21 @@ python3 -m tests.test_intake_cannot_declare_its_own_verdict
 #                Neither half can pass vacuously: a stale manifest fails here, a
 #                missing table fails there, deleting the manifest fails both.
 python3 -m tests.test_every_written_table_exists
+# 3a-online-schema-drift. A-28: the ONLINE half of "every table the code
+#                    writes to exists". The OFFLINE stage above verifies
+#                    manifest matches source AST; this verifies manifest
+#                    matches the LIVE database. Together they catch the
+#                    fusion_paper_state drift (manifest says X exists,
+#                    DB says X doesn't) that the offline AST test cannot.
+#
+#                    Endpoint: GET /internal/schema-drift (S-166 / S-286).
+#                    Skipped, not failed, when INTERNAL_TOKEN is absent —
+#                    offline test is still authoritative, this is additive.
+#                    Local Mac sources .env; CI populates the secret.
+if [ -z "${INTERNAL_TOKEN:-}" ] && [ -f .env ]; then
+    set -a; source .env; set +a
+fi
+python3 scripts/schema_drift_check.py || exit 1
 # 3a-undevicesima. S-342: AST-derived _WRITE_FUNCS predicate, replacing the
 #                    hand-maintained writer list (S-330/S-334 root cause).
 #                    Three legs — POSITIVE: every shipping writer matches;
@@ -442,6 +457,21 @@ python3 -m pytest tests/test_paper_books_uses_direct_imports.py -q || {
 #                    of bug as S-244 (silent regression of the watcher).
 python3 -m pytest tests/test_s_rate_daily.py -q || {
     echo "✗ preflight stage: s-rate-daily counter red" >&2
+    exit 1
+}
+# 3a-undevicesima-quinquies. S-341a (Change 1 Stage 1): StoreResult[T] envelope
+#                    skeleton. The dataclass shape (`ok`/`why`/`value`,
+#                    frozen, `__bool__` migration aid, `fail(why='')` guard)
+#                    is the structural fix for S-180/S-329/S-334 — three
+#                    failures this week where bare-bool returns collapsed
+#                    success/refusal/unreachable into one bit. Live-regression
+#                    guard verifies `redis_set` and `redis_set_key` return
+#                    types are actually `StoreResult[bool]` (catches a
+#                    "rename it back to bool" refactor before it ships).
+#                    Stage 2 (S-341b) migrates remaining writers + call sites;
+#                    Stage 3 (S-341c) wires mypy --strict on the two-file scope.
+python3 -m pytest tests/test_store_result.py -q || {
+    echo "✗ preflight stage: S-341a StoreResult envelope red" >&2
     exit 1
 }
 # 3a-vicies. no .sql file grants PUBLIC read or write (2026-08-15, S-167).

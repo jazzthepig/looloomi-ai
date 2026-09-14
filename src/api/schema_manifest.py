@@ -55,7 +55,21 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2]
 
-# Call sites that mean "this string is a table we write to".
+# Call sites that mean "this string is a table we write to" vs "this string
+# is an RPC function we call". The two are SEPARATE catalogs because they
+# answer different drift questions:
+#
+#   write_tables  → "does this table exist in Postgres?"     (S-166 / S-286)
+#   rpc_functions → "does this function exist in Postgres?"  (A-29)
+#
+# Conflating them was the S-342 bug S-342 itself could not see: the
+# suffix `_with_detail` matches both `insert_with_detail` (writes a row) and
+# `rpc_with_detail` (calls a Postgres function). Both landed in `write_tables`,
+# so `panel_funding` / `panel_closes` / `deep_panel_symbol_list` /
+# `refresh_depth_divergence` / `resolve_depth_divergence` were all marked as
+# MISSING TABLES when the drift probe ran on 2026-09-14 — they are missing
+# TABLES, but present as FUNCTIONS, and the offline walker could not tell
+# which side of the suffix they were on.
 #
 # ⚠️ S-330:这张表本身是一个**手写枚举**,所以它会随着写入函数的演化而失明。
 # 2026-09-11 实测:`beta_core._write()` 从 `supabase_insert_table` 改到
@@ -69,60 +83,107 @@ _ROOT = Path(__file__).resolve().parents[2]
 #
 # 加新写入函数时必须同时加到这里。`test_every_written_table_exists` 两半
 # (离线 manifest + 线上 schema-drift)都建立在这张表之上。
-_WRITE_FUNCS = frozenset({
-    # Pattern A — table-as-args[0](AST walker 直接摘 args[0]):
-    "supabase_insert_table",
-    "supabase_upsert_table",
-    "supabase_delete_table",
-    # S-328/S-329 write path — same semantics, returns (ok, detail) so the
-    # failure reason reaches the heartbeat instead of a log line nobody reads.
+_TABLE_WRITE_EXACT = frozenset({
+    # S-328/S-329 write path — same semantics as supabase_insert_table, returns
+    # (ok, detail) so the failure reason reaches the heartbeat instead of a
+    # log line nobody reads.
     "insert_with_detail",
     # S-342 catch-up: production callers exist at
     # factor_tilt_paper.py:493 + pod_aggregator_paper.py:411, but the prior
     # hand-maintained set did not list the writer. Table is reached via the
     # NAV_TABLE module constant, see _CONST_RX below.
     "write_nav_row",
-    # Pattern B — rows-as-args[0] (no static table; args[0] = list of rows
-    # whose `_table` field carries the destination, OR an RPC function name).
-    # S-342 catch-up: present in src/api/store.py + cited by Agent 3 §1.2
-    # as visible-to-writers but invisible-to-manifest prior to this refactor.
-    "supabase_insert_batch",
-    "supabase_rpc_write",
 })
+_TABLE_WRITE_SUFFIX = (
+    # Pattern A — table-as-args[0] (AST walker 直接摘 args[0]):
+    "_insert_table",
+    "_insert_batch",
+    "_upsert_table",
+    "_delete_table",
+    # NOTE: `_rpc_write` is NOT here. Its first arg is a Postgres FUNCTION
+    # name, not a table. The S-342 regex treated it as table-write — A-29
+    # splits it into _RPC_SUFFIX below. See _is_table_write_name docstring.
+)
 
-
-# S-342: AST-derived writer detection. Suffix-token regex, end-anchored.
-#
-# Anchored at end so a function like `def _check_insert_table_safe(...)`
-# (suffix `_safe`) does NOT match — only the LEAF writer is recognized.
-_WRITE_NAME_RE = re.compile(
-    r"^(?:.*_insert_(?:table|batch)"
-    r"|.*_upsert_table"
-    r"|.*_delete_table"
-    r"|.*_with_detail"
-    r"|.*_rpc_write"
-    r"|write_nav_row"
-    r")$"
+# Functions whose first string arg is a Postgres FUNCTION name (not a table).
+# The drift probe checks these against `pg_proc`, not `pg_class`.
+_RPC_EXACT = frozenset({
+    # S-323m read path — returns (rows, detail) so failure reason reaches
+    # the heartbeat (S-323 family). Distinct from `_rpc_write` (writer).
+    "rpc_with_detail",
+})
+_RPC_SUFFIX = (
+    # Pattern B — write-RPC: same signature as supabase_rpc (function name +
+    # payload), but role-gated and returns (ok, reason) tuple (S-169). It is
+    # STILL an RPC call: the function name must exist in Postgres for the call
+    # to land anywhere. Putting `_rpc_write` here, not in table-write, is the
+    # A-29 split that fixes the S-342 conflation.
+    "_rpc_write",
 )
 
 
-def _is_writer_name(name: str | None) -> bool:
-    """S-342: AST-derived writer detection. Replaces ``name in _WRITE_FUNCS``.
+def _is_table_write_name(name: str | None) -> bool:
+    """S-342 + A-29: classify a call name as a table write.
 
-    A function is a writer iff its name ENDS with a structural-suffix token
-    (``_insert_table``, ``_insert_batch``, ``_upsert_table``, ``_delete_table``,
-    ``_with_detail``, ``_rpc_write``), OR equals ``write_nav_row``.
+    A function is a table-write iff its name ENDS with a structural-suffix
+    token (``_insert_table``, ``_insert_batch``, ``_upsert_table``,
+    ``_delete_table``), OR equals ``insert_with_detail`` or
+    ``write_nav_row``.
 
     End-anchoring prevents over-matching: ``def _validate_insert_table_safe(...)``
-    does NOT count as a writer because its suffix is ``_safe``, not ``_insert_table``.
+    does NOT count because its suffix is ``_safe``, not ``_insert_table``.
 
-    S-330 was a hand-maintained literal set; S-342 is a predicate. Rename a
-    writer and the predicate keeps matching by intent; rename a wrapper and
-    the predicate rejects it by structure.
+    The split from ``_is_rpc_call_name`` is the S-342 bugfix: ``_with_detail``
+    is ambiguous between ``insert_with_detail`` (table) and ``rpc_with_detail``
+    (function), and ``_rpc_write`` is a write-RPC (function name in args[0])
+    rather than a table writer — both are RPC calls (the function must exist
+    in Postgres), so each is listed EXACTLY on the side it belongs.
     """
     if not name:
         return False
-    return bool(_WRITE_NAME_RE.match(name))
+    if name in _TABLE_WRITE_EXACT:
+        return True
+    if name in _RPC_EXACT or any(name.endswith(s) for s in _RPC_SUFFIX):
+        return False
+    return any(name.endswith(s) for s in _TABLE_WRITE_SUFFIX)
+
+
+def _is_rpc_call_name(name: str | None) -> bool:
+    """A-29: classify a call name as an RPC function call (not a table write).
+
+    Two shape classes:
+      - ``rpc_with_detail`` (read RPC, S-323m)
+      - any function whose name ends with ``_rpc_write`` (write RPC, S-169)
+
+    Both kinds take a Postgres function name as their first string arg,
+    which is the same shape that makes the manifest's tables-in / rpcs-in
+    walkers work without per-call metadata. Adding ``rpc_with_timeout`` or
+    ``rpc_read_with_detail`` here is a one-line change at the call-site
+    declaration, not a search-and-replace through the project.
+    """
+    if not name:
+        return False
+    if name in _RPC_EXACT:
+        return True
+    return any(name.endswith(s) for s in _RPC_SUFFIX)
+
+
+# Backward-compat alias for tests that pin the canonical writer set. The
+# S-330/S-342 evolution was: literal set (S-330, stale-by-design) → suffix
+# predicate (S-342, drift-by-rename). A-29 splits the predicate into
+# table-write vs rpc-call. The literal set stays as a SANITY CHECK that the
+# predicate hasn't quietly grown past what the docs say (test_a_book_asks...
+# uses this). If a real writer appears that's NOT in this set, that's a
+# legitimate signal — and the predicate already caught it via the AST walk.
+_WRITE_FUNCS = frozenset({
+    "supabase_insert_table",
+    "supabase_upsert_table",
+    "supabase_delete_table",
+    "insert_with_detail",
+    "write_nav_row",
+    "supabase_insert_batch",
+    "supabase_rpc_write",
+})
 
 # `_TABLE = "foo"` / `_NAV_TABLE = "foo"` module constants.
 #
@@ -184,10 +245,10 @@ def _tables_in(path: Path) -> set[str]:
             continue
         fn = node.func
         name = getattr(fn, "id", None) or getattr(fn, "attr", None)
-        # S-342: predicate replaces `name not in _WRITE_FUNCS`. Detection by
-        # suffix-token (intent) instead of enumeration, so a renamed writer
+        # S-342 + A-29: predicate splits table-write from rpc-call. Detection
+        # by structural suffix (intent), not enumeration, so a renamed writer
         # automatically stays in the manifest's scan (S-330 shape: stop).
-        if not _is_writer_name(name) or not node.args:
+        if not _is_table_write_name(name) or not node.args:
             continue
         first = node.args[0]
         if isinstance(first, ast.Constant) and isinstance(first.value, str):
@@ -196,6 +257,30 @@ def _tables_in(path: Path) -> set[str]:
         # That is a known blind spot, recorded rather than papered over: a
         # dynamic table name cannot be checked statically, and pretending
         # otherwise would make the manifest look more complete than it is.
+    return found
+
+
+def _rpcs_in(path: Path) -> set[str]:
+    """RPC function names this file calls. Mirrors ``_tables_in`` shape (A-29)."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return set()
+    found: set[str] = set()
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return found
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        fn = node.func
+        name = getattr(fn, "id", None) or getattr(fn, "attr", None)
+        if not _is_rpc_call_name(name) or not node.args:
+            continue
+        first = node.args[0]
+        if isinstance(first, ast.Constant) and isinstance(first.value, str):
+            found.add(first.value)
     return found
 
 
@@ -249,6 +334,23 @@ def write_tables() -> list[str]:
     return sorted(t for t in out if t and not t.startswith("_"))
 
 
+def rpc_functions() -> list[str]:
+    """Every RPC function a production module calls. Sorted, deduped. A-29.
+
+    Mirrors ``write_tables()`` in shape but the catalog is different: these
+    are Postgres functions (RPC endpoints), not tables. ``/internal/schema-drift``
+    checks this list against ``pg_proc`` via ``supabase_function_exists`` —
+    a missing function is the same drift class as a missing table (the call
+    returns False, the failure looks like "no data yet"), but the live probe
+    must look in the right catalog.
+    """
+    out: set[str] = set()
+    for p in sorted(_ROOT.rglob("*.py")):
+        if _is_prod(p):
+            out |= _rpcs_in(p)
+    return sorted(t for t in out if t and not t.startswith("_"))
+
+
 def _columns_in(path: Path) -> dict[str, set[str]]:
     """table -> column names this file passes to a write helper (S-286).
 
@@ -267,8 +369,10 @@ def _columns_in(path: Path) -> dict[str, set[str]]:
         if not isinstance(node, ast.Call):
             continue
         name = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
-        # S-342: see _tables_in — same predicate, same rationale.
-        if not _is_writer_name(name) or len(node.args) < 2:
+        # S-342 + A-29: see _tables_in — same predicate, same rationale. We
+        # only collect columns for TABLE writes; RPC calls don't carry row
+        # payloads in the same shape.
+        if not _is_table_write_name(name) or len(node.args) < 2:
             continue
         first = node.args[0]
         if not (isinstance(first, ast.Constant) and isinstance(first.value, str)):
