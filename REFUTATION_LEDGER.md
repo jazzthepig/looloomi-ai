@@ -19435,3 +19435,114 @@ C 写入了 22k」,并据此给 Jazz 提了一条结构建议 —— **全是假
 与 S-323x(坏量具讲了个很有说服力的故事)、S-336(猜来的字段名回 `None` 读起来像发现)同形。
 结构问题本身仍然成立且与那个假数字无关:**这个上限由 Seth 的 preflight 单边强制,
 而两条 lane 都往这个文件写** —— 真超了的时候 C 那边没有任何信号,只表现为 Seth 推不了代码。归 Jazz 定。
+
+---
+
+## S-343 — 教训可达性 walker:test_lessons.py 让 50 条未强制执行的教训不再静默增加
+
+**日期** 2026-09-14 · **Seth** · **状态: 工程,非实验。记录是因为「只被写下来的教训」是这个仓记过最贵的形状之一,而今天是关掉它的那一笔。**
+
+**Bug.** S-223 在 09-04 量出来:**66 条 lessons 散落在五个 canonical docs(REFUTATION_LEDGER / PROJECT_STATE / PROJECT_STATE_LOG / STRATEGY_PLAYBOOK / STRATEGY_2_DEFERRED),只有 11 条被 tests/ 或 PROJECT_STATE.md 真正引用 —— 55 条只是写了下来**。其中大部分是研究方法论(directional overlay shape、cross-sectional demean、regime-conditioning magnitude),**没有可执行形式**:写一个 `def test_lesson_xx_placeholder(): pass` 是把注释伪装成测试,而今天 55 条都收到这种位置里,要么放弃 enforcement,要么把债换名。
+
+**Plan option (a) 同意走的路**(Seth 评价 C 的 plan 时定的):**walker 是 tripwire 不是修复**。新增 `tests/test_lessons.py`,两个 cap:
+  · UNREACHABLE count 不许涨 —— 当前 55 是 baseline,新加 lesson 必须出现在 tests/ 或 PROJECT_STATE.md,或进 `_EXEMPT_UNENFORCED` 并写明 category + 理由;
+  · BASELINE_REACHABLE 不许缩 —— 当前 11 条(68/70/71/72/103/104/105/106/107/108/112),任何一条失去引用就 fail。
+
+**踩到的三个洞(全部来自反例控制):**
+
+  1. **My initial EXEMPT map cited `#41`/`#75`/`#58` inside the reason text.** 第一次跑就红了 —— `test_lessons.py` 自己在 EXEMPT 文本里提到 "#41 同 lineage" 等,等于让 walker **对自己计数**(the walker 是 tests/ 的一部分)。修法:**self-exclude** `tests/test_lessons.py` from `_tests_blob()`,并在 EXEMPT reasons 里**用 prose 描述 sibling category 而非 `#N` literal**。
+
+  2. **`SUPERSEDED-BY` category 我写成了 `SUPERSEDED-BY-NN`,但 lesson 83 的 reason 是 `SUPERSEDED-` (无 -NN)。** startswith 检查只匹配字面前缀,所以 `#NN` 字面在 reason 里的范式是我自己造的不一致。统一改成 `SUPERSEDED`。
+
+  3. **Initial _BASELINE_REACHABLE 列了 24 条,实测只有 11 条真正被引用。** 我把 PROJECT_STATE.md + PROJECT_STATE_LOG 一起扫了,日志里引用的也算了进去 —— 而 PROJECT_STATE_LOG 是 archive,**archive ≠ enforcement**。重新测量:11 live + 55 exempt + 0 undocumented = 66。
+
+**Stub 上限 = 0 的执行.** Plan 明确写「a-选项,新增 stub 上限 = 0」。EXEMPT map 里有 55 个条目,**每一个是一条"无法测 / 不需测 / 由他处 enforce" 的 admission with reason**。每条 reason 必须以 4 个 category 之一开头:`ARCH-NO-TEST` / `MAC-LANE-ONLY` / `SUPERSEDED` / `PROJECT-LEVEL-DECISION`。一个空 reason 或 `TODO` 直接 fail。
+
+**最终验证:**
+
+```
+✓ test_baseline_reachable_count_does_not_shrink
+✓ test_baseline_unreachable_count_does_not_grow
+✓ test_every_lesson_exemption_has_a_valid_reason
+✓ test_exemption_count_matches_unreachable_baseline
+✓ test_exemption_does_not_double_cover_an_enforced_lesson
+✓ test_no_lesson_number_collision_in_exempt_map
+✓ test_report_lesson_coverage (informational)
+
+✅ 7/7 lesson-walker checks passed
+· lessons: 66 total (11 live-reachable, 55 exempt, 0 undocumented — should be 0)
+```
+
+登记到 preflight stage 3a-undevicesima-bis(在 S-342 后面),`test_every_test_is_registered` 报 **124 个 in preflight · 1 个 exempt(没有 orphan)**。
+
+**这条教给仓里什么.** 「已记未修」这条 pattern 的 cost 是 lesson-only 不够 —— **lesson 必须 reachable**,因为冷启动 agent 不读 5,000+ 行的台账。S-92 (Seth 当时没看到 S-83 教训)、S-336 (Jazz 在 Supabase 跑 `select ... from fusion_paper_state` 时 recall 不到 OPEN RISK 0b) 是同一形状的两个实例。一个 lesson 只活在 ledger 里 = 一个被归档但没被记得的事实 = 一个下次还会复发的 bug。walker 不修已存在的 gap,它**确保 gap 不再涨**;修复这些 lesson 本应是另一种类型的工作(把 doctrine 转成 doctrine + executable form,而这是更费时也更危险的)。
+
+---
+
+## S-342 — AST 派生取代手写枚举:`_WRITE_FUNCS` 不再随代码漂移
+
+**日期** 2026-09-14 · **Seth** · **状态: 工程,非实验。记录是因这是 Pattern D 的关键一击 —— 三份手写清单第一份被结构性取代。**
+
+**Bug.** `src/api/schema_manifest.py` 的 `_WRITE_FUNCS` 是一个**手写 frozenset**:
+
+```python
+_WRITE_FUNCS = frozenset({
+    "supabase_insert_table", "supabase_upsert_table",
+    "supabase_delete_table", "insert_with_detail",
+})
+```
+
+S-330 测出来它是怎么失败的 —— `beta_core._write` 改名为 `insert_with_detail` 时,manifest 的 scanner **看不见 beta_core_nav 被写**,manifest 报「nothing the source no longer writes"」。**一个「哪些函数算写入」的清单和它所守护的代码是分开演化的,换个写入函数覆盖面就静默少一块,而少的那块恰恰是新代码。**
+
+**Plan option 「Change 2 在 Change 1 之前」.** C 写的依赖图是「Change 2 依赖 Change 1」—— **反的**。事实链:
+  1. 先有 `_WRITE_FUNCS` 的 AST walker
+  2. 测试它识别 7 个 writer(含 `insert_with_detail`、新增 `write_nav_row`/`supabase_insert_batch`/`supabase_rpc_write`)
+  3. 新 envelope 替换旧 writer 为 `supabase_insert_v2`
+  4. AST walker 自动识别 `supabase_insert_v2` 因为后缀匹配 `*_insert_*`
+
+**修复.** suffix-token regex,end-anchored:
+
+```python
+_WRITE_NAME_RE = re.compile(
+    r"^(?:.*_insert_(?:table|batch)"
+    r"|.*_upsert_table"
+    r"|.*_delete_table"
+    r"|.*_with_detail"
+    r"|.*_rpc_write"
+    r"|write_nav_row"
+    r")$"
+)
+
+def _is_writer_name(name: str | None) -> bool:
+    if not name:
+        return False
+    return bool(_WRITE_NAME_RE.match(name))
+```
+
+End-anchoring 防过匹配:`def _check_insert_table_safe(...)` 后缀是 `_safe` 不是 `_insert_table` → predicate 拒绝 → manifest 不收假表。
+
+**三个守卫腿.**
+  · POSITIVE:7 个 shipping writer 全部匹配
+  · NEGATIVE:7 个 helper/getter/空串/None 全部不匹配
+  · MUTATION:legacy `_WRITE_FUNCS` snapshot 与 predicate 不一致时 fail
+
+**遗留手写 snapshot + 漂移检查.** `_WRITE_FUNCS` 仍存,但**只作为下游测试的 import 单一来源** —— `tests/test_a_failed_write_cannot_report_marked.py` + `test_nav_policy.py` + `test_a_book_asks_the_table_not_the_cache.py` 三个测试用 `re.compile(... | JOIN(_WRITE_FUNCS))` 扫源码。`test_the_write_function_list_has_not_drifted` 让 manifest 与这三个测试**互相对账** —— 第一次运行就抓到 `schema_manifest._WRITE_FUNCS` 有 `supabase_delete_table` 而三个测试的 local 副本没有,**drift 在被任何用户碰到之前就被发现的**。
+
+**Pre-existing 漏洞同期修补.** `test_a_failed_write_cannot_report_marked.py` 的 local `_WRITE_FUNCS` 缺 `write_nav_row`/`supabase_insert_batch`/`supabase_rpc_write` 三个 writer,drift 检查当天把它打红,补齐。
+
+**最终验证.**
+
+```
+✓ test_every_current_writer_matches_the_predicate
+✓ test_non_writers_and_helpers_do_not_match
+✓ test_predicate_rejects_none_and_empty
+✓ test_write_funcs_snapshot_includes_s342_catch_ups
+✓ test_predicate_is_a_superset_of_write_funcs
+
+✅ 5/5 S-342 AST walker verified — predicate matches intent, not enumeration
+```
+
+登记到 preflight stage 3a-undevicesima。`test_every_test_is_registered` 报 124 registered(0 orphan)。
+
+**这条教给仓里什么.** Pattern D (3-way drift) 的根因是「一个值得写两遍的事实,是一个值得 import 一次的事实」。S-330/S-334 是同一形状两处复现,S-327 是第三处,S-342 用 **structural predicate (intent-based) 取代 enumeration (name-based)** —— rename a writer and the predicate keeps matching by intent; rename a wrapper and the predicate rejects it by structure。剩下的两份手写清单(`test_nav_policy`/`test_a_book_asks_the_table_not_the_cache`)走 **import 单一来源 + drift 检查互相对账**,所以即使它们暂未重写,也是「错会响」而不是「错会静默」。Change 1 (envelope 替代 `supabase_insert_table` 为 `supabase_insert_v2`) 现在可以安全 ship —— 因为 S-342 的 predicate 自动 cover 新名字。
+
