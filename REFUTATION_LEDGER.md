@@ -19807,3 +19807,59 @@ Downstream regression (writer-side call sites that depend on bare-bool):
 
 **This teaches the repo what.** **Bare-bool returns are not "simple", they're "collapsed"**. S-334, S-329, S-323g — three different sleeves, three different failure modes, all flattened to `False`. The migration was not "replace bool with a richer type"; it was "make False refuse to be a single answer". The `fail(why='')` constructor guard (S-341a) is the structural enforcement: an empty-why failure is a programming error, not a logging error.
 
+
+## S-341c · mypy --strict on store.py + store_result.py (Change 1 Stage 3) (Seth, 2026-09-15)
+
+**Trigger.** S-341a + S-341b migrated 6 writers to `StoreResult` but the discipline was *narrative* (a docstring, a README line, "use the envelope"). For a discipline to survive contact with a future refactor, it has to be CI — a contract that fails the build when violated. S-341c wires `mypy --strict` on the two-file scope so any new code touching `StoreResult` MUST type-check correctly, and any drift toward bare-bool in the lock-in zone fails loud.
+
+**Why the two-file scope (NOT whole repo).** Per the plan evaluation: `mypy --strict` on the full repo would surface **~thousand** typing errors unrelated to the envelope (cache dicts, reader helpers, sanitizers). The two-file scope (`store.py` + `store_result.py`) is the contract that's worth the lock-in. Reader-side typing on `supabase_get_*` is explicitly deferred — those go in a separate PR when reader-side envelope migration lands.
+
+**What landed.**
+
+```
+src/api/store.py                  ← 50 errors → 0 (mypy --strict clean)
+src/api/store_result.py           ← unchanged (was already clean from S-341a)
+src/api/runtime_role.py           ← 1 transitive error fixed
+                                    (runtime_role.describe return type)
+scripts/preflight.sh              ← stage 3a-undevicesima-sexies wired
+                                    (mypy --strict runs in preflight)
+```
+
+**50 errors → 0, by category.**
+
+| Error | Count | Fix |
+|---|---|---|
+| Missing type args on `dict` / `list` | 30 | Bulk regex `dict` → `dict[str, Any]`, `list` → `list[Any]` (preserves calls vs. types) |
+| Missing return annotation on `ConnectionManager` methods + `sanitize_floats` | 7 | Explicit `-> None` / `-> Any` |
+| `Returning Any` from cache reads | 6 | Type the cache dicts (`_EDGEMAP_CACHE["rows"]: list[dict[str, Any]] \| None`) + `cast()` at the return point |
+| Missing type args on `**kwargs` | 1 | `**kwargs: Any` |
+| `StoreResult` without generic | 1 | `supabase_rpc_write -> StoreResult[Any]` |
+| Non-overlapping equality `client_state == 1` | 1 | `WebSocketState.CONNECTED` (was a silent bug — comparing enum to int 1) |
+| Transitive `runtime_role.describe` | 1 | `-> dict[str, Any]` + `from typing import Any` |
+
+**The `client_state == 1` bug.** Found while wiring the strict pass. The old `websocket.client_state == 1` was always True because `WebSocketState.CONNECTED == 1`, but it was a coincidence — if FastAPI ever reordered the enum, the `_is_alive` check would silently mark every connection as alive (or dead). mypy caught it under `--strict` with `comparison-overlap` because the enum member is `Literal[WebSocketState.CONNECTED]`, not `Literal[1]`. **This is exactly what `--strict` is for** — the bug was pre-existing, latent, would have shipped.
+
+**Verification.**
+
+```
+mypy --strict src/api/store.py src/api/store_result.py
+  → Success: no issues found in 2 source files
+
+bash scripts/preflight.sh
+  → ... [stage 3a-undevicesima-sexies: mypy --strict (store + store_result) green]
+  → ... (continues past it; schema-drift RED is pre-existing infra)
+
+python3 -m pytest tests/test_store_result.py tests/test_a_failed_write_cannot_report_marked.py ...
+  → 182 passed, 5 skipped (5 skipped = pre-existing test_s342_ast_writer_walker
+    broken since user's e61a7ad rename — unrelated)
+```
+
+**Why S-341c took longer than 0.5 day.** Bulk regex got 23 errors in 30 seconds. The remaining 27 needed surgical edits because they were real typing decisions: which cache fields can be `Any`, which need explicit casts, what shape `sanitize_floats` returns when given an opaque object. Plus the `client_state == 1` real bug. **Strict typing is not free — the cost is the discipline of saying what shape each function returns.** That cost is the point.
+
+**What this teaches the repo.** **A discipline that lives in a docstring is a discipline that will be lost.** The envelope shape was correct in S-341a but the *guarantee that future code keeps it* did not exist until S-341c. mypy --strict on the contract zone is the structural fix: any future "let me just return bool here for speed" PR fails the build, and the dev catches it before merge, not after deploy. The same pattern should land on the reader envelope when that migration happens — but as a separate PR, because mixing reader-side typing into writer-side enforcement breaks the "one shape per PR" discipline that has kept Change 1 reviewable.
+
+**Known gap / NOT in this commit.**
+- `supabase_get_*` reader functions still have `dict | None` / `list` / `set[str] | None` shapes — out of scope by design (Change 1 is writer-side only). Reader-side typing waits for the reader-side envelope (next structural change, weekly review picks).
+- `mypy --strict` is NOT applied to `tests/`, `src/data/signals/`, `src/api/routers/` — those have their own typing debt. The scope discipline is "one lock-in per PR".
+- `**kwargs: Any` in `_supabase_request_with_retry` is a typing downgrade from a typed-kwargs signature — but httpx's request signature is wide and strict-mode would force a structural type alias. Out of scope.
+

@@ -55,6 +55,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Any
 
 _log = logging.getLogger("runtime_role")
 
@@ -185,7 +186,7 @@ def refusal_counts() -> dict[str, int]:
     return dict(_REFUSALS)
 
 
-def describe() -> dict:
+def describe() -> dict[str, Any]:
     """The boot banner's payload — role, capability, and credential presence.
 
     Credential VALUES never appear; only whether each is set, empty or absent. The
