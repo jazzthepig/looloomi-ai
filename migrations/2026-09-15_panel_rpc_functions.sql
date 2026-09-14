@@ -57,6 +57,15 @@
 -- Caller (paid_close_loader.py:114-123) takes ONE row per symbol; if we
 -- ever changed to multiple rows per symbol the caller would silently
 -- overwrite, so the row_number=1 filter is the contract.
+--
+-- ⚠️  DROP-then-CREATE, NOT CREATE OR REPLACE. panel_closes / panel_funding
+-- were previously applied via MCP with DIFFERENT OUT parameter signatures
+-- (the MCP stub returned one shape; we need a different shape for the
+-- paid_close_loader / pod_aggregator callers). Postgres cannot change an
+-- existing function's return type via CREATE OR REPLACE — it errors
+-- 42P13 "Row type defined by OUT parameters is different". DROP FUNCTION
+-- first is the only safe path.
+DROP FUNCTION IF EXISTS public.panel_closes(text[], int);
 CREATE OR REPLACE FUNCTION public.panel_closes(
     p_symbols text[],
     p_days    int
@@ -117,6 +126,10 @@ COMMENT ON FUNCTION public.panel_closes(text[], int) IS
 -- has anon-revoked RLS (supabase_funding_history.sql:46). Function runs
 -- as owner (postgres in Supabase) and reads the table; anon calls the
 -- RPC and gets the result.
+--
+-- Same DROP-first note as panel_closes above (Postgres can't change OUT
+-- parameters via CREATE OR REPLACE).
+DROP FUNCTION IF EXISTS public.panel_funding(text[], int);
 CREATE OR REPLACE FUNCTION public.panel_funding(
     p_symbols text[],
     p_points  int
@@ -172,6 +185,10 @@ COMMENT ON FUNCTION public.panel_funding(text[], int) IS
 -- SECURITY DEFINER + auth.role() check INSIDE the function body — the
 -- 2026-07-30 anonymous-writable SECURITY INVOKER hole is the reason this
 -- pattern exists at all (see supabase_forward_return_backfill.sql header).
+--
+-- DROP-first: same Postgres "cannot change OUT parameter type" rule
+-- applies if an older signature exists in pg_proc from a prior MCP apply.
+DROP FUNCTION IF EXISTS public.exec_backfill_forward_returns(INT);
 CREATE OR REPLACE FUNCTION public.exec_backfill_forward_returns(
     horizon_days INT DEFAULT 7
 )
