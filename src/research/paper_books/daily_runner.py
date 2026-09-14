@@ -19,13 +19,30 @@ Schema: date, vol_carry_iv, vol_carry_rv, vol_carry_term_premium,
 Usage:
   python3 src/research/paper_books/daily_runner.py    # run all 3 sleeves + regime track + write daily summary
   python3 src/research/paper_books/daily_runner.py --read-last   # show last daily summary
+
+ARCHITECTURAL NOTE (S-345, 2026-09-14) — paper_books/ is the OLDER prototype
+sleeve-and-ledger layer, NOT a spec_runner entry point. The pre-spec_runner
+sleeves here (sleeve_1/2/3, nav_ledger) compute their own P&L with bespoke
+bookkeeping; spec_runner has since shipped panel_long_only (A-17) and
+survivors_book (M-117g / Book B) as the canonical spec-driven dispatch path.
+Per OPEN RISK 0c / CLAUDE.md, paper_books remains Seth lane for its existing
+60d forward-paper prototype, but NEW work uses spec_runner.
+
+This file is the orchestrator for the prototype path. It calls each sleeve's
+`main()` directly via Python import — no subprocess, no sys.executable
+spawning, no capture_output buffering. The pre-S-345 subprocess shape (a)
+hid every traceback inside a `capture_output` pipe unless rc != 0; (b) made
+the orchestrator depend on the path layout on disk; (c) could not be unit-
+tested without running the whole chain. Direct import is the same call
+sequence with none of those costs — the only behavioral change is that an
+exception in a sleeve module now surfaces in this process's traceback
+instead of behind a returncode.
 """
 from __future__ import annotations
 
-import os
-import sys
 import csv
-import subprocess
+import importlib
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -47,15 +64,31 @@ DAILY_SUMMARY_HEADER = [
 ]
 
 
-def _run_sleeve(module_name: str) -> int:
-    """Run a single sleeve module and return its exit code."""
-    path = _REPO_ROOT / "src" / "research" / "paper_books" / f"{module_name}.py"
-    res = subprocess.run([sys.executable, str(path)], capture_output=True, text=True, timeout=180)
-    print(res.stdout)
-    if res.returncode != 0:
-        print(f"  [ERROR] {module_name} exit={res.returncode}")
-        print(res.stderr)
-    return res.returncode
+def _run_module(module_name: str) -> int:
+    """Run a single paper_books module's main() and return its exit code.
+
+    S-345: replaces the prior `subprocess.run([sys.executable, ...])` shape.
+    Direct import lets exceptions surface in this process's traceback (the
+    subprocess shape hid them inside capture_output); tests can mock the
+    module; the orchestrator no longer depends on a particular sys.executable
+    or the on-disk path layout. The `print(...)` of stdout-equivalent output
+    is now the module's own main()'s responsibility — exactly the same lines
+    reach this process's stdout as before.
+    """
+    try:
+        mod = importlib.import_module(module_name)
+    except Exception as e:
+        print(f"  [ERROR] {module_name} import failed: {type(e).__name__}: {e}")
+        return 1
+    if not hasattr(mod, "main"):
+        print(f"  [ERROR] {module_name} has no main() — pre-spec_runner "
+              f"prototype shape; cannot orchestrate")
+        return 1
+    try:
+        return int(mod.main() or 0)
+    except Exception as e:
+        print(f"  [ERROR] {module_name} raised: {type(e).__name__}: {e}")
+        return 1
 
 
 def _read_last_row(sleeve_id: str) -> dict:
@@ -77,19 +110,22 @@ def main() -> int:
     print(f"  ledgers: {LEDGER_DIR}")
     print()
 
-    # Run all 3 sleeves sequentially
+    # Run all 3 sleeves sequentially. Direct import — S-345 replaces the
+    # pre-S-345 subprocess shape (capture_output + sys.executable spawn).
     for s in SLEEVES:
         print(f"--- {s} ---")
-        rc = _run_sleeve(s)
+        rc = _run_module(s)
         if rc != 0:
-            print(f"  [WARN] {s} failed; continuing to next sleeve")
+            print(f"  [WARN] {s} failed (rc={rc}); continuing to next sleeve")
         print()
 
-    # Run NAV ledger for daily P&L accumulation (the 60d verdict needs this)
+    # Run NAV ledger for daily P&L accumulation (the 60d verdict needs this).
+    # nav_ledger is also a pre-spec_runner prototype module — see ARCHITECTURAL
+    # NOTE in this file's docstring for the bridge to spec_runner.
     print(f"--- {NAV_LEDGER_MODULE} ---")
-    rc = _run_sleeve(NAV_LEDGER_MODULE)
+    rc = _run_module(NAV_LEDGER_MODULE)
     if rc != 0:
-        print(f"  [WARN] NAV ledger failed; continuing")
+        print(f"  [WARN] NAV ledger failed (rc={rc}); continuing")
     print()
 
     # ⓠ REGIME OVERRIDE paper track — parallel paper NAV under the enforcer.
