@@ -94,6 +94,14 @@ FAMILIES: dict[str, bool] = {
     "regime_switch_beta_multiplier": False,     # M-88:regime 开关切两个子策略,机制不同
     "survivors_only_lag1_book": True,           # M-113 V3 / M-115 Book B:2-sleeve book
                                                 # (① regime-gated BTC + ④ cross-section L/S)
+    "btc_trend_regime_ladder": True,            # M-152 Path π:① BTT-LEX standalone
+                                                # (BTC MA{N}+mom{N}, lag-1) × regime ladder
+                                                # SHIP-READY: SR +1.115 / cum +178.0% / MaxDD -20.44%
+    "panel_long_only": True,                    # A-17 形态 A:panel-wide long-only hold
+                                                # (整个 universe 等权 / CIS 权, lag-1, 可选
+                                                # regime gate + rebalance cadence) ——
+                                                # §5b ① 的 panel-wide 形态,基准本应
+                                                # 只回报 beta,excess ≤ cost bps
 }
 #: 2026-09-04 K fix: 双名字 `survivors_only_lag1_book_bookB` 在 S-249 形状下
 #: 是一个漂移 hazard —— bookB 和 bookA 在运行时只是同一个家族的两个 alias,
@@ -305,6 +313,102 @@ class Spec:
                 dd_stop_pct=float(need(p, "dd_stop_pct", "parameters")),
                 max_open_trades=int(need(p, "max_open_trades", "parameters")),
                 skip_regimes=frozenset(str(r).upper() for r in (p.get("skip_regimes") or [])),
+                source=str(need(ds, "primary", "data_source")),
+                family=fam,
+                dry_run=bool(ex.get("dry_run", True)),
+                raw=raw,
+            )
+
+        if fam == "btc_trend_regime_ladder":
+            # M-152 Path π BTT-LEX: ① BTC trend (MA{N} + mom{N}, lag-1) ×
+            # Regime Multiplier Ladder. First standalone ① slot — §5b 的
+            # "long-only panel hold" 在 BTC 单资产上的形态;panel-wide 1 后续。
+            ma_lookback = int(need(p, "ma_lookback", "parameters"))
+            mom_lookback = int(need(p, "mom_lookback", "parameters"))
+            mults = need(p, "regime_multipliers", "parameters")
+            if not isinstance(mults, dict) or not mults:
+                raise ValueError(
+                    "spec 缺 parameters.regime_multipliers — 必须提供一个 "
+                    "regime → weight 的映射,key 是规范化的 regime 名 "
+                    "(EASING/TIGHTENING/RISK_OFF/RISK_ON/STAGFLATION/NEUTRAL)")
+            canonical = {
+                str(k).upper(): float(v) for k, v in mults.items()
+                if v is not None
+            }
+            if not canonical:
+                raise ValueError(
+                    "spec 的 regime_multipliers 全是 None —— 没法决定仓位")
+            return cls(
+                name=need(raw, "spec_name", "spec"),
+                universe=tuple(need(raw, "universe", "spec")),   # 通常 ["BTC"]
+                rank_by="btc_trend_ma_mom",       # family 决定走哪条 decide
+                n_lookback=mom_lookback,          # 兼容 decide() 默认字段
+                hold=1,                           # 每日 mark
+                cadence=1,
+                k=1, k_long=1, k_short=0,
+                weight_per_leg=1.0,               # 占位 —— 实际权重由 regime ladder 决定
+                cost_bps_rt=float(need(p, "cost_bps_rt", "parameters")),
+                dd_stop_pct=float(need(p, "dd_stop_pct", "parameters")),
+                max_open_trades=int(need(p, "max_open_trades", "parameters")),
+                skip_regimes=frozenset(),          # regime ladder 自带
+                source=str(need(ds, "primary", "data_source")),
+                family=fam,
+                dry_run=bool(ex.get("dry_run", True)),
+                raw=raw,
+            )
+
+        if fam == "panel_long_only":
+            # A-17 / docs/PANEL_LONG_ONLY_SPEC.md — §5b ① 形态 A:panel-wide
+            # long-only hold。是 **基准本**,应该只回报 beta,excess ≤ cost bps
+            # (equal-weight 形态下)。Panel-wide 比 M-152 BTT-LEX(单 BTC)多覆盖
+            # 整个 benchmark universe —— 两者合起来才是完整的 ①。
+            #
+            # Parameters:
+            #   allocation: equal_weight | cis_weight | market_cap_weight
+            #   target_size: int  (0 = 整个 universe;>0 = 按 allocation 取 top N)
+            #   rebalance_cadence: int  (days between rebalances)
+            #   max_position_pct: float (cap any single position)
+            #   min_position_pct: float (floor)
+            #   regime_gate: dict {REGIME: bool, default: bool}  (可选)
+            #   min_history_days: int  (panel needs at least N days per symbol)
+            allocation = str(need(p, "allocation", "parameters")).lower()
+            if allocation not in ("equal_weight", "cis_weight", "market_cap_weight"):
+                raise ValueError(
+                    f"spec allocation '{allocation}' 不是合法值 —— v1 ship 只接 "
+                    f"'equal_weight';cis_weight / market_cap_weight 在下一档 "
+                    f"(PANEL_LONG_ONLY_SPEC §'Allocation helpers')")
+            target_size = int(need(p, "target_size", "parameters"))
+            if target_size < 0:
+                raise ValueError(
+                    f"target_size = {target_size} 非法 —— 0 = 全 universe,>0 = top N")
+            rebalance_cadence = int(need(p, "rebalance_cadence", "parameters"))
+            if rebalance_cadence < 1:
+                raise ValueError(
+                    f"rebalance_cadence = {rebalance_cadence} 非法 —— 至少 1 天")
+            max_pos = float(p.get("max_position_pct", 1.0))
+            min_pos = float(p.get("min_position_pct", 0.0))
+            if max_pos <= 0 or max_pos > 1.0:
+                raise ValueError(f"max_position_pct={max_pos} 非法 —— (0, 1]")
+            if min_pos < 0 or min_pos >= max_pos:
+                raise ValueError(f"min_position_pct={min_pos} 非法 —— [0, max_position_pct)")
+            min_history_days = int(need(p, "min_history_days", "parameters"))
+            if min_history_days < 30:
+                raise ValueError(
+                    f"min_history_days = {min_history_days} 太短 —— ① 候选至少需要 "
+                    f"30 天,默认 365 (PANEL_LONG_ONLY_SPEC §'Why long-only')")
+            return cls(
+                name=need(raw, "spec_name", "spec"),
+                universe=tuple(need(raw, "universe", "spec")),
+                rank_by=f"panel_long_only_{allocation}",  # family 决定走哪条 decide
+                n_lookback=min_history_days,              # 兼容 decide() 默认字段
+                hold=rebalance_cadence,                   # 兼容 decide() 默认字段
+                cadence=rebalance_cadence,
+                k=1, k_long=1, k_short=0,                 # 全 long,no short
+                weight_per_leg=1.0 / max(len(need(raw, "universe", "spec")), 1),
+                cost_bps_rt=float(need(p, "cost_bps_rt", "parameters")),
+                dd_stop_pct=float(need(p, "dd_stop_pct", "parameters")),
+                max_open_trades=int(need(p, "max_open_trades", "parameters")),
+                skip_regimes=frozenset(),                 # regime gate 由 spec 处理
                 source=str(need(ds, "primary", "data_source")),
                 family=fam,
                 dry_run=bool(ex.get("dry_run", True)),
@@ -537,12 +641,17 @@ def decide_gated_2d(spec: Spec, panel: Panel, *, as_of: date,
 
 def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
            n_open: int,
-           features: Optional[Mapping[str, "ExternalFeature"]] = None) -> Decision:
+           features: Optional[Mapping[str, "ExternalFeature"]] = None,
+           last_rebalance: Optional["date"] = None) -> Decision:
     """一天的判定。**不写任何东西** —— 纯函数,便于重放与测试。
 
     顺序有意为之:**先判我们能不能算(BLOCKED),再判规则说什么(SKIPPED)。**
     反过来的话,一个价源死掉的日子会被记成"regime 跳过",
     而那会让停摆看起来像纪律。
+
+    `last_rebalance` (Optional[date]): 上一次再平衡的日期。A-17 形态 A
+    panel_long_only 用它来判「今天该不该 rebalance」。None = 第一次运行,
+    视为「需要 rebalance」。其他 family 忽略这个参数。
     """
     # Multi-sleeve book (M-113 V3 / M-115 Book B) routes to its own decide().
     # 2-sleeve book needs different BLOCKED checks (BTC presence for M-93 sleeve)
@@ -550,6 +659,14 @@ def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
     if spec.family == "survivors_only_lag1_book":
         return decide_survivors_book(spec, panel, as_of=as_of, regime=regime,
                                       n_open=n_open, features=features)
+    # M-152 Path π BTT-LEX: standalone ① — BTC trend × regime ladder.
+    if spec.family == "btc_trend_regime_ladder":
+        return decide_btc_trend(spec, panel, as_of=as_of, regime=regime,
+                                  n_open=n_open)
+    # A-17 形态 A: §5b ① panel-wide long-only hold.
+    if spec.family == "panel_long_only":
+        return decide_panel_long_only(spec, panel, as_of=as_of, regime=regime,
+                                      n_open=n_open, last_rebalance=last_rebalance)
     d = as_of.isoformat()
     base = dict(d=d, spec_name=spec.name, panel_source=panel.source,
                 panel_last_bar=panel.last_bar)
@@ -733,6 +850,289 @@ def decide_survivors_book(spec: Spec, panel: Panel, *, as_of: date,
     return Decision(**base, verdict=Verdict.ENTERED, legs=legs)
 
 
+# ── BTT-LEX (M-152 Path π) — ① standalone BTC trend × regime ladder ─────────
+# §5b 把 ① 写成 "long-only panel hold — FoF core"。Panel-wide 实现要等更长
+# 的 panel rebuild,但 BTC-as-the-bellwether 的 standalone 形态 (M-152) 已经
+# SHIP-READY: SR +1.115 / cum +178.0% / MaxDD -20.44% / 2025 vs BTC -8.42pp。
+# 这条 spec 把 BTT-LEX 接进 runner,后续 CDCB-A v2 book (50% BTT-LEX +
+# 50% CCCL) 可以直接引用。
+#
+# Signal (lag-1, S-114 / S-122):
+#   ma{N} = mean of last N bars <= d-1
+#   mom{N} = N-day return up to d-1
+#   trend_on = (close_{d-1} > ma{N}) AND (mom{N} > 0)
+#
+# Weight from regime ladder:
+#   multipliers = {REGIME: weight} (默认 M-152 5 档: 1.30/1.15/1.00/0.80/0.00)
+#   canon = canonical_regime_strict(regime); 未知 / None → 退回 NEUTRAL
+#   mult <= 0 → SKIPPED "regime ladder says zero"
+#   mult > 0  → ENTERED 单条 BTC long 腿,weight = mult
+#   mult > 1.0 是 leverage,不是 raw long —— spec.weight_per_leg 在这条 family
+#   里被忽略,实际权重由 ladder 决定。
+#
+# BLOCKED vs SKIPPED:
+#   BLOCKED: panel empty, BTC 缺失, panel 太旧, BTC 历史 < ma_lookback + 1
+#   SKIPPED: max_open_trades hit, trend OFF, regime ladder = 0
+
+def decide_btc_trend(spec: Spec, panel: Panel, *, as_of: date,
+                     regime: Optional[str], n_open: int) -> Decision:
+    from datetime import timedelta as _td
+
+    raw_params = (spec.raw.get("parameters") or {})
+    ma_lookback = int(raw_params.get("ma_lookback", 200))
+    mom_lookback = int(raw_params.get("mom_lookback", 60))
+    raw_mults = raw_params.get("regime_multipliers") or {}
+    multipliers = {str(k).upper(): float(v)
+                   for k, v in raw_mults.items() if v is not None}
+    if not multipliers:
+        # M-152 默认 ladder。缺省时给一条 ship-ready 的兜底,而不是 spec 错。
+        multipliers = {"EASING": 1.30, "TIGHTENING": 1.15, "NEUTRAL": 1.00,
+                       "STAGFLATION": 0.80, "RISK_OFF": 0.00, "RISK_ON": 1.15}
+
+    d = as_of.isoformat()
+    d_lag1 = (as_of - _td(days=1)).isoformat()
+    base = dict(d=d, spec_name=spec.name,
+                panel_source=panel.source, panel_last_bar=panel.last_bar)
+
+    # ① BLOCKED checks (mirror decide() 的 shape)
+    if panel.n_symbols == 0:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"面板 0 个标的 —— 源 {spec.source} 没有返回任何行。"
+                               f"BTT-LEX 不能在空面板上判定 trend。")
+    if "BTC" not in panel.closes:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason="BTC 不在面板里 —— BTT-LEX 必须有 BTC 才能算 trend。")
+    age = panel.age_days(as_of)
+    if age is None:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason="面板没有可读的最后一根 bar")
+    if age > MAX_PANEL_AGE_DAYS:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"面板最后一根 bar 是 {panel.last_bar},已 {age} 天 "
+                               f"> {MAX_PANEL_AGE_DAYS} 天 —— BTT-LEX 用旧价会污染 trend 判定")
+    btc_closes = panel.closes["BTC"]
+    if len(btc_closes) < ma_lookback + 1:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"BTC 只有 {len(btc_closes)} 天历史,BTT-LEX 需要 "
+                               f"至少 {ma_lookback + 1} 天算 MA{ma_lookback}")
+
+    # ② regime canonical (skip_regimes 由 ladder 处理,不在 family 层 skip)
+    canon = None
+    if regime is not None:
+        from src.data.cis.cis_provider import canonical_regime_strict
+        canon = canonical_regime_strict(regime)
+    base["regime"] = canon
+
+    if n_open >= spec.max_open_trades:
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"已有 {n_open} 笔未平仓 >= max_open_trades "
+                               f"{spec.max_open_trades} —— 不重复开 BTT-LEX")
+
+    # ③ Trend (lag-1: signal uses bars <= d-1; entry price = bar at d)
+    bars_signal = sorted(x for x in btc_closes if x <= d_lag1)
+    if len(bars_signal) < ma_lookback:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"BTC 在 {d_lag1} 及之前只有 {len(bars_signal)} 根 bar,"
+                               f"算不出 MA{ma_lookback}")
+    ma_n = sum(btc_closes[b] for b in bars_signal[-ma_lookback:]) / ma_lookback
+    close_signal = btc_closes[bars_signal[-1]]
+    mom = _return_over(btc_closes, d_lag1, mom_lookback)
+    if mom is None:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"BTC 在 {d_lag1} 及之前算不出 {mom_lookback}d 动量")
+
+    trend_on = (close_signal > ma_n) and (mom > 0)
+    if not trend_on:
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"BTC trend OFF — close_{d_lag1}={close_signal:.4f} ≤ "
+                               f"MA{ma_lookback}={ma_n:.4f} 或 "
+                               f"mom{mom_lookback}={mom:+.4%} ≤ 0")
+
+    # ④ Multiplier from regime ladder
+    mult = multipliers.get(canon, multipliers.get("NEUTRAL", 1.0))
+    if mult <= 0:
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"BTC trend ON,但 regime {canon} ladder = {mult} "
+                               f"—— 不开仓")
+
+    # Entry price = bar at d (今天的 mark price)
+    bars_today = sorted(x for x in btc_closes if x <= d)
+    if not bars_today:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"BTC 在 {d} 当天没有 bar —— 无法定价入场")
+    px_entry = btc_closes[bars_today[-1]]
+
+    legs = (Leg("BTC", "long", float(mult), float(px_entry)),)
+    return Decision(**base, verdict=Verdict.ENTERED, legs=legs)
+
+
+# ── panel_long_only (A-17 形态 A) — §5b ① panel-wide long-only hold ─────────
+# §5b 把 ① 写成「long-only hold of the panel — the FoF core;the benchmark
+# every sleeve is measured against is 'hold the panel', NEVER 0」。
+# 这是 panel-wide 形态,M-152 BTT-LEX 是单 BTC 形态 —— 两者合起来才是
+# 完整的 ① doctrine。
+#
+# Signal 与 trade logic:
+#   target_symbols = universe(或 top N by allocation rank)
+#   weights        = equal / cis / mcap,normalised,cap 在 max_position_pct
+#   rebalance day  = (last_rebalance is None) OR
+#                    (as_of - last_rebalance).days >= rebalance_cadence
+#   BLOCKED:       panel empty,panel too old,universe < MIN,symbols missing,
+#                    symbol 历史不够 min_history_days
+#   SKIPPED:       regime gated off,dd_stop hit,not rebalance day,
+#                    n_open >= max_open_trades
+#   ENTERED:       N legs,all long,weight = target,price = bar at d
+#
+# lag-1 PIT discipline (S-114 / S-122):
+#   signal/target size 决定在 bars <= d-1 上做
+#   entry price         = bar at d(今天的 mark price)
+#
+# 整条 spec 的全部目的就是「把整个 universe 按既定权重持有」 —— 没有 alpha,
+# 没有横截面,没有 lever,只有再平衡。回报应该长得像 buy-and-hold,
+# excess ≤ cost bps。**任何超过 cost bps 的 excess 都值得审查 —— 那意味着
+# spec 偷偷装了一个 §5b 不允许的机制。**
+def decide_panel_long_only(spec: Spec, panel: Panel, *, as_of: date,
+                           regime: Optional[str], n_open: int,
+                           last_rebalance: Optional[date]) -> Decision:
+    """§5b ① 形态 A:panel-wide long-only hold。"""
+    from datetime import timedelta as _td
+
+    raw_params = (spec.raw.get("parameters") or {})
+    allocation = str(raw_params.get("allocation", "equal_weight")).lower()
+    rebalance_cadence = int(raw_params.get("rebalance_cadence", 7))
+    max_pos = float(raw_params.get("max_position_pct", 1.0))
+    min_pos = float(raw_params.get("min_position_pct", 0.0))
+    regime_gate = raw_params.get("regime_gate") or {}
+    min_history_days = int(raw_params.get("min_history_days", 365))
+
+    d = as_of.isoformat()
+    d_lag1 = (as_of - _td(days=1)).isoformat()
+    base = dict(d=d, spec_name=spec.name,
+                panel_source=panel.source, panel_last_bar=panel.last_bar)
+
+    # ① BLOCKED: panel 必须能用
+    if panel.n_symbols == 0:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"面板 0 个标的 —— 源 {spec.source} 没有返回任何行。"
+                               f"这不等于'今天没有机会' (S-180)")
+    if len(spec.universe) < MIN_UNIVERSE_FOR_RANK:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"universe 只有 {len(spec.universe)} 个标的,"
+                               f"< MIN_UNIVERSE_FOR_RANK={MIN_UNIVERSE_FOR_RANK} "
+                               f"—— 没有横截面信息可言 (spec_runner MIN)")
+    age = panel.age_days(as_of)
+    if age is None:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason="面板没有可读的最后一根 bar")
+    if age > MAX_PANEL_AGE_DAYS:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"面板最后一根 bar 是 {panel.last_bar},已 {age} 天 "
+                               f"> {MAX_PANEL_AGE_DAYS} 天 —— 用旧价 rebalance "
+                               f"会污染 §5b ① 基准")
+
+    # ② universe 必须在面板里;每个 symbol 历史都要够 min_history_days
+    missing = [s for s in spec.universe if s not in panel.closes]
+    if missing:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"universe 中有 {len(missing)} 个不在面板里:"
+                               f"{missing[:5]}{'...' if len(missing) > 5 else ''} "
+                               f"—— ① 必须持完整 universe,缺一个就不是 'hold the panel'")
+    too_short = []
+    threshold_date = (as_of - _td(days=min_history_days)).isoformat()
+    for s in spec.universe:
+        s_closes = panel.closes[s]
+        if not s_closes:
+            too_short.append((s, 0))
+            continue
+        # First bar <= as_of
+        sorted_dates = sorted(d_ for d_ in s_closes if d_ <= d_lag1)
+        if not sorted_dates or sorted_dates[0] > threshold_date:
+            too_short.append((s, len(sorted_dates)))
+    if too_short:
+        sym_list = ", ".join(f"{s} ({n}d)" for s, n in too_short[:5])
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"{len(too_short)}/{len(spec.universe)} 个 universe "
+                               f"symbol 历史不足 {min_history_days}d:{sym_list}"
+                               f"{'...' if len(too_short) > 5 else ''} "
+                               f"—— ① 形态 A 候选至少需要 {min_history_days}d")
+
+    # ③ Regime gate (per spec.parameters.regime_gate)
+    canon = None
+    if regime is not None:
+        from src.data.cis.cis_provider import canonical_regime_strict
+        canon = canonical_regime_strict(regime)
+    base["regime"] = canon
+    if regime_gate:
+        if canon in regime_gate:
+            allow = bool(regime_gate[canon])
+            if not allow:
+                return Decision(**base, verdict=Verdict.SKIPPED,
+                                reason=f"regime_gate 把 {canon} 关掉了 "
+                                       f"(parameters.regime_gate.{canon}=False) "
+                                       f"—— ① 形态 A 在该 regime 不持仓")
+        elif "default" in regime_gate:
+            allow = bool(regime_gate["default"])
+            if not allow:
+                return Decision(**base, verdict=Verdict.SKIPPED,
+                                reason=f"regime_gate.default=False,{canon} "
+                                       f"未在 gate 里显式列出 —— 默认不放")
+
+    # ④ n_open 容量
+    if n_open >= spec.max_open_trades:
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"已有 {n_open} 笔未平仓 >= max_open_trades "
+                               f"{spec.max_open_trades}")
+
+    # ⑤ Rebalance day 检查 —— ① 的纪律就是「cadence 到了才动」
+    if last_rebalance is not None:
+        elapsed = (as_of - last_rebalance).days
+        if elapsed < rebalance_cadence:
+            return Decision(**base, verdict=Verdict.SKIPPED,
+                            reason=f"上次再平衡 {last_rebalance.isoformat()},"
+                                   f"已 {elapsed}d < cadence {rebalance_cadence}d "
+                                   f"—— ① 形态 A 不在 cadence 上不动仓")
+
+    # ⑥ Compute target weights (v1 only: equal_weight;cis / mcap 在下档 ship)
+    n = len(spec.universe)
+    if allocation != "equal_weight":
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"v1 ship 只接 allocation='equal_weight'; "
+                               f"'{allocation}' 在下一档 "
+                               f"(PANEL_LONG_ONLY_SPEC §'Allocation helpers')")
+    raw_w = {sym: 1.0 / n for sym in spec.universe}
+    # HARD cap + floor —— **不 renormalize**。如果用户把 max_position_pct 设到
+    # 比 1/N 还小,他们就是在明确说「我接受 cash drag」,而不是「请把多余的
+    # 钱按比例塞回每个仓位」。Renormalize 会把 cap 偷偷抹平,变成「我说要
+    # cap 但其实没 cap」 —— 那种撒谎 ① 基准不能有。
+    capped = {sym: min(max_pos, max(min_pos, w)) for sym, w in raw_w.items()}
+    s_w = sum(capped.values())
+    if s_w <= 0:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"权重重整后总和 {s_w} ≤ 0 —— max/min_position_pct "
+                               f"配置让所有权重被剪没了 (max={max_pos}, min={min_pos})")
+    if s_w > 1.0 + 1e-9:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"权重重整后总和 {s_w:.4f} > 1.0 —— "
+                               f"min_position_pct 把总和推过了 1,会出现隐式杠杆;"
+                               f"max={max_pos}, min={min_pos}, N={n}")
+    weights = capped
+
+    # ⑦ Entry price = bar at d (今天的 mark price);lag-1 已用于历史深度检查
+    legs_list = []
+    for sym in spec.universe:
+        sym_closes = panel.closes[sym]
+        bars_today = sorted(x for x in sym_closes if x <= d)
+        if not bars_today:
+            return Decision(**base, verdict=Verdict.BLOCKED,
+                            reason=f"{sym} 在 {d} 当天没有 bar —— 无法定价入场")
+        px_entry = sym_closes[bars_today[-1]]
+        legs_list.append(Leg(sym, "long", float(weights[sym]), float(px_entry)))
+    legs = tuple(legs_list)
+
+    return Decision(**base, verdict=Verdict.ENTERED, legs=legs,
+                    reason=f"rebalance {d},n_legs={len(legs)},allocation={allocation}")
+
+
 def should_run_today(spec: Spec, *, as_of: date, last_entry: Optional[date]) -> bool:
     """cadence 到了没有。第一次运行(无 last_entry)总是跑。"""
     if last_entry is None:
@@ -903,6 +1303,7 @@ if __name__ == "__main__":                                  # noqa: C901
 
 __all__ = ["Spec", "Panel", "Decision", "Leg", "Verdict",
            "build_panel", "decide", "decide_gated", "decide_gated_2d",
-           "decide_survivors_book",
+           "decide_survivors_book", "decide_btc_trend",
+           "decide_panel_long_only",
            "should_run_today", "exit_due",
            "MAX_PANEL_AGE_DAYS", "MIN_UNIVERSE_FOR_RANK"]
