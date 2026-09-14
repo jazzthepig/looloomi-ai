@@ -177,6 +177,14 @@ _CB_COOLDOWN_S     = float(os.environ.get("SB_CB_COOLDOWN_S", "30"))
 _cb_consecutive_failures = 0
 _cb_open_until = 0.0
 _cb_trips = 0            # lifetime count, surfaced by /health
+# S-323 Phase A2 (2026-09-14): 4xx is a CALLER bug (bad path / bad key /
+# missing permission), not a backend outage. Counting it as success hid
+# dozens of failures behind `lifetime_trips=0` while the loops racked up
+# 14+ consecutive failures. Track 4xx separately so the health endpoint
+# surfaces "config is wrong" without conflating it with saturation.
+_cb_lifetime_4xx = 0
+_cb_consecutive_4xx = 0
+_CB_4XX_ALERT_THRESHOLD = 20       # alert once we have 20 cumulative 4xx
 
 
 def supabase_breaker_state() -> dict:
@@ -188,6 +196,8 @@ def supabase_breaker_state() -> dict:
         "consecutive_failures": _cb_consecutive_failures,
         "cooldown_remaining_s": max(0.0, round(_cb_open_until - now, 1)),
         "lifetime_trips": _cb_trips,
+        "lifetime_4xx": _cb_lifetime_4xx,
+        "consecutive_4xx": _cb_consecutive_4xx,
         "threshold": _CB_FAIL_THRESHOLD,
     }
 
@@ -207,6 +217,28 @@ def _cb_record_failure() -> None:
         _logger.error(
             f"[SUPABASE] circuit OPEN after {_cb_consecutive_failures} consecutive "
             f"failures — failing fast for {_CB_COOLDOWN_S}s (trip #{_cb_trips})")
+
+
+def _cb_record_caller_error(status_code: int, body_snippet: str) -> None:
+    """S-323 Phase A2. 4xx means our request was wrong (path/key/permission),
+    not that the backend is saturated. Track separately so the data layer's
+    health card can say "config is wrong" instead of looking healthy while
+    loops pile up silent failures.
+
+    Does NOT trip the breaker — callers still get the response so the loop's
+    `_beat(ok=False, error=...)` carries the real reason."""
+    global _cb_lifetime_4xx, _cb_consecutive_4xx
+    _cb_lifetime_4xx += 1
+    _cb_consecutive_4xx += 1
+    snippet = (body_snippet or "")[:200]
+    _logger.warning(
+        f"[SUPABASE] 4xx caller_error #{_cb_lifetime_4xx} "
+        f"(consec={_cb_consecutive_4xx}): HTTP {status_code} — {snippet}")
+    if _cb_consecutive_4xx >= _CB_4XX_ALERT_THRESHOLD:
+        _logger.error(
+            f"[SUPABASE] { _cb_consecutive_4xx } consecutive 4xx — "
+            f"this is a CONFIG bug, not saturation. Check SUPABASE_KEY / "
+            f"endpoint paths. (lifetime_4xx={_cb_lifetime_4xx})")
 
 
 async def _supabase_request_with_retry(
@@ -235,12 +267,15 @@ async def _supabase_request_with_retry(
             resp = await client.request(method, url, **kwargs)
             if resp.status_code in (200, 201):
                 _cb_record_success()
+                global _cb_consecutive_4xx
+                _cb_consecutive_4xx = 0          # a 2xx clears the 4xx streak
                 return resp
             # Non-retryable error (4xx except 429) — the backend is healthy and
-            # is telling us the request is wrong. Does NOT count toward the breaker.
+            # is telling us the request is wrong. S-323 Phase A2: do NOT record
+            # this as success. Track as caller_error so the loop's heartbeat
+            # surfaces the real failure mode instead of "熔断 open, no request sent".
             if 400 <= resp.status_code < 500 and resp.status_code != 429:
-                _cb_record_success()
-                _logger.warning(f"[SUPABASE] Non-retryable error {resp.status_code}: {resp.text[:100]}")
+                _cb_record_caller_error(resp.status_code, resp.text or "")
                 return resp
             last_error = f"HTTP {resp.status_code}"
         except httpx.TimeoutException as e:
@@ -383,6 +418,59 @@ async def supabase_table_exists(table: str) -> bool | None:
         return None
     except Exception:                                  # noqa: BLE001
         return None
+
+
+async def supabase_missing_columns(table: str, columns: list[str]) -> list[str] | None:
+    """Which of `columns` does the LIVE table not have? None = could not tell (S-286).
+
+    THE GAP THIS CLOSES. `supabase_table_exists` was built for S-166, where eleven
+    TABLES were missing. It inherited that incident's scope, and on 2026-09-04 the
+    ① book was taken down by a missing COLUMN: `_INCEPTION_ID` moved to v5 and
+    deployed while the migration adding `interval_hours` had not run. Every insert
+    got a 400, `_write` returned False, the book stopped, and the curve answered
+    `{"days": 0}`. The table existed the whole time, so the online guard stayed
+    green — **a control whose scope is one notch too narrow reads as coverage.**
+
+    Probes with `select=<cols>&limit=0`: PostgREST resolves the projection before
+    it fetches anything, so an unknown column answers 42703 without reading a row.
+    Cheap enough to run on every deploy, which is the point — the offline half can
+    only prove a migration FILE exists, never that it RAN.
+
+    Three-valued for the same reason as `supabase_table_exists`: "the column is
+    missing" and "I could not reach Supabase" must not collapse, or the report
+    that says missing on a network blip trains everyone to ignore it.
+    """
+    if not _SB_URL or not _SB_KEY or not table or not columns:
+        return None
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
+    # Ask for all of them at once; only narrow to per-column probes on failure,
+    # so the common (healthy) case costs exactly one request per table.
+    url = f"{_SB_URL}/rest/v1/{table}?select={','.join(columns)}&limit=0"
+    try:
+        resp = await _supabase_request_with_retry("GET", url, headers=headers)
+        if resp is None:
+            return None
+        if resp.status_code in (200, 206):
+            return []
+        if resp.status_code != 400 and "42703" not in (resp.text or ""):
+            return None                      # auth, missing relation, something else
+    except Exception:                                  # noqa: BLE001
+        return None
+
+    missing = []
+    for col in columns:
+        try:
+            r = await _supabase_request_with_retry(
+                "GET", f"{_SB_URL}/rest/v1/{table}?select={col}&limit=0", headers=headers)
+            if r is None:
+                return None
+            if r.status_code == 400 or "42703" in (r.text or ""):
+                missing.append(col)
+            elif r.status_code not in (200, 206):
+                return None
+        except Exception:                              # noqa: BLE001
+            return None
+    return missing
 
 
 async def supabase_upsert_table(table: str, rows: list, on_conflict: str) -> bool:
@@ -546,7 +634,16 @@ async def supabase_get_latest_edge_map() -> list:
 
 async def supabase_rpc(fn_name: str, payload: dict | None = None):
     """Call a Postgres function via PostgREST RPC (uses the configured service key).
-    Returns the JSON result or None. Used by the daily track-record refresh."""
+    Returns the JSON result or None. Used by the daily track-record refresh.
+
+    S-323 Phase A1 (2026-09-14): when the response is 4xx or `200 with a
+    non-JSON body`, log the status AND body inline so the heartbeat can pick
+    it up. The previous shape collapsed four different failure modes
+    (`4xx real error`, `200 with empty body`, `network timeout`,
+    `breaker open`) into a single `None`, which is what kept us guessing
+    at the cause for 128 days. Caller contract unchanged — None still
+    means "no data", but the reason is now in the log with status+body.
+    """
     if not _SB_URL or not _SB_KEY:
         return None
     url = f"{_SB_URL}/rest/v1/rpc/{fn_name}"
@@ -558,9 +655,18 @@ async def supabase_rpc(fn_name: str, payload: dict | None = None):
             try:
                 return resp.json()
             except Exception:
-                return True
+                # 200 + non-JSON: this IS the bug class S-323 calls out — log
+                # the raw body, don't return True (which loses the diagnostic).
+                _logger.warning(
+                    f"[SUPABASE] rpc {fn_name}: HTTP 200 but body not JSON: "
+                    f"{(resp.text or '')[:200]}")
+                return None
         if resp:
-            _logger.warning(f"[SUPABASE] rpc {fn_name} error {resp.status_code}: {resp.text[:120]}")
+            # S-323 Phase A1: log the actual response body. Caller still gets
+            # None (signature preserved) but the reason is now searchable.
+            _logger.warning(
+                f"[SUPABASE] rpc {fn_name}: HTTP {resp.status_code} — "
+                f"{(resp.text or '')[:200]}")
         return None
     except Exception as e:
         _logger.warning(f"[SUPABASE] rpc {fn_name} exception: {e}")
