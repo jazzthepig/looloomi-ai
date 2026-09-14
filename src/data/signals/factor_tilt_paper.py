@@ -316,8 +316,17 @@ async def _row_exists_for(table: str, day: str) -> bool | None:
     except Exception:                                           # noqa: BLE001
         return None
 
-async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
-    """Daily mark of the cross-asset factor tilt paper book. Idempotent per day."""
+async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
+                           source: str = "cron") -> dict[str, Any]:
+    """Daily mark of the cross-asset factor tilt paper book. Idempotent per day.
+
+    Args:
+        dry_run: if True, compute and return NAV but DON'T write.
+        force:   operator override — mark NOW (no timing guard in this book;
+                 reserved for future use). Passed through for uniform signature.
+        source:  'cron' for the 24h scheduled mark, 'manual' for force-mark
+                 via POST /internal/force-mark/{book}. Written to NAV row's
+                 mark_source column."""
     from src.research.validation.cross_asset_factor_tilt import (
         build_composite, tilt_weights, h32_size, vol_target, book_returns,
         hold_panel_benchmark,
@@ -499,6 +508,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
             "validated": validated,
             "factor_attribution": factor_attribution,
             "max_single_factor_sharpe_share": max_share,
+            "mark_source": source,
         })
 
         # 只有真的写进去了才记「今天做过」。写失败时**不存 state**,

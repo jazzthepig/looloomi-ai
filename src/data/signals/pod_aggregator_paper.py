@@ -275,8 +275,19 @@ async def _row_exists_for(table: str, day: str) -> bool | None:
     except Exception:                                           # noqa: BLE001
         return None
 
-async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
+async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
+                           source: str = "cron") -> dict[str, Any]:
     """Daily mark of the pod aggregator paper book. Idempotent per calendar day.
+
+    Args:
+        dry_run: if True, compute and return NAV but DON'T write.
+        force:   operator override — mark NOW (no timing guard in this book;
+                 reserved for future use). Passed through for uniform signature.
+        source:  'cron' for the 24h scheduled mark, 'manual' for force-mark
+                 via POST /internal/force-mark/{book}. Written to NAV row's
+                 mark_source column.
+
+    Returns the daily result dict (used by both the loop and the API endpoint).
 
     Returns the daily result dict (used by both the loop and the API endpoint).
     """
@@ -419,6 +430,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict[str, Any]:
             "pods_dropped": gate_log["dropped"],
             "breakers_tripped": breakers,
             "max_corr_retained": gate_log["max_corr_retained"],
+            "mark_source": source,
         })
 
     return {

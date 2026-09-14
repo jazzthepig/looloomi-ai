@@ -92,8 +92,19 @@ async def _load_live_panel():
     return close, ret, fmean, fsum, last_px, last_fund
 
 
-async def mark_and_rebalance(dry_run: bool = False) -> dict:
-    """Daily mark of the combined book; weekly rebalance. Idempotent per day."""
+async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
+                           source: str = "cron") -> dict:
+    """Daily mark of the combined book; weekly rebalance. Idempotent per day.
+
+    Args:
+        dry_run: if True, compute and return NAV but DON'T write.
+        force:   operator override — mark NOW (currently no timing guard in
+                 this book; reserved for future use). Passed through for
+                 uniform signature.
+        source:  'cron' for the 24h scheduled mark, 'manual' for force-mark
+                 via POST /internal/force-mark/{book}. Written to NAV row's
+                 mark_source column.
+    """
     from src.data.market.data_layer import _redis_get, _redis_set
     today = dt.date.today()
     try:
@@ -115,7 +126,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             # first leaves the cache asserting a mark the table does not have — the
             # state then says "done" about a day that was never recorded, and §3
             # forbids backfilling it.
-            _ok, _why = await _write_nav(today, 1.0, 0.0, sum(abs(x) for x in w.values()), len(w), 0.0, 0.0, 0.0, True, w)
+            _ok, _why = await _write_nav(today, 1.0, 0.0, sum(abs(x) for x in w.values()), len(w), 0.0, 0.0, 0.0, True, w,
+                                         source=source)
             if not _ok:
                 return {"status": "mark_failed", "date": today.isoformat(),
                         "error": f"durable_write_failed :: {_why}"}
@@ -171,7 +183,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
         # state then says "done" about a day that was never recorded, and §3
         # forbids backfilling it.
         _ok, _why = await _write_nav(today, nav, daily_ret, sum(abs(x) for x in new_w.values()),
-                                     len(new_w), funding_pnl, price_pnl, cost, rebalanced, new_w)
+                                     len(new_w), funding_pnl, price_pnl, cost, rebalanced, new_w,
+                                     source=source)
         if not _ok:
             return {"status": "mark_failed", "date": today.isoformat(),
                     "error": f"durable_write_failed :: {_why}"}
@@ -180,7 +193,8 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
             "rebalanced": rebalanced, "n": len(new_w), "date": today.isoformat()}
 
 
-async def _write_nav(d, nav, dret, gross, n, fpnl, ppnl, cost, rebal, weights):
+async def _write_nav(d, nav, dret, gross, n, fpnl, ppnl, cost, rebal, weights,
+                    source: str = "cron"):
     """Persist one NAV row. Returns (ok, why) — S-334.
 
     ⚠️ THIS FUNCTION USED TO DISCARD ITS OWN RESULT, and that is why this book
@@ -205,7 +219,8 @@ async def _write_nav(d, nav, dret, gross, n, fpnl, ppnl, cost, rebal, weights):
             "mark_date": d.isoformat(), "nav": round(nav, 6), "daily_return": round(dret, 6),
             "gross": round(gross, 4), "n_positions": n, "funding_pnl": round(fpnl, 6),
             "price_pnl": round(ppnl, 6), "cost": round(cost, 6), "rebalanced": rebal,
-            "nucleus": NUCLEUS, "top_longs": longs, "top_shorts": shorts}])
+            "nucleus": NUCLEUS, "top_longs": longs, "top_shorts": shorts,
+            "mark_source": source}])
     except Exception as e:
         _log.warning("[combined_book] nav write: %s", e)
         return False, f"{type(e).__name__}: {e}"

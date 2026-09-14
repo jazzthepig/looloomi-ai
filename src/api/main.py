@@ -37,6 +37,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
 from src.api.routers.write_probe import router as write_probe_router  # S-328
+from src.api.routers.force_mark import router as force_mark_router   # 9 paper books
 from src.api.routers.market import router as market_router
 from src.api.routers.cis import router as cis_router
 from src.api.routers.intelligence import router as intelligence_router
@@ -110,6 +111,7 @@ async def security_headers(request: Request, call_next):
 
 app.include_router(market_router)
 app.include_router(write_probe_router)   # S-328 instant write/dry-run verification
+app.include_router(force_mark_router)     # 9 paper books force-mark (A-21 vault-tick shape)
 app.include_router(cis_router)
 app.include_router(intelligence_router)
 app.include_router(vault_router)
