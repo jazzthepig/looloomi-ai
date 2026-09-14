@@ -471,6 +471,70 @@ def decide_gated(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str]
                   n_open=n_open, features=features)
 
 
+def decide_gated_2d(spec: Spec, panel: Panel, *, as_of: date,
+                    regime: Optional[str], n_open: int,
+                    composite_z: Optional[float] = None,
+                    composite_z_source: Optional["CompositeZSource"] = None,
+                    features: Optional[Mapping[str, "ExternalFeature"]] = None,
+                    quorum: Optional["RegimeQuorum"] = None) -> Decision:
+    """`decide_gated()` 的 wrapper,加 M-128d Path γ 2D gate (CASH in RISK_OFF × weak breadth)。
+
+    ## 为什么 gate 在 decide 之前
+
+    M-128c/d 验证: RISK_OFF × NEUTRAL 是 SR -1.546 的失败 zone。
+    如果走 `decide()` 拿到 ENTERED,再被 gate 截胡,记录里会写 "今天策略说要开仓"
+    —— 而真相是「策略本不该开,gate 救了它」。这会让 gate 看起来像一个事后的
+    风控补丁,而**它是一个先验的条件**(我们不需要一个会跳进 RISK_OFF × NEUTRAL
+    的策略)。
+
+    所以在 decide() 之前先 gate:CASH → 直接返回 SKIPPED,gate 的 reason
+    写进 Decision.reason(consumer 看得到「策略说 HOLD 但 gate 让它 CASH」 vs
+    「regime 说跳过」 vs 「面板 BLOCKED」)。
+
+    ## 调用约定
+
+    - `composite_z` 显式传入 → 用它
+    - `composite_z_source` 传入 → 用它查 (as_of - LAG_DAYS)
+    - 都没传 → gate 走保守 CASH (unknown composite_z in RISK_OFF)
+
+    `quorum=None` → 不加 quorum 闸(向后兼容)。
+    """
+    import sys as _gate_sys
+    # Lazy import: gate module lives in Minimax-C lane (cometcloud-local).
+    # Vendored copy at paper_trading/_vendor/m128d_2d_gate.py for Railway;
+    # if not vendored, try the local Minimax-C path; if neither, no-gate.
+    gate = None
+    for _try in (
+        "paper_trading._vendor.m128d_2d_gate",
+        "m128d_2d_gate",
+    ):
+        try:
+            _gate_sys.path.insert(0, "/Volumes/CometCloudAI/cometcloud-local")
+            _mod = __import__(_try, fromlist=["Gate2D"])
+            gate = _mod.Gate2D()
+            break
+        except ImportError:
+            continue
+
+    if gate is not None:
+        # Resolve composite_z: explicit > source > unknown
+        cz = composite_z
+        if cz is None and composite_z_source is not None:
+            cz = composite_z_source.get(as_of)
+        d = as_of.isoformat()
+        gd = gate.evaluate(as_of=as_of, regime=regime, composite_z=cz)
+        if gd.action == "CASH":
+            base = dict(d=d, spec_name=spec.name, panel_source=panel.source,
+                        panel_last_bar=panel.last_bar, regime=gd.regime)
+            return Decision(
+                **base, verdict=Verdict.SKIPPED,
+                reason=(f"M-128d 2D gate CASH — {gd.reason} "
+                        f"(Path γ ship-ready, threshold=±{gate.threshold})"))
+    # Gate HOLD or no-gate-available → defer to existing decide_gated
+    return decide_gated(spec, panel, as_of=as_of, regime=regime,
+                        n_open=n_open, features=features, quorum=quorum)
+
+
 def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
            n_open: int,
            features: Optional[Mapping[str, "ExternalFeature"]] = None) -> Decision:
@@ -749,6 +813,19 @@ if __name__ == "__main__":                                  # noqa: C901
     _p.add_argument("--quorum-rows-json", default=None,
                     help="optional regime_quorum input rows JSON; passed to "
                          "regime_quorum.classify() instead of synthesizing")
+    _p.add_argument("--gate", default="none",
+                    choices=("none", "regime", "2d_composite"),
+                    help="pre-decision gate: "
+                         "none=no gate (default), "
+                         "regime=decide_gated with quorum only, "
+                         "2d_composite=M-128d Path γ 2D gate "
+                         "(CASH in RISK_OFF × |composite_z|≤0.75)")
+    _p.add_argument("--composite-z", type=float, default=None,
+                    help="prior-day composite_z for --gate=2d_composite; "
+                         "omit to use --composite-z-db lookup")
+    _p.add_argument("--composite-z-db", default=None,
+                    help="path to composite_z sqlite (trade_date, composite_z); "
+                         "only used with --gate=2d_composite and no --composite-z")
 
     _args = _p.parse_args()
 
@@ -789,9 +866,25 @@ if __name__ == "__main__":                                  # noqa: C901
         )
 
     # ── Decide
-    _decision = decide_gated(_spec, _panel, as_of=_as_of,
-                             regime=_args.regime, n_open=_args.n_open,
-                             quorum=_quorum)
+    if _args.gate == "2d_composite":
+        # Path γ: pre-decision 2D gate. If gate says CASH, returns SKIPPED
+        # before decide_gated is called.
+        _cz = _args.composite_z
+        _cz_src = None
+        if _cz is None and _args.composite_z_db:
+            try:
+                from m128d_2d_gate import CompositeZSource as _CZS
+                _cz_src = _CZS(db_path=_args.composite_z_db)
+            except ImportError:
+                pass
+        _decision = decide_gated_2d(_spec, _panel, as_of=_as_of,
+                                    regime=_args.regime, n_open=_args.n_open,
+                                    composite_z=_cz, composite_z_source=_cz_src,
+                                    quorum=_quorum)
+    else:
+        _decision = decide_gated(_spec, _panel, as_of=_as_of,
+                                 regime=_args.regime, n_open=_args.n_open,
+                                 quorum=_quorum)
 
     # ── 输出 (含 book 信息 + dry-run 标记,便于人读)
     _payload = _decision.as_payload()
@@ -802,11 +895,14 @@ if __name__ == "__main__":                                  # noqa: C901
         "synthetic_panel": _args.panel_json is None,
         "synthetic_quorum": _args.require_regime is not None
                             and _args.quorum_rows_json is None,
+        "gate": _args.gate,
+        "composite_z": _args.composite_z,
     }
     print(json.dumps(_payload, indent=2, ensure_ascii=False))
 
 
 __all__ = ["Spec", "Panel", "Decision", "Leg", "Verdict",
-           "build_panel", "decide", "decide_gated", "decide_survivors_book",
+           "build_panel", "decide", "decide_gated", "decide_gated_2d",
+           "decide_survivors_book",
            "should_run_today", "exit_due",
            "MAX_PANEL_AGE_DAYS", "MIN_UNIVERSE_FOR_RANK"]
