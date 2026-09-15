@@ -180,8 +180,8 @@ def _try_fetch_r77_nav() -> list[tuple[str, float]] | None:
         # baseline would splice fabricated v1 marks onto real v2 marks.
         url = (
             f"{SUPABASE_URL.rstrip('/')}/rest/v1/{R77_NAV_TABLE}"
-            f"?select=date_utc,nav&inception_id=eq.v2&void_reason=is.null"
-            f"&order=date_utc.asc&limit=200"
+            f"?select=mark_date,nav&inception_id=eq.v2&void_reason=is.null"
+            f"&order=mark_date.asc&limit=200"
         )
         req = urllib.request.Request(
             url,

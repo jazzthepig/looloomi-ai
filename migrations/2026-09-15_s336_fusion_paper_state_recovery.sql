@@ -146,8 +146,12 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Partial index supports the live-v2 reader filter.
+-- NOTE: time column is `mark_date DATE NOT NULL UNIQUE` per
+-- scripts/supabase_fusion_paper.sql:6-24 (NOT `ts` — that was an
+-- assumption that blew up on apply). Index supports `(mark_date DESC)
+-- WHERE inception_id='v2' AND void_reason IS NULL`.
 CREATE INDEX IF NOT EXISTS fusion_paper_nav_v2_live_idx
-    ON fusion_paper_nav (ts DESC)
+    ON fusion_paper_nav (mark_date DESC)
     WHERE inception_id = 'v2' AND void_reason IS NULL;
 
 
