@@ -67,6 +67,9 @@ TIER_SEVERITY = {TRACK_RECORD: 0, SIGNAL: 1, INPUT: 2, OPS: 3, REFERENCE: 4}
 BLOCKING_TIERS = (TRACK_RECORD,)
 
 COVERED, NOT_COVERED, EXCLUDED = "covered", "not_covered", "excluded"
+#: S-353。没有手写判活规则,但 `write_log` 看得见写入尝试。
+#: **比 NOT_COVERED 强、比 COVERED 弱** —— 它说「有人在写」,不说「内容是对的」。
+WRITE_OBSERVED = "write_observed"
 
 
 @dataclass(frozen=True)
@@ -161,12 +164,27 @@ def tier_of(table: str) -> str:
     return OPS
 
 
-def census(tables: list) -> dict:
+def census(tables: list, write_health: dict | None = None) -> dict:
     """库里的真实表名 → 覆盖清册。
 
     `tables` 应来自 `information_schema`(实时),**不是一份手写清单** ——
     手写清单本身就是抽样,而抽样正是本模块要修的毛病。
+
+    `write_health`(S-353,可选)是 `write_health()` RPC 的结果:每张表最后一次
+    写入**尝试**的时间与结果。它和 `COVERAGE` **不是一回事,不可混为一谈**:
+
+        COVERAGE[t]      有人声明过「这张表健康意味着什么」—— 一个**判断**
+        write_health[t]  我们看得见有人尝试写它 —— 一个**事实,不含判断**
+
+    第二个弱得多(它不说行是不是当期的、对不对),但它**不需要手写规则、
+    自动覆盖每一张被写的表**。而 `COVERAGE` 是手写字典,这正是它追不上的原因:
+    每建一张表就掉进 `not_covered`,等人记得来加。
+
+    ⚠️ **`n_not_covered` 的口径一个字没改。** 让一个弱事实把红色数字改小,
+    等于用重新定义来降警报(S-323z 我干过一次)。所以 write 观测**另开一个字段**,
+    46 还是 46,只是现在能说出「其中多少能看见写入、多少完全黑」。
     """
+    wh = write_health or {}
     items = []
     for t in sorted(set(tables)):
         tier = tier_of(t)
@@ -175,12 +193,24 @@ def census(tables: list) -> dict:
         elif t in EXCLUDED_BY_DESIGN:
             items.append(WatchItem(t, tier, EXCLUDED,
                                    reason=EXCLUDED_BY_DESIGN[t]))
+        elif t in wh:
+            h = wh[t]
+            items.append(WatchItem(
+                t, tier, WRITE_OBSERVED, watched_by="write_log (S-352)",
+                reason=(f"没有判活规则,但**写入尝试可见**:最后成功 "
+                        f"{h.get('last_ok') or '从未'} · 最后失败 "
+                        f"{h.get('last_fail') or '无'} · 24h 成功 "
+                        f"{h.get('n_ok_24h', 0)}/失败 {h.get('n_fail_24h', 0)}"
+                        f"。**这不等于内容是新鲜的** —— 它只说有人在写。")))
         else:
             items.append(WatchItem(
                 t, tier, NOT_COVERED,
-                reason="没有任何检查在看它 —— **没有颜色的东西永远不会让裁决变坏**"))
+                reason="没有任何检查在看它,**写入台账里也一次尝试都没有** —— "
+                       "既不知道它健不健康,也不知道有没有人写过它"))
 
-    gaps = [i for i in items if i.status == NOT_COVERED]
+    # 口径不变:没有手写规则的一律算 not_covered,write 观测不抵消它。
+    gaps = [i for i in items if i.status in (NOT_COVERED, WRITE_OBSERVED)]
+    dark = [i for i in items if i.status == NOT_COVERED]
     blocking = [i for i in gaps if i.blocking]
     by_tier: dict = {}
     for i in gaps:
@@ -189,6 +219,10 @@ def census(tables: list) -> dict:
     return {
         # **这个整数就是「还差多少」。** 它能收敛到零;守卫的数量不会。
         "n_not_covered": len(gaps),
+        # S-353:把 46 拆开 —— 多少能看见写入尝试,多少完全黑。
+        # **总数不变**,变的只是它现在说得出自己由什么构成。
+        "n_write_observed": len(gaps) - len(dark),
+        "n_dark": len(dark),
         "n_blocking": len(blocking),
         "blocking": [i.name for i in blocking],
         "n_total": len(items),
