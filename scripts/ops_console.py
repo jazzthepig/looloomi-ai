@@ -131,7 +131,11 @@ PAPER_GATE_DAYS = 60
 
 _STARTED_AT = datetime.now(timezone.utc).isoformat()
 
-SEV = {"act_now": 0, "unregistered": 1, "waiting": 2, "no_action": 3, "ok": 4}
+# S-352:`never_written` 排在 act_now 之后、unregistered 之前。
+# **它的处置和「写失败」完全不同** —— 写失败去看 PostgREST body,
+# 没人写过要去找那个没被调用的写入者(pod_aggregator._save_state 就是这样躺了几个月)。
+SEV = {"act_now": 0, "never_written": 1, "unregistered": 2,
+       "waiting": 3, "no_action": 4, "ok": 5}
 
 
 def _get(path: str) -> dict:
@@ -476,6 +480,92 @@ def _panel_declared_tables_exist() -> dict | None:
             "verify": "select count(*) from information_schema.tables where table_schema='public';"}
 
 
+def _panel_write_health() -> list[dict]:
+    """写入尝试的三态 —— S-352 的显示端。
+
+    在 `write_log` 之前,「表里没有行」同时意味着三件事,而它们在库里完全同形:
+    **没人写过 / 写了但失败了 / 写了但写到别处**。这个月建的每一个检查都在量
+    「结果」,没有一个在量「尝试」,所以它们结构上分不出来 —— 这就是 Jazz 说的
+    「写入没有写入完全是玄学」。
+
+    这块牌子读 `write_health()`(每张表最后一次成功/失败 + 最近的 PostgREST 原话),
+    并把它和声明表清单对账。**没出现在 write_log 里的声明表 = 没人尝试过**,
+    单独一类 `never_written`,因为它的处置是「去找那个没被调用的写入者」,
+    而不是「去看写失败的原因」。
+
+    无凭据返回空 —— 台子会说这项没跑,**不是说它通过了**。
+    """
+    import json as _json
+    import os
+    import pathlib as _pl
+    import urllib.request as _rq
+
+    url = (os.environ.get("SUPABASE_URL") or "").rstrip("/")
+    key = (os.environ.get("SUPABASE_SERVICE_KEY")
+           or os.environ.get("SUPABASE_KEY") or "")
+    if not url or not key:
+        return []
+    try:
+        req = _rq.Request(f"{url}/rest/v1/rpc/write_health", data=b"{}",
+                          headers={"apikey": key, "Authorization": f"Bearer {key}",
+                                   "Content-Type": "application/json"}, method="POST")
+        with _rq.urlopen(req, timeout=TIMEOUT) as r:
+            health = {h["table_name"]: h for h in _json.loads(r.read().decode())}
+    except Exception as e:                                   # noqa: BLE001
+        return [{"id": "write:health", "name": "写入尝试记录", "kind": "check",
+                 "verdict": "unknown", "remedy_class": "unregistered",
+                 "detail": f"{type(e).__name__}: {str(e)[:140]}",
+                 "note": "读不到 write_health() —— **读不到 ≠ 写入都正常**",
+                 "verify": "select * from write_health();"}]
+
+    try:
+        sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+        from src.api.schema_manifest import write_tables
+        declared = write_tables()
+    except Exception:                                        # noqa: BLE001
+        declared = sorted(health)
+
+    out: list[dict] = []
+    if not health:
+        # write_log 整个空,而 app 在跑 —— 记录器本身可疑,不要读成「没人写过」。
+        return [{"id": "write:health", "name": "写入尝试记录", "kind": "check",
+                 "verdict": "EMPTY", "remedy_class": "act_now",
+                 "detail": "write_log 一行都没有",
+                 "note": "**记录器自己可能是坏的。** 空的 write_log 和「真的没人写过」"
+                         "同形 —— 先看 /internal/write-probe 的 `logged` 字段",
+                 "verify": "select count(*) from write_log;"}]
+
+    never = [t for t in declared if t not in health and t != "write_log"]
+    for t in never:
+        out.append({"id": f"write:never:{t}", "name": t, "kind": "write",
+                    "verdict": "NEVER_WRITTEN", "remedy_class": "never_written",
+                    "detail": "声明会写它,而 write_log 里一次尝试都没有",
+                    "note": "**没人调用过那个写入者。** 这不是写失败 —— "
+                            "去代码里找那个定义了却从未被调用的函数"
+                            "(pod_aggregator._save_state 就是这样躺了几个月)",
+                    "verify": f"select * from write_log where table_name='{t}';"})
+
+    for t, h in sorted(health.items()):
+        n_fail = int(h.get("n_fail_24h") or 0)
+        n_ok = int(h.get("n_ok_24h") or 0)
+        if n_fail and not n_ok:
+            out.append({"id": f"write:fail:{t}", "name": t, "kind": "write",
+                        "verdict": "FAILING", "remedy_class": "act_now",
+                        "detail": f"24h 内 {n_fail} 次失败、0 次成功 · "
+                                  f"最后 outcome={h.get('last_outcome')}",
+                        "note": (h.get("last_body") or "(没有 body)")[:300],
+                        "verify": f"select * from write_log where table_name='{t}' "
+                                  f"order by at desc limit 5;"})
+        elif n_fail and n_ok:
+            out.append({"id": f"write:mixed:{t}", "name": t, "kind": "write",
+                        "verdict": "partial", "remedy_class": "waiting",
+                        "detail": f"24h 内 成功 {n_ok} · 失败 {n_fail}",
+                        "note": "有成功也有失败 —— 间歇性,不是死的",
+                        "verify": f"select * from write_log where table_name='{t}' "
+                                  f"order by at desc limit 5;"})
+    return out
+
+
 def build_state() -> dict:
     try:
         f = _get(FRESHNESS)
@@ -495,6 +585,7 @@ def build_state() -> dict:
     schema = _panel_declared_tables_exist()
     if schema:
         items.append(schema)
+    items.extend(_panel_write_health())
     cov = f.get("coverage") or {}
 
     counts: dict[str, int] = {}
@@ -586,7 +677,9 @@ border-radius:6px;padding:6px 13px;cursor:pointer;font-size:12px}
 <div id="app">loading…</div>
 <script>
 const ORDER=["act_now","unregistered","waiting","no_action","ok"];
-const TITLE={act_now:"要处理 · 现在坏了",unregistered:"没有规则 · 这是台账的洞",
+const TITLE={act_now:"要处理 · 现在坏了",
+never_written:"从来没人写过 · 去找那个没被调用的写入者",
+unregistered:"没有规则 · 这是台账的洞",
 waiting:"在等 · 此刻并没有坏",no_action:"不用管 · 守卫正确地拒绝",ok:"健康"};
 async function load(){
  const r=await fetch('/api/state'); const s=await r.json();
