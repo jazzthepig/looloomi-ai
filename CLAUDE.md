@@ -12,31 +12,28 @@
 | Question | Read | Write discipline |
 |---|---|---|
 | What's true right now / in flight | `PROJECT_STATE.md` | **≤80,000 chars**; update same turn work lands; `**Last updated:**` line stays at the TOP |
-| Long-term facts index | `MEMORY.md` | **≤3,400 CHARACTERS** (not bytes — the file is bilingual and CJK costs 3 B/char; reading time scales with chars). One line per fact; evict stale; **if a test already enforces it, the test is the memory** |
+| Long-term facts index | `MEMORY.md` | **≤3,400 CHARACTERS** (not bytes — CJK is 3 B/char; `wc -c` will lie to you, S-337). One line per fact; evict stale; **if a test enforces it, the test is the memory** |
 | Why a thing landed / build log | `PROJECT_STATE_LOG.md` | append-only; **NOT read at session start** — grep it, don't read it |
 | Experiment truth (R/S/M-numbers) | `REFUTATION_LEDGER.md` | APPEND-ONLY at EOF; claim heading before body; **grep, never read whole** (577k chars) |
 | Cross-lane coordination | `MINIMAX_SYNC.md` (gitignored) | **≤80,000 chars**; append §sections; syncs Mac-side, not via git. Anything dated >5d and settled → `MINIMAX_SYNC_ARCHIVE.md`; **still open ⇒ re-raise in §IN-FLIGHT, don't leave it in place** |
 | Strategy truth / frozen cells | `STRATEGY_PLAYBOOK.md` | |
 | The soul / north star | `ARCHITECTURE.md` | read when a decision touches what we ARE |
 | Behavioral-edge doctrine | `docs/TRADER_TOM_DOCTRINE.md` | read before building any sleeve |
-| **Mining output — where the research actually IS** | `Shadow/cometcloud-local/_reports/INDEX.md` (reader's guide, 14 R-numbers + status) → then `absorb_input/` (217 files) | Minimax-C writes both; **read the WHOLE lineage, not the first hit** — R70 read alone gave a number R71 corrected by 32% |
-| **How deep we already hold a symbol** (before ANY backfill) | `curl /internal/data-coverage?symbol=X` — no creds | Baseline is **`deepest_start` = union across sources**, never one source's start. S-276: M-118 used binance_hist and re-fetched 820 days of PENDLE we already had |
+| **Mining output — where the research IS** | `Shadow/.../_reports/INDEX.md` → then `absorb_input/` | Minimax-C writes both; **read the WHOLE lineage, not the first hit** — R70 alone gave a number R71 corrected by 32% |
+| **How deep we hold a symbol** (before ANY backfill) | `curl /internal/data-coverage?symbol=X` | Baseline is **`deepest_start` = union across sources**, never one source's. S-276: a single-source read re-fetched 820 days we already had |
 | Full history | `git log` | |
 
-**⚠️ "NOT authority" ≠ "not worth reading" (2026-08-19, cost real work).** Rule #2 is about the
-*contract* — never take a schema or config from Shadow. It says nothing about the RESEARCH in it.
-Reading it as "ignore Shadow" led Seth to tell Jazz we had one verifiable backtest, while
-`_reports/absorb_input/` held 14 R-number summaries including R70's held-out OOS grid.
+**⚠️ "NOT authority" ≠ "not worth reading."** Rule #2 governs the *contract* (never take a schema
+or config from Shadow) and says nothing about the RESEARCH in it. Reading it as "ignore Shadow"
+once cost a false claim that we had one verifiable backtest while `_reports/absorb_input/` held 14.
 **Before saying a result does not exist, grep `_reports/`.**
 
-**Caps above are CI, not advice** (`tests/test_cold_start_contract.py`, S-165) — the test is the
-memory. The lesson that outlived the incident: capping only MEMORY.md pushed the cost next door
-(PROJECT_STATE hit 315k), because **a cap with too narrow a scope redirects attention away from
-what it misses.**
+**Caps above are CI, not advice** (`tests/test_cold_start_contract.py`, S-165). Capping only
+MEMORY.md once pushed the cost next door (PROJECT_STATE hit 315k): **a cap with too narrow a scope
+redirects attention away from what it misses.**
 
-**A lane can only judge what it can see.** When another lane gets something wrong about our data,
-ask what it could read before asking it to be more careful — S-276 was an interface gap
-(no Supabase access ⇒ single-source baseline), not a discipline failure.
+**A lane can only judge what it can see.** When another lane gets our data wrong, ask what it could
+READ before asking it to be more careful — S-276 was an interface gap, not a discipline failure.
 
 ## Who I'm working with
 
@@ -62,34 +59,26 @@ family-office / HNW across APAC; HK base. AI-curated **on-chain FoF, venue- and 
 performance. Built for human LPs and AI agents equally.
 **Looloomi** — the AI-agent / Web3 tech arm powering it.
 
-> **Chain-agnostic ≠ instrument-agnostic (Jazz, 2026-08-23).** "On Solana" was the original
-> framing and is retired: the chain follows liquidity. What did NOT change is ①'s instrument.
-> ARCHITECTURE.md says **beta = HOLD**, and a long perpetual is not a hold — it is a synthetic
-> long that pays carry. Measured on the ① panel's own 24 names, 2026-08-23: **equal-weight
-> funding +23.07% annualised** (AAVE +110.8%, NEAR +94.4%), so at gross 1.15 a perp-based ①
-> bleeds **~26.5%/yr** — larger than any alpha we have ever demonstrated (R70's best was 14.5%
-> annualised and failed its DSR). ① holds SPOT, on whichever chain has the depth. Perps belong
-> to the ②③④ sleeves, which already carry funding accounting; ① did not, which is how this
-> nearly shipped unnoticed.
+> **Chain-agnostic ≠ instrument-agnostic (Jazz, 2026-08-23).** The chain follows liquidity;
+> ①'s INSTRUMENT does not move. **beta = HOLD, and a long perp is not a hold** — it is a
+> synthetic long paying carry. Measured on ①'s own 24 names: equal-weight funding **+23.07%
+> annualised**, so at gross 1.15 a perp-based ① bleeds ~26.5%/yr — more than any alpha we have
+> ever shown. **① holds SPOT.** Perps belong to ②③④, which already account for funding.
 
-**Philosophy (full text: ARCHITECTURE.md):** technology and art are one impulse; we build early
-infrastructure for human+AI convergence. The deepest object is not the Asset but the
-**Entity/Decision** — influence propagating into quality and price; CIS/momentum are reflections,
-beta+ comes from being closer to the cause. We ship ONE kernel, freely fusable. In an A2A market
-the scarce resource is **verifiable forward track record** — the validation apparatus IS the
-product. Ambition raises the evidence bar (§ALTITUDE). Honesty over optimism; the graveyard is
-the asset. *Build things that feel alive.*
+**Philosophy (full text: ARCHITECTURE.md):** the deepest object is not the Asset but the
+**Entity/Decision** — CIS/momentum are reflections; beta+ comes from being closer to the cause.
+**We ship ONE kernel**, freely fusable. In an A2A market the scarce resource is **verifiable
+forward track record — the validation apparatus IS the product.** Ambition raises the evidence bar
+(§ALTITUDE). Honesty over optimism; the graveyard is the asset. *Build things that feel alive.*
 
-**⚠️ RETURN HIERARCHY (Jazz, asset-management first principle — priority order, not a menu; full text
-`docs/HIGH_DIM_ONTOLOGY.md` §5b):** ① **capture beta** (long-only hold of the panel — the FoF core;
-the benchmark every sleeve is measured against is "hold the panel", NEVER 0) → ② **beta+** (overweight
-better assets INSIDE the book — CIS's actual job, tilt not L/S) → ③ **beta multiplier** (time total
-exposure 0.7x–1.3x, never short — regime×vol, liquidity gate, v5 risk_score) → ④ **pure alpha**
-(neutral/hedged — hardest, LAST). **We built this upside-down:** R76–R94 were all ④ (cross-sectional
-demean = beta discarded by construction) while ① was never built — that specification error, not luck,
-is the 15-attempt graveyard. **Default long-only: tilt, don't neutralize.** β-adjustment is for
-ATTRIBUTION (R62), never for neutralizing a book. Every result reports total return vs hold-the-panel,
-then excess.
+**⚠️ RETURN HIERARCHY (Jazz — priority order, not a menu; full text `docs/HIGH_DIM_ONTOLOGY.md` §5b):**
+① **capture beta** (long-only hold of the panel — the FoF core; every sleeve's benchmark is
+"hold the panel", NEVER 0) → ② **beta+** (overweight better assets INSIDE the book — CIS's job,
+tilt not L/S) → ③ **beta multiplier** (time exposure 0.7x–1.3x, never short) → ④ **pure alpha**
+(neutral/hedged — hardest, LAST). **We built it upside-down:** R76–R94 were all ④ (cross-sectional
+demean discards beta by construction) while ① was never built — **that specification error, not
+luck, is the 15-attempt graveyard.** Default long-only: tilt, don't neutralize. β-adjustment is for
+ATTRIBUTION (R62), never for neutralizing a book. Report total return vs hold-the-panel, then excess.
 
 **The bar:** every claim is guilty until proven with out-of-sample outcomes. Every sleeve needs a
 *cause*, a base rate, and OOS survival. **This is now CI, not prose** —
@@ -109,31 +98,25 @@ then excess.
    documented in MINIMAX_SYNC §2 BEFORE code; both sides confirm; bump `SCHEMA_VERSION`.
 
 3. **Ownership lanes.** Seth/Austin: `src/`, `dashboard/`, `docs/`, `scripts/`,
-   **`paper_trading/`** (spec library, top-level — re-exported via
-   `paper_trading.__all__`, 2026-09-04 S-284 H fix), and
-   **`src/research/paper_books/`** (older sleeve+ledger prototypes,
-   pre-spec_runner — reconciliation pending, see
-   PROJECT_STATE.md OPEN RISKS §0c). Minimax:
-   `/Volumes/CometCloudAI/cometcloud-local/`. When unsure, `MINIMAX_SYNC.md` §1.
+   `paper_trading/`, `src/research/paper_books/`. Minimax:
+   `/Volumes/CometCloudAI/cometcloud-local/` — **that path is the Minimax data root,
+   architecture not debt** (S-323w: I once flagged it as a hardcoded path and was wrong).
+   When unsure, `MINIMAX_SYNC.md` §1.
 
-3b. **Ingestion is ONE lane (Seth), by function not by path.** Fetching and persisting price data
-   goes through the guarded path only (S-251/S-258 CG Pro→Supabase, S-269 `deep_walk`); Minimax
-   *consumes* — mining, backtests, VDB upkeep. Path-based lanes alone permitted M-118: it stayed
-   inside minimax paths and still built a 3rd fetcher over data we already had. **Two ingesters
-   means two series that look like the same quantity and are not** — the defect that produced
-   S-273/S-274/S-275 in one day. Backfill request → say so in `MINIMAX_SYNC`, Seth's lane runs it.
+3b. **Ingestion is ONE lane (Seth), by function not by path.** Fetching/persisting price data goes
+   through the guarded path only; Minimax *consumes* — mining, backtests, VDB upkeep. Path-based
+   lanes alone let M-118 build a 3rd fetcher over data we already had. **Two ingesters means two
+   series that look like the same quantity and are not** (S-273/274/275, one day). Backfill
+   request → say so in `MINIMAX_SYNC`, Seth's lane runs it.
 
-4. **NEVER run ANY git command from the Cowork sandbox that touches the index** — and that
-   includes `git status` and `git diff`, which *refresh* the index and therefore create
-   `.git/index.lock`, which FUSE then refuses to unlink. "Write-commands" was too narrow a
-   scope and cost a whole batch on 2026-09-04: the agent ran `git status`, the stranded lock
-   made every later `git add` fail with "Unable to create .git/index.lock", and `git push`
-   answered "Everything up-to-date" on 16 uncommitted files.
-   **Sandbox read-only alternatives:** `git --no-optional-locks status --porcelain`, or compare
-   against `git show origin/main:<path>` — both leave the index alone. ALL writes happen
-   Mac-side. **Every handoff block puts `rm -f .git/index.lock` immediately before the first
-   `git add`, after preflight** — `scripts/preflight.sh` itself calls `git ls-files`, so
-   unlocking before preflight unlocks the wrong side of the thing that re-locks.
+4. **NEVER run ANY git command from the Cowork sandbox that touches the index** — including
+   `git status` / `git diff` / `git checkout`, which refresh the index, create
+   `.git/index.lock`, and FUSE will not let the sandbox unlink it. Cost: a whole batch
+   (2026-09-04, 16 files silently uncommitted) and again S-334 (`git checkout` deleted a fix
+   mid-session). **Sandbox read-only alternatives:** `git --no-optional-locks status
+   --porcelain`, or `git show origin/main:<path>`. ALL writes happen Mac-side.
+   **Every handoff block puts `rm -f .git/index.lock` immediately before the first `git add`,
+   AFTER preflight** — preflight itself calls `git ls-files` and re-locks.
 
 5. **`bash scripts/preflight.sh` before EVERY push.** Railway auto-deploys on push; preflight is
    the ONLY prod gate. `py_compile` is NOT sufficient (2026-07-13: import-time error 502'd prod).
@@ -189,38 +172,31 @@ git commit -m "<type>(<scope>): <subject>
 git push origin main
 ```
 
-**NO TRAILING `#` COMMENTS ON ANY COMMAND LINE. NO INLINE ANNOTATION. EVER.** Jazz has raised
-this repeatedly and it kept recurring because **the template above used to carry them itself** —
-the rule and its own example disagreed, and the example is what gets copied. Explanation goes in
-prose *outside* the fenced block; inside the block, only lines that paste and run. Same for blank
-lines used as visual grouping: they invite a partial paste that runs half the sequence.
+**NO TRAILING `#` COMMENTS ON ANY COMMAND LINE. NO INLINE ANNOTATION. EVER.** This kept recurring
+because the template itself used to carry them — **the rule and its own example disagreed, and the
+example is what gets copied.** Explanation goes in prose *outside* the fence; inside, only lines
+that paste and run. No blank lines for grouping either — they invite a partial paste.
 
-Rules: one commit per concern (ledger appends ride their own — `git log` is a source-of-truth
-surface, and a commit whose title covers 9% of its diff corrupts it); any post-push verification
-as a copy-pasteable `curl`; if a step is Jazz's alone (Supabase console, restart), say so on its
-own line rather than burying it in a table.
+Rules: one commit per concern (ledger appends ride their own — a commit whose title covers 9% of
+its diff corrupts `git log` as a source of truth); post-push verification as a pasteable `curl`;
+if a step is Jazz's alone (Supabase console, restart), say so on its own line.
 
-**Staleness thresholds (task-audit flags):** in_progress >3d 🟡 / >7d 🔴 · queue P0 >3d 🟡 / >7d 🔴
-· P1 >7d 🟡 / >14d 🔴 · AWAITING JAZZ >7d 🔴 · "done" claimed with dirty tree / unpushed commit /
-stale header = 🔴 drift, same turn.
+**Staleness (task-audit):** in_progress >3d 🟡 />7d 🔴 · P0 >3d 🟡 />7d 🔴 · P1 >7d 🟡 />14d 🔴 ·
+AWAITING JAZZ >7d 🔴 · "done" with dirty tree / unpushed commit / stale header = 🔴 same turn.
 
 ## Tech stack (essence)
 
-React+Tailwind → Railway (auto-deploy on push) · FastAPI `src/api/main.py` (23 routers) ·
-Upstash Redis (2h-TTL cache bridge) · **Supabase Postgres = system of record** (cis_scores,
-signal_outcomes β-adjusted, ohlcv_daily incl. 2017+ `binance_hist` deep panel, pgvector
-`asset_embeddings` HNSW + `match_asset_embeddings` RPC) · Mac Mini M4 Pro T1 engine (pushes
-`/internal/cis-scores` ~30min, `X-Internal-Token`) · Data: CoinGecko→Hyperliquid fallback (crypto),
-EODHD→yfinance fallback (TradFi), DeFiLlama, Alternative.me · Env vars: see Railway dashboard;
-key ones `SUPABASE_URL/KEY`, `UPSTASH_REDIS_REST_URL/TOKEN`, `INTERNAL_TOKEN`, `COINGECKO_API_KEY`,
-`EODHD_API_KEY`, `LLM_*`, `NARRATIVE_LLM_*` (fallback chains documented in code at use-site).
+React+Tailwind → Railway (auto-deploy on push) · FastAPI `src/api/main.py` · Upstash Redis
+(2h-TTL cache bridge) · **Supabase Postgres = system of record** (Pro plan; compute is a SEPARATE
+add-on and is still Micro — 256MB shared_buffers, 60 conns) · Mac Mini M4 Pro T1 engine (pushes
+`/internal/cis-scores` ~30min, `X-Internal-Token`) · Data: CoinGecko Pro (crypto), EODHD (TradFi),
+DeFiLlama, Alternative.me · Env vars in the Railway dashboard; fallback chains documented at
+use-site. Table/RPC inventory: `src/api/schema_manifest.py`, never a list here.
 
-**CIS spine:** Mac T1 (full engine, 8 classes, 6 regimes) → cis_push → Redis `cis:local_scores` →
-`cis_provider.py` T2 fallback (shape-tolerant pillar persist + `canonical_regime()` UPPER_SNAKE)
-→ `/api/v1/cis/universe` → frontend badge T1 green / T2 amber. Grades A+≥85…F<25, percentile is
-metadata. Signals = compliance enum only. Full spec: `CIS_METHODOLOGY.md` + cis-methodology skill.
-**CIS v5 (validated, not deployed):** two-score architecture — return {F-anchored 0.40, M 0.25,
-A 0.35 level+change} · risk {O-led + S/O stability→confidence}. `src/data/cis/cis_v5_architecture.py`.
+**CIS spine:** Mac T1 → cis_push → Redis `cis:local_scores` → `cis_provider.py` T2 fallback →
+`/api/v1/cis/universe` → badge T1 green / T2 amber. Grades A+≥85…F<25; percentile is metadata;
+signals = compliance enum only. Spec: `CIS_METHODOLOGY.md` + cis-methodology skill.
+**CIS v5 validated, NOT deployed:** `src/data/cis/cis_v5_architecture.py`.
 
 ## Design principles
 
