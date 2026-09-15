@@ -93,6 +93,7 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
     expected_tables = sorted(manifest.get("write_tables") or [])
     expected_rpcs = sorted(manifest.get("rpc_functions") or [])
 
+    from src.api.rpc_diagnostics import rpc_with_detail
     from src.api.store import (
         supabase_function_exists, supabase_missing_columns, supabase_table_exists,
     )
@@ -103,15 +104,39 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
 
     missing = [t for t in unknown]
 
-    # ── RPC FUNCTIONS (A-29) ─────────────────────────────────────────────────
-    # Same drift class as tables: the manifest says "we call panel_funding",
-    # the live DB says "no such function", the caller gets None, and the
-    # failure reads as "no data yet". One catalog entry per function name.
-    rpc_live, rpc_unknown = [], []
-    for fn in expected_rpcs:
-        got = await supabase_function_exists(fn)
-        (rpc_live if got is True else rpc_unknown).append(fn)
-    rpc_missing = [t for t in rpc_unknown]
+    # ── RPC FUNCTIONS (A-29, probe corrected S-354) ──────────────────────────
+    # Same drift class as tables. But **existence is a CATALOG question, not a
+    # call question** — and probing by calling produced the same false P0 three
+    # separate times for the same three functions:
+    #
+    #   panel_closes / panel_funding / exec_backfill_forward_returns
+    #
+    # All three exist and return real data. PostgREST resolves RPCs by ARGUMENT
+    # NAME, so POSTing `{}` to a function with a required parameter answers
+    # PGRST202 — "no overload matches these argument names", NOT "no such
+    # function". Measured 2026-09-15: **128 of this project's 148 functions have
+    # a required argument**, so the call-probe would report 128 as missing.
+    #
+    # ⚠️ And the consequence text built on top of it was worse than the wrong
+    # flag: "every write to them returns False and is swallowed — the sleeves
+    # have no forward record and cannot start one." A complete causal story on a
+    # false premise, pointing at rewriting functions that work.
+    #
+    # `catalog_inventory()` (S-350) reads pg_proc in one round trip. It was built
+    # for exactly this and then left unwired — the report got fixed, the probe
+    # did not.
+    rpc_live, rpc_unknown, rpc_missing = [], [], []
+    _cat, _cat_detail = await rpc_with_detail("catalog_inventory", {})
+    if isinstance(_cat, list):
+        _known = {r.get("name") for r in _cat
+                  if isinstance(r, dict) and r.get("kind") == "function"}
+        for fn in expected_rpcs:
+            (rpc_live if fn in _known else rpc_missing).append(fn)
+    else:
+        # **Unreadable catalog is NOT "everything is missing".** Three values,
+        # kept apart all the way to the output (S-350: `unknown` renamed to
+        # `missing` two lines below its own docstring is how this started).
+        rpc_unknown = list(expected_rpcs)
 
     # ── COLUMNS, not only tables (S-286) ────────────────────────────────────
     # This endpoint was built for S-166, where eleven TABLES were missing, and it
@@ -140,6 +165,8 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
             col_drift[t] = got
 
     return {
+        # `rpc_unknown` 不参与 ok —— **读不到不是坏,但也不是好**,
+        # 它单独出现在 rpc_check_unavailable 里让人看见。
         "ok": not missing and not col_drift and not rpc_missing,
         # WHICH CHECKS THIS BUILD RUNS. Without it, `column_drift: null` from a
         # deploy that predates the column check is indistinguishable from
@@ -155,6 +182,8 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
         "rpc_checked": len(expected_rpcs),
         "rpc_present": len(rpc_live),
         "rpc_missing": rpc_missing,
+        # S-354:读不到目录 ≠ 全部缺失。三值一路带到输出,绝不在最后一步塌成两值。
+        "rpc_check_unavailable": rpc_unknown,
         "column_drift": col_drift,
         "column_check_unavailable": col_unknown,
         "column_consequence": (
@@ -174,7 +203,15 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
                "indistinguishable from 'no data yet'. The sleeves depending on "
                "them have no forward record and cannot start one."
              if missing or rpc_missing else
-            "every table the code writes to and every RPC it calls exists")),
+            "every table the code writes to and every RPC it calls exists")
+            # ⚠️ S-354:这句话曾经挂在一个**假前提**上。前一版探针 POST `{}`,
+            # 于是三个有必填参数的函数(panel_closes / panel_funding /
+            # exec_backfill_forward_returns)被判缺失,而它们都存在且返回真数据。
+            # **一个建立在错误事实上的完整因果故事,比一个错误的计数危险得多** ——
+            # 它会把人送去重写正在工作的函数,造出第二个重载并弄坏现在能用的那个。
+            + (f" ⚠️ catalog unreadable for {len(rpc_unknown)} RPC(s) — "
+               f"**that is 'we could not ask', not 'they are missing'**."
+             if rpc_unknown else "")),
     }
 
 
