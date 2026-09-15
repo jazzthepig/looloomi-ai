@@ -154,9 +154,124 @@ def render_detail(detail: dict, *, prefix: str = "") -> str:
     return f"{prefix}{fn}: outcome={o!r} (unrecognised — this is not success)"
 
 
+#: 不记录对它自己的写入,否则一次失败会无限递归。
+_WRITE_LOG_TABLE = "write_log"
+
+
+def _caller() -> str:
+    """谁在写 —— 回答「哪个模块尝试了」,而不只是「这张表被写了没有」(S-352)。
+
+    跳过本模块和 store 的帧;取第一个真正的调用点。失败返回 "?" ——
+    **一个问不出来的调用方是 "?",不是空字符串**,两者在下游读起来不一样。
+    """
+    try:
+        import inspect
+        for fr in inspect.stack()[2:8]:
+            mod = fr.frame.f_globals.get("__name__", "")
+            if mod and not mod.endswith(("rpc_diagnostics", "store")):
+                return f"{mod}.{fr.function}"[:120]
+    except Exception:                                           # noqa: BLE001
+        pass
+    return "?"
+
+
+async def _record_attempt(detail: dict, writer: str) -> bool:
+    """把一次写入尝试落进 `write_log`。**绝不抛,绝不递归。**
+
+    S-352。这一步存在的全部理由:在它之前,**写成功留下一行,写失败什么都不留**,
+    于是「表里没有行」同时意味着「没人写过 / 写了失败 / 写到别处」三件事,
+    而它们在库里完全同形 —— 这就是 Jazz 说的「写入没有写入完全是玄学」。
+
+    ⚠️ 它自己失败时只能沉默(没有第二层日志可写)。代价写在这里而不是藏起来:
+    那会在 write_log 里留下一个**洞**,而洞的表现是「某次尝试没有对应行」。
+    所以 write_log 自己的新鲜度也必须被人看 —— 它不是一个免检的裁判。
+    """
+    if detail.get("table") == _WRITE_LOG_TABLE:
+        return True                       # 按设计不记,不是记失败
+    try:
+        from src.api import store
+        if not store._SB_URL or not store._SB_KEY:
+            return False
+        import httpx
+        row = {
+            "table_name": str(detail.get("table") or "?")[:120],
+            "n_rows": int(detail.get("n_rows") or 0),
+            "outcome": str(detail.get("outcome") or "?")[:40],
+            "status": detail.get("status"),
+            "body": (str(detail["body"])[:400] if detail.get("body") else None),
+            "elapsed_ms": detail.get("elapsed_ms"),
+            "writer": writer,
+        }
+        async with httpx.AsyncClient(timeout=5) as c:
+            r = await c.post(
+                f"{store._SB_URL}/rest/v1/{_WRITE_LOG_TABLE}",
+                json=[row],
+                headers={"apikey": store._SB_KEY,
+                         "Authorization": f"Bearer {store._SB_KEY}",
+                         "Content-Type": "application/json",
+                         "Prefer": "return=minimal"})
+        return r.status_code in (200, 201, 204)
+    except Exception:                                           # noqa: BLE001
+        return False
+
+
+def log_write_attempt(fn: Any) -> Any:
+    """装饰 `store.py` 里返回 `StoreResult` 的写入函数,让每次尝试落进 `write_log`(S-352)。
+
+    为什么是装饰器而不是改函数体。`store.py` 是 Minimax-A 当前的活跃面
+    (S-341a/b/c,而且已经上了 `mypy --strict`),所以这里只留 4 行足迹:
+    两个 import + 两个 `@`。实现留在本模块(Seth lane)。
+
+    为什么必须覆盖这两个。实测调用点分布:`insert_with_detail` 10 处、
+    `supabase_insert_table` 16 处、`supabase_upsert_table` 10 处。
+    **只包第一个 = 覆盖 10/36,而 `write_log` 会看起来是满的** ——
+    那正好是这张表要消灭的那种错觉。
+
+    表名取第一个位置参数,这是这两个函数共同的签名约定。
+    """
+    import functools
+
+    @functools.wraps(fn)
+    async def _wrapped(*args: Any, **kwargs: Any) -> Any:
+        res = await fn(*args, **kwargs)
+        try:
+            table = str(args[0]) if args else str(kwargs.get("table", "?"))
+            n_rows = len(args[1]) if len(args) > 1 and hasattr(args[1], "__len__") else 0
+            ok = bool(getattr(res, "ok", False))
+            why = str(getattr(res, "why", "") or "")
+            await _record_attempt({
+                "table": table, "n_rows": n_rows,
+                # StoreResult 没有分 outcome 类型 —— 有 `.why` 就照抄,
+                # **不把它归类**(S-323m:装观测不装假设)。
+                "outcome": "ok" if ok else "store_result_fail",
+                "status": None, "body": (None if ok else why[:400]),
+                "elapsed_ms": None,
+            }, _caller())
+        except Exception:                                       # noqa: BLE001
+            pass                                                # 记录失败不能改变写入结果
+        return res
+
+    return _wrapped
+
+
 async def insert_with_detail(table: str, rows: list) -> tuple[bool, dict]:
-    """Insert rows and return `(ok, detail)` — the WRITE-path twin of
-    `rpc_with_detail` (S-328).
+    """Insert rows and return `(ok, detail)`,并把这次尝试记进 `write_log`(S-328/S-352)。
+
+    S-352 加的那一半:`detail` 早就算出了 outcome/status/body/elapsed,**算完就扔**。
+    现在每一个 return 之前先落一行 —— 成功和失败都落。
+    **「表里没有行」和「没人尝试过」从此是两个可区分的事实。**
+    """
+    ok, detail = await _insert_with_detail_inner(table, rows)
+    # ⚠️ 记录器必须自报。`_record_attempt` 吞掉所有异常(它没有第二层日志可写),
+    # 所以如果它从来没成功过,`write_log` 会是空的 —— 而空 = 「没人尝试过」,
+    # **正好是最错的那个结论**。那样这个修复就带着它要修的故障模式。
+    # `logged` 让它一路走到 `/internal/write-probe` 的返回里:**记录器坏了看得见**。
+    detail["logged"] = await _record_attempt(detail, _caller())
+    return ok, detail
+
+
+async def _insert_with_detail_inner(table: str, rows: list) -> tuple[bool, dict]:
+    """原逻辑,七个 return 点不动 —— 记录发生在外层,所以每一条路径都被覆盖。
 
     WHY. `supabase_insert_table` returns a bare bool, and `nav_persist` says so
     itself: it "returns False for a role refusal, missing credentials, an empty
