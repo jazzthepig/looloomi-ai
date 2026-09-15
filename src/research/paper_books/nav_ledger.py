@@ -303,8 +303,8 @@ def _fetch_r77_nav_close_to(today_iso: str) -> tuple[Optional[float], Optional[f
         # the void_reason column exists to prevent.
         url = (
             f"{SUPABASE_URL.rstrip('/')}/rest/v1/{R77_NAV_TABLE}"
-            f"?select=date_utc,nav&inception_id=eq.v2&void_reason=is.null"
-            f"&order=date_utc.desc&limit=2"
+            f"?select=mark_date,nav&inception_id=eq.v2&void_reason=is.null"
+            f"&order=mark_date.desc&limit=2"
         )
         req = urllib.request.Request(
             url,
