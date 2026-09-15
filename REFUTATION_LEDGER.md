@@ -20043,3 +20043,54 @@ Jazz:「现在我们建了好多东西,但**写入没有写入完全是玄学**!
 打断了前一个提交的测试**,而那个测试在 preflight 里注册着。
 所以 main 上的 preflight 现在是红的。**一个跨两次提交的重构,和它守卫的测试分开演化** ——
 与 S-330 同形(换写入函数让 manifest 扫描器失明),只是这次隔了两个提交而不是两个文件。
+
+
+---
+
+## S-354 — 我为这件事建了工具,然后没接上去 (2026-09-15)
+
+线上 schema-drift 第三次报同一个假阳性:
+
+    rpc_missing (3): ['exec_backfill_forward_returns', 'panel_closes', 'panel_funding']
+
+**三个全部存在且返回真数据** —— 我今天实调过 `panel_closes(['BTC','ETH','SOL'],30)` → 3 行、
+`panel_funding` → 3 行。这是同一组函数第三次被判死:A 报 → 我证伪 → A 撤回 → **端点又报一次**。
+
+因为我修的是**报告**,没修**探针**。`supabase_function_exists` 仍在 POST `{}`,
+而 PostgREST 按参数名解析 RPC,必填参数函数一律回 PGRST202 =
+「没有匹配这组参数名的重载」,**不是「不存在」**。
+实测:库里 148 个函数,**128 个有必填参数** —— 这个探法会报 128 个缺失。
+
+> **而我在 S-350 为这件事建了 `catalog_inventory()`,然后把它留在那里没有接。**
+> 和 `regime_override_enforcer.py` 写好了被 0 处 import 是同一个形状 ——
+> 只不过那个是别人留下的,这个是我今天自己留下的,而且中间隔了不到六小时。
+
+⚠️ **比错误的计数更危险的是挂在它上面的那句话:**
+
+> "Every write to them returns False and is swallowed — indistinguishable from
+> 'no data yet'. The sleeves depending on them have no forward record and cannot start one."
+
+**一个建立在假前提上的完整因果故事。** 它读起来比 "3 missing" 可信得多,
+而它会把人送去重写正在工作的函数 —— 造出第二个重载,把现在能用的那个弄坏。
+S-323m 说「一句列举作者猜测的错误信息,比没有错误信息更贵」;这一条更进一步:
+**一句从错误事实推出的、结构完整的后果陈述,比那还贵。**
+
+修:探针改走 `catalog_inventory()`,一次往返读 `pg_proc`。
+**三值一路带到输出** —— 目录读不到时填 `rpc_check_unavailable`,不填 `rpc_missing`,
+consequence 里单说一句「that is 'we could not ask', not 'they are missing'」。
+(S-350 这条链的起点正是 `rpc_missing = [t for t in rpc_unknown]` ——
+在自己的 docstring 下面两行把 unknown 改名成 missing。)
+
+### 顺带:Minimax-C 的调查里两条更正
+
+C 的 ground truth 是对的(**7/9 NAV 表实际在写**,fusion 是 state 真空不是 writer 坏 ——
+那句拒绝原话正是我 S-336 写的,C 读对了)。两条要更正:
+
+1. **「19 blocking = 装饰器盲区或 _record_attempt 静默失败」** —— 都不是。
+   `n_blocking` 的定义是 `NOT_COVERED ∩ track_record`,而 S-353 我**刻意**不让
+   write 观测抵消它(让弱事实把红色数字改小 = 用重新定义降警报,S-323z)。
+   **19 是设计,不是故障。** 但 C 会这么猜说明我把它藏得太深 ——
+   `coverage` 的 JSON 里没有一句话解释 `n_write_observed` 为什么不减 `n_blocking`。
+2. **「把 @log_write_attempt 装饰到 insert_with_detail 上」** —— 不需要。
+   `insert_with_detail` 走的是**内联**记录(`detail["logged"]`,实测 `logged: true`);
+   装饰器是给 `supabase_insert_table` / `supabase_upsert_table` 用的。两条路都已覆盖。
