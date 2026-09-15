@@ -19863,3 +19863,38 @@ python3 -m pytest tests/test_store_result.py tests/test_a_failed_write_cannot_re
 - `mypy --strict` is NOT applied to `tests/`, `src/data/signals/`, `src/api/routers/` — those have their own typing debt. The scope discipline is "one lock-in per PR".
 - `**kwargs: Any` in `_supabase_request_with_retry` is a typing downgrade from a typed-kwargs signature — but httpx's request signature is wide and strict-mode would force a structural type alias. Out of scope.
 
+
+
+---
+
+## S-349 — 83 篇冥想躺了三个月,而 VDB 里为它留的格子标着「已算未入库」 (2026-09-15)
+
+Jazz:「**不然我们建矢量数据库来做什么呢?**」
+
+实测:`meditations/` 83 篇、299,612 字节、三个月每日不断,**被代码读取 0 次、入库 0 行、向量化 0**。
+同时 `HIGH_DIM_ONTOLOGY §5` 的 VDB 表里 `Regime 指纹 12d` 写着「📋 已算未入库」,
+`时序窗口 → 「当前60天像历史哪段」` 写着「📋 规划」。
+**两个为彼此而生的东西,三个月没见过面。**
+
+这是「多重降智」的机制:`ARCHITECTURE §大象无形` 要的 formless / per-instance / 当下 regime 的
+价格发现跟踪,**每天都在产出 —— 就是这 83 篇**;而工程力气全花在九本机械账上,
+那九本恰好是同一份文档点名否定的那一类(固定因子 / grid search)。
+**我们把「无形」留在系统外面,把「有形」放进系统里面,然后只维护后者。**
+
+修:`regime_daily` 落 **474 天**指纹(2025-05-03 起,比冥想早 13 个月),
+83 篇判读贴到对应日期旁。检索走 NaN-aware 共享维余弦。
+
+- **不进 pgvector**:§4 的存储法则 —— few+sparse 走 jsonb,「0 补齐再算稠密余弦是**错误度量**」。
+- **I1 的形态**:没测到的维度**键不存在**,不是 0;共享维 <6 返回 **None 而不是 0.0**
+  (「比不了」和「完全不像」处置相反)。
+- **不从散文反解数字**:avg_cis/pillar 全部来自 `cis_scores` 记录源。
+  从散文里抠一个本来就在库里的数,是给自己造第二个真相。
+
+验证(实测,非推断):目标 2026-09-15 → 最近 5 个相位 **0.985–0.991,全部是 Tightening**,
+而 **regime 根本不在指纹维度里** —— 几何自己把同相位找了回来;其中 4/5 当时有人写过判读。
+
+⚠️ 口径:维度全为正、量纲相近,余弦压在 0.98–0.99 窄带,**排序有意义、绝对值没有**。
+逐维 z 化是下一步,不在这一步里。
+
+⚠️ 覆盖:83/474 = 17%。**其余 83% 是空白,不是「那些天没事」** —— 检索命中无判读的相位时,
+输出明说「那是个空白」。
