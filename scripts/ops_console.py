@@ -598,11 +598,21 @@ def build_state() -> dict:
     # 而这块牌子显示了大大的 `null`,底下还写着一句从 None 编出来的
     # **假话**:「None of them are track_record」。
     # **端点诚实地说了「我读不到」,我的台子把它印成了一个值和一个断言。**
+    # S-353:46 不变,但现在说得出它由什么构成 —— 多少能看见写入尝试、多少完全黑。
+    _nwo, _ndark = cov.get("n_write_observed"), cov.get("n_dark")
+    _ledger_note = cov.get("write_ledger")
     _ncov = cov.get("n_not_covered")
     if isinstance(_ncov, int):
+        # 拆分只在**副标题**里出现,主数字不动 —— 让一个弱事实把红色数字改小,
+        # 等于用重新定义来降警报(S-323z)。46 还是 46。
+        _parts = f"{cov.get('n_blocking')} of them are track_record — the product itself"
+        if isinstance(_nwo, int) and isinstance(_ndark, int):
+            _parts += (f" · 其中 {_nwo} 个能看见写入尝试(write_log),"
+                       f"**{_ndark} 个完全黑 —— 既不知健康,也不知有没有人写过**")
+        if _ledger_note:
+            _parts += f" · ⚠️ {str(_ledger_note)[:160]}"
         _cov_num = {"label": "无判决对象", "value": _ncov, "of": cov.get("n_total"),
-                    "hint": f"{cov.get('n_blocking')} of them are track_record — "
-                            f"the product itself"}
+                    "hint": _parts}
     else:
         _cov_num = {"label": "无判决对象", "value": "读不到",
                     "hint": str(cov.get("reason")

@@ -2876,11 +2876,26 @@ async def data_freshness(x_internal_token: str = Header(None, alias="X-Internal-
         from src.data.market.watch_census import census as _census
         from src.data.market.watch_census import qualify_verdict as _qual
         _tbls, _rpc_detail = await _rpc_read_census("watch_census", {})
+        # S-353:写入台账是一份**不需要手写规则**的判活来源。`COVERAGE` 是手写字典,
+        # 所以每建一张表就多一个 not_covered;`write_log` 自动覆盖每一张被写的表。
+        # 读不到就传 None —— **读不到 ≠ 没人写过**,两者绝不能同形。
+        _wh_rows, _wh_detail = await _rpc_read_census("write_health", {})
+        _wh = ({r["table_name"]: r for r in _wh_rows
+                if isinstance(r, dict) and r.get("table_name")}
+               if isinstance(_wh_rows, list) else None)
         if isinstance(_tbls, list) and _tbls:
-            _c = _census([r.get("table_name") for r in _tbls if r.get("table_name")])
+            _c = _census([r.get("table_name") for r in _tbls if r.get("table_name")],
+                         write_health=_wh)
             out["coverage"] = {k: _c[k] for k in (
-                "n_not_covered", "n_blocking", "n_total", "n_covered",
+                "n_not_covered", "n_write_observed", "n_dark",
+                "n_blocking", "n_total", "n_covered",
                 "not_covered_by_tier", "verdict", "reason")}
+            # 写入台账本身读不到时要说出来 —— 否则 n_dark 会把「我们没问到」
+            # 渲染成「真的没人写过」,正是这张表要消灭的那一类同形。
+            if _wh is None:
+                out["coverage"]["write_ledger"] = (
+                    f"**读不到 write_health() —— n_dark 因此偏高**:"
+                    f"{_render_rpc(_wh_detail)}")
             out["verdict_scope"] = _qual(out.get("verdict", "unknown"), _c)
         else:
             out["coverage"] = {
