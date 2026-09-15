@@ -72,6 +72,28 @@ def main() -> int:
     hdr = {"apikey": key, "Authorization": f"Bearer {key}",
            "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"}
 
+    # regime_daily 上 features/regime_db/n_universe 是 NOT NULL(S-349 migration
+    # 跑过、脚本不重算)。要写 meditation 必须先 fetch 现存的 features+regime_db+n_universe
+    # 并入 row,否则 23502 not-null violation。这是脚本 bug,不是 schema drift。
+    days = [r["d"] for r in rows]
+    with httpx.Client(timeout=30) as c:
+        r = c.get(f"{url}/rest/v1/regime_daily",
+                  params={"select": "d,features,regime_db,n_universe",
+                          "or": f"({','.join(f'd.eq.{d}' for d in days)})"},
+                  headers=hdr)
+        r.raise_for_status()
+        existing = {row["d"]: row for row in r.json()}
+    n_missing_pre = sum(1 for r in rows if r["d"] not in existing)
+    if n_missing_pre:
+        print(f"⚠ {n_missing_pre} 天 regime_daily 没有现存的 features/regime_db/n_universe"
+              f"(S-349 没跑到那一天) —— 这些天跳过 upsert,先看 S-349 日志")
+        rows = [r for r in rows if r["d"] in existing]
+    for r in rows:
+        ex = existing[r["d"]]
+        r["features"] = ex["features"]
+        r["regime_db"] = ex["regime_db"]
+        r["n_universe"] = ex["n_universe"]
+
     # upsert,不是 insert:重跑幂等,而冥想会被修订。
     ok = miss = 0
     with httpx.Client(timeout=30) as c:
