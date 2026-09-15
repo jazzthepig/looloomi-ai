@@ -37,7 +37,8 @@
     "treasury_entities",
     "two_layer_paper_nav",
     "vault_nav_tick",
-    "wallet_profiles"
+    "wallet_profiles",
+    "write_log"
   ],
   "rpc_functions": [
     "deep_panel_symbol_list",
