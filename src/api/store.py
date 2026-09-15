@@ -8,6 +8,7 @@ Shared state and utilities for all routers.
 """
 import logging
 
+from src.api.rpc_diagnostics import log_write_attempt  # S-352
 from src.api.runtime_role import note_refusal, refuse_write
 from src.api.store_result import StoreResult
 import os, json, math, time
@@ -393,6 +394,7 @@ async def supabase_insert_batch(rows: list[Any]) -> StoreResult[bool]:
         return StoreResult[bool].fail(f"{type(e).__name__}: {e}")
 
 
+@log_write_attempt
 async def supabase_insert_table(table: str, rows: list[Any]) -> StoreResult[bool]:
     """Generic bulk-insert into any Supabase table (REST) with retry.
 
@@ -575,6 +577,7 @@ async def supabase_missing_columns(table: str, columns: list[str]) -> list[str] 
     return missing
 
 
+@log_write_attempt
 async def supabase_upsert_table(table: str, rows: list[Any], on_conflict: str) -> StoreResult[bool]:
     """Bulk UPSERT into any Supabase table, resolving duplicates on `on_conflict`.
 
