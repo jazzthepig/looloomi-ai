@@ -44,7 +44,8 @@ __all__ = ["rpc_with_detail", "render_detail", "insert_with_detail"]
 
 
 async def rpc_with_detail(fn_name: str,
-                          payload: dict | None = None) -> tuple[Any, dict]:
+                          payload: dict[str, Any] | None = None,
+                          ) -> tuple[Any, dict[str, Any]]:
     """Call a PostgREST RPC and return `(data_or_None, detail)`.
 
     `detail` always says which of the mutually-exclusive outcomes happened, so
@@ -124,7 +125,7 @@ async def rpc_with_detail(fn_name: str,
     return None, detail
 
 
-def render_detail(detail: dict, *, prefix: str = "") -> str:
+def render_detail(detail: dict[str, Any], *, prefix: str = "") -> str:
     """One line, observation only. **Never append a suspected cause.**"""
     o = detail.get("outcome")
     fn = detail.get("fn", "?")
@@ -175,7 +176,7 @@ def _caller() -> str:
     return "?"
 
 
-async def _record_attempt(detail: dict, writer: str) -> bool:
+async def _record_attempt(detail: dict[str, Any], writer: str) -> bool:
     """把一次写入尝试落进 `write_log`。**绝不抛,绝不递归。**
 
     S-352。这一步存在的全部理由:在它之前,**写成功留下一行,写失败什么都不留**,
@@ -254,7 +255,9 @@ def log_write_attempt(fn: Any) -> Any:
     return _wrapped
 
 
-async def insert_with_detail(table: str, rows: list) -> tuple[bool, dict]:
+async def insert_with_detail(table: str,
+                             rows: list[dict[str, Any]],
+                             ) -> tuple[bool, dict[str, Any]]:
     """Insert rows and return `(ok, detail)`,并把这次尝试记进 `write_log`(S-328/S-352)。
 
     S-352 加的那一半:`detail` 早就算出了 outcome/status/body/elapsed,**算完就扔**。
@@ -270,7 +273,9 @@ async def insert_with_detail(table: str, rows: list) -> tuple[bool, dict]:
     return ok, detail
 
 
-async def _insert_with_detail_inner(table: str, rows: list) -> tuple[bool, dict]:
+async def _insert_with_detail_inner(table: str,
+                                    rows: list[dict[str, Any]],
+                                    ) -> tuple[bool, dict[str, Any]]:
     """原逻辑,七个 return 点不动 —— 记录发生在外层,所以每一条路径都被覆盖。
 
     WHY. `supabase_insert_table` returns a bare bool, and `nav_persist` says so
