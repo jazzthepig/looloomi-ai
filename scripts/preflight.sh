@@ -474,6 +474,16 @@ python3 -m pytest tests/test_store_result.py -q || {
     echo "✗ preflight stage: S-341a StoreResult envelope red" >&2
     exit 1
 }
+# 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
+#                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
+#                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了
+#                    122 天,每条写下时都真,今天全假,当天误导了一次排查。
+#                    本检查要的是「文档与代码说同一件事」,不是「代码已干净」——
+#                    一个要求世界完美的门会被关掉,一个要求文档诚实的门不会。
+python3 tests/test_spine_is_current.py || {
+    echo "✗ preflight stage: S-360 SPINE 与代码漂移" >&2
+    exit 1
+}
 # 3a-undevicesima-sexies. S-341c (Change 1 Stage 3): mypy --strict on the
 #                    two-file scope (store.py + store_result.py ONLY). The
 #                    discipline is the locked-in envelope contract: any future

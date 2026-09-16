@@ -18,6 +18,7 @@
 | Cross-lane coordination | `MINIMAX_SYNC.md` (gitignored) | **≤80,000 chars**; append §sections; syncs Mac-side, not via git. Anything dated >5d and settled → `MINIMAX_SYNC_ARCHIVE.md`; **still open ⇒ re-raise in §IN-FLIGHT, don't leave it in place** |
 | Strategy truth / frozen cells | `STRATEGY_PLAYBOOK.md` | |
 | The soul / north star | `ARCHITECTURE.md` | read when a decision touches what we ARE |
+| **哪条路是活的**(应用通路 / 已退役登记) | `docs/SPINE.md` | **建新路径或换实现前必读。** CI 校验(`tests/test_spine_is_current.py`):文档与代码必须说同一件事 |
 | Behavioral-edge doctrine | `docs/TRADER_TOM_DOCTRINE.md` | read before building any sleeve |
 | **Mining output — where the research IS** | `Shadow/.../_reports/INDEX.md` → then `absorb_input/` | Minimax-C writes both; **read the WHOLE lineage, not the first hit** — R70 alone gave a number R71 corrected by 32% |
 | **How deep we hold a symbol** (before ANY backfill) | `curl /internal/data-coverage?symbol=X` | Baseline is **`deepest_start` = union across sources**, never one source's. S-276: a single-source read re-fetched 820 days we already had |
