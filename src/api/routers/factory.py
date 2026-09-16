@@ -23,14 +23,29 @@ import os
 _INTERNAL_TOKEN = os.getenv("INTERNAL_TOKEN", "")
 
 # Solana RPC integration flag — set SOLANA_READY=true in env when programs are deployed
-_SOLANA_READY = os.getenv("SOLANA_READY", "false").lower() == "true"
+# S-358。这个门原来叫 `_SOLANA_READY`,而 Jazz 2026-09-16 明确:
+# **Solana 将来是我们「其中一个」渠道和公链,不是唯一;vault 现在优先用 ETH L2 建**
+# (资源更丰富)。CLAUDE.md 也写着链跟流动性走(2026-08-23)。
+# 用链名当闸门名,会让「vault 还没上线」和「Solana 还没上线」长成同一件事 ——
+# 而前者是真的,后者已经不是判据了。读两个环境变量:新名优先,旧名兼容。
+_VAULT_READY = (os.getenv("VAULT_READY", os.getenv("SOLANA_READY", "false"))
+                .lower() == "true")
 
+# ⚠️ S-358:这里原来写 `"data_source": "mock"` —— 而这个响应**根本没有数据**,
+# 它是一次拒绝。把拒绝标成 "mock" 正是硬规则 9 禁止的那件事
+# (「No mock data in production paths. Prefer empty + flagged over fabricated」),
+# 而下游有 9 个测试在**断言**它返回 mock —— 一条被废掉的约定,被测试守着。
 _COMING_SOON = {
     "status": "coming_soon",
-    "message": "Solana on-chain integration is under development. Fund data will be live when Solana programs are deployed.",
-    "data_source": "mock",
-    "solana_ready": False,
+    "message": ("Vault is not deployed yet. Build order is ETH L2 first "
+                "(deeper resources); additional chains follow liquidity. "
+                "No fund data is served until a vault is live."),
+    # **没有数据就说没有数据。** "none" 不是 "mock"。
+    "data_source": "none",
+    "vault_ready": False,
 }
+
+from fastapi.responses import JSONResponse   # S-358
 
 router = APIRouter(prefix="/api/v1/factory", tags=["factory"])
 
@@ -134,8 +149,7 @@ MOCK_FUNDS = {
 @router.get("/funds")
 async def list_funds():
     """List all deployed funds on-chain."""
-    if not _SOLANA_READY:
-        from fastapi.responses import JSONResponse
+    if not _VAULT_READY:
         return JSONResponse(status_code=503, content={**_COMING_SOON, "funds": []})
     return [
         FundResponse(**fund) for fund in MOCK_FUNDS.values()
@@ -145,8 +159,7 @@ async def list_funds():
 @router.get("/fund/{fund_id}")
 async def get_fund(fund_id: int):
     """Get details of a specific fund."""
-    if not _SOLANA_READY:
-        from fastapi.responses import JSONResponse
+    if not _VAULT_READY:
         return JSONResponse(status_code=503, content={**_COMING_SOON, "fund_id": fund_id})
     if fund_id not in MOCK_FUNDS:
         raise HTTPException(status_code=404, detail="Fund not found")
@@ -170,6 +183,13 @@ async def deploy_fund(
     3. Return unsigned transaction for wallet signing
     4. Wait for signed tx submission
     """
+    # ⚠️ S-358 —— 这是一个**写端点**,而在此之前它没有任何门:vault 不存在时
+    # 它照样返回一个**捏造的成功响应**(`data_source: "mock"`)。
+    # `POST /deposit` 给一个金额、回一个假的 tx —— **在钱形状的端点上捏造结果**,
+    # 是硬规则 9 能被违反的最危险的那个面。只有 3 个读端点有门,5 个 POST 一个都没有。
+    if not _VAULT_READY:
+        return JSONResponse(status_code=503, content=dict(_COMING_SOON))
+
     # TODO: Integrate with Solana RPC
     # - Construct transaction using FundFactoryClient
     # - Get recent blockhash
@@ -211,6 +231,13 @@ async def deposit(
     4. Construct deposit instruction
     5. Return transaction for signing
     """
+    # ⚠️ S-358 —— 这是一个**写端点**,而在此之前它没有任何门:vault 不存在时
+    # 它照样返回一个**捏造的成功响应**(`data_source: "mock"`)。
+    # `POST /deposit` 给一个金额、回一个假的 tx —— **在钱形状的端点上捏造结果**,
+    # 是硬规则 9 能被违反的最危险的那个面。只有 3 个读端点有门,5 个 POST 一个都没有。
+    if not _VAULT_READY:
+        return JSONResponse(status_code=503, content=dict(_COMING_SOON))
+
     # TODO: Integrate with Solana RPC
     if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
         raise HTTPException(status_code=403, detail="Forbidden")
@@ -258,6 +285,13 @@ async def redeem(
     4. Construct redeem instruction
     5. Return transaction for signing
     """
+    # ⚠️ S-358 —— 这是一个**写端点**,而在此之前它没有任何门:vault 不存在时
+    # 它照样返回一个**捏造的成功响应**(`data_source: "mock"`)。
+    # `POST /deposit` 给一个金额、回一个假的 tx —— **在钱形状的端点上捏造结果**,
+    # 是硬规则 9 能被违反的最危险的那个面。只有 3 个读端点有门,5 个 POST 一个都没有。
+    if not _VAULT_READY:
+        return JSONResponse(status_code=503, content=dict(_COMING_SOON))
+
     # TODO: Integrate with Solana RPC
     if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
         raise HTTPException(status_code=403, detail="Forbidden")
@@ -301,6 +335,13 @@ async def update_nav(
     2. Calculating new NAV
     3. Signing with GP authority
     """
+    # ⚠️ S-358 —— 这是一个**写端点**,而在此之前它没有任何门:vault 不存在时
+    # 它照样返回一个**捏造的成功响应**(`data_source: "mock"`)。
+    # `POST /deposit` 给一个金额、回一个假的 tx —— **在钱形状的端点上捏造结果**,
+    # 是硬规则 9 能被违反的最危险的那个面。只有 3 个读端点有门,5 个 POST 一个都没有。
+    if not _VAULT_READY:
+        return JSONResponse(status_code=503, content=dict(_COMING_SOON))
+
     if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
         raise HTTPException(status_code=403, detail="Forbidden")
 
@@ -339,6 +380,13 @@ async def manage_whitelist(
     - 1: Accredited investor
     - 2: Institutional investor
     """
+    # ⚠️ S-358 —— 这是一个**写端点**,而在此之前它没有任何门:vault 不存在时
+    # 它照样返回一个**捏造的成功响应**(`data_source: "mock"`)。
+    # `POST /deposit` 给一个金额、回一个假的 tx —— **在钱形状的端点上捏造结果**,
+    # 是硬规则 9 能被违反的最危险的那个面。只有 3 个读端点有门,5 个 POST 一个都没有。
+    if not _VAULT_READY:
+        return JSONResponse(status_code=503, content=dict(_COMING_SOON))
+
     if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
         raise HTTPException(status_code=403, detail="Forbidden")
 
@@ -362,8 +410,7 @@ async def manage_whitelist(
 @router.get("/position/{fund_id}/{investor}")
 async def get_investor_position(fund_id: int, investor: str):
     """Get investor's position in a fund."""
-    if not _SOLANA_READY:
-        from fastapi.responses import JSONResponse
+    if not _VAULT_READY:
         return JSONResponse(status_code=503, content={**_COMING_SOON, "fund_id": fund_id, "investor": investor})
     # TODO: Integrate with Solana RPC - fetch from InvestorPosition PDA
 
@@ -395,5 +442,5 @@ async def health_check():
         "cluster": "devnet",
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "data_source": "mock",  # Solana RPC not yet integrated
-        "solana_ready": _SOLANA_READY,
+        "vault_ready": _VAULT_READY,
     }
