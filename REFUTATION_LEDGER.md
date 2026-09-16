@@ -20221,3 +20221,45 @@ S-336 给 `fusion_paper_nav` 加的 `inception_id` / `void_reason` **在库里�
 > **这一条最该记的:分阶段的 gate 会让人以为红灯只有一个。**
 > 我连着四轮在「修最后一个红灯」,而真实数字是 11。
 > 修之前先跑全套,和修之后再跑全套,是两件不同的事 —— 我只做了后者的一部分。
+
+
+---
+
+## S-358 — 五个写端点没有任何门,在钱形状的接口上返回捏造的成功 (2026-09-16)
+
+追 `test_factory` 那 9 个红的时候查出来的。它们断言 `data_source == "mock"` ——
+**在强制一条硬规则 9 明令禁止的契约**(「No mock data in production paths.
+Prefer empty + flagged over fabricated」)。**一条被废掉的约定,由测试守着,
+而守卫比约定活得更久。**
+
+往下查,比测试的问题严重得多:
+
+    读端点  /funds /fund/{id} /position   有 _SOLANA_READY 门 → 503
+    写端点  /deploy /deposit /redeem /nav /whitelist   **一个门都没有**
+
+`POST /api/v1/factory/deposit` 给一个金额,**返回一个带 `data_source: "mock"`
+的成功响应**。`/nav` 能在没有 vault 的情况下「更新 NAV」。
+**在钱形状的端点上捏造结果,是规则 9 能被违反的最危险的那个面** ——
+而门只装在读的那一侧,写的那一侧一个都没有。
+
+⚠️ `_COMING_SOON` 自己也写着 `"data_source": "mock"` —— 而那个响应**根本没有数据**,
+它是一次拒绝。**把拒绝标成 "mock",等于说「我给了你东西」**。改成 `"none"`。
+
+### 门的名字也是过期的框架
+
+原名 `_SOLANA_READY`。Jazz 2026-09-16:**「Solana 将来会作为我们其中一个渠道和
+公链部署上去,但不是唯一,现在我们的 vault 优先用 ETH 的二层链来构建,资源更丰富。」**
+CLAUDE.md 也写着链跟流动性走(2026-08-23)。
+
+**用链名当闸门名,会让「vault 还没上线」和「Solana 还没上线」长成同一件事** ——
+前者是真的,后者已经不是判据了。改名 `_VAULT_READY`(读 `VAULT_READY`,
+兼容旧 `SOLANA_READY`),message 改成说明构建顺序而不是点名一条链。
+
+### ⚠️ 我测门的第一版,量到的是校验器不是门
+
+payload 写错 → FastAPI 在**进函数体之前**就 422,门永远看不到它。
+我于是以为门没生效。**「你的请求不合法」和「vault 没上线」是两回事**,
+而我用前者去测后者。已加反向控制 `test_a_malformed_request_is_not_a_refusal`
+锁住这个区分。
+
+全套:**11 红 → 1 红**(剩的那个是列快照,要凭据在 Mac 侧重生成)。
