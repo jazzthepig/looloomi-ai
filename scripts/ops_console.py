@@ -441,22 +441,36 @@ def _panel_declared_tables_exist() -> dict | None:
                 "note": "could not build the declared-table list — unknown is not 'all present'",
                 "verify": "python3 -c \"from src.api.schema_manifest import write_tables; print(write_tables())\""}
 
-    missing, unknown = [], []
-    for t in declared:
-        try:
-            req = _rq.Request(
-                f"{url}/rest/v1/{t}?select=*&limit=0",
-                headers={"apikey": key, "Authorization": f"Bearer {key}"})
-            with _rq.urlopen(req, timeout=TIMEOUT):
-                pass
-        except urllib.error.HTTPError as e:
-            # 404 / PGRST205 == the relation is not in the schema cache at all.
-            # 401/403 is a GRANT question, not an existence question, and
-            # conflating them would re-create the S-323e confusion.
-            (missing if e.code == 404 else unknown).append(t)
-        except Exception:                                    # noqa: BLE001
-            unknown.append(t)
+    # S-355:一次往返,不是 39 次。
+    #
+    # 上一版对 39 张表逐张发 GET —— 每刷新一次 **43 个请求**,
+    # 实测把 `/internal/data-freshness` 打成 **HTTP 429 Too Many Requests**,
+    # 于是这块台子自己变成了它要监控的那个故障。
+    #
+    # ⚠️ 而 `catalog_inventory()`(S-350)昨天就建好了,一次返回全部表和函数。
+    # 我把它接进了 `research_intake`(S-354),**没接进我自己的 console** ——
+    # 同一天第三次「建了工具、只接了一处」(第一次 regime_override_enforcer,
+    # 第二次 S-354 的探针)。
+    #
+    # 顺带消掉了 404-vs-403 那个区分:目录里有就是有,没有就是没有,
+    # **权限根本不参与这个问题** —— 这比「小心地把 403 判成 unknown」更干净。
+    try:
+        req = _rq.Request(f"{url}/rest/v1/rpc/catalog_inventory", data=b"{}",
+                          headers={"apikey": key, "Authorization": f"Bearer {key}",
+                                   "Content-Type": "application/json"}, method="POST")
+        with _rq.urlopen(req, timeout=TIMEOUT) as r:
+            _cat = _json.loads(r.read().decode())
+        live_tables = {c.get("name") for c in _cat if c.get("kind") == "table"}
+    except Exception as e:                                   # noqa: BLE001
+        return {"id": "schema:declared", "name": "declared tables exist",
+                "kind": "check", "verdict": "unknown",
+                "remedy_class": "unregistered",
+                "detail": f"catalog_inventory() 读不到:{type(e).__name__}: {str(e)[:120]}",
+                "note": "**读不到目录 ≠ 表都在**,也 ≠ 表都不在 —— 这一项没跑",
+                "verify": "select count(*) from catalog_inventory();"}
 
+    missing = sorted(t for t in declared if t not in live_tables)
+    unknown: list[str] = []          # 目录法下不存在「问不出来」的单张表
     if missing:
         return {"id": "schema:declared", "name": "declared tables exist",
                 "kind": "check", "verdict": "MISSING", "remedy_class": "act_now",
