@@ -38,16 +38,17 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 
 | # | 段 | 唯一活实现 | 消费者 | 状态 |
 |---|---|---|---|---|
-| 1 | 测量·价格 | `ohlcv_daily_canonical`(入口收敛到 Seth lane,Rule 3b) | `outcome_tracker` **只此一处** | 🟡 23 处直读基表,见 §5.0.1 逐处判定 |
+| 1 | 测量·价格 | `ohlcv_daily`(基表)→ `ohlcv_daily_canonical`(去重+量纲归一) | 23 处读基表 · `outcome_tracker` 读视图 | 🟢 **S-361 已修**(视图曾停 39 天) |
 | 2 | 测量·CIS | `cis_scores` ← Mac T1 → `cis_push` → Redis → `cis_provider` | `/api/v1/cis/universe` | 🟢 |
 | 3 | 几何·资产 | `asset_embeddings`(27 维,72 行) | `match_asset_embeddings()` | 🟢 |
-| 4 | 几何·市场态 | `market_state_vectors.vec_full`(24 声明 / 15 实测,582 行) | `similar_market_states()` | 🔴 停 42 天 |
+| 4 | 几何·市场态 | `market_state_vectors.vec_full`(24 声明 / 15 实测,582 行) | `similar_market_states()` | 🟡 **S-361 写者已上日程**;剩余陈旧来自源(binance_hist 停 8 天) |
 | 5a | 检索·**宏观**相位 | `similar_market_states()`(价格/宏观 15 实测维) | **无** | 🔴 零调用者;缺 z 化与排邻 |
 | 5b | 检索·**微观**相位 | `regime_match`(CIS 支柱 11 维 + 78 天人工判读) | **无** | 🔴 零调用者 |
 | 6 | 判断·ⓠ | `regime_override_enforcer`(`EXPOSURE_BANDS_V1`) | **无** | 🔴 零导入(唯一那处在 docstring 里);且封顶 1.3x,与设计的 −0.5…3x 不符 |
 | 7 | 建仓·① | `beta_core_nav`(产品本体,兼所有 book 的基准) | 全部 book 的「超额」 | 🟢 |
 | 7b | 组合·gross 预算 | **尚无实现** —— 相关性状态 → gross,见 §5 第 7 条 | — | 🔴 缺段 |
 | 8 | 反馈 | `signal_outcomes_unified`(视图) | `refresh_signal_edge_map()` **← 没接** | 🔴 停 2026-07-26 |
+| 9 | **实体/决策内核** | `entities` / `decisions`(ARCHITECTURE 的中央对象) | `entity_store.py` 在写 | 🔴 写者活着,落地 1 行 / **0 行** |
 
 **🔴 的四段是连着的,这就是"没有应用通路"的准确位置:**
 
@@ -74,8 +75,21 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 |---|---|---|
 | `signal_outcomes`(直读) | `signal_outcomes_unified` | 原表保留,是唯一的一年期真实记录,**但只能经视图读** |
 | `signal_journal`(直读) | `signal_outcomes_unified` | 同上 |
-| `entities` / `decisions` | `treasury_entities` / `treasury_decisions` | 空表待删,先删 `entities_vec_hnsw` |
 | `market_state_vectors.vec` `[DB]` | `.vec_full` | 582 行全 NULL,零读者;连同 `msv_hnsw` 一起删 |
+
+> **⛔ 2026-09-16 撤回一条:`entities` / `decisions` 曾被我列在这张表里,是错的。**
+> Minimax-B 查出 `src/data/vector/entity_store.py:83/:104` **正在 POST**
+> `/rest/v1/entities` 与 `/rest/v1/decisions` —— 那是**活跃写入端**,不是旧路。
+> 我把**领域源**(`treasury_*` = Strategy 等 119 家公司的财库持仓)
+> 当成了**内核主存**(`entities`/`decisions` = ARCHITECTURE.md 的中央对象)的替代品。
+> 两者字段就不同:`decisions` 有 `direction / magnitude / half_life_d / targets / provenance`
+> 这些**抽象出来的决策量**,`treasury_decisions` 只有 `holding_net_change / decision_type / coin_id`
+> 这些**事件原貌**。**treasury 是喂给内核的一个源,不是内核的后继。**
+> 正确位置见 §2 第 9 段。Minimax-C 的 Phase 0 也独立指出了同一点。
+>
+> **这条错在这份文件里,比错在别处更贵** —— SPINE 是方向基准,
+> 一条错的退役注记会让下一个 agent 去删一个还活着的内核。
+> 它能被查出来,是因为 B 的活是「逐处判定」而不是「照着执行」。
 
 ### 已知未清偿(`VERIFY:` 登记)
 
@@ -92,7 +106,7 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
 | `signal_outcomes` | `h3_edge_map_backfill.py`(研究回填,合法) · `producer_freshness.py:302` SQL 监控(合法) · `refresh_signal_edge_map()`(**不合法**) | C / W1 | `refresh_signal_edge_map()` 的 `prosrc` 里出现 `signal_outcomes_unified` | 🟡 **C-S360-1 未结**(unified view 0 reader in src/,需 C 切线) |
 | `signal_journal` | `routers/signals.py:716` (`get_signal_journal`) · `producer_freshness.py:304` SQL(合法) · `outcome_tracker.py:49` (**写入端,合法**) · `cis.py:33` · `mac_writes.py:65` (**写入端,合法**) | C / W1 | 读取端全部切视图;写入端不变 | 🟡 **`get_signal_journal` 仍直读基表**(应切 unified) |
 | `market_state_vectors.vec` `[DB]` | 无代码读者(`market_state.py:359` 仅注释) | C / W2 | `select count(*) from information_schema.columns where table_name='market_state_vectors' and column_name='vec'` → 0 | 🟡 DB 验证待跑:`select` 列应返 0 行 |
-| `entities` / `decisions` | `src/data/vector/entity_store.py:83` POST `/rest/v1/entities` · `:104` POST `/rest/v1/decisions` · `watch_census.py:158` SQL freshness 监控 | **结构 / 待 Jazz 拍** | SPINE §2 「已退役」栏写 `entities`/`decisions` 已被 `treasury_entities`/`treasury_decisions` 取代,但 `entity_store.py` 实为 **VDB Entity/Decision KERNEL 的活跃写入端**(`ARCHITECTURE.md` 中央对象)。`treasury_*` 是 Strategy 119 corporate-treasury holdings(完全不同域)—— **SPINE 退役注记混淆了两个域**。验证:打开 SPINE §2 加一节「VDB 实体/决策核」,`entities`/`decisions` 移入并标注「kernel 主存」 | 🔴 **结构性分歧**(SPINE §2 退役注记与 ARCHITECTURE.md 冲突;`entity_store.py` 一直在写旧名,**未退役**) |
+| `entities` / `decisions` | `src/data/vector/entity_store.py:83` POST `/rest/v1/entities` · `:104` POST `/rest/v1/decisions` · `watch_census.py:158` SQL freshness 监控 | **Seth(已裁定)** | ~~退役~~ **撤回** —— B 判对了:`entity_store.py` 是内核的活跃写入端,`treasury_*` 是领域源不是后继。已移出「已退役」,建为 §2 **第 9 段**。新判据不再是"清偿",是 **`select count(*) from decisions` > 0** | ✅ **B-S360-2 结**(2026-09-16 采纳 B 的 (a) 方案)。**余下的是第 9 段本身的断点**:写者活着、`decisions` 落地 0 行 —— 见 §5 第 8 条 |
 
 **`[DB]` 标记的行,CI 不做代码 grep,只要求这一行写明一条可跑的 SQL 判据。**
 
@@ -234,6 +248,57 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
    某些读取端可能自带去重。要做的是**逐处判定**并登记,不是一次性替换。
    这条排在最前不是因为最急,是因为**判错了会让上面所有段的结论都不可信**。
 
+   ### ⛔ 2026-09-16 P0:上面这段的方向是反的 —— 视图才是断的那个
+
+   ```
+   ohlcv_daily            基表   最新 2026-09-16  ← 今天有数据
+   ohlcv_daily_canonical  视图   最新 2026-08-08  ← 停 39 天
+   ```
+
+   **视图不会自己陈旧** —— 它在读取时计算。机制查明:
+   近 7 天写入的 **1,770 行,`asset_id` 全是 NULL**,而视图
+   `join assets a on a.asset_id = o.asset_id` 是 **INNER JOIN**,于是近期行被整批丢掉。
+
+   断点是同时发生的 —— 所有源在同一周停止写 `asset_id`:
+
+   ```
+   binance_hist        最后一次带 asset_id  2026-08-08
+   coingecko           最后一次带 asset_id  2026-08-07
+   eodhd               最后一次带 asset_id  2026-08-06
+   coingecko_pro_ohlc  从来没写过           (9,263 行 NULL)
+   hyperliquid         从来没写过           (2,655 行 NULL)
+   ```
+
+   **所以那 23 处直读基表的代码拿到的是今天的价格,而唯一"守规矩"读视图的
+   `outcome_tracker` 拿到的是 39 天前的。** 按本文件原来的建议把 23 处迁到视图,
+   等于把生产整体迁到一个停更的源上 —— **一个方向基准把所有人指向了断掉的那一边。**
+
+   Minimax-B 被要求「逐处判定」而不是「照着迁」,所以他在动 `vault/tick.py` 前
+   停下来问覆盖 —— **那个停顿是这条 P0 被发现的唯一原因。**
+
+   ### ✅ 2026-09-16 已修(S-361,`scripts/supabase_s361_canonical_p0.sql`)
+
+   三步,顺序不能反:
+
+   1. **回填** 18,310 / 18,460 行 —— canonical 立刻回到 2026-09-16,近 7 天标的数 **0 → 235**
+   2. **视图 `LEFT JOIN` + `coalesce(a.class, o.asset_class)`**
+      ⚠️ 只改 LEFT JOIN 不够:行回来了但 `asset_class` 变 NULL,而下游普遍写
+      `where asset_class='Crypto'` —— **丢失会从 join 移到 filter,同样静默。**
+      基表自己就有这一列且 100% 填着,所以连降级都不需要,原来只是没用它。
+   3. **写入触发器**解析 `asset_id`(实测 `src/` 里没有任何写入端设过它 ——
+      修某一个没用,第六个还会忘)。解析不出来留 NULL,由第 2 步承接:
+      **解析不出来的会出现,不会消失。**
+
+   剩 150 行 / 10 个 symbol 在 `assets` 里没条目(Hyperliquid 系,K 前缀是 1000x)。
+   它们现在**出现在视图里**而不是消失;是否建 `assets` 条目属于准入,
+   不该由一个 JOIN 顺手决定。
+
+   守卫:`tests/test_canonical_keeps_up_with_base.py`(已接 preflight)查的是**后果**
+   —— 视图落后基表 >1 天即红,`asset_class` 出现 NULL 即红。
+   上面三步都是机制,机制会被下一次重构删掉;**后果查得住,机制换了也拦得住。**
+
+   **现在可以把读取端迁到 canonical 了** —— 但仍照 §5.0.1 逐处判定,不要批量替换。
+
 ### §5.0.1 第 1 段 — 23 处直读基表的逐处判定(B-S360-1,Seth, 2026-09-16)
 
 > **判据:** ① 它是不是读收盘价给收益/打标?② 有没有 `source=eq.X` 显式单源过滤?
@@ -318,8 +383,36 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
    **而按 MEMORY.md,基准 = 等权持有本 panel;没有基准的 OUTPERFORM 根本不是一个断言。**
    并且 `refresh_signal_edge_map()` 到现在还在直读 `signal_outcomes`,不读视图。
 
-2. **第 4 段(市场态)** — `market_state_writer.py` 存在且能写(S-245,第 629 行),
-   **全仓库零个调用者**,从没上过日程。
+2. **第 4 段(市场态)** — ✅ **S-361 已上日程**(`_market_state_loop`,
+   `main.py`,日频,含 `_beat`,已注册 `liveness` 48h)。
+   写者 S-245 就存在且能写,**全仓库零个调用者** —— 又一次
+   「建了这条 loop 的每一级,一级都没让它流动」。
+
+   心跳**不经 `_classify`**:`RecomputeResult` 已经把「拒绝」(地板没过,没写,
+   系统健康)和「失败」(写出错了)分开了,让分类器去猜一个已经分好的东西,
+   是把 S-220 那条信息再丢一次。
+
+   **剩余陈旧不在写者,在源。** 实测各源对地板(`MIN_DAYS=400` / `MIN_SYMBOLS=20`
+   / `MIN_COVERAGE=0.90`)的能力:
+
+   ```
+   binance_hist        1709 天  262 标的  127 达标  停  8 天   ✓ 唯一过地板的
+   coingecko           1706 天   25 标的    5 达标  停  0 天   ✗ 标的太少
+   yfinance            1119 天   33 标的   33 达标  停 90 天   ✓ 但已死
+   eodhd                289 天   33 标的   33 达标  停  1 天   ✗ 天数不够
+   coingecko_pro_ohlc    72 天  203 标的  196 达标  停  0 天   ✗ 天数不够(还需约 330 天)
+   hyperliquid           15 天  177 标的  177 达标  停 24 天   ✗
+   ```
+
+   所以部署后第 4 段会从停 42 天 → 停 8 天,**并在源恢复时自动追上**
+   (全量重算是幂等的)。⚠️ `market_state_writer.py:104` 那条
+   「binance_hist 天花板 343 天(M-91)」的注释**已过期** —— 实测 1709 天。
+
+3. **binance_hist 停 8 天(2026-09-08 起)** — 现在它是第 4 段唯一的可用源,
+   所以这 8 天直接变成第 4 段的陈旧度。`_deep_panel_loop` 已调度(`main.py:443`),
+   `deep_panel_collector.py:59` 的注释停在 "262 个符号 (2026-09-08)" ——
+   **正是数据停止那天**。心跳在 Redis(`loops:beat`),沙箱读不到,需线上查。
+   归 Seth(Sense 段,Rule 3b)。
 
 3. **第 5a 段(宏观相位)** — `similar_market_states()` 零调用者,且缺 z 化与排邻。
    实测未修时返回 0.964–0.970 窄带、五条全落在目标日前四周 ——
@@ -347,7 +440,18 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
    相关性收敛时自动收、发散时放开。它的输入正是第 5a/5b 段。
    **这就是为什么 VDB 不是锦上添花 —— 它是 3.3x 这个决定能否成立的前置条件。**
 
-8. **第 6 段(ⓠ 层)** — `regime_override_enforcer` 在 `src/` 里**零个真实导入**:
+8. **第 9 段(实体/决策内核)** — 写者活着,产出近乎为零。
+   `entity_store.py:83/:104` 在 POST `/rest/v1/entities` 和 `/rest/v1/decisions`,
+   而 `entities` **1 行**、`decisions` **0 行**。
+   **这不是"没建",是"建了、在跑、不落地"** —— S-334 那一类(写者返回 False 被吞)。
+   先查写入返回,不要先怀疑数据源。`write_log`(S-352)就是为这个建的,去读它。
+
+   与它相邻的 `treasury_entities` 102 行 / `treasury_decisions` 893 行是**领域源**,
+   不是它的后继(见「已退役」表下面那条撤回)。**源是活的,内核是空的** ——
+   所以缺的是 `treasury_* → entities/decisions` 的抽象那一跳:
+   把 `holding_net_change / decision_type` 提炼成 `direction / magnitude / half_life_d`。
+
+9. **第 6 段(ⓠ 层)** — `regime_override_enforcer` 在 `src/` 里**零个真实导入**:
    唯一一处出现在 `fusion_paper_regime_track.py` 的 docstring 里,是一句描述,不是一次调用。
    **Jazz 说 ⓠ 是四层之上最重要的一层,而它现在没有接到任何东西上。**
 

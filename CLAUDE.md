@@ -106,6 +106,17 @@ ATTRIBUTION (R62), never for neutralizing a book. Report total return vs hold-th
    architecture not debt** (S-323w: I once flagged it as a hardcoded path and was wrong).
    When unsure, `MINIMAX_SYNC.md` §1.
 
+3a. **产物落在 lane 的根上,不落 `/tmp`。** Minimax 的研究产物(脚本、报告、
+   中间结果)**归宿是 `/Volumes/CometCloudAI/cometcloud-local/`**
+   (`research/` 放脚本,`_reports/absorb_input/` 放报告);Seth 的归宿是仓库。
+   `/tmp` 只做单次运行的 scratch,**下一条消息就当它不存在**。
+   代价:2026-09-16 一次清点发现 `/tmp/cometcloud_reports/vdb_build/` 里 21 个文件,
+   18 个与 `cometcloud-local/research/` 逐字节相同 —— **是我用 `cp` 不是 `mv`**,
+   于是同一份东西有两个副本,而 `/tmp` 那份会随机消失。
+   **这条先约束 Seth**:搬运用 `mv`,或者搬完删源;留下一份"以防万一"的副本,
+   就是给下一个人造一个说不清哪份是真的的接缝。
+   跨 lane 交付要在 `MINIMAX_SYNC` 里写**最终路径**,不写 `/tmp` 路径。
+
 3b. **Ingestion is ONE lane (Seth), by function not by path.** Fetching/persisting price data goes
    through the guarded path only; Minimax *consumes* — mining, backtests, VDB upkeep. Path-based
    lanes alone let M-118 build a 3rd fetcher over data we already had. **Two ingesters means two
@@ -165,15 +176,23 @@ a file list plus a commit message is homework, because he still has to compose t
 himself. Give the exact block, in order, path-scoped, with preflight first:
 
 ```bash
-cd ~/Projects/looloomi-ai
-bash scripts/preflight.sh
-rm -f .git/index.lock
-git add <explicit paths — never -A>
+cd ~/Projects/looloomi-ai &&
+bash scripts/preflight.sh &&
+rm -f .git/index.lock &&
+git add <explicit paths — never -A> &&
 git commit -m "<type>(<scope>): <subject>
 
-<body: what changed and WHY it was wrong before>"
+<body: what changed and WHY it was wrong before>" &&
 git push origin main
 ```
+
+**EVERY line ends in `&&` except the last.** Rule 5 says preflight is the ONLY prod gate —
+but a block of bare newline-separated commands **is not a gate**: the shell runs the next line
+regardless of the exit code. Measured 2026-09-16 (S-360): preflight printed `🔴 2 FAILED` and the
+commit landed anyway. **The rule said "gate" and the template shipped no gate** — the same shape as
+the trailing-`#` lesson above: the rule and its own example disagreed, and the example is what gets
+copied. Trailing `&&` is also the safe failure mode for a partial paste — the shell waits for the
+continuation instead of running half a batch.
 
 **NO TRAILING `#` COMMENTS ON ANY COMMAND LINE. NO INLINE ANNOTATION. EVER.** This kept recurring
 because the template itself used to carry them — **the rule and its own example disagreed, and the

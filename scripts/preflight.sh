@@ -484,6 +484,16 @@ python3 tests/test_spine_is_current.py || {
     echo "✗ preflight stage: S-360 SPINE 与代码漂移" >&2
     exit 1
 }
+# 3a-vicesima-prima. S-361 P0:ohlcv_daily_canonical 落后基表 39 天而无人知 ——
+#                    asset_id 自 08-06 全 NULL,被视图的 INNER JOIN 整批丢掉。
+#                    视图照常返回 485k 行,只是旧的,所以没有消费者报错。
+#                    已修 LEFT JOIN + coalesce + 写入触发器,但那些都是**机制**;
+#                    这条查的是**后果**,机制被谁改掉都拦得住。
+#                    无凭据时打印 NOT CHECKED 并放行(Mac 侧 preflight 才有凭据)。
+python3 tests/test_canonical_keeps_up_with_base.py || {
+    echo "✗ preflight stage: S-361 canonical 落后基表" >&2
+    exit 1
+}
 # 3a-undevicesima-sexies. S-341c (Change 1 Stage 3): mypy --strict on the
 #                    two-file scope (store.py + store_result.py ONLY). The
 #                    discipline is the locked-in envelope contract: any future

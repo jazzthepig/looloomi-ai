@@ -49,6 +49,9 @@ LIVENESS_SLOS: dict[str, dict] = {
     # High-freq — 24h budget
     "_forward_record_loop":      {"max_age_h": 24, "kind": "high_freq"},
     "_outcome_tracker_loop":     {"max_age_h": 24, "kind": "high_freq"},
+    # S-361: 写者存在于 2026-08-27,零调用者,表停 42 天才被发现。
+    # 48h 而非 24h —— 全量重算依赖 binance_hist 面板,那个源本身会有间隔。
+    "_market_state_loop":        {"max_age_h": 48, "kind": "high_freq"},
     "_hyperliquid_loop":         {"max_age_h": 24, "kind": "high_freq"},
     "_metering_flush_loop":      {"max_age_h": 24, "kind": "high_freq"},
     # Fan-out — 168h (weekly) budget

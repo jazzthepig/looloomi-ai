@@ -1117,6 +1117,48 @@ async def _start_outcome_tracker():
         print("[OUTCOME] ✅ daily outcome-tracker loop scheduled")
 
 
+# ── S-361 · market_state_vectors 的写者上日程 ────────────────────────────────
+# `market_state_writer.recompute_all` 存在于 2026-08-27 (S-245),能写,
+# **全仓库零个调用者** —— 写了一次,从没上过日程。表因此停在 2026-08-05。
+# 这是 `vdb_health.py` 开头那句话的又一次:「我建了这条 loop 的每一级,
+# 一级都没让它流动。」Building the thing feels like finishing it, and a
+# scheduler disagrees.
+#
+# **全量重算,不是增量** (S-232):z-score 跨整段历史,多一天就改变每个历史 z 值,
+# 所以「只算今天再插一行」会把新行放进和旧行不同的坐标系 —— 而 RPC 的余弦
+# 不会说,它照样返回一个数。`fetch_panel` 是分页的,内存有界。
+#
+# **心跳不经 `_classify`。** `RecomputeResult` 已经把「拒绝」(地板没过,没写,
+# 系统健康)和「失败」(写出错了)分开了 —— S-220 记的就是把这两者压成一个
+# status 的代价。让分类器去猜一个已经分好的东西,是把信息再丢一次。
+_MARKET_STATE_INTERVAL_S = 24 * 3600   # daily
+
+
+async def _market_state_loop():
+    await _asyncio.sleep(_boot_delay(150))
+    while True:
+        try:
+            from src.data.vector.market_state_writer import recompute_all
+            res = await recompute_all()
+            print(f"[MSV] daily recompute — ok={res.ok} refused={res.refused} "
+                  f"rows={res.rows} pass={res.zscore_pass} "
+                  f"{('· ' + res.reason) if res.reason else ''}")
+            await _beat("_market_state_loop", ok=res.ok, refused=res.refused,
+                        error=res.reason or None,
+                        detail={"rows": res.rows, "zscore_pass": res.zscore_pass})
+        except Exception as _e:
+            print(f"[MSV] ⚠️  daily recompute failed: {_e}")
+            await _beat("_market_state_loop", ok=False, error=str(_e))
+        await _asyncio.sleep(_MARKET_STATE_INTERVAL_S)
+
+
+@app.on_event("startup")
+async def _start_market_state_loop():
+    if os.environ.get("DISABLE_MARKET_STATE_LOOP", "").lower() not in ("1", "true", "yes"):
+        _asyncio.create_task(_market_state_loop())
+        print("[MSV] ✅ daily market-state-vector recompute loop scheduled")
+
+
 # ── Prediction resolver loop — "resolve EVERY prediction" (causes/conviction/narrative) ──
 # Generalises the signal outcome tracker to all sources → per-source hit rate + alpha
 # written to prediction_outcomes. This is the read-back that mines the write-only logs
