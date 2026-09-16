@@ -67,11 +67,43 @@ def _code(text: str) -> str:
 
 
 def test_a_failed_write_never_reports_rows_written() -> None:
-    blk = _ROUTER.split("async def _call")[1][:1400]
-    code = _code(blk)
-    check("the failure branch pins rows_written to 0", '"rows_written": 0' in code, "")
-    check("and ok False", '"ok": False' in code, "")
-    check("and carries the reason through", '"reason": result' in code,
+    """S-360: 这条原来 grep `'"reason": result'` —— 一个**变量名**。
+
+    A 的 S-341b 把写入端迁到 `StoreResult`,`_call` 里的变量从 `result` 改名为 `r`,
+    并且先取 `reason = r.why or "unknown"` 再放进 payload。**行为严格变强了**
+    (多了 "unknown" 兜底和 `diagnosis` 分流),而守卫因为名字变了就变红。
+
+    本文件自己的 docstring 写着:「THE PROPERTY THIS FILE PINS is not the payload
+    shape ... It is that **ok=false always carries rows_written=0 and a named
+    reason**」。那就断言那个属性,不要断言拼写。
+
+    这是同一个缺陷今天第三次(S-359 `test_production_can_write` 查旧契约拼写;
+    S-345 CLAUDE.md 裁剪删掉了被测试钉住的字符串)。
+    **一个查拼写的守卫,会在行为变好时变红,在行为变坏而拼写不变时保持绿。**
+    """
+    import asyncio
+
+    from src.api.routers import mac_push
+    from src.api.store_result import StoreResult
+
+    async def _run(fake):
+        import src.api.store as store
+        orig = store.supabase_rpc_write
+        store.supabase_rpc_write = fake
+        try:
+            return await mac_push._call("some_rpc", {"a": 1}, "LABEL", 7)
+        finally:
+            store.supabase_rpc_write = orig
+
+    async def _refused(fn, payload=None):
+        return StoreResult(ok=False, why="role=replica may not write x")
+
+    out = asyncio.run(_run(_refused))
+
+    check("the failure branch pins rows_written to 0", out.get("rows_written") == 0,
+          f"got {out.get('rows_written')!r}")
+    check("and ok False", out.get("ok") is False, f"got {out.get('ok')!r}")
+    check("and carries the reason through", bool(str(out.get("reason", "")).strip()),
           "a generic message does not merely fail to help, it funds wrong answers")
 
 
@@ -92,7 +124,35 @@ def test_the_write_goes_through_the_role_gated_helper() -> None:
           "shared record while supabase_insert_table beside it refuses")
     blk = _code(_STORE.split("async def supabase_rpc_write")[1][:1800])
     check("supabase_rpc_write consults refuse_write", "refuse_write(" in blk, "")
-    check("and returns a reason, not just False", "return False," in blk,
+
+    # S-360: 原来查的是字面量 `"return False,"` —— 旧的裸元组拼法。
+    # A 的 S-341b 换成了 `StoreResult[Any]`,**它比 (False, reason) 元组更强**
+    # (带类型、`.ok`/`.why` 是离散字段、mypy 看得见),守卫却因为找不到旧拼写而红。
+    # 改成真的调用它:replica 角色下角色门先于任何网络 I/O 触发,不需要凭据。
+    import asyncio
+    import os
+
+    from src.api.store import supabase_rpc_write
+
+    prev = os.environ.get("APP_ROLE")
+    os.environ["APP_ROLE"] = "replica"
+    try:
+        raised, res = None, None
+        try:
+            res = asyncio.run(supabase_rpc_write("any_fn", {"p_d": "2026-01-01"}))
+        except Exception as e:                      # noqa: BLE001
+            raised = f"{type(e).__name__}: {e}"
+    finally:
+        if prev is None:
+            os.environ.pop("APP_ROLE", None)
+        else:
+            os.environ["APP_ROLE"] = prev
+
+    why = getattr(res, "why", "") or ""
+    check("a refused rpc write returns rather than raising", raised is None, raised or "")
+    check("and reports the refusal as a failure",
+          getattr(res, "ok", None) is False, f"got {res!r}")
+    check("and returns a reason, not just False", bool(why.strip()),
           "None-for-everything is the collapse that hid S-166 and S-168")
 
 
