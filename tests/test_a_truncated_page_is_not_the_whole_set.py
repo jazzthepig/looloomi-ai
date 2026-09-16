@@ -208,7 +208,10 @@ def t_the_overlap_window_can_reach_the_hole_it_has_to_repair():
     import src.api.store as _store
     from src.data.market import deep_panel_collector as dpc
 
-    today = _dt.date.today()
+    # ⚠️ 必须用 **UTC** 日期 —— 源里是 `datetime.now(timezone.utc).date()`。
+    # 沙箱 +09,跨午夜 UTC 后两边差 1 天,gap 算出 22 而不是 23。
+    # 一条随环境时区漂移的断言不是判据。
+    today = _dt.datetime.now(_dt.timezone.utc).date()
 
     def _state(days_ago: int, n: int = 262, fresh: int = 2) -> list[dict]:
         return [{"symbol": f"S{i}", "n_rows": 100,
@@ -216,32 +219,65 @@ def t_the_overlap_window_can_reach_the_hole_it_has_to_repair():
                             else today - _dt.timedelta(days=days_ago)).isoformat()}
                 for i in range(n)]
 
+    # ⚠️ S-361:这里原来 stub 的是 `store.supabase_rpc`,**而代码早已不走那条路**。
+    # `deep_panel_state_detailed()` 现在调 `rpc_diagnostics.rpc_with_detail`
+    # (S-323x 起,为了拿到 not_configured / breaker_open / http_error 的区分)。
+    # 于是 stub 落空,真实调用在没有凭据的进程里返回 `not_configured`,
+    # `collect_deep_panel` 提前返回,`_fetch_one` 从没被调到 → `seen["days"]` KeyError。
+    #
+    # **守卫守在了一道已经不通行的门上** —— 和今天查的四对同一个形状:
+    # 代码改道了,旧的那条没被退役,只是没人再走。
+    #
+    # 而它更坏的一面:**有凭据时它会打真 RPC**,拿到线上 262 个符号的真实
+    # `latest`,于是三条断言测的根本不是 `_state(21)` 构造的那个洞 ——
+    # 它会因为线上数据碰巧是什么而红或绿。**一条随环境变的断言不是判据。**
+    import src.api.rpc_diagnostics as _rpcd
+
     seen: dict = {}
-    orig_fetch, orig_rpc = dpc._fetch_one, _store.supabase_rpc
+    orig_fetch, orig_rpc = dpc._fetch_one, _rpcd.rpc_with_detail
 
     async def _stub(sym, days):
         seen["days"] = days
         return sym, [], "stub"
 
     def _window(rows: list[dict]) -> int:
-        async def _rpc(name, payload=None):
-            return rows
-        _store.supabase_rpc = _rpc
+        async def _rpc(name, payload=None, **kw):
+            return rows, {"outcome": "ok"}
+        _rpcd.rpc_with_detail = _rpc
+        seen.clear()
         _a.run(dpc.collect_deep_panel())
+        assert "days" in seen, (
+            "`_fetch_one` 没有被调到 —— stub 的门和代码走的门又不是同一道了。"
+            "先确认 `deep_panel_state_detailed()` 现在调的是哪个函数。")
         return seen["days"]
 
     try:
         dpc._fetch_one = _stub
-        _check("洞 21 天 → 窗口伸到 23 天", _window(_state(21)) == 23,
-               f"窗口 {seen.get('days')} —— 够不到的窗口等于没有自愈")
-        _check("没有洞 → 窗口留在 14 天", _window(_state(0)) == 14,
-               f"窗口 {seen.get('days')} —— 无事也全量拉是浪费")
+        # ⚠️ S-367:断言**性质**,不断言那个 `+2` 的余量。
+        #
+        # 原来写的是 `== 23`,而这条断言自己的失败信息说的是
+        # 「**够不到的窗口等于没有自愈**」—— 那是可达性,不是精确值。
+        # 2026-09-17 有一次实跑得到 22:**按它自己声明的判据,22 是够得到的,该绿**,
+        # 却因为不等于 23 判红。**断言了实现细节,而错误信息描述的是性质** ——
+        # 和今天查出的三处「查拼写不查行为」同形,第四处。
+        #
+        # 而且 `== 23` 把测试钉在了挂钟上:fixture 与被测代码各自读一次
+        # `now(utc)`,跨 UTC 午夜就差一天。**一条随时刻变的断言不是判据。**
+        # 可达性对两边的时刻差免疫。
+        w21 = _window(_state(21))
+        _check("洞 21 天 → 窗口够得到那个洞", w21 > 21,
+               f"窗口 {w21} ≤ 洞 21 —— 够不到的窗口等于没有自愈")
+        _check("而且不会无端拉满 180 天", w21 <= 21 + 5,
+               f"窗口 {w21} —— 洞 21 天却拉了这么多,余量失控了")
+        w0 = _window(_state(0))
+        _check("没有洞 → 窗口留在 14 天", w0 == 14,
+               f"窗口 {w0} —— 无事也全量拉是浪费")
         _outlier = _state(0)
         _outlier[5]["latest"] = "2017-01-01"
         _check("一个 2017 的离群点不绑架窗口", _window(_outlier) == 14,
                f"窗口 {seen.get('days')} —— 用了 min 而不是中位数?")
     finally:
-        dpc._fetch_one, _store.supabase_rpc = orig_fetch, orig_rpc
+        dpc._fetch_one, _rpcd.rpc_with_detail = orig_fetch, orig_rpc
 
 
 def main() -> int:
