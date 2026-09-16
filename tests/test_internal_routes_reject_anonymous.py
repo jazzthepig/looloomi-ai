@@ -315,6 +315,23 @@ def test_no_hardware_names_in_public_internal_payloads():
             "运维错误消息「Railway env set」—— 告诉运维该去哪设变量,"
             "去掉厂商名会让这条消息不可执行。同上,非投资人面。",
     }
+
+    #: **条件式豁免** —— 这些词只在某条分支上出现,所以「它现在没出现」
+    #: 不等于「它已经被清掉了」。值必须写明**可复现的触发条件**。
+    #:
+    #: S-361:`/internal/beta-core-clock-q` 的 railway 一度被判成「已清理,待删」——
+    #: 因为那次 preflight 在有凭据的 Mac 上跑,走了正常分支。
+    #: 但删掉它,没凭据的环境立刻变成「未登记的泄漏」而红。
+    #: **删掉只是把红换个环境,不是清偿。**
+    #:
+    #: 「冻结名单只能减」这条纪律对**无条件**出现的词是对的(清掉了就该删登记,
+    #: 否则下一处泄漏被它掩护);对**分支上**的词,那个推理不成立。
+    #: 加这一层不是放宽 —— 代价是每条必须说清怎么复现,说不清的不许进。
+    CONDITIONAL = {
+        ("/internal/beta-core-clock-q", "railway"):
+            "只在 `main.py:2300` 的 `if not SUPABASE_URL or not SUPABASE_KEY` "
+            "分支上返回。复现:清空这两个环境变量再打这条路由。",
+    }
     banned = ("mac_mini", "macmini", "ollama", "gemma", "railway", "fastapi", "upstash")
     c = TestClient(app)
     hits, thawed = [], []
@@ -329,12 +346,18 @@ def test_no_hardware_names_in_public_internal_payloads():
         for b in banned:
             if b in body and (p, b) not in FROZEN:
                 hits.append(f"{p} 含 '{b}'")
-            elif b not in body and (p, b) in FROZEN:
+            elif b not in body and (p, b) in FROZEN and (p, b) not in CONDITIONAL:
                 thawed.append(f"{p}/{b}")
     _check("公开的 /internal/ 响应里没有新增的硬件/厂商名", not hits, "; ".join(hits[:5]))
     # 冻结名单同样只能减:已经清掉的词还留在里面 → 下一处泄漏会被它掩护。
+    # 条件式条目除外(见 CONDITIONAL):它们「现在没出现」只说明走了另一条分支。
     _check(f"FROZEN 里没有已清理的条目({len(thawed)} 条待删)", not thawed,
            "已不再出现,删掉:" + ", ".join(thawed[:4]))
+    # CONDITIONAL 是 FROZEN 的子集,且每条都得有触发条件 —— 否则它就是
+    # 一张「永久免检」的通行证,而那正是这个守卫要防的东西。
+    _check("CONDITIONAL 条目都在 FROZEN 里且写明了复现方式",
+           all(k in FROZEN and len(v) > 20 for k, v in CONDITIONAL.items()),
+           str([k for k, v in CONDITIONAL.items() if k not in FROZEN or len(v) <= 20]))
 
 
 if __name__ == "__main__":
