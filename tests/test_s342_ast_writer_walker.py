@@ -41,9 +41,26 @@ _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT))
 
 from src.api.schema_manifest import (       # noqa: E402
-    _is_writer_name,
+    _is_rpc_call_name,
+    _is_table_write_name,
     _WRITE_FUNCS,
 )
+
+# ⚠️ S-356:这个文件曾经 import `_is_writer_name`,而 A-28/A-29 的 manifest 拆分
+# 把那个谓词**一分为二**:`_is_table_write_name`(表在 args[0])和
+# `_is_rpc_call_name`(函数名在 args[0])。拆分是对的 —— `supabase_rpc_write`
+# 是一个写 RPC,不是表写入者,两者需要存在于不同的目录里。
+#
+# 但 `bb23fa9`(21:29)加谓词、`e61a7ad`(23:31)拆掉它,**两小时,同一个人,
+# 后一个提交打断了前一个提交的测试**,而这个测试在 preflight 里注册着 ——
+# 所以 main 上的 preflight 从那一刻起一直是红的,挡住了之后每一次 push。
+#
+# **一个跨两次提交的重构,和它守卫的测试分开演化**(S-330 同形:换写入函数
+# 让 manifest 扫描器失明,只是那次隔的是两个文件,这次隔的是两个提交)。
+#
+# ⚠️ 我自己的账:我连着两轮说「归 A,我不动他的 lane」—— **那是错的**。
+# CLAUDE.md 规则 3 写着 `src/` 和 `tests/` 是 Seth/Austin lane。
+# **我用一条不存在的边界推掉了两次,而它一直在挡着 push。**
 
 # LEG 1 — POSITIVE: every currently-shipped writer matches the predicate.
 # If a future writer ships under one of the standard suffixes but is
@@ -80,11 +97,24 @@ _NEGATIVE = (
 
 def test_every_current_writer_matches_the_predicate() -> None:
     """POSITIVE: the AST walker recognizes every shipping writer."""
-    failures = [name for name in _POSITIVE if not _is_writer_name(name)]
-    assert not failures, (
-        f"{failures} are writers but the predicate doesn't match them. "
-        f"Either add the name to _WRITE_NAME_RE (new suffix pattern) or "
-        f"check why the predicate rejects it."
+    # 拆分之后要分两侧验:表写入者走 `_is_table_write_name`,
+    # 写 RPC 走 `_is_rpc_call_name`。**一个写入者必须被其中恰好一侧认领** ——
+    # 两侧都不认 = 扫描器看不见它;两侧都认 = 它会被数两次。
+    unclaimed, double = [], []
+    for name in _POSITIVE:
+        t, r = _is_table_write_name(name), _is_rpc_call_name(name)
+        if not (t or r):
+            unclaimed.append(name)
+        elif t and r:
+            double.append(name)
+    assert not unclaimed, (
+        f"{unclaimed} are writers but NEITHER predicate matches them — "
+        f"the AST walker is blind to them. Add to _TABLE_WRITE_SUFFIX/"
+        f"_TABLE_WRITE_EXACT or to the RPC side, whichever they belong to."
+    )
+    assert not double, (
+        f"{double} match BOTH predicates — they would be counted twice, "
+        f"and a table would appear in rpc_functions or vice versa."
     )
 
 
@@ -96,7 +126,9 @@ def test_non_writers_and_helpers_do_not_match() -> None:
     start collecting fake tables from helper internals — and the test
     that protects this is the one that catches the regression.
     """
-    failures = [name for name in _NEGATIVE if _is_writer_name(name)]
+    # 负样本必须被**两侧**都拒绝 —— 只验一侧的话,一个名字可以从另一侧溜进来。
+    failures = [name for name in _NEGATIVE
+                if _is_table_write_name(name) or _is_rpc_call_name(name)]
     assert not failures, (
         f"{failures} are NOT writers but the predicate says they are. "
         f"Loosen the regex end-anchoring so helpers like "
@@ -110,8 +142,10 @@ def test_predicate_rejects_none_and_empty() -> None:
     ``ast.Call.func`` is occasionally ``Attribute`` whose ``attr`` may be
     None for malformed AST — the predicate should reject, not raise.
     """
-    assert _is_writer_name(None) is False
-    assert _is_writer_name("") is False
+    assert _is_table_write_name(None) is False
+    assert _is_rpc_call_name(None) is False
+    assert _is_table_write_name("") is False
+    assert _is_rpc_call_name("") is False
 
 
 def test_write_funcs_snapshot_includes_s342_catch_ups() -> None:
@@ -143,11 +177,20 @@ def test_predicate_is_a_superset_of_write_funcs() -> None:
     far. The predicate is structural. They must agree on what they BOTH
     cover; if they don't, one of them drifted.
     """
-    not_pred = [n for n in _WRITE_FUNCS if not _is_writer_name(n)]
+    # 拆分之后:快照里的每个名字必须被**恰好一侧**认领。实测(2026-09-16)
+    # 6 个在表侧、`supabase_rpc_write` 在 RPC 侧、两侧都不认的为 0。
+    not_pred = [n for n in _WRITE_FUNCS
+                if not (_is_table_write_name(n) or _is_rpc_call_name(n))]
+    both = [n for n in _WRITE_FUNCS
+            if _is_table_write_name(n) and _is_rpc_call_name(n)]
     assert not not_pred, (
-        f"_WRITE_FUNCS lists {not_pred} but the predicate rejects them. "
-        f"Either the predicate missed a suffix or the snapshot list has a "
-        f"stale entry. S-330 was the same drift in reverse."
+        f"_WRITE_FUNCS lists {not_pred} but NEITHER predicate accepts them — "
+        f"the AST walker is blind to those writers. S-330 was the same drift "
+        f"in reverse (the function moved, the list did not)."
+    )
+    assert not both, (
+        f"{both} match both predicates — a table would be counted as an RPC "
+        f"or vice versa, and the two manifests would double-count it."
     )
 
 
