@@ -581,3 +581,138 @@ async def receive_asset_vectors(payload: dict, x_internal_token: str = Header(No
         "schema_version": ASSET_VECTOR_SCHEMA_VERSION,
         "ts": int(time.time()),
     }
+
+
+# ── S-362 · 相位检索:两个角度并排,不合成一个分数 ──────────────────────────
+
+@router.get("/api/v1/regime/similar")
+async def regime_similar(
+    d: Optional[str] = Query(default=None, description="目标日,默认库里最新的一天"),
+    k: int = Query(default=5, ge=1, le=20),
+    exclude_days: int = Query(default=30, ge=0, le=365,
+                              description="排除目标日附近的天数 —— 昨天像今天不是信息"),
+):
+    """「现在像历史哪段,那时什么风格在跑」—— 建 VDB 的全部理由 (SPINE 第 5a/5b 段)。
+
+    **两个角度,不是两个实现**(Jazz 2026-09-16 裁定):
+
+        5a 宏观相位   market_state_vectors.vec_full   15 实测维   价格 + 宏观背景
+        5b 微观相位   regime_daily.features           11 维       CIS 支柱 + 人工判读
+
+    实测同一天零重叠(目标 2026-08-05:5a → 2025-08 簇 0.595–0.641 EASING/RISK_ON;
+    5b → 2026-06~07 簇 0.743–0.929 Tightening)。**近乎正交,所以两个都留。**
+
+    ⚠️ **两边的相似度数值不可比,更不能平均。** 维度数不同(15 vs 11)、语料不同,
+    0.64 在宏观里是最像的,在微观里排不进前五。把它们平均是 S-351 那个错升一维。
+    所以本端点**并排返回,不合成分数**;`agreement` 只看**日期集合的重叠**,
+    是一个排名/集合层面的量。
+
+    合成规则(SPINE §4):两角度指向同一段历史 ⇒ 相位清晰;分歧 ⇒ 宏观背景与
+    内部横截面脱钩 ⇒ 相位不清晰。**分歧是产出,不是要调和掉的噪音。**
+
+    每个角度各自带 `stale_days` 与 `error`。**一个角度断了不让另一个也返回不了** ——
+    5a 依赖的 market_state_vectors 现在就停在 2026-08-05(binance_hist 09-08 起
+    被 source_policy 拒绝,S-361),而 5b 每天在更新。把它们折叠成一个
+    "ok/failed" 会让「这一段断了」和「两段都断了」长成一样。
+    """
+    import datetime as _dt
+
+    from src.api.store import supabase_rpc
+
+    out: dict = {"target": d, "k": k, "exclude_days": exclude_days}
+
+    # ── 5a 宏观 ──────────────────────────────────────────────────────────
+    macro: dict = {"space": "macro", "source": "market_state_vectors.vec_full"}
+    try:
+        rows = await supabase_rpc("similar_market_states", {
+            "target_day": d, "k": k, "min_shared": 6, "exclude_days": exclude_days})
+        hits = rows if isinstance(rows, list) else []
+        macro["hits"] = [{"d": r.get("d"), "sim": r.get("cosine"),
+                          "dims": r.get("measured_dims")} for r in hits]
+        macro["n"] = len(hits)
+    except Exception as e:                                        # noqa: BLE001
+        macro["error"] = f"{type(e).__name__}: {str(e)[:120]}"
+        macro["hits"], macro["n"] = [], 0
+
+    # ── 5b 微观 ──────────────────────────────────────────────────────────
+    micro: dict = {"space": "micro", "source": "regime_daily.features"}
+    try:
+        from src.data.vector.regime_match import most_similar
+
+        base, key = os.environ.get("SUPABASE_URL", ""), os.environ.get("SUPABASE_KEY", "")
+        if not base or not key:
+            raise RuntimeError("SUPABASE_URL / SUPABASE_KEY not set on this process")
+        import httpx
+        async with httpx.AsyncClient(timeout=30) as c:
+            r = await c.get(
+                f"{base.rstrip('/')}/rest/v1/regime_daily",
+                params={"select": "d,features,regime_db,n_universe,"
+                                  "meditation_regime,meditation",
+                        "order": "d.asc", "limit": "2000"},
+                headers={"apikey": key, "Authorization": f"Bearer {key}"})
+        if r.status_code != 200:
+            raise RuntimeError(f"HTTP {r.status_code}: {r.text[:120]}")
+        rd = r.json()
+        target = d or (max(x["d"] for x in rd) if rd else None)
+        hits, diag = most_similar(target, rd, k=k, exclude_days=exclude_days)
+        micro["hits"] = [{"d": h["d"], "sim": round(h["sim"], 4),
+                          "regime": h.get("regime_db"),
+                          "human_regime": h.get("meditation_regime"),
+                          "has_meditation": bool(h.get("meditation"))} for h in hits]
+        micro["n"] = len(hits)
+        # 覆盖缺口必须原样透出:出局 = **比不了**,不是「不像」。
+        micro["diag"] = diag
+        micro["target"] = target
+    except Exception as e:                                        # noqa: BLE001
+        micro["error"] = f"{type(e).__name__}: {str(e)[:120]}"
+        micro["hits"], micro["n"] = [], 0
+
+    # ── 新鲜度:每个角度各报各的 ─────────────────────────────────────────
+    # **必须分开报。** 5a 的底表停在 2026-08-05,5b 每天在更新;
+    # 折叠成一个数会让「一段断了」和「两段都断了」长成一样。
+    today = _dt.date.today()
+    _base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    _key = os.environ.get("SUPABASE_KEY", "")
+
+    async def _newest(table: str, col: str) -> Optional[str]:
+        if not (_base and _key):
+            return None
+        import httpx
+        try:
+            async with httpx.AsyncClient(timeout=15) as c:
+                r = await c.get(f"{_base}/rest/v1/{table}",
+                                params={"select": col, "order": f"{col}.desc",
+                                        "limit": "1"},
+                                headers={"apikey": _key,
+                                         "Authorization": f"Bearer {_key}"})
+            rows = r.json() if r.status_code == 200 else []
+            return rows[0][col] if rows else None
+        except Exception:                                         # noqa: BLE001
+            return None                                           # 读不到 ≠ 新鲜
+
+    for leg, table in ((macro, "market_state_vectors"), (micro, "regime_daily")):
+        leg["table"] = table
+        newest = await _newest(table, "d")
+        leg["newest_day"] = newest
+        leg["stale_days"] = (
+            (today - _dt.date.fromisoformat(newest)).days if newest else None)
+
+    # ── agreement:只在**日期集合**上算,不碰相似度数值 ────────────────────
+    ma = {h["d"] for h in macro.get("hits", []) if h.get("d")}
+    mi = {h["d"] for h in micro.get("hits", []) if h.get("d")}
+    both_ran = not macro.get("error") and not micro.get("error") and ma and mi
+    overlap = sorted(ma & mi)
+    out["macro_angle"], out["micro_angle"] = macro, micro
+    out["agreement"] = {
+        "comparable": bool(both_ran),
+        "overlap_days": overlap,
+        "n_overlap": len(overlap),
+        # 分歧不是失败。SPINE §4:一致 ⇒ 相位清晰;分歧 ⇒ 宏观与横截面脱钩。
+        "reading": (None if not both_ran
+                    else "aligned" if overlap
+                    else "divergent"),
+        "note": "只比日期集合。两个角度的 sim 数值维度数不同(15 vs 11),"
+                "不可比、不可平均 —— S-351 的同一个错升一维。",
+    }
+    out["ok"] = bool(macro.get("hits") or micro.get("hits"))
+    return out
