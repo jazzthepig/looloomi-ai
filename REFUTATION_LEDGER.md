@@ -20171,3 +20171,53 @@ this is NOT 'everything is fine'」,没有把读不到渲染成绿色。S-323z �
 于是剩下两处让测试继续红。**「手写 scope」的形状,出现在我修同类问题的补丁里** ——
 S-327 我手写守卫 scope 漏了四本账,今天在一个 190 行的文件里重演了一次。
 先数全,再改。
+
+
+---
+
+## S-357 — 我一直在逐个修红灯,而全貌从来没看过 (2026-09-16)
+
+preflight 分阶段跑,所以一次只暴露一个红灯。我于是**一个一个修**,
+每修完一个就交一次 handoff,Jazz 再撞下一个。跑一次全套:**11 个失败,不是 1 个。**
+
+    tests/test_factory.py                       9 个  503 vs 200
+    tests/test_postgrest_columns_exist.py       1 个  列快照停在 2026-08-20
+    tests/test_price_route.py                   1 个  CLAUDE.md 缺 "perpetual"
+
+**两个是我的,而且是同一个动作造成的** —— 我压缩 CLAUDE.md(S-353 那轮)时:
+
+- 把 `paper_books`「older sleeve+ledger prototypes, pre-spec_runner」那半句删了,
+  而 S-345 的测试正在查它(**注意正则是 `paper_books[^\n]*(?:older|…)`,要求同一行** ——
+  我第一次修时把限定语放到了下一行,仍然红)。
+- 把 "long perpetual" 压成 "long perp",而 `test_price_route` 查的是全词 `perpetual`。
+
+而我当时说「**十条硬规则全在,关键字符串全在**」—— **我验的是一份自己列的 10 个字符串,
+这两句都不在里面**。手写验证 scope,漏掉它该抓的东西。
+**一次删改的正确验证是「跑测试」,不是「grep 我记得的词」。**
+
+### 第三个:列快照没有重生成路径
+
+`schema/public_columns.json` 停在 **2026-08-20**,近一个月。
+S-336 给 `fusion_paper_nav` 加的 `inception_id` / `void_reason` **在库里存在、在快照里不存在**,
+守卫于是报「列不存在」—— 而列是在的。
+
+根因和 S-353 的 `COVERAGE` 手写字典同源:**一份需要有人记得手动更新的快照,
+就是一份手写清单**。PostgREST 挡了 `information_schema`,所以脚本没法自己查,
+于是它一直靠人 —— 而人会忘。
+
+修:`public_columns()`(SECURITY DEFINER,已 revoke PUBLIC)+
+`scripts/refresh_column_snapshot.py`。脚本**只报差异不静默覆盖**(快照是守卫的权威,
+悄悄改掉权威等于关掉守卫),空返回**拒绝写入**(空 ≠ 库里没有列),
+表消失时单独标注「**先确认是删除不是读取失败**」。
+实测 `public_columns()`:79 张表,三个缺的列全在。
+
+### 不归我的一个(留给 Jazz 拍)
+
+`test_factory` 9 个红:代码因 `_SOLANA_READY` 为假而返回 503「coming soon」,
+测试断言 200 + mock。而 CLAUDE.md 写着 Solana 那条约束 **2026-08-23 已退役**(链跟流动性)。
+**这不是 bug,是产品状态问题** —— factory 该发 mock、还是测试该改成断言 503,
+归 Jazz,不该被我顺手改掉。
+
+> **这一条最该记的:分阶段的 gate 会让人以为红灯只有一个。**
+> 我连着四轮在「修最后一个红灯」,而真实数字是 11。
+> 修之前先跑全套,和修之后再跑全套,是两件不同的事 —— 我只做了后者的一部分。
