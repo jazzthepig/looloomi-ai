@@ -1,0 +1,44 @@
+-- S-361 · applied 2026-09-16 · public_columns() 只授 service_role,Mac 上永远跑不了
+--
+-- 症状:Jazz 在 Mac 上跑 `python3 scripts/refresh_column_snapshot.py`
+-- 报 `✗ 需要 SUPABASE_URL / SUPABASE_KEY`,而 `.env` 里两个都有值。
+-- 而因为我把这一步放进了 `&&` 链,**整个 push 被它挡住** ——
+-- 快照过期本来只让 preflight 一条测试红,我这么一接,变成什么都推不了。
+-- **一个维护步骤不该是推送的门。**
+--
+-- 两层原因,都是我造的:
+--
+-- 1. **脚本不读 `.env`。** `preflight.sh` 在它自己第 404 行 `source .env`,
+--    而我把这个脚本排在 preflight **之前**,那时 `.env` 还没被 source。
+--    → 已修:脚本自己读仓库根的 `.env`(已导出的优先,CI 注入的 secret 不被盖)。
+--    **一个只能在另一个脚本跑过之后才工作的脚本,不是一个脚本。**
+--
+-- 2. **即使 source 了也调不动。** `.env` 里的 `SUPABASE_KEY` 是 anon key
+--    (219 字符 JWT,且没有 `SUPABASE_SERVICE_KEY` 那一行 —— 仓库明确记着
+--    「service_role is deliberately in no .env」,S-169)。
+--    而我在 S-360 那条迁移里写了 `revoke all ... from anon, authenticated`。
+--    **所以这个脚本按当时的授权在 Mac 上永远跑不了**,而它的错误信息
+--    (「需要 SUPABASE_URL / SUPABASE_KEY」)指向了一个错误的方向 ——
+--    变量明明有值。
+--
+-- 对照既有惯例 —— 同为 SECURITY DEFINER 的目录读取器:
+--
+--     catalog_inventory        anon + authenticated + service_role
+--     deep_panel_symbol_list   anon + authenticated + service_role
+--     public_columns           service_role only          ← 只有它是例外
+--
+-- `public_columns()` 返回的只有 information_schema 里的**表名与列名**,
+-- 没有任何行数据,与 `catalog_inventory()` 同一风险级。
+-- 这里对齐惯例,而不是给它造一条特例通道。
+--
+-- ⚠️ 这不是放宽 S-167:S-167 禁的是 `to PUBLIC` 和 TO-less 的 permissive policy。
+-- 显式授给 anon 是另一回事 —— `catalog_inventory` 的迁移就是这么写的,一直过 CI。
+
+revoke all on function public.public_columns() from public;
+grant execute on function public.public_columns() to anon, authenticated, service_role;
+
+-- 验收(2026-09-16 实测):
+--   沙箱(只有 anon key)跑 `python3 scripts/refresh_column_snapshot.py --dry`
+--   → 「快照 2026-09-16 → 2026-09-16 · 无差异」,不再报缺凭据。
+--   `pytest tests/test_postgrest_columns_exist.py` → 4 passed(此前长期 1 failed)。
+--   快照 92 个对象,含 ohlcv_daily_canonical / signal_outcomes_unified 两条视图。
