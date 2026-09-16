@@ -871,6 +871,37 @@
       "source",
       "symbol"
     ],
+    "r77_forward_episodes": [
+      "alpha_count",
+      "created_at",
+      "end_date",
+      "episode_id",
+      "episode_sign",
+      "episode_t_pooled",
+      "inception_id",
+      "mark_date",
+      "max_daily_distance",
+      "mean_daily_alpha",
+      "mean_daily_distance",
+      "n_days",
+      "n_neighbors",
+      "regime_centroid",
+      "void_reason"
+    ],
+    "r77_forward_episodes_meta": [
+      "created_at",
+      "event_id",
+      "event_type",
+      "inception_id",
+      "mark_date",
+      "meta",
+      "n_episodes",
+      "negative_count",
+      "pooled_t_mean",
+      "positive_count",
+      "reason",
+      "verdict"
+    ],
     "regime_band_log": [
       "bench_trail_30d",
       "current_band",
