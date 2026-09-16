@@ -20094,3 +20094,37 @@ C 的 ground truth 是对的(**7/9 NAV 表实际在写**,fusion 是 state 真空
 2. **「把 @log_write_attempt 装饰到 insert_with_detail 上」** —— 不需要。
    `insert_with_detail` 走的是**内联**记录(`detail["logged"]`,实测 `logged: true`);
    装饰器是给 `supabase_insert_table` / `supabase_upsert_table` 用的。两条路都已覆盖。
+
+
+---
+
+## S-355 — 指挥台每刷新一次发 43 个请求,然后把被监控的 API 打成 429 (2026-09-16)
+
+`/internal/schema-drift` 在 S-354 之后翻绿(**7/7 · 0 missing · 0 unavailable**),
+而同一时刻台子整块变红:
+
+    HTTPError: HTTP Error 429: Too Many Requests
+    could not reach the API — this is NOT 'everything is fine'
+
+数了一下:`_panel_declared_tables_exist` 对 **39 张声明表逐张发 GET**,
+加上 reconcile 2 + write_health 1 + freshness 1 = **43 请求/刷新**。
+**这块用来监控系统的台子,自己成了它要监控的那个故障。**
+
+⚠️ 而 `catalog_inventory()`(S-350)昨天就建好了,一次往返返回全部表和函数。
+我把它接进了 `research_intake`(S-354),**没接进我自己的 console**。
+
+> **同一天第三次同一个形状:建了工具,只接了一处。**
+> 第一次 `regime_override_enforcer.py`(别人写的,被 0 处 import);
+> 第二次 S-354(我建了 catalog_inventory,没接探针,隔了不到六小时);
+> 第三次就是这条 —— 而第二次的台账里我刚写过「和 regime_override_enforcer 是同一个形状」。
+> **写下这句话,和把它应用到下一个调用点,再一次是两件事。**
+
+修:一次 `catalog_inventory()`,**43 → 5 请求/刷新**。
+顺带消掉了 404-vs-403 的区分:目录里有就是有,**权限根本不参与存在性问题** ——
+这比「小心地把 403 判成 unknown」更干净,少一个要维护的判据。
+
+⚠️ 口径:我**只证明了自己的贡献被砍掉 87%**,没有证明 429 全部来自这里。
+Railway/Supabase 侧是否另有限流未测 —— 但 43 请求换 5 个数字无论如何都站不住。
+
+✅ 值得记的一条:429 那块牌子**自己是对的** —— 它说「无法读取 API,
+this is NOT 'everything is fine'」,没有把读不到渲染成绿色。S-323z 那条守住了。
