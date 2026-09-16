@@ -447,7 +447,29 @@ async def backfill_cg_pro(
     # (symbol → coin_id,带 `resolved_from` / `verified_at` 溯源)。
     # 猜错一个映射会把另一个币的价格写进这个标的的历史,而那条曲线看起来完全正常 ——
     # 所以只取 `coin_id is not null` 的行,解析不出来的**跳过并报出来**,不猜。
-    rows = await supabase_rpc("cg_known_coin_map", {}) or []
+    #
+    # ⚠️ 这个 RPC 实测 ~20s/209 rows(LEFT JOIN + ORDER BY 没索引)——
+    # `supabase_rpc` 共享 client 的 default timeout=10s 不到一半就 fallback None
+    # (实测 10s 后 endpoint 503 而 service_role 直调 19.9s 通了 209 行),
+    # 静默返回空。**这是一个被超时掩盖的可见 bug** —— 不知道 RPC 慢,
+    # 就会以为 RPC 没数据。与下面 cis_scores 读取同模式(直 httpx + 显式 timeout)。
+    async with httpx.AsyncClient(timeout=60) as _rpc_c:
+        _rpc_r = await _rpc_c.post(
+            f"{_SB_URL}/rest/v1/rpc/cg_known_coin_map",
+            json={},
+            headers={"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}",
+                     "Content-Type": "application/json"})
+    if _rpc_r.status_code != 200:
+        raise HTTPException(
+            status_code=503,
+            detail=f"读 cg_known_coin_map RPC 失败: HTTP {_rpc_r.status_code} "
+                   f"{_rpc_r.text[:200]}. **RPC 慢是已知**(给 60s);HTTP 失败是别的原因。")
+    try:
+        rows = _rpc_r.json() if _rpc_r.content else []
+    except Exception:
+        rows = []
+    if not isinstance(rows, list):
+        rows = []
     resolved = {r["symbol"]: r["coin_id"] for r in rows
                 if r.get("symbol") and r.get("coin_id")}
     # 每个标的的 asset_class **不同**(实测 200 Crypto / 3 L1 / 2 DeFi / 2 RWA /
