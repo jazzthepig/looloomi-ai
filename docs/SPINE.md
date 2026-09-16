@@ -42,12 +42,12 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | 2 | 测量·CIS | `cis_scores` ← Mac T1 → `cis_push` → Redis → `cis_provider` | `/api/v1/cis/universe` | 🟢 |
 | 3 | 几何·资产 | `asset_embeddings`(27 维,72 行) | `match_asset_embeddings()` | 🟢 |
 | 4 | 几何·市场态 | `market_state_vectors.vec_full`(24 声明 / 15 实测,582 行) | `similar_market_states()` | 🟡 **S-361 写者已上日程**;剩余陈旧来自源(binance_hist 停 8 天) |
-| 5a | 检索·**宏观**相位 | `similar_market_states()`(价格/宏观 15 实测维) | **无** | 🔴 零调用者;缺 z 化与排邻 |
-| 5b | 检索·**微观**相位 | `regime_match`(CIS 支柱 11 维 + 78 天人工判读) | **无** | 🔴 零调用者 |
+| 5a | 检索·**宏观**相位 | `similar_market_states()`(价格/宏观 15 实测维) | `/api/v1/regime/similar` | 🟡 **S-362 已修 z 化与排邻并接线**;底表停 42 天(见第 4 段) |
+| 5b | 检索·**微观**相位 | `regime_match`(CIS 支柱 11 维 + 78 天人工判读) | `/api/v1/regime/similar` | 🟢 **S-362 已接线**;底表每日更新 |
 | 6 | 判断·ⓠ | `regime_override_enforcer`(`EXPOSURE_BANDS_V1`) | **无** | 🔴 零导入(唯一那处在 docstring 里);且封顶 1.3x,与设计的 −0.5…3x 不符 |
 | 7 | 建仓·① | `beta_core_nav`(产品本体,兼所有 book 的基准) | 全部 book 的「超额」 | 🟢 |
 | 7b | 组合·gross 预算 | **尚无实现** —— 相关性状态 → gross,见 §5 第 7 条 | — | 🔴 缺段 |
-| 8 | 反馈 | `signal_outcomes_unified`(视图) | `refresh_signal_edge_map()` **← 没接** | 🔴 停 2026-07-26 |
+| 8 | 反馈 | `signal_outcomes_unified`(视图) | `refresh_signal_edge_map()` | 🟡 **S-365 已接**,双基准并存;journal 段仍薄(91 行有 alpha) |
 | 9 | **实体/决策内核** | `entities` / `decisions`(ARCHITECTURE 的中央对象) | `entity_store.py` 在写 | 🔴 写者活着,落地 1 行 / **0 行** |
 
 **🔴 的四段是连着的,这就是"没有应用通路"的准确位置:**
@@ -119,8 +119,9 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
 `test_production_can_write` 查的是旧契约的拼写而不是行为)。
 **一个因错误理由变绿的检查,比红的更坏** —— 红的会被修,绿的会被信任。
 
-**`signal_outcomes_unified` 当前 `src/` 代码命中数 = 0。**
-视图建好了、MEMORY.md 记了、没有一行代码读它 —— 这是本文件存在的直接理由。
+**`signal_outcomes_unified`:S-365 起由 `refresh_signal_edge_map()` 读(DB 函数)。**
+`src/` 侧仍为 0 —— `get_signal_journal` 还直读基表,见上表。
+它曾经「建好了、MEMORY.md 记了、没有一行代码读」,那是本文件存在的直接理由。
 
 ---
 
@@ -183,12 +184,12 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
 | 数据 | `market_state_vectors.vec_full` | `regime_daily.features` |
 | 维度 | 24 声明 / 15 实测(价格+宏观) | 11(CIS 支柱) |
 | 覆盖 | 582 天,**停 42 天** | 474 天,每日更新 |
-| z 化 | **无** ← 要补 | 有(S-351) |
-| 排邻 | **无** ← 要补 | 有(30 天) |
+| z 化 | **有**(S-362 补) | 有(S-351) |
+| 排邻 | **有**(S-362 补,30 天) | 有(30 天) |
 | 人工判读 | 无 | **78 天冥想正文** |
 
 两边架构本来就一致:jsonb 共享维余弦,不走 pgvector,符合 §4 存储法则(few+sparse)。
-差的只是 5a 缺 z 化和排邻 —— **那是 bug,不是角度差异**,照 5b 已修好的方式补上。
+5a 曾缺 z 化和排邻 —— **那是 bug,不是角度差异**,S-362 已照 5b 的方式补上。
 
 ### 它们近乎正交 —— 实测,不是推断
 
@@ -451,7 +452,22 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
    所以缺的是 `treasury_* → entities/decisions` 的抽象那一跳:
    把 `holding_net_change / decision_type` 提炼成 `direction / magnitude / half_life_d`。
 
-9. **第 6 段(ⓠ 层)** — `regime_override_enforcer` 在 `src/` 里**零个真实导入**:
+9. **第 6 段(ⓠ 层)** — `regime_override_enforcer` 在 `src/` 里**零个真实导入**。
+   **S-366 查清了为什么:没有任何账本把 ⓠ 的 cap 施加到权重上。**
+   `assign_band_hysteresis` 负责定档(在 `m_wo_q_o1`),enforcer 负责**施加** ——
+   而 ⓠ 每天定出一个 cap、写进 `/tmp/.../regime_track.csv`(docstring 称其
+   "authoritative local copy"),**Railway 上每次部署就清空**,一天好几次。
+   决定在做,产出没有落脚处。
+
+   **S-366 已接的那一半:** `beta_core_size.regime_band(vdb_distance)` 早就写好,
+   而**传真值的调用方只有测试,生产传 None** —— 于是 sizing 每天落在
+   「我不知道」那一档,**看起来和正常工作一模一样**(S-122:默认值越接近多数类
+   越查不出)。现已把 5b 的相位距离填进 `beta_core_nav_q.vdb_distance`:
+   25/26 行,band 分布 1=16 / 2=8 / 3=1(此前 band3×26)。
+
+   **仍未做的两件:**(a) ⓠ 的每日决定要有持久归宿(不能是 `/tmp`);
+   (b) 新行的 `vdb_distance` 要在写入时自动算,现在只回填了历史。
+
    唯一一处出现在 `fusion_paper_regime_track.py` 的 docstring 里,是一句描述,不是一次调用。
    **Jazz 说 ⓠ 是四层之上最重要的一层,而它现在没有接到任何东西上。**
 
