@@ -60,7 +60,7 @@ performance. Built for human LPs and AI agents equally.
 **Looloomi** — the AI-agent / Web3 tech arm powering it.
 
 > **Chain-agnostic ≠ instrument-agnostic (Jazz, 2026-08-23).** The chain follows liquidity;
-> ①'s INSTRUMENT does not move. **beta = HOLD, and a long perp is not a hold** — it is a
+> ①'s INSTRUMENT does not move. **beta = HOLD, and a long perpetual is not a hold** — it is a
 > synthetic long paying carry. Measured on ①'s own 24 names: equal-weight funding **+23.07%
 > annualised**, so at gross 1.15 a perp-based ① bleeds ~26.5%/yr — more than any alpha we have
 > ever shown. **① holds SPOT.** Perps belong to ②③④, which already account for funding.
@@ -98,7 +98,9 @@ ATTRIBUTION (R62), never for neutralizing a book. Report total return vs hold-th
    documented in MINIMAX_SYNC §2 BEFORE code; both sides confirm; bump `SCHEMA_VERSION`.
 
 3. **Ownership lanes.** Seth/Austin: `src/`, `dashboard/`, `docs/`, `scripts/`,
-   `paper_trading/`, `src/research/paper_books/`. Minimax:
+   `paper_trading/` (canonical spec library). `src/research/paper_books/` = **older
+   sleeve+ledger prototypes, pre-spec_runner** — `daily_runner.py` there is NOT a
+   spec_runner entry point (OPEN RISK §0c, reconciliation pending). Minimax:
    `/Volumes/CometCloudAI/cometcloud-local/` — **that path is the Minimax data root,
    architecture not debt** (S-323w: I once flagged it as a hardcoded path and was wrong).
    When unsure, `MINIMAX_SYNC.md` §1.
