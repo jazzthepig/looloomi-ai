@@ -172,6 +172,12 @@ def test_every_record_writer_is_gated_including_ones_added_later() -> None:
             code = line.split("#")[0]
             if "rest/v1" not in code:
                 continue
+            # `rest/v1/rpc/<fn>` is a Postgres RPC call (POST to a function), not
+            # a table write — the table gate does not apply, and conflating them
+            # would have us gate the read-side of the same RPC too. Strip the
+            # `/rpc/` prefix so the rest of the heuristic stays table-focused.
+            if "rest/v1/rpc/" in code:
+                continue
             ctx = "\n".join(lines[max(0, i - 10):i + 12])
             if not re.search(r'\.post\(|\.patch\(|\.delete\(|'
                              r'method\s*=\s*["\'](POST|PATCH|DELETE)', ctx):
