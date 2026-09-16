@@ -114,17 +114,76 @@ def test_the_gate_still_fails_closed() -> None:
 
 
 def test_a_refused_write_is_reported_by_the_write_path() -> None:
-    """Both write helpers must return False rather than raise, AND the caller
-    must be able to tell. Checked at the source because the five paper books
-    that swallow the return value are the reason this went unseen for days."""
+    """A refused write must RETURN a failure a caller can read — never raise.
+
+    ⚠️ S-359: this used to grep the source for the literal ``return False``.
+    A's S-341b migrated both helpers to ``StoreResult[bool].fail(reason)`` —
+    strictly better, because a bare False cannot say WHY — and the guard went
+    red while the behaviour it protects got stronger.
+
+    **It was checking the SPELLING of the old contract, not the behaviour.**
+    And this file's own comment already recorded being fooled by source text
+    once ("the guard was reading past the end of the prose"). Same class,
+    second time. So it now CALLS them under a refusing role.
+
+    The role gate fires before any network I/O, so this needs no credentials.
+    """
+    import asyncio
+    import importlib
+    import os
+
+    saved = {k: os.environ.get(k) for k in ("APP_ROLE", "SUPABASE_URL", "SUPABASE_KEY")}
+    try:
+        os.environ["APP_ROLE"] = "replica"          # read-only ⇒ every write refused
+        import src.api.runtime_role as rr
+        importlib.reload(rr)
+        import src.api.store as st
+        importlib.reload(st)
+
+        for fn_name, call in (
+            ("supabase_insert_table",
+             lambda: st.supabase_insert_table("beta_core_nav", [{"nav": 1.0}])),
+            ("supabase_upsert_table",
+             lambda: st.supabase_upsert_table("beta_core_nav", [{"nav": 1.0}], "mark_date")),
+        ):
+            try:
+                res = asyncio.run(call())
+                raised = None
+            except Exception as e:                              # noqa: BLE001
+                res, raised = None, f"{type(e).__name__}: {e}"
+
+            check(f"{fn_name} returns rather than raising", raised is None, raised or "")
+            if raised:
+                continue
+            ok = bool(getattr(res, "ok", res))
+            why = str(getattr(res, "why", "") or "")
+            check(f"{fn_name} reports the refusal as a failure", ok is False, f"got {res!r}")
+            # A bare False is the defect S-329 spent a week on: the caller cannot
+            # tell a role refusal from a timeout. Require a readable reason.
+            check(f"{fn_name} says WHY it refused",
+                  bool(why.strip()), f"why={why!r} — a bare False cannot be acted on")
+    finally:
+        for k, v in saved.items():
+            os.environ.pop(k, None)
+            if v is not None:
+                os.environ[k] = v
+        import src.api.runtime_role as rr2
+        importlib.reload(rr2)
+        import src.api.store as st2
+        importlib.reload(st2)
+
+
+def test_the_role_gate_is_still_consulted_at_the_source() -> None:
+    """Structural half: the gate must be IN the helper, not in its callers.
+
+    Kept as a source check on purpose — this one is about WHERE the gate lives,
+    and "a gate you have to remember to call is a gate that will be forgotten"
+    (store.py's own words, S-149). Behaviour is asserted above.
+    """
     store = (_ROOT / "src/api/store.py").read_text(encoding="utf-8")
     for fn in ("supabase_insert_table", "supabase_upsert_table"):
-        # Window wide enough to clear the docstring. The first version used 900
-        # chars and reported upsert as raising — the guard was reading past the
-        # end of the prose, not past the end of the function.
         blk = store.split(f"async def {fn}")[1][:2600]
         check(f"{fn} consults the role gate", "refuse_write(" in blk, "")
-        check(f"{fn} returns False rather than raising", "return False" in blk, "")
 
 
 if __name__ == "__main__":

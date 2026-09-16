@@ -407,9 +407,12 @@ async def get_ohlcv(symbol: str, days: int = Query(90, ge=1, le=730)):
 @router.post("/internal/backfill-cg-pro")
 async def backfill_cg_pro(
     dry_run: bool = Query(default=True, description="默认 dry_run —— 写入要显式要求"),
-    dest: str = Query(default="local", pattern="^(local|supabase)$",
-                      description="local=本地研究面(默认)· supabase=系统记录(显式)"),
-    days: int = Query(default=1825, ge=90, le=3650, description="回看天数,默认 5 年"),
+    dest: str = Query(default="supabase", pattern="^(local|supabase)$",
+                      description="supabase=系统记录(S-361 起默认)· local=本地研究面"),
+    days: int = Query(default=2451, ge=90, le=3650,
+                      description="回看天数,默认 2451 ≈ 回到 2020-01-01"),
+    panel: str = Query(default="cis", pattern="^(cis|all)$",
+                       description="cis=CIS 面板交集(默认)· all=cg_coin_map 全量"),
     x_internal_token: str = Header(None),
 ):
     """把 CoinGecko Pro 的真 K 线落进 `ohlcv_daily`,标为 `coingecko_pro_ohlc`。
@@ -431,21 +434,96 @@ async def backfill_cg_pro(
     from datetime import date as _date
     from datetime import timedelta as _td
 
+    from src.api.store import supabase_rpc
     from src.data.market.cg_pro_backfill import backfill
 
-    # symbol → coingecko coin_id。**显式表,不猜** —— 猜错一个映射会把另一个币
-    # 的价格写进这个标的的历史,而那条曲线看起来完全正常。
-    # 先覆盖 M-87 的 10 个宇宙成员(② beta+ 的标的),其余后续按需扩。
-    pairs = [
-        ("BTC", "bitcoin"), ("ETH", "ethereum"), ("SOL", "solana"),
-        ("BNB", "binancecoin"), ("XRP", "ripple"), ("ADA", "cardano"),
-        ("DOGE", "dogecoin"), ("AVAX", "avalanche-2"), ("LINK", "chainlink"),
-        ("DOT", "polkadot"),
-    ]
+    # S-361:标的集从 `cg_coin_map` 读,**不再硬编码**。
+    #
+    # 原来这里钉死 M-87 的 10 个,注释写着「其余后续按需扩」—— 那个「后续」
+    # 没有发生,而 `cg_coin_map` 现在有 209 个已解析映射。**一份写着「待扩」
+    # 的硬编码清单,和一份过期的注释是同一种东西**:它不会自己扩,也不会报错。
+    #
+    # 「显式表,不猜」这条**保留且更强了**:`cg_coin_map` 就是那张显式表
+    # (symbol → coin_id,带 `resolved_from` / `verified_at` 溯源)。
+    # 猜错一个映射会把另一个币的价格写进这个标的的历史,而那条曲线看起来完全正常 ——
+    # 所以只取 `coin_id is not null` 的行,解析不出来的**跳过并报出来**,不猜。
+    rows = await supabase_rpc("cg_known_coin_map", {}) or []
+    resolved = {r["symbol"]: r["coin_id"] for r in rows
+                if r.get("symbol") and r.get("coin_id")}
+    # 每个标的的 asset_class **不同**(实测 200 Crypto / 3 L1 / 2 DeFi / 2 RWA /
+    # 1 Infrastructure / 1 L2)。原来这里对整批硬编码 `asset_class="L1"` ——
+    # 209 个里 206 个是错的。分组调用,每组带自己的类。
+    #
+    # ⚠️ 不能图省事传 None:`asset_class` 空的行进 `ohlcv_daily_canonical` 后,
+    # 只能靠 `coalesce(a.class, o.asset_class)` 去 `assets` 里找;标的不在
+    # `assets` 里就变 NULL,而 S-361 的守卫正是判它红。**别给自己的守卫喂它要抓的东西。**
+    klass = {r["symbol"]: (r.get("asset_class") or "Crypto") for r in rows
+             if r.get("symbol")}
+
+    if panel == "cis":
+        # CIS 面板最近一轮。**直读表,不新建 RPC** —— 我第一版写了
+        # `cis_latest_symbols`,那个函数不存在(库里只有 cg_known_coin_map /
+        # deep_panel_symbol_list / panel_closes …)。凭印象写 RPC 名是
+        # 这条链上反复吃亏的事:PostgREST 按参数名解析,猜错得到 PGRST202,
+        # 读起来像「没有这个函数」,其实是「没有匹配这些参数名的重载」。
+        #
+        # 43 个 CIS 标的里 19 个是 TradFi(SPY/TLT/AAPL…),它们走 EODHD,
+        # **不是 CoinGecko 的事** —— 与 cg_coin_map 求交集天然把它们排除。
+        async with httpx.AsyncClient(timeout=20) as _c:
+            _r = await _c.get(
+                f"{_SB_URL}/rest/v1/cis_scores",
+                params={"select": "symbol", "order": "recorded_at.desc",
+                        "limit": "3000"},
+                headers={"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"})
+        if _r.status_code != 200:
+            raise HTTPException(
+                status_code=503,
+                detail=f"读 cis_scores 失败: HTTP {_r.status_code} {_r.text[:200]}. "
+                       f"**读不到 ≠ 面板是空的** —— 这里不退化成回填 0 个标的。")
+        wanted = {row["symbol"] for row in _r.json() if row.get("symbol")}
+        pairs = [(s, cid) for s, cid in sorted(resolved.items()) if s in wanted]
+        skipped = sorted(wanted - set(resolved))
+    else:
+        pairs = sorted(resolved.items())
+        skipped = []
+
+    if not pairs:
+        raise HTTPException(
+            status_code=503,
+            detail=f"没有可回填的标的 —— cg_coin_map 解析出 {len(resolved)} 个,"
+                   f"panel={panel} 交集为空。**空 ≠ 完成**,这里不静默返回 ok。")
+
     end = _date.today()
-    # `dest` 默认 local:Supabase 是免费版(实测 253MB/500MB = 50.7%),
-    # 而研究面不该占系统记录的额度 (S-261)。写生产库要显式要求两次:
-    # dry_run=false 且 dest=supabase。
-    res = await backfill(pairs, start=end - _td(days=days), end=end,
-                         asset_class="L1", dest=dest, dry_run=dry_run)
-    return res.as_payload()
+    # `dest` 默认 supabase(S-361 改)。原来默认 local,理由是「Supabase 是免费版
+    # (实测 253MB/500MB)」—— **那个前提 2026-09-16 已不成立**,Jazz 升了 Pro。
+    # 实测库总 304MB,`ohlcv_daily` 121MB / 552k 行 ≈ 229 B/行;
+    # 24 个 CIS 加密标的回填到 2020-01-01 ≈ 58.8k 行 ≈ 13MB。
+    # `dry_run` 仍默认 True —— 那条理由(按错一次就是几万行)没有过期。
+    groups: dict[str, list[tuple[str, str]]] = {}
+    for _s, _cid in pairs:
+        groups.setdefault(klass.get(_s, "Crypto"), []).append((_s, _cid))
+
+    by_class = []
+    for _ac, _pairs in sorted(groups.items()):
+        _res = await backfill(_pairs, start=end - _td(days=days), end=end,
+                              asset_class=_ac, dest=dest, dry_run=dry_run)
+        by_class.append({"asset_class": _ac, "n_pairs": len(_pairs),
+                         **_res.as_payload()})
+
+    # 跳过的标的必须出现在返回里。**一个不报「我少做了什么」的回填,
+    # 会让下一个人以为面板是全的**(S-166 的形状)。
+    # ⚠️ `as_payload()` 返回的键是 `status`("ok"/"degraded"),**没有 `ok`**。
+    # 我第一版写 `all(g.get("ok") ...)` —— 那会对一堆 None 求值,
+    # **全部失败也返回 True**。一个把失败报成成功的汇总,比不汇总更坏。
+    return {
+        "ok": bool(by_class) and all(g.get("status") == "ok" for g in by_class),
+        "panel": panel,
+        "dry_run": dry_run,
+        "dest": dest,
+        "days": days,
+        "start": (end - _td(days=days)).isoformat(),
+        "end": end.isoformat(),
+        "n_pairs": len(pairs),
+        "skipped_no_coin_id": skipped,
+        "by_asset_class": by_class,
+    }
