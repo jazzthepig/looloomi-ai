@@ -330,7 +330,8 @@ async def collect_deep_panel(days: int | None = None,
     # 一个只靠 env 拦住的违规,下一个把 loop 判成「坏了」的人还会再打开一次。
     from src.data.market.source_policy import MARKET_DATA, assert_purpose_source
     assert_purpose_source(MARKET_DATA, "binance_hist", n_assets=len(syms),
-                          job="deep panel daily bars")
+                          job="deep panel daily bars",
+                          secondary_ok=True)  # S-323n: 9 年历史续接,显式 secondary
 
     started = datetime.now(timezone.utc)
     sem = asyncio.Semaphore(_CONCURRENCY)

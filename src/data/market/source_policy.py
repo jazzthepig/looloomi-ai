@@ -91,6 +91,28 @@ PURPOSE_PRIMARY: dict[str, str] = {
     EXECUTION: "hyperliquid",
 }
 
+#: 每个用途下**显式声明**的 secondary 源 (S-323n, 2026-09-16, Minimax-A
+#: cross-lane at JAZZ explicit instruction)。
+#:
+#: 主源策略回答「这件事该在哪个源做」;这一节回答「哪些源允许作为
+#: **历史续接**走,但不能升成主源」。
+#:
+#: **为什么 `binance_hist` 在这里,而不是 PAID_SOURCES / FREE_SOURCES。**
+#: 它不付费(没有 monthly_call_credit),也不属于「单点查询」的免费端
+#: —— `data-api.binance.vision` 的日线 1d klines 是 deep_panel_collector
+#: 跑了半年的真实来源,262 个符号从 2017 年起的 bars 都长在这里。
+#: 把它当「坏源」会让 9 年日线停摆;把它升成主源会绕过 JAZZ 09-05
+#: 「实时数据走 CG Pro」的指令。所以它是一个**显式 secondary**:调用方
+#: 必须 `secondary_ok=True`,默许会让策略文件变成装饰。
+#:
+#: 未来要加新的 secondary,在这里加一行,并在 docstring 注明用途边界 ——
+#: 实时数据能不能走它,资产集多大算 fan-out,bar convention 接续点在哪。
+#: **默许 = 0**(默认值是空 frozenset),新增必须显式登记。
+PURPOSE_SECONDARY: dict[str, frozenset[str]] = {
+    MARKET_DATA: frozenset({"binance_hist"}),
+    EXECUTION: frozenset(),  # 当前没有显式 secondary;成交只走场馆
+}
+
 #: 每个用途允许的**资产集口径**,写成人话是为了让违规在 code review 时就刺眼。
 PURPOSE_SCOPE: dict[str, str] = {
     MARKET_DATA: "整个研究面板(262)—— 付费源,fan-out 是买来的权利",
@@ -212,16 +234,25 @@ class SourcePolicyError(RuntimeError):
     """
 
 
-def assert_bulk_source(n_assets: int, source: str, *, job: str) -> None:
+def assert_bulk_source(n_assets: int, source: str, *, job: str,
+                       explicit_bulk_ok: bool = False) -> None:
     """Gate a fan-out. Call it where the job decides its source, not later.
 
     >>> assert_bulk_source(232, "hyperliquid", job="daily bars")
     Traceback (most recent call last):
     SourcePolicyError: ...
+
+    `explicit_bulk_ok=True` 是「该 source 在该 job 下被显式声明为 bulk
+    友好」的旁路(S-323n)。默认 False —— 主源策略认为 bulk 只走 PAID
+    源;secondary 源由 `assert_purpose_source(secondary_ok=True)` 显式
+    声明后**透传**此旁路。**这条旁路只给显式登记的 secondary 用,不是
+    「免费的 bulk 通行证」。**
     """
     if n_assets <= BULK_THRESHOLD:
         return
     if source in PAID_SOURCES:
+        return
+    if explicit_bulk_ok:
         return
     hint = ""
     if source in BULK_ENDPOINTS:
@@ -241,7 +272,8 @@ class PurposeMismatch(SourcePolicyError):
 
 
 def assert_purpose_source(purpose: str, source: str, *, n_assets: int,
-                          job: str, explicit_set: bool = False) -> None:
+                          job: str, explicit_set: bool = False,
+                          secondary_ok: bool = False) -> None:
     """按**用途**而不是只按数量来判源 (S-296)。
 
     数量守卫回答「这么多资产能不能在这个源上取」;这一层回答
@@ -256,17 +288,29 @@ def assert_purpose_source(purpose: str, source: str, *, n_assets: int,
 
     `explicit_set=True` 是 execution 扇出的**唯一**通行方式:调用方必须
     自己传入成交名单。默认拿场馆挂牌当名单的,正是 S-204 那次。
+
+    `secondary_ok=True` 是「我知道这是 secondary 源,我显式选它」的声明
+    (S-323n, 2026-09-16)。默许会让策略文件变成装饰 —— 写一行
+    「binance_hist 可以作 historical fill」,然后每一个 fan-out 都
+    「反正它合法」地走它,主源策略就空转了。所以这条**必须显式**,
+    默认值是 False,且 secondary 必须已在 `PURPOSE_SECONDARY[purpose]`
+    里登记 —— 写 `secondary_ok=True` 但源不在登记表,仍然 raise。
     """
     want = PURPOSE_PRIMARY.get(purpose)
     if want is None:
         raise PurposeMismatch(
             f"{job}: 未知用途 '{purpose}'。用途必须是 "
             f"{sorted(PURPOSE_PRIMARY)} 之一 —— **说不出用途,就还没想清楚该问谁**")
-    if source != want:
+    is_secondary = (source != want
+                    and secondary_ok
+                    and source in PURPOSE_SECONDARY.get(purpose, frozenset()))
+    if source != want and not is_secondary:
         raise PurposeMismatch(
             f"{job}: 用途是 '{purpose}',主源应为 '{want}',实际用了 '{source}'。"
             f"Jazz 2026-09-05:实时数据与前端走 CoinGecko 付费 API,"
             f"接入交易生产的才读 Hyperliquid。"
+            f"如 '{source}' 是该用途下声明的 secondary 源(S-323n),"
+            f"请显式传 secondary_ok=True —— 默许会让策略变成装饰。"
             f"这个用途的资产集口径:{PURPOSE_SCOPE.get(purpose, '')}")
     if purpose == EXECUTION and n_assets > BULK_THRESHOLD and not explicit_set:
         raise PurposeMismatch(
@@ -274,7 +318,10 @@ def assert_purpose_source(purpose: str, source: str, *, n_assets: int,
             f"**没有显式传入成交名单** —— 这说明名单是从场馆挂牌来的。"
             f"「挂牌」不等于「我们要交易」:{PURPOSE_SCOPE[EXECUTION]}。"
             f"S-204 那次 233 个标的的扇出就是这么来的")
-    assert_bulk_source(n_assets, source, job=job)
+    # secondary 源走 explicit bulk 旁路(主源策略认为 bulk 只走 PAID 源;
+    # 显式 secondary 已由调用方自己承认「不走 PAID 我也认」)。
+    assert_bulk_source(n_assets, source, job=job,
+                       explicit_bulk_ok=is_secondary)
 
 
 def bulk_endpoint_for(source: str) -> dict[str, str]:
