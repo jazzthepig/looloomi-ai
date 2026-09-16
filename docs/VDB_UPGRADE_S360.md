@@ -2,6 +2,10 @@
 
 > **状态** 2026-09-16 · 作者 Seth · 依据 C 的 VDB 审计报告(诊断采纳,处方重写)
 > **新增组件数:0。** 不装 Qdrant,不训 FinGPT LoRA,不上 GraphSAGE / PatchTST,不建新表。
+>
+> **先读 `docs/SPINE.md`。** 那份文件说明**哪条路是活的**;本文件只说**怎么把断的接上**。
+> 本文件里任何一处与 SPINE 冲突,以 SPINE 为准 ——
+> 并且按 SPINE §3 法则二,改方向要先改 SPINE 再动代码。
 
 ---
 
@@ -112,26 +116,47 @@ select * from similar_market_states(null, 5, 6);
 列是同一套语义换了名字:`signal_journal.alpha_30d` = `signal_outcomes.alpha`;
 `benchmark_return_30d` = `b_ret`;`return_pct_30d` = `a_ret`。
 
+⚠️ **这张单比我第一版写的小得多 —— 视图已经存在。**
+我第一版提议新建一个叫 `forward_record` 的视图。**错了**:
+`signal_outcomes_unified` 早就建好了(7834 行,带 `era` 列区分 legacy/journal,
+`alpha_beta_adj` 在 journal 侧写 NULL 而非 0 —— I1 处理得是对的),
+而且 **MEMORY.md 里白纸黑字写着「读 `signal_outcomes_unified`,单读任一表静默丢一半历史」**。
+我读过 MEMORY.md,然后提议了同一个东西的第六个名字。
+**这就是 `docs/SPINE.md` 要挡住的那件事,发生在写 SPINE 的人身上。**
+
+**真正缺的是两处接线。**
+
 **做什么。**
-1. 建视图 `forward_record`,UNION 两表,列名归一到 `signal_outcomes` 的命名(它更完整,
-   多了 `beta_pit` 7044 行、`alpha_beta_adj`、`edge_beta_adj`)。
-   `signal_journal` 侧这三列写 NULL —— **NULL 表示"未测量",不是 0**(I1)。
-2. `refresh_signal_edge_map()` 改读 `forward_record`。
-3. 让 `signal_journal` 已结算的行持续流进统一记录(方向由 C 定,但**只能有一条记录**)。
-4. 22 天空洞:**标注,不要补**。用 `source` 列区分,`gap_2026_05_04_to_05_24` 留空。
-   补一段我们没测过的历史就是造第二个真相。
+1. **`refresh_signal_edge_map()` 改读 `signal_outcomes_unified`。**
+   它现在直读 `signal_outcomes`,所以 edge_map 那 40 行建立在 2026-05-03 就冻结的数据上。
+   这是一处 `create or replace function`,不是新建。
+2. **补基准 —— 这才是记录停住的真因。** 实测:
+   ```
+   signal_journal 已结算 outcome_30d      157 条
+     其中缺 benchmark_symbol               66 条   ← 最新到 2026-08-16
+     ⇒ 无 benchmark_return_30d ⇒ 无 alpha_30d
+     ⇒ 被视图的 where alpha is not null 静默滤掉
+   ```
+   所以统一记录停在 **2026-07-26**,不是因为追踪器坏了,是因为**基准没被赋值**。
+   按 MEMORY.md:**基准 = 等权持有本 panel,不是 0 也不是 BTC**
+   (S-103:用 BTC 做基准给每档扣了 2.16pp,t=3.96)。
+   **一个没有基准的 OUTPERFORM 根本不是一个断言** —— 它连被证伪的资格都没有。
+3. **22 天空洞(2026-05-04…05-24):标注,不要补。** 补一段我们没测过的历史就是造第二个真相。
+4. `src/` 里对 `signal_outcomes` / `signal_journal` 的**读取端**全部切到视图;
+   **写入端不动**(`outcome_tracker.py` 本来就该写 `signal_journal`)。
+   切完按 SPINE 法则一,把这两条从「已知未清偿」表里划掉。
 
 **验收。**
 ```sql
-select min(d), max(d), count(*) from forward_record;
--- 期望:2025-05-03 … ≥2026-09-14,行数 ≥ 8033
-select count(*) from (select d, lead(d) over (order by d) nx from (select distinct d from forward_record) s) t
-where nx - d > 3 and d <> '2026-05-03';
--- 期望:0(除了那个已标注的空洞,没有别的 >3 天断裂)
+select era, count(*), min(d), max(d) from signal_outcomes_unified group by era;
+-- 期望:journal 那一档的 max(d) 推进到 ≥ 2026-08-16(现在是 2026-07-26)
+select count(*) from signal_journal where outcome_30d is not null and benchmark_symbol is null;
+-- 期望:0
 ```
-`refresh_signal_edge_map()` 跑完后 `signal_edge_map.n` 必须增加,且 `computed_at` 是今天。
+`refresh_signal_edge_map()` 的 `prosrc` 里必须出现 `signal_outcomes_unified`;
+跑完后 `signal_edge_map.n` 增加且 `computed_at` 是今天。
 
-**不做什么。** 不建第三张表(Rule 3b:两个 ingester 就是两条看起来同名、实则不同的序列)。
+**不做什么。** **不要再建一个统一视图。** 已经有了。
 不删 `signal_outcomes` 的历史 —— 那 7743 行是我们唯一的一年期真实前向记录,是资产。
 
 ---
@@ -183,15 +208,22 @@ select max(d), count(*) from market_state_vectors;
 
 **先选一个,再接线。两个都留着就是第四对「旧的空 + 新的活」。**
 
-我的建议是**留 `regime_match`、退役 RPC**,理由不是它是我写的,而是:
-它挂在每天更新的 `regime_daily` 上、两个缺陷已修、并且带着 78 天的人工判读 ——
-**那是库里算不出来、也是任何通用方案买不到的东西。**
-但如果 C 认为 24 维的价格/宏观态比 11 维 CIS 态更接近"风格",
-**可以反过来选,前提是把 z 化和时间排除补进 RPC**,并说明理由。
-`REFUTATION_LEDGER` 记一条,哪个赢都行,**不能两个都活着**。
+⚠️ **这个选择不是 C 的,也不是我的 —— 按 `docs/SPINE.md` §3 法则二,它是方向变更,归 Jazz。**
+
+因为 MEMORY.md 把决策链**指定**为
+`market_state_vectors → similar_market_states() → strategy_response`。
+那是现行方向。我 S-349/S-351 建 `regime_daily` + `regime_match.py` 时
+**没有登记、也没有退役那条链** —— 于是"两个都对、两个都没人用"。
+现在要么改方向(登记),要么回到指定的那条(补 z 化和时间排除)。
+**不能靠"我建的那个更好"把方向悄悄换掉,那正是这次要根治的行为。**
+
+我的读法(供 Jazz 判断,不是结论):`regime_match` 挂在每天更新的 `regime_daily` 上、
+两个缺陷已修、带 78 天人工判读 —— 那是库里算不出来、也买不到的东西。
+但 24 维价格/宏观态是否比 11 维 CIS 态更接近"风格",是策略判断,不是工程判断。
 
 **做什么。**
-1. 定选型,退役另一个(RPC 就 `DROP FUNCTION`,Python 就删文件),记进 ledger。
+1. **Jazz 拍板后**,退役另一个(RPC 就 `DROP FUNCTION`,Python 就删文件),
+   同步更新 SPINE §2 与「已退役」表,并在 `REFUTATION_LEDGER` 记一条。
 2. `GET /api/v1/regime/similar?d=<date>&k=5` → 返回 `(hits, diag)`,
    **`diag.n_excluded_incomplete` 必须原样透出** —— 那是覆盖缺口,不是"不像"。
 3. 指挥台(`scripts/ops_console.py`)加一格:今天的 top-5 相位 + 当时 regime + 有无人工判读。
