@@ -38,7 +38,7 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 
 | # | 段 | 唯一活实现 | 消费者 | 状态 |
 |---|---|---|---|---|
-| 1 | 测量·价格 | `ohlcv_daily_canonical`(入口收敛到 Seth lane,Rule 3b) | `outcome_tracker` **只此一处** | 🟡 生产里 23 处直读基表 `ohlcv_daily` |
+| 1 | 测量·价格 | `ohlcv_daily_canonical`(入口收敛到 Seth lane,Rule 3b) | `outcome_tracker` **只此一处** | 🟡 23 处直读基表,见 §5.0.1 逐处判定 |
 | 2 | 测量·CIS | `cis_scores` ← Mac T1 → `cis_push` → Redis → `cis_provider` | `/api/v1/cis/universe` | 🟢 |
 | 3 | 几何·资产 | `asset_embeddings`(27 维,72 行) | `match_asset_embeddings()` | 🟢 |
 | 4 | 几何·市场态 | `market_state_vectors.vec_full`(24 声明 / 15 实测,582 行) | `similar_market_states()` | 🔴 停 42 天 |
@@ -85,12 +85,14 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
 
 登记一条要写:名字 · 还在读它的位置 · 谁负责 · `VERIFY:` 怎样算清偿。
 
-| 旧路 | 还在读它的代码 | 负责 | VERIFY |
-|---|---|---|---|
-| `signal_outcomes` | `h3_edge_map_backfill.py`(研究回填,合法) · `producer_freshness.py`(监控,合法) · `refresh_signal_edge_map()`(**不合法**) | C / W1 | `refresh_signal_edge_map()` 的 `prosrc` 里出现 `signal_outcomes_unified` |
-| `signal_journal` | `routers/signals.py` · `routers/admin.py` · `outcome_tracker.py`(**写入端,合法**) | C / W1 | 读取端全部切视图;写入端不变 |
-| `entities` / `decisions` | `entity/writer.py` · `entity/collect.py` · `watch_census.py` | C / W4 | 两表行数 = 0 且 `entities_vec_hnsw` 已 drop |
-| `market_state_vectors.vec` `[DB]` | 无代码读者 | C / W2 | `select count(*) from information_schema.columns where table_name='market_state_vectors' and column_name='vec'` → 0 |
+**状态(B-S360-2 清偿后,2026-09-16):**
+
+| 旧路 | 还在读它的代码 | 负责 | VERIFY | **2026-09-16 状态** |
+|---|---|---|---|---|
+| `signal_outcomes` | `h3_edge_map_backfill.py`(研究回填,合法) · `producer_freshness.py:302` SQL 监控(合法) · `refresh_signal_edge_map()`(**不合法**) | C / W1 | `refresh_signal_edge_map()` 的 `prosrc` 里出现 `signal_outcomes_unified` | 🟡 **C-S360-1 未结**(unified view 0 reader in src/,需 C 切线) |
+| `signal_journal` | `routers/signals.py:716` (`get_signal_journal`) · `producer_freshness.py:304` SQL(合法) · `outcome_tracker.py:49` (**写入端,合法**) · `cis.py:33` · `mac_writes.py:65` (**写入端,合法**) | C / W1 | 读取端全部切视图;写入端不变 | 🟡 **`get_signal_journal` 仍直读基表**(应切 unified) |
+| `market_state_vectors.vec` `[DB]` | 无代码读者(`market_state.py:359` 仅注释) | C / W2 | `select count(*) from information_schema.columns where table_name='market_state_vectors' and column_name='vec'` → 0 | 🟡 DB 验证待跑:`select` 列应返 0 行 |
+| `entities` / `decisions` | `src/data/vector/entity_store.py:83` POST `/rest/v1/entities` · `:104` POST `/rest/v1/decisions` · `watch_census.py:158` SQL freshness 监控 | **结构 / 待 Jazz 拍** | SPINE §2 「已退役」栏写 `entities`/`decisions` 已被 `treasury_entities`/`treasury_decisions` 取代,但 `entity_store.py` 实为 **VDB Entity/Decision KERNEL 的活跃写入端**(`ARCHITECTURE.md` 中央对象)。`treasury_*` 是 Strategy 119 corporate-treasury holdings(完全不同域)—— **SPINE 退役注记混淆了两个域**。验证:打开 SPINE §2 加一节「VDB 实体/决策核」,`entities`/`decisions` 移入并标注「kernel 主存」 | 🔴 **结构性分歧**(SPINE §2 退役注记与 ARCHITECTURE.md 冲突;`entity_store.py` 一直在写旧名,**未退役**) |
 
 **`[DB]` 标记的行,CI 不做代码 grep,只要求这一行写明一条可跑的 SQL 判据。**
 
@@ -232,6 +234,83 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
    某些读取端可能自带去重。要做的是**逐处判定**并登记,不是一次性替换。
    这条排在最前不是因为最急,是因为**判错了会让上面所有段的结论都不可信**。
 
+### §5.0.1 第 1 段 — 23 处直读基表的逐处判定(B-S360-1,Seth, 2026-09-16)
+
+> **判据:** ① 它是不是读收盘价给收益/打标?② 有没有 `source=eq.X` 显式单源过滤?
+> ③ 是不是 freshness/coverage/by-source 审计?**写入端写基表是合法的,
+> 不在表里**(SPINE §3 法则一)。下面 23 处全部在 `src/` 内,
+> grep `ohlcv_daily` 命中,**不含注释/docstring/纯字面量**。
+
+#### A 类 — 写入端(6 处,保持写基表)
+
+| # | 位置 | 写入形态 | 判据 |
+|---|---|---|---|
+| A1 | `src/api/routers/ohlcv.py:65` | POST upsert `on_conflict=symbol,trade_date,source` | 写基表是必要的,视图无主键可 upsert |
+| A2 | `src/api/routers/ohlcv.py:350` | POST upsert(批量回填) | 同 A1 |
+| A3 | `src/api/routers/ohlcv.py:386` | POST upsert(每日采集) | 同 A1 |
+| A4 | `src/data/market/cg_pro_backfill.py:477` | `supabase_upsert_table("ohlcv_daily", ..., on_conflict=ON_CONFLICT)` | 同 A1 |
+| A5 | `src/data/market/hyperliquid_collector.py:390` | `supabase_insert_table("ohlcv_daily", all_rows[i:i+2000])` | 同 A1 |
+| A6 | `src/data/market/deep_panel_collector.py:398` | `supabase_insert_table("ohlcv_daily", all_rows[i:i+2000])` | 同 A1 |
+
+#### B 类 — 读收盘价用于收益 / 打标(3 处)
+
+| # | 位置 | 读的是哪个 | 该读哪个 | 判据 |
+|---|---|---|---|---|
+| B1 | `src/data/signals/outcome_tracker.py:238` | `ohlcv_daily_canonical` ✓ | `ohlcv_daily_canonical` | **唯一合规读者。** 视图像素优先级 = `native venue > aggregator > free`,与 `price_route.EXECUTION_VENUE=hyperliquid` 对齐;entry/exit 双腿同一来源,不触发 `UNMEASURABLE` 分支。**保持现状** |
+| B2 | `src/data/vault/tick.py:103` | `ohlcv_daily` 过滤 `source=eq.binance_hist` | **改 `ohlcv_daily_canonical`** | vault 打标走的是 ① 的本子 —— `price_route.py` 已定 tradeable 必须 HL 优先,**binance_hist 是次优**。同一 symbol 在 vault NAV 里用 binance_hist、在 outcome_tracker 里用 canonical,意味着 `signal_outcomes.ret = vault_mark − entry` 这条链的两个端点**用了不同的源**。**判错会让 vault NAV 与信号回路用不同的价格**(S-193 那个洞) |
+| B3 | `src/research/validation/s113_revisit_s108_s109_on_687asset.py:132` | `ohlcv_daily` 过滤 `source=eq.binance_hist`,`select=close` | **保持 `ohlcv_daily` + `source=eq.binance_hist`** | 研究员**显式选择** binance_hist 来构建 687-asset survivorship-free panel —— 跨标的同源才能做 N_eff / breadth 的横截面比较。canonical 视图会按优先级切换源,**会破坏面板同源性**。这是研究方法学的选择,不是 bug。判据:`source=eq.X` 是显式单源约束 → 基表 |
+
+#### C 类 — 显式单源约束的读(4 处,保持读基表)
+
+| # | 位置 | 用途 | 判据 |
+|---|---|---|---|
+| C1 | `src/data/market/coverage.py:178` | `group by symbol, source`,跨源覆盖审计 | 按源分别计数是审计目的,视图会折叠源、审计失真 |
+| C2 | `src/data/market/source_freshness.py:287,291,294` | by-source freshness / 覆盖率 | 同 C1 |
+| C3 | `src/data/vector/market_state_writer.py:288` | `source=eq.{PANEL_SOURCE}` (binance_hist) 单源 panel | 横截面统计量(breadth / corr / dispersion)在**同一组成员**上才可比 — 显式单源是设计,不是漏判 |
+| C4 | `src/data/vector/market_state_writer.py:546` | 候选起点扫描,`source=eq.{source}` | 同 C3 |
+
+#### D 类 — Freshness / 审计探针(2 处,保持读基表)
+
+| # | 位置 | 用途 | 判据 |
+|---|---|---|---|
+| D1 | `src/api/store.py:922` (`supabase_ohlcv_daily_freshness()`) | `select=trade_date, order=desc, limit=1` 算 `age_seconds` | 这是 §BETA-METRIC-AGG 的 ship gate,**测的是写入者的存活**(`max(trade_date)`)。视图的 DISTINCT ON 会把多源折叠,反而把「这个写入者死了但那个还活」掩盖 —— 与 S-251 的「一个还活的写入者掩护 260 个死掉的」同形。**基表是必要的** |
+| D2 | `src/data/signals/forward_record_keeper.py:368` (`check_pit_lag()`) | `select=trade_date, recorded_at, source=eq.coingecko_pro_ohlc` 算 PIT 滞后 | 需要 `recorded_at` 这个写入时间戳,**视图不带它**(视图只挑一行 close,不暴露 `recorded_at`)。基表 |
+
+#### E 类 — 注释 / 字符串字面量 / 文档(8 处,不构成读)
+
+| 位置 | 形式 |
+|---|---|
+| `src/api/routers/ohlcv.py:4, 197, 273, 415` | docstring 描述库的作用 |
+| `src/api/routers/admin.py:5, 44, 271` | docstring / freshness 表清单 |
+| `src/api/main.py:352, 1599, 2669, 2675, 2713, 2806, 2916` | docstring / verdict_note 字符串 |
+| `src/api/routers/signals.py:1116, 1131, 1166, 1186, 1188` | 端点 docstring / response payload 字段名 |
+| `src/api/loop_health.py:128, 143` | freshness 字段名 |
+| `src/api/store.py:859, 861, 894, 909, 955` | freshness 函数 docstring + 错误码 |
+| `src/api/main.py:2772, 2799` | response payload 字段名 |
+| `src/mcp/cometcloud_mcp.py:1022, 1027, 1046` | MCP 工具 docstring |
+
+`src/research/data/ohlcv_local.py` 8 处 + `r95_panel.py` 2 处 + `r96_panel.py` 2 处 + `simulate_paper_trade.py` 1 处 + `test_ohlcv_local_smoke.py` 1 处 = 14 处**全部读本地 SQLite**(`/tmp/cometcloud_data/ohlcv.db`),**不读 Supabase** — 与本表无关,SPINE 的 23 处是 Supabase 端计数。
+
+#### F 类 — 校验/对账读(1 处,保持读基表)
+
+| # | 位置 | 用途 | 判据 |
+|---|---|---|---|
+| F1 | `src/data/market/cg_pro_backfill.py:370` (`_verify_mapping()`) | 拿库里的 `coingecko` 收盘对照新写入的 `coingecko_pro_ohlc` 行,**同源对照** | 校验语义要求读与写同源,视图不适用 |
+
+#### 总结
+
+| 类型 | 处数 | 处理 |
+|---|---|---|
+| A 写入端 | 6 | **保持基表**(写必须写基表) |
+| B 收益/打标 | 3 | **B1 已合规 · B2 应改 canonical · B3 显式单源,保持** |
+| C 显式单源 | 4 | **保持基表**(审计/同源面板的硬约束) |
+| D Freshness | 2 | **保持基表**(测写入者存活 + `recorded_at`) |
+| E 注释/字面 | 8 | **非读,不处理** |
+| F 校验 | 1 | **保持基表**(同源对照) |
+
+**实际待改:1 处 —— `vault/tick.py:103` 由 `ohlcv_daily` 改 `ohlcv_daily_canonical`。**
+其余 22 处**不是 bug**,只是它们在用基表 —— 而那些用法对它们的目的来说是对的。
+
 1. **第 8 段(反馈)** — `signal_outcomes_unified` 停在 2026-07-26。
    追踪器是好的(待结算 0 条),断的是**基准**:157 条已结算里 **66 条没有
    `benchmark_symbol`** ⇒ 没有 `benchmark_return_30d` ⇒ 没有 `alpha_30d`
@@ -279,6 +358,16 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
      **做空成本模型是 −0.5x 能否成立的前提,不是它的后续。**
      C 交的是让 Jazz 能拍板的证据(见 VDB 方案 W5),**不自己改那个 dict**。
      曝险区间属策略层,maxdd 属组合管理层,不同工序。
+
+9. **B-S360-2 清偿后的 DB 端清理**(代码已清,DB 未清):
+   - `entities` / `decisions` 两表行数 = 0 → `DROP TABLE entities CASCADE;` + `DROP TABLE decisions CASCADE;`
+     `entities_vec_hnsw` 索引由 `CASCADE` 自动覆盖。
+   - `market_state_vectors.vec` 列是否还在:
+     `select count(*) from information_schema.columns where table_name='market_state_vectors' and column_name='vec'` → 若 1,`ALTER TABLE market_state_vectors DROP COLUMN vec;`
+   - 这两条都不在「已知未清偿」表里(代码不再读),但 DB 端的真清理
+     **需要 Supabase console 直跑 SQL**,由 Minimax-C 拍板。
+     ⚠️ **DROP 之前先 SELECT 验证两表 0 行 + 1 行无意义**,避免误删有数据的旧表。
+     这是 C-W2 + C-W4 的收尾动作,**不归 Seth 做**(Rule 3)。
 
 ---
 
