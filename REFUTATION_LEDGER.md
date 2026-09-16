@@ -20460,3 +20460,100 @@ Jazz 2026-09-16 定:A/B,两套都报。
 改:统一视图带 `a_ret`/`bench_trail_30d` 并归一拼法;edge_map 加 `benchmark` 维 +
 唯一键 `(benchmark, signal, risk_band)` + upsert;`refresh_signal_edge_map()` 读视图、
 两套基准各用**自己的** trailing 量分档。**永远不跨 benchmark 平均 —— 唯一键让它做不到。**
+
+---
+
+## S-366 — ⓠ 的 sizing 每天落在「我不知道」那一档,而它看起来和正常工作一样 (2026-09-17)
+
+第 6 段为什么零导入,查清了两件事。
+
+### 一、ⓠ 的决定每天在做,产出没有落脚处
+
+`assign_band_hysteresis` 负责**定档**,`regime_override_enforcer` 负责**施加**。
+enforcer 零导入的真实含义不是「ⓠ 没跑」,是**没有任何账本把 cap 施加到权重上**。
+而 `compute_today_track` 把每日 band/cap 写进
+`/tmp/cometcloud_data/paper_books/fusion_paper_regime_track/regime_track.csv`,
+docstring 称其 **"CSV (authoritative local copy)"** —— 而 Railway 的 `/tmp`
+**每次部署就清空**,我们一天部署好几次。
+**这违反的正是我前一天刚写进 CLAUDE.md 规则 3a 的那条。**
+
+### 二、sizing 的 VDB 输入,生产从来只传 None
+
+`beta_core_size.regime_band(vdb_distance)` 早就写好,而且 I1 处理得很讲究:
+
+> NaN/None → band 3 (mid-tail, default, conservative). **Per I1: don't silently
+> default to band 1 (in-distribution) where missing data would look like a
+> strong daily claim.**
+
+**而传真值的调用方只有测试。** `beta_core_nav_q` 26 行 `vdb_distance` 全 NULL,
+`beta_core_nav_size` 0 行。于是 sizing 每天落在「我不知道」那一档,
+**并且看起来和正常工作一模一样** —— 因为那个默认被设计成安全的,
+**而安全的默认是隐形的**。
+
+MEMORY.md 早写下了这条:**默认值越接近多数类越查不出 —— 危害与可发现性成反比**
+(S-122)。这次它兑现在一个**专为它设计的槽位上**。
+
+### 已接的那一半
+
+`src/data/vector/phase_distance.py`:`distance = 1 − cosine`,**只用 5b**
+(5a 的底表停 42 天;且 SPINE §4 规定两角度数值不可比、不可平均)。
+薄封装,复用已验证的 `regime_match.most_similar`,**不重写一遍相似度**。
+
+回填 `beta_core_nav_q.vdb_distance`:**25/26 行**,band 分布
+**1=16 · 2=8 · 3=1**(此前 band3 × 26)。剩的一行是当天 —— `regime_daily`
+还没有当天的特征行,返回 None 走保守默认,**那是对的**。
+
+读不到返回 `None` 并带 `reason`,**不编一个距离** —— 编出来的那个数
+会以一个日度断言的形状进入 sizing。反例已验:无凭据时 `distance=None`。
+
+### 仍未做(不算在这条里)
+
+1. ⓠ 的每日决定要有持久归宿,不能是 `/tmp`
+2. 新行的 `vdb_distance` 要在写入时自动算 —— 现在只回填了历史
+3. `regime_override_enforcer` 仍零导入:**没有账本施加 cap** 这件事没有解决
+
+---
+
+## S-367 — 我差一点"把 enforcer 接上",而那会静默关掉波动率目标 (2026-09-17)
+
+S-366 我写下「没有任何账本把 ⓠ 的 cap 施加到权重上」,依据是
+`regime_override_enforcer` 在 `src/` 里零导入。**错了 —— 又一次从 import 数推出系统事实。**
+
+`beta_core_q_overlay` 第 6 行:`gross_total[t] = beta_capture_gross[t] × q_override[t]`。
+cap 一直在被施加,`beta_core_nav_q` 26 行日更,`gross_total = baseline × q_override`
+在 26/26 行上吻合。
+
+### 两个实现对同一组数字的解释不同
+
+    enforcer  scaled = w * cap;再归一化   → 最终 gross **等于** cap      ← 目标水平
+    overlay   gross_total = baseline × q   → gross **乘以** cap          ← 乘数
+
+只有基线 gross 恰好 1.0 时两者一致。实测:
+
+    beta_core_nav.gross        33 行里 **16 行 ≠ 1.0**(0.500 ~ 1.300)
+    vol_target_scalar          **33/33 行 ≠ 1.0**(0.87 ~ 1.30)
+
+基线 0.5 遇 cap 1.3:enforcer 给 **1.3**,overlay 给 **0.65** —— **两倍暴露差**。
+而 cap=1.0 时 enforcer 会把 gross 强行归一到 1.0,**抵消波动率目标,33/33 天**。
+
+CLAUDE.md 写的是「③ **beta multiplier**(time exposure 0.7x–1.3x)」—— 乘数。
+**所以活的那个是对的,enforcer 零导入是好事,不是缺陷。**
+
+### 这条教训比修复本身重要
+
+我今天两次在第 6 段上判错,两次都是同一个推理:**「零导入」⇒「这段没接通」**。
+第一次让我去找"谁来施加",第二次让我准备把 enforcer 接上 ——
+**而那一步会静默关掉一个每天都在生效的风控。**
+
+> **「没人用」不等于「该接上」。先问它做的是不是同一件事。**
+
+`similar_market_states` vs `regime_match` 是两个**角度**(该都留);
+`enforcer` vs `overlay` 是两个**语义**(该退役一个)。
+判据在 SPINE §3 法则一里:**能不能合理地给出不同答案,而分歧本身携带信息?**
+相位的分歧是信息;暴露语义的分歧只是两份不能同时为真的规格。
+
+### 顺带
+
+SPINE §2 表格下面那段摘要 **CI 查不到**(校验器只解析表格),
+它一度和表格说着相反的话。已同步,并在文里写明这段只能靠人改、
+不一致时以表格为准 —— **一个守不到的地方,至少要标出来它守不到。**

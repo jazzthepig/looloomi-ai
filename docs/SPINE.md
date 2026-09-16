@@ -44,30 +44,27 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | 4 | 几何·市场态 | `market_state_vectors.vec_full`(24 声明 / 15 实测,582 行) | `similar_market_states()` | 🟡 **S-361 写者已上日程**;剩余陈旧来自源(binance_hist 停 8 天) |
 | 5a | 检索·**宏观**相位 | `similar_market_states()`(价格/宏观 15 实测维) | `/api/v1/regime/similar` | 🟡 **S-362 已修 z 化与排邻并接线**;底表停 42 天(见第 4 段) |
 | 5b | 检索·**微观**相位 | `regime_match`(CIS 支柱 11 维 + 78 天人工判读) | `/api/v1/regime/similar` | 🟢 **S-362 已接线**;底表每日更新 |
-| 6 | 判断·ⓠ | `regime_override_enforcer`(`EXPOSURE_BANDS_V1`) | **无** | 🔴 零导入(唯一那处在 docstring 里);且封顶 1.3x,与设计的 −0.5…3x 不符 |
+| 6 | 判断·ⓠ | `beta_core_q_overlay`(乘数语义)| `beta_core_nav_q` 26 行,日更 | 🟡 **活的**;`regime_override_enforcer` 是**语义不同的旧实现**,见「已退役」;封顶 1.3x 与设计的 −0.5…3.3x 不符(归 Jazz) |
 | 7 | 建仓·① | `beta_core_nav`(产品本体,兼所有 book 的基准) | 全部 book 的「超额」 | 🟢 |
 | 7b | 组合·gross 预算 | **尚无实现** —— 相关性状态 → gross,见 §5 第 7 条 | — | 🔴 缺段 |
 | 8 | 反馈 | `signal_outcomes_unified`(视图) | `refresh_signal_edge_map()` | 🟡 **S-365 已接**,双基准并存;journal 段仍薄(91 行有 alpha) |
 | 9 | **实体/决策内核** | `entities` / `decisions`(ARCHITECTURE 的中央对象) | `entity_store.py` 在写 | 🔴 写者活着,落地 1 行 / **0 行** |
 
-**🔴 的四段是连着的,这就是"没有应用通路"的准确位置:**
+**2026-09-17 的通路状态 —— 早上只有第 7 段是通的:**
 
 ```
-第4段 停42天 → 第5段 零调用 → 第6段 零导入 → 第7段 建仓 → 第8段 停7/26
-   市场态断         检索断         ⓠ层断        (只有这段活)      反馈断
+1 价格 🟢 → 2 CIS 🟢 → 3 资产 🟢 → 4 市场态 🟡(源断) → 5a 🟡 / 5b 🟢
+  → 6 ⓠ 🟡(活的,乘数语义) → 7 建仓 🟢 → 8 反馈 🟡(双基准) → 9 内核 🔴
+                                          7b 组合 gross 预算 🔴(缺段)
 ```
 
-第 4 段停了 ⇒ 第 5 段即使修好也在读 42 天前的世界 ⇒ 第 6 段拿不到"当前像哪段历史"
-⇒ 第 8 段收不回判据 ⇒ **没有任何东西能告诉我们第 6 段的决定是对是错。**
+**主链已经连上了。** 剩下两个红都不是断线,是**结构性缺口**:
+7b 从来没建(而它是 3.3x 的前提);第 9 段写者活着但 `decisions` 落地 0 行。
 
-**中间四段全断,只有第 7 段(建仓)是通的** —— 这正是现在的实际状态:
-一个「因子-regime 策略 paper trade 跟踪器」。不是 VDB 没用起来,
-是**除了建仓那一段,整条通路就没有连过**。VDB 在第 5 段,两头都不通,
-一个两端断开的中间件,内部再完整,效用必然为零。
-
-`src/data/signals/forward_record_keeper.py` 的 docstring 把这件事说得最准:
-
-> **「Building the thing feels like finishing it, and a scheduler disagrees.」**
+⚠️ **这段散文 CI 查不到。** 校验器只解析 §2 的表格 ——
+它一度落后两批而全绿,补了反方向检查后才抓住表里的过期 🔴,
+**但表格下面这段话仍然只能靠人改**。写下它的时候就知道它会过期,所以:
+**更新 §2 表格时,连这段一起改;两者不一致时以表格为准。**
 
 ### 已退役 / 不得再被读写
 
@@ -76,6 +73,29 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | `signal_outcomes`(直读) | `signal_outcomes_unified` | 原表保留,是唯一的一年期真实记录,**但只能经视图读** |
 | `signal_journal`(直读) | `signal_outcomes_unified` | 同上 |
 | `market_state_vectors.vec` `[DB]` | `.vec_full` | 582 行全 NULL,零读者;连同 `msv_hnsw` 一起删 |
+| `regime_override_enforcer.apply_regime_override` | `beta_core_q_overlay`(乘数语义) | **不是"没人用所以该接上",是语义不同而且会抵消风控** —— 见下 |
+
+> **⛔ 2026-09-17 第 6 段第二次判错 —— 而这次差点把一个风控关掉。**
+> 我一小时前写「没有任何账本把 ⓠ 的 cap 施加到权重上」,**错了**:
+> `beta_core_q_overlay` 第 6 行 `gross_total[t] = beta_capture_gross[t] × q_override[t]`
+> —— cap 一直在被施加,`beta_core_nav_q` 26 行日更。**我又一次从 import 数推出了一个系统事实。**
+>
+> 两个实现对同一组数字的解释不同:
+>
+> ```
+> enforcer  scaled = w * cap; 再归一化  → 最终 gross **等于** cap      ← 目标水平
+> overlay   gross_total = baseline_gross × q_override → gross **乘以** cap  ← 乘数
+> ```
+>
+> 只有基线 gross 恰好 1.0 时两者才一致。实测:`beta_core_nav.gross` **33 行里 16 行 ≠ 1.0**,
+> 而 `vol_target_scalar` **33/33 行都 ≠ 1.0**(0.87–1.30)。
+> 基线 0.5 遇 cap 1.3:enforcer 给 **1.3**,overlay 给 **0.65** —— **两倍暴露差**。
+> 更要命的是 cap=1.0 时 enforcer 会把 gross 强行拉回 1.0,**抵消波动率目标,33/33 天**。
+>
+> CLAUDE.md 写的是「③ **beta multiplier**(time exposure 0.7x–1.3x)」—— 乘数。
+> **所以活的那个是对的,enforcer 零导入是好事不是缺陷。**
+> 我差一点"把它接上" —— 那会静默关掉一个风控。
+> **「没人用」不等于「该接上」;先问它做的是不是同一件事。**
 
 > **⛔ 2026-09-16 撤回一条:`entities` / `decisions` 曾被我列在这张表里,是错的。**
 > Minimax-B 查出 `src/data/vector/entity_store.py:83/:104` **正在 POST**
