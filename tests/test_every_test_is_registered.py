@@ -86,6 +86,15 @@ VALIDATION_TESTS = ROOT / "src" / "research" / "validation" / "tests"
 #: 这一行必须删掉,否则名单会变成永久特赦(和 test_no_investor_facing_internals
 #: 里 `KNOWN_CODE_ONLY` 同一个设计)。
 EXEMPT = {
+    "test_internal_token_contract":
+        "S-371 的判据,**故意是红的** —— 它断言的收敛(36 处 token 比较 → 1 处)"
+        "被 Jazz 2026-09-17 裁定暂缓,先赶开发进度。现在注册它会让 preflight 常红,"
+        "而常红的关卡等于没有关卡(与下面 test_factory 同一个理由)。"
+        "⚠️ 我本来想靠在测试自己的 docstring 里写一段说明来代替这一行 —— "
+        "**守卫看不见那里**,于是 preflight 当场逮住,而它逮的正是我刚写过的那条道理"
+        "(「没进清单的测试永远不跑」)。推理推到了和守卫相同的结论,却选了它禁止的那扇门。"
+        "删除条件:A-1 收敛落地 → 测试转绿 → 注册进 preflight 并**删掉这一行**"
+        "(这已经写进 A-1 的完成定义第 ③ 条)。到期日 2026-10-08,见 PROJECT_STATE OPEN RISK #0b。",
     "test_factory":
         "9 个断言在沙箱里返回 503/403 —— 缺凭证与 role gate,是环境相关而非代码缺陷。"
         "进 CI 会让 preflight 在没有凭证的机器上常红,而常红的关卡等于没有关卡。"
