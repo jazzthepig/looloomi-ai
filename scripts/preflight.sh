@@ -1717,6 +1717,14 @@ python3 -m tests.test_spec_runner || {
 python3 -m tests.test_decide_survivors_book || {
   echo "  ✗ 多 sleeve book 守卫 — do not push"; exit 1; }
 
+# ── M-115 Book B paper runner smoke (2026-09-17) ─────────────────────────
+# run_paper_m115.py 是 M-115 Book B 的日循环入口。spec 必须用当前 family 名
+# (survivors_only_lag1_book),runner 在无 Supabase 数据时必须 fall back to
+# synthetic 并显式标记 (S-122:默认值越接近多数类越查不出),--no-fallback-synthetic
+# 必须真 BLOCKED + 退出 1。3 条断言对应 3 个真实失败形状。
+python3 -m paper_trading.tests.test_run_paper_m115_smoke || {
+  echo "  ✗ M-115 Book B paper runner 守卫 — do not push"; exit 1; }
+
 # ── S-284/S-288 C fix: regime_quorum 闸 (S-263 redux) ──────────────────────────
 # decide_gated 是 decide() 的 wrapper —— quorum=COLLAPSED/frozen/no_baseline/
 # no_data → SKIPPED(不是 ENTERED)。一个「全票通过」的 regime 标签如果票数本身

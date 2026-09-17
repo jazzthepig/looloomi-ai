@@ -1,0 +1,140 @@
+{
+  "_owner": "minimax-c / drafted 2026-08-31 (supersedes m113_v3_survivors_ew.json per M-115 finding)",
+  "_purpose": "M-115 Book B SHIP: survivors-only equal-weight book (M-93 + R14-Lite) at lag-1. SUPERSEDES M-113 V3 (M-93 + R19-Lite) — R14-Lite cleanly passes M-114 retention guard (0.614) while R19-Lite borderline FAILS (0.493 < 0.5). Book B SR +1.629 / cum +321.5% / MaxDD -22.9% on 1196d. Paper trade only (dry_run). Awaiting JAZZ halt-resume decision on Task #30 + M-114 preflight adoption.",
+  "_ledger_ref": "M-115 (mining_findings.db verdict M115_LIVE_BOOK_R14_LITE_BEATS_M113_R19_SHARPE_1629_RETENTION_0614) + MINIMAX_SYNC §M-115 + m115_xs_lag1_sweep_2026-08-31_REPORT.md",
+  "_supersedes": "m113_v3_survivors_ew.json (kept as fallback for comparison; not recommended)",
+  "_version": "draft_v1 / 2026-08-31",
+  "_compliance_note": "All sleeve signals use positioning language only (STRONG OUTPERFORM / OUTPERFORM / NEUTRAL / UNDERPERFORM / UNDERWEIGHT) per CLAUDE.md rule #1.",
+  "_seth_lane_moved_from_mac": "2026-09-17,Seth/Cowork 搬到 looloomi-ai/paper_trading/specs/(Minimax 根原文件不动,作为历史副本保留)。理由:M-115 Book B 是 Seth/Cowork 跑 paper 的目标 spec,Seth lane 必须有 canonical 副本才能跑 spec_runner.py --spec。",
+  "_seth_lane_spec_family_fix": "spec_family 从 'survivors_only_lag1_book_bookB'(S-249 K fix 2026-09-04 已退役)改为 'survivors_only_lag1_book'(spec_runner 单名字,Book A V3 / Book B 共用,按 sleeve_R14-Lite vs sleeve_R19-Lite 区分)。原 spec_runner.py:106-114 _RETIRED_FAMILIES 表会拒绝 'survivors_only_lag1_book_bookB' 并提示改用 'survivors_only_lag1_book'。Mac 原件保留 'survivors_only_lag1_book_bookB' 不动 —— 是历史文档,不是 live spec。",
+  "_ship_gates_open": [
+    "M-114 lag-discipline regression guard NOT YET adopted in scripts/preflight.sh stage 3 (handoff to Seth/Austin pending — see _reports/absorb_input/m114_adoption_handoff_2026-08-31.md) [2026-09-17:ADOPTED per a3e0191 — guard 现在 stage 3a.1]",
+    "M-93 OOS holdout NOT YET VALIDATED (R19/R14 OOS via R-number lineage; M-93 still needs M-116)",
+    "R14-Lite OOS holdout NOT YET VALIDATED (M-115 finding is full-window 1196d; needs M-116 train/test split)",
+    "ARCHITECTURE §5b audit: FAIL — ④ pure-alpha weight is 50% (should be <20% per doctrine); Book B is honest baseline, NOT a §5b-aligned production book",
+    "data_source primary = 'coingecko_pro_ohlc' 仅 73d(S-370/S-372 2026-09-17 audit),不够 R14-Lite 的 lookback=14d + hold=7d 完整验证",
+    "regime_source = 'cis_history.narrative_daily.macro_regime' 已 stale 42d(M-119 2026-09-17),Seth(Mac) 已派 A-372-1/2 修根因(超 A-372-1/2 之前 paper 跑不出真 regime)"
+  ],
+  "spec_name": "M115_BOOK_B_M93_R14",
+  "spec_family": "survivors_only_lag1_book",
+  "strategy_class": "M-93 (① regime-gated BTC) + R14-Lite (④ 14d xs momentum weekly k=2) — equal-weight EW book",
+  "universe": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "BNB",
+    "XRP"
+  ],
+  "exchange_pairs": [
+    "BTC/USDT:USDT",
+    "ETH/USDT:USDT",
+    "SOL/USDT:USDT",
+    "BNB/USDT:USDT",
+    "XRP/USDT:USDT"
+  ],
+  "parameters": {
+    "signal_lag_days": 1,
+    "weight_scheme": "equal_weight",
+    "sleeve_weights": {
+      "M-93_regime_btc": 0.5,
+      "R14-Lite_14d_xs_mom_weekly": 0.5
+    },
+    "sleeve_M93": {
+      "asset": "BTC",
+      "signal": "regime-gated long-only",
+      "regime_proxy": "macro_regime from cis_history.narrative_daily (canonical_regime_strict per feedback-canonical-regime-strict-2026-08-27)",
+      "long_when_regime_in": ["EASING", "NEUTRAL", "GOLDILOCKS", "RISK_ON"],
+      "cash_when_regime_in": ["RISK_OFF", "TIGHTENING", "STAGFLATION"],
+      "leverage": 1.0,
+      "rebalance": "on regime flip",
+      "regime_flip_cost_bps_rt": 10
+    },
+    "sleeve_R14-Lite": {
+      "rank_by": "ret_14d",
+      "K_long": 1,
+      "K_short": 1,
+      "cadence_days": 7,
+      "hold_days": 7,
+      "leverage": 1.0,
+      "weight_per_leg": 0.5,
+      "m114_retention_observed": 0.614,
+      "m114_retention_floor": 0.5,
+      "m114_status": "PASS (cleanly above floor by 0.114 margin)"
+    },
+    "dd_stop_pct": -15.0,
+    "cool_off_days_after_dd_stop": 7,
+    "reduce_factor_after_dd_stop": 0.25,
+    "cost_bps_rt_max": 10,
+    "max_open_trades": 3
+  },
+  "data_source": {
+    "primary": "coingecko_pro_ohlc",
+    "regime_source": "cis_history.narrative_daily.macro_regime",
+    "regime_lookup": "carry-forward last known regime (per M-95c pattern) — honest caveat: regime label has 14-month historical gap",
+    "filter": "source = coingecko_pro_ohlc ONLY",
+    "_seth_lane_data_caveat_2026-09-17": "coingecko_pro_ohlc 仅 73d (S-370/S-372 audit) + narrative_daily stale 42d (M-119)。paper 跑出 SKIPPED 是预期,不是 bug。"
+  },
+  "execution": {
+    "mode": "paper",
+    "dry_run": true,
+    "initial_state": "stopped",
+    "scheduling": "R14-Lite weekly cadence (entry check every 7d on binance_hist close); M-93 regime check daily 00:00 UTC",
+    "start_condition": "initial_state=stopped until JAZZ clears Task #30 halt-resume gate. M-114 已在 preflight.sh stage 3a.1 就位 (a3e0191),不再是阻塞。Mac 端数据活(A-372-1/2)后,paper 可启。"
+  },
+  "validation_summary": {
+    "evidence_full_1196d": "SR +1.629 / cum +321.5% / MaxDD -22.9% / n=1196 days / 2023-04-02 → 2026-07-18",
+    "evidence_per_year": {
+      "2023": {"sharpe": 1.738, "verdict": "STRONG_OUTPERFORM"},
+      "2024": {"sharpe": 2.156, "verdict": "STRONG_OUTPERFORM"},
+      "2025": {"sharpe": 1.684, "verdict": "STRONG_OUTPERFORM"},
+      "2026": {"sharpe": -0.707, "verdict": "UNDERPERFORM"}
+    },
+    "vs_m113_book_a": "Δ Sharpe +0.380 / Δ cum +140.9pp / Δ MaxDD +4.0pp (Book A: SR +1.249, cum +180.6%, MaxDD -26.9%)",
+    "lag_discipline_retention": 0.614,
+    "lag_discipline_floor": 0.5,
+    "lag_discipline_status": "PASS (R14-Lite retention 0.614 cleanly above 0.5 floor; R19-Lite retention 0.493 was BORDERLINE FAIL per M-115 sweep)",
+    "dsr_p": 0.001,
+    "cost_robust_bps_per_day": 10,
+    "cost_fail_bps_per_day": 30,
+    "regime_conditional_inherited_from_m93_r19_book": "regime-asymmetric (RISK_ON/TIGHTENING/GOLDILOCKS positive; EASING/RISK_OFF/STAGFLATION negative); per-regime Sharpe should be re-measured for R14-Lite in M-116 follow-up",
+    "doctrine_alignment": "PARTIAL — Book B is honest baseline, NOT §5b-aligned production book. ④ pure-alpha weight is 50% (doctrine target: <20%). Book B is acceptable as ④-satellite paper experiment; NOT acceptable as main book structure."
+  },
+  "ship_criteria": {
+    "rule_1_cause": "M-93 (regime-gated BTC spot, captures ① macro beta exposure) + R14-Lite (14d xs momentum dispersion, captures ④ cross-sectional alpha with cleaner retention than R19-Lite)",
+    "rule_2_base_rate": "Book B full 1196d SR +1.629 / cum +321.5% / MaxDD -22.9%; R14-Lite retention 0.614 PASSES M-114 guard cleanly",
+    "rule_3_oos_survival": "PARTIAL — Book B is full-window; train/test split required (M-116). Per-year Sharpe shows 2026 stress year at -0.707 (less bad than Book A's -1.927 but still negative).",
+    "rule_4_60d_paper_trade": "BLOCKED — initial_state=stopped until JAZZ decision + Mac 数据活 (A-372-1/2)",
+    "rule_5_regime_conditional_reporting": "ENABLED — must re-measure per-regime Sharpe for R14-Lite sleeve (not yet done; M-116 follow-up)"
+  },
+  "monitoring": {
+    "weekly_digest_file": "_reports/paper_trading/weekly_YYYYMMDD.md (tag M115_BOOK_B)",
+    "trade_log_db": "user_data/tradesv3.M115_BOOK_B_M93_R14.sqlite",
+    "abort_conditions": [
+      "max_dd < -23% (worse than backtested)",
+      "rolling 30d Sharpe < -1.0",
+      "cost drag > 10bps effective per leg (production spread exceeds backtested)",
+      "regime whipsaw > 8 switches in 30d",
+      "M-93 regime_proxy coverage < 90%",
+      "R14-Lite retention drops below 0.5 in any sub-window (M-114 re-test)"
+    ],
+    "promote_threshold": "AFTER 60d paper trade: Sharpe > +1.0 AND maxdd > -23% AND cost_effective <= 10bps/leg AND M-93 OOS validation (M-116) PASSES AND R14-Lite per-regime Sharpe acceptable"
+  },
+  "escalation": {
+    "next_review": "after 30d paper trade → 60d gate decision",
+    "owner": "Seth for execution; Minimax for weekly digest observation; JAZZ for halt-resume gate",
+    "rollback_path": "set initial_state=stopped + remove from scheduler queue (no real funds at risk)",
+    "communication": "MINIMAX_SYNC §M-115-RUN-LOG entries per week",
+    "blocking_decisions": [
+      "Task #30 (JAZZ): book_trader.py halt-resume",
+      "Mac 数据活: A-372-1 (hyperliquid+binance_hist) + A-372-2 (CG Pro 回填 2020) —— 2026-09-17 已派",
+      "M-116: M-93 + R14-Lite OOS holdout validation"
+    ]
+  },
+  "_non_goals": [
+    "NOT a §5b-aligned production book — Book B is honest baseline, future M-117 redesign required for production",
+    "NOT a real-funds deployment — paper trade only",
+    "NOT a freqtrade config — different mechanism (regime-gated spot + xs ranking)",
+    "NOT a primary book candidate — companion to existing ①/②/③ sleeves, intended as ④-satellite",
+    "SUPERSEDES m113_v3_survivors_ew.json — R14-Lite is the cleaner sleeve (retention 0.614 vs R19-Lite 0.493)"
+  ]
+}
