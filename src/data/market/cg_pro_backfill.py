@@ -356,27 +356,62 @@ def write_local(rows: Sequence[dict], *, db_path: str = LOCAL_DB) -> int:
         conn.close()
 
 
-async def _verify_mapping(symbol: str, coin_id: str, row: dict) -> MappingCheck:
-    """拿库里同日的 `coingecko` 收盘做对照。读不到 → 未校验(不是通过)。"""
+async def _fetch_close(base: str, key: str, symbol: str,
+                       trade_date: str, source: str) -> Optional[float]:
+    """从 `ohlcv_daily` 拿 (symbol, trade_date, source) 的收盘价。
+
+    单独抽出来是为了让 `_verify_mapping` 能用 paid-first 顺序各查一次
+    —— Pro 找不到才 fallback 免费层。两个调用点是同一个查询模板,
+    区别只在 `source` 字面量,**抽出比复制两遍好**。
+    """
+    from src.api.store import _supabase_request_with_retry
     try:
-        from src.api.store import _supabase_request_with_retry
-        import os as _os
-        base = (_os.getenv("SUPABASE_URL") or "").rstrip("/")
-        key = _os.getenv("SUPABASE_KEY") or _os.getenv("SUPABASE_SERVICE_KEY") or ""
-        if not base or not key:
-            return check_mapping(symbol, coin_id, pro_close=row.get("close"),
-                                 existing_close=None)
         resp = await _supabase_request_with_retry(
             "GET", f"{base}/rest/v1/ohlcv_daily",
             params={"select": "close", "symbol": f"eq.{symbol}",
-                    "trade_date": f"eq.{row['trade_date']}",
-                    "source": "eq.coingecko", "limit": "1"},
+                    "trade_date": f"eq.{trade_date}",
+                    "source": f"eq.{source}", "limit": "1"},
             headers={"apikey": key, "Authorization": f"Bearer {key}"})
-        existing = None
-        if resp is not None and resp.status_code < 300:
-            js = resp.json()
-            if isinstance(js, list) and js:
-                existing = js[0].get("close")
+        if resp is None or resp.status_code >= 300:
+            return None
+        js = resp.json() if resp.content else None
+        if isinstance(js, list) and js:
+            v = js[0].get("close")
+            return float(v) if v is not None else None
+        return None
+    except Exception:                                            # noqa: BLE001
+        return None
+
+
+async def _verify_mapping(symbol: str, coin_id: str, row: dict) -> MappingCheck:
+    """paid-first 对照 —— Pro 找不到再 fallback 免费层。
+
+    Jazz 2026-09-17:「我们上了 analyst api 为什么不用上?如果不行再走
+    免费版的通路,不要反了。」旧版只用免费层作对照,**方向反了** —— Pro
+    行即使存在也对不上免费层采样的价位点,差异不该由 Pro 端承担。
+
+    新顺序:
+      ① 查 `coingecko_pro_ohlc`(同 vendor 付费侧,优先)
+      ② 查 `coingecko`(免费侧,仅作 Pro 真没对照时的 fallback)
+      ③ 都查不到 → `existing_close=None` → `check_mapping` 返回「未校验」
+
+    两条都查不到是 S-307 的 not-checkable 状态;**`vendor_paired` 通路
+    会把这个当成放行**(在 `backfill_symbol` 里),不是失败。
+    """
+    import os as _os
+    base = (_os.getenv("SUPABASE_URL") or "").rstrip("/")
+    key = _os.getenv("SUPABASE_KEY") or _os.getenv("SUPABASE_SERVICE_KEY") or ""
+    if not base or not key:
+        return check_mapping(symbol, coin_id, pro_close=row.get("close"),
+                             existing_close=None)
+    try:
+        # ① paid first
+        existing = await _fetch_close(base, key, symbol, row["trade_date"],
+                                      source="coingecko_pro_ohlc")
+        # ② free fallback (only when paid has no对照)
+        if existing is None:
+            existing = await _fetch_close(base, key, symbol, row["trade_date"],
+                                          source="coingecko")
         return check_mapping(symbol, coin_id, pro_close=row.get("close"),
                              existing_close=existing)
     except Exception as e:                                        # noqa: BLE001

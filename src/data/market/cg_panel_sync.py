@@ -64,8 +64,9 @@ WRITES_TABLES = ("cg_coin_map",)
 LOOP_NAME = "_cg_panel_loop"
 
 
-async def _known_map(supabase_query) -> tuple[dict[str, str], dict[str, str]]:
-    """`cg_coin_map` 里已解析的 → `({symbol: coin_id}, {symbol: asset_class})`。
+async def _known_map(supabase_query) -> tuple[dict[str, str], dict[str, str],
+                                               dict[str, str]]:
+    """`cg_coin_map` 里已解析的 → (ids, klass, resolved_from)。
 
     **解析结果是缓存的,不是每天重算的。**
 
@@ -74,6 +75,16 @@ async def _known_map(supabase_query) -> tuple[dict[str, str], dict[str, str]]:
     于是任何按 `asset_class in (...)` 过滤的消费者(包括
     `refresh_depth_divergence`)**一行都看不见**。
     数据落进去了,而需要它的人看不到它:又一个「写了但没连线」。
+
+    第三项 `resolved_from` 是**审计 `vendor_paired` 语义的真源**:
+    - `FROM_DB` = trending_log 已存映射,vendor 出的
+    - `FROM_UNIQUE` = `/coins/list` 里唯一匹配,vendor 出的
+    - `FROM_MCAP` = 我们按市值撞名裁决,**不是 vendor 出的**,必须过校验
+
+    把这三项区分清楚之前,daily loop 把 `cg_coin_map` 里所有行当 vendor_paired
+    处理,语义范围比 docstring 承诺的宽 ——
+    `FROM_MCAP` 写过的行再被读出来,`_verify_mapping` 又会被它挡住,
+    反复。
     """
     try:
         rows = await supabase_query(
@@ -83,9 +94,11 @@ async def _known_map(supabase_query) -> tuple[dict[str, str], dict[str, str]]:
                if r.get("symbol") and r.get("coin_id")}
         cls = {r["symbol"]: (r.get("asset_class") or "Crypto") for r in rows
                if r.get("symbol")}
-        return ids, cls
+        rf = {r["symbol"]: (r.get("resolved_from") or "") for r in rows
+              if r.get("symbol")}
+        return ids, cls, rf
     except Exception:                                           # noqa: BLE001
-        return {}, {}
+        return {}, {}, {}
 
 
 async def run_once(*, client, supabase_query, supabase_upsert,
@@ -97,13 +110,14 @@ async def run_once(*, client, supabase_query, supabase_upsert,
     必须能在没有网络的情况下被验证。
     """
     from src.data.market.cg_universe import (
-        CG_PRO_BASE, index_listing, pairs_for_backfill, resolve)
+        CG_PRO_BASE, FROM_DB, FROM_MCAP, FROM_UNIQUE,
+        index_listing, pairs_for_backfill, resolve)
 
     today = today or dt.date.today().isoformat()
     out: dict[str, Any] = {"today": today, "status": "ok", "errors": [],
                            "n_resolved_new": 0, "rows_written": 0}
 
-    known, klass = await _known_map(supabase_query)
+    known, klass, resolved_from = await _known_map(supabase_query)
     missing = [s for s in panel_symbols if s.upper() not in known]
     out["n_known"] = len(known)
     out["n_missing"] = len(missing)
@@ -171,10 +185,20 @@ async def run_once(*, client, supabase_query, supabase_upsert,
 
     # ── ② 回填 ──────────────────────────────────────────────────────────────
     # **默认排除市值裁决的** —— 未过收盘价校验的猜测不许写 ohlcv_daily。
+    # 把 `cg_coin_map` 里已知映射带回来时,**只带 vendor 出的(FROM_DB/FROM_UNIQUE)**;
+    # FROM_MCAP 是我们自己按市值猜的撞名裁决,**必须先过 paid-first 校验**(S-307
+    # 之后又一轮收紧,2026-09-17 audit),不能享受 `vendor_paired` 的 not-checkable
+    # 放行权 —— 否则 endpoint 写错一处就把「我们猜的币」永久当成「vendor 出的币」,
+    # `_verify_mapping` 形同虚设。
     pairs = pairs_for_backfill(res)
-    pairs += [(s, cid) for s, cid in known.items()]
+    _vendor_known = [(s, cid) for s, cid in known.items()
+                     if resolved_from.get(s) in (FROM_DB, FROM_UNIQUE)]
+    pairs += _vendor_known
     pairs = list(dict.fromkeys(pairs))
     out["n_pairs"] = len(pairs)
+    out["n_vendor_paired"] = len(_vendor_known)
+    out["n_mcap_required_check"] = sum(
+        1 for s in known if resolved_from.get(s) == FROM_MCAP)
 
     if not pairs:
         out["status"] = "skipped"
