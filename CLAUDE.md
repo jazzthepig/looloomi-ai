@@ -136,6 +136,18 @@ ATTRIBUTION (R62), never for neutralizing a book. Report total return vs hold-th
    the ONLY prod gate. `py_compile` is NOT sufficient (2026-07-13: import-time error 502'd prod).
    Preflight = compile + boot smoke + discipline suite + contract SCHEMA_VERSION echo.
 
+5a. **每一轮都归档 MINIMAX_SYNC,不要等 preflight 报红**(Jazz, 2026-09-17)。
+   2026-09-17 一天之内它超限 **六次**,每次都是我先看见 preflight 的 🔴 才去 trim。
+   **四条 lane 同时写、一个全局上限 ⇒ 挡住的永远是跑 preflight 的那个人,而不是写的那个人。**
+   所以这不是 C 的纪律问题,是我的收尾漏了一步。**动作放在每轮收尾,和更新
+   PROJECT_STATE 同一时刻做:**
+   ```
+   python3 -c "print(len(open('MINIMAX_SYNC.md',encoding='utf-8').read()))"
+   ```
+   **≥76,000 就当场归档**:已结的交付报告正文 → `MINIMAX_SYNC_ARCHIVE.md`,原位留一行
+   指针 + 结论;**未结项先提到 §IN-FLIGHT 再归档,否则它会跟正文一起消失**(S-370)。
+   判据:删掉正文只留产物路径后,读的人仍然知道下一步做什么 —— 那正文就不属于这里。
+
 6. **Stage only your OWN paths; NEVER `git add -A`** (blind sweeps commit the other lane's
    half-finished work under your message). Explicit paths, always.
 
