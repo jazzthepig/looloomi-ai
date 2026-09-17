@@ -294,7 +294,11 @@ async def collect_ohlcv(symbols: list = None, days: int = 365) -> dict:
                 source_used = None
                 if cg_id:
                     rows_in = await _fetch_cg_daily(client, cg_id, days)
-                    source_used = "coingecko"
+                    # `_fetch_cg_daily` 走 CG Pro `/ohlc/range`(ohlcv.py:97-98),
+                    # **数据来自付费 Analyst 端点,标签必须是 pro 而不是 free**
+                    # —— 旧版打 `coingecko` 让 S-195 那条「免费不可用于收益」
+                    # 直接命中我们自己写的 Pro 行,pro 数据被免费标签屏蔽。
+                    source_used = "coingecko_pro_ohlc"
                     if not rows_in:
                         rows_in = await _fetch_hyperliquid_daily(client, sym, days)  # crypto fallback (CG rate-limited)
                         if rows_in:
@@ -527,8 +531,13 @@ async def backfill_cg_pro(
 
     by_class = []
     for _ac, _pairs in sorted(groups.items()):
+        # `resolved` 来自 `cg_known_coin_map` RPC(vendor-supplied mapping),
+        # 不是 endpoint 自己猜的 —— 应走 `vendor_paired` 通路,允许 not-checkable
+        # 时放行(S-307)。改前不传此参,所有映射都被「未校验」挡死(本 session 实测
+        # 24/24 拒收);改后 vendor_paired=True 的标的可直接写入。
         _res = await backfill(_pairs, start=end - _td(days=days), end=end,
-                              asset_class=_ac, dest=dest, dry_run=dry_run)
+                              asset_class=_ac, dest=dest, dry_run=dry_run,
+                              vendor_paired=set(resolved.keys()))
         by_class.append({"asset_class": _ac, "n_pairs": len(_pairs),
                          **_res.as_payload()})
 
