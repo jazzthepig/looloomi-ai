@@ -1074,6 +1074,17 @@ python3 -m pytest tests/test_ops_console_classifies_by_remedy.py -q || {
   echo "  ✗ ops-console classifier FAILED — do not push"; exit 1; }
 echo "  ✓ console sorts by remedy; refusals carry an expiry (S-323s)"
 
+# ── 2026-09-18: CI Smoke gate must cover scripts/ + tests/ ────────────────────
+# Without this, a syntax error in scripts/ops_console.py bypassed the gate
+# (ci-smoke.yml paths scope was src-only). S-371 (`import json as _json`
+# missing in three try/except branches) is the canonical regression: local
+# console rendered as upstream error, gate didn't see it. The test pins the
+# paths: scope + the compileall step so a future refactor can't quietly
+# narrow it back.
+python3 -m pytest tests/test_ci_smoke_paths.py -q || {
+  echo "  ✗ CI Smoke paths coverage regressed — do not push"; exit 1; }
+echo "  ✓ CI Smoke gate covers scripts/ + tests/ paths"
+
 # ── S-194: a dead feed is not a flat day ─────────────────────────────────────
 # All five paper books computed daily return as `pnl = 0.0` then a conditional
 # accumulate, so "could not price" and "did not move" were the same number.

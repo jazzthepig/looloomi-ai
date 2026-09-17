@@ -4,12 +4,24 @@ name: CI Smoke (import + boot gate)
 # installs deps and verifies the app can IMPORT and BOOT. A missing import or a
 # startup error fails the check — exactly the failure mode that silently broke
 # production for 5 days on 2026-06-14.
+#
+# 2026-09-18: paths scope extended to scripts/** + tests/**. Without this, any
+# change to scripts/ops_console.py (or any other scripts/ file) bypassed the
+# gate entirely — and scripts/ contains the local ops console where S-371
+# (`import json as _json` / `import urllib.request as _rq` missing in three
+# try/except branches) silently rendered as upstream errors. The fix is
+# twofold: (1) extend paths so the gate RUNS on these changes, (2) add a
+# `compileall` step that catches SyntaxError before the runtime smoke test
+# gets a chance to skip the file. compileall is parse-only (does NOT execute
+# top-level code), so it won't false-fail on scripts that need env vars.
 
 on:
   push:
     branches: [main]
     paths:
       - "src/**"
+      - "scripts/**"
+      - "tests/**"
       - "requirements.txt"
       - "scripts/smoke_test.py"
       - ".github/workflows/ci-smoke.yml"
@@ -17,6 +29,8 @@ on:
     branches: [main]
     paths:
       - "src/**"
+      - "scripts/**"
+      - "tests/**"
       - "requirements.txt"
 
 concurrency:
@@ -39,6 +53,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Compile scripts + tests (syntax gate)
+        # compileall is parse-only — it does NOT execute top-level code, so it
+        # won't false-fail on scripts that need env vars (e.g., ops_console.py
+        # reading SUPABASE_URL at import time). It DOES catch SyntaxError,
+        # IndentationError, and bad escapes. Catches the cheap regressions
+        # without paying the runtime import cost.
+        run: |
+          python -m compileall -q scripts tests
 
       - name: Smoke test — import + boot
         env:
