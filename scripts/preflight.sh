@@ -1725,6 +1725,17 @@ python3 -m tests.test_decide_survivors_book || {
 python3 -m paper_trading.tests.test_run_paper_m115_smoke || {
   echo "  ✗ M-115 Book B paper runner 守卫 — do not push"; exit 1; }
 
+# ── A-17 panel_long_only (2026-09-17) — §5b ① panel-wide bench ─────────
+# A-17 是 ARCHITECTURE §5b ① 的第一份 spec —— panel-wide long-only equal-weight
+# hold,是 M-152 BTT-LEX(单 BTC)的 panel-wide 多资产补集。两份合起来才是完整 ①。
+# Spec.load 在 v1 ship 拒绝 cis_weight / market_cap_weight (spec_runner.py:375-379);
+# regime_gate 必须空(① benchmark 按设计 regime-blind)。
+python3 -m src.research.validation.tests.test_a17_panel_long_only_smoke || {
+  echo "  ✗ A-17 panel_long_only family 守卫 — do not push"; exit 1; }
+
+python3 -m paper_trading.tests.test_run_paper_a17_smoke || {
+  echo "  ✗ A-17 panel_long_only paper runner 守卫 — do not push"; exit 1; }
+
 # ── S-284/S-288 C fix: regime_quorum 闸 (S-263 redux) ──────────────────────────
 # decide_gated 是 decide() 的 wrapper —— quorum=COLLAPSED/frozen/no_baseline/
 # no_data → SKIPPED(不是 ENTERED)。一个「全票通过」的 regime 标签如果票数本身
