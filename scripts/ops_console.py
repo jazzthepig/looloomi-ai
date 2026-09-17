@@ -44,6 +44,52 @@ import json
 import sys
 import urllib.error
 import urllib.request
+
+#: 本文件的历史写法是在函数体内 `import json as _json` / `import urllib.request as _rq`,
+#: 而**三个函数用了别名却漏了那行 import**(`_rpc` 漏两个,
+#: `_panel_declared_tables_exist` 漏一个)。2026-09-17 Pylance 只看见其中一处。
+#:
+#: ⚠️ **这个漏法在这里特别毒**:那三处全在 `try:` 里,外面是
+#: `except Exception` → `verdict="unknown"` / `detail="catalog_inventory() 读不到"`。
+#: 于是 `NameError` 会被**渲染成一个连接问题** —— 一个编程错误戴上了上游故障的脸,
+#: 而这台子存在的意义正是分辨这两者。同一天我自己在 `_get()` 里踩过同一个
+#: (`NameError: os`),**那次在主路径上当场炸,所以查得到;这三处不会。**
+#:
+#: 修法不是再补三次本地 import,是在顶层别名一次 —— 和 S-371「36 处先收敛成 1 处」
+#: 同一个道理:**同一个名字有多个定义点,就是多个漏掉它的机会。**
+import json as _json
+import urllib.request as _rq
+
+
+def _load_env_once() -> None:
+    """模块加载时把仓库根的 `.env` 读进 `os.environ`,**一次,在任何函数跑之前**。
+
+    ⚠️ 这个台子里有 **4 处**直接读 `os.environ` 拿凭证:`_get()` 要 `INTERNAL_TOKEN`,
+    另外三处要 `SUPABASE_*`。它们全都**假设调用方先 `source .env`** ——
+    而 Jazz 直接 `python3 scripts/ops_console.py` 时不会。
+
+    最初我只在 `_get()` 里懒加载,那留下一个**调用顺序依赖**:
+    `_get()` 先跑才轮得到别人。实测单独调 `_panel_declared_tables_exist()` 返回 `None`
+    —— 而 `None` 在这台子里的意思是「这项没跑」,**又一次把「没测」渲染成别的东西**。
+    这正是它存在的意义要分辨的那类事。
+
+    S-361 的同款:`refresh_column_snapshot.py` 靠调用方给凭证,进了 `&&` 链之后
+    在没 source 过的 shell 上拿不到,**把所有 push 卡住**。
+    **一个只在某种启动方式下才工作的脚本,和坏的没区别 —— 只是更难查。**
+    """
+    import os
+    if os.environ.get("INTERNAL_TOKEN") and os.environ.get("SUPABASE_URL"):
+        return
+    try:
+        from pathlib import Path
+        from dotenv import load_dotenv
+        load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+    except Exception:
+        # dotenv 缺失或 .env 不可读 —— 不在这里报,由各检查各自把缺失讲出来。
+        pass
+
+
+_load_env_once()
 from datetime import datetime, timezone
 
 BASE = "https://web-production-0cdf76.up.railway.app"
@@ -176,27 +222,13 @@ _TOKEN_WARNED = False
 
 
 def _internal_token() -> str:
-    """拿 `INTERNAL_TOKEN`:先环境,环境没有就自己读仓库根的 `.env`。
+    """`.env` 已在模块加载时读过(`_load_env_once`),这里只取值。
 
-    ⚠️ **不要指望调用方先 `source .env`。** S-361 踩过一模一样的:
-    `refresh_column_snapshot.py` 靠调用方给凭证,结果它进了 `&&` 链,
-    在一台没 source 过的 shell 上拿不到凭证,**把所有 push 卡住了**。
-    `schema_drift_check.py` 至今也是这个假设(docstring 明写「Local Mac
-    sources .env before invoking preflight」)—— 而 Jazz 直接跑这个台子时不会。
-    **一个只在某种启动方式下才工作的脚本,和坏的没区别 —— 只是更难查。**
+    取不到就返回空字符串,**由调用方把缺失讲出来,不要静默降级** ——
+    静默掉回匿名限流档的代价是几小时后一个看不懂的 429,不是此刻一行字。
     """
     import os
-    tok = (os.environ.get("INTERNAL_TOKEN") or "").strip()
-    if tok:
-        return tok
-    try:
-        from pathlib import Path
-        from dotenv import load_dotenv
-        load_dotenv(Path(__file__).resolve().parents[1] / ".env")
-        return (os.environ.get("INTERNAL_TOKEN") or "").strip()
-    except Exception:
-        # dotenv 缺失或 .env 不可读 —— 返回空,由调用方讲出来,**不要静默降级**。
-        return ""
+    return (os.environ.get("INTERNAL_TOKEN") or "").strip()
 
 
 def _now() -> datetime:
