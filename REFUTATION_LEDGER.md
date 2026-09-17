@@ -20801,3 +20801,46 @@ S-122 早写过:**默认值越接近多数类越查不出,危害与可发现性�
 **B 其余五条逐条验过,全部精确**:`signal_outcomes` 137 天分毫不差 ·
 `backtest_runs` 确实不存在 · `market_state_writer` 42 天与我独立测量一致 ·
 `entities` 103 行 · `refresh_signal_edge_map` 46 行 2 个 benchmark 维。**五条采信。**
+
+## S-374 — 日报把我写进 prompt 的错误忠实地执行了一遍
+
+**2026-09-17 · Seth · 起因:`cometcloud-loop-watch` 的当日产出 + Jazz「upgrade our scheduled loop watch and prompt」**
+
+日报的头条是「METER_REBAL 240 个未平仓,轮动停摆 7 天,**去查 Railway 的
+`REBAL_LOOP_ENABLED`**」。四条全错,**而错误的来源不是它,是 prompt 第 33 行的原文。**
+
+⚠️ **我的第一个判断也错了。** 我先认定「日报读了 `.claude/worktrees/` 里 2026-07-01 的旧文档」——
+那个变量确实只存在于那个 gitignored 的旧 worktree 里。**但日报没读它,它读的是 prompt,
+而 prompt 里那句话是我写的。** 去 grep 之前我已经准备好一个完整的因果故事了 ——
+和 S-354 那次「建立在假前提上的完整因果故事」同一个形状。**查了才没派错活。**
+
+### 四条,逐条
+
+| prompt 原文 | 后果 | 实测 |
+|---|---|---|
+| 「check `REBAL_LOOP_ENABLED` on Railway」 | 派人找一个不存在的开关 | `grep -rn src/` **零命中**;真机制是 `mark_and_rebalance()` + `DISABLE_*` |
+| `max(created_at)` | 写时钟当事件时钟 | METER_REBAL 写时钟 7 天,**`entry_time` 14 天** |
+| 「open positions」与 SQL 行数混在一个条件里 | 240 总行数报成 240 未平仓 | **`exit_time is null` 逐策略全是 0** |
+| 通篇没有 `/internal/data-freshness` | 用 `loop_health.py` 5 层,报 **6 PASS 1 WARN** | 同分钟 data-freshness:`producers_dead` · liveness `critical` · 21 dead · 4 refusing |
+
+**它唯一 flag 的那件事,是整块板子上最不要紧的一件**;真正死掉的
+(msv 43 天 · signal_outcomes 137 天 · 三个价格源 · deep_panel 连拒 40 轮)一件都没提。
+
+### 这是今天第三次同一个形状
+
+`/internal/health-summary`(4 项检查说 healthy)· `loop_health.py`(5 层说 6 PASS)·
+这份日报 —— **三个监控面,作用域都小于系统,都报健康。**
+S-283 那条就写在 PROJECT_STATE 第一屏:**作用域太窄的控制会把注意力从它漏掉的地方引开,
+因为它看起来已经有守卫了。** 一天之内撞三次,说明这不是个别疏忽,是我们建监控的默认姿势。
+
+### prompt 已改,三条硬规则写在最前面
+
+① **不许写没 grep 过的标识符** —— 零命中就写「找不到这个开关」,
+**一个自信的错误下一步,比没有下一步更贵**;
+② **写时钟 ≠ 事件时钟**,两者不一致时都报;
+③ **每个裁决都要带作用域** —— 强制打印 `coverage.n_not_covered / n_total`,
+**不带限定的「healthy」正是这份日报存在的理由**。
+另加:主仪表改成 `/internal/data-freshness`(它早就算好了,不要手工重推);
+给出 2026-09-17 的**已知死亡基线**,日报报**增量**而不是每天重列同一份名单 ——
+**一份一周读起来都一样的日报,说明这个watch没在watch**;
+`open_now`(`exit_time is null`)与 `n`(行数)在 SQL 里分开,并写明不许混用。
