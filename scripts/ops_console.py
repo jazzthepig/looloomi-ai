@@ -155,8 +155,7 @@ def _get(path: str) -> dict:
     ⚠️ 没有 token 时**不静默降级**:照发请求,但把缺失讲出来。
     静默走匿名档的代价是几小时后一个看不懂的 429,而不是此刻一行字(I1)。
     """
-    import os
-    tok = (os.environ.get("INTERNAL_TOKEN") or "").strip()
+    tok = _internal_token()
     headers = {"User-Agent": "looloomi-ops-console"}
     if tok:
         headers["X-Internal-Token"] = tok
@@ -174,6 +173,30 @@ def _get(path: str) -> dict:
 
 #: 只警告一次,不要每次刷新刷屏。
 _TOKEN_WARNED = False
+
+
+def _internal_token() -> str:
+    """拿 `INTERNAL_TOKEN`:先环境,环境没有就自己读仓库根的 `.env`。
+
+    ⚠️ **不要指望调用方先 `source .env`。** S-361 踩过一模一样的:
+    `refresh_column_snapshot.py` 靠调用方给凭证,结果它进了 `&&` 链,
+    在一台没 source 过的 shell 上拿不到凭证,**把所有 push 卡住了**。
+    `schema_drift_check.py` 至今也是这个假设(docstring 明写「Local Mac
+    sources .env before invoking preflight」)—— 而 Jazz 直接跑这个台子时不会。
+    **一个只在某种启动方式下才工作的脚本,和坏的没区别 —— 只是更难查。**
+    """
+    import os
+    tok = (os.environ.get("INTERNAL_TOKEN") or "").strip()
+    if tok:
+        return tok
+    try:
+        from pathlib import Path
+        from dotenv import load_dotenv
+        load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+        return (os.environ.get("INTERNAL_TOKEN") or "").strip()
+    except Exception:
+        # dotenv 缺失或 .env 不可读 —— 返回空,由调用方讲出来,**不要静默降级**。
+        return ""
 
 
 def _now() -> datetime:
