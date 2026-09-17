@@ -20968,3 +20968,34 @@ S-361 踩过一模一样的(`refresh_column_snapshot.py` 靠调用方给凭证,
 
 实测(环境里刻意不放 token):从 `.env` 读到长度 24 的 token,
 `/internal/schema-drift` 与 `/internal/data-freshness` 双双 200。
+
+### S-377c — 一个 NameError 会被渲染成「上游读不到」
+
+Pylance 在 `ops_console.py:515` 报 `_json is not defined`。AST 扫一遍:**三处,不是一处**
+(`_rpc()` 漏 `_json` 和 `_rq`,`_panel_declared_tables_exist()` 漏 `_json`)。
+根因是这文件顶层 `import json` / `import urllib.request`,而函数体内用别名
+`import json as _json`,**三个函数用了别名却漏了那行 import**。
+
+**毒在渲染上**:三处全在 `try:` 里,外面是 `except Exception` →
+`verdict="unknown"` / `detail="catalog_inventory() 读不到:{type(e).__name__}"`。
+**于是 `NameError` 会戴上「上游连接故障」的脸** —— 而这台子存在的意义
+正是分辨这两者。同一天我在 `_get()` 里踩过同款(`NameError: os`),
+**那次在主路径上当场炸所以查得到;这三处不会,它们会安安静静地报一个假原因。**
+
+修法:顶层别名一次,不补三次本地 import。**同一个名字有多个定义点,
+就是多个漏掉它的机会**(S-371「36 处先收敛成 1 处」同理)。
+
+### 顺带查出第二层:四处凭证读取,同一个假设
+
+修完 `_json` 真跑一次 `_panel_declared_tables_exist()` —— **返回 `None`**。
+`compile` 抓不到这个,`py_compile` 也不会。追下去:这台子有 **4 处**直接读
+`os.environ` 拿凭证(`_get` 要 `INTERNAL_TOKEN`,三处要 `SUPABASE_*`),
+**全都假设调用方先 `source .env`**。我先前只在 `_get()` 里懒加载,
+于是留下**调用顺序依赖**:`_get()` 先跑才轮得到别人。
+
+而 `None` 在这台子里的意思是「这项没跑」—— **又一次把「没测」渲染成别的东西**。
+改成模块加载时 `_load_env_once()`。**干净环境实测**(不 source .env):
+token ✅ · `_panel_declared_tables_exist` 从 `None` 变成
+`verdict=ok, 39/39 declared tables present` · 鉴权端点 200。
+
+**也就是说这台子此前一直少报一项检查,而少报的样子和「检查通过」在屏幕上分不出来。**
