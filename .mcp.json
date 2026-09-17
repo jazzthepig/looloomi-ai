@@ -2,7 +2,9 @@
   "mcpServers": {
     "cometcloud": {
       "command": "python3",
-      "args": ["src/mcp/cometcloud_mcp.py"],
+      "args": [
+        "src/mcp/cometcloud_mcp.py"
+      ],
       "cwd": "${workspaceRoot}",
       "env": {
         "COMETCLOUD_API_BASE": "https://looloomi.ai",
@@ -12,7 +14,9 @@
     },
     "lmstudio": {
       "command": "node",
-      "args": ["src/mcp/lmstudio_bridge.js"],
+      "args": [
+        "src/mcp/lmstudio_bridge.js"
+      ],
       "cwd": "${workspaceRoot}",
       "env": {
         "LMSTUDIO_BASE": "http://localhost:1234",
@@ -20,6 +24,10 @@
         "LM_TEMPERATURE": "0.7"
       },
       "_note": "Mac Mini only — LM Studio must be running at localhost:1234. Auto-detects loaded model (gemma4-26b)."
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=soupjamxlfsmgmmtoeok&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
     }
   }
 }
