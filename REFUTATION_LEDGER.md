@@ -20999,3 +20999,57 @@ token ✅ · `_panel_declared_tables_exist` 从 `None` 变成
 `verdict=ok, 39/39 declared tables present` · 鉴权端点 200。
 
 **也就是说这台子此前一直少报一项检查,而少报的样子和「检查通过」在屏幕上分不出来。**
+
+## S-378 — 接线 ⓠ matcher,路上撞出三个「同名不同物」
+
+**2026-09-17 · Seth · 起因:C 的 verify probe ready,等我 execute**
+
+S-373 那条的兑现:`phase_distance` 我 S-366 建好,**此前零调用方**,
+手工回填 25 行历史,新行一直 NULL。现在接上了。
+
+**接线本身**:`beta_core_paper` 每次 mark → `smoothed_phase_distance()` →
+`beta_core_q_overlay.apply_dwell_filter`(§C2-SHIP-SPEC `median(t-4..t)`,`DWELL_DAYS=5`,
+M-WO-7.1 验过)→ hook。实测 `smoothed=0.157196`,`n_usable=5/5`,`trigger=one_zone`。
+
+### 撞出来的三个,一个比一个深
+
+**① 我差点造第二条活路。** 第一版我在 `phase_distance.py` 里**又定义了一遍
+`DWELL_DAYS = 5`、又手写了一遍 `statistics.median`** —— 写完才看见
+`beta_core_q_overlay.apply_dwell_filter()` 早就存在、有测试、用的是同一个常量。
+**两份 spec 常量,改一份不改另一份,而它们长得一样** —— SPINE 第一条法律禁止的那个。
+已撤,取数归取数,滤波复用。
+⚠️ 而 `apply_dwell_filter` 此前也是**零生产调用方,只有测试在调** ——
+和 `phase_distance` 一样是「建好了没接」。**两个为彼此而生的东西,各自躺着。**
+
+**② `vdb_matcher_live` 有两个定义点,翻一个不起作用。**
+`q_hook_config()` 写死 `False`,调用点 `beta_core_paper` **又写死一次 `False`**。
+两处都长得像开关。已收成一处,并给 `VDB_MATCHER_LIVE=0` 作不重新部署的 kill switch。
+
+**③ 最深的一个:DB 列 `vdb_distance` 装的是 smoothed,不是 raw。**
+`write_q_overlay_row` 落的是 `q_state.smoothed_distance`,而 dataclass 字段
+`vdb_distance` 的注释写着 "raw distance" —— **同一个名字,两个东西**。
+**而 S-366 我手工回填的 25 行是 raw。** 于是这一列里躺着两个口径,
+今日 raw 0.1572 / smoothed 0.1572,**在图上、在查询里、在类型上都分不出来**。
+**这是 S-106「两套约定拼成一条序列」换了个轴**,而且是在一列**直接驱动 sizing** 的数上。
+
+修法:加列(`s378_beta_core_nav_q_separate_raw_and_smoothed`),
+`vdb_distance` = 原始(与已回填的 25 行同口径,**历史不改,不制造第二次改写**),
+`smoothed_distance` = 决定 zone 的那个数,2026-09-17 之前为 NULL —— **那段时间
+matcher 离线,没有任何一天做过判断,NULL 是诚实的**。
+两个写入端各自展开过一遍 NaN 判据(`x != x`),也收成一个 `_fin()`。
+
+### 一条测试红了,而它红得对
+
+`test_q_hook_config_default_is_baseline_only` 断言「first-ship `vdb_matcher_live` 必须 False」。
+**那个不变量在 matcher 没接线时是对的;接线之后它变成一条锁死已完成状态的测试。**
+改判据不是放松 —— **真正要守的从来不是那个常量,是「这个决定只有一个定义点,
+而且能不重新部署就关掉」**,而那恰恰是它此前拦不住的东西(两处写死 False)。
+新判据:默认 live + `VDB_MATCHER_LIVE=0` 必须关得掉。
+
+### 数据充分性地板
+
+`n_usable < 3` → 返回 `None`,不返回一个点的「中位数」。
+**中位数取在 1 个点上就是那个点本身** —— 它会把 raw 冒充成 smoothed 送进 sizing,
+而类型、字段名、日志全都看不出区别。**地板不是保守,是让「没平滑」和「平滑了」不同形。**
+
+回归:41/41 book · 11/11 hook · 12/12 overlay · SPINE CI · data_architecture · strategy_discipline。
