@@ -170,6 +170,40 @@ REFUSAL_POLICY = {
         "owner": "Minimax-C",
         "stale_after_days": 14,
     },
+    # S-220 「拒绝不叫 ok,也不叫 error —— 它叫 degraded」 —— market_state_vectors
+    # 在写前设地板(n_symbols / n_days / vectors-empty),没过就 refused=True,
+    # 不写。**这是地板工作,不是写入失败。** 23 consecutive refusals 是因为
+    # coingecko_pro_ohlc 面板缩到 < MIN_SYMBOLS —— 它活着但不够宽。
+    "_market_state_loop": {
+        "reason": ("market_state_writer.recompute_all returns refused=True when "
+                   "spec.n_symbols < MIN_SYMBOLS or spec.n_days < MIN_DAYS, or "
+                   "vectors compute to 0 (S-220: 「写前设地板」). The system is "
+                   "healthy — refusing means NOT writing on a panel too thin for "
+                   "a defensible z-score. See market_state_writer.py:590-605."),
+        "clears_when": ("first row in market_state_vectors after a heartbeat cycle "
+                        "(panel recovers to n_symbols ≥ MIN_SYMBOLS AND "
+                        "n_days ≥ MIN_DAYS, or MIN_SYMBOLS/MIN_DAYS thresholds "
+                        "re-tune to today's feed shape)."),
+        "owner": "Seth",
+        "stale_after_days": 7,
+    },
+    # S-336 state-vs-table split: _fusion_paper_loop refuses when `_load_state`
+    # returns empty but `nav_table_has_any_rows(_NAV_TABLE)` is True —— the book
+    # held a position yesterday and cannot say what. A flat mark there is not
+    # arithmetic, it is a claim we did not observe (S-194/S-326/S-336). The 5
+    # refusals are this guard working, not a stuck write.
+    "_fusion_paper_loop": {
+        "reason": ("S-336 state-vs-table split — refuses when state is empty "
+                   "but fusion_paper_nav already has marks. 「this book held a "
+                   "position yesterday and cannot say what. A flat mark here is "
+                   "not arithmetic, it is a claim we did not observe "
+                   "(S-194/S-326/S-336)」。See fusion_paper.py:653-666."),
+        "clears_when": ("S-336 fix lands (state-vs-table reconciliation that lets "
+                        "_write_nav cover the date even when _load_state reads "
+                        "empty), OR _write_nav takes a row for today's date."),
+        "owner": "Seth",
+        "stale_after_days": 14,
+    },
 }
 
 #: The forward-paper gate every sleeve must clear (tests/test_strategy_discipline).
