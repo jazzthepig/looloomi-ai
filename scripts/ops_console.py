@@ -436,6 +436,25 @@ def _classify_books(producers: dict) -> list[dict]:
         rows = t.get("n_rows") or 0
         verdict = t.get("verdict")
         last = (t.get("event") or {}).get("last") or (t.get("write") or {}).get("last")
+        # R57: two_layer_paper_nav is structurally dead (V5c core retired, R57
+        # graveyard). Mirrors the _two_layer_paper_loop REFUSAL_POLICY entry
+        # above — the loop keeps refusing with R57 in its reason, and the
+        # table's 'dead' verdict is the same retirement from a different angle.
+        # Inline conditional on purpose so the relation to the loop-side entry
+        # (line 166-172) is visually obvious. If a SECOND design-dead book
+        # appears, refactor to a `BOOK_RETIRED_BY_POLICY = {"two_layer_paper_nav":
+        # "R57"}` dict — not in this commit.
+        if name == "two_layer_paper_nav":
+            out.append({
+                "id": f"book:{name}", "name": name, "kind": "book",
+                "verdict": verdict, "remedy_class": "no_action",
+                "rows": rows, "last": last,
+                "detail": f"{rows} marks · last {last}",
+                "note": ("design-dead (R57: V5c core retired; sleeve holds zero "
+                         "size by design) — see _two_layer_paper_loop policy"),
+                "verify": f"select count(*), min(mark_date), max(mark_date) from {name};",
+            })
+            continue
         if verdict == "empty":
             cls = "act_now"
             note = "0 rows — a book with a writer that has never written"

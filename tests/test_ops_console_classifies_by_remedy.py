@@ -234,3 +234,60 @@ def test_fusion_paper_loop_past_its_14d_window_becomes_an_alarm():
     assert got["remedy_class"] == "act_now", (
         "a guard refusing past its own declared window is itself the outage"
     )
+
+
+def test_two_layer_paper_nav_dead_is_no_action_with_r57_note():
+    """R57: two_layer_paper_nav is structurally dead (V5c core retired). The
+    loop-side REFUSAL_POLICY entry for _two_layer_paper_loop already says so;
+    the book-side mirror here must agree. Otherwise the same object renders
+    differently on its two views (an incident on one, no_action on the other)."""
+    producers = {"tables": {
+        "two_layer_paper_nav": {
+            "verdict": "dead",
+            "n_rows": 28,
+            "event": {"last": "2026-08-14"},
+            "write": {"last": "2026-08-14"},
+        },
+    }}
+    rows = oc._classify_books(producers)
+    got = {r["name"]: r for r in rows}
+    assert "two_layer_paper_nav" in got
+    item = got["two_layer_paper_nav"]
+    assert item["remedy_class"] == "no_action", (
+        f"R57 retired book must not render as act_now; got {item['remedy_class']!r}"
+    )
+    assert "R57" in item["note"], (
+        f"no_action without R57 is just 'silent' — note must name the retirement "
+        f"so the operator knows it's by design. Got: {item['note']!r}"
+    )
+    # Also verify the loop-side policy and book-side note cite the SAME R-number
+    # (mirror check — same retirement, same reference, two angles).
+    assert "R57" in oc.REFUSAL_POLICY["_two_layer_paper_loop"]["reason"]
+
+
+def test_other_dead_book_is_still_act_now():
+    """Regression guard: the two_layer_paper_nav carve-out is specific. A
+    different book with a 'dead' verdict must still render as act_now. If this
+    test fails, somebody widened the carve-out without thinking — likely a
+    refactor to BOOK_RETIRED_BY_POLICY that incorrectly classified something."""
+    producers = {"tables": {
+        "third_paper_nav": {
+            "verdict": "dead",
+            "n_rows": 5,
+            "event": {"last": "2026-08-01"},
+            "write": {"last": "2026-08-01"},
+        },
+    }}
+    rows = oc._classify_books(producers)
+    got = {r["name"]: r for r in rows}
+    assert "third_paper_nav" in got
+    item = got["third_paper_nav"]
+    assert item["remedy_class"] == "act_now", (
+        f"a book that isn't retired-by-policy but stopped marking IS an "
+        f"incident (gap in the record cannot be backfilled, §3). "
+        f"Got: {item['remedy_class']!r} for {item['name']!r}"
+    )
+    assert "R57" not in item["note"], (
+        "R57 must not appear on a book that wasn't the R57 retirement — that "
+        "would be a misattribution"
+    )
