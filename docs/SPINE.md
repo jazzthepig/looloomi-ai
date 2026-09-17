@@ -48,7 +48,7 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | 7 | 建仓·① | `beta_core_nav`(产品本体,兼所有 book 的基准) | 全部 book 的「超额」 | 🟢 |
 | 7b | 组合·gross 预算 | **尚无实现** —— 相关性状态 → gross,见 §5 第 7 条 | — | 🔴 缺段 |
 | 8 | 反馈 | `signal_outcomes_unified`(视图) | `refresh_signal_edge_map()` | 🟡 **S-365 已接**,双基准并存;journal 段仍薄(91 行有 alpha) |
-| 9 | **实体/决策内核** | `entities` / `decisions`(ARCHITECTURE 的中央对象) | `entity_store.py` 在写 | 🔴 写者活着,落地 1 行 / **0 行** |
+| 9 | **实体/决策内核** | `entities` / `decisions`(ARCHITECTURE 的中央对象) | `entity_store.py` 写 · `match_entities()` 读 | 🟡 **C 的 W4 已 ship**:`entities` **103/103 有 vec**;**`decisions` 仍 0 行** |
 
 **2026-09-17 的通路状态 —— 早上只有第 7 段是通的:**
 
@@ -72,8 +72,27 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 |---|---|---|
 | `signal_outcomes`(直读) | `signal_outcomes_unified` | 原表保留,是唯一的一年期真实记录,**但只能经视图读** |
 | `signal_journal`(直读) | `signal_outcomes_unified` | 同上 |
-| `market_state_vectors.vec` `[DB]` | `.vec_full` | 582 行全 NULL,零读者;连同 `msv_hnsw` 一起删 |
+| `market_state_vectors.vec` `[DB]` | `.vec_full` | 582 行全 NULL,零读者。⚠️ **`msv_hnsw` 先别删** —— 见下面的 HNSW 更正 |
 | `regime_override_enforcer.apply_regime_override` | `beta_core_q_overlay`(乘数语义) | **不是"没人用所以该接上",是语义不同而且会抵消风控** —— 见下 |
+
+> **⛔ 2026-09-17 我把一条单表测量推广成了通则,Minimax-C 用更好的方法推翻了它。**
+> 我在 `asset_embeddings`(72 行)上看到 planner 选了 Seq Scan、0.365ms 给精确解,
+> 就写下「**我们不是缺向量索引,三个 HNSW 全盖在空东西上**」并建议删掉它们。
+>
+> C 在 `entities`(102 行)上把**两条计划各跑一次**:
+>
+> ```
+> 自然 planner              Seq Scan    9.283 ms
+> set enable_seqscan = off  HNSW        3.551 ms   ← 2.6x 快
+> ```
+>
+> **planner 的 cost model 估错了。** 我量的是「planner 选了什么」,
+> 他量的是「两条路各自多快」——**后者才是问题**。
+> 结论反过来:**102 行上 HNSW 已经值得,行数只会涨。**
+>
+> 更正后的规则:**不要用 planner 的选择当证据,用 `enable_seqscan=off` 对比 actual time。**
+> 「N 小就不需要索引」是一条**要测的假设,不是可以推广的结论**。
+> `msv_hnsw` 同理 —— 在 `vec` 回填并实测两条计划之前,不删。
 
 > **⛔ 2026-09-17 第 6 段第二次判错 —— 而这次差点把一个风控关掉。**
 > 我一小时前写「没有任何账本把 ⓠ 的 cap 施加到权重上」,**错了**:

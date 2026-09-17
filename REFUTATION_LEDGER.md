@@ -20594,3 +20594,49 @@ _check("洞 21 天 → 窗口伸到 23 天", _window(_state(21)) == 23,
 1. **一次只做一个变异**,别把还原压在一个会超时的循环末尾;
 2. 还原放 `finally`,并且**每次变异后立刻 `git --no-optional-locks status --porcelain <路径>`**
    —— 不是"应该干净",是**看一眼它干净**。
+
+---
+
+## S-370 — 我把一条单表测量推广成了通则,C 用更好的方法推翻了它 (2026-09-17)
+
+S-360 我写下:「**我们不是缺向量索引 —— 有三个 HNSW,全盖在空东西上**;
+planner 拒绝走它们,0.365ms 的 Seq Scan 给精确解;这个量级索引是负收益。」
+依据是 `asset_embeddings`(72 行)上的一次 `EXPLAIN ANALYZE`。
+
+Minimax-C 在 `entities`(102 行)上把**两条计划各跑一次**:
+
+    自然 planner              Seq Scan    9.283 ms
+    set enable_seqscan = off  HNSW        3.551 ms   ← 2.6x 快
+
+**planner 的 cost model 估错了**(estimated 7.37..22.62,actual 差 2.6x)。
+他据此 KEEP 了 `entities_vec_hnsw`,并明确写「不要跑那条 drop」。
+
+> **我量的是「planner 选了什么」,他量的是「两条路各自多快」。后者才是问题。**
+
+更正后的规则:**不要拿 planner 的选择当证据,用 `enable_seqscan=off` 对比 actual time。**
+「N 小就不需要索引」是一条**要逐表测的假设,不是可以推广的结论**。
+已改 `docs/SPINE.md`(3 处)+ `docs/VDB_UPGRADE_S360.md`(3 处);`msv_hnsw` 暂不删。
+
+⚠️ **不加 Qdrant 的结论不受影响** —— 那条的依据是「我们已经有 pgvector+HNSW,
+外部向量库解决的不是我们的瓶颈」,和「N 小不需要索引」是两件事。
+**一条结论被推翻时,要分清它下面哪几条前提是各自独立的。**
+
+### C 的 W4 同批 ship
+
+`entities` **103/103 有 vec**(z-scored,max abs 3.29)· `match_entities(target_entity_id, k)`
+RPC 建成(**那个名字我 9/16 凭印象写过一次、当时不存在,C 把它真的建了出来,具名定参**)·
+anon RLS policy 就位。SPINE 第 9 段 🔴 → 🟡:**`decisions` 仍 0 行**,那半边没动。
+
+### MINIMAX_SYNC 的上限不是纪律问题
+
+同日实测 82,127/80,000,而我当天已 trim 四次。按作者拆开:
+
+    Minimax-C 40,415 (49%) · 指针 26,329 · Seth 12,362 · A 2,495 · B 0
+
+**C 那 49% 的正文几乎每段都已存在于 `cometcloud-local/_reports/absorb_input/`。**
+撑爆预算的是**副本**。而四方共写 + 一个全局上限 ⇒ **谁跑 preflight 谁被挡**,
+挡的还不是写的那个人 —— **一个惩罚落在非肇事方身上的机制,不会改变行为。**
+
+定规(与 CLAUDE.md 规则 3a 同源):**这里只装未结项与裁决,交付报告留一行指针。**
+判据:删掉正文只留产物路径后,读的人仍然知道下一步做什么 —— 那正文就不属于这里。
+已归档 10 段,82,127 → 69,004。

@@ -18,7 +18,7 @@ C 的报告和我 9/16 上午给 Jazz 的口头判断里,有几条与库里的�
 |---|---|---|
 | `signal_outcomes` 死 136 天,`_outcome_tracker_loop` 每天失败 | **循环是好的。** `signal_journal` 290 行,最新 2026-09-14,待结算 **0** 条,最后一次结算 2026-09-15 | `select count(*) filter (where outcome_30d is null and signal_date < current_date-30) from signal_journal` → `0` |
 | `entities`/`decisions` 是唯一没建的空间,要新建 | **已经在跑。** `treasury_entities` 102 行(更新于 9/15)、`treasury_decisions` **893 行**(更新于 9/11) | `src/data/entity/writer.py` 写的是 `treasury_*`,不是 `entities`/`decisions` |
-| VDB 缺向量索引 | **有三个 HNSW,全部盖在空东西上** | `entities_vec_hnsw`(1 行)、`asset_embeddings_vec_hnsw`(72 行)、`msv_hnsw`(`vec` 在 582 行上全 NULL) |
+| VDB 缺向量索引 | **有三个 HNSW。当时全盖在空东西上**(2026-09-17 起 `entities` 已 103 行且实测 HNSW 快 2.6x)| `entities_vec_hnsw`(1 行)、`asset_embeddings_vec_hnsw`(72 行)、`msv_hnsw`(`vec` 在 582 行上全 NULL) |
 | VDB 缺 regime 检索能力 | **库里早就有 `similar_market_states(target_day, k, min_shared)`,现在就能跑** | 见 §1b —— 它不但存在,还和我昨天独立写的 Python 版**犯了同样的两个错** |
 
 我上午那条「P0 = 救活 signal_outcomes」是错的,错因是**我读了我们自己写的注释当现状**。
@@ -69,9 +69,16 @@ from asset_embeddings where vec is not null order by 2 desc limit 5;
   Execution Time: 0.365 ms
 ```
 
-**Postgres 拒绝走已有的 HNSW,选了全表扫描,0.365 毫秒给出精确解。**
-HNSW 的全部理由是「几百万行不能扫」。我们是 1 / 72 / 474 / 582 行。
-在这个量级索引是**负收益**:要维护、会丢召回、还多一个服务。
+**Postgres 在这张表上选了全表扫描,0.365 毫秒给出精确解。**
+
+⚠️ **2026-09-17 更正 —— 我把这一条推广成了通则,是错的。**
+Minimax-C 在 `entities`(102 行)上把**两条计划各跑一次**:
+自然 planner 走 Seq Scan **9.283ms**,`set enable_seqscan=off` 走 HNSW **3.551ms** —— **快 2.6x**。
+**planner 的 cost model 估错了。我量的是 planner 选了什么,他量的是两条路各自多快。**
+所以「N 小就不需要索引」是一条**要逐表测的假设,不是可以推广的结论**。
+这一节保留是因为它对 `asset_embeddings` 仍然成立 —— **但它不能当规则用**。
+**不新增 Qdrant 的理由不受影响**:我们已经有 pgvector + HNSW,再加一个外部向量库
+解决的不是我们的瓶颈。
 
 ### §1b 检索层不但存在,还已经复现了我们刚修过的 bug
 
@@ -189,10 +196,10 @@ select max(d), count(*) from market_state_vectors;
 `loop_beat` 里有对应心跳;**次日再查一次,`max(d)` 必须又前进一天** ——
 一次手动回填不算上日程,这是 `signal_outcomes` 那一课的具体形式。
 
-**不做什么。** **`DROP INDEX msv_hnsw`,并把 `market_state_vectors.vec` 列一起删掉。**
+**不做什么。** ⚠️ **2026-09-17 更正:先别删 `msv_hnsw`。** 本文原来的依据是我在 `asset_embeddings`(72 行)上看到 planner 选 Seq Scan —— 而 Minimax-C 在 `entities`(102 行)上把两条计划各跑一次,**HNSW 3.551ms vs Seq Scan 9.283ms,快 2.6x**,planner 的 cost model 估错了。**我量的是 planner 选了什么,他量的是两条路各自多快。** 回填 `vec` 后用 `set enable_seqscan=off` 实测两条计划再决定。`market_state_vectors.vec` 列本身零读者,删列是另一件事。
 582 行全 NULL、零读者、零写者,而它的存在让人以为检索走的是 pgvector ——
 实际走的是 `vec_full` 上的 jsonb 共享维余弦。**一个空列加一个空索引,
-是一条永远在撒谎的文档。** 同理检查 `entities_vec_hnsw` 是否也该删(见 W4)。
+是一条永远在撒谎的文档。** ⚠️ `entities_vec_hnsw` **经 C 实测应当 KEEP** —— 见上面的更正。
 
 ---
 
