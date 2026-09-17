@@ -139,11 +139,41 @@ SEV = {"act_now": 0, "never_written": 1, "unregistered": 2,
 
 
 def _get(path: str) -> dict:
+    """带 `X-Internal-Token` 请求 —— 没有它,这个台子会被它监控的系统当成陌生人。
+
+    2026-09-17 (S-375):台子报 `HTTP 429 Too Many Requests`。原因不是打得太猛,
+    是**身份不对**:`src/api/middleware/rate_limit.py:141` 有一行
+    「`X-Internal-Token` 命中就直接跳过限流」,而这个台子一个 header 都没带,
+    于是掉进匿名档 —— **120 rpm / 2000 rpd,按 IP**,和同一台机器上另外 7 个
+    本地脚本(`loop_health` / `loop_status` / `deploy_health_gate` /
+    `post_deploy_check` / `export_edge_gate_grid` / `paper_trading_weekly` /
+    `test_auth_e2e`)共用同一个桶。
+
+    **观察这个系统的工具,被这个系统当陌生人对待** —— 这和当天那三个
+    「监控面作用域小于系统」是同一族缺陷,只是方向反过来。
+
+    ⚠️ 没有 token 时**不静默降级**:照发请求,但把缺失讲出来。
+    静默走匿名档的代价是几小时后一个看不懂的 429,而不是此刻一行字(I1)。
+    """
+    import os
+    tok = (os.environ.get("INTERNAL_TOKEN") or "").strip()
+    headers = {"User-Agent": "looloomi-ops-console"}
+    if tok:
+        headers["X-Internal-Token"] = tok
+    elif not _TOKEN_WARNED:
+        globals()["_TOKEN_WARNED"] = True
+        print("⚠️  INTERNAL_TOKEN 不在环境里 —— 本台子按匿名档限流"
+              "(120 rpm / 2000 rpd,与本机其它脚本共用一个 IP 桶)。"
+              "先 `set -a; source .env; set +a` 再跑。", file=sys.stderr)
     req = urllib.request.Request(
         BASE + path + ("&" if "?" in path else "?") + f"cb={int(_now().timestamp())}",
-        headers={"User-Agent": "looloomi-ops-console"})
+        headers=headers)
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         return json.loads(r.read().decode("utf-8"))
+
+
+#: 只警告一次,不要每次刷新刷屏。
+_TOKEN_WARNED = False
 
 
 def _now() -> datetime:
