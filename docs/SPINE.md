@@ -44,7 +44,7 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | 4 | 几何·市场态 | `market_state_vectors.vec_full`(24 声明 / 15 实测,582 行) | `similar_market_states()` | 🟡 **S-361 写者已上日程**;剩余陈旧来自源(binance_hist 停 8 天) |
 | 5a | 检索·**宏观**相位 | `similar_market_states()`(价格/宏观 15 实测维) | `/api/v1/regime/similar` | 🟡 **S-362 已修 z 化与排邻并接线**;底表停 42 天(见第 4 段) |
 | 5b | 检索·**微观**相位 | `regime_match`(CIS 支柱 11 维 + 78 天人工判读) | `/api/v1/regime/similar` | 🟢 **S-362 已接线**;底表每日更新 |
-| 6 | 判断·ⓠ | `beta_core_q_overlay`(乘数语义)| `beta_core_nav_q` 26 行,日更 | 🟡 **活的**;`regime_override_enforcer` 是**语义不同的旧实现**,见「已退役」;封顶 1.3x 与设计的 −0.5…3.3x 不符(归 Jazz) |
+| 6 | 判断·ⓠ | `beta_core_q_overlay`(乘数语义)| `beta_core_nav_q` 27 行,日更;**S-378 起 matcher 在线**(`smoothed_phase_distance` → dwell filter → hook)| 🟡 **活的**;`regime_override_enforcer` 是**语义不同的旧实现**,见「已退役」;封顶 1.3x 与设计的 −0.5…3.3x 不符(归 Jazz) |
 | 7 | 建仓·① | `beta_core_nav`(产品本体,兼所有 book 的基准) | 全部 book 的「超额」 | 🟢 |
 | 7b | 组合·gross 预算 | **尚无实现** —— 相关性状态 → gross,见 §5 第 7 条 | — | 🔴 缺段 |
 | 8 | 反馈 | `signal_outcomes_unified`(视图) | `refresh_signal_edge_map()` | 🟡 **S-365 已接**,双基准并存;journal 段仍薄(91 行有 alpha) |
@@ -505,7 +505,18 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
    25/26 行,band 分布 1=16 / 2=8 / 3=1(此前 band3×26)。
 
    **仍未做的两件:**(a) ⓠ 的每日决定要有持久归宿(不能是 `/tmp`);
-   (b) 新行的 `vdb_distance` 要在写入时自动算,现在只回填了历史。
+   (b) ~~新行的 `vdb_distance` 要在写入时自动算,现在只回填了历史。~~
+   **✅ S-378 已接线**(2026-09-17):`beta_core_paper` 每次 mark 调
+   `smoothed_phase_distance()` → §C2-SHIP-SPEC 的 5 日中位 dwell filter
+   (复用 `beta_core_q_overlay.apply_dwell_filter`,**没有第二份实现**)→
+   真值传进 hook,`vdb_matcher_live` 默认 True,`VDB_MATCHER_LIVE=0` 可关。
+   实测 smoothed=0.1572(5/5 天可用)→ `trigger=one_zone`。
+   ⚠️ 同批修掉两个**同名不同物**:
+   ① 写入端把 DB 列 `vdb_distance` 写成 **smoothed** 值,而 dataclass 注释写着 raw,
+      **S-366 回填的 25 行又是 raw** —— 一列两个口径,数值接近到查询里分不出来。
+      已加 `smoothed_distance` 列(迁移 `s378_...`),`vdb_distance` 保持 = 原始,历史不改;
+   ② `vdb_matcher_live` 此前在配置和调用点**各写死一次 False**,翻一处不起作用。
+      现在配置是唯一定义点。
 
    唯一一处出现在 `fusion_paper_regime_track.py` 的 docstring 里,是一句描述,不是一次调用。
    **Jazz 说 ⓠ 是四层之上最重要的一层,而它现在没有接到任何东西上。**
