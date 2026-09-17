@@ -15,6 +15,10 @@ Shadow/
 # Other _data/* files are audit / strategy_records working artifacts. Mac-side ownership.
 _data/
 
+# Paper-trade runner logs — runtime, regenerate from spec_runner + paper_trading/run_*.py.
+# 跟 _data/ 同性质(runner 跑出来的工作产物,不进版本)。
+paper_trading/state/
+
 # Internal operational docs — never commit
 JAZZ_TODAY.md
 ATTACK_PLAN.md
