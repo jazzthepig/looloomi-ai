@@ -34,6 +34,38 @@ def test_every_refusal_policy_declares_who_clears_it_and_when():
         assert isinstance(pol["stale_after_days"], int), name
 
 
+def test_refusal_policy_reasons_carry_their_why_substring():
+    """WHY-substring guard. A future refactor that drops the S-/R- reference from
+    `reason` is a refactor that turned the guard back into a silent refusal.
+
+    The substring must match by code (loop name) so the test rides on the actual
+    constant, not a free-text comment. Each substring here is what a future reader
+    would need to find the original refusal in code/git history.
+    """
+    WHY_SUBSTRINGS = {
+        # loop name : substring that MUST appear in reason
+        "_deep_panel_loop":       "S-323i",
+        "_forward_record_loop":   "S-323f",
+        "_beta_core_loop":        "S-323o",
+        "_factor_tilt_loop":      "insufficient_live_data",
+        "_pod_aggregator_loop":   "insufficient_live_data",
+        "_two_layer_paper_loop":  "R57",
+        "_market_state_loop":     "S-220",
+        "_fusion_paper_loop":     "S-336",
+    }
+    for loop_name, why in WHY_SUBSTRINGS.items():
+        assert loop_name in oc.REFUSAL_POLICY, (
+            f"{loop_name} removed from REFUSAL_POLICY — the test rides on the "
+            f"actual constant; if you intentionally retired this loop, remove "
+            f"the entry here too"
+        )
+        reason = oc.REFUSAL_POLICY[loop_name]["reason"]
+        assert why in reason, (
+            f"{loop_name}.reason dropped its WHY ({why!r}); without it the "
+            f"refusal becomes silent. Reason text was:\n{reason!r}"
+        )
+
+
 def test_a_refusal_past_its_window_becomes_an_alarm():
     import time
     pol = {"reason": "r", "clears_when": "c", "owner": "o", "stale_after_days": 3}
@@ -139,3 +171,66 @@ def test_a_retired_source_whose_verdict_is_degraded_stays_no_action():
     else:
         got = oc._classify_sources(src)[0]
         assert got["remedy_class"] == "no_action"
+
+
+def test_market_state_loop_inside_window_is_no_action():
+    """REFUSAL_POLICY entry added for _market_state_loop (23 consecutive refusals
+    in the S-323 chain). Inside its 7d window the refusal is the guard working —
+    no_action, with the S-220 'floor not met' reason surfaced."""
+    import time
+    pol = oc.REFUSAL_POLICY["_market_state_loop"]
+    fresh = {"last_ok_at": time.time() - 1 * 86400}    # 1d ago < 7d window
+    assert oc._refusal_overdue(fresh, pol) is False
+    rows = {"rows": [{"loop": "_market_state_loop", "verdict": "refused",
+                      "stale_build": False, "last_ok_at": fresh["last_ok_at"]}]}
+    got = oc._classify_loops(rows)[0]
+    assert got["remedy_class"] == "no_action", (
+        "23 refusals inside the 7d window = the floor working, not an incident"
+    )
+    assert "S-220" in got.get("note", "") or "S-220" in pol["reason"]
+
+
+def test_market_state_loop_past_its_7d_window_becomes_an_alarm():
+    """A refusal that persists past its stale_after_days IS the outage — the
+    very shape S-296 warns about. _market_state_loop: stale_after_days=7."""
+    import time
+    pol = oc.REFUSAL_POLICY["_market_state_loop"]
+    stale = {"last_ok_at": time.time() - 9 * 86400}    # 9d > 7d
+    assert oc._refusal_overdue(stale, pol) is True
+    rows = {"rows": [{"loop": "_market_state_loop", "verdict": "refused",
+                      "stale_build": False, "last_ok_at": stale["last_ok_at"]}]}
+    got = oc._classify_loops(rows)[0]
+    assert got["remedy_class"] == "act_now", (
+        "the floor itself is the outage if it refuses indefinitely"
+    )
+
+
+def test_fusion_paper_loop_inside_window_is_no_action():
+    """_fusion_paper_loop: 5 consecutive refusals, S-336 state-vs-table split.
+    Inside its 14d window, no_action with the S-336 WHY surfaced so the operator
+    knows the guard is correct (state read empty but nav table non-empty)."""
+    import time
+    pol = oc.REFUSAL_POLICY["_fusion_paper_loop"]
+    fresh = {"last_ok_at": time.time() - 3 * 86400}    # 3d < 14d
+    assert oc._refusal_overdue(fresh, pol) is False
+    rows = {"rows": [{"loop": "_fusion_paper_loop", "verdict": "refused",
+                      "stale_build": False, "last_ok_at": fresh["last_ok_at"]}]}
+    got = oc._classify_loops(rows)[0]
+    assert got["remedy_class"] == "no_action", (
+        "5 refusals inside the 14d window = S-336 guard working, not an incident"
+    )
+    assert "S-336" in got.get("note", "") or "S-336" in pol["reason"]
+
+
+def test_fusion_paper_loop_past_its_14d_window_becomes_an_alarm():
+    """stale_after_days=14 for _fusion_paper_loop. Past it = act_now."""
+    import time
+    pol = oc.REFUSAL_POLICY["_fusion_paper_loop"]
+    stale = {"last_ok_at": time.time() - 21 * 86400}   # 21d > 14d
+    assert oc._refusal_overdue(stale, pol) is True
+    rows = {"rows": [{"loop": "_fusion_paper_loop", "verdict": "refused",
+                      "stale_build": False, "last_ok_at": stale["last_ok_at"]}]}
+    got = oc._classify_loops(rows)[0]
+    assert got["remedy_class"] == "act_now", (
+        "a guard refusing past its own declared window is itself the outage"
+    )
