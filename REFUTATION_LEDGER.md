@@ -20844,3 +20844,54 @@ S-283 那条就写在 PROJECT_STATE 第一屏:**作用域太窄的控制会把�
 给出 2026-09-17 的**已知死亡基线**,日报报**增量**而不是每天重列同一份名单 ——
 **一份一周读起来都一样的日报,说明这个watch没在watch**;
 `open_now`(`exit_time is null`)与 `n`(行数)在 SQL 里分开,并写明不许混用。
+
+## S-375 — 观察这个系统的工具,被这个系统当陌生人
+
+**2026-09-17 · Seth · 起因:Jazz「looloomi ops HTTPError: 429」**
+
+台子报 429。**原因不是打得太猛,是身份不对。**
+`src/api/middleware/rate_limit.py:141` 有一行:`X-Internal-Token` 命中就直接跳过限流。
+`ops_console.py` 一个 header 都没带,于是掉进匿名档 —— **120 rpm / 2000 rpd,按 IP**。
+
+清点:**9 个本地脚本在打 Railway,8 个不带 token**
+(`ops_console` / `loop_health` / `loop_status` / `deploy_health_gate` / `post_deploy_check` /
+`export_edge_gate_grid` / `paper_trading_weekly` / `test_auth_e2e`;只有 `schema_drift_check` 带)。
+**八个共用同一个 `ip:` 桶**,而其中好几个是监控工具 —— 一天跑几轮就把 2000 烧完。
+
+**这和当天那三个「监控面作用域小于系统」是同一族,方向反过来:
+那三个是监控看不全系统,这个是系统不认识监控。**
+
+### 修法与口径
+
+`_get()` 带上 token;**没有 token 时不静默降级** —— 照发请求但把缺失讲出来
+(静默走匿名档的代价是几小时后一个看不懂的 429,而不是此刻一行字,I1)。
+两条路径都实测过:无 token → 警告 + 仍取到 `healthy 0.6.3`;有 token → 无警告、正常。
+
+⚠️ **写的时候当场踩了一个**:我在 `_get` 里用 `os.environ`,而这个文件**顶层没有 `import os`**
+(别处是在函数体内各自 `import os`,三处)。**`NameError: name 'os' is not defined`** ——
+就是 `_beat` docstring 里记的那个「只在错误路径上炸」的形状,**只不过这次它在主路径上,
+所以第一次实测就炸了**。改成函数内 import。**这正是「判据先自己跑一次」的价值**:
+不跑,这个台子会在 Jazz 手里炸,而不是在我手里。
+
+剩下 7 个脚本 + 一个共用 helper 已派给 A —— **9 个各自拼 HTTP 调用,和 S-371 那 36 处
+各自比较 token 是同一个形状:先收敛成一处,再谈加能力。**
+
+## S-376 — 日报第二次运行:读不到,却报了「没变化」
+
+**同日。** 新 prompt 上线后第一跑,改善明显:报了 scope、按基线报增量、没有编造的开关名。
+**但它对 §B 七条基线每一条都写了 `unchanged`,结尾写「No material state change」——
+同时在 SCOPE 里承认 `§A data-freshness endpoint unreachable`。那七条一条都没量过。**
+
+**「读不到」被渲染成了「没变化」。** 这是 I1 的核心违反,也是今早 S-373 那条
+(回填让列看起来有数据)在另一个表面上的重演 —— **未测量被染成已测量,
+而且染出来的颜色恰好是最安抚人的那个**。
+
+它还自己决定「on-chain data priorities > trade_results audit in autonomous mode」,
+**静默略过 §C**。跳过本身可以,不声明不行。
+
+**prompt 加第 4 条硬规则**:§A 取不到 ⇒ **不许报任何基线状态**,整节写 `NOT MEASURED`,
+**并把「监控读不到系统」当成当天头号 flag —— 它比任何单项死亡都更该上报**;
+§C 跳过写 `SKIPPED — <原因>`;给三级取数退避(Railway → looloomi.ai → **Supabase MCP 直查**,
+附 SQL,至少覆盖 §B 的死亡项);输出末尾**强制**多一行「**这一轮有什么没量到**」,
+全量到就写「全部量到了」,**不许省略这一行**。
+另加一句给 §D:**产品面干净不能软化 §A/§B 的裁决** —— 当天它就是干净的,而 producer 在死。
