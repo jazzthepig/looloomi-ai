@@ -67,8 +67,19 @@ def derive_q_override(
     enter_q_up_frac: float = 0.0,                                # 0.0 if no VDB k=5 outcome
     baseline: float = 1.0,
     vdb_failure: bool = False,
+    vdb_distance: float | None = None,                           # raw, pre-dwell
 ) -> QOverrideState:
     """Compute q_override per §C2-SHIP-SPEC §1-§2.
+
+    `vdb_distance` 是**当日原始距离**(未过 dwell filter);`smoothed_distance`
+    是过滤后的、真正决定 zone 的那个数。2026-09-17 之前这个参数不存在,
+    三个分支一律写死 `vdb_distance=None` —— 于是 `beta_core_nav_q.vdb_distance`
+    **无论 matcher 在不在线都是 NULL**,而那正是我们用来判断「它接上了吗」的那一列。
+    **判活用的列自己永远是空的** —— 与 S-373(手工回填让这列看起来 93% 有数据)
+    是同一处伤口的两面。
+
+    ⚠️ 失败分支仍然写 `None` 而不是把 raw 塞进去:**算不出 zone 的那天,
+    原始距离存在与否都不该被读成「当天有过判断」**(I1)。
 
     Priority of override:
       1. vdb_failure → q_override = 1.0 (freeze + fall back, per §C2-SHIP-SPEC §4)
@@ -102,7 +113,8 @@ def derive_q_override(
         trig = "up_zone" if q > 1.0 else "half_zone"
     return QOverrideState(
         mark_date=mark_date, q_override=q,
-        vdb_distance=None, smoothed_distance=float(smoothed_distance),
+        vdb_distance=(float(vdb_distance) if vdb_distance is not None else None),
+        smoothed_distance=float(smoothed_distance),
         enter_q_zero_thr=enter_q_zero_thr, exit_q_zero_thr=exit_q_zero_thr,
         trigger=trig, vdb_failure=False,
     )

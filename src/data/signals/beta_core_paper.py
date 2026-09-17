@@ -1194,11 +1194,31 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
                 write_q_overlay_row,
                 log_q_meta_event,
             )
+            # S-378:matcher 接线。此前这里传 `smoothed_distance=None` +
+            # `vdb_matcher_live=False` 两个写死值,于是 ⓠ 每天都落
+            # `trigger=baseline_vdb_matcher_offline` —— **而那和「matcher 算过、
+            # 结论是持有」在 NAV 曲线上完全同形**。`phase_distance` 我 S-366 就建好了,
+            # 在此之前**零调用方**:手工回填过 25 行历史,新行一直是 NULL,
+            # 于是这一列读起来 93% 有数据,唯独最新行没有(S-373)。
+            #
+            # `smoothed_phase_distance` = §C2-SHIP-SPEC 的 `dwell_filter`:
+            # 5 日滚动**中位数**(不是 EMA;DWELL_DAYS=5 来自 M-WO-7.1,不是我挑的)。
+            # 算不出 → 返回 None → `is_vdb_failure(None)` 兜回 1.0,基线不受影响。
+            from src.data.vector.phase_distance import smoothed_phase_distance
+            from src.data.signals.beta_core_q_hook import q_hook_config
+            _sm, _smdiag = await smoothed_phase_distance()
+            _cfg = q_hook_config()
             q_state = compute_q_hook_state(
                 today=today, gross=sum(abs(v) for v in new_w.values()),
-                regime=regime, smoothed_distance=None,
-                vdb_matcher_live=False,
+                regime=regime, smoothed_distance=_sm,
+                vdb_distance=_smdiag.get("raw_today"),
+                vdb_matcher_live=_cfg.vdb_matcher_live,
             )
+            _log.info("[beta_core] ⓠ vdb: smoothed=%s n_usable=%s/%s raw=%s "
+                      "live=%s trigger=%s q=%s",
+                      _sm, _smdiag.get("n_usable"), _smdiag.get("dwell_days"),
+                      _smdiag.get("raw_today"), _cfg.vdb_matcher_live,
+                      q_state.trigger, q_state.q_override)
             q_ok = await write_q_overlay_row(
                 today=today, q_state=q_state,
                 baseline_gross=sum(abs(v) for v in new_w.values()),

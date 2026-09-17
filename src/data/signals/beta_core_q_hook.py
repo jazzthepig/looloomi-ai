@@ -54,12 +54,25 @@ class QHookConfig:
 
 
 def q_hook_config() -> QHookConfig:
-    """Read the current hook config (env overrides honored)."""
+    """Read the current hook config (env overrides honored).
+
+    `vdb_matcher_live` 从 2026-09-17 (S-378) 起**默认 True** —— matcher 接上了:
+    `beta_core_paper` 现在调 `smoothed_phase_distance()`(§C2-SHIP-SPEC 的
+    5 日中位 dwell filter)并把真值传进来。
+
+    ⚠️ **留一个不用重新部署就能关的开关**:`VDB_MATCHER_LIVE=0`。
+    此前这里写死 `False`、调用点又写死一次 `False` —— **同一个决定有两个定义点,
+    翻其中一个不起作用**,而两处都长得像「开关」。这就是 S-371 那 36 处比较的小号版本。
+    现在配置是唯一定义点,调用点读它。
+    """
+    import os
     enter, exit_ = env_thresholds()
+    raw = (os.environ.get("VDB_MATCHER_LIVE") or "").strip().lower()
+    live = raw not in ("0", "false", "no", "off")
     return QHookConfig(
         enter_q_zero_thr=enter,
         exit_q_zero_thr=exit_,
-        vdb_matcher_live=False,                                  # toggle on Mac-side wire
+        vdb_matcher_live=live,
     )
 
 
@@ -72,6 +85,7 @@ def compute_q_hook_state(
     enter_q_up_frac: float = 0.0,
     vdb_failure: bool = False,
     vdb_matcher_live: bool = False,
+    vdb_distance: float | None = None,
 ) -> QOverrideState:
     """Compute the q_override state for today.
 
@@ -101,10 +115,20 @@ def compute_q_hook_state(
             vdb_failure=True,
         )
     return derive_q_override(
-        mark_date=today, smoothed_distance=smoothed_distance,
+        mark_date=today, vdb_distance=vdb_distance,
+        smoothed_distance=smoothed_distance,
         enter_q_zero_thr=enter, exit_q_zero_thr=exit_,
         enter_q_up_frac=enter_q_up_frac, baseline=1.0,
     )
+
+
+def _fin(x: float | None) -> float | None:
+    """有限的浮点才落库。**NaN 不是 0,也不是「在分布内」** —— 它是没算出来。
+
+    `x != x` 是 NaN 的判据(NaN 不等于自己)。两个写入端各自展开过一遍这个表达式,
+    改一处漏一处就是两套 NaN 语义;收成一个函数。
+    """
+    return None if x is None or x != x else round(float(x), 6)
 
 
 # ── I/O wrapper (Supabase write, called by mark_and_rebalance) ───────────────
@@ -130,9 +154,13 @@ async def write_q_overlay_row(
         "mark_date": today.isoformat(),
         "inception_id": inception_id,
         "q_override": q_state.q_override,
-        "vdb_distance": (None if q_state.smoothed_distance is None
-                          or q_state.smoothed_distance != q_state.smoothed_distance
-                         else round(q_state.smoothed_distance, 6)),
+        # S-378:**这两列曾经是同一列**。写入端落的是 smoothed,而 dataclass 注释
+        # 写着 "raw distance",S-366 手工回填的 25 行又落的是 raw ——
+        # 一列两个口径,而数值接近到在图上和查询里都分不出来(S-106 换了个轴)。
+        # 现在:`vdb_distance` = 原始(与已回填的 25 行同口径,历史不用改),
+        # `smoothed_distance` = **真正决定 zone 的那个数**。
+        "vdb_distance": _fin(q_state.vdb_distance),
+        "smoothed_distance": _fin(q_state.smoothed_distance),
         "enter_q_zero_thr": q_state.enter_q_zero_thr,
         "exit_q_zero_thr": q_state.exit_q_zero_thr,
         "baseline_gross": round(baseline_gross, 6),
@@ -173,9 +201,8 @@ async def log_q_meta_event(
         "inception_id": inception_id,
         "event_type": event_type,
         "q_override": q_state.q_override,
-        "vdb_distance": (None if q_state.smoothed_distance is None
-                          or q_state.smoothed_distance != q_state.smoothed_distance
-                         else round(q_state.smoothed_distance, 6)),
+        "vdb_distance": _fin(q_state.vdb_distance),
+        "smoothed_distance": _fin(q_state.smoothed_distance),
         "reason": reason,
     }
     try:

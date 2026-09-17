@@ -43,10 +43,28 @@ def _fail(msg: str) -> None:
 
 # ─────────────────────────────────────────────────────────────────────────────
 def test_q_hook_config_default_is_baseline_only() -> None:
-    """First-ship: vdb_matcher_live = False (no behavior change yet)."""
+    """S-378 起 matcher 已接线:默认 live,且 `VDB_MATCHER_LIVE=0` 能关掉。
+
+    ⚠️ 这条断言 2026-09-17 **反过来了**,原文是「first-ship 必须 False」。
+    那个不变量在 matcher 没接线时是对的 —— 接线之后它变成了一条
+    **锁死已完成状态的测试**。改它不是放松判据:**真正要守的从来不是那个常量,
+    是「这个决定只有一个定义点,而且能不重新部署就关掉」。**
+    此前配置里写死 False、调用点又写死一次 False,**翻一处不起作用**,
+    而两处都长得像开关 —— 那才是这条测试该拦却拦不住的东西。
+    """
+    import os
+    prev = os.environ.pop("VDB_MATCHER_LIVE", None)
+    try:
+        if not q_hook_config().vdb_matcher_live:
+            _fail("matcher 已接线(S-378),默认应为 live")
+        os.environ["VDB_MATCHER_LIVE"] = "0"
+        if q_hook_config().vdb_matcher_live:
+            _fail("VDB_MATCHER_LIVE=0 必须能关掉 —— 一个关不掉的开关不是开关")
+    finally:
+        os.environ.pop("VDB_MATCHER_LIVE", None)
+        if prev is not None:
+            os.environ["VDB_MATCHER_LIVE"] = prev
     cfg = q_hook_config()
-    if cfg.vdb_matcher_live:
-        _fail("first-ship vdb_matcher_live should be False (no behavior change)")
     if cfg.enter_q_zero_thr != ENTER_Q_ZERO_THRESHOLD_DEFAULT:
         _fail(f"enter_q_default mismatch: {cfg.enter_q_zero_thr}")
     if cfg.exit_q_zero_thr != EXIT_Q_ZERO_THRESHOLD_DEFAULT:

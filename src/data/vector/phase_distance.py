@@ -97,4 +97,77 @@ async def phase_distance(
         return None, {"reason": f"{type(e).__name__}: {str(e)[:140]}"}
 
 
-__all__ = ["phase_distance"]
+#: ⚠️ **`DWELL_DAYS` 和中位数滤波器都不在这里** —— 它们在
+#: `beta_core_q_overlay`(`DWELL_DAYS = 5`,`apply_dwell_filter()`,M-WO-7.1 验过、有测试)。
+#:
+#: 我 2026-09-17 第一版在这个文件里**又定义了一遍 `DWELL_DAYS = 5`、又手写了一遍
+#: `statistics.median`** —— 写完才看见 overlay 里早就有。那就是 SPINE 第一条法律
+#: 禁止的「一个能力两条活路」:**两份 spec 常量,改一份不改另一份,而它们长得一样。**
+#: 现在这里只做**取数**,滤波复用 overlay 那一份。
+#: (`apply_dwell_filter` 此前**零生产调用方**,只有测试在调 —— 和 `phase_distance`
+#: 本身一样,是「建好了没接」的同一族。这次一起接上。)
+
+#: 5 天里至少要有这么多天算得出距离,否则返回 None。
+#: **为什么要这条:** 中位数取在 1 个点上就是那个点本身 —— 它会把一个 raw 值
+#: 冒充成 smoothed 值送进 sizing,而类型、字段名、日志全都看不出区别。
+#: 这是 S-367「enforcer vs overlay」的同一个形状:**槽位的名字说了一件事,
+#: 塞进去的是另一件**。地板不是保守,是让「没平滑」和「平滑了」不同形。
+MIN_USABLE_DAYS = 3
+
+
+async def smoothed_phase_distance(
+    d: Optional[str] = None, *, exclude_days: int = 30,
+) -> tuple[Optional[float], dict]:
+    """§C2-SHIP-SPEC 的 `dwell_filter`:取最近 `DWELL_DAYS` 天的 `phase_distance`,
+    交给 `beta_core_q_overlay.apply_dwell_filter()`(5 日滚动中位)。
+
+    返回 `(smoothed, diag)`。**`smoothed is None` ⇒ 算不出,不是"在分布内"**(I1)。
+    下游 `is_vdb_failure(None)` 会兜回 baseline 1.0,那是正确的保守行为。
+
+    `diag` 带 `per_day`(逐日原值,含 None)、`n_usable`、`raw_today`,
+    **让"平滑了几个点"在调用方可见** —— 不然 5 个点和 1 个点的中位数在库里长得一样。
+    """
+    import datetime as _dt
+
+    import pandas as _pd
+
+    from src.data.signals.beta_core_q_overlay import DWELL_DAYS, apply_dwell_filter
+
+    base = _dt.date.fromisoformat(d) if d else None
+    per_day: list[dict] = []
+    idx: list[_dt.date] = []
+    vals: list[float] = []
+    raw_today: Optional[float] = None
+
+    for i in range(DWELL_DAYS):
+        day = (base - _dt.timedelta(days=i)).isoformat() if base else None
+        dist, dg = await phase_distance(day, exclude_days=exclude_days)
+        tgt = dg.get("target")
+        per_day.append({"asked": day, "target": tgt,
+                        "distance": dist, "reason": dg.get("reason")})
+        if i == 0:
+            raw_today = dist
+        if dist is not None and tgt:
+            idx.append(_dt.date.fromisoformat(tgt))
+            vals.append(dist)
+        if base is None:
+            # 没给日期 ⇒ phase_distance 每次返回同一个最新日,循环 5 次没意义。
+            # 用它 target 那天当基准,从下一轮起往回数。
+            if not tgt:
+                break
+            base = _dt.date.fromisoformat(tgt)
+
+    diag = {"dwell_days": DWELL_DAYS, "n_usable": len(vals),
+            "min_usable": MIN_USABLE_DAYS, "per_day": per_day,
+            "raw_today": raw_today}
+    if len(vals) < MIN_USABLE_DAYS:
+        diag["reason"] = (f"{DWELL_DAYS} 天里只有 {len(vals)} 天算得出 "
+                          f"< {MIN_USABLE_DAYS} —— 不足以平滑,不冒充 smoothed")
+        return None, diag
+
+    ser = _pd.Series(vals, index=_pd.DatetimeIndex(idx)).sort_index()
+    smoothed = apply_dwell_filter(ser, dwell_days=DWELL_DAYS)
+    return float(smoothed.iloc[-1]), diag
+
+
+__all__ = ["phase_distance", "smoothed_phase_distance"]
