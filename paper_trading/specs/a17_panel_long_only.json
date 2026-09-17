@@ -1,0 +1,118 @@
+{
+  "_owner": "Seth/Austin / drafted 2026-09-17 (A-17 panel_long_only family — first §5b ① panel-wide shape)",
+  "_purpose": "A-17 SHIP: ARCHITECTURE §5b ① panel-wide long-only hold, equal-weight, weekly rebalance, regime-blind (benchmark should hold through everything). Paper trade only (dry_run). Awaiting JAZZ decision on Task #30 + Mac 数据活 (A-372-1/2).",
+  "_ledger_ref": "ARCHITECTURE.md §5b ① + test_a17_panel_long_only_smoke.py (12/12 PASS) + spec_runner.py:360-416 panel_long_only Spec.load + spec_runner.py:994-1133 decide_panel_long_only",
+  "_version": "draft_v1 / 2026-09-17",
+  "_compliance_note": "All signals use positioning language only (STRONG OUTPERFORM / OUTPERFORM / NEUTRAL / UNDERPERFORM / UNDERPERFORM) per CLAUDE.md rule #1.",
+
+  "spec_name": "A17_PANEL_LONG_ONLY",
+  "spec_family": "panel_long_only",
+  "strategy_class": "§5b ① panel-wide long-only hold (equal-weight, weekly rebalance, regime-blind). First standalone panel-wide ① slot — M-152 BTT-LEX is the single-BTC form, A-17 is the multi-asset form. Together they cover the full ① doctrine.",
+  "universe": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "BNB",
+    "XRP"
+  ],
+  "exchange_pairs": [
+    "BTC/USDT:USDT",
+    "ETH/USDT:USDT",
+    "SOL/USDT:USDT",
+    "BNB/USDT:USDT",
+    "XRP/USDT:USDT"
+  ],
+  "parameters": {
+    "allocation": "equal_weight",
+    "target_size": 0,
+    "rebalance_cadence": 7,
+    "max_position_pct": 0.30,
+    "min_position_pct": 0.0,
+    "min_history_days": 60,
+    "cost_bps_rt": 5.0,
+    "dd_stop_pct": -25.0,
+    "max_open_trades": 50,
+    "regime_gate": {},
+    "lag_discipline": {
+      "signal_bars_max_age_days": 1,
+      "entry_price_bar": "bar at as_of d (today's mark; signal depth ≤ d-1)"
+    }
+  },
+
+  "_a17_design_notes": {
+    "panel_long_only_vs_survivors_only_lag1_book": "panel_long_only (A-17) = §5b ① panel-wide equal-weight hold, no ranking, no shorts, no alpha. survivors_only_lag1_book (M-115) = §5b ④ book with cross-sectional ranking. A-17 is the BASELINE M-115 is measured against (every sleeve's benchmark is 'hold the panel', NEVER 0).",
+    "min_history_days_60_rationale": "Spec default (load() rejection threshold) is 30; production pin to 60 to give 1-2 weeks of buffer above the production limit. coingecko_pro_ohlc has 73d as of 2026-09-17 — passes 60d by 13d. If data shrinks, expect BLOCKED until it grows back. ARCHITECTURE §5b ① is regime-blind by design (the FoF core benchmark should hold through everything)",
+    "regime_gate_empty_rationale": "Empty dict = no regime-driven SKIPPED. This is correct for §5b ① benchmark — 'hold the panel' means hold through all regimes. If you want to gate, add {'RISK_OFF': false} explicitly.",
+    "cap_0.30_with_5_symbols": "1/N = 0.20 < 0.30 → cap does NOT trigger. This is the 'no cash drag' shape. Real production wants full deployment at benchmark weight (no half-cash from a cap the user didn't intend).",
+    "weekly_rebalance_rationale": "7d cadence matches M-115 R14-Lite cadence. Same operational heartbeat, different shape — keeps ops simple during paper tracking.",
+    "v1_ship_only_equal_weight": "Spec.load (spec_runner.py:375-379) REJECTS allocation != equal_weight in v1 ship. cis_weight + market_cap_weight are next-tier (next ship) per PANEL_LONG_ONLY_SPEC §'Allocation helpers'."
+  },
+
+  "_ship_gates_open": [
+    "data_source primary = 'coingecko_pro_ohlc' 仅 73d (S-370/S-372 audit 2026-09-17). 60d floor passes by 13d margin. If the source drops below 60d, all 5 syms BLOCKED — paper 日志走 BLOCKED 不是 bug.",
+    "regime_source = 'cis_history.narrative_daily.macro_regime' 已 stale 42d (M-119 2026-09-17). regime_gate=空 (no gate),regime_value 用于日志而已,不会 BLOCKED。Seth(Mac) 已派 A-372-1/2 修根因",
+    "initial_state=stopped until JAZZ clears Task #30 halt-resume gate",
+    "Mac 端数据活:A-372-1 (hyperliquid+binance_hist) + A-372-2 (CG Pro 回填 2020) —— 2026-09-17 已派,等完成",
+    "ARCHITECTURE §5b v1: ① 是 benchmark 本,生产 cargo shape 由 M-117 之后 §5b 决定;A-17 是 paper 跑出来的真实回报应该 ≈ buy-and-hold excess ≤ cost bps。任何超过 cost bps 的 excess 都要审查(spec 偷偷装了不允许的机制)"
+  ],
+
+  "data_source": {
+    "primary": "coingecko_pro_ohlc",
+    "filter": "source = coingecko_pro_ohlc ONLY (S-230 / S-307 — single-source hard pin)",
+    "_seth_lane_data_caveat_2026-09-17": "73d 实际 (S-370/S-372) — min_history_days=60 PASSES 但在数据长起来之前 paper 跑不全 365d 验证窗"
+  },
+
+  "execution": {
+    "mode": "paper",
+    "dry_run": true,
+    "initial_state": "stopped",
+    "scheduling": "weekly rebalance check every 7d on coingecko_pro_ohlc close (00:00 UTC)",
+    "start_condition": "initial_state=stopped until JAZZ clears Task #30 halt-resume gate + Mac 数据活 (A-372-1/2)"
+  },
+
+  "validation_summary": {
+    "family_smoke": "12/12 PASS (test_a17_panel_long_only_smoke.py 2026-09-17 0.08s)",
+    "expected_paper_behavior": "weekly ENTERED with 5 long legs, 1/5=0.20 each, 0% cash drag (cap=0.30 > 0.20)",
+    "expected_excess_vs_buy_and_hold": "≤ cost_bps_rt = 5 bps per leg per rebalance ≈ 3.5bps/day. 任何超出都是 spec 偷偷装机制 (spec_runner.py:992-993 注释)",
+    "lag_discipline": "lag-1 PIT: signal bars ≤ d-1, entry price = bar at d (spec_runner.py:986-989)"
+  },
+
+  "ship_criteria": {
+    "rule_1_cause": "ARCHITECTURE §5b ① — 'long-only hold of the panel — the FoF core; every sleeve's benchmark is hold the panel, NEVER 0'. M-152 BTT-LEX is single-BTC form, A-17 is panel-wide form.",
+    "rule_2_base_rate": "Pre-spec bench: equal-weight buy-and-hold of BTC/ETH/SOL/BNB/XRP on coingecko_pro_ohlc 73d window. Ref: BMK panel-wide long-only = standard market beta.",
+    "rule_3_oos_survival": "Pending — A-17 is bench-shape, not an alpha claim. OOS survival = 'still ≈ buy-and-hold ± cost bps' (the test is excess, not absolute).",
+    "rule_4_60d_paper_trade": "BLOCKED — initial_state=stopped + Mac 数据活 (A-372-1/2) 缺",
+    "rule_5_regime_conditional_reporting": "regime_gate=空 by design. If LP mandates regime-aware benchmark (e.g. cash in RISK_OFF), spec.parameters.regime_gate 应显式列出"
+  },
+
+  "monitoring": {
+    "weekly_digest_file": "_reports/paper_trading/weekly_YYYYMMDD.md (tag A17_PANEL_LONG_ONLY)",
+    "trade_log_db": "user_data/tradesv3.A17_PANEL_LONG_ONLY.sqlite",
+    "abort_conditions": [
+      "excess vs buy-and-hold > +20bps/day (spec 偷偷装机制 — spec_runner.py:992-993 commentary 必须 review)",
+      "panel age > 2d consecutive 3+ times in a week (data feed unhealthy)",
+      "min_history_days 缩到 < 60d (数据被回填污染,见 S-373 / feedback-backfill-without-scheduler-worse-than-no-backfill)"
+    ],
+    "promote_threshold": "AFTER 60d paper trade: paper 回报 ≈ buy-and-hold ± cost bps (excess ≤ +5bps/day) AND no regime whipsaw AND panel 健康"
+  },
+
+  "escalation": {
+    "next_review": "after 30d paper trade → 60d gate decision",
+    "owner": "Seth for execution; JAZZ for halt-resume gate",
+    "rollback_path": "set initial_state=stopped + remove from scheduler queue (no real funds at risk)",
+    "communication": "MINIMAX_SYNC §S-376 entries per week",
+    "blocking_decisions": [
+      "Task #30 (JAZZ): book_trader.py halt-resume",
+      "Mac 数据活: A-372-1 (hyperliquid+binance_hist) + A-372-2 (CG Pro 回填 2020)",
+      "M-117 §5b redesign (A-17 是 §5b ① baseline,但完整 production book shape 还没定)"
+    ]
+  },
+
+  "_non_goals": [
+    "NOT a §5b-aligned production book — A-17 is the ① benchmark, future M-117 redesign wraps it into the production book",
+    "NOT a real-funds deployment — paper trade only",
+    "NOT alpha — 'long-only hold of the panel' means no cross-section ranking, no shorts",
+    "NOT a freqtrade config — different mechanism (architecture §5b ① benchmark, not L/S)",
+    "NOT cis_weight or market_cap_weight — v1 ship only equal_weight (Spec.load rejects others 2026-09-17)"
+  ]
+}
