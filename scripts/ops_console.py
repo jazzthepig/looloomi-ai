@@ -336,10 +336,20 @@ def _classify_sources(by_source: dict) -> list[dict]:
         name = s.get("source")
         verdict = s.get("verdict")
         retired = RETIRED_BY_POLICY.get(name)
+        # Dispatch order is load-bearing: retired-before-verdict.
+        # A "retired-but-currently-degraded" source must NOT escalate to act_now
+        # because the policy says we don't carry that source (S-323n precedent).
         if verdict in ("DEAD", "COLLAPSED") and retired:
             cls, note = "no_action", retired
         elif verdict in ("DEAD", "COLLAPSED"):
             cls, note = "act_now", "a source stopped and no policy explains it"
+        elif verdict == "degraded" and retired:
+            cls, note = "no_action", retired
+        elif verdict == "degraded":
+            cls, note = "act_now", (
+                "degraded but still usable_for_returns — covers most but not all "
+                "panels; investigate before next cadence"
+            )
         elif verdict == "flowing" and not s.get("usable_for_returns") and retired:
             cls, note = "no_action", retired
         elif verdict == "flowing":
