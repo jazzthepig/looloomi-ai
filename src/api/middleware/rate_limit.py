@@ -54,10 +54,19 @@ _EXEMPT_PREFIXES = (
 )
 
 # Same-origin dashboard origins — treated as trusted, very high limit
+#
+# 2026-09-18: added Railway auto-URL to the default. Without it, anyone who
+# opened the dashboard at `web-production-0cdf76.up.railway.app` (instead of
+# looloomi.ai) was falling through to the anon bucket — 120 rpm / 2000 rpd —
+# and the first burst on the CIS page (six components each fetching
+# /api/v1/cis/universe) tripped 429, then Asset Radar showed "Data unavailable"
+# because the same endpoint was already rate-limited. The dashboard IS the
+# dashboard, on every host we ship it on.
 _FRONTEND_ORIGINS = set(
     os.getenv(
         "FRONTEND_ORIGINS",
-        "https://looloomi.ai,https://looloomi.com,http://localhost:5173,http://localhost:8000"
+        "https://looloomi.ai,https://looloomi.com,https://web-production-0cdf76.up.railway.app,"
+        "http://localhost:5173,http://localhost:8000"
     ).split(",")
 )
 

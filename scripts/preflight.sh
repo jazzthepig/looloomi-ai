@@ -1085,6 +1085,16 @@ python3 -m pytest tests/test_ci_smoke_paths.py -q || {
   echo "  ✗ CI Smoke paths coverage regressed — do not push"; exit 1; }
 echo "  ✓ CI Smoke gate covers scripts/ + tests/ paths"
 
+# ── 2026-09-18: dashboard hosts in FRONTEND_ORIGINS default ───────────────────
+# 429 regression: web-production-0cdf76.up.railway.app was missing from the
+# default, so anyone opening the dashboard on the Railway auto-URL hit the
+# anon bucket (120 rpm / 2000 rpd). Six-component CIS fetch burst tripped it,
+# Asset Radar then showed "Data unavailable". The test pins the literal
+# default so a future rename / new host doesn't silently drop a host.
+python3 -m pytest tests/test_frontend_origins_default.py -q || {
+  echo "  ✗ FRONTEND_ORIGINS default regressed — do not push"; exit 1; }
+echo "  ✓ every shipped dashboard host is in FRONTEND_ORIGINS default"
+
 # ── S-194: a dead feed is not a flat day ─────────────────────────────────────
 # All five paper books computed daily return as `pnl = 0.0` then a conditional
 # accumulate, so "could not price" and "did not move" were the same number.
