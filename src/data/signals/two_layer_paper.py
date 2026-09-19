@@ -235,6 +235,67 @@ def _compute_nav_base(state: dict, disk_prev_nav: float | None,
     return disk_prev_nav
 
 
+def _decide_price_pnl(w_held: dict, w_tgt: dict,
+                      last_px: dict, mp: dict,
+                      state: dict, *, book: str) -> tuple[float | None, dict | None]:
+    """S-378b-2.3 / S-326 / R57: 4-way guard for today's price_pnl contribution.
+
+    The mark_and_rebalance guard used to inline this if/elif/else chain. The
+    four branches, in priority order:
+
+      ① w_held non-empty → call weighted_mark (with coverage floor). If
+        coverage < floor, weighted_mark returns its own skip envelope;
+        pass it through.
+      ② state["revived_from_disk"] True → price_pnl=0. Redis was empty, we
+        revived from disk_prev; w_held is {} because we don't know what was
+        held yesterday, and a fabricated P&L is the same class of lie as
+        S-194 (the 0.00% bug this whole guard exists to prevent).
+      ③ (NEW, S-378b-2.3) w_held empty AND w_tgt empty → price_pnl=0. R57
+        verdict: two_layer's core is structurally dead, so the book holds
+        nothing by design on both days. 0 × any market = 0 — arithmetic,
+        not a lie. This was the branch the old code refused on, losing
+        honest records (the 28 core_dead rows from 09-14..).
+      ④ otherwise (w_held empty AND w_tgt has positions AND NOT revived) →
+        refuse. We don't know what was held yesterday and the core is alive
+        today, so we can't honestly compute P&L. Caller can retry after
+        state is recovered.
+
+    Returns (price_pnl, skip_envelope). Exactly one is non-None:
+      - (float, None): compute the day's P&L with this price_pnl
+      - (None, dict): caller should return this envelope directly
+    """
+    from src.data.signals.mark_coverage import weighted_mark
+
+    if w_held:
+        _mk = weighted_mark(w_held, last_px, mp, book=book)
+        if not _mk.ok:
+            return None, _mk.as_skip(book)
+        return _mk.pnl, None
+
+    if state.get("revived_from_disk"):
+        # S-378b: revival — flat day, we don't know what was held yesterday
+        return 0.0, None
+
+    if not w_tgt:
+        # R57: by-design flat — core dead both yesterday and today, the book
+        # is structurally at zero. Mark flat honestly.
+        return 0.0, None
+
+    # S-326: state lost (w_held={} AND w_tgt has positions AND NOT revived).
+    # Refuse — caller decides "by-design hold zero" vs "state lost".
+    return None, {
+        "status": "skipped",
+        "book": book,
+        "reason": (f"{book}: holds nothing and not a revival — "
+                   "call _redis_get before this path or revive from disk "
+                   "(S-326/S-378b)"),
+        "coverage": 0.0,
+        "priced": 0,
+        "unpriced": 0,
+        "unpriced_sample": [],
+    }
+
+
 def target_weights(data: dict, core: dict) -> tuple[dict, dict]:
     """Today's target book + diagnostics. Overlay-only: w = core × I(C > gate), equal-weight.
 
@@ -355,28 +416,21 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
     w_held, mp = state.get("weights", {}) or {}, state.get("mark_prices", {}) or {}
     # S-194. This book recorded 0.00% on SIX of six marks in the week the panel
     # ran +23.99% — the most complete instance of the class.
-    from src.data.signals.mark_coverage import weighted_mark
-    if w_held:
-        _mk = weighted_mark(w_held, last_px, mp, book="two_layer")
-        if not _mk.ok:
-            return _mk.as_skip("two_layer")
-        price_pnl = _mk.pnl
-    elif state.get("revived_from_disk"):
-        # S-378b: revival branch — w_held={} is KNOWN (state was lost, just
-        # revived from disk). Mark a flat day honestly. PnL=0 because we don't
-        # know what was held yesterday, and a fabricated PnL is the same class
-        # of lie as S-194 (the 0.00% bug this guard exists to prevent).
-        price_pnl = 0.0
+    # S-378b-2.3: 4-way guard extracted to `_decide_price_pnl` (testable).
+    #   ① w_held non-empty → weighted_mark with coverage floor
+    #   ② state["revived_from_disk"] → flat (PnL=0)
+    #   ③ w_held empty AND w_tgt empty → flat (R57 by-design, PnL=0) [NEW]
+    #   ④ otherwise → S-326 refuse envelope
+    price_pnl, skip_env = _decide_price_pnl(
+        w_held, w_tgt, last_px, mp, state, book="two_layer")
+    if skip_env is not None:
+        return skip_env
+    if price_pnl == 0.0 and (not w_held) and (not w_tgt):
+        # R57 by-design flat — log it for LP-facing observability (S-378b-2.3)
+        _log.info("[two_layer] by-design flat — core dead both days, marking flat")
+    elif price_pnl == 0.0 and (not w_held):
+        # S-378b revival — flat day at disk_prev (state was lost, just revived)
         _log.info("[two_layer] revival — flat day at disk_prev (no w_held to compute PnL)")
-    else:
-        # S-326: empty weights, no revival flag — we don't know if this is
-        # "by design" (R57 core dead) or "state lost" (the bug we're fixing).
-        # Be conservative and refuse — caller can retry after reviving state.
-        return {"status": "skipped", "book": "two_layer",
-                "reason": "two_layer: holds nothing and not a revival — "
-                          "call _redis_get before this path or revive from disk "
-                          "(S-326/S-378b)",
-                "coverage": 0.0, "priced": 0, "unpriced": 0, "unpriced_sample": []}
 
     turn = sum(abs(w_tgt.get(c, 0.0) - w_held.get(c, 0.0)) for c in set(w_tgt) | set(w_held))
     cost = _FEE * turn

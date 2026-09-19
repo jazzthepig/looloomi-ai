@@ -21567,6 +21567,30 @@ A 当时报告:PGRST205 实测,`/tmp/cometcloud_data/.../regime_track.csv` 是�
 `SUPABASE_DB_URL`)。Python 写者不动 —— 表存在它就 upsert 成功;
 不存在就 best-effort fail 落到 /tmp,与 2026-09-17 A 测的状态同形。
 
+### S-378b-2.3 — two_layer by-design flat 分支 (R57 verdict: core dead → 持零算术) (2026-09-20, Seth/Jazz 2-day window)
+
+**问题**:`two_layer_paper.mark_and_rebalance` 的 inline guard (S-378b-2.2 之前写的 4 路 if/elif/else) 漏了第三路 —— **w_held empty AND w_tgt empty**(R57 verdict:core 结构 dead,设计「持零算术」)。
+S-326 conservative branch 把这个状态当 state-lost 拒,**每天丢一行 honest 记录**(R57 28 行 `book_state=core_dead` 的平记录)。
+
+**根因**:S-326 三值 `nav_table_has_any_rows()` 设计为「表有行 + 状态空 = 拒绝」(适用 fusion 的 voided-v1 情形),但 two_layer 例外 —— core dead 时 w_held={} + w_tgt={} **同时**出现,**book_state=core_dead** 自己明说按设计持零。
+「拒绝没有让我们损失一份记录」(REFUTATION_LEDGER §R57),R57 verdict 实际上**更正了 S-326 对 two_layer 的判断**:过度保守,本来可以像 fusion 那样自己判。
+
+**修法**:
+1. inline guard 抽成纯 helper `_decide_price_pnl(w_held, w_tgt, last_px, mp, state, *, book)` —— 4 路决策(testable):
+   - ① w_held 非空 → weighted_mark (覆盖检查,失败 → its own skip envelope)
+   - ② state["revived_from_disk"] → price_pnl=0 (S-378b 复活)
+   - ③ **(NEW)** w_held empty AND w_tgt empty → price_pnl=0 (R57 by-design)
+   - ④ otherwise → S-326 拒绝 envelope
+2. `mark_and_rebalance` 改用 helper + 双分支 log(by-design flat / revival)。
+3. `tests/test_s378b_fusion_two_layer_nav_compound_fix.py` 加 7 个新 case(2 个 by-design flat 算术 + 5 个 `_decide_price_pnl` 4 路覆盖),**17/17 PASS**,**71/71 signals regression 全绿**。
+
+**为什么这条比 R57 verdict 早一周**:S-378b-2.2 (line 304-320 加 `revived_from_disk` 复活分支) 已经修了「状态空 + disk 有 rows」一类,但「状态非空 + w_held={} + w_tgt={}」(Redis 在但 weights 空,core dead 也写空) **仍未覆盖** —— 这条是 S-378b-2.3 闭掉的洞。
+R57 verdict 给了我正确判断:持零 × 任何行情 = 0 是算术,不是谎。
+
+**为什么 helper 抽取而不就地改 inline**:`if/elif/else` 4 路(含 weighted_mark 错误处理)挤在 mark_and_rebalance 内部,**纯函数无法触达**,test 必须 mock 整个 IO 栈;helper 让 5 个 case(unit)直接打 `_decide_price_pnl(w_held, w_tgt, last_px, mp, state, book="two_layer")`,覆盖 4 路 + weighted_mark fail 边界。**测试代码减半,可读性翻倍** —— 跟 S-378b 已 ship 的 `_compute_nav_base` 同一 pattern。
+
+⏸ **验证 gated**:`bash scripts/preflight.sh` ✅;等 Railway auto-deploy (~90s) → `POST /internal/force-mark/two_layer_paper_nav` 应返回 `ok: true, status: marked, nav: 1.004xxx`(R57 28 行后的第一行 by-design flat,nav 持平,daily_return=0)。
+
 ### 教训(同 S-378 + S-378b)
 
 「接一条线而不先量它能否真的工作」再演:
