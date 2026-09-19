@@ -33,8 +33,17 @@ SCHEMA_VERSION = 1                                              # bumped on edit
 INCEPTION_ID = "c2_q_v1"                                        # ship 2026-09-15
 DAY_60 = "2026-11-14"                                           # 60-day clock
 
-ENTER_Q_ZERO_THRESHOLD_DEFAULT = 0.85
-EXIT_Q_ZERO_THRESHOLD_DEFAULT = 0.65
+# ── Q thresholds: data-calibrated, NOT spec-default (S-378b + A-378b-1, 2026-09-19) ──
+# 旧值 0.85/0.65 是 §C2-SHIP-SPEC §8 锚定的 M-WO-7.1 12 维 fingerprint 标定:
+# 历史 458 天 0 次触发(per §S-378b)—— 阈值高于数据分布,**死代码**。
+# 新值来源:
+#   ENTER 0.2341 (p95): A-378b-1 zone-discrimination probe, n=458 / cohens_d 0.239/0.255 (5d/10d)
+#                       = 7 候选最强;18/458 触发 (3.9%/月,1-2 次/月)
+#   EXIT 0.05 (= ENTER - 0.1841): hysteresis gap ≥ 0.05 (env helper 校验下限)
+# Phase 2 升 0.30 条件:6 个月后 cohens_d ≥ 0.2 + n_triggered ≥ 36(Min-A escalation path)
+# Spec §8 仍指 0.85/0.65;**本表是数据裁定值,与 spec 锚定解耦**——改动要走 §IN-FLIGHT 拍板。
+ENTER_Q_ZERO_THRESHOLD_DEFAULT = 0.2341
+EXIT_Q_ZERO_THRESHOLD_DEFAULT = 0.05
 HYSTERESIS_GAP = 0.20
 DWELL_DAYS = 5
 ALLOWED_Q = (0.0, 0.5, 1.0, 1.3)

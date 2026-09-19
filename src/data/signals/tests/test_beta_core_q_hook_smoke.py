@@ -90,11 +90,15 @@ def test_compute_q_hook_state_first_ship_returns_baseline() -> None:
 
 
 def test_compute_q_hook_state_matcher_live_no_failure_returns_override() -> None:
-    """Matcher live + tail event → q_override = 0.0 (zero_zone)."""
+    """Matcher live + tail event → q_override = 0.0 (zero_zone).
+
+    NB 2026-09-19: 0.90 仍在新 ENTER=0.2341 之上 → 仍命中 zero_zone,断言不变;
+    注释里 0.85 改为 0.2341 同步数据裁定阈值。
+    """
     today = dt.date(2026, 9, 16)
     s = compute_q_hook_state(
         today=today, gross=0.65, regime="TIGHTENING",
-        smoothed_distance=0.90,                                  # above 0.85
+        smoothed_distance=0.90,                                  # above ENTER=0.2341
         vdb_matcher_live=True,
     )
     if s.q_override != 0.0:
@@ -120,11 +124,15 @@ def test_compute_q_hook_state_matcher_live_vdb_failure_falls_back() -> None:
 
 
 def test_compute_q_hook_state_matcher_live_baseline_band() -> None:
-    """Matcher live + low distance → q_override = 1.0 (one_zone, baseline)."""
+    """Matcher live + low distance → q_override = 1.0 (one_zone, baseline).
+
+    NB 2026-09-19: 数据裁定阈值 (S-378b + A-378b-1) EXIT=0.05;旧值 0.30/0.75
+    都落在新 ENTER=0.2341 之上,反而命中 zero_zone,**不再是 baseline band**。
+    """
     today = dt.date(2026, 9, 18)
     s = compute_q_hook_state(
         today=today, gross=0.65, regime="GOLDILOCKS",
-        smoothed_distance=0.30,                                  # below 0.65
+        smoothed_distance=0.02,                                  # below EXIT=0.05
         vdb_matcher_live=True,
     )
     if s.q_override != 1.0:
@@ -135,11 +143,15 @@ def test_compute_q_hook_state_matcher_live_baseline_band() -> None:
 
 
 def test_compute_q_hook_state_matcher_live_mid_band_with_up_signal() -> None:
-    """Matcher live + mid-band + up signal → q_override = 1.3 (up_zone)."""
+    """Matcher live + mid-band + up signal → q_override = 1.3 (up_zone).
+
+    NB 2026-09-19: 数据裁定阈值 (S-378b + A-378b-1) 中位带为 [0.05, 0.2341];旧值 0.75
+    落在 ENTER 之上,**已不再属中位带**,需取 0.15。
+    """
     today = dt.date(2026, 9, 19)
     s = compute_q_hook_state(
         today=today, gross=0.65, regime="RISK_ON",
-        smoothed_distance=0.75,                                  # between 0.65 and 0.85
+        smoothed_distance=0.15,                                  # mid-band [EXIT=0.05, ENTER=0.2341]
         enter_q_up_frac=0.6,                                     # 3/5 = 0.6 > 0.5
         vdb_matcher_live=True,
     )
