@@ -172,3 +172,177 @@ def test_two_layer_l1_holds_after_fix_with_real_compounding():
     # Old: nav_new = 1.0 * (1+r) → compounding starts from 1.0, not 1.015
     # New: nav_new = 1.015 * (1+r) → correct
     assert nav_base == pytest.approx(1.015, abs=1e-9)
+
+
+# ── S-378b-2.3 by-design flat branch (R57 verdict: core dead → 持零算术) ──────
+#
+# R57 verdict: two_layer's 28 rows are `book_state=core_dead` flat — by design,
+# not state loss. The S-326 conservative guard at lines 372-379 refused
+# `w_held={}` AND `w_tgt={}` because it could not distinguish "core dead
+# today AND yesterday" (legal flat-by-declaration) from "state lost" (bug).
+# Fix: when BOTH w_held AND w_tgt are empty, the day's P&L is structurally 0
+# (no positions × any market = 0 — arithmetic, not a lie). Mark flat honestly.
+
+def test_two_layer_by_design_flat_when_w_held_and_w_tgt_both_empty():
+    """R57 core-dead path: w_held={} AND w_tgt={} → price_pnl=0, nav=disk_prev.
+
+    This is the canonical "core dead for both yesterday and today" branch.
+    The book holds nothing by design, so the day's P&L is structurally 0.
+    We do NOT refuse (S-326/S-378b) because that loses honest records.
+    """
+    # Simulate the post-guard calculation: price_pnl=0, daily_ret=0,
+    # nav = nav_base * (1+0) = nav_base.
+    state = {"nav": 1.0, "last_mark": None, "core_name": "v5c",
+             "weights": {}, "mark_prices": {}}
+    disk_prev_nav, disk_prev_date = 1.004, "2026-09-18"
+
+    from src.data.signals.two_layer_paper import _compute_nav_base
+    nav_base = _compute_nav_base(state, disk_prev_nav, disk_prev_date,
+                                 today=dt.date(2026, 9, 19))
+    # w_held={} AND w_tgt={} → price_pnl=0, daily_ret=0 → nav=nav_base
+    price_pnl = 0.0  # by-design flat branch
+    daily_ret = price_pnl - 0.0  # turn=0, cost=0
+    nav_new = nav_base * (1.0 + daily_ret)
+    assert nav_new == pytest.approx(1.004, abs=1e-9)
+    # And nav_base itself was disk_prev (1.004), not 1.0 — compounding chain
+    # survives through core-dead days instead of resetting at 1.0 every cycle.
+    assert nav_base == pytest.approx(1.004, abs=1e-9)
+
+
+def test_two_layer_by_design_flat_preserves_compounding_after_real_returns():
+    """Real compounding history interleaved with by-design flat days.
+
+    Sequence:
+      09-14: nav=1.000
+      09-15: nav=1.008  (real return +0.8%)
+      09-16: nav=1.008  (core dead, flat — by design, NOT state loss)
+      09-17: nav=1.004  (real return -0.4%)
+      09-18: nav=1.004  (core dead again, flat — by design)
+      09-19: mark today → expect nav_new = 1.004 (not 1.0)
+    """
+    from src.data.signals.two_layer_paper import _compute_nav_base
+
+    # 09-19: state has weights={} (Redis might still hold stale state from 09-17),
+    # w_tgt={} (core dead today), disk_prev=1.004 from 09-18 flat row.
+    state = {"nav": 1.004, "last_mark": "2026-09-17", "core_name": "v5c",
+             "weights": {}, "mark_prices": {}}
+    disk_prev_nav, disk_prev_date = 1.004, "2026-09-18"
+
+    nav_base = _compute_nav_base(state, disk_prev_nav, disk_prev_date,
+                                 today=dt.date(2026, 9, 19))
+    # State last_mark=09-17 ≠ 09-18=disk_prev_date, so disk wins.
+    # nav_base = 1.004 (matches disk chain after the 09-17 -0.4% mark).
+    assert nav_base == pytest.approx(1.004, abs=1e-9)
+
+
+# ── _decide_price_pnl: 4-way guard decision (S-326/R57/S-378b-2.3) ───────────
+#
+# The guard inside mark_and_rebalance decides today's price_pnl contribution
+# from four states. Before the S-378b-2.3 fix, the by-design flat branch
+# (R57: w_held={} AND w_tgt={}) was missing — the S-326 conservative branch
+# refused it, losing honest records (the 28 core_dead rows from 09-14..).
+#
+# `_decide_price_pnl(w_held, w_tgt, last_px, mp, state, book)` is the pure
+# extraction of this decision. Returns (price_pnl, skip_envelope_or_None).
+
+def test_decide_price_pnl_w_held_non_empty_runs_weighted_mark():
+    """Branch ①: w_held non-empty → call weighted_mark with coverage check."""
+    from src.data.signals.two_layer_paper import _decide_price_pnl
+
+    w_held = {"BTC": 0.5, "ETH": 0.5}
+    w_tgt = {"BTC": 0.5, "ETH": 0.5}
+    last_px = {"BTC": 105.0, "ETH": 100.0}
+    mp = {"BTC": 100.0, "ETH": 100.0}  # BTC +5%, ETH flat
+    state = {"revived_from_disk": False}
+
+    price_pnl, skip = _decide_price_pnl(w_held, w_tgt, last_px, mp, state,
+                                       book="two_layer")
+    assert skip is None
+    # BTC: 0.5 * (105/100 - 1) = 0.5 * 0.05 = 0.025
+    # ETH: 0.5 * (100/100 - 1) = 0
+    # total = 0.025
+    assert price_pnl == pytest.approx(0.025, abs=1e-9)
+
+
+def test_decide_price_pnl_revived_from_disk_flat_zero():
+    """Branch ②: state empty + revived from disk → flat (price_pnl=0).
+
+    S-378b: Redis state was lost, we revived from disk_prev. w_held is {}
+    because we don't know what was held yesterday. Honest answer: 0.
+    """
+    from src.data.signals.two_layer_paper import _decide_price_pnl
+
+    w_held = {}
+    w_tgt = {"BTC": 0.5}  # today target is alive
+    last_px = {"BTC": 105.0}
+    mp = {}
+    state = {"revived_from_disk": True}
+
+    price_pnl, skip = _decide_price_pnl(w_held, w_tgt, last_px, mp, state,
+                                       book="two_layer")
+    assert skip is None
+    assert price_pnl == 0.0
+
+
+def test_decide_price_pnl_by_design_flat_when_both_empty():
+    """Branch ③ (NEW in S-378b-2.3): R57 by-design flat, both empty → 0.
+
+    two_layer's core is structurally dead (R57 verdict). When the core is
+    dead both yesterday AND today, w_held={} AND w_tgt={}. The book holds
+    nothing by design, so the day's P&L is structurally 0 — arithmetic,
+    not a lie. Mark flat honestly instead of refusing (S-326).
+    """
+    from src.data.signals.two_layer_paper import _decide_price_pnl
+
+    w_held = {}
+    w_tgt = {}
+    last_px = {"BTC": 105.0, "ETH": 100.0}
+    mp = {}
+    state = {"revived_from_disk": False}  # NOT revival — both empty by design
+
+    price_pnl, skip = _decide_price_pnl(w_held, w_tgt, last_px, mp, state,
+                                       book="two_layer")
+    assert skip is None  # NOT a refusal — this is the fix
+    assert price_pnl == 0.0
+
+
+def test_decide_price_pnl_state_lost_refuses():
+    """Branch ④: w_held={} AND w_tgt has positions AND NOT revived → S-326 refuse.
+
+    This is the actual state-lost bug: state was empty, NOT revived (Redis
+    miss but no disk), but w_tgt has positions (core alive today). We don't
+    know what was held yesterday, so we can't honestly compute P&L. Refuse.
+    """
+    from src.data.signals.two_layer_paper import _decide_price_pnl
+
+    w_held = {}
+    w_tgt = {"BTC": 0.5}  # core alive today, target has positions
+    last_px = {"BTC": 105.0}
+    mp = {}
+    state = {"revived_from_disk": False}  # NOT revived — state lost
+
+    price_pnl, skip = _decide_price_pnl(w_held, w_tgt, last_px, mp, state,
+                                       book="two_layer")
+    assert price_pnl is None
+    assert skip is not None
+    assert skip["status"] == "skipped"
+    assert "holds nothing" in skip["reason"]
+    assert skip["book"] == "two_layer"
+
+
+def test_decide_price_pnl_weighted_mark_fail_returns_skip():
+    """Branch ① failure: coverage < floor → return weighted_mark's skip envelope."""
+    from src.data.signals.two_layer_paper import _decide_price_pnl
+
+    w_held = {"BTC": 0.5, "ETH": 0.5}
+    w_tgt = {"BTC": 0.5, "ETH": 0.5}
+    last_px = {"BTC": 105.0}  # ETH missing → coverage 50% < 80% floor
+    mp = {"BTC": 100.0, "ETH": 100.0}
+    state = {}
+
+    price_pnl, skip = _decide_price_pnl(w_held, w_tgt, last_px, mp, state,
+                                       book="two_layer")
+    assert price_pnl is None
+    assert skip is not None
+    assert skip["status"] == "skipped"
+    assert "coverage" in skip["reason"].lower()
