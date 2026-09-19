@@ -189,6 +189,23 @@ async def _fetch_cis_pillar_o_live(symbols: list[str]) -> pd.Series:
 
 
 # ── State persistence (mirror fusion_paper_state schema) ─────────────────────
+def _compute_nav_base(state: dict[str, Any], disk_prev_nav: float | None,
+                      disk_prev_date: str | None, today: dt.date) -> float:
+    """S-378b: Pick the nav base for today's compounding. See factor_tilt_paper
+    for the rule (1) no disk history → 1.0; (2) state agrees with disk → state;
+    (3) otherwise → disk prev. pod_aggregator_state was empty on disk 2026-09-19,
+    so without this helper new_nav would be 1.0 * (1+r) every cycle, never
+    compounding, breaking L1 self-consistency with disk daily_return.
+    """
+    state_nav = float(state.get("nav", 1.0))
+    state_last = state.get("last_mark_date")
+    if disk_prev_nav is None:
+        return 1.0
+    if state_last == disk_prev_date and abs(state_nav - disk_prev_nav) < 0.01:
+        return state_nav
+    return disk_prev_nav
+
+
 async def _load_state() -> dict[str, Any]:
     """Load state from Supabase (durable). Falls back to in-memory cache."""
     try:
@@ -387,7 +404,15 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
     # Today's return
     today_idx = targeted_agg.index[-1]
     today_ret = float(targeted_agg.iloc[-1]) if len(targeted_agg) > 0 else 0.0
-    new_nav = float(state.get("nav", 1.0)) * (1.0 + today_ret)
+    # ── S-378b: state.nav must compound from disk, not reset to 1.0 ────────────
+    # Same root cause as factor_tilt: pod_aggregator_state was empty on disk,
+    # so `_load_state()` returned `nav=1.0` every cycle, breaking the compounding
+    # chain. See nav_persist.nav_table_last_nav and factor_tilt_paper.py:439.
+    from src.data.signals.nav_persist import nav_table_last_nav
+    state_nav = float(state.get("nav", 1.0))
+    disk_prev_nav, disk_prev_date = await nav_table_last_nav(NAV_TABLE, before=str(today))
+    nav_base = _compute_nav_base(state, disk_prev_nav, disk_prev_date, today)
+    new_nav = nav_base * (1.0 + today_ret)
     n_days_marked = int(state.get("n_days_marked", 0)) + 1
 
     # Per-pod mask status

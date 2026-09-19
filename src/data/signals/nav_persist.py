@@ -157,8 +157,71 @@ async def nav_row_exists(table: str, day: str) -> bool | None:
         return None
 
 
-async def nav_table_has_any_rows(table: str) -> bool | None:
+async def nav_table_last_nav(table: str, before: str | None = None,
+                              inception_id: str | None = None,
+                              include_voided: bool = False) -> tuple[float | None, str | None]:
+    """Return (nav, mark_date) of the last row in `table`, optionally before `before`.
+
+    Three-valued: (nav, date) tuple / (None, None) if empty / (None, None) if read failed.
+
+    S-378b: factor_tilt and pod_aggregator had L1 self-consistency failures because
+    their state.nav reset to 1.0 every cycle (state empty on read), while disk
+    nav rows were real. state.nav * (1 + today_ret) produced nav that didn't
+    compound with disk daily_returns. Fix: when state is missing or stale, read
+    the last disk nav and use it as the compounding base.
+
+    S-378b (fusion): the table may hold voided v1 rows AND live v2 rows. The
+    `inception_id` filter scopes the read to a specific incarnation. By default
+    voided rows (void_reason IS NOT NULL) are excluded — `include_voided=True`
+    flips that for callers that want the raw history.
+
+    None means we could not read. Callers MUST NOT read None as "1.0 inception"
+    — that's exactly the bug this function exists to prevent.
+    """
+    if not table:
+        return None, None
+    try:
+        import httpx
+
+        from src.api.store import _SB_KEY, _SB_URL
+        if not _SB_URL or not _SB_KEY:
+            return None, None
+        params = [("select", "mark_date,nav"), ("order", "mark_date.desc"), ("limit", "1")]
+        if before:
+            params.append(("mark_date", f"lt.{before}"))
+        if inception_id:
+            params.append(("inception_id", f"eq.{inception_id}"))
+        if not include_voided:
+            params.append(("void_reason", "is.null"))
+        async with httpx.AsyncClient(timeout=10) as c:
+            r = await c.get(
+                f"{_SB_URL}/rest/v1/{table}",
+                params=params,
+                headers={"apikey": _SB_KEY,
+                         "Authorization": f"Bearer {_SB_KEY}"})
+        if r.status_code != 200:
+            _log.warning("[NAV] %s last_nav check HTTP %s — returning None, "
+                         "which the caller must NOT read as 'inception'",
+                         table, r.status_code)
+            return None, None
+        rows = r.json()
+        if not rows:
+            return None, None
+        return float(rows[0]["nav"]), rows[0]["mark_date"]
+    except Exception as e:                                        # noqa: BLE001
+        _log.warning("[NAV] %s last_nav check raised: %s", table, e)
+        return None, None
+
+
+async def nav_table_has_any_rows(table: str, inception_id: str | None = None,
+                                 include_voided: bool = False) -> bool | None:
     """Has this book EVER marked? **Three-valued: True / False / None** (S-336).
+
+    S-378b (fusion): a table may hold voided v1 rows AND live v2 rows.
+    `inception_id` scopes the check to a specific incarnation; by default
+    voided rows (void_reason IS NOT NULL) are excluded — `include_voided=True`
+    flips that. The fusion S-336 guard uses `inception_id='v2'` so it no
+    longer refuses against its own voided past.
 
     THE QUESTION THIS ANSWERS, and why it needs its own function. When a book
     loads empty state, `weights` is `{}` — and S-326 recorded that `{}` has two
@@ -195,9 +258,15 @@ async def nav_table_has_any_rows(table: str) -> bool | None:
         from src.api.store import _SB_KEY, _SB_URL
         if not _SB_URL or not _SB_KEY:
             return None
+        params = [("select", "mark_date"), ("limit", "1")]
+        if inception_id:
+            params.append(("inception_id", f"eq.{inception_id}"))
+        if not include_voided:
+            params.append(("void_reason", "is.null"))
         async with httpx.AsyncClient(timeout=10) as c:
             r = await c.get(
-                f"{_SB_URL}/rest/v1/{table}?select=mark_date&limit=1",
+                f"{_SB_URL}/rest/v1/{table}",
+                params=params,
                 headers={"apikey": _SB_KEY,
                          "Authorization": f"Bearer {_SB_KEY}"})
         if r.status_code != 200:

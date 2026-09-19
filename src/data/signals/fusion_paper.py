@@ -495,6 +495,29 @@ async def _load_state() -> dict:
     return s
 
 
+def _compute_nav_base(state: dict, disk_prev_nav: float | None,
+                      disk_prev_date: str | None, today: dt.date) -> float:
+    """S-378b: Pick the nav base for today's compounding.
+
+    Rule (in priority order, same as factor_tilt_paper / pod_aggregator_paper):
+      1. No disk v2 history → 1.0 (genuine v2 inception).
+      2. State agrees with disk v2 (same date AND same nav within 1pp) → state.
+      3. Otherwise → disk v2 prev nav. State is stale or missing — disk
+         authoritative (S-321 / S-327).
+
+    Returns a float. Never returns None — caller's `nav_base * (1+r)` would
+    blow up otherwise, and a missing read should default to inception, not
+    to a NULL arithmetic.
+    """
+    state_nav = float(state.get("nav", 1.0))
+    state_last = state.get("last_mark")
+    if disk_prev_nav is None:
+        return 1.0
+    if state_last == disk_prev_date and abs(state_nav - disk_prev_nav) < 0.01:
+        return state_nav
+    return disk_prev_nav
+
+
 async def _save_state(s: dict) -> None:
     """Persist state. Durable first (Supabase), cache second (Redis).
 
@@ -649,24 +672,29 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
     # S-326 said the ①/② split belongs to the caller, because only the caller
     # can tell "holds nothing by design" from "state was not read". Here is that
     # split, decided against the TABLE rather than against the cache:
-    from src.data.signals.nav_persist import nav_table_has_any_rows
+    from src.data.signals.nav_persist import nav_table_has_any_rows, nav_table_last_nav
 
     if not w_held:
-        _has_history = await nav_table_has_any_rows(_NAV_TABLE)
-        if _has_history is None:
+        # S-378b: scope the check to v2 (live). v1 (voided) rows are the book's
+        # past-life — they are NOT this incarnation's history, and refusing
+        # against them would loop forever on the same 26 rows.
+        _has_v2 = await nav_table_has_any_rows(_NAV_TABLE, inception_id=_INCEPTION_ID)
+        if _has_v2 is None:
             return {"status": "skipped", "date": today.isoformat(),
                     "reason": "state is empty and the NAV table could not be read "
                               "— cannot tell inception from lost state, refusing "
                               "rather than marking a day we cannot justify"}
-        if _has_history:
-            return {"status": "skipped", "date": today.isoformat(),
-                    "reason": f"state is empty but {_NAV_TABLE} already has marks "
-                              "— this book held a position yesterday and cannot say "
-                              "what. A flat mark here is not arithmetic, it is a "
-                              "claim we did not observe (S-194/S-326/S-336)"}
-        # Table empty AND state empty: genuine inception. Holding nothing times
-        # any market really is zero, and that IS arithmetic.
-        _log.info("[fusion] inception — no prior marks and no state, NAV 1.0")
+        if _has_v2:
+            # S-378b: v2 has rows but state is empty. Read disk prev nav as the
+            # compounding base — this is the same defect as factor_tilt /
+            # pod_aggregator (state empty on read, disk has real history).
+            # We do NOT refuse — we revive from disk.
+            _log.info("[fusion] state empty but v2 has %s prev rows — "
+                      "will compound from disk", _INCEPTION_ID)
+        else:
+            # No v2 rows AND no state: genuine v2 inception. Holding nothing
+            # times any market really is zero, and that IS arithmetic.
+            _log.info("[fusion] inception — no prior v2 marks and no state, NAV 1.0")
 
     # Mark-to-market PnL: Σ w_held × (price[t]/price[t-1] - 1)
     price_pnl = 0.0
@@ -677,7 +705,12 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
     # Turnover cost on the clip we just got from fill_attribution
     cost_frac = (fill["totals"]["weighted_slippage_bps"] / 1e4) if fill["totals"]["weighted_slippage_bps"] > 0 else 0.0
     daily_ret = price_pnl - cost_frac
-    nav_new = nav * (1.0 + daily_ret)
+    # S-378b: compound from disk v2 prev nav when state is empty or stale.
+    # Same pattern as factor_tilt_paper._compute_nav_base — the helper is
+    # defined above.
+    disk_prev_nav, disk_prev_date = await nav_table_last_nav(
+        _NAV_TABLE, before=str(today), inception_id=_INCEPTION_ID)
+    nav_new = _compute_nav_base(state, disk_prev_nav, disk_prev_date, today) * (1.0 + daily_ret)
 
     new_state = {
         "inception": state.get("inception", today.isoformat()),

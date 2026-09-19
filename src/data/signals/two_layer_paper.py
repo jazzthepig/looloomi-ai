@@ -210,6 +210,31 @@ async def _live_core() -> dict:
     return DEFAULT_CORE
 
 
+def _compute_nav_base(state: dict, disk_prev_nav: float | None,
+                      disk_prev_date: str | None, today: dt.date) -> float:
+    """S-378b: Pick the nav base for today's compounding.
+
+    Rule (in priority order, same as factor_tilt_paper / pod_aggregator_paper):
+      1. No disk history → 1.0 (genuine inception).
+      2. State agrees with disk (same date AND same nav within 1pp) → state.
+      3. Otherwise → disk prev nav. State is stale or missing — Redis-only
+         state means a TTL'd key, evicted entry, or process restart between
+         cycles leaves state empty even though `two_layer_paper_nav` has
+         real compounding rows.
+
+    Returns a float. Never returns None — caller's `nav_base * (1+r)` would
+    blow up otherwise, and a missing read should default to inception, not
+    to a NULL arithmetic.
+    """
+    state_nav = float(state.get("nav", 1.0))
+    state_last = state.get("last_mark")
+    if disk_prev_nav is None:
+        return 1.0
+    if state_last == disk_prev_date and abs(state_nav - disk_prev_nav) < 0.01:
+        return state_nav
+    return disk_prev_nav
+
+
 def target_weights(data: dict, core: dict) -> tuple[dict, dict]:
     """Today's target book + diagnostics. Overlay-only: w = core × I(C > gate), equal-weight.
 
@@ -269,23 +294,47 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
     w_tgt, diag = target_weights(data, core)
     last_px = {c: float(d["close"][-1]) for c, d in data.items()}
 
+    # S-378b: read disk prev nav ONCE — used by both the revival branch (to
+    # decide inception vs revival) and `_compute_nav_base` (to determine the
+    # compounding base if state is missing/stale).
+    from src.data.signals.nav_persist import nav_table_last_nav
+    disk_prev_nav, disk_prev_date = await nav_table_last_nav(
+        "two_layer_paper_nav", before=str(today))
     state = await _redis_get(_STATE_KEY)
     if not isinstance(state, dict) or "nav" not in state:
-        state = {"inception": today.isoformat(), "nav": 1.0, "weights": w_tgt,
-                 "mark_prices": last_px, "last_mark": today.isoformat(),
-                 "core_name": core.get("name", "v5c")}
-        if not dry_run:
-            # S-334: write FIRST, advance state only on a durable write. Advancing
-            # first leaves the cache asserting a mark the table does not have — the
-            # state then says "done" about a day that was never recorded, and §3
-            # forbids backfilling it.
-            _ok, _why = await _write_nav(today, 1.0, 0.0, w_tgt, 0.0, diag, core, source=source)
-            if not _ok:
-                return {"status": "mark_failed", "date": today.isoformat(),
-                        "error": f"durable_write_failed :: {_why}"}
-            await _redis_set(_STATE_KEY, state, ttl=0)
-        return {"status": "inception", "nav": 1.0, "book_state": diag["book_state"],
-                "n": len(w_tgt), "date": today.isoformat()}
+        # S-378b: Redis state is empty. two_layer's state lives ONLY in Redis
+        # (no Supabase state table), so a TTL, eviction, or process restart
+        # between cycles leaves `state` empty even though `two_layer_paper_nav`
+        # has real compounding rows. Try to revive from disk before incepting.
+        if disk_prev_nav is not None:
+            # Revive: set state.nav to disk prev so today's mark compounds from
+            # the real chain, not from 1.0. w_held stays {} (we don't know what
+            # was held yesterday), so daily_ret will be 0 (flat day), which is
+            # honest for a core-dead book.
+            _log.info("[two_layer] Redis state empty — reviving from disk "
+                      "(disk_prev=%.6f on %s)", disk_prev_nav, disk_prev_date)
+            state = {"inception": disk_prev_date, "nav": disk_prev_nav,
+                     "weights": {}, "mark_prices": {},
+                     "last_mark": disk_prev_date,
+                     "core_name": core.get("name", "v5c"),
+                     "revived_from_disk": True}
+        else:
+            # Genuine inception: state empty AND no disk rows.
+            state = {"inception": today.isoformat(), "nav": 1.0, "weights": w_tgt,
+                     "mark_prices": last_px, "last_mark": today.isoformat(),
+                     "core_name": core.get("name", "v5c")}
+            if not dry_run:
+                # S-334: write FIRST, advance state only on a durable write. Advancing
+                # first leaves the cache asserting a mark the table does not have — the
+                # state then says "done" about a day that was never recorded, and §3
+                # forbids backfilling it.
+                _ok, _why = await _write_nav(today, 1.0, 0.0, w_tgt, 0.0, diag, core, source=source)
+                if not _ok:
+                    return {"status": "mark_failed", "date": today.isoformat(),
+                            "error": f"durable_write_failed :: {_why}"}
+                await _redis_set(_STATE_KEY, state, ttl=0)
+            return {"status": "inception", "nav": 1.0, "book_state": diag["book_state"],
+                    "n": len(w_tgt), "date": today.isoformat()}
 
     if state.get("last_mark") == today.isoformat():
         # ⚠️ **state 说做过不算数,表说有才算** (S-321 / S-327)。
@@ -307,15 +356,33 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
     # S-194. This book recorded 0.00% on SIX of six marks in the week the panel
     # ran +23.99% — the most complete instance of the class.
     from src.data.signals.mark_coverage import weighted_mark
-    _mk = weighted_mark(w_held, last_px, mp, book="two_layer")
-    if not _mk.ok:
-        return _mk.as_skip("two_layer")
-    price_pnl = _mk.pnl
+    if w_held:
+        _mk = weighted_mark(w_held, last_px, mp, book="two_layer")
+        if not _mk.ok:
+            return _mk.as_skip("two_layer")
+        price_pnl = _mk.pnl
+    elif state.get("revived_from_disk"):
+        # S-378b: revival branch — w_held={} is KNOWN (state was lost, just
+        # revived from disk). Mark a flat day honestly. PnL=0 because we don't
+        # know what was held yesterday, and a fabricated PnL is the same class
+        # of lie as S-194 (the 0.00% bug this guard exists to prevent).
+        price_pnl = 0.0
+        _log.info("[two_layer] revival — flat day at disk_prev (no w_held to compute PnL)")
+    else:
+        # S-326: empty weights, no revival flag — we don't know if this is
+        # "by design" (R57 core dead) or "state lost" (the bug we're fixing).
+        # Be conservative and refuse — caller can retry after reviving state.
+        return {"status": "skipped", "book": "two_layer",
+                "reason": "two_layer: holds nothing and not a revival — "
+                          "call _redis_get before this path or revive from disk "
+                          "(S-326/S-378b)",
+                "coverage": 0.0, "priced": 0, "unpriced": 0, "unpriced_sample": []}
 
     turn = sum(abs(w_tgt.get(c, 0.0) - w_held.get(c, 0.0)) for c in set(w_tgt) | set(w_held))
     cost = _FEE * turn
     daily_ret = price_pnl - cost
-    nav = float(state["nav"]) * (1.0 + daily_ret)
+    # S-378b: compound from disk prev nav when state is missing/stale.
+    nav = _compute_nav_base(state, disk_prev_nav, disk_prev_date, today) * (1.0 + daily_ret)
 
     state = {**state, "nav": nav, "weights": w_tgt, "mark_prices": last_px,
              "last_mark": today.isoformat(), "core_name": core.get("name", "v5c")}

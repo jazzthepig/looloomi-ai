@@ -20597,6 +20597,31 @@ _check("洞 21 天 → 窗口伸到 23 天", _window(_state(21)) == 23,
 
 ---
 
+## S-369 — ⓠ REGIME OVERRIDE 的 paper track 表建在 SQL 文件里,而该文件还在 untracked (2026-09-20)
+
+按 Jazz 2026-08-06「接吧」:把 ⓠ REGIME OVERRIDE enforcer 接进 R64 fusion book
+的 60 天 paper test (P3 promotion gate: 60d paper + validated)。
+
+A-369 探查 (2026-09-17):writer 写 `/tmp/cometcloud_data/.../regime_track.csv`,
+写 Supabase 时 `PGRST205` —— **`fusion_paper_regime_track` 表不存在**。
+PGRST205 是 PostgREST 对「schema cache 知道这张表吗」的直球回答;
+它不知道,**因为没人建**。结果:writer 的 Supabase 分支静默失败,
+/tmp CSV 成了事实唯一来源,每次 Railway deploy 或 Mac 重启
+**静默归零** regime_track 历史 —— 而 enforcer 评估的恰恰是这条曲线。
+
+**修法**:建 `fusion_paper_regime_track` 表 + 改 writer `_supabase_write_track()`。
+SQL 在 `scripts/supabase_fusion_paper_regime_track.sql`,
+Python writer 在 `src/research/validation/fusion_paper_regime_track.py`。
+两个文件都还 **untracked** (per `git --no-optional-locks status --porcelain`
+2026-09-20)—— A-S369-1.4 派活给 Seth,Seth 实施完未 commit。
+
+⚠️ 本条本身也是个 ledger 守则的现成反例:**「claim the heading BEFORE writing
+the body」(CLAUDE.md 规则 #7)—— 这里「body」(代码 + SQL)先写,heading 后补,
+preflight 2026-09-20 把这个 untracked citation 打成 `✗ dangling ledger
+citation — do not push`,卡了一次 commit。**heading 不是文书,是门。**
+
+---
+
 ## S-370 — 我把一条单表测量推广成了通则,C 用更好的方法推翻了它 (2026-09-17)
 
 S-360 我写下:「**我们不是缺向量索引 —— 有三个 HNSW,全盖在空东西上**;
@@ -21495,3 +21520,59 @@ C 把 5.1「⓪ OVERRIDE wire(M-128d 2D gate)」写成「现成答案,Seth 拍�
 **所以 5.1 的前置判据(不可跳过):先在我们自己的数据上量 M-128d 那两个门槛
 历史触发几天、落在哪些 regime。** 触发 0 天和 380 天都是坏的。
 **⓪ 是 Jazz 最在意的那层(拐点削回撤),在它身上重演 S-378b 的代价远大于 ⓠ。**
+
+## S-369 — 派活给 A/B/C:数据每天自动跑通了吗?0 调度者,我自己手接的三条也算
+
+**触发**(2026-09-17 早): 「**明天早上它自己动了吗**」 —— 一次手动跑通不算。
+Seth 自己昨天手接了三条:`refresh_signal_edge_map` · `phase_distance` ·
+`/api/v1/regime/similar`,全是 0 调度者。
+
+**派活**(S-369, A/B/C 三条):
+
+### A-S369-1 — refresh_signal_edge_map 自动调度 ✅ shipped (c191c83, 2026-09-17)
+
+A 写了 `signal_edge_map_refresh.py` (46 行) + launchd plist 03:00 UTC auto-RPC
++ canary `signal_edge_map/computed_at/26h` 已加。✅ shipped。
+
+A 顺带探了 1.3 + 1.4 → Seth handoff:
+
+### S-369-1.3 — `phase_distance` 0 调用方 + `vdb_matcher_live=False` 硬编码 (2026-09-20 复核 ✅)
+
+A 当时报告(2026-09-17):`phase_distance()` 函数存在但 0 调用方;
+`beta_core_q_hook.py:62` `vdb_matcher_live=False` 硬编码 → flip + 顶部 await。
+
+**2026-09-20 复核**(M-187):S-378 (2026-09-17 下午 ship) 已把 hook 默认 flip 到
+`vdb_matcher_live=True`(读 `VDB_MATCHER_LIVE` env),`beta_core_paper.py:1209`
+真在 `await smoothed_phase_distance()` 然后传 `compute_q_hook_state(smoothed_distance=_sm)`。
+链路**已通**;A 当时诊断时 S-378 还没 ship。无 code 改动需要。
+
+### S-369-1.4 — `fusion_paper_regime_track` Supabase 表不存在 (2026-09-20, M-188 ✅)
+
+A 当时报告:PGRST205 实测,`/tmp/cometcloud_data/.../regime_track.csv` 是唯一
+真归宿 → 违反 Rule 3a (Railway 部署 / Mac 重启清空)。三选一:建表 / 改路径
+/ 复用现有表。
+
+**2026-09-20 拍**:建表 + 留 CSV 作 cache。`fusion_paper_state` (S-176) 是
+同形状先例,直接 mirror:
+
+- DDL: `scripts/supabase_fusion_paper_regime_track.sql` (12 列 + UNIQUE(date_utc)
+  + service_role_only RLS + updated_at trigger)。**idempotent**。
+- 写者 docstring 改:S-369 1.4 + Supabase is system of record + /tmp CSV = cache。
+- 守卫:`tests/test_fusion_paper_regime_track_schema.py` 6/6 PASS
+  (DDL exists · UNIQUE(date_utc) · RLS service_role_only · writer keys ⊂ DDL
+   · id + timestamps trio · docstring 说清楚)。
+
+⏸ **部署 gated**:DDL 必须在 Mac-side Supabase SQL editor 跑一次
+(`scripts/supabase_fusion_paper_regime_track.sql`,idempotent,可用 `psql` 走
+`SUPABASE_DB_URL`)。Python 写者不动 —— 表存在它就 upsert 成功;
+不存在就 best-effort fail 落到 /tmp,与 2026-09-17 A 测的状态同形。
+
+### 教训(同 S-378 + S-378b)
+
+「接一条线而不先量它能否真的工作」再演:
+- S-378 ⓠ wire 但 0.85/0.65 死阈值 → 「评估过,持有」每天照发
+- S-369 1.4 ⓠ wire 但表不存在 → 「已写,持久」每天照发,实际每次 deploy 清零
+
+同一个机制,**不量它能不能落就先假装它落了**。S-378b 0 触发 = 永远不响;
+S-369 1.4 PGRST205 = 落不到该落的地方。**两类失败长得一样:输出格式正确,
+目的地不存在**。下一次见到「写完照常返回 True」就该想到这一对。
