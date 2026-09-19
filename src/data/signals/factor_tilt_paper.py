@@ -236,6 +236,32 @@ async def _fetch_cis_pillar_o_live(symbols: list[str]) -> pd.Series:
 
 
 # ── State persistence (mirror fusion_paper_state schema) ─────────────────────
+def _compute_nav_base(state: dict[str, Any], disk_prev_nav: float | None,
+                      disk_prev_date: str | None, today: dt.date) -> float:
+    """S-378b: Pick the nav base for today's compounding.
+
+    Rule (in priority order):
+      1. No disk history → 1.0 (genuine inception).
+      2. State agrees with disk (same date AND same nav within 1pp) → state.
+         State gives the full compounding chain — every cycle is a mark, and
+         state captures inter-mark drift if any.
+      3. Otherwise → disk prev nav. The state is stale or missing (verified
+         factor_tilt_state was empty 2026-09-19); disk is authoritative
+         (S-321 / S-327 — "表说有没有比 state 说自己做过更算数").
+
+    Returns a float. Never returns None — caller's `nav_base * (1+r)` would
+    blow up otherwise, and a missing read should default to inception, not
+    to a NULL arithmetic.
+    """
+    state_nav = float(state.get("nav", 1.0))
+    state_last = state.get("last_mark_date")
+    if disk_prev_nav is None:
+        return 1.0
+    if state_last == disk_prev_date and abs(state_nav - disk_prev_nav) < 0.01:
+        return state_nav
+    return disk_prev_nav
+
+
 async def _load_state() -> dict[str, Any]:
     try:
         import httpx
@@ -436,7 +462,20 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
     # Excess return
     excess = today_ret - float(bench.iloc[-1])
 
-    new_nav = float(state.get("nav", 1.0)) * (1.0 + today_ret)
+    # ── S-378b: state.nav must compound from disk, not reset to 1.0 ────────────
+    # factor_tilt_state was empty on disk (verified 2026-09-19), so
+    # `_load_state()` returned `_default_state()` with `nav=1.0` and
+    # `inception_date=today` every cycle. Result: new_nav = 1.0 * (1+today_ret)
+    # each day, never compounding, while disk daily_return held real book returns.
+    # L1 self-consistency (nav[t]/nav[t-1]-1 ≈ daily_return[t]) failed by up to
+    # 2.5pp because disk nav was from inception each cycle, not from prev disk nav.
+    # Fix: prefer state.nav when present AND matches disk prev nav; otherwise fall
+    # back to disk prev nav. Read disk via nav_persist.nav_table_last_nav.
+    from src.data.signals.nav_persist import nav_table_last_nav
+    state_nav = float(state.get("nav", 1.0))
+    disk_prev_nav, disk_prev_date = await nav_table_last_nav(NAV_TABLE, before=str(today))
+    nav_base = _compute_nav_base(state, disk_prev_nav, disk_prev_date, today)
+    new_nav = nav_base * (1.0 + today_ret)
     n_days_marked = int(state.get("n_days_marked", 0)) + 1
     inception = dt.date.fromisoformat(state["inception_date"])
     n_forward_days = (today - inception).days

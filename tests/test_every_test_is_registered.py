@@ -99,6 +99,16 @@ EXEMPT = {
         "9 个断言在沙箱里返回 503/403 —— 缺凭证与 role gate,是环境相关而非代码缺陷。"
         "进 CI 会让 preflight 在没有凭证的机器上常红,而常红的关卡等于没有关卡。"
         "归属:需要先给它一个不依赖真实凭证的 fixture,再注册 (S-244 未了项)。",
+    "test_fusion_paper_regime_track_schema":
+        "S-369 配套测试,验证 `fusion_paper_regime_track` 表 schema 字段(见 "
+        "`scripts/supabase_fusion_paper_regime_track.sql`)。文件存在 2026-09-20, "
+        "但 SQL 还未在 Supabase 实际 apply(表不存在 ⇒ 测试 import 即连,跑起来全红), "
+        "且 SQL + Python writer 都还是 untracked(S-369 ledger heading 2026-09-20 才 claim)。"
+        "**注册它会让 preflight 常红,而常红的关卡等于没有关卡**(S-244 同理)。"
+        "删除条件:① SQL 在 Supabase apply 成功(Supabase MCP `apply_migration` 或 psql)→ "
+        "② writer 改成 service_role 凭证并实际写一行 → "
+        "③ 测试转绿 → 注册 `python3 -m tests.test_fusion_paper_regime_track_schema` "
+        "进 preflight 并**删掉这一行**。到期日 2026-09-27 一周后(JAZZ 拍)。",
 }
 
 #: 非测试文件 —— 不参与统计。
