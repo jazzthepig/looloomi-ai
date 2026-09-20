@@ -93,6 +93,15 @@ DECISION_INPUTS = {
 _log = logging.getLogger("fusion_paper_regime_track")
 
 # ── Persistence constants ────────────────────────────────────────────────────
+# S-369 1.4 (2026-09-20): Supabase is **system of record**. /tmp CSV is a
+# redundant cache the writer rebuilds on read miss. Before this fix, the
+# Supabase table did not exist (PGRST205 measured 2026-09-17 by A-369 probe),
+# every deploy silently zeroed the /tmp CSV, and there was **no durable
+# record of the regime_track**. Mirror the `fusion_paper_state` (S-176)
+# posture: durable first, cache best-effort.
+#
+# DDL: scripts/supabase_fusion_paper_regime_track.sql (UNIQUE(date_utc),
+# service_role_only RLS, updated_at trigger).
 _TRACK_DIR = Path("/tmp/cometcloud_data/paper_books/fusion_paper_regime_track")
 _TRACK_CSV = _TRACK_DIR / "regime_track.csv"
 _SUPABASE_TABLE = "fusion_paper_regime_track"
