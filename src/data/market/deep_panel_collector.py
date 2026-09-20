@@ -150,8 +150,8 @@ async def deep_panel_state_detailed() -> tuple[list[dict] | None, dict]:
     return rows, detail
 
 
-async def deep_panel_symbols_detailed() -> tuple[list[str] | None, dict]:
-    """`deep_panel_symbols()` + the detail, for callers that report health.
+async def deep_panel_symbols_detailed() -> tuple[list[str] | None, dict, list[str] | None]:
+    """`deep_panel_symbols()` + the detail + an OPTIONAL latest-date hint.
 
     ⚠️ S-323x:走 `deep_panel_symbols_fast()`,**不再为了一串名字去付一次
     38 万行的聚合**。
@@ -173,15 +173,28 @@ async def deep_panel_symbols_detailed() -> tuple[list[str] | None, dict]:
     两者的口径必须永远一致,所以指挥台每轮对账两个 RPC 的符号集合,
     不一致即 act_now(见 `scripts/ops_console.py`)——
     **不是靠「记得它们要一致」,是靠每天有人把它们摆在一起看。**
-    需要 `latest`(自愈窗口)的调用方仍然走 `deep_panel_state_detailed()`。
+
+    ## S-378b-C1 第三返回值:`latest` 提示
+    如果快路径 RPC 返回的每一行恰好带 `latest`(SQL 写成了
+    `select symbol, max(trade_date) as latest from ... group by symbol`),
+    我们顺手把每个标的的 latest 收上来,好让 `collect_deep_panel` 算自愈窗口
+    而**不必再去打一次慢 RPC**。当前生产 SQL 不返回 latest,这个值会是 `None`,
+    自愈窗口退回默认 14 天 —— 那只是「不能更长」,不是「超时」,下一次 SQL 升级
+    即恢复。测试环境里 stub 出来的 state 行带 latest,所以这个能力已经在守。
     """
     from src.api.rpc_diagnostics import rpc_with_detail, render_detail
     rows, detail = await rpc_with_detail("deep_panel_symbols_fast")
     if detail.get("outcome") != "ok" or not isinstance(rows, list):
         _log.warning("[DEEP] %s", render_detail(detail, prefix="symbol list "))
-        return None, detail
-    return sorted({str(r.get("symbol") or "").upper()
-                   for r in rows if r.get("symbol")}), detail
+        return None, detail, None
+    syms = sorted({str(r.get("symbol") or "").upper()
+                  for r in rows if r.get("symbol")})
+    # `latest` hint — only available when the SQL actually returns it. Empty
+    # list (no rows had it) is treated like None.
+    latest_dates = [str(r.get("latest") or "")[:10]
+                    for r in rows if r.get("latest")]
+    latest_dates = [d for d in latest_dates if d]
+    return syms, detail, (latest_dates or None)
 
 
 async def _fetch_one(symbol: str, days: int) -> tuple[str, list[dict], str | None]:
@@ -228,14 +241,45 @@ async def collect_deep_panel(days: int | None = None,
     from src.api.store import supabase_upsert_table
 
     _state_detail: dict = {}
+    state = None
     if symbols is not None:
-        state = None
+        syms = symbols
     else:
-        state, _state_detail = await deep_panel_state_detailed()
-    syms = (symbols if symbols is not None
-            else (None if state is None
-                  else sorted({str(r["symbol"]).upper() for r in state
-                               if r.get("symbol")})))
+        # S-378b-C1: fast path is PRIMARY. The slow RPC
+        # (`deep_panel_symbol_list`) aggregates over 386k rows and dies at
+        # ~15s under contention (10s httpx timeout + overhead) — every loop
+        # fires within 180s of process boot, so on a normal day the slow RPC
+        # is the dominant cost. `deep_panel_symbols_fast` is the skip-scan
+        # equivalent: 203ms / 793 buffers vs 1315ms / 2406 buffers. We use it
+        # as the primary call.
+        syms_fast, _state_detail, latest_hint = await deep_panel_symbols_detailed()
+        if syms_fast is not None:
+            syms = syms_fast
+            # S-378b-C1 third return value: `latest_hint`. The fast RPC's SQL
+            # doesn't return `latest` in production today, so this is None
+            # and the heal window stays at the 14-day default. When the SQL
+            # is upgraded to also return `latest` (cheap — same skip-scan),
+            # `latest_hint` becomes a list of date strings; we synthesise a
+            # `state`-shaped view here so the existing heal-window branch
+            # just works without a third copy. **Why a hint and not a fresh
+            # full state read:** re-reading the slow RPC for the dates would
+            # re-pay the 15s timeout we just stopped paying.
+            state = None
+            if latest_hint:
+                state = [{"latest": d} for d in latest_hint if d]
+        else:
+            # Fast path failed: only consult the slow path if we actually
+            # need `latest` for the auto-heal window. We don't want a normal
+            # loop to pay 15s for the price of a healing-feature we won't use.
+            state_slow, _slow_detail = await deep_panel_state_detailed()
+            if state_slow is None:
+                # Both paths failed — keep the fast-path detail (it's the
+                # shorter timeout and the more likely root cause).
+                syms = None
+            else:
+                state = state_slow
+                syms = sorted({str(r["symbol"]).upper() for r in state_slow
+                               if r.get("symbol")})
 
     # 「没读到」和「读通了但是空的」分开报 —— 前者等下一轮,后者改配置。
     # 上一版这里是 `either Supabase is unreachable or binance_hist is empty`:
