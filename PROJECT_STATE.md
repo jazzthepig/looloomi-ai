@@ -265,9 +265,16 @@ The cap is doing its job only if closure is as routine as addition.*
    All 11 created; verified live `23/23 present, missing: []`.
    VERIFY: `python3 -m tests.test_every_written_table_exists` (offline: manifest matches source)
    · `curl -s -H "X-Internal-Token: $INTERNAL_TOKEN" $RAILWAY/internal/schema-drift` → `missing: []`
-   OWNER: Seth (both halves shipped) · still open: `scripts/supabase_fusion_paper.sql` grants
-   `FOR INSERT WITH CHECK (true)` to PUBLIC on a forward NAV table — the DB was built without it,
-   the file still needs correcting or the next person to run it re-opens public writes.
+   OWNER: Seth (both halves shipped) · **🟢 2026-09-20 close (M-189)** — `scripts/supabase_fusion_paper.sql`
+   no longer grants PUBLIC writes: only `DROP POLICY IF EXISTS` + history comments remain, no live
+   `CREATE POLICY` lines. All 7 migration files (`supabase_setup`/`supabase_all_tables`/
+   `supabase_fusion_paper`/`supabase_migration_cause_history`/`supabase_migration_week10`/
+   `supabase_migration_timeseries`/`supabase_strategy_records`) verified clean; the 3 files that
+   DO have live CREATE POLICY use `service_role_only` posture (fusion_paper_regime_track /
+   fusion_paper_state / strategy34_books). `tests/test_no_sql_file_grants_public_access.py` 5/5
+   PASS (no-PUBLIC-grant / no-TO-clause / no-false-denial / OR-trap-doc / leaked-tables-named).
+   "Next person re-runs it" failure mode is now mechanically impossible at the file level
+   (S-167 in production + structural guard in preflight).
 
    Migration now applied (RLS on, anon revoked); `/health` gained
    `data_layer.strategy_library`; `tests/test_strategy_durability.py` 4/4 in preflight. Kept OUT of
