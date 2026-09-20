@@ -21667,3 +21667,5 @@ S-369 1.4 PGRST205 = 落不到该落的地方。**两类失败长得一样:输�
 **为什么 _two_layer_paper_loop 不 opt-in**:R57 verdict 是 V5c core dead by design,loop **永远至少 1 refusal** 是 R57 的产物。给 R57 加 count 升级会让 R57 自己 escalate 成 act_now(自相矛盾)且跟 S-378b-2(engagement / by-design flat)两分支的几何结果混淆 —— book 真复活时 `_two_layer_paper_loop` 也走 REFUSED(loop 跟 book 是两个对象)。**保守做法 = opt-in + 显式 absent + 测试锁**。
 
 ⏸ **验证 gated**:`bash scripts/preflight.sh` ✅ (Phase 1+2+3 全绿);**20/20 ops_console tests PASS**;不动 dashboard,只动 `_classify_loops` 输出,无需 Railway force-mark 验证。
+
+⚠️ **CROSS-LANE COMMIT COLLISION**(2026-09-20):这段代码落到 origin/main 是通过 `fe85e9d feat(s369): M-186 Q-threshold 0.2341 + M-188 fusion_paper_regime_track durable table` —— **Seth lane 没写这条 commit**,是 Min-A 的 message 里包了 Seth 的 diff(3 files / 252 lines,正好是 S-378b-5 全工作)。**code 是对的、tests 是绿的**,只是 `git log --grep=S-378b-5` 找不到、M186/M188 commit 也不该有我的 ledger entry。Rule 6 "stage only your OWN paths" 失败 —— Min-A 那侧用了 `git add -A` 把已 staged 的 Seth 工作也捎进去了。修正 = 此处加 audit note(本次)+ Sync 段记录;**code 不可逆撤回**(会破坏 prod 的 _classify_loops 行为);M-186/M-188 真实文件仍在 working tree 等 Min-A 自行 commit。S-378b-5 视为 **DEPLOYED / MISATTRIBUTED**。
