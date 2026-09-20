@@ -267,16 +267,27 @@ async def evaluate_forward_record() -> dict[str, Any]:
         out["reason"] = "Supabase 未配置 —— **未测,不是合格**"
         return out
     try:
-        import httpx
+        # S-378b-C2: route through the shared retry helper so this read
+        # participates in the breaker and obeys the 10s/once timeout. The
+        # prior direct-httpx call took up to 15s on a slow day and never
+        # tripped the breaker — so the other three loop calls retreated
+        # under contention while this one kept timing out individually.
+        from src.api.store import _supabase_request_with_retry
         from src.data.signals.beta_core_paper import _INCEPTION_ID
         url = (f"{_SB_URL}/rest/v1/beta_core_nav"
                f"?select=mark_date,nav,benchmark_nav,interval_hours"
                f"&inception_id=eq.{_INCEPTION_ID}&void_reason=is.null"
                f"&order=mark_date.asc")
-        async with httpx.AsyncClient(timeout=15) as c:
-            r = await c.get(url, headers={"apikey": _SB_KEY,
-                                          "Authorization": f"Bearer {_SB_KEY}"})
-        rows = r.json() if r.status_code == 200 else None
+        r = await _supabase_request_with_retry(
+            "GET", url,
+            headers={"apikey": _SB_KEY,
+                     "Authorization": f"Bearer {_SB_KEY}"})
+        if r is None or r.status_code != 200:
+            out["reason"] = (f"beta_core_nav 读取失败 (status="
+                             f"{getattr(r, 'status_code', None)}) —— "
+                             f"**未测,不是合格**")
+            return out
+        rows = r.json()
     except Exception as e:                                      # noqa: BLE001
         out["reason"] = f"读不到 beta_core_nav:{type(e).__name__} —— **读不到 ≠ 没有记录**"
         return out
@@ -363,15 +374,25 @@ async def check_pit_lag() -> dict[str, Any]:
         out["reason"] = "Supabase 未配置 —— **未测,不是合格**"
         return out
     try:
-        import httpx
+        # S-378b-C2: same shared-retry-helper swap as evaluate_forward_record.
+        # Both functions used to take up to 15s on a slow day each, and neither
+        # tripped the breaker — so the loop's heartbeat went red on a Supabase
+        # hiccup that the breaker would have caught early.
+        from src.api.store import _supabase_request_with_retry
         from datetime import date as _date
         url = (f"{_SB_URL}/rest/v1/ohlcv_daily"
                f"?select=trade_date,recorded_at&source=eq.coingecko_pro_ohlc"
                f"&order=trade_date.desc&limit=400")
-        async with httpx.AsyncClient(timeout=15) as c:
-            r = await c.get(url, headers={"apikey": _SB_KEY,
-                                          "Authorization": f"Bearer {_SB_KEY}"})
-        rows = r.json() if r.status_code == 200 else None
+        r = await _supabase_request_with_retry(
+            "GET", url,
+            headers={"apikey": _SB_KEY,
+                     "Authorization": f"Bearer {_SB_KEY}"})
+        if r is None or r.status_code != 200:
+            out["reason"] = (f"ohlcv_daily 读取失败 (status="
+                             f"{getattr(r, 'status_code', None)}) —— "
+                             f"**未测,不是合格**")
+            return out
+        rows = r.json()
     except Exception as e:                                      # noqa: BLE001
         out["reason"] = f"读不到:{type(e).__name__} —— **读不到 ≠ 滞后为 0**"
         return out
