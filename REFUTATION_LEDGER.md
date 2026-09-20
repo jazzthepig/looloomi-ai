@@ -21694,3 +21694,56 @@ S-369 1.4 PGRST205 = 落不到该落的地方。**两类失败长得一样:输�
 **为什么 dispatcher 位置这么关键**:`retired` 必须先(don't carry 比 carry-with-caveat 强);`docketed` 必须先于 `verdict="degraded"`(否则跌到 act_now);但 `verdict="flowing"` 不该被 docket 拦截(operator 想看见 green)。三处 order 的 regression test 各 1 条 = 单 dispatch 一改就 3 红。
 
 ⏸ **验证 gated**:`bash scripts/preflight.sh` 待跑(下个 commit);**23/23 ops_console tests PASS**(本步);不动 dashboard / 不动 API(只动 `_classify_sources` 输出);LP-facing 走 source:`coingecko_pro_ohlc` 的 card 应该从 🔴 转 🟢。
+
+## S-364 — §S-364 trading module 扫一遍,Seth 这边能 plug 的有 5 条,只有 2 条是 P0 (2026-09-20, Seth/Jazz window)
+
+**背景**:Min-C 把 §S-364 trading module 的所有 loop 落地接过去后,问 Seth:「你这边能插什么」。我做了 scan,发现两件事:
+1. **Mac 侧 job 的可观测性是盲的**。`Shadow/cometcloud-local/MacErrorEnvelope.py` 写 JSONL postmortem 到
+   `/Volumes/CometCloudAI/cometcloud-local/_logs/mac_envelopes.jsonl`,但 Seth-side 的 `loop_beat.py`
+   只覆盖 Seth lane 起的 loop。**结果是 Mac 侧 launchd job 出错时,Railway 这边完全看不见**。
+2. **`active_monitor` canary 行写 0 行时,失败 step 被静默归一为 `unknown`**(MacErrorEnvelope.py:113-114
+   的 silent normalisation 是 by design —— "装观测,不装猜测"),**但 `canary_zero` 是有诊断意义的失败**,
+   折叠进 `unknown` 会丢失信号。
+
+**找到的 5 条 plug-in**:
+- **P1**: `/internal/loops` 端点读 MacErrorEnvelope JSONL → ops-console / data-freshness 看得到 Mac-side job
+- **P2**: `FAILED_STEP_VALUES` 加 `canary_zero` —— Seth-side mirror + 等 Mac-side C-N3 ack
+- **P3**: `MacErrorEnvelope` schema 字段加 `paper_spec_id`,把 envelope 跟 spec_runner 跑过的 paper 串起来
+- **P4**: `loop_beat.py` 加一个 `sleeve_heartbeat`,每轮除了 ok/refused 还报 sleeve 当前 weight / Sharpe 7d
+- **P5**: `/internal/loops` 加 `stale_after_minutes` 字段,超过 N 分钟没 envelope 的 job 单独标 stale
+
+**为什么 P1 + P2 是 P0,P3-P5 是 P2**:
+- P1: §S-364 trading module deploy 后,A lane 的 loop 落地必须能看见失败,否则 trading module 上线 = 装个黑盒进生产
+- P2: active_monitor canary 是 P0 失败检测链的一环(M-119 engine smoke 的 7 canary),折叠进 `unknown` 让我们分不清"canary 写 0 行" vs "我没认识这个 step"
+- P3-P5: nice-to-have,但不是 deploy blocker;A lane 跑 60 天后根据 observed gap 再决定要不要做
+
+**为什么 §S-364 trading module 窗本身被 JAZZ 拍板(D1)**:窗的形状(全 Seth lane / 部分 Mac lane / 跨 lane)直接决定 P3-P5 中哪些能落地 —— 这是个 D-level decision,JAZZ-only。**Seth 这边先把 P1 + P2 ship 完,trading module 窗定下来再说 P3-P5**。
+
+⏸ **验证 gated**:`bash scripts/preflight.sh` 待跑(P1 + P2 ship commit);**8/8 loops_envelopes tests PASS**(本步);不动 trading module 代码,只动 Seth-side ops 可见性 + 词表契约。**trading module 部署仍是 JAZZ 拍 D1 的 blocker,本 entry 不解它**。
+
+## S-390 — Seth plug-in P1 + P2 实现 + 跨 lane 契约 mirror (2026-09-20, Seth/Jazz window)
+
+**承接 S-364**:5 条 plug-in 里 P1 + P2 是 P0(P1 解 trading module 装上后的盲飞问题,P2 解 canary 失败的诊断信息)。本 entry 是 P1 + P2 的 ship 记录。
+
+**P1 — `/internal/loops` 端点**(Mac-side job envelope 读取):
+1. `src/api/loops_envelopes.py` 新模块:**纯函数层** `build_report(path=None, max_lines=5000)` 读 JSONL → 按 `job_name` 去重(最新覆盖旧)→ 返回 `EnvelopesReport` dataclass。
+2. `src/api/main.py` 加 `/internal/loops` GET endpoint:走 `INTERNAL_TOKEN` 守卫(per `/internal/data-freshness` 同模式),返 `to_dict(report)`。
+3. `tests/test_loops_envelopes.py`:8 个 t_* test + 1 个 max_lines test,覆盖 missing/empty/garbled/dedupe/canary_zero/JSON shape/mirror contract/unknown step/max_lines。
+4. **关键判据**:`file not found` ≠ "Mac 一切正常"(返回 `readable=False` + note),**这是 honest signal**,不让 ops-console 把"读不到"当 green。
+
+**P2 — `FAILED_STEP_VALUES` 加 `canary_zero`**(跨 lane 契约):
+1. `src/api/contracts/mac_failed_step_values.py` 新文件:**Seth-side mirror** of `Shadow/cometcloud-local/MacErrorEnvelope.py:76-89` 的 `FAILED_STEP_VALUES`。`Shadow/` 是 READ-ONLY(CLAUDE.md Rule 2),Seth 不能改,所以镜像一份 + 显式声明"两侧必须一致,改这里必须改那边"。
+2. Mirror 加 `canary_zero` 进 frozenset。
+3. 提供 `is_known_failed_step(step)` helper(只查词表,不归一化 —— 归一化是 MacErrorEnvelope 的事)。
+4. **跨 lane ack 状态**:
+   - [x] Seth-side ack(本文件)
+   - [ ] Mac-side ack —— 等 Min-C 改 `Shadow/.../MacErrorEnvelope.py` + bump `SCHEMA_VERSION`。**本文件是契约参考,改这里必须同时改那边,反过来亦然**(per MacErrorEnvelope.py:75-76: "New entries need a C-N3 contract update + Seth SYNC ack")。
+
+**为什么 mirror 不放 dict 而放独立文件**:
+- **契约 visibility**:`contracts/mac_failed_step_values.py` 在 `src/api/contracts/`,跟 `cis_push.py` 同目录 —— 这是 §2 规定的契约路径,任何 lane 的对接方都知道去哪查
+- **可测性**:`tests/test_loops_envelopes.py` 直接 import 词表,不 mock
+- **防 drift**:文件 docstring 写明"改了这里必须改那边"+ commit history 双侧可追
+
+**为什么不直接读 Shadow 的 `MacErrorEnvelope.py`**(Seth-side):Shadow 是 READ-ONLY,import 路径上 Shadow 是 dead code 路径(任何 Seth 侧 import 都违反 Rule 2)。Mirror 是一份**契约**,不是参考。
+
+⏸ **验证 gated**:`bash scripts/preflight.sh` 待跑(本 entry ship commit);**8/8 loops_envelopes tests PASS**;`/internal/loops` token-guarded 模式跟 `/internal/data-freshness` 同(per S-378b-1);Mac-side `canary_zero` ack pending Min-C C-N3 + SCHEMA_VERSION bump。
