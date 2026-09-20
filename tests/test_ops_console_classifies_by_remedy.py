@@ -291,3 +291,165 @@ def test_other_dead_book_is_still_act_now():
         "R57 must not appear on a book that wasn't the R57 retirement — that "
         "would be a misattribution"
     )
+
+
+# ─── S-378b-5: REFUSAL_POLICY auto-escalate rule (parallel signal) ──────────
+#
+# S-296: 「一个只拦不导的守卫,会把违规变成缺口」. The existing rule escalates
+# when a refusal PERSISTS past its `stale_after_days` TIME window. But a guard
+# can also fail systematically in a tight loop — 3 refusals in 3 days, window
+# is 30d — and the time-only rule says "no_action, sit and wait". That hides
+# a real pattern. S-378b-5 adds a parallel opt-in signal:
+#
+#     pol["escalate_after_n_refusals"]: int
+#
+# When `n_consecutive_refusals >= escalate_after_n_refusals`, the refusal
+# escalates to `act_now` EVEN INSIDE the time window. Absent key = no
+# refusal-count escalation (conservative default — opt-in, not silent on).
+#
+# The two signals are OR'd: a stale-or-piling-up refusal is an alarm;
+# a fresh AND low-count refusal is no_action (the guard is working).
+#
+# _two_layer_paper_loop DELIBERATELY has no `escalate_after_n_refusals` —
+# it is R57-retired (V5c core dead by design), so piling-up refusals is
+# not an incident, it is the spec.
+
+
+def test_escalate_after_n_refusals_above_threshold_is_act_now_inside_window():
+    """Parallel signal: 5 consecutive refusals inside a 30d window against an
+    escalate_after_n_refusals=3 threshold is `act_now`. Time-only rule says
+    no_action (1d < 30d); count rule says act_now (5 > 3). Count wins."""
+    import time
+    rows = {"rows": [{
+        "loop": "_escalation_count_test",
+        "verdict": "refused",
+        "stale_build": False,
+        "last_ok_at": time.time() - 1 * 86400,        # 1d ago — INSIDE window
+        "n_consecutive_refusals": 5,
+    }]}
+    # Inject a synthetic policy entry with the new key, then classify.
+    pol = {
+        "reason": "S-378b-5 synthetic — refusing 5x, threshold 3",
+        "clears_when": "the count test removes this entry",
+        "owner": "Seth",
+        "stale_after_days": 30,
+        "escalate_after_n_refusals": 3,
+    }
+    oc.REFUSAL_POLICY["_escalation_count_test"] = pol
+    try:
+        got = oc._classify_loops(rows)[0]
+        assert got["remedy_class"] == "act_now", (
+            f"5 consecutive refusals against threshold 3 inside a 30d window "
+            f"is a systematic failure (count signal beat time signal); "
+            f"got {got['remedy_class']!r}"
+        )
+        assert "CONSECUTIVE REFUSALS" in got["note"], (
+            f"act_now note must explain WHICH signal fired (count, not time); "
+            f"got note: {got['note']!r}"
+        )
+    finally:
+        oc.REFUSAL_POLICY.pop("_escalation_count_test", None)
+
+
+def test_escalate_after_n_refusals_below_threshold_is_no_action_inside_window():
+    """Count below threshold + inside time window = no_action. Both signals
+    silent = the guard is working (refusing correctly for the right reason)."""
+    import time
+    rows = {"rows": [{
+        "loop": "_escalation_below_test",
+        "verdict": "refused",
+        "stale_build": False,
+        "last_ok_at": time.time() - 1 * 86400,        # 1d ago
+        "n_consecutive_refusals": 2,                  # < threshold 3
+    }]}
+    pol = {
+        "reason": "S-378b-5 synthetic — refusing 2x, threshold 3",
+        "clears_when": "the below test removes this entry",
+        "owner": "Seth",
+        "stale_after_days": 30,
+        "escalate_after_n_refusals": 3,
+    }
+    oc.REFUSAL_POLICY["_escalation_below_test"] = pol
+    try:
+        got = oc._classify_loops(rows)[0]
+        assert got["remedy_class"] == "no_action", (
+            f"2 refusals < 3 threshold AND 1d < 30d window = guard is working. "
+            f"got {got['remedy_class']!r}"
+        )
+        # no_action note should NOT carry the alarm signals
+        assert "CONSECUTIVE REFUSALS" not in got["note"], (
+            "below-threshold refusal must not render the alarm note"
+        )
+        assert "REFUSING LONGER THAN" not in got["note"], (
+            "inside-window refusal must not render the time-alarm note"
+        )
+    finally:
+        oc.REFUSAL_POLICY.pop("_escalation_below_test", None)
+
+
+def test_escalate_after_n_refusals_absent_key_means_no_count_escalation():
+    """Absent `escalate_after_n_refusals` key = NO count escalation. Existing
+    entries without the key must behave exactly as before (regression)."""
+    import time
+    rows = {"rows": [{
+        "loop": "_no_count_key_test",
+        "verdict": "refused",
+        "stale_build": False,
+        "last_ok_at": time.time() - 1 * 86400,        # 1d ago
+        "n_consecutive_refusals": 999,                # huge, but no key
+    }]}
+    pol = {
+        "reason": "r", "clears_when": "c", "owner": "o",
+        "stale_after_days": 30,
+        # NOTE: no escalate_after_n_refusals
+    }
+    oc.REFUSAL_POLICY["_no_count_key_test"] = pol
+    try:
+        got = oc._classify_loops(rows)[0]
+        assert got["remedy_class"] == "no_action", (
+            f"no-key entries must NOT escalate by count; got {got['remedy_class']!r}"
+        )
+    finally:
+        oc.REFUSAL_POLICY.pop("_no_count_key_test", None)
+
+
+def test_both_signals_firing_still_act_now_with_both_in_note():
+    """Both signals firing (time overdue AND count above threshold) = act_now
+    with both reasons in the note (operator sees which signals are firing)."""
+    import time
+    rows = {"rows": [{
+        "loop": "_both_signals_test",
+        "verdict": "refused",
+        "stale_build": False,
+        "last_ok_at": time.time() - 60 * 86400,       # 60d — past 30d window
+        "n_consecutive_refusals": 10,                 # > threshold 3
+    }]}
+    pol = {
+        "reason": "r", "clears_when": "c", "owner": "o",
+        "stale_after_days": 30,
+        "escalate_after_n_refusals": 3,
+    }
+    oc.REFUSAL_POLICY["_both_signals_test"] = pol
+    try:
+        got = oc._classify_loops(rows)[0]
+        assert got["remedy_class"] == "act_now"
+        # Time signal fires FIRST in the note (S-296: persistent refusal
+        # is the canonical outage; count is the secondary signal).
+        assert "REFUSING LONGER THAN ITS 30d WINDOW" in got["note"], (
+            f"both-signals note must cite the time-window signal first; "
+            f"got note: {got['note']!r}"
+        )
+    finally:
+        oc.REFUSAL_POLICY.pop("_both_signals_test", None)
+
+
+def test_every_refusal_policy_keeps_its_stale_after_days():
+    """S-378b-5 is ADDITIVE: every existing REFUSAL_POLICY entry still has its
+    `stale_after_days` (the existing time-only rule must not regress). A missing
+    integer `stale_after_days` is what test_every_refusal_policy_declares_...
+    already enforces; this test only confirms none were dropped."""
+    for name, pol in oc.REFUSAL_POLICY.items():
+        assert "stale_after_days" in pol, (
+            f"{name} lost stale_after_days — time-only auto-escalate regressed"
+        )
+        assert isinstance(pol["stale_after_days"], int), name

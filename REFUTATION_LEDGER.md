@@ -21635,3 +21635,35 @@ R57 verdict 给了我正确判断:持零 × 任何行情 = 0 是算术,不是谎
 同一个机制,**不量它能不能落就先假装它落了**。S-378b 0 触发 = 永远不响;
 S-369 1.4 PGRST205 = 落不到该落的地方。**两类失败长得一样:输出格式正确,
 目的地不存在**。下一次见到「写完照常返回 True」就该想到这一对。
+
+### S-378b-5 — REFUSAL_POLICY 加 auto-escalate 并行信号(拒数) (2026-09-20, Seth/Jazz 2-day window)
+
+**背景**:S-296 「一个只拦不导的守卫,会把违规变成缺口」已落到 `scripts/ops_console.py:_classify_loops`,把过 `stale_after_days` 的拒升级到 `act_now`。但**升级只有时间一个信号**:某 loop 拒 3 次连击 + 30d 窗 → 现在算 `no_action`(1d < 30d),实际是系统性问题却被「宽容」掉了。S-378b-5 加**并行**拒数信号,opt-in:`pol["escalate_after_n_refusals"]: int`。
+
+**修法**:
+1. `scripts/ops_console.py` 新增 `_refusal_count_escalation(row, pol)` 纯 helper —— absent key 或阈值 ≤ 0 都不退(opt-in 默认 = 跟以前一样)。
+2. `_classify_loops` 改 `cls = "act_now" if (overdue or count_escalation) else "no_action"`。两个信号 OR,note 文案分别:
+   - 过期:`⏱ REFUSING LONGER THAN ITS {N}d WINDOW — a guard that never clears is an outage.`
+   - 仅 count:`🔁 {n} CONSECUTIVE REFUSALS against the {threshold}-refusal threshold inside the {N}d window — systematic, not transient.`
+   - 两个同时:时间文案先,note 不双前缀。
+3. REFUSAL_POLICY 7 个 entry 中 6 个补 `escalate_after_n_refusals`:
+   - `_deep_panel_loop=3`(30d 窗太宽)
+   - `_forward_record_loop=5`(panel-wide feed,需 1-2 自然周期宽容)
+   - `_beta_core_loop=2`(1d 窗已紧)
+   - `_factor_tilt_loop=2` / `_pod_aggregator_loop=2`(3d 窗快反馈)
+   - `_market_state_loop=10`(S-220 7d floor,recovery 需多周期)
+   - `_fusion_paper_loop=5`(S-336 reconciliation 多次轮回)
+   - **`_two_layer_paper_loop` 故意不带**(R57 retired,count 堆积是 spec not incident)
+4. `tests/test_ops_console_classifies_by_remedy.py` 加 5 个 case:threshold 上方 / 下方 / absent key 不退 / 两信号同时 / 不漏 stale_after_days。
+5. **20/20 PASS**(原 15 个 + 新 5 个),RED → GREEN。
+
+**为什么 opt-in 不是 opt-out**:
+- absent key 多数情况是「没想清楚」,**默认行为应该跟以前一样**(不升级),而不是偷偷绑一个全局阈值。
+- R57 retired entries 必须**显式** absent,因为「count 堆积 = by design」要讲一次 —— 沉默 absent 会被未来读代码的人误以为是「漏配」。
+- 测试 `test_escalate_after_n_refusals_absent_key_means_no_count_escalation` 锁住这件事。
+
+**跟 S-296 的关系**:S-296 讲**时间**过期,S-378b-5 讲**次数**频繁 —— 同一族问题(只看一个信号会漏另一个)。OR'd 合并,note 文案分清「哪个信号先响」。
+
+**为什么 _two_layer_paper_loop 不 opt-in**:R57 verdict 是 V5c core dead by design,loop **永远至少 1 refusal** 是 R57 的产物。给 R57 加 count 升级会让 R57 自己 escalate 成 act_now(自相矛盾)且跟 S-378b-2(engagement / by-design flat)两分支的几何结果混淆 —— book 真复活时 `_two_layer_paper_loop` 也走 REFUSED(loop 跟 book 是两个对象)。**保守做法 = opt-in + 显式 absent + 测试锁**。
+
+⏸ **验证 gated**:`bash scripts/preflight.sh` ✅ (Phase 1+2+3 全绿);**20/20 ops_console tests PASS**;不动 dashboard,只动 `_classify_loops` 输出,无需 Railway force-mark 验证。

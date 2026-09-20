@@ -132,6 +132,9 @@ REFUSAL_POLICY = {
                        "coingecko_pro_ohlc carries the bars.",
         "owner": "Seth (ingestion is one lane, rule 3b)",
         "stale_after_days": 30,
+        # S-378b-5: count escalation. 30d window is wide (slow category); 3
+        # consecutive refusals are a real pattern, not noise.
+        "escalate_after_n_refusals": 3,
     },
     "_forward_record_loop": {
         "reason": "S-323f/g — declared coverage baseline 262; refuses to write a "
@@ -139,6 +142,9 @@ REFUSAL_POLICY = {
         "clears_when": "maintained-feed coverage ≥ 50% of 262 on a day ≤3d old.",
         "owner": "Seth",
         "stale_after_days": 30,
+        # S-378b-5: panel-wide feed; threshold 5 gives a few natural cycles
+        # for an intermittent outage before the count kicks in.
+        "escalate_after_n_refusals": 5,
     },
     "_beta_core_loop": {
         "reason": "S-193/S-323o — will not mark ① against an unverified venue "
@@ -150,19 +156,29 @@ REFUSAL_POLICY = {
                        "(S-323o/p) is fresh enough at 00:05 UTC.",
         "owner": "Seth",
         "stale_after_days": 1,
+        # S-378b-5: 1d window is already tight; threshold 2 to catch a tight
+        # cluster that hasn't yet crossed the 1d boundary.
+        "escalate_after_n_refusals": 2,
     },
     "_factor_tilt_loop": {
         "reason": "status=skipped — insufficient_live_data.",
         "clears_when": "factor_tilt_nav takes its first row.",
         "owner": "Seth",
         "stale_after_days": 3,
+        # S-378b-5: fast feedback; 2 consecutive refusals within 3d is real.
+        "escalate_after_n_refusals": 2,
     },
     "_pod_aggregator_loop": {
         "reason": "status=skipped — insufficient_live_data.",
         "clears_when": "pod_aggregator_nav takes its first row.",
         "owner": "Seth",
         "stale_after_days": 3,
+        # S-378b-5: fast feedback; 2 consecutive refusals within 3d is real.
+        "escalate_after_n_refusals": 2,
     },
+    # NB: _two_layer_paper_loop DELIBERATELY has no `escalate_after_n_refusals`
+    # — it is R57-retired (V5c core dead by design). Piling-up refusals is the
+    # spec, not an incident (S-378b-5 conservative default: opt-in, not opt-out).
     "_two_layer_paper_loop": {
         "reason": "status=skipped — no positions held (R57: V5c core structurally "
                   "dead; the sleeve holds zero size by design).",
@@ -186,6 +202,9 @@ REFUSAL_POLICY = {
                         "re-tune to today's feed shape)."),
         "owner": "Seth",
         "stale_after_days": 7,
+        # S-378b-5: 7d floor needs patience (recovery may take a few feed
+        # cycles); 10 consecutive refusals inside that = panel-shape is wrong.
+        "escalate_after_n_refusals": 10,
     },
     # S-336 state-vs-table split: _fusion_paper_loop refuses when `_load_state`
     # returns empty but `nav_table_has_any_rows(_NAV_TABLE)` is True —— the book
@@ -203,6 +222,9 @@ REFUSAL_POLICY = {
                         "empty), OR _write_nav takes a row for today's date."),
         "owner": "Seth",
         "stale_after_days": 14,
+        # S-378b-5: reconciliation fix may need several cycles; 5 in 14d is
+        # the pattern that says the fix is not closing the gap.
+        "escalate_after_n_refusals": 5,
     },
 }
 
@@ -290,6 +312,30 @@ def _refusal_overdue(row: dict, pol: dict) -> bool:
     return age_days > days
 
 
+def _refusal_count_escalation(row: dict, pol: dict) -> bool:
+    """S-378b-5 — parallel auto-escalate signal based on refusal COUNT.
+
+    The time-based rule (`_refusal_overdue`) escalates a refusal when it has
+    sat past its declared `stale_after_days`. But a loop can also fail
+    SYSTEMATICALLY in a tight loop — 3 refusals in 3 days against a 30d
+    window — and time-only escalation hides the pattern. This helper is
+    the count mirror:
+
+      `escalate_after_n_refusals` (opt-in key): if the loop has refused
+      `>= N` times in a row, escalate EVEN INSIDE the time window.
+
+    Absent key = NO count escalation. Conservative default — entries opt in,
+    not opt out. `_two_layer_paper_loop` deliberately has no count key: it
+    is R57-retired (V5c core dead by design), so piling-up refusals is the
+    spec, not an incident.
+    """
+    threshold = pol.get("escalate_after_n_refusals")
+    if not isinstance(threshold, int) or threshold <= 0:
+        return False
+    n_refusals = int(row.get("n_consecutive_refusals") or 0)
+    return n_refusals >= threshold
+
+
 def _classify_loops(loops: dict) -> list[dict]:
     """Sort loops by REMEDY. The panel's own verdict is an input, not the answer."""
     out = []
@@ -311,14 +357,25 @@ def _classify_loops(loops: dict) -> list[dict]:
                 # A refusal is only "no action" while it is still inside the
                 # window we said it could sit for. Past that, a correct refusal
                 # IS the outage — that is the S-296 lesson made mechanical.
+                # S-378b-5: parallel signal — count escalation (opt-in via
+                # `escalate_after_n_refusals`) catches systematic failure inside
+                # the time window. OR'd with overdue; both notes surface.
                 overdue = _refusal_overdue(r, pol)
-                cls = "act_now" if overdue else "no_action"
+                count_escalation = _refusal_count_escalation(r, pol)
+                cls = "act_now" if (overdue or count_escalation) else "no_action"
                 note = (f"{pol['reason']}  ·  clears when: {pol['clears_when']}"
                         f"  ·  owner: {pol['owner']}")
                 if overdue:
                     note = (f"⏱ REFUSING LONGER THAN ITS {pol['stale_after_days']}d "
                             f"WINDOW — a guard that never clears is an outage. "
                             + note)
+                elif count_escalation:
+                    n_refusals = int(r.get("n_consecutive_refusals") or 0)
+                    threshold = pol["escalate_after_n_refusals"]
+                    note = (f"🔁 {n_refusals} CONSECUTIVE REFUSALS against the "
+                            f"{threshold}-refusal threshold inside the "
+                            f"{pol['stale_after_days']}d window — systematic, "
+                            f"not transient. " + note)
         elif verdict == "failing":
             # A fossil verdict is NOT a judgement on the running build (S-322).
             cls = "waiting" if stale else "act_now"
