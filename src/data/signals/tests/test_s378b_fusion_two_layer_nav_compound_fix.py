@@ -306,28 +306,33 @@ def test_decide_price_pnl_by_design_flat_when_both_empty():
     assert price_pnl == 0.0
 
 
-def test_decide_price_pnl_state_lost_refuses():
-    """Branch ④: w_held={} AND w_tgt has positions AND NOT revived → S-326 refuse.
+def test_decide_price_pnl_engagement_even_when_state_lost_pretends_loaded():
+    """S-378b-2.4: state.lost scenario never reaches _decide_price_pnl — handled
+    earlier by revival/inception branches in mark_and_rebalance. Once we reach
+    here, state IS loaded (or revived), and every w_held/w_tgt combination has
+    a definite price_pnl answer (no refuse).
 
-    This is the actual state-lost bug: state was empty, NOT revived (Redis
-    miss but no disk), but w_tgt has positions (core alive today). We don't
-    know what was held yesterday, so we can't honestly compute P&L. Refuse.
+    The old branch ④ "S-326 conservative refuse" was removed because it could
+    not actually distinguish "state lost" from "state honest + weights empty
+    + core alive today (engagement)". The engagement case is the common one
+    (regime change after a long flat period), and refusing it lost honest
+    engagement records — the same bug class as S-378b-2.3 (R57 by-design flat).
     """
     from src.data.signals.two_layer_paper import _decide_price_pnl
 
+    # state loaded with weights={}, w_tgt has positions, NOT revived.
+    # Old code: refused. New code (engagement branch ⑤): price_pnl=0.
     w_held = {}
-    w_tgt = {"BTC": 0.5}  # core alive today, target has positions
+    w_tgt = {"BTC": 0.5}
     last_px = {"BTC": 105.0}
     mp = {}
-    state = {"revived_from_disk": False}  # NOT revived — state lost
+    state = {"revived_from_disk": False}
 
     price_pnl, skip = _decide_price_pnl(w_held, w_tgt, last_px, mp, state,
                                        book="two_layer")
-    assert price_pnl is None
-    assert skip is not None
-    assert skip["status"] == "skipped"
-    assert "holds nothing" in skip["reason"]
-    assert skip["book"] == "two_layer"
+    # NO refuse — the helper now has a definitive answer for every case.
+    assert skip is None
+    assert price_pnl == 0.0  # engagement: no prior holdings → no day P&L
 
 
 def test_decide_price_pnl_weighted_mark_fail_returns_skip():
@@ -346,3 +351,38 @@ def test_decide_price_pnl_weighted_mark_fail_returns_skip():
     assert skip is not None
     assert skip["status"] == "skipped"
     assert "coverage" in skip["reason"].lower()
+
+
+# ── S-378b-2.4: engagement branch — state said "flat yday", core alive today
+#
+# Local probe 2026-09-20: BTC/ETH/SOL all core_state=live, SOL c=0.2159 > 0.2 gate.
+# R57 verdict was for the past 28 days (table has core_dead rows up to 08-22);
+# today the V5c core has re-engaged (regime change). Redis state still says
+# weights={} (state was honest 28 days ago, never updated). So:
+#   w_held = {} (state yesterday was honest flat)
+#   w_tgt = {"SOL": 0.3333} (core alive today, gate open)
+# Branch ④ fires (S-326 conservative refuse) but the correct action is to
+# MARK: price_pnl=0 (no prior holdings → no day P&L), cost = turn × fee.
+# The book SHOULD engage today; refusing it loses a real engagement record.
+
+def test_decide_price_pnl_engagement_when_state_flat_yday_core_alive_today():
+    """Branch ⑤ (NEW in S-378b-2.4): engage today, no prior P&L, cost only."""
+    from src.data.signals.two_layer_paper import _decide_price_pnl
+
+    # Yesterday Redis state honest: weights={} (book was flat — core dead 28d).
+    # Today core alive: w_tgt = {"SOL": 0.3333}.
+    # State is NOT "revived" (it was loaded from Redis, not from revival path).
+    w_held = {}
+    w_tgt = {"SOL": 0.3333}
+    last_px = {"SOL": 100.0}
+    mp = {}  # no mark_prices — consistent with weights={} yesterday
+    state = {"nav": 1.0, "last_mark": "2026-08-22", "weights": {},
+             "revived_from_disk": False}
+
+    price_pnl, skip = _decide_price_pnl(w_held, w_tgt, last_px, mp, state,
+                                       book="two_layer")
+    assert skip is None  # NOT a refusal — engagement is honest
+    assert price_pnl == 0.0  # no prior holdings → no day P&L
+    # Caller computes cost = turn × fee = 0.3333 × 5bps = 0.17bps
+    # daily_ret = 0 - 0.000167 ≈ -0.0002
+    # nav = disk_prev × (1 - 0.0002) ≈ disk_prev (slightly down due to entry cost)

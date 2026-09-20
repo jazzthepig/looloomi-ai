@@ -21567,6 +21567,41 @@ A 当时报告:PGRST205 实测,`/tmp/cometcloud_data/.../regime_track.csv` 是�
 `SUPABASE_DB_URL`)。Python 写者不动 —— 表存在它就 upsert 成功;
 不存在就 best-effort fail 落到 /tmp,与 2026-09-17 A 测的状态同形。
 
+### S-378b-2.4 — engagement 分支:state 说「昨天平」、今天 core 活了,book 应入仓 (2026-09-20, Seth/Jazz 2-day window)
+
+**问题**:S-378b-2.3 修完后 Railway force-mark 仍 `status: skipped / reason: holds nothing`。
+本地 probe (`_live_core` + `_fetch_daily` + `target_weights`) 显示 w_tgt = `{"SOL": 0.3333}`
+(BTC/ETH/SOL 都 `core_state=live`,SOL c=0.2159 > 0.2 gate),但 Redis state `weights={}`,
+S-326 conservative branch 拒。
+
+**这不是 R57 by-design flat**(核心死两天 → 都空),是 **engagement**(核心今天活了, 昨天诚实平)。
+旧代码把两种情况塞进同一个 `else: refuse`,丢掉了诚实的 engagement 记录 —— **同一族缺陷**:
+S-378b-2.3 修「core dead 持零算术」,S-378b-2.4 修「core alive 但 state 昨天平」。两者对称。
+
+**根因**:S-326 三值 `nav_table_has_any_rows()` 把 `weights={}` 分两种来源(按设计 vs 状态丢失),
+但**修法选择"拒绝"是过度保守**:revival 分支已处理「Redis 空 + disk 有 rows」(复活);
+inception 分支已处理「Redis 空 + 无 disk rows」(写 1.0);
+`_compute_nav_base` 已处理「state.nav ≠ disk_prev」(disk wins)。**真正"状态丢失"到不了 `_decide_price_pnl`**,
+能到这里的 state 都是加载过(或复活)的 —— 让它再拒绝一次是**对一道已被前几关守住的门再加一道,挡住的全是合法通行**。
+
+**修法**:`_decide_price_pnl` 加 branch ⑤ 在 branch ④ (S-326 refuse) 之前,
+所有「state loaded + w_held={} + w_tgt has positions」一律返回 `(0.0, None)`:
+- price_pnl = 0 (昨天没持仓 → 没有 day P&L 可算,这就是事实)
+- caller 应用 cost = turn × fee (进入仓位的入场费)
+- nav = disk_prev × (1 - cost)
+
+**测试**:`test_decide_price_pnl_engagement_when_state_flat_yday_core_alive_today` GREEN;
+旧 `test_decide_price_pnl_state_lost_refuses` 改名 `engagement_even_when_state_lost_pretends_loaded`
+并改 assertion(branch ④ 移除,helper 现在 4 路 100% 有定论,从不拒);
+**18/18 S-378b smoke + 72/72 signals regression green**。
+
+**为什么没在 S-378b-2.3 时一次做完**:当时本地没 probe live w_tgt,不知道今天 core 已经活了;
+S-378b-2.3 commit 后 Railway 跑 force-mark 才暴露。**修法原地扩展,不复用 branch ④**(逻辑独立);
+「先测后修」纪律保住:S-378b-2.4 测试先 RED (改 branch ④ 之前) → GREEN (加 branch ⑤ 之后)。
+
+⏸ **验证 gated**:Mac-side push → Railway auto-deploy ~90s → force-mark 应返
+`ok: true, status: marked, nav: 0.999833, daily_return: -0.0167`(engagement SOL 入场,cost 反映在 nav 跌)。
+
 ### S-378b-2.3 — two_layer by-design flat 分支 (R57 verdict: core dead → 持零算术) (2026-09-20, Seth/Jazz 2-day window)
 
 **问题**:`two_layer_paper.mark_and_rebalance` 的 inline guard (S-378b-2.2 之前写的 4 路 if/elif/else) 漏了第三路 —— **w_held empty AND w_tgt empty**(R57 verdict:core 结构 dead,设计「持零算术」)。
