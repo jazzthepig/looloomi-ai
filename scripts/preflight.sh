@@ -1258,6 +1258,22 @@ python3 -m tests.test_two_layer_paper_smoke || {
 python3 -m tests.test_spa_deep_links_resolve || {
   echo "  ✗ SPA 深链 — do not push"; exit 1; }
 
+# ── S-378b C+D: 4 个 dashboard/loop 守卫(S-244 补注册) ──────────────────
+# 这些测试在 src/ 修复之后才写,但它们是回归守卫:
+# 不在这里跑,下次有人改回原来的旧路径不会被任何东西看见。
+python3 -m tests.test_deep_panel_uses_fast_rpc_first || {
+  echo "  ✗ deep_panel fast-RPC-first — do not push"; exit 1; }
+python3 -m tests.test_forward_record_uses_shared_retry || {
+  echo "  ✗ forward_record shared Supabase retry — do not push"; exit 1; }
+python3 -m tests.test_hyperliquid_venue_marks_handle_field_drift || {
+  echo "  ✗ hyperliquid funding field-drift — do not push"; exit 1; }
+python3 -m tests.test_watch_census_dark_lists_visible || {
+  echo "  ✗ watch_census dark_tables 暴露 — do not push"; exit 1; }
+# S-390 / `/internal/loops` 后端守卫(build_report + to_dict 纯函数部分)。
+# 之前存在但未注册 — preflight 报"1 处未运行"(S-244 同款漏洞)。
+python3 -m tests.test_loops_envelopes || {
+  echo "  ✗ loops envelopes 守卫 — do not push"; exit 1; }
+
 # ── S-245: 几何基底的写者 —— 单源 · 定盘 · 写前地板 ──────────────────────────
 # 实测 2026-08-27:`market_state_vectors` 的 582 行里 **568 行(97.6%)混了价源**
 # (229 行含 yfinance,568 行含 coingecko,两者都被 S-195/S-230 禁用于收益序列),
