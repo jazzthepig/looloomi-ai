@@ -117,10 +117,15 @@ def test_a_retired_source_is_not_an_alarm_but_a_dead_one_is():
         {"source": "some_new_feed", "verdict": "DEAD", "symbols_recent": 0,
          "symbols_typical": 10, "last_bar": "2026-01-01", "usable_for_returns": False},
         # 2026-09-17 dashboard incident: coingecko_pro_ohlc emits verdict='degraded'
-        # legitimately (source_freshness.classify line 190-193),but the dispatch
+        # legitimately (source_freshness.classify line 190-193), but the dispatch
         # table at scripts/ops_console.py was closed against it and surfaced the
         # row as 'unrecognised source verdict'. Add it to the same test row list
         # so this never regresses to a 144/202 panel hole.
+        #
+        # S-378b-6 (2026-09-20) SUPERSEDES the S-323n precedent for THIS source:
+        # coingecko_pro_ohlc is now in SOURCE_DOCKETED_BY_POLICY (maintained
+        # crypto feed, partial by coin_id mapping not data). Degraded on a
+        # docked source is no_action with the docket reason, NOT act_now.
         {"source": "coingecko_pro_ohlc", "verdict": "degraded",
          "symbols_recent": 144, "symbols_typical": 202, "last_bar": "2026-09-16",
          "usable_for_returns": True},
@@ -130,9 +135,16 @@ def test_a_retired_source_is_not_an_alarm_but_a_dead_one_is():
     assert got["some_new_feed"]["remedy_class"] == "act_now", (
         "a source that stopped with no policy explaining it IS an incident"
     )
-    assert got["coingecko_pro_ohlc"]["remedy_class"] == "act_now", (
-        "degraded but not retired is an incident (partial panel; "
-        "see S-323n precedent for the usable_for_returns=but-not-full shape)"
+    assert got["coingecko_pro_ohlc"]["remedy_class"] == "no_action", (
+        "S-378b-6: coingecko_pro_ohlc is in SOURCE_DOCKETED_BY_POLICY; degraded "
+        "verdict short-circuits to no_action with the docket reason. (Prior S-323n "
+        "behaviour — act_now on partial panel — is superseded for THIS source. "
+        "Other degraded-but-undocketed sources still hit act_now, see "
+        "test_an_undocketed_degraded_source_still_lands_act_now.)"
+    )
+    assert "S-378b-6" in got["coingecko_pro_ohlc"]["note"], (
+        f"docket note must carry its S-number so the operator can find the "
+        f"rationale; got: {got['coingecko_pro_ohlc']['note']!r}"
     )
 
 
@@ -453,3 +465,102 @@ def test_every_refusal_policy_keeps_its_stale_after_days():
             f"{name} lost stale_after_days — time-only auto-escalate regressed"
         )
         assert isinstance(pol["stale_after_days"], int), name
+
+
+# ─── S-378b-6: SOURCE_DOCKETED_BY_POLICY (different slot from RETIRED) ──────
+#
+# Retirement = "STOP carrying this source" (S-296 / S-323n). Strong move.
+# Docket     = "CONTINUE carrying this source; current state is known and
+#             acceptable as-is for some defined window." Weaker move — the
+#             operator is still on the hook to revisit, but not now.
+#
+# Concretely: coingecko_pro_ohlc today is `verdict=degraded /
+# usable=True / 159/203`. It is our maintained crypto feed (no other
+# covers the same panel); the gap is coin_id-mapping, not data. The
+# existing dispatch renders it `act_now` per test_a_retired_source_is_not_...
+# S-378b-6 says: docket it. The dispatch must short-circuit `degraded`
+# to `no_action` when the source is in SOURCE_DOCKETED_BY_POLICY, before
+# falling through to the act_now "investigate before next cadence" path.
+#
+# Three tests:
+#   1. docketed + degraded → no_action (with docket reason)
+#   2. undocketed + degraded → act_now (regression)
+#   3. docketed but verdict moves from degraded → flowing → still ok
+#      (flowing is the GOOD state; docket must not over-rule)
+#
+# Dispatch position: docketed-degraded branch sits between
+#   "degraded AND retired"  (no_action, retired reason)
+# and
+#   "degraded"              (act_now, generic reason)
+# so retired → docketed → undocketed in descending strength (retirement
+# beats docket because retirement means "don't carry at all").
+
+
+def test_a_docketed_degraded_source_is_no_action():
+    """S-378b-6: coingecko_pro_ohlc (maintained crypto feed, panel 159/203 by
+    coin_id mapping not by data gap) is `degraded / usable_for_returns=True`.
+    Without docket, this lands as `act_now` (the old behaviour). With docket,
+    it is no_action and the operator knows WHY (the docket reason quotes
+    S-377 evidence: the partial panel is by design)."""
+    src = {"sources": [{
+        "source": "coingecko_pro_ohlc", "verdict": "degraded",
+        "symbols_recent": 159, "symbols_typical": 203,
+        "last_bar": "2026-09-19", "usable_for_returns": True,
+    }]}
+    # Inject a synthetic docket entry with the new key, then classify.
+    docket = ("S-378b-6 synthetic — coin_id mapping gap, not a data gap; "
+              "159/203 covers all required returns for the panel")
+    oc.SOURCE_DOCKETED_BY_POLICY["coingecko_pro_ohlc"] = docket
+    try:
+        got = {i["name"]: i for i in oc._classify_sources(src)}
+        assert got["coingecko_pro_ohlc"]["remedy_class"] == "no_action", (
+            f"a docketed degraded source must short-circuit to no_action "
+            f"(not act_now); got {got['coingecko_pro_ohlc']['remedy_class']!r}"
+        )
+        assert docket in got["coingecko_pro_ohlc"]["note"], (
+            f"note must cite the docket reason so the operator can SEE it's "
+            f"deferred-by-policy, not silently excused. got note: "
+            f"{got['coingecko_pro_ohlc']['note']!r}"
+        )
+    finally:
+        oc.SOURCE_DOCKETED_BY_POLICY.pop("coingecko_pro_ohlc", None)
+
+
+def test_an_undocketed_degraded_source_still_lands_act_now():
+    """Regression: a degraded source NOT in SOURCE_DOCKETED_BY_POLICY must
+    keep its old behaviour (act_now with 'investigate before next cadence').
+    S-378b-6 is scoped: opt-in per source, not a global reclassification."""
+    src = {"sources": [{
+        "source": "some_new_feed_we_dont_know_about",
+        "verdict": "degraded",
+        "symbols_recent": 12, "symbols_typical": 80,
+        "last_bar": "2026-09-19", "usable_for_returns": True,
+    }]}
+    got = {i["name"]: i for i in oc._classify_sources(src)}
+    assert got["some_new_feed_we_dont_know_about"]["remedy_class"] == "act_now", (
+        f"a degraded source not in the docket must still escalate; got "
+        f"{got['some_new_feed_we_dont_know_about']['remedy_class']!r}"
+    )
+
+
+def test_a_docketed_source_does_not_overrule_a_flowing_verdict():
+    """Defensive: docketing only matters when the source is in trouble. A
+    docketed source that recovers to `flowing` is `ok`, not `no_action` —
+    because the operator WANTS to see the green when it returns (the docket
+    is about deferring pain, not about never showing green)."""
+    src = {"sources": [{
+        "source": "coingecko_pro_ohlc", "verdict": "flowing",
+        "symbols_recent": 203, "symbols_typical": 203,
+        "last_bar": "2026-09-19", "usable_for_returns": True,
+    }]}
+    oc.SOURCE_DOCKETED_BY_POLICY["coingecko_pro_ohlc"] = (
+        "S-378b-6 synthetic — would-be docket; test confirms flowing still wins"
+    )
+    try:
+        got = {i["name"]: i for i in oc._classify_sources(src)}
+        assert got["coingecko_pro_ohlc"]["remedy_class"] == "ok", (
+            f"flowing on a docketed source must still be ok (operator wants "
+            f"to see recovery); got {got['coingecko_pro_ohlc']['remedy_class']!r}"
+        )
+    finally:
+        oc.SOURCE_DOCKETED_BY_POLICY.pop("coingecko_pro_ohlc", None)

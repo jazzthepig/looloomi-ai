@@ -21669,3 +21669,28 @@ S-369 1.4 PGRST205 = 落不到该落的地方。**两类失败长得一样:输�
 ⏸ **验证 gated**:`bash scripts/preflight.sh` ✅ (Phase 1+2+3 全绿);**20/20 ops_console tests PASS**;不动 dashboard,只动 `_classify_loops` 输出,无需 Railway force-mark 验证。
 
 ⚠️ **CROSS-LANE COMMIT COLLISION**(2026-09-20):这段代码落到 origin/main 是通过 `fe85e9d feat(s369): M-186 Q-threshold 0.2341 + M-188 fusion_paper_regime_track durable table` —— **Seth lane 没写这条 commit**,是 Min-A 的 message 里包了 Seth 的 diff(3 files / 252 lines,正好是 S-378b-5 全工作)。**code 是对的、tests 是绿的**,只是 `git log --grep=S-378b-5` 找不到、M186/M188 commit 也不该有我的 ledger entry。Rule 6 "stage only your OWN paths" 失败 —— Min-A 那侧用了 `git add -A` 把已 staged 的 Seth 工作也捎进去了。修正 = 此处加 audit note(本次)+ Sync 段记录;**code 不可逆撤回**(会破坏 prod 的 _classify_loops 行为);M-186/M-188 真实文件仍在 working tree 等 Min-A 自行 commit。S-378b-5 视为 **DEPLOYED / MISATTRIBUTED**。
+
+### S-378b-6 — `SOURCE_DOCKETED_BY_POLICY`:coingecko_pro_ohlc degraded 从 act_now → no_action (2026-09-20, Seth/Jazz 2-day window)
+
+**背景**:`/internal/data-freshness` 报 `coingecko_pro_ohlc = degraded / usable=True / 159-203 symbols`。这是 main crypto feed —— 159/203 是 coin_id mapping 缺口(S-377 evidence),**不是** data 缺口。但 `_classify_sources` 旧 dispatch 把 `degraded` 但未 retired 的 source 一律渲染为 `act_now` —— operator 每周都见到一行「degraded but not retired is an incident」,实际他没的可做(只能同意「是的,这就是我们现在有的」)。
+
+**修法**:
+1. `scripts/ops_console.py` 新增 `SOURCE_DOCKETED_BY_POLICY` dict(mirror `RETIRED_BY_POLICY`,但**语义不同**):
+   - **Retired** = 「不要 carry」(S-296/S-323n)。Strong。
+   - **Docketed** = 「carry; 当前 degraded 是 by design,定义窗内可接受」(S-378b-6)。Weak — operator 还得重访,但不必在这周的 act_now 堆里。
+2. `_classify_sources` dispatch 顺序 = **retired > docketed > verdict**(descending strength)。`degraded AND docketed` 是新分支 → `no_action` + docket reason。`flowing` 不走 docket(operator 想看见 recovery,green path 保留);`dead/collapsed` 不走 docket(那需要更强响应)。
+3. `coingecko_pro_ohlc` 入 docket(reason 引用 S-377 evidence + 「coverage delta 不再 monotone 时重访」+ OPEN RISK #0a 关联)。
+4. `tests/test_ops_console_classifies_by_remedy.py`:
+   - 加 3 个新 case(docketed-degraded → no_action + docket reason;undocketed → act_now regression;docketed-flowing → ok 防过度 docket)
+   - 改 `test_a_retired_source_is_not_an_alarm_but_a_dead_one_is`:同一 fixture 的 `coingecko_pro_ohlc degraded` 现在断言 `no_action`(S-378b-6 supersedes S-323n precedent for THIS source)
+5. **23/23 PASS**(原 22 + 新 3 - 1 调整 - 等于 23)。
+
+**为什么 opt-in dict 而非 Supabase 表**:
+1. **Scope**:目前 1 个 source 需要 docket(159/203 = main crypto feed)。Supabase DDL + RLS + write path 是 ≥1 天的工程;dict 是 1 个 commit。
+2. **类比**:`RETIRED_BY_POLICY` 4 个 source 也是 dict,**没人喊要建表** —— 如果 docket 涨到 5+ 个再考虑表(M-119 模式)。
+3. **可测性**:dict 改 ops_console.py = tests ride 真实常量,不是 stub。一个 source 加 docket 走 PR review,跟代码同 review,不走 Supabase console。
+4. **审计**:`coingecko_pro_ohlc` 的 reason 在 commit 里有白纸黑字;Supabase 表需要单独的迁移历史读起来更慢。
+
+**为什么 dispatcher 位置这么关键**:`retired` 必须先(don't carry 比 carry-with-caveat 强);`docketed` 必须先于 `verdict="degraded"`(否则跌到 act_now);但 `verdict="flowing"` 不该被 docket 拦截(operator 想看见 green)。三处 order 的 regression test 各 1 条 = 单 dispatch 一改就 3 红。
+
+⏸ **验证 gated**:`bash scripts/preflight.sh` 待跑(下个 commit);**23/23 ops_console tests PASS**(本步);不动 dashboard / 不动 API(只动 `_classify_sources` 输出);LP-facing 走 source:`coingecko_pro_ohlc` 的 card 应该从 🔴 转 🟢。
