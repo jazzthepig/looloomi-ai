@@ -212,7 +212,7 @@ def _names_a_table(const_name: str) -> bool:
 # and a study that fails loudly on a missing table costs one person one minute.
 # Including them would flood the manifest with tables nobody deployed, and a
 # noisy guard is a guard people learn to skip.
-_PROD_DIRS = ("src/api", "src/data", "src/mcp")
+_PROD_DIRS = ("src/api", "src/data", "src/mcp", "src/research/validation")
 
 # Not a table. Vendored dependencies, virtualenvs, caches.
 _SKIP = ("__pycache__", "/.venv/", "site-packages", "/node_modules/")
