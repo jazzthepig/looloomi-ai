@@ -3495,6 +3495,35 @@ async def beta_core_probe(x_internal_token: str = Header(None)):
     }
 
 
+@app.get("/internal/loops")
+async def loops_envelopes(x_internal_token: str = Header(None)):
+    """Mac-side job envelopes 的可读端 (S-390 P1)。
+
+    读 `COMETCLOUD_ENVELOPE_POSTMORTEM`(默认 Mac 约定路径)JSONL,按
+    `job_name` 去重返回最新观察。文件不存在 → `readable=false` + 解释 note,
+    **不是"一切正常"**。
+
+    与 `/internal/loop-health`(全流程 sweep,Seth 写)、`/internal/data-freshness`
+    的 `loops.rows`(Seth lane `_beat()` 心跳)是**三套独立数据源**,不重叠:
+    本端点专看 Mac lane launchd job,另两个看 Seth lane in-process loop。
+    合并会让"哪个 lane 失败"这个信号消失(§S-364)。
+
+    Token-guarded:envelope 含 Mac-side 错误信息,不是公开面。
+    """
+    _tok = os.environ.get("INTERNAL_TOKEN", "")
+    if not _tok or x_internal_token != _tok:
+        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    try:
+        from src.api.loops_envelopes import build_report, to_dict
+        report = build_report()
+        return to_dict(report)
+    except Exception as _e:                                    # noqa: BLE001
+        from datetime import datetime, timezone as _tz
+        return {"readable": False, "verdict": "unknown",
+                "note": f"{type(_e).__name__}: {str(_e)[:160]}",
+                "checked_at": datetime.now(_tz.utc).isoformat()}
+
+
 @app.get("/internal/build-state")
 async def build_state():
     try:
