@@ -52,6 +52,18 @@ _log = logging.getLogger("hyperliquid")
 _INFO_URL = "https://api.hyperliquid.xyz/info"
 SOURCE = "hyperliquid"
 
+# S-378b-C3: Hyperliquid ships the per-asset funding rate under several field
+# names across API revisions (`funding`, `fundingRate`, `funding_rate`). A
+# single `.get("funding")` made the loop look healthy (snapshot 200 OK, 234
+# perps returned) while writing 0 rows — every perp had `funding_1h=None`,
+# the dashboard summarised it as "234 永续 · 0 行 funding", and nobody could tell
+# whether the venue was down or the field had drifted.
+#
+# Try each known name; record WHICH one was used per asset (or "missing") so
+# the loop's diagnostic points at the field-drift hypothesis on the next
+# occurrence. This is defensive — we don't pick a winner.
+_FUNDING_FIELD_NAMES = ("funding", "fundingRate", "funding_rate")
+
 # ── S-204 (2026-08-23): the collector rate-limited ITSELF into refusing ─────
 # Measured: concurrency 8 with a 0.15s pause is roughly 53 req/s. Hyperliquid
 # answered HTTP 429 to 57 of 232 symbols — including BTC — which dropped coverage
@@ -205,20 +217,43 @@ async def venue_snapshot() -> dict[str, Any]:
         except (TypeError, ValueError):
             return None          # I1: unmeasured is None, never 0.0
 
+    def _funding(c: dict) -> tuple[float | None, str]:
+        """S-378b-C3: try every known field name; report which one matched.
+
+        Returns (rate, field_name_used). `field_name_used` is one of the
+        names in `_FUNDING_FIELD_NAMES`, or "missing" if none were present
+        (or all failed to parse to float). The field-name surface lets the
+        next reader see exactly what HL shipped today — without guessing
+        which of the three names is current.
+        """
+        for n in _FUNDING_FIELD_NAMES:
+            v = c.get(n)
+            if v is None:
+                continue
+            f = _f(v)
+            if f is not None:
+                return f, n
+        return None, "missing"
+
     assets = {}
+    funding_fields_seen: set[str] = set()
     for a, c in zip(meta.get("universe", []), ctxs):
         name = a.get("name")
         if not name:
             continue
+        funding, field_used = _funding(c)
+        funding_fields_seen.add(field_used)
         assets[name.upper()] = {
             "mark": _f(c.get("markPx")),
             "oracle": _f(c.get("oraclePx")),
             "prev_day": _f(c.get("prevDayPx")),
-            "funding_1h": _f(c.get("funding")),
+            "funding_1h": funding,
+            "funding_field": field_used,            # S-378b-C3 diagnostic
             "open_interest": _f(c.get("openInterest")),
             "day_notional_volume": _f(c.get("dayNtlVlm")),
         }
     return {"ok": True, "assets": assets, "n": len(assets),
+            "funding_fields_seen": sorted(funding_fields_seen),
             "fetched_at": datetime.now(timezone.utc).isoformat()}
 
 
