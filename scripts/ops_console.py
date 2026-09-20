@@ -117,6 +117,30 @@ RETIRED_BY_POLICY = {
                   "collapsed to a 'daily close')."),
 }
 
+#: Sources whose current "degraded" verdict is a KNOWN-AND-DEFERRED state.
+#: S-378b-6: this is the WEAKER move than RETIRED_BY_POLICY — retirement says
+#: "STOP carrying this source", docketing says "CONTINUE carrying it; the
+#: partial state is by design and we accept it for some defined window".
+#: The operator must STILL revisit (a docket is not a forever-pass), but not
+#: in this week's act_now pile.
+#:
+#: Coingecko Pro today: `degraded / usable=True / 159/203`. The 44 missing
+#: symbols are coin_id-mapping gaps, not data gaps (S-377 evidence). It is the
+#: maintained crypto feed — no other covers the same panel. Without docket
+#: this lands as act_now ("investigate before next cadence"); the operator
+#: would have nothing to do but agree "yes, this is what we have". The docket
+#: recognises that and defers until coverage CREEP (panel widens) becomes a
+#: signal in its own right. See OPEN RISK #0a for the broader recovery story.
+SOURCE_DOCKETED_BY_POLICY = {
+    "coingecko_pro_ohlc": (
+        "S-378b-6 / S-377 evidence — main crypto feed. Today 159/203 symbols; "
+        "the 44 missing are coin_id-mapping gaps, not data gaps. Partial "
+        "panel is by design (cg_coin_map is the binding constraint, not data "
+        "freshness). Revisit when coverage delta is no longer monotone — i.e. "
+        "when 'we got more' becomes a signal worth chasing (likely each quarter)."
+    ),
+}
+
 #: Loops whose refusal is the system working — **and what clears it, and when.**
 #:
 #: 「一个只拦不导的守卫,会把违规变成缺口」(S-296). Every outage in the S-323
@@ -426,16 +450,26 @@ def _classify_sources(by_source: dict) -> list[dict]:
     for s in by_source.get("sources", []):
         name = s.get("source")
         verdict = s.get("verdict")
+        docketed = SOURCE_DOCKETED_BY_POLICY.get(name)
         retired = RETIRED_BY_POLICY.get(name)
-        # Dispatch order is load-bearing: retired-before-verdict.
-        # A "retired-but-currently-degraded" source must NOT escalate to act_now
-        # because the policy says we don't carry that source (S-323n precedent).
+        # Dispatch order is load-bearing: retired > docketed > verdict.
+        # retired:    "STOP carrying this source" (S-296 / S-323n). Strongest.
+        # docketed:   "CONTINUE carrying; current degraded state is by design
+        #              for some defined window." S-378b-6. Weaker than retired
+        #              — retirement still wins if a source is both (defensive).
+        # verdict:    the by_source emission; act_now if no policy explains it.
         if verdict in ("DEAD", "COLLAPSED") and retired:
             cls, note = "no_action", retired
         elif verdict in ("DEAD", "COLLAPSED"):
             cls, note = "act_now", "a source stopped and no policy explains it"
         elif verdict == "degraded" and retired:
             cls, note = "no_action", retired
+        elif verdict == "degraded" and docketed:
+            # S-378b-6: docketing a degraded source — known-and-deferred
+            # (vs retirement which is "stop carrying"). Only fires for the
+            # degraded verdict specifically; a docketed source that recovers
+            # to `flowing` keeps going through the regular green path.
+            cls, note = "no_action", docketed
         elif verdict == "degraded":
             cls, note = "act_now", (
                 "degraded but still usable_for_returns — covers most but not all "
