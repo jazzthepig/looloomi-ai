@@ -211,10 +211,17 @@ def census(tables: list, write_health: dict | None = None) -> dict:
     # 口径不变:没有手写规则的一律算 not_covered,write 观测不抵消它。
     gaps = [i for i in items if i.status in (NOT_COVERED, WRITE_OBSERVED)]
     dark = [i for i in items if i.status == NOT_COVERED]
+    write_observed = [i for i in items if i.status == WRITE_OBSERVED]
     blocking = [i for i in gaps if i.blocking]
     by_tier: dict = {}
     for i in gaps:
         by_tier.setdefault(i.tier, []).append(i.name)
+    # S-378b-D: pre-group the dark list by tier so the dashboard / ops_console
+    # / any future consumer can render "31 完全黑 → by tier" without each
+    # one re-deriving `tier_of`. This is observability, not a count change.
+    dark_by_tier: dict = {}
+    for i in dark:
+        dark_by_tier.setdefault(i.tier, []).append(i.name)
 
     return {
         # **这个整数就是「还差多少」。** 它能收敛到零;守卫的数量不会。
@@ -231,6 +238,22 @@ def census(tables: list, write_health: dict | None = None) -> dict:
         "not_covered_by_tier": {
             k: sorted(v) for k, v in
             sorted(by_tier.items(), key=lambda kv: TIER_SEVERITY.get(kv[0], 9))},
+        # S-378b-D: the actual NAMES, not just the count. Previously the
+        # dashboard saw "31 完全黑" but could not enumerate them — the
+        # operator couldn't tell whether they were REFERENCE items
+        # mis-classified as OPS or TRACK_RECORD tables with no observations.
+        # `dark_tables` / `write_observed_tables` carry tier so consumers
+        # can render the breakdown directly. Counts above are unchanged.
+        "dark_tables": [{"name": i.name, "tier": i.tier, "reason": i.reason}
+                        for i in sorted(dark, key=lambda x: x.name)],
+        "write_observed_tables": [{"name": i.name, "tier": i.tier,
+                                   "reason": i.reason}
+                                  for i in sorted(write_observed,
+                                                  key=lambda x: x.name)],
+        "dark_tables_by_tier": {
+            k: sorted(v) for k, v in
+            sorted(dark_by_tier.items(),
+                   key=lambda kv: TIER_SEVERITY.get(kv[0], 9))},
         "verdict": ("blocked" if blocking else
                     "incomplete" if gaps else "complete"),
         "reason": (
