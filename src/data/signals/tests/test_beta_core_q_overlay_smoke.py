@@ -52,15 +52,21 @@ def _dates(start: date, n: int) -> list[date]:
 
 # ─────────────────────────────────────────────────────────────────────────────
 def test_frozen_constants_match_spec() -> None:
-    """Constants frozen per §C2-SHIP-SPEC §8. Drift = ship hazard."""
+    """Constants frozen per §C2-SHIP-SPEC §8. Drift = ship hazard.
+
+    NB 2026-09-19: ENTER/EXIT 是**数据裁定值**(S-378b + A-378b-1),不是 spec 锚定。
+    Spec §8 仍指 0.85/0.65;改这两个值要走 §IN-FLIGHT 拍板。
+    """
     if INCEPTION_ID != "c2_q_v1":
         _fail(f"INCEPTION_ID drift: {INCEPTION_ID} != c2_q_v1")
     if DAY_60 != "2026-11-14":
         _fail(f"DAY_60 drift: {DAY_60} != 2026-11-14")
-    if ENTER_Q_ZERO_THRESHOLD_DEFAULT != 0.85:
-        _fail(f"ENTER_Q_ZERO_THRESHOLD_DEFAULT drift: {ENTER_Q_ZERO_THRESHOLD_DEFAULT} != 0.85")
-    if EXIT_Q_ZERO_THRESHOLD_DEFAULT != 0.65:
-        _fail(f"EXIT_Q_ZERO_THRESHOLD_DEFAULT drift: {EXIT_Q_ZERO_THRESHOLD_DEFAULT} != 0.65")
+    if ENTER_Q_ZERO_THRESHOLD_DEFAULT != 0.2341:
+        _fail(f"ENTER_Q_ZERO_THRESHOLD_DEFAULT drift: {ENTER_Q_ZERO_THRESHOLD_DEFAULT} != 0.2341 "
+              f"(data-calibrated per A-378b-1)")
+    if EXIT_Q_ZERO_THRESHOLD_DEFAULT != 0.05:
+        _fail(f"EXIT_Q_ZERO_THRESHOLD_DEFAULT drift: {EXIT_Q_ZERO_THRESHOLD_DEFAULT} != 0.05 "
+              f"(ENTER - 0.1841 hysteresis)")
     if HYSTERESIS_GAP != 0.20:
         _fail(f"hysteresis gap drift: {HYSTERESIS_GAP} != 0.20")
     if DWELL_DAYS != 5:
