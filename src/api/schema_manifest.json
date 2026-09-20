@@ -20,7 +20,9 @@
     "factor_tilt_nav",
     "factor_tilt_state",
     "funding_history",
+    "fusion_paper_lifecycle",
     "fusion_paper_nav",
+    "fusion_paper_regime_track",
     "fusion_paper_state",
     "holder_concentration_history",
     "macro_briefs",
@@ -41,6 +43,7 @@
     "write_log"
   ],
   "rpc_functions": [
+    "catalog_inventory",
     "deep_panel_symbol_list",
     "deep_panel_symbols_fast",
     "exec_backfill_forward_returns",
