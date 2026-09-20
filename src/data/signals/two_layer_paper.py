@@ -281,19 +281,14 @@ def _decide_price_pnl(w_held: dict, w_tgt: dict,
         # is structurally at zero. Mark flat honestly.
         return 0.0, None
 
-    # S-326: state lost (w_held={} AND w_tgt has positions AND NOT revived).
-    # Refuse — caller decides "by-design hold zero" vs "state lost".
-    return None, {
-        "status": "skipped",
-        "book": book,
-        "reason": (f"{book}: holds nothing and not a revival — "
-                   "call _redis_get before this path or revive from disk "
-                   "(S-326/S-378b)"),
-        "coverage": 0.0,
-        "priced": 0,
-        "unpriced": 0,
-        "unpriced_sample": [],
-    }
+    # S-378b-2.4: engagement — state said "flat yesterday" (weights={} honestly
+    # recorded 28 days of core_dead), core alive today (regime change, gate
+    # open for SOL or similar). The book SHOULD engage today: price_pnl=0
+    # because there are no prior holdings to mark against, and the caller
+    # applies cost = turn × fee on the entry. Refusing this case (the old
+    # branch ④) loses honest engagement records — exactly the "本该放真守卫
+    # 的位置被静默关卡占着" bug S-244 family.
+    return 0.0, None
 
 
 def target_weights(data: dict, core: dict) -> tuple[dict, dict]:
