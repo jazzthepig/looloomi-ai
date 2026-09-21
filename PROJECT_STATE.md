@@ -1,48 +1,12 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-09-21 (Seth/Cowork lane — **S-397 frontend hidden-data 全面审计 + safeFormat helper ✅ (commit `2bf6ef9`, JAZZ "前端还有很多类似的低级错误" directive, **renumbered from S-396 due to collision w/ `9100e06 feat(paper_trading): S-396 3-arm comparison framework` per '台账是权威'**: `dashboard/src/lib/safeFormat.js` NEW (`isMissing / fmtPct / fmtNum / fmtDollar / fmtB / fmtChg / directionOf`, centralizes "missing → —" semantics; null/undefined/NaN → "—", real 0 renders as "0" — different from missing); `dashboard/src/components/MacroPulse.jsx` (3 tile renderers BTC Dom/Fear&Greed/MCap 24h `|| 0` collapse → `!= null` guards; FNG default 50→null propagates correctly); `dashboard/src/components/StrategiesPage.jsx:604` (TVL masquerading as price_7d fallback → `price_change_7d → change_7d → null`); `dashboard/src/components/PerformanceDashboard.jsx` (30d Outcome OPEN badge amber pill vs "—" distinguished, was `{isOpen ? "—" : "—"}` both branches rendered "—"); `src/data/market/data_layer.py:1804-1816` (FNG default 50→None, MCap change 0→None, JSON `"null"` not `str(None)`); **Downstream FNG=None verified safe** across 4 routers (`agent.py:340` explicit None, `share.py:196` / `social.py:195` / `macro.py:143` or-chains degrade, `macro.py:167` is-not-None guard); **REFUTATION_LEDGER §S-397** claim heading + S-262 family #11 entry; **⚠️ preflight `schema-drift` RED at ship** (spirit of Rule 5 form violation — content compliant, S-397 doesn't touch nav_panel_* or mcap_usd column; c-path Phase 1+2 backlog, see §IN-FLIGHT); **P1/P2 audit backlog 11 sites queued** (A2/A5/A6/A7/A8/A9 + C2/C3/C4/C6/C7 — JAZZ 拍下一轮).) — 2026-09-21 (Seth/Cowork lane — **S-396 3-arm comparison framework ✅** (JAZZ 2026-09-21 directive "测一下 jev 和不用这个决策模型,用原有的交易模型或者简单因子触发的交易的对比分析"): `paper_trading/factors.py` NEW (纯 stdlib SMA60 + mom_60 + realized_vol_30 AND-gate, lag-1 PIT, 复用 `market_state.py` helpers); `paper_trading/specs/a17_panel_long_only_simple_factor.json` NEW (Arm C spec, 5-symbol 与 A-17 同, min_history_days=90); `paper_trading/spec_runner.py` MODIFY (FAMILIES + Spec.load branch + decide() 分派 + 新 `decide_panel_long_only_simple_factor` 函数 + `__all__`; **decide_panel_long_only 主体一行未动** — A-17 v1 60d paper track 零风险); `replay_three_arms.py` NEW (orchestrator: Supabase httpx 拉 1196d × 5 symbols × binance_hist, freshness probe gate, 3 arm 并行 walk, 写 3 JSONLs + `_meta.json`); `compare_three_arms.py` NEW (per-arm cum_return / Sharpe / Sortino / MaxDD + cross-arm agreement + factor_skip_days; **paper-trade MTM, NOT fill sim**); `report_three_arms.py` NEW (`_diff.json` → markdown, 内置 ✓/✗ promote 判据); 3 new tests: `test_factors_smoke.py` 11/11 + `test_replay_three_arms_smoke.py` 6/6 + `test_compare_three_arms_smoke.py` 16/16 → **57/57 paper_trading tests PASS**; `bash scripts/preflight.sh` discipline 段全绿 (cis-universe-lock 7 + T2 fan-out 7 + strategy-discipline 14 + 5+10 其它 stage-3 disciplines),**`schema-drift` RED = pre-existing** (S-391 / C-13 §2.2 Mac-side DDL deploy gap, baseline 复测同样 RED, 与本 patch 无关);**Risk #5 verified**: A vs B agreement ≥ 99.99% under always_ok mode (Pattern A wire 是 no-op when always_ok); Mac-side 真跑 gated on (a) binance_hist freshness probe by A lane (M-119), (b) JAZZ git commit+push per Rule 4. **REFUTATION_LEDGER §S-396** claim heading per Rule 7.) — 2026-09-21 (Seth/Cowork lane — **S-393 CIS /universe 500 真因修 ✅ (commit `d44fcf3`)**:`src/api/routers/cis.py:979` cache-hit 分支加 `result = dict(_t2_cached)` 一行 —— `_T2FromCache` raise 跳过 inline `result = await calculate_cis_universe()`,原 code 1172 `result["source"] = "railway"` 撞 UnboundLocalError,S-392 broad except 接住返 degraded,但每条请求仍 0.27s 拿不到 universe;**S-393 = S-382 "先 safety net 再 root-cause fix" 顺序的必要第二步**(safety net 是 breadcrumb 机制,不是偷懒);deploy ~90s 后 `/api/v1/cis/universe?limit=3` 返 `source=railway / universe_size=58 / t2_count=58 / build_error=None`,`/health.last_universe_build.path=railway / total_ms=79 / t2_source=precomputed(290s)`;**7+ dashboard 页面(portfolio/analytics/MyPortfolio/StrategyPage/StrategiesPage/MobileApp/CISWidget)从 degraded-shell 恢复到 58 资产真实数据**;`tests/test_cis_universe_lock.py::test_serving_path_has_no_undefined_names` ⭐ 新增 + 全套 discipline (cis-universe-lock 7/7 · T2 fan-out 7/7 · strategy-discipline 14/14 · undefined-name 2/2) zero regression;REFUTATION_LEDGER §S-393 claim heading + before/after 表 + S-392/S-393 关系解释。⏸ Mac T1 pipeline 仍 broken (`_cg_panel_loop` 105× fail / `cis_scores` 卡 2026-09-18) —— S-372/A-372-1 lane,Min-A;S-393 修 read path,write path 仍 degraded。) — 2026-09-21 (Seth/Cowork lane — **S-392 Jev Pattern A pre-filter wired into A-17 paper-track ✅**(per `docs/jev_nautilus_integration_plan_2026-09-21.md`):`paper_trading/jev_regime.py` 新文件(JevRegimeDecision frozen dataclass + JevRegimeBackend Protocol + MockJevRegimeBackend 三 mode:always_ok/always_veto/deterministic + JevRegimeActor cumulative stats + build_state_payload helper,**no network calls**);`spec_runner.decide_panel_long_only` 加 `Optional[JevRegimeDecision]` 参数 —— gate ⓪ 在所有其他 check 之前 fire(Jev 是 veto-only,risk/sizing/stops/doctrine 留在 Python 端 testable);`run_paper_a17.py` 接 JevRegimeActor —— `--no-jev` / `--jev-mode always_ok|always_veto` / `--jev-log` 三 CLI flag,default mode=always_ok safe no-op(Jev 在学习不阻塞 baseline);Jev decision 单独 log 到 `paper_trading/state/a17_jev_regime_decisions.jsonl`(60d validation 5 gate 的输入全部在此,无需 re-read strategy log);**24/24 tests PASS**(`test_jev_regime_smoke.py` 16 module shape + `test_run_paper_a17_smoke.py` 8 含 3 新 Jev path tests);§5b mapping:Pattern A = ⓪ OVERRIDE 层,future ①②③④ blocked on 60d validation 5 gate (Brier/hit rate/frequency/cost/doctrine);**⏸ Seth 不擅自动手 ship**(per Rule 4 sandbox=no-git-writes)—— 等 JAZZ 拍 deploy 时间窗(P1+P2 trading module 通后,Pattern A 接 Railway);Mac-side 需要 `JEV_API_KEY` env var 注入 + `TypesafeJevRegimeBackend` plug-in(A lane)。REFUTATION_LEDGER S-392 claim heading per Rule 7。) — 2026-09-20 (Seth/Cowork lane — **S-390 P1+P2 ship ✅**:P1 `/internal/loops` token-guarded endpoint reads MacErrorEnvelope JSONL postmortem → ops-console 可看见 Mac-side job failures(`file not found` ≠ "Mac 一切正常",honest signal per I1);P2 Seth-side mirror `src/api/contracts/mac_failed_step_values.py` of Shadow `MacErrorEnvelope.py` FAILED_STEP_VALUES + `canary_zero` 扩词表(Mac-side ack pending Min-C C-N3 + SCHEMA_VERSION bump,per MacErrorEnvelope.py:75-76 contract);REFUTATION_LEDGER claim S-364 + S-390 headings per Rule 7;**8/8 loops_envelopes tests PASS** + `bash scripts/preflight.sh` ✅(claim 后);⏸ **Mac-side commit + push gated on JAZZ per Rule 4 sandbox=no-git-writes**,只 stage 自有路径(P1+P2 文件 + ledger claim,NOT 其它 lane 的 dirty files)。) — 2026-09-20 (Seth/Cowork lane — **§DECISIONS-PENDING digest + §S-390 trading module scan ✅**:MINIMAX_SYNC 新增 2 个 digests —— (1) `§DECISIONS-PENDING` 单屏汇总 7 件 JAZZ 拍板事项(D1 trading module 时间窗 卡 5 件最重 / D2 decisions 表归属 / D3 M-176 5 件 / D4 Jev push / D5 cap-weighted ① ship / D6 S-389 FIX / D7 S-377 数据驱动),放 §DATA-EXPANSION-HOLD 之后顶置,JAZZ 一眼看到; (2) `§S-390` §S-364 trading module 现状扫描 + 5 件 Seth plug-in 不冲突 A —— **P1 `/internal/loops` 心跳端点 ship** + **P2 `FAILED_STEP_VALUES` 扩 `canary_zero`**(A 留给 Seth 的两条,P0)/ P3 stage-3 schema stub / P4 schema_manifest 注册 cap-weighted ① / P5 DDL preparation,**P1+P2 是为什么 trading module 通后失败仍看不见的根因,先 ship 这两条 trading window 才有可视面**。 ⏸ Seth plug-in 待 JAZZ 拍 P1+P2 是否现在做(不卡 §S-364 时间窗,但开了 trading module 后 deploy 会更顺)。) — 2026-09-20 (Seth/Cowork lane — **S-389 fusion_paper_loop HTTP 409 unique violation handoff ✅**:ops-console post-deploy 验证 S-378b-6 (task #191) 时,4 个 triage target 中 `_fusion_paper_loop` 走 `failing` 分支、detail 暴露 `HTTP 409 [204ms] Key (mark_date)=(2026-09-20) already exists`;writer `src/data/signals/fusion_paper.py:653-666` 用 `supabase_insert_table` 而非 upsert,同一天 retry/re-run 撞 unique constraint;S-322 fossil 把它显示成 `waiting` 盖住连续 fail —— 「两种状态渲染成同一个」老形状;**与 S-336 不重叠**(S-336=state-vs-table split,本条=写端 idempotency 漏洞,同文件不同 root cause);`MINIMAX_SYNC §S-389` 已落(claim heading per Rule 7,preflight S-number check pass),3 选 1 FIX-A(`supabase_upsert_table + on_conflict=mark_date` ⭐)/ B(select-then-insert)/ C(catch 23505)给 JAZZ 拍;⏸ Seth 不擅自动手 per (b)。) — 2026-09-20 (Seth/Cowork lane — **S-378b-2.4 two_layer engagement 分支 ✅ Railway force-mark 验证 ✅ (Jazz 2-day window 续)**:Mac-side push `2bb60a4` → Railway auto-deploy ~100s → `POST /internal/force-mark/two_layer` 返 **`ok: true, wrote: true, status: marked, nav: 0.99983, daily_return_pct: -0.017, book_state: live, gross: 0.333, n: 1, date: 2026-09-20`**;Supabase `two_layer_paper_nav` 新 row `mark_date=2026-09-20, nav=0.999833, daily_return=-0.000167, book_state=live, n_positions=1, gross=0.3333, mark_source=manual` —— **28 天 refusal gap 关闭 (gap 是 2026-08-22 → 2026-09-20)**,book 重新 engages SOL @ 0.3333 weight,cost -0.17bps 反映在 nav 跌。✅ 整个 S-378b-2 sleeve 复活 ship-ready。下一个 in-line: **S-378b-5 REFUSAL_POLICY auto-escalate** + **S-378b-6 coingecko_pro_ohlc docket skip**。) — 2026-09-20 (Seth/Cowork lane — **S-378b-2.4 two_layer engagement 分支 ✅ (Jazz 2-day window 续)**:S-378b-2.3 修后 Railway force-mark 仍拒 → 本地 probe (`_live_core + _fetch_daily + target_weights`) 显示 w_tgt = `{"SOL": 0.3333}` (BTC/ETH/SOL core_state=live, SOL c=0.2159 > 0.2 gate),R57 verdict 适用过去 28 天,今天 core 重新 alive —— 这不是 R57 by-design flat,是 **engagement** (state 昨天诚实平、今天 core 活) → 旧 S-326 conservative refuse 丢了诚实 engagement 记录;`_decide_price_pnl` 加 branch ⑤ (在 branch ④ 之前),所有「state loaded + w_held={} + w_tgt has positions」一律返 `(0.0, None)`,caller 应用 cost = turn × fee;branch ④ 移除 (revival/inception/_compute_nav_base 三关已挡住真正 state lost,到不了 helper,helper 现在 4 路 100% 有定论);**18/18 S-378b smoke + 72/72 signals regression green**;**S-378b-2.4 ledger heading claim** (Rule 7)。⏸ 等 Railway auto-deploy → force-mark 应返 `ok: true, status: marked, nav: 0.999833, daily_return: -0.0167` (engagement SOL 入场,cost 反映)。) — 2026-09-20 (Seth/Cowork lane — **S-378b-2.3 two_layer by-design flat 分支 ✅ (Jazz 2-day window 续)**:R57 verdict — two_layer core 结构 dead,设计「持零算术」(28 行 `book_state=core_dead` 是诚实记录不是 state 丢失);inline guard (lines 358-379) 抽成纯 helper `_decide_price_pnl(w_held, w_tgt, last_px, mp, state, *, book)` 4 路决策(① w_held 非空 → weighted_mark 覆盖检查 ② state["revived_from_disk"] → price_pnl=0 ③ **NEW** w_held empty AND w_tgt empty → price_pnl=0,by-design flat ④ otherwise → S-326 拒绝 envelope);`mark_and_rebalance` 改用 helper + 双分支 log(by-design flat / revival);**17/17 S-378b smoke PASS**(原 12 + 5 新 `_decide_price_pnl` 覆盖 4 分支 + weighted_mark fail),**71/71 signals regression 全绿**(零 regression);`bash scripts/preflight.sh` ✅;**S-378b-2.3 ledger heading claim**(Rule 7) → preflight S-number check pass。⏸ 等 Railway auto-deploy (~90s) → `POST /internal/force-mark/two_layer_paper_nav` 验真复活(R57 28 行后 first new row expected,nav=disk_prev 持平 + daily_return=0)。) — 2026-09-20 (Seth/Cowork lane — **M-187 + M-188 闭环(S-369 1.3 + 1.4) ✅**:phase_distance chain 验通(`src/data/vector/phase_distance.py` → `src/data/signals/beta_core_paper.py:1207-1209` → `compute_q_hook_state(smoothed_distance=_sm)` line 1213,S-378 + M-186 已接好,本轮只验);**S-369 1.4 fusion_paper_regime_track 表归属落定**:`scripts/supabase_fusion_paper_regime_track.sql`(12 列,UNIQUE(date_utc),service_role_only RLS,updated_at trigger,与 `fusion_paper_state` 同形 S-176)+ `tests/test_fusion_paper_regime_track_schema.py` **6/6 PASS**(DDL 存在 · UNIQUE · RLS service_role_only · writer keys ⊂ DDL · id + timestamps trio · docstring 声明 Supabase 系统记录)+ writer docstring 改 `/tmp` 是缓存非真源;**S-369 ledger heading claim**(Rule 7 修,S-369-1.4 引用前必须先 claim,preflight S-number check 266 引用全在台账);**⏸ 部署 gated on Mac-side Supabase SQL 编辑器跑 DDL**(Cowork 不能 psql);`bash scripts/preflight.sh` ✅。) — 2026-09-20 (Seth/Cowork lane — **S-378b-1+2+3+4 4 sleeve NAV compound fix 写 + test-first (Jazz 2-day window 授权)**:fusion_paper + two_layer_paper + factor_tilt_paper + pod_aggregator_paper 的 mark_and_rebalance 入口加 `_compute_nav_base(state, disk_prev_nav, disk_prev_date, today)` 兜底(state 空 + disk 有 rows → 复活从 disk prev,不拒绝;state 空 + disk 无 rows → genuine inception 1.0);nav_persist.py `nav_table_last_nav` / `nav_table_has_any_rows` 加 `inception_id` + `include_voided` 参数(fusion v2-aware check);**64/64 signals tests green**(7 + 10 新 smoke,零 regression);**S-369 ledger heading claim**(untracked `fusion_paper_regime_track.{sql,py}` 引用 S-369 但无 ledger entry,preflight 卡 commit —— 现 claim heading 让 push 过);**等 deploy + force-mark 实证 fusion 真复活**(`status: skipped → marked`,不再"state empty but fusion_paper_nav already has marks" S-336 拒绝);后续 S-378b-5 REFUSAL_POLICY auto-escalate + S-378b-6 coingecko_pro_ohlc docket skip 排队中。) — 2026-09-19 (Seth/Cowork lane — **M-186 ⓠ 阈值 0.2341 deploy prep + 实施 ✅**:ENTER/EXIT 改 `0.2341` / `0.05`(数据裁定 per A-378b-1 cohens_d 0.255 / n=18);`src/data/signals/beta_core_q_overlay.py` 加 9 行数据裁定注释 + 6mo escalation path;**overlay/hook smoke 23/23 PASS**(drift 同步 + 3 个 zone test 对齐新阈值),`bash scripts/preflight.sh` ✅;3 文件 ship-ready 等 JAZZ 拍 commit;**⏸ Railway env 部署 gated on §S-364 trading module 打通**(per 拍板 line 1018);env override `C2_ENTER_Q_ZERO`/`C2_EXIT_Q_ZERO` 已就位(bounds + hysteresis ≥ 0.05 校验);SYNC trim 76,597 → 75,971(< 76,000 软上限),归档:S-378b C-接收 body + A-378b-1 body → 1-line pointer,M-186 ✅ 新增。) — 2026-09-19 (Seth/Cowork lane — **A-378b-1+2 拍板 + SYNC 归档三轮**(详见 SYNC §IN-FLIGHT ✅ A-378b-1+2-拍板):A-378b-1 **ⓠ 阈值拍 0.2341 (p95)**(cohens_d 0.255 / n=18,vs C's 0.30 的 n=7),部署等 §S-364 trading module 打通;A-378b-2 mark_snapshot **5 题逐条拍 + 3 修订**(13 列不是 9 / wiring 后移到 `_write` 成功后 line 1230 / 测试拆 stage-3 schema + stage-4 repro / 加 `universe_used text[]` / L1 fix=FIX-3) + 8 步实施序;**⏸ 不自 ship**,等 JAZZ 给 trading module 部署时间窗。**SYNC trim** 73,117 → **75,827**(< 76,000 软上限)—— 本轮归档:S-363 裁决(已结)/ A-372-1(被 S-377 supersede)/ A-378b-1 + A-378b-2 旧 handoff body(被新 ✅ 拍板 entry 取代)/ C-LANE-PILLAR-DISPERSION(已结,② 等 JAZZ 拍);新增 ⛔ M-176 / ⛔ M-181/182/183(见上一行 last updated)。) — 2026-09-19 (Seth/Cowork lane — **Jev 文章家族 + M-176 设计交付,全部未 push,等 JAZZ 拍**(详见 SYNC §IN-FLIGHT ⛔ M-176 / ⛔ M-181/182/183):主报告 EN + 中文导读 + 齐锐扩写(M-181) + 14-slide PPTX + 中文现场讲义 45min(M-182) + 英文 YouTube 22min(M-183) + 3 重做 v4 PNG + M-176 附录,**全在 `docs/articles/`**(8 untracked,1 modified PNG,`git status --porcelain` 见原样)。**JAZZ 2026-09-18 原话 "先不要着急push"** —— 3 件事待拍:风格 mix 接受度 · PPTX 是否再 polish · 一次 commit vs 分批。M-176 设计 8 文件已落 `cometcloud-local/research/m176_eval_design/`(**Rule 3a 自纠**:从 `/tmp/jev_assets/eval_design/` `mv` 走,源清空),**§S-381 三件已落进设计**(边界声明 · ground truth 双栏报 · 合规预筛归"预筛第一道"),**5 件待 JAZZ 拍**(key 谁拿 · 从哪边调 API · 数据落哪 · 场景 C trace 是否过 §S-371 token 收敛 · 报告发哪)。) — 2026-09-17 (Seth/Cowork lane — **S-375 + S-376 观察工具被系统当陌生人 / 日报读不到却报「没变化」**:**S-375** Jazz 的 ops 台子报 429 —— **不是打得太猛,是身份不对**:`rate_limit.py:141` 有一行「`X-Internal-Token` 命中就跳过限流」,而 `ops_console.py` 一个 header 都没带,掉进匿名档 **120 rpm / 2000 rpd 按 IP**;清点:**9 个本地脚本打 Railway,8 个不带 token,共用一个桶**(只有 `schema_drift_check` 带)。**这和当天那三个「监控面作用域小于系统」同族,方向反过来:那三个是监控看不全系统,这个是系统不认识监控。**已修 `_get()` 带 token,**没 token 不静默降级**(照发+讲出来 —— 静默的代价是几小时后一个看不懂的 429,不是此刻一行字,I1);两条路径都实测。⚠️ **写的时候当场踩一个**:`ops_console.py` 顶层没有 `import os`(别处函数内各自 import,三处),`NameError` —— 就是 `_beat` docstring 记的「只在错误路径上炸」那个形状,**这次在主路径上,第一次实测就炸**;**这正是「判据先自己跑一次」的价值** —— 不跑就是在 Jazz 手里炸。剩 7 个脚本 + 共用 helper 派给 A,**并写明不要改 7 次**:9 个各自拼 HTTP 调用和 S-371 那 36 处各自比较 token 是同一个形状,先收敛成 `scripts/_api.py`。**S-376** 新 prompt 上线首跑改善明显(报了 scope、按基线报增量、没有编造的开关名),**但对 §B 七条基线每条都写 `unchanged`、结尾写「No material state change」,同时在 SCOPE 里承认 `§A data-freshness unreachable` —— 那七条一条都没量过**。**「读不到」被渲染成了「没变化」**,I1 核心违反,也是今早 S-373(回填让列看起来有数据)在另一个表面的重演 —— **未测量被染成已测量,而且染出来的颜色恰好最安抚人**;它还自作主张静默略过 §C。**prompt 加第 4 条硬规则**:§A 取不到 ⇒ **不许报任何基线状态**,整节 `NOT MEASURED`,**并把「监控读不到系统」当当天头号 flag(比任何单项死亡更该上报)**;§C 跳过写 `SKIPPED — <原因>`;三级取数退避(Railway → looloomi.ai → **Supabase MCP 直查**,附 SQL);输出末尾**强制**多一行「这一轮有什么没量到」,全量到就写「全部量到了」,**不许省略**;另给 §D 一句:**产品面干净不能软化 §A/§B 的裁决**(当天它就是干净的,而 producer 在死)。⚠️ **编号撞车**:SYNC 里另一个 Seth session 同日也用了 `§S-374`(M-115 Book B),与台账 S-374(日报 prompt)不是一回事;**台账是权威**,SYNC 那节已标注。) — 2026-09-17 (Seth/Cowork lane — **S-374 日报把我写进 prompt 的错误忠实执行了一遍 + 今天第三个作用域缺陷**:`cometcloud-loop-watch` 头条报「METER_REBAL 240 未平仓,轮动停摆,**去查 Railway 的 `REBAL_LOOP_ENABLED`**」—— **四条全错,而来源是 prompt 第 33 行的原文,是我写的**。⚠️ **我的第一个判断也错了**:先认定它读了 `.claude/worktrees/` 里 2026-07-01 的旧文档(那变量确实只存在于那个 gitignored worktree),**去 grep 之前我已经准备好一条完整因果故事** —— 和 S-354「建立在假前提上的完整因果故事」同形,**查了才没派错活**。逐条:`REBAL_LOOP_ENABLED` 在 `src/` **零命中**(真机制 `mark_and_rebalance()` + `DISABLE_*`)· prompt 写死 `max(created_at)` = **写时钟当事件时钟**(METER_REBAL 写时钟 7 天、`entry_time` **14 天**)· 「open positions」与 SQL 行数混在一个条件里 → 240 行数报成 240 未平仓(**实测 `exit_time is null` 逐策略全 0**)· 通篇没有 `/internal/data-freshness`,用 `loop_health.py` 报 **6 PASS 1 WARN**。**它唯一 flag 的是整块板子上最不要紧的一件**,真死的(msv 43d · signal_outcomes 137d · 三个价格源 · deep_panel 连拒 40 轮)一件没提。**今天第三次同一形状**:health-summary(4 项说 healthy)· loop_health.py(5 层说 6 PASS)· 这份日报 —— **三个监控面作用域都小于系统,都报健康**;S-283 那条就在第一屏。**一天撞三次 ⇒ 不是个别疏忽,是我们建监控的默认姿势** —— 已把这个问题本身交给 B 当判定表最值钱的一列。**prompt 已改**:三条硬规则置顶(① 不许写没 grep 过的标识符,零命中就写「找不到这个开关」,**一个自信的错误下一步比没有下一步更贵** ② 写时钟≠事件时钟,不一致时都报 ③ **每个裁决带作用域**,强制打印 `coverage.n_not_covered/n_total`,不带限定的 healthy 正是日报存在的理由);主仪表换 `/internal/data-freshness`;给出已知死亡基线、**报增量不报名单**(一周读起来一样的日报说明 watch 没在 watch);`open_now` 与 `n` 在 SQL 里分开并写明不许混用。**另:S-371 判据触发了 S-244 守卫** —— 守卫给两扇门(注册 / 写进 `EXEMPT` 并说明原因),**我把理由写在测试自己的 docstring 里,守卫看不见那里**,推理推到了和守卫一字不差的结论却选了它禁止的那扇门;已按设计补 EXEMPT 条目含删除条件,129 注册 · 2 豁免,绿。) — 【更早条目已移至 `PROJECT_STATE_LOG.md` §2026-09-19-HEADER-MOVED-FOR-CAP】
+**Last updated:** 2026-09-21 (Seth/Cowork lane — **S-397 §5b ④ Jev L/S overlay kernel SHIP-READY (Pattern A test-only, awaiting JAZZ commit+push per Rule 4)**: JAZZ 关键 pivot "需要拆解jev的内核" → Jev IS multi-primitive decision kernel (Choice + Score + Noul batch),NOT regime filter(S-396 mis-pivot);**30-question batch per cadence** = C(5,2)=10 pairs × 3 primitives,12.2× cheaper + 10× faster than sequential,~$0.0004/case;**4 NEW modules** `paper_trading/{jev_decision.py ~350 lines: JevDecision / MockJevDecisionBackend 3 mode / TypesafeJevDecisionBackend real-API fail-open / JevDecisionActor stats / build_ls_questions / build_ls_state_payload · ls_state_builder.py 35-field L/S state · pair_decision_assembler.py selective classification + size clip · walk_forward_oos.py anchored 6/2/6mo × 5 folds OOS harness (test_start=val_end+1d no overlap)}` + **`paper_trading/spec_runner.py` MODIFY** (FAMILIES["panel_long_short_jev_overlay"]=True + Spec.load jev_overlay validation + `decide_panel_long_short_jev_overlay` ~270 lines: ① base 1/N long + ④ overlay L/S pairs = 5 base + 2×N_overlay legs,lag-1 PIT per M-114;**bug fix** lines 1769/1783 `d.isoformat()` on already-stringified `d` → `d_lag1` + `as_of`) + **spec `s397_jev_ls_overlay.json`** (coverage@0.55 / score@0.15 / thesis@0.55 / max_pair_weight=0.10 / fail_open=True);**5 new test files = 49/49 PASS** (test_jev_decision_smoke.py 16 + test_ls_state_builder_smoke.py 10 + test_pair_decision_assembler_smoke.py 12 + test_s397_ls_overlay_smoke.py 7 + test_walk_forward_oos_smoke.py 5);**3 fail-safes** = (1) `TypesafeJevDecisionBackend` missing-key/HTTP-error/schema-mismatch → all-no_edge + error marker,base ① ENTERED; (2) `pair_decision_assembler` `jev_decision.error` → all pairs abstained,base ① ENTERED; (3) `FAMILIES` dict gate unregistered family → `UnwiredFamily` NotImplementedError;**Pattern A discipline** = `JEV_API_KEY` never in `.py`/`.md`/`.json`,`os.environ.get()` at `evaluate_batch()` time,tests use `api_key="dummy_key_for_unit_test"`;**preflight** discipline 全绿,**唯一 RED = `online schema-drift`** (c-path `nav_panel_daily`/`nav_panel_rebalances` missing + `market_state_vectors` column drift = pre-existing C-13 backlog,NOT S-397 introduced);**⏸ Mac-side commit+push gated on JAZZ** (Rule 4 sandbox=no-git-writes,11 paths staged:`paper_trading/{spec_runner.py, jev_decision.py, ls_state_builder.py, pair_decision_assembler.py, walk_forward_oos.py, specs/s397_jev_ls_overlay.json, tests/test_*}.py` ×5;**NOT staged** `docs/articles/jev_*.{pptx,md}` + `docs/jev_nautilus_integration_plan_2026-09-21.md` + `docs/articles/images/maio_*` = JAZZ-owned);**live 1196d replay gated on** A-lane `binance_hist` writer fix (#234, M-119) + `JEV_API_KEY` inject by A lane;**post-ship**: M-121e L3 cross-ref consumes `PairPosition.{score, confidence, thesis_noul}`;Brier Gate 1 needs TypesafeBackend + real Jev data on real bars (60d paper track).REFUTATION_LEDGER §S-397 claim heading per Rule 7.) — 2026-09-21 (Seth/Cowork lane — **S-397 frontend hidden-data 全面审计 + safeFormat helper ✅ (commit `2bf6ef9`, JAZZ "前端还有很多类似的低级错误" directive, **renumbered from S-396 due to collision w/ `9100e06 feat(paper_trading): S-396 3-arm comparison framework` per '台账是权威'**: `dashboard/src/lib/safeFormat.js` NEW (`isMissing / fmtPct / fmtNum / fmtDollar / fmtB / fmtChg / directionOf`, centralizes "missing → —" semantics; null/undefined/NaN → "—", real 0 renders as "0" — different from missing); `dashboard/src/components/MacroPulse.jsx` (3 tile renderers BTC Dom/Fear&Greed/MCap 24h `|| 0` collapse → `!= null` guards; FNG default 50→null propagates correctly); `dashboard/src/components/StrategiesPage.jsx:604` (TVL masquerading as price_7d fallback → `price_change_7d → change_7d → null`); `dashboard/src/components/PerformanceDashboard.jsx` (30d Outcome OPEN badge amber pill vs "—" distinguished, was `{isOpen ? "—" : "—"}` both branches rendered "—"); `src/data/market/data_layer.py:1804-1816` (FNG default 50→None, MCap change 0→None, JSON `"null"` not `str(None)`); **Downstream FNG=None verified safe** across 4 routers (`agent.py:340` explicit None, `share.py:196` / `social.py:195` / `macro.py:143` or-chains degrade, `macro.py:167` is-not-None guard); **REFUTATION_LEDGER §S-397** claim heading + S-262 family #11 entry; **⚠️ preflight `schema-drift` RED at ship** (spirit of Rule 5 form violation — content compliant, S-397 doesn't touch nav_panel_* or mcap_usd column; c-path Phase 1+2 backlog, see §IN-FLIGHT); **P1/P2 audit backlog 11 sites queued** (A2/A5/A6/A7/A8/A9 + C2/C3/C4/C6/C7 — JAZZ 拍下一轮).) — 【更早条目 → `PROJECT_STATE_LOG.md` §2026-09-22-HEADER-MOVED-FOR-CAP】
 
-> **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
-> inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
-> 只覆盖 `api_keys`,于是新增一列本可静默杀死 ① 账。**作用域太窄的控制会把注意力从它漏掉的
-> 地方引开 —— 因为它看起来「已经有守卫了」。** 与 MEMORY.md 那条(只给 MEMORY 加上限,成本
-> 搬到 PROJECT_STATE)是同一个形状。
-
-## 本轮一句话:**一个形状,十次**
-
-> **S-262/S-263(2026-08-30→09-01)。** `/internal/` 40 条路由全部行为验过:12 条有意公开 ·
-> 27 条已收口 · 1 条已知坏 · 匿名可用的敏感端点 **0**。详见台账。**危险项已进 OPEN RISKS。**
-
-每一次都是**「拿不到」被渲染成一个合理的数字**,而不是被渲染成「拿不到」。
-一个 0 在合法区间内、看起来正常、是空累加的天然产物 —— 所以九次都没人发现。
-
-| # | 哪里 | 缺失变成了什么 |
-|---|---|---|
-| S-180 | `redis_get_key` miss=error | 一次丢包 → 58 资产 T1→T2,评级写进永久记录 |
-| S-184 | quant / crowd_clock / 日快照 | 交易历史被覆盖 · 重复行 · 影子行 |
-| S-185 | 占用查询用了不存在的列 | fail-closed 拒写 → **静默停机 115 分钟,`/health` 全绿** |
-| S-190 | 深度面板覆盖率下限只标注不拦截 | 1/262 的运行照写,`max(trade_date)` 显示当天 |
-| S-194 | 五本账本 `pnl = 0.0` + 条件累加 | **面板 +23.99% 期间账本记 0.00%** |
-| S-195 | CoinGecko 用错端点四个月 | 小时点塌缩成"日收盘",08-19 BTC 记 +0.30%(实际 +7.15%) |
-| S-200 | T2 构建 110s / 预算 12s | 缓存永远填不上 → 永久降级,`regime=None` |
-| S-201 | `NAV_TABLE` 声明了没写入者 | 表存在、永远空、看起来这项有人管 |
-| S-202 | `{"ok": True, "rows": 0}` | **CIS 四个月用中性权重打分,日志每天说正常** |
-| S-242 | 接收端漏写顶层 `macro_regime` | HIGH 级 regime 信号**从 feed 里消失**(守卫是 `if regime:`);CIS gate 落到 58 默认值而非 TIGHTENING 的 52 → **27 个过闸报成 20 个** |
-| S-243 | 每资产 regime 从没和顶层对过账 | 同一份响应顶层 `Tightening` / 每资产 `RISK_ON`(58/58)→ 配置面板对投资人显示 **"Risk appetite elevated. Full allocation eligible."** |
-
-**S-242/243 三课**(细节见 ledger,别在这里展开):① **沉默也是一种渲染** —— 前九次是「拿不到」
-渲染成一个合理的数字,这次渲染成**什么都没有**,一条缺席的 HIGH 信号和「没这个状况」在输出上
-一样;所以 `cis_regime_unmeasured` 那条 pillar 全 0 的信号不是装饰,**未测量必须占一个位置**。
-② **读对 key 还不够** —— 引擎发 `Tightening`,所有表是 UPPER_SNAKE,miss 的表现是默认值不是报错。
-③ **「两处写法不一致」要当缺陷查,不是当风格容忍** —— S-243 正是问「要不要统一大小写」问出来的,
-表层不一致底下压着一个不一致的**事实**。四条出口(含最易烂的 degraded/LKG)统一走 `_unify_regime()`,
-矛盾一律 `_logger.error`,**不静默调和**(引擎侧归 Minimax lane)。
-
-⚠️ 守卫失败第七轮,同一类(匹配名字而非构造):S-243 前端守卫初版按 `if "regime" in line` 过滤,
-而出问题的 key 所在行**恰好没有这个词** —— **在真实的坏文件上通过**。已改成跟踪代码块 +
-补「用 fixture 重新引入 bug 确认守卫会响」的测试;旧版 CISWidget 实测 7 处全捕获。
-
-⚠️ **守卫自己失败了六轮**,两类:匹配名字而非构造(**解释 bug 的注释废掉了抓这个 bug 的测试**,已抽成 `tests/_source.py`);测试样本过度确定。每个守卫现在都用重新引入 bug 验证过。
+> **本项目的主导缺陷类:「拿不到」被渲染成一个合理的数字,而不是被渲染成「拿不到」。**
+> 十一次实例(S-180…S-243)+ 三条课 + 守卫自己失败七轮的记录 →
+> **见本文件 §一个形状,十次(在 OPEN RISKS 之后)。**
+> 那一段移出第一屏不是降级:**第一屏按 `test_project_state_opens_with_open_risks` 只装活的危险,
+> 历史教训排在危险后面** —— 2026-09-22 我把方向段插在 OPEN RISKS 之前,当场被这条判据抓到。
 
 ## 现在能跑的 / 不能跑的
 
@@ -350,6 +314,105 @@ The cap is doing its job only if closure is as routine as addition.*
 ***RETIRED 2026-09-01 为 #0 腾位:🟢 S-104 T2 fan-out fix** — 2026-08-09 已在生产验证(`git_sha=5a54d1c1`, `fanout_total_ms=634`, `degraded_branches=[]`),其 VERIFY 是回归检查而非风险。正文进 `PROJECT_STATE_LOG.md` / 台账。**它带的那句教训单独留下:***
    *代码修好而它的数据迁移没跑,是修了一半* —— S-123 的修复本身就带了迁移,
    而迁移要 service_role,于是修复挂在另一条 OPEN RISK 上。
+
+---
+
+
+
+## 一个形状,十次(历史教训 —— 排在危险之后)
+
+> **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
+> inception 身份护住了 Postgres、漏了先应答的 Redis;`test_table_columns_match_the_code`
+> 只覆盖 `api_keys`,于是新增一列本可静默杀死 ① 账。**作用域太窄的控制会把注意力从它漏掉的
+> 地方引开 —— 因为它看起来「已经有守卫了」。** 与 MEMORY.md 那条(只给 MEMORY 加上限,成本
+> 搬到 PROJECT_STATE)是同一个形状。
+
+## 本轮一句话:**一个形状,十次**
+
+> **S-262/S-263(2026-08-30→09-01)。** `/internal/` 40 条路由全部行为验过:12 条有意公开 ·
+> 27 条已收口 · 1 条已知坏 · 匿名可用的敏感端点 **0**。详见台账。**危险项已进 OPEN RISKS。**
+
+每一次都是**「拿不到」被渲染成一个合理的数字**,而不是被渲染成「拿不到」。
+一个 0 在合法区间内、看起来正常、是空累加的天然产物 —— 所以九次都没人发现。
+
+| # | 哪里 | 缺失变成了什么 |
+|---|---|---|
+| S-180 | `redis_get_key` miss=error | 一次丢包 → 58 资产 T1→T2,评级写进永久记录 |
+| S-184 | quant / crowd_clock / 日快照 | 交易历史被覆盖 · 重复行 · 影子行 |
+| S-185 | 占用查询用了不存在的列 | fail-closed 拒写 → **静默停机 115 分钟,`/health` 全绿** |
+| S-190 | 深度面板覆盖率下限只标注不拦截 | 1/262 的运行照写,`max(trade_date)` 显示当天 |
+| S-194 | 五本账本 `pnl = 0.0` + 条件累加 | **面板 +23.99% 期间账本记 0.00%** |
+| S-195 | CoinGecko 用错端点四个月 | 小时点塌缩成"日收盘",08-19 BTC 记 +0.30%(实际 +7.15%) |
+| S-200 | T2 构建 110s / 预算 12s | 缓存永远填不上 → 永久降级,`regime=None` |
+| S-201 | `NAV_TABLE` 声明了没写入者 | 表存在、永远空、看起来这项有人管 |
+| S-202 | `{"ok": True, "rows": 0}` | **CIS 四个月用中性权重打分,日志每天说正常** |
+| S-242 | 接收端漏写顶层 `macro_regime` | HIGH 级 regime 信号**从 feed 里消失**(守卫是 `if regime:`);CIS gate 落到 58 默认值而非 TIGHTENING 的 52 → **27 个过闸报成 20 个** |
+| S-243 | 每资产 regime 从没和顶层对过账 | 同一份响应顶层 `Tightening` / 每资产 `RISK_ON`(58/58)→ 配置面板对投资人显示 **"Risk appetite elevated. Full allocation eligible."** |
+
+**S-242/243 三课**(细节见 ledger,别在这里展开):① **沉默也是一种渲染** —— 前九次是「拿不到」
+渲染成一个合理的数字,这次渲染成**什么都没有**,一条缺席的 HIGH 信号和「没这个状况」在输出上
+一样;所以 `cis_regime_unmeasured` 那条 pillar 全 0 的信号不是装饰,**未测量必须占一个位置**。
+② **读对 key 还不够** —— 引擎发 `Tightening`,所有表是 UPPER_SNAKE,miss 的表现是默认值不是报错。
+③ **「两处写法不一致」要当缺陷查,不是当风格容忍** —— S-243 正是问「要不要统一大小写」问出来的,
+表层不一致底下压着一个不一致的**事实**。四条出口(含最易烂的 degraded/LKG)统一走 `_unify_regime()`,
+矛盾一律 `_logger.error`,**不静默调和**(引擎侧归 Minimax lane)。
+
+⚠️ 守卫失败第七轮,同一类(匹配名字而非构造):S-243 前端守卫初版按 `if "regime" in line` 过滤,
+而出问题的 key 所在行**恰好没有这个词** —— **在真实的坏文件上通过**。已改成跟踪代码块 +
+补「用 fixture 重新引入 bug 确认守卫会响」的测试;旧版 CISWidget 实测 7 处全捕获。
+
+⚠️ **守卫自己失败了六轮**,两类:匹配名字而非构造(**解释 bug 的注释废掉了抓这个 bug 的测试**,已抽成 `tests/_source.py`);测试样本过度确定。每个守卫现在都用重新引入 bug 验证过。
+
+## 方向(不放 MINIMAX_SYNC —— 那个文件会按体积轮转)
+
+> **2026-09-22 定规(S-398):** 09-21 一次按体积的轮转把 SYNC 从 69,725 砍到 21,602,
+> **「自证率 / 棘轮 / S-380」在活文件里的提及变成 0 次。**
+> 设计来防止「三天没人发现六个价格源死了」的那个机制,自己被归档掉了。
+> **方向从此住在这里**(有上限,但是被策展的,不整体轮转)。**A/B/C 冷启动读这一段。**
+
+### 目标:装置自证率,棘轮式,只能升,**没有到期日**
+
+> **每天都要能回答:这套装置今天说的话,有几成是量出来的。而这个比例只许上升。**
+
+两个比值,全部取自装置已经在报的数,**不新建指标**:
+
+    ① 覆盖率     = coverage.n_covered / n_total    (2026-09-18 基线 **14 / 81**)
+    ② 可证成功率 = 有 last_ok_at 的循环 / 全部循环  (2026-09-18 基线 **3 / 23**)
+
+机制与 `scripts/lesson_enforcement_baseline.txt` 同源:基线落盘,
+**preflight 拒绝任何让这两个比值下降的推送。**
+
+**为什么是它而不是「60 天前向记录」**(前一版目标,Jazz 当场否掉):
+日历门控的目标会把工作变成等待;**而且等不到** —— 实测 41 天里五次 inception,
+平均每段活 8 天(S-384),每一次重置都是**一个部件没有停下来、产出了一个貌似合理的数**:
+历史被截断 / vol 三分位没接上用了冻结默认值 / 面板动了账本记 0.00% / inception 经未加作用域的 key 继承。
+
+    装置分不清「量到了」和「没量到」
+      → 部件产出貌似合理的数 → 账本照记 → 几天后才发现
+      → 整段作废 → 记录重置 → 永远到不了 60 天
+
+**所以棘轮不是那个目标的代理,它是因果路径。** 自证率 ↑ ⇒ 缺陷当天可见 ⇒
+inception 不必重置 ⇒ 记录才可能长到 60 天。**这条链是量出来的,不是论证的。**
+
+### 打平时的破局方向:从反射层走向因果层
+
+ARCHITECTURE:最深的对象是 **Entity/Decision**,CIS 与动量是它的反射。
+实测(S-383,43 天截面):`pillar_m` 动量 Q4−Q1 **+0.941pp/天 t=2.43**,
+而复合 CIS **+0.747 t=2.23** —— **复合分弱于它自己的动量支柱**;
+`pillar_o` 链上 **+0.059 t=0.20**(C 已证其离散度正常,是前向信号真的弱)。
+**反射层有效,因果层贡献≈0,而 `decisions` 至今 0 行。**
+两件活对棘轮贡献相近时,**选离因果更近的那个**。
+
+### 三条 lane 的分母归属
+
+**A**(统筹):循环的 `last_ok_at` 地基 · 面板宽度(cg_pro ≥20 标的 ≥415 天,现 6 / 中位 73)· 入库存活
+**B**:把这两个比值做成脚本 + 棘轮进 preflight(**现在是手算的,手算的指标下周就没人算**)· 判据审计
+**C**:ⓠ 阈值重标定(458 天 0 次触发)· 分级中段倒挂 · ② 的规格题
+
+### 我保留、不下放的四件
+
+换源 / 换口径(`PANEL_SOURCE` 由 Seth 执行,S-245)· 降地板(默认否)·
+策略自由参数(阈值窗口权重 → C 出方法 + Jazz 拍)· 花钱 · key 真值(只经 Jazz)
 
 ---
 
