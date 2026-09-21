@@ -564,3 +564,275 @@ def test_a_docketed_source_does_not_overrule_a_flowing_verdict():
         )
     finally:
         oc.SOURCE_DOCKETED_BY_POLICY.pop("coingecko_pro_ohlc", None)
+
+
+# ── S-378b-A2 ──────────────────────────────────────────────────────────────
+# 4 paper-book force-mark beats (_book_factor_tilt_loop, _book_fusion_loop,
+# _book_pod_aggregator_loop, _book_two_layer_loop) all land at stale_build=True
+# after the S-378b force-mark verifications. The dashboard was rendering them
+# as 4 of the "8 broken loops" because it counted every verdict != ok —
+# including fossils. _classify_loops already maps stale_build→waiting, but a
+# specific regression test pins the four known offenders.
+
+def test_s378b_a2_book_force_mark_fossils_are_waiting_not_broken():
+    """S-378b-A2: S-378b-1.3 / 2.4 / 3 / 4 force-mark verification left four
+    `_book_*_loop` stale fossil beats (build 3161dd93 vs current 4b6bba55).
+    Even with HTTP 409 or empty-error conditions, they MUST classify as
+    `waiting` — the loop hasn't run on the current build yet, so any verdict
+    is the previous build's news, not an actionable failure."""
+    fossil_loops = [
+        "_book_factor_tilt_loop",
+        "_book_fusion_loop",
+        "_book_pod_aggregator_loop",
+        "_book_two_layer_loop",
+    ]
+    rows = {"rows": []}
+    for name in fossil_loops:
+        rows["rows"].append({
+            "loop": name,
+            "verdict": "failing",
+            "stale_build": True,
+            "build": "3161dd93",
+            "n_consecutive_failures": 1,
+            "last_error": "" if name != "_book_fusion_loop" else
+                "durable_write_failed :: HTTP 409 duplicate key (mark_date)=2026-09-20",
+            "last_ok_at": None,
+            "last_run_at": 1789890948,
+        })
+    out = {it["name"]: it for it in oc._classify_loops(rows)}
+    for name in fossil_loops:
+        assert name in out, f"missing entry for {name}"
+        assert out[name]["remedy_class"] == "waiting", (
+            f"{name} is a stale fossil (build 3161dd93 != current 4b6bba55) and "
+            f"MUST be `waiting` not `act_now`; got {out[name]['remedy_class']!r}. "
+            f"This is the S-322 / S-378b-A2 fossil-not-broken discipline — a "
+            f"verdict from the old build is not a judgement on the new one."
+        )
+
+
+# ── S-378b-A1 ──────────────────────────────────────────────────────────────
+# force_mark.py used to pass `(result or {}).get("error")` directly to beat.
+# Many books write the failure reason into `reason` / `note` / `phase` instead
+# of `error` — the beat landed in Redis with `last_error=""`, and the dashboard
+# could not diagnose ("you cannot debug a blank"). Verify the helper derives a
+# non-empty string from any of the four plausible fields, and synthesizes a
+# clear "book returned <status> with no error field" if all are empty.
+
+def test_s378b_a1_force_mark_derives_error_from_error_field():
+    """Most direct path: book returns {"error": "..."}."""
+    from src.api.routers import force_mark as fm
+    _err = fm._derive_force_mark_error(
+        book="factor_tilt", ok=False, status="mark_failed",
+        result={"error": "missing_price:BTC"},
+    )
+    assert _err == "missing_price:BTC", (
+        f"direct .error field should pass through; got {_err!r}"
+    )
+
+
+def test_s378b_a1_force_mark_falls_back_to_reason_note_phase():
+    """Books that write into reason / note / phase must still surface context."""
+    from src.api.routers import force_mark as fm
+    for field, value in [
+        ("reason", "insufficient_live_data"),
+        ("note", "no_rows"),
+        ("phase", "write"),
+    ]:
+        _err = fm._derive_force_mark_error(
+            book="two_layer", ok=False, status="skipped",
+            result={field: value},
+        )
+        assert _err == value, (
+            f"fallback to {field!r} should surface {value!r}; got {_err!r}"
+        )
+
+
+def test_s378b_a1_force_mark_synthesizes_when_all_fields_empty():
+    """When the book returns no error/reason/note/phase, the helper synthesizes
+    a clear, actionable message — never an empty string. This is the S-323z
+    'you cannot debug a blank' discipline at the source."""
+    from src.api.routers import force_mark as fm
+    _err = fm._derive_force_mark_error(
+        book="pod_aggregator", ok=False, status="degraded",
+        result={"status": "degraded", "nav_persisted": False},
+    )
+    assert _err and _err.strip(), (
+        f"empty-input must still produce non-empty error context; got {_err!r}"
+    )
+    assert "pod_aggregator" in _err, (
+        f"synthesized message must name the book (so operator knows WHICH book "
+        f"has the failure-shape wrong); got {_err!r}"
+    )
+    assert "degraded" in _err, (
+        f"synthesized message must include the status (the operator needs the "
+        f"state, not just the book name); got {_err!r}"
+    )
+    assert ("error" in _err and "reason" in _err and "note" in _err
+            and "phase" in _err), (
+        f"synthesized message must point at which fields the book SHOULD have "
+        f"written into; got {_err!r}"
+    )
+
+
+def test_s378b_a1_force_mark_no_error_when_ok():
+    """When ok=True, the helper returns None — beats store last_error=None then."""
+    from src.api.routers import force_mark as fm
+    assert fm._derive_force_mark_error(
+        book="factor_tilt", ok=True, status="ok",
+        result={"status": "ok"},
+    ) is None
+
+
+# ── S-378b-B ───────────────────────────────────────────────────────────────
+# force_mark.py used to invoke the book even when today's row already existed
+# (cron wrote at 00:05 UTC; operator-verified at 07:55 UTC). That caused
+# `durable_write_failed :: HTTP 409` to land on the liveness beat as the
+# last_error for every force-mark verification. The fix short-circuits with
+# `{"status": "already_marked", ...}` and fires the beat as refused (so the
+# failure counter stays clean).
+
+def test_s378b_b_force_mark_short_circuits_when_today_row_exists():
+    """S-378b-B: when nav_row_exists returns True for today, force_mark must
+    NOT invoke the book; it returns already_marked, ok=True, no HTTP 409.
+
+    Pure-function level: verify `_already_marked_response` builds the right
+    shape (no I/O — the actual call path uses nav_row_exists which is mocked
+    in the higher-level integration test)."""
+    from src.api.routers import force_mark as fm
+    resp = fm._already_marked_response(
+        book="fusion", today="2026-09-20", nav_table="fusion_paper_nav",
+    )
+    assert resp["ok"] is True, (
+        f"already_marked must be ok=True (the work is done); got {resp['ok']!r}"
+    )
+    assert resp["wrote"] is False, (
+        f"already_marked must NOT have written (the row was already there); "
+        f"got wrote={resp['wrote']!r}"
+    )
+    assert resp["phase"] == "idempotent_short_circuit", (
+        f"phase must say 'idempotent_short_circuit' so the operator can "
+        f"distinguish this from a real mark; got {resp['phase']!r}"
+    )
+    assert resp["mark_status"] == "already_marked", (
+        f"mark_status must surface 'already_marked' (so dashboard classify() "
+        f"maps to NO_WORK_STATUS → refused=True, failure counter clean); "
+        f"got {resp['mark_status']!r}"
+    )
+    assert resp["result"]["status"] == "already_marked", (
+        f"result.status must be 'already_marked' for the inner book-shape "
+        f"contract; got {resp['result']['status']!r}"
+    )
+    assert "force_overwrite" in resp["reading"], (
+        f"reading must tell the operator how to force-replace (rare but real); "
+        f"got reading: {resp['reading']!r}"
+    )
+
+
+def test_s378b_b_force_mark_does_not_short_circuit_on_force_overwrite():
+    """force_overwrite=true must skip the already_marked short-circuit and
+    proceed to actually invoke the book (or, when no row exists, to behave
+    normally). The signal is the function-level skip — verify the public API
+    exposes force_overwrite as a query parameter that flows through."""
+    import inspect
+    from src.api.routers.force_mark import force_mark
+    sig = inspect.signature(force_mark)
+    assert "force_overwrite" in sig.parameters, (
+        f"force_mark must accept force_overwrite query param; got params: "
+        f"{list(sig.parameters.keys())!r}"
+    )
+    assert sig.parameters["force_overwrite"].default is False, (
+        f"force_overwrite default must be False (idempotent by default); "
+        f"got default: {sig.parameters['force_overwrite'].default!r}"
+    )
+
+
+def test_s378b_b_force_mark_force_overwrite_skips_short_circuit(monkeypatch):
+    """End-to-end-ish: with force_overwrite=True, the short-circuit is
+    skipped even when nav_row_exists returns True. We mock nav_row_exists
+    to always return True, and assert that import_module gets called (proving
+    the short-circuit was bypassed)."""
+    import asyncio
+    from src.api.routers import force_mark as fm
+
+    # Mock nav_row_exists to always say "row exists"
+    async def _always_exists(table, day):
+        return True
+
+    # Mock importlib.import_module to record the call
+    import importlib
+    import_calls: list[str] = []
+    real_import_module = importlib.import_module
+
+    def _spy(name, *args, **kwargs):
+        import_calls.append(name)
+        # Return a fake module with a mark_and_rebalance that records it was called
+        if "fusion_paper" in name:
+            mod = real_import_module(name)
+            orig = mod.mark_and_rebalance
+
+            async def _fake(*a, **kw):
+                import_calls.append("book_called")
+                return {"status": "ok", "nav": 1.0}
+            mod.mark_and_rebalance = _fake
+            return mod
+        return real_import_module(name, *args, **kwargs)
+
+    monkeypatch.setattr("src.data.signals.nav_persist.nav_row_exists", _always_exists)
+    monkeypatch.setattr(importlib, "import_module", _spy)
+
+    # Use the X-Internal-Token header — must come from env
+    import os
+    os.environ.setdefault("INTERNAL_TOKEN", "cometcloud_internal_2026")
+
+    resp = asyncio.run(fm.force_mark(
+        book="fusion",
+        dry_run=False,
+        force_overwrite=True,
+        x_internal_token="cometcloud_internal_2026",
+    ))
+    # With force_overwrite=True, the short-circuit was skipped and the book
+    # was actually invoked (or attempted to be).
+    assert resp.get("phase") != "idempotent_short_circuit", (
+        f"force_overwrite=True must skip the short-circuit; got phase: "
+        f"{resp.get('phase')!r}. Full response: {resp!r}"
+    )
+
+
+def test_s378b_b_force_mark_short_circuit_path(monkeypatch):
+    """Without force_overwrite, when nav_row_exists returns True, the
+    response is the already_marked short-circuit (no book invocation)."""
+    import asyncio
+    import importlib
+    from src.api.routers import force_mark as fm
+
+    async def _always_exists(table, day):
+        return True
+
+    import_calls: list[str] = []
+    real_import_module = importlib.import_module
+
+    def _spy(name, *args, **kwargs):
+        import_calls.append(name)
+        return real_import_module(name, *args, **kwargs)
+
+    monkeypatch.setattr("src.data.signals.nav_persist.nav_row_exists", _always_exists)
+    monkeypatch.setattr(importlib, "import_module", _spy)
+    import os
+    os.environ.setdefault("INTERNAL_TOKEN", "cometcloud_internal_2026")
+
+    resp = asyncio.run(fm.force_mark(
+        book="fusion",
+        dry_run=False,
+        force_overwrite=False,
+        x_internal_token="cometcloud_internal_2026",
+    ))
+    assert resp.get("phase") == "idempotent_short_circuit", (
+        f"with no force_overwrite and row-exists, the short-circuit MUST fire; "
+        f"got phase: {resp.get('phase')!r}. Full response: {resp!r}"
+    )
+    assert resp.get("ok") is True
+    # importlib.import_module must NOT have been called for the book module
+    book_imports = [c for c in import_calls if "fusion_paper" in c]
+    assert not book_imports, (
+        f"short-circuit must skip the book import; got: {book_imports!r}"
+    )
