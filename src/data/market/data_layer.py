@@ -415,11 +415,27 @@ async def get_defi_overview() -> dict:
             return round(sum(changes) / len(changes), 2) if changes else 0.0
 
         # ── Sector breakdowns ─────────────────────────────────────────────────
+        # ── S-394 (2026-09-21) ──────────────────────────────────────────────────
+        # DeFiLlama actual category strings (verified against /protocols 2026-09-21):
+        #   DEX     = "Dexs"  (no 'e' before 's') + "DEX Aggregator" + "Yield Aggregator"
+        #   STAKING = "Liquid Staking" + "Staking Pool" + "Restaking" + "Liquid Restaking"
+        #   ORACLE  = "Oracle" but ALL TVL = $0 by DeFiLlama def (oracles are services,
+        #             not capital pools). Render as null + "No data" on dashboard rather
+        #             than misleading $0M. TVS metric lives on a different endpoint.
         rwa_tvl, rwa_change_24h    = _sector_tvl_change({"rwa"})
-        staking_tvl, staking_change = _sector_tvl_change({"liquid staking", "staking", "lst"})
-        oracle_tvl, oracle_change   = _sector_tvl_change({"oracle"})
+        staking_tvl, staking_change = _sector_tvl_change({
+            "liquid staking", "staking", "lst",
+            "staking pool", "staking pools",          # SSV Network $13.91B etc.
+            "restaking", "liquid restaking",          # EigenCloud $7B+ etc.
+        })
+        oracle_tvl, oracle_change   = None, None       # metric mismatch — see S-394
         gaming_tvl, gaming_change   = _sector_tvl_change({"gaming", "gamefi", "nft marketplace"})
-        dex_tvl, dex_change         = _sector_tvl_change({"dexes", "dex", "amm", "dex aggregator", "aggregator"})
+        dex_tvl, dex_change         = _sector_tvl_change({
+            "dexs", "dex", "amm",
+            "dex aggregator", "dex aggregators",
+            "aggregator",
+            "yield aggregator", "yield aggregators",
+        })
         lending_tvl, lending_change = _sector_tvl_change({"lending", "cdp"})
 
         l2_change_24h = _l2_change(all_protos) if all_protos else 0.0
@@ -431,7 +447,7 @@ async def get_defi_overview() -> dict:
             "defi_change_24h":        defi_change_24h,
             # Sector TVL + 24h change
             "l1_tvl":                 l1_tvl,
-            "l1_change_24h":          0.0,           # chain-level not available in /v2/chains
+            "l1_change_24h":          None,          # chain-level not available in /v2/chains — render "—" not 0.0
             "l2_tvl":                 l2_tvl,
             "l2_change_24h":          l2_change_24h,
             "rwa_tvl":                rwa_tvl,

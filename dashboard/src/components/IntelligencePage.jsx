@@ -171,6 +171,9 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   // Heatmap color helper — design system palette (void-black base + subtle thermal tints)
   const getHeatmapStyle = (change, noData) => {
     if (noData) return { bg: "rgba(5,7,22,0.60)", color: "rgba(148,163,184,0.25)" }; // no data — near-void
+    // S-394 (2026-09-21): null change with valid TVL (L1 case) — render muted,
+    // not strong-down (parseFloat(null) is NaN, would otherwise fall through).
+    if (change == null) return { bg: "rgba(5,7,22,0.40)", color: T.t3 };
     const val = parseFloat(change);
     if (val >= 5)   return { bg: "rgba(16,185,129,0.18)", color: "#10b981" };  // strong up  — emerald tint
     if (val >= 0.5) return { bg: "rgba(6,182,212,0.10)",  color: T.cyan };     // up         — cyan tint
@@ -190,8 +193,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         const data = await res.json();
         // Map API data to sector format — live fields from get_defi_overview v2
         const fmtB = (v) => (v && v > 1e7) ? `$${(v / 1e9).toFixed(1)}B` : (v && v > 0 ? `$${(v / 1e6).toFixed(0)}M` : "—");
+        // S-394 (2026-09-21): return null (not 0) when input is null, so backend's
+        // "data unavailable" signal propagates to the heatmap rendering layer instead
+        // of being collapsed into a real-looking 0.0% (S-262 §"一个形状,十次").
         // Clamp -0 display: Object.is(-0, v) or v === 0 → force +0
-        const fmtChg = (v) => v == null ? 0 : (Object.is(v, -0) ? 0 : (Math.abs(v) < 0.05 ? 0 : v));
+        const fmtChg = (v) => v == null ? null : (Object.is(v, -0) ? 0 : (Math.abs(v) < 0.05 ? 0 : v));
         const mapped = [
           { name: "DeFi",    change: fmtChg(data.defi_change_24h),    tvl: fmtB(data.total_tvl) },
           { name: "L2",      change: fmtChg(data.l2_change_24h),      tvl: fmtB(data.l2_tvl) },
@@ -624,7 +630,12 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       </div>
                     ))
                   ) : sectorData.map((sector, idx) => {
-                    const noData = sector.tvl === "—" && sector.change === 0;
+                    // S-394 (2026-09-21): change === null signals "backend had no data"
+                    // (e.g. l1_change_24h is chain-level and not available, oracle TVL
+                    // is the wrong metric for that category). Render "No data" when
+                    // BOTH tvl and change are missing; render "—" for change alone
+                    // when TVL is real (L1 case).
+                    const noData = sector.tvl === "—" && sector.change == null;
                     const s = getHeatmapStyle(sector.change, noData);
                     return (
                       <div key={idx} style={{
@@ -643,7 +654,9 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                         <div style={{ fontFamily: FONTS.mono, fontSize: 20, fontWeight: 400, letterSpacing: "-0.02em", color: s.color, lineHeight: 1 }}>
                           {noData
                             ? <span style={{ fontSize: 12, opacity: 0.4 }}>No data</span>
-                            : `${sector.change > 0 ? "+" : ""}${Number(sector.change).toFixed(1)}%`}
+                            : sector.change == null
+                              ? <span style={{ fontSize: 12, opacity: 0.4 }}>—</span>
+                              : `${sector.change > 0 ? "+" : ""}${Number(sector.change).toFixed(1)}%`}
                         </div>
                         <div style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: noData ? 0.2 : 0.45, marginTop: 5 }}>
                           {noData ? "—" : sector.tvl}
