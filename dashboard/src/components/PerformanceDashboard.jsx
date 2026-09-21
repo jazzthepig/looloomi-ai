@@ -324,9 +324,20 @@ function SignalRow({ sig, currentPrices }) {
             {sig.outcome_30d}
           </span>
         ) : (
-          <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.3 }}>
-            {isOpen ? "—" : "—"}
-          </span>
+          // S-396 (2026-09-21, JAZZ audit): was `{isOpen ? "—" : "—"}` —
+          // both branches rendered the same string. Investors couldn't
+          // distinguish "open / awaiting 30d resolution" from "closed /
+          // outcome not tracked". Distinguish honestly: OPEN badge vs "—".
+          isOpen ? (
+            <span style={{
+              fontFamily: FONTS.mono, fontSize: 7, fontWeight: 700,
+              padding: "2px 5px", borderRadius: 2,
+              color: C.amber, background: "rgba(245,158,11,0.08)",
+              border: "1px solid rgba(245,158,11,0.15)", letterSpacing: "0.08em",
+            }}>OPEN</span>
+          ) : (
+            <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.3 }}>—</span>
+          )
         )}
       </div>
 

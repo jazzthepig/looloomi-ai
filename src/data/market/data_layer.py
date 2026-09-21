@@ -1801,22 +1801,28 @@ async def get_macro_pulse() -> dict:
         if not isinstance(defi_ov, Exception) and isinstance(defi_ov, dict):
             _defi_tvl = defi_ov.get("total_tvl_usd", 0)
 
-        _btc_dom = round(cg_data.get("market_cap_percentage", {}).get("btc", 0), 2)
-        _fg_val  = int(fng_entry.get("value", 50))
-        _fg_lbl  = fng_entry.get("value_classification", "Neutral")
-        _btc_px  = btc_entry.get("usd", 0)
-        _mc_usd  = cg_data.get("total_market_cap", {}).get("usd", 0)
+        # S-396 (2026-09-21, JAZZ audit): never default missing CG/FNG fields to
+        # 0 or 50 — these collapse "data unavailable" into a real-looking
+        # number on the dashboard. Use None so MacroPulse renders "—" (S-262
+        # family discipline, same root cause as S-395/S-395b SectorHeatmap).
+        _btc_dom = cg_data.get("market_cap_percentage", {}).get("btc")
+        _fg_val  = int(fng_entry["value"]) if fng_entry.get("value") is not None else None
+        _fg_lbl  = fng_entry.get("value_classification") or "Neutral"
+        _btc_px  = btc_entry.get("usd")  # may be None; frontend handles
+        _mc_usd  = cg_data.get("total_market_cap", {}).get("usd")
 
         result = {
             # ── nested structure (MacroPulse.jsx compat) ──────────────────────
             "data": {
                 "market_cap_percentage": cg_data.get("market_cap_percentage", {}),
                 "market_cap_change_percentage_24h_usd": cg_data.get(
-                    "market_cap_change_percentage_24h_usd", 0
-                ),
+                    "market_cap_change_percentage_24h_usd"
+                ),  # None when CG returned no global — render "—", not +0.00%
             },
             "fng": {
-                "value": str(_fg_val),
+                # S-396: keep None as JSON null, not str(None)="None" —
+                # otherwise MacroPulse parseInt("None") = NaN.
+                "value": None if _fg_val is None else str(_fg_val),
                 "value_classification": _fg_lbl,
             },
             "btc": btc_entry,  # {usd, usd_24h_change, usd_7d_change}
