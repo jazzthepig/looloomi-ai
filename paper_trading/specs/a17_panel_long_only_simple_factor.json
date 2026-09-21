@@ -1,0 +1,113 @@
+{
+  "_owner": "Seth/Austin / drafted 2026-09-21 (A-17 panel_long_only_simple_factor — arm C of Jev vs baseline vs simple-factor 3-arm comparison)",
+  "_purpose": "Arm C: equal-weight long ONLY symbols whose (SMA60 + mom_60 > 0 + realized_vol_30 < threshold) AND-gate all pass. 0/N passed → SKIPPED that day. Same panel + same universe as A-17 (5 symbols). NOT a production book — a comparison arm for JAZZ's 60d paper-track question.",
+  "_ledger_ref": "S-393 (TBD) — 3-arm comparison plan at /Users/sbb/.claude/plans/seth-temporal-cloud.md",
+  "_version": "draft_v1 / 2026-09-21",
+  "_compliance_note": "Internal paper-trade comparison arm. All signals use positioning language (long/short) consistent with technical spec_runner use; user-facing surfaces unchanged. CLAUDE.md rule #1.",
+
+  "spec_name": "A17_PANEL_LONG_ONLY_SIMPLE_FACTOR",
+  "spec_family": "panel_long_only_simple_factor",
+  "strategy_class": "§5b ① panel-wide long-only hold WITH simple-factor AND-gate (SMA60 + mom_60 > 0 + realized_vol_30 < threshold). Comparison arm for Jev-gate evaluation, NOT a production shape.",
+  "universe": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "BNB",
+    "XRP"
+  ],
+  "exchange_pairs": [
+    "BTC/USDT:USDT",
+    "ETH/USDT:USDT",
+    "SOL/USDT:USDT",
+    "BNB/USDT:USDT",
+    "XRP/USDT:USDT"
+  ],
+  "parameters": {
+    "allocation": "equal_weight",
+    "target_size": 0,
+    "rebalance_cadence": 7,
+    "max_position_pct": 0.30,
+    "min_position_pct": 0.0,
+    "min_history_days": 90,
+    "cost_bps_rt": 5.0,
+    "dd_stop_pct": -25.0,
+    "max_open_trades": 50,
+    "regime_gate": {},
+    "factor_filter": {
+      "sma_window": 60,
+      "mom_window": 60,
+      "vol_window": 30,
+      "vol_threshold_daily_stdev": 0.05,
+      "sma_ok_rule": "above"
+    },
+    "lag_discipline": {
+      "signal_bars_max_age_days": 1,
+      "entry_price_bar": "bar at as_of d (today's mark; signal depth ≤ d-1)"
+    }
+  },
+
+  "_arm_c_design_notes": {
+    "comparison_role": "Arm C of JAZZ 2026-09-21 3-arm question. Same panel + universe as A-17 arm B; differs only in the factor-AND-gate at leg construction (step ⑦ of decide_panel_long_only).",
+    "min_history_days_90_rationale": "A-17 v1 uses 60d (SMA60 needs 60 bars; mom_60 needs 61). For the simple-factor arm we add 30d buffer (vol_window=30 needs ~31 bars of returns) → 90d minimum. Each symbol must have at least 90d history past as_of - 1 before it can be ENTERED-eligible.",
+    "factor_thresholds_rationale": "vol_threshold_daily_stdev=0.05 = 5% daily stdev ≈ ~95% annualized. Above this, the symbol is filtered as 'too volatile for the simple trend-following baseline'. Tweakable via spec.parameters.factor_filter; v1 uses a conservative cutoff.",
+    "skip_when_0_pass": "If 0/N symbols pass the factor gate, return SKIPPED with reason '0/N passed factor gate (sma=N, mom=N, vol=N)'. This is the arm's expected behaviour during RISK_OFF windows — DO NOT interpret as a bug.",
+    "equal_weight_over_passing_subset": "If 3/5 pass, weight = 1/3 per passing symbol (not 1/5 with the other 2 as cash). This is the cleanest comparison vs arm B (which is 1/5 always). Difference between arm B and arm C is then 'factor gate value added'.",
+    "no_jev_gate": "Arm C deliberately runs WITHOUT Jev — it's a pure factor model. Jev vs factor is the third dimension of the 3-arm comparison (JAZZ 2026-09-21). Pattern A Jev gate is wired into arms A and B but not C."
+  },
+
+  "_ship_gates_open": [
+    "Mac-side binance_hist freshness MUST be verified before live replay — M-119 noted binance_hist dead. Replay script (replay_three_arms.py) probes last-bar freshness and BLOCKS with actionable error if last_bar < 2025-01-01.",
+    "Mac-side ohlcv_daily cache may not have 1196d of 5 symbols at coingecko_pro_ohlc depth — replay defaults to binance_hist (deepest single source per single_source.py whitelist). Seth/A can swap to eodhd/hyperliquid if binance_hist fails freshness check.",
+    "Paper trade only (dry_run). NOT a production book shape."
+  ],
+
+  "data_source": {
+    "primary": "binance_hist",
+    "filter": "source = binance_hist ONLY (S-230 / S-307 — single-source hard pin)",
+    "_replay_note": "Replays need ≥1196d of daily OHLCV; binance_hist is the only whitelist source with that depth (M-119 confirmation pending Mac-side). For real-time paper tracking once live, swap to coingecko_pro_ohlc once Mac-side A-372-1/2 lands."
+  },
+
+  "execution": {
+    "mode": "paper",
+    "dry_run": true,
+    "initial_state": "stopped",
+    "scheduling": "weekly rebalance check every 7d (same cadence as A-17)",
+    "start_condition": "initial_state=stopped until 3-arm replay comparison ships + JAZZ reviews the diff report (JAZZ 2026-09-21)"
+  },
+
+  "validation_summary": {
+    "family_smoke": "TBD — tests/test_factors_smoke.py + tests/test_replay_three_arms_smoke.py + tests/test_compare_three_arms_smoke.py to ship together",
+    "expected_paper_behavior": "Lower frequency than arm B (factor gate skips some symbols). Expected Sharpe and MaxDD vs arm B is the comparison point.",
+    "expected_diff_vs_arm_b": "Lower n_periods (fewer ENTERED days due to factor skip). SR difference IS the signal — if arm C SR ≈ arm B SR, the factor gate adds no value. If arm C SR >> arm B SR with comparable MaxDD, gate is worth promoting.",
+    "lag_discipline": "lag-1 PIT: factor signals use bars ≤ d-1, entry price = bar at d (mirrors A-17 spec_runner.py:986-989)"
+  },
+
+  "monitoring": {
+    "replay_output_dir": "paper_trading/state/replay/<run_id>/{a_jev,b_baseline,c_simple_factor}_decisions.jsonl",
+    "diff_report": "paper_trading/state/replay/<run_id>/_diff.json",
+    "human_report": "paper_trading/reports/replay_jev_vs_baseline_vs_simple_factor_<run_id>.md",
+    "abort_conditions": [
+      "factor gate produces 0 ENTERED for 30+ consecutive days (data dead or threshold too tight)",
+      "arm C SR significantly negative vs arm B (> -0.3 SR over 1196d) — gate actively destroys value"
+    ],
+    "promote_threshold": "AFTER 1196d replay + JAZZ review: SR arm_C - SR arm_B ≥ 0 AND MaxDD arm_C ≤ MaxDD arm_B + 5pp. If YES, factor gate is a candidate for the production book; if NO, drop arm C from future comparisons."
+  },
+
+  "escalation": {
+    "next_review": "after 1196d replay ships — JAZZ decides if factor gate ships to live track",
+    "owner": "Seth for execution; JAZZ for promote/drop decision",
+    "rollback_path": "spec is comparison-only; no live deployment without explicit JAZZ sign-off",
+    "blocking_decisions": [
+      "Mac-side binance_hist freshness verify (A lane, M-119)",
+      "JAZZ review of replay report.md after first full 1196d run"
+    ]
+  },
+
+  "_non_goals": [
+    "NOT a §5b-aligned production book — arm C is a comparison arm, not a ship candidate",
+    "NOT a real-funds deployment — paper trade / historical replay only",
+    "NOT cross-sectional ranking — equal-weight long over passing subset, no shorts, no rank",
+    "NOT multi-factor — v1 ships exactly 3 factors (SMA60 + mom_60 + vol_30); extension is future work",
+    "NOT Jev-gated — comparison isolates the factor-gate contribution; arm A already covers Jev"
+  ]
+}

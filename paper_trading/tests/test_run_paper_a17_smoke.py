@@ -10,6 +10,9 @@ Three claims worth testing (each = one realistic failure mode):
   4. --last-rebalance within cadence → SKIPPED (rebalance discipline)
   5. regime_gate is empty (regime-blind ① benchmark) — verify the spec
      explicitly declares it so a future edit doesn't accidentally add a gate
+  6. Pattern A Jev gate (always_ok mode) — strategy ENTERED, Jev decision logged
+  7. Pattern A Jev gate (always_veto mode) — strategy SKIPPED with jev_gate reason
+  8. --no-jev — strategy runs without Jev, _meta.jev.wired=False, no jev log
 
 Per the same discipline as `test_decide_survivors_book.py`: each assertion is
 paired with one mutation that should flip it.
@@ -32,6 +35,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 SPEC_PATH = ROOT / "paper_trading" / "specs" / "a17_panel_long_only.json"
 LOG_PATH = ROOT / "paper_trading" / "state" / "a17_panel_long_only_decisions.jsonl"
+JEV_LOG_PATH = ROOT / "paper_trading" / "state" / "a17_jev_regime_decisions.jsonl"
 RUNNER = ROOT / "paper_trading" / "run_paper_a17.py"
 
 
@@ -136,4 +140,111 @@ def test_within_cadence_skipped():
     )
     assert "3d" in payload["reason"] and "7d" in payload["reason"], (
         f"SKIPPED reason 必须含 '3d' and '7d' (cadence trace)。got: {payload['reason'][:80]!r}"
+    )
+
+
+# ── Pattern A: Jev gate integration ────────────────────────────────────────
+# Per docs/jev_nautilus_integration_plan_2026-09-21.md — Pattern A pre-filter
+# is wired into run_paper_a17 with a mock backend. The runner-level contract:
+# - default: Jev wired, mode=always_ok, regime_ok=True → strategy ENTERED,
+#   Jev decision logged to a17_jev_regime_decisions.jsonl, _meta.jev populated
+# - --jev-mode always_veto: Jev says no → strategy SKIPPED with jev_gate reason
+# - --no-jev: Jev not wired → _meta.jev.wired=False, no jev log file written
+#
+# These are runner-integration tests; module-level Jev tests live in
+# test_jev_regime_smoke.py.
+
+
+def test_jev_always_ok_default_produces_entered():
+    """Default Jev (always_ok) → ENTERED + Jev decision logged + _meta.jev populated."""
+    if LOG_PATH.exists():
+        LOG_PATH.unlink()
+    if JEV_LOG_PATH.exists():
+        JEV_LOG_PATH.unlink()
+    cp = _run("--as-of", "2026-09-17")
+    assert cp.returncode == 0, f"stderr={cp.stderr!r}"
+    # Strategy decision log
+    line = LOG_PATH.read_text(encoding="utf-8").strip().splitlines()[-1]
+    payload = json.loads(line)
+    assert payload["verdict"] == "ENTERED", (
+        f"always_ok Jev must not veto. got verdict={payload['verdict']!r}"
+    )
+    # _meta.jev is populated + wired=True + regime_ok=True
+    jev_meta = payload.get("_meta", {}).get("jev", {})
+    assert jev_meta.get("wired") is True, (
+        f"default Jev should be wired; got {jev_meta!r}"
+    )
+    assert jev_meta.get("regime_ok") is True, (
+        f"always_ok mode should report regime_ok=True; got {jev_meta!r}"
+    )
+    assert jev_meta.get("backend") == "mock_jev_regime"
+    # Jev decision log written separately (one row per run)
+    assert JEV_LOG_PATH.exists(), (
+        f"always_ok mode should write Jev decision log at {JEV_LOG_PATH}. "
+        f"stderr={cp.stderr!r}"
+    )
+    jev_line = JEV_LOG_PATH.read_text(encoding="utf-8").strip().splitlines()[-1]
+    jev_payload = json.loads(jev_line)
+    assert jev_payload["decision"]["regime_ok"] is True
+    assert jev_payload["decision"]["mock"] is True
+    assert jev_payload["actor_stats"]["n_calls"] == 1
+
+
+def test_jev_always_veto_produces_skipped_with_jev_reason():
+    """--jev-mode always_veto → SKIPPED with reason citing jev_gate closed."""
+    if LOG_PATH.exists():
+        LOG_PATH.unlink()
+    if JEV_LOG_PATH.exists():
+        JEV_LOG_PATH.unlink()
+    cp = _run("--as-of", "2026-09-17", "--jev-mode", "always_veto")
+    assert cp.returncode == 0, (
+        f"SKIPPED is not an error; should exit 0. stderr={cp.stderr!r}"
+    )
+    line = LOG_PATH.read_text(encoding="utf-8").strip().splitlines()[-1]
+    payload = json.loads(line)
+    assert payload["verdict"] == "SKIPPED", (
+        f"Jev veto → SKIPPED. got verdict={payload['verdict']!r}"
+    )
+    assert "legs" not in payload or len(payload.get("legs", [])) == 0, (
+        f"veto means no legs opened; got {len(payload.get('legs', []))} legs"
+    )
+    reason = payload.get("reason", "")
+    assert "jev_gate closed" in reason, (
+        f"SKIPPED reason must cite jev_gate closed (Pattern A). got: {reason[:80]!r}"
+    )
+    assert "Pattern A pre-filter" in reason
+    assert "mock_jev_regime" in reason
+    # _meta.jev.regime_ok=False so a future audit can see Jev vetoed
+    assert payload["_meta"]["jev"]["regime_ok"] is False
+    # Jev decision still logged (veto is data, not error)
+    assert JEV_LOG_PATH.exists()
+
+
+def test_no_jev_flag_skips_jev_entirely():
+    """--no-jev → strategy runs without Jev, _meta.jev.wired=False, no jev log file."""
+    if LOG_PATH.exists():
+        LOG_PATH.unlink()
+    if JEV_LOG_PATH.exists():
+        JEV_LOG_PATH.unlink()
+    cp = _run("--as-of", "2026-09-17", "--no-jev")
+    assert cp.returncode == 0, f"stderr={cp.stderr!r}"
+    line = LOG_PATH.read_text(encoding="utf-8").strip().splitlines()[-1]
+    payload = json.loads(line)
+    assert payload["verdict"] == "ENTERED", (
+        f"--no-jev should produce ENTERED (no gate active). got verdict={payload['verdict']!r}"
+    )
+    jev_meta = payload.get("_meta", {}).get("jev", {})
+    assert jev_meta.get("wired") is False, (
+        f"--no-jev should mark wired=False; got {jev_meta!r}"
+    )
+    assert "regime_ok" not in jev_meta, (
+        f"--no-jev should NOT have regime_ok (no decision made); got {jev_meta!r}"
+    )
+    # No jev log file written
+    assert not JEV_LOG_PATH.exists(), (
+        f"--no-jev should NOT write jev log. file exists: {JEV_LOG_PATH}"
+    )
+    # stdout should NOT mention "jev:" prefix line
+    assert "[run_paper_a17] jev:" not in cp.stdout, (
+        f"--no-jev should not print Jev line. stdout={cp.stdout!r}"
     )
