@@ -2,7 +2,7 @@
 CIS router — scoring, history, backtest, agent API, WebSocket, internal push
 Endpoints: /api/v1/cis/*, /api/v1/agent/cis, /ws/cis, /internal/cis-scores
 """
-import os, json as _json, time, asyncio, re, math
+import os, json as _json, time, asyncio, re, math, traceback
 from typing import Optional
 from datetime import datetime
 
@@ -589,6 +589,47 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
                     detail="CIS universe build timed out and no cached payload available",
                     headers={"Retry-After": "10"},
                 )
+            except Exception as e:
+                # ── SAFETY NET (S-392, 2026-09-21) ────────────────────────
+                # _build_cis_universe has many inner try/except blocks, but
+                # no outer guard. Any unhandled exception (e.g. `float(non-
+                # numeric)` in the GRADE-ALIGN block at lines 999-1018, an
+                # import surprise, a malformed Redis payload) bubbles up and
+                # produces a hard 500 to every dashboard page.
+                #
+                # Observed 2026-09-21: /api/v1/cis/universe and 3 sibling
+                # endpoints (top/asset/compare) returned HTTP 500 in 0.27s
+                # with body "Internal Server Error". /health.last_universe_
+                # build stayed empty (build never records completion because
+                # _record_build is on the success path only).
+                #
+                # The CIS endpoint must NEVER 500: a degraded universe is
+                # recoverable at the UI level; a hard 500 makes the page
+                # useless AND leaves no breadcrumb for the next investigator.
+                # This safety net itself is half the fix — /health exposes
+                # the real exception via data_layer.last_universe_build.
+                _logger.exception(
+                    "[CIS] universe build raised unhandled exception — returning "
+                    "degraded empty universe rather than 500")
+                _LAST_BUILD.clear()
+                _LAST_BUILD.update({
+                    "at":                  int(time.time()),
+                    "path":                "build_failed",
+                    "total_ms":            0,
+                    "last_error":          f"{type(e).__name__}: {str(e)[:120]}",
+                    "last_traceback_tail": traceback.format_exc().splitlines()[-3:],
+                })
+                data = {
+                    "status":             "degraded",
+                    "version":            "4.1.0",
+                    "data_status":        "build_failed",
+                    "build_error":        type(e).__name__,
+                    "build_error_detail": str(e)[:200],
+                    "timestamp":          time.time(),
+                    "universe":           [],
+                    "t1_count":           0,
+                    "t2_count":           0,
+                }
             if data and data.get("universe"):
                 _UNIVERSE_CACHE["data"] = data
                 _UNIVERSE_CACHE["ts"] = time.time()
@@ -597,13 +638,25 @@ async def get_cis_universe(force_source: str = None, response: Response = None):
 
         # Bound #3 — enrichment is decoration; it runs OUTSIDE the lock and can
         # never gate the core payload for other callers.
-        _attach_asset_narratives(data)
-        await _attach_cause_proximity_async(data)
+        try:
+            _attach_asset_narratives(data)
+        except Exception:
+            _logger.exception("[CIS] _attach_asset_narratives raised — continuing with core payload")
+        try:
+            await _attach_cause_proximity_async(data)
+        except Exception:
+            _logger.exception("[CIS] _attach_cause_proximity_async raised — continuing with core payload")
         return data
 
     data = await _build_cis_universe(force_source)
-    _attach_asset_narratives(data)
-    await _attach_cause_proximity_async(data)
+    try:
+        _attach_asset_narratives(data)
+    except Exception:
+        _logger.exception("[CIS] _attach_asset_narratives raised — continuing with core payload")
+    try:
+        await _attach_cause_proximity_async(data)
+    except Exception:
+        _logger.exception("[CIS] _attach_cause_proximity_async raised — continuing with core payload")
     return data
 
 
