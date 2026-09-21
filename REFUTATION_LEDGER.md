@@ -21784,3 +21784,102 @@ S-369 1.4 PGRST205 = 落不到该落的地方。**两类失败长得一样:输�
 - [ ] Post-deploy:`/internal/schema-drift` 在 nav_panel_* + 3 mcap 列上报 `MISSING TABLE` / `MISSING COLUMN`,Seth 的离线 manifest 是契约侧、Mac 的实际部署是状态侧,两侧对齐才闭环。
 
 **判据**:`test_c13_nav_panel_manifest_registered` PASS + `test_every_written_table_exists` PASS(preflight 内)+ `schema_manifest.json` 43 表 / 11 表 × 103 列含新条目。**Seth ship commit + Mac-side DDL 部署 = C-13 P4 全绿**。
+
+## S-392 — Jev Pattern A pre-filter wired into A-17 paper-track (2026-09-21, Seth/Jazz window)
+
+**承接 `docs/jev_nautilus_integration_plan_2026-09-21.md` Pattern A**:Jev 说 yes/no 到「is this regime tradeable?」BEFORE strategy fires。**最小爆炸半径开始** —— Jev 是 veto-only,risk gates / sizing / stops / doctrine 留在 `spec_runner.decide_*` 里 Python 端。
+
+**为什么 Pattern A 是起点,不是 B(C)**:
+- A (pre-filter / regime gate) = 最小爆炸半径,Jev 可说「no」不影响 strategy 正常运作
+- A 的 calibration 可测:gate fires = rare events,measured hit rate vs base rate = honest Brier
+- A 不需要 trust Jev probability —— 只需 trust binary「is this tradeable?」
+- A 与 §5b 复合自然:Jev 坐在 ⓪ OVERRIDE 层,不是 ①②③④ 里
+
+**不**从 Pattern B(sole decider)开始 —— 那需要 trust Jev probability calibration,**unproven**(无 published Brier/ECE)。
+
+**ship 的 5 件**:
+1. `paper_trading/jev_regime.py` 新文件 (Seth lane) —— `JevRegimeDecision` frozen dataclass + `JevRegimeBackend` Protocol + `MockJevRegimeBackend` (always_ok / always_veto / deterministic 三 mode) + `JevRegimeActor` (cumulative stats) + `build_state_payload` helper。**no network calls**,`TypesafeJevRegimeBackend` 留给 key 到达时 plug-in。
+2. `paper_trading/spec_runner.py` `decide_panel_long_only` 加 `Optional[JevRegimeDecision] = None` 参数 —— gate ⓪ 在所有其他 check 之前 fire;`None` = Jev 未接,backward compat。`JevRegimeDecision` re-export 顶 module level。
+3. `paper_trading/run_paper_a17.py` 接 JevRegimeActor —— `--no-jev` / `--jev-mode always_ok|always_veto` / `--jev-log <path>` 三 CLI flag;default mode = always_ok (safe no-op,Jev 在学习不阻塞)。Jev decision 单独 log 到 `paper_trading/state/a17_jev_regime_decisions.jsonl` 让 60d validation framework 不必 re-read strategy log。
+4. Tests:`paper_trading/tests/test_jev_regime_smoke.py` **16/16 PASS** (module shape + validation + stats + protocol conformance) + `paper_trading/tests/test_run_paper_a17_smoke.py` 扩 3 个 test (always_ok ENTERED / always_veto SKIPPED with reason / --no-jev wired=False) **8/8 PASS**。**24/24 total green**。
+5. spec 不动 —— Jev 是 **pre-strategy input**,spec 不需要知道。spec 改了就污染 §5b ① 形状(A-17 是 regime-blind by design)。
+
+**Jev decision 单独 log 关键字段**:`{bar_ts, regime_ok, direction_bias, confidence, latency_ms, input_tokens, backend, mock}` + `state{regime, panel_age_days, panel_n_symbols}` + `actor_stats{n_calls, cum_latency_ms, avg_latency_ms, cum_input_tokens}` —— 60d validation 5 gate 的输入全部在此,无需 re-read strategy log。
+
+**60d validation framework 就绪**(待 key 到达):
+- Gate 1 Brier:replay `MockJevRegimeBackend(mode='deterministic', fn=...)` over 历史 state payloads vs realized 5d forward return
+- Gate 2 Hit rate:compare strategy hit rate when Jev=True vs Jev=False
+- Gate 3 Frequency:veto rate 5-30% 期望 (5min cadence 验 daily 频次)
+- Gate 4 Cost realism:`actor_stats.cum_input_tokens × $0.042/M` < 1% strategy gross alpha
+- Gate 5 Doctrine:Strategy doctrine wins over Jev veto
+
+**为什么 default mode = always_ok**:Mock backend log decision 但永远不 veto —— 让 paper track 继续产生 baseline 决策直到 TypesafeBackend ship(BLOCKED on JEV_API_KEY 到 Seth lane)。`--jev-mode always_veto` 留给 veto path drill。**default 不该阻塞 baseline** —— 否则 60d baseline 没法对比 Jev gate 的边际效应。
+
+**§5b mapping**(per `docs/jev_nautilus_integration_plan_2026-09-21.md`):
+| §5b layer | Jev integration point | status |
+|---|---|---|
+| ⓪ OVERRIDE (downside protection) | **Pattern A** —— Jev gates「is regime tradeable?」before strategy fires | **✅ SHIP-READY** (本 entry) |
+| ① capture beta (long-only hold) | no Jev | n/a |
+| ② beta+ (CIS tilt) | future —— Pattern D multi-primitive batch | blocked on ⓪ 60d |
+| ③ time exposure (gross 0.7-1.3) | future —— Pattern C post-verdict | blocked on ⓪ 60d |
+| ④ pure alpha | future —— Pattern B sole decider | blocked on ⓪ 60d |
+
+**⏸ Seth 不擅自动 Mac-side commit**:Mac-side 需要先 ack `MacErrorEnvelope.py:75-76` contract + `SCHEMA_VERSION` bump(MIN-C C-N3 答)+ 拍 P1+P2 deploy 时间窗。Seth side files staged only Mac-side per Rule 4 sandbox=no-git-writes。JAZZ 拍 deploy 时间窗后 `bash scripts/preflight.sh` + 1 commit ship。
+
+**跨 lane 状态**:
+- [x] Seth-side:`paper_trading/jev_regime.py` 新文件 + `spec_runner.decide_panel_long_only` veto + `run_paper_a17.py` Jev wiring + 24 tests PASS + ledger claim heading
+- [ ] JAZZ:拍 deploy 时间窗(P1+P2 trading module 通后 → Pattern A 上 Railway)
+- [ ] Mac-side:`JEV_API_KEY` env var 注入 + `TypesafeJevRegimeBackend` plug-in (A lane)
+- [ ] Post-deploy:60d validation 5 gate 跑过 → promote Pattern A to live
+
+**判据**:Pattern A live 上线后,Jev gate veto 率 5-30% (Gate 3),strategy hit rate when Jev=True > Jev=False + 5pp (Gate 2),Jev cost < 1% alpha (Gate 4),**任意不过不 ship Pattern B**。
+
+## S-393 — CIS /universe 500 真因:cache-hit 路径跳过了 `result` 绑定,S-392 安全网修症状,这一条修根 (2026-09-21, Seth/Jazz window)
+
+**承接 S-392** (`280506e`)。S-392 在 `get_cis_universe` 加了 broad except,把所有 unhandled exception 转成 `200/degraded/data_status=build_failed`,**当时不知道真因是什么** —— 安全网把 21 字节 "Internal Server Error" 换成 200 degraded,但每条请求仍在 0.27s 拿不到 universe。
+
+**真因**:S-392 deploy 后 `/health.last_universe_build.last_error` 暴露了:
+
+```
+UnboundLocalError: cannot access local variable 'result'
+where it is not associated with a value
+    at  result["source"] = "railway"
+```
+
+`_build_cis_universe` 在 T2 cache (`cis:t2_universe`) 命中且 fresh 时,line 974-979 直接从 `_t2_cached["universe"]` 读 `railway_universe`,然后 `raise _T2FromCache()` 跳过 line 981 的 `result = await calculate_cis_universe()`。**`result` 这个 local 从未被赋值**。后续 "Pure Railway (no Mac Mini data available)" 分支(line 1170+)引用 `result["source"]` —— `UnboundLocalError`,被 S-392 的 broad except 接住返 degraded。
+
+**Sandbox 复现不了**:sandbox Redis 未配(`redis_get_key('cis:t2_universe')` 返 `None`),每次都走 inline compute 路径,`result` 正常绑定。这就是为什么 21-byte 500 持续了不知道多久 —— 测试覆盖的是 happy path,不是 cache-hit path。
+
+**修复(commit `d44fcf3`,Seth lane `src/api/routers/cis.py:979-990`)**:cache-hit 分支里加一行 `result = dict(_t2_cached)` —— shallow copy,不让后续 `result["source"] = "railway"` / `result["macro_regime"] = ...` / `result["t1_count"] = ...` / `result["t2_count"] = ...` 的 mutation 染到 in-process redis blob。`raise _T2FromCache()` 紧跟其后,纯-Railway 分支用真实 dict 跑完。
+
+**为什么 `dict()` 不是直接 `_t2_cached`**:in-process blob 在这次请求内还会被别处读(S-186 last-good fallback 等),shallow copy 隔离 mutation,没有 aliasing 风险。
+
+**Before / After(deploy 完 ~90s 实测)**:
+
+| | 前(500) | S-392 后(degraded) | S-393 后(real) |
+|---|---|---|---|
+| HTTP | 500 | 200 | **200** |
+| `status` | n/a | `degraded` | (omitted) |
+| `data_status` | n/a | `build_failed` | (omitted) |
+| `source` | n/a | (omitted) | **`railway`** |
+| `universe_size` | 0 | 0 | **58** |
+| `t2_count` | n/a | 0 | **58** |
+| `build_error` | n/a | `UnboundLocalError...` | (omitted) |
+| `/health.last_universe_build.path` | `{}` | `build_failed` | **`railway`** |
+| `/health.last_universe_build.total_ms` | n/a | 0 | **79** |
+| `/health.last_universe_build.t2_source` | (omitted) | (omitted) | **`precomputed(290s)`** |
+
+**Side benefit**:7+ dashboard 页面(portfolio / analytics / MyPortfolio / StrategyPage / StrategiesPage / MobileApp / CISWidget)从 500 → 真实 universe。S-392 那一轮只恢复了 "degraded 空 shell",**S-393 是首次把 universe 真实数据交回到前端**。
+
+**为什么 S-392 没顺手发现这条**:`get_cis_universe` 的 broad except 是 **outer frame**,它接住 `_build_cis_universe` 任何 raise;但 `/health.last_universe_build.last_error` 这条 breadcrumb **只在 S-392 的 catch 分支里被写入** —— 没有 S-392,真因永远看不见。**先 safety net 再 root-cause fix 的顺序是必要的,不是偷懒**(S-262 §"一个形状,十次"同族)。
+
+**测试**:`tests/test_cis_universe_lock.py::test_serving_path_has_no_undefined_names` ⭐ 新增(诊断时写的),确认所有路径下 `result` 都已绑定;同时跑 `tests/test_cis_universe_lock.py` **7/7 PASS** + `T2 fan-out bound` 7/7 + `strategy-discipline` 14/14 + `undefined-name` 2/2 + 其它 100+ checks,zero regression。
+
+**Preflight**:`bash scripts/preflight.sh` discipline 段全绿,`schema-drift` 段 RED 为 pre-existing(C-13 §2.2 Mac-side DDL deploy gap,与本 patch 无关,baseline 复测同样 RED)。`py_compile` + `boot smoke` + `test_serving_path_has_no_undefined_names` 三关确认语法与命名解析。
+
+**遗留 / 下一条**:
+- Mac T1 pipeline 仍 broken(`_cg_panel_loop` 105× fail with "too many values to unpack" · `cis_scores` recorded_at 卡在 2026-09-18)—— S-372/A-372-1 lane,Min-A 修。S-393 修的是 read path,**write path 仍是 degraded 直到 T1 复活**。
+- 5+ dashboard 页面可能仍受 T1 缺失影响(显示 58 资产但都是 T2 tier)—— 看前端如何 render tier badge,T1 红/绿依赖 Mac 推。
+- S-286 review:S-392 + S-393 应作为一对(防御 + 根因)一起 review,而不是单独看 S-393。
+
+**判据**:S-393 关闭 = `source=railway` 在 cache-hit 路径下不再 raise UnboundLocalError,universe 真实交回。S-392 的 safety net **保留**(defense-in-depth,其它 unhandled 路径仍可能触发,如 `float(non-numeric)` 在 GRADE-ALIGN);下次 `_LAST_BUILD.last_error` 出现新名字 = 下一条 S-394 的 trigger。
