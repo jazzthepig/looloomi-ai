@@ -976,6 +976,18 @@ async def _build_cis_universe(force_source: str = None):
                 _phase["t2_source"] = f"precomputed({int(_age)}s)"
                 _phase["t2_branches"] = _t2_cached.get("branch_timing") or {}
                 _phase["railway_t2_ms"] = 0
+                # ── S-393 (2026-09-21) ───────────────────────────────────────
+                # When the inline compute below is skipped (cache hit raises
+                # _T2FromCache), the pure-Railway path at line ~1172 still
+                # references `result["source"] = "railway"`. Without this
+                # bind, Python raises UnboundLocalError and the broad S-392
+                # safety net catches it (returning 200/degraded) but the
+                # /health breadcrumb shows the wrong root cause.
+                #
+                # dict() copy keeps the in-memory cached blob pristine —
+                # downstream mutations (source, macro_regime, t1/t2_count)
+                # land on the fresh dict, not on the redis-cached one.
+                result = dict(_t2_cached)
                 raise _T2FromCache()      # skip the inline compute below
             _phase["t2_precompute_age_s"] = int(_age)
         result = await calculate_cis_universe()
