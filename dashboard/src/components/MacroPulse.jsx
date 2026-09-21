@@ -94,11 +94,15 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
     return () => clearInterval(interval);
   }, []);
 
-  const btcDominance        = data?.market_cap_percentage?.btc || 0;
-  const totalMarketCapChange = data?.market_cap_change_percentage_24h_usd || 0;
-  const fngValue            = fngData ? parseInt(fngData.value) : null;
-  const fngLabel            = fngData?.value_classification || "N/A";
-  const btc7dChange         = btcData?.usd_7d_change || 0;
+  // S-396 (2026-09-21, JAZZ audit): never || 0 on percentages — collapses
+  // missing data into a real-looking +0.00% green pill (S-262 family).
+  // Use safeMissing-aware destructuring: undefined propagates through to the
+  // renderer, which formats it as "—" via fmtPct / fmtDollar.
+  const btcDominance         = data?.market_cap_percentage?.btc;
+  const totalMarketCapChange = data?.market_cap_change_percentage_24h_usd;
+  const fngValue             = fngData && fngData.value != null ? parseInt(fngData.value) : null;
+  const fngLabel             = fngData?.value_classification || "N/A";
+  const btc7dChange          = btcData?.usd_7d_change;
 
   const calculatedRegime = calculateRegime(btc7dChange, fngValue);
   const regime           = manualRegime || calculatedRegime;
@@ -196,7 +200,7 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
             BTC Dom
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.t1, letterSpacing: "-0.02em", lineHeight: 1 }}>
-            {btcDominance.toFixed(1)}%
+            {btcDominance != null ? `${btcDominance.toFixed(1)}%` : "—"}
           </div>
           <div style={{ height: 9, marginTop: 7 }} />
         </div>
@@ -219,8 +223,8 @@ export default function MacroPulse({ refreshTrigger = 0 }) {
           <div style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.14em", color: T.t3, textTransform: "uppercase", marginBottom: 10, opacity: 0.6 }}>
             Total MCap 24h
           </div>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1, color: totalMarketCapChange >= 0 ? T.green : T.red }}>
-            {totalMarketCapChange >= 0 ? "+" : ""}{totalMarketCapChange.toFixed(2)}%
+          <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1, color: totalMarketCapChange != null ? (totalMarketCapChange >= 0 ? T.green : T.red) : T.t3 }}>
+            {totalMarketCapChange != null ? `${totalMarketCapChange >= 0 ? "+" : ""}${totalMarketCapChange.toFixed(2)}%` : "—"}
           </div>
           <div style={{ height: 9, marginTop: 7 }} />
         </div>

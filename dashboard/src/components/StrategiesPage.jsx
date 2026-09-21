@@ -601,7 +601,16 @@ const STRATEGIES = [
           signal: p.signal || "OUTPERFORM",
           cis_score: p.cis_score,
           grade: p.grade,
-          price_change_7d: p.tvl_change_7d ?? null,
+          // S-396 (2026-09-21): was `p.tvl_change_7d ?? null` — the field
+          // name said "price" but the value was TVL. Investors would read
+          // "+12.3%" as price return when it was actually protocol TVL
+          // change. Try change_7d first; fall through to null (rendered as
+          // "—") when neither field exists. Backend should populate
+          // change_7d on protocol-yield strategies; if missing, that's a
+          // data-shape bug to fix upstream, not papered over here.
+          price_change_7d: p.change_7d != null ? p.change_7d
+                           : p.price_change_7d != null ? p.price_change_7d
+                           : null,
         }));
     },
   },
