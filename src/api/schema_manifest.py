@@ -394,13 +394,72 @@ def write_columns() -> dict[str, list[str]]:
     ahead of its migration — and every existing guard stayed green. The offline
     guard can only prove a migration FILE exists; only a live probe can prove it
     RAN. This is the contract half of that probe (see `/internal/schema-drift`).
+
+    Two sources are merged: literal `dict` payloads in write helpers (the
+    `_columns_in` walker) AND module-level `WRITES_COLUMNS = {table: (cols...)}`
+    declarations for injected writers (C-13 P4) whose payload is built outside
+    this repo and so cannot be inferred from a literal dict.
     """
     out: dict[str, set[str]] = {}
     for p in sorted(_ROOT.rglob("*.py")):
         if _is_prod(p):
             for t, cols in _columns_in(p).items():
                 out.setdefault(t, set()).update(cols)
+            for t, cols in _declared_columns_in(p).items():
+                out.setdefault(t, set()).update(cols)
     return {t: sorted(c) for t, c in sorted(out.items()) if t and not t.startswith("_")}
+
+
+#: C-13 P4 (2026-09-21): mirror of `_DECLARED` for columns. `WRITES_COLUMNS`
+#: is `{table: (col, col, ...)}` at module level — same shape as `WRITES_TABLES`,
+#: but per-column. Used by Seth-side declaration modules whose payload is built
+#: in Mac-side writers the AST walker cannot see (Rule 3: `cometcloud-local/`
+#: is not Seth's lane). The declaration is read here; the alternative is a
+#: manifest that "looks complete" while missing the columns the production code
+#: actually writes — the same hazard `_declared_tables_in` was added to prevent.
+_DECLARED_COLUMNS = "WRITES_COLUMNS"
+
+
+def _declared_columns_in(path: Path) -> dict[str, set[str]]:
+    """模块级 `WRITES_COLUMNS = {"t": ("c", "c")}` 里声明的 table -> columns。
+
+    Accepted forms for the value side: tuple, list, set, frozenset, or a
+    `frozenset({...})` call (the common idiom for a frozen, hashable set).
+    Anything else falls through silently — the same blind-spot doctrine as
+    `_tables_in` for non-literal first args.
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, SyntaxError):
+        return {}
+    out: dict[str, set[str]] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        names = {getattr(t, "id", None) for t in node.targets}
+        if _DECLARED_COLUMNS not in names:
+            continue
+        if not isinstance(node.value, ast.Dict):
+            continue
+        for k_node, v_node in zip(node.value.keys, node.value.values):
+            if not (isinstance(k_node, ast.Constant) and isinstance(k_node.value, str)):
+                continue
+            cols: set[str] = set()
+            # Form A: literal ("c", "c") / ["c", "c"] / {"c", "c"}.
+            if isinstance(v_node, (ast.Tuple, ast.List, ast.Set)):
+                for el in v_node.elts:
+                    if isinstance(el, ast.Constant) and isinstance(el.value, str):
+                        cols.add(el.value)
+            # Form B: frozenset({"c", "c"}) — common for frozen-set literals.
+            elif isinstance(v_node, ast.Call) and getattr(v_node.func, "id", None) == "frozenset":
+                for arg in v_node.args:
+                    if isinstance(arg, ast.Set):
+                        for el in arg.elts:
+                            if isinstance(el, ast.Constant) and isinstance(el.value, str):
+                                cols.add(el.value)
+            if cols:
+                out[k_node.value] = cols
+    return out
 
 
 def manifest_path() -> Path:
