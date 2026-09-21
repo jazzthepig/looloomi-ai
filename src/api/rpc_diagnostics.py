@@ -257,14 +257,22 @@ def log_write_attempt(fn: Any) -> Any:
 
 async def insert_with_detail(table: str,
                              rows: list[dict[str, Any]],
+                             on_conflict: str | None = None,
                              ) -> tuple[bool, dict[str, Any]]:
     """Insert rows and return `(ok, detail)`,并把这次尝试记进 `write_log`(S-328/S-352)。
 
     S-352 加的那一半:`detail` 早就算出了 outcome/status/body/elapsed,**算完就扔**。
     现在每一个 return 之前先落一行 —— 成功和失败都落。
     **「表里没有行」和「没人尝试过」从此是两个可区分的事实。**
+
+    `on_conflict` (S-389 FIX-A, 2026-09-21): when set, the writer is UPSERT not
+    INSERT — URL gains `?on_conflict=<value>` and Prefer gains
+    `resolution=merge-duplicates`. The retry/re-run on the same primary key
+    returns 200/201/204 instead of HTTP 409 (Postgres 23505), so the second
+    write silently merges into the existing row. The nine other books that
+    don't pass `on_conflict` keep the insert path unchanged.
     """
-    ok, detail = await _insert_with_detail_inner(table, rows)
+    ok, detail = await _insert_with_detail_inner(table, rows, on_conflict=on_conflict)
     # ⚠️ 记录器必须自报。`_record_attempt` 吞掉所有异常(它没有第二层日志可写),
     # 所以如果它从来没成功过,`write_log` 会是空的 —— 而空 = 「没人尝试过」,
     # **正好是最错的那个结论**。那样这个修复就带着它要修的故障模式。
@@ -275,6 +283,7 @@ async def insert_with_detail(table: str,
 
 async def _insert_with_detail_inner(table: str,
                                     rows: list[dict[str, Any]],
+                                    on_conflict: str | None = None,
                                     ) -> tuple[bool, dict[str, Any]]:
     """原逻辑,七个 return 点不动 —— 记录发生在外层,所以每一条路径都被覆盖。
 
@@ -290,6 +299,12 @@ async def _insert_with_detail_inner(table: str,
     Same collapse as the RPC path before S-323m, one layer over. This returns
     the status and the PostgREST body, which is the sentence that names the
     cause.
+
+    `on_conflict` (S-389 FIX-A): when set, the request becomes an UPSERT
+    (`?on_conflict=<value>` + Prefer `resolution=merge-duplicates`) so retries
+    on a unique-keyed table like `fusion_paper_nav(mark_date)` succeed instead
+    of 409-ing. PostgREST's own contract: prefer-resolution=merge-duplicates
+    is the upsert switch; without it the same URL is plain insert.
     """
     from src.api import store
 
@@ -297,6 +312,7 @@ async def _insert_with_detail_inner(table: str,
         "table": table, "n_rows": len(rows or []), "outcome": None,
         "status": None, "body": None, "elapsed_ms": None,
         "role_refusal": None,
+        "on_conflict": on_conflict,                              # S-389
     }
     if not table or not rows:
         detail["outcome"] = "empty_payload"
@@ -319,10 +335,13 @@ async def _insert_with_detail_inner(table: str,
         return False, detail
 
     url = f"{store._SB_URL}/rest/v1/{table}"
+    if on_conflict:
+        url = f"{url}?on_conflict={on_conflict}"
     headers = {"apikey": store._SB_KEY,
                "Authorization": f"Bearer {store._SB_KEY}",
                "Content-Type": "application/json",
-               "Prefer": "return=minimal"}
+               "Prefer": ("return=minimal,resolution=merge-duplicates"
+                          if on_conflict else "return=minimal")}
     t0 = time.time()
     try:
         resp = await store._supabase_request_with_retry(
