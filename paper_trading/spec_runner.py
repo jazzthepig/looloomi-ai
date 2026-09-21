@@ -71,6 +71,12 @@ from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence
 
 if TYPE_CHECKING:
     from src.data.market.regime_quorum import RegimeQuorum
+    from paper_trading.jev_regime import JevRegimeDecision
+
+#: Re-export Jev gate type for callers that prefer `from spec_runner import JevRegimeDecision`.
+#: Pattern A pre-filter (per docs/jev_nautilus_integration_plan_2026-09-21.md) lives in
+#: paper_trading.jev_regime; spec_runner only consumes it.
+from paper_trading.jev_regime import JevRegimeDecision  # noqa: E402,F401
 
 log = logging.getLogger("spec_runner")
 
@@ -102,6 +108,14 @@ FAMILIES: dict[str, bool] = {
                                                 # regime gate + rebalance cadence) ——
                                                 # §5b ① 的 panel-wide 形态,基准本应
                                                 # 只回报 beta,excess ≤ cost bps
+    "panel_long_only_simple_factor": True,      # S-393 arm C: A-17 形态 A + per-symbol
+                                                # factor AND-gate (SMA60 + mom_60 > 0 +
+                                                # realized_vol_30 < threshold);仅 long
+                                                # 通过的子集;0/N → SKIPPED。
+                                                # Comparison arm for Jev vs baseline vs
+                                                # simple-factor (JAZZ 2026-09-21)。
+                                                # 复用 panel_long_only 的 BLOCKED / SKIPPED
+                                                # 纪律,只在 step ⑦ 加 factor gate。
 }
 #: 2026-09-04 K fix: 双名字 `survivors_only_lag1_book_bookB` 在 S-249 形状下
 #: 是一个漂移 hazard —— bookB 和 bookA 在运行时只是同一个家族的两个 alias,
@@ -415,6 +429,88 @@ class Spec:
                 raw=raw,
             )
 
+        if fam == "panel_long_only_simple_factor":
+            # S-393 arm C: A-17 panel_long_only + per-symbol factor AND-gate.
+            # Parameters mirror `panel_long_only` (allocation / cadence / cap /
+            # min_history) PLUS `factor_filter` (sma_window / mom_window /
+            # vol_window / vol_threshold_daily_stdev / sma_ok_rule).
+            #
+            # Why a separate family instead of a `panel_long_only + factor` flag:
+            # 1. Same universe + same cadence + same allocation — but the
+            #    decide() step ⑦ differs (factor filter vs unconditional).
+            # 2. `min_history_days` MUST be ≥ max(sma_window, mom_window + 1,
+            #    vol_window + 1). For default (60/60/30) the floor is 90.
+            #    `panel_long_only` ships with 60d floor → reusing that family
+            #    would silently let an under-built factor symbol slip through.
+            # 3. _meta separation: comparison arm writes different _meta
+            #    fields than the production-shape benchmark — better to have
+            #    distinct family so consumers don't accidentally compare.
+            allocation = str(need(p, "allocation", "parameters")).lower()
+            if allocation not in ("equal_weight", "cis_weight", "market_cap_weight"):
+                raise ValueError(
+                    f"spec allocation '{allocation}' 不是合法值 —— v1 ship 只接 "
+                    f"'equal_weight';cis_weight / market_cap_weight 在下一档 "
+                    f"(PANEL_LONG_ONLY_SPEC §'Allocation helpers')")
+            target_size = int(need(p, "target_size", "parameters"))
+            if target_size < 0:
+                raise ValueError(
+                    f"target_size = {target_size} 非法 —— 0 = 全 universe,>0 = top N")
+            rebalance_cadence = int(need(p, "rebalance_cadence", "parameters"))
+            if rebalance_cadence < 1:
+                raise ValueError(
+                    f"rebalance_cadence = {rebalance_cadence} 非法 —— 至少 1 天")
+            ff = need(p, "factor_filter", "parameters")
+            if not isinstance(ff, dict):
+                raise ValueError(
+                    "parameters.factor_filter 必须是一个 dict —— {sma_window, "
+                    "mom_window, vol_window, vol_threshold_daily_stdev, sma_ok_rule}")
+            sma_window = int(need(ff, "sma_window", "parameters.factor_filter"))
+            mom_window = int(need(ff, "mom_window", "parameters.factor_filter"))
+            vol_window = int(need(ff, "vol_window", "parameters.factor_filter"))
+            vol_th = float(need(ff, "vol_threshold_daily_stdev",
+                                "parameters.factor_filter"))
+            sma_rule = str(ff.get("sma_ok_rule", "above"))
+            if sma_rule not in ("above", "below_or_equal"):
+                raise ValueError(
+                    f"factor_filter.sma_ok_rule='{sma_rule}' 非法 —— "
+                    f"v1 只接 'above'(trend-following);'below_or_equal' "
+                    f"留给 mean-reversion 扩展")
+            max_pos = float(p.get("max_position_pct", 1.0))
+            min_pos = float(p.get("min_position_pct", 0.0))
+            if max_pos <= 0 or max_pos > 1.0:
+                raise ValueError(f"max_position_pct={max_pos} 非法 —— (0, 1]")
+            if min_pos < 0 or min_pos >= max_pos:
+                raise ValueError(f"min_position_pct={min_pos} 非法 —— [0, max_position_pct)")
+            min_history_days = int(need(p, "min_history_days", "parameters"))
+            # min_history_days 必须够算全部三个 factor —— 否则符号会"已经 ENTERED"
+            # 但 factor 算不出 (sma=None → factor fails) → 当天该符号被 skip,
+            # 看起来像"factor 太严" 实际是 min_history_days 太松。
+            # 缓冲 +1 是因为 mom_window 需要 mom_window+1 个 close(分母).
+            floor = max(sma_window, mom_window + 1, vol_window + 1) + 1
+            if min_history_days < floor:
+                raise ValueError(
+                    f"min_history_days = {min_history_days} 不足以算全部三个 factor"
+                    f"(sma={sma_window}, mom={mom_window}+1, vol={vol_window}+1) "
+                    f"—— 至少 {floor}")
+            return cls(
+                name=need(raw, "spec_name", "spec"),
+                universe=tuple(need(raw, "universe", "spec")),
+                rank_by=f"panel_long_only_simple_factor_{allocation}",  # dispatcher key
+                n_lookback=min_history_days,                # 兼容 decide() 默认字段
+                hold=rebalance_cadence,                     # 兼容 decide() 默认字段
+                cadence=rebalance_cadence,
+                k=1, k_long=1, k_short=0,                   # 全 long, no short
+                weight_per_leg=1.0 / max(len(need(raw, "universe", "spec")), 1),
+                cost_bps_rt=float(need(p, "cost_bps_rt", "parameters")),
+                dd_stop_pct=float(need(p, "dd_stop_pct", "parameters")),
+                max_open_trades=int(need(p, "max_open_trades", "parameters")),
+                skip_regimes=frozenset(),                   # regime gate 由 spec 处理
+                source=str(need(ds, "primary", "data_source")),
+                family=fam,
+                dry_run=bool(ex.get("dry_run", True)),
+                raw=raw,
+            )
+
         if fam == "survivors_only_lag1_book":
             # M-113 V3 (M-93 + R19-Lite) / M-115 Book B (M-93 + R14-Lite):
             # 2-sleeve book combining ① regime-gated BTC long + ④ cross-section L/S.
@@ -667,6 +763,12 @@ def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
     if spec.family == "panel_long_only":
         return decide_panel_long_only(spec, panel, as_of=as_of, regime=regime,
                                       n_open=n_open, last_rebalance=last_rebalance)
+    # S-393 arm C: A-17 + per-symbol factor AND-gate.
+    if spec.family == "panel_long_only_simple_factor":
+        return decide_panel_long_only_simple_factor(
+            spec, panel, as_of=as_of, regime=regime,
+            n_open=n_open, last_rebalance=last_rebalance,
+        )
     d = as_of.isoformat()
     base = dict(d=d, spec_name=spec.name, panel_source=panel.source,
                 panel_last_bar=panel.last_bar)
@@ -993,8 +1095,18 @@ def decide_btc_trend(spec: Spec, panel: Panel, *, as_of: date,
 # spec 偷偷装了一个 §5b 不允许的机制。**
 def decide_panel_long_only(spec: Spec, panel: Panel, *, as_of: date,
                            regime: Optional[str], n_open: int,
-                           last_rebalance: Optional[date]) -> Decision:
-    """§5b ① 形态 A:panel-wide long-only hold。"""
+                           last_rebalance: Optional[date],
+                           jev_regime: Optional["JevRegimeDecision"] = None) -> Decision:
+    """§5b ① 形态 A:panel-wide long-only hold。
+
+    `jev_regime` (optional, Pattern A pre-filter per
+    `docs/jev_nautilus_integration_plan_2026-09-21.md`): if provided and
+    `regime_ok=False`, return SKIPPED with the Jev reason before ANY other
+    check. This is gate **⓪** (downside protection), separate from the
+    spec's own regime_gate (gate ③). Both gates honor the same regime-blinded
+    benchmark for §5b ①, but ⓪ fires on Jev's structural "is this regime
+    tradeable" call while ③ fires on the spec's regime mapping.
+    """
     from datetime import timedelta as _td
 
     raw_params = (spec.raw.get("parameters") or {})
@@ -1009,6 +1121,24 @@ def decide_panel_long_only(spec: Spec, panel: Panel, *, as_of: date,
     d_lag1 = (as_of - _td(days=1)).isoformat()
     base = dict(d=d, spec_name=spec.name,
                 panel_source=panel.source, panel_last_bar=panel.last_bar)
+
+    # ⓪ Jev gate (Pattern A — optional). Fires BEFORE any other check:
+    # if Jev says the regime is not tradeable, the strategy skips this bar
+    # regardless of panel freshness, regime mapping, or rebalance cadence.
+    # `None` (default) = Jev not wired → behavior unchanged (backward compat).
+    if jev_regime is not None and not jev_regime.regime_ok:
+        return Decision(
+            **base, verdict=Verdict.SKIPPED,
+            reason=(f"jev_gate closed at {d} (Pattern A pre-filter): "
+                    f"direction_bias={jev_regime.direction_bias}, "
+                    f"confidence={jev_regime.confidence}, "
+                    f"backend={jev_regime.backend_name}, "
+                    f"mock={jev_regime.mock}, "
+                    f"latency={jev_regime.jev_latency_ms}ms, "
+                    f"tokens={jev_regime.jev_input_tokens} — "
+                    f"§5b ⓪ OVERRIDE 命中,① 形态 A 不开仓 (per "
+                    f"docs/jev_nautilus_integration_plan_2026-09-21.md)"),
+        )
 
     # ① BLOCKED: panel 必须能用
     if panel.n_symbols == 0:
@@ -1131,6 +1261,241 @@ def decide_panel_long_only(spec: Spec, panel: Panel, *, as_of: date,
 
     return Decision(**base, verdict=Verdict.ENTERED, legs=legs,
                     reason=f"rebalance {d},n_legs={len(legs)},allocation={allocation}")
+
+
+# ── panel_long_only_simple_factor (S-393 arm C) ─────────────────────────────
+# A-17 形态 A 的扩展:在 step ⑦ 用 per-symbol factor AND-gate 过滤 universe,
+# 只 long 通过的子集。这是 JAZZ 2026-09-21 3-arm 对比的 arm C —— 跟 arm B
+# (panel_long_only) 共用 universe + cadence + BLOCKED 纪律,只在 leg
+# 构造阶段不同。
+#
+# **设计纪律(S-393):**
+# - 0/0 跟 1/0 一样 → SKIPPED with reason。不是 bug,是设计:factor gate 在
+#   全 universe 都不达标的窗口(如 RISK_OFF + 高波)就该空仓,这是 factor model
+#   的"看空"信号,不是错误。
+# - 通过的子集上 1/N 等权 —— 不是 1/原 universe。差异正是 factor gate 的
+#   "value added"。报告里要分开报:(a) absolute 1/N passing,(b) 与 arm B
+#   等权的 SR / MaxDD 差异。
+# - 跟 arm B 同样 lag-1 PIT:factor 信号 ≤ d_lag1,entry price = bar at d。
+# - 不接 Jev gate(arm C 是"纯 factor model",Jev 是另一维 —— 已在 arm A
+#   测过 wire 路径,arm C 不重复)。
+
+def decide_panel_long_only_simple_factor(spec: Spec, panel: Panel, *,
+                                          as_of: date, regime: Optional[str],
+                                          n_open: int,
+                                          last_rebalance: Optional[date],
+                                          jev_regime: Optional["JevRegimeDecision"] = None,
+                                          ) -> Decision:
+    """S-393 arm C: §5b ① panel_long_only + per-symbol factor AND-gate.
+
+    Mirrors `decide_panel_long_only` step ⓪-⑥ exactly. Step ⑦ replaces the
+    unconditional leg construction with a factor-filtered construction.
+
+    `jev_regime` accepted for symmetry with `decide_panel_long_only` but the
+    arm-C spec does NOT wire Jev (per S-393 — comparison isolates factor gate).
+    """
+    from datetime import timedelta as _td
+    from paper_trading.factors import compute_factor_signals
+
+    raw_params = (spec.raw.get("parameters") or {})
+    allocation = str(raw_params.get("allocation", "equal_weight")).lower()
+    rebalance_cadence = int(raw_params.get("rebalance_cadence", 7))
+    max_pos = float(raw_params.get("max_position_pct", 1.0))
+    min_pos = float(raw_params.get("min_position_pct", 0.0))
+    regime_gate = raw_params.get("regime_gate") or {}
+    min_history_days = int(raw_params.get("min_history_days", 90))
+
+    # factor_filter was validated in Spec.load (min_history_days ≥ floor
+    # for the windows). Read here without re-validation — load() is the gate.
+    ff = raw_params.get("factor_filter") or {}
+    sma_window = int(ff.get("sma_window", 60))
+    mom_window = int(ff.get("mom_window", 60))
+    vol_window = int(ff.get("vol_window", 30))
+    vol_threshold = float(ff.get("vol_threshold_daily_stdev", 0.05))
+    sma_ok_rule = str(ff.get("sma_ok_rule", "above"))
+
+    d = as_of.isoformat()
+    d_lag1 = (as_of - _td(days=1)).isoformat()
+    base = dict(d=d, spec_name=spec.name,
+                panel_source=panel.source, panel_last_bar=panel.last_bar)
+
+    # ⓪ Jev gate (accepted but not used by arm C — see docstring)
+    if jev_regime is not None and not jev_regime.regime_ok:
+        return Decision(
+            **base, verdict=Verdict.SKIPPED,
+            reason=(f"jev_gate closed at {d} (Pattern A pre-filter): "
+                    f"direction_bias={jev_regime.direction_bias}, "
+                    f"confidence={jev_regime.confidence}, "
+                    f"backend={jev_regime.backend_name}, "
+                    f"mock={jev_regime.mock}, "
+                    f"latency={jev_regime.jev_latency_ms}ms, "
+                    f"tokens={jev_regime.jev_input_tokens} — "
+                    f"§5b ⓪ OVERRIDE 命中 (S-393 arm C 兼容但 spec 不 wire Jev)"),
+        )
+
+    # ① BLOCKED checks (mirror decide_panel_long_only:1047-1066)
+    if panel.n_symbols == 0:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"面板 0 个标的 —— 源 {spec.source} 没有返回任何行。"
+                               f"factor gate 在空面板上算不了 (S-180)")
+    if len(spec.universe) < MIN_UNIVERSE_FOR_RANK:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"universe 只有 {len(spec.universe)} 个标的,"
+                               f"< MIN_UNIVERSE_FOR_RANK={MIN_UNIVERSE_FOR_RANK} "
+                               f"—— factor gate 至少需要 {MIN_UNIVERSE_FOR_RANK} 个标的"
+                               f"才能跟 arm B 比较 (spec_runner MIN)")
+    age = panel.age_days(as_of)
+    if age is None:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason="面板没有可读的最后一根 bar")
+    if age > MAX_PANEL_AGE_DAYS:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"面板最后一根 bar 是 {panel.last_bar},已 {age} 天 "
+                               f"> {MAX_PANEL_AGE_DAYS} 天 —— factor 信号基于旧价会"
+                               f"产生一条看起来正常的污染记录 (S-251)")
+
+    # ② universe 在面板里 + 每个 symbol 历史够 min_history_days
+    missing = [s for s in spec.universe if s not in panel.closes]
+    if missing:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"universe 中有 {len(missing)} 个不在面板里:"
+                               f"{missing[:5]}{'...' if len(missing) > 5 else ''} "
+                               f"—— arm C 必须持完整 universe 才能跟 arm B 比较")
+    too_short = []
+    threshold_date = (as_of - _td(days=min_history_days)).isoformat()
+    for s in spec.universe:
+        s_closes = panel.closes[s]
+        if not s_closes:
+            too_short.append((s, 0))
+            continue
+        sorted_dates = sorted(d_ for d_ in s_closes if d_ <= d_lag1)
+        if not sorted_dates or sorted_dates[0] > threshold_date:
+            too_short.append((s, len(sorted_dates)))
+    if too_short:
+        sym_list = ", ".join(f"{s} ({n}d)" for s, n in too_short[:5])
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"{len(too_short)}/{len(spec.universe)} 个 universe "
+                               f"symbol 历史不足 {min_history_days}d:{sym_list}"
+                               f"{'...' if len(too_short) > 5 else ''} "
+                               f"—— arm C factor gate 至少需要 {min_history_days}d")
+    # 又多一道:每个 symbol 必须能算 factor (depth ≥ max(sma, mom+1, vol+1))
+    factor_floor = max(sma_window, mom_window + 1, vol_window + 1)
+    factor_too_short = []
+    for s in spec.universe:
+        s_closes = panel.closes[s]
+        depth_d_lag1 = sum(1 for d_ in s_closes if d_ <= d_lag1)
+        if depth_d_lag1 < factor_floor:
+            factor_too_short.append((s, depth_d_lag1))
+    if factor_too_short:
+        sym_list = ", ".join(f"{s} ({n}d)" for s, n in factor_too_short[:5])
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"{len(factor_too_short)}/{len(spec.universe)} 个 universe "
+                               f"symbol 历史不足以算 factor (need ≥ {factor_floor}d):"
+                               f"{sym_list} —— arm C factor gate 算不出该符号,"
+                               f"应排除而不是跳过整面板")
+
+    # ③ Regime gate (per spec.parameters.regime_gate)
+    canon = None
+    if regime is not None:
+        from src.data.cis.cis_provider import canonical_regime_strict
+        canon = canonical_regime_strict(regime)
+    base["regime"] = canon
+    if regime_gate:
+        if canon in regime_gate:
+            allow = bool(regime_gate[canon])
+            if not allow:
+                return Decision(**base, verdict=Verdict.SKIPPED,
+                                reason=f"regime_gate 把 {canon} 关掉了 "
+                                       f"(parameters.regime_gate.{canon}=False)")
+        elif "default" in regime_gate:
+            allow = bool(regime_gate["default"])
+            if not allow:
+                return Decision(**base, verdict=Verdict.SKIPPED,
+                                reason=f"regime_gate.default=False,{canon} "
+                                       f"未在 gate 里显式列出 —— 默认不放")
+
+    # ④ n_open 容量
+    if n_open >= spec.max_open_trades:
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"已有 {n_open} 笔未平仓 >= max_open_trades "
+                               f"{spec.max_open_trades}")
+
+    # ⑤ Cadence — 跟 arm B 同 cadence 纪律
+    if last_rebalance is not None:
+        elapsed = (as_of - last_rebalance).days
+        if elapsed < rebalance_cadence:
+            return Decision(**base, verdict=Verdict.SKIPPED,
+                            reason=f"上次再平衡 {last_rebalance.isoformat()},"
+                                   f"已 {elapsed}d < cadence {rebalance_cadence}d "
+                                   f"—— arm C 跟 arm B 同 cadence")
+
+    # ⑥ Allocation weight (v1 only: equal_weight)
+    if allocation != "equal_weight":
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"v1 ship 只接 allocation='equal_weight'; "
+                               f"'{allocation}' 在下一档 (PANEL_LONG_ONLY_SPEC "
+                               f"§'Allocation helpers')")
+    n_total = len(spec.universe)
+
+    # ⑦ Per-symbol factor gate — 跟 arm B 的差别就在这一步
+    signals: dict[str, dict[str, bool]] = {}
+    for s in spec.universe:
+        signals[s] = compute_factor_signals(
+            panel.closes[s], as_of=as_of,
+            sma_window=sma_window, mom_window=mom_window,
+            vol_window=vol_window, vol_threshold=vol_threshold,
+            sma_ok_rule=sma_ok_rule,
+        )
+    passing = [s for s in spec.universe if signals[s]["all_ok"]]
+    if not passing:
+        # 0/N passed → factor model says "no edge today" → SKIPPED
+        n_sma = sum(1 for s in spec.universe if signals[s]["sma_ok"])
+        n_mom = sum(1 for s in spec.universe if signals[s]["mom_ok"])
+        n_vol = sum(1 for s in spec.universe if signals[s]["vol_ok"])
+        return Decision(
+            **base, verdict=Verdict.SKIPPED,
+            reason=(f"0/{n_total} 通过 factor gate "
+                    f"(sma={n_sma}/{n_total}, mom={n_mom}/{n_total}, "
+                    f"vol={n_vol}/{n_total}) —— factor model 当天空仓 "
+                    f"(S-393 arm C design)")
+        )
+
+    # Equal-weight over PASSING subset — 1/|passing|, NOT 1/n_total.
+    # 这是 arm B vs arm C 的关键差异:arm B 永远 1/5 = 0.20,arm C 在 1/2 .. 1/5
+    # 之间跳(取决于当日通过数)。
+    n_pass = len(passing)
+    raw_w = {sym: 1.0 / n_pass for sym in passing}
+    capped = {sym: min(max_pos, max(min_pos, w)) for sym, w in raw_w.items()}
+    s_w = sum(capped.values())
+    if s_w <= 0:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"权重重整后总和 {s_w} ≤ 0 —— max/min_position_pct 配置"
+                               f"让所有权重被剪没了 (max={max_pos}, min={min_pos})")
+    if s_w > 1.0 + 1e-9:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"权重重整后总和 {s_w:.4f} > 1.0 —— min_position_pct "
+                               f"把总和推过了 1 (max={max_pos}, min={min_pos}, "
+                               f"n_pass={n_pass})")
+    weights = capped
+
+    # Entry price = bar at d (lag-1 已用于 factor 信号)
+    legs_list = []
+    for sym in passing:
+        sym_closes = panel.closes[sym]
+        bars_today = sorted(x for x in sym_closes if x <= d)
+        if not bars_today:
+            return Decision(**base, verdict=Verdict.BLOCKED,
+                            reason=f"{sym} 在 {d} 当天没有 bar —— 无法定价入场")
+        px_entry = sym_closes[bars_today[-1]]
+        legs_list.append(Leg(sym, "long", float(weights[sym]), float(px_entry)))
+    legs = tuple(legs_list)
+
+    return Decision(
+        **base, verdict=Verdict.ENTERED, legs=legs,
+        reason=(f"rebalance {d}, n_legs={len(legs)}/{n_total} passed factor gate "
+                f"(sma={sma_window}, mom={mom_window}, vol={vol_window}<"
+                f"{vol_threshold}), allocation={allocation}")
+    )
 
 
 def should_run_today(spec: Spec, *, as_of: date, last_entry: Optional[date]) -> bool:
@@ -1305,5 +1670,6 @@ __all__ = ["Spec", "Panel", "Decision", "Leg", "Verdict",
            "build_panel", "decide", "decide_gated", "decide_gated_2d",
            "decide_survivors_book", "decide_btc_trend",
            "decide_panel_long_only",
+           "decide_panel_long_only_simple_factor",
            "should_run_today", "exit_due",
            "MAX_PANEL_AGE_DAYS", "MIN_UNIVERSE_FOR_RANK"]

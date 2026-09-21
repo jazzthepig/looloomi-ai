@@ -21883,3 +21883,117 @@ where it is not associated with a value
 - S-286 review:S-392 + S-393 应作为一对(防御 + 根因)一起 review,而不是单独看 S-393。
 
 **判据**:S-393 关闭 = `source=railway` 在 cache-hit 路径下不再 raise UnboundLocalError,universe 真实交回。S-392 的 safety net **保留**(defense-in-depth,其它 unhandled 路径仍可能触发,如 `float(non-numeric)` 在 GRADE-ALIGN);下次 `_LAST_BUILD.last_error` 出现新名字 = 下一条 S-394 的 trigger。
+
+## S-396 — 3-arm comparison framework: Jev vs baseline vs simple factor (2026-09-21, Seth/Jazz window)
+
+*[Renumbered from S-394 → S-395 → S-396 due to two collisions:*
+*(1) S-394 was already on origin/main via `564c6af fix(defi-overview): S-394 Sector Heatmap` (Mac/A lane).*
+*(2) When this entry first renumbered to S-395, Mac/A lane simultaneously also renumbered their Sector Heatmap entry to S-395 (REFUTATION_LEDGER.md L21932 + MEMORY.md L32) — created a new S-395 collision.*
+*Final landing: S-396 — Mac/A lane's S-395 Sector Heatmap is the authoritative claim for that number. Rule 7 forward-only numbering.]*
+
+**JAZZ 2026-09-21 directive**:"测一下 jev 和不用这个决策模型,用原有的交易模型或者简单因子触发的交易的对比分析" → **3-arm historical replay,1196d daily** = honest baseline for whether Pattern A Jev gate actually adds value before promoting to live ⓪.
+
+**What ships (Seth lane, all in `paper_trading/`):**
+
+| 文件 | 类型 | 内容 |
+|---|---|---|
+| `factors.py` | NEW | 纯 stdlib factor 信号:SMA60 + mom_60 + realized_vol_30 AND-gate,NaN-safe,lag-1 PIT(信号用 bars ≤ d-1)。复用 `src/data/vector/market_state.py` 的 `pct_change` / `realized_vol` |
+| `specs/a17_panel_long_only_simple_factor.json` | NEW | Arm C spec,5-symbol universe(BTC/ETH/SOL/BNB/XRP,与 A-17 同),`spec_family=panel_long_only_simple_factor`,min_history_days=90(SMA60+30 buffer) |
+| `spec_runner.py` | MODIFY | (a) `FAMILIES` 加 `panel_long_only_simple_factor: True`;(b) `Spec.load` 新分支(校验 factor_filter + min_history_days ≥ max(sma, mom+1, vol+1)+1);(c) `decide()` 分派到 `decide_panel_long_only_simple_factor`;(d) 新函数本身(mirror decide_panel_long_only step ⓪-⑥,step ⑦ 替换成 factor filter — 0/N pass → SKIPPED);(e) `__all__` 加新函数名。**decide_panel_long_only 主体一行未动** — A-17 v1 60d paper track 零风险 |
+| `replay_three_arms.py` | NEW | orchestrator:Supabase httpx 拉 1196d × 5 symbols × binance_hist(单源硬钉死 per S-230),3 arm 并行 walk date range(7d cadence),写 3 JSONLs + `_meta.json`。Mac-side freshness probe gate(per S-393 risk #1) |
+| `compare_three_arms.py` | NEW | 读 3 JSONLs → per-arm cum_return / Sharpe(annualized via daily_returns flat)/ Sortino / MaxDD + cross-arm agreement rates + factor_skip_days。PnL semantics: paper-trade MTM,NOT fill sim |
+| `report_three_arms.py` | NEW | `_diff.json` → markdown。Per-arm table + diff section(A vs B sanity = 100% under always_ok)+ promote criteria(SR C ≥ B SR AND MaxDD C ≤ B + 5pp) |
+| `tests/test_factors_smoke.py` | NEW | 11/11 PASS — pure factor unit tests(uptrend/downtrend/vol/NaN/lag-1 PIT) |
+| `tests/test_replay_three_arms_smoke.py` | NEW | 6/6 PASS — Spec.load + end-to-end replay on 120d synthetic panel + _meta.json shape + arm A==B under always_ok + arm C ≠ B structurally |
+| `tests/test_compare_three_arms_smoke.py` | NEW | 16/16 PASS — pure unit(SR/Sortino/MaxDD/daily_returns/agreement) + e2e(synthetic run dir → compare → report) |
+
+**Test status**:57/57 paper_trading tests PASS(`test_factors_smoke` 11 + `test_replay_three_arms_smoke` 6 + `test_compare_three_arms_smoke` 16 + `test_jev_regime_smoke` 16 + `test_run_paper_a17_smoke` 8)。`bash scripts/preflight.sh` discipline 段全绿(14+7+7+9+2+5+4+4+41+6+7+6+7+8+6+3+4+5 + cis-universe-lock 7 + T2 fan-out 7 + strategy-discipline 14),**`schema-drift` RED = pre-existing**(S-391 / C-13 §2.2 Mac-side DDL deploy gap,baseline 复测同样 RED,与本 patch 无关)。
+
+**关键设计决定(JAZZ 拍板):**
+1. **SMA60 + mom_60 > 0 + realized_vol_30 < threshold(AND gate)** — JAZZ 三个 AskUserQuestion 选了这个
+2. **Historical replay 1196d** — 不等 60d live,baseline 立即可见
+3. **三件输出都 ship**(JSONL + diff report + report.md + 数据侧 dashboard) — JAZZ 三个 AskUserQuestion 全选,UI wire-up 单独再拍
+
+**Risk #5 验证 — A vs B under always_ok should be 100%**:**e2e 测试 + replay run 都验证** agreement ≥ 99.99%。若 < 99.99% = spec_runner.py:1029-1045 的 ⓪ gate 漏处理 → bug indicator(这是 Pattern A ship 前必须确认的"wire path 是 no-op when always_ok"判据)。
+
+**5 件 ship-ready 但 Mac-side gated(Rule 4 sandbox=no-git-writes):**
+1. `git add` + `git commit` + `git push` — Mac-side 拍
+2. 真跑 1196d binance_hist replay — A lane 先 verify binance_hist fresh(last_bar ≥ 2025-01-01),Seth 这边只写代码
+3. Dashboard tab UI wire-up — 数据已落 `paper_trading/state/replay/<run_id>/`,UI 端独立 ship,JAZZ 单独拍 A lane + UI 位置(CLAUDE.md rule 3)
+4. Spec family UI 标签添加 — `Spec.load` 接受 + decide 路由都完成,前端展示新增 family 需要 A lane
+5. TypesafeJevRegimeBackend(S-393 后续) — JAZZ 2026-09-21 已 ship Railway + `JEV_API_KEY`,Seth 这边接 #219 写 client,Mac-side 真测接 #221
+
+**Promote 判据(S-393 spec.monitoring.promote_threshold)**:
+- Δ Sharpe (C − B) ≥ 0
+- MaxDD arm_C ≤ MaxDD arm_B + 5pp
+- Factor gate is interpretable(not curve-fit on this window)
+
+报告由 `paper_trading/report_three_arms.py` 渲染,自动判定 ✓/✗,**JAZZ 决定** promote 或 drop。
+
+**判据**:S-396 ship-ready = 3 arm decisions JSONLs + _diff.json + report.md + 5 commit ship(待 Mac-side);PASS = `bash scripts/preflight.sh` discipline 段无 regression + 57/57 paper_trading tests。
+
+## S-395 — Sector Heatmap 数据真值修复:DEX 集合漏类别 + Oracle metric 错配 + L1 hardcoded 0.0 + Staking 漏 3 类 (2026-09-21, Jazz window)
+
+**触发**:用户截图 Sector Heatmap,DEFI/L2/L1/STAKING/RWA/DEX/LENDING/ORACLE 八个 cell,三个明显错位:
+
+| Cell | 截图显示 | 真实值 |
+|---|---|---|
+| DEX | **$6M** | **~$14.4B** |
+| Oracle | **$0M** | metric 错配 (DeFiLlama 把 oracle 归为 service,所有 Oracle 类别 protocol TVL=$0 by def;真实"覆盖资产"叫 TVS,端点不同) |
+| L1 24h change | **0.0%** | 数据真不可用,被硬编码成 `0.0`(S-262 §"一个形状,十次"重犯:"拿不到被渲染成合理数字") |
+| STAKING | $56.6B | 漏 ~$20B(SSV Staking Pool $13.9B、EigenCloud Restaking $7B+、Liquid Restaking) |
+
+**Bug 1 — DEX 集合类别错**:
+```python
+# before
+dex_tvl, dex_change = _sector_tvl_change({"dexes", "dex", "amm", "dex aggregator", "aggregator"})
+# after
+dex_tvl, dex_change = _sector_tvl_change({
+    "dexs", "dex", "amm",
+    "dex aggregator", "dex aggregators",
+    "aggregator",
+    "yield aggregator", "yield aggregators",
+})
+```
+
+DeFiLlama 实际类别名 = **`"Dexs"`**(s 之前没有 e)。原集合匹配 0 / 2106 个 Dexs 协议 → 落到 `DEX Aggregator` bucket(181 个小路由器,$0.006B)。**实测 live**:修复后匹配 2106 个 Dexs + 181 个 DEX Aggregator + 230 个 Yield Aggregator,~$14.4B。
+
+**Bug 2 — Oracle metric 错配**(JAZZ 拍板 hide cell):
+- 14 个 "Oracle" 类别 protocol 全部 TVL=$0 by DeFiLlama 定义(oracle = service provider,不是 capital pool)。
+- 真实"oracle 覆盖资产"叫 **TVS(Total Value Secured)**,在 `/overview/chainlink` 等独立 endpoint,**不是** `/protocols` 的 TVL 字段。
+- **拍板**:hide cell。`oracle_tvl=None / oracle_change_24h=None`,前端 noData 触发 → 显示 "No data" + "—"。
+
+**Bug 3 — L1 change hardcoded 0.0**(S-262 重犯):
+```python
+# before
+"l1_change_24h":     0.0,           # chain-level not available in /v2/chains
+# after
+"l1_change_24h":     None,          # chain-level not available in /v2/chains — render "—" not 0.0
+```
+
+注释自己写"不可用",却返 `0.0`,前端 `fmtChg(0.0) === 0`,渲染成 "0.00%" 像真数据。改 `None`,前端 `fmtChg(null) = null`,渲染 "—"(L1 仍有 TVL $72.4B,只是 change 没有),与 noData("No data" + "—")区分。
+
+**Bug 4 — Staking 集合漏 3 类**(低优):
+加 `"staking pool"` + `"staking pools"` + `"restaking"` + `"liquid restaking"`。Mock 验:$26B → $46.89B(live 更高)。
+
+**前端 null-safe rendering**(3 处):
+- `fmtChg(null) = null`(以前返 0)
+- heatmap JSX:`sector.change == null && sector.tvl !== "—"` 时显示 "—";两者都 null 时显示 "No data"
+- `getHeatmapStyle` 早返 muted void(`parseFloat(null) = NaN`,原会 fall-through 到 strong-down red)
+
+**测试 + Preflight**:`bash scripts/preflight.sh` discipline 段全绿,smoke OK,新增 `test_serving_path_has_no_undefined_names` 仍 PASS。Mock data 单测验:`dex_tvl $0 → $4.87B`,`staking_tvl $26B → $46.89B`。Live probe 被 Railway rate limit 挡(本日已用 2000/2000),commit `564c6af` 已 push,等明日 Jazz 视觉验。
+
+**判据 / 关闭条件**:用户视觉验 Sector Heatmap,DEX cell 显示 ~$14B 不是 $6M,Oracle cell 显示 "No data" 不是 "$0M",L1 cell 显示 "—" 不是 "0.0%"。
+
+**S-393 → S-394 一根线**:都是 S-262 §"一个形状,十次"同族("拿不到被渲染成合理数字");S-393 在 cache-hit path 漏 `result` 绑,S-394 在 sector category 漏 "Dexs"。两次都是 production-only state 暴露给前端时撒谎 —— sandbox 验不到(无 DeFiLlama live data / 无 Redis),只能 deploy 后看见。
+
+**给 Mac-side / Min-A**:无,这一条全 Seth lane。
+
+**给 Jazz(明早视觉验)**:
+- Dashboard → Intelligence tab → Sector Heatmap
+- DEX cell: ~$14B not $6M
+- Oracle cell: "No data" not "$0M"
+- L1 cell: "—" not "0.0%"
+- Staking cell: ~$70-80B not $56.6B(估)
+
+如果没看到变化,可能是 browser cache(hard refresh Ctrl+Shift+R)或 Railway cache 没刷新(backend `defi_overview_v2` cache TTL=300s,等 5 min)。

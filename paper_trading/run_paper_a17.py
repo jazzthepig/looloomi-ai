@@ -54,6 +54,7 @@ if str(_ROOT) not in sys.path:
 
 SPEC_PATH = _ROOT / "paper_trading" / "specs" / "a17_panel_long_only.json"
 LOG_PATH = _ROOT / "paper_trading" / "state" / "a17_panel_long_only_decisions.jsonl"
+JEV_LOG_PATH = _ROOT / "paper_trading" / "state" / "a17_jev_regime_decisions.jsonl"
 STATE_DIR = LOG_PATH.parent
 
 
@@ -203,12 +204,24 @@ async def main() -> int:
                    help="if panel is empty/err, log BLOCKED instead of falling back")
     p.add_argument("--n-open", type=int, default=0,
                    help="currently open trades (default 0)")
+    p.add_argument("--no-jev", action="store_true", default=False,
+                   help="disable Jev gate entirely (Pattern A off); default on "
+                        "with mock always_ok backend")
+    p.add_argument("--jev-mode", default="always_ok",
+                   choices=("always_ok", "always_veto"),
+                   help="MockJevRegimeBackend mode (default: always_ok = no-op "
+                        "gate). always_veto is for veto-path testing only.")
+    p.add_argument("--jev-log", default=str(JEV_LOG_PATH),
+                   help=f"Jev decision log JSONL path (default: {JEV_LOG_PATH})")
     args = p.parse_args()
 
     # 1. Load spec
     from paper_trading.spec_runner import (
         Spec, Panel, build_panel, decide_panel_long_only,
         MAX_PANEL_AGE_DAYS, Decision,
+    )
+    from paper_trading.jev_regime import (
+        JevRegimeActor, MockJevRegimeBackend, build_state_payload,
     )
 
     spec = Spec.load(args.spec)
@@ -260,6 +273,60 @@ async def main() -> int:
         dt.date.fromisoformat(args.last_rebalance) if args.last_rebalance else None
     )
 
+    # 3.5 Jev regime gate (Pattern A pre-filter — optional, default ON with mock)
+    # Per docs/jev_nautilus_integration_plan_2026-09-21.md: Jev says yes/no to
+    # "is this regime tradeable?" BEFORE the strategy fires. Default backend is
+    # MockJevRegimeBackend(mode="always_ok") which never vetoes — paper track
+    # continues to produce baseline decisions until a real TypesafeBackend ships
+    # (BLOCKED on JEV_API_KEY arriving in Seth lane). `--jev-mode always_veto`
+    # is the diagnostic for the veto path; `--no-jev` disables the gate entirely.
+    jev_decision = None
+    jev_meta: dict[str, Any] = {"wired": not args.no_jev, "mode": args.jev_mode}
+    if not args.no_jev:
+        jev_actor = JevRegimeActor(
+            backend=MockJevRegimeBackend(mode=args.jev_mode),
+        )
+        jev_state = build_state_payload(
+            bar_ts=args.as_of,
+            regime=regime,
+            panel_age_days=age,
+            panel_n_symbols=panel.n_symbols,
+        )
+        jev_decision = jev_actor.decide(jev_state)
+        # Log the Jev decision to its own JSONL so the 60d validation framework
+        # (Gate 1 Brier / Gate 3 frequency) can replay without re-reading the
+        # strategy decision log. One row per call.
+        jev_payload = {
+            "date": args.as_of,
+            "spec": spec.name,
+            "decision": {
+                "bar_ts": jev_decision.bar_ts,
+                "regime_ok": jev_decision.regime_ok,
+                "direction_bias": jev_decision.direction_bias,
+                "confidence": jev_decision.confidence,
+                "latency_ms": jev_decision.jev_latency_ms,
+                "input_tokens": jev_decision.jev_input_tokens,
+                "backend": jev_decision.backend_name,
+                "mock": jev_decision.mock,
+            },
+            "state": {
+                "regime": regime,
+                "panel_age_days": age,
+                "panel_n_symbols": panel.n_symbols,
+            },
+            "actor_stats": jev_actor.stats(),
+            "_meta": {"runner": "run_paper_a17.py @ 2026-09-21"},
+        }
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        with open(args.jev_log, "a", encoding="utf-8") as f:
+            f.write(json.dumps(jev_payload, ensure_ascii=False) + "\n")
+        jev_meta["regime_ok"] = jev_decision.regime_ok
+        jev_meta["direction_bias"] = jev_decision.direction_bias
+        jev_meta["backend"] = jev_decision.backend_name
+        print(f"[run_paper_a17] jev: regime_ok={jev_decision.regime_ok} "
+              f"bias={jev_decision.direction_bias} backend={jev_decision.backend_name} "
+              f"latency={jev_decision.jev_latency_ms}ms")
+
     decision: Decision
     if age is None or age > MAX_PANEL_AGE_DAYS:
         # 镜像 decide_survivors_book BLOCKED 检查 (spec_runner.py:792-796):
@@ -277,6 +344,7 @@ async def main() -> int:
         decision = decide_panel_long_only(
             spec, panel, as_of=as_of_date, regime=regime,
             n_open=args.n_open, last_rebalance=last_rebalance,
+            jev_regime=jev_decision,
         )
 
     # 5. Build payload + log
@@ -290,7 +358,8 @@ async def main() -> int:
         "last_rebalance_input": args.last_rebalance,
         "panel_source": panel.source,
         "panel_age_days": age,
-        "runner": "run_paper_a17.py @ 2026-09-17",
+        "runner": "run_paper_a17.py @ 2026-09-21",
+        "jev": jev_meta,
     }
     print(f"[run_paper_a17] verdict={payload['verdict']} "
           f"legs={len(payload.get('legs', []))}")
