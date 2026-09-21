@@ -21747,3 +21747,20 @@ S-369 1.4 PGRST205 = 落不到该落的地方。**两类失败长得一样:输�
 **为什么不直接读 Shadow 的 `MacErrorEnvelope.py`**(Seth-side):Shadow 是 READ-ONLY,import 路径上 Shadow 是 dead code 路径(任何 Seth 侧 import 都违反 Rule 2)。Mirror 是一份**契约**,不是参考。
 
 ⏸ **验证 gated**:`bash scripts/preflight.sh` 待跑(本 entry ship commit);**8/8 loops_envelopes tests PASS**;`/internal/loops` token-guarded 模式跟 `/internal/data-freshness` 同(per S-378b-1);Mac-side `canary_zero` ack pending Min-C C-N3 + SCHEMA_VERSION bump。
+
+## S-389 — FIX-A: fusion_paper_nav mark_date upsert via insert_with_detail kwarg (2026-09-21, Seth/Jazz window)
+
+**触发**: MINIMAX_SYNC §S-389 (2026-09-20) —— ops-console post-deploy 验证 S-378b-6 triage 时 `_fusion_paper_loop` 暴露 `detail=mark_failed :: durable_write_failed :: fusion_paper_nav?: HTTP 409 [204ms] — {"code":"23505","details":"Key (mark_date)=(2026-09-20) already exists."}`。同一天 retry/re-run 撞 Postgres UNIQUE(mark_date) → 409 → book 报 mark_failed → fossil 把它盖成 `waiting`(S-322 fossil 机制)**「两种状态渲染成同一个」的老形状**。
+
+**与 S-336 不重叠**:S-336 是 state-vs-table split(读空 vs 写有),S-389 是**写端 idempotency 漏洞**——同一 mark_date 第二次写就是 409。同文件,不同 root cause。
+
+**FIX-A ⭐**(per §S-389 l.326):1 行 src + 1 test。`insert_with_detail` 加 `on_conflict: str | None = None` kwarg;当 set,URL 变 `?on_conflict=<value>`、Prefer 加 `resolution=merge-duplicates`(PostgREST 的 upsert 开关);当 None,9 本其它书完全不动。`fusion_paper._write_nav` 调用点改 `..., on_conflict="mark_date"`。
+
+**Test-first RED → GREEN**:`tests/test_fusion_paper_mark_date_upsert.py` 3 个 test:
+- T1 mock `_supabase_request_with_retry`,断言 URL ends with `?on_conflict=mark_date` + Prefer 有 `resolution=merge-duplicates`
+- T2 不传 on_conflict,断言 URL 无 on_conflict query + Prefer 是 bare `return=minimal`(**insert 路径不变**)
+- T3 AST 检查 `fusion_paper.py`,断言 `insert_with_detail('fusion_paper_nav', ..., on_conflict='mark_date')` 在调用点
+
+**为什么不直接换成 `supabase_upsert_table`**:FIX-A SYNC 描述的 1 行,**但**丢了 S-352 那条 write_log 记录器(`insert_with_detail` 返回 `(ok, detail)` tuple,`supabase_upsert_table` 返 `StoreResult`)。加 `on_conflict` 参数保留了 detail shape,记录器继续工作。
+
+**判据**:post-deploy `force-mark` fusion 一天两次,detail 字段从 `HTTP 409 ... already exists` 变成 `写入成功`,`failing` 分支消失、`n_consecutive_failures` 不爬。**JAZZ 拍 A/B/C 后 Seth 1 commit ship**。

@@ -773,6 +773,9 @@ async def _write_nav(d, nav, dret, weights, cost, fill, det, today_ts,
     longs = ",".join(f"{s}:{w:+.3f}" for s, w in sorted(weights.items(), key=lambda kv: -kv[1])[:3])
     shorts = ",".join(f"{s}:{w:+.3f}" for s, w in sorted(weights.items(), key=lambda kv: kv[1])[:3])
     try:
+        # S-389 FIX-A: UPSERT on mark_date — same-day retry / re-run no longer
+        # hits Postgres UNIQUE(mark_date) and 409s. The nine other books keep
+        # the insert path because they do not pass `on_conflict`.
         ok, _wdet = await insert_with_detail(_NAV_TABLE, [{
             "mark_date": d.isoformat(),
             "nav": round(nav, 6),
@@ -792,7 +795,7 @@ async def _write_nav(d, nav, dret, weights, cost, fill, det, today_ts,
             "top_shorts": shorts,
             "mark_source": source,
             "note": f"fill={fill['totals']['fill_ratio_overall']:.3f} slip={fill['totals']['weighted_slippage_bps']:.1f}bps cap={fill['capacity']['status']}",
-        }])
+        }], on_conflict="mark_date")
     except Exception as e:
         _log.warning("[fusion] nav write: %s", e)
         return False, f"{type(e).__name__}: {e}"
