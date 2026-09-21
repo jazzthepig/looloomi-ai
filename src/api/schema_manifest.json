@@ -28,6 +28,8 @@
     "macro_briefs",
     "market_state_vectors",
     "nav_exceptions",
+    "nav_panel_daily",
+    "nav_panel_rebalances",
     "ohlcv_daily",
     "pod_aggregator_nav",
     "pod_aggregator_state",
@@ -123,6 +125,11 @@
       "recorded_at",
       "source"
     ],
+    "market_state_vectors": [
+      "adv_screen_pass",
+      "adv_usd_20d",
+      "mcap_usd"
+    ],
     "nav_exceptions": [
       "action",
       "actor",
@@ -133,6 +140,18 @@
       "mark_date",
       "reason",
       "symbol"
+    ],
+    "nav_panel_daily": [
+      "nav",
+      "return_pct",
+      "trade_date"
+    ],
+    "nav_panel_rebalances": [
+      "as_of",
+      "mcap_usd",
+      "symbol",
+      "trade_date",
+      "weight"
     ],
     "scalable_book_nav": [
       "daily_return",

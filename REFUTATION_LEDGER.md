@@ -21764,3 +21764,23 @@ S-369 1.4 PGRST205 = 落不到该落的地方。**两类失败长得一样:输�
 **为什么不直接换成 `supabase_upsert_table`**:FIX-A SYNC 描述的 1 行,**但**丢了 S-352 那条 write_log 记录器(`insert_with_detail` 返回 `(ok, detail)` tuple,`supabase_upsert_table` 返 `StoreResult`)。加 `on_conflict` 参数保留了 detail shape,记录器继续工作。
 
 **判据**:post-deploy `force-mark` fusion 一天两次,detail 字段从 `HTTP 409 ... already exists` 变成 `写入成功`,`failing` 分支消失、`n_consecutive_failures` 不爬。**JAZZ 拍 A/B/C 后 Seth 1 commit ship**。
+
+## S-391 — C-13 P4 Seth plug-in: schema_manifest 注册 nav_panel_* + mcap 字段 (2026-09-21, Seth/Min-C window)
+
+**承接 S-390 §S-390 P4**(MINIMAX_SYNC l.345):Min-C 拍 C-13 时,Seth plug-in 是唯一 Seth 项——`cometcloud-local/research/{nav_writer, rebalance_cron, adv_reconstitution}.py` 写到 `nav_panel_rebalances` / `nav_panel_daily` / `market_state_vectors.{mcap_usd, adv_usd_20d, adv_screen_pass}`,Rule 3 让 Seth 不能 import 这些路径 → AST walker 看不见 → offline manifest 漏登记 → `/internal/schema-drift` 不能 flag 缺失的 migration。
+
+**为什么 C-13 P4 必须在 Mac-side 部署窗之前 ship**:`schema_manifest.py` 的离线 manifest 是 S-166 守门,**没它 `/internal/schema-drift` 在 nav_panel_* 上是沉默的**——Mac-side 一上 cron,5 行 mcap 列写向不存在的表,manifest 不报警,production 5 天才发现。
+
+**本 entry ship 的 3 件**:
+1. `src/api/contracts/c13_nav_panel_manifest.py` 新文件 —— `WRITES_TABLES = ("nav_panel_rebalances", "nav_panel_daily")` + `WRITES_COLUMNS = {"market_state_vectors": frozenset({"mcap_usd", "adv_usd_20d", "adv_screen_pass"}), "nav_panel_rebalances": frozenset({"symbol", "weight", "mcap_usd", "as_of", "trade_date"}), "nav_panel_daily": frozenset({"trade_date", "nav", "return_pct"})}`。frozenset 强制显式集合,声明漂移是 loud 不是 silent。
+2. `src/api/schema_manifest.py` 扩展 `_declared_columns_in()` + `write_columns()` merge —— 同 `WRITES_TABLES` 模式,`_DECLARED_COLUMNS = "WRITES_COLUMNS"` 读模块级声明。**这是新 API,加它给 C-13 P4 用,但任何 lane 都能声明**。
+3. `src/api/schema_manifest.json` regenerate —— 离线 manifest 现在含 `nav_panel_rebalances` + `nav_panel_daily` + `market_state_vectors.{adv_screen_pass, adv_usd_20d, mcap_usd}`,`test_every_written_table_exists` 重新绿。
+
+**preflight 注册**:新 test `test_c13_nav_panel_manifest_registered.py` 4 个 t_*:T1+T2 验表出现在 `write_tables()`,T3+T4 验 `write_columns()` 携带声明的列。`scripts/preflight.sh` S-378b 块尾注册(S-244 同款:"test exists ≠ it's run")。
+
+**跨 lane 状态**:
+- [x] Seth-side:schema_manifest 注册 + manifest.json regenerate + preflight 注册 + test 全 PASS
+- [ ] Mac-side:跑 §2.2 DDL 创建 `nav_panel_rebalances` + `nav_panel_daily` + 给 `market_state_vectors` 加 3 列 —— **Min-A 窗口**。DDL 已 ship 草稿(`cometcloud-local/research/c_path_13_nav_writer_schema_2026-09-20.md`)。
+- [ ] Post-deploy:`/internal/schema-drift` 在 nav_panel_* + 3 mcap 列上报 `MISSING TABLE` / `MISSING COLUMN`,Seth 的离线 manifest 是契约侧、Mac 的实际部署是状态侧,两侧对齐才闭环。
+
+**判据**:`test_c13_nav_panel_manifest_registered` PASS + `test_every_written_table_exists` PASS(preflight 内)+ `schema_manifest.json` 43 表 / 11 表 × 103 列含新条目。**Seth ship commit + Mac-side DDL 部署 = C-13 P4 全绿**。
