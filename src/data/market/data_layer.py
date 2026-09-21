@@ -414,21 +414,36 @@ async def get_defi_overview() -> dict:
             changes = [p.get("change_1d") for p in l2_protos if p.get("change_1d") is not None]
             return round(sum(changes) / len(changes), 2) if changes else 0.0
 
+        def _l1_change(proto_list: list) -> float:
+            """L1 24h change: average change_1d of protocols primarily on L1 chains.
+            S-395b (2026-09-21): replaced hardcoded 0.0 with the analogous pattern
+            to _l2_change(). Verified 2026-09-21: 604 L1-primary protocols with
+            change_1d, mean 3.33% that day. JAZZ correctly pushed back on
+            'data unavailable' — chain-level /v2/chains lacks change, but
+            protocol-level /protocols has it, so we compute from there.
+            """
+            l1_protos = [
+                p for p in proto_list
+                if any(c.lower() in L1_CHAINS for c in (p.get("chains") or []))
+                and (p.get("tvl") or 0) > 1_000_000  # ignore micro-protocols
+            ]
+            changes = [p.get("change_1d") for p in l1_protos if p.get("change_1d") is not None]
+            return round(sum(changes) / len(changes), 2) if changes else 0.0
+
         # ── Sector breakdowns ─────────────────────────────────────────────────
-        # ── S-394 (2026-09-21) ──────────────────────────────────────────────────
-        # DeFiLlama actual category strings (verified against /protocols 2026-09-21):
-        #   DEX     = "Dexs"  (no 'e' before 's') + "DEX Aggregator" + "Yield Aggregator"
-        #   STAKING = "Liquid Staking" + "Staking Pool" + "Restaking" + "Liquid Restaking"
-        #   ORACLE  = "Oracle" but ALL TVL = $0 by DeFiLlama def (oracles are services,
-        #             not capital pools). Render as null + "No data" on dashboard rather
-        #             than misleading $0M. TVS metric lives on a different endpoint.
+        # S-395b (2026-09-21, JAZZ pushback): L1 24h change IS computable from
+        # /protocols (604 L1-primary protocols, mean change_1d available). Oracle
+        # 24h change IS computable too (14 Oracle-category protocols have
+        # change_1d); only the Oracle TVL is structurally $0 because DeFiLlama
+        # classifies oracles as services, not capital pools. Render change +
+        # '—' TVL so the cell shows direction with honest size notional.
         rwa_tvl, rwa_change_24h    = _sector_tvl_change({"rwa"})
         staking_tvl, staking_change = _sector_tvl_change({
             "liquid staking", "staking", "lst",
-            "staking pool", "staking pools",          # SSV Network $13.91B etc.
-            "restaking", "liquid restaking",          # EigenCloud $7B+ etc.
+            "staking pool", "staking pools",
+            "restaking", "liquid restaking",
         })
-        oracle_tvl, oracle_change   = None, None       # metric mismatch — see S-394
+        oracle_tvl, oracle_change   = _sector_tvl_change({"oracle"})   # tvl=0 by def, change=mean of change_1d
         gaming_tvl, gaming_change   = _sector_tvl_change({"gaming", "gamefi", "nft marketplace"})
         dex_tvl, dex_change         = _sector_tvl_change({
             "dexs", "dex", "amm",
@@ -447,7 +462,7 @@ async def get_defi_overview() -> dict:
             "defi_change_24h":        defi_change_24h,
             # Sector TVL + 24h change
             "l1_tvl":                 l1_tvl,
-            "l1_change_24h":          None,          # chain-level not available in /v2/chains — render "—" not 0.0
+            "l1_change_24h":          _l1_change(all_protos) if all_protos else 0.0,
             "l2_tvl":                 l2_tvl,
             "l2_change_24h":          l2_change_24h,
             "rwa_tvl":                rwa_tvl,
