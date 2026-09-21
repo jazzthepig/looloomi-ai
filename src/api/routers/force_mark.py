@@ -82,6 +82,21 @@ _FORCE_BOOKS: dict[str, str] = {
     "pod_aggregator": "src.data.signals.pod_aggregator_paper",
 }
 
+#: Book → NAV table. S-378b-B: force-mark checks this table for today's row
+#: before invoking the book, so re-running force-mark after the daily cron
+#: already wrote the row returns already_marked instead of HTTP 409.
+_NAV_TABLE_BY_BOOK: dict[str, str] = {
+    "beta_core":      "beta_core_paper_nav",
+    "causal":         "causal_paper_nav",
+    "combined":       "combined_book_nav",
+    "dingge":         "dingge_paper_nav",
+    "fusion":         "fusion_paper_nav",
+    "scalable":       "scalable_book_nav",
+    "two_layer":      "two_layer_paper_nav",
+    "factor_tilt":    "factor_tilt_nav",
+    "pod_aggregator": "pod_aggregator_nav",
+}
+
 
 def _token() -> str:
     # Read at call time, not import time — Railway rotates it.
@@ -94,10 +109,72 @@ def _auth(tok: str | None) -> None:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
+def _already_marked_response(*, book: str, today: str, nav_table: str) -> dict:
+    """S-378b-B: build the response when today's NAV row already exists.
+
+    Pure function — no I/O. The caller (`force_mark`) does the Supabase check
+    via `nav_row_exists` and hands the three needed facts here. Keeps the
+    short-circuit logic testable without mocks for the rest of the request
+    lifecycle.
+    """
+    return {
+        "ok": True,
+        "book": book,
+        "mark_ts": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "mark_source": "manual",
+        "wrote": False,
+        "phase": "idempotent_short_circuit",
+        "mark_status": "already_marked",
+        "result": {"status": "already_marked",
+                   "date": today,
+                   "reason": "today_row_exists"},
+        "reading": ("ok=true: today's NAV row already exists. "
+                    "force-mark is idempotent by design so the "
+                    "24h cron write is not overwritten by an "
+                    "operator verification call. Pass "
+                    "?force_overwrite=true only if you deleted "
+                    "the row first."),
+    }
+
+
+def _derive_force_mark_error(
+    *, book: str, ok: bool, status: str | None, result: dict | None,
+) -> str | None:
+    """S-378b-A1: derive a non-empty error context for the liveness beat.
+
+    Prior code passed `(result or {}).get("error")` directly — many paper books
+    write the failure reason into `reason` / `note` / `phase` instead of `error`,
+    so the beat landed in Redis with `last_error=""`. Dashboard then couldn't
+    diagnose ("you cannot debug a blank"). Try every plausible field in order;
+    if every one is empty, synthesize a clear "book returned <status> with no
+    error field" message — that message tells the operator exactly which book
+    has its failure-shape wrong.
+
+    When `ok=True`, returns None — beats store last_error=None then.
+
+    Pure function, importable for tests.
+    """
+    if ok:
+        return None
+    _err_fields = [
+        (result or {}).get("error"),
+        (result or {}).get("reason"),
+        (result or {}).get("note"),
+        (result or {}).get("phase"),
+    ]
+    _err_ctx = next((str(e) for e in _err_fields if e), "")
+    if not _err_ctx.strip():
+        _err_ctx = (f"{book}: mark returned status={status!r} with no "
+                    f"error/reason/note/phase field — fix the book to write "
+                    f"a failure string into one of those keys")
+    return _err_ctx[:200]
+
+
 @router.post("/internal/force-mark/{book}")
 async def force_mark(
     book: str,
     dry_run: bool = False,
+    force_overwrite: bool = False,
     x_internal_token: str = Header(None, alias="X-Internal-Token"),
 ) -> dict[str, Any]:
     """Force one mark of one paper book. The validation primitive.
@@ -135,6 +212,41 @@ async def force_mark(
         raise HTTPException(
             status_code=404,
             detail=f"unknown book {book!r}; known: {sorted(_FORCE_BOOKS)}")
+
+    # S-378b-B: idempotency check before invoking the book. The daily cron
+    # already wrote today's row at 00:05 UTC; re-running force-mark later in
+    # the day would attempt a duplicate insert and 409. Short-circuit to
+    # already_marked so the operator gets an explicit, non-error response
+    # instead of "HTTP 409" appearing as last_error on the liveness beat.
+    # Override via the `force_overwrite=true` query param when the operator
+    # genuinely wants to replace today's row (e.g., they deleted the bad one
+    # and want to re-mark).
+    if not force_overwrite:
+        _today = dt.date.today().isoformat()
+        _nav_table = _NAV_TABLE_BY_BOOK.get(book)
+        if _nav_table:
+            try:
+                from src.data.signals.nav_persist import nav_row_exists
+                _exists = await nav_row_exists(_nav_table, _today)
+            except Exception:                                   # noqa: BLE001
+                _exists = None  # read fail ⇒ don't block the operator
+            if _exists is True:
+                _err_ctx = (f"{book}: today's row already exists in "
+                            f"{_nav_table} for {_today}; force-mark is "
+                            f"idempotent. Pass ?force_overwrite=true to "
+                            f"replace it (you usually do NOT want this).")
+                # Beat as refused (already_marked is in NO_WORK_STATUS → ok=
+                # False, refused=True); keeps the failure counter clean and
+                # the operator sees a clear "no work needed" on the dashboard.
+                try:
+                    from src.api.loop_beat import beat
+                    await beat(f"_book_{book}_loop", ok=False, refused=True,
+                               error=_err_ctx)
+                except Exception:                               # noqa: BLE001
+                    pass
+                return _already_marked_response(
+                    book=book, today=_today, nav_table=_nav_table,
+                )
 
     try:
         mod = importlib.import_module(_FORCE_BOOKS[book])
@@ -193,6 +305,12 @@ async def force_mark(
     # ok=True iff the mark succeeded (a row landed) AND no exception escaped.
     _ok = _wrote and _status not in ("mark_failed", "error", "degraded")
 
+    # S-378b-A1: derive a non-empty error context via the helper. Single source
+    # of truth for the S-323z "no blank errors" discipline.
+    _err_for_beat = _derive_force_mark_error(
+        book=book, ok=_ok, status=_status, result=result,
+    )
+
     # Fire the per-call beat. Liveness update failure must not block the
     # response — the mark data is already in (or failed for an honest reason).
     _liveness_error: str | None = None
@@ -200,7 +318,7 @@ async def force_mark(
         from src.api.loop_beat import beat
         await beat(f"_book_{book}_loop",
                    ok=_ok,
-                   error=None if _ok else (result or {}).get("error"))
+                   error=_err_for_beat)
     except Exception as _be:                                    # noqa: BLE001
         _liveness_error = f"{type(_be).__name__}: {str(_be)[:120]}"
 
