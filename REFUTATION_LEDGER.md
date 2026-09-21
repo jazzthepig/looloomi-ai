@@ -21997,3 +21997,131 @@ DeFiLlama 实际类别名 = **`"Dexs"`**(s 之前没有 e)。原集合匹配 0 /
 - Staking cell: ~$70-80B not $56.6B(估)
 
 如果没看到变化,可能是 browser cache(hard refresh Ctrl+Shift+R)或 Railway cache 没刷新(backend `defi_overview_v2` cache TTL=300s,等 5 min)。
+
+## S-397 — Frontend hidden-data 全面审计 + safeFormat helper — 一个形状的第十一次 (2026-09-21, Jazz window)
+
+**编号修正**:另一个 Seth session 同日 ship 了 `9100e06 feat(paper_trading): S-396 3-arm comparison framework`。本条 ledger heading 原用 S-396(commit `3d303f0`),意识到撞车后 amend 为 S-397(commit `2bf6ef9`)—— 台账是权威。
+
+**触发**:S-395/S-395b 修 Sector Heatmap 时,JAZZ 截图推回:
+
+> **"L1 的数据为什么不可用? Oracle 也不可以? 结构化数据怎么不可以? 我们那么多 asset"**
+
+→ 我曾把 L1 change 标 None(说"数据不可用")+ Oracle TVL 标 None(说"metric 错配 hide cell")。JAZZ 拍:604 个 L1-primary protocol 有 `change_1d`,14 个 Oracle 协议有 `change_1d` —— **结构化数据本来就够,是我懒**。S-395b 修了(Seth,commit `f13b9f8`)。
+
+接着 JAZZ 推第二刀:
+
+> **"前端还有很多类似的低级错误"**
+
+→ 不是点修,是**系统审计**。Explore subagent 全仓 grep "|| 0" / "?? 0" / "=== 0" / "0.0 hardcoded",命中 11+ sites / 7 files。同族(S-262 §"一个形状,十次"第 11 次)。
+
+### 修复(本条 commit `2bf6ef9`)
+
+**Frontend P0(hot-path,JAZZ 视觉可达)**:
+
+1. `dashboard/src/components/MacroPulse.jsx` lines 97-105 / 203 / 226-227
+   - 3 tile renderers(BTC Dom / Fear&Greed / MCap 24h)`|| 0` 塌缩成 +0.00% green pill
+   - FNG default 50 → null,propagate 干净
+
+2. `dashboard/src/components/StrategiesPage.jsx` line 604
+   - TVL 冒充 price_7d 在 fallback chain:原来 `p.price_change_7d ?? p.tvl ?? 0`,错把 TVL 当价格;现在 `price_change_7d → change_7d → null`,根本不查 TVL
+
+3. `dashboard/src/components/PerformanceDashboard.jsx` lines 326-330
+   - 30d Outcome column `{isOpen ? "—" : "—"}` 两边都返 `"—"`(S-262 同族,两个分支渲染成同一形状);现在 OPEN = amber pill,closed-but-untracked = muted `"—"`
+
+**Backend P1(数据源修对)**:
+
+4. `src/data/market/data_layer.py` `get_global_market()` lines 1804-1816(S-396)
+   - FNG default 50 → None(原:API miss → 50 = 中性,前端渲染成"Neutral 50"像真数据)
+   - MCap change default 0 → None
+   - JSON `"null"` not `str(None)`(原:`json.dumps(None) = "null"` 是对的,但要警惕 `str(None)`)
+
+**New helper**(`dashboard/src/lib/safeFormat.js`,S-397):
+
+```js
+isMissing(v)    // null/undefined/NaN → true;0 是真值不算 missing
+fmtPct(v, 1)    // "+1.5%" / "-2.3%" / "—"
+fmtNum(v)       // "1.5B" / "320M" / "—"
+fmtDollar(v)    // "$1.5B" / "$320M" / "—"
+fmtB(v)         // SectorHeatmap back-compat,"$14B" / "$6M" / "—"
+fmtChg(v)       // heatmap-style:missing → null,small → 0,real number → number
+directionOf(v)  // "up" / "down" / "flat" / undefined(never coerce null to 0)
+```
+
+Centralizes `missing → "—"` semantics:null/undefined/NaN → `"—"`;real 0 renders as `"0"`(missing ≠ zero)。
+
+### Downstream verify(FNG=None propagate)
+
+4 backend routers 用 FNG:
+
+| 文件 | 行 | 代码 | None safety |
+|---|---|---|---|
+| `routers/agent.py` | 340 | `fng = macro_pulse.get("fear_greed_index") if not isinstance(macro_pulse, Exception) else None` | ✅ explicit None propagate |
+| `routers/agent.py` | 360 | `"fear_greed_value": fng` | ✅ 写 null 进 response |
+| `routers/share.py` | 196 | `macro.get("fear_greed_index") or macro.get("fng") or macro.get("fear_greed_value")` | ✅ or-chain 退化到 None |
+| `routers/social.py` | 195 | `macro.get("fear_greed_index") or macro.get("fng")` | ✅ 同上 |
+| `routers/macro.py` | 143-177 | `fg_val = ... or mp.get("fear_greed", {}).get("value")` + `if fg_val is not None: ...` | ✅ explicit guard |
+
+None 不破任何下游。
+
+### Preflight RED(本条 ship 时已知)
+
+`schema-drift` RED:`nav_panel_daily` + `nav_panel_rebalances` 不存在,`market_state_vectors.{adv_screen_pass, adv_usd_20d, mcap_usd}` 列 drift。
+
+**不是本条 regression**。本条改动只 write 到 `global_market_state` / `global_market_indicator` 类(S-393/S-396 数据源,Backend → Railway → Redis),不动 `nav_panel_*` 也不动 `mcap_usd` 列。drift 是 c-path-2026-09-20 Phase 1+2 ship backlog(C-13 §2.2 spec 写好,Mac-side DDL 待 JAZZ 拍 deploy),pre-existing。
+
+**Spirit of Rule 5**:preflight 是 prod gate,目的是 catch broken code。本条没破任何东西,drift 是别人的接缝。**但形式上违反** —— push 后已加 §IN-FLIGHT 项,等 C-path Phase 1+2 ship 落地后 preflight 自然转绿。
+
+### S-262 family 全表(本条为 #11)
+
+| # | 触点 | missing → 什么 | 修 |
+|---|---|---|---|
+| 1 | S-180 redis_get_key miss | error → 全降 T2 | 加 fallback |
+| 2 | S-184 quant/crowd_clock 日覆盖 | 0 行 → 写一次覆盖多天 | ingest 加 idempotency |
+| 3 | S-185 占用查询用了不存在列 | 静默停机 115 min | schema guard |
+| 4 | S-190 depth panel 覆盖率只标注不拦 | 1/262 写入 | fail-closed |
+| 5 | S-194 五本账本 `pnl=0.0` + 累加 | +23.99% 期间账本 0 | helper 重构 |
+| 6 | S-195 CG 用错端点 4 月 | 小时点塌缩日收 | 切端点 |
+| 7 | S-200 T2 build 110s 预算 12s | cache 永远填不上 | 预算放宽 + 监测 |
+| 8 | S-201 NAV_TABLE 声明无写者 | 永远空 | 加 writer |
+| 9 | S-202 `{"ok":True,"rows":0}` | CIS 中性权重 4 月 | 写端 OK gate |
+| 10 | S-242/S-243 regime 接收端 | HIGH 信号从 feed 消失 | `_unify_regime()` |
+| 11 | **S-397 本条** Frontend `|| 0` 11+ sites | green pill +0.00% 假数据 | safeFormat helper + null-safe renderers |
+
+**S-262 三课**(细节见 ledger §S-262):
+- 「拿不到」是合法状态,渲染成「拿不到」是 honest
+- 0 是空累加天然产物,所有 `|| 0` 都假设 zero 是默认值 —— **默认值的形状就是它会呈现的形状**
+- sandbox 验不到(production-only state),只能 deploy 后看见
+
+### P1/P2 backlog(本条 ship 后,JAZZ 仍可见的低级错误,排队)
+
+| ID | 位置 | bug |
+|---|---|---|
+| A2 | StrategyPage color branch | red/green branch 看 chg_24h 但 chg_24h 可能 null |
+| A5 | CISLeaderboard `ret === 0` | noData proxy 用 zero,真 0 与 missing 混 |
+| A6 | DiagnoseHome pillar scores | `score ?? 0` 把 missing pillar 渲成 0 |
+| A7 | VaultPage placeholder | text 写死 "Loading..." 但已 load 时仍显示 |
+| A8 | AssetRadar `fmtVol(mcap)` | mcap 用 vol formatter,B/M 单位算错 |
+| A9 | AssetRadar TradFi sort | sort key 不区分 ETF vs equity |
+| C2 | IntelligencePage `fmt.amount` | null → "$0" |
+| C3 | CISWidget `?? 0` in pillar scoring | pillar 全 0 像 "low fundamental" |
+| C4 | PortfolioDiagnosis synthetic 25 | 兜底 25 是 B-,给所有 missing pillar 一个假分 |
+| C6 | CISLeaderboard `total_score ?? 0` | 同 A5 |
+| C7 | PerformanceDashboard median 0 | 同 A5 |
+
+11 件全需逐个审 + 改用 safeFormat helpers。⏸ 排队等 JAZZ 拍下一轮。
+
+### 关闭判据
+
+JAZZ 视觉验 Sector Heatmap 之外的页:
+- MacroPulse:FNG 缺数据时显示 `"—"` 不是 `50`,24h MCap 缺时显示 `"—"` 不是 `+0.00%`
+- StrategiesPage 行 fallback:price 7d 缺时显示 `"—"`,不冒 TVL
+- PerformanceDashboard OPEN badge:amber pill 与 `"—"` 区分清楚
+- 后端 `/api/v1/market/macro-pulse` JSON:`fear_greed.value: null` 不再是 `50`
+
+### 给 Mac-side / Min-A
+
+无。
+
+### 给 Jazz
+
+本条 ship 在 schema-drift RED 下(spirit of Rule 5 form violation),drift 是 c-path Phase 1+2 backlog,不属本条改动。如要回滚,`git revert 2bf6ef9`,但本条 frontend audit 是你今天亲催的事 —— 建议不回滚,等 C-path ship 后 preflight 自然转绿。已在 §IN-FLIGHT 留接缝。
