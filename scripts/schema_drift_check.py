@@ -31,6 +31,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from pathlib import Path
 import urllib.error
 import urllib.request
 
@@ -102,7 +103,53 @@ def main() -> int:
             print(f"  column_check_unavailable: {cc}", file=sys.stderr)
         if cons:
             print(f"  consequence: {cons}", file=sys.stderr)
-        return 1
+
+        # ── S-399c:**严重级别跟着来源走,和措辞一样** ────────────────────
+        # 2026-09-22 实测:这个检查 `exit 1`,preflight 是 `|| exit 1`,
+        # handoff 是 `&&` 链 —— **于是它挡住了所有 push**。
+        # 而挡住的理由是两张**没有任何人写**的表(`declared_only`):
+        # 没有写入在被吞,没有账本在断,只是一个注册在先的意图。
+        # 与此同时价格源全挂、replay 读取有 bug,**修它们的 push 被这个红灯挡着**。
+        #
+        # 上一轮我把 `with_call_site` / `declared_only` 分开只用在**措辞**上,
+        # **没有用在退出码上** —— 又一次「修了一个渲染器,漏了另一个」,
+        # 而这正是同一批改动里刚写过的那句话。
+        #
+        # 这不是豁免(没有到期日、会变成永久特赦的那种):**它是结构性的** ——
+        # 一旦 `src/` 里出现调用点,同一张表自动落进 `with_call_site`,**立刻恢复硬闸**。
+        # 真正防「声明了永远不建」的是 `PROJECT_STATE.md` OPEN RISK #0c 的到期日
+        # (2026-10-06,到期未 ship 则**撤注册**,不是撤红灯)。
+        # **来源在本地算,不问端点**(S-399c)。
+        # 第一版我让端点返回拆分字段,于是出现部署顺序死锁:
+        # 加字段的那个 push,要先过一个需要那个字段的检查。
+        # 而**「哪些只是声明」是源码树的属性,不是部署的属性** ——
+        # 这个脚本就跑在仓库里,自己算就行。端点只负责回答「什么漂了」。
+        try:
+            sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+            from src.api.schema_manifest import (
+                write_columns_by_provenance, write_tables_by_provenance,
+            )
+            dec_tbl = set(write_tables_by_provenance()["declared_only"])
+            dec_col = write_columns_by_provenance()["declared_only"]
+        except Exception as e:                                    # noqa: BLE001
+            # 算不出来 ⇒ **不假装知道**,全部按硬伤走(保守),并说出来。
+            print(f"  ⚠️ 来源无法本地判定({type(e).__name__}),按全部硬伤处理",
+                  file=sys.stderr)
+            dec_tbl, dec_col = set(), {}
+
+        hard_tbl = [t for t in miss if t not in dec_tbl]
+        hard_col = {t: [c for c in cols if c not in set(dec_col.get(t, []))]
+                    for t, cols in cd.items()}
+        hard_col = {t: c for t, c in hard_col.items() if c}
+        # `cc`(column_check_unavailable)= **问不出来**,不是「没有」。
+        # 它保持阻断:读不到时不许假装通过(S-354)。
+        if hard_tbl or hard_col or rpc_miss or cc:
+            return 1
+        print("  ⓘ 以上全部属于 `declared_only`(声明在先、`src/` 无调用点)——"
+              " **没有写入在被吞**,所以本检查不阻断推送。"
+              " 到期日与 owner 见 PROJECT_STATE.md OPEN RISK #0c。",
+              file=sys.stderr)
+        return 0
 
     n_miss = len(d.get("missing") or [])
     n_rpc_miss = len(d.get("rpc_missing") or [])

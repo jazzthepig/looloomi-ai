@@ -50,6 +50,55 @@ def _token() -> str:
     return os.getenv("INTERNAL_TOKEN", "")
 
 
+def _drift_consequence(msplit: dict, rpc_missing: list, missing: list,
+                       rpc_unknown: list | None = None) -> str:
+    """把 drift 的 consequence 拼成一句**自洽**的话。纯函数,判据可直接调用。
+
+    三种缺失**修法不同**,不能共用一句措辞(S-399):
+      · `with_call_site`:src/ 有调用点而表没了 ⇒ 写入真的在被吞,补迁移;
+      · `declared_only` :只在 `WRITES_TABLES` 声明过 ⇒ **这边没人写**,去问声明它的 lane。
+        ⚠️ **不等于「没有写入者」** —— 声明机制存在的理由正是 AST 走查跟不进
+        `cometcloud-local/`(实测六张 declared_only 里四张是活的);
+      · `rpc_missing`   :函数不存在。
+
+    **S-399b:全清子句曾经挂在 `with_call_site or rpc_missing` 上**,于是
+    declared_only 非空而另两者为空时,**同一句话既报缺失又说「全都存在」**。
+    那正是这整条守卫反对的东西,而我在修它的时候把它搬了进去。全清只能在**三者皆空**时出现。
+
+    抽成纯函数是为了让判据能**调用**它 —— 上一版守卫想用正则去源码里读措辞,
+    第一次取错窗口,第二次匹配不上。**按文本匹配而不是按结构,是同一个毛病。**
+
+    ⚠️ S-354 那条保留:`rpc_unknown` 是「问不出来」,不是「不存在」——
+    一个建立在错误事实上的完整因果故事,比一个错误的计数危险得多。
+    """
+    parts: list[str] = []
+    if msplit["with_call_site"]:
+        parts.append(
+            f"{len(msplit['with_call_site'])} table(s) with a live call site in "
+            f"src/ do not exist — every write returns False and is swallowed, "
+            f"indistinguishable from 'no data yet'. ")
+    if msplit["declared_only"]:
+        parts.append(
+            f"{len(msplit['declared_only'])} table(s) are DECLARED "
+            f"(WRITES_TABLES) but have no call site in src/ — "
+            f"**nothing here writes to them yet**, so this is a registered "
+            f"intention, not a swallowed write. Whether an out-of-lane "
+            f"(Mac-side) writer exists is NOT observable from here: check the "
+            f"lane that declared it. ")
+    if rpc_missing:
+        parts.append(
+            f"{len(rpc_missing)} RPC function(s) the code calls do not exist. ")
+    if msplit["with_call_site"] or rpc_missing:
+        parts.append("The sleeves depending on those tables have no forward "
+                     "record and cannot start one.")
+    if not (missing or rpc_missing):
+        parts.append("every table the code writes to and every RPC it calls exists")
+    if rpc_unknown:
+        parts.append(f" ⚠️ catalog unreadable for {len(rpc_unknown)} RPC(s) — "
+                     f"**that is 'we could not ask', not 'they are missing'**.")
+    return "".join(parts)
+
+
 @router.get("/internal/research-intake/schema")
 async def research_intake_schema():
     """Unauthenticated on purpose. The submitting lane does not have this repo
@@ -187,6 +236,22 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
         elif got:
             col_drift[t] = got
 
+
+    # ── S-399c:列这一半也按来源拆 ──────────────────────────────────────
+    # 表拆了、列没拆,于是 `market_state_vectors` 那三列(和那两张表同一个
+    # 不存在的 Mac 侧写入端)继续让 `schema_drift_check` 退出 1 ——
+    # 而 preflight 是 `|| exit 1`、handoff 是 `&&` 链,**所有 push 被挡住**,
+    # 挡住的理由是一批没有任何人写的列。**「修了一半」这次发生在同一批改动里。**
+    try:
+        from src.api.schema_manifest import write_columns_by_provenance
+        _cprov = write_columns_by_provenance()["declared_only"]
+        _col_declared_only = {
+            t: [c for c in cols if c in set(_cprov.get(t, []))]
+            for t, cols in col_drift.items()
+            if [c for c in cols if c in set(_cprov.get(t, []))]
+        }
+    except Exception:                                             # noqa: BLE001
+        _col_declared_only = {}   # 拿不到来源 ⇒ 不假装知道,全部按「有调用点」
     return {
         # `rpc_unknown` 不参与 ok —— **读不到不是坏,但也不是好**,
         # 它单独出现在 rpc_check_unavailable 里让人看见。
@@ -208,6 +273,15 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
         # S-354:读不到目录 ≠ 全部缺失。三值一路带到输出,绝不在最后一步塌成两值。
         "rpc_check_unavailable": rpc_unknown,
         "column_drift": col_drift,
+        # S-399c:列这一半也按来源拆 —— 表拆了列没拆,于是
+        # `market_state_vectors` 那三列(同一个不存在的 Mac 侧写入端)
+        # 继续让 `schema_drift_check` 退出 1,**挡住所有 push**。
+        "column_drift_declared_only": _col_declared_only,
+        "column_drift_with_call_site": {
+            t: [c for c in cols if c not in set(_col_declared_only.get(t, []))]
+            for t, cols in col_drift.items()
+            if [c for c in cols if c not in set(_col_declared_only.get(t, []))]
+        },
         "column_check_unavailable": col_unknown,
         "column_consequence": (
             "code writes column(s) the live table does not have. PostgREST answers "
@@ -220,32 +294,8 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
         # S-399:表这一支曾经和 RPC 那一支犯同一个错 —— 见下面 `_missing_split`。
         "missing_with_call_site": _msplit["with_call_site"],
         "missing_declared_only": _msplit["declared_only"],
-        "consequence": (
-            (f"{len(_msplit['with_call_site'])} table(s) with a live call site in "
-             f"src/ do not exist — every write returns False and is swallowed, "
-             f"indistinguishable from 'no data yet'. "
-             if _msplit["with_call_site"] else "")
-            + (f"{len(_msplit['declared_only'])} table(s) are DECLARED "
-               f"(WRITES_TABLES) but have no call site in src/ — "
-               f"**nothing here writes to them yet**, so this is a registered "
-               f"intention, not a swallowed write. Whether an out-of-lane "
-               f"(Mac-side) writer exists is NOT observable from here: check the "
-               f"lane that declared it. "
-             if _msplit["declared_only"] else "")
-            + (f"{len(rpc_missing)} RPC function(s) the code calls do not exist. "
-             if rpc_missing else "")
-            + ("The sleeves depending on the first group have no forward record "
-               "and cannot start one."
-             if _msplit["with_call_site"] or rpc_missing else
-            "every table the code writes to and every RPC it calls exists")
-            # ⚠️ S-354:这句话曾经挂在一个**假前提**上。前一版探针 POST `{}`,
-            # 于是三个有必填参数的函数(panel_closes / panel_funding /
-            # exec_backfill_forward_returns)被判缺失,而它们都存在且返回真数据。
-            # **一个建立在错误事实上的完整因果故事,比一个错误的计数危险得多** ——
-            # 它会把人送去重写正在工作的函数,造出第二个重载并弄坏现在能用的那个。
-            + (f" ⚠️ catalog unreadable for {len(rpc_unknown)} RPC(s) — "
-               f"**that is 'we could not ask', not 'they are missing'**."
-             if rpc_unknown else "")),
+        "consequence": _drift_consequence(
+            _msplit, rpc_missing, missing, rpc_unknown),
     }
 
 

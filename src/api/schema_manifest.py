@@ -422,6 +422,35 @@ def _columns_in(path: Path) -> dict[str, set[str]]:
     return out
 
 
+def write_columns_by_provenance() -> dict[str, dict[str, list[str]]]:
+    """同 `write_tables_by_provenance()`,列这一半(S-399c)。
+
+    `{"with_call_site": {table: [cols]}, "declared_only": {table: [cols]}}`
+
+    **为什么两半都要**:2026-09-22 我把表按来源拆开修了措辞,**列没拆**,
+    于是 `market_state_vectors` 那三列(`adv_screen_pass` / `adv_usd_20d` /
+    `mcap_usd`,和那两张表同一个不存在的 Mac 侧写入端)继续让
+    `schema_drift_check` 退出 1,**而 preflight 是 `|| exit 1`、handoff 是 `&&` 链,
+    于是所有 push 被挡住** —— 挡住的理由是一批**没有任何人写**的列。
+
+    **「修了一半」这次发生在我自己身上,而且是在同一批改动里。**
+    """
+    ast_cols: dict[str, set[str]] = {}
+    dec_cols: dict[str, set[str]] = {}
+    for p in sorted(_ROOT.rglob("*.py")):
+        if not _is_prod(p):
+            continue
+        for t, cols in _columns_in(p).items():
+            ast_cols.setdefault(t, set()).update(cols)
+        for t, cols in _declared_columns_in(p).items():
+            dec_cols.setdefault(t, set()).update(cols)
+    out_ast = {t: sorted(c) for t, c in ast_cols.items() if c}
+    out_dec = {t: sorted(c - ast_cols.get(t, set()))
+               for t, c in dec_cols.items()}
+    return {"with_call_site": out_ast,
+            "declared_only": {t: c for t, c in out_dec.items() if c}}
+
+
 def write_columns() -> dict[str, list[str]]:
     """Every column a production module writes, per table. Sorted, deduped.
 
