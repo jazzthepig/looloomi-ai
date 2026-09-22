@@ -711,13 +711,32 @@ def _panel_declared_tables_exist() -> dict | None:
     missing = sorted(t for t in declared if t not in live_tables)
     unknown: list[str] = []          # 目录法下不存在「问不出来」的单张表
     if missing:
+        # ── S-399d:跟 research_intake / schema_drift_check 同样按来源拆 ────────
+        # ops_console.py 此前的 note 把 with_call_site 的措辞(含 swallowed /
+        # False 等字眼)用在了 declared_only 上 —— 一模一样的 S-354 表支。
+        # S-399a 修了 research_intake.py 的 router,S-399c 修了
+        # scripts/schema_drift_check.py 的退出码判定,**本文件漏了**
+        # (「一个文件里学到的教训,没有应用到另一个文件的同一种 bug 上」
+        # 的跨文件版本)。把来源拆开,note 走 `_drift_consequence()` 单一来源,
+        # declared_only 不再被借用 with_call_site 的结论。
+        try:
+            from src.api.schema_manifest import write_tables_by_provenance
+            from src.api.routers.research_intake import _drift_consequence
+            _prov = write_tables_by_provenance()
+            _declared_only = set(_prov["declared_only"])
+        except Exception:                                # noqa: BLE001
+            _declared_only = set()    # 拿不到来源 ⇒ 不假装知道,走老措辞(保守)
+        _with_call_site = [t for t in missing if t not in _declared_only]
+        _declared_only_missing = [t for t in missing if t in _declared_only]
+        consequence = _drift_consequence(
+            {"with_call_site": _with_call_site,
+             "declared_only": _declared_only_missing},
+            [], missing)
         return {"id": "schema:declared", "name": "declared tables exist",
                 "kind": "check", "verdict": "MISSING", "remedy_class": "act_now",
                 "detail": f"{len(missing)}/{len(declared)} declared tables do not "
                           f"exist: {missing}",
-                "note": "THE CODE WRITES TO A TABLE THAT IS NOT THERE (S-166/S-336). "
-                        "Every write returns False without raising, so the book "
-                        "keeps running and records whatever an empty state implies.",
+                "note": consequence,
                 "verify": "select to_regclass('public." + missing[0] + "');"}
     if unknown:
         return {"id": "schema:declared", "name": "declared tables exist",
