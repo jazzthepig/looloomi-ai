@@ -325,6 +325,9 @@ def write_tables() -> list[str]:
     """Every table name a production module writes to. Sorted, deduped.
 
     两条来源:AST 推断出的字面调用,加上注入式写入者的显式声明。
+
+    ⚠️ **这个函数把两条来源合并,而合并会丢掉下游需要的区别** ——
+    见 `write_tables_by_provenance()`。保留它是因为「清单」这个用途不关心来源。
     """
     out: set[str] = set()
     for p in sorted(_ROOT.rglob("*.py")):
@@ -332,6 +335,40 @@ def write_tables() -> list[str]:
             out |= _tables_in(p)
             out |= _declared_tables_in(p)
     return sorted(t for t in out if t and not t.startswith("_"))
+
+
+def write_tables_by_provenance() -> dict[str, list[str]]:
+    """同一份清单,但**不在最后一步塌成一个集合**。
+
+    `{"with_call_site": [...], "declared_only": [...]}`
+
+    **为什么要分开(S-399):** `/internal/schema-drift` 的那句 consequence 写的是
+    「N table(s) **the code writes to** do not exist. Every write to them returns
+    False and is swallowed」。2026-09-22 它对 `nav_panel_daily` /
+    `nav_panel_rebalances` 报了这句 —— 而 `src/` 里**没有任何调用点**写这两张表,
+    它们只出现在 `c13_nav_panel_manifest.WRITES_TABLES` 的声明里。
+    **于是那句话在描述一个不存在的吞掉的写入**,会把人送去找一批不存在的 False。
+
+    这和 S-354 是同一处伤口的另一支:那次是 RPC 探针把「读不到」说成「缺失」,
+    修法写在本文件上游 ——「**三值一路带到输出,绝不在最后一步塌成两值**」。
+    **RPC 那一支修了,表这一支没修**,而两支在同一个表达式里。
+
+    ⚠️ **`declared_only` 不等于「没有写入者」。** 显式声明这个机制存在的理由,
+    正是 AST 走查跟不进 `cometcloud-local/`(规则 3)。所以它只说明
+    **「从 `src/` 看不到调用点」** —— 写入者在不在,要去声明它的那条 lane 看。
+    **读不到 ≠ 不存在**(I1)。
+    """
+    ast_seen: set[str] = set()
+    declared: set[str] = set()
+    for p in sorted(_ROOT.rglob("*.py")):
+        if _is_prod(p):
+            ast_seen |= _tables_in(p)
+            declared |= _declared_tables_in(p)
+    clean = lambda s: sorted(t for t in s if t and not t.startswith("_"))
+    return {
+        "with_call_site": clean(ast_seen),
+        "declared_only": clean(declared - ast_seen),
+    }
 
 
 def rpc_functions() -> list[str]:

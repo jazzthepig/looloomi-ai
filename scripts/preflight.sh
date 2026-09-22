@@ -117,6 +117,15 @@ python3 -m tests.test_cold_start_contract
 #            invisible to py_compile AND to production when the caller logs a warning. That
 #            combination silently killed the T2 universe fallback (2026-08-06).
 python3 -m tests.test_no_undefined_names
+# 3a-quinquies-bis. schema-drift 的措辞按来源分开 (2026-09-22, S-399).
+#               drift 端点曾对 `nav_panel_*` 报「the code writes to ... every write
+#               returns False and is swallowed」—— 而 src/ 里没有任何调用点写它们。
+#               **那句话描述的是一批不存在的吞掉的写入**,实测代价:一条 lane 被派去
+#               修一个不存在的 writer。与 S-354 同一处伤口的另一支(RPC 支修了,表支没修)。
+#               这条守的是**措辞**:declared_only 那一支不许借用另一支的结论,
+#               且必须明写「写入者在不在,从这里看不出来」(六张 declared_only 表里
+#               四张实测是活的 —— 看不到调用点 ≠ 没有写入者)。
+python3 -m tests.test_drift_separates_declared_from_written
 # 3a-quinquies. neutralisation (2026-08-07, S-103). `neutralize()` was cited in 71
 #               files and defined in none, so no claim of alpha had ever been
 #               separated from exposure. Guards both directions: pure beta must
