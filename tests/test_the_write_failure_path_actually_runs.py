@@ -100,7 +100,12 @@ class _Patched:
         self._orig = self._mod.insert_with_detail
 
     def __enter__(self):
-        async def _stub(table, rows):
+        # Accept **kwargs so future signature additions to `insert_with_detail`
+        # (e.g. S-389 FIX-A's `on_conflict="mark_date"`) don't break this
+        # negative-control mock — the stub's job is to fake the *outcome*, not
+        # to police the *call shape*. Without `**kwargs`, every new kwarg
+        # silently fails this test with TypeError on every book.
+        async def _stub(table, rows, **kwargs):
             assert isinstance(rows, list) and rows, "writer sent an empty payload"
             return self._result
         self._mod.insert_with_detail = _stub
