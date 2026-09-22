@@ -134,6 +134,16 @@ python3 -m tests.test_drift_separates_declared_from_written
 #               棘轮:当前 9 个冻结在 FROZEN(各带理由 + 解除条件),**这条拦的是第 10 个**。
 #               读不在范围内 —— anon 读 80 张表是 by design,禁读是把作用域扩到不需要的地方。
 python3 -m tests.test_no_direct_supabase_writes
+# 3a-quinquies-quater. 日期一律 UTC,不用机器本地时区 (2026-09-22, S-406).
+#               实测:DB 是 UTC、`recorded_at` 是 timestamptz(自带时区不会错),
+#               而 `mark_date`/`trade_date` 是**裸 date**,吃的是写入方算出来的日期。
+#               **Mac 在 JST,每天 15:00 UTC 之后 JST 已经是第二天** —— 那之后写入
+#               就会打上明天的日期,而且静默(错一天的 NAV 行和正确的行长得一样)。
+#               ① 的起跑时刻正逐日后漂(01:38 → 05:43),漂过 15:00 UTC 就会发生。
+#               已付两次学费:S-195(BTC 记 +0.30% 实际 +7.15%)· S-368(gap 22 vs 23)。
+#               ⚠️ 修法不是「统一到日本时间」——那会让裸 date 列更糟。是统一到 UTC,
+#               JST 只出现在显示层。棘轮:基线只许降;① 那个文件必须恒为 0。
+python3 -m tests.test_dates_are_utc_not_machine_local
 # 3a-quinquies-ter. safeFormat.fmtScore null-safe (2026-09-22, S-397 P1 A5/C6).
 #               CISLeaderboard used `item.total_score ?? 0` which collapsed
 #               "no score" to a misleading "0.0" (S-262 family #12). The new
