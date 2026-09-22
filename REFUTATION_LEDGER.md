@@ -22327,3 +22327,311 @@ fitness 里那一项本来是对的(② 确实不该满仓冒险),**错的是评
 ③ 回答 70/30 为什么反而 FAIL。
 ⚠️ 另记:「Full-period 837d excess +27.7pp/yr for the **top** Dv2 cell」
 **是全样本 + 486 选 1 的两层选择偏差,不要再作为证据出现。**
+
+## S-399b — 我修那句话的时候,把它反对的东西搬了进去
+
+**2026-09-22 · Seth · 起因:Jazz「刚才的问题一模一样还在」**
+
+S-399 修完 drift 措辞、推上线(`deploy_sha 1c9c3301`)之后,实跑打出来的是:
+
+> "...2 table(s) are DECLARED ... not a swallowed write ... check the lane that
+> declared it. **every table the code writes to and every RPC it calls exists**"
+
+**同一句话既报「这两张不存在」,又说「全都存在」。**
+原因:全清那个 `else` 挂在 `with_call_site or rpc_missing` 上,
+而此刻 `declared_only` 非空、另两者为空 —— **于是它跟在警告后面一起打出来。**
+
+**这条守卫存在的全部理由就是「两个状态不许渲染成一句话」,而我在修它的时候把它搬了进去。**
+Jazz 说「一模一样还在」是准确的:措辞换了,**结构没变**。
+
+### 判据自己也犯了同一个毛病,两次
+
+`test_drift_separates_declared_from_written` 的措辞检查:
+- **v1** 用「往前 900 字符」取窗口 → 取到了**前一支**的字面量,红得莫名;
+- **v2** 改成找起止标记 → 措辞被抽成函数后标记不在了,**直接匹配不上**;
+- **v3** 才是对的:**调用 `_drift_consequence()`,不读它的源码。**
+
+**按文本匹配而不是按结构 —— 这条测试讲的就是这个毛病,它自己犯了两次。**
+所以措辞被抽成纯函数,判据五种状态各调一次(只 declared_only / 只 with_call_site /
+只 rpc_missing / 两者都有 / 什么都不缺),**断言全清子句只在三者皆空时出现**。
+
+### 抽函数时又踩一个,而它只在 import 期炸
+
+我把 `_drift_consequence` 插在了 `@router.get(...)` 和它装饰的函数**中间** ——
+装饰器于是套到了新函数上,FastAPI 拿一个收 `dict`/`list` 的函数去建表单依赖,
+`RuntimeError: Form data requires "python-multipart"`。
+**`py_compile` 通过,import 才炸** —— `_beat` docstring 里记的「只在错误路径上炸」同族,
+这次在主路径上,所以第一次调用就抓到了。
+
+### 给 Jazz 的口径
+
+**上一轮的修复确实已部署且生效**(端点 `missing_declared_only` 字段在,措辞已分支);
+**而它带着这个自相矛盾一起上了线。** 本轮的修复在工作树里,**未推**。
+**所以你屏幕上看到的没变,是对的 —— 不是你跑早了。**
+
+## S-399c — 红灯挡住了所有 push,而挡住的理由是没有人写的两张表
+
+**2026-09-22 · Seth · 起因:Jazz「新的 preflight 还是没有过」+ A 报 ops_console 第二处同形伤**
+
+### 我上一轮说错了一句,而那句话是 push 卡住的原因
+
+我写过:「这个 RED 现在是非阻塞的(IN-FLIGHT 明确写了不阻 push)。
+**一个正确的非阻塞红灯正在做它该做的事。**」
+
+**实测:`schema_drift_check.py` 退出 1,preflight 是 `|| exit 1`,handoff 是 `&&` 链 ——
+它挡住了每一次 push。** 我引的是 IN-FLIGHT 里的一句话,**没有自己跑一次退出码**。
+**而这正是我这一周要求别人做的那件事。**
+
+于是:价格源全挂、replay 读取有 bug,**修它们的 push 被一个「两张没人写的表」挡着。**
+
+### 修法就掉在我已经做完的那件事里
+
+S-399 把 `with_call_site` / `declared_only` 拆开,**只用在措辞上,没用在退出码上** ——
+**「修了一个渲染器,漏了另一个」,而那句话就写在同一批改动里。**
+现在严重级别跟着来源走:
+- `with_call_site` 缺失 / RPC 缺失 / 列**问不出来** ⇒ **仍然硬闸**(写入真的在被吞,或读不到不许假装通过);
+- 全部属于 `declared_only` ⇒ **不阻断**,打一行说明 + 指向 OPEN RISK #0c。
+
+**这不是豁免**(没有到期日、会变成永久特赦的那种):**它是结构性的** ——
+一旦 `src/` 出现调用点,同一张表自动落进 `with_call_site`,**立刻恢复硬闸**。
+防「声明了永远不建」的是 #0c 的到期日 2026-10-06(到期撤注册,不撤红灯)。
+
+### 又一次只修了一半,同一批改动里
+
+第一版只拆了**表**,**列没拆** —— `market_state_vectors` 那三列
+(`adv_screen_pass`/`adv_usd_20d`/`mcap_usd`,和那两张表同一个不存在的 Mac 侧写入端)
+继续让退出码为 1。补 `write_columns_by_provenance()`,两半齐。
+
+### 第三个坑:部署顺序死锁
+
+第一版让**端点**返回拆分字段,于是:**加字段的那个 push,要先过一个需要那个字段的检查。**
+改法不是找跳过口,是**把依赖去掉** ——
+**「哪些只是声明」是源码树的属性,不是部署的属性**,而这个脚本就跑在仓库里。
+端点只回答「什么漂了」,来源本地算。**实测对着旧 build 退出 0。**
+
+### 过程中还踩了一个只在 import 期炸的
+
+抽 `_drift_consequence` 时把它插在了 `@router.get(...)` 和被装饰函数**中间**,
+装饰器套错对象 → FastAPI 拿一个收 `dict` 的函数建表单依赖 →
+`RuntimeError: Form data requires "python-multipart"`。**`py_compile` 通过,import 才炸。**
+
+判据 `test_drift_separates_declared_from_written` 现 5 条全绿,已在 preflight 清单。
+
+## S-401 — 数据通路不是被读坏的,是被我派的那次回填吃掉的
+
+**2026-09-22 · Seth · 起因:Jazz 问 B「数据通路为什么坏了?因为前端和交易端同时读?」**
+
+### 先修我自己 S-398 里的一条错
+
+S-398 我写「eodhd 33 → 0 → 0 → 0(09-19 起死)」。**错了。**
+按 `recorded_at`(写入时钟)看:**eodhd 今天 09-22 05:44 写了 33 行 / 33 标的**,
+09-19 / 09-18 / 09-17 / 09-16 / 09-15 每天都写。
+**它写 TradFi,周末没有 bar,所以 `trade_date` 自然滞后 —— 我读的是事件时钟。**
+
+**而「写入时钟 ≠ 事件时钟」是我三天前亲手写进 digest prompt 的第 2 条硬规则。**
+B 在回答 Jazz 时继承了我这个错(他引的就是 S-398 那三行)。
+**一个写错的台账会把下一个人一起带偏 —— 这次被带偏的是另一条 lane 对 Jazz 的答复。**
+
+### 真实形状(全部按 `recorded_at`)
+
+    09-17  02:17–14:31   **17,238 行 / 159 标的**   ← 回填跑了 12 小时(A-372-2)
+    09-18  01:38–01:42        164 / 158
+    09-19  03:12–09:05        159 / 159
+    09-20  01:45–01:48        157 / 157
+    09-21  04:29               17 /  17   ← 塌
+    09-22  05:43               32 /  25
+
+    9 月 cg_pro 总写入 31,603 行;**09-17 那次占 17,238 = 54.5%**
+    回填前日均 1,153 行 ⇒ **一次跑掉约 15 天的量**
+    每日起跑时刻 01:38 → 03:12 → 01:45 → 04:29 → 05:43 —— **每天往后漂**
+
+### 因果链,而起点是我
+
+1. 我派 A-372-2「回填到 2020」,**判据写成并集量**(`min(trade_date)` + `count(distinct trade_date)`);
+2. A 一字不差满足它(2020-01-01 / 2452 天),**而中位标的深度只从 71 天变成 73 天** ——
+   **那次跑几乎没有增加面板深度**(S-379 已记);
+3. 它吃掉全月 54.5% 的写入量;
+4. 四天后日更面板从 159 塌到 17;
+5. 我写 S-398 说「六个价格源全死」,**其中 eodhd 那条是我读错时钟**。
+
+**一次由错误判据驱动的、几乎无用的深挖,吃掉了日更面板的配额。**
+
+### 三条要跟 B 更正的
+
+**(a) 「前端和交易端同时读」不是原因** —— B 这条对:MVCC 下读不阻塞写,
+症状也反了(是写端塌、读端活)。**采信。**
+
+**(b) 「key 被 revoke 或降级到 free tier,数字对得上」—— 这是假设,不是发现。**
+25 个**标的** ≠ 25 次**调用**。更强的反证:**cg_pro 与 coingecko 是同一供应商**,
+若 key 死应同时死;实测 coingecko 09-18 归零而 cg_pro 撑到 09-21,**差三天**。
+**按 volume 塌缩 + 起跑时刻逐日后漂,更像配额耗尽 + 重试拉长,不像 key 被吊销。**
+
+**(c) 所以去 billing dashboard 要找的不是「key 还在不在」,是 **09-17 那天的用量尖峰**。**
+
+⚠️ **口径**:我是用**行数**推配额,而 CG Pro 按**调用数**计费,一次调用可返多行 ——
+**这条是强假设,不是结论。** 供应商侧的用量曲线才能定案。
+**但它已经足以改变下一步动作:不要再去修 writer,也不要先去换 key。**
+
+### 顺带一条给 MVP 的判断
+
+B 的 MVP 排序我同意(Step 0 修读取 → 三臂真数据 → β-matched 重判 → testnet →
+live 试点 → 最后才接 TradingView;TradingView 是 UI 不是 execution)。
+**加一条前置**:在 Step 0 之前先定 cg_pro 的配额预算 ——
+**否则下一次回填会再吃掉一次日更面板**,而这次的代价是我们唯一还在长的那条腿。
+
+## S-402 — 一个 import 期的失败,穿着参数校验失败的衣服
+
+**2026-09-22 · Seth · 起因:preflight「`--book=c` → exit 2,实得 exit=1」**
+
+S-397 给 `paper_trading/spec_runner.py` 加了四行**绝对包导入**
+(`from paper_trading.jev_regime import …` 等)。
+
+    python3 -m paper_trading.spec_runner --book=c   → exit 2  ✅(sys.path 有仓库根)
+    python3 paper_trading/spec_runner.py --book=c   → exit 1  ❌
+
+脚本路径调用时 `sys.path[0]` 是 `paper_trading/` **本身**,
+于是 `ModuleNotFoundError: No module named 'paper_trading'`,
+**在 argparse 之前就炸** —— argparse 根本没轮到去拒 `--book=c`。
+
+**所以症状是「参数校验的退出码不对」,而病因是 import。**
+两条调用路,**一条能跑**;只用 `-m` 或 pytest 跑过的人看不到。
+`test_spec_runner_cli` 用的正是脚本路径,**所以它抓到了** ——
+一条按真实调用方式写的判据,又一次比按名字/按拼写写的判据有用。
+
+修法照抄同目录已有的三个(`replay_three_arms` / `run_paper_a17` / `run_paper_m115`),
+**不新发明**:同一个能力的第二种写法就是下一次漂移的起点。
+实测三条路径(脚本路径 `--book=c` / `-m --book=c` / 脚本路径缺必填)全部 exit 2。
+
+### 补了一条守「类」的判据
+
+原来那条只守 `spec_runner` 一个文件。新增:
+**`paper_trading/` 里凡有绝对包导入的脚本,必须带 sys.path bootstrap。**
+
+⚠️ 同时记一笔:这个 bootstrap 现在有 **4 份逐字重复的副本** ——
+那是「一个能力多条活路」的形状。**收敛它要动四个在跑的文件,风险大于收益,
+所以这里选择把约定变成可执行的,而不是把副本变成一处。**
+**这是一次有意识的取舍,不是没看见。** 真要收敛时,这条判据跟着一起改。
+
+## S-403 — Jev 是评测不是产品腿;而生产 runner 在 import 期硬依赖它
+
+**2026-09-22 · Seth · 起因:Jazz「jev 的模块是用来做测试的,不是最终的;
+交易模块不属于 looloomi.ai 的产品,是我们自己用数据 dashboard 的应用」**
+
+### 裁定把 ARCHITECTURE 切细了,而不是推翻它
+
+    产品     = 可验证的前向记录 + 归因 + provenance
+    内部工具 = 执行/交易管道、Jev 实验、ops console、回测脚手架
+
+**「验证装置就是产品」仍成立 —— 卖的是证据,不是交易机器人。**
+
+### 它已经咬过一次,而我上一轮只修了症状
+
+S-402:`--book=c` 应 exit 2、实得 exit 1。病因是 `spec_runner.py`(**生产 runner**)
+在**模块顶层** import 三个 Jev **实验**模块,脚本路径下 import 先炸。
+**我补了 sys.path bootstrap,症状消失,耦合原样留着。**
+
+**按新裁定,那个耦合本身才是缺陷**:一个测试阶段的实验能把生产 runner 带下水。
+已解耦 —— 类型进 `TYPE_CHECKING`,调用点惰性导入,
+**缺失 ⇒ `BLOCKED` + 明确原因,不是跳过**(S-207)。
+实测双向:移走三个实验模块后 `spec_runner` 仍可 import 且 `--book=c` exit 2;移回后守卫全绿。
+
+### 一个我差点犯的排期错
+
+我上一轮给了两个选项,**(A) 连 S-397 一起推**。
+**按这条裁定,(A) 是错的方向** —— 那会把一次评测当作产品腿一起 ship,
+而且把耦合固化进仓库。正确的是先解耦,再让评测按评测的节奏走。
+**Jazz 的一句边界裁定,把一个「怎么推」的问题变成了「本来就不该这么耦合」。**
+
+### 三条口径落到 PROJECT_STATE 的「产品边界」段(不放 SYNC,那个会轮转)
+
+① 实验模块不许被生产 runner 在 import 期硬依赖;
+② 规则 1 的枚举守**投资人可见面**,内部工具说 order 可以,**一旦对外立刻适用**;
+③ 严谨度分级:前向记录/归因/provenance 机构级;内部工具「够用 + 失败要响」。
+**CLAUDE.md 那句「Internals can be rough; interfaces cannot」第一次有了分界线。**
+
+## S-404 — 不是数据被写乱,是写进了虚空
+
+**2026-09-22 · Seth · 起因:Jazz「minimax 几个 agent 总是直连 supabase,造成数据和写入混乱,
+现在到底有多少写错了的 scripts,我们要彻底解决」**
+
+### 先验框架,而框架是反的
+
+    .env 里的钥匙            SUPABASE_KEY(anon) + SUPABASE_URL —— **没有 service_role**
+    anon 可 INSERT / UPDATE / DELETE 的表   **0 / 0 / 0**
+    service_role 可 INSERT                  96
+    引用 `SUPABASE_SERVICE_KEY` 的文件       **90 个,而它不在 .env 里** —— 全部解析成空
+    scripts/ 里真的发写请求到 /rest/v1 的    **9 个**
+
+**所以那 9 个脚本在这台机器上一个字节都写不进去。**
+**它们不是在制造混乱的数据,是在往虚空里写,然后把 401/403 吞掉。**
+
+这解释了一整周的测量:`decisions` 0 行、表「存在、永远空、看起来有人管」(S-201)。
+而 `research_intake.py` 的 docstring 早就记了同一件事:
+「Minimax-C 被要求把 172 个产物落进一条**已经关闭**的路径,靠碰撞才发现,
+**因为没有任何东西说它关了**。」
+**正确的路早就建好并 ship 了(`/internal/research-intake`)—— 缺的从来是强制。**
+
+### 否掉 B 方案里的一条:自动路由的 fallback
+
+B 提「`scripts/_api.py`:MCP → Railway → **直连 fallback**」。
+**那个 fallback 正是病因本身** —— 静默退到一条 fail-closed 的路,就是现在这个局面。
+**连不上 Railway 就该停,不是降级。** 一个会悄悄改变语义的回退,比没有回退坏。
+
+### 也否掉「把读一起禁」
+
+anon 读 80 张表是 by design(S-169),**一个直连的只读脚本不产生任何写入问题**。
+把读一起禁是把作用域扩到不需要的地方 —— **作用域太大的规则会被绕过,和太小一样坏**(S-283 的反面)。
+**这条守卫只管写。**
+
+### 做法:棘轮,不是大迁移
+
+9 个违规者全部冻结在 `FROZEN`,**各带理由 + 解除条件**;守卫今天绿,**它拦的是第 10 个**。
+一次性重写 21 个脚本、每个都要回归,风险远大于收益;
+**而不拦住增长,重写完第二天就会有新的。**
+名单设计沿用 `test_every_test_is_registered.EXEMPT`:
+**豁免不是赦免,解决之后那一行必须删掉** —— 并有一条反向检查强制它。
+
+### 反向检查当场抓到我自己
+
+第一版 `_REST = r"rest/v1/"` **多写了一个斜杠**,于是漏掉
+`run_freqtrade_backtest.py:79`(`SUPABASE_URL` 默认值以 `rest/v1` 结尾,拼接时才补斜杠)——
+**一个字符的过严,少报一个真实违规者。**
+**是「名单里的是不是还成立」那条反向检查响的**;只查「有没有新增」的单向守卫会静默少报。
+**SPINE 那条(单向守卫)的同款,而这次它救的是我自己。**
+
+实测:造一个第 10 个违规脚本 → RED;移除 → 绿。已进 preflight(141 注册 / 3 豁免)。
+
+## S-405 — CISLeaderboard `total_score ?? 0` 把"无评分"渲染成"C 级"——S-262 家族 #12 (2026-09-22, A5/C6 闭合)
+
+**位置**:`dashboard/src/components/CISLeaderboard.jsx` 5 个 render site + line 882 一个 noData proxy。
+
+**触发**:S-397 主批 ship 后(commit `2bf6ef9`),P1/P2 audit backlog 剩 10 sites。最危险的是 CISLeaderboard —— **CIS 是产品本体,`item.total_score ?? 0` 把"还没打分"渲染成"打了 0 分"**,然后 `scoreTone` 用 `>= 70` 三色阈值给它上 amber,**前端用户区分不出"这个资产今天没分"和"这个资产 C 级"**。同类:
+- 5 个 `(item.total_score ?? 0).toFixed(1)` 在 compact list / score pill / detail header / raw-vs-adjusted 双线
+- 1 个 `noData = typeof ret !== "number" || ret === 0`(line 882,作者留了注释"Binance klines don't carry SPY/AAPL/GLD/TLT")
+  - **那个 `|| ret === 0` 是同样的家族缺陷**:一个稳定币 grade 永远 0% return,会被读成 "noData" ——
+  - 注释里那个理由是数据源的事,**不该由渲染器用一个数值当 proxy**。
+
+**修复**(本批 ship):
+
+1. `dashboard/src/lib/safeFormat.js` 加 `fmtScore(v, digits=1)`:
+   - `isMissing(v)` || `typeof v !== "number"` → `"—"`
+   - 第二个 guard 是 family pattern,`fmtPct`/`fmtNum` 早就这么写
+   - 测试**当场捕获第一次的 bug**:`fmtScore("null")` 因没第二个 guard 崩了 —— 加 guard,过
+2. `dashboard/src/components/CISLeaderboard.jsx`:
+   - import `isMissing, fmtScore` from `../lib/safeFormat`
+   - 加 `scoreTone(v)` 本地 helper:`isMissing → T.muted`,>=85 green,>=70 blue,else amber
+   - 5 个 render site 全切 `scoreTone(...)` + `fmtScore(...)` —— 单形态重复消失
+   - line 882 `noData = typeof ret !== "number"`(去掉 `|| ret === 0`),合法 0.00% 渲染 muted 而非 "—"
+3. `tests/test_safe_format_score.py`:
+   - 直接调 node subprocess 跑 14 case:null/undef/NaN/字符串/对象 → "—";0/0.0/-0/72.3/85/99.4/-3.2/2 位 → 各自数值
+   - 静态守卫:文件里不许再出现 `total_score ?? 0`(剥注释行后查)
+4. `scripts/preflight.sh` 注册新测 + 一段注释解释 family context(S-244:**测试存在 ≠ 被运行**,这是上一次踩的同一个坑,preflight 这次自动捕到了)
+
+**Family pattern 守卫**:
+- safeFormat 的所有 formatter 都走 `isMissing(v) || typeof v !== "number"` 双 guard(2026-09-22 第二次踩的是 fmtScore 第一个版本漏了第二个)
+- 静态 grep `?? 0` 在 src 是 S-262 family 的最弱 catch —— 它会同时误报合法 `?? 0` 默认值(像 x ?? 0 在数据 fallback chain 里是 OK 的),所以守卫限定为**渲染 site 的具体形态**:`total_score ?? 0` 这种"已知有意义的属性 + 0 默认值"的塌缩
+
+**未闭合 / 后续**:
+- 真正区分 "Binance 没有 kline" vs "legitimate 0% return" 需要 data layer 报 `grade_data_availability`(TradFi 标记 EODHD 覆盖 vs Binance 覆盖)。本次没做,留给 backlog。
+- 其它 P1 sites(`cis_score: a.total_score ?? a.cis_score ?? 0` 在 portfolio.jsx / analytics.jsx / CISLeaderboard.jsx:1001)是数据层 fallback,不是渲染层塌缩,需要分别评估。
+- 批次 ship 完 Task #18 P1 段;P2 段(11 → 10 - 1 = 9 sites remaining)等 JAZZ 拍下一轮。
