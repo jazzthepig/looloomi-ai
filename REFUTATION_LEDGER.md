@@ -22635,3 +22635,150 @@ anon 读 80 张表是 by design(S-169),**一个直连的只读脚本不产生任
 - 真正区分 "Binance 没有 kline" vs "legitimate 0% return" 需要 data layer 报 `grade_data_availability`(TradFi 标记 EODHD 覆盖 vs Binance 覆盖)。本次没做,留给 backlog。
 - 其它 P1 sites(`cis_score: a.total_score ?? a.cis_score ?? 0` 在 portfolio.jsx / analytics.jsx / CISLeaderboard.jsx:1001)是数据层 fallback,不是渲染层塌缩,需要分别评估。
 - 批次 ship 完 Task #18 P1 段;P2 段(11 → 10 - 1 = 9 sites remaining)等 JAZZ 拍下一轮。
+
+## S-405 — 全量盘点:有用 / 重复 / 未打通
+
+**2026-09-22 · Seth · 起因:Jazz「回到高维,验证哪些有用、哪些重复、哪些未开发完需要打通」**
+
+**从库和生成器取数,不读任何手写地图**(S-385:上一次手写的工序图七个数错六个)。
+
+### 一、有用(活着 **且** 产出被消费)
+
+    ① beta_core        12 标记 / 18 日历日 / **+19.78%**,今天仍在标
+                       ⚠️ 它活着是因为**直接调 Binance,不读我们的表**(S-382)
+    CIS 打分           164,872 行,日更 58 标的 —— Mac→Railway 那条路是通的
+    四本纸面账本        causal / combined / dingge / scalable,日更 24 仓
+    treasury_*         896 / 3,852 行,新鲜 —— **实体层唯一真正在跑的部分**
+    asset_embeddings   72 + 1,741 历史,今日新鲜
+    signal_edge_map    46 行 / 2 个 benchmark 维(S-365)
+    **守卫套件**        **141 个 preflight 测试** —— 客观上这是整个系统里最完整的部分
+
+### 二、重复(每条都有实测,不是印象)
+
+| # | 两条活路 | 状态 |
+|---|---|---|
+| 1 | **同一个端点里两个存活判据互相矛盾**:`loops.rows` 21 个里 13 报 ok,`liveness` 同一时刻 `n_live=2` | **仍然活着,没修** |
+| 2 | 三个监控面作用域不同:`health-summary`(4 项)/ `loop_health.py`(5 层)/ 每日 digest | B-380-3 在手上 |
+| 3 | `regime_override_enforcer`(归一)vs `beta_core_q_overlay`(乘数) | 已裁:overlay 对,enforcer 退役(S-367) |
+| 4 | `INTERNAL_TOKEN` **36 处比较 / 10 种写法 / 17 个文件** | 冻结(S-371,到期 10-08) |
+| 5 | `sys.path` bootstrap **4 份逐字副本** | **有意识的取舍**:收敛要动 4 个在跑的文件,改成可执行约定(S-402) |
+| 6 | `ops_console` 的 schema note vs `research_intake` 的 consequence | 已裁 β:ops_console 改调端点(S-399) |
+| 7 | 我在 `phase_distance` 里重写的中位数 vs 既有 `apply_dwell_filter` | 当天撤回(S-378) |
+
+**第 1 条最值钱,因为它在我叫所有人信任的那个仪表里面。**
+
+### 三、未打通(**有写入端、却 0 行**)
+
+**82 张表里 28 张精确 0 行。** 排掉「产品功能还没有用户」那类
+(`organizations` / `webhook_subscriptions` / `api_usage` / `vault_*` / `leads` —— 空是对的),
+剩下**这 14 张在 `src/` 里有写入端而一行都没有**:
+
+    decisions(2 写入端)       ← **ARCHITECTURE 说最深的对象,从未运行**
+    execution_intents / execution_outcomes(各 2)   ← 执行层的记录本身
+    beta_core_nav_size(2)     ← ③ 的 sizing 账本
+    cis_backtest_results(3) · agent_call_log(3)
+    cis_regime_fitness · cause_outcomes · strategy_params
+    factor_tilt_state · pod_aggregator_state · fusion_paper_state
+    crypto_universe · audit_log
+
+**另有 2 张连写入端都没有**:`r77_forward_episodes` / `vault_state` —— 那是**声明先于实现**,
+和 `nav_panel_*` 同类(OPEN RISK #0c)。
+
+**「有写入端 + 0 行」在这个系统里有确定的成因**,本周已各自测到:
+① 写入用 anon 直连 ⇒ **0 张表可写** ⇒ 401 被吞(S-404);
+② 写入端没有调度者(S-373 家族);
+③ 循环在**正确地拒绝**(msv 连拒 15 轮 / deep_panel 连拒 40 轮)。
+**三种成因的修法完全不同,而它们在「表是空的」这个观察上长得一模一样。**
+
+### 四、一个没有移动的数
+
+    自证率 ①  coverage   **14 / 82**   (09-18 是 14/81)
+    自证率 ②  能自证成功的循环  **3 / 21**   (09-18 是 3/23)
+
+**四天,没动。** 棘轮(B-380-1)没建 ——
+**而上面三节里几乎每一条,如果那个棘轮在跑,都会在当天自己报出来,而不是靠我手查。**
+
+## S-406 — 「统一到日本时间」会让它更糟;规则是统一到 UTC
+
+**2026-09-22 · Seth · 起因:Jazz「先解决 src 时间不统一,我们是日本时间,
+但刚才 preflight 失败就是因为成了东 8 时间」**
+
+### 实测推翻了这个修法方向
+
+    DB TimeZone                 UTC
+    recorded_at                 timestamptz —— **自带时区,不会错**
+    mark_date / trade_date / d  **裸 date,没有时区** ← 歧义全落在这里
+    全仓提到 Asia/Tokyo 的       **1 处** —— JST 从来不是代码里的约定
+    裸本地日期(抹注释后)        **111 处** · 显式 UTC **151 处**
+
+裸 `date` 列吃的是**写入方算出来的那个日期**。
+**Mac 在 JST,每天 15:00 UTC 之后 JST 已经是第二天** —— 那之后写入就打上**明天**的日期。
+**所以把机器统一成 JST,等于让这 111 处每天有 9 小时窗口在写错日期。**
+
+**而这不是假设**:① 的起跑时刻实测在逐日后漂 **01:38 → 03:12 → 04:29 → 05:43**,
+**漂过 15:00 UTC 就会发生,并且静默** —— 一条日期错一天的 NAV 行,和正确的行长得一模一样。
+已付两次学费:**S-195**(coingecko 用写入日打标签,08-19 BTC 记 +0.30% 而实际 +7.15%)·
+**S-368**(沙箱 +09 跨 UTC 午夜,gap 算 22 而期望 23)。
+
+**规则:计算与存储一律 UTC,JST 只在显示层。** 加密行情本身就是 UTC 计日的;
+把人类时区带进计算,等于给每行数据加一个「它在哪台机器上算的」隐藏维度。
+
+### 不新建 helper
+
+仓库已有 **151 处** `datetime.now(timezone.utc)`。再包一层就是**第五种写法** ——
+而这一周每个缺陷都源于同一能力多条活路。**统一到既有那一种。**
+
+### ① 已清,其余棘轮
+
+`beta_core_paper.py`(**唯一在产出前向记录的东西**)7 处全改,41/41 回归绿,
+并设为 `PROTECTED` **恒为 0**。其余 111 处冻结基线,**只许降**。
+
+### 守卫自己又踩了一次,而解药早就在仓库里
+
+第一版直接扫源码,于是**我写来解释这个 bug 的那行注释,触发了抓这个 bug 的守卫**。
+台账里记过一模一样的:「**解释 bug 的注释废掉了抓这个 bug 的测试**」——
+当时就为此抽出了 `tests/_source.code_only()`。**已有解药还自己重踩。**
+改用它之后,真实数从 122 降到 111(那 11 个差额全是注释)。
+
+⚠️ 并加了一条**不测代码、测算术**的判据:验证「15:00 UTC 是 JST 跨天临界点」这个前提本身 ——
+**整条规则架在它上面,而一条没人验过的前提,是下一个人推翻规则的入口。**
+
+## S-407 — 新规则:写入端三缺一不算完
+
+**同批,回应 Jazz「形成规则」。**
+
+> **一个写入端落地,必须同时交付:① 调度者 ② 判活判据 ③ 第一行真实数据。三缺一不算完。**
+
+**它直接来自 S-405 的实测**:82 张表 **28 张精确 0 行**,其中 **14 张在 `src/` 里有写入端
+却一行都没有** —— `decisions`(ARCHITECTURE 说最深的对象)、`execution_intents`/`execution_outcomes`
+(执行层的记录本身)、`beta_core_nav_size`(③ 的账本)……
+**全都「写完了」,没有一样是通的。**
+
+**而「有写入端 + 0 行」有三种成因,观察上一模一样、修法完全相反:**
+① anon 直连写(**0 张表可写**,401 被吞,S-404)
+② 写入端没有调度者(S-373 家族)
+③ 循环在**正确地拒绝**(msv 连拒 15 轮 / deep_panel 连拒 40 轮)
+**所以规则的第二句是:先判成因,再动手。**
+
+已进 `CLAUDE.md` 规则 5b/5c(压缩 5a 腾的位;余量 162 字符)。
+
+### S-407b — 我的 handoff 模板把规则 7 的顺序做反了
+
+同批。Jazz 跑 preflight 得到 `✗ dangling ledger citation`,而我核完:
+**HEAD 干净(`c9e146f` 自带 S-404 标题),守卫现在 280 条引用全绿。**
+所以那个红是**一个时间窗口** —— 我先写了引用 S-406 的测试和 preflight 注释,
+台账条目几分钟后才追加。**那几分钟里仓库在引用一个不存在的条目。**
+
+**窗口是我的 handoff 模板造成的。** 这一周每一份 handoff 都是:
+
+    git add <代码/测试> && git commit …     ← 引用 S-NNN
+    git add REFUTATION_LEDGER.md && git commit …   ← 才创建 S-NNN
+
+**规则 7 的原文是「claim the heading BEFORE writing the body」,而我把顺序倒过来了。**
+后果不只是那几分钟:**如果中间任何一步失败(preflight 红、粘贴只跑了一半),
+仓库就停在一个引用悬空的状态**,而下一个人看到的红灯指向一个他没做过的事。
+
+**从此:台账 commit 排在第一个,代码 commit 跟在后面。**
+同一个 push 里顺序不影响最终状态,**但它决定了中途失败时停在哪一边** ——
+停在「有条目没代码」是无害的,停在「有代码没条目」是红的。
+**这和 `&&` 链那条是同一个道理:安全的失败方向要设计,不能指望不失败。**
