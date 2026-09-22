@@ -156,6 +156,43 @@ def test_cli_book_flag_only_a_or_b():
         _check("--book=c → exit 2", cp.returncode == 2, f"exit={cp.returncode}")
 
 
+def test_package_imports_require_the_script_path_bootstrap():
+    """S-402 — `paper_trading/` 里凡是用绝对包导入的脚本,必须带 sys.path bootstrap。
+
+    2026-09-22:S-397 给 `spec_runner.py` 加了四行 `from paper_trading.…`。
+    `-m` 调用下没问题;**脚本路径调用下 `sys.path[0]` 是 `paper_trading/` 本身**,
+    于是 `ModuleNotFoundError`,**在 argparse 之前就炸**,症状变成
+    「`--book=c` 应 exit 2,实得 exit 1」——
+    **一个 import 期的失败,穿着参数校验失败的衣服出现。**
+
+    上面那条 `--book=c` 抓到了它,但只抓 `spec_runner` 这一个文件。
+    这条守的是**类**:任何带包导入的同目录脚本,少了 bootstrap 就会在
+    脚本路径下静默地换一种失败方式,而只用 `-m` 或 pytest 跑的人看不见。
+
+    ⚠️ 同时记一笔:这个 bootstrap 现在有 **4 份逐字重复的副本**
+    (`spec_runner` / `replay_three_arms` / `run_paper_a17` / `run_paper_m115`)。
+    那是「一个能力多条活路」的形状 —— 收敛它要动四个在跑的文件,
+    风险大于收益,**所以这里选择把约定变成可执行的,而不是把副本变成一处**。
+    真要收敛时,这条判据会跟着一起改。
+    """
+    import re
+    pkg_import = re.compile(r"(?m)^\s*from\s+paper_trading\.\w+\s+import")
+    bootstrap = re.compile(r"sys\.path\.insert\(0,\s*str\(_ROOT\)\)")
+    offenders = []
+    for f in sorted((ROOT / "paper_trading").glob("*.py")):
+        if f.name.startswith("_"):
+            continue
+        txt = f.read_text(encoding="utf-8", errors="replace")
+        if not pkg_import.search(txt):
+            continue
+        if not bootstrap.search(txt):
+            offenders.append(f.name)
+    _check("带包导入的脚本都有 sys.path bootstrap",
+           not offenders,
+           f"缺 bootstrap:{offenders} —— 脚本路径调用下会 ModuleNotFoundError,"
+           f"而症状会伪装成参数校验失败")
+
+
 if __name__ == "__main__":
     print("── paper_trading spec_runner CLI (S-284 D) ──")
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:

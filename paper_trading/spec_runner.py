@@ -72,11 +72,55 @@ from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence
 if TYPE_CHECKING:
     from src.data.market.regime_quorum import RegimeQuorum
     from paper_trading.jev_regime import JevRegimeDecision
+    # S-403:实验模块的类型只在这里出现 —— 运行期不导入。
+    from paper_trading.jev_decision import (
+        JevDecision, JevDecisionActor, JevQuestion,
+        TypesafeJevDecisionBackend, build_ls_questions, build_ls_state_payload,
+    )
+    from paper_trading.ls_state_builder import build_ls_context
+    from paper_trading.pair_decision_assembler import (
+        PairPosition, assemble_pair_positions,
+    )
+
+# ── S-402:让包导入在【脚本路径调用】下也成立 ────────────────────────────
+# S-397 在下面加了四行 `from paper_trading.…` 的**绝对包导入**。
+# `python3 -m paper_trading.spec_runner` 下没问题(`sys.path` 有仓库根);
+# **`python3 paper_trading/spec_runner.py` 下 `sys.path[0]` 是 `paper_trading/` 本身**,
+# 于是 `ModuleNotFoundError: No module named 'paper_trading'`,**在 argparse 之前就炸**。
+#
+# 症状因此是「`--book=c` 应 exit 2,实得 exit 1」——
+# **一个 import 期的失败,穿着参数校验失败的衣服出现**。
+# `test_spec_runner_cli` 用的正是脚本路径,所以它抓到了;
+# 而只用 `-m` 或 pytest 跑过的人看不到。**两条调用路,一条能跑。**
+#
+# 写法照抄同目录已有的三个(`replay_three_arms` / `run_paper_a17` / `run_paper_m115`),
+# 不新发明 —— 同一个能力第二种写法就是下一次漂移的起点。
+import sys as _sys
+_HERE = Path(__file__).resolve().parent
+_ROOT = _HERE.parent if _HERE.name == "paper_trading" else _HERE
+if str(_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_ROOT))
 
 #: Re-export Jev gate type for callers that prefer `from spec_runner import JevRegimeDecision`.
 #: Pattern A pre-filter (per docs/jev_nautilus_integration_plan_2026-09-21.md) lives in
 #: paper_trading.jev_regime; spec_runner only consumes it.
 from paper_trading.jev_regime import JevRegimeDecision  # noqa: E402,F401
+# ── S-403:Jev 那三个模块是**测试阶段**的,不在 import 期硬依赖 ──────────
+# Jazz 2026-09-22 裁定:「jev 的模块是用来做测试的,不是最终的;
+# 交易模块不属于 looloomi.ai 的产品,是我们自己用数据 dashboard 的应用」。
+#
+# 那么一个**生产纸面账本 runner**在模块顶层 import 三个实验模块,
+# 就是让实验能把 runner 带下水 —— **而它已经发作过一次**:
+# S-402 那个「`--book=c` 应 exit 2、实得 exit 1」,病因正是这段 import
+# 在脚本路径下炸掉,argparse 根本没轮到。**我当时修了 sys.path,
+# 症状消失了,耦合还在。**
+#
+# 现在:类型只在 TYPE_CHECKING 下引用(下面的注解本来就是字符串),
+# 真正的调用在**用到它的那个函数体内**惰性导入。
+# 于是 `spec_runner` 可以独立于 Jev 实验存在、被推送、被跑。
+#
+# ⚠️ 惰性不等于静默:模块缺失时返回 **BLOCKED + 明确原因**,
+# 不是跳过、不是当成「今天没信号」(S-207:规则拒绝 vs 规则跑不起来)。
 
 log = logging.getLogger("spec_runner")
 
@@ -116,6 +160,16 @@ FAMILIES: dict[str, bool] = {
                                                 # simple-factor (JAZZ 2026-09-21)。
                                                 # 复用 panel_long_only 的 BLOCKED / SKIPPED
                                                 # 纪律,只在 step ⑦ 加 factor gate。
+    "panel_long_short_jev_overlay": True,       # S-397 §5b ④:① base (1/N long) +
+                                                # Jev multi-primitive L/S overlay。
+                                                # Per `s397-jev-ls-overlay-redesign-2026-09-21.md`:
+                                                # base ① from panel_long_only + N pair L/S
+                                                # from Jev (Choice + Score + Noul, hedged
+                                                # by construction) → §5b ④ pure alpha on
+                                                # top of ①/②/③ base。Coverage gate
+                                                # (conf/score/thesis thresholds) 内生,
+                                                # selective classification discipline
+                                                # (arXiv 2110.14914)。
 }
 #: 2026-09-04 K fix: 双名字 `survivors_only_lag1_book_bookB` 在 S-249 形状下
 #: 是一个漂移 hazard —— bookB 和 bookA 在运行时只是同一个家族的两个 alias,
@@ -511,6 +565,90 @@ class Spec:
                 raw=raw,
             )
 
+        if fam == "panel_long_short_jev_overlay":
+            # S-397 §5b ④ L/S overlay: ①/②/③ base (panel_long_only) +
+            # Jev multi-primitive batch (Choice + Score + Noul) per pair.
+            # Per `s397-jev-ls-overlay-redesign-2026-09-21.md`:
+            #   - base positions = 1/N long-only of universe (①)
+            #   - overlay positions = N pair L/S from Jev (④, hedged)
+            #   - net exposure ≈ 0 by construction (pair L/S is hedged)
+            #
+            # Parameters (mirror panel_long_only + jev_overlay):
+            #   allocation, target_size, rebalance_cadence, max_position_pct,
+            #   min_position_pct, min_history_days, regime_gate, cost_bps_rt,
+            #   dd_stop_pct, max_open_trades  (base)
+            #   jev_overlay: {
+            #     coverage_threshold: float (default 0.55),
+            #     score_threshold: float   (default 0.15),
+            #     thesis_threshold: float  (default 0.55),
+            #     max_pair_weight: float   (default 0.10),
+            #     backend: "mock" | "typesafe"   (default "mock" — Pattern A 测试不 deploy)
+            #   }
+            allocation = str(need(p, "allocation", "parameters")).lower()
+            if allocation not in ("equal_weight", "cis_weight", "market_cap_weight"):
+                raise ValueError(
+                    f"spec allocation '{allocation}' 不是合法值 — v1 ship 只接 "
+                    f"'equal_weight';cis_weight / market_cap_weight 在下一档")
+            target_size = int(need(p, "target_size", "parameters"))
+            if target_size < 0:
+                raise ValueError(f"target_size = {target_size} 非法 —— 0 = 全 universe,>0 = top N")
+            rebalance_cadence = int(need(p, "rebalance_cadence", "parameters"))
+            if rebalance_cadence < 1:
+                raise ValueError(f"rebalance_cadence = {rebalance_cadence} 非法 —— 至少 1 天")
+            max_pos = float(p.get("max_position_pct", 1.0))
+            min_pos = float(p.get("min_position_pct", 0.0))
+            if max_pos <= 0 or max_pos > 1.0:
+                raise ValueError(f"max_position_pct={max_pos} 非法 —— (0, 1]")
+            if min_pos < 0 or min_pos >= max_pos:
+                raise ValueError(f"min_position_pct={min_pos} 非法 —— [0, max_position_pct)")
+            min_history_days = int(need(p, "min_history_days", "parameters"))
+            if min_history_days < 60:
+                raise ValueError(
+                    f"min_history_days = {min_history_days} 太短 — Jev L/S overlay "
+                    f"需要 ≥60d 算 mom_30/mom_60/vol_30,默认 90")
+            jo = need(p, "jev_overlay", "parameters")
+            if not isinstance(jo, dict):
+                raise ValueError(
+                    "parameters.jev_overlay 必须是一个 dict — "
+                    "{coverage_threshold, score_threshold, thesis_threshold, "
+                    "max_pair_weight, backend}")
+            backend_kind = str(jo.get("backend", "mock")).lower()
+            if backend_kind not in ("mock", "typesafe"):
+                raise ValueError(
+                    f"jev_overlay.backend='{backend_kind}' 非法 — 只接 'mock' "
+                    f"(Pattern A 测试不 deploy) 或 'typesafe'")
+            for k in ("coverage_threshold", "score_threshold", "thesis_threshold", "max_pair_weight"):
+                v = jo.get(k)
+                if v is None:
+                    continue
+                try:
+                    fv = float(v)
+                except (TypeError, ValueError):
+                    raise ValueError(
+                        f"jev_overlay.{k}='{v}' 不是 float — 0-1 之间的概率阈值")
+                if not (0.0 <= fv <= 1.0):
+                    raise ValueError(
+                        f"jev_overlay.{k}={fv} 超出 [0,1] — "
+                        f"coverage/score/thesis 是概率,max_pair_weight 是 size cap")
+            return cls(
+                name=need(raw, "spec_name", "spec"),
+                universe=tuple(need(raw, "universe", "spec")),
+                rank_by=f"panel_long_short_jev_overlay_{allocation}",
+                n_lookback=min_history_days,
+                hold=rebalance_cadence,
+                cadence=rebalance_cadence,
+                k=1, k_long=1, k_short=0,
+                weight_per_leg=1.0 / max(len(need(raw, "universe", "spec")), 1),
+                cost_bps_rt=float(need(p, "cost_bps_rt", "parameters")),
+                dd_stop_pct=float(need(p, "dd_stop_pct", "parameters")),
+                max_open_trades=int(need(p, "max_open_trades", "parameters")),
+                skip_regimes=frozenset(),
+                source=str(need(ds, "primary", "data_source")),
+                family=fam,
+                dry_run=bool(ex.get("dry_run", True)),
+                raw=raw,
+            )
+
         if fam == "survivors_only_lag1_book":
             # M-113 V3 (M-93 + R19-Lite) / M-115 Book B (M-93 + R14-Lite):
             # 2-sleeve book combining ① regime-gated BTC long + ④ cross-section L/S.
@@ -768,6 +906,15 @@ def decide(spec: Spec, panel: Panel, *, as_of: date, regime: Optional[str],
         return decide_panel_long_only_simple_factor(
             spec, panel, as_of=as_of, regime=regime,
             n_open=n_open, last_rebalance=last_rebalance,
+        )
+    # S-397 §5b ④: ① base + Jev multi-primitive L/S overlay.
+    # (Jev actor passed in via kwargs from the runner; absent = base only.)
+    if spec.family == "panel_long_short_jev_overlay":
+        return decide_panel_long_short_jev_overlay(
+            spec, panel, as_of=as_of, regime=regime,
+            n_open=n_open, last_rebalance=last_rebalance,
+            jev_actor=kwargs.get("jev_decision_actor"),
+            jev_decision=kwargs.get("jev_decision"),
         )
     d = as_of.isoformat()
     base = dict(d=d, spec_name=spec.name, panel_source=panel.source,
@@ -1498,6 +1645,214 @@ def decide_panel_long_only_simple_factor(spec: Spec, panel: Panel, *,
     )
 
 
+def decide_panel_long_short_jev_overlay(
+    spec: Spec, panel: Panel, *,
+    as_of: date, regime: Optional[str], n_open: int,
+    last_rebalance: Optional[date],
+    jev_decision: Optional["JevDecision"] = None,
+    jev_actor: Optional["JevDecisionActor"] = None,
+) -> Decision:
+    """S-397 §5b ④ L/S overlay: base ①/②/③ (panel_long_only, 1/N long)
+    + Jev multi-primitive L/S overlay on top.
+
+    Architecture (per `s397-jev-ls-overlay-redesign-2026-09-21.md`):
+      - Base legs = 1/N long-only of `spec.universe` (① hold-the-panel)
+      - Overlay legs = Jev-driven L/S pairs (④ pure alpha, hedged)
+      - Net exposure ≈ 0 by pair construction → overlay doesn't double beta
+      - Coverage gate: only take pairs where Choice.confidence > threshold AND
+        |Score| > threshold AND Noul(thesis_valid) > threshold
+
+    `jev_decision` (preferred): pre-computed JevDecision for `as_of`. Skip the
+    Jev call (caller already paid for it, e.g. on cadence day).
+    `jev_actor` (fallback): if `jev_decision is None`, build state + questions
+    + ask `jev_actor.decide_batch()` once on this cadence day. Caller holds the
+    actor and accumulates stats across days.
+
+    lag-1 PIT discipline (M-114): signal uses bars <= d-1; entry price = bar at d.
+    """
+    from datetime import timedelta as _td
+
+    raw_params = (spec.raw.get("parameters") or {})
+    rebalance_cadence = int(raw_params.get("rebalance_cadence", 7))
+    min_history_days = int(raw_params.get("min_history_days", 90))
+    jo = raw_params.get("jev_overlay") or {}
+    coverage_threshold = float(jo.get("coverage_threshold", 0.55))
+    score_threshold = float(jo.get("score_threshold", 0.15))
+    thesis_threshold = float(jo.get("thesis_threshold", 0.55))
+    max_pair_weight = float(jo.get("max_pair_weight", 0.10))
+    backend_kind = str(jo.get("backend", "mock")).lower()
+
+    d = as_of.isoformat()
+    d_lag1 = (as_of - _td(days=1)).isoformat()
+    base = dict(d=d, spec_name=spec.name,
+                panel_source=panel.source, panel_last_bar=panel.last_bar)
+
+    # ⓪ Jev gate: if jev_decision failed-open (mock always_no_edge or vendor
+    # error) AND we want strict signal, return SKIPPED. For S-397 v1 we
+    # default to "fail-open" — if Jev can't decide, base ① still runs.
+    # (Spec.json can override with `jev_overlay.fail_open=False`.)
+    fail_open = bool(jo.get("fail_open", True))
+    if (jev_decision is not None and jev_decision.error
+            and not fail_open):
+        return Decision(
+            **base, verdict=Verdict.SKIPPED,
+            reason=(f"jev_decision fail-closed at {d} (Pattern A pre-filter): "
+                    f"backend={jev_decision.backend_name}, mock={jev_decision.mock}, "
+                    f"error={jev_decision.error}"),
+        )
+
+    # ① BLOCKED: panel 必须能用
+    if panel.n_symbols == 0:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"面板 0 个标的 —— 源 {spec.source} 没有返回任何行。"
+                               f"Jev L/S overlay 在空面板上无 pair 可选 (S-180)")
+    if len(spec.universe) < 2:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"universe 只有 {len(spec.universe)} 个标的,"
+                               f"< 2 —— Jev L/S overlay 至少需要 2 个标的才能组 pair")
+    age = panel.age_days(as_of)
+    if age is None:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason="面板没有可读的最后一根 bar")
+    if age > MAX_PANEL_AGE_DAYS:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"面板最后一根 bar 是 {panel.last_bar},已 {age} 天 "
+                               f"> {MAX_PANEL_AGE_DAYS} 天 —— overlay pair 信号基于旧价会"
+                               f"污染 §5b ④ (S-251)")
+
+    # ② universe 必须在面板里;每个 symbol 历史都要够 min_history_days
+    missing = [s for s in spec.universe if s not in panel.closes]
+    if missing:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"universe 中有 {len(missing)} 个不在面板里:"
+                               f"{missing[:5]}{'...' if len(missing) > 5 else ''} "
+                               f"—— Jev L/S overlay 必须持完整 universe")
+    too_short = []
+    threshold_date = (as_of - _td(days=min_history_days)).isoformat()
+    for s in spec.universe:
+        s_closes = panel.closes[s]
+        if not s_closes:
+            too_short.append((s, 0))
+            continue
+        sorted_dates = sorted(d_ for d_ in s_closes if d_ <= d_lag1)
+        if not sorted_dates or sorted_dates[0] > threshold_date:
+            too_short.append((s, len(sorted_dates)))
+    if too_short:
+        sym_list = ", ".join(f"{s} ({n}d)" for s, n in too_short[:5])
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"{len(too_short)}/{len(spec.universe)} 个 universe "
+                               f"symbol 历史不足 {min_history_days}d:{sym_list}"
+                               f" —— overlay pair 信号算不出 (mom_30/mom_60/vol_30)")
+
+    # ③ Regime gate (per spec.parameters.regime_gate, optional)
+    canon = None
+    if regime is not None:
+        from src.data.cis.cis_provider import canonical_regime_strict
+        canon = canonical_regime_strict(regime)
+    base["regime"] = canon
+    regime_gate = raw_params.get("regime_gate") or {}
+    if canon in regime_gate and not bool(regime_gate[canon]):
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"regime_gate 在 {canon} 关 — overlay 跳过 (per spec)")
+
+    # ④ Cadence
+    if last_rebalance is not None and (as_of - last_rebalance).days < rebalance_cadence:
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"cadence skip — 上次 rebalance {last_rebalance.isoformat()},"
+                               f"距今 {(as_of - last_rebalance).days}d < cadence {rebalance_cadence}d")
+
+    # ⑤ DD stop
+    if n_open >= spec.max_open_trades:
+        return Decision(**base, verdict=Verdict.SKIPPED,
+                        reason=f"已有 {n_open} 笔未平仓 >= max_open_trades "
+                               f"{spec.max_open_trades} —— 不重复开 overlay")
+
+    # ⑥ Build L/S context + run Jev batch (if no pre-computed decision)
+    # S-403:Jev 是测试阶段模块,在这里才导入。**缺失 ⇒ BLOCKED,不是跳过** ——
+    # 「overlay 没跑」和「今天没开仓」必须是两个状态(S-207)。
+    try:
+        from paper_trading.jev_decision import build_ls_questions
+        from paper_trading.ls_state_builder import build_ls_context
+        from paper_trading.pair_decision_assembler import assemble_pair_positions
+    except ImportError as _e:
+        return Decision(**base, verdict=Verdict.BLOCKED,
+                        reason=f"Jev L/S overlay 模块不可用({_e.name})—— "
+                               f"它是测试阶段组件,不随 spec_runner 一起保证存在。"
+                               f"**这是「跑不起来」,不是「今天没信号」。**")
+    if jev_decision is None:
+        if jev_actor is None:
+            return Decision(**base, verdict=Verdict.BLOCKED,
+                            reason="Jev L/S overlay 需要 jev_decision 或 jev_actor "
+                                   "(两者都未提供 — pattern A testing 漏 wire)")
+        closes_by_sym = {s: panel.closes[s] for s in spec.universe}
+        state = build_ls_context(
+            bar_ts=d, universe=list(spec.universe),
+            closes_by_sym=closes_by_sym,
+            panel_age_days=age, cadence_days=rebalance_cadence,
+            cost_bps_rt=spec.cost_bps_rt,
+            regime=canon,
+        )
+        questions = build_ls_questions(list(spec.universe))
+        jev_decision = jev_actor.decide_batch(state, questions)
+
+    # ⑦ Assemble pair positions (coverage / score / thesis gates)
+    assembled = assemble_pair_positions(
+        jev_decision,
+        universe=list(spec.universe),
+        coverage_threshold=coverage_threshold,
+        score_threshold=score_threshold,
+        thesis_threshold=thesis_threshold,
+        max_pair_weight=max_pair_weight,
+    )
+
+    # ⑧ Build legs: base 1/N long + overlay L/S pairs (each pair = 2 legs)
+    legs_list: list[Leg] = []
+    n_total = len(spec.universe)
+
+    # Base: 1/N long of universe
+    base_weight = 1.0 / max(n_total, 1)
+    for s in spec.universe:
+        sym_closes = panel.closes[s]
+        bars_today = sorted(d_ for d_ in sym_closes if d_ <= d_lag1)
+        if not bars_today:
+            return Decision(**base, verdict=Verdict.BLOCKED,
+                            reason=f"{s} 在 {as_of} 当天没有 bar —— 无法定价 base 入场")
+        px_entry = sym_closes[bars_today[-1]]
+        legs_list.append(Leg(s, "long", float(base_weight), float(px_entry)))
+
+    # Overlay: each pair = long leg + short leg
+    for pos in assembled.positions:
+        for sym, side, w in [
+            (pos.sym_long, "long", pos.weight),
+            (pos.sym_short, "short", pos.weight),
+        ]:
+            sym_closes = panel.closes[sym]
+            bars_today = sorted(d_ for d_ in sym_closes if d_ <= d_lag1)
+            if not bars_today:
+                continue  # skip leg, not whole decision
+            px_entry = sym_closes[bars_today[-1]]
+            legs_list.append(Leg(sym, side, float(w), float(px_entry)))
+
+    legs = tuple(legs_list)
+
+    overlay_reason = (
+        f"Jev L/S overlay: {len(assembled.positions)}/{assembled.n_pairs_total} "
+        f"pairs passed coverage@>{coverage_threshold} / |score|>={score_threshold} "
+        f"/ thesis@{thesis_threshold} gates "
+        f"(coverage={assembled.coverage:.2f}, "
+        f"backend={jev_decision.backend_name}, "
+        f"mock={jev_decision.mock}, "
+        f"error={jev_decision.error})"
+    )
+    if assembled.error:
+        overlay_reason += f" — note: {assembled.error}"
+
+    return Decision(
+        **base, verdict=Verdict.ENTERED, legs=legs,
+        reason=(f"rebalance {d}, base ① 1/N long + ④ overlay ({overlay_reason})"),
+    )
+
+
 def should_run_today(spec: Spec, *, as_of: date, last_entry: Optional[date]) -> bool:
     """cadence 到了没有。第一次运行(无 last_entry)总是跑。"""
     if last_entry is None:
@@ -1669,6 +2024,8 @@ if __name__ == "__main__":                                  # noqa: C901
 __all__ = ["Spec", "Panel", "Decision", "Leg", "Verdict",
            "build_panel", "decide", "decide_gated", "decide_gated_2d",
            "decide_survivors_book", "decide_btc_trend",
+           "decide_panel_long_only", "decide_panel_long_only_simple_factor",
+           "decide_panel_long_short_jev_overlay",
            "decide_panel_long_only",
            "decide_panel_long_only_simple_factor",
            "should_run_today", "exit_due",
