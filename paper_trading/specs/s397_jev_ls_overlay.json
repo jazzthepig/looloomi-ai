@@ -1,0 +1,27 @@
+{
+  "spec_name": "S397_PANEL_LONG_SHORT_JEV_OVERLAY",
+  "spec_family": "panel_long_short_jev_overlay",
+  "data_source": {"primary": "binance_hist"},
+  "universe": ["BTC", "ETH", "SOL", "BNB", "XRP"],
+  "execution": {"dry_run": true},
+  "parameters": {
+    "allocation": "equal_weight",
+    "target_size": 0,
+    "rebalance_cadence": 7,
+    "max_position_pct": 0.20,
+    "min_position_pct": 0.0,
+    "min_history_days": 90,
+    "regime_gate": {},
+    "cost_bps_rt": 10.0,
+    "dd_stop_pct": -20.0,
+    "max_open_trades": 100,
+    "jev_overlay": {
+      "backend": "mock",
+      "fail_open": true,
+      "coverage_threshold": 0.55,
+      "score_threshold": 0.15,
+      "thesis_threshold": 0.55,
+      "max_pair_weight": 0.10
+    }
+  }
+}
