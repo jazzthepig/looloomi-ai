@@ -104,6 +104,29 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
 
     missing = [t for t in unknown]
 
+    # ── S-399:把「缺失」按来源拆开,**不在最后一步塌成一个数** ─────────────
+    # 2026-09-22 这个端点对 nav_panel_daily / nav_panel_rebalances 报了
+    # 「the code writes to ... Every write returns False and is swallowed」——
+    # 而 src/ 里没有任何调用点写它们,它们只在
+    # `c13_nav_panel_manifest.WRITES_TABLES` 的声明里。**那句话在描述一批
+    # 不存在的吞掉的写入**,会把人送去找不存在的 False(实测:一条 lane
+    # 因此被派去修一个不存在的 writer)。
+    #
+    # 与 S-354 同一处伤口的另一支:那次 RPC 探针把「读不到」说成「缺失」,
+    # 修法就写在本文件 `rpc_check_unavailable` 上面 ——「三值一路带到输出,
+    # 绝不在最后一步塌成两值」。**RPC 支修了,表支没修,而两支在同一个表达式里。**
+    try:
+        from src.api.schema_manifest import write_tables_by_provenance
+        _prov = write_tables_by_provenance()
+        _declared_only = set(_prov["declared_only"])
+    except Exception:                                             # noqa: BLE001
+        # 拿不到来源 ⇒ 不假装知道。全部按「有调用点」报(保守:那一支的措辞更严厉)。
+        _declared_only = set()
+    _msplit = {
+        "with_call_site": [t for t in missing if t not in _declared_only],
+        "declared_only": [t for t in missing if t in _declared_only],
+    }
+
     # ── RPC FUNCTIONS (A-29, probe corrected S-354) ──────────────────────────
     # Same drift class as tables. But **existence is a CATALOG question, not a
     # call question** — and probing by calling produced the same false P0 three
@@ -194,15 +217,26 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
             if col_drift else "every column the code writes exists"),
         # Naming the consequence, not just the count. "3 missing" reads like a
         # config nit; "these sleeves cannot persist anything" is the actual fact.
+        # S-399:表这一支曾经和 RPC 那一支犯同一个错 —— 见下面 `_missing_split`。
+        "missing_with_call_site": _msplit["with_call_site"],
+        "missing_declared_only": _msplit["declared_only"],
         "consequence": (
-            (f"{len(missing)} table(s) the code writes to do not exist. "
-             if missing else "")
+            (f"{len(_msplit['with_call_site'])} table(s) with a live call site in "
+             f"src/ do not exist — every write returns False and is swallowed, "
+             f"indistinguishable from 'no data yet'. "
+             if _msplit["with_call_site"] else "")
+            + (f"{len(_msplit['declared_only'])} table(s) are DECLARED "
+               f"(WRITES_TABLES) but have no call site in src/ — "
+               f"**nothing here writes to them yet**, so this is a registered "
+               f"intention, not a swallowed write. Whether an out-of-lane "
+               f"(Mac-side) writer exists is NOT observable from here: check the "
+               f"lane that declared it. "
+             if _msplit["declared_only"] else "")
             + (f"{len(rpc_missing)} RPC function(s) the code calls do not exist. "
              if rpc_missing else "")
-            + ("Every write to them returns False and is swallowed — "
-               "indistinguishable from 'no data yet'. The sleeves depending on "
-               "them have no forward record and cannot start one."
-             if missing or rpc_missing else
+            + ("The sleeves depending on the first group have no forward record "
+               "and cannot start one."
+             if _msplit["with_call_site"] or rpc_missing else
             "every table the code writes to and every RPC it calls exists")
             # ⚠️ S-354:这句话曾经挂在一个**假前提**上。前一版探针 POST `{}`,
             # 于是三个有必填参数的函数(panel_closes / panel_funding /
