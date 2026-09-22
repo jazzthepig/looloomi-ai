@@ -126,6 +126,23 @@ python3 -m tests.test_no_undefined_names
 #               且必须明写「写入者在不在,从这里看不出来」(六张 declared_only 表里
 #               四张实测是活的 —— 看不到调用点 ≠ 没有写入者)。
 python3 -m tests.test_drift_separates_declared_from_written
+# 3a-quinquies-ter. scripts/ 不许新增直连 Supabase 写入 (2026-09-22, S-404).
+#               实测:.env 只有 anon key,而 anon 对 **0 张表**有 INSERT/UPDATE/DELETE。
+#               所以直连写在这台机器上一个字节都写不进去 —— **不是数据被写乱,
+#               是写进虚空然后把 401/403 吞掉**,表永远空而看起来有人管(S-201)。
+#               合法写入只有两条:Railway `/internal/*`(持 service_role)或 Supabase MCP。
+#               棘轮:当前 9 个冻结在 FROZEN(各带理由 + 解除条件),**这条拦的是第 10 个**。
+#               读不在范围内 —— anon 读 80 张表是 by design,禁读是把作用域扩到不需要的地方。
+python3 -m tests.test_no_direct_supabase_writes
+# 3a-quinquies-ter. safeFormat.fmtScore null-safe (2026-09-22, S-397 P1 A5/C6).
+#               CISLeaderboard used `item.total_score ?? 0` which collapsed
+#               "no score" to a misleading "0.0" (S-262 family #12). The new
+#               helper renders "—" for null/undefined/NaN/non-number, and the
+#               score is also rendered through scoreTone() so the color branch
+#               (green ≥85 / blue ≥70 / amber / muted for missing) follows the
+#               same contract. The static guard catches the literal `?? 0`
+#               pattern if anyone reverts the call sites.
+python3 -m tests.test_safe_format_score
 # 3a-quinquies. neutralisation (2026-08-07, S-103). `neutralize()` was cited in 71
 #               files and defined in none, so no claim of alpha had ever been
 #               separated from exposure. Guards both directions: pure beta must
