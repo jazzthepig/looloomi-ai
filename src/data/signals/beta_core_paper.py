@@ -526,7 +526,8 @@ async def _resolve_cap(regime: str | None, rv: float | None = None,
     prev = float(last["exposure_cap"])
     carried = min(prev, 1.0)          # leverage does not survive an unknown
     try:
-        age = (dt.date.today() - dt.date.fromisoformat(str(last["mark_date"])[:10])).days
+        age = (dt.datetime.now(dt.timezone.utc).date()
+               - dt.date.fromisoformat(str(last["mark_date"])[:10])).days
     except Exception:
         age = -1
     src = (f"carried_forward(from={str(last.get('mark_date'))[:10]}, age={age}d, "
@@ -571,7 +572,7 @@ async def _load_panel():
     # so 120 days and 900 days are the SAME number of HTTP calls per symbol. The
     # old window was not buying anything — it was just short enough to starve a
     # statistic that had not been written yet when it was chosen.
-    s = dt.date.today() - dt.timedelta(days=_PANEL_DAYS)
+    s = dt.datetime.now(dt.timezone.utc).date() - dt.timedelta(days=_PANEL_DAYS)
     _, close, fmean, fsum, _filled = load_binance_panel(
         DEFAULT_UNIVERSE, start=(s.year, s.month, s.day), with_fill_mask=True)
     # I1, and the sharpest instance of it in this file (2026-08-09). This line used
@@ -662,7 +663,8 @@ async def _regime_history(days: int = 30) -> list[str]:
     # 窗口也放宽到能覆盖配额基线(60 天),否则基线永远算不出来。
     from src.data.market import regime_quorum as _rq
     lookback = max(days + 5, _rq.BASELINE_LO_DAYS + 5)
-    since = (dt.date.today() - dt.timedelta(days=lookback)).isoformat()
+    since = (dt.datetime.now(dt.timezone.utc).date()
+             - dt.timedelta(days=lookback)).isoformat()
     url = (f"{base}/rest/v1/daily_macro_regime?select={_rq.SELECT_COLS}"
            f"&d=gte.{since}&order=d.asc")
     try:
@@ -700,9 +702,11 @@ async def _regime_history(days: int = 30) -> list[str]:
     # exactly like a fresh one — same length, same labels, same everything except
     # which days it covers — so it must PROVE it reaches the present.
     newest = max(d for d, _ in series)
-    if (dt.date.today() - dt.date.fromisoformat(newest)).days > 2:
+    if (dt.datetime.now(dt.timezone.utc).date()
+            - dt.date.fromisoformat(newest)).days > 2:
         _log.error("[beta_core] regime history STALE — newest day %s, today %s; "
-                   "refusing to size off it", newest, dt.date.today().isoformat())
+                   "refusing to size off it", newest,
+                   dt.datetime.now(dt.timezone.utc).date().isoformat())
         return []
     return [g for _, g in sorted(series)]
 
@@ -826,7 +830,20 @@ async def _recover_state_from_nav(px: dict) -> dict | None:
 async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
                            source: str = "cron") -> dict:
     from src.data.market.data_layer import _redis_get, _redis_set
-    today = dt.date.today()
+# ── S-406:日期一律 UTC,**不用机器本地时区** ──────────────────────────
+# `dt.date.today()` 吃的是**机器时区**。DB 的 `mark_date` 是裸 `date`(无时区),
+# 所以它存的就是写入方算出来的那个日期。
+# **Mac 在 JST,每天 15:00 UTC 之后 JST 已经是第二天** —— 那之后的每一次 mark
+# 都会被打上**明天**的日期。而 ① 的起跑时刻正在逐日后漂(01:38 → 05:43),
+# 漂过 15:00 UTC 就会发生,**而且它会静默发生:一条日期错一天的 NAV 行,
+# 和一条正确的行长得一模一样。**
+#
+# 已付过两次学费:S-195(coingecko 用写入日给 K 线打标签,08-19 BTC 记 +0.30%
+# 而实际 +7.15%)· S-368(沙箱 +09 跨 UTC 午夜,gap 算出 22 而期望 23)。
+#
+# 统一到仓库里既有的那个写法(151 处已在用),**不新建 helper** ——
+# 再造一个就是第五种写法。
+    today = dt.datetime.now(dt.timezone.utc).date()
 
     # ── THE VALUATION POINT, ENFORCED (S-286, NAV_POLICY §3) ────────────────
     # Declared in S-283, obeyed from here. A mark struck away from the elected
@@ -1448,7 +1465,7 @@ async def continuity_state() -> dict:
                 "note": "book has never marked — the clock is NOT running"}
     days = [_dt.date.fromisoformat(x["mark_date"]) for x in rows]
     span = (days[-1] - days[0]).days + 1
-    since = (_dt.date.today() - days[-1]).days
+    since = (_dt.datetime.now(_dt.timezone.utc).date() - days[-1]).days
     return {
         "configured": True, "marks": len(days), "started": True,
         "inception": days[0].isoformat(), "last_mark": days[-1].isoformat(),
