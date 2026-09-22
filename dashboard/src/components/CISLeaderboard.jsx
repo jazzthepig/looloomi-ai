@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense, useMemo } from "react";
 import { T, FONTS, sigStyle } from "../tokens";
+import { isMissing, fmtScore } from "../lib/safeFormat";
 
 const CISCompare = lazy(() => import("./CISCompare"));
 
@@ -52,6 +53,16 @@ const GRADE_COLORS = {
   C:    T.amber,
   D:    T.red,      // #FF3D5A
   F:    T.dim,
+};
+
+// S-397 P1 (A5/C6) — null-safe score tone. Missing score → T.muted (visible
+// "—", not "0.0"); real score keeps the grade-tier coloring (green/blue/amber).
+// Lives here (not safeFormat.js) because the color tokens are theme-bound.
+const scoreTone = (v) => {
+  if (isMissing(v)) return T.muted;
+  if (v >= 85) return T.green;
+  if (v >= 70) return T.blue;
+  return T.amber;
 };
 
 const ASSET_CLASS_COLORS = {
@@ -718,7 +729,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
               <span style={{ fontSize: 13, fontWeight: 600, fontFamily: FONTS.display, color: T.primary }}>{item.asset_name}</span>
             </div>
             <div style={{ textAlign: "right" }}>
-              <span style={{ fontSize: 16, fontWeight: 700, fontFamily: FONTS.mono, color: GRADE_COLORS[item.grade] }}>{(item.total_score ?? 0).toFixed(1)}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, fontFamily: FONTS.mono, color: scoreTone(item.total_score) }}>{fmtScore(item.total_score)}</span>
             </div>
             <span style={{
               width: 24, height: 24, borderRadius: "50%", display: "flex",
@@ -878,8 +889,14 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           </div>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
             {Object.entries(backtest.returns_by_grade).map(([grade, ret]) => {
-              // TradFi assets return 0.0 — Binance klines don't carry SPY/AAPL/GLD/TLT
-              const noData = typeof ret !== "number" || ret === 0;
+              // S-397 P1 (A5): the old `|| ret === 0` collapsed "TradFi not in
+              // Binance klines" into the same shape as "legitimately 0% return"
+              // — a stablecoin / parked asset would also have read as missing.
+              // The data-source gap is a *separate* signal (see the header text
+              // "Binance klines · {n} assets"), not a reason to lie about the
+              // number. Real 0.00% now renders honestly; only true missing
+              // (null/undefined/NaN) reads as "—".
+              const noData = typeof ret !== "number";
               const color = noData ? "rgba(148,163,184,0.25)" : ret > 3 ? "#00D98A" : ret > 0 ? "#4472FF" : "#FF2D55";
               return (
                 <div key={grade} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
@@ -888,7 +905,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                     color: grade.startsWith("A") ? "#00D98A" : grade.startsWith("B") ? "#4472FF" : "#E8A000",
                   }}>{grade}</span>
                   <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 400, color }}>
-                    {noData ? "—" : `${ret > 0 ? "+" : ""}${ret.toFixed(2)}%`}
+                    {noData ? "—"
+                     : ret > 0 ? `+${ret.toFixed(2)}%`
+                     : `${ret.toFixed(2)}%`}
                   </span>
                 </div>
               );
@@ -1352,9 +1371,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                         opacity: 0.7,
                       }} />
                     )}
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 15, fontWeight: 400,
-                      color: (item.total_score ?? 0) >= 85 ? T.green : (item.total_score ?? 0) >= 70 ? T.blue : T.amber }}>
-                      {item.confidence != null && item.confidence < 0.5 ? "~" : ""}{(item.total_score ?? 0).toFixed(1)}
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 15, fontWeight: 400, color: scoreTone(item.total_score) }}>
+                      {item.confidence != null && item.confidence < 0.5 ? "~" : ""}{fmtScore(item.total_score)}
                     </span>
                   </div>
                   {/* v4.2: raw score when it differs from regime-adjusted */}
@@ -1462,8 +1480,8 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
               <span className="cis-score" style={{
                 fontFamily: FONTS.mono, fontSize: 42, fontWeight: 400, lineHeight: 1, letterSpacing: "-0.03em",
-                color: (selectedAsset?.total_score ?? 0) >= 85 ? T.green : (selectedAsset?.total_score ?? 0) >= 70 ? T.blue : T.amber
-              }}>{(selectedAsset?.total_score ?? 0).toFixed(1)}</span>
+                color: scoreTone(selectedAsset?.total_score)
+              }}>{fmtScore(selectedAsset?.total_score)}</span>
               <span style={{ fontSize: 10, color: T.muted }}>/ 100</span>
             </div>
             {/* v4.2: Dual score — raw vs regime-adjusted */}
@@ -1474,7 +1492,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                 </span>
                 <span style={{ fontSize: 9, color: T.muted }}>→</span>
                 <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.muted, letterSpacing: "0.08em" }}>
-                  REGIME-ADJ <span style={{ color: T.amber, fontSize: 11 }}>{(selectedAsset.total_score ?? 0).toFixed(1)}</span>
+                  REGIME-ADJ <span style={{ color: scoreTone(selectedAsset.total_score), fontSize: 11 }}>{fmtScore(selectedAsset.total_score)}</span>
                 </span>
               </div>
             )}

@@ -73,3 +73,17 @@ export const directionOf = (v) => {
   if (v < 0)  return "down";
   return "flat";
 };
+
+/** CIS score (0–100) with one decimal. null/undefined/NaN/non-number → "—".
+ *  S-397 P1 (A5/C6): CISLeaderboard had `total_score ?? 0` renderers that
+ *  collapsed "no score" to a misleading "0.0". Now `fmtScore(missing) === "—"`.
+ *  Color choice stays at the call site so theme tokens stay out of safeFormat.
+ *  The second `typeof v !== "number"` guard matches fmtPct/fmtNum — `isMissing`
+ *  alone leaves strings/objects to crash on `.toFixed()` (caught by the test
+ *  the first time around: `fmtScore("null")` threw before this guard was added).
+ */
+export const fmtScore = (v, digits = 1) => {
+  if (isMissing(v)) return "—";
+  if (typeof v !== "number") return "—";
+  return v.toFixed(digits);
+};
