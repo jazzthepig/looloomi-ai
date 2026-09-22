@@ -136,17 +136,21 @@ ATTRIBUTION (R62), never for neutralizing a book. Report total return vs hold-th
    the ONLY prod gate. `py_compile` is NOT sufficient (2026-07-13: import-time error 502'd prod).
    Preflight = compile + boot smoke + discipline suite + contract SCHEMA_VERSION echo.
 
-5a. **每一轮都归档 MINIMAX_SYNC,不要等 preflight 报红**(Jazz, 2026-09-17)。
-   2026-09-17 一天之内它超限 **六次**,每次都是我先看见 preflight 的 🔴 才去 trim。
-   **四条 lane 同时写、一个全局上限 ⇒ 挡住的永远是跑 preflight 的那个人,而不是写的那个人。**
-   所以这不是 C 的纪律问题,是我的收尾漏了一步。**动作放在每轮收尾,和更新
-   PROJECT_STATE 同一时刻做:**
-   ```
-   python3 -c "print(len(open('MINIMAX_SYNC.md',encoding='utf-8').read()))"
-   ```
-   **≥76,000 就当场归档**:已结的交付报告正文 → `MINIMAX_SYNC_ARCHIVE.md`,原位留一行
-   指针 + 结论;**未结项先提到 §IN-FLIGHT 再归档,否则它会跟正文一起消失**(S-370)。
-   判据:删掉正文只留产物路径后,读的人仍然知道下一步做什么 —— 那正文就不属于这里。
+5a. **每轮收尾自查 MINIMAX_SYNC 字符数,≥76,000 当场归档** —— 别等 preflight 报红
+   (一天超限六次,四方共写+全局上限 ⇒ 挡的永远是跑 preflight 的人,不是写的人)。
+   已结报告正文 → `MINIMAX_SYNC_ARCHIVE.md`,原位留指针;**未结项先提到 §IN-FLIGHT
+   再归档,否则会跟正文一起消失**(S-370)。
+
+5b. **一个写入端落地,必须同时交付:① 调度者 ② 判活判据 ③ 第一行真实数据。三缺一不算完。**
+   实测 2026-09-22(S-405):82 张表 **28 张精确 0 行**,其中 **14 张在 `src/` 里有写入端
+   却一行都没有**(`decisions` / `execution_intents` / `beta_core_nav_size` …)——
+   **全都「写完了」,没有一样是通的。** 三种成因观察上一模一样而修法相反:
+   anon 直连写(**0 张表可写**,401 被吞,S-404)· 没有调度者 · 循环在**正确地拒绝**。
+   **先判成因再动手。**
+
+5c. **日期一律 UTC,JST 只在显示层。** 裸 `date` 列(`mark_date`/`trade_date`)吃写入方
+   算出的日期;**Mac 在 JST,15:00 UTC 之后写入就打上明天的日期,且静默**。
+   写法统一 `datetime.now(timezone.utc)`(151 处在用),**不新建 helper**。S-195 / S-368 各付过一次。
 
 6. **Stage only your OWN paths; NEVER `git add -A`** (blind sweeps commit the other lane's
    half-finished work under your message). Explicit paths, always.
