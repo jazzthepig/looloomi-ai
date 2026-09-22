@@ -29,6 +29,44 @@ the lessons lived only in a 5,672-line ledger. **Don't transmit memory, transmit
 Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 `tests/test_cold_start_contract.py`.*
 
+### #0c · `nav_panel_*` 两张表:**声明在前,写入端在后** (S-399, 2026-09-22)
+
+`/internal/schema-drift` RED:`nav_panel_daily` / `nav_panel_rebalances` 不存在。
+**这个红灯是对的,而它此前的措辞是错的。**
+
+实测:`src/` 里**零调用点**写这两张表;它们只出现在
+`c13_nav_panel_manifest.WRITES_TABLES` 的声明里(注册 commit `83aab37` 在写入端存在之前)。
+Mac 侧只有 `nav_writer_2026-09-20.py` 的骨架(TODO 在 43/101 行),**无 launchctl 调度**。
+7 步 ship 规格在 `cometcloud-local/research/c_path_15_mac_ship_7step_2026-09-20.md`:
+步骤 1–6 归 Min-A(~2 个工作日),步骤 7 归 Seth(~4 小时)。
+
+**为什么不现在建表(三个方案都不选):**
+- 建了 → drift 立刻变绿,而两张表**永远是空的** = **S-201 原形**
+  (「表存在、永远空、看起来这项有人管」,就在本文件 §一个形状,十次 里)。
+  **一个因错误理由变绿的检查,比红的更坏。**
+- 撤注册(方案 A)→ 等写入端真 ship 而表仍缺失时,**没有东西会抓到**。拆守卫。
+- `pending_writer: true` 降级 WARN(方案 C)→ **一个没有理由字段、没有删除条件的豁免**。
+  仓库里唯一好用的豁免机制(`test_every_test_is_registered.EXEMPT`)两样都有,
+  它的注释写着为什么:**「豁免不是赦免……被注册之后这一行必须删掉,否则名单会变成永久特赦」**。
+  且 RED→WARN 在一个打几十行的 preflight 里等于不存在(S-372:三个监控面报健康而五个 producer 在死)。
+
+**已做的(S-399,不是把红灯变绿,是让红灯说真话):**
+`write_tables_by_provenance()` 把「有调用点」和「只有声明」分开,
+drift 的 consequence 按来源分两段措辞。
+⚠️ **关键口径:`declared_only` ≠ 没有写入者** —— 实测六张 declared_only 表里**四张是活的**
+(`cg_coin_map` 211 / `corporate_treasury_history` 3852 / `treasury_decisions` 896 /
+`treasury_entities` 102),因为显式声明这个机制存在的理由正是 AST 走查跟不进
+`cometcloud-local/`。所以措辞只说「从这里看不到调用点」。守卫:
+`tests/test_drift_separates_declared_from_written.py`(已进 preflight)。
+
+VERIFY: `curl -s .../internal/schema-drift | python3 -m json.tool | grep -A2 missing_declared_only`
+→ 期望 `nav_panel_daily` / `nav_panel_rebalances` 落在 `missing_declared_only`,
+**且 consequence 里那一段不含「returns False and is swallowed」**。
+**解除条件**:A 完成步骤 1–6 且 launchctl 有调度 → Seth 建表(步骤 7)→ 红灯因为管子通了而变绿。
+**日期兜底 2026-10-06**:到期未 ship,则**撤掉 manifest 注册**(不是撤红灯),
+并在这里记明「声明先于实现」这次的代价。
+OWNER: Min-A(1–6)· Seth(7 + 本条到期盯)
+
 ### #0b · `INTERNAL_TOKEN` 按已泄露对待,而我们**选择**带着它继续开发 (S-371, 2026-09-17)
 
 **这是一条被接受的风险,不是一个被遗忘的缺陷。** Jazz 2026-09-17 裁定:

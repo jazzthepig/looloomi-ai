@@ -22214,3 +22214,116 @@ SYNC 从 69,725 轮转到 **21,602**(归档 `MINIMAX_SYNC_ARCHIVE_2026-09-21.md`
 结果:`OPEN RISKS` 从**第 60 行(判据上限,余量 0)**变成**第 24 行(余量 36 行)**。
 **原来那个 9/9 是卡在边界上的 pass** —— 下一次任何人往头部加一行就会红,
 而他不会知道为什么。**一个正好压线通过的检查,和一个将要失败的检查,是同一个东西。**
+
+## S-399 — 那个红灯是对的,而它的措辞把一条 lane 派去修一个不存在的东西
+
+**2026-09-22 · Seth · 起因:schema-drift RED,以及一条 lane 查完后给出 A/B/C 三个方案**
+
+### 红灯说了什么,实际是什么
+
+drift 原话:「**2 table(s) the code writes to** do not exist.
+**Every write to them returns False and is swallowed** — indistinguishable from
+'no data yet'. The sleeves depending on them have no forward record.」
+
+实测:**`src/` 里零调用点写 `nav_panel_daily` / `nav_panel_rebalances`。**
+它们只出现在 `c13_nav_panel_manifest.WRITES_TABLES` 的声明里(注册 `83aab37`
+**在写入端存在之前**)。Mac 侧只有 `nav_writer_2026-09-20.py` 骨架(TODO 43/101 行),无调度。
+
+**所以那句话在描述一批不存在的吞掉的写入。** 代价是实的:
+**一条 lane 据此被派去修一个不存在的 writer**(我上一轮也照着这个措辞推理过一次)。
+
+### 而这是 S-354 同一处伤口的另一支
+
+同一个表达式里,RPC 那一支的上面就写着修法 ——
+`"rpc_check_unavailable": rpc_unknown` 配注释「**三值一路带到输出,绝不在最后一步塌成两值**」。
+**RPC 支修了(S-354),表支没修。** 而根因在 `schema_manifest.write_tables()` 第 332–333 行:
+AST 走查的调用点和 `WRITES_TABLES` 显式声明**在那里合并**,来源就丢了。
+**一个文件里学到的教训,没有应用到同一个文件的隔壁那一行。**
+
+### 三个方案都不选,理由是它们自己给的
+
+- **A 撤注册** → 提案里自己写了「Ships the lie forward」。撤掉之后,
+  等写入端真 ship 而表仍缺失时,**没有东西会抓到**。那是拆掉现在唯一在工作的守卫。
+- **C `pending_writer: true` 降级 WARN** → **一个没有理由字段、没有删除条件的豁免**。
+  仓库里唯一好用的豁免(`EXEMPT`)两样都有,其注释写明:
+  「豁免不是赦免……被注册之后这一行必须删掉,否则名单会变成永久特赦」。
+  且 RED→WARN 在打几十行的 preflight 里等于不存在(S-372 三个监控面报健康时刚量过)。
+- **B 留红** → 对的,但提案说它「honest but blocking」**也不准**:实测非阻塞,push 照落。
+  而留红不给 owner 和到期日,红灯就会变成墙纸(「一盏常亮的红灯等于一盏坏灯」)。
+
+### 做的不是把红灯变绿,是让红灯说真话
+
+`write_tables_by_provenance()` 把 `with_call_site` 和 `declared_only` 分开一路带到输出;
+drift 的 consequence 按来源分两段措辞。
+
+⚠️ **最关键的一条口径:`declared_only` ≠ 没有写入者。**
+显式声明这个机制存在的理由正是 AST 走查跟不进 `cometcloud-local/`(规则 3)。
+**实测六张 declared_only 表里四张是活的** —— `cg_coin_map` 211 行 ·
+`corporate_treasury_history` 3852 · `treasury_decisions` 896 · `treasury_entities` 102。
+**所以措辞只能说「从 `src/` 看不到调用点」,不能说「没人写」**(I1:读不到 ≠ 不存在)。
+
+### 守卫自己又犯了一次同形的错,当场
+
+`test_drift_separates_declared_from_written` 第三条第一版用「往前 900 字符」取窗口检查措辞,
+**取到了前一支(with_call_site)的字面量**,于是红得莫名 ——
+**按文本距离匹配,不是按结构**,和 `test_production_can_write` 匹配拼写同形,
+**而这条测试讲的就是这个毛病**。改成取那一支自己的字面量,3/3 绿。
+已进 preflight(139 注册 / 3 豁免)。OPEN RISK **#0c** 记 owner + 到期日 2026-10-06:
+**到期未 ship 则撤注册,不是撤红灯。**
+
+## S-400 — 158d 那个自曝是本周最好的;而 fitness 函数在给「离开市场」付钱
+
+**2026-09-22 · Seth · 起因:C 交 VDB tilt Phase 4 / M-116 OOS,报 β-capture 30/30 PASS**
+
+### 先记 C 做对的那件事,它比任何通过的判据都值钱
+
+C 自己发现 8 个 sweep 用 `set.intersection(*sym_date_sets)`,
+**日期被塌成 ONDO ∩ MKR 的 158 天** —— `#87 / #99 / #100` 全跑在 158d 上,不是宣称的 837d。
+修完之后诚实窗口的结果,**推翻的是他自己此前全部的 ship-ready**:
+
+    158d:  fit 高到 +0.6243 / SR +2.376 · M-116 OOS **60/60 PASS**
+    837d:  32,805 格 **0 ship-ready** · 486 格 **0 ship-ready** · M-116 OOS **0/90 PASS**
+           三个 split 的中位 OOS 夏普全为负(−1.116 / −0.385 / −1.164)
+
+**主动交出这种结果,是这一周质量最高的一件事。** 修法也对:8 处调用点一次改完,
+没留「以后再改剩下的」。
+
+### 然后判据被换了,而换判据本身不是问题,顺序是
+
+诚实窗口把 60/60 打成 0/90 → 加 β-capture lens(OOS excess_vs_b1 ≥ +5pp/yr)→ 又变回 60/60。
+lens 本身合法(ARCHITECTURE 确实写 ② 的基准是持有面板,Jazz 在 Phase 1 批过 5pp/yr)。
+**但这个时序在事后无法和「先失败再挪门槛」区分**,所以补救不是解释动机,是补能分离的数。
+
+### 而那个超额是被制造的,不是被发现的 —— 链条闭合在 fitness 里
+
+    Phase 1 验收条(JAZZ-approved):  **β vs B1 ∈ [0.5, 0.9]**
+    #99 实测(文档里出现三次,零评论): **β = 0.358**  ← 低于下限
+    Phase 1:                          **60.8% CASH**
+    Phase 1 冻结的 fitness:           …… **+ 0.15 × (1 − β)** ……
+
+**`0.15 × (1−β)` 直接给「离开市场」付钱**:β=0.358 拿 0.096,β=0.9 拿 0.015,
+**低仓位在选拔里多拿约 6.4 倍。** 于是:
+**fitness 奖励低 β → sweep 选出低 β 的格子 → 再拿去和 β=1.0 的面板比 → 正超额**,
+而中间没有任何一步把「被奖励的低仓位」分离出来。
+**选拔判据与评价判据同向,超额就是被制造的。**
+fitness 里那一项本来是对的(② 确实不该满仓冒险),**错的是评价端没把基准调到同一仓位水平。**
+
+**这个假说还多解释一件事**:70/30(最近 251 天,bear/sideways)是唯一 FAIL 的一格 ——
+**低仓位在本来就没涨幅的窗口里换不到超额。**
+它同时解释了 30/30 通过和 0/30 挂掉,比「sleeve 和 B1 nearly track」完整。
+**一个能同时解释通过和失败的假说,优先级高于只解释失败的那个。**
+
+### 裁决与判据
+
+**🟡 NOT-YET-EVALUABLE(不是 CONDITIONAL PASS)** —— 不是结果不好,是现在这套数分不出倾斜和仓位。
+分离的测量是 beta-matched 基准:`B_matched = 0.358×B1 + 0.642×cash`;
+**对它的超额 = 倾斜,对 1.0×B1 的超额 ≈ 仓位。**
+**这是 S-103 换了地方** —— 那次基准选了 BTC,每桶多算 2.16pp(t=3.96),
+法条从此是「基准 = 等权持有本 panel」。**这次面板对了,仓位水平没对齐。**
+(三天前在 ① 上量到同形:代码注释写着「BOOK 与 BENCHMARK 用同一天同一批价格 ——
+两者差异是 exposure timing,除此之外什么都不是」。**这里的差异是 exposure level。**)
+
+判据三条:① 每个 split 各自报 β 和 avg cash;② 对 `B_matched` 与对 `1.0×B1` 的超额并排;
+③ 回答 70/30 为什么反而 FAIL。
+⚠️ 另记:「Full-period 837d excess +27.7pp/yr for the **top** Dv2 cell」
+**是全样本 + 486 选 1 的两层选择偏差,不要再作为证据出现。**
