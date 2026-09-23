@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { T, FONTS } from "../tokens";
+import { isMissing } from "../lib/safeFormat";
 
 /* The front door. Drop your book; see it projected into the conviction field;
    drag a holding toward the core to rotate it into a stronger same-class name —
@@ -29,7 +30,13 @@ function causeProx(P, c30) {
 }
 
 // Radius = quality (high CIS → core). Off-standard names sit at the rim.
-function radius(h) { return !h.g ? 222 + (hashAng(h.s) % 16) : clamp(46 + ((85 - h.cis) / 60) * 150, 40, 196); }
+// S-397 P1 (A6): missing CIS must NOT ride the inner-ring low-score band; it
+// goes to its own outer rim so a "no score" holder isn't read as "low score".
+function radius(h) {
+  if (!h.g) return 222 + (hashAng(h.s) % 16);
+  if (isMissing(h.cis)) return 222 + (hashAng(h.s) % 16);   // missing → rim, same as off-standard
+  return clamp(46 + ((85 - h.cis) / 60) * 150, 40, 196);
+}
 // Position: distance = quality, vertical elevation = cause-proximity (up = upstream),
 // horizontal side spread by hash so similar-proximity names fan out instead of stacking.
 function posOf(h) {

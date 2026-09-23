@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, Fragment } from "react";
 import { T, FONTS } from "../tokens";
+import { isMissing } from "../lib/safeFormat";
 
 const API_BASE = "/api/v1";
 
@@ -340,8 +341,11 @@ export function CISLeaderboardTable({ data, filter, setFilter, defaultLimit = 0 
                     <td style={{ padding: "10px 4px", width: 140 }}>
                       <div style={{ display: "flex", gap: 2 }}>
                         {[asset.f, asset.m, asset.o ?? asset.r, asset.s, asset.a].map((v, j) => {
-                          const vv = v ?? 0;
-                          const c = vv >= 80 ? "#22c55e" : vv >= 65 ? "#fbbf24" : vv >= 50 ? "#fb923c" : "#ef4444";
+                          // S-397 P1 (C3): missing pillars must NOT render as 0
+                          // (red "< 50") — that reads as "low fundamental".
+                          // isMissing → muted grey; the text label still shows
+                          // "—" via the existing `v != null ? v : "—"` branch.
+                          const c = isMissing(v) ? "#6b7280" : (v >= 80 ? "#22c55e" : v >= 65 ? "#fbbf24" : v >= 50 ? "#fb923c" : "#ef4444");
                           return (
                             <div key={j} style={{ flex: 1, height: 18, borderRadius: 2, background: `${c}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                               <span style={{ fontSize: 8, fontWeight: 700, color: c, fontFamily: FONTS.mono }}>{v != null ? v : "—"}</span>
@@ -715,12 +719,23 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
     const weights = customWeights || defaultWeights;
 
     const recalculated = data.universe.map(asset => {
-      const newScore =
-        weights.F * (asset.f ?? 0) +
-        weights.M * (asset.m ?? 0) +
-        weights.O * (asset.o ?? asset.r ?? 0) +
-        weights.S * (asset.s ?? 0) +
-        weights.A * (asset.a ?? 0);
+      // S-397 P1 (C3): the previous `?? 0` for missing pillars dragged the
+      // composite down by ~6pts per missing pillar. Normalize weights by
+      // presence: only divide by sum-of-present-weights so the composite stays
+      // on its real scale. If every pillar is missing, fall back to null so
+      // the row reads as "no score" downstream (not a misleading 0).
+      const present = [
+        ["F", asset.f],
+        ["M", asset.m],
+        ["O", asset.o ?? asset.r],
+        ["S", asset.s],
+        ["A", asset.a],
+      ].filter(([, v]) => !isMissing(v));
+      if (present.length === 0) {
+        return { ...asset, recalculated: null };
+      }
+      const wSum = present.reduce((s, [k]) => s + weights[k], 0);
+      const newScore = present.reduce((s, [k, v]) => s + weights[k] * v, 0) / wSum;
 
       let newGrade;
       if (newScore >= 85) newGrade = "A+";

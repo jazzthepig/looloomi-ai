@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { T, FONTS } from "../tokens";
+import { isMissing } from "../lib/safeFormat";
 
 /* One object (your book) + one action (Diagnose). The iPod: simple, honest,
    one job — drop your holdings, get a read and the few moves toward beta+. */
@@ -39,8 +40,12 @@ function BookField({ holdings }) {
   const rings = [44, 92, 140, 188];
   const nodes = (holdings || []).map((h) => {
     const off = !h.grade;
-    const cis = typeof h.cis === "number" ? h.cis : 25;
-    const r = off
+    // S-397 P1 (C4): missing CIS must NOT ride the inner-ring low-score band
+    // (would render a "no score" holding as "B-" territory). Off-standard
+    // holders already go to the rim via `off`; missing-CIS is the same shape.
+    const cisMissing = isMissing(h.cis);
+    const cis = cisMissing ? null : h.cis;
+    const r = off || cisMissing
       ? 202 + (hashAng(h.symbol) % 18)
       : Math.max(38, Math.min(196, 44 + ((85 - cis) / 60) * 148));
     const ang = (hashAng(h.symbol) * Math.PI) / 180;

@@ -153,6 +153,19 @@ python3 -m tests.test_dates_are_utc_not_machine_local
 #               same contract. The static guard catches the literal `?? 0`
 #               pattern if anyone reverts the call sites.
 python3 -m tests.test_safe_format_score
+# 3a-quinque. S-397 P1/P2 audit backlog (2026-09-23) — 8 sites of the
+#               S-262 family pattern "missing rendered as plausible number":
+#               A2 BTC 7D color branch / A6 DiagnoseHome radius NaN /
+#               A8 AssetRadar fmtVol $1e3 divisor on mcap /
+#               A9 AssetRadar sort `|| 0` collapses missing /
+#               C2 IntelligencePage fmt.amount falsy-zero /
+#               C3 CISWidget pillar `?? 0` color + composite recalc /
+#               C4 PortfolioDiagnosis `cis:25` fallback /
+#               C7 QuantMonitor median_return falsy-zero.
+#               A7 VaultPage verified NOT broken (setLoading(false) IS in finally).
+#               All fixes use isMissing from safeFormat.js — runtime smoke +
+#               per-site grep guards prevent regressions.
+python3 -m tests.test_s397_p1p2_audit_backlog
 # 3a-quater. S-410 (2026-09-23) — `_cg_panel_loop` failed 366× with "too many
 #               values to unpack (expected 2)" because S-378b-C1 added a 3rd
 #               return value (`latest_hint`) to `deep_panel_symbols_detailed()`

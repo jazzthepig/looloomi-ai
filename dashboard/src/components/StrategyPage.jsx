@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { T, FONTS } from "../tokens";
+import { isMissing } from "../lib/safeFormat";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CometCloud AI — Investor Strategy Page
@@ -542,7 +543,7 @@ export default function StrategyPage() {
               { label: "BTC Dominance", value: btcDom ? `${btcDom.toFixed(1)}%` : "—", color: T.t1 },
               { label: "Fear & Greed", value: fngVal || "—", sub: fngLabel || "", color: fngVal ? (parseInt(fngVal) > 65 ? T.green : parseInt(fngVal) < 35 ? T.red : T.gold) : T.t3 },
               { label: "Total MCap 24h", value: mcapChange != null ? `${mcapChange >= 0 ? "+" : ""}${mcapChange.toFixed(1)}%` : "—", color: mcapChange >= 0 ? T.green : T.red },
-              { label: "BTC 7D", value: macro?.btc?.usd_7d_change != null ? `${macro.btc.usd_7d_change >= 0 ? "+" : ""}${macro.btc.usd_7d_change.toFixed(1)}%` : "—", color: (macro?.btc?.usd_7d_change || 0) >= 0 ? T.green : T.red },
+              { label: "BTC 7D", value: macro?.btc?.usd_7d_change != null ? `${macro.btc.usd_7d_change >= 0 ? "+" : ""}${macro.btc.usd_7d_change.toFixed(1)}%` : "—", color: isMissing(macro?.btc?.usd_7d_change) ? T.t3 : ((macro.btc.usd_7d_change >= 0) ? T.green : T.red) },
             ].map((m, i) => (
               <div key={i} style={{
                 background: "rgba(10,14,24,0.7)", border: `1px solid ${T.border}`,
