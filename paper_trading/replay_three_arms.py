@@ -83,38 +83,87 @@ def _sb_env() -> tuple[str, str]:
 
 async def fetch_panel_rows(
     universe: list[str], source: str, start: str, end: str,
+    *,
+    page_size: int = 1000,
+    max_pages: int = 50,
 ) -> tuple[list[dict[str, Any]], Optional[str]]:
-    """Single-shot Supabase httpx fetch for the full replay window.
+    """Paginated Supabase httpx fetch for the full replay window.
+
+    **Why pagination (S-396 reader bug, 2026-09-23):** PostgREST's default
+    `max-rows=1000` silently caps the response even when the URL says
+    `limit=50000`. 1196d × 262 sym = ~262k rows; a single 50k-limit call
+    returns the first 1k rows and the rest are silently dropped. Confirmed
+    by §S-398 §二 that the DB actually holds 229,682 rows for the window.
+
+    Bypass: set `Range-Unit: items` + `Range: offset-(offset+page_size-1)`
+    AND `Prefer: count=exact` so PostgREST returns the full chunk (HTTP 200
+    for full read, 206 Partial Content for ranged reads — both OK).
 
     Returns (rows, err). On network/empty failure, returns ([], err).
+    `page_size=1000` matches the PostgREST default cap exactly so each
+    request returns a full page. `max_pages=50` is a defensive ceiling
+    (50 × 1000 = 50k rows — if a window blows past this, the universe/window
+    combo is wrong and we want to know loudly rather than hang).
     """
     import httpx
     url, key = _sb_env()
     if not url or not key:
         return [], "SUPABASE_URL / SUPABASE_KEY empty in this process"
     syms = ",".join(f'"{s}"' for s in universe)
-    endpoint = (
-        f"{url}/rest/v1/ohlcv_daily"
-        f"?select=symbol,trade_date,close,source"
-        f"&source=eq.{source}"
-        f"&symbol=in.({syms})"
-        f"&trade_date=gte.{start}"
-        f"&trade_date=lte.{end}"
-        f"&order=trade_date.asc"
-        f"&limit=50000"
-    )
-    try:
-        async with httpx.AsyncClient(timeout=60) as client:
-            r = await client.get(
-                endpoint,
-                headers={"apikey": key, "Authorization": f"Bearer {key}"},
+    all_rows: list[dict[str, Any]] = []
+    offset = 0
+    page_count = 0
+    while True:
+        endpoint = (
+            f"{url}/rest/v1/ohlcv_daily"
+            f"?select=symbol,trade_date,close,source"
+            f"&source=eq.{source}"
+            f"&symbol=in.({syms})"
+            f"&trade_date=gte.{start}"
+            f"&trade_date=lte.{end}"
+            f"&order=trade_date.asc"
+            f"&limit={page_size}"
+            f"&offset={offset}"
+        )
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                r = await client.get(
+                    endpoint,
+                    headers={
+                        "apikey": key,
+                        "Authorization": f"Bearer {key}",
+                        "Range-Unit": "items",
+                        "Range": f"{offset}-{offset + page_size - 1}",
+                        "Prefer": "count=exact",
+                    },
+                )
+                if r.status_code not in (200, 206):
+                    return [], (
+                        f"Supabase HTTP {r.status_code} at offset={offset}: "
+                        f"{r.text[:140]}"
+                    )
+                rows = r.json() or []
+                all_rows.extend(rows)
+                page_count += 1
+                # Last page: returned < page_size rows → stop.
+                # Use len(rows) < page_size (not ==0) so empty final page
+                # doesn't loop forever if server returns 0 rows but
+                # Content-Range says more.
+                if len(rows) < page_size:
+                    break
+                offset += page_size
+                if page_count >= max_pages:
+                    return [], (
+                        f"fetch_panel_rows: hit max_pages={max_pages} "
+                        f"(={max_pages * page_size} rows) at offset={offset}; "
+                        f"universe/window likely too large"
+                    )
+        except Exception as e:                                  # noqa: BLE001
+            return [], (
+                f"Supabase request failed at offset={offset}: "
+                f"{type(e).__name__}: {str(e)[:120]}"
             )
-            if r.status_code != 200:
-                return [], f"Supabase HTTP {r.status_code}: {r.text[:140]}"
-            rows = r.json() or []
-            return rows, None
-    except Exception as e:                                  # noqa: BLE001
-        return [], f"Supabase request failed: {type(e).__name__}: {str(e)[:120]}"
+    return all_rows, None
 
 
 def load_panel_json(path: str) -> tuple[list[dict[str, Any]], Optional[str]]:

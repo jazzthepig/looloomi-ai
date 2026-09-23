@@ -203,3 +203,154 @@ def test_compare_produces_diff_with_expected_shape(panel_60d, tmp_path):
         f"agreement should be 100% under always_ok; got "
         f"{diff['summary']['windows_match_under_always_ok']:.2f}%"
     )
+
+
+# ── 7. fetch_panel_rows pagination (S-396 reader fix, 2026-09-23) ──────────
+# These tests mock httpx so they run WITHOUT a live Supabase.
+# They verify:
+#   - single-page (< page_size rows): all returned in one shot
+#   - multi-page loop: paged through Range headers
+#   - HTTP error path: returns ([], err)
+#   - Range header sent: confirms the pagination header is actually used
+#   (not just limit= which PostgREST caps at max-rows=1000)
+
+
+class _FakeResp:
+    """Minimal httpx.Response-like — only what fetch_panel_rows reads."""
+    def __init__(self, status_code: int, body: list[dict], text: str = "[]"):
+        self.status_code = status_code
+        self._body = body
+        self.text = text
+
+    def json(self):
+        return self._body
+
+
+class _FakeAsyncClient:
+    """Records GET calls and returns queued responses in order."""
+    def __init__(self, responses: list[_FakeResp]):
+        self._responses = list(responses)
+        self.calls: list[tuple[str, dict]] = []
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        return None
+
+    async def get(self, url: str, headers: dict = None, **_):
+        self.calls.append((url, dict(headers or {})))
+        if not self._responses:
+            raise RuntimeError("FakeAsyncClient exhausted (more GETs than queued responses)")
+        return self._responses.pop(0)
+
+
+def _make_rows(n: int, *, base_date: dt.date = dt.date(2026, 1, 1)) -> list[dict]:
+    """Build n synthetic ohlcv rows with unique trade_date."""
+    return [
+        {"symbol": "BTC", "trade_date": (base_date + dt.timedelta(days=i)).isoformat(),
+         "close": 100.0 + i, "source": "binance_hist"}
+        for i in range(n)
+    ]
+
+
+def test_fetch_panel_rows_single_page(monkeypatch):
+    """< page_size rows: returned in one shot, no pagination loop."""
+    from paper_trading.replay_three_arms import fetch_panel_rows
+
+    monkeypatch.setenv("SUPABASE_URL", "https://fake.supabase.co")
+    monkeypatch.setenv("SUPABASE_KEY", "fake_key_for_unit_test")
+    rows_5 = _make_rows(5)
+    fake = _FakeAsyncClient([_FakeResp(200, rows_5)])
+
+    import httpx
+    monkeypatch.setattr(httpx, "AsyncClient", lambda timeout=60: fake)
+
+    rows, err = _run_async(fetch_panel_rows(["BTC"], "binance_hist", "2026-01-01", "2026-01-05"))
+    assert err is None
+    assert len(rows) == 5
+    assert len(fake.calls) == 1
+    # Range header present and well-formed
+    _, headers = fake.calls[0]
+    assert headers.get("Range-Unit") == "items"
+    assert headers.get("Range") == "0-999"
+    assert headers.get("Prefer") == "count=exact"
+
+
+def test_fetch_panel_rows_paginates_multi_page(monkeypatch):
+    """3 pages × 4 rows each = 12 rows total; all assembled."""
+    from paper_trading.replay_three_arms import fetch_panel_rows
+
+    monkeypatch.setenv("SUPABASE_URL", "https://fake.supabase.co")
+    monkeypatch.setenv("SUPABASE_KEY", "fake_key_for_unit_test")
+    page1 = _make_rows(4, base_date=dt.date(2026, 1, 1))   # offset 0..3
+    page2 = _make_rows(4, base_date=dt.date(2026, 1, 5))   # offset 4..7
+    page3 = _make_rows(4, base_date=dt.date(2026, 1, 9))   # offset 8..11
+    fake = _FakeAsyncClient([
+        _FakeResp(200, page1),  # first call: full page → continue
+        _FakeResp(200, page2),  # second call: full page → continue
+        _FakeResp(200, page3),  # third call: full page → continue (would loop again)
+        _FakeResp(200, []),     # fourth call: empty → stop
+    ])
+
+    import httpx
+    monkeypatch.setattr(httpx, "AsyncClient", lambda timeout=60: fake)
+
+    rows, err = _run_async(
+        fetch_panel_rows(["BTC"], "binance_hist", "2026-01-01", "2026-01-12", page_size=4),
+    )
+    assert err is None
+    assert len(rows) == 12
+    # Verify offset progression in the URL
+    offsets = [int(c[0].split("offset=")[1].split("&")[0]) for c in fake.calls]
+    assert offsets == [0, 4, 8, 12]
+    # Range headers track offsets
+    ranges = [c[1].get("Range") for c in fake.calls]
+    assert ranges == ["0-3", "4-7", "8-11", "12-15"]
+
+
+def test_fetch_panel_rows_http_error_returns_err(monkeypatch):
+    """500 → returns ([], err); no rows silently dropped."""
+    from paper_trading.replay_three_arms import fetch_panel_rows
+
+    monkeypatch.setenv("SUPABASE_URL", "https://fake.supabase.co")
+    monkeypatch.setenv("SUPABASE_KEY", "fake_key_for_unit_test")
+    fake = _FakeAsyncClient([_FakeResp(500, [], text="internal error")])
+
+    import httpx
+    monkeypatch.setattr(httpx, "AsyncClient", lambda timeout=60: fake)
+
+    rows, err = _run_async(fetch_panel_rows(["BTC"], "binance_hist", "2026-01-01", "2026-01-05"))
+    assert rows == []
+    assert err is not None
+    assert "500" in err
+    assert "offset=0" in err  # page-level context for triage
+
+
+def test_fetch_panel_rows_max_pages_safety(monkeypatch):
+    """page_count > max_pages → returns err, doesn't hang."""
+    from paper_trading.replay_three_arms import fetch_panel_rows
+
+    monkeypatch.setenv("SUPABASE_URL", "https://fake.supabase.co")
+    monkeypatch.setenv("SUPABASE_KEY", "fake_key_for_unit_test")
+    # Always return full pages — would loop forever without max_pages cap
+    full_page = _make_rows(2, base_date=dt.date(2026, 1, 1))
+    responses = [_FakeResp(200, full_page) for _ in range(10)]
+    fake = _FakeAsyncClient(responses)
+
+    import httpx
+    monkeypatch.setattr(httpx, "AsyncClient", lambda timeout=60: fake)
+
+    rows, err = _run_async(
+        fetch_panel_rows(["BTC"], "binance_hist", "2026-01-01", "2026-12-31",
+                         page_size=2, max_pages=3),
+    )
+    assert rows == []
+    assert err is not None
+    assert "max_pages=3" in err
+
+
+def _run_async(coro):
+    """Run an async coroutine in a fresh event loop (pytest-asyncio not assumed)."""
+    import asyncio
+    return asyncio.run(coro)
