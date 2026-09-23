@@ -1841,6 +1841,11 @@ python3 -m src.research.validation.tests.test_a17_panel_long_only_smoke || {
 python3 -m paper_trading.tests.test_run_paper_a17_smoke || {
   echo "  ✗ A-17 panel_long_only paper runner 守卫 — do not push"; exit 1; }
 
+# ── S-412 hl_book(HL 4 币组合决策内核,回放与每日流程共用)──────────────
+# 永不给亏损仓位加仓 · 换手不动带 · Jev 臂的匿名/打乱/解析路径喂机械答案必须 ≡ 机械 Tom。
+python3 -m paper_trading.tests.test_hl_book_smoke || {
+  echo "  ✗ S-412 hl_book 守卫 — do not push"; exit 1; }
+
 # ── S-284/S-288 C fix: regime_quorum 闸 (S-263 redux) ──────────────────────────
 # decide_gated 是 decide() 的 wrapper —— quorum=COLLAPSED/frozen/no_baseline/
 # no_data → SKIPPED(不是 ENTERED)。一个「全票通过」的 regime 标签如果票数本身
