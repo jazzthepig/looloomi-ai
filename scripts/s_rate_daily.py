@@ -71,6 +71,31 @@ _DATE_BODY_RE = re.compile(r"\*\*日期[:\*]+\s+(\d{4}-\d{2}-\d{2})")
 # Used only when no other form matches.
 _DATE_HEADING_ANY_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
+# Date form 5: first YYYY-MM-DD in body lines that are NOT inside a fenced
+# code block (```). Catches ~48 entries that have an ISO date in narrative
+# form but no `**日期**` marker — e.g. "**Jazz 的要求** ... 2026-07-08",
+# "(2026-08-23)" inline, quoted message dates. The 2026-09-23 walker audit
+# showed 75% of body-ISO-dates fall in the first 10% of body, so picking
+# the FIRST one is almost always the entry date; mid-body fallbacks are
+# rare (2/48 cases) and still better than None. Code-block skip prevents
+# matching timestamps like "08-19 09:02" which aren't ISO dates anyway.
+_FENCE_RE = re.compile(r"^\s*```")
+
+
+def _first_iso_date_in_body(body_slice: str) -> str | None:
+    """First YYYY-MM-DD outside fenced code blocks; None if not found."""
+    in_code = False
+    for line in body_slice.splitlines():
+        if _FENCE_RE.match(line):
+            in_code = not in_code
+            continue
+        if in_code:
+            continue
+        m = _DATE_HEADING_ANY_RE.search(line)
+        if m:
+            return m.group(1)
+    return None
+
 
 def _extract_date(heading_line: str, body_slice: str) -> str | None:
     """Return ISO date string for a `## S-NNN` heading, or None if unparseable.
@@ -81,8 +106,11 @@ def _extract_date(heading_line: str, body_slice: str) -> str | None:
       3. Body line containing `**日期** ` or `**日期:**` with a YYYY-MM-DD
          (searched over a 20-line body window so legacy entries with 2
          leading blank lines still parse).
-      4. Last resort: first YYYY-MM-DD anywhere in the heading line.
-         Used only when 1-3 fail. Body never falls back to this.
+      4. First YYYY-MM-DD in body, outside fenced code blocks. Catches
+         entries that have an ISO date in narrative form but no `**日期**`
+         marker (48 entries as of 2026-09-23 audit).
+      5. Last resort: first YYYY-MM-DD anywhere in the heading line.
+         Used only when 1-4 fail. Body never falls back to this.
     Returns None (not raises) so the caller can decide whether to count or skip.
     """
     m = _DATE_TRAILING_RE.search(heading_line)
@@ -94,6 +122,9 @@ def _extract_date(heading_line: str, body_slice: str) -> str | None:
     m = _DATE_BODY_RE.search(body_slice)
     if m:
         return m.group(1)
+    m = _first_iso_date_in_body(body_slice)
+    if m:
+        return m
     m = _DATE_HEADING_ANY_RE.search(heading_line)
     if m:
         return m.group(1)
