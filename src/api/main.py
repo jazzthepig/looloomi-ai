@@ -1053,7 +1053,12 @@ async def _cg_panel_loop():
             # 「RPC 不通/熔断」—— 三个嫌疑人,而真凶(一个 GRANT)的名字
             # 一个字都没出现,连续五轮诊断全被这句话送回了那三个猜测。
             # 现在传的是状态码 + PostgREST 的 body + 调用时的熔断器状态。
-            _panel, _detail = await deep_panel_symbols_detailed()
+            # ⚠️ S-410 / S-378b-C1 third return value:`deep_panel_symbols_detailed`
+            # 现在返 **3-tuple**(syms · detail · latest_hint)。本循环只用 syms+detail,
+            # `latest_hint` 留给 `collect_deep_panel` 算自愈窗口(同一份数据,
+            # 不再付一次慢 RPC)。**两次少接一个会触发**「too many values to unpack
+            # (expected 2)」—— 366 次连续失败正是这个,实测 2026-09-23。
+            _panel, _detail, _latest_hint = await deep_panel_symbols_detailed()
             if _panel is None:
                 _why = render_detail(_detail, prefix="深盘符号表没读到 — ")
                 print(f"[CG-PANEL] {_why}")

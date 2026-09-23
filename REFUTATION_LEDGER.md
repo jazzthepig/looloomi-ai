@@ -22856,3 +22856,46 @@ Jazz 2026-09-22 问「刚才数据的问题解决没有?」。我这两天交的
 判据用的是**当日 distinct symbol**,不是 `max(trade_date)` 也不是总行数:
 S-379 那次我给 A 的并集统计被精确满足,而中位深度只动了 2 天。
 **宽度问题要用宽度量,这是同一条教训的第二次适用。**
+
+## S-410 — `_cg_panel_loop` 失败 366× —— S-378b-C1 加了第 3 返回值,caller 没改 (2026-09-23, Seth/Jazz window, ops console triage 真因)
+
+**[CLAIM heading first per Rule 7; body written before push.]**
+
+**症状**:JAZZ 2026-09-22 截图 ops console 显示 `_cg_panel_loop` ×297 "too many values to unpack (expected 2)"。S-409 当时归因到 Min-A 车道(Mac T1 dead);**完全错**。`/internal/data-freshness` 实测:
+
+- `cis_scores`:**fresh today**(168,265 行,`recorded_at=2026-09-23`,age=0d)—— Mac T1 活着
+- `coingecko_pro_ohlc`:**degraded but usable**(159/203 = 78%,今天有 bar)
+- `_cg_panel_loop`:`build=771528a3` current,`n_consecutive_failures=366`(4 小时内从 297 涨到 366),`last_error="too many values to unpack (expected 2)"`
+- `_market_state_loop` ×30 refused `last_ok_at=null`(从未成功过)—— 同一个上游问题:面板太薄
+
+**真因**(2026-09-23 实测):
+
+`src/data/market/deep_panel_collector.py:153` S-378b-C1 改 signature 加 `latest` 提示:
+```python
+async def deep_panel_symbols_detailed() -> tuple[list[str] | None,
+                                                 dict,
+                                                 list[str] | None]: ...
+return syms, detail, (latest_dates or None)   # ← 3-tuple
+```
+
+`src/api/main.py:1056` caller 没改:
+```python
+_panel, _detail = await deep_panel_symbols_detailed()   # ← 2-tuple unpack
+```
+
+Python tuple unpack 规则:**values > targets → `ValueError: too many values to unpack (expected 2)`**。每 600s 一轮,catch-all 在 main.py:1074 录 `_beat(ok=False, error=str(_e))`,counter 一直涨。
+
+**这是 S-273/274/275 同族** —— 「同一量两个实现,改一处忘另一处」。S-378b-C1 那次 PR 的测试 `test_deep_panel_uses_fast_rpc_first.py` mock 的是函数本身,**没有 assert `main.py` caller 收齐 3 个返回值**,所以这条 regression 跨过测试网。
+
+**修复**:`main.py:1056` 改 2-tuple unpack → `_panel, _detail, _latest_hint = await deep_panel_symbols_detailed()`(`_latest_hint` 在本循环不用,只为对齐 signature —— `collect_deep_panel` 在另一处用)。
+
+**新测试**:`tests/test_cg_panel_loop_unpacks_three_tuple.py` 8 cases PASS:
+- AST 静态 guard —— `main.py` 里 `deep_panel_symbols_detailed()` 的 call site **必须** 有 3 个 targets(回归即报红)
+- Runtime smoke —— 3-tuple 直接 unpack 不抛
+- **Bug-shape pinned** —— 2-tuple unpack of 3-tuple **必须** raise `ValueError`,错误字面含 "too many values to unpack" + "expected 2"(把那条错误钉死,任何把 caller 改回 2-tuple 的回归都会被测试抓到,而不仅是 prod heartbeat)
+
+**判据**:Railway deploy 后 `_cg_panel_loop` heartbeat `verdict=ok` 或 `verdict=refused`(面板太薄,正确地不写),`n_consecutive_failures` 在合理次数内(写失败可见,不积累);`cg_coin_map` 新行(今天 UTC 当日);`coingecko_pro_ohlc` 当日 distinct ≥ 150 连续 3 天(同 §S-408 判据 3)。
+
+**S-409 修正**:归因错了 —— Mac T1 fresh today,A 不是 Min-A lane,是 Seth 自家 caller 漏接返回值。
+
+**与 S-405 关系**:同族 S-262 family #12:**「一处改,另一处漏改」**。S-262 family 11+12 同测:`test_safe_format_score` + `test_cg_panel_loop_unpacks_three_tuple` —— **两条都是改 signature 后 caller 没跟上**。S-405 静默渲染错数据(测试抓到 `total_score ?? 0`),S-410 静默循环死(测试必须先建)。
