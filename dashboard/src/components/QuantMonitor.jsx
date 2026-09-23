@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { T, FONTS } from "../tokens";
+import { isMissing } from "../lib/safeFormat";
 import PerformanceDashboard from "./PerformanceDashboard";
 
 const API_BASE = "/api/v1";
@@ -224,7 +225,7 @@ function BacktestCard({ data }) {
           { label: "Total Return", value: lev ? `+${lev.total_return}%` : "—", sub: "3× leveraged", color: lev && lev.total_return >= 0 ? T.green : T.red },
           { label: "Annualized",   value: lev?.annualized ? `${lev.annualized}%` : "—", sub: "CAGR", color: T.green },
           { label: "Win Rate",     value: spot?.summary?.win_rate != null ? `${spot.summary.win_rate}%` : "—", sub: `${spot?.summary?.trades ?? "—"} trades`, color: T.green },
-          { label: "Median Return",value: spot?.summary?.median_return ? `${spot.summary.median_return}%` : "—", sub: "per trade", color: T.cyan },
+          { label: "Median Return",value: isMissing(spot?.summary?.median_return) ? "—" : `${spot.summary.median_return}%`, sub: "per trade", color: T.cyan },
         ].map((s, i, arr) => (
           <div key={i} style={{
             paddingRight: 32,
@@ -275,7 +276,7 @@ function BacktestCard({ data }) {
           <div>
             <span style={{ fontFamily: FONTS.display, fontSize: 10, fontWeight: 600, color: T.cyan }}>SMC Enhanced</span>
             <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, marginLeft: 8 }}>
-              {smc_enhanced.summary.trades} trades · {smc_enhanced.summary.win_rate}% WR · median {smc_enhanced.summary.median_return}%
+              {smc_enhanced.summary.trades} trades · {smc_enhanced.summary.win_rate}% WR · median {isMissing(smc_enhanced.summary.median_return) ? "—" : `${smc_enhanced.summary.median_return}%`}
             </span>
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.green }}>{smc_enhanced.vs_original?.avg_return_improvement} avg return</div>

@@ -1,0 +1,1 @@
+const t=e=>e==null||typeof e=="number"&&Number.isNaN(e),n=e=>{if(t(e)||typeof e!="number")return"—";const r=Math.abs(e);return r>=1e9?`$${(e/1e9).toFixed(1)}B`:r>=1e6?`$${(e/1e6).toFixed(0)}M`:r>=1e3?`$${(e/1e3).toFixed(1)}K`:`$${e.toFixed(0)}`},i=(e,r=1)=>t(e)||typeof e!="number"?"—":e.toFixed(r);export{i as a,n as f,t as i};

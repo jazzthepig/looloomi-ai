@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { T, FONTS, sigStyle as sigStyleFromTokens } from "../tokens";
+import { isMissing, fmtDollar } from "../lib/safeFormat";
 
 /* ─── Asset Universe ────────────────────────────────────────────────── */
 // CometCloud Inclusion Standard v2.0 (May 2026) — 24 crypto assets.
@@ -156,6 +157,12 @@ const fmtVol = (v) => {
   if (v >= 1e6)  return `$${(v / 1e6).toFixed(1)}M`;
   return `$${(v / 1e3).toFixed(0)}K`;
 };
+// S-397 P1 (A8): mcap uses a different smallest-bucket divisor than volume
+// ($500 mcap is "$500", not "$500K"). Reuse safeFormat.fmtDollar which has no
+// scale error and proper "—" semantics — single renderer for both is the audit
+// target. Use fmtMcap for market_cap, fmtVol remains for total_volume (its
+// 1e3 divisor is right for tradeable liquidity in $/K).
+const fmtMcap = (v) => fmtDollar(v);
 
 /* ─── TH style (shared) ───────────────────────────────────────────── */
 const thBase = {
@@ -339,16 +346,25 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
 
     // Sort
     list = [...list].sort((a, b) => {
-      let va = 0, vb = 0;
+      // S-397 P1 (A9): `|| 0` collapses missing values to 0 and groups them at
+      // the bottom regardless of true quality — order looks "right" but the
+      // rank is wrong. Push missing values to the END regardless of sortDir
+      // (sort still reads as ascending/descending within real data).
+      let va, vb;
       switch (sortBy) {
-        case "mcap": va = a.mkt.market_cap || 0; vb = b.mkt.market_cap || 0; break;
-        case "24h":  va = a.ch24 || 0;           vb = b.ch24 || 0; break;
-        case "7d":   va = a.ch7d || 0;           vb = b.ch7d || 0; break;
-        case "cis":  va = a.cis?.score || 0;     vb = b.cis?.score || 0; break;
-        case "las":  va = a.cis?.las || 0;       vb = b.cis?.las || 0; break;
-        case "vol":  va = a.mkt.total_volume || 0; vb = b.mkt.total_volume || 0; break;
-        default: break;
+        case "mcap": va = a.mkt.market_cap; vb = b.mkt.market_cap; break;
+        case "24h":  va = a.ch24;           vb = b.ch24; break;
+        case "7d":   va = a.ch7d;           vb = b.ch7d; break;
+        case "cis":  va = a.cis?.score;     vb = b.cis?.score; break;
+        case "las":  va = a.cis?.las;       vb = b.cis?.las; break;
+        case "vol":  va = a.mkt.total_volume; vb = b.mkt.total_volume; break;
+        default: va = 0; vb = 0;
       }
+      const aMissing = isMissing(va);
+      const bMissing = isMissing(vb);
+      if (aMissing && !bMissing) return 1;   // missing always last
+      if (bMissing && !aMissing) return -1;
+      if (aMissing && bMissing) return 0;
       return (va - vb) * sortDir;
     });
 
@@ -549,7 +565,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                         {/* Mkt Cap */}
                         <td style={{ textAlign: "right", padding: "9px 14px" }}>
                           <span style={{ fontFamily: FONTS.mono, fontSize: 12, color: T.t2 }}>
-                            {fmtVol(mkt.market_cap)}
+                            {fmtMcap(mkt.market_cap)}
                           </span>
                         </td>
 

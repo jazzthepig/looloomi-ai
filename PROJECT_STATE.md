@@ -1,7 +1,9 @@
 # PROJECT_STATE.md — the living single source of truth
 
 **Last updated:** 2026-09-23 (Seth/Cowork lane — **S-410 `_cg_panel_loop` 失败 366× 真因 + 修复 ✅ (S-262 family #13, ops console A 真因)**: S-409 初判归因 Min-A 完全错 —— `/internal/data-freshness` 实测 `cis_scores` **fresh today (168,265 行,age=0d)** ⇒ Mac T1 活着。真因 = `deep_panel_collector.py:153` S-378b-C1 改 signature 加 3rd `latest_hint` 返回值,但 `src/api/main.py:1056` caller 仍是 2-tuple unpack → Python `values > targets` raise,**S-273/274/275 同族**「一处改,另一处漏改」。修复:`main.py:1056` 2-tuple → 3-tuple unpack + 注释;`tests/test_cg_panel_loop_unpacks_three_tuple.py` **8 cases PASS** —— AST 静态 guard + runtime smoke + **bug-shape pinned**(2-tuple of 3-tuple raise "too many values to unpack" + "expected 2",钉死错误);`scripts/preflight.sh` 注册 stage 3(S-244 family pattern);`REFUTATION_LEDGER.md` S-410 claim heading per Rule 7;preflight discipline 段全绿。`MINIMAX_SYNC.md` S-409 §IN-FLIGHT 段纠正归因 + 新增 §S-410 ship entry(70,471 chars)。**与 S-405 同族**:S-405 静默渲染错数据,S-410 静默循环死,**两条都是 signature change 后 caller 没跟上**。判据:Railway `_cg_panel_loop` heartbeat `verdict=ok` 或 `verdict=refused`(面板太薄,正确地不写),`n_consecutive_failures` 不再涨;`cg_coin_map` 新行(今天 UTC);`coingecko_pro_ohlc` 当日 distinct ≥ 150 连续 3 天(同 §S-408 判据 3)。
-**🟢 DEPLOY VERIFIED 2026-09-23**:commit `1bb885f` pushed → Railway `build=1bb885fa`;`_cg_panel_loop` heartbeat `verdict=ok`,age=158min(well within `_CG_PANEL_INTERVAL_S=6*3600` success cadence — **not staleness**),`stale_build=false`,`late=false`,`reason=上次成功 158 分钟前`。S-410 ✅ CLOSED。) — 【更早条目 → `PROJECT_STATE_LOG.md` §2026-09-23-HEADER-MOVED-FOR-CAP】
+**🟢 DEPLOY VERIFIED 2026-09-23**:commit `1bb885f` pushed → Railway `build=1bb885fa`;`_cg_panel_loop` heartbeat `verdict=ok`,age=158min(well within `_CG_PANEL_INTERVAL_S=6*3600` success cadence — **not staleness**),`stale_build=false`,`late=false`,`reason=上次成功 158 分钟前`。S-410 ✅ CLOSED。
+
+**S-397 P1+P2 audit backlog ✅ SHIPPED 2026-09-23 (8 sites + 1 false-positive)**: JAZZ 「abc 都做」。8 sites of S-262 family fixed (A7 verified NOT broken — `setLoading(false)` IS in `finally` block): A2 `StrategyPage.jsx:545` BTC 7D color branch / A6 `DiagnoseHome.jsx:32` radius NaN when cis missing / A8 `AssetRadar.jsx:152-158,552` fmtVol $1e3 divisor on mcap → fmtMcap via `fmtDollar` / A9 `AssetRadar.jsx:341-353` sort `|| 0` collapses missing → isMissing last / C2 `IntelligencePage.jsx:67-73` fmt.amount falsy-zero → isMissing / C3 `CISWidget.jsx:343-344,718-723` pillar `?? 0` color + composite recalc normalize by presence / C4 `PortfolioDiagnosis.jsx:42` `cis:25` fallback → isMissing + outer rim / C7 `QuantMonitor.jsx:227,279` median_return falsy-zero → isMissing. Tests `tests/test_s397_p1p2_audit_backlog.py` 27 cases PASS (runtime isMissing smoke + 8 per-site grep guards + A7 false-positive verification + preflight registration). preflight stage 3 注册 + `lesson_enforcement_baseline.txt` 196→197 (auto-bump). Bundled fix: `paper_trading/jev_smoke.py` 加 `sys.path` bootstrap(S-402 — pre-existing RED from S-397 main batch,不带 bootstrap 时脚本路径调用下 `from paper_trading.X` 会在 argparse 之前炸,症状伪装成参数校验失败)。) — 【更早条目 → `PROJECT_STATE_LOG.md` §2026-09-23-HEADER-MOVED-FOR-CAP】
 
 > **本项目的主导缺陷类:「拿不到」被渲染成一个合理的数字,而不是被渲染成「拿不到」。**
 > 十一次实例(S-180…S-243)+ 三条课 + 守卫自己失败七轮的记录 →
@@ -55,6 +57,14 @@ select count(distinct symbol) from ohlcv_daily
 `loop_attempt` 每天 ≥ 100 行(现:表不存在)。
 ⚠️ 用**当日 distinct symbol**,不是 `max(trade_date)` 也不是总行数 —— S-379 的并集统计教训第二次适用。
 派活:`MINIMAX_SYNC.md` §S-408-面板断线-2026-09-22。
+
+**S-410 ✅ closed caller unpack,本条三条 VERIFY 仍未过 —— 两条独立**:
+S-410 (commit `1bb885f`, 2026-09-23) 修了 `main.py:1056` 2-tuple → 3-tuple unpack,
+`_cg_panel_loop` heartbeat `verdict=ok`,age=158min(well within `_CG_PANEL_INTERVAL_S=6*3600`)。
+**但 S-410 只闭合 caller 漏接返回值,**§S-408 三条 VERIFY 判据(distinct writer ≥ 4 /
+`_cg_panel_loop` ≥ 100 attempt/天 / 当日 distinct symbol ≥ 150 连续 3d)仍派 A,
+**A-408-1 让它重新跑起来 + A-408-2 写 loop_attempt + A-408-3 补四个 write_log writer**。
+本条不因 S-410 而关。
 
 ### #0c · `nav_panel_*` 两张表:**声明在前,写入端在后** (S-399, 2026-09-22)
 

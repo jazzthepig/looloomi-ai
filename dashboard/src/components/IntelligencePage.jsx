@@ -10,6 +10,7 @@ import EconomicIndicators from "./EconomicIndicators";
 import DinggeBoard from "./DinggeBoard";
 import CrowdClock from "./CrowdClock";
 import { T, FONTS } from "../tokens";
+import { isMissing } from "../lib/safeFormat";
 
 // Lazy — recharts + DeFiLlama logic (~80KB); only used on Protocol tab
 const ProtocolIntelligence = lazy(() => import("./ProtocolIntelligence"));
@@ -66,7 +67,10 @@ const CSS = `
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 const fmt = {
   amount: (v) => {
-    if (!v) return "—";                       // 0 / null → "—", never a dead "$0.00M"
+    // S-397 P1 (C2): `!v` collapses legitimate 0 (e.g. all undisclosed rounds
+    // in 180d) into "—", which then reads as "no data" — same shape as
+    // missing. A real zero is honest data. isMissing keeps the cases apart.
+    if (isMissing(v)) return "—";
     if (v >= 1000) return `$${(v / 1000).toFixed(1)}B`;
     if (v >= 1)    return `$${v.toFixed(1)}M`;
     return `$${v.toFixed(2)}M`;
