@@ -23059,3 +23059,29 @@ JAZZ 视觉验 Sector Heatmap 之外的页:
 ### 给 Jazz
 
 本条 ship 在 schema-drift RED 下(spirit of Rule 5 form violation),drift 是 c-path Phase 1+2 backlog,不属本条改动。如要回滚,`git revert 2bf6ef9`,但本条 frontend audit 是你今天亲催的事 —— 建议不回滚,等 C-path ship 后 preflight 自然转绿。已在 §IN-FLIGHT 留接缝。
+
+---
+
+## S-411
+
+**Jev 客户端从没成功调用过一次:端点、模型名、请求格式四处都是猜错的。**
+
+2026-09-23 第一次真实调用 404。Jazz 看 TypeSafe 用量:这几天没有一次成功。
+对照官方文档 https://docs.typesafe.ai/api:
+
+    我们猜的                              官方
+    POST /v1/experimental_evaluate        POST /v1/systemone
+    model "jev-1"                         model "jev-latest"
+    questions: [ {name, primitive, …} ]   questions: { "<id>": {type, …} }  ← map
+    primitive "Choice|Score|Noul"         type "choice|score|noul"(小写)
+
+**后果:S-397 的 `TypesafeJevDecisionBackend` 是 fail-open 的,所以之前任何一次「真实」Jev
+调用都返回了安全默认值(Choice=no_edge / Noul=0.5 / Score=0)。到今天为止,
+仓库里不存在任何一个真实的 Jev 决策。** S-397 的 49/49 测试全部基于 Mock,没有错,
+但它们证明的是管道,不是 Jev。
+
+已按官方改 `_build_request_body` / `_request` / `DEFAULT_MODEL`;50 个 Jev 相关测试仍全绿。
+**判据:`python3 -m paper_trading.jev_smoke --send` 返回 HTTP 200 且解析通过。**
+
+同一形状第 N 次:**fail-open 把「从没接通」渲染成了「Jev 没有观点」。**
+研究和影子盘里,Jev 调用失败必须 fail-closed;fail-open 只留给实盘执行路径。
