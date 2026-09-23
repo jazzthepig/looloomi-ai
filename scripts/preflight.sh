@@ -153,6 +153,14 @@ python3 -m tests.test_dates_are_utc_not_machine_local
 #               same contract. The static guard catches the literal `?? 0`
 #               pattern if anyone reverts the call sites.
 python3 -m tests.test_safe_format_score
+# 3a-quater. S-410 (2026-09-23) — `_cg_panel_loop` failed 366× with "too many
+#               values to unpack (expected 2)" because S-378b-C1 added a 3rd
+#               return value (`latest_hint`) to `deep_panel_symbols_detailed()`
+#               but the caller in `main.py:_cg_panel_loop` still did a 2-tuple
+#               unpack. The AST static guard pins that the call site has
+#               exactly 3 targets; the runtime smoke + bug-shape tests pin the
+#               exact ValueError string that the heartbeat was recording.
+python3 -m tests.test_cg_panel_loop_unpacks_three_tuple
 # 3a-quinquies. neutralisation (2026-08-07, S-103). `neutralize()` was cited in 71
 #               files and defined in none, so no claim of alpha had ever been
 #               separated from exposure. Guards both directions: pure beta must
