@@ -52,29 +52,36 @@ def _sb_headers(write: bool = False) -> dict:
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 async def _upsert_ohlcv(client: httpx.AsyncClient, rows: list) -> int:
-    """Upsert rows to ohlcv_daily. Returns count accepted."""
-    if not _SB_URL or not _SB_KEY or not rows:
+    """Upsert rows to ohlcv_daily. Returns count accepted.
+
+    A-408-3 / S-408-3: refactored from a raw httpx POST (which bypassed
+    `write_log`) to `supabase_upsert_table` (which is `@log_write_attempt`
+    decorated, S-352). One row in `write_log` per chunk instead of zero
+    rows for the entire batch — and each row carries
+    `writer='src.api.routers.ohlcv._upsert_ohlcv'`.
+
+    Chunking stays at 500 (caller-side); `supabase_upsert_table` does NOT
+    chunk internally (it ships the entire `rows` list as one body). A
+    250k-row body is a timeout — the chunk loop stays here.
+
+    `StoreResult.__bool__ → r.ok` — the `if r:` check uses that. Documented
+    so a future reader doesn't "fix" it to `if r.ok:`.
+    """
+    if not rows or not _SB_URL or not _SB_KEY:
         return 0
-    try:
-        # chunk to avoid oversized bodies
-        CHUNK = 500
-        total = 0
-        for i in range(0, len(rows), CHUNK):
-            chunk = rows[i:i+CHUNK]
-            r = await client.post(
-                f"{_SB_URL}/rest/v1/ohlcv_daily?on_conflict=symbol,trade_date,source",
-                content=json.dumps(chunk),
-                headers=_sb_headers(write=True),
-                timeout=30,
-            )
-            if r.status_code in (200, 201):
-                total += len(chunk)
-            else:
-                _logger.warning(f"[OHLCV] upsert chunk failed: {r.status_code} {r.text[:120]}")
-        return total
-    except Exception as e:
-        _logger.warning(f"[OHLCV] upsert error: {e}")
-        return 0
+    from src.api.store import supabase_upsert_table
+    CHUNK = 500
+    total = 0
+    for i in range(0, len(rows), CHUNK):
+        chunk = rows[i:i+CHUNK]
+        r = await supabase_upsert_table(
+            "ohlcv_daily", chunk,
+            on_conflict="symbol,trade_date,source")
+        if r:                                           # StoreResult.__bool__ → r.ok
+            total += len(chunk)
+        else:
+            _logger.warning(f"[OHLCV] upsert chunk failed: {r.why[:200]}")
+    return total
 
 
 async def _fetch_cg_daily(client: httpx.AsyncClient, coin_id: str, days: int) -> list:
