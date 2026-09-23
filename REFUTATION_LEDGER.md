@@ -22096,36 +22096,17 @@ None 不破任何下游。
 
 | ID | 位置 | bug |
 |---|---|---|
-| A2 | StrategyPage color branch | red/green branch 看 chg_24h 但 chg_24h 可能 null |
-| A5 | CISLeaderboard `ret === 0` | noData proxy 用 zero,真 0 与 missing 混 |
-| A6 | DiagnoseHome pillar scores | `score ?? 0` 把 missing pillar 渲成 0 |
-| A7 | VaultPage placeholder | text 写死 "Loading..." 但已 load 时仍显示 |
-| A8 | AssetRadar `fmtVol(mcap)` | mcap 用 vol formatter,B/M 单位算错 |
-| A9 | AssetRadar TradFi sort | sort key 不区分 ETF vs equity |
-| C2 | IntelligencePage `fmt.amount` | null → "$0" |
-| C3 | CISWidget `?? 0` in pillar scoring | pillar 全 0 像 "low fundamental" |
-| C4 | PortfolioDiagnosis synthetic 25 | 兜底 25 是 B-,给所有 missing pillar 一个假分 |
-| C6 | CISLeaderboard `total_score ?? 0` | 同 A5 |
-| C7 | PerformanceDashboard median 0 | 同 A5 |
-
-11 件全需逐个审 + 改用 safeFormat helpers。⏸ 排队等 JAZZ 拍下一轮。
-
-### 关闭判据
-
-JAZZ 视觉验 Sector Heatmap 之外的页:
-- MacroPulse:FNG 缺数据时显示 `"—"` 不是 `50`,24h MCap 缺时显示 `"—"` 不是 `+0.00%`
-- StrategiesPage 行 fallback:price 7d 缺时显示 `"—"`,不冒 TVL
-- PerformanceDashboard OPEN badge:amber pill 与 `"—"` 区分清楚
-- 后端 `/api/v1/market/macro-pulse` JSON:`fear_greed.value: null` 不再是 `50`
-
-### 给 Mac-side / Min-A
-
-无。
-
-### 给 Jazz
-
-本条 ship 在 schema-drift RED 下(spirit of Rule 5 form violation),drift 是 c-path Phase 1+2 backlog,不属本条改动。如要回滚,`git revert 2bf6ef9`,但本条 frontend audit 是你今天亲催的事 —— 建议不回滚,等 C-path ship 后 preflight 自然转绿。已在 §IN-FLIGHT 留接缝。
-
+| A2 | StrategyPage color branch | red/green branch 看 chg_24h 但 chg_24h 可能 null — **✅ S-411** |
+| A5 | CISLeaderboard `ret === 0` | noData proxy 用 zero,真 0 与 missing 混 — **✅ S-405** |
+| A6 | DiagnoseHome pillar scores | `score ?? 0` 把 missing pillar 渲成 0 — **✅ S-411** (radius NaN) |
+| A7 | VaultPage placeholder | text 写死 "Loading..." 但已 load 时仍显示 — **NOT BROKEN**（setLoading(false) IS in finally,S-411 验证） |
+| A8 | AssetRadar `fmtVol(mcap)` | mcap 用 vol formatter,B/M 单位算错 — **✅ S-411** (fmtMcap via fmtDollar) |
+| A9 | AssetRadar TradFi sort | sort key 不区分 ETF vs equity — **✅ S-411** (isMissing → last) |
+| C2 | IntelligencePage `fmt.amount` | null → "$0" — **✅ S-411** (isMissing, 0 → "$0.00M") |
+| C3 | CISWidget `?? 0` in pillar scoring | pillar 全 0 像 "low fundamental" — **✅ S-411** (muted + recalc normalize by presence) |
+| C4 | PortfolioDiagnosis synthetic 25 | 兜底 25 是 B-,给所有 missing pillar 一个假分 — **✅ S-411** (outer rim bucket) |
+| C6 | CISLeaderboard `total_score ?? 0` | 同 A5 — **✅ S-405** |
+| C7 | PerformanceDashboard median 0 | 同 A5 — **✅ S-411** (QuantMonitor.jsx:227,279,isMissing) |
 ## S-398 — 三天高产出,全部在死掉的数据流的另一侧
 
 **2026-09-22 · Seth · 起因:Jazz「回到高维,综观整个项目,check sync 并 audit 更新的工作」**
@@ -22957,3 +22938,124 @@ P1(T4 的现货多头版)主窗口 +115% / 0.74,稳健性窗口 1.35;比全永�
 4. **被推翻:** M-82/M-86 横截面 K1(原结论 n=1–3 笔)在 3.4 年上 ≈ 0;资金费逆向第 6 次被推翻;短期反转灾难性。
 5. **给 Jev 叠加层一个基准:** T6「持有 + 0.5×TSMOM 多空」主窗口比持有多 +125pp,回撤不变。
    Jev 叠加要证明自己,得在同口径下打败这个两行规则,而不只是打败 0。
+
+---
+
+## S-410
+
+**「辨识风格 → 在风格地图里匹配策略」这一步,本身有没有增益 —— 先于 Jev,先于杠杆。**
+
+Jazz 2026-09-23:落地 = 辨识风格 → 在风格地图和矢量库里匹配策略 → 组合管理;
+底层策略无杠杆或低杠杆,杠杆只在组合层/执行层;Jev 要像 Trader Tom,不像交易 bot。
+
+这条架构的**第一个可证伪前提**:在当前风格下挑策略,比一直用同一个策略好。
+如果这一步本身没有增益,Jev 叠在上面就是在噪声上做判断。所以先单独测它。
+
+### 预注册(跑之前写下)
+
+- 资产:BTC/ETH/SOL 等权(HYPE 历史太短,不进本测)。HL 原生数据,成本和资金费同 S-409。
+- **候选策略 = S-409 已测的无杠杆 sleeve,不新增、不调参:**
+  空仓 · H0 现货持有 · T1 趋势多/空仓 · T3 TSMOM 多/空仓 · P1 TSMOM 多空(多头现货、空头永续)。
+- **风格状态**(只用 ≤t 的信息,扩展窗口标准化):BTC 距 MA200 · 三币 60 日收益均值 ·
+  组合 30 日波动 · BTC 距 200 日高点回撤。
+- **两种匹配器:**
+  M1 风格格子 = 趋势(上 / 下 / 混合)× 波动(高于 / 低于历史中位数),6 格;
+  M2 向量近邻 = 标准化状态上最近的 40 个历史日,只取 d ≤ t−15(前向结果在 t 时已知)。
+- **选择规则:** 每 7 天一次,选匹配日上「决策后 14 天前向净收益」均值最高的 sleeve;
+  匹配样本 < 20 时默认 T3。组合仓位 = 所选 sleeve 的仓位,按真实换手计成本。
+- 评估窗口 2022-01-01 → 今天(2020-10 → 2021-12 只作初始地图)。
+- **通过判据:** 匹配版 Sharpe 高于静态 T3,并且 2022–2026 五个年份里至少 3 个更高,
+  最大回撤不比 T3 差 5pp 以上。**否则判定:风格匹配在这几个币、这几个策略上没有增益。**
+
+### 结果:🔴 未通过,而且输给了每一个静态 sleeve
+
+`src/research/validation/s410_style_matched_selection.py`,2022-01-01 → 2026-09-21:
+
+    版本                  总收益  Sharpe  MaxDD    2022   2023   2024   2025   2026
+    M1 风格格子           -50.0%   0.01   -89.6%  -2.62   1.15   1.49   0.17   0.76
+    M2 向量近邻           -47.7%   0.04   -82.8%  -1.72   1.43   0.88  -0.17   0.84
+    T3 静态(基准)        +148.9%   0.73   -41.5%  -2.16   2.33   1.03   0.31   0.86
+    T1 静态              +207.8%   0.89   -38.7%  -1.35   1.90   0.74   0.30   1.58
+    H0 持有               +30.2%   0.42   -80.0%
+    P1 多空               +95.6%   0.54   -51.4%
+
+机制核对:同一选择机制强制全选 T3,得到 +146.5%(直算 +148.9%,差额 = 首日建仓成本)。不是 bug。
+
+选择频率:两种匹配器都有 55% 的时间选 H0 持有。按「匹配日前向收益均值最高」挑,
+地图里 2020–21 的牛市让最高 β 的 sleeve 在多数格子里胜出;到 2022 这正是最差的选择。
+另外 23–33% 的时间选 P1,而 H0 与 P1 的相关系数是 −0.30 —— **在两个反向的 sleeve 之间切换,
+择时错误被放大**,所以组合比它的任何一个成分都差。
+
+### 读法
+
+1. **T1/T3 本身已经是「按风格出手」**:它们的仓位就由趋势状态决定。在同样的特征上再做一层
+   更粗的风格划分、按历史均值挑 argmax,只是一个择时更差的趋势规则。
+2. **风格地图要有用,地图里的 sleeve 必须原因不同。** 现有候选全是趋势变体加持有
+   (T3 与 H0 相关 0.75)。Trader Tom §5c 要的是**反向偏度的两层**:趋势(右尾)+
+   均值回归/拥挤反转(左尾,胜率引擎)。库里没有第二类,地图就没东西可选。
+3. **用配置权重,不用 argmax 切换。** 本测按预注册只测了切换;切换在反相关 sleeve 之间是放大器。
+4. Trader Tom 真正依赖的风格维度是**拥挤度**(资金费、持仓量、爆仓),而 HL 资金费 2023-05 才有,
+   本测为了 2020 起可比没放进去。这是下一步能测、且应该测的维度。
+
+**不做的:** 不在这组数据上继续换特征、换 k、换评分函数找一个能过的版本 —— 那是分叉路径。
+## S-411 — S-397 P1+P2 audit backlog ship (2026-09-23, JAZZ 「abc 都做」)
+
+**8 sites of S-262 family fixed; A7 verified NOT broken** (S-244 family: preflight registration ensures regression catches at deploy time, not in prod).
+
+**⚠️ Rule 7 violation flagged**: 本批 push(`6ded043`)发生在 ledger claim 之前 — 一个 commit 已经 ship,这条 S-411 是补救记录,不是常规先 claim 后 ship 的顺序。JAZZ 拍「abc 都做」,我直接 ship 了 8 sites + test + preflight 注册,**漏了写 claim heading**;现在按 forward-only 编号补 S-411。**下次 (S-412+) 务必先 claim heading 再 push body。**
+
+**Sites fixed + test** (`tests/test_s397_p1p2_audit_backlog.py` 27 cases PASS):
+
+| ID | File:line | 修复 | 测试 |
+|---|---|---|---|
+| A2 | StrategyPage.jsx:545 | BTC 7D color: `(usd_7d_change || 0) >= 0` → `isMissing(...) ? T.t3 : (>=0 ? green : red)` | grep guard |
+| A6 | DiagnoseHome.jsx:32 | radius(h) gate: `isMissing(h.cis)` → outer rim bucket (off-standard 同) | grep guard + gate-precedes check |
+| A8 | AssetRadar.jsx:152-158, 552 | fmtVol → fmtMcap via safeFormat.fmtDollar (no $1e3 scale error, proper "—") | helper defined + apply guard |
+| A9 | AssetRadar.jsx:341-353 | sort `\|\| 0` → isMissing last, scoped to comparator (其他上下文合法 0) | scoped grep guard |
+| C2 | IntelligencePage.jsx:67-73 | fmt.amount `!v` → `isMissing(v)`(legit 0 → "$0.00M", missing → "—") | grep guard |
+| C3 | CISWidget.jsx:343-344, 718-723 | pillar `?? 0` → `isMissing(v) ? #6b7280 : <color>`; recalc normalize by sum-of-present-weights, all-missing → null | grep guard |
+| C4 | PortfolioDiagnosis.jsx:42 | `cis:25` fallback → `isMissing(h.cis) ? null : h.cis` + outer rim (off-standard 同) | grep guard |
+| C7 | QuantMonitor.jsx:227, 279 | median_return `?:` → `isMissing(...)` (label + SMC sub-line) | grep guard |
+
+**A7 verified NOT broken**: `VaultPage.jsx:177 setLoading(false)` AND `:195 setVaultsLoading(false)` are both in `finally` blocks — loading branch DOES flip off on error. No fix shipped. Test asserts this so a regression that breaks the finally would be caught.
+
+**Bundled pre-existing RED**: `paper_trading/jev_smoke.py` 加 `sys.path` bootstrap (S-402) — `from paper_trading.X` 在 `_build_questions` / `_send` 函数体内,脚本路径调用下 `sys.path[0]` 是 `paper_trading/` 本身,import 在 argparse 之前炸,症状伪装成「参数校验失败」。Pattern 复制 `spec_runner.py:98-102`。JAZZ 增强后版本已落仓。
+
+**测试结构** (27 cases):
+1. `test_ismissing_predicate_zero_safe` — runtime smoke via Node subprocess against `safeFormat.js` (0 must NOT be missing)
+2. `test_a2_strategypage_btc7d_color_uses_isMissing` — 3 grep checks
+3. `test_a6_diagnosehome_radius_guards_missing` — 3 grep checks (gate-precedes check)
+4. `test_a7_vaultpage_already_handled` — 2 grep checks (false-positive verification)
+5. `test_a8_assetradar_fmtvol_mcap_split` — 4 grep checks
+6. `test_a9_assetradar_sort_missing_last` — 2 grep checks (scoped to comparator)
+7. `test_c2_intelligencepage_amount_ismissing` — 2 grep checks
+8. `test_c3_ciswidget_pillar_color_and_recalc` — 3 grep checks
+9. `test_c4_portfoliodiagnosis_cis_fallback` — 3 grep checks
+10. `test_c7_quantmonitor_median_ismissing` — 3 grep checks
+11. `test_preflight_registers_this_test` — S-244 family: test exists ≠ test runs
+
+**preflight 阶段**:`scripts/preflight.sh` 在 `test_safe_format_score` 之后注册 `test_s397_p1p2_audit_backlog`,带 S-244 family 注释(测存在 ≠ 被跑);`lesson_enforcement_baseline.txt` 196→197 (auto-bump)。
+
+**与 S-405 关系**:S-405 闭合 A5+C6 (CISLeaderboard 5 处,frontend 主战场);S-411 闭合 A2/A6/A8/A9/C2/C3/C4/C7 (其他 6 个页面)。S-262 family 总闭合数 = 11+9 = **20 处**(S-395/S-395b + S-396 + S-405 + S-411)。**余下 ≤3 处**(`MultiFactorStrategies.jsx` 类比 C3、`MyPortfolio.jsx` 类比、若干 `sort keys` 排序用,优先级低,JAZZ 拍下一轮)。
+
+**判据**:Railway deploy `auto-` S-411 后续包,前端应看到 (1) StrategyPage BTC 7D 缺失时显示 "—" 灰色而非绿色;(2) DiagnoseHome / PortfolioDiagnosis 中无 CIS 的资产移到外圈而非内圈;(3) AssetRadar mcap 列 ≤1M 资产显示 "$X" 而非 "$XK";(4) AssetRadar 缺失值不再排序到底;(5) IntelligencePage 0 总额显示 "$0.00M" 而非 "—";(6) CISWidget 缺失 pillar 灰色而非红色,composite 不被拉低;(7) QuantMonitor median 0% 显示 "0.0%" 而非 "—"。
+
+**Mac-side ship**:`6ded043` → main 推。
+
+11 件全需逐个审 + 改用 safeFormat helpers。⏸ 排队等 JAZZ 拍下一轮。
+
+### 关闭判据
+
+JAZZ 视觉验 Sector Heatmap 之外的页:
+- MacroPulse:FNG 缺数据时显示 `"—"` 不是 `50`,24h MCap 缺时显示 `"—"` 不是 `+0.00%`
+- StrategiesPage 行 fallback:price 7d 缺时显示 `"—"`,不冒 TVL
+- PerformanceDashboard OPEN badge:amber pill 与 `"—"` 区分清楚
+- 后端 `/api/v1/market/macro-pulse` JSON:`fear_greed.value: null` 不再是 `50`
+
+### 给 Mac-side / Min-A
+
+无。
+
+### 给 Jazz
+
+本条 ship 在 schema-drift RED 下(spirit of Rule 5 form violation),drift 是 c-path Phase 1+2 backlog,不属本条改动。如要回滚,`git revert 2bf6ef9`,但本条 frontend audit 是你今天亲催的事 —— 建议不回滚,等 C-path ship 后 preflight 自然转绿。已在 §IN-FLIGHT 留接缝。
