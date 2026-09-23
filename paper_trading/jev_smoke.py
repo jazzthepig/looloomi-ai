@@ -126,7 +126,7 @@ def main() -> int:
               "请求没有发出。检查 export 的是不是真实 key,不是占位文字。", file=sys.stderr)
         return 1
 
-    print(f"\n── 发送到 {be._base_url}/v1/experimental_evaluate ──")
+    print(f"\n── 发送到 {be._base_url}/v1/systemone ──")
     t0 = time.monotonic()
     try:
         resp = be._request(key, body)

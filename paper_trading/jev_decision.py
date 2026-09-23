@@ -304,23 +304,24 @@ class TypesafeJevDecisionBackend:
     leaks the key into a log line / test output / commit message → rotate the
     key immediately per project rule.
 
-    Endpoint contract (best-effort based on TypeSafe blog + community SDKs):
-        POST {base_url}/v1/experimental_evaluate
+    Endpoint contract —— **官方文档 https://docs.typesafe.ai/api,2026-09-23 核对**。
+    首版是按社区资料猜的(`/v1/experimental_evaluate`、`jev-1`、questions 为数组、
+    字段 `primitive`),第一次真实调用 404。四处都和官方不一致,已按官方改:
+
+        POST {base_url}/v1/systemone
         Headers: Authorization: Bearer $JEV_API_KEY
-                 Content-Type: application/json
         Body: {
-          "state": {...},
-          "questions": [
-            {"name": "...", "primitive": "Choice|Score|Noul",
-             "instructions": "...", "criteria": {...} | [...] | null}
-          ]
+          "state": <string | object | array>,
+          "model": "jev-latest",
+          "questions": {                       ← map,key 由我们定,答案按同一个 key 返回
+            "<id>": {"type": "choice|score|noul",
+                     "instructions": ...,
+                     "criteria": {opt: desc} | [level, ...] | {"true":..,"false":..}}
+          }
         }
-        Response: {
-          "answers": {
-            "<name>": {"choice": "...", ...} | {"score": ..., ...} | {"noul": ...}
-          },
-          "usage": {"input_tokens": N}
-        }
+        Response: {"model": "jev-1.x", "answers": {"<id>": {"type": ..,
+                   "choice"+"probabilities"+"confidence" | "score"+"legend"+"probabilities"+"confidence"
+                   | "noul"}}, "usage": {"input_tokens": N, "output_tokens": M}}
 
     If the real schema differs, override `_request()` in a subclass or PR the
     fix here — `evaluate_batch()` MUST keep its current signature (state_payload,
@@ -336,7 +337,7 @@ class TypesafeJevDecisionBackend:
 
     DEFAULT_BASE_URL = "https://api.typesafe.ai"
     DEFAULT_TIMEOUT_S = 5.0
-    DEFAULT_MODEL = "jev-1"  # vendor's default model id (per community SDKs)
+    DEFAULT_MODEL = "jev-latest"  # 官方文档 /api:flagship 别名
 
     def __init__(
         self,
@@ -425,21 +426,20 @@ class TypesafeJevDecisionBackend:
         return {
             "model": self._model,
             "state": dict(state_payload),
-            "questions": [
-                {
-                    "name": q.name,
-                    "primitive": q.primitive,
+            "questions": {
+                q.name: {
+                    "type": q.primitive.lower(),
                     "instructions": q.instructions,
-                    "criteria": q.criteria,
+                    **({"criteria": q.criteria} if q.criteria is not None else {}),
                 }
                 for q in questions
-            ],
+            },
         }
 
     def _request(self, api_key: str, body: dict[str, Any]) -> Any:
         """POST to TypeSafe. Uses httpx (already a project dep)."""
         import httpx
-        url = f"{self._base_url}/v1/experimental_evaluate"
+        url = f"{self._base_url}/v1/systemone"
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
