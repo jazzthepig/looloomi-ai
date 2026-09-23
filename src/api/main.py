@@ -440,6 +440,34 @@ async def _start_forward_record_loop():
     print("[FWD] ✅ forward-record keeper scheduled (writes the log, pages on a stalled book)")
 
 
+async def _hl_book_loop():
+    """HL 4 币组合每日「只算不发」(S-413)。每小时看一眼,新日线收盘就补一行。
+
+    幂等:昨天那根已记录 ⇒ refused(没活干,不是故障)。决策日 Jev 失败 ⇒ ok=False 带原因,
+    下一轮重试。写入走 `supabase_upsert_table`(service role),表 `hl_book_daily`。
+    """
+    await _asyncio.sleep(_boot_delay(300))
+    while True:
+        try:
+            from src.data.signals.hl_book_daily import run_once as _hl_run
+            r = await _hl_run()
+            print(f"[HL-BOOK] written={r.get('written')} · {str(r.get('reason'))[:120]}")
+            await _beat("_hl_book_loop", ok=bool(r.get("ok")) and not r.get("refused"),
+                        refused=bool(r.get("refused")),
+                        detail={"written": r.get("written"), "nav": r.get("nav")},
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+        except Exception as _e:
+            print(f"[HL-BOOK] ⚠️  pass FAILED: {_e}")
+            await _beat("_hl_book_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_hl_book_loop():
+    _asyncio.create_task(_hl_book_loop())
+    print("[HL-BOOK] ✅ daily compute-only record scheduled (hl_book_daily, 5 arms)")
+
+
 async def _deep_panel_loop():
     """Keeps the 262-symbol research panel current (S-179).
 
@@ -889,6 +917,16 @@ def _minutes_from_valuation_point_utc(hour: int, minute: int) -> float:
 # 样本:循环活着、每天准时跑、每天失败,而 signal_outcomes 因此死了 123 天无人知。
 # 心跳只记录,不重试不终止 —— 一个顺手改行为的记录器,下一个人就不敢用。
 from src.api.loop_beat import classify as _classify  # noqa: E402  (S-299)
+from src.api.rpc_diagnostics import _record_loop_attempt  # S-408-2 (A-408-2) per-iteration record
+
+#: S-408-2 follow-up PR 候选 —— 17 个 `_beat()`-using 循环待 wire `_record_loop_attempt`:
+#: _forward_record_loop · _hl_book_loop · _deep_panel_loop · _hyperliquid_loop
+#: _treasury_decisions_loop · _outcome_tracker_loop · _market_state_loop
+#: _causal_paper_loop · _dingge_paper_loop · _combined_book_loop
+#: _scalable_book_loop · _beta_core_loop · _two_layer_paper_loop
+#: _fusion_paper_loop · _pod_aggregator_loop · _factor_tilt_loop · _track_record_loop
+#: 本次 PR 只 ship `_cg_panel_loop`(判据范围),其他按 adapter 形态逐个 wire。
+#: 25 个 print-only loop 也是同一类 follow-up(优先级低,等 _beat()-using 闭环后再批量)。
 
 
 async def _beat(name: str, *, ok: bool, error: str | None = None,
@@ -1064,6 +1102,12 @@ async def _cg_panel_loop():
                 print(f"[CG-PANEL] {_why}")
                 await _beat("_cg_panel_loop", ok=False, error=_why,
                             detail=_detail)
+                # S-408-2: per-iteration record. Same line as _beat() —
+                # both are best-effort, neither changes loop behaviour.
+                await _record_loop_attempt(
+                    "_cg_panel_loop", "panel_unavailable",
+                    reason=_why, detail=_detail,
+                    writer="src.api.main._cg_panel_loop")
                 await _asyncio.sleep(_RETRY_AFTER_FAILURE_S)
                 continue
             async with _httpx.AsyncClient(headers=_cg_headers(),
@@ -1076,9 +1120,18 @@ async def _cg_panel_loop():
             _ok, _ref, _why = _classify(res)
             _round_ok = bool(_ok or _ref)
             await _beat("_cg_panel_loop", ok=_ok, refused=_ref, error=_why)
+            # S-408-2: per-iteration record (success / refused path).
+            await _record_loop_attempt(
+                "_cg_panel_loop", "ok" if _ok else "refused",
+                reason=_why,
+                writer="src.api.main._cg_panel_loop")
         except Exception as _e:
             print(f"[CG-PANEL] ⚠️  run failed: {_e}")
             await _beat("_cg_panel_loop", ok=False, error=str(_e))
+            # S-408-2: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_cg_panel_loop", "error", reason=str(_e),
+                writer="src.api.main._cg_panel_loop")
         await _asyncio.sleep(_CG_PANEL_INTERVAL_S if _round_ok
                              else _RETRY_AFTER_FAILURE_S)
 

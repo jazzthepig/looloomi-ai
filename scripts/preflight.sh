@@ -166,6 +166,18 @@ python3 -m tests.test_safe_format_score
 #               All fixes use isMissing from safeFormat.js — runtime smoke +
 #               per-site grep guards prevent regressions.
 python3 -m tests.test_s397_p1p2_audit_backlog
+# 3a-ter. A-408-2 / S-408-2 (2026-09-23) — per-iteration record for async loops.
+#              `_beat()` is a Redis hash, last-write-wins, 3-day TTL — it
+#              cannot answer a COUNT. The audit gate is
+#              `select count(*) from loop_attempt where loop_name='_cg_panel_loop'
+#               and at::date = current_date` ≥ 100, which is a COUNT.
+#              The smoke covers: helper typing / never-raises / not-configured /
+#              payload-shape for ok and error outcomes / reason truncation /
+#              build field / table constant / S-244 family call-site guard
+#              (main.py contains `_record_loop_attempt("_cg_panel_loop"` ≥ 3
+#              times — drop one and the audit gate silently disappears) /
+#              parallel-with-beat pattern / idempotent / 4-branch replay.
+python3 -m src.research.validation.tests.test_a_408_2_loop_attempt_smoke
 # 3a-quater. S-410 (2026-09-23) — `_cg_panel_loop` failed 366× with "too many
 #               values to unpack (expected 2)" because S-378b-C1 added a 3rd
 #               return value (`latest_hint`) to `deep_panel_symbols_detailed()`
@@ -1320,6 +1332,8 @@ python3 -m tests.test_spa_deep_links_resolve || {
 # 不在这里跑,下次有人改回原来的旧路径不会被任何东西看见。
 python3 -m tests.test_deep_panel_uses_fast_rpc_first || {
   echo "  ✗ deep_panel fast-RPC-first — do not push"; exit 1; }
+python3 -m tests.test_deep_panel_floor_counts_reachable || {
+  echo "  ✗ S-415 deep_panel 地板分母只数能回答的符号 — do not push"; exit 1; }
 python3 -m tests.test_forward_record_uses_shared_retry || {
   echo "  ✗ forward_record shared Supabase retry — do not push"; exit 1; }
 python3 -m tests.test_hyperliquid_venue_marks_handle_field_drift || {

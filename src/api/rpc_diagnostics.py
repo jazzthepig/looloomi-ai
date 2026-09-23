@@ -38,9 +38,22 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Any
+from typing import Any, Literal
 
-__all__ = ["rpc_with_detail", "render_detail", "insert_with_detail"]
+__all__ = ["rpc_with_detail", "render_detail", "insert_with_detail",
+           "_record_loop_attempt"]
+
+#: S-408-2 (A-408-2). 闭环迭代 outcome 词汇,与 `_classify()` 返值 + 一个
+#: loop-specific panel_unavailable 一一对齐。**字面冻结**,新增值必须:
+#:   ① 在此处加 Literal 成员
+#:   ② 在调用点映射
+#:   ③ 在测试里覆盖
+#: 否则 CI 静默(S-299 教训:未知 status 渲成 failing 比 loud fail 更糟)。
+LoopOutcome = Literal["ok", "refused", "error", "panel_unavailable"]
+
+#: 不记录对它自己的写入(loop_attempt 不会写 write_log,无递归路径,
+#: 但保留同型常量便于后人理解)。
+_LOOP_ATTEMPT_TABLE = "loop_attempt"
 
 
 async def rpc_with_detail(fn_name: str,
@@ -206,6 +219,59 @@ async def _record_attempt(detail: dict[str, Any], writer: str) -> bool:
         async with httpx.AsyncClient(timeout=5) as c:
             r = await c.post(
                 f"{store._SB_URL}/rest/v1/{_WRITE_LOG_TABLE}",
+                json=[row],
+                headers={"apikey": store._SB_KEY,
+                         "Authorization": f"Bearer {store._SB_KEY}",
+                         "Content-Type": "application/json",
+                         "Prefer": "return=minimal"})
+        return r.status_code in (200, 201, 204)
+    except Exception:                                           # noqa: BLE001
+        return False
+
+
+async def _record_loop_attempt(loop_name: str,
+                               outcome: LoopOutcome,
+                               reason: str | None = None,
+                               *,
+                               elapsed_ms: int | None = None,
+                               detail: dict[str, Any] | None = None,
+                               writer: str | None = None,
+                               ) -> bool:
+    """把一次循环迭代落进 `loop_attempt`(S-408-2 / A-408-2)。
+
+    与 `_record_attempt` 同骨架:try-hard, **绝不抛**, 吞所有异常返 bool。
+    它自己失败没有第二层日志可写 —— 同 S-352,docstring 写一次:
+    `loop_attempt` 自己的健康必须被人看(`loop_attempt_health(loop_name)`),
+    不能免检。
+
+    `writer` 显式传入。**不**内部调 `_caller()`,因为循环主体内的栈帧不稳
+    (`_asyncio.create_task` 展开后 `_caller()` 会落在不预期的帧上),显式
+    字符串比 inspect-stack 推断更稳更便宜。
+    """
+    try:
+        from src.api import store
+        if not store._SB_URL or not store._SB_KEY:
+            return False
+        import httpx
+        # build_sha 同源 inline (S-341c mypy scope doctrine: 不从 loop_beat 跨模块
+        # import 拉宽 two-file strict 范围)。4 行 env 查找,值得避免一个跨模块耦合。
+        import os as _os
+        _build = (_os.environ.get("RAILWAY_GIT_COMMIT_SHA")
+                  or _os.environ.get("GIT_COMMIT_SHA")
+                  or _os.environ.get("SOURCE_COMMIT")
+                  or "")[:8]
+        row = {
+            "loop_name":  str(loop_name)[:120],
+            "outcome":    str(outcome)[:40],
+            "reason":     (str(reason)[:400] if reason else None),
+            "elapsed_ms": int(elapsed_ms) if elapsed_ms is not None else None,
+            "detail":     detail,
+            "writer":     (writer or _caller())[:120],
+            "build":      _build,
+        }
+        async with httpx.AsyncClient(timeout=5) as c:
+            r = await c.post(
+                f"{store._SB_URL}/rest/v1/{_LOOP_ATTEMPT_TABLE}",
                 json=[row],
                 headers={"apikey": store._SB_KEY,
                          "Authorization": f"Bearer {store._SB_KEY}",
