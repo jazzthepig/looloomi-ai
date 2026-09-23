@@ -178,6 +178,22 @@ python3 -m tests.test_s397_p1p2_audit_backlog
 #              times — drop one and the audit gate silently disappears) /
 #              parallel-with-beat pattern / idempotent / 4-branch replay.
 python3 -m src.research.validation.tests.test_a_408_2_loop_attempt_smoke
+# 3a-ter-bis. A-408-3 / S-408-3 (2026-09-23) — write_log coverage of ohlcv_daily
+#                writers. Of 4 audit-named sites, 1 was real (ohlcv.py direct
+#                httpx bypassed the @log_write_attempt decorator), 1 was a
+#                transitive route (admin → collect_ohlcv → _upsert_ohlcv,
+#                covered by the ohlcv.py refactor), 2 were false positives
+#                (deep_panel_collector already uses the helper; price_route.py
+#                doesn't write to ohlcv_daily at all). The audit gate
+#                (`select count(distinct writer) from write_log
+#                where table_name='ohlcv_daily'` ≥ 4) accumulates from
+#                cg_pro_backfill + ohlcv._upsert_ohlcv (this PR) +
+#                deep_panel_collector (after S-415) + admin transitively.
+#                Smoke covers: refactor chunks at 500 / uses helper / partial
+#                success / S-244 family regression guard on direct POST /
+#                deep_panel_collector call site / price_route false-positive
+#                lock / writer attribution / cumulative writer inventory.
+python3 -m src.research.validation.tests.test_a_408_3_write_log_coverage_smoke
 # 3a-quater. S-410 (2026-09-23) — `_cg_panel_loop` failed 366× with "too many
 #               values to unpack (expected 2)" because S-378b-C1 added a 3rd
 #               return value (`latest_hint`) to `deep_panel_symbols_detailed()`
