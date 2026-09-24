@@ -341,6 +341,17 @@ async def get_macro_brief(response: Response):
         _logger.warning(f"[MACRO] rejecting non-prose brief ({len(brief_text)} chars) → template fallback")
         brief_text = ""
 
+    # T-017:上游简报与它自己的快照矛盾(说平静,而快照 24h 变动 ≥2%)→ 不服务,走模板。
+    # 放在出口而不只在接收端,是因为矛盾的那份可能已经在 Redis 里(接收端守卫上线之前推来的)。
+    if brief_text:
+        from src.api.contracts.macro_brief import contradicts_the_day, has_market_data
+        snap = (data or {}).get("market_data")
+        why_not = (contradicts_the_day(brief_text, snap)
+                   or (None if has_market_data(snap) else "was written from an empty snapshot"))
+        if why_not:
+            _logger.warning(f"[MACRO] upstream brief {why_not} → template fallback")
+            brief_text = ""
+
     # Serve LLM brief if fresh AND has actual content
     if brief_text:
         age    = now - data.get("received_at", 0)

@@ -484,6 +484,44 @@ _INTERNALS = [
 MIN_WORDS, MAX_WORDS = 90, 230
 
 
+#: 24h 变动(BTC 或总市值,取绝对值较大者)达到这个幅度,「平静」类措辞就是与数据矛盾。
+QUIET_CONTRADICTION_PCT = 2.0
+_QUIET_TERMS = re.compile(
+    r"\bflat\b|\bequilibrium\b|\bno\s+(?:material\s+|significant\s+)?(?:directional|movement|price\s+action)"
+    r"|\bstatic\b|\brange[- ]bound\b|\bconsolidat\w*|\bquiet\s+(?:tape|market)\b|\bpause\s+in\s+directional",
+    re.I)
+
+
+def contradicts_the_day(text: str, snapshot: dict | None) -> str | None:
+    """简报说市场平静,而同一份快照里 24h 变动 ≥ 2% → 返回理由;否则 None。
+
+    T-017:Mac 侧合约是副本。副本没更新时,Railway 这边的 prompt 修好了也没用 ——
+    2026-09-24 修复推送之后,线上仍是 qwen 写的 "The tape is flat"(当日总市值 −6.4%)。
+    **所以接收端要能自己认出这种矛盾**,不依赖对方的 prompt 版本。快照缺 24h 值时不判。
+    """
+    moves = [abs(v) for v in (btc_change_24h(snapshot or {}), mcap_change_24h(snapshot or {}))
+             if v is not None]
+    if not moves or max(moves) < QUIET_CONTRADICTION_PCT:
+        return None
+    m = _QUIET_TERMS.search(text or "")
+    if not m:
+        return None
+    return (f"describes a quiet market ({m.group(0)!r}) while the same snapshot shows a "
+            f"{max(moves):.1f}% 24h move")
+
+
+def has_market_data(snapshot: dict | None) -> bool:
+    """快照里至少有 BTC 价格或总市值。
+
+    T-017 实测:09-14 起 Mac 推来的简报,快照为 `{}` 的占比从 3/45 涨到 36/47(09-23)——
+    Mac 取 macro-pulse 失败时 `fetch_macro_data()` 返回 `{}`,模型拿着一份空数据照样写,
+    写出来的就是「市场平静」。**空快照写出的简报,是「拿不到」渲染成一段话。**
+    """
+    s = snapshot or {}
+    return any(_num(v) is not None for v in (
+        s.get("btc_price"), (s.get("btc") or {}).get("usd"), s.get("total_market_cap_usd")))
+
+
 def validate_brief(text: str, snapshot: dict | None = None) -> dict:
     """Check a generated brief against the rules the prompt asked for.
 
@@ -508,6 +546,14 @@ def validate_brief(text: str, snapshot: dict | None = None) -> dict:
         m = re.search(pat, body, re.I)
         if m:
             violations.append(f"names internals: {m.group(0)!r} (CLAUDE.md #8)")
+
+    if snapshot is not None and not has_market_data(snapshot):
+        violations.append("written without measured data: the snapshot has no BTC price "
+                          "and no total market cap")
+
+    quiet = contradicts_the_day(body, snapshot)
+    if quiet:
+        violations.append(f"contradicts the data: {quiet}")
 
     words = len(body.split())
     if words < MIN_WORDS:

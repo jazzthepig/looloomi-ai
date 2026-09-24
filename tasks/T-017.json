@@ -21,6 +21,6 @@
   },
   "prior_value": "模板:'BTC at $83,403 (— 24h)' + 'Risk-off positioning favoured';LLM 简报:'market tape is currently flat',当日总市值 24h -6.4%;移动端 RECENT SIGNALS:空标的行 + 4 条全显示 NEUTRAL(feed 里 direction 全为 null)",
   "created": "2026-09-24",
-  "notes": "Mac 侧 macro_brief_contract.py 是副本(非导入),需 A 按文件头第 2 步重新复制,否则 LLM 路仍是 mb-2。",
+  "notes": "Mac 副本更新拆到 T-018(A)。接收端与出口另加两道:与快照矛盾的「平静」、空快照写成的简报,一律不发布,走模板(S-423)。",
   "verified": null
 }
