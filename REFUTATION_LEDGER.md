@@ -23450,3 +23450,39 @@ preflight 红:「没有第二条摄入路径 :: `src/api/routers/ohlcv.py` 也�
 
 处理:列入 `_ALLOWED_WRITERS`,写明它是存量而非新增,以及退出条件(TradFi 日线并入同一条 lane 后摘掉)。
 **同一形状第 N 次:一个守卫的作用域由它的识别方式决定,而不是由它的名字决定。**
+
+---
+
+## S-418 — Mac T1 CIS 引擎自 09-18 11:01 UTC 起一行没写:启动即 `NameError: dt`,launchd 每 30 秒重启
+
+Jazz 问 C「还差什么数据和信息层」。核 C 的清单时先看了现有 feed 的死活,找到一个比任何新 feed 都大的洞。
+
+**实测:**
+
+    cis_scores 按 data_tier                   09-17        09-18          09-19 → 09-24
+    T1(Mac local_engine)                    1,720 行     731 行 止于 11:01   0
+    T2(railway_snapshot)带 macro_regime     全部         全部            0(09-21 起全部 NULL)
+    daily_macro_regime(视图)最新           —            09-18          不再前进
+
+**根因**(`Shadow/cometcloud-local/_logs/mac_envelopes.jsonl` + `cis_scheduler.py`,Shadow 快照止于 09-19/20):
+
+    cis_scheduler  ok=false  error=NameError  "name 'dt' is not defined"  exit_code=1   每 30 秒一条
+
+`cis_scheduler.py` 第 1399 / 1467 行(A-PB / A-19C 自检钩子)写 `dt.datetime.now(dt.timezone.utc)`,
+而模块只有 `from datetime import datetime, timedelta, timezone`,没有 `dt` 这个名字。
+钩子在调度器启动的第一轮就被触发 → 异常 → `sys.exit(1)` → launchd 30 秒后重启 → 再死。
+
+**连带三件事:**
+1. 每次重启都把 D1/D2「每日推送」重跑一遍(上次运行时间存在内存里,重启归零)——
+   每 30 秒请求一次 Railway `/api/v1/cis/universe`,约 5,760 次/天。**Railway 的 2,000 次/天限流被打满、
+   `/cis/universe` 出现 500,都与此吻合。**
+2. 整点 CIS 任务再也没跑到(进程活不过 30 秒)⇒ 没有 T1 分数、没有 macro_regime ⇒
+   ① 的 `regime` 自 09-21 起为 NULL、`daily_macro_regime` 停在 09-18、Layer B 的 regime 闸无输入。
+3. **S-409/S-410 在 MINIMAX_SYNC 里写「cis_scores fresh today 168,265 行 ⇒ Mac T1 活着」—— 错了。**
+   新鲜的是 T2(Railway 兜底),T1 已停。这是 S-379 / S-408 的同一条教训第三次:
+   **整表新鲜度是并集统计,它替一个死掉的来源作了证。** 判活必须按来源(`data_tier='T1'`)看。
+
+**修法(Mac 侧,A lane):** 模块头加 `import datetime as dt`;D1/D2 的上次运行时间落盘而不是存内存;
+钩子异常只记录不退出进程(一个自检钩子不该能杀死它在检查的那个引擎)。
+**判据:** `select count(*) from cis_scores where data_tier='T1' and recorded_at > now()-interval '2 hours'` > 0,
+且 `daily_macro_regime` 最新日期 = 今天。
