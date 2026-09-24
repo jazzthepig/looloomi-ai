@@ -23614,3 +23614,54 @@ S-409 把整表新鲜读成 T1 活着;A 把「读到 0 行」读成「库里 0 �
 
 **S-422 的判断需要修正:** 我当时以为 LLM 路的问题是 prompt 锚错了跨度;**更大的成因是它根本没拿到数据。**
 prompt 那处修正仍然成立,但它不是主因。
+
+## S-424 — Supabase:anon 对 84 张表有 TRUNCATE;RLS 管不到 TRUNCATE
+
+**来源:** Jazz 转来的 Supabase Advisor(5 条 CRITICAL)。Advisor 报的是 `cg_coin_map` RLS 未开、3 个 SECURITY DEFINER 视图;
+**它没报、但更重的是授权本身:** `anon` 对 public 下 84 张表有 SELECT/TRUNCATE/TRIGGER/REFERENCES,`authenticated` 对 93 张有全部 DML。
+「RLS 开着但没策略」挡得住 SELECT/INSERT/UPDATE/DELETE,**挡不住 TRUNCATE** —— 持有 anon key 的任何一方都能清空任意表。
+anon key 不在前端 bundle 里(已查 dist),持有方是 Mac 与各 lane。auth.users = 0,没有任何策略给 authenticated 写权。
+
+**改(迁移 `s424_lock_down_public_grants` / `s424b_…`,原文 `scripts/supabase_s424_lock_down_grants.sql`):**
+收回 anon/authenticated 的 TRUNCATE/TRIGGER/REFERENCES 与 authenticated 的写;默认权限同步收回(新表不再自带);
+`cg_coin_map` 开 RLS + 只读策略;3 个视图改 `security_invoker`,**同时给 5 张基表显式只读策略 + anon 读 assets** ——
+否则 anon 经视图的读会**静默变成 0 行**(Mac 研究脚本走这些视图)。19 个函数固定 search_path。
+
+**验:** anon 经三视图 + cg_coin_map 均读到行(677/50/50/50);`set role anon; truncate cg_coin_map` → permission denied;
+Advisor ERROR 级 5 → 0。未动:8 个 anon 可调的 SECURITY DEFINER 函数(Mac 读路径,有意为之)、`vector` 在 public(迁移风险大于收益)。
+
+**顺带发现,需 Jazz:** 仓库 `.env` 的 `SUPABASE_KEY` 解出来 role = `service_role` —— 与 CLAUDE.md「service_role 不在任何 .env」相反;
+且 `setup_lane_worktrees.sh`(S-421,我写的)把这份 `.env` 链进了三个 lane worktree。并入 OPEN RISK #0b 的轮换。
+
+## S-425 — 5 个预测来源里 4 个,自 08 月中起一条结果都没有;根因是一个裸日期被解析成 naive
+
+**来源:** 同一份 Advisor 的「Data API 错误率 9.22%」。查日志:2 小时内 326 个 `POST prediction_outcomes` 409。
+
+**测得:** `prediction_outcomes` 只有 `signal` 一个来源(170 行 = 该来源全部合格行);positioning 984 / forward_supply 984 /
+conviction 2,245 / narrative 720 行合格预测,**0 行结果**。
+
+**根因链:** 那四个来源的日期列是 `date`;`_parse_dt('2026-07-15')` 走 `fromisoformat` 返回 naive(同函数的正则分支对同样输入给 UTC)→
+`_resolve_alpha` 用它减 `now(UTC)` → TypeError → `resolve_all_predictions` 无逐来源兜底,`signal` 排第一先写完,整轮失败。
+日志只打印 `hit_rate`,四个来源显示为 None,和「样本不足」长得一样。409 则是每轮取「最老 500 行」把已解析的重插。
+
+**修:** `_parse_dt` 无时区一律 UTC(规则 5c);逐来源 try/except,错误进结果;先取已解析 ref_id 再分页取未解析的;
+写入 `on_conflict` + `ignore-duplicates`;读失败报 error 不报 0 行;循环日志打印 (status, written, examined, error)。
+`tests/test_prediction_resolver_sources.py` 用 conviction 的真实行形状;两处回滚变异均被抓到。入 preflight。
+
+**意义:** 这四个来源是「因」层的验证装置 —— 我们说装置就是产品,而它 6 周没有产出一条前向结果,且没有任何东西报红。
+部署后第一轮(boot 后 240 s)应写出数百行;验收见 T-019。
+
+## S-424c — 我在 S-424 里给 5 张基表开了 anon 只读,违反 S-167;preflight 拦下,已撤回
+
+**经过:** S-424 把 3 个视图改成 invoker 后,为了让 anon 经视图还能读到行,给 assets / ohlcv_daily / cis_scores /
+signal_journal / signal_outcomes / cg_coin_map 加了 `to anon, authenticated using (true)`。S-167 守卫在 preflight 里拦下:
+**「RLS 开 + 零策略」本来就是设计姿态 —— 只有 service_role 能读,cis_scores 对 anon 关闭是有意的。**
+我当时把「视图读不到会静默变 0 行」当成要保住的行为,没先问**谁在用 anon 读**。
+
+**查:** 实际读者全是 service_role —— Railway;Mac 研究脚本用 `SVC`。没有合法的 anon 读者。
+
+**改(迁移 `s424c_restore_zero_policy_posture`):** 删掉 6 条策略;收回 anon 对 assets 的读;
+**收回 anon/authenticated 对 3 个视图和 cg_coin_map 的 SELECT** —— 让 anon 读**报错**,而不是静默 0 行。
+
+**这次学到的:** 修一个守卫报的问题时,先读相邻守卫定下的姿态。我把「让它继续能读」当成默认要保住的,
+而这个项目明文规定的默认是「不能读」。
