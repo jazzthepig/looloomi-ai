@@ -2,6 +2,7 @@
   "write_tables": [
     "agent_call_log",
     "asset_embeddings",
+    "asset_embeddings_history",
     "beta_core_nav",
     "beta_core_nav_q",
     "beta_core_nav_q_meta",
@@ -29,6 +30,7 @@
     "loop_attempt",
     "macro_briefs",
     "market_state_vectors",
+    "narrative_events",
     "nav_exceptions",
     "nav_panel_daily",
     "nav_panel_rebalances",
@@ -36,6 +38,7 @@
     "pod_aggregator_nav",
     "pod_aggregator_state",
     "regime_band_log",
+    "risk_meter_history",
     "scalable_book_nav",
     "signal_journal",
     "trade_results",

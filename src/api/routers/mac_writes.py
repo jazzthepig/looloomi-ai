@@ -75,6 +75,16 @@ TABLES: dict[str, dict] = {
             "circ_supply_at_entry", "outcome_source", "outcome_at",
             "benchmark_symbol", "benchmark_return_30d", "alpha_30d"},
     },
+    # T-008(2026-09-24):Mac 的新闻 / 漏洞监听器 → 信息层。
+    # 列与 Mac `cis_history.db.narrative_events` 一致;event_id 冲突即覆盖(监听器端已按 hash 去重,这里再守一道)。
+    # `date` 是文本:论点级的行写 'ongoing',事件级的行写 YYYY-MM-DD(UTC)。
+    "narrative-events": {
+        "table": "narrative_events",
+        "on_conflict": "event_id",
+        "required": {"event_id", "date"},
+        "allowed": {"event_id", "date", "event_type", "narrative_tag",
+                    "description", "related_assets", "source_round"},
+    },
     "trade-results": {
         "table": "trade_results",
         "on_conflict": None,
@@ -87,6 +97,13 @@ TABLES: dict[str, dict] = {
             "macro_regime", "data_tier", "created_at"},
     },
 }
+
+#: 显式声明给 `schema_manifest`(它按 AST 读字面量元组)。表名放在上面的 dict 值里,
+#: manifest 看不见 —— T-008 加表时发现 risk_meter_history / asset_embeddings_history
+#: 一直不在 manifest 里,线上 schema-drift 因此从没检查过这两张表是否存在。
+#: `tests/test_mac_writes.py` 断言这个元组与 TABLES 里的表一一对应。
+WRITES_TABLES = ("risk_meter_history", "asset_embeddings_history", "signal_journal",
+                 "narrative_events", "trade_results")
 
 #: 一批最多多少行。上界存在的理由是**它让失败可诊断** ——
 #: 一个 10,000 行的批次失败时,你不知道是哪一行。
