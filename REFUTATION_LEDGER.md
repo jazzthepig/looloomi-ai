@@ -23191,3 +23191,208 @@ Jev 的对照组:同一套规则、同一段数据,差别只在谁回答那四�
 3. **前视泄漏没有迹象:** 如果 Jev 在利用训练数据里的未来行情,它应该跑赢,而它跑输了。
 4. 下一步不在这组历史上调阈值(分叉路径)。**前向影子盘每天一次 Jev 调用,同时计算多条预注册臂:**
    机械 Tom · Jev 全部 · 只用 Jev 的趋势确认 —— 同一次调用,零额外成本,让前向数据裁决。
+
+---
+
+## S-413
+
+**HL 组合每日「只算不发」接通:一个调度器、一张表、五条前向记录;每日流程 ≡ 回放。**
+
+Jazz 2026-09-23:「最重要赶紧将项目打通和接通」。
+
+- 表 `hl_book_daily`(Supabase MCP 迁移 `s413_hl_book_daily`,RLS 开,只读策略给 anon/authenticated)
+- 写入端 `src/data/signals/hl_book_daily.py`,决策内核复用 `paper_trading/hl_book.py`(与 S-412 回放同一份代码)
+- 调度者 `_hl_book_loop`(`src/api/main.py`,每小时,幂等;新日线收盘就补一行,最多补 14 天,
+  断档更久红灯等人决定,不悄悄从 NAV 1.0 重来)
+- 五个臂:H0 持有 · T3 每周(实盘首版)· 机械 Tom · Jev 全部 · 只用 Jev 趋势确认(S-412 事后假设,预注册为前向臂)
+- Jev 每周一调用一次,fail-closed:失败写 `jev_error`,Jev 两臂保持上次仓位,下一轮重试
+- 状态全在行里(decided / held / book / nav),Railway 重启不丢
+
+**规则 5b 三件:**
+① 调度者:`_hl_book_loop`,`liveness.py` 预算 48h
+② 判活判据:`select max(d) from hl_book_daily` 在 UTC 01:00 后 = 昨天;
+   `select count(*) from hl_book_daily where is_decision and jev_error is not null` = 0
+③ 第一行真实数据:部署后几分钟内由循环写入 —— **推送后验证,不算完成之前**
+
+**等价性守卫(`paper_trading/tests/test_hl_book_smoke.py`,已进 preflight):**
+每日流程逐日推进 ≡ 回放(差 < 1e-7),唯一差别是起点建仓成本 —— 每日流程收,回放不收。
+真实 HL 数据上从 2023-05-15 逐日推进:H0 +380.9% / T3 +282.5% / 机械 Tom +381.1%,
+回放 +381.5% / +282.7% / +381.4%,差额恰为起点建仓成本。
+
+---
+
+## S-414 — 编号冲突:两个 Seth 窗口同一天各自认领了 S-410 和 S-411
+
+2026-09-23 两个会话并行追加台账,S-410、S-411 各出现两次(按标题区分):
+
+    S-410 — `_cg_panel_loop` 失败 366×(另一窗口)   |  S-410 风格匹配选策略(HL 主干)
+    S-411 — S-397 P1+P2 audit backlog(另一窗口)    |  S-411 Jev 客户端从没接通(HL 主干)
+
+两边都已推送、都被引用,**台账只追加不改写**,所以不重编号;引用时带上标题。
+规则 7 的「先认领标题再写正文」防的是同一窗口里的时间差,**防不了两个窗口并发** ——
+认领之前 `grep -c "^## S-NNN"` 为 0 只说明「我看的那一刻没人用」。
+下一个空号从 S-415 起。另:另一窗口的 S-410 找到了 S-408 面板断线的真因(三元组解包),
+S-408 里「重启后循环没回来」的判断据此修正为「重启后循环每轮在同一处抛异常」。
+
+---
+
+## S-415 — `_deep_panel_loop` 不是被限流,是被 123 个「永远回空」的符号拖住
+
+Jazz 2026-09-23:「现在就剩下 deep_panel_loop 没有通」。
+
+**实测(沙箱原样跑 `collect_deep_panel()`,写入替换成计数):**
+
+    262 个符号 · 139 个回了数据 · 123 个 "empty (delisted or unlisted pair?)" · 0 个真错误
+    覆盖率 139/262 = 53% < 地板 70% ⇒ REFUSING TO WRITE
+
+123 个回空的是 Binance 现货上根本不存在的名字:永续命名(1000SHIB、1000LUNC)、已下架(AGIX)、
+HL 独有名(1000X、42、A2Z)。它们**每一轮**都回空,覆盖率被永久钉在 53%,地板每轮拒绝写入。
+`binance_hist` 在 09-06 和 09-08 各只进了 2 个标的,之后一行没有。Binance 镜像本身可达(200,0.6s)。
+
+**同一个形状在 `hyperliquid_collector` 已经修过(S-204:「地板分母排除永久缺席」)**,
+隔一个文件的这个采集器没跟上 —— 和 S-410(签名改了、调用方没改)是同一族:一处修,另一处漏。
+
+**修法(`src/data/market/deep_panel_collector.py`):**
+1. 覆盖率 = 活的 / 能回答的(成功 + 真错误);回空的单独报 `symbols_delisted`,不算失败
+2. 新增绝对地板 `_MIN_LIVE_SYMBOLS = 100`(实测 139):全体回空时分母趋 0,比例失去意义,绝对数挡住
+3. 自愈窗口补上 frontier 读:快路径不返回 latest,窗口永远 14 天,而断档已 15 天 ——
+   **恢复第一轮会在 09-09 留下永远补不上的洞**。现在读 binance_hist 全局最新 bar 算窗口(实测 17 天)
+
+**修后实测:** 139/139 可达符号成功,2,349 行,覆盖 08-25 → 09-23,ok=True。
+守卫 `tests/test_deep_panel_floor_counts_reachable.py`(3 条,已进 preflight):
+回空不挡写入 · 真错误仍然挡 · 全体回空被绝对地板挡住。
+
+**下游:** `market_state_vectors` 停在 08-05、`_market_state_loop` 从未成功过 —— 它单源读 binance_hist。
+面板恢复后它有了输入;**判据:部署后 48h 内 `max(d) from market_state_vectors` 前进**。
+
+## S-413 — A-408-2: per-iteration record for async loops (loop_attempt)
+
+**2026-09-23 · A lane (Seth/Austin) · 起因:MINIMAX_SYNC §SETH-AUDIT-2026-09-23 派活,A-408-2 🔴**
+
+`_beat()` 是 Redis hash(last-write-wins, 3-day TTL),回答"循环现在活着吗",但**不能回答一个 COUNT**。审计判据 `select count(*) from loop_attempt where loop_name='_cg_panel_loop' and at::date = current_date` ≥ 100 是 COUNT —— Redis hash 实现不了。
+
+43 个 in-process loop,18 个调 `_beat()`,25 个只 print,0 个写 per-iteration row。两件事在库里同形:
+- "loop 死了" — 心跳写不进去
+- "loop 跑着,每轮都正确拒绝" — 心跳写成功
+
+**Ship 三件套:**
+
+1. **DDL `scripts/supabase_s408_2_loop_attempt.sql`**:新表 `public.loop_attempt(id, at, loop_name, outcome, reason, elapsed_ms, detail jsonb, writer, build)` + 3 索引(`(loop_name, at desc)` + 部分索引 `where outcome <> 'ok'` + `(outcome, at desc)`)+ RLS + 3 grant + helper function `public.loop_attempt_health(p_loop_name text default null)`(镜像 `write_health()`)。**未加 CHECK constraint** —— S-299 教训:未知 outcome 静默 fall to zero 比 loud fail 更糟。
+
+2. **Helper `_record_loop_attempt(loop_name, outcome, reason, *, elapsed_ms=None, detail=None, writer=None)`** in `src/api/rpc_diagnostics.py`:克隆 `_record_attempt` 骨架(try-hard,never raise,swallow all exceptions),key 不同。`LoopOutcome = Literal["ok", "refused", "error", "panel_unavailable"]` 字面冻结(S-299 教训)。writer 显式传入,不用 `_caller()` —— 循环主体内栈帧不稳。build 字段来自 `loop_beat.build_sha()[:8]`(S-322 fossil 教训)。
+
+3. **Wire `_cg_panel_loop` 3 个分支**:line 1107 `panel_unavailable`,line 1124 `ok|refused`,line 1132 `error`。每处 5 行 + 1 行注释。其他 17 个 `_beat()`-using loop 列入 follow-up 清单(注释块在 import 旁),不在 scope。
+
+**测试 `src/research/validation/tests/test_a_408_2_loop_attempt_smoke.py`**:12 个 case 全绿。
+- T1: Literal vocabulary 冻结
+- T2: never-raises on httpx ConnectionError
+- T3: not-configured 短路,无网络
+- T4-T6: payload shape / reason 截断
+- T7: build 字段 8 字符
+- T8: 表名常量
+- **T9: S-244 family 文本守卫** — `main.py` 含 `_record_loop_attempt("_cg_panel_loop"` ≥ 3 次
+- T10: 与 `_beat()` 并行不冲突
+- T11: 幂等(无递归守卫)
+- T12: REPLAY 4-branch fixture
+
+**preflight**:`scripts/preflight.sh` 阶段 3 在 `test_s397_p1p2_audit_backlog` 后注册。
+
+**判据(部署后):**
+1. `select count(*) from loop_attempt where loop_name='_cg_panel_loop' and at::date = current_date` ≥ 100 *(本次 ship 后立即可测;6h cadence 设计值 ~4/day,600s retry-after-failure 推送至 100+ on bad days)*
+2. `loop_attempt_health('_cg_panel_loop')` 返 `today_count > 0`,`last_outcome` 在 4 字面内
+
+**风险 #5 row bloat**:43 loop 全 wire 后 ~600 rows/day ≈ 220k/year。Supabase Pro 容量无压力。**90 天保留 cron 列为 follow-up**(本次 PR 不加)。
+
+**Mac-side ship 流程:**
+```bash
+cd ~/Projects/looloomi-ai
+# 1. DDL apply(Jazz 经 MCP 到生产,或本地 sandbox)
+psql $SUPABASE_URL < scripts/supabase_s408_2_loop_attempt.sql
+# 2. preflight
+bash scripts/preflight.sh
+# 3. push
+rm -f .git/index.lock
+git add scripts/supabase_s408_2_loop_attempt.sql \
+        src/api/rpc_diagnostics.py \
+        src/api/main.py \
+        src/research/validation/tests/test_a_408_2_loop_attempt_smoke.py \
+        scripts/preflight.sh
+git commit -m "feat(api): A-408-2 loop_attempt per-iteration record + wire _cg_panel_loop"
+git push origin main
+# 4. 等 ~90s deploy
+sleep 90
+psql $SUPABASE_URL -c "select count(*) from loop_attempt where loop_name='_cg_panel_loop' and at > now() - interval '1 hour';"
+```
+
+**与兄弟 PR-B (S-414) 独立**:S-414 是 `_upsert_ohlcv` 重构 → write_log coverage。两个 commit 分开,各自独立 revert。
+
+## S-414 — A-408-3: write_log coverage 1/5 → 3/5 (refactor _upsert_ohlcv)
+
+**2026-09-23 · A lane (Seth/Austin) · 起因:MINIMAX_SYNC §SETH-AUDIT-2026-09-23 派活,A-408-3 🔴**
+
+审计列 4 个写 `ohlcv_daily` 但**不**记 `write_log` 的文件。复查后实际 1 真 1 转路 2 误报:
+- ✅ **`src/api/routers/ohlcv.py:_upsert_ohlcv`(line 54-77,refactor 前)** — 真。直 httpx POST `/ohlcv_daily?on_conflict=...`,**绕过 `@log_write_attempt` 装饰器**。这是 `distinct writer = 1` 的根因(其他 4 个文件根本不写或走装饰器)。
+- 转路 **`src/api/routers/admin.py:trigger_ohlcv_collect`** — `→ collect_ohlcv → _upsert_ohlcv`,**不是独立 write site**。修了 ohlcv.py 自动覆盖(writer attribution 仍是 `ohlcv._upsert_ohlcv`,非 `admin.trigger_ohlcv_collect`)。
+- 误报 **`src/data/market/deep_panel_collector.py:490`** — 已走 `supabase_upsert_table`(decorated)。S-415 silent-fail 修完后**自动**出现在 write_log。
+- 误报 **`src/data/market/price_route.py`** — **根本没写 ohlcv_daily**,grep 只有 docstring 引用。**ledger 注明 false positive**,不动代码。
+
+**Ship 一件套(refactor):**
+
+`src/api/routers/ohlcv.py:54-77` 的 `_upsert_ohlcv` 从直接 httpx POST 改为 `await supabase_upsert_table("ohlcv_daily", chunk, on_conflict="symbol,trade_date,source")` per chunk。**chunk 循环仍在 caller**(500/批),`supabase_upsert_table` 自身不 chunk(`store.py:622` 一次性 POST 整个 rows)。
+
+```python
+async def _upsert_ohlcv(client: httpx.AsyncClient, rows: list) -> int:
+    if not rows or not _SB_URL or not _SB_KEY:
+        return 0
+    from src.api.store import supabase_upsert_table
+    CHUNK = 500
+    total = 0
+    for i in range(0, len(rows), CHUNK):
+        chunk = rows[i:i+CHUNK]
+        r = await supabase_upsert_table(
+            "ohlcv_daily", chunk,
+            on_conflict="symbol,trade_date,source")
+        if r:                                    # StoreResult.__bool__ → r.ok
+            total += len(chunk)
+        else:
+            _logger.warning(f"[OHLCV] upsert chunk failed: {r.why[:200]}")
+    return total
+```
+
+Caller `ohlcv.py:325` `n = await _upsert_ohlcv(client, out_rows); rows_total += n` 不变 —— signature 保留,return type 仍 `int`。`client` 参数变 unused 但保留(避免 caller 改动)。
+
+**测试 `src/research/validation/tests/test_a_408_3_write_log_coverage_smoke.py`**:8 个 case 全绿。
+- T1: chunk 仍 500(1200 行 → 500/500/200 三块)
+- T2: 走 `supabase_upsert_table`(装饰器触发)
+- T3: partial success —— chunk 2 fail 不影响 1/3(1200-1000 净差 200)
+- **T4: S-244 family 文本守卫** — `_upsert_ohlcv` 函数体内**不**含 `client.post(`,**不**含 `?on_conflict=` 字面
+- **T5: deep_panel_collector 文本守卫** — `supabase_upsert_table("ohlcv_daily"` 调用存在
+- **T6: price_route false-positive 锁** — `code_only`(剥离 docstring)内**不**含写 ohlcv_daily 的指标
+- T7: writer attribution — `_caller()` 从 `supabase_upsert_table` 栈帧走到 `ohlcv.py`,得 `src.api.routers.ohlcv._upsert_ohlcv`
+- T8: REPLAY 累计 inventory(cg_pro_backfill + ohlcv._upsert_ohlcv + deep_panel_collector = 3)
+
+**preflight**:`scripts/preflight.sh` 阶段 3 在 `test_a_408_2_loop_attempt_smoke` 后注册。
+
+**判据(部署后):**
+
+```sql
+select count(distinct writer) from write_log where table_name='ohlcv_daily';
+-- 期望: 2 (cg_pro_backfill + ohlcv._upsert_ohlcv)
+-- 完整 ≥ 4 由 S-415 silent-fail fix + admin transitively 累积
+```
+
+**风险 #1 direct POST 复活**:被未来同事误重构成 `client.post(...)` 直写,S-244 守卫 T4 在 preflight 阶段 3 即拒。Risk #3 `StoreResult.__bool__`:`if r:` 而非 `if r.ok:` —— docstring 注明防"修正"。Risk #4 deep_panel_collector silent fail:本次 PR 不修,S-415 ship 后由 MINIMAX_SYNC §SETH-AUDIT 下一轮核对(`distinct writer` 1 → 2)。
+
+**Mac-side ship 流程:**
+```bash
+cd ~/Projects/looloomi-ai
+bash scripts/preflight.sh
+rm -f .git/index.lock
+git add src/api/routers/ohlcv.py \
+        src/research/validation/tests/test_a_408_3_write_log_coverage_smoke.py \
+        scripts/preflight.sh
+git commit -m "refactor(routers): A-408-3 _upsert_ohlcv → supabase_upsert_table (write_log coverage 1/5 → 3/5)"
+git push origin main
+sleep 90
+psql $SUPABASE_URL -c "select count(distinct writer) from write_log where table_name='ohlcv_daily';"
+```
