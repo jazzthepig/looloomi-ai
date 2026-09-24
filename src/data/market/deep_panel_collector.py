@@ -61,6 +61,13 @@ _MIN_OK_FRACTION = 0.70
 #: **这个数只能往上调,不能往下调**:调低它等于把一次塌陷重新定义成正常。
 _MIN_PANEL_SYMBOLS = 200
 
+#: 真正有 bar 的标的数的**绝对**地板 (S-415)。覆盖率地板的分母现在只数「能回答的」
+#: (下架/非 Binance 现货对不算失败,见 `collect_deep_panel`),于是需要一个绝对数
+#: 防住「所有请求都回空」这种整体故障 —— 那时 reachable→0,比例失去意义。
+#: 实测 2026-09-23:262 个符号里 139 个是活的 Binance 现货对,123 个回空
+#: (1000SHIB 这类永续命名、AGIX 这类已下架、HL 独有名)。取 100。
+_MIN_LIVE_SYMBOLS = 100
+
 _DEFAULT_DAYS = 14   # a fortnight of overlap; upsert makes re-writes free
 
 #: 自愈窗口上限 (S-323)。Binance 1d klines 一次请求最多 1000 根,所以 180 天
@@ -232,6 +239,26 @@ async def _fetch_one(symbol: str, days: int) -> tuple[str, list[dict], str | Non
     return symbol, rows, None
 
 
+async def _panel_frontier():
+    """binance_hist 全体的最新 trade_date;读不到 ⇒ None(调用方退回默认窗口)。"""
+    import os
+
+    import httpx
+    base, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY")
+    if not base or not key:
+        return None
+    url = (f"{base}/rest/v1/ohlcv_daily?select=trade_date&source=eq.binance_hist"
+           f"&order=trade_date.desc&limit=1")
+    try:
+        async with httpx.AsyncClient(timeout=8) as c:
+            r = await c.get(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+        rows = r.json() if r.status_code == 200 else []
+        return datetime.strptime(str(rows[0]["trade_date"])[:10], "%Y-%m-%d").date() if rows else None
+    except Exception as e:                                   # noqa: BLE001
+        _log.warning("[DEEP] frontier read failed: %s", e)
+        return None
+
+
 async def collect_deep_panel(days: int | None = None,
                              symbols: list[str] | None = None) -> dict[str, Any]:
     """Refresh the deep panel. Idempotent; safe to run repeatedly.
@@ -342,6 +369,15 @@ async def collect_deep_panel(days: int | None = None,
                 frontier = lat[len(lat) // 2]
                 gap = (datetime.now(timezone.utc).date() - frontier).days + 2
                 days = max(_DEFAULT_DAYS, min(gap, _HEAL_MAX_DAYS))
+        if not state:
+            # S-415:快路径不返回 latest(见上面 S-378b-C1 注释),于是自愈窗口
+            # 永远是 14 天 —— 而 2026-09-08 起的断档已经 15 天,**恢复的第一轮会在
+            # 09-09 留下一个永远补不上的洞**。一个便宜的读补上 frontier:整个
+            # binance_hist 的最新 bar(全体同日停更,所以全局 max 就是 frontier)。
+            frontier = await _panel_frontier()
+            if frontier:
+                gap = (datetime.now(timezone.utc).date() - frontier).days + 2
+                days = max(_DEFAULT_DAYS, min(gap, _HEAL_MAX_DAYS))
         if days > _DEFAULT_DAYS:
             _log.warning("[DEEP] healing window %sd (gap detected) — not the usual %sd",
                          days, _DEFAULT_DAYS)
@@ -394,7 +430,16 @@ async def collect_deep_panel(days: int | None = None,
     await asyncio.gather(*[_go(s) for s in syms])
 
     ok_n = len(syms) - len(failures)
-    frac = ok_n / len(syms) if syms else 0.0
+    # S-415:**下架和故障是两个结果**(与 hyperliquid_collector S-204 同一个修法,
+    # 那边修了,这边隔一个文件没跟上)。262 个符号里 123 个在 Binance 现货上
+    # 根本不存在 —— 永续命名(1000SHIB)、已下架(AGIX)、HL 独有名。它们每一轮
+    # 都回空,把覆盖率永久钉在 53%,70% 地板每轮都拒绝写入:binance_hist 自
+    # 2026-09-08 起一行没进,**不是被限流,是被一个永久事实拖住**。
+    # 地板的分母只数「能回答的」符号;回空的另报,不算失败。
+    delisted = {s: e for s, e in failures.items() if e.startswith("empty")}
+    errored = {s: e for s, e in failures.items() if s not in delisted}
+    reachable = ok_n + len(errored)
+    frac = ok_n / reachable if reachable else 0.0
 
     # ── S-190 (2026-08-20): the floor must BLOCK, not annotate ───────────────
     # This function's own docstring says "a run that reaches 40 of 262 must not
@@ -413,7 +458,7 @@ async def collect_deep_panel(days: int | None = None,
     # cross-sectional study reading 2026-08-20 gets a one-symbol universe and no
     # way to know. A visible gap is recoverable; a day that silently contains
     # one asset corrupts every study that crosses it.
-    if all_rows and frac < _MIN_OK_FRACTION:
+    if all_rows and (frac < _MIN_OK_FRACTION or ok_n < _MIN_LIVE_SYMBOLS):
         _log.error(
             "[DEEP] REFUSING TO WRITE — only %s/%s symbols returned data (%.0f%%, "
             "floor %.0f%%). Writing them would leave max(trade_date) at today and "
@@ -424,14 +469,17 @@ async def collect_deep_panel(days: int | None = None,
             "ok": False,
             "symbols_total": len(syms), "symbols_ok": ok_n,
             "symbols_failed": len(failures), "ok_fraction": round(frac, 3),
+            "symbols_reachable": reachable, "symbols_delisted": len(delisted),
+            "symbols_errored": len(errored),
             "rows_built": len(all_rows), "rows_upserted": 0, "written": False,
             "refused": True,
             "elapsed_s": round((datetime.now(timezone.utc) - started).total_seconds(), 1),
-            "failure_sample": dict(list(failures.items())[:8]),
+            "failure_sample": dict(list(errored.items())[:8]) or dict(list(failures.items())[:8]),
             "diagnosis": (
-                f"only {ok_n}/{len(syms)} symbols ({frac:.0%}) — below the "
-                f"{_MIN_OK_FRACTION:.0%} floor. Write REFUSED so the gap stays "
-                f"visible rather than being papered over by a partial day."),
+                f"only {ok_n}/{reachable} reachable symbols ({frac:.0%}, floor "
+                f"{_MIN_OK_FRACTION:.0%}; live floor {_MIN_LIVE_SYMBOLS}); "
+                f"{len(delisted)} delisted/unlisted not counted. Write REFUSED so "
+                f"the gap stays visible rather than being papered over by a partial day."),
         }
 
     written = False
@@ -446,10 +494,13 @@ async def collect_deep_panel(days: int | None = None,
                 break
 
     out = {
-        "ok": bool(written) and frac >= _MIN_OK_FRACTION,
+        "ok": bool(written) and frac >= _MIN_OK_FRACTION and ok_n >= _MIN_LIVE_SYMBOLS,
         "symbols_total": len(syms),
         "symbols_ok": ok_n,
         "symbols_failed": len(failures),
+        "symbols_reachable": reachable,
+        "symbols_delisted": len(delisted),
+        "symbols_errored": len(errored),
         "ok_fraction": round(frac, 3),
         "rows_upserted": len(all_rows) if written else 0,
         "rows_built": len(all_rows),
@@ -457,11 +508,12 @@ async def collect_deep_panel(days: int | None = None,
         "elapsed_s": round((datetime.now(timezone.utc) - started).total_seconds(), 1),
         # First few reasons, not a count. "12 failed" is not actionable;
         # "12 failed with HTTP 418" is.
-        "failure_sample": dict(list(failures.items())[:8]),
+        "failure_sample": dict(list(errored.items())[:8]),
+        "delisted_sample": sorted(delisted)[:12],
     }
     if frac < _MIN_OK_FRACTION:
         out["diagnosis"] = (
-            f"only {ok_n}/{len(syms)} symbols returned data ({frac:.0%}, floor "
+            f"only {ok_n}/{reachable} reachable symbols returned data ({frac:.0%}, floor "
             f"{_MIN_OK_FRACTION:.0%}). Below this it is a throttle or an outage, "
             f"not normal delisting attrition — do NOT read the result as a quiet day.")
     if not written and all_rows:
