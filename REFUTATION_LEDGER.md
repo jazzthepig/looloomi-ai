@@ -23486,3 +23486,14 @@ Jazz 问 C「还差什么数据和信息层」。核 C 的清单时先看了现�
 钩子异常只记录不退出进程(一个自检钩子不该能杀死它在检查的那个引擎)。
 **判据:** `select count(*) from cis_scores where data_tier='T1' and recorded_at > now()-interval '2 hours'` > 0,
 且 `daily_macro_regime` 最新日期 = 今天。
+
+### S-418 验收(2026-09-24 08:47 UTC,Seth 直接查库)
+
+- **T1 恢复:** `local_engine` 48 行,最新 08:15 UTC;`daily_macro_regime` = **2026-09-24 TIGHTENING**。判据两条都达成。
+- **A 报告的「新 P0:Mac→Supabase 写入断了,cis_scores 和 daily_macro_regime 都是 0 行」不成立。**
+  `cis_scores` 共 168,951 行,T1 今天在写。很可能是用 anon 查询时撞上 RLS 或过滤条件写错 ——
+  **「读到 0」不等于「库里是 0」**(S-180 那条)。已在 MINIMAX_SYNC 叫停,免得去「修」一条正常的路径。
+- **真正的新缺口:T1 只剩 24 个加密标的,19 个 TradFi 全部缺席**(AAPL/AMZN/GOOGL/META/MSFT/NVDA/TSLA/
+  SPY/QQQ/XLF/TLT/IEF/SHY/TIP/LQD/HYG/GLD/SLV/USO)。09-16/17 是 43 个。
+  修复前后标的数从 43 掉到 24,A 的报告写了「24 assets」但没有对照之前的 43 —— **只报当前值不报变化,
+  看不出这是一次塌陷。**
