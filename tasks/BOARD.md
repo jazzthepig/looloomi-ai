@@ -4,6 +4,7 @@
 |---|---|---|---|---|---|---|
 | in_review | T-008 | seth | Railway 侧:新闻事件表 + mac_writes 白名单 | 201 且 write_log 有行 | 无 |  |
 | in_review | T-017 | seth | 宏观简报:兜底模板去掉仓位建议 + 24h 变化读对键名 + 不再把几分钟的静止写成市场平静;移动端把缺失的 direction 显示成 NEUTRAL | 文本含 24h 变化数值;不含 Accumulat/contrarian entry/Allocate/Reduce/favoured;Mac 推来的 prompt_version = mb-3 | 模板:'BTC at $83,403 (— 24h)' + 'Risk-off positioning favoured';LLM 简报:'market tape is currently flat',当日总市值 24h -6.4%;移动端 RECENT SIGNALS:空标的行 + 4 条全显示 NEUTRAL(feed 里 direction 全为 null) |  |
+| in_review | T-019 | seth | prediction_resolver:4 个 date 列来源恢复出结果;不再 409 | 5 个来源都有行(positioning/forward_supply/conviction/narrative 各 >0);409 = 0 | 只有 signal 170 行,其余 4 个来源 0 行;2h 内 409 × 326 |  |
 | claimed | T-014 | seth | 产品面审计(内置浏览器,走 Jazz 网络) | 每页有结论,问题都转成任务卡 | 3 周未动 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-001 | lane-a | T1 的 TradFi 改从 ohlcv_daily(eodhd)读,撤回 30 天过期缓存 | = 43,且 19 个 TradFi 最新价格日期 ≥ 最近一个美股交易日 | 24 |  |
@@ -21,4 +22,4 @@
 | open | T-013 | seth | 首页和页面路由免于限流 | 仍返回 HTML 200 | 返回 JSON 429 |  |
 | blocked(等 T-015) | T-016 | seth | 实盘执行器(只算不发两天 → 3,000U 真跑) | > 0,且每日对账有数 | 0 |  |
 
-open 14 · claimed 1 · blocked 1 · in_review 2
+open 14 · claimed 1 · blocked 1 · in_review 3

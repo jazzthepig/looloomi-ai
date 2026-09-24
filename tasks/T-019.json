@@ -1,0 +1,24 @@
+{
+  "id": "T-019",
+  "title": "prediction_resolver:4 个 date 列来源恢复出结果;不再 409",
+  "owner": "seth",
+  "status": "in_review",
+  "source": "S-425",
+  "allowed_paths": [
+    "src/data/signals/outcome_tracker.py",
+    "src/data/signals/prediction_resolver.py",
+    "src/api/main.py",
+    "tests/test_prediction_resolver_sources.py",
+    "scripts/preflight.sh"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "select source, count(*) from prediction_outcomes group by 1;  以及 Supabase edge_logs 里 POST prediction_outcomes 的 409 计数(部署后 2h)",
+    "expect": "5 个来源都有行(positioning/forward_supply/conviction/narrative 各 >0);409 = 0"
+  },
+  "prior_value": "只有 signal 170 行,其余 4 个来源 0 行;2h 内 409 × 326",
+  "created": "2026-09-24",
+  "verified": null
+}

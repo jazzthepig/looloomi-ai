@@ -1230,8 +1230,10 @@ async def _prediction_resolver_loop():
         try:
             from src.data.signals.prediction_resolver import resolve_all_predictions
             res = await resolve_all_predictions(dry_run=False)
-            hr = {s: v.get("hit_rate_pct") for s, v in res.get("sources", {}).items()}
-            print(f"[PRED] daily resolve — per-source hit_rate={hr}")
+            # S-425:只打印 hit_rate 时,「0 行写入」「读失败」「整个来源抛异常」都显示成 None。
+            summ = {s: (v.get("status"), v.get("rows_written"), v.get("examined"),
+                        v.get("error")) for s, v in res.get("sources", {}).items()}
+            print(f"[PRED] daily resolve — per-source (status, written, examined, error)={summ}")
         except Exception as _e:
             print(f"[PRED] ⚠️  daily resolve failed: {_e}")
         await _asyncio.sleep(_PREDICTION_INTERVAL_S)
