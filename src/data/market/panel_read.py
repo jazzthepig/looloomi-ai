@@ -144,7 +144,7 @@ async def read_panel(symbols: Sequence[str], *, start: str,
             f"账本在这种情况下应当拒绝记账,而不是记一个不变的 NAV")
 
     from src.data.vector.market_state_writer import fetch_panel
-    raw, series_source = await fetch_panel(start, source=source)
+    raw, series_source = await fetch_panel(start, source=source, symbols=syms)
 
     days = sorted({d for s in syms for d in (raw.get(s) or {})})
     if not days:
