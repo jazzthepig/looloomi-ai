@@ -135,87 +135,98 @@ _BRIEF_SWR      = 120     # brief SWR: a cold edge may serve up to 2 min past
 # ── Template brief generator (no LLM required) ───────────────────────────────
 
 def _generate_template_brief(mp: dict) -> str:
+    """上游简报缺失时,由 macro-pulse 现算的模板简报。只描述,不建议。
+
+    T-017(2026-09-24)重写。旧版每档都带一句仓位建议 ——「Accumulation zones」
+    「contrarian entry」「Allocate across grades」「Reduce risk exposure」「Risk-off
+    positioning favoured」—— 在投资人页面上,这是规则 1 的 P0。而它躲过了检查,
+    因为 `validate_brief` 只在 Mac 推送的入口跑,**兜底从不过校验**。
+    现在:① 文本只陈述测得的状态和 regime 的机制含义;② 缺值的句子整句省略,
+    不写「—」;③ 24h 变化通过合约里的同一个读法取(旧版读的键不存在,永远是「—」);
+    ④ `tests/test_macro_template_brief.py` 把每个 regime × 情绪档喂给 `validate_brief`。
     """
-    Build a structured data-driven macro brief from macro-pulse snapshot.
-    Runs inline on Railway — no LLM dependency.
-    """
-    regime        = mp.get("macro_regime", "Unknown")
-    fg_val        = mp.get("fear_greed_index") or mp.get("fear_greed", {}).get("value")
-    fg_lbl        = mp.get("fear_greed_label") or mp.get("fear_greed", {}).get("label", "—")
-    btc_dom       = mp.get("btc_dominance")
-    btc_price     = mp.get("btc_price") or mp.get("btc", {}).get("price")
-    btc_chg       = mp.get("btc_change_24h") or mp.get("btc", {}).get("change_24h")
-    mcap          = mp.get("total_market_cap_usd")
-    defi_tvl      = mp.get("defi_tvl_usd")
+    from src.api.contracts.macro_brief import (btc_change_24h, mcap_change_24h,
+                                               fng_band)
 
-    # Regime colour-coding
-    regime_signals = {
-        "TIGHTENING":   ("Tightening monetary conditions persist.", "Risk-off positioning favoured. Selective exposure to high-CIS assets above regime threshold (CIS≥52)."),
-        "EASING":       ("Easing cycle underway.", "Risk-on conditions improve. Broader exposure warranted for assets above CIS≥60."),
-        "RISK_ON":      ("Risk-on macro environment.", "Broad participation supported. Quality filter still applies — CIS≥65 preferred."),
-        "RISK_OFF":     ("Risk-off macro environment.", "Capital preservation priority. High-CIS defensives and stablecoins preferred."),
-        "STAGFLATION":  ("Stagflation signals present.", "Commodities, RWA, and BTC screen as inflation hedges. High-beta altcoins rank UNDERWEIGHT."),
-        "GOLDILOCKS":   ("Goldilocks regime — growth without excess inflation.", "Full-spectrum participation. Allocate across grades B+ and above."),
-    }
-    regime_key = (regime or "").upper()
-    regime_context, regime_action = regime_signals.get(regime_key, (
-        f"Current regime: {regime}.",
-        "Monitor CIS universe for grade changes before adjusting exposure."
-    ))
+    def _f(v):
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return None
 
-    # Sentiment read
-    if fg_val is not None:
-        if fg_val <= 25:
-            sentiment_read = f"Extreme Fear ({fg_val}) signals capitulation risk but potential contrarian entry for high-conviction positions."
-        elif fg_val <= 45:
-            sentiment_read = f"Fear ({fg_val}) — market participants remain cautious. Accumulation zones possible for A-grade assets."
-        elif fg_val <= 55:
-            sentiment_read = f"Neutral ({fg_val}) — indecision. Await confirmation before adding risk."
-        elif fg_val <= 75:
-            sentiment_read = f"Greed ({fg_val}) — momentum positive but watch for mean-reversion signals."
-        else:
-            sentiment_read = f"Extreme Greed ({fg_val}) — elevated complacency. Reduce risk exposure incrementally."
-    else:
-        sentiment_read = "Sentiment data unavailable."
+    regime   = (mp.get("macro_regime") or "").upper()
+    fg_val   = _f(mp.get("fear_greed_index") or (mp.get("fear_greed") or {}).get("value"))
+    btc_dom  = _f(mp.get("btc_dominance"))
+    btc_px   = _f(mp.get("btc_price") or (mp.get("btc") or {}).get("usd")
+                  or (mp.get("btc") or {}).get("price"))
+    btc_chg  = btc_change_24h(mp)
+    mcap     = _f(mp.get("total_market_cap_usd"))
+    mcap_chg = mcap_change_24h(mp)
+    tvl      = _f(mp.get("defi_tvl_usd"))
 
-    # BTC dominance read
-    if btc_dom is not None:
-        if btc_dom > 60:
-            dom_read = f"BTC dominance at {btc_dom:.1f}% — alt-season conditions absent. BTC-led market structure."
-        elif btc_dom > 52:
-            dom_read = f"BTC dominance at {btc_dom:.1f}% — selective altcoin strength possible in L1/DeFi."
-        else:
-            dom_read = f"BTC dominance at {btc_dom:.1f}% — broad altcoin participation. Diversified exposure warranted."
-    else:
-        dom_read = "Dominance data unavailable."
-
-    # Format numbers
-    def _fmt_mcap(v):
-        if v is None: return "—"
+    def _usd(v):
         if v >= 1e12: return f"${v/1e12:.2f}T"
         if v >= 1e9:  return f"${v/1e9:.1f}B"
         return f"${v:,.0f}"
 
-    btc_str  = f"${btc_price:,.0f}" if btc_price else "—"
-    chg_str  = (f"+{btc_chg:.1f}%" if btc_chg >= 0 else f"{btc_chg:.1f}%") if btc_chg is not None else "—"
-    mcap_str = _fmt_mcap(mcap)
-    tvl_str  = _fmt_mcap(defi_tvl)
+    # 每个 regime 一句「是什么」+ 一句「评分在这个 regime 下怎么运作」。不含任何动作。
+    regime_text = {
+        "TIGHTENING":  ("The macro regime reads as tightening: monetary conditions are restrictive.",
+                        "In a defensive regime the CIS grade distribution compresses by design, so fewer assets reach the upper grades and relative ranking carries more of the information."),
+        "RISK_OFF":    ("The macro regime reads as risk-off.",
+                        "In a defensive regime the CIS grade distribution compresses by design, so fewer assets reach the upper grades and relative ranking carries more of the information."),
+        "STAGFLATION": ("The macro regime reads as stagflationary: growth is soft while inflation pressure persists.",
+                        "In a defensive regime the CIS grade distribution compresses by design, so fewer assets reach the upper grades and relative ranking carries more of the information."),
+        "EASING":      ("The macro regime reads as easing: monetary conditions are loosening.",
+                        "In a supportive regime the CIS grade distribution widens, so grade differences across the universe are larger than in defensive periods."),
+        "RISK_ON":     ("The macro regime reads as risk-on.",
+                        "In a supportive regime the CIS grade distribution widens, so grade differences across the universe are larger than in defensive periods."),
+        "GOLDILOCKS":  ("The macro regime reads as goldilocks: growth without excess inflation.",
+                        "In a supportive regime the CIS grade distribution widens, so grade differences across the universe are larger than in defensive periods."),
+    }
+    p1, p3 = regime_text.get(regime, (
+        "The macro regime classification is currently unresolved.",
+        "Grades are read against the full universe; relative ranking remains the primary comparison."))
 
+    market = []
+    if mcap is not None:
+        s = f"Total crypto market capitalisation stands at {_usd(mcap)}"
+        s += f", {mcap_chg:+.1f}% over 24 hours." if mcap_chg is not None else "."
+        market.append(s)
+    if btc_px is not None:
+        s = f"BTC trades at {_usd(btc_px)}"
+        s += f", {btc_chg:+.1f}% over 24 hours." if btc_chg is not None else "."
+        market.append(s)
+    if btc_chg is not None and mcap_chg is not None:
+        if max(abs(btc_chg), abs(mcap_chg)) < 1:
+            market.append("Day-over-day movement across the market is small.")
+        elif mcap_chg < btc_chg:
+            market.append("The broader market has moved down more than BTC over the day, which means alts have lagged.")
+        elif mcap_chg > btc_chg:
+            market.append("The broader market has moved up more than BTC over the day, which means alts have led.")
+    if btc_dom is not None:
+        market.append(f"BTC dominance is {btc_dom:.1f}% of total market capitalisation.")
+    if tvl is not None:
+        market.append(f"DeFi total value locked is {_usd(tvl)}.")
+
+    band = fng_band(fg_val) if fg_val is not None else None
+    if band:
+        market.append(f"The Fear & Greed index reads {fg_val:.0f}, in the {band} band; "
+                      f"it is a sentiment gauge measured daily, not a price signal.")
+
+    body = " ".join(market) if market else "Market-wide measurements are temporarily unavailable."
     ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    text = (f"{p1} {body}\n\n{p3} Positioning views on individual assets are expressed only "
+            f"through the CIS signal scale, from STRONG OUTPERFORM to UNDERWEIGHT, shown "
+            f"alongside each asset.\n\nMacro snapshot as of {ts}.")
 
-    brief = f"""**CometCloud Macro Brief** · {ts}
-
-**Regime: {regime}** — {regime_context}
-
-Total crypto market cap stands at {mcap_str} with BTC at {btc_str} ({chg_str} 24h). {dom_read} DeFi TVL: {tvl_str}.
-
-**Sentiment:** {sentiment_read}
-
-**Positioning:** {regime_action}
-
-Powered by Looloomi-AI"""
-
-    return brief
+    # 兜底也过同一道用语校验(长度除外 —— 缺值时模板本来就短)。
+    from src.api.contracts.macro_brief import validate_brief
+    bad = [v for v in validate_brief(text)["violations"] if not v.startswith("too short")]
+    if bad:
+        _logger.error("[MACRO] template brief failed its own vocabulary check: %s", bad)
+        return f"Macro snapshot as of {ts}. {body}"
+    return text
 
 
 # ── Internal push (Mac Mini → Railway) ───────────────────────────────────────

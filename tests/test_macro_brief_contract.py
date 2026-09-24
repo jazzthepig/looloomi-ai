@@ -167,7 +167,7 @@ def test_prompt_is_told_what_moved_not_just_where_things_are():
     prev = {"btc_price": 71848, "macro_regime": "Tightening"}
     cur = {"btc_price": 71848 * 1.006, "macro_regime": "Tightening"}
     p = mb.build_prompt(cur, prev, why="BTC 0.6%")
-    assert "MOVEMENT since" in p and "+0.60%" in p
+    assert "CHANGE SINCE THE PREVIOUS BRIEF" in p and "+0.60%" in p
     assert "asked to rewrite because" in p
 
 
@@ -178,9 +178,11 @@ def test_zero_deltas_are_not_listed_as_movement():
             "macro_regime": "Tightening"}
     p = mb.build_prompt(dict(same), dict(same))
     assert "+0.00%" not in p and "-0.00%" not in p
-    assert "the tape is flat" in p, (
-        "a flat tape must be stated, not omitted — an absent section reads as "
+    assert "nothing above the reporting floor over that interval" in p, (
+        "a quiet interval must be stated, not omitted — an absent section reads as "
         "'not provided', which is a different fact")
+    # T-017:但它只能说「这个几分钟的跨度里没动」,不能说市场平静。
+    assert "the tape is flat" not in p
 
 
 # ── Cadence ──────────────────────────────────────────────────────────────────

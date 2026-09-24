@@ -1035,7 +1035,11 @@ echo "  ✓ postgrest columns exist (S-185)"
 # named absent, never narrated (I1 in prose) · the CDN window derived from the
 # poll interval so the cache cannot silently become the freshness ceiling.
 # 12 mutations, 12 caught.
-python3 -m pytest tests/test_macro_brief_contract.py -q || {
+# T-017: the Railway template fallback carried advice ("Accumulation zones",
+# "Allocate across grades") and never went through validate_brief; the 24h
+# change was read from a key macro-pulse does not have, so both paths said
+# "flat" on a -6.4% day.
+python3 -m pytest tests/test_macro_brief_contract.py tests/test_macro_template_brief.py -q || {
   echo "  ✗ macro-brief contract FAILED — do not push"; exit 1; }
 echo "  ✓ macro brief contract (S-186/S-187)"
 
