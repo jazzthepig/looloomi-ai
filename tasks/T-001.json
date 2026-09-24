@@ -1,0 +1,21 @@
+{
+  "id": "T-001",
+  "title": "T1 的 TradFi 改从 ohlcv_daily(eodhd)读,撤回 30 天过期缓存",
+  "owner": "lane-a",
+  "status": "open",
+  "source": "S-419",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/data_fetcher.py"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "tests/"
+  ],
+  "acceptance": {
+    "check": "select count(distinct symbol) from cis_scores where data_tier='T1' and recorded_at > now()-interval '2 hours'",
+    "expect": "= 43,且 19 个 TradFi 最新价格日期 ≥ 最近一个美股交易日"
+  },
+  "prior_value": "24",
+  "created": "2026-09-24",
+  "verified": null
+}

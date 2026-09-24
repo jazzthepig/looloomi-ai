@@ -1,0 +1,20 @@
+{
+  "id": "T-004",
+  "title": "恢复持币集中度写入(holder_concentration_history)",
+  "owner": "lane-a",
+  "status": "open",
+  "source": "S-420 前的数据层盘点",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/"
+  ],
+  "forbidden_paths": [
+    "src/api/"
+  ],
+  "acceptance": {
+    "check": "select max(d) from holder_concentration_history",
+    "expect": "= 今天(UTC)"
+  },
+  "prior_value": "2026-08-31",
+  "created": "2026-09-24",
+  "verified": null
+}

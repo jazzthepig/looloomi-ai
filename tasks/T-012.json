@@ -1,0 +1,18 @@
+{
+  "id": "T-012",
+  "title": "HL 采集器加持仓量(OI)",
+  "owner": "seth",
+  "status": "open",
+  "source": "数据层盘点 09-24",
+  "allowed_paths": [
+    "src/data/market/hyperliquid_collector.py"
+  ],
+  "forbidden_paths": [],
+  "acceptance": {
+    "check": "今天 HL 的 OI 行数",
+    "expect": "> 200 个币"
+  },
+  "prior_value": "0(没有存)",
+  "created": "2026-09-24",
+  "verified": null
+}

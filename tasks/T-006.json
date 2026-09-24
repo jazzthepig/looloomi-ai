@@ -1,0 +1,20 @@
+{
+  "id": "T-006",
+  "title": "Strategy 3/4 按正确问题复核",
+  "owner": "lane-c",
+  "status": "open",
+  "source": "S-420",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/research/"
+  ],
+  "forbidden_paths": [
+    "src/"
+  ],
+  "acceptance": {
+    "check": "报告:对照等权持有同一面板的 β 匹配超额,按 牛/熊 × 高/低波 分格;Strategy 3 的断路器加再入场",
+    "expect": "每格都有数字,不是只给一个总 Sharpe"
+  },
+  "prior_value": "只用绝对 Sharpe 判为 REFUTED",
+  "created": "2026-09-24",
+  "verified": null
+}

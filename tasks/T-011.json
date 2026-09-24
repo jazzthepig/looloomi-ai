@@ -1,0 +1,20 @@
+{
+  "id": "T-011",
+  "title": "Jev 仓位乘数对照线:先预注册(只调 1 个参数,4 级基准)",
+  "owner": "lane-b",
+  "status": "open",
+  "source": "对 B 的讨论 09-23",
+  "allowed_paths": [
+    "REFUTATION_LEDGER.md 的预注册段(经 PR)"
+  ],
+  "forbidden_paths": [
+    "src/data/signals/hl_book_daily.py"
+  ],
+  "acceptance": {
+    "check": "台账里有预注册:固定参数 / 波动率公式 / 在线学习 / Jev 四级基准与判据",
+    "expect": "合并者确认后 Seth 接进 hl_book_daily"
+  },
+  "prior_value": "无",
+  "created": "2026-09-24",
+  "verified": null
+}

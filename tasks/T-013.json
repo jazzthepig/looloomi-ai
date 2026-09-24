@@ -1,0 +1,19 @@
+{
+  "id": "T-013",
+  "title": "首页和页面路由免于限流",
+  "owner": "seth",
+  "status": "open",
+  "source": "产品面 09-24",
+  "allowed_paths": [
+    "src/api/middleware/rate_limit.py",
+    "tests/"
+  ],
+  "forbidden_paths": [],
+  "acceptance": {
+    "check": "同一 IP 超限后访问 /",
+    "expect": "仍返回 HTML 200"
+  },
+  "prior_value": "返回 JSON 429",
+  "created": "2026-09-24",
+  "verified": null
+}

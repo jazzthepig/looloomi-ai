@@ -1,0 +1,21 @@
+{
+  "id": "T-005",
+  "title": "Layer C 重新设计(不强制现金),先写 M- 台账再跑",
+  "owner": "lane-c",
+  "status": "open",
+  "source": "S-420 / DECISIONS 09-24",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/research/vdb_tilt/"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "tests/"
+  ],
+  "acceptance": {
+    "check": "三透镜 OOS(60/40、50/50、70/30)",
+    "expect": "β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9]"
+  },
+  "prior_value": "β 匹配 0/30,β≈0.35",
+  "created": "2026-09-24",
+  "verified": null
+}

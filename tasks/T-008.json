@@ -1,0 +1,21 @@
+{
+  "id": "T-008",
+  "title": "Railway 侧:新闻事件表 + mac_writes 白名单",
+  "owner": "seth",
+  "status": "open",
+  "source": "C 09-24 报告",
+  "allowed_paths": [
+    "src/api/routers/mac_writes.py",
+    "src/api/schema_manifest.json"
+  ],
+  "forbidden_paths": [
+    "/Volumes/CometCloudAI/"
+  ],
+  "acceptance": {
+    "check": "POST /internal/mac-write 该表一行,write_log 出现记录",
+    "expect": "201 且 write_log 有行"
+  },
+  "prior_value": "无",
+  "created": "2026-09-24",
+  "verified": null
+}
