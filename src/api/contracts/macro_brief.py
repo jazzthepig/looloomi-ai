@@ -46,7 +46,10 @@ from __future__ import annotations
 import re
 
 # Bump on any change to build_prompt's text or to the gate thresholds.
-PROMPT_VERSION = "mb-2"
+# mb-3 (T-017, 2026-09-24):24h 变化此前从未进过 prompt(读的键名 macro-pulse 里不存在),
+# 而「距上份简报」的几分钟增量被标成 MOVEMENT、空时写 "the tape is flat" ——
+# 于是市值 24h −6.4% 的那天,线上简报写的是「市场平静、无方向」。
+PROMPT_VERSION = "mb-3"
 
 # ── Regeneration gate (S-187) ────────────────────────────────────────────────
 #
@@ -210,6 +213,44 @@ def select_top_assets(items: list, n: int = TOP_ASSET_SHOW) -> list:
 _ABSENT = ("—", "", None, "N/A", "n/a")
 
 
+def _num(v) -> float | None:
+    if v in _ABSENT:
+        return None
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def btc_change_24h(d: dict) -> float | None:
+    """BTC 24h %,两种拼法都认。
+
+    T-017:prompt 和模板都读 `btc_change_24h`,而 `/api/v1/market/macro-pulse`
+    实际给的是 `btc.usd_24h_change`。键名对不上 → 值为 None → 被当成「未测」静默省略。
+    **读一个不存在的键,和读到一个缺失的值,在输出上一模一样** —— 所以读法集中在这里,
+    并由测试拿线上真实形状来喂。
+    """
+    d = d or {}
+    for v in (d.get("btc_change_24h"),
+              (d.get("btc") or {}).get("usd_24h_change"),
+              (d.get("btc") or {}).get("change_24h")):
+        f = _num(v)
+        if f is not None:
+            return f
+    return None
+
+
+def mcap_change_24h(d: dict) -> float | None:
+    """总市值 24h %(CoinGecko /global 的 `data.market_cap_change_percentage_24h_usd`)。"""
+    d = d or {}
+    for v in (d.get("market_cap_change_24h"),
+              (d.get("data") or {}).get("market_cap_change_percentage_24h_usd")):
+        f = _num(v)
+        if f is not None:
+            return f
+    return None
+
+
 def _fmt(v, prefix="$", suffix="") -> str | None:
     """Formatted value, or None when the reading is absent.
 
@@ -282,9 +323,10 @@ def build_prompt(current: dict, previous: dict | None = None,
         absent.append("Macro regime")
 
     add("BTC", current.get("btc_price"))
-    add("BTC 24h change", current.get("btc_change_24h"),
-        None if current.get("btc_change_24h") in _ABSENT
-        else f"{float(current['btc_change_24h']):+.2f}%")
+    b24 = btc_change_24h(current)
+    add("BTC 24h change", b24, None if b24 is None else f"{b24:+.2f}%")
+    m24 = mcap_change_24h(current)
+    add("Total market cap 24h change", m24, None if m24 is None else f"{m24:+.2f}%")
     add("BTC dominance", current.get("btc_dominance"),
         None if current.get("btc_dominance") in _ABSENT
         else f"{float(current['btc_dominance']):.2f}%")
@@ -327,9 +369,13 @@ def build_prompt(current: dict, previous: dict | None = None,
     # section. An absent heading reads as "not provided"; this reads as "checked,
     # and the answer is nothing" — which paragraph 1 is instructed to report as a
     # finding in its own right.
-    delta_block = ("\nMOVEMENT since the brief currently on screen:\n"
+    # T-017:这一段的时间跨度是「上份简报到现在」,通常只有几分钟。
+    # mb-2 的标题叫 MOVEMENT、空时写 "the tape is flat",模型据此写出「市场平静」——
+    # 而当天市值 −6.4%。**几分钟里没动 ≠ 市场没动**:标题写明跨度,空时只说这个跨度。
+    delta_block = ("\nCHANGE SINCE THE PREVIOUS BRIEF (a short interval, usually "
+                   "minutes — it says nothing about the day's direction):\n"
                    + ("\n".join(deltas) if deltas
-                      else "  none above the reporting floor — the tape is flat")
+                      else "  nothing above the reporting floor over that interval")
                    + "\n") if previous else ""
 
     why_block = f"\nYou were asked to rewrite because: {why}\n" if why else ""
@@ -350,9 +396,11 @@ Top assets by CIS score:
 WRITE:
 - 3 short paragraphs, 120-180 words total. No headings, no bullet points, no
   markdown formatting.
-- Paragraph 1: what the market is doing, anchored to the movement above if any.
-  If nothing moved materially, say so plainly — a quiet tape is a finding, not a
-  gap to fill.
+- Paragraph 1: what the market is doing, anchored to the 24h changes above.
+  The change since the previous brief is secondary; a quiet interval of a few
+  minutes is not a quiet market. Call the market flat or range-bound only if
+  the 24h changes themselves are small (under 1% either way). If no 24h change
+  is given, describe levels and do not characterise direction at all.
 - Paragraph 2: what the regime implies for positioning across the book.
 - Paragraph 3: the single thing most worth watching, stated as an observable
   condition rather than a prediction.
@@ -406,6 +454,12 @@ _BANNED_TERMS = [
     r"\bshort\s+(?:it|this|the\s+\w+)\b", r"\bgo\s+long\b", r"\btake\s+profit",
     r"\bentry\s+point", r"\battractive\s+entry", r"\bworth\s+(?:adding|owning|buying)",
     r"\bdip\s+buy", r"\bexit\s+(?:now|here)",
+    # T-017:Railway 模板兜底写了 "Accumulation zones" / "contrarian entry" /
+    # "Allocate across grades" / "Broader exposure warranted" / "before adding risk",
+    # 上面的列表一个都没抓到(`accumulate` 不匹配 `Accumulation`)。
+    r"\baccumulat\w*", r"\bcontrarian\s+entry", r"\badd(?:ing)?\s+(?:risk|exposure)",
+    r"\bincrease\s+(?:risk|exposure)", r"\ballocate\b", r"\bexposure\s+(?:is\s+)?warranted",
+    r"\bpositioning\s+(?:is\s+)?favou?red",
 ]
 
 _FORWARD_TERMS = [

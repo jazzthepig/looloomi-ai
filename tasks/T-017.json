@@ -1,0 +1,26 @@
+{
+  "id": "T-017",
+  "title": "宏观简报:兜底模板去掉仓位建议 + 24h 变化读对键名 + 不再把几分钟的静止写成市场平静;移动端把缺失的 direction 显示成 NEUTRAL",
+  "owner": "seth",
+  "status": "in_review",
+  "source": "T-014 产品面审计 09-24(移动端首屏)",
+  "allowed_paths": [
+    "src/api/contracts/macro_brief.py",
+    "src/api/routers/macro.py",
+    "tests/test_macro_brief_contract.py",
+    "tests/test_macro_template_brief.py",
+    "scripts/preflight.sh",
+    "dashboard/src/components/MobileApp.jsx"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "部署后 GET /api/v1/macro/brief(兜底时)与 Mac 同步 mb-3 后的下一份简报;select brief from macro_briefs order by id desc limit 1",
+    "expect": "文本含 24h 变化数值;不含 Accumulat/contrarian entry/Allocate/Reduce/favoured;Mac 推来的 prompt_version = mb-3"
+  },
+  "prior_value": "模板:'BTC at $83,403 (— 24h)' + 'Risk-off positioning favoured';LLM 简报:'market tape is currently flat',当日总市值 24h -6.4%;移动端 RECENT SIGNALS:空标的行 + 4 条全显示 NEUTRAL(feed 里 direction 全为 null)",
+  "created": "2026-09-24",
+  "notes": "Mac 侧 macro_brief_contract.py 是副本(非导入),需 A 按文件头第 2 步重新复制,否则 LLM 路仍是 mb-2。",
+  "verified": null
+}
