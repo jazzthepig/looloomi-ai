@@ -155,7 +155,12 @@ def _parse_dt(s: str) -> datetime | None:
         return None
     s = str(s).strip()
     try:
-        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+        d = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        # S-425:无时区的输入(尤其是裸 `date` 列 '2026-07-15')这里原本返回 naive,
+        # 而下面的正则分支对同样没时区的输入给 UTC —— 同一函数两种答案。
+        # 调用方拿 naive 去减 `now(timezone.utc)` 抛 TypeError,prediction_resolver
+        # 的 4 个 date 列来源因此自 08 月中起一条结果都没写出来(规则 5c:一律 UTC)。
+        return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
     except Exception:
         pass
     m = _TS_RE.match(s)

@@ -1038,8 +1038,9 @@ echo "  ✓ postgrest columns exist (S-185)"
 # T-017: the Railway template fallback carried advice ("Accumulation zones",
 # "Allocate across grades") and never went through validate_brief; the 24h
 # change was read from a key macro-pulse does not have, so both paths said
-# "flat" on a -6.4% day.
-python3 -m pytest tests/test_macro_brief_contract.py tests/test_macro_template_brief.py -q || {
+# "flat" on a -6.4% day. S-425 rides the same gate: a date-only _parse_dt was
+# naive, so 4 of 5 prediction sources never wrote one outcome since mid-August.
+python3 -m pytest tests/test_macro_brief_contract.py tests/test_macro_template_brief.py tests/test_prediction_resolver_sources.py -q || {
   echo "  ✗ macro-brief contract FAILED — do not push"; exit 1; }
 echo "  ✓ macro brief contract (S-186/S-187)"
 

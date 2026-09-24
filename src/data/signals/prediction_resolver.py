@@ -170,8 +170,13 @@ async def _write_outcome(client, row: dict) -> bool:
     if not (_SB_URL and _SB_KEY):
         return False
     try:
+        # S-425:唯一键 (source, ref_id, horizon_days)。重复即忽略,不再 409 ——
+        # 旧版每次重跑都把已解析的 170 行重插一遍,2 小时 326 个 409,占满 Supabase 的错误率。
+        h = dict(_sb_headers(write=True))
+        h["Prefer"] = "resolution=ignore-duplicates,return=minimal"
         r = await client.post(f"{_SB_URL}/rest/v1/prediction_outcomes",
-                              content=json.dumps(row), headers=_sb_headers(write=True), timeout=15)
+                              params={"on_conflict": "source,ref_id,horizon_days"},
+                              content=json.dumps(row), headers=h, timeout=15)
         return r.status_code in (200, 201, 204)
     except Exception as e:
         _log.warning("[PRED] write error: %s", e)
@@ -189,12 +194,44 @@ async def resolve_source(source: str, *, horizon: int = 30, limit: int = 500,
     hits = misses = flat = nodata = written = 0
     alphas = []
     async with httpx.AsyncClient(timeout=20) as client:
+        # S-425:旧版每次取「最老的 500 行」—— 已解析的会被重插(409),而一个来源一旦
+        # 超过 500 行合格预测,更新的那些**永远轮不到**。现在先取已解析的 ref_id,
+        # 再按日期分页往后找,凑满 `limit` 条**未解析**的为止。
+        # 读失败必须报 error,不能当成 0 行 —— 0 行和「读不到」在结果里一模一样。
         try:
-            resp = await client.get(f"{_SB_URL}/rest/v1/{cfg['table']}",
-                params={cfg["date"]: f"lt.{cutoff}", "order": f"{cfg['date']}.asc",
-                        "limit": str(limit), "select": cfg["cols"]},
-                headers=_sb_headers(), timeout=20)
-            rows = resp.json() if resp.status_code == 200 else []
+            done = set()
+            off = 0
+            while True:
+                rr = await client.get(f"{_SB_URL}/rest/v1/prediction_outcomes",
+                    params={"source": f"eq.{source}", "horizon_days": f"eq.{horizon}",
+                            "select": "ref_id", "order": "ref_id.asc",
+                            "limit": "1000", "offset": str(off)},
+                    headers=_sb_headers(), timeout=20)
+                if rr.status_code != 200:
+                    return {"source": source, "status": "error",
+                            "error": f"read prediction_outcomes HTTP {rr.status_code}"}
+                page = rr.json()
+                done.update(str(x.get("ref_id")) for x in page)
+                if len(page) < 1000:
+                    break
+                off += 1000
+            rows, off = [], 0
+            while len(rows) < limit:
+                resp = await client.get(f"{_SB_URL}/rest/v1/{cfg['table']}",
+                    params={cfg["date"]: f"lt.{cutoff}",
+                            "order": f"{cfg['date']}.asc,{cfg['idc']}.asc",
+                            "limit": "1000", "offset": str(off), "select": cfg["cols"]},
+                    headers=_sb_headers(), timeout=20)
+                if resp.status_code != 200:
+                    return {"source": source, "status": "error",
+                            "error": f"read {cfg['table']} HTTP {resp.status_code}"}
+                page = resp.json()
+                rows += [r for r in page if str(r.get(cfg["idc"])) not in done]
+                if len(page) < 1000:
+                    break
+                off += 1000
+            rows = rows[:limit]
+            already = len(done)
         except Exception as e:
             return {"source": source, "status": "error", "error": str(e)}
 
@@ -230,7 +267,7 @@ async def resolve_source(source: str, *, horizon: int = 30, limit: int = 500,
 
     n = hits + misses
     return {"source": source, "status": "ok", "dry_run": dry_run,
-            "examined": len(rows), "hits": hits, "misses": misses, "flat": flat, "no_data": nodata,
+            "examined": len(rows), "already_resolved": already, "hits": hits, "misses": misses, "flat": flat, "no_data": nodata,
             "hit_rate_pct": round(hits / n * 100, 1) if n else None,
             "avg_directional_alpha_pct": round(sum(alphas) / len(alphas) * 100, 3) if alphas else None,
             "rows_written": written}
@@ -240,7 +277,14 @@ async def resolve_all_predictions(*, horizon: int = 30, dry_run: bool = True) ->
     """Resolve every source → per-source track record. THE read-back that mines the log."""
     out = {}
     for src in SOURCES:
-        out[src] = await resolve_source(src, horizon=horizon, dry_run=dry_run)
+        # S-425:一个来源抛异常,原本让整轮失败 —— `signal` 排第一、先写完,
+        # 其余四个自 08 月中起一条都没写出来,日志只有一行 "daily resolve failed"。
+        try:
+            out[src] = await resolve_source(src, horizon=horizon, dry_run=dry_run)
+        except Exception as e:                                    # noqa: BLE001
+            _log.error("[PRED] source %s failed: %s", src, e, exc_info=True)
+            out[src] = {"source": src, "status": "error",
+                        "error": f"{type(e).__name__}: {str(e)[:200]}"}
     return {"as_of": datetime.now(timezone.utc).isoformat(), "horizon_days": horizon, "sources": out}
 
 
