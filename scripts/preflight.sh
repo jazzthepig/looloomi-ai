@@ -1350,6 +1350,8 @@ python3 -m tests.test_deep_panel_uses_fast_rpc_first || {
   echo "  ✗ deep_panel fast-RPC-first — do not push"; exit 1; }
 python3 -m tests.test_deep_panel_floor_counts_reachable || {
   echo "  ✗ S-415 deep_panel 地板分母只数能回答的符号 — do not push"; exit 1; }
+python3 -m tests.test_fetch_panel_reads_past_the_server_cap || {
+  echo "  ✗ S-416 fetch_panel 必须读过 PostgREST 1000 行上限 — do not push"; exit 1; }
 python3 -m tests.test_forward_record_uses_shared_retry || {
   echo "  ✗ forward_record shared Supabase retry — do not push"; exit 1; }
 python3 -m tests.test_hyperliquid_venue_marks_handle_field_drift || {

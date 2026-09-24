@@ -139,8 +139,17 @@ MIN_DAYS = 400
 #: 标的的表,而它长得和一张好表一模一样。
 DEFAULT_START = "2022-01-01"
 
-#: 一次拉取的分页大小(PostgREST 上限保守取值)。
-PAGE = 10_000
+#: 一次拉取的分页大小 = PostgREST 服务端上限(S-416)。
+#:
+#: ⚠️ 原来是 10_000,注释写着「上限保守取值」—— 而服务端 `db-max-rows` 是 1000。
+#: 请求 10_000 得到 1000 行和一个 200,于是 `len(batch) < PAGE` 在**第一页就成立**,
+#: 循环退出。实测 2026-09-24:`fetch_panel("2026-06-01", source="coingecko_pro_ohlc")`
+#: 从热身起点读了 1000 行就停 —— **25 个标的 × 40 天,止于 2025-11-12**。
+#: 这个函数是 `market_state_writer` 和 `panel_read.read_panel` 的唯一读价路径:
+#: `market_state_vectors` 停在 08-05、`_market_state_loop` 从未成功过,根子在这里。
+#: `tests/test_a_truncated_page_is_not_the_whole_set.py` 只扫 URL 里的 `limit=` 字面量,
+#: 这里的 limit 放在 params dict 里,**守卫看不见**。
+PAGE = 1000
 
 
 @dataclass(frozen=True)
@@ -268,7 +277,8 @@ async def _sb_get(path: str, params: dict[str, str]) -> SbRead:
     return SbRead(resp.json())
 
 
-async def fetch_panel(start: str, *, source: str = PANEL_SOURCE
+async def fetch_panel(start: str, *, source: str = PANEL_SOURCE,
+                      symbols: "list[str] | None" = None,
                       ) -> tuple[dict[str, dict[str, tuple[float, float]]], SeriesSource]:
     """`{symbol: {day: (close, volume)}}`,**单源**,含热身期。
 
@@ -285,13 +295,17 @@ async def fetch_panel(start: str, *, source: str = PANEL_SOURCE
     offset = 0
 
     while True:
-        read = await _sb_get("ohlcv_daily", {
+        params = {
             "select": "symbol,trade_date,close,volume,source",
             "source": f"eq.{source}",
             "trade_date": f"gte.{warm}",
-            "order": "trade_date.asc",
+            # 排序键必须唯一,否则分页之间行会漂移(同一天多个标的)
+            "order": "trade_date.asc,symbol.asc",
             "limit": str(PAGE), "offset": str(offset),
-        })
+        }
+        if symbols:
+            params["symbol"] = "in.(" + ",".join(sorted({s.upper() for s in symbols})) + ")"
+        read = await _sb_get("ohlcv_daily", params)
         if not read.ok:
             # 原因原样往上传。把它压回一句"读不到"就等于没查过 —— 这一句
             # 正是 2026-08-27 dry-run 给出的、对排查毫无帮助的那一句。
@@ -310,9 +324,11 @@ async def fetch_panel(start: str, *, source: str = PANEL_SOURCE
         # 只留断言需要的字段,不把 386k 行整份留在内存里。
         seen.extend({"source": r.get("source"), "trade_date": r.get("trade_date"),
                      "symbol": r.get("symbol")} for r in batch[:200])
-        if len(batch) < PAGE:
+        # 读到空页才停 —— 不拿「这页比我要的少」当结束:服务端上限变了,
+        # 那个比较就会在第一页成立(S-416 就是这么发生的)。
+        if not batch:
             break
-        offset += PAGE
+        offset += len(batch)
 
     # 客户端断言:若过滤条件被改坏,这里抛异常,而不是静默地拼出一条曲线。
     src = assert_single_source(seen, job="market_state panel", source_key="source")
