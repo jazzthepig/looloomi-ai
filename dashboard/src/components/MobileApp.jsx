@@ -450,12 +450,18 @@ function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }
                   borderRadius: 8, padding: "10px 12px",
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 700, color: T.t1 }}>
-                      {sig.symbol}
+                    {/* T-017:feed 条目多数没有 direction(regime 背景、conviction 观察),
+                        旧版把缺失渲染成 "NEUTRAL" —— 未测被显示成一个信号,且与上方同一标的的
+                        OUTPERFORM 矛盾。现在:有 headline 显示 headline,有 direction 才显示方向。 */}
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 700, color: T.t1,
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
+                      {sig.headline || sig.symbol}
                     </span>
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, color: dc, letterSpacing: "0.05em" }}>
-                      {isUp ? "▲ " : isDown ? "▼ " : ""}{dir || "NEUTRAL"}
-                    </span>
+                    {dir && (
+                      <span style={{ fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, color: dc, letterSpacing: "0.05em" }}>
+                        {isUp ? "▲ " : isDown ? "▼ " : ""}{dir}
+                      </span>
+                    )}
                     {sig.conviction_grade && (
                       <span style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, color: T.t2 }}>
                         {sig.conviction_grade}
@@ -764,14 +770,16 @@ function MobileSignals({ signals, loading }) {
                   <span style={{ fontFamily: FONTS.brand || FONTS.body, fontSize: 15, fontWeight: 700, color: T.t1 }}>
                     {sig.symbol}
                   </span>
-                  <span style={{
-                    fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, letterSpacing: "0.06em",
-                    padding: "2px 7px", borderRadius: 100, color: dc,
-                    background: isUp ? "rgba(0,217,138,0.10)" : isDown ? "rgba(255,61,90,0.10)" : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${dc}40`,
-                  }}>
-                    {isUp ? "▲ " : isDown ? "▼ " : ""}{dir || "NEUTRAL"}
-                  </span>
+                  {dir && (
+                    <span style={{
+                      fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, letterSpacing: "0.06em",
+                      padding: "2px 7px", borderRadius: 100, color: dc,
+                      background: isUp ? "rgba(0,217,138,0.10)" : isDown ? "rgba(255,61,90,0.10)" : "rgba(255,255,255,0.04)",
+                      border: `1px solid ${dc}40`,
+                    }}>
+                      {isUp ? "▲ " : isDown ? "▼ " : ""}{dir}
+                    </span>
+                  )}
                   {sig.conviction_grade && (
                     <span style={{ fontFamily: FONTS.mono, fontSize: 10, fontWeight: 700, color: T.t2 }}>
                       {sig.conviction_grade}
