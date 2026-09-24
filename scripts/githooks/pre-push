@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# S-421:只有主工作目录(Seth 的合并位)可以推 main。lane 的 worktree 只能推自己的分支。
+# 书面约定挡不住「整文件 add 把别人的代码带上线」(S-416);这个钩子在推送那一刻挡。
+set -euo pipefail
+here="$(git rev-parse --show-toplevel)"
+main_wt="$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')"
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [[ "$remote_ref" == "refs/heads/main" && "$here" != "$main_wt" ]]; then
+    echo "✗ 这里是 lane worktree($here),不能推 main。"
+    echo "  推你自己的分支:git push -u origin \$(git branch --show-current)"
+    echo "  然后把任务卡状态改成 in_review,由 Seth 合并。"
+    exit 1
+  fi
+done
+exit 0

@@ -113,6 +113,10 @@ python3 -m tests.test_t2_fanout_bounds
 # 3a-ter. cold-start contract — the amnesia path (docs/AMNESIA_PROTOCOL.md). Every agent starts
 #         every session at zero; a lesson that lives only in a 5,672-line ledger changes nothing.
 python3 -m tests.test_cold_start_contract
+# 3a-ter-bis. S-421 协作机制:任务卡合法、看板最新、「完成」只能由合并者验证;
+#             结论(REFUTED/SHIP)必须带着它的问题(基准、regime、判据)。
+python3 -m tests.test_task_cards
+python3 -m tests.test_verdicts_carry_their_question
 # 3a-quater. undefined names on the serving path — a NameError on a rarely-taken branch is
 #            invisible to py_compile AND to production when the caller logs a warning. That
 #            combination silently killed the T2 universe fallback (2026-08-06).
