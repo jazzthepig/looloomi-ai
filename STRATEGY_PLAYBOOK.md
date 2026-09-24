@@ -245,6 +245,8 @@ verdicts as a single batched R/S-86 entry once the user signs off.
 
 ## Strategy 3 — Pod Aggregator (Millennium flavor) — 🔴 REFUTED on real data (2026-08-24)
 
+> ⚠️ **待重问(S-420,2026-09-24):** 原判据是绝对 Sharpe / 窗口年化,未对照「持有同一面板」、未分 regime(Strategy 3 另有断路器无再入场的问题)。复核见 `tasks/T-006.json`。在复核结果出来前,这个 🔴 只说明「这段行情里不成立」。
+
 **Minimax-B, 2026-08-20** — A pod-style meta-strategy that aggregates
 already-validated sleeves (R46 / R62 / R76) as independent alpha "pods".
 
@@ -329,6 +331,8 @@ runs** — see §FROZEN-WEIGHT-FILL in the spec.
 ---
 
 ## Strategy 4 — Cross-Asset Quality-Momentum-LowVol Tilt (AQR flavor) — 🔴 REFUTED on real data (2026-08-24)
+
+> ⚠️ **待重问(S-420,2026-09-24):** 原判据是绝对 Sharpe / 窗口年化,未对照「持有同一面板」、未分 regime(Strategy 3 另有断路器无再入场的问题)。复核见 `tasks/T-006.json`。在复核结果出来前,这个 🔴 只说明「这段行情里不成立」。
 
 **Minimax-B, 2026-08-20** — An AQR-style long-only factor tilt across
 crypto + TradFi. CLAUDE.md is explicit: *"默认 long-only: tilt, 不要 neutralize."*
