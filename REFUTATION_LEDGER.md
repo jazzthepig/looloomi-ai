@@ -23568,3 +23568,31 @@ S-409 把整表新鲜读成 T1 活着;A 把「读到 0 行」读成「库里 0 �
 
 任务卡用 JSON 而不是 YAML:仓库没有 PyYAML 依赖,不为一个看板引入新依赖。
 16 张初始卡由 SYNC 里的未结项转来;SYNC 以后只放讨论和结论。
+
+## S-422 — 宏观简报在总市值 24h −6.4% 的那天写「市场平静」;兜底模板带着仓位建议,从不过校验(T-017)
+
+**来源:** T-014 产品面审计,2026-09-24 12:0x UTC,移动端首屏。
+
+**看到的:** MACRO BRIEF 写 "The market tape is currently flat … no directional momentum";下方 6 张卡 −1.2% 到 −9.0%;
+`macro-pulse` 当时 BTC 24h −2.46%、总市值 24h −5.30%(入库快照 −6.42%)。
+
+**两个成因,叠在一起:**
+1. **24h 变化从未进过任何一条路。** prompt 与 Railway 模板都读 `btc_change_24h`,macro-pulse 给的是
+   `btc.usd_24h_change`;总市值 24h 变化根本没人读。键不存在 → None → 按「未测」静默省略。
+   入库的模板简报原文 `BTC at $83,403 (— 24h)` —— 读错键与值缺失,在输出上一模一样。
+2. **几分钟的增量被标成市场状态。** 唯一的变动段是「距上份简报」(常为几分钟),标题叫 MOVEMENT,
+   空时写 "the tape is flat",第 1 段被要求锚定它。模型照做。
+
+**第三件,更重:** Railway 模板兜底(上游简报缺失时对外服务、并每次入库)每个 regime/情绪档都带一句仓位建议:
+"Accumulation zones possible" · "contrarian entry" · "Allocate across grades" · "Broader exposure warranted" ·
+"Reduce risk exposure" · "Risk-off positioning favoured"。**规则 1 的 P0。** 它躲过检查,因为 `validate_brief`
+只在 Mac 推送入口跑;且黑名单本身漏了 `Accumulation`(正则是 `accumulate\b`)。
+
+**修:** 合约集中两种拼法的读法(`btc_change_24h()` / `mcap_change_24h()`),prompt 加两条 24h 行、变动段改名并写明跨度、
+第 1 段锚定 24h;黑名单补 7 类;模板重写为只陈述 + regime 机制句,缺值整句省略,出口再过一次 `validate_brief`。
+移动端 RECENT SIGNALS 把 feed 里为 null 的 direction 渲染成 "NEUTRAL"(与上方同一标的 OUTPERFORM 冲突)→ 只在有值时显示。
+`PROMPT_VERSION` mb-2 → mb-3;**Mac 侧是副本不是导入,A 重新复制前 LLM 路仍是 mb-2。**
+
+**守卫:** `tests/test_macro_template_brief.py`(线上真实形状喂读法;8 regime × 6 情绪档全过用语校验;旧模板 7 句话全被拒),入 preflight。
+
+**这一类:** 又是「拿不到」渲染成一个像样的答案 —— 这次是渲染成一句话。
