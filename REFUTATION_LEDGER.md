@@ -23596,3 +23596,21 @@ S-409 把整表新鲜读成 T1 活着;A 把「读到 0 行」读成「库里 0 �
 **守卫:** `tests/test_macro_template_brief.py`(线上真实形状喂读法;8 regime × 6 情绪档全过用语校验;旧模板 7 句话全被拒),入 preflight。
 
 **这一类:** 又是「拿不到」渲染成一个像样的答案 —— 这次是渲染成一句话。
+
+## S-423 — Mac 的宏观简报四分之三是拿着空快照写的;修了 prompt 不够,出口要自己认
+
+**来源:** S-422 推送后,Jazz 实测 `/api/v1/macro/brief` 仍是 `qwen/qwen3.8-27b upstream`,"The tape is flat …"。
+
+**测得:** `macro_briefs` 里 source=mac_mini 的行,`data_snapshot = {}` 的占比:09-12 0/11 · 09-14 3/45 · 09-17 27/48 ·
+09-21 35/51 · 09-23 **36/47**。同日写「flat」的 39 份,几乎与空快照一一对应。Mac 的 `fetch_macro_data()` 取 macro-pulse
+失败即返回 `{}`,模型照写;接收端 `validate_brief` 不看快照是否为空。
+
+**成因(推断,T-018 请 A 用 Mac 日志确认):** 匿名限额 120/分 · 2000/天 按 IP 计;Mac 所有 loop 共用一个出口 IP,
+该 GET 不带 `X-Internal-Token` → 当日额度用完后 429。空快照占比随 Mac 侧 loop 增加而上升,与此一致。
+
+**修(Railway 侧,不依赖 Mac 副本版本):** `has_market_data()` —— 空快照写成的简报在接收端判违规;
+`contradicts_the_day()` —— 快照 24h 变动 ≥2% 时出现「flat / equilibrium / static / consolidat…」判违规;
+两条也在**出口**检查(矛盾的那份可能已在 Redis 里),命中即走已修好的模板。测试用线上那段原文。
+
+**S-422 的判断需要修正:** 我当时以为 LLM 路的问题是 prompt 锚错了跨度;**更大的成因是它根本没拿到数据。**
+prompt 那处修正仍然成立,但它不是主因。
