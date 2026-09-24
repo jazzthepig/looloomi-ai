@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.api.routers.mac_writes import MAX_ROWS, TABLES, _vet   # noqa: E402
+from src.api.routers.mac_writes import MAX_ROWS, TABLES, WRITES_TABLES, _vet   # noqa: E402
 
 _FAIL: list = []
 
@@ -79,10 +79,13 @@ def t_every_dataset_declares_conflict_and_required():
                str(spec["required"] - spec["allowed"]))
         _check(f"{name}:声明了 on_conflict(None 表示纯追加)",
                "on_conflict" in spec)
-    _check("四张表都在", len(TABLES) == 4, str(sorted(TABLES)))
+    _check("五张表都在(T-008 加 narrative-events)", len(TABLES) == 5, str(sorted(TABLES)))
+    _check("WRITES_TABLES 与 TABLES 一一对应(schema_manifest 靠它看见这些表)",
+           set(WRITES_TABLES) == {v["table"] for v in TABLES.values()},
+           f"{sorted(WRITES_TABLES)} vs {sorted(v['table'] for v in TABLES.values())}")
     _check("upsert 的表都有冲突键",
            all(s["on_conflict"] for n, s in TABLES.items()
-               if n in ("risk-meter-history", "asset-embeddings-history")))
+               if n in ("risk-meter-history", "asset-embeddings-history", "narrative-events")))
 
 
 def t_batch_cap_exists_so_failures_are_diagnosable():
@@ -101,6 +104,12 @@ def t_columns_match_information_schema_not_mac_side_code():
            "alpha_30d" in TABLES["signal-journal"]["allowed"])
     _check("trade_results 有 realized_return_7d",
            "realized_return_7d" in TABLES["trade-results"]["allowed"])
+    # T-008 实查 2026-09-24(迁移 t008_narrative_events):event_id 主键,date 是文本(论点级写 'ongoing')
+    _check("narrative_events 的列与建表一致,冲突键是 event_id",
+           TABLES["narrative-events"]["allowed"] == {
+               "event_id", "date", "event_type", "narrative_tag",
+               "description", "related_assets", "source_round"}
+           and TABLES["narrative-events"]["on_conflict"] == "event_id")
     # 两张表都有 macro_regime 但 risk_meter 用的是 regime —— **这正是会写错的地方**
     _check("risk_meter 用 regime、embeddings 用 macro_regime(不同表不同名)",
            "regime" in TABLES["risk-meter-history"]["allowed"]
