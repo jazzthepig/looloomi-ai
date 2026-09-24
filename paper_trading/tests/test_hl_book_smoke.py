@@ -60,9 +60,38 @@ def test_jev_path_equals_mechanical() -> None:
     print("  ✓ Jev 臂(匿名 → 打乱 → 解析)喂机械答案 ≡ 机械 Tom")
 
 
+def test_daily_cycle_equals_replay() -> None:
+    """S-413:每日流程 `hl_book_daily.compute_row` 逐日推进,必须和回放算出同一条收益序列。
+    唯一允许的差别是起点那天的建仓成本 —— 每日流程收它,回放不收(更接近实盘)。"""
+    import json
+    import paper_trading.jev_replay_s412 as rp
+    from src.data.signals import hl_book_daily as hd
+    px, fd = _synthetic()
+    start = pd.Timestamp("2022-09-05")
+    old = rp.START
+    rp.START = start
+    try:
+        W, N, *_ = simulate(px, fd, "none", None, 0)
+    finally:
+        rp.START = old
+    replay, _ = rp.pnl(W["MECH_tom"], N, px, fd)
+    rows = {}
+    for d in pd.date_range(start, px.index[-1]):
+        row = hd.compute_row(hb, px, fd, d, rows.get(d - pd.Timedelta(days=1)),
+                             rows.get(d - pd.Timedelta(days=2)), lambda *a: (_ for _ in ()).throw(RuntimeError("no jev")))
+        rows[d] = json.loads(json.dumps(row))
+    live = pd.Series({d: r["ret"]["MECH_tom"] for d, r in rows.items()})
+    both = pd.concat([replay, live], axis=1).dropna().iloc[3:]
+    assert np.allclose(both.iloc[:, 0], both.iloc[:, 1], atol=1e-7), \
+        f"每日流程与回放的收益不一致,最大差 {(both.iloc[:, 0] - both.iloc[:, 1]).abs().max():.2e}"
+    assert all(r["jev_error"] for r in rows.values() if r["is_decision"]), "Jev 失败必须写进 jev_error"
+    print("  ✓ 每日流程逐日推进 ≡ 回放(起点建仓成本除外);Jev 失败 fail-closed 且有记录")
+
+
 if __name__ == "__main__":
-    print("── S-412 hl_book 守卫 ──")
+    print("── S-412/S-413 hl_book 守卫 ──")
     test_never_add_to_losers()
     test_turnover_band()
     test_jev_path_equals_mechanical()
-    print("\n✅ 3/3 passed")
+    test_daily_cycle_equals_replay()
+    print("\n✅ 4/4 passed")
