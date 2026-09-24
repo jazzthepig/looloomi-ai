@@ -1,0 +1,21 @@
+{
+  "id": "T-003",
+  "title": "S-396 三臂回放 live 验证(读路径分页修复后)",
+  "owner": "lane-a",
+  "status": "open",
+  "source": "S-396",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "replay 的 n_rows 与 SQL count(*) 对账(binance_hist,2023-10-19→2026-07-18)",
+    "expect": "相等"
+  },
+  "prior_value": "replay 读到 1,000 行(截断)",
+  "created": "2026-09-24",
+  "verified": null
+}

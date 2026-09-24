@@ -1,0 +1,20 @@
+{
+  "id": "T-002",
+  "title": "确认 T1 每小时一批恢复",
+  "owner": "lane-a",
+  "status": "open",
+  "source": "S-418",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/cis_scheduler.py"
+  ],
+  "forbidden_paths": [
+    "src/"
+  ],
+  "acceptance": {
+    "check": "select count(distinct date_trunc('hour', recorded_at)) from cis_scores where data_tier='T1' and recorded_at > now()-interval '24 hours'",
+    "expect": ">= 20"
+  },
+  "prior_value": "1(09-24 恢复当天)",
+  "created": "2026-09-24",
+  "verified": null
+}

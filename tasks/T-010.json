@@ -1,0 +1,21 @@
+{
+  "id": "T-010",
+  "title": "Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key",
+  "owner": "lane-c",
+  "status": "open",
+  "source": "C 09-24 报告",
+  "allowed_paths": [
+    "~/Library/LaunchAgents/",
+    "~/.config/cometcloud/"
+  ],
+  "forbidden_paths": [
+    "src/"
+  ],
+  "acceptance": {
+    "check": "grep -lE 'CG_PRO_API_KEY|INTERNAL_TOKEN' ~/Library/LaunchAgents/*.plist | wc -l",
+    "expect": "= 0"
+  },
+  "prior_value": "2 个 plist 硬写 key",
+  "created": "2026-09-24",
+  "verified": null
+}

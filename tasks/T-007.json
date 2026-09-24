@@ -1,0 +1,21 @@
+{
+  "id": "T-007",
+  "title": "CG 新闻监听器写入 Supabase(经 Railway mac_writes)",
+  "owner": "lane-c",
+  "status": "blocked",
+  "blocked_by": "T-008",
+  "source": "C 09-24 报告",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/tools/cg_news_listener.py"
+  ],
+  "forbidden_paths": [
+    "src/"
+  ],
+  "acceptance": {
+    "check": "select count(*) from <新闻事件表> where recorded_at > now()-interval '24 hours'",
+    "expect": "> 0"
+  },
+  "prior_value": "只在 Mac 本地 cis_history.db,13 行",
+  "created": "2026-09-24",
+  "verified": null
+}

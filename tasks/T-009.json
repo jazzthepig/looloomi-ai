@@ -1,0 +1,20 @@
+{
+  "id": "T-009",
+  "title": "data_quality_score:先修 data_freshness,再算分,随推送落库",
+  "owner": "lane-c",
+  "status": "open",
+  "source": "C 09-24 报告",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/"
+  ],
+  "forbidden_paths": [
+    "src/api/contracts/"
+  ],
+  "acceptance": {
+    "check": "select count(data_quality_score) from cis_scores where data_tier='T1' and recorded_at > now()-interval '2 hours'",
+    "expect": "> 0 且 值有区分度(不全相同)"
+  },
+  "prior_value": "0(列一直为空)",
+  "created": "2026-09-24",
+  "verified": null
+}

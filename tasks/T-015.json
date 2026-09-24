@@ -1,0 +1,16 @@
+{
+  "id": "T-015",
+  "title": "创建 HL API 钱包 + 开东京/新加坡云主机",
+  "owner": "jazz",
+  "status": "open",
+  "source": "DECISIONS 09-24",
+  "allowed_paths": [],
+  "forbidden_paths": [],
+  "acceptance": {
+    "check": "Jazz 确认",
+    "expect": "API 钱包只可交易不可提币;主机可 SSH"
+  },
+  "prior_value": "无",
+  "created": "2026-09-24",
+  "verified": null
+}

@@ -1,0 +1,21 @@
+{
+  "id": "T-016",
+  "title": "实盘执行器(只算不发两天 → 3,000U 真跑)",
+  "owner": "seth",
+  "status": "blocked",
+  "blocked_by": "T-015",
+  "source": "TRADE_PATH",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "docs/TRADE_PATH.md"
+  ],
+  "forbidden_paths": [],
+  "acceptance": {
+    "check": "select count(*) from execution_intents",
+    "expect": "> 0,且每日对账有数"
+  },
+  "prior_value": "0",
+  "created": "2026-09-24",
+  "verified": null
+}
