@@ -23396,3 +23396,57 @@ git push origin main
 sleep 90
 psql $SUPABASE_URL -c "select count(distinct writer) from write_log where table_name='ohlcv_daily';"
 ```
+
+---
+
+## S-416 — 「账本读价的唯一入口」一直在读一个 2025-11 的旧切片
+
+**起因:** S-413 的每日流程直接调场馆 K 线,preflight 的 Sense 入口预算当场 25 > 24。
+守卫是对的:账本要价格应当走 `panel_read.read_panel`。改走它的时候,发现它读不全。
+
+**实测 2026-09-24:** `fetch_panel("2026-06-01", source="coingecko_pro_ohlc")` 返回
+**25 个标的 × 40 天,2025-10-04 → 2025-11-12**。库里同一窗口是 205 个标的 × 355 天。
+
+**机制:** `PAGE = 10_000`,注释写「PostgREST 上限保守取值」;服务端 `db-max-rows` 是 1000。
+请求 10,000 得到 1,000 行和一个 200,于是 `len(batch) < PAGE` **在第一页就成立**,循环退出。
+这正是 S-323「拿到一页 ≠ 拿到全部」,而 `tests/test_a_truncated_page_is_not_the_whole_set.py`
+只扫 URL 字面量里的 `limit=` —— 这里的 limit 放在 params dict 里,**守卫看不见**。
+
+**影响面:** `fetch_panel` 是 `market_state_writer` 和 `panel_read.read_panel` 的唯一读价路径。
+`market_state_vectors` 停在 08-05、`_market_state_loop` 从未成功过 —— S-415 里我把原因归给
+`binance_hist` 停更,**那只是一半;另一半是它从热身起点读 1000 行就停,永远读不到最近的日子**。
+`read_panel` 目前没有生产调用者(S-302 建了「唯一入口」,还没有账本迁过来),
+所以这是第一个调用者当场撞上的。
+
+**修法:** `PAGE = 1000`;读到空页才停(不拿「比我要的少」当结束);排序键加 `symbol` 保证分页稳定;
+新增 `symbols=` 过滤下推(4 币读 1.2 秒,全面板 8 秒)。修后同一调用:205 个标的 × 355 天,到 09-23。
+守卫 `tests/test_fetch_panel_reads_past_the_server_cap.py`:假服务端每页最多 1000 行,喂 2,500 行,全部读到。
+
+**S-413 随之改为:** 价格走 `read_panel`(`coingecko_pro_ohlc`,单源),资金费读 `funding_history`
+(按日「小时费率均值 × 24」,采集器是抽样写入,直接求和会低估)。就绪判据看 `recorded_at`:
+target 那根 bar 必须是收盘后写入的 —— 实测存在当天写入、之后没被覆盖的半根(HYPE 09-19 记录于 09-19 09:05,
+ETH 09-22 同样)。收盘后 30 小时仍未就绪 ⇒ 报错,不无限期显示成「在等」。Sense 入口回到 24。
+
+### 同一天的另一件事:A 的提交把 `_hl_book_loop` 带上了线,而它 import 的模块不在仓库里
+
+`067e10f`(A-408-2)用整文件 `git add src/api/main.py`,把工作树里 Seth 未提交的 `_hl_book_loop`
+一起提交并推送;`src/data/signals/hl_book_daily.py` 没有被提交。线上这个循环每小时
+`ModuleNotFoundError`(在 try 里,不崩进程,心跳报错)。**§SETH-2026-09-23b 预先写了「按 hunk 暂存」,
+没有被执行** —— 书面约定挡不住整文件 add;共享工作树下,能挡住的只有提交前的差异检查。
+
+同一提交里 A-408-2 的写入端上了线,**表没有建**(`loop_attempt` 不存在,写入静默返回 False)——
+规则 5b「写入端要带第一行真实数据」。Seth 已按 `scripts/supabase_s408_2_loop_attempt.sql` 建表
+(迁移 `a408_2_loop_attempt`),修两处:函数授权指向 `loop_attempt_health(text)`;authenticated 不给 insert。
+
+---
+
+## S-417 — `routers/ohlcv.py` 一直是第二条摄入路径,守卫直到它进了 write_log 才看见
+
+preflight 红:「没有第二条摄入路径 :: `src/api/routers/ohlcv.py` 也在写 ohlcv_daily」。
+**这不是新增的路径。** `collect_ohlcv`(CIS 58 标的日线;eodhd 是 TradFi 唯一的写入者)
+一直在写,用的是裸 `httpx` POST;`tests/test_one_ingestion_lane.py` 按写入 helper 识别写入者,
+所以看不见它。A-408-3(`a34e804`)把它改走 `supabase_upsert_table` 以进 `write_log`,
+守卫第一次看见了它 —— 两个修复各自正确,合在一起在 origin/main 上留下了一个红的 preflight。
+
+处理:列入 `_ALLOWED_WRITERS`,写明它是存量而非新增,以及退出条件(TradFi 日线并入同一条 lane 后摘掉)。
+**同一形状第 N 次:一个守卫的作用域由它的识别方式决定,而不是由它的名字决定。**
