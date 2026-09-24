@@ -33,7 +33,19 @@
   回测条「30d realized returns by grade · Binance klines · 64 assets:A +4.09% / B +1.83% / C −1.28%」—— 数据源写的是 Binance,
   而 Binance 从 Railway 被地区封锁(NAV_POLICY),要查这条回测是什么时候、用什么数据算的。
 
+### 4. 移动端 `app.html`(窄屏首屏:Pulse)
+
+- 🔴 **宏观简报写「市场平静」,当天总市值 24h −6.4%** → 已修,T-017 / S-422。两条路都读错 24h 键;
+  「距上份简报」的几分钟增量被当成市场状态。
+- 🔴 **规则 1:Railway 兜底模板带仓位建议**(Accumulation zones / contrarian entry / Allocate / Reduce risk / positioning favoured),
+  从不过 `validate_brief` → 已修,T-017。
+- 🟡 RECENT SIGNALS:一行没有标的、四行全是 NEUTRAL —— feed 条目 direction 为 null,前端把缺失显示成 NEUTRAL,
+  与上方 UNI 的 OUTPERFORM 冲突 → 已修,T-017(只在有值时显示方向,行标题改显示 headline)。
+- 🟡 卡片文案「positions to outperform on **strong momentum**」旁边是 −7.45% / −8.98%。两者时间跨度不同(百分比是 24h),
+  但读者看到的是矛盾。建议:卡片上的百分比标出跨度(24h),或叙事避免「strong momentum」这类与短期价格同屏会冲突的词。待开卡。
+- 待核:顶栏「CIS LIVE · 58 assets」—— T1 只覆盖 24 个加密标的(T-001 未完),其余是 T2 估算。「LIVE」是否该拆成 T1/T2 计数。
+
 ## 待看
 
 Intelligence · Strategies · Protocols · Vault · Research Desk · Portfolio · API Keys · Portfolio Builder ·
-投资策略页 · MCP / agent 卡片 · 移动端
+投资策略页 · MCP / agent 卡片 · 移动端其余两屏(Rankings / Signals)
