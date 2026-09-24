@@ -46,6 +46,11 @@ _ALLOWED_WRITERS = {
     "src/data/market/deep_panel_collector.py",
     # Hyperliquid 采集,S-197 之后作为价格锚而非执行场所。
     "src/data/market/hyperliquid_collector.py",
+    # S-417:`collect_ohlcv`(CIS 58 标的日线,eodhd 是 TradFi 唯一的写入者)。
+    # **不是新路径** —— 它一直在写,只是用裸 httpx POST,这个守卫按写入 helper 识别,看不见它。
+    # A-408-3(a34e804)把它改走 `supabase_upsert_table` 以进 write_log,于是守卫第一次看见了它。
+    # 退出条件:TradFi 日线并入 deep_walk / cg_pro 同一条 lane 后,从这里摘掉。
+    "src/api/routers/ohlcv.py",
 }
 
 _WRITE_HELPERS = {"supabase_insert_table", "supabase_upsert_table",
