@@ -1,6 +1,6 @@
 # CLAUDE.md — CometCloud AI / Looloomi
 
-> **⭐ SESSION START: read `MEMORY.md` (facts index, 30s) then `PROJECT_STATE.md` (living state) FIRST.
+> **⭐ SESSION START: read `docs/DECISIONS.md` (Jazz's rulings + why) → `MEMORY.md` → `PROJECT_STATE.md` → `tasks/BOARD.md`. Inherited verdicts are hypotheses.
 > Update PROJECT_STATE LAST.** Never trust memory of what's committed — run
 > `git --no-optional-locks status --porcelain` / `git rev-list origin/main..HEAD` before
 > describing any "pending push". **The `--no-optional-locks` is not optional** (rule 4): plain
@@ -152,8 +152,9 @@ ATTRIBUTION (R62), never for neutralizing a book. Report total return vs hold-th
    算出的日期;**Mac 在 JST,15:00 UTC 之后写入就打上明天的日期,且静默**。
    写法统一 `datetime.now(timezone.utc)`(151 处在用),**不新建 helper**。S-195 / S-368 各付过一次。
 
-6. **Stage only your OWN paths; NEVER `git add -A`** (blind sweeps commit the other lane's
-   half-finished work under your message). Explicit paths, always.
+6. **Stage only your OWN paths; NEVER `git add -A`.** Minimax lanes work in their own worktree,
+   push only their branch (pre-push hook blocks main); Seth merges. Tasks = `tasks/*.json`; done =
+   merger-verified value. Full flow: `docs/AGENT_WORKFLOW.md`.
 
 7. **Ledger numbering is lane-prefixed, forward-only** (`docs/R_NUMBERING_CONVENTION.md`):
    Seth/Austin = `S-76+`, Minimax = `M-76+`, frozen history `R1…R75` stays bare. Ledger is
@@ -202,18 +203,13 @@ git commit -m "<type>(<scope>): <subject>
 git push origin main
 ```
 
-**EVERY line ends in `&&` except the last.** Rule 5 says preflight is the ONLY prod gate —
-but a block of bare newline-separated commands **is not a gate**: the shell runs the next line
-regardless of the exit code. Measured 2026-09-16 (S-360): preflight printed `🔴 2 FAILED` and the
-commit landed anyway. **The rule said "gate" and the template shipped no gate** — the same shape as
-the trailing-`#` lesson above: the rule and its own example disagreed, and the example is what gets
-copied. Trailing `&&` is also the safe failure mode for a partial paste — the shell waits for the
-continuation instead of running half a batch.
+**EVERY line ends in `&&` except the last.** Bare newline-separated commands are not a gate: the
+shell runs the next line regardless (S-360: preflight printed `🔴 2 FAILED`, the commit landed anyway).
+Trailing `&&` also makes a partial paste wait instead of running half a batch.
 
-**NO TRAILING `#` COMMENTS ON ANY COMMAND LINE. NO INLINE ANNOTATION. EVER.** This kept recurring
-because the template itself used to carry them — **the rule and its own example disagreed, and the
-example is what gets copied.** Explanation goes in prose *outside* the fence; inside, only lines
-that paste and run. No blank lines for grouping either — they invite a partial paste.
+**NO TRAILING `#` COMMENTS ON ANY COMMAND LINE. NO INLINE ANNOTATION. EVER.** The template once carried
+them and the example is what gets copied. Explanation goes in prose outside the fence; no blank lines
+inside either — they invite a partial paste.
 
 Rules: one commit per concern (ledger appends ride their own — a commit whose title covers 9% of
 its diff corrupts `git log` as a source of truth); post-push verification as a pasteable `curl`;
