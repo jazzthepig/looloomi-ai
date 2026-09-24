@@ -2,7 +2,7 @@
   "id": "T-014",
   "title": "产品面审计(内置浏览器,走 Jazz 网络)",
   "owner": "seth",
-  "status": "open",
+  "status": "claimed",
   "source": "DECISIONS 09-24",
   "allowed_paths": [
     "dashboard/",
@@ -15,5 +15,6 @@
   },
   "prior_value": "3 周未动",
   "created": "2026-09-24",
-  "verified": null
+  "verified": null,
+  "notes": "2026-09-24 开始;进度与发现记在 docs/PRODUCT_AUDIT_2026-09-24.md(已看 3 处)"
 }
