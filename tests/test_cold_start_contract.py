@@ -92,6 +92,8 @@ COLD_START_CAPS = {
     "PROJECT_STATE.md": (80_000, "PROJECT_STATE_LOG.md"),
     "MINIMAX_SYNC.md":  (80_000, "MINIMAX_SYNC_ARCHIVE.md"),
     "CLAUDE.md":        (16_000, "a skill under .claude/skills/"),
+    # S-421:Jazz 的决定,一条一行。压缩上下文后最先丢的就是它们 —— 所以它必须短到每次都读得完。
+    "docs/DECISIONS.md": (5_000, "删掉被推翻的决定,出处里留痕"),
 }
 
 # ≤7 is a design choice, not laziness: a 30-item risk list and no list are
