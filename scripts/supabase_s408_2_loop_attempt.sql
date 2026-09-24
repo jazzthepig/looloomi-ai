@@ -46,8 +46,9 @@ create index if not exists loop_attempt_outcome_at_desc
     on public.loop_attempt (outcome, at desc);
 alter table public.loop_attempt enable row level security;
 grant select on public.loop_attempt to anon;
-grant select, insert on public.loop_attempt to authenticated;
+grant select on public.loop_attempt to authenticated;   -- 写入只走 service role(S-404)
 grant select, insert, delete on public.loop_attempt to service_role;
+grant usage, select on sequence public.loop_attempt_id_seq to service_role;
 
 -- Health probe: one round-trip per loop's last success / failure.
 -- Mirrors write_health() so the dashboard can call both with the same shape.
@@ -69,7 +70,9 @@ as $$
     group by a.loop_name
     order by max(a.at) desc;
 $$;
-revoke all on function public.loop_attempt_health() from public;   -- S-323h
-grant execute on function public.loop_attempt_health() to anon;
-grant execute on function public.loop_attempt_health() to authenticated;
-grant execute on function public.loop_attempt_health() to service_role;
+revoke all on function public.loop_attempt_health(text) from public;   -- S-323h
+grant execute on function public.loop_attempt_health(text) to anon;
+grant execute on function public.loop_attempt_health(text) to authenticated;
+grant execute on function public.loop_attempt_health(text) to service_role;
+-- 2026-09-24 Seth:已按本文件应用(迁移 a408_2_loop_attempt)。修两处:函数授权指向 (text) 签名 ——
+-- `()` 指一个不存在的零参数重载,会 function does not exist;authenticated 不给 insert。
