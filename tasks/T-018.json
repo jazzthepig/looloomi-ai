@@ -1,0 +1,23 @@
+{
+  "id": "T-018",
+  "title": "Mac 对 Railway 的读请求带 X-Internal-Token;空快照不生成简报;macro_brief 合约副本更新到 mb-3",
+  "owner": "lane-a",
+  "status": "open",
+  "source": "S-423",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/macro_brief_push.py",
+    "/Volumes/CometCloudAI/cometcloud-local/macro_brief_contract.py"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "tests/"
+  ],
+  "acceptance": {
+    "check": "select count(*) filter (where data_snapshot='{}'::jsonb) empty, count(*) n, max(recorded_at) from macro_briefs where source='mac_mini' and recorded_at > now()-interval '6 hours'",
+    "expect": "empty = 0 且 n > 0;最新一行 prompt_version = mb-3(Railway 日志 [MACRO] 无 prompt_version 告警)"
+  },
+  "prior_value": "09-23:47 份里 36 份快照为空({}),39 份写「平静」;Mac 副本 mb-2",
+  "created": "2026-09-24",
+  "notes": "成因推断(待 A 用 Mac 日志确认):匿名 IP 限额 2000/天,Mac 所有 loop 共享一个 IP,fetch_macro_data 不带 token → 429 → 返回 {}。Mac 侧其余对 Railway 的 GET 同样检查一遍。",
+  "verified": null
+}
