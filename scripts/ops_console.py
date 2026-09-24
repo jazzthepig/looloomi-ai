@@ -150,6 +150,17 @@ SOURCE_DOCKETED_BY_POLICY = {
 #: refusal carries who clears it and how long it may sit before it becomes an
 #: alarm again. A refusal with no expiry is how a guard turns into an outage.
 REFUSAL_POLICY = {
+    "_hl_book_loop": {
+        "reason": "S-413 — refuses (a) when yesterday's row is already recorded, or "
+                  "(b) when yesterday's coingecko_pro_ohlc bar for BTC/ETH/SOL/HYPE was "
+                  "not yet written after the UTC close (S-416: partial bars exist).",
+        "clears_when": "_cg_panel_loop writes the post-close bars (normally 01:00–06:00 "
+                       "UTC); the loop retries hourly. Past 30h after the close the loop "
+                       "itself reports failing, not refused.",
+        "owner": "Seth",
+        "stale_after_days": 2,
+        "escalate_after_n_refusals": 30,
+    },
     "_deep_panel_loop": {
         "reason": "S-323i source_policy — must not fan out to a free venue API.",
         "clears_when": "OPEN RISK #0a closes: cg_coin_map covers the panel and "
