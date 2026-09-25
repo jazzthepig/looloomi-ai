@@ -2,7 +2,7 @@
   "id": "T-019",
   "title": "prediction_resolver:4 个 date 列来源恢复出结果;不再 409",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "source": "S-425",
   "allowed_paths": [
     "src/data/signals/outcome_tracker.py",
@@ -20,5 +20,9 @@
   },
   "prior_value": "只有 signal 170 行,其余 4 个来源 0 行;2h 内 409 × 326",
   "created": "2026-09-24",
-  "verified": null
+  "verified": {
+    "by": "seth",
+    "at": "2026-09-25",
+    "value": "5/5 来源有行:positioning 436 · conviction 428 · signal 170 · forward_supply 104 · narrative 14;部署后首轮 15:24–15:30 UTC,POST prediction_outcomes 982×201、0×409"
+  }
 }
