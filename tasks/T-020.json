@@ -1,0 +1,23 @@
+{
+  "id": "T-020",
+  "title": "DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻",
+  "owner": "lane-c",
+  "status": "blocked",
+  "source": "§T-009-DECISION",
+  "blocked_by": ["T-001"],
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/data_fetcher.py",
+    "/Volumes/CometCloudAI/cometcloud-local/cis_v4_engine.py"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "tests/"
+  ],
+  "acceptance": {
+    "check": "select recorded_at, count(distinct data_quality_score) from cis_scores where data_tier='T1' and recorded_at > now()-interval '6 hours' group by 1 order by 1",
+    "expect": "同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减"
+  },
+  "prior_value": "同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移",
+  "created": "2026-09-25",
+  "verified": null
+}
