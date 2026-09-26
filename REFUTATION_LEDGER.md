@@ -23779,3 +23779,42 @@ t 收盘出信号、t+1 收盘成交;成本 10 bps × 换手,两臂同扣;基准
 也不被悄悄吞掉。两本前向账共用。停写 5 币另开卡(T-031)。
 
 **这一类:** 又一个「看起来有值」的字段 —— `recorded_at` 一直有值,只是回答的不是我们以为的那个问题。
+
+## M-97 (lane-b, 2026-09-26) — Jev 仓位乘数对照线:4 级基准预注册 (T-011)
+
+**来源:** T-011 acceptance.check(对 B 的讨论 2026-09-23,卡见 tasks/T-011.json)。
+**目的:** pre-register 4 baselines 让 Jev 仓位乘数对照线 honesty 可证伪;Outter spec 上线前不报 "Jev wins"。
+
+**Scope (T-011 限定):** deliverable = ledger 段;`src/data/signals/hl_book_daily.py` 不在本卡改(`T-011.expect`: 合并者确认后 Seth 接进 hl_book_daily)。
+
+### 4 baselines (fixed / vol-formula / online-learning / Jev)
+
+| # | Baseline | 公式 / 参数 | 适用 scope | 历史实证参考 |
+|---|----|---|---|---|
+| 1 | 固定参数 (fixed) | `size_mult = 1.0` 恒定 | control | n/a |
+| 2 | 波动率公式 (vol-formula) | `size_mult = 1.0 × clamp(target_vol / realized_vol_30d, 0.5, 1.5)` | 标准 vol-targeting 公式派 | S-409 vol-targeting fail(main 0.90 vs hold 0.93; bear 1.05 vs 1.28) |
+| 3 | 在线学习 (online-learning) | `bandit(arm ∈ {0.5, 0.7, 1.0, 1.3, 1.5}, ctx=30d OHLCV summary); Thompson sample` | 多 arm 自适应,但纯机械 | n/a in codebase;new build |
+| 4 | Jev (model-based) | `size_mult = Jev(state) ∈ {0.7, 1.0, 1.3}; state = state machine over 4 confirm signals(§5b 那套)+ 3 invalidation layers` | 上下文敏感 AI 调整 | Outter v1 framework(后续 T-018+) |
+
+### 判据 (per-baseline 必须输出的报告项)
+
+每个 baseline 跑同一窗口(默认 `hl_book_daily` paper 周期),以下 signature 必须自报:
+
+| 项 | 强制报告 |
+|---|---|
+| 基准 SR 窗口 | baseline = "hold the panel"(`HIGH_DIM_ONTOLOGY.md` §5b ①),**不是** 0 |
+| regime-conditional | RISK_ON / NEUTRAL / RISK_OFF 三段分别出 SR(per `ARCHITECTURE.md` §5b),不可只合并报总 Sharpe |
+| n_periods | ≥30(统计学最低限) |
+| cost realism | 必须 +10 bps/day 应用(M-108 layered cost) |
+| lag discipline | `lag_discipline_pass` retention ≥ 0.5 + SR ≥ 0.05(M-114 contract);lag-1 底线,lag-0 = look-ahead 直接 REJECT |
+| early-exit 触发 | 任一 baseline 触发 hard-stop / 流动性干涸 时,必须报告 early-exit 次数与时间 |
+
+### Hypothesis test (pre-registered)
+
+- **H1:** Jev's IC contribution ≠ 0 independent of state-machine signal(对照组 = fixed baseline)。Reject null → Jev 是独立贡献,不是 state machine 记账。
+- **H2:** Asymmetric size_mult(1.3 / 1.0 / 0.7)在 PRESS/CONFIRMED state 下产生 better SR/Calmar over symmetric baseline(对照组 = vol-formula, online-learning)。
+
+### Acceptance signature
+
+ledger entry 完成后,4 baseline run results 写到 ledger 后段(预计 M-98…M-101;M-97 当前是 pre-register 段)。
+Seth merge + 接 `hl_book_daily` 后实跑出 SR / MaxDD,才能开 `[verified]`。

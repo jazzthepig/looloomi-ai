@@ -2,7 +2,7 @@
   "id": "T-011",
   "title": "Jev 仓位乘数对照线:先预注册(只调 1 个参数,4 级基准)",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "source": "对 B 的讨论 09-23",
   "allowed_paths": [
     "REFUTATION_LEDGER.md 的预注册段(经 PR)"
@@ -16,5 +16,6 @@
   },
   "prior_value": "无",
   "created": "2026-09-24",
+  "notes": "M-97 ledger pre-reg段 已 append (REFUTATION_LEDGER.md 23706 行, +39 行 M-97 段)。4 baselines 已定义: fixed / vol-formula (S-409) / online-learning bandit / Jev (Outter v1)。判据表写齐:基准=hold-panel,regime-conditional,n_periods≥30,+10bps cost,M-114 lag-1 底线,early-exit 触发报告。H1 / H2 pre-registered。hl_book_daily wire-up 仍在 Seth 接手范围 (T-011.expect)。",
   "verified": null
 }
