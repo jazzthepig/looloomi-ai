@@ -32,7 +32,7 @@ from typing import Optional
 
 import httpx
 from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 _log = logging.getLogger(__name__)
@@ -51,6 +51,38 @@ _EXEMPT_PREFIXES = (
     "/assets",
     "/vite.svg",
     "/favicon",
+)
+
+# T-013 (2026-09-26): page routes still count against the limit (DoS protection
+# stays in force) but a 429 on a page request returns HTML 200, NOT JSON 429 —
+# the prior behaviour put `{"error":"rate_limit_exceeded"}` in front of the
+# landing page, which is a JSON response on a /  URL. An API path that hits
+# 429 keeps its JSON envelope. Detection: anything that does NOT start with
+# one of these prefixes is a "page request" (HTML-served).
+_API_PREFIXES = ("/api/", "/internal/", "/ws/", "/mcp/", "/mcp-sse")
+
+
+def _is_page_request(path: str) -> bool:
+    return not any(path.startswith(p) for p in _API_PREFIXES)
+
+
+_HTML_429 = (
+    "<!doctype html><html lang=en><head><meta charset=utf-8>"
+    "<meta name=viewport content='width=device-width,initial-scale=1'>"
+    "<title>CometCloud — rate limited</title>"
+    "<meta http-equiv=refresh content='{retry_after}'>"
+    "<style>body{{font-family:system-ui;background:#020208;color:#cbd5e1;"
+    "display:flex;min-height:100vh;align-items:center;justify-content:center;"
+    "margin:0}}main{{max-width:480px;padding:32px;text-align:center}}"
+    "h1{{font-weight:600;font-size:18px;color:#e2e8f0;margin:0 0 8px}}"
+    "p{{font-size:13px;line-height:1.6;opacity:0.72;margin:8px 0 0}}"
+    "code{{font-family:ui-monospace,monospace;font-size:12px;color:#06b6b4}}"
+    "</style></head><body><main>"
+    "<h1>Rate limited</h1>"
+    "<p>You've sent more than <code>{limit}</code> requests per {window_label} "
+    "from this IP. The page will refresh automatically in <code>{retry_after}s</code>.</p>"
+    "<p>Authenticated users and the dashboard itself are not affected.</p>"
+    "</main></body></html>"
 )
 
 # Same-origin dashboard origins — treated as trusted, very high limit
@@ -179,32 +211,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Check minute window
         rpm_count = await _redis_incr(f"rl:rpm:{identity}", 60)
         if rpm_count > rpm_limit:
-            return JSONResponse(
-                status_code=429,
-                content={
-                    "error":        "rate_limit_exceeded",
-                    "window":       "minute",
-                    "limit":        rpm_limit,
-                    "message":      f"Rate limit: {rpm_limit} req/min. Upgrade at jazz@cometcloud.ai",
-                    "retry_after":  60,
-                },
-                headers={"Retry-After": "60", "X-RateLimit-Limit": str(rpm_limit)},
-            )
+            return self._rate_limited_response(
+                request=request, window="minute", limit=rpm_limit,
+                window_label="minute", retry_after=60)
 
         # Check day window (skip if rpd_limit == 0 = unlimited)
         rpd_count = await _redis_incr(f"rl:rpd:{identity}", 86400) if rpd_limit > 0 else 0
         if rpd_limit > 0 and rpd_count > rpd_limit:
-            return JSONResponse(
-                status_code=429,
-                content={
-                    "error":        "rate_limit_exceeded",
-                    "window":       "day",
-                    "limit":        rpd_limit,
-                    "message":      f"Daily limit: {rpd_limit} req/day. Need more? Email jazz@cometcloud.ai",
-                    "retry_after":  86400,
-                },
-                headers={"Retry-After": "86400", "X-RateLimit-Limit-Day": str(rpd_limit)},
-            )
+            return self._rate_limited_response(
+                request=request, window="day", limit=rpd_limit,
+                window_label="day", retry_after=86400)
 
         response = await call_next(request)
 
@@ -213,3 +229,48 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response.headers["X-RateLimit-Remaining"] = str(max(0, rpm_limit - rpm_count))
 
         return response
+
+    def _rate_limited_response(
+            self, *, request: Request, window: str, limit: int,
+            window_label: str, retry_after: int):
+        """T-013: page requests get HTML 200; API requests keep JSON 429.
+
+        The page HTML embeds a `<meta http-equiv=refresh>` so the browser
+        auto-retries after `retry_after` seconds — this avoids the JSON-in-a-
+        browser-URL failure mode where the user gets a wall of `{"error":...}`
+        on what is supposed to be a marketing page. API requests keep the
+        structured JSON envelope (`status_code=429`) so SDK consumers can
+        parse `Retry-After` / `error`.
+        """
+        path = request.url.path
+        if _is_page_request(path):
+            body = _HTML_429.format(
+                retry_after=retry_after, limit=limit, window_label=window_label)
+            return HTMLResponse(
+                content=body,
+                status_code=200,
+                headers={
+                    "Retry-After":     str(retry_after),
+                    "X-RateLimit-Limit": str(limit),
+                    "X-RateLimit-Window": window,
+                },
+            )
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error":        "rate_limit_exceeded",
+                "window":       window,
+                "limit":        limit,
+                "message":      (
+                    f"Rate limit: {limit} req/{window_label}. "
+                    f"Upgrade at jazz@cometcloud.ai"
+                    if window == "minute"
+                    else f"Daily limit: {limit} req/day. "
+                         f"Need more? Email jazz@cometcloud.ai"),
+                "retry_after":  retry_after,
+            },
+            headers={
+                "Retry-After": str(retry_after),
+                "X-RateLimit-Limit": str(limit),
+            },
+        )
