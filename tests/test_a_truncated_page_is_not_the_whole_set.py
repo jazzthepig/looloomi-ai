@@ -31,6 +31,11 @@ docstring 里,然后两个新站点照犯,S-318 我还把 `_cg_panel_loop` 接�
 
 from __future__ import annotations
 
+try:
+    from tests._source import tracked_py
+except ImportError:  # run as a script from tests/
+    from _source import tracked_py
+
 import ast
 import pathlib
 import re
@@ -90,7 +95,7 @@ def _code_strings(path: pathlib.Path) -> list[str]:
 
 def t_no_postgrest_read_asks_for_more_rows_than_the_server_will_give():
     offenders: list[str] = []
-    for f in sorted((ROOT / "src").rglob("*.py")):
+    for f in sorted(tracked_py((ROOT / "src"))):
         try:
             txt = f.read_text(encoding="utf-8")
         except Exception:                                    # noqa: BLE001

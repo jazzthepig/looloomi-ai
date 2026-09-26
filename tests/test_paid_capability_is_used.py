@@ -30,6 +30,11 @@ Jazz 2026-09-04:「我们有 coingecko analyst api 是 139 刀一个月的。。
 """
 from __future__ import annotations
 
+try:
+    from tests._source import tracked_py
+except ImportError:  # run as a script from tests/
+    from _source import tracked_py
+
 import re
 import sys
 from pathlib import Path
@@ -99,7 +104,7 @@ def _src_code() -> str:
     S-264 踩过一次(登记表匹配到自己),当天第五次那个形状。
     """
     parts = []
-    for f in (ROOT / "src").rglob("*.py"):
+    for f in tracked_py((ROOT / "src")):
         if ".venv" in f.parts or "site-packages" in f.parts:
             continue
         if f.name in ("source_policy.py",):          # 登记表不为自己作证

@@ -47,3 +47,26 @@ def flat(src: str) -> str:
     delete the guard.
     """
     return re.sub(r"\s+", " ", src)
+
+
+def tracked_py(base) -> list:
+    """`*.py` under `base` that git tracks — what a ratchet should count.
+
+    2026-09-26:`rglob` 数的是**磁盘上的目录**,不是仓库。主工作目录里有两个未跟踪文件
+    (4 处裸日期),于是同一个提交在主目录算 111、在 lane worktree 算 107 ——
+    lane-b 的 preflight 红了,主目录的是绿的,**同一份代码两个判决**。
+    多 worktree 之后这必然反复发生,所以棘轮一律数 `git ls-files`。
+    git 不可用时退回 rglob(并不比以前差)。`--no-optional-locks`:只读,不碰 index 锁(规则 4)。
+    """
+    import subprocess
+    from pathlib import Path
+    base = Path(base).resolve()
+    try:
+        top = subprocess.run(["git", "-C", str(base), "--no-optional-locks", "rev-parse",
+                              "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip()
+        out = subprocess.run(["git", "-C", top, "--no-optional-locks", "ls-files", "-z", "--",
+                              str(base.relative_to(top))], capture_output=True, check=True).stdout
+        files = [Path(top) / f for f in out.decode().split("\0") if f.endswith(".py")]
+        return sorted(p for p in files if p.exists())
+    except Exception:                                             # noqa: BLE001
+        return sorted(base.rglob("*.py"))

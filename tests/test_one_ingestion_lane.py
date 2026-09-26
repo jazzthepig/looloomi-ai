@@ -31,6 +31,11 @@ Mac 侧的等价保证要么靠 A 的 preflight,要么靠把摄入彻底收回�
 """
 from __future__ import annotations
 
+try:
+    from tests._source import tracked_py
+except ImportError:  # run as a script from tests/
+    from _source import tracked_py
+
 import ast
 import pathlib
 
@@ -69,7 +74,7 @@ def _ohlcv_writers() -> dict[str, list[int]]:
     注释里的表名是文档,不是写入,而本文件的全部意义就是不把
     「写下来的」和「跑起来的」混为一谈。"""
     found: dict[str, list[int]] = {}
-    for p in sorted(_SRC.rglob("*.py")):
+    for p in sorted(tracked_py(_SRC)):
         try:
             tree = ast.parse(p.read_text(encoding="utf-8", errors="replace"))
         except (OSError, SyntaxError):

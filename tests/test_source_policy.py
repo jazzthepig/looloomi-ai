@@ -20,6 +20,11 @@ in ONE request. The 232-call loop existed because nobody looked for a bulk
 endpoint. The rate limit was not a wall to pace against — it was the venue
 saying the question was wrong.
 """
+try:
+    from tests._source import tracked_py
+except ImportError:  # run as a script from tests/
+    from _source import tracked_py
+
 import ast
 import pathlib
 
@@ -167,7 +172,7 @@ def test_no_new_module_fans_out_over_a_free_endpoint_uncounted():
     FREE_HOSTS = ("api.hyperliquid.xyz", "data-api.binance.vision",
                   "fapi.binance.com", "api.binance.com")
     offenders = []
-    for path in (ROOT / "src").rglob("*.py"):
+    for path in tracked_py((ROOT / "src")):
         if "__pycache__" in str(path):
             continue
         src = code_only(path.read_text())
@@ -340,7 +345,7 @@ def test_the_scanners_blind_spot_is_stated_not_hidden():
     scanned, with_urls = 0, 0
     FREE_HOSTS = ("api.hyperliquid.xyz", "data-api.binance.vision",
                   "fapi.binance.com", "api.binance.com")
-    for path in (ROOT / "src/data").rglob("*.py"):
+    for path in tracked_py((ROOT / "src/data")):
         if "__pycache__" in str(path):
             continue
         scanned += 1
