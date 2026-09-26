@@ -2,7 +2,7 @@
   "id": "T-017",
   "title": "宏观简报:兜底模板去掉仓位建议 + 24h 变化读对键名 + 不再把几分钟的静止写成市场平静;移动端把缺失的 direction 显示成 NEUTRAL",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "source": "T-014 产品面审计 09-24(移动端首屏)",
   "allowed_paths": [
     "src/api/contracts/macro_brief.py",
@@ -22,5 +22,9 @@
   "prior_value": "模板:'BTC at $83,403 (— 24h)' + 'Risk-off positioning favoured';LLM 简报:'market tape is currently flat',当日总市值 24h -6.4%;移动端 RECENT SIGNALS:空标的行 + 4 条全显示 NEUTRAL(feed 里 direction 全为 null)",
   "created": "2026-09-24",
   "notes": "Mac 副本更新拆到 T-018(A)。接收端与出口另加两道:与快照矛盾的「平静」、空快照写成的简报,一律不发布,走模板(S-423)。",
-  "verified": null
+  "verified": {
+    "by": "seth",
+    "value": "Railway mb-3 端:GET /api/v1/macro/brief 含 24h 变化('-2.1% over 24 hours' / '-0.0% over 24 hours' + 02:54 UTC 时间戳),最新 brief 文本无 Accumulat/contrarian entry/Allocate/Reduce/favoured。src/api/contracts/macro_brief.py PROMPT_VERSION=mb-3 ✅,src/api/routers/macro.py 收端校验 prompt_version=mb-3。**Mac 副本 mb-2 → mb-3 仍待**(/Volumes/CometCloudAI/cometcloud-local/macro_brief_contract.py:36 仍 mb-2)→ **T-018 lane-a**(卡 notes 已声明)",
+    "at": "2026-09-26T01:55:00Z"
+  }
 }
