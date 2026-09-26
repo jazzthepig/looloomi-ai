@@ -161,6 +161,15 @@ REFUSAL_POLICY = {
         "stale_after_days": 2,
         "escalate_after_n_refusals": 30,
     },
+    "_beta_plus_loop": {
+        "reason": "S-429 — refuses when fewer than 90% of the 24 panel coins have a "
+                  "binance_hist bar for yesterday written after the UTC close.",
+        "clears_when": "the binance_hist writer lands the post-close bars; retries hourly. "
+                       "Past 30h after the close it reports failing, not refused.",
+        "owner": "Seth",
+        "stale_after_days": 2,
+        "escalate_after_n_refusals": 30,
+    },
     "_tokenization_tilt_loop": {
         "reason": "S-427 — refuses when fewer than 90% of the panel+basket coins have a "
                   "coingecko_pro_ohlc bar for yesterday written after the UTC close.",

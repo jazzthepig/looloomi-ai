@@ -1,0 +1,35 @@
+{
+  "id": "T-029",
+  "title": "② β+ 动量 + 52 周高点前向账本上线(四臂)",
+  "owner": "seth",
+  "status": "in_review",
+  "source": "S-429",
+  "allowed_paths": [
+    "src/data/signals/beta_plus_momentum.py",
+    "src/data/signals/tokenization_tilt.py",
+    "src/research/validation/s428_beta_plus_factor_tilt.py",
+    "src/research/validation/s428_candidates.py",
+    "tests/test_beta_plus_momentum.py",
+    "src/api/main.py",
+    "src/api/liveness.py",
+    "scripts/ops_console.py",
+    "tests/test_ops_console_classifies_by_remedy.py",
+    "src/api/schema_manifest.json",
+    "scripts/preflight.sh",
+    "STRATEGY_PLAYBOOK.md",
+    "docs/DECISIONS.md",
+    "tests/test_tokenization_tilt.py",
+    "scripts/supabase_s430_ohlcv_recorded_at.sql"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "select arm, min(d), max(d), count(*), round(max(nav)::numeric,4) from beta_plus_daily group by 1",
+    "expect": "四臂都有行,min(d)=2026-09-25、max(d)=昨天;momentum_52w_w 与 panel_hold_w 的 NAV 不同"
+  },
+  "prior_value": "② 从未建过前向账本;S-428 研究周频 +17.2%/年(t 3.22)",
+  "created": "2026-09-26",
+  "verified": null,
+  "notes": "S-430:部署前发现 recorded_at 语义问题(首次插入时间),已加触发器;两本账就绪判据排除停写的源。首行预计在下一根收盘终值写入后出现。"
+}

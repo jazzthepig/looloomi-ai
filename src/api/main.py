@@ -915,6 +915,34 @@ def _minutes_from_valuation_point_utc(hour: int, minute: int) -> float:
 # 实测 39 个真实循环里 **28 个**的失败只 print(第一次报的 67/64 把
 # `_start_*` 包装函数也数进去了 —— 夸大动机数字,今天第二次)。_outcome_tracker_loop 是最干净的
 # 样本:循环活着、每天准时跑、每天失败,而 signal_outcomes 因此死了 123 天无人知。
+async def _beta_plus_loop():
+    """② β+ 动量 + 52 周高点倾斜的前向记录(S-429)。每小时一次;从起点整条重算、整条 upsert。
+
+    幂等、无状态。收盘后终值未就绪 ⇒ refused;收盘后 30h 仍未就绪 ⇒ 失败。表 `beta_plus_daily`。
+    """
+    await _asyncio.sleep(_boot_delay(360))
+    while True:
+        try:
+            from src.data.signals.beta_plus_momentum import run_once as _bp_run
+            r = await _bp_run()
+            print(f"[BETA-PLUS] written={r.get('written')} nav={r.get('nav')} · {str(r.get('reason'))[:120]}")
+            await _beat("_beta_plus_loop", ok=bool(r.get("ok")) and not r.get("refused"),
+                        refused=bool(r.get("refused")),
+                        detail={"written": r.get("written"), "nav": r.get("nav"), "barred": r.get("barred"),
+                                "stale_in_source": r.get("stale_in_source")},
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+        except Exception as _e:
+            print(f"[BETA-PLUS] ⚠️  pass FAILED: {_e}")
+            await _beat("_beta_plus_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_beta_plus_loop():
+    _asyncio.create_task(_beta_plus_loop())
+    print("[BETA-PLUS] ✅ forward record scheduled (beta_plus_daily, 4 arms)")
+
+
 async def _tokenization_tilt_loop():
     """② β+ 代币化基础设施倾斜的前向记录(S-427)。每小时一次;每次从起点整条重算、整条 upsert。
 
@@ -928,7 +956,8 @@ async def _tokenization_tilt_loop():
             print(f"[TOKEN-TILT] written={r.get('written')} nav={r.get('nav')} · {str(r.get('reason'))[:120]}")
             await _beat("_tokenization_tilt_loop", ok=bool(r.get("ok")) and not r.get("refused"),
                         refused=bool(r.get("refused")),
-                        detail={"written": r.get("written"), "nav": r.get("nav"), "barred": r.get("barred")},
+                        detail={"written": r.get("written"), "nav": r.get("nav"), "barred": r.get("barred"),
+                                "stale_in_source": r.get("stale_in_source")},
                         error=None if r.get("ok") else str(r.get("reason"))[:200])
         except Exception as _e:
             print(f"[TOKEN-TILT] ⚠️  pass FAILED: {_e}")

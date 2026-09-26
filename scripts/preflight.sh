@@ -1884,9 +1884,9 @@ python3 -m paper_trading.tests.test_run_paper_a17_smoke || {
 
 # ── S-427 代币化基础设施倾斜(② β+ 前向记录,无状态重算)──────────────
 # fusion 22 天 ret ≡ −0.05%(只扣成本不记价格)那一类在这里被钉死:价格必须进 NAV,读不到必须拒绝。
-python3 -m pytest tests/test_tokenization_tilt.py -q || {
-  echo "  ✗ S-427 tokenization tilt — do not push"; exit 1; }
-echo "  ✓ S-427 tokenization tilt book"
+python3 -m pytest tests/test_tokenization_tilt.py tests/test_beta_plus_momentum.py -q || {
+  echo "  ✗ S-427/S-429 forward books — do not push"; exit 1; }
+echo "  ✓ S-427 tokenization tilt · S-429 β+ momentum books"
 
 # ── S-412 hl_book(HL 4 币组合决策内核,回放与每日流程共用)──────────────
 # 永不给亏损仓位加仓 · 换手不动带 · Jev 臂的匿名/打乱/解析路径喂机械答案必须 ≡ 机械 Tom。
