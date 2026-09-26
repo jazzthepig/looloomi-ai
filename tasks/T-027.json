@@ -1,0 +1,21 @@
+{
+  "id": "T-027",
+  "title": "多空账本存完整权重(不只前三),让「是否持有 X」可回答",
+  "owner": "seth",
+  "status": "open",
+  "source": "S-427",
+  "allowed_paths": [
+    "src/data/signals/",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "causal/combined/scalable 最新行能查到任一持仓币的权重",
+    "expect": "完整权重 jsonb,非空"
+  },
+  "prior_value": "只存 top_longs/top_shorts 各 3 个;09-24/25 LINK 是否持有无法回答",
+  "created": "2026-09-26",
+  "verified": null
+}
