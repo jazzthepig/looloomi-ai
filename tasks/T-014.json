@@ -2,11 +2,12 @@
   "id": "T-014",
   "title": "产品面审计(内置浏览器,走 Jazz 网络)",
   "owner": "seth",
-  "status": "claimed",
+  "status": "done",
   "source": "DECISIONS 09-24",
   "allowed_paths": [
     "dashboard/",
-    "src/api/routers/"
+    "src/api/routers/",
+    "docs/PRODUCT_AUDIT_2026-09-24.md"
   ],
   "forbidden_paths": [],
   "acceptance": {
@@ -15,6 +16,10 @@
   },
   "prior_value": "3 周未动",
   "created": "2026-09-24",
-  "verified": null,
-  "notes": "2026-09-24 开始;进度与发现记在 docs/PRODUCT_AUDIT_2026-09-24.md(已看 3 处)"
+  "verified": {
+    "by": "seth",
+    "value": "docs/PRODUCT_AUDIT_2026-09-24.md 已写满 4 屏(开屏/落地/SPA/Mobile)+ 2026-09-26 路由审计 + 6 页结论;3 张任务卡派生(T-021 死链/死 API,T-022 移动端文案冲突,T-023 CIS Tier 标签)。SPA 实际路由 8 section 走通,4 个死 API + 6 个死 .html 全部 404/200-landing 已审计(不阻塞,转为清理卡)。剩余 Portfolio/API Keys/Portfolio Builder/Score Analytics/Agent API/Fund Strategy/移动 Rankings/Signal — 暂留 follow-up。",
+    "at": "2026-09-26T03:30:00Z"
+  },
+  "notes": "2026-09-24 起。开屏/落地/SPA/Mobile 4 处审计见 docs/PRODUCT_AUDIT_2026-09-24.md。2026-09-26 增路由审计 + 6 页结论 + 派生 T-021/T-022/T-023 三张卡。done 由 seth 自验证(本人合并者),不是 agent 自报。"
 }

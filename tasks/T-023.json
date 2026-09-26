@@ -1,0 +1,22 @@
+{
+  "id": "T-023",
+  "title": "CIS universe API:把 Tier 标签(T1/T2)传到前端,CISLeaderboard 徽章按源染色",
+  "owner": "lane-a",
+  "status": "open",
+  "source": "T-014 audit 2026-09-26",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/cis_push.py",
+    "/Volumes/CometCloudAI/cometcloud-local/cis_v4_engine.py",
+    "src/data/cis/cis_provider.py",
+    "src/api/routers/cis.py"
+  ],
+  "forbidden_paths": [],
+  "acceptance": {
+    "check": "GET /api/v1/cis/universe:response['data_source'] 非 null,或每个 universe[i]['data_source'] ∈ {'T1','T2','T2_estimated'}。前端打开 /app.html(走 Jazz 网络)任意一张 CIS 卡,徽章染色与 data_source 一致(T1 绿,T2 琥珀)。",
+    "expect": "T1 标的徽章绿、T2 标的徽章琥珀;不再全部 50% 灰"
+  },
+  "prior_value": "GET /api/v1/cis/universe:universe 58 行,但 data_source=None(API 层未传播 Tier)。CISLeaderboard 徽章当前无法区分",
+  "created": "2026-09-26",
+  "verified": null,
+  "notes": "T-001 (lane-a) 完成后 T1 标的数会从 24 升到 43+,数据路径走通后这个标签才有意义;但 API 字段先固定 —— 等 T-001 ship 不影响本卡的 schema 端。Seth lane 在 src/api/routers/cis.py 加 data_source 字段映射;Minimax lane 在 cis_push.py/cis_v4_engine.py 输出 data_source='T1'。"
+}

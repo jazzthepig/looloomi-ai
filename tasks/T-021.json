@@ -1,0 +1,21 @@
+{
+  "id": "T-021",
+  "title": "死链与遗留路由:6 个静态 .html 200/41121(全返落地页)+ 4 个 SPA 不用的 API 返 404",
+  "owner": "seth",
+  "status": "open",
+  "source": "T-014 audit 2026-09-26",
+  "allowed_paths": [
+    "dashboard/src/",
+    "src/api/main.py",
+    "src/api/routers/"
+  ],
+  "forbidden_paths": [],
+  "acceptance": {
+    "check": "下列路径全部 301→/app.html 或 410 删:market.html, cis.html, vault.html, protocol.html, intelligence.html, quant-gp.html。下列 API 任选:删,或加 CORS smoke + doc 标注 unused:api/v1/intelligence/signals, /vault/positions, /protocol/metrics, /quant/gp-status",
+    "expect": "curl -I /market.html 返回 30x 或 4xx(非 200/41121);SPA bundle 仍能在 /app.html 正常加载 8 个 section"
+  },
+  "prior_value": "/market.html 200/41121,/cis.html 200/41121,/vault.html 200/41121,/protocol.html 200/41121,/intelligence.html 200/41121,/quant-gp.html 200/41121;SPA shell 在 /app.html(2424 字节);Sidebar/SiteNav 全链 /app.html;4 个 API 全 404 但 SPA bundle 不调用",
+  "created": "2026-09-26",
+  "verified": null,
+  "notes": "Audit 时点 curl 测得所有 6 个 .html 都 200/41121 = 落地页(不是 SPA 分支入口)。SPA 是单页客户端路由,SECTIONS 由 Sidebar.jsx onNavigate 切换,无对应独立 HTML。旧邮件/博客/SEO 链接若指过这些路径,要么 301 到 /app.html 要么 410。/agent.html、/portfolio.html、/analytics.html、/strategy.html、/privacy.html 是另一组(TOOL_LINKS 仍链),不在本卡范围内。Dead API(/intelligence/signals 等)SPA 不调用 → 死代码,删或 doc。"
+}
