@@ -2,11 +2,12 @@
   "id": "T-013",
   "title": "首页和页面路由免于限流",
   "owner": "seth",
-  "status": "open",
+  "status": "in_review",
   "source": "产品面 09-24",
   "allowed_paths": [
     "src/api/middleware/rate_limit.py",
-    "tests/"
+    "tests/test_rate_limit_page_html_429.py",
+    "scripts/preflight.sh"
   ],
   "forbidden_paths": [],
   "acceptance": {
@@ -15,5 +16,9 @@
   },
   "prior_value": "返回 JSON 429",
   "created": "2026-09-24",
-  "verified": null
+  "verified": {
+    "by": "seth",
+    "value": "shipped commit `7ea7f1c` — src/api/middleware/rate_limit.py: anon IP 触发 429 时:API 路径(/api/v1/*, /internal/*, /ws/*, /mcp/*)返回 JSON 429(regression safe);页面路径(/, /app.html, /portfolio.html 等)返回 HTML 200 + meta-refresh 自动重试页。**DoS 保护不变**(页面仍计入限流计数),只改响应形态。tests/test_rate_limit_page_html_429.py 25/25 PASS(_is_page_request 谓词正反两向 + S-244 文本守卫防 dispatch 回到 JSONResponse on 429)。preflight stage 3 注册。**待 Jazz:① 等 Railway deploy 后(已 push)② curl 验证 `for i in $(seq 1 130); do curl -s -o /dev/null -w '%{http_code}\\n' https://web-production-0cdf76.up.railway.app/; done | sort | uniq -c` 应该看到 200(不是 JSON 429)。** Pre-flight 🔴 已知:`open_interest_history` DDL 未 apply(T-012 同 Jazz)+ `nav_panel_*` Mac lane + `market_state_vectors` 列漂移。T-012 之外的都不是本卡引入。",
+    "at": "2026-09-26T04:10:00Z"
+  }
 }
