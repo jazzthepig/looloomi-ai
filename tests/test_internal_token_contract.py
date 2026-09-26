@@ -26,6 +26,11 @@
 
 from __future__ import annotations
 
+try:
+    from tests._source import tracked_py
+except ImportError:  # run as a script from tests/
+    from _source import tracked_py
+
 import ast
 import os
 import re
@@ -58,7 +63,7 @@ _IMPORT_TIME = re.compile(
 
 
 def _py_files() -> list[Path]:
-    return [p for p in API.rglob("*.py") if "__pycache__" not in p.parts]
+    return [p for p in tracked_py(API) if "__pycache__" not in p.parts]
 
 
 def _read(p: Path) -> str:

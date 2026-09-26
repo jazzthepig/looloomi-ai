@@ -57,6 +57,11 @@
 """
 from __future__ import annotations
 
+try:
+    from tests._source import tracked_py
+except ImportError:  # run as a script from tests/
+    from _source import tracked_py
+
 import ast
 import pathlib
 import sys
@@ -191,7 +196,7 @@ def main() -> int:
     for base in SCAN:
         if not base.exists():
             continue
-        for p in sorted(base.rglob("*.py")):
+        for p in sorted(tracked_py(base)):
             if set(p.parts) & SKIP_PARTS:
                 continue
             rel = str(p.relative_to(ROOT))

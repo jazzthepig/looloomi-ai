@@ -42,6 +42,11 @@
 """
 from __future__ import annotations
 
+try:
+    from tests._source import tracked_py
+except ImportError:  # run as a script from tests/
+    from _source import tracked_py
+
 import re
 import sys
 from pathlib import Path
@@ -68,7 +73,7 @@ _NAIVE_DATE = re.compile(
 )
 
 #: 冻结基线。**只许降。** 降了就把这个数改小 —— 它是棘轮的棘齿。
-BASELINE = 111
+BASELINE = 107
 
 #: 这些文件必须**恒为 0**:它们写裸 `date` 列,错一天就是一行假数据。
 #: `beta_core_paper.py` 是 ①,**我们唯一在产出的前向记录**(S-406 已清)。
@@ -87,7 +92,7 @@ def _ok(m: str) -> None:
 def _hits() -> dict[str, int]:
     out: dict[str, int] = {}
     for top in SCAN:
-        for p in sorted((ROOT / top).rglob("*.py")):
+        for p in sorted(tracked_py((ROOT / top))):
             sp = str(p.relative_to(ROOT))
             if ".venv" in sp or "__pycache__" in sp or "/tests/" in sp:
                 continue

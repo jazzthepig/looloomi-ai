@@ -21,6 +21,11 @@
 """
 from __future__ import annotations
 
+try:
+    from tests._source import tracked_py
+except ImportError:  # run as a script from tests/
+    from _source import tracked_py
+
 import re
 import subprocess
 import sys
@@ -57,7 +62,7 @@ SELF = Path(__file__).name
 
 def _files():
     for d in SEARCH_DIRS:
-        for f in (ROOT / d).rglob("*.py"):
+        for f in tracked_py((ROOT / d)):
             if (".venv" not in f.parts and "site-packages" not in f.parts
                     and f.name != SELF):
                 yield f
