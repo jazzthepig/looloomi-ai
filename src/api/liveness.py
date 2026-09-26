@@ -39,6 +39,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     # Marker loops — 48h budget (must run daily; 48h = 2 missed days = stale)
     "_beta_core_loop":           {"max_age_h": 48, "kind": "marker"},
     "_hl_book_loop":             {"max_age_h": 48, "kind": "marker"},   # S-413
+    "_tokenization_tilt_loop":   {"max_age_h": 48, "kind": "marker"},   # S-427
     "_causal_paper_loop":        {"max_age_h": 48, "kind": "marker"},
     "_combined_book_loop":       {"max_age_h": 48, "kind": "marker"},
     "_dingge_paper_loop":        {"max_age_h": 48, "kind": "marker"},

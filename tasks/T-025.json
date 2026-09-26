@@ -1,0 +1,29 @@
+{
+  "id": "T-025",
+  "title": "② 代币化基础设施倾斜账本上线:第一行真实数据 + 连续前向记录",
+  "owner": "seth",
+  "status": "in_review",
+  "source": "S-427",
+  "allowed_paths": [
+    "src/data/signals/tokenization_tilt.py",
+    "src/api/main.py",
+    "src/api/liveness.py",
+    "scripts/ops_console.py",
+    "tests/test_tokenization_tilt.py",
+    "tests/test_ops_console_classifies_by_remedy.py",
+    "src/api/schema_manifest.json",
+    "scripts/preflight.sh",
+    "STRATEGY_PLAYBOOK.md",
+    "docs/DECISIONS.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "select arm, min(d), max(d), count(*), max(nav) from tokenization_tilt_daily group by 1",
+    "expect": "两臂都有行,min(d)=2026-09-25,max(d)=昨天(UTC 06:00 后);09-26 起 nav ≠ 1.0"
+  },
+  "prior_value": "代币化论点 09-01 起只在观测层(S-266),没有任何账本;① 里只有 LINK 3.8%",
+  "created": "2026-09-26",
+  "verified": null
+}

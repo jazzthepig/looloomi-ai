@@ -161,6 +161,15 @@ REFUSAL_POLICY = {
         "stale_after_days": 2,
         "escalate_after_n_refusals": 30,
     },
+    "_tokenization_tilt_loop": {
+        "reason": "S-427 — refuses when fewer than 90% of the panel+basket coins have a "
+                  "coingecko_pro_ohlc bar for yesterday written after the UTC close.",
+        "clears_when": "_cg_panel_loop writes the post-close bars (normally 01:00–06:00 "
+                       "UTC); retries hourly. Past 30h after the close it reports failing.",
+        "owner": "Seth",
+        "stale_after_days": 2,
+        "escalate_after_n_refusals": 30,
+    },
     "_deep_panel_loop": {
         "reason": "S-323i source_policy — must not fan out to a free venue API.",
         "clears_when": "OPEN RISK #0a closes: cg_coin_map covers the panel and "

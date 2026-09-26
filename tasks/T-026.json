@@ -1,0 +1,21 @@
+{
+  "id": "T-026",
+  "title": "fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空",
+  "owner": "seth",
+  "status": "open",
+  "source": "S-427",
+  "allowed_paths": [
+    "src/data/signals/fusion_paper.py",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "select count(distinct round(daily_return::numeric,6)) from fusion_paper_nav where mark_date >= current_date-7",
+    "expect": "> 1(按价格记账,不再是常数)"
+  },
+  "prior_value": "22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性",
+  "created": "2026-09-26",
+  "verified": null
+}

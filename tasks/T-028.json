@@ -1,0 +1,21 @@
+{
+  "id": "T-028",
+  "title": "SKY 日线回填(替换已下架的 MKR 进代币化篮子)",
+  "owner": "seth",
+  "status": "open",
+  "source": "S-427",
+  "allowed_paths": [
+    "src/data/market/",
+    "scripts/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "select min(trade_date), max(trade_date), count(*) from ohlcv_daily where source='coingecko_pro_ohlc' and symbol='SKY'",
+    "expect": "覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档)"
+  },
+  "prior_value": "SKY 只有 15 天(08-09→08-23),之后停更",
+  "created": "2026-09-26",
+  "verified": null
+}
