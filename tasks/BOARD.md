@@ -3,6 +3,7 @@
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
 | in_review | T-018 | lane-a | Mac 对 Railway 的读请求带 X-Internal-Token;空快照不生成简报;macro_brief 合约副本更新到 mb-3 | empty = 0 且 n > 0;最新一行 prompt_version = mb-3(Railway 日志 [MACRO] 无 prompt_version 告警) | 09-23:47 份里 36 份快照为空({}),39 份写「平静」;Mac 副本 mb-2 |  |
+| in_review | T-012 | seth | HL 采集器加持仓量(OI) | > 200 个币 | 0(没有存) | 代码侧 ship 完成 commit `5950f41`:scripts/supabase_open_interest_history.sql(新表 DDL,PK (symbol, snapshot_time, venue),NOT NULL OI,RLS+revoke from anon)+ src/data/market/hyperliquid_collector.py `collect_venue_marks()` 加 OI 落库(I1 None skip)+ tests/test_hyperliquid_open_interest_persistence.py 10 checks 全绿 + scripts/preflight.sh stage 3 注册 + src/api/schema_manifest.json 重新生成(open_interest_history 在列)。Railway deploy 后健康(/health 200,version 0.6.3)。**DDL apply 由 Jazz 经 MCP 到生产 Supabase**(沙箱不可达 Supabase)。DDL apply 后,`_venue_marks` 循环每 6h 一轮 → 下一轮 tick 应写 ~200 行 OI(HL ~232 perps)。**待 Jazz:① 经 MCP apply `scripts/supabase_open_interest_history.sql` ② 等下一轮循环(最长 6h)③ 验 `select count(distinct symbol) from open_interest_history where snapshot_time::date = current_date` > 200。**Pre-flight 🔴 已知**:S-431 dangling citation 在 src/research/validation/s431_beta_plus_8h.py(Austin lane),与 T-012 无关。 @ 2026-09-26T03:55:00Z |
 | in_review | T-025 | seth | ② 代币化基础设施倾斜账本上线:第一行真实数据 + 连续前向记录 | 两臂都有行,min(d)=2026-09-25,max(d)=昨天(UTC 06:00 后);09-26 起 nav ≠ 1.0 | 代币化论点 09-01 起只在观测层(S-266),没有任何账本;① 里只有 LINK 3.8% |  |
 | in_review | T-029 | seth | ② β+ 动量 + 52 周高点前向账本上线(四臂) | 四臂都有行,min(d)=2026-09-25、max(d)=昨天;momentum_52w_w 与 panel_hold_w 的 NAV 不同 | ② 从未建过前向账本;S-428 研究周频 +17.2%/年(t 3.22) |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
@@ -17,7 +18,6 @@
 | open | T-007 | lane-c | CG 新闻监听器写入 Supabase(经 Railway mac_writes) | > 0 | 只在 Mac 本地 cis_history.db,13 行 |  |
 | open | T-009 | lane-c | data_quality_score:先修 data_freshness,再算分,随推送落库 | > 0 且 值有区分度(不全相同) | 0(列一直为空) |  |
 | open | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
-| open | T-012 | seth | HL 采集器加持仓量(OI) | > 200 个币 | 0(没有存) |  |
 | open | T-013 | seth | 首页和页面路由免于限流 | 仍返回 HTML 200 | 返回 JSON 429 |  |
 | open | T-021 | seth | 死链与遗留路由:6 个静态 .html 200/41121(全返落地页)+ 4 个 SPA 不用的 API 返 404 | curl -I /market.html 返回 30x 或 4xx(非 200/41121);SPA bundle 仍能在 /app.html 正常加载 8 个 section | /market.html 200/41121,/cis.html 200/41121,/vault.html 200/41121,/protocol.html 200/41121,/intelligence.html 200/41121,/quant-gp.html 200/41121;SPA shell 在 /app.html(2424 字节);Sidebar/SiteNav 全链 /app.html;4 个 API 全 404 但 SPA bundle 不调用 |  |
 | open | T-022 | seth | 移动端 RECENT SIGNALS 卡片:百分比与文案跨度对齐(短时价格不和"strong momentum"同屏) | DOM/截图: 卡片百分比后缀为 '24h' 或 '(24h)';文案与百分比跨度一致(避免 −7% 旁边写 'strong momentum') | MobileApp 卡片:'positions to outperform on strong momentum' 旁显示 −7.45% / −8.98%(百分比实为 24h,跨度与文案冲突) |  |
@@ -34,4 +34,4 @@
 | done | T-017 | seth | 宏观简报:兜底模板去掉仓位建议 + 24h 变化读对键名 + 不再把几分钟的静止写成市场平静;移动端把缺失的 direction 显示成 NEUTRAL | 文本含 24h 变化数值;不含 Accumulat/contrarian entry/Allocate/Reduce/favoured;Mac 推来的 prompt_version = mb-3 | 模板:'BTC at $83,403 (— 24h)' + 'Risk-off positioning favoured';LLM 简报:'market tape is currently flat',当日总市值 24h -6.4%;移动端 RECENT SIGNALS:空标的行 + 4 条全显示 NEUTRAL(feed 里 direction 全为 null) | Railway mb-3 端:GET /api/v1/macro/brief 含 24h 变化('-2.1% over 24 hours' / '-0.0% over 24 hours' + 02:54 UTC 时间戳),最新 brief 文本无 Accumulat/contrarian entry/Allocate/Reduce/favoured。src/api/contracts/macro_brief.py PROMPT_VERSION=mb-3 ✅,src/api/routers/macro.py 收端校验 prompt_version=mb-3。**Mac 副本 mb-2 → mb-3 仍待**(/Volumes/CometCloudAI/cometcloud-local/macro_brief_contract.py:36 仍 mb-2)→ **T-018 lane-a**(卡 notes 已声明) @ 2026-09-26T01:55:00Z |
 | done | T-019 | seth | prediction_resolver:4 个 date 列来源恢复出结果;不再 409 | 5 个来源都有行(positioning/forward_supply/conviction/narrative 各 >0);409 = 0 | 只有 signal 170 行,其余 4 个来源 0 行;2h 内 409 × 326 | 5/5 来源有行:positioning 436 · conviction 428 · signal 170 · forward_supply 104 · narrative 14;部署后首轮 15:24–15:30 UTC,POST prediction_outcomes 982×201、0×409 @ 2026-09-25 |
 
-open 21 · blocked 2 · in_review 3 · done 5
+open 20 · blocked 2 · in_review 4 · done 5
