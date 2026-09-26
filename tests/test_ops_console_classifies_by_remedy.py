@@ -46,6 +46,7 @@ def test_refusal_policy_reasons_carry_their_why_substring():
         # loop name : substring that MUST appear in reason
         "_hl_book_loop":          "S-413",
         "_tokenization_tilt_loop": "S-427",
+        "_beta_plus_loop":        "S-429",
         "_deep_panel_loop":       "S-323i",
         "_forward_record_loop":   "S-323f",
         "_beta_core_loop":        "S-323o",

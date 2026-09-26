@@ -1,0 +1,21 @@
+{
+  "id": "T-030",
+  "title": "binance_hist 回填:过去一年整天缺 41 天(最后 09-06)",
+  "owner": "seth",
+  "status": "open",
+  "source": "S-429",
+  "allowed_paths": [
+    "src/data/market/",
+    "scripts/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "对 24 个面板币,2025-08-21→昨天 的自然日里 binance_hist 缺失天数",
+    "expect": "= 0"
+  },
+  "prior_value": "20 个币各缺 41 天,ETC/SUI/TRX 29 天,BCH 17 天",
+  "created": "2026-09-26",
+  "verified": null
+}
