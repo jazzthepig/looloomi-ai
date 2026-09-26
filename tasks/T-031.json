@@ -1,0 +1,21 @@
+{
+  "id": "T-031",
+  "title": "CG Pro 面板停写 5 个 ① 面板币(BCH/DOGE/FIL/LTC/TRX,自 09-13)",
+  "owner": "seth",
+  "status": "open",
+  "source": "S-430",
+  "allowed_paths": [
+    "src/data/market/",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "select symbol, max(trade_date) from ohlcv_daily where source='coingecko_pro_ohlc' and symbol in ('BCH','DOGE','FIL','LTC','TRX') group by 1",
+    "expect": "5 个都 = 昨天;并在 SPINE / 守卫里说明为什么它们会掉出写入宇宙"
+  },
+  "prior_value": "5 个币最后一行都是 2026-09-13",
+  "created": "2026-09-26",
+  "verified": null
+}

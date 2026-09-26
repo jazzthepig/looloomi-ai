@@ -137,10 +137,43 @@ def compute_path(px: pd.DataFrame, panel: tuple[str, ...], barred: list[str],
     return rows
 
 
+async def closing_bars_final(symbols, target: pd.Timestamp, source: str,
+                             min_share: float = 0.9):
+    """→ (收盘后写入终值的币集合, 源已停写的币, None) 或 (None, 停写的币, 拒绝/失败结果)。两本前向账共用。
+
+    终值判据同 S-413:target 那根 bar 在 target 收盘之后写入。S-430 起 `ohlcv_daily.recorded_at`
+    在价格值变化时由触发器刷新,所以「半根后来被改成终值」也会被认出来(此前永远显示成半根)。
+
+    **源已停写的币不进分母,但显式返回。** S-430 实测:CG Pro 从 09-13 起不再写 BCH/DOGE/FIL/LTC/TRX,
+    它们会把就绪比例永久压在 90% 以下 —— 一个死掉的源让整本账永远「等」。
+    停写 = target 前 3 天在该源里一行都没有。收盘后 30 小时仍不够 ⇒ 失败,不是「等」。
+    """
+    from src.data.signals.hl_book_daily import _supabase_get
+    symbols = list(symbols)
+    lo = (target - pd.Timedelta(days=3)).date().isoformat()
+    rec = await _supabase_get(
+        f"ohlcv_daily?select=symbol,trade_date,recorded_at&source=eq.{source}"
+        f"&symbol=in.({','.join(symbols)})&trade_date=gte.{lo}&trade_date=lte.{target.date().isoformat()}")
+    recent = {r["symbol"] for r in rec if r["trade_date"] < target.date().isoformat()}
+    stale = sorted(set(symbols) - recent)
+    live = [s for s in symbols if s in recent]
+    close_ts = target + pd.Timedelta(days=1)
+    final = {r["symbol"] for r in rec if r["trade_date"] == target.date().isoformat()
+             and r.get("recorded_at") and r["symbol"] in recent
+             and pd.Timestamp(r["recorded_at"]).tz_convert("UTC").tz_localize(None) >= close_ts}
+    if live and len(final) >= min_share * len(live):
+        return final, stale, None
+    late_h = (pd.Timestamp.now(tz="UTC").tz_localize(None) - close_ts).total_seconds() / 3600
+    msg = (f"{target.date()} 收盘后终值 {len(final)}/{len(live)} 个在写的币({source})"
+           + (f";源已停写:{stale}" if stale else ""))
+    if late_h > 30:
+        return None, stale, {"ok": False, "refused": False, "written": 0, "reason": f"收盘后 {late_h:.0f}h:{msg}"}
+    return None, stale, {"ok": True, "refused": True, "written": 0, "reason": f"未就绪:{msg}"}
+
+
 async def run_once() -> dict[str, Any]:
     """重算到昨天那根已收盘日线并整条 upsert。幂等。"""
     from src.data.market.panel_read import read_panel
-    from src.data.signals.hl_book_daily import _supabase_get
     from src.api.store import supabase_upsert_table
 
     target = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize() - pd.Timedelta(days=1)
@@ -154,20 +187,10 @@ async def run_once() -> dict[str, Any]:
     px = pd.DataFrame(p.close, index=idx, columns=p.symbols, dtype=float)
     px = px.mask(pd.DataFrame(p.filled, index=idx, columns=p.symbols))   # 前推的价格不是价格
 
-    # 就绪:target 那根 bar 须是收盘之后写入的终值(同 S-413 的判据),占 ≥90% 的币
-    rec = await _supabase_get(
-        f"ohlcv_daily?select=symbol,recorded_at&source=eq.{PRICE_SOURCE}"
-        f"&symbol=in.({','.join(p.symbols)})&trade_date=eq.{target.date().isoformat()}")
-    close_ts = target + pd.Timedelta(days=1)
-    final = {r["symbol"] for r in rec if r.get("recorded_at")
-             and pd.Timestamp(r["recorded_at"]).tz_convert("UTC").tz_localize(None) >= close_ts}
-    if len(final) < 0.9 * len(p.symbols):
-        late_h = (pd.Timestamp.now(tz="UTC").tz_localize(None) - close_ts).total_seconds() / 3600
-        msg = f"{target.date()} 收盘后终值只有 {len(final)}/{len(p.symbols)} 个币"
-        if late_h > 30:
-            return {"ok": False, "refused": False, "written": 0, "reason": f"收盘后 {late_h:.0f}h:{msg}"}
-        return {"ok": True, "refused": True, "written": 0, "reason": f"未就绪:{msg}"}
-    px.loc[target, [c for c in px.columns if c not in final]] = float("nan")
+    ready, stale, why = await closing_bars_final(p.symbols, target, PRICE_SOURCE)
+    if not ready:
+        return why
+    px.loc[target, [c for c in px.columns if c not in ready]] = float("nan")
 
     rows = await asyncio.to_thread(compute_path, px, panel, list(p.barred), p.source, target)
     res = await supabase_upsert_table(TABLE, rows, on_conflict="d,arm")
@@ -175,4 +198,5 @@ async def run_once() -> dict[str, Any]:
         return {"ok": False, "refused": False, "written": 0, "reason": f"写入失败:{res.why}"}
     last = {r["arm"]: r["nav"] for r in rows if r["d"] == target.date().isoformat()}
     return {"ok": True, "refused": False, "written": len(rows),
-            "reason": f"重算至 {target.date()}", "nav": last, "barred": list(p.barred)}
+            "reason": f"重算至 {target.date()}", "nav": last, "barred": list(p.barred),
+            "stale_in_source": stale}
