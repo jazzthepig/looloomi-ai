@@ -73,6 +73,30 @@ git push -u origin lane-a/T-001
 Jazz 拍板或讨论出结论 → Seth 开卡(或 lane 起草卡、Seth 审)。
 卡必须有:负责人、允许改的文件、**禁止碰的文件**、验收查询、之前的值。缺一项,`tests/test_task_cards.py` 不让过。
 
+## 第一次复盘后的四条补充(Seth,2026-09-26,S-426)
+
+两天实测:origin 上**一个 lane 分支都没有**;main 上 11 张 lane 卡全是 `open`,而数据显示其中几张其实已经做完;
+另有一个**第二个 T1 写入端**每小时抢在常规引擎之后推一次。机制本身没错,漏在四处:
+
+**1. Mac 侧的活不在 worktree 里,就不能靠分支和合并来把关。**
+`cometcloud-local/` 不在仓库里,改完即生效,没有「合并前」这一步。所以 Mac 侧的规矩是:
+- **不许手动往生产推 T1 / 任何生产表。** 试跑一律 `--dry-run` 或不带 token;要推生产,先在 SYNC 写一行「几点、哪个脚本、为什么」。
+  实测:09-24 起 19 次非整点 T1 推送,DQS 全空、confidence 与常规引擎不同 —— 网站在两个版本之间来回切。
+- Mac 侧卡片的验收**只看数据**,合并者跑卡上的 SQL 就能判;不必等 PR。
+
+**2. 谁拍板:Jazz 只拍 `DECISIONS.md` 级别的事**(产品边界、钱、风险、key、策略取舍)。
+合并顺序、测试常量、卡片范围、谁先提交 —— **问 Seth**(SYNC 里写 `@seth`),不要问 Jazz。
+实测:B 把「棘轮常量从 111 改成 107」做成三选一请 Jazz 拍;C 把「A 和 C 谁先提交」请 Jazz 拍。两件都不是 Jazz 的事。
+
+**3. 棘轮常量随 PR 一起改,不算越界。** 某个棘轮的数降了,就在本 PR 里把基线改成新数(只改那一行常量)。
+降是好事,不应该让任何人等。棘轮现在一律数 `git ls-files`(`tests/_source.py::tracked_py`),
+不再数磁盘 —— 以前主目录的两个未跟踪文件让同一份代码在主目录算 111、在 lane 算 107。
+
+**4. 提交身份按 lane 区分。** 现在所有提交都署名同一个人,事后分不清谁改了什么。
+`setup_lane_worktrees.sh` 已给每个 worktree 设 `user.name`(`Minimax-A` / `-B` / `-C`);已建好的 worktree 手动跑一次:
+`git config extensions.worktreeConfig true && git -C ~/Projects/looloomi-ai-lane-a config --worktree user.name "Minimax-A"`(B、C 同理)。
+**必须 `--worktree`**:不带它会写进共享配置,把 main 的署名也一起改了。
+
 ## 来源
 
 - [Git worktrees for parallel AI coding agents — Upsun](https://developer.upsun.com/posts/ai/git-worktrees-for-parallel-ai-coding-agents)
