@@ -23665,3 +23665,21 @@ signal_journal / signal_outcomes / cg_coin_map 加了 `to anon, authenticated us
 
 **这次学到的:** 修一个守卫报的问题时,先读相邻守卫定下的姿态。我把「让它继续能读」当成默认要保住的,
 而这个项目明文规定的默认是「不能读」。
+
+## S-426 — 新工作模式两天复盘:机制没错,漏在 Mac 侧、拍板路由、棘轮数磁盘、署名
+
+**测得(2026-09-26 03:10 UTC):**
+- origin 上 lane 分支 **0 个**;main 上 11 张 lane 卡全 `open`。按卡上的 SQL 实测:T-002 已达标(24 小时有推送 ≥20)、
+  T-018 空快照 0/34(09-23 为 36/47)、T-001 部分(39/43 标的,TradFi 15/19)、T-007 仅 1 行 —— **做完的活没有回到 main,看板说的和数据说的不一样。**
+- **第二个 T1 写入端:** 09-24 起 19 次非整点 T1 推送(08:09、08:15、09:09 … 09-26 02:07、03:09),confidence 0.67/0.83/1.0
+  (常规引擎 0.70/0.85)、DQS 全空、BTC 分类 L1(常规 Crypto)。网站在两版之间每小时切一次,LAS 随之变。
+  这是 Mac 侧的手动/试跑直接写生产 —— worktree + 分支 + 合并这套只管仓库,**Mac 侧没有「合并前」这一步**。
+- B 的 preflight 红:裸日期棘轮在 lane worktree 数 107、在主目录数 111。**主目录多出的 4 处来自两个未跟踪文件**
+  (`src/data/reports/weekly_report.py`、`scripts/backtest_q_override.py`)。8 个棘轮都用 `rglob` 数磁盘,同一份代码在不同目录判决不同。
+- B、C 把实现层问题(测试常量、提交顺序)做成选项请 Jazz 拍。
+- 所有提交署名同一人,事后无法区分 lane。
+
+**改:** `tests/_source.py::tracked_py` —— 8 个棘轮改数 `git ls-files`;裸日期基线 111 → 107(仓库真值)。
+`docs/AGENT_WORKFLOW.md` 补四条:Mac 侧不许手动推生产、Mac 侧卡按数据直接验收;Jazz 只拍 DECISIONS 级;
+棘轮常量随 PR 改不算越界;提交按 lane 署名(`--worktree`,否则连 main 一起改名)。
+T-024(A,P0)找并停第二个写入端;T-002 按数据验收 done;T-001/T-007/T-009/T-018 写入实测值。
