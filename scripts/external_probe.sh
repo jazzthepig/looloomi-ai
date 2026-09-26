@@ -71,8 +71,14 @@ read -r STATUS SBSTATE WRITES WROLE <<<"$HS"
 # Retry once before failing: a probe that cries wolf gets muted, and a muted
 # probe is worse than none — it manufactures assurance. Both failure modes are
 # real; neither is traded away for the other.
+# Per-run body file. A fixed /tmp path survived between runs: on a connection
+# failure curl writes nothing, so a dead API reported the LAST GOOD asset count
+# and "universe=empty" could never fire (and a sticky-bit /tmp owned by another
+# user can't even be cleared). 2026-09-26.
+UBODY=$(mktemp); trap 'rm -f "$UBODY"' EXIT
 probe_universe() {
-  curl -sm 20 -o /tmp/_probe_u.json -w '%{http_code} %{time_total}' \
+  : >"$UBODY"
+  curl -sm 20 -o "$UBODY" -w '%{http_code} %{time_total}' \
     "$BASE/api/v1/cis/universe?limit=2" 2>/dev/null
 }
 read -r UCODE UTIME <<<"$(probe_universe)"
@@ -85,7 +91,7 @@ if [ "${UCODE:-000}" != "200" ]; then
   sleep 3; read -r UCODE UTIME <<<"$(probe_universe)"
   UMS=$(python3 -c "print(int(float('${UTIME:-99}')*1000))" 2>/dev/null || echo 99999)
 fi
-UN=$(python3 -c 'import json;print(len(json.load(open("/tmp/_probe_u.json")).get("universe",[])))' 2>/dev/null || echo 0)
+UN=$(python3 -c 'import json;print(len(json.load(open("'"$UBODY"'")).get("universe",[])))' 2>/dev/null || echo 0)
 [ "${UCODE:-000}" = "200" ] || FAILS+=("universe=http:${UCODE:-timeout}")
 [ "$UMS" -lt 8000 ]         || FAILS+=("universe=${UMS}ms")
 [ "$UN" -gt 0 ]             || FAILS+=("universe=empty")
@@ -102,7 +108,11 @@ try:
         if c.get("name") in ("upstream_scores_push","mac_mini_push"):
             m=re.search(r"(\d+)s",c.get("detail","")); print(int(m.group(1))//60 if m else -1); break
     else: print(-1)
-except Exception: print(-1)' 2>/dev/null || echo -1)
+except Exception: print(-1)' 2>/dev/null || true)
+# `|| true`, not `|| echo -1`: under pipefail a failed curl fails the pipeline even
+# though python already printed -1, so the old fallback appended a SECOND -1 and
+# `[ "-1\n-1" -ge 0 ]` crashed the test (2026-09-26, probe ran mid-deploy).
+PUSH=${PUSH:--1}
 [ "${PUSH:--1}" -ge 0 ] && [ "${PUSH}" -le 180 ] || FAILS+=("macpush=${PUSH}min")
 
 # ── 3b. price-feed freshness — the hole this probe originally had ────────────
@@ -122,7 +132,8 @@ OHLCV_D=$(curl -sm 15 "$BASE/internal/data-freshness" 2>/dev/null \
 try:
     d=json.load(sys.stdin).get("ohlcv_daily",{})
     a=d.get("age_days"); print(int(a) if a is not None else -1)
-except Exception: print(-1)' 2>/dev/null || echo -1)
+except Exception: print(-1)' 2>/dev/null || true)
+OHLCV_D=${OHLCV_D:--1}
 [ "${OHLCV_D:--1}" -ge 0 ] && [ "${OHLCV_D}" -le 3 ] || FAILS+=("ohlcv=${OHLCV_D}d")
 
 # ── 4+5. security regression — revoked 2026-07-30 (S-94), must STAY revoked ──
