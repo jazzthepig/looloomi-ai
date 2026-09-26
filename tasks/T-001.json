@@ -17,5 +17,6 @@
   },
   "prior_value": "24",
   "created": "2026-09-24",
-  "verified": null
+  "verified": null,
+  "notes": "S-426 测:T1 过去 2h 39 个标的(验收要 43),其中 TradFi 15 个(要 19)。部分完成,未过。"
 }

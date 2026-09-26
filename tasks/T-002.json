@@ -2,7 +2,7 @@
   "id": "T-002",
   "title": "确认 T1 每小时一批恢复",
   "owner": "lane-a",
-  "status": "open",
+  "status": "done",
   "source": "S-418",
   "allowed_paths": [
     "/Volumes/CometCloudAI/cometcloud-local/cis_scheduler.py"
@@ -16,5 +16,9 @@
   },
   "prior_value": "1(09-24 恢复当天)",
   "created": "2026-09-24",
-  "verified": null
+  "verified": {
+    "by": "seth",
+    "at": "2026-09-26",
+    "value": "24 个不同小时有 T1 推送(过去 24h),≥20 通过;Mac 侧卡按数据直接验收(S-426)"
+  }
 }

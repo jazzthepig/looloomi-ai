@@ -1,0 +1,22 @@
+{
+  "id": "T-024",
+  "title": "P0:找到并停掉第二个 T1 写入端(非整点推送,DQS 全空、confidence 不同)",
+  "owner": "lane-a",
+  "status": "open",
+  "source": "S-426",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "tests/"
+  ],
+  "acceptance": {
+    "check": "select date_trunc('hour',recorded_at) h, count(distinct date_trunc('minute',recorded_at)) pushes, count(*) filter (where data_quality_score is null) dq_null from cis_scores where data_tier='T1' and recorded_at > now()-interval '12 hours' group by 1 order by 1",
+    "expect": "每小时 pushes = 1 且 dq_null = 0,连续 12 小时"
+  },
+  "prior_value": "09-24 起 19 次非整点 T1 推送(08:09、08:15、09:09 … 09-26 02:07、03:09);这些推送 confidence 为 0.67/0.83/1.0(常规引擎是 0.70/0.85),DQS 全空,BTC 分类为 L1(常规为 Crypto)。网站在两版之间每小时切换一次。",
+  "notes": "先查:ps aux | grep -E 'cis_scheduler|cis_push|cis_v4' ;launchctl list | grep -i comet ;以及各 lane 是否在手动跑引擎。停掉后在 SYNC 写明是哪个进程、从哪个目录启动的。",
+  "created": "2026-09-26",
+  "verified": null
+}

@@ -18,5 +18,5 @@
   "prior_value": "只在 Mac 本地 cis_history.db,13 行",
   "created": "2026-09-24",
   "verified": null,
-  "notes": "T-008 已就绪(部署后可推)。date 是文本:事件行写 YYYY-MM-DD(UTC),论点行可写 ongoing,但最好补一个起始日期。"
+  "notes": "S-426 测:narrative_events 共 1 行(09-26 02:00 UTC)。验收 >0 字面通过,但 1 行不能说明监听器在持续写;连续 24h 有新行再验。"
 }

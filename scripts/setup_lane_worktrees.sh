@@ -15,6 +15,9 @@ for lane in a b c; do
     echo "✓ lane-$lane:$dir"
   fi
   [ -e "$dir/.env" ] || ln -s "$main_wt/.env" "$dir/.env"
+  # S-426:提交按 lane 署名。必须 --worktree(且开 worktreeConfig),否则写进共享配置,连 main 一起改名。
+  git config extensions.worktreeConfig true
+  git -C "$dir" config --worktree user.name "Minimax-$(echo $lane | tr a-z A-Z)"
 done
 # 绝对路径:钩子用主工作目录那份,lane 改不到自己的副本来绕过
 git config core.hooksPath "$main_wt/scripts/githooks"
