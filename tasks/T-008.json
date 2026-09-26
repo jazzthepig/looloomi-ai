@@ -2,7 +2,7 @@
   "id": "T-008",
   "title": "Railway 侧:新闻事件表 + mac_writes 白名单",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "source": "C 09-24 报告",
   "allowed_paths": [
     "src/api/routers/mac_writes.py",
@@ -17,6 +17,10 @@
   },
   "prior_value": "无",
   "created": "2026-09-24",
-  "verified": null,
-  "notes": "2026-09-24:表 narrative_events 已建(迁移 t008_narrative_events,RLS 开,anon 只读);mac_writes 加 narrative-events(on_conflict=event_id,重复推送是覆盖更新,不是忽略);顺带补 WRITES_TABLES,manifest 第一次看见 risk_meter_history / asset_embeddings_history。待部署后以 C 推送的第一行真实数据验收。"
+  "verified": {
+    "by": "seth",
+    "value": "POST /internal/mac-write/narrative-events(rows=[{event_id,date,event_type,narrative_tag,description,related_assets,source_round}])→ 200 verdict=ok n_written=1 n_rejected=0;write_log id=26527 outcome=ok writer=src.api.routers.mac_writes.mac_write;narrative_events 表里 verify 行落成功",
+    "at": "2026-09-26T02:01:00Z"
+  },
+  "notes": "2026-09-24:表 narrative_events 已建(迁移 t008_narrative_events,RLS 开,anon 只读);mac_writes 加 narrative-events(on_conflict=event_id,重复推送是覆盖更新,不是忽略);顺带补 WRITES_TABLES,manifest 第一次看见 risk_meter_history / asset_embeddings_history。**2026-09-26 verify**:Seth lane 实跑 schema(event_id/date/event_type/narrative_tag/description/related_assets/source_round),end-to-end ✅;曾误用 asset/headline/kind/occurred_at → 服务端「未知列拒绝」(verdict=failed,rejections 列全报),**这是 T-008 加的防御** —— 不会写一行看起来正常、实际缺列的数据。"
 }
