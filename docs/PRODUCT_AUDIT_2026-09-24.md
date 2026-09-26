@@ -45,7 +45,93 @@
   但读者看到的是矛盾。建议:卡片上的百分比标出跨度(24h),或叙事避免「strong momentum」这类与短期价格同屏会冲突的词。待开卡。
 - 待核:顶栏「CIS LIVE · 58 assets」—— T1 只覆盖 24 个加密标的(T-001 未完),其余是 T2 估算。「LIVE」是否该拆成 T1/T2 计数。
 
-## 待看
+## 路由审计(2026-09-26,本轮补充)
 
-Intelligence · Strategies · Protocols · Vault · Research Desk · Portfolio · API Keys · Portfolio Builder ·
-投资策略页 · MCP / agent 卡片 · 移动端其余两屏(Rankings / Signals)
+**SPA 入口只有一个:`/app.html`(2424 字节,加载 `assets/app-iOwRc3Gh.js`)。** Sidebar/SiteNav 全部 onNavigate 切 section,无独立 HTML。
+
+### 死链(6 个静态 URL)
+
+| URL | 状态 | 内容 |
+|---|---|---|
+| `/market.html` | 200 / 41121 | 落地页 |
+| `/cis.html` | 200 / 41121 | 落地页 |
+| `/vault.html` | 200 / 41121 | 落地页 |
+| `/protocol.html` | 200 / 41121 | 落地页 |
+| `/intelligence.html` | 200 / 41121 | 落地页 |
+| `/quant-gp.html` | 200 / 41121 | 落地页 |
+
+→ 全部转 T-021:删 OR 301→/app.html OR 410。
+
+### 死 API(4 个 404,SPA 不调用)
+
+| 路径 | SPA 是否调用 |
+|---|---|
+| `/api/v1/intelligence/signals` | ❌(SPA 用 `/api/v1/signals/feed`) |
+| `/api/v1/vault/positions` | ❌(SPA 用 `/api/v1/trading/positions`) |
+| `/api/v1/protocol/metrics` | ❌(SPA 用 `/api/v1/protocols/universe`) |
+| `/api/v1/quant/gp-status` | ❌(QuantMonitor 用 `/api/v1/trading/metrics` + `/trading/positions` + `/trading/order`) |
+
+→ 全部转 T-021:删 OR doc。
+
+### SPA 实际调用的 API(全部 200,2026-09-26 验证)
+
+```
+/api/v1/cis/universe                       → 58 universe(data_source=null,见 T-023)
+/api/v1/macro/brief                        → mb-3 内容(已修,T-017)
+/api/v1/market/crowd-clock                 → CrowdClock widget
+/api/v1/market/earnings-calendar           → EarningsCalendarWidget
+/api/v1/signals/dingge-board               → DinggeBoard
+/api/v1/signals/feed                       → SignalFeed
+/api/v1/protocols/universe                 → ProtocolIntelligence
+/api/v1/trading/metrics                    → QuantMonitor
+/api/v1/trading/positions                  → QuantMonitor
+/api/v1/trading/order                      → QuantMonitor
+/api/v1/defi/overview                      → ProtocolIntelligence(TVL)
+/api/v1/intelligence/macro-events          → IntelligencePage(VC Funding Flows)
+/api/v1/market/economic-indicators         → MacroBrief 周边
+```
+
+### Section 路由(Sidebar.jsx,8 个)
+
+`cis` / `intelligence` / `strategies` / `protocol` / `vault` / `quantgp` / `portfolio` / `api-keys` —— 全部由 SPA 客户端 onNavigate 切换。
+
+## 6 页结论(走 SPA 路径)
+
+### 1. CIS Engine(`/app.html` 默认)
+
+- ✅ 数据加载(CIS universe 58,合规用语 OK)。
+- 🟡 徽章颜色:全 ESTIMATED 灰;**T1/T2 不染色**(data_source=null)→ T-023。
+
+### 2. Intelligence
+
+- ✅ Macro brief 24h 变化对、零仓位建议(mb-3 验收已过)。
+- ✅ Signal Feed 接 `/api/v1/signals/feed`,合规用语通过。
+- 🟡 移动端 RECENT SIGNALS 卡片文案/百分比跨度冲突 → T-022。
+
+### 3. Strategies / Research Desk(QuantGP)
+
+- ✅ QuantMonitor 接 trading/positions/metrics/order,PAPER 仓位可见(2026-09-26 拉 POL/SOL 两条,unrealized +16.86% / +6.75%)。
+- ✅ EstAlphaSection:内容已就位。
+
+### 4. Protocols
+
+- ✅ ProtocolIntelligence 接 `/api/v1/protocols/universe` + `/defi/overview`,DeFi TVL 正常。
+
+### 5. Vault(`/app.html` + section `vault`)
+
+- 🔴 **VaultInProgress 占位**(2026-08-19 Jazz:「内容下,放着进度页」)。
+- 待 Jazz:是否解除(Vault 表全部 0 行,链上无仓位)。
+
+### 6. Portfolio / API Keys
+
+- 待核(本轮未走完)。
+
+## 已转任务卡
+
+- T-021:死链与遗留路由
+- T-022:移动端 RECENT SIGNALS 卡片
+- T-023:CIS universe Tier 标签
+
+## 剩余未看
+
+- Portfolio · API Keys · Portfolio Builder(`/portfolio.html`)· Score Analytics(`/analytics.html`)· Agent API(`/agent.html`)· Fund Strategy(`/strategy.html`)· 移动端 Rankings/Signal 屏

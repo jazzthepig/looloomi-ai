@@ -1,0 +1,20 @@
+{
+  "id": "T-022",
+  "title": "移动端 RECENT SIGNALS 卡片:百分比与文案跨度对齐(短时价格不和\"strong momentum\"同屏)",
+  "owner": "seth",
+  "status": "open",
+  "source": "T-014 audit 2026-09-24(移动端首屏)",
+  "allowed_paths": [
+    "dashboard/src/components/MobileApp.jsx",
+    "dashboard/src/components/SignalFeed.jsx"
+  ],
+  "forbidden_paths": [],
+  "acceptance": {
+    "check": "移动端 RECENT SIGNALS 卡片任一条目,百分比显式带 '24h' 后缀;文案不再用 'strong momentum' / 'surge' 这类暗示趋势的词在短时负百分比旁",
+    "expect": "DOM/截图: 卡片百分比后缀为 '24h' 或 '(24h)';文案与百分比跨度一致(避免 −7% 旁边写 'strong momentum')"
+  },
+  "prior_value": "MobileApp 卡片:'positions to outperform on strong momentum' 旁显示 −7.45% / −8.98%(百分比实为 24h,跨度与文案冲突)",
+  "created": "2026-09-26",
+  "verified": null,
+  "notes": "T-017 修了 NEUTRAL 全 null 与缺失 direction;本卡接 T-017 的下一处:卡片文案与百分比跨度的视觉冲突。文案可改为更稳定的词(类似 'tactically aligned with momentum signals')或明确 24h。"
+}
