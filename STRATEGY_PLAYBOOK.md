@@ -835,6 +835,15 @@ What this turn delivered:
 - Ledger entry S-217 documenting the SIM-vs-live distinction (lesson #67)
 - Honest §STRATEGY-DISCIPLINE 4-gate table updated with SIM column
 
+## Strategy ②-TOK — 代币化基础设施倾斜(Jazz 2026-09-26)— ⏳ 前向记录中,0/60 天
+
+**层级:** ② β+(只做倾斜,不做中性化)。**因:** 传统金融上链的长期增长先抬它经过的通路(预言机/跨链、发行、链上场所)—— Jazz 09-01(S-264)、09-26(S-427)。
+**账本:** `tokenization_tilt_daily`,两臂:`panel_hold`(① 24 币等权,基准)与 `tokenization_tilt_25`(75% 面板 + 25% 篮子)。
+**篮子:** LINK · ONDO · PENDLE · POLYX · AAVE · UNI · HYPE(QNT 场所未挂牌、MKR 已下架 → 研究用,不上账)。
+**规则:** 现货、无杠杆、每月 1 日 UTC 再平衡、换手 10 bps、起点 2026-09-25 收盘、每轮从起点无状态重算。
+**历史对照(不是证据):** 2022-10 → 2026-09 倾斜臂 +154% vs 面板 +78%,波动相近 —— 但篮子是事后挑的。
+**判据(预注册):** 倾斜臂 − 基准臂 的累计差,按 regime 分段报;≥60 个前向日才下结论。
+
 ## References
 
 - **R77 module**: `src/research/validation/r77_r76_as_fusion_contribution.py`
