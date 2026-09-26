@@ -82,3 +82,36 @@ def test_basket_matches_the_decision():
     assert set(tt.BASKET) == {"LINK", "ONDO", "PENDLE", "POLYX", "AAVE", "UNI", "HYPE"}
     assert set(tt.RESEARCH_ONLY) == {"QNT", "MKR"}
     assert tt.TILT == 0.25 and tt.INCEPTION == pd.Timestamp("2026-09-25")
+
+
+# ── 就绪判据(S-430):停写的源不进分母;半根不是终值;超过 30h 是失败 ──
+
+def _patch_rows(monkeypatch, rows):
+    from src.data.signals import hl_book_daily
+
+    async def fake(url_tail):
+        return rows
+    monkeypatch.setattr(hl_book_daily, "_supabase_get", fake)
+
+
+def test_dead_feed_is_excluded_and_reported(monkeypatch):
+    import asyncio
+    tgt = pd.Timestamp("2026-09-25")
+    live = [f"L{i}" for i in range(9)]
+    rows = [{"symbol": s, "trade_date": "2026-09-24", "recorded_at": "2026-09-25T02:00:00+00:00"} for s in live]
+    rows += [{"symbol": s, "trade_date": "2026-09-25", "recorded_at": "2026-09-26T02:00:00+00:00"} for s in live]
+    _patch_rows(monkeypatch, rows)              # DEAD 在这 3 天里一行都没有
+    final, stale, why = asyncio.run(tt.closing_bars_final(live + ["DEAD"], tgt, "x"))
+    assert why is None and stale == ["DEAD"] and final == set(live)
+
+
+def test_partial_bar_is_not_final(monkeypatch):
+    import asyncio
+    tgt = pd.Timestamp("2026-09-25")
+    syms = [f"L{i}" for i in range(10)]
+    rows = [{"symbol": s, "trade_date": "2026-09-24", "recorded_at": "2026-09-25T02:00:00+00:00"} for s in syms]
+    rows += [{"symbol": s, "trade_date": "2026-09-25", "recorded_at": "2026-09-25T03:02:00+00:00"} for s in syms]
+    _patch_rows(monkeypatch, rows)
+    final, stale, why = asyncio.run(tt.closing_bars_final(syms, tgt, "x"))
+    assert final is None and why is not None
+    assert "未就绪" in why["reason"] or "收盘后" in why["reason"]
