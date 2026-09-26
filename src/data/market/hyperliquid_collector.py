@@ -302,14 +302,24 @@ async def collect_venue_marks() -> dict[str, Any]:
 
     ts = started.replace(minute=0, second=0, microsecond=0).isoformat()
     rows, n_no_funding = [], 0
+    oi_rows, n_no_oi = [], 0
     for sym, a in (snap.get("assets") or {}).items():
         # I1:funding 是 None 表示**没量到**,不是 0。一个 0 funding 的永续
         # 和一个我们没读到 funding 的永续,在 carry 计算上是两个完全不同的结论。
         if a.get("funding_1h") is None:
             n_no_funding += 1
-            continue
-        rows.append({"symbol": sym, "funding_time": ts, "venue": SOURCE,
-                     "funding_rate": a["funding_1h"], "mark_price": a.get("mark")})
+        else:
+            rows.append({"symbol": sym, "funding_time": ts, "venue": SOURCE,
+                         "funding_rate": a["funding_1h"], "mark_price": a.get("mark")})
+        # T-012: OI persists alongside funding — venue_snapshot returns
+        # `open_interest` per perp since S-205 but it was being dropped. Same
+        # I1 discipline: None OI is "not measured", never 0.
+        oi = a.get("open_interest")
+        if oi is None:
+            n_no_oi += 1
+        else:
+            oi_rows.append({"symbol": sym, "snapshot_time": ts, "venue": SOURCE,
+                            "open_interest": oi})
 
     written = 0
     for i in range(0, len(rows), 2000):
@@ -319,15 +329,33 @@ async def collect_venue_marks() -> dict[str, Any]:
         else:
             break
 
+    # T-012: OI to its own table; same chunk + idempotent hourly bucket.
+    oi_written = 0
+    for i in range(0, len(oi_rows), 2000):
+        if await supabase_upsert_table(
+                "open_interest_history", oi_rows[i:i + 2000],
+                on_conflict="symbol,snapshot_time,venue"):
+            oi_written += len(oi_rows[i:i + 2000])
+        else:
+            break
+
     elapsed = round((datetime.now(timezone.utc) - started).total_seconds(), 1)
     return {
         "ok": bool(rows) and written == len(rows),
-        "n_perps": snap.get("n"), "rows_written": written,
+        "n_perps": snap.get("n"),
+        "funding_rows_written": written,
+        "oi_rows_written": oi_written,
         "n_missing_funding": n_no_funding,
+        "n_missing_oi": n_no_oi,
         "funding_time": ts, "elapsed_s": elapsed,
         "reason": (f"{snap.get('n')} 个永续一次请求 · 写入 {written} 行 funding"
                    + (f" · {n_no_funding} 个没读到 funding(记为未量到,不是 0)"
-                      if n_no_funding else "")),
+                      if n_no_funding else "")
+                   + f" · {oi_written} 行 OI"
+                   + (f" · {n_no_oi} 个没读到 OI" if n_no_oi else "")),
+        # Backward-compat: the loop print uses `rows_written` as funding count.
+        # Keep it as an alias so the live print format doesn't change.
+        "rows_written": written,
     }
 
 

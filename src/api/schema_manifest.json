@@ -36,6 +36,7 @@
     "nav_panel_daily",
     "nav_panel_rebalances",
     "ohlcv_daily",
+    "open_interest_history",
     "pod_aggregator_nav",
     "pod_aggregator_state",
     "regime_band_log",
@@ -50,16 +51,6 @@
     "vault_nav_tick",
     "wallet_profiles",
     "write_log"
-  ],
-  "rpc_functions": [
-    "catalog_inventory",
-    "deep_panel_symbol_list",
-    "deep_panel_symbols_fast",
-    "exec_backfill_forward_returns",
-    "panel_closes",
-    "panel_funding",
-    "refresh_depth_divergence",
-    "resolve_depth_divergence"
   ],
   "write_columns": {
     "beta_core_nav": [
@@ -187,5 +178,15 @@
       "note",
       "positions"
     ]
-  }
+  },
+  "rpc_functions": [
+    "catalog_inventory",
+    "deep_panel_symbol_list",
+    "deep_panel_symbols_fast",
+    "exec_backfill_forward_returns",
+    "panel_closes",
+    "panel_funding",
+    "refresh_depth_divergence",
+    "resolve_depth_divergence"
+  ]
 }
