@@ -15,6 +15,8 @@ for lane in a b c; do
     echo "✓ lane-$lane:$dir"
   fi
   [ -e "$dir/.env" ] || ln -s "$main_wt/.env" "$dir/.env"
+  # S-433:SYNC 与归档是 gitignored,不链进来 lane 就各写各的副本(分裂)。一律写主目录那份。
+  for f in MINIMAX_SYNC.md MINIMAX_SYNC_ARCHIVE.md; do [ -e "$dir/$f" ] || ln -s "$main_wt/$f" "$dir/$f"; done
   # S-426:提交按 lane 署名。必须 --worktree(且开 worktreeConfig),否则写进共享配置,连 main 一起改名。
   git config extensions.worktreeConfig true
   git -C "$dir" config --worktree user.name "Minimax-$(echo $lane | tr a-z A-Z)"

@@ -1,0 +1,23 @@
+{
+  "id": "T-032",
+  "title": "M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起)",
+  "owner": "seth",
+  "status": "open",
+  "source": "M-189 / T-011",
+  "allowed_paths": [
+    "src/data/signals/hl_book_daily.py",
+    "paper_trading/hl_book.py",
+    "tests/",
+    "paper_trading/tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "hl_book_daily 每行 nav jsonb 含 SIZE_fixed / SIZE_volformula 两臂;回放脚本出 4 项报告(基准=H0_hold、分 regime、n≥30、成本按换手)",
+    "expect": "两臂前向在写;回放报告写进台账"
+  },
+  "prior_value": "M-189 只有预注册,没有任何实现",
+  "created": "2026-09-27",
+  "verified": null
+}
