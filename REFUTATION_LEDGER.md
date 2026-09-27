@@ -23779,3 +23779,113 @@ t 收盘出信号、t+1 收盘成交;成本 10 bps × 换手,两臂同扣;基准
 也不被悄悄吞掉。两本前向账共用。停写 5 币另开卡(T-031)。
 
 **这一类:** 又一个「看起来有值」的字段 —— `recorded_at` 一直有值,只是回答的不是我们以为的那个问题。
+
+## S-431 — 8h K 线 20/60/365 根不比日线更好;周频的头条数字里有 5.6 个点是「星期几」运气 → 改为 7 份分批
+
+**Jazz:** 「20/60/365 日 K 的验证对于 crypto 可能有点长,缩短看 8h 的 20/60/365 呢?」
+
+**数据/口径同 S-428**,但用 Binance 8h K 线(2019-10 起,24 币,补 8h 日历),信号在 bar 收盘、下一根 bar 收盘成交,再平衡 8h / 日 / 周三档。
+脚本 `s431_beta_plus_8h.py`、`s431_timing_luck.py`、`s431_book_reproduces_research.py`。
+
+**8h 结果(24 个变体):**
+- **20 根(≈6.7 天)失败**:样本外 −6.6% ~ −14.8%/年(与日线 7 天动量同向)。
+- 60 根(≈20 天):全样本 +15.0%(日再平衡)但样本外只有 +4.9%。**365 根(≈122 天)最稳**:三档再平衡每年为正,2026 +6~7%。
+- 8h 组合 + 52 周高点(日再平衡)+15.8% ≈ 现行日线信号在同一网格上 +16.1%。**缩短窗口没有带来改进。**
+- **每 8h 再平衡全部更差**(年换手 90–170×,成本吃掉超额)。
+
+**顺带发现(更重要):** 现行信号周频在 8h 网格上 +11.4%,日线研究里 +17.2% —— 差别只是一周内哪天哪个时点成交。
+日线数据上把再平衡日从周一换到周日逐个跑:**+13.6%(周六)到 +19.2%(周三)**。头条数字的一部分是择时运气。
+**7 份分批**(每份一个星期几,每天调 1/7):+16.6%、t 3.29、样本外 +8.7%、最差 12 个月 +0.2%、相对最大回撤 −11.0%(周一单批 −14.1%),
+年换手不变 12.9×。
+
+**改(账本未推送、无前向数据,预注册在第一行之前改):** `beta_plus_daily` 周频两臂改为 7 份分批(CODE_REF v2)。
+账本 `compute_path` 从 2020-07 起跑历史,与研究脚本**逐位一致**:周分批 +16.7% / t 3.12,月频 +15.6% / t 2.62。
+基准:同日程等权面板;regime:BTC 200 日线分段(8h 表已报);判据:≥60 前向日。
+
+## S-432 — 强势标的「等 2 天回撤、站稳再买」不增厚;限价单的正值是撮合假设的产物;弱势标的等反弹再卖显著更差
+
+**Jazz 09-26:** 短期技术位置直接介入胜率低;强势标的 2 天内回撤完毕、在支撑处反弹 —— 进入观察的标的怎样通过交易优化增厚?
+
+**定位:** ② β+ 的执行时点层 —— 目标权重不变(β 不变),只决定每笔加仓在 2 天内何时成交;等待中资金留在面板;
+统一在 t+5 天 / t+14 天结算,**错过的涨幅计入**。基准:下一根 8h 收盘立即成交。
+数据:Binance 8h OHLC 2019-10 → 2026-09,24 币;事件 E1 = 信号前 1/3(16,629 个)、E2 = 新进入前 1/3(1,770)、S = 后 1/3(15,497)。
+脚本 `src/research/validation/s432_pullback_entry.py`(含 run_extra)。按周聚类的 t。
+
+**结果(bps = 每事件相对立即成交的改善,5 天结算;14 天结论相同):**
+
+| 情景 | E1 | t | 说明 |
+|---|---:|---:|---|
+| R1 Jazz 规则(延伸 → 回撤 → 收盘收复前高 → 支撑,时间止损)8 格 | −2.5 ~ +0.1 | ≤0.4 | **无改善**;E2 −1.8 ~ +1.8,均不显著 |
+| R3 纯延迟 1 天 / 2 天 | −3.1 / −7.4 | −1.8 | 强势币在漂移向上,**等本身有成本** |
+| R4 Jazz 规则不设延伸门槛 | +2.9 | 0.7 | 54% 的强势事件 2 天内收盘跌破 SMA20 被取消 |
+| R5 Jazz 规则用于所有币 | +0.6 | 1.1 | 「强势」这个条件没有带来差别 |
+| R2 限价 −0.75 ATR(触价即成交) | +9.3 | 2.0 | 样本内/外、牛/熊都为正 —— **但见下** |
+| R2 同上,**要求穿价 0.1 ATR 才成交** | **−12.9** | **−2.5** | 翻号 |
+| S1 卖出:超卖时等反弹再卖 | **−1.9 ~ −2.6** | **−2.7 ~ −3.6** | **弱势币继续跌,等反弹卖显著更差** |
+
+**读法:**
+1. Jazz 描述的形态**确实常见**:延伸的强势事件里约 71% 在 2 天内回撤 ≥0.75 ATR 并收复前一根高点。
+   **但它不能被利用** —— 收复时的价格 ≈ 立即成交的价格:确认把回撤的折扣还了回去。便宜的点是回撤低点,而低点只能靠限价单拿。
+2. 限价单在「触价即成交」下 +9 bps,要求穿价 0.1 ATR 就 −13 bps。**触价成交的正值来自那批刚好在限价反弹的单子**,
+   现实里排队不一定成交,真正成交的是继续下跌的那些(逆向选择)。**不采纳。**
+3. 卖出侧是本轮唯一稳健的结论:**减仓立即执行**,不要等反弹。
+
+**执行层结论(写进账本口径,不需要新代码):** 加仓按下一根收盘成交(或短 TWAP),不追也不等;减仓立即。
+按账本年买入换手 ~6.5× 折算,即便最乐观的限价假设也只有 +0.6%/年,远小于倾斜本身 —— β+ 的收益来自「持什么」,不来自「几点买」。
+**Jev 的位置:** 若要让 Jev 判断「这次回撤健康与否」,基线就是本条的 R1/R3 —— 机械版已为零,Jev 需要在穿价口径下为正才有意义。
+基准:下一根 8h 收盘立即成交;regime:BTC 200 日线上/下分段(各情景同号);判据:按周聚类 t > 2 且穿价口径下为正 —— 无一情景通过。
+
+## M-189 (lane-b, 2026-09-26;Seth 09-27 合并自 `lane-b/T-011` b2cb105)— Jev 仓位乘数对照线:4 级基准预注册 (T-011)
+
+> **合并者注(Seth):** 原编号 M-97 与 C 的 `_reports` 里已有的 M-97(ρ→1 covariance stress)撞号,合并时改为 M-189(AGENT_WORKFLOW:编号在合并时分配)。「cost realism」一行原写「+10 bps/day」,已改为按换手计 —— 按天计会让每个基准每年多扣 36.5%,任何乘数都比不过。其余原文不动。
+
+**来源:** T-011 acceptance.check(对 B 的讨论 2026-09-23,卡见 tasks/T-011.json)。
+**目的:** pre-register 4 baselines 让 Jev 仓位乘数对照线 honesty 可证伪;Outter spec 上线前不报 "Jev wins"。
+
+**Scope (T-011 限定):** deliverable = ledger 段;`src/data/signals/hl_book_daily.py` 不在本卡改(`T-011.expect`: 合并者确认后 Seth 接进 hl_book_daily)。
+
+### 4 baselines (fixed / vol-formula / online-learning / Jev)
+
+| # | Baseline | 公式 / 参数 | 适用 scope | 历史实证参考 |
+|---|----|---|---|---|
+| 1 | 固定参数 (fixed) | `size_mult = 1.0` 恒定 | control | n/a |
+| 2 | 波动率公式 (vol-formula) | `size_mult = 1.0 × clamp(target_vol / realized_vol_30d, 0.5, 1.5)` | 标准 vol-targeting 公式派 | S-409 vol-targeting fail(main 0.90 vs hold 0.93; bear 1.05 vs 1.28) |
+| 3 | 在线学习 (online-learning) | `bandit(arm ∈ {0.5, 0.7, 1.0, 1.3, 1.5}, ctx=30d OHLCV summary); Thompson sample` | 多 arm 自适应,但纯机械 | n/a in codebase;new build |
+| 4 | Jev (model-based) | `size_mult = Jev(state) ∈ {0.7, 1.0, 1.3}; state = state machine over 4 confirm signals(§5b 那套)+ 3 invalidation layers` | 上下文敏感 AI 调整 | Outter v1 framework(后续 T-018+) |
+
+### 判据 (per-baseline 必须输出的报告项)
+
+每个 baseline 跑同一窗口(默认 `hl_book_daily` paper 周期),以下 signature 必须自报:
+
+| 项 | 强制报告 |
+|---|---|
+| 基准 SR 窗口 | baseline = "hold the panel"(`HIGH_DIM_ONTOLOGY.md` §5b ①),**不是** 0 |
+| regime-conditional | RISK_ON / NEUTRAL / RISK_OFF 三段分别出 SR(per `ARCHITECTURE.md` §5b),不可只合并报总 Sharpe |
+| n_periods | ≥30(统计学最低限) |
+| cost realism | 成本 = 换手 × 10 bps(与 hl_book / beta_plus 同口径;**不是**按天计) |
+| lag discipline | `lag_discipline_pass` retention ≥ 0.5 + SR ≥ 0.05(M-114 contract);lag-1 底线,lag-0 = look-ahead 直接 REJECT |
+| early-exit 触发 | 任一 baseline 触发 hard-stop / 流动性干涸 时,必须报告 early-exit 次数与时间 |
+
+### Hypothesis test (pre-registered)
+
+- **H1:** Jev's IC contribution ≠ 0 independent of state-machine signal(对照组 = fixed baseline)。Reject null → Jev 是独立贡献,不是 state machine 记账。
+- **H2:** Asymmetric size_mult(1.3 / 1.0 / 0.7)在 PRESS/CONFIRMED state 下产生 better SR/Calmar over symmetric baseline(对照组 = vol-formula, online-learning)。
+
+### Acceptance signature
+
+ledger entry 完成后,4 baseline run results 写到 ledger 后段(编号合并时分配;本条是预注册段)。
+Seth merge + 接 `hl_book_daily` 后实跑出 SR / MaxDD,才能开 `[verified]`。
+
+## S-433 — 第一次合并 lane 的活:三个 lane 三种走法,两处机制缺口
+
+**B(T-011):** 第一个真正推到 `origin/lane-b/*` 的 lane 分支。内容合格,两处问题:编号 M-97 与 C `_reports` 里的 M-97 撞号;
+「cost realism +10 bps/day」按天计成本(应按换手)。分支基于 b067135,改了 `PROJECT_STATE` 表头并在台账末尾追加 —— 与主干冲突两处。
+**处理:** 合并者把内容并入 main(改号 M-189、修成本行、注明出处 b2cb105),分支可删。T-011 按卡验收 done;接进 hl_book 另起 T-032。
+**A(T-022,卡 owner 是 seth):** **直接在主工作目录改**(MobileApp.jsx / preflight.sh / 新测试 / 卡),并给 Jazz 一个直推 main 的 handoff —— 绕过 worktree 与合并。
+内容合格(24h 后缀 + 守卫),合并者接收并重建 dist;后半(后端叙事「strong momentum」)未做,卡留 in_review。
+**C:** 自己把越界的 M-180 archive 掉,并问边界 —— 答复见 SYNC §S-433:研究在 C,生产在 Seth,**缺的是「spec → 评审 → 再跑」这一步**。
+
+**机制缺口:** ① `MINIMAX_SYNC.md` 是 gitignored,worktree 只链了 `.env` —— lane 相对路径写 SYNC 就会写进自己的副本。
+这次 B 写进了主目录那份(查过,无分裂),但只是运气;`setup_lane_worktrees.sh` 现在把 SYNC 与归档也链进去。
+② 我自己的 S-431 两个研究脚本在 import 时读 `/tmp/s428`,Jazz 机器上 preflight 的 research-import 守卫红 —— 改为 `main()`;
+隐藏 `/tmp/s428` 复现 Jazz 环境后 202 个模块 import 通过。
