@@ -97,6 +97,10 @@ Jazz 拍板或讨论出结论 → Seth 开卡(或 lane 起草卡、Seth 审)。
 `git config extensions.worktreeConfig true && git -C ~/Projects/looloomi-ai-lane-a config --worktree user.name "Minimax-A"`(B、C 同理)。
 **必须 `--worktree`**:不带它会写进共享配置,把 main 的署名也一起改了。
 
+**5. 审阅结论写在卡上,不只写在 SYNC(S-433e)。** 09-27:C 的 spec 审阅写在 SYNC §S-433b(就在 C 的 spec 段下面 33 行),
+C 按「下一个 S- 编号」去搜,没找到,于是把「等审阅」当成现状又问了一轮。**找回复一律搜卡号(`grep T-005`)**;
+合并者给出的裁决同时写进卡的 `notes` —— 开工先读卡,就不会漏。
+
 ## 来源
 
 - [Git worktrees for parallel AI coding agents — Upsun](https://developer.upsun.com/posts/ai/git-worktrees-for-parallel-ai-coding-agents)
