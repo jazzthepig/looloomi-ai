@@ -27,7 +27,11 @@ _PILLAR_NAME = {
 }
 _STRONG = {
     "F": "solid fundamentals",
-    "M": "strong momentum",
+    # T-033 (2026-09-27): "strong momentum" implied a short-window trend and
+    # conflicted visually with a negative 24h % next to the same asset on the
+    # mobile / desktop leaderboard (T-022 prior_value). Replaced with
+    # structural phrasing — doesn't tie to any specific window.
+    "M": "constructive momentum profile",
     "O": "a clean risk-adjusted profile",
     "S": "constructive sentiment",
     "A": "strong relative alpha",

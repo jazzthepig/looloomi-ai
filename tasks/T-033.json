@@ -1,0 +1,24 @@
+{
+  "id": "T-033",
+  "title": "后端 CIS narrative 短句措辞:避免短期 trend 词与负 24h% 同屏(T-022 后半)",
+  "owner": "seth",
+  "status": "in_review",
+  "source": "T-022 后半(Seth 09-27 review:phrase 来自 src/data/cis/narrative.py)",
+  "allowed_paths": [
+    "src/data/cis/narrative.py",
+    "src/data/cis/cause_proximity.py",
+    "src/data/market/protocol_engine.py",
+    "tests/test_cis_narrative_phrasing.py"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "当 signal=OUTPERFORM 且 24h change < -3% 时,deterministic narrative(LLM fallback)不含 'strong momentum' / 'positions to outperform on strong momentum' 这类 short-window trend 词;改为不依赖短期 trend 的稳定措辞(类似 'strong structural profile' / 'constructive momentum read')。",
+    "expect": "deterministic narrative 在 OUTPERFORM + 负 24h 条件下仍合规 + 不与百分比跨度冲突;不破坏 desktop CIS leaderboard narrative 既有体验(LLM 路径不受影响)"
+  },
+  "prior_value": "T-022 前半(pct24h 后缀)shipped。Seth 09-27 review:'strong momentum' 文本来自后端 CIS narrative(cis.py narrative.py 按支柱生成),前端后缀改不了。acceptance 要求文案与百分比跨度一致 —— 需改后端叙事措辞。",
+  "created": "2026-09-27",
+  "verified": null,
+  "notes": "phrase 来源 src/data/cis/narrative.py:30 `_STRONG['M']='strong momentum'` + line 45 `_SIGNAL_PHRASE['OUTPERFORM']='positions to outperform'`,被 build_asset_narrative() 拼成 'XXX positions to outperform on strong momentum'。T-022 是 mobile 卡片文案/百分比冲突,本卡接其后半——把这俩 phrase 改为 structural 措辞(不依赖 24h 趋势)。如果 LLM narrative(Gemma)还在,narrative_source=llm 不受影响——只影响 fallback 路径,符合 T-022 acceptance 的后半(LLM down 时的叙事兜底)。合规(CLAUDE.md rule 1):保持 positioning language,不引入 buy/sell/hold。测试:deterministic narrative 对 5 种 (signal, 24h 区间) 组合做 grid,确认 negative-24h 不再叠 short-window trend 词。 | 作者自报(未经部署后验收,Seth 合并者 09-27 移出 verified):shipped: src/data/cis/narrative.py `_STRONG['M']='strong momentum'` → `'constructive momentum profile'` (T-033 marker in inline comment);`_SIGNAL_PHRASE['OUTPERFORM']` 保留 'positions to outperform' (CLAUDE.md rule 1 合规 positioning language)。`_WEAK['M']='fading momentum'` 不动(acceptance scope 外,但 pinned 防回归)。tests/test_cis_narrative_phrasing.py 21/21 PASS:source-level dict guard + 5-row grid (signal × M × 24h<0,含 ETH-7.45% / AVAX STRONG-OUTPERFORM -8.98% prior_value case)+ NEUTRAL path 不破 + S-244 文本守卫全文件无 'strong momentum' 字面。LLM path (narrative_source='llm') 不受影响 —— 只 deterministic fallback 换 phrase。preflight stage 3 已注册。"
+}
