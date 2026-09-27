@@ -415,6 +415,51 @@ async def get_ohlcv(symbol: str, days: int = Query(90, ge=1, le=730)):
 
 # ── S-258: CoinGecko Pro 深盘回填 ─────────────────────────────────────────────
 
+@router.post("/internal/backfill-deep-panel")
+async def backfill_deep_panel(
+    days: int = Query(default=400, ge=14, le=1500, description="回看天数"),
+    symbols: str = Query(default="", description="逗号分隔;空 = ① 面板 24 币(T-030 的范围)"),
+    dry_run: bool = Query(default=True, description="默认 dry_run —— 写入要显式要求"),
+    x_internal_token: str = Header(None),
+):
+    """T-030(2026-09-27):用**同一个**写入端(`deep_panel_collector.collect_deep_panel`,source='binance_hist')
+    按更长的窗口补历史缺口。不是第二条摄入路径 —— 同一函数、同一 upsert、同一 write_log。
+
+    **为什么要这个端点:** binance_hist 过去一年整天缺 41 天(最后一次 09-06)。采集器每天只重写 14 天,
+    自愈只在**前沿**出现缺口时放大窗口(最多 180 天)—— 历史内部的洞它看不见,也就永远不补。
+    β+ 账本(S-429)与 C 的 T-005 研究都读这个源。
+
+    **后台执行:** 请求经 Cloudflare 有 100s 上限,这里立即返回,结果看 `write_log`(writer=_upsert_ohlcv 同族)
+    与 `select symbol, count(*) from ohlcv_daily where source='binance_hist' …`。
+    值不变的重写不会刷新 `recorded_at`(S-430 触发器),所以补洞不会污染 PIT。
+    """
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    if symbols.strip():
+        syms = [x.strip().upper() for x in symbols.split(",") if x.strip()]
+    else:
+        from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE
+        syms = list(DEFAULT_UNIVERSE)
+    plan = {"source": "binance_hist", "days": days, "n_symbols": len(syms), "symbols": syms}
+    if dry_run:
+        return {"dry_run": True, **plan, "note": "加 ?dry_run=false 才会真正抓取并写入"}
+
+    from src.data.market.deep_panel_collector import collect_deep_panel
+
+    async def _run():
+        try:
+            r = await collect_deep_panel(days=days, symbols=syms)
+            _logger.warning("[DEEP-BACKFILL] days=%s symbols=%s → %s", days, len(syms),
+                            {k: r.get(k) for k in ("symbols_ok", "symbols_failed", "rows_written", "status")})
+        except Exception as e:                                    # noqa: BLE001
+            _logger.error("[DEEP-BACKFILL] failed: %s: %s", type(e).__name__, e)
+
+    asyncio.create_task(_run())
+    return {"dry_run": False, "started": True, **plan,
+            "verify": "select symbol, count(*) from ohlcv_daily where source='binance_hist' "
+                      "and trade_date >= current_date - %d group by 1" % days}
+
+
 @router.post("/internal/backfill-cg-pro")
 async def backfill_cg_pro(
     dry_run: bool = Query(default=True, description="默认 dry_run —— 写入要显式要求"),

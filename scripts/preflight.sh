@@ -1376,6 +1376,8 @@ python3 -m tests.test_cis_narrative_phrasing || {
 # T-021 (2026-09-26 audit): 6 个死链 .html 301 → /app.html,4 个 dead API
 # 在 main.py 留 doc 注释(catch-all _api_prefixes → 404)。S-244 family:
 # "test 存在 ≠ test 跑" —— 必须在 preflight 阶段 3 实际执行,否则回归悄无声息。
+python3 -m pytest -q tests/test_snapshot_never_writes_t1.py tests/test_backfill_deep_panel_route.py || {
+  echo "  ✗ T-024 快照不写 T1 / T-030 补洞端点 — do not push"; exit 1; }
 python3 -m tests.test_pages_redirects || {
   echo "  ✗ T-021 Pages _redirects 与 FastAPI 死链表不一致 — do not push"; exit 1; }
 python3 -m tests.test_t021_dead_routes || {
