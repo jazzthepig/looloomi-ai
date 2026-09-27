@@ -2,7 +2,7 @@
   "id": "T-029",
   "title": "② β+ 动量 + 52 周高点前向账本上线(四臂)",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "source": "S-429",
   "allowed_paths": [
     "src/data/signals/beta_plus_momentum.py",
@@ -33,6 +33,10 @@
   },
   "prior_value": "② 从未建过前向账本;S-428 研究周频 +17.2%/年(t 3.22)",
   "created": "2026-09-26",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-09-27",
+    "value": "beta_plus_daily 四臂各 2 行(09-25、09-26);09-26 NAV:momentum_52w_w/m 0.99415,panel_hold_w/m 0.99769(不同,判据满足)。第 1 天差异是噪声 + 起点 10 bps,不是结论。"
+  },
   "notes": "S-430:部署前发现 recorded_at 语义问题(首次插入时间),已加触发器;两本账就绪判据排除停写的源。首行预计在下一根收盘终值写入后出现。 S-431:周频改为 7 份分批(择时运气 5.6 个点),账本跑历史与研究逐位一致。"
 }
