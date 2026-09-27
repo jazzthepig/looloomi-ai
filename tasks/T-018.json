@@ -18,6 +18,6 @@
   },
   "prior_value": "09-23:47 份里 36 份快照为空({}),39 份写「平静」;Mac 副本 mb-2",
   "created": "2026-09-24",
-  "notes": "S-426 测:过去 24h Mac 简报 34 份,空快照 0 份(此前 09-23 为 36/47)。prompt_version=mb-3 待 A 在 SYNC 报一行 Mac 日志后置 done。",
+  "notes": "S-426 测:过去 24h Mac 简报 34 份,空快照 0 份(此前 09-23 为 36/47)。A 09-27 SYNC §IN-FLIGHT T-018 段:token + 空快照 2/3 已证(token:macro_brief_push.py:280 字面;空快照:S-426 实测 + should_regenerate 结构)。prompt_version=mb-3 待 Mac 重拷 `src/api/contracts/macro_brief.py` → `/Volumes/.../macro_brief_contract.py`(Seth §T-017 9-24 要求,3 天未做,文件头自证仍 mb-2 + Replication date 2026-08-20)。最小 Mac 动作块见 SYNC。关闭:Seth 在此填 verified。",
   "verified": null
 }
