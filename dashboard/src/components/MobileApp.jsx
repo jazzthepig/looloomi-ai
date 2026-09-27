@@ -159,10 +159,23 @@ function formatAge(seconds) {
   return `${Math.round(seconds / 3600)}h ago`;
 }
 
-function pct(v) {
+/** Format helpers.
+ *  `_pct()` is the raw "+1.23%" formatter (no window suffix). All call sites
+ *  that show a user-facing percentage MUST go through a window-aware wrapper
+ *  (e.g. `pct24h`) — bare `_pct()` in JSX is a S-244 guard violation (T-022).
+ */
+function _pct(v) {
   if (v == null || isNaN(v)) return "—";
   const sign = v >= 0 ? "+" : "";
   return `${sign}${v.toFixed(2)}%`;
+}
+
+/** 24h change: window suffix makes short-window % unambiguous vs sparkline
+ *  (7d). T-022: prior bug was bare `+1.23%` next to a 24h value — looked like
+ *  a 7d sparkline at the same magnitude. */
+function pct24h(v) {
+  const s = _pct(v);
+  return s === "—" ? s : `${s} (24h)`;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -414,7 +427,7 @@ function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }
                       color: change >= 0 ? T.green : T.red,
                       marginTop: 2,
                     }}>
-                      {pct(change)}
+                      {pct24h(change)}
                     </div>
                   )}
                 </div>
