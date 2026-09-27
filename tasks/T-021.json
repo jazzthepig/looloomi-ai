@@ -2,7 +2,7 @@
   "id": "T-021",
   "title": "死链与遗留路由:6 个静态 .html 200/41121(全返落地页)+ 4 个 SPA 不用的 API 返 404",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "source": "T-014 audit 2026-09-26",
   "allowed_paths": [
     "dashboard/src/",
@@ -16,6 +16,10 @@
   },
   "prior_value": "/market.html 200/41121,/cis.html 200/41121,/vault.html 200/41121,/protocol.html 200/41121,/intelligence.html 200/41121,/quant-gp.html 200/41121;SPA shell 在 /app.html(2424 字节);Sidebar/SiteNav 全链 /app.html;4 个 API 全 404 但 SPA bundle 不调用",
   "created": "2026-09-26",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-09-27T07:33Z",
+    "value": "looloomi.ai(Cloudflare Pages)6 个 .html 全部 301 → /app,跟随后 200;/cis、/intelligence 深链仍 200;Railway 源站 6×301、4 个死 API 404。Pages 在推送后约 4 分钟生效(c93b9eb 07:28 推,07:32 生效)。"
+  },
   "notes": "Audit 时点 curl 测得所有 6 个 .html 都 200/41121 = 落地页(不是 SPA 分支入口)。SPA 是单页客户端路由,SECTIONS 由 Sidebar.jsx onNavigate 切换,无对应独立 HTML。旧邮件/博客/SEO 链接若指过这些路径,要么 301 到 /app.html 要么 410。/agent.html、/portfolio.html、/analytics.html、/strategy.html、/privacy.html 是另一组(TOOL_LINKS 仍链),不在本卡范围内。Dead API(/intelligence/signals 等)SPA 不调用 → 死代码,删或 doc。 | 作者自报(Minimax-A,未经部署后验收;合并者 09-27 移出 verified):{\"by\": \"seth\", \"at\": \"2026-09-27\", \"summary\": \"shipped in sandbox: (1) src/api/main.py 添加 _DEAD_HTML_REDIRECTS dict (6 条 .html → /app.html) + dead API doc comment (4 条 + 真替代路径); (2) import 加 RedirectResponse; (3) serve_spa() 第一行加 `if full_path in _DEAD_HTML_REDIRECTS: return RedirectResponse(...)` —— 顺序在 _api_prefixes 守卫之前; (4) tests/test_t021_dead_routes.py 新建,33/33 PASS(源级 + S-244 family); (5) scripts/preflight.sh stage 3 已注册。Mac-side 待 commit + push + Railway 部署后 verify。S-244 family 同款 'test 存在 ≠ test 跑' —— 必须在 preflight 跑。\"} | Seth 09-27 部署后验:Railway 源站 6×301 ✓、4×404 ✓;但 looloomi.ai 仍 6×200 —— 页面由 Cloudflare Pages 提供(/app.html→308→/app),FastAPI 的 301 到不了。已补 dashboard/public/_redirects(6 条 → /app 301)+ tests/test_pages_redirects.py 保持两处同步。另:用 curl -I(HEAD)验会误判 —— FastAPI 对 HEAD 回 405,Cloudflare 自己回 200;验收一律用 GET。"
 }
