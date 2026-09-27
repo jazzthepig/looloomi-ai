@@ -20,5 +20,5 @@
   "prior_value": "20 个币各缺 41 天,ETC/SUI/TRX 29 天,BCH 17 天",
   "created": "2026-09-26",
   "verified": null,
-  "notes": "09-27 Seth:加 /internal/backfill-deep-panel(同一写入端 collect_deep_panel,默认 dry_run,后台跑,默认 ① 24 币)。部署后由 Jazz 带 token 调一次 days=400&dry_run=false;再按卡上判据查缺失天数 = 0。C 的 T-005 读这个源。"
+  "notes": "09-27 Seth:加 /internal/backfill-deep-panel(同一写入端 collect_deep_panel,默认 dry_run,后台跑,默认 ① 24 币)。部署后由 Jazz 带 token 调一次 days=400&dry_run=false;再按卡上判据查缺失天数 = 0。C 的 T-005 读这个源。 | 09-27 15:36 UTC 查:回填**尚未执行** —— 缺失仍 924 币日(最多 41),write_log 里部署后只有启动时的常规 collect_deep_panel(1,930 行)。端点在两个域名都活(无 token → 401)。最可能:curl 时 shell 里没有 INTERNAL_TOKEN,发出空头 → 401。"
 }
