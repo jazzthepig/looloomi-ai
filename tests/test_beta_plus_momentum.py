@@ -44,17 +44,28 @@ def test_signal_prefers_winners_near_their_high():
 
 def test_preregistration_is_pinned():
     assert set(bp.ARMS) == {"panel_hold_w", "momentum_52w_w", "panel_hold_m", "momentum_52w_m"}
+    assert bp.ARMS["momentum_52w_w"] == ("W7", True) and bp.TRANCHES == 7
     assert bp.K == 1.0 and bp.COST_BPS == 10.0 and bp.MIN_HIST == 180
     assert bp.INCEPTION == pd.Timestamp("2026-09-25") and bp.PRICE_SOURCE == "binance_hist"
 
 
-def test_signal_monday_trades_tuesday_not_same_day():
-    px = _prices()
-    rows = bp.compute_path(px, PANEL, "t")
+def test_weekly_is_seven_tranches_trading_the_day_after_their_signal():
+    """S-431:周频 = 7 份分批。起点(09-25 周五)全部建仓;09-26 各份刚出信号、无人成交;此后每天有一份成交。"""
+    rows = bp.compute_path(_prices(), PANEL, "t")
     w = {r["d"]: r for r in _rows(rows, "momentum_52w_w")}
-    assert w["2026-09-28"]["signal"] is not None and not w["2026-09-28"]["traded"]   # 周一出信号
-    assert w["2026-09-29"]["traded"]                                                   # 周二成交
-    assert not any(w[d]["traded"] for d in ("2026-09-30", "2026-10-01", "2026-10-02"))
+    assert w["2026-09-25"]["traded"]
+    assert not w["2026-09-26"]["traded"]
+    assert all(w[d.date().isoformat()]["traded"] for d in pd.date_range("2026-09-27", "2026-10-10"))
+    # 每天只调约 1/7 的书:单日换手远小于整本调仓
+    assert max(w[d.date().isoformat()]["turnover"] for d in pd.date_range("2026-09-27", "2026-10-10")) < 0.2
+
+
+def test_monthly_signals_on_the_first_and_trades_the_next_day():
+    rows = bp.compute_path(_prices(), PANEL, "t")
+    m = {r["d"]: r for r in _rows(rows, "momentum_52w_m")}
+    assert m["2026-10-01"]["signal"] is not None and not m["2026-10-01"]["traded"]
+    assert m["2026-10-02"]["traded"]
+    assert not any(m[d]["traded"] for d in ("2026-09-26", "2026-09-30", "2026-10-03"))
 
 
 def test_prices_move_nav_and_arms_differ():

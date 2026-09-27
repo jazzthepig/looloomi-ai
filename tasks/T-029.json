@@ -19,7 +19,10 @@
     "STRATEGY_PLAYBOOK.md",
     "docs/DECISIONS.md",
     "tests/test_tokenization_tilt.py",
-    "scripts/supabase_s430_ohlcv_recorded_at.sql"
+    "scripts/supabase_s430_ohlcv_recorded_at.sql",
+    "src/research/validation/s431_beta_plus_8h.py",
+    "src/research/validation/s431_timing_luck.py",
+    "src/research/validation/s431_book_reproduces_research.py"
   ],
   "forbidden_paths": [
     "Shadow/"
@@ -31,5 +34,5 @@
   "prior_value": "② 从未建过前向账本;S-428 研究周频 +17.2%/年(t 3.22)",
   "created": "2026-09-26",
   "verified": null,
-  "notes": "S-430:部署前发现 recorded_at 语义问题(首次插入时间),已加触发器;两本账就绪判据排除停写的源。首行预计在下一根收盘终值写入后出现。"
+  "notes": "S-430:部署前发现 recorded_at 语义问题(首次插入时间),已加触发器;两本账就绪判据排除停写的源。首行预计在下一根收盘终值写入后出现。 S-431:周频改为 7 份分批(择时运气 5.6 个点),账本跑历史与研究逐位一致。"
 }

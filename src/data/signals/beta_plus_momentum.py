@@ -12,15 +12,19 @@ Jazz:「长持仓是 baseline,我们落地 beta+ 策略要做动量和其他有�
     权重      w_i = (1/N)·(1 + k·z_i),z = 排名映射到 [−1, 1] 去均值后按最大绝对值归一;k = 1 ⇒ 0 ~ 2/N
               只做多、满仓、无杠杆(DECISIONS 07-27 / 08-23)
     时点      信号在再平衡日收盘算,次日收盘成交,之间随价漂移;起点那天在起点收盘直接建仓
-    四个臂    panel_hold_w / momentum_52w_w   周一出信号(主检验)
+    四个臂    panel_hold_w / momentum_52w_w   周频,**7 等份分批**:每份在不同星期几出信号、次日成交(主检验)
               panel_hold_m / momentum_52w_m   每月 1 日出信号(低换手)
+              分批的理由(S-431):同一信号只换再平衡的星期几,年化超额从 +13.6%(周六)到 +19.2%(周三),
+              头条数字里有 5.6 个点是择时运气。7 份分批 = 每天调 1/7,换手不变(12.9×/年),
+              结果 +16.6%、t 3.29、最差 12 个月 +0.2%、相对最大回撤 −11.0%(周一单批:−14.1%)。
               基准与倾斜臂同日程、同延迟、同成本 —— 差值只来自倾斜
     成本      换手 × 10 bps,两臂同扣
     价格      ohlcv_daily · binance_hist(与 S-428 研究同源;CG Pro 有 7 个币历史不足 180 天)
     起点      2026-09-25 收盘
     判据      倾斜臂 − 同日程基准 的累计差,按 regime(BTC 200 日线上/下)分段;≥60 个前向日再谈结论
 
-历史(S-428,不是证据):周频 年化超额 +17.3%、t 3.23、β 0.98、2020–2026 每年为正;
+历史(S-428/S-431,不是证据):周频分批 年化超额 +16.6%、t 3.29、β 0.98、2020–2026 每年为正;
+8h K 线 20/60/365 根(≈6.7/20/122 天)不更好:20 根样本外为负,每 8h 再平衡全部更差(S-431)。
 **组合因子是看过 86 个变体后挑的,数值偏高**,支撑它的是整个动量族在所有构造下同号。
 
 ## 同一份内核
@@ -43,10 +47,11 @@ import pandas as pd
 
 TABLE = "beta_plus_daily"
 WRITES_TABLES = (TABLE,)
-ARMS = {  # arm → (schedule, tilted?)
-    "panel_hold_w": ("W", False), "momentum_52w_w": ("W", True),
+ARMS = {  # arm → (schedule, tilted?);"W7" = 7 份分批,每份一个星期几
+    "panel_hold_w": ("W7", False), "momentum_52w_w": ("W7", True),
     "panel_hold_m": ("M", False), "momentum_52w_m": ("M", True),
 }
+TRANCHES = 7
 K = 1.0
 COST_BPS = 10.0
 MIN_HIST = 180
@@ -54,7 +59,7 @@ INCEPTION = pd.Timestamp("2026-09-25")
 PRICE_SOURCE = "binance_hist"
 MIN_QUOTED_WEIGHT = 0.90
 HISTORY_DAYS = 400
-CODE_REF = "S-429 beta_plus_momentum v1"
+CODE_REF = "S-431 beta_plus_momentum v2 (weekly = 7 tranches)"
 
 
 def panel_universe() -> tuple[str, ...]:
@@ -87,8 +92,11 @@ def tilt_targets(x: pd.Series, k: float = K) -> pd.Series:
     return tgt / tgt.sum()
 
 
-def _is_signal_day(d: pd.Timestamp, sched: str) -> bool:
-    return d.dayofweek == 0 if sched == "W" else d.day == 1
+def _signal_days(sched: str) -> list:
+    """→ 每一份(tranche)的「出信号日」判据。W7 = 7 份,第 j 份在星期 j 出信号;M = 1 份,每月 1 日。"""
+    if sched == "W7":
+        return [lambda d, j=j: d.dayofweek == j for j in range(TRANCHES)]
+    return [lambda d: d.day == 1]
 
 
 # ── 账本(纯函数)──────────────────────────────────────────────────────────────
@@ -108,65 +116,82 @@ def compute_path(px: pd.DataFrame, panel: tuple[str, ...], source: str,
     now = datetime.now(timezone.utc).isoformat()
     rows: list[dict] = []
     for arm, (sched, tilted) in ARMS.items():
-        w: dict[str, float] = {}
-        last: dict[str, float] = {}
-        nav, pend = 1.0, None
+        books = [_simulate(px, days, hist, sig, tilted, is_sig, arm) for is_sig in _signal_days(sched)]
         for i, d in enumerate(days):
-            row_px = px.loc[d]
-            quoted = {s for s in row_px.index if pd.notna(row_px[s])}
-            ret, n_filled = 0.0, 0
-            if i > 0:
-                qw = sum(v for s, v in w.items() if s in quoted)
-                if qw < MIN_QUOTED_WEIGHT:
-                    raise ValueError(f"{d.date()} {arm}:有真实收盘的持仓权重只有 {qw:.0%} —— 读不到,不记成没涨跌")
-                rets = {}
-                for s in w:
-                    if s in quoted and s in last:
-                        rets[s] = float(row_px[s]) / last[s] - 1
-                    else:
-                        rets[s] = 0.0
-                        n_filled += 1
-                ret = sum(w[s] * rets[s] for s in w)
-                nav *= 1 + ret
-                w = {s: v * (1 + rets[s]) / (1 + ret) for s, v in w.items()}
-            for s in quoted:
-                last[s] = float(row_px[s])
-
-            traded, turnover = False, 0.0
-            if pend is not None:                                   # 昨天出的信号,今天收盘成交
-                tgt = {s: v for s, v in pend.items() if s in quoted}
-                tot = sum(tgt.values())
-                tgt = {s: v / tot for s, v in tgt.items()}
-                keys = set(tgt) | set(w)
-                turnover = sum(abs(tgt.get(s, 0.0) - w.get(s, 0.0)) for s in keys)
-                cost = turnover * COST_BPS / 1e4
-                nav *= 1 - cost
-                ret = (1 + ret) * (1 - cost) - 1
-                w, pend, traded = tgt, None, True
-
-            signal_snapshot = None
-            if i == 0 or _is_signal_day(d, sched):
-                elig = [s for s in px.columns if hist.at[d, s] >= MIN_HIST and s in quoted]
-                x = sig.loc[d, elig]
-                t = tilt_targets(x, K if tilted else 0.0).to_dict()
-                signal_snapshot = {s: round(float(v), 4) for s, v in x.dropna().sort_values(ascending=False).items()}
-                if i == 0:                                         # 起点:当天收盘直接建仓
-                    w, traded, turnover = t, True, 1.0
-                    cost = turnover * COST_BPS / 1e4
-                    nav *= 1 - cost
-                    ret = -cost
-                else:
-                    pend = t
+            parts = [bk[i] for bk in books]
+            navs = [p_["nav"] for p_ in parts]
+            nav = sum(navs) / len(navs)                     # 各份起始资金相同 ⇒ 组合 NAV = 各份 NAV 的均值
+            prev = sum(bk[i - 1]["nav"] for bk in books) / len(books) if i > 0 else 1.0
+            ret = nav / prev - 1
+            w: dict[str, float] = {}
+            for p_ in parts:
+                for s_, v in p_["w"].items():
+                    w[s_] = w.get(s_, 0.0) + v * p_["nav"] / sum(navs)
+            snap = next((p_["signal"] for p_ in parts if p_["signal"] is not None), None)
             rows.append({
                 "d": d.date().isoformat(), "arm": arm,
                 "nav": round(nav, 8), "ret": round(ret, 8),
-                "weights": {s: round(v, 5) for s, v in sorted(w.items(), key=lambda kv: -kv[1])},
-                "traded": traded, "turnover": round(turnover, 6),
-                "signal": signal_snapshot, "n_eligible": len(signal_snapshot) if signal_snapshot else None,
-                "n_filled": n_filled, "source": source,
+                "weights": {s_: round(v, 5) for s_, v in sorted(w.items(), key=lambda kv: -kv[1])},
+                "traded": any(p_["traded"] for p_ in parts),
+                "turnover": round(sum(p_["turnover"] * p_["nav"] for p_ in parts) / sum(navs), 6),
+                "signal": snap, "n_eligible": len(snap) if snap else None,
+                "n_filled": max(p_["n_filled"] for p_ in parts), "source": source,
                 "inception": INCEPTION.date().isoformat(), "code_ref": CODE_REF, "computed_at": now,
             })
     return rows
+
+
+def _simulate(px, days, hist, sig, tilted: bool, is_signal_day, arm: str) -> list[dict]:
+    """一份(tranche)从起点到末日的逐日记录。起点当天收盘建仓;此后出信号日收盘出目标、次日收盘成交。"""
+    out: list[dict] = []
+    w: dict[str, float] = {}
+    last: dict[str, float] = {}
+    nav, pend = 1.0, None
+    for i, d in enumerate(days):
+        row_px = px.loc[d]
+        quoted = {s for s in row_px.index if pd.notna(row_px[s])}
+        ret, n_filled = 0.0, 0
+        if i > 0:
+            qw = sum(v for s, v in w.items() if s in quoted)
+            if qw < MIN_QUOTED_WEIGHT:
+                raise ValueError(f"{d.date()} {arm}:有真实收盘的持仓权重只有 {qw:.0%} —— 读不到,不记成没涨跌")
+            rets = {}
+            for s in w:
+                if s in quoted and s in last:
+                    rets[s] = float(row_px[s]) / last[s] - 1
+                else:
+                    rets[s] = 0.0
+                    n_filled += 1
+            ret = sum(w[s] * rets[s] for s in w)
+            nav *= 1 + ret
+            w = {s: v * (1 + rets[s]) / (1 + ret) for s, v in w.items()}
+        for s in quoted:
+            last[s] = float(row_px[s])
+
+        traded, turnover = False, 0.0
+        if pend is not None:                                   # 昨天出的信号,今天收盘成交
+            tgt = {s: v for s, v in pend.items() if s in quoted}
+            tot = sum(tgt.values())
+            tgt = {s: v / tot for s, v in tgt.items()}
+            keys = set(tgt) | set(w)
+            turnover = sum(abs(tgt.get(s, 0.0) - w.get(s, 0.0)) for s in keys)
+            nav *= 1 - turnover * COST_BPS / 1e4
+            w, pend, traded = tgt, None, True
+
+        snapshot = None
+        if i == 0 or is_signal_day(d):
+            elig = [s for s in px.columns if hist.at[d, s] >= MIN_HIST and s in quoted]
+            x = sig.loc[d, elig]
+            t = tilt_targets(x, K if tilted else 0.0).to_dict()
+            snapshot = {s: round(float(v), 4) for s, v in x.dropna().sort_values(ascending=False).items()}
+            if i == 0:                                         # 起点:当天收盘直接建仓
+                w, traded, turnover = t, True, 1.0
+                nav *= 1 - turnover * COST_BPS / 1e4
+            else:
+                pend = t
+        out.append({"nav": nav, "w": dict(w), "traded": traded, "turnover": turnover,
+                    "signal": snapshot, "n_filled": n_filled})
+    return out
 
 
 async def run_once() -> dict[str, Any]:
