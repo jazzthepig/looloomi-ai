@@ -1,0 +1,25 @@
+{
+  "id": "T-034",
+  "title": "M-189 基准 1–2(固定 / 波动率公式)在 HL 4 币账本上的历史回放报告",
+  "owner": "lane-b",
+  "status": "open",
+  "source": "M-189 / T-011",
+  "allowed_paths": [
+    "paper_trading/research/m189_replay.py",
+    "paper_trading/tests/test_m189_replay.py",
+    "REFUTATION_LEDGER.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "paper_trading/hl_book.py",
+    "src/data/signals/hl_book_daily.py",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "用 paper_trading/hl_book.py 的内核与 jev_replay_s412.py 同一段 3.4 年 HL 数据,回放 size_mult=1.0 与 vol-formula 两臂,按 M-189 判据出报告(基准 = H0_hold;分 regime;成本按换手;lag-1)",
+    "expect": "台账一条(编号合并时分配),两臂 × 分 regime 的 SR / MaxDD / 相对 H0 超额;测试钉住「同一内核、同一数据、无前视」"
+  },
+  "prior_value": "M-189 只有预注册;T-032(Seth 接进 hl_book_daily)等这份回放结论",
+  "created": "2026-09-27",
+  "verified": null
+}

@@ -1,0 +1,22 @@
+{
+  "id": "T-035",
+  "title": "复核 M-152(CDCB-A v2)与 M-128d(§5b 2D gate)—— 按 S-420 口径重问后再决定是否接 spec_runner",
+  "owner": "seth",
+  "status": "open",
+  "source": "lane-b 09-27 审计",
+  "allowed_paths": [
+    "docs/",
+    "REFUTATION_LEDGER.md",
+    "tasks/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "两条各写清:基准(持有面板 / β+)、regime 分段、判据、是否与 ② β+ 重叠",
+    "expect": "台账一条:接 / 不接 / 重跑,附理由"
+  },
+  "prior_value": "B 报 M-152 SR +1.115「ship-ready」、M-128d 9/10 PASS;两条都未按「对照持有面板 + 分 regime」口径复核",
+  "created": "2026-09-27",
+  "verified": null
+}
