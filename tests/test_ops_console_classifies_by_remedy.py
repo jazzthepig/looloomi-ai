@@ -785,13 +785,13 @@ def test_s378b_b_force_mark_force_overwrite_skips_short_circuit(monkeypatch):
 
     # Use the X-Internal-Token header — must come from env
     import os
-    os.environ.setdefault("INTERNAL_TOKEN", "cometcloud_internal_2026")
+    monkeypatch.setenv("INTERNAL_TOKEN", "test-internal-token")  # 测试自带的假 token,不依赖 .env(令牌已轮换,09-27)
 
     resp = asyncio.run(fm.force_mark(
         book="fusion",
         dry_run=False,
         force_overwrite=True,
-        x_internal_token="cometcloud_internal_2026",
+        x_internal_token="test-internal-token",
     ))
     # With force_overwrite=True, the short-circuit was skipped and the book
     # was actually invoked (or attempted to be).
@@ -821,13 +821,13 @@ def test_s378b_b_force_mark_short_circuit_path(monkeypatch):
     monkeypatch.setattr("src.data.signals.nav_persist.nav_row_exists", _always_exists)
     monkeypatch.setattr(importlib, "import_module", _spy)
     import os
-    os.environ.setdefault("INTERNAL_TOKEN", "cometcloud_internal_2026")
+    monkeypatch.setenv("INTERNAL_TOKEN", "test-internal-token")  # 测试自带的假 token,不依赖 .env(令牌已轮换,09-27)
 
     resp = asyncio.run(fm.force_mark(
         book="fusion",
         dry_run=False,
         force_overwrite=False,
-        x_internal_token="cometcloud_internal_2026",
+        x_internal_token="test-internal-token",
     ))
     assert resp.get("phase") == "idempotent_short_circuit", (
         f"with no force_overwrite and row-exists, the short-circuit MUST fire; "
