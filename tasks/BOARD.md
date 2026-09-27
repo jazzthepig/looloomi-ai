@@ -8,6 +8,7 @@
 | in_review | T-022 | seth | 移动端 RECENT SIGNALS 卡片:百分比与文案跨度对齐(短时价格不和"strong momentum"同屏) | DOM/截图: 卡片百分比后缀为 '24h' 或 '(24h)';文案与百分比跨度一致(避免 −7% 旁边写 'strong momentum') | MobileApp 卡片:'positions to outperform on strong momentum' 旁显示 −7.45% / −8.98%(百分比实为 24h,跨度与文案冲突) |  |
 | in_review | T-025 | seth | ② 代币化基础设施倾斜账本上线:第一行真实数据 + 连续前向记录 | 两臂都有行,min(d)=2026-09-25,max(d)=昨天(UTC 06:00 后);09-26 起 nav ≠ 1.0 | 代币化论点 09-01 起只在观测层(S-266),没有任何账本;① 里只有 LINK 3.8% |  |
 | in_review | T-029 | seth | ② β+ 动量 + 52 周高点前向账本上线(四臂) | 四臂都有行,min(d)=2026-09-25、max(d)=昨天;momentum_52w_w 与 panel_hold_w 的 NAV 不同 | ② 从未建过前向账本;S-428 研究周频 +17.2%/年(t 3.22) |  |
+| in_review | T-033 | seth | 后端 CIS narrative 短句措辞:避免短期 trend 词与负 24h% 同屏(T-022 后半) | deterministic narrative 在 OUTPERFORM + 负 24h 条件下仍合规 + 不与百分比跨度冲突;不破坏 desktop CIS leaderboard narrative 既有体验(LLM 路径不受影响) | T-022 前半(pct24h 后缀)shipped。Seth 09-27 review:'strong momentum' 文本来自后端 CIS narrative(cis.py narrative.py 按支柱生成),前端后缀改不了。acceptance 要求文案与百分比跨度一致 —— 需改后端叙事措辞。 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-001 | lane-a | T1 的 TradFi 改从 ohlcv_daily(eodhd)读,撤回 30 天过期缓存 | = 43,且 19 个 TradFi 最新价格日期 ≥ 最近一个美股交易日 | 24 |  |
 | open | T-003 | lane-a | S-396 三臂回放 live 验证(读路径分页修复后) | 相等 | replay 读到 1,000 行(截断) |  |
@@ -35,4 +36,4 @@
 | done | T-017 | seth | 宏观简报:兜底模板去掉仓位建议 + 24h 变化读对键名 + 不再把几分钟的静止写成市场平静;移动端把缺失的 direction 显示成 NEUTRAL | 文本含 24h 变化数值;不含 Accumulat/contrarian entry/Allocate/Reduce/favoured;Mac 推来的 prompt_version = mb-3 | 模板:'BTC at $83,403 (— 24h)' + 'Risk-off positioning favoured';LLM 简报:'market tape is currently flat',当日总市值 24h -6.4%;移动端 RECENT SIGNALS:空标的行 + 4 条全显示 NEUTRAL(feed 里 direction 全为 null) | Railway mb-3 端:GET /api/v1/macro/brief 含 24h 变化('-2.1% over 24 hours' / '-0.0% over 24 hours' + 02:54 UTC 时间戳),最新 brief 文本无 Accumulat/contrarian entry/Allocate/Reduce/favoured。src/api/contracts/macro_brief.py PROMPT_VERSION=mb-3 ✅,src/api/routers/macro.py 收端校验 prompt_version=mb-3。**Mac 副本 mb-2 → mb-3 仍待**(/Volumes/CometCloudAI/cometcloud-local/macro_brief_contract.py:36 仍 mb-2)→ **T-018 lane-a**(卡 notes 已声明) @ 2026-09-26T01:55:00Z |
 | done | T-019 | seth | prediction_resolver:4 个 date 列来源恢复出结果;不再 409 | 5 个来源都有行(positioning/forward_supply/conviction/narrative 各 >0);409 = 0 | 只有 signal 170 行,其余 4 个来源 0 行;2h 内 409 × 326 | 5/5 来源有行:positioning 436 · conviction 428 · signal 170 · forward_supply 104 · narrative 14;部署后首轮 15:24–15:30 UTC,POST prediction_outcomes 982×201、0×409 @ 2026-09-25 |
 
-open 18 · blocked 2 · in_review 6 · done 6
+open 18 · blocked 2 · in_review 7 · done 6
