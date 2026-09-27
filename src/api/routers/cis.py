@@ -3608,6 +3608,7 @@ async def snapshot_full_universe_to_supabase() -> dict:
     from src.api.store import supabase_fresh_t1_symbols
     _fresh_t1 = await supabase_fresh_t1_symbols(max_age_minutes=1440)
     _shadowed: list[str] = []
+    _t1_skipped: list[str] = []
 
     rows = []
     for a in universe:
@@ -3617,6 +3618,15 @@ async def snapshot_full_universe_to_supabase() -> dict:
             continue
         tier = a.get("data_tier")
         tier_label = a.get("data_tier_label") or ("T1" if tier in (1, "1", "T1") else "T2")
+        # T-024(2026-09-27):**快照从不写 T1。** 一个币被当作 T1 服务,说明 Mac 引擎在过去 2 小时内
+        # (Redis TTL)推过它 —— 而那次推送已经写进了 cis_scores(source='local_engine')。
+        # 这里再写一份,是用 Railway 侧的 confidence / asset_class 抄一份标成 T1 的副本:
+        # 自 06-19 起 15,661 行(约占 T1 的 14%),每次部署重启都来一次(「每日」循环在启动 5 分钟后先跑一轮),
+        # 于是「T1 序列」在不同读者手里是两个版本 —— lane-a 找了 4 天 Mac 上的「第二个写入端」,它在这里。
+        # Mac 死掉时,这些币会被降级为 T2 服务,下面照常作为 T2 写入 —— 快照保证「每个币每天有一行」的本意不变。
+        if tier_label == "T1":
+            _t1_skipped.append(sym)
+            continue
         if tier_label == "T2" and _fresh_t1 and sym.upper() in _fresh_t1:
             # A T1 row for this symbol landed within the day. Writing T2 on top
             # of it does not guarantee a daily row — there already is one.
@@ -3670,6 +3680,7 @@ async def snapshot_full_universe_to_supabase() -> dict:
                       len(_shadowed), sorted(_shadowed)[:12],
                       " …" if len(_shadowed) > 12 else "")
     return {"ok": bool(ok), "rows": len(rows), "t1": t1, "t2": len(rows) - t1,
+            "t1_left_to_engine": len(_t1_skipped),
             "shadow_suppressed": len(_shadowed),
             "t1_occupancy_known": _fresh_t1 is not None}
 
