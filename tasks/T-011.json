@@ -2,7 +2,7 @@
   "id": "T-011",
   "title": "Jev 仓位乘数对照线:先预注册(只调 1 个参数,4 级基准)",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "source": "对 B 的讨论 09-23",
   "allowed_paths": [
     "REFUTATION_LEDGER.md 的预注册段(经 PR)"
@@ -16,5 +16,9 @@
   },
   "prior_value": "无",
   "created": "2026-09-24",
-  "verified": null
+  "verified": {
+    "by": "seth",
+    "at": "2026-09-27",
+    "value": "台账 M-189(原 M-97,合并时改号)含 4 级基准 fixed / vol-formula / bandit / Jev + 判据 + H1/H2;cost 行改为按换手计。合并方式:内容由 Seth 并入 main(分支与 PROJECT_STATE/台账末尾冲突),lane-b/T-011 可删。接进 hl_book_daily 见 T-032。"
+  }
 }
