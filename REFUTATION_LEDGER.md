@@ -23889,3 +23889,24 @@ Seth merge + 接 `hl_book_daily` 后实跑出 SR / MaxDD,才能开 `[verified]`�
 这次 B 写进了主目录那份(查过,无分裂),但只是运气;`setup_lane_worktrees.sh` 现在把 SYNC 与归档也链进去。
 ② 我自己的 S-431 两个研究脚本在 import 时读 `/tmp/s428`,Jazz 机器上 preflight 的 research-import 守卫红 —— 改为 `main()`;
 隐藏 `/tmp/s428` 复现 Jazz 环境后 202 个模块 import 通过。
+
+## S-434 — 「第二个 T1 写入端」不在 Mac 上:是 Railway 的每日快照,每次重启都把服务中的 T1 抄一份写回 cis_scores
+
+**来源:** T-024(09-26 开给 A,P0)。A 在 Mac 上找了 4 天进程。
+
+**测得(一条 SQL):** `cis_scores` 的 `source` 列本来就区分写入端 —— 过去 36 小时 T1 行:`local_engine` 35 次推送(confidence 0.70/0.85、有 DQS)、
+`railway_snapshot` 17 次(confidence 0.67/0.83/1.0、DQS 全空、percentile 全有)。**自 06-19 起 `railway_snapshot` 写了 15,661 行 T1,约占 T1 总行数 14%。**
+
+**成因:** `_daily_snapshot_loop` 名为「每日」,但启动后 5 分钟先跑一轮(`_boot_delay(300)`)—— 每次部署/重启都跑。
+`snapshot_full_universe_to_supabase()` 把**服务中**的整个 universe 写回 cis_scores,T1 也写、标成 T1,用 Railway 侧的 confidence / asset_class。
+被当作 T1 服务的币,Mac 在 2 小时内(Redis TTL)已经推过、已经写进 cis_scores —— 这一份永远是重复,且字段不同。
+09-26、09-27 部署密集,所以「非整点 T1 推送」密集出现,看起来像一个新进程。
+
+**改:** 快照**从不写 T1**(Mac 死掉时这些币会降为 T2 服务,照常以 T2 写入 —— 「每个币每天一行」的本意不变)。
+`tests/test_snapshot_never_writes_t1.py`,去掉修复即红。**历史 15,661 行未改动**(删改历史需 Jazz 决定);读 T1 序列的研究请加 `source = 'local_engine'`。
+
+**这一类:** 一个名字里写着「每日」的循环,实际节奏由部署频率决定;而区分两个版本的那一列一直在表里,没人去查。
+A 提的「推送里加 source 标签」不需要 —— 标签已经在了。
+
+**同轮:** T-030 —— 新增 `/internal/backfill-deep-panel`(默认 dry_run、后台执行),调用同一个 binance_hist 写入端按更长窗口补 41 天的历史空洞;
+采集器的自愈只看前沿,历史内部的洞永远补不上。
