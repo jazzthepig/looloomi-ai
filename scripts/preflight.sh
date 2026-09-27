@@ -1373,6 +1373,11 @@ python3 -m tests.test_mobileapp_pct24h || {
   echo "  ✗ T-022 MobileApp pct24h (24h) 后缀 + RECENT SIGNALS 文案守卫 — do not push"; exit 1; }
 python3 -m tests.test_cis_narrative_phrasing || {
   echo "  ✗ T-033 后端 CIS narrative 短语措辞修订 — do not push"; exit 1; }
+# T-021 (2026-09-26 audit): 6 个死链 .html 301 → /app.html,4 个 dead API
+# 在 main.py 留 doc 注释(catch-all _api_prefixes → 404)。S-244 family:
+# "test 存在 ≠ test 跑" —— 必须在 preflight 阶段 3 实际执行,否则回归悄无声息。
+python3 -m tests.test_t021_dead_routes || {
+  echo "  ✗ T-021 死链 301 + dead API doc 注释守卫 — do not push"; exit 1; }
 python3 -m tests.test_watch_census_dark_lists_visible || {
   echo "  ✗ watch_census dark_tables 暴露 — do not push"; exit 1; }
 # S-390 / `/internal/loops` 后端守卫(build_report + to_dict 纯函数部分)。
