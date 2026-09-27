@@ -1,2 +1,15 @@
-# _redirects — superseded by Cloudflare Pages Functions (functions/api/[[path]].js)
-# This file is intentionally empty. Do not add proxy rules here.
+# _redirects — Cloudflare Pages.
+# Proxying /api/* lives in Pages Functions (functions/api/[[path]].js); do NOT add proxy rules here.
+# Plain redirects only.
+#
+# T-021 (2026-09-27): looloomi.ai pages are served by Cloudflare Pages, not FastAPI — the 301s added to
+# serve_spa() only exist on the Railway origin. Pages falls back to the SPA shell for any missing file,
+# so these six legacy URLs returned 200 with the landing page. Redirect to /app (Pages strips .html:
+# /app.html would 308 to /app, one hop more). Only the .html forms: /cis, /intelligence … are live SPA
+# deep links (S-160). Kept in sync with main._DEAD_HTML_REDIRECTS by tests/test_pages_redirects.py.
+/market.html        /app  301
+/cis.html           /app  301
+/vault.html         /app  301
+/protocol.html      /app  301
+/intelligence.html  /app  301
+/quant-gp.html      /app  301
