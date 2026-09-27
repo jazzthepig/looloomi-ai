@@ -66,6 +66,34 @@ def check(name: str, cond: bool, detail: str = "") -> None:
 _MAIN = (_ROOT / "src/api/main.py").read_text(encoding="utf-8")
 
 
+def _serve_spa_body() -> str:
+    """Extract the WHOLE serve_spa function body — from the line AFTER the
+    `async def serve_spa(...):` signature up to (but not including) the next
+    top-level construct.
+
+    S-160 + T-021 history: the original guard used a fixed `[:2200]` window,
+    which broke when T-021 added a redirect branch (~170 chars), pushing the
+    S-160 safety logic past the window edge. Reading the whole body makes
+    the guard resilient to future legitimate growth."""
+    # split() removes the literal "async def serve_spa" — the remainder's
+    # first line is the function signature's tail (e.g. "(full_path: str):").
+    # Skip until we hit a non-empty indented line (the first body line).
+    after = _MAIN.split("async def serve_spa")[1]
+    lines = after.splitlines()
+    start = 0
+    for i, line in enumerate(lines):
+        if line.startswith((" ", "\t")) and line.strip():
+            start = i
+            break
+    # Collect indented lines until the next non-indented non-empty line.
+    out: list[str] = []
+    for line in lines[start:]:
+        if line and not line.startswith((" ", "\t")):
+            break
+        out.append(line)
+    return "\n".join(out)
+
+
 def test_a_missing_file_does_not_rely_on_an_exception_that_never_fires() -> None:
     """The mechanism, asserted directly: constructing a FileResponse over a
     path that does not exist raises NOTHING. Any handler whose fallback depends
@@ -83,7 +111,7 @@ def test_a_missing_file_does_not_rely_on_an_exception_that_never_fires() -> None
 
 
 def test_the_spa_handler_checks_existence_instead_of_catching() -> None:
-    blk = _MAIN.split("async def serve_spa")[1][:2200]
+    blk = _serve_spa_body()
     check("serve_spa tests the file with isfile", "os.path.isfile(" in blk,
           "existence must be checked; the exception never arrives")
     code = "\n".join(l for l in blk.splitlines() if not l.lstrip().startswith("#"))
@@ -112,7 +140,7 @@ def test_api_prefixes_still_get_json_404_not_the_shell() -> None:
     """An unmatched /api/... path must return JSON, not an HTML page. A client
     parsing the shell as JSON reports a parse error, which is another symptom
     that names the wrong layer."""
-    blk = _MAIN.split("async def serve_spa")[1][:2200]
+    blk = _serve_spa_body()
     check("api-ish prefixes short-circuit to a JSON 404",
           '_api_prefixes' in blk and 'status_code=404' in blk, "")
 
@@ -120,7 +148,7 @@ def test_api_prefixes_still_get_json_404_not_the_shell() -> None:
 def test_traversal_cannot_escape_the_build_directory() -> None:
     """`os.path.join(base, "../../etc/passwd")` resolves outside base. Checking
     isfile() without also checking containment would happily serve it."""
-    blk = _MAIN.split("async def serve_spa")[1][:2200]
+    blk = _serve_spa_body()
     check("the resolved path is normalised", "normpath(" in blk, "")
     check("and confined to the build directory",
           "startswith(dashboard_path)" in blk,
