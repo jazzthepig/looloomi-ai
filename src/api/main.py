@@ -34,7 +34,7 @@ from fastapi import FastAPI, Request, Header, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
 from src.api.routers.write_probe import router as write_probe_router  # S-328
 from src.api.routers.force_mark import router as force_mark_router   # 9 paper books
@@ -3726,6 +3726,34 @@ dashboard_path = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     "dashboard", "dist"
 )
+
+# T-021 (2026-09-26 audit): 6 个静态 .html 是历史邮件 / 博客 / SEO 留下的
+# 入口。SPA 是单页应用,SECTIONS 由 Sidebar.jsx onNavigate 客户端切,
+# 没有任何对应独立 HTML。这些 URL 之前被 catch-all serve 成 index.html
+# (200 / 41121 bytes) —— 用户看到 SPA shell 但 URL 留在 /market.html,
+# 旧链接刷新就 200 OK landing page,UX 错位 + 误导爬虫。
+# 301 → /app.html:友好给出 SPA 入口,客户端 section 切到对应 tab。
+_DEAD_HTML_REDIRECTS = {
+    "market.html":       "/app.html",
+    "cis.html":          "/app.html",
+    "vault.html":        "/app.html",
+    "protocol.html":     "/app.html",
+    "intelligence.html": "/app.html",
+    "quant-gp.html":     "/app.html",
+}
+
+# T-021 dead API doc (404-by-design):以下 4 个路径**不在任何 router 注册**,
+# 走 catch-all 的 _api_prefixes 拦截 → 404 JSON。SPA bundle 不调用(走的是
+# 旁边的真路径),保留 404 是契约 — 任何"修复"成 200 都是新功能,
+# 需要走 T-023 (data_source 染色) 等 acceptance path。
+#
+#   /api/v1/intelligence/signals  → SPA 用 /api/v1/signals/feed
+#   /api/v1/vault/positions       → SPA 用 /api/v1/trading/positions
+#   /api/v1/protocol/metrics      → SPA 用 /api/v1/protocols/universe  ← 复数
+#   /api/v1/quant/gp-status       → QuantMonitor 用 /api/v1/trading/{metrics,positions,order}
+#
+# 如果未来真的要"复活"其中之一 → 这是新功能,起新 task card,不要在这里改。
+
 if os.path.exists(dashboard_path):
     app.mount("/assets", StaticFiles(directory=os.path.join(dashboard_path, "assets")), name="assets")
 
@@ -3735,6 +3763,9 @@ if os.path.exists(dashboard_path):
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
+        # T-021: dead-link .html 301 → /app.html (rationale at _DEAD_HTML_REDIRECTS above)
+        if full_path in _DEAD_HTML_REDIRECTS:
+            return RedirectResponse(url=_DEAD_HTML_REDIRECTS[full_path], status_code=301)
         # API/internal/ws/mcp paths that don't match any router → 404 JSON (not SPA fallback)
         _api_prefixes = ("api/", "internal/", "ws/", "mcp/", "mcp-sse", ".env", "config", "secrets", "admin", ".git")
         if any(full_path.startswith(p) for p in _api_prefixes):
