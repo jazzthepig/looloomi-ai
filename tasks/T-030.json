@@ -2,11 +2,13 @@
   "id": "T-030",
   "title": "binance_hist 回填:过去一年整天缺 41 天(最后 09-06)",
   "owner": "seth",
-  "status": "open",
+  "status": "in_review",
   "source": "S-429",
   "allowed_paths": [
+    "scripts/",
+    "src/api/routers/ohlcv.py",
     "src/data/market/",
-    "scripts/"
+    "tests/test_backfill_deep_panel_route.py"
   ],
   "forbidden_paths": [
     "Shadow/"
@@ -17,5 +19,6 @@
   },
   "prior_value": "20 个币各缺 41 天,ETC/SUI/TRX 29 天,BCH 17 天",
   "created": "2026-09-26",
-  "verified": null
+  "verified": null,
+  "notes": "09-27 Seth:加 /internal/backfill-deep-panel(同一写入端 collect_deep_panel,默认 dry_run,后台跑,默认 ① 24 币)。部署后由 Jazz 带 token 调一次 days=400&dry_run=false;再按卡上判据查缺失天数 = 0。C 的 T-005 读这个源。"
 }
