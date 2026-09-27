@@ -17,5 +17,6 @@
   },
   "prior_value": "β 匹配 0/30,β≈0.35",
   "created": "2026-09-24",
-  "verified": null
+  "verified": null,
+  "notes": "2026-09-27 Seth 审阅(SYNC §S-433b):spec 方向批准,**改 5 处后直接跑,不再等一轮**。① 判据 regime 改为价格 PIT:RISK_OFF := BTC 收盘 < 200 日均线(滞后 1 天),2020 起;daily_macro_regime 只有 481 天且 RISK_OFF 基本一段,只描述性报告,不进判据。② 给 BTC 的权重从其余所有币按比例挪(不选 highest_signal / SOL+AAVE+ARB),这一维去掉。③ 滞后 3 档(1/3/7 天)可以。④ 不加 RISK_OFF 绝对收益门槛;改为 RISK_OFF 段相对 ② 年化超额 ≥ +2% + bootstrap 区间。⑤ 24 格(4 加仓 × 3 滞后 × 2 regime 范围)全报,样本内按预先写定规则选一格报样本外,并报样本外为正的格占比。数据:Binance 公共日线 2020 起(不用 binance_hist),放 lane 根。"
 }
