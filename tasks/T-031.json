@@ -1,6 +1,6 @@
 {
   "id": "T-031",
-  "title": "CG Pro 面板停写 5 个 ① 面板币(BCH/DOGE/FIL/LTC/TRX,自 09-13)",
+  "title": "CG Pro 面板:5 币自 09-13 停写 + 收盘后终值只覆盖一部分币(7 币停在开盘后的半根)",
   "owner": "seth",
   "status": "open",
   "source": "S-430",
@@ -17,5 +17,6 @@
   },
   "prior_value": "5 个币最后一行都是 2026-09-13",
   "created": "2026-09-26",
-  "verified": null
+  "verified": null,
+  "notes": "09-27 实测(Seth):09-26 的 CG bar,23 个在写的币里 16 个收盘后终值,7 个(ARB/HYPE/NEAR/OP/ATOM/ETC/POLYX)只有 09-26 02:09–02:12 写入的半根、之后再没被改写(触发器会在值变化时刷新 recorded_at,没刷新 = 没被重写)。与 cg_coin_map.resolved_from 不对应(BTC 是 mcap_tiebreak 却是终值,POLYX 是 list_unique 却是半根)⇒ 不止一个写入端在写 coingecko_pro_ohlc,币表与时点不同。影响:tokenization_tilt 就绪 16/23 < 90%,账本起不来(HYPE/POLYX 在篮子里)。HYPE 不在 cg_coin_map。"
 }
