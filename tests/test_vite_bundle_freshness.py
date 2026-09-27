@@ -105,6 +105,24 @@ def _newest_mtime(root: Path, ignore_suffixes: tuple[str, ...] = (),
     return best
 
 
+def _committed_freshness():
+    """src 无未提交改动 ⇒ (最后一次改 src 的提交时间, 最后一次改 dist 的提交时间);否则 / git 不可用 ⇒ None。
+    只读:`--no-optional-locks`,不碰 index 锁(规则 4)。"""
+    import subprocess
+    try:
+        g = lambda *a: subprocess.run(["git", "-C", str(_ROOT), "--no-optional-locks", *a],
+                                      capture_output=True, text=True, check=True).stdout.strip()
+        if g("status", "--porcelain", "--", "dashboard/src"):
+            return None
+        src_ct = g("log", "-1", "--format=%ct", "--", "dashboard/src")
+        dist_ct = g("log", "-1", "--format=%ct", "--", "dashboard/dist")
+        if not src_ct or not dist_ct:
+            return None
+        return float(src_ct), float(dist_ct)
+    except Exception:                                             # noqa: BLE001
+        return None
+
+
 def test_dist_directory_exists() -> None:
     """No dist/ → never built. The first push of a dashboard change without
     `npm run build` lands here."""
@@ -128,6 +146,21 @@ def test_src_newer_than_dist_fails() -> None:
         _check("dashboard/dist/ has at least one build artefact",
               False,
               "dist/ has no .js / .css / etc. after filtering; run `npm run build`")
+        return
+
+    # S-433b(lane-b 实测 09-27):**干净检出里 mtime 不说明任何事** —— git 按检出顺序写文件,
+    # src 与 dist 落在同一秒甚至 src 更晚,于是每个新 worktree 的 preflight 随机变红。
+    # src 没有未提交改动时,新鲜度是「提交」的属性:最后一次动 src 的提交不能晚于最后一次动 dist 的提交。
+    # src 有未提交改动(正在改)时,才用 mtime —— 这才是这个守卫原本要抓的场景。
+    committed = _committed_freshness()
+    if committed is not None:
+        src_ct, dist_ct = committed
+        _check(
+            f"dashboard/src 无未提交改动;最后一次改 src 的提交 ({_fmt(src_ct)}) ≤ 最后一次改 dist 的提交 ({_fmt(dist_ct)})",
+            src_ct <= dist_ct,
+            "有一次提交改了 dashboard/src 却没有随后重建 dist。"
+            "Run `cd dashboard && npm run build && git add dashboard/dist/` before pushing.",
+        )
         return
 
     delta_s = src_max - dist_max
