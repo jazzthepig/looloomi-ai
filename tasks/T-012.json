@@ -2,7 +2,7 @@
   "id": "T-012",
   "title": "HL 采集器加持仓量(OI)",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "source": "数据层盘点 09-24",
   "allowed_paths": [
     "src/data/market/hyperliquid_collector.py",
@@ -20,8 +20,8 @@
   "created": "2026-09-24",
   "verified": {
     "by": "seth",
-    "value": "代码侧 ship 完成 commit `5950f41`:scripts/supabase_open_interest_history.sql(新表 DDL,PK (symbol, snapshot_time, venue),NOT NULL OI,RLS+revoke from anon)+ src/data/market/hyperliquid_collector.py `collect_venue_marks()` 加 OI 落库(I1 None skip)+ tests/test_hyperliquid_open_interest_persistence.py 10 checks 全绿 + scripts/preflight.sh stage 3 注册 + src/api/schema_manifest.json 重新生成(open_interest_history 在列)。Railway deploy 后健康(/health 200,version 0.6.3)。**DDL apply 由 Jazz 经 MCP 到生产 Supabase**(沙箱不可达 Supabase)。DDL apply 后,`_venue_marks` 循环每 6h 一轮 → 下一轮 tick 应写 ~200 行 OI(HL ~232 perps)。**待 Jazz:① 经 MCP apply `scripts/supabase_open_interest_history.sql` ② 等下一轮循环(最长 6h)③ 验 `select count(distinct symbol) from open_interest_history where snapshot_time::date = current_date` > 200。**Pre-flight 🔴 已知**:S-431 dangling citation 在 src/research/validation/s431_beta_plus_8h.py(Austin lane),与 T-012 无关。",
-    "at": "2026-09-26T03:55:00Z"
+    "at": "2026-09-27",
+    "value": "open_interest_history 03:00 UTC 一轮写入 234 个币(判据 >200)"
   },
   "notes": "2026-09-27 Seth:DDL 已经由 MCP 应用(迁移 t012_open_interest_history,RLS 开、零策略、anon/authenticated 收回)。preflight 在线 schema-drift 的硬红就是这张表(有调用点、表不存在 ⇒ 每次写入返回 False 被吞)。待 venue_marks 下一轮后按卡上判据验。"
 }
