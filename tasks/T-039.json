@@ -1,0 +1,24 @@
+{
+  "id": "T-039",
+  "title": "风格表头:每个标的的风格归属(PIT)+ 每个风格的日指数 + 每本账本的风格暴露",
+  "owner": "seth",
+  "status": "open",
+  "source": "Jazz 09-30:「分辨不了大币周期、二线公链、山寨币、meme 的暴露,就是表头没有做」;DECISION_PATH_SPEC ① 风格/相位判断从未接上",
+  "allowed_paths": [
+    "src/data/style/",
+    "src/api/",
+    "scripts/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① asset_style(symbol, style, tier, valid_from, valid_to, source):风格 = 大币 / 头部公链 / 二线公链与 L2 / DeFi / 基础设施与代币化 / AI / meme …;档位按当日市值排名(PIT,不用今天的排名回填过去)。② style_index_daily(d, style, weighting ∈ {cap, equal}, ret, n_members) 自 2020 起。③ book_style_exposure_daily(d, book, style, beta):每本账本对各风格指数的滚动暴露。④ 覆盖缺口:meme / AI 在库里几乎没有历史(binance_hist 只有 DOGE/PEPE/1000SHIB),按 Rule 3b 由 Seth 回填",
+    "expect": "任意一天能回答「这本账本此刻在大币 / 二线 / 山寨 / meme 各暴露多少」,且能回放到 2021、2022、2024 三段"
+  },
+  "prior_value": "asset_class 只有 L1/L2/DeFi/RWA/Infra 粗分类、无档位、无 meme;asset_embeddings_history 仅 08-19 起 42 天、59 个标的;无任何风格指数",
+  "created": "2026-09-30",
+  "verified": null
+}
