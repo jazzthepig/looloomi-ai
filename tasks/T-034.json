@@ -22,5 +22,5 @@
   "prior_value": "M-189 只有预注册;T-032(Seth 接进 hl_book_daily)等这份回放结论",
   "created": "2026-09-27",
   "verified": null,
-  "notes": "Seth 09-29:M-190 台账已合并(只取台账段)。未满足:① m189_replay.py 与测试不在仓库 → 不可复现;② regime 全 UNKNOWN,「分 regime」未做。补齐方式:代码+测试推到 lane-b/T-034 分支,regime 用真表重跑,改 M-190 追加段。"
+  "notes": "Seth 09-29:M-190 台账已合并(只取台账段)。未满足:① m189_replay.py 与测试不在仓库 → 不可复现;② regime 全 UNKNOWN,「分 regime」未做。补齐方式:代码+测试推到 lane-b/T-034 分支,regime 用真表重跑,改 M-190 追加段。 | Seth 09-29 S-437:m189_replay.py + 17 个测试已从 lane-b 工作区合入并挂进 preflight;M-190 数字现在可复现。仍缺:regime 分段(全 UNKNOWN)。"
 }
