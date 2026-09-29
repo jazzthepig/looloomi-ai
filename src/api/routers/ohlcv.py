@@ -449,12 +449,26 @@ async def backfill_deep_panel(
     from src.data.market.deep_panel_collector import collect_deep_panel
 
     async def _run():
+        # S-439:后台任务的结果必须落到能查的地方。首次真跑被「活标的 ≥100」地板拒绝,
+        # 只留了一行日志,从外面看就是「跑了,没写」。
+        from src.api.rpc_diagnostics import _record_loop_attempt
         try:
             r = await collect_deep_panel(days=days, symbols=syms)
             _logger.warning("[DEEP-BACKFILL] days=%s symbols=%s → %s", days, len(syms),
-                            {k: r.get(k) for k in ("symbols_ok", "symbols_failed", "rows_written", "status")})
+                            {k: r.get(k) for k in ("symbols_ok", "symbols_failed", "rows_upserted", "refused")})
+            outcome = "refused" if r.get("refused") else ("ok" if r.get("ok") else "error")
+            detail = {k: r.get(k) for k in ("symbols_total", "symbols_ok", "symbols_failed",
+                                            "rows_built", "rows_upserted", "written")}
+            detail["days"] = days
+            await _record_loop_attempt(
+                "_deep_panel_backfill", outcome,
+                reason=str(r.get("diagnosis") or r.get("error") or "")[:400] or None,
+                detail=detail, writer="src.api.routers.ohlcv.backfill_deep_panel")
         except Exception as e:                                    # noqa: BLE001
             _logger.error("[DEEP-BACKFILL] failed: %s: %s", type(e).__name__, e)
+            await _record_loop_attempt("_deep_panel_backfill", "error",
+                                       reason=f"{type(e).__name__}: {e}"[:400],
+                                       writer="src.api.routers.ohlcv.backfill_deep_panel")
 
     asyncio.create_task(_run())
     return {"dry_run": False, "started": True, **plan,

@@ -430,6 +430,10 @@ async def collect_deep_panel(days: int | None = None,
     await asyncio.gather(*[_go(s) for s in syms])
 
     ok_n = len(syms) - len(failures)
+    # S-439:活标的地板是给「自动全面板」设的(防止半天的数据把面板伪装成最新)。
+    # 显式传入少量标的做历史补洞时(T-030 的 24 个),固定 100 的地板让每次都被拒 —— 按比例算。
+    live_floor = (_MIN_LIVE_SYMBOLS if symbols is None
+                  else min(_MIN_LIVE_SYMBOLS, max(1, -(-len(syms) * 7 // 10))))
     # S-415:**下架和故障是两个结果**(与 hyperliquid_collector S-204 同一个修法,
     # 那边修了,这边隔一个文件没跟上)。262 个符号里 123 个在 Binance 现货上
     # 根本不存在 —— 永续命名(1000SHIB)、已下架(AGIX)、HL 独有名。它们每一轮
@@ -458,7 +462,7 @@ async def collect_deep_panel(days: int | None = None,
     # cross-sectional study reading 2026-08-20 gets a one-symbol universe and no
     # way to know. A visible gap is recoverable; a day that silently contains
     # one asset corrupts every study that crosses it.
-    if all_rows and (frac < _MIN_OK_FRACTION or ok_n < _MIN_LIVE_SYMBOLS):
+    if all_rows and (frac < _MIN_OK_FRACTION or ok_n < live_floor):
         _log.error(
             "[DEEP] REFUSING TO WRITE — only %s/%s symbols returned data (%.0f%%, "
             "floor %.0f%%). Writing them would leave max(trade_date) at today and "
@@ -477,7 +481,7 @@ async def collect_deep_panel(days: int | None = None,
             "failure_sample": dict(list(errored.items())[:8]) or dict(list(failures.items())[:8]),
             "diagnosis": (
                 f"only {ok_n}/{reachable} reachable symbols ({frac:.0%}, floor "
-                f"{_MIN_OK_FRACTION:.0%}; live floor {_MIN_LIVE_SYMBOLS}); "
+                f"{_MIN_OK_FRACTION:.0%}; live floor {live_floor}); "
                 f"{len(delisted)} delisted/unlisted not counted. Write REFUSED so "
                 f"the gap stays visible rather than being papered over by a partial day."),
         }
@@ -494,7 +498,7 @@ async def collect_deep_panel(days: int | None = None,
                 break
 
     out = {
-        "ok": bool(written) and frac >= _MIN_OK_FRACTION and ok_n >= _MIN_LIVE_SYMBOLS,
+        "ok": bool(written) and frac >= _MIN_OK_FRACTION and ok_n >= live_floor,
         "symbols_total": len(syms),
         "symbols_ok": ok_n,
         "symbols_failed": len(failures),
