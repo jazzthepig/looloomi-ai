@@ -109,7 +109,9 @@ async def _fetch_cg_daily(client: httpx.AsyncClient, coin_id: str, days: int) ->
                 _h = await get_cg_market_chart_range(coin_id, frm, now, interval="daily")
                 for v in (_h.get("volumes") or []):
                     if len(v) >= 2:
-                        _d = datetime.fromtimestamp(float(v[0]) / 1000, tz=timezone.utc).date()
+                        # S-436: the 00:00 point carries the 24h ending there = the day before.
+                        _d = (datetime.fromtimestamp(float(v[0]) / 1000, tz=timezone.utc)
+                              - timedelta(days=1)).date()
                         vol_by_date[_d.isoformat()] = float(v[1])
             except Exception:
                 pass          # volume is decoration; the candle is the point
