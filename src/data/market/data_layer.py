@@ -3453,6 +3453,26 @@ async def get_cg_ohlc_range(coin_id: str, from_ts: int, to_ts: int,
         return []
 
 
+async def get_cg_category_ids() -> set[str]:
+    """CoinGecko Pro `/coins/categories/list` → 全部分类 id(T-039 风格表头用来校验分类法)。读不到抛异常。"""
+    client = _get_cg_client()
+    r = await client.get(f"{CG_PRO_BASE}/coins/categories/list", headers=_cg_headers(), timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"CoinGecko /coins/categories/list HTTP {r.status_code}: {r.text[:160]}")
+    return {c.get("category_id") for c in r.json() or [] if c.get("category_id")}
+
+
+async def get_cg_category_markets(category_id: str, per_page: int = 40) -> list[dict]:
+    """CoinGecko Pro `/coins/markets?category=…` 按市值降序的前 `per_page` 个成员(T-039)。读不到抛异常。"""
+    client = _get_cg_client()
+    r = await client.get(f"{CG_PRO_BASE}/coins/markets", headers=_cg_headers(), timeout=30,
+                         params={"vs_currency": "usd", "category": category_id,
+                                 "order": "market_cap_desc", "per_page": per_page, "page": 1})
+    if r.status_code != 200:
+        raise RuntimeError(f"CoinGecko /coins/markets?category={category_id} HTTP {r.status_code}: {r.text[:160]}")
+    return r.json() or []
+
+
 async def get_cg_market_chart_range(coin_id: str, from_ts: int, to_ts: int, interval: str = None) -> dict:
     """
     CoinGecko Pro /coins/{id}/market_chart/range — prices in a precise unix timestamp window.

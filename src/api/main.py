@@ -971,6 +971,39 @@ async def _start_tokenization_tilt_loop():
     print("[TOKEN-TILT] ✅ forward record scheduled (tokenization_tilt_daily, 2 arms)")
 
 
+async def _style_header_loop():
+    """T-039 风格表头:成员(每 7 天)→ 市值历史补到昨天 → 风格指数(大币 / 头部公链 / 二线公链与 L2 /
+    DeFi / 基础设施与代币化 / AI / meme)。每 6 小时一轮,幂等。表 `style_membership` / `asset_mcap_daily` /
+    `style_index_daily`。判活:`select max(d) from style_index_daily` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(420))
+    while True:
+        try:
+            from src.data.style.header import run_once as _style_run
+            r = await _style_run()
+            print(f"[STYLE] {str(r.get('reason'))[:200]}")
+            await _beat("_style_header_loop", ok=bool(r.get("ok")),
+                        detail={"n_styled": r.get("n_styled"), "mcap_rows": r.get("mcap_rows"),
+                                "mcap_failed": r.get("mcap_failed"), "index": r.get("index")},
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt("_style_header_loop", "ok" if r.get("ok") else "error",
+                                       reason=str(r.get("reason"))[:400],
+                                       writer="src.api.main._style_header_loop")
+        except Exception as _e:
+            print(f"[STYLE] ⚠️  pass FAILED: {_e}")
+            await _beat("_style_header_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_style_header_loop", "error",
+                                       reason=f"{type(_e).__name__}: {_e}"[:400],
+                                       writer="src.api.main._style_header_loop")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_style_header_loop():
+    _asyncio.create_task(_style_header_loop())
+    print("[STYLE] ✅ style header scheduled (style_membership / asset_mcap_daily / style_index_daily)")
+
+
 # 心跳只记录,不重试不终止 —— 一个顺手改行为的记录器,下一个人就不敢用。
 from src.api.loop_beat import classify as _classify  # noqa: E402  (S-299)
 from src.api.rpc_diagnostics import _record_loop_attempt  # S-408-2 (A-408-2) per-iteration record
