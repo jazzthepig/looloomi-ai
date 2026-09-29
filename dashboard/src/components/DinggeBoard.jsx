@@ -31,6 +31,12 @@ export default function DinggeBoard() {
   const board = (data && data.board) || [];
   const active = board.filter(b => b.at_cap || (b.days_since_cap != null && b.days_since_cap <= 45));
   const shown = active.length ? active : board.slice(0, 6);
+  // T-033.2a (2026-09-28): replace misleading "X active/recent · Y tracked" copy.
+  // Reality is sparse — most tracked symbols never hit cap. Surface that honestly
+  // so the operator reads "1 active · 34 quiet · 1 archived" not "1 active · 36 tracked".
+  const nActive   = board.filter(b => b.at_cap || (b.days_since_cap != null && b.days_since_cap <= 45)).length;
+  const nArchived = board.filter(b => b.days_since_cap != null && b.days_since_cap > 45).length;
+  const nQuiet    = board.length - nActive - nArchived;
 
   return (
     <div style={{ marginTop: 28 }}>
@@ -42,7 +48,7 @@ export default function DinggeBoard() {
         </span>
         {data && (
           <span style={{ fontFamily: F.mono, fontSize: 9, color: T.muted, marginLeft: "auto" }}>
-            {data.active_or_recent || 0} active/recent · {board.length} tracked
+            {nActive} active · {nQuiet} quiet · {nArchived} archived
           </span>
         )}
       </div>

@@ -27,6 +27,25 @@ function dirColor(d = "") {
   return T.t3;
 }
 
+// Relative-time formatter for signal timestamps.
+// T-033.1 (2026-09-28): Item dropped it.timestamp silently — relative form now shown next to source.
+// Falls back to ISO local-date on >30d age or unparseable input so cards never render blank.
+function relTime(iso) {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return null;
+  const age = Date.now() - t;
+  const min = Math.floor(age / 60000);
+  const hr  = Math.floor(min / 60);
+  const d   = Math.floor(hr / 24);
+  if (age < 0)        return "just now";
+  if (min < 1)        return "just now";
+  if (hr  < 1)        return `${min}m ago`;
+  if (hr  < 24)       return `${hr}h ago`;
+  if (d   < 30)       return `${d}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
 async function fetchFeed() {
   try {
     const r = await fetch("/api/v1/signals/feed");
@@ -83,11 +102,16 @@ const Item = ({ it, tierColor }) => (
       <div style={{ fontFamily: FONTS.body, fontSize: 12.5, lineHeight: 1.6, color: T.t2, opacity: 0.92 }}>{clean(it.narrative)}</div>
     )}
     <Layers l={it.layers} />
-    {(it.source || it.symbols) && (
+    {(it.source || it.symbols || it.timestamp) && (
       <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
         {it.symbols && it.symbols.map((s) => (
           <span key={s} style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t2, background: T.raised, border: `1px solid ${T.border}`, padding: "1px 6px", borderRadius: 3 }}>{s}</span>
         ))}
+        {it.timestamp && relTime(it.timestamp) && (
+          <span title={it.timestamp} style={{ fontFamily: FONTS.mono, fontSize: 8.5, color: T.t4, letterSpacing: "0.04em" }}>
+            {relTime(it.timestamp)}
+          </span>
+        )}
         {it.source && <span style={{ fontFamily: FONTS.mono, fontSize: 8.5, color: T.t4, marginLeft: "auto", letterSpacing: "0.06em" }}>{it.source}</span>}
       </div>
     )}
