@@ -7,6 +7,7 @@
 | in_review | T-022 | seth | 移动端 RECENT SIGNALS 卡片:百分比与文案跨度对齐(短时价格不和"strong momentum"同屏) | DOM/截图: 卡片百分比后缀为 '24h' 或 '(24h)';文案与百分比跨度一致(避免 −7% 旁边写 'strong momentum') | MobileApp 卡片:'positions to outperform on strong momentum' 旁显示 −7.45% / −8.98%(百分比实为 24h,跨度与文案冲突) |  |
 | in_review | T-025 | seth | ② 代币化基础设施倾斜账本上线:第一行真实数据 + 连续前向记录 | 两臂都有行,min(d)=2026-09-25,max(d)=昨天(UTC 06:00 后);09-26 起 nav ≠ 1.0 | 代币化论点 09-01 起只在观测层(S-266),没有任何账本;① 里只有 LINK 3.8% |  |
 | in_review | T-030 | seth | binance_hist 回填:过去一年整天缺 41 天(最后 09-06) | = 0 | 20 个币各缺 41 天,ETC/SUI/TRX 29 天,BCH 17 天 |  |
+| in_review | T-031 | seth | CG Pro 面板:5 币自 09-13 停写 + 收盘后终值只覆盖一部分币(7 币停在开盘后的半根) | 5 个都 = 昨天;并在 SPINE / 守卫里说明为什么它们会掉出写入宇宙 | 5 个币最后一行都是 2026-09-13 |  |
 | in_review | T-033 | seth | 后端 CIS narrative 短句措辞:避免短期 trend 词与负 24h% 同屏(T-022 后半) | deterministic narrative 在 OUTPERFORM + 负 24h 条件下仍合规 + 不与百分比跨度冲突;不破坏 desktop CIS leaderboard narrative 既有体验(LLM 路径不受影响) | T-022 前半(pct24h 后缀)shipped。Seth 09-27 review:'strong momentum' 文本来自后端 CIS narrative(cis.py narrative.py 按支柱生成),前端后缀改不了。acceptance 要求文案与百分比跨度一致 —— 需改后端叙事措辞。 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-001 | lane-a | T1 的 TradFi 改从 ohlcv_daily(eodhd)读,撤回 30 天过期缓存 | = 43,且 19 个 TradFi 最新价格日期 ≥ 最近一个美股交易日 | 24 |  |
@@ -21,7 +22,6 @@
 | open | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | open | T-027 | seth | 多空账本存完整权重(不只前三),让「是否持有 X」可回答 | 完整权重 jsonb,非空 | 只存 top_longs/top_shorts 各 3 个;09-24/25 LINK 是否持有无法回答 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
-| open | T-031 | seth | CG Pro 面板:5 币自 09-13 停写 + 收盘后终值只覆盖一部分币(7 币停在开盘后的半根) | 5 个都 = 昨天;并在 SPINE / 守卫里说明为什么它们会掉出写入宇宙 | 5 个币最后一行都是 2026-09-13 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-035 | seth | 复核 M-152(CDCB-A v2)与 M-128d(§5b 2D gate)—— 按 S-420 口径重问后再决定是否接 spec_runner | 台账一条:接 / 不接 / 重跑,附理由 | B 报 M-152 SR +1.115「ship-ready」、M-128d 9/10 PASS;两条都未按「对照持有面板 + 分 regime」口径复核 |  |
 | open | T-036 | seth | Mac 只留一份 env:~/.config/cometcloud/.env;cis_scheduler 改读它,cometcloud-local/.env 退役;Python 日志改 UTC | 一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行 | 三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份 |  |
@@ -39,4 +39,4 @@
 | done | T-024 | seth | P0:找到并停掉第二个 T1 写入端(非整点推送,DQS 全空、confidence 不同) | 只有 local_engine;railway_snapshot 的 T1 = 0 | 09-24 起 19 次非整点 T1 推送(08:09、08:15、09:09 … 09-26 02:07、03:09);这些推送 confidence 为 0.67/0.83/1.0(常规引擎是 0.70/0.85),DQS 全空,BTC 分类为 L1(常规为 Crypto)。网站在两版之间每小时切换一次。 | 部署(afc0c12,~11:37 UTC)后:railway_snapshot 最后一行 T1 = 11:13(部署前);部署后那次启动快照 11:40 只写了 T2。T1 行此后只有 local_engine。 @ 2026-09-27T15:36Z |
 | done | T-029 | seth | ② β+ 动量 + 52 周高点前向账本上线(四臂) | 四臂都有行,min(d)=2026-09-25、max(d)=昨天;momentum_52w_w 与 panel_hold_w 的 NAV 不同 | ② 从未建过前向账本;S-428 研究周频 +17.2%/年(t 3.22) | beta_plus_daily 四臂各 2 行(09-25、09-26);09-26 NAV:momentum_52w_w/m 0.99415,panel_hold_w/m 0.99769(不同,判据满足)。第 1 天差异是噪声 + 起点 10 bps,不是结论。 @ 2026-09-27 |
 
-open 17 · blocked 2 · in_review 6 · done 11
+open 16 · blocked 2 · in_review 7 · done 11
