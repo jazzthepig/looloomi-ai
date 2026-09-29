@@ -1909,6 +1909,9 @@ echo "  ✓ S-427 tokenization tilt · S-429 β+ momentum books"
 # 永不给亏损仓位加仓 · 换手不动带 · Jev 臂的匿名/打乱/解析路径喂机械答案必须 ≡ 机械 Tom。
 python3 -m paper_trading.tests.test_hl_book_smoke || {
   echo "  ✗ S-412 hl_book 守卫 — do not push"; exit 1; }
+# M-190 / T-034: M-189 两臂回放(固定 / 波动率公式)同一 hl_book 内核、lag-1、无前视。
+python3 -m pytest paper_trading/tests/test_m189_replay.py -q || {
+  echo "  ✗ M-190 m189_replay 守卫 — do not push"; exit 1; }
 
 # ── S-284/S-288 C fix: regime_quorum 闸 (S-263 redux) ──────────────────────────
 # decide_gated 是 decide() 的 wrapper —— quorum=COLLAPSED/frozen/no_baseline/
