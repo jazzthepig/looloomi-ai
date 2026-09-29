@@ -23910,3 +23910,117 @@ A 提的「推送里加 source 标签」不需要 —— 标签已经在了。
 
 **同轮:** T-030 —— 新增 `/internal/backfill-deep-panel`(默认 dry_run、后台执行),调用同一个 binance_hist 写入端按更长窗口补 41 天的历史空洞;
 采集器的自愈只看前沿,历史内部的洞永远补不上。
+
+## M-190 (lane-b, 2026-09-27;Seth 09-29 合并自 `lane-b/T-036-internal` 的台账段,只取本条) — M-189 基准 1 (fixed) + 2 (vol-formula) 在 HL 4 币的历史回放(T-034)
+
+> **合并者注(Seth 09-29):** 回放代码 `paper_trading/research/m189_replay.py` 与测试**不在仓库**(只在 B 的工作区),本条的数字目前**不可复现**;regime 分段全部为 UNKNOWN(沙箱读不到 regime 表),T-034 验收要求的「分 regime」未满足。所以:**记录,不验证**。T-034 停在 in_review,直到代码 + 测试进 `lane-b/T-034` 分支、regime 段用真表重跑。唯一可以先用的结论:两臂夏普几乎相同(+0.002),vol-formula 的相对价值只在回撤(−36% → −27%)。
+
+**来源:** T-034 acceptance.check(M-189 acceptance signature:「Seth merge + 接 `hl_book_daily` 后实跑出 SR / MaxDD,才能开 `[verified]`」)。
+**目的:** 实跑 M-189 预注册前两级(baseline 1 fixed / baseline 2 vol-formula)在 HL 4 币 3.4 年历史回放,`hl_book.py` zero 修改,Seth 的 T-032(接进 `hl_book_daily`)前置。
+**Engine:** `paper_trading/hl_book.py` 286 行 zero modification;vol-formula wrapper 在 `paper_trading/research/m189_replay.py:vol_formula_size_multiplier` + `tom_targets_vol_formula`,**不动 engine 调用方式**(`apply_turnover_limits` 仍生效,gross cap + trade-band 0.2 触发换手)。
+
+**Setup:** HL 4 币 cache `paper_trading/state/hl_cache/{BTC,ETH,SOL,HYPE}.json`(主仓,S-167 持久化);`START=2023-05-15`(周一);`COST_SPOT=12e-4`(engine 默认;M-189 spec 写 10 bps 是误记,**按换手计 ≠ 按天计**);`target_vol_annual=0.50`(crypto 60-100% realized vol 中位,clamp [0.5, 1.5]);lag=1 默认 + lag=0 双跑给 M-114 retention 测。
+
+**结果(HL 4-coin, 2023-05-15 → 2026-09-23, 2227 trading days, 1226 Mondays, cost = 12.0bps, lag=1):**
+
+| Arm | n_periods | cum | CAGR | Sharpe | MaxDD | freq/yr | cost/yr |
+|---|---|---|---|---|---|---|---|
+| `H0_hold` (panel baseline) | 1226 | 3.76 | 0.5917 | 1.07 | **-56.26%** | 0.07 | 0.0001 |
+| `T3_weekly` (panel mechanical) | 1226 | 2.79 | 0.4866 | 1.23 | -36.79% | 8.32 | 0.0100 |
+| `MECH_tom` (fixed size_mult=1.0) | 1226 | 3.75 | 0.5902 | **1.42** | -36.04% | 8.83 | 0.0127 |
+| `VOL_tom` (vol-formula) | 1226 | 2.99 | 0.5094 | **1.42** | **-27.43%** | 7.74 | 0.0116 |
+
+**Lag discipline(M-114 `lag_discipline_pass(retention_floor=0.5, sharpe_min=0.05)`):**
+
+| Arm | SR(lag-0) | SR(lag-1) | retention | passes |
+|---|---|---|---|---|
+| `MECH_tom` | 1.69 | 1.42 | **0.840** | ✅ |
+| `VOL_tom`  | 1.72 | 1.42 | **0.827** | ✅ |
+
+**Cost sensitivity(per-leg per-rebalance):**
+
+| Arm | Sharpe@12.0bps | Sharpe@10.0bps | Δ |
+|---|---|---|---|
+| `H0_hold` | 1.07 | 1.07 | 0.00 |
+| `T3_weekly` | 1.23 | 1.23 | 0.00 |
+| `MECH_tom` | 1.42 | 1.43 | +0.01 |
+| `VOL_tom`  | 1.42 | 1.43 | +0.01 |
+
+**Regime-conditional SR(cost = 12.0bps first row):** 全样本 1226 Mondays ∈ `UNKNOWN`(sandbox 跑不通 Supabase REST;42d stale + 14-month historical gap per M-119)。**Mac-side 重跑**才会出真 regime 段;report 单列 UNKNOWN 不沉默映射到 NEUTRAL。
+
+**M-189 判据 checklist:**
+
+- [x] **baseline = hold the panel** — `H0_hold` 列存在,SR=1.07 / cum=3.76x / MaxDD=-56.26%(`HIGH_DIM_ONTOLOGY §5b ①` 真实成本:panel baseline 不去风险就有 56% MaxDD)
+- [x] **regime-conditional** — 7 regime bucket 都跑了(S-412 framework 复用),但 sandbox-only regime=UNKNOWN 1226d;**Mac-side** 真 regime
+- [x] **n_periods ≥ 30** — 1226 Mondays ✅
+- [x] **cost realism** — 12.0bps(engine 默认)+ 10.0bps(M-189 spec 改写值)双 cost 行,per-leg per-rebalance(非按天,S-433 反馈修)
+- [x] **lag discipline(M-114 retention ≥ 0.5)** — MECH 0.840 / VOL 0.827,两臂都过
+- [x] **early-exit(trade-band 0.2)** — 反映在 freq/yr(8.83 / 7.74)+ cost/yr(0.0127 / 0.0116)
+
+**Summary stats(M-189 acceptance signature 主输出):**
+
+```
+vol_vs_fixed_delta_sharpe:    +0.0024    (negligible — VOL 和 MECH SR 几乎平;MaxDD 改善 8.6pp)
+vol_vs_hold_delta_sharpe:     +0.3495    (significant excess over buy-hold)
+fixed_vs_hold_delta_sharpe:   +0.3471    (mechanical 也是 excess over buy-hold)
+```
+
+**Findings(JAZZ-decision-relevant):**
+
+1. **VOL 和 MECH SR 几乎平(+0.0024),VOL MaxDD 改善 8.6pp(-36.04% → -27.43%)。** 期望中的「vol-targeting 应该改善 Sharpe」没出现,但 MaxDD 改善是真。clamp [0.5, 1.5] 让 vol-formula 大部分时候落在 1.0 附近(60-100% realized vol 区间,target=0.50 经常 hit `lo=0.5` floor),**约束行为比预期更不活跃**。
+2. **两臂都明显 beat H0_hold**(SR +0.35),但 H0_hold MaxDD -56% 在 RL / FoF 视角是真痛点 — `H0_hold` 不能直接当产品腿(没风险管理)。
+3. **cost sensitivity 几乎为 0** — 12bps vs 10bps 在这两臂上 Sharpe 移动 < 0.01;crypto 12bps 实际是「数学不利」假设,真实 spread+impact 大概率 > 12bps,但**这是历史回放而不是 paper trade**,所以 12 bps 是稳口径下限。
+4. **regime gap 是本回放最大 caveat**:sandbox 不接 Supabase → 1226d 全 UNKNOWN → regime-conditional 表里 7 regime 段都是空白。**T-034 Mac-side 真跑**会填补真 regime(per S-405/§V5 macro_regime history backfill:CSV in `/Volumes/CometCloudAI/cometcloud-local/_data/v5_macro_history.csv` 应已在 Mac 落地)。
+5. **T-032 (Seth 接 hl_book_daily) 的入口参数已现成:** M-189 acceptance 的 H1(Jev IC 贡献独立性 vs state-machine)对照组 = fixed baseline,**已经 ship 验过**。T-032 的固定 + vol-formula 两级实现可直接复刻 `tom_targets_vol_formula` 的 wrapper pattern 到 `hl_book_daily.py`(不动 `mechanical_answers` 主路径)。
+
+**产出(allowed paths 全部落在 `paper_trading/`):**
+
+- `paper_trading/research/__init__.py`(NEW, 空 package init)
+- `paper_trading/research/m189_replay.py`(NEW, ~400 行: wrappers + 4-arm simulate + pnl + lag-discipline + CLI + report rendering)
+- `paper_trading/tests/test_m189_replay.py`(NEW, **16/16 PASS**:vol_formula 默认 clamp / NaN fallback / negative vol fallback / 自定义 bounds / engine-wrap / 4-arm synthetic 260d / Monday-only iteration / pnl shape + cost subtraction / cost 高低减扣 / stats known shape / lag-disciplined M-93-like / lag-discipline fail M-95c-like / trivial skip / regime bucket / end-to-end diff / report 段齐全)
+- `paper_trading/state/replay/m189_hl_2026-09-27/`(NEW, **gitignored**;`_meta.json` + `_diff.json` + `_regime_cache.json` + 4 个 `*_decisions.jsonl`)
+- `paper_trading/reports/m189_hl_replay_2023-05-15.md`(NEW, **gitignored**;Markdown 报告 = 上面表格的源头)
+- `tasks/T-034.json`(NEW + status=`in_review`, verified 段已填)
+- `PROJECT_STATE.md` 表头加 T-034 行(Seth merge 后)
+
+**未做项 + 下游:**
+
+- **Jev baseline #4**(M-189 pre-reg 第三级)+ **online-learning bandit #3** —— 不在 T-034 scope;bandit 是 T-018 之后 Outter framework 接(`outter-concept-2026-09-24` 立项)
+- **Dashboard tab** —— 数据 side ship,UI wire-up 独立 task(JAZZ 拍,Rule 3)
+- **Live 60d paper track** —— historical replay only,live 是 T-038+ 后续
+- **T-035(S-420 复查 M-152 + M-128d)** —— Seth 自接,不在 T-034 范围
+- **hl_book.py / hl_book_daily.py / spec_runner.py / Spec.load** —— engine unchanged 硬约束,**0 文件改动**
+
+**来源证据(commit trail):**
+
+- M-189 pre-reg: REFUTATION_LEDGER.md:23838-23877(lane-b/T-011 b2cb105,Seth 09-27 renumbered)
+- S-433 §IN-FLIGHT 末段:Seth 派活「T-034 → B: replay M-189 的两级简单基准」
+- T-034 plan:`/Users/sbb/.claude/plans/seth-temporal-cloud.md`(Seth 拍)
+- T-032 (Seth 后继, hl_book_daily wire-up):等 Seth 自己接
+
+**Verify(已跑过,sandbox):**
+
+- 16/16 unit + smoke test PASS(`pytest paper_trading/tests/test_m189_replay.py -q`)
+- preflight stage 3 PASS(主仓 `bash scripts/preflight.sh` 末段绿)
+- 实跑 output: 2227d HL 4-coin,4-arm + lag-discipline + cost-sensitivity + regime-conditional(UNKNOWN)段都写出
+
+**[verified · lane-b]**
+
+## S-435 — 09-28 三 lane 复核:三条「已完成」与库不符,一次合成数据差点变成决定
+
+**测了什么:** 每张 lane 卡的验收 SQL 直接在库上跑,不看报告。
+
+| 声明 | 库里 |
+|---|---|
+| A:T-018「mb-3 已 ship」 | `macro_briefs` 没有 `prompt_version` 列;`source='mac_mini'` 09-27 15:50 → 09-28 15:18 零行(23h) |
+| A:T-001 v2 让 T1 到 43 | T1=43 自 09-26 04 UTC 起就成立,早于改动 —— 不能当验收 |
+| B:Outter v1.0 三个「高置信格」夏普 +22.9 / +31.9 / +15.3 | 全部来自 `gen_fixture.py` 的模拟 NAV 与模拟 regime,n=4/10/8 |
+| B:「新 token 未经过 B」 | 同一句话把新 token 明文写进了 SYNC |
+
+**简报 23h 断供的真因:** Mac 上有三份 env(仓库 `.env`、`cometcloud-local/.env`、`~/.config/cometcloud/.env`)。
+轮换改了前两份;简报/新闻监听/价格采集读第三份 ⇒ 带旧 token 一直 401,进程活着、不报错。
+第三份补齐 + kickstart 后,一分钟内写出新简报(15:18 UTC,非空快照,文字与当日 −3.5% 一致)。
+
+**同一个缺陷类的第三种形态:** 前两种是「读不到 → 用看起来合理的值顶上」;这次是「在合成数据上算出来 → 当成证据」。
+判别不靠自觉:报告首行必须写数据来源;`fixtures/` 下产生的数字不进 `_reports/absorb_input/`。
+另:卡号三处撞号(A 用 T-032,B 用 T-036/T-037)—— 卡号只由合并者分配。
