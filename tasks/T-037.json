@@ -2,10 +2,10 @@
   "id": "T-037",
   "title": "历史策略清点:每个「报过跑赢持有」的策略一行,只收集、不重算(v0.2 阶段 1 的输入)",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "source": "v0.2 §7 阶段 1 / S-437",
   "allowed_paths": [
-    "docs/strategy_inventory_2026-09-30.json"
+    "docs/research/T-037_historical_strategy_inventory_2026-09-30.md"
   ],
   "forbidden_paths": [
     "src/",
@@ -14,11 +14,15 @@
     "scripts/"
   ],
   "acceptance": {
-    "check": "docs/strategy_inventory_2026-09-30.json 每行字段齐:id / 层级 ①–④⓪ / 台账出处 / 仓库内代码路径(不存在写 null)/ 数据源 / 宇宙 / 窗口 / 基准(持有面板?BTC?0?)/ 自报指标原文 / 已知问题(同 bar 前视家族、成本 5bps 即失效、只有回测没前向 …)/ 能否今天重跑",
+    "check": "docs/research/T-037_historical_strategy_inventory_2026-09-30.md 每行字段齐:id / 层级 ①–④⓪ / 台账出处 / 仓库内代码路径(不存在写 null)/ 数据源 / 宇宙 / 窗口 / 基准(持有面板?BTC?0?)/ 自报指标原文 / 已知问题(同 bar 前视家族、成本 5bps 即失效、只有回测没前向 …)/ 能否今天重跑",
     "expect": "覆盖 B 阶段 1 报告里 A 表全部行;每个自报数字都标「自报,未重算」;不出现任何新算的数字"
   },
   "prior_value": "B 09-29 阶段 1 报告(A 表 17 行,数字来自 MEMORY 概括)",
   "created": "2026-09-30",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-09-30",
+    "value": "25 条策略 + 11 条坟场,数字全部标「自报,未重算」;风格列已加;C-5 差异 Seth 复算:到 09-20 C-5 币池等权 −44.1%、①面板 −14.0%(binance_hist,日再平衡)—— 差异主要来自币池(MKR/CRV/LDO/COMP/GRT/ONDO 等 DeFi),不是记账"
+  },
   "notes": "不跑模拟、不定对错。重算由 Seth 用公用记账内核做。C-5「等权面板 −58.84%」需标出处 —— Seth 用 binance_hist 实测 2023-12-27→2026-09-28 等权为 −7.5%(日再平衡)/ −3.5%(买入持有),对不上。"
 }
