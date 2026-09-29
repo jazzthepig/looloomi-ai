@@ -2,7 +2,7 @@
   "id": "T-009",
   "title": "data_quality_score:先修 data_freshness,再算分,随推送落库",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "source": "C 09-24 报告",
   "allowed_paths": [
     "/Volumes/CometCloudAI/cometcloud-local/"
@@ -16,6 +16,10 @@
   },
   "prior_value": "0(列一直为空)",
   "created": "2026-09-24",
-  "verified": null,
-  "notes": "S-426 测:常规引擎整点推送 DQS 已 39/39 非空,取值 0.70/0.85 与 confidence 一致(A′ 生效)。但每小时另有一次非整点推送 DQS 全空 —— 见 T-024,T-024 结案前 T-009 不能验。"
+  "verified": {
+    "by": "seth",
+    "at": "2026-09-29T08:10Z",
+    "value": "T1 最近 2h:86/86 行 DQS 非空,取值 {0.70, 0.85}(区分度满足原验收)。注:A′ 口径下 DQS = confidence,目前不带额外信息 —— 是否让它随源时间戳变化是 T-020 的事。"
+  },
+  "notes": "S-426 测:常规引擎整点推送 DQS 已 39/39 非空,取值 0.70/0.85 与 confidence 一致(A′ 生效)。但每小时另有一次非整点推送 DQS 全空 —— 见 T-024,T-024 结案前 T-009 不能验。 | Seth 09-29:T-024 已结(第二个 T1 写入端停了),按原验收验过。"
 }
