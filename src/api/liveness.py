@@ -41,6 +41,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_hl_book_loop":             {"max_age_h": 48, "kind": "marker"},   # S-413
     "_tokenization_tilt_loop":   {"max_age_h": 48, "kind": "marker"},   # S-427
     "_beta_plus_loop":           {"max_age_h": 48, "kind": "marker"},   # S-429
+    "_style_header_loop":        {"max_age_h": 24, "kind": "marker"},   # T-039
     "_causal_paper_loop":        {"max_age_h": 48, "kind": "marker"},
     "_combined_book_loop":       {"max_age_h": 48, "kind": "marker"},
     "_dingge_paper_loop":        {"max_age_h": 48, "kind": "marker"},
