@@ -3427,7 +3427,16 @@ async def get_cg_ohlc_range(coin_id: str, from_ts: int, to_ts: int,
             try:
                 # The DATE COMES FROM THE CANDLE. Never from the write clock —
                 # that is the mistake this whole endpoint switch exists to end.
-                d = datetime.fromtimestamp(float(k[0]) / 1000, tz=timezone.utc).date()
+                #
+                # S-436: and k[0] is the candle's CLOSE time, not its open. The
+                # daily candle for day D is stamped D+1 00:00 UTC. Reading it as
+                # D labelled every coingecko_pro_ohlc row one day late — measured
+                # 18/18 days, CG(D) matched Binance(D-1) to 0.02% and Binance(D)
+                # only to 0.03–6.3%. It also froze the readiness guards: the row
+                # labelled D was first written early on D and never changed, so
+                # "written after D's close" was never true for most coins.
+                d = (datetime.fromtimestamp(float(k[0]) / 1000, tz=timezone.utc)
+                     - timedelta(days=1)).date()
                 out.append({"trade_date": d.isoformat(),
                             "open": float(k[1]), "high": float(k[2]),
                             "low": float(k[3]), "close": float(k[4])})
