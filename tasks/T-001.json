@@ -18,5 +18,5 @@
   "prior_value": "24",
   "created": "2026-09-24",
   "verified": null,
-  "notes": "A 09-27 SYNC §IN-FLIGHT T-001 段:4 段改动 spec(import+Supabase / _read_ohlcv_daily / _fetch_tradfi_prices 重写 / cache 撤回),不引入新写入端,Rule 5b 三件套继承自 ohlcv_daily 已存数据。Mac 侧执行 + launchd 重启 + 等 90 min 跑验收 SQL。sandbox 不写 Mac 文件,改动严格在 allowed_paths 内。前值:S-426 = 39 个标的 / TradFi 15(均差 4)。"
+  "notes": "A 09-27 SYNC §IN-FLIGHT T-001 段:4 段改动 spec(import+Supabase / _read_ohlcv_daily / _fetch_tradfi_prices 重写 / cache 撤回),不引入新写入端,Rule 5b 三件套继承自 ohlcv_daily 已存数据。Mac 侧执行 + launchd 重启 + 等 90 min 跑验收 SQL。sandbox 不写 Mac 文件,改动严格在 allowed_paths 内。前值:S-426 = 39 个标的 / TradFi 15(均差 4)。 | Seth 09-29:T1=43 自 09-26 04 UTC 起成立,早于 v1/v2,不能当 v2 验收。待补:19 个 TradFi 在 cis_scores 用的价格日期(需推送里带 price_date 或 A 贴 Mac 日志)。A 的时间戳把 JST 写成 UTC(Rule 5c)。"
 }

@@ -2,7 +2,7 @@
   "id": "T-018",
   "title": "Mac 对 Railway 的读请求带 X-Internal-Token;空快照不生成简报;macro_brief 合约副本更新到 mb-3",
   "owner": "lane-a",
-  "status": "in_review",
+  "status": "done",
   "source": "S-423",
   "allowed_paths": [
     "/Volumes/CometCloudAI/cometcloud-local/macro_brief_push.py",
@@ -14,10 +14,14 @@
   ],
   "acceptance": {
     "check": "select count(*) filter (where data_snapshot='{}'::jsonb) empty, count(*) n, max(recorded_at) from macro_briefs where source='mac_mini' and recorded_at > now()-interval '6 hours'",
-    "expect": "empty = 0 且 n > 0;最新一行 prompt_version = mb-3(Railway 日志 [MACRO] 无 prompt_version 告警)"
+    "expect": "empty = 0 且 n > 0(prompt_version 项删除:表无此列,S-435)"
   },
   "prior_value": "09-23:47 份里 36 份快照为空({}),39 份写「平静」;Mac 副本 mb-2",
   "created": "2026-09-24",
-  "notes": "S-426 测:过去 24h Mac 简报 34 份,空快照 0 份(此前 09-23 为 36/47)。A 09-27 SYNC §IN-FLIGHT T-018 段:token + 空快照 2/3 已证(token:macro_brief_push.py:280 字面;空快照:S-426 实测 + should_regenerate 结构)。prompt_version=mb-3 待 Mac 重拷 `src/api/contracts/macro_brief.py` → `/Volumes/.../macro_brief_contract.py`(Seth §T-017 9-24 要求,3 天未做,文件头自证仍 mb-2 + Replication date 2026-08-20)。最小 Mac 动作块见 SYNC。关闭:Seth 在此填 verified。",
-  "verified": null
+  "notes": "Seth 09-29 验:空快照 0 ✓;Mac 简报 09-28 15:18 UTC 恢复写入(model qwen3.8-27b,快照非空,文字与当日 −3.5% 一致)✓。09-27 15:50→09-28 15:18 断供 23h,真因不是 A 的 Mac 改动,是 ~/.config/cometcloud/.env 轮换时漏改 ⇒ 旧 token 401(S-435,T-036)。验收里的 prompt_version 不可测:macro_briefs 没有该列 —— 此项从验收中删除,若要可测需另起卡加列。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-09-29",
+    "value": "mac_mini 6h: empty=0, n≥1(最新 09-28 15:18 UTC)"
+  }
 }

@@ -2,7 +2,7 @@
   "id": "T-034",
   "title": "M-189 基准 1–2(固定 / 波动率公式)在 HL 4 币账本上的历史回放报告",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "source": "M-189 / T-011",
   "allowed_paths": [
     "paper_trading/research/m189_replay.py",
@@ -21,5 +21,6 @@
   },
   "prior_value": "M-189 只有预注册;T-032(Seth 接进 hl_book_daily)等这份回放结论",
   "created": "2026-09-27",
-  "verified": null
+  "verified": null,
+  "notes": "Seth 09-29:M-190 台账已合并(只取台账段)。未满足:① m189_replay.py 与测试不在仓库 → 不可复现;② regime 全 UNKNOWN,「分 regime」未做。补齐方式:代码+测试推到 lane-b/T-034 分支,regime 用真表重跑,改 M-190 追加段。"
 }
