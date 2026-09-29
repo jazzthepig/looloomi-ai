@@ -24095,3 +24095,121 @@ binance_hist,2023-12-27 → 2026-09-28:BTC **+92%**,① 面板 24 名等权 **�
 09-05 → 09-28 反向:BTC +6%,山寨普涨(CoinGecko:NEAR +148%、ARB +72%、UNI +57%)。
 Jazz 纠正:风格/相位判断一直是设计第一步(HIGH_DIM §5b-bis ⓪、DECISION_PATH_SPEC ①),缺的是表头 ——
 标的只有粗分类、无档位、无 meme;无任何风格指数;`asset_embeddings_history` 仅 42 天。→ T-039(风格表头)、T-038(风格轮动,lane-c)。
+
+## M-193 (lane-c, 2026-09-30;**PRE-REGISTERED before sweep**) — T-038 v2 BTC↔alt 状态特征 (v1 REFUTED on 4 hard flaws per JAZZ 2026-09-30 反馈)
+
+**触发**:
+- T-038 v1(`t038_btc_alt_rotation.py` + `t038_btc_alt_rotation_2026-09-29.md`)跑了才写结论(违反 pre-registration 纪律)。
+- 4 个 hard flaws 由 JAZZ 2026-09-30 实测:
+  1. **无预注册** —— v1 sweep 完才写 doc;**v2 必须先在台账占号,再 sweep**。
+  2. **SI 仅 H2 2024 170 天** —— 30d 预测周期下 ≈6 个独立 sample,几乎全是 2024 末 altseason 单 episode。
+  3. **4 桶挑 1 个**,纯随机 baseline ≈68% 双年通过 → 「唯一过关」不说明什么。
+  4. **5d block × 30d target** —— block overlap 导致 CI 系统性过窄(被低估的 variance)。
+- v1 verdict(`BTC_outperf_alt_narrow` 双年 sign-consistent, magnitude 在 OOS CI 跨 0)**作废**;v1 closeout doc 留作 record(归档 / 不推任何下游决策)。
+
+**PRE-REGISTRATION SPEC**(此段为约束,**sweep 不可更改**):
+
+| Item | v2 设定 | v1 → v2 修订理由 |
+|---|---|---|
+| Sample-in 窗口 | **2020-01-01 → 2023-12-31** (4 年,含 2021 牛市 + 2022 熊市 + 2020 减半后 + 2023 横盘) | v1 SI 170 天被单 episode 主导 |
+| OOS 窗口 | **2024-01-01 → 2026-09-29** (按年 split:OOS-24 / OOS-25 / OOS-26) | 多年 OOS 验证 sign consistency |
+| 数据源 | `/Volumes/CometCloudAI/cometcloud-local/data/ohlcv_11yr.db` (`ohlcv_11yr_daily`, source='binance_spot') | BTC 起 2017-08-17,2020 起 ≥29 alts + BTC = 30 名 |
+| Panel 定义 | expanding universe —— 每个 d 取**当日已 start_trading** 的所有 alt + BTC;panel EW = 当日 available alts 等权 | 2020 ~30 名 → 2026 ~48 名,每日动态 |
+| 状态维数 | **max 3 dims**(per JAZZ §S-438 原始约束) | 同 v1 |
+| 状态维度 | D1 BTC_rel_mom_30d; D2 BTC_above_MA200(200d MA,需 warmup);D3 alt_breadth_30d | 同 v1 |
+| 状态桶数 | **4**(D1 sign × D3 bucket:`BTC_outperf_alt_narrow` / `_wide` / `BTC_underperf_alt_narrow` / `_wide`)| 同 v1 |
+| 目标变量 | forward 30d `BTC_ret - panel_EW_ret` | 同 v1 |
+| Target 窗口 | **non-overlapping 30d 滚动**(每天 d 的 target 用 d+30..d+60 的 BTC ret − panel EW ret;而不是 d..d+30 短窗口) | v1 用 d..d+30 的简单 forward;non-overlapping 减少信息泄露 |
+| Bootstrap | **block 长 = 30d**(≥ target horizon),n_iter=1000,95% CI,per §S-438 | v1 5d block underestimates variance |
+| Random baseline | **显式写进 acceptance**:「4 桶独立同分布假设下,至少 1 桶 sign-consistent 双年」的随机概率 ≈ 1 − (1 − 0.25)² ≈ 0.44;**但若要求 surviving bucket 是双年 mean ranked top-1 且 CI 与其他 3 桶不重叠**,random baseline ≈ **30-40%**(per ordering + separation 双约束) | v1 没写 baseline |
+| Pre-reg 完成时点 | 本 entry 落地后,任何 v2 sweep 都可启动;sweep 前不复查 spec | 纪律:先占号再 sweep |
+
+**v2 Acceptance criteria**(三条**同时**成立 = SHIP-COMPLETE):
+1. **Rank**:Surviving bucket 双年 OOS mean ranked **top-1 of 4**(实证通过率必须超过 random baseline 30-40%)。
+2. **CI separation**:Surviving bucket 双年 OOS mean 的 30d-block bootstrap 95% CI **不重叠** 其他 3 桶对应 CI 的中位数(或 CI 区间明显远离)。
+3. **Sign consistency**:Surviving bucket 双年 OOS mean **同号** 且 **CI 不跨 0**(任一年 CI 跨 0 → 该年标记 ★CI-cross,但 sign + direction 一致可保留作 evidence 级)。
+
+**任一条不达 → REFUTED**,**判据简化**:v2 不需要超过 v1 的方向证据强度;**只需要** 满足上面 3 条 + 任何 surviving bucket 必须 ≥ 2 个 OOS 年的 sample size ≥ 60 天(避免 single-episode 主导)。
+
+**Open Q**(JAZZ 拍前 lane-c 不会先跑):
+- (无)—— 上面 spec 已是 JAZZ 反馈的 4 条 hard flaws 全部修订;**先占号 → 等 spec 落定 → 跑 sweep**。
+
+**v2 sweep 执行计划**(占号后立即跑,不需二次 JAZZ 拍):
+1. `t038_v2_btc_alt_rotation.py`(~500 行)—— 复用 v1 框架,改 sample window + non-overlapping target + 30d bootstrap
+2. Output:`_reports/absorb_input/t038_v2_btc_alt_rotation_2026-09-30.json` + `t038_v2_btc_alt_rotation_2026-09-30.md`
+3. 跑完 verdict 用上面 3 条 acceptance criteria 检验;通过 → 写 v2 closeout,refute v1,提 v2 candidate;不通过 → REFUTED v2,记录为何不通过(为 v3 留 lesson)
+
+**不动的边界**(per CLAUDE.md "可以自行执行" + §s lane-c 自主权):
+- 不动 REFUTATION_LEDGER.md 已有 M-NNN(S-190 / S-438 等)
+- 不动 verdict JSON 已落档 v1
+- 不动 SYNC §IN-FLIGHT 已有 T-038 entry(本条 M-193 落地时,可在 SYNC 加一句「M-193 pre-reg 落地,v2 sweep 启动」一行 cross-ref)
+- 不动 PLAN.md / spec_runner / src/(Seth 域)
+- 不推 v1 candidate long-only BTC↔alt tilt 给 Seth backtest(per JAZZ 「等 v2 出结果再说」)
+
+**v1 归档建议**(v2 sweep 落地后,REFUTED 决议时一起做):
+- v1 closeout doc `t038_btc_alt_rotation_2026-09-29.md` → 加 header banner `[REFUTED by M-193 v2 pre-reg;v2 verdict 后 final]`
+- v1 verdict JSON → 同上
+- T-038 SYNC entry → 加一行 cross-ref 指向 M-193
+
+## S-441 — T-039 风格表头第一片:分类法 + 三张表 + 风格指数
+
+**分类:** CoinGecko 分类成员关系,优先级 meme > AI > 基础设施与代币化 > DeFi > 公链 > L2(一个币同时是 Meme 和 Layer 1 时,
+决定它价格行为的是 meme 属性);BTC/ETH 直接归大币;稳定币、包装币、流动性质押凭证不进任何指数。
+公链按 **d-1 市值**(PIT)在非大币公链里排前 10 为「头部公链」,其余与 L2 合为「二线公链与 L2」—— 同一个币在不同年份可以换档。
+分类 id 每轮对 `/coins/categories/list` 校验,不存在即整轮失败,不静默跳过。
+**时间戳:** market_chart 的 00:00 UTC 点 = 前一天收盘(S-436 同一个坑);「现在」那个点丢弃。
+**指数:** 市值加权(单币上限 40%)与等权两版;成员、权重都用 d-1;缺一整天时不跨缺口算收益;成员 < 3 的那天不出行。
+**已知偏差:** 历史成分是今天各分类的市值前列往回取,死掉的币不在里面 —— 回填段偏乐观(S-111 量级约 25pp/年),每行 `basis` 标注;前向段无此偏差。
+测试 8 个钉住优先级、PIT 换档、时间戳、上限、缺日、拒绝、水平接续。第二片:每本账本对各风格的滚动暴露。
+
+## M-194 (lane-c, 2026-09-30;**PRE-REGISTERED before sweep**) — T-038 v3 BTC↔alt 状态特征 (连续回归 + Newey-West, 不分桶)
+
+**触发**:
+- v2 verdict(REFUTED)**错误**(per JAZZ 2026-09-30 §S-442):0/4 通过不是 evidence of failure,**只是 sample size 不够**。每格 n=2-7 既证不了也否不了,正确 verdict = 🟡 **INCONCLUSIVE — 样本不足、无法判断**。
+- **根因诊断(per JAZZ §S-442 同意):把连续变量硬切 4 桶是二值化,把本就稀薄的样本切碎**。v2 sweep 方法正确,但 spec 自身就是 binarization 思路。
+- v3 = 改 **连续回归**:不切桶,用全日度样本,Newey-West HAC SE(滞后 ≥ 30 天)处理 overlap,不再靠丢样本解决。
+
+**PRE-REGISTRATION SPEC**(本段为约束,sweep 不可更改):
+
+| Item | v3 设定 | v2 → v3 修订 |
+|---|---|---|
+| 模型形式 | **OLS linear regression**(连续自变量,不切桶) | v2 binarization → v3 continuous |
+| DV(因变量) | forward 30d `BTC_ret - panel_EW_ret`(Y_t) | 同 v1/v2 target 语义 |
+| IV1(自变量) | past 30d `BTC_ret - panel_EW_ret`(X1_t) | v2 D1 → v3 连续 |
+| IV2(自变量) | past 90d `BTC_ret - panel_EW_ret`(X2_t) | 新加:longer-term rel mom |
+| IV3(自变量) | alt_breadth_30d(X3_t, fraction of available alts with positive 30d return, 0-1 连续) | v2 D3 → v3 连续 |
+| 样本 | **全日度样本**(daily, 不 subsample)| v2 non-overlap 30d 抛弃样本 → v3 用全日度 |
+| 标准误 | **Newey-West HAC**,maxlags ≥ 30 天(覆盖 overlap) | v2 iid block bootstrap → v3 Newey-West |
+| Sample-in | 2020-01-01 → 2023-12-31 | 同 v2 |
+| OOS | 2024 + 2025 + 2026 YTD (按年 split)| 同 v2 |
+| Panel | Expanding universe(per-day available alts + BTC)| 同 v2 |
+| 工具 | `statsmodels.regression.linear_model.OLS.fit(cov_type='HAC', cov_kwds={'maxlags': 30})` | — |
+
+**v3 Acceptance criteria**(per JAZZ §S-442 「样本外看两点」):
+1. **Direction check**:OOS 各年回归斜率 β1 (IV1=过去 30d rel mom) 与 SI β1 **同号**;3 年 OOS 中 ≥ 2 年同号 = 通过。
+2. **Magnitude check**:OOS 各年 β1 点估计落在 **SI β1 95% CI 内**;3 年 OOS 中 ≥ 2 年落入 = 通过。
+
+**Verdict 决策**:
+- ✅ SHIP-COMPLETE:方向 ≥ 2/3 OOS 年同号 AND 幅度 ≥ 2/3 OOS 年落 SI CI
+- 🟡 INCONCLUSIVE:方向 1/3 同号 OR 幅度 1/3 落入(部分信号)
+- 🔴 REFUTED:方向 0/3 同号(连续 3 年都反转,evidence of failure)OR 方向 3/3 同号 但 幅度 0/3 落 SI CI(SI signal 太弱,OOS 虽同号但 magnitude 偏 SI CI 之外 = signal 不稳定)
+
+**Random baseline**(per v2 已算 25.13% empirical):v3 回归本身的 random baseline 比 bucket 难定义;**改用学术基准**:单变量 OLS with Newey-West,β 显著 ≠ 0(t > 2)的概率在 random walk data 下 ≈ 5%(per α=0.05)。**v3 不需要超过 random baseline,但需要 β1 在 SI 上 t > 2 才算有 signal**。
+
+**Open Q**(JAZZ 拍前 lane-c 不跑 sweep):
+- (无)—— 上面 spec 是 §S-442 的 4 条 hard items 全部实现;**先占号 → spec 落定 → 跑 sweep**。
+
+**v3 sweep 执行计划**(占号后立即跑,不需二次 JAZZ 拍):
+1. `t038_v3_btc_alt_regression.py`(~400 行):加载 daily panel / 计算 IVs/DV / SI regression / per-OOS-year regression / 2 acceptance checks
+2. Output:`_reports/absorb_input/t038_v3_btc_alt_regression_2026-09-30.json` + `t038_v3_btc_alt_regression_2026-09-30.md`
+3. 跑完 verdict 用上面 3 选 1 决策(SHIP/INCONCLUSIVE/REFUTED)
+4. T-039 风格指数落库后,**扩展**:同一回归应用到各风格 pair(大币 / 头部公链 / 二线 / DeFi / meme 等)—— 多条 spread 一起检验,样本量上来。**本 M-194 不动 T-039**,只是 placeholder。
+
+**不动的边界**(per CLAUDE.md "可以自行执行" + §s lane-c 自主权):
+- 不动 REFUTATION_LEDGER.md 已有 M-NNN(M-193 等)
+- 不动 v1 / v2 verdict JSON + closeout(只在 header 加 VERDICT CORRECTION banner per §S-442)
+- 不动 SYNC §IN-FLIGHT 已有 T-038 entry(本条 M-194 落地时,在 SYNC 加一行 cross-ref「M-194 pre-reg 落地,v3 regression 启动」)
+- 不动 PLAN.md / spec_runner / src/(Seth 域)
+- 不推任何策略形态(包括 v1 §7 的 candidate long-only BTC↔alt tilt)
+
+**v2 verdict 修订**(per JAZZ §S-442 已确认):v2 closeout doc + verdict JSON header 加 VERDICT CORRECTION banner(REFUTED → INCONCLUSIVE),根因 = binarization。
