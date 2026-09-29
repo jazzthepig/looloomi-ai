@@ -1,0 +1,21 @@
+{
+  "id": "T-036",
+  "title": "Mac 只留一份 env:~/.config/cometcloud/.env;cis_scheduler 改读它,cometcloud-local/.env 退役;Python 日志改 UTC",
+  "owner": "seth",
+  "status": "open",
+  "source": "S-435(三份 env,轮换漏一份 ⇒ 简报 23h 401)",
+  "allowed_paths": [
+    "docs/",
+    "scripts/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "Mac: ls /Volumes/CometCloudAI/cometcloud-local/.env 不存在;grep -l 'cometcloud-local/.env' ~/Library/LaunchAgents/* 为空;轮换脚本一条命令改 Railway + 这一份 + kickstart",
+    "expect": "一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行"
+  },
+  "prior_value": "三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份",
+  "created": "2026-09-29",
+  "verified": null
+}
