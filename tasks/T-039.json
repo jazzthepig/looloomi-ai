@@ -2,7 +2,7 @@
   "id": "T-039",
   "title": "风格表头:每个标的的风格归属(PIT)+ 每个风格的日指数 + 每本账本的风格暴露",
   "owner": "seth",
-  "status": "open",
+  "status": "claimed",
   "source": "Jazz 09-30:「分辨不了大币周期、二线公链、山寨币、meme 的暴露,就是表头没有做」;DECISION_PATH_SPEC ① 风格/相位判断从未接上",
   "allowed_paths": [
     "src/data/style/",
@@ -20,5 +20,6 @@
   },
   "prior_value": "asset_class 只有 L1/L2/DeFi/RWA/Infra 粗分类、无档位、无 meme;asset_embeddings_history 仅 08-19 起 42 天、59 个标的;无任何风格指数",
   "created": "2026-09-30",
-  "verified": null
+  "verified": null,
+  "notes": "Seth 09-30 第一片:分类法(meme > AI > 基础设施与代币化 > DeFi > 公链 > L2;稳定币/包装币/LSD 排除;公链按 d-1 市值前 10 切头部)+ 三张表 + 风格指数(市值加权单币 40% 上限 / 等权;PIT;缺日不跨;成员 <3 不出行)+ Railway 每 6 小时一轮。历史成分是今天的分类成员往回取 —— 幸存者偏差,每行 basis 标注。第二片:每本账本的风格暴露。"
 }
