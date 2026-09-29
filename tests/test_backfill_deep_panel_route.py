@@ -41,3 +41,40 @@ def test_real_run_uses_the_same_collector(monkeypatch):
     assert r["started"] is True and r["symbols"] == ["BTC", "ETH"]
     # 后台任务在 TestClient 的事件循环里跑完
     assert calls == [(400, ["BTC", "ETH"])]
+
+
+def test_explicit_symbol_backfill_is_not_refused_by_the_full_panel_floor(monkeypatch):
+    """S-439:首次真跑 24 个币被「活标的 ≥100」地板拒绝,0 行写入。显式传入的标的按比例定地板。"""
+    import src.data.market.deep_panel_collector as dpc
+    import src.api.store as store
+
+    async def fake_fetch(sym, days):
+        return sym, [{"symbol": sym, "trade_date": "2026-09-05", "close": 1.0, "source": "binance_hist"}], None
+    written = []
+
+    async def fake_upsert(table, rows, on_conflict=None):
+        written.extend(rows); return True
+    monkeypatch.setattr(dpc, "_fetch_one", fake_fetch)
+    monkeypatch.setattr(store, "supabase_upsert_table", fake_upsert)
+    monkeypatch.setattr(dpc, "_BATCH_PAUSE_S", 0, raising=False)
+    monkeypatch.setattr(dpc, "assert_purpose_source", lambda *a, **k: None, raising=False)
+    syms = [f"S{i}" for i in range(24)]
+    r = asyncio.run(dpc.collect_deep_panel(days=400, symbols=syms))
+    assert not r.get("refused") and r["ok"] and len(written) == 24
+
+
+def test_explicit_backfill_still_refuses_when_most_symbols_fail(monkeypatch):
+    import src.data.market.deep_panel_collector as dpc
+    import src.api.store as store
+
+    async def fake_fetch(sym, days):
+        if sym in ("S0", "S1", "S2"):
+            return sym, [{"symbol": sym, "trade_date": "2026-09-05", "close": 1.0}], None
+        return sym, [], "http 451"
+    async def fake_upsert(*a, **k):
+        raise AssertionError("must not write")
+    monkeypatch.setattr(dpc, "_fetch_one", fake_fetch)
+    monkeypatch.setattr(store, "supabase_upsert_table", fake_upsert)
+    monkeypatch.setattr(dpc, "_BATCH_PAUSE_S", 0, raising=False)
+    r = asyncio.run(dpc.collect_deep_panel(days=400, symbols=[f"S{i}" for i in range(24)]))
+    assert r.get("refused") is True
