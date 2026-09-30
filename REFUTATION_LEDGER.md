@@ -24299,3 +24299,74 @@ C 在预注册的 v3(过去 30/90 → 未来 30,连续回归)无信号之后,把
 且两格同在「过去 180 天」一行、前瞻重叠,实为一个发现;样本内 t = 2.04,2024、2025 单年不显著,由 2026 一年撑起。
 **结论:正式结论是 v3 的「无信号」;180 天反转记为待检验假设。** v5 只测这一个设定,放到 T-039 的六个风格对上(独立币池),
 判据 6 对中 ≥ 4 对显著为负且样本外同号。为此加了公开只读端点 `/api/v1/style/index`(lane 不持 key,走与 ohlcv 相同的读路径)。
+
+## S-448 — ① 的等权面板只有 9% 在大币;「大币」市值加权指数其实是各半(已修)
+
+v3 全量重算完成(层级 19,712 行、板块 17,924 行,2020-01-01 → 09-29)。两件事:
+1. **持仓法暴露(09-29,beta_plus 的 panel_hold 臂 = ① 的 24 名等权面板):** 大币 9% · 头部公链 25% · **二线公链与 L2 49%** · 应用币 17%;
+   板块上 DeFi 17%、基础设施与代币化 17%、AI 4%、meme 4%。**「持有面板」本质上是一本以二线公链为主的书** ——
+   这就是 2023-12 → 2026-09 它 −7.5% 而 BTC +92% 的机制,也是 S-440 两个「等权面板」差 30 个点的同一件事。
+   动量倾斜臂把二线降到 45%、DeFi 升到 28%,大币仍是 9%。
+2. **「大币」市值加权指数算错了:** 40% 单币上限对两个成员做不到,代码退回了等权 —— 于是 BTC/ETH 各半,2021 年显示 +198%。
+   改为成员不足以满足上限时用真实市值权重。code_ref → t039-v3b,触发全量重算。
+
+## M-195 — T-038 v5:长周期相对收益反转假设在 T-039 六个风格对上的独立检验(PRE-REGISTERED per Seth 2026-09-30 §S-447)
+
+**Lane:** C (sandbox research, 不动 src/展示/verdict/仓位建议)
+**Owner:** lane-c (per Seth §S-447 2026-09-30 / REFUTATION_LEDGER §S-447)
+**Date:** 2026-09-30 (pre-reg; sweep 待 Railway 接口限流重置后跑)
+**Status:** 🟡 PRE-REGISTERED, sweep 暂挂
+
+---
+
+### §0 背景与动机
+
+per Seth §S-447 判读:**T-038 v3(过去 30/90 → 未来 30,连续回归)的「无信号」是本轮正式结论**;v4b 在 v3 之后才扩成 6×7=42 cell 网格,5% 水平下纯随机预期 ≈ 2.1 cells 过线,实得 2 cells 等于随机的数;两 cell 同在 past=180d 行 = 实际一个发现不是两个;SI t=2.04 边缘,2024/2025 单年不显著,全靠 2026 一年撑起。**v4b 不能算证据**。
+
+但 v4b 指向的现象本身有先验(academic long-horizon reversal,BTC 领先半年后山寨补涨),值得在**独立数据**上正式测一次。v5 只测这一个设定。
+
+### §1 v5 spec (per Seth §S-447 2026-09-30)
+
+| Item | v5 设定 |
+|---|---|
+| **假设** | 过去 180 天 BTC-X 相对收益 → 未来 30 天 BTC-X 相对收益,预期 β1 < 0 |
+| **窗口(固定,不再扫)** | past_h = 180, fwd_h = 30 |
+| **数据(独立)** | **T-039 的 6 个风格对**(各自的币池 ≠ BTC-24 名等权,算独立检验):<br>1. `second_l1_l2 − majors`(二线公链与 L2 减大币)<br>2. `app − majors`(应用币减大币)<br>3. `meme − majors`<br>4. `ai − majors`<br>5. `defi − majors`<br>6. `infra_tokenization − majors`(基础设施与代币化减大币)<br>**所有权重 = 市值加权(cap)**,端点返回当前版本(不会混旧版本) |
+| **数据接口** | `GET https://web-production-0cdf76.up.railway.app/api/v1/style/index?style=<name>&weighting=cap` (Seth §S-447 加的公开只读端点,走与 ohlcv 相同读路径;lane 不持 key)。每日限流 2000,Seth 会在 SYNC 通知可用状态 |
+| **模型(per pair)** | 单变量 OLS: Y_t = β0 + β1·X1_t + ε_t<br>X1_t = (style_X ret_past180d − majors ret_past180d) at time t<br>Y_t = (style_X ret_fwd30d − majors ret_fwd30d) at time t |
+| **SE** | Newey-West HAC, maxlags = max(30, fwd_h) = 30 |
+| **Sample-in** | 2020-01-01 → 2023-12-31(SI 同 v3/v4b) |
+| **OOS** | 2024-01-01 → 至今 split by year(2024 / 2025 / 2026 YTD) |
+| **判据(写死)** | **6 对里 ≥ 4 对** 同时满足:<br>(a) SI β1 显著为负(Newey-West \|t\| > 2)<br>(b) OOS 2024+ 至少 2/3 OOS years β1 同号(SI 负 → OOS β1 也负)<br>**多重比较按 6 对算**(Bonferroni-corrected per-pair threshold 不改;但 family-wise acceptance = 4/6 而非 5/6) |
+| **Verdict** | ✅ SURVIVE: 6 对里 ≥ 4 对 (a)+(b) 同时满足<br>🟡 PARTIAL: 6 对里 2-3 对满足 (a)+(b)<br>🔴 NOT EVIDENCE: 6 对里 < 2 对满足 (a)+(b) |
+
+### §2 不做的事(per Seth §S-447 「不做」)
+
+1. ❌ 单独深挖 30d × 7d 那格(SI t=+1.55,没过线,再深挖 = fishing)
+2. ❌ 扩 SI 到 2017(币池不同,换一个问题)
+3. ❌ 挑 2026 子窗口(在挑结果)
+4. ❌ 改 past_h 或 fwd_h(固定 180d/30d)
+5. ❌ 改 BTC-panel EW rel mom(那是 v3/v4b 设定,v5 用 style-major rel mom)
+
+### §3 数据可用性 + 执行步骤
+
+| Step | Status |
+|---|---|
+| 1. 占台账 M-195 标题(本条) | ✅ done |
+| 2. 写 `t038_v5_style_pairs.py` sweep 脚本 | pending(等限流重置可取数) |
+| 3. 接口取 6 对 style index 日序列 → cache 到 `/tmp/cometcloud_cache/t039_styles/`(单次 scratch) | pending(限流 2000/天已用尽,明天才能取) |
+| 4. 跑 sweep → verdict JSON + closeout doc | pending |
+| 5. JAZZ 拍 verdict | pending |
+
+### §4 不动的边界
+
+- **不动**:v1/v2/v3/v4b verdict JSON、closeout doc(但 v4b verdict 即将按 §S-447 加 CORRECTION banner —— 不动原 verdict JSON 数值,只在 header 加 correction 字段,per CLAUDE.md 「不重写历史」)
+- **不动**:M-193 / M-194 / M-194b(这些是 pre-reg 历史)
+- **不动**:src/ / dashboard/ / spec_runner / PLAN.md / SYNC 主结构(只在 SYNC 加 v4b→v5 衔接行)
+- **不动**:T-039 lane-c 工作状态(v5 是 T-038 后续,不占用 T-039 slot)
+
+### §5 JAZZ 拍 (待 sweep 完成后)
+
+1. v5 verdict 接受?
+2. 如果 SURVIVE → 上 v0.2 state feature 进 §S-442 v6 / 如果 NOT EVIDENCE → T-038 lane-c 永久 parked,转其他研究主题
+3. 如果 PARTIAL → 6 对中失败 2-3 对的方向是哪种?是否需要 re-specify?
