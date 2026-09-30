@@ -21,17 +21,24 @@ from typing import Any, Mapping, Optional
 import numpy as np
 import pandas as pd
 
-from src.data.style.taxonomy import (CATEGORY_PRIORITY, EXCLUDE_CATEGORIES, STYLES,
+from src.data.style.taxonomy import (EXTRA_MEMBERS, MIN_MEMBERS, MIN_MEMBERS_DEFAULT, STYLES,
                                      all_category_ids, base_style, resolve_styles)
 
 HISTORY_START = "2020-01-01"
 SINGLE_CAP = 0.40
-MIN_MEMBERS = 3
+#: d-1 市值低于这个的币当天不进指数:小到几百万美元的币价格常有错点,等权时会把整个风格带飞
+#: (v1 首轮出现过单日 +116,682% 的等权「收益」)。
+MIN_MCAP_USD = 20e6
+#: 单币单日收益超出这个范围按坏点处理(当天丢掉这个币,行里记 n_dropped),不参与平均。
+MAX_DAILY_RET, MIN_DAILY_RET = 5.0, -0.95
+#: 过去 30 天日收益标准差低于这个的币当天不进指数:RWA 分类里混着代币化国债(THBILL、FIGR_HELOC 等),
+#: 价格钉在 1 附近,它们不是「代币化基础设施」的风险暴露,而是现金。
+MIN_VOL_30D = 0.005
 MEMBERS_PER_CATEGORY = 40
 MEMBERSHIP_REFRESH_DAYS = 7
 BASIS_BACKFILL = "current_constituents_backfilled"
 SOURCE = "coingecko_pro_market_chart"
-CODE_REF = "t039-v1"
+CODE_REF = "t039-v2"
 WEIGHTINGS = ("cap", "equal")
 
 
@@ -84,6 +91,7 @@ def compute_style_index(price: pd.DataFrame, mcap: pd.DataFrame,
     # 日期不连续时(缺一整天),跨越缺口的「日收益」不是日收益 —— 丢掉
     gap = price.index.to_series().diff() != pd.Timedelta(days=1)
     rets[gap.values] = np.nan
+    vol30 = rets.rolling(30, min_periods=20).std().shift(1)      # 只用 d 之前的,PIT
     level = dict(prev_level or {})
     rows: list[dict] = []
     days = price.index[(price.index >= pd.Timestamp(start)) & (price.index <= pd.Timestamp(end))]
@@ -92,11 +100,16 @@ def compute_style_index(price: pd.DataFrame, mcap: pd.DataFrame,
         if i == 0:
             continue
         m_prev = mcap.iloc[i - 1].dropna()
+        m_prev = m_prev[m_prev >= MIN_MCAP_USD]
+        v = vol30.loc[d]
+        m_prev = m_prev[[not (pd.notna(v.get(s)) and v.get(s) < MIN_VOL_30D) for s in m_prev.index]]
         styles = resolve_styles(base, m_prev.to_dict())
         r_d = rets.loc[d]
         for style in STYLES:
-            members = [s for s, st in styles.items() if st == style and pd.notna(r_d.get(s))]
-            if len(members) < MIN_MEMBERS:
+            cand = [s for s, st in styles.items() if st == style and pd.notna(r_d.get(s))]
+            bad = [s for s in cand if not (MIN_DAILY_RET <= float(r_d[s]) <= MAX_DAILY_RET)]
+            members = [s for s in cand if s not in bad]
+            if len(members) < MIN_MEMBERS.get(style, MIN_MEMBERS_DEFAULT):
                 continue
             r = r_d[members].astype(float)
             for wname in WEIGHTINGS:
@@ -108,7 +121,7 @@ def compute_style_index(price: pd.DataFrame, mcap: pd.DataFrame,
                 top = w.idxmax()
                 rows.append({"d": d.date().isoformat(), "style": style, "weighting": wname,
                              "ret": ret, "level": level[key], "n_members": len(members),
-                             "top_member": top, "top_weight": float(w[top]),
+                             "n_dropped": len(bad), "top_member": top, "top_weight": float(w[top]),
                              "members": sorted(members), "basis": basis, "code_ref": CODE_REF})
     return rows
 
@@ -162,12 +175,18 @@ async def refresh_membership(today: date) -> dict[str, Any]:
 
 
 async def latest_membership() -> list[dict]:
-    rows = await _read_all("style_membership", {"select": "symbol,coin_id,base_style,fetched_d",
+    """最近一次抓取的成员,**基础风格在读取时按当前分类法重算**(改规则不必等 7 天重抓),再并入 EXTRA_MEMBERS。"""
+    rows = await _read_all("style_membership", {"select": "symbol,coin_id,categories,fetched_d",
                                                 "order": "fetched_d.desc"})
     if not rows:
         return []
     last = rows[0]["fetched_d"]
-    return [r for r in rows if r["fetched_d"] == last]
+    out = {r["symbol"]: {"symbol": r["symbol"], "coin_id": r["coin_id"], "fetched_d": last,
+                         "base_style": base_style(r["symbol"], r.get("categories") or [])}
+           for r in rows if r["fetched_d"] == last}
+    for sym, (cid, style) in EXTRA_MEMBERS.items():
+        out[sym] = {"symbol": sym, "coin_id": cid, "fetched_d": last, "base_style": style}
+    return list(out.values())
 
 
 async def backfill_mcap(members: list[dict], today: date) -> dict[str, Any]:
@@ -181,6 +200,7 @@ async def backfill_mcap(members: list[dict], today: date) -> dict[str, Any]:
         if m.get("base_style") is None:
             continue
         rd = await _sb_get("asset_mcap_daily", {"select": "d", "symbol": f"eq.{m['symbol']}",
+                                                "coin_id": f"eq.{m['coin_id']}",
                                                 "order": "d.desc", "limit": "1"})
         if not rd.ok:
             failed[m["symbol"]] = f"读不到已有历史:{rd.reason}"
@@ -211,10 +231,12 @@ async def rebuild_index(members: list[dict], end: date) -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
     base = {m["symbol"]: m["base_style"] for m in members}
     from src.data.vector.market_state_writer import _sb_get
-    rd = await _sb_get("style_index_daily", {"select": "d", "order": "d.desc", "limit": "1"})
+    rd = await _sb_get("style_index_daily", {"select": "d,code_ref", "order": "d.desc", "limit": "1"})
     if not rd.ok:
         raise RuntimeError(f"style_index_daily 读不到:{rd.reason}")
-    last = (rd.rows or [{}])[0].get("d")
+    top = (rd.rows or [{}])[0]
+    # 分类法或算法变了(code_ref 不同)⇒ 从头重算,不接旧水平
+    last = top.get("d") if top.get("code_ref") == CODE_REF else None
     start = (date.fromisoformat(last) - timedelta(days=40)) if last else date.fromisoformat(HISTORY_START)
     prev_level: dict[tuple[str, str], float] = {}
     if last:
@@ -222,11 +244,13 @@ async def rebuild_index(members: list[dict], end: date) -> dict[str, Any]:
                                                      "d": f"eq.{(start - timedelta(days=1)).isoformat()}"})
         prev_level = {(r["style"], r["weighting"]): float(r["level"]) for r in prev}
     rows = await _read_all("asset_mcap_daily", {
-        "select": "symbol,d,price,mcap", "source": f"eq.{SOURCE}",
+        "select": "symbol,coin_id,d,price,mcap", "source": f"eq.{SOURCE}",
         "d": f"gte.{(start - timedelta(days=3)).isoformat()}", "order": "d.asc,symbol.asc"})
     if not rows:
         return {"written": 0, "reason": "asset_mcap_daily 在窗口里 0 行 —— 先补市值历史"}
+    want = {m["symbol"]: m["coin_id"] for m in members}
     df = pd.DataFrame(rows)
+    df = df[df["coin_id"] == df["symbol"].map(want)]     # 同名币换过 id 时,旧 id 的行不参与
     df["d"] = pd.to_datetime(df["d"])
     days = pd.date_range(df["d"].min(), df["d"].max(), freq="D")
     price = df.pivot_table(index="d", columns="symbol", values="price").reindex(days)
@@ -251,9 +275,69 @@ async def run_once() -> dict[str, Any]:
         members = await latest_membership()
     mc = await backfill_mcap(members, today)
     idx = await rebuild_index(members, today - timedelta(days=1))
+    expo = await book_exposures(members, today - timedelta(days=45))
     n_styled = sum(1 for m in members if m.get("base_style"))
     ok = idx.get("written", 0) > 0 and len(mc["failed"]) <= max(3, n_styled // 10)
     return {"ok": ok, "refused": False, "membership": refreshed, "n_styled": n_styled,
             "mcap_rows": mc["rows"], "mcap_failed": list(mc["failed"])[:10], "index": idx,
+            "exposure": expo,
             "reason": (f"{n_styled} 个币有风格;市值写 {mc['rows']} 行,失败 {len(mc['failed'])} 个;"
-                       f"指数写 {idx.get('written', 0)} 行")}
+                       f"指数写 {idx.get('written', 0)} 行;账本风格暴露写 {expo.get('written', 0)} 行")}
+
+
+# ── 账本的风格暴露(持仓法)───────────────────────────────────────────────────
+#
+# 有逐日权重的账本,暴露就是「持仓按风格加总」—— 精确,不需要回归。
+# 没有逐日权重的(多空账本只存前三大持仓)先不算,不用回归去猜。
+
+EXPOSURE_BOOKS: tuple[tuple[str, str, str], ...] = (
+    # (表, 权重列, 标签)
+    ("beta_plus_daily", "weights", "beta_plus"),
+    ("tokenization_tilt_daily", "weights", "tokenization_tilt"),
+)
+
+
+def style_shares(weights: Mapping[str, float], styles: Mapping[str, str]) -> dict[str, float]:
+    """持仓 → 各风格占总多头的比例。未归类的单列 'unclassified',不丢。"""
+    tot = sum(max(0.0, float(w)) for w in weights.values())
+    if tot <= 0:
+        return {}
+    out: dict[str, float] = {}
+    for s, w in weights.items():
+        w = max(0.0, float(w))
+        if w == 0:
+            continue
+        k = styles.get(s.upper(), "unclassified")
+        out[k] = out.get(k, 0.0) + w / tot
+    return out
+
+
+async def book_exposures(members: list[dict], since: date) -> dict[str, Any]:
+    """逐日、逐账本、逐臂的风格暴露,落 `book_style_exposure_daily`。公链档位按 d-1 市值(PIT)。"""
+    from src.api.store import supabase_upsert_table
+    base = {m["symbol"]: m["base_style"] for m in members}
+    want = {m["symbol"]: m["coin_id"] for m in members}
+    mc = await _read_all("asset_mcap_daily", {"select": "symbol,coin_id,d,mcap", "source": f"eq.{SOURCE}",
+                                              "d": f"gte.{(since - timedelta(days=2)).isoformat()}"})
+    mcap_by_d: dict[str, dict[str, float]] = {}
+    for r in mc:
+        if want.get(r["symbol"]) == r["coin_id"] and r.get("mcap"):
+            mcap_by_d.setdefault(r["d"], {})[r["symbol"]] = float(r["mcap"])
+    out: list[dict] = []
+    for table, col, label in EXPOSURE_BOOKS:
+        rows = await _read_all(table, {"select": f"d,arm,{col}", "d": f"gte.{since.isoformat()}",
+                                       "order": "d.asc"})
+        for r in rows:
+            prev = (date.fromisoformat(r["d"]) - timedelta(days=1)).isoformat()
+            styles = resolve_styles(base, mcap_by_d.get(prev, {}))
+            w = r.get(col) or {}
+            for st, share in style_shares(w, styles).items():
+                out.append({"d": r["d"], "book": label, "arm": r["arm"], "style": st,
+                            "weight": share, "n_holdings": sum(1 for v in w.values() if float(v) > 0),
+                            "code_ref": CODE_REF})
+    for i in range(0, len(out), 2000):
+        res = await supabase_upsert_table("book_style_exposure_daily", out[i:i + 2000],
+                                          on_conflict="d,book,arm,style")
+        if not res.ok:
+            raise RuntimeError(f"book_style_exposure_daily 写入失败:{res.why}")
+    return {"written": len(out)}
