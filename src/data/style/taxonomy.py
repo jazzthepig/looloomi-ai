@@ -30,14 +30,36 @@ MAJORS = frozenset({"BTC", "ETH"})
 
 #: CoinGecko 分类 id → 基础风格。按优先级从高到低;一个币取第一个命中。
 #: id 在运行时对 `/coins/categories/list` 校验,**不存在的 id 让整轮拒绝**,不静默跳过。
+#:
+#: v2(09-30,首轮数据复核后):**公链排在 AI / 基础设施 / DeFi 前面。** v1 把 NEAR、ICP 归进 AI,
+#: INJ、ALGO、XLM 归进基础设施 —— 它们首先是一条链,「二线公链周期」里涨跌的就是它们。
+#: 例外写在 OVERRIDES 里,不改规则。
 CATEGORY_PRIORITY: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("meme", ("meme-token",)),
+    ("l1", ("layer-1",)),
     ("ai", ("artificial-intelligence", "ai-agents")),
     ("infra_tokenization", ("oracle", "real-world-assets-rwa", "interoperability")),
     ("defi", ("decentralized-finance-defi",)),
-    ("l1", ("layer-1",)),
     ("l2", ("layer-2",)),
 )
+
+#: 规则之外的判断,逐条写理由。键 = 符号,值 = 基础风格。
+OVERRIDES: dict[str, str] = {
+    "TAO": "ai",     # Bittensor 带 layer-1 标签,但它是 AI 板块的领头币,价格跟 AI 叙事走
+}
+
+#: 不在任何分类前 40 里、但在我们账本面板里的币:显式给出 CoinGecko id 与风格。
+#: TON 在分类列表里撞名成了 Tokamak Network(一个 L2),这里指定 Toncoin。
+EXTRA_MEMBERS: dict[str, tuple[str, str]] = {
+    "DOT": ("polkadot", "l1"),
+    "ATOM": ("cosmos", "l1"),
+    "TON": ("the-open-network", "l1"),
+    "POLYX": ("polymesh", "infra_tokenization"),   # 代币化篮子成员(DECISIONS 09-26)
+}
+
+#: 每个风格至少几个成员才出指数。大币只有 BTC / ETH 两个。
+MIN_MEMBERS: dict[str, int] = {"majors": 2}
+MIN_MEMBERS_DEFAULT = 3
 
 #: 不进任何风格指数:它们的价格是别的东西的影子(稳定币、包装币、流动性质押凭证)。
 EXCLUDE_CATEGORIES: tuple[str, ...] = ("stablecoins", "wrapped-tokens", "liquid-staking-tokens")
@@ -56,6 +78,8 @@ def base_style(symbol: str, categories: Iterable[str]) -> Optional[str]:
     s = symbol.upper()
     if s in MAJORS:
         return "majors"
+    if s in OVERRIDES:
+        return OVERRIDES[s]
     cats = set(categories)
     if cats & set(EXCLUDE_CATEGORIES):
         return None

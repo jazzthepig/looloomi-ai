@@ -39,3 +39,15 @@ alter table public.asset_mcap_daily  enable row level security;
 alter table public.style_index_daily enable row level security;
 revoke all on public.style_membership, public.asset_mcap_daily, public.style_index_daily from anon, authenticated;
 grant select, insert, update, delete on public.style_membership, public.asset_mcap_daily, public.style_index_daily to service_role;
+
+-- v2 (09-30):坏点丢弃计数
+alter table public.style_index_daily add column if not exists n_dropped integer not null default 0;
+
+-- 账本风格暴露(持仓法)
+create table if not exists public.book_style_exposure_daily (
+  d date not null, book text not null, arm text not null, style text not null,
+  weight double precision not null, n_holdings integer, code_ref text,
+  computed_at timestamptz not null default now(), primary key (d, book, arm, style));
+alter table public.book_style_exposure_daily enable row level security;
+revoke all on public.book_style_exposure_daily from anon, authenticated;
+grant select, insert, update, delete on public.book_style_exposure_daily to service_role;
