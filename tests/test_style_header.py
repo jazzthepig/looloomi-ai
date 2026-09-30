@@ -50,7 +50,8 @@ def test_market_chart_midnight_point_is_the_previous_day_and_now_point_is_droppe
 def test_capped_weights_respect_the_cap_and_sum_to_one():
     w = h.capped_weights(pd.Series({"A": 90.0, "B": 5.0, "C": 3.0, "D": 2.0}))
     assert abs(w.sum() - 1) < 1e-9 and w.max() <= 0.40 + 1e-9
-    assert np.allclose(h.capped_weights(pd.Series({"A": 90.0, "B": 10.0})).values, 0.5)
+    w2 = h.capped_weights(pd.Series({"BTC": 70.0, "ETH": 30.0}))       # 两个成员:上限做不到 ⇒ 真实市值权重
+    assert np.allclose(w2.values, [0.7, 0.3])
 
 
 def _frame(days, cols):
@@ -104,6 +105,8 @@ def test_majors_need_only_two_members():
     rows = h.compute_style_index(px, mc, {"BTC": "majors", "ETH": "majors"}, start="2026-01-02", end="2026-01-02")
     eq = next(r for r in rows if r["style"] == "majors" and r["weighting"] == "equal")
     assert abs(eq["ret"] - 0.15) < 1e-12 and eq["dimension"] == "tier"
+    cap = next(r for r in rows if r["style"] == "majors" and r["weighting"] == "cap")
+    assert abs(cap["ret"] - (0.8 * 0.1 + 0.2 * 0.2)) < 1e-12 and abs(cap["top_weight"] - 0.8) < 1e-12
 
 
 def test_tiny_caps_and_bad_prints_stay_out():
