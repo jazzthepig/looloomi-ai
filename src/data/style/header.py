@@ -42,7 +42,7 @@ MEMBERS_PER_CATEGORY = 40
 MEMBERSHIP_REFRESH_DAYS = 7
 BASIS_BACKFILL = "current_constituents_backfilled"
 SOURCE = "coingecko_pro_market_chart"
-CODE_REF = "t039-v3"
+CODE_REF = "t039-v3b"
 WEIGHTINGS = ("cap", "equal")
 
 
@@ -66,8 +66,10 @@ def parse_market_chart(prices: list, market_caps: list) -> list[dict]:
 def capped_weights(mcap: pd.Series, cap: float = SINGLE_CAP) -> pd.Series:
     """市值加权,单个上限 `cap`,超出部分按比例分给其余的(迭代到收敛)。"""
     w = mcap / mcap.sum()
-    if len(w) * cap < 1:          # 成员太少,上限无法满足 —— 退回等权而不是造出和不为 1 的权重
-        return pd.Series(1.0 / len(w), index=w.index)
+    if len(w) * cap < 1:
+        # 成员太少,上限无法满足(大币只有 BTC/ETH):用真实市值权重,不设上限。
+        # v3 首版在这里退回了等权 —— 「大币」市值加权指数于是成了 BTC/ETH 各半,2021 年显示 +198%。
+        return w
     for _ in range(50):
         over = w > cap + 1e-12
         if not over.any():
