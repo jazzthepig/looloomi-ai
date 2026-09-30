@@ -32,6 +32,7 @@
     "holder_concentration_history",
     "loop_attempt",
     "macro_briefs",
+    "market_interpretation_daily",
     "market_state_vectors",
     "narrative_events",
     "nav_exceptions",

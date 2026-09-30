@@ -1004,6 +1004,38 @@ async def _start_style_header_loop():
     print("[STYLE] ✅ style header scheduled (style_membership / asset_mcap_daily / style_index_daily)")
 
 
+async def _interpret_loop():
+    """T-040 解读层:今天像历史上哪几段 → 那几段之后各风格怎么走 → 角度是否一致;30 天后写回实际结果。
+    每 6 小时一轮,从 2023-01-01 整条重算(无状态,历史回放与实时是同一段代码)。表 `market_interpretation_daily`。
+    判活:`select max(d) from market_interpretation_daily` = style_index_daily 的最新一天。
+    """
+    await _asyncio.sleep(_boot_delay(900))
+    while True:
+        try:
+            from src.data.interpret.interpret import run_once as _interp_run
+            r = await _interp_run()
+            print(f"[INTERPRET] {str(r.get('reason'))[:200]}")
+            await _beat("_interpret_loop", ok=bool(r.get("ok")),
+                        detail={"last": r.get("last"), "angles_today": r.get("angles_today"),
+                                "space_stale_days": r.get("space_stale_days")},
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt("_interpret_loop", "ok" if r.get("ok") else "error",
+                                       reason=str(r.get("reason"))[:400],
+                                       writer="src.api.main._interpret_loop")
+        except Exception as _e:
+            print(f"[INTERPRET] ⚠️  pass FAILED: {_e}")
+            await _beat("_interpret_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_interpret_loop", "error", reason=f"{type(_e).__name__}: {_e}"[:400],
+                                       writer="src.api.main._interpret_loop")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_interpret_loop():
+    _asyncio.create_task(_interpret_loop())
+    print("[INTERPRET] ✅ interpretation layer scheduled (market_interpretation_daily)")
+
+
 # 心跳只记录,不重试不终止 —— 一个顺手改行为的记录器,下一个人就不敢用。
 from src.api.loop_beat import classify as _classify  # noqa: E402  (S-299)
 from src.api.rpc_diagnostics import _record_loop_attempt  # S-408-2 (A-408-2) per-iteration record
