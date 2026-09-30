@@ -24213,3 +24213,62 @@ Jazz 纠正:风格/相位判断一直是设计第一步(HIGH_DIM §5b-bis ⓪、
 - 不推任何策略形态(包括 v1 §7 的 candidate long-only BTC↔alt tilt)
 
 **v2 verdict 修订**(per JAZZ §S-442 已确认):v2 closeout doc + verdict JSON header 加 VERDICT CORRECTION banner(REFUTED → INCONCLUSIVE),根因 = binarization。
+
+## M-194b (lane-c, 2026-09-30;**PRE-REGISTERED before sweep**) — T-038 时间维度网格扫描 (per JAZZ 2026-09-30 「我们是不是没有比较时间维度?」)
+
+**触发**:
+- JAZZ 2026-09-30 反馈:**「我们是不是没有比较时间维度?」** —— M-193 / M-194 都钉死 forward=30d, past=30d+90d, 没扫时间维度。
+- v3 verdict INCONCLUSIVE 可能是 wrong-sample 错误(刚好在 (past=30d, fwd=30d) 这一格没东西),**同一信号在 fwd=7d 那一格可能就显著**。
+- 一次性扫 6×7=42 cell 找出确实稳定的 cell。
+
+**PRE-REGISTRATION SPEC**:
+
+| Item | v4b 设定 |
+|---|---|
+| Past horizon 网格 | **[7d, 14d, 30d, 60d, 90d, 180d]** × 6 cells |
+| Forward horizon 网格 | **[1d, 3d, 7d, 14d, 30d, 60d, 90d]** × 7 cells |
+| 总 cells | **6 × 7 = 42** |
+| 模型 | 单变量 OLS (univariate): Y = β0 + β1·X1 + ε,X1 = past_h rel mom, Y = forward_h rel mom |
+| SE | Newey-West HAC, maxlags = max(30, forward_h) — covers DV autocorrelation |
+| Sample-in | 2020-01-01 → 2023-12-31 (4 年) |
+| OOS | 2024 + 2025 + 2026 YTD (3 年 split) |
+| Panel | Expanding universe (per-day available alts + BTC) |
+| 工具 | `statsmodels.regression.linear_model.OLS.fit(cov_type='HAC', cov_kwds={'maxlags': maxlags})` |
+
+**v4b Acceptance criteria** (per cell):
+1. **SI signal**: SI β1 t-stat **> 2** (academic baseline, 5% significance)
+2. **OOS direction consistency**: OOS β1 与 SI β1 **同号** in **≥ 2/3 OOS 年**
+
+**Cell-survival**:Both criteria 同时成立 = SHIP per cell.
+
+**Cross-cell decision**(per 42-cell heatmap):
+- ≥ 3 cells survive in **同一 forward_h** column → v4b SHIP at that forward horizon
+- ≥ 1 cell survive → partial signal, INCONCLUSIVE 但 v4b 指出**正确的 forward horizon**
+- 0 cells survive → 真没信号, T-038 parked 等 T-039 多 spread
+
+**Open Q**:无 —— JAZZ 拍了「跑 M-194b 时间维度网格扫描」直接落地。
+
+**执行计划**:
+1. `t038_v4b_horizon_sweep.py` (~350 行) — 复用 M-194 数据加载 + IV/DV 计算;新增 past/forward horizon grid loop
+2. Output: `_reports/absorb_input/t038_v4b_horizon_sweep_2026-09-30.json` + `t038_v4b_horizon_sweep_2026-09-30.md`
+3. 42-cell heatmap + surviving cell list
+4. JAZZ 拍下一步(per JAZZ 选项 A/B/C)
+
+**不动的边界**(per CLAUDE.md):
+- 不动已有 M-NNN (M-193 / M-194 等)
+- 不动 v1 / v2 / v3 verdict
+- 不动 SYNC / PLAN / spec_runner / src/
+
+
+## S-442 — 记账内核只有一种签名;T-038 v2 是「样本不足」而不是「已证否」(号在 SYNC §S-442 先用,此处补台账)
+
+内核:`nav_kernel(目标权重, 价格, 成本, lag=1) → 逐日 NAV`。仓位缩放、提前离场、回撤止损都是进内核之前对目标权重的变换,
+不做内核参数 —— 否则每个策略会把自己的逻辑塞进记账,又回到「各记各的账」(S-437)。
+T-038 v2(M-193):方法对了,但每格 n = 2–7,既证不了也否不了。**把连续变量切桶本身就是二值化**,v3 改连续回归 + Newey-West。
+
+## S-443 — 指标之后缺「解释」这一步:能检索相似日,但不问「那之后发生了什么」,也没人读、没人对账
+
+Jazz 09-30:「获得指标后没有立刻分析市场、获得归因 —— 单纯指标没有解释,就是 AI 前世纪的工程流。」
+实测:`/api/v1/regime/similar` 按需返回 5a(宏观 15 维)/ 5b(横截面 11 维)两角度的相似日;`market_state_vectors` 已到 09-29。
+缺的是四件:定时调用、类比日之后的结果(各风格未来 30 天分布)、决策读取、30 天后对账。→ T-040(Seth)、T-041(B 验证预注册)。
+解释本身也要过验证:类比日给出的分布若不比无条件分布更准,它就只是一段好看的叙事。
