@@ -1,0 +1,24 @@
+{
+  "id": "T-040",
+  "title": "解读层 v0:每天「今天像历史上哪几段 → 那几段之后各风格怎么走 → 两角度是否一致」,落库并在 30 天后对账",
+  "owner": "seth",
+  "status": "blocked",
+  "source": "Jazz 09-30:「获得指标后没有立刻分析市场、获得归因 —— 单纯指标没有解释就是 AI 前世纪的工程流」",
+  "allowed_paths": [
+    "src/data/interpret/",
+    "src/api/",
+    "scripts/",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "market_interpretation_daily(d, macro_analogs, micro_analogs, agreement, fwd_30d 按风格的分布(中位数 / 四分位 / 正收益占比), n_analogs, source_ids, narrative);只用 d 及以前的数据选类比日,类比日至少早于 d 30 天(前瞻窗口不重叠);30 天后自动写入实际结果,与当时的分布对账",
+    "expect": "每天一行;任意一句 narrative 能追到具体类比日和指数行;历史回放模式可以对 2023 起每一天重跑(给 T-041 验证用)"
+  },
+  "prior_value": "/api/v1/regime/similar 能按需返回 5a(宏观 15 维)/5b(横截面 11 维)两角度的相似日,但:没有定时调用、不回答「那几段之后发生了什么」、没有决策读它、没有事后对账",
+  "created": "2026-09-30",
+  "verified": null,
+  "blocked_by": "T-039"
+}
