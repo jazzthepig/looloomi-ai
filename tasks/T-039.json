@@ -2,7 +2,7 @@
   "id": "T-039",
   "title": "风格表头:每个标的的风格归属(PIT)+ 每个风格的日指数 + 每本账本的风格暴露",
   "owner": "seth",
-  "status": "claimed",
+  "status": "done",
   "source": "Jazz 09-30:「分辨不了大币周期、二线公链、山寨币、meme 的暴露,就是表头没有做」;DECISION_PATH_SPEC ① 风格/相位判断从未接上",
   "allowed_paths": [
     "src/data/style/",
@@ -20,6 +20,10 @@
   },
   "prior_value": "asset_class 只有 L1/L2/DeFi/RWA/Infra 粗分类、无档位、无 meme;asset_embeddings_history 仅 08-19 起 42 天、59 个标的;无任何风格指数",
   "created": "2026-09-30",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-09-30T04:00Z",
+    "value": "t039-v4:层级 4 × 板块 4 × 两种加权,2020-01-01 → 09-29 共 37,636 行;公开读 /api/v1/style/index 实测返回(meme 09-20 起 37 个成员,DOGE 45%);持仓法暴露已写(beta_plus 四臂)。多空账本无逐日权重,未算暴露。"
+  },
   "notes": "Seth 09-30 第一片:分类法(meme > AI > 基础设施与代币化 > DeFi > 公链 > L2;稳定币/包装币/LSD 排除;公链按 d-1 市值前 10 切头部)+ 三张表 + 风格指数(市值加权单币 40% 上限 / 等权;PIT;缺日不跨;成员 <3 不出行)+ Railway 每 6 小时一轮。历史成分是今天的分类成员往回取 —— 幸存者偏差,每行 basis 标注。第二片:每本账本的风格暴露。 | 09-30 首轮已跑(289 币有风格、市值 36.3 万行、指数 2020-01→09-28)。复核出四个问题,v2 修:①公链排到 AI/基础设施/DeFi 前(NEAR/ICP/INJ 是链),TAO 例外归 AI;②大币只有 2 个成员被 ≥3 的门槛挡掉,改为大币 ≥2;③等权出现单日 +116,682% —— 小市值坏点,d-1 市值 <2000 万不进、单日 >+500% 当坏点;④RWA 里混着代币化国债(价格钉在 1),30 天波动 <0.5% 的不进。另:TON 撞名成 Tokamak,显式指定 Toncoin;DOT/ATOM/POLYX 不在分类前 40,显式补入。第二片:持仓法账本风格暴露(beta_plus、tokenization_tilt)。 | v3(Jazz:「公链和分类不冲突」):层级(每币一个)与板块(每币多个)两个维度,NEAR = 公链 + AI;TAO 例外删除。S-445。"
 }

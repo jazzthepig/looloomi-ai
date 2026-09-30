@@ -24371,6 +24371,133 @@ per Seth §S-447 判读:**T-038 v3(过去 30/90 → 未来 30,连续回归)的�
 2. 如果 SURVIVE → 上 v0.2 state feature 进 §S-442 v6 / 如果 NOT EVIDENCE → T-038 lane-c 永久 parked,转其他研究主题
 3. 如果 PARTIAL → 6 对中失败 2-3 对的方向是哪种?是否需要 re-specify?
 
+## M-196 (lane-b, 2026-09-30;**PRE-REGISTERED before sweep**) — T-041 解读层验证预注册 (REV 2, 4 处更正)
+
+**Owner:** lane-b (B / Seth/Austin)
+**Card ID (lane-b):** T-041
+**Parent:** T-040 (Seth lane — 解读层落地,similar-day × 3 角度 × 30d forward)
+**Status:** 🟡 PRE-REGISTERED, sweep 待 Seth 用 T-040 历史模式跑
+**Source:** `/Users/sbb/Projects/looloomi-ai-lane-b/research/T-041_interpretation_validation_prereg_2026-09-30.md` (REV 2)
+
+---
+
+### §0 触发
+
+per Seth 2026-09-30 §S-443 / §S-446 / §S-450:**「解释」本身也要被检验。** T-040 每天落一行「相似日条件分布 + 之后 30 天各风格收益分布」,但这层解读是否比无条件历史分布更准地预测未来 30 天收益,必须先**预注册判据再回放**,否则是叙事不是证据。lane-b 草稿 `T-041_interpretation_validation_prereg_2026-09-30.md` 经 Seth 4 处更正,本条为正式台账版。
+
+### §1 核心问题 + null 假设
+
+**Q:** T-040 给出的「相似日条件分布」是否**比无条件历史分布**更能预测「接下来 30 天各风格的实际收益分布」?
+
+**H₀:** 给定相同预测日的输入特征,T-040 相似日条件分布与无条件历史分布在预测「t+1..t+30 实际收益分布」上**无差**(quantile loss 相等)。
+
+**H₁:** T-040 相似日条件分布**严格更优**(quantile loss 更低)且在随机基线下不崩。
+
+**判据格式:** 预注册 = **4 个独立测试 + 1 个随机基线,任一 FAIL 整体 FAIL。**
+
+### §2 4 个独立测试(任一 FAIL 整体 FAIL)
+
+| 测试 | 做法 | 统计量 | 判据 |
+|---|---|---|---|
+| **T1 · Quantile Loss** (REV 2 修正:评分方法) | T-040 给出 Q25/Q50/Q75 + p_up;无条件分布给同样 3 个分位 + 0.5 占位。算 pinball loss 在 3 档:`QL_α(y,q) = (1−α)·(q−y) if y<q else α·(y−q)`。`ΔQL(t) = QL_A(t) − QL_B(t)` | 全部测试日的 Σ ΔQL → **paired Wilcoxon**(30d block bootstrap, 10000 重抽样) | ✅ median(ΔQL) < 0 且 paired Wilcoxon p < 0.05 (one-sided)<br>❌ median(ΔQL) ≥ 0 OR p ≥ 0.05 |
+| **T2 · 校准(Calibration)** | 把 p_up 按十分位分箱(decile 1-10),每个箱算实际 30 天收益 > 0 的比例 | Expected Calibration Error(ECE)= Σ \|predicted_p − actual_rate\| × 桶权重 | ✅ ECE_A < ECE_B 且 (ECE_B − ECE_A) bootstrap CI 不含 0<br>❌ ECE_A ≥ ECE_B OR CI 含 0 |
+| **T3 · 区间覆盖(Coverage)** (REV 2 修正:判据简化) | T-040 给的 IQR(p25/p75),看实际 30 天收益落进 IQR 的频率 | IQR coverage error = \|50% − actual_IQR_coverage\| | ✅ cov_err_A < cov_err_B **且** (cov_err_B − cov_err_A) bootstrap CI **不含 0**<br>❌ cov_err_A ≥ cov_err_B OR CI 含 0 |
+| **T4 · 辨别力(Discrimination)** | 找 T-040 与无条件分布**分歧最大**的日子(QL_A − QL_B 绝对值前 1/3)。在这些日子里,T-040 的方向性判断 hit rate vs 无条件方向的 hit rate | 分歧日 hit_rate_A − hit_rate_B | ✅ hit_rate_A > hit_rate_B + 0.10<br>❌ hit_rate_A ≤ hit_rate_B + 0.10 |
+
+### §3 随机基线(per §S-440 「68% 随机基准率」)
+
+**做法:** 对每个测试日 t,把 T-040 选的 5 个相似日**随机替换**为从 [t-window, t-1] 随机抽的 5 个历史日,跑同一套 4 测试。
+**判据:** ✅ 真实 T-040 **显著**优于随机 T-040 在 T1 (median(ΔQL_real) < median(ΔQL_rand) 且 paired p < 0.05) · ❌ 否则 FAIL
+
+### §4 样本量 + 样本窗(REV 2 修正)
+
+| 维度 | 设定 |
+|---|---|
+| **样本量** | 每天 = 1 paired observation;30 天前瞻 + 非重叠 ≈ **85 个非重叠窗**(REV 2 修正:不是 2470);30 天 block bootstrap(per §S-442 JAZZ 「块长 ≥ 30 天」),10000 重抽;n=85 足够 paired Wilcoxon 在 d=0.5 + 功效 0.8 |
+| **样本窗** | (REV 2 修正:相似日数据从 2022-01 起,不是 2019)<br>**样本内:2023-01 → 2023-12** (12 个月)<br>**样本外:2024-01 → today**(约 21 个月到 2026-09-30)<br>OOS ≈ **~20 个独立 OOS 观察**(n=20 paired Wilcoxon 在 d=0.5 + 功效 0.8 临界;效应小 d<0.30 无法检测 ⇒ **任何「阴性结果」必须分清「真无差异」 vs 「n 不足」**,per §E F4 INCONCLUSIVE) |
+
+### §5 失败模式 + 升级路径(per §S-440 「先判成因再动手」)
+
+| 失败模式 | 含义 | 升级 |
+|---|---|---|
+| **F1: A ≈ B(4 测试全 FAIL)** | 相似日选择没用,T-040 是叙事 | **杀 T-040**,回 ⓪ OVERRIDE 用其它判据(lead 指标 R11/R12/R14 直通) |
+| **F2: 真实 ≤ 随机(C FAIL)** | 相似性选择没信号 | **降级相似性选择**到 lead 指标族(R11/R12/R14),T-040 框架保留但相似度 metric 换 |
+| **F3: A 显著优于 B 但只 T1 PASS** | 平均意义上轻微更优但无辨别力 | **降级** T-040 到 advisory 而非决策输入 |
+| **F4: INCONCLUSIVE(n 不足或 SE 过宽)** | 测试无统计功效 | OOS 窗已 cap,扩样本需等时间走;**当前不可扩 ⇒ 判 INCONCLUSIVE 而非 PASS** |
+| **F5: A 显著优于 B 但 coverage 偏差**(T1 PASS, T3 FAIL) | 分布中心对但尾巴错 | 改 T-040 的 tails estimator(parametric → bootstrap),非杀 T-040 |
+
+**任一 F1-F3 ⇒ 整体 FAIL ⇒ T-040 不进 production。** **F4-F5 ⇒ 重做或缩范围,不立即判 PASS。**
+
+### §6 §S-446 分析时附加视角(pre-reg 不变,判读时用)
+
+(per Seth §S-446 第 3、4 项,这些是**怎么分析**而不是**怎么改 pre-reg** —— 落到 §F 结果格式里,不改 §2 判据。)
+
+1. **优先看风格相对收益**(`second_l1_l2 − majors` / `meme − majors` / `ai − majors` / `defi − majors` / `app − majors` / `infra_tokenization − majors`),绝对收益次之
+2. **两角度一致 vs 不一致分开报** —— 设计说「分歧是产出」,要验证分歧是否对应更宽的实际分布(separately 报告两个子组的 coverage / dispersion)
+3. **每行 `basis` 字段标注幸存者偏差**(per §S-451 t039-v4 回填段偏乐观 —— 历史相似日的币池成员在今天不一定存在)
+
+### §7 跑完后落台账格式(Seth 跑,B 按预注册判据读结果写)
+
+```
+## T-041 result @ <date>
+test_1_quantile_loss:   PASS/FAIL  median ΔQL = <num>  p = <num>
+test_2_calibration:     PASS/FAIL  ECE_A = <num>  ECE_B = <num>  Δ CI excludes 0?
+test_3_coverage:        PASS/FAIL  cov_err_A = <num>  cov_err_B = <num>  Δ CI excludes 0?
+test_4_discrimination:  PASS/FAIL  hit_rate_A = <num>  hit_rate_B = <num>
+random_baseline:        PASS/FAIL  median ΔQL_real < median ΔQL_rand + p
+overall: PASS / FAIL / INCONCLUSIVE
+action per §5: <F1-F5 之一>
+```
+
+并把 §6 三条附加视角的发现(相对收益对比 / 两角度一致 vs 不一致子组 / basis 标注偏差)作为额外字段写入,不参与 PASS/FAIL 判定。
+
+### §8 4 处 REV 2 修正对照 SYNC §S-450
+
+| # | REV 1 → REV 2 修正 | SYNC §S-450 要求 | 对齐 |
+|---|---|---|---|
+| 1 | Test 1 评分:log-likelihood → **quantile loss / pinball loss** 在 Q25/Q50/Q75 | 「解读层给的是分位数,不是完整分布,没法算对数似然」 | ✅ |
+| 2 | 样本量:2470 → **~85 个非重叠 30d 窗口**;重叠样本用 30d block bootstrap | 「重叠样本前后相关,直接做显著性检验会把 p 值算得过小」 | ✅ |
+| 3 | 样本窗:2019 → **2022-01 起**(宏观相似度数据起点);**SI 2023 / OOS 2024+** | 「宏观相似度数据从 2022-01 才开始」 | ✅ |
+| 4 | Test 3 判据:「3 档平均 < 5pp + Δ ≥ 3pp」 → 只留一条相对判据 **cov_err_A < cov_err_B + Δ CI 不含 0** | 「第 3 项检验的判据前后矛盾。只保留一条相对判据」 | ✅ |
+
+### §9 不动的边界
+
+- **不动**:src/ / dashboard/ / spec_runner / nav_kernel(本条纯 pre-reg,落 lane-b 草稿)
+- **不动**:M-189 / M-190 / M-193 / M-194 / M-194b / M-195(其它 lane pre-reg 历史)
+- **不动**:T-039 风格表头(T-041 的输入,不动)
+- **动**:Seth lane 跑回放后,本条 §7 模板按预注册判据填上,**走 §5 升级路径**
+- **不动**:T-041 REV 2 草稿(在 lane-b 仓,本条是台账版镜像)
+
+### §10 §S-442 / §S-440 已立规矩对齐
+
+| 规矩 | 来源 | 本条对齐 |
+|---|---|---|
+| 先预注册再跑 | §S-440 | 本条 = pre-reg,跑在 Seth lane |
+| 68% 随机基准率 | §S-440 | §3 真实 vs 随机 |
+| 30d block bootstrap, 块长 ≥ 30d | §S-442 | §4 + §7 |
+| B 不跑数字 | JAZZ §S-440 | §7 B 只读 + 写台账 |
+| 零 mock / 零替代 / 全程实数据 | CLAUDE.md Rule 9 | P_A / P_B / r_actual 走 Supabase + nav_kernel(Seth lane),不走 fixture |
+| Ledger 编号 lane-prefixed forward-only | CLAUDE.md Rule 7 | M-196 = B 卡号(Seth 分配),T-041 是 lane-b 仓内的卡号命名,本条以 M-196 进主仓台账 |
+| 相似性数据时窗从 2022-01 起 | Seth §S-450 | §4 |
+| ~85 个非重叠 30d 窗 | Seth §S-450 | §4 |
+| quantile loss / CRPS | Seth §S-450 | §2 T1 |
+| Test 3 只留相对判据 | Seth §S-450 | §2 T3 |
+
+### §11 References
+
+- `/Users/sbb/Projects/looloomi-ai-lane-b/research/T-041_interpretation_validation_prereg_2026-09-30.md`(REV 2, 4 修正全应用)
+- T-040(Seth 在做,本条 parent)—— 解读层落地
+- T-039(Seth 已 ship)—— 风格表头 + Railway 公开端点 `/api/v1/style/index?style=<name>&weighting=cap|equal&start=2020-01-01`
+- §S-443 / §S-446 / §S-450 —— JAZZ 2026-09-30 三轮反馈
+- §S-440 JAZZ 2026-09-30 —— pre-reg + 68% 随机基线
+- §S-442 JAZZ 2026-09-30 —— 30d block bootstrap + 不分桶
+- §S-451 Seth 2026-09-30 —— 风格指数 API live + basis 当幸存者
+- HIGH_DIM_ONTOLOGY §5b-bis —— ⓪ OVERRIDE doctrine(本卡是 doctrine 的判据化)
+- ARCHITECTURE §"Not an app — an OS" —— Diagnose(Portfolio) 原语,T-040/T-041 是最小可用版
+- Gneiting & Raftery(2007)—— quantile loss / pinball loss 金标准来源
+
+---
+
 ## S-449 — 40% 是交易策略的上限,不是指数的规则:风格指数改为不设上限的市值加权
 
 Jazz 09-30:「那个是我们交易策略的上限,不是加权指数的上限。」
@@ -24384,3 +24511,25 @@ v1–v3b 把 v0.2 L3 的「单一标的 ≤ 40%」加在了风格指数上 —�
 S-447 写「C 在 v3 无信号之后把窗口扩成 42 格」,好像是 C 自行扩搜。实际是 Jazz 09-30 问「我们是不是没有比较时间维度?」(M-194b 标题里写着)。
 统计判读不变:42 格里 2 格过线等于随机预期,两格是同一个发现 —— 所以 v4b 的产出是一个**假设**(180 天反转),已由 C 预注册为 M-195 在独立数据上检验。
 比较时间维度本身是对的问题;错的只会是把探索的结果当证据。
+
+## S-451 — 风格周期第一张可信的表(t039-v4),与解读层 v0 上线
+
+**风格指数(纯市值加权,当前成员往回取 ⇒ 回填段偏乐观)**,年收益:
+
+| | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 至 09-29 | 2023-12-27→09-28 | 09-05→09-28 |
+|---|---|---|---|---|---|---|---|---|
+| 大币 | +106% | −65% | +135% | +102% | −7% | −5% | **+72%** | +5% |
+| 头部公链 | +344% | −73% | +101% | +106% | −21% | −5% | +51% | +7% |
+| 二线公链与 L2 | **+708%** | −71% | +124% | +31% | −42% | +3% | **−21%** | **+32%** |
+| 应用币 | +424% | −73% | +75% | +104% | −61% | +13% | −15% | +10% |
+| AI | +180% | −87% | +186% | +33% | −76% | **+50%** | −50% | **+50%** |
+| meme | −12% | −66% | +45% | **+245%** | −66% | −9% | +2% | +4% |
+| DeFi | +149% | −74% | +128% | +49% | −49% | **+71%** | +23% | +11% |
+| 基础设施与代币化 | +188% | −78% | +93% | +5% | −42% | +6% | −39% | +17% |
+
+领涨风格每年都换;三年里大币 +72%、二线 −21%,而 ① 的面板 49% 在二线、9% 在大币(S-448)。
+
+**解读层 v0(T-040):** 三个角度并排 —— 风格相位(各风格相对大币过去 30/90/180 天)、宏观(5a)、横截面(5b)。
+每个角度 10 个相似日,只取早于 d−30 天、标准化只用 d 之前(回放与实时同一段代码);给出之后 30 天的分布与角度间方向一致比例,30 天后写回实际。
+库里的 `similar_market_states()` 用全样本标准化且允许取未来的日子 —— 看今天可以,回放不行,所以不复用。
+横截面空间 `regime_daily` 自 09-15 停写(Mac 侧写入端),今天只有两个角度可用。
