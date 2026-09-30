@@ -415,6 +415,41 @@ async def get_ohlcv(symbol: str, days: int = Query(90, ge=1, le=730)):
 
 
 
+# ── T-039:风格指数的公开读取(研究 lane 与外部 agent 用;只读、无 key)────────────
+#
+# lane 不持有 Supabase key(OPEN RISK #0b),研究要数据走 Railway 的公开读端点 —— 与 /api/v1/ohlcv 同一模式。
+# 只返回当前 code_ref 的行:分类法改版后旧行在清理前不会混进来。
+
+@router.get("/api/v1/style/index")
+async def get_style_index(style: str = Query(..., description="majors / top_l1 / second_l1_l2 / app / ai / meme / defi / infra_tokenization"),
+                          weighting: str = Query("cap", pattern="^(cap|equal)$"),
+                          start: str = Query("2020-01-01")):
+    """一个风格指数的逐日收益与累计水平(旧→新)。每行带 n_members 与 basis(回填段有幸存者偏差,如实标注)。"""
+    from src.data.style.header import CODE_REF
+    from src.data.style.taxonomy import DIMENSION
+    if style not in DIMENSION:
+        raise HTTPException(status_code=400, detail=f"未知风格 '{style}';可用:{sorted(DIMENSION)}")
+    if not _SB_URL or not _SB_KEY:
+        raise HTTPException(status_code=503, detail="supabase not configured")
+    out: list = []
+    async with httpx.AsyncClient(timeout=20) as client:
+        while True:
+            r = await client.get(
+                f"{_SB_URL}/rest/v1/style_index_daily",
+                params={"style": f"eq.{style}", "weighting": f"eq.{weighting}", "code_ref": f"eq.{CODE_REF}",
+                        "d": f"gte.{start}", "order": "d.asc", "limit": "1000", "offset": str(len(out)),
+                        "select": "d,ret,level,n_members,n_dropped,top_member,top_weight,basis"},
+                headers=_sb_headers())
+            if r.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"读不到 style_index_daily:HTTP {r.status_code}")
+            batch = r.json()
+            out.extend(batch)
+            if len(batch) < 1000:
+                break
+    return {"status": "ok", "style": style, "dimension": DIMENSION[style], "weighting": weighting,
+            "code_ref": CODE_REF, "count": len(out), "data": out}
+
+
 # ── S-258: CoinGecko Pro 深盘回填 ─────────────────────────────────────────────
 
 @router.post("/internal/backfill-deep-panel")

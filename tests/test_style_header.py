@@ -145,3 +145,13 @@ def test_extra_members_cover_panel_coins_missing_from_category_lists():
     assert t.EXTRA_MEMBERS["TON"][0] == "the-open-network"
     assert {"DOT", "ATOM", "POLYX"} <= set(t.EXTRA_MEMBERS)
     assert set(t.STYLES) == set(t.TIERS) | set(t.SECTORS) and not set(t.TIERS) & set(t.SECTORS)
+
+
+def test_public_style_index_route_rejects_unknown_styles(monkeypatch):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from src.api.routers import ohlcv
+    app = FastAPI(); app.include_router(ohlcv.router)
+    c = TestClient(app)
+    assert c.get("/api/v1/style/index?style=nope").status_code == 400
+    assert c.get("/api/v1/style/index?style=ai&weighting=weird").status_code == 422
