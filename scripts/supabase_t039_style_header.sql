@@ -51,3 +51,7 @@ create table if not exists public.book_style_exposure_daily (
 alter table public.book_style_exposure_daily enable row level security;
 revoke all on public.book_style_exposure_daily from anon, authenticated;
 grant select, insert, update, delete on public.book_style_exposure_daily to service_role;
+
+-- v3 (09-30):层级 / 板块两个维度
+alter table public.style_index_daily add column if not exists dimension text;
+alter table public.book_style_exposure_daily add column if not exists dimension text;
