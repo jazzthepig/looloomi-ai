@@ -1,112 +1,124 @@
 """T-039 风格表头 —— 分类法。纯函数,无 I/O。
 
 Jazz 2026-09-30:「分辨不了大币周期、二线公链、山寨币、meme 的暴露,就是表头没有做。」
-风格/相位判断一直是设计的第一步(HIGH_DIM §5b-bis ⓪、DECISION_PATH_SPEC ①);缺的是这张表。
+Jazz 2026-09-30(v3):「公链和分类不冲突啊。NEAR 也是区块链里面 AI 最重要的。」
 
-两层:
-1. **基础风格**来自 CoinGecko 的分类成员关系(`/coins/markets?category=<id>`),按优先级取第一个命中:
-   meme > AI > 基础设施与代币化 > DeFi > 公链(L1) > L2。
-   一个币同时在「Meme」和「Layer 1」里时,决定它价格行为的是 meme 属性 —— 所以 meme 优先。
-2. **档位**只切公链:当天(PIT,用 d-1 的市值)在非大币、非稳定币里市值前 N 的公链 = 头部公链,其余 = 二线公链与 L2。
-   同一个币在不同年份可以属于不同档位 —— 这正是「大币周期 / 二线周期」要能分辨的东西。
+**所以风格是两个正交的维度,不是一个桶:**
+
+1. **层级(tier)—— 每个币恰好一个:** 大币 / 头部公链 / 二线公链与 L2 / 应用币(不是链的代币)。
+   公链的头部 / 二线按当天(PIT,用 d-1 市值)在非大币公链里的市值排名切,同一个币不同年份可以换档。
+2. **板块(sector)—— 每个币零个或多个:** AI / meme / DeFi / 基础设施与代币化。
+   NEAR 同时是「头部或二线公链」和「AI」;TAO 同时是公链和 AI;INJ 同时是公链、DeFi、代币化。
+   一个币进它所属的**每一个**板块指数,不再用优先级把它塞进唯一一格 —— 那样做就是二值化。
+
+v1/v2 用「优先级取第一个」给每个币一个风格,NEAR 要么进 AI 要么进公链,两种都丢了一半事实。
 """
 from __future__ import annotations
 
 from typing import Iterable, Mapping, Optional
 
-#: 风格桶(顺序即展示顺序)。键是英文 slug,落库用;值是中文名。
-STYLES: dict[str, str] = {
+#: 层级维度(每个币一个)
+TIERS: dict[str, str] = {
     "majors": "大币",
     "top_l1": "头部公链",
     "second_l1_l2": "二线公链与 L2",
-    "defi": "DeFi",
-    "infra_tokenization": "基础设施与代币化",
+    "app": "应用币",
+}
+
+#: 板块维度(每个币零个或多个)
+SECTORS: dict[str, str] = {
     "ai": "AI",
     "meme": "meme",
+    "defi": "DeFi",
+    "infra_tokenization": "基础设施与代币化",
 }
+
+#: 全部指数名 → 中文;两个维度的名字互不重复,所以可以共用一张指数表。
+STYLES: dict[str, str] = {**TIERS, **SECTORS}
+DIMENSION: dict[str, str] = {**{k: "tier" for k in TIERS}, **{k: "sector" for k in SECTORS}}
 
 #: 大币不看分类,直接指定。
 MAJORS = frozenset({"BTC", "ETH"})
 
-#: CoinGecko 分类 id → 基础风格。按优先级从高到低;一个币取第一个命中。
-#: id 在运行时对 `/coins/categories/list` 校验,**不存在的 id 让整轮拒绝**,不静默跳过。
-#:
-#: v2(09-30,首轮数据复核后):**公链排在 AI / 基础设施 / DeFi 前面。** v1 把 NEAR、ICP 归进 AI,
-#: INJ、ALGO、XLM 归进基础设施 —— 它们首先是一条链,「二线公链周期」里涨跌的就是它们。
-#: 例外写在 OVERRIDES 里,不改规则。
-CATEGORY_PRIORITY: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("meme", ("meme-token",)),
-    ("l1", ("layer-1",)),
-    ("ai", ("artificial-intelligence", "ai-agents")),
-    ("infra_tokenization", ("oracle", "real-world-assets-rwa", "interoperability")),
-    ("defi", ("decentralized-finance-defi",)),
-    ("l2", ("layer-2",)),
-)
-
-#: 规则之外的判断,逐条写理由。键 = 符号,值 = 基础风格。
-OVERRIDES: dict[str, str] = {
-    "TAO": "ai",     # Bittensor 带 layer-1 标签,但它是 AI 板块的领头币,价格跟 AI 叙事走
+#: 层级来自这两个分类;都不在 ⇒ 应用币。
+CHAIN_CATEGORIES: dict[str, tuple[str, ...]] = {
+    "l1": ("layer-1",),
+    "l2": ("layer-2",),
 }
 
-#: 不在任何分类前 40 里、但在我们账本面板里的币:显式给出 CoinGecko id 与风格。
+#: 板块来自这些分类(多标签)。id 在运行时对 `/coins/categories/list` 校验,不存在即整轮拒绝。
+SECTOR_CATEGORIES: dict[str, tuple[str, ...]] = {
+    "ai": ("artificial-intelligence", "ai-agents"),
+    "meme": ("meme-token",),
+    "defi": ("decentralized-finance-defi",),
+    "infra_tokenization": ("oracle", "real-world-assets-rwa", "interoperability"),
+}
+
+#: 不进任何指数:它们的价格是别的东西的影子(稳定币、包装币、流动性质押凭证)。
+EXCLUDE_CATEGORIES: tuple[str, ...] = ("stablecoins", "wrapped-tokens", "liquid-staking-tokens")
+
+#: 不在任何分类前 40 里、但在我们账本面板里的币:显式给出 CoinGecko id 与分类。
 #: TON 在分类列表里撞名成了 Tokamak Network(一个 L2),这里指定 Toncoin。
-EXTRA_MEMBERS: dict[str, tuple[str, str]] = {
-    "DOT": ("polkadot", "l1"),
-    "ATOM": ("cosmos", "l1"),
-    "TON": ("the-open-network", "l1"),
-    "POLYX": ("polymesh", "infra_tokenization"),   # 代币化篮子成员(DECISIONS 09-26)
+EXTRA_MEMBERS: dict[str, tuple[str, tuple[str, ...]]] = {
+    "DOT": ("polkadot", ("layer-1", "interoperability")),
+    "ATOM": ("cosmos", ("layer-1", "interoperability")),
+    "TON": ("the-open-network", ("layer-1",)),
+    "POLYX": ("polymesh", ("layer-1", "real-world-assets-rwa")),   # 代币化篮子成员(DECISIONS 09-26)
 }
 
-#: 每个风格至少几个成员才出指数。大币只有 BTC / ETH 两个。
+#: 每个指数至少几个成员才出一行。大币只有 BTC / ETH 两个。
 MIN_MEMBERS: dict[str, int] = {"majors": 2}
 MIN_MEMBERS_DEFAULT = 3
-
-#: 不进任何风格指数:它们的价格是别的东西的影子(稳定币、包装币、流动性质押凭证)。
-EXCLUDE_CATEGORIES: tuple[str, ...] = ("stablecoins", "wrapped-tokens", "liquid-staking-tokens")
 
 #: 头部公链的档位线:非大币公链里,d-1 市值排名前 N。
 TOP_L1_RANK = 10
 
 
 def all_category_ids() -> list[str]:
-    ids = [c for _, cs in CATEGORY_PRIORITY for c in cs] + list(EXCLUDE_CATEGORIES)
+    ids = ([c for cs in CHAIN_CATEGORIES.values() for c in cs]
+           + [c for cs in SECTOR_CATEGORIES.values() for c in cs] + list(EXCLUDE_CATEGORIES))
     return list(dict.fromkeys(ids))
 
 
-def base_style(symbol: str, categories: Iterable[str]) -> Optional[str]:
-    """基础风格:'majors' / 'meme' / 'ai' / 'infra_tokenization' / 'defi' / 'l1' / 'l2' / None(排除或未归类)。"""
+def classify(symbol: str, categories: Iterable[str]) -> Optional[tuple[str, frozenset[str]]]:
+    """→ (层级基础, 板块集合);层级基础 ∈ {'majors','l1','l2','app'}。被排除的返回 None。"""
     s = symbol.upper()
-    if s in MAJORS:
-        return "majors"
-    if s in OVERRIDES:
-        return OVERRIDES[s]
     cats = set(categories)
-    if cats & set(EXCLUDE_CATEGORIES):
+    if s not in MAJORS and cats & set(EXCLUDE_CATEGORIES):
         return None
-    for style, ids in CATEGORY_PRIORITY:
-        if cats & set(ids):
-            return style
-    return None
+    sectors = frozenset(k for k, ids in SECTOR_CATEGORIES.items() if cats & set(ids))
+    if s in MAJORS:
+        return "majors", sectors
+    if cats & set(CHAIN_CATEGORIES["l1"]):
+        return "l1", sectors
+    if cats & set(CHAIN_CATEGORIES["l2"]):
+        return "l2", sectors
+    return "app", sectors
 
 
-def resolve_styles(base: Mapping[str, Optional[str]], mcap_prev: Mapping[str, float],
-                   top_n: int = TOP_L1_RANK) -> dict[str, str]:
-    """一天的最终风格。`base` = 基础风格;`mcap_prev` = d-1 的市值(PIT)。
-
-    公链切两档:有 d-1 市值的 l1 按市值排,前 top_n 为 top_l1,其余与 l2 一起为 second_l1_l2。
-    没有 d-1 市值的币当天不归类(不猜)。
+def resolve_tiers(tier_base: Mapping[str, str], mcap_prev: Mapping[str, float],
+                  top_n: int = TOP_L1_RANK) -> dict[str, str]:
+    """一天的层级。`tier_base` = classify 的第一项;`mcap_prev` = d-1 市值(PIT)。
+    l1 按 d-1 市值排,前 top_n 为 top_l1,其余与 l2 一起为 second_l1_l2。没有 d-1 市值的币当天不归类(不猜)。
     """
-    out: dict[str, str] = {}
-    l1 = sorted((s for s, b in base.items() if b == "l1" and mcap_prev.get(s)),
+    l1 = sorted((s for s, b in tier_base.items() if b == "l1" and mcap_prev.get(s)),
                 key=lambda s: -float(mcap_prev[s]))
     top = set(l1[:top_n])
-    for s, b in base.items():
-        if b is None or not mcap_prev.get(s):
+    out: dict[str, str] = {}
+    for s, b in tier_base.items():
+        if not mcap_prev.get(s):
             continue
-        if b == "l1":
-            out[s] = "top_l1" if s in top else "second_l1_l2"
-        elif b == "l2":
-            out[s] = "second_l1_l2"
-        else:
-            out[s] = b
+        out[s] = {"l1": "top_l1" if s in top else "second_l1_l2", "l2": "second_l1_l2"}.get(b, b)
+    return out
+
+
+def members_by_index(tier_base: Mapping[str, str], sectors: Mapping[str, frozenset],
+                     mcap_prev: Mapping[str, float]) -> dict[str, list[str]]:
+    """一天里每个指数的成员。层级:每币一个;板块:每币可以在多个里。"""
+    tiers = resolve_tiers(tier_base, mcap_prev)
+    out: dict[str, list[str]] = {k: [] for k in STYLES}
+    for s, t in tiers.items():
+        out[t].append(s)
+        for sec in sectors.get(s, ()):
+            out[sec].append(s)
     return out
