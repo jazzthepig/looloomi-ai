@@ -47,11 +47,11 @@ def test_market_chart_midnight_point_is_the_previous_day_and_now_point_is_droppe
     assert [p["d"] for p in pts] == ["2026-09-27", "2026-09-28"] and pts[-1]["price"] == 2.0
 
 
-def test_capped_weights_respect_the_cap_and_sum_to_one():
-    w = h.capped_weights(pd.Series({"A": 90.0, "B": 5.0, "C": 3.0, "D": 2.0}))
-    assert abs(w.sum() - 1) < 1e-9 and w.max() <= 0.40 + 1e-9
-    w2 = h.capped_weights(pd.Series({"BTC": 70.0, "ETH": 30.0}))       # 两个成员:上限做不到 ⇒ 真实市值权重
-    assert np.allclose(w2.values, [0.7, 0.3])
+def test_index_weights_are_plain_market_caps_no_strategy_cap():
+    """40% 是交易策略的单一标的上限,不是指数的规则(Jazz 09-30)。"""
+    w = h.mcap_weights(pd.Series({"A": 90.0, "B": 5.0, "C": 3.0, "D": 2.0}))
+    assert np.allclose(w.values, [0.9, 0.05, 0.03, 0.02])
+    assert np.allclose(h.mcap_weights(pd.Series({"BTC": 70.0, "ETH": 30.0})).values, [0.7, 0.3])
 
 
 def _frame(days, cols):
@@ -77,7 +77,7 @@ def test_index_uses_previous_day_caps_and_refuses_thin_days():
     defi_eq = [r for r in rows if r["style"] == "defi" and r["weighting"] == "equal"]
     assert len(defi_eq) == 4 and abs(defi_eq[0]["ret"] - 0.1 / 3) < 1e-12
     cap = next(r for r in rows if r["style"] == "defi" and r["weighting"] == "cap" and r["d"] == "2026-01-02")
-    assert cap["top_member"] == "A" and cap["top_weight"] <= 0.40 + 1e-9
+    assert cap["top_member"] == "A" and abs(cap["top_weight"] - 0.6) < 1e-12        # 300/(300+100+100),不截顶
     assert not any(r["style"] == "meme" for r in rows)            # 成员不够 ⇒ 不出行,不是 0
     assert all(r["basis"] == h.BASIS_BACKFILL for r in rows)
 

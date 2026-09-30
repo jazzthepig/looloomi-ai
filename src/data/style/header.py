@@ -6,7 +6,7 @@
 三张表(`scripts/supabase_t039_style_header.sql`):
 - `style_membership`   每个币属于哪些 CoinGecko 分类、基础风格是什么(按抓取日留历史)
 - `asset_mcap_daily`   每个币每天的价格与市值(CoinGecko market_chart,日线)
-- `style_index_daily`  每个风格每天的收益与累计水平,市值加权(单币上限 40%)与等权两版
+- `style_index_daily`  每个风格每天的收益与累计水平,市值加权(不设上限,就是市场本来的样子)与等权两版
 
 **时间戳语义(S-436 的教训,写在最前面):** CoinGecko market_chart 的日线点在 00:00 UTC 取样,
 那一刻的价格就是**前一天的收盘**。所以 `d = 点的日期 − 1 天`;不在 00:00 的点(最后一个「现在」)丢弃。
@@ -29,7 +29,6 @@ from src.data.style.taxonomy import (DIMENSION, EXTRA_MEMBERS, MIN_MEMBERS, MIN_
                                      resolve_tiers)
 
 HISTORY_START = "2020-01-01"
-SINGLE_CAP = 0.40
 #: d-1 市值低于这个的币当天不进指数:小到几百万美元的币价格常有错点,等权时会把整个风格带飞
 #: (v1 首轮出现过单日 +116,682% 的等权「收益」)。
 MIN_MCAP_USD = 20e6
@@ -42,7 +41,7 @@ MEMBERS_PER_CATEGORY = 40
 MEMBERSHIP_REFRESH_DAYS = 7
 BASIS_BACKFILL = "current_constituents_backfilled"
 SOURCE = "coingecko_pro_market_chart"
-CODE_REF = "t039-v3b"
+CODE_REF = "t039-v4"
 WEIGHTINGS = ("cap", "equal")
 
 
@@ -63,22 +62,14 @@ def parse_market_chart(prices: list, market_caps: list) -> list[dict]:
     return out
 
 
-def capped_weights(mcap: pd.Series, cap: float = SINGLE_CAP) -> pd.Series:
-    """市值加权,单个上限 `cap`,超出部分按比例分给其余的(迭代到收敛)。"""
-    w = mcap / mcap.sum()
-    if len(w) * cap < 1:
-        # 成员太少,上限无法满足(大币只有 BTC/ETH):用真实市值权重,不设上限。
-        # v3 首版在这里退回了等权 —— 「大币」市值加权指数于是成了 BTC/ETH 各半,2021 年显示 +198%。
-        return w
-    for _ in range(50):
-        over = w > cap + 1e-12
-        if not over.any():
-            break
-        excess = (w[over] - cap).sum()
-        w[over] = cap
-        rest = ~over
-        w[rest] += excess * w[rest] / w[rest].sum()
-    return w
+def mcap_weights(mcap: pd.Series) -> pd.Series:
+    """市值权重,**不设上限**。
+
+    指数度量的是「这个风格在市场里本来的样子」。40% 是我们**交易策略**的单一标的上限(v0.2 L3,Jazz 09-29),
+    不是指数的规则 —— v1–v3 把它加在指数上,v3 更因两个成员满足不了上限而把「大币」算成了 BTC/ETH 各半(S-448、S-449)。
+    一个币在某个板块里占大头(DOGE 之于 meme)就是事实;要看广度,看等权版。
+    """
+    return mcap / mcap.sum()
 
 
 def compute_style_index(price: pd.DataFrame, mcap: pd.DataFrame,
@@ -122,7 +113,7 @@ def compute_style_index(price: pd.DataFrame, mcap: pd.DataFrame,
                 continue
             r = r_d[members].astype(float)
             for wname in WEIGHTINGS:
-                w = (capped_weights(m_prev[members].astype(float)) if wname == "cap"
+                w = (mcap_weights(m_prev[members].astype(float)) if wname == "cap"
                      else pd.Series(1.0 / len(members), index=members))
                 ret = float((w * r).sum())
                 key = (style, wname)
