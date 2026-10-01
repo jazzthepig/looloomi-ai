@@ -24663,3 +24663,98 @@ preflight 跑在工作目录上,未跟踪文件就在磁盘上,所以是绿的 �
 **为什么「引擎」没抓到:** 系统里没有任何东西决定总敞口;当前这一版 ① 09-04 才起,7–8 月没有一本多头账本在场。
 而经典的趋势闸门(BTC > 200 日线)也会错过:BTC 直到 8 月底都在 200 日线下(07-01 60,024 对 75,248;08-15 63,086 对 69,412),大币 8 月已涨 +26%。**V 形底从趋势线下开始,趋势闸门按构造就迟到。**
 **解读层回看(t040-v1):** 07-01 / 07-15 / 08-01 / 08-15 对大币未来 30 天的中位数都在 ±1.2% 以内、上涨占比约 0.5 —— 它在这段没有方向判断,不会说「加风险」。
+
+## S-458 — 上游通道第一批:CoinGecko Analyst 能给的稳定币 / 代币化资产 / RWA 规模与全市场市值
+
+Jazz 10-01:这一轮由传统资产代币化带动,要找市场的上游变量与真正的因子组合;通道不是选一条,是联合状态(高维)。
+我们一直在用价格解释价格 —— 稳定币、代币化规模、利率,一条都没入库(S-457 后的讨论)。先接 CoinGecko Analyst 能给的:
+- 分类 id **运行时按关键词发现**(stablecoin / tokenized / real-world-asset、rwa),发现结果落 `channel_categories`;
+- 每个分类前 50 名成员的市值逐日历史(`cg_coin_mcap_daily`,2020 起),按「通道 / 分类」与「通道 / 全部」加总进 `channel_series_daily`;
+- `/global/market_cap_chart` 的全市场市值与成交额(分母)。
+已知口径:成员是今天的前 50 往回取(历史存量偏低估,`basis` 标注);CoinGecko 不按链拆分 —— 「哪条链承接」一维等 DeFiLlama 补;
+存的是水平,状态层取变化与加速度。下一步:DeFiLlama(稳定币按链、RWA 按链与产品)与美债收益率曲线,然后降秩 + 时变载荷的预注册研究。
+
+## M-198 (lane-c, 2026-10-01;**PRE-REGISTERED before sweep**, JAZZ 拍全跑) — 7-Probe Vector Mapping:风格 × 策略矢量化与正交补空间
+
+> **NOTE — 号段澄清:** S-455 §M.2「占住 M-197 标题」是 lane-b 给 T-041 result 预留的位置;lane-c 改用 **M-198**(下一个 lane-c 槽,per CLAUDE.md Rule 7 forward-only)。
+
+**Owner:** lane-c (Minimax-C Mac Mini)
+**Status:** 🟡 PRE-REGISTERED,7 probe 待跑
+**Lane-c host:** Claude-C
+**Parent:** T-038 v5 PARTIAL ACCEPTED per S-454 + JAZZ 2026-10-01 + §5b 4-layer hierarchy + ⓪ OVERRIDE doctrine + T-039 v4 风格指数 + Outter advisory contract
+**Source:** `cometcloud-local/research/t038_v6_*.py` (NEW, post-T-038 v5 closure)
+
+### §0 触发 — 为什么 JAZZ 2026-10-01 拍「全跑」
+
+T-038 收尾后,JAZZ 2026-10-01 给出 2 件 directive:
+1. **「不要在搞费率了,费率方向已经到头」** —— M-108/M-110 之后,fee 端已被穷尽
+2. **「风格和策略矢量的研究和打通还很落后」** —— 新战场
+
+新框架 = 4 件套(S-454 §5b + ⓪ + T-039 + Outter):layered return hierarchy、T-039 风格指数(shipped v4 不截顶 per S-449)、§5b 4 layer、Outter advisory contract。
+
+**核心 gap**:有 style basis(6 dim T-039)+有 strategy basis(5+ sleeves M-93 / R19-Lite / R14-Lite / BTT-LEX / CCCL),**两张 basis 之间的 mapping matrix 是空的**。这导致:
+- Book A / B / CDCB-A 之间相关性多高?是不是同一矢量换了马甲?
+- 风格反转 2/6 通过(ai + infra_tokenization per M-195 v5 PARTIAL),但 **sleeve 实际有没有吃到这个 edge**?
+- 「缺失矢量」= 正交补空间里有什么?有没有 alpha 没被采?
+- S-454 已经点出 **T-038 PARTIAL 6/6 方向一致不是独立 evidence**(都减大币腿,山寨同涨同跌)—— 这正是 P7 要测的 dependency 结构
+
+### §1 7 个 Probe 总览
+
+| # | 名 | Hypothesis | 关键产物 | 数据依赖 | 阻塞 |
+|---|---|---|---|---|---|
+| **P1** | Style basis 正交化 | 6 T-039 风格指数 daily ret 之间相关矩阵 + SVD,找主成分;多少 dim 解释 95% 方差? | 6×6 corr + singular value spectrum | T-039 API(✅ live per S-451) | 0 阻塞 |
+| **P2** | Sleeve → Style 投影 | 5 sleeve(M-93 / R19-Lite / R14-Lite / BTT-LEX / CCCL)日 P&L 对 6 风格 ret 做 OLS,看 loadings | 5×6 loadings + 每 sleeve dominant style | sleeve daily P&L(per M-115/116/128d/152 outputs) | **lane-b 给** |
+| **P3** | Strategy-strategy 相关性 | 5 sleeve 日 P&L 相关矩阵;哪些 redundancy?Book A / B / CDCB-A 重合度? | 5×5 corr + redundancy 树状图 | 同 P2 | cascade |
+| **P4** | Residual decomposition | 每 sleeve ret 减去 6 风格 loadings 后的残差;残差自身相关 + 可解释度 | 残差 stats + 残差是否含独立 alpha | P2 outputs | cascade |
+| **P5** | Regime 条件 style activation | 6 风格在 EASING / TIGHT / RISK_OFF 下相对强弱;哪些 sleeve 在哪个 regime 该 activate | regime × style matrix + 激活规则 | M-127 2D classifier regime 时间戳 | **lane-b 给** |
+| **P6** | Missing vector proposal | P1-P5 联合 → 找正交补空间:哪个风格 / regime 我们还没 sleeve 押? | 候选新 sleeve spec(**不 ship,只 spec**) | P1-P5 全部 | cascade |
+| **P7** | T-038 PARTIAL 假设事后验证 | 「180d reversal」是 style-level 还是 panel-level?按 style 跑,是否还 2/6?是否 6/6 方向一致(独立 vs 非独立)? | 风格对 vs panel 对对照表 + independence test | T-038 v5 outputs(✅ 本地)+ 6 风格 daily ret | 0 阻塞 |
+
+### §2 分批 + 时间预算
+
+**Batch A(0 阻塞,立即跑)**: P1 + P7 —— 估时 4-6 h
+**Batch B(lane-b 依赖,P2 + P5 data feed)**: 等 lane-b 响应后,P2 → P3 → P4 → P6 串行;P5 与 P3/P4 可并行
+
+总预算 ~15-20 h 串行 / **~10 h 并行**。SYNC 一行 ping lane-b 请求 P2+P5 data。
+
+### §3 Per-Probe Verdict 标准
+
+每 probe 落独立 verdict(per M-195 / S-440 教训):
+- 🟢 **SURVIVE**: pre-reg 判据全过
+- 🟡 **PARTIAL**: 部分通过,JAZZ 拍后续(per T-038 v5 PARTIAL model)
+- 🔴 **REFUTED**: pre-reg 判据未过,假设被推翻
+- ⚫ **NOT EVIDENCE**: 数据 / power 不足,无法判定
+
+**失败 probe → pivot 不重跑**(per S-446 / S-450 / S-454 三次教训)。
+
+### §4 协议(per CLAUDE.md Rule 5b + Rule 9)
+
+- **零 mock 数据**:全走 Supabase + T-039 API + sleeve outputs
+- **三件齐交付**:每 probe 落 (1) 调度者 (2) 判活判据 (3) 第一行真实数据
+- **零硬规则破例**:JAZZ 2026-09-20 「no fallback mcap / supply」,写 anti-hallucination guard(独立 ship per 提案 B)
+- **lane-b 不动 ≠ 阻塞**:P1 + P7 0 阻塞可立即跑,Batch B 等 lane-b 响应
+
+### §5 不动的边界
+
+- **不动**:src/ / dashboard/ / spec_runner / nav_kernel / T-039 endpoint
+- **不动**:M-193 / M-194 / M-194b / M-195(T-038 历史 + S-454 终审不变)
+- **不动**:T-041 pre-reg(M-196 lane-b / Seth 跑)
+- **不动**:C-path C-1..C-18 / Outter v1 spec
+- **不动**:M-197 标题(S-455 留给 T-041)
+- **动**:本条 7 probe outputs + 新台账落点 + 「全不 shipment」policy(纯 sandbox research)
+
+### §6 References
+
+- **S-449**(Seth 2026-09-30)—— T-039 v4 纯市值加权不截顶,度量层不带约束
+- **S-451**(Seth 2026-09-30)—— 风格周期第一张可信表 + basis 当幸存者
+- **S-454**(Seth 2026-09-30)—— T-038 v5 PARTIAL 终审 + 「6 对不独立,扣大币腿山寨同涨同跌」+ 假设转前向观察
+- **S-455**(Seth 2026-09-30)—— M-196 实现细节 + 「占住 M-197 标题」for T-041 results
+- **M-93**(lane-c)—— sleeve 1
+- **M-115 / M-116 / M-128d / M-152** —— sleeve daily P&L 来源
+- **M-127**(lane-c)—— 2D regime classifier(P5 输入)
+- **M-129**(lane-c)—— §5b Layer ② F-anchored tilt REFUTED → ⓪ OVERRIDE doctrine
+- **M-195 v5**(lane-c)—— T-038 PARTIAL pre-reg
+- **M-196**(lane-b)—— T-041 解读层验证(P7 同假设的不同切面,lane-b 已 pre-reg)
+- **CLAUDE.md Rule 7** —— Ledger lane-prefixed forward-only,本条 M-198 衔接 M-196
+- **HIGH_DIM_ONTOLOGY §5b / §5b-bis** —— 4 层 hierarchy + ⓪ OVERRIDE
+- **ARCHITECTURE §"Not an app — an OS"** —— 矢量化研究是「Diagnose(Portfolio)」原语的最深应用
