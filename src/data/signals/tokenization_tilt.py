@@ -87,49 +87,28 @@ def compute_path(px: pd.DataFrame, panel: tuple[str, ...], barred: list[str],
     days = [d for d in px.index if d >= INCEPTION and (end is None or d <= end)]
     if not days or days[0] != INCEPTION:
         raise ValueError(f"起点 {INCEPTION.date()} 那天没有面板行 —— 不从别的日子悄悄开始")
+    from src.data.accounting.nav_kernel import run_nav
+
     rows: list[dict] = []
     now = datetime.now(timezone.utc).isoformat()
     for arm in ARMS:
-        w: dict[str, float] = {}
-        last: dict[str, float] = {}
-        nav = 1.0
+        # 起点与每月 1 日收盘再平衡,同日成交;目标只在当天有真实收盘的币上分配。记账走公用内核(v0.2 阶段 1)。
+        orders = {}
         for i, d in enumerate(days):
-            row_px = px.loc[d]
-            quoted = {s for s in row_px.index if pd.notna(row_px[s])}
-            ret, n_filled = 0.0, 0
-            if i > 0:
-                qw = sum(v for s, v in w.items() if s in quoted)
-                if qw < MIN_QUOTED_WEIGHT:
-                    raise ValueError(f"{d.date()} {arm}:有真实收盘的持仓权重只有 {qw:.0%} "
-                                     f"< {MIN_QUOTED_WEIGHT:.0%} —— 读不到,不记成没涨跌")
-                rets = {}
-                for s in w:
-                    if s in quoted and s in last:
-                        rets[s] = float(row_px[s]) / last[s] - 1
-                    else:
-                        rets[s] = 0.0
-                        n_filled += 1
-                ret = sum(w[s] * rets[s] for s in w)
-                nav *= 1 + ret
-                w = {s: v * (1 + rets[s]) / (1 + ret) for s, v in w.items()}
-            for s in quoted:
-                last[s] = float(row_px[s])
-            rebalanced, turnover = False, 0.0
             if i == 0 or d.day == 1:
-                tgt = targets(arm, quoted, panel)
-                keys = set(tgt) | set(w)
-                turnover = sum(abs(tgt.get(s, 0.0) - w.get(s, 0.0)) for s in keys)
-                cost = turnover * COST_BPS / 1e4
-                nav *= 1 - cost
-                ret = (1 + ret) * (1 - cost) - 1
-                w, rebalanced = tgt, True
+                row_px = px.loc[d]
+                orders[d] = targets(arm, {s for s in row_px.index if pd.notna(row_px[s])}, panel)
+        book = run_nav(px, orders, cost_bps=COST_BPS, min_quoted_weight=MIN_QUOTED_WEIGHT, label=arm,
+                       renormalize_to_quoted=False, days=days)
+        for d, b in zip(days, book):
+            w = b["w"]
             rows.append({
                 "d": d.date().isoformat(), "arm": arm,
-                "nav": round(nav, 8), "ret": round(ret, 8),
+                "nav": round(b["nav"], 8), "ret": round(b["ret"], 8),
                 "weights": {s: round(v, 5) for s, v in sorted(w.items(), key=lambda kv: -kv[1])},
                 "basket_weight": round(sum(v for s, v in w.items() if s in BASKET), 5),
-                "rebalanced": rebalanced, "turnover": round(turnover, 6),
-                "n_quoted": len(quoted & set(w)), "n_filled": n_filled,
+                "rebalanced": b["traded"], "turnover": round(b["turnover"], 6),
+                "n_quoted": b["n_quoted"], "n_filled": b["n_filled"],
                 "barred": barred, "source": source,
                 "inception": INCEPTION.date().isoformat(), "code_ref": CODE_REF,
                 "computed_at": now,
