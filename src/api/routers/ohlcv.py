@@ -302,16 +302,12 @@ async def collect_ohlcv(symbols: list = None, days: int = 365) -> dict:
                 rows_in: list = []
                 source_used = None
                 if cg_id:
-                    rows_in = await _fetch_cg_daily(client, cg_id, days)
-                    # `_fetch_cg_daily` 走 CG Pro `/ohlc/range`(ohlcv.py:97-98),
-                    # **数据来自付费 Analyst 端点,标签必须是 pro 而不是 free**
-                    # —— 旧版打 `coingecko` 让 S-195 那条「免费不可用于收益」
-                    # 直接命中我们自己写的 Pro 行,pro 数据被免费标签屏蔽。
-                    source_used = "coingecko_pro_ohlc"
-                    if not rows_in:
-                        rows_in = await _fetch_hyperliquid_daily(client, sym, days)  # crypto fallback (CG rate-limited)
-                        if rows_in:
-                            source_used = "hyperliquid"
+                    # S-459:加密日线**只有一个写入端** —— `_cg_panel_loop` → `cg_pro_backfill`(按 ≤ 窗口分块取真 K 线)。
+                    # 这里原来一次要 365 天的 /ohlc/range,拿不到就退回 market_chart 的**采样点**,
+                    # 把 O=H=L=C 的点、按「点的日期」(晚一天)写进 `coingecko_pro_ohlc` —— 过去一年 9,098 行,
+                    # 恰好是 BTC/ETH/SOL/HYPE/LINK/ONDO 等 28 个核心币;每轮还把正确的 K 线覆盖回去。
+                    return {"symbol": sym, "rows": 0, "source": "coingecko_pro_ohlc", "ok": True,
+                            "reason": "crypto 由 _cg_panel_loop(cg_pro_backfill)单一写入端负责"}
                 if not rows_in and yf_sym:
                     rows_in = await _fetch_eodhd_daily(client, yf_sym, days)   # PRIMARY (yfinance dead)
                     source_used = "eodhd"
