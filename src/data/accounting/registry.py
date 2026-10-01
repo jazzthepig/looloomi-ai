@@ -25,7 +25,7 @@ class Book:
     shape: str                 # 'plain' (mark_date, nav) | 'arms' (d, arm, nav) | 'hl' (d, nav jsonb)
     arm: Optional[str] = None
     accounting: str = "own"    # 'shared_kernel' | 'own'
-    benchmark: str = "beta_core_benchmark"   # 'arm:<名字>' | 'beta_core_benchmark'
+    benchmark: str = "panel_ew"   # 'arm:<名字>' | 'panel_ew'(① 的 24 名面板等权持有,binance_hist)
     status: str = "paper"      # paper | dormant | retired_by_design
     filters: dict = field(default_factory=dict)
     caveat: str = ""
@@ -90,9 +90,14 @@ def scorecard_rows(navs: dict[str, pd.Series], bench: dict[str, pd.Series]) -> l
             bs = bs.dropna().sort_index()
             a, z = pd.Timestamp(m["start"]), pd.Timestamp(m["last"])
             seg = bs[(bs.index >= a) & (bs.index <= z)]
-            if len(seg) >= 2:
+            # 基准必须覆盖账本的整段:首日相差超过 3 天就不比 —— 第一版这里没查,7 月起的多空账本
+            # 被拿去和 9 月起的基准比(S-456)。
+            if len(seg) >= 2 and (seg.index[0] - a).days <= 3 and (z - seg.index[-1]).days <= 3:
                 row["benchmark_return"] = float(seg.iloc[-1] / seg.iloc[0] - 1)
+                row["benchmark_span"] = [seg.index[0].date().isoformat(), seg.index[-1].date().isoformat()]
                 row["excess"] = row["total_return"] - row["benchmark_return"]
+            else:
+                row["note"] = "基准没有覆盖这本账的整段日期,不比"
         out.append(row)
     return out
 
@@ -110,6 +115,7 @@ async def load_navs() -> tuple[dict[str, pd.Series], dict[str, pd.Series]]:
         df.index = pd.to_datetime(df["mark_date"])
         navs["beta_core"] = df["nav"].astype(float)
         core_bench = df["benchmark_nav"].astype(float)
+    panel_ew = await _panel_ew_benchmark()
     cache: dict[str, list] = {}
     for b in BOOKS:
         if b.id == "beta_core":
@@ -132,19 +138,41 @@ async def load_navs() -> tuple[dict[str, pd.Series], dict[str, pd.Series]]:
                 rows = [r for r in rows if r.get("inception_id") == inc]
             s = pd.Series([float(r["nav"]) for r in rows], index=pd.to_datetime([r["mark_date"] for r in rows]))
             navs[b.id] = s[~s.index.duplicated(keep="last")]
-            bench[b.id] = core_bench
+            bench[b.id] = panel_ew
         elif b.shape == "arms":
             df = pd.DataFrame(rows)
             df["d"] = pd.to_datetime(df["d"])
             pv = df.pivot_table(index="d", columns="arm", values="nav")
             navs[b.id] = pv.get(b.arm)
-            bench[b.id] = pv.get(b.benchmark.split(":", 1)[1]) if b.benchmark.startswith("arm:") else core_bench
+            bench[b.id] = pv.get(b.benchmark.split(":", 1)[1]) if b.benchmark.startswith("arm:") else panel_ew
         else:
             idx = pd.to_datetime([r["d"] for r in rows])
             navs[b.id] = pd.Series([float((r["nav"] or {}).get(b.arm, np.nan)) for r in rows], index=idx)
             bench[b.id] = pd.Series([float((r["nav"] or {}).get(b.benchmark.split(":", 1)[1], np.nan))
                                      for r in rows], index=idx)
     return navs, bench
+
+
+def panel_ew_nav(close: pd.DataFrame) -> pd.Series:
+    """① 的面板等权持有(每日再平衡):当天与前一天都有真实收盘的币的平均日收益,复利。缺一整天时不跨缺口。"""
+    close = close.sort_index()
+    r = close / close.shift(1) - 1
+    gap = close.index.to_series().diff() != pd.Timedelta(days=1)
+    r[gap.values] = np.nan
+    daily = r.mean(axis=1, skipna=True).fillna(0.0)
+    return (1 + daily).cumprod()
+
+
+async def _panel_ew_benchmark() -> Optional[pd.Series]:
+    """多空 / 事件账本的基准:持有 ① 的同一个 24 名面板(binance_hist,与 β+ 研究同源)。"""
+    from src.data.market.panel_read import read_panel
+    from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE
+    p = await read_panel(list(DEFAULT_UNIVERSE), start="2026-06-01", source="binance_hist")
+    idx = pd.to_datetime(p.days)
+    px = pd.DataFrame(p.close, index=idx, columns=p.symbols, dtype=float)
+    px = px.mask(pd.DataFrame(p.filled, index=idx, columns=p.symbols))
+    px = px.reindex(pd.date_range(idx.min(), idx.max(), freq="D"))
+    return panel_ew_nav(px)
 
 
 async def scorecard() -> list[dict]:
