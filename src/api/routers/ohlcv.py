@@ -450,6 +450,44 @@ async def get_style_index(style: str = Query(..., description="majors / top_l1 /
             "code_ref": CODE_REF, "count": len(out), "data": out}
 
 
+# ── v0.2 阶段 1:所有纸面账本的统一成绩单 ─────────────────────────────────────
+
+@router.get("/internal/books/scorecard")
+async def books_scorecard(x_internal_token: str = Header(None)):
+    """每本纸面账本一行:层级、记账是否走公用内核、起止、缺几天、总收益、同期持有同一面板、差值、最大回撤。
+    记账还没迁到公用内核的账本标 `accounting=own` —— 那一行的数字仍是它自己的记账算的。"""
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.data.accounting.registry import scorecard
+    rows = await scorecard()
+    return {"status": "ok", "n": len(rows), "books": rows}
+
+
+# ── T-041 / M-196:解读层的预注册检验(后台跑,结果落 interpretation_validation_runs)────
+
+@router.post("/internal/interpret/validate")
+async def interpret_validate(x_internal_token: str = Header(None)):
+    """按台账 M-196 回放 2023-01 起每一天:相似日分布 vs 只用过去的无条件分布 vs 随机相似日。
+    后台执行(几分钟);结果看 `select verdict, result from interpretation_validation_runs order by id desc limit 1`。"""
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.api.rpc_diagnostics import _record_loop_attempt
+    from src.data.interpret.validate import run as _validate
+
+    async def _bg():
+        try:
+            r = await _validate()
+            await _record_loop_attempt("_interpret_validate", "ok" if r.get("written") else "error",
+                                       reason=f"M-196 verdict={r.get('verdict')}",
+                                       writer="src.api.routers.ohlcv.interpret_validate")
+        except Exception as e:                                    # noqa: BLE001
+            await _record_loop_attempt("_interpret_validate", "error", reason=f"{type(e).__name__}: {e}"[:400],
+                                       writer="src.api.routers.ohlcv.interpret_validate")
+    asyncio.create_task(_bg())
+    return {"started": True, "prereg": "M-196",
+            "verify": "select verdict, result from interpretation_validation_runs order by id desc limit 1"}
+
+
 # ── S-258: CoinGecko Pro 深盘回填 ─────────────────────────────────────────────
 
 @router.post("/internal/backfill-deep-panel")
