@@ -24758,3 +24758,18 @@ T-038 收尾后,JAZZ 2026-10-01 给出 2 件 directive:
 - **CLAUDE.md Rule 7** —— Ledger lane-prefixed forward-only,本条 M-198 衔接 M-196
 - **HIGH_DIM_ONTOLOGY §5b / §5b-bis** —— 4 层 hierarchy + ⓪ OVERRIDE
 - **ARCHITECTURE §"Not an app — an OS"** —— 矢量化研究是「Diagnose(Portfolio)」原语的最深应用
+
+## S-459 — 价格引擎:核心 28 个币在 `coingecko_pro_ohlc` 里有 38% 的行是「采样点冒充 K 线」,而且晚一天
+
+Jazz 10-01 问「价格引擎和技术指标是不是也有问题」。实测:
+1. **两个写入端写同一个源标签。** `_cg_panel_loop → cg_pro_backfill` 按分块取真 K 线(S-436 修过时间戳);
+   `collect_ohlcv` 一次要 365 天的 `/ohlc/range`,拿不到就退回 `market_chart` 的**采样点**,把 O = H = L = C 的点、按「点的日期」(晚一天)写进 `coingecko_pro_ohlc`。
+   过去一年 **9,098 / 23,755 行**是这种行,恰好是 BTC、ETH、SOL、HYPE、LINK、ONDO、PENDLE 等 **28 个核心币**;两个写入端轮流覆盖,
+   同一条序列里一会儿是真 K 线、一会儿是晚一天的采样点 —— 接缝处会凭空多出一天的「收益」。
+   S-436 之后 BTC 仍然 CG(D) ≈ Binance(D−1),原因就在这里(09-29 08:12 `collect_ohlcv` 重写了 25 个币 × 365 天)。
+2. **受影响的:** `hl_book_daily`(BTC/ETH/SOL/HYPE)、`tokenization_tilt_daily`(LINK/ONDO/PENDLE/HYPE)的价格;任何用高低价的指标(ATR、区间)在这些行上为零波幅。
+   **不受影响的:** β+(binance_hist)、风格表头与解读层(`asset_mcap_daily`,走 market_chart 且按 S-436 语义标注,已对 Binance 核过 97% 同日一致)。
+3. **跨源同名不同币:** 近 60 天 binance_hist 与 CG 同日收盘差的中位数 > 50% 的标的约 70 个(ONE、BNX、FUN、CHESS、TON、AI16Z、FTM、AGIX、OCEAN …)——
+   同一个代码映射到了不同的币(TON 在 `cg_coin_map` 里是 Tokamak),或经历了迁移 / 合并。跨源拼接这些标的的任何特征都是错的。
+**修:** `collect_ohlcv` 不再写加密(只留 TradFi 的 EODHD),加密日线只剩一个写入端;测试钉住。部署后用 `/internal/backfill-cg-pro` 重写近 400 天,真 K 线覆盖采样点。
+映射冲突另开卡审计(按 Binance 对照逐个确认 coin_id),不在本次修。
