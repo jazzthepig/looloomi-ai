@@ -3453,6 +3453,18 @@ async def get_cg_ohlc_range(coin_id: str, from_ts: int, to_ts: int,
         return []
 
 
+async def get_cg_global_market_cap_chart(days: str = "max") -> dict:
+    """CoinGecko Pro `/global/market_cap_chart`(Analyst 档):全市场市值与成交额的日度历史。读不到抛异常。
+    返回 {"market_cap": [[ts_ms, usd]…], "volume": [[ts_ms, usd]…]}。"""
+    client = _get_cg_client()
+    r = await client.get(f"{CG_PRO_BASE}/global/market_cap_chart", headers=_cg_headers(), timeout=45,
+                         params={"vs_currency": "usd", "days": days})
+    if r.status_code != 200:
+        raise RuntimeError(f"CoinGecko /global/market_cap_chart HTTP {r.status_code}: {r.text[:160]}")
+    j = (r.json() or {}).get("market_cap_chart") or {}
+    return {"market_cap": j.get("market_cap") or [], "volume": j.get("volume") or []}
+
+
 async def get_cg_category_ids() -> set[str]:
     """CoinGecko Pro `/coins/categories/list` → 全部分类 id(T-039 风格表头用来校验分类法)。读不到抛异常。"""
     client = _get_cg_client()

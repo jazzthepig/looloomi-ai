@@ -1030,6 +1030,37 @@ async def _interpret_loop():
         await _asyncio.sleep(6 * 3600)
 
 
+async def _channels_loop():
+    """上游通道日度序列(CoinGecko Analyst):稳定币 / 代币化资产 / RWA 分类市值 + 全市场市值与成交额。
+    每 24 小时一轮,幂等。表 `channel_categories` / `cg_coin_mcap_daily` / `channel_series_daily`。
+    判活:`select max(d) from channel_series_daily where channel='stablecoin'` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(1200))
+    while True:
+        try:
+            from src.data.channels.cg_channels import run_once as _ch_run
+            r = await _ch_run()
+            print(f"[CHANNELS] {str(r.get('reason'))[:200]}")
+            await _beat("_channels_loop", ok=bool(r.get("ok")),
+                        detail={"categories": r.get("categories"), "coins": r.get("coins"),
+                                "failed": r.get("failed")},
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt("_channels_loop", "ok" if r.get("ok") else "error",
+                                       reason=str(r.get("reason"))[:400], writer="src.api.main._channels_loop")
+        except Exception as _e:
+            print(f"[CHANNELS] ⚠️  pass FAILED: {_e}")
+            await _beat("_channels_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_channels_loop", "error", reason=f"{type(_e).__name__}: {_e}"[:400],
+                                       writer="src.api.main._channels_loop")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_channels_loop():
+    _asyncio.create_task(_channels_loop())
+    print("[CHANNELS] ✅ upstream channel series scheduled (stablecoin / tokenized / rwa / global)")
+
+
 @app.on_event("startup")
 async def _start_interpret_loop():
     _asyncio.create_task(_interpret_loop())
