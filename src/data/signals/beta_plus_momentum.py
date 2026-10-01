@@ -142,56 +142,31 @@ def compute_path(px: pd.DataFrame, panel: tuple[str, ...], source: str,
 
 
 def _simulate(px, days, hist, sig, tilted: bool, is_signal_day, arm: str) -> list[dict]:
-    """一份(tranche)从起点到末日的逐日记录。起点当天收盘建仓;此后出信号日收盘出目标、次日收盘成交。"""
-    out: list[dict] = []
-    w: dict[str, float] = {}
-    last: dict[str, float] = {}
-    nav, pend = 1.0, None
+    """一份(tranche)从起点到末日的逐日记录。起点当天收盘建仓;此后出信号日收盘出目标、次日收盘成交。
+
+    记账走公用内核 `src/data/accounting/nav_kernel.run_nav`(v0.2 阶段 1);这里只负责**出目标、定成交日**。
+    """
+    from src.data.accounting.nav_kernel import run_nav
+
+    orders: dict = {}
+    snapshots: dict = {}
     for i, d in enumerate(days):
+        if not (i == 0 or is_signal_day(d)):
+            continue
         row_px = px.loc[d]
         quoted = {s for s in row_px.index if pd.notna(row_px[s])}
-        ret, n_filled = 0.0, 0
-        if i > 0:
-            qw = sum(v for s, v in w.items() if s in quoted)
-            if qw < MIN_QUOTED_WEIGHT:
-                raise ValueError(f"{d.date()} {arm}:有真实收盘的持仓权重只有 {qw:.0%} —— 读不到,不记成没涨跌")
-            rets = {}
-            for s in w:
-                if s in quoted and s in last:
-                    rets[s] = float(row_px[s]) / last[s] - 1
-                else:
-                    rets[s] = 0.0
-                    n_filled += 1
-            ret = sum(w[s] * rets[s] for s in w)
-            nav *= 1 + ret
-            w = {s: v * (1 + rets[s]) / (1 + ret) for s, v in w.items()}
-        for s in quoted:
-            last[s] = float(row_px[s])
-
-        traded, turnover = False, 0.0
-        if pend is not None:                                   # 昨天出的信号,今天收盘成交
-            tgt = {s: v for s, v in pend.items() if s in quoted}
-            tot = sum(tgt.values())
-            tgt = {s: v / tot for s, v in tgt.items()}
-            keys = set(tgt) | set(w)
-            turnover = sum(abs(tgt.get(s, 0.0) - w.get(s, 0.0)) for s in keys)
-            nav *= 1 - turnover * COST_BPS / 1e4
-            w, pend, traded = tgt, None, True
-
-        snapshot = None
-        if i == 0 or is_signal_day(d):
-            elig = [s for s in px.columns if hist.at[d, s] >= MIN_HIST and s in quoted]
-            x = sig.loc[d, elig]
-            t = tilt_targets(x, K if tilted else 0.0).to_dict()
-            snapshot = {s: round(float(v), 4) for s, v in x.dropna().sort_values(ascending=False).items()}
-            if i == 0:                                         # 起点:当天收盘直接建仓
-                w, traded, turnover = t, True, 1.0
-                nav *= 1 - turnover * COST_BPS / 1e4
-            else:
-                pend = t
-        out.append({"nav": nav, "w": dict(w), "traded": traded, "turnover": turnover,
-                    "signal": snapshot, "n_filled": n_filled})
-    return out
+        elig = [s for s in px.columns if hist.at[d, s] >= MIN_HIST and s in quoted]
+        x = sig.loc[d, elig]
+        t = tilt_targets(x, K if tilted else 0.0).to_dict()
+        snapshots[d] = {s: round(float(v), 4) for s, v in x.dropna().sort_values(ascending=False).items()}
+        if i == 0:                                   # 起点:当天收盘直接建仓
+            orders[d] = t
+        elif i + 1 < len(days):                      # 信号日收盘出目标,次日收盘成交
+            orders[days[i + 1]] = t
+    book = run_nav(px, orders, cost_bps=COST_BPS, min_quoted_weight=MIN_QUOTED_WEIGHT, label=arm,
+                   days=list(days))
+    return [{"nav": b["nav"], "w": b["w"], "traded": b["traded"], "turnover": b["turnover"],
+             "signal": snapshots.get(d), "n_filled": b["n_filled"]} for d, b in zip(days, book)]
 
 
 async def run_once() -> dict[str, Any]:
