@@ -24783,3 +24783,9 @@ Jazz 10-01 问「价格引擎和技术指标是不是也有问题」。实测:
 **修:** ① 校验先用独立来源 binance_hist,参照行若 O=H=L=C 视为不可校验(不再用坏数据挡好数据),并改用倒数第二根(已收盘)比;
 ② `cg_coin_map` 加 HYPE → hyperliquid(`resolved_from='manual_verified'`,与风格表头的分类成员一致),面板循环把人工确认的映射与 vendor 映射同等对待;
 ③ 回填真写入改为后台执行,结果写 `loop_attempt`(`_backfill_cg_pro`)。
+
+## S-461 — 合入 A-408-2b:lane worktree 落后 97 个提交时,「交接块」本身就是错的
+
+A 的补丁(`_hl_book_loop` 逐轮写 `loop_attempt`;`_cg_panel_loop` 成功路径把写入 / 失败标的数放进 detail —— 让「写了 4/57」和「写了 57/57」不再长一样)内容对。
+但 A 的 worktree 停在 09-24 的 base:交接块从主目录 add 什么也不提交,而整文件搬运会抹掉一周改动 —— 按 diff 打补丁合入。
+测试写死了 `/Users/sbb/...` 并会读 **lane-a worktree** 的 main.py:主仓库的守卫可能因为隔壁目录有代码而变绿。改为仓库相对路径。
