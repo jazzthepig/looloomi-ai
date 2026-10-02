@@ -1,0 +1,26 @@
+{
+  "id": "T-043",
+  "title": "跨源同名不同币审计:binance_hist 与 coingecko_pro_ohlc 同一代码是不是同一个币(约 70 个嫌疑)",
+  "owner": "lane-b",
+  "status": "open",
+  "source": "S-459 §3:近 60 天两源同日收盘差中位数 > 50% 的标的约 70 个(ONE、BNX、FUN、CHESS、TON、AI16Z、FTM、AGIX、OCEAN …);跨源拼接这些标的的任何特征都是错的",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/research/t043/",
+    "/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/",
+    "REFUTATION_LEDGER.md(EOF 追加,M- 前缀)"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "tests/",
+    "任何写库(cg_coin_map 的修改由 Seth 执行)",
+    "新的抓取器(Rule 3b)"
+  ],
+  "acceptance": {
+    "check": "只读:/api/v1/research/ohlcv/{symbol}?source=binance_hist 与 ?source=coingecko_pro_ohlc 各取全史;对每个在两源都有的代码算:同日收盘比的中位数与离散度、日收益相关、错一天相关(-1/0/+1)、比值是否在某一天跳变(迁移/改名的指纹)",
+    "expect": "一张表,每个代码一行,分四类:① 同一个币(比≈1、相关高、无跳变)② 同一个币但有时间错位(错一天相关最高)③ 迁移/拆分/合并(比值在某天跳变,写出日期与倍数)④ 不是同一个币(相关低)。②③④ 每行附证据数字;不写猜测的 coin_id,只写「需要 Seth 改映射」。报告首行写数据来源与日期范围"
+  },
+  "prior_value": "S-460 修了 HYPE、NEAR 两个;TON 在 cg_coin_map 里是 Tokamak 已知错",
+  "created": "2026-10-02",
+  "verified": null,
+  "notes": "B 出清单,Seth 逐个查 CoinGecko 确认 coin_id 并改 cg_coin_map(manual_verified)、重回填。核心 24 名优先排在表头。"
+}
