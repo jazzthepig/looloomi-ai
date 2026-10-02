@@ -411,6 +411,48 @@ async def get_ohlcv(symbol: str, days: int = Query(90, ge=1, le=730)):
 
 
 
+# ── 研究读取(lane 不持 key):单一来源、带起点、分页 ─────────────────────────────
+#
+# `/api/v1/ohlcv/{symbol}` 按行数截断且混着多个来源(同一天可能有 binance_hist 和 coingecko_pro_ohlc 两行),
+# 拿来做研究会把两个源拼成一条序列 —— S-459 的接缝问题。研究用这两个端点:**必须指定来源**,按日期分页取全。
+
+async def _paged(table: str, params: dict) -> list:
+    out: list = []
+    async with httpx.AsyncClient(timeout=30) as client:
+        while True:
+            r = await client.get(f"{_SB_URL}/rest/v1/{table}",
+                                 params={**params, "limit": "1000", "offset": str(len(out))},
+                                 headers=_sb_headers())
+            if r.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"读不到 {table}:HTTP {r.status_code}")
+            batch = r.json()
+            out.extend(batch)
+            if len(batch) < 1000:
+                return out
+
+
+@router.get("/api/v1/research/ohlcv/{symbol}")
+async def research_ohlcv(symbol: str,
+                         source: str = Query(..., pattern="^(binance_hist|coingecko_pro_ohlc|eodhd)$"),
+                         start: str = Query("2020-01-01")):
+    """单一来源的日线(旧→新)。`trade_date` = 覆盖的那一天(UTC)。"""
+    if not _SB_URL or not _SB_KEY:
+        raise HTTPException(status_code=503, detail="supabase not configured")
+    rows = await _paged("ohlcv_daily", {"symbol": f"eq.{symbol.upper()}", "source": f"eq.{source}",
+                                        "trade_date": f"gte.{start}", "order": "trade_date.asc",
+                                        "select": "trade_date,open,high,low,close,volume"})
+    return {"status": "ok", "symbol": symbol.upper(), "source": source, "count": len(rows), "data": rows}
+
+
+@router.get("/api/v1/research/market-state")
+async def research_market_state(start: str = Query("2022-01-01")):
+    """宏观状态向量(解读层 5a 的空间)。`vec_full` 里的 null = 那一维当天没测到,不是 0。"""
+    if not _SB_URL or not _SB_KEY:
+        raise HTTPException(status_code=503, detail="supabase not configured")
+    rows = await _paged("market_state_vectors", {"d": f"gte.{start}", "order": "d.asc", "select": "d,vec_full"})
+    return {"status": "ok", "count": len(rows), "data": rows}
+
+
 # ── T-039:风格指数的公开读取(研究 lane 与外部 agent 用;只读、无 key)────────────
 #
 # lane 不持有 Supabase key(OPEN RISK #0b),研究要数据走 Railway 的公开读端点 —— 与 /api/v1/ohlcv 同一模式。
