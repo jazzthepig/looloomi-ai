@@ -24789,3 +24789,10 @@ Jazz 10-01 问「价格引擎和技术指标是不是也有问题」。实测:
 A 的补丁(`_hl_book_loop` 逐轮写 `loop_attempt`;`_cg_panel_loop` 成功路径把写入 / 失败标的数放进 detail —— 让「写了 4/57」和「写了 57/57」不再长一样)内容对。
 但 A 的 worktree 停在 09-24 的 base:交接块从主目录 add 什么也不提交,而整文件搬运会抹掉一周改动 —— 按 diff 打补丁合入。
 测试写死了 `/Users/sbb/...` 并会读 **lane-a worktree** 的 main.py:主仓库的守卫可能因为隔壁目录有代码而变绿。改为仓库相对路径。
+
+## S-462 — M-196 跑了两次,都判 FAIL,但结果一行都没落库:NaN 进不了 JSON
+
+`POST /internal/interpret/validate` 在 10-02 07:55 与 08:04 各跑完一次,`loop_attempt` 记 `M-196 verdict=FAIL`、outcome=error ——
+裁决算出来了,写结果表失败:结果里有 NaN(角度单独评估时没有随机基线,p 值为 NaN),JSON 不收 NaN,整行被拒;而后台任务只把「写没写成」记成了 error,没记原因。
+**修:** 写入前 `sanitize_floats`;写失败时原因进 `loop_attempt.reason`;样本外的七项数字同时写进 `loop_attempt.detail`,结果表再失败也不至于整轮丢失。部署后重跑。
+**在数字出来之前,不对「FAIL」做任何解读** —— 四项检验里哪项没过、差多少,决定的是 M-196 §5 的哪一条后续(F1 杀掉 / F3 降为参考 / F5 改尾部)。
