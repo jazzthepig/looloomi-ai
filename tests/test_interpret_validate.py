@@ -75,3 +75,12 @@ def test_full_run_end_to_end_on_synthetic_data(monkeypatch):
     res = asyncio.run(v.run())
     assert res["verdict"] in ("PASS", "FAIL", "INCONCLUSIVE") and written[0][0] == "interpretation_validation_runs"
     assert res["in_sample_2023"]["n_days"] > 300
+
+
+def test_result_with_nan_is_sanitized_before_insert(monkeypatch):
+    """S-462:前两次运行算出 FAIL,但结果里带 NaN,JSON 写入被拒,一行都没留下。"""
+    import json
+    from src.api.store import sanitize_floats
+    r = sanitize_floats({"p": float("nan"), "x": [np.float64("nan"), 1.0]})
+    json.dumps(r, allow_nan=False)
+    assert r == {"p": None, "x": [None, 1.0]}
