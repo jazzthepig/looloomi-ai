@@ -15,6 +15,7 @@
 | open | T-003 | lane-a | S-396 三臂回放 live 验证(读路径分页修复后) | 相等 | replay 读到 1,000 行(截断) |  |
 | open | T-004 | lane-a | 恢复持币集中度写入(holder_concentration_history) | = 今天(UTC) | 2026-08-31 |  |
 | open | T-023 | lane-a | CIS universe API:把 Tier 标签(T1/T2)传到前端,CISLeaderboard 徽章按源染色 | T1 标的徽章绿、T2 标的徽章琥珀;不再全部 50% 灰 | GET /api/v1/cis/universe:universe 58 行,但 data_source=None(API 层未传播 Tier)。CISLeaderboard 徽章当前无法区分 |  |
+| open | T-043 | lane-b | 跨源同名不同币审计:binance_hist 与 coingecko_pro_ohlc 同一代码是不是同一个币(约 70 个嫌疑) | 一张表,每个代码一行,分四类:① 同一个币(比≈1、相关高、无跳变)② 同一个币但有时间错位(错一天相关最高)③ 迁移/拆分/合并(比值在某天跳变,写出日期与倍数)④ 不是同一个币(相关低)。②③④ 每行附证据数字;不写猜测的 coin_id,只写「需要 Seth 改映射」。报告首行写数据来源与日期范围 | S-460 修了 HYPE、NEAR 两个;TON 在 cg_coin_map 里是 Tokamak 已知错 |  |
 | open | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED |  |
 | open | T-007 | lane-c | CG 新闻监听器写入 Supabase(经 Railway mac_writes) | > 0 | 只在 Mac 本地 cis_history.db,13 行 |  |
 | open | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
@@ -45,4 +46,4 @@
 | done | T-030 | seth | binance_hist 回填:过去一年整天缺 41 天(最后 09-06) | = 0 | 20 个币各缺 41 天,ETC/SUI/TRX 29 天,BCH 17 天 | loop_attempt _deep_panel_backfill 09-30 00:37 ok:24/24 币、9,600 行;binance_hist 过去 400 天 BTC/ETH/SOL/LINK/BCH 缺 0 天(此前 41 天) @ 2026-09-30T01:00Z |
 | done | T-039 | seth | 风格表头:每个标的的风格归属(PIT)+ 每个风格的日指数 + 每本账本的风格暴露 | 任意一天能回答「这本账本此刻在大币 / 二线 / 山寨 / meme 各暴露多少」,且能回放到 2021、2022、2024 三段 | asset_class 只有 L1/L2/DeFi/RWA/Infra 粗分类、无档位、无 meme;asset_embeddings_history 仅 08-19 起 42 天、59 个标的;无任何风格指数 | t039-v4:层级 4 × 板块 4 × 两种加权,2020-01-01 → 09-29 共 37,636 行;公开读 /api/v1/style/index 实测返回(meme 09-20 起 37 个成员,DOGE 45%);持仓法暴露已写(beta_plus 四臂)。多空账本无逐日权重,未算暴露。 @ 2026-09-30T04:00Z |
 
-open 15 · claimed 2 · blocked 3 · in_review 6 · done 16
+open 16 · claimed 2 · blocked 3 · in_review 6 · done 16
