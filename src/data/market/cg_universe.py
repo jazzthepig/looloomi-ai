@@ -59,6 +59,7 @@ RESOLVED, AMBIGUOUS, UNRESOLVED = "resolved", "ambiguous", "unresolved"
 FROM_DB = "free_db"          # trending_log 里已有,零成本
 FROM_UNIQUE = "list_unique"  # /coins/list 里该 symbol 唯一 —— 最可信
 FROM_MCAP = "mcap_tiebreak"  # 撞名,按市值裁决 —— **是猜,必须再过价格校验**
+FROM_MANUAL = "manual_verified"  # Seth 人工确认(S-459:HYPE → hyperliquid,与风格表头分类成员一致),每条记台账
 
 
 @dataclass(frozen=True)

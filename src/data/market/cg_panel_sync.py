@@ -110,7 +110,7 @@ async def run_once(*, client, supabase_query, supabase_upsert,
     必须能在没有网络的情况下被验证。
     """
     from src.data.market.cg_universe import (
-        CG_PRO_BASE, FROM_DB, FROM_MCAP, FROM_UNIQUE,
+        CG_PRO_BASE, FROM_DB, FROM_MANUAL, FROM_MCAP, FROM_UNIQUE,
         index_listing, pairs_for_backfill, resolve)
 
     today = today or dt.date.today().isoformat()
@@ -192,7 +192,7 @@ async def run_once(*, client, supabase_query, supabase_upsert,
     # `_verify_mapping` 形同虚设。
     pairs = pairs_for_backfill(res)
     _vendor_known = [(s, cid) for s, cid in known.items()
-                     if resolved_from.get(s) in (FROM_DB, FROM_UNIQUE)]
+                     if resolved_from.get(s) in (FROM_DB, FROM_UNIQUE, FROM_MANUAL)]
     pairs += _vendor_known
     pairs = list(dict.fromkeys(pairs))
     out["n_pairs"] = len(pairs)
