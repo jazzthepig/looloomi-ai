@@ -368,7 +368,7 @@ async def _fetch_close(base: str, key: str, symbol: str,
     try:
         resp = await _supabase_request_with_retry(
             "GET", f"{base}/rest/v1/ohlcv_daily",
-            params={"select": "close", "symbol": f"eq.{symbol}",
+            params={"select": "open,high,low,close", "symbol": f"eq.{symbol}",
                     "trade_date": f"eq.{trade_date}",
                     "source": f"eq.{source}", "limit": "1"},
             headers={"apikey": key, "Authorization": f"Bearer {key}"})
@@ -376,7 +376,12 @@ async def _fetch_close(base: str, key: str, symbol: str,
             return None
         js = resp.json() if resp.content else None
         if isinstance(js, list) and js:
-            v = js[0].get("close")
+            r0 = js[0]
+            v = r0.get("close")
+            # S-459:O = H = L = C 的行是采样点冒充的 K 线(且晚一天)—— 拿它当参照,会把正确的
+            # 真 K 线判成「映射错了」而拒写,坏数据就永远修不掉。这类行不作参照(= 不可校验)。
+            if v is not None and r0.get("open") == r0.get("high") == r0.get("low") == v:
+                return None
             return float(v) if v is not None else None
         return None
     except Exception:                                            # noqa: BLE001
@@ -405,9 +410,13 @@ async def _verify_mapping(symbol: str, coin_id: str, row: dict) -> MappingCheck:
         return check_mapping(symbol, coin_id, pro_close=row.get("close"),
                              existing_close=None)
     try:
-        # ① paid first
+        # S-459:先用**独立来源** binance_hist 对照 —— 拿正在被修的同一张表当参照是循环论证。
         existing = await _fetch_close(base, key, symbol, row["trade_date"],
-                                      source="coingecko_pro_ohlc")
+                                      source="binance_hist")
+        # ① paid
+        if existing is None:
+            existing = await _fetch_close(base, key, symbol, row["trade_date"],
+                                          source="coingecko_pro_ohlc")
         # ② free fallback (only when paid has no对照)
         if existing is None:
             existing = await _fetch_close(base, key, symbol, row["trade_date"],
@@ -453,7 +462,8 @@ async def backfill_symbol(symbol: str, coin_id: str, *, start: date, end: date,
     # 一个错的 coin_id 会把另一个币的整段历史写进这个标的,而曲线看起来完全正常。
     # 拿最后一根 bar 对库里同日的 coingecko 收盘 —— 同 vendor 两端点,必须接近。
     if rows:
-        chk = await _verify_mapping(symbol, coin_id, rows[-1])
+        # 用倒数第二根(已收盘)校验:最后一根常常是当天未收的半根,和任何来源都对不上。
+        chk = await _verify_mapping(symbol, coin_id, rows[-2] if len(rows) >= 2 else rows[-1])
         # ⚠️ **不可校验 ≠ 校验不通过** (S-307)。
         #
         # 2026-09-05 实测:57 个映射里 **35 个库里没有 coingecko 对照行**,

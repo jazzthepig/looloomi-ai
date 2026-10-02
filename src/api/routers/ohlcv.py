@@ -666,6 +666,31 @@ async def backfill_cg_pro(
     for _s, _cid in pairs:
         groups.setdefault(klass.get(_s, "Crypto"), []).append((_s, _cid))
 
+    if not dry_run:
+        # S-460:真写入改为后台执行。同步跑 200 个标的 × 400 天要几分钟,Cloudflare 100s 先断开,
+        # 客户端只看到「upstream error」,而回填其实在服务器上跑完了 —— 结果看不到。改为立即返回,结果写 loop_attempt。
+        async def _bg():
+            from src.api.rpc_diagnostics import _record_loop_attempt
+            out = []
+            try:
+                for _ac2, _p2 in sorted(groups.items()):
+                    _r2 = await backfill(_p2, start=end - _td(days=days), end=end, asset_class=_ac2,
+                                         dest=dest, dry_run=False, vendor_paired=set(resolved.keys()))
+                    out.append({"asset_class": _ac2, "n_pairs": len(_p2), **_r2.as_payload()})
+                ok = bool(out) and all(g.get("status") == "ok" for g in out)
+                await _record_loop_attempt("_backfill_cg_pro", "ok" if ok else "error",
+                                           reason=str([{k: g.get(k) for k in ("asset_class", "n_pairs", "status")}
+                                                       for g in out])[:400],
+                                           detail={"days": days, "panel": panel, "by_asset_class": out},
+                                           writer="src.api.routers.ohlcv.backfill_cg_pro")
+            except Exception as e:                                # noqa: BLE001
+                await _record_loop_attempt("_backfill_cg_pro", "error", reason=f"{type(e).__name__}: {e}"[:400],
+                                           writer="src.api.routers.ohlcv.backfill_cg_pro")
+        asyncio.create_task(_bg())
+        return {"started": True, "panel": panel, "days": days, "n_pairs": len(pairs),
+                "skipped_no_coin_id": skipped,
+                "verify": "select outcome, reason, detail from loop_attempt where loop_name='_backfill_cg_pro' order by at desc limit 1"}
+
     by_class = []
     for _ac, _pairs in sorted(groups.items()):
         # `resolved` 来自 `cg_known_coin_map` RPC(vendor-supplied mapping),
