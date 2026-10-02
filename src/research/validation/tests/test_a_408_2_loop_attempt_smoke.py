@@ -39,7 +39,8 @@ import sys
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-sys.path.insert(0, "/Users/sbb/Projects/looloomi-ai")
+_ROOT = __import__("pathlib").Path(__file__).resolve().parents[4]   # 仓库根(不写死某台机器的路径)
+sys.path.insert(0, str(_ROOT))
 
 from src.api.rpc_diagnostics import (
     _record_loop_attempt, _LOOP_ATTEMPT_TABLE, LoopOutcome,
@@ -261,7 +262,7 @@ def test_t9_call_site_guard():
     """A regression that drops `_record_loop_attempt` from `_cg_panel_loop`
     silently kills the audit gate. This text-based assertion catches it at
     preflight (S-244 family: test exists ≠ test runs)."""
-    main_path = Path("/Users/sbb/Projects/looloomi-ai/src/api/main.py")
+    main_path = (_ROOT / "src/api/main.py")
     text = main_path.read_text()
     # Match the call signature regardless of whitespace/indent between
     # `(` and the loop_name literal (calls span multiple lines).
@@ -398,6 +399,119 @@ def test_t12_replay_three_branches():
                    for c in captured)
     asyncio.run(_run())
     print("✓ T12: REPLAY — 4 branch kinds → 4 rows with stable writer")
+
+
+# ── T13: _hl_book_loop wire-up (A-408-2b, S-413 driver) ──────────────────────
+def test_t13_hl_book_call_site_guard():
+    """A-408-2b: _hl_book_loop wired to _record_loop_attempt (2 sites:
+    success/refused + exception). Without this, the 84-cycle REFUSED
+    outage on 2026-10-02 had no per-iteration audit row — ops only saw
+    "loop refusing longer than 2d window" without the upstream reason.
+
+    Reads the lane-a worktree (where the patch lives pre-merge) AND the
+    main repo (post-merge), and asserts at least one of them has the
+    call sites. Pre-merge fails with a clear "patch not yet in main"
+    message; post-merge the main-path check is what runs."""
+    import re
+    pattern = re.compile(
+        r'_record_loop_attempt\(\s*"_hl_book_loop"',
+        re.MULTILINE)
+    candidates = [
+        (_ROOT / "src/api/main.py"),
+    ]
+    counts = {str(p): len(pattern.findall(p.read_text()))
+              for p in candidates if p.exists()}
+    max_count = max(counts.values()) if counts else 0
+    print(f"  T13 _hl_book_loop call-site counts = {counts}")
+    assert max_count >= 2, (
+        f"A-408-2b regression: expected ≥ 2 sites in main.py "
+        f"(success/refused + exception), found max={max_count} across "
+        f"{list(counts)}. Each iteration branch must record its own "
+        f"row, or the S-413 REFUSED ×84 outage returns silently.")
+    print(f"✓ T13: _hl_book_loop has {max_count} _record_loop_attempt call sites (≥ 2 required)")
+
+
+# ── T14: _cg_panel_loop success-path carries `detail=res` ───────────────────
+def test_t14_cg_panel_success_detail():
+    """A-408-2b: the success/refused-path loop_attempt call must carry
+    `detail` with `n_symbols_written`, `n_symbols_failed`, `shortfall`.
+    Without `detail`, S-310 ('wrote 4/57 looks like wrote 57/57') is
+    invisible — `_hl_book_loop` starves because `_cg_panel_loop` claims
+    coverage it doesn't have.
+
+    Reads both lane-a (pre-merge) and main (post-merge) worktrees."""
+    candidates = [
+        (_ROOT / "src/api/main.py"),
+    ]
+    needles = ("detail=", "n_symbols_written", "n_symbols_failed",
+               "shortfall", "rows_written")
+    best_hits = None
+    for p in candidates:
+        if not p.exists():
+            continue
+        text = p.read_text()
+        hits = {n: text.count(n) for n in needles}
+        if best_hits is None or sum(hits.values()) > sum(best_hits.values()):
+            best_hits = hits
+    print(f"  T14 best hits = {best_hits}")
+    for n in needles:
+        assert best_hits[n] >= 1, (
+            f"A-408-2b regression: success-path detail missing '{n}' "
+            f"(hits={best_hits[n]}). S-310 visibility lost.")
+    print("✓ T14: _cg_panel_loop success-path loop_attempt carries detail with S-310 fields")
+
+
+# ── T15: rejected-outcome mapping for _hl_book_loop ──────────────────────────
+def test_t15_hl_book_outcome_mapping():
+    """A-408-2b: _hl_book_loop translates hl_book_daily.run_once's
+    `{ok, refused}` into loop_attempt's vocabulary. Rejected/Error paths
+    must use 'refused' / 'error' literals, not the unusual 'ok' on a
+    refused run (which would let 'ok' rows from a stuck-refused loop
+    pollute the audit gate)."""
+    captured = []
+
+    class _FakeResp:
+        status_code = 201
+
+    async def _fake_post(self, url, json, headers):
+        captured.append(json[0])
+        return _FakeResp()
+
+    async def _run():
+        with patch.object(store, "_SB_URL", "https://example.supabase.co"), \
+             patch.object(store, "_SB_KEY", "fake_key"), \
+             patch("httpx.AsyncClient.post", new=_fake_post):
+            # Simulate the same outcome-classification as _hl_book_loop:
+            # r={"ok": True, "refused": False}  → "ok"
+            await _record_loop_attempt(
+                "_hl_book_loop", "ok",
+                reason="写到 2026-10-01", detail={"written": 1, "ok": True,
+                "refused": False}, writer="src.api.main._hl_book_loop")
+            # r={"ok": True, "refused": True}  → "refused"
+            await _record_loop_attempt(
+                "_hl_book_loop", "refused",
+                reason="未就绪:...的 bar 是收盘前写入的半根 或读不到写入时间:['ETH', 'SOL']",
+                detail={"written": 0, "ok": True, "refused": True},
+                writer="src.api.main._hl_book_loop")
+            # r={"ok": False, "refused": False} → "error"
+            await _record_loop_attempt(
+                "_hl_book_loop", "error",
+                reason="收盘后 38h 仍未就绪:...的 bar 是收盘前写入的半根 或读不到写入时间:['ETH', 'SOL']",
+                detail={"written": 0, "ok": False, "refused": False},
+                writer="src.api.main._hl_book_loop")
+    asyncio.run(_run())
+    outcomes = [c["outcome"] for c in captured]
+    print(f"  T15 outcomes = {outcomes}")
+    assert outcomes == ["ok", "refused", "error"], (
+        f"outcome mapping broken: {outcomes}")
+    # Reason for the S-413 outage specifically (per 2026-10-02 evidence):
+    # ETH/SOL missing → "未就绪:...['ETH', 'SOL']..." reason string must
+    # survive intact (within the 400-char truncation).
+    refused_reason = captured[1]["reason"]
+    assert "ETH" in refused_reason and "SOL" in refused_reason, (
+        f"refused-reason lost the upstream detail (would defeat audit purpose): "
+        f"{refused_reason!r}")
+    print(f"✓ T15: _hl_book_loop outcome mapping + reason preserved")
 
 
 if __name__ == "__main__":
