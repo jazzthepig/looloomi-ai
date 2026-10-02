@@ -42,3 +42,12 @@ def test_a_sample_point_row_is_not_accepted_as_a_mapping_reference(monkeypatch):
         return R({"open": 5.0, "high": 5.4, "low": 4.9, "close": 5.2})
     monkeypatch.setattr(store, "_supabase_request_with_retry", real)
     assert asyncio.run(bf._fetch_close("http://x", "k", "NEAR", "2026-09-20", "coingecko_pro_ohlc")) == 5.2
+
+
+def test_research_ohlcv_requires_a_single_source():
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    app = FastAPI(); app.include_router(ohlcv.router)
+    c = TestClient(app)
+    assert c.get("/api/v1/research/ohlcv/BTC").status_code == 422                       # 不给来源 ⇒ 拒绝
+    assert c.get("/api/v1/research/ohlcv/BTC?source=hyperliquid").status_code == 422     # 死源 ⇒ 拒绝
