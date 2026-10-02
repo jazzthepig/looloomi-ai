@@ -1,6 +1,9 @@
 {
   "write_tables": [
     "agent_call_log",
+    "allocation_daily",
+    "allocation_nav_daily",
+    "allocation_override",
     "asset_embeddings",
     "asset_embeddings_history",
     "asset_mcap_daily",

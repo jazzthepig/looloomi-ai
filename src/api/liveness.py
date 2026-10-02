@@ -44,6 +44,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_style_header_loop":        {"max_age_h": 24, "kind": "marker"},   # T-039
     "_interpret_loop":           {"max_age_h": 24, "kind": "marker"},   # T-040
     "_channels_loop":            {"max_age_h": 48, "kind": "marker"},   # 上游通道
+    "_allocation_loop":          {"max_age_h": 24, "kind": "marker"},   # v0.2 L3 纸面配置
     "_causal_paper_loop":        {"max_age_h": 48, "kind": "marker"},
     "_combined_book_loop":       {"max_age_h": 48, "kind": "marker"},
     "_dingge_paper_loop":        {"max_age_h": 48, "kind": "marker"},
