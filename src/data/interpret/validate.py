@@ -179,8 +179,12 @@ async def run(seed: int = 7) -> dict[str, Any]:
                                            if ang in r["per_angle"]], label=f"OOS · 只用 {ang}")
                             for ang in ("style", "macro", "micro")}}
     res["verdict"] = res["out_of_sample_2024+"]["overall"]
+    # S-462:结果里有 NaN(某个角度没有随机基线时的 p 值等)—— JSON 不收 NaN,首两次运行算出了 FAIL 却一行都没写进去。
+    from src.api.store import sanitize_floats
+    res = sanitize_floats(res)
     row = {"run_at": datetime.now(timezone.utc).isoformat(), "prereg": "M-196",
            "code_ref": it.CODE_REF, "verdict": res["verdict"], "result": res}
     w = await supabase_insert_table("interpretation_validation_runs", [row])
     res["written"] = bool(w.ok)
+    res["write_error"] = None if w.ok else str(getattr(w, "why", ""))[:300]
     return res

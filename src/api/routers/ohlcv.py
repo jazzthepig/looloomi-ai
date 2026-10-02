@@ -473,8 +473,12 @@ async def interpret_validate(x_internal_token: str = Header(None)):
     async def _bg():
         try:
             r = await _validate()
+            # 摘要也写进 loop_attempt:结果表写入失败时,数字不至于整轮丢失(S-462)。
+            _oos = r.get("out_of_sample_2024+") or {}
             await _record_loop_attempt("_interpret_validate", "ok" if r.get("written") else "error",
-                                       reason=f"M-196 verdict={r.get('verdict')}",
+                                       reason=(f"M-196 verdict={r.get('verdict')}"
+                                               + ("" if r.get("written") else f" · 结果表未写入:{r.get('write_error')}")),
+                                       detail={k: _oos.get(k) for k in ("n_days", "t1", "t2", "t3", "t4", "random", "overall")},
                                        writer="src.api.routers.ohlcv.interpret_validate")
         except Exception as e:                                    # noqa: BLE001
             await _record_loop_attempt("_interpret_validate", "error", reason=f"{type(e).__name__}: {e}"[:400],
