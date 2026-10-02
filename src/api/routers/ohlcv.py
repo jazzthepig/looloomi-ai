@@ -501,6 +501,63 @@ async def books_scorecard(x_internal_token: str = Header(None)):
     return {"status": "ok", "n": len(rows), "books": rows}
 
 
+# ── v0.2 L3 配置层(纸面)──────────────────────────────────────────────────────
+
+from pydantic import BaseModel, Field  # noqa: E402
+
+
+class AllocationOverrideIn(BaseModel):
+    delta: float = Field(..., ge=-1.3, le=1.3, description="敞口偏置;最终敞口截到 [-0.3, 1.3]")
+    horizon: str = Field(..., pattern="^(7d|14d|1m|delegate)$")
+    reason: str = Field(..., min_length=1, max_length=500)
+    start_d: date | None = None
+
+
+@router.post("/internal/allocation/override")
+async def allocation_override(body: AllocationOverrideIn, x_internal_token: str = Header(None)):
+    """⓪ 人工通道:下一条带理由、带期限的敞口偏置(7d / 14d / 1m / delegate=全委托 即不设偏置)。
+    写入后在后台整条重算配置。"""
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.api.store import supabase_insert_table
+    from src.data.allocation.allocator import HORIZONS, run_once
+    start = body.start_d or datetime.now(timezone.utc).date()
+    days = HORIZONS[body.horizon]
+    row = {"start_d": start.isoformat(), "delta": 0.0 if body.horizon == "delegate" else body.delta,
+           "horizon": body.horizon, "reason": body.reason,
+           "expires_d": (start + timedelta(days=days)).isoformat() if days else None}
+    w = await supabase_insert_table("allocation_override", [row])
+    if not w.ok:
+        raise HTTPException(status_code=502, detail=f"allocation_override 写入失败:{w.why}")
+    asyncio.create_task(run_once())
+    return {"status": "ok", "override": row, "recompute": "started"}
+
+
+@router.get("/internal/allocation/latest")
+async def allocation_latest(x_internal_token: str = Header(None), days: int = Query(30, ge=1, le=400)):
+    """最新一天的配置(权重、敞口、为什么)+ 最近 N 天纸面 NAV + 生效中的人工偏置。"""
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.data.vector.market_state_writer import _sb_get
+    nav = await _sb_get("allocation_nav_daily", {"select": "*", "order": "d.desc", "limit": str(days)})
+    if not nav.ok:
+        raise HTTPException(status_code=502, detail=f"allocation_nav_daily 读不到:{nav.reason}")
+    if not nav.rows:
+        return {"status": "empty", "note": "配置还没有第一行 —— 看 loop_attempt 里 _allocation_loop 的原因"}
+    last = nav.rows[0]["d"]
+    alloc = await _sb_get("allocation_daily", {"select": "book,weight,exposure,evidence,why",
+                                               "d": f"eq.{last}", "order": "weight.desc"})
+    ovr = await _sb_get("allocation_override", {"select": "*", "order": "id.desc", "limit": "20"})
+    if not alloc.ok or not ovr.ok:
+        raise HTTPException(status_code=502, detail="allocation_daily / allocation_override 读不到")
+    today = datetime.now(timezone.utc).date().isoformat()
+    active = [o for o in ovr.rows or [] if o.get("expires_d") and o["start_d"] <= today < o["expires_d"]]
+    why = next((r.get("why") for r in alloc.rows or [] if r.get("why")), None)
+    return {"status": "ok", "d": last, "exposure": nav.rows[0]["exposure"], "nav": nav.rows[0]["nav"],
+            "weights": [{k: r[k] for k in ("book", "weight", "evidence")} for r in alloc.rows or []],
+            "why": why, "active_overrides": active, "nav_series": list(reversed(nav.rows))}
+
+
 # ── T-041 / M-196:解读层的预注册检验(后台跑,结果落 interpretation_validation_runs)────
 
 @router.post("/internal/interpret/validate")

@@ -1081,6 +1081,38 @@ async def _channels_loop():
         await _asyncio.sleep(24 * 3600)
 
 
+async def _allocation_loop():
+    """v0.2 L3 配置层(纸面):默认持有 ①,其余账本按前向证据连续加权,⓪ 人工偏置带期限。
+    每 6 小时从 INCEPTION 整条重算,幂等。表 `allocation_daily` / `allocation_nav_daily`。
+    判活:`select max(d) from allocation_nav_daily` = 昨天(UTC),或 ① 的最新 NAV 日。
+    """
+    await _asyncio.sleep(_boot_delay(1500))
+    while True:
+        try:
+            from src.data.allocation.allocator import run_once as _al_run
+            r = await _al_run()
+            print(f"[ALLOCATION] {str(r.get('reason'))[:200]}")
+            await _beat("_allocation_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")),
+                        detail={"last": r.get("last"), "weights": r.get("weights"),
+                                "exposure": r.get("exposure"), "nav": r.get("nav")},
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt("_allocation_loop",
+                                       ("refused" if r.get("refused") else "ok") if r.get("ok") else "error",
+                                       reason=str(r.get("reason"))[:400], writer="src.api.main._allocation_loop")
+        except Exception as _e:
+            print(f"[ALLOCATION] ⚠️  pass FAILED: {_e}")
+            await _beat("_allocation_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_allocation_loop", "error", reason=f"{type(_e).__name__}: {_e}"[:400],
+                                       writer="src.api.main._allocation_loop")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_allocation_loop():
+    _asyncio.create_task(_allocation_loop())
+    print("[ALLOCATION] ✅ L3 paper allocation scheduled (allocation_daily / allocation_nav_daily)")
+
+
 @app.on_event("startup")
 async def _start_channels_loop():
     _asyncio.create_task(_channels_loop())
