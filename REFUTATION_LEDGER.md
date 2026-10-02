@@ -24890,9 +24890,26 @@ per M-196 §5:F1 + F2 双重 ⇒ **杀 T-040,回 ⓪ OVERRIDE 用其它判据**(
 - **任务 #89「Rule 5a 红线」 → COMPLETED**(归档 batch 已 ship, SYNC 21,640 / 76,000,占 28%)
 - **新任务待 JAZZ 拍**:T-042 解读层 v2(特征组合 / 上游通道)何时 ship + 是否要 lane-b 配 M-196-style pre-reg(per §S-464 「v2 用同一份 M-196 预注册」已隐含 — 但 lane-b 是否要做「预注册 v2」还是等 C 的 v2 spec 出再写判据,等 JAZZ 拍)
 
+### §7 · 数据 lineage 状态(per CLAUDE.md Rule 5b 三件套 + S-462)
+
+| 维度 | 状态 |
+|---|---|
+| ① 调度者 | ✅ Seth 触发 `POST /internal/interpret/validate`(2026-10-02 ~09:59 UTC, JAZZ 通知「m-196 has been run」对应 sync)|
+| ② 判活判据 | ✅ endpoint 返回 `{"started":true,"prereg":"M-196"}` 给 Seth |
+| ③ 第一行真实数据 | 🟡 **不一致**: <br>• **§Seth-1002c 在 SYNC 给了 5 数字 + verdict FAIL**(Seth 手工整理,不是从 `interpretation_validation_runs` 拉的)<br>• **S-462 + §Seth-1002b @B 段**说「结果含 NaN、写表被拒、7 项数字没落库」「数字出来前不解读 FAIL」<br>• **`interpretation_validation_runs` 表真实 id=1 行未落库 / 待 offer 行未落库**(per S-462 + IN-FACT 第 1 行) |
+
+**含义:** M-197 verdict 是基于 **§Seth-1002c 手工给出的数字**写的,但 **数字未落 `interpretation_validation_runs` production 表**(per Rule 5b 三件套 ③ 缺位)。
+
+**lane-b 处置:**
+- **M-197 保留** —— 数字方向(全 FAIL)+ 5 个测试数值与 Seth 判读一致,verdict 大概率稳定
+- **加 lineage 状态 标 🟡** —— 等 Seth 修 NaN + 写表拒 + 重跑 + 落库后,**Seth 必查 `interpretation_validation_runs id=1 / id=2` 行数字是否与 §Seth-1002c 一致**:
+  - ✅ 一致 → M-197 终审确认
+  - ⚠️ 不一致 → M-197 撤回重写(verdict 可能仍 FAIL,但数字是 production 表为准)
+- **任务 #88 reopen** —— 原 close 错了,**等 production 行落库再 close**
+
 ---
 
-*Lane: B (Seth/Austin) · Status: 🔴 **整体 FAIL — F1 + F2** · 验收:5 数字到位 ✓ · 4 测试 + 1 随机基线全部 FAIL ✓ · 样本内也 FAIL ✓ · 单角度 3 个全部 FAIL ✓ · sanity 状态待补(占位)· 升级路径 §5 处置 4 条已落 ✓ · 与 S-463/S-464 互证 ✓ · 不动 M-196 预注册机制 ✓*
+*Lane: B (Seth/Austin) · Status: 🔴 **整体 FAIL — F1 + F2 (preliminary, lineage 🟡)** · 验收:5 数字到位 ✓ · 4 测试 + 1 随机基线全部 FAIL ✓ · 样本内也 FAIL ✓ · 单角度 3 个全部 FAIL ✓ · sanity 状态待补(占位)· 升级路径 §5 处置 4 条已落 ✓ · 与 S-463/S-464 互证 ✓ · 不动 M-196 预注册机制 ✓ · 数据 lineage 🟡 待 §Seth-1002c 数字 vs production 表校对*
 
 ## S-464 — 解读层 v2 交给 C 的 autoresearch(T-042);研究读端点必须单一来源
 
@@ -24900,3 +24917,214 @@ Jazz 10-02:「单纯价格去找肯定失败,要特征组合。」v2 = (币, 日
 全部变体记日志(deflated 口径),2025 起的样本外最终只评一次。
 数据给 lane 的公开读端点:`/api/v1/ohlcv/{symbol}` 按行数截断且混着多个来源 —— 同一天 binance_hist 与 coingecko_pro_ohlc 各一行,研究直接拿来就是 S-459 的接缝。
 新增 `/api/v1/research/ohlcv/{symbol}`(必须指定来源、按起点分页)与 `/api/v1/research/market-state`。旧端点保留(A 的 T-001 v2 在用)。
+
+## M-199 (lane-c, 2026-10-02; **PRE-REGISTERED before sweep**, per §Seth-1002d) — T-042 解读层 v2:特征组合条件匹配(背景先 → 形态后)
+
+> **NOTE — 衔接:** M-198 (lane-c) → M-199 (lane-c),per CLAUDE.md Rule 7 forward-only。T-041 verdict 走 M-197 (lane-b) per S-455,本条不动 M-197。
+
+**Owner:** lane-c (Minimax-C Mac Mini)
+**Status:** 🟡 PRE-REGISTERED,**autoresearch 待跑**;**2025-01+ 数据在最终评估前不碰**(per §Seth-1002d §4)
+**Lane-c host:** Claude-C
+**Parent:** T-040 解读层 (M-196 lane-b FAIL per S-463 / F1+F2) + S-464 (JAZZ 2026-10-02 「v2 = 特征组合」) + §Seth-1002d (Seth 2026-10-02 「autoresearch + 2025 起样本外最终只评一次」) + M-198 P3/P4/P6 (per §Seth-1002d §11 可并入)
+**Source:** `cometcloud-local/research/t042_v1_*.py` (NEW, post-T-041 FAIL closure)
+
+### §0 触发 — 为什么 T-042 (v2)
+
+**T-041 verdict 失败:** M-196 / M-197 整体 **🔴 FAIL (F1 + F2)** —— 价格空间三个角度 (风格相位/宏观/横截面) 找相似日再 pool,**每个单角度都比无条件差**,pool 之所以「略好」是因为不同角度在不同日子略胜,**没有真正的独立信号** (S-463 §1)。
+
+**JAZZ 2026-10-02 directive (per S-464):** 「单纯价格去找肯定失败,要**特征组合**:K 线形态 + 宏观背景 / 产业周期 + 走势。」
+
+**Seth 给的方法论边界 (per §Seth-1002d 2026-10-02):**
+1. **Unit = (币, 日)**,不是风格指数 —— 形态长在单币上,独立样本多两个数量级 (风格指数样本外只有 ~32 个窗口)。
+2. **前瞻 10 天**;目标 = **相对其所属风格指数的收益**,另报绝对收益。
+3. **匹配 = 先背景后形态**:先按背景找最像的时段,再在其中按形态找相似的 (币, 日)。
+4. **autoresearch 边界**:只在 **2022-01 ~ 2024-12** 内迭代,用按时间的前推交叉验证;**2025-01+ 数据在最终评估前一眼都不看**;每次试过的变体 + 分数**全部记日志** (deflated 口径)。
+
+### §1 Hypothesis
+
+> **H₁:** (币, 日) 级条件匹配 — **先按「宏观 + 产业周期」背景找相似时段,再在其中按「K 线形态 + 走势 + 仓位」找相似单币单日** — 组合族对该 (币, 日) **未来 10 天的相对其所属风格指数的超额收益**有预测力,**同时优于无条件基本盘、只看形态、只看背景**。
+
+**Null H₀:** 条件匹配的 ΔQL (相对无条件) ≤ 0 AND ΔQL (相对单角度) ≤ 0 AND 30d block bootstrap 单侧 p ≥ 0.05。
+
+### §2 数据范围 + 硬约束
+
+| 项 | 值 | 硬约束 |
+|---|---|---|
+| **Train + CV 窗口** | **2022-01-01 ~ 2024-12-31** (3 年) | **唯一允许迭代区间** |
+| **OOS 窗口 (held-out)** | **2025-01-01 ~ 2026-09-30** (≈ 21 个月) | **autoresearch 期间一眼不看**;只在最终评估 1-shot 打开 |
+| **Unit** | **(币, 日)** | 形态长在单币上;前瞻 10 天 |
+| **Target** | 未来 10d 收益 - 同期所属风格指数收益 (主报);绝对 10d 收益 (附报) | per §Seth-1002d §1 |
+| **读端点 (per S-464)** | `/api/v1/research/ohlcv/{symbol}?source=binance_hist&start=...` (单一来源) | 不准用 `/api/v1/ohlcv/{symbol}` (S-459 接缝) |
+| **风格端点** | `/api/v1/style/index?style=...&weighting=cap` | T-039 v4 (per S-449/451) |
+| **宏观端点** | `/api/v1/research/market-state?start=...` | 背景阶段查找 |
+| **缓存** | lane 根 (`/Volumes/CometCloudAI/cometcloud-local/_data/research/t042_v1/`) | **不放 /tmp** (CLAUDE.md Rule 3a) |
+| **报告首行** | 数据来源 + 日期范围 + train/OOS split | per §Seth-1002d 末尾 |
+
+### §3 Feature blocks (per §Seth-1002d §2)
+
+| Block | 特征 | 备注 |
+|---|---|---|
+| **K 线形态** | 最近 5/10/20 根 ATR-归一化的收益序列、区间位置、影线、跳空、放量、距 20/50/200 日线与 52 周高点 | per §Seth-1002d §2 |
+| **走势** | 多周期动量 (mom_5/20/60)、波动率分位 (vol_pct_20/60) | per §Seth-1002d §2 |
+| **宏观背景** | market-state 向量 (从 `/api/v1/research/market-state` 取) | **第一阶段匹配特征** |
+| **产业周期** | 所属风格的相对强弱与相位 (从 T-039 取) | **第一阶段匹配特征** |
+| **仓位** | 资金费率、OI 变化 (有多少用多少,缺则置空) | per §Seth-1002d §2 |
+
+### §4 匹配协议 (per §Seth-1002d §3)
+
+**两阶段条件匹配:**
+1. **背景匹配 (Stage 1):** 在历史窗口里按 (宏观背景, 产业周期) 找最相似的 K 个时段 (default k_background=20) → 缩窄到 ~k_background 天
+2. **形态匹配 (Stage 2):** 在缩窄后的 ~k_background 天里按 (K 线形态, 走势, 仓位) 找最相似的 top-N 个 (币, 日) (default n=10)
+
+**输出:** 每 (币, 日) 目标日的 top-N 邻居 (币, 日) 集合,每个邻居带「相对其所属风格指数的未来 10d 收益」。
+
+### §5 组合族 (pre-specified per §Seth-1002d §3)
+
+**autoresearch 在以下 pre-specified 族里搜权重和超参,不准临时新增族:**
+
+| 族 | 阶段 1 维度 | 阶段 2 维度 | 默认权重 |
+|---|---|---|---|
+| **G1: 形态×宏观** | 宏观背景 | K 线形态 | 0.5/0.5 |
+| **G2: 走势×产业周期** | 产业周期 | 走势 | 0.5/0.5 |
+| **G3: 形态×产业周期×仓位** | 产业周期 | 形态 + 仓位 | 0.4/0.4/0.2 |
+| **G4: 全特征 baseline** | 宏观 + 产业周期 | 形态 + 走势 + 仓位 | 0.3/0.3/0.4 |
+
+**autoresearch 允许调的:** k_background ∈ {10, 20, 50, 100}、n_neighbors ∈ {5, 10, 20, 50}、族内权重网格 (步长 0.1)、ATR-normalization 窗口 ∈ {14, 20, 60}、动量窗口 ∈ {5, 20, 60}。
+
+### §6 评估判据 (per §Seth-1002d §5)
+
+**样本外 (held-out 2025+) 1-shot 评估,**5 数字一次跑齐:
+
+| 测试 | 判据 | 通过条件 |
+|---|---|---|
+| **T1 分位数损失 (主)** | ΔQL = QL_combo − min(QL_unconditional, QL_form_only, QL_background_only) | ΔQL < 0 (3 个都赢) |
+| **T2 方向命中** | hit_combo vs hit_unconditional | hit_combo > hit_unconditional + 5pp |
+| **T3 30d block bootstrap** | 单侧 p (combo > unconditional) | p < 0.05 |
+| **T4 deflated Sharpe / ΔQL** | 用 autoresearch 试过的变体数 N 折扣 (per §Seth-1002d §4 「deflated 口径」) | 折扣后 p < 0.05 OR SR > 1.0 |
+| **T5 随机基线** | ΔQL_real vs ΔQL_random (random permutation of target) | ΔQL_real > ΔQL_random, p < 0.05 |
+
+**Verdict 映射 (per M-195 / S-440 教训):**
+
+- 🟢 **SURVIVE**: 5 测试全过 + deflated 后 SR > 1
+- 🟡 **PARTIAL**: 4/5 通过 + deflated 后 SR > 0
+- 🔴 **REFUTED**: ≤3/5 通过 OR deflated SR < 0
+- ⚫ **NOT EVIDENCE**: 数据 / power 不足 (e.g., 2025+ 窗口 < 90d 或币数 < 20)
+
+**Reject 条件 (per S-446 / S-450 / S-454 教训):** 拒绝 = autosearch 收敛到 ≤3 候选,1-shot 评估;不重跑,不 P1 (一次机会 = 只有一份)。
+
+### §7 autoresearch 协议 (logs)
+
+**每个变体记录到 `_data/research/vlog/t042_v1_variants.jsonl` (JSONL, append-only):**
+
+```json
+{
+  "trial_id": "t042_v1_001",
+  "timestamp_utc": "2026-10-02T...",
+  "family": "G1|G2|G3|G4",
+  "hyperparams": {"k_bg": 20, "n_neigh": 10, "w_macro": 0.5, ...},
+  "cv_fold": "2022-01~2022-12|2023-01~2023-12|2024-01~2024-12",
+  "cv_metric": {"delta_ql_si": ..., "delta_sr_si": ...},
+  "oos_status": "held_out (not evaluated yet)",
+  "notes": "..."
+}
+```
+
+**日志纪律:**
+- 每行一个 trial,append-only (per CLAUDE.md Rule 7 spirit)
+- autoresearch 期间 OOS 字段 = `"held_out (not evaluated yet)"`,**绝不允许填值**
+- autoresearch 跑完收敛到 top-3,每候选一行 final_summary
+- 最终评估 1-shot 后,OOS 字段才允许写实数
+
+**deflated 口径:** 用 trial 总数 N,bootstrap 分布取上 100 校正 (per §Seth-1002d §4 「每个试过的变体 + 分数全部记日志,deflated 口径」)
+
+### §8 候选上限 + 最终评估协议 (per §Seth-1002d §4 第 4 条)
+
+- **autoresearch 收敛到 ≤ 3 个候选**(per §B-465 第 4 条)
+- **最终评估 1-shot:** 在 2025+ OOS 上一次跑齐 T1-T5
+- **不允许**:
+  - 看 2025+ 数据 → 调超参 → 再看 (loop forbidden)
+  - 跑完 5 测试 → 看一个数字不达标 → 改组合族再跑 (multi-shot forbidden)
+- **允许**: 在最终评估前 **JAZZ 可以在 IN-FLIGHT 表 拍**「接受 PARTIAL 或拒收」(决策点)
+
+### §9 三件齐交付 (per CLAUDE.md Rule 5b)
+
+每 probe 落 (1) 调度者 (2) 判活判据 (3) 第一行真实数据:
+- 调度者: `bash scripts/run_t042_v1.sh` (cron 在 autoresearch 期间每 6h 跑一次主 trial)
+- 判活判据: §6 T1-T5
+- 第一行真实数据: 2022-01-01 的 BTC (binance_hist) 的 ATR-归一化 K 线形态向量
+
+### §10 Sanity battery (per S-455 §A)
+
+**autoresearch 启动前必须过 6 个 sanity (per S-455 §A):**
+- **S1 知道答案预测器**: 用目标本身做匹配 → ΔQL_real ≪ ΔQL_random (应 < 1/10)
+- **S2 方向全反**: 把目标取负 → ΔQL_combo > 0 (应失去优势)
+- **S3 对照组改动未来数据**: 在 train 内做时间泄漏 swap → 要求 ΔQL_combo ≪ baseline
+- **S4 合成数据端到端**: 在合成 (宏观, 形态) 联合正态上跑完整 pipeline → 要求 T1-T5 全过
+- **S5 风格归属 sanity**: 目标「相对其所属风格指数的收益」应大致对称 (mean ≈ 0),否则风格归属有 bug
+- **S6 K 线 sanity**: ATR-normalization 后,价格序列方差应在 [0.5, 2.0] 倍范围
+
+**Sanity 不全过 → autoresearch 不开始**(per S-455 §A)。
+
+### §11 与 M-198 P3/P4/P6 的合并 (per §Seth-1002d 末尾)
+
+**M-198 outputs 可并入 T-042 特征,避免双线:**
+- **M-198 P3** (per-style R² on (PC1, PC2)): 2-driver style loadings → 直接用作 T-042 「产业周期」block 的**有信息压缩**
+- **M-198 P4** (2-driver captures 85% of var): 验证产业周期 block 信息基础
+- **M-198 P6** (residual PC1 = 「AI vs DeFi-Tokenization」主题热度差): 用作 T-042 「宏观背景」block 的**主题向量化补充**(per §IN-FLIGHT row 12 「P6 propose 主题热度差为第 3 vector」 — **等 JAZZ 拍**才进 T-042 主路径,**未拍前作为可选 add-on**)
+
+**合并方法:** T-042 跑两个并行 variants族 (G0-baseline 无 M-198 / G1-with M-198),autoresearch 看 ΔQL(G1) - ΔQL(G0),看 M-198 outputs 是否增价值。
+
+### §13 不动的边界
+
+- **不动**:M-196 / M-197 (T-041 verdict FAIL, 不重审)
+- **不动**:M-198 (7-probe 全 ship, T-038 PARTIAL 不动, P6 主题热度差 §IN-FLIGHT row 12 等 JAZZ 拍)
+- **不动**:src/ / dashboard/ / spec_runner / nav_kernel / T-039 endpoint
+- **不动**:T-040 v1 (失败, 不复用)
+- **不动**:C-path C-1..C-18 / Outter v1 spec / §5b 4-layer
+- **动**:本条 T-042 预注册 (M-199) + autoresearch + 1-shot 评估 + 最终 verdict
+
+### §14 References
+
+- **S-463** (Seth 2026-10-02) — T-041 verdict FAIL (F1 + F2)
+- **S-464** (JAZZ 2026-10-02) — 「v2 = 特征组合 + autoresearch + 2025 起样本外最终只评一次」+ 公开读端点必须单一来源
+- **§Seth-1002d** (Seth 2026-10-02) — T-042 完整 spec (本条 parent)
+- **§B-465** (B 2026-10-02) — T-040 v2 由 C 按 §Seth-1002d / S-464 ship
+- **M-196 / M-197** (lane-b) — T-041 pre-reg + verdict
+- **M-198** (lane-c) — 7-Probe Style × Strategy 矢量化 (P3/P4/P6 可并入)
+- **CLAUDE.md Rule 5b** — 三件齐交付
+- **CLAUDE.md Rule 7** — Ledger lane-prefixed forward-only,本条 M-199 衔接 M-198 (M-197 留给 T-041)
+- **HIGH_DIM_ONTOLOGY §5b / §5b-bis** — 4-layer + ⓪ OVERRIDE
+
+---
+
+*Lane: C (Seth/Austin - Claude-C) · Status: 🟡 **PRE-REGISTERED, autoresearch 待跑** · 验收: 5 数字 + 6 sanity + deflated 口径全到位 ✓ · 2025+ held-out ✓ · ≤3 候选 1-shot ✓ · 三件齐交付待落 ✓*
+
+## S-465 — v0.2 L3 配置层 v0(纸面):① 默认 100%,其余账本只靠前向证据连续拿权重
+
+**Seth · 2026-10-02 · 代码 `src/data/allocation/allocator.py`(CODE_REF `l3-v0`)· 表 `allocation_daily` / `allocation_nav_daily` / `allocation_override`**
+
+**规则(全部来自 v0.2 §3 L3 与 Jazz 09-29,无新参数):**
+- 非 ① 账本权重 = 0.25 × μ / σ²(相对各自基准的日超额,年化),前提超额 95% 下界 > 0 且 ≥ 20 天;① 拿剩下的。
+- 单本 ≤ 80%;单一标的净 ≤ 40% —— L4 还没有标的层持仓,**所以非 ① 账本一律按「可能全仓一个币」处理,单本上限取 40%**。④ / 事件前向 < 60 天合计 ≤ 10%。
+- 敞口默认 1.0,截到 [−0.3, 1.3];v0 只有 ⓪ 人工通道能改(7d / 14d / 1m 到期失效,delegate = 不设偏置)。状态驱动择时不接:M-196/M-197 FAIL。
+- **证据只算前向(INCEPTION = 2026-10-01 起)。** 账本表里更早的行有的是历史回放(β+ / 代币化倾斜整条重算),回放是先验、前向定结论(v0.2 §5);先验等评估层 `rr_matrix_daily`。
+
+**预期,写在跑之前:** 至少到 2026-10-21(20 天)以前,每天都应是 ① = 100%、敞口 1.00;之后任何非 ① 账本拿到权重,`why` 里必须给出超额、σ、下界、天数。若前 20 天出现非 ① 权重 = bug。
+
+**已知不计:** 配置层自身的再平衡成本;账本缺某天 NAV 时当天记 0、下一个有数日补回(收益不丢,`missing_returns` 计数)。① 仍是 24 名等权波动率目标版 —— 与市值加权 ① 的取舍待 Jazz。
+
+**判活:** `select max(d), count(*) from allocation_nav_daily` 应 = 昨天 UTC(或 ① 最新 NAV 日);`_allocation_loop` 每 6h。16 个测试 `tests/test_allocation_l3.py`。
+
+## S-466 — T-042 v1 的 45 个 trial 作废:打分里没有用到邻居,排名是抽样噪声;2025+ 样本外保持未开
+
+**Seth · 2026-10-02 · 审 `cometcloud-local/research/t042_v1_main.py` 与 `t042_v1_g5_m198.py`(Shadow 镜像)**
+
+1. **没有预测。** `run_one_trial` 每个 trial 随机抽 200 个 (币, 日),调 `two_stage_match` 找邻居,但邻居只用于 `len(nbrs) < 3` 的过滤;记分的是**目标自己**的未来 10 天超额 `fwd_sym − fwd_sty`。所以 `sharpe_like` = 随机抽的 (币, 日) 的超额均值/标准差,与匹配族、k_bg、n_neigh 无关。G5 脚本同构。
+2. **trial 之间的差别 = 种子。** 种子是 `hash(trial_id)`;Python 的字符串 hash 每个进程加盐,结果不可复现。n≈170 时 `sharpe_like` 的标准误 ≈ 0.077,36 次独立抽样的最大值在零假设下期望 ≈ 0.16 —— 第一名 +0.206 落在噪声里;第一名命中 50.8%。
+3. **若接上邻居,当前写法还有前视:** 邻居池不限时间(含目标日之后的日子,含同日其他币 —— 它们的 10 天前瞻与目标重叠);z-score 用整段 2022–2024 的均值方差。预注册里专门抓这个的 S3 被 DEFER 了。
+4. **sanity 与预注册不符:** M-199 §10 S1 = 「知道答案的预测器」,实现成「返回了 10 个邻居」;S4 要求合成数据上 T1–T5 全过,实现成 NN 相关;S6 区间 [0.5, 2.0] 被改成 [0.3, 3.0](实测 0.454 在原区间外);S2/S3 DEFER,而 §10 写的是「sanity 不全过 → autoresearch 不开始」。
+5. **连带作废:** 「P6 主题轴不增价值(ΔSR −0.046)⇒ ⓪ 维持 2 维」这条结论建立在同一个不含预测的分数上,不能用于任何架构决定。
+
+**保住的东西:** 2025-01 起的样本外确实没碰(`clip_to_train` + `assert_no_2025`)—— 这是本轮唯一不可再生的资产,所以**不授权 1-shot**:拿一个不做预测的流水线去开样本外,等于把唯一一次机会烧掉。
+
+**trial 计数:** 这 45 个 trial 不算进 deflation 的 N(它们没有在比较候选),但日志保留,标 `void: S-466`。修好后的 v1.1 从 N=0 开始计。
