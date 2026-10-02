@@ -445,6 +445,11 @@ async def _hl_book_loop():
 
     幂等:昨天那根已记录 ⇒ refused(没活干,不是故障)。决策日 Jev 失败 ⇒ ok=False 带原因,
     下一轮重试。写入走 `supabase_upsert_table`(service role),表 `hl_book_daily`。
+
+    A-408-2b (2026-10-02): wired `_record_loop_attempt` — refused sequence
+    now carries the upstream reason (`recorded_at < close_ts` or `panel bar
+    missing for [ETH, SOL]`), so a sustained REFUSED sequence stops being
+    a single-line summary and starts being a per-iteration audit row.
     """
     await _asyncio.sleep(_boot_delay(300))
     while True:
@@ -452,13 +457,34 @@ async def _hl_book_loop():
             from src.data.signals.hl_book_daily import run_once as _hl_run
             r = await _hl_run()
             print(f"[HL-BOOK] written={r.get('written')} · {str(r.get('reason'))[:120]}")
-            await _beat("_hl_book_loop", ok=bool(r.get("ok")) and not r.get("refused"),
+            _ok_h = bool(r.get("ok")) and not r.get("refused")
+            await _beat("_hl_book_loop", ok=_ok_h,
                         refused=bool(r.get("refused")),
                         detail={"written": r.get("written"), "nav": r.get("nav")},
                         error=None if r.get("ok") else str(r.get("reason"))[:200])
+            # A-408-2b: per-iteration record (success / refused path).
+            # `r` shape from hl_book_daily.run_once: {ok, refused, written,
+            # reason, nav}. Persist verbatim so an audit can see WHY each
+            # refusal fired — especially "未就绪:...ETH/SOL...".
+            await _record_loop_attempt(
+                "_hl_book_loop",
+                "ok" if r.get("ok") and not r.get("refused")
+                else "refused" if r.get("refused")
+                else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail={"written": r.get("written"),
+                        "nav":     r.get("nav"),
+                        "ok":      r.get("ok"),
+                        "refused": r.get("refused")},
+                writer="src.api.main._hl_book_loop")
         except Exception as _e:
             print(f"[HL-BOOK] ⚠️  pass FAILED: {_e}")
             await _beat("_hl_book_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            # A-408-2b: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_hl_book_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._hl_book_loop")
         await _asyncio.sleep(3600)
 
 
@@ -1071,13 +1097,14 @@ async def _start_interpret_loop():
 from src.api.loop_beat import classify as _classify  # noqa: E402  (S-299)
 from src.api.rpc_diagnostics import _record_loop_attempt  # S-408-2 (A-408-2) per-iteration record
 
-#: S-408-2 follow-up PR 候选 —— 17 个 `_beat()`-using 循环待 wire `_record_loop_attempt`:
-#: _forward_record_loop · _hl_book_loop · _deep_panel_loop · _hyperliquid_loop
+#: S-408-2 follow-up PR 候选 —— 16 个 `_beat()`-using 循环待 wire `_record_loop_attempt`:
+#: _forward_record_loop · _deep_panel_loop · _hyperliquid_loop
 #: _treasury_decisions_loop · _outcome_tracker_loop · _market_state_loop
 #: _causal_paper_loop · _dingge_paper_loop · _combined_book_loop
 #: _scalable_book_loop · _beta_core_loop · _two_layer_paper_loop
 #: _fusion_paper_loop · _pod_aggregator_loop · _factor_tilt_loop · _track_record_loop
-#: 本次 PR 只 ship `_cg_panel_loop`(判据范围),其他按 adapter 形态逐个 wire。
+#: A-408-2b (2026-10-02): `_hl_book_loop` wired (driver for the S-413 REFUSED
+#: ×84 outage — refused rows now carry upstream reason). 16 remain.
 #: 25 个 print-only loop 也是同一类 follow-up(优先级低,等 _beat()-using 闭环后再批量)。
 
 
@@ -1272,10 +1299,24 @@ async def _cg_panel_loop():
             _ok, _ref, _why = _classify(res)
             _round_ok = bool(_ok or _ref)
             await _beat("_cg_panel_loop", ok=_ok, refused=_ref, error=_why)
-            # S-408-2: per-iteration record (success / refused path).
+            # S-408-2b (A-408-2b): S-310 visibility — loop says ok on rows_written>0,
+            # which collapses "wrote 4/57" and "wrote 57/57" into the same shape.
+            # Pass the structured `res` as `detail` so the audit table shows
+            # `n_symbols_written`, `n_symbols_failed`, `shortfall` per iteration.
+            # Without this, downstream consumers (e.g. `_hl_book_loop`) silently
+            # starve waiting for symbols the loop "says" it covered.
             await _record_loop_attempt(
                 "_cg_panel_loop", "ok" if _ok else "refused",
                 reason=_why,
+                detail={"n_symbols_written": res.get("n_symbols_written"),
+                        "n_symbols_failed":  res.get("n_symbols_failed"),
+                        "rows_written":       res.get("rows_written"),
+                        "n_pairs":            res.get("n_pairs"),
+                        "shortfall":          res.get("shortfall"),
+                        "today":              res.get("today"),
+                        "resolution":         res.get("resolution"),
+                        "errors":             res.get("errors")[:3]
+                                              if res.get("errors") else None},
                 writer="src.api.main._cg_panel_loop")
         except Exception as _e:
             print(f"[CG-PANEL] ⚠️  run failed: {_e}")
