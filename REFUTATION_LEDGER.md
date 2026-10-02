@@ -24773,3 +24773,13 @@ Jazz 10-01 问「价格引擎和技术指标是不是也有问题」。实测:
    同一个代码映射到了不同的币(TON 在 `cg_coin_map` 里是 Tokamak),或经历了迁移 / 合并。跨源拼接这些标的的任何特征都是错的。
 **修:** `collect_ohlcv` 不再写加密(只留 TradFi 的 EODHD),加密日线只剩一个写入端;测试钉住。部署后用 `/internal/backfill-cg-pro` 重写近 400 天,真 K 线覆盖采样点。
 映射冲突另开卡审计(按 Binance 对照逐个确认 coin_id),不在本次修。
+
+## S-460 — 回填跑完了,但「upstream error」;HYPE 不在映射表、NEAR 被坏数据自己挡住
+
+`/internal/backfill-cg-pro` 同步执行,几分钟的活超过 Cloudflare 的 100 秒,客户端看到「upstream error」—— 回填其实在服务器上跑完了:
+30 分钟内写入 68,779 行,采样点行 9,098 → 1,174;核心币(BTC、ETH、SOL、LINK、HYPE、ONDO、PENDLE、AAVE、UNI)近 60 天与 Binance 同日一致 402/412。
+剩下的坏行几乎全在三个币:**HYPE 380 行**(不在 `cg_coin_map` —— 它的 CG 行一直只来自 `collect_ohlcv`,S-459 关掉后会断供,而代币化篮子与 HL 账本都用它)、
+**NEAR 373 行**(映射校验拿同一张表里的坏行当参照,真 K 线被判「映射错了」而拒写 —— 循环论证)、MKR 379 行(已更名 SKY,T-028)。
+**修:** ① 校验先用独立来源 binance_hist,参照行若 O=H=L=C 视为不可校验(不再用坏数据挡好数据),并改用倒数第二根(已收盘)比;
+② `cg_coin_map` 加 HYPE → hyperliquid(`resolved_from='manual_verified'`,与风格表头的分类成员一致),面板循环把人工确认的映射与 vendor 映射同等对待;
+③ 回填真写入改为后台执行,结果写 `loop_attempt`(`_backfill_cg_pro`)。
