@@ -657,6 +657,8 @@ async def backfill_cg_pro(
                       description="回看天数,默认 2451 ≈ 回到 2020-01-01"),
     panel: str = Query(default="cis", pattern="^(cis|all)$",
                        description="cis=CIS 面板交集(默认)· all=cg_coin_map 全量"),
+    symbols: str = Query(default="", max_length=400,
+                         description="逗号分隔;非空时只回填这些(仍须在 cg_coin_map 里有 coin_id)—— 改了映射后只重写那几个"),
     x_internal_token: str = Header(None),
 ):
     """把 CoinGecko Pro 的真 K 线落进 `ohlcv_daily`,标为 `coingecko_pro_ohlc`。
@@ -753,6 +755,12 @@ async def backfill_cg_pro(
         pairs = sorted(resolved.items())
         skipped = []
 
+    # S-468:改了映射之后只重写那几个,不必整面板 30 分钟。不在映射表里的报出来,不猜。
+    only = {s.strip().upper() for s in symbols.split(",") if s.strip()}
+    if only:
+        pairs = [(s, cid) for s, cid in sorted(resolved.items()) if s in only]
+        skipped = sorted(only - set(resolved))
+
     if not pairs:
         raise HTTPException(
             status_code=503,
@@ -784,13 +792,14 @@ async def backfill_cg_pro(
                 await _record_loop_attempt("_backfill_cg_pro", "ok" if ok else "error",
                                            reason=str([{k: g.get(k) for k in ("asset_class", "n_pairs", "status")}
                                                        for g in out])[:400],
-                                           detail={"days": days, "panel": panel, "by_asset_class": out},
+                                           detail={"days": days, "panel": panel, "symbols": sorted(only) or None, "by_asset_class": out},
                                            writer="src.api.routers.ohlcv.backfill_cg_pro")
             except Exception as e:                                # noqa: BLE001
                 await _record_loop_attempt("_backfill_cg_pro", "error", reason=f"{type(e).__name__}: {e}"[:400],
                                            writer="src.api.routers.ohlcv.backfill_cg_pro")
         asyncio.create_task(_bg())
         return {"started": True, "panel": panel, "days": days, "n_pairs": len(pairs),
+                "symbols": [p[0] for p in pairs] if only else None,
                 "skipped_no_coin_id": skipped,
                 "verify": "select outcome, reason, detail from loop_attempt where loop_name='_backfill_cg_pro' order by at desc limit 1"}
 

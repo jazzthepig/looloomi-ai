@@ -51,3 +51,50 @@ def test_research_ohlcv_requires_a_single_source():
     c = TestClient(app)
     assert c.get("/api/v1/research/ohlcv/BTC").status_code == 422                       # 不给来源 ⇒ 拒绝
     assert c.get("/api/v1/research/ohlcv/BTC?source=hyperliquid").status_code == 422     # 死源 ⇒ 拒绝
+
+
+def test_backfill_cg_pro_symbols_restricts_to_the_named_mappings(monkeypatch):
+    """S-468:改了映射之后只重写那几个;不在映射表里的报出来,不猜。"""
+    from src.data.market import cg_pro_backfill as bf
+    monkeypatch.setattr(ohlcv, "_INTERNAL_TOKEN", "t")
+    monkeypatch.setattr(ohlcv, "_SB_URL", "http://x")
+    monkeypatch.setattr(ohlcv, "_SB_KEY", "k")
+
+    class Resp:
+        def __init__(self, data):
+            self.status_code, self._d, self.content, self.text = 200, data, b"x", ""
+
+        def json(self):
+            return self._d
+
+    class Client:
+        def __init__(self, *a, **k):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+        async def post(self, *a, **k):
+            return Resp([{"symbol": "ONE", "coin_id": "harmony"}, {"symbol": "BTC", "coin_id": "bitcoin"},
+                         {"symbol": "AI", "coin_id": "sleepless-ai"}])
+
+        async def get(self, *a, **k):
+            return Resp([{"symbol": "BTC"}, {"symbol": "ONE"}, {"symbol": "AI"}])
+    monkeypatch.setattr(ohlcv.httpx, "AsyncClient", Client)
+    seen = []
+
+    class Res:
+        def as_payload(self):
+            return {"status": "ok"}
+
+    async def fake_backfill(pairs, **k):
+        seen.extend(pairs)
+        return Res()
+    monkeypatch.setattr(bf, "backfill", fake_backfill)
+    out = asyncio.run(ohlcv.backfill_cg_pro(dry_run=True, dest="supabase", days=400, panel="all",
+                                            symbols="one, ai,NOPE", x_internal_token="t"))
+    assert sorted(seen) == [("AI", "sleepless-ai"), ("ONE", "harmony")]
+    assert out["skipped_no_coin_id"] == ["NOPE"]
