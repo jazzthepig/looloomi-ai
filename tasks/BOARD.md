@@ -15,7 +15,6 @@
 | open | T-003 | lane-a | S-396 三臂回放 live 验证(读路径分页修复后) | 相等 | replay 读到 1,000 行(截断) |  |
 | open | T-004 | lane-a | 恢复持币集中度写入(holder_concentration_history) | = 今天(UTC) | 2026-08-31 |  |
 | open | T-023 | lane-a | CIS universe API:把 Tier 标签(T1/T2)传到前端,CISLeaderboard 徽章按源染色 | T1 标的徽章绿、T2 标的徽章琥珀;不再全部 50% 灰 | GET /api/v1/cis/universe:universe 58 行,但 data_source=None(API 层未传播 Tier)。CISLeaderboard 徽章当前无法区分 |  |
-| open | T-043 | lane-b | 跨源同名不同币审计:binance_hist 与 coingecko_pro_ohlc 同一代码是不是同一个币(约 70 个嫌疑) | 一张表,每个代码一行,分四类:① 同一个币(比≈1、相关高、无跳变)② 同一个币但有时间错位(错一天相关最高)③ 迁移/拆分/合并(比值在某天跳变,写出日期与倍数)④ 不是同一个币(相关低)。②③④ 每行附证据数字;不写猜测的 coin_id,只写「需要 Seth 改映射」。报告首行写数据来源与日期范围 | S-460 修了 HYPE、NEAR 两个;TON 在 cg_coin_map 里是 Tokamak 已知错 |  |
 | open | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED |  |
 | open | T-007 | lane-c | CG 新闻监听器写入 Supabase(经 Railway mac_writes) | > 0 | 只在 Mac 本地 cis_history.db,13 行 |  |
 | open | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
@@ -33,6 +32,7 @@
 | done | T-018 | lane-a | Mac 对 Railway 的读请求带 X-Internal-Token;空快照不生成简报;macro_brief 合约副本更新到 mb-3 | empty = 0 且 n > 0(prompt_version 项删除:表无此列,S-435) | 09-23:47 份里 36 份快照为空({}),39 份写「平静」;Mac 副本 mb-2 | mac_mini 6h: empty=0, n≥1(最新 09-28 15:18 UTC) @ 2026-09-29 |
 | done | T-011 | lane-b | Jev 仓位乘数对照线:先预注册(只调 1 个参数,4 级基准) | 合并者确认后 Seth 接进 hl_book_daily | 无 | 台账 M-189(原 M-97,合并时改号)含 4 级基准 fixed / vol-formula / bandit / Jev + 判据 + H1/H2;cost 行改为按换手计。合并方式:内容由 Seth 并入 main(分支与 PROJECT_STATE/台账末尾冲突),lane-b/T-011 可删。接进 hl_book_daily 见 T-032。 @ 2026-09-27 |
 | done | T-037 | lane-b | 历史策略清点:每个「报过跑赢持有」的策略一行,只收集、不重算(v0.2 阶段 1 的输入) | 覆盖 B 阶段 1 报告里 A 表全部行;每个自报数字都标「自报,未重算」;不出现任何新算的数字 | B 09-29 阶段 1 报告(A 表 17 行,数字来自 MEMORY 概括) | 25 条策略 + 11 条坟场,数字全部标「自报,未重算」;风格列已加;C-5 差异 Seth 复算:到 09-20 C-5 币池等权 −44.1%、①面板 −14.0%(binance_hist,日再平衡)—— 差异主要来自币池(MKR/CRV/LDO/COMP/GRT/ONDO 等 DeFi),不是记账 @ 2026-09-30 |
+| done | T-043 | lane-b | 跨源同名不同币审计:binance_hist 与 coingecko_pro_ohlc 同一代码是不是同一个币(约 70 个嫌疑) | 一张表,每个代码一行,分四类:① 同一个币(比≈1、相关高、无跳变)② 同一个币但有时间错位(错一天相关最高)③ 迁移/拆分/合并(比值在某天跳变,写出日期与倍数)④ 不是同一个币(相关低)。②③④ 每行附证据数字;不写猜测的 coin_id,只写「需要 Seth 改映射」。报告首行写数据来源与日期范围 | S-460 修了 HYPE、NEAR 两个;TON 在 cg_coin_map 里是 Tokamak 已知错 | M-200 的 134 标的分类经回库复核(S-468):真映射错 2 个(ONE→harmony、AI→sleepless-ai,已改);「09-07 同日跳变」是 binance_hist 41,804 行前推假价(125 个下架标的,已改标 binance_hist_ffill);核心币低相关源于 CoinGecko Pro K 线 2025-12-27~2026-03-26 的污染。TON/CHESS 映射仍错但无独立参照,未改。 @ 2026-10-03T06:00Z |
 | done | T-009 | lane-c | data_quality_score:先修 data_freshness,再算分,随推送落库 | > 0 且 值有区分度(不全相同) | 0(列一直为空) | T1 最近 2h:86/86 行 DQS 非空,取值 {0.70, 0.85}(区分度满足原验收)。注:A′ 口径下 DQS = confidence,目前不带额外信息 —— 是否让它随源时间戳变化是 T-020 的事。 @ 2026-09-29T08:10Z |
 | done | T-038 | lane-c | 风格周期:大币 / 头部公链 / 二线公链 / 山寨 / meme 之间的轮动 —— 状态能否提前识别(预注册研究) | 一张表:每个状态格子的天数、未来 30 天收益差均值与 95% 区间、各年符号;结论只说「哪个状态在样本外仍把收益差分开」,不给仓位建议 | 无 —— 这个问题从没被单独问过;① 的基准是等权面板,而过去三年收益几乎全在 BTC | M-195 预注册判据下 2/6 ⇒ PARTIAL(AI、代币化);不改判据;结题。S-454 @ 2026-10-01 |
 | done | T-008 | seth | Railway 侧:新闻事件表 + mac_writes 白名单 | 201 且 write_log 有行 | 无 | POST /internal/mac-write/narrative-events(rows=[{event_id,date,event_type,narrative_tag,description,related_assets,source_round}])→ 200 verdict=ok n_written=1 n_rejected=0;write_log id=26527 outcome=ok writer=src.api.routers.mac_writes.mac_write;narrative_events 表里 verify 行落成功 @ 2026-09-26T02:01:00Z |
@@ -46,4 +46,4 @@
 | done | T-030 | seth | binance_hist 回填:过去一年整天缺 41 天(最后 09-06) | = 0 | 20 个币各缺 41 天,ETC/SUI/TRX 29 天,BCH 17 天 | loop_attempt _deep_panel_backfill 09-30 00:37 ok:24/24 币、9,600 行;binance_hist 过去 400 天 BTC/ETH/SOL/LINK/BCH 缺 0 天(此前 41 天) @ 2026-09-30T01:00Z |
 | done | T-039 | seth | 风格表头:每个标的的风格归属(PIT)+ 每个风格的日指数 + 每本账本的风格暴露 | 任意一天能回答「这本账本此刻在大币 / 二线 / 山寨 / meme 各暴露多少」,且能回放到 2021、2022、2024 三段 | asset_class 只有 L1/L2/DeFi/RWA/Infra 粗分类、无档位、无 meme;asset_embeddings_history 仅 08-19 起 42 天、59 个标的;无任何风格指数 | t039-v4:层级 4 × 板块 4 × 两种加权,2020-01-01 → 09-29 共 37,636 行;公开读 /api/v1/style/index 实测返回(meme 09-20 起 37 个成员,DOGE 45%);持仓法暴露已写(beta_plus 四臂)。多空账本无逐日权重,未算暴露。 @ 2026-09-30T04:00Z |
 
-open 16 · claimed 2 · blocked 3 · in_review 6 · done 16
+open 15 · claimed 2 · blocked 3 · in_review 6 · done 17
