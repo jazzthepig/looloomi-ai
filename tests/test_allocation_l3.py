@@ -21,7 +21,7 @@ def test_core_is_100pct_when_no_evidence():
                                               "evidence": {"n_days": 3}}}, [])
     assert out["weights"] == {CORE: 1.0}
     assert out["exposure"] == 1.0
-    assert out["why"][0].startswith("① beta_core: 100.0%")
+    assert out["why"][0].startswith(f"① {CORE}: 100.0%")
 
 
 def test_lower_bound_gate_and_min_days():

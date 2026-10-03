@@ -32,7 +32,11 @@ class Book:
 
 
 BOOKS: tuple[Book, ...] = (
-    Book("beta_core", "①", "核心持仓(24 名等权,波动率目标)", "持有面板吃 beta;FoF 的本体",
+    # S-473(Jazz 10-03「use 1」):① = 市值加权、单币 ≤ 40%。基准臂 ew_a0 = 同一内核下的等权,记着 α 这个决定本身的前向证据。
+    Book("core_cap", "①", "核心持仓(24 名市值加权,单币 ≤ 40%)", "持有市场吃 beta;FoF 的本体(S-472/S-473)",
+         "core_cap_daily", "arms", arm="cap_a1", accounting="shared_kernel", benchmark="arm:ew_a0"),
+    # 原 ①。S-473 起改作 ② 候选:等权 = 对二线 / 山寨的风格倾斜,外加波动率目标(③ 的成分)—— 要自己挣到权重。
+    Book("beta_core", "②", "等权 + 波动率目标(原 ①,S-473 起为 ② 候选)", "面板内等权 = 风格倾斜;另含 ③ 的波动率目标",
          "beta_core_nav", "plain", filters={"void_reason": "is.null"}, benchmark="own_benchmark_nav"),
     Book("beta_plus_w", "②", "动量 + 52 周高点倾斜(周频 7 份)", "面板内超配趋势强、接近新高的币(S-428)",
          "beta_plus_daily", "arms", arm="momentum_52w_w", accounting="shared_kernel", benchmark="arm:panel_hold_w"),

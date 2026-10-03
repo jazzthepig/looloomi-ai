@@ -514,6 +514,96 @@ def test_t15_hl_book_outcome_mapping():
     print(f"✓ T15: _hl_book_loop outcome mapping + reason preserved")
 
 
+# ── T16: _tokenization_tilt_loop wire-up (A-408-2c, 2026-10-03 driver) ──────
+def test_t16_tokenization_tilt_call_site_guard():
+    """A-408-2c: _tokenization_tilt_loop wired to _record_loop_attempt
+    (2 sites: success/refused + exception). Driver = the 2026-10-03 ops
+    dashboard showing 8 cycles refusing without per-iteration audit rows.
+
+    Reads the repo's own main.py (via _ROOT, no hardcoded paths).
+    Post-merge pattern: same shape as T13 (_hl_book_loop)."""
+    import re
+    pattern = re.compile(
+        r'_record_loop_attempt\(\s*"_tokenization_tilt_loop"',
+        re.MULTILINE)
+    candidates = [(_ROOT / "src/api/main.py")]
+    counts = {str(p): len(pattern.findall(p.read_text()))
+              for p in candidates if p.exists()}
+    max_count = max(counts.values()) if counts else 0
+    print(f"  T16 _tokenization_tilt_loop call-site counts = {counts}")
+    assert max_count >= 2, (
+        f"A-408-2c regression: expected ≥ 2 sites in main.py "
+        f"(success/refused + exception), found {max_count}. The "
+        f"_tokenization_tilt_loop's refused sequence loses audit detail.")
+    print(f"✓ T16: _tokenization_tilt_loop has {max_count} _record_loop_attempt call sites (≥ 2 required)")
+
+
+# ── T17: _tokenization_tilt_loop outcome mapping + reason preservation ──────
+def test_t17_tokenization_tilt_outcome_mapping():
+    """A-408-2c: _tokenization_tilt_loop translates
+    tokenization_tilt.run_once's `{ok, refused}` into the loop_attempt
+    vocabulary. Refused/Error paths must use 'refused' / 'error' literals.
+
+    Detail must include `barred` (which tokens excluded this iteration)
+    and `stale_in_source` (which upstream source was stale) — both are
+    audit-critical for S-427 (代币化基础设施倾斜)."""
+    captured = []
+
+    class _FakeResp:
+        status_code = 201
+
+    async def _fake_post(self, url, json, headers):
+        captured.append(json[0])
+        return _FakeResp()
+
+    async def _run():
+        with patch.object(store, "_SB_URL", "https://example.supabase.co"), \
+             patch.object(store, "_SB_KEY", "fake_key"), \
+             patch("httpx.AsyncClient.post", new=_fake_post):
+            # r={"ok": True, "refused": False}  → "ok"
+            await _record_loop_attempt(
+                "_tokenization_tilt_loop", "ok",
+                reason="整条重算 + upsert 2 行",
+                detail={"written": 2, "nav": 1.024,
+                         "barred": [], "stale_in_source": [],
+                         "ok": True, "refused": False},
+                writer="src.api.main._tokenization_tilt_loop")
+            # r={"ok": True, "refused": True}  → "refused"
+            await _record_loop_attempt(
+                "_tokenization_tilt_loop", "refused",
+                reason="收盘后 18h 数据未就绪:stale_in_source=['coingecko_pro_ohlc']",
+                detail={"written": 0, "nav": None,
+                         "barred": ["ONDO", "POL"],
+                         "stale_in_source": ["coingecko_pro_ohlc"],
+                         "ok": True, "refused": True},
+                writer="src.api.main._tokenization_tilt_loop")
+            # r={"ok": False, "refused": False} → "error"
+            await _record_loop_attempt(
+                "_tokenization_tilt_loop", "error",
+                reason="收盘后 38h 仍未就绪:barred=['ONDO', 'POL', 'TRUMPCOIN']",
+                detail={"written": 0, "nav": None,
+                         "barred": ["ONDO", "POL", "TRUMPCOIN"],
+                         "stale_in_source": ["coingecko_pro_ohlc"],
+                         "ok": False, "refused": False},
+                writer="src.api.main._tokenization_tilt_loop")
+    asyncio.run(_run())
+    outcomes = [c["outcome"] for c in captured]
+    print(f"  T17 outcomes = {outcomes}")
+    assert outcomes == ["ok", "refused", "error"], (
+        f"outcome mapping broken: {outcomes}")
+    # Detail fields must survive intact — S-427 audit gate depends on
+    # `barred` and `stale_in_source` being queryable per-iteration.
+    refused_detail = captured[1]["detail"]
+    assert refused_detail["barred"] == ["ONDO", "POL"], (
+        f"barred list lost: {refused_detail['barred']}")
+    assert refused_detail["stale_in_source"] == ["coingecko_pro_ohlc"], (
+        f"stale_in_source lost: {refused_detail['stale_in_source']}")
+    error_detail = captured[2]["detail"]
+    assert "TRUMPCOIN" in error_detail["barred"], (
+        f"error-path barred list lost: {error_detail['barred']}")
+    print(f"✓ T17: _tokenization_tilt_loop outcome mapping + audit fields preserved")
+
+
 if __name__ == "__main__":
     print("── A-408-2 / S-408-2 loop_attempt smoke ──")
     tests = sorted(

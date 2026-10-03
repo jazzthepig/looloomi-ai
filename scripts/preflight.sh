@@ -198,6 +198,19 @@ python3 -m src.research.validation.tests.test_a_408_2_loop_attempt_smoke
 #                deep_panel_collector call site / price_route false-positive
 #                lock / writer attribution / cumulative writer inventory.
 python3 -m src.research.validation.tests.test_a_408_3_write_log_coverage_smoke
+# 3a-quater-A. A-408-4 (2026-10-03) — 4 data-collection loops
+#               (`_forward_record_loop` / `_deep_panel_loop` /
+#               `_hyperliquid_loop` / `_market_state_loop`) wired to
+#               `_record_loop_attempt`. These are S-405 28 zero-row
+#               root cause: silent failures had `_beat()` heartbeat
+#               but NO per-iteration record. Structural guards pin
+#               site count + outcome enum + reason preservation.
+#               _hyperliquid_loop explicitly NO refused (S-294 design
+#               intent: failure is always a fault, never by-rules).
+#               _deep_panel_loop SourcePolicyError is refused (design
+#               intent per S-323i/l, not failing). _market_state_loop
+#               uses StoreResult typed object.
+python3 -m src.research.validation.tests.test_a_408_4_data_collection_loops_smoke
 # 3a-quater. S-410 (2026-09-23) — `_cg_panel_loop` failed 366× with "too many
 #               values to unpack (expected 2)" because S-378b-C1 added a 3rd
 #               return value (`latest_hint`) to `deep_panel_symbols_detailed()`
@@ -1901,7 +1914,7 @@ python3 -m paper_trading.tests.test_run_paper_a17_smoke || {
 
 # ── S-427 代币化基础设施倾斜(② β+ 前向记录,无状态重算)──────────────
 # fusion 22 天 ret ≡ −0.05%(只扣成本不记价格)那一类在这里被钉死:价格必须进 NAV,读不到必须拒绝。
-python3 -m pytest tests/test_tokenization_tilt.py tests/test_beta_plus_momentum.py tests/test_cg_ohlc_candle_close_date.py tests/test_style_header.py tests/test_interpret_layer.py tests/test_nav_kernel.py tests/test_interpret_validate.py tests/test_cg_channels.py tests/test_one_crypto_daily_writer.py tests/test_allocation_l3.py tests/test_cg_coin_map_manual_is_sticky.py -q || {
+python3 -m pytest tests/test_tokenization_tilt.py tests/test_beta_plus_momentum.py tests/test_cg_ohlc_candle_close_date.py tests/test_style_header.py tests/test_interpret_layer.py tests/test_nav_kernel.py tests/test_interpret_validate.py tests/test_cg_channels.py tests/test_one_crypto_daily_writer.py tests/test_allocation_l3.py tests/test_cg_coin_map_manual_is_sticky.py tests/test_core_cap.py -q || {
   echo "  ✗ S-427/S-429 forward books — do not push"; exit 1; }
 echo "  ✓ S-427 tokenization tilt · S-429 β+ momentum books"
 
