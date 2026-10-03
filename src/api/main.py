@@ -414,8 +414,9 @@ async def _forward_record_loop():
             print(f"[FWD] record={_rec.get('verdict')} · pit={_pit.get('verdict')}"
                   f"(lag={_pit.get('lag_days')}d) · {_rec.get('reason', '')[:90]}")
             _w = int((r.get("depth_divergence") or {}).get("written") or 0)
-            await _beat("_forward_record_loop", ok=bool(r.get("ok")) and _w > 0,
-                        refused=bool(r.get("ok")) and _w == 0,
+            _ok = bool(r.get("ok"))
+            await _beat("_forward_record_loop", ok=_ok and _w > 0,
+                        refused=_ok and _w == 0,
                         detail={"forward_record": {
                             k: _rec.get(k) for k in
                             ("verdict", "n_days", "n_gaps", "tracking_diff",
@@ -424,13 +425,37 @@ async def _forward_record_loop():
                             # 属性,是循环还在按时跑的副产品 —— 停了就回来。
                             "pit_lag": {k: _pit.get(k) for k in
                                         ("verdict", "lag_days", "newest_bar")}},
-                        error=None if r.get("ok") else
+                        error=None if _ok else
                         f"stalled={[b['book'] for b in r['books'] if b['status']=='stalled']} "
                         f"problems={str((r.get('depth_divergence') or {}).get('problems'))[:90]}")
+            # A-408-4: per-iteration record (success / refused / error path).
+            # `r` shape from forward_record_keeper.run_once: {ok, books[],
+            # depth_divergence{written, refused, problems}, forward_record{},
+            # pit_lag{}}. ok=True+w=0 ⇒ refused (合法 empty day), ok=False ⇒ error.
+            await _record_loop_attempt(
+                "_forward_record_loop",
+                "ok" if _ok and _w > 0
+                else "refused" if _ok
+                else "error",
+                reason=None if _ok else
+                f"stalled={[b['book'] for b in r['books'] if b['status']=='stalled']} "
+                f"problems={str((r.get('depth_divergence') or {}).get('problems'))[:200]}",
+                detail={"ok":                 _ok,
+                        "depth_written":      _w,
+                        "forward_verdict":    _rec.get("verdict"),
+                        "pit_verdict":        _pit.get("verdict"),
+                        "pit_lag_days":       _pit.get("lag_days"),
+                        "n_books":            len(r.get("books") or [])},
+                writer="src.api.main._forward_record_loop")
         except Exception as _e:
             # Loud: the whole point of this loop is that silence was the bug.
             print(f"[FWD] ⚠️  forward-record pass FAILED: {_e}")
             await _beat("_forward_record_loop", ok=False, error=str(_e)[:200])
+            # A-408-4: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_forward_record_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._forward_record_loop")
         await _asyncio.sleep(24 * 3600)
 
 
@@ -524,6 +549,21 @@ async def _deep_panel_loop():
             await _beat("_deep_panel_loop", ok=bool(r.get("ok")),
                         refused=bool(r.get("refused")),
                         error=r.get("diagnosis") or r.get("error"))
+            # A-408-4: per-iteration record (success / refused path).
+            # `r` shape from collect_deep_panel: {ok, refused, symbols_ok,
+            # symbols_total, rows_upserted, elapsed_s, diagnosis, error}.
+            # ok=True ⇒ "ok", refused=True ⇒ "refused" (legit empty day).
+            await _record_loop_attempt(
+                "_deep_panel_loop",
+                "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("diagnosis") or r.get("error") or "")[:400] or None,
+                detail={"symbols_ok":     r.get("symbols_ok"),
+                        "symbols_total":  r.get("symbols_total"),
+                        "rows_upserted":  r.get("rows_upserted"),
+                        "elapsed_s":      r.get("elapsed_s"),
+                        "ok":             r.get("ok"),
+                        "refused":        r.get("refused")},
+                writer="src.api.main._deep_panel_loop")
         except SourcePolicyError as _e:
             # S-323i/l:**这不是故障,是策略拒绝。**
             # `collect_deep_panel` 对 262 个标的扇出 Binance 免费镜像,
@@ -536,9 +576,20 @@ async def _deep_panel_loop():
             # 不是让这个循环重新跑起来。
             print(f"[DEEP] ⛔ refused by source policy: {_e}")
             await _beat("_deep_panel_loop", ok=False, refused=True, error=str(_e))
+            # A-408-4: per-iteration record (source-policy refusal — design intent).
+            await _record_loop_attempt(
+                "_deep_panel_loop", "refused",
+                reason=f"SourcePolicyError: {str(_e)[:300]}",
+                detail={"source_policy_refused": True},
+                writer="src.api.main._deep_panel_loop")
         except Exception as _e:
             print(f"[DEEP] ⚠️  deep-panel collection FAILED: {_e}")
             await _beat("_deep_panel_loop", ok=False, error=str(_e))
+            # A-408-4: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_deep_panel_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._deep_panel_loop")
         await _asyncio.sleep(24 * 3600)
 
 
@@ -621,11 +672,36 @@ async def _hyperliquid_loop():
             # 生产者与消费者对同一件事用了两个名字,信息就在最需要它的那条路上被丢掉。
             # 与 S-242(接收端漏写顶层 `macro_regime`)同形。
             _why = (r.get("diagnosis") or r.get("error") or r.get("reason") or "")
-            await _beat("_hyperliquid_loop", ok=bool(r.get("ok")),
-                        error=None if r.get("ok") else str(_why))
+            _ok = bool(r.get("ok"))
+            await _beat("_hyperliquid_loop", ok=_ok,
+                        error=None if _ok else str(_why))
+            # A-408-4: per-iteration record (success / error path).
+            # `r` shape from collect_venue_marks: {ok, n_perps,
+            # rows_written, funding_time, elapsed_s, diagnosis, error,
+            # reason}. Per inline S-294: NO refused path — failure is
+            # always a fault (venue unreachable OR write failed), never
+            # "按规矩拒绝". Preserve `diagnosis`/`error`/`reason` verbatim
+            # so the audit table shows the actual write-failure message
+            # (S-324: producer used reason, consumer read diagnosis/error).
+            await _record_loop_attempt(
+                "_hyperliquid_loop",
+                "ok" if _ok else "error",
+                reason=str(_why)[:400] or None,
+                detail={"ok":             _ok,
+                        "n_perps":        r.get("n_perps"),
+                        "rows_written":   r.get("rows_written"),
+                        "funding_time":   str(r.get("funding_time") or ""),
+                        "elapsed_s":      r.get("elapsed_s"),
+                        "venue_warmed":   True},
+                writer="src.api.main._hyperliquid_loop")
         except Exception as _e:
             print(f"[HL] ⚠️  venue marks FAILED: {_e}")
             await _beat("_hyperliquid_loop", ok=False, error=str(_e))
+            # A-408-4: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_hyperliquid_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._hyperliquid_loop")
         await _asyncio.sleep(6 * 3600)
 
 
@@ -973,6 +1049,12 @@ async def _tokenization_tilt_loop():
     """② β+ 代币化基础设施倾斜的前向记录(S-427)。每小时一次;每次从起点整条重算、整条 upsert。
 
     幂等、无状态。收盘后终值未就绪 ⇒ refused;收盘后 30h 仍未就绪 ⇒ 失败。表 `tokenization_tilt_daily`。
+
+    A-408-2c (2026-10-03): wired `_record_loop_attempt` — refused sequence
+    now carries the upstream reason (which token was barred / which source
+    was stale). Same shape as `_hl_book_loop` (A-408-2b): the 2026-10-03
+    ops dashboard showed 8 cycles refusing without per-iteration audit
+    rows; now each iteration persists its refusal reason verbatim.
     """
     await _asyncio.sleep(_boot_delay(330))
     while True:
@@ -985,9 +1067,32 @@ async def _tokenization_tilt_loop():
                         detail={"written": r.get("written"), "nav": r.get("nav"), "barred": r.get("barred"),
                                 "stale_in_source": r.get("stale_in_source")},
                         error=None if r.get("ok") else str(r.get("reason"))[:200])
+            # A-408-2c: per-iteration record (success / refused path).
+            # `r` shape from tokenization_tilt.run_once: {ok, refused,
+            # written, nav, barred, stale_in_source, reason}. Persist
+            # verbatim so the audit table shows why each refusal fired
+            # (which token was barred, which source was stale).
+            await _record_loop_attempt(
+                "_tokenization_tilt_loop",
+                "ok" if r.get("ok") and not r.get("refused")
+                else "refused" if r.get("refused")
+                else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail={"written":        r.get("written"),
+                        "nav":            r.get("nav"),
+                        "barred":         r.get("barred"),
+                        "stale_in_source": r.get("stale_in_source"),
+                        "ok":             r.get("ok"),
+                        "refused":        r.get("refused")},
+                writer="src.api.main._tokenization_tilt_loop")
         except Exception as _e:
             print(f"[TOKEN-TILT] ⚠️  pass FAILED: {_e}")
             await _beat("_tokenization_tilt_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            # A-408-2c: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_tokenization_tilt_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._tokenization_tilt_loop")
         await _asyncio.sleep(3600)
 
 
@@ -995,6 +1100,43 @@ async def _tokenization_tilt_loop():
 async def _start_tokenization_tilt_loop():
     _asyncio.create_task(_tokenization_tilt_loop())
     print("[TOKEN-TILT] ✅ forward record scheduled (tokenization_tilt_daily, 2 arms)")
+
+
+async def _core_cap_loop():
+    """① 持有市场(市值加权、单币 ≤ 40%,S-473)+ α=0.5 / α=0 对照臂的前向记录。每小时一次;每次从起点
+    整条重算、整条 upsert,幂等无状态。收盘后终值未就绪 ⇒ refused;30h 仍未就绪 ⇒ 失败。表 `core_cap_daily`。
+    判活:`select arm, max(d) from core_cap_daily group by 1` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(360))
+    while True:
+        try:
+            from src.data.signals.core_cap import run_once as _cc_run
+            r = await _cc_run()
+            print(f"[CORE-CAP] written={r.get('written')} nav={r.get('nav')} · {str(r.get('reason'))[:120]}")
+            await _beat("_core_cap_loop", ok=bool(r.get("ok")) and not r.get("refused"),
+                        refused=bool(r.get("refused")),
+                        detail={"written": r.get("written"), "nav": r.get("nav"), "core_top": r.get("core_top"),
+                                "stale_in_source": r.get("stale_in_source")},
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_core_cap_loop",
+                "ok" if r.get("ok") and not r.get("refused") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail={"written": r.get("written"), "nav": r.get("nav"), "core_top": r.get("core_top"),
+                        "stale_in_source": r.get("stale_in_source")},
+                writer="src.api.main._core_cap_loop")
+        except Exception as _e:
+            print(f"[CORE-CAP] ⚠️  pass FAILED: {_e}")
+            await _beat("_core_cap_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_core_cap_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._core_cap_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_core_cap_loop():
+    _asyncio.create_task(_core_cap_loop())
+    print("[CORE-CAP] ✅ ① cap-weighted core scheduled (core_cap_daily, 3 arms)")
 
 
 async def _style_header_loop():
@@ -1430,9 +1572,26 @@ async def _market_state_loop():
             await _beat("_market_state_loop", ok=res.ok, refused=res.refused,
                         error=res.reason or None,
                         detail={"rows": res.rows, "zscore_pass": res.zscore_pass})
+            # A-408-4: per-iteration record (success / refused / error path).
+            # `res` is a StoreResult (typed object, not dict): .ok / .refused /
+            # .reason / .rows / .zscore_pass. Same shape as `_cg_panel_loop`.
+            await _record_loop_attempt(
+                "_market_state_loop",
+                "ok" if res.ok else "refused" if res.refused else "error",
+                reason=str(res.reason)[:400] if res.reason else None,
+                detail={"ok":           res.ok,
+                        "refused":      res.refused,
+                        "rows":         res.rows,
+                        "zscore_pass":  res.zscore_pass},
+                writer="src.api.main._market_state_loop")
         except Exception as _e:
             print(f"[MSV] ⚠️  daily recompute failed: {_e}")
             await _beat("_market_state_loop", ok=False, error=str(_e))
+            # A-408-4: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_market_state_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._market_state_loop")
         await _asyncio.sleep(_MARKET_STATE_INTERVAL_S)
 
 

@@ -2,19 +2,21 @@
 
 规则来自 `docs/ALLOCATION_ARCHITECTURE_v0.2.md` §3 L3 与 Jazz 09-29 的决定:
 1. **① 是默认。** 其他账本的权重从 ① 里拨出;没有证据就是 0,① 就是 100%。
-2. **其他账本的权重 = 0.25 × max(0, μ) / σ²**(μ、σ = 相对它自己基准的日超额,年化),
+2. **其他账本的权重 = 0.25 × max(0, μ) / σ²**(μ、σ = 相对 ① 的日超额,年化),
    前提是超额的近似 95% 下界 > 0。证据越弱权重越小 —— 连续,不是开关。
 3. **上限:** 单个账本 ≤ 80%;单一标的净持仓 ≤ 40%。v0 还没有标的层持仓(L4 未建),
    所以**任何非 ① 账本都按「可能全仓一个币」处理,单本上限取 40%**;① 是 24 名等权,不受此限。
    ④ 与事件类在前向记录不足 60 天时合计 ≤ 10%。
-4. **证据只算前向:** 每本账的证据从 `INCEPTION` 起算。账本表里更早的行有些是历史回放
+4. **① 是 `core_cap`(市值加权、单币 ≤ 40%,S-473;l3-v0 时是等权的 `beta_core`)。其余账本的证据 = 相对 ① 的超额**
+   —— 从 ① 里拨出一份权重给它,挣到的就是它减 ① 的差;不是相对它自己挑的基准。
+5. **证据只算前向:** 每本账的证据从 `INCEPTION` 起算。账本表里更早的行有些是历史回放
    (β+ / 代币化倾斜整条重算),回放给先验、前向定结论(v0.2 §5);先验接入等评估层
    (`rr_matrix_daily`)建好再说。所以头几周 ① = 100% 是**预期结果**,不是故障。
-5. **总敞口 e ∈ [−0.3, 1.3]**,默认 1.0。v0 里只有人工通道能改它;状态驱动的择时等 L1 有经检验的信号再接
+6. **总敞口 e ∈ [−0.3, 1.3]**,默认 1.0。v0 里只有人工通道能改它;状态驱动的择时等 L1 有经检验的信号再接
    (M-196 判了 FAIL,解读层权重 0)。
-6. **人工通道(⓪):** 每条偏置选期限 —— 7 天 / 14 天 / 1 个月 / 全委托。前三档到期自动失效;
+7. **人工通道(⓪):** 每条偏置选期限 —— 7 天 / 14 天 / 1 个月 / 全委托。前三档到期自动失效;
    「全委托」= 不设偏置,敞口交给 L3。
-7. **每天一份「为什么」**,写在 ① 那一行。
+8. **每天一份「为什么」**,写在 ① 那一行。
 
 纸面 NAV:当天收益 = 敞口 × Σ(前一天定的权重 × 账本当天收益)。1 − 敞口 的部分是零收益现金;
 敞口为负 = 整本组合反向。各账本自身已扣成本;**配置层再平衡成本 v0 不计**。
@@ -29,8 +31,8 @@ from typing import Any, Mapping, Optional
 
 import pandas as pd
 
-INCEPTION = "2026-10-01"
-CORE = "beta_core"
+INCEPTION = "2026-10-02"
+CORE = "core_cap"
 KELLY = 0.25
 SINGLE_BOOK_CAP = 0.80
 SINGLE_ASSET_CAP = 0.40
@@ -40,7 +42,7 @@ FORWARD_DAYS_FOR_ALPHA = 60
 MIN_DAYS = 20
 EXPOSURE_RANGE = (-0.3, 1.3)
 HORIZONS = {"7d": 7, "14d": 14, "1m": 30, "delegate": 0}
-CODE_REF = "l3-v0"
+CODE_REF = "l3-v1"
 
 
 @dataclass(frozen=True)
@@ -172,7 +174,7 @@ async def run_once() -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
     from src.data.accounting.registry import BOOKS, load_navs
 
-    navs, bench = await load_navs()
+    navs, _bench = await load_navs()
     core = navs.get(CORE)
     if core is None or core.dropna().empty:
         return {"ok": False, "reason": "① beta_core 读不到 NAV —— 不出配置"}
@@ -186,9 +188,9 @@ async def run_once() -> dict[str, Any]:
     decisions, alloc_rows = {}, []
     for d in days:
         ts = pd.Timestamp(d)
+        core_w = forward_window(core, ts)
         books = {b.id: {"layer": b.layer, "status": b.status, "caveat": b.caveat,
-                        "evidence": evidence(forward_window(navs.get(b.id), ts),
-                                             forward_window(bench.get(b.id), ts))}
+                        "evidence": evidence(forward_window(navs.get(b.id), ts), core_w)}
                  for b in BOOKS}
         dec = decide(d, books, ovs)
         decisions[d] = dec

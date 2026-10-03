@@ -22,6 +22,7 @@
     "cis_backtest_results",
     "cis_scores",
     "combined_book_nav",
+    "core_cap_daily",
     "corporate_treasury_history",
     "crowd_clock_log",
     "dingge_paper_nav",
