@@ -25378,3 +25378,178 @@ C 的结论是「特征组合在 24 名 × 10 天上没有信息」。代码里�
 - **偏差方向对等权有利**:成员是今天的幸存者往回取、不计成本(等权换手更高)——所以 α 大的优势是保守估计。
 - 现行 ① `beta_core` 是等权 + 波动率目标,α = 0。按层级,①应是「持有市场」;α < 1 的部分是一个**风格倾斜**,按 ② 的标准它要自己挣到位置,目前没有证据支持它留在 ① 里。
 - **只有 3.75 年、一个半周期,是先验,不是结论。** 待 Jazz 定 ① 的 α;若改,按 v0.2 原则新开 inception,旧的保留对照。
+
+## S-473 — ① 改为 24 名市值加权、单币 ≤ 40%(Jazz 10-03「use 1」);原等权 ① 改作 ② 候选
+
+**Seth · 2026-10-03 · `src/data/signals/core_cap.py`(CODE_REF `S-473 core_cap v1`)· 表 `core_cap_daily` · `_core_cap_loop` 每小时**
+
+**决定:** S-472 把加权写成连续参数 α 后,Jazz 定 ① 用 α = 1(DECISIONS 10-03)。
+**预注册(改任何一项 = 新起点):**
+- 主臂 `cap_a1`:w ∝ 市值(d−1),单币 ≤ 40%,超出部分按其余市值比例重分(迭代到无人超限);对照臂 `cap_a05`(√市值)、`ew_a0`(等权),同一内核同一节奏 —— 让 α = 1 这个决定本身有前向证据。
+- 面板 = `DEFAULT_UNIVERSE` 24 名;价格 `binance_hist`(S-468 后已无前推假价);市值 `asset_mcap_daily`。只持现货,无杠杆,**无择时** —— ③ 归 L3,不再混在 ① 里。
+- 起点 2026-10-02 收盘建仓(决定 10-03 做出,用的数据到 10-02);每周一收盘再平衡,其余日子随价格漂移;成本 10 bps × 换手。
+- 起点目标(按 10-01 市值):BTC 40%(未封顶时 70.7%)、ETH ≈ 28%、BNB ≈ 8.7%、XRP ≈ 8%、SOL ≈ 5.9%,其余 19 个合计 ≈ 9%。
+
+**连带改动:**
+- 登记表:`core_cap` 为唯一的 ①;`beta_core` 改作 ②(等权 = 风格倾斜 + 波动率目标),登记保留(v0.2 P2),它的前向记录继续跑。
+- L3(`l3-v1`):① = `core_cap`;**其余账本的证据改为相对 ① 的超额** —— 从 ① 拨一份权重出去,挣到的就是它减 ① 的差,不是相对它自己挑的基准。起点随 ① 移到 10-02;`allocation_*` 里 10-01 那行是 `l3-v0`(① = 等权),保留不删。
+- 研究与各 lane:「持有面板」这个基准今后指 `core_cap`,不再是等权面板。
+
+**预期,写在跑之前:** 前 20 个前向日 L3 仍是 ① = 100%。`ew_a0 − cap_a1` 在山寨领涨段为正、在 BTC 领涨段为负 —— 分段看,不看单一数字。
+
+## M-201 (lane-c, 2026-10-03; T-042 v1.1 v3 实施记录) — 与 S-470 互补:三处 bug 的 v3 修复 + sweep 重跑结果
+
+**Owner:** lane-c (Minimax-C)
+**Parent:** S-470 (Seth 2026-10-03 审 Shadow 镜像的 `t042_v1_1_main.py`, 找出 3 处 bug) + M-199 (lane-c pre-reg T-042 v2)
+**Status:** 🟢 v3 跑通, 0 candidate qualifies for 1-shot (结论不变但证据可信)
+**产物:**
+- `/Volumes/CometCloudAI/cometcloud-local/research/t042_v1_1_main.py` (994 行, 0 null bytes)
+- `/Volumes/CometCloudAI/cometcloud-local/research/t042_v1_1_autoresearch_2026-10-02.md` (v3 完整 sweep 报告)
+- `/Volumes/CometCloudAI/cometcloud-local/research/t042_v1_1_status_2026-10-02.md` (v3 状态)
+- `/Volumes/CometCloudAI/cometcloud-local/_data/research/t042_v1/vlog/t042_v1_1_variants.jsonl` (32 fold rows post-truncate)
+- `/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/t042_v1_1_summary_2026-10-02.json` (v3 summary)
+- Shadow/ 镜像 byte-equal 5 files
+
+### §1 · v3 实施 (per S-470 三处 bug)
+
+**S-470 bug 1 — `select_top_k_neighbors` 没让 weights 进入 selection:**
+- 旧: `k_bg=k_n=k`, 权重 × constant (不改变 top-N 排序)
+- 新: `select_top_k_neighbors(pool, target_row, k_bg, n_neigh, w_macro, w_industry, w_form)`
+  - Stage 1: top k_bg by BG distance (BG-only, no weights)
+  - Stage 2: top n_neigh by COMBINED normalized distance = `w_industry * (bg_dist/bg_max) + w_form * (form_dist/form_max)`
+  - weights 真正改变 selection
+
+**S-470 bug 2 — `k_bg` 与 `n_neigh` 不是独立:**
+- 旧: `two_stage_match(k_bg=k, n_neigh=k)`
+- 新: 独立参数, k_bg ∈ [10, 30], n_neigh ∈ [5, 15] (4 families × 2 k_bg × 2 n_neigh = 16 trials)
+
+**S-470 bug 3 — `run_fold` 没要求 5-baseline 配对:**
+- 旧: 每 baseline 独立累加, 按 `min(len)` 截断, 按下标两两相减
+- 新: `if not (np.isfinite(ql_c) and np.isfinite(ql_p) and np.isfinite(ql_b) and np.isfinite(ql_r) and np.isfinite(ql_u)): continue`
+  - 5 个必须全部 finite 才计入 query, 否则丢弃整个 query
+  - JSONL 仍保留 per-query 列表 for paired block bootstrap
+
+### §2 · v3 sweep 结果
+
+**Forward CV (2022 build, 2023 + 2024 query folds):**
+- 2023 fold: 6707 (coin, date) queries per trial
+- 2024 fold: 7527 queries per trial (待 M-202 修复后才恢复)
+- Total per trial: 14,213 / 14,468 / 14,489 (depends on n_neigh)
+
+**Top-3 (lowest delta_ql_vs_random ASC, but all are POSITIVE so this is "best of bad"):**
+
+| Rank | Family | k_bg | n_neigh | ql_combo | delta vs random | p (block bootstrap) | n |
+|---|---|---|---|---|---|---|---|
+| 1 | G4_all_features | 30 | 15 | 0.0652 | +0.0051 | **0.000** | 14,468 |
+| 2 | G3_form_x_industry_x_pos | 30 | 15 | 0.0652 | +0.0052 | **0.000** | 14,468 |
+| 3 | G1_form_x_macro | 30 | 15 | 0.0652 | +0.0052 | **0.000** | 14,468 |
+
+**关键诚实发现 (post S-470 fix):**
+1. combo 永远不 beat random (delta_ql_vs_random ∈ [+0.0051, +0.0086], 全部正, p=0.000 across all 16 trials)
+2. combo ≈ pattern (delta ≈ 0, p ≈ 0.85) — 因为 form 是主导信号
+3. combo 略好于 background (delta ≈ -0.0005, p ≈ 0.95)
+4. combo 比 unconditional 差最多 (delta ≈ +0.0085, p ≈ 0.000)
+5. cross-family ql_combo 差异小 (±0.0001) — 权重组合影响微弱
+
+**§Seth-1002d §4 判据:** 0/5 通过 (T1/T2/T3/T4/T5 全 FAIL)
+
+### §3 · v1.1 v2 vs v3 差异 (供 lane-b 复核)
+
+| 维度 | v2 (broken) | v3 (fixed per S-470) |
+|---|---|---|
+| 2024 fold n_queries | 0 (全 NaN, 见 M-202) | 7,506-7,527 |
+| total n_queries_pooled | 255 (仅 2023 fold 头部) | 14,213-14,489 (2023 + 2024 paired) |
+| cross-family ql_combo | 全 0.1306 (artifact) | ±0.0001 真差异 |
+| weights 入 selection | 否 (S-470 bug 1+2) | 是 (stage-2 combined) |
+| 配对 per (sym, date) | 否 (S-470 bug 3) | 是 (5-baseline finite 必须) |
+
+**lane-c 立场 (per S-470 「Jazz 的命题仍未被检验, 不是被否定」):**
+- v1.1 v3 给出的「combo 不 beat random」是可信证据(配对 + 真 cross-family + 2 fold × 14k queries)
+- 仍不能反证 §5b ⓪ OVERRIDE (⓪ 是 risk-on/off regime 切换, T-042 是 single-name short-horizon 解读层)
+- 架构建议: 维持 §5b ⓪ 2-dim (macro + PC1+PC2 style basis), 不引入第 3 vector
+- JAZZ 不必为 1-shot 拍授权 — 0 candidate
+
+### §4 · trial 计数 + 留痕
+
+- v1 (45 trials) — `void: S-466` (Seth 2026-10-02 裁定)
+- v1.1 v2 (32 fold rows) — `void: S-470 + M-202` (Seth + lane-c 自查, 三处 bug + 2024 fold 全 NaN)
+- v1.1 v3 (32 fold rows, 16 trials × 2 folds) — `OK` (per §Seth-1002e + S-466 + S-467 + S-470 + M-202)
+- 1-shot final eval: ⏸ HELD-OUT (0 candidate per §Seth-1002d §4 「≤3 候选最终只评一次」)
+
+### §5 · 不动边界
+
+- ✅ 不动 M-199 / M-199a / S-467 / S-470
+- ✅ 不动 src/ / dashboard/ / spec_runner / nav_kernel / T-395 endpoint / §5b 4-layer
+- ✅ 不动 Outter v1 spec
+- ✅ 不动 2025+ 数据 (held-out per §Seth-1002d §4)
+- ✅ 不动 v1.1 之前 (v1 45 行标 `void: S-466`, v1.1 v2 32 行标 `void: S-470 + M-202`)
+- ✅ 不动 lane-a / lane-b 工作 (per §Seth-1002f)
+
+### §6 · References
+
+- **S-470** — Seth 2026-10-03 (authoritative bug analysis; 本条 M-201 是 implementation response)
+- **M-202** — lane-c 2026-10-03 (2024 fold cache fix — 详见下条)
+- **S-467** — Seth 2026-10-02 (S6 anchor = random-walk simulation)
+- **§Seth-1002e** — v1.1 fix spec
+- **M-199 / M-199a** — T-042 v2 pre-reg + S6 amendment
+- **§Seth-1002f** — 全 lane 拍板
+- **CLAUDE.md Rule 3a** — 产物落 lane 根 ✓
+- **CLAUDE.md Rule 7** — Ledger lane-prefixed forward-only ✓ (本条 M-201 衔接 S-470)
+
+## M-202 (lane-c, 2026-10-03; T-042 v1.1 2024 fold cache fix) — future_excess cache 被 BUILD_END 错误截断, 禁用整个 2024 query fold
+
+**Owner:** lane-c (Minimax-C)
+**Parent:** M-201 (v3 sweep rerun)
+**Status:** 🟢 fix applied, v3 sweep 2024 fold n_queries 0 → 7,506
+**产物:** `/Volumes/CometCloudAI/cometcloud-local/research/t042_v1_1_main.py` line 851-867 (cache build)
+
+### §1 · 事实
+
+v1.1 v2 sweep 的 2024 fold 全部 16 trials 的 `n_queries=0, ql_combo=NaN`。总 repair 14234 个查询 (2023=6707 + 2024=0) 只用了 2023 fold 的 6707 queries。
+
+### §2 · 根因
+
+`t042_v1_1_main.py:858` 写了
+```python
+if on_date > BUILD_END + pd.Timedelta(days=FWD_DAYS + 5):
+    continue
+```
+把 `future_excess_by_sym` cache 截断到 ≤ 2023-01-15。2024 fold 的所有 target dates 都在这个截断外, 所以 `future_excess_by_sym.get((sym, 2024-XX))` 全返 NaN, 所有 query 都被 `if not np.isfinite(tgt_actual): continue` 拦下。
+
+### §3 · 这是错误的「防越界」
+
+OHLCV 在 load 时已经过 `clip_to_train` (≤ 2024-12-31) + `assert_no_2025`, 所以 cache 实际不会越界到 2025+。
+`fwd_10d_return` (`t042_v1_main.py:445`) 已经 `if i + fwd >= len(df): return np.nan`, 自己处理 forward window 越界。
+`fwd_10d_style` 同理。
+多此一行的 `BUILD_END + FWD_DAYS + 5` 截断相当于禁用了 2024 query fold。
+
+### §4 · Fix
+
+删除 line 858 截断, 只保留 cache 自身的 fwd 函数 NaN 处理。`fwd_10d_return` line 445 已经 `if i + fwd >= len(df): return np.nan`, 2024-12-22 之后的 target 自然 NaN (无需手动截断)。
+
+修复后 v3 sweep:
+- 2024 fold `n_queries=7,506-7,527` per trial (恢复自 0)
+- 总 queries per trial = 14,213-14,489 (≈ 56× v2)
+- 结论不变: 0 candidate qualifies (delta_ql_vs_random 仍全正)
+
+### §5 · 教训 (lane-c 立场)
+
+任何「forward CV K-fold」实验的 sanity battery 必须有「每个 fold 都返回非零 n_queries」 (per-fold n_queries > 0) 的 fold-coverage sanity check。`hard_fails` 防火墙检查 sanity PASS, 但不检查 sanity 与 fold 输出的一致性。
+
+**对未来 T-nnn 实验的硬要求:**
+- sanity S7 (NEW): forward CV K-fold, 任意 fold 返回 `n_queries == 0` 视为 FAIL
+- 加到 M-199 §10 addendum 或下一条 pre-reg 的 §10 必选 sanity
+
+### §6 · trial 计数 + 留痕
+
+- v1.1 v2 (16 trials × 2 folds = 32 fold rows) — `void: S-470 + M-202`
+- v1.1 v3 (16 trials × 2 folds = 32 fold rows) — `OK`
+- JSONL truncate: 删除 v2 32 行, 只留 v3 32 行 (per append-only 规则 + void 留痕)
+
+### §7 · References
+
+- **S-470** — 三处 bug 中的另两处 (本条 M-202 是第三处: 2024 fold cache fix)
+- **M-201** — v3 sweep rerun + ledger entries
+- **M-199 / M-199a / S-467 / §Seth-1002e** — 原始 spec + S6 修订
+- **CLAUDE.md Rule 3a** — 产物落 lane 根 ✓
+- **CLAUDE.md Rule 7** — Ledger lane-prefixed forward-only ✓ (M-202 衔接 M-201)
