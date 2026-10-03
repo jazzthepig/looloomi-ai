@@ -208,12 +208,17 @@ async def run_once(*, client, supabase_query, supabase_upsert,
     pairs = pairs_for_backfill(res)
     _vendor_known = [(s, cid) for s, cid in known.items()
                      if resolved_from.get(s) in (FROM_DB, FROM_UNIQUE, FROM_MANUAL)]
-    pairs += _vendor_known
+    # S-471:市值裁决的已知映射**也要每天写** —— 只是不享受 vendor_paired 放行,必须先过
+    # `_verify_mapping` 对 binance_hist 的同日收盘校验。原来这里整批丢掉它们,于是 BTC / ETH / SOL
+    # 在内的 18 个核心名(① 面板 24 个里的 18 个)从来没有日更写入端;S-459 关掉 collect_ohlcv
+    # 的加密写入后,它们只剩手动回填 —— 10-02 起 HL 账本与代币化倾斜因缺收盘而拒绝记账。
+    _mcap_known = [(s, cid) for s, cid in known.items() if resolved_from.get(s) == FROM_MCAP]
+    _vendor_syms = {s for s, _ in pairs} | {s for s, _ in _vendor_known}
+    pairs += _vendor_known + _mcap_known
     pairs = list(dict.fromkeys(pairs))
     out["n_pairs"] = len(pairs)
     out["n_vendor_paired"] = len(_vendor_known)
-    out["n_mcap_required_check"] = sum(
-        1 for s in known if resolved_from.get(s) == FROM_MCAP)
+    out["n_mcap_required_check"] = len(_mcap_known)
 
     if not pairs:
         out["status"] = "skipped"
@@ -231,7 +236,7 @@ async def run_once(*, client, supabase_query, supabase_upsert,
         # 对照行时「不可校验」应当放行并记为未校验,而不是拒写 —— 否则面板
         # 结构上永远扩不出已有的 25 个标的 (S-307)。
         # 市值裁决出来的不在这个集合里,它们仍然必须先过校验。
-        _vendor = {s_ for s_, _ in pairs}
+        _vendor = _vendor_syms          # 市值裁决的不在里面:查不到对照 ⇒ 拒写,不放行
         # **按 asset_class 分组** (S-313) —— `backfill` 一次只接受一个 class,
         # 而面板里有 6 个。传一个统一值会给 8 个非 Crypto 标的贴错标签,
         # 而错的标签比缺失的标签更难发现。

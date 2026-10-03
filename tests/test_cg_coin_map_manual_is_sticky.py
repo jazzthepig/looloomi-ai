@@ -46,3 +46,35 @@ def test_readable_map_leaves_manual_rows_alone(monkeypatch):
     out, upserts, gets = _run(rows, ["ONE", "BTC"], monkeypatch)
     assert upserts == [] and gets == []
     assert out["n_missing"] == 0
+
+
+def test_mcap_resolved_known_symbols_are_refreshed_but_must_pass_the_check(monkeypatch):
+    """S-471:BTC/ETH/SOL 在映射表里是 mcap_tiebreak —— 原来整批不进日更回填,① 面板 24 个里 18 个没有日更写入端。
+    现在它们进回填,但不在 vendor_paired 里(查不到对照就拒写,不放行)。"""
+    rows = [{"symbol": "BTC", "coin_id": "bitcoin", "resolved_from": "mcap_tiebreak"},
+            {"symbol": "AAVE", "coin_id": "aave", "resolved_from": "list_unique"},
+            {"symbol": "ONE", "coin_id": "harmony", "resolved_from": "manual_verified"}]
+    seen = {}
+
+    async def q(table, cols):
+        return rows
+
+    async def up(table, r, on_conflict):
+        return True
+
+    class Client:
+        async def get(self, *a, **k):
+            raise AssertionError("没有缺失的标的,不该去解析")
+
+    class Res:
+        rows_written, ok, per_symbol, reason = 3, True, (), ""
+
+    async def fake_backfill(pairs, **k):
+        seen["pairs"], seen["vendor"] = list(pairs), set(k["vendor_paired"])
+        return Res()
+    monkeypatch.setattr(bf, "backfill", fake_backfill)
+    out = asyncio.run(ps.run_once(client=Client(), supabase_query=q, supabase_upsert=up,
+                                  panel_symbols=["BTC", "AAVE", "ONE"], today="2026-10-03"))
+    assert ("BTC", "bitcoin") in seen["pairs"]
+    assert "BTC" not in seen["vendor"] and {"AAVE", "ONE"} <= seen["vendor"]
+    assert out["n_mcap_required_check"] == 1 and out["status"] == "ok"
