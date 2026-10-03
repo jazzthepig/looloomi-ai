@@ -1275,8 +1275,9 @@ async def _cg_panel_loop():
             from src.data.market.cg_panel_sync import run_once
 
             async def _q(table, cols):
+                # S-469:失败返回 None,不返回 [] —— 空表和读不到必须分得开。
                 rows = await supabase_rpc("cg_known_coin_map", {})
-                return rows if isinstance(rows, list) else []
+                return rows if isinstance(rows, list) else None
 
             async def _up(table, rows, on_conflict):
                 return await supabase_upsert_table(table, rows, on_conflict)

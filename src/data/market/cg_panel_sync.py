@@ -64,8 +64,8 @@ WRITES_TABLES = ("cg_coin_map",)
 LOOP_NAME = "_cg_panel_loop"
 
 
-async def _known_map(supabase_query) -> tuple[dict[str, str], dict[str, str],
-                                               dict[str, str]]:
+async def _known_map(supabase_query) -> Optional[tuple[dict[str, str], dict[str, str],
+                                                        dict[str, str]]]:
     """`cg_coin_map` 里已解析的 → (ids, klass, resolved_from)。
 
     **解析结果是缓存的,不是每天重算的。**
@@ -86,19 +86,25 @@ async def _known_map(supabase_query) -> tuple[dict[str, str], dict[str, str],
     `FROM_MCAP` 写过的行再被读出来,`_verify_mapping` 又会被它挡住,
     反复。
     """
+    # S-469:**读不到 ≠ 一个映射都没有。** 这里原来把读失败(RPC ~20s,共享 client 10s 超时)
+    # 折成 `{}`,于是整张表在这一轮「全部缺失」,解析器按市值重猜一遍并 upsert ——
+    # 2026-10-03 05:49 把刚人工改正的 ONE / AI 覆盖回了错的 coin_id。读不到就返回 None,
+    # 调用方本轮不解析、不覆盖。
     try:
         rows = await supabase_query(
             "cg_coin_map",
-            "symbol,coin_id,resolved_from,verified_at,asset_class") or []
-        ids = {r["symbol"]: r["coin_id"] for r in rows
-               if r.get("symbol") and r.get("coin_id")}
-        cls = {r["symbol"]: (r.get("asset_class") or "Crypto") for r in rows
-               if r.get("symbol")}
-        rf = {r["symbol"]: (r.get("resolved_from") or "") for r in rows
-              if r.get("symbol")}
-        return ids, cls, rf
+            "symbol,coin_id,resolved_from,verified_at,asset_class")
     except Exception:                                           # noqa: BLE001
-        return {}, {}, {}
+        return None
+    if not isinstance(rows, list) or not rows:
+        return None
+    ids = {r["symbol"]: r["coin_id"] for r in rows
+           if r.get("symbol") and r.get("coin_id")}
+    cls = {r["symbol"]: (r.get("asset_class") or "Crypto") for r in rows
+           if r.get("symbol")}
+    rf = {r["symbol"]: (r.get("resolved_from") or "") for r in rows
+          if r.get("symbol")}
+    return ids, cls, rf
 
 
 async def run_once(*, client, supabase_query, supabase_upsert,
@@ -117,7 +123,14 @@ async def run_once(*, client, supabase_query, supabase_upsert,
     out: dict[str, Any] = {"today": today, "status": "ok", "errors": [],
                            "n_resolved_new": 0, "rows_written": 0}
 
-    known, klass, resolved_from = await _known_map(supabase_query)
+    km = await _known_map(supabase_query)
+    if km is None:
+        out["status"] = "error"
+        out["error"] = ("cg_coin_map 读不到 —— 读不到 ≠ 没有映射;本轮不解析、不覆盖、不回填"
+                        "(S-469:曾因此把人工改正的映射按市值重猜覆盖)")
+        out["reason"] = out["error"]
+        return out
+    known, klass, resolved_from = km
     missing = [s for s in panel_symbols if s.upper() not in known]
     out["n_known"] = len(known)
     out["n_missing"] = len(missing)
@@ -175,10 +188,12 @@ async def run_once(*, client, supabase_query, supabase_upsert,
     out["ambiguous"] = res["ambiguous"][:20]
     out["unresolved"] = res["unresolved"][:20]
 
+    # 人工确认过的映射(FROM_MANUAL)永不被自动解析覆盖;库里另有触发器兜底(S-469)。
     new_rows = [{"symbol": m.symbol, "coin_id": m.coin_id,
                  "resolved_from": m.resolved_from,
                  "candidates": list(m.candidates) or None}
-                for m in res["resolved"] if m.coin_id]
+                for m in res["resolved"]
+                if m.coin_id and resolved_from.get(m.symbol) != FROM_MANUAL]
     if new_rows:
         if await supabase_upsert("cg_coin_map", new_rows, "symbol"):
             out["n_resolved_new"] = len(new_rows)

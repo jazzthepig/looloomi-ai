@@ -14,3 +14,21 @@ vacuum (analyze) ohlcv_daily;
 update cg_coin_map set coin_id = v.cid, resolved_from = 'manual_verified', resolved_at = now()
   from (values ('ONE','harmony'), ('AI','sleepless-ai')) as v(sym, cid)
  where cg_coin_map.symbol = v.sym and v.cid = any(cg_coin_map.candidates);
+
+-- S-469 (2026-10-03, migration s469_cg_coin_map_manual_sticky): the ONE/AI fix above was overwritten 4 minutes later.
+-- _cg_panel_loop reads cg_coin_map through the slow cg_known_coin_map RPC; on timeout it got [] and treated every
+-- panel symbol as unresolved, re-guessing by market cap and upserting over the manual rows. Code now refuses the round
+-- when the map is unreadable; this trigger makes manual_verified rows immune to any non-manual update.
+create or replace function cg_coin_map_keep_manual() returns trigger
+language plpgsql set search_path = public, pg_temp as $$
+begin
+  if old.resolved_from = 'manual_verified' and coalesce(new.resolved_from, '') <> 'manual_verified' then
+    return old;
+  end if;
+  return new;
+end $$;
+revoke all on function cg_coin_map_keep_manual() from public, anon, authenticated;
+drop trigger if exists cg_coin_map_keep_manual on cg_coin_map;
+create trigger cg_coin_map_keep_manual before update on cg_coin_map
+  for each row execute function cg_coin_map_keep_manual();
+-- then the ONE/AI update above was re-applied.
