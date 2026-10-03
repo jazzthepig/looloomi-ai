@@ -25234,3 +25234,96 @@ M-199 §10 写的「应接近 1」和 [0.5, 2.0] 这个界从一开始就设错�
 - 这是对预注册的修订,写在跑之前(M-199a 已占位);**trial 计数仍为 0**。
 
 **同时:S2 / S3 不能再 DEFER。** M-199 §10 与 §Seth-1002e 都写明 sanity 全过才开扫。S3(故意放开「邻居早于目标 10 天」的限制,ΔQL 应好得离谱)是证明前视已被堵住的唯一对照,S2(目标取负)证明打分方向是对的。两个都要在 sweep 前跑出数字。
+
+## M-200 (lane-b, 2026-10-03; T-043 跨源同名不同币审计) — 134 个两源标的,86(64%)有结构性问题
+
+**Owner:** lane-b (B / Seth/Austin)
+**Parent:** S-459 §3 "跨源同名不同币 — 近 60 天 binance_hist 与 CG 同日收盘差中位数 > 50% 的标的约 70 个"
+**Status:** 🟡 **完成 audit,待 Seth 行动(改映射 / 查 2026-09-07 loop_attempt)**
+**Source:** `tasks/T-043.json` (per §Seth-1002g, B 直接 claim 不等拍)
+**产物:** `/Volumes/CometCloudAI/cometcloud-local/research/t043/{discovery_2026-10-03.{json,csv}, audit_2026-10-03.md}`
+
+---
+
+### §1 · 范围与方法
+
+读 `/api/v1/ohlcv/coverage` 同时出现在 `binance_hist` 与 `coingecko_pro_ohlc` 的标的 → **134 个**。
+对每标的 → 拉两源全史 → 同日 close 比 `r = b/c` → 算 `median(log r)`, `MAD(log r)`, lag-0 日收益相关, lag ±1 相关, 单日最大跳变 `max |Δlog r|`。
+
+**4 分类阈值:**
+- ① 同一个币: `|median log r| < 0.10` ∧ `corr0 > 0.95` ∧ `max_jump < 0.30`
+- ② 时间错位: 最佳相关不在 lag=0 且优于 lag=0 ≥0.05
+- ③ 迁移/拆分: `max_jump > log(5) = 1.609`
+- ④ 不是同一个币: `|median log r| > 0.405`(比值偏离 1.5×)或 `corr0 < 0.50`
+- ?: 不满足以上任一(灰色地带)
+
+### §2 · 总览(134 个标的)
+
+| 类别 | 数量 | 占比 | 含义 |
+|------|------|------|------|
+| ④ | 22 | 16.4% | 不是同一个币 / 严重失配 |
+| ③ | 8 | 6.0% | 单日比值跳变 >5× |
+| ② | 0 | 0.0% | 时间错位 |
+| ? | 56 | 41.8% | 低相关但比值≈1 |
+| ① | 48 | 35.8% | 同一个币 OK |
+
+**86 个(64%)**异常(④+③+?),与 S-459 "约 70 个比例严重"相符 —— 多出来的 16 个主要是 `?`(同币低相关),S-459 §1 解释为 CG 采样点污染。
+
+### §3 · 三条主发现
+
+**(a) ONE / RAY 是 ④ 真正的 mapping 错(比值严重偏离)。**
+- ONE: `median_ratio × 0.028`(两源差 36×), corr0 = 0.24 → **不是同一个币或缩放错**
+- RAY: `median_ratio × 0.253`, corr0 = 0.39
+- USDC: corr0 = -0.08(比值≈1 但完全负相关)→ **稳定币机制不同,不能跨源拼接**
+
+**(b) 22 个 ④ 中的 20 个是 "假 ④": 比值≈1 但 corr0 < 0.5。**
+- IOTX / MTL / CHR / CKB / KAVA / RSR / OGN / SKL / MAGIC / SPELL / APE / GMT / STRK / CFX / FLOW / GALA / OP / SEI / TIA
+- 这是单源稀疏 + 采样点污染让长尾相关崩,S-459 §1 38% 假 K 线的症状。不是 mapping 错。
+
+**(c) ⚠️ 7/8 ③ 跳变全部 = 2026-09-07。**
+- 标的: AI / SC / DGB / FTT / RAD / GLMR / STRAX(API3 例外,跳变日 2026-03-21)
+- **8 个独立代币不可能同时真实 fork**,最大可能是 **2026-09-07 一次数据写回事件**(`_logs/loop_attempt` / `loop_attempt` 表中应能查到针对这些标的的 `backfill_cg_pro` / `cg_panel_loop` 重写)。
+- 这意味着 ③ 不只是 "映射错",可能是 "**写库时把 CG 采样点当 K 线写进去了**",污染了 binance_hist 视角。
+- 这是 S-459 §1 的子问题,**应优先于 mapping 修复**(否则改了 coin_id 还是被同样的污染源覆盖)。
+
+### §4 · S-459 提到的 8 个标的**不在 134 universe**
+
+TON / AI16Z / AGIX / OCEAN / BNX / FUN / CHESS / FTM — `coverage` 任一源都查不到。
+- TON 在 `cg_coin_map` 是 Tokamak(已知)
+- 其他 7 个:Seth 需查 `cg_coin_map` 表确认 canonical ticker 是否是别的(cg_coin_map 里可能是大写或带后缀,如 `the-open-network` vs `toncoin` 等)
+
+### §5 · 给 Seth 的动作清单
+
+1. **优先查 2026-09-07 的 `loop_attempt`** —— 7 个 ③ 同日跳变的最可能解释。若确实是回填重写,先修 `cg_panel_loop` 不写采样点(S-459 §1 的根治);若不是,再查 8 个代币在 9-7 当天的 binance 是否真的发生了 fork/split。
+2. **改 `cg_coin_map`:** ONE / RAY / USDC(三个 corr < 0.5 + 比值异常)。其余 20 个 "假 ④" 大概率 mapping 对,是数据稀疏。
+3. **修完映射后**:`/internal/backfill-cg-pro` 重写对应行的近 400 天真 K 线。
+4. **S-459 §1 根治**:剩下的 ①/② 但 corr0 < 0.95 的标的可能仍受采样点污染 —— S-460 已修 HYPE/NEAR/MKR 三个,其余的 S-459 需更彻底的批量回填。
+5. **本审计可重跑**(`research/t043_step1_discover.py`,38 行,可定时 cron)—— 修完映射后预期 ④ ≤5、③ ≤2、? 大幅下降。
+
+### §6 · B 教训
+
+- (a) `?` 阈值 0.5 太宽 —— 这次产出 56 个 `?`,但其中多数不是错。建议下次用 `|corr0 - 0.95|` 量化距离,把灰色地带细分。
+- (b) **数据稀疏 ≠ 错映射**: T-043 acceptance 没区分这两者,导致 22 个 ④ 里只有 2-3 个真错。这是预注册时该问的问题("clean mapping" vs "valid data"),记下。
+
+**Lane:** B (sandbox research) · **Date:** 2026-10-03 · **Status:** 🟡 完成 audit,待 Seth 拍行动顺序(查 9-7 loop vs 改 mapping 优先级)
+
+## S-468 — T-043 复核:「09-07 同日跳变」不是写入事件,是 08-08 的前推行;核心币的低相关来自 CoinGecko 一段被污染的 K 线
+
+**Seth · 2026-10-03 · 复核 M-200(lane-b 的 T-043 审计),逐条回库里查**
+
+B 的审计是对的工具,找到了真问题;但三条原因判断有两条不成立。逐条:
+
+**1. ③「7 个标的同日 2026-09-07 跳变」—— 是前推行的终点,不是写入事件。**
+`binance_hist` 里有 **41,804 行**成交量为 0、O=H=L=C 的行,**125 个标的**,全部写于 2026-08-08 那次一次性深度导入:每个已下架的交易对,从最后一笔成交一直被前推到导入日(STRAX 自 2024-03-15、FTT / RAY 自 2022-11、SC 自 2022-06)。08-08 之后日更写入端停了 30 天,09-07 恢复 —— 所以「跳变」是前推的假价终于被真价接上。和 S-459 同一类:**「拿不到」被存成了一个价格。** 核心面板 0 行受影响。
+**已修:** 这些行的 source 改为 `binance_hist_ffill`(UPDATE,可逆,`scripts/supabase_s468_binance_hist_ffill_relabel.sql`)。读端现在看到的是缺口,`read_panel` 会把前推标成可见的 filled。
+
+**2. ④ 只有两个是真映射错:ONE、AI。** `cg_coin_map` 里 ONE → `cross-2`、AI → `artificial-inu-3`,都是 `mcap_tiebreak`(同代码取市值最大者)选的,不是 Binance 上的那个。已改为 `harmony` / `sleepless-ai`(两者都在库里存的候选列表里;与 Binance 近期价位一致)。
+对**所有**有 Binance 近期行可对照的映射(134 个)逐个比同日收盘:**只有这两个错**。RAY 的映射是对的,它的失配就是第 1 条的前推行。TON(tokamak)、CHESS(chesscoin)仍是错的,但 Binance 上已没有近期行,无从独立校验(回填的映射检查会拿错的旧历史当参照,反而拒掉正确的 id)—— 不在任何账本里,先记着。
+回填端点加了 `symbols=` 参数,改完映射只重写那几个。
+
+**3. 核心币(OP / GRT / ATOM / LDO …)的「低相关」—— CoinGecko Pro 的 K 线在 2025-12-27 ~ 2026-03-26 被污染。**
+这段时间约 13 个中盘币的 `/ohlc/range` 日 K:**低点与 Binance 一致,高点和收盘被抬高**(同日收盘平均偏差:LDO 38%、GRT 23%、ATOM 11%、LINK 7%);错开 ±120 天找不到对齐 —— 不是时间错位。BTC / ETH / SOL / BNB / TRX 在同一段干净。同一批币的 CoinGecko **价格序列**(旧 `coingecko` 源)与 Binance 一致 —— 所以是供应商 K 线聚合里混进了坏报价,不是我们的解析。
+S-460 写的「核心币与 Binance 同日一致 402/412」只查了最近 60 天;对那段是真的,对更早的不说话 —— 我当时把它当成了整段的结论。
+**影响:** 没有账本读这段(代币化倾斜 09-25 起、HL 9 月起);风格表头用 market_chart,不受影响。**研究取历史收益与区间,用 `binance_hist`;`coingecko_pro_ohlc` 的这段不能用。**
+
+**4. 方法上的一条:** 全史一个相关系数把不同时段的不同病混在一起。B 若按时段算,1 和 3 会自己分开。
