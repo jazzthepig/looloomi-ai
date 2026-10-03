@@ -2,7 +2,7 @@
   "id": "T-043",
   "title": "跨源同名不同币审计:binance_hist 与 coingecko_pro_ohlc 同一代码是不是同一个币(约 70 个嫌疑)",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "source": "S-459 §3:近 60 天两源同日收盘差中位数 > 50% 的标的约 70 个(ONE、BNX、FUN、CHESS、TON、AI16Z、FTM、AGIX、OCEAN …);跨源拼接这些标的的任何特征都是错的",
   "allowed_paths": [
     "/Volumes/CometCloudAI/cometcloud-local/research/t043/",
@@ -21,6 +21,10 @@
   },
   "prior_value": "S-460 修了 HYPE、NEAR 两个;TON 在 cg_coin_map 里是 Tokamak 已知错",
   "created": "2026-10-02",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-03T06:00Z",
+    "value": "M-200 的 134 标的分类经回库复核(S-468):真映射错 2 个(ONE→harmony、AI→sleepless-ai,已改);「09-07 同日跳变」是 binance_hist 41,804 行前推假价(125 个下架标的,已改标 binance_hist_ffill);核心币低相关源于 CoinGecko Pro K 线 2025-12-27~2026-03-26 的污染。TON/CHESS 映射仍错但无独立参照,未改。"
+  },
   "notes": "B 出清单,Seth 逐个查 CoinGecko 确认 coin_id 并改 cg_coin_map(manual_verified)、重回填。核心 24 名优先排在表头。"
 }
