@@ -1033,9 +1033,20 @@ async def _beta_plus_loop():
                         detail={"written": r.get("written"), "nav": r.get("nav"), "barred": r.get("barred"),
                                 "stale_in_source": r.get("stale_in_source")},
                         error=None if r.get("ok") else str(r.get("reason"))[:200])
+            # A-408-6: per-iteration record (success / refused / error).
+            await _record_loop_attempt(
+                "_beta_plus_loop",
+                "ok" if r.get("ok") and not r.get("refused") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail={"written": r.get("written"), "nav": r.get("nav"), "barred": r.get("barred"),
+                        "stale_in_source": r.get("stale_in_source")},
+                writer="src.api.main._beta_plus_loop")
         except Exception as _e:
             print(f"[BETA-PLUS] ⚠️  pass FAILED: {_e}")
             await _beat("_beta_plus_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            # A-408-6: per-iteration record (exception path).
+            await _record_loop_attempt("_beta_plus_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._beta_plus_loop")
         await _asyncio.sleep(3600)
 
 
@@ -1182,9 +1193,11 @@ async def _style_header_loop():
     """
     await _asyncio.sleep(_boot_delay(420))
     while True:
+        _st_ok = False
         try:
             from src.data.style.header import run_once as _style_run
             r = await _style_run()
+            _st_ok = bool(r.get("ok"))
             print(f"[STYLE] {str(r.get('reason'))[:200]}")
             await _beat("_style_header_loop", ok=bool(r.get("ok")),
                         detail={"n_styled": r.get("n_styled"), "mcap_rows": r.get("mcap_rows"),
@@ -1199,7 +1212,9 @@ async def _style_header_loop():
             await _record_loop_attempt("_style_header_loop", "error",
                                        reason=f"{type(_e).__name__}: {_e}"[:400],
                                        writer="src.api.main._style_header_loop")
-        await _asyncio.sleep(6 * 3600)
+        # 失败(多为部署后所有循环同时起跑时的读超时)20 分钟后重试,不等 6 小时 ——
+        # ① 的周一再平衡读的就是这里写的前一日市值(S-474)
+        await _asyncio.sleep(6 * 3600 if _st_ok else 1200)
 
 
 @app.on_event("startup")
@@ -1588,9 +1603,21 @@ async def _outcome_tracker_loop():
                   f"written={summary.get('rows_written')}")
             _ok, _ref, _why = _classify(summary)
             await _beat("_outcome_tracker_loop", ok=_ok, refused=_ref, error=_why)
+            # A-408-6: per-iteration record —— signal_outcomes 的写入端(S-405 点名的静默失败)。
+            await _record_loop_attempt(
+                "_outcome_tracker_loop",
+                "ok" if _ok else "refused" if _ref else "error",
+                reason=str(_why)[:400] if _why else None,
+                detail={"resolved": summary.get("resolved"), "wins": summary.get("wins"),
+                        "losses": summary.get("losses"), "rows_written": summary.get("rows_written")},
+                writer="src.api.main._outcome_tracker_loop")
         except Exception as _e:
             print(f"[OUTCOME] ⚠️  daily run failed: {_e}")
             await _beat("_outcome_tracker_loop", ok=False, error=str(_e))
+            # A-408-6: per-iteration record (exception path).
+            await _record_loop_attempt("_outcome_tracker_loop", "error",
+                                       reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._outcome_tracker_loop")
         await _asyncio.sleep(_OUTCOME_INTERVAL_S)
 
 
@@ -2207,9 +2234,22 @@ async def _pod_aggregator_loop():
                   f"n_days={res.get('n_days_marked')}")
             _ok, _ref, _why = _classify(res)
             await _beat("_pod_aggregator_loop", ok=_ok, refused=_ref, error=_why)
+            # A-408-6: per-iteration record —— M-79 冻结格子:权重 / 相关门 / 存活 / 熔断都要留痕。
+            await _record_loop_attempt(
+                "_pod_aggregator_loop",
+                "ok" if _ok else "refused" if _ref else "error",
+                reason=str(_why)[:400] if _why else None,
+                detail={"status": res.get("status"), "nav": res.get("nav"), "weights": res.get("weights"),
+                        "max_corr_retained": res.get("max_corr_retained"), "survivors": res.get("survivors"),
+                        "breakers_tripped": res.get("breakers_tripped"), "n_days_marked": res.get("n_days_marked")},
+                writer="src.api.main._pod_aggregator_loop")
         except Exception as _e:
             print(f"[POD-AGG] ⚠️  mark failed: {_e}")
             await _beat("_pod_aggregator_loop", ok=False, error=str(_e))
+            # A-408-6: per-iteration record (exception path).
+            await _record_loop_attempt("_pod_aggregator_loop", "error",
+                                       reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._pod_aggregator_loop")
         await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
@@ -2319,14 +2359,24 @@ async def _track_record_loop():
             # 但修法不同,所以分成 failing 与 refused。
             _n = res if isinstance(res, int) else (
                 len(res) if isinstance(res, (list, tuple)) else None)
-            await _beat("_track_record_loop", ok=bool(_n),
-                        refused=(_n == 0),
-                        error=(None if _n else
-                               ("RPC 返回 None —— 刷新没跑成" if _n is None
-                                else "刷新跑通但 0 行 —— 上游 cis_scores × ohlcv 没有可解析的对")))
+            _tr_err = (None if _n else
+                       ("RPC 返回 None —— 刷新没跑成" if _n is None
+                        else "刷新跑通但 0 行 —— 上游 cis_scores × ohlcv 没有可解析的对"))
+            await _beat("_track_record_loop", ok=bool(_n), refused=(_n == 0), error=_tr_err)
+            # A-408-6: per-iteration record。S-299:None(RPC 失败)与 0(上游没有可解析的对)修法不同,分开记。
+            await _record_loop_attempt(
+                "_track_record_loop",
+                "ok" if (_n and _n > 0) else "refused" if _n == 0 else "error",
+                reason=_tr_err,
+                detail={"n_rows": _n, "rpc_failed": _n is None, "zero_rows": _n == 0},
+                writer="src.api.main._track_record_loop")
         except Exception as _e:
             print(f"[TRACK-REC] ⚠️  refresh failed: {_e}")
             await _beat("_track_record_loop", ok=False, error=str(_e))
+            # A-408-6: per-iteration record (exception path).
+            await _record_loop_attempt("_track_record_loop", "error",
+                                       reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._track_record_loop")
         await _asyncio.sleep(_TRACKREC_INTERVAL_S)
 
 

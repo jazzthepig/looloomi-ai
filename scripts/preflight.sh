@@ -223,6 +223,11 @@ python3 -m src.research.validation.tests.test_a_408_4_data_collection_loops_smok
 #               `_treasury_decisions_loop` has NO refused (S-292: failure
 #               is always a fault, never "by-rules refused").
 python3 -m src.research.validation.tests.test_a_408_5_strategy_loops_smoke
+# A-408-6 (2026-10-04, lane A, ported by Seth): outcome tracker / pod aggregator / track record /
+#   beta_plus loops record every iteration; track_record keeps None (RPC failed) apart from 0 (no pairs).
+python3 -m src.research.validation.tests.test_a_408_6_final_loops_smoke
+# T-044a (lane A): cross-source agreement algorithm — 1-day shift, 3%x5d drift, frozen binance rows.
+python3 -m src.research.validation.tests.test_t_044_price_source_agreement_smoke
 # 3a-quater. S-410 (2026-09-23) — `_cg_panel_loop` failed 366× with "too many
 #               values to unpack (expected 2)" because S-378b-C1 added a 3rd
 #               return value (`latest_hint`) to `deep_panel_symbols_detailed()`

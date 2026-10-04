@@ -107,6 +107,13 @@ RECENT_DAYS = 3  # 加密口径;保留供不带域的调用点使用
 #: 「这个源属于一个叫 unknown 的域」** —— 前者是注册表有洞,后者读起来像一个事实。
 #: 未登记的源现在会被显式报出来(见 `overall()` 的 `unregistered_sources`),
 #: 因为一盏常亮的假红灯,和一盏坏灯是同一个东西。
+#: 不是价源,是**隔离区**:从某个源里移出来的坏行改了 source 标签留档(不删)。它们按设计永远不再增长,
+#: 所以不进判活 —— 否则一个隔离标签会被报成「死掉的源」,还会被当成注册表的洞(S-474)。
+QUARANTINE_SOURCES = {
+    "binance_hist_ffill": "S-468:2026-08-08 导入时把 125 个下架对前推到导入日的 41,804 行,"
+                          "成交量 0、O=H=L=C;从 binance_hist 移出,留档不删。",
+}
+
 DOMAIN_OF_SOURCE = {
     "binance_hist": "crypto",
     "hyperliquid": "crypto",
@@ -268,6 +275,7 @@ def from_rows(rows: Iterable[Mapping[str, Any]]) -> list[SourceHealth]:
                if DOMAIN_OF_SOURCE.get(src) == "tradfi" else "symbols_recent_crypto_win")
         return int(r.get(key) or 0)
 
+    rows = [r for r in rows if str(r.get("source")) not in QUARANTINE_SOURCES]
     return [classify(str(r.get("source")),
                      last_bar=r.get("last_bar"),
                      age_days=r.get("age_days"),

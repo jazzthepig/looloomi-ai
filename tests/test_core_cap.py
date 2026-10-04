@@ -79,3 +79,31 @@ def test_scorecard_tells_one_day_from_unreadable():
     rows = {r["id"]: r for r in scorecard_rows({"core_cap": one}, {})}
     assert "只有起点一天" in rows["core_cap"]["note"]
     assert rows["beta_core"]["note"] == "没有可用的 NAV"
+
+
+def test_rebalance_refuses_when_mcap_covers_too_little_of_the_panel():
+    days = pd.date_range(cc.INCEPTION, periods=3, freq="D")
+    syms = ["A", "B", "C", "D", "E"]
+    px, mc = _panel(days, syms)
+    mc.loc[cc.INCEPTION, ["A", "B"]] = np.nan          # 只有 3/5 = 60% 有市值
+    with pytest.raises(ValueError):
+        cc.compute_path(px, mc, [], "test")
+
+
+def test_quarantine_label_is_not_a_source():
+    from src.data.market import source_freshness as sf
+    rows = [{"source": "binance_hist_ffill", "last_bar": "2026-08-08", "age_days": 57,
+             "symbols_recent": 0, "symbols_typical": None},
+            {"source": "binance_hist", "last_bar": "2026-10-03", "age_days": 1,
+             "symbols_recent": 200, "symbols_typical": 210}]
+    hs = sf.from_rows(rows)
+    assert [h.source for h in hs] == ["binance_hist"]
+    assert "binance_hist_ffill" not in sf.overall(hs)["unregistered_sources"]
+
+
+def test_ops_console_does_not_call_the_core_price_source_retired():
+    import importlib.util, pathlib
+    spec = importlib.util.spec_from_file_location("oc", pathlib.Path(__file__).resolve().parents[1] / "scripts/ops_console.py")
+    oc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(oc)
+    assert "binance_hist" not in oc.RETIRED_BY_POLICY and cc.PRICE_SOURCE == "binance_hist"

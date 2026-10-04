@@ -40,6 +40,9 @@ COST_BPS = 10.0
 INCEPTION = pd.Timestamp("2026-10-02")
 PRICE_SOURCE = "binance_hist"
 MIN_QUOTED_WEIGHT = 0.90
+#: 再平衡日:有收盘的币里至少这么多也有(≤ 3 天前的)市值,否则拒绝 —— 不在半个面板上算「市值加权」
+MIN_MCAP_COVERAGE = 0.90
+MCAP_MAX_AGE_DAYS = 3
 CODE_REF = "S-473 core_cap v1"
 
 
@@ -94,9 +97,11 @@ def compute_path(px: pd.DataFrame, mcap_prev: pd.DataFrame, barred: list[str], s
                 continue
             row_px = px.loc[d]
             mc = mcap_prev.loc[d] if d in mcap_prev.index else pd.Series(dtype=float)
-            avail = {s: mc.get(s) for s in px.columns if pd.notna(row_px.get(s)) and pd.notna(mc.get(s))}
-            if not avail:
-                raise ValueError(f"{d.date()} 没有一个币同时有收盘与前一日市值 —— 不建一个空仓")
+            quoted = [s for s in px.columns if pd.notna(row_px.get(s))]
+            avail = {s: mc.get(s) for s in quoted if pd.notna(mc.get(s))}
+            if not quoted or len(avail) < MIN_MCAP_COVERAGE * len(quoted):
+                raise ValueError(f"{d.date()} 有收盘的 {len(quoted)} 个币里只有 {len(avail)} 个有 ≤{MCAP_MAX_AGE_DAYS} 天的市值"
+                                 f" —— 不在半个面板上做市值加权")
             orders[d] = capped_weights(avail, alpha)
         book = run_nav(px, orders, cost_bps=COST_BPS, min_quoted_weight=MIN_QUOTED_WEIGHT, label=arm,
                        renormalize_to_quoted=False, days=days)
@@ -127,7 +132,8 @@ async def _mcap_prev(symbols: list[str], start: str) -> pd.DataFrame:
     df["d"] = pd.to_datetime(df["d"])
     mc = df.pivot_table(index="d", columns="symbol", values="mcap")
     mc = mc.reindex(pd.date_range(mc.index.min(), mc.index.max() + pd.Timedelta(days=1), freq="D"))
-    return mc.shift(1)
+    # 市值写入端(风格表头循环)偶尔一轮失败;权重用的市值最多沿用 3 天前的,再旧就当缺(S-474)
+    return mc.ffill(limit=MCAP_MAX_AGE_DAYS - 1).shift(1)
 
 
 async def run_once() -> dict[str, Any]:

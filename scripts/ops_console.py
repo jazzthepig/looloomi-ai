@@ -108,9 +108,9 @@ RETIRED_BY_POLICY = {
     "hyperliquid": ("S-296 2026-08-23 — daily-bar role retired on the purpose "
                     "axis (market_data → CG Pro). Funding/oracle/OI still live; "
                     "check funding_history, not ohlcv_daily."),
-    "binance_hist": ("S-323i — 262-symbol fan-out to a FREE venue API violates "
-                     "source_policy; frozen as history. Panel bars come from "
-                     "coingecko_pro_ohlc. Recovery is OPEN RISK #0a, not this feed."),
+    # binance_hist 不再在这里(S-474):S-323i 之后它恢复了日更(deep panel collector),
+    # β+ 与 ①(core_cap,S-473)都按它记账。留着这条「已退役」,它一旦停写,控制台会把
+    # ① 的价源死掉报成「按计划」—— 正好与事实相反。
     "yfinance": ("barred from return series (S-195 bar-convention); TradFi is "
                  "served by eodhd."),
     "coingecko": ("flowing but BARRED for returns (S-195: hourly samples "
