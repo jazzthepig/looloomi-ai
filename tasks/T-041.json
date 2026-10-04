@@ -2,7 +2,7 @@
   "id": "T-041",
   "title": "解读层的验证预注册:类比日给出的「未来 30 天风格分布」是否比无条件分布更准",
   "owner": "lane-b",
-  "status": "claimed",
+  "status": "done",
   "source": "T-040;Jazz 09-30 要的是有解释的指标,而解释本身也要能被验证",
   "allowed_paths": [
     "REFUTATION_LEDGER.md(EOF 追加预注册)",
@@ -20,6 +20,10 @@
   },
   "prior_value": "无",
   "created": "2026-09-30",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-04T10:00Z",
+    "value": "M-196 预注册 + M-197 判读 FAIL(F1+F2)终审;production interpretation_validation_runs id=1 与 §Seth-1002c 逐项一致;sanity S1–S4 = tests/test_interpret_validate.py(§Seth-1002f)"
+  },
   "notes": " | 预注册 M-196 已入台账;回放代码 src/data/interpret/validate.py,实现细节 S-455(先于运行)。等部署后触发。"
 }

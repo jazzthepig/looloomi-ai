@@ -1,0 +1,25 @@
+{
+  "id": "T-048",
+  "title": "状态层 state_daily 首批特征(v0.2 阶段 2):趋势、波动、广度、风格相对强弱、资金费与持仓量 —— 模块 + PIT 测试",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-04",
+  "source": "v0.2 §3 L1 / §7 阶段 2;L3 的择时与 rr_matrix 的格子都要它",
+  "allowed_paths": [
+    "src/data/state/state_daily.py(新)",
+    "tests/test_state_daily.py(新)",
+    "scripts/supabase_state_daily.sql(新,DDL 交 Seth 建)"
+  ],
+  "forbidden_paths": [
+    "src/api/main.py(调度 Seth 接)",
+    "写价格表(Rule 3b)",
+    "主目录直接改"
+  ],
+  "acceptance": {
+    "check": "纯函数 features(d) 只用 ≤ d 的数据;字段(连续值,不分桶):① 的 20/60/200 日动量与相对 200 日线距离、① 的 30 日实现波动及其 3 年分位、面板广度(24 名里收盘在 50 日线上方的比例)、大币相对二线公链的 30 日相对强弱(style_index_daily)、HL 资金费 7 日均值与 OI 30 日变化(funding_history / open_interest_history)、宏观 regime 近 30 天各类占比(regime_daily);run_once() 从 2023-01-01 起整条重算并写表,返回 {ok, reason, last_d}",
+    "expect": "PIT 测试:把 d 之后的价格全部改掉,d 及以前每一行的特征逐位不变;缺数据的特征是 null 不是 0;每天 06:00 UTC 后有昨天的行(接调度后验收)"
+  },
+  "prior_value": "状态散在各处:regime 四选一字符串、动量在 β+ 里、资金费在 HL 表里,没有统一的逐日状态表",
+  "verified": null,
+  "notes": "顺序:A 的第 2 张(T-044b 之后)。价格读 binance_hist(① 的价源)。交付放 lane-a worktree,SYNC 写最终路径。"
+}

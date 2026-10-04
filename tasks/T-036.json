@@ -1,7 +1,7 @@
 {
   "id": "T-036",
   "title": "Mac 只留一份 env:~/.config/cometcloud/.env;cis_scheduler 改读它,cometcloud-local/.env 退役;Python 日志改 UTC",
-  "owner": "seth",
+  "owner": "lane-c",
   "status": "open",
   "source": "S-435(三份 env,轮换漏一份 ⇒ 简报 23h 401)",
   "allowed_paths": [
@@ -17,5 +17,6 @@
   },
   "prior_value": "三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份",
   "created": "2026-09-29",
-  "verified": null
+  "verified": null,
+  "notes": " | 2026-10-04 改派 lane-c(Mac 侧),并入 T-010(plist 不放 key)。轮换值只经 Jazz 的手:C 只改读取路径与 plist,不读、不打印 key 的值。"
 }

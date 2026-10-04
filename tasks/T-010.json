@@ -2,7 +2,7 @@
   "id": "T-010",
   "title": "Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key",
   "owner": "lane-c",
-  "status": "open",
+  "status": "dropped",
   "source": "C 09-24 报告",
   "allowed_paths": [
     "~/Library/LaunchAgents/",
@@ -17,5 +17,6 @@
   },
   "prior_value": "2 个 plist 硬写 key",
   "created": "2026-09-24",
-  "verified": null
+  "verified": null,
+  "notes": " | 2026-10-04 并入 T-036。"
 }

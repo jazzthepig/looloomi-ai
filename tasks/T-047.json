@@ -1,0 +1,24 @@
+{
+  "id": "T-047",
+  "title": "所有登记账本按新的 ① 重新打分:相对「市值加权、单币 ≤ 40%」的超额(只读,一次性)",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-04",
+  "source": "S-473:① 从等权改为市值加权后,旧的「跑赢持有面板」都是对等权说的",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/",
+    "REFUTATION_LEDGER.md(EOF,M- 前缀)"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "写库",
+    "新的抓取器(Rule 3b)"
+  ],
+  "acceptance": {
+    "check": "对 registry.BOOKS 里每本账,在它自己的前向窗口上:总收益、同期 α=1 基准(10-02 前用 docs/research/S-472_beta_core_weighting.sql 的 α=1 日收益序列,之后用 core_cap_daily.cap_a1)、同期 α=0(等权)基准、两个差值;按 BTC 是否在 200 日线上分两段",
+    "expect": "一张表,每本账一行;每个数字能从 SQL 复算(附 SQL);报告首行写数据来源与日期范围;不给仓位建议"
+  },
+  "prior_value": "成绩单与 L3 之前都以等权面板为基准",
+  "verified": null,
+  "notes": "顺序:B 的第 1 张(只读、最快、给 T-045 的格子提供先验)。数据只走公开读端点或只读 SQL 结果。"
+}

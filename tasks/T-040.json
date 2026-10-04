@@ -2,7 +2,7 @@
   "id": "T-040",
   "title": "解读层 v0:每天「今天像历史上哪几段 → 那几段之后各风格怎么走 → 两角度是否一致」,落库并在 30 天后对账",
   "owner": "seth",
-  "status": "claimed",
+  "status": "done",
   "source": "Jazz 09-30:「获得指标后没有立刻分析市场、获得归因 —— 单纯指标没有解释就是 AI 前世纪的工程流」",
   "allowed_paths": [
     "src/data/interpret/",
@@ -19,7 +19,11 @@
   },
   "prior_value": "/api/v1/regime/similar 能按需返回 5a(宏观 15 维)/5b(横截面 11 维)两角度的相似日,但:没有定时调用、不回答「那几段之后发生了什么」、没有决策读它、没有事后对账",
   "created": "2026-09-30",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-04T10:00Z",
+    "value": "_interpret_loop 每 6h 写 market_interpretation_daily(1371 天至 10-02);历史回放模式供 M-196 使用;检验 FAIL(S-463)⇒ L3 权重 0,继续运行;v2 = T-042"
+  },
   "blocked_by": null,
   "notes": "Seth 09-30 v0:三个角度(风格相位 2020 起 / 宏观 5a 2022 起 / 横截面 5b 2025-05 起)各找 10 个相似日(PIT 标准化、只取早于 d−30 天、彼此隔 7 天),给出之后 30 天各风格与「相对大币」的中位数 / 四分位 / 上涨占比,两两角度的方向一致比例,30 天后写回 realized。2023 起逐日整条重算(回放 = 实时同一段代码)。库里的 similar_market_states() 用全样本标准化且允许取未来日,不能用于回放 —— 改为 Python 内 PIT 实现。regime_daily(5b)自 09-15 起停写,是 Mac 侧写入端。 | 09-30 首轮上线:1,368 天(2023-01-01 → 09-29),今天可用角度 style + macro,横截面落后 14 天。复核后相似日间隔 7 → 30 天(前向不重叠),code_ref t040-v1。"
 }

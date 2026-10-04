@@ -1,0 +1,27 @@
+{
+  "id": "T-045",
+  "title": "评估层 rr_matrix:每本账在每个状态格子里相对 ① 的超额分布(v0.2 阶段 3)—— 规格 + 纯函数 + 测试",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-04",
+  "source": "v0.2 §3 评估层 / §7 阶段 3;L3 现在只用整段前向超额,不分状态",
+  "allowed_paths": [
+    "docs/research/RR_MATRIX_SPEC.md(新)",
+    "src/data/evaluation/rr_matrix.py(新,纯函数)",
+    "tests/test_rr_matrix.py(新)",
+    "scripts/supabase_rr_matrix.sql(新,DDL 交 Seth 建)",
+    "REFUTATION_LEDGER.md(EOF,M- 前缀)"
+  ],
+  "forbidden_paths": [
+    "src/api/main.py",
+    "任何写库代码",
+    "主目录直接改"
+  ],
+  "acceptance": {
+    "check": "纯函数 cells(book_ret, core_ret, states) → 每格:n_days、超额均值、30 天块 bootstrap 区间、向该账本全样本收缩后的估计、n_variants_tried;格子维度 ≤ 3、每维 ≤ 3 档(v0.2 §8 防挖掘);单测覆盖:任一格可从原始 NAV 复算、样本少时收缩生效、PIT(改掉 d 之后的数据,d 之前的格子值不变)",
+    "expect": "规格文档 + 纯函数 + ≥ 6 个测试全过;状态输入先用 T-048 的字段名约定(没就绪时用合成数据测),交 patch 到 lane-b worktree,Seth 接调度与建表"
+  },
+  "prior_value": "评估都在台账的一次性报告里;L3 的证据不分状态",
+  "verified": null,
+  "notes": "顺序:B 的第 2 张(先做 T-047)。基准一律是 ①(core_cap 的 cap_a1);2026-10-02 以前用 S-472 的 α=1 回放序列作先验,不当前向证据。"
+}

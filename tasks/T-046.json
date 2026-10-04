@@ -1,0 +1,26 @@
+{
+  "id": "T-046",
+  "title": "上游通道 → 市场:稳定币供给、代币化资产规模、全市场市值的变化,能否联合解释风格价差与 ① 的未来收益(预注册研究)",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-04",
+  "source": "Jazz 10-01:「现在是传统资产代币化带动的周期,要找市场的因变量与真正的因子组合们」「不可以二极管思维」;channel_series_daily 已在写(S-458)",
+  "allowed_paths": [
+    "/Volumes/CometCloudAI/cometcloud-local/research/t046/",
+    "/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/",
+    "REFUTATION_LEDGER.md(EOF,M- 前缀,先写预注册)"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "样本外 2025-01-01 之后的数据(最终一次之前)",
+    "新的抓取器(Rule 3b)",
+    "把连续变量分桶 / 二选一的『哪个通道』"
+  ],
+  "acceptance": {
+    "check": "先写预注册:变量取变化量与加速度(不是水平);方法是联合的(滚动多元回归或降秩回归,载荷允许随时间变),不是逐个通道检验;目标 = 未来 10 / 30 天的风格价差(style_index_daily)与 ① 收益;前推交叉验证在 2020–2024 内,≤ 3 个最终设定;S4 = 埋一个已知通道效应的合成数据,同一段代码必须找出来",
+    "expect": "样本外(2025+)只评一次:联合模型的样本外 R² / 分位数损失优于无条件与只用价格动量的基线,块 bootstrap 单侧 p < 0.05,按试过的设定数 deflate 后仍成立;报告首行写数据来源与日期范围"
+  },
+  "prior_value": "通道数据只入库,没有任何研究读它;稳定币/代币化分类成员是今天的幸存者往回取(basis 列已标)",
+  "verified": null,
+  "notes": "顺序:C 的第 3 张(T-042 v1.2 的 S4 过闸、T-036 之后)。数据读 /api/v1/research/* 或 Seth 给的只读导出;channel_series_daily 的读端点若没有,在 SYNC 提,Seth 加。"
+}
