@@ -211,6 +211,18 @@ python3 -m src.research.validation.tests.test_a_408_3_write_log_coverage_smoke
 #               intent per S-323i/l, not failing). _market_state_loop
 #               uses StoreResult typed object.
 python3 -m src.research.validation.tests.test_a_408_4_data_collection_loops_smoke
+# 3a-quater-B. A-408-5 (2026-10-03) — 8 paper_trading + 1 strategy loop
+#               wired to `_record_loop_attempt`. Class A (7 loops) share
+#               `_mark_within_valuation_window` shape; Class B
+#               `_factor_tilt_loop` uses `_classify(res)`; Class C
+#               `_treasury_decisions_loop` is S-292 independent. All 9
+#               loops get 2 sites each (success/refused + exception).
+#               `_beta_core_loop` carries FoF benchmark fields (nav,
+#               benchmark_nav, excess_pct, regime) since it IS the
+#               benchmark every other book measures against.
+#               `_treasury_decisions_loop` has NO refused (S-292: failure
+#               is always a fault, never "by-rules refused").
+python3 -m src.research.validation.tests.test_a_408_5_strategy_loops_smoke
 # 3a-quater. S-410 (2026-09-23) — `_cg_panel_loop` failed 366× with "too many
 #               values to unpack (expected 2)" because S-378b-C1 added a 3rd
 #               return value (`latest_hint`) to `deep_panel_symbols_detailed()`

@@ -1133,6 +1133,42 @@ async def _core_cap_loop():
         await _asyncio.sleep(3600)
 
 
+async def _regime_daily_loop():
+    """`regime_daily`(5b 微观相位指纹:CIS 支柱均值、信号分布、宏观 regime 众数)的日更写入端(S-475)。
+
+    S-349 一次性回填之后没有人再写(A §T-052 查明),停在 09-15:`/api/v1/regime/similar` 的微观腿、
+    解读层的横截面角度、ⓠ 的相位距离全读着 18 天前的指纹。派生规则就是 S-349 那条 SQL,收成库函数
+    `refresh_regime_daily(p_since)`,只写已收完的 UTC 日,每轮重算近 3 天(CIS 当天会被更新),保留冥想列。
+    判活:`select max(d) from regime_daily` = 昨天(UTC)—— CIS 那天没推送时那天就没有行,这是缺口,不是 0。
+    """
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    await _asyncio.sleep(_boot_delay(480))
+    while True:
+        try:
+            from src.api.store import supabase_rpc_write
+            _since = (_dt.now(_tz.utc).date() - _td(days=3)).isoformat()
+            res = await supabase_rpc_write("refresh_regime_daily", {"p_since": _since})
+            _n = res.value if res.ok else None
+            _why = f"重算 {_since} 起已收完的日子:{_n} 行" if res.ok else f"写入失败:{res.why}"
+            print(f"[REGIME-DAILY] {_why}")
+            await _beat("_regime_daily_loop", ok=bool(res.ok), detail={"since": _since, "rows": _n},
+                        error=None if res.ok else _why[:200])
+            await _record_loop_attempt("_regime_daily_loop", "ok" if res.ok else "error", reason=_why[:400],
+                                       writer="src.api.main._regime_daily_loop")
+        except Exception as _e:
+            print(f"[REGIME-DAILY] ⚠️  pass FAILED: {_e}")
+            await _beat("_regime_daily_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_regime_daily_loop", "error", reason=f"{type(_e).__name__}: {_e}"[:400],
+                                       writer="src.api.main._regime_daily_loop")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_regime_daily_loop():
+    _asyncio.create_task(_regime_daily_loop())
+    print("[REGIME-DAILY] ✅ regime_daily fingerprint writer scheduled (refresh_regime_daily RPC)")
+
+
 @app.on_event("startup")
 async def _start_core_cap_loop():
     _asyncio.create_task(_core_cap_loop())
@@ -1230,9 +1266,11 @@ async def _allocation_loop():
     """
     await _asyncio.sleep(_boot_delay(1500))
     while True:
+        _al_ok = False
         try:
             from src.data.allocation.allocator import run_once as _al_run
             r = await _al_run()
+            _al_ok = bool(r.get("ok"))
             print(f"[ALLOCATION] {str(r.get('reason'))[:200]}")
             await _beat("_allocation_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")),
                         detail={"last": r.get("last"), "weights": r.get("weights"),
@@ -1246,7 +1284,8 @@ async def _allocation_loop():
             await _beat("_allocation_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_allocation_loop", "error", reason=f"{type(_e).__name__}: {_e}"[:400],
                                        writer="src.api.main._allocation_loop")
-        await _asyncio.sleep(6 * 3600)
+        # 失败(多是开机时与 ① 的写入抢跑、或库忙)半小时后重试,不等 6 小时(S-474)
+        await _asyncio.sleep(6 * 3600 if _al_ok else 1800)
 
 
 @app.on_event("startup")
@@ -1359,11 +1398,30 @@ async def _treasury_decisions_loop():
                 res = await run_once(client=_c, supabase_query=_q,
                                      supabase_upsert=_up)
             print(f"[TREASURY] {res['reason'][:160]}")
-            await _beat("_treasury_decisions_loop", ok=bool(res.get("ok")),
-                        error=None if res.get("ok") else str(res.get("errors"))[:180])
+            _ok = bool(res.get("ok"))
+            await _beat("_treasury_decisions_loop", ok=_ok,
+                        error=None if _ok else str(res.get("errors"))[:180])
+            # A-408-5: per-iteration record (success / error path).
+            # Class C — `res` shape from entity.writer.run_once: {ok,
+            # reason, errors, ...}. NO refused path per inline S-292
+            # (failure is always a fault, never "by-rules refused" —
+            # the loop MUST connect 4 surfaces or it's broken).
+            await _record_loop_attempt(
+                "_treasury_decisions_loop",
+                "ok" if _ok else "error",
+                reason=str(res.get("reason") or "")[:400] or None,
+                detail={"ok":      _ok,
+                        "errors":  (res.get("errors") or [])[:5],
+                        "reason":  str(res.get("reason") or "")[:200]},
+                writer="src.api.main._treasury_decisions_loop")
         except Exception as _e:
             print(f"[TREASURY] ⚠️  run failed: {_e}")
             await _beat("_treasury_decisions_loop", ok=False, error=str(_e))
+            # A-408-5: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_treasury_decisions_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._treasury_decisions_loop")
         await _asyncio.sleep(_TREASURY_INTERVAL_S)
 
 
@@ -1654,9 +1712,28 @@ async def _causal_paper_loop():
                   f"rebal={res.get('rebalanced')}")
             await _beat("_causal_paper_loop", ok=_ok, refused=_ref, error=_why,
                         detail={"attempts": _tries})
+            # A-408-5: per-iteration record (success / refused / error).
+            # `res` shape from mark_and_rebalance: {status, nav, rebalanced,
+            # ...}; _ok/_ref/_why from valuation-window classifier.
+            await _record_loop_attempt(
+                "_causal_paper_loop",
+                "ok" if _ok else "refused" if _ref else "error",
+                reason=str(_why)[:400] if _why else None,
+                detail={"status":     res.get("status"),
+                        "nav":        res.get("nav"),
+                        "rebalanced": res.get("rebalanced"),
+                        "attempts":   _tries,
+                        "ok":         _ok,
+                        "refused":    _ref},
+                writer="src.api.main._causal_paper_loop")
         except Exception as _e:
             print(f"[CAUSAL-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_causal_paper_loop", ok=False, error=str(_e))
+            # A-408-5: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_causal_paper_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._causal_paper_loop")
         await _asyncio.sleep(_CAUSAL_PAPER_INTERVAL_S)
 
 
@@ -1683,9 +1760,28 @@ async def _dingge_paper_loop():
                   f"open={res.get('open')} +{res.get('opened_today')}/-{res.get('closed_today')}")
             await _beat("_dingge_paper_loop", ok=_ok, refused=_ref, error=_why,
                         detail={"attempts": _tries})
+            # A-408-5: per-iteration record (success / refused / error).
+            await _record_loop_attempt(
+                "_dingge_paper_loop",
+                "ok" if _ok else "refused" if _ref else "error",
+                reason=str(_why)[:400] if _why else None,
+                detail={"status":        res.get("status"),
+                        "nav":           res.get("nav"),
+                        "open":          res.get("open"),
+                        "opened_today":  res.get("opened_today"),
+                        "closed_today":  res.get("closed_today"),
+                        "attempts":      _tries,
+                        "ok":            _ok,
+                        "refused":       _ref},
+                writer="src.api.main._dingge_paper_loop")
         except Exception as _e:
             print(f"[DINGGE-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_dingge_paper_loop", ok=False, error=str(_e))
+            # A-408-5: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_dingge_paper_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._dingge_paper_loop")
         await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
@@ -1714,9 +1810,26 @@ async def _combined_book_loop():
                   f"rebal={res.get('rebalanced')}")
             await _beat("_combined_book_loop", ok=_ok, refused=_ref, error=_why,
                         detail={"attempts": _tries})
+            # A-408-5: per-iteration record (success / refused / error).
+            await _record_loop_attempt(
+                "_combined_book_loop",
+                "ok" if _ok else "refused" if _ref else "error",
+                reason=str(_why)[:400] if _why else None,
+                detail={"status":     res.get("status"),
+                        "nav":        res.get("nav"),
+                        "rebalanced": res.get("rebalanced"),
+                        "attempts":   _tries,
+                        "ok":         _ok,
+                        "refused":    _ref},
+                writer="src.api.main._combined_book_loop")
         except Exception as _e:
             print(f"[COMBINED-BOOK] ⚠️  mark failed: {_e}")
             await _beat("_combined_book_loop", ok=False, error=str(_e))
+            # A-408-5: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_combined_book_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._combined_book_loop")
         await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
@@ -1745,9 +1858,26 @@ async def _scalable_book_loop():
                   f"rebal={res.get('rebalanced')}")
             await _beat("_scalable_book_loop", ok=_ok, refused=_ref, error=_why,
                         detail={"attempts": _tries})
+            # A-408-5: per-iteration record (success / refused / error).
+            await _record_loop_attempt(
+                "_scalable_book_loop",
+                "ok" if _ok else "refused" if _ref else "error",
+                reason=str(_why)[:400] if _why else None,
+                detail={"status":     res.get("status"),
+                        "nav":        res.get("nav"),
+                        "rebalanced": res.get("rebalanced"),
+                        "attempts":   _tries,
+                        "ok":         _ok,
+                        "refused":    _ref},
+                writer="src.api.main._scalable_book_loop")
         except Exception as _e:
             print(f"[SCALABLE-BOOK] ⚠️  mark failed: {_e}")
             await _beat("_scalable_book_loop", ok=False, error=str(_e))
+            # A-408-5: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_scalable_book_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._scalable_book_loop")
         await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
@@ -1780,9 +1910,33 @@ async def _beta_core_loop():
                   f"cap={res.get('exposure_cap')} regime={res.get('regime')}")
             await _beat("_beta_core_loop", ok=_ok, refused=_ref, error=_why,
                         detail={"attempts": _tries})
+            # A-408-5: per-iteration record (success / refused / error).
+            # `_beta_core_loop` is the FoF benchmark (every other book is
+            # measured against it per return hierarchy) — its visibility is
+            # load-bearing. Capture nav + benchmark + regime + cap so the
+            # audit shows the actual NAV state, not just "ok".
+            await _record_loop_attempt(
+                "_beta_core_loop",
+                "ok" if _ok else "refused" if _ref else "error",
+                reason=str(_why)[:400] if _why else None,
+                detail={"status":       res.get("status"),
+                        "nav":          res.get("nav"),
+                        "benchmark_nav": res.get("benchmark_nav"),
+                        "excess_pct":   res.get("excess_pct"),
+                        "exposure_cap": res.get("exposure_cap"),
+                        "regime":       res.get("regime"),
+                        "attempts":     _tries,
+                        "ok":           _ok,
+                        "refused":      _ref},
+                writer="src.api.main._beta_core_loop")
         except Exception as _e:
             print(f"[BETA-CORE] ⚠️  mark failed: {_e}")
             await _beat("_beta_core_loop", ok=False, error=str(_e))
+            # A-408-5: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_beta_core_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._beta_core_loop")
         await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
@@ -1849,9 +2003,28 @@ async def _two_layer_paper_loop():
                   f"book_state={res.get('book_state')} gross={res.get('gross')}")
             await _beat("_two_layer_paper_loop", ok=_ok, refused=_ref, error=_why,
                         detail={"attempts": _tries})
+            # A-408-5: per-iteration record (success / refused / error).
+            # §5b two-layer paper book — captures gross + book_state.
+            await _record_loop_attempt(
+                "_two_layer_paper_loop",
+                "ok" if _ok else "refused" if _ref else "error",
+                reason=str(_why)[:400] if _why else None,
+                detail={"status":     res.get("status"),
+                        "nav":        res.get("nav"),
+                        "book_state": res.get("book_state"),
+                        "gross":      res.get("gross"),
+                        "attempts":   _tries,
+                        "ok":         _ok,
+                        "refused":    _ref},
+                writer="src.api.main._two_layer_paper_loop")
         except Exception as _e:
             print(f"[TWO-LAYER] ⚠️  mark failed: {_e}")
             await _beat("_two_layer_paper_loop", ok=False, error=str(_e))
+            # A-408-5: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_two_layer_paper_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._two_layer_paper_loop")
         await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
@@ -1883,9 +2056,33 @@ async def _fusion_paper_loop():
                   f"n_days={res.get('n_days_marked')} validated={res.get('validated')}")
             await _beat("_fusion_paper_loop", ok=_ok, refused=_ref, error=_why,
                         detail={"attempts": _tries})
+            # A-408-5: per-iteration record (success / refused / error).
+            # R64/R65 fusion book — fill_ratio + capacity_status are
+            # load-bearing for forward track record.
+            await _record_loop_attempt(
+                "_fusion_paper_loop",
+                "ok" if _ok else "refused" if _ref else "error",
+                reason=str(_why)[:400] if _why else None,
+                detail={"status":          res.get("status"),
+                        "nav":             res.get("nav"),
+                        "gross":           res.get("gross"),
+                        "fill_ratio":      res.get("fill_ratio_overall"),
+                        "capacity_status": res.get("capacity_status"),
+                        "detector_fired":  res.get("detector_fired_today"),
+                        "n_days_marked":   res.get("n_days_marked"),
+                        "validated":       res.get("validated"),
+                        "attempts":        _tries,
+                        "ok":              _ok,
+                        "refused":         _ref},
+                writer="src.api.main._fusion_paper_loop")
         except Exception as _e:
             print(f"[FUSION-PAPER] ⚠️  mark failed: {_e}")
             await _beat("_fusion_paper_loop", ok=False, error=str(_e))
+            # A-408-5: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_fusion_paper_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._fusion_paper_loop")
         await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
@@ -2044,9 +2241,31 @@ async def _factor_tilt_loop():
                   f"n_days={res.get('n_days_marked')}")
             _ok, _ref, _why = _classify(res)
             await _beat("_factor_tilt_loop", ok=_ok, refused=_ref, error=_why)
+            # A-408-5: per-iteration record (success / refused / error).
+            # Class B — uses _classify(res) directly (no valuation-window).
+            # Capture factor attribution so the audit shows the actual
+            # factor-sharpe distribution, not just "ok".
+            await _record_loop_attempt(
+                "_factor_tilt_loop",
+                "ok" if _ok else "refused" if _ref else "error",
+                reason=str(_why)[:400] if _why else None,
+                detail={"status":         res.get("status"),
+                        "nav":            res.get("nav"),
+                        "today_return":   res.get("today_return"),
+                        "factor_sharpe":  res.get("factor_sharpe_attribution"),
+                        "max_share":      res.get("max_single_factor_sharpe_share"),
+                        "n_days_marked":  res.get("n_days_marked"),
+                        "ok":             _ok,
+                        "refused":        _ref},
+                writer="src.api.main._factor_tilt_loop")
         except Exception as _e:
             print(f"[FACTOR-TILT] ⚠️  mark failed: {_e}")
             await _beat("_factor_tilt_loop", ok=False, error=str(_e))
+            # A-408-5: per-iteration record (exception path).
+            await _record_loop_attempt(
+                "_factor_tilt_loop", "error",
+                reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                writer="src.api.main._factor_tilt_loop")
         await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 

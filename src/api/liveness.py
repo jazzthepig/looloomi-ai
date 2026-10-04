@@ -41,6 +41,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_hl_book_loop":             {"max_age_h": 48, "kind": "marker"},   # S-413
     "_tokenization_tilt_loop":   {"max_age_h": 48, "kind": "marker"},   # S-427
     "_core_cap_loop":            {"max_age_h": 48, "kind": "marker"},   # S-473 ① 市值加权核心
+    "_regime_daily_loop":        {"max_age_h": 24, "kind": "marker"},   # S-475 5b 指纹日更
     "_beta_plus_loop":           {"max_age_h": 48, "kind": "marker"},   # S-429
     "_style_header_loop":        {"max_age_h": 24, "kind": "marker"},   # T-039
     "_interpret_loop":           {"max_age_h": 24, "kind": "marker"},   # T-040
