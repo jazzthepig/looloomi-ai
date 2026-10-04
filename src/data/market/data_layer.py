@@ -3435,8 +3435,9 @@ async def get_cg_ohlc_range(coin_id: str, from_ts: int, to_ts: int,
                 # only to 0.03–6.3%. It also froze the readiness guards: the row
                 # labelled D was first written early on D and never changed, so
                 # "written after D's close" was never true for most coins.
-                d = (datetime.fromtimestamp(float(k[0]) / 1000, tz=timezone.utc)
-                     - timedelta(days=1)).date()
+                # 语义一处定义(T-049):bar_semantics.STAMP["coingecko_ohlc_range"] = "close"
+                from src.data.market.bar_semantics import covered_day
+                d = covered_day("coingecko_ohlc_range", k[0])
                 out.append({"trade_date": d.isoformat(),
                             "open": float(k[1]), "high": float(k[2]),
                             "low": float(k[3]), "close": float(k[4])})

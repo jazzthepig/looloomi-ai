@@ -200,6 +200,7 @@
     "panel_closes",
     "panel_funding",
     "refresh_depth_divergence",
+    "refresh_regime_daily",
     "resolve_depth_divergence"
   ]
 }

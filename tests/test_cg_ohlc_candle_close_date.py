@@ -55,4 +55,5 @@ def test_router_volume_uses_the_same_convention():
     import inspect
     from src.api.routers import ohlcv
     src = inspect.getsource(ohlcv)
-    assert "timedelta(days=1)).date()" in src
+    # T-049:语义收进 bar_semantics,路由的成交量也走同一个函数(不再自己减一天)
+    assert 'covered_day("coingecko_market_chart"' in src and "timedelta(days=1)).date()" not in src

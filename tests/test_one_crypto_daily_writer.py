@@ -98,3 +98,9 @@ def test_backfill_cg_pro_symbols_restricts_to_the_named_mappings(monkeypatch):
                                             symbols="one, ai,NOPE", x_internal_token="t"))
     assert sorted(seen) == [("AI", "sleepless-ai"), ("ONE", "harmony")]
     assert out["skipped_no_coin_id"] == ["NOPE"]
+
+
+def test_research_reads_for_lanes_are_registered():
+    """T-045 / T-046 / T-047 的只读入口:lane 不持 Supabase key,研究数据走 Railway 读端点。"""
+    paths = {r.path for r in ohlcv.router.routes}
+    assert {"/api/v1/research/channels", "/api/v1/research/core-alpha", "/internal/research/book-navs"} <= paths

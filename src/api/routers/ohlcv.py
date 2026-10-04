@@ -110,8 +110,8 @@ async def _fetch_cg_daily(client: httpx.AsyncClient, coin_id: str, days: int) ->
                 for v in (_h.get("volumes") or []):
                     if len(v) >= 2:
                         # S-436: the 00:00 point carries the 24h ending there = the day before.
-                        _d = (datetime.fromtimestamp(float(v[0]) / 1000, tz=timezone.utc)
-                              - timedelta(days=1)).date()
+                        from src.data.market.bar_semantics import covered_day
+                        _d = covered_day("coingecko_market_chart", v[0])   # 一处定义(T-049)
                         vol_by_date[_d.isoformat()] = float(v[1])
             except Exception:
                 pass          # volume is decoration; the candle is the point
@@ -442,6 +442,53 @@ async def research_ohlcv(symbol: str,
                                         "trade_date": f"gte.{start}", "order": "trade_date.asc",
                                         "select": "trade_date,open,high,low,close,volume"})
     return {"status": "ok", "symbol": symbol.upper(), "source": source, "count": len(rows), "data": rows}
+
+
+@router.get("/api/v1/research/channels")
+async def research_channels(level: str = Query("aggregate", pattern="^(aggregate|category)$"),
+                            start: str = Query("2020-01-01")):
+    """上游通道日度序列(S-458,T-046 用):稳定币 / 代币化 / RWA 分类市值之和与成员数,外加全市场市值与成交额。
+    `aggregate` = 每个通道的合计(category_id='*')与 global;`category` = 逐个分类。`basis` 标幸存者回填。
+    这些都是**水平**;研究里取变化量与加速度。"""
+    if not _SB_URL or not _SB_KEY:
+        raise HTTPException(status_code=503, detail="supabase not configured")
+    params = {"d": f"gte.{start}", "order": "d.asc",
+              "select": "d,channel,category_id,mcap,n_members,basis"}
+    if level == "aggregate":
+        params["or"] = "(category_id.eq.*,channel.eq.global)"
+    rows = await _paged("channel_series_daily", params)
+    return {"status": "ok", "level": level, "count": len(rows), "data": rows}
+
+
+@router.get("/api/v1/research/core-alpha")
+async def research_core_alpha(start: str = Query("2023-01-01")):
+    """① 加权参数 α 的三条日收益序列(α = 0 等权 / 0.5 / 1 市值,单币 ≤ 40%,24 名,每日再平衡)——
+    S-472 那条 SQL 收成的库函数 `core_alpha_daily`。2026-10-02 以前是回放(先验),之后的前向记录看 `core_cap_daily`。"""
+    from src.api.store import supabase_rpc
+    rows = await supabase_rpc("core_alpha_daily", {"p_start": start})
+    if not isinstance(rows, list):
+        raise HTTPException(status_code=502, detail="core_alpha_daily 读不到 —— 读不到 ≠ 没有数据")
+    return {"status": "ok", "count": len(rows), "data": rows,
+            "note": "回放序列:成员是今天的 24 名往回取(幸存者),不计成本"}
+
+
+@router.get("/internal/research/book-navs")
+async def research_book_navs(x_internal_token: str = Header(None)):
+    """登记表里每本账的逐日 NAV 与它自己的基准(给 T-047 / T-045 用)。只读。"""
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.data.accounting.registry import BOOKS, load_navs
+    navs, bench = await load_navs()
+
+    def _ser(s):
+        if s is None:
+            return []
+        s = s.dropna().sort_index()
+        return [{"d": d.date().isoformat(), "nav": float(v)} for d, v in s.items()]
+    return {"status": "ok",
+            "books": [{"id": b.id, "layer": b.layer, "status": b.status, "caveat": b.caveat,
+                       "benchmark": b.benchmark, "nav": _ser(navs.get(b.id)), "bench": _ser(bench.get(b.id))}
+                      for b in BOOKS]}
 
 
 @router.get("/api/v1/research/market-state")

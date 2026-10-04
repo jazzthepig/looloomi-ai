@@ -206,6 +206,7 @@ async def deep_panel_symbols_detailed() -> tuple[list[str] | None, dict, list[st
 
 async def _fetch_one(symbol: str, days: int) -> tuple[str, list[dict], str | None]:
     """One symbol. Returns (symbol, rows, error). Never raises."""
+    from src.data.market.bar_semantics import covered_day
     from src.data.market.data_layer import get_klines_binance
     pair = symbol if symbol.upper().endswith("USDT") else f"{symbol.upper()}USDT"
     try:
@@ -220,11 +221,11 @@ async def _fetch_one(symbol: str, days: int) -> tuple[str, list[dict], str | Non
     rows = []
     for k in kl[-days:]:
         try:
-            ts = int(k["time"]) / 1000.0
             rows.append({
                 "symbol": symbol.upper(),
                 "asset_class": "Crypto",
-                "trade_date": datetime.fromtimestamp(ts, timezone.utc).date().isoformat(),
+                # 语义一处定义(T-049):Binance 日 K 的时间戳是开盘时刻 ⇒ 覆盖日 = 当天
+                "trade_date": covered_day("binance_klines", k["time"]).isoformat(),
                 "open": float(k["open"]), "high": float(k["high"]),
                 "low": float(k["low"]), "close": float(k["close"]),
                 "volume": float(k["volume"]),

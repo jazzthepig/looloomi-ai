@@ -47,15 +47,17 @@ WEIGHTINGS = ("cap", "equal")
 
 # ── 纯函数 ──────────────────────────────────────────────────────────────────
 
+from src.data.market.bar_semantics import covered_day, is_day_boundary  # noqa: E402
+
 def parse_market_chart(prices: list, market_caps: list) -> list[dict]:
     """market_chart → [{d, price, mcap}]。只保留 00:00 UTC 的点,d = 点的日期 − 1。"""
     caps = {int(t): v for t, v in (market_caps or []) if t is not None}
     out = []
     for t, p in prices or []:
         t = int(t)
-        if t % 86_400_000 != 0 or p is None:
+        if not is_day_boundary(t) or p is None:
             continue
-        d = (datetime.fromtimestamp(t / 1000, tz=timezone.utc) - timedelta(days=1)).date()
+        d = covered_day("coingecko_market_chart", t)          # 语义一处定义(T-049)
         m = caps.get(t)
         out.append({"d": d.isoformat(), "price": float(p),
                     "mcap": float(m) if m else None})

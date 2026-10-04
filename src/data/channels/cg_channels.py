@@ -53,15 +53,17 @@ def discover(category_ids: set[str]) -> dict[str, list[str]]:
     return out
 
 
+from src.data.market.bar_semantics import covered_day, is_day_boundary  # noqa: E402
+
 def daily_points(points: list, tolerance_ms: int = 3_600_000) -> dict[str, float]:
     """[[ts_ms, v]…] → {覆盖日: v}。取 00:00 UTC 起 1 小时内的点(全局图的时间戳不一定正好是零点),
     d = 点的日期 − 1(S-436 语义);同一天多个点取最早的。"""
     out: dict[str, tuple[int, float]] = {}
     for t, v in points or []:
         t = int(t)
-        if v is None or t % 86_400_000 > tolerance_ms:
+        if v is None or not is_day_boundary(t, tolerance_ms):
             continue
-        d = (datetime.fromtimestamp(t / 1000, tz=timezone.utc) - timedelta(days=1)).date().isoformat()
+        d = covered_day("coingecko_global_chart", t).isoformat()   # 语义一处定义(T-049)
         if d not in out or t < out[d][0]:
             out[d] = (t, float(v))
     return {d: v for d, (_, v) in out.items()}
