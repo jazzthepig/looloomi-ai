@@ -1,0 +1,26 @@
+{
+  "id": "T-044",
+  "title": "跨源日期对齐与污染的常驻守卫:每天按源比对 binance_hist,同日 vs 错一天、持续偏离,一旦漂移就红",
+  "owner": "lane-a",
+  "status": "open",
+  "source": "S-436(CG K 线晚一天)、S-459(采样点冒充 K 线且晚一天)、S-468(binance_hist 前推假价;CG Pro K 线 2025-12-27~2026-03-26 被污染)—— 三次都是事后偶然发现,没有常驻检查",
+  "allowed_paths": [
+    "src/data/market/date_alignment_guard.py(新)",
+    "tests/test_date_alignment_guard.py(新)",
+    "src/api/main.py 里新增一个循环(在 lane-a worktree 里改,交 patch)",
+    "src/api/liveness.py 一行 SLO"
+  ],
+  "forbidden_paths": [
+    "任何写价格表的代码(Rule 3b:摄入是 Seth 的)",
+    "src/data/market/data_layer.py",
+    "主目录直接改(§Seth-1003d)"
+  ],
+  "acceptance": {
+    "check": "只读。每天对 coingecko_pro_ohlc、asset_mcap_daily(price)、hyperliquid 三个源,取近 30 天与 binance_hist 都有行、且 binance_hist 成交量 > 0 的 (symbol, d):① 同日收盘差 < 0.5% 的比例,与错一天(d−1、d+1)的比例对比;② 同日 |ln(比值)| > 3% 连续 ≥ 5 天的 symbol;③ binance_hist 自己:成交量 0 且 O=H=L=C 的新行数。结果写一张表(每天每源一行,附最差的 10 个 symbol),并接 _record_loop_attempt。",
+    "expect": "回放验证:在 2026-09-28(S-436 修复前)的数据形态上,对 coingecko_pro_ohlc 判红(错一天胜过同日);在今天的数据上判绿;对 2026-02 的 CG Pro 判出 LDO / GRT / ATOM 的持续偏离。三个判据各有一个测试用合成数据钉住,另有一个测试证明守卫能抓住它要抓的东西(把一列整体后移一天必须判红)。"
+  },
+  "prior_value": "无 —— 这三类问题都靠人在别的排查里撞见",
+  "created": "2026-10-04",
+  "verified": null,
+  "notes": "红灯阈值先定:同日一致比例 < 90%,或错一天的一致比例高于同日。判据与阈值写在模块 docstring,改动要记台账。"
+}
