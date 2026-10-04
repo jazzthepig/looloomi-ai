@@ -2,7 +2,7 @@
   "id": "T-027",
   "title": "多空账本存完整权重(不只前三),让「是否持有 X」可回答",
   "owner": "seth",
-  "status": "open",
+  "status": "in_review",
   "source": "S-427",
   "allowed_paths": [
     "src/data/signals/",
@@ -17,5 +17,6 @@
   },
   "prior_value": "只存 top_longs/top_shorts 各 3 个;09-24/25 LINK 是否持有无法回答",
   "created": "2026-09-26",
-  "verified": null
+  "verified": null,
+  "notes": " | 2026-10-04 Seth(S-481):causal / combined / scalable 每行 NAV 带完整 state(weights + mark_prices)落 `state` 列;验收 = 部署后第一行 state.weights 非空且条目数 = n_positions。"
 }
