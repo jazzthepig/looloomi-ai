@@ -29,6 +29,9 @@ class Book:
     status: str = "paper"      # paper | dormant | retired_by_design
     filters: dict = field(default_factory=dict)
     caveat: str = ""
+    #: S-481:这几本账在 Redis 状态丢失时曾把 NAV 重置为 1.0(曲线被拼接)。它们的 `daily_return` 是每天按当时持仓
+    #: 记的真收益,复利它才是连续的 NAV;表里的 `nav` 列在重置日断开。
+    nav_from_returns: bool = False
 
 
 BOOKS: tuple[Book, ...] = (
@@ -50,11 +53,11 @@ BOOKS: tuple[Book, ...] = (
     Book("hl_jev", "①+③", "HL 4 币 Jev 仓位(JEV_tom)", "同上,Jev 参与调整",
          "hl_book_daily", "hl", arm="JEV_tom", benchmark="arm:H0_hold"),
     Book("causal_paper", "④", "因果多空(资金费率)", "资金费率与持仓结构的多空",
-         "causal_paper_nav", "plain"),
+         "causal_paper_nav", "plain", nav_from_returns=True),
     Book("scalable_book", "④", "可扩展多空组合", "多策略多空",
-         "scalable_book_nav", "plain"),
+         "scalable_book_nav", "plain", nav_from_returns=True),
     Book("combined_book", "④", "多空合成", "多空合成",
-         "combined_book_nav", "plain"),
+         "combined_book_nav", "plain", nav_from_returns=True),
     Book("dingge_paper", "事件", "Dingge 事件", "事件驱动",
          "dingge_paper_nav", "plain"),
     Book("fusion_paper", "④", "Fusion 多空", "多 sleeve 融合",
@@ -129,7 +132,8 @@ async def load_navs() -> tuple[dict[str, pd.Series], dict[str, pd.Series]]:
             continue
         if b.table not in cache:
             if b.shape == "plain":
-                sel = "mark_date,nav" + (",inception_id" if b.table == "fusion_paper_nav" else "")
+                sel = ("mark_date,nav" + (",inception_id" if b.table == "fusion_paper_nav" else "")
+                       + (",daily_return" if b.nav_from_returns else ""))
                 cache[b.table] = await _read_all(b.table, {"select": sel, "order": "mark_date.asc", **b.filters})
             elif b.shape == "arms":
                 cache[b.table] = await _read_all(b.table, {"select": "d,arm,nav", "order": "d.asc"})
@@ -142,7 +146,13 @@ async def load_navs() -> tuple[dict[str, pd.Series], dict[str, pd.Series]]:
             if b.table == "fusion_paper_nav":
                 inc = rows[-1].get("inception_id")
                 rows = [r for r in rows if r.get("inception_id") == inc]
-            s = pd.Series([float(r["nav"]) for r in rows], index=pd.to_datetime([r["mark_date"] for r in rows]))
+            if b.nav_from_returns:
+                rets = pd.Series([float(r.get("daily_return") or 0.0) for r in rows],
+                                 index=pd.to_datetime([r["mark_date"] for r in rows]))
+                rets = rets[~rets.index.duplicated(keep="last")].sort_index()
+                s = (1 + rets).cumprod()
+            else:
+                s = pd.Series([float(r["nav"]) for r in rows], index=pd.to_datetime([r["mark_date"] for r in rows]))
             navs[b.id] = s[~s.index.duplicated(keep="last")]
             bench[b.id] = panel_ew
         elif b.shape == "arms":

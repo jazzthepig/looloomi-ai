@@ -99,6 +99,7 @@
       "nav",
       "price_pnl",
       "rebalanced",
+      "state",
       "top_longs",
       "top_shorts"
     ],
@@ -114,6 +115,7 @@
       "nucleus",
       "price_pnl",
       "rebalanced",
+      "state",
       "top_longs",
       "top_shorts"
     ],
@@ -175,6 +177,7 @@
       "price_pnl",
       "rebalanced",
       "sleeves",
+      "state",
       "top_longs",
       "top_shorts"
     ],

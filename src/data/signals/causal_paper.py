@@ -100,6 +100,12 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
 
     state = await _redis_get(_STATE_KEY)
     if not isinstance(state, dict) or not state.get("weights"):
+        # S-481:Redis 状态读不到时先从表恢复;表里有历史却恢复不了 ⇒ 报错等人,不从 1.0 重来
+        from src.data.signals.nav_persist import recover_book_state
+        state, _lost = await recover_book_state("causal_paper_nav")
+        if _lost:
+            return {"status": "error", "reason": _lost}
+    if not isinstance(state, dict) or not state.get("weights"):
         # inception — start flat at NAV 1.0 with today's target book
         w = _target_weights(live, DEFAULT_UNIVERSE)
         state = {"inception": today.isoformat(), "nav": 1.0, "weights": w,
@@ -113,7 +119,7 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
             _ok, _why = await _write_nav(today, state["nav"], 0.0,
                                          sum(abs(x) for x in w.values()),
                                          len(w), 0.0, 0.0, 0.0, True, w,
-                                         source=source)
+                                         source=source, state=state)
             if not _ok:
                 return {"status": "mark_failed", "date": today.isoformat(),
                         "error": f"durable_write_failed :: {_why}"}
@@ -176,7 +182,7 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
         _ok, _why = await _write_nav(today, nav, daily_ret,
                                      sum(abs(x) for x in new_w.values()),
                                      len(new_w), funding_pnl, price_pnl, cost, rebalanced,
-                                     dict(longs + shorts), source=source)
+                                     dict(longs + shorts), source=source, state=state)
         if not _ok:
             return {"status": "mark_failed", "date": today.isoformat(),
                     "error": f"durable_write_failed :: {_why}"}
@@ -186,7 +192,7 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
 
 
 async def _write_nav(d, nav, dret, gross, n, fpnl, ppnl, cost, rebal, weights,
-                    source: str = "cron"):
+                    source: str = "cron", state: dict | None = None):
     """Persist one NAV row. Returns (ok, why) — S-334.
 
     ⚠️ THIS FUNCTION USED TO DISCARD ITS OWN RESULT, and that is why this book
@@ -212,7 +218,8 @@ async def _write_nav(d, nav, dret, gross, n, fpnl, ppnl, cost, rebal, weights,
             "gross": round(gross, 4), "n_positions": n, "funding_pnl": round(fpnl, 6),
             "price_pnl": round(ppnl, 6), "cost": round(cost, 6), "rebalanced": rebal,
             "top_longs": longs, "top_shorts": shorts,
-            "mark_source": source}])
+            "mark_source": source,
+            "state": _state_json(state)}])
     except Exception as e:
         _log.warning("[causal_paper] nav write: %s", e)
         return False, f"{type(e).__name__}: {e}"
@@ -252,3 +259,16 @@ async def get_curve(limit: int = 400) -> dict:
 if __name__ == "__main__":
     import asyncio, json
     print(json.dumps(asyncio.run(mark_and_rebalance(dry_run=True)), indent=2))
+
+
+def _state_json(state):
+    """S-481:整份状态随 NAV 行落库(完整权重 + 成交参考价),Redis 丢了能从表恢复;也让「那天是否持有 X」可回答(T-027)。"""
+    if not isinstance(state, dict):
+        return None
+    out = {}
+    for k in ("inception", "weights", "mark_prices", "last_rebal", "last_mark"):
+        v = state.get(k)
+        if isinstance(v, dict):
+            v = {str(a): (round(float(b), 10) if isinstance(b, (int, float)) else b) for a, b in v.items()}
+        out[k] = v
+    return out

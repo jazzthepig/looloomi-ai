@@ -278,3 +278,43 @@ async def nav_table_has_any_rows(table: str, inception_id: str | None = None,
     except Exception as e:                                        # noqa: BLE001
         _log.warning("[NAV] %s history check raised: %s", table, e)
         return None
+
+
+async def recover_book_state(table: str) -> tuple[dict | None, str | None]:
+    """Redis 里的账本状态丢了 —— 从表里最后一行的 `state` 列恢复(S-481)。
+
+    返回三种:
+      (state, None)  最后一行带完整状态(weights / mark_prices / last_rebal / nav)→ 照它继续
+      (None, None)   表里一行都没有 → 真的是起点,调用方可以从 1.0 建仓
+      (None, 原因)   读不到表,或表里有行但没有可用的状态 → **不许从 1.0 重来**,调用方报错等人
+
+    为什么(实测 2026-10-04):causal / combined / scalable 三本多空账本在 Redis 状态读不到时直接「起点」,
+    把 NAV 重置为 1.0 —— scalable 7 次(10-04 当天还有一次)、combined 7 次、causal 6 次。daily_return 复利 0.900,
+    表里 NAV 首尾比 1.000:曲线是被拼起来的。fusion / factor_tilt / pod / two_layer 早在 S-336 / S-378b 修过同一件事,
+    **这三本没跟上 —— 教训又只留在了学到它的那几个文件里。**
+    """
+    if not table:
+        return None, "没有表名"
+    try:
+        import httpx
+
+        from src.api.store import _SB_KEY, _SB_URL
+        if not _SB_URL or not _SB_KEY:
+            return None, f"{table}:Supabase 未配置 —— 读不到 ≠ 没有历史"
+        async with httpx.AsyncClient(timeout=15) as c:
+            r = await c.get(f"{_SB_URL}/rest/v1/{table}",
+                            params={"select": "mark_date,nav,state", "order": "mark_date.desc", "limit": "1"},
+                            headers={"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"})
+        if r.status_code != 200:
+            return None, f"{table}:读最后一行 HTTP {r.status_code} —— 状态丢失且无法从表恢复,不重置 NAV"
+        rows = r.json()
+    except Exception as e:                                        # noqa: BLE001
+        return None, f"{table}:读最后一行失败 {type(e).__name__} —— 状态丢失且无法从表恢复,不重置 NAV"
+    if not rows:
+        return None, None
+    last = rows[0]
+    st = last.get("state")
+    if isinstance(st, dict) and st.get("weights") and st.get("mark_prices") is not None:
+        return {**st, "nav": float(last["nav"]), "last_mark": last["mark_date"]}, None
+    return None, (f"{table}:Redis 状态丢失,表里最后一行({last.get('mark_date')})没有可恢复的 state —— "
+                  f"不把 NAV 重置为 1.0(S-481);需要人决定是开新起点还是补状态")
