@@ -22,5 +22,5 @@
   "prior_value": "无 —— 这三类问题都靠人在别的排查里撞见",
   "created": "2026-10-04",
   "verified": null,
-  "notes": "红灯阈值先定:同日一致比例 < 90%,或错一天的一致比例高于同日。判据与阈值写在模块 docstring,改动要记台账。"
+  "notes": "红灯阈值先定:同日一致比例 < 90%,或错一天的一致比例高于同日。判据与阈值写在模块 docstring,改动要记台账。 | 2026-10-04 Seth:T-044a(算法 `src/research/validation/t_044_price_source_agreement.py` + 6 个回放测试)已合入;T-044b 待做 —— 在同一模块加 `run_once()`:读三源与 binance_hist、写表 `price_source_agreement_daily`(每天每源一行 + 最差 10 个 symbol)、返回 {ok, reason, …};A 不改 main.py,调度由 Seth 接。"
 }
