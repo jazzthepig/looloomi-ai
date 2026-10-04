@@ -84,7 +84,9 @@ def scorecard_rows(navs: dict[str, pd.Series], bench: dict[str, pd.Series]) -> l
         row: dict[str, Any] = {"id": b.id, "layer": b.layer, "name": b.name, "accounting": b.accounting,
                                "status": b.status, "caveat": b.caveat}
         if s is None or len(s.dropna()) < 2:
-            row["note"] = "没有可用的 NAV"
+            # 「读不到」和「刚起步只有起点一天」是两回事,不能写成同一句(S-474)
+            row["note"] = ("没有可用的 NAV" if s is None or s.dropna().empty
+                           else f"只有起点一天({s.dropna().index.min().date()}),收益从下一个收盘起算")
             out.append(row)
             continue
         m = _metrics(s)

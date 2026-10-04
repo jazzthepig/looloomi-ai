@@ -177,7 +177,7 @@ async def run_once() -> dict[str, Any]:
     navs, _bench = await load_navs()
     core = navs.get(CORE)
     if core is None or core.dropna().empty:
-        return {"ok": False, "reason": "① beta_core 读不到 NAV —— 不出配置"}
+        return {"ok": False, "reason": f"① {CORE} 读不到 NAV —— 不出配置(读不到 ≠ ① 为 0)"}
     today = datetime.now(timezone.utc).date()
     last = min(today - timedelta(days=1), core.dropna().index.max().date())
     days = [x.date() for x in pd.date_range(INCEPTION, last, freq="D")]

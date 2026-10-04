@@ -71,3 +71,11 @@ def test_registry_and_allocator_point_at_the_cap_weighted_core():
     assert by_id["core_cap"].table == cc.TABLE and by_id["core_cap"].arm == cc.CORE_ARM
     assert by_id["beta_core"].layer == "②"          # 原 ①,登记永远在(v0.2 P2)
     assert [b.id for b in BOOKS if b.layer == "①"] == ["core_cap"]
+
+
+def test_scorecard_tells_one_day_from_unreadable():
+    from src.data.accounting.registry import scorecard_rows
+    one = pd.Series([0.999], index=pd.to_datetime(["2026-10-02"]))
+    rows = {r["id"]: r for r in scorecard_rows({"core_cap": one}, {})}
+    assert "只有起点一天" in rows["core_cap"]["note"]
+    assert rows["beta_core"]["note"] == "没有可用的 NAV"
