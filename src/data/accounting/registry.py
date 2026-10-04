@@ -25,7 +25,7 @@ class Book:
     shape: str                 # 'plain' (mark_date, nav) | 'arms' (d, arm, nav) | 'hl' (d, nav jsonb)
     arm: Optional[str] = None
     accounting: str = "own"    # 'shared_kernel' | 'own'
-    benchmark: str = "panel_ew"   # 'arm:<名字>' | 'panel_ew'(① 的 24 名面板等权持有,binance_hist)
+    benchmark: str = "core"   # 'arm:<名字>' | 'core'(① 本身:10-02 前 core_alpha α=1 回放,之后 core_cap 前向;S-482)
     status: str = "paper"      # paper | dormant | retired_by_design
     filters: dict = field(default_factory=dict)
     caveat: str = ""
@@ -124,7 +124,7 @@ async def load_navs() -> tuple[dict[str, pd.Series], dict[str, pd.Series]]:
         df.index = pd.to_datetime(df["mark_date"])
         navs["beta_core"] = df["nav"].astype(float)
         core_bench = df["benchmark_nav"].astype(float)
-    panel_ew = await _panel_ew_benchmark()
+    core_bench = await _core_benchmark()
     cache: dict[str, list] = {}
     for b in BOOKS:
         if b.id == "beta_core":
@@ -154,13 +154,13 @@ async def load_navs() -> tuple[dict[str, pd.Series], dict[str, pd.Series]]:
             else:
                 s = pd.Series([float(r["nav"]) for r in rows], index=pd.to_datetime([r["mark_date"] for r in rows]))
             navs[b.id] = s[~s.index.duplicated(keep="last")]
-            bench[b.id] = panel_ew
+            bench[b.id] = core_bench
         elif b.shape == "arms":
             df = pd.DataFrame(rows)
             df["d"] = pd.to_datetime(df["d"])
             pv = df.pivot_table(index="d", columns="arm", values="nav")
             navs[b.id] = pv.get(b.arm)
-            bench[b.id] = pv.get(b.benchmark.split(":", 1)[1]) if b.benchmark.startswith("arm:") else panel_ew
+            bench[b.id] = pv.get(b.benchmark.split(":", 1)[1]) if b.benchmark.startswith("arm:") else core_bench
         else:
             idx = pd.to_datetime([r["d"] for r in rows])
             navs[b.id] = pd.Series([float((r["nav"] or {}).get(b.arm, np.nan)) for r in rows], index=idx)
@@ -194,3 +194,26 @@ async def _panel_ew_benchmark() -> Optional[pd.Series]:
 async def scorecard() -> list[dict]:
     navs, bench = await load_navs()
     return scorecard_rows(navs, bench)
+
+
+async def _core_benchmark() -> Optional[pd.Series]:
+    """多空 / 事件 / 无内臂账本的基准 = ① 本身(S-480:① 只有一条序列)。
+
+    10-02 及以前:库函数 `core_alpha_daily` 的 α=1 回放(24 名市值加权、单币 ≤ 40%、每日再平衡);
+    之后:`core_cap_daily.cap_a1` 的前向收益(周一再平衡)。两段按收益拼接成一条 NAV。
+    读不到 ⇒ None,成绩单会说「基准没有覆盖」,不悄悄退回等权。
+    """
+    from src.api.store import supabase_rpc
+    from src.data.signals.core_cap import CORE_ARM, INCEPTION, TABLE
+    from src.data.style.header import _read_all
+    rows = await supabase_rpc("core_alpha_daily", {"p_start": "2026-06-01"})
+    if not isinstance(rows, list) or not rows:
+        return None
+    rep_ = pd.Series({pd.Timestamp(r["d"]): float(r["ret"]) for r in rows
+                      if float(r.get("alpha", -1)) == 1.0 and r.get("ret") is not None}).sort_index()
+    rep_ = rep_[rep_.index <= INCEPTION]
+    fwd = await _read_all(TABLE, {"select": "d,nav", "arm": f"eq.{CORE_ARM}", "order": "d.asc"})
+    f = pd.Series({pd.Timestamp(r["d"]): float(r["nav"]) for r in fwd}).sort_index()
+    rets = pd.concat([rep_, f.pct_change().dropna()[lambda x: x.index > INCEPTION]]).sort_index()
+    rets = rets[~rets.index.duplicated(keep="first")]
+    return (1 + rets).cumprod()

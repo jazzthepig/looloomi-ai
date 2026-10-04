@@ -429,6 +429,13 @@ def _classify_loops(loops: dict) -> list[dict]:
                             f"{threshold}-refusal threshold inside the "
                             f"{pol['stale_after_days']}d window — systematic, "
                             f"not transient. " + note)
+        elif verdict == "failing" and stale and str(name).startswith("_book_") and \
+                isinstance(r.get("age_s"), (int, float)) and r["age_s"] > 72 * 3600:
+            # S-482:`_book_<name>_loop` 不是循环,是 POST /internal/force-mark/{book} 每次手动调用留下的心跳。
+            # 旧构建上手动打过一次失败,之后再没人调 —— 它永远「在等」一个不会来的下一轮。按旧闻处理。
+            cls = "no_action"
+            note = (f"manual force-mark beat, not a loop — last called {r['age_s'] / 86400:.0f} days ago "
+                    "on an older build; the book's own cron loop is the one to read")
         elif verdict == "failing":
             # A fossil verdict is NOT a judgement on the running build (S-322).
             cls = "waiting" if stale else "act_now"

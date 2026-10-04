@@ -198,19 +198,24 @@ def _pillar_of(asset: dict, K: str):
 #: `_age_sweep_loop` 睡整整一小时。整晚四次「还没在当前构建下跑过」
 #: 都是这个,而它看起来像「循环坏了」——**两个状态,一个表象**。
 #:
-#: 启动延迟本来只有两个目的:让应用先启动完、让 41 个循环别同时开火。
-#: 两个都不需要一小时。
-_BOOT_DELAY_CAP_S = 180
+#: 启动延迟本来只有两个目的:让应用先启动完、让循环别同时开火。
+#:
+#: **S-482(2026-10-05):上限 180 秒解决了第一个目的,却把第二个弄反了。** 实测 51 个循环里 **43 个在同一个
+#: 30 秒窗口里开火**(部署后约 3 分钟)—— Supabase 的熔断在这一刻打开,风格表头、regime 指纹、L3、面板映射
+#: 几乎每次部署后都报一轮「读不到 / 写入失败」,20 分钟后自己好。上限放到 900 秒,同值的再错开几秒:
+#: 任一 30 秒窗口最多 9 个,最慢的 17 分钟内跑第一轮。
+_BOOT_DELAY_CAP_S = 900
+_BOOT_SEQ = __import__("itertools").count()
 
 
 def _boot_delay(want_s: float) -> float:
-    """封顶到 `_BOOT_DELAY_CAP_S`,**但保持原有的先后次序**。
+    """封顶到 `_BOOT_DELAY_CAP_S`,**保持原有的先后次序**,同值的循环再错开 0–24 秒。
 
     次序是有意义的(`_track_record_loop` 要排在 `_outcome_tracker_loop` 之后),
-    所以不能一律改成同一个数。加一个与原值成正比的小偏移即可保序,
-    最坏情况 4 分钟,而不是 60 分钟。
+    所以不能一律改成同一个数。相邻两档原值至少差 30 秒,错开量最多 24 秒,不会颠倒次序。
     """
-    return min(float(want_s), _BOOT_DELAY_CAP_S) + (float(want_s) / 3600.0) * 60.0
+    base = min(float(want_s), _BOOT_DELAY_CAP_S) + (float(want_s) / 3600.0) * 120.0
+    return base + (next(_BOOT_SEQ) % 7) * 4.0
 
 
 async def _hourly_t2_snapshot_loop():
@@ -1155,10 +1160,12 @@ async def _regime_daily_loop():
     from datetime import datetime as _dt, timedelta as _td, timezone as _tz
     await _asyncio.sleep(_boot_delay(480))
     while True:
+        _rd_ok = False
         try:
             from src.api.store import supabase_rpc_write
             _since = (_dt.now(_tz.utc).date() - _td(days=3)).isoformat()
             res = await supabase_rpc_write("refresh_regime_daily", {"p_since": _since})
+            _rd_ok = bool(res.ok)
             _n = res.value if res.ok else None
             _why = f"重算 {_since} 起已收完的日子:{_n} 行" if res.ok else f"写入失败:{res.why}"
             print(f"[REGIME-DAILY] {_why}")
@@ -1171,7 +1178,7 @@ async def _regime_daily_loop():
             await _beat("_regime_daily_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_regime_daily_loop", "error", reason=f"{type(_e).__name__}: {_e}"[:400],
                                        writer="src.api.main._regime_daily_loop")
-        await _asyncio.sleep(6 * 3600)
+        await _asyncio.sleep(6 * 3600 if _rd_ok else 1200)   # 失败 20 分钟后重试(S-482)
 
 
 @app.on_event("startup")

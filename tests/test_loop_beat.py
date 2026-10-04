@@ -434,7 +434,7 @@ def t_no_loop_can_be_outrun_by_the_deploy_cadence():
     from src.api.main import _BOOT_DELAY_CAP_S, _boot_delay
     _check(f"封顶 {_BOOT_DELAY_CAP_S}s 且保序",
            _boot_delay(3600) > _boot_delay(900) > _boot_delay(120)
-           and _boot_delay(3600) <= _BOOT_DELAY_CAP_S + 60,
+           and _boot_delay(3600) <= _BOOT_DELAY_CAP_S + 150,
            f"3600→{_boot_delay(3600):.0f} 900→{_boot_delay(900):.0f} "
            f"120→{_boot_delay(120):.0f}")
 
