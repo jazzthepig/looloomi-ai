@@ -1181,6 +1181,43 @@ async def _regime_daily_loop():
         await _asyncio.sleep(6 * 3600 if _rd_ok else 1200)   # 失败 20 分钟后重试(S-482)
 
 
+async def _price_agreement_loop():
+    """T-044b:跨源价格一致性守卫(S-484)。每 6 小时把 coingecko_pro_ohlc / asset_mcap_daily / hyperliquid 与
+    binance_hist 比近 45 天,每天每源一行进 `price_source_agreement_daily`。有 error 级发现 ⇒ 心跳报失败(要人看)。
+    判据来自 lane A 的 T-044a `agreement()`。判活:`select source, max(d) from price_source_agreement_daily group by 1`。
+    """
+    await _asyncio.sleep(_boot_delay(540))
+    while True:
+        _pa_ok = False
+        try:
+            from src.data.market.price_agreement_guard import run_once as _pa_run
+            r = await _pa_run()
+            _pa_ok = bool(r.get("ok"))
+            print(f"[PRICE-AGREE] {str(r.get('reason'))[:200]}")
+            _clean = _pa_ok and not r.get("n_error")
+            await _beat("_price_agreement_loop", ok=_clean,
+                        detail={"rows": [{k: x.get(k) for k in ("source", "n_symbols", "n_findings", "n_error", "by_kind")}
+                                         for x in (r.get("rows") or [])]},
+                        error=None if _clean else (f"{r.get('n_error')} 条 error 级跨源不一致 —— {r.get('reason')}"[:200]
+                                                   if _pa_ok else str(r.get("reason"))[:200]))
+            await _record_loop_attempt("_price_agreement_loop", "ok" if _pa_ok else "error",
+                                       reason=str(r.get("reason"))[:400],
+                                       detail={"n_error": r.get("n_error")},
+                                       writer="src.api.main._price_agreement_loop")
+        except Exception as _e:
+            print(f"[PRICE-AGREE] ⚠️  pass FAILED: {_e}")
+            await _beat("_price_agreement_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_price_agreement_loop", "error", reason=f"{type(_e).__name__}: {_e}"[:400],
+                                       writer="src.api.main._price_agreement_loop")
+        await _asyncio.sleep(6 * 3600 if _pa_ok else 1200)
+
+
+@app.on_event("startup")
+async def _start_price_agreement_loop():
+    _asyncio.create_task(_price_agreement_loop())
+    print("[PRICE-AGREE] ✅ cross-source price agreement guard scheduled (price_source_agreement_daily)")
+
+
 @app.on_event("startup")
 async def _start_regime_daily_loop():
     _asyncio.create_task(_regime_daily_loop())
