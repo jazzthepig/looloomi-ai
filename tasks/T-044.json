@@ -2,7 +2,7 @@
   "id": "T-044",
   "title": "跨源日期对齐与污染的常驻守卫:每天按源比对 binance_hist,同日 vs 错一天、持续偏离,一旦漂移就红",
   "owner": "lane-a",
-  "status": "in_review",
+  "status": "done",
   "source": "S-436(CG K 线晚一天)、S-459(采样点冒充 K 线且晚一天)、S-468(binance_hist 前推假价;CG Pro K 线 2025-12-27~2026-03-26 被污染)—— 三次都是事后偶然发现,没有常驻检查",
   "allowed_paths": [
     "src/data/market/date_alignment_guard.py(新)",
@@ -21,6 +21,10 @@
   },
   "prior_value": "无 —— 这三类问题都靠人在别的排查里撞见",
   "created": "2026-10-04",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-05T12:00Z",
+    "value": "price_source_agreement_daily 首行 2026-10-05:coingecko_pro_ohlc 27 币 0 发现、asset_mcap_daily 27 币 0 发现、hyperliquid 0 币(该源日线已退役);_price_agreement_loop verdict ok(build df2043e2)。判据 = lane A 的 agreement()(6 个回放测试含 S-436 / S-459 / S-468 / 2 月 LDO-GRT-ATOM),调度与落表 = S-484。"
+  },
   "notes": "红灯阈值先定:同日一致比例 < 90%,或错一天的一致比例高于同日。判据与阈值写在模块 docstring,改动要记台账。 | 2026-10-04 Seth:T-044a(算法 `src/research/validation/t_044_price_source_agreement.py` + 6 个回放测试)已合入;T-044b 待做 —— 在同一模块加 `run_once()`:读三源与 binance_hist、写表 `price_source_agreement_daily`(每天每源一行 + 最差 10 个 symbol)、返回 {ok, reason, …};A 不改 main.py,调度由 Seth 接。 | 2026-10-05 Seth(S-484):T-044b 由 Seth 接手实现 `src/data/market/price_agreement_guard.py` + `_price_agreement_loop`(6h)+ 表 price_source_agreement_daily(每天每源一行),复用 A 的 agreement();A 的 skeleton / t_044_findings 版本未合入(全史读取不分页、只拿到最老 1,000 行;每天把 2 月已知污染重报;每发现插一行不去重;表不存在)。验收 = 部署后第一行。"
 }

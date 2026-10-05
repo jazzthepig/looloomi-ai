@@ -2,7 +2,6 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
-| in_review | T-044 | lane-a | 跨源日期对齐与污染的常驻守卫:每天按源比对 binance_hist,同日 vs 错一天、持续偏离,一旦漂移就红 | 回放验证:在 2026-09-28(S-436 修复前)的数据形态上,对 coingecko_pro_ohlc 判红(错一天胜过同日);在今天的数据上判绿;对 2026-02 的 CG Pro 判出 LDO / GRT / ATOM 的持续偏离。三个判据各有一个测试用合成数据钉住,另有一个测试证明守卫能抓住它要抓的东西(把一列整体后移一天必须判红)。 | 无 —— 这三类问题都靠人在别的排查里撞见 |  |
 | in_review | T-034 | lane-b | M-189 基准 1–2(固定 / 波动率公式)在 HL 4 币账本上的历史回放报告 | 台账一条(编号合并时分配),两臂 × 分 regime 的 SR / MaxDD / 相对 H0 超额;测试钉住「同一内核、同一数据、无前视」 | M-189 只有预注册;T-032(Seth 接进 hl_book_daily)等这份回放结论 |  |
 | in_review | T-013 | seth | 首页和页面路由免于限流 | 仍返回 HTML 200 | 返回 JSON 429 | shipped commit `7ea7f1c` — src/api/middleware/rate_limit.py: anon IP 触发 429 时:API 路径(/api/v1/*, /internal/*, /ws/*, /mcp/*)返回 JSON 429(regression safe);页面路径(/, /app.html, /portfolio.html 等)返回 HTML 200 + meta-refresh 自动重试页。**DoS 保护不变**(页面仍计入限流计数),只改响应形态。tests/test_rate_limit_page_html_429.py 25/25 PASS(_is_page_request 谓词正反两向 + S-244 文本守卫防 dispatch 回到 JSONResponse on 429)。preflight stage 3 注册。**待 Jazz:① 等 Railway deploy 后(已 push)② curl 验证 `for i in $(seq 1 130); do curl -s -o /dev/null -w '%{http_code}\n' https://web-production-0cdf76.up.railway.app/; done | sort | uniq -c` 应该看到 200(不是 JSON 429)。** Pre-flight 🔴 已知:`open_interest_history` DDL 未 apply(T-012 同 Jazz)+ `nav_panel_*` Mac lane + `market_state_vectors` 列漂移。T-012 之外的都不是本卡引入。 @ 2026-09-26T04:10:00Z |
 | in_review | T-022 | seth | 移动端 RECENT SIGNALS 卡片:百分比与文案跨度对齐(短时价格不和"strong momentum"同屏) | DOM/截图: 卡片百分比后缀为 '24h' 或 '(24h)';文案与百分比跨度一致(避免 −7% 旁边写 'strong momentum') | MobileApp 卡片:'positions to outperform on strong momentum' 旁显示 −7.45% / −8.98%(百分比实为 24h,跨度与文案冲突) |  |
@@ -33,6 +32,7 @@
 | blocked(等 T-015) | T-016 | seth | 实盘执行器(只算不发两天 → 3,000U 真跑) | > 0,且每日对账有数 | 0 |  |
 | done | T-002 | lane-a | 确认 T1 每小时一批恢复 | >= 20 | 1(09-24 恢复当天) | 24 个不同小时有 T1 推送(过去 24h),≥20 通过;Mac 侧卡按数据直接验收(S-426) @ 2026-09-26 |
 | done | T-018 | lane-a | Mac 对 Railway 的读请求带 X-Internal-Token;空快照不生成简报;macro_brief 合约副本更新到 mb-3 | empty = 0 且 n > 0(prompt_version 项删除:表无此列,S-435) | 09-23:47 份里 36 份快照为空({}),39 份写「平静」;Mac 副本 mb-2 | mac_mini 6h: empty=0, n≥1(最新 09-28 15:18 UTC) @ 2026-09-29 |
+| done | T-044 | lane-a | 跨源日期对齐与污染的常驻守卫:每天按源比对 binance_hist,同日 vs 错一天、持续偏离,一旦漂移就红 | 回放验证:在 2026-09-28(S-436 修复前)的数据形态上,对 coingecko_pro_ohlc 判红(错一天胜过同日);在今天的数据上判绿;对 2026-02 的 CG Pro 判出 LDO / GRT / ATOM 的持续偏离。三个判据各有一个测试用合成数据钉住,另有一个测试证明守卫能抓住它要抓的东西(把一列整体后移一天必须判红)。 | 无 —— 这三类问题都靠人在别的排查里撞见 | price_source_agreement_daily 首行 2026-10-05:coingecko_pro_ohlc 27 币 0 发现、asset_mcap_daily 27 币 0 发现、hyperliquid 0 币(该源日线已退役);_price_agreement_loop verdict ok(build df2043e2)。判据 = lane A 的 agreement()(6 个回放测试含 S-436 / S-459 / S-468 / 2 月 LDO-GRT-ATOM),调度与落表 = S-484。 @ 2026-10-05T12:00Z |
 | done | T-011 | lane-b | Jev 仓位乘数对照线:先预注册(只调 1 个参数,4 级基准) | 合并者确认后 Seth 接进 hl_book_daily | 无 | 台账 M-189(原 M-97,合并时改号)含 4 级基准 fixed / vol-formula / bandit / Jev + 判据 + H1/H2;cost 行改为按换手计。合并方式:内容由 Seth 并入 main(分支与 PROJECT_STATE/台账末尾冲突),lane-b/T-011 可删。接进 hl_book_daily 见 T-032。 @ 2026-09-27 |
 | done | T-037 | lane-b | 历史策略清点:每个「报过跑赢持有」的策略一行,只收集、不重算(v0.2 阶段 1 的输入) | 覆盖 B 阶段 1 报告里 A 表全部行;每个自报数字都标「自报,未重算」;不出现任何新算的数字 | B 09-29 阶段 1 报告(A 表 17 行,数字来自 MEMORY 概括) | 25 条策略 + 11 条坟场,数字全部标「自报,未重算」;风格列已加;C-5 差异 Seth 复算:到 09-20 C-5 币池等权 −44.1%、①面板 −14.0%(binance_hist,日再平衡)—— 差异主要来自币池(MKR/CRV/LDO/COMP/GRT/ONDO 等 DeFi),不是记账 @ 2026-09-30 |
 | done | T-041 | lane-b | 解读层的验证预注册:类比日给出的「未来 30 天风格分布」是否比无条件分布更准 | 一条 M- 预注册;实际回放由 Seth 用 T-040 的历史模式跑,B 按预注册判读 | 无 | M-196 预注册 + M-197 判读 FAIL(F1+F2)终审;production interpretation_validation_runs id=1 与 §Seth-1002c 逐项一致;sanity S1–S4 = tests/test_interpret_validate.py(§Seth-1002f) @ 2026-10-04T10:00Z |
@@ -52,4 +52,4 @@
 | done | T-040 | seth | 解读层 v0:每天「今天像历史上哪几段 → 那几段之后各风格怎么走 → 两角度是否一致」,落库并在 30 天后对账 | 每天一行;任意一句 narrative 能追到具体类比日和指数行;历史回放模式可以对 2023 起每一天重跑(给 T-041 验证用) | /api/v1/regime/similar 能按需返回 5a(宏观 15 维)/5b(横截面 11 维)两角度的相似日,但:没有定时调用、不回答「那几段之后发生了什么」、没有决策读它、没有事后对账 | _interpret_loop 每 6h 写 market_interpretation_daily(1371 天至 10-02);历史回放模式供 M-196 使用;检验 FAIL(S-463)⇒ L3 权重 0,继续运行;v2 = T-042 @ 2026-10-04T10:00Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 17 · blocked 3 · in_review 9 · done 19 · dropped 1
+open 17 · blocked 3 · in_review 8 · done 20 · dropped 1
