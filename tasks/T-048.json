@@ -21,5 +21,5 @@
   },
   "prior_value": "状态散在各处:regime 四选一字符串、动量在 β+ 里、资金费在 HL 表里,没有统一的逐日状态表",
   "verified": null,
-  "notes": "顺序:A 的第 2 张(T-044b 之后)。价格读 binance_hist(① 的价源)。交付放 lane-a worktree,SYNC 写最终路径。"
+  "notes": "顺序:A 的第 2 张(T-044b 之后)。价格读 binance_hist(① 的价源)。交付放 lane-a worktree,SYNC 写最终路径。 | 2026-10-05 A 交计划,Seth 答复见 SYNC §Seth-1005b:① 读 registry.core_nav(start);宇宙 core_cap.panel_universe();价格 panel_read.read_panel(source=binance_hist);regime 9 种写法归一成 6 类;资金费只有 HL(09-05 起)、OI 只有 HL(09-27 起),之前为 null;表 PK (d,entity,feature),只授 service_role;DDL 由 Seth 建。"
 }

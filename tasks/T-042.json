@@ -24,5 +24,5 @@
   "prior_value": "T-040 v1(价格空间三角度各自找相似日再平均)M-196 全部 FAIL;单角度都比无条件差",
   "created": "2026-10-02",
   "verified": null,
-  "notes": "单位 = (币, 日);前瞻 10 天;目标 = 相对所属风格指数的收益与绝对收益。数据只走公开读端点:/api/v1/research/ohlcv/{symbol}?source=binance_hist(或 coingecko_pro_ohlc,S-460 后核心币已干净)、/api/v1/style/index、/api/v1/research/market-state。"
+  "notes": "单位 = (币, 日);前瞻 10 天;目标 = 相对所属风格指数的收益与绝对收益。数据只走公开读端点:/api/v1/research/ohlcv/{symbol}?source=binance_hist(或 coingecko_pro_ohlc,S-460 后核心币已干净)、/api/v1/style/index、/api/v1/research/market-state。 | 2026-10-05 S-486:v1.2 S4 未过 —— 只看背景基线 = 组合本身(差恒为 0,p 把平局算胜);交付脚本不是跑的那份;严格判据在 sign×sign 下做得到(Seth 复现 pattern p=0.30 / bg p=0.87)。v1.3:背景基线 K 天内随机取 10、p 严格 <0 报平局比例、脚本 sha256 进 JSON、查询 2,000、作废产物标 VOID 不删。"
 }
