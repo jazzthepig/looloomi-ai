@@ -21,6 +21,7 @@ import json
 import asyncio
 import logging
 from datetime import datetime, timezone, timedelta, date
+from typing import Optional
 
 import httpx
 from fastapi import APIRouter, Header, HTTPException, Query
@@ -461,15 +462,20 @@ async def research_channels(level: str = Query("aggregate", pattern="^(aggregate
 
 
 @router.get("/api/v1/research/core-alpha")
-async def research_core_alpha(start: str = Query("2023-01-01")):
+async def research_core_alpha(start: str = Query("2023-01-01"),
+                              alpha: Optional[float] = Query(None, description="0 / 0.5 / 1;不给 = 三臂都给")):
     """① 加权参数 α 的三条日收益序列(α = 0 等权 / 0.5 / 1 市值,单币 ≤ 40%,24 名,每日再平衡)——
-    S-472 那条 SQL 收成的库函数 `core_alpha_daily`。2026-10-02 以前是回放(先验),之后的前向记录看 `core_cap_daily`。"""
-    from src.api.store import supabase_rpc
-    rows = await supabase_rpc("core_alpha_daily", {"p_start": start})
+    S-472 那条 SQL 收成的库函数 `core_alpha_daily`。2026-10-02 以前是回放(先验),之后的前向记录看 `core_cap_daily`。
+    ① 是 α=1。分页读全(S-487:以前只拿到前 1,000 行 = 只有 α=0)。"""
+    from src.api.store import supabase_rpc_all
+    params = {"order": "alpha.asc,d.asc"}
+    if alpha is not None:
+        params["alpha"] = f"eq.{alpha}"
+    rows = await supabase_rpc_all("core_alpha_daily", {"p_start": start}, params)
     if not isinstance(rows, list):
         raise HTTPException(status_code=502, detail="core_alpha_daily 读不到 —— 读不到 ≠ 没有数据")
     return {"status": "ok", "count": len(rows), "data": rows,
-            "note": "回放序列:成员是今天的 24 名往回取(幸存者),不计成本"}
+            "note": "回放序列:成员是今天的 24 名往回取(幸存者),不计成本;① = α=1"}
 
 
 @router.get("/internal/research/book-navs")

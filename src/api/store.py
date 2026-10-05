@@ -791,6 +791,44 @@ async def supabase_rpc(fn_name: str, payload: dict[str, Any] | None = None) -> A
         return None
 
 
+RPC_PAGE = 1000
+
+
+async def supabase_rpc_all(fn_name: str, payload: dict[str, Any] | None = None,
+                           params: dict[str, str] | None = None) -> list[dict[str, Any]] | None:
+    """返回集合的库函数,分页读全(S-487)。
+
+    PostgREST 对 RPC 的结果同样只给前 1,000 行,而且**不报错** ——
+    `core_alpha_daily('2023-01-01')` 有 4,119 行,`supabase_rpc` 只拿到按 α 排序的前 1,000 行,
+    也就是只有 α=0(等权),① 那一臂整条不见。`params` 走查询串(过滤 / 排序,如 `{"alpha": "eq.1"}`);
+    任何一页失败 ⇒ None,绝不返回半截。
+    """
+    if not _SB_URL or not _SB_KEY:
+        return None
+    url = f"{_SB_URL}/rest/v1/rpc/{fn_name}"
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}",
+               "Content-Type": "application/json"}
+    out: list[dict[str, Any]] = []
+    offset = 0
+    while True:
+        q = {**(params or {}), "limit": str(RPC_PAGE), "offset": str(offset)}
+        try:
+            resp = await _supabase_request_with_retry("POST", url, json=(payload or {}),
+                                                      headers=headers, params=q)
+            batch = resp.json() if resp is not None and resp.status_code == 200 else None
+        except Exception as e:
+            _logger.warning(f"[SUPABASE] rpc_all {fn_name} offset={offset} exception: {e}")
+            return None
+        if not isinstance(batch, list):
+            _logger.warning(f"[SUPABASE] rpc_all {fn_name} offset={offset}: "
+                            f"HTTP {getattr(resp, 'status_code', None)} — {(getattr(resp, 'text', '') or '')[:200]}")
+            return None
+        out.extend(batch)
+        if len(batch) < RPC_PAGE:
+            return out
+        offset += len(batch)
+
+
 async def supabase_rpc_write(fn_name: str, payload: dict[str, Any] | None = None) -> StoreResult[Any]:
     """RPC that WRITES — role-gated. Returns StoreResult with `value` carrying
     the JSON result on success (S-169 + S-341b).

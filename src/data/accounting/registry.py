@@ -204,16 +204,22 @@ async def scorecard() -> list[dict]:
 
 
 async def _core_benchmark() -> Optional[pd.Series]:
-    """多空 / 事件 / 无内臂账本的基准 = ① 本身(S-480:① 只有一条序列)。
+    """多空 / 事件 / 无内臂账本的基准 = ① 本身(S-480:① 只有一条序列)。"""
+    return await core_nav()
+
+
+async def core_nav(start: str = "2026-06-01") -> Optional[pd.Series]:
+    """① 的逐日 NAV —— 全系统只这一个读法(成绩单基准、L3、T-048 状态层都从这里取)。
 
     10-02 及以前:库函数 `core_alpha_daily` 的 α=1 回放(24 名市值加权、单币 ≤ 40%、每日再平衡);
     之后:`core_cap_daily.cap_a1` 的前向收益(周一再平衡)。两段按收益拼接成一条 NAV。
     读不到 ⇒ None,成绩单会说「基准没有覆盖」,不悄悄退回等权。
     """
-    from src.api.store import supabase_rpc
+    from src.api.store import supabase_rpc_all
     from src.data.signals.core_cap import CORE_ARM, INCEPTION, TABLE
     from src.data.style.header import _read_all
-    rows = await supabase_rpc("core_alpha_daily", {"p_start": "2026-06-01"})
+    rows = await supabase_rpc_all("core_alpha_daily", {"p_start": start},
+                                  {"alpha": "eq.1", "order": "d.asc"})
     if not isinstance(rows, list) or not rows:
         return None
     rep_ = pd.Series({pd.Timestamp(r["d"]): float(r["ret"]) for r in rows
