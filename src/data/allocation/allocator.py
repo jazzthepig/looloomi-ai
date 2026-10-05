@@ -2,11 +2,16 @@
 
 规则来自 `docs/ALLOCATION_ARCHITECTURE_v0.2.md` §3 L3 与 Jazz 09-29 的决定:
 1. **① 是默认。** 其他账本的权重从 ① 里拨出;没有证据就是 0,① 就是 100%。
-2. **其他账本的权重 = 0.25 × max(0, μ) / σ²**(μ、σ = 相对 ① 的日超额,年化),
-   前提是超额的近似 95% 下界 > 0。证据越弱权重越小 —— 连续,不是开关。
+2. **其他账本的权重 = 0.25 × μ_post / σ²**(σ = 相对 ① 的日超额波动,年化;μ_post = 超额均值向 0 收缩后的值)。
+   **l3-v2(S-485 / T-050)** 改了三处,因为 l3-v1 每天重算「均值 − 2 标准误 > 0」是反复看的 p 值:
+   零超额账本一年内 17% 会在某个运气好的日子被放进去,而越过门槛那一刻 Kelly 就顶到上限。
+   - **门槛 = 任意时刻有效的置信序列**(正态混合边界,`CS_ALPHA`、`CS_RHO_DAYS`):天天看也不膨胀;
+   - **Kelly 之前先收缩:** 先验 超额 ~ N(0, `PRIOR_EXCESS_SD_ANN`²),权重随证据平滑爬升,不再一步顶格;
+   - **任何非 ① 账本前向不足 60 天一律 0**(与 CLAUDE.md 的 60 天纸面交易门一致;
+     原「④ / 事件 60 天内合计 ≤ 10%」被这条覆盖,已删)。
+   代价写在台账 S-488:超额夏普 1 的账本一年内被放进去的概率约 12%。证据越弱权重越小 —— 连续,不是开关。
 3. **上限:** 单个账本 ≤ 80%;单一标的净持仓 ≤ 40%。v0 还没有标的层持仓(L4 未建),
    所以**任何非 ① 账本都按「可能全仓一个币」处理,单本上限取 40%**;① 是 24 名等权,不受此限。
-   ④ 与事件类在前向记录不足 60 天时合计 ≤ 10%。
 4. **① 是 `core_cap`(市值加权、单币 ≤ 40%,S-473;l3-v0 时是等权的 `beta_core`)。其余账本的证据 = 相对 ① 的超额**
    —— 从 ① 里拨出一份权重给它,挣到的就是它减 ① 的差;不是相对它自己挑的基准。
 5. **证据只算前向:** 每本账的证据从 `INCEPTION` 起算。账本表里更早的行有些是历史回放
@@ -36,13 +41,15 @@ CORE = "core_cap"
 KELLY = 0.25
 SINGLE_BOOK_CAP = 0.80
 SINGLE_ASSET_CAP = 0.40
-ALPHA_LAYERS = ("④", "事件")
-ALPHA_CAP_BEFORE_60D = 0.10
-FORWARD_DAYS_FOR_ALPHA = 60
-MIN_DAYS = 20
+MIN_DAYS = 60
+#: 置信序列:双侧水平(单侧越界概率约一半)与边界最紧的时点(天)。S-488 的模拟:零超额账本一年内被放进去约 1%。
+CS_ALPHA = 0.10
+CS_RHO_DAYS = 60
+#: 超额(相对 ①)的先验标准差,年化。真实账本的长期超额很少超过这个量级。
+PRIOR_EXCESS_SD_ANN = 0.10
 EXPOSURE_RANGE = (-0.3, 1.3)
 HORIZONS = {"7d": 7, "14d": 14, "1m": 30, "delegate": 0}
-CODE_REF = "l3-v1"
+CODE_REF = "l3-v2"
 
 
 @dataclass(frozen=True)
@@ -57,8 +64,25 @@ class Override:
         return days > 0 and self.start <= d < self.start + timedelta(days=days)
 
 
+def cs_halfwidth(n: int, s: float, alpha: float = CS_ALPHA, rho_days: float = CS_RHO_DAYS) -> float:
+    """日均值的任意时刻有效半宽(正态混合边界,Robbins 1970 / Howard et al. 2021):
+    以内禀时间 V = n·s²、ρ = rho_days·s²,对所有 n 同时有 |Σx − nμ| ≤ √((V+ρ)·ln((V+ρ)/(ρ·α²)))(概率 ≥ 1−α)。
+    s 用样本估计(插入式);厚尾下由 S-488 的 t3 模拟兜底。"""
+    if n < 1 or not s > 0:
+        return float("inf")
+    v, rho = n * s * s, rho_days * s * s
+    return math.sqrt((v + rho) * math.log((v + rho) / (rho * alpha * alpha))) / n
+
+
+def shrink(m: float, s: float, n: int, prior_sd_ann: float = PRIOR_EXCESS_SD_ANN) -> float:
+    """日均值向 0 收缩(正态先验 N(0, τ²),τ 为日化先验标准差):后验均值 = m · nτ² / (nτ² + s²)。"""
+    tau = prior_sd_ann / 365
+    return m * (n * tau * tau) / (n * tau * tau + s * s) if s > 0 else 0.0
+
+
 def evidence(nav: Optional[pd.Series], bench: Optional[pd.Series]) -> dict[str, Any]:
-    """相对基准的日超额:天数、年化均值与波动、近似 95% 下界(均值 − 2 标准误)。基准缺失 ⇒ 无证据。"""
+    """相对基准的日超额:天数、年化均值与波动、固定 2 标准误下界(只作显示)、
+    任意时刻有效下界 `mu_lo_cs`(门槛用)、收缩后的均值 `mu_post`(权重用)。基准缺失 ⇒ 无证据。"""
     if nav is None or bench is None:
         return {"n_days": 0}
     a = nav.dropna().sort_index().pct_change()
@@ -69,7 +93,9 @@ def evidence(nav: Optional[pd.Series], bench: Optional[pd.Series]) -> dict[str, 
         return {"n_days": n}
     m, s = float(ex.mean()), float(ex.std())
     return {"n_days": n, "mu": m * 365, "sigma": s * math.sqrt(365),
-            "mu_lo95": (m - 2 * s / math.sqrt(n)) * 365}
+            "mu_lo95": (m - 2 * s / math.sqrt(n)) * 365,
+            "mu_lo_cs": (m - cs_halfwidth(n, s)) * 365,
+            "mu_post": shrink(m, s, n) * 365}
 
 
 def book_cap(bid: str) -> float:
@@ -88,22 +114,17 @@ def decide(d: date, books: Mapping[str, Mapping[str, Any]], overrides: list[Over
         if b.get("status") != "paper" or b.get("caveat"):
             why.append(f"{bid}: 0 —— 状态 {b.get('status')}" + (f";{b['caveat']}" if b.get("caveat") else ""))
         elif n < MIN_DAYS:
-            why.append(f"{bid}: 0 —— 前向 {n} 天,不到 {MIN_DAYS} 天估不了")
-        elif not ev.get("mu_lo95", -1.0) > 0:
-            why.append(f"{bid}: 0 —— 超额 {ev['mu']:+.1%}/年,95% 下界 {ev['mu_lo95']:+.1%} 不 > 0({n} 天)")
+            why.append(f"{bid}: 0 —— 前向 {n} 天,不到 {MIN_DAYS} 天不配")
+        elif "mu_lo_cs" not in ev or "mu_post" not in ev:
+            why.append(f"{bid}: 0 —— 证据缺任意时刻下界或收缩均值({n} 天)")
+        elif not ev["mu_lo_cs"] > 0:
+            why.append(f"{bid}: 0 —— 超额 {ev['mu']:+.1%}/年,任意时刻下界 {ev['mu_lo_cs']:+.1%} 不 > 0({n} 天)")
         else:
             cap = book_cap(bid)
-            w = min(cap, KELLY * ev["mu"] / max(ev["sigma"] ** 2, 1e-9))
+            w = min(cap, max(0.0, KELLY * ev["mu_post"] / max(ev["sigma"] ** 2, 1e-9)))
             raw[bid] = w
-            why.append(f"{bid}: {w:.1%} —— 超额 {ev['mu']:+.1%}/年,σ {ev['sigma']:.1%},下界 {ev['mu_lo95']:+.1%},"
-                       f"{n} 天" + (f";触上限 {cap:.0%}" if w >= cap else ""))
-    young = [k for k in raw if books[k].get("layer") in ALPHA_LAYERS
-             and (books[k].get("evidence") or {}).get("n_days", 0) < FORWARD_DAYS_FOR_ALPHA]
-    a_tot = sum(raw[k] for k in young)
-    if a_tot > ALPHA_CAP_BEFORE_60D:
-        for k in young:
-            raw[k] *= ALPHA_CAP_BEFORE_60D / a_tot
-        why.append(f"④/事件 前向不足 {FORWARD_DAYS_FOR_ALPHA} 天,合计从 {a_tot:.1%} 压到 {ALPHA_CAP_BEFORE_60D:.0%}")
+            why.append(f"{bid}: {w:.1%} —— 超额 {ev['mu']:+.1%}/年(收缩后 {ev['mu_post']:+.1%}),σ {ev['sigma']:.1%},"
+                       f"任意时刻下界 {ev['mu_lo_cs']:+.1%},{n} 天" + (f";触上限 {cap:.0%}" if w >= cap else ""))
     tot = sum(raw.values())
     if tot > 1.0:
         raw = {k: v / tot for k, v in raw.items()}
