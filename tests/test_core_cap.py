@@ -129,7 +129,7 @@ def test_ls_books_are_scored_against_the_core_not_equal_weight(monkeypatch):
     s = asyncio.run(reg._core_benchmark())
     # 10-01、10-02 用回放(α=1),10-03 用前向(+3%),回放里 10-03 的 +90% 不用;α=0 的行不用
     assert s.iloc[-1] == pytest.approx(1.01 * 1.02 * 1.03)
-    assert all(b.benchmark in ("core",) or b.benchmark.startswith("arm:") or b.benchmark == "own_benchmark_nav"
+    assert all(b.benchmark in ("core",) or b.benchmark.startswith("arm:")
                for b in reg.BOOKS)
 
 

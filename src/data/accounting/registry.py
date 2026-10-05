@@ -32,6 +32,10 @@ class Book:
     #: S-481:这几本账在 Redis 状态丢失时曾把 NAV 重置为 1.0(曲线被拼接)。它们的 `daily_return` 是每天按当时持仓
     #: 记的真收益,复利它才是连续的 NAV;表里的 `nav` 列在重置日断开。
     nav_from_returns: bool = False
+    #: S-483:`mark_date` 的含义。"close" = 这一行就是市场 d 日的收盘(公用内核的账本:core_cap / β+ / 代币化 / HL);
+    #: "valuation_next_day" = 在 d 日 00:05 UTC 的估值点打的标,覆盖的是 d−1 日(beta_core 与按估值点记账的那几本)。
+    #: 不对齐的话,同一天比较的是两个不同交易日:beta_core 与 ① 同日相关 0.11,错一天对齐后 0.82。
+    stamp: str = "close"
 
 
 BOOKS: tuple[Book, ...] = (
@@ -40,7 +44,7 @@ BOOKS: tuple[Book, ...] = (
          "core_cap_daily", "arms", arm="cap_a1", accounting="shared_kernel", benchmark="arm:ew_a0"),
     # 原 ①。S-473 起改作 ② 候选:等权 = 对二线 / 山寨的风格倾斜,外加波动率目标(③ 的成分)—— 要自己挣到权重。
     Book("beta_core", "②", "等权 + 波动率目标(原 ①,S-473 起为 ② 候选)", "面板内等权 = 风格倾斜;另含 ③ 的波动率目标",
-         "beta_core_nav", "plain", filters={"void_reason": "is.null"}, benchmark="own_benchmark_nav"),
+         "beta_core_nav", "plain", filters={"void_reason": "is.null"}, benchmark="core", stamp="valuation_next_day"),
     Book("beta_plus_w", "②", "动量 + 52 周高点倾斜(周频 7 份)", "面板内超配趋势强、接近新高的币(S-428)",
          "beta_plus_daily", "arms", arm="momentum_52w_w", accounting="shared_kernel", benchmark="arm:panel_hold_w"),
     Book("beta_plus_m", "②", "动量 + 52 周高点倾斜(月频)", "同上,月频",
@@ -53,18 +57,18 @@ BOOKS: tuple[Book, ...] = (
     Book("hl_jev", "①+③", "HL 4 币 Jev 仓位(JEV_tom)", "同上,Jev 参与调整",
          "hl_book_daily", "hl", arm="JEV_tom", benchmark="arm:H0_hold"),
     Book("causal_paper", "④", "因果多空(资金费率)", "资金费率与持仓结构的多空",
-         "causal_paper_nav", "plain", nav_from_returns=True),
+         "causal_paper_nav", "plain", nav_from_returns=True, stamp="valuation_next_day"),
     Book("scalable_book", "④", "可扩展多空组合", "多策略多空",
-         "scalable_book_nav", "plain", nav_from_returns=True),
+         "scalable_book_nav", "plain", nav_from_returns=True, stamp="valuation_next_day"),
     Book("combined_book", "④", "多空合成", "多空合成",
-         "combined_book_nav", "plain", nav_from_returns=True),
+         "combined_book_nav", "plain", nav_from_returns=True, stamp="valuation_next_day"),
     Book("dingge_paper", "事件", "Dingge 事件", "事件驱动",
-         "dingge_paper_nav", "plain"),
+         "dingge_paper_nav", "plain", stamp="valuation_next_day"),
     Book("fusion_paper", "④", "Fusion 多空", "多 sleeve 融合",
-         "fusion_paper_nav", "plain", filters={"void_reason": "is.null"},
+         "fusion_paper_nav", "plain", filters={"void_reason": "is.null"}, stamp="valuation_next_day",
          caveat="T-026:记录只扣成本、不记价格 —— 数字不可信"),
     Book("two_layer_paper", "—", "两层(已按设计退役)", "R57:V5c 核心退役,持仓为 0",
-         "two_layer_paper_nav", "plain", status="retired_by_design"),
+         "two_layer_paper_nav", "plain", status="retired_by_design", stamp="valuation_next_day"),
 )
 
 
@@ -117,13 +121,11 @@ async def load_navs() -> tuple[dict[str, pd.Series], dict[str, pd.Series]]:
     bench: dict[str, pd.Series] = {}
     core = await _read_all("beta_core_nav", {"select": "mark_date,nav,benchmark_nav,inception_id",
                                              "void_reason": "is.null", "order": "mark_date.asc"})
-    core_bench = None
     if core:
         last_inc = core[-1]["inception_id"]
         df = pd.DataFrame([r for r in core if r["inception_id"] == last_inc])
         df.index = pd.to_datetime(df["mark_date"])
         navs["beta_core"] = df["nav"].astype(float)
-        core_bench = df["benchmark_nav"].astype(float)
     core_bench = await _core_benchmark()
     cache: dict[str, list] = {}
     for b in BOOKS:
@@ -166,6 +168,11 @@ async def load_navs() -> tuple[dict[str, pd.Series], dict[str, pd.Series]]:
             navs[b.id] = pd.Series([float((r["nav"] or {}).get(b.arm, np.nan)) for r in rows], index=idx)
             bench[b.id] = pd.Series([float((r["nav"] or {}).get(b.benchmark.split(":", 1)[1], np.nan))
                                      for r in rows], index=idx)
+    # S-483:按估值点打标的账本,行日期覆盖的是前一天 —— 统一到「市场日」再交给成绩单与 L3
+    for b in BOOKS:
+        if b.stamp == "valuation_next_day" and navs.get(b.id) is not None:
+            navs[b.id] = navs[b.id].copy()
+            navs[b.id].index = navs[b.id].index - pd.Timedelta(days=1)
     return navs, bench
 
 
