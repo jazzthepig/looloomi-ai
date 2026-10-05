@@ -20,6 +20,10 @@ _data/
 paper_trading/state/
 
 # Internal operational docs — never commit
+# Reading notes on OTHER people's papers, mapped to our stack — agents read them from
+# the main checkout, not published (Jazz, 2026-10-05: 「不用开源,我们 agent 们自己看就可以了」).
+# NOT docs/papers/ — that directory is OUR OWN published papers and stays tracked.
+docs/reading/
 JAZZ_TODAY.md
 ATTACK_PLAN.md
 COMMIT_READY.md
