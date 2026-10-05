@@ -1,0 +1,23 @@
+{
+  "id": "T-050",
+  "title": "L3 l3-v2:准入门换成任意时刻有效的置信序列 + Kelly 前收缩 + 非 ① 账本 ≥ 60 天(S-485,10-22 之前)",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-05",
+  "source": "S-485(DXRG 2609.05663 方法规范第 15 条:反复看的滚动 p 值不是 p 值)",
+  "allowed_paths": [
+    "src/data/allocation/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "docs/research/S-485_allocator_peeking_sim.py 换成 l3-v2 的准入函数重跑:零超额日超额路径一年内曾被放进去的比例;tests/test_allocation_l3.py 加一条模拟测试钉住",
+    "expect": "≤ 5%(l3-v1 为 17.3%);越过门槛后的权重随证据爬升,不是一步顶到上限;10-22 第一批账本满 20 天之前上线"
+  },
+  "prior_value": "l3-v1:每天重算 均值 − 2 标准误 > 0 且 ≥ 20 天,零超额账本一年内 17.3% 曾被放进,一放即 40% 上限",
+  "verified": null,
+  "notes": "待 Jazz 定:准入看总超额还是扣掉对 ① 的 β 之后的 α(β 1.28 的账在牛市会因杠杆被放进)。"
+}

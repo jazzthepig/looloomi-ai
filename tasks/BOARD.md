@@ -27,6 +27,7 @@
 | open | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
+| open | T-050 | seth | L3 l3-v2:准入门换成任意时刻有效的置信序列 + Kelly 前收缩 + 非 ① 账本 ≥ 60 天(S-485,10-22 之前) | ≤ 5%(l3-v1 为 17.3%);越过门槛后的权重随证据爬升,不是一步顶到上限;10-22 第一批账本满 20 天之前上线 | l3-v1:每天重算 均值 − 2 标准误 > 0 且 ≥ 20 天,零超额账本一年内 17.3% 曾被放进,一放即 40% 上限 |  |
 | blocked(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | blocked(等 ['T-001']) | T-020 | lane-c | DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻 | 同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减 | 同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移 |  |
 | blocked(等 T-015) | T-016 | seth | 实盘执行器(只算不发两天 → 3,000U 真跑) | > 0,且每日对账有数 | 0 |  |
@@ -52,4 +53,4 @@
 | done | T-040 | seth | 解读层 v0:每天「今天像历史上哪几段 → 那几段之后各风格怎么走 → 两角度是否一致」,落库并在 30 天后对账 | 每天一行;任意一句 narrative 能追到具体类比日和指数行;历史回放模式可以对 2023 起每一天重跑(给 T-041 验证用) | /api/v1/regime/similar 能按需返回 5a(宏观 15 维)/5b(横截面 11 维)两角度的相似日,但:没有定时调用、不回答「那几段之后发生了什么」、没有决策读它、没有事后对账 | _interpret_loop 每 6h 写 market_interpretation_daily(1371 天至 10-02);历史回放模式供 M-196 使用;检验 FAIL(S-463)⇒ L3 权重 0,继续运行;v2 = T-042 @ 2026-10-04T10:00Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 17 · blocked 3 · in_review 8 · done 20 · dropped 1
+open 18 · blocked 3 · in_review 8 · done 20 · dropped 1
