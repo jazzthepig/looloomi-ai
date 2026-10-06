@@ -2,7 +2,7 @@
   "id": "T-048",
   "title": "状态层 state_daily 首批特征(v0.2 阶段 2):趋势、波动、广度、风格相对强弱、资金费与持仓量 —— 模块 + PIT 测试",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-04",
   "source": "v0.2 §3 L1 / §7 阶段 2;L3 的择时与 rr_matrix 的格子都要它",
   "allowed_paths": [
@@ -21,5 +21,5 @@
   },
   "prior_value": "状态散在各处:regime 四选一字符串、动量在 β+ 里、资金费在 HL 表里,没有统一的逐日状态表",
   "verified": null,
-  "notes": "顺序:A 的第 2 张(T-044b 之后)。价格读 binance_hist(① 的价源)。交付放 lane-a worktree,SYNC 写最终路径。 | 2026-10-05 A 交计划,Seth 答复见 SYNC §Seth-1005b:① 读 registry.core_nav(start);宇宙 core_cap.panel_universe();价格 panel_read.read_panel(source=binance_hist);regime 9 种写法归一成 6 类;资金费只有 HL(09-05 起)、OI 只有 HL(09-27 起),之前为 null;表 PK (d,entity,feature),只授 service_role;DDL 由 Seth 建。"
+  "notes": "顺序:A 的第 2 张(T-044b 之后)。价格读 binance_hist(① 的价源)。交付放 lane-a worktree,SYNC 写最终路径。 | 2026-10-05 A 交计划,Seth 答复见 SYNC §Seth-1005b:① 读 registry.core_nav(start);宇宙 core_cap.panel_universe();价格 panel_read.read_panel(source=binance_hist);regime 9 种写法归一成 6 类;资金费只有 HL(09-05 起)、OI 只有 HL(09-27 起),之前为 null;表 PK (d,entity,feature),只授 service_role;DDL 由 Seth 建。 | 2026-10-06 合并(S-494):Seth 重写读数与时点(A 版读取端用了不存在的列、手写的错面板、吞错、单次 5,000 行;regime 无数据写 0.0;PIT 测试文件不在交付里)。as-built:src/data/state/state_daily.py(17 特征)+ 表 state_daily(迁移 s494)+ _state_daily_loop + tests/test_state_daily_pit.py。验收待部署后首次回填:select feature, count(*), count(value) from state_daily group by 1。"
 }

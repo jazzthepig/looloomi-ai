@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-048 | lane-a | 状态层 state_daily 首批特征(v0.2 阶段 2):趋势、波动、广度、风格相对强弱、资金费与持仓量 —— 模块 + PIT 测试 | PIT 测试:把 d 之后的价格全部改掉,d 及以前每一行的特征逐位不变;缺数据的特征是 null 不是 0;每天 06:00 UTC 后有昨天的行(接调度后验收) | 状态散在各处:regime 四选一字符串、动量在 β+ 里、资金费在 HL 表里,没有统一的逐日状态表 |  |
 | in_review | T-034 | lane-b | M-189 基准 1–2(固定 / 波动率公式)在 HL 4 币账本上的历史回放报告 | 台账一条(编号合并时分配),两臂 × 分 regime 的 SR / MaxDD / 相对 H0 超额;测试钉住「同一内核、同一数据、无前视」 | M-189 只有预注册;T-032(Seth 接进 hl_book_daily)等这份回放结论 |  |
 | in_review | T-013 | seth | 首页和页面路由免于限流 | 仍返回 HTML 200 | 返回 JSON 429 | shipped commit `7ea7f1c` — src/api/middleware/rate_limit.py: anon IP 触发 429 时:API 路径(/api/v1/*, /internal/*, /ws/*, /mcp/*)返回 JSON 429(regression safe);页面路径(/, /app.html, /portfolio.html 等)返回 HTML 200 + meta-refresh 自动重试页。**DoS 保护不变**(页面仍计入限流计数),只改响应形态。tests/test_rate_limit_page_html_429.py 25/25 PASS(_is_page_request 谓词正反两向 + S-244 文本守卫防 dispatch 回到 JSONResponse on 429)。preflight stage 3 注册。**待 Jazz:① 等 Railway deploy 后(已 push)② curl 验证 `for i in $(seq 1 130); do curl -s -o /dev/null -w '%{http_code}\n' https://web-production-0cdf76.up.railway.app/; done | sort | uniq -c` 应该看到 200(不是 JSON 429)。** Pre-flight 🔴 已知:`open_interest_history` DDL 未 apply(T-012 同 Jazz)+ `nav_panel_*` Mac lane + `market_state_vectors` 列漂移。T-012 之外的都不是本卡引入。 @ 2026-09-26T04:10:00Z |
 | in_review | T-022 | seth | 移动端 RECENT SIGNALS 卡片:百分比与文案跨度对齐(短时价格不和"strong momentum"同屏) | DOM/截图: 卡片百分比后缀为 '24h' 或 '(24h)';文案与百分比跨度一致(避免 −7% 旁边写 'strong momentum') | MobileApp 卡片:'positions to outperform on strong momentum' 旁显示 −7.45% / −8.98%(百分比实为 24h,跨度与文案冲突) |  |
@@ -13,11 +14,9 @@
 | in_review | T-052 | seth | ② CIS 倾斜账本上线:按 T-051 的预注册建账、登记、前向记录(第一行真实数据) | 回放段标「暴露」;前向首行 ≤ 10-10;每天 06:00 UTC 后有昨天的行 | 无 |  |
 | in_review | T-053 | seth | 证据面:一个端点 + 一个 MCP 工具,把 ① 与每本账的前向证据按证据等级摆到门外;CIS 信号记录的 β 层要么算出来要么删 | 外部 agent 一次调用能回答「哪本账有前向证据、相对 ① 怎样、为什么 L3 给它 0」;没有任何写死的结论句 | 证据只在 SQL 与台账里;track-record 说明文字三个月引用一个从未算出的 β 层 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
-| open | T-001 | lane-a | T1 的 TradFi 改从 ohlcv_daily(eodhd)读,撤回 30 天过期缓存 | = 43,且 19 个 TradFi 最新价格日期 ≥ 最近一个美股交易日 | 24 |  |
 | open | T-003 | lane-a | S-396 三臂回放 live 验证(读路径分页修复后) | 相等 | replay 读到 1,000 行(截断) |  |
 | open | T-004 | lane-a | 恢复持币集中度写入(holder_concentration_history) | = 今天(UTC) | 2026-08-31 |  |
 | open | T-023 | lane-a | CIS universe API:把 Tier 标签(T1/T2)传到前端,CISLeaderboard 徽章按源染色 | T1 标的徽章绿、T2 标的徽章琥珀;不再全部 50% 灰 | GET /api/v1/cis/universe:universe 58 行,但 data_source=None(API 层未传播 Tier)。CISLeaderboard 徽章当前无法区分 |  |
-| open | T-048 | lane-a | 状态层 state_daily 首批特征(v0.2 阶段 2):趋势、波动、广度、风格相对强弱、资金费与持仓量 —— 模块 + PIT 测试 | PIT 测试:把 d 之后的价格全部改掉,d 及以前每一行的特征逐位不变;缺数据的特征是 null 不是 0;每天 06:00 UTC 后有昨天的行(接调度后验收) | 状态散在各处:regime 四选一字符串、动量在 β+ 里、资金费在 HL 表里,没有统一的逐日状态表 |  |
 | open | T-035 | lane-b | 复核 M-152(CDCB-A v2)与 M-128d(§5b 2D gate)—— 按 S-420 口径重问后再决定是否接 spec_runner | 台账一条:接 / 不接 / 重跑,附理由 | B 报 M-152 SR +1.115「ship-ready」、M-128d 9/10 PASS;两条都未按「对照持有面板 + 分 regime」口径复核 |  |
 | open | T-045 | lane-b | 评估层 rr_matrix:每本账在每个状态格子里相对 ① 的超额分布(v0.2 阶段 3)—— 规格 + 纯函数 + 测试 | 规格文档 + 纯函数 + ≥ 6 个测试全过;状态输入先用 T-048 的字段名约定(没就绪时用合成数据测),交 patch 到 lane-b worktree,Seth 接调度与建表 | 评估都在台账的一次性报告里;L3 的证据不分状态 |  |
 | open | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED |  |
@@ -30,6 +29,7 @@
 | blocked(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | blocked(等 ['T-001']) | T-020 | lane-c | DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻 | 同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减 | 同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移 |  |
 | blocked(等 T-015) | T-016 | seth | 实盘执行器(只算不发两天 → 3,000U 真跑) | > 0,且每日对账有数 | 0 |  |
+| done | T-001 | lane-a | T1 的 TradFi 改从 ohlcv_daily(eodhd)读,撤回 30 天过期缓存 | = 43,且 19 个 TradFi 最新价格日期 ≥ 最近一个美股交易日 | 24 | 验收 SQL:cis_scores 近 2 小时 data_tier=T1 的标的 = 43(T2 = 15);19 个 TradFi T1 标的(美股 10、美债 6、商品 3)在 ohlcv_daily(eodhd)的最新日期全部 = 2026-10-05(最近一个美股交易日)。卡上的改动 09-26 前后已在 Mac 侧生效(Seth 09-29 记 T1=43);A 10-06 的「选数据源 / 新建表」计划不需要。 @ 2026-10-06T08:00Z |
 | done | T-002 | lane-a | 确认 T1 每小时一批恢复 | >= 20 | 1(09-24 恢复当天) | 24 个不同小时有 T1 推送(过去 24h),≥20 通过;Mac 侧卡按数据直接验收(S-426) @ 2026-09-26 |
 | done | T-018 | lane-a | Mac 对 Railway 的读请求带 X-Internal-Token;空快照不生成简报;macro_brief 合约副本更新到 mb-3 | empty = 0 且 n > 0(prompt_version 项删除:表无此列,S-435) | 09-23:47 份里 36 份快照为空({}),39 份写「平静」;Mac 副本 mb-2 | mac_mini 6h: empty=0, n≥1(最新 09-28 15:18 UTC) @ 2026-09-29 |
 | done | T-044 | lane-a | 跨源日期对齐与污染的常驻守卫:每天按源比对 binance_hist,同日 vs 错一天、持续偏离,一旦漂移就红 | 回放验证:在 2026-09-28(S-436 修复前)的数据形态上,对 coingecko_pro_ohlc 判红(错一天胜过同日);在今天的数据上判绿;对 2026-02 的 CG Pro 判出 LDO / GRT / ATOM 的持续偏离。三个判据各有一个测试用合成数据钉住,另有一个测试证明守卫能抓住它要抓的东西(把一列整体后移一天必须判红)。 | 无 —— 这三类问题都靠人在别的排查里撞见 | price_source_agreement_daily 首行 2026-10-05:coingecko_pro_ohlc 27 币 0 发现、asset_mcap_daily 27 币 0 发现、hyperliquid 0 币(该源日线已退役);_price_agreement_loop verdict ok(build df2043e2)。判据 = lane A 的 agreement()(6 个回放测试含 S-436 / S-459 / S-468 / 2 月 LDO-GRT-ATOM),调度与落表 = S-484。 @ 2026-10-05T12:00Z |
@@ -56,4 +56,4 @@
 | done | T-050 | seth | L3 l3-v2:准入门换成任意时刻有效的置信序列 + Kelly 前收缩 + 非 ① 账本 ≥ 60 天(S-485,10-22 之前) | ≤ 5%(l3-v1 为 17.3%);越过门槛后的权重随证据爬升,不是一步顶到上限;10-22 第一批账本满 20 天之前上线 | l3-v1:每天重算 均值 − 2 标准误 > 0 且 ≥ 20 天,零超额账本一年内 17.3% 曾被放进,一放即 40% 上限 | build 6c918931:_allocation_loop 03:40 UTC ok「配置 3 天至 2026-10-04;① 100%」;allocation_daily 3 行 code_ref=l3-v2(l3-v1 行已被覆盖)。模拟验收:零超额一年内曾被放进 1%(≤ 5%),测试钉住。中间经历 S-489(−∞ 写进 JSON,13 小时)。 @ 2026-10-06T03:40Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 15 · blocked 3 · in_review 10 · done 24 · dropped 1
+open 13 · blocked 3 · in_review 11 · done 25 · dropped 1
