@@ -2567,25 +2567,45 @@ _HOLDER_REFRESH_INTERVAL_S = 6 * 3600
 
 
 async def _holder_refresh_loop():
+    """T-004:`holder_concentration_history` 自 2026-08-31 停写 —— Railway 上的 MORALIS_API_KEY 没了,
+    这个循环在启动时就**不调度**,没有心跳、没有 loop_attempt,控制台看不见它死了(1 of 55 无人监控)。
+    现在总是调度:没有 key ⇒ 每轮记一次 refused 并让心跳失败(原因写明);有 key ⇒ 刷新并按写入行数判活。
+    """
     await _asyncio.sleep(_boot_delay(180))   # 3 min warmup
     while True:
         try:
-            from src.data.cis.holder_provider import refresh_holder_map
-            m = await refresh_holder_map()
-            print(f"[HOLDER] map refreshed — {len(m)} tokens")
+            if not os.environ.get("MORALIS_API_KEY"):
+                _why = "MORALIS_API_KEY 未设置(Railway)—— holder_concentration_history 停写;需要 Jazz 在 Railway 设回"
+                await _beat("_holder_refresh_loop", ok=False, refused=True, error=_why)
+                await _record_loop_attempt("_holder_refresh_loop", "refused", reason=_why,
+                                           writer="src.api.main._holder_refresh_loop")
+            else:
+                from src.data.cis.holder_provider import refresh_holder_map
+                m = await refresh_holder_map()
+                print(f"[HOLDER] map refreshed — {len(m)} tokens")
+                _ok = len(m) > 0
+                await _beat("_holder_refresh_loop", ok=_ok, detail={"tokens": len(m)},
+                            error=None if _ok else "0 个代币取到集中度 —— 读不到 ≠ 没有")
+                await _record_loop_attempt("_holder_refresh_loop", "ok" if _ok else "error",
+                                           reason=f"{len(m)} tokens", detail={"tokens": sorted(m)[:20]},
+                                           writer="src.api.main._holder_refresh_loop")
         except Exception as _e:
             print(f"[HOLDER] ⚠️  refresh failed: {_e}")
+            await _beat("_holder_refresh_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_holder_refresh_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._holder_refresh_loop")
         await _asyncio.sleep(_HOLDER_REFRESH_INTERVAL_S)
 
 
 @app.on_event("startup")
 async def _start_holder_refresh_loop():
-    if os.environ.get("MORALIS_API_KEY") and \
-       os.environ.get("DISABLE_HOLDER_REFRESH", "").lower() not in ("1", "true", "yes"):
+    # T-004:没有 key 也调度 —— 让「停写」在控制台上是红的,而不是不存在。只有显式关闭才不调度。
+    if os.environ.get("DISABLE_HOLDER_REFRESH", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_holder_refresh_loop())
-        print("[HOLDER] ✅ D3 holder-concentration refresh loop scheduled")
+        print("[HOLDER] ✅ D3 holder-concentration refresh loop scheduled"
+              + ("" if os.environ.get("MORALIS_API_KEY") else " (MORALIS_API_KEY missing → refused each round)"))
     else:
-        print("[HOLDER] ⏸ holder refresh disabled (no MORALIS_API_KEY)")
+        print("[HOLDER] ⏸ holder refresh disabled (DISABLE_HOLDER_REFRESH)")
 
 
 # ── Forward-supply refresh loop (the UPSTREAM cause) ──────────────────────────

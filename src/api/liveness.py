@@ -44,6 +44,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_cis_tilt_loop":            {"max_age_h": 48, "kind": "marker"},   # T-052 ② CIS 倾斜
     "_state_daily_loop":         {"max_age_h": 30, "kind": "marker"},   # T-048 L1 状态层
     "_rr_matrix_loop":           {"max_age_h": 36, "kind": "marker"},   # T-045 评估层
+    "_holder_refresh_loop":      {"max_age_h": 14, "kind": "marker"},   # T-004 持币集中度(6h)
     "_regime_daily_loop":        {"max_age_h": 24, "kind": "marker"},   # S-475 5b 指纹日更
     "_price_agreement_loop":     {"max_age_h": 24, "kind": "marker"},   # S-484 T-044b 跨源价格守卫
     "_beta_plus_loop":           {"max_age_h": 48, "kind": "marker"},   # S-429

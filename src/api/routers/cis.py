@@ -746,6 +746,28 @@ def _age_seconds(ts) -> float | None:
 _STALE_AFTER_S = 1800   # 30 min — Mac pushes ~every 30 min; older than this = stale
 
 
+def normalize_tiers(universe: list, *, t1_fresh: bool) -> int:
+    """T-023:每行的数据层级统一成整数 `data_tier ∈ {1, 2}`,并给 `data_source ∈ {"T1", "T1_stale", "T2"}`。
+    返回 T1 行数。
+
+    实测(10-06):`/api/v1/cis/universe` 的 `data_tier` 混着 `"T1"`(18 行)与 `1`(19 行)两种类型,
+    前端徽章按 `data_tier === 1` 染色 —— 写成字符串的那 18 个 T1 显示成琥珀色的「TT1」。
+    `T1_stale` = Mac 推过、但这一份来自过期缓存或 last-known-good(不是 30 分钟内的新推送)。
+    """
+    n1 = 0
+    for a in universe or []:
+        if not isinstance(a, dict):
+            continue
+        tier = 1 if a.get("data_tier") in (1, "1", "T1") or a.get("data_tier_label") == "T1" else 2
+        a["data_tier"] = tier
+        if tier == 1:
+            n1 += 1
+            a["data_source"] = "T1" if t1_fresh else "T1_stale"
+        else:
+            a["data_source"] = "T2"
+    return n1
+
+
 def _freshness(ts) -> dict:
     """Honest freshness block for a CIS response. Never fabricates a timestamp."""
     age = _age_seconds(ts)
@@ -1132,6 +1154,10 @@ async def _build_cis_universe(force_source: str = None):
                     or None          # placeholder strings look like data — S-120
                 )
 
+        # T-023:先把层级统一成整数 —— 下面按 `data_tier == 1` 补 pillars,写成 "T1" 字符串的行原来被漏掉。
+        _fr = _freshness(cached.get("timestamp"))
+        normalize_tiers(merged, t1_fresh=not _fr.get("stale"))
+
         # Normalize T1 pillars: Mac Mini sends flat keys (f/m/o/s/a).
         # Build nested pillars dict so frontend components can read asset.pillars.F etc.
         for a in merged:
@@ -1170,7 +1196,7 @@ async def _build_cis_universe(force_source: str = None):
         return sanitize_floats({
             "status":            "success",
             "version":           "4.1.0",
-            **_freshness(cached.get("timestamp")),   # honest timestamp/data_age_s/stale — no fake "now"
+            **_fr,   # honest timestamp/data_age_s/stale — no fake "now"
             "source":            "merged",
             "t1_count":          len(local_map),
             "t2_count":          len(merged) - len(local_map),
@@ -1196,6 +1222,7 @@ async def _build_cis_universe(force_source: str = None):
         except Exception:
             result["macro_regime"] = (result.get("macro") or {}).get("regime") or None
         result["macro_regime"] = _unify_regime(railway_universe, result["macro_regime"])
+        normalize_tiers(railway_universe, t1_fresh=False)   # T-023
         result["t1_count"] = 0
         result["t2_count"] = len(railway_universe)
         _record_build(_phase, _t0, "railway")
@@ -1204,12 +1231,14 @@ async def _build_cis_universe(force_source: str = None):
     # Last resort: stale hot-cache Redis
     if cached and cached.get("universe"):
         stale_universe = cached["universe"]
+        _n1_stale = normalize_tiers(stale_universe, t1_fresh=False)   # T-023
         return {
             "status":       "degraded",
             "version":      "4.1.0",
             **_freshness(cached.get("timestamp")),
             "source":       "local_engine_stale",
             "t1_count":     0,
+            "t1_stale_count": _n1_stale,
             "t2_count":     len(stale_universe),
             "macro_regime": _unify_regime(stale_universe, (
                 (cached.get("macro") or {}).get("regime")
@@ -1230,6 +1259,7 @@ async def _build_cis_universe(force_source: str = None):
         lkg = None
     if lkg and lkg.get("universe"):
         lkg_universe = lkg["universe"]
+        _n1_lkg = normalize_tiers(lkg_universe, t1_fresh=False)   # T-023
         lkg_age = time.time() - lkg.get("last_updated", 0)
         return {
             "status":         "degraded",
@@ -1238,6 +1268,7 @@ async def _build_cis_universe(force_source: str = None):
             "source":         "last_known_good",
             "stale_age_s":    round(lkg_age, 1),
             "t1_count":       0,
+            "t1_stale_count": _n1_lkg,
             "t2_count":       len(lkg_universe),
             "macro_regime": _unify_regime(lkg_universe, (
                 (lkg.get("macro") or {}).get("regime")
