@@ -1319,6 +1319,27 @@ def _cg_headers() -> dict:
     return {"x-cg-pro-api-key": CG_API_KEY} if CG_API_KEY else {}
 
 
+async def get_cg_top_holders(address: str, network: str = "eth", holders: int = 50) -> dict:
+    """CoinGecko Analyst 档的链上前 N 大持有人(`/onchain/networks/{network}/tokens/{address}/top_holders`,
+    非 Solana 最多 50,Solana 最多 40;Beta,缓存 60 秒)。T-004:持币集中度改走这里(S-268 早已登记,
+    Moralis 的 key 08-31 起没了)。返回 {holders, last_updated_at} 或 {error} —— 读不到写明原因,不返回空列表冒充「没有持有人」。"""
+    if not CG_API_KEY:
+        return {"error": "COINGECKO_API_KEY not set"}
+    try:
+        client = _get_cg_client()
+        r = await client.get(f"{CG_PRO_BASE}/onchain/networks/{network}/tokens/{address}/top_holders",
+                             headers=_cg_headers(), params={"holders": str(holders)})
+        if r.status_code != 200:
+            return {"error": f"HTTP {r.status_code}: {r.text[:200]}"}
+        attrs = ((r.json() or {}).get("data") or {}).get("attributes") or {}
+        hs = attrs.get("holders")
+        if not isinstance(hs, list):
+            return {"error": "响应里没有 holders 列表"}
+        return {"holders": hs, "last_updated_at": attrs.get("last_updated_at")}
+    except Exception as e:                                    # noqa: BLE001
+        return {"error": f"{type(e).__name__}: {str(e)[:200]}"}
+
+
 async def get_cg_global() -> dict:
     """
     CoinGecko global market data.

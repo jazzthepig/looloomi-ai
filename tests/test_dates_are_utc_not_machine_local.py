@@ -73,7 +73,7 @@ _NAIVE_DATE = re.compile(
 )
 
 #: 冻结基线。**只许降。** 降了就把这个数改小 —— 它是棘轮的棘齿。
-BASELINE = 107
+BASELINE = 106   # 10-06 S-499:holder_provider 的快照日期改 UTC
 
 #: 这些文件必须**恒为 0**:它们写裸 `date` 列,错一天就是一行假数据。
 #: `beta_core_paper.py` 是 ①,**我们唯一在产出的前向记录**(S-406 已清)。

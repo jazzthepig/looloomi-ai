@@ -2561,21 +2561,22 @@ async def _start_band_log_loop():
 # ── D3 holder-concentration refresh loop ──────────────────────────────────────
 # Warms the Moralis holder-concentration map into Redis so cause_proximity serves the
 # D3 (on-chain) tier without ever blocking the universe path on a Moralis fetch. Gated
-# on MORALIS_API_KEY (no-ops cleanly without it). Holder concentration moves slowly →
+# on the CoinGecko key (T-004: source moved from Moralis to CG onchain top_holders). Holder concentration moves slowly →
 # 6h cadence is plenty.
 _HOLDER_REFRESH_INTERVAL_S = 6 * 3600
 
 
 async def _holder_refresh_loop():
-    """T-004:`holder_concentration_history` 自 2026-08-31 停写 —— Railway 上的 MORALIS_API_KEY 没了,
-    这个循环在启动时就**不调度**,没有心跳、没有 loop_attempt,控制台看不见它死了(1 of 55 无人监控)。
-    现在总是调度:没有 key ⇒ 每轮记一次 refused 并让心跳失败(原因写明);有 key ⇒ 刷新并按写入行数判活。
+    """T-004:`holder_concentration_history` 自 2026-08-31 停写 —— 当时的源 Moralis 的 key 在 Railway 上没了,
+    而这个循环**只在有 key 时才调度**,没有心跳、没有 loop_attempt,控制台看不见它死了。
+    现在源换成 CoinGecko Analyst 的 onchain top_holders(S-268 早已登记;Jazz 10-06),循环总是调度:
+    没有 CG key ⇒ 每轮记 refused 并让心跳失败;取到 0 个代币 ⇒ error(读不到 ≠ 没有)。
     """
     await _asyncio.sleep(_boot_delay(180))   # 3 min warmup
     while True:
         try:
-            if not os.environ.get("MORALIS_API_KEY"):
-                _why = "MORALIS_API_KEY 未设置(Railway)—— holder_concentration_history 停写;需要 Jazz 在 Railway 设回"
+            if not os.environ.get("COINGECKO_API_KEY"):
+                _why = "COINGECKO_API_KEY 未设置 —— holder_concentration_history 停写"
                 await _beat("_holder_refresh_loop", ok=False, refused=True, error=_why)
                 await _record_loop_attempt("_holder_refresh_loop", "refused", reason=_why,
                                            writer="src.api.main._holder_refresh_loop")
@@ -2602,8 +2603,8 @@ async def _start_holder_refresh_loop():
     # T-004:没有 key 也调度 —— 让「停写」在控制台上是红的,而不是不存在。只有显式关闭才不调度。
     if os.environ.get("DISABLE_HOLDER_REFRESH", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_holder_refresh_loop())
-        print("[HOLDER] ✅ D3 holder-concentration refresh loop scheduled"
-              + ("" if os.environ.get("MORALIS_API_KEY") else " (MORALIS_API_KEY missing → refused each round)"))
+        print("[HOLDER] ✅ D3 holder-concentration refresh loop scheduled (CoinGecko onchain top_holders)"
+              + ("" if os.environ.get("COINGECKO_API_KEY") else " (COINGECKO_API_KEY missing → refused each round)"))
     else:
         print("[HOLDER] ⏸ holder refresh disabled (DISABLE_HOLDER_REFRESH)")
 

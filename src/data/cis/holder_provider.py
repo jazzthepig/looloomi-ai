@@ -1,6 +1,12 @@
 """
-Holder-concentration provider (D3) via Moralis — the on-chain gold-standard tier for
-cause_proximity (出圈). Turns per-token holder distribution into a diffusion `stage`.
+Holder-concentration provider (D3) — the on-chain gold-standard tier for cause_proximity (出圈).
+Turns per-token holder distribution into a diffusion `stage`.
+
+**Source = CoinGecko Analyst on-chain top_holders (T-004, 2026-10-06).** Originally Moralis; the
+Moralis key disappeared from Railway around 2026-08-31 and `holder_concentration_history` stopped.
+The paid CG plan already includes `/onchain/.../top_holders` (S-268 logged it on 09-01) — Jazz:
+「这个之前我们解决过了,coingecko analyst api 可以解决」. The history rows carry `source`, so the
+Moralis (top-100) → CG (top-50) switch is visible as a labelled break, not a silent level shift.
 
 Moralis covers EVM + Solana (matches our Solana fund); free tier ~10M req/mo. Registry-gated:
 only tokens with a known (chain, contract) are fetched; everything else degrades gracefully to
@@ -20,7 +26,7 @@ import asyncio
 import logging
 
 from src.data.market.data_layer import (
-    MORALIS_KEY, _redis_get, _redis_set, get_token_holders,
+    CG_API_KEY, _redis_get, _redis_set, get_cg_top_holders,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,7 +59,8 @@ def _concentration(holders: list) -> dict | None:
     without a usable percentage; return None if nothing parses."""
     shares = []
     for h in holders:
-        pct = h.get("percentage_relative_to_total_supply")
+        # CG top_holders: "percentage"(字符串,0–100);Moralis: "percentage_relative_to_total_supply"
+        pct = h.get("percentage", h.get("percentage_relative_to_total_supply"))
         if pct is None:
             continue
         try:
@@ -79,8 +86,9 @@ def _stage_from(top10_share: float) -> float:
 
 
 async def _fetch_one(symbol: str, chain: str, address: str) -> dict | None:
-    res = await get_token_holders(address, chain=chain, limit=100)
+    res = await get_cg_top_holders(address, network=chain, holders=50)
     if not isinstance(res, dict) or res.get("error"):
+        logger.warning(f"[HOLDER] {symbol} top_holders 读不到:{(res or {}).get('error')}")
         return None
     conc = _concentration(res.get("holders", []))
     if not conc:
@@ -92,15 +100,16 @@ async def _fetch_one(symbol: str, chain: str, address: str) -> dict | None:
         "n_top": conc["n_top"],
         "chuquan": False,      # Phase 2 (needs timeseries)
         "season": None,        # Phase 2 (Wyckoff — Minimax lane)
-        "source": "moralis_holders",
+        "source": "cg_onchain_top_holders",
+        "as_of": res.get("last_updated_at"),
     }
 
 
 async def refresh_holder_map() -> dict:
-    """Background refresh: fetch concentration for every registry token, write the map to Redis.
-    Concurrency-limited to respect the free tier. Gated on MORALIS_KEY."""
-    if not MORALIS_KEY:
-        logger.info("[HOLDER] MORALIS_API_KEY not set — skipping holder map")
+    """Background refresh: fetch concentration for every registry token, write the map to Redis
+    and append today's snapshot to history. Gated on the CoinGecko key (T-004)."""
+    if not CG_API_KEY:
+        logger.warning("[HOLDER] COINGECKO_API_KEY not set — skipping holder map")
         return {}
     sem = asyncio.Semaphore(4)
     out: dict = {}
@@ -149,10 +158,10 @@ async def _persist_history(rows: dict) -> bool:
     """
     if not rows:
         return False
-    from datetime import date
+    from datetime import datetime, timezone
     from src.api.store import supabase_upsert_table
 
-    today = date.today().isoformat()
+    today = datetime.now(timezone.utc).date().isoformat()   # 规则 5c:日期一律 UTC
     payload = [{
         "d": today,
         "symbol": sym.upper(),
