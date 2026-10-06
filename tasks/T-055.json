@@ -1,0 +1,22 @@
+{
+  "id": "T-055",
+  "title": "对外 MCP 工具描述的数据声明审计:每一句「有多少 / 赢多少 / 有多准」对上线上数据,标 支持 / 不支持 / 过期",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-06",
+  "source": "S-491 / T-053 剩余项:track-record 的说明三个月引用一个从未算出的 β 层;其余工具描述可能有同类写死结论",
+  "allowed_paths": [
+    "research/"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "一张表:src/mcp/cometcloud_mcp.py 每个工具描述里的每一句数据声明(数字、胜率、优势、准确度)× 支撑它的线上端点字段 × 今天实测的值(附 curl 原始输出)× 结论(支持 / 不支持 / 过期 / 无数据源)",
+    "expect": "Seth 按表逐条改;用法建议(如 edge-map 的分档用法)是方案之一,不是缺陷,不进表(Jazz 10-06)"
+  },
+  "prior_value": "只有 track-record 一处被查过(S-491)",
+  "verified": null,
+  "notes": "B 本周第 1 张,周五 10-09。只读审计,不改代码。"
+}

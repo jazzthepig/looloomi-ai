@@ -2,7 +2,7 @@
   "id": "T-035",
   "title": "复核 M-152(CDCB-A v2)与 M-128d(§5b 2D gate)—— 按 S-420 口径重问后再决定是否接 spec_runner",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "source": "lane-b 09-27 审计",
   "allowed_paths": [
     "docs/",
@@ -18,6 +18,10 @@
   },
   "prior_value": "B 报 M-152 SR +1.115「ship-ready」、M-128d 9/10 PASS;两条都未按「对照持有面板 + 分 regime」口径复核",
   "created": "2026-09-27",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-06T13:00Z",
+    "value": "B 10-06 收尾:M-128d 已走 registry.core_nav(回放 + 前向同一条 ①);M-152 的 BTC 基准是策略自身选择,评估层另按 ① 算超额(rr_matrix 已涵盖)—— 未发现基准错误。"
+  },
   "notes": " | 2026-10-04 改派 lane-b(Seth):基准用 ① cap_a1(10-02 前用 S-472 α=1 回放),顺序 B 的第 3 张。"
 }

@@ -18,5 +18,5 @@
   "prior_value": "三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份",
   "created": "2026-09-29",
   "verified": null,
-  "notes": " | 2026-10-04 改派 lane-c(Mac 侧),并入 T-010(plist 不放 key)。轮换值只经 Jazz 的手:C 只改读取路径与 plist,不读、不打印 key 的值。"
+  "notes": "2026-10-04 改派 lane-c(Mac 侧),并入 T-010(plist 不放 key)。轮换值只经 Jazz 的手:C 只改读取路径与 plist,不读、不打印 key 的值。 | 2026-10-06 Seth 裁定(§Seth-1006g):采纳 C 的方向 —— Mac 唯一 env = /Volumes/CometCloudAI/cometcloud-local/.env(25 个脚本 + run_cis_scheduler.sh 在读;~/.config/cometcloud/.env 零读者)。验收改为:~/.config/cometcloud/.env 不存在(由 Jazz 删,key 文件只经 Jazz 的手,lane 不删)+ lint 脚本过 + 轮换只动 Railway 与这一份。"
 }

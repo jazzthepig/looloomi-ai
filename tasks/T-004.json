@@ -1,7 +1,7 @@
 {
   "id": "T-004",
   "title": "恢复持币集中度写入(holder_concentration_history)",
-  "owner": "lane-a",
+  "owner": "seth",
   "status": "open",
   "source": "S-420 前的数据层盘点",
   "allowed_paths": [
@@ -16,6 +16,6 @@
   },
   "prior_value": "2026-08-31",
   "created": "2026-09-24",
-  "notes": "A 09-28 SYNC §IN-FLIGHT T-004 段:5 个相互加固的 bug 一起闷死 28 天(根因=JAZZ 唯一的 Railway env MORALIS_API_KEY 在 08-31 前后 unset → holder_provider.py:102 静默 early-return → _persist_history 不跑;+ /internal/data-freshness 不监控这张表 = 1 of 55 unmonitored;+ holder loop 失败只 stdout,无 loop_attempt 持久化)。修法 3 步:① JAZZ Railway Variables 设回 MORALIS_API_KEY(P0 唯一因)② Seth 微修 holder_provider.py early-return 改 outcome='refused' 写 loop_attempt(S-405 模式)③ 可选 Seth 把 holder_concentration_history 加进 data_freshness 的 producers.tables。A 在 sandbox 验不动(env 都在 Mac/Railway);Seth 域代码修复需走 PR。A 不动修。",
+  "notes": "A 09-28 SYNC §IN-FLIGHT T-004 段:5 个相互加固的 bug 一起闷死 28 天(根因=JAZZ 唯一的 Railway env MORALIS_API_KEY 在 08-31 前后 unset → holder_provider.py:102 静默 early-return → _persist_history 不跑;+ /internal/data-freshness 不监控这张表 = 1 of 55 unmonitored;+ holder loop 失败只 stdout,无 loop_attempt 持久化)。修法 3 步:① JAZZ Railway Variables 设回 MORALIS_API_KEY(P0 唯一因)② Seth 微修 holder_provider.py early-return 改 outcome='refused' 写 loop_attempt(S-405 模式)③ 可选 Seth 把 holder_concentration_history 加进 data_freshness 的 producers.tables。A 在 sandbox 验不动(env 都在 Mac/Railway);Seth 域代码修复需走 PR。A 不动修。 | 2026-10-06 改归 Seth + Jazz:A 09-28 自己查明的根因 = Railway 上 MORALIS_API_KEY 没了 ⇒ _holder_refresh_loop 启动时就不调度、没有心跳 ⇒ 静默停写。Seth(S-497):循环总是调度,没有 key 每轮记 refused + 心跳失败(写明原因),liveness 加 SLO。Jazz:在 Railway 设回 MORALIS_API_KEY(key 只经 Jazz 的手)。表与源不变(holder_concentration_history / Moralis),不新建表、不换源。",
   "verified": null
 }

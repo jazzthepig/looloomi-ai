@@ -17,5 +17,6 @@
   },
   "prior_value": "replay 读到 1,000 行(截断)",
   "created": "2026-09-24",
-  "verified": null
+  "verified": null,
+  "notes": "2026-10-06 派给 A 为本周第 2 张(T-023 已由 Seth 实现):周日 10-11 交 —— 对账 SQL 与 replay 输出的原始数字。"
 }
