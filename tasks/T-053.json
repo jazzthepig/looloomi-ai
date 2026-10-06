@@ -21,5 +21,5 @@
   },
   "prior_value": "证据只在 SQL 与台账里;track-record 说明文字三个月引用一个从未算出的 β 层",
   "verified": null,
-  "notes": "合规:只用定位语言;不出现内部架构名(规则 8)。 | 2026-10-06 上线第一版:/api/v1/proof/books + MCP cometcloud_get_proof + src/data/accounting/proof.py + tests/test_proof_surface.py。未完:track-record 的 β 层算出或删;其余 MCP 描述里写死的数据结论句逐条对数据;edge-map 的分档用法是方案之一不是规则(Jazz 10-06),已改写成「一种用法」。"
+  "notes": "合规:只用定位语言;不出现内部架构名(规则 8)。 | 2026-10-06 上线第一版:/api/v1/proof/books + MCP cometcloud_get_proof + src/data/accounting/proof.py + tests/test_proof_surface.py。未完:track-record 的 β 层算出或删;其余 MCP 描述里写死的数据结论句逐条对数据;edge-map 的分档用法是方案之一不是规则(Jazz 10-06),已改写成「一种用法」。 | 2026-10-06 β 层:线上 refresh_signal_track_record 是 v1(无 β),v2 SQL(07-26)从未应用 —— 不部署旧草稿,改为在响应里写 beta_adj_layer = not_computed + 原因 + 指向 cis_tilt(S-496)。剩:其余 MCP 描述里写死的数据结论句逐条对数据。"
 }
