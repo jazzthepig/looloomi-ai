@@ -1265,6 +1265,41 @@ async def _start_cis_tilt_loop():
     print("[CIS-TILT] ✅ ② CIS tilt scheduled (cis_tilt_daily, 1 arm)")
 
 
+async def _state_daily_loop():
+    """L1 状态层(T-048):每 6 小时重算最近 14 天的 17 个面板特征并 upsert;表为空时从 2023-01-01 整条回填。
+    时点由 `features_at` 结构保证(先把输入截到 ≤ d)。缺数据写 None。失败 30 分钟后重试。
+    判活:`select max(d) from state_daily where feature = 'mom_20'` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(600))
+    while True:
+        _ok = False
+        try:
+            from src.data.state.state_daily import run_once as _sd_run
+            r = await _sd_run()
+            _ok = bool(r.get("ok"))
+            print(f"[STATE-DAILY] written={r.get('written')} · {str(r.get('reason'))[:140]}")
+            _detail = {"written": r.get("written"), "last_d": r.get("last_d"), "null_last_day": r.get("null_last_day")}
+            await _beat("_state_daily_loop", ok=_ok and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail=_detail, error=None if _ok else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_state_daily_loop",
+                "ok" if _ok and not r.get("refused") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._state_daily_loop")
+        except Exception as _e:
+            print(f"[STATE-DAILY] ⚠️  pass FAILED: {_e}")
+            await _beat("_state_daily_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_state_daily_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._state_daily_loop")
+        await _asyncio.sleep(6 * 3600 if _ok else 1800)
+
+
+@app.on_event("startup")
+async def _start_state_daily_loop():
+    _asyncio.create_task(_state_daily_loop())
+    print("[STATE-DAILY] ✅ L1 state layer scheduled (state_daily, 17 panel features)")
+
+
 async def _style_header_loop():
     """T-039 风格表头:成员(每 7 天)→ 市值历史补到昨天 → 风格指数(大币 / 头部公链 / 二线公链与 L2 /
     DeFi / 基础设施与代币化 / AI / meme)。每 6 小时一轮,幂等。表 `style_membership` / `asset_mcap_daily` /

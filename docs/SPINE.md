@@ -42,6 +42,7 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | 2 | 测量·CIS | `cis_scores` ← Mac T1 → `cis_push` → Redis → `cis_provider` | `/api/v1/cis/universe` | 🟢 |
 | 3 | 几何·资产 | `asset_embeddings`(27 维,72 行) | `match_asset_embeddings()` | 🟢 |
 | 4 | 几何·市场态 | `market_state_vectors.vec_full`(24 声明 / 15 实测,582 行) | `similar_market_states()` | 🟡 **S-361 写者已上日程**;剩余陈旧来自源(binance_hist 停 8 天) |
+| 4b | 状态·L1(v0.2) | `state_daily`(T-048:17 个面板特征,长表;时点由 `features_at` 先截到 ≤ d 结构保证)| 评估层 rr_matrix(T-045)→ L3 按状态分格 | 🟡 新上 |
 | 5a | 检索·**宏观**相位 | `similar_market_states()`(价格/宏观 15 实测维) | `/api/v1/regime/similar` | 🟡 **S-362 已修 z 化与排邻并接线**;底表停 42 天(见第 4 段) |
 | 5b | 检索·**微观**相位 | `regime_match`(CIS 支柱 11 维 + 78 天人工判读) | `/api/v1/regime/similar` | 🟢 **S-362 已接线**;底表每日更新 |
 | 6 | 判断·ⓠ | `beta_core_q_overlay`(乘数语义)| `beta_core_nav_q` 27 行,日更;**S-378 起 matcher 在线**(`smoothed_phase_distance` → dwell filter → hook)| 🟡 **活的**;`regime_override_enforcer` 是**语义不同的旧实现**,见「已退役」;封顶 1.3x 与设计的 −0.5…3.3x 不符(归 Jazz) |
@@ -547,6 +548,10 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
 11. **第 10 段(门外·证据面)** — `/api/v1/proof/books` 与 MCP `cometcloud_get_proof` 10-06 上线(T-053)。
     🟡 未完的两件:CIS 信号记录(`/api/v1/signals/track-record`)的 β 调整层自 07-01 一行没算出(S-491)——
     要么算出来,要么从输出里拿掉;其余 MCP 工具描述里写死的数据结论句逐条对数据(edge-map 的分档用法是基于 CIS 分级的方案之一,不是规则,保留)。
+
+12. **第 4b 段(L1 状态层)** — `state_daily` 10-06 上线(T-048,S-494)。🟡:资金费只有 HL 09-05 起、持仓量 09-27 起,
+    之前为 None(不拼别的场所);regime 只有 2025-05-03 起。消费者 = B 的评估层 rr_matrix(T-045,待接)。
+    判活:`select max(d) from state_daily where feature = 'mom_20'` = 昨天。
 
 ---
 
