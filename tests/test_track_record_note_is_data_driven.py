@@ -5,7 +5,7 @@
 """
 import pathlib
 
-from src.api.routers.signals import track_record_note
+from src.api.routers.signals import beta_layer_status, track_record_note
 
 
 def test_empty_beta_layer_is_said_plainly_and_no_edge_is_claimed():
@@ -25,3 +25,9 @@ def test_no_hardcoded_edge_claims_left_in_the_agent_surface():
         text = (root / rel).read_text(encoding="utf-8")
         assert "delivers positive β-ADJ" not in text, rel
         assert "restores it to a positive" not in text, rel
+
+
+def test_beta_layer_status_says_why_it_is_empty():
+    st = beta_layer_status({"BETA_ADJ": {"STRONG_OUTPERFORM": None}})
+    assert st["status"] == "not_computed" and "never deployed" in st["why"] and "/api/v1/proof/books" in st["see_instead"]
+    assert beta_layer_status({"BETA_ADJ": {"X": {"n": 3}}}) == {"status": "computed"}

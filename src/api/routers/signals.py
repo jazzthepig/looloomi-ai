@@ -1125,6 +1125,21 @@ def track_record_note(headline: dict) -> str:
     return base + " Read each tier's β-ADJ value and its t-stat directly; no tier is pre-judged here."
 
 
+def beta_layer_status(headline: dict) -> dict:
+    """S-496:β 调整层的真实状态,写进响应 —— 不让读者自己从一排 null 里猜。
+
+    线上的 `refresh_signal_track_record` 是 v1(只算 RAW 与胜率);带 PIT β 的 v2
+    (`scripts/supabase_refresh_signal_track_record_v2.sql`,2026-07-26)写好了但**从未应用**,
+    所以 `signal_track_record.n_beta_adj` 自 07-01 第一行起全空。CIS 在面板内的倾斜价值改由
+    `/api/v1/proof/books` 的 `cis_tilt` 账本前向检验(T-052)。
+    """
+    if any(v for v in (headline.get("BETA_ADJ") or {}).values()):
+        return {"status": "computed"}
+    return {"status": "not_computed",
+            "why": "The live refresh computes RAW and WIN_PCT only; the beta-adjusted version was never deployed.",
+            "see_instead": "/api/v1/proof/books (cis_tilt: CIS used as a tilt inside the core, forward record)"}
+
+
 @router.get("/api/v1/signals/track-record")
 async def get_signal_track_record(response: Response = None):
     """
@@ -1209,6 +1224,7 @@ async def get_signal_track_record(response: Response = None):
                       if not gate_open else None,
         },
         "note": track_record_note(headline),
+        "beta_adj_layer": beta_layer_status(headline),
         "compliance": "Positioning language only; not investment advice.",
     }
 
