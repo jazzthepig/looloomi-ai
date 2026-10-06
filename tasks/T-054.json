@@ -1,0 +1,27 @@
+{
+  "id": "T-054",
+  "title": "GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-06",
+  "source": "Jazz 10-06:「入观察池 dashboard 是动态还是静态」→ 现状静态(vault.py 里手写的 2 家,EST Alpha 的 83 分 / A 级 / YTD +8.5% 一次性手填,5 月后未改);Jazz:本周之后做",
+  "allowed_paths": [
+    "src/api/routers/vault.py",
+    "src/mcp/",
+    "src/data/",
+    "scripts/",
+    "tests/",
+    "dashboard/src/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "表 gp_pipeline(gp, stage, entered_at, criteria jsonb, source, updated_at)+ 链上 vault 业绩按日落表;/api/v1/vault/funds 与 MCP get_fund_portfolio 从表读,每个数带 as_of 与证据等级;手填数字要么有来源与日期,要么不出现",
+    "expect": "不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查"
+  },
+  "prior_value": "静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数",
+  "verified": null,
+  "notes": "排在 10-11 之后(Jazz 10-06)。顺带:在动态化之前,MCP 返回里至少标明「静态、截至何时」。"
+}
