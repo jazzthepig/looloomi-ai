@@ -49,6 +49,9 @@ BOOKS: tuple[Book, ...] = (
          "beta_plus_daily", "arms", arm="momentum_52w_w", accounting="shared_kernel", benchmark="arm:panel_hold_w"),
     Book("beta_plus_m", "②", "动量 + 52 周高点倾斜(月频)", "同上,月频",
          "beta_plus_daily", "arms", arm="momentum_52w_m", accounting="shared_kernel", benchmark="arm:panel_hold_m"),
+    # T-051 / T-052(S-491 / S-493):CIS 的本职 = 面板内倾斜。① 权重 × exp(0.5·z_CIS),单币 ≤ 40%,起点 10-06。
+    Book("cis_tilt", "②", "CIS 倾斜(① 内按 CIS 超配,k=0.5)", "CIS 的岗位是 ②:在持有的面板内决定超配谁(§5b)",
+         "cis_tilt_daily", "arms", arm="cis_a1", accounting="shared_kernel", benchmark="core"),
     Book("tokenization_tilt", "②", "代币化基础设施 25% 倾斜", "TradFi 上链的通路与发行是长期主题(DECISIONS 09-26)",
          "tokenization_tilt_daily", "arms", arm="tokenization_tilt_25", accounting="shared_kernel",
          benchmark="arm:panel_hold"),

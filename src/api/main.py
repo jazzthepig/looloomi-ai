@@ -1230,6 +1230,41 @@ async def _start_core_cap_loop():
     print("[CORE-CAP] ✅ ① cap-weighted core scheduled (core_cap_daily, 3 arms)")
 
 
+async def _cis_tilt_loop():
+    """② CIS 倾斜(T-051 预注册 / T-052):① 持仓内按 CIS 的截面 z 做 exp(0.5·z) 倾斜,单币 ≤ 40%,周一再平衡。
+    每小时一次;每次从起点(2026-10-06)整条重算、整条 upsert,幂等无状态。收盘后终值未就绪 ⇒ refused。
+    判活:`select max(d) from cis_tilt_daily` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(420))
+    while True:
+        try:
+            from src.data.signals.cis_tilt import run_once as _ct_run
+            r = await _ct_run()
+            print(f"[CIS-TILT] written={r.get('written')} nav={r.get('nav')} · {str(r.get('reason'))[:120]}")
+            _detail = {"written": r.get("written"), "nav": r.get("nav"), "top": r.get("top"),
+                       "n_scored_last_rebal": r.get("n_scored_last_rebal"), "stale_in_source": r.get("stale_in_source")}
+            await _beat("_cis_tilt_loop", ok=bool(r.get("ok")) and not r.get("refused"),
+                        refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_cis_tilt_loop",
+                "ok" if r.get("ok") and not r.get("refused") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._cis_tilt_loop")
+        except Exception as _e:
+            print(f"[CIS-TILT] ⚠️  pass FAILED: {_e}")
+            await _beat("_cis_tilt_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_cis_tilt_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._cis_tilt_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_cis_tilt_loop():
+    _asyncio.create_task(_cis_tilt_loop())
+    print("[CIS-TILT] ✅ ② CIS tilt scheduled (cis_tilt_daily, 1 arm)")
+
+
 async def _style_header_loop():
     """T-039 风格表头:成员(每 7 天)→ 市值历史补到昨天 → 风格指数(大币 / 头部公链 / 二线公链与 L2 /
     DeFi / 基础设施与代币化 / AI / meme)。每 6 小时一轮,幂等。表 `style_membership` / `asset_mcap_daily` /
