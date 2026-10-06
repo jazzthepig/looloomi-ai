@@ -54,6 +54,7 @@
     "price_source_agreement_daily",
     "regime_band_log",
     "risk_meter_history",
+    "rr_matrix_daily",
     "scalable_book_nav",
     "signal_journal",
     "state_daily",

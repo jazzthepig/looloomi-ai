@@ -1300,6 +1300,37 @@ async def _start_state_daily_loop():
     print("[STATE-DAILY] ✅ L1 state layer scheduled (state_daily, 17 panel features)")
 
 
+async def _rr_matrix_loop():
+    """评估层 rr_matrix(T-045,B 的 v0.6 + S-496):每本账 × 状态格子相对 ① 的超额分布,每 12 小时整表重算一次。
+    读不到 ① 或状态层 ⇒ 不写。失败 30 分钟后重试。判活:`select max(d) from rr_matrix_daily` = ① 的最新一天。
+    """
+    await _asyncio.sleep(_boot_delay(1800))
+    while True:
+        _ok = False
+        try:
+            from src.data.evaluation.rr_matrix import run_once as _rr_run
+            r = await _rr_run()
+            _ok = bool(r.get("ok"))
+            print(f"[RR-MATRIX] written={r.get('written')} · {str(r.get('reason'))[:140]}")
+            _detail = {"written": r.get("written"), "as_of": r.get("as_of")}
+            await _beat("_rr_matrix_loop", ok=_ok, detail=_detail, error=None if _ok else str(r.get("reason"))[:200])
+            await _record_loop_attempt("_rr_matrix_loop", "ok" if _ok else "error",
+                                       reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                                       detail=_detail, writer="src.api.main._rr_matrix_loop")
+        except Exception as _e:
+            print(f"[RR-MATRIX] ⚠️  pass FAILED: {_e}")
+            await _beat("_rr_matrix_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_rr_matrix_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._rr_matrix_loop")
+        await _asyncio.sleep(12 * 3600 if _ok else 1800)
+
+
+@app.on_event("startup")
+async def _start_rr_matrix_loop():
+    _asyncio.create_task(_rr_matrix_loop())
+    print("[RR-MATRIX] ✅ evaluation layer scheduled (rr_matrix_daily)")
+
+
 async def _style_header_loop():
     """T-039 风格表头:成员(每 7 天)→ 市值历史补到昨天 → 风格指数(大币 / 头部公链 / 二线公链与 L2 /
     DeFi / 基础设施与代币化 / AI / meme)。每 6 小时一轮,幂等。表 `style_membership` / `asset_mcap_daily` /

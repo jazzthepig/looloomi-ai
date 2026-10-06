@@ -86,6 +86,9 @@ VALIDATION_TESTS = ROOT / "src" / "research" / "validation" / "tests"
 #: 这一行必须删掉,否则名单会变成永久特赦(和 test_no_investor_facing_internals
 #: 里 `KNOWN_CODE_ONLY` 同一个设计)。
 EXEMPT = {
+    "rr_matrix_cases":
+        "不是测试文件,是 lane B 的 T-045 用例库(每个函数返回 (ok, msg))。由已注册的 tests/test_rr_matrix.py "
+        "逐个 import 并断言;单独跑它只会打印,不会让任何东西变红(S-496)。",
     "test_internal_token_contract":
         "S-371 的判据,**故意是红的** —— 它断言的收敛(36 处 token 比较 → 1 处)"
         "被 Jazz 2026-09-17 裁定暂缓,先赶开发进度。现在注册它会让 preflight 常红,"
