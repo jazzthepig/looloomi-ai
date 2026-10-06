@@ -2,7 +2,7 @@
   "id": "T-053",
   "title": "证据面:一个端点 + 一个 MCP 工具,把 ① 与每本账的前向证据按证据等级摆到门外;CIS 信号记录的 β 层要么算出来要么删",
   "owner": "seth",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-06",
   "source": "WEEKLY_REVIEW 10-06 / S-491",
   "allowed_paths": [
@@ -21,5 +21,5 @@
   },
   "prior_value": "证据只在 SQL 与台账里;track-record 说明文字三个月引用一个从未算出的 β 层",
   "verified": null,
-  "notes": "合规:只用定位语言;不出现内部架构名(规则 8)。"
+  "notes": "合规:只用定位语言;不出现内部架构名(规则 8)。 | 2026-10-06 上线第一版:/api/v1/proof/books + MCP cometcloud_get_proof + src/data/accounting/proof.py + tests/test_proof_surface.py。未完:track-record 的 β 层算出或删;其余 MCP 描述里写死的数据结论句逐条对数据;edge-map 的分档用法是方案之一不是规则(Jazz 10-06),已改写成「一种用法」。"
 }

@@ -2,7 +2,7 @@
   "id": "T-042",
   "title": "解读层 v2:特征组合(K 线形态 × 背景)的相似日 —— C 用 autoresearch 在样本内搜索,样本外只开一次",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "source": "Jazz 10-02:「单纯价格去找肯定失败,要特征组合:K 线形态 + 宏观背景 / 产业周期 + 走势」;M-196 FAIL(S-463)",
   "allowed_paths": [
     "/Volumes/CometCloudAI/cometcloud-local/research/t042/",
@@ -23,6 +23,10 @@
   },
   "prior_value": "T-040 v1(价格空间三角度各自找相似日再平均)M-196 全部 FAIL;单角度都比无条件差",
   "created": "2026-10-02",
-  "verified": null,
-  "notes": "单位 = (币, 日);前瞻 10 天;目标 = 相对所属风格指数的收益与绝对收益。数据只走公开读端点:/api/v1/research/ohlcv/{symbol}?source=binance_hist(或 coingecko_pro_ohlc,S-460 后核心币已干净)、/api/v1/style/index、/api/v1/research/market-state。 | 2026-10-05 S-486:v1.2 S4 未过 —— 只看背景基线 = 组合本身(差恒为 0,p 把平局算胜);交付脚本不是跑的那份;严格判据在 sign×sign 下做得到(Seth 复现 pattern p=0.30 / bg p=0.87)。v1.3:背景基线 K 天内随机取 10、p 严格 <0 报平局比例、脚本 sha256 进 JSON、查询 2,000、作废产物标 VOID 不删。"
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-06T05:00Z",
+    "value": "S-492:按事先写下的规则关闭 —— v1.3 S4 没过(组合 vs 无条件 0.695;单边基线 vs 随机 0.999;无信号时组合对单边基线 p=0.00)。价值 = 墓地:这套 kNN + 分位损失架构取不出埋进去的纯交互信号。trial 计数停在 v1.3。"
+  },
+  "notes": "单位 = (币, 日);前瞻 10 天;目标 = 相对所属风格指数的收益与绝对收益。数据只走公开读端点:/api/v1/research/ohlcv/{symbol}?source=binance_hist(或 coingecko_pro_ohlc,S-460 后核心币已干净)、/api/v1/style/index、/api/v1/research/market-state。 | 2026-10-05 S-486:v1.2 S4 未过 —— 只看背景基线 = 组合本身(差恒为 0,p 把平局算胜);交付脚本不是跑的那份;严格判据在 sign×sign 下做得到(Seth 复现 pattern p=0.30 / bg p=0.87)。v1.3:背景基线 K 天内随机取 10、p 严格 <0 报平局比例、脚本 sha256 进 JSON、查询 2,000、作废产物标 VOID 不删。 | 2026-10-06 关闭(S-492),不再有 v1.4;C 转 T-046。"
 }
