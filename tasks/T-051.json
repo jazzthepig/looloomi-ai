@@ -1,0 +1,23 @@
+{
+  "id": "T-051",
+  "title": "② CIS 倾斜账本的预注册:① 面板内按 CIS 加权倾斜(不做空、不中性化)—— 成因、基准率、固定参数、证伪条件",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-06",
+  "source": "WEEKLY_REVIEW 10-06:CIS 的岗位是 ②(§5b 07-27),但 ② 里没有任何一本 CIS 倾斜账本 —— 核心产品不在验证机器里",
+  "allowed_paths": [
+    "research/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/api/main.py"
+  ],
+  "acceptance": {
+    "check": "规格文档一份(交到 lane-b worktree 的 research/ 下):成因(引用 S-80 F 支柱 IC 与 §5b 原文)、倾斜公式(① 权重 × exp(k·z) 再归一、单币 ≤ 40%,k 事先固定、不网格搜索)、用哪几个 CIS 字段与其时点(recorded_at ≤ 再平衡日)、缺 CIS 的币保持 ① 权重、周一与 ① 同步再平衡、成本 10bps、2026-01-01 至今的回放只作先验并标「暴露」、前向证伪条件 = L3 l3-v2 的任意时刻下界与 60 天;附一段 SQL,任何人可复算回放的日收益",
+    "expect": "10-07(周三)交;Seth 按它建账,不再改参数"
+  },
+  "prior_value": "CIS 有分数(21/24 名有 2026 年全年日分数),没有倾斜账本",
+  "verified": null,
+  "notes": "B 的本周第 1 张;T-045 第 2 张。"
+}

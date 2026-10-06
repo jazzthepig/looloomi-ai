@@ -10,7 +10,6 @@
 | in_review | T-031 | seth | CG Pro 面板:5 币自 09-13 停写 + 收盘后终值只覆盖一部分币(7 币停在开盘后的半根) | 5 个都 = 昨天;并在 SPINE / 守卫里说明为什么它们会掉出写入宇宙 | 5 个币最后一行都是 2026-09-13 |  |
 | in_review | T-033 | seth | 后端 CIS narrative 短句措辞:避免短期 trend 词与负 24h% 同屏(T-022 后半) | deterministic narrative 在 OUTPERFORM + 负 24h 条件下仍合规 + 不与百分比跨度冲突;不破坏 desktop CIS leaderboard narrative 既有体验(LLM 路径不受影响) | T-022 前半(pct24h 后缀)shipped。Seth 09-27 review:'strong momentum' 文本来自后端 CIS narrative(cis.py narrative.py 按支柱生成),前端后缀改不了。acceptance 要求文案与百分比跨度一致 —— 需改后端叙事措辞。 |  |
 | in_review | T-049 | seth | L0 时间戳语义收成一个合约:每个源的 bar 日期怎么来,一处定义 + 每源一条对 binance_hist 的合约测试(v0.2 原则 P4) | 代码里不再有第二处『减一天』;T-044 守卫做每日巡检,这条做提交前的门 | 日期语义散在 get_cg_ohlc_range / parse_market_chart / deep_panel_collector 各自的注释里 |  |
-| in_review | T-050 | seth | L3 l3-v2:准入门换成任意时刻有效的置信序列 + Kelly 前收缩 + 非 ① 账本 ≥ 60 天(S-485,10-22 之前) | ≤ 5%(l3-v1 为 17.3%);越过门槛后的权重随证据爬升,不是一步顶到上限;10-22 第一批账本满 20 天之前上线 | l3-v1:每天重算 均值 − 2 标准误 > 0 且 ≥ 20 天,零超额账本一年内 17.3% 曾被放进,一放即 40% 上限 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-001 | lane-a | T1 的 TradFi 改从 ohlcv_daily(eodhd)读,撤回 30 天过期缓存 | = 43,且 19 个 TradFi 最新价格日期 ≥ 最近一个美股交易日 | 24 |  |
 | open | T-003 | lane-a | S-396 三臂回放 live 验证(读路径分页修复后) | 相等 | replay 读到 1,000 行(截断) |  |
@@ -19,6 +18,7 @@
 | open | T-048 | lane-a | 状态层 state_daily 首批特征(v0.2 阶段 2):趋势、波动、广度、风格相对强弱、资金费与持仓量 —— 模块 + PIT 测试 | PIT 测试:把 d 之后的价格全部改掉,d 及以前每一行的特征逐位不变;缺数据的特征是 null 不是 0;每天 06:00 UTC 后有昨天的行(接调度后验收) | 状态散在各处:regime 四选一字符串、动量在 β+ 里、资金费在 HL 表里,没有统一的逐日状态表 |  |
 | open | T-035 | lane-b | 复核 M-152(CDCB-A v2)与 M-128d(§5b 2D gate)—— 按 S-420 口径重问后再决定是否接 spec_runner | 台账一条:接 / 不接 / 重跑,附理由 | B 报 M-152 SR +1.115「ship-ready」、M-128d 9/10 PASS;两条都未按「对照持有面板 + 分 regime」口径复核 |  |
 | open | T-045 | lane-b | 评估层 rr_matrix:每本账在每个状态格子里相对 ① 的超额分布(v0.2 阶段 3)—— 规格 + 纯函数 + 测试 | 规格文档 + 纯函数 + ≥ 6 个测试全过;状态输入先用 T-048 的字段名约定(没就绪时用合成数据测),交 patch 到 lane-b worktree,Seth 接调度与建表 | 评估都在台账的一次性报告里;L3 的证据不分状态 |  |
+| open | T-051 | lane-b | ② CIS 倾斜账本的预注册:① 面板内按 CIS 加权倾斜(不做空、不中性化)—— 成因、基准率、固定参数、证伪条件 | 10-07(周三)交;Seth 按它建账,不再改参数 | CIS 有分数(21/24 名有 2026 年全年日分数),没有倾斜账本 |  |
 | open | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED |  |
 | open | T-007 | lane-c | CG 新闻监听器写入 Supabase(经 Railway mac_writes) | > 0 | 只在 Mac 本地 cis_history.db,13 行 |  |
 | open | T-036 | lane-c | Mac 只留一份 env:~/.config/cometcloud/.env;cis_scheduler 改读它,cometcloud-local/.env 退役;Python 日志改 UTC | 一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行 | 三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份 |  |
@@ -27,6 +27,8 @@
 | open | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
+| open | T-052 | seth | ② CIS 倾斜账本上线:按 T-051 的预注册建账、登记、前向记录(第一行真实数据) | 回放段标「暴露」;前向首行 ≤ 10-10;每天 06:00 UTC 后有昨天的行 | 无 |  |
+| open | T-053 | seth | 证据面:一个端点 + 一个 MCP 工具,把 ① 与每本账的前向证据按证据等级摆到门外;CIS 信号记录的 β 层要么算出来要么删 | 外部 agent 一次调用能回答「哪本账有前向证据、相对 ① 怎样、为什么 L3 给它 0」;没有任何写死的结论句 | 证据只在 SQL 与台账里;track-record 说明文字三个月引用一个从未算出的 β 层 |  |
 | blocked(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | blocked(等 ['T-001']) | T-020 | lane-c | DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻 | 同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减 | 同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移 |  |
 | blocked(等 T-015) | T-016 | seth | 实盘执行器(只算不发两天 → 3,000U 真跑) | > 0,且每日对账有数 | 0 |  |
@@ -51,6 +53,7 @@
 | done | T-030 | seth | binance_hist 回填:过去一年整天缺 41 天(最后 09-06) | = 0 | 20 个币各缺 41 天,ETC/SUI/TRX 29 天,BCH 17 天 | loop_attempt _deep_panel_backfill 09-30 00:37 ok:24/24 币、9,600 行;binance_hist 过去 400 天 BTC/ETH/SOL/LINK/BCH 缺 0 天(此前 41 天) @ 2026-09-30T01:00Z |
 | done | T-039 | seth | 风格表头:每个标的的风格归属(PIT)+ 每个风格的日指数 + 每本账本的风格暴露 | 任意一天能回答「这本账本此刻在大币 / 二线 / 山寨 / meme 各暴露多少」,且能回放到 2021、2022、2024 三段 | asset_class 只有 L1/L2/DeFi/RWA/Infra 粗分类、无档位、无 meme;asset_embeddings_history 仅 08-19 起 42 天、59 个标的;无任何风格指数 | t039-v4:层级 4 × 板块 4 × 两种加权,2020-01-01 → 09-29 共 37,636 行;公开读 /api/v1/style/index 实测返回(meme 09-20 起 37 个成员,DOGE 45%);持仓法暴露已写(beta_plus 四臂)。多空账本无逐日权重,未算暴露。 @ 2026-09-30T04:00Z |
 | done | T-040 | seth | 解读层 v0:每天「今天像历史上哪几段 → 那几段之后各风格怎么走 → 两角度是否一致」,落库并在 30 天后对账 | 每天一行;任意一句 narrative 能追到具体类比日和指数行;历史回放模式可以对 2023 起每一天重跑(给 T-041 验证用) | /api/v1/regime/similar 能按需返回 5a(宏观 15 维)/5b(横截面 11 维)两角度的相似日,但:没有定时调用、不回答「那几段之后发生了什么」、没有决策读它、没有事后对账 | _interpret_loop 每 6h 写 market_interpretation_daily(1371 天至 10-02);历史回放模式供 M-196 使用;检验 FAIL(S-463)⇒ L3 权重 0,继续运行;v2 = T-042 @ 2026-10-04T10:00Z |
+| done | T-050 | seth | L3 l3-v2:准入门换成任意时刻有效的置信序列 + Kelly 前收缩 + 非 ① 账本 ≥ 60 天(S-485,10-22 之前) | ≤ 5%(l3-v1 为 17.3%);越过门槛后的权重随证据爬升,不是一步顶到上限;10-22 第一批账本满 20 天之前上线 | l3-v1:每天重算 均值 − 2 标准误 > 0 且 ≥ 20 天,零超额账本一年内 17.3% 曾被放进,一放即 40% 上限 | build 6c918931:_allocation_loop 03:40 UTC ok「配置 3 天至 2026-10-04;① 100%」;allocation_daily 3 行 code_ref=l3-v2(l3-v1 行已被覆盖)。模拟验收:零超额一年内曾被放进 1%(≤ 5%),测试钉住。中间经历 S-489(−∞ 写进 JSON,13 小时)。 @ 2026-10-06T03:40Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 16 · blocked 3 · in_review 9 · done 21 · dropped 1
+open 19 · blocked 3 · in_review 8 · done 22 · dropped 1

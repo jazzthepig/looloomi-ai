@@ -1,0 +1,25 @@
+{
+  "id": "T-053",
+  "title": "证据面:一个端点 + 一个 MCP 工具,把 ① 与每本账的前向证据按证据等级摆到门外;CIS 信号记录的 β 层要么算出来要么删",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-06",
+  "source": "WEEKLY_REVIEW 10-06 / S-491",
+  "allowed_paths": [
+    "src/api/",
+    "src/mcp/",
+    "src/data/accounting/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "GET /api/v1/proof/books:每本账一行 —— 前向天数、总收益、同期 ①、超额、任意时刻下界、证据等级(forward / replay_exposed / caveat / retired)、L3 权重与 why;MCP cometcloud_get_proof 返回同一份;signal_track_record 的 n_beta_adj 要么非空、要么该层从输出里拿掉并写明",
+    "expect": "外部 agent 一次调用能回答「哪本账有前向证据、相对 ① 怎样、为什么 L3 给它 0」;没有任何写死的结论句"
+  },
+  "prior_value": "证据只在 SQL 与台账里;track-record 说明文字三个月引用一个从未算出的 β 层",
+  "verified": null,
+  "notes": "合规:只用定位语言;不出现内部架构名(规则 8)。"
+}
