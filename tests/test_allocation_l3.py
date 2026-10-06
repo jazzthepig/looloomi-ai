@@ -158,3 +158,17 @@ def test_routes_registered():
     from src.api.routers.ohlcv import router
     paths = {r.path for r in router.routes}
     assert "/internal/allocation/override" in paths and "/internal/allocation/latest" in paths
+
+
+def test_core_against_itself_is_strict_json_and_scores_zero():
+    """S-489:① 对它自己的超额恒为 0 ⇒ 波动 0 ⇒ 半宽 inf。l3-v2 上线后把 -Infinity 写进 evidence,
+    PostgREST 以 PGRST102 拒收整批,配置停了 13 小时。不可估的量必须是 None,且 decide 照常给 0。"""
+    import json
+    idx = pd.date_range("2026-10-01", periods=80, freq="D")
+    core = pd.Series(np.cumprod(1 + np.random.default_rng(1).normal(0, 0.02, 80)), index=idx)
+    ev = evidence(core, core)
+    json.dumps(ev, allow_nan=False)
+    assert ev["mu_lo_cs"] is None and ev["sigma"] == 0.0
+    out = decide(D, {CORE: _book("①"), "twin": {"layer": "②", "status": "paper", "caveat": "", "evidence": ev}}, [])
+    assert out["weights"] == {CORE: 1.0}
+    json.dumps(out, allow_nan=False)

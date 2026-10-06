@@ -92,10 +92,13 @@ def evidence(nav: Optional[pd.Series], bench: Optional[pd.Series]) -> dict[str, 
     if n < 2:
         return {"n_days": n}
     m, s = float(ex.mean()), float(ex.std())
-    return {"n_days": n, "mu": m * 365, "sigma": s * math.sqrt(365),
-            "mu_lo95": (m - 2 * s / math.sqrt(n)) * 365,
-            "mu_lo_cs": (m - cs_halfwidth(n, s)) * 365,
-            "mu_post": shrink(m, s, n) * 365}
+    # S-489:超额波动为 0(① 对它自己)时半宽是 inf ⇒ 下界 −inf;json 写成 -Infinity,PostgREST 整批拒收。
+    # 不可估的量写 None(「没有」),不写无穷。
+    return {k: (v if not isinstance(v, float) or math.isfinite(v) else None) for k, v in {
+        "n_days": n, "mu": m * 365, "sigma": s * math.sqrt(365),
+        "mu_lo95": (m - 2 * s / math.sqrt(n)) * 365,
+        "mu_lo_cs": (m - cs_halfwidth(n, s)) * 365,
+        "mu_post": shrink(m, s, n) * 365}.items()}
 
 
 def book_cap(bid: str) -> float:
@@ -115,8 +118,8 @@ def decide(d: date, books: Mapping[str, Mapping[str, Any]], overrides: list[Over
             why.append(f"{bid}: 0 —— 状态 {b.get('status')}" + (f";{b['caveat']}" if b.get("caveat") else ""))
         elif n < MIN_DAYS:
             why.append(f"{bid}: 0 —— 前向 {n} 天,不到 {MIN_DAYS} 天不配")
-        elif "mu_lo_cs" not in ev or "mu_post" not in ev:
-            why.append(f"{bid}: 0 —— 证据缺任意时刻下界或收缩均值({n} 天)")
+        elif ev.get("mu_lo_cs") is None or ev.get("mu_post") is None or not ev.get("sigma"):
+            why.append(f"{bid}: 0 —— 证据缺任意时刻下界或收缩均值、或超额波动为 0,不可估({n} 天)")
         elif not ev["mu_lo_cs"] > 0:
             why.append(f"{bid}: 0 —— 超额 {ev['mu']:+.1%}/年,任意时刻下界 {ev['mu_lo_cs']:+.1%} 不 > 0({n} 天)")
         else:
@@ -220,6 +223,14 @@ async def run_once() -> dict[str, Any]:
                                "evidence": books.get(bid, {}).get("evidence"),
                                "why": dec["why"] if bid == CORE else None, "code_ref": CODE_REF})
     nav_rows = nav_path(days, decisions, returns)
+    # S-489:写之前按严格 JSON 检查一遍 —— 无穷 / NaN 会让 PostgREST 以「Empty or invalid json」拒收整批,
+    # 原因被埋在 400 里;在这里拦下来,报出是哪一种。
+    import json
+    try:
+        json.dumps(alloc_rows, allow_nan=False)
+        json.dumps(nav_rows, allow_nan=False)
+    except ValueError as e:
+        return {"ok": False, "reason": f"写入前检查:行里有非有限数({e})—— 不写"}
     # 表名写成字面量:schema_manifest 的 AST 扫描只认得字面量,循环变量里的表名它看不见(S-166)。
     for i in range(0, len(alloc_rows), 1000):
         w = await supabase_upsert_table("allocation_daily", alloc_rows[i:i + 1000], on_conflict="d,book")
