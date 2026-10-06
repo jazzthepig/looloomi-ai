@@ -1108,6 +1108,23 @@ async def get_signal_summary():
     }
 
 
+def track_record_note(headline: dict) -> str:
+    """S-491:说明文字只能说数据里有的东西。
+
+    这里原先是一句写死的话:「最高档 STRONG OUTPERFORM 的 β 调整后为正;宽泛的 OUTPERFORM 在 β 调整后
+    恢复为正」。`signal_track_record` 从 2026-07-01 第一行起,`n_beta_adj` 就**没有一行非空** ——
+    这个结论三个月来没有任何数据支撑,而它出现在 agent 用来「决定信任多少」的那个工具里。
+    """
+    base = ("Observational signal→30d outcome (validates the signal), not live-traded P&L. "
+            "Use the tier breakdown under BOTH RAW and β-ADJ headings; do not blend.")
+    beta = headline.get("BETA_ADJ") or {}
+    if not any(v for v in beta.values()):
+        return base + (" The β-adjusted layer is EMPTY in this refresh (no tier has a computed "
+                       "β-ADJ value), so no β-adjusted edge is claimed; only the RAW and WIN_PCT "
+                       "layers carry evidence.")
+    return base + " Read each tier's β-ADJ value and its t-stat directly; no tier is pre-judged here."
+
+
 @router.get("/api/v1/signals/track-record")
 async def get_signal_track_record(response: Response = None):
     """
@@ -1191,12 +1208,7 @@ async def get_signal_track_record(response: Response = None):
                        "collector writes a fresh row.")
                       if not gate_open else None,
         },
-        "note": "Observational signal→30d outcome (validates the signal), not "
-                "live-traded P&L. Use the tier breakdown under BOTH RAW and β-ADJ "
-                "headings; do not blend. The top-conviction STRONG OUTPERFORM tier "
-                "delivers positive β-ADJ (R62); the broad OUTPERFORM tier was "
-                "previously mischaracterised by the pre-R62 RAW number — the "
-                "β-ADJ row restores it to a positive (smaller) edge.",
+        "note": track_record_note(headline),
         "compliance": "Positioning language only; not investment advice.",
     }
 

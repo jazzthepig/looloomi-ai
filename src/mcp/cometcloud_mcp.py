@@ -1021,13 +1021,14 @@ async def cometcloud_get_market_movers() -> str:
 async def cometcloud_get_track_record() -> str:
     """Returns CometCloud's validated 30-day BENCHMARK-RELATIVE track record for all DIRECTIONAL signals (STRONG OUTPERFORM / OUTPERFORM / UNDERPERFORM / UNDERWEIGHT), computed from our own stored data (cis_scores × ohlcv_daily) and refreshed daily by the Supabase RPC refresh_signal_track_record (v2, 2026-07-26; MINIMAX_SYNC §BETA-METRIC-AGG).
 
-    Call this to decide HOW MUCH TO TRUST a CIS signal before acting on it. Two layers are published, LABELLED:
-      - RAW (`avg_alpha_pct`): what an UNHEDGED holder experiences (pre-R62 metric).
+    Call this to decide HOW MUCH TO TRUST a CIS signal before acting on it. Two layers, LABELLED:
+      - RAW (`avg_alpha_pct`): what an UNHEDGED holder experiences.
       - BETA_ADJ (`avg_edge_beta_adj_pct`): the HEDGED excess (requires shorting the bench at the PIT β).
-    The β-ADJ layer is suppressed by a ship-gate when ohlcv_daily is stale (see `ship_gate.publish_beta_adj`).
+        This layer may be EMPTY (all null) — then no β-adjusted edge exists in the data and none is
+        claimed; read the `note` field, which states which layers actually carry values.
+    The β-ADJ layer is also suppressed by a ship-gate when ohlcv_daily is stale (see `ship_gate.publish_beta_adj`).
 
     Cite the tier breakdown under BOTH RAW and BETA_ADJ headings, never a blended headline.
-    UNDERWEIGHT carries the documented R62 defect (β-ADJ t < 0) — `defect_warning` surfaces this explicitly.
     Observational signal→outcome (validates the signal), not live-traded P&L.
 
     Returns:
