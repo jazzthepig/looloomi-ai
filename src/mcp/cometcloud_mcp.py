@@ -1060,6 +1060,35 @@ async def cometcloud_get_track_record() -> str:
 
 
 @mcp.tool(
+    name="cometcloud_get_proof",
+    annotations={
+        "title": "Proof — forward evidence of every paper book vs the core",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_get_proof() -> str:
+    """Returns the forward evidence of CometCloud's core holding (24 names, market-cap weighted, single coin <= 40%, spot only) and of every paper book built on top of it, in the same terms the allocation layer uses: the forward window, total return, the core's return over the same window, excess vs the core, an anytime-valid lower bound on the excess, and the weight the allocation layer currently gives the book.
+
+    Every row carries an `evidence_class` (forward / forward_young / caveat / retired / no_record). Books with fewer than 60 forward days are descriptive only. `no_record` means the record could not be read - it is not a zero. No book is pre-judged; read `how_to_read`. Paper records, not live-traded P&L.
+
+    Returns:
+        str: {as_of, allocation_as_of, core, books: [{id, layer, name, thesis, evidence_class, window, forward_days, total_return, core_return_same_window, excess_vs_core, excess_ann, excess_vol_ann, anytime_lower_bound_ann, l3_weight}], how_to_read, note, compliance}
+
+    Examples:
+        - "Which CometCloud books have real forward evidence?" → use this tool
+        - "Why does the allocation hold 100% core?" → use this tool
+    """
+    try:
+        data = await _get("/api/v1/proof/books")
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool(
     name="cometcloud_get_edge_map",
     annotations={
         "title": "Edge Map — expected alpha by signal tier × risk gradient",
@@ -1070,7 +1099,7 @@ async def cometcloud_get_track_record() -> str:
     },
 )
 async def cometcloud_get_edge_map() -> str:
-    """Returns CometCloud's decision surface: the expected 30-day BENCHMARK-RELATIVE alpha of each signal tier, CONDITIONED ON THE RISK GRADIENT (how risk-on/off the tape is, = benchmark trailing 30d return). Every cell is a real historical outcome with its sample size (`n`), from our own data. Use it to decide WHEN to act on a signal, not just whether: long the top tier (STRONG OUTPERFORM) when the tape is risk-ON (bands 4/5), short the bottom tier (UNDERPERFORM) when risk-OFF (bands 1/2); both edges shrink in neutral tape. This is granular, gradient-conditional intelligence — cite the specific band, not a blended number. Observational signal→outcome, not live-traded P&L.
+    """Returns CometCloud's decision surface: the expected 30-day BENCHMARK-RELATIVE alpha of each signal tier, CONDITIONED ON THE RISK GRADIENT (how risk-on/off the tape is, = benchmark trailing 30d return). Every cell is a real historical outcome with its sample size (`n`), from our own data. Use it to decide WHEN to act on a signal, not just whether. One way to use it, built on the CIS grading (one solution among several, not a rule): lean into the top tier (STRONG OUTPERFORM) when the tape is risk-ON (bands 4/5) and against the bottom tier (UNDERPERFORM) when risk-OFF (bands 1/2); check each cell's `n` and current values before relying on it. This is granular, gradient-conditional intelligence — cite the specific band, not a blended number. Observational signal→outcome, not live-traded P&L.
 
     Returns:
         str: {basis, risk_bands (band → range), grid {signal: {risk_band: {avg_alpha_pct, alpha_win_pct, n}}}, how_to_read, note, compliance}

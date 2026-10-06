@@ -46,9 +46,11 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | 5b | 检索·**微观**相位 | `regime_match`(CIS 支柱 11 维 + 78 天人工判读) | `/api/v1/regime/similar` | 🟢 **S-362 已接线**;底表每日更新 |
 | 6 | 判断·ⓠ | `beta_core_q_overlay`(乘数语义)| `beta_core_nav_q` 27 行,日更;**S-378 起 matcher 在线**(`smoothed_phase_distance` → dwell filter → hook)| 🟡 **活的**;`regime_override_enforcer` 是**语义不同的旧实现**,见「已退役」;封顶 1.3x 与设计的 −0.5…3.3x 不符(归 Jazz) |
 | 7 | 建仓·① | `core_cap_daily`(产品本体:24 名市值加权、单币 ≤ 40%,S-473 / Jazz 10-03);原 `beta_core_nav`(等权 + 波动率目标)改作 ② 候选,登记保留 | L3 `allocation_daily`(其余 book 的证据 = 相对 ① 的超额)· 成绩单 | 🟢 |
+| 7a | 倾斜·②(CIS) | `cis_tilt_daily`(T-051 预注册 / T-052:① 权重 × exp(0.5·z_CIS),单币 ≤ 40%,起点 10-06)—— CIS 的本职第一次进账本 | 登记表 → L3(前向 ≥ 60 天 + 任意时刻下界)· 证据面 | 🟡 前向起步 |
 | 7b | 组合·gross 预算 | **尚无实现** —— 相关性状态 → gross,见 §5 第 7 条 | — | 🔴 缺段 |
 | 8 | 反馈 | `signal_outcomes_unified`(视图) | `refresh_signal_edge_map()` | 🟡 **S-365 已接**,双基准并存;journal 段仍薄(91 行有 alpha) |
 | 9 | **实体/决策内核** | `entities` / `decisions`(ARCHITECTURE 的中央对象) | `entity_store.py` 写 · `match_entities()` 读 | 🟡 **C 的 W4 已 ship**:`entities` **103/103 有 vec**;**`decisions` 仍 0 行** |
+| 10 | 门外·证据面 | `/api/v1/proof/books` + MCP `cometcloud_get_proof`(T-053,与 L3 同口径、按证据等级,不下结论句)| 外部 agent / LP | 🟡 新上 |
 
 **2026-09-17 的通路状态 —— 早上只有第 7 段是通的:**
 
@@ -538,6 +540,13 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
      **需要 Supabase console 直跑 SQL**,由 Minimax-C 拍板。
      ⚠️ **DROP 之前先 SELECT 验证两表 0 行 + 1 行无意义**,避免误删有数据的旧表。
      这是 C-W2 + C-W4 的收尾动作,**不归 Seth 做**(Rule 3)。
+
+10. **第 7a 段(② CIS 倾斜)** — 2026-10-06 起前向(T-051 / T-052)。🟡 的原因只是「刚开始」:
+    满 60 个前向日(最早 12-05)之前,L3 按规则只描述不配权重。判活:`select max(d) from cis_tilt_daily` = 昨天。
+
+11. **第 10 段(门外·证据面)** — `/api/v1/proof/books` 与 MCP `cometcloud_get_proof` 10-06 上线(T-053)。
+    🟡 未完的两件:CIS 信号记录(`/api/v1/signals/track-record`)的 β 调整层自 07-01 一行没算出(S-491)——
+    要么算出来,要么从输出里拿掉;其余 MCP 工具描述里写死的数据结论句逐条对数据(edge-map 的分档用法是基于 CIS 分级的方案之一,不是规则,保留)。
 
 ---
 

@@ -554,6 +554,43 @@ async def books_scorecard(x_internal_token: str = Header(None)):
     return {"status": "ok", "n": len(rows), "books": rows}
 
 
+# ── T-053 证据面:对外,与配置层同一口径 ─────────────────────────────────────────
+
+_PROOF_CACHE: dict = {"at": None, "body": None}
+_PROOF_TTL_S = 1800
+
+
+@router.get("/api/v1/proof/books")
+async def proof_books():
+    """① 与每本纸面账本的前向证据,按证据等级(forward / forward_young / caveat / retired / no_record)。
+    口径 = 配置层:前向窗口、相对 ① 的超额、任意时刻有效下界、配置层最新权重。不下结论句(S-491)。30 分钟缓存。"""
+    now = datetime.now(timezone.utc)
+    if _PROOF_CACHE["body"] is not None and _PROOF_CACHE["at"] and (now - _PROOF_CACHE["at"]).total_seconds() < _PROOF_TTL_S:
+        return _PROOF_CACHE["body"]
+    import pandas as pd
+    from src.data.accounting.proof import HOW_TO_READ, proof_rows
+    from src.data.accounting.registry import BOOKS, load_navs
+    from src.data.allocation.allocator import CORE
+    from src.data.style.header import _read_all
+    navs, _bench = await load_navs()
+    core = navs.get(CORE)
+    if core is None or core.dropna().empty:
+        raise HTTPException(status_code=502, detail="① 的 NAV 读不到 —— 不出证据面(读不到 ≠ 没有证据)")
+    since = (now.date() - timedelta(days=7)).isoformat()
+    arows = await _read_all("allocation_daily", {"select": "d,book,weight", "d": f"gte.{since}", "order": "d.asc"})
+    last_d = max((r["d"] for r in arows), default=None)
+    alloc = {r["book"]: {"weight": r["weight"], "d": r["d"]} for r in arows if r["d"] == last_d}
+    asof = pd.Timestamp(core.dropna().index.max())
+    rows = proof_rows(list(BOOKS), navs, core, alloc, asof)
+    body = {"status": "ok", "as_of": asof.date().isoformat(), "allocation_as_of": last_d,
+            "core": CORE, "books": rows, "how_to_read": HOW_TO_READ,
+            "note": "Paper records, not live-traded P&L. Every number is labelled with its evidence class; "
+                    "no book is pre-judged here.",
+            "compliance": "Positioning language only; not investment advice."}
+    _PROOF_CACHE.update({"at": now, "body": body})
+    return body
+
+
 # ── v0.2 L3 配置层(纸面)──────────────────────────────────────────────────────
 
 from pydantic import BaseModel, Field  # noqa: E402
