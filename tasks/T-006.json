@@ -2,7 +2,7 @@
   "id": "T-006",
   "title": "Strategy 3/4 按正确问题复核",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "source": "S-420",
   "allowed_paths": [
     "/Volumes/CometCloudAI/cometcloud-local/research/"
@@ -16,5 +16,6 @@
   },
   "prior_value": "只用绝对 Sharpe 判为 REFUTED",
   "created": "2026-09-24",
-  "verified": null
+  "verified": null,
+  "notes": "M-208h(2026-10-07)sub-task 出 1-shot:H-persist 🔴 FADE + H-switch 🔴 SWITCH_FAIL。报告 _reports/absorb_input/M-208h_result_2026-10-07.md。原始数字:H-persist 入选 4 对(spec,cell)只在 BULL×LV(sr_in vs sr_oos 4/4 同号 = m86 +0.587/+0.273、m87 +1.146/+0.842、m113 +0.701/+1.496、m115 +0.989/+1.839);符号一致率 obs=1.0000 / null p(right-tail)=0.085;Spearman ρ obs=+0.40 / null p(two-sided)=0.749;H-switch OOS 切换组合 cum=-10.58%/SR=-0.046/MaxDD=-44.28% vs ① cap_a1 -41.67%/-0.299/-59.95% vs 5 spec 等权 +16.77%/+0.493/-16.41%;超额 vs cap_a1 +31.09%,零分布 mean=+53.68% / p95=+125,观测落在 p32→95→p_switch=0.677 → 🔴 SWITCH_FAIL。M-208 主卡(§10/§11)的 1 SURVIVE+1 REGRESS+3 REFUTED 不变。M-208h 走完把'按 cell 切换有价值'判据关了。"
 }
