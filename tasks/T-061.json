@@ -1,0 +1,22 @@
+{
+  "created": "2026-10-07",
+  "verified": null,
+  "status": "open",
+  "id": "T-061",
+  "owner": "seth",
+  "title": "22 个不写逐轮记录的后台循环补 _record_loop_attempt,判活补齐",
+  "source": "docs/LOOP_INVENTORY_2026-10-07.md §8 第 1 条",
+  "allowed_paths": [
+    "src/api/main.py",
+    "src/api/liveness.py",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "select count(distinct loop_name) from loop_attempt where at > now() - interval '2 days'",
+    "expect": "≥ 50(55 个里只有周频的允许暂缺);liveness SLO 覆盖全部 55 个"
+  },
+  "prior_value": "33"
+}

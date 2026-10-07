@@ -1,0 +1,24 @@
+{
+  "created": "2026-10-07",
+  "verified": null,
+  "status": "open",
+  "id": "T-059",
+  "owner": "lane-b",
+  "title": "评估层加随机基准:每本账 × 状态格子给出「同条件随机组合」的分布带与分位;超出 p99 的列为 outlier",
+  "source": "docs/LOOP_INVENTORY_2026-10-07.md §3;Jazz 10-07「要和能赚到钱、有随机性的东西对比,不断捕捉 outlier」",
+  "allowed_paths": [
+    "src/data/evaluation/rr_matrix.py",
+    "tests/test_rr_matrix.py",
+    "tests/rr_matrix_cases.py"
+  ],
+  "forbidden_paths": [
+    "src/api/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "rr_matrix_daily 每格新增:随机组合(同宇宙、同持仓数、同换手、同单币上限,1,000 次,按日期块抽样)的 p05 / p50 / p95 / p99,以及实测值在随机分布中的分位 pct_vs_random;另出 outlier 清单 = 实测 > 随机 p99 的(账本,格子)",
+    "expect": "测试钉住:①零信号账本的 pct_vs_random 近似均匀(KS p > 0.05);②埋了信号的账本分位 > 0.95;上线后当天的 rr_matrix_daily 行带分位"
+  },
+  "prior_value": "只有相对 ① 的实测超额,没有随机基准 —— 牛市里随机组合也赚钱,分不出本事和行情",
+  "notes": "2026-10-07 派给 B(rr_matrix 是 B 的 T-045)。先写测试证明零信号下分位均匀,再接实数据。"
+}

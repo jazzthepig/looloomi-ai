@@ -1,0 +1,23 @@
+{
+  "created": "2026-10-07",
+  "verified": null,
+  "status": "open",
+  "id": "T-062",
+  "owner": "seth",
+  "title": "三路该定期写入却 0 行的结构化数据:regime 相关度、fusion 的 regime 跟踪、API 计量",
+  "source": "docs/LOOP_INVENTORY_2026-10-07.md §8 第 2 条;Jazz 10-07「很多想要的结构化数据没有定期写入」",
+  "allowed_paths": [
+    "src/api/",
+    "src/research/validation/",
+    "src/api/metering.py",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "select (select count(*) from cis_regime_fitness), (select count(*) from fusion_paper_regime_track), (select count(*) from api_usage)",
+    "expect": "前两张每天有新行;api_usage 每次 flush 都写一行(使用量为 0 也写,0 是一次观测);每一路先判成因(无调度 / 写不进 / 正确拒绝)再修"
+  },
+  "prior_value": "0 / 0 / 0"
+}
