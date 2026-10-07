@@ -14,7 +14,7 @@
 | open | T-003 | lane-a | S-396 三臂回放 live 验证(读路径分页修复后) | 相等 | replay 读到 1,000 行(截断) |  |
 | open | T-060 | lane-a | 天气数据四个角度的挖掘:一致性与对未来收益的区分力 | 一张表 + 报告路径写进卡 notes:每个角度的区分力分位;哪几份高度重合;哪份有独有信息。只读、不改代码 | 四份并存,从没比较过;决策读 state_daily 是约定,不是证据 |  |
 | open | T-058 | lane-b | MCP 工具描述:8 处写了返回里根本没有的字段(B 的 T-055 drill-down) | drill_structural 0 ABSENT;测试在改之前的描述上会红(先证明它能失败) | 8 ABSENT(10-07 05:08 UTC 探针) |  |
-| open | T-059 | lane-b | 评估层加随机基准:每本账 × 状态格子给出「同条件随机组合」的分布带与分位;超出 p99 的列为 outlier | 测试钉住:①零信号账本的 pct_vs_random 近似均匀(KS p > 0.05);②埋了信号的账本分位 > 0.95;上线后当天的 rr_matrix_daily 行带分位 | 只有相对 ① 的实测超额,没有随机基准 —— 牛市里随机组合也赚钱,分不出本事和行情 |  |
+| open | T-059 | lane-b | 评估层先校准、再加随机基准:修 bootstrap 退化 + 状态轴换成有历史的价格特征 + 每本账 × 格子在自己的底上对随机组合给分位;超出 p99 的列为 outlier | 测试钉住(先在现在的代码上红):① n=23 的序列 CI 宽度 > 0 且均值用满 23 天;n=10 的 p_pos 不是只取 0/1;② 零信号账本 pct_vs_random 近似均匀(KS p > 0.05);③ 埋了信号的账本分位 > 0.95;④ 等权底的零信号账本在「等权跑赢市值」的样本里 pct_vs_random 仍近似均匀(风格不被记成信号)。上线当天的 rr_matrix_daily 行带新格子与分位 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
 | open | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED |  |
 | open | T-007 | lane-c | CG 新闻监听器写入 Supabase(经 Railway mac_writes) | > 0 | 只在 Mac 本地 cis_history.db,13 行 |  |
 | open | T-036 | lane-c | Mac 只留一份 env:~/.config/cometcloud/.env;cis_scheduler 改读它,cometcloud-local/.env 退役;Python 日志改 UTC | 一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行 | 三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份 |  |
@@ -27,13 +27,13 @@
 | open | T-061 | seth | 22 个不写逐轮记录的后台循环补 _record_loop_attempt,判活补齐 | ≥ 50(55 个里只有周频的允许暂缺);liveness SLO 覆盖全部 55 个 | 33 |  |
 | open | T-062 | seth | 三路该定期写入却 0 行的结构化数据:regime 相关度、fusion 的 regime 跟踪、API 计量 | 前两张每天有新行;api_usage 每次 flush 都写一行(使用量为 0 也写,0 是一次观测);每一路先判成因(无调度 / 写不进 / 正确拒绝)再修 | 0 / 0 / 0 |  |
 | open | T-063 | seth | ③ 推力:今天就用 2023 起的历史按时点模拟出结果,前向账本同时上线 | 回放结果与随机分位当天出;前向记录从上线日起累积,用于核对模拟,不是开始的前提。敞口永不 < 0.7、> 1.3,不做空 | ③ 前向账本 0 本;m88 的 dd_stop 到 0× 越出 ③ 定义 |  |
-| open | T-064 | seth | L3 准入改为「模拟证据或前向证据」:过了随机对照与留出段的,当天进纸面配置,不等 60 天 | 测试钉住:零信号账本 A 路准入率 ≤ 5%;上线当天 allocation_daily 出现由 A 路准入的行(标 evidence=simulated) | 非 ① 账本一律等 ≥ 60 个前向天 |  |
 | open | T-065 | seth | 加密度:小时线恢复并扩面(现在 10 个币、08-08 起停更);CIS 历史往前补(现在 2025-05 起) | 小时线覆盖 ① 的 24 个名字、最新一根在 2 小时内、有调度和判活;CIS 历史用重建脚本补到 2024-01(标 source=reconstructed,与实时推送分开) | 小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03 |  |
 | open | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | open | T-067 | seth | 风格矢量按时点重建:每天按当日市值决定层级成分,不用今天的成分回填历史 | 2023-01-01 的 top L1 不再包含当时还不在前列的币;两版风格收益的差异作为幸存者偏差的测量报出来 | 8 个风格,全部 current_constituents_backfilled |  |
 | blocked(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | blocked(等 ['T-001']) | T-020 | lane-c | DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻 | 同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减 | 同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移 |  |
 | blocked(等 T-015) | T-016 | seth | 实盘执行器(只算不发两天 → 3,000U 真跑) | > 0,且每日对账有数 | 0 |  |
+| blocked(等 T-059) | T-064 | seth | L3 准入改为「模拟证据或前向证据」:过了随机对照与留出段的,当天进纸面配置,不等 60 天 | 测试钉住:零信号账本 A 路准入率 ≤ 5%;上线当天 allocation_daily 出现由 A 路准入的行(标 evidence=simulated) | 非 ① 账本一律等 ≥ 60 个前向天 |  |
 | done | T-001 | lane-a | T1 的 TradFi 改从 ohlcv_daily(eodhd)读,撤回 30 天过期缓存 | = 43,且 19 个 TradFi 最新价格日期 ≥ 最近一个美股交易日 | 24 | 验收 SQL:cis_scores 近 2 小时 data_tier=T1 的标的 = 43(T2 = 15);19 个 TradFi T1 标的(美股 10、美债 6、商品 3)在 ohlcv_daily(eodhd)的最新日期全部 = 2026-10-05(最近一个美股交易日)。卡上的改动 09-26 前后已在 Mac 侧生效(Seth 09-29 记 T1=43);A 10-06 的「选数据源 / 新建表」计划不需要。 @ 2026-10-06T08:00Z |
 | done | T-002 | lane-a | 确认 T1 每小时一批恢复 | >= 20 | 1(09-24 恢复当天) | 24 个不同小时有 T1 推送(过去 24h),≥20 通过;Mac 侧卡按数据直接验收(S-426) @ 2026-09-26 |
 | done | T-018 | lane-a | Mac 对 Railway 的读请求带 X-Internal-Token;空快照不生成简报;macro_brief 合约副本更新到 mb-3 | empty = 0 且 n > 0(prompt_version 项删除:表无此列,S-435) | 09-23:47 份里 36 份快照为空({}),39 份写「平静」;Mac 副本 mb-2 | mac_mini 6h: empty=0, n≥1(最新 09-28 15:18 UTC) @ 2026-09-29 |
@@ -70,4 +70,4 @@
 | done | T-050 | seth | L3 l3-v2:准入门换成任意时刻有效的置信序列 + Kelly 前收缩 + 非 ① 账本 ≥ 60 天(S-485,10-22 之前) | ≤ 5%(l3-v1 为 17.3%);越过门槛后的权重随证据爬升,不是一步顶到上限;10-22 第一批账本满 20 天之前上线 | l3-v1:每天重算 均值 − 2 标准误 > 0 且 ≥ 20 天,零超额账本一年内 17.3% 曾被放进,一放即 40% 上限 | build 6c918931:_allocation_loop 03:40 UTC ok「配置 3 天至 2026-10-04;① 100%」;allocation_daily 3 行 code_ref=l3-v2(l3-v1 行已被覆盖)。模拟验收:零超额一年内曾被放进 1%(≤ 5%),测试钉住。中间经历 S-489(−∞ 写进 JSON,13 小时)。 @ 2026-10-06T03:40Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 21 · blocked 3 · in_review 8 · done 34 · dropped 1
+open 20 · blocked 4 · in_review 8 · done 34 · dropped 1
