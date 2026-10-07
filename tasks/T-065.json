@@ -1,0 +1,24 @@
+{
+  "id": "T-065",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-07",
+  "verified": null,
+  "title": "加密度:小时线恢复并扩面(现在 10 个币、08-08 起停更);CIS 历史往前补(现在 2025-05 起)",
+  "source": "Jazz 10-07「数据不够就再调取、增加维度和密度」",
+  "allowed_paths": [
+    "src/data/",
+    "src/api/main.py",
+    "src/api/routers/",
+    "scripts/",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "select count(distinct symbol), max(ts) from ohlcv_hourly;select min(recorded_at) from cis_scores",
+    "expect": "小时线覆盖 ① 的 24 个名字、最新一根在 2 小时内、有调度和判活;CIS 历史用重建脚本补到 2024-01(标 source=reconstructed,与实时推送分开)"
+  },
+  "prior_value": "小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03"
+}

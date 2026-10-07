@@ -1,0 +1,24 @@
+{
+  "id": "T-064",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-07",
+  "verified": null,
+  "title": "L3 准入改为「模拟证据或前向证据」:过了随机对照与留出段的,当天进纸面配置,不等 60 天",
+  "source": "Jazz 10-07「不需要等 30 / 60 / 90 天」;S-488 的 MIN_DAYS = 60 是 Seth 定的",
+  "allowed_paths": [
+    "src/data/allocation/",
+    "src/data/evaluation/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "allocator 的准入:A 路 = 按时点回放(2023-01 起)的超额高于随机组合 p95,且在封存留出段(2025-07-01 起,从不调参)上仍为正;B 路 = 现行前向置信序列。任一路过即进纸面配置;前向证据转负可以把 A 路准入的账本降回",
+    "expect": "测试钉住:零信号账本 A 路准入率 ≤ 5%;上线当天 allocation_daily 出现由 A 路准入的行(标 evidence=simulated)"
+  },
+  "prior_value": "非 ① 账本一律等 ≥ 60 个前向天",
+  "notes": "纸面配置,不涉及真钱。依赖 T-059 的随机基准。"
+}
