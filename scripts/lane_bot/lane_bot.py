@@ -48,7 +48,7 @@ ALLOWED_TOOLS = [
     "Bash(mkdir:*)", "Bash(mv:*)", "Bash(cp:*)",
 ]
 # 工具白名单逐项作为独立参数传(模式里有空格):zsh 的 ${(@s:,:)…} 按逗号拆、每项保持一个词。
-_LAUNCH = ('cd "$LANE_CWD" && exec "$LANE_CMD" -p "$LANE_PROMPT" --output-format json '
+_LAUNCH = ('cd "$LANE_CWD" && exec "$LANE_CMD" -p "$LANE_PROMPT" --output-format stream-json --verbose '
            '--max-turns "$LANE_TURNS" --permission-mode acceptEdits --allowedTools "${(@s:,:)LANE_TOOLS}"')
 
 
@@ -153,6 +153,36 @@ def append_to_sync(lane: str, lc: dict, text: str, meta: str) -> None:
         log(f"⚠ MINIMAX_SYNC {n} 字符 ≥ {SYNC_SOFT_CAP} —— Seth 的合并轮需要归档")
 
 
+def parse_stream(out: str, max_turns: int) -> tuple[dict, str]:
+    """stream-json 的每一行是一个事件;最后的 type=result 是收尾。到步数上限时没有 result 文本 ——
+    那时贴进 SYNC 的是一句人话 + 最后在做什么,不是一段原始 JSON(10-07 B 第一轮就是这样把 JSON 尾巴贴进了 SYNC)。"""
+    events = []
+    for line in out.splitlines():
+        line = line.strip()
+        if line.startswith("{"):
+            try:
+                events.append(json.loads(line))
+            except ValueError:
+                pass
+    final = next((e for e in reversed(events) if e.get("type") == "result"), {})
+    text = (final.get("result") or "").strip()
+    if text:
+        return final, text
+    last_said, last_did = "", ""
+    for e in events:
+        if e.get("type") != "assistant":
+            continue
+        for c in (e.get("message") or {}).get("content") or []:
+            if c.get("type") == "text" and c.get("text", "").strip():
+                last_said = c["text"].strip()
+            elif c.get("type") == "tool_use":
+                inp = c.get("input") or {}
+                last_did = f"{c.get('name')}: {inp.get('command') or inp.get('file_path') or ''}"[:200]
+    why = {"error_max_turns": f"到 {max_turns} 步上限,没有收尾"}.get(final.get("subtype", ""), "没有最终回复")
+    text = f"({why})\n最后说的:{last_said[-600:] or '—'}\n最后在做:{last_did or '—'}"
+    return final, text
+
+
 def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False) -> dict:
     lc = cfg["lanes"][lane]
     cwd = os.path.expanduser(lc["cwd"])
@@ -174,15 +204,15 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False) -> dict:
         timed_out = True
     res: dict = {"lane": lane, "reason": reason, "started": started.isoformat(), "exit": p.returncode,
                  "timed_out": timed_out, "seconds": round((now() - started).total_seconds())}
-    try:
-        j = json.loads(out.strip().splitlines()[-1]) if out.strip() else {}
-    except ValueError:
-        j = {}
+    j, text = parse_stream(out, cfg["max_turns"])
     res.update({k: j.get(k) for k in ("subtype", "num_turns", "total_cost_usd", "session_id")})
-    text = j.get("result") or ""
-    if not text:
-        text = f"(未拿到最终回复:exit={p.returncode}{',超时' if timed_out else ''})\n" + (err or out)[-800:]
-    (RUNS / f"{lane}-{started:%Y%m%dT%H%M%SZ}.json").write_text(
+    if timed_out:
+        text = f"(超时 {cfg['timeout_min']} 分钟被终止)\n" + text
+    if not out.strip():
+        text = f"(没有任何输出:exit={p.returncode})\n" + (err or "")[-600:]
+    stem = RUNS / f"{lane}-{started:%Y%m%dT%H%M%SZ}"
+    stem.with_suffix(".jsonl").write_text(out, encoding="utf-8")          # 完整过程:每一步做了什么
+    stem.with_suffix(".json").write_text(
         json.dumps({**res, "result": text, "stderr_tail": (err or "")[-2000:]}, ensure_ascii=False, indent=1),
         encoding="utf-8")
     append_to_sync(lane, lc, text, f"{reason};{res.get('num_turns') or '?'} 步;{res['seconds']} 秒")

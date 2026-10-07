@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from scripts.check_pr_scope import GLOBAL_FORBIDDEN  # noqa: E402
-from scripts.lane_bot.lane_bot import ALLOWED_TOOLS, _LAUNCH, build_prompt, decide, load_config  # noqa: E402
+from scripts.lane_bot.lane_bot import ALLOWED_TOOLS, _LAUNCH, build_prompt, decide, load_config, parse_stream  # noqa: E402
 
 CFG = {"active_hours": [9, 23], "every_min": 120, "max_runs_per_day": 8,
        "lanes": {"lane-b": {"enabled": True, "name": "Minimax-B", "cwd": "/x", "worktree": "/x"}}}
@@ -71,6 +71,18 @@ def test_shipped_config_is_sane() -> None:
     cfg = load_config()
     assert set(cfg["lanes"]) == {"lane-a", "lane-b", "lane-c"}
     assert cfg["max_turns"] <= 100 and cfg["timeout_min"] <= 60 and cfg["max_runs_per_day"] <= 12
+
+
+def test_max_turns_posts_a_sentence_not_raw_json() -> None:
+    """10-07 B 的第一轮到 60 步上限,SYNC 里被贴进了一段原始 JSON 尾巴。"""
+    import json as _j
+    ev = [{"type": "assistant", "message": {"content": [{"type": "text", "text": "先读 T-058 卡"}]}},
+          {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Bash", "input": {"command": "git show x:y"}}]}},
+          {"type": "result", "subtype": "error_max_turns", "num_turns": 61}]
+    j, text = parse_stream("\n".join(_j.dumps(e) for e in ev), 60)
+    assert j["subtype"] == "error_max_turns" and "60 步上限" in text and "git show x:y" in text and "{" not in text
+    ok = [{"type": "result", "subtype": "success", "result": "T-058 已推 lane-b/T-058"}]
+    assert parse_stream(_j.dumps(ok[0]), 60)[1] == "T-058 已推 lane-b/T-058"
 
 
 if __name__ == "__main__":
