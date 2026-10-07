@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from scripts.check_pr_scope import GLOBAL_FORBIDDEN  # noqa: E402
-from scripts.lane_bot.lane_bot import ALLOWED_TOOLS, _LAUNCH, build_prompt, decide, load_config, parse_stream  # noqa: E402
+from scripts.lane_bot.lane_bot import ALLOWED_TOOLS, _LAUNCH, build_prompt, decide, load_config, parse_stream, run_summary  # noqa: E402
 
 CFG = {"active_hours": [9, 23], "every_min": 120, "max_runs_per_day": 8,
        "lanes": {"lane-b": {"enabled": True, "name": "Minimax-B", "cwd": "/x", "worktree": "/x"}}}
@@ -83,6 +83,22 @@ def test_max_turns_posts_a_sentence_not_raw_json() -> None:
     assert j["subtype"] == "error_max_turns" and "60 步上限" in text and "git show x:y" in text and "{" not in text
     ok = [{"type": "result", "subtype": "success", "result": "T-058 已推 lane-b/T-058"}]
     assert parse_stream(_j.dumps(ok[0]), 60)[1] == "T-058 已推 lane-b/T-058"
+
+
+def test_status_shows_model_writes_and_pushes() -> None:
+    """Jazz 10-07「我怎么知道它们有没有做事、用的是谁的算力」—— 从完整记录里取出模型、写过的文件、推过的分支。"""
+    import json as _j
+    ev = [{"type": "system", "subtype": "init", "model": "MiniMax-M3", "apiKeySource": "none"},
+          {"type": "assistant", "message": {"content": [
+              {"type": "tool_use", "name": "Write", "input": {"file_path": "/x/report.md"}},
+              {"type": "tool_use", "name": "Bash", "input": {"command": "git push -u origin lane-b/T-058"}}]}},
+          {"type": "result", "modelUsage": {"MiniMax-M3": {"inputTokens": 10, "cacheReadInputTokens": 5, "outputTokens": 3}}}]
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:   # 不用 pytest 的 tmp_path:preflight 以 python3 -m 自跑,不注入夹具
+        f = Path(d) / "r.jsonl"
+        f.write_text("\n".join(_j.dumps(e) for e in ev))
+        sm = run_summary(f)
+    assert sm["model"] == "MiniMax-M3" and sm["writes"] == ["/x/report.md"] and sm["pushes"] and sm["tokens_in"] == 15
 
 
 if __name__ == "__main__":

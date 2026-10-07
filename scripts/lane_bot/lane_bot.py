@@ -205,7 +205,7 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
         os.killpg(p.pid, signal.SIGTERM)
         out, err = p.communicate()
         timed_out = True
-    res: dict = {"lane": lane, "reason": reason, "started": started.isoformat(), "exit": p.returncode,
+    res: dict = {"lane": lane, "reason": reason, "task": task[:500], "started": started.isoformat(), "exit": p.returncode,
                  "timed_out": timed_out, "seconds": round((now() - started).total_seconds())}
     j, text = parse_stream(out, cfg["max_turns"])
     res.update({k: j.get(k) for k in ("subtype", "num_turns", "total_cost_usd", "session_id")})
@@ -222,11 +222,78 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
     return res
 
 
+def run_summary(jsonl: Path) -> dict:
+    """从一轮的完整记录里取出:用的模型、步数、写了哪些文件、推了哪些分支、跑了哪些命令。
+    回答 Jazz 10-07「我怎么知道它们到底有没有做事、用的是谁的算力」。"""
+    out: dict = {"model": None, "auth": None, "writes": [], "pushes": [], "commands": 0, "tokens_in": 0, "tokens_out": 0}
+    for line in jsonl.read_text(encoding="utf-8", errors="replace").splitlines():
+        if not line.startswith("{"):
+            continue
+        try:
+            e = json.loads(line)
+        except ValueError:
+            continue
+        if e.get("type") == "system" and e.get("subtype") == "init":
+            out["model"], out["auth"] = e.get("model"), e.get("apiKeySource")
+        elif e.get("type") == "assistant":
+            for c in (e.get("message") or {}).get("content") or []:
+                if c.get("type") != "tool_use":
+                    continue
+                inp = c.get("input") or {}
+                if c.get("name") in ("Write", "Edit") and inp.get("file_path"):
+                    out["writes"].append(inp["file_path"])
+                elif c.get("name") == "Bash":
+                    out["commands"] += 1
+                    cmd = inp.get("command") or ""
+                    if "git push" in cmd:
+                        out["pushes"].append(cmd[:120])
+        elif e.get("type") == "result":
+            for u in (e.get("modelUsage") or {}).values():
+                out["tokens_in"] += (u.get("inputTokens") or 0) + (u.get("cacheReadInputTokens") or 0)
+                out["tokens_out"] += u.get("outputTokens") or 0
+    out["writes"] = sorted(set(out["writes"]))
+    return out
+
+
+def status(n: int = 3) -> None:
+    """python3 scripts/lane_bot/lane_bot.py --status —— 每个 lane 最近几轮:何时、为什么、做了什么、用了谁的模型。"""
+    cfg = load_config()
+    busy = interactive_claude_cwds()
+    print(f"此刻开着的 claude 会话目录(lane_bot 会让开这些目录):{sorted(busy) or '无'}")
+    for lane, lc in cfg["lanes"].items():
+        cwd = Path(os.path.expanduser(lc["cwd"])).resolve().as_posix()
+        print(f"\n══ {lane}  目录 {cwd}  {'← 你正开着' if cwd in busy else ''}")
+        runs = sorted(RUNS.glob(f"{lane}-*.json"))[-n:]
+        if not runs:
+            print("   还没有自动轮次")
+        for r in runs:
+            d = json.loads(r.read_text(encoding="utf-8"))
+            ok = d.get("exit") == 0 and not d.get("timed_out")
+            print(f"   {'✓' if ok else '✗'} {d.get('started', '')[:16]}Z  {d.get('num_turns') or '?'} 步 {d.get('seconds')} 秒 —— {d.get('reason')}")
+            if d.get("task"):
+                print(f"     任务:{d['task'][:110]}")
+            jl = r.with_suffix(".jsonl")
+            if jl.exists():
+                sm = run_summary(jl)
+                print(f"     模型:{sm['model']}(认证方式 {sm['auth']});读入 {sm['tokens_in']:,} / 写出 {sm['tokens_out']:,} tokens;命令 {sm['commands']} 条")
+                for w in sm["writes"][:6]:
+                    print(f"     写了:{w}")
+                for ps in sm["pushes"]:
+                    print(f"     推送:{ps}")
+            first = (d.get("result") or "").strip().splitlines()[:3]
+            for l in first:
+                print(f"     回复:{l[:110]}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--once", metavar="LANE")
+    ap.add_argument("--status", action="store_true", help="每个 lane 最近几轮做了什么、用了谁的模型")
     a = ap.parse_args()
+    if a.status:
+        status()
+        return 0
     cfg = load_config()
     BOT.mkdir(exist_ok=True)
     WAKE.mkdir(exist_ok=True)
