@@ -56,7 +56,8 @@ def test_scanner_catches_each_kind_without_echoing_it() -> None:
     assert scan(b'X="${K:-CG-' + b"a1" * 12 + b'}"') == ["coingecko"]
     assert scan(b"k=" + jwt("service_role")) == ["jwt:service_role"]
     assert scan(b"k=" + jwt("anon")) == []
-    assert scan(b"postgresql://postgres:hunter2hunter2@db.example:5432/x") == ["postgres_password"]
+    # 样例在运行时拼出来:写成字面量,这个文件一被跟踪就会扫到自己(S-502 第一次合并时正是这样红的)。
+    assert scan(b"postgresql://postgres:" + b"hunter2" * 2 + b"@db.example:5432/x") == ["postgres_password"]
     assert scan(b"see https://docs.coingecko.com, header x-cg-pro-api-key") == []
 
 

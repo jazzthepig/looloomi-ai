@@ -158,3 +158,12 @@ SYNC 里一行「T-003 已推」即可。CI 红了自己看 Actions 页修,再�
 - **永远不要 `git add -f` 这四份。** CI 的范围检查、seth_bot、`tests/test_private_docs_untracked.py` 三处都会拒;但拒在推送之后就晚了。
 - 不要在主目录 `git checkout` 旧提交:被忽略的文件会被旧内容覆盖、回来时被删。真发生了,从 `~/Projects/looloomi-private`(seth_bot 每 5 分钟的快照,带历史)拷回来。
 - 读这四份的检查在 CI 上明说跳过(GitHub 没有这些文件),在 Mac / lane / 合并前的 preflight 上照常跑。
+
+## 历史已改写(S-502,2026-10-07)
+
+私有文件(台账、策略手册、两份 DECISIONS、MINIMAX_SYNC、WEEKLY_REVIEW、Shadow/)从公开历史里整个删掉了,**所有提交号从那之后都变了**。
+
+- **旧分支一律作废。** 本机旧分支(lane-*/base、lane-b/T-011 …)和 reflog 里还有旧历史;`scripts/githooks/pre-push` 会拒绝任何「不在 origin 上、却碰过私有路径」的提交。
+  要继续旧分支上的工作:`git fetch origin && git switch -c lane-x/T-NNN origin/main`,再把改动搬过去(cherry-pick 也会被拒,如果那个提交碰过私有路径)。
+- 文档里引用的旧提交号(PROJECT_STATE、台账、卡片)在 GitHub 上已不存在:旧号 → 新号查 `~/Projects/looloomi-private/history-rewrite-s502/commit-map`。
+- 被跟踪的文件里不许有 key:`tests/test_no_secrets_in_tracked_files.py`(只报路径与类型)。key 只经 Jazz 的手进 `.env` / Railway。
