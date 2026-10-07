@@ -2,7 +2,7 @@
   "id": "T-025",
   "title": "② 代币化基础设施倾斜账本上线:第一行真实数据 + 连续前向记录",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "source": "S-427",
   "allowed_paths": [
     "src/data/signals/tokenization_tilt.py",
@@ -25,6 +25,10 @@
   },
   "prior_value": "代币化论点 09-01 起只在观测层(S-266),没有任何账本;① 里只有 LINK 3.8%",
   "created": "2026-09-26",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-07T04:07:40Z",
+    "value": "tokenization_tilt_daily: 两臂各 12 行,min(d)=2026-09-25,max(d)=2026-10-06;09-26 起 nav≠1(tilt 0.99961522 / panel_hold 0.9980779);max nav 1.0092894 / 1.00789522"
+  },
   "notes": "09-27 07:19 UTC 仍 0 行:判据正确地拒绝 —— 23 个在写的币里只有 16 个 09-26 终值,篮子里的 HYPE/POLYX 是半根。根因在 T-031。"
 }
