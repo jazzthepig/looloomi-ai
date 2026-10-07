@@ -167,3 +167,18 @@ SYNC 里一行「T-003 已推」即可。CI 红了自己看 Actions 页修,再�
   要继续旧分支上的工作:`git fetch origin && git switch -c lane-x/T-NNN origin/main`,再把改动搬过去(cherry-pick 也会被拒,如果那个提交碰过私有路径)。
 - 文档里引用的旧提交号(PROJECT_STATE、台账、卡片)在 GitHub 上已不存在:旧号 → 新号查 `~/Projects/looloomi-private/history-rewrite-s502/commit-map`。
 - 被跟踪的文件里不许有 key:`tests/test_no_secrets_in_tracked_files.py`(只报路径与类型)。key 只经 Jazz 的手进 `.env` / Railway。
+
+## lane 自己醒(S-503,2026-10-07 起)—— 不用 Jazz 开 terminal
+
+`scripts/lane_bot/`:launchd 每 10 分钟检查一次(`.lane_bot/wake/` 里出现文件立即检查)。某个 lane **醒**的条件:
+Seth 写了 `.lane_bot/wake/lane-x`(派卡、回复、要求返工时),或者距上一轮 ≥ 2 小时且名下有 open / claimed 的卡。
+**不醒**:09:00–23:00(本机时间)之外;当天已跑满 8 轮;那个目录里已经开着一个 claude(Jazz 在用);上一轮没完。
+
+醒了就在 lane 平时的目录里用无界面模式跑一轮(`claude -p`,经 `zsh -lic` 启动,读的是和 Jazz 开 terminal 时同一份配置,
+即同一个 MiniMax 连接;key 不经过脚本)。每轮最多 60 步、40 分钟。提示词 `scripts/lane_bot/prompt.md`,目录 `scripts/lane_bot/lanes.json`。
+
+- **lane 在自动轮次里不编辑 MINIMAX_SYNC** —— 它的最终回复由 lane_bot 加锁贴成 `§A-auto-MMDD-HHMM` 一段(三个 lane 同时整文件改写会互相覆盖)。
+- 工具白名单:读写文件、`python3`、`git` 的读与分支操作、只推 `lane-` 开头的分支;没有 `rm`、没有推 main(另有 pre-push 钩子)。
+- lane 改不了自己的缰绳:`scripts/lane_bot/` 在全局禁区(`check_pr_scope.py`)。
+- Jazz 手动开 terminal 照旧可用;开着的那个 lane 自动轮次会让开。暂停全部:`touch .lane_bot/PAUSE`;单个:`lanes.json` 里 `enabled: false`。
+- 记录:`.lane_bot/log.txt`(一行一轮)、`.lane_bot/runs/`(每轮的原始输出、步数、耗时)。

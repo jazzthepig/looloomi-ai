@@ -125,6 +125,8 @@ python3 -m tests.test_seth_bot
 python3 -m tests.test_private_docs_untracked
 # S-502 被跟踪的文件里不许有任何 key(HEAD 上曾有一把 CoinGecko key 当默认值,公开五个月)。只报路径与类型。
 python3 -m tests.test_no_secrets_in_tracked_files
+# S-503 lane_bot 的缰绳:醒的条件、白名单(无删除、只推 lane 分支)、不拼 shell、lane 不编辑 SYNC、改不了自己的缰绳。
+python3 -m tests.test_lane_bot
 # 3a-quater. undefined names on the serving path — a NameError on a rarely-taken branch is
 #            invisible to py_compile AND to production when the caller logs a warning. That
 #            combination silently killed the T2 universe fallback (2026-08-06).

@@ -127,3 +127,5 @@ _data/research/
 /STRATEGY_PLAYBOOK.md
 /DECISIONS.md
 /docs/DECISIONS.md
+# S-503 lane_bot 的唤醒文件 / 运行记录 / 状态(本机状态,不入库)
+.lane_bot/

@@ -34,6 +34,7 @@ GLOBAL_FORBIDDEN = (
     ".github/",                # CI 本身就是关卡;改关卡的 PR 不能由被关卡管的人发
     "scripts/githooks/",       # pre-push 钩子(S-421)
     "scripts/seth_bot/",       # 合并执行器(S-500)
+    "scripts/lane_bot/",       # lane 的唤醒器与它的缰绳(白名单、提示词)—— lane 不改自己的缰绳(S-503)
     "scripts/check_pr_scope.py",
     "docs/DECISIONS.md",       # Jazz 的裁决,只经 Seth 记;S-501 起不入库(公开仓库)
     "DECISIONS.md",            # S-501:以下三份不入库 —— lane 用 git add -f 也过不去

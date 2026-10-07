@@ -36,7 +36,7 @@ BASE = os.environ.get("COMETCLOUD_BASE", "https://web-production-0cdf76.up.railw
 # 永不经执行器提交的路径(硬规则 + 交接块里一直手写的「永不 stage」清单)。
 # S-501:仓库是 public,这四份不入库(PRIVATE_DOCS)。
 PRIVATE_DOCS = ("REFUTATION_LEDGER.md", "STRATEGY_PLAYBOOK.md", "DECISIONS.md", "docs/DECISIONS.md")
-DENY = ("Shadow/", ".env", ".seth_bot/", "MINIMAX_SYNC", "WEEKLY_REVIEW.md", "docs/reading/",
+DENY = ("Shadow/", ".env", ".seth_bot/", ".lane_bot/", "MINIMAX_SYNC", "WEEKLY_REVIEW.md", "docs/reading/",
         "scripts/lesson_enforcement_baseline.txt", "paper_trading/specs/eth_ls_walkforward_v1.json") + PRIVATE_DOCS
 DENY_SUFFIX = (".pptx",)
 MAX_PATHS = 80
