@@ -70,7 +70,8 @@ BOOKS: tuple[Book, ...] = (
     Book("fusion_paper", "④", "Fusion 多空", "多 sleeve 融合",
          "fusion_paper_nav", "plain", filters={"void_reason": "is.null"}, stamp="valuation_next_day",
          caveat="T-026:记录只扣成本、不记价格 —— 数字不可信"),
-    Book("two_layer_paper", "—", "两层(已按设计退役)", "R57:V5c 核心退役,持仓为 0",
+    Book("two_layer_paper", "—", "两层(核心待换)",
+         "R57:V5c 核心多数日子不触发,此时零仓位;换上新核心(Redis 配置)即自动接上。实际净值 0.984–1.021,07-22 起有断档",
          "two_layer_paper_nav", "plain", status="retired_by_design", stamp="valuation_next_day"),
 )
 
