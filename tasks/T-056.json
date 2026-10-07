@@ -1,0 +1,24 @@
+{
+  "id": "T-056",
+  "title": "策略向量陈旧:_data/strategy_records.json 停在 07-21,按现有台账重新生成后 test_strategy_vector_smoke 14 项红",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-07",
+  "source": "S-500(干净机器跑 preflight 时发现)",
+  "allowed_paths": [
+    "scripts/backfill_strategies.py",
+    "src/data/vector/",
+    "tests/test_strategy_vector_smoke.py",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "干净树里 python3 scripts/backfill_strategies.py --write && python3 -m tests.test_strategy_vector_smoke",
+    "expect": "0 项红;sidecar 来源写进仓库或改为显式输入,不依赖仓库外的 REPORT.md"
+  },
+  "prior_value": "Mac 上靠 07-21 生成的旧文件通过;现生成 14 项红(R46 cost_sensitivity / sidecar 标签 / R64 记录缺失等)",
+  "verified": null,
+  "notes": "2026-10-07 开卡(S-500)。preflight 现在在没有该文件的机器上明说跳过,Mac 上照旧跑。"
+}

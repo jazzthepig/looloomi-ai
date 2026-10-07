@@ -109,3 +109,41 @@ C 按「下一个 S- 编号」去搜,没找到,于是把「等审阅」当成现
 - [Use a Merge Queue for Coding Agent Pull Requests — Coding Agent Guide](https://codingagentguide.com/posts/merge-queues-for-coding-agent-pull-requests/)
 - [Agent pull requests are everywhere — GitHub Blog](https://github.blog/ai-and-ml/generative-ai/agent-pull-requests-are-everywhere-heres-how-to-review-them/)
 - [Claude Code Multi-Agent Orchestration: 2026 Guide — Tembo](https://www.tembo.io/blog/claude-code-multi-agent-orchestration)
+
+## 自动化(S-500,2026-10-07 起)—— Jazz 不再当传话的人
+
+Jazz:「一个一个等你复核这样效率很低,因为不是实时和全自动化的。」实测瓶颈不是审阅本身,是**每个改动要过 Jazz 的手三次**:
+转述 lane 的报告 → 粘贴 Seth 的提交块 → 把核对输出粘回来。而 origin 上**一个 lane 分支都没有**(10-07 实测),交付全走 SYNC 散文 + 补丁。
+
+**现在的路:**
+
+```
+lane 推 lane-x/T-NNN ──► GitHub Actions「Lane gate」自动跑:
+                          scope(改动 ⊆ 卡的 allowed_paths)· preflight(干净机器、无凭证)· 开 PR · Claude 初审(有密钥时)
+                     ──► Seth(定时任务,每 2 小时)读 SYNC 新段落、origin/lane-*、PR 结果、in_review 的卡
+                     ──► 合并 = Seth 往 .seth_bot/queue/ 放一个任务 ──► Mac 上的 seth_bot 执行:
+                          范围检查 → 临时 worktree 里合并 → preflight(合并后的树)→ push → 快进主目录 → 等部署 → GET 核对
+                     ──► 结果写 .seth_bot/done/<id>.json,Seth 下一轮读;卡的 verified 由 Seth 跑验收查询后写
+```
+
+**lane 要改的只有一件事:交付 = 推分支。** 不再在 SYNC 里贴补丁、不再请 Jazz 转达。
+
+```bash
+cd ~/Projects/looloomi-ai-lane-a &&
+git fetch origin &&
+git switch -c lane-a/T-003 origin/main
+```
+
+做完:卡的 `status` 改 `in_review`、`notes` 写测得的值 → `python3 scripts/task_board.py` → preflight → `git add <卡允许的路径> tasks/T-003.json tasks/BOARD.md` → commit → `git push -u origin lane-a/T-003`。
+SYNC 里一行「T-003 已推」即可。CI 红了自己看 Actions 页修,再推同一分支。
+
+**卡就是合同。** `scripts/check_pr_scope.py` 把「改了卡上没允许的文件」变成机械事实:改动必须在 `allowed_paths` 内
+(加卡自己和 BOARD.md),不许碰 `forbidden_paths` 和全局禁区(Shadow/、.github/、githooks、seth_bot、DECISIONS.md、.env)。
+卡的范围不够 → 在 SYNC `@seth` 要 Seth 改卡,不要越界改。只交报告(Mac 数据根)的卡不用推分支,照旧写最终路径。
+
+**seth_bot 只做三件事**(`scripts/seth_bot/seth_bot.py`,测试 `tests/test_seth_bot.py`):
+`commit`(显式路径,绝不 -A,永不提交清单拒收)· `merge`(只收 `lane-{a,b,c}/T-NNN`)· `fetch`。
+只执行 `by=seth` 的任务;不执行任意命令;核对只做本站相对路径的 GET。**lane 不许往 `.seth_bot/` 写任何东西。**
+安装 / 卸载 / 暂停只由 Jazz:`bash scripts/seth_bot/install.sh` / `--uninstall` / `touch .seth_bot/PAUSE`。
+
+**Jazz 仍然拍的:** `DECISIONS.md` 级别的事(产品边界、钱、风险、key、策略取舍)。其余合并顺序、范围、测试常量都问 Seth。
