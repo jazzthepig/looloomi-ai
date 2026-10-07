@@ -14,9 +14,10 @@
 | What's true right now / in flight | `PROJECT_STATE.md` | **≤80,000 chars**; update same turn work lands; `**Last updated:**` line stays at the TOP |
 | Long-term facts index | `MEMORY.md` | **≤3,400 CHARACTERS** (not bytes — CJK is 3 B/char; `wc -c` will lie to you, S-337). One line per fact; evict stale; **if a test enforces it, the test is the memory** |
 | Why a thing landed / build log | `PROJECT_STATE_LOG.md` | append-only; **NOT read at session start** — grep it, don't read it |
-| Experiment truth (R/S/M-numbers) | `REFUTATION_LEDGER.md` | APPEND-ONLY at EOF; claim heading before body; **grep, never read whole** (577k chars) |
+| Experiment truth (R/S/M-numbers) | `REFUTATION_LEDGER.md` | APPEND-ONLY at EOF; claim heading before body; **grep, never read whole** (577k chars). **Not in git since S-501** (public repo) — see the private-docs row |
 | Cross-lane coordination | `MINIMAX_SYNC.md` (gitignored) | **≤80,000 chars**; append §sections; syncs Mac-side, not via git. Anything dated >5d and settled → `MINIMAX_SYNC_ARCHIVE.md`; **still open ⇒ re-raise in §IN-FLIGHT, don't leave it in place** |
-| Strategy truth / frozen cells | `STRATEGY_PLAYBOOK.md` | |
+| Strategy truth / frozen cells | `STRATEGY_PLAYBOOK.md` | Not in git since S-501 |
+| **Private docs** (ledger, playbook, `DECISIONS.md`, `docs/DECISIONS.md`) | Mac main dir = the ONLY copy; lane worktrees symlink to it | **The repo is public.** gitignored + `tests/test_private_docs_untracked.py`; never `git add -f`. History/backup: seth_bot snapshots them each tick into `~/Projects/looloomi-private` (ledger shrinking → refused + alert). Restore = copy back from there |
 | The soul / north star | `ARCHITECTURE.md` | read when a decision touches what we ARE |
 | **哪条路是活的**(应用通路 / 已退役登记) | `docs/SPINE.md` | **建新路径或换实现前必读。** CI 校验(`tests/test_spine_is_current.py`):文档与代码必须说同一件事 |
 | Behavioral-edge doctrine | `docs/TRADER_TOM_DOCTRINE.md` | read before building any sleeve |

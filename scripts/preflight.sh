@@ -121,6 +121,8 @@ python3 -m tests.test_verdicts_carry_their_question
 python3 -m tests.test_pr_scope
 # S-500 Mac 侧执行器(替 Jazz 粘贴交接块,推的是生产):只收显式路径、只合 lane 分支、不执行任意命令。
 python3 -m tests.test_seth_bot
+# S-501 仓库是 public:台账 / 策略手册 / DECISIONS 不许被 git 跟踪(看索引,不看忽略规则)。
+python3 -m tests.test_private_docs_untracked
 # 3a-quater. undefined names on the serving path — a NameError on a rarely-taken branch is
 #            invisible to py_compile AND to production when the caller logs a warning. That
 #            combination silently killed the T2 universe fallback (2026-08-06).

@@ -22,6 +22,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLAYBOOK = ROOT / "STRATEGY_PLAYBOOK.md"
+sys.path.insert(0, str(ROOT))
+from tests._private_docs import available  # noqa: E402  S-501:手册不入库,CI 上明说跳过
 
 _VERDICT_HEADING = re.compile(r"^(#{2,4})\s+(.*(?:🔴|✅).*(?:REFUTED|SHIP|LIVE).*)$")
 _MARKERS = {
@@ -62,6 +64,8 @@ def verdicts() -> dict[str, list[str]]:
 
 
 def test_new_verdicts_carry_their_question() -> None:
+    if not available("STRATEGY_PLAYBOOK.md"):
+        return
     v = verdicts()
     bad = {h: miss for h, miss in v.items() if miss and h not in AWAITING_REASK}
     assert not bad, (
@@ -71,6 +75,8 @@ def test_new_verdicts_carry_their_question() -> None:
 
 
 def test_the_reask_list_only_shrinks() -> None:
+    if not available("STRATEGY_PLAYBOOK.md"):
+        return
     v = verdicts()
     assert len(AWAITING_REASK) <= 6, "待重问名单只减不增(2026-09-24 基线 6)—— 新结论请直接写全三样"
     stale = [h for h in AWAITING_REASK if h in v and not v[h]]

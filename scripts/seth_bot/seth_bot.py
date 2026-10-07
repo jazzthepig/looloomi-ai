@@ -34,11 +34,20 @@ QUEUE, DONE, LOG = BOT / "queue", BOT / "done", BOT / "log.txt"
 BASE = os.environ.get("COMETCLOUD_BASE", "https://web-production-0cdf76.up.railway.app")
 
 # 永不经执行器提交的路径(硬规则 + 交接块里一直手写的「永不 stage」清单)。
+# S-501:仓库是 public,这四份不入库(PRIVATE_DOCS)。
+PRIVATE_DOCS = ("REFUTATION_LEDGER.md", "STRATEGY_PLAYBOOK.md", "DECISIONS.md", "docs/DECISIONS.md")
 DENY = ("Shadow/", ".env", ".seth_bot/", "MINIMAX_SYNC", "WEEKLY_REVIEW.md", "docs/reading/",
-        "scripts/lesson_enforcement_baseline.txt", "paper_trading/specs/eth_ls_walkforward_v1.json")
+        "scripts/lesson_enforcement_baseline.txt", "paper_trading/specs/eth_ls_walkforward_v1.json") + PRIVATE_DOCS
 DENY_SUFFIX = (".pptx",)
 MAX_PATHS = 80
-LOCAL_ONLY = ("_data",)
+# gitignored、但 Mac 侧 preflight 要读的东西:合并用的临时 worktree 里软链回主目录(S-500 / S-501)。
+LOCAL_ONLY = ("_data",) + PRIVATE_DOCS
+# 私有快照:不入公开仓库的文档,每轮有变化就提交进一个本地私有 git 仓库(带历史,可恢复)。
+PRIVATE_REPO = Path(os.environ.get("SETH_BOT_PRIVATE_REPO", str(ROOT.parent / "looloomi-private")))
+SNAPSHOT = PRIVATE_DOCS + ("MINIMAX_SYNC.md", "MINIMAX_SYNC_ARCHIVE.md", "WEEKLY_REVIEW.md", "PROJECT_STATE_LOG.md", "docs/reading")
+APPEND_ONLY = ("REFUTATION_LEDGER.md",)
+SHRINK_TOLERANCE = 2048          # 台账只追加;比上一份快照短 2KB 以上 = 被旧版本覆盖或截断,不快照、报警
+LANES = ("a", "b", "c")
 LANE_BRANCH = re.compile(r"^lane-[abc]/T-\d{3}(?:-[A-Za-z0-9._-]+)?$")
 VERIFY_PATH = re.compile(r"^/[A-Za-z0-9_\-./?=&%,:]*$")
 
@@ -81,6 +90,21 @@ def path_problems(paths: list[str]) -> list[str]:
             out.append(f"非法路径 {p!r}")
         elif any(p == d.rstrip("/") or p.startswith(d) for d in DENY) or p.endswith(DENY_SUFFIX):
             out.append(f"{p} 在永不提交清单里")
+    return out
+
+
+def untrack_problems(paths: list[str]) -> list[str]:
+    """`untrack` 只许停止跟踪【已被 .gitignore 忽略、磁盘上还在、当前被跟踪】的文件 —— 内容一字不丢。"""
+    out = []
+    for p in paths:
+        if p.startswith(("/", "-")) or ".." in Path(p).parts:
+            out.append(f"非法路径 {p!r}")
+        elif not (ROOT / p).is_file():
+            out.append(f"{p} 磁盘上不在 —— untrack 不能用来删文件")
+        elif git("check-ignore", "-q", "--no-index", "--", p)[0] != 0:
+            out.append(f"{p} 没有被 .gitignore 忽略 —— 先把它写进 .gitignore")
+        elif git("ls-files", "--error-unmatch", "--", p)[0] != 0:
+            out.append(f"{p} 本来就没被跟踪")
     return out
 
 
@@ -130,17 +154,28 @@ def do_commit(job: dict) -> dict:
         return {"ok": False, "stage": "sync", "detail": "本地 main 落后 origin/main —— 先在 Mac 上 git pull --ff-only"}
     if git("diff", "--cached", "--quiet")[0] != 0:
         return {"ok": False, "stage": "index", "detail": "索引里已有别人 stage 的东西;执行器不替任何人提交"}
+    untrack = list(job.get("untrack") or [])
+    bad = untrack_problems(untrack)
+    if bad:
+        return {"ok": False, "stage": "validate", "detail": bad}
+    if untrack:                      # 先于 preflight:守卫看的是索引,要看到「已不跟踪」的状态
+        code, out = git("rm", "--cached", "--quiet", "--", *untrack)
+        if code != 0:
+            return {"ok": False, "stage": "untrack", "detail": out}
     ok, out = preflight(ROOT)
     if not ok:
+        if untrack:
+            git("reset", "--quiet", "--", *untrack)
         return {"ok": False, "stage": "preflight", "detail": out[-4000:]}
     (ROOT / ".git" / "index.lock").unlink(missing_ok=True)
     code, out = git("add", "--", *paths)
     if code != 0:
         return {"ok": False, "stage": "add", "detail": out}
     _, staged = git("diff", "--cached", "--name-only")
-    extra = [f for f in staged.splitlines() if not any(f == p or f.startswith(p.rstrip("/") + "/") for p in paths)]
+    allowed = paths + untrack
+    extra = [f for f in staged.splitlines() if not any(f == p or f.startswith(p.rstrip("/") + "/") for p in allowed)]
     if extra or not staged.strip():
-        git("reset", "--quiet", "--", *paths)
+        git("reset", "--quiet", "--", *allowed)
         return {"ok": False, "stage": "add", "detail": f"stage 结果与清单不符:多出 {extra}" if extra else "没有任何改动"}
     with tempfile.NamedTemporaryFile("w", delete=False, suffix=".txt", encoding="utf-8") as f:
         f.write(job["message"].rstrip() + f"\n\nCommitted-by: seth_bot (job {job['id']})\n")
@@ -185,6 +220,7 @@ def do_merge(job: dict) -> dict:
             return {"ok": False, "stage": "merge", "detail": out[-3000:]}
         for name in LOCAL_ONLY:          # gitignored 本机产物,Mac 侧 preflight 要读(S-500)
             if (ROOT / name).exists() and not (wt / name).exists():
+                (wt / name).parent.mkdir(parents=True, exist_ok=True)
                 (wt / name).symlink_to(ROOT / name)
         ok, out = preflight(wt)
         if not ok:
@@ -212,17 +248,20 @@ def process(job_file: Path) -> None:
     except Exception as e:  # noqa: BLE001
         job = {"id": job_file.stem, "op": "?", "_error": str(e)}
     job.setdefault("id", job_file.stem)
-    if job.get("by") != "seth":
-        res = {"ok": False, "stage": "validate", "detail": "只执行 by=seth 的任务"}
-    elif job.get("op") == "commit":
-        res = do_commit(job)
-    elif job.get("op") == "merge":
-        res = do_merge(job)
-    elif job.get("op") == "fetch":
-        code, out = git("fetch", "--quiet", "--prune", "origin")
-        res = {"ok": code == 0, "stage": "fetched", "detail": out}
-    else:
-        res = {"ok": False, "stage": "validate", "detail": f"未知 op {job.get('op')!r}(只有 commit / merge / fetch)"}
+    try:
+        if job.get("by") != "seth":
+            res = {"ok": False, "stage": "validate", "detail": "只执行 by=seth 的任务"}
+        elif job.get("op") == "commit":
+            res = do_commit(job)
+        elif job.get("op") == "merge":
+            res = do_merge(job)
+        elif job.get("op") == "fetch":
+            code, out = git("fetch", "--quiet", "--prune", "origin")
+            res = {"ok": code == 0, "stage": "fetched", "detail": out}
+        else:
+            res = {"ok": False, "stage": "validate", "detail": f"未知 op {job.get('op')!r}(只有 commit / merge / fetch)"}
+    except Exception as e:  # noqa: BLE001 — 一个任务崩了要出结果、出队,不能每轮重放
+        res = {"ok": False, "stage": "exception", "detail": f"{type(e).__name__}: {e}"}
     res.update({"id": job["id"], "op": job.get("op"), "finished_at": now()})
     DONE.mkdir(parents=True, exist_ok=True)
     (DONE / f"{job['id']}.json").write_text(json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -232,9 +271,56 @@ def process(job_file: Path) -> None:
     notify("seth_bot", line)
 
 
+def snapshot_private() -> str:
+    """把不入公开仓库的文档提交进本地私有仓库。台账变短 = 被覆盖,不快照、报警(S-501)。"""
+    PRIVATE_REPO.mkdir(parents=True, exist_ok=True)
+    if not (PRIVATE_REPO / ".git").exists():
+        git("init", "-q", "-b", "main", cwd=PRIVATE_REPO)
+    refused = []
+    for rel in SNAPSHOT:
+        src, dst = ROOT / rel, PRIVATE_REPO / rel
+        if not src.exists():
+            continue
+        if rel in APPEND_ONLY and dst.exists() and src.stat().st_size + SHRINK_TOLERANCE < dst.stat().st_size:
+            refused.append(f"{rel} {dst.stat().st_size}→{src.stat().st_size} 字节")
+            continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if src.is_dir():
+            shutil.copytree(src, dst, dirs_exist_ok=True)
+        else:
+            shutil.copy2(src, dst)
+    if refused:
+        msg = "台账变短,疑似被旧版本覆盖 —— 没有快照;从 looloomi-private 恢复:" + "; ".join(refused)
+        log("✗ " + msg)
+        notify("seth_bot ⚠", msg)
+    git("add", "-A", cwd=PRIVATE_REPO)
+    if git("diff", "--cached", "--quiet", cwd=PRIVATE_REPO)[0] == 0:
+        return "unchanged"
+    git("-c", "user.name=seth_bot", "-c", "user.email=seth_bot@localhost", "commit", "-q", "-m",
+        f"snapshot {now()}", cwd=PRIVATE_REPO)
+    if git("remote", cwd=PRIVATE_REPO)[1].strip():
+        code, out = git("push", "-q", "origin", "main", cwd=PRIVATE_REPO)
+        if code != 0:
+            log(f"✗ 私有仓库推送失败:{out[-200:]}")
+    return "committed"
+
+
+def ensure_lane_links() -> None:
+    """lane worktree 里没有私有文档 → 软链到主目录那份(唯一一份)。已有文件(旧分支还在跟踪)不动。"""
+    for lane in LANES:
+        wt = ROOT.parent / f"looloomi-ai-lane-{lane}"
+        if not wt.is_dir():
+            continue
+        for rel in PRIVATE_DOCS:
+            link = wt / rel
+            if not link.exists() and not link.is_symlink() and (ROOT / rel).exists() and link.parent.is_dir():
+                link.symlink_to(ROOT / rel)
+
+
 def main() -> int:
     BOT.mkdir(exist_ok=True)
     QUEUE.mkdir(exist_ok=True)
+    (BOT / "heartbeat").write_text(now() + ("  PAUSED" if (BOT / "PAUSE").exists() else "") + "\n", encoding="utf-8")
     if (BOT / "PAUSE").exists():
         return 0
     lock = BOT / "lock"
@@ -252,6 +338,11 @@ def main() -> int:
             git("fetch", "--quiet", "--prune", "origin")
         for jf in jobs:
             process(jf)
+        for step in (snapshot_private, ensure_lane_links):
+            try:
+                step()
+            except Exception as e:  # noqa: BLE001 — 快照失败不能挡住合并,但必须留痕
+                log(f"✗ {step.__name__}: {type(e).__name__}: {e}")
     finally:
         shutil.rmtree(lock, ignore_errors=True)
     return 0

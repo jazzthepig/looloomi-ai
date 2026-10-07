@@ -115,7 +115,7 @@ EXEMPT = {
 }
 
 #: 非测试文件 —— 不参与统计。
-NOT_A_TEST = {"__init__", "conftest", "_source"}
+NOT_A_TEST = {"__init__", "conftest", "_source", "_private_docs"}
 
 
 def _registered() -> set[str]:

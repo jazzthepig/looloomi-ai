@@ -35,7 +35,10 @@ GLOBAL_FORBIDDEN = (
     "scripts/githooks/",       # pre-push 钩子(S-421)
     "scripts/seth_bot/",       # 合并执行器(S-500)
     "scripts/check_pr_scope.py",
-    "docs/DECISIONS.md",       # Jazz 的裁决,只经 Seth 记
+    "docs/DECISIONS.md",       # Jazz 的裁决,只经 Seth 记;S-501 起不入库(公开仓库)
+    "DECISIONS.md",            # S-501:以下三份不入库 —— lane 用 git add -f 也过不去
+    "REFUTATION_LEDGER.md",
+    "STRATEGY_PLAYBOOK.md",
     ".env",
 )
 

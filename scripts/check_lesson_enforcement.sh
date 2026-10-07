@@ -27,7 +27,11 @@ cd "$(dirname "$0")/.."
 LEDGER="REFUTATION_LEDGER.md"
 BASELINE="scripts/lesson_enforcement_baseline.txt"
 
-[[ -f "$LEDGER" ]] || { echo "  ✗ $LEDGER 不存在"; exit 1; }
+# S-501:同 check_ledger_citations.sh —— 只有 CI 明说跳过,别处缺了就是红。
+if [[ ! -f "$LEDGER" ]]; then
+  if [[ "${CI:-}" == "true" ]]; then echo "  ⚠ 跳过教训强制率:$LEDGER 不入库(S-501)"; exit 0; fi
+  echo "  ✗ $LEDGER 不存在"; exit 1
+fi
 
 # 写下的:台账里带 S-号的标题行。一个标题可以认领多个号 (## S-186 / S-187 — ...)。
 WRITTEN=$(grep -E '^#{2,3} .*S-[0-9]+' "$LEDGER" | grep -oE 'S-[0-9]+' | sort -u)

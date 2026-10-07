@@ -121,3 +121,9 @@ src/research/r*_mining_*/
 _data/research/
 # S-500 Mac 侧执行器的队列/结果/日志(本机状态,不入库)
 .seth_bot/
+# S-501:仓库是 public。研究台账、策略手册、Jazz 的裁决不入库;Mac 主目录一份(lane worktree 软链过来),
+# seth_bot 每轮快照到私有仓库 ~/Projects/looloomi-private(带历史)。
+/REFUTATION_LEDGER.md
+/STRATEGY_PLAYBOOK.md
+/DECISIONS.md
+/docs/DECISIONS.md

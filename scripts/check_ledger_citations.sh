@@ -25,7 +25,11 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 LEDGER="REFUTATION_LEDGER.md"
 
-[[ -f "$LEDGER" ]] || { echo "  ✗ $LEDGER not found — cannot verify citations"; exit 1; }
+# S-501:台账不入库(公开仓库)。只有 CI(干净机器)明说跳过;Mac / lane / 合并用 worktree 上缺了就是红 —— 那是丢数据。
+if [[ ! -f "$LEDGER" ]]; then
+  if [[ "${CI:-}" == "true" ]]; then echo "  ⚠ 跳过台账引用检查:$LEDGER 不入库(S-501),由 Mac 侧 preflight 与 seth_bot 合并时检查"; exit 0; fi
+  echo "  ✗ $LEDGER not found — cannot verify citations"; exit 1
+fi
 
 # Headings only. `## S-186 / S-187 — ...` claims BOTH numbers, so scan the whole
 # heading line rather than anchoring one number to one line.

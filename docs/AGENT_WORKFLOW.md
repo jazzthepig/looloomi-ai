@@ -147,3 +147,14 @@ SYNC 里一行「T-003 已推」即可。CI 红了自己看 Actions 页修,再�
 安装 / 卸载 / 暂停只由 Jazz:`bash scripts/seth_bot/install.sh` / `--uninstall` / `touch .seth_bot/PAUSE`。
 
 **Jazz 仍然拍的:** `DECISIONS.md` 级别的事(产品边界、钱、风险、key、策略取舍)。其余合并顺序、范围、测试常量都问 Seth。
+
+## 私有文档不入库(S-501,2026-10-07 起)
+
+仓库是 public。`REFUTATION_LEDGER.md`、`STRATEGY_PLAYBOOK.md`、`DECISIONS.md`、`docs/DECISIONS.md` **不再被 git 跟踪**,
+和 MINIMAX_SYNC 一样:**Mac 主目录一份,是唯一一份**;lane worktree 里是软链(seth_bot 每轮补,`setup_lane_worktrees.sh` 也会建)。
+
+- lane 照旧读、照旧往台账末尾追加 M- 条目 —— 写的是主目录那份。**先切到新 main**(`git fetch origin && git switch -c lane-x/T-NNN origin/main`):
+  旧分支上那份还是被跟踪的旧副本,写进去的东西会跟着分支走、合并时冲突。
+- **永远不要 `git add -f` 这四份。** CI 的范围检查、seth_bot、`tests/test_private_docs_untracked.py` 三处都会拒;但拒在推送之后就晚了。
+- 不要在主目录 `git checkout` 旧提交:被忽略的文件会被旧内容覆盖、回来时被删。真发生了,从 `~/Projects/looloomi-private`(seth_bot 每 5 分钟的快照,带历史)拷回来。
+- 读这四份的检查在 CI 上明说跳过(GitHub 没有这些文件),在 Mac / lane / 合并前的 preflight 上照常跑。
