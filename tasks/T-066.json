@@ -1,0 +1,26 @@
+{
+  "created": "2026-10-07",
+  "verified": null,
+  "status": "open",
+  "id": "T-066",
+  "owner": "seth",
+  "title": "补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层",
+  "source": "S-504;Jazz 10-07「这个月看的是传统市场到链上的边际流动性,是不是没及时补抓新变量」",
+  "allowed_paths": [
+    "src/data/",
+    "src/api/main.py",
+    "src/api/liveness.py",
+    "scripts/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "每路:调度 + 判活 + 第一行真实数据(5b),日分辨率,带来源与 as_of;流量按「成员变动中性」计算(链式指数,新增 / 移除成分与缺行不算流量);state_daily 新增对应特征并从 2023-01 起按时点回填(源允许多早就多早)",
+    "expect": "state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期"
+  },
+  "prior_value": "state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149%",
+  "notes": "规则 3b:取数只经 Seth 这条路。源先查 source_policy 与现有通道(DeFiLlama 稳定币有按链历史),缺的再接。"
+}

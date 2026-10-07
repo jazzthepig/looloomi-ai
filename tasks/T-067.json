@@ -1,0 +1,23 @@
+{
+  "created": "2026-10-07",
+  "verified": null,
+  "status": "open",
+  "id": "T-067",
+  "owner": "seth",
+  "title": "风格矢量按时点重建:每天按当日市值决定层级成分,不用今天的成分回填历史",
+  "source": "S-504 第 1 条:style_index_daily 与 cg_coin_mcap_daily 都是 current_constituents_backfilled",
+  "allowed_paths": [
+    "src/data/",
+    "scripts/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "新风格表(或新 basis 值 point_in_time)里每天的层级成分 = 当日市值排名;板块维度标明「成分是今天的分类」;记录每个风格每天有多少成员是「今天才知道它会活下来」的(覆盖缺口);研究读取默认用按时点版本",
+    "expect": "2023-01-01 的 top L1 不再包含当时还不在前列的币;两版风格收益的差异作为幸存者偏差的测量报出来"
+  },
+  "prior_value": "8 个风格,全部 current_constituents_backfilled"
+}
