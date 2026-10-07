@@ -31,6 +31,8 @@ import sys
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
+# S-500:用本文件所在的树,不写死 Jazz 的 Mac 路径 —— 写死时 CI 必红,lane worktree 与合并用的临时 worktree 会静默测主目录那份。
+_SAFEFORMAT_URL = (_REPO / "dashboard" / "src" / "lib" / "safeFormat.js").as_uri()
 
 _FAILURES: list[str] = []
 
@@ -46,7 +48,7 @@ def check(name: str, cond: bool, detail: str = "") -> None:
 # ── runtime smoke (Node subprocess against safeFormat.js) ─────────────────────
 
 _JS_RUNTIME = r"""
-import('/Users/sbb/Projects/looloomi-ai/dashboard/src/lib/safeFormat.js')
+import('__SAFEFORMAT_URL__')
 .then(async (m) => {
   const { isMissing } = m;
   const fails = [];
@@ -70,7 +72,7 @@ def test_ismissing_predicate_zero_safe() -> None:
     """The whole batch hinges on `isMissing` treating 0 as data, not absence.
     A regression that returns `true` for 0 would re-collapse every fix here."""
     r = subprocess.run(
-        ["node", "--input-type=module", "-e", _JS_RUNTIME],
+        ["node", "--input-type=module", "-e", _JS_RUNTIME.replace("__SAFEFORMAT_URL__", _SAFEFORMAT_URL)],
         capture_output=True, text=True, timeout=15,
     )
     ok = r.returncode == 0 and r.stdout.strip().startswith("OK")

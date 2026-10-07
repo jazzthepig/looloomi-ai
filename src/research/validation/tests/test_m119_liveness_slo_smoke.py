@@ -26,7 +26,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, "/Users/sbb/Projects/looloomi-ai")
+sys.path.insert(0, str(Path(__file__).resolve().parents[4]))  # S-500:不写死 Mac 路径
 
 from src.api.liveness import (
     LIVENESS_SLOS, DEFAULT_MAX_AGE_H,

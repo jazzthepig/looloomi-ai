@@ -117,6 +117,10 @@ python3 -m tests.test_cold_start_contract
 #             结论(REFUTED/SHIP)必须带着它的问题(基准、regime、判据)。
 python3 -m tests.test_task_cards
 python3 -m tests.test_verdicts_carry_their_question
+# 3a-ter-ter. S-500 lane 分支改动范围 = 任务卡 allowed_paths(CI 与 Mac 侧执行器同一个函数)。
+python3 -m tests.test_pr_scope
+# S-500 Mac 侧执行器(替 Jazz 粘贴交接块,推的是生产):只收显式路径、只合 lane 分支、不执行任意命令。
+python3 -m tests.test_seth_bot
 # 3a-quater. undefined names on the serving path — a NameError on a rarely-taken branch is
 #            invisible to py_compile AND to production when the caller logs a warning. That
 #            combination silently killed the T2 universe fallback (2026-08-06).
@@ -1375,8 +1379,15 @@ python3 -m pytest tests/test_cis.py -q || {
   echo "  ✗ CIS 核心 — do not push"; exit 1; }
 python3 -m tests.test_pit_replay || {                                    # S-207 自跑式
   echo "  ✗ PIT 重放守卫 — do not push"; exit 1; }
-python3 -m tests.test_strategy_vector_smoke || {
-  echo "  ✗ strategy vector — do not push"; exit 1; }
+# S-500:_data/strategy_records.json 是 gitignored 的生成物,生成时还要读仓库外的 REPORT.md sidecar。
+# 实测 10-07:干净机器上现生成一份,这条测试 14 项红 —— Mac 上能过,靠的是 07-21 生成的旧文件。
+# 所以它测的是「这台机器上的旧产物」,不是代码。干净机器上明说跳过,Mac 上照旧跑。
+if [ -f _data/strategy_records.json ]; then
+  python3 -m tests.test_strategy_vector_smoke || {
+    echo "  ✗ strategy vector — do not push"; exit 1; }
+else
+  echo "  ⚠ strategy vector 跳过:本机没有 _data/strategy_records.json(只在 Mac 侧 preflight 生效,S-500)"
+fi
 python3 -m tests.test_two_layer_paper_smoke || {
   echo "  ✗ two-layer paper book — do not push"; exit 1; }
 python3 -m tests.test_spa_deep_links_resolve || {

@@ -1,0 +1,149 @@
+name: Lane gate (scope + preflight + PR + first-pass review)
+
+# S-500 (2026-10-07). Jazz: "一个一个等你复核这样效率很低,因为不是实时和全自动化的".
+# A lane pushes `lane-{a,b,c}/T-NNN` → this runs by itself:
+#   scope      changed files ⊆ the card's allowed_paths, ∩ forbidden = ∅  (scripts/check_pr_scope.py)
+#   preflight  the full offline gate on a clean machine (preflight strips credentials by design, S-163)
+#   open-pr    opens the PR if none exists, so every delivery has one place to be read
+#   review     Claude first pass (optional; runs only when a Claude secret exists)
+# Seth merges through scripts/seth_bot/ on the Mac, which re-runs scope + preflight on the merged tree.
+#
+# ⚠️ Triggered on `push`, not `pull_request`: a PR opened with GITHUB_TOKEN does not fire
+# pull_request workflows. Checks from the push attach to the head commit, so the PR shows them.
+
+on:
+  push:
+    branches: ["lane-a/**", "lane-b/**", "lane-c/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: lane-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Changed files are inside the task card
+        run: python3 scripts/check_pr_scope.py --branch "$GITHUB_REF_NAME" --base origin/main --head HEAD | tee -a "$GITHUB_STEP_SUMMARY"
+
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest mypy
+      - name: Preflight (offline, credential-free)
+        run: bash scripts/preflight.sh
+
+  open-pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      number: ${{ steps.pr.outputs.number }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Open PR if none exists
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          N=$(gh pr list --head "$GITHUB_REF_NAME" --state open --json number --jq '.[0].number')
+          if [ -z "$N" ]; then
+            TITLE=$(python3 scripts/check_pr_scope.py --title "$GITHUB_REF_NAME")
+            printf 'Lane delivery for %s.\n\nChecks: lane scope · preflight · first-pass review. Seth merges.\n' "$GITHUB_REF_NAME" > /tmp/body.md
+            gh pr create --base main --head "$GITHUB_REF_NAME" --title "$TITLE" --body-file /tmp/body.md || {
+              echo "Could not open the PR (repo setting: Actions → General → allow GitHub Actions to create pull requests)." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            }
+            N=$(gh pr list --head "$GITHUB_REF_NAME" --state open --json number --jq '.[0].number')
+          fi
+          echo "number=$N" >> "$GITHUB_OUTPUT"
+          echo "PR #$N" >> "$GITHUB_STEP_SUMMARY"
+
+  review:
+    needs: [open-pr]
+    if: needs.open-pr.outputs.number != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    env:
+      HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' || secrets.ANTHROPIC_API_KEY != '' }}
+      PR: ${{ needs.open-pr.outputs.number }}
+    steps:
+      - name: Skip notice
+        if: env.HAS_CLAUDE != 'true'
+        run: echo "No CLAUDE_CODE_OAUTH_TOKEN / ANTHROPIC_API_KEY secret — first-pass review skipped." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/checkout@v5
+        if: env.HAS_CLAUDE == 'true'
+        with:
+          fetch-depth: 0
+      - name: Claude first-pass review
+        id: review
+        if: env.HAS_CLAUDE == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are the first-pass reviewer for lane branch ${{ github.ref_name }} (PR #${{ needs.open-pr.outputs.number }}).
+            CLAUDE.md is loaded; its Hard rules are the review standard. The diff is `git diff origin/main...HEAD`.
+            The task card is tasks/T-NNN.json (NNN from the branch name): read its acceptance and notes first.
+            Scope and preflight are checked by other jobs — do not repeat them.
+
+            Report only what a careful merger would block on or must know. P0 = blocking:
+            1. Buy/sell wording anywhere user-facing (only STRONG OUTPERFORM / OUTPERFORM / NEUTRAL / UNDERPERFORM / UNDERWEIGHT).
+            2. Fabricated or placeholder numbers on a production path; a missing value rendered as a plausible number.
+            3. A value that is unreadable / not computable treated as a real value (None→0, -inf/NaN written, truncated reads taken as complete).
+            4. Look-ahead: any input dated after the decision date d.
+            5. Machine-local dates in writers (datetime.now() without timezone.utc, date.today()).
+            6. Tests that cannot fail (no assert, assert on a constant, functions returning tuples instead of asserting, swallowed exceptions).
+            7. Docstrings, MCP descriptions or API text that claim more than the data shows.
+            8. Secrets, keys or service_role in the diff; direct Supabase writes from scripts/.
+            P1/P2 = correctness or clarity issues worth fixing, not blocking.
+
+            Verify each finding by reading the code; do not report guesses. Write findings in Chinese, one line each, with file:line.
+          claude_args: |
+            --max-turns 30
+            --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
+            --json-schema '{"type":"object","properties":{"blocking":{"type":"boolean"},"summary":{"type":"string"},"findings":{"type":"array","items":{"type":"object","properties":{"severity":{"type":"string","enum":["P0","P1","P2"]},"where":{"type":"string"},"issue":{"type":"string"},"fix":{"type":"string"}},"required":["severity","where","issue"]}}},"required":["blocking","summary","findings"]}'
+      - name: Post review comment
+        if: env.HAS_CLAUDE == 'true' && steps.review.outputs.structured_output != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUT: ${{ steps.review.outputs.structured_output }}
+        run: |
+          python3 - <<'PY' > /tmp/review.md
+          import json, os
+          d = json.loads(os.environ["OUT"])
+          print(f"**First-pass review** — {'🔴 blocking' if d.get('blocking') else '🟢 no blocker'}\n\n{d.get('summary','')}\n")
+          for f in d.get("findings", []):
+              fix = f" → {f['fix']}" if f.get("fix") else ""
+              print(f"- **{f['severity']}** `{f['where']}` {f['issue']}{fix}")
+          PY
+          cat /tmp/review.md >> "$GITHUB_STEP_SUMMARY"
+          gh pr comment "$PR" --body-file /tmp/review.md
+          python3 -c "import json,os,sys; sys.exit(1 if json.loads(os.environ['OUT']).get('blocking') else 0)"

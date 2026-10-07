@@ -31,7 +31,7 @@ import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-sys.path.insert(0, "/Users/sbb/Projects/looloomi-ai")
+sys.path.insert(0, str(Path(__file__).resolve().parents[4]))  # S-500:不写死 Mac 路径
 
 
 # ── T1: signature ─────────────────────────────────────────────────────────────

@@ -119,3 +119,5 @@ _data/cis_historical/
 # cautionary tale directly above.
 src/research/r*_mining_*/
 _data/research/
+# S-500 Mac 侧执行器的队列/结果/日志(本机状态,不入库)
+.seth_bot/

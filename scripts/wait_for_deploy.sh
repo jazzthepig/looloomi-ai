@@ -8,7 +8,7 @@
 # 用法:bash scripts/wait_for_deploy.sh && curl ...
 set -u
 BASE="${COMETCLOUD_BASE:-https://web-production-0cdf76.up.railway.app}"
-WANT="$(git rev-parse HEAD)"
+WANT="${WANT_SHA:-$(git rev-parse HEAD)}"
 DEADLINE=$(( $(date +%s) + ${WAIT_SECONDS:-900} ))
 while [ "$(date +%s)" -lt "$DEADLINE" ]; do
   LIVE="$(curl -s --max-time 10 "$BASE/internal/build-state" | python3 -c 'import sys,json

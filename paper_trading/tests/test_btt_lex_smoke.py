@@ -18,7 +18,7 @@ import tempfile
 from datetime import date, timedelta
 from pathlib import Path
 
-sys.path.insert(0, "/Users/sbb/Projects/looloomi-ai")
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # S-500:不写死 Mac 路径
 
 from paper_trading.spec_runner import (
     Spec, Panel, decide_btc_trend, build_panel

@@ -21,10 +21,12 @@ from pathlib import Path
 
 
 _REPO = Path(__file__).resolve().parents[1]
+# S-500:用本文件所在的树,不写死 Jazz 的 Mac 路径 —— 写死时 CI 必红,lane worktree 与合并用的临时 worktree 会静默测主目录那份。
+_SAFEFORMAT_URL = (_REPO / "dashboard" / "src" / "lib" / "safeFormat.js").as_uri()
 
 
 _JS = r"""
-import('/Users/sbb/Projects/looloomi-ai/dashboard/src/lib/safeFormat.js')
+import('__SAFEFORMAT_URL__')
   .then(async (m) => {
     const { fmtScore, isMissing } = m;
     const fails = [];
@@ -84,7 +86,7 @@ import('/Users/sbb/Projects/looloomi-ai/dashboard/src/lib/safeFormat.js')
 
 def _run_node_assertion() -> None:
     proc = subprocess.run(
-        ["node", "--input-type=module", "-e", _JS],
+        ["node", "--input-type=module", "-e", _JS.replace("__SAFEFORMAT_URL__", _SAFEFORMAT_URL)],
         cwd=_REPO, capture_output=True, text=True, timeout=30,
     )
     if proc.returncode != 0:

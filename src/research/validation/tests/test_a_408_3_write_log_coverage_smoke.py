@@ -51,13 +51,13 @@ import sys
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-sys.path.insert(0, "/Users/sbb/Projects/looloomi-ai")
+sys.path.insert(0, str(Path(__file__).resolve().parents[4]))  # S-500:不写死 Mac 路径
 
 from src.api import store
 from src.api.store_result import StoreResult
 
 
-_REPO = Path("/Users/sbb/Projects/looloomi-ai")
+_REPO = Path(__file__).resolve().parents[4]  # S-500
 
 
 # ── T1: refactor still chunks at 500 ─────────────────────────────────────────
