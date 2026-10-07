@@ -1,14 +1,27 @@
 #!/usr/bin/env bash
 # S-421:只有主工作目录(Seth 的合并位)可以推 main。lane 的 worktree 只能推自己的分支。
 # 书面约定挡不住「整文件 add 把别人的代码带上线」(S-416);这个钩子在推送那一刻挡。
+#
+# S-502:历史已改写,私有文件(台账、策略手册、DECISIONS、SYNC、WEEKLY_REVIEW、Shadow/)从公开历史里删掉了。
+# 本机还留着旧提交(lane 的旧分支、reflog)。**任何不在 origin 上、却碰过这些路径的提交 = 旧历史**,
+# 推上去就把删掉的东西重新公开 —— 在这里拒绝,不管推到哪个分支。
 set -euo pipefail
 here="$(git rev-parse --show-toplevel)"
 main_wt="$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')"
+zero="0000000000000000000000000000000000000000"
+private=(REFUTATION_LEDGER.md STRATEGY_PLAYBOOK.md DECISIONS.md docs/DECISIONS.md MINIMAX_SYNC.md WEEKLY_REVIEW.md Shadow)
 while read -r local_ref local_sha remote_ref remote_sha; do
   if [[ "$remote_ref" == "refs/heads/main" && "$here" != "$main_wt" ]]; then
     echo "✗ 这里是 lane worktree($here),不能推 main。"
     echo "  推你自己的分支:git push -u origin \$(git branch --show-current)"
     echo "  然后把任务卡状态改成 in_review,由 Seth 合并。"
+    exit 1
+  fi
+  [[ "$local_sha" == "$zero" ]] && continue
+  leak="$(git log --format=%h -1 "$local_sha" --not --remotes=origin -- "${private[@]}" 2>/dev/null || true)"
+  if [[ -n "$leak" ]]; then
+    echo "✗ $local_ref 带着改写前的旧历史(例如 $leak 碰过私有文件)—— 推上去会把它们重新公开。"
+    echo "  从新的 origin/main 重新开分支:git fetch origin && git switch -c <新分支> origin/main,再把改动搬过去。"
     exit 1
   fi
 done

@@ -20,7 +20,8 @@ if [ -z "$SUPABASE_KEY" ]; then
   exit 1
 fi
 
-export COINGECKO_API_KEY="${COINGECKO_API_KEY:-CG-REDACTED-S502}"
+# S-502:原来这里写死了一把 CoinGecko key 当默认值,随公开仓库暴露了五个月。只从环境 / .env 读。
+: "${COINGECKO_API_KEY:?COINGECKO_API_KEY 未设置 —— 写进 .env(gitignored)或在 shell 里 export}"
 
 echo "=============================="
 echo "  CIS Historical Reconstruction"

@@ -225,10 +225,12 @@ def do_merge(job: dict) -> dict:
         ok, out = preflight(wt)
         if not ok:
             return {"ok": False, "stage": "preflight(merged tree)", "detail": out[-4000:]}
-        code, out = git("push", "origin", "HEAD:main", cwd=wt)
+        sha = git("rev-parse", "HEAD", cwd=wt)[1].strip()
+        # 从主目录推这个提交(worktree 共用对象库):pre-push 钩子只放主工作目录推 main(S-421),
+        # 在临时 worktree 里推会被它拦下(S-502 发现,S-500 的模拟里没装钩子所以没暴露)。
+        code, out = git("push", "origin", f"{sha}:refs/heads/main")
         if code != 0:
             return {"ok": False, "stage": "push", "detail": out}
-        sha = git("rev-parse", "HEAD", cwd=wt)[1].strip()
     finally:
         for name in LOCAL_ONLY:
             if (wt / name).is_symlink():
