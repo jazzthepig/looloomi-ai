@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from scripts.check_pr_scope import GLOBAL_FORBIDDEN  # noqa: E402
-from scripts.lane_bot.lane_bot import ALLOWED_TOOLS, _LAUNCH, build_prompt, decide, load_config, parse_stream, run_summary  # noqa: E402
+from scripts.lane_bot.lane_bot import ALLOWED_TOOLS, _LAUNCH, build_prompt, decide, load_config, parse_stream, review_tasks, run_summary  # noqa: E402
 
 CFG = {"active_hours": [9, 23], "every_min": 120, "max_runs_per_day": 8,
        "lanes": {"lane-b": {"enabled": True, "name": "Minimax-B", "cwd": "/x", "worktree": "/x"}}}
@@ -99,6 +99,17 @@ def test_status_shows_model_writes_and_pushes() -> None:
         f.write_text("\n".join(_j.dumps(e) for e in ev))
         sm = run_summary(f)
     assert sm["model"] == "MiniMax-M3" and sm["writes"] == ["/x/report.md"] and sm["pushes"] and sm["tokens_in"] == 15
+
+
+def test_cross_review_rotates_once_a_day() -> None:
+    """Jazz 10-07:lane 们要定时互相验证。A 查 B、B 查 C、C 查 A;到点才派,每天一次。"""
+    cfg = {"review_hour": 21, "lanes": {"lane-a": {}, "lane-b": {}, "lane-c": {}}}
+    assert review_tasks(cfg, {}, "2026-10-07", 20) == {}
+    t = review_tasks(cfg, {}, "2026-10-07", 21)
+    assert set(t) == {"lane-a", "lane-b", "lane-c"} and "lane-b-20261007" in t["lane-a"] and "lane-a-20261007" in t["lane-c"]
+    assert "不改对方任何文件" in t["lane-b"]
+    done = {"lane-a": {"review_day": "2026-10-07"}}
+    assert "lane-a" not in review_tasks(cfg, done, "2026-10-07", 22)
 
 
 if __name__ == "__main__":

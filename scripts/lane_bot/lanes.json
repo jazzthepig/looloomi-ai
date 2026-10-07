@@ -6,6 +6,7 @@
   "max_runs_per_day": 8,
   "max_turns": 100,
   "timeout_min": 40,
+  "review_hour": 21,
   "lanes": {
     "lane-a": {"enabled": true, "name": "Minimax-A", "cwd": "~/Projects/looloomi-ai-lane-a", "worktree": "~/Projects/looloomi-ai-lane-a"},
     "lane-b": {"enabled": true, "name": "Minimax-B", "cwd": "~/Projects/looloomi-ai-lane-b", "worktree": "~/Projects/looloomi-ai-lane-b"},

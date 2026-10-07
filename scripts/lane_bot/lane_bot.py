@@ -39,7 +39,7 @@ SYNC_SOFT_CAP = 76_000
 
 ALLOWED_TOOLS = [
     "Read", "Edit", "Write", "Glob", "Grep",
-    "Bash(python3:*)", "Bash(bash scripts/preflight.sh)",
+    "Bash(python3:*)", "Bash(bash scripts/preflight.sh:*)",
     "Bash(git fetch:*)", "Bash(git switch:*)", "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)",
     "Bash(git show:*)", "Bash(git add:*)", "Bash(git commit:*)",
     # 「:*」是前缀匹配:只放行以 `git push -u origin lane-` 开头的推送;推 main 另有 pre-push 钩子兜底。
@@ -48,7 +48,8 @@ ALLOWED_TOOLS = [
     "Bash(mkdir:*)", "Bash(mv:*)", "Bash(cp:*)",
 ]
 # 工具白名单逐项作为独立参数传(模式里有空格):zsh 的 ${(@s:,:)…} 按逗号拆、每项保持一个词。
-_LAUNCH = ('cd "$LANE_CWD" && exec "$LANE_CMD" -p "$LANE_PROMPT" --output-format stream-json --verbose '
+# unset INTERNAL_TOKEN:lane 不需要它;它出现在 shell 环境里时,preflight 的 schema-drift 检查会对线上 401(10-07 B 撞上)。
+_LAUNCH = ('unset INTERNAL_TOKEN; cd "$LANE_CWD" && exec "$LANE_CMD" -p "$LANE_PROMPT" --output-format stream-json --verbose '
            '--max-turns "$LANE_TURNS" --permission-mode acceptEdits --allowedTools "${(@s:,:)LANE_TOOLS}"')
 
 
@@ -222,6 +223,29 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
     return res
 
 
+REVIEW_OF = {"lane-a": "lane-b", "lane-b": "lane-c", "lane-c": "lane-a"}   # 交叉复核轮转:A 查 B,B 查 C,C 查 A
+
+
+def review_tasks(cfg: dict, st: dict, today: str, local_hour: int) -> dict[str, str]:
+    """每天一次交叉复核(Jazz 10-07:让 lane 们定时互相验证 —— 他手动让 C 复核 C 自己的自动轮次,一次就找出三个问题)。
+    到 review_hour 之后,给今天还没复核过的 lane 派一条复核任务。纯函数:返回 {复核者: 任务原文}。"""
+    hour = cfg.get("review_hour")
+    if hour is None or local_hour < hour:
+        return {}
+    out = {}
+    for lane, target in REVIEW_OF.items():
+        if lane not in cfg["lanes"] or (st.get(lane) or {}).get("review_day") == today:
+            continue
+        out[lane] = (
+            f"交叉复核(每天一次):复核 {target} 今天的自动轮次。材料:`{RUNS.as_posix()}/` 里 {target}-{today.replace('-', '')}*.json"
+            f"(每轮的任务原文与最终回复)和同名 .jsonl(每一步做了什么),以及它交付的文件 / 分支;今天没有就复核它最近一次交付。"
+            "问三件事:① 它回答的是不是被问的问题(对照任务原文,和 MINIMAX_SYNC 里点名它的最新 §Seth 段);"
+            "② 判据与数据站不站得住(偷换题面、用了已撤回的判据、读了不存在的列、偷看未来、结论超出证据、没有随机 / 零信号对照);"
+            "③ 漏了什么该看的(高维:风格 × 周期、多个时间尺度、和随机组合比)。"
+            "列 ≤ 5 条,按严重排序,每条附证据(文件:行 或 数据)。只读,不改对方任何文件;值得返工的写「@seth 建议返工:…」。")
+    return out
+
+
 def run_summary(jsonl: Path) -> dict:
     """从一轮的完整记录里取出:用的模型、步数、写了哪些文件、推了哪些分支、跑了哪些命令。
     回答 Jazz 10-07「我怎么知道它们到底有没有做事、用的是谁的算力」。"""
@@ -304,6 +328,14 @@ def main() -> int:
     at, local = now(), dt.datetime.now()
     today = local.strftime("%Y-%m-%d")
     busy = interactive_claude_cwds()
+    if not a.once and not a.dry_run:
+        for lane, task in review_tasks(cfg, st, today, local.hour).items():
+            w = WAKE / lane
+            if not w.exists():                       # 已有待办任务就先做那件,复核下一次检查再派
+                w.write_text(task, encoding="utf-8")
+                st.setdefault(lane, {})["review_day"] = today
+                log(f"→ {lane} 今日交叉复核 {REVIEW_OF[lane]}")
+        STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
     lanes = [a.once] if a.once else list(cfg["lanes"])
     stale = (cfg["timeout_min"] + 10) * 60
     todo: list[tuple[str, str, str]] = []
