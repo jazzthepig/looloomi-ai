@@ -18,5 +18,5 @@
   "prior_value": "replay 读到 1,000 行(截断)",
   "created": "2026-09-24",
   "verified": null,
-  "notes": "2026-10-06 派给 A 为本周第 2 张(T-023 已由 Seth 实现):周日 10-11 交 —— 对账 SQL 与 replay 输出的原始数字。"
+  "notes": "2026-10-06 派给 A 为本周第 2 张(T-023 已由 Seth 实现):周日 10-11 交 —— 对账 SQL 与 replay 输出的原始数字。 | 2026-10-07 A 跑了回放(1,204 天,2023-04-02 起)。验收要的两个数(回放行数 vs SQL count,2023-10-19→2026-07-18)还没给;arm C 的 Sharpe 4.90 是 compare_three_arms 记账缺陷造成的(T-057,Seth 修),修后重跑。A 在 worktree 里改了 paper_trading/ 的 4 个文件 —— 不在本卡范围、且基于 09-24 的旧历史:先说改了什么、为什么。"
 }

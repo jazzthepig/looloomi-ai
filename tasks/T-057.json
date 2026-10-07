@@ -1,0 +1,24 @@
+{
+  "id": "T-057",
+  "title": "三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-07",
+  "source": "S-396 的 paper_trading/compare_three_arms.py::_build_daily_returns;A 10-07 的 T-003 回放报告",
+  "allowed_paths": [
+    "paper_trading/compare_three_arms.py",
+    "paper_trading/replay_three_arms.py",
+    "paper_trading/tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/api/"
+  ],
+  "acceptance": {
+    "check": "① 掉出下一次调仓的币按它在那一天的真实收盘价出场(不是入场价);② 日收益用每日收盘逐日盯市,不把周收益平摊;③ 加测试:合成面板里一个币跌 50% 后被闸门剔除,组合收益必须包含这 -50%;④ 同一窗口重跑三臂,并列给出 hold-the-panel 基准",
+    "expect": "测试钉住 ①②;重跑后 arm B 的 Sharpe 不再被平滑抬高(与 hold-the-panel 同量级);arm C 的结论按新数重判"
+  },
+  "prior_value": "A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据",
+  "verified": null,
+  "notes": "2026-10-07 开卡。两处:(1) exit 价取「下一次 ENTERED 里同一个币的 leg.price」,不在就取 entry 价 —— arm C 的宇宙随闸门变,跌出闸门的币亏损被抹成 0;(2) 一个调仓周期的收益按天数开方平摊,日波动被低估,所有臂的 Sharpe 都被抬高。这是 Seth 的代码(S-396)。"
+}

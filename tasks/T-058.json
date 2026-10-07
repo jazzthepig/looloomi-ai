@@ -1,0 +1,24 @@
+{
+  "id": "T-058",
+  "title": "MCP 工具描述:8 处写了返回里根本没有的字段(B 的 T-055 drill-down)",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-07",
+  "source": "T-055 v0.4 drill_structural.md(§B-486)",
+  "allowed_paths": [
+    "src/mcp/cometcloud_mcp.py",
+    "tests/test_mcp_descriptions_match_responses.py",
+    "scripts/preflight.sh"
+  ],
+  "forbidden_paths": [
+    "src/api/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "8 处(get_prices.market_cap、get_signal_feed.{confidence,tvl}、market_snapshot.tvl、get_cis_exclusions.tvl、get_defi_yields.tvl、get_portfolio_stats.{volatility_30d,max_drawdown_90d})的描述只写返回里真有的字段;加一个测试,用 T-055 的快照断言描述里点名的字段在响应里存在;部署后重跑 drill_structural.py",
+    "expect": "drill_structural 0 ABSENT;测试在改之前的描述上会红(先证明它能失败)"
+  },
+  "prior_value": "8 ABSENT(10-07 05:08 UTC 探针)",
+  "verified": null,
+  "notes": "2026-10-07 派给 B。第一张走新交付方式的卡:从新 origin/main 开 lane-b/T-058,推分支即交付。只改描述,不改返回(要加字段另开卡)。合规用语照旧(只用 STRONG OUTPERFORM … UNDERWEIGHT)。"
+}

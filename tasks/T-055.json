@@ -2,7 +2,7 @@
   "id": "T-055",
   "title": "对外 MCP 工具描述的数据声明审计:每一句「有多少 / 赢多少 / 有多准」对上线上数据,标 支持 / 不支持 / 过期",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-06",
   "source": "S-491 / T-053 剩余项:track-record 的说明三个月引用一个从未算出的 β 层;其余工具描述可能有同类写死结论",
   "allowed_paths": [
@@ -17,6 +17,10 @@
     "expect": "Seth 按表逐条改;用法建议(如 edge-map 的分档用法)是方案之一,不是缺陷,不进表(Jazz 10-06)"
   },
   "prior_value": "只有 track-record 一处被查过(S-491)",
-  "verified": null,
-  "notes": "B 本周第 1 张,周五 10-09。只读审计,不改代码。"
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-07T06:40Z",
+    "value": "28 个工具的声明表已交(lane-b/research/T-055/)。8 处 ABSENT 属实 → T-058。🔢 172 个「异常」是口径误报:SPEC 把 change_* 当小数、界 (-1,100),而接口返回的是百分数 —— 同一时刻 cis_top 的 BTC change_24h = 0.42,prices 的 BTC = 0.447,两者都是 %;「随时间增长、交集为 0」是每天跌超 1% 的币不同。不开数据卡。"
+  },
+  "notes": "B 本周第 1 张,周五 10-09。只读审计,不改代码。 | 2026-10-07 收卡(Seth 核):8 ABSENT → T-058(B);数值异常是单位误报,不开数据卡(更正 §Seth-1007e 第 1 条)。"
 }
