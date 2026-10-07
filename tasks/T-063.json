@@ -1,0 +1,27 @@
+{
+  "id": "T-063",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-07",
+  "verified": null,
+  "title": "③ 推力:今天就用 2023 起的历史按时点模拟出结果,前向账本同时上线",
+  "source": "Jazz 10-07 定调(执行只读 ① 推力 + ② 倾斜);LOOP_INVENTORY §4「③ 没有一本在跑」;L3 规则:非 ① 账本 ≥ 60 前向天才能准入",
+  "allowed_paths": [
+    "src/data/signals/",
+    "src/data/accounting/registry.py",
+    "src/api/main.py",
+    "src/api/liveness.py",
+    "scripts/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① 规则(状态 → 0.7 / 1.0 / 1.3×)只用 2025-01-01 之前的数据定;② 当天用 state_daily(2023-01 起,按时点)回放到今天,对照 ① 持有与随机择时(同换手、同 0.7–1.3× 区间,1,000 次),报总收益 / MaxDD / Sharpe 与随机分位;2025 起这段不调参;③ 前向表同时上线:调度、判活、第一行真实数据",
+    "expect": "回放结果与随机分位当天出;前向记录从上线日起累积,用于核对模拟,不是开始的前提。敞口永不 < 0.7、> 1.3,不做空"
+  },
+  "prior_value": "③ 前向账本 0 本;m88 的 dd_stop 到 0× 越出 ③ 定义",
+  "notes": "2026-10-07 开卡;同日按 Jazz「不要等」改:先模拟、前向并行。"
+}
