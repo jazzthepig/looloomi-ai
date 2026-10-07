@@ -904,7 +904,7 @@ async def cometcloud_get_prices(params: PricesInput) -> str:
 
     Returns:
         str: Price data per asset including price, change_24h, change_7d,
-             market_cap, volume_24h.
+             volume_24h. (Market capitalization is not returned by this endpoint.)
 
     Examples:
         - "What's the price of BTC and ETH?" → symbols="BTC,ETH"
@@ -1276,7 +1276,6 @@ async def cometcloud_get_signal_feed(params: SignalFeedInput) -> str:
               "body": str, "asset": str,
               "signal": str,           # OUTPERFORM / NEUTRAL / UNDERPERFORM / etc.
               "time_horizon": str,     # SHORT / MEDIUM / LONG
-              "confidence": float,
               "timestamp": str
             }
           ]
@@ -1284,7 +1283,7 @@ async def cometcloud_get_signal_feed(params: SignalFeedInput) -> str:
 
     Examples:
         - "What are the latest CometCloud signals?" → use this tool
-        - "Any new DeFi TVL signals?" → use this tool, filter type by client
+        - "Any new DeFi liquidity signals?" → use this tool, filter type by client
     """
     try:
         # v4 loop-sourced feed: each signal is a dated, resolvable call from our own prediction
@@ -1581,7 +1580,7 @@ async def cometcloud_get_defi_overview() -> str:
 async def cometcloud_get_defi_yields(params: YieldsInput) -> str:
     """Fetch the top DeFi yield opportunities across protocols and chains.
 
-    Returns pools sorted by APY with TVL, protocol, chain, and asset info.
+    Returns pools sorted by APY with pool size, protocol, chain, and asset info.
     Useful for identifying yield opportunities that complement CIS-based
     asset allocation.
 
@@ -1592,7 +1591,7 @@ async def cometcloud_get_defi_yields(params: YieldsInput) -> str:
             - response_format: 'json' or 'markdown'
 
     Returns:
-        str: Table of yield pools with protocol, asset, chain, APY, and TVL.
+        str: Table of yield pools with protocol, asset, chain, APY, and pool size.
 
     Examples:
         - "Where can I get the best yield on USDC?" → min_apy=0, limit=20
@@ -2116,7 +2115,7 @@ async def cometcloud_get_cis_exclusions(
 
     CometCloud's 7 exclusion criteria:
       1 = Liquidity threshold (30d avg volume, exchange count, bid-ask spread)
-      2 = Data completeness (OHLCV history, TVL data, audited financials)
+      2 = Data completeness (OHLCV history, protocol liquidity data, audited financials)
       3 = Institutional custody (Coinbase, BitGo, Fireblocks, Anchorage, Fidelity, Komainu, Zodia)
       4 = Regulatory status (not under enforcement, not OFAC-sanctioned)
       5 = Token mechanics (supply ratio, emission rate, vesting transparency — crypto only)
@@ -2316,7 +2315,7 @@ async def cometcloud_get_regime_context() -> str:
     },
 )
 async def cometcloud_market_snapshot() -> str:
-    """One-call market context: macro regime + top movers + DeFi TVL health.
+    """One-call market context: macro regime + top movers + DeFi sector snapshot.
 
     Replaces 3 separate calls: cometcloud_get_macro_pulse + get_market_movers + get_defi_overview.
     Use this as the first tool in any market analysis session to establish regime context.
