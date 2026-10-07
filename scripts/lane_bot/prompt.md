@@ -2,9 +2,10 @@
 
 路径:主仓库(只读卡片与文档)= `{repo}`;你交代码用的 worktree = `{worktree}`;Mac 数据根 = `/Volumes/CometCloudAI/cometcloud-local/`。
 
-**开工先读**:`{repo}/CLAUDE.md` 的 Hard rules;`{repo}/docs/DECISIONS.md`;`{repo}/docs/AGENT_WORKFLOW.md`(「自动化」「私有文档不入库」「历史已改写」三节);`{repo}/tasks/BOARD.md` 里 owner = {lane} 的卡;`{repo}/MINIMAX_SYNC.md` 里最近的 `§Seth-…` 段落中点名你({lane} / @{short} / 你的卡号)的内容 —— **找回复一律 grep 卡号**。
+**本轮任务**:{task}
 
-**本轮只做一件事,而且要小**(步数有上限,用完就没有收尾 —— 宁可交一个部分结果并写清还差什么):Seth 在 SYNC 里点名要你做/答的事优先;否则做你名下最靠前的 open / claimed 卡。做不完就做到一个能交付的节点停下。从文件继承来的结论只当假设,先用原始数据核一遍。
+**只读完成这件事需要的东西**:你的卡 `{repo}/tasks/T-NNN.json`、任务里点名的文件与段落。**不要通读** CLAUDE.md、MINIMAX_SYNC.md、AGENT_WORKFLOW.md —— 规则就是本页这些。上一轮三个 lane 都把 60 步花在读背景上,一样都没交付。
+**小而完整**:步数有上限,用完就没有收尾 —— 先交一个能核对的部分结果,写清还差什么。从文件继承来的结论只当假设,用原始数据核一遍。
 
 **交付**
 - 代码:在 `{worktree}` 里 `git fetch origin && git switch -c {lane}/T-NNN origin/main`(分支已存在就 `git switch {lane}/T-NNN`)→ 只改卡上 `allowed_paths` → 卡 `status` 改 `in_review`、`notes` 写测得的值 → `python3 scripts/task_board.py` → `bash scripts/preflight.sh` → `git add <卡允许的路径> tasks/T-NNN.json tasks/BOARD.md` → `git commit` → `git push -u origin {lane}/T-NNN`。CI 会自动检查范围、跑 preflight、开 PR;Seth 合并。

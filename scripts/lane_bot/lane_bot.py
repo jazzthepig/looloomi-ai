@@ -129,10 +129,13 @@ def interactive_claude_cwds() -> set[str]:
     return cwds
 
 
-def build_prompt(lane: str, lc: dict, reason: str) -> str:
+def build_prompt(lane: str, lc: dict, reason: str, task: str = "") -> str:
+    """task = Seth 写进 wake 文件的那件事(一两句话);没有就是「名下最靠前的卡」。执行要极简:给一件具体的事,不让 lane 自己通读背景去找。"""
     tpl = (HERE / "prompt.md").read_text(encoding="utf-8")
+    cards = actionable_cards(lane)
+    task = task.strip() or (f"你名下最靠前的卡 {cards[0]}:按卡上的 acceptance 做到能交付" if cards else "没有派给你的事 —— 只回一行说明")
     return tpl.format(name=lc["name"], lane=lane, short=lane[-1].upper(), reason=reason, repo=ROOT.as_posix(),
-                      worktree=os.path.expanduser(lc["worktree"]))
+                      worktree=os.path.expanduser(lc["worktree"]), task=task)
 
 
 def launch_argv(cfg: dict) -> list[str]:
@@ -183,11 +186,11 @@ def parse_stream(out: str, max_turns: int) -> tuple[dict, str]:
     return final, text
 
 
-def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False) -> dict:
+def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "") -> dict:
     lc = cfg["lanes"][lane]
     cwd = os.path.expanduser(lc["cwd"])
     env = dict(os.environ, LANE_CWD=cwd, LANE_CMD=cfg.get("command", "claude"),
-               LANE_PROMPT=build_prompt(lane, lc, reason), LANE_TURNS=str(cfg["max_turns"]),
+               LANE_PROMPT=build_prompt(lane, lc, reason, task), LANE_TURNS=str(cfg["max_turns"]),
                LANE_TOOLS=",".join(ALLOWED_TOOLS))
     if dry:
         return {"lane": lane, "reason": reason, "cwd": cwd, "argv": launch_argv(cfg), "tools": ALLOWED_TOOLS}
@@ -236,7 +239,7 @@ def main() -> int:
     busy = interactive_claude_cwds()
     lanes = [a.once] if a.once else list(cfg["lanes"])
     stale = (cfg["timeout_min"] + 10) * 60
-    todo: list[tuple[str, str]] = []
+    todo: list[tuple[str, str, str]] = []
     for lane in lanes:
         lc = cfg["lanes"][lane]
         cwd = Path(os.path.expanduser(lc["cwd"])).resolve().as_posix()
@@ -252,6 +255,7 @@ def main() -> int:
             print(json.dumps({"lane": lane, "wake": go, "why": why,
                               **(run_lane(lane, cfg, why, dry=True) if go else {})}, ensure_ascii=False, indent=1))
         elif go:
+            task = wake.read_text(encoding="utf-8") if wake.exists() else ""
             wake.unlink(missing_ok=True)
             lock.write_text(str(os.getpid()))
             s = st.setdefault(lane, {})
@@ -259,13 +263,13 @@ def main() -> int:
                 s.update(day=today, runs_today=0)
             s["runs_today"] = s.get("runs_today", 0) + 1
             s["last_run"] = at.isoformat()
-            todo.append((lane, why))
+            todo.append((lane, why, task))
     if todo:
         STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    def one(lane: str, why: str) -> None:
+    def one(lane: str, why: str, task: str) -> None:
         try:
-            res = run_lane(lane, cfg, why)
+            res = run_lane(lane, cfg, why, task=task)
             ok = res.get("exit") == 0 and not res["timed_out"]
             log(f"{'✓' if ok else '✗'} {lane} {why} → exit={res.get('exit')} {res.get('num_turns') or '?'} 步 {res['seconds']}s")
         except Exception as e:  # noqa: BLE001 — 一个 lane 崩了不能挡其他 lane,但必须留痕
