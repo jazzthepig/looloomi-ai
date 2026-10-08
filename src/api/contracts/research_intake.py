@@ -45,7 +45,7 @@ FOUR RULES, and the third is the one that matters
 
    This is not distrust of C. It is that the discipline suite
    (`tests/test_strategy_discipline.py`) is what earns a SHIP — documented
-   cause, `oos_survival=True`, ≥60d paper trade, regime-conditional reporting
+   cause, `oos_survival=True`, forward or simulated evidence (S-515: ≥20d with a positive anytime bound, or a sealed holdout ≥ p95 vs random), regime-conditional reporting
    — and that suite runs in preflight, on this side, over the committed
    record. An endpoint that let a verdict arrive pre-declared would be a way
    to route around the only gate we have. The bar is "guilty until proven with
@@ -150,7 +150,7 @@ def _coerce_verdict(raw: Any) -> tuple[str, str | None]:
         return "CANDIDATE", (
             f"verdict '{raw}' submitted via /internal/research-intake was stored as "
             f"CANDIDATE. A SHIP verdict is earned by tests/test_strategy_discipline.py "
-            f"(cause documented, oos_survival=True, >=60d paper trade, "
+            f"(cause documented, oos_survival=True, forward or simulated evidence (S-515), "
             f"regime-conditional reporting) over the committed record, not asserted "
             f"at submission.")
     if v in SUBMITTABLE_VERDICTS:

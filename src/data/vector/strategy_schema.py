@@ -152,7 +152,11 @@ class StrategyRecord:
     base_rate: Optional[str] = None          # the CAUSE + its base rate (§TRADER_TOM: every sleeve traces to a behavioral cause)
     oos_window: Optional[str] = None         # e.g. "2026-02-01→2026-05-03" — the held-out window actually used
     oos_survival: Optional[bool] = None      # survived OOS + independent-event count (None = untested, NOT False)
-    paper_trade_days: Optional[int] = None   # forward paper days accrued (SHIP requires ≥ 60)
+    paper_trade_days: Optional[int] = None   # forward paper days accrued
+    # S-515(Jazz 10-07 / 10-08:不等 30/60/90 天、不按日期计划走)—— SHIP 的证据门是证据,不是日历:
+    forward_lower_bound_ann: Optional[float] = None  # 前向超额的任意时刻有效下界(年化;与 L3 同一个 cs_halfwidth)
+    sim_holdout_pct: Optional[float] = None          # 按时点回放、封存留出段上相对随机对照的分位
+    sim_holdout_sealed: Optional[bool] = None        # 留出段从没用来定或调过规则
     regime_skip: list[str] = field(default_factory=list)     # regimes the sleeve is gated OFF in
     regime_reported: Optional[bool] = None   # OOS metrics reported per-regime (RISK_OFF/NEUTRAL/RISK_ON), not aggregate-only
 
@@ -297,8 +301,17 @@ class StrategyRecord:
                 problems.append("ship verdict but no base_rate/cause documented (§TRADER_TOM: every sleeve needs a cause)")
             if self.oos_survival is not True:
                 problems.append("ship verdict but oos_survival is not True (guilty until proven with OOS outcomes)")
-            if (self.paper_trade_days or 0) < 60:
-                problems.append(f"ship verdict but paper_trade_days={self.paper_trade_days} < 60 (forward paper gate)")
+            # S-515:两条证据路任一条过即可 —— 前向(≥ 20 天 = 估方差的最少点数,且任意时刻下界 > 0)
+            # 或模拟(封存留出段、随机对照 ≥ p95)。旧记录只带天数:≥ 60 天的照旧接受(不追溯作废)。
+            _fwd = (self.paper_trade_days or 0) >= 20 and (self.forward_lower_bound_ann is not None
+                                                           and self.forward_lower_bound_ann > 0)
+            _sim = self.sim_holdout_sealed is True and (self.sim_holdout_pct or 0) >= 0.95
+            _legacy = (self.paper_trade_days or 0) >= 60
+            if not (_fwd or _sim or _legacy):
+                problems.append(f"ship verdict but no forward or simulated evidence: paper_trade_days={self.paper_trade_days} "
+                                f"(forward path needs >= 20 days with forward_lower_bound_ann > 0), "
+                                f"sim_holdout_sealed={self.sim_holdout_sealed}, sim_holdout_pct={self.sim_holdout_pct} "
+                                f"(simulated path needs a sealed holdout at >= p95 vs random) — S-515")
             if self.regime_reported is not True:
                 problems.append("ship verdict but regime_reported is not True (aggregate-only metrics hide regime failure)")
             # Millennium discipline: no stop rule ⇒ no production. Ever.

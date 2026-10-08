@@ -154,7 +154,9 @@ async def strategy_record_schema():
         "fields": fields,
         "verdicts": [v.value for v in Verdict],
         "ship_floor": [
-            "base_rate", "oos_survival", "paper_trade_days>=60", "regime_reported",
+            "base_rate", "oos_survival",
+            "evidence: (paper_trade_days>=20 and forward_lower_bound_ann>0) or (sim_holdout_sealed and sim_holdout_pct>=0.95)",
+            "regime_reported",
             "max_dd_stop + capital_action_on_breach", "backtest_included_stop",
             "deflated_sharpe>=0.95 + n_trials", "pbo<=0.5",
             "median_holding_days>=5", "net_effect_pct_yr>0",

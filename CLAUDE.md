@@ -88,7 +88,7 @@ ATTRIBUTION (R62), never for neutralizing a book. Report total return vs hold-th
 **The bar:** every claim is guilty until proven with out-of-sample outcomes. Every sleeve needs a
 *cause*, a base rate, and OOS survival. **This is now CI, not prose** —
 `tests/test_strategy_discipline.py` + `scripts/preflight.sh` stage 3 enforce: cause documented,
-`oos_survival=True`, ≥60d paper trade, regime-conditional reporting, before any SHIP verdict.
+`oos_survival=True`, forward or simulated evidence (not a calendar, S-515), regime-conditional reporting, before any SHIP verdict.
 
 ## Hard rules (each has burned us; violating any is a P0)
 

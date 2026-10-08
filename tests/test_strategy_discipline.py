@@ -361,6 +361,18 @@ def test_decision_inputs_debt_is_not_stale():
             f"'{rel}' 现已合规 —— 从 DECISION_INPUTS_DEBT 移除")
 
 
+def test_ship_gate_is_evidence_not_calendar():
+    """S-515:SHIP 不再要求 60 个日历日;前向(≥ 20 天且任意时刻下界 > 0)或模拟(封存留出段 ≥ p95)任一条。"""
+    base = dict(id="x", title="x", doc_source="test", verdict=Verdict.SHIP, pit_clean=True, cost_feasible_at_5bps=True,
+                forward_committed=True, base_rate="cause", oos_survival=True, regime_reported=True)
+    gate = lambda **kw: [p for p in StrategyRecord(**base, **kw).validate() if "paper_trade_days" in p]  # noqa: E731
+    assert gate(paper_trade_days=25, forward_lower_bound_ann=0.03) == []
+    assert gate(paper_trade_days=0, sim_holdout_sealed=True, sim_holdout_pct=0.97) == []
+    assert gate(paper_trade_days=25, forward_lower_bound_ann=-0.01), "下界不 > 0 不是证据"
+    assert gate(paper_trade_days=0, sim_holdout_sealed=False, sim_holdout_pct=0.99), "留出段看过数据不算"
+    assert gate(paper_trade_days=10, forward_lower_bound_ann=0.5), "10 天估不出方差"
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
