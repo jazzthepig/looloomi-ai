@@ -530,10 +530,17 @@ python3 -m tests.test_every_written_table_exists
 #                    Skipped, not failed, when INTERNAL_TOKEN is absent —
 #                    offline test is still authoritative, this is additive.
 #                    Local Mac sources .env; CI populates the secret.
-if [ -z "${INTERNAL_TOKEN:-}" ] && [ -f .env ]; then
-    set -a; source .env; set +a
+# 10-08:改成显式开启。lane worktree 的 .env 是软链、shell 里还可能带一个过期的 INTERNAL_TOKEN ——
+# 线上检查对 lane 永远是 401 红,而且 source .env 会把凭证带回这个「无凭证关卡」的后半段。
+# seth_bot 在主目录跑 preflight 时设 PREFLIGHT_ONLINE=1:线上那一半只在合并 / 提交这道真正的门上跑。
+if [ "${PREFLIGHT_ONLINE:-}" = "1" ]; then
+    if [ -z "${INTERNAL_TOKEN:-}" ] && [ -f .env ]; then
+        set -a; source .env; set +a
+    fi
+    python3 scripts/schema_drift_check.py || exit 1
+else
+    echo "  ⓘ online schema-drift skipped (PREFLIGHT_ONLINE≠1 —— seth_bot 合并 / 提交时会跑)"
 fi
-python3 scripts/schema_drift_check.py || exit 1
 # 3a-undevicesima. S-342: AST-derived _WRITE_FUNCS predicate, replacing the
 #                    hand-maintained writer list (S-330/S-334 root cause).
 #                    Three legs — POSITIVE: every shipping writer matches;

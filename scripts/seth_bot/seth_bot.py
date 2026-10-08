@@ -120,7 +120,7 @@ def failure_digest(out: str) -> str:
 
 
 def preflight(cwd: Path) -> tuple[bool, str]:
-    env = dict(os.environ)
+    env = dict(os.environ, PREFLIGHT_ONLINE="1")     # 线上 schema-drift 只在这道门上跑(lane 与 CI 跳过)
     env.pop("INTERNAL_TOKEN", None)
     p = subprocess.run(["bash", "scripts/preflight.sh"], cwd=cwd, capture_output=True, text=True,
                        timeout=2400, env=env)

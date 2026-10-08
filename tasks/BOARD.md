@@ -13,7 +13,6 @@
 | in_review | T-053 | seth | 证据面:一个端点 + 一个 MCP 工具,把 ① 与每本账的前向证据按证据等级摆到门外;CIS 信号记录的 β 层要么算出来要么删 | 外部 agent 一次调用能回答「哪本账有前向证据、相对 ① 怎样、为什么 L3 给它 0」;没有任何写死的结论句 | 证据只在 SQL 与台账里;track-record 说明文字三个月引用一个从未算出的 β 层 |  |
 | in_review | T-063 | seth | ③ 推力:今天就用 2023 起的历史按时点模拟出结果,前向账本同时上线 | 回放结果与随机分位当天出;前向记录从上线日起累积,用于核对模拟,不是开始的前提。敞口永不 < 0.7、> 1.3,不做空 | ③ 前向账本 0 本;m88 的 dd_stop 到 0× 越出 ③ 定义 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
-| open | T-003 | lane-a | S-396 三臂回放 live 验证(读路径分页修复后) | 相等 | replay 读到 1,000 行(截断) |  |
 | open | T-060 | lane-a | 天气数据四个角度的挖掘:一致性与对未来收益的区分力 | 一张表 + 报告路径写进卡 notes:每个角度的区分力分位;哪几份高度重合;哪份有独有信息。只读、不改代码 | 四份并存,从没比较过;决策读 state_daily 是约定,不是证据 |  |
 | open | T-058 | lane-b | MCP 工具描述:8 处写了返回里根本没有的字段(B 的 T-055 drill-down) | drill_structural 0 ABSENT;测试在改之前的描述上会红(先证明它能失败) | 8 ABSENT(10-07 05:08 UTC 探针) |  |
 | open | T-059 | lane-b | 评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张) | 测试先在现在的代码上红:n=23 的序列 CI 宽度 > 0 且均值用满 23 天;n=10 的 p_pos 不是只取 0 / 1;改完转绿 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
@@ -37,6 +36,7 @@
 | blocked(等 T-059) | T-064 | seth | L3 准入改为「模拟证据或前向证据」:过了随机对照与留出段的,当天进纸面配置,不等 60 天 | 测试钉住:零信号账本 A 路准入率 ≤ 5%;上线当天 allocation_daily 出现由 A 路准入的行(标 evidence=simulated) | 非 ① 账本一律等 ≥ 60 个前向天 |  |
 | done | T-001 | lane-a | T1 的 TradFi 改从 ohlcv_daily(eodhd)读,撤回 30 天过期缓存 | = 43,且 19 个 TradFi 最新价格日期 ≥ 最近一个美股交易日 | 24 | 验收 SQL:cis_scores 近 2 小时 data_tier=T1 的标的 = 43(T2 = 15);19 个 TradFi T1 标的(美股 10、美债 6、商品 3)在 ohlcv_daily(eodhd)的最新日期全部 = 2026-10-05(最近一个美股交易日)。卡上的改动 09-26 前后已在 Mac 侧生效(Seth 09-29 记 T1=43);A 10-06 的「选数据源 / 新建表」计划不需要。 @ 2026-10-06T08:00Z |
 | done | T-002 | lane-a | 确认 T1 每小时一批恢复 | >= 20 | 1(09-24 恢复当天) | 24 个不同小时有 T1 推送(过去 24h),≥20 通过;Mac 侧卡按数据直接验收(S-426) @ 2026-09-26 |
+| done | T-003 | lane-a | S-396 三臂回放 live 验证(读路径分页修复后) | 相等 | replay 读到 1,000 行(截断) | SQL count(*)(binance_hist,BTC/ETH/SOL/BNB/XRP,2023-10-19 → 2026-07-18)= 5,020(Seth 实测);回放真正用的 paper_trading.replay_three_arms.fetch_panel_rows 读到 5,020(lane-a 分支 d9cdce2 的脚本调用该函数)—— 相等,1,000 行截断已修 @ 2026-10-08T04:30Z |
 | done | T-018 | lane-a | Mac 对 Railway 的读请求带 X-Internal-Token;空快照不生成简报;macro_brief 合约副本更新到 mb-3 | empty = 0 且 n > 0(prompt_version 项删除:表无此列,S-435) | 09-23:47 份里 36 份快照为空({}),39 份写「平静」;Mac 副本 mb-2 | mac_mini 6h: empty=0, n≥1(最新 09-28 15:18 UTC) @ 2026-09-29 |
 | done | T-044 | lane-a | 跨源日期对齐与污染的常驻守卫:每天按源比对 binance_hist,同日 vs 错一天、持续偏离,一旦漂移就红 | 回放验证:在 2026-09-28(S-436 修复前)的数据形态上,对 coingecko_pro_ohlc 判红(错一天胜过同日);在今天的数据上判绿;对 2026-02 的 CG Pro 判出 LDO / GRT / ATOM 的持续偏离。三个判据各有一个测试用合成数据钉住,另有一个测试证明守卫能抓住它要抓的东西(把一列整体后移一天必须判红)。 | 无 —— 这三类问题都靠人在别的排查里撞见 | price_source_agreement_daily 首行 2026-10-05:coingecko_pro_ohlc 27 币 0 发现、asset_mcap_daily 27 币 0 发现、hyperliquid 0 币(该源日线已退役);_price_agreement_loop verdict ok(build df2043e2)。判据 = lane A 的 agreement()(6 个回放测试含 S-436 / S-459 / S-468 / 2 月 LDO-GRT-ATOM),调度与落表 = S-484。 @ 2026-10-05T12:00Z |
 | done | T-048 | lane-a | 状态层 state_daily 首批特征(v0.2 阶段 2):趋势、波动、广度、风格相对强弱、资金费与持仓量 —— 模块 + PIT 测试 | PIT 测试:把 d 之后的价格全部改掉,d 及以前每一行的特征逐位不变;缺数据的特征是 null 不是 0;每天 06:00 UTC 后有昨天的行(接调度后验收) | 状态散在各处:regime 四选一字符串、动量在 β+ 里、资金费在 HL 表里,没有统一的逐日状态表 | 首次回填 07:23 UTC ok:state_daily 2023-01-01 → 2026-10-05,23,358 行;17 个特征里 16 个有值(oi_chg_30d 为空,符合预期:HL 持仓量 09-27 起,10-27 起才有 30 日变化);资金费 09-09 起;regime 2025-05-22 起(覆盖 ≥ 20 天才写)。 @ 2026-10-06T09:50Z |
@@ -72,4 +72,4 @@
 | done | T-050 | seth | L3 l3-v2:准入门换成任意时刻有效的置信序列 + Kelly 前收缩 + 非 ① 账本 ≥ 60 天(S-485,10-22 之前) | ≤ 5%(l3-v1 为 17.3%);越过门槛后的权重随证据爬升,不是一步顶到上限;10-22 第一批账本满 20 天之前上线 | l3-v1:每天重算 均值 − 2 标准误 > 0 且 ≥ 20 天,零超额账本一年内 17.3% 曾被放进,一放即 40% 上限 | build 6c918931:_allocation_loop 03:40 UTC ok「配置 3 天至 2026-10-04;① 100%」;allocation_daily 3 行 code_ref=l3-v2(l3-v1 行已被覆盖)。模拟验收:零超额一年内曾被放进 1%(≤ 5%),测试钉住。中间经历 S-489(−∞ 写进 JSON,13 小时)。 @ 2026-10-06T03:40Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 19 · blocked 4 · in_review 10 · done 35 · dropped 1
+open 18 · blocked 4 · in_review 10 · done 36 · dropped 1
