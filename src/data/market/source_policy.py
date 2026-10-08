@@ -108,8 +108,14 @@ PURPOSE_PRIMARY: dict[str, str] = {
 #: 未来要加新的 secondary,在这里加一行,并在 docstring 注明用途边界 ——
 #: 实时数据能不能走它,资产集多大算 fan-out,bar convention 接续点在哪。
 #: **默许 = 0**(默认值是空 frozenset),新增必须显式登记。
+#:
+#: **`binance_perp`(S-509, 2026-10-08)。** 永续资金费率的**历史续接**:`funding_history`
+#: venue='binance_perp' 10 个币 2024-02 → 2026-08-07(一次性导入,从无写入端)。用途边界:
+#: 研究与状态层的特征(S-507 / S-508 的情景扫描要它),**每天一轮、不做日内轮询**,**不进前端、不进成交** —— 成交的场馆
+#: 数据仍只走 hyperliquid。资产集 = binance_hf_collector.HF_SYMBOLS(10 个),扩面要改那里并在此注明。
+#: CoinGecko Pro 只给当前费率、没有历史,所以这一项没有付费源可走。
 PURPOSE_SECONDARY: dict[str, frozenset[str]] = {
-    MARKET_DATA: frozenset({"binance_hist"}),
+    MARKET_DATA: frozenset({"binance_hist", "binance_perp"}),
     EXECUTION: frozenset(),  # 当前没有显式 secondary;成交只走场馆
 }
 

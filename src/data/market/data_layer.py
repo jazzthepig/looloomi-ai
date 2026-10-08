@@ -2291,6 +2291,34 @@ async def get_klines_binance(symbol: str, interval: str = "1d", months: int = 6)
         return []
 
 
+BINANCE_FUNDING_URL = "https://fapi.binance.com/fapi/v1/fundingRate"   # Railway 可达(07-13 起,fusion / causal 在用)
+
+
+async def get_binance_hourly_page(symbol: str, start_ms: int, limit: int = 1000) -> list:
+    """S-509:一页 1h klines 的**原始数组**(从 start_ms 起,含该根)。
+
+    与 get_klines_binance 分开,因为那个只留 OHLCV,而小时线续接要 quote volume / trades /
+    taker buy base(k[7] / k[8] / k[9])。非 200 ⇒ 抛错:调用方要把它记成失败,**空页和故障是两件事**。
+    放在这里而不是写入端自己发请求:取数入口只减不增(tests/test_sense_entrypoints.py)。
+    """
+    resp = await _get_binance_client().get(
+        BINANCE_KLINES_URL, timeout=30,
+        params={"symbol": symbol.upper(), "interval": "1h", "startTime": int(start_ms), "limit": int(limit)})
+    if resp.status_code != 200:
+        raise RuntimeError(f"HTTP {resp.status_code} data-api.binance.vision")
+    return resp.json()
+
+
+async def get_binance_funding_page(symbol: str, start_ms: int, limit: int = 1000) -> list:
+    """S-509:一页永续资金费率记录(fundingTime / fundingRate / markPrice),从 start_ms 起。非 200 ⇒ 抛错。"""
+    resp = await _get_binance_client().get(
+        BINANCE_FUNDING_URL, timeout=30,
+        params={"symbol": symbol.upper(), "startTime": int(start_ms), "limit": int(limit)})
+    if resp.status_code != 200:
+        raise RuntimeError(f"HTTP {resp.status_code} fapi.binance.com")
+    return resp.json()
+
+
 async def get_klines_okx(symbol: str, interval: str = "1d", months: int = 6) -> list[dict]:
     """
     Fetch historical klines from OKX.

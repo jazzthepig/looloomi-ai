@@ -20,5 +20,6 @@
     "check": "select count(distinct symbol), max(ts) from ohlcv_hourly;select min(recorded_at) from cis_scores",
     "expect": "小时线覆盖 ① 的 24 个名字、最新一根在 2 小时内、有调度和判活;CIS 历史用重建脚本补到 2024-01(标 source=reconstructed,与实时推送分开)"
   },
-  "prior_value": "小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03"
+  "prior_value": "小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03",
+  "notes": " | 10-08 S-509:小时线续接写入端上线(src/data/market/binance_hf_collector.py + _binance_hf_loop,日更,同 10 个币,含 taker_buy_base);08-08 之后的缺口第一轮补完。扩面(① 的 24 个)仍是本卡的下一步。"
 }
