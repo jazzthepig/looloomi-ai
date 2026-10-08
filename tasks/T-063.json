@@ -1,9 +1,13 @@
 {
   "id": "T-063",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-07",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-08T04:45Z",
+    "value": "回放 + 评估当天出(loop_attempt 04:41):2023–24 ③ +367% vs ① +316%,随机分位 0.44;2025-01-01→10-07 留出 ③ −20.5% vs ① −21.1%,随机分位 0.59 —— v1 REFUTED(S-505);multiplier_daily 2,750 行;前向 10-09 起"
+  },
   "title": "③ 推力:今天就用 2023 起的历史按时点模拟出结果,前向账本同时上线",
   "source": "Jazz 10-07 定调(执行只读 ① 推力 + ② 倾斜);LOOP_INVENTORY §4「③ 没有一本在跑」;L3 规则:非 ① 账本 ≥ 60 前向天才能准入",
   "allowed_paths": [
@@ -23,5 +27,5 @@
     "expect": "回放结果与随机分位当天出;前向记录从上线日起累积,用于核对模拟,不是开始的前提。敞口永不 < 0.7、> 1.3,不做空"
   },
   "prior_value": "③ 前向账本 0 本;m88 的 dd_stop 到 0× 越出 ③ 定义",
-  "notes": "2026-10-07 开卡;同日按 Jazz「不要等」改:先模拟、前向并行。 | 10-07 高维复盘(Seth):state_daily 2023 起实际有值的只有 8 个价格特征(breadth / dist_200 / mom_20/60/200 / style_rel / vol_30 / vol_pct_3y);6 个 regime_share 2025-05 起;funding_7d_ann 一共 28 天;oi_chg_30d 0 天(OI 09-27 起)。回放规则只许用前 8 个,缺的不许补 0(I1)。评估用 T-059 修好之后的 rr_matrix。 | 10-08 Seth 实现(S-505):src/data/signals/multiplier.py + _multiplier_loop + 表 multiplier_daily(已 apply)+ registry ③ + 测试 8 项。规则零拟合参数:m = 1.3(dist_200 > 0 且 vol_pct_3y ≤ 0.5)/ 0.7(dist_200 ≤ 0 且 vol_pct_3y > 0.5)/ 1.0。部署后第一轮回放 2023 起;评估写进 loop_attempt.detail。"
+  "notes": "2026-10-07 开卡;同日按 Jazz「不要等」改:先模拟、前向并行。 | 10-07 高维复盘(Seth):state_daily 2023 起实际有值的只有 8 个价格特征(breadth / dist_200 / mom_20/60/200 / style_rel / vol_30 / vol_pct_3y);6 个 regime_share 2025-05 起;funding_7d_ann 一共 28 天;oi_chg_30d 0 天(OI 09-27 起)。回放规则只许用前 8 个,缺的不许补 0(I1)。评估用 T-059 修好之后的 rr_matrix。 | 10-08 Seth 实现(S-505):src/data/signals/multiplier.py + _multiplier_loop + 表 multiplier_daily(已 apply)+ registry ③ + 测试 8 项。规则零拟合参数:m = 1.3(dist_200 > 0 且 vol_pct_3y ≤ 0.5)/ 0.7(dist_200 ≤ 0 且 vol_pct_3y > 0.5)/ 1.0。部署后第一轮回放 2023 起;评估写进 loop_attempt.detail。 | 10-08 收卡:账本、回放、随机对照都在跑;v1 规则被证伪,前向照记。新规则另开卡、另立预注册。"
 }
