@@ -46,7 +46,7 @@ REPLAY_START = pd.Timestamp("2023-01-02")
 HOLDOUT_START = pd.Timestamp("2025-01-01")
 INCEPTION = pd.Timestamp("2026-10-08")
 N_RANDOM, SEED = 500, 517
-CODE_REF = "T-072 core variants v1"
+CODE_REF = "T-072 core variants v2"
 CASH_ANN = 0.04
 
 WeightFn = Callable[[pd.Timestamp, pd.DataFrame, pd.DataFrame, list], dict]
@@ -77,9 +77,9 @@ def capped(raw: Mapping[str, float], cap: float) -> dict[str, float]:
     return w
 
 
-def momentum(px: pd.DataFrame, d: pd.Timestamp, names: list) -> dict[str, float]:
-    """d−1 收盘相对 d−1−LOOKBACK 收盘的收益。任一端缺 ⇒ 不给分(不猜)。"""
-    a, b = d - pd.Timedelta(days=1), d - pd.Timedelta(days=1 + LOOKBACK)
+def momentum(px: pd.DataFrame, d: pd.Timestamp, names: list, lookback: int = LOOKBACK) -> dict[str, float]:
+    """d−1 收盘相对 d−1−lookback 收盘的收益。任一端缺 ⇒ 不给分(不猜)。"""
+    a, b = d - pd.Timedelta(days=1), d - pd.Timedelta(days=1 + lookback)
     if a not in px.index or b not in px.index:
         return {}
     out = {}
@@ -88,6 +88,46 @@ def momentum(px: pd.DataFrame, d: pd.Timestamp, names: list) -> dict[str, float]
         if pd.notna(pa) and pd.notna(pb) and pb > 0:
             out[s] = float(pa / pb - 1)
     return out
+
+
+CASH = "_CASH"
+#: S-520 预注册的短周期臂:名 → (回看天数, 仓位规则, 再平衡日程)
+SHORT_ARMS: dict[str, tuple[int, str, str]] = {
+    "mom30_breadth": (30, "breadth", "W"),
+    "mom14_breadth": (14, "breadth", "MON_THU"),
+    "mom7_breadth": (7, "breadth", "D"),
+    "mom30_abs": (30, "abs", "W"),
+}
+BROAD_TOP_N = 50
+BROAD_MIN_MCAP = 2e8
+STABLE_IDS = frozenset({"tether", "usd-coin", "dai", "ethena-usde", "first-digital-usd", "usds", "paypal-usd",
+                        "binance-usd", "true-usd", "frax", "usdd", "pax-dollar"})
+
+
+def on_schedule(d: pd.Timestamp, schedule: str) -> bool:
+    return {"W": d.weekday() == 0, "MON_THU": d.weekday() in (0, 3), "D": True}[schedule]
+
+
+def breadth_weights(px: pd.DataFrame, d: pd.Timestamp, names: list, lookback: int, mode: str) -> dict:
+    """纯函数。S-520:为正的币按 max(0, 收益) 分配;breadth ⇒ 总仓位 = 为正个数 ÷ 有分的个数,余下现金;
+    abs ⇒ 有为正的就满仓,一个都没有 ⇒ 全现金(不退回市值加权)。没有任何分数 ⇒ 全现金。"""
+    mom = momentum(px, d, names, lookback)
+    pos = {s: m for s, m in mom.items() if m > 0}
+    w = _norm(pos)
+    if not w:
+        return {CASH: 1.0}
+    scale = len(pos) / len(mom) if mode == "breadth" else 1.0
+    out = {s: v * scale for s, v in w.items()}
+    if scale < 1:
+        out[CASH] = 1 - scale
+    return out
+
+
+def broad_universe(mcap_prev_row: pd.Series, vol30_row: pd.Series, top_n: int = BROAD_TOP_N) -> list:
+    """纯函数。d−1 市值前 top_n 名,去掉稳定币与 30 日波动 < 0.5% 的(类现金)。"""
+    m = mcap_prev_row.dropna()
+    m = m[[c not in STABLE_IDS and not (pd.notna(vol30_row.get(c)) and vol30_row.get(c) < 0.005) for c in m.index]]
+    return list(m.sort_values(ascending=False).index[:top_n])
 
 
 def target_weights(arm: str, d: pd.Timestamp, px: pd.DataFrame, mcap_prev: pd.DataFrame, names: list) -> dict:
@@ -106,6 +146,9 @@ def target_weights(arm: str, d: pd.Timestamp, px: pd.DataFrame, mcap_prev: pd.Da
         return _norm(pos) or _norm(caps)
     if arm == "mom90_x_cap":
         return _norm({s: caps[s] * m for s, m in pos.items() if s in caps}) or _norm(caps)
+    if arm in SHORT_ARMS:
+        lb, mode, _ = SHORT_ARMS[arm]
+        return breadth_weights(px, d, names, lb, mode)
     raise ValueError(f"未知臂 {arm}")
 
 
@@ -115,12 +158,13 @@ def simulate(rets: pd.DataFrame, targets: Mapping[pd.Timestamp, Mapping[str, flo
     cols = list(rets.columns)
     r = rets.fillna(0.0).to_numpy()
     w = np.zeros(len(cols))
+    risky = np.array([c != CASH for c in cols], dtype=float)   # 现金腿的进出不算换手
     out = np.zeros(len(rets))
     for i, d in enumerate(rets.index):
         cost = 0.0
         if d in targets:
             new = np.array([targets[d].get(c, 0.0) for c in cols])
-            cost = float(np.abs(new - w).sum()) * COST_BPS / 1e4
+            cost = float((np.abs(new - w) * risky).sum()) * COST_BPS / 1e4
             w = new
         port = float(w @ r[i])
         out[i] = port - cost
@@ -192,20 +236,50 @@ def dual_momentum(mom_ret: pd.Series, btc_px: pd.Series, s4: Optional[pd.Series]
     return x * mom_ret + (1 - x) * defense - switch
 
 
+def broad_momentum(cg_px: pd.DataFrame, cg_mcap: pd.DataFrame, end: pd.Timestamp,
+                   lookback: int = 30) -> pd.Series:
+    """纯函数。S-520 `broad_mom30_breadth`:每周一,宇宙 = d−1 市值前 50(去稳定币、类现金),其余同 mom30_breadth。
+    cg_px / cg_mcap:行 = 日,列 = coin_id;CoinGecko 日收盘与当日市值。"""
+    cg_px = cg_px.sort_index()
+    rets = (cg_px / cg_px.shift(1) - 1)
+    vol30 = rets.rolling(30, min_periods=20).std().shift(1)
+    mprev = cg_mcap.sort_index().shift(1)
+    rets = rets.loc[(rets.index >= REPLAY_START) & (rets.index <= end)]
+    days = list(rets.index)
+    tg = {}
+    for d in days:
+        if not (d == days[0] or d.weekday() == 0) or d not in mprev.index:
+            continue
+        uni = broad_universe(mprev.loc[d], vol30.loc[d] if d in vol30.index else pd.Series(dtype=float))
+        tg[d] = breadth_weights(cg_px, d, uni, lookback, "breadth")
+    return simulate(rets.assign(**{CASH: CASH_ANN / 365.0}), tg)
+
+
 def build(px: pd.DataFrame, mcap_prev: pd.DataFrame, end: pd.Timestamp,
-          n_random: int = N_RANDOM, s4: Optional[pd.Series] = None) -> tuple[list[dict], dict[str, Any]]:
+          n_random: int = N_RANDOM, s4: Optional[pd.Series] = None,
+          broad: Optional[tuple] = None) -> tuple[list[dict], dict[str, Any]]:
     """纯函数。px:面板收盘(前推价已为 NaN);mcap_prev:行 = d、值 = d−1 市值。"""
     px = px.sort_index()
     names = list(px.columns)
     rets = (px / px.shift(1) - 1).loc[(px.index >= REPLAY_START) & (px.index <= end)]
     days = list(rets.index)
     rebal = [d for d in days if d == days[0] or d.weekday() == 0]
-    quoted = {d: [s for s in names if pd.notna(px.at[d - pd.Timedelta(days=1), s])]
-              if (d - pd.Timedelta(days=1)) in px.index else [] for d in rebal}
+
+    def _quoted(d):
+        y = d - pd.Timedelta(days=1)
+        return [s for s in names if pd.notna(px.at[y, s])] if y in px.index else []
+
+    quoted = {d: _quoted(d) for d in rebal}
     arm_rets: dict[str, pd.Series] = {}
     for arm in ARMS:
         tg = {d: target_weights(arm, d, px, mcap_prev, quoted[d]) for d in rebal}
         arm_rets[arm] = simulate(rets, tg)
+    rets_c = rets.assign(**{CASH: CASH_ANN / 365.0})
+    for arm, (_, _, sched) in SHORT_ARMS.items():
+        tg = {d: target_weights(arm, d, px, mcap_prev, _quoted(d)) for d in days if d == days[0] or on_schedule(d, sched)}
+        arm_rets[arm] = simulate(rets_c, tg)
+    if broad is not None:
+        arm_rets["broad_mom30_breadth"] = broad_momentum(*broad, end=end).reindex(rets.index).fillna(0.0)
     if "BTC" in px.columns:
         arm_rets["dual_mom"] = dual_momentum(arm_rets["mom90"], px["BTC"], s4)
     rand = random_baseline(rets, rebal, quoted, n=n_random) if n_random else None
@@ -221,7 +295,7 @@ def build(px: pd.DataFrame, mcap_prev: pd.DataFrame, end: pd.Timestamp,
     last = rebal[-1]
     ev["latest_weights"] = {a: {k: round(v, 4) for k, v in sorted(target_weights(a, last, px, mcap_prev, quoted[last]).items(),
                                                                    key=lambda kv: -kv[1])[:8]}
-                            for a in ARMS}
+                            for a in (*ARMS, *SHORT_ARMS)}
     ev["latest_rebalance"] = last.date().isoformat()
     return rows, ev
 
@@ -245,7 +319,17 @@ async def run_once() -> dict[str, Any]:
         return {"ok": False, "refused": True, "written": 0, "reason": f"面板收盘只到 {px.index.max().date()}"}
     mc = await _mcap_prev(panel, start)
     from src.data.signals.portfolio_layer import load_strategy4
-    rows, ev = await asyncio.to_thread(build, px, mc, target, N_RANDOM, load_strategy4())
+    from src.data.style.header import _read_all
+    cg = await _read_all("asset_mcap_daily", {"select": "coin_id,d,price,mcap", "mcap": f"gte.{BROAD_MIN_MCAP:.0f}",
+                                              "d": f"gte.{start}", "order": "d.asc"})
+    broad = None
+    if cg:
+        g = pd.DataFrame(cg)
+        g["d"] = pd.to_datetime(g["d"])
+        days_all = pd.date_range(g["d"].min(), g["d"].max(), freq="D")
+        broad = (g.pivot_table(index="d", columns="coin_id", values="price").reindex(days_all),
+                 g.pivot_table(index="d", columns="coin_id", values="mcap").reindex(days_all))
+    rows, ev = await asyncio.to_thread(build, px, mc, target, N_RANDOM, load_strategy4(), broad)
     for i in range(0, len(rows), 2000):
         res = await supabase_upsert_table(TABLE, rows[i:i + 2000], on_conflict="d,arm")
         if not res.ok:

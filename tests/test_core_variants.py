@@ -58,7 +58,8 @@ def test_build_reports_all_arms_and_random_baseline_on_noise() -> None:
     px, mc = _panel(n=900, seed=3)
     rows, ev = build(px, mc, px.index[-1], n_random=60)
     arms = {r["arm"] for r in rows}
-    assert arms == {"cap_c40", "cap_uncapped", "mom90", "mom90_x_cap", "btc", "dual_mom"}
+    assert arms == {"cap_c40", "cap_uncapped", "mom90", "mom90_x_cap", "btc", "dual_mom",
+                    "mom30_breadth", "mom14_breadth", "mom7_breadth", "mom30_abs"}
     w = ev["in_sample_2023_2024"]
     assert "random_weights" in w and 0.0 <= w["mom90"]["pct_vs_random"] <= 1.0
     assert ev["latest_weights"]["btc"] == {"BTC": 1.0}
@@ -75,3 +76,33 @@ def test_dual_momentum_switches_on_yesterdays_btc_trend_and_pays_for_it() -> Non
     assert abs(late - CASH_ANN / 365) < 1e-9, "BTC 一年跌 ⇒ 防守腿(没有 ④ 时全是现金)"
     btc2 = btc.copy(); btc2.iloc[-1] = 1e9
     assert abs(dual_momentum(mom, btc2, None).iloc[-1] - late) < 1e-12, "当天的价格不影响当天的仓位"
+
+
+def test_breadth_sizes_by_how_many_are_up_and_abs_goes_to_cash() -> None:
+    """S-520:窄动量(24 个里只有 1 个转正)不再满仓;一个都不为正 ⇒ 现金,不退回市值加权。"""
+    from src.data.signals.core_variants import CASH, breadth_weights
+    idx = pd.date_range("2024-01-01", periods=40)
+    px = pd.DataFrame({"A": np.linspace(100, 120, 40), "B": np.linspace(100, 80, 40),
+                       "C": np.linspace(100, 90, 40), "D": np.linspace(100, 70, 40)}, index=idx)
+    d = idx[-1]
+    w = breadth_weights(px, d, list(px.columns), 30, "breadth")
+    assert abs(w["A"] - 0.25) < 1e-12 and abs(w[CASH] - 0.75) < 1e-12
+    w2 = breadth_weights(px, d, list(px.columns), 30, "abs")
+    assert w2 == {"A": 1.0}
+    down = px[["B", "C", "D"]]
+    assert breadth_weights(down, d, list(down.columns), 30, "abs") == {CASH: 1.0}
+
+
+def test_cash_leg_earns_and_is_not_charged_turnover() -> None:
+    from src.data.signals.core_variants import CASH, CASH_ANN
+    idx = pd.date_range("2024-01-01", periods=2)
+    rets = pd.DataFrame({"A": [0.0, 0.0], CASH: [CASH_ANN / 365] * 2}, index=idx)
+    out = simulate(rets, {idx[0]: {CASH: 1.0}})
+    assert abs(out.iloc[0] - CASH_ANN / 365) < 1e-12, "全现金:不付换手、拿现金收益"
+
+
+def test_broad_universe_excludes_stables_and_cash_like_and_takes_top_n() -> None:
+    from src.data.signals.core_variants import broad_universe
+    m = pd.Series({"bitcoin": 1e12, "tether": 9e11, "ethereum": 4e11, "tbill": 3e11, "solana": 1e11})
+    v = pd.Series({"tbill": 0.001, "bitcoin": 0.03})
+    assert broad_universe(m, v, top_n=2) == ["bitcoin", "ethereum"]
