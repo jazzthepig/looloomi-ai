@@ -1299,6 +1299,69 @@ async def _start_multiplier_loop():
     print("[MULTIPLIER] ✅ ③ multiplier scheduled (multiplier_daily: replay since 2023 + forward)")
 
 
+async def _anchor_loop():
+    """T-073 / S-519:每小时看一次,昨天(UTC)的前向行记齐了就锚一次(只追加);UTC 22 点还没齐就照锚并记下缺的。
+    判活:`select max(d) from forward_anchor_daily` = 昨天(UTC 22 点后)。
+    """
+    await _asyncio.sleep(_boot_delay(720))
+    while True:
+        try:
+            from src.data.accounting.anchor import run_once as _an_run
+            r = await _an_run()
+            print(f"[ANCHOR] {str(r.get('reason'))[:160]}")
+            await _beat("_anchor_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"written": r.get("written")}, error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_anchor_loop", "ok" if r.get("ok") and not r.get("refused") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail={"written": r.get("written")}, writer="src.api.main._anchor_loop")
+        except Exception as _e:
+            print(f"[ANCHOR] ⚠️  pass FAILED: {_e}")
+            await _beat("_anchor_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_anchor_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._anchor_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_anchor_loop():
+    _asyncio.create_task(_anchor_loop())
+    print("[ANCHOR] ✅ forward-record anchoring scheduled (forward_anchor_daily → OpenTimestamps)")
+
+
+async def _core_variants_loop():
+    """T-072 / S-517:① 的候选定义(拿掉单币上限、动量加权)回放 2023 起 + 前向,对照 BTC、现行 ① 与随机权重。
+    每 6 小时一轮;评估写进 loop_attempt.detail。判活:`select max(d) from core_variants_daily where arm = 'mom90'` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(660))
+    while True:
+        try:
+            from src.data.signals.core_variants import run_once as _cv_run
+            r = await _cv_run()
+            print(f"[CORE-VARIANTS] written={r.get('written')} · {str(r.get('reason'))[:120]}")
+            _detail = {"written": r.get("written"), "eval": r.get("eval")}
+            await _beat("_core_variants_loop", ok=bool(r.get("ok")) and not r.get("refused"),
+                        refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_core_variants_loop",
+                "ok" if r.get("ok") and not r.get("refused") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._core_variants_loop")
+        except Exception as _e:
+            print(f"[CORE-VARIANTS] ⚠️  pass FAILED: {_e}")
+            await _beat("_core_variants_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_core_variants_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._core_variants_loop")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_core_variants_loop():
+    _asyncio.create_task(_core_variants_loop())
+    print("[CORE-VARIANTS] ✅ core variants scheduled (core_variants_daily: uncapped / momentum vs BTC)")
+
+
 async def _stable_lending_loop():
     """S-513 / T-066:Aave v2/v3 以太坊 USDC/USDT 借贷池的日度 TVL 与存款 APY → stable_lending_daily(DeFiLlama,4 个池)。
     每天一轮。判活:`select max(d) from stable_lending_daily` = 昨天或今天(UTC)。

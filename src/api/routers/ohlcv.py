@@ -598,6 +598,44 @@ async def proof_books():
     return body
 
 
+# ── T-073 / S-519:前向记录锚定 —— 每天一行,只追加;外人可重算摘要、对比特币核对时间 ──────────────
+
+@router.get("/api/v1/proof/anchors")
+async def proof_anchors(start: str = Query("2026-10-01")):
+    """每天一行:日期、摘要(SHA-256)、行数、提交时间、收下它的日历。payload 与 .ots 证明见 /api/v1/proof/anchors/{d}。"""
+    from src.data.style.header import _read_all
+    rows = await _read_all("forward_anchor_daily", {"select": "d,digest,n_rows,submitted_at,ots",
+                                                    "d": f"gte.{start}", "order": "d.asc"})
+    return {"status": "ok", "count": len(rows),
+            "anchors": [{"d": x["d"], "digest": x["digest"], "n_rows": x["n_rows"], "submitted_at": x["submitted_at"],
+                         "calendars": sorted((x.get("ots") or {}).keys())} for x in rows],
+            "how_to_verify": ("GET /api/v1/proof/anchors/{d} → sha256(payload as compact JSON, keys sorted, UTF-8) must equal "
+                              "digest; decode any ots value (base64) to a .ots file and run `ots verify` / `ots upgrade` "
+                              "(OpenTimestamps) to check the time against Bitcoin. Anchors are append-only."),
+            "note": "Paper records, not live-traded P&L."}
+
+
+@router.get("/api/v1/proof/anchors/{d}")
+async def proof_anchor_day(d: str):
+    """一天的锚:payload(规范 JSON 的原文)、摘要、.ots 证明(base64,按日历),以及现场重算 —— 今天的表与锚定时是否一致。"""
+    from src.data.accounting.anchor import verify_now
+    from src.data.style.header import _read_all
+    try:
+        day = date.fromisoformat(d)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="d 必须是 YYYY-MM-DD")
+    rows = await _read_all("forward_anchor_daily", {"select": "*", "d": f"eq.{day.isoformat()}"})
+    if not rows:
+        raise HTTPException(status_code=404, detail=f"{day} 没有锚")
+    x = rows[0]
+    check = await verify_now(day)
+    return {"status": "ok", "d": x["d"], "digest": x["digest"], "n_rows": x["n_rows"], "submitted_at": x["submitted_at"],
+            "payload": x["payload"], "ots_base64": x["ots"],
+            "matches_current_tables": check.get("matches_current_tables"),
+            "note": ("matches_current_tables = false means the stored rows for that day were changed after anchoring; "
+                     "the anchored payload is what existed at anchoring time.")}
+
+
 # ── v0.2 L3 配置层(纸面)──────────────────────────────────────────────────────
 
 from pydantic import BaseModel, Field  # noqa: E402
