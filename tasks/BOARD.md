@@ -18,7 +18,7 @@
 | open | T-059 | lane-b | 评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张) | 测试先在现在的代码上红:n=23 的序列 CI 宽度 > 0 且均值用满 23 天;n=10 的 p_pos 不是只取 0 / 1;改完转绿 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
 | open | T-068 | lane-b | 评估层 ②:状态轴换成有历史的价格特征(T-059 之后) | 测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子 | 见 T-059 原卡(10-07) |  |
 | open | T-069 | lane-b | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
-| open | T-036 | lane-c | Mac 只留一份 env:~/.config/cometcloud/.env;cis_scheduler 改读它,cometcloud-local/.env 退役;Python 日志改 UTC | 一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行 | 三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份 |  |
+| open | T-036 | lane-c | Mac 只留一份 env:canonical=/Volumes/CometCloudAI/cometcloud-local/.env(§Seth-1006g);~/.config/cometcloud/.env 孤儿由 Jazz 删;Python 日志改 UTC | 一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行 | 三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份 |  |
 | open | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
