@@ -74,3 +74,11 @@ def test_merge_fixup_paths_are_validated_like_commit_paths() -> None:
     assert r["ok"] is False and r["stage"] == "validate"
     r = sb.do_merge({"id": "t", "branch": "lane-c/T-071", "fixup_paths": ["scripts/no_such_file.sh"]})
     assert r["ok"] is False and r["detail"]["missing"] == ["scripts/no_such_file.sh"]
+
+
+def test_blocking_files_are_parsed_from_git_message() -> None:
+    from scripts.seth_bot.seth_bot import blocking_files
+    msg = ("error: Your local changes to the following files would be overwritten by merge:\n"
+           "\tscripts/preflight.sh\n\tscripts/seth_bot/seth_bot.py\n"
+           "Please commit your changes or stash them before you merge.\nAborting")
+    assert blocking_files(msg) == ["scripts/preflight.sh", "scripts/seth_bot/seth_bot.py"]

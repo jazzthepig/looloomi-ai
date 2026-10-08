@@ -169,9 +169,59 @@ def sync_main() -> Optional[str]:
             board.write_text(head.stdout, encoding="utf-8")
             regen = True
     code, out = git("merge", "--ff-only", "--quiet", "origin/main")
+    if code != 0 and "would be overwritten" in out:
+        code, out = _ff_through_local_edits(blocking_files(out))
     if regen:
         run(["python3", "scripts/task_board.py"], timeout=120)
     return None if code == 0 else f"快进失败(本地改动与合进来的提交冲突):{out[-300:]}"
+
+
+def blocking_files(out: str) -> list[str]:
+    """纯函数。从 git 的「would be overwritten by merge」消息里取出挡住快进的文件。"""
+    files, on = [], False
+    for line in out.splitlines():
+        if "would be overwritten" in line:
+            on = True
+            continue
+        if on:
+            if line.startswith(("\t", "        ")) and line.strip():
+                files.append(line.strip())
+            elif line.strip():
+                break
+    return files
+
+
+def _ff_through_local_edits(files: list[str]) -> tuple[int, str]:
+    """10-08:合并时 fixup 带进去的文件,主目录里的内容与合进来的版本**完全一样**,ff-only 照样拒绝。
+    对每个挡路的文件做三方合并(base = HEAD,ours = 主目录,theirs = origin/main):全部无冲突 ⇒
+    先还原成 HEAD、快进、再写回合并结果 —— 谁的改动都不丢;任何一个有冲突 ⇒ 一个都不动,原样报告。"""
+    merged: dict[str, str] = {}
+    for f in files:
+        texts = []
+        for rev in ("HEAD", "origin/main"):
+            r = subprocess.run(["git", "show", f"{rev}:{f}"], cwd=ROOT, capture_output=True, text=True)
+            if r.returncode != 0:
+                return 1, f"{f}:读不到 {rev} 的版本,不动"
+            texts.append(r.stdout)
+        mine = (ROOT / f).read_text(encoding="utf-8")
+        if mine.startswith(texts[1]):          # 主目录 = 合进来的版本(+ 在它末尾追加)⇒ 主目录已经包含它
+            merged[f] = mine
+            continue
+        with tempfile.TemporaryDirectory() as td:
+            base, theirs, ours = Path(td) / "base", Path(td) / "theirs", Path(td) / "ours"
+            base.write_text(texts[0], encoding="utf-8")
+            theirs.write_text(texts[1], encoding="utf-8")
+            ours.write_text((ROOT / f).read_text(encoding="utf-8"), encoding="utf-8")
+            r = subprocess.run(["git", "merge-file", "-p", str(ours), str(base), str(theirs)],
+                               capture_output=True, text=True)
+            if r.returncode != 0:
+                return 1, f"{f}:主目录的改动与合进来的提交有真冲突,不动"
+            merged[f] = r.stdout
+    git("checkout", "HEAD", "--", *files)
+    code, out = git("merge", "--ff-only", "--quiet", "origin/main")
+    for f, text in merged.items():
+        (ROOT / f).write_text(text, encoding="utf-8")
+    return code, out
 
 
 def do_commit(job: dict) -> dict:
