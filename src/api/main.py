@@ -1299,6 +1299,37 @@ async def _start_multiplier_loop():
     print("[MULTIPLIER] ✅ ③ multiplier scheduled (multiplier_daily: replay since 2023 + forward)")
 
 
+async def _stable_lending_loop():
+    """S-513 / T-066:Aave v2/v3 以太坊 USDC/USDT 借贷池的日度 TVL 与存款 APY → stable_lending_daily(DeFiLlama,4 个池)。
+    每天一轮。判活:`select max(d) from stable_lending_daily` = 昨天或今天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(420))
+    while True:
+        try:
+            from src.data.market.stable_lending import run_once as _sl_run
+            r = await _sl_run()
+            print(f"[STABLE-LEND] {str(r.get('reason'))[:160]}")
+            _detail = {k: r.get(k) for k in ("written", "pools", "failed")}
+            await _beat("_stable_lending_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_stable_lending_loop", "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._stable_lending_loop")
+        except Exception as _e:
+            print(f"[STABLE-LEND] ⚠️  pass FAILED: {_e}")
+            await _beat("_stable_lending_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_stable_lending_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._stable_lending_loop")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_stable_lending_loop():
+    _asyncio.create_task(_stable_lending_loop())
+    print("[STABLE-LEND] ✅ stablecoin lending APY scheduled (stable_lending_daily, 4 Aave pools)")
+
+
 async def _style_pit_loop():
     """T-067 / S-512:风格指数按时点、在宽宇宙(Binance 现货上市过的全部币)上重算 → style_index_pit_daily;
     覆盖率 → style_pit_coverage_daily;幸存者偏差(两版逐年收益差)写进 loop_attempt.detail。每天一轮,排在风格表头之后。

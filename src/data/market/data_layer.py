@@ -673,6 +673,22 @@ async def get_top_yields(min_tvl: float = 1_000_000, limit: int = 20) -> list[di
         return [{"error": str(e)}]
 
 
+async def get_llama_pools_raw() -> list[dict]:
+    """DeFiLlama yields `/pools` 全表(一次请求)。非 200 抛错 —— 读不到 ≠ 没有池子(S-513)。"""
+    r = await _get_llama_client().get(f"{LLAMA_YIELDS}/pools", timeout=60)
+    if r.status_code != 200:
+        raise RuntimeError(f"DeFiLlama /pools HTTP {r.status_code}")
+    return (r.json() or {}).get("data") or []
+
+
+async def get_llama_pool_chart(pool_id: str) -> list[dict]:
+    """DeFiLlama yields `/chart/{pool}`:日度 [{timestamp, tvlUsd, apy, apyBase, apyReward}]。非 200 抛错(S-513)。"""
+    r = await _get_llama_client().get(f"{LLAMA_YIELDS}/chart/{pool_id}", timeout=60)
+    if r.status_code != 200:
+        raise RuntimeError(f"DeFiLlama /chart/{pool_id} HTTP {r.status_code}")
+    return (r.json() or {}).get("data") or []
+
+
 async def get_dex_volumes() -> dict:
     """Top DEX volumes from DeFiLlama. TTL: 5 min Redis."""
     key = "dex_volumes"

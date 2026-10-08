@@ -20,7 +20,15 @@ def _inputs(seed=0, n=1300):
     oi = pd.DataFrame(rng.uniform(1e3, 2e3, (45, 6)), index=idx[-45:], columns=[f"C{i}" for i in range(6)])
     style = pd.DataFrame({"majors": np.cumprod(1 + rng.normal(0, 0.02, n)),
                           "second_l1_l2": np.cumprod(1 + rng.normal(0, 0.03, n))}, index=idx)
-    return {"core": core, "px": px, "regimes": regimes, "funding": funding, "oi": oi, "style": style}
+    bdays = idx[idx.dayofweek < 5]
+    spy = pd.DataFrame({"yfinance": pd.Series(np.cumprod(1 + rng.normal(0, 0.01, len(bdays))), index=bdays)})
+    taker = pd.DataFrame({"taker_buy_quote": rng.uniform(4e9, 6e9, n), "quote_volume": 1e10,
+                          "n_bars": 72.0}, index=idx)
+    return {"core": core, "px": px, "regimes": regimes, "funding": funding, "oi": oi, "style": style,
+            "funding_bn": pd.Series(rng.normal(0.08, 0.05, n - 400), index=idx[400:]),
+            "qvol": pd.Series(rng.uniform(1e10, 3e10, n), index=idx), "spy": spy, "taker": taker,
+            "stable_lend": pd.Series(rng.uniform(2, 8, n), index=idx),
+            "stable_supply": pd.Series(np.cumprod(1 + rng.normal(0.001, 0.002, n)) * 1e11, index=idx)}
 
 
 def _mutate_after(inp, d):
@@ -68,6 +76,22 @@ def test_one_row_per_feature_all_finite_or_none():
     inp = _inputs()
     rows = sd.features_at(inp["core"].index[-1], inp)
     feats = [r["feature"] for r in rows]
-    assert len(feats) == len(set(feats)) == 17
+    assert len(feats) == len(set(feats)) == 23
     assert all(r["value"] is None or math.isfinite(r["value"]) for r in rows)
     assert {r["entity"] for r in rows} == {"panel"}
+
+
+def test_flow_features_present_late_and_none_early():
+    """S-513:六个流量维度 —— 数据到了才有值,之前是 None 不是 0;taker 每天不足 66 根小时线的不算。"""
+    inp = _inputs()
+    late = {r["feature"]: r["value"] for r in sd.features_at(inp["core"].index[-1], inp)}
+    for f in ("funding_7d_ann_binance", "vratio_30_180", "spy_ret_21", "taker_buy_share_30d",
+              "stable_lend_apy_7d", "stable_supply_30d"):
+        assert late[f] is not None, f
+    assert 0.4 < late["taker_buy_share_30d"] < 0.6
+    early = {r["feature"]: r["value"] for r in sd.features_at(pd.Timestamp("2023-01-20"), inp)}
+    assert early["funding_7d_ann_binance"] is None and early["vratio_30_180"] is None
+    thin = dict(inp)
+    thin["taker"] = inp["taker"].assign(n_bars=10.0)
+    v = {r["feature"]: r["value"] for r in sd.features_at(inp["core"].index[-1], thin)}
+    assert v["taker_buy_share_30d"] is None, "半天的小时线不能当一整天"
