@@ -514,10 +514,17 @@ async def research_market_state(start: str = Query("2022-01-01")):
 @router.get("/api/v1/style/index")
 async def get_style_index(style: str = Query(..., description="majors / top_l1 / second_l1_l2 / app / ai / meme / defi / infra_tokenization"),
                           weighting: str = Query("cap", pattern="^(cap|equal)$"),
-                          start: str = Query("2020-01-01")):
-    """一个风格指数的逐日收益与累计水平(旧→新)。每行带 n_members 与 basis(回填段有幸存者偏差,如实标注)。"""
+                          start: str = Query("2020-01-01"),
+                          basis: str = Query("pit", pattern="^(pit|backfilled)$",
+                                             description="pit = 时点 + 宽宇宙(T-067,研究默认);backfilled = 今天成分回填(有幸存者偏差)")):
+    """一个风格指数的逐日收益与累计水平(旧→新)。每行带 n_members 与 basis。
+
+    默认 `basis=pit`(T-067 / S-512):每天的成员按当日市值、宇宙含在 Binance 现货上市过的全部币;
+    `backfilled` 是旧口径(今天的分类前 40 名往回取),有幸存者偏差,留作对照。"""
     from src.data.style.header import CODE_REF
+    from src.data.style.pit import CODE_REF_PIT, PIT_TABLE
     from src.data.style.taxonomy import DIMENSION
+    table, code_ref = (PIT_TABLE, CODE_REF_PIT) if basis == "pit" else ("style_index_daily", CODE_REF)
     if style not in DIMENSION:
         raise HTTPException(status_code=400, detail=f"未知风格 '{style}';可用:{sorted(DIMENSION)}")
     if not _SB_URL or not _SB_KEY:
@@ -526,19 +533,19 @@ async def get_style_index(style: str = Query(..., description="majors / top_l1 /
     async with httpx.AsyncClient(timeout=20) as client:
         while True:
             r = await client.get(
-                f"{_SB_URL}/rest/v1/style_index_daily",
-                params={"style": f"eq.{style}", "weighting": f"eq.{weighting}", "code_ref": f"eq.{CODE_REF}",
+                f"{_SB_URL}/rest/v1/{table}",
+                params={"style": f"eq.{style}", "weighting": f"eq.{weighting}", "code_ref": f"eq.{code_ref}",
                         "d": f"gte.{start}", "order": "d.asc", "limit": "1000", "offset": str(len(out)),
                         "select": "d,ret,level,n_members,n_dropped,top_member,top_weight,basis"},
                 headers=_sb_headers())
             if r.status_code != 200:
-                raise HTTPException(status_code=502, detail=f"读不到 style_index_daily:HTTP {r.status_code}")
+                raise HTTPException(status_code=502, detail=f"读不到 {table}:HTTP {r.status_code}")
             batch = r.json()
             out.extend(batch)
             if len(batch) < 1000:
                 break
     return {"status": "ok", "style": style, "dimension": DIMENSION[style], "weighting": weighting,
-            "code_ref": CODE_REF, "count": len(out), "data": out}
+            "basis": basis, "code_ref": code_ref, "count": len(out), "data": out}
 
 
 # ── v0.2 阶段 1:所有纸面账本的统一成绩单 ─────────────────────────────────────

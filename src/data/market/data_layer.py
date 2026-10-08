@@ -3524,6 +3524,26 @@ async def get_cg_category_ids() -> set[str]:
     return {c.get("category_id") for c in r.json() or [] if c.get("category_id")}
 
 
+async def get_cg_category_name_map() -> dict[str, str]:
+    """CoinGecko Pro `/coins/categories/list` → {分类名: 分类 id}。`/coins/{id}` 给的是**名字**,分类法用的是 id(T-067)。"""
+    client = _get_cg_client()
+    r = await client.get(f"{CG_PRO_BASE}/coins/categories/list", headers=_cg_headers(), timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"CoinGecko /coins/categories/list HTTP {r.status_code}: {r.text[:160]}")
+    return {c.get("name"): c.get("category_id") for c in r.json() or [] if c.get("name") and c.get("category_id")}
+
+
+async def get_cg_coin_categories(coin_id: str) -> list[str]:
+    """CoinGecko Pro `/coins/{id}` 的分类**名字**列表(只要分类,其余全关)。读不到抛异常 —— 读不到 ≠ 没有分类。"""
+    client = _get_cg_client()
+    r = await client.get(f"{CG_PRO_BASE}/coins/{coin_id}", headers=_cg_headers(), timeout=30,
+                         params={"localization": "false", "tickers": "false", "market_data": "false",
+                                 "community_data": "false", "developer_data": "false", "sparkline": "false"})
+    if r.status_code != 200:
+        raise RuntimeError(f"CoinGecko /coins/{coin_id} HTTP {r.status_code}: {r.text[:120]}")
+    return [c for c in (r.json() or {}).get("categories") or [] if c]
+
+
 async def get_cg_category_markets(category_id: str, per_page: int = 40) -> list[dict]:
     """CoinGecko Pro `/coins/markets?category=…` 按市值降序的前 `per_page` 个成员(T-039)。读不到抛异常。"""
     client = _get_cg_client()

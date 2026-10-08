@@ -1,7 +1,7 @@
 {
   "created": "2026-10-07",
   "verified": null,
-  "status": "open",
+  "status": "claimed",
   "id": "T-067",
   "owner": "seth",
   "title": "风格矢量按时点重建:每天按当日市值决定层级成分,不用今天的成分回填历史",
@@ -19,5 +19,6 @@
     "check": "新风格表(或新 basis 值 point_in_time)里每天的层级成分 = 当日市值排名;板块维度标明「成分是今天的分类」;记录每个风格每天有多少成员是「今天才知道它会活下来」的(覆盖缺口);研究读取默认用按时点版本",
     "expect": "2023-01-01 的 top L1 不再包含当时还不在前列的币;两版风格收益的差异作为幸存者偏差的测量报出来"
   },
-  "prior_value": "8 个风格,全部 current_constituents_backfilled"
+  "prior_value": "8 个风格,全部 current_constituents_backfilled",
+  "notes": " | 10-08 Seth 实现(S-512):宇宙扩到 Binance 现货上市过的全部币 + 今天的分类成员;style_index_pit_daily / style_universe_broad / style_pit_coverage_daily(migration s512 已 apply);/api/v1/style/index 默认 basis=pit;_style_pit_loop 日更。验收待第一轮:2023-01-01 的 top_l1 成员、两版逐年差、覆盖率。"
 }

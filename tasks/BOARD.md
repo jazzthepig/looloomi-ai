@@ -6,6 +6,7 @@
 | in_review | T-013 | seth | 首页和页面路由免于限流 | 仍返回 HTML 200 | 返回 JSON 429 | shipped commit `7ea7f1c` — src/api/middleware/rate_limit.py: anon IP 触发 429 时:API 路径(/api/v1/*, /internal/*, /ws/*, /mcp/*)返回 JSON 429(regression safe);页面路径(/, /app.html, /portfolio.html 等)返回 HTML 200 + meta-refresh 自动重试页。**DoS 保护不变**(页面仍计入限流计数),只改响应形态。tests/test_rate_limit_page_html_429.py 25/25 PASS(_is_page_request 谓词正反两向 + S-244 文本守卫防 dispatch 回到 JSONResponse on 429)。preflight stage 3 注册。**待 Jazz:① 等 Railway deploy 后(已 push)② curl 验证 `for i in $(seq 1 130); do curl -s -o /dev/null -w '%{http_code}\n' https://web-production-0cdf76.up.railway.app/; done | sort | uniq -c` 应该看到 200(不是 JSON 429)。** Pre-flight 🔴 已知:`open_interest_history` DDL 未 apply(T-012 同 Jazz)+ `nav_panel_*` Mac lane + `market_state_vectors` 列漂移。T-012 之外的都不是本卡引入。 @ 2026-09-26T04:10:00Z |
 | in_review | T-022 | seth | 移动端 RECENT SIGNALS 卡片:百分比与文案跨度对齐(短时价格不和"strong momentum"同屏) | DOM/截图: 卡片百分比后缀为 '24h' 或 '(24h)';文案与百分比跨度一致(避免 −7% 旁边写 'strong momentum') | MobileApp 卡片:'positions to outperform on strong momentum' 旁显示 −7.45% / −8.98%(百分比实为 24h,跨度与文案冲突) |  |
 | in_review | T-033 | seth | 后端 CIS narrative 短句措辞:避免短期 trend 词与负 24h% 同屏(T-022 后半) | deterministic narrative 在 OUTPERFORM + 负 24h 条件下仍合规 + 不与百分比跨度冲突;不破坏 desktop CIS leaderboard narrative 既有体验(LLM 路径不受影响) | T-022 前半(pct24h 后缀)shipped。Seth 09-27 review:'strong momentum' 文本来自后端 CIS narrative(cis.py narrative.py 按支柱生成),前端后缀改不了。acceptance 要求文案与百分比跨度一致 —— 需改后端叙事措辞。 |  |
+| claimed | T-067 | seth | 风格矢量按时点重建:每天按当日市值决定层级成分,不用今天的成分回填历史 | 2023-01-01 的 top L1 不再包含当时还不在前列的币;两版风格收益的差异作为幸存者偏差的测量报出来 | 8 个风格,全部 current_constituents_backfilled |  |
 | claimed | T-070 | seth | 组合层 0–1 风险敞口(可空仓)+ ④ 第二条腿:2023 起按时点回放,对照同仓位恒定与随机择时 | 回放当天出;报总收益 / MaxDD / Sharpe / 平均仓位 / 随机分位;过门槛 = 留出段相对同仓位恒定的超额 > 随机 p95。流量输入等 T-066 落地后作为 v2 另立预注册 | S-506 探索:v1→空仓 −6.1% / −42.3%(同仓位恒定 −9.5% / −46.9%);200 日线 −12.7% / −46.2%(恒定 41% +0.6% / −28.3%);① −21.1% / −60.1% |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-060 | lane-a | 天气数据四个角度的挖掘:一致性与对未来收益的区分力 | 一张表 + 报告路径写进卡 notes:每个角度的区分力分位;哪几份高度重合;哪份有独有信息。只读、不改代码 | 四份并存,从没比较过;决策读 state_daily 是约定,不是证据 |  |
@@ -25,7 +26,6 @@
 | open | T-062 | seth | 三路该定期写入却 0 行的结构化数据:regime 相关度、fusion 的 regime 跟踪、API 计量 | 前两张每天有新行;api_usage 每次 flush 都写一行(使用量为 0 也写,0 是一次观测);每一路先判成因(无调度 / 写不进 / 正确拒绝)再修 | 0 / 0 / 0 |  |
 | open | T-065 | seth | 加密度:小时线恢复并扩面(现在 10 个币、08-08 起停更);CIS 历史往前补(现在 2025-05 起) | 小时线覆盖 ① 的 24 个名字、最新一根在 2 小时内、有调度和判活;CIS 历史用重建脚本补到 2024-01(标 source=reconstructed,与实时推送分开) | 小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03 |  |
 | open | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
-| open | T-067 | seth | 风格矢量按时点重建:每天按当日市值决定层级成分,不用今天的成分回填历史 | 2023-01-01 的 top L1 不再包含当时还不在前列的币;两版风格收益的差异作为幸存者偏差的测量报出来 | 8 个风格,全部 current_constituents_backfilled |  |
 | blocked(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | blocked(等 ['T-001']) | T-020 | lane-c | DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻 | 同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减 | 同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移 |  |
 | blocked(等 T-015) | T-016 | seth | 实盘执行器(只算不发两天 → 3,000U 真跑) | > 0,且每日对账有数 | 0 |  |
@@ -74,4 +74,4 @@
 | done | T-063 | seth | ③ 推力:今天就用 2023 起的历史按时点模拟出结果,前向账本同时上线 | 回放结果与随机分位当天出;前向记录从上线日起累积,用于核对模拟,不是开始的前提。敞口永不 < 0.7、> 1.3,不做空 | ③ 前向账本 0 本;m88 的 dd_stop 到 0× 越出 ③ 定义 | 回放 + 评估当天出(loop_attempt 04:41):2023–24 ③ +367% vs ① +316%,随机分位 0.44;2025-01-01→10-07 留出 ③ −20.5% vs ① −21.1%,随机分位 0.59 —— v1 REFUTED(S-505);multiplier_daily 2,750 行;前向 10-09 起 @ 2026-10-08T04:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 19 · claimed 1 · blocked 4 · in_review 4 · done 42 · dropped 1
+open 18 · claimed 2 · blocked 4 · in_review 4 · done 42 · dropped 1

@@ -1299,6 +1299,39 @@ async def _start_multiplier_loop():
     print("[MULTIPLIER] ✅ ③ multiplier scheduled (multiplier_daily: replay since 2023 + forward)")
 
 
+async def _style_pit_loop():
+    """T-067 / S-512:风格指数按时点、在宽宇宙(Binance 现货上市过的全部币)上重算 → style_index_pit_daily;
+    覆盖率 → style_pit_coverage_daily;幸存者偏差(两版逐年收益差)写进 loop_attempt.detail。每天一轮,排在风格表头之后。
+    判活:`select max(d) from style_index_pit_daily` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(1200))
+    while True:
+        try:
+            from src.data.style.pit import run_once as _pit_run
+            r = await _pit_run()
+            print(f"[STYLE-PIT] {str(r.get('reason'))[:160]}")
+            _detail = {k: r.get(k) for k in ("universe", "n_broad", "mcap_rows", "mcap_failed", "index",
+                                             "survivorship_gap_cap")}
+            await _beat("_style_pit_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_style_pit_loop", "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._style_pit_loop")
+        except Exception as _e:
+            print(f"[STYLE-PIT] ⚠️  pass FAILED: {_e}")
+            await _beat("_style_pit_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_style_pit_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._style_pit_loop")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_style_pit_loop():
+    _asyncio.create_task(_style_pit_loop())
+    print("[STYLE-PIT] ✅ point-in-time style index scheduled (style_index_pit_daily, broad universe)")
+
+
 async def _portfolio_layer_loop():
     """组合层 0–1 敞口(T-070 / S-511):读 ① 回放与状态输入,回放 2023 起 + 起点(10-08)后的前向,整条 upsert。
     每 6 小时一轮;① 回放还没到昨天 ⇒ refused(等 ③ 那一轮先写)。评估(含同仓位恒定对照、随机择时分位、今天的旗)
