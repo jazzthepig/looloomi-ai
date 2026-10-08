@@ -1299,6 +1299,40 @@ async def _start_multiplier_loop():
     print("[MULTIPLIER] ✅ ③ multiplier scheduled (multiplier_daily: replay since 2023 + forward)")
 
 
+async def _portfolio_layer_loop():
+    """组合层 0–1 敞口(T-070 / S-511):读 ① 回放与状态输入,回放 2023 起 + 起点(10-08)后的前向,整条 upsert。
+    每 6 小时一轮;① 回放还没到昨天 ⇒ refused(等 ③ 那一轮先写)。评估(含同仓位恒定对照、随机择时分位、今天的旗)
+    写进 loop_attempt.detail。判活:`select max(d) from portfolio_layer_daily where arm = 'pl_v2_replay'` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(600))
+    while True:
+        try:
+            from src.data.signals.portfolio_layer import run_once as _pl_run
+            r = await _pl_run()
+            print(f"[PORTFOLIO-LAYER] written={r.get('written')} · {str(r.get('reason'))[:120]}")
+            _detail = {"written": r.get("written"), "eval": r.get("eval")}
+            await _beat("_portfolio_layer_loop", ok=bool(r.get("ok")) and not r.get("refused"),
+                        refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_portfolio_layer_loop",
+                "ok" if r.get("ok") and not r.get("refused") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._portfolio_layer_loop")
+        except Exception as _e:
+            print(f"[PORTFOLIO-LAYER] ⚠️  pass FAILED: {_e}")
+            await _beat("_portfolio_layer_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_portfolio_layer_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._portfolio_layer_loop")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_portfolio_layer_loop():
+    _asyncio.create_task(_portfolio_layer_loop())
+    print("[PORTFOLIO-LAYER] ✅ portfolio layer scheduled (portfolio_layer_daily: replay since 2023 + forward)")
+
+
 async def _binance_hf_loop():
     """S-509:Binance 小时线(含主动买量)+ 永续资金费率的续接 —— 两条序列 08-08 一次性导入后从无写入端。
     **每天一轮**(Jazz 09-09:多资产不许反复打免费 API —— 10 个符号 × 2 次请求 / 天,消费方是日频研究特征),

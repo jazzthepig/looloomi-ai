@@ -52,6 +52,7 @@
     "open_interest_history",
     "pod_aggregator_nav",
     "pod_aggregator_state",
+    "portfolio_layer_daily",
     "price_source_agreement_daily",
     "regime_band_log",
     "risk_meter_history",
