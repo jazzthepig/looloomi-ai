@@ -15,6 +15,7 @@ Jazz 10-08:「解开单一资产上限限制,采用真正的动量加权。」S-
             mom90         w ∝ max(0, 90 日收益);没有一个为正 ⇒ 退回 cap_uncapped
             mom90_x_cap   w ∝ 市值 × max(0, 90 日收益);同样退回
             btc           单持 BTC(基准)
+            dual_mom      (S-517 续,看第一轮结果之前写)BTC 365 日收益 > 0 ⇒ mom90;否则 50% ④ + 50% 现金;切换 2 × 10 bps
     对照    BTC · 现行 ① · 随机权重(每个再平衡日对当时有价的币取 Dirichlet(1) 权重,500 次)的分位
     窗口    2023–2024 / 2025-01-01 → 起点 / 起点(2026-10-08)后前向
 
@@ -46,6 +47,7 @@ HOLDOUT_START = pd.Timestamp("2025-01-01")
 INCEPTION = pd.Timestamp("2026-10-08")
 N_RANDOM, SEED = 500, 517
 CODE_REF = "T-072 core variants v1"
+CASH_ANN = 0.04
 
 WeightFn = Callable[[pd.Timestamp, pd.DataFrame, pd.DataFrame, list], dict]
 
@@ -176,8 +178,22 @@ def evaluate(arm_rets: Mapping[str, pd.Series], rand: Optional[np.ndarray], idx:
     return out
 
 
+def dual_momentum(mom_ret: pd.Series, btc_px: pd.Series, s4: Optional[pd.Series]) -> pd.Series:
+    """纯函数。S-517 续的预注册(看结果之前写):d−1 时 BTC 的 365 日收益 > 0 ⇒ 持 mom90;否则 ⇒ 50% ④ + 50% 现金等价物。
+    信号读不到 ⇒ 不切(留在 mom90)。④ 缺的日子按现金算。切换付 2 × COST_BPS。"""
+    idx = mom_ret.index
+    btc = btc_px.reindex(pd.date_range(min(btc_px.index.min(), idx.min()), idx.max(), freq="D"))
+    sig = (btc.shift(1) / btc.shift(366) - 1).reindex(idx)
+    x = (~(sig <= 0)).astype(float)                       # NaN ⇒ 进攻(不切)
+    cash = CASH_ANN / 365.0
+    s4r = s4.reindex(idx).fillna(cash) if s4 is not None else pd.Series(cash, index=idx)
+    defense = 0.5 * s4r + 0.5 * cash
+    switch = x.diff().abs().fillna(0.0) * 2 * COST_BPS / 1e4
+    return x * mom_ret + (1 - x) * defense - switch
+
+
 def build(px: pd.DataFrame, mcap_prev: pd.DataFrame, end: pd.Timestamp,
-          n_random: int = N_RANDOM) -> tuple[list[dict], dict[str, Any]]:
+          n_random: int = N_RANDOM, s4: Optional[pd.Series] = None) -> tuple[list[dict], dict[str, Any]]:
     """纯函数。px:面板收盘(前推价已为 NaN);mcap_prev:行 = d、值 = d−1 市值。"""
     px = px.sort_index()
     names = list(px.columns)
@@ -190,6 +206,8 @@ def build(px: pd.DataFrame, mcap_prev: pd.DataFrame, end: pd.Timestamp,
     for arm in ARMS:
         tg = {d: target_weights(arm, d, px, mcap_prev, quoted[d]) for d in rebal}
         arm_rets[arm] = simulate(rets, tg)
+    if "BTC" in px.columns:
+        arm_rets["dual_mom"] = dual_momentum(arm_rets["mom90"], px["BTC"], s4)
     rand = random_baseline(rets, rebal, quoted, n=n_random) if n_random else None
     ev = evaluate(arm_rets, rand, rets.index, end)
     now = datetime.now(timezone.utc).isoformat()
@@ -217,7 +235,7 @@ async def run_once() -> dict[str, Any]:
 
     target = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize() - pd.Timedelta(days=1)
     panel = list(panel_universe())
-    start = (REPLAY_START - pd.Timedelta(days=LOOKBACK + 10)).date().isoformat()
+    start = (REPLAY_START - pd.Timedelta(days=400)).date().isoformat()   # 365 日信号要往回看
     p = await read_panel(panel, start=start, source=PRICE_SOURCE)
     idx = pd.to_datetime(p.days)
     px = pd.DataFrame(p.close, index=idx, columns=p.symbols, dtype=float)
@@ -226,7 +244,8 @@ async def run_once() -> dict[str, Any]:
     if px.index.max() < target:
         return {"ok": False, "refused": True, "written": 0, "reason": f"面板收盘只到 {px.index.max().date()}"}
     mc = await _mcap_prev(panel, start)
-    rows, ev = await asyncio.to_thread(build, px, mc, target)
+    from src.data.signals.portfolio_layer import load_strategy4
+    rows, ev = await asyncio.to_thread(build, px, mc, target, N_RANDOM, load_strategy4())
     for i in range(0, len(rows), 2000):
         res = await supabase_upsert_table(TABLE, rows[i:i + 2000], on_conflict="d,arm")
         if not res.ok:

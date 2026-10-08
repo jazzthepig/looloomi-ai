@@ -58,7 +58,20 @@ def test_build_reports_all_arms_and_random_baseline_on_noise() -> None:
     px, mc = _panel(n=900, seed=3)
     rows, ev = build(px, mc, px.index[-1], n_random=60)
     arms = {r["arm"] for r in rows}
-    assert arms == {"cap_c40", "cap_uncapped", "mom90", "mom90_x_cap", "btc"}
+    assert arms == {"cap_c40", "cap_uncapped", "mom90", "mom90_x_cap", "btc", "dual_mom"}
     w = ev["in_sample_2023_2024"]
     assert "random_weights" in w and 0.0 <= w["mom90"]["pct_vs_random"] <= 1.0
     assert ev["latest_weights"]["btc"] == {"BTC": 1.0}
+
+
+def test_dual_momentum_switches_on_yesterdays_btc_trend_and_pays_for_it() -> None:
+    from src.data.signals.core_variants import CASH_ANN, dual_momentum
+    idx = pd.date_range("2024-01-01", periods=400)
+    btc = pd.Series(np.r_[np.linspace(100, 50, 380), np.full(20, 50.0)], index=idx)
+    mom = pd.Series(0.01, index=idx)
+    out = dual_momentum(mom, btc, None)
+    assert abs(out.iloc[10] - 0.01) < 1e-12, "信号读不到 ⇒ 不切"
+    late = out.iloc[-1]
+    assert abs(late - CASH_ANN / 365) < 1e-9, "BTC 一年跌 ⇒ 防守腿(没有 ④ 时全是现金)"
+    btc2 = btc.copy(); btc2.iloc[-1] = 1e9
+    assert abs(dual_momentum(mom, btc2, None).iloc[-1] - late) < 1e-12, "当天的价格不影响当天的仓位"
