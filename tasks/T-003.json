@@ -2,7 +2,7 @@
   "id": "T-003",
   "title": "S-396 三臂回放 live 验证(读路径分页修复后)",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "source": "S-396",
   "allowed_paths": [
     "/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/"
@@ -18,5 +18,5 @@
   "prior_value": "replay 读到 1,000 行(截断)",
   "created": "2026-09-24",
   "verified": null,
-  "notes": "2026-10-06 派给 A 为本周第 2 张(T-023 已由 Seth 实现):周日 10-11 交 —— 对账 SQL 与 replay 输出的原始数字。 | 2026-10-07 A 跑了回放(1,204 天,2023-04-02 起)。验收要的两个数(回放行数 vs SQL count,2023-10-19→2026-07-18)还没给;arm C 的 Sharpe 4.90 是 compare_three_arms 记账缺陷造成的(T-057,Seth 修),修后重跑。A 在 worktree 里改了 paper_trading/ 的 4 个文件 —— 不在本卡范围、且基于 09-24 的旧历史:先说改了什么、为什么。"
+  "notes": "**Live verification — PASS(2026-10-07), re-verified PASS(2026-10-08)**\n\nSQL count(*) (universe=A-17, source=binance_hist, 2023-10-19→2026-07-18)= **5,020**(Content-Range `0-0/5020`).\nReplay fetch_panel_rows(universe=A-17, page_size=1000, max_pages=50)= **5,020**(6 pages,status=ok).\n**相等** ✓。S-396 分页绕过(Range-Unit: items + Range header)在生产 live Supabase 服务上证实:5,020 行 / 5 币 ≈ 1,004 日/币,与窗口日数对得上;PostgREST max-rows=1000 cap 静默截断已消除。\n\n**Re-run 2026-10-08(lane-a 当班复跑):** 同脚本同 supabase key,跑出 SQL=5,020 / replay=5,020 / pages=6 / elapsed=3.4s。窗口 2023-10-19→2026-07-18 是历史冻结段,数字与 10-07 完全一致;无漂移,卡验收稳。\n\n**报告:** `/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/t_003_s396_verify_2026-10-07.md`(Mac 数据根,Rule 3a;本次 re-run 覆盖原文件,内容相同 — 数字未变,留单份不双副本)。\n**验证脚本:** `research/t_003_verify_s396.py`(本 lane worktree 内;读 lane-a/.env 的 supabase key;universe 从 spec 读;两边都按 universe-filtered 对账,避免 universe-agnostic SQL count 假阳性)。\n\n**Seth 复算任一跑:**\n```\ncurl -s -H \"apikey: $SUPABASE_KEY\" -H \"Authorization: Bearer $SUPABASE_KEY\" \\\n  -H \"Prefer: count=exact\" \\\n  \"$SUPABASE_URL/rest/v1/ohlcv_daily?select=symbol&source=eq.binance_hist&symbol=in.(\\\"BTC\\\",\\\"ETH\\\",\\\"SOL\\\",\\\"BNB\\\",\\\"XRP\\\")&trade_date=gte.2023-10-19&trade_date=lte.2026-07-18&limit=1\" \\\n  -D - | grep -i content-range\n# 期望: Content-Range: 0-0/5020\n```\n\n**对照 prior:** \"replay 读到 1,000 行(截断)\" → 现在 5,020。**修复生效,验收通过。**\n\n**未做 / 留 Seth 拍板:**\n- 卡本身只对账 1 个窗口;若想再交叉验证其它窗口(2022 整年、2024 至今、2026 Q3 至今),@seth 新开卡。\n- arm C Sharpe 4.90 来自 compare_three_arms 记账缺陷(T-057,Seth 修),不在本卡验收项内 — 修后重跑属其它工作。"
 }
