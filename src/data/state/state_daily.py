@@ -334,7 +334,11 @@ async def run_once(backfill: bool = False) -> dict[str, Any]:
     target = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize() - pd.Timedelta(days=1)
     have = await _read_all(TABLE, {"select": "d", "feature": "eq.mom_20", "order": "d.desc", "limit": "1"})
     have_new = await _read_all(TABLE, {"select": "d", "feature": f"eq.{NEWEST_FEATURE}", "limit": "1"})
-    first = backfill or not have or not have_new
+    # 源比特征晚到(借贷池那一轮还没跑,状态层先跑了)⇒ 那一列整段是空的;源到了而特征一个非空值都没有 ⇒ 再回填一次
+    lend_src = await _read_all("stable_lending_daily", {"select": "d", "limit": "1"})
+    lend_feat = await _read_all(TABLE, {"select": "d", "feature": "eq.stable_lend_apy_7d", "value": "not.is.null",
+                                        "limit": "1"})
+    first = backfill or not have or not have_new or (bool(lend_src) and not lend_feat)
     start_days = pd.Timestamp(BACKFILL_START) if first else target - pd.Timedelta(days=RECENT_DAYS)
     # 读的起点要早于写的起点:200 日动量、3 年波动分位要往回看
     inputs = await load_inputs((start_days - pd.Timedelta(days=3 * 365 + 60)).date().isoformat())
