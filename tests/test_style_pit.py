@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.data.style.pit import (CODE_REF_PIT, MAX_CATEGORY_FETCH, annotate_rows, category_ids,  # noqa: E402
-                                coverage_rows, needs_refresh, universe_candidates, yearly_gap)
+                                coverage_rows, dedupe_broad, needs_refresh, universe_candidates, yearly_gap)
 from src.data.style.header import compute_style_index  # noqa: E402
 
 
@@ -62,3 +62,12 @@ def test_yearly_gap_is_old_minus_new_and_missing_endpoints_are_none() -> None:
     new = {("top_l1", "2022-12-31"): 1.0, ("top_l1", "2023-12-31"): 1.5}
     g = yearly_gap(old, new, [2023, 2024], ["top_l1"])
     assert g["top_l1"]["2023"] == 0.5 and g["top_l1"]["2024"] is None
+
+
+def test_same_coin_under_two_tickers_is_counted_once() -> None:
+    """10-08:TON 在 CoinGecko 的分类名单里叫 GRAM,补充名单与 Binance 里叫 TON —— 同一个 coin_id 只能进一次。"""
+    cur = [{"symbol": "GRAM", "coin_id": "the-open-network"}]
+    rows = [{"symbol": "TON", "coin_id": "the-open-network", "tier_base": "l1", "fetched_d": "2026-10-08"},
+            {"symbol": "FTT", "coin_id": "ftx-token", "tier_base": "app", "fetched_d": "2026-10-08"},
+            {"symbol": "FTT2", "coin_id": "ftx-token", "tier_base": "app", "fetched_d": "2026-10-08"}]
+    assert [r["symbol"] for r in dedupe_broad(cur, rows)] == ["FTT"]

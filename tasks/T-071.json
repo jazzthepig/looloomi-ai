@@ -1,9 +1,13 @@
 {
   "id": "T-071",
   "owner": "lane-c",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-08",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-08T10:05Z",
+    "value": "合并 49c8fc3;1,366 行(2023-01-02 → 2026-09-28);复现 M-208h 2025-01-01→08-13 +16.76% / 0.4925 / −16.41%;_portfolio_layer_loop 09:50 读到并出了 w4 = 0.25 / 0.5 两档。C 查出 M-208h 成本实现 ≈ 1bp(标注 10bp)。"
+  },
   "title": "④ 5 spec 等权的日收益序列交进仓库:research/series/strategy4_blend_daily.json(组合层的第二条腿)",
   "source": "T-070 / S-511:组合层回放要 ④ 的真实日序列;M-208h 只给了汇总(2025-01-01→2026-08-13 +16.77% / Sharpe 0.493 / 回撤 −16.41%)",
   "allowed_paths": [

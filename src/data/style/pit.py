@@ -41,7 +41,7 @@ UNIVERSE_TABLE = "style_universe_broad"
 COVERAGE_TABLE = "style_pit_coverage_daily"
 WRITES_TABLES = (PIT_TABLE, UNIVERSE_TABLE, COVERAGE_TABLE)
 BASIS_PIT = "point_in_time_broad_universe"
-CODE_REF_PIT = "t067-v1"
+CODE_REF_PIT = "t067-v2"
 UNIVERSE_SOURCE = "binance_listed"
 CATEGORY_REFRESH_DAYS = 30
 MAX_CATEGORY_FETCH = 250
@@ -152,12 +152,23 @@ async def refresh_universe(today: date, current: set[str]) -> dict[str, Any]:
 
 
 async def broad_members(current_members: list[dict]) -> list[dict]:
-    cur = {m["symbol"] for m in current_members}
     rows = await _read_all(UNIVERSE_TABLE, {"select": "symbol,coin_id,tier_base,sectors,fetched_d"})
-    extra = [{"symbol": r["symbol"], "coin_id": r["coin_id"], "tier_base": r.get("tier_base"),
-              "sectors": r.get("sectors") or [], "fetched_d": r["fetched_d"]}
-             for r in rows if r["symbol"] not in cur and r.get("tier_base")]
-    return extra
+    return dedupe_broad(current_members, rows)
+
+
+def dedupe_broad(current_members: list[dict], rows: list[dict]) -> list[dict]:
+    """纯函数。宽宇宙里去掉今天名单上已有的**代号或 coin_id**(TON / GRAM 是同一个币,10-08 查出被算两遍),
+    宽宇宙内部同一个 coin_id 只留一个。"""
+    cur_syms = {m["symbol"] for m in current_members}
+    cur_ids = {m["coin_id"] for m in current_members}
+    out, seen = [], set()
+    for r in rows:
+        if r["symbol"] in cur_syms or r["coin_id"] in cur_ids or r["coin_id"] in seen or not r.get("tier_base"):
+            continue
+        seen.add(r["coin_id"])
+        out.append({"symbol": r["symbol"], "coin_id": r["coin_id"], "tier_base": r.get("tier_base"),
+                    "sectors": r.get("sectors") or [], "fetched_d": r["fetched_d"]})
+    return out
 
 
 async def _global_ex_stables(start: str) -> tuple[pd.Series, pd.Series]:

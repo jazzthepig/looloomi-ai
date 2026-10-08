@@ -41,7 +41,7 @@ MEMBERS_PER_CATEGORY = 40
 MEMBERSHIP_REFRESH_DAYS = 7
 BASIS_BACKFILL = "current_constituents_backfilled"
 SOURCE = "coingecko_pro_market_chart"
-CODE_REF = "t039-v4"
+CODE_REF = "t039-v5"
 WEIGHTINGS = ("cap", "equal")
 
 
@@ -193,8 +193,12 @@ async def latest_membership() -> list[dict]:
     last = rows[0]["fetched_d"]
     out = {r["symbol"]: _member(r["symbol"], r["coin_id"], r.get("categories"), last)
            for r in rows if r["fetched_d"] == last}
+    # 10-08(S-512 续):同一个币在 CoinGecko 换了代号(TON → GRAM)后,分类名单里是 GRAM、补充名单里是 TON ——
+    # 两个代号、一个 coin_id,指数里 TON 的权重被算了两遍。按 coin_id 去重:分类名单里已有的,补充名单不再加。
+    have_ids = {m["coin_id"] for m in out.values()}
     for sym, (cid, cats) in EXTRA_MEMBERS.items():
-        out[sym] = _member(sym, cid, cats, last)
+        if cid not in have_ids:
+            out[sym] = _member(sym, cid, cats, last)
     return list(out.values())
 
 
