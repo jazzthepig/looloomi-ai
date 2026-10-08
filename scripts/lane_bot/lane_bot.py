@@ -51,6 +51,7 @@ ALLOWED_TOOLS = [
 # unset INTERNAL_TOKEN:lane 不需要它;它出现在 shell 环境里时,preflight 的 schema-drift 检查会对线上 401(10-07 B 撞上)。
 _LAUNCH = ('unset INTERNAL_TOKEN; cd "$LANE_CWD" && exec "$LANE_CMD" -p "$LANE_PROMPT" --output-format stream-json --verbose '
            '--max-turns "$LANE_TURNS" --permission-mode acceptEdits --settings "$LANE_SETTINGS" '
+           '--add-dir "$LANE_WORKTREE" --add-dir "$LANE_MAIN" '
            '--allowedTools "${(@s:,:)LANE_TOOLS}"')
 
 
@@ -140,15 +141,19 @@ def build_prompt(lane: str, lc: dict, reason: str, task: str = "") -> str:
                       worktree=os.path.expanduser(lc["worktree"]), task=task)
 
 
-def guard_settings() -> Path:
+def guard_settings(lane: str = "", dirs: tuple[str, ...] = ()) -> Path:
     """每一轮都装上的 PreToolUse 钩子:lane 不在主目录做 git 写操作、不往主目录写文件(10-08 事故)。
 
     白名单拦不住 —— --allowedTools 是追加在用户自己的权限之上的,而 terminal 里的 claude 早已放行 git。
-    钩子对每次工具调用都跑,退出码 2 = 拦下。"""
+    钩子对每次工具调用都跑,退出码 2 = 拦下。
+
+    ⚠️ 10-08 第二次:装上 --settings 之后,lane-c(cwd 在 Mac 数据根)连自己的 worktree 和任务卡都读不到了 ——
+    「允许的工作目录」只剩 cwd。所以把 lane 的 worktree 与主仓库(只读用;写由钩子拦)显式写进
+    additionalDirectories,启动命令再带 --add-dir,两处都给。"""
     BOT.mkdir(parents=True, exist_ok=True)
-    f = BOT / "guard_settings.json"
+    f = BOT / (f"guard_settings-{lane}.json" if lane else "guard_settings.json")
     guard = ROOT / "scripts" / "lane_bot" / "guard_main_dir.py"
-    f.write_text(json.dumps({"hooks": {"PreToolUse": [{
+    f.write_text(json.dumps({"permissions": {"additionalDirectories": list(dirs)}, "hooks": {"PreToolUse": [{
         "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [{"type": "command", "command": f'python3 "{guard}"'}]}]}}, ensure_ascii=False), encoding="utf-8")
     return f
@@ -205,9 +210,11 @@ def parse_stream(out: str, max_turns: int) -> tuple[dict, str]:
 def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "") -> dict:
     lc = cfg["lanes"][lane]
     cwd = os.path.expanduser(lc["cwd"])
+    wt = os.path.expanduser(lc.get("worktree") or lc["cwd"])
     env = dict(os.environ, LANE_CWD=cwd, LANE_CMD=cfg.get("command", "claude"),
                LANE_PROMPT=build_prompt(lane, lc, reason, task), LANE_TURNS=str(cfg["max_turns"]),
-               LANE_TOOLS=",".join(ALLOWED_TOOLS), LANE_SETTINGS=str(guard_settings()))
+               LANE_TOOLS=",".join(ALLOWED_TOOLS), LANE_WORKTREE=wt, LANE_MAIN=str(ROOT),
+               LANE_SETTINGS=str(guard_settings(lane, (wt, str(ROOT)))))
     if dry:
         return {"lane": lane, "reason": reason, "cwd": cwd, "argv": launch_argv(cfg), "tools": ALLOWED_TOOLS}
     RUNS.mkdir(parents=True, exist_ok=True)

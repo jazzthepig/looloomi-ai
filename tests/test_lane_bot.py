@@ -153,7 +153,10 @@ def test_every_launch_installs_the_guard() -> None:
     import json as _json
     from scripts.lane_bot.lane_bot import guard_settings
     assert '--settings "$LANE_SETTINGS"' in _LAUNCH
-    cfg = _json.loads(guard_settings().read_text(encoding="utf-8"))
+    assert '--add-dir "$LANE_WORKTREE"' in _LAUNCH and '--add-dir "$LANE_MAIN"' in _LAUNCH, \
+        "10-08:装了 --settings 之后 lane-c 只剩 cwd 可读,连自己的 worktree 都打不开"
+    cfg = _json.loads(guard_settings("lane-x", ("/tmp/wt", "/tmp/main")).read_text(encoding="utf-8"))
+    assert cfg["permissions"]["additionalDirectories"] == ["/tmp/wt", "/tmp/main"]
     hook = cfg["hooks"]["PreToolUse"][0]
     assert "Bash" in hook["matcher"] and "Write" in hook["matcher"]
     assert "guard_main_dir.py" in hook["hooks"][0]["command"]
