@@ -1,7 +1,7 @@
 {
   "id": "T-074",
   "owner": "seth",
-  "status": "open",
+  "status": "claimed",
   "created": "2026-10-08",
   "verified": null,
   "title": "探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因",
@@ -22,5 +22,5 @@
     "expect": "第一笔纸面机会走完全流程;额度档位的规则写死在预注册里"
   },
   "prior_value": "没有探索仓;没有给 Jazz 的机会提交通道",
-  "notes": "2026-10-08 开卡。数据:关注度用 CoinGecko trending + C 的新闻监听(T-007);上所 / 代币化事件需要新的事件源(待查)。"
+  "notes": "2026-10-08 开卡。数据:关注度用 CoinGecko trending + C 的新闻监听(T-007);上所 / 代币化事件需要新的事件源(待查)。 | 10-08 第一块(S-522):exploration_ideas 表 + POST/GET /internal/exploration/ideas + scripts/submit_idea.py;当天提交随前向锚一起锚定。剩:纸面生命周期规则、额度档(5–30% 按市场风格)、上所 / 代币化事件源。"
 }

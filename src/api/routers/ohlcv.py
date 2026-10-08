@@ -598,6 +598,30 @@ async def proof_books():
     return body
 
 
+# ── T-074 / S-522:探索仓的入口 —— 机会提交(内部,X-Internal-Token);当天的前向锚把它一起锚定 ─────────
+
+@router.post("/internal/exploration/ideas")
+async def exploration_submit(body: dict, x_internal_token: str = Header(None)):
+    """提交一个机会:asset(必填)、thesis(必填,一句话:为什么、会怎样、什么情况下算错)、chain / contract / source /
+    horizon(hours|days|weeks|months)/ submitted_by。只追加;当天锚定。"""
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.data.exploration.ideas import submit
+    out = await submit(body or {})
+    if not out.get("ok"):
+        raise HTTPException(status_code=400, detail=out.get("problems"))
+    return out
+
+
+@router.get("/internal/exploration/ideas")
+async def exploration_list(start: str = Query("2026-10-01"), x_internal_token: str = Header(None)):
+    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.data.style.header import _read_all
+    rows = await _read_all("exploration_ideas", {"select": "*", "d": f"gte.{start}", "order": "submitted_at.asc"})
+    return {"status": "ok", "count": len(rows), "ideas": rows}
+
+
 # ── T-073 / S-519:前向记录锚定 —— 每天一行,只追加;外人可重算摘要、对比特币核对时间 ──────────────
 
 @router.get("/api/v1/proof/anchors")

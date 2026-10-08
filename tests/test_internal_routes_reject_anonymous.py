@@ -144,6 +144,7 @@ VALID_BODIES: dict[str, dict] = {
     "/internal/asset-vectors": {"rows": [{"symbol": "BTC"}]},
     "/internal/asset-vectors-history": {"rows": [{"symbol": "BTC", "schema_version": 3}]},
     "/internal/cis-scores": {"scores": [], "assets": []},
+    "/internal/exploration/ideas": {"asset": "BTC", "thesis": "auth probe only - not an idea", "horizon": "days"},
     "/internal/factor-hypotheses": {"hypotheses": []},
     "/internal/macro-brief": {},
     "/internal/quant-push": {"rows": []},

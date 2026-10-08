@@ -17,6 +17,7 @@
     "causal_paper_nav",
     "cg_coin_map",
     "cg_coin_mcap_daily",
+    "chain_activity_daily",
     "channel_categories",
     "channel_series_daily",
     "cis_backtest_results",
