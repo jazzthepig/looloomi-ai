@@ -1436,7 +1436,7 @@ async def _chain_activity_loop():
             from src.data.market.chain_activity import run_once as _ca_run
             r = await _ca_run()
             print(f"[CHAIN-ACT] {str(r.get('reason'))[:160]}")
-            _detail = {k: r.get(k) for k in ("written", "chains", "failed")}
+            _detail = {k: r.get(k) for k in ("written", "chains", "failed", "no_series")}
             await _beat("_chain_activity_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
                         error=None if r.get("ok") else str(r.get("reason"))[:200])
             await _record_loop_attempt(

@@ -95,16 +95,30 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
         return {"ok": False, "refused": True, "written": 0, "reason": f"只选出 {len(chains)} 条链 —— DeFiLlama /v2/chains 变了?"}
     last_d, known = await _known_chains()
     recent = (today - timedelta(days=RECENT_DAYS)).isoformat()
-    written, failed, full = 0, {}, []
+    written, failed, full, no_series = 0, {}, [], {}
     for c in chains:
+        incremental = bool(last_d and c["name"] in known)
         try:
             tvl = by_day(await get_llama_chain_tvl(c["name"]), today)
-            fees = by_day(await get_llama_chain_overview("fees", c["name"]), today)
-            dex = by_day(await get_llama_chain_overview("dexs", c["name"]), today)
         except Exception as e:                              # noqa: BLE001
             failed[c["name"]] = f"{type(e).__name__}: {str(e)[:60]}"
             continue
-        since = recent if (last_d and c["name"] in known) else None
+        series: dict[str, dict] = {}
+        miss: list[str] = []
+        for kind in ("fees", "dexs"):
+            try:
+                series[kind] = by_day(await get_llama_chain_overview(kind, c["name"]), today)
+            except Exception:                               # noqa: BLE001
+                # DeFiLlama 对没有该类数据的链回 500 而不是 404。新链:那一列留空照写;
+                # 已有的链:这轮整条跳过 —— 写空值会把库里好的近 10 天覆盖掉。
+                series[kind] = {}
+                miss.append(kind)
+        if miss:
+            no_series[c["name"]] = miss
+            if incremental:
+                continue
+        fees, dex = series["fees"], series["dexs"]
+        since = recent if incremental else None
         if since is None:
             full.append(c["name"])
         rows = merge_rows(c, tvl, fees, dex, since)
@@ -117,5 +131,7 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
     if len(failed) >= len(chains) / 2:
         return {"ok": False, "refused": True, "written": written, "reason": f"一半以上的链读不到:{list(failed)[:8]}"}
     return {"ok": not failed, "refused": False, "written": written, "chains": len(chains),
-            "full_backfill": full[:60], "failed": failed,
-            "reason": f"{len(chains)} 条链写 {written} 行(全量 {len(full)} 条)" + (f";失败 {len(failed)} 条" if failed else "")}
+            "full_backfill": full[:60], "failed": failed, "no_series": no_series,
+            "reason": f"{len(chains)} 条链写 {written} 行(全量 {len(full)} 条)"
+                      + (f";TVL 读不到 {len(failed)} 条" if failed else "")
+                      + (f";缺手续费 / DEX 序列 {len(no_series)} 条" if no_series else "")}
