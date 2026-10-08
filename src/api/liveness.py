@@ -42,6 +42,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_tokenization_tilt_loop":   {"max_age_h": 48, "kind": "marker"},   # S-427
     "_core_cap_loop":            {"max_age_h": 48, "kind": "marker"},   # S-473 ① 市值加权核心
     "_cis_tilt_loop":            {"max_age_h": 48, "kind": "marker"},   # T-052 ② CIS 倾斜
+    "_multiplier_loop":          {"max_age_h": 48, "kind": "marker"},   # T-063 ③ 推力
     "_state_daily_loop":         {"max_age_h": 30, "kind": "marker"},   # T-048 L1 状态层
     "_rr_matrix_loop":           {"max_age_h": 36, "kind": "marker"},   # T-045 评估层
     "_holder_refresh_loop":      {"max_age_h": 14, "kind": "marker"},   # T-004 持币集中度(6h)

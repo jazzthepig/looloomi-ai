@@ -50,7 +50,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest mypy
       - name: Preflight (offline, credential-free)
-        run: bash scripts/preflight.sh
+        run: |
+          set -o pipefail
+          bash scripts/preflight.sh 2>&1 | tee /tmp/preflight.log
+      - name: Surface the failure as annotations
+        # 10-08: every lane branch showed "preflight failure" and nobody could see why without logging in —
+        # Actions logs need auth, annotations do not. Seth's merge round reads them from the public API.
+        if: failure()
+        run: |
+          python3 - <<'EOF'
+          import re
+          lines = open("/tmp/preflight.log", encoding="utf-8", errors="replace").read().splitlines()
+          hits = [l for l in lines if re.search(r"✗|FAILED|Traceback|Error|🔴|assert", l)][-12:]
+          esc = lambda t: t.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")[:900]
+          for l in hits:
+              print(f"::error title=preflight::{esc(l)}")
+          print(f"::error title=preflight-tail::{esc(' | '.join(lines[-8:]))}")
+          EOF
 
   open-pr:
     runs-on: ubuntu-latest

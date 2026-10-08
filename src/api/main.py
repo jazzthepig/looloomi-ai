@@ -1265,6 +1265,40 @@ async def _start_cis_tilt_loop():
     print("[CIS-TILT] ✅ ② CIS tilt scheduled (cis_tilt_daily, 1 arm)")
 
 
+async def _multiplier_loop():
+    """③ 推力(T-063 / S-505):① × 状态决定的 0.7 / 1.0 / 1.3 倍。每小时一次;从 2023 起整条回放 + 起点(10-08)后的前向,
+    整条 upsert,幂等。三个窗口的评估(含随机择时分位)写进 loop_attempt.detail。收盘终值未就绪 ⇒ refused。
+    判活:`select max(d) from multiplier_daily where arm = 'mult_v1_replay'` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(480))
+    while True:
+        try:
+            from src.data.signals.multiplier import run_once as _mu_run
+            r = await _mu_run()
+            print(f"[MULTIPLIER] written={r.get('written')} · {str(r.get('reason'))[:120]}")
+            _detail = {"written": r.get("written"), "eval": r.get("eval"), "stale_in_source": r.get("stale_in_source")}
+            await _beat("_multiplier_loop", ok=bool(r.get("ok")) and not r.get("refused"),
+                        refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_multiplier_loop",
+                "ok" if r.get("ok") and not r.get("refused") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._multiplier_loop")
+        except Exception as _e:
+            print(f"[MULTIPLIER] ⚠️  pass FAILED: {_e}")
+            await _beat("_multiplier_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_multiplier_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._multiplier_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_multiplier_loop():
+    _asyncio.create_task(_multiplier_loop())
+    print("[MULTIPLIER] ✅ ③ multiplier scheduled (multiplier_daily: replay since 2023 + forward)")
+
+
 async def _state_daily_loop():
     """L1 状态层(T-048):每 6 小时重算最近 14 天的 17 个面板特征并 upsert;表为空时从 2023-01-01 整条回填。
     时点由 `features_at` 结构保证(先把输入截到 ≤ d)。缺数据写 None。失败 30 分钟后重试。
