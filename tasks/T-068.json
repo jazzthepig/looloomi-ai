@@ -1,0 +1,24 @@
+{
+  "created": "2026-10-08",
+  "verified": null,
+  "status": "open",
+  "owner": "lane-b",
+  "allowed_paths": [
+    "src/data/evaluation/rr_matrix.py",
+    "tests/test_rr_matrix.py",
+    "tests/rr_matrix_cases.py"
+  ],
+  "forbidden_paths": [
+    "src/api/",
+    "Shadow/"
+  ],
+  "prior_value": "见 T-059 原卡(10-07)",
+  "id": "T-068",
+  "title": "评估层 ②:状态轴换成有历史的价格特征(T-059 之后)",
+  "source": "T-059 拆分;10-07 高维复盘",
+  "acceptance": {
+    "check": "主格子 = state_daily 面板特征按时点:趋势(dist_200 > 0 / ≤ 0)× 波动(vol_pct_3y 切三档,切点 1/3、2/3 —— vol_pct_3y 本身是滚动 3 年的分位,按时点;切点是常数,不用全样本分位)= 6 格;宏观标签主导类保留为 `macro=` 前缀的描述格",
+    "expect": "测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子"
+  },
+  "notes": "依赖 T-059。A 10-07 复核第 5 条:切点按时点,已写进验收。"
+}

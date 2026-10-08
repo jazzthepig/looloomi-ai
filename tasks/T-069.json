@@ -1,0 +1,24 @@
+{
+  "created": "2026-10-08",
+  "verified": null,
+  "status": "open",
+  "owner": "lane-b",
+  "allowed_paths": [
+    "src/data/evaluation/rr_matrix.py",
+    "tests/test_rr_matrix.py",
+    "tests/rr_matrix_cases.py"
+  ],
+  "forbidden_paths": [
+    "src/api/",
+    "Shadow/"
+  ],
+  "prior_value": "见 T-059 原卡(10-07)",
+  "id": "T-069",
+  "title": "评估层 ③:随机组合基准与 outlier(T-068 之后)",
+  "source": "T-059 拆分;Jazz 10-07「和能赚钱、有随机性的东西对比,不断捕捉 outlier」",
+  "acceptance": {
+    "check": "每本账 × 格子:随机组合 1,000 次(按日期块抽样),与账本同宇宙、同底层加权(β+ / 代币化 / beta_core 用等权底,cis_tilt 用 ① 的市值底)、同持仓数、同换手、同单币上限;给 p05 / p50 / p95 / p99 与 pct_vs_random;outlier 清单 = 实测 > 随机 p99 的(账本,格子)",
+    "expect": "测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号)"
+  },
+  "notes": "依赖 T-068。T-064(配置器按模拟证据准入)等本卡。"
+}

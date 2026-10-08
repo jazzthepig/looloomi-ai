@@ -48,6 +48,7 @@ SNAPSHOT = PRIVATE_DOCS + ("MINIMAX_SYNC.md", "MINIMAX_SYNC_ARCHIVE.md", "WEEKLY
 APPEND_ONLY = ("REFUTATION_LEDGER.md",)
 SHRINK_TOLERANCE = 2048          # 台账只追加;比上一份快照短 2KB 以上 = 被旧版本覆盖或截断,不快照、报警
 LANES = ("a", "b", "c")
+REGENERATED = {"tasks/BOARD.md", "scripts/lesson_enforcement_baseline.txt"}   # 生成物:冲突可自动解
 LANE_BRANCH = re.compile(r"^lane-[abc]/T-\d{3}(?:-[A-Za-z0-9._-]+)?$")
 VERIFY_PATH = re.compile(r"^/[A-Za-z0-9_\-./?=&%,:]*$")
 
@@ -216,8 +217,25 @@ def do_merge(job: dict) -> dict:
         msg = (job.get("message") or f"merge {br}").rstrip() + f"\n\nCommitted-by: seth_bot (job {job['id']})"
         code, out = git("merge", "--no-ff", "-m", msg, f"origin/{br}", cwd=wt)
         if code != 0:
-            git("merge", "--abort", cwd=wt)
-            return {"ok": False, "stage": "merge", "detail": out[-3000:]}
+            conflicted = set(git("diff", "--name-only", "--diff-filter=U", cwd=wt)[1].split())
+            if not conflicted or not conflicted <= REGENERATED:
+                git("merge", "--abort", cwd=wt)
+                return {"ok": False, "stage": "merge", "detail": out[-3000:]}
+            # 只有生成物冲突:看板由卡片重生;棘轮基线取 main 那份(preflight 自己会再抬)。10-07 T-006 就卡在这里。
+            if "scripts/lesson_enforcement_baseline.txt" in conflicted:
+                git("checkout", "--ours", "--", "scripts/lesson_enforcement_baseline.txt", cwd=wt)
+            if "tasks/BOARD.md" in conflicted:
+                git("checkout", "--ours", "--", "tasks/BOARD.md", cwd=wt)
+            git("add", "--", *sorted(conflicted), cwd=wt)
+            code, out = git("commit", "--no-edit", "-q", cwd=wt)
+            if code != 0:
+                git("merge", "--abort", cwd=wt)
+                return {"ok": False, "stage": "merge", "detail": out[-3000:]}
+        # 合并后看板一律按合并后的卡片重生 —— 两边各改不同的卡时没有冲突,但看板会过期,preflight 会红。
+        run(["python3", "scripts/task_board.py"], cwd=wt, timeout=120)
+        if git("diff", "--quiet", "--", "tasks/BOARD.md", cwd=wt)[0] != 0:
+            git("add", "--", "tasks/BOARD.md", cwd=wt)
+            git("commit", "--amend", "--no-edit", "-q", cwd=wt)
         for name in LOCAL_ONLY:          # gitignored 本机产物,Mac 侧 preflight 要读(S-500)
             if (ROOT / name).exists() and not (wt / name).exists():
                 (wt / name).parent.mkdir(parents=True, exist_ok=True)
