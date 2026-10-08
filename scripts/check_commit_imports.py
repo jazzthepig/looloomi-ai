@@ -35,8 +35,12 @@ def missing_imports(files: set[str]) -> list[tuple[str, str, str]]:
         if not f.endswith(".py") or not f.startswith(PACKAGES):
             continue
         try:
-            tree = ast.parse((ROOT / f).read_text(encoding="utf-8"))
-        except (SyntaxError, OSError):
+            # 读「已提交」的内容,不读磁盘:工作区里别的没提交的改动(一个还没提交的 import)
+            # 不该挡住一个与它无关的提交(10-08 seth_bot 的一个提交就被这样拦下)。
+            src = subprocess.run(["git", "-C", str(ROOT), "--no-optional-locks", "show", f"HEAD:{f}"],
+                                 capture_output=True, check=True).stdout.decode("utf-8")
+            tree = ast.parse(src)
+        except (SyntaxError, OSError, subprocess.CalledProcessError, UnicodeDecodeError):
             continue
         for node in ast.walk(tree):
             mods = []

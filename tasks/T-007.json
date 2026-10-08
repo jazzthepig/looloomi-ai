@@ -2,7 +2,7 @@
   "id": "T-007",
   "title": "CG 新闻监听器写入 Supabase(经 Railway mac_writes)",
   "owner": "lane-c",
-  "status": "in_review",
+  "status": "done",
   "blocked_by": null,
   "source": "C 09-24 报告",
   "allowed_paths": [
@@ -17,6 +17,10 @@
   },
   "prior_value": "只在 Mac 本地 cis_history.db,13 行",
   "created": "2026-09-24",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-08T03:58Z",
+    "value": "narrative_events:近 24 小时 154 行,共 1,329 行,最新 2026-10-08 03:37 UTC(lane-c 10-08 00:13 测得 150 / 1,310,一致)"
+  },
   "notes": "2026-10-08 lane-c 测:总行 1310,24h count=150(全 CG_news_phase_1),newest 2026-10-07T23:36:55+00(UTC)=2026-10-08 08:36:55+09 JST 与本地 listener log 末条时间一致,1h 内增量 4(launchd StartInterval=3600,4-9 行/run 符合预期)。验收 >0 通过。代码无修改(listener 已 ship)。"
 }
