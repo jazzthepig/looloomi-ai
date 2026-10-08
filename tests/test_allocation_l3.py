@@ -42,11 +42,37 @@ def test_non_core_capped_at_single_asset_cap_until_holdings_exist():
     assert al.SINGLE_ASSET_CAP <= al.SINGLE_BOOK_CAP
 
 
-def test_nothing_before_60_days_forward():
-    """l3-v2:任何非 ① 账本前向不足 60 天一律 0(覆盖了原「④ / 事件 60 天内合计 ≤ 10%」)。"""
-    books = {CORE: _book("①"), "a": _book("④", n=59, mu=5, sigma=0.1), "b": _book("②", n=59, mu=5, sigma=0.1)}
+def test_min_days_is_a_variance_floor_not_a_waiting_period():
+    """l3-v3(T-064 / S-514):60 天日期门拿掉;只留插入式方差需要的 20 个点。前向不足 20 天、又没有模拟证据 ⇒ 0。"""
+    books = {CORE: _book("①"), "a": _book("④", n=19, mu=5, sigma=0.1), "b": _book("②", n=19, mu=5, sigma=0.1)}
     assert decide(D, books, [])["weights"] == {CORE: 1.0}
-    assert al.MIN_DAYS == 60
+    assert al.MIN_DAYS == 20
+
+
+def _sim(sealed=True, pct=0.97, lo=0.02, mu=0.20, post=0.10, sigma=0.30):
+    return {"sealed": sealed, "pct_vs_random": pct,
+            "replay_evidence": {"n_days": 645, "mu": mu, "sigma": sigma, "mu_lo_cs": lo, "mu_post": post}}
+
+
+def test_simulated_evidence_admits_on_day_one_when_sealed_and_beats_random():
+    b = dict(_book("③", n=0), sim=_sim())
+    out = decide(D, {CORE: _book("①"), "m": b}, [])
+    assert out["weights"]["m"] == pytest.approx(min(al.SINGLE_ASSET_CAP, 0.25 * 0.10 / 0.09))
+    assert any("模拟证据" in w for w in out["why"])
+
+
+def test_simulated_path_refuses_unsealed_weak_or_unbounded_evidence():
+    for sim in (_sim(sealed=False), _sim(pct=0.94), _sim(lo=-0.01), {"sealed": True, "pct_vs_random": 0.99}):
+        b = dict(_book("③", n=0), sim=sim)
+        assert decide(D, {CORE: _book("①"), "m": b}, [])["weights"] == {CORE: 1.0}, sim
+    assert not al.sim_admits({}) and al.sim_admits(_sim())
+
+
+def test_forward_evidence_can_veto_the_simulation():
+    fwd = {"n_days": 30, "mu": -0.5, "sigma": 0.3, "mu_lo_cs": -0.9, "mu_hi_cs": -0.05, "mu_post": -0.1}
+    b = {"layer": "③", "status": "paper", "caveat": "", "evidence": fwd, "sim": _sim()}
+    out = decide(D, {CORE: _book("①"), "m": b}, [])
+    assert out["weights"] == {CORE: 1.0} and any("前向否决" in w for w in out["why"])
 
 
 def test_weight_uses_shrunk_mean_and_gate_uses_anytime_bound():

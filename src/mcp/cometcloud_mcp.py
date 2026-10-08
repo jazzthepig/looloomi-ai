@@ -1073,7 +1073,7 @@ async def cometcloud_get_track_record() -> str:
 async def cometcloud_get_proof() -> str:
     """Returns the forward evidence of CometCloud's core holding (24 names, market-cap weighted, single coin <= 40%, spot only) and of every paper book built on top of it, in the same terms the allocation layer uses: the forward window, total return, the core's return over the same window, excess vs the core, an anytime-valid lower bound on the excess, and the weight the allocation layer currently gives the book.
 
-    Every row carries an `evidence_class` (forward / forward_young / caveat / retired / no_record). Books with fewer than 60 forward days are descriptive only. `no_record` means the record could not be read - it is not a zero. No book is pre-judged; read `how_to_read`. Paper records, not live-traded P&L.
+    Every row carries an `evidence_class` (forward / forward_young / caveat / retired / no_record). Books with fewer than 20 forward days are descriptive only (20 = the minimum to estimate a variance); a book can also be admitted on simulated evidence from a sealed point-in-time holdout - see `how_to_read`. `no_record` means the record could not be read - it is not a zero. No book is pre-judged; read `how_to_read`. Paper records, not live-traded P&L.
 
     Returns:
         str: {as_of, allocation_as_of, core, books: [{id, layer, name, thesis, evidence_class, window, forward_days, total_return, core_return_same_window, excess_vs_core, excess_ann, excess_vol_ann, anytime_lower_bound_ann, l3_weight}], how_to_read, note, compliance}

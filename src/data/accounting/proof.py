@@ -73,9 +73,12 @@ HOW_TO_READ = {
     "excess_vs_core": "Book total return minus the core's (24 names, market-cap weighted, single coin <= 40%, spot only) "
                       "over the same window. The benchmark is always holding the core, never zero.",
     "anytime_lower_bound_ann": "Anytime-valid lower bound on the mean daily excess, annualised: re-checking it daily does not "
-                               f"inflate it. The allocation layer gives a book weight only when this is > 0 and the book has "
-                               f">= {MIN_DAYS} forward days; the weight is also shrunk toward 0 first.",
-    "evidence_class": "forward | forward_young (< 60 forward days, descriptive only) | caveat (known issue, numbers not "
-                      "reliable) | retired | no_record (could not be read - not a zero).",
+                               f"inflate it. The allocation layer admits a book on either of two paths: forward - this bound is "
+                               f"> 0 with at least {MIN_DAYS} forward days (the minimum to estimate a variance, not a waiting "
+                               f"period); or simulated - a point-in-time replay whose sealed holdout (never used to tune the rule) "
+                               f"ranks at or above the 95th percentile of 1,000 random timings with a positive anytime lower bound, "
+                               f"unless forward evidence then turns significantly negative. Weights are shrunk toward 0 first.",
+    "evidence_class": f"forward | forward_young (< {MIN_DAYS} forward days, descriptive only) | caveat (known issue, numbers "
+                      "not reliable) | retired | no_record (could not be read - not a zero).",
     "l3_weight": "Weight the allocation layer gave this book on its latest day; the core takes the rest.",
 }

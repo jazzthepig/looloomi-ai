@@ -7,8 +7,14 @@
    零超额账本一年内 17% 会在某个运气好的日子被放进去,而越过门槛那一刻 Kelly 就顶到上限。
    - **门槛 = 任意时刻有效的置信序列**(正态混合边界,`CS_ALPHA`、`CS_RHO_DAYS`):天天看也不膨胀;
    - **Kelly 之前先收缩:** 先验 超额 ~ N(0, `PRIOR_EXCESS_SD_ANN`²),权重随证据平滑爬升,不再一步顶格;
-   - **任何非 ① 账本前向不足 60 天一律 0**(与 CLAUDE.md 的 60 天纸面交易门一致;
-     原「④ / 事件 60 天内合计 ≤ 10%」被这条覆盖,已删)。
+   - ~~任何非 ① 账本前向不足 60 天一律 0~~ **l3-v3(T-064 / S-514,Jazz 10-07「不等 30/60/90 天」、10-08「不按日期计划走」):**
+     60 天是日期门,不是证据门 —— 同一个零超额、天天重看的模拟里,60 天地板把一年内误放率从 1.2% 压到 1.07%,
+     几乎全部的保护来自任意时刻有效的置信序列。现在只留 `MIN_DAYS = 20`:插入式方差估计需要的最少点数。
+   - **两条准入路(T-064):** B 路 = 前向置信序列(上面这套);A 路 = **模拟证据** —— 按时点回放的封存留出段
+     (规则从没在这段上调过)里,择时 / 倾斜的超额高于随机对照 p95,且留出段超额的任意时刻下界 > 0。
+     A 路进来的账本权重按留出段证据算(同样先收缩再 ¼ Kelly),标 `evidence_path = simulated`;
+     前向攒够 `MIN_DAYS` 天、且前向超额的任意时刻**上界** < 0 ⇒ 降回 0(前向证据转负可以否决模拟)。
+     留出段看过数据才定规则的账本(如组合层 v2,S-511)不走 A 路。
    代价写在台账 S-488:超额夏普 1 的账本一年内被放进去的概率约 12%。证据越弱权重越小 —— 连续,不是开关。
 3. **上限:** 单个账本 ≤ 80%;单一标的净持仓 ≤ 40%。v0 还没有标的层持仓(L4 未建),
    所以**任何非 ① 账本都按「可能全仓一个币」处理,单本上限取 40%**;① 是 24 名等权,不受此限。
@@ -41,7 +47,9 @@ CORE = "core_cap"
 KELLY = 0.25
 SINGLE_BOOK_CAP = 0.80
 SINGLE_ASSET_CAP = 0.40
-MIN_DAYS = 60
+MIN_DAYS = 20
+#: A 路:模拟证据的随机对照分位门槛
+SIM_PCT = 0.95
 #: 置信序列:双侧水平(单侧越界概率约一半)与边界最紧的时点(天)。S-488 的模拟:零超额账本一年内被放进去约 1%。
 CS_ALPHA = 0.10
 CS_RHO_DAYS = 60
@@ -49,7 +57,7 @@ CS_RHO_DAYS = 60
 PRIOR_EXCESS_SD_ANN = 0.10
 EXPOSURE_RANGE = (-0.3, 1.3)
 HORIZONS = {"7d": 7, "14d": 14, "1m": 30, "delegate": 0}
-CODE_REF = "l3-v2"
+CODE_REF = "l3-v3"
 
 
 @dataclass(frozen=True)
@@ -98,7 +106,26 @@ def evidence(nav: Optional[pd.Series], bench: Optional[pd.Series]) -> dict[str, 
         "n_days": n, "mu": m * 365, "sigma": s * math.sqrt(365),
         "mu_lo95": (m - 2 * s / math.sqrt(n)) * 365,
         "mu_lo_cs": (m - cs_halfwidth(n, s)) * 365,
+        "mu_hi_cs": (m + cs_halfwidth(n, s)) * 365,
         "mu_post": shrink(m, s, n) * 365}.items()}
+
+
+#: A 路的模拟证据来源:账本 → 回放臂、① 回放臂、留出段起点、评估所在的循环与键、留出段是否封存(规则没在它上面调过)。
+SIM_SOURCES: dict[str, dict[str, Any]] = {
+    "multiplier": {"table": "multiplier_daily", "arm": "mult_v1_replay", "core_arm": "core_replay",
+                   "holdout": ("2025-01-01", "2026-10-07"), "loop": "_multiplier_loop",
+                   "eval_key": "holdout_2025_to_inception", "sealed": True},
+    "portfolio_layer": {"table": "portfolio_layer_daily", "arm": "pl_v2_replay", "core_arm": None,
+                        "holdout": ("2025-01-01", "2026-10-08"), "loop": "_portfolio_layer_loop",
+                        "eval_key": "holdout_2025_to_inception", "sealed": False},   # S-511:变量看过留出段
+}
+
+
+def sim_admits(sim: Mapping[str, Any]) -> bool:
+    """纯函数。A 路:留出段封存、随机分位 ≥ SIM_PCT、留出段超额任意时刻下界 > 0、证据齐。"""
+    ev = sim.get("replay_evidence") or {}
+    return bool(sim.get("sealed")) and (sim.get("pct_vs_random") or 0) >= SIM_PCT and \
+        ev.get("mu_lo_cs") is not None and ev["mu_lo_cs"] > 0 and ev.get("mu_post") is not None and bool(ev.get("sigma"))
 
 
 def book_cap(bid: str) -> float:
@@ -114,10 +141,24 @@ def decide(d: date, books: Mapping[str, Mapping[str, Any]], overrides: list[Over
             continue
         ev = b.get("evidence") or {}
         n = ev.get("n_days", 0)
+        sim = b.get("sim") or {}
+        if b.get("status") == "paper" and not b.get("caveat") and sim_admits(sim):
+            if n >= MIN_DAYS and ev.get("mu_hi_cs") is not None and ev["mu_hi_cs"] < 0:
+                why.append(f"{bid}: 0 —— 模拟证据过了,但前向 {n} 天超额任意时刻上界 {ev['mu_hi_cs']:+.1%} < 0,前向否决")
+                continue
+            sev = sim["replay_evidence"]
+            cap = book_cap(bid)
+            w = min(cap, max(0.0, KELLY * sev["mu_post"] / max(sev["sigma"] ** 2, 1e-9)))
+            raw[bid] = w
+            why.append(f"{bid}: {w:.1%} —— 模拟证据(A 路):封存留出段超额 {sev['mu']:+.1%}/年,随机分位 "
+                       f"{sim['pct_vs_random']:.2f},下界 {sev['mu_lo_cs']:+.1%};前向 {n} 天")
+            continue
         if b.get("status") != "paper" or b.get("caveat"):
             why.append(f"{bid}: 0 —— 状态 {b.get('status')}" + (f";{b['caveat']}" if b.get("caveat") else ""))
         elif n < MIN_DAYS:
-            why.append(f"{bid}: 0 —— 前向 {n} 天,不到 {MIN_DAYS} 天不配")
+            why.append(f"{bid}: 0 —— 前向 {n} 天,方差还估不出来(< {MIN_DAYS});模拟证据" +
+                       (f"随机分位 {sim['pct_vs_random']:.2f} 未过 {SIM_PCT}" if sim.get("pct_vs_random") is not None
+                        else "没有") + ("" if sim.get("sealed", True) else "(留出段看过数据,不算)"))
         elif ev.get("mu_lo_cs") is None or ev.get("mu_post") is None or not ev.get("sigma"):
             why.append(f"{bid}: 0 —— 证据缺任意时刻下界或收缩均值、或超额波动为 0,不可估({n} 天)")
         elif not ev["mu_lo_cs"] > 0:
@@ -192,6 +233,44 @@ async def load_overrides() -> list[Override]:
             for r in rows]
 
 
+async def load_sim_evidence(core_nav: pd.Series) -> dict[str, dict[str, Any]]:
+    """A 路的输入:每个 SIM_SOURCES 账本的留出段回放证据 + 最近一轮评估的随机分位。读不到 ⇒ 不给(不当成过)。"""
+    from src.data.style.header import _read_all
+    out: dict[str, dict[str, Any]] = {}
+    for bid, src in SIM_SOURCES.items():
+        try:
+            lo, hi = src["holdout"]
+            rows = await _read_all(src["table"], {"select": "d,nav", "arm": f"eq.{src['arm']}",
+                                                  "d": f"gte.{(pd.Timestamp(lo) - pd.Timedelta(days=1)).date()}",
+                                                  "order": "d.asc"})
+            nav = pd.Series({pd.Timestamp(r["d"]): float(r["nav"]) for r in rows}).sort_index()
+            nav = nav[nav.index <= pd.Timestamp(hi)]
+            if src["core_arm"]:
+                crow = await _read_all(src["table"], {"select": "d,nav", "arm": f"eq.{src['core_arm']}",
+                                                      "d": f"gte.{(pd.Timestamp(lo) - pd.Timedelta(days=1)).date()}",
+                                                      "order": "d.asc"})
+                bench = pd.Series({pd.Timestamp(r["d"]): float(r["nav"]) for r in crow}).sort_index()
+            else:
+                bench = await _core_replay_nav(lo)
+            bench = bench[bench.index <= pd.Timestamp(hi)]
+            la = await _read_all("loop_attempt", {"select": "detail", "loop_name": f"eq.{src['loop']}",
+                                                  "outcome": "eq.ok", "order": "at.desc", "limit": "1"})
+            ev_detail = ((la[0].get("detail") or {}).get("eval") or {}).get(src["eval_key"]) or {} if la else {}
+            out[bid] = {"sealed": src["sealed"], "pct_vs_random": ev_detail.get("pct_vs_random"),
+                        "replay_evidence": evidence(nav, bench)}
+        except Exception as e:                              # noqa: BLE001 — 读不到 ⇒ 不走 A 路,不是过了
+            out[bid] = {"sealed": src["sealed"], "pct_vs_random": None, "error": f"{type(e).__name__}: {str(e)[:80]}"}
+    return out
+
+
+async def _core_replay_nav(lo: str) -> pd.Series:
+    from src.data.style.header import _read_all
+    rows = await _read_all("multiplier_daily", {"select": "d,nav", "arm": "eq.core_replay",
+                                                "d": f"gte.{(pd.Timestamp(lo) - pd.Timedelta(days=1)).date()}",
+                                                "order": "d.asc"})
+    return pd.Series({pd.Timestamp(r["d"]): float(r["nav"]) for r in rows}).sort_index()
+
+
 async def run_once() -> dict[str, Any]:
     """从 INCEPTION 起逐日整条重算(无状态、幂等),写 allocation_daily 与 allocation_nav_daily。"""
     from datetime import datetime, timezone
@@ -208,19 +287,26 @@ async def run_once() -> dict[str, Any]:
     if not days:
         return {"ok": True, "refused": True, "reason": f"① 最新 {last},起点 {INCEPTION} 还没到"}
     ovs = await load_overrides()
+    sims = await load_sim_evidence(core)
     returns = {k: v.dropna().sort_index().pct_change() for k, v in navs.items() if v is not None}
     decisions, alloc_rows = {}, []
     for d in days:
         ts = pd.Timestamp(d)
         core_w = forward_window(core, ts)
         books = {b.id: {"layer": b.layer, "status": b.status, "caveat": b.caveat,
-                        "evidence": evidence(forward_window(navs.get(b.id), ts), core_w)}
+                        "evidence": evidence(forward_window(navs.get(b.id), ts), core_w),
+                        "sim": sims.get(b.id)}
                  for b in BOOKS}
         dec = decide(d, books, ovs)
         decisions[d] = dec
         for bid, w in dec["weights"].items():
+            _sim = books.get(bid, {}).get("sim") or {}
+            _ev = dict(books.get(bid, {}).get("evidence") or {})
+            if _sim:
+                _ev["sim"] = {k: _sim.get(k) for k in ("sealed", "pct_vs_random")}
+                _ev["evidence_path"] = "simulated" if (w > 0 and sim_admits(_sim)) else "forward"
             alloc_rows.append({"d": d.isoformat(), "book": bid, "weight": w, "exposure": dec["exposure"],
-                               "evidence": books.get(bid, {}).get("evidence"),
+                               "evidence": _ev,
                                "why": dec["why"] if bid == CORE else None, "code_ref": CODE_REF})
     nav_rows = nav_path(days, decisions, returns)
     # S-489:写之前按严格 JSON 检查一遍 —— 无穷 / NaN 会让 PostgREST 以「Empty or invalid json」拒收整批,
