@@ -56,3 +56,11 @@ if __name__ == "__main__":
             fn()
             print(f"  ✓ {name}")
     print("\n✅ passed")
+
+
+def test_executor_checks_the_main_dir_before_any_job() -> None:
+    """10-08:lane 在主目录切了分支又 stash —— 执行器必须先看 HEAD 在不在 main,再看有没有新 stash。"""
+    src = BOT.read_text(encoding="utf-8")
+    assert "def main_dir_guard" in src
+    assert "if main_dir_guard() else []" in src, "HEAD 不在 main 时一个任务都不能执行"
+    assert "refs/stash" in src and "git stash apply" in src, "新 stash 要留下恢复指令"

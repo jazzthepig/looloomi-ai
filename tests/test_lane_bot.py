@@ -119,3 +119,41 @@ if __name__ == "__main__":
             fn()
             print(f"  ✓ {name}")
     print("\n✅ passed")
+
+
+def test_guard_blocks_main_dir_git_writes_and_file_writes() -> None:
+    """10-08:lane-c 在主目录 switch → stash「not mine」→ switch main,收走了 Seth 17 个未提交的文件。"""
+    from scripts.lane_bot.guard_main_dir import verdict
+    M, L = "/Users/sbb/Projects/looloomi-ai", "/Users/sbb/Projects/looloomi-ai-lane-c"
+    blocked = [
+        f"git -C {M} switch -c lane-c/T-036 origin/main",
+        f'git -C {M} stash push -m "pre-existing dirty state (not mine)" --keep-index',
+        f"git -C {M} update-index --chmod=+x scripts/x.sh",
+        f"cd {M} && git add -A && git commit -m x",
+        "cd ~/Projects/looloomi-ai && git checkout main",
+        f"echo hi > {M}/scripts/stray.sh",
+    ]
+    for cmd in blocked:
+        assert verdict("Bash", {"command": cmd}), cmd
+    allowed = [
+        f"git -C {L} switch -c lane-c/T-036 origin/main",
+        f"cd {L} && git add tasks/T-036.json && git commit -m x",
+        f"git -C {M} log --oneline -5", f"git -C {M} show origin/main:tasks/T-036.json", f"git -C {M} status",
+        f"cat {M}/MINIMAX_SYNC.md", f"echo '## §C' >> {M}/MINIMAX_SYNC.md",
+        "git -C /Users/sbb/Projects/looloomi-ai-private log -1",
+    ]
+    for cmd in allowed:
+        assert verdict("Bash", {"command": cmd}) is None, cmd
+    assert verdict("Write", {"file_path": f"{M}/scripts/verify_rotation_alive.sh"})
+    assert verdict("Write", {"file_path": f"{M}/MINIMAX_SYNC.md"}) is None
+    assert verdict("Edit", {"file_path": f"{L}/scripts/verify_rotation_alive.sh"}) is None
+
+
+def test_every_launch_installs_the_guard() -> None:
+    import json as _json
+    from scripts.lane_bot.lane_bot import guard_settings
+    assert '--settings "$LANE_SETTINGS"' in _LAUNCH
+    cfg = _json.loads(guard_settings().read_text(encoding="utf-8"))
+    hook = cfg["hooks"]["PreToolUse"][0]
+    assert "Bash" in hook["matcher"] and "Write" in hook["matcher"]
+    assert "guard_main_dir.py" in hook["hooks"][0]["command"]

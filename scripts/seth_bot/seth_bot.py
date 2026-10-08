@@ -368,6 +368,33 @@ def ensure_lane_links() -> None:
                 link.symlink_to(ROOT / rel)
 
 
+def main_dir_guard() -> bool:
+    """主目录必须在 main;有人在主目录 stash 了,立刻留下恢复指令。返回 False = 本轮不执行任务。
+
+    10-08:lane-c 的自动轮次在**主目录**里 `switch -c lane-c/T-036` → `stash push`(消息写着
+    「not mine」)→ `switch main`,把 Seth 17 个未提交的文件(含 Jazz 的 pptx)收进了 stash。
+    执行器当时没看 HEAD 在哪 —— 如果那几分钟里有任务,提交会落在 lane 的分支上。"""
+    code, br = git("symbolic-ref", "--short", "-q", "HEAD")
+    ok = code == 0 and br.strip() == "main"
+    if not ok:
+        line = f"✗ 主目录 HEAD 在 {br.strip() or '(detached)'},不在 main —— 有人在主目录切了分支;本轮不执行任何任务"
+        log(line)
+        notify("seth_bot", line)
+    code, sha = git("rev-parse", "-q", "--verify", "refs/stash")
+    sha = sha.strip() if code == 0 else ""
+    seen_f = BOT / "stash_seen"
+    seen = seen_f.read_text(encoding="utf-8").strip() if seen_f.exists() else ""
+    if sha and sha != seen:
+        _, msg = git("log", "-g", "-1", "--format=%gs", "refs/stash")
+        line = (f"⚠️ 主目录出现新的 stash {sha[:10]}「{msg.strip()[:120]}」—— 被收走的未提交改动在这里;"
+                f"恢复:git stash apply {sha[:10]}")
+        log(line)
+        notify("seth_bot", line)
+    if sha != seen:
+        seen_f.write_text(sha + "\n", encoding="utf-8")
+    return ok
+
+
 def main() -> int:
     BOT.mkdir(exist_ok=True)
     QUEUE.mkdir(exist_ok=True)
@@ -384,7 +411,7 @@ def main() -> int:
         shutil.rmtree(lock, ignore_errors=True)
         lock.mkdir()
     try:
-        jobs = sorted(QUEUE.glob("*.json"))
+        jobs = sorted(QUEUE.glob("*.json")) if main_dir_guard() else []
         if not jobs:
             git("fetch", "--quiet", "--prune", "origin")
         for jf in jobs:
