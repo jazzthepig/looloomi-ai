@@ -110,6 +110,15 @@ def untrack_problems(paths: list[str]) -> list[str]:
     return out
 
 
+def failure_digest(out: str) -> str:
+    """preflight 的失败原因:挑出 ✗ / FAILED / Traceback 行,再附最后几行。只截尾 4000 字时,
+    真正的失败行常被后面的测试日志淹没(10-08 T-058 合并失败,尾巴里全是无关的 403 打印)。"""
+    import re as _re
+    lines = out.splitlines()
+    hits = [l for l in lines if _re.search(r"✗|FAILED|Traceback|AssertionError|🔴", l)][-15:]
+    return "\n".join(["[失败行]", *hits, "[最后几行]", *lines[-6:]])[-4000:]
+
+
 def preflight(cwd: Path) -> tuple[bool, str]:
     env = dict(os.environ)
     env.pop("INTERNAL_TOKEN", None)
@@ -189,7 +198,7 @@ def do_commit(job: dict) -> dict:
     if not ok:
         if untrack:
             git("reset", "--quiet", "--", *untrack)
-        return {"ok": False, "stage": "preflight", "detail": out[-4000:]}
+        return {"ok": False, "stage": "preflight", "detail": failure_digest(out)}
     (ROOT / ".git" / "index.lock").unlink(missing_ok=True)
     code, out = git("add", "--", *paths)
     if code != 0:
@@ -265,7 +274,7 @@ def do_merge(job: dict) -> dict:
                 (wt / name).symlink_to(ROOT / name)
         ok, out = preflight(wt)
         if not ok:
-            return {"ok": False, "stage": "preflight(merged tree)", "detail": out[-4000:]}
+            return {"ok": False, "stage": "preflight(merged tree)", "detail": failure_digest(out)}
         sha = git("rev-parse", "HEAD", cwd=wt)[1].strip()
         # 从主目录推这个提交(worktree 共用对象库):pre-push 钩子只放主工作目录推 main(S-421),
         # 在临时 worktree 里推会被它拦下(S-502 发现,S-500 的模拟里没装钩子所以没暴露)。
