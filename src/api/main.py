@@ -1299,6 +1299,39 @@ async def _start_multiplier_loop():
     print("[MULTIPLIER] ✅ ③ multiplier scheduled (multiplier_daily: replay since 2023 + forward)")
 
 
+async def _meta_allocator_loop():
+    """T-075 / S-521:类比元配置 —— 按状态找历史相似日、看策略库里各策略之后表现、每周重配;回放 2023-07 起 + 前向。
+    每 6 小时一轮(排在 ① 候选之后)。判活:`select max(d) from meta_allocator_daily where arm = 'meta_knn'` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(840))
+    while True:
+        try:
+            from src.data.signals.meta_allocator import run_once as _ma_run
+            r = await _ma_run()
+            print(f"[META-ALLOC] written={r.get('written')} · {str(r.get('reason'))[:120]}")
+            _detail = {"written": r.get("written"), "eval": r.get("eval")}
+            await _beat("_meta_allocator_loop", ok=bool(r.get("ok")) and not r.get("refused"),
+                        refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_meta_allocator_loop",
+                "ok" if r.get("ok") and not r.get("refused") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._meta_allocator_loop")
+        except Exception as _e:
+            print(f"[META-ALLOC] ⚠️  pass FAILED: {_e}")
+            await _beat("_meta_allocator_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_meta_allocator_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._meta_allocator_loop")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_meta_allocator_loop():
+    _asyncio.create_task(_meta_allocator_loop())
+    print("[META-ALLOC] ✅ analog meta-allocator scheduled (meta_allocator_daily)")
+
+
 async def _anchor_loop():
     """T-073 / S-519:每小时看一次,昨天(UTC)的前向行记齐了就锚一次(只追加);UTC 22 点还没齐就照锚并记下缺的。
     判活:`select max(d) from forward_anchor_daily` = 昨天(UTC 22 点后)。
@@ -1657,7 +1690,7 @@ async def _allocation_loop():
     每 6 小时从 INCEPTION 整条重算,幂等。表 `allocation_daily` / `allocation_nav_daily`。
     判活:`select max(d) from allocation_nav_daily` = 昨天(UTC),或 ① 的最新 NAV 日。
     """
-    await _asyncio.sleep(_boot_delay(1500))
+    await _asyncio.sleep(_boot_delay(840))
     while True:
         _al_ok = False
         try:

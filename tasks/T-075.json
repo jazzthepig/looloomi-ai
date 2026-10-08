@@ -1,0 +1,27 @@
+{
+  "id": "T-075",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-08",
+  "verified": null,
+  "title": "类比元配置:按当下状态去历史找相似日,看策略库里每个策略之后表现,每周重配(机器自己选)",
+  "source": "Jazz 10-08「现在还是没有做到我们设计的智能」;DECISIONS 10-07「策略 × 周期」「风格 VDB 按周期匹配」",
+  "allowed_paths": [
+    "src/data/signals/",
+    "src/data/accounting/anchor.py",
+    "src/api/main.py",
+    "src/api/liveness.py",
+    "scripts/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "meta_allocator_daily 回放 2023-07 起 + 前向;报学习期 / 留出段 / 前向的总收益、回撤、夏普;主判据 = 状态打乱(30 天块 100 次)分位,次要 = 随机挑 2 个、全库等权、BTC、事后最好单一策略",
+    "expect": "留出段打乱分位 > 0.95 才算「会挑」;不论结果,前向从 10-09 起记并锚定"
+  },
+  "prior_value": "所有规则都是手写阈值;没有一个按状态在策略库里自己挑的配置",
+  "notes": "2026-10-08 开卡并实现(S-521)。"
+}

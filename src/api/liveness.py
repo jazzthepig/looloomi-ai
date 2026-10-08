@@ -43,6 +43,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_core_cap_loop":            {"max_age_h": 48, "kind": "marker"},   # S-473 ① 市值加权核心
     "_cis_tilt_loop":            {"max_age_h": 48, "kind": "marker"},   # T-052 ② CIS 倾斜
     "_multiplier_loop":          {"max_age_h": 48, "kind": "marker"},   # T-063 ③ 推力
+    "_meta_allocator_loop":      {"max_age_h": 30, "kind": "marker"},   # T-075 类比元配置
     "_anchor_loop":              {"max_age_h": 30, "kind": "marker"},   # T-073 前向记录锚定
     "_core_variants_loop":       {"max_age_h": 30, "kind": "marker"},   # T-072 ① 候选定义
     "_stable_lending_loop":      {"max_age_h": 30, "kind": "collector"},  # S-513 稳定币借贷 APY(日更)
