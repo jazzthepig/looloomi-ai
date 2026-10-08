@@ -2,7 +2,7 @@
   "id": "T-049",
   "title": "L0 时间戳语义收成一个合约:每个源的 bar 日期怎么来,一处定义 + 每源一条对 binance_hist 的合约测试(v0.2 原则 P4)",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-04",
   "source": "S-436 / S-459 / S-468 三次同类缺陷;v0.2 §6 L0 缺口",
   "allowed_paths": [
@@ -18,6 +18,10 @@
     "expect": "代码里不再有第二处『减一天』;T-044 守卫做每日巡检,这条做提交前的门"
   },
   "prior_value": "日期语义散在 get_cg_ohlc_range / parse_market_chart / deep_panel_collector 各自的注释里",
-  "verified": null,
-  "notes": "Seth 的第 1 张。 | 2026-10-04:`src/data/market/bar_semantics.py`(STAMP + covered_day + is_day_boundary)一处定义;CG ohlc / market_chart / global chart、Binance klines、/api/v1/ohlcv 的成交量五处写入端改调它;tests/test_bar_semantics.py 钉每个来源 + 扫 src/ 不许别处自己「减一天」。在线的「同日 ≥ 95%」巡检由 T-044b 每日做。"
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-08T07:20Z",
+    "value": "tests/test_bar_semantics.py 通过(扫 src/ 无第二处「减一天」);T-044b 每日巡检 _price_agreement_loop 10-08 ok、n_error 0"
+  },
+  "notes": "Seth 的第 1 张。 | 2026-10-04:`src/data/market/bar_semantics.py`(STAMP + covered_day + is_day_boundary)一处定义;CG ohlc / market_chart / global chart、Binance klines、/api/v1/ohlcv 的成交量五处写入端改调它;tests/test_bar_semantics.py 钉每个来源 + 扫 src/ 不许别处自己「减一天」。在线的「同日 ≥ 95%」巡检由 T-044b 每日做。 | 10-08 收卡(lane-a 的进度评估指出 in_review 积压 —— 积压的原因是合并后没人跑验收,不是没合并)。"
 }

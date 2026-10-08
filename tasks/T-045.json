@@ -2,7 +2,7 @@
   "id": "T-045",
   "title": "评估层 rr_matrix:每本账在每个状态格子里相对 ① 的超额分布(v0.2 阶段 3)—— 规格 + 纯函数 + 测试",
   "owner": "lane-b",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-04",
   "source": "v0.2 §3 评估层 / §7 阶段 3;L3 现在只用整段前向超额,不分状态",
   "allowed_paths": [
@@ -22,6 +22,10 @@
     "expect": "规格文档 + 纯函数 + ≥ 6 个测试全过;状态输入先用 T-048 的字段名约定(没就绪时用合成数据测),交 patch 到 lane-b worktree,Seth 接调度与建表"
   },
   "prior_value": "评估都在台账的一次性报告里;L3 的证据不分状态",
-  "verified": null,
-  "notes": "顺序:B 的第 2 张(先做 T-047)。基准一律是 ①(core_cap 的 cap_a1);2026-10-02 以前用 S-472 的 α=1 回放序列作先验,不当前向证据。 | 2026-10-06 B 交 v0.5(规格 + 纯函数 + 10 测试)。退回改 v0.6(SYNC §Seth-1006d):对齐 T-048 实际特征名(无 regime_4label 字符串;用 regime_share_30d 的主导类)、6 类不是 4 类、缺状态不许默认 RISK_ON(进 unknown 格)、年化 365、基准用 registry 的 ①(回放 + 前向)不是 cap_a1、全样本区间不写单点。 | 2026-10-06 v0.6 合并(S-496):src/data/evaluation/rr_matrix.py + 表 rr_matrix_daily(迁移 s496)+ _rr_matrix_loop(12h)+ tests/test_rr_matrix.py(B 的 13 个用例逐个断言 + 4 个新)。合并时改三处:hash 种子 → crc32(跨进程可复现)、rel_maxdd 在账本窗口算、FOMC 三个错日。验收待部署后第一份 rr_matrix_daily。"
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-08T07:20Z",
+    "value": "rr_matrix_daily 2026-10-05..10-07 共 60 行,_rr_matrix_loop 10-08 05:05 UTC ok;测试 tests/test_rr_matrix.py 在 preflight 里。已知缺陷:bootstrap 区间退化 —— 由 T-059 修,不在本卡"
+  },
+  "notes": "顺序:B 的第 2 张(先做 T-047)。基准一律是 ①(core_cap 的 cap_a1);2026-10-02 以前用 S-472 的 α=1 回放序列作先验,不当前向证据。 | 2026-10-06 B 交 v0.5(规格 + 纯函数 + 10 测试)。退回改 v0.6(SYNC §Seth-1006d):对齐 T-048 实际特征名(无 regime_4label 字符串;用 regime_share_30d 的主导类)、6 类不是 4 类、缺状态不许默认 RISK_ON(进 unknown 格)、年化 365、基准用 registry 的 ①(回放 + 前向)不是 cap_a1、全样本区间不写单点。 | 2026-10-06 v0.6 合并(S-496):src/data/evaluation/rr_matrix.py + 表 rr_matrix_daily(迁移 s496)+ _rr_matrix_loop(12h)+ tests/test_rr_matrix.py(B 的 13 个用例逐个断言 + 4 个新)。合并时改三处:hash 种子 → crc32(跨进程可复现)、rel_maxdd 在账本窗口算、FOMC 三个错日。验收待部署后第一份 rr_matrix_daily。 | 10-08 收卡(lane-a 的进度评估指出 in_review 积压 —— 积压的原因是合并后没人跑验收,不是没合并)。"
 }

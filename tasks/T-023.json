@@ -2,7 +2,7 @@
   "id": "T-023",
   "title": "CIS universe API:把 Tier 标签(T1/T2)传到前端,CISLeaderboard 徽章按源染色",
   "owner": "lane-a",
-  "status": "in_review",
+  "status": "done",
   "source": "T-014 audit 2026-09-26",
   "allowed_paths": [
     "/Volumes/CometCloudAI/cometcloud-local/cis_push.py",
@@ -17,6 +17,10 @@
   },
   "prior_value": "GET /api/v1/cis/universe:universe 58 行,但 data_source=None(API 层未传播 Tier)。CISLeaderboard 徽章当前无法区分",
   "created": "2026-09-26",
-  "verified": null,
-  "notes": "T-001 (lane-a) 完成后 T1 标的数会从 24 升到 43+,数据路径走通后这个标签才有意义;但 API 字段先固定 —— 等 T-001 ship 不影响本卡的 schema 端。Seth lane 在 src/api/routers/cis.py 加 data_source 字段映射;Minimax lane 在 cis_push.py/cis_v4_engine.py 输出 data_source='T1'。 | 2026-10-06 Seth 实现(S-497),未用 A 的补丁:A 的 cis.py 基于 09-27 前的旧文件,整份套上会回退 T-024「快照从不写 T1」的修复;A 只认 data_tier == 1,正是写成 \"T1\" 字符串的那 18 行会被判成 t2;枚举也不是卡上的。as-built:cis.normalize_tiers —— 四条返回路径统一 data_tier 为整数并给 data_source ∈ {T1, T1_stale, T2};merged 路径在补 pillars 之前先归一(字符串 T1 原来也漏补 pillars)。tests/test_cis_data_source.py。前端徽章按 data_tier === 1 染色,归一后即生效。验收待部署后 /api/v1/cis/universe 抽查。"
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-08T07:20Z",
+    "value": "GET /api/v1/cis/universe:data_source='T1'(非空);每个标的顶层 data_tier 已归一为整数 1(抽到的 19 个全是;字符串 'T1' 只在 provenance.data_tier 里,不是徽章读的字段)。前端徽章按 data_tier === 1 染色 —— 截图未做"
+  },
+  "notes": "T-001 (lane-a) 完成后 T1 标的数会从 24 升到 43+,数据路径走通后这个标签才有意义;但 API 字段先固定 —— 等 T-001 ship 不影响本卡的 schema 端。Seth lane 在 src/api/routers/cis.py 加 data_source 字段映射;Minimax lane 在 cis_push.py/cis_v4_engine.py 输出 data_source='T1'。 | 2026-10-06 Seth 实现(S-497),未用 A 的补丁:A 的 cis.py 基于 09-27 前的旧文件,整份套上会回退 T-024「快照从不写 T1」的修复;A 只认 data_tier == 1,正是写成 \"T1\" 字符串的那 18 行会被判成 t2;枚举也不是卡上的。as-built:cis.normalize_tiers —— 四条返回路径统一 data_tier 为整数并给 data_source ∈ {T1, T1_stale, T2};merged 路径在补 pillars 之前先归一(字符串 T1 原来也漏补 pillars)。tests/test_cis_data_source.py。前端徽章按 data_tier === 1 染色,归一后即生效。验收待部署后 /api/v1/cis/universe 抽查。 | 10-08 收卡(lane-a 的进度评估指出 in_review 积压 —— 积压的原因是合并后没人跑验收,不是没合并)。"
 }

@@ -2,7 +2,7 @@
   "id": "T-052",
   "title": "② CIS 倾斜账本上线:按 T-051 的预注册建账、登记、前向记录(第一行真实数据)",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-06",
   "source": "T-051",
   "allowed_paths": [
@@ -21,6 +21,10 @@
     "expect": "回放段标「暴露」;前向首行 ≤ 10-10;每天 06:00 UTC 后有昨天的行"
   },
   "prior_value": "无",
-  "verified": null,
-  "notes": "规则 5b:调度者 + 判活判据 + 第一行真实数据,三缺一不算完。 | 2026-10-06 建成:src/data/signals/cis_tilt.py + cis_tilt_daily(迁移 s493)+ _cis_tilt_loop + 登记表 + tests/test_cis_tilt.py(6 项)。验收待部署后第一行(d=10-06,起点)与 10-07 第一根前向。"
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-08T07:20Z",
+    "value": "cis_tilt_daily 2026-10-06..10-07 共 2 行(起点 + 第一根前向,≤ 10-10 ✓);登记表 cis_tilt(② / benchmark core)在 /api/v1/proof/books 与 MCP cometcloud_get_proof 中出现;_cis_tilt_loop 10-08 04:57 UTC ok"
+  },
+  "notes": "规则 5b:调度者 + 判活判据 + 第一行真实数据,三缺一不算完。 | 2026-10-06 建成:src/data/signals/cis_tilt.py + cis_tilt_daily(迁移 s493)+ _cis_tilt_loop + 登记表 + tests/test_cis_tilt.py(6 项)。验收待部署后第一行(d=10-06,起点)与 10-07 第一根前向。 | 10-08 收卡(lane-a 的进度评估指出 in_review 积压 —— 积压的原因是合并后没人跑验收,不是没合并)。"
 }
