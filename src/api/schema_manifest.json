@@ -34,6 +34,7 @@
     "exploration_ideas",
     "factor_tilt_nav",
     "factor_tilt_state",
+    "feature_arms_daily",
     "forward_anchor_daily",
     "funding_history",
     "fusion_paper_lifecycle",

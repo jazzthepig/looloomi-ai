@@ -1457,6 +1457,38 @@ async def _start_chain_activity_loop():
     print("[CHAIN-ACT] ✅ chain activity scheduled (chain_activity_daily: TVL / fees / DEX volume)")
 
 
+async def _feature_arms_loop():
+    """S-528 / T-077:把 CIS 当特征放进组合的三条臂(cis_ew / cis_follow / cis_contra)→ feature_arms_daily。
+    回放 2025-05 起(样本内),前向 10-12 起;进前向锚。每 6 小时一轮,幂等。
+    判活:`select max(d) from feature_arms_daily` = 昨天(UTC)。
+    """
+    await _asyncio.sleep(_boot_delay(870))
+    while True:
+        try:
+            from src.data.signals.feature_arms import run_once as _fa_run
+            r = await _fa_run()
+            print(f"[FEATURE-ARMS] {str(r.get('reason'))[:160]}")
+            _detail = {k: r.get(k) for k in ("written",)}
+            await _beat("_feature_arms_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_feature_arms_loop", "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._feature_arms_loop")
+        except Exception as _e:
+            print(f"[FEATURE-ARMS] ⚠️  pass FAILED: {_e}")
+            await _beat("_feature_arms_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_feature_arms_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._feature_arms_loop")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_feature_arms_loop():
+    _asyncio.create_task(_feature_arms_loop())
+    print("[FEATURE-ARMS] ✅ CIS feature arms scheduled (feature_arms_daily: cis_ew / cis_follow / cis_contra)")
+
+
 async def _style_pit_loop():
     """T-067 / S-512:风格指数按时点、在宽宇宙(Binance 现货上市过的全部币)上重算 → style_index_pit_daily;
     覆盖率 → style_pit_coverage_daily;幸存者偏差(两版逐年收益差)写进 loop_attempt.detail。每天一轮,排在风格表头之后。

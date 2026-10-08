@@ -46,6 +46,7 @@ SOURCES: tuple[tuple[str, dict, str], ...] = (
     ("portfolio_layer_daily", {"arm": "eq.pl_v2"}, "arm"),
     ("core_variants_daily", {}, "arm"),
     ("meta_allocator_daily", {}, "arm"),
+    ("feature_arms_daily", {}, "arm"),
     ("allocation_daily", {}, "book"),
     ("allocation_nav_daily", {}, "d"),
     ("exploration_ideas", {}, "id"),

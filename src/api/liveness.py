@@ -48,6 +48,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_core_variants_loop":       {"max_age_h": 30, "kind": "marker"},   # T-072 ① 候选定义
     "_stable_lending_loop":      {"max_age_h": 30, "kind": "collector"},  # S-513 稳定币借贷 APY(日更)
     "_chain_activity_loop":      {"max_age_h": 30, "kind": "collector"},  # S-526 链 TVL / 手续费 / DEX 成交量(日更)
+    "_feature_arms_loop":        {"max_age_h": 30, "kind": "marker"},   # S-528 CIS 特征臂
     "_style_pit_loop":           {"max_age_h": 30, "kind": "marker"},   # T-067 时点风格指数(日更)
     "_portfolio_layer_loop":     {"max_age_h": 30, "kind": "marker"},   # T-070 组合层 0–1 敞口
     "_binance_hf_loop":          {"max_age_h": 30, "kind": "collector"},  # S-509 小时线 + 资金费率(日更)

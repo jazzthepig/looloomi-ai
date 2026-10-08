@@ -1,0 +1,25 @@
+{
+  "id": "T-077",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-09",
+  "verified": null,
+  "title": "CIS 当特征放进组合:cis_ew / cis_follow / cis_contra 三臂前向对照(S-527 的方向,S-528 预注册)",
+  "source": "Jazz 10-09「CIS 的这个不是问题,是 feature —— 强信号之后会回撤,底部会反弹,关键看我们怎样做我们的组合利用起来」",
+  "allowed_paths": [
+    "src/data/",
+    "src/api/",
+    "scripts/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① feature_arms_daily 三臂落库、6 小时一轮、进前向锚 ② 回放(2025-05 → 10-11,样本内)照报 ③ 前向 10-12 起:cis_contra − cis_ew 任意时刻下界 > 0 ⇒ 进 ② 的倾斜;cis_follow − cis_ew 上界 < 0 ⇒ 对外标签含义要改(交 Jazz)",
+    "expect": "第一行真实数据 + 回放数字;前向判据写死"
+  },
+  "prior_value": "CIS 只被当成正向标签用;没有一本书把「OUT 之后回撤、UNDER 之后相对反弹」当特征",
+  "notes": "2026-10-09 开卡。S-527:OUT 名字 17 个月跑输同类等权(超额 t −2.9,与市场相关 −0.26);BTC 50 日线下方时 OUT −4.3%/周(t −3.6)、UNDER +0.3%/周(t 2.4)。"
+}
