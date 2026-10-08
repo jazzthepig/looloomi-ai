@@ -689,6 +689,38 @@ async def get_llama_pool_chart(pool_id: str) -> list[dict]:
     return (r.json() or {}).get("data") or []
 
 
+async def get_llama_chains_raw() -> list[dict]:
+    """DeFiLlama `/v2/chains`:[{name, gecko_id, tokenSymbol, tvl, ...}]。非 200 抛错(T-076 / S-526)。"""
+    r = await _get_llama_client().get(f"{LLAMA_BASE}/v2/chains", timeout=60)
+    if r.status_code != 200:
+        raise RuntimeError(f"DeFiLlama /v2/chains HTTP {r.status_code}")
+    return r.json() or []
+
+
+async def get_llama_chain_tvl(chain: str) -> list[list]:
+    """DeFiLlama `/v2/historicalChainTvl/{chain}` → [[unix_ts, tvl_usd], ...]。非 200 抛错(T-076 / S-526)。"""
+    from urllib.parse import quote
+    r = await _get_llama_client().get(f"{LLAMA_BASE}/v2/historicalChainTvl/{quote(chain)}", timeout=60)
+    if r.status_code != 200:
+        raise RuntimeError(f"DeFiLlama historicalChainTvl/{chain} HTTP {r.status_code}")
+    return [[x.get("date"), x.get("tvl")] for x in (r.json() or [])]
+
+
+async def get_llama_chain_overview(kind: str, chain: str) -> list[list]:
+    """DeFiLlama `/overview/{fees|dexs}/{chain}` 的 totalDataChart → [[unix_ts, usd], ...]。
+    404 = 这条链没有该类数据 → 空列表;其他非 200 抛错(T-076 / S-526)。"""
+    from urllib.parse import quote
+    if kind not in ("fees", "dexs"):
+        raise ValueError(kind)
+    q = "excludeTotalDataChartBreakdown=true" + ("&dataType=dailyFees" if kind == "fees" else "")
+    r = await _get_llama_client().get(f"{LLAMA_BASE}/overview/{kind}/{quote(chain)}?{q}", timeout=60)
+    if r.status_code in (404, 400):
+        return []
+    if r.status_code != 200:
+        raise RuntimeError(f"DeFiLlama overview/{kind}/{chain} HTTP {r.status_code}")
+    return (r.json() or {}).get("totalDataChart") or []
+
+
 async def get_dex_volumes() -> dict:
     """Top DEX volumes from DeFiLlama. TTL: 5 min Redis."""
     key = "dex_volumes"

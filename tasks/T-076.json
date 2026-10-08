@@ -1,0 +1,25 @@
+{
+  "id": "T-076",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-09",
+  "verified": null,
+  "title": "景气轮动 / 预期差:链的 TVL、手续费、DEX 成交量动量减去币价动量,横截面检验;STRK 当个案",
+  "source": "Jazz 10-09「STRK 是一个很好的案例,我们要补抓到这样的机会 —— 类似景气轮动;很多机会是市场普遍没有观察到的,有非常强预期差」",
+  "allowed_paths": [
+    "src/data/",
+    "src/api/",
+    "scripts/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① chain_activity_daily 落库(约 60 条链,2023 起)、日更、判活 max(d) = 昨天 ② 预注册(S-526)的 gap30 三个变体(TVL / fees / DEX)按周一分档,顶减底 vs 同日打乱 1,000 次,2023–24 与 2025–26 分报 ③ STRK 在 09-08 / 09-15 的分档位置",
+    "expect": "顶减底在两段都 ≥ 打乱的 p95 才进 ② 的倾斜候选;否则写进墓地"
+  },
+  "prior_value": "没有链的基本面读数;所有书只看价格与 CIS",
+  "notes": "2026-10-09 开卡。STRK 个案先看过(TVL 平、DEX 成交量 8 月中 → 9 月初 ×3),所以 DEX 变体不是盲选 —— 试验数记 3。"
+}
