@@ -1282,6 +1282,19 @@ python3 -m pytest tests/test_source_policy.py -q || {
   echo "  ✗ source-policy suite FAILED — do not push"; exit 1; }
 echo "  ✓ bulk fan-out on paid sources only (S-205)"
 
+# ── T-058: MCP tool docstrings must not claim fields absent from responses ────
+# T-055 drill_structural surfaced 8 (tool, key) ABSENT-class hallucinations:
+# descriptions named fields the actual API response did not expose. Agents
+# relying on the description would build schemas that 404 in production.
+# Walk the T-055 snapshots recursively; if a description-only token
+# (case-insensitive, word-boundary — so `tvl` does NOT match `tvl_usd`
+# and `market_cap` does NOT match `market_cap_percentage`) appears in a
+# tool's docstring AND the response has zero occurrences of that key,
+# the test fails. Six pre-fix docstrings tripped this. Post-fix: 0.
+python3 -m pytest tests/test_mcp_descriptions_match_responses.py -q || {
+  echo "  ✗ mcp-description-vs-response suite FAILED — do not push"; exit 1; }
+echo "  ✓ MCP docstrings match response shape (T-058)"
+
 # ── S-197: pod aggregator guards (Strategy 3) ────────────────────────────────
 # The aggregator wraps three cross-sectional legs (R46/R62/R76) inside a single
 # book with three safety properties: (1) cross-pod correlation gate drops the
