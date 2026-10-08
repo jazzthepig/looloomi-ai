@@ -119,8 +119,11 @@ def _discover_a_s1_symbols(a_s1_dir: Path = A_S1_DIR) -> list[str]:
 
 
 A_S1_SYMBOLS = _discover_a_s1_symbols()
-assert len(A_S1_SYMBOLS) >= 20, \
-    f"Expected >=20 A-S1 symbols, got {len(A_S1_SYMBOLS)} — data dir anomaly"
+# The data dir lives on the Mac Mini volume. Check it where it exists; a clean CI runner has no /Volumes, and an
+# import-time assert there made every lane branch's preflight fail on a missing disk, not on the lane's change.
+if A_S1_DIR.exists():
+    assert len(A_S1_SYMBOLS) >= 20, \
+        f"Expected >=20 A-S1 symbols, got {len(A_S1_SYMBOLS)} — data dir anomaly"
 
 # Sign constants
 SIGN_HIGH_TAFI_LONG = "high_tafi_long"   # long assets with above-mean taker-buy ratio (buy-pressure)

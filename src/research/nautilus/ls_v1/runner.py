@@ -80,7 +80,8 @@ OUT_DIR = Path(
         "/Volumes/CometCloudAI/cometcloud-local/_reports/nautilus/ls_v1",
     )
 )
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+# No mkdir at import: run_parity() creates the run dir it writes to. An import-time mkdir under /Volumes
+# raised PermissionError on clean CI runners and failed every lane branch's preflight.
 
 INSTRUMENTS = [
     "BTCUSDT-PERP.BINANCE",
