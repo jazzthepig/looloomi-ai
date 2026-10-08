@@ -86,6 +86,26 @@ def t_success_clears_the_streak_and_is_not_late_by_default():
     _check("late 仍是 ok 而不是 failing(两个维度)", r2["verdict"] == OK)
 
 
+def t_healthy_loop_is_live_end_to_end():
+    """10-08:assess 的 ok 分支不带时间字段 → liveness 把每个健康循环判 dead
+    (线上 n_live=1 / n_dead=35 / critical,而 loop_attempt 里 34/35 最后一轮 ok)。
+    两个模块各自的测试都绿 —— 断在它们之间,所以这里走真实的两段。"""
+    import time
+    from src.api.liveness import compute_liveness_summary
+    now = int(time.time())
+    beats = {"_ok_loop": {"last_run_at": now - 600, "ok": True, "last_ok_at": now - 600,
+                          "n_consecutive_failures": 0},
+             "_legacy_ok": {"last_run_at": now - 600, "ok": True,
+                            "n_consecutive_failures": 0}}
+    rows = [assess(n, beats, now=now) for n in beats]
+    for r in rows:
+        _check(f"{r['loop']} ok 行带 last_run_at", r.get("last_run_at") == now - 600, str(r))
+    s = compute_liveness_summary(rows)
+    _check("健康循环在 liveness 里是 live", s["n_live"] == 2 and s["n_dead"] == 0,
+           f"n_live={s['n_live']} n_dead={s['n_dead']} dead={s.get('dead_loops')}")
+    _check("全部健康时 overall 不是 critical", s["overall"] != "critical", s["overall"])
+
+
 def t_overall_reports_failing_and_never_ran_not_a_healthy_count():
     import time
     now = int(time.time())

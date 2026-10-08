@@ -332,7 +332,14 @@ def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
     # 我读着一条旧构建记下的 `ok` 或 `refused`,以为那是对当前构建的确认。
     # **失败读起来像「还没修好」,而成功读起来像「已经修好了」** ——
     # 后者会让人停止排查,所以它更贵。
+    # ⚠️ 10-08:这个分支原本不带 `last_run_at` / `last_ok_at`,而 liveness 把
+    # 「没有 last_run_at」判成 never_ran → dead。于是**每个健康的循环都被报死**,
+    # 只有拒绝 / 失败分支(带着这两个字段)能被判活 —— 线上 n_live=1、n_dead=35、
+    # overall=critical,而同一天 loop_attempt 里 34/35 个循环最后一轮是 ok。
+    # 三个分支给同一组时间字段;判据在 tests/test_loop_beat.py 端到端钉住。
     return {"loop": name, "verdict": OK, "age_s": age,
+            "last_ok_at": e.get("last_ok_at") or e.get("last_run_at"),
+            "last_run_at": e.get("last_run_at"),
             "build": e.get("build"),
             "stale_build": _stale(e),
             "late": bool(late),
