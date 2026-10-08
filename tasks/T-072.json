@@ -1,0 +1,26 @@
+{
+  "id": "T-072",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-08",
+  "verified": null,
+  "title": "① 重新定义:拿掉单币上限、真正的动量加权,以 BTC 为基准按时点回放 + 前向",
+  "source": "Jazz 10-08「解开单一资产上限限制,采用真正的动量加权」;S-516 现行 ① 两段每一项都输给单持 BTC",
+  "allowed_paths": [
+    "src/data/signals/",
+    "src/api/main.py",
+    "src/api/liveness.py",
+    "scripts/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "core_variants_daily 五臂(cap_c40 / cap_uncapped / mom90 / mom90_x_cap / btc)2023 起回放 + 前向;cap_c40 与 multiplier_daily core_replay 两段总收益差 < 2pp;每臂报总收益 / 回撤 / 夏普、相对 BTC、随机权重分位",
+    "expect": "回放当天出;选哪一个当新 ① 由 Jazz 拍(DECISIONS 10-03 的改版);前向从 10-09 起记"
+  },
+  "prior_value": "现行 ① 2023–24 +316% / −35% / 1.68,2025–26 −19.5% / −60% / 0.04;BTC +463% / −26% / 2.01,−10.8% / −53% / 0.07",
+  "notes": "2026-10-08 开卡并实现(S-517)。"
+}
