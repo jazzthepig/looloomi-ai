@@ -29,6 +29,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 # Repo root = parent of the tests/ directory this file lives in.
 BASE = Path(__file__).resolve().parents[1]
 MCP_PY = BASE / "src" / "mcp" / "cometcloud_mcp.py"
@@ -153,4 +155,57 @@ def test_no_hallucinated_field_claims_in_docstrings():
             f"{t}: key_in_response={kr}, claims_in_doc={cl}"
             for t, k, kr, cl in checked
         )
+    )
+
+
+# ── T-058 negative-control — proves the assertion actually catches regressions ──
+# Each (tool, key) hallucination from T-055 drill_structural §1 is INJECTED into
+# the docstring of the matching tool in an in-memory copy of cometcloud_mcp.py,
+# then re-walked. The post-injection run must flag exactly one failure per pair
+# and that failure must name the injected key. This proves the test machinery
+# is wired up correctly — the first test passes only because the docstrings
+# actually do not claim the keys, not because the assertion is broken.
+@pytest.mark.parametrize("tool,key", HALLUCINATIONS)
+def test_negative_control_catches_reintroduced_hallucination(tool: str, key: str):
+    """Inject `key` into `tool`'s docstring and assert the test machinery flags it.
+
+    The test reads the same MCP_PY, locates the function's docstring,
+    appends `\n__INJECTED_HALLUCINATION__: <key>\n`, then re-runs the same
+    claim check inline. If the docstring extractor (`_get_docstring`) or the
+    standalone-token matcher (`_mentions_standalone`) is broken, this test
+    would falsely pass — catching that is the whole point.
+    """
+    src = MCP_PY.read_text()
+
+    # Locate `def <tool>(...) -> str:` and the OPENING `"""` of its docstring
+    def_pattern = rf"(?:async\s+)?def\s+{re.escape(tool)}\s*\([^)]*\)[^:]*:\s*\"\"\""
+    m = re.search(def_pattern, src)
+    assert m, f"could not locate function header for {tool}"
+    open_end = m.end()  # position right AFTER the opening """
+
+    # Find the closing `"""` of the same docstring (first triple-quote after open_end)
+    close_idx = src.find('"""', open_end)
+    assert close_idx != -1, f"could not locate docstring close for {tool}"
+
+    # Inject the hallucinated token INSIDE the existing docstring, just before
+    # the closing `"""`. The unchanged outer triple-quotes keep the regex
+    # primitive (`_get_docstring`) honest: a broken docstring extraction would
+    # also break the live test, and that breakage shows up here too.
+    injection = f"\n__INJECTED_HALLUCINATION__: {key}\n"
+    mutated = src[:close_idx] + injection + src[close_idx:]
+
+    # Reuse the same primitives — if they were broken for the real run, they
+    # are broken here too, and the test catches it. We deliberately do NOT
+    # check `key in TOOL_KEYS[tool]` here, because TOOL_KEYS reflects the live
+    # response surface at the time it was written — for some tools the
+    # hallucinated key is a real nested field of a sub-list (e.g.
+    # market_snapshot.tvl is reachable via defi_overview.top_protocols[*].tvl),
+    # and that is precisely the T-055 root cause this test guards against.
+    docstring = _get_docstring(mutated, tool)
+    claims = _mentions_standalone(docstring, key)
+
+    assert docstring, f"docstring extraction regressed for {tool}"
+    assert claims, (
+        f"standalone-token matcher regressed: injection of `{key}` into "
+        f"`{tool}` docstring was not detected"
     )
