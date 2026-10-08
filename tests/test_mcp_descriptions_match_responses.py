@@ -12,10 +12,8 @@ shipped via src/mcp/cometcloud_mcp.py docstring edits) is to remove the
 field-name mention from the docstring (the response side is owned by a
 different card).
 
-Response keys are INLINED below (TOOL_KEYS) — earlier revisions loaded them
-from a `research/T-055/snapshots/` directory that was scoped to a one-off
-drill and is not part of the merged tree. Inlining keeps the test independent
-of that artefact while preserving the same (tool, key) contract:
+Response keys are INLINED below (TOOL_KEYS) — the test contract is:
+if the docstring names a key and the response has zero occurrences of that key, FAIL.
 
     if key NOT in TOOL_KEYS[tool] AND key appears standalone in docstring → FAIL
 
