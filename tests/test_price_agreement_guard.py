@@ -1,6 +1,6 @@
 """T-044b(S-484):近 45 天、每天每源一行、能抓住整体后移一天。"""
 import asyncio
-from datetime import date, timedelta
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
@@ -14,7 +14,7 @@ def _series(n, seed=0):
 
 
 def test_shifted_source_is_flagged_and_summarized_one_row_per_source(monkeypatch):
-    today = date.today()
+    today = datetime.now(timezone.utc).date()      # 规则 5c:与被测代码同一个 UTC 日(Mac 在 JST,15:00 UTC 后 date.today() 已是明天)
     days = [(today - timedelta(days=44 - i)).isoformat() for i in range(45)]
     px = _series(45)
     base = {"BTC": dict(zip(days, px))}
