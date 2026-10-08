@@ -67,7 +67,9 @@ def check(branch: str, changed: list[str], card: dict | None) -> list[str]:
         out.append(f"{tid} 的 owner 是 {card.get('owner')!r},不是 {lane}")
     if card.get("status") != "in_review":
         out.append(f"{tid} 的 status 是 {card.get('status')!r} —— 交付时改成 in_review,notes 写上自己测得的值")
-    allowed = list(card.get("allowed_paths") or []) + [f"tasks/{tid}.json", "tasks/BOARD.md"]
+    # 生成物永远允许:看板由卡片重生;棘轮基线由 preflight 自动抬(10-08 T-058 因此被范围检查拦下)
+    allowed = list(card.get("allowed_paths") or []) + [f"tasks/{tid}.json", "tasks/BOARD.md",
+                                                       "scripts/lesson_enforcement_baseline.txt"]
     forbidden = list(card.get("forbidden_paths") or []) + list(GLOBAL_FORBIDDEN)
     for f in changed:
         hit = next((p for p in forbidden if _match(f, p)), None)

@@ -26,6 +26,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+from typing import Optional
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -144,6 +145,26 @@ def behind_origin() -> int:
     return int(n.strip() or 0)
 
 
+def sync_main() -> Optional[str]:
+    """本地 main 落后 origin 时快进。返回 None = 已同步;否则返回原因。
+
+    看板是生成物:主目录里重生过的 BOARD.md 会挡住快进(10-08 合并 T-007 后,下一个提交因此被拒)。
+    先把它还原成 HEAD 的版本、快进、再按本地卡片重生 —— 不丢任何人的改动(卡片才是源头)。
+    其他文件的本地改动若与合进来的提交冲突,ff-only 会拒绝,原样报告,不硬来。"""
+    if not behind_origin():
+        return None
+    board, regen = ROOT / "tasks" / "BOARD.md", False
+    if git("diff", "--quiet", "--", "tasks/BOARD.md")[0] != 0:
+        head = subprocess.run(["git", "show", "HEAD:tasks/BOARD.md"], cwd=ROOT, capture_output=True, text=True)
+        if head.returncode == 0:
+            board.write_text(head.stdout, encoding="utf-8")
+            regen = True
+    code, out = git("merge", "--ff-only", "--quiet", "origin/main")
+    if regen:
+        run(["python3", "scripts/task_board.py"], timeout=120)
+    return None if code == 0 else f"快进失败(本地改动与合进来的提交冲突):{out[-300:]}"
+
+
 def do_commit(job: dict) -> dict:
     paths = list(job.get("paths") or [])
     bad = path_problems(paths)
@@ -151,8 +172,9 @@ def do_commit(job: dict) -> dict:
         return {"ok": False, "stage": "validate", "detail": bad}
     if not (job.get("message") or "").strip():
         return {"ok": False, "stage": "validate", "detail": "message 为空"}
-    if behind_origin():
-        return {"ok": False, "stage": "sync", "detail": "本地 main 落后 origin/main —— 先在 Mac 上 git pull --ff-only"}
+    why = sync_main()
+    if why:
+        return {"ok": False, "stage": "sync", "detail": why}
     if git("diff", "--cached", "--quiet")[0] != 0:
         return {"ok": False, "stage": "index", "detail": "索引里已有别人 stage 的东西;执行器不替任何人提交"}
     untrack = list(job.get("untrack") or [])
@@ -198,8 +220,9 @@ def do_merge(job: dict) -> dict:
     br = job.get("branch") or ""
     if not LANE_BRANCH.match(br):
         return {"ok": False, "stage": "validate", "detail": f"只合并 lane-{{a,b,c}}/T-NNN 分支,收到 {br!r}"}
-    if behind_origin():
-        return {"ok": False, "stage": "sync", "detail": "本地 main 落后 origin/main"}
+    why = sync_main()
+    if why:
+        return {"ok": False, "stage": "sync", "detail": why}
     _, ahead = git("rev-list", "--count", "origin/main..HEAD")
     if int(ahead.strip() or 0):
         return {"ok": False, "stage": "sync", "detail": "本地 main 有未推送的提交 —— 先处理"}
@@ -254,9 +277,8 @@ def do_merge(job: dict) -> dict:
             if (wt / name).is_symlink():
                 (wt / name).unlink()
         git("worktree", "remove", "--force", str(wt))
-    git("fetch", "--quiet", "origin")
-    code, out = git("merge", "--ff-only", "--quiet", "origin/main")
-    ff = "主目录已快进" if code == 0 else f"主目录没能快进(本地改动冲突)—— 在 Mac 上手动 git pull --ff-only:{out[-300:]}"
+    why = sync_main()
+    ff = "主目录已快进" if not why else f"主目录没能快进 —— {why}"
     res = {"ok": True, "stage": "pushed", "sha": sha, "main_worktree": ff}
     res["verify"] = verify_after_deploy(job.get("verify") or [], sha)
     return res

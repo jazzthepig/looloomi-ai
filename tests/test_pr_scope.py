@@ -15,7 +15,8 @@ CARD = {"id": "T-123", "owner": "lane-b", "status": "in_review",
 
 
 def test_inside_scope_passes() -> None:
-    ok = ["src/data/evaluation/rr_matrix.py", "tests/test_rr_matrix.py", "tasks/T-123.json", "tasks/BOARD.md"]
+    ok = ["src/data/evaluation/rr_matrix.py", "tests/test_rr_matrix.py", "tasks/T-123.json", "tasks/BOARD.md",
+          "scripts/lesson_enforcement_baseline.txt"]
     assert check("lane-b/T-123", ok, CARD) == []
     assert check("lane-b/T-123-fixup", ok, CARD) == []
 
