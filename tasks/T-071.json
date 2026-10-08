@@ -1,7 +1,7 @@
 {
   "id": "T-071",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-08",
   "verified": null,
   "title": "④ 5 spec 等权的日收益序列交进仓库:research/series/strategy4_blend_daily.json(组合层的第二条腿)",
@@ -19,5 +19,5 @@
     "expect": "Seth 的 _portfolio_layer_loop 读到它后,评估里自动出现 w4 = 0.25 / 0.5 两档"
   },
   "prior_value": "库里与仓库里都没有 ④ 的日序列",
-  "notes": "2026-10-08 开卡(Seth)。一轮能做完:用 M-208h 已有的脚本导出,不重算新东西。分支 lane-c/T-071,只碰 allowed_paths;主目录不是你的工作区(S-510)。"
+  "notes": "2026-10-08 完成(lane-c)。导出脚本 research/series/export_strategy4_daily.py 复用了 M-208h sealed 的 spec_m86/m87/m88/m113/m115 + 5-spec equal-weight + 10bp turnover cost 公式(M-208h_run 里的 `five_spec_equal_daily` + `portfolio_stats`)。覆盖 2023-01-02 → 2026-09-28(panel 末端,24 标的交集,1366 行);OOS 2025-01-01 → 2026-08-13 复利 = +16.76% / SR = 0.4925 / MaxDD = -16.41%,与 M-208h C2 +16.77% / 0.493 / -16.41% 对齐(|Δ| = 0.006pp,远低于 0.5pp 阈值)。test_strategy4_series.py 6 个断言全过:schema、specs 集合、日期唯一递增、无 NaN、首日 ≥ 2023-01-02、OOS 复利匹配。"
 }

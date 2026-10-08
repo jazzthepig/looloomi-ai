@@ -229,6 +229,13 @@ def do_merge(job: dict) -> dict:
     br = job.get("branch") or ""
     if not LANE_BRANCH.match(br):
         return {"ok": False, "stage": "validate", "detail": f"只合并 lane-{{a,b,c}}/T-NNN 分支,收到 {br!r}"}
+    # 10-08:lane 交了新测试,但 preflight.sh 不在它的卡里 —— 注册那一行只能由 Seth 加,而先单独提交注册
+    # 会让 main 的 preflight 去跑一个还不存在的文件。fixup_paths = Seth 主目录里的这几个文件随合并一起进同一个提交。
+    fix = list(job.get("fixup_paths") or [])
+    bad = path_problems(fix) if fix else []
+    missing = [f for f in fix if not (ROOT / f).is_file()]
+    if bad or missing:
+        return {"ok": False, "stage": "validate", "detail": {"fixup_paths": bad, "missing": missing}}
     why = sync_main()
     if why:
         return {"ok": False, "stage": "sync", "detail": why}
@@ -263,6 +270,12 @@ def do_merge(job: dict) -> dict:
             if code != 0:
                 git("merge", "--abort", cwd=wt)
                 return {"ok": False, "stage": "merge", "detail": out[-3000:]}
+        if fix:
+            for f in fix:
+                (wt / f).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / f, wt / f)
+            git("add", "--", *fix, cwd=wt)
+            git("commit", "--amend", "--no-edit", "-q", cwd=wt)
         # 合并后看板一律按合并后的卡片重生 —— 两边各改不同的卡时没有冲突,但看板会过期,preflight 会红。
         run(["python3", "scripts/task_board.py"], cwd=wt, timeout=120)
         if git("diff", "--quiet", "--", "tasks/BOARD.md", cwd=wt)[0] != 0:

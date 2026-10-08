@@ -64,3 +64,13 @@ def test_executor_checks_the_main_dir_before_any_job() -> None:
     assert "def main_dir_guard" in src
     assert "if main_dir_guard() else []" in src, "HEAD 不在 main 时一个任务都不能执行"
     assert "refs/stash" in src and "git stash apply" in src, "新 stash 要留下恢复指令"
+
+
+def test_merge_fixup_paths_are_validated_like_commit_paths() -> None:
+    """10-08:lane 的新测试要注册进 preflight,注册行随合并进同一个提交;fixup 路径同样过禁区检查。"""
+    sys.path.insert(0, str(ROOT / "scripts" / "seth_bot"))
+    import seth_bot as sb
+    r = sb.do_merge({"id": "t", "branch": "lane-c/T-071", "fixup_paths": [".env"]})
+    assert r["ok"] is False and r["stage"] == "validate"
+    r = sb.do_merge({"id": "t", "branch": "lane-c/T-071", "fixup_paths": ["scripts/no_such_file.sh"]})
+    assert r["ok"] is False and r["detail"]["missing"] == ["scripts/no_such_file.sh"]
