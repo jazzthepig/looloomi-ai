@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-003 | lane-a | S-396 三臂回放 live 验证(读路径分页修复后) | 相等 | replay 读到 1,000 行(截断) |  |
 | in_review | T-023 | lane-a | CIS universe API:把 Tier 标签(T1/T2)传到前端,CISLeaderboard 徽章按源染色 | T1 标的徽章绿、T2 标的徽章琥珀;不再全部 50% 灰 | GET /api/v1/cis/universe:universe 58 行,但 data_source=None(API 层未传播 Tier)。CISLeaderboard 徽章当前无法区分 |  |
 | in_review | T-045 | lane-b | 评估层 rr_matrix:每本账在每个状态格子里相对 ① 的超额分布(v0.2 阶段 3)—— 规格 + 纯函数 + 测试 | 规格文档 + 纯函数 + ≥ 6 个测试全过;状态输入先用 T-048 的字段名约定(没就绪时用合成数据测),交 patch 到 lane-b worktree,Seth 接调度与建表 | 评估都在台账的一次性报告里;L3 的证据不分状态 |  |
 | in_review | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED |  |
@@ -12,7 +13,6 @@
 | in_review | T-052 | seth | ② CIS 倾斜账本上线:按 T-051 的预注册建账、登记、前向记录(第一行真实数据) | 回放段标「暴露」;前向首行 ≤ 10-10;每天 06:00 UTC 后有昨天的行 | 无 |  |
 | in_review | T-053 | seth | 证据面:一个端点 + 一个 MCP 工具,把 ① 与每本账的前向证据按证据等级摆到门外;CIS 信号记录的 β 层要么算出来要么删 | 外部 agent 一次调用能回答「哪本账有前向证据、相对 ① 怎样、为什么 L3 给它 0」;没有任何写死的结论句 | 证据只在 SQL 与台账里;track-record 说明文字三个月引用一个从未算出的 β 层 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
-| open | T-003 | lane-a | S-396 三臂回放 live 验证(读路径分页修复后) | 相等 | replay 读到 1,000 行(截断) |  |
 | open | T-060 | lane-a | 天气数据四个角度的挖掘:一致性与对未来收益的区分力 | 一张表 + 报告路径写进卡 notes:每个角度的区分力分位;哪几份高度重合;哪份有独有信息。只读、不改代码 | 四份并存,从没比较过;决策读 state_daily 是约定,不是证据 |  |
 | open | T-058 | lane-b | MCP 工具描述:8 处写了返回里根本没有的字段(B 的 T-055 drill-down) | drill_structural 0 ABSENT;测试在改之前的描述上会红(先证明它能失败) | 8 ABSENT(10-07 05:08 UTC 探针) |  |
 | open | T-059 | lane-b | 评估层先校准、再加随机基准:修 bootstrap 退化 + 状态轴换成有历史的价格特征 + 每本账 × 格子在自己的底上对随机组合给分位;超出 p99 的列为 outlier | 测试钉住(先在现在的代码上红):① n=23 的序列 CI 宽度 > 0 且均值用满 23 天;n=10 的 p_pos 不是只取 0/1;② 零信号账本 pct_vs_random 近似均匀(KS p > 0.05);③ 埋了信号的账本分位 > 0.95;④ 等权底的零信号账本在「等权跑赢市值」的样本里 pct_vs_random 仍近似均匀(风格不被记成信号)。上线当天的 rr_matrix_daily 行带新格子与分位 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
@@ -70,4 +70,4 @@
 | done | T-050 | seth | L3 l3-v2:准入门换成任意时刻有效的置信序列 + Kelly 前收缩 + 非 ① 账本 ≥ 60 天(S-485,10-22 之前) | ≤ 5%(l3-v1 为 17.3%);越过门槛后的权重随证据爬升,不是一步顶到上限;10-22 第一批账本满 20 天之前上线 | l3-v1:每天重算 均值 − 2 标准误 > 0 且 ≥ 20 天,零超额账本一年内 17.3% 曾被放进,一放即 40% 上限 | build 6c918931:_allocation_loop 03:40 UTC ok「配置 3 天至 2026-10-04;① 100%」;allocation_daily 3 行 code_ref=l3-v2(l3-v1 行已被覆盖)。模拟验收:零超额一年内曾被放进 1%(≤ 5%),测试钉住。中间经历 S-489(−∞ 写进 JSON,13 小时)。 @ 2026-10-06T03:40Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 19 · blocked 4 · in_review 9 · done 34 · dropped 1
+open 18 · blocked 4 · in_review 10 · done 34 · dropped 1
