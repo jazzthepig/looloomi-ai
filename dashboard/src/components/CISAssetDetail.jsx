@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from "react";
 import { T, FONTS, sigStyle } from "../tokens";
+import SignalAttribution from "./SignalAttribution";
 
 const API = import.meta.env.VITE_API_URL || "";
 
@@ -395,12 +396,15 @@ export default function CISAssetDetail({ symbol, onBack, onNavigate }) {
             </div>
             <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.t4,
               marginTop: 8, lineHeight: 1.4 }}>
-              Quantitative positioning indicator only.
+              Describes where the asset sits, computed from past and current data — not a forecast.
               Not investment advice. CometCloud is not a licensed investment advisor.
             </div>
           </div>
         </div>
       </div>
+
+      {/* ── Every signal change, attributed (T-078) ── */}
+      <SignalAttribution symbol={sym} assetClass={asset.asset_class} currentSignal={signal} />
 
       {/* ── Responsive styles ── */}
       <style>{`

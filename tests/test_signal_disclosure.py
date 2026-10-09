@@ -34,7 +34,8 @@ def test_signal_routes_use_the_one_constant() -> None:
 
 def test_no_forward_looking_framing_on_signal_surfaces() -> None:
     for rel in ("src/mcp/cometcloud_mcp.py", "src/api/routers/signals.py", "CIS_METHODOLOGY.md",
-                "dashboard/src/components/MethodologyPage.jsx"):
+                "dashboard/src/components/MethodologyPage.jsx", "dashboard/src/components/SignalAttribution.jsx",
+                "dashboard/src/components/CISAssetDetail.jsx"):
         text = (ROOT / rel).read_text(encoding="utf-8")
         hits = [m.group(0) for m in FORWARD.finditer(text)]
         assert not hits, f"{rel} 有预测 / 该行动措辞:{hits[:5]}"

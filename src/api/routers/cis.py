@@ -3391,6 +3391,8 @@ def _attr_public(r: dict) -> dict:
                 "relative_30d_before": r.get("pre30_rel")},
         "after": {"7d": after(7), "30d": after(30), "beta_to_btc": r.get("beta_btc"),
                   "btc_below_50d_mean": r.get("btc_below_ma50")},
+        "held": {"days": r.get("held_days"), "next_signal": r.get("next_signal"), "next_date": r.get("next_d"),
+                 "reverted_within_3d": r.get("reverted_3d")},
         "note": r.get("note"),
     }
 
@@ -3404,7 +3406,9 @@ async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, 
       after  — 7d / 30d return, the equal-weight scored universe over the same days, the difference,
                and for crypto the BTC return, the 90d beta to BTC and the beta-adjusted return
     Plus `track_record`: matured signals of each kind, summarised relative to the scored universe
-    (crypto also split by whether BTC was below its 50-day mean on the signal day).
+    (crypto also split by whether BTC was below its 50-day mean on the signal day). Changes that flipped
+    back within 3 days (label noise at a grade boundary, known only afterwards) are counted separately
+    and kept out of the outcome statistics; each signal carries `held` (how long it lasted).
     Signals describe where an asset sits on past and current data; outcomes are historical, not forecasts.
     Returns are fractions (0.05 = 5%). Example: GET /api/v1/cis/attribution?symbol=STRK
     """

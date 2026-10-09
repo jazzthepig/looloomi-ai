@@ -86,3 +86,26 @@ def test_build_rows_full_columns_and_track_record() -> None:
     tr = track_record(out)
     assert tr["crypto"]["OUTPERFORM"]["30d"]["n"] == 1 and "btc_below_ma50" in tr["crypto"]["OUTPERFORM"]
     assert tr["tradfi"]["OUTPERFORM"]["30d"] == {"n": 0}
+
+
+def test_persistence_marks_boundary_whipsaws() -> None:
+    from src.data.cis.signal_attribution import persistence
+    rows = [_row("A", "2025-05-01", "NEUTRAL"), _row("A", "2025-05-02", "OUTPERFORM"),
+            _row("A", "2025-05-03", "NEUTRAL"),                     # 1 天就变回 ⇒ 来回跳
+            _row("A", "2025-05-20", "UNDERPERFORM"),                # 17 天后变成别的档 ⇒ 不是来回跳
+            _row("A", "2025-05-21", "UNDERPERFORM")]
+    p = persistence(find_events(rows), "2025-05-21")
+    assert p[("A", "2025-05-02")] == {"next_d": "2025-05-03", "next_signal": "NEUTRAL", "held_days": 1, "reverted_3d": True}
+    assert p[("A", "2025-05-03")]["reverted_3d"] is False and p[("A", "2025-05-03")]["held_days"] == 17
+    last = p[("A", "2025-05-20")]
+    assert last["next_d"] is None and last["held_days"] == 1 and last["reverted_3d"] is None, "仍是当前档、不满 3 天 ⇒ 还不知道"
+
+
+def test_track_record_excludes_whipsaws_but_reports_their_share() -> None:
+    base = {c: None for c in COLUMNS}
+    rows = [dict(base, grp="crypto", signal="OUTPERFORM", rel_30=0.10, reverted_3d=False),
+            dict(base, grp="crypto", signal="OUTPERFORM", rel_30=-0.50, reverted_3d=True),
+            dict(base, grp="crypto", signal="OUTPERFORM", rel_30=0.02, reverted_3d=None)]
+    e = track_record(rows)["crypto"]["OUTPERFORM"]
+    assert e["30d"]["n"] == 2 and e["30d"]["mean_rel_pct"] == 6.0, "来回跳的不进结果统计"
+    assert e["changes"] == 3 and e["reverted_within_3d_share"] == 0.5

@@ -62,7 +62,9 @@ DEFAULT_WEIGHTS = {"F": .30, "M": .25, "O": .20, "S": .15, "A": .10}
 COLUMNS = ("symbol", "d", "asset_class", "grp", "signal", "prev_signal", "prev_d", "score", "prev_score", "grade",
            "d_score", "contrib", "contrib_residual", "top_driver", "weights", "pre30_ret", "pre30_rel", "beta_btc",
            "btc_below_ma50", "matured_7", "ret_7", "univ_7", "rel_7", "btc_7", "alpha_7",
-           "matured_30", "ret_30", "univ_30", "rel_30", "btc_30", "alpha_30", "note", "code_ref", "computed_at")
+           "matured_30", "ret_30", "univ_30", "rel_30", "btc_30", "alpha_30",
+           "next_d", "next_signal", "held_days", "reverted_3d", "note", "code_ref", "computed_at")
+WHIPSAW_DAYS = 3
 
 
 def group_of(asset_class: Optional[str]) -> str:
@@ -169,10 +171,35 @@ def outcomes(sym: str, d: pd.Timestamp, px: pd.DataFrame, idx: pd.Series, btc: O
     return out
 
 
+def persistence(events: list[dict], last_day: str) -> dict[tuple[str, str], dict[str, Any]]:
+    """纯函数。每次变化维持了多久:下一次变化的日期与档位;没有下一次 ⇒ 维持到 last_day(仍是当前档)。
+    reverted_3d = 下一次变化在 WHIPSAW_DAYS 天内、且变回了原档 —— 边界来回跳。**事后才知道**,只用于归因与描述。"""
+    by_sym: dict[str, list[dict]] = {}
+    for ev in events:
+        by_sym.setdefault(ev["symbol"], []).append(ev)
+    out: dict[tuple[str, str], dict[str, Any]] = {}
+    for sym, evs in by_sym.items():
+        evs = sorted(evs, key=lambda e: e["cur"]["d"])
+        for i, ev in enumerate(evs):
+            d = str(ev["cur"]["d"])[:10]
+            nxt = evs[i + 1] if i + 1 < len(evs) else None
+            if nxt is None:
+                held = (pd.Timestamp(last_day) - pd.Timestamp(d)).days
+                out[(sym, d)] = {"next_d": None, "next_signal": None, "held_days": held, "reverted_3d": None if held < WHIPSAW_DAYS else False}
+                continue
+            nd = str(nxt["cur"]["d"])[:10]
+            held = (pd.Timestamp(nd) - pd.Timestamp(d)).days
+            out[(sym, d)] = {"next_d": nd, "next_signal": nxt["cur"]["signal"], "held_days": held,
+                             "reverted_3d": bool(held <= WHIPSAW_DAYS and nxt["cur"]["signal"] == ev["prev"]["signal"])}
+    return out
+
+
 def build_rows(events: list[dict], groups: Mapping[str, tuple[pd.DataFrame, pd.Series]],
-               btc: Optional[pd.Series]) -> list[dict]:
-    """纯函数。groups:组名 → (价格, 等权指数)。"""
+               btc: Optional[pd.Series], last_day: Optional[str] = None) -> list[dict]:
+    """纯函数。groups:组名 → (价格, 等权指数)。last_day:信号数据的最后一天(算「仍是当前档」维持了几天)。"""
     now = datetime.now(timezone.utc).isoformat()
+    last_day = last_day or max((str(e["cur"]["d"])[:10] for e in events), default=None)
+    pers = persistence(events, last_day) if last_day else {}
     rows = []
     for ev in events:
         cur, prev = ev["cur"], ev["prev"]
@@ -182,7 +209,8 @@ def build_rows(events: list[dict], groups: Mapping[str, tuple[pd.DataFrame, pd.S
             "symbol": ev["symbol"], "d": str(cur["d"])[:10], "asset_class": cur.get("asset_class"), "grp": g,
             "signal": cur["signal"], "prev_signal": prev["signal"], "prev_d": str(prev["d"])[:10],
             "score": _f(cur.get("score")), "prev_score": _f(prev.get("score")), "grade": cur.get("grade"),
-            **drivers(cur, prev), "code_ref": CODE_REF, "computed_at": now}
+            **drivers(cur, prev), **pers.get((ev["symbol"], str(cur["d"])[:10]), {}),
+            "code_ref": CODE_REF, "computed_at": now}
         if g in groups:
             px, idx = groups[g]
             last = px.dropna(how="all").index.max()
@@ -197,7 +225,8 @@ def build_rows(events: list[dict], groups: Mapping[str, tuple[pd.DataFrame, pd.S
 
 
 def track_record(rows: list[dict]) -> dict[str, Any]:
-    """纯函数。已到期的信号按 (组, 档) 汇总:次数、平均 / 中位相对同类、相对为正的占比;加密再按 BTC 是否在 50 日线下方拆。"""
+    """纯函数。已到期的信号按 (组, 档) 汇总:次数、平均 / 中位相对同类、相对为正的占比;加密再按 BTC 是否在 50 日线下方拆。
+    3 天内变回原档的(边界来回跳)单独报占比,不进结果统计 —— 那是标签噪声,不是一次信号。"""
     def agg(rs: list[dict], h: int) -> dict[str, Any]:
         xs = [r[f"rel_{h}"] for r in rs if r.get(f"rel_{h}") is not None]
         if not xs:
@@ -206,15 +235,20 @@ def track_record(rows: list[dict]) -> dict[str, Any]:
         return {"n": int(len(a)), "mean_rel_pct": round(float(a.mean()) * 100, 2),
                 "median_rel_pct": round(float(np.median(a)) * 100, 2), "share_rel_positive": round(float((a > 0).mean()), 3)}
 
-    out: dict[str, Any] = {}
+    out: dict[str, Any] = {"excludes": "changes that reverted to the previous signal within 3 days (label noise at a grade boundary)"}
     for major in ("crypto", "tradfi"):
         rs = [r for r in rows if (r.get("grp") == "crypto") == (major == "crypto")]
         by_sig: dict[str, Any] = {}
         for sig in ("STRONG OUTPERFORM", "OUTPERFORM", "NEUTRAL", "UNDERPERFORM", "UNDERWEIGHT"):
-            ss = [r for r in rs if r.get("signal") == sig]
-            if not ss:
+            allc = [r for r in rs if r.get("signal") == sig]
+            if not allc:
                 continue
-            e = {f"{h}d": agg(ss, h) for h in HORIZONS}
+            ss = [r for r in allc if r.get("reverted_3d") is not True]
+            known = [r for r in allc if r.get("reverted_3d") is not None]
+            e: dict[str, Any] = {f"{h}d": agg(ss, h) for h in HORIZONS}
+            e["changes"] = len(allc)
+            e["reverted_within_3d_share"] = (round(sum(1 for r in known if r["reverted_3d"]) / len(known), 3)
+                                             if known else None)
             if major == "crypto":
                 e["btc_below_ma50"] = {f"{h}d": agg([r for r in ss if r.get("btc_below_ma50") is True], h) for h in HORIZONS}
                 e["btc_above_ma50"] = {f"{h}d": agg([r for r in ss if r.get("btc_below_ma50") is False], h) for h in HORIZONS}
@@ -261,7 +295,8 @@ async def run_once() -> dict[str, Any]:
             btc = px["BTC"]
         members = [s for s in px.columns if s in syms]
         groups[g] = (px, ew_index(px[members]))
-    rows = build_rows(evs, groups, btc)
+    last_day = max(str(r["d"])[:10] for r in sig)
+    rows = build_rows(evs, groups, btc, last_day)
     for i in range(0, len(rows), 1000):
         res = await supabase_upsert_table(TABLE, rows[i:i + 1000], on_conflict="symbol,d")
         if not res.ok:

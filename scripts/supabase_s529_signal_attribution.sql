@@ -51,3 +51,10 @@ from public.cis_scores
 order by symbol, (recorded_at at time zone 'UTC')::date, recorded_at desc;
 revoke all on public.v_cis_signal_daily from anon, authenticated;
 grant select on public.v_cis_signal_daily to service_role;
+
+-- S-529 补(10-09,migration s529b_signal_attribution_held):51% 的信号变化 3 天内变回原档(边界来回跳)。
+-- 记下一次变化的日期与档位、这一档维持了几天、是否 3 天内变回 —— 事后才知道,归因里标明。
+alter table public.cis_signal_attribution add column if not exists next_d date;
+alter table public.cis_signal_attribution add column if not exists next_signal text;
+alter table public.cis_signal_attribution add column if not exists held_days integer;
+alter table public.cis_signal_attribution add column if not exists reverted_3d boolean;
