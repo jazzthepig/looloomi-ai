@@ -21,6 +21,7 @@
     "channel_categories",
     "channel_series_daily",
     "cis_backtest_results",
+    "cis_rebuild_daily",
     "cis_scores",
     "cis_signal_attribution",
     "cis_tilt_daily",

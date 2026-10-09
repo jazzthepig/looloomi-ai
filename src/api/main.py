@@ -1515,6 +1515,39 @@ async def _start_cis_inputs_loop():
     print("[CIS-INPUTS] ✅ CIS input dimensions scheduled (macro_daily / protocol_tvl_daily / volume / tradfi adjusted)")
 
 
+async def _cis_rebuild_loop():
+    """S-531 / T-079:CIS 按时点重建(统一标准 v1)→ cis_rebuild_daily。与实盘 T2 同一个函数,只喂 d 收盘时已知的输入;
+    滞回标签另列。每天一轮(UTC 01:00 后数据齐);输入补齐前算的行在下一轮整条重算。
+    判活:`select max(d) from cis_rebuild_daily where code_ref = 'cis-standard-v1'` = 昨天。
+    """
+    await _asyncio.sleep(_boot_delay(1500))
+    await _asyncio.sleep(600)   # 再等 10 分钟:让同一次部署里的 _cis_inputs_loop(补维度)先跑完,首轮就用补齐的输入
+    while True:
+        try:
+            from src.data.cis.rebuild import run_once as _rb_run
+            r = await _rb_run()
+            print(f"[CIS-REBUILD] {str(r.get('reason'))[:160]}")
+            _detail = {k: r.get(k) for k in ("written", "full", "rows_total", "missing_last_10d")}
+            await _beat("_cis_rebuild_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_cis_rebuild_loop", "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._cis_rebuild_loop")
+        except Exception as _e:
+            print(f"[CIS-REBUILD] ⚠️  pass FAILED: {_e}")
+            await _beat("_cis_rebuild_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_cis_rebuild_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._cis_rebuild_loop")
+        await _asyncio.sleep(12 * 3600)
+
+
+@app.on_event("startup")
+async def _start_cis_rebuild_loop():
+    _asyncio.create_task(_cis_rebuild_loop())
+    print("[CIS-REBUILD] ✅ CIS point-in-time rebuild scheduled (cis_rebuild_daily, standard v1)")
+
+
 async def _signal_attribution_loop():
     """S-529 / T-078:每个 CIS 信号变化的归因(支柱贡献 + 7 / 30 天结果:同类、相对、BTC β)→ cis_signal_attribution。
     Jazz 10-09:信号是根据过往表现的展示,不是预测;每个信号都要归因。每 6 小时一轮,幂等。
