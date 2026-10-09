@@ -14,7 +14,9 @@
 #   2 = T1 push stale
 #   3 = both stale
 #   4 = missing argument
-#   5 = source files missing (preflight data not present)
+#   5 = source files missing (preflight data not present) OR T1 push source unwired
+#       (T-036 §Seth-1008o: until first real rotation test, T1 source emits
+#       NOT_MEASURED and the script exits 5 — §7.2 cannot be auto-verified yet)
 #
 # ⚠ SKELETON — paths are placeholders. After T-036 shipped, fill in:
 #   • actual mac_mini 简报 latest path (line ~30)
@@ -74,17 +76,16 @@ echo ""
 #   b) Redis bridge `cis:local_scores` last write
 #   c) Mac local log file mtime
 #   → choose after first real rotation test
-T1_TS=$(...)
-T1_TS="${T1_TS:-0}"
-T1_HUMAN=$(date -u -r "$T1_TS" '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo "n/a")
-echo "[2] T1 push last write: $T1_HUMAN ($T1_TS)"
-if [ "$T1_TS" -lt "$ROT_TS" ]; then
-    PUSH_OK=0
-    echo "    ✗ STALE: pre-rotation ($T1_TS < $ROT_TS)"
-else
-    PUSH_OK=1
-    echo "    ✓ ALIVE post-rotation"
-fi
+#
+# Per §Seth-1008o: T1_TS source not wired yet — emit NOT_MEASURED + exit 5.
+# After first real rotation test, replace `T1_TS=""` block with real probe
+# (Supabase / Redis / mtime) and remove the `exit 5`.
+T1_TS=""
+T1_HUMAN="NOT_MEASURED"
+echo "[2] T1 push last write: $T1_HUMAN (T1 source unwired — §Seth-1008o)"
+echo "    ⚠ NOT_MEASURED: wire T1 source after first real rotation test, then"
+echo "      remove this guard. Until then, §7.2 cannot be auto-verified."
+exit 5
 echo ""
 
 # === Verdict ===
