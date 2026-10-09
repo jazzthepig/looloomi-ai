@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-060 | lane-a | 天气数据四个角度的挖掘:一致性与对未来收益的区分力 | 一张表 + 报告路径写进卡 notes:每个角度的区分力分位;哪几份高度重合;哪份有独有信息。只读、不改代码 | 四份并存,从没比较过;决策读 state_daily 是约定,不是证据 |  |
 | in_review | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED |  |
 | in_review | T-013 | seth | 首页和页面路由免于限流 | 仍返回 HTML 200 | 返回 JSON 429 | shipped commit `7ea7f1c` — src/api/middleware/rate_limit.py: anon IP 触发 429 时:API 路径(/api/v1/*, /internal/*, /ws/*, /mcp/*)返回 JSON 429(regression safe);页面路径(/, /app.html, /portfolio.html 等)返回 HTML 200 + meta-refresh 自动重试页。**DoS 保护不变**(页面仍计入限流计数),只改响应形态。tests/test_rate_limit_page_html_429.py 25/25 PASS(_is_page_request 谓词正反两向 + S-244 文本守卫防 dispatch 回到 JSONResponse on 429)。preflight stage 3 注册。**待 Jazz:① 等 Railway deploy 后(已 push)② curl 验证 `for i in $(seq 1 130); do curl -s -o /dev/null -w '%{http_code}\n' https://web-production-0cdf76.up.railway.app/; done | sort | uniq -c` 应该看到 200(不是 JSON 429)。** Pre-flight 🔴 已知:`open_interest_history` DDL 未 apply(T-012 同 Jazz)+ `nav_panel_*` Mac lane + `market_state_vectors` 列漂移。T-012 之外的都不是本卡引入。 @ 2026-09-26T04:10:00Z |
 | in_review | T-022 | seth | 移动端 RECENT SIGNALS 卡片:百分比与文案跨度对齐(短时价格不和"strong momentum"同屏) | DOM/截图: 卡片百分比后缀为 '24h' 或 '(24h)';文案与百分比跨度一致(避免 −7% 旁边写 'strong momentum') | MobileApp 卡片:'positions to outperform on strong momentum' 旁显示 −7.45% / −8.98%(百分比实为 24h,跨度与文案冲突) |  |
@@ -18,7 +19,6 @@
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
-| open | T-060 | lane-a | 天气数据四个角度的挖掘:一致性与对未来收益的区分力 | 一张表 + 报告路径写进卡 notes:每个角度的区分力分位;哪几份高度重合;哪份有独有信息。只读、不改代码 | 四份并存,从没比较过;决策读 state_daily 是约定,不是证据 |  |
 | open | T-058 | lane-b | MCP 工具描述:8 处写了返回里根本没有的字段(B 的 T-055 drill-down) | drill_structural 0 ABSENT;测试在改之前的描述上会红(先证明它能失败) | 8 ABSENT(10-07 05:08 UTC 探针) |  |
 | open | T-059 | lane-b | 评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张) | 测试先在现在的代码上红:n=23 的序列 CI 宽度 > 0 且均值用满 23 天;n=10 的 p_pos 不是只取 0 / 1;改完转绿 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
 | open | T-068 | lane-b | 评估层 ②:状态轴换成有历史的价格特征(T-059 之后) | 测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子 | 见 T-059 原卡(10-07) |  |
@@ -81,4 +81,4 @@
 | done | T-063 | seth | ③ 推力:今天就用 2023 起的历史按时点模拟出结果,前向账本同时上线 | 回放结果与随机分位当天出;前向记录从上线日起累积,用于核对模拟,不是开始的前提。敞口永不 < 0.7、> 1.3,不做空 | ③ 前向账本 0 本;m88 的 dd_stop 到 0× 越出 ③ 定义 | 回放 + 评估当天出(loop_attempt 04:41):2023–24 ③ +367% vs ① +316%,随机分位 0.44;2025-01-01→10-07 留出 ③ −20.5% vs ① −21.1%,随机分位 0.59 —— v1 REFUTED(S-505);multiplier_daily 2,750 行;前向 10-09 起 @ 2026-10-08T04:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 16 · claimed 2 · blocked 3 · in_review 13 · done 43 · dropped 1
+open 15 · claimed 2 · blocked 3 · in_review 14 · done 43 · dropped 1
