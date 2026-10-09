@@ -435,6 +435,18 @@ class CisHistoryInput(BaseModel):
         return v.upper()
 
 
+class SignalAttributionInput(BaseModel):
+    """Input for cometcloud_get_signal_attribution."""
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    symbol: Optional[str] = Field(default=None, description="Asset ticker; omit for the latest signal changes across the universe.", max_length=12)
+    limit: int = Field(default=20, description="How many signal changes to return (1–200).", ge=1, le=200)
+
+    @field_validator("symbol")
+    @classmethod
+    def upper(cls, v: Optional[str]) -> Optional[str]:
+        return v.upper() if v else v
+
+
 class CisTopInput(BaseModel):
     """Input for cometcloud_get_cis_top."""
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
@@ -1117,6 +1129,39 @@ async def cometcloud_get_edge_map() -> str:
 
 
 @mcp.tool(
+    name="cometcloud_get_signal_attribution",
+    annotations={
+        "title": "Signal attribution — why each CIS signal fired and what followed",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def cometcloud_get_signal_attribution(params: SignalAttributionInput) -> str:
+    """Every CIS signal change, attributed. For each change: WHY it fired (which pillars moved the score, weighted by the class base weights; what is left unexplained; how the price had already moved in the 30 days before) and WHAT FOLLOWED over 7 and 30 days (the asset's return, the equal-weight scored universe, the difference, and for crypto the BTC return, 90d beta to BTC and the beta-adjusted return). Also returns `track_record`: matured signals of each kind summarised relative to the scored universe — the historical record that sits next to every signal. CIS signals describe where an asset sits, computed from past and current data; outcomes are historical, not forecasts, and have at times run opposite to the label. Not investment advice.
+
+    Args:
+        params (SignalAttributionInput): symbol (optional), limit (1–200)
+
+    Returns:
+        str: {disclosure, reading, as_of, total_signal_changes, track_record {crypto|tradfi: {signal: {7d, 30d, btc_below_ma50?, btc_above_ma50?}}}, signals: [{symbol, date, signal, previous_signal, why {...}, after {7d, 30d, beta_to_btc}}]}
+
+    Examples:
+        - "Why did STRK's signal change and what happened after?" → symbol="STRK"
+        - "How have OUTPERFORM signals done relative to the universe historically?" → read track_record
+    """
+    try:
+        q: dict = {"limit": params.limit}
+        if params.symbol:
+            q["symbol"] = params.symbol
+        data = await _get("/api/v1/cis/attribution", params=q)
+        return json.dumps(data, indent=2)
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool(
     name="cometcloud_get_current_band",
     annotations={
         "title": "Current Band — where the tape sits on the risk gradient NOW",
@@ -1127,13 +1172,13 @@ async def cometcloud_get_edge_map() -> str:
     },
 )
 async def cometcloud_get_current_band() -> str:
-    """Returns WHERE THE MARKET SITS RIGHT NOW on CometCloud's edge-map risk gradient (BTC trailing 30d return → one of 5 bands: deep risk-off → deep risk-on), and what each signal tier is expected to do IN THAT BAND. This is the live companion to the edge map: instead of the whole grid, it tells you the single column that applies today plus a positioning read. Call it to turn a static signal into a timed decision — e.g. a STRONG OUTPERFORM in a deep-risk-on band is the highest-conviction long setup; the same signal in neutral tape is muted. Positioning language only; not investment advice.
+    """Returns WHERE THE MARKET SITS RIGHT NOW on CometCloud's edge-map risk gradient (BTC trailing 30d return → one of 5 bands: deep risk-off → deep risk-on), and how each signal tier has behaved HISTORICALLY in that band (average 30d outcome relative to the scored universe, hit rate, sample size). This is the live companion to the edge map: instead of the whole grid, it returns the single column that applies today. It is a description of past outcomes, not a forecast: in some periods the top tier has trailed its peers. CIS signals describe where each asset sits, computed from past and current data; they are not forecasts of future performance and not investment advice.
 
     Returns:
         str: {ts, bench_trail_30d, current_band, macro_regime, tiers_now {signal: {avg_alpha_pct, alpha_win_pct, n}}, top_tier_alpha, action, risk_bands}
 
     Examples:
-        - "Is now a good time to act on the top signal?" → use this tool
+        - "How has the top signal tier done historically in a tape like today's?" → use this tool
         - "What band are we in right now?" → use this tool
     """
     try:
@@ -1154,14 +1199,14 @@ async def cometcloud_get_current_band() -> str:
     },
 )
 async def cometcloud_get_conviction() -> str:
-    """Returns CometCloud's SINGLE fused verdict per asset — the one call that combines all four intelligence layers into an actionable ranking: (1) regime-neutral QUALITY (CIS grade), (2) cause-proximity — are we EARLY/upstream or LATE/出圈-fragile, (3) the edge map's expected 30d alpha for that signal tier in TODAY's risk band (real outcomes, not a guess), and (4) EXECUTABILITY (a high-grade illiquid name you can't size is correctly discounted, not top-ranked). Output is ranked by signed edge — best longs first, best shorts last — each with a conviction 0..1, a direction, and a positioning action. This is the tool to answer 'what should I actually do across the book right now', because it will not recommend a name you can't trade or a signal the current tape isn't rewarding. Positioning language only; not investment advice.
+    """Returns CometCloud's fused per-asset ranking, combining four layers: (1) regime-neutral QUALITY (CIS grade), (2) cause-proximity — EARLY/upstream or LATE/出圈-fragile, (3) the historical average 30d outcome of that signal tier in TODAY's risk band from the edge map (past outcomes, not a forecast — `expected_edge_pct` is that historical average), and (4) EXECUTABILITY (a high-grade illiquid name is discounted, not top-ranked). Output is ranked by signed historical edge, each with a conviction 0..1, a direction and a positioning label. Use it to see how our layers line up across the universe today; it describes positions and past outcomes and is not a forecast or investment advice.
 
     Returns:
         str: {current_band, macro_regime, posture, conviction: [{symbol, grade, signal, quality_score, in_circle, season, expected_edge_pct, adjusted_edge_pct, executability, conviction, direction, action, drivers}], compliance}
 
     Examples:
-        - "What's the highest-conviction position across the book right now?" → use this tool
-        - "Rank the universe by how much I should actually act on it today" → use this tool
+        - "How do quality, proximity, historical edge and liquidity line up across the universe today?" → use this tool
+        - "Which names rank highest on the fused view right now, and why?" → use this tool
     """
     try:
         data = await _get("/api/v1/cis/conviction")
@@ -2078,7 +2123,7 @@ async def cometcloud_get_cis_report(params: CisReportInput) -> str:
             "---",
             "",
             "*CIS v4.1 — Absolute grading: A+≥85 · A≥75 · B+≥65 · B≥55 · C+≥45 · C≥35 · D≥25 · F<25*  ",
-            "*Signals are relative positioning language only — not investment advice.*  ",
+            "*Signals describe where each asset sits, computed from past and current data — not forecasts, not investment advice.*  ",
             "*Valid signals: STRONG OUTPERFORM / OUTPERFORM / NEUTRAL / UNDERPERFORM / UNDERWEIGHT*",
         ]
 

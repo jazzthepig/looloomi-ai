@@ -1,0 +1,29 @@
+{
+  "id": "T-078",
+  "owner": "seth",
+  "status": "in_review",
+  "created": "2026-10-09",
+  "verified": null,
+  "title": "每个 CIS 信号都归因(为什么出:支柱贡献;之后:同类 / 相对 / BTC β),对外口径改为「根据过往表现展示,不是预测」",
+  "source": "Jazz 10-09「就按这样定,是根据过往表现展示并非预测。然后我们需要给他们每个信号都归因」",
+  "allowed_paths": [
+    "src/data/",
+    "src/api/",
+    "src/mcp/",
+    "scripts/",
+    "tests/",
+    "docs/",
+    "dashboard/src/",
+    "CIS_METHODOLOGY.md",
+    ".claude/skills/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① cis_signal_attribution:2025-05 起每次信号变化一行,驱动 + 7 / 30 天结果,6 小时一轮 ② GET /api/v1/cis/attribution 与 MCP cometcloud_get_signal_attribution 返回 disclosure + track_record + 每个信号 ③ 所有信号面用同一句口径(SIGNAL_DISCLOSURE),无预测 / 该行动措辞(tests/test_signal_disclosure.py)④ 抽查一个信号(如 STRK 09-29)的数字与 SQL 重算一致",
+    "expect": "第一轮落库;track_record 的 OUTPERFORM 相对同类与 S-527 同号"
+  },
+  "prior_value": "信号对外没有任何归因;MCP 描述里有「expected to do」「timed decision」等预测 / 行动措辞;方法论 §8 是一张进场 / 止损 / 退出表",
+  "notes": "2026-10-09 开卡。"
+}

@@ -251,7 +251,7 @@ Both engines use identical thresholds:
 |---|---|---|---|
 | A+ | ≥ 85 | STRONG OUTPERFORM | Exceptional across all pillars |
 | A  | ≥ 75 | OUTPERFORM | Strong fundamentals + momentum |
-| B+ | ≥ 65 | OUTPERFORM | Above average, positive outlook |
+| B+ | ≥ 65 | OUTPERFORM | Above average across pillars |
 | B  | ≥ 55 | NEUTRAL | Solid but not exceptional |
 | C+ | ≥ 45 | NEUTRAL | Mixed signals, watch closely |
 | C  | ≥ 35 | UNDERPERFORM | Below average, deteriorating |
@@ -372,13 +372,21 @@ Confidence = sum of available weights.
 
 ## 8. Signal Definitions
 
-| Signal | Trigger | Agent Action |
+| Signal | Trigger | What it describes |
 |---|---|---|
-| STRONG OUTPERFORM | Grade A+ | Enter full position (LAS-adjusted) |
-| OUTPERFORM | Grade A or B+ | Enter partial position |
-| NEUTRAL | Grade B or C+ | Maintain existing, no new entry |
-| UNDERPERFORM | Grade C | Scale down 50%, set stop-loss |
-| UNDERWEIGHT | Grade D or F | Exit position, no new entry |
+| STRONG OUTPERFORM | Grade A+ | Top of the scored universe on current and past data |
+| OUTPERFORM | Grade A or B+ | Above the scored universe |
+| NEUTRAL | Grade B or C+ | Around the middle of the scored universe |
+| UNDERPERFORM | Grade C | Below the scored universe |
+| UNDERWEIGHT | Grade D or F | Bottom of the scored universe, or insufficient data |
+
+**Signals are descriptions, not forecasts (Jazz, 2026-10-09).** Every pillar is computed from past and
+current data, so a signal says where an asset sits now, not what it will do next. Each signal is published
+with the historical outcomes of signals of the same kind (`GET /api/v1/cis/attribution`): what moved the
+score (pillar contributions) and what followed (return of the scored universe, the asset relative to it,
+and for crypto the BTC beta component). Those outcomes have at times run opposite to the label — over
+2025-05 → 2026-10, names newly labelled OUTPERFORM trailed the equal-weight crypto universe. How a portfolio
+uses a signal is a separate layer with its own evidence.
 
 **Signal stability rule:** Signal changes require 2 consecutive scoring cycles
 at the new level before the signal updates. This prevents noise-driven flipping

@@ -3370,6 +3370,74 @@ async def get_cis_trend(
     }
 
 
+# ── Per-signal attribution (T-078 / S-529) ────────────────────────────────────
+
+_ATTR_CACHE: dict = {}
+
+
+def _attr_public(r: dict) -> dict:
+    """One signal change → why it fired (pillar contributions) and what followed (7d / 30d)."""
+    def after(h: int) -> dict:
+        return {"matured": r.get(f"matured_{h}"), "return": r.get(f"ret_{h}"),
+                "universe_return": r.get(f"univ_{h}"), "relative_to_universe": r.get(f"rel_{h}"),
+                "btc_return": r.get(f"btc_{h}"), "beta_adjusted": r.get(f"alpha_{h}")}
+    return {
+        "symbol": r.get("symbol"), "date": r.get("d"), "asset_class": r.get("asset_class"), "peer_group": r.get("grp"),
+        "signal": r.get("signal"), "previous_signal": r.get("prev_signal"), "previous_date": r.get("prev_d"),
+        "grade": r.get("grade"), "score": r.get("score"), "previous_score": r.get("prev_score"),
+        "why": {"score_change": r.get("d_score"), "pillar_contributions": r.get("contrib"),
+                "unexplained": r.get("contrib_residual"), "main_driver": r.get("top_driver"),
+                "weights_used": r.get("weights"), "return_30d_before": r.get("pre30_ret"),
+                "relative_30d_before": r.get("pre30_rel")},
+        "after": {"7d": after(7), "30d": after(30), "beta_to_btc": r.get("beta_btc"),
+                  "btc_below_50d_mean": r.get("btc_below_ma50")},
+        "note": r.get("note"),
+    }
+
+
+@router.get("/api/v1/cis/attribution")
+async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, response: Response = None):
+    """
+    Every CIS signal change, attributed (T-078). Two halves per signal:
+      why    — which pillars moved the score (pillar change × class base weight), what is left
+               unexplained, and how the price had already moved in the 30 days before the signal
+      after  — 7d / 30d return, the equal-weight scored universe over the same days, the difference,
+               and for crypto the BTC return, the 90d beta to BTC and the beta-adjusted return
+    Plus `track_record`: matured signals of each kind, summarised relative to the scored universe
+    (crypto also split by whether BTC was below its 50-day mean on the signal day).
+    Signals describe where an asset sits on past and current data; outcomes are historical, not forecasts.
+    Returns are fractions (0.05 = 5%). Example: GET /api/v1/cis/attribution?symbol=STRK
+    """
+    from src.api.contracts.disclosure import SIGNAL_DISCLOSURE, TRACK_RECORD_READING
+    from src.data.cis.signal_attribution import TABLE as _ATTR_TABLE, track_record
+    from src.data.style.header import _read_all
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1800"
+    now = time.time()
+    hit = _ATTR_CACHE.get("rows")
+    if not hit or now - hit[0] > 600:
+        try:
+            rows = await _read_all(_ATTR_TABLE, {"select": "*", "order": "d.desc,symbol.asc"})
+        except Exception as e:
+            logging.getLogger(__name__).warning("[SIGNAL-ATTR] read failed: %s", e)
+            raise HTTPException(status_code=502, detail="signal attribution unreadable — not the same as no signals")
+        _ATTR_CACHE["rows"] = (now, rows)
+        hit = _ATTR_CACHE["rows"]
+    rows = hit[1]
+    lim = max(1, min(int(limit or 50), 500))
+    sym = (symbol or "").strip().upper()
+    sel = [r for r in rows if not sym or str(r.get("symbol", "")).upper() == sym][:lim]
+    return sanitize_floats({
+        "disclosure": SIGNAL_DISCLOSURE,
+        "reading": TRACK_RECORD_READING,
+        "as_of": max((str(r.get("computed_at")) for r in rows), default=None),
+        "total_signal_changes": len(rows),
+        "track_record": track_record(rows),
+        "count": len(sel),
+        "signals": [_attr_public(r) for r in sel],
+    })
+
+
 # ── CIS Score History + Trend (agent-queryable) ───────────────────────────────
 
 @router.get("/api/v1/cis/history/{symbol}")

@@ -19,6 +19,7 @@ import json
 import logging
 import math
 import time
+from src.api.contracts.disclosure import SIGNAL_DISCLOSURE
 from datetime import datetime, timezone, timedelta
 
 import httpx
@@ -1225,7 +1226,7 @@ async def get_signal_track_record(response: Response = None):
         },
         "note": track_record_note(headline),
         "beta_adj_layer": beta_layer_status(headline),
-        "compliance": "Positioning language only; not investment advice.",
+        "compliance": SIGNAL_DISCLOSURE,
     }
 
 
@@ -1277,7 +1278,7 @@ async def get_signal_edge_map(response: Response = None):
                        "tape is risk-ON (bands 4/5); the bottom tier (UNDERPERFORM) has shown the "
                        "widest negative edge when risk-OFF (bands 1/2). Neutral tape → both edges shrink.",
         "note": "Observational signal→30d outcome; thin cells shrunk to structure. Not live-traded P&L.",
-        "compliance": "Positioning language only; not investment advice.",
+        "compliance": SIGNAL_DISCLOSURE,
     }
 
 
@@ -1290,11 +1291,11 @@ def _band_of(trail_30d: float) -> str:
     return "5_deep_on"
 
 _BAND_ACTION = {
-    "1_deep_off": "Deep risk-OFF — negative-edge tier at maximum width; positive-edge book screens UNDERWEIGHT.",
-    "2_off":      "Risk-OFF — the negative-edge tier is widest; the positive-edge book screens UNDERWEIGHT.",
-    "3_neutral":  "Neutral tape — both edges shrink; conviction dispersion compresses.",
-    "4_on":       "Risk-ON — top tier (STRONG OUTPERFORM) edge widest; negative-edge tier fades.",
-    "5_deep_on":  "Deep risk-ON — top-tier edge strongest; bottom tier disfavored.",
+    "1_deep_off": "Deep risk-OFF — historically the negative-edge tier was widest here; positive-edge book screens UNDERWEIGHT.",
+    "2_off":      "Risk-OFF — historically the negative-edge tier was widest; the positive-edge book screens UNDERWEIGHT.",
+    "3_neutral":  "Neutral tape — historically both edges shrank; conviction dispersion compresses.",
+    "4_on":       "Risk-ON — historically the top tier (STRONG OUTPERFORM) edge was widest; negative-edge tier fades.",
+    "5_deep_on":  "Deep risk-ON — historically the top-tier edge was strongest; bottom tier disfavored.",
 }
 
 # Band → default posture (net bias + gross scale), from the edge-map thesis: top-tier edge is
@@ -1331,8 +1332,8 @@ def _posture_from(band: str, tiers_now: dict) -> dict:
 
 
 async def compute_current_band() -> dict:
-    """Where the tape sits RIGHT NOW on the edge-map risk gradient + what each signal
-    tier is expected to do in that band. Benchmark = BTC 30d (crypto). Shared by the
+    """Where the tape sits RIGHT NOW on the edge-map risk gradient + how each signal
+    tier has behaved historically in that band. Benchmark = BTC 30d (crypto). Shared by the
     live read endpoint AND the daily snapshot logger so both are identical."""
     from src.api.routers.cis import get_cis_universe
     from src.api.store import supabase_get_latest_edge_map
@@ -1384,13 +1385,13 @@ async def compute_current_band() -> dict:
 @router.get("/api/v1/signals/current-band")
 async def get_current_band(response: Response = None):
     """Live read: given today's risk gradient (BTC 30d), which edge-map band are we in and
-    what is each signal tier expected to do NOW. Compliance: positioning language only."""
+    how each signal tier has behaved historically in that band. Historical description, not a forecast."""
     if response:
         response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1800"
     cur = await compute_current_band()
     cur["risk_bands"] = {"1_deep_off": "<-15%", "2_off": "-15..-5%", "3_neutral": "-5..+5%",
                          "4_on": "+5..+15%", "5_deep_on": ">+15%"}
-    cur["compliance"] = "Positioning language only; not investment advice."
+    cur["compliance"] = SIGNAL_DISCLOSURE
     return cur
 
 
@@ -1438,7 +1439,7 @@ async def get_conviction(response: Response = None):
         "basis": "quality × in-circle × (edge-map tier×band) × executability, ranked by signed edge",
         "count": len(rows),
         "conviction": rows,
-        "compliance": "Positioning language only; not investment advice.",
+        "compliance": SIGNAL_DISCLOSURE,
     }
 
 

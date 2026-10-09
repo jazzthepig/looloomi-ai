@@ -12,7 +12,9 @@ the methodology + compliance basis. No fabricated precision.
 from __future__ import annotations
 
 _METHODOLOGY_URL = "https://looloomi.ai/methodology.html"
-_COMPLIANCE = "Positioning language only (STRONG OUTPERFORM…UNDERWEIGHT); not investment advice."
+from src.api.contracts.disclosure import SIGNAL_DISCLOSURE as _DISCLOSURE  # noqa: E402
+
+_COMPLIANCE = "Positioning language only (STRONG OUTPERFORM…UNDERWEIGHT). " + _DISCLOSURE
 
 # Per-pillar data sources (what actually feeds each pillar). Kept honest + generic;
 # the engine field distinguishes the full T1 computation from the T2 estimate.

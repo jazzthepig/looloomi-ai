@@ -39,6 +39,17 @@ The rule applies to:
 Descriptive verbs that are fine: *positioned*, *ranked*, *weighted*, *scored*,
 *graded*, *benchmarked*, *favored*, *disfavored*, *tilted toward*, *tilted away from*.
 
+### ✅ Signals are descriptions, not forecasts (Jazz, 2026-10-09)
+
+CIS signals are computed from past and current data. Every signal surface says so with the one
+constant `SIGNAL_DISCLOSURE` (`src/api/contracts/disclosure.py`) — never a hand-written variant — and
+shows the historical outcomes of signals of the same kind next to the signal (T-078 attribution,
+`GET /api/v1/cis/attribution`). Forward-looking framing is out even when the label is compliant:
+"expected to do", "will outperform", "positive outlook", "time to act", "what should I do now".
+Describe historical outcomes in the past tense ("has trailed", "averaged"). S-527 is why: names
+newly labelled OUTPERFORM trailed their peers for 17 months — the label read as a forecast would
+have told users the opposite of what happened. Guard: `tests/test_signal_disclosure.py`.
+
 ### ❌ Forbidden — transactional / advisory language
 
 NEVER use these in ANY user-facing output, even if the user asks for them:

@@ -533,8 +533,11 @@ export default function MethodologyPage() {
               <p style={{ fontFamily: body, fontSize: 13, color: C.t3, lineHeight: 1.7, margin: 0 }}>
                 CIS signals use positioning language exclusively. CometCloud does not hold
                 an investment advisory license and does not issue buy or sell recommendations.
-                Signals indicate quantitative positioning relative to the scored universe —
-                not forecasts of future price performance.
+                Signals describe where each asset sits in the scored universe, computed from past
+                and current data — they are not forecasts of future price performance. Each signal is
+                shown with the historical outcomes of signals of the same kind: what moved the score,
+                and what followed relative to the scored universe. Those outcomes have at times run
+                opposite to the label.
               </p>
             </Card>
           </Section>

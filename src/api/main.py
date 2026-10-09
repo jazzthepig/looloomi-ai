@@ -1483,6 +1483,38 @@ async def _feature_arms_loop():
         await _asyncio.sleep(6 * 3600)
 
 
+async def _signal_attribution_loop():
+    """S-529 / T-078:每个 CIS 信号变化的归因(支柱贡献 + 7 / 30 天结果:同类、相对、BTC β)→ cis_signal_attribution。
+    Jazz 10-09:信号是根据过往表现的展示,不是预测;每个信号都要归因。每 6 小时一轮,幂等。
+    判活:`select max(computed_at) from cis_signal_attribution` 在 7 小时内。
+    """
+    await _asyncio.sleep(_boot_delay(690))
+    while True:
+        try:
+            from src.data.cis.signal_attribution import run_once as _sa_run
+            r = await _sa_run()
+            print(f"[SIGNAL-ATTR] {str(r.get('reason'))[:160]}")
+            _detail = {k: r.get(k) for k in ("written", "with_outcome_7d", "groups_without_prices")}
+            await _beat("_signal_attribution_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_signal_attribution_loop", "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._signal_attribution_loop")
+        except Exception as _e:
+            print(f"[SIGNAL-ATTR] ⚠️  pass FAILED: {_e}")
+            await _beat("_signal_attribution_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_signal_attribution_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._signal_attribution_loop")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_signal_attribution_loop():
+    _asyncio.create_task(_signal_attribution_loop())
+    print("[SIGNAL-ATTR] ✅ per-signal attribution scheduled (cis_signal_attribution)")
+
+
 @app.on_event("startup")
 async def _start_feature_arms_loop():
     _asyncio.create_task(_feature_arms_loop())

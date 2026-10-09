@@ -22,6 +22,7 @@
     "channel_series_daily",
     "cis_backtest_results",
     "cis_scores",
+    "cis_signal_attribution",
     "cis_tilt_daily",
     "combined_book_nav",
     "core_cap_daily",
