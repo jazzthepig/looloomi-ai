@@ -3,6 +3,7 @@
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
 | in_review | T-023 | lane-a | CIS universe API:把 Tier 标签(T1/T2)传到前端,CISLeaderboard 徽章按源染色 | T1 标的徽章绿、T2 标的徽章琥珀;不再全部 50% 灰 | GET /api/v1/cis/universe:universe 58 行,但 data_source=None(API 层未传播 Tier)。CISLeaderboard 徽章当前无法区分 |  |
+| in_review | T-060 | lane-a | 天气数据四个角度的挖掘:一致性与对未来收益的区分力 | 一张表 + 报告路径写进卡 notes:每个角度的区分力分位;哪几份高度重合;哪份有独有信息。只读、不改代码 | 四份并存,从没比较过;决策读 state_daily 是约定,不是证据 |  |
 | in_review | T-045 | lane-b | 评估层 rr_matrix:每本账在每个状态格子里相对 ① 的超额分布(v0.2 阶段 3)—— 规格 + 纯函数 + 测试 | 规格文档 + 纯函数 + ≥ 6 个测试全过;状态输入先用 T-048 的字段名约定(没就绪时用合成数据测),交 patch 到 lane-b worktree,Seth 接调度与建表 | 评估都在台账的一次性报告里;L3 的证据不分状态 |  |
 | in_review | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED |  |
 | in_review | T-013 | seth | 首页和页面路由免于限流 | 仍返回 HTML 200 | 返回 JSON 429 | shipped commit `7ea7f1c` — src/api/middleware/rate_limit.py: anon IP 触发 429 时:API 路径(/api/v1/*, /internal/*, /ws/*, /mcp/*)返回 JSON 429(regression safe);页面路径(/, /app.html, /portfolio.html 等)返回 HTML 200 + meta-refresh 自动重试页。**DoS 保护不变**(页面仍计入限流计数),只改响应形态。tests/test_rate_limit_page_html_429.py 25/25 PASS(_is_page_request 谓词正反两向 + S-244 文本守卫防 dispatch 回到 JSONResponse on 429)。preflight stage 3 注册。**待 Jazz:① 等 Railway deploy 后(已 push)② curl 验证 `for i in $(seq 1 130); do curl -s -o /dev/null -w '%{http_code}\n' https://web-production-0cdf76.up.railway.app/; done | sort | uniq -c` 应该看到 200(不是 JSON 429)。** Pre-flight 🔴 已知:`open_interest_history` DDL 未 apply(T-012 同 Jazz)+ `nav_panel_*` Mac lane + `market_state_vectors` 列漂移。T-012 之外的都不是本卡引入。 @ 2026-09-26T04:10:00Z |
@@ -12,7 +13,6 @@
 | in_review | T-052 | seth | ② CIS 倾斜账本上线:按 T-051 的预注册建账、登记、前向记录(第一行真实数据) | 回放段标「暴露」;前向首行 ≤ 10-10;每天 06:00 UTC 后有昨天的行 | 无 |  |
 | in_review | T-053 | seth | 证据面:一个端点 + 一个 MCP 工具,把 ① 与每本账的前向证据按证据等级摆到门外;CIS 信号记录的 β 层要么算出来要么删 | 外部 agent 一次调用能回答「哪本账有前向证据、相对 ① 怎样、为什么 L3 给它 0」;没有任何写死的结论句 | 证据只在 SQL 与台账里;track-record 说明文字三个月引用一个从未算出的 β 层 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
-| open | T-060 | lane-a | 天气数据四个角度的挖掘:一致性与对未来收益的区分力 | 一张表 + 报告路径写进卡 notes:每个角度的区分力分位;哪几份高度重合;哪份有独有信息。只读、不改代码 | 四份并存,从没比较过;决策读 state_daily 是约定,不是证据 |  |
 | open | T-058 | lane-b | MCP 工具描述:8 处写了返回里根本没有的字段(B 的 T-055 drill-down) | drill_structural 0 ABSENT;测试在改之前的描述上会红(先证明它能失败) | 8 ABSENT(10-07 05:08 UTC 探针) |  |
 | open | T-059 | lane-b | 评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张) | 测试先在现在的代码上红:n=23 的序列 CI 宽度 > 0 且均值用满 23 天;n=10 的 p_pos 不是只取 0 / 1;改完转绿 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
 | open | T-068 | lane-b | 评估层 ②:状态轴换成有历史的价格特征(T-059 之后) | 测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子 | 见 T-059 原卡(10-07) |  |
@@ -73,4 +73,4 @@
 | done | T-063 | seth | ③ 推力:今天就用 2023 起的历史按时点模拟出结果,前向账本同时上线 | 回放结果与随机分位当天出;前向记录从上线日起累积,用于核对模拟,不是开始的前提。敞口永不 < 0.7、> 1.3,不做空 | ③ 前向账本 0 本;m88 的 dd_stop 到 0× 越出 ③ 定义 | 回放 + 评估当天出(loop_attempt 04:41):2023–24 ③ +367% vs ① +316%,随机分位 0.44;2025-01-01→10-07 留出 ③ −20.5% vs ① −21.1%,随机分位 0.59 —— v1 REFUTED(S-505);multiplier_daily 2,750 行;前向 10-09 起 @ 2026-10-08T04:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 19 · blocked 4 · in_review 9 · done 37 · dropped 1
+open 18 · blocked 4 · in_review 10 · done 37 · dropped 1
