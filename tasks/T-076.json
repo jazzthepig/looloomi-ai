@@ -1,9 +1,13 @@
 {
   "id": "T-076",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-09",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-09T02:20:00Z",
+    "value": "chain_activity_daily: 95,415 rows, 68 chains, 2014-02-17→2026-10-08 (max(d)=yesterday); gap30 variants failed prereg gate per S-526 → graveyard"
+  },
   "title": "景气轮动 / 预期差:链的 TVL、手续费、DEX 成交量动量减去币价动量,横截面检验;STRK 当个案",
   "source": "Jazz 10-09「STRK 是一个很好的案例,我们要补抓到这样的机会 —— 类似景气轮动;很多机会是市场普遍没有观察到的,有非常强预期差」",
   "allowed_paths": [

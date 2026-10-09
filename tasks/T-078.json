@@ -25,5 +25,5 @@
     "expect": "第一轮落库;track_record 的 OUTPERFORM 相对同类与 S-527 同号"
   },
   "prior_value": "信号对外没有任何归因;MCP 描述里有「expected to do」「timed decision」等预测 / 行动措辞;方法论 §8 是一张进场 / 止损 / 退出表",
-  "notes": "2026-10-09 开卡。"
+  "notes": "2026-10-09 开卡。 | 10-09 上线(60ce0ce):4,045 个信号变化归因落库;STRK 09-29 与 SQL 手算一致;出信号前 30 天相对同类按档单调(STRONG +23% → UW −10%),之后 30 天各档均值贴近 0。剩:dashboard 上每个信号旁边展示归因(现在是 API + MCP)。 | 10-09 第二块:资产页加 SignalAttribution(每次变化的支柱贡献、之前 30 天、之后 7 / 30 天、维持天数、同档历史记录 + 口径);51% 的变化 3 天内变回原档 —— 归因与 track_record 已标出并排除,CIS 标签滞回交 Jazz。"
 }
