@@ -721,6 +721,42 @@ async def get_llama_chain_overview(kind: str, chain: str) -> list[list]:
     return (r.json() or {}).get("totalDataChart") or []
 
 
+async def get_llama_protocol_tvl(slug: str) -> list[list]:
+    """DeFiLlama `/protocol/{slug}` 的 tvl 序列 → [[unix_ts, tvl_usd], ...]。非 200 抛错(T-079 / S-531)。"""
+    from urllib.parse import quote
+    r = await _get_llama_client().get(f"{LLAMA_BASE}/protocol/{quote(slug)}", timeout=60)
+    if r.status_code != 200:
+        raise RuntimeError(f"DeFiLlama /protocol/{slug} HTTP {r.status_code}")
+    return [[x.get("date"), x.get("totalLiquidityUSD")] for x in ((r.json() or {}).get("tvl") or [])]
+
+
+async def get_fng_history() -> list[dict]:
+    """alternative.me 恐惧贪婪全历史(limit=0)→ [{timestamp, value}]。非 200 或空抛错 —— 读不到 ≠ 没有(T-079)。"""
+    r = await _get_misc_client().get("https://api.alternative.me/fng/", params={"limit": 0, "format": "json"}, timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"alternative.me fng HTTP {r.status_code}")
+    data = (r.json() or {}).get("data") or []
+    if not data:
+        raise RuntimeError("alternative.me fng 返回空")
+    return data
+
+
+async def get_eodhd_eod_range(ticker: str, exchange: str, frm: str) -> list[dict]:
+    """EODHD `/eod/{ticker}.{exchange}` 从 frm 起的日线原始行 [{date, open, high, low, close, adjusted_close, volume}]。
+    没有 key / 非 200 抛错(T-079)。"""
+    if not EODHD_KEY:
+        raise RuntimeError("EODHD_API_KEY 不在进程环境里")
+    r = await _get_misc_client().get(f"{EODHD_BASE}/eod/{ticker}.{exchange}",
+                                     params={"fmt": "json", "api_token": EODHD_KEY, "period": "d", "from": frm},
+                                     timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"EODHD eod {ticker}.{exchange} HTTP {r.status_code}")
+    rows = r.json()
+    if not isinstance(rows, list):
+        raise RuntimeError(f"EODHD eod {ticker}.{exchange} 返回的不是列表")
+    return rows
+
+
 async def get_dex_volumes() -> dict:
     """Top DEX volumes from DeFiLlama. TTL: 5 min Redis."""
     key = "dex_volumes"

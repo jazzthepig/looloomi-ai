@@ -49,9 +49,11 @@ WEIGHTINGS = ("cap", "equal")
 
 from src.data.market.bar_semantics import covered_day, is_day_boundary  # noqa: E402
 
-def parse_market_chart(prices: list, market_caps: list) -> list[dict]:
-    """market_chart → [{d, price, mcap}]。只保留 00:00 UTC 的点,d = 点的日期 − 1。"""
+def parse_market_chart(prices: list, market_caps: list, volumes: Optional[list] = None) -> list[dict]:
+    """market_chart → [{d, price, mcap, volume}]。只保留 00:00 UTC 的点,d = 点的日期 − 1。
+    volume = 那一刻的 24 小时全市场成交额(美元)= d 当天的成交 —— T-079 起落库(此前被丢掉,CIS 的 M / S 要用)。"""
     caps = {int(t): v for t, v in (market_caps or []) if t is not None}
+    vols = {int(t): v for t, v in (volumes or []) if t is not None}
     out = []
     for t, p in prices or []:
         t = int(t)
@@ -59,8 +61,11 @@ def parse_market_chart(prices: list, market_caps: list) -> list[dict]:
             continue
         d = covered_day("coingecko_market_chart", t)          # 语义一处定义(T-049)
         m = caps.get(t)
-        out.append({"d": d.isoformat(), "price": float(p),
-                    "mcap": float(m) if m else None})
+        row = {"d": d.isoformat(), "price": float(p), "mcap": float(m) if m else None}
+        if volumes is not None:                               # 只有调用方给了成交额才带这个键(cg_coin_mcap_daily 没有这一列)
+            v = vols.get(t)
+            row["volume"] = float(v) if v else None
+        out.append(row)
     return out
 
 
@@ -231,7 +236,7 @@ async def backfill_mcap(members: list[dict], today: date) -> dict[str, Any]:
         if not raw.get("available"):
             failed[m["symbol"]] = str(raw.get("error") or raw.get("reason"))[:120]
             continue
-        pts = parse_market_chart(raw.get("prices"), raw.get("market_caps"))
+        pts = parse_market_chart(raw.get("prices"), raw.get("market_caps"), raw.get("volumes"))
         rows = [{"symbol": m["symbol"], "coin_id": m["coin_id"], "source": SOURCE, **p} for p in pts]
         for i in range(0, len(rows), 2000):
             res = await supabase_upsert_table("asset_mcap_daily", rows[i:i + 2000],

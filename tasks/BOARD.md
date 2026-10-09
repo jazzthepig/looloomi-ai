@@ -17,6 +17,7 @@
 | in_review | T-078 | seth | 每个 CIS 信号都归因(为什么出:支柱贡献;之后:同类 / 相对 / BTC β),对外口径改为「根据过往表现展示,不是预测」 | 第一轮落库;track_record 的 OUTPERFORM 相对同类与 S-527 同号 | 信号对外没有任何归因;MCP 描述里有「expected to do」「timed decision」等预测 / 行动措辞;方法论 §8 是一张进场 / 止损 / 退出表 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
+| claimed | T-079 | seth | CIS 统一标准 v1 + 按时点重建:一个公式、一套时点、一个来源优先级;缺的维度补齐;标签滞回 | 重建与实盘 T2 同函数同输入时差 ≈ 0;差异全部能指到某个输入 | CIS 历史 = 代理重建(77%)+ T2 + T1 + Railway 快照拼接;恐惧贪婪 / VIX / 全市场市值 / 协议 TVL / 全市场成交额没有历史;传统资产原始收盘(跨拆股假跌) |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-059 | lane-b | 评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张) | 测试先在现在的代码上红:n=23 的序列 CI 宽度 > 0 且均值用满 23 天;n=10 的 p_pos 不是只取 0 / 1;改完转绿 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
 | open | T-068 | lane-b | 评估层 ②:状态轴换成有历史的价格特征(T-059 之后) | 测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子 | 见 T-059 原卡(10-07) |  |
@@ -81,4 +82,4 @@
 | done | T-076 | seth | 景气轮动 / 预期差:链的 TVL、手续费、DEX 成交量动量减去币价动量,横截面检验;STRK 当个案 | 顶减底在两段都 ≥ 打乱的 p95 才进 ② 的倾斜候选;否则写进墓地 | 没有链的基本面读数;所有书只看价格与 CIS | chain_activity_daily: 95,415 rows, 68 chains, 2014-02-17→2026-10-08 (max(d)=yesterday); gap30 variants failed prereg gate per S-526 → graveyard @ 2026-10-09T02:20:00Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 14 · claimed 2 · blocked 3 · in_review 13 · done 45 · dropped 1
+open 14 · claimed 3 · blocked 3 · in_review 13 · done 45 · dropped 1

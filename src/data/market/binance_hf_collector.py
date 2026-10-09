@@ -33,13 +33,20 @@ from typing import Any, Awaitable, Callable
 _log = logging.getLogger("binance_hf")
 
 HF_SYMBOLS: tuple[str, ...] = ("ADA", "AVAX", "BNB", "BTC", "DOGE", "ETH", "LINK", "SOL", "SUI", "XRP")
+#: 资金费率覆盖 CIS 的全部加密名字(T-079 / S-531:CIS 统一标准的 O 支柱要用,一个场馆 —— binance_perp)。
+#: 小时线仍只有上面 10 个(研究用,量大)。
+FUNDING_SYMBOLS: tuple[str, ...] = tuple(sorted(set(HF_SYMBOLS) | {
+    "DOT", "NEAR", "APT", "HYPE", "ARB", "OP", "POL", "STRK", "UNI", "AAVE", "LDO", "PENDLE", "INJ", "TIA",
+    "ONDO", "MKR"}))
+#: 库里一行都没有的资金费率序列从这里开始补(CIS 重建从 2023 起,30 日窗口往前留余量)。
+FUNDING_BACKFILL_START_MS = int(datetime(2022, 11, 1, tzinfo=timezone.utc).timestamp() * 1000)
 HOURLY_SOURCE = "binance_hist"
 FUNDING_VENUE = "binance_perp"
 
 _HOUR_MS = 3_600_000
 PAGE = 1000
 MAX_PAGES_HOURLY = 3
-MAX_PAGES_FUNDING = 2
+MAX_PAGES_FUNDING = 5               # 一页 1,000 期 ≈ 333 天;首次回填 2022-11 起约 4.3 页
 MIN_OK_FRACTION = 0.70
 _CONCURRENCY = 4
 _PAUSE_S = 0.25
@@ -169,7 +176,10 @@ async def _one_series(kind: str, get_page: GetPage, now_ms: int) -> dict:
             if f is None:
                 failures[sym] = "frontier unreadable"
                 return
-            start = f if f else now_ms - _NO_HISTORY_LOOKBACK_MS
+            if f:
+                start = f
+            else:
+                start = now_ms - _NO_HISTORY_LOOKBACK_MS if kind == "hourly" else FUNDING_BACKFILL_START_MS
             try:
                 if kind == "hourly":
                     got, more = await fetch_hourly(get_page, sym, start, now_ms)
@@ -183,14 +193,15 @@ async def _one_series(kind: str, get_page: GetPage, now_ms: int) -> dict:
                 pending.append(sym)
             await asyncio.sleep(_PAUSE_S)
 
-    await asyncio.gather(*[_go(s) for s in HF_SYMBOLS])
-    n_ok = len(HF_SYMBOLS) - len(failures)
-    out: dict[str, Any] = {"symbols_ok": n_ok, "symbols_total": len(HF_SYMBOLS),
+    symbols = HF_SYMBOLS if kind == "hourly" else FUNDING_SYMBOLS
+    await asyncio.gather(*[_go(s) for s in symbols])
+    n_ok = len(symbols) - len(failures)
+    out: dict[str, Any] = {"symbols_ok": n_ok, "symbols_total": len(symbols),
                            "rows_built": len(rows), "pending": sorted(pending),
                            "failure_sample": dict(list(failures.items())[:5])}
-    if not coverage_ok(n_ok, len(HF_SYMBOLS)):
+    if not coverage_ok(n_ok, len(symbols)):
         out.update(written=False, refused=True, rows_upserted=0,
-                   reason=f"{kind}: only {n_ok}/{len(HF_SYMBOLS)} symbols readable — write refused so the gap stays visible")
+                   reason=f"{kind}: only {n_ok}/{len(symbols)} symbols readable — write refused so the gap stays visible")
         return out
     table, conflict = (("ohlcv_hourly", "symbol,ts,source") if kind == "hourly"
                        else ("funding_history", "symbol,funding_time,venue"))
@@ -206,7 +217,7 @@ async def run_once() -> dict:
     from src.data.market.source_policy import MARKET_DATA, assert_purpose_source
     assert_purpose_source(MARKET_DATA, HOURLY_SOURCE, n_assets=len(HF_SYMBOLS),
                           job="binance hourly bars", secondary_ok=True)
-    assert_purpose_source(MARKET_DATA, FUNDING_VENUE, n_assets=len(HF_SYMBOLS),
+    assert_purpose_source(MARKET_DATA, FUNDING_VENUE, n_assets=len(FUNDING_SYMBOLS),
                           job="binance perp funding history", secondary_ok=True)
 
     now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)

@@ -202,6 +202,40 @@ async def _fetch_hyperliquid_daily(client, coin: str, days: int) -> list:
         return []
 
 
+def eodhd_adjusted_rows(rows: list) -> list:
+    """纯函数。EODHD 原始日线 → 复权后的 OHLC(T-079 / S-531)。
+
+    原来写的是**原始收盘**,而 CIS 实盘读的是 `adjusted_close`(data_layer.get_eodhd_eod_data)—— 同一个标的
+    两种口径。原始收盘跨拆股会造出假跌(NVDA 2024-06 一拆十 = 一天 −90%),跨分红会少算债券 ETF 的收益。
+    统一为复权:收盘 = adjusted_close,开高低按同一个系数(adjusted_close / close)缩放;成交量不动。
+    复权值会随后来的分红回改 —— 所以全历史每周重取一次(cis_inputs 的回填),不是只取一次。"""
+    out = []
+    for x in rows or []:
+        d, close = x.get("date"), x.get("close")
+        try:
+            close = float(close)
+        except (TypeError, ValueError):
+            continue
+        if not d or close <= 0:
+            continue
+        try:
+            adj = float(x.get("adjusted_close"))
+        except (TypeError, ValueError):
+            adj = close
+        if adj <= 0:
+            adj = close
+        k = adj / close
+        out.append({
+            "trade_date": d,
+            "open":   float(x.get("open") or close) * k,
+            "high":   float(x.get("high") or close) * k,
+            "low":    float(x.get("low") or close) * k,
+            "close":  adj,
+            "volume": float(x.get("volume") or 0),
+        })
+    return out
+
+
 async def _fetch_eodhd_daily(client, symbol: str, days: int) -> list:
     """Fetch daily candles from EODHD /eod — the TradFi PRIMARY. yfinance is rate-limited/blocked
     (confirmed 2026-07: YFRateLimitError), which silently stalled ohlcv_daily since 06-18; the rest
@@ -225,20 +259,7 @@ async def _fetch_eodhd_daily(client, symbol: str, days: int) -> list:
         rows = r.json()
         if not isinstance(rows, list):
             return []
-        out = []
-        for x in rows:
-            d, close = x.get("date"), x.get("close")
-            if not d or close is None:
-                continue
-            out.append({
-                "trade_date": d,
-                "open":   float(x.get("open")  or close or 0),
-                "high":   float(x.get("high")  or close or 0),
-                "low":    float(x.get("low")   or close or 0),
-                "close":  float(close or 0),
-                "volume": float(x.get("volume") or 0),
-            })
-        return out
+        return eodhd_adjusted_rows(rows)
     except Exception as e:
         _logger.warning(f"[OHLCV] EODHD {symbol} failed: {e}")
         return []

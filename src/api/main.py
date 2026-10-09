@@ -1483,6 +1483,38 @@ async def _feature_arms_loop():
         await _asyncio.sleep(6 * 3600)
 
 
+async def _cis_inputs_loop():
+    """S-531 / T-079:CIS 统一标准缺的维度 —— 恐惧贪婪 / VIX / 全市场市值(macro_daily)、DeFi 协议 TVL、
+    CG 全市场成交额(asset_mcap_daily.volume)、传统资产复权日线(周一全量重取)。每天一轮。
+    判活:`select series, max(d) from macro_daily group by 1`。
+    """
+    await _asyncio.sleep(_boot_delay(750))
+    while True:
+        try:
+            from src.data.market.cis_inputs import run_once as _ci_run
+            r = await _ci_run()
+            print(f"[CIS-INPUTS] {str(r.get('reason'))[:160]}")
+            _detail = {k: r.get(k) for k in ("errors", "macro", "protocols", "tradfi")}
+            await _beat("_cis_inputs_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_cis_inputs_loop", "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._cis_inputs_loop")
+        except Exception as _e:
+            print(f"[CIS-INPUTS] ⚠️  pass FAILED: {_e}")
+            await _beat("_cis_inputs_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_cis_inputs_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._cis_inputs_loop")
+        await _asyncio.sleep(24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_cis_inputs_loop():
+    _asyncio.create_task(_cis_inputs_loop())
+    print("[CIS-INPUTS] ✅ CIS input dimensions scheduled (macro_daily / protocol_tvl_daily / volume / tradfi adjusted)")
+
+
 async def _signal_attribution_loop():
     """S-529 / T-078:每个 CIS 信号变化的归因(支柱贡献 + 7 / 30 天结果:同类、相对、BTC β)→ cis_signal_attribution。
     Jazz 10-09:信号是根据过往表现的展示,不是预测;每个信号都要归因。每 6 小时一轮,幂等。

@@ -1,0 +1,25 @@
+{
+  "id": "T-079",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-09",
+  "verified": null,
+  "title": "CIS 统一标准 v1 + 按时点重建:一个公式、一套时点、一个来源优先级;缺的维度补齐;标签滞回",
+  "source": "Jazz 10-09「先开始重建。付费 api 待定,先统一标准。重建不是问题,问题是要数据和时序对上。有缺了维度的补上」",
+  "allowed_paths": [
+    "src/data/",
+    "src/api/",
+    "scripts/",
+    "tests/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① docs/CIS_STANDARD.md(公式冻结 / 时点 / 来源优先级 / 维度清单 / 滞回)② 缺的维度落库并日更:macro_daily(fng / vix / total_mcap)、protocol_tvl_daily、asset_mcap_daily.volume、binance_perp 资金费率覆盖全部加密名字到 2022-11、eodhd 复权日线到 2022-08 ③ cis_rebuild_daily 2023 起每天每名字一行,带输入来源与缺失维度 ④ 与 Railway T2 重叠日的分数差逐项追到输入",
+    "expect": "重建与实盘 T2 同函数同输入时差 ≈ 0;差异全部能指到某个输入"
+  },
+  "prior_value": "CIS 历史 = 代理重建(77%)+ T2 + T1 + Railway 快照拼接;恐惧贪婪 / VIX / 全市场市值 / 协议 TVL / 全市场成交额没有历史;传统资产原始收盘(跨拆股假跌)",
+  "notes": "2026-10-09 开卡。第一块:标准文档 + 补维度的采集(cis_inputs、资金费率扩展、eodhd 复权)。"
+}
