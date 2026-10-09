@@ -132,13 +132,13 @@ def coverage_ok(n_ok: int, n_total: int) -> bool:
     return n_total > 0 and n_ok / n_total >= MIN_OK_FRACTION
 
 
-async def _frontier(table: str, col: str, flt: str, symbol: str) -> int | None:
-    """库里该符号的最新时间(毫秒);没有行 ⇒ 0;读不到 ⇒ None(调用方把它当失败,不猜)。"""
+async def _frontier(table: str, col: str, flt: str, symbol: str, earliest: bool = False) -> int | None:
+    """库里该符号的最新(earliest=True 时最早)时间(毫秒);没有行 ⇒ 0;读不到 ⇒ None(调用方把它当失败,不猜)。"""
     import httpx
     base, key = os.environ.get("SUPABASE_URL", "").rstrip("/"), os.environ.get("SUPABASE_KEY", "")
     if not base or not key:
         return None
-    url = f"{base}/rest/v1/{table}?select={col}&symbol=eq.{symbol}&{flt}&order={col}.desc&limit=1"
+    url = f"{base}/rest/v1/{table}?select={col}&symbol=eq.{symbol}&{flt}&order={col}.{'asc' if earliest else 'desc'}&limit=1"
     try:
         async with httpx.AsyncClient(timeout=10) as c:
             r = await c.get(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
@@ -191,6 +191,23 @@ async def _one_series(kind: str, get_page: GetPage, now_ms: int) -> dict:
             rows.extend(got)
             if more:
                 pending.append(sym)
+            if kind == "funding" and f:
+                # 往回补:2026-08 一次性导入的 10 个名字从 2024-02 起,CIS 重建要 2022-11 起(T-079)。
+                e = await _frontier("funding_history", "funding_time", f"venue=eq.{FUNDING_VENUE}", sym, earliest=True)
+                if e and e > FUNDING_BACKFILL_START_MS + 2 * 24 * _HOUR_MS:
+                    try:
+                        cur, got_back = FUNDING_BACKFILL_START_MS, []
+                        for _ in range(MAX_PAGES_FUNDING):
+                            page = await get_page(f"{sym}USDT", cur)
+                            if not page or int(page[0]["fundingTime"]) >= e - _HOUR_MS:
+                                break                        # 场馆最早就到这里(上市晚于回填起点)—— 没有更早的
+                            got_back += [b for b in funding_rows(sym, page) if b["funding_time"] < _iso(e)]
+                            if len(page) < PAGE or int(page[-1]["fundingTime"]) >= e:
+                                break
+                            cur = int(page[-1]["fundingTime"]) + 1
+                        rows.extend(got_back)
+                    except Exception as ex:                  # noqa: BLE001
+                        failures.setdefault(sym, f"backfill {type(ex).__name__}: {str(ex)[:60]}")
             await asyncio.sleep(_PAUSE_S)
 
     symbols = HF_SYMBOLS if kind == "hourly" else FUNDING_SYMBOLS

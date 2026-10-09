@@ -36,7 +36,7 @@ S-530 测得:我们手里的 CIS 历史是三段拼起来的 —— 2025-05 → 
 |---|---|---|
 | 收盘、涨跌、ATH 距离 | asset_mcap_daily(CG market_chart,25 个名字同一源、与市值同一时刻) | eodhd(复权) |
 | 日内高 / 低 | binance_hist(HYPE:coingecko_pro_ohlc) | eodhd(复权) |
-| 市值、总成交额 | asset_mcap_daily(CG market_chart) | 成交 = 股数 × 收盘(美元);市值无历史 → F 走类别下限 45 |
+| 市值、总成交额 | asset_mcap_daily(CG market_chart) | 成交 = 股数 × 收盘(美元);市值 = 今天的市值 × (d 价 / 今天价)(静态份额假设,标注) |
 | 流通量 | 市值 / 价格(当日推得) | — |
 | 总量 / 上限 / FDV | **静态:取当前值**(无历史;解锁事件不反映,标注) | — |
 | TVL | DeFi → DeFiLlama 协议 TVL;L2 → DeFiLlama 链 TVL(`chain_activity_daily`) | — |
