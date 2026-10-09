@@ -48,6 +48,15 @@ HALLUCINATIONS = [
     ("cometcloud_market_snapshot", "tvl"),
 ]
 
+# Prose-level over-claims for the same 8 tools (T-055 ABSENT). These are
+# descriptions that assert a returned field in plain English (no underscore),
+# so a literal token-only check (HALLUCINATIONS above) would miss them.
+# Each phrase was confirmed ABSENT in v2 response (0 null / 0 populated).
+PROSE_OVERCLAIMS = [
+    ("cometcloud_get_portfolio_stats", "max drawdown"),
+    ("cometcloud_get_portfolio_stats", "drawdown"),
+]
+
 # Known response-key surface per tool. Each set is the EXACT set of dict keys
 # (top-level and any walked-over sub-dicts/lists) the tool exposes — drawn from the
 # Returns block in src/mcp/cometcloud_mcp.py docstrings + the field accesses in
@@ -142,6 +151,24 @@ def test_no_hallucinated_field_claims_in_docstrings():
                 f"from the actual API response (T-055 ABSENT)"
             )
 
+    # ── Prose-level over-claims (T-055 ABSENT fields described in plain English)
+    # These are NEITHER literal snake_case tokens (the previous loop) NOR
+    # real fields in the response — so a literal-token check alone would miss
+    # them. Each (tool, prose_phrase) below was matched against T-055 v2
+    # responses and found to be a description-side over-claim (no backing key).
+    # ──────────────────────────────────────────────────────────────────────────
+    for tool, phrase in PROSE_OVERCLAIMS:
+        docstring = _get_docstring(src, tool)
+        # case-insensitive substr match — the prose phrasing is what matters,
+        # not the exact token form (e.g. "max drawdown" == "Max Drawdown").
+        present = phrase.lower() in docstring.lower()
+        checked.append((tool, f"PROSE:{phrase}", False, present))
+        if present:
+            failures.append(
+                f"{tool}: docstring mentions `{phrase}` as a returned field, "
+                f"but the response has no drawdown key — over-claim (T-055 ABSENT)"
+            )
+
     # Sanity-check that the test machinery actually walked something — if all
     # 8 pairs are no-docstring / absent, the docstring extractor is broken.
     assert checked, "HALLUCINATIONS list is empty — test is a no-op"
@@ -150,7 +177,7 @@ def test_no_hallucinated_field_claims_in_docstrings():
         "Docstring hallucinations (T-058 acceptance: 0 expected, "
         f"{len(failures)} found):\n  - "
         + "\n  - ".join(failures)
-        + "\n\nAll 8 (tool, key) pairs checked:\n  - "
+        + "\n\nAll (tool, key) pairs checked:\n  - "
         + "\n  - ".join(
             f"{t}: key_in_response={kr}, claims_in_doc={cl}"
             for t, k, kr, cl in checked

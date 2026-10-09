@@ -1713,9 +1713,14 @@ async def cometcloud_get_fund_portfolio() -> str:
 async def cometcloud_get_portfolio_stats(params: PortfolioStatsInput) -> str:
     """Compute portfolio risk/return statistics for a given set of assets and weights.
 
-    Returns expected return, volatility, Sharpe ratio, max drawdown, and
-    correlation data for the specified portfolio. Uses CometCloud's CIS scores
-    as a quality overlay on top of the statistical output.
+    Returns expected return, annualized volatility, and Sharpe ratio for the
+    specified portfolio. Uses CometCloud's CIS scores as a quality overlay on
+    top of the statistical output.
+
+    Note: per-T-058 (T-055 v2 drill), this response exposes `return_90d`,
+    `volatility` (annualised), `sharpe`, and `price` per asset. It does NOT
+    expose 30d-window volatility or any risk-adjusted statistic beyond
+    what is listed above — naming additional metrics here would over-claim.
 
     Args:
         params (PortfolioStatsInput):
@@ -1724,7 +1729,7 @@ async def cometcloud_get_portfolio_stats(params: PortfolioStatsInput) -> str:
             - response_format: 'json' or 'markdown'
 
     Returns:
-        str: Portfolio analytics including return, volatility, Sharpe, drawdown,
+        str: Portfolio analytics including per-asset return, volatility, Sharpe,
              and CIS-weighted quality score.
 
     Examples:
