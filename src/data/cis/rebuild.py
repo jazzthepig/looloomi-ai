@@ -133,8 +133,10 @@ def crypto_market_data(px: pd.Series, mcap: pd.Series, vol: pd.Series, hi: pd.Se
 
 
 def tradfi_market_data(cl: pd.Series, hi: pd.Series, lo: pd.Series, vol: pd.Series,
-                       d: pd.Timestamp) -> tuple[Optional[dict], list[str]]:
-    """纯函数。传统资产在 d 的 market_data:d 当天或之前最近一个交易日(最多回看 4 天)。"""
+                       d: pd.Timestamp, static: Optional[Mapping[str, Any]] = None) -> tuple[Optional[dict], list[str]]:
+    """纯函数。传统资产在 d 的 market_data:d 当天或之前最近一个交易日(最多回看 4 天)。
+    市值没有历史:用今天的市值 × (d 的价 / 今天的价)近似(股数 / 份额不变的假设,标 `tradfi_market_cap_static`)。
+    不给市值时 A 支柱的规模项会从 −5 跳到 +20 —— 10-09 与实盘对照时 A 差 14 分就是这个。"""
     s = cl.loc[:d].dropna()
     if s.empty or (d - s.index[-1]).days > 4:
         return None, ["price"]
@@ -146,13 +148,15 @@ def tradfi_market_data(cl: pd.Series, hi: pd.Series, lo: pd.Series, vol: pd.Seri
         return float(z.iloc[-1]) if not z.empty else None
 
     win = s.loc[t - pd.Timedelta(days=50):]
+    mc_now, px_now = (static or {}).get("market_cap"), (static or {}).get("price")
+    mcap = float(mc_now) * p / float(px_now) if mc_now and px_now else 0.0
     md = {
-        "price": p, "market_cap": 0.0, "volume_24h": float(vol.get(t) or 0) * p,
+        "price": p, "market_cap": mcap, "volume_24h": float(vol.get(t) or 0) * p,
         "change_24h": _pct(p, back(1)) or 0.0, "change_7d": _pct(p, back(7)) or 0.0, "change_30d": _pct(p, back(30)) or 0.0,
         "ath_change_percentage": (p / float(win.max()) - 1) * 100 if len(win) else 0.0,
         "high_24h": float(hi.get(t) or 0), "low_24h": float(lo.get(t) or 0),
     }
-    return md, ["tradfi_market_cap"]
+    return md, ["tradfi_market_cap_static"] if mcap else ["tradfi_market_cap"]
 
 
 def score_day(d: pd.Timestamp, assets: Mapping[str, Mapping[str, Any]], data: Mapping[str, Any]) -> list[dict]:
@@ -163,7 +167,7 @@ def score_day(d: pd.Timestamp, assets: Mapping[str, Mapping[str, Any]], data: Ma
     for sym, cfg in assets.items():
         if cfg["class"] in TRADFI:
             t = data["tradfi"].get(sym)
-            md, miss = tradfi_market_data(*t, d) if t else (None, ["price"])
+            md, miss = tradfi_market_data(*t, d, data.get("static_tf", {}).get(sym)) if t else (None, ["price"])
         else:
             c = data["crypto"].get(sym)
             md, miss = crypto_market_data(*c, d, data["static"].get(sym, {})) if c else (None, ["price"])
@@ -300,7 +304,17 @@ async def load_inputs(end: pd.Timestamp) -> tuple[dict, dict]:
             s = s.reindex(pd.date_range(s.index.min(), max(s.index.max(), end), freq="D")).ffill(limit=4)
         macro_s[k] = s.to_dict()
     funding = {s: col(fund, "symbol", s, "funding_rate").to_dict() for s in cg_ids}
-    data = {"crypto": crypto, "tradfi": tradfi, "tvl": tvl, "macro": macro_s, "funding": funding, "static": static}
+    from src.data.market.data_layer import get_eodhd_eod_data
+    static_tf = {}
+    for s in tf_syms:
+        try:
+            x = await get_eodhd_eod_data(s, "US") or {}
+        except Exception:                                   # noqa: BLE001
+            x = {}
+        if x.get("market_cap") and x.get("price"):
+            static_tf[s] = {"market_cap": float(x["market_cap"]), "price": float(x["price"])}
+    data = {"crypto": crypto, "tradfi": tradfi, "tvl": tvl, "macro": macro_s, "funding": funding, "static": static,
+            "static_tf": static_tf}
     return assets, data
 
 
@@ -334,7 +348,7 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
         return {"ok": False, "refused": True, "written": 0, "reason": "一行都没算出来(BTC 没有价格?)"}
     rd = await _sb_get(TABLE, {"select": "d", "code_ref": f"eq.{CODE_REF}", "order": "d.asc", "limit": "1"})
     # 全量重写:表里还没有这一版 / 周一 / 库里还有「补维度之前」算的行(成交额或恐惧贪婪缺)—— 输入补齐后整条重算
-    stale = await _sb_get(TABLE, {"select": "d", "code_ref": f"eq.{CODE_REF}", "missing": "ov.{volume,fng}",
+    stale = await _sb_get(TABLE, {"select": "d", "code_ref": f"eq.{CODE_REF}", "missing": "ov.{volume,fng,tradfi_market_cap}",
                                   "d": f"gte.{START.date().isoformat()}", "limit": "1"})
     full = (not rd.ok) or (not rd.rows) or today.weekday() == 0 or (stale.ok and bool(stale.rows))
     cut = (today - timedelta(days=10)).isoformat()

@@ -61,6 +61,8 @@ def test_tradfi_uses_last_trading_day_within_four_days() -> None:
     md, _ = tradfi_market_data(cl, cl, cl, cl * 0 + 1000, sat)
     assert md["price"] == cl.loc[:sat].iloc[-1]
     assert tradfi_market_data(cl, cl, cl, cl, idx[-1] + pd.Timedelta(days=10))[0] is None, "停太久 ⇒ 不出分"
+    md2, miss2 = tradfi_market_data(cl, cl, cl, cl * 0 + 1000, idx[100], {"market_cap": 1e12, "price": float(cl.iloc[-1])})
+    assert abs(md2["market_cap"] - 1e12 * cl.iloc[100] / cl.iloc[-1]) < 1 and miss2 == ["tradfi_market_cap_static"]
 
 
 def test_score_day_records_non_reconstructable_and_uses_live_function() -> None:
