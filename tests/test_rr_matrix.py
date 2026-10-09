@@ -1,4 +1,4 @@
-"""T-045 评估层 rr_matrix:B 的 13 个用例逐个断言(原来返回 (ok, msg),pytest 不会因 False 失败)+ S-496 的三处修正。"""
+"""T-045 评估层 rr_matrix:B 的 13 个用例逐个断言(原来返回 (ok, msg),pytest 不会因 False 失败)+ S-496 的三处修正 + T-059 加 2 个零信号 bootstrap 用例。"""
 import json
 import os
 import subprocess
@@ -16,8 +16,12 @@ from src.data.evaluation import rr_matrix as rr
 _CASES = sorted(n for n in dir(cases) if n.startswith("test_") and callable(getattr(cases, n)))
 
 
-def test_all_thirteen_cases_are_wired():
-    assert len(_CASES) == 13
+def test_all_thirteen_plus_two_cases_are_wired():
+    """B 原始 13 个用例 + T-059 加 2 个零信号 bootstrap 用例(14/15)。"""
+    assert len(_CASES) >= 13
+    expected = {"test_rr_matrix_bootstrap_uses_all_days_20_40",
+                "test_rr_matrix_p_pos_not_binary_n_lt_40"}
+    assert expected <= set(_CASES), f"缺 T-059 用例:现有={sorted(_CASES)[-5:]}"
 
 
 @pytest.mark.parametrize("name", _CASES)

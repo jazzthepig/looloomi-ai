@@ -173,47 +173,80 @@ def _derive_regime_per_day(state_panel: pd.DataFrame) -> pd.Series:
     return pd.Series([r[1] for r in rows], index=pd.DatetimeIndex([r[0] for r in rows]), name="regime")
 
 
-def _block_bootstrap_ci(ret_series: pd.Series, block_size: int = 20, n_bootstrap: int = 1000,
-                        ci: float = 0.95, seed: int | None = None) -> tuple[float, float, float]:
-    """Per SPEC §2 step 3 + §10.5:块 bootstrap 95% CI + excess_mean。
+def _sliding_block_sample(rng: np.random.Generator, arr: np.ndarray, block_size: int,
+                          n_blocks: int) -> np.ndarray:
+    """T-059 滑动块 + 随机起点 + 首尾相接 — 公用于 _block_bootstrap_ci / _p_pos。
 
-    Block size 20 天 ≈ 1 个月(per §10.5 Politis & Romano + 业界惯例)。
+    n_blocks 个块,每块长度 = block_size;每块的起点 s ∈ [0, n) 随机抽,
+    块内下标 (s + k) mod n(首尾相接)。所有 n 天都能被选中 — 修旧 bug
+    (20 ≤ n < 40 时固定非重叠块 ⇒ n_blocks=1 ⇒ 只重抽前 20 天那一个块)。
+    """
+    n = len(arr)
+    starts = rng.integers(0, n, size=n_blocks)
+    idx = np.empty(n_blocks * block_size, dtype=np.int64)
+    for k, s in enumerate(starts):
+        idx[k * block_size:(k + 1) * block_size] = (s + np.arange(block_size, dtype=np.int64)) % n
+    return arr[idx]
+
+
+def _block_bootstrap_ci(ret_series: pd.Series, block_size: int | None = None,
+                        n_bootstrap: int = 1000, ci: float = 0.95,
+                        seed: int | None = None) -> tuple[float, float, float]:
+    """Per SPEC §2 step 3 + §10.5 + T-059 acceptance(2026-10-07):块 bootstrap 95% CI + excess_mean。
+
+    行为契约(T-059 acceptance):
+    - 滑动块、随机起点、首尾相接 — 通过 _sliding_block_sample;
+    - 块长 = min(20, n // 2),大样本就是 20;有效 block 被 n 限制不会越界。
+    - n < 40:ci_lo / ci_hi = NaN(per §Seth-1006d #5 + T-059);excess_mean 用满全部 n 天(修旧 bug,
+      n ∈ [20, 40) 时 em = 前 20 天均值、CI 是单点的退化)。
+    - n == 0:em = 0.0, CI = NaN。
+
     Returns: (excess_mean, ci_lo, ci_hi)。
-    当 n < block_size 或不可靠时,ci_lo / ci_hi = NaN(per §Seth-1006d #5:不写单点)。
     """
     arr = ret_series.dropna().to_numpy()
     n = len(arr)
-    if n < block_size:
-        # 样本不够一个 block:返回 NaN CI(per §Seth-1006d #5)
-        return float(arr.mean()) if n > 0 else 0.0, float("nan"), float("nan")
-    n_blocks = max(1, n // block_size)
+    if n == 0:
+        return 0.0, float("nan"), float("nan")
+    excess_mean_full = float(arr.mean())
+    if n < 40:
+        # n < 40 时 CI 不可靠,返回 NaN;但 excess_mean 用全样本(arr.mean())— 显式声明用满 n 天
+        return excess_mean_full, float("nan"), float("nan")
+    bs = min(20, max(1, n // 2))
+    if block_size is not None:
+        bs = min(block_size, max(1, n // 2))
+    n_blocks = max(1, -(-n // bs))   # ceil(n / bs) — 保证每张天在一次 sample 里期望至少 1 次被覆盖
     rng = np.random.default_rng(seed)
     boot_means = np.empty(n_bootstrap, dtype=float)
     for i in range(n_bootstrap):
-        idx = rng.integers(0, n_blocks, size=n_blocks)
-        sample = np.concatenate([arr[j * block_size:(j + 1) * block_size] for j in idx])
-        boot_means[i] = sample.mean()
-    excess_mean = float(boot_means.mean())
+        boot_means[i] = _sliding_block_sample(rng, arr, bs, n_blocks).mean()
     alpha = 1 - ci
     ci_lo = float(np.quantile(boot_means, alpha / 2))
     ci_hi = float(np.quantile(boot_means, 1 - alpha / 2))
-    return excess_mean, ci_lo, ci_hi
+    return excess_mean_full, ci_lo, ci_hi
 
 
-def _p_pos(ret_series: pd.Series, block_size: int = 20, n_bootstrap: int = 1000, seed: int | None = None) -> float:
-    """bootstrap 里超额 > 0 的比例(per SPEC §2 step 3)。"""
+def _p_pos(ret_series: pd.Series, block_size: int | None = None,
+           n_bootstrap: int = 1000, seed: int | None = None) -> float:
+    """T-059 acceptance:bootstrap 里超额 > 0 的比例。规则与 _block_bootstrap_ci 完全一致。
+
+    - n == 0:NaN。
+    - n < 40:NaN(per acceptance "p_pos 同一规则",修旧 _p_pos binary {0, 1} bug)。
+    - n ≥ 40:滑动块 + 随机起点 + 首尾相接;bs = min(20, n//2);n_blocks = ceil(n/bs)。
+    """
     arr = ret_series.dropna().to_numpy()
     n = len(arr)
     if n == 0:
         return float("nan")
-    if n < block_size:
-        block_size = max(1, n)
-    n_blocks = max(1, n // block_size)
+    if n < 40:
+        return float("nan")   # per acceptance — 不写 binary {0, 1}
+    bs = min(20, max(1, n // 2))
+    if block_size is not None:
+        bs = min(block_size, max(1, n // 2))
+    n_blocks = max(1, -(-n // bs))
     rng = np.random.default_rng(seed)
     p_pos_count = 0
     for _ in range(n_bootstrap):
-        idx = rng.integers(0, n_blocks, size=n_blocks)
-        sample = np.concatenate([arr[j * block_size:(j + 1) * block_size] for j in idx])
+        sample = _sliding_block_sample(rng, arr, bs, n_blocks)
         if sample.mean() > 0:
             p_pos_count += 1
     return float(p_pos_count / n_bootstrap)

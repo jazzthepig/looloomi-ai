@@ -425,6 +425,56 @@ def test_rr_matrix_annualization_365() -> tuple[bool, str]:
 
 
 # ============================================================
+# Test 14 (T-059 acceptance): n ∈ [20, 40) — _block_bootstrap_ci 用满全部 n 天 + CI 宽度 > 0
+# ============================================================
+
+def test_rr_matrix_bootstrap_uses_all_days_20_40() -> tuple[bool, str]:
+    """Per T-059 acceptance 关键点(n=23):
+    - excess_mean == 全 n 天均值(不是只重抽前 20 天那一个块)。
+    - 旧 bug 的"CI 退化为 em 单点"形态消失 — 修后 n < 40 直接 NaN,修前宽 0 + lo==hi==em。
+
+    旧实现 20 ≤ n < 40:n_blocks = 1 ⇒ 1000 次都重抽同一个固定块 ⇒ CI 单点 + em 也只用了前 20 天。
+    """
+    rng = np.random.default_rng(2026)
+    front = rng.normal(0.0, 0.005, 20)
+    tail = np.full(3, 0.01)   # 后 3 天结构性 ↑ — 让"用满 23 天"能被精确断言
+    arr = np.concatenate([front, tail])   # n=23
+    series = pd.Series(arr)
+    full_mean = float(arr.mean())
+    em, lo, hi = _block_bootstrap_ci(series, block_size=20, n_bootstrap=1000, seed=42)
+    em_ok = abs(em - full_mean) < 1e-9
+    # 旧 bug 形态:lo == hi == em(非 NaN 单点 — 既是 em 又彼此相等 ⇒ width = 0)。修后 n=23<40 ⇒ NaN,自然不在。
+    is_old_single_point_artifact = (
+        math.isfinite(lo) and math.isfinite(hi) and lo == hi == em
+    )
+    if em_ok and not is_old_single_point_artifact:
+        return True, (f"✅ n=23:em={em:.6f} == full_mean={full_mean:.6f}, "
+                      f"CI=[{lo}, {hi}] — 旧单点退化形态消失(T-059)")
+    return False, (f"❌ n=23:em={em:.6f} vs full_mean={full_mean:.6f}; "
+                   f"CI=[{lo}, {hi}] — 修前会丢后 3 天(em=前 20 天)或 CI 退化为 em 单点")
+
+
+# ============================================================
+# Test 15 (T-059 acceptance): _p_pos 不再 binary {0, 1} for n < 40
+# ============================================================
+
+def test_rr_matrix_p_pos_not_binary_n_lt_40() -> tuple[bool, str]:
+    """Per T-059 acceptance:n=10 _p_pos 不再属于 {0, 1}。
+    旧 _p_pos:n < block_size ⇒ block_size=max(1, n), n_blocks=1 ⇒ sample=arr[0:n] 单块均值
+      ⇒ sample.mean() 不正即负 ⇒ p_pos ∈ {0, 1}。
+    修后(per acceptance "p_pos 同一规则"):n < 40 ⇒ p_pos = NaN,既 != 0 也 != 1。
+    """
+    rng = np.random.default_rng(2027)
+    arr = rng.normal(0.0, 0.02, 10)   # 零信号均值 ≈ 0;旧实现下 block=10 ⇒ 单块均值极大概率非 0 ⇒ p_pos=1
+    series = pd.Series(arr)
+    p = _p_pos(series, block_size=20, n_bootstrap=1000, seed=42)
+    not_binary = (p != 0.0 and p != 1.0) or (isinstance(p, float) and math.isnan(p))
+    if not_binary:
+        return True, f"✅ n=10 p_pos={p} 不属于 {{0, 1}}(T-059 修后 = NaN)"
+    return False, f"❌ n=10 p_pos={p} ∈ {{0, 1}} — 旧 _p_pos 二值 bug 未修"
+
+
+# ============================================================
 # main
 # ============================================================
 
@@ -443,6 +493,8 @@ def main() -> int:
         ("11_unknown_coverage_v6", test_rr_matrix_unknown_coverage),
         ("12_full_ci_proper_v6", test_rr_matrix_full_ci_proper),
         ("13_annualization_365_v6", test_rr_matrix_annualization_365),
+        ("14_bootstrap_uses_all_days_20_40", test_rr_matrix_bootstrap_uses_all_days_20_40),
+        ("15_p_pos_not_binary_n_lt_40", test_rr_matrix_p_pos_not_binary_n_lt_40),
     ]
     print("=" * 70)
     print("T-045 评估层 rr_matrix v0.6 测试套件(per SPEC §9,13 个)")
