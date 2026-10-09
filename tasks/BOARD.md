@@ -18,7 +18,6 @@
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
-| open | T-058 | lane-b | MCP 工具描述:8 处写了返回里根本没有的字段(B 的 T-055 drill-down) | drill_structural 0 ABSENT;测试在改之前的描述上会红(先证明它能失败) | 8 ABSENT(10-07 05:08 UTC 探针) |  |
 | open | T-059 | lane-b | 评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张) | 测试先在现在的代码上红:n=23 的序列 CI 宽度 > 0 且均值用满 23 天;n=10 的 p_pos 不是只取 0 / 1;改完转绿 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
 | open | T-068 | lane-b | 评估层 ②:状态轴换成有历史的价格特征(T-059 之后) | 测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子 | 见 T-059 原卡(10-07) |  |
 | open | T-069 | lane-b | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
@@ -52,6 +51,7 @@
 | done | T-047 | lane-b | 所有登记账本按新的 ① 重新打分:相对「市值加权、单币 ≤ 40%」的超额(只读,一次性) | 一张表,每本账一行;每个数字能从 SQL 复算(附 SQL);报告首行写数据来源与日期范围;不给仓位建议 | 成绩单与 L3 之前都以等权面板为基准 | M-205:4 本 n≥30 的账本(causal / scalable / combined / dingge)全部落后 ①,多空三本 β −0.155 / −0.139 / −0.188 区间全负,与 S-483 独立复算一致;8 本 n<30 不下结论。附带发现 core-alpha 被截在 1,000 行(S-487,已修)。 @ 2026-10-05T13:00Z |
 | done | T-051 | lane-b | ② CIS 倾斜账本的预注册:① 面板内按 CIS 加权倾斜(不做空、不中性化)—— 成因、基准率、固定参数、证伪条件 | 10-07(周三)交;Seth 按它建账,不再改参数 | CIS 有分数(21/24 名有 2026 年全年日分数),没有倾斜账本 | B 的 v0.5 规格 + 20/20 自测通过;Seth 收紧三处(只留主臂、CIS 超 3 天当缺、起点提前到 10-06)后冻结为预注册,按它建成 T-052(S-493)。 @ 2026-10-06T07:00Z |
 | done | T-055 | lane-b | 对外 MCP 工具描述的数据声明审计:每一句「有多少 / 赢多少 / 有多准」对上线上数据,标 支持 / 不支持 / 过期 | Seth 按表逐条改;用法建议(如 edge-map 的分档用法)是方案之一,不是缺陷,不进表(Jazz 10-06) | 只有 track-record 一处被查过(S-491) | 28 个工具的声明表已交(lane-b/research/T-055/)。8 处 ABSENT 属实 → T-058。🔢 172 个「异常」是口径误报:SPEC 把 change_* 当小数、界 (-1,100),而接口返回的是百分数 —— 同一时刻 cis_top 的 BTC change_24h = 0.42,prices 的 BTC = 0.447,两者都是 %;「随时间增长、交集为 0」是每天跌超 1% 的币不同。不开数据卡。 @ 2026-10-07T06:40Z |
+| done | T-058 | lane-b | MCP 工具描述:8 处写了返回里根本没有的字段(B 的 T-055 drill-down) | drill_structural 0 ABSENT;测试在改之前的描述上会红(先证明它能失败) | 8 ABSENT(10-07 05:08 UTC 探针) | Seth merged by hand 10-09 (branch head b1731dc minus _reports/T058_proof.py and the lesson baseline): tests/test_mcp_descriptions_match_responses.py 9 passed on main incl. 8 injected negative controls; defi_yields now names the real field (`tvlUsd`) instead of 'pool size'. @ 2026-10-09T03:40:00Z |
 | done | T-007 | lane-c | CG 新闻监听器写入 Supabase(经 Railway mac_writes) | > 0 | 只在 Mac 本地 cis_history.db,13 行 | narrative_events:近 24 小时 154 行,共 1,329 行,最新 2026-10-08 03:37 UTC(lane-c 10-08 00:13 测得 150 / 1,310,一致) @ 2026-10-08T03:58Z |
 | done | T-009 | lane-c | data_quality_score:先修 data_freshness,再算分,随推送落库 | > 0 且 值有区分度(不全相同) | 0(列一直为空) | T1 最近 2h:86/86 行 DQS 非空,取值 {0.70, 0.85}(区分度满足原验收)。注:A′ 口径下 DQS = confidence,目前不带额外信息 —— 是否让它随源时间戳变化是 T-020 的事。 @ 2026-09-29T08:10Z |
 | done | T-038 | lane-c | 风格周期:大币 / 头部公链 / 二线公链 / 山寨 / meme 之间的轮动 —— 状态能否提前识别(预注册研究) | 一张表:每个状态格子的天数、未来 30 天收益差均值与 95% 区间、各年符号;结论只说「哪个状态在样本外仍把收益差分开」,不给仓位建议 | 无 —— 这个问题从没被单独问过;① 的基准是等权面板,而过去三年收益几乎全在 BTC | M-195 预注册判据下 2/6 ⇒ PARTIAL(AI、代币化);不改判据;结题。S-454 @ 2026-10-01 |
@@ -81,4 +81,4 @@
 | done | T-076 | seth | 景气轮动 / 预期差:链的 TVL、手续费、DEX 成交量动量减去币价动量,横截面检验;STRK 当个案 | 顶减底在两段都 ≥ 打乱的 p95 才进 ② 的倾斜候选;否则写进墓地 | 没有链的基本面读数;所有书只看价格与 CIS | chain_activity_daily: 95,415 rows, 68 chains, 2014-02-17→2026-10-08 (max(d)=yesterday); gap30 variants failed prereg gate per S-526 → graveyard @ 2026-10-09T02:20:00Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 15 · claimed 2 · blocked 3 · in_review 13 · done 44 · dropped 1
+open 14 · claimed 2 · blocked 3 · in_review 13 · done 45 · dropped 1
