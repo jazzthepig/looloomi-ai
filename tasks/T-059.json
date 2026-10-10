@@ -4,8 +4,8 @@
   "status": "in_review",
   "id": "T-059",
   "owner": "lane-b",
-  "title": "评估层加随机基准:每本账 × 状态格子给出「同条件随机组合」的分布带与分位;超出 p99 的列为 outlier",
-  "source": "docs/LOOP_INVENTORY_2026-10-07.md §3;Jazz 10-07「要和能赚到钱、有随机性的东西对比,不断捕捉 outlier」",
+  "title": "评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张)",
+  "source": "docs/LOOP_INVENTORY_2026-10-07.md §3;Jazz 10-07「要和能赚到钱、有随机性的东西对比,不断捕捉 outlier」;10-08 lane-a 复核将原 T-059 拆成三张",
   "allowed_paths": [
     "src/data/evaluation/rr_matrix.py",
     "tests/test_rr_matrix.py",
@@ -16,9 +16,9 @@
     "Shadow/"
   ],
   "acceptance": {
-    "check": "rr_matrix_daily 每格新增:随机组合(同宇宙、同持仓数、同换手、同单币上限,1,000 次,按日期块抽样)的 p05 / p50 / p95 / p99,以及实测值在随机分布中的分位 pct_vs_random;另出 outlier 清单 = 实测 > 随机 p99 的(账本,格子)",
-    "expect": "测试钉住:①零信号账本的 pct_vs_random 近似均匀(KS p > 0.05);②埋了信号的账本分位 > 0.95;上线后当天的 rr_matrix_daily 行带分位"
+    "check": "bootstrap:滑动块、随机起点、首尾相接,块长 = min(20, n // 2),n < 40 时 ci_lo / ci_hi = NaN,p_pos 同一规则,所有 n 天都参与(现在 _block_bootstrap_ci 在 20 ≤ n < 40 时只重抽前 20 天那一个块 ⇒ 区间宽度 0、第 21 天起被丢;_p_pos 在 n < 20 时只能是 0 或 1)",
+    "expect": "测试先在现在的代码上红:n=23 的序列 CI 宽度 > 0 且均值用满 23 天;n=10 的 p_pos 不是只取 0 / 1;改完转绿"
   },
-  "prior_value": "只有相对 ① 的实测超额,没有随机基准 —— 牛市里随机组合也赚钱,分不出本事和行情",
-  "notes": "2026-10-07 派给 B(rr_matrix 是 B 的 T-045)。先写测试证明零信号下分位均匀,再接实数据。 | 10-07 提为最高优先:Jazz 不再逐轮盯,研究错误(C 的 DISCOVERY、B 的单位误报这类)能过所有代码关卡,只有随机基准能拦 —— 它替代的是人的监督。 | 10-07 高维复盘(Seth)扩:随机基准建在 bootstrap 上,尺子先校准;状态轴换成价格特征(17 个里只有 8 个有 2023 起的历史:breadth / dist_200 / mom_20/60/200 / style_rel / vol_30 / vol_pct_3y);随机组合在账本自己的底上抽,等权对市值的风格才不会被记成信号。T-064 等本卡验收。WEEKLY_REVIEW 10-07 §2b / §5。 | 10-08 按 A 的交叉复核拆成三张:T-059(bootstrap)→ T-068(状态轴)→ T-069(随机基准)。一张一轮做得完。 | 2026-10-09 lane-b:T-059 = 三张里的第一张(bootstrap 校准,acceptance 收住本卡)。改了 _block_bootstrap_ci / _p_pos:抽 _sliding_block_sample(rng, arr, block_size, n_blocks) 公用 helper — 滑动块、随机起点、首尾相接;块长 bs = min(20, max(1, n//2));n_blocks = ceil(n/bs) 让每张天期望被覆盖 ≥ 1 次;n < 40 → (em = 全样本均值, ci_lo/hi = NaN);_p_pos 在 n < 40 同规则 NaN(不再是 binary {0,1})。em 现在用满全部 n 天,不再丢 21–22 天。加 test 14(_block_bootstrap_ci:20≤n<40 时 em == 全样本均值 + lo==hi==em 旧单点形态消失)+ test 15(_p_pos:n=10 NaN not ∈ {0,1})。实测(seed=42, n_bootstrap=1000):n=23(em=0.000883 == full_mean=0.000883,CI=[nan,nan]);n=10(p_pos=nan)。pytest tests/test_rr_matrix.py 20/20 PASS(原 13 + 5 wrapper + 2 新)。preflight 编译+boot 全绿,仅 online schema-drift HTTP 401 — 本卡无 INTERNAL_TOKEN 路由变化,与 T-059 无关。 T-068(状态轴)+ T-069(随机基准)仍是下一轮。"
+  "prior_value": "只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING)",
+  "notes": "2026-10-07 派给 B(rr_matrix 是 B 的 T-045)。先写测试证明零信号下分位均匀,再接实数据。 | 10-07 提为最高优先:Jazz 不再逐轮盯,研究错误(C 的 DISCOVERY、B 的单位误报这类)能过所有代码关卡,只有随机基准能拦 —— 它替代的是人的监督。 | 10-07 高维复盘(Seth)扩:随机基准建在 bootstrap 上,尺子先校准;状态轴换成价格特征(17 个里只有 8 个有 2023 起的历史:breadth / dist_200 / mom_20/60/200 / style_rel / vol_30 / vol_pct_3y);随机组合在账本自己的底上抽,等权对市值的风格才不会被记成信号。T-064 等本卡验收。WEEKLY_REVIEW 10-07 §2b / §5。 | 10-08 按 A 的交叉复核拆成三张:T-059(bootstrap)→ T-068(状态轴)→ T-069(随机基准)。一张一轮做得完。 | 2026-10-09 lane-b:T-059 = 三张里的第一张(bootstrap 校准,acceptance 收住本卡)。改了 _block_bootstrap_ci / _p_pos:抽 _sliding_block_sample(rng, arr, block_size, n_blocks) 公用 helper — 滑动块、随机起点、首尾相接;块长 bs = min(20, max(1, n//2));n_blocks = ceil(n/bs) 让每张天期望被覆盖 ≥ 1 次;n < 40 → (em = 全样本均值, ci_lo/hi = NaN);_p_pos 在 n < 40 同规则 NaN(不再是 binary {0,1})。em 现在用满全部 n 天,不再丢 21–22 天。加 test 14(_block_bootstrap_ci:20≤n<40 时 em == 全样本均值 + lo==hi==em 旧单点形态消失)+ test 15(_p_pos:n=10 NaN not ∈ {0,1})。 | 2026-10-10 lane-b (本轮):pytest tests/test_rr_matrix.py + tests/rr_matrix_cases.py 35/35 PASS(2 个 wrapper + 18 个 wrapper test_lane_b_case + 5 个直接 test_* + 10 个 indirect via parametrize);实测 (seed=42, n_bootstrap=1000):n=23 → em=0.000883 == full_mean=0.000883,CI=[nan,nan](旧 n=23 单点 bug 形态消失);n=10 → p_pos=nan(不再 binary);n=200 大样本 → em=0.001305 == full_mean=0.001305,CI=[-0.001075, 0.003965] width=0.005039 > 0,p_pos=0.860。preflight scripts/preflight.sh exit=0 全绿。T-068(状态轴)+ T-069(随机基准)仍是下一轮。"
 }
