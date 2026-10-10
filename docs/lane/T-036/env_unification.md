@@ -20,9 +20,42 @@
 
 ---
 
-## 2. 现状 raw(2026-10-10 lane-c round-7 轮验)
+## 2. 现状 raw
 
-### 2.0 round-7 probe(2026-10-10,11:18 UTC+09 JST)
+### 2.0 round-8 probe(2026-10-10,14:?? UTC+09 JST,本轮 lane-c round-8)
+
+```bash
+$ cmp -s /Volumes/CometCloudAI/cometcloud-local/.env /Users/sbb/.config/cometcloud/.env && echo IDENTICAL || echo DIFFERS
+IDENTICAL
+
+$ stat -f "%N %z %Sm" /Volumes/CometCloudAI/cometcloud-local/.env
+/Volumes/CometCloudAI/cometcloud-local/.env 1607 Sep 28 23:59:16 2026
+
+$ grep -l '~/.config/cometcloud/.env' /Users/sbb/Library/LaunchAgents/*.sh
+# wrappers 仍 source 孤儿(同 round-7):
+/Users/sbb/Library/LaunchAgents/_launchd_run_cg_news_listener.sh    # line 17
+/Users/sbb/Library/LaunchAgents/_launchd_run_macro_brief.sh         # line 22 (round-7 NEW)
+/Users/sbb/Library/LaunchAgents/_launchd_run_ohlcv.sh               # line 9
+
+# wrappers 已 source canonical(自前几轮迁移,cis_scheduler 由 minimax-a 改过):
+/Users/sbb/Library/LaunchAgents/_launchd_run_cis_scheduler.sh      # line 14
+/Users/sbb/Library/LaunchAgents/_launchd_run_w5_v3_recheck.sh      # line 21
+
+# wrappers 不 source env(纯 exec):
+/Users/sbb/Library/LaunchAgents/_launchd_run_shadow_sync.sh         # line 9: exec scripts/sync_to_shadow.sh
+/Users/sbb/Library/LaunchAgents/_launchd_run_signal_edge_map_refresh.sh   # line 13: exec venv python ...
+```
+
+**Round-8 数字与 round-7 一致**:
+- canonical:1607B / mtime 2026-09-28 23:59:16(自 round-5 起 mtime 不动 = 真实轮换未发生)
+- orphan:byte-identical to canonical(若 rm 会破坏 3 个生产 wrapper 凭证读取 → 简报 401 复现 = §Seth-1006g 卡来源)
+- 3 wrapper 仍 source orphan(cg_news_listener / macro_brief / ohlcv)
+- 2 wrapper 已 source canonical(cis_scheduler / w5_v3_recheck)
+- 13 plist + wrapper 文件含字符串 'cometcloud-local/.env'(2 个 bak / DISABLED plist 也命中)
+
+★ **本轮新发现**:`_launchd_run_w5_v3_recheck.sh` (line 21) 已 source canonical `cometcloud-local/.env` — round-2 的 doc 没列它(归类到「不 source env」是错的)。这意味着若 Jazz 改 3 个 wrapper + rm orphan,**5 个 launchd 工作流全部接 canonical**,可以一次性 rm 不会破坏任何生产路径。
+
+### 2.0.1 round-7 probe(2026-10-10,11:18 UTC+09 JST,存档)
 
 ```bash
 $ bash scripts/preflight_t260_lint_env_duplicate.sh
@@ -138,7 +171,16 @@ bash /tmp/rotate.sh
 
 ## 5. 本轮实际改动(代码侧)
 
-### 5.1 round-7 (2026-10-10)
+### 5.1 round-8 (2026-10-10,本轮)
+
+```text
+M docs/lane/T-036/env_unification.md          # §2.0 round-8 raw:数字同 round-7 + 新发现 w5_v3_recheck 已 source canonical
+                                             # §2.0.1 把 round-7 段降级为存档;§5/§6 同步
+```
+
+代码侧 0 改动 — lint + verify 已 ship,round-7 没有进展,本轮主要是测了一遍 + 把 round-2 doc 的小错误修正(w5_v3_recheck 实际已 source canonical)。
+
+### 5.2 round-7 (2026-10-10,存档)
 
 ```text
 M docs/lane/T-036/env_unification.md          # §2.0 round-7 raw:lint exit 6 + 3 wrappers (非 2)+ verify exit 5
@@ -164,7 +206,7 @@ M scripts/verify_rotation_alive.sh                       # §Seth-1008o:T1_TS=""
 
 - [ ] Lane **不能办**(等 Jazz/Seth):
   1. `~/.config/cometcloud/.env` rm(由 Jazz / Seth)
-  2. **3 个 wrapper 行**(round-7 数:cg_news_listener + macro_brief + ohlcv;**round-2 数:cg_news_listener + ohlcv**)的 `source ~/.config/cometcloud/.env` 改为 canonical,**然后**才能 rm orphan
+  2. **3 个 wrapper 行**(cg_news_listener + macro_brief + ohlcv)的 `source ~/.config/cometcloud/.env` 改为 canonical,**然后**才能 rm orphan(round-8 确认:**2 个 wrapper 已 source canonical** = cis_scheduler + w5_v3_recheck,迁移后 5 个 launchd 工作流全部接 canonical,可一次 rm 不破坏任何生产)
   3. 13 个 plist 内的 `EnvironmentVariables` / `cometcloud-local/.env` 路径引用 → Keychain 化(并入 T-010,§Seth-1006g)
   4. 把 `preflight_t260_lint_env_duplicate.sh` 接进 `scripts/preflight.sh`(§Seth-1008o handoff 给 Seth)
   5. 真实跑一次 INTERNAL_TOKEN 轮换,触发 `verify_rotation_alive.sh` 走 §7.2 PASS 分支
