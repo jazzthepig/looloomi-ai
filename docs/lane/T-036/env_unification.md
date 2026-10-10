@@ -112,13 +112,13 @@ bash /tmp/rotate.sh
 ## 5. 本轮实际改动(代码侧)
 
 ```text
-M scripts/run_cis_scheduler.sh          # 移 4 个硬编码 secret → .env 单源
-M scripts/verify_rotation_alive.sh      # §Seth-1008o:T1_TS="" + exit 5(NOT_MEASURED)
-+ docs/lane/T-036/env_unification.md    # 本文件
+M scripts/verify_rotation_alive.sh                       # §Seth-1008o:T1_TS="" + exit 5(NOT_MEASURED)
++ scripts/preflight_t260_lint_env_duplicate.sh          # exit 0/1/2/3/6 lint(§Seth-1008o handoff)
++ docs/lane/T-036/env_unification.md                    # 本文件
 ```
 
-- `run_cis_scheduler.sh` 历史含 4 个 export(`INTERNAL_TOKEN/CG_PRO_API_KEY/EODHD_API_KEY/RAILWAY_URL`)硬编码在脚本体内,违反 §Seth-1006g 的「Mac 唯一 env = single source」,已替换为 `set -a; . /Volumes/CometCloudAI/cometcloud-local/.env; set +a`,并加头部注释说明。
-  - 这 4 个 key 在脚本里 *从未离开 git 历史*,但 commit 此改动会让 `git grep` 不再命中 commit 后的工作树。Seth 如认为需要在改前先 `git filter-repo` 全清,@seth 拍板。
+- `scripts/run_cis_scheduler.sh` 不在仓库(`git ls-files` 不命中);其 Mac 端版本 `/Volumes/CometCloudAI/cometcloud-local/scripts/run_cis_scheduler.sh` 已*此前手动*改完,无硬编码 export,头部 5 行说明全 key 来源于 canonical `.env`,body 用 `set -a; . …/.env; set +a`。Lane 不能 commit 该文件(在 shadow-tree 之外),所以本卡的 code-side diff 只含 verify_rotation + lint + 本文档。Mac 那一份在 Jazz 的工作树下,由 Jazz 持有版本控制。
+- 4 个原硬编码 secret(`INTERNAL_TOKEN/CG_PRO_API_KEY/EODHD_API_KEY/RAILWAY_URL`)*从未离开 git 历史*;若 Seth 想在 `run_cis_scheduler.sh` 入仓前先 `git filter-repo` 全清,@seth 拍板。lane 不能擅自动 git history。
 
 ---
 
