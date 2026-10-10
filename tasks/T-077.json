@@ -1,9 +1,13 @@
 {
   "id": "T-077",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-09",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-10T04:11:16Z",
+    "value": "feature_arms_daily: 3 arms x 516 rows (2025-05-12 -> 2026-10-09), replay total return cis_contra -28.0% / cis_ew -41.7% / cis_follow -81.1% (inception 2026-10-11); feature_arms_daily is a source in forward_anchor_daily 2026-10-08 payload. Forward criteria (10-12 on) not yet measurable."
+  },
   "title": "CIS 当特征放进组合:cis_ew / cis_follow / cis_contra 三臂前向对照(S-527 的方向,S-528 预注册)",
   "source": "Jazz 10-09「CIS 的这个不是问题,是 feature —— 强信号之后会回撤,底部会反弹,关键看我们怎样做我们的组合利用起来」",
   "allowed_paths": [

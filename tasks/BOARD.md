@@ -13,7 +13,6 @@
 | in_review | T-072 | seth | ① 重新定义:拿掉单币上限、真正的动量加权,以 BTC 为基准按时点回放 + 前向 | 回放当天出;选哪一个当新 ① 由 Jazz 拍(DECISIONS 10-03 的改版);前向从 10-09 起记 | 现行 ① 2023–24 +316% / −35% / 1.68,2025–26 −19.5% / −60% / 0.04;BTC +463% / −26% / 2.01,−10.8% / −53% / 0.07 |  |
 | in_review | T-073 | seth | 前向记录锚定:每天把所有前向账本的行做哈希、挂比特币时间戳(OpenTimestamps),对外可验证 | 第一行真实锚(昨天的前向行)落库,.ots 能用 ots upgrade 补全比特币证明 | 前向记录无任何外部锚;回放与配置层每轮整条重算 |  |
 | in_review | T-075 | seth | 类比元配置:按当下状态去历史找相似日,看策略库里每个策略之后表现,每周重配(机器自己选) | 留出段打乱分位 > 0.95 才算「会挑」;不论结果,前向从 10-09 起记并锚定 | 所有规则都是手写阈值;没有一个按状态在策略库里自己挑的配置 |  |
-| in_review | T-077 | seth | CIS 当特征放进组合:cis_ew / cis_follow / cis_contra 三臂前向对照(S-527 的方向,S-528 预注册) | 第一行真实数据 + 回放数字;前向判据写死 | CIS 只被当成正向标签用;没有一本书把「OUT 之后回撤、UNDER 之后相对反弹」当特征 |  |
 | in_review | T-078 | seth | 每个 CIS 信号都归因(为什么出:支柱贡献;之后:同类 / 相对 / BTC β),对外口径改为「根据过往表现展示,不是预测」 | 第一轮落库;track_record 的 OUTPERFORM 相对同类与 S-527 同号 | 信号对外没有任何归因;MCP 描述里有「expected to do」「timed decision」等预测 / 行动措辞;方法论 §8 是一张进场 / 止损 / 退出表 |  |
 | in_review | T-079 | seth | CIS 统一标准 v1 + 按时点重建:一个公式、一套时点、一个来源优先级;缺的维度补齐;标签滞回 | 重建与实盘 T2 同函数同输入时差 ≈ 0;差异全部能指到某个输入 | CIS 历史 = 代理重建(77%)+ T2 + T1 + Railway 快照拼接;恐惧贪婪 / VIX / 全市场市值 / 协议 TVL / 全市场成交额没有历史;传统资产原始收盘(跨拆股假跌) |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
@@ -80,6 +79,7 @@
 | done | T-053 | seth | 证据面:一个端点 + 一个 MCP 工具,把 ① 与每本账的前向证据按证据等级摆到门外;CIS 信号记录的 β 层要么算出来要么删 | 外部 agent 一次调用能回答「哪本账有前向证据、相对 ① 怎样、为什么 L3 给它 0」;没有任何写死的结论句 | 证据只在 SQL 与台账里;track-record 说明文字三个月引用一个从未算出的 β 层 | GET /api/v1/proof/books 与 MCP cometcloud_get_proof 返回同一份:15 本账,每本带 evidence_class / 前向天数 / 同期 ① / 超额 / 任意时刻下界 / l3_weight;无写死的结论句。另记:multiplier 显示 no_record —— 它的前向从 10-09 起,这时应读作「未开始」,不是读不到(小问题,另记) @ 2026-10-08T07:20Z |
 | done | T-063 | seth | ③ 推力:今天就用 2023 起的历史按时点模拟出结果,前向账本同时上线 | 回放结果与随机分位当天出;前向记录从上线日起累积,用于核对模拟,不是开始的前提。敞口永不 < 0.7、> 1.3,不做空 | ③ 前向账本 0 本;m88 的 dd_stop 到 0× 越出 ③ 定义 | 回放 + 评估当天出(loop_attempt 04:41):2023–24 ③ +367% vs ① +316%,随机分位 0.44;2025-01-01→10-07 留出 ③ −20.5% vs ① −21.1%,随机分位 0.59 —— v1 REFUTED(S-505);multiplier_daily 2,750 行;前向 10-09 起 @ 2026-10-08T04:45Z |
 | done | T-076 | seth | 景气轮动 / 预期差:链的 TVL、手续费、DEX 成交量动量减去币价动量,横截面检验;STRK 当个案 | 顶减底在两段都 ≥ 打乱的 p95 才进 ② 的倾斜候选;否则写进墓地 | 没有链的基本面读数;所有书只看价格与 CIS | chain_activity_daily: 95,415 rows, 68 chains, 2014-02-17→2026-10-08 (max(d)=yesterday); gap30 variants failed prereg gate per S-526 → graveyard @ 2026-10-09T02:20:00Z |
+| done | T-077 | seth | CIS 当特征放进组合:cis_ew / cis_follow / cis_contra 三臂前向对照(S-527 的方向,S-528 预注册) | 第一行真实数据 + 回放数字;前向判据写死 | CIS 只被当成正向标签用;没有一本书把「OUT 之后回撤、UNDER 之后相对反弹」当特征 | feature_arms_daily: 3 arms x 516 rows (2025-05-12 -> 2026-10-09), replay total return cis_contra -28.0% / cis_ew -41.7% / cis_follow -81.1% (inception 2026-10-11); feature_arms_daily is a source in forward_anchor_daily 2026-10-08 payload. Forward criteria (10-12 on) not yet measurable. @ 2026-10-10T04:11:16Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 14 · claimed 2 · blocked 3 · in_review 14 · done 45 · dropped 1
+open 14 · claimed 2 · blocked 3 · in_review 13 · done 46 · dropped 1
