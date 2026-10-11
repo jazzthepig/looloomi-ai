@@ -1587,7 +1587,7 @@ async def _signal_attribution_loop():
     await _asyncio.sleep(_boot_delay(690))
     while True:
         try:
-            from src.data.cis.signal_attribution import run_once as _sa_run
+            from src.data.cis.signal_attribution import run_all as _sa_run
             r = await _sa_run()
             print(f"[SIGNAL-ATTR] {str(r.get('reason'))[:160]}")
             _detail = {k: r.get(k) for k in ("written", "with_outcome_7d", "groups_without_prices")}

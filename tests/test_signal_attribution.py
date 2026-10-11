@@ -115,3 +115,34 @@ def test_provenance_marks_reconstruction() -> None:
     from src.data.cis.signal_attribution import provenance_of
     assert provenance_of("historical_reconstruction") == "reconstructed"
     assert provenance_of("local_engine") == "live" and provenance_of(None) == "live"
+
+
+# ── S-534 / T-080:归因跟着正式序列 ─────────────────────────────────────────────
+
+def test_standard_series_prefers_published_over_reconstruction():
+    from src.data.cis.signal_attribution import provenance_of, standard_series
+    reb = [{"symbol": "X", "d": "2026-10-09", "asset_class": "L1", "signal_pct": "NEUTRAL", "score": 50.0, "grade": "B",
+            "pct": 0.5, "pillar_f": 1, "pillar_m": 2, "pillar_o": 3, "pillar_s": 4, "pillar_a": 5},
+           {"symbol": "X", "d": "2026-10-10", "asset_class": "L1", "signal_pct": "NEUTRAL", "score": 51.0, "grade": "B",
+            "pct": 0.6, "pillar_f": 1, "pillar_m": 2, "pillar_o": 3, "pillar_s": 4, "pillar_a": 5}]
+    off = [{"symbol": "X", "d": "2026-10-10", "asset_class": "L1", "signal": "OUTPERFORM", "regime_adjusted_score": 58.0,
+            "grade": "B+", "pct": 0.82, "pillar_f": 9, "pillar_m": 2, "pillar_o": 3, "pillar_s": 4, "pillar_a": 5}]
+    rows = standard_series(reb, off)
+    assert [(r["d"], r["signal"], r["source"]) for r in rows] == [
+        ("2026-10-09", "NEUTRAL", "cis_rebuild"), ("2026-10-10", "OUTPERFORM", "official")]
+    assert rows[1]["score"] == 58.0 and rows[1]["pct"] == 0.82
+    assert provenance_of("cis_rebuild") == "reconstructed" and provenance_of("official") == "live"
+    assert provenance_of("historical_reconstruction") == "reconstructed"
+
+
+def test_rows_carry_series_and_rank_move():
+    from src.data.cis.signal_attribution import COLUMNS, SERIES_STANDARD, build_rows, find_events, standard_series
+    reb = [{"symbol": "X", "d": f"2026-10-0{i}", "asset_class": "L1", "signal_pct": sig, "score": 50.0, "grade": "B",
+            "pct": p, "pillar_f": 1, "pillar_m": 2, "pillar_o": 3, "pillar_s": 4, "pillar_a": 5}
+           for i, (sig, p) in enumerate([("NEUTRAL", 0.6), ("OUTPERFORM", 0.81)], start=1)]
+    evs = find_events(standard_series(reb, []))
+    rows = build_rows(evs, {}, None, "2026-10-02", series=SERIES_STANDARD)
+    assert len(rows) == 1 and set(rows[0]) == set(COLUMNS)
+    r = rows[0]
+    assert r["series"] == SERIES_STANDARD and r["provenance"] == "reconstructed"
+    assert r["pct"] == 0.81 and r["prev_pct"] == 0.6 and r["d_score"] == 0.0, "peers moved, own score did not"

@@ -1153,13 +1153,13 @@ async def cometcloud_get_edge_map() -> str:
     },
 )
 async def cometcloud_get_signal_attribution(params: SignalAttributionInput) -> str:
-    """Every CIS signal change, attributed. For each change: WHY it fired (which pillars moved the score, weighted by the class base weights; what is left unexplained; how the price had already moved in the 30 days before) and WHAT FOLLOWED over 7 and 30 days (the asset's return, the equal-weight scored universe, the difference, and for crypto the BTC return, 90d beta to BTC and the beta-adjusted return). Also returns `track_record`: matured signals of each kind summarised relative to the scored universe — the historical record that sits next to every signal. CIS signals describe where an asset sits, computed from past and current data; outcomes are historical, not forecasts, and have at times run opposite to the label. Not investment advice.
+    """Every CIS signal change, attributed. For each change: WHY it fired (which pillars moved the score, weighted by the class base weights; what is left unexplained; how the price had already moved in the 30 days before) and WHAT FOLLOWED over 7 and 30 days (the asset's return, the equal-weight scored universe, the difference, and for crypto the BTC return, 90d beta to BTC and the beta-adjusted return). Signals are those of the official daily-close series: published changes plus the point-in-time reconstruction of the same standard, each tagged `provenance`; levels rank within the group, so `group_percentile` / `previous_group_percentile` show whether the asset or its peers moved. Also returns `track_record` (published changes only) and `track_record_reconstructed` (same standard, never published), matured signals of each kind summarised relative to the scored universe, plus `track_record_previous_method` for signals published by the earlier intraday method. CIS signals describe where an asset sits, computed from past and current data; outcomes are historical, not forecasts, and have at times run opposite to the label. Not investment advice.
 
     Args:
         params (SignalAttributionInput): symbol (optional), limit (1–200)
 
     Returns:
-        str: {disclosure, reading, as_of, total_signal_changes, track_record {crypto|tradfi: {signal: {7d, 30d, btc_below_ma50?, btc_above_ma50?}}}, signals: [{symbol, date, signal, previous_signal, why {...}, after {7d, 30d, beta_to_btc}}]}
+        str: {disclosure, reading, series, as_of, total_signal_changes, track_record {crypto|tradfi: {signal: {7d, 30d, btc_below_ma50?, btc_above_ma50?}}}, track_record_reconstructed, track_record_previous_method, signals: [{symbol, date, signal, previous_signal, provenance, group_percentile, previous_group_percentile, why {...}, after {7d, 30d, beta_to_btc}}]}
 
     Examples:
         - "Why did STRK's signal change and what happened after?" → symbol="STRK"

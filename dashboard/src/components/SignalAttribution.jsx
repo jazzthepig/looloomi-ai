@@ -42,6 +42,36 @@ const Skeleton = () => (
   </div>
 );
 
+const RecordBox = ({ tr, title, sigNow, major, s }) => (
+  <div style={{ marginTop: 22, padding: "14px 16px", background: s.bg, border: `1px solid ${s.border}`, borderRadius: 8 }}>
+    <div style={{ ...label, color: s.color }}>{title}</div>
+    <div style={{ display: "flex", gap: 22, flexWrap: "wrap", marginTop: 10 }}>
+      {[["Signals", tr["30d"]?.n, (v) => v ?? "—"],
+        ["Avg 30d vs universe", tr["30d"]?.mean_rel_pct, (v) => v == null ? "—" : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`],
+        ["Median 30d vs universe", tr["30d"]?.median_rel_pct, (v) => v == null ? "—" : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`],
+        ["Ahead of universe", tr["30d"]?.share_rel_positive, (v) => v == null ? "—" : `${Math.round(v * 100)}%`],
+      ].map(([k, v, f]) => (
+        <div key={k}>
+          <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.t3 }}>{k}</div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 14, fontWeight: 700, color: T.t1, marginTop: 2 }}>{f(v)}</div>
+        </div>
+      ))}
+    </div>
+    {tr.reverted_within_3d_share != null && (
+      <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3, marginTop: 10 }}>
+        {Math.round(tr.reverted_within_3d_share * 100)}% of {tr.changes} past changes into {sigNow} flipped back within 3 days
+        (label noise at a boundary) and are left out of the figures above.
+      </div>
+    )}
+    {major === "crypto" && tr.btc_below_ma50 && tr.btc_above_ma50 && (
+      <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3, marginTop: 10 }}>
+        BTC below its 50-day mean: avg {tr.btc_below_ma50["30d"]?.mean_rel_pct ?? "—"}% (n {tr.btc_below_ma50["30d"]?.n ?? 0})
+        {" · "}above: avg {tr.btc_above_ma50["30d"]?.mean_rel_pct ?? "—"}% (n {tr.btc_above_ma50["30d"]?.n ?? 0})
+      </div>
+    )}
+  </div>
+);
+
 const ContribBar = ({ k, name, v, max }) => (
   <div style={{ display: "grid", gridTemplateColumns: "92px 1fr 56px", alignItems: "center", gap: 8, marginBottom: 6 }}>
     <span style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t3 }}>
@@ -148,7 +178,9 @@ export default function SignalAttribution({ symbol, assetClass, currentSignal })
   const latest = rows[0];
   const major = CRYPTO.has(assetClass) ? "crypto" : "tradfi";
   const sigNow = currentSignal || latest?.signal;
-  const tr = data.track_record?.[major]?.[sigNow];
+  const trPub = data.track_record?.[major]?.[sigNow];
+  const trRec = data.track_record_reconstructed?.[major]?.[sigNow];
+  const grpName = major === "crypto" ? "CRYPTO" : "TRADITIONAL ASSETS";
   const s = sigStyle(sigNow || "NEUTRAL");
 
   return (
@@ -174,6 +206,11 @@ export default function SignalAttribution({ symbol, assetClass, currentSignal })
             <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.t3 }}>
               score {latest.previous_score?.toFixed?.(1) ?? "—"} → {latest.score?.toFixed?.(1) ?? "—"}
             </span>
+            {latest.group_percentile != null && latest.previous_group_percentile != null && (
+              <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: T.t3 }}>
+                · rank in group P{Math.round(latest.previous_group_percentile * 100)} → P{Math.round(latest.group_percentile * 100)}
+              </span>
+            )}
             {latest.why?.main_driver && (
               <span style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t2 }}>
                 · main driver: <strong>{PILLAR_LABEL[latest.why.main_driver] || latest.why.main_driver}</strong>
@@ -244,40 +281,17 @@ export default function SignalAttribution({ symbol, assetClass, currentSignal })
         </>
       ) : (
         <div style={{ fontFamily: FONTS.body, fontSize: 12, color: T.t3, marginTop: 14 }}>
-          This asset's signal has not changed since May 2025, so there is no change to attribute yet.
+          This asset's signal has not changed over the recorded history, so there is no change to attribute yet.
         </div>
       )}
 
-      {tr && (
-        <div style={{ marginTop: 22, padding: "14px 16px", background: s.bg, border: `1px solid ${s.border}`, borderRadius: 8 }}>
-          <div style={{ ...label, color: s.color }}>
-            HISTORICAL RECORD · PAST {sigNow} SIGNALS AS PUBLISHED ({major === "crypto" ? "CRYPTO" : "TRADITIONAL ASSETS"})
-          </div>
-          <div style={{ display: "flex", gap: 22, flexWrap: "wrap", marginTop: 10 }}>
-            {[["Signals", tr["30d"]?.n, (v) => v ?? "—"],
-              ["Avg 30d vs universe", tr["30d"]?.mean_rel_pct, (v) => v == null ? "—" : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`],
-              ["Median 30d vs universe", tr["30d"]?.median_rel_pct, (v) => v == null ? "—" : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`],
-              ["Ahead of universe", tr["30d"]?.share_rel_positive, (v) => v == null ? "—" : `${Math.round(v * 100)}%`],
-            ].map(([k, v, f]) => (
-              <div key={k}>
-                <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.t3 }}>{k}</div>
-                <div style={{ fontFamily: FONTS.mono, fontSize: 14, fontWeight: 700, color: T.t1, marginTop: 2 }}>{f(v)}</div>
-              </div>
-            ))}
-          </div>
-          {tr.reverted_within_3d_share != null && (
-            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3, marginTop: 10 }}>
-              {Math.round(tr.reverted_within_3d_share * 100)}% of {tr.changes} past changes into {sigNow} flipped back within 3 days
-              (grade-boundary noise) and are left out of the figures above.
-            </div>
-          )}
-          {major === "crypto" && tr.btc_below_ma50 && tr.btc_above_ma50 && (
-            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.t3, marginTop: 10 }}>
-              BTC below its 50-day mean: avg {tr.btc_below_ma50["30d"]?.mean_rel_pct ?? "—"}% (n {tr.btc_below_ma50["30d"]?.n ?? 0})
-              {" · "}above: avg {tr.btc_above_ma50["30d"]?.mean_rel_pct ?? "—"}% (n {tr.btc_above_ma50["30d"]?.n ?? 0})
-            </div>
-          )}
-        </div>
+      {trPub?.["30d"]?.n > 0 && (
+        <RecordBox tr={trPub} sigNow={sigNow} major={major} s={s}
+          title={`HISTORICAL RECORD · PAST ${sigNow} SIGNALS AS PUBLISHED (${grpName})`} />
+      )}
+      {trRec?.["30d"]?.n > 0 && (
+        <RecordBox tr={trRec} sigNow={sigNow} major={major} s={s}
+          title={`POINT-IN-TIME RECONSTRUCTION · PAST ${sigNow} SIGNALS, SAME STANDARD, NOT PUBLISHED AT THE TIME (${grpName})`} />
       )}
 
       <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.t4, marginTop: 16, lineHeight: 1.5 }}>

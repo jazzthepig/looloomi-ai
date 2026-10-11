@@ -3421,7 +3421,8 @@ def _attr_public(r: dict) -> dict:
     return {
         "symbol": r.get("symbol"), "date": r.get("d"), "asset_class": r.get("asset_class"), "peer_group": r.get("grp"),
         "signal": r.get("signal"), "previous_signal": r.get("prev_signal"), "previous_date": r.get("prev_d"),
-        "provenance": r.get("provenance"),
+        "provenance": r.get("provenance"), "series": r.get("series"),
+        "group_percentile": r.get("pct"), "previous_group_percentile": r.get("prev_pct"),
         "grade": r.get("grade"), "score": r.get("score"), "previous_score": r.get("prev_score"),
         "why": {"score_change": r.get("d_score"), "pillar_contributions": r.get("contrib"),
                 "unexplained": r.get("contrib_residual"), "main_driver": r.get("top_driver"),
@@ -3438,7 +3439,11 @@ def _attr_public(r: dict) -> dict:
 @router.get("/api/v1/cis/attribution")
 async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, response: Response = None):
     """
-    Every CIS signal change, attributed (T-078). Two halves per signal:
+    Every CIS signal change, attributed (T-078), on the official daily-close series (T-080):
+    published changes plus the point-in-time reconstruction of the same standard, each tagged
+    `provenance`. Signal levels rank within the group, so a change can come from the asset's own
+    score or from its peers: `group_percentile` / `previous_group_percentile` show the rank move.
+    Two halves per signal:
       why    — which pillars moved the score (pillar change × class base weight), what is left
                unexplained, and how the price had already moved in the 30 days before the signal
       after  — 7d / 30d return, the equal-weight scored universe over the same days, the difference,
@@ -3450,8 +3455,9 @@ async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, 
     Signals describe where an asset sits on past and current data; outcomes are historical, not forecasts.
     Returns are fractions (0.05 = 5%). Example: GET /api/v1/cis/attribution?symbol=STRK
     """
-    from src.api.contracts.disclosure import SIGNAL_DISCLOSURE, TRACK_RECORD_READING
-    from src.data.cis.signal_attribution import TABLE as _ATTR_TABLE, track_record
+    from src.api.contracts.disclosure import OFFICIAL_BASIS, SIGNAL_DISCLOSURE, TRACK_RECORD_READING
+    from src.data.cis.signal_attribution import (LEGACY_END, SERIES_LEGACY, SERIES_STANDARD,
+                                                 TABLE as _ATTR_TABLE, track_record)
     from src.data.style.header import _read_all
     if response:
         response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1800"
@@ -3465,20 +3471,32 @@ async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, 
             raise HTTPException(status_code=502, detail="signal attribution unreadable — not the same as no signals")
         _ATTR_CACHE["rows"] = (now, rows)
         hit = _ATTR_CACHE["rows"]
-    rows = hit[1]
+    all_rows = hit[1]
+    # S-534 / T-080:归因跟着正式序列(standard = 统一标准日终;已发布 + 按时点重建)。
+    # live_mixed = 10-10 及以前实际对外发布的实时信号,单独给,标明。
+    std = [r for r in all_rows if (r.get("series") or SERIES_LEGACY) == SERIES_STANDARD]
+    legacy = [r for r in all_rows if (r.get("series") or SERIES_LEGACY) == SERIES_LEGACY]
+    series = SERIES_STANDARD if std else SERIES_LEGACY
+    rows = std or legacy
     lim = max(1, min(int(limit or 50), 500))
     sym = (symbol or "").strip().upper()
     sel = [r for r in rows if not sym or str(r.get("symbol", "")).upper() == sym][:lim]
     return sanitize_floats({
         "disclosure": SIGNAL_DISCLOSURE,
         "reading": TRACK_RECORD_READING,
+        "series": series,
+        "series_basis": (OFFICIAL_BASIS if series == SERIES_STANDARD else
+                         "standard series not computed yet — showing signals as published by the previous intraday method"),
         "as_of": max((str(r.get("computed_at")) for r in rows), default=None),
         "total_signal_changes": len(rows),
-        # 对外的历史记录只用实盘发布过的信号;事后重建的那段单独给、标明是回测(S-530)
+        # 对外的历史记录只用发布过的信号;按时点重建的那段单独给、标明是重建(S-530 / S-534)
         "track_record": track_record([r for r in rows if r.get("provenance") != "reconstructed"]),
         "track_record_reconstructed": track_record([r for r in rows if r.get("provenance") == "reconstructed"]),
-        "track_record_basis": "live-published signal changes only; changes from the after-the-fact reconstruction "
-                              "(2025-05 to 2026-05) are in track_record_reconstructed and are a backtest, not a record",
+        "track_record_basis": ("published signal changes only; changes from the point-in-time reconstruction of the same "
+                               "standard (same formula and timing, never published) are in track_record_reconstructed"),
+        "track_record_previous_method": track_record([r for r in legacy if r.get("provenance") != "reconstructed"]),
+        "previous_method_basis": (f"signals as published by the previous intraday method, through {LEGACY_END}; "
+                                  "a different formula and labelling from the official series"),
         "count": len(sel),
         "signals": [_attr_public(r) for r in sel],
     })

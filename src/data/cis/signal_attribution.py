@@ -27,7 +27,7 @@ S-527:标 OUTPERFORM 的名字 17 个月跑输同类 —— 一个信号如果�
 from __future__ import annotations
 
 import math
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any, Mapping, Optional
 
 import numpy as np
@@ -36,6 +36,12 @@ import pandas as pd
 TABLE = "cis_signal_attribution"
 WRITES_TABLES = (TABLE,)
 CODE_REF = "T-078 signal attribution v1"
+#: S-534 / T-080:一张表两条序列(主键 symbol, d, series)。
+#: standard = 统一标准日终序列(cis_rebuild_daily 同版本的按时点重建 + cis_official_daily 的已发布,已发布优先)—— 对外默认;
+#: live_mixed = 10-10 及以前实际对外发布的实时信号(v_cis_signal_daily),冻结在 LEGACY_END,只让结果到期。
+SERIES_STANDARD, SERIES_LEGACY = "standard", "live_mixed"
+LEGACY_END = "2026-10-10"
+STANDARD_START = "2023-01-01"
 HORIZONS = (7, 30)
 BETA_DAYS, BETA_MIN = 90, 60
 MA_DAYS = 50
@@ -59,7 +65,7 @@ BASE_WEIGHTS: dict[str, dict[str, float]] = {
 DEFAULT_WEIGHTS = {"F": .30, "M": .25, "O": .20, "S": .15, "A": .10}
 
 #: 表的全部列 —— 每行补齐(PostgREST 批量写要求每个对象同一组键)。
-COLUMNS = ("symbol", "d", "asset_class", "grp", "provenance", "signal", "prev_signal", "prev_d", "score", "prev_score", "grade",
+COLUMNS = ("symbol", "d", "series", "asset_class", "grp", "provenance", "pct", "prev_pct", "signal", "prev_signal", "prev_d", "score", "prev_score", "grade",
            "d_score", "contrib", "contrib_residual", "top_driver", "weights", "pre30_ret", "pre30_rel", "beta_btc",
            "btc_below_ma50", "matured_7", "ret_7", "univ_7", "rel_7", "btc_7", "alpha_7",
            "matured_30", "ret_30", "univ_30", "rel_30", "btc_30", "alpha_30",
@@ -195,7 +201,7 @@ def persistence(events: list[dict], last_day: str) -> dict[tuple[str, str], dict
 
 
 def build_rows(events: list[dict], groups: Mapping[str, tuple[pd.DataFrame, pd.Series]],
-               btc: Optional[pd.Series], last_day: Optional[str] = None) -> list[dict]:
+               btc: Optional[pd.Series], last_day: Optional[str] = None, series: str = SERIES_LEGACY) -> list[dict]:
     """纯函数。groups:组名 → (价格, 等权指数)。last_day:信号数据的最后一天(算「仍是当前档」维持了几天)。"""
     now = datetime.now(timezone.utc).isoformat()
     last_day = last_day or max((str(e["cur"]["d"])[:10] for e in events), default=None)
@@ -206,7 +212,8 @@ def build_rows(events: list[dict], groups: Mapping[str, tuple[pd.DataFrame, pd.S
         g = group_of(cur.get("asset_class"))
         d = pd.Timestamp(cur["d"])
         row: dict[str, Any] = {
-            "symbol": ev["symbol"], "d": str(cur["d"])[:10], "asset_class": cur.get("asset_class"), "grp": g,
+            "symbol": ev["symbol"], "d": str(cur["d"])[:10], "series": series, "asset_class": cur.get("asset_class"), "grp": g,
+            "pct": _f(cur.get("pct")), "prev_pct": _f(prev.get("pct")),
             "signal": cur["signal"], "prev_signal": prev["signal"], "prev_d": str(prev["d"])[:10],
             "score": _f(cur.get("score")), "prev_score": _f(prev.get("score")), "grade": cur.get("grade"),
             "provenance": provenance_of(cur.get("source")),
@@ -226,8 +233,26 @@ def build_rows(events: list[dict], groups: Mapping[str, tuple[pd.DataFrame, pd.S
 
 
 def provenance_of(source: Optional[str]) -> str:
-    """纯函数。信号日那条记录的来源 → live / reconstructed。事后重建(historical_reconstruction)不是当时发布的信号。"""
-    return "reconstructed" if (source or "") == "historical_reconstruction" else "live"
+    """纯函数。信号日那条记录的来源 → live / reconstructed。事后重建(historical_reconstruction、按时点重建 cis_rebuild)
+    不是当时发布的信号。"""
+    return "reconstructed" if (source or "") in ("historical_reconstruction", "cis_rebuild") else "live"
+
+
+def standard_series(rebuild: list[dict], official: list[dict]) -> list[dict]:
+    """纯函数。统一标准序列:每个 (名字, 日) 一条,已发布(cis_official_daily)优先于按时点重建(cis_rebuild_daily)。
+    两张表列名不同,这里统一成 find_events / drivers 读的形状(score = 状态调整分,档位按它的同组分位定)。"""
+    out: dict[tuple[str, str], dict] = {}
+    for r in rebuild or []:
+        k = (r.get("symbol"), str(r.get("d"))[:10])
+        out[k] = {"symbol": k[0], "d": k[1], "asset_class": r.get("asset_class"), "signal": r.get("signal_pct"),
+                  "score": r.get("score"), "grade": r.get("grade"), "pct": r.get("pct"),
+                  **{f"pillar_{p}": r.get(f"pillar_{p}") for p in "fmosa"}, "source": "cis_rebuild"}
+    for r in official or []:
+        k = (r.get("symbol"), str(r.get("d"))[:10])
+        out[k] = {"symbol": k[0], "d": k[1], "asset_class": r.get("asset_class"), "signal": r.get("signal"),
+                  "score": r.get("regime_adjusted_score"), "grade": r.get("grade"), "pct": r.get("pct"),
+                  **{f"pillar_{p}": r.get(f"pillar_{p}") for p in "fmosa"}, "source": "official"}
+    return sorted(out.values(), key=lambda r: (r["d"], r["symbol"] or ""))
 
 
 def track_record(rows: list[dict]) -> dict[str, Any]:
@@ -263,17 +288,37 @@ def track_record(rows: list[dict]) -> dict[str, Any]:
     return out
 
 
-async def run_once() -> dict[str, Any]:
+async def _read_series(series: str) -> list[dict]:
+    from src.data.style.header import _read_all
+    if series == SERIES_LEGACY:
+        sig = await _read_all("v_cis_signal_daily", {
+            "select": "symbol,asset_class,d,signal,score,grade,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source",
+            "and": f"(d.gte.{START},d.lte.{LEGACY_END})", "order": "d.asc"})
+        return [r for r in sig if r.get("symbol") not in STABLES]
+    from src.data.cis.official import TABLE as OFFICIAL
+    from src.data.cis.rebuild import CODE_REF as STD_REF, TABLE as REBUILD
+    cols = "symbol,asset_class,d,score,grade,pct,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a"
+    reb = await _read_all(REBUILD, {"select": cols + ",signal_pct", "code_ref": f"eq.{STD_REF}",
+                                    "d": f"gte.{STANDARD_START}", "order": "d.asc,symbol.asc"})
+    off = await _read_all(OFFICIAL, {"select": cols.replace("score", "regime_adjusted_score") + ",signal",
+                                     "order": "d.asc,symbol.asc"})
+    return [r for r in standard_series(reb, off) if r.get("symbol") not in STABLES]
+
+
+async def run_once(series: str = SERIES_STANDARD) -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
     from src.data.market.panel_read import read_panel
-    from src.data.style.header import _read_all
 
-    sig = await _read_all("v_cis_signal_daily", {
-        "select": "symbol,asset_class,d,signal,score,grade,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source",
-        "d": f"gte.{START}", "order": "d.asc"})
-    sig = [r for r in sig if r.get("symbol") not in STABLES]
+    sig = await _read_series(series)
     if not sig:
-        return {"ok": False, "refused": True, "written": 0, "reason": "v_cis_signal_daily 读到 0 行"}
+        return {"ok": False, "refused": True, "written": 0, "reason": f"{series} 序列读到 0 行"}
+    if series == SERIES_STANDARD:
+        last = max(str(r["d"])[:10] for r in sig)
+        lag = (datetime.now(timezone.utc).date() - date.fromisoformat(last)).days
+        if lag > 3:
+            # 重建正在全量重写(或停了):读到的是半截序列,算出来的换档会是假的 —— 不写
+            return {"ok": False, "refused": True, "written": 0,
+                    "reason": f"standard 序列最后一天 {last}(落后 {lag} 天)—— 重建没写完或停了,不归因"}
     evs = find_events(sig)
     cls_of = {r["symbol"]: r.get("asset_class") for r in sig}
     groups: dict[str, tuple[pd.DataFrame, pd.Series]] = {}
@@ -281,7 +326,8 @@ async def run_once() -> dict[str, Any]:
     by_grp: dict[str, set] = {}
     for s, c in cls_of.items():
         by_grp.setdefault(group_of(c), set()).add(s)
-    start = (pd.Timestamp(START) - pd.Timedelta(days=BETA_DAYS + 40)).date().isoformat()
+    first = min(str(r["d"])[:10] for r in sig)
+    start = (pd.Timestamp(first) - pd.Timedelta(days=BETA_DAYS + 40)).date().isoformat()
     missing: dict[str, str] = {}
     for g, syms in by_grp.items():
         src = "binance_hist" if g == "crypto" else "eodhd"
@@ -302,12 +348,23 @@ async def run_once() -> dict[str, Any]:
         members = [s for s in px.columns if s in syms]
         groups[g] = (px, ew_index(px[members]))
     last_day = max(str(r["d"])[:10] for r in sig)
-    rows = build_rows(evs, groups, btc, last_day)
+    rows = build_rows(evs, groups, btc, last_day, series=series)
     for i in range(0, len(rows), 1000):
-        res = await supabase_upsert_table(TABLE, rows[i:i + 1000], on_conflict="symbol,d")
+        res = await supabase_upsert_table(TABLE, rows[i:i + 1000], on_conflict="symbol,d,series")
         if not res.ok:
-            return {"ok": False, "refused": False, "written": i, "reason": f"写入失败:{res.why}"}
+            return {"ok": False, "refused": False, "written": i, "reason": f"{series} 写入失败:{res.why}"}
     with_out = sum(1 for r in rows if r.get("ret_7") is not None)
+    published = sum(1 for r in rows if r.get("provenance") == "live")
     return {"ok": not missing, "refused": False, "written": len(rows), "with_outcome_7d": with_out,
-            "groups_without_prices": missing,
-            "reason": f"{len(rows)} 个信号变化,{with_out} 个有 7 天结果" + (f";无价格组 {list(missing)}" if missing else "")}
+            "published": published, "series": series, "groups_without_prices": missing,
+            "reason": f"{series}:{len(rows)} 个信号变化(已发布 {published}),{with_out} 个有 7 天结果"
+                      + (f";无价格组 {list(missing)}" if missing else "")}
+
+
+async def run_all() -> dict[str, Any]:
+    """两条序列各跑一遍。对外默认 standard;live_mixed 冻结在 LEGACY_END,只为让最后一批结果到期。"""
+    out = {s: await run_once(s) for s in (SERIES_STANDARD, SERIES_LEGACY)}
+    return {"ok": all(r.get("ok") for r in out.values()), "refused": any(r.get("refused") for r in out.values()),
+            "written": sum(r.get("written") or 0 for r in out.values()),
+            "with_outcome_7d": sum(r.get("with_outcome_7d") or 0 for r in out.values()),
+            "reason": " | ".join(str(r.get("reason")) for r in out.values()), "by_series": out}
