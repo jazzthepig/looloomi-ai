@@ -59,7 +59,7 @@ BASE_WEIGHTS: dict[str, dict[str, float]] = {
 DEFAULT_WEIGHTS = {"F": .30, "M": .25, "O": .20, "S": .15, "A": .10}
 
 #: 表的全部列 —— 每行补齐(PostgREST 批量写要求每个对象同一组键)。
-COLUMNS = ("symbol", "d", "asset_class", "grp", "signal", "prev_signal", "prev_d", "score", "prev_score", "grade",
+COLUMNS = ("symbol", "d", "asset_class", "grp", "provenance", "signal", "prev_signal", "prev_d", "score", "prev_score", "grade",
            "d_score", "contrib", "contrib_residual", "top_driver", "weights", "pre30_ret", "pre30_rel", "beta_btc",
            "btc_below_ma50", "matured_7", "ret_7", "univ_7", "rel_7", "btc_7", "alpha_7",
            "matured_30", "ret_30", "univ_30", "rel_30", "btc_30", "alpha_30",
@@ -209,6 +209,7 @@ def build_rows(events: list[dict], groups: Mapping[str, tuple[pd.DataFrame, pd.S
             "symbol": ev["symbol"], "d": str(cur["d"])[:10], "asset_class": cur.get("asset_class"), "grp": g,
             "signal": cur["signal"], "prev_signal": prev["signal"], "prev_d": str(prev["d"])[:10],
             "score": _f(cur.get("score")), "prev_score": _f(prev.get("score")), "grade": cur.get("grade"),
+            "provenance": provenance_of(cur.get("source")),
             **drivers(cur, prev), **pers.get((ev["symbol"], str(cur["d"])[:10]), {}),
             "code_ref": CODE_REF, "computed_at": now}
         if g in groups:
@@ -222,6 +223,11 @@ def build_rows(events: list[dict], groups: Mapping[str, tuple[pd.DataFrame, pd.S
                 row[k] = round(v, 6) if math.isfinite(v) else None
         rows.append({c: row.get(c) for c in COLUMNS})
     return rows
+
+
+def provenance_of(source: Optional[str]) -> str:
+    """纯函数。信号日那条记录的来源 → live / reconstructed。事后重建(historical_reconstruction)不是当时发布的信号。"""
+    return "reconstructed" if (source or "") == "historical_reconstruction" else "live"
 
 
 def track_record(rows: list[dict]) -> dict[str, Any]:
@@ -263,7 +269,7 @@ async def run_once() -> dict[str, Any]:
     from src.data.style.header import _read_all
 
     sig = await _read_all("v_cis_signal_daily", {
-        "select": "symbol,asset_class,d,signal,score,grade,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a",
+        "select": "symbol,asset_class,d,signal,score,grade,pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,source",
         "d": f"gte.{START}", "order": "d.asc"})
     sig = [r for r in sig if r.get("symbol") not in STABLES]
     if not sig:

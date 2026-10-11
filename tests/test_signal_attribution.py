@@ -109,3 +109,9 @@ def test_track_record_excludes_whipsaws_but_reports_their_share() -> None:
     e = track_record(rows)["crypto"]["OUTPERFORM"]
     assert e["30d"]["n"] == 2 and e["30d"]["mean_rel_pct"] == 6.0, "来回跳的不进结果统计"
     assert e["changes"] == 3 and e["reverted_within_3d_share"] == 0.5
+
+
+def test_provenance_marks_reconstruction() -> None:
+    from src.data.cis.signal_attribution import provenance_of
+    assert provenance_of("historical_reconstruction") == "reconstructed"
+    assert provenance_of("local_engine") == "live" and provenance_of(None) == "live"

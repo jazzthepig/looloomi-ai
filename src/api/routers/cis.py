@@ -3384,6 +3384,7 @@ def _attr_public(r: dict) -> dict:
     return {
         "symbol": r.get("symbol"), "date": r.get("d"), "asset_class": r.get("asset_class"), "peer_group": r.get("grp"),
         "signal": r.get("signal"), "previous_signal": r.get("prev_signal"), "previous_date": r.get("prev_d"),
+        "provenance": r.get("provenance"),
         "grade": r.get("grade"), "score": r.get("score"), "previous_score": r.get("prev_score"),
         "why": {"score_change": r.get("d_score"), "pillar_contributions": r.get("contrib"),
                 "unexplained": r.get("contrib_residual"), "main_driver": r.get("top_driver"),
@@ -3436,7 +3437,11 @@ async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, 
         "reading": TRACK_RECORD_READING,
         "as_of": max((str(r.get("computed_at")) for r in rows), default=None),
         "total_signal_changes": len(rows),
-        "track_record": track_record(rows),
+        # 对外的历史记录只用实盘发布过的信号;事后重建的那段单独给、标明是回测(S-530)
+        "track_record": track_record([r for r in rows if r.get("provenance") != "reconstructed"]),
+        "track_record_reconstructed": track_record([r for r in rows if r.get("provenance") == "reconstructed"]),
+        "track_record_basis": "live-published signal changes only; changes from the after-the-fact reconstruction "
+                              "(2025-05 to 2026-05) are in track_record_reconstructed and are a backtest, not a record",
         "count": len(sel),
         "signals": [_attr_public(r) for r in sel],
     })

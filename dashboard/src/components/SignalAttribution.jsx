@@ -207,7 +207,7 @@ export default function SignalAttribution({ symbol, assetClass, currentSignal })
           {rows.length > 1 && (
             <div style={{ marginTop: 22 }}>
               <div style={{ ...label, marginBottom: 8 }}>EARLIER SIGNAL CHANGES</div>
-              <div style={{ display: "grid", gridTemplateColumns: "92px 1fr 110px 120px 80px 80px 80px", gap: 8,
+              <div style={{ display: "grid", gridTemplateColumns: "128px 1fr 110px 120px 80px 80px 80px", gap: 8,
                 fontFamily: FONTS.mono, fontSize: 10, color: T.t4, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>
                 <span>DATE</span><span>CHANGE</span><span>MAIN DRIVER</span><span>HELD</span>
                 <span style={{ textAlign: "right" }}>30D BEFORE</span>
@@ -215,9 +215,17 @@ export default function SignalAttribution({ symbol, assetClass, currentSignal })
                 <span style={{ textAlign: "right" }}>30D AFTER</span>
               </div>
               {rows.slice(1).map(r => (
-                <div key={r.date} style={{ display: "grid", gridTemplateColumns: "92px 1fr 110px 120px 80px 80px 80px", gap: 8,
+                <div key={r.date} style={{ display: "grid", gridTemplateColumns: "128px 1fr 110px 120px 80px 80px 80px", gap: 8,
                   fontFamily: FONTS.mono, fontSize: 11, padding: "6px 0", borderBottom: `1px solid ${T.border}` }}>
-                  <span style={{ color: T.t3 }}>{r.date}</span>
+                  <span style={{ color: T.t3 }}>
+                    {r.date}
+                    {r.provenance === "reconstructed" && (
+                      <span title="Reconstructed after the fact, not published at the time"
+                        style={{ marginLeft: 4, fontSize: 9, color: T.t4, border: `1px solid ${T.border}`, borderRadius: 3, padding: "0 3px" }}>
+                        rebuilt
+                      </span>
+                    )}
+                  </span>
                   <span style={{ color: T.t2 }}>{r.previous_signal} → <span style={{ color: sigStyle(r.signal).color }}>{r.signal}</span></span>
                   <span style={{ color: T.t3 }}>{PILLAR_LABEL[r.why?.main_driver] || "—"}</span>
                   <span><Held h={r.held} /></span>
@@ -243,7 +251,7 @@ export default function SignalAttribution({ symbol, assetClass, currentSignal })
       {tr && (
         <div style={{ marginTop: 22, padding: "14px 16px", background: s.bg, border: `1px solid ${s.border}`, borderRadius: 8 }}>
           <div style={{ ...label, color: s.color }}>
-            HISTORICAL RECORD · PAST {sigNow} SIGNALS ({major === "crypto" ? "CRYPTO" : "TRADITIONAL ASSETS"})
+            HISTORICAL RECORD · PAST {sigNow} SIGNALS AS PUBLISHED ({major === "crypto" ? "CRYPTO" : "TRADITIONAL ASSETS"})
           </div>
           <div style={{ display: "flex", gap: 22, flexWrap: "wrap", marginTop: 10 }}>
             {[["Signals", tr["30d"]?.n, (v) => v ?? "—"],

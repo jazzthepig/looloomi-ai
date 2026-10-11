@@ -58,3 +58,21 @@ alter table public.cis_signal_attribution add column if not exists next_d date;
 alter table public.cis_signal_attribution add column if not exists next_signal text;
 alter table public.cis_signal_attribution add column if not exists held_days integer;
 alter table public.cis_signal_attribution add column if not exists reverted_3d boolean;
+
+-- S-530 补(10-11,migration s530b_signal_view_source_priority):一天一个来源 —— 同一天有多条时按
+-- T1(local_engine)> 本地 T2 > Railway 快照 / 小时线 > 事后重建 取最后一条(以前取「当天最后一条」,来源天天换,
+-- 造出 175 次假换档);视图带上 source / data_tier。归因加 provenance:事后重建的历史标出来,对外的历史记录只用实盘段。
+create or replace view public.v_cis_signal_daily with (security_invoker = true) as
+select distinct on (symbol, (recorded_at at time zone 'UTC')::date)
+       symbol, asset_class, (recorded_at at time zone 'UTC')::date as d, signal, score,
+       grade, pillar_f, pillar_m, pillar_o, pillar_s, pillar_a, source, data_tier
+from public.cis_scores
+order by symbol, (recorded_at at time zone 'UTC')::date,
+         case when source = 'local_engine' and data_tier = 'T1' then 1
+              when source = 'local_engine' then 2
+              when source = 'historical_reconstruction' then 4
+              else 3 end,
+         recorded_at desc;
+revoke all on public.v_cis_signal_daily from anon, authenticated;
+grant select on public.v_cis_signal_daily to service_role;
+alter table public.cis_signal_attribution add column if not exists provenance text;
