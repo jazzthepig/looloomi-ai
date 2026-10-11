@@ -79,19 +79,30 @@ def eod_rows(series: str, rows: list[dict], since: str = HISTORY_START) -> list[
     return out
 
 
-def global_rows(gm: dict, since: str = HISTORY_START) -> list[dict]:
-    """纯函数。CG `/global/market_cap_chart` → total_mcap / total_volume 行。只收 00:00 UTC 的点,d = 前一天(收盘)。"""
+#: `days=1` 是 5 分钟粒度,00:00 那一档的点落在 00:00–00:05 之间。
+RECENT_TOLERANCE_MS = 10 * 60 * 1000
+
+
+def global_rows(gm: dict, since: str = HISTORY_START, tolerance_ms: int = 0) -> list[dict]:
+    """纯函数。CG `/global/market_cap_chart` → total_mcap / total_volume 行。只收 00:00 UTC 的点,d = 前一天(收盘)。
+    `days=max` 是日粒度,但**最后一个 00:00 点是昨天的**(今天 00:00 被「现在」那个点取代)—— 所以 d 的收盘要到 d+2
+    才出现,正式发布(d+1 的 UTC 06:00 前)永远缺 BTC 占比(S-536)。最近一天改从 `days=1`(5 分钟粒度)取 00:00 后
+    第一个点,容差 `tolerance_ms`(只往后容);同一天两边都有时取 `days=max` 的整点。"""
     from src.data.market.bar_semantics import covered_day, is_day_boundary
     out = []
     for series, key in (("total_mcap", "market_cap"), ("total_volume", "volume")):
+        seen: set[str] = set()
         for t, v in (gm or {}).get(key) or []:
             try:
                 t = int(t)
             except (TypeError, ValueError):
                 continue
             val = _f(v)
-            if val is None or val <= 0 or not is_day_boundary(t):
+            if val is None or val <= 0 or not is_day_boundary(t, tolerance_ms):
                 continue
+            if covered_day("coingecko_market_chart", t).isoformat() in seen:
+                continue                                    # 容差内同一天多个点:只取最早的
+            seen.add(covered_day("coingecko_market_chart", t).isoformat())
             d = covered_day("coingecko_market_chart", t).isoformat()
             if d >= since:
                 out.append({"series": series, "d": d, "value": val, "source": "coingecko_pro_global"})
@@ -186,14 +197,22 @@ async def _macro(today: date) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for name, fetch in (("fng", lambda: get_fng_history()),
                         ("vix", lambda: get_eodhd_eod_range("VIX", "INDX", HISTORY_START)),
-                        ("global", lambda: get_cg_global_market_cap_chart("max"))):
+                        ("global", lambda: get_cg_global_market_cap_chart("max")),
+                        ("global_recent", lambda: get_cg_global_market_cap_chart("1"))):
         try:
             raw = await fetch()
-            rows = fng_rows(raw) if name == "fng" else eod_rows("vix", raw) if name == "vix" else global_rows(raw)
+            if name == "global_recent":
+                have = {(r["series"], r["d"]) for r in out.get("_global_rows", [])}
+                rows = [r for r in global_rows(raw, tolerance_ms=RECENT_TOLERANCE_MS) if (r["series"], r["d"]) not in have]
+            else:
+                rows = fng_rows(raw) if name == "fng" else eod_rows("vix", raw) if name == "vix" else global_rows(raw)
+            if name == "global":
+                out["_global_rows"] = rows
             err = await _upsert(MACRO_TABLE, rows, "series,d") if rows else f"{name}: 0 行"
             out[name] = {"rows": len(rows), "error": err, "last": rows[-1]["d"] if rows else None}
         except Exception as e:                              # noqa: BLE001
             out[name] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:100]}"}
+    out.pop("_global_rows", None)
     return out
 
 

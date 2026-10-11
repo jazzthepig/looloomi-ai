@@ -1448,7 +1448,8 @@ async def _chain_activity_loop():
             await _beat("_chain_activity_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_chain_activity_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._chain_activity_loop")
-        await _asyncio.sleep(24 * 3600)
+        # S-536:正式 CIS 在 UTC 收盘后发布,它的输入每天紧跟收盘取(不随部署时刻漂);仍是一天一轮
+        await _sleep_until_utc(0, 45)
 
 
 @app.on_event("startup")
@@ -1506,7 +1507,8 @@ async def _cis_inputs_loop():
             await _beat("_cis_inputs_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_cis_inputs_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._cis_inputs_loop")
-        await _asyncio.sleep(24 * 3600)
+        # S-536:正式 CIS 在 UTC 收盘后发布,它的输入每天紧跟收盘取(不随部署时刻漂);仍是一天一轮
+        await _sleep_until_utc(0, 50)
 
 
 @app.on_event("startup")
@@ -1715,7 +1717,8 @@ async def _binance_hf_loop():
             await _beat("_binance_hf_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_binance_hf_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._binance_hf_loop")
-        await _asyncio.sleep(24 * 3600)
+        # S-536:正式 CIS 在 UTC 收盘后发布,它的输入每天紧跟收盘取(不随部署时刻漂);仍是一天一轮
+        await _sleep_until_utc(0, 35)
 
 
 @app.on_event("startup")

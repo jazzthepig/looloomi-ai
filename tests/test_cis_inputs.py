@@ -38,6 +38,19 @@ def test_global_rows_only_day_boundary_and_previous_day() -> None:
                                                                  ("total_volume", "2026-10-08", 1.0e11)}
 
 
+def test_global_rows_recent_takes_first_point_after_midnight() -> None:
+    """S-536:days=max 的最后一个整点是昨天的;最近一天从 days=1(5 分钟粒度)取 00:00 后第一个点。"""
+    ms = lambda *a: _ts(*a) * 1000  # noqa: E731
+    gm = {"market_cap": [[ms(2026, 10, 10, 23) + 55 * 60_000, 2.9e12], [ms(2026, 10, 11) + 3 * 60_000, 3.0e12],
+                         [ms(2026, 10, 11) + 8 * 60_000, 3.05e12], [ms(2026, 10, 11, 1), 3.1e12]],
+          "volume": [[ms(2026, 10, 11) + 3 * 60_000, 1.0e11]]}
+    from src.data.market.cis_inputs import RECENT_TOLERANCE_MS
+    rows = global_rows(gm, tolerance_ms=RECENT_TOLERANCE_MS)
+    assert {(r["series"], r["d"], r["value"]) for r in rows} == {("total_mcap", "2026-10-10", 3.0e12),
+                                                                 ("total_volume", "2026-10-10", 1.0e11)}
+    assert global_rows(gm) == [], "没有容差时 00:03 不算收盘"
+
+
 def test_tvl_rows_drop_today_placeholder() -> None:
     pts = [[_ts(2026, 10, 7), 1.0e9], [_ts(2026, 10, 8), 1.1e9], [_ts(2026, 10, 9), 1.1e9]]
     rows = tvl_rows("AAVE", "aave", "aave", pts, date(2026, 10, 9))
