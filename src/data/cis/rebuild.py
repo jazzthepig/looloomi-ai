@@ -315,6 +315,43 @@ def group_pct(rows: list[dict]) -> None:
             r["pct"] = round(float((rk - 0.5) / n), 4)
 
 
+def churn(levels: list[Optional[int]], days: list[str]) -> tuple[int, int]:
+    """纯函数。一个名字的档位序列 → (换档次数, 其中 3 天内又变回原档的次数)。"""
+    ch, back = 0, 0
+    idx = [i for i in range(1, len(levels)) if levels[i] is not None and levels[i - 1] is not None and levels[i] != levels[i - 1]]
+    for k, i in enumerate(idx):
+        ch += 1
+        if k + 1 < len(idx):
+            j = idx[k + 1]
+            if levels[j] == levels[i - 1] and (pd.Timestamp(days[j]) - pd.Timestamp(days[i])).days <= 3:
+                back += 1
+    return ch, back
+
+
+def label_stats(rows: list[dict]) -> dict[str, Any]:
+    """纯函数。候选口径的换档频率:每组、每个带宽,每名字每 30 天换档几次、3 天内变回的占比。供口径决定(S-531 ⑤)。"""
+    by: dict[str, dict[str, list[dict]]] = {}
+    for r in rows:
+        g = "tradfi" if r["asset_class"] in TRADFI else "crypto"
+        by.setdefault(g, {}).setdefault(r["symbol"], []).append(r)
+    out: dict[str, Any] = {}
+    for g, syms in by.items():
+        n_days = sum(len(v) for v in syms.values()) or 1
+        res = {}
+        for name, fn in (("abs_2pt", lambda rs: [lv for lv, _ in hysteresis([r["score"] for r in rs])]),
+                         *[(f"pct_{int(b * 100)}", (lambda b: lambda rs: [lv for lv, _ in pct_hysteresis([r.get("pct") for r in rs], b)])(b))
+                           for b in (0.05, 0.10, 0.15)]):
+            ch = back = 0
+            for rs in syms.values():
+                rs = sorted(rs, key=lambda r: r["d"])
+                c, b_ = churn(fn(rs), [r["d"] for r in rs])
+                ch += c
+                back += b_
+            res[name] = {"changes_per_name_30d": round(30 * ch / n_days, 2), "flip_back_3d": round(back / ch, 3) if ch else None}
+        out[g] = res
+    return out
+
+
 def label_rows(rows: list[dict]) -> list[dict]:
     """纯函数。按名字、按日期给每行加滞回信号与 watch。"""
     by: dict[str, list[dict]] = {}
@@ -461,5 +498,10 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
         if r["d"] >= cut:
             for m in r["missing"]:
                 miss[m] = miss.get(m, 0) + 1
+    try:
+        stats = label_stats(rows)
+    except Exception as e:                                  # noqa: BLE001
+        stats = {"error": f"{type(e).__name__}: {str(e)[:80]}"}
     return {"ok": True, "refused": False, "written": len(out), "full": full, "rows_total": len(rows),
-            "missing_last_10d": miss, "reason": f"{len(rows)} 行({'全量' if full else '近 10 天'}写入 {len(out)})"}
+            "missing_last_10d": miss, "label_stats": stats,
+            "reason": f"{len(rows)} 行({'全量' if full else '近 10 天'}写入 {len(out)})"}

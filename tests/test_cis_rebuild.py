@@ -116,3 +116,13 @@ def test_commits_4w_complete_weeks_before_d() -> None:
     weeks = {"2026-09-13": 1, "2026-09-20": 2, "2026-09-27": 3, "2026-10-04": 4, "2026-10-11": 100}
     assert commits_4w(weeks, pd.Timestamp("2026-10-14")) == 10, "10-11 那周没走完,不算"
     assert commits_4w(weeks, pd.Timestamp("2026-10-06")) is None, "不满 4 个已知完整周 ⇒ None,不补 0"
+
+
+def test_churn_counts_changes_and_quick_flip_backs() -> None:
+    from src.data.cis.rebuild import churn, label_stats
+    days = [f"2026-01-{i:02d}" for i in range(1, 11)]
+    assert churn([2, 3, 2, 2, 2, 2, 3, 3, 3, 3], days) == (3, 1), "第 2 天升、第 3 天又回 = 1 次来回跳;第 7 天再升不回"
+    rows = [{"symbol": "A", "d": d, "asset_class": "L1", "score": s, "pct": p}
+            for d, s, p in zip(days, [60, 66, 60, 60, 60, 60, 70, 70, 70, 70], [0.5, 0.75, 0.5, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 0.8])]
+    st = label_stats(rows)
+    assert set(st["crypto"]) == {"abs_2pt", "pct_5", "pct_10", "pct_15"}
