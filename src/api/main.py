@@ -1549,7 +1549,7 @@ async def _start_cis_official_loop():
 async def _cis_rebuild_loop():
     """S-531 / T-079:CIS 按时点重建(统一标准 v1)→ cis_rebuild_daily。与实盘 T2 同一个函数,只喂 d 收盘时已知的输入;
     滞回标签另列。每天一轮(UTC 01:00 后数据齐);输入补齐前算的行在下一轮整条重算。
-    判活:`select max(d) from cis_rebuild_daily where code_ref = 'cis-standard-v1.1'` = 昨天。
+    判活:`select max(d) from cis_rebuild_daily where code_ref = 'cis-standard-v1.2'` = 昨天。
     """
     await _asyncio.sleep(_boot_delay(1500))
     await _asyncio.sleep(600)   # 再等 10 分钟:让同一次部署里的 _cis_inputs_loop(补维度)先跑完,首轮就用补齐的输入
@@ -1576,7 +1576,7 @@ async def _cis_rebuild_loop():
 @app.on_event("startup")
 async def _start_cis_rebuild_loop():
     _asyncio.create_task(_cis_rebuild_loop())
-    print("[CIS-REBUILD] ✅ CIS point-in-time rebuild scheduled (cis_rebuild_daily, standard v1.1)")
+    print("[CIS-REBUILD] ✅ CIS point-in-time rebuild scheduled (cis_rebuild_daily, standard v1.2)")
 
 
 async def _signal_attribution_loop():

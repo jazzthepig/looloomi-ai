@@ -30,12 +30,13 @@ TRACK_RECORD_READING = (
 OFFICIAL_BASIS = (
     "Official CIS is computed once per day on the UTC daily close, using only data that was available at that "
     "close, with one source per input. Signal levels rank each asset within its group (crypto or traditional "
-    "assets) on that day, with a 10-percentile buffer before a level changes; grades use the absolute score. "
+    "assets) on that day, with a buffer before a level changes (10 percentiles; 5 at the top-10% and bottom-10% "
+    "cuts); grades use the absolute score. "
     "Intraday values are a preview and do not change the published signal."
 )
 
 OFFICIAL_BASIS_ZH = (
     "正式 CIS 每天在 UTC 收盘后计算一次,只用收盘时已经可得的数据,每个输入只有一个来源。"
-    "信号档位按当天同组(加密 / 传统资产)排名确定,换档前有 10 个百分位的缓冲;等级按绝对分。"
+    "信号档位按当天同组(加密 / 传统资产)排名确定,换档前有缓冲(10 个百分位;前 10% 与后 10% 两道门槛为 5);等级按绝对分。"
     "盘中数值是预览,不改变已发布的信号。"
 )

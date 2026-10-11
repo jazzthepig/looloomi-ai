@@ -26,7 +26,7 @@ const C = {
 };
 
 // Mirror of src/api/contracts/disclosure.py::OFFICIAL_BASIS — tests/test_cis_official.py keeps them identical.
-const OFFICIAL_BASIS = "Official CIS is computed once per day on the UTC daily close, using only data that was available at that close, with one source per input. Signal levels rank each asset within its group (crypto or traditional assets) on that day, with a 10-percentile buffer before a level changes; grades use the absolute score. Intraday values are a preview and do not change the published signal.";
+const OFFICIAL_BASIS = "Official CIS is computed once per day on the UTC daily close, using only data that was available at that close, with one source per input. Signal levels rank each asset within its group (crypto or traditional assets) on that day, with a buffer before a level changes (10 percentiles; 5 at the top-10% and bottom-10% cuts); grades use the absolute score. Intraday values are a preview and do not change the published signal.";
 
 const mono  = FONTS.mono;
 const brand = FONTS.brand;

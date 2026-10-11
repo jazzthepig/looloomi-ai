@@ -569,7 +569,8 @@ async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
 
     Official scores, grades, signals and pillars are the daily-close series: computed once per UTC
     day from data available at that close, one source per input. Signal levels rank each asset
-    within its group (crypto / traditional assets) with a 10-percentile buffer; grades use the
+    within its group (crypto / traditional assets) with a buffer (10 percentiles; 5 at the
+    top/bottom 10% cuts); grades use the
     absolute score. Live intraday preview values are returned under each asset's `intraday`;
     `official` (top level) gives the publication date and method. Signals describe past and
     current data; they are not forecasts.

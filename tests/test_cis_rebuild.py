@@ -100,6 +100,21 @@ def test_pct_signal_candidate_ranks_within_group_with_band() -> None:
     assert [x for x, _ in lv10] == [2, 2, 2, 3, 3, 2], "正式口径 ±10:越过 0.70 要到 0.80,跌回要到 0.60"
 
 
+def test_extreme_levels_stay_reachable() -> None:
+    """S-535:外档只有 10 个百分位宽,缓冲不封顶时「前 10% / 后 10%」第二天起永远进不去。"""
+    from src.data.cis.rebuild import cut_bands, pct_hysteresis
+    assert cut_bands() == (0.05, 0.10, 0.10, 0.05)
+    assert cut_bands(0.15) == (0.05, 0.15, 0.15, 0.05) and cut_bands(0.04) == (0.04, 0.04, 0.04, 0.04)
+    top = [x for x, _ in pct_hysteresis([0.5, 0.98, 0.93, 0.86, 0.84])]
+    assert top == [2, 4, 4, 4, 3], "0.98 进前 10%(要 ≥ 0.95),0.86 仍保持,< 0.85 才掉"
+    assert [x for x, _ in pct_hysteresis([0.5, 0.94, 0.96])] == [2, 3, 4], "0.94 只到 OUTPERFORM"
+    bot = [x for x, _ in pct_hysteresis([0.5, 0.02, 0.12, 0.16])]
+    assert bot == [2, 0, 0, 1], "0.02 进后 10%(要 < 0.05),0.12 仍保持,≥ 0.15 才回"
+    # 25 个名字的加密组,分位最高 0.98、最低 0.02:两个极端档都必须能从中间档走进去
+    assert [x for x, _ in pct_hysteresis([0.5, 0.98])][-1] == 4
+    assert [x for x, _ in pct_hysteresis([0.5, 0.02])][-1] == 0
+
+
 def test_pit_fundamentals_only_quarters_already_published() -> None:
     from src.data.cis.rebuild import pit_fundamentals
     q = [{"period_end": f"2023-{m:02d}-28", "available_d": f"2023-{m + 1:02d}-15", "eps": 1.0, "revenue": 100.0} for m in (2, 5, 8, 11) if m < 11] + \

@@ -35,7 +35,7 @@ import pandas as pd
 
 TABLE = "cis_rebuild_daily"
 WRITES_TABLES = (TABLE,)
-CODE_REF = "cis-standard-v1.1"   # v1.1(10-11,S-533):正式档位口径 = 同组分位 ±10;v1 的行保留
+CODE_REF = "cis-standard-v1.2"   # v1.2(10-11,S-535):外侧门槛缓冲封顶 ±5;v1.1(±10,极端档进不去)与 v1 的行保留
 START = pd.Timestamp("2023-01-01")
 READ_FROM = "2019-12-01"
 BAND = 2.0
@@ -266,7 +266,9 @@ def score_day(d: pd.Timestamp, assets: Mapping[str, Mapping[str, Any]], data: Ma
 
 
 #: 正式档位口径(Jazz 10-11 批准,S-533):同组当日分位 → 档位。由低到高:后 10% / 10–30% / 30–70% / 70–90% / 前 10%;
-#: 滞回带 ±10 个百分位(S-531 补 5:加密换档 1.68 次 / 30 天、3 天内变回 22%)。
+#: 滞回带 ±10 个百分位;**最外两道门槛(10 / 90 分位)的缓冲封顶为外档宽度的一半(±5)**(S-535,v1.2)。
+#: 为什么:外档本身只有 10 个百分位宽。±10 的缓冲放在 90 分位上 = 进入「前 10%」要求分位 ≥ 1.0,放在 10 分位上 =
+#: 进入「后 10%」要求 < 0 —— 两个极端档只在序列第一天出现,之后永远进不去(v1.1 重建 10-10:0 个 STRONG、0 个 UNDERWEIGHT)。
 PCT_CUTS = (0.10, 0.30, 0.70, 0.90)
 PCT_BAND = 0.10
 
@@ -276,13 +278,23 @@ def pct_level(p: float) -> int:
     return sum(1 for c in PCT_CUTS if p >= c)
 
 
+def cut_bands(band: float = PCT_BAND) -> tuple[float, ...]:
+    """纯函数。每道门槛的缓冲:内侧门槛 = band;最外两道封顶为外档宽度的一半,保证极端档进得去(S-535)。"""
+    last = len(PCT_CUTS) - 1
+    return tuple(round(min(band, (c if i == 0 else 1 - c) / 2), 6) if i in (0, last) else band
+                 for i, c in enumerate(PCT_CUTS))
+
+
 def pct_step(cur: Optional[int], p: Optional[float], band: float = PCT_BAND) -> tuple[Optional[int], Optional[str]]:
-    """纯函数。滞回的一步:上一档 cur + 今天的分位 p → (今天的档, watch)。重建与每日正式发布共用这一步。"""
+    """纯函数。滞回的一步:上一档 cur + 今天的分位 p → (今天的档, watch)。重建与每日正式发布共用这一步。
+    往上换档要越过门槛 + 缓冲,往下要跌破门槛 − 缓冲;缓冲按门槛给(`cut_bands`)。"""
     if p is None:
         return cur, None
     if cur is None:
         return pct_level(p), None
-    up, down = pct_level(p - band), pct_level(p + band)
+    bands = cut_bands(band)
+    up = sum(1 for c, b in zip(PCT_CUTS, bands) if p >= c + b)
+    down = sum(1 for c, b in zip(PCT_CUTS, bands) if p >= c - b)
     if up > cur:
         cur = up
     elif down < cur:

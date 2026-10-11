@@ -388,8 +388,10 @@ published signal.
 | UNDERWEIGHT | Bottom 10% | Bottom of its group |
 
 Groups are crypto and traditional assets, ranked separately on the regime-adjusted score. A level changes
-only when the rank moves 10 percentiles past the cut (hysteresis); inside that buffer the asset keeps its
-level and carries `watch: up/down`. Grades (§5) stay on the absolute score — a grade says how strong the
+only when the rank moves past the cut by the buffer (hysteresis): 10 percentiles at the 30th/70th cuts, 5 at
+the 10th/90th cuts — the top and bottom levels are only 10 percentiles wide, so a 10-percentile buffer there
+would make them unreachable once a series has started. Inside the buffer the asset keeps its level and
+carries `watch: up/down`. Grades (§5) stay on the absolute score — a grade says how strong the
 score is, the signal says where the asset sits within its group. The grade→signal mapping in §5 is the
 intraday preview's rule and is retired for the official series: on consistent data the absolute cuts
 degenerated (no traditional asset reached OUTPERFORM; no crypto reached STRONG OUTPERFORM, S-531).
@@ -403,7 +405,7 @@ and for crypto the BTC beta component). Those outcomes have at times run opposit
 uses a signal is a separate layer with its own evidence.
 
 **Signal stability rule:** the official signal changes at most once per day (UTC close) and only past the
-10-percentile buffer above. Intraday score changes are visible under `intraday`; they do not move the signal.
+buffer above. Intraday score changes are visible under `intraday`; they do not move the signal.
 
 ---
 
