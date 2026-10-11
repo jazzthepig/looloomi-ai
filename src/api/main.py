@@ -1494,7 +1494,7 @@ async def _cis_inputs_loop():
             from src.data.market.cis_inputs import run_once as _ci_run
             r = await _ci_run()
             print(f"[CIS-INPUTS] {str(r.get('reason'))[:160]}")
-            _detail = {k: r.get(k) for k in ("errors", "macro", "protocols", "tradfi")}
+            _detail = {k: r.get(k) for k in ("errors", "macro", "protocols", "tradfi", "fundamentals", "github")}
             await _beat("_cis_inputs_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
                         error=None if r.get("ok") else str(r.get("reason"))[:200])
             await _record_loop_attempt(
@@ -1527,7 +1527,7 @@ async def _cis_rebuild_loop():
             from src.data.cis.rebuild import run_once as _rb_run
             r = await _rb_run()
             print(f"[CIS-REBUILD] {str(r.get('reason'))[:160]}")
-            _detail = {k: r.get(k) for k in ("written", "full", "rows_total", "missing_last_10d")}
+            _detail = {k: r.get(k) for k in ("written", "full", "rows_total", "missing_last_10d", "label_stats")}
             await _beat("_cis_rebuild_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
                         error=None if r.get("ok") else str(r.get("reason"))[:200])
             await _record_loop_attempt(

@@ -769,7 +769,8 @@ async def get_eodhd_quarterly_history(ticker: str, exchange: str = "US") -> dict
                 "filter": "Earnings::History,Financials::Income_Statement::quarterly"},
         timeout=45)
     if r.status_code != 200:
-        raise RuntimeError(f"EODHD fundamentals {ticker}.{exchange} HTTP {r.status_code}")
+        body = (r.text or "")[:80].replace(EODHD_KEY, "***") if EODHD_KEY else (r.text or "")[:80]
+        raise RuntimeError(f"EODHD fundamentals {ticker}.{exchange} HTTP {r.status_code}: {body}")
     j = r.json()
     if not isinstance(j, dict):
         raise RuntimeError(f"EODHD fundamentals {ticker}.{exchange} 返回的不是对象")
@@ -785,7 +786,8 @@ async def get_github_participation(repo: str) -> list[int]:
         headers["Authorization"] = f"Bearer {tok}"
     r = await _get_misc_client().get(f"https://api.github.com/repos/{repo}/stats/participation", headers=headers, timeout=20)
     if r.status_code != 200:
-        raise RuntimeError(f"GitHub participation {repo} HTTP {r.status_code}")
+        raise RuntimeError(f"GitHub participation {repo} HTTP {r.status_code}"
+                           + (" (GitHub 还在计算,下一轮再取)" if r.status_code == 202 else ""))
     weeks = (r.json() or {}).get("all") or []
     if not isinstance(weeks, list) or not weeks:
         raise RuntimeError(f"GitHub participation {repo} 返回空")
