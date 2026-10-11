@@ -36,3 +36,9 @@ where venue = 'binance_perp'
 group by 1, 2;
 revoke all on public.v_funding_daily from anon, authenticated;
 grant select on public.v_funding_daily to service_role;
+
+-- S-531 补(10-11,migration s531c_rebuild_pct_signal):候选档位口径 —— 同组(加密 / 传统资产)当日分位定档 + ±5 个百分位滞回。
+-- 只是并列的一列,供 Jazz 决定口径前对照;实盘不变。
+alter table public.cis_rebuild_daily add column if not exists pct double precision;
+alter table public.cis_rebuild_daily add column if not exists signal_pct text;
+alter table public.cis_rebuild_daily add column if not exists watch_pct text;

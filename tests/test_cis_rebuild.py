@@ -83,3 +83,36 @@ def test_score_day_records_non_reconstructable_and_uses_live_function() -> None:
     out = build(assets, data, idx[455], start=idx[440])
     assert {r["signal"] for r in out} <= set(LEVELS) and all("watch" in r for r in out)
     assert all(r["code_ref"] == "cis-standard-v1" for r in out)
+
+
+def test_pct_signal_candidate_ranks_within_group_with_band() -> None:
+    from src.data.cis.rebuild import group_pct, pct_hysteresis, pct_level
+    assert [pct_level(p) for p in (0.0, 0.1, 0.5, 0.75, 0.95)] == [0, 1, 2, 3, 4]
+    rows = [{"d": "2026-01-01", "asset_class": "L1", "score": float(s)} for s in range(10)] + \
+           [{"d": "2026-01-01", "asset_class": "US Bond", "score": 40.0}]
+    group_pct(rows)
+    assert rows[0]["pct"] == 0.05 and rows[9]["pct"] == 0.95, "加密 10 个名字内排"
+    assert rows[10]["pct"] is None, "传统资产当天不足 5 个名字不排"
+    lv = pct_hysteresis([0.68, 0.72, 0.74, 0.76, 0.66, 0.64])
+    assert [x for x, _ in lv] == [2, 2, 2, 3, 3, 2]
+
+
+def test_pit_fundamentals_only_quarters_already_published() -> None:
+    from src.data.cis.rebuild import pit_fundamentals
+    q = [{"period_end": f"2023-{m:02d}-28", "available_d": f"2023-{m + 1:02d}-15", "eps": 1.0, "revenue": 100.0} for m in (2, 5, 8, 11) if m < 11] + \
+        [{"period_end": "2023-11-28", "available_d": "2024-01-20", "eps": 1.0, "revenue": 100.0}] + \
+        [{"period_end": f"2024-{m:02d}-28", "available_d": f"2024-{m + 1:02d}-15", "eps": 2.0, "revenue": 150.0} for m in (2, 5, 8)] + \
+        [{"period_end": "2024-11-28", "available_d": "2025-01-20", "eps": 2.0, "revenue": 150.0}]
+    f = pit_fundamentals(q, 80.0, pd.Timestamp("2025-01-19"))
+    assert abs(f["pe_ratio"] - 80.0 / 7.0) < 1e-9, "2024-11 季还没公布:近四季 = 1 + 2 + 2 + 2"
+    assert "revenue_growth_yoy" not in f, "营收同比要 8 个已公布的季度,当时只有 7 个"
+    g = pit_fundamentals(q, 80.0, pd.Timestamp("2025-01-20"))
+    assert abs(g["pe_ratio"] - 10.0) < 1e-9 and abs(g["revenue_growth_yoy"] - 50.0) < 1e-9
+    assert pit_fundamentals(q[:3], 80.0, pd.Timestamp("2025-01-20")) is None
+
+
+def test_commits_4w_complete_weeks_before_d() -> None:
+    from src.data.cis.rebuild import commits_4w
+    weeks = {"2026-09-13": 1, "2026-09-20": 2, "2026-09-27": 3, "2026-10-04": 4, "2026-10-11": 100}
+    assert commits_4w(weeks, pd.Timestamp("2026-10-14")) == 10, "10-11 那周没走完,不算"
+    assert commits_4w(weeks, pd.Timestamp("2026-10-06")) is None, "不满 4 个已知完整周 ⇒ None,不补 0"

@@ -61,3 +61,24 @@ def test_parse_market_chart_volume_only_when_given() -> None:
     assert "volume" not in parse_market_chart(p, [[ms(2026, 10, 9), 5.0]])[0], "没给成交额就不带这个键(另一张表没有这一列)"
     r = parse_market_chart(p, [[ms(2026, 10, 9), 5.0]], [[ms(2026, 10, 9), 7.0]])[0]
     assert r == {"d": "2026-10-08", "price": 2.0, "mcap": 5.0, "volume": 7.0}
+
+
+def test_fundamentals_rows_both_shapes_and_availability() -> None:
+    from src.data.market.cis_inputs import fundamentals_rows
+    nested = {"Earnings": {"History": {"2024-06-30": {"date": "2024-06-30", "reportDate": "2024-08-01", "epsActual": 1.4},
+                                       "2019-12-31": {"date": "2019-12-31", "reportDate": "2020-01-30", "epsActual": 1.0}}},
+              "Financials": {"Income_Statement": {"quarterly": {"2024-06-30": {"date": "2024-06-30", "filing_date": "2024-08-02",
+                                                                               "totalRevenue": "85777000000"}}}}}
+    rows = fundamentals_rows("AAPL", nested)
+    assert rows == [{"symbol": "AAPL", "period_end": "2024-06-30", "available_d": "2024-08-01", "eps": 1.4,
+                     "revenue": 85777000000.0, "source": "eodhd_fundamentals"}], "可得日 = EPS 公布日;2020 前的不收"
+    flat = {"Earnings::History": {"2024-06-30": {"date": "2024-06-30", "reportDate": "2024-08-01", "epsActual": 1.4}},
+            "Financials::Income_Statement::quarterly": {}}
+    assert fundamentals_rows("AAPL", flat)[0]["revenue"] is None
+    assert fundamentals_rows("X", {"Earnings::History": {"2024-06-30": {"date": "2024-06-30", "epsActual": 1}}}) == [], "没有可得日不收"
+
+
+def test_github_rows_weeks_start_sunday_and_drop_current() -> None:
+    from src.data.market.cis_inputs import github_rows
+    rows = github_rows("BTC", "bitcoin/bitcoin", [5, 6, 7], date(2026, 10, 14))   # 周三;本周从 10-11(周日)开始
+    assert [(r["week_start"], r["commits"]) for r in rows] == [("2026-09-27", 5), ("2026-10-04", 6)], "本周没走完,不收"

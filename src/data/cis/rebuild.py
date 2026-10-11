@@ -46,7 +46,7 @@ TRADFI = frozenset({"US Equity", "US Bond", "Commodity", "FX", "Real Estate", "E
 #: L2 → DeFiLlama 链(chain_activity_daily.gecko_id = 币的 coingecko id)
 L2_CHAIN = {"ARB": "arbitrum", "OP": "optimism", "POL": "polygon-ecosystem-token", "STRK": "starknet"}
 NOT_RECONSTRUCTABLE = ("cg_dev_score", "trending_rank", "narrative_modifier", "open_interest", "ic_feedback",
-                       "github_commits", "eodhd_fundamentals", "macro_beta")
+                       "macro_beta")   # github_commits:有 52 周,更早的复原不了(按天判断,不整体排除)
 
 
 def level_of(score: float) -> int:
@@ -159,6 +159,34 @@ def tradfi_market_data(cl: pd.Series, hi: pd.Series, lo: pd.Series, vol: pd.Seri
     return md, ["tradfi_market_cap_static"] if mcap else ["tradfi_market_cap"]
 
 
+def pit_fundamentals(q: list[dict], price: float, d: pd.Timestamp) -> Optional[dict]:
+    """纯函数。按可得日复原 d 那天的 PE 与营收同比(百分比):只用 available_d ≤ d 的季度。
+    PE = 价格 / 最近四季 EPS 之和(≤ 0 不给);营收同比 = 最近四季营收 / 再往前四季营收 − 1。"""
+    known = sorted((r for r in q if str(r["available_d"]) <= d.date().isoformat()), key=lambda r: str(r["period_end"]))
+    if len(known) < 4:
+        return None
+    last4 = known[-4:]
+    eps = [r.get("eps") for r in last4]
+    out: dict[str, Any] = {}
+    if all(e is not None for e in eps) and sum(eps) > 0:
+        out["pe_ratio"] = price / sum(eps)
+    if len(known) >= 8:
+        prev4 = known[-8:-4]
+        a = [r.get("revenue") for r in last4]
+        b = [r.get("revenue") for r in prev4]
+        if all(x is not None for x in a + b) and sum(b) > 0:
+            out["revenue_growth_yoy"] = (sum(a) / sum(b) - 1) * 100
+    return out or None
+
+
+def commits_4w(weeks: Mapping[str, int], d: pd.Timestamp) -> Optional[int]:
+    """纯函数。d 之前 4 个**已完成**的周(周日开始)提交数之和;不满 4 周 ⇒ None(复原不了,不补 0)。"""
+    this_sunday = d - pd.Timedelta(days=(d.weekday() + 1) % 7)
+    want = [(this_sunday - pd.Timedelta(days=7 * k)).date().isoformat() for k in (1, 2, 3, 4)]
+    vals = [weeks.get(w) for w in want]
+    return int(sum(vals)) if all(v is not None for v in vals) else None
+
+
 def score_day(d: pd.Timestamp, assets: Mapping[str, Mapping[str, Any]], data: Mapping[str, Any]) -> list[dict]:
     """纯函数(除了 cis_provider 的纯函数)。d 这一天全宇宙的分数行。"""
     from src.data.cis.cis_provider import (calculate_cis_score, calculate_total_score, canonical_regime_strict,
@@ -201,14 +229,20 @@ def score_day(d: pd.Timestamp, assets: Mapping[str, Mapping[str, Any]], data: Ma
                 if not tvl:
                     miss = miss + ["tvl"]
         fr = _num(data["funding"].get(sym, {}).get(d)) if not is_tf else None
+        gh = commits_4w(data["github"][sym], d) if sym in data.get("github", {}) else None
+        fund = None
+        if cls == "US Equity" and sym in data.get("fundamentals", {}):
+            fund = pit_fundamentals(data["fundamentals"][sym], md["price"], d)
+            if fund is None:
+                miss = miss + ["eodhd_fundamentals"]
         deriv = {sym: {"funding_rate": fr, "funding_signal": "binance_perp_daily_mean"}} if fr is not None else {}
         pil = calculate_cis_score(
             md, tvl, fng, cls, asset_id=sym,
             btc_change_30d=btc30 if (sym != "BTC" and not is_tf) else None,
-            github_commits_4w=None, vix=vix if is_tf else None,
+            github_commits_4w=gh, vix=vix if is_tf else None,
             spy_change_30d=spy30 if ((is_tf and sym != "SPY") or sym == "BTC") else None,
             asset_betas=None, category_median_30d=cat_med.get(cls, 0), dev_activity_score=None,
-            eodhd_fundamentals=None, regime=regime, _deriv_map=deriv, _trend_map={}, narrative_modifier=0.0)
+            eodhd_fundamentals=fund, regime=regime, _deriv_map=deriv, _trend_map={}, narrative_modifier=0.0)
         tot_r = calculate_total_score({k: pil[k] for k in "FMOSA"}, cls, regime=regime, ic_mult=None)
         if fng_v is None:
             miss = miss + ["fng"]
@@ -231,6 +265,56 @@ def score_day(d: pd.Timestamp, assets: Mapping[str, Mapping[str, Any]], data: Ma
     return rows
 
 
+#: 候选口径(S-531 ⑤,待 Jazz):同组当日分位 → 档位。由低到高:后 10% / 10–30% / 30–70% / 70–90% / 前 10%。
+PCT_CUTS = (0.10, 0.30, 0.70, 0.90)
+PCT_BAND = 0.05
+
+
+def pct_level(p: float) -> int:
+    """纯函数。分位 0..1 → 档位 0..4。"""
+    return sum(1 for c in PCT_CUTS if p >= c)
+
+
+def pct_hysteresis(ps: list[Optional[float]], band: float = PCT_BAND) -> list[tuple[Optional[int], Optional[str]]]:
+    """纯函数。同 `hysteresis`,只是门槛在分位上(±band)。"""
+    out: list[tuple[Optional[int], Optional[str]]] = []
+    cur: Optional[int] = None
+    for p in ps:
+        if p is None:
+            out.append((cur, None))
+            continue
+        if cur is None:
+            cur = pct_level(p)
+            out.append((cur, None))
+            continue
+        up, down = pct_level(p - band), pct_level(p + band)
+        if up > cur:
+            cur = up
+        elif down < cur:
+            cur = down
+        raw = pct_level(p)
+        out.append((cur, "up" if raw > cur else "down" if raw < cur else None))
+    return out
+
+
+def group_pct(rows: list[dict]) -> None:
+    """就地。每天、每组(加密 / 传统资产)按分数排分位(平均名次 / 人数,0..1);同组当天 < 5 个名字不排。"""
+    by: dict[tuple[str, str], list[dict]] = {}
+    for r in rows:
+        g = "tradfi" if r["asset_class"] in TRADFI else "crypto"
+        by.setdefault((r["d"], g), []).append(r)
+    for rs in by.values():
+        sc = [r for r in rs if r.get("score") is not None]
+        if len(sc) < 5:
+            for r in rs:
+                r["pct"] = None
+            continue
+        s = pd.Series([r["score"] for r in sc]).rank(method="average")
+        n = len(sc)
+        for r, rk in zip(sc, s):
+            r["pct"] = round(float((rk - 0.5) / n), 4)
+
+
 def label_rows(rows: list[dict]) -> list[dict]:
     """纯函数。按名字、按日期给每行加滞回信号与 watch。"""
     by: dict[str, list[dict]] = {}
@@ -241,6 +325,9 @@ def label_rows(rows: list[dict]) -> list[dict]:
         for r, (lv, w) in zip(rs, hysteresis([r["score"] for r in rs])):
             r["signal"] = LEVELS[lv] if lv is not None else None
             r["watch"] = w
+        for r, (lv, w) in zip(rs, pct_hysteresis([r.get("pct") for r in rs])):
+            r["signal_pct"] = LEVELS[lv] if lv is not None else None
+            r["watch_pct"] = w
     return rows
 
 
@@ -313,8 +400,16 @@ async def load_inputs(end: pd.Timestamp) -> tuple[dict, dict]:
             x = {}
         if x.get("market_cap") and x.get("price"):
             static_tf[s] = {"market_cap": float(x["market_cap"]), "price": float(x["price"])}
+    gq = await _read_all("github_commits_weekly", {"select": "symbol,week_start,commits"})
+    github: dict[str, dict[str, int]] = {}
+    for r in gq:
+        github.setdefault(r["symbol"], {})[str(r["week_start"])[:10]] = int(r["commits"])
+    fq = await _read_all("equity_fundamentals_q", {"select": "symbol,period_end,available_d,eps,revenue"})
+    fundamentals: dict[str, list[dict]] = {}
+    for r in fq:
+        fundamentals.setdefault(r["symbol"], []).append(r)
     data = {"crypto": crypto, "tradfi": tradfi, "tvl": tvl, "macro": macro_s, "funding": funding, "static": static,
-            "static_tf": static_tf}
+            "static_tf": static_tf, "fundamentals": fundamentals, "github": github}
     return assets, data
 
 
@@ -325,6 +420,7 @@ def build(assets: Mapping[str, Mapping[str, Any]], data: Mapping[str, Any], end:
     rows: list[dict] = []
     for d in pd.date_range(start, end, freq="D"):
         rows += score_day(d, assets, data)
+    group_pct(rows)
     rows = label_rows(rows)
     for r in rows:
         r["code_ref"] = CODE_REF
@@ -348,9 +444,12 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
         return {"ok": False, "refused": True, "written": 0, "reason": "一行都没算出来(BTC 没有价格?)"}
     rd = await _sb_get(TABLE, {"select": "d", "code_ref": f"eq.{CODE_REF}", "order": "d.asc", "limit": "1"})
     # 全量重写:表里还没有这一版 / 周一 / 库里还有「补维度之前」算的行(成交额或恐惧贪婪缺)—— 输入补齐后整条重算
-    stale = await _sb_get(TABLE, {"select": "d", "code_ref": f"eq.{CODE_REF}", "missing": "ov.{volume,fng,tradfi_market_cap}",
+    stale = await _sb_get(TABLE, {"select": "d", "code_ref": f"eq.{CODE_REF}", "missing": "ov.{volume,fng,tradfi_market_cap,eodhd_fundamentals}",
                                   "d": f"gte.{START.date().isoformat()}", "limit": "1"})
-    full = (not rd.ok) or (not rd.rows) or today.weekday() == 0 or (stale.ok and bool(stale.rows))
+    no_pct = await _sb_get(TABLE, {"select": "d", "code_ref": f"eq.{CODE_REF}", "signal_pct": "is.null",
+                                   "d": f"gte.{START.date().isoformat()}", "limit": "1"})
+    full = ((not rd.ok) or (not rd.rows) or today.weekday() == 0 or (stale.ok and bool(stale.rows))
+            or (no_pct.ok and bool(no_pct.rows)))
     cut = (today - timedelta(days=10)).isoformat()
     out = rows if full else [r for r in rows if r["d"] >= cut]
     for i in range(0, len(out), 1000):

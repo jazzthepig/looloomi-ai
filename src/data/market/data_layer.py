@@ -757,6 +757,41 @@ async def get_eodhd_eod_range(ticker: str, exchange: str, frm: str) -> list[dict
     return rows
 
 
+async def get_eodhd_quarterly_history(ticker: str, exchange: str = "US") -> dict:
+    """EODHD 基本面里的**历史**部分:每季 EPS(含公布日)与季度利润表(含报送日)。
+    返回 {"Earnings": {"History": {...}}, "Financials": {"Income_Statement": {"quarterly": {...}}}} 的原样子树。
+    没有 key / 非 200 抛错(T-079:美股 F 支柱按披露日复原 PE 与营收增速)。"""
+    if not EODHD_KEY:
+        raise RuntimeError("EODHD_API_KEY 不在进程环境里")
+    r = await _get_misc_client().get(
+        f"{EODHD_BASE}/fundamentals/{ticker}.{exchange}",
+        params={"api_token": EODHD_KEY, "fmt": "json",
+                "filter": "Earnings::History,Financials::Income_Statement::quarterly"},
+        timeout=45)
+    if r.status_code != 200:
+        raise RuntimeError(f"EODHD fundamentals {ticker}.{exchange} HTTP {r.status_code}")
+    j = r.json()
+    if not isinstance(j, dict):
+        raise RuntimeError(f"EODHD fundamentals {ticker}.{exchange} 返回的不是对象")
+    return j
+
+
+async def get_github_participation(repo: str) -> list[int]:
+    """GitHub `/repos/{repo}/stats/participation` 的 `all`:最近 52 周每周提交数(旧 → 新,最后一个是本周)。
+    202(GitHub 还在算)与其他非 200 一律抛错 —— 读不到 ≠ 没有提交(T-079)。"""
+    headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+    tok = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN") or ""
+    if tok:
+        headers["Authorization"] = f"Bearer {tok}"
+    r = await _get_misc_client().get(f"https://api.github.com/repos/{repo}/stats/participation", headers=headers, timeout=20)
+    if r.status_code != 200:
+        raise RuntimeError(f"GitHub participation {repo} HTTP {r.status_code}")
+    weeks = (r.json() or {}).get("all") or []
+    if not isinstance(weeks, list) or not weeks:
+        raise RuntimeError(f"GitHub participation {repo} 返回空")
+    return [int(x) for x in weeks]
+
+
 async def get_dex_volumes() -> dict:
     """Top DEX volumes from DeFiLlama. TTL: 5 min Redis."""
     key = "dex_volumes"

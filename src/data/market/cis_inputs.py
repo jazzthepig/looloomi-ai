@@ -30,11 +30,14 @@ from typing import Any, Optional
 
 MACRO_TABLE = "macro_daily"
 TVL_TABLE = "protocol_tvl_daily"
-WRITES_TABLES = (MACRO_TABLE, TVL_TABLE, "asset_mcap_daily")
+WRITES_TABLES = (MACRO_TABLE, TVL_TABLE, "asset_mcap_daily", "equity_fundamentals_q", "github_commits_weekly")
 HISTORY_START = "2021-06-01"          # 2023 起的重建要 400 天回看(252 日动量、ATH 用全史另算)
 VOLUME_BACKFILL_FROM = "2022-06-01"
 TRADFI_BACKFILL_DAYS = 1500           # 约 2022-08 起
 #: DeFi 类 CIS 名字 → DeFiLlama 协议 slug。L2 用链 TVL(chain_activity_daily),不在这里。
+#: 美股单票(ETF 没有 PE / 营收):按披露日复原 PE 与营收同比(F 支柱,标准 §4)。
+STOCKS: tuple[str, ...] = ("AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA")
+FUND_TABLE = "equity_fundamentals_q"
 PROTOCOLS: dict[str, tuple[str, str]] = {"UNI": ("uniswap", "uniswap"), "AAVE": ("aave", "aave"),
                                          "LDO": ("lido", "lido-dao"), "PENDLE": ("pendle", "pendle")}
 
@@ -101,6 +104,66 @@ def tvl_rows(sym: str, slug: str, gecko: str, points: list[list], today: date, s
     days = by_day(points, today)
     return [{"protocol": slug, "d": d, "symbol": sym, "gecko_id": gecko, "tvl_usd": v, "source": "defillama_protocol"}
             for d, v in sorted(days.items()) if d >= since and v > 0]
+
+
+def fundamentals_rows(symbol: str, j: dict, since: str = "2020-06-01") -> list[dict]:
+    """纯函数。EODHD 基本面历史 → 每季一行:期末、可得日(EPS 公布日,没有则报送日)、EPS、营收。
+    兼容两种返回形状:嵌套({Earnings: {History}})与按过滤路径平铺({"Earnings::History": …})。"""
+    eh = j.get("Earnings::History") or ((j.get("Earnings") or {}).get("History")) or {}
+    iq = (j.get("Financials::Income_Statement::quarterly")
+          or (((j.get("Financials") or {}).get("Income_Statement") or {}).get("quarterly")) or {})
+    out = []
+    for per in sorted(set(eh) | set(iq)):
+        e, i = eh.get(per) or {}, iq.get(per) or {}
+        pe_ = str(e.get("date") or i.get("date") or per)[:10]
+        avail = str(e.get("reportDate") or i.get("filing_date") or "")[:10]
+        if len(pe_) != 10 or len(avail) != 10 or pe_ < since or avail < pe_:
+            continue
+        eps, rev = _f(e.get("epsActual")), _f(i.get("totalRevenue"))
+        if eps is None and rev is None:
+            continue
+        out.append({"symbol": symbol, "period_end": pe_, "available_d": avail, "eps": eps, "revenue": rev,
+                    "source": "eodhd_fundamentals"})
+    return out
+
+
+def github_rows(symbol: str, repo: str, weeks: list[int], today: date) -> list[dict]:
+    """纯函数。GitHub participation 的 52 周(旧 → 新,最后一个 = 本周,未完)→ 每个**已完成**的周一行。
+    GitHub 按周日开始分周(UTC);本周不收。历史只有 52 周 —— 更早的提交数复原不了(标准 §4)。"""
+    this_sunday = today - timedelta(days=(today.weekday() + 1) % 7)
+    n = len(weeks)
+    out = []
+    for i, c in enumerate(weeks[:-1]):
+        ws = this_sunday - timedelta(days=7 * (n - 1 - i))
+        out.append({"symbol": symbol, "repo": repo, "week_start": ws.isoformat(), "commits": int(c), "source": "github_participation"})
+    return out
+
+
+async def _github(today: date) -> dict[str, Any]:
+    from src.data.cis.cis_provider import GITHUB_REPOS
+    from src.data.market.data_layer import get_github_participation
+    out: dict[str, Any] = {}
+    for sym, repo in GITHUB_REPOS.items():
+        try:
+            rows = github_rows(sym, repo, await get_github_participation(repo), today)
+            err = await _upsert("github_commits_weekly", rows, "symbol,week_start") if rows else "0 行"
+            out[sym] = {"rows": len(rows), "error": err}
+        except Exception as e:                              # noqa: BLE001
+            out[sym] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:80]}"}
+    return out
+
+
+async def _fundamentals() -> dict[str, Any]:
+    from src.data.market.data_layer import get_eodhd_quarterly_history
+    out: dict[str, Any] = {}
+    for s in STOCKS:
+        try:
+            rows = fundamentals_rows(s, await get_eodhd_quarterly_history(s, "US"))
+            err = await _upsert(FUND_TABLE, rows, "symbol,period_end") if rows else "0 行"
+            out[s] = {"rows": len(rows), "error": err}
+        except Exception as e:                              # noqa: BLE001
+            out[s] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:100]}"}
+    return out
 
 
 async def _upsert(table: str, rows: list[dict], conflict: str) -> Optional[str]:
@@ -190,6 +253,8 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
     macro = await _macro(today)
     protocols = await _protocols(today)
     volumes = await _volumes(today)
+    fundamentals = await _fundamentals()
+    github = await _github(today)
     try:
         tradfi = await _tradfi(today)
     except Exception as e:                                  # noqa: BLE001
@@ -197,7 +262,10 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
     errors = [f"macro.{k}" for k, v in macro.items() if v.get("error")] + \
              [f"tvl.{k}" for k, v in protocols.items() if v.get("error")] + \
              [f"vol.{k}" for k, v in volumes.items() if not str(v).endswith("行")] + \
+             [f"fund.{k}" for k, v in fundamentals.items() if v.get("error")] + \
+             [f"gh.{k}" for k, v in github.items() if v.get("error")] + \
              (["tradfi"] if tradfi.get("error") else [])
     return {"ok": not errors, "refused": False, "errors": errors[:20], "macro": macro, "protocols": protocols,
+            "fundamentals": fundamentals, "github": {k: v for k, v in github.items() if v.get("error")},
             "volumes": volumes, "tradfi": tradfi,
             "reason": "全部写入" if not errors else f"{len(errors)} 项失败:{errors[:6]}"}
