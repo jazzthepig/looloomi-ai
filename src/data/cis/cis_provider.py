@@ -304,10 +304,10 @@ GITHUB_REPOS: Dict[str, str] = {
     "STRK": "starkware-libs/cairo",
     "UNI":  "Uniswap/v4-core",
     "AAVE": "aave/aave-v3-core",
-    "LDO":  "lidofinance/lido-dao",
-    "PENDLE":"pendle-finance/core-v2",
+    "LDO":  "lidofinance/core",            # 10-11:lido-dao 已改名(301)
+    "PENDLE":"pendle-finance/pendle-core-v2-public",   # 10-11:core-v2 已 404
     "LINK": "smartcontractkit/chainlink",
-    "INJ":  "InjectiveLabs/injective-core",
+    "INJ":  "InjectiveFoundation/injective-core",       # 10-11:迁到 InjectiveFoundation(原址 404)
     "TIA":  "celestiaorg/celestia-node",
 }
 

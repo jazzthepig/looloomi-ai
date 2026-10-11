@@ -784,7 +784,8 @@ async def get_github_participation(repo: str) -> list[int]:
     tok = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN") or ""
     if tok:
         headers["Authorization"] = f"Bearer {tok}"
-    r = await _get_misc_client().get(f"https://api.github.com/repos/{repo}/stats/participation", headers=headers, timeout=20)
+    r = await _get_misc_client().get(f"https://api.github.com/repos/{repo}/stats/participation", headers=headers,
+                                     timeout=20, follow_redirects=True)   # 仓库改名会 301(10-11 lido-dao)
     if r.status_code != 200:
         raise RuntimeError(f"GitHub participation {repo} HTTP {r.status_code}"
                            + (" (GitHub 还在计算,下一轮再取)" if r.status_code == 202 else ""))

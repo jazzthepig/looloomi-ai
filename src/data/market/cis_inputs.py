@@ -162,7 +162,13 @@ async def _fundamentals() -> dict[str, Any]:
             err = await _upsert(FUND_TABLE, rows, "symbol,period_end") if rows else "0 行"
             out[s] = {"rows": len(rows), "error": err}
         except Exception as e:                              # noqa: BLE001
-            out[s] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:100]}"}
+            msg = f"{type(e).__name__}: {str(e)[:100]}"
+            if "HTTP 403" in msg:
+                # 10-11 实测:我们的 EODHD 套餐不含基本面接口(实盘 T2 的 PE / 营收 / 市值同样拿不到)。
+                # 这是付费源的决定(Jazz:付费 API 待定),不是故障 —— 标出来,不记成错误。
+                out[s] = {"rows": 0, "error": None, "unavailable": "EODHD 套餐不含基本面(403)"}
+            else:
+                out[s] = {"rows": 0, "error": msg}
     return out
 
 
