@@ -55,6 +55,28 @@ $ grep -l '~/.config/cometcloud/.env' /Users/sbb/Library/LaunchAgents/*.sh
 
 ★ **本轮新发现**:`_launchd_run_w5_v3_recheck.sh` (line 21) 已 source canonical `cometcloud-local/.env` — round-2 的 doc 没列它(归类到「不 source env」是错的)。这意味着若 Jazz 改 3 个 wrapper + rm orphan,**5 个 launchd 工作流全部接 canonical**,可以一次性 rm 不会破坏任何生产路径。
 
+### 2.0.2 round-15 probe(2026-10-11,10:35 UTC,本轮 lane-c round-15)
+
+```bash
+$ cmp -s /Volumes/CometCloudAI/cometcloud-local/.env /Users/sbb/.config/cometcloud/.env && echo IDENTICAL || echo DIFFERS
+IDENTICAL
+
+$ stat -f "%N %z %Sm" /Volumes/CometCloudAI/cometcloud-local/.env
+/Volumes/CometCloudAI/cometcloud-local/.env 1607 Sep 28 23:59:16 2026
+
+# 本次轮换未发生(canonical mtime 自 round-5 起不动)
+# wrapper 状态未漂移:3 source orphan / 2 source canonical / 2 不 source
+```
+
+**Round-15 数字(与 round-14 锁定一致)**:
+- canonical:1607B / mtime 2026-09-28 23:59:16
+- orphan:byte-identical to canonical
+- 3 wrapper 仍 source orphan(cg_news_listener / macro_brief / ohlcv)
+- 2 wrapper 已 source canonical(cis_scheduler / w5_v3_recheck)
+- 13 plist + wrapper 文件含字符串 'cometcloud-local/.env'
+
+**Round-15 决策**:Round-15 与 round-14 同 — 无漂移。本卡 Lane 侧无可交付代码;5/5 acceptance 仅 §1 Mac canonical 唯一存在已通过,其余 4 条等 Jazz/Seth 外部决策(参见 §6 卡 status 表)。
+
 ### 2.0.1 round-7 probe(2026-10-10,11:18 UTC+09 JST,存档)
 
 ```bash
@@ -171,7 +193,15 @@ bash /tmp/rotate.sh
 
 ## 5. 本轮实际改动(代码侧)
 
-### 5.1 round-8 (2026-10-10,本轮)
+### 5.1 round-15 (2026-10-11,本轮)
+
+```text
+M docs/lane/T-036/env_unification.md          # §2.0.2 round-15 probe:与 round-14 同(7 元表无漂移)
+```
+
+代码侧 0 改动 — 与 round-14 相同的判断。卡 status 留 `in_review`,6 项外部决策仍等 Jazz/Seth。
+
+### 5.2 round-8 (2026-10-10,存档)
 
 ```text
 M docs/lane/T-036/env_unification.md          # §2.0 round-8 raw:数字同 round-7 + 新发现 w5_v3_recheck 已 source canonical
@@ -180,7 +210,7 @@ M docs/lane/T-036/env_unification.md          # §2.0 round-8 raw:数字同 roun
 
 代码侧 0 改动 — lint + verify 已 ship,round-7 没有进展,本轮主要是测了一遍 + 把 round-2 doc 的小错误修正(w5_v3_recheck 实际已 source canonical)。
 
-### 5.2 round-7 (2026-10-10,存档)
+### 5.3 round-7 (2026-10-10,存档)
 
 ```text
 M docs/lane/T-036/env_unification.md          # §2.0 round-7 raw:lint exit 6 + 3 wrappers (非 2)+ verify exit 5
@@ -189,7 +219,7 @@ M docs/lane/T-036/env_unification.md          # §2.0 round-7 raw:lint exit 6 + 
 
 代码侧 0 改动 — 上一轮(round-6)已经按 §Seth-1008o 改完。
 
-### 5.2 全卡历史代码 diff(round-1..6)
+### 5.4 全卡历史代码 diff(round-1..6)
 
 ```text
 M scripts/verify_rotation_alive.sh                       # §Seth-1008o:T1_TS="" + exit 5(NOT_MEASURED)
