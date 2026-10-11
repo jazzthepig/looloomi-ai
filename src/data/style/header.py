@@ -136,11 +136,32 @@ def compute_style_index(price: pd.DataFrame, mcap: pd.DataFrame,
 
 # ── I/O ─────────────────────────────────────────────────────────────────────
 
+def stable_order(params: dict) -> dict:
+    """纯函数。分页读必须有确定的顺序 —— 没给 order 时按 select 里的列全部升序排(S-532)。
+
+    10-09 → 10-11 CIS 重建四次全量,算出的行数 37,206 / 65,763 / 61,042 / 51,536 —— 输入一样。
+    原因:limit/offset 分页**没有 ORDER BY**,Postgres 不保证两页之间的顺序一致(并发的顺序扫描会从表中间
+    开始,`synchronize_seqscans`),于是有的行读了两遍、有的一遍没读到 —— 静默的,每次不一样。
+    select 是 `*` 或含函数 / 嵌入 / 别名时无法推断,原样返回(这类读都是单日的小查询)。"""
+    sel = str(params.get("select") or "*")
+    cols = [c.strip() for c in sel.split(",") if c.strip()]
+    if not cols or any(c == "*" or any(ch in c for ch in "():!*") for c in cols):
+        return params
+    have = str(params.get("order") or "")
+    used = {o.split(".")[0].strip() for o in have.split(",") if o.strip()}
+    # 给了 order 但不唯一(如只按 d)时,同一个 d 的行之间仍然没有顺序 —— 用其余选中的列补齐作并列裁决
+    extra = [f"{c}.asc" for c in cols if c not in used]
+    if not extra:
+        return params
+    return {**params, "order": ",".join(([have] if have else []) + extra)}
+
+
 async def _read_all(table: str, params: dict) -> list[dict]:
-    """分页读全表。读不到抛异常 —— 读不到 ≠ 0 行(S-180)。"""
+    """分页读全表。读不到抛异常 —— 读不到 ≠ 0 行(S-180)。没给 order 时补一个确定的顺序(S-532)。"""
     from src.data.vector.market_state_writer import _sb_get
     out: list[dict] = []
     offset = 0
+    params = stable_order(params)
     while True:
         rd = await _sb_get(table, {**params, "limit": "1000", "offset": str(offset)})
         if not rd.ok:

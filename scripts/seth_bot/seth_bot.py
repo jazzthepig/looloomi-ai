@@ -431,6 +431,12 @@ def ensure_lane_links() -> None:
                 link.symlink_to(ROOT / rel)
 
 
+def stash_is_main(msg: str) -> bool:
+    """纯函数。stash 的 reflog 消息是不是在 main 上做的(「WIP on main: …」/「On main: …」)。"""
+    m = (msg or "").strip()
+    return m.startswith("WIP on main:") or m.startswith("On main:")
+
+
 def main_dir_guard() -> bool:
     """主目录必须在 main;有人在主目录 stash 了,立刻留下恢复指令。返回 False = 本轮不执行任务。
 
@@ -449,10 +455,15 @@ def main_dir_guard() -> bool:
     seen = seen_f.read_text(encoding="utf-8").strip() if seen_f.exists() else ""
     if sha and sha != seen:
         _, msg = git("log", "-g", "-1", "--format=%gs", "refs/stash")
-        line = (f"⚠️ 主目录出现新的 stash {sha[:10]}「{msg.strip()[:120]}」—— 被收走的未提交改动在这里;"
-                f"恢复:git stash apply {sha[:10]}")
+        if stash_is_main(msg):
+            line = (f"⚠️ 主目录出现新的 stash {sha[:10]}「{msg.strip()[:120]}」—— 被收走的未提交改动在这里;"
+                    f"恢复:git stash apply {sha[:10]}")
+            notify("seth_bot", line)
+        else:
+            # refs/stash 是整个仓库共用的:lane 在自己的 worktree 里 stash 也会出现在这里(10-10 两次假警报)。
+            line = (f"ⓘ lane worktree 的 stash {sha[:10]}「{msg.strip()[:120]}」(不在 main 上,不是主目录被收走);"
+                    f"需要时:git stash apply {sha[:10]}")
         log(line)
-        notify("seth_bot", line)
     if sha != seen:
         seen_f.write_text(sha + "\n", encoding="utf-8")
     return ok

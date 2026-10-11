@@ -474,7 +474,7 @@ async def research_channels(level: str = Query("aggregate", pattern="^(aggregate
     这些都是**水平**;研究里取变化量与加速度。"""
     if not _SB_URL or not _SB_KEY:
         raise HTTPException(status_code=503, detail="supabase not configured")
-    params = {"d": f"gte.{start}", "order": "d.asc",
+    params = {"d": f"gte.{start}", "order": "d.asc,channel.asc,category_id.asc",   # 排序键唯一,分页不漂(S-532)
               "select": "d,channel,category_id,mcap,n_members,basis"}
     if level == "aggregate":
         params["or"] = "(category_id.eq.*,channel.eq.global)"

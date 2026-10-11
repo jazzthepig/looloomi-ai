@@ -158,3 +158,12 @@ def test_public_style_index_route_rejects_unknown_styles(monkeypatch):
     c = TestClient(app)
     assert c.get("/api/v1/style/index?style=nope").status_code == 400
     assert c.get("/api/v1/style/index?style=ai&weighting=weird").status_code == 422
+
+
+def test_stable_order_makes_paging_deterministic() -> None:
+    from src.data.style.header import stable_order
+    assert stable_order({"select": "coin_id,d,price"})["order"] == "coin_id.asc,d.asc,price.asc"
+    assert stable_order({"select": "symbol,d", "order": "d.desc"})["order"] == "d.desc,symbol.asc", "只按 d 排时用其余列做并列裁决"
+    assert stable_order({"select": "symbol,d", "order": "d.asc,symbol.asc"}) == {"select": "symbol,d", "order": "d.asc,symbol.asc"}
+    assert "order" not in stable_order({"select": "*", "d": "eq.2026-10-01"}), "select * 推不出列,原样"
+    assert "order" not in stable_order({"select": "a,count()"})

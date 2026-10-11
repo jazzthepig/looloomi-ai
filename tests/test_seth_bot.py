@@ -82,3 +82,12 @@ def test_blocking_files_are_parsed_from_git_message() -> None:
            "\tscripts/preflight.sh\n\tscripts/seth_bot/seth_bot.py\n"
            "Please commit your changes or stash them before you merge.\nAborting")
     assert blocking_files(msg) == ["scripts/preflight.sh", "scripts/seth_bot/seth_bot.py"]
+
+
+def test_stash_is_main_tells_lane_worktree_stashes_apart() -> None:
+    from scripts.seth_bot.seth_bot import stash_is_main
+    assert stash_is_main("WIP on main: 4baf02b docs(state): …")
+    assert stash_is_main("On main: something")
+    assert not stash_is_main("WIP on lane-b/T-059: 686ff9a docs(tasks): …"), "lane 在自己 worktree 的 stash 不是主目录事故"
+    assert not stash_is_main("On lane-c/T-036: pre-existing dirty state")
+
