@@ -35,7 +35,7 @@ import pandas as pd
 
 TABLE = "cis_rebuild_daily"
 WRITES_TABLES = (TABLE,)
-CODE_REF = "cis-standard-v1"
+CODE_REF = "cis-standard-v1.1"   # v1.1(10-11,S-533):正式档位口径 = 同组分位 ±10;v1 的行保留
 START = pd.Timestamp("2023-01-01")
 READ_FROM = "2019-12-01"
 BAND = 2.0
@@ -265,9 +265,10 @@ def score_day(d: pd.Timestamp, assets: Mapping[str, Mapping[str, Any]], data: Ma
     return rows
 
 
-#: 候选口径(S-531 ⑤,待 Jazz):同组当日分位 → 档位。由低到高:后 10% / 10–30% / 30–70% / 70–90% / 前 10%。
+#: 正式档位口径(Jazz 10-11 批准,S-533):同组当日分位 → 档位。由低到高:后 10% / 10–30% / 30–70% / 70–90% / 前 10%;
+#: 滞回带 ±10 个百分位(S-531 补 5:加密换档 1.68 次 / 30 天、3 天内变回 22%)。
 PCT_CUTS = (0.10, 0.30, 0.70, 0.90)
-PCT_BAND = 0.05
+PCT_BAND = 0.10
 
 
 def pct_level(p: float) -> int:
@@ -275,25 +276,28 @@ def pct_level(p: float) -> int:
     return sum(1 for c in PCT_CUTS if p >= c)
 
 
+def pct_step(cur: Optional[int], p: Optional[float], band: float = PCT_BAND) -> tuple[Optional[int], Optional[str]]:
+    """纯函数。滞回的一步:上一档 cur + 今天的分位 p → (今天的档, watch)。重建与每日正式发布共用这一步。"""
+    if p is None:
+        return cur, None
+    if cur is None:
+        return pct_level(p), None
+    up, down = pct_level(p - band), pct_level(p + band)
+    if up > cur:
+        cur = up
+    elif down < cur:
+        cur = down
+    raw = pct_level(p)
+    return cur, ("up" if raw > cur else "down" if raw < cur else None)
+
+
 def pct_hysteresis(ps: list[Optional[float]], band: float = PCT_BAND) -> list[tuple[Optional[int], Optional[str]]]:
     """纯函数。同 `hysteresis`,只是门槛在分位上(±band)。"""
     out: list[tuple[Optional[int], Optional[str]]] = []
     cur: Optional[int] = None
     for p in ps:
-        if p is None:
-            out.append((cur, None))
-            continue
-        if cur is None:
-            cur = pct_level(p)
-            out.append((cur, None))
-            continue
-        up, down = pct_level(p - band), pct_level(p + band)
-        if up > cur:
-            cur = up
-        elif down < cur:
-            cur = down
-        raw = pct_level(p)
-        out.append((cur, "up" if raw > cur else "down" if raw < cur else None))
+        cur, w = pct_step(cur, p, band)
+        out.append((cur, w))
     return out
 
 

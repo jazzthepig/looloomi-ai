@@ -160,6 +160,11 @@ export default function CISAssetDetail({ symbol, onBack, onNavigate }) {
   const rawScore= asset.raw_cis_score ?? score;
   const grade   = asset.grade || "—";
   const signal  = asset.signal || "NEUTRAL";
+  const daily   = asset.signal_basis === "daily_close";
+  const intra   = asset.intraday || null;
+  const basisNote = daily
+    ? `Daily close ${asset.official_date}` + (asset.watch ? ` · watch ${asset.watch === "up" ? "↑" : "↓"}` : "")
+    : "Intraday preview";
   const tier    = asset.data_tier ?? 2;
   const regime  = asset.macro_regime || "—";
   const conf    = asset.confidence ?? 0;
@@ -254,6 +259,7 @@ export default function CISAssetDetail({ symbol, onBack, onNavigate }) {
         <Stat
           label="Signal"
           value={signal.replace("_", " ")}
+          sub={basisNote}
           color={sig.color}
         />
         <Stat
@@ -399,6 +405,13 @@ export default function CISAssetDetail({ symbol, onBack, onNavigate }) {
               Describes where the asset sits, computed from past and current data — not a forecast.
               Not investment advice. CometCloud is not a licensed investment advisor.
             </div>
+            {daily && intra && (
+              <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t4, marginTop: 8 }}>
+                Published on the UTC close {asset.official_date}
+                {asset.group_percentile != null ? ` · P${Math.round(asset.group_percentile * 100)} in group` : ""}
+                {intra.cis_score != null ? ` · intraday preview ${fmt(intra.cis_score, 1)}` : ""}
+              </div>
+            )}
           </div>
         </div>
       </div>

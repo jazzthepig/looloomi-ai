@@ -39,7 +39,7 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | # | 段 | 唯一活实现 | 消费者 | 状态 |
 |---|---|---|---|---|
 | 1 | 测量·价格 | `ohlcv_daily`(基表)→ `ohlcv_daily_canonical`(去重+量纲归一) | 23 处读基表 · `outcome_tracker` 读视图 | 🟢 **S-361 已修**(视图曾停 39 天) |
-| 2 | 测量·CIS | `cis_scores` ← Mac T1 → `cis_push` → Redis → `cis_provider` | `/api/v1/cis/universe` | 🟢 |
+| 2 | 测量·CIS | **正式** = `cis_official_daily`(统一标准日终,每天一批、只追加,`official.py`;T-080 / S-533)叠加到响应上;**盘中预览** = `cis_scores` ← Mac T1 → `cis_push` → Redis → `cis_provider`(响应里的 `intraday` 块;`official=false` 取原样) | `/api/v1/cis/universe` · `/agent/cis` · MCP | 🟡 正式序列首日发布待验 |
 | 3 | 几何·资产 | `asset_embeddings`(27 维,72 行) | `match_asset_embeddings()` | 🟢 |
 | 4 | 几何·市场态 | `market_state_vectors.vec_full`(24 声明 / 15 实测,582 行) | `similar_market_states()` | 🟡 **S-361 写者已上日程**;剩余陈旧来自源(binance_hist 停 8 天) |
 | 4b | 状态·L1(v0.2) | `state_daily`(T-048:17 个面板特征,长表;时点由 `features_at` 先截到 ≤ d 结构保证)| 评估层 rr_matrix(T-045)→ L3 按状态分格 | 🟡 新上 |
@@ -552,6 +552,12 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
 12. **第 4b 段(L1 状态层)** — `state_daily` 10-06 上线(T-048,S-494)。🟡:资金费只有 HL 09-05 起、持仓量 09-27 起,
     之前为 None(不拼别的场所);regime 只有 2025-05-03 起。消费者 = 评估层 `rr_matrix_daily`(T-045,10-06 接上,S-496)。
     判活:`select max(d) from state_daily where feature = 'mom_20'` = 昨天。
+
+13. **第 2 段(测量·CIS)** — 10-11 起正式 CIS = 统一标准日终序列(Jazz 批准,T-080 / S-533,`docs/CIS_STANDARD.md` §8)。
+    `cis_official_daily` 每天 UTC 收盘后一批、只追加(触发器拒绝改删);`/api/v1/cis/universe`、`/agent/cis`、MCP 默认叠加正式值,
+    实时引擎值挪进 `intraday`。🟡 的原因:首日发布待验;以下仍读实时(前向记录从实时起步,换输入 = 换版本,另定):
+    `compute_current_band`、`/api/v1/cis/conviction` + `conviction_verdicts_daily`、纸面再平衡、`crowd_clock`、`grade-changes`。
+    判活:`select max(d) from cis_official_daily` = 昨天(UTC 06:00 后)。
 
 ---
 

@@ -52,6 +52,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_signal_attribution_loop":  {"max_age_h": 14, "kind": "marker"},   # S-529 每个信号的归因(6 小时一轮)
     "_cis_inputs_loop":          {"max_age_h": 30, "kind": "collector"},  # S-531 CIS 标准缺的维度(日更)
     "_cis_rebuild_loop":         {"max_age_h": 30, "kind": "marker"},   # S-531 CIS 按时点重建(12 小时一轮)
+    "_cis_official_loop":        {"max_age_h": 3, "kind": "marker"},    # S-533 正式 CIS 日终发布(每小时看一次)
     "_style_pit_loop":           {"max_age_h": 30, "kind": "marker"},   # T-067 时点风格指数(日更)
     "_portfolio_layer_loop":     {"max_age_h": 30, "kind": "marker"},   # T-070 组合层 0–1 敞口
     "_binance_hf_loop":          {"max_age_h": 30, "kind": "collector"},  # S-509 小时线 + 资金费率(日更)

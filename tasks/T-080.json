@@ -1,0 +1,30 @@
+{
+  "id": "T-080",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-11",
+  "verified": null,
+  "title": "正式 CIS = 统一标准日终序列:每天一批只追加(cis_official_daily),档位同组分位 ±10,等级按绝对分;实时引擎降为盘中预览(intraday)",
+  "source": "Jazz 10-11「好的 continue」—— 批准 CIS_STANDARD §8:正式 CIS 改为统一标准日终序列,档位按同组排名 ±10 个百分位缓冲,等级仍按绝对分,30 分钟引擎降为盘中预览",
+  "allowed_paths": [
+    "src/data/cis/",
+    "src/api/",
+    "src/mcp/",
+    "src/data/accounting/anchor.py",
+    "src/data/market/crowd_clock.py",
+    "scripts/",
+    "tests/",
+    "docs/",
+    "dashboard/",
+    "CIS_METHODOLOGY.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① select max(d) from cis_official_daily = 昨天(UTC 06:00 后),每天一批、不漏 ② update / delete 被触发器拒绝 ③ /api/v1/cis/universe 每个有正式行的名字 signal / grade / cis_score = 当日正式行,实时值只在 intraday;official.applied = true ④ cis_rebuild_daily code_ref = cis-standard-v1.1 全量重写 ⑤ 锚定日志含 cis_official_daily",
+    "expect": "对外档位与发布表逐一一致;Mac / Railway 引擎的值只出现在 intraday"
+  },
+  "prior_value": "对外 CIS = Mac T1(30 分钟)+ Railway T2 兜底,两个公式、含复原不了的维度;历史与实盘对不上;绝对门槛下传统资产 65% 的日子是 UNDERPERFORM、没有 OUTPERFORM",
+  "notes": "2026-10-11 开卡(S-533)。已写:rebuild v1.1(±10)、official.py 发布 + overlay、s533 迁移(已应用,只追加触发器)、_cis_official_loop、liveness、anchor、API 叠加(universe/top/asset/compare/agent/MCP)、方法论文档与页面。仍读实时(前向记录从实时起步,换输入 = 换版本):compute_current_band、conviction + conviction_verdicts_daily、纸面再平衡、crowd_clock、grade-changes。下一步:首日发布验收;归因改在标准序列上。"
+}

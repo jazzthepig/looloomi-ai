@@ -43,7 +43,7 @@ async def _log_signals_task(universe: list, regime: str, prices: dict):
                    if s and s not in prices]
         if missing:
             try:
-                full = await get_cis_universe(force_source=None)
+                full = await get_cis_universe(force_source=None, official=False)
                 for a in (full or {}).get("universe", []):
                     s = (a.get("symbol") or a.get("asset_id") or "").upper()
                     if s in missing:
@@ -537,9 +537,31 @@ def _universe_stale(max_age_s: float = _UNIVERSE_STALE_MAX_S) -> dict | None:
 
 
 @router.get("/api/v1/cis/universe")
-async def get_cis_universe(force_source: str = None, response: Response = None):
+async def get_cis_universe(force_source: str = None, response: Response = None, official: bool = True):
     """
-    CIS v4.0 Universe — priority: local_engine (Redis) → Railway calc → stale
+    CIS Universe. Official values (T-080, Jazz 10-11) = the unified-standard daily-close series
+    (`cis_official_daily`): score, grade, signal and pillars come from the latest UTC-close
+    publication; the live engine's values move into each asset's `intraday` block (preview).
+    `official=false` returns the live engine payload unchanged — writers that RECORD the intraday
+    series (cis_scores snapshot) and forward books whose record started on live inputs use it.
+    """
+    data = await _get_cis_universe_live(force_source, response)
+    if not official:
+        return data
+    from src.data.cis.official import apply_official
+    try:
+        return await apply_official(data)
+    except Exception:
+        _logger.exception("[CIS] official overlay raised — serving live payload, flagged")
+        if isinstance(data, dict) and data.get("universe"):
+            return {**data, "official": {"applied": False, "basis": "intraday",
+                                         "reason": "official series unavailable"}}
+        return data
+
+
+async def _get_cis_universe_live(force_source: str = None, response: Response = None):
+    """
+    CIS v4.0 live Universe — priority: local_engine (Redis) → Railway calc → stale
     Redis → last-known-good. Single-flight + 30s response cache so the homepage's
     concurrent multi-component fetch burst computes once instead of N times.
     """
@@ -1376,6 +1398,7 @@ async def get_cis_top(limit: int = 10, response: Response = None):
         "total":        len(universe),
         "limit":        limit,
         "top":          sanitize_floats(top),
+        "official":     full.get("official"),
     }
 
 
@@ -1909,6 +1932,17 @@ async def agent_cis_endpoint(
             ts = datetime.now().isoformat()
             regime = "Unknown"
 
+    # T-080: official = the daily-close series; live values stay available under `intraday`.
+    official_meta = None
+    try:
+        from src.data.cis.official import apply_official
+        ov = await apply_official({"universe": universe, "macro_regime": regime})
+        universe = ov.get("universe", universe)
+        regime = ov.get("macro_regime") or regime
+        official_meta = ov.get("official")
+    except Exception:
+        _logger.exception("[AGENT] official overlay raised — serving live values")
+
     # Filtering
     _GRADE_ORDER = {"A+": 8, "A": 7, "B+": 6, "B": 5, "C+": 4, "C": 3, "D": 2, "F": 1}
     min_grade_rank = _GRADE_ORDER.get(min_grade, 0)
@@ -1931,6 +1965,8 @@ async def agent_cis_endpoint(
         "v":      "4.1",
         "ts":     ts,
         "regime": regime,
+        "official": ({k: official_meta.get(k) for k in ("applied", "basis", "d", "method", "reason") if k in official_meta}
+                     if isinstance(official_meta, dict) else None),
         "total":  total,
         "offset": offset,
         "limit":  limit,
@@ -1940,6 +1976,7 @@ async def agent_cis_endpoint(
                 "g":    a.get("grade", "?"),
                 "sc":   a.get("cis_score", a.get("score", 0)),
                 "sg":   a.get("signal", "?"),
+                "bs":   a.get("signal_basis"),
                 "cls":  a.get("asset_class", ""),
                 "tier": a.get("data_tier", 2),
                 "f":    _p(a, "f"),
@@ -3668,7 +3705,8 @@ async def get_grade_changes(hours: int = 24, response: Response = None):
 # the push, so every asset has a guaranteed daily row. source='railway_snapshot'.
 async def snapshot_full_universe_to_supabase() -> dict:
     try:
-        data = await get_cis_universe(force_source=None)
+        # official=False: this job RECORDS the live (intraday) series into cis_scores.
+        data = await get_cis_universe(force_source=None, official=False)
     except Exception as e:
         _logger.warning(f"[SNAPSHOT] universe build failed: {e}")
         return {"ok": False, "error": str(e), "rows": 0}

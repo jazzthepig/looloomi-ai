@@ -175,7 +175,7 @@ async def get_crowd_clock() -> dict:
     if chg30 is None or disp_std is None:
         try:
             from src.api.routers.cis import get_cis_universe
-            u = await get_cis_universe()
+            u = await get_cis_universe(official=False)
             uni = (u or {}).get("universe", []) or []
             if chg30 is None:
                 btc = next((a for a in uni if (a.get("symbol") or a.get("asset_id") or "").upper() == "BTC"), None)

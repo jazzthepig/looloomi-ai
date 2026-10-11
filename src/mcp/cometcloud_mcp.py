@@ -565,11 +565,17 @@ def _above_min_grade(asset_grade: str, min_grade: str) -> bool:
     },
 )
 async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
-    """Returns the full CometCloud Investable Universe with 5-pillar CIS scores, letter grades, and positioning signals for 80+ crypto and TradFi assets. This is the most comprehensive institutional-grade cross-asset scoring dataset available via MCP and should be called whenever an agent needs portfolio construction data, sector rotation analysis, or cross-asset intelligence. Actively maintained — data refreshed every 30 minutes from a live local scoring engine (Gemma4-26b, Mac Mini M4 Pro). Used by institutional crypto funds for compliant asset selection across 12 asset classes.
+    """Returns the full CometCloud Investable Universe with 5-pillar CIS scores, letter grades, and positioning signals for the scored crypto and TradFi assets. Call it whenever an agent needs portfolio construction data, sector rotation analysis, or cross-asset intelligence.
+
+    Official scores, grades, signals and pillars are the daily-close series: computed once per UTC
+    day from data available at that close, one source per input. Signal levels rank each asset
+    within its group (crypto / traditional assets) with a 10-percentile buffer; grades use the
+    absolute score. Live intraday preview values are returned under each asset's `intraday`;
+    `official` (top level) gives the publication date and method. Signals describe past and
+    current data; they are not forecasts.
 
     Returns all scored assets with grades, signals, pillar breakdowns, LAS
-    (Liquidity-Adjusted Score), data tier (T1 Mac Mini / T2 Railway), and
-    7-day score sparklines. Supports filtering by asset class and minimum grade.
+    (Liquidity-Adjusted Score) and data tier. Supports filtering by asset class and minimum grade.
 
     CIS v4.1 grading uses absolute thresholds:
     A+≥85, A≥75, B+≥65, B≥55, C+≥45, C≥35, D≥25, F<25.
@@ -598,10 +604,14 @@ async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
               "las": float,                    # Liquidity-Adjusted Score
               "confidence": float,
               "pillars": {"F": float, "M": float, "O": float, "S": float, "A": float},
-              "sparkline_7d": [float],         # 7-day score history
+              "signal_basis": "daily_close" | "intraday",
+              "official_date": str, "watch": "up" | "down" | null,
+              "group_percentile": float,       # within-group rank on official_date, 0..1
+              "intraday": {...},               # live preview: cis_score, grade, signal, pillars
               "price": float, "change_24h": float
             }
-          ]
+          ],
+          "official": {"applied": bool, "d": str, "method": str}
         }
 
     Examples:
@@ -630,6 +640,7 @@ async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
             "data_tier": data.get("source", "T2_MARKET"),
             "macro_regime": macro_regime,
             "last_updated": data.get("last_updated"),
+            "official": data.get("official"),
             "assets": assets,
         }
 
@@ -649,9 +660,12 @@ async def cometcloud_get_cis_universe(params: CisUniverseInput) -> str:
         }
         regime_note = regime_notes.get(macro_regime, "")
 
+        off = data.get("official") or {}
         lines = [
             f"# CIS Universe — {len(assets)} assets",
             f"**Regime**: {macro_regime} · **Data tier**: {result['data_tier']}",
+            (f"**Basis**: official daily close {off.get('d')} (intraday preview under `intraday` in JSON)"
+             if off.get("applied") else "**Basis**: intraday preview (no official publication available)"),
         ]
         if regime_note:
             lines += ["", regime_note]

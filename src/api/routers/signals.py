@@ -1337,7 +1337,9 @@ async def compute_current_band() -> dict:
     live read endpoint AND the daily snapshot logger so both are identical."""
     from src.api.routers.cis import get_cis_universe
     from src.api.store import supabase_get_latest_edge_map
-    data = await get_cis_universe()
+    # official=False (T-080): the band series and its daily snapshot started on live inputs;
+    # switching their input is a version boundary, not a silent change.
+    data = await get_cis_universe(official=False)
     universe = (data or {}).get("universe", []) or []
     regime = (data or {}).get("macro_regime")
     btc = next((a for a in universe if (a.get("symbol") or a.get("asset_id") or "").upper() == "BTC"), {})
@@ -1428,7 +1430,8 @@ async def get_conviction(response: Response = None):
     from src.api.routers.cis import get_cis_universe
     from src.data.cis.conviction import rank_universe
     cur = await compute_current_band()
-    data = await get_cis_universe()
+    # official=False (T-080): must stay identical to the persisted conviction_verdicts_daily row.
+    data = await get_cis_universe(official=False)
     universe = (data or {}).get("universe", []) or []
     rows = rank_universe(universe, cur.get("tiers_now") or {}, cur.get("current_band"))
     return {

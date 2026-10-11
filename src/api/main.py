@@ -1515,10 +1515,41 @@ async def _start_cis_inputs_loop():
     print("[CIS-INPUTS] ✅ CIS input dimensions scheduled (macro_daily / protocol_tvl_daily / volume / tradfi adjusted)")
 
 
+async def _cis_official_loop():
+    """S-533 / T-080:正式 CIS —— 统一标准的日终序列,每天 UTC 收盘后发布前一天,只追加 → cis_official_daily。
+    每小时看一次:已发布就跳过;数据不齐时等到 UTC 06:00。判活:`select max(d) from cis_official_daily` = 昨天。
+    """
+    await _asyncio.sleep(_boot_delay(600))
+    while True:
+        try:
+            from src.data.cis.official import run_once as _co_run
+            r = await _co_run()
+            print(f"[CIS-OFFICIAL] {str(r.get('reason'))[:160]}")
+            _detail = {k: r.get(k) for k in ("written", "d", "signals", "incomplete")}
+            await _beat("_cis_official_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_cis_official_loop", "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._cis_official_loop")
+        except Exception as _e:
+            print(f"[CIS-OFFICIAL] ⚠️  pass FAILED: {_e}")
+            await _beat("_cis_official_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_cis_official_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._cis_official_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_cis_official_loop():
+    _asyncio.create_task(_cis_official_loop())
+    print("[CIS-OFFICIAL] ✅ official daily CIS scheduled (cis_official_daily, append-only)")
+
+
 async def _cis_rebuild_loop():
     """S-531 / T-079:CIS 按时点重建(统一标准 v1)→ cis_rebuild_daily。与实盘 T2 同一个函数,只喂 d 收盘时已知的输入;
     滞回标签另列。每天一轮(UTC 01:00 后数据齐);输入补齐前算的行在下一轮整条重算。
-    判活:`select max(d) from cis_rebuild_daily where code_ref = 'cis-standard-v1'` = 昨天。
+    判活:`select max(d) from cis_rebuild_daily where code_ref = 'cis-standard-v1.1'` = 昨天。
     """
     await _asyncio.sleep(_boot_delay(1500))
     await _asyncio.sleep(600)   # 再等 10 分钟:让同一次部署里的 _cis_inputs_loop(补维度)先跑完,首轮就用补齐的输入
@@ -1545,7 +1576,7 @@ async def _cis_rebuild_loop():
 @app.on_event("startup")
 async def _start_cis_rebuild_loop():
     _asyncio.create_task(_cis_rebuild_loop())
-    print("[CIS-REBUILD] ✅ CIS point-in-time rebuild scheduled (cis_rebuild_daily, standard v1)")
+    print("[CIS-REBUILD] ✅ CIS point-in-time rebuild scheduled (cis_rebuild_daily, standard v1.1)")
 
 
 async def _signal_attribution_loop():
@@ -3142,7 +3173,7 @@ async def _daily_snapshot_loop():
             from src.data.cis.conviction import rank_universe
             from src.data.cis.cause_persistence import persist_conviction_verdicts
             _cur = await compute_current_band()
-            _u = (await get_cis_universe() or {}).get("universe", []) or []
+            _u = (await get_cis_universe(official=False) or {}).get("universe", []) or []
             _rows = rank_universe(_u, _cur.get("tiers_now") or {}, _cur.get("current_band"))
             _cn = await persist_conviction_verdicts(
                 _rows, band=_cur.get("current_band") or "?",

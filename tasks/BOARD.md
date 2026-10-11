@@ -17,6 +17,7 @@
 | in_review | T-079 | seth | CIS 统一标准 v1 + 按时点重建:一个公式、一套时点、一个来源优先级;缺的维度补齐;标签滞回 | 重建与实盘 T2 同函数同输入时差 ≈ 0;差异全部能指到某个输入 | CIS 历史 = 代理重建(77%)+ T2 + T1 + Railway 快照拼接;恐惧贪婪 / VIX / 全市场市值 / 协议 TVL / 全市场成交额没有历史;传统资产原始收盘(跨拆股假跌) |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
+| claimed | T-080 | seth | 正式 CIS = 统一标准日终序列:每天一批只追加(cis_official_daily),档位同组分位 ±10,等级按绝对分;实时引擎降为盘中预览(intraday) | 对外档位与发布表逐一一致;Mac / Railway 引擎的值只出现在 intraday | 对外 CIS = Mac T1(30 分钟)+ Railway T2 兜底,两个公式、含复原不了的维度;历史与实盘对不上;绝对门槛下传统资产 65% 的日子是 UNDERPERFORM、没有 OUTPERFORM |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-059 | lane-b | 评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张) | 测试先在现在的代码上红:n=23 的序列 CI = [NaN, NaN] 且 point 均值用满 23 天(旧代码:CI 宽度 0、只用前 20 天);n=10 的 p_pos = NaN 而不是只取 0 / 1;n=80 零信号 iid 序列 CI 宽度 > 0 且含真均值;改完转绿 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
 | open | T-068 | lane-b | 评估层 ②:状态轴换成有历史的价格特征(T-059 之后) | 测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子 | 见 T-059 原卡(10-07) |  |
@@ -82,4 +83,4 @@
 | done | T-077 | seth | CIS 当特征放进组合:cis_ew / cis_follow / cis_contra 三臂前向对照(S-527 的方向,S-528 预注册) | 第一行真实数据 + 回放数字;前向判据写死 | CIS 只被当成正向标签用;没有一本书把「OUT 之后回撤、UNDER 之后相对反弹」当特征 | feature_arms_daily: 3 arms x 516 rows (2025-05-12 -> 2026-10-09), replay total return cis_contra -28.0% / cis_ew -41.7% / cis_follow -81.1% (inception 2026-10-11); feature_arms_daily is a source in forward_anchor_daily 2026-10-08 payload. Forward criteria (10-12 on) not yet measurable. @ 2026-10-10T04:11:16Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 14 · claimed 2 · blocked 3 · in_review 13 · done 46 · dropped 1
+open 14 · claimed 3 · blocked 3 · in_review 13 · done 46 · dropped 1

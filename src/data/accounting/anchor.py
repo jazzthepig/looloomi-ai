@@ -47,6 +47,7 @@ SOURCES: tuple[tuple[str, dict, str], ...] = (
     ("core_variants_daily", {}, "arm"),
     ("meta_allocator_daily", {}, "arm"),
     ("feature_arms_daily", {}, "arm"),
+    ("cis_official_daily", {}, "symbol"),
     ("allocation_daily", {}, "book"),
     ("allocation_nav_daily", {}, "d"),
     ("exploration_ideas", {}, "id"),

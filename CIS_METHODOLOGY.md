@@ -372,13 +372,27 @@ Confidence = sum of available weights.
 
 ## 8. Signal Definitions
 
-| Signal | Trigger | What it describes |
+**Official series (Jazz, 2026-10-11; T-080).** The published CIS is computed once per day on the UTC daily
+close, using only data available at that close and one source per input (`docs/CIS_STANDARD.md`). History
+(point-in-time reconstruction) and live publication are the same function on the same timing, so the record
+shown next to a signal is the record of this series. Each day's batch is append-only once published. The
+live engine (every ~30 minutes) is an intraday preview, returned under `intraday`; it does not change the
+published signal.
+
+| Signal | Trigger (within-group rank on the UTC close) | What it describes |
 |---|---|---|
-| STRONG OUTPERFORM | Grade A+ | Top of the scored universe on current and past data |
-| OUTPERFORM | Grade A or B+ | Above the scored universe |
-| NEUTRAL | Grade B or C+ | Around the middle of the scored universe |
-| UNDERPERFORM | Grade C | Below the scored universe |
-| UNDERWEIGHT | Grade D or F | Bottom of the scored universe, or insufficient data |
+| STRONG OUTPERFORM | Top 10% of its group | Top of its group on current and past data |
+| OUTPERFORM | 70th–90th percentile | Above its group |
+| NEUTRAL | 30th–70th percentile | Around the middle of its group |
+| UNDERPERFORM | 10th–30th percentile | Below its group |
+| UNDERWEIGHT | Bottom 10% | Bottom of its group |
+
+Groups are crypto and traditional assets, ranked separately on the regime-adjusted score. A level changes
+only when the rank moves 10 percentiles past the cut (hysteresis); inside that buffer the asset keeps its
+level and carries `watch: up/down`. Grades (§5) stay on the absolute score — a grade says how strong the
+score is, the signal says where the asset sits within its group. The grade→signal mapping in §5 is the
+intraday preview's rule and is retired for the official series: on consistent data the absolute cuts
+degenerated (no traditional asset reached OUTPERFORM; no crypto reached STRONG OUTPERFORM, S-531).
 
 **Signals are descriptions, not forecasts (Jazz, 2026-10-09).** Every pillar is computed from past and
 current data, so a signal says where an asset sits now, not what it will do next. Each signal is published
@@ -388,9 +402,8 @@ and for crypto the BTC beta component). Those outcomes have at times run opposit
 2025-05 → 2026-10, names newly labelled OUTPERFORM trailed the equal-weight crypto universe. How a portfolio
 uses a signal is a separate layer with its own evidence.
 
-**Signal stability rule:** Signal changes require 2 consecutive scoring cycles
-at the new level before the signal updates. This prevents noise-driven flipping
-for trading agents. Raw score changes are always visible; the signal is debounced.
+**Signal stability rule:** the official signal changes at most once per day (UTC close) and only past the
+10-percentile buffer above. Intraday score changes are visible under `intraday`; they do not move the signal.
 
 ---
 

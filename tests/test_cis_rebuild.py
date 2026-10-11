@@ -82,7 +82,8 @@ def test_score_day_records_non_reconstructable_and_uses_live_function() -> None:
     assert "vix" in [r for r in rows if r["symbol"] == "SPY"][0]["missing"]
     out = build(assets, data, idx[455], start=idx[440])
     assert {r["signal"] for r in out} <= set(LEVELS) and all("watch" in r for r in out)
-    assert all(r["code_ref"] == "cis-standard-v1" for r in out)
+    from src.data.cis.rebuild import CODE_REF
+    assert all(r["code_ref"] == CODE_REF for r in out)
 
 
 def test_pct_signal_candidate_ranks_within_group_with_band() -> None:
@@ -93,8 +94,10 @@ def test_pct_signal_candidate_ranks_within_group_with_band() -> None:
     group_pct(rows)
     assert rows[0]["pct"] == 0.05 and rows[9]["pct"] == 0.95, "加密 10 个名字内排"
     assert rows[10]["pct"] is None, "传统资产当天不足 5 个名字不排"
-    lv = pct_hysteresis([0.68, 0.72, 0.74, 0.76, 0.66, 0.64])
+    lv = pct_hysteresis([0.68, 0.72, 0.74, 0.76, 0.66, 0.64], band=0.05)
     assert [x for x, _ in lv] == [2, 2, 2, 3, 3, 2]
+    lv10 = pct_hysteresis([0.68, 0.76, 0.79, 0.81, 0.62, 0.59])
+    assert [x for x, _ in lv10] == [2, 2, 2, 3, 3, 2], "正式口径 ±10:越过 0.70 要到 0.80,跌回要到 0.60"
 
 
 def test_pit_fundamentals_only_quarters_already_published() -> None:

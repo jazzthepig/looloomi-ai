@@ -1206,7 +1206,8 @@ async def _run_paper_rebalance(dry_run: bool = True) -> dict:
     from src.data.market.risk_meter import (
         build_risk_meter, plan_rebalance, _SHORT_OK, _norm_regime, REGIME_FACTOR)
     from src.api.routers.cis import get_cis_universe
-    data = await get_cis_universe()
+    # official=False (T-080): this paper book's record started on live inputs; switching is a version boundary.
+    data = await get_cis_universe(official=False)
     universe = (data or {}).get("universe", []) or []
     regime = (data or {}).get("macro_regime") or "Neutral"
     shorts_ok = _norm_regime(regime) in _SHORT_OK

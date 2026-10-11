@@ -25,6 +25,9 @@ const C = {
   t4:       "rgba(199,210,254,0.20)",
 };
 
+// Mirror of src/api/contracts/disclosure.py::OFFICIAL_BASIS — tests/test_cis_official.py keeps them identical.
+const OFFICIAL_BASIS = "Official CIS is computed once per day on the UTC daily close, using only data that was available at that close, with one source per input. Signal levels rank each asset within its group (crypto or traditional assets) on that day, with a 10-percentile buffer before a level changes; grades use the absolute score. Intraday values are a preview and do not change the published signal.";
+
 const mono  = FONTS.mono;
 const brand = FONTS.brand;
 const body  = FONTS.body;
@@ -500,32 +503,50 @@ export default function MethodologyPage() {
           {/* §5 Grading */}
           <Section id="grading">
             <SectionTitle num="5" title="Grading — Absolute Thresholds"
-              sub="Both engines use identical thresholds. Percentile rank is metadata only and does not override grades." />
+              sub="Grades use the absolute score. Signals are set separately, by rank within each group on the daily close." />
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 12 }}>
               {[
-                ["A+", "≥ 85", C.green,  "STRONG OUTPERFORM"],
-                ["A",  "≥ 75", C.green,  "OUTPERFORM"],
-                ["B+", "≥ 65", C.cyan,   "OUTPERFORM"],
-                ["B",  "≥ 55", C.cyan,   "NEUTRAL"],
-                ["C+", "≥ 45", C.gold,   "NEUTRAL"],
-                ["C",  "≥ 35", C.gold,   "UNDERPERFORM"],
-                ["D",  "≥ 25", C.red,    "UNDERWEIGHT"],
-                ["F",  "< 25", C.red,    "UNDERWEIGHT"],
-              ].map(([grade, range, color, signal]) => (
+                ["A+", "≥ 85", C.green],
+                ["A",  "≥ 75", C.green],
+                ["B+", "≥ 65", C.cyan],
+                ["B",  "≥ 55", C.cyan],
+                ["C+", "≥ 45", C.gold],
+                ["C",  "≥ 35", C.gold],
+                ["D",  "≥ 25", C.red],
+                ["F",  "< 25", C.red],
+              ].map(([grade, range, color]) => (
                 <div key={grade} style={{
                   background: `${color}0e`, border: `1px solid ${color}30`,
                   borderRadius: 8, padding: "14px 12px", textAlign: "center",
                 }}>
                   <div style={{ fontFamily: mono, fontSize: 22, fontWeight: 700, color, lineHeight: 1 }}>{grade}</div>
-                  <div style={{ fontFamily: mono, fontSize: 10, color: C.t3, margin: "4px 0 8px" }}>{range}</div>
-                  <div style={{ fontFamily: disp, fontSize: 8, fontWeight: 700, color, letterSpacing: "0.08em",
-                    background: `${color}20`, padding: "2px 6px", borderRadius: 3 }}>
-                    {signal}
-                  </div>
+                  <div style={{ fontFamily: mono, fontSize: 10, color: C.t3, marginTop: 4 }}>{range}</div>
                 </div>
               ))}
             </div>
+
+            <Card style={{ marginTop: 20 }}>
+              <div style={{ fontFamily: disp, fontSize: 11, color: C.t3, fontWeight: 700,
+                letterSpacing: "0.1em", marginBottom: 10 }}>OFFICIAL SIGNAL — DAILY CLOSE</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
+                {[
+                  ["STRONG OUTPERFORM", "Top 10%",      C.green],
+                  ["OUTPERFORM",        "70th – 90th",  C.cyan],
+                  ["NEUTRAL",           "30th – 70th",  C.t3],
+                  ["UNDERPERFORM",      "10th – 30th",  C.gold],
+                  ["UNDERWEIGHT",       "Bottom 10%",   C.red],
+                ].map(([signal, band, color]) => (
+                  <div key={signal} style={{ border: `1px solid ${color}30`, borderRadius: 6, padding: "10px 10px" }}>
+                    <div style={{ fontFamily: disp, fontSize: 8, fontWeight: 700, color, letterSpacing: "0.08em" }}>{signal}</div>
+                    <div style={{ fontFamily: mono, fontSize: 10, color: C.t3, marginTop: 4 }}>{band} of its group</div>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontFamily: body, fontSize: 13, color: C.t3, lineHeight: 1.7, margin: 0 }}>
+                {OFFICIAL_BASIS}
+              </p>
+            </Card>
 
             <Card style={{ marginTop: 20 }}>
               <div style={{ fontFamily: disp, fontSize: 11, color: C.t3, fontWeight: 700,

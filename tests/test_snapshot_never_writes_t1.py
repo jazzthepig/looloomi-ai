@@ -11,7 +11,9 @@ from src.api.routers import cis
 def _run(monkeypatch, universe, fresh_t1=frozenset()):
     written = {}
 
-    async def fake_universe(force_source=None):
+    async def fake_universe(force_source=None, official=True):
+        # T-080:快照记的是实时(盘中)序列,必须显式要 official=False —— 否则会把正式日终值写进 cis_scores
+        assert official is False, "snapshot must record the live series (official=False)"
         return {"universe": universe, "macro_regime": "TIGHTENING"}
 
     async def fake_fresh(max_age_minutes=1440):
