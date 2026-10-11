@@ -1598,11 +1598,13 @@ async def _signal_attribution_loop():
                 reason=str(r.get("reason"))[:400] if r.get("reason") else None,
                 detail=_detail, writer="src.api.main._signal_attribution_loop")
         except Exception as _e:
+            r = {"refused": True}
             print(f"[SIGNAL-ATTR] ⚠️  pass FAILED: {_e}")
             await _beat("_signal_attribution_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_signal_attribution_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._signal_attribution_loop")
-        await _asyncio.sleep(6 * 3600)
+        # 某条序列拒绝了(多半是重建正在全量重写)→ 1 小时后再试,不等 6 小时
+        await _asyncio.sleep(3600 if r.get("refused") else 6 * 3600)
 
 
 @app.on_event("startup")
