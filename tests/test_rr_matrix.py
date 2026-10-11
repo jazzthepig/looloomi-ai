@@ -1,4 +1,4 @@
-"""T-045 评估层 rr_matrix:B 的 13 个用例逐个断言(原来返回 (ok, msg),pytest 不会因 False 失败)+ S-496 的三处修正 + T-059 加 2 个零信号 bootstrap 用例。"""
+"""T-045 评估层 rr_matrix:B 的 13 个用例逐个断言(原来返回 (ok, msg),pytest 不会因 False 失败)+ S-496 的三处修正 + T-059 加 3 个零信号 bootstrap 用例(14/15/16 = §Seth-1010c 合并前必补)。"""
 import json
 import os
 import subprocess

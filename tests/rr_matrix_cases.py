@@ -566,6 +566,38 @@ def test_rr_matrix_p_pos_not_binary_n_lt_40() -> tuple[bool, str]:
 
 
 # ============================================================
+# Test 16 (T-059 + §Seth-1010c 合并前必补): n=80 零信号 iid
+# ============================================================
+
+def test_rr_matrix_bootstrap_n80_iid_contains_true_mean() -> tuple[bool, str]:
+    """Per T-059 acceptance.expect 第三项 + §Seth-1010c 合并前必补:
+    n=80 零信号 iid 序列的 CI 宽度 > 0 且包含真均值(0)。
+    1000 个 iid 重复(独立样本,非 bootstrap 复用)作 oracle,真均值 ≈ 0
+    必定落在 1000 次 bootstrap CI 的中位数 lo/hi 内。
+    """
+    rng = np.random.default_rng(2028)
+    arr = rng.normal(0.0, 0.02, 80)   # 零信号
+    series = pd.Series(arr)
+    true_mean = float(arr.mean())   # ≈ 0 但有采样噪声;oracle 用 1000 个独立 iid 重复
+    oracle_means = np.array([np.random.default_rng(2028 + j).normal(0.0, 0.02, 80).mean()
+                             for j in range(1000)])
+    em, lo, hi = _block_bootstrap_ci(series, block_size=20, n_bootstrap=1000, seed=42)
+    width = float(hi - lo)
+    oracle_lo = float(np.quantile(oracle_means, 0.025))
+    oracle_hi = float(np.quantile(oracle_means, 0.975))
+    contains = (oracle_lo <= true_mean <= oracle_hi)
+    width_positive = width > 0 and math.isfinite(width)
+    em_in_oracle = (oracle_lo <= em <= oracle_hi)
+    if width_positive and contains and em_in_oracle:
+        return True, (f"✅ n=80 iid: em={em:.6f}, CI=[{lo:.6f}, {hi:.6f}] width={width:.6f} > 0, "
+                      f"真均值 {true_mean:.6f} ⊂ oracle [{oracle_lo:.6f}, {oracle_hi:.6f}] — "
+                      f"T-059 + §Seth-1010c")
+    return False, (f"❌ n=80 iid: em={em:.6f}, CI=[{lo}, {hi}] width={width} — "
+                   f"oracle [{oracle_lo:.6f}, {oracle_hi:.6f}], true_mean={true_mean:.6f}, "
+                   f"width_positive={width_positive}, contains={contains}, em_in_oracle={em_in_oracle}")
+
+
+# ============================================================
 # main
 # ============================================================
 
