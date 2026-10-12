@@ -961,7 +961,7 @@ export default function StrategyPage() {
                 rpd: "1,000 req/day",
                 color: T.t2,
                 border: T.border,
-                features: ["CIS universe — 84 assets", "Grade + signal per asset", "Macro regime", "5-pillar breakdown"],
+                features: ["Full CIS universe (crypto + traditional assets)", "Official grade + signal per asset (daily)", "Macro regime", "5-pillar breakdown"],
                 cta: "Get API key",
               },
               {
@@ -1070,7 +1070,7 @@ curl -X POST https://looloomi.ai/api/v1/keys/create \\
   -H "Content-Type: application/json" \\
   -d '{"email":"you@fund.com","name":"Your Fund"}'
 
-# Fetch live CIS universe — 84 assets, grades, signals, 5-pillar scores
+# Fetch the CIS universe — official daily grades, signals, 5-pillar scores
 curl https://looloomi.ai/api/v1/cis/universe \\
   -H "X-API-Key: cc_live_YOUR_KEY"
 

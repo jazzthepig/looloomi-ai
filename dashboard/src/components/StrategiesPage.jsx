@@ -543,7 +543,7 @@ const STRATEGIES = [
       { label: "Max Drawdown",    value: "< 15%",         color: "#f59e0b" },
       { label: "Signal Cadence",  value: "Daily (UTC close)", color: T.cyan },
       { label: "Min Allocation",  value: "$1K USDC",      color: T.t2 },
-      { label: "Universe",        value: "84 assets",     color: T.t2 },
+      { label: "Universe",        value: "Full CIS universe", color: T.t2 },
     ],
     allocation: [
       { label: "STRONG OUTPERFORM (top-3)",  pct: 45, color: T.green },

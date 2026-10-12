@@ -386,7 +386,7 @@ export function CISLeaderboardTable({ data, filter, setFilter, defaultLimit = 0 
                               </div>
                             )}
                             <div style={{ fontSize: 12, color: T.secondary, lineHeight: 1.8 }}>
-                              <div>Cross-Asset Percentile: <strong style={{ color: T.primary }}>{asset.percentile != null ? `Top ${100 - asset.percentile}%` : "—"}</strong></div>
+                              <div>Rank in group: <strong style={{ color: T.primary }}>{asset.percentile != null ? `Top ${100 - asset.percentile}%` : "—"}</strong></div>
                               <div>CIS Grade: <strong style={{ color: GRADE_COLORS[asset.grade] }}>{asset.grade}</strong> ({asset.cis_score != null ? asset.cis_score.toFixed(1) : "—"}/100)</div>
                               <div>CIS Rating: <strong style={{ color: SIGNAL_STYLES[asset.signal]?.color }}>{SIGNAL_STYLES[asset.signal]?.label ?? "—"}</strong></div>
                             </div>
@@ -716,7 +716,8 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
   // Recalculate scores when custom weights change
   const processedData = useMemo(() => {
     if (!data) return null;
-    const weights = customWeights || defaultWeights;
+    if (!customWeights) return data;          // S-542: the official CIS, as published — no client-side recompute
+    const weights = customWeights;
 
     const recalculated = data.universe.map(asset => {
       // S-397 P1 (C3): the previous `?? 0` for missing pillars dragged the
@@ -747,13 +748,8 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
       else if (newScore >= 25) newGrade = "D";
       else newGrade = "F";
 
-      let newSignal;
-      if (newGrade === "A+" || newGrade === "A") newSignal = "STRONG OUTPERFORM";
-      else if (newGrade === "B+" || newGrade === "B") newSignal = "OUTPERFORM";
-      else if (newGrade === "C+" || newGrade === "C") newSignal = "NEUTRAL";
-      else newSignal = "UNDERWEIGHT";
-
-      return { ...asset, cis_score: newScore, grade: newGrade, signal: newSignal };
+      // what-if only: score and grade under the user's weights; the signal stays the official one
+      return { ...asset, cis_score: newScore, grade: newGrade, custom: true };
     });
 
     recalculated.sort((a, b) => b.cis_score - a.cis_score);
@@ -784,7 +780,7 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
           </div>
           <p style={{ fontSize: 11, color: T.secondary, marginTop: 4 }}>
             CIS v4.1 · Live · {processedData?.universe?.length || 0} assets
-            {customWeights && <span style={{ color: T.gold, marginLeft: 8 }}>Custom Weights</span>}
+            {customWeights && <span style={{ color: T.gold, marginLeft: 8 }}>Custom weights — what-if scores, not the official CIS</span>}
             {data?.timestamp && <span style={{ marginLeft: 8 }}>Updated: {new Date(data.timestamp < 1e12 ? data.timestamp * 1000 : data.timestamp).toLocaleString()}</span>}
           </p>
         </div>

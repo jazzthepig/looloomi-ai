@@ -351,7 +351,6 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
   const [updatedAt, setUpdatedAt] = useState(null);
   const [sparklines, setSparklines] = useState({});   // { [symbol]: number[] }
   const sparkFetchedRef = useRef(false);
-  const [backtest, setBacktest] = useState(null);   // backtest summary from API
   const tableBodyRef = useRef(null);
   const tableHeaderRef = useRef(null);
   const [tableScrolled, setTableScrolled] = useState(false);
@@ -505,14 +504,6 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
 
     fetchAll();
   }, [data]);
-
-  // Fetch backtest validation summary once on mount
-  useEffect(() => {
-    fetch("/api/v1/cis/backtest")
-      .then(r => r.json())
-      .then(d => { if (d.status === "success") setBacktest(d); })
-      .catch(() => {});
-  }, []);
 
   // Fetch grade movers when Movers tab is activated
   useEffect(() => {
@@ -860,73 +851,6 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
         </div>
       )}
 
-      {/* Backtest Validation Strip */}
-      {backtest && backtest.returns_by_grade && (
-        <div style={{
-          marginBottom: 18, padding: "14px 20px",
-          background: "rgba(0,217,138,0.04)", border: "1px solid rgba(0,217,138,0.14)",
-          borderRadius: 10, display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-            <span style={{
-              fontSize: 9, padding: "2px 8px", borderRadius: 3,
-              background: "rgba(0,217,138,0.12)", color: "#00D98A",
-              border: "1px solid rgba(0,217,138,0.25)",
-              fontFamily: FONTS.display, fontWeight: 700, letterSpacing: "0.1em",
-            }}>BACKTEST</span>
-            <span style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
-              30d realized returns by grade · Binance klines · {backtest.assets || "—"} assets
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            {Object.entries(backtest.returns_by_grade).map(([grade, ret]) => {
-              // S-397 P1 (A5): the old `|| ret === 0` collapsed "TradFi not in
-              // Binance klines" into the same shape as "legitimately 0% return"
-              // — a stablecoin / parked asset would also have read as missing.
-              // The data-source gap is a *separate* signal (see the header text
-              // "Binance klines · {n} assets"), not a reason to lie about the
-              // number. Real 0.00% now renders honestly; only true missing
-              // (null/undefined/NaN) reads as "—".
-              const noData = typeof ret !== "number";
-              const color = noData ? "rgba(148,163,184,0.25)" : ret > 3 ? "#00D98A" : ret > 0 ? "#4472FF" : "#FF2D55";
-              return (
-                <div key={grade} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-                  <span style={{
-                    fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
-                    color: grade.startsWith("A") ? "#00D98A" : grade.startsWith("B") ? "#4472FF" : "#E8A000",
-                  }}>{grade}</span>
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 400, color }}>
-                    {noData ? "—"
-                     : ret > 0 ? `+${ret.toFixed(2)}%`
-                     : `${ret.toFixed(2)}%`}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          {backtest.alpha && (
-            <div style={{ marginLeft: "auto", display: "flex", gap: 16, flexShrink: 0 }}>
-              {backtest.alpha.A_vs_B !== undefined && (
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 9, color: T.muted, fontFamily: FONTS.mono }}>A vs B alpha</div>
-                  <div style={{ fontSize: 12, fontFamily: FONTS.mono, color: "#00D98A" }}>
-                    +{backtest.alpha.A_vs_B.toFixed(2)}%
-                  </div>
-                </div>
-              )}
-              {backtest.alpha.A_vs_C !== undefined && (
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 9, color: T.muted, fontFamily: FONTS.mono }}>A vs C alpha</div>
-                  <div style={{ fontSize: 12, fontFamily: FONTS.mono, color: "#00D98A" }}>
-                    +{backtest.alpha.A_vs_C.toFixed(2)}%
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Grade Summary — editorial: big letter, count, thin bar */}
       <div className="cis-grade-summary" style={{
         display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0,
@@ -936,7 +860,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           { grade: "A", label: "Institutional",   sub: "A+ · A", color: T.green },
           { grade: "B", label: "Investment Grade", sub: "B+ · B", color: "#4472FF" },
           { grade: "C", label: "Speculative",      sub: "C+ · C", color: T.amber },
-          { grade: "D", label: "Underweight",      sub: "D · F",  color: T.red },
+          { grade: "D", label: "Weak",             sub: "D · F",  color: T.red },
         ].map(g => {
           const count = g.grade === "A" ? gradeSummary.A : g.grade === "B" ? gradeSummary.B : g.grade === "C" ? gradeSummary.C : gradeSummary.D;
           const total = (gradeSummary.A || 0) + (gradeSummary.B || 0) + (gradeSummary.C || 0) + (gradeSummary.D || 0);

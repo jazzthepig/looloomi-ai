@@ -13,7 +13,7 @@ const TIERS = [
     label: "Free",
     rpm: 60,
     rpd: "1,000",
-    features: ["CIS Universe (84 assets)", "Macro Pulse", "Signal Feed", "Standard latency"],
+    features: ["CIS Universe (official, daily)", "Macro Pulse", "Signal Feed", "Standard latency"],
     cta: "Get Free Key",
     price: "$0",
     highlight: false,
@@ -308,7 +308,7 @@ export default function ApiKeysPage() {
         {/* Quick reference */}
         <div style={{ marginTop: 48, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
           {[
-            { label: "CIS Universe", path: "/api/v1/cis/universe", desc: "84 assets, grades, signals, pillars" },
+            { label: "CIS Universe", path: "/api/v1/cis/universe", desc: "Official daily grades, signals, pillars (intraday preview under intraday)" },
             { label: "Macro Pulse", path: "/api/v1/market/macro-pulse", desc: "Regime, BTC dominance, FNG" },
             { label: "Signal Feed", path: "/api/v1/signals/feed", desc: "7 concurrent intelligence sources" },
             { label: "Asset History", path: "/api/v1/cis/history/BTC?days=7", desc: "Score time series + delta + z-score" },

@@ -306,7 +306,7 @@ export default function MethodologyPage() {
             <SectionTitle num="1" title="Purpose" />
             <Card>
               <p style={{ fontFamily: body, fontSize: 14, color: C.t2, lineHeight: 1.75, margin: 0 }}>
-                CIS provides a unified, continuously-updated quality signal across 84 assets
+                CIS provides a unified quality signal, published once per day on the UTC close, across the CIS universe
                 spanning crypto-native and traditional financial instruments. The score is
                 not a price forecast. It measures the <em>structural quality, momentum,
                 risk profile, sentiment positioning, and independent alpha potential</em> of
