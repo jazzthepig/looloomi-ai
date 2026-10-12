@@ -17,6 +17,8 @@ const SIGNAL_COLORS = {
   UNDERWEIGHT:  { color: T.red,   bg: "rgba(255,61,90,0.10)",  border: "rgba(255,61,90,0.25)" },
 };
 
+const NO_SIGNAL = { color: T.t3, bg: "transparent", border: "rgba(255,255,255,0.08)" };
+
 const RISK_COLORS = {
   LOW:    { color: T.green, bg: "rgba(0,232,122,0.06)" },
   MEDIUM: { color: T.gold,  bg: "rgba(200,168,75,0.06)" },
@@ -371,7 +373,9 @@ export default function ProtocolIntelligence() {
             const isExpanded_ = expandedId === p.id;
             const isPick = agentPicks.includes(p.id);
             const gradeColor = GRADE_COLORS[p.protocol_grade] || T.t3;
-            const sigCfg = SIGNAL_COLORS[p.signal] || SIGNAL_COLORS.HOLD;
+            // S-550: protocols with no token in the CIS universe have signal = null since S-541; the old fallback
+            // (SIGNAL_COLORS.HOLD) does not exist, so the whole Protocols section crashed on the first such row.
+            const sigCfg = SIGNAL_COLORS[p.signal] || NO_SIGNAL;
             const riskCfg = RISK_COLORS[p.risk_tier] || RISK_COLORS.MEDIUM;
             const dirColor = DIR_COLOR[p.tvl_direction] || T.t3;
             const dirIcon = DIR_ICON[p.tvl_direction] || "—";
