@@ -19,6 +19,8 @@ const SOURCE_LABEL = {
   event: "Event-driven",
   other: "Other",
 };
+const SOURCE_TAG = { beta: "①", beta_plus: "②", multiplier: "③", beta_and_multiplier: "①+③", alpha: "④",
+  portfolio_layer: "PL", event: "EV", other: "—" };
 const pct = (v, d = 1) => (v == null || isNaN(v)) ? "—" : `${v >= 0 ? "+" : ""}${(v * 100).toFixed(d)}%`;
 const num = (v, d = 2) => (v == null || isNaN(v)) ? "—" : v.toFixed(d);
 const tone = (v) => v == null ? T.t3 : v > 0 ? T.green : v < 0 ? T.red : T.t3;
@@ -107,7 +109,7 @@ export default function PortfolioBuilder() {
               onChange={e => setWeights(w => ({ ...w, [b.id]: e.target.value }))}
               style={{ width: 52, background: "transparent", color: T.t1, border: `1px solid ${T.border}`,
                 borderRadius: 4, fontFamily: F.mono, fontSize: 11, padding: "2px 4px" }} />
-            <span style={{ fontFamily: F.mono, fontSize: 10, color: T.t3, width: 26 }}>{b.layer}</span>
+            <span style={{ fontFamily: F.mono, fontSize: 10, color: T.t3, width: 26 }}>{SOURCE_TAG[b.source] || "—"}</span>
             <span style={{ fontFamily: F.body, fontSize: 11, color: T.t2, flex: 1 }}>{b.name}</span>
           </div>
         ))}

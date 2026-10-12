@@ -155,3 +155,15 @@ def test_public_fund_view_has_stars_not_letter_grade():
         assert "grade" not in v and v["rating_basis"] == STAR_BASIS
         total = (f.get("scores") or {}).get("total")
         assert v["stars"] == (None if total is None else max(1, min(5, int(math.floor(float(total) / 20)) + 1)))
+
+
+def test_every_book_has_a_public_english_name():
+    """页面是英文的、对外的:登记表里的中文名和内部编号(S-/M-/DECISIONS)不能出站。"""
+    import re
+    from src.data.accounting.combine import PUBLIC
+    from src.data.accounting.registry import BOOKS
+    assert {b.id for b in BOOKS} <= set(PUBLIC)
+    for name, desc in PUBLIC.values():
+        txt = name + desc
+        assert not re.search(r"[一-鿿]", txt), txt
+        assert not re.search(r"\b[SMR]-?\d{2,}\b|DECISIONS", txt), txt

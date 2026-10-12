@@ -28,6 +28,26 @@ DAYS_PER_YEAR = 365
 MIN_DAYS = 20
 LAYER_SOURCE = {"①": "beta", "②": "beta_plus", "③": "multiplier", "④": "alpha", "①+③": "beta_and_multiplier",
                 "组合层": "portfolio_layer", "事件": "event", "—": "other"}
+#: 对外的名字与一句话说明(页面是英文的;登记表里的中文名与内部编号不出站)
+PUBLIC = {
+    "core_cap": ("Core holding", "24 names, market-cap weighted, no name above 40% — holding the market."),
+    "beta_core": ("Equal weight + volatility target", "The same panel equal-weighted, with exposure scaled to a volatility target."),
+    "beta_plus_w": ("Momentum tilt (weekly)", "Overweights names with strong trends near their 52-week highs, inside the panel."),
+    "beta_plus_m": ("Momentum tilt (monthly)", "The momentum tilt, rebalanced monthly."),
+    "cis_tilt": ("CIS tilt", "Overweights higher-CIS names inside the core holding."),
+    "multiplier": ("Exposure timing (0.7–1.3x)", "The core holding scaled between 0.7x and 1.3x by market state; never short."),
+    "portfolio_layer": ("Portfolio layer (0–1x)", "Exposure between 0 and 1 by market-state flags; can sit in cash."),
+    "tokenization_tilt": ("Tokenization infrastructure tilt", "A 25% tilt toward names carrying traditional assets on-chain."),
+    "hl_mech": ("Four-coin rule-based sizing", "Four liquid coins held spot, position size set by rule."),
+    "hl_jev": ("Four-coin discretionary sizing", "The same four coins, with discretionary size adjustments."),
+    "causal_paper": ("Funding-rate long/short", "Long/short on funding-rate and positioning structure."),
+    "scalable_book": ("Multi-strategy long/short", "A long/short book built to scale."),
+    "combined_book": ("Combined long/short", "Several long/short sleeves combined."),
+    "dingge_paper": ("Event-driven", "Positions taken around identified events."),
+    "fusion_paper": ("Fusion long/short", "Several sleeves fused into one long/short book."),
+    "two_layer_paper": ("Two-layer book", "A core-plus-overlay book; inactive while its core is replaced."),
+}
+
 #: 回放口径:账本 → (表, 臂)
 REPLAY = {"core_cap": ("multiplier_daily", "core_replay"),
           "multiplier": ("multiplier_daily", "mult_v1_replay"),
@@ -130,8 +150,9 @@ async def load_basis(mode: str) -> tuple[dict[str, pd.Series], dict[str, str], d
     from src.data.accounting.registry import BOOKS, load_navs
     from src.data.style.header import _read_all
     layers = {b.id: b.layer for b in BOOKS}
-    info = {b.id: {"id": b.id, "name": b.name, "layer": b.layer, "source": LAYER_SOURCE.get(b.layer, "other"),
-                   "thesis": b.cause, "status": b.status, "caveat": b.caveat or None} for b in BOOKS}
+    info = {b.id: {"id": b.id, "name": PUBLIC.get(b.id, (b.id, ""))[0], "layer": b.layer,
+                   "source": LAYER_SOURCE.get(b.layer, "other"), "thesis": PUBLIC.get(b.id, ("", ""))[1],
+                   "status": b.status, "_caveat": bool(b.caveat)} for b in BOOKS}
     if mode == "replay":
         navs: dict[str, pd.Series] = {}
         for bid, (table, arm) in REPLAY.items():
@@ -139,6 +160,7 @@ async def load_basis(mode: str) -> tuple[dict[str, pd.Series], dict[str, str], d
             if rows:
                 navs[bid] = pd.Series({pd.Timestamp(r["d"]): float(r["nav"]) for r in rows}).sort_index()
         for bid in info:
+            info[bid].pop("_caveat", None)
             info[bid]["available"] = bid in navs
             info[bid]["note"] = (f"point-in-time replay ({REPLAY[bid][1]}), computed after the fact"
                                  if bid in navs else "no point-in-time replay for this book")
@@ -148,10 +170,12 @@ async def load_basis(mode: str) -> tuple[dict[str, pd.Series], dict[str, str], d
         s = navs.get(bid)
         s = s.dropna() if s is not None else None
         info[bid]["available"] = s is not None and len(s) >= 2 and info[bid]["status"] != "retired_by_design" \
-            and not info[bid]["caveat"]
+            and not info[bid]["_caveat"]
         info[bid]["record"] = ([s.index[0].date().isoformat(), s.index[-1].date().isoformat()]
                                if s is not None and len(s) >= 2 else None)
         info[bid]["note"] = ("paper record" if info[bid]["available"]
-                             else (info[bid]["caveat"] or ("retired" if info[bid]["status"] == "retired_by_design"
-                                                           else "no usable record")))
+                             else ("record under review — not selectable" if info[bid]["_caveat"]
+                                   else ("retired" if info[bid]["status"] == "retired_by_design" else "no usable record")))
+    for v in info.values():
+        v.pop("_caveat", None)
     return navs, layers, info
