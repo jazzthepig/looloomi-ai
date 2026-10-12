@@ -101,7 +101,13 @@ async def _fetch_macro() -> dict:
     """Get macro pulse data."""
     try:
         from src.data.market.data_layer import get_macro_pulse
-        return await get_macro_pulse()
+        data = await get_macro_pulse()
+        # S-548:分享图上的市场状态 = 正式日终那天的(与 CIS 页、宏观脉搏同一个)
+        try:
+            from src.data.cis.official import latest_official, regime_overlay
+            return regime_overlay(data, await latest_official())
+        except Exception:
+            return data
     except Exception as e:
         _logger.warning(f"[OG] Macro fetch error: {e}")
     return {}
@@ -168,7 +174,7 @@ def _render_og_card(top5: list, macro: dict, ref: str = "") -> bytes:
     date_str = datetime.now(timezone.utc).strftime("%b %d, %Y")
     draw.text((W - 200, y + 4), date_str, fill=DIM, font=font_mono_sm)
 
-    regime = macro.get("regime") or macro.get("macro_regime")
+    regime = macro.get("macro_regime") or macro.get("regime")
     if regime:
         rc = REGIME_COLORS.get(regime, BLUE)
         rl = REGIME_LABELS.get(regime, regime)
