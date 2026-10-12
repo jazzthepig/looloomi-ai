@@ -1,7 +1,7 @@
 {
   "id": "T-081",
   "owner": "seth",
-  "status": "claimed",
+  "status": "in_review",
   "created": "2026-10-12",
   "verified": null,
   "title": "代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3",
@@ -23,5 +23,5 @@
     "expect": "SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC"
   },
   "prior_value": "MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币",
-  "notes": "2026-10-12 开卡(S-537)。migrations.py + 测试;rebuild 接段;cis_inputs 补抓旧币历史;ASSETS_CONFIG MKR→SKY;overlay 旧代码让位 + 正式有实时没有的补进;_prev_levels 正式优先、缺的取重建;SYNC §Seth-1012a 请 Minimax 换 T1 宇宙。"
+  "notes": "2026-10-12 开卡(S-537)。migrations.py + 测试;rebuild 接段;cis_inputs 补抓旧币历史;ASSETS_CONFIG MKR→SKY;overlay 旧代码让位 + 正式有实时没有的补进;_prev_levels 正式优先、缺的取重建;SYNC §Seth-1012a 请 Minimax 换 T1 宇宙。 | 10-12 03:00 v1.3 全量:SKY 生效 2025-10-02、POL 2024-10-01;10-11 正式批次含 SKY、无 MKR(official.retired = MKR->SKY);协议页 / 静态列表同步。剩:Minimax 换 T1 宇宙(SYNC §Seth-1012a)。"
 }
