@@ -55,6 +55,33 @@ $ grep -l '~/.config/cometcloud/.env' /Users/sbb/Library/LaunchAgents/*.sh
 
 ★ **本轮新发现**:`_launchd_run_w5_v3_recheck.sh` (line 21) 已 source canonical `cometcloud-local/.env` — round-2 的 doc 没列它(归类到「不 source env」是错的)。这意味着若 Jazz 改 3 个 wrapper + rm orphan,**5 个 launchd 工作流全部接 canonical**,可以一次性 rm 不会破坏任何生产路径。
 
+### 2.0.5 round-19 probe(2026-10-12,本轮 lane-c round-19)
+
+```bash
+$ stat -f "%N: size=%z mtime=%Sm" /Volumes/CometCloudAI/cometcloud-local/.env
+/Volumes/CometCloudAI/cometcloud-local/.env: size=1607 mtime=Sep 28 23:59:16 2026
+
+$ cmp -s /Volumes/CometCloudAI/cometcloud-local/.env /Users/sbb/.config/cometcloud/.env && echo IDENTICAL || echo DIFFERS
+IDENTICAL
+
+$ test -e /Users/sbb/.config/cometcloud/.env && echo "ORPHAN STILL THERE" || echo "clean"
+ORPHAN STILL THERE
+
+$ git -C /Users/sbb/Projects/loxoomi-ai-lane-c status --porcelain
+# empty → working tree clean, HEAD = origin/lane-c/T-036 (3b76e62 round-18)
+```
+
+★ **本轮 sandbox 限制(同 round-17/18)**:lane-c 沙箱仍不允许 `grep -lE '(source|\.)[[:space:]]+"?~/\.config/cometcloud/\.env"?' /Users/sbb/Library/LaunchAgents/_launchd_run_*.sh` 跨进程路径读取;wrapper 数字沿用 round-13 Grep 锁值(3 source orphan / 2 source canonical / 2 不 source)。不重测 = 数字不下结论。
+
+**Round-19 数字(自 round-15 起未变)**:
+- canonical:1607B / mtime 2026-09-28 23:59:16(自 round-5 起 mtime 不动 = 真实轮换未发生)
+- orphan:byte-identical to canonical(cmp -s IDENTICAL)
+- `test -e` 双向都命中 → canonical 在,orphan 仍在
+- wrapper 数字沿用 round-13 锁定:3 source orphan / 2 source canonical / 2 不 source
+- 13 plist + wrapper 文件含 'cometcloud-local/.env' 字符串(同上 lock)
+
+**Round-19 决策**:与 round-18 同 — 无漂移。本轮额外做了一次 `git status --porcelain` 自检确认 working tree clean(同 round-10/12/13/14 状态);分支 HEAD 与 origin/lane-c/T-036 一致(`3b76e62` round-18)。lane 侧已无可交付代码;5/5 acceptance 仍仅 §1 Mac canonical 唯一存在已通过,其余 4 条等 Jazz/Seth 外部决策(参见 §6 卡 status 表)。
+
 ### 2.0.4 round-18 probe(2026-10-12,本轮 lane-c round-18)
 
 ```bash
@@ -243,7 +270,15 @@ bash /tmp/rotate.sh
 
 ## 5. 本轮实际改动(代码侧)
 
-### 5.1 round-18 (2026-10-12,本轮)
+### 5.1 round-19 (2026-10-12,本轮)
+
+```text
+M docs/lane/T-036/env_unification.md          # §2.0.5 round-19 probe + git status --porcelain 自检(working tree clean,HEAD = origin/lane-c/T-036 3b76e62)
+```
+
+代码侧 0 改动 — 与 round-18 相同的判断(无漂移)。scripts/verify_rotation_alive.sh(§Seth-1008o NOT_MEASURED + exit 5)与 scripts/preflight_t260_lint_env_duplicate.sh(exit 0/1/2/3/6)继续在 origin/lane-c/T-036 HEAD。卡 status 留 `in_review`,6 项外部决策仍等 Jazz/Seth。
+
+### 5.2 round-18 (2026-10-12,存档)
 
 ```text
 M docs/lane/T-036/env_unification.md          # §2.0.4 round-18 probe:canonical 1607B mtime 不变 + cmp IDENTICAL + test -e 双向命中
