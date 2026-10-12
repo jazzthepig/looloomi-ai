@@ -1,0 +1,29 @@
+{
+  "id": "T-087",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-13",
+  "verified": null,
+  "title": "③ 推力与组合层换到新 ①(不设单币上限)上:各开新臂、新起点,旧臂照旧记作对照",
+  "source": "S-556(Jazz 10-12「把单币上限40%解除」):① 已切到 core_cap_daily.cap_a1_u;multiplier / portfolio_layer 仍以 ≤ 40% 的旧 ① 为底",
+  "allowed_paths": [
+    "src/data/signals/multiplier.py",
+    "src/data/signals/portfolio_layer.py",
+    "tests/test_multiplier.py",
+    "tests/test_portfolio_layer.py",
+    "tasks/T-087.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/data/accounting/",
+    "src/api/",
+    "src/data/signals/core_cap.py",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "multiplier.py:新增 core_u_replay(core_returns 用 capped_weights(avail, 1.0, cap=1.0),即 core_cap.ARM_CAP['cap_a1_u'])、mult_v2_replay(同一状态规则、同一切点、同一成本,只换底仓)、mult_v2(前向,起点 = core_cap.CORE_SINCE = 2026-10-12 收盘,NAV 在起点 = 1);mult_v1 / mult_v1_replay / core_replay 一行不改照旧写。portfolio_layer.py:同样加 pl_v3_replay(底仓读 core_u_replay)与 pl_v3(前向,起点 10-12),pl_v2 系列照旧。评估(三个窗口 + 随机择时分位)两套都写进 loop_attempt.detail。测试:新臂的底仓在一个大币 > 40% 的合成面板上不被压到 40%;旧臂仍被压;新前向臂起点之前没有行。不要改 registry / combine(Seth 接线)。",
+    "expect": "multiplier_daily 出现 core_u_replay / mult_v2_replay(2023-01-02 起)/ mult_v2(10-12 起);portfolio_layer_daily 出现 pl_v3_replay / pl_v3;卡 notes 写两套的三个窗口数字(总收益 / 回撤 / 夏普 / 随机分位)并排"
+  },
+  "prior_value": "mult_v1_replay 与 pl_v2_replay 都建在 ≤ 40% 的 ① 上;① 不设上限后(core_variants cap_uncapped)2023–24 +359% / −32%、2025-01 → +−17.0% / −57%,③ 与组合层在新底仓上的数字没算过",
+  "notes": "2026-10-13 Seth 开卡派 C(与 T-085 并行;T-085 每轮只是几次快照)。"
+}

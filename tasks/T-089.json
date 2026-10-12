@@ -1,0 +1,24 @@
+{
+  "id": "T-089",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-13",
+  "verified": null,
+  "title": "完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置",
+  "source": "Jazz 10-12「把单币上限40%解除,然后继续做,加速挖掘数据和策略,然后完成模拟」",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-089.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "先在台账写 M- 预注册:(1) 积木 = core_variants_daily.cap_uncapped(① 回放)、multiplier_daily mult_v2_replay、portfolio_layer_daily pl_v3_replay、cis_tilt_daily cis_a1_u_replay(T-087 / T-088 交付前先用 v1 各臂跑通管线,交付后换);(2) 合成规则 = 配置层现行规则(src/data/allocation/allocator.py:① 默认 100%,其余账本按 S-514 的证据准入 —— 模拟证据 = 封存留出段相对随机 ≥ p95,或前向 ≥ 20 天且任意时刻下界 > 0;单本 ≤ 40%、④ 合计 ≤ 10%)**按时点**执行:每周一只用当时已有的证据决定权重;(3) 对照 = BTC、① 本身、同积木随机权重 500 次;(4) 窗口 = 2023–24 / 2025-01 → 10-12 / 10-12 起前向。报总收益、最大回撤、夏普(满一年才年化)、相对 ① 的超额与其分位、每一层的收益来源(同组合器的拆法)。",
+    "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改"
+  },
+  "prior_value": "从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。",
+  "notes": "2026-10-13 Seth 开卡派 A,排在 T-083 之后。积木在 T-087 / T-088 交付前用旧臂跑通,交付后重跑一次。"
+}

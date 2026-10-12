@@ -1,15 +1,33 @@
 {
-  "_doc": "S-503 lane_bot 配置。cwd = 你平时在那个 terminal 里打开 claude 的目录;worktree = 交代码用的 lane worktree。改完无需重装,下一次唤醒即生效。",
+  "_doc": "S-503 lane_bot 配置。cwd = 你平时在那个 terminal 里打开 claude 的目录;worktree = 交代码用的 lane worktree。改完无需重装,下一次唤醒即生效。 10-13(Jazz「加速」):醒的间隔 120 → 60 分钟、每天 8 → 12 轮、时段 09–23 → 07–24。",
   "command": "claude",
-  "active_hours": [9, 23],
-  "every_min": 120,
-  "max_runs_per_day": 8,
+  "active_hours": [
+    7,
+    24
+  ],
+  "every_min": 60,
+  "max_runs_per_day": 12,
   "max_turns": 100,
   "timeout_min": 40,
   "review_hour": 21,
   "lanes": {
-    "lane-a": {"enabled": true, "name": "Minimax-A", "cwd": "~/Projects/looloomi-ai-lane-a", "worktree": "~/Projects/looloomi-ai-lane-a"},
-    "lane-b": {"enabled": true, "name": "Minimax-B", "cwd": "~/Projects/looloomi-ai-lane-b", "worktree": "~/Projects/looloomi-ai-lane-b"},
-    "lane-c": {"enabled": true, "name": "Minimax-C", "cwd": "/Volumes/CometCloudAI/cometcloud-local", "worktree": "~/Projects/looloomi-ai-lane-c"}
+    "lane-a": {
+      "enabled": true,
+      "name": "Minimax-A",
+      "cwd": "~/Projects/looloomi-ai-lane-a",
+      "worktree": "~/Projects/looloomi-ai-lane-a"
+    },
+    "lane-b": {
+      "enabled": true,
+      "name": "Minimax-B",
+      "cwd": "~/Projects/looloomi-ai-lane-b",
+      "worktree": "~/Projects/looloomi-ai-lane-b"
+    },
+    "lane-c": {
+      "enabled": true,
+      "name": "Minimax-C",
+      "cwd": "/Volumes/CometCloudAI/cometcloud-local",
+      "worktree": "~/Projects/looloomi-ai-lane-c"
+    }
   }
 }
