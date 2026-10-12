@@ -383,16 +383,22 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
         max_dd = min(max_dd, dd)
         equity_curve.append(round(equity, 2))
 
-    # CAGR — annualized from first to last signal
+    # CAGR — annualized from first to last signal, ONLY over a full year (S-553, GIPS: returns for periods under
+    # a year are not annualised). The old floor was 0.05 years (~18 days), so a few weeks of signals became a
+    # "CAGR". Under a year the period return is reported instead.
     dates = [r["signal_date"] for r in closed if r.get("signal_date")]
     cagr  = None
+    period_return = None
+    years = None
     if len(dates) >= 2:
         try:
             dt0 = datetime.fromisoformat(dates[-1].replace("Z", "+00:00"))
             dt1 = datetime.fromisoformat(dates[0].replace("Z", "+00:00"))
             years = (dt1 - dt0).total_seconds() / (365.25 * 86400)
-            if years > 0.05 and equity_curve:
-                cagr = round((equity_curve[-1] / 100_000) ** (1 / years) - 1, 4)
+            if equity_curve:
+                period_return = round(equity_curve[-1] / 100_000 - 1, 4)
+                if years >= 1.0:
+                    cagr = round((equity_curve[-1] / 100_000) ** (1 / years) - 1, 4)
         except Exception:
             pass
 
@@ -701,11 +707,13 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
         "alpha_win_rate_pct":  alpha_win_rate,
         "avg_alpha_pct":       out_avg_alpha,
         "headline_basis":      "benchmark_relative_alpha",
-        "headline_note":       "Lead with alpha_* — absolute metrics reflect a long-only sleeve in a Tightening market. Live validated market-neutral track record: /api/v1/signals/causal-paper.",
+        "headline_note":       "Lead with alpha_* — absolute metrics reflect a long-only sleeve. Market-neutral paper record: /api/v1/signals/causal-paper.",
         # Core KPIs (absolute — reference only)
         "sharpe":          sharpe,
         "sortino":         sortino,
         "cagr_pct":        round(cagr * 100, 2) if cagr is not None else None,
+        "period_return_pct": round(period_return * 100, 2) if period_return is not None else None,
+        "period_years":    round(years, 3) if years is not None else None,
         "max_drawdown_pct": round(max_dd * 100, 2),
         "calmar":          calmar,
         "win_rate_pct":    win_rate,
@@ -1177,6 +1185,8 @@ async def get_signal_summary():
         "sharpe":          perf.get("sharpe"),
         "sortino":         perf.get("sortino"),
         "cagr_pct":        perf.get("cagr_pct"),
+        "period_return_pct": perf.get("period_return_pct"),
+        "period_years":    perf.get("period_years"),
         "max_drawdown_pct": perf.get("max_drawdown_pct"),
         "win_rate_pct":    perf.get("win_rate_pct"),
         "profit_factor":   perf.get("profit_factor"),

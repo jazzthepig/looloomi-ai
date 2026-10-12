@@ -587,12 +587,13 @@ export default function PerformanceDashboard() {
           color={isNum(p.sortino) ? (p.sortino >= 1.5 ? C.green : p.sortino >= 0 ? C.amber : C.red) : T.t3}
           tooltip="Like Sharpe but penalizes downside volatility only. > 1.5 is strong."
         />
+        {/* S-553: annualised only over a full year (GIPS); under a year the period return is shown */}
         <KpiCard
-          label="CAGR"
-          value={loading ? <Skeleton w={50} /> : fmtPct(p.cagr_pct)}
-          sub="annualized"
-          color={pColor(p.cagr_pct)}
-          tooltip="Compound annual growth rate of signal portfolio."
+          label={isNum(p.cagr_pct) ? "CAGR" : "Period return"}
+          value={loading ? <Skeleton w={50} /> : fmtPct(isNum(p.cagr_pct) ? p.cagr_pct : p.period_return_pct)}
+          sub={isNum(p.cagr_pct) ? "annualized" : (isNum(p.period_years) ? `${Math.round(p.period_years * 365)} days · not annualized` : "not annualized")}
+          color={pColor(isNum(p.cagr_pct) ? p.cagr_pct : p.period_return_pct)}
+          tooltip="Annualised only once the record covers a full year; shorter records show the return over the period."
         />
         <KpiCard
           label="Max Drawdown"
