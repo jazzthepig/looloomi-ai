@@ -18,8 +18,8 @@ _CACHE: dict[str, tuple[float, Any]] = {}
 _TTL_S = 900
 
 READING = ("Paper records and point-in-time replays, not live-traded P&L. The combined figures describe what the "
-           "selected books did over the shown window; they are not forecasts and not investment advice. Under 20 "
-           "days of shared record, figures are described but not annualised.")
+           "selected books did over the shown window; they are not forecasts and not investment advice. Returns are "
+           "annualised only over a full year of shared record; shorter windows show the period return.")
 
 
 async def _basis(mode: str):

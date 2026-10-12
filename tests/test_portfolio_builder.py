@@ -27,7 +27,8 @@ def test_single_book_full_weight_is_the_book():
     rng = np.random.default_rng(1)
     r = rng.normal(0.001, 0.02, 40)
     out = combine({"a": _nav(r)}, {"a": 1.0}, {"a": "①"})
-    assert out["ok"] and out["days"] == 40 and out["estimable"]
+    assert out["ok"] and out["days"] == 40 and out["estimable"] and not out["annualised"]
+    assert out["portfolio"]["ann_return"] is None and out["portfolio"]["sharpe"] is None
     assert out["portfolio"]["total_return"] == pytest.approx(np.prod(1 + r) - 1)
     assert out["books"][0]["risk_contribution"] == pytest.approx(1.0)
     assert out["return_sources_by_layer"] == {"beta": pytest.approx(r.sum())}
@@ -80,7 +81,7 @@ def test_missing_book_is_refused_not_zero():
 
 def test_vs_core_splits_beta_from_residual():
     rng = np.random.default_rng(3)
-    c = rng.normal(0.002, 0.03, 80)
+    c = rng.normal(0.002, 0.03, 400)
     port_r = 1.2 * c + 0.0005
     out = combine({"x": _nav(port_r)}, {"x": 1.0}, {"x": "①+③"}, core=_nav(c))
     vc = out["vs_core"]
@@ -167,3 +168,24 @@ def test_every_book_has_a_public_english_name():
         txt = name + desc
         assert not re.search(r"[一-鿿]", txt), txt
         assert not re.search(r"\b[SMR]-?\d{2,}\b|DECISIONS", txt), txt
+
+
+def test_under_a_year_is_never_annualised_and_a_year_is():
+    """S-543 上线实测:31 天 +12% 被年化成 +292%、Sharpe 8.5。不足一年不年化(GIPS)。"""
+    short = combine({"a": _nav([0.004] * 31)}, {"a": 1.0}, {"a": "②"})
+    assert short["estimable"] and not short["annualised"]
+    assert short["portfolio"]["ann_return"] is None and short["portfolio"]["sharpe"] is None
+    assert short["portfolio"]["ann_vol"] is not None
+    year = combine({"a": _nav([0.0002] * 365)}, {"a": 1.0}, {"a": "①"})
+    assert year["annualised"] and year["portfolio"]["ann_return"] == pytest.approx(1.0002 ** 365 - 1)
+
+
+def test_gaps_align_levels_before_returns():
+    """一本账缺几天时,两本账的收益必须覆盖同一段时间:先对齐 NAV 再算收益。"""
+    idx = pd.date_range("2026-01-01", periods=10, freq="D")
+    a = pd.Series(np.cumprod([1.0] + [1.01] * 9), index=idx)
+    b = pd.Series(np.cumprod([1.0] + [1.02] * 9), index=idx).drop(idx[3:6])
+    out = combine({"a": a, "b": b}, {"a": 0.5, "b": 0.5}, {"a": "①", "b": "④"})
+    assert out["days"] == 6 and out["calendar_days"] == 9
+    ra = out["books"][0]["book_return"]
+    assert ra == pytest.approx(1.01 ** 9 - 1)          # a 在 b 的缺口上算的是同一段 4 天的收益

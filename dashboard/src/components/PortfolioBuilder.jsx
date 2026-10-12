@@ -94,7 +94,8 @@ export default function PortfolioBuilder() {
       <p style={{ fontFamily: F.body, fontSize: 12, color: T.t2, margin: "8px 0 14px", lineHeight: 1.6 }}>
         Pick strategies and weights (the rest is cash). The result shows the combination's return, risk, and where
         the return came from — holding the panel, tilts, exposure timing, long/short — and how much each strategy adds to risk.
-        {mode === "replay" ? " Replay = computed after the fact with point-in-time data; only some strategies have one." : " Paper records are short for most strategies; under 20 shared days figures are described, not annualised."}
+        {mode === "replay" ? " Replay = computed after the fact with point-in-time data; only some strategies have one." : " Paper records are short for most strategies."}
+        {" Returns are annualised only over a full year of shared record; shorter windows show the period return."}
       </p>
 
       {books.error && <div style={{ fontFamily: F.body, fontSize: 12, color: T.red }}>{books.error}</div>}
@@ -132,12 +133,13 @@ export default function PortfolioBuilder() {
       {result && result.ok && (
         <div style={{ marginTop: 16 }}>
           <div style={{ fontFamily: F.mono, fontSize: 10, color: T.t3 }}>
-            {result.window?.[0]} → {result.window?.[1]} · {result.days} shared days
-            {!result.estimable && " · too short to annualise"}
+            {result.window?.[0]} → {result.window?.[1]} · {result.days} shared observations
+            {!result.annualised && " · under a year: period return shown, not annualised"}
           </div>
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginTop: 10 }}>
-            {[["Total return", pct(result.portfolio.total_return)], ["Annualised", pct(result.portfolio.ann_return)],
-              ["Volatility (ann.)", pct(result.portfolio.ann_vol).replace("+", "")], ["Sharpe", num(result.portfolio.sharpe)],
+            {[["Period return", pct(result.portfolio.total_return)],
+              ...(result.annualised ? [["Annualised", pct(result.portfolio.ann_return)], ["Sharpe", num(result.portfolio.sharpe)]] : []),
+              ["Volatility (ann.)", pct(result.portfolio.ann_vol).replace("+", "")],
               ["Max drawdown", pct(result.portfolio.max_drawdown)], ["Worst day", pct(result.portfolio.worst_day)]].map(([k, v]) => (
               <div key={k}>
                 <div style={label}>{k.toUpperCase()}</div>

@@ -6,7 +6,7 @@
 ## 两种口径(都标明,不混)
 
 - `forward`:各账本自己的纸面记录(登记表 `load_navs`,估值点已对齐到市场日)。窗口 = 所选账本共同有记录的日子 ——
-  大多数账本刚起步,窗口短;不足 20 天只描述、不估计(与配置层 MIN_DAYS 同一条线)。
+  大多数账本刚起步,窗口短;不足 20 天只描述、不估计(与配置层 MIN_DAYS 同一条线);不满一年不年化(GIPS)。
 - `replay`:按时点回放(事后算的,不是当时的记录):① = `core_replay`,③ = `mult_v1_replay`,组合层 = `pl_v2_replay`,
   2023 起。没有回放的账本在这个口径下不可选,如实说。
 
@@ -26,6 +26,9 @@ import pandas as pd
 
 DAYS_PER_YEAR = 365
 MIN_DAYS = 20
+#: 年化只在共同记录满一年时做(GIPS:不足一年的收益不年化)。31 天 +12% 年化成 +292%、Sharpe 8.5 —— 上线当天实测,
+#: 这种数字摆在页面上就是误导。波动率可以年化(按实际观测频率),收益 / Sharpe / 年化 α 不行。
+ANNUALISE_DAYS = 365
 LAYER_SOURCE = {"①": "beta", "②": "beta_plus", "③": "multiplier", "④": "alpha", "①+③": "beta_and_multiplier",
                 "组合层": "portfolio_layer", "事件": "event", "—": "other"}
 #: 对外的名字与一句话说明(页面是英文的;登记表里的中文名与内部编号不出站)
@@ -81,15 +84,16 @@ def combine(navs: Mapping[str, pd.Series], weights: Mapping[str, float], layers:
     if total_w > 1.0 + 1e-9:
         weights = {k: v / total_w for k, v in weights.items()}
         total_w = 1.0
-    rets = {}
+    levels = {}
     for b in weights:
         s = navs.get(b)
         if s is None or len(s.dropna()) < 2:
             return {"ok": False, "reason": f"{b}: no record in this basis"}
         s = s.dropna().sort_index()
-        s = s[~s.index.duplicated(keep="last")]
-        rets[b] = s.pct_change().dropna()
-    df = pd.DataFrame(rets).dropna()
+        levels[b] = s[~s.index.duplicated(keep="last")]
+    # 先对齐 NAV 再算收益:每本账的收益都覆盖同一段时间(先各自 pct_change 再对齐,缺口两侧的收益区间会对不上)
+    lv = pd.DataFrame(levels).dropna()
+    df = lv.pct_change().dropna()
     if len(df) < 2:
         return {"ok": False, "reason": "the selected books share fewer than 2 days of record"}
     w = pd.Series(weights)
@@ -97,9 +101,12 @@ def combine(navs: Mapping[str, pd.Series], weights: Mapping[str, float], layers:
     port = contrib.sum(axis=1)
     nav = (1 + port).cumprod()
     n = len(port)
+    span = max(1, (lv.index[-1] - lv.index[0]).days)
+    per_year = n * DAYS_PER_YEAR / span                  # 实际观测频率(有缺口时少于 365)
+    annualised = span >= ANNUALISE_DAYS
     total = float(nav.iloc[-1] - 1)
-    ann_ret = float(nav.iloc[-1] ** (DAYS_PER_YEAR / n) - 1) if n >= MIN_DAYS else None
-    vol = float(port.std(ddof=1) * math.sqrt(DAYS_PER_YEAR)) if n >= 3 else None
+    ann_ret = float(nav.iloc[-1] ** (DAYS_PER_YEAR / span) - 1) if annualised else None
+    vol = float(port.std(ddof=1) * math.sqrt(per_year)) if n >= 3 else None
     dd = float((nav / nav.cummax() - 1).min())
     var_p = float(port.var(ddof=1)) if n >= 3 else 0.0
     books = []
@@ -119,8 +126,9 @@ def combine(navs: Mapping[str, pd.Series], weights: Mapping[str, float], layers:
         by_source[x["source"]] = by_source.get(x["source"], 0.0) + x["return_contribution"]
     corr = df.corr().round(3) if n >= 3 else None
     out: dict[str, Any] = {
-        "ok": True, "window": [df.index[0].date().isoformat(), df.index[-1].date().isoformat()], "days": n,
-        "estimable": n >= MIN_DAYS, "cash_weight": round(max(0.0, 1.0 - total_w), 4),
+        "ok": True, "window": [lv.index[0].date().isoformat(), lv.index[-1].date().isoformat()], "days": n,
+        "calendar_days": span, "estimable": n >= MIN_DAYS, "annualised": annualised,
+        "cash_weight": round(max(0.0, 1.0 - total_w), 4),
         "portfolio": {"total_return": total, "ann_return": ann_ret, "ann_vol": vol,
                       "sharpe": (ann_ret / vol) if ann_ret is not None and vol else None,
                       "max_drawdown": dd, "worst_day": float(port.min()), "best_day": float(port.max())},
@@ -131,7 +139,8 @@ def combine(navs: Mapping[str, pd.Series], weights: Mapping[str, float], layers:
         "nav": [{"d": d.date().isoformat(), "nav": round(float(v), 6)} for d, v in nav.items()],
     }
     if core is not None and n >= 3:
-        c = core.dropna().sort_index().pct_change().reindex(df.index)
+        cl = core.dropna().sort_index()
+        c = cl[~cl.index.duplicated(keep="last")].reindex(lv.index).pct_change().reindex(df.index)
         ok = c.notna()
         if ok.sum() >= 3 and float(c[ok].var(ddof=1)) > 0:
             beta = float(np.cov(port[ok], c[ok], ddof=1)[0, 1] / c[ok].var(ddof=1))
@@ -140,7 +149,7 @@ def combine(navs: Mapping[str, pd.Series], weights: Mapping[str, float], layers:
             resid = port[ok] - beta * c[ok]
             out["vs_core"] = {"beta": beta, "core_return": core_total,
                               "beta_part": beta * core_total, "residual_part": float(resid.sum()),
-                              "alpha_ann": alpha_d * DAYS_PER_YEAR if n >= MIN_DAYS else None,
+                              "alpha_ann": alpha_d * per_year if annualised else None,
                               "r2": float(np.corrcoef(port[ok], c[ok])[0, 1] ** 2)}
     return out
 
