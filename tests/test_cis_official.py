@@ -144,7 +144,7 @@ def test_methodology_page_mirrors_official_basis():
     assert m and json.loads(m.group(1)) == OFFICIAL_BASIS, "改 disclosure.py 的口径,同步 MethodologyPage"
 
 
-def _patch_run(monkeypatch, *, have_rows, prev, rows, now_hour=7):
+def _patch_run(monkeypatch, *, have_rows, prev, rows, now_hour=7, ready=True, refresh_log=None):
     import asyncio
     from datetime import datetime, timezone
     from types import SimpleNamespace
@@ -172,6 +172,18 @@ def _patch_run(monkeypatch, *, have_rows, prev, rows, now_hour=7):
     monkeypatch.setattr(rb, "score_day", lambda d, a, data: [dict(r) for r in rows])
     monkeypatch.setattr(off, "_prev_levels", prev_levels)
     monkeypatch.setattr(store, "supabase_insert_table", insert)
+
+    async def inputs_ready(d):
+        return ready
+
+    async def refresh(now):
+        if refresh_log is not None:
+            refresh_log.append(now)
+        return {"closes": {"rows": 1}}
+
+    import src.data.market.cis_inputs as ci
+    monkeypatch.setattr(off, "_close_inputs_ready", inputs_ready)
+    monkeypatch.setattr(ci, "refresh_close_inputs", refresh)
     now = datetime(2026, 10, 11, now_hour, 5, tzinfo=timezone.utc)
     return asyncio.run(off.run_once(now)), written
 
@@ -191,4 +203,15 @@ def test_run_once_publishes_once_and_waits_for_a_seed(monkeypatch):
     res, w = _patch_run(monkeypatch, have_rows=False, prev={"BTC": 2}, rows=thin, now_hour=3)
     assert res["refused"] and not w, "incomplete before the deadline → wait"
     res, w = _patch_run(monkeypatch, have_rows=False, prev={"BTC": 2}, rows=thin, now_hour=7)
-    assert res["written"] == len(thin) and all(any(m.startswith("batch:") for m in r["missing"]) for r in w)
+    assert res["refused"] and res["ok"] is False and not w, "S-538:大部分加密没有收盘 = 硬性缺,过了 06:00 也不发半批"
+
+
+def test_soft_gaps_publish_after_deadline_and_missing_closes_are_fetched(monkeypatch):
+    rows = [_row(s, cls=c["class"], fng=None if s == "BTC" else 50) for s, c in _assets().items()]
+    log: list = []
+    res, w = _patch_run(monkeypatch, have_rows=False, prev={"BTC": 2}, rows=rows, now_hour=3, ready=False, refresh_log=log)
+    assert res["refused"] and not w and len(log) == 1, "收盘输入没落库 → 发布器自己补一次,再判"
+    res, w = _patch_run(monkeypatch, have_rows=False, prev={"BTC": 2}, rows=rows, now_hour=7)
+    assert res["written"] == len(rows) and all("batch:恐惧贪婪缺" in r["missing"] for r in w), "软性缺:过点照发并标出"
+    from src.data.cis.official import is_hard
+    assert is_hard("BTC 没有价格") and is_hard("加密名字有价的 3/25") and not is_hard("恐惧贪婪缺")

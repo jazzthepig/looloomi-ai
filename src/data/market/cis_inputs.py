@@ -288,6 +288,38 @@ async def _migration_history(today: date) -> dict[str, Any]:
     return out
 
 
+async def refresh_close_inputs(now: Optional[datetime] = None) -> dict[str, Any]:
+    """S-538:正式发布前把「收盘」那一档输入补齐 —— 全市场市值 / 恐惧贪婪 / VIX(`_macro`)与加密名字最近几天的收盘
+    (CG market_chart,interval=daily)。不依赖每日采集循环跑在一天里的哪个钟点:发布器缺什么就自己补,每小时一次。
+    写法与各自的每日采集相同(同源同约定),幂等。"""
+    from src.data.cis.cis_provider import CRYPTO_ASSETS
+    from src.data.market.data_layer import get_cg_market_chart_range
+    from src.data.style.header import SOURCE, parse_market_chart
+    from src.data.vector.market_state_writer import _sb_get
+    now = now or datetime.now(timezone.utc)
+    out: dict[str, Any] = {"macro": await _macro(now.date())}
+    frm_ts = int((now - timedelta(days=4)).timestamp())
+    to_ts = int(now.timestamp())
+    rows, failed = [], {}
+    for sym, cfg in CRYPTO_ASSETS.items():
+        cg = cfg.get("coingecko")
+        if not cg:
+            continue
+        rd = await _sb_get("asset_mcap_daily", {"select": "symbol", "coin_id": f"eq.{cg}", "source": f"eq.{SOURCE}",
+                                                "order": "d.desc", "limit": "1"})
+        stored = ((rd.rows or [{}])[0].get("symbol") if rd.ok else None) or sym   # 沿用库里这个币已有的代码,不另起一行
+        raw = await get_cg_market_chart_range(cg, frm_ts, to_ts, interval="daily")
+        if not raw.get("available"):
+            failed[sym] = str(raw.get("error") or raw.get("reason"))[:80]
+            continue
+        pts = parse_market_chart(raw.get("prices"), raw.get("market_caps"), raw.get("volumes"))
+        rows += [{"symbol": stored, "coin_id": cg, "source": SOURCE, **p} for p in pts]
+    err = await _upsert("asset_mcap_daily", rows, "symbol,d,source") if rows else None
+    out["closes"] = {"rows": len(rows), "failed": failed, "error": err,
+                     "last": max((r["d"] for r in rows), default=None)}
+    return out
+
+
 async def _tradfi(today: date) -> dict[str, Any]:
     """传统资产 eodhd 日线:最早一行晚于 2022-11 或今天是周一 ⇒ 全量重取(复权口径,TRADFI_BACKFILL_DAYS 天)。"""
     from src.api.routers.ohlcv import collect_ohlcv

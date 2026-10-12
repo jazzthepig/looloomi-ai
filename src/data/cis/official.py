@@ -33,6 +33,14 @@ PUBLISH_DEADLINE_HOUR = 6
 MIN_CRYPTO_PRICED = 0.90
 
 
+#: 缺了就不发的(过了 UTC 06:00 也不发,心跳变红);其余的(恐惧贪婪、BTC 占比)过点照发并标在 missing 里(S-538)。
+HARD_PREFIXES = ("BTC 没有价格", "加密名字有价的")
+
+
+def is_hard(problem: str) -> bool:
+    return problem.startswith(HARD_PREFIXES)
+
+
 def completeness(rows: list[dict], assets: Mapping[str, Mapping[str, Any]]) -> list[str]:
     """纯函数。d 这一批能不能发:返回缺的东西(空 = 齐)。"""
     probs: list[str] = []
@@ -95,6 +103,22 @@ async def _prev_levels(d: date) -> dict[str, Optional[int]]:
     return merge_prev(off, reb)
 
 
+async def _close_inputs_ready(d: date) -> bool:
+    """便宜的预检:d 的加密收盘(≥ 90% 的名字)与全市场市值 / 恐惧贪婪都已落库。读不到当作没齐(会去补)。"""
+    from src.data.cis.cis_provider import CRYPTO_ASSETS
+    from src.data.style.header import SOURCE, _read_all
+    coins = [c["coingecko"] for c in CRYPTO_ASSETS.values() if c.get("coingecko")]
+    try:
+        have = await _read_all("asset_mcap_daily", {"select": "coin_id", "source": f"eq.{SOURCE}", "d": f"eq.{d.isoformat()}",
+                                                    "coin_id": f"in.({','.join(coins)})"})
+        mac = await _read_all("macro_daily", {"select": "series", "d": f"eq.{d.isoformat()}",
+                                              "series": "in.(total_mcap,fng)"})
+    except Exception:                                       # noqa: BLE001
+        return False
+    return len({r["coin_id"] for r in have}) >= MIN_CRYPTO_PRICED * len(coins) and \
+        {r["series"] for r in mac} >= {"total_mcap", "fng"}
+
+
 async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
     from src.api.store import supabase_insert_table
     from src.data.cis.rebuild import load_inputs, score_day
@@ -106,11 +130,24 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
         return {"ok": False, "refused": False, "written": 0, "reason": f"{TABLE} 读不到:{have.reason}"}
     if have.rows:
         return {"ok": True, "refused": False, "written": 0, "reason": f"{d} 已发布 —— 只发一次"}
+    refreshed = None
+    if not await _close_inputs_ready(d):
+        # S-538:收盘输入还没落库(每日采集跑在一天里的哪个钟点不由发布器决定)—— 自己补,再算
+        from src.data.market.cis_inputs import refresh_close_inputs
+        try:
+            refreshed = await refresh_close_inputs(now)
+        except Exception as e:                              # noqa: BLE001
+            refreshed = {"error": f"{type(e).__name__}: {str(e)[:120]}"}
     assets, data = await load_inputs(pd.Timestamp(d))
     rows = score_day(pd.Timestamp(d), assets, data)
     probs = completeness(rows, assets)
+    hard = [p for p in probs if is_hard(p)]
+    if hard:
+        # 硬性输入缺(BTC / 大部分加密名字没有收盘)—— 永远不发半批;过了 06:00 还缺 = 心跳红
+        return {"ok": now.hour < PUBLISH_DEADLINE_HOUR, "refused": True, "written": 0, "refreshed": refreshed,
+                "reason": f"{d} 缺硬性输入({'; '.join(hard)})—— 不发,下一小时再补再试"}
     if probs and now.hour < PUBLISH_DEADLINE_HOUR:
-        return {"ok": True, "refused": True, "written": 0,
+        return {"ok": True, "refused": True, "written": 0, "refreshed": refreshed,
                 "reason": f"{d} 数据还不齐({'; '.join(probs)})—— UTC {PUBLISH_DEADLINE_HOUR}:00 前等"}
     group_pct(rows)
     prev = await _prev_levels(d)
