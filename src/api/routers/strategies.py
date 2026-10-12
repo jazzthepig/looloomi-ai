@@ -300,12 +300,10 @@ OPEN_SOURCE_STRATEGIES: List[Dict[str, Any]] = [
         "timeframe": "15m (4h regime)", "style": "Directional multi-timeframe swing",
         "thesis": ("4h MACD/ADX/EMA sets regime + direction; 15m RSI-cross times entries "
                    "aligned to it. Regime direction filter + flat-mode circuit breaker."),
-        "metrics": {"sharpe": 6.2, "cagr_pct": 32, "profit_factor": 1.9,
-                    "win_rate_pct": 66, "max_dd_pct": 3.3, "n_trades": 554},
-        "metrics_basis": "in_sample",
-        "honest_note": ("Profitable in-sample (DSR-certified across a 9-strategy search). "
-                        "Directional TA — commodity, not our causal moat. Owes a walk-forward "
-                        "OOS before live sizing."),
+        # S-549(Jazz 10-12「删掉」):没有被样本外验证过的数字不上页面、不进对外接口 —— 样本内 Sharpe / CAGR 拿掉
+        "metrics": None, "metrics_basis": "in_sample_only",
+        "honest_note": ("Backtested in-sample only; no out-of-sample record yet, so no performance figures "
+                        "are shown. Directional technical analysis — tradeable, but not our causal edge."),
         "license": "MIT", "color": "#8B5CF6", "icon": "〰",
         "tags": ["swing", "multi-timeframe", "long-short", "regime"],
     },
@@ -347,7 +345,7 @@ async def list_open_source():
         "count": len(OPEN_SOURCE_STRATEGIES), "license": "MIT",
         "repo_path": "strategies/open_source/", "framework": "Freqtrade",
         "api_base": "https://looloomi.ai/api/v1",
-        "note": "Directional / CIS-gated strategies — profitable but not our causal moat. Numbers are labeled in_sample vs reference.",
+        "note": "Directional / CIS-gated strategies — not our causal edge. No performance figures: none has an out-of-sample record, and a backtest is not a track record.",
     }
 
 

@@ -148,7 +148,7 @@ function StrategyCard({ s, selected, onSelect, regime }) {
         </div>
         <div>
           <div style={{ fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.08em" }}>HOLD</div>
-          <div style={{ fontFamily: F.mono, fontSize: 10, color: T.t2, marginTop: 2 }}>{s.target_hold_days}d</div>
+          <div style={{ fontFamily: F.mono, fontSize: 10, color: T.t2, marginTop: 2 }}>{/^[\d–-]+$/.test(String(s.target_hold_days)) ? `${s.target_hold_days}d` : s.target_hold_days}</div>
         </div>
         <div style={{ marginLeft: "auto" }}>
           <div style={{ fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.08em" }}>FREQTRADE</div>

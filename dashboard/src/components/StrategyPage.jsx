@@ -731,8 +731,7 @@ export default function StrategyPage() {
               description="AI-powered systematic trading engine that converts CIS signals into position sizing and execution. Regime-aware allocation adjusts exposure between risk-on and risk-off environments."
               metrics={[
                 { label: "Strategy", value: "Long/Short Crypto", color: T.t1 },
-                { label: "Target Return", value: "15-25% Ann.", color: T.green },
-                { label: "Max Drawdown", value: "< 15%", color: T.amber },
+                { label: "Max per asset", value: "8%", color: T.t1 },
                 { label: "Rebalance", value: "Daily (UTC close)", color: T.t1 },
               ]}
               status="DRY RUN IN DEPLOYMENT"
@@ -760,8 +759,7 @@ export default function StrategyPage() {
               subtitle="DEFI · PROTOCOL-SCORED · YIELD"
               description="Protocol-scored DeFi allocation. Capital is deployed to the highest-scoring protocols with verified security audits, sustainable yield sources, and sufficient TVL depth."
               metrics={[
-                { label: "Protocols Rated", value: `${(protocols?.protocols || protocols?.data || []).length || 30}+`, color: T.t1 },
-                { label: "Target APY", value: "8-18%", color: T.green },
+                { label: "Protocols Rated", value: (protocols?.protocols || protocols?.data || []).length ? `${(protocols?.protocols || protocols?.data || []).length}` : "—", color: T.t1 },
                 { label: "Min Audit Score", value: "7/10", color: T.t1 },
                 { label: "Min TVL", value: "> $100M", color: T.t1 },
               ]}

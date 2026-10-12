@@ -83,7 +83,7 @@ function PositionRow({ rank, symbol, signal, score, grade, weight, change7d }) {
   );
 }
 
-function PositionTable({ assets, maxRows = 5, emptyMsg = "Loading positions…" }) {
+function PositionTable({ assets, maxRows = 5, emptyMsg = "Loading positions…", scoreLabel = "CIS" }) {
   if (!assets || assets.length === 0) {
     return (
       <div style={{
@@ -108,7 +108,7 @@ function PositionTable({ assets, maxRows = 5, emptyMsg = "Loading positions…" 
         <span>#</span>
         <span>ASSET</span>
         <span>SIGNAL</span>
-        <span style={{ textAlign: "right" }}>CIS</span>
+        <span style={{ textAlign: "right" }}>{scoreLabel}</span>
         <span style={{ textAlign: "center" }}>GRD</span>
         <span style={{ textAlign: "right" }}>7D</span>
       </div>
@@ -233,11 +233,10 @@ function ActivateModal({ strategy, regime, onClose }) {
               </div>
             </div>
 
-            {/* Risk summary */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            {/* Risk summary — no target return / drawdown promises (S-549: unverified numbers stay off the page) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {[
-                { label: "Target Return", value: strategy.target },
-                { label: "Max Drawdown", value: strategy.maxDD },
+                { label: "Risk level", value: strategy.risk },
                 { label: "Rebalance", value: strategy.rebalance },
               ].map((m, i) => (
                 <div key={i} style={{
@@ -465,9 +464,12 @@ function StrategyCard({ strategy, assets, protocols, regime, onActivate }) {
               width: 5, height: 5, borderRadius: "50%", background: T.cyan,
               boxShadow: `0 0 8px ${T.cyan}`, display: "inline-block",
             }} />
-            CURRENT POSITIONS · LIVE CIS
+            {/* S-550: the yield book ranks protocols by protocol score, not CIS — label it so, or Aave reads 96.4 A+
+                 here and 64.7 B one card up */}
+            {strategy.positionsBasis === "protocol" ? "MODEL POSITIONS · PROTOCOL SCORE" : "MODEL POSITIONS · CIS DAILY CLOSE"}
           </div>
-          <PositionTable assets={positions} maxRows={strategy.maxPositions || 5} />
+          <PositionTable assets={positions} maxRows={strategy.maxPositions || 5}
+            scoreLabel={strategy.positionsBasis === "protocol" ? "PROT." : "CIS"} />
         </div>
 
         {/* Right: composition + allocation */}
@@ -526,10 +528,8 @@ const STRATEGIES = [
     icon: "⚡",
     name: "CIS Momentum Alpha",
     description:
-      "Systematic signal-following strategy. Automatically positions into the highest-scoring OUTPERFORM and STRONG OUTPERFORM assets from the CIS universe. Regime-aware: full exposure in RISK ON / GOLDILOCKS, shifts to cash buffer in TIGHTENING and RISK OFF. Rebalances within 30 minutes of any grade or signal change.",
+      "Systematic signal-following strategy. Automatically positions into the highest-scoring OUTPERFORM and STRONG OUTPERFORM assets from the CIS universe. Regime-aware: full exposure in RISK ON / GOLDILOCKS, shifts to cash buffer in TIGHTENING and RISK OFF. Rebalances on each daily official CIS publication.",
     risk: "MEDIUM",
-    target: "15–25% ann.",
-    maxDD: "< 15%",
     rebalance: "Daily",
     minEntry: "$1,000 USDC",
     live: true,
@@ -540,8 +540,6 @@ const STRATEGIES = [
     regimeShort:
       "TIGHTENING: holds STRONG OUTPERFORM only, 30% USDC buffer.",
     metrics: [
-      { label: "Target Return",   value: "15–25% ann.",   color: T.green },
-      { label: "Max Drawdown",    value: "< 15%",         color: "#f59e0b" },
       { label: "Signal Cadence",  value: "Daily (UTC close)", color: T.cyan },
       { label: "Min Allocation",  value: "$1K USDC",      color: T.t2 },
       { label: "Universe",        value: "Full CIS universe", color: T.t2 },
@@ -568,20 +566,17 @@ const STRATEGIES = [
     description:
       "Allocates capital to the top-3 highest-scoring DeFi protocols (protocol score) with TVL > $100M and verified security audits. No leverage, no liquidation risk. Sources yield only from lending, staking, and liquidity provision — never from speculative positions. Rebalances weekly or on TVL drop > 20%.",
     risk: "LOW",
-    target: "7–15% APY",
-    maxDD: "< 5%",
     rebalance: "Weekly",
     minEntry: "$500 USDC",
     live: true,
     statusLabel: "PROTOCOLS LIVE",
+    positionsBasis: "protocol",
     maxPositions: 3,
     regimeNote:
       "Yield is relatively regime-stable but the strategy shifts weight toward established lending protocols (Aave, Compound) in RISK OFF / TIGHTENING, and opens allocations to higher-APY structured products (Pendle, Ethena) in RISK ON.",
     regimeShort:
       "TIGHTENING: overweight Aave / Compound. Reduces Ethena exposure.",
     metrics: [
-      { label: "Target APY",      value: "7–15%",         color: T.green },
-      { label: "Max Drawdown",    value: "< 5%",          color: T.green },
       { label: "Rebalance",       value: "Weekly",        color: T.cyan },
       { label: "Min Allocation",  value: "$500 USDC",     color: T.t2 },
       { label: "Protocol Min TVL",value: "$100M",         color: T.t2 },
@@ -622,10 +617,8 @@ const STRATEGIES = [
     icon: "◎",
     name: "Balanced AI Portfolio",
     description:
-      "Full-spectrum allocation combining both strategies into one. 50% systematic CIS momentum trading, 30% protocol yield, 20% USDC buffer. Regime-aware buffer expansion — shifts stablecoin weight to 40% in TIGHTENING / RISK OFF. Designed for investors who want broad CometCloud AI exposure with built-in downside protection.",
+      "Full-spectrum allocation combining both strategies into one. 50% systematic CIS momentum trading, 30% protocol yield, 20% USDC buffer. Regime-aware buffer expansion — shifts stablecoin weight to 40% in TIGHTENING / RISK OFF. Designed for investors who want broad CometCloud AI exposure with a stablecoin buffer.",
     risk: "MEDIUM",
-    target: "12–20% ann.",
-    maxDD: "< 10%",
     rebalance: "Weekly",
     minEntry: "$5,000 USDC",
     live: false,
@@ -636,8 +629,6 @@ const STRATEGIES = [
     regimeShort:
       "TIGHTENING: 30% momentum / 30% yield / 40% buffer.",
     metrics: [
-      { label: "Target Return",   value: "12–20% ann.",   color: T.green },
-      { label: "Max Drawdown",    value: "< 10%",         color: "#f59e0b" },
       { label: "Rebalance",       value: "Weekly",        color: T.cyan },
       { label: "Min Allocation",  value: "$5K USDC",      color: T.t2 },
       { label: "Fee",             value: "0% mgmt.",      color: T.green },
@@ -660,7 +651,7 @@ const STRATEGIES = [
 /* ═══════════════════════════════════════════════════════════════════════════
    MAIN
    ═══════════════════════════════════════════════════════════════════════════ */
-// ── Open-source strategies (MIT) — earlier profitable/CIS-gated strategies, honestly labeled ──
+// ── Open-source strategies (MIT) — earlier directional / CIS-gated strategies; no unverified figures (S-549) ──
 function OpenSourceStrategies() {
   const [items, setItems] = useState([]);
   const [openId, setOpenId] = useState(null);
@@ -691,9 +682,9 @@ function OpenSourceStrategies() {
         <span style={{ fontFamily: F.mono, fontSize: 8, fontWeight: 700, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.05)", color: T.t2, letterSpacing: ".1em" }}>MIT · FREQTRADE</span>
       </div>
       <p style={{ fontFamily: F.body, fontSize: 12, color: T.t2, lineHeight: 1.6, maxWidth: 620, margin: "0 0 16px", paddingLeft: 12 }}>
-        Earlier profitable strategies, released under MIT. Directional / CIS-gated — genuinely tradeable, but
-        not our edge (the causal + conviction layer stays proprietary). Numbers are honestly labeled
-        in-sample vs reference; we never dress a backtest as a live track record.
+        Earlier strategies, released under MIT. Directional / CIS-gated — genuinely tradeable, but
+        not our edge (the causal + conviction layer stays proprietary). No performance figures are shown:
+        none of these has an out-of-sample record, and a backtest is not a track record.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {items.map(s => (
@@ -704,8 +695,8 @@ function OpenSourceStrategies() {
                 <span style={{ fontFamily: F.mono, fontSize: 9, color: T.muted, marginLeft: 8 }}>{s.subtitle} · {s.timeframe}</span>
               </div>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                {s.metrics_basis === "in_sample" && s.metrics && (
-                  <span style={{ fontFamily: F.mono, fontSize: 10, color: T.green }}>Sharpe {s.metrics.sharpe} · {s.metrics.cagr_pct}% CAGR <span style={{ color: T.muted }}>(in-sample)</span></span>
+                {s.metrics_basis === "in_sample_only" && (
+                  <span style={{ fontFamily: F.mono, fontSize: 9, color: T.muted }}>in-sample backtest only</span>
                 )}
                 {s.metrics_basis === "reference" && (
                   <span style={{ fontFamily: F.mono, fontSize: 9, color: T.muted }}>reference impl</span>
@@ -787,8 +778,8 @@ export default function StrategiesPage() {
           )}
         </div>
         <p style={{ fontFamily: F.body, fontSize: 13, color: T.t2, lineHeight: 1.65, maxWidth: 640, margin: 0, paddingLeft: 14 }}>
-          Three complete investment strategies powered by live CIS signals.
-          Each strategy shows its current positions, target metrics, and allocation model.
+          Three model strategies built on the daily official CIS.
+          Each shows its model positions, its rules, and its allocation model — no target returns.
           Subscribe in three clicks — signals delivered by email and webhook.
         </p>
       </div>
