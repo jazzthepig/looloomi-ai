@@ -1,7 +1,7 @@
 {
   "id": "T-083",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-13",
   "verified": null,
   "title": "③ 敞口旋钮:宽度定仓位(前 N 名里 L 日动量为正的比例)是不是真的会择时 —— 对照同平均仓位恒定与打乱时序的随机择时;收尾 S-555 的两项",
@@ -20,5 +20,6 @@
     "expect": "报告(两半:检验 + 挖掘)写到 Mac 数据根 _reports/absorb_input/,最终路径写进卡 notes;台账 M- 条目先写预注册再写结果;过了 ⇒ Seth 开前向账本卡(③ 的第二条腿,与 multiplier 并排);不过 ⇒ 进坟场并写清死因"
   },
   "prior_value": "S-555:市值加权 × 宽度仓位 S1 +159% / −15% / 夏普 1.75,S2 +1.7% / −28%;同宇宙市值加权满仓 S1 +374% / −29%,S2 −24% / −55%。从没和「同平均仓位恒定」「随机择时」比过 —— 回撤减半可能只是平均一半仓位。",
-  "notes": "2026-10-13 Seth 开卡派 A(Jazz:多用 lane)。只读研究,不改 src/。SQL 参考已在 docs/research/。"
+  "notes": "lane-a 10-13 第一脚:台账主仓库 REFUTATION_LEDGER.md 已写 M-557 预注册(主臂 cap_breadth N50/L30、对照 A = 主臂全期平均仓位恒定、对照 B = 主臂 w(t) 4 周块打乱 500 次、邻域 9 格、3 档成本)。**沙盒现状:MCP supabase execute_sql 未授权;`/tmp/cometcloud_data/ohlcv.db` 0 字节;Mac 根 `data/ohlcv_11yr.db` 只 48 币 binance_spot(S-555 已确认 binance_hist 也有 125 个 09-07 后假价);`_cache/coingecko_history/mcap_history_24.json` 仅 24 币。** 没有合规路径在本轮拉全量 `asset_mcap_daily`(完整价格史 + 全量币池)。**卡状态先置 in_review**,等 Seth 在 Supabase 端放行授权、或在 Mac 端 dump 一份 `asset_mcap_daily` 的全量 parquet/csv 到 `_cache/` 后,任一端接 M-557 跑下条;判据、邻域、对照、ZEC 剔除、3 档成本 已锁。"
+
 }
