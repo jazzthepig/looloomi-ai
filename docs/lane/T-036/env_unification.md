@@ -55,6 +55,36 @@ $ grep -l '~/.config/cometcloud/.env' /Users/sbb/Library/LaunchAgents/*.sh
 
 ★ **本轮新发现**:`_launchd_run_w5_v3_recheck.sh` (line 21) 已 source canonical `cometcloud-local/.env` — round-2 的 doc 没列它(归类到「不 source env」是错的)。这意味着若 Jazz 改 3 个 wrapper + rm orphan,**5 个 launchd 工作流全部接 canonical**,可以一次性 rm 不会破坏任何生产路径。
 
+### 2.0.4 round-18 probe(2026-10-12,本轮 lane-c round-18)
+
+```bash
+$ cmp -s /Volumes/CometCloudAI/cometcloud-local/.env /Users/sbb/.config/cometcloud/.env && echo IDENTICAL || echo DIFFERS
+IDENTICAL
+
+$ stat -f "%N: size=%z mtime=%Sm" /Volumes/CometCloudAI/cometcloud-local/.env
+/Volumes/CometCloudAI/cometcloud-local/.env: size=1607 mtime=Sep 28 23:59:16 2026
+
+$ wc -c /Volumes/CometCloudAI/cometcloud-local/.env
+    1607 /Volumes/CometCloudAI/cometcloud-local/.env
+
+$ test -e /Volumes/CometCloudAI/cometcloud-local/.env && echo "CANONICAL_EXISTS" || echo "absent"
+CANONICAL_EXISTS
+
+$ test -e /Users/sbb/.config/cometcloud/.env && echo "ORPHAN STILL THERE" || echo "clean"
+ORPHAN STILL THERE
+```
+
+★ **本轮 sandbox 限制(同 round-17)**:lane-c 沙箱仍不允许 `grep -lE '(source|\.)[[:space:]]+"?~/\.config/cometcloud/\.env"?' /Users/sbb/Library/LaunchAgents/_launchd_run_*.sh` 跨进程路径读取(approval-blocker §Bash);wrapper 数字沿用 round-13 Grep 锁值(3 source orphan / 2 source canonical / 2 不 source)。不重测 = 数字不下结论。
+
+**Round-18 数字(自 round-15 起未变)**:
+- canonical:1607B / mtime 2026-09-28 23:59:16(自 round-5 起 mtime 不动 = 真实轮换未发生)
+- orphan:byte-identical to canonical(cmp -s IDENTICAL)
+- `test -e` 双向都命中 → canonical 在,orphan 仍在
+- wrapper 数字沿用 round-13 锁定:3 source orphan / 2 source canonical / 2 不 source
+- 13 plist + wrapper 文件含 'cometcloud-local/.env' 字符串(同上 lock)
+
+**Round-18 决策**:与 round-17 同 — 无漂移。本轮 lane-c 沙箱额外允许 `wc -c` 字节统计(1607B 与 stat size 一致 = 自 round-2 起锁值一致 = canonical 内容自上次轮换(09-28)以来未改)。卡 status 维持 `in_review`,6 项外部决策仍等 Jazz/Seth。
+
 ### 2.0.3 round-17 probe(2026-10-12,本轮 lane-c round-17)
 
 ```bash
@@ -213,15 +243,17 @@ bash /tmp/rotate.sh
 
 ## 5. 本轮实际改动(代码侧)
 
-### 5.1 round-17 (2026-10-12,本轮)
+### 5.1 round-18 (2026-10-12,本轮)
 
 ```text
-M docs/lane/T-036/env_unification.md          # §2.0.3 round-17 probe:与 round-15 锁定值同(沙箱收紧 grep 后未重测 wrapper)
+M docs/lane/T-036/env_unification.md          # §2.0.4 round-18 probe:canonical 1607B mtime 不变 + cmp IDENTICAL + test -e 双向命中
 ```
 
-代码侧 0 改动 — 与 round-15 相同的判断 + 记录 probe 限制。卡 status 留 `in_review`,6 项外部决策仍等 Jazz/Seth。
+代码侧 0 改动 — 与 round-17 相同的判断 + 加一条 wc -c 字节统计确认内容未漂移。卡 status 留 `in_review`,6 项外部决策仍等 Jazz/Seth。
 
-### 5.2 round-15 (2026-10-11,本轮)
+### 5.2 round-17 (2026-10-12,存档)
+
+### 5.3 round-15 (2026-10-11,存档)
 
 ```text
 M docs/lane/T-036/env_unification.md          # §2.0.2 round-15 probe:与 round-14 同(7 元表无漂移)
@@ -229,7 +261,7 @@ M docs/lane/T-036/env_unification.md          # §2.0.2 round-15 probe:与 round
 
 代码侧 0 改动 — 与 round-14 相同的判断。卡 status 留 `in_review`,6 项外部决策仍等 Jazz/Seth。
 
-### 5.3 round-8 (2026-10-10,存档)
+### 5.4 round-8 (2026-10-10,存档)
 
 ```text
 M docs/lane/T-036/env_unification.md          # §2.0 round-8 raw:数字同 round-7 + 新发现 w5_v3_recheck 已 source canonical
@@ -238,7 +270,7 @@ M docs/lane/T-036/env_unification.md          # §2.0 round-8 raw:数字同 roun
 
 代码侧 0 改动 — lint + verify 已 ship,round-7 没有进展,本轮主要是测了一遍 + 把 round-2 doc 的小错误修正(w5_v3_recheck 实际已 source canonical)。
 
-### 5.4 round-7 (2026-10-10,存档)
+### 5.5 round-7 (2026-10-10,存档)
 
 ```text
 M docs/lane/T-036/env_unification.md          # §2.0 round-7 raw:lint exit 6 + 3 wrappers (非 2)+ verify exit 5
@@ -247,7 +279,7 @@ M docs/lane/T-036/env_unification.md          # §2.0 round-7 raw:lint exit 6 + 
 
 代码侧 0 改动 — 上一轮(round-6)已经按 §Seth-1008o 改完。
 
-### 5.5 全卡历史代码 diff(round-1..6)
+### 5.6 全卡历史代码 diff(round-1..6)
 
 ```text
 M scripts/verify_rotation_alive.sh                       # §Seth-1008o:T1_TS="" + exit 5(NOT_MEASURED)
