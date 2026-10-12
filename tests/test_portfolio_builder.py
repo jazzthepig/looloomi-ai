@@ -189,3 +189,15 @@ def test_gaps_align_levels_before_returns():
     assert out["days"] == 6 and out["calendar_days"] == 9
     ra = out["books"][0]["book_return"]
     assert ra == pytest.approx(1.01 ** 9 - 1)          # a 在 b 的缺口上算的是同一段 4 天的收益
+
+
+def test_strategy_page_regime_uses_the_official_spelling_map():
+    """S-548:策略页的市场状态来自正式序列(RISK_ON),要换成策略表的键(Risk-On),否则 regime_adaptive 落回默认权重。"""
+    from src.api.routers.strategies import _REGIME_BLEND, regime_label
+    for off in ("RISK_ON", "RISK_OFF", "TIGHTENING", "EASING", "STAGFLATION", "GOLDILOCKS", "risk-on"):
+        assert regime_label(off) in _REGIME_BLEND, off
+    assert regime_label(None) is None and regime_label("??") is None
+    import inspect
+    from src.api.routers import strategies
+    src = inspect.getsource(strategies)
+    assert src.count("await _current_regime()") >= 3, "list / detail / compare must read the official state"

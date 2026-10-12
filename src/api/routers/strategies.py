@@ -207,6 +207,38 @@ def _strategy_fitness(strategy: Dict, regime: str) -> int:
     return 55  # neutral — strategy works but not optimal
 
 
+#: 正式序列的状态写法 → 本页策略表的键
+_OFFICIAL_TO_BLEND = {"RISK_ON": "Risk-On", "RISK_OFF": "Risk-Off", "TIGHTENING": "Tightening", "EASING": "Easing",
+                      "STAGFLATION": "Stagflation", "GOLDILOCKS": "Goldilocks", "NEUTRAL": "Neutral"}
+
+
+def regime_label(official_regime: Any) -> Optional[str]:
+    """纯函数。正式状态(RISK_ON …)→ 策略表的键(Risk-On …);认不出 → None。"""
+    return _OFFICIAL_TO_BLEND.get(str(official_regime or "").upper().replace("-", "_"))
+
+
+async def _current_regime() -> str:
+    """S-548:策略页的「当前市场状态」= 正式日终序列那一天的状态(与 CIS 页顶栏同一个答案)。
+    之前三个接口直读 Mac 推送的盘中 macro(10-12 实测:页面写 TIGHTENING,CIS 顶栏写 RISK_ON)。
+    没有正式值时才退回盘中值。"""
+    try:
+        from src.data.cis.official import latest_official
+        latest = await latest_official()
+        regs = {r.get("regime") for r in ((latest or {}).get("rows") or {}).values() if r.get("regime")}
+        if len(regs) == 1 and (lab := regime_label(next(iter(regs)))):
+            return lab
+    except Exception:
+        pass
+    try:
+        cached = await redis_get_key("cis:local_scores")
+        if cached and isinstance(cached, dict):
+            macro = cached.get("macro", {})
+            return macro.get("regime", "Neutral") if isinstance(macro, dict) else "Neutral"
+    except Exception:
+        pass
+    return "Neutral"
+
+
 def _resolve_weights(strategy: Dict, regime: str) -> Dict[str, float]:
     """For regime_adaptive, use the regime-specific blend. Others use fixed weights."""
     if strategy["id"] == "regime_adaptive":
@@ -236,16 +268,7 @@ async def list_strategies():
     List all available multi-factor strategies with metadata.
     Returns strategy definitions, pillar weights, and current regime fitness.
     """
-    # Get current regime from Redis
-    try:
-        cached = await redis_get_key("cis:local_scores")
-        if cached and isinstance(cached, dict):
-            macro = cached.get("macro", {})
-            regime = macro.get("regime", "Neutral") if isinstance(macro, dict) else "Neutral"
-        else:
-            regime = "Neutral"
-    except Exception:
-        regime = "Neutral"
+    regime = await _current_regime()
 
     result = []
     for s in STRATEGIES.values():
@@ -351,14 +374,7 @@ async def get_strategy(strategy_id: str):
                             f"Available: {list(STRATEGIES.keys())}")
 
     s = STRATEGIES[strategy_id]
-    try:
-        cached = await redis_get_key("cis:local_scores")
-        regime = "Neutral"
-        if cached and isinstance(cached, dict):
-            macro = cached.get("macro", {})
-            regime = macro.get("regime", "Neutral") if isinstance(macro, dict) else regime
-    except Exception:
-        regime = "Neutral"
+    regime = await _current_regime()
 
     weights = _resolve_weights(s, regime)
     return {
@@ -404,7 +420,8 @@ async def strategy_universe(
             raise HTTPException(500, "CIS universe unavailable")
 
         raw_assets = base_universe.get("assets") or base_universe.get("universe", [])
-        regime = base_universe.get("macro_regime", "Neutral")
+        # 正式序列写 RISK_ON,策略表的键是 Risk-On —— 不换写法,regime_adaptive 永远落回默认权重(S-548)
+        regime = regime_label(base_universe.get("macro_regime")) or base_universe.get("macro_regime") or "Neutral"
 
         weights = _resolve_weights(strategy, regime)
         entry = strategy["entry_criteria"]
@@ -542,14 +559,7 @@ async def compare_pillar_weights():
     Side-by-side comparison of all strategy pillar weights.
     Useful for building factor exposure charts in the frontend.
     """
-    try:
-        cached = await redis_get_key("cis:local_scores")
-        regime = "Neutral"
-        if cached and isinstance(cached, dict):
-            macro = cached.get("macro", {})
-            regime = macro.get("regime", "Neutral") if isinstance(macro, dict) else "Neutral"
-    except Exception:
-        regime = "Neutral"
+    regime = await _current_regime()
 
     comparison = {}
     for sid, s in STRATEGIES.items():
