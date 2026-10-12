@@ -1466,7 +1466,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                 <div className="pulse-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: T.amber }} />
                 <span style={{ fontSize: 13, color: T.amber, fontWeight: 600, fontFamily: FONTS.body }}>
-                  Vault Contract: In Development · Solana Devnet Q2 2026
+                  Vault Contract: In Development · Solana Devnet
                 </span>
               </div>
               <div style={{ fontSize: 11, color: T.muted, fontFamily: FONTS.mono }}>

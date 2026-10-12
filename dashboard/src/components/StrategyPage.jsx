@@ -510,7 +510,7 @@ export default function StrategyPage() {
           }}>
             <Stat label="Assets Scored" value={universeSize ? `${universeSize}` : "—"} sub="Crypto + TradFi" />
             <Stat label="Investment Channels" value="3" sub="Algo · Protocol · FoF" />
-            <Stat label="Target AUM" value="$30M" sub="Phase 1" />
+            <Stat label="Target AUM" value="$30M" sub="Phase 1 · built for $500M" />
             <Stat label="Management Fee" value="0%" sub="Performance only" color={T.green} />
           </div>
         </Section>
@@ -808,11 +808,11 @@ export default function StrategyPage() {
               description="Solana-based fund-of-funds allocating across CIS-scored GP partners. Zero management fee, performance-only structure aligned with LP interests. Denominated in OSL stablecoin."
               metrics={[
                 { label: "Structure", value: "On-chain FoF", color: T.t1 },
-                { label: "Target AUM", value: "$30M", color: T.t1 },
+                { label: "Target AUM", value: "$30M · built for $500M", color: T.t1 },
                 { label: "Management Fee", value: "0%", color: T.green },
                 { label: "Base", value: "Hong Kong", color: T.t1 },
               ]}
-              status="GP ONBOARDING · Q2 2026"
+              status="GP ONBOARDING"
               statusColor={T.amber}
             >
               <div>
@@ -839,7 +839,7 @@ export default function StrategyPage() {
                 }}>
                   <div>
                     <div style={{ fontFamily: F.display, fontSize: 12, fontWeight: 600, color: T.t3 }}>Additional GPs</div>
-                    <div style={{ fontFamily: F.mono, fontSize: 10, color: T.t3 }}>Onboarding Q2 2026</div>
+                    <div style={{ fontFamily: F.mono, fontSize: 10, color: T.t3 }}>Onboarding</div>
                   </div>
                   <span style={{
                     fontFamily: F.mono, fontSize: 9, fontWeight: 700, padding: "2px 8px",
@@ -907,7 +907,7 @@ export default function StrategyPage() {
             {[
               { title: "Regulatory Framework", desc: "Hong Kong incorporated entity. Structured for institutional LP participation with proper fund documentation and compliance.", icon: "🏛" },
               { title: "Technology Stack", desc: "Point-in-time data pipelines, one scoring standard for history and publication, and append-only daily records.", icon: "⚙" },
-              { title: "Fee Structure", desc: "Zero management fee. Performance-only fee alignment ensures our interests are fully aligned with LP returns.", icon: "💎" },
+              { title: "Fee Structure", desc: "Strategies carry zero management fee — performance fee only, so our interests stay aligned with LP returns. A regulated fund vehicle adds a management fee that covers fund administration costs; the two structures sit side by side.", icon: "💎" },
               { title: "On-Chain Settlement", desc: "Solana-based fund operations. OSL stablecoin denominated. Designed for both human LPs and autonomous AI agent participation.", icon: "⛓" },
               { title: "Risk Controls", desc: "Max 8% single-asset allocation. Regime-based derisking. Drawdown triggers. 6 macro regime detection for dynamic weight adjustment.", icon: "🛡" },
               { title: "Transparency", desc: "Full CIS methodology published. Daily official scores, an intraday preview, score history and grade migration for all assets.", icon: "📊" },
