@@ -268,7 +268,7 @@ export default function ShareCard() {
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {[
                 "AI-curated Fund-of-Funds on Solana",
-                "0% management fee · Performance-only",
+                "Strategies: 0% mgmt · performance fee only",
                 "Institutional DeFi · $30M AUM target",
               ].map((txt, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>

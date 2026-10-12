@@ -637,9 +637,9 @@ export default function MethodologyPage() {
               rows={[
                 ["Confidence < 0.5",      "Score compresses toward 50 (less range)", "Warning dot indicator"],
                 ["Volume data gap",        "LAS liq_mult floored at 0.15",           "LAS displayed in amber"],
-                ["Full-model score unavailable", "System falls back to Tier 2 estimate", "Badge: CIS MKT · T2"],
+                ["Inputs missing at the close", "Hard gaps (no BTC price, under 90% of crypto priced): no publication that day. Soft gaps: published after 06:00 UTC, flagged", "Previous official score stays; missing inputs listed per asset"],
                 ["Market data unavail.",   "Asset excluded from universe",            "Not shown in leaderboard"],
-                ["Regime transition",      "T1 flags + stores previous_regime",      "Regime badge updates live"],
+                ["Regime change",          "Recorded with that day's official batch",  "Market-state badge changes with the next publication"],
               ]}
             />
 
@@ -647,7 +647,8 @@ export default function MethodologyPage() {
               <div style={{ fontFamily: disp, fontSize: 11, color: C.t3, fontWeight: 700,
                 letterSpacing: "0.1em", marginBottom: 12 }}>SCORE HISTORY</div>
               <p style={{ fontFamily: body, fontSize: 13, color: C.t2, lineHeight: 1.7, margin: 0 }}>
-                Every CIS push is persisted to a time-series database. Institutions can
+                Every daily official publication is appended to a write-once series — a published
+                day is never edited; a methodology change starts a new version. Institutions can
                 request historical score data to audit score stability and model the
                 relationship between CIS signals and subsequent price performance.
                 The CIS API exposes a{" "}

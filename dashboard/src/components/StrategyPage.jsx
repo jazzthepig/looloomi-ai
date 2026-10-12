@@ -511,7 +511,7 @@ export default function StrategyPage() {
             <Stat label="Assets Scored" value={universeSize ? `${universeSize}` : "—"} sub="Crypto + TradFi" />
             <Stat label="Investment Channels" value="3" sub="Algo · Protocol · FoF" />
             <Stat label="Target AUM" value="$30M" sub="Phase 1 · built for $500M" />
-            <Stat label="Management Fee" value="0%" sub="Performance only" color={T.green} />
+            <Stat label="Strategy Fees" value="0% mgmt" sub="Performance fee only" color={T.green} />
           </div>
         </Section>
 
@@ -531,7 +531,7 @@ export default function StrategyPage() {
             fontFamily: F.body, fontSize: 13, color: T.t2, lineHeight: 1.65,
             maxWidth: 600, marginBottom: 32,
           }}>
-            Our AI continuously monitors macro conditions, on-chain flows, and market sentiment
+            The market state is read on each daily close from macro conditions, on-chain flows, and market sentiment
             to dynamically adjust allocation weights across all three investment channels.
           </p>
 
@@ -591,9 +591,9 @@ export default function StrategyPage() {
               fontFamily: F.mono, fontSize: 8, fontWeight: 700,
               letterSpacing: "0.12em", color: "#c8a84b",
               background: "rgba(200,168,75,0.15)", borderRadius: 3, padding: "2px 6px",
-            }}>T2 DATA</span>
+            }}>DAILY CLOSE</span>
             <span style={{ fontFamily: F.body, fontSize: 10, color: T.t3 }}>
-              Live market scoring via CoinGecko · DeFiLlama · Alternative.me — T1 local AI engine scores available on request
+              Official scores published once per day on the UTC close · CoinGecko Pro · DeFiLlama · Alternative.me · EODHD
             </span>
           </div>
 
@@ -803,11 +803,11 @@ export default function StrategyPage() {
               icon="🗂"
               title="Fund of Funds"
               subtitle="INSTITUTIONAL · MULTI-GP · ON-CHAIN"
-              description="Solana-based fund-of-funds allocating across CIS-scored GP partners. Zero management fee, performance-only structure aligned with LP interests. Denominated in OSL stablecoin."
+              description="Solana-based fund-of-funds allocating across CIS-scored GP partners, offered through a regulated fund structure: a management fee covering fund costs plus a performance fee. Denominated in OSL stablecoin."
               metrics={[
                 { label: "Structure", value: "On-chain FoF", color: T.t1 },
                 { label: "Target AUM", value: "$30M · built for $500M", color: T.t1 },
-                { label: "Management Fee", value: "0%", color: T.green },
+                { label: "Fees", value: "Mgmt + perf.", color: T.t1 },
                 { label: "Base", value: "Hong Kong", color: T.t1 },
               ]}
               status="GP ONBOARDING"
@@ -869,17 +869,17 @@ export default function StrategyPage() {
           }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <FlowStep num="1" title="Multi-Source Data Ingestion"
-                desc="Real-time feeds from CoinGecko Pro, DeFiLlama, Alternative.me, and Binance. On-chain analytics, TVL flows, sentiment indices, and macro indicators aggregated every 30 minutes." />
+                desc="Feeds from CoinGecko Pro, DeFiLlama, Alternative.me, EODHD and Binance — on-chain analytics, TVL flows, sentiment indices, and macro indicators. Inputs refresh through the day; the official score uses only data available at each UTC close." />
               <FlowStep num="2" title="CIS Scoring Engine"
-                desc="Dedicated local AI infrastructure scores each asset across 5 pillars. Regime-aware weight adjustments ensure scores reflect the current macro environment — not static rankings." />
+                desc="One scoring standard, used for history and for each day's publication, scores every asset across 5 pillars. Regime-aware weights reflect the macro environment of that close — not static rankings." />
               <FlowStep num="3" title="Signal Generation"
-                desc="Scores are converted to positioning signals: STRONG OUTPERFORM, OUTPERFORM, NEUTRAL, UNDERPERFORM, UNDERWEIGHT. Confidence levels and recommended portfolio weights are computed per asset." />
+                desc="Scores are converted to positioning signals: STRONG OUTPERFORM, OUTPERFORM, NEUTRAL, UNDERPERFORM, UNDERWEIGHT. Each signal change is attributed to the pillars that moved it and shown with the history of signals of the same kind." />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <FlowStep num="4" title="Channel Allocation"
-                desc="Signals feed into three channels simultaneously. The Trading Agent executes positions, Protocol Yield rebalances DeFi allocations, and the Fund-of-Funds adjusts GP weights." />
+                desc="Signals feed the three channels: the trading strategy (in dry run), protocol yield allocation, and GP weighting in the fund-of-funds." />
               <FlowStep num="5" title="Risk Management"
-                desc="Maximum per-asset allocation 8%, sector concentration limits, drawdown triggers, and automatic regime-based derisking. All positions monitored in real-time." />
+                desc="Maximum per-asset allocation 8%, sector concentration limits, drawdown triggers, and automatic regime-based derisking. Positions are marked daily." />
               <FlowStep num="6" title="Investor Dashboard"
                 desc="Full transparency: daily official CIS scores with their history, channel performance, allocation breakdown, and risk metrics. All data accessible on-platform." />
             </div>
