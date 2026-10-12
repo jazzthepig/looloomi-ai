@@ -55,6 +55,26 @@ $ grep -l '~/.config/cometcloud/.env' /Users/sbb/Library/LaunchAgents/*.sh
 
 ★ **本轮新发现**:`_launchd_run_w5_v3_recheck.sh` (line 21) 已 source canonical `cometcloud-local/.env` — round-2 的 doc 没列它(归类到「不 source env」是错的)。这意味着若 Jazz 改 3 个 wrapper + rm orphan,**5 个 launchd 工作流全部接 canonical**,可以一次性 rm 不会破坏任何生产路径。
 
+### 2.0.3 round-17 probe(2026-10-12,本轮 lane-c round-17)
+
+```bash
+$ stat -f "%N: size=%z mtime=%Sm" /Volumes/CometCloudAI/cometcloud-local/.env
+/Volumes/CometCloudAI/cometcloud-local/.env: size=1607 mtime=Sep 28 23:59:16 2026
+
+$ test -e /Users/sbb/.config/cometcloud/.env && echo "ORPHAN STILL THERE" || echo "clean"
+ORPHAN STILL THERE
+```
+
+★ **本轮 sandbox 限制**:lane-c 沙箱不再授权 `grep -lE '(source|\.)[[:space:]]+"?~/\.config/cometcloud/\.env"?' /Users/sbb/Library/LaunchAgents/_launchd_run_*.sh`(approval-blocker §Bash 跨进程路径读取),与本文件 §2.0.1 末段所写「结果由 Jazz 在 Mac 终端跑」一致。本轮 wrapper 数字直接采信 round-15 probe 锁定值(3 source orphan / 2 source canonical / 2 不 source);不重测 = 数字不下结论。
+
+**Round-17 数字(自 round-15 起未变)**:
+- canonical:1607B / mtime 2026-09-28 23:59:16(自 round-5 起 mtime 不动)
+- orphan:`test -e` = STILL THERE(未 rm,等 Jazz per §Seth-1006g)
+- wrapper 数字锁定值(沙箱限制不能重测):3 source orphan / 2 source canonical / 2 不 source
+- 13 plist + wrapper 文件含 'cometcloud-local/.env' 字符串(同上 lock)
+
+**Round-17 决策**:与 round-15 同 — 无漂移。本卡 Lane 侧无可交付代码(本轮 sandbox 还收紧了一项 probe);5/5 acceptance 仍仅 §1 Mac canonical 唯一存在已通过,其余 4 条等 Jazz/Seth 外部决策(参见 §6 卡 status 表)。
+
 ### 2.0.2 round-15 probe(2026-10-11,10:35 UTC,本轮 lane-c round-15)
 
 ```bash
@@ -193,7 +213,15 @@ bash /tmp/rotate.sh
 
 ## 5. 本轮实际改动(代码侧)
 
-### 5.1 round-15 (2026-10-11,本轮)
+### 5.1 round-17 (2026-10-12,本轮)
+
+```text
+M docs/lane/T-036/env_unification.md          # §2.0.3 round-17 probe:与 round-15 锁定值同(沙箱收紧 grep 后未重测 wrapper)
+```
+
+代码侧 0 改动 — 与 round-15 相同的判断 + 记录 probe 限制。卡 status 留 `in_review`,6 项外部决策仍等 Jazz/Seth。
+
+### 5.2 round-15 (2026-10-11,本轮)
 
 ```text
 M docs/lane/T-036/env_unification.md          # §2.0.2 round-15 probe:与 round-14 同(7 元表无漂移)
@@ -201,7 +229,7 @@ M docs/lane/T-036/env_unification.md          # §2.0.2 round-15 probe:与 round
 
 代码侧 0 改动 — 与 round-14 相同的判断。卡 status 留 `in_review`,6 项外部决策仍等 Jazz/Seth。
 
-### 5.2 round-8 (2026-10-10,存档)
+### 5.3 round-8 (2026-10-10,存档)
 
 ```text
 M docs/lane/T-036/env_unification.md          # §2.0 round-8 raw:数字同 round-7 + 新发现 w5_v3_recheck 已 source canonical
@@ -210,7 +238,7 @@ M docs/lane/T-036/env_unification.md          # §2.0 round-8 raw:数字同 roun
 
 代码侧 0 改动 — lint + verify 已 ship,round-7 没有进展,本轮主要是测了一遍 + 把 round-2 doc 的小错误修正(w5_v3_recheck 实际已 source canonical)。
 
-### 5.3 round-7 (2026-10-10,存档)
+### 5.4 round-7 (2026-10-10,存档)
 
 ```text
 M docs/lane/T-036/env_unification.md          # §2.0 round-7 raw:lint exit 6 + 3 wrappers (非 2)+ verify exit 5
@@ -219,7 +247,7 @@ M docs/lane/T-036/env_unification.md          # §2.0 round-7 raw:lint exit 6 + 
 
 代码侧 0 改动 — 上一轮(round-6)已经按 §Seth-1008o 改完。
 
-### 5.4 全卡历史代码 diff(round-1..6)
+### 5.5 全卡历史代码 diff(round-1..6)
 
 ```text
 M scripts/verify_rotation_alive.sh                       # §Seth-1008o:T1_TS="" + exit 5(NOT_MEASURED)
