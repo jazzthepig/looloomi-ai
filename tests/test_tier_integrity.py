@@ -158,7 +158,8 @@ def test_radar_footer_does_not_hardcode_a_tier():
     T1 — which is what made two pages showing the SAME number look different."""
     txt = _RADAR.read_text()
     footer = txt.split("── Footer")[1]
-    assert "dataTier" in footer, "the tier claim must be derived from the rows"
+    # S-541:脚注说的是「正式(UTC 收盘)/ 盘中预览」,由每行的 signal_basis 推出(不再是 T1 / T2 引擎层)
+    assert "dataTier" in footer or "basis" in footer, "the tier claim must be derived from the rows"
     assert not re.search(r'\{"\s*·\s*"\}<span[^>]*>T2</span>\s*Market Est\.',
                          footer.replace("\n", " ")) or "t1 === 0" in footer, (
         "an unconditional T2 claim is a hardcoded assertion about live data")
