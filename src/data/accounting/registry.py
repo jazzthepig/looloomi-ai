@@ -39,9 +39,14 @@ class Book:
 
 
 BOOKS: tuple[Book, ...] = (
-    # S-473(Jazz 10-03「use 1」):① = 市值加权、单币 ≤ 40%。基准臂 ew_a0 = 同一内核下的等权,记着 α 这个决定本身的前向证据。
-    Book("core_cap", "①", "核心持仓(24 名市值加权,单币 ≤ 40%)", "持有市场吃 beta;FoF 的本体(S-472/S-473)",
-         "core_cap_daily", "arms", arm="cap_a1", accounting="shared_kernel", benchmark="arm:ew_a0"),
+    # S-473(Jazz 10-03「use 1」):① = 市值加权。S-556(Jazz 10-12「把单币上限 40% 解除」):10-12 收盘起 ① = cap_a1_u
+    # (不设上限);在那之前 ① 的记录就是 cap_a1(单币 ≤ 40%)—— load_navs 按日期拼成一条。基准臂 ew_a0 = 同一内核下的等权。
+    Book("core_cap", "①", "核心持仓(24 名市值加权,不设单币上限;10-12 前单币 ≤ 40%)", "持有市场吃 beta;FoF 的本体(S-472/S-473/S-556)",
+         "core_cap_daily", "arms", arm="cap_a1_u", accounting="shared_kernel", benchmark="arm:ew_a0"),
+    # 旧 ①(单币 ≤ 40%)照旧前向记账,留作「解除上限」这个决定本身的对照 —— 不是候选,不进配置。
+    Book("core_cap_c40", "①", "旧核心持仓(单币 ≤ 40%,10-12 前的 ①;留作对照)", "解除上限这个决定的前向对照(S-556)",
+         "core_cap_daily", "arms", arm="cap_a1", accounting="shared_kernel", benchmark="arm:ew_a0",
+         caveat="对照臂:10-12 起 ① 已不设单币上限"),
     # 原 ①。S-473 起改作 ② 候选:等权 = 对二线 / 山寨的风格倾斜,外加波动率目标(③ 的成分)—— 要自己挣到权重。
     Book("beta_core", "②", "等权 + 波动率目标(原 ①,S-473 起为 ② 候选)", "面板内等权 = 风格倾斜;另含 ③ 的波动率目标",
          "beta_core_nav", "plain", filters={"void_reason": "is.null"}, benchmark="core", stamp="valuation_next_day"),
@@ -182,7 +187,33 @@ async def load_navs() -> tuple[dict[str, pd.Series], dict[str, pd.Series]]:
         if b.stamp == "valuation_next_day" and navs.get(b.id) is not None:
             navs[b.id] = navs[b.id].copy()
             navs[b.id].index = navs[b.id].index - pd.Timedelta(days=1)
+    # S-556:① 在 10-12 收盘换了规则(解除单币上限)—— 账本 core_cap 的 NAV = 旧臂到换规则那天 + 新臂之后,按收益拼接
+    if navs.get("core_cap") is not None or navs.get("core_cap_c40") is not None:
+        navs["core_cap"] = stitch_core(navs.get("core_cap_c40"), navs.get("core_cap"))
     return navs, bench
+
+
+def stitch_core(legacy: Optional[pd.Series], current: Optional[pd.Series]) -> Optional[pd.Series]:
+    """纯函数。① 的前向 NAV:CORE_SINCE 及以前用旧臂(单币 ≤ 40%),之后用新臂(不设上限)的日收益接上去。"""
+    from src.data.signals.core_cap import CORE_SINCE
+    parts = []
+    if legacy is not None:
+        lg = legacy.dropna().sort_index()
+        parts.append(lg.pct_change().dropna()[lambda x: x.index <= CORE_SINCE])
+        start = lg.index[0] if len(lg) else None
+    else:
+        start = None
+    if current is not None:
+        cu = current.dropna().sort_index()
+        parts.append(cu.pct_change().dropna()[lambda x: x.index > CORE_SINCE])
+        if start is None and len(cu):
+            start = cu.index[0]
+    if not parts or start is None:
+        return None
+    rets = pd.concat(parts).sort_index()
+    rets = rets[~rets.index.duplicated(keep="first")]
+    nav = (1 + rets).cumprod()
+    return pd.concat([pd.Series({start: 1.0}), nav]).sort_index()[lambda x: ~x.index.duplicated(keep="first")]
 
 
 def panel_ew_nav(close: pd.DataFrame) -> pd.Series:
@@ -221,11 +252,11 @@ async def core_nav(start: str = "2026-06-01") -> Optional[pd.Series]:
     """① 的逐日 NAV —— 全系统只这一个读法(成绩单基准、L3、T-048 状态层都从这里取)。
 
     10-02 及以前:库函数 `core_alpha_daily` 的 α=1 回放(24 名市值加权、单币 ≤ 40%、每日再平衡);
-    之后:`core_cap_daily.cap_a1` 的前向收益(周一再平衡)。两段按收益拼接成一条 NAV。
+    10-02 → 10-12:`core_cap_daily.cap_a1` 的前向收益;10-12 之后:`cap_a1_u`(不设单币上限,S-556)。按收益拼接成一条 NAV。
     读不到 ⇒ None,成绩单会说「基准没有覆盖」,不悄悄退回等权。
     """
     from src.api.store import supabase_rpc_all
-    from src.data.signals.core_cap import CORE_ARM, INCEPTION, TABLE
+    from src.data.signals.core_cap import CORE_ARM, CORE_SINCE, INCEPTION, LEGACY_CORE_ARM, TABLE
     from src.data.style.header import _read_all
     rows = await supabase_rpc_all("core_alpha_daily", {"p_start": start},
                                   {"alpha": "eq.1", "order": "d.asc"})
@@ -234,8 +265,16 @@ async def core_nav(start: str = "2026-06-01") -> Optional[pd.Series]:
     rep_ = pd.Series({pd.Timestamp(r["d"]): float(r["ret"]) for r in rows
                       if float(r.get("alpha", -1)) == 1.0 and r.get("ret") is not None}).sort_index()
     rep_ = rep_[rep_.index <= INCEPTION]
-    fwd = await _read_all(TABLE, {"select": "d,nav", "arm": f"eq.{CORE_ARM}", "order": "d.asc"})
-    f = pd.Series({pd.Timestamp(r["d"]): float(r["nav"]) for r in fwd}).sort_index()
-    rets = pd.concat([rep_, f.pct_change().dropna()[lambda x: x.index > INCEPTION]]).sort_index()
+
+    async def _arm(arm: str) -> pd.Series:
+        fwd = await _read_all(TABLE, {"select": "d,nav", "arm": f"eq.{arm}", "order": "d.asc"})
+        return pd.Series([float(r["nav"]) for r in fwd],
+                         index=pd.DatetimeIndex([pd.Timestamp(r["d"]) for r in fwd]), dtype=float).sort_index()
+
+    # S-556:① 的前向 = 旧臂 (INCEPTION, CORE_SINCE] + 新臂(不设单币上限)> CORE_SINCE
+    old, new = await _arm(LEGACY_CORE_ARM), await _arm(CORE_ARM)
+    seg_old = old.pct_change().dropna()[lambda x: (x.index > INCEPTION) & (x.index <= CORE_SINCE)]
+    seg_new = new.pct_change().dropna()[lambda x: x.index > CORE_SINCE]
+    rets = pd.concat([rep_, seg_old, seg_new]).sort_index()
     rets = rets[~rets.index.duplicated(keep="first")]
     return (1 + rets).cumprod()

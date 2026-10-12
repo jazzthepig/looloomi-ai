@@ -17,7 +17,7 @@ from src.api.contracts.fund import (BUILD_DAYS, DESIGN_AUM_USD, PARTICIPATION_RA
                                     TARGET_AUM_USD)
 
 #: 有持仓权重的账本:登记表 id → (表, 臂)
-WEIGHTED_BOOKS = {"core_cap": ("core_cap_daily", "cap_a1"), "cis_tilt": ("cis_tilt_daily", "cis_a1"),
+WEIGHTED_BOOKS = {"core_cap": ("core_cap_daily", "cap_a1_u"),     # S-556:① 不设单币上限(首行出来之前退回旧臂) "cis_tilt": ("cis_tilt_daily", "cis_a1"),
                   "beta_plus_w": ("beta_plus_daily", "momentum_52w_w"), "beta_plus_m": ("beta_plus_daily", "momentum_52w_m"),
                   "tokenization_tilt": ("tokenization_tilt_daily", "tokenization_tilt_25")}
 
@@ -101,6 +101,10 @@ async def report() -> dict[str, Any]:
     for bid, (table, arm) in WEIGHTED_BOOKS.items():
         rd = await _sb_get(table, {"select": "d,weights", "arm": f"eq.{arm}", "weights": "not.is.null",
                                    "order": "d.desc", "limit": "1"})
+        if bid == "core_cap" and rd.ok and not rd.rows:
+            from src.data.signals.core_cap import LEGACY_CORE_ARM
+            rd = await _sb_get(table, {"select": "d,weights", "arm": f"eq.{LEGACY_CORE_ARM}", "weights": "not.is.null",
+                                       "order": "d.desc", "limit": "1"})
         w = ((rd.rows or [{}])[0].get("weights") or {}) if rd.ok else {}
         row = book_row(bid, {k: float(v) for k, v in w.items() if v is not None}, adv)
         row["as_of"] = (rd.rows or [{}])[0].get("d") if rd.ok else None

@@ -30,7 +30,7 @@ import pandas as pd
 
 # 11 有效账本(per SPEC §4.1)+ family + n_variants_tried
 DEFAULT_N_VARIANTS: dict[str, int] = {
-    "core_cap": 3,         # cap_a1 + cap_a05 + ew_a0
+    "core_cap": 4,         # cap_a1 + cap_a05 + ew_a0 + cap_a1_u(S-556)
     "beta_core": 1,
     "beta_plus_w": 2,      # w + m
     "beta_plus_m": 2,

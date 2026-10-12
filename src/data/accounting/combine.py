@@ -33,7 +33,8 @@ LAYER_SOURCE = {"①": "beta", "②": "beta_plus", "③": "multiplier", "④": "
                 "组合层": "portfolio_layer", "事件": "event", "—": "other"}
 #: 对外的名字与一句话说明(页面是英文的;登记表里的中文名与内部编号不出站)
 PUBLIC = {
-    "core_cap": ("Core holding", "24 names, market-cap weighted, no name above 40% — holding the market."),
+    "core_cap": ("Core holding", "24 names, market-cap weighted, no single-name cap (until 2026-10-12: no name above 40%) — holding the market."),
+    "core_cap_c40": ("Core holding, 40% cap (control)", "The previous core rule, kept running as the control for removing the cap."),
     "beta_core": ("Equal weight + volatility target", "The same panel equal-weighted, with exposure scaled to a volatility target."),
     "beta_plus_w": ("Momentum tilt (weekly)", "Overweights names with strong trends near their 52-week highs, inside the panel."),
     "beta_plus_m": ("Momentum tilt (monthly)", "The momentum tilt, rebalanced monthly."),
@@ -52,7 +53,9 @@ PUBLIC = {
 }
 
 #: 回放口径:账本 → (表, 臂)
-REPLAY = {"core_cap": ("multiplier_daily", "core_replay"),
+#: S-556:① 的回放 = 不设单币上限的市值加权(core_variants 的 cap_uncapped,同面板、同周一再平衡、同 10 bps);
+#: ③ / 组合层的回放仍以旧 ①(单币 ≤ 40%)为底,直到 T-087 按新 ① 重算。
+REPLAY = {"core_cap": ("core_variants_daily", "cap_uncapped"),
           "multiplier": ("multiplier_daily", "mult_v1_replay"),
           "portfolio_layer": ("portfolio_layer_daily", "pl_v2_replay")}
 

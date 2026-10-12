@@ -17,6 +17,15 @@ S-472 把 ① 的加权写成一个连续参数:w ∝ 市值^α。同一 24 名�
     成本    换手 × 10 bps
     起点    2026-10-02 收盘(决定在 10-03 做出,用的数据到 10-02;第一天收益 10-03 才是真正的前向)
 
+## 2026-10-12 改版(Jazz「把单币上限 40% 解除」,S-556)—— 新起点,旧臂留档
+
+    主臂   cap_a1_u  w ∝ 市值(d−1),**不设单币上限**                    ← 10-12 起这是 ①
+    留档   cap_a1    原 ①(单币 ≤ 40%),照旧每天记 —— 10-02 → 10-12 的 ① 就是它
+    起点    cap_a1_u 自 2026-10-12 收盘(决定在 10-12 15:55 UTC 做出,早于当天收盘;第一天前向收益是 10-13)
+    其余    面板 / 价源 / 节奏 / 成本 / 覆盖率门槛与上面相同
+    ① 的整条 NAV(registry.core_nav)按日期拼接:回放(≤ 10-02)→ cap_a1(10-02, 10-12] → cap_a1_u(> 10-12)。
+    ③ / 组合层 / ② CIS 倾斜仍以旧 ① 为底,直到各自按新 ① 另起新臂(T-087 / T-088)—— 不在原臂上改规则。
+
 ## 不存状态 —— 每次从起点重算(同 S-427)
 
 ## 判活判据(规则 5b ②)
@@ -33,17 +42,24 @@ import pandas as pd
 
 TABLE = "core_cap_daily"
 WRITES_TABLES = (TABLE,)
-ARMS = {"cap_a1": 1.0, "cap_a05": 0.5, "ew_a0": 0.0}
-CORE_ARM = "cap_a1"
+ARMS = {"cap_a1": 1.0, "cap_a05": 0.5, "ew_a0": 0.0, "cap_a1_u": 1.0}
+#: 每臂的单币上限:cap_a1_u = 不设上限(S-556);其余照 S-473 原规则
 SINGLE_ASSET_CAP = 0.40
+ARM_CAP = {"cap_a1": SINGLE_ASSET_CAP, "cap_a05": SINGLE_ASSET_CAP, "ew_a0": SINGLE_ASSET_CAP, "cap_a1_u": 1.0}
+CORE_ARM = "cap_a1_u"
+LEGACY_CORE_ARM = "cap_a1"
+#: ① 换成 cap_a1_u 的那一天(收盘);在这之前 ① = LEGACY_CORE_ARM
 COST_BPS = 10.0
 INCEPTION = pd.Timestamp("2026-10-02")
+CORE_SINCE = pd.Timestamp("2026-10-12")
+ARM_INCEPTION = {"cap_a1_u": CORE_SINCE}
 PRICE_SOURCE = "binance_hist"
 MIN_QUOTED_WEIGHT = 0.90
 #: 再平衡日:有收盘的币里至少这么多也有(≤ 3 天前的)市值,否则拒绝 —— 不在半个面板上算「市值加权」
 MIN_MCAP_COVERAGE = 0.90
 MCAP_MAX_AGE_DAYS = 3
 CODE_REF = "S-473 core_cap v1"
+ARM_CODE_REF = {"cap_a1_u": "S-556 core_cap v2 (no single-name cap)"}
 
 
 def panel_universe() -> tuple[str, ...]:
@@ -74,8 +90,8 @@ def capped_weights(mcap: Mapping[str, float], alpha: float, cap: float = SINGLE_
     return w
 
 
-def is_rebalance_day(d: pd.Timestamp) -> bool:
-    return d == INCEPTION or d.weekday() == 0
+def is_rebalance_day(d: pd.Timestamp, inception: pd.Timestamp = INCEPTION) -> bool:
+    return d == inception or d.weekday() == 0
 
 
 def compute_path(px: pd.DataFrame, mcap_prev: pd.DataFrame, barred: list[str], source: str,
@@ -91,9 +107,13 @@ def compute_path(px: pd.DataFrame, mcap_prev: pd.DataFrame, barred: list[str], s
     now = datetime.now(timezone.utc).isoformat()
     rows: list[dict] = []
     for arm, alpha in ARMS.items():
+        inc = ARM_INCEPTION.get(arm, INCEPTION)
+        arm_days = [d for d in days if d >= inc]
+        if not arm_days:
+            continue                                      # 起点还没到的臂(cap_a1_u 在 10-12 收盘之前)
         orders: dict[pd.Timestamp, dict[str, float]] = {}
-        for d in days:
-            if not is_rebalance_day(d):
+        for d in arm_days:
+            if not is_rebalance_day(d, inc):
                 continue
             row_px = px.loc[d]
             mc = mcap_prev.loc[d] if d in mcap_prev.index else pd.Series(dtype=float)
@@ -102,10 +122,10 @@ def compute_path(px: pd.DataFrame, mcap_prev: pd.DataFrame, barred: list[str], s
             if not quoted or len(avail) < MIN_MCAP_COVERAGE * len(quoted):
                 raise ValueError(f"{d.date()} 有收盘的 {len(quoted)} 个币里只有 {len(avail)} 个有 ≤{MCAP_MAX_AGE_DAYS} 天的市值"
                                  f" —— 不在半个面板上做市值加权")
-            orders[d] = capped_weights(avail, alpha)
+            orders[d] = capped_weights(avail, alpha, ARM_CAP[arm])
         book = run_nav(px, orders, cost_bps=COST_BPS, min_quoted_weight=MIN_QUOTED_WEIGHT, label=arm,
-                       renormalize_to_quoted=False, days=days)
-        for d, b in zip(days, book):
+                       renormalize_to_quoted=False, days=arm_days)
+        for d, b in zip(arm_days, book):
             w = b["w"]
             rows.append({
                 "d": d.date().isoformat(), "arm": arm, "alpha": alpha,
@@ -115,7 +135,7 @@ def compute_path(px: pd.DataFrame, mcap_prev: pd.DataFrame, barred: list[str], s
                 "rebalanced": b["traded"], "turnover": round(b["turnover"], 6),
                 "n_quoted": b["n_quoted"], "n_filled": b["n_filled"],
                 "barred": barred, "source": source,
-                "inception": INCEPTION.date().isoformat(), "code_ref": CODE_REF, "computed_at": now,
+                "inception": inc.date().isoformat(), "code_ref": ARM_CODE_REF.get(arm, CODE_REF), "computed_at": now,
             })
     return rows
 

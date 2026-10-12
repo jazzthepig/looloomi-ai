@@ -41,17 +41,50 @@ def _panel(days, syms, seed=0):
     return px, mc
 
 
-def test_path_rebalances_on_inception_and_mondays_only_and_core_is_capped():
+def test_path_rebalances_on_inception_and_mondays_only_and_legacy_core_is_capped():
     days = pd.date_range(cc.INCEPTION, periods=12, freq="D")
     syms = ["A", "B", "C", "D", "E"]
     px, mc = _panel(days, syms)
     rows = cc.compute_path(px, mc, [], "test")
-    core = [r for r in rows if r["arm"] == cc.CORE_ARM]
-    assert len(core) == 12 and core[0]["nav"] == pytest.approx(1 - core[0]["turnover"] * cc.COST_BPS / 1e4)
-    rebal_days = {pd.Timestamp(r["d"]) for r in core if r["rebalanced"]}
+    legacy = [r for r in rows if r["arm"] == cc.LEGACY_CORE_ARM]
+    assert len(legacy) == 12 and legacy[0]["nav"] == pytest.approx(1 - legacy[0]["turnover"] * cc.COST_BPS / 1e4)
+    rebal_days = {pd.Timestamp(r["d"]) for r in legacy if r["rebalanced"]}
     assert rebal_days == {d for d in days if d == cc.INCEPTION or d.weekday() == 0}
-    assert all(r["max_weight"] <= 0.40 + 1e-6 for r in core if r["rebalanced"])
+    assert all(r["max_weight"] <= 0.40 + 1e-6 for r in legacy if r["rebalanced"])
     assert {r["arm"] for r in rows} == set(cc.ARMS)
+
+
+def test_new_core_has_no_single_name_cap_and_starts_at_its_own_inception():
+    """S-556(Jazz 10-12「把单币上限 40% 解除」):① = cap_a1_u,10-12 收盘起;旧臂照旧记,不改规则。"""
+    days = pd.date_range(cc.INCEPTION, periods=16, freq="D")
+    syms = ["A", "B", "C", "D", "E"]
+    px, mc = _panel(days, syms)                      # E 的市值是 25/55 ≈ 45% > 40%
+    rows = cc.compute_path(px, mc, [], "test")
+    core = [r for r in rows if r["arm"] == cc.CORE_ARM]
+    assert cc.CORE_ARM == "cap_a1_u" and cc.ARM_CAP[cc.CORE_ARM] == 1.0
+    assert pd.Timestamp(core[0]["d"]) == cc.CORE_SINCE and core[0]["inception"] == cc.CORE_SINCE.date().isoformat()
+    assert len(core) == (days[-1] - cc.CORE_SINCE).days + 1
+    assert core[0]["max_weight"] == pytest.approx(25 / 55, rel=1e-3)        # 不压到 40%
+    rebal = {pd.Timestamp(r["d"]) for r in core if r["rebalanced"]}
+    assert rebal == {d for d in days if d >= cc.CORE_SINCE and (d == cc.CORE_SINCE or d.weekday() == 0)}
+    assert core[0]["code_ref"].startswith("S-556")
+    # 旧 ① 在同一天仍然压在 40%
+    old = {r["d"]: r for r in rows if r["arm"] == cc.LEGACY_CORE_ARM}
+    assert old[core[0]["d"]]["max_weight"] <= 0.40 + 1e-6
+
+
+def test_core_nav_is_stitched_at_the_rule_change():
+    from src.data.accounting.registry import stitch_core
+    idx = pd.date_range("2026-10-02", "2026-10-15", freq="D")
+    legacy = pd.Series(np.cumprod([1.0] + [1.01] * (len(idx) - 1)), index=idx)
+    cur_idx = pd.date_range(cc.CORE_SINCE, "2026-10-15", freq="D")
+    current = pd.Series(np.cumprod([1.0] + [0.99] * (len(cur_idx) - 1)), index=cur_idx)
+    s = stitch_core(legacy, current)
+    n_old = (cc.CORE_SINCE - idx[0]).days            # 10-03 … 10-12 用旧臂
+    n_new = (idx[-1] - cc.CORE_SINCE).days           # 10-13 … 10-15 用新臂
+    assert s.index[0] == idx[0] and s.iloc[0] == 1.0
+    assert s.iloc[-1] == pytest.approx(1.01 ** n_old * 0.99 ** n_new)
+    assert stitch_core(legacy, None).iloc[-1] == pytest.approx(1.01 ** n_old)
 
 
 def test_path_refuses_a_day_with_too_little_priced_weight():
@@ -70,7 +103,8 @@ def test_registry_and_allocator_point_at_the_cap_weighted_core():
     assert al.CORE == "core_cap" and by_id["core_cap"].layer == "①"
     assert by_id["core_cap"].table == cc.TABLE and by_id["core_cap"].arm == cc.CORE_ARM
     assert by_id["beta_core"].layer == "②"          # 原 ①,登记永远在(v0.2 P2)
-    assert [b.id for b in BOOKS if b.layer == "①"] == ["core_cap"]
+    assert [b.id for b in BOOKS if b.layer == "①" and not b.caveat] == ["core_cap"]
+    assert by_id["core_cap_c40"].arm == cc.LEGACY_CORE_ARM and by_id["core_cap_c40"].caveat
 
 
 def test_scorecard_tells_one_day_from_unreadable():
@@ -122,8 +156,10 @@ def test_ls_books_are_scored_against_the_core_not_equal_weight(monkeypatch):
                 {"alpha": 1.0, "d": "2026-10-02", "ret": 0.02}, {"alpha": 1.0, "d": "2026-10-03", "ret": 0.9}]
 
     async def fake_read_all(table, params):
-        assert table == cc.TABLE and params["arm"] == f"eq.{cc.CORE_ARM}"
-        return [{"d": "2026-10-02", "nav": 0.999}, {"d": "2026-10-03", "nav": 0.999 * 1.03}]
+        assert table == cc.TABLE and params["arm"] in (f"eq.{cc.CORE_ARM}", f"eq.{cc.LEGACY_CORE_ARM}")
+        if params["arm"] == f"eq.{cc.LEGACY_CORE_ARM}":
+            return [{"d": "2026-10-02", "nav": 0.999}, {"d": "2026-10-03", "nav": 0.999 * 1.03}]
+        return []                                   # 新 ① 首行之前
     monkeypatch.setattr(store, "supabase_rpc_all", fake_rpc)
     monkeypatch.setattr(hdr, "_read_all", fake_read_all)
     s = asyncio.run(reg._core_benchmark())
