@@ -33,6 +33,7 @@
 | open | T-061 | seth | 22 个不写逐轮记录的后台循环补 _record_loop_attempt,判活补齐 | ≥ 50(55 个里只有周频的允许暂缺);liveness SLO 覆盖全部 55 个 | 33 |  |
 | open | T-062 | seth | 三路该定期写入却 0 行的结构化数据:regime 相关度、fusion 的 regime 跟踪、API 计量 | 前两张每天有新行;api_usage 每次 flush 都写一行(使用量为 0 也写,0 是一次观测);每一路先判成因(无调度 / 写不进 / 正确拒绝)再修 | 0 / 0 / 0 |  |
 | open | T-065 | seth | 加密度:小时线恢复并扩面(现在 10 个币、08-08 起停更);CIS 历史往前补(现在 2025-05 起) | 小时线覆盖 ① 的 24 个名字、最新一根在 2 小时内、有调度和判活;CIS 历史用重建脚本补到 2024-01(标 source=reconstructed,与实时推送分开) | 小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03 |  |
+| open | T-082 | seth | 可交易规模由数据定:按我们实际能下单的场所深度(订单簿 ±1% 深度 / 场所成交)算每个名字、每本账的容量,替代全市场报告成交额 | 每个名字 / 每本账在 $30M 与 $500M 下能否在 5 天内建满,按我们真能成交的深度说,不按 CoinGecko 聚合成交额说 | S-544 容量按 30 日全市场报告成交额中位数 × 10% 参与率:$30M 下 58/58 名通过,$500M 下 50/58;tokenization_tilt 被 POLYX(日成交 $0.6M)卡在 ≈ $9M。聚合成交额含不能下单的场所与刷量,实际可成交深度更低,没量过。 |  |
 | blocked(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | blocked(等 ['T-001']) | T-020 | lane-c | DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻 | 同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减 | 同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移 |  |
 | blocked(等 T-015) | T-016 | seth | 实盘执行器(只算不发两天 → 3,000U 真跑) | > 0,且每日对账有数 | 0 |  |
@@ -84,4 +85,4 @@
 | done | T-077 | seth | CIS 当特征放进组合:cis_ew / cis_follow / cis_contra 三臂前向对照(S-527 的方向,S-528 预注册) | 第一行真实数据 + 回放数字;前向判据写死 | CIS 只被当成正向标签用;没有一本书把「OUT 之后回撤、UNDER 之后相对反弹」当特征 | feature_arms_daily: 3 arms x 516 rows (2025-05-12 -> 2026-10-09), replay total return cis_contra -28.0% / cis_ew -41.7% / cis_follow -81.1% (inception 2026-10-11); feature_arms_daily is a source in forward_anchor_daily 2026-10-08 payload. Forward criteria (10-12 on) not yet measurable. @ 2026-10-10T04:11:16Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 14 · claimed 2 · blocked 3 · in_review 15 · done 46 · dropped 1
+open 15 · claimed 2 · blocked 3 · in_review 15 · done 46 · dropped 1

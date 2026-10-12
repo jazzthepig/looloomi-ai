@@ -1,0 +1,27 @@
+{
+  "id": "T-082",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-12",
+  "verified": null,
+  "title": "可交易规模由数据定:按我们实际能下单的场所深度(订单簿 ±1% 深度 / 场所成交)算每个名字、每本账的容量,替代全市场报告成交额",
+  "source": "Jazz 10-12「数据定可交易规模这个我们设成待办」(S-544 容量报告的口径边界)",
+  "allowed_paths": [
+    "src/data/accounting/",
+    "src/data/market/",
+    "src/api/routers/portfolio_builder.py",
+    "src/api/contracts/fund.py",
+    "tests/",
+    "scripts/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① 列出可下单场所清单(现货优先,① 只持现货)及每个场所覆盖哪些名字 ② 每天落库各名字在这些场所的 ±1% / ±2% 订单簿深度与场所成交(有调度者、判活、第一行真实数据)③ /api/v1/fund/capacity 加一列「场所口径」容量,与全市场口径并排 ④ 两个口径差多少倍,写进 ledger",
+    "expect": "每个名字 / 每本账在 $30M 与 $500M 下能否在 5 天内建满,按我们真能成交的深度说,不按 CoinGecko 聚合成交额说"
+  },
+  "prior_value": "S-544 容量按 30 日全市场报告成交额中位数 × 10% 参与率:$30M 下 58/58 名通过,$500M 下 50/58;tokenization_tilt 被 POLYX(日成交 $0.6M)卡在 ≈ $9M。聚合成交额含不能下单的场所与刷量,实际可成交深度更低,没量过。",
+  "notes": "2026-10-12 开卡,Jazz 定为待办。先查现有采集:binance 小时线已有 taker 量,HL 只有 4 个流动币的现货。"
+}
