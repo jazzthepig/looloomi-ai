@@ -53,6 +53,10 @@ import pandas as pd
 TABLE = "portfolio_layer_daily"
 WRITES_TABLES = (TABLE,)
 ARM, REPLAY_ARM, V1CASH_ARM = "pl_v2", "pl_v2_replay", "pl_v1cash_replay"
+#: T-087:组合层在新 ① (cap_a1_u) 上的臂 —— 底仓从 multiplier_daily.core_u_replay 读,
+#:   起点 = core_cap.CORE_SINCE = 2026-10-12 收盘
+ARM_U, REPLAY_ARM_U = "pl_v3", "pl_v3_replay"
+INCEPTION_U = pd.Timestamp("2026-10-12")
 CASH_ANN = 0.04
 SWITCH_COST_BPS = 10.0
 REPLAY_START = pd.Timestamp("2023-01-02")
@@ -60,6 +64,7 @@ HOLDOUT_START = pd.Timestamp("2025-01-01")
 INCEPTION = pd.Timestamp("2026-10-08")
 FUNDING_BASE_ANN = 0.1095
 CODE_REF = "T-070 portfolio layer v2"
+CODE_REF_U = "T-087 portfolio layer v3 (cap_a1_u 底仓)"
 S4_FILE = Path(__file__).resolve().parents[3] / "research" / "series" / "strategy4_blend_daily.json"
 
 FLAGS = ("dead_market", "decoupled", "alt_froth", "crowded", "flushed")
@@ -177,6 +182,22 @@ def evaluate(core_ret: pd.Series, x_prev: pd.Series, end: pd.Timestamp,
     return out
 
 
+def evaluate_u(core_ret: pd.Series, x_prev: pd.Series, end: pd.Timestamp,
+               s4: Optional[pd.Series] = None) -> dict[str, Any]:
+    """T-087:在新 ① (cap_a1_u) 底仓上的评估。前向起点用 INCEPTION_U(2026-10-12)。"""
+    windows = {"in_sample_2023_2024": (REPLAY_START, HOLDOUT_START - pd.Timedelta(days=1)),
+               "holdout_2025_to_inception": (HOLDOUT_START, INCEPTION_U),
+               "forward": (INCEPTION_U + pd.Timedelta(days=1), end)}
+    out: dict[str, Any] = {"底仓": "core_cap.cap_a1_u (不设单币上限,S-556)",
+                           "caveat": "阈值看过 2023–26 才定:回放是描述,前向才是检验(S-508)"}
+    for name, (lo, hi) in windows.items():
+        r1 = core_ret[(core_ret.index >= lo) & (core_ret.index <= hi)]
+        out[name] = _window_eval(r1, x_prev, s4) if len(r1) >= 2 else {"n": int(len(r1))}
+    if s4 is None:
+        out["strategy4"] = "④ 日序列未交付(T-071)—— 不用汇总数顶替"
+    return out
+
+
 def build_rows(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp,
                s4: Optional[pd.Series] = None) -> tuple[list[dict], dict[str, Any]]:
     """纯函数。state = state_frame(...) 的输出。"""
@@ -216,6 +237,38 @@ def build_rows(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp,
     return rows, ev
 
 
+def build_rows_u(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp,
+                 s4: Optional[pd.Series] = None) -> tuple[list[dict], dict[str, Any]]:
+    """T-087:组合层在新 ① (cap_a1_u) 底仓上的臂 —— pl_v3_replay 整段回放,pl_v3 从 10-12 起前向。
+
+    同一旗标、同一权重映射、同一成本 —— 只换底仓。 core_ret 已由 multiplier_daily.core_u_replay 提供。"""
+    recs = state.to_dict("index")
+    fl = {d: flags_for(r) for d, r in recs.items()}
+    sc = {d: exposure(f) for d, f in fl.items()}
+    x_at = pd.Series({d: v[1] for d, v in sc.items()}, dtype=float)
+    x_prev = x_at.shift(1, freq="D")
+    core_ret = core_ret[(core_ret.index >= REPLAY_START) & (core_ret.index <= end)]
+    now = datetime.now(timezone.utc).isoformat()
+    rows: list[dict] = []
+
+    def emit(arm: str, book: pd.DataFrame) -> None:
+        for d, b in book.iterrows():
+            prev = d - pd.Timedelta(days=1)
+            rows.append({"d": d.date().isoformat(), "arm": arm, "x": float(b["x"]),
+                         "ret": round(float(b["ret"]), 8), "nav": round(float(b["nav"]), 8),
+                         "cost": round(float(b["cost"]), 8),
+                         "score": sc[prev][0] if prev in sc else None,
+                         "flags": fl.get(prev),
+                         "inception": INCEPTION_U.date().isoformat(), "code_ref": CODE_REF_U,
+                         "computed_at": now})
+
+    emit(REPLAY_ARM_U, apply_exposure(core_ret, x_prev))
+    fwd = core_ret[core_ret.index > INCEPTION_U]
+    if len(fwd):
+        emit(ARM_U, apply_exposure(fwd, x_prev))
+    return rows, evaluate_u(core_ret, x_prev, end, s4)
+
+
 def load_strategy4() -> Optional[pd.Series]:
     """lane-c 交付的 ④ 日收益(T-071)。格式 {"rows": [{"d": "YYYY-MM-DD", "ret": float}, ...]}。没有 ⇒ None。"""
     if not S4_FILE.exists():
@@ -227,15 +280,20 @@ def load_strategy4() -> Optional[pd.Series]:
 
 
 async def run_once() -> dict[str, Any]:
-    """读 ① 回放(multiplier_daily core_replay)与状态输入,回放 2023 起 + 前向,整条 upsert。"""
+    """读 ① 回放(multiplier_daily core_replay / core_u_replay)与状态输入,回放 2023 起 + 前向,整条 upsert。
+
+    T-087:同时算新底仓 cap_a1_u 上的 pl_v3 / pl_v3_replay 臂。"""
     from src.api.store import supabase_upsert_table
     from src.data.style.header import _read_all
 
     start = (REPLAY_START - pd.Timedelta(days=200)).date().isoformat()
-    core = await _read_all("multiplier_daily", {"select": "d,ret", "arm": "eq.core_replay", "order": "d.asc"})
-    if not core:
+    core_old = await _read_all("multiplier_daily", {"select": "d,ret", "arm": "eq.core_replay", "order": "d.asc"})
+    if not core_old:
         return {"ok": False, "refused": True, "written": 0, "reason": "① 回放(multiplier_daily core_replay)读到 0 行"}
-    core_ret = pd.Series({pd.Timestamp(r["d"]): float(r["ret"]) for r in core}).sort_index()
+    core_ret = pd.Series({pd.Timestamp(r["d"]): float(r["ret"]) for r in core_old}).sort_index()
+    core_u_rows = await _read_all("multiplier_daily", {"select": "d,ret", "arm": "eq.core_u_replay", "order": "d.asc"})
+    core_u_ret = (pd.Series({pd.Timestamp(r["d"]): float(r["ret"]) for r in core_u_rows}).sort_index()
+                  if core_u_rows else core_ret.iloc[0:0])
     target = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize() - pd.Timedelta(days=1)
     if core_ret.index.max() < target:
         return {"ok": False, "refused": True, "written": 0,
@@ -271,9 +329,22 @@ async def run_once() -> dict[str, Any]:
         fd["d"] = pd.to_datetime(fd["funding_time"].str[:10])
         fund_daily = fd.groupby("d")["funding_rate"].mean().astype(float) * 3 * 365
 
-    state = state_frame(st, quote_vol, spy_close, fund_daily, core_ret)
-    rows, ev = build_rows(core_ret, state, target, load_strategy4())
+    s4 = load_strategy4()
+    state_old = state_frame(st, quote_vol, spy_close, fund_daily, core_ret)
+    rows_old, ev_old = build_rows(core_ret, state_old, target, s4)
+    rows: list[dict] = list(rows_old)
+    ev_extra: dict[str, Any] = {}
+    if len(core_u_ret) >= 2:
+        # T-087:core30 这一项在新底仓上重算(state 其他列都是不依赖 ① 收益的外部状态)
+        state_u = state_old.copy()
+        days = state_u.index
+        lr = np.log1p(core_u_ret.reindex(days))
+        state_u["core30"] = np.expm1(lr.rolling(30, min_periods=28).sum())
+        rows_new, ev_new = build_rows_u(core_u_ret, state_u, target, s4)
+        rows.extend(rows_new)
+        ev_extra = {"eval_u_cap_a1u": ev_new}
     res = await supabase_upsert_table(TABLE, rows, on_conflict="d,arm")
     if not res.ok:
         return {"ok": False, "refused": False, "written": 0, "reason": f"写入失败:{res.why}"}
-    return {"ok": True, "refused": False, "written": len(rows), "reason": f"回放至 {target.date()}", "eval": ev}
+    return {"ok": True, "refused": False, "written": len(rows), "reason": f"回放至 {target.date()}",
+            "eval": ev_old, **ev_extra}

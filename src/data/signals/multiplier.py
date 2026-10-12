@@ -22,6 +22,15 @@ Jazz 10-07 定调:执行只读一张表 —— ① 的推力 + ② 的倾斜。�
             2025-01-01 → 起点前一天 = 留出段;起点起 = 前向
     起点    2026-10-08 收盘(第一天前向收益 = 10-09)
 
+## T-087 / S-556:① 不设单币上限后,③ 在新底仓上的臂(2026-10-12 起)
+
+    底仓    cap_a1_u(同 24 名、市值加权、周一再平衡、10 bps,但 cap=1.0 = 不压任何币)
+    规则    与 v1 完全一致(同状态、同切点、同成本)—— 只换底仓,不留新参数
+    起点    2026-10-12 收盘(第一天前向收益 = 10-13;NAV 在起点 = 1)
+    写什么  `multiplier_daily (d, arm)`:`mult_v2` = 前向(只从 10-12 起)·
+            `mult_v2_replay` = 回放全程(底仓 cap_a1_u)· `core_u_replay` = 同期 ① 不设上限的回放。
+            旧臂 v1 / v1_replay / core_replay 一行不改照旧写。
+
 ## 已知偏差
 
 ① 的 24 名是今天的名单回填到 2023(幸存者)。它对 ① 与 ③ 同时成立;③ 相对 ① 的超额(择时价值)受影响小,但不是零。
@@ -29,11 +38,13 @@ Jazz 10-07 定调:执行只读一张表 —— ① 的推力 + ② 的倾斜。�
 ## 写什么
 
 `multiplier_daily (d, arm)`:`mult_v1` = 前向(只从起点起,NAV 在起点 = 1)· `mult_v1_replay` = 回放全程 ·
-`core_replay` = 同期 ① 的回放。评估(三个窗口的总收益 / 回撤 / Sharpe / 随机分位)写进每轮的 loop_attempt.detail。
+`core_replay` = 同期 ① 的回放。 T-087 起再加 `mult_v2` / `mult_v2_replay` / `core_u_replay`。
+评估(三个窗口的总收益 / 回撤 / Sharpe / 随机分位)写进每轮的 loop_attempt.detail。
 
 ## 判活判据(规则 5b ②)
 
     select max(d) from multiplier_daily where arm = 'mult_v1_replay';   -- UTC 08:00 后应 = 昨天
+    select max(d) from multiplier_daily where arm = 'mult_v2_replay';   -- 同上(新底仓)
 """
 from __future__ import annotations
 
@@ -51,6 +62,9 @@ from src.data.signals.core_cap import (COST_BPS, MCAP_MAX_AGE_DAYS, MIN_MCAP_COV
 TABLE = "multiplier_daily"
 WRITES_TABLES = (TABLE,)
 ARM, REPLAY_ARM, CORE_ARM = "mult_v1", "mult_v1_replay", "core_replay"
+#: T-087:① 切到 cap_a1_u 后,③ 在新底仓上的臂 —— 起点 = core_cap.CORE_SINCE(2026-10-12 收盘)
+ARM_U, REPLAY_ARM_U, CORE_ARM_U = "mult_v2", "mult_v2_replay", "core_u_replay"
+INCEPTION_U = pd.Timestamp("2026-10-12")
 LEVELS = (0.7, 1.0, 1.3)
 VOL_CUT = 0.5
 CASH_ANN = 0.04
@@ -61,6 +75,7 @@ HOLDOUT_START = pd.Timestamp("2025-01-01")
 INCEPTION = pd.Timestamp("2026-10-08")
 N_RANDOM, BLOCK, SEED = 1000, 20, 63
 CODE_REF = "T-063 multiplier v1"
+CODE_REF_U = "T-087 multiplier v2 (cap_a1_u 底仓)"
 
 
 def multiplier(dist_200: Optional[float], vol_pct: Optional[float]) -> float:
@@ -96,6 +111,13 @@ def _stats(r: pd.Series) -> dict[str, Optional[float]]:
             "maxdd": round(float((nav / nav.cummax() - 1).min()), 5)}
 
 
+def _windows(replay_start: pd.Timestamp, holdout_start: pd.Timestamp, forward_start: pd.Timestamp,
+             end: pd.Timestamp) -> dict[str, tuple[pd.Timestamp, pd.Timestamp]]:
+    return {"in_sample_2023_2024": (replay_start, holdout_start - pd.Timedelta(days=1)),
+            "holdout_2025_to_inception": (holdout_start, forward_start - pd.Timedelta(days=1)),
+            "forward": (forward_start + pd.Timedelta(days=1), end)}
+
+
 def random_timing_pct(core_ret: pd.Series, m_prev: pd.Series, funding_ann: pd.Series,
                       n: int = N_RANDOM, block: int = BLOCK, seed: int = SEED) -> dict[str, Optional[float]]:
     """把 m 序列按 block 天一块随机重排 n 次,重算「③ − ①」总收益差;报实测在其中的分位。"""
@@ -123,10 +145,26 @@ def random_timing_pct(core_ret: pd.Series, m_prev: pd.Series, funding_ann: pd.Se
 
 def evaluate(core_ret: pd.Series, m_prev: pd.Series, funding_ann: pd.Series, end: pd.Timestamp) -> dict[str, Any]:
     """三个窗口:样本内语境 / 留出段 / 前向。每个窗口:① 与 ③ 的总收益、Sharpe、回撤,以及随机择时分位。"""
-    windows = {"in_sample_2023_2024": (REPLAY_START, HOLDOUT_START - pd.Timedelta(days=1)),
-               "holdout_2025_to_inception": (HOLDOUT_START, INCEPTION - pd.Timedelta(days=1)),
-               "forward": (INCEPTION + pd.Timedelta(days=1), end)}
+    windows = _windows(REPLAY_START, HOLDOUT_START, INCEPTION, end)
     out: dict[str, Any] = {}
+    for name, (lo, hi) in windows.items():
+        sel = (core_ret.index >= lo) & (core_ret.index <= hi)
+        r1 = core_ret[sel]
+        if len(r1) < 2:
+            out[name] = {"n": int(len(r1))}
+            continue
+        book = apply_multiplier(r1, m_prev, funding_ann)
+        mm = book["m"]
+        out[name] = {"core": _stats(r1), "mult": _stats(book["ret"]),
+                     "share_days": {str(lv): round(float((mm == lv).mean()), 3) for lv in LEVELS},
+                     **random_timing_pct(r1, m_prev, funding_ann)}
+    return out
+
+
+def evaluate_u(core_ret: pd.Series, m_prev: pd.Series, funding_ann: pd.Series, end: pd.Timestamp) -> dict[str, Any]:
+    """T-087:在新底仓 cap_a1_u 上重做三个窗口的评估。 前向起点用 INCEPTION_U(2026-10-12)。"""
+    windows = _windows(REPLAY_START, HOLDOUT_START, INCEPTION_U, end)
+    out: dict[str, Any] = {"底仓": "core_cap.cap_a1_u (不设单币上限,S-556)"}
     for name, (lo, hi) in windows.items():
         sel = (core_ret.index >= lo) & (core_ret.index <= hi)
         r1 = core_ret[sel]
@@ -163,6 +201,31 @@ def core_returns(px: pd.DataFrame, mcap_prev: pd.DataFrame, start: pd.Timestamp,
     return pd.Series([b["ret"] for b in book], index=pd.DatetimeIndex(days))
 
 
+def core_u_returns(px: pd.DataFrame, mcap_prev: pd.DataFrame, start: pd.Timestamp,
+                   end: pd.Timestamp) -> pd.Series:
+    """T-087:① 的回放,但不设单币上限(cap=1.0)—— 对应 core_cap.cap_a1_u。
+
+    同一节奏(周一再平衡)、同一成本、同一覆盖率门槛。 名字一致:数据落在
+    multiplier_daily.arm = 'core_u_replay'; portfolio_layer.pl_v3_replay 从这里读底仓。"""
+    from src.data.accounting.nav_kernel import run_nav
+
+    days = [d for d in px.sort_index().index if start <= d <= end]
+    orders: dict[pd.Timestamp, dict[str, float]] = {}
+    for d in days:
+        if not (d == days[0] or d.weekday() == 0):
+            continue
+        row_px = px.loc[d]
+        mc = mcap_prev.loc[d] if d in mcap_prev.index else pd.Series(dtype=float)
+        quoted = [s for s in px.columns if pd.notna(row_px.get(s))]
+        avail = {s: mc.get(s) for s in quoted if pd.notna(mc.get(s))}
+        if not quoted or len(avail) < MIN_MCAP_COVERAGE * len(quoted):
+            raise ValueError(f"{d.date()} 有收盘的 {len(quoted)} 个币里只有 {len(avail)} 个有 ≤{MCAP_MAX_AGE_DAYS} 天的市值")
+        orders[d] = capped_weights(avail, 1.0, cap=1.0)        # T-087:cap=1.0 ⇒ 不再压任何币
+    book = run_nav(px, orders, cost_bps=COST_BPS, min_quoted_weight=MIN_QUOTED_WEIGHT, label="core_u_replay",
+                   renormalize_to_quoted=False, days=days)
+    return pd.Series([b["ret"] for b in book], index=pd.DatetimeIndex(days))
+
+
 def build_rows(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp) -> tuple[list[dict], dict[str, Any]]:
     """纯函数。state:行 = d,列 = dist_200 / vol_pct_3y / funding_7d_ann(d 收盘可知的值)。"""
     m_at = pd.Series({d: multiplier(_f(row.get("dist_200")), _f(row.get("vol_pct_3y")))
@@ -193,6 +256,40 @@ def build_rows(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp) -> t
     return rows, evaluate(core_ret, m_prev, funding, end)
 
 
+def build_rows_u(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp) -> tuple[list[dict], dict[str, Any]]:
+    """T-087:把 ③ 在新 ① (cap_a1_u) 上的回放 + 前向臂写出来。
+
+    同一状态规则、同一切点、同一成本 —— 只换底仓。 mult_v2_replay 用 core_ret(cap_a1_u) 整段回放;
+    mult_v2 是 2026-10-12 起的纯前向(NAV 在起点 = 1)。 core_u_replay 与 v2 共用同一段 core_ret,
+    只是状态列填回去。"""
+    m_at = pd.Series({d: multiplier(_f(row.get("dist_200")), _f(row.get("vol_pct_3y")))
+                      for d, row in state.iterrows()}, dtype=float)
+    m_prev = m_at.shift(1, freq="D")
+    funding = state.get("funding_7d_ann", pd.Series(dtype=float)).astype(float)
+    core_ret = core_ret[core_ret.index <= end]
+    replay = apply_multiplier(core_ret, m_prev, funding)
+    core_nav = (1 + core_ret).cumprod()
+    now = datetime.now(timezone.utc).isoformat()
+    rows: list[dict] = []
+    for d, b in replay.iterrows():
+        st = state.loc[d] if d in state.index else pd.Series(dtype=float)
+        common = {"d": d.date().isoformat(), "inception": INCEPTION_U.date().isoformat(), "code_ref": CODE_REF_U,
+                  "computed_at": now, "dist_200": _r(st.get("dist_200")), "vol_pct_3y": _r(st.get("vol_pct_3y"))}
+        rows.append({**common, "arm": REPLAY_ARM_U, "m": float(b["m"]), "ret": round(float(b["ret"]), 8),
+                     "nav": round(float(b["nav"]), 8), "cost": round(float(b["cost"]), 8)})
+        rows.append({**common, "arm": CORE_ARM_U, "m": 1.0, "ret": round(float(core_ret[d]), 8),
+                     "nav": round(float(core_nav[d]), 8), "cost": 0.0})
+    fwd = core_ret[core_ret.index > INCEPTION_U]
+    if len(fwd):
+        book = apply_multiplier(fwd, m_prev, funding)
+        for d, b in book.iterrows():
+            rows.append({"d": d.date().isoformat(), "arm": ARM_U, "m": float(b["m"]), "ret": round(float(b["ret"]), 8),
+                         "nav": round(float(b["nav"]), 8), "cost": round(float(b["cost"]), 8),
+                         "inception": INCEPTION_U.date().isoformat(), "code_ref": CODE_REF_U, "computed_at": now,
+                         "dist_200": None, "vol_pct_3y": None})
+    return rows, evaluate_u(core_ret, m_prev, funding, end)
+
+
 def _f(v: Any) -> Optional[float]:
     try:
         x = float(v)
@@ -219,7 +316,9 @@ async def _state(start: str) -> pd.DataFrame:
 
 
 async def run_once() -> dict[str, Any]:
-    """回放 2023 起到昨天已收盘那根,并写前向行。幂等,整条 upsert。"""
+    """回放 2023 起到昨天已收盘那根,并写前向行。 幂等,整条 upsert。
+
+    T-087:同时算 cap_a1_u 底仓上的新臂(mult_v2 / mult_v2_replay / core_u_replay)。"""
     from src.api.store import supabase_upsert_table
     from src.data.market.panel_read import read_panel
     from src.data.signals.core_cap import _mcap_prev
@@ -238,10 +337,19 @@ async def run_once() -> dict[str, Any]:
     px.loc[target, [c for c in px.columns if c not in ready]] = float("nan")
     mc = await _mcap_prev(panel, start)
     state = await _state(start)
-    core_ret = await asyncio.to_thread(core_returns, px, mc, REPLAY_START, target)
-    rows, ev = await asyncio.to_thread(build_rows, core_ret, state, target)
+    core_ret, core_u_ret = await asyncio.to_thread(_both_core_returns, px, mc, REPLAY_START, target)
+    rows_old, ev_old = await asyncio.to_thread(build_rows, core_ret, state, target)
+    rows_new, ev_new = await asyncio.to_thread(build_rows_u, core_u_ret, state, target)
+    rows = rows_old + rows_new
     res = await supabase_upsert_table(TABLE, rows, on_conflict="d,arm")
     if not res.ok:
         return {"ok": False, "refused": False, "written": 0, "reason": f"写入失败:{res.why}"}
     return {"ok": True, "refused": False, "written": len(rows), "reason": f"回放至 {target.date()}",
-            "eval": ev, "stale_in_source": stale}
+            "eval": ev_old, "eval_u_cap_a1u": ev_new, "stale_in_source": stale}
+
+
+def _both_core_returns(px: pd.DataFrame, mcap_prev: pd.DataFrame, start: pd.Timestamp,
+                       end: pd.Timestamp) -> tuple[pd.Series, pd.Series]:
+    """一次性把 ① cap_a1 与 cap_a1_u 两个回放都算好(共用面板/市值,只换 cap)。"""
+    return (core_returns(px, mcap_prev, start, end),
+            core_u_returns(px, mcap_prev, start, end))
