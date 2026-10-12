@@ -1,4 +1,5 @@
-"""T-070 / S-511:组合层 0–1 敞口 —— 旗标、敞口映射、时点、现金腿、对照与回放行。"""
+"""T-070 / S-511:组合层 0–1 敞口 —— 旗标、敞口映射、时点、现金腿、对照与回放行。
+T-087:① 切到 cap_a1_u 后,组合层在新底仓上的新臂(pl_v3 / pl_v3_replay)。"""
 from __future__ import annotations
 
 import sys
@@ -10,8 +11,9 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.data.signals.portfolio_layer import (CASH_ANN, INCEPTION, REPLAY_ARM, V1CASH_ARM,  # noqa: E402
-                                              apply_exposure, build_rows, exposure, flags_for, state_frame)
+from src.data.signals.portfolio_layer import (ARM_U, ARM as ARM_OLD, CASH_ANN, INCEPTION, INCEPTION_U, REPLAY_ARM,  # noqa: E402
+                                              REPLAY_ARM_U, V1CASH_ARM, apply_exposure, build_rows,
+                                              build_rows_u, evaluate_u, exposure, flags_for, state_frame)
 
 
 def test_flags_and_unknown_inputs_raise_nothing() -> None:
@@ -78,3 +80,50 @@ def test_null_timing_is_centred_and_constant_control_is_reported() -> None:
     w = ev["in_sample_2023_2024"]
     assert 0.03 < w["pct_vs_random"] < 0.97, "旗与收益无关时,择时分位不该在尾部"
     assert "same_exposure_constant" in w and w["avg_exposure"] < 1.0
+
+
+# ── T-087 新臂:组合层在新 ① 上,pl_v3_replay / pl_v3,旧臂照旧 ──────────────────
+
+
+def test_build_rows_u_writes_only_v3_arms_and_v3_forward_starts_after_10_12() -> None:
+    """pl_v3_replay:整段(2023 起)。 pl_v3:前向,从 INCEPTION_U(2026-10-12)收盘之后。"""
+    days = pd.date_range("2024-12-20", INCEPTION_U + pd.Timedelta(days=3))
+    core_u = pd.Series(0.01, index=days)
+    state = pd.DataFrame({"vol_pct_3y": 0.5, "dist_200": 0.1, "maj_rel": 0.0, "vratio": 1.0,
+                          "spy21": 0.0, "core30": 0.0, "fund7": 0.05}, index=days)
+    rows, _ = build_rows_u(core_u, state, days[-1])
+    arms = {r["arm"] for r in rows}
+    assert {REPLAY_ARM_U, ARM_U} <= arms
+    # pl_v3_replay 从 2024-12-20 开始就有行;pl_v3 第一行必须 > INCEPTION_U
+    fwd = [r for r in rows if r["arm"] == ARM_U]
+    assert fwd and min(r["d"] for r in fwd) > INCEPTION_U.date().isoformat()
+    # 不会混入旧 pl_v2 / pl_v2_replay / pl_v1cash_replay
+    assert not (arms & {REPLAY_ARM, ARM_OLD, V1CASH_ARM})
+
+
+def test_old_build_rows_does_not_emit_new_v3_arms() -> None:
+    """旧 build_rows(底仓 cap_a1)一行不改:仍只产出 pl_v2_replay / pl_v2 / pl_v1cash_replay。"""
+    days = pd.date_range("2024-12-20", INCEPTION + pd.Timedelta(days=3))
+    core = pd.Series(0.01, index=days)
+    state = pd.DataFrame({"vol_pct_3y": 0.5, "dist_200": 0.1, "maj_rel": 0.0, "vratio": 1.0,
+                          "spy21": 0.0, "core30": 0.0, "fund7": 0.05}, index=days)
+    rows, _ = build_rows(core, state, days[-1])
+    arms = {r["arm"] for r in rows}
+    assert not (arms & {REPLAY_ARM_U, ARM_U}), "旧 build_rows 不应写入 v3 臂"
+
+
+def test_evaluate_u_uses_inception_u_and_inherits_window_layout() -> None:
+    """evaluate_u:三窗口存在,标注底仓。 留出段包含 INCEPTION_U 收盘(INCLUSIVE)。"""
+    days = pd.date_range("2025-01-01", "2026-12-31")
+    rng = np.random.default_rng(2)
+    cr = pd.Series(rng.normal(0, 0.01, len(days)), index=days)
+    state = pd.DataFrame({"vol_pct_3y": 0.4, "dist_200": 0.1, "maj_rel": 0.0,
+                          "vratio": 1.0, "spy21": 0.0, "core30": 0.0, "fund7": 0.05}, index=days)
+    x = pd.Series(1.0, index=days)
+    ev = evaluate_u(cr, x, days[-1])
+    assert ev.get("底仓", "").startswith("core_cap.cap_a1_u")
+    assert {"in_sample_2023_2024", "holdout_2025_to_inception", "forward"} <= set(ev)
+    # holdout 包含 [HOLDOUT_START, INCEPTION_U],即 2025-01-01 → 2026-10-12(闭区间)
+    h = ev["holdout_2025_to_inception"]
+    expected = int(((cr.index >= pd.Timestamp("2025-01-01")) & (cr.index <= INCEPTION_U)).sum())
+    assert h["core"]["n"] == expected

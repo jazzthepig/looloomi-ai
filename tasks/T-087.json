@@ -1,7 +1,7 @@
 {
   "id": "T-087",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-13",
   "verified": null,
   "title": "③ 推力与组合层换到新 ①(不设单币上限)上:各开新臂、新起点,旧臂照旧记作对照",
@@ -24,6 +24,6 @@
     "check": "multiplier.py:新增 core_u_replay(core_returns 用 capped_weights(avail, 1.0, cap=1.0),即 core_cap.ARM_CAP['cap_a1_u'])、mult_v2_replay(同一状态规则、同一切点、同一成本,只换底仓)、mult_v2(前向,起点 = core_cap.CORE_SINCE = 2026-10-12 收盘,NAV 在起点 = 1);mult_v1 / mult_v1_replay / core_replay 一行不改照旧写。portfolio_layer.py:同样加 pl_v3_replay(底仓读 core_u_replay)与 pl_v3(前向,起点 10-12),pl_v2 系列照旧。评估(三个窗口 + 随机择时分位)两套都写进 loop_attempt.detail。测试:新臂的底仓在一个大币 > 40% 的合成面板上不被压到 40%;旧臂仍被压;新前向臂起点之前没有行。不要改 registry / combine(Seth 接线)。",
     "expect": "multiplier_daily 出现 core_u_replay / mult_v2_replay(2023-01-02 起)/ mult_v2(10-12 起);portfolio_layer_daily 出现 pl_v3_replay / pl_v3;卡 notes 写两套的三个窗口数字(总收益 / 回撤 / 夏普 / 随机分位)并排"
   },
-  "prior_value": "mult_v1_replay 与 pl_v2_replay 都建在 ≤ 40% 的 ① 上;① 不设上限后(core_variants cap_uncapped)2023–24 +359% / −32%、2025-01 → +−17.0% / −57%,③ 与组合层在新底仓上的数字没算过",
-  "notes": "2026-10-13 Seth 开卡派 C(与 T-085 并行;T-085 每轮只是几次快照)。"
+  "prior_value": "mult_v1_replay 与 pl_v2_replay 都建在 ≤ 40% 的旧 ① 上;① 不设上限后(core_variants cap_uncapped)2023–24 +359% / −32%、2025-01 → +−17.0% / −57%,③ 与组合层在新底仓上的数字没算过",
+  "notes": "2026-10-13 lane-c 交付:代码 + 测试已就绪;真实回放数字等首轮接 ③ run_once(scheduler 拉)后回填(本地无 Supabase 写入路径)。\n\n【已交付】\n- multiplier.py:新臂 ARM_U/REPLAY_ARM_U/CORE_ARM_U='mult_v2'/'mult_v2_replay'/'core_u_replay',INCEPTION_U=2026-10-12。新函数 core_u_returns(avail,1.0,cap=1.0)、evaluate_u、build_rows_u;旧 build_rows / evaluate 一行不改(走 _windows 共用工具)。run_once 现在一次读面板同时算 cap_a1 与 cap_a1_u 两个底仓,合并 upsert 进 multiplier_daily。\n- portfolio_layer.py:新臂 ARM_U/REPLAY_ARM_U='pl_v3'/'pl_v3_replay',底仓读 multiplier_daily.core_u_replay;新 evaluate_u / build_rows_u;run_once 在 state 之上把 core30 用 core_u_ret 重算(其他状态列与 ① 收益无关,沿用)。\n- tests/test_multiplier.py:5 个新测试(capped_weights 在 BTC 主导合成面板上 cap=1.0 不被压、cap=0.4 仍压到 40%;build_rows_u 只写 v2 三臂且前向第一行 > 10-12;旧 build_rows 不产出新臂;evaluate_u 用 INCEPTION_U);全 13 个测试 PASS。\n- tests/test_portfolio_layer.py:3 个新测试(同上对照 + evaluate_u 三窗口 + holdout 含 10-12 闭区间);全 8 个测试 PASS。\n- 一行没碰 registry / combine / core_cap。\n\n【未交付 / 等接数据后回填】\n- 真实三个窗口(总收益 / 回撤 / Sharpe / 随机分位)cap_a1 vs cap_a1_u 的并排数字:本地无 Supabase 写入路径,跑不出 backtest 实数;Seth 接 ③ run_once 上线后,在 loop_attempt.detail 抓 eval + eval_u_cap_a1u 并排填回本卡。\n- combine / registry:卡 acceptance 已写「Seth 接线」,不归本卡。"
 }
