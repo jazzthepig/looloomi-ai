@@ -84,23 +84,13 @@ def _fmt_mcap(v):
 async def _fetch_cis_top5() -> list:
     """Get top 5 CIS assets from the scoring engine."""
     try:
-        from src.data.cis.cis_provider import calculate_cis_universe
-        from src.api.store import redis_get
-
-        # Try Redis first (Mac Mini T1 data)
-        cached = await redis_get()
+        # S-539:与其它页面同一份 CIS(正式日终序列;没有正式发布时它自己退回实时并标明)
+        from src.api.routers.cis import get_cis_universe
+        cached = await get_cis_universe()
         if cached and cached.get("universe"):
             assets = cached["universe"]
             scored = [a for a in assets if (a.get("cis_score") or a.get("score", 0)) > 0]
             scored.sort(key=lambda a: a.get("cis_score") or a.get("score", 0), reverse=True)
-            return scored[:5]
-
-        # Fallback: Railway T2 scoring
-        result = await calculate_cis_universe()
-        if result and result.get("universe"):
-            assets = result["universe"]
-            scored = [a for a in assets if (a.get("cis_score", 0)) > 0 and a.get("grade")]
-            scored.sort(key=lambda a: a.get("cis_score", 0), reverse=True)
             return scored[:5]
     except Exception as e:
         _logger.warning(f"[OG] CIS fetch error: {e}")

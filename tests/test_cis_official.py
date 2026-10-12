@@ -120,20 +120,16 @@ def test_official_basis_is_compliance_clean():
     assert "UTC" in OFFICIAL_BASIS and "UTC" in OFFICIAL_BASIS_ZH
 
 
-def test_universe_endpoint_defaults_to_official_and_recorders_opt_out():
+def test_universe_endpoint_defaults_to_official_and_only_recorders_opt_out():
     from src.api.routers import cis
     sig = inspect.signature(cis.get_cis_universe)
     assert sig.parameters["official"].default is True
     src = (BASE / "src/api/routers/cis.py").read_text()
     i = src.index("async def snapshot_full_universe_to_supabase")
     assert "get_cis_universe(force_source=None, official=False)" in src[i:i + 600]
-    # forward records that started on live inputs keep them (switching is a version boundary)
-    for path, needle in (("src/api/routers/trading.py", "async def _run_paper_rebalance"),
-                         ("src/api/routers/signals.py", "async def compute_current_band")):
-        s = (BASE / path).read_text()
-        j = s.index(needle)
-        assert "get_cis_universe(official=False)" in s[j:j + 900], path
-
+    # S-539:前向记录(档位带、conviction、纸面再平衡、crowd_clock)也读正式序列,版本边界 2026-10-12
+    for path in ("src/api/routers/trading.py", "src/api/routers/signals.py", "src/api/main.py", "src/data/market/crowd_clock.py"):
+        assert "official=False" not in (BASE / path).read_text(), path
 
 def test_methodology_page_mirrors_official_basis():
     import json
@@ -160,8 +156,12 @@ def _patch_run(monkeypatch, *, have_rows, prev, rows, now_hour=7, ready=True, re
     async def load_inputs(d):
         return _assets(), {}
 
-    async def prev_levels(d):
-        return prev
+    async def prev_rows(d):
+        from src.data.cis.rebuild import LEVELS
+        return {k: {"grade": "B", "signal": LEVELS[v] if v is not None else None} for k, v in prev.items()}
+
+    async def no_events(out, prev_rows, d):
+        return {}
 
     async def insert(table, out):
         written.extend(out)
@@ -170,7 +170,8 @@ def _patch_run(monkeypatch, *, have_rows, prev, rows, now_hour=7, ready=True, re
     monkeypatch.setattr(msw, "_sb_get", sb_get)
     monkeypatch.setattr(rb, "load_inputs", load_inputs)
     monkeypatch.setattr(rb, "score_day", lambda d, a, data: [dict(r) for r in rows])
-    monkeypatch.setattr(off, "_prev_levels", prev_levels)
+    monkeypatch.setattr(off, "_prev_rows", prev_rows)
+    monkeypatch.setattr(off, "publish_events", no_events)
     monkeypatch.setattr(store, "supabase_insert_table", insert)
 
     async def inputs_ready(d):
@@ -215,3 +216,93 @@ def test_soft_gaps_publish_after_deadline_and_missing_closes_are_fetched(monkeyp
     assert res["written"] == len(rows) and all("batch:恐惧贪婪缺" in r["missing"] for r in w), "软性缺:过点照发并标出"
     from src.data.cis.official import is_hard
     assert is_hard("BTC 没有价格") and is_hard("加密名字有价的 3/25") and not is_hard("恐惧贪婪缺")
+
+
+def test_change_events_compare_with_previous_official_day():
+    from src.data.cis.official import change_events
+    out = [{"symbol": "A", "d": "2026-10-11", "grade": "A", "signal": "OUTPERFORM", "cis_score": 76.0, "asset_class": "L1"},
+           {"symbol": "B", "d": "2026-10-11", "grade": "B", "signal": "NEUTRAL", "cis_score": 56.0, "asset_class": "L1"},
+           {"symbol": "C", "d": "2026-10-11", "grade": "C", "signal": "UNDERPERFORM", "cis_score": 40.0, "asset_class": "L1"},
+           {"symbol": "NEW", "d": "2026-10-11", "grade": "B", "signal": "NEUTRAL", "cis_score": 55.0, "asset_class": "L1"}]
+    prev = {"A": {"grade": "B+", "signal": "OUTPERFORM"}, "B": {"grade": "B", "signal": "OUTPERFORM"},
+            "C": {"grade": "C+", "signal": "NEUTRAL"}}
+    ev = change_events(out, prev)
+    assert [e["symbol"] for e in ev["GRADE_UPGRADE"]] == ["A"] and ev["GRADE_UPGRADE"][0]["delta"] == 1
+    assert [e["symbol"] for e in ev["GRADE_DOWNGRADE"]] == ["C"]
+    assert [(e["symbol"], e["from"], e["to"]) for e in ev["SIGNAL_CHANGE"]] == [("B", "OUTPERFORM", "NEUTRAL")]
+    assert all(e["symbol"] != "NEW" for v in ev.values() for e in v), "没有前一天的名字不算变化"
+
+
+def test_official_journal_ops_open_and_close_on_official_levels():
+    from src.api.routers.signals import OFFICIAL_STRATEGY, official_journal_ops
+    rows = [{"symbol": "A", "signal": "STRONG OUTPERFORM", "grade": "A", "cis_score": 80, "inputs": {"price": 10.0}},
+            {"symbol": "B", "signal": "NEUTRAL", "grade": "B", "cis_score": 55, "inputs": {"price": 12.0}},
+            {"symbol": "C", "signal": "OUTPERFORM", "grade": "B+", "cis_score": 66, "inputs": {"price": 5.0}}]
+    open_rows = {"B": {"id": 7, "entry_price": 10.0, "signal_date": "2026-10-01T00:00:00+00:00"},
+                 "C": {"id": 8, "entry_price": 4.0, "signal_date": "2026-10-05T00:00:00+00:00"}}
+    new, closes = official_journal_ops(rows, open_rows, "2026-10-12T00:00:00+00:00")
+    assert [r["symbol"] for r in new] == ["A"] and new[0]["strategy"] == OFFICIAL_STRATEGY
+    assert new[0]["signal"] == "STRONG_OUTPERFORM" and new[0]["entry_price"] == 10.0
+    assert closes == [(7, {"exit_price": 12.0, "exit_date": "2026-10-12T00:00:00+00:00", "exit_reason": "SIGNAL_TO_NEUTRAL",
+                           "return_pct": 20.0, "holding_days": 11.0})]
+
+
+def test_history_rows_prefer_published_and_carry_provenance():
+    from src.data.cis.official import history_rows
+    reb = [{"symbol": "BTC", "d": "2026-10-09", "raw_score": 60.0, "score": 58.0, "grade": "B", "signal_pct": "NEUTRAL",
+            "pct": 0.5, "regime": "RISK_ON"},
+           {"symbol": "BTC", "d": "2026-10-10", "raw_score": 61.0, "score": 59.0, "grade": "B", "signal_pct": "NEUTRAL",
+            "pct": 0.5, "regime": "RISK_ON"}]
+    off = [{"symbol": "BTC", "d": "2026-10-10", "cis_score": 62.0, "regime_adjusted_score": 60.0, "grade": "B",
+            "signal": "OUTPERFORM", "pct": 0.7, "regime": "RISK_ON"}]
+    h = history_rows(off, reb)["BTC"]
+    assert [(p["d"], p["score"], p["signal"], p["provenance"]) for p in h] == [
+        ("2026-10-09", 60.0, "NEUTRAL", "reconstructed"), ("2026-10-10", 62.0, "OUTPERFORM", "published")]
+    assert h[1]["score_delta"] == 2.0 and h[0]["score_delta"] is None
+
+
+def test_official_changes_window():
+    from src.data.cis.official import official_changes
+    hist = {"X": [{"d": "2026-10-08", "grade": "B", "signal": "NEUTRAL", "score": 56.0},
+                  {"d": "2026-10-10", "grade": "B+", "signal": "OUTPERFORM", "score": 66.0}],
+            "Y": [{"d": "2026-10-10", "grade": "C", "signal": "NEUTRAL", "score": 40.0}]}
+    ch = official_changes(hist, 2)
+    assert [u["symbol"] for u in ch["upgrades"]] == ["X"] and ch["upgrades"][0]["delta"] == 1
+    assert ch["signal_changes"][0]["to_signal"] == "OUTPERFORM" and ch["stable_count"] == 1
+
+
+def test_every_cis_surface_reads_the_official_series():
+    """S-539(Jazz 10-12):页面 / 接口 / 事件 不得直读实时引擎的分数。只有写盘中历史的快照和日志价格回填可以。"""
+    import inspect
+    from src.api.routers import agent, cis, market, share, signals, social, strategies, trading, vector
+    from src.data.market import crowd_clock
+    live = ("calculate_cis_universe(", "redis_get()", "supabase_get_history(", "official=False",
+            'redis_get_key("cis:local_scores")', 'redis_get("cis:local_scores")')
+    must_be_official = [
+        agent._exec_portfolio_analysis, agent._exec_cis_snapshot, agent._exec_regime_briefing, agent._exec_trade_signal,
+        share.og_image, social._fetch_cis_top5, strategies.strategy_universe, trading._get_cis_for_symbol,
+        trading._run_paper_rebalance, vector._get_cached_universe, signals.compute_current_band, signals.get_conviction,
+        signals.assemble_briefing, market.get_signals, crowd_clock.get_crowd_clock,
+        cis.get_cis_history, cis.get_cis_trend, cis.cis_history, cis.cis_trend, cis.get_grade_changes,
+        cis.get_regime_transitions,
+    ]
+    bad = [f"{f.__module__}.{f.__name__}" for f in must_be_official if any(x in inspect.getsource(f) for x in live)]
+    assert not bad, f"直读实时引擎的分数:{bad}"
+    assert cis.LIVE_PUSH_FIRES_EVENTS is False, "实时推送不发对外事件 / 不记信号日志"
+    assert "regime_overlay" in inspect.getsource(market.macro_pulse), "宏观脉搏的市场状态 = 正式日终那天的"
+    src = inspect.getsource(cis.get_cis_history_batch)
+    assert "official: bool = Query(default=True)" in src and "standard_history" in src
+
+
+def test_regime_overlay_and_transitions():
+    from src.data.cis.official import regime_overlay, regime_transitions
+    pulse = {"macro_regime": "TIGHTENING", "regime_source": "mac_mini", "fng": {"value": 61}}
+    latest = {"d": "2026-10-11", "rows": {"BTC": {"regime": "RISK_ON"}, "ETH": {"regime": "RISK_ON"}}}
+    out = regime_overlay(pulse, latest)
+    assert out["macro_regime"] == "RISK_ON" and out["intraday_regime"]["macro_regime"] == "TIGHTENING"
+    assert out["regime_as_of"] == "2026-10-11" and pulse["macro_regime"] == "TIGHTENING", "不改入参"
+    assert regime_overlay(pulse, {"rows": {}}) is pulse, "没有正式发布 → 原样"
+    pts = [{"d": "2026-10-08", "regime": "TIGHTENING"}, {"d": "2026-10-09", "regime": "TIGHTENING"},
+           {"d": "2026-10-10", "regime": "RISK_ON", "provenance": "published"}]
+    assert regime_transitions(pts) == [{"symbol": None, "previous_regime": "TIGHTENING", "new_regime": "RISK_ON",
+                                        "transition_time": "2026-10-10", "provenance": "published"}]

@@ -373,10 +373,10 @@ async def og_image(
     cis_top5: list = []
     macro:    dict = {}
 
-    # CIS top 5 — try Redis-cached local-engine scores first
+    # CIS top 5 — the official daily-close series, same as every other page (S-539)
     try:
-        import src.api.store as store
-        redis_data = await store.redis_get("cis:local_scores")
+        from src.api.routers.cis import get_cis_universe
+        redis_data = await asyncio.wait_for(get_cis_universe(), timeout=15)
         if redis_data and isinstance(redis_data, dict):
             universe = redis_data.get("universe", [])
             if universe:
@@ -387,20 +387,6 @@ async def og_image(
                 )[:5]
     except Exception:
         pass
-
-    # Fallback: Railway T2 engine
-    if not cis_top5:
-        try:
-            from src.data.cis.cis_provider import calculate_cis_universe
-            result   = await asyncio.wait_for(calculate_cis_universe(), timeout=15)
-            universe = result.get("universe", [])
-            cis_top5 = sorted(
-                [a for a in universe if float(a.get("cis_score") or 0) > 0],
-                key=lambda x: float(x.get("cis_score", 0)),
-                reverse=True,
-            )[:5]
-        except Exception as e:
-            _logger.warning(f"og-image: CIS fetch error: {e}")
 
     # Macro pulse
     try:

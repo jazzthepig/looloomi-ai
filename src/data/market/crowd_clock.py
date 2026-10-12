@@ -134,8 +134,9 @@ async def get_crowd_clock() -> dict:
     + FNG), compute the clock, persist today's snapshot for later validation. Never raises."""
     fng = chg30 = chg7 = mean_pressure = disp_std = vol_ratio = None
     try:
+        from src.api.routers.cis import get_cis_universe
         from src.api.store import redis_get_key
-        cis = await redis_get_key("cis:local_scores") or {}
+        cis = await get_cis_universe() or {}          # S-539:与页面同一份 CIS(正式日终序列),不直读实时缓存
         pos = await redis_get_key("cis:positioning") or {}
         uni = cis.get("assets") or cis.get("universe") or []
 
@@ -175,7 +176,7 @@ async def get_crowd_clock() -> dict:
     if chg30 is None or disp_std is None:
         try:
             from src.api.routers.cis import get_cis_universe
-            u = await get_cis_universe(official=False)
+            u = await get_cis_universe()   # S-539:正式序列(版本边界 2026-10-12)
             uni = (u or {}).get("universe", []) or []
             if chg30 is None:
                 btc = next((a for a in uni if (a.get("symbol") or a.get("asset_id") or "").upper() == "BTC"), None)

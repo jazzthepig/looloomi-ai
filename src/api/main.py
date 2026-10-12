@@ -3178,7 +3178,7 @@ async def _daily_snapshot_loop():
             from src.data.cis.conviction import rank_universe
             from src.data.cis.cause_persistence import persist_conviction_verdicts
             _cur = await compute_current_band()
-            _u = (await get_cis_universe(official=False) or {}).get("universe", []) or []
+            _u = (await get_cis_universe() or {}).get("universe", []) or []   # S-539:正式序列,版本边界 2026-10-12
             _rows = rank_universe(_u, _cur.get("tiers_now") or {}, _cur.get("current_band"))
             _cn = await persist_conviction_verdicts(
                 _rows, band=_cur.get("current_band") or "?",

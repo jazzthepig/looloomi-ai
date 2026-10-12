@@ -397,12 +397,13 @@ async def strategy_universe(
     else:
         # Fetch base universe
         try:
-            base_universe = await calculate_cis_universe()
+            from src.api.routers.cis import get_cis_universe   # S-539:同一份 CIS(正式日终序列)
+            base_universe = await get_cis_universe()
         except Exception as e:
             _logger.error(f"[Strategies] Failed to fetch base universe: {e}")
             raise HTTPException(500, "CIS universe unavailable")
 
-        raw_assets = base_universe.get("assets", [])
+        raw_assets = base_universe.get("assets") or base_universe.get("universe", [])
         regime = base_universe.get("macro_regime", "Neutral")
 
         weights = _resolve_weights(strategy, regime)

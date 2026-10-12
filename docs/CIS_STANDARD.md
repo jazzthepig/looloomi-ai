@@ -133,3 +133,15 @@ T1 单一来源模拟:换档每名字每 30 天 2.35 → 1.30 次,3 天内变回
 - 仍读实时的:写盘中历史的 `cis_scores` 快照;从实时起步的前向记录(当前档位带、conviction、纸面再平衡、crowd_clock)——
   换输入 = 换版本,另定。
 - 判活:`select max(d) from cis_official_daily` = 昨天(UTC 06:00 后)。
+
+**每个页面同一份(S-539,Jazz 10-12「不同页面显示不同打分,我和潜在用户都不明白」):**
+
+- 分数 / 等级 / 档位 / 支柱 / 状态,任何对外的面都从正式序列取:宇宙 / top / asset / compare / agent / MCP、
+  走势(`/cis/history*`、`/cis/trend*` = 已发布优先、之前是同标准按时点重建,每点带 `provenance`)、
+  等级变化(`/cis/grade-changes` = 正式序列逐日比)、信号简报、社媒卡片、分享图、策略页、相似资产、档位带、
+  conviction、纸面再平衡、crowd_clock、A2A 任务。`tests/test_cis_official.py` 守着「不得直读实时引擎的分数」。
+- 对外事件(webhook、Telegram、信号日志)只在每天正式发布时发一次;实时推送(Mac T1)只写盘中历史与缓存
+  (`LIVE_PUSH_FIRES_EVENTS = False`)。信号日志:`CIS_OFFICIAL`(2026-10-12 起);旧的 `CIS_THRESHOLD`
+  (2026-05-25 → 2026-10-09)冻结,接口 `?method=previous` 单独给。
+- 前向记录(档位带、conviction、纸面再平衡、crowd_clock)换输入的版本边界 = 2026-10-12。
+- 发布器自己补收盘输入(S-538):缺加密收盘 / 全市场市值时先补再算;BTC 没价或加密有价 < 90% 永远不发半批。

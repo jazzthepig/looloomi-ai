@@ -38,6 +38,13 @@ _SB_KEY    = os.environ.get("SUPABASE_KEY", "")
 _SB_TABLE  = "signal_journal"
 
 # Signal thresholds (same as CLAUDE.md CIS spec)
+#: S-539(Jazz 10-12「不同页面显示不同打分」):信号日志从此只记正式日终序列的档位变化(CIS_OFFICIAL)。
+#: 之前实时引擎按分数门槛记的(CIS_THRESHOLD,2026-05-25 → 2026-10-09)冻结保留,接口里单独给、标明是上一套方法。
+OFFICIAL_STRATEGY = "CIS_OFFICIAL"
+PREVIOUS_STRATEGY = "CIS_THRESHOLD"
+OFFICIAL_JOURNAL_FROM = "2026-10-12"
+_LONG_SIGNALS = ("OUTPERFORM", "STRONG OUTPERFORM")
+
 _OUTPERFORM_THRESH        = 60.0
 _STRONG_OUTPERFORM_THRESH = 75.0
 _EXIT_THRESH              = 52.0    # close when score falls below this
@@ -137,10 +144,11 @@ async def _sb_update(row_id: int, data: dict) -> bool:
         return False
 
 
-async def _get_open_signals() -> dict:
-    """Fetch all open signals keyed by symbol (uppercase)."""
+async def _get_open_signals(strategy: str = PREVIOUS_STRATEGY) -> dict:
+    """Fetch all open signals of one strategy keyed by symbol (uppercase)."""
     rows = await _sb_query(_SB_TABLE, {
         "exit_date": "is.null",
+        "strategy": f"eq.{strategy}",
         "select": "id,symbol,entry_price,cis_score,signal_date,signal",
         "order": "signal_date.desc",
         "limit": "200",
@@ -151,6 +159,58 @@ async def _get_open_signals() -> dict:
         if sym and sym not in result:   # keep most recent open per symbol
             result[sym] = row
     return result
+
+
+# ── Official signal journal (S-539) ─────────────────────────────────────────
+
+def official_journal_ops(rows: list, open_rows: dict, close_ts: str) -> tuple[list, list]:
+    """纯函数。一批正式行(cis_official_daily)+ 当前未平的 CIS_OFFICIAL → (新开的行, [(id, 平仓字段)])。
+    进:档位是 OUTPERFORM / STRONG OUTPERFORM 且没有未平的;出:档位掉到 NEUTRAL 及以下。价格 = d 的收盘(inputs.price)。
+    不看分数门槛 —— 档位就是正式档位(否则日志和页面又是两套)。"""
+    new_rows, closes = [], []
+    for r in rows:
+        sym = str(r.get("symbol") or "").upper()
+        sig = r.get("signal") or ""
+        px = (r.get("inputs") or {}).get("price")
+        if not sym or not sig:
+            continue
+        is_long = sig in _LONG_SIGNALS
+        if sym in open_rows and not is_long:
+            o = open_rows[sym]
+            ent = o.get("entry_price")
+            ret = round((px - ent) / ent * 100, 4) if ent and px and ent > 0 else None
+            hold = None
+            try:
+                hold = round((datetime.fromisoformat(close_ts.replace("Z", "+00:00")) -
+                              datetime.fromisoformat(str(o.get("signal_date")).replace("Z", "+00:00"))).total_seconds() / 86400, 2)
+            except Exception:
+                pass
+            closes.append((o["id"], {"exit_price": _safe(px), "exit_date": close_ts, "exit_reason": f"SIGNAL_TO_{sig.replace(' ', '_')}",
+                                     "return_pct": _safe(ret), "holding_days": _safe(hold)}))
+        elif is_long and sym not in open_rows:
+            new_rows.append({
+                "symbol": sym, "asset_class": r.get("asset_class"), "grade": r.get("grade"),
+                "signal": sig.replace(" ", "_"), "cis_score": _safe(r.get("cis_score")),
+                "raw_cis_score": _safe(r.get("cis_score")), "las": None,
+                **{f"pillar_{p}": _safe(r.get(f"pillar_{p}")) for p in "fmosa"},
+                "macro_regime": r.get("regime"), "strategy": OFFICIAL_STRATEGY, "data_tier": None,
+                "entry_price": _safe(px), "exit_price": None, "exit_date": None, "exit_reason": None,
+                "return_pct": None, "holding_days": None, "signal_date": close_ts, "recorded_at": close_ts})
+    return new_rows, closes
+
+
+async def log_official_signals(rows: list, d: str) -> dict:
+    """正式发布之后调:按正式档位记进 / 出。d 的收盘时刻 = d+1 00:00 UTC。"""
+    if not _SB_URL or not _SB_KEY:
+        return {"skipped": "no supabase"}
+    if d < OFFICIAL_JOURNAL_FROM:
+        return {"skipped": f"{d} 早于正式日志起点 {OFFICIAL_JOURNAL_FROM}"}
+    close_ts = (datetime.fromisoformat(d) + timedelta(days=1)).replace(tzinfo=timezone.utc).isoformat()
+    open_rows = await _get_open_signals(OFFICIAL_STRATEGY)
+    new_rows, closes = official_journal_ops(rows, open_rows, close_ts)
+    ok = await _sb_insert(new_rows) if new_rows else True
+    closed = sum([1 for rid, upd in closes if await _sb_update(rid, upd)])
+    return {"opened": len(new_rows) if ok else 0, "insert_ok": ok, "closed": closed}
 
 
 # ── Signal logging (called from cis.py) ─────────────────────────────────────
@@ -696,12 +756,16 @@ async def get_signal_journal(
     offset: int = Query(default=0, ge=0),
     status: str = Query(default="all"),    # all | open | closed
     symbol: str = Query(default=None),
+    method: str = Query(default="official"),   # official | previous (S-539)
 ):
     """
-    Paginated signal history with open/closed filter.
-    Returns latest signals first.
+    Paginated signal history with open/closed filter. Latest first.
+    method=official (default): official daily-close signals (from 2026-10-12);
+    method=previous: the previous intraday method's log (2026-05-25 → 2026-10-09, no longer extended).
     """
+    strategy = PREVIOUS_STRATEGY if method == "previous" else OFFICIAL_STRATEGY
     params = {
+        "strategy": f"eq.{strategy}",
         "order":  "signal_date.desc",
         "limit":  str(limit),
         "offset": str(offset),
@@ -721,6 +785,7 @@ async def get_signal_journal(
         "offset":  offset,
         "limit":   limit,
         "filter":  status,
+        "method":  "previous" if strategy == PREVIOUS_STRATEGY else "official",
     }
 
 
@@ -736,8 +801,9 @@ async def assemble_briefing(symbol: str = None) -> dict:
 
     wl = await redis_get_key("conviction:watchlist") or {}
     pos = await redis_get_key("cis:positioning") or {}
-    cis = await redis_get_key("cis:local_scores") or {}
-    regime = (cis.get("macro") or {}).get("regime") or cis.get("macro_regime") or "Unknown"
+    from src.api.routers.cis import get_cis_universe
+    cis = await get_cis_universe() or {}          # S-539:与 CIS 页同一份(正式日终序列),不直读实时缓存
+    regime = cis.get("macro_regime") or (cis.get("macro") or {}).get("regime") or "Unknown"
 
     # crowding read for the context headline
     crowded_long = crowded_short = None
@@ -1006,16 +1072,25 @@ async def push_ai_briefing(payload: dict, x_internal_token: str = Header(None)):
 
 
 @router.get("/api/v1/signals/performance")
-async def get_signal_performance():
+async def get_signal_performance(method: str = Query(default="official")):
     """
-    Institutional-grade performance metrics computed from signal_journal.
-    Sharpe, Sortino, CAGR, max drawdown, win rate, profit factor, equity curve.
-    Cached 10 minutes in Redis.
+    Performance of logged signals (signal_journal). Sharpe, Sortino, CAGR, max drawdown, win rate,
+    profit factor, equity curve. Cached 10 minutes in Redis.
+
+    method=official (default): the official daily-close signals (CIS_OFFICIAL, logged from 2026-10-12).
+    method=previous: signals logged by the previous intraday method (CIS_THRESHOLD, 2026-05-25 →
+    2026-10-09) — a different formula and labelling, kept as its own record and no longer extended.
     """
+    strategy = PREVIOUS_STRATEGY if method == "previous" else OFFICIAL_STRATEGY
+    label = {"method": "previous" if strategy == PREVIOUS_STRATEGY else "official", "strategy": strategy,
+             "basis": ("signals of the previous intraday method, logged 2026-05-25 to 2026-10-09; no longer extended"
+                       if strategy == PREVIOUS_STRATEGY else
+                       f"official daily-close signals (UTC close), logged from {OFFICIAL_JOURNAL_FROM}")}
+    cache_key = f"{_REDIS_PERF_KEY}:{strategy}"
     # Try Redis cache first
     try:
         from src.api.store import redis_get_key, redis_set_key
-        cached = await redis_get_key(_REDIS_PERF_KEY)
+        cached = await redis_get_key(cache_key)
         if cached and cached.get("status") == "live":
             age = int(time.time()) - cached.get("_cached_at", 0)
             if age < _REDIS_PERF_TTL:
@@ -1023,9 +1098,10 @@ async def get_signal_performance():
     except Exception:
         pass
 
-    # Fetch closed signals (last 180 days, ordered oldest→newest for equity curve)
+    # Fetch closed signals (ordered oldest→newest for equity curve)
     closed = await _sb_query(_SB_TABLE, {
         "exit_date": "not.is.null",
+        "strategy": f"eq.{strategy}",
         "order":     "signal_date.asc",
         "limit":     "500",
         "select":    "id,symbol,asset_class,grade,signal,cis_score,macro_regime,return_pct,holding_days,signal_date,exit_date,exit_reason,entry_price,exit_price,outcome_30d,return_pct_30d,alpha_30d,benchmark_symbol",
@@ -1034,6 +1110,7 @@ async def get_signal_performance():
     # Fetch open signals
     open_rows = await _sb_query(_SB_TABLE, {
         "exit_date": "is.null",
+        "strategy": f"eq.{strategy}",
         "order":     "signal_date.desc",
         "limit":     "100",
         "select":    "id,symbol,asset_class,grade,signal,cis_score,macro_regime,entry_price,signal_date,outcome_30d",
@@ -1048,13 +1125,14 @@ async def get_signal_performance():
         return {"status": "building",
                 "message": "Performance metrics are recomputing.",
                 "total_signals": len(closed) + len(open_rows),
-                "closed_signals": len(closed), "open_signals": len(open_rows)}
+                "closed_signals": len(closed), "open_signals": len(open_rows), **label}
+    result.update(label)
     result["_cached_at"] = int(time.time())
 
     # Cache result
     try:
         from src.api.store import redis_set_key
-        await redis_set_key(_REDIS_PERF_KEY, result, ttl=_REDIS_PERF_TTL)
+        await redis_set_key(cache_key, result, ttl=_REDIS_PERF_TTL)
     except Exception:
         pass
 
@@ -1080,7 +1158,8 @@ async def run_outcome_tracker_endpoint(
     if not dry_run and result.get("rows_written"):
         try:
             from src.api.store import redis_set_key
-            await redis_set_key(_REDIS_PERF_KEY, {"status": "stale"}, ttl=1)
+            for _st in (OFFICIAL_STRATEGY, PREVIOUS_STRATEGY):
+                await redis_set_key(f"{_REDIS_PERF_KEY}:{_st}", {"status": "stale"}, ttl=1)
         except Exception:
             pass
     return result
@@ -1092,7 +1171,7 @@ async def get_signal_summary():
     Lightweight KPI strip — for embedding in other pages.
     Cached in Redis; fast response.
     """
-    perf = await get_signal_performance()
+    perf = await get_signal_performance(method="official")
     return {
         "status":          perf.get("status"),
         "sharpe":          perf.get("sharpe"),
@@ -1337,9 +1416,8 @@ async def compute_current_band() -> dict:
     live read endpoint AND the daily snapshot logger so both are identical."""
     from src.api.routers.cis import get_cis_universe
     from src.api.store import supabase_get_latest_edge_map
-    # official=False (T-080): the band series and its daily snapshot started on live inputs;
-    # switching their input is a version boundary, not a silent change.
-    data = await get_cis_universe(official=False)
+    # S-539(Jazz 10-12「不同页面显示不同打分」):档位带读正式序列。版本边界 2026-10-12 —— 之前的快照是实时引擎输入。
+    data = await get_cis_universe()
     universe = (data or {}).get("universe", []) or []
     regime = (data or {}).get("macro_regime")
     btc = next((a for a in universe if (a.get("symbol") or a.get("asset_id") or "").upper() == "BTC"), {})
@@ -1430,8 +1508,8 @@ async def get_conviction(response: Response = None):
     from src.api.routers.cis import get_cis_universe
     from src.data.cis.conviction import rank_universe
     cur = await compute_current_band()
-    # official=False (T-080): must stay identical to the persisted conviction_verdicts_daily row.
-    data = await get_cis_universe(official=False)
+    # S-539:与 conviction_verdicts_daily 同一个输入 —— 正式序列(版本边界 2026-10-12)。
+    data = await get_cis_universe()
     universe = (data or {}).get("universe", []) or []
     rows = rank_universe(universe, cur.get("tiers_now") or {}, cur.get("current_band"))
     return {

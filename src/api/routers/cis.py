@@ -307,7 +307,9 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                         else:
                             downgrades.append(change)
 
-            if upgrades:
+            # S-539(Jazz 10-12「不同页面显示不同打分」):实时推送不再对外发等级 / 档位变化(webhook、Telegram、
+            # 信号日志)—— 这些只由正式发布器每天发一次(official.publish_events),否则订阅者收到的是另一套口径。
+            if upgrades and LIVE_PUSH_FIRES_EVENTS:
                 _logger.info(f"[INTERNAL] {len(upgrades)} GRADE_UPGRADE — firing webhooks")
                 asyncio.create_task(fire_grade_webhooks(
                     event  = "GRADE_UPGRADE",
@@ -332,7 +334,7 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                         except Exception:
                             pass
                     asyncio.create_task(_tg("\n".join(_lines)))
-            if downgrades:
+            if downgrades and LIVE_PUSH_FIRES_EVENTS:
                 _logger.info(f"[INTERNAL] {len(downgrades)} GRADE_DOWNGRADE — firing webhooks")
                 asyncio.create_task(fire_grade_webhooks(
                     event  = "GRADE_DOWNGRADE",
@@ -368,7 +370,7 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
                         "grade":       asset.get("grade", ""),
                         "cis_score":   round(asset.get("cis_score") or asset.get("score") or 0.0, 2),
                     })
-            if signal_changes:
+            if signal_changes and LIVE_PUSH_FIRES_EVENTS:
                 _logger.info(f"[INTERNAL] {len(signal_changes)} SIGNAL_CHANGE — firing webhooks")
                 asyncio.create_task(fire_grade_webhooks(
                     event  = "SIGNAL_CHANGE",
@@ -379,7 +381,7 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
         # 3. Signal journal — auto-log OUTPERFORM threshold crossings (fire-and-forget)
         #    Extract prices from the universe payload (Mac Mini includes price data).
         #    Falls back to None if price unavailable — entry_price will be null (still logs signal).
-        if universe and _SB_KEY_SET:
+        if universe and _SB_KEY_SET and LIVE_PUSH_FIRES_EVENTS:
             prices_from_payload = {}
             for a in universe:
                 sym = (a.get("symbol") or a.get("asset_id") or "").upper()
@@ -424,6 +426,9 @@ async def get_cis_push_schema():
 # concurrent burst overwhelmed the worker → 503. Collapsing the burst into one
 # computation (others await/serve the cached result) removes the 503 entirely.
 _UNIVERSE_CACHE: dict = {"data": None, "ts": 0.0}
+
+#: S-539:实时推送(Mac T1)只写盘中历史与缓存;对外的等级 / 档位变化事件与信号日志只来自正式发布。
+LIVE_PUSH_FIRES_EVENTS = False
 _UNIVERSE_TTL = 30.0
 
 # S-180: the last T1 payload we successfully READ, kept so that a failed Redis
@@ -1649,64 +1654,49 @@ async def get_regime_analysis(response: Response = None):
 @router.get("/api/v1/macro/regime-transitions")
 async def get_regime_transitions(limit: int = 20, response: Response = None):
     """
-    Returns recent regime transitions with timestamps and affected assets.
-    Source: Supabase cis_scores where regime_transition=TRUE.
-
-    Each row: symbol, previous_regime, macro_regime (new), recorded_at
+    Market-regime transitions on the official daily-close series (S-539): one regime per UTC day —
+    published days, and before them the point-in-time reconstruction of the same standard (`provenance`).
+    Each row: previous_regime, new_regime, transition_time (the UTC day).
     """
     if response:
-        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
-
-    if not store._SB_URL or not store._SB_KEY:
-        return {"status": "error", "message": "Supabase not configured"}
-
-    url = f"{store._SB_URL}/rest/v1/cis_scores"
-    params = {
-        "select":    "symbol,macro_regime,previous_regime,recorded_at",
-        "regime_transition": "eq.true",
-        "order":     "recorded_at.desc",
-        "limit":     str(limit),
-    }
-    headers = {
-        "apikey":        store._SB_KEY,
-        "Authorization": f"Bearer {store._SB_KEY}",
-    }
-
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1800"
+    from src.data.cis.official import regime_transitions, standard_history
     try:
-        resp = await store._supabase_request_with_retry("GET", url, params=params, headers=headers)
-        if resp and resp.status_code == 200:
-            rows = resp.json()
-            return {
-                "status":   "success",
-                "count":    len(rows),
-                "transitions": [
-                    {
-                        "symbol":          r.get("symbol"),
-                        "previous_regime":  r.get("previous_regime"),
-                        "new_regime":       r.get("macro_regime"),
-                        "transition_time":  r.get("recorded_at"),
-                    }
-                    for r in rows
-                ],
-            }
-    except Exception as e:
-        _logger.warning(f"[REGIME_TRANSITIONS] error: {e}")
-
-    return {"status": "success", "count": 0, "transitions": []}
+        hist = (await standard_history(["BTC"], 400)).get("BTC", [])
+    except Exception:
+        _logger.exception("[REGIME_TRANSITIONS] standard history read failed")
+        raise HTTPException(status_code=502, detail="regime history unreadable — not the same as no transitions")
+    rows = regime_transitions([{"d": p["d"], "regime": p.get("macro_regime"), "provenance": p.get("provenance")}
+                               for p in hist])[:max(1, min(int(limit or 20), 100))]
+    return {"status": "success", "basis": "daily_close", "count": len(rows), "transitions": rows}
 
 
 # ── CIS History ───────────────────────────────────────────────────────────────
 # IMPORTANT: batch route MUST be registered before {symbol} route to avoid shadowing
+
+async def _official_history_desc(sym: str, days: int) -> list[dict]:
+    """S-539:单个名字的正式序列历史,新→旧(旧接口的顺序)。读不到 → 502,不当作没有历史。"""
+    from src.data.cis.official import standard_history
+    try:
+        rows = (await standard_history([sym], days)).get(sym.upper(), [])
+    except Exception:
+        _logger.exception("[CIS] standard history read failed")
+        raise HTTPException(status_code=502, detail="CIS history unreadable — not the same as no history")
+    return list(reversed(rows))
+
 
 @router.get("/api/v1/cis/history/batch")
 async def get_cis_history_batch(
     symbols: str,
     days: int = Query(default=30, ge=1, le=365),
     include_historical: bool = Query(default=True),
+    official: bool = Query(default=True),
     response: Response = None,
 ):
     """
-    Batch CIS history — single request for up to 60 symbols.
+    Batch CIS history — single request for up to 60 symbols. Default (official=true): the official
+    daily-close series — published days, and before them the point-in-time reconstruction of the same
+    standard; each point carries `provenance`. official=false: the live engine's stored pushes.
     Returns map of symbol → [rows sorted oldest-first].
     Each row includes: score, grade, signal, pillar_f..a, macro_regime, data_tier,
                        score_delta, score_zscore, recorded_at.
@@ -1719,6 +1709,18 @@ async def get_cis_history_batch(
     symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()][:60]
     if not symbol_list:
         return {"status": "error", "message": "No symbols provided", "data": {}}
+
+    if official:
+        # S-539:页面上的走势 = 正式序列(已发布优先,之前是同标准按时点重建),每点带 provenance
+        from src.data.cis.official import standard_history
+        try:
+            data = await standard_history(symbol_list, days)
+        except Exception:
+            _logger.exception("[CIS] standard history read failed")
+            raise HTTPException(status_code=502, detail="CIS history unreadable — not the same as no history")
+        if response:
+            response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1800"
+        return {"status": "success", "days": days, "count": len(data), "basis": "daily_close", "data": data}
 
     cache_key = f"cis:history:batch:{','.join(sorted(symbol_list))}:{days}:{include_historical}"
     cached = await redis_get_key(cache_key)
@@ -3345,7 +3347,7 @@ async def get_cis_history(
     if cached:
         return cached
 
-    rows = await supabase_get_history(sym, days)
+    rows = await _official_history_desc(sym, days)
 
     if not rows:
         result = {"symbol": sym, "history": [], "count": 0, "message": "No history found"}
@@ -3373,7 +3375,7 @@ async def get_cis_trend(
     """Return trend direction (improving / stable / declining) for a symbol over N days."""
     sym = symbol.upper()
 
-    rows = await supabase_get_history(sym, days)
+    rows = await _official_history_desc(sym, days)
 
     if len(rows) < 2:
         _logger.warning(f"[CIS trend] insufficient data for {sym}: {len(rows)} rows")
@@ -3520,7 +3522,7 @@ async def cis_history(symbol: str, days: int = 30):
     if cached:
         return cached
 
-    rows = await store.supabase_get_history(symbol, days=days)
+    rows = await _official_history_desc(symbol, days)
 
     if not rows:
         return {
@@ -3558,7 +3560,7 @@ async def cis_trend(symbol: str, days: int = 7):
     if cached:
         return cached
 
-    rows = await store.supabase_get_history(symbol, days=days)
+    rows = await _official_history_desc(symbol, days)
 
     if len(rows) < 2:
         return {
@@ -3607,11 +3609,9 @@ _GRADE_RANK_STATIC = {"A+": 8, "A": 7, "B+": 6, "B": 5, "C+": 4, "C": 3, "D": 2,
 @router.get("/api/v1/cis/grade-changes")
 async def get_grade_changes(hours: int = 24, response: Response = None):
     """
-    Returns assets whose CIS grade changed in the last N hours.
-
-    Compares the two most recent Supabase score rows per asset.
+    Returns assets whose official CIS grade changed over the last N hours, on the official daily-close
+    series (one publication per UTC day, so N is rounded up to whole days). Also lists `signal_changes`.
     Useful for agents polling grade transitions without implementing webhook endpoints.
-    Complements the push-based GRADE_UPGRADE/GRADE_DOWNGRADE webhook delivery.
 
     Response fields:
       upgrades   — assets that moved to a higher grade (e.g. B → B+), sorted by delta desc
@@ -3622,93 +3622,27 @@ async def get_grade_changes(hours: int = 24, response: Response = None):
     Example: GET /api/v1/cis/grade-changes?hours=24
              GET /api/v1/cis/grade-changes?hours=6
     """
-    from datetime import timezone
-
-    cache_key = f"cis:grade_changes:{hours}"
+    # S-539:等级 / 档位的变化只在正式序列上算(每天一次),不再比较实时引擎的相邻两次推送 ——
+    # 否则「变化」页和 CIS 页会给同一个名字不同的等级。hours 换算成天(至少 1 天)。
+    from src.data.cis.official import latest_official, official_changes, standard_history
+    cache_key = f"cis:grade_changes:official:{hours}"
     cached = await store.redis_get_key(cache_key)
     if cached:
         return cached
-
-    # Get current universe symbols
-    universe = await redis_get()
-    if not universe:
-        try:
-            universe = await calculate_cis_universe()
-        except Exception:
-            universe = []
-
-    assets  = universe if isinstance(universe, list) else universe.get("assets", [])
-    symbols = [a.get("symbol") for a in assets if a.get("symbol")]
-
+    lookback = max(1, -(-int(hours) // 24))
+    latest = await latest_official()
+    symbols = sorted((latest or {}).get("rows", {}).keys())
     if not symbols:
-        return {"upgrades": [], "downgrades": [], "stable_count": 0, "checked": 0, "hours": hours, "total_changes": 0}
-
-    # Fetch last 2 scores per symbol (sufficient to detect one grade change)
-    recent = await store.supabase_get_recent_scores(symbols, n=2)
-
-    upgrades: list   = []
-    downgrades: list = []
-    stable   = 0
-    now      = datetime.utcnow().replace(tzinfo=timezone.utc)
-
-    for sym, rows in recent.items():
-        if len(rows) < 2:
-            stable += 1
-            continue
-
-        latest = rows[0]   # newest first
-        prev   = rows[1]
-
-        new_grade  = latest.get("grade", "")
-        prev_grade = prev.get("grade",  "")
-
-        if not new_grade or not prev_grade or new_grade == prev_grade:
-            stable += 1
-            continue
-
-        # Respect the hours window — skip if the latest score predates the window
-        try:
-            change_ts = datetime.fromisoformat(
-                latest.get("recorded_at", "").replace("Z", "+00:00")
-            )
-            if (now - change_ts).total_seconds() / 3600 > hours:
-                stable += 1
-                continue
-        except Exception:
-            pass  # include if timestamp parsing fails
-
-        new_rank  = _GRADE_RANK_STATIC.get(new_grade,  0)
-        prev_rank = _GRADE_RANK_STATIC.get(prev_grade, 0)
-        delta     = new_rank - prev_rank
-
-        entry = {
-            "symbol":     sym,
-            "from_grade": prev_grade,
-            "to_grade":   new_grade,
-            "delta":      delta,
-            "cis_score":  round(latest.get("score") or 0, 2),
-            "signal":     latest.get("signal", ""),
-            "changed_at": latest.get("recorded_at", ""),
-        }
-
-        if delta > 0:
-            upgrades.append(entry)
-        else:
-            downgrades.append(entry)
-
-    upgrades.sort(key=lambda x: -x["delta"])
-    downgrades.sort(key=lambda x: x["delta"])
-
-    result = {
-        "hours":         hours,
-        "upgrades":      upgrades,
-        "downgrades":    downgrades,
-        "stable_count":  stable,
-        "checked":       len(symbols),
-        "total_changes": len(upgrades) + len(downgrades),
-    }
-
-    # Cache 15 min — Mac Mini pushes every ~30 min so sub-minute freshness is unnecessary
+        return {"hours": hours, "basis": "daily_close", "upgrades": [], "downgrades": [], "signal_changes": [],
+                "stable_count": 0, "checked": 0, "total_changes": 0,
+                "note": (latest or {}).get("reason") or "no official publication yet"}
+    try:
+        hist = await standard_history(symbols, lookback + 3)
+    except Exception:
+        _logger.exception("[CIS] grade-changes history read failed")
+        raise HTTPException(status_code=502, detail="CIS history unreadable — not the same as no changes")
+    result = {"hours": hours, "basis": "daily_close", "lookback_days": lookback,
+              "as_of": latest.get("d"), **official_changes(hist, lookback)}
     await store.redis_set_key(cache_key, result, ttl=900)
     if response:
         response.headers["Cache-Control"] = "public, max-age=900, stale-while-revalidate=1800"

@@ -85,16 +85,12 @@ def _load_data_layer():
 
 
 async def _get_cached_universe() -> dict | None:
-    """Fetch CIS universe from Redis (same key as CIS router). Returns None on miss."""
+    """The CIS universe every page shows — the official daily-close series (S-539). None on failure."""
     try:
-        from src.api.store import redis_get
-        return await redis_get()
+        from src.api.routers.cis import get_cis_universe
+        return await get_cis_universe()
     except Exception:
-        try:
-            from api.store import redis_get
-            return await redis_get()
-        except Exception:
-            return None
+        return None
 
 
 # ── /api/v1/cis/similar ──────────────────────────────────────────────────────

@@ -563,15 +563,6 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
     return gradeMatch && classMatch;
   });
 
-  // Percentile-based CIS rating — derived from live universe ranking
-  // Top 20% = Very High | Middle 60% = Neutral | Bottom 20% = Low
-  const getPercentileSignal = (pct) => {
-    if (pct == null) return null;
-    if (pct >= 80) return { label: "Very High", color: "#00D98A", bg: "rgba(0,217,138,0.12)" };
-    if (pct >= 20) return { label: "Neutral",   color: "#4472FF", bg: "rgba(68,114,255,0.10)" };
-    return               { label: "Low",        color: "#FF2D55", bg: "rgba(255,45,85,0.12)" };
-  };
-
   // Grade summary — includes A+/B+/C+ variants
   const gradeSummary = {
     A: data.filter(i => i.grade === "A" || i.grade === "A+").length,
@@ -1439,17 +1430,18 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
                   <span style={{ fontSize: 9, color: T.muted }}>
                     {selectedAsset?.asset_class} · Rank #{selectedAsset?.rank}
-                    {selectedAsset?.percentile_rank != null ? ` · P${Math.round(selectedAsset.percentile_rank)}` : ""}
+                    {selectedAsset?.percentile_rank != null ? ` · P${Math.round(selectedAsset.percentile_rank)} in group` : ""}
                   </span>
-                  {(() => {
-                    const sig = getPercentileSignal(selectedAsset?.percentile_rank);
-                    return sig ? (
+                  {selectedAsset?.signal && (() => {
+                    /* S-539: one label system — the official signal, not a separate percentile tag */
+                    const st = sigStyle(selectedAsset.signal);
+                    return (
                       <span style={{
                         fontSize: 8, fontFamily: FONTS.display, fontWeight: 700,
                         letterSpacing: "0.07em", padding: "2px 7px", borderRadius: 3,
-                        background: sig.bg, color: sig.color, border: `1px solid ${sig.color}30`,
-                      }}>{sig.label}</span>
-                    ) : null;
+                        background: st.bg, color: st.color, border: `1px solid ${st.color}30`,
+                      }}>{selectedAsset.signal}</span>
+                    );
                   })()}
                 </div>
               </div>

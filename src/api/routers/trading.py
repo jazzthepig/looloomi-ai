@@ -306,36 +306,11 @@ async def _get_cis_for_symbol(symbol: str) -> tuple[float, str, str, dict]:
     for alpha mining (pillar_fitness Pearson correlation via /api/v1/trading/mine).
     """
     try:
-        from src.data.cis.cis_provider import calculate_cis_universe
-        from src.api.store import redis_get_key as _rg
-        # Try Redis cache first (Mac Mini T1 push, 2h TTL)
-        cached = await _rg("cis:local_scores")
-        if cached and isinstance(cached, dict):
-            assets = cached.get("assets") or cached.get("universe", [])
-            # Mac Mini canonical: regime lives in `macro.regime` (nested). Some
-            # legacy shapes / Supabase mirrors also carry flat `macro_regime`.
-            # Same nested-then-flat pattern as src/data/market/data_layer.py:1787
-            # and the IC loop at trading.py:855 — keep them in sync.
-            regime = (
-                (cached.get("macro") or {}).get("regime")
-                or cached.get("macro_regime")
-                or "Unknown"
-            )
-            for a in assets:
-                sym = (a.get("symbol") or a.get("asset_id") or "").upper()
-                if sym == symbol.upper():
-                    score = a.get("cis_score") or a.get("total_score") or a.get("score", 0) or 0
-                    return float(score), a.get("grade", "?"), regime, a
-        # Fallback: compute via Railway CIS engine
-        universe_data = await calculate_cis_universe()
-        assets = universe_data.get("assets") or universe_data.get("universe", [])
-        # Same nested-then-flat pattern — /api/v1/cis/universe returns
-        # `macro.regime` nested (see cis.py:391 normalizer), not top-level
-        regime = (
-            (universe_data.get("macro") or {}).get("regime")
-            or universe_data.get("macro_regime")
-            or "Unknown"
-        )
+        # S-539:与所有页面同一份 CIS —— 正式日终序列(没有正式发布时 get_cis_universe 自己退回实时并标明)
+        from src.api.routers.cis import get_cis_universe
+        universe_data = await get_cis_universe()
+        assets = universe_data.get("universe") or universe_data.get("assets", [])
+        regime = universe_data.get("macro_regime") or (universe_data.get("macro") or {}).get("regime") or "Unknown"
         for a in assets:
             sym = (a.get("symbol") or a.get("asset_id") or "").upper()
             if sym == symbol.upper():
@@ -1206,8 +1181,8 @@ async def _run_paper_rebalance(dry_run: bool = True) -> dict:
     from src.data.market.risk_meter import (
         build_risk_meter, plan_rebalance, _SHORT_OK, _norm_regime, REGIME_FACTOR)
     from src.api.routers.cis import get_cis_universe
-    # official=False (T-080): this paper book's record started on live inputs; switching is a version boundary.
-    data = await get_cis_universe(official=False)
+    # S-539:纸面再平衡读正式序列 —— 与页面上同一份档位。版本边界 2026-10-12(之前读实时引擎)。
+    data = await get_cis_universe()
     universe = (data or {}).get("universe", []) or []
     regime = (data or {}).get("macro_regime") or "Neutral"
     shorts_ok = _norm_regime(regime) in _SHORT_OK

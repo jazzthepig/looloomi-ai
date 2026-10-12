@@ -430,27 +430,29 @@ export default function PerformanceDashboard() {
   const [tab,     setTab]     = useState("overview");   // overview | journal | attribution
   const [journalStatus, setJournalStatus] = useState("all");  // all | open | closed
   const [journalPage,   setJournalPage]   = useState(0);
+  // S-539: official daily-close signals (from 2026-10-12) vs the previous intraday method's log
+  const [method, setMethod] = useState("official");
   const PAGE = 30;
 
   const fetchPerf = useCallback(async () => {
     try {
-      const r = await fetch(`${API}/signals/performance`);
+      const r = await fetch(`${API}/signals/performance?method=${method}`);
       if (r.ok) setPerf(await r.json());
     } catch { /* silent */ }
     finally { setLoading(false); }
-  }, []);
+  }, [method]);
 
   const fetchJournal = useCallback(async (status = "all", page = 0) => {
     try {
       const r = await fetch(
-        `${API}/signals/journal?limit=${PAGE}&offset=${page * PAGE}&status=${status}`
+        `${API}/signals/journal?limit=${PAGE}&offset=${page * PAGE}&status=${status}&method=${method}`
       );
       if (r.ok) {
         const d = await r.json();
         setSignals(d.signals || []);
       }
     } catch { /* silent */ }
-  }, []);
+  }, [method]);
 
   useEffect(() => {
     fetchPerf();
@@ -493,9 +495,21 @@ export default function PerformanceDashboard() {
           <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, marginTop: 4, opacity: 0.65 }}>
             Observational signal track record — NOT live capital · {closedCount + openCount} total signals
           </div>
+          {p.basis && (
+            <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, marginTop: 4 }}>{p.basis}</div>
+          )}
         </div>
 
         <div style={{ display: "flex", gap: 6 }}>
+          {[["official", "Official"], ["previous", "Previous method"]].map(([k, label]) => (
+            <button key={k} onClick={() => { setMethod(k); setJournalPage(0); }} style={{
+              fontFamily: FONTS.mono, fontSize: 9, padding: "4px 10px", borderRadius: 4, cursor: "pointer",
+              color: method === k ? T.t1 : T.t3, background: "transparent",
+              border: `1px solid ${method === k ? T.t3 : C.border}`,
+            }}>
+              {label}
+            </button>
+          ))}
           <button onClick={fetchPerf} style={{
             fontFamily: FONTS.mono, fontSize: 9, color: T.t3, padding: "4px 10px",
             background: "transparent", border: `1px solid ${C.border}`, borderRadius: 4, cursor: "pointer",

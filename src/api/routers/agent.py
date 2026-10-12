@@ -151,6 +151,12 @@ async def _update_task(task_id: str, **kwargs):
 
 # ── Task executors ───────────────────────────────────────────────────────────
 
+async def _official_universe() -> dict:
+    """S-539:对外只有一份 CIS —— 正式日终序列(实时引擎值在每个名字的 intraday 里)。"""
+    from src.api.routers.cis import get_cis_universe
+    return await get_cis_universe()
+
+
 async def _exec_portfolio_analysis(task_id: str, params: dict):
     """
     CIS-based portfolio allocation given investor constraints.
@@ -169,7 +175,7 @@ async def _exec_portfolio_analysis(task_id: str, params: dict):
 
         # Fetch live data
         universe_data, macro_pulse = await asyncio.gather(
-            calculate_cis_universe(),
+            _official_universe(),
             get_macro_pulse(),
             return_exceptions=True,
         )
@@ -266,7 +272,7 @@ async def _exec_cis_snapshot(task_id: str, params: dict):
         _GRADE_ORDER = {"A+": 8, "A": 7, "B+": 6, "B": 5, "C+": 4, "C": 3, "D": 2, "F": 1}
         min_grade_val = _GRADE_ORDER.get(min_grade, 0)
 
-        universe_data = await calculate_cis_universe()
+        universe_data = await _official_universe()
         assets = universe_data.get("assets", []) or universe_data.get("universe", [])
 
         filtered = []
@@ -363,7 +369,7 @@ async def _exec_regime_briefing(task_id: str, params: dict):
         }
 
         if depth == "full":
-            universe_data = await calculate_cis_universe()
+            universe_data = await _official_universe()
             assets = universe_data.get("assets", []) or universe_data.get("universe", [])
 
             # Sector rotation: avg CIS per class
@@ -433,7 +439,7 @@ async def _exec_trade_signal(task_id: str, params: dict):
 
         # Fetch CIS universe + macro in parallel
         universe_data, macro = await asyncio.gather(
-            calculate_cis_universe(),
+            _official_universe(),
             get_macro_pulse(),
             return_exceptions=True,
         )

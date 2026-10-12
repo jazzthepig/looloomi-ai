@@ -121,7 +121,13 @@ async def macro_pulse(response: Response = None):
     """
     if response:
         response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=180"
-    return await get_macro_pulse()
+    data = await get_macro_pulse()
+    # S-539:对外的市场状态 = 正式日终那天的(与 CIS 页同一个);盘中引擎的状态在 intraday_regime
+    try:
+        from src.data.cis.official import latest_official, regime_overlay
+        return regime_overlay(data, await latest_official())
+    except Exception:
+        return data
 
 
 @router.get("/api/v1/market/crowd-clock")
@@ -245,6 +251,12 @@ def _mk(base: dict, pi: dict, logic: str, horizon: str = "24H") -> dict:
     }
 
 
+
+async def _official_cis_universe() -> dict:
+    """S-539:对外只有一份 CIS(正式日终序列)。"""
+    from src.api.routers.cis import get_cis_universe
+    return await get_cis_universe()
+
 @router.get("/api/v1/signals")
 async def get_signals(background_tasks: BackgroundTasks, response: Response = None):
     """
@@ -266,7 +278,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
         _safe(get_defi_overview()),
         _safe(get_stablecoin_overview()),
         _safe(get_top_yields(min_tvl=5_000_000, limit=5)),
-        _safe(redis_get()),
+        _safe(_official_cis_universe()),     # S-539:与 CIS 页同一份(正式日终序列)
         _safe(_fetch_macro_signals()),
         _safe(get_cg_global()),
         _safe(get_cg_trending()),
@@ -1289,7 +1301,8 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
 
         if current_grades:
             try:
-                prev_grades = (await redis_get_key("signal:grade_baseline")) or {}
+                # S-539:基线换新键 —— 旧键存的是实时引擎的等级,拿它比正式等级会造出一批假「变化」
+                prev_grades = (await redis_get_key("signal:grade_baseline:official")) or {}
                 grade_upgrades, grade_downgrades = [], []
 
                 for sym, curr_grade in current_grades.items():
@@ -1348,31 +1361,10 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                     "24H"))
 
                 # Persist baseline (26h TTL — refreshes daily, survives normal deploy gaps)
-                await redis_set_key("signal:grade_baseline", current_grades, ttl=26 * 3600)
+                await redis_set_key("signal:grade_baseline:official", current_grades, ttl=26 * 3600)
 
-                # ── Webhook fan-out (async, non-blocking) ──────────────────────
-                try:
-                    from src.api.routers.webhooks import fire_grade_webhooks
-                    if grade_upgrades:
-                        await fire_grade_webhooks(
-                            "GRADE_UPGRADE",
-                            [{"symbol": g["symbol"], "from": g["from"], "to": g["to"],
-                              "delta": g["delta"], "cis_score": g["cis_score"]}
-                             for g in grade_upgrades[:10]],
-                            macro_regime,
-                            background_tasks,
-                        )
-                    if grade_downgrades:
-                        await fire_grade_webhooks(
-                            "GRADE_DOWNGRADE",
-                            [{"symbol": g["symbol"], "from": g["from"], "to": g["to"],
-                              "delta": g["delta"], "cis_score": g["cis_score"]}
-                             for g in grade_downgrades[:10]],
-                            macro_regime,
-                            background_tasks,
-                        )
-                except Exception:
-                    pass  # Webhook delivery is best-effort
+                # ── Webhook fan-out ── S-539:webhook / Telegram 只由正式发布器在每天发布时发(official.py),
+                # 这里不再发 —— 否则同一个等级变化会从两处、按两种口径推给订阅者。
 
             except Exception:
                 pass  # Grade tracking is best-effort; never block signal feed
