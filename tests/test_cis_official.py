@@ -103,6 +103,24 @@ def test_overlay_replaces_official_fields_and_keeps_live_under_intraday():
     assert overlay(out, _latest()) is out, "idempotent"
 
 
+def test_narrative_follows_the_official_row_not_the_engine():
+    """S-547:引擎叙述按盘中值和盘中状态写(10-12:58 个名字全写 tightening,正式是 RISK_ON;正式 NEUTRAL 的写
+    outperform)。对外的 narrative 只用正式行;引擎那句挪进 intraday。"""
+    live = _live()
+    live["universe"][0]["narrative"] = "BTC positions to outperform in a risk-on regime."
+    live["universe"][0]["name"] = "Bitcoin"
+    out = overlay(live, _latest(), today=date(2026, 10, 11))
+    btc = {a["symbol"].upper(): a for a in out["universe"]}["BTC"]
+    assert btc["intraday"]["narrative"].startswith("BTC positions to outperform")
+    n = btc["narrative"]
+    assert n.startswith("Bitcoin: NEUTRAL within crypto on the 2026-10-10 UTC close")
+    assert "50th percentile" in n and "tightening" in n and "outperform" not in n.lower()
+    assert "Strongest pillar: Alpha independence 50; weakest: Fundamental 10" in n
+    from src.data.cis.official import _ordinal
+    assert [_ordinal(x) for x in (1, 2, 3, 11, 12, 13, 21, 52, 100)] == \
+        ["1st", "2nd", "3rd", "11th", "12th", "13th", "21st", "52nd", "100th"]
+
+
 def test_overlay_without_publication_serves_live_and_says_so():
     live = _live()
     out = overlay(live, {"rows": {}, "reason": "no official publication yet"})

@@ -253,7 +253,39 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
 INTRADAY_KEYS = ("cis_score", "raw_cis_score", "regime_adjusted_score", "grade", "signal",
                  "f", "m", "o", "s", "a", "pillars", "percentile_rank", "macro_regime", "las",
                  "percentile", "cross_asset_percentile", "global_rank", "class_rank",
-                 "score_change_7d", "score_change_30d")
+                 "score_change_7d", "score_change_30d", "narrative")
+
+PILLAR_NAMES = {"F": "Fundamental", "M": "Market structure", "O": "On-chain health", "S": "Sentiment",
+                "A": "Alpha independence"}
+REGIME_WORDS = {"RISK_ON": "risk-on", "RISK_OFF": "risk-off", "TIGHTENING": "tightening", "EASING": "easing",
+                "STAGFLATION": "stagflation", "GOLDILOCKS": "goldilocks"}
+
+
+def _ordinal(n: int) -> str:
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
+def official_narrative(name: str, r: Mapping[str, Any], d: str) -> str:
+    """纯函数。正式行 → 一句描述(S-547)。引擎的 narrative 是按盘中值和盘中市场状态写的(10-12 实测:58 个名字
+    全写「tightening regime」,而正式状态是 RISK_ON;ARB / BTC 正式 NEUTRAL,叙述写 outperform)—— 挪进 intraday,
+    对外的这一句只用正式行里的数,描述、不预测。"""
+    sig = r.get("signal") or "NEUTRAL"
+    grp = "traditional assets" if r.get("asset_class") in TRADFI else "crypto"
+    parts = [f"{name}: {sig} within {grp} on the {d} UTC close"]
+    sc, gr, pct = r.get("cis_score"), r.get("grade"), r.get("pct")
+    if sc is not None:
+        parts.append(f"score {float(sc):.1f}" + (f" (grade {gr})" if gr else "")
+                     + (f", {_ordinal(round(float(pct) * 100))} percentile in the group" if pct is not None else ""))
+    pil = {k: r.get(f"pillar_{k.lower()}") for k in PILLAR_NAMES}
+    pil = {k: float(v) for k, v in pil.items() if v is not None}
+    text = parts[0] + (" — " + parts[1] if len(parts) > 1 else "") + "."
+    if len(pil) >= 2:
+        hi = max(pil, key=pil.get)
+        lo = min(pil, key=pil.get)
+        text += f" Strongest pillar: {PILLAR_NAMES[hi]} {pil[hi]:.0f}; weakest: {PILLAR_NAMES[lo]} {pil[lo]:.0f}."
+    if r.get("regime"):
+        text += f" Market state on that close: {REGIME_WORDS.get(str(r['regime']), str(r['regime']).lower())}."
+    return text
 
 
 def scaled_las(live_las: Any, live_score: Any, official_score: Any) -> Optional[float]:
@@ -319,6 +351,7 @@ def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date
             "signal_basis": "daily_close", "official_date": d,
             "watch": r.get("watch"), "group_percentile": pct,
             "missing_inputs": r.get("missing") or [],
+            "narrative": official_narrative(str(a.get("name") or names.get(sym) or sym), r, d),
         })
         if "las" in a:
             b["las"] = scaled_las(a.get("las"), a.get("cis_score"), r.get("cis_score"))
@@ -343,7 +376,7 @@ def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date
                     "pillars": p, "percentile_rank": round(pct * 100, 1) if pct is not None else None,
                     "macro_regime": r.get("regime"), "signal_basis": "daily_close", "official_date": d,
                     "watch": r.get("watch"), "group_percentile": pct, "missing_inputs": r.get("missing") or [],
-                    "intraday": None})
+                    "narrative": official_narrative(names.get(sym, sym), r, d), "intraday": None})
     uni.sort(key=lambda x: (x.get("cis_score") is None, -(x.get("cis_score") or 0)))
     by_cls: dict[str, int] = {}
     for i, x in enumerate(uni, start=1):
