@@ -35,7 +35,7 @@ import pandas as pd
 
 TABLE = "cis_rebuild_daily"
 WRITES_TABLES = (TABLE,)
-CODE_REF = "cis-standard-v1.2"   # v1.2(10-11,S-535):外侧门槛缓冲封顶 ±5;v1.1(±10,极端档进不去)与 v1 的行保留
+CODE_REF = "cis-standard-v1.3"   # v1.3(10-12,S-537):代币迁移接段(MKR→SKY、MATIC→POL);v1.2 外侧缓冲 ±5(S-535);旧版本的行保留
 START = pd.Timestamp("2023-01-01")
 READ_FROM = "2019-12-01"
 BAND = 2.0
@@ -104,6 +104,8 @@ def crypto_market_data(px: pd.Series, mcap: pd.Series, vol: pd.Series, hi: pd.Se
     hist = px.loc[:d].dropna()
     m = mcap.get(d)
     m = float(m) if m is not None and pd.notna(m) else 0.0
+    if m <= 0:
+        miss.append("market_cap")                         # 0 / 缺 不是「市值为零」—— 标出来(S-537:MKR 16 个月市值记为 0)
     v = vol.get(d)
     if v is None or pd.isna(v):
         miss.append("volume")
@@ -191,6 +193,7 @@ def score_day(d: pd.Timestamp, assets: Mapping[str, Mapping[str, Any]], data: Ma
     """纯函数(除了 cis_provider 的纯函数)。d 这一天全宇宙的分数行。"""
     from src.data.cis.cis_provider import (calculate_cis_score, calculate_total_score, canonical_regime_strict,
                                            detect_regime, get_grade, get_signal)
+    from src.data.cis.migrations import token_on
     mds: dict[str, tuple[dict, list[str]]] = {}
     for sym, cfg in assets.items():
         if cfg["class"] in TRADFI:
@@ -259,7 +262,8 @@ def score_day(d: pd.Timestamp, assets: Mapping[str, Mapping[str, Any]], data: Ma
             "regime": canonical_regime_strict(regime),
             "inputs": {"price": round(md["price"], 8), "mcap": md.get("market_cap"), "volume": md.get("volume_24h"),
                        "chg30": round(md["change_30d"], 3), "fng": fng_v, "vix": vix, "btc_dom": round(bdom, 3) if bdom else None,
-                       "tvl": tvl or None, "funding": fr},
+                       "tvl": tvl or None, "funding": fr,
+                       **({"token": tok} if (tok := token_on(sym, d, data.get("migration_eff") or {})) else {})},
             "missing": sorted(set(miss)),
         })
     return rows
@@ -397,14 +401,18 @@ async def load_inputs(end: pd.Timestamp) -> tuple[dict, dict]:
     from src.data.cis.cis_provider import ASSETS_CONFIG, CRYPTO_ASSETS
     from src.data.market.data_layer import get_cg_markets
     from src.data.style.header import SOURCE as CG_SOURCE, _read_all
+    from src.data.cis.migrations import MIGRATIONS, chain, effective_day
     assets = {k: {"class": v["class"], "coingecko": v.get("coingecko")} for k, v in ASSETS_CONFIG.items()}
     cg_ids = {k: v["coingecko"] for k, v in CRYPTO_ASSETS.items() if v.get("coingecko")}
+    migs = [m for m in MIGRATIONS if m["new"] in cg_ids]          # S-537:迁移前的旧币一并读,接成一段
+    all_coins = list(cg_ids.values()) + [m["old_coin"] for m in migs]
+    all_syms = list(cg_ids) + [m["old"] for m in migs]
     mc = await _read_all("asset_mcap_daily", {"select": "coin_id,d,price,mcap,volume", "source": f"eq.{CG_SOURCE}",
-                                              "coin_id": f"in.({','.join(cg_ids.values())})", "d": f"gte.{READ_FROM}"})
+                                              "coin_id": f"in.({','.join(all_coins)})", "d": f"gte.{READ_FROM}"})
     if not mc:
         raise RuntimeError("asset_mcap_daily 读到 0 行")
     hl = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,high,low", "source": "eq.binance_hist",
-                                         "symbol": f"in.({','.join(cg_ids)})", "trade_date": "gte.2022-11-01"})
+                                         "symbol": f"in.({','.join(all_syms)})", "trade_date": "gte.2022-11-01"})
     hl_hype = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,high,low", "source": "eq.coingecko_pro_ohlc",
                                               "symbol": "eq.HYPE", "trade_date": "gte.2022-11-01"})
     tf_syms = [s for s in ASSETS_CONFIG if s not in CRYPTO_ASSETS]
@@ -430,6 +438,19 @@ async def load_inputs(end: pd.Timestamp) -> tuple[dict, dict]:
         hsrc = hl_hype if sym == "HYPE" else hl
         crypto[sym] = (col(mc, "coin_id", cg, "price"), col(mc, "coin_id", cg, "mcap"), col(mc, "coin_id", cg, "volume"),
                        col(hsrc, "symbol", sym, "high"), col(hsrc, "symbol", sym, "low"))
+    migration_eff: dict[str, Any] = {}
+    old_funding: dict[str, pd.Series] = {}
+    for m in migs:
+        old5 = (col(mc, "coin_id", m["old_coin"], "price"), col(mc, "coin_id", m["old_coin"], "mcap"),
+                col(mc, "coin_id", m["old_coin"], "volume"), col(hl, "symbol", m["old"], "high"),
+                col(hl, "symbol", m["old"], "low"))
+        if not len(old5[0]):
+            migration_eff[m["new"]] = None                  # 旧币历史还没落库 —— 不接,如实留着新币自己的历史
+            continue
+        eff = effective_day(old5[2], crypto[m["new"]][2], m["start"])
+        migration_eff[m["new"]] = eff
+        crypto[m["new"]] = chain(old5, crypto[m["new"]], m["ratio"], eff)
+        old_funding[m["new"]] = col(fund, "symbol", m["old"], "funding_rate")
     tradfi = {s: (col(tf, "symbol", s, "close"), col(tf, "symbol", s, "high"), col(tf, "symbol", s, "low"),
                   col(tf, "symbol", s, "volume")) for s in tf_syms}
     tvl = {}
@@ -444,6 +465,11 @@ async def load_inputs(end: pd.Timestamp) -> tuple[dict, dict]:
             s = s.reindex(pd.date_range(s.index.min(), max(s.index.max(), end), freq="D")).ffill(limit=4)
         macro_s[k] = s.to_dict()
     funding = {s: col(fund, "symbol", s, "funding_rate").to_dict() for s in cg_ids}
+    for sym, of in old_funding.items():                     # 资金费率是比率,不换算;生效日前用旧币的
+        eff = migration_eff.get(sym)
+        merged = {k: v for k, v in of.to_dict().items() if eff is None or k < eff}
+        merged.update({k: v for k, v in funding.get(sym, {}).items() if eff is None or k >= eff})
+        funding[sym] = merged
     from src.data.market.data_layer import get_eodhd_eod_data
     static_tf = {}
     for s in tf_syms:
@@ -462,7 +488,7 @@ async def load_inputs(end: pd.Timestamp) -> tuple[dict, dict]:
     for r in fq:
         fundamentals.setdefault(r["symbol"], []).append(r)
     data = {"crypto": crypto, "tradfi": tradfi, "tvl": tvl, "macro": macro_s, "funding": funding, "static": static,
-            "static_tf": static_tf, "fundamentals": fundamentals, "github": github}
+            "static_tf": static_tf, "fundamentals": fundamentals, "github": github, "migration_eff": migration_eff}
     return assets, data
 
 

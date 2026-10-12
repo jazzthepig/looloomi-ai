@@ -67,7 +67,7 @@ _CG_IDS = {
     "XRP": "ripple", "ADA": "cardano", "AVAX": "avalanche-2", "DOT": "polkadot",
     "NEAR": "near", "SUI": "sui", "APT": "aptos", "HYPE": "hyperliquid",
     "ARB": "arbitrum", "OP": "optimism", "LINK": "chainlink", "UNI": "uniswap",
-    "AAVE": "aave", "MKR": "maker", "LTC": "litecoin", "ATOM": "cosmos",
+    "AAVE": "aave", "MKR": "maker", "SKY": "sky", "LTC": "litecoin", "ATOM": "cosmos",
     "ALGO": "algorand", "HBAR": "hedera-hashgraph", "INJ": "injective-protocol",
     "TIA": "celestia", "SEI": "sei-network", "ENA": "ethena", "ONDO": "ondo-finance",
     "PENDLE": "pendle", "MANTLE": "mantle", "MNT": "mantle", "STX": "blockstack",

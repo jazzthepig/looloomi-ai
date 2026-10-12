@@ -98,7 +98,7 @@ _SYM_TO_CG: dict[str, str] = {
     "XRP":   "ripple",          "ADA":   "cardano",
     "AVAX":  "avalanche-2",     "DOT":   "polkadot",
     "LINK":  "chainlink",       "UNI":   "uniswap",
-    "AAVE":  "aave",            "MKR":   "maker",
+    "AAVE":  "aave",            "MKR":   "maker",           "SKY":   "sky",
     "SNX":   "synthetix-network-token",
     "CRV":   "curve-dao-token", "COMP":  "compound-governance-token",
     "LDO":   "lido-dao",        "ARB":   "arbitrum",

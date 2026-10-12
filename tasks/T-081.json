@@ -1,0 +1,27 @@
+{
+  "id": "T-081",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-12",
+  "verified": null,
+  "title": "代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3",
+  "source": "Jazz 10-12「需要,你也要看看别的项目怎么解决这个问题的」(MKR 是否换成 SKY)",
+  "allowed_paths": [
+    "src/data/cis/",
+    "src/data/market/cis_inputs.py",
+    "src/api/",
+    "src/data/signals/outcome_tracker.py",
+    "tests/",
+    "docs/",
+    "scripts/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① asset_mcap_daily 有 matic-network 历史、sky 有成交额历史 ② cis_rebuild_daily v1.3 全量,SKY / POL 行 inputs.token 在生效日前后正确切换,生效日写进 ledger ③ 正式下一批含 SKY、不含 MKR,SKY 的上一档取重建 ④ /cis/universe 里 MKR 不再出现(official.retired = MKR->SKY)",
+    "expect": "SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC"
+  },
+  "prior_value": "MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币",
+  "notes": "2026-10-12 开卡(S-537)。migrations.py + 测试;rebuild 接段;cis_inputs 补抓旧币历史;ASSETS_CONFIG MKR→SKY;overlay 旧代码让位 + 正式有实时没有的补进;_prev_levels 正式优先、缺的取重建;SYNC §Seth-1012a 请 Minimax 换 T1 宇宙。"
+}

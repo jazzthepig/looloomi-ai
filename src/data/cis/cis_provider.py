@@ -217,7 +217,9 @@ CRYPTO_ASSETS = {
     "TIA":   {"coingecko": "celestia",                 "name": "Celestia",       "class": "Infrastructure"},
     # RWA — Real World Assets
     "ONDO":  {"coingecko": "ondo-finance",            "name": "Ondo Finance",   "class": "RWA"},
-    "MKR":   {"coingecko": "maker",                   "name": "Maker",           "class": "RWA"},
+    # S-537:MKR → SKY(1 : 24,000)。CoinGecko 2025-06-05 起把 MKR 市值记为 0、供应记到 SKY 名下;MKR 主要交易所 2025-08/09
+    # 已转换下架。统一标准里 SKY 的历史在迁移生效日前接 MKR÷24000(src/data/cis/migrations.py)。
+    "SKY":   {"coingecko": "sky",                     "name": "Sky (prev. Maker)", "class": "RWA"},
 }
 
 # 24 crypto assets. Universe v2.0 total: 24 crypto + 10 US Equity + 6 Bonds + 3 Commodities = 43
@@ -504,7 +506,7 @@ BINANCE_SYMBOLS = {
     "TIA":   "tiausdt",
     # RWA
     "ONDO":  "ondousdt",
-    "MKR":   "mkrusdt",
+    # MKR 2025-09 Binance 已下架并转换为 SKY;SKY 的现货代码未核实 —— 不猜,走 CoinGecko(S-537)
 }
 # Reverse mapping
 BINANCE_TO_CIS = {v: k for k, v in BINANCE_SYMBOLS.items()}
@@ -2316,7 +2318,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 return {}
 
         _crypto_ids = ["BTC","ETH","SOL","BNB","XRP","ADA","AVAX","DOT","NEAR","SUI","APT","HYPE",
-                       "ARB","OP","LINK","UNI","AAVE","MKR","LDO","PENDLE","INJ","TIA","ONDO"]
+                       "ARB","OP","LINK","UNI","AAVE","SKY","LDO","PENDLE","INJ","TIA","ONDO"]
         try:
             signals = await batch_narrative_signals(_crypto_ids, social_collector, orderflow_collector)
             # Build {symbol: nma_score} map for calculate_cis_score injection

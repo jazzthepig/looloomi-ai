@@ -258,6 +258,36 @@ async def _volumes(today: date) -> dict[str, Any]:
     return out
 
 
+async def _migration_history(today: date) -> dict[str, Any]:
+    """S-537:迁移前的旧币(MKR / MATIC)的 asset_mcap_daily 历史。没有就从 HISTORY_START 整段取;有了只补最近 10 天。
+    统一标准把新币的历史在生效日前接到旧币上(src/data/cis/migrations.py),旧币没落库就接不上。"""
+    from src.data.cis.migrations import MIGRATIONS
+    from src.data.market.data_layer import get_cg_market_chart_range
+    from src.data.style.header import SOURCE, parse_market_chart
+    from src.data.vector.market_state_writer import _sb_get
+    out: dict[str, Any] = {}
+    to_ts = int(datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc).timestamp())
+    for m in MIGRATIONS:
+        rd = await _sb_get("asset_mcap_daily", {"select": "d", "coin_id": f"eq.{m['old_coin']}", "source": f"eq.{SOURCE}",
+                                                "order": "d.desc", "limit": "1"})
+        if not rd.ok:
+            out[m["old"]] = f"读不到已有历史:{rd.reason}"
+            continue
+        last = (rd.rows or [{}])[0].get("d")
+        frm = (date.fromisoformat(last) - timedelta(days=10)) if last else date.fromisoformat(HISTORY_START)
+        raw = await get_cg_market_chart_range(m["old_coin"], int(datetime.combine(frm, datetime.min.time(),
+                                                                                   tzinfo=timezone.utc).timestamp()),
+                                              to_ts, interval="daily")
+        if not raw.get("available"):
+            out[m["old"]] = f"读不到:{str(raw.get('error') or raw.get('reason'))[:80]}"
+            continue
+        pts = parse_market_chart(raw.get("prices"), raw.get("market_caps"), raw.get("volumes"))
+        rows = [{"symbol": m["old"], "coin_id": m["old_coin"], "source": SOURCE, **p} for p in pts]
+        err = await _upsert("asset_mcap_daily", rows, "symbol,d,source") if rows else None
+        out[m["old"]] = err or f"{len(rows)} 行"
+    return out
+
+
 async def _tradfi(today: date) -> dict[str, Any]:
     """传统资产 eodhd 日线:最早一行晚于 2022-11 或今天是周一 ⇒ 全量重取(复权口径,TRADFI_BACKFILL_DAYS 天)。"""
     from src.api.routers.ohlcv import collect_ohlcv
@@ -278,6 +308,7 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
     macro = await _macro(today)
     protocols = await _protocols(today)
     volumes = await _volumes(today)
+    volumes.update({f"migration.{k}": v for k, v in (await _migration_history(today)).items()})
     fundamentals = await _fundamentals()
     github = await _github(today)
     try:

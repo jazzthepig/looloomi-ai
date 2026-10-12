@@ -1684,7 +1684,7 @@ COINGECKO_IDS = {
     "AVAX": "avalanche-2", "DOT": "polkadot", "NEAR": "near",
     "SUI": "sui", "APT": "aptos", "HYPE": "hyperliquid",
     "ARB": "arbitrum", "OP": "optimism", "LINK": "chainlink",
-    "UNI": "uniswap", "AAVE": "aave", "MKR": "maker",
+    "UNI": "uniswap", "AAVE": "aave", "MKR": "maker", "SKY": "sky",
 }
 
 

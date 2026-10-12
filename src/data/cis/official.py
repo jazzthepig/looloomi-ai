@@ -77,16 +77,22 @@ def _r(v: Any) -> Optional[float]:
         return None
 
 
+def merge_prev(official: list[dict], rebuild: list[dict]) -> dict[str, Optional[int]]:
+    """纯函数。前一天的档:正式发布过的优先;正式表里没有的名字(新进宇宙、迁移换了代码)取同版本重建的。"""
+    out = {r["symbol"]: (LEVELS.index(r["signal_pct"]) if r.get("signal_pct") in LEVELS else None) for r in rebuild}
+    out.update({r["symbol"]: (LEVELS.index(r["signal"]) if r.get("signal") in LEVELS else None) for r in official})
+    return out
+
+
 async def _prev_levels(d: date) -> dict[str, Optional[int]]:
-    """前一天的正式档;没有就取重建序列的前一天。"""
+    """前一天的正式档;正式表里没有的名字取重建序列的前一天(S-537:SKY 第一次进正式表时接重建的链)。"""
     from src.data.style.header import _read_all
     y = (d - timedelta(days=1)).isoformat()
-    rows = await _read_all(TABLE, {"select": "symbol,signal", "d": f"eq.{y}"})
-    if not rows:
-        rows = [{"symbol": r["symbol"], "signal": r["signal_pct"]}
-                for r in await _read_all("cis_rebuild_daily", {"select": "symbol,signal_pct", "d": f"eq.{y}",
-                                                               "code_ref": f"eq.{CODE_REF}"})]
-    return {r["symbol"]: (LEVELS.index(r["signal"]) if r.get("signal") in LEVELS else None) for r in rows}
+    off = await _read_all(TABLE, {"select": "symbol,signal", "d": f"eq.{y}"})
+    reb = await _read_all("cis_rebuild_daily", {"select": "symbol,signal_pct", "d": f"eq.{y}", "code_ref": f"eq.{CODE_REF}"})
+    if not reb:
+        return {}                                           # 同版本重建还没写完 —— 宁可等(见 run_once),不在半截上接
+    return merge_prev(off, reb)
 
 
 async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
@@ -143,8 +149,11 @@ CACHE_FAIL_S = 60.0
 _LATEST: dict[str, Any] = {"at": 0.0, "ttl": 0.0, "val": None}
 
 
-def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date] = None) -> Any:
-    """纯函数,不改入参。`latest` = {"d", "rows": {symbol: 正式行}, "code_ref", "published_at"} 或 None。"""
+def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date] = None,
+            names: Optional[Mapping[str, str]] = None) -> Any:
+    """纯函数,不改入参。`latest` = {"d", "rows": {symbol: 正式行}, "code_ref", "published_at"} 或 None。
+    names:代码 → 显示名(正式有、实时没有的名字补进来时用)。"""
+    names = names or {}
     from src.api.contracts.disclosure import OFFICIAL_BASIS
     if not isinstance(data, dict) or not data.get("universe"):
         return data
@@ -157,11 +166,16 @@ def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date
                            "reason": (latest or {}).get("reason") or "no official publication yet",
                            "method": OFFICIAL_BASIS}
         return out
+    from src.data.cis.migrations import RETIRED
     d = str(latest["d"])
-    uni, hit = [], 0
+    uni, hit, seen, retired = [], 0, set(), []
     for a in data["universe"]:
         b = dict(a)
         sym = str(a.get("symbol") or a.get("asset_id") or "").upper()
+        if sym in RETIRED and RETIRED[sym] in rows:
+            retired.append(f"{sym}->{RETIRED[sym]}")          # 迁移后的旧代码:正式视图只放新代码(S-537)
+            continue
+        seen.add(sym)
         r = rows.get(sym)
         if r is None:
             b["signal_basis"] = "intraday"
@@ -183,6 +197,20 @@ def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date
             "missing_inputs": r.get("missing") or [],
         })
         uni.append(b)
+    for sym, r in rows.items():                             # 正式发布了、实时引擎还没有的名字(如刚换代码的 SKY)
+        if sym in seen:
+            continue
+        hit += 1
+        p = {k.upper(): r.get(f"pillar_{k}") for k in "fmosa"}
+        pct = r.get("pct")
+        uni.append({"symbol": sym, "name": names.get(sym, sym), "asset_class": r.get("asset_class"),
+                    "cis_score": r.get("cis_score"), "raw_cis_score": r.get("cis_score"),
+                    "regime_adjusted_score": r.get("regime_adjusted_score"), "grade": r.get("grade"),
+                    "signal": r.get("signal"), "f": p["F"], "m": p["M"], "o": p["O"], "s": p["S"], "a": p["A"],
+                    "pillars": p, "percentile_rank": round(pct * 100, 1) if pct is not None else None,
+                    "macro_regime": r.get("regime"), "signal_basis": "daily_close", "official_date": d,
+                    "watch": r.get("watch"), "group_percentile": pct, "missing_inputs": r.get("missing") or [],
+                    "intraday": None})
     uni.sort(key=lambda x: (x.get("cis_score") is None, -(x.get("cis_score") or 0)))
     out["universe"] = uni
     out["intraday"] = {k: data.get(k) for k in ("macro_regime", "regime_confidence", "timestamp", "source") if k in data}
@@ -196,7 +224,8 @@ def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date
         pass
     out["official"] = {"applied": True, "basis": "daily_close", "d": d, "age_days": age,
                        "code_ref": latest.get("code_ref"), "published_at": latest.get("published_at"),
-                       "covered": hit, "total": len(uni), "intraday_key": "intraday", "method": OFFICIAL_BASIS}
+                       "covered": hit, "total": len(uni), "intraday_key": "intraday", "method": OFFICIAL_BASIS,
+                       **({"retired": retired} if retired else {})}
     return out
 
 
@@ -228,4 +257,5 @@ async def latest_official(now: Optional[float] = None) -> dict[str, Any]:
 
 
 async def apply_official(data: Any) -> Any:
-    return overlay(data, await latest_official())
+    from src.data.cis.cis_provider import ASSETS_CONFIG
+    return overlay(data, await latest_official(), names={k: v.get("name", k) for k, v in ASSETS_CONFIG.items()})
