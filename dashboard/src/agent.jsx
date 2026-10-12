@@ -630,7 +630,7 @@ response = client.messages.create(
               'get_cis_asset(symbol) — single asset deep dive',
               'get_regime_context() — live macro regime',
               '60 requests / hour rate limit',
-              'Standard refresh cadence (30 min)',
+              'Official daily publication (UTC close) + intraday preview',
             ]}
             cta="Start for free"
             ctaHref="#request-key"
@@ -658,7 +658,7 @@ response = client.messages.create(
             priceNote="For fund operators and multi-agent deployments"
             features={[
               'Everything in Pro',
-              'WebSocket streaming (real-time score push)',
+              'WebSocket streaming (intraday preview push)',
               'Custom universe configuration',
               'SLA guarantee with uptime monitoring',
               'Direct line to research team',

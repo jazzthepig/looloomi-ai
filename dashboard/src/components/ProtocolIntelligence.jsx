@@ -74,6 +74,8 @@ const PillarMini = ({ pillars }) => {
 const ProtocolDetail = ({ protocol }) => {
   const p = protocol;
   if (!p) return null;
+  // S-541: the protocol score is a separate method from CIS; the positioning signal shown here is the
+  // official CIS of the protocol's token (only when the token is in the CIS universe).
   const sig = SIGNAL_COLORS[p.signal] || SIGNAL_COLORS.NEUTRAL;
 
   return (
@@ -84,13 +86,15 @@ const ProtocolDetail = ({ protocol }) => {
     }}>
       {/* Signal + Risk + Weight row */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
-        <span style={{
-          fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
-          letterSpacing: "0.08em", padding: "4px 12px", borderRadius: 4,
-          background: sig.bg, color: sig.color, border: `1px solid ${sig.border}`,
-        }}>
-          {p.signal}
-        </span>
+        {p.cis && (
+          <span title={`Official CIS of ${p.cis.symbol} (UTC close ${p.cis.official_date})`} style={{
+            fontFamily: FONTS.display, fontSize: 11, fontWeight: 700,
+            letterSpacing: "0.08em", padding: "4px 12px", borderRadius: 4,
+            background: sig.bg, color: sig.color, border: `1px solid ${sig.border}`,
+          }}>
+            CIS {p.cis.symbol} · {p.cis.grade} · {p.signal}
+          </span>
+        )}
         {p.risk_tier && (
           <span style={{
             fontFamily: FONTS.display, fontSize: 10, fontWeight: 600,
@@ -208,7 +212,7 @@ const ProtocolDetail = ({ protocol }) => {
 
       {/* Pillar breakdown */}
       <div style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.t3, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>
-        CIS Pillar Breakdown
+        Protocol Pillar Breakdown
       </div>
       <PillarMini pillars={p.pillars} />
     </div>
@@ -256,7 +260,7 @@ export default function ProtocolIntelligence() {
     .sort((a, b) => {
       if (sortBy === "tvl") return (b.tvl || 0) - (a.tvl || 0);
       if (sortBy === "change_7d") return (b.tvl_change_7d || 0) - (a.tvl_change_7d || 0);
-      return (b.cis_score || 0) - (a.cis_score || 0);
+      return (b.protocol_score || 0) - (a.protocol_score || 0);
     });
 
   return (
@@ -274,7 +278,7 @@ export default function ProtocolIntelligence() {
           <span style={{
             fontFamily: FONTS.mono, fontSize: 10,
             letterSpacing: "0.1em", textTransform: "uppercase", color: T.muted,
-          }}>· CIS v4.1</span>
+          }}>· Protocol score (separate from CIS)</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 11, fontFamily: FONTS.mono, color: T.t3 }}>
@@ -310,7 +314,7 @@ export default function ProtocolIntelligence() {
         </div>
         <div style={{ display: "flex", gap: 4 }}>
           {[
-            { key: "score", label: "CIS Score" },
+            { key: "score", label: "Protocol Score" },
             { key: "tvl", label: "TVL" },
             { key: "change_7d", label: "7D Flow" },
           ].map(s => (
@@ -366,7 +370,7 @@ export default function ProtocolIntelligence() {
           ) : filtered.map((p, idx) => {
             const isExpanded_ = expandedId === p.id;
             const isPick = agentPicks.includes(p.id);
-            const gradeColor = GRADE_COLORS[p.grade] || T.t3;
+            const gradeColor = GRADE_COLORS[p.protocol_grade] || T.t3;
             const sigCfg = SIGNAL_COLORS[p.signal] || SIGNAL_COLORS.HOLD;
             const riskCfg = RISK_COLORS[p.risk_tier] || RISK_COLORS.MEDIUM;
             const dirColor = DIR_COLOR[p.tvl_direction] || T.t3;
@@ -451,10 +455,10 @@ export default function ProtocolIntelligence() {
                       fontFamily: FONTS.mono, fontSize: 13, fontWeight: 800,
                       color: gradeColor,
                     }}>
-                      {p.grade}
+                      {p.protocol_grade}
                     </span>
                     <div style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.mono, marginTop: 1 }}>
-                      {p.cis_score?.toFixed(0)}
+                      {p.protocol_score?.toFixed(0)}
                     </div>
                   </div>
 
@@ -465,8 +469,8 @@ export default function ProtocolIntelligence() {
                       letterSpacing: "0.05em", padding: "3px 6px", borderRadius: 3,
                       background: sigCfg.bg, color: sigCfg.color,
                       border: `1px solid ${sigCfg.border}`,
-                    }}>
-                      {p.signal}
+                    }} title={p.cis ? `Official CIS of ${p.cis.symbol}` : "No token in the CIS universe"}>
+                      {p.cis ? `${p.cis.symbol} ${p.signal}` : "—"}
                     </span>
                   </div>
 
@@ -494,7 +498,7 @@ export default function ProtocolIntelligence() {
           display: "flex", justifyContent: "space-between", alignItems: "center",
           fontSize: 9, color: T.t3, fontFamily: FONTS.mono,
         }}>
-          <span>Source: DeFiLlama TVL · CIS Protocol Engine v1.0 · Sorted by {sortBy === "score" ? "CIS Score ↓" : sortBy === "tvl" ? "TVL ↓" : "7D Flow ↓"}</span>
+          <span>Source: DeFiLlama TVL · Protocol scoring v1.0 (separate from CIS; the signal column is the token's official CIS) · Sorted by {sortBy === "score" ? "Protocol Score ↓" : sortBy === "tvl" ? "TVL ↓" : "7D Flow ↓"}</span>
           <span>Showing {filtered.length} of {protocols.length} protocols · Click row to expand · Refreshes every 10 min</span>
         </div>
       </div>

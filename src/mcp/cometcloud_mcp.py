@@ -975,11 +975,11 @@ async def cometcloud_get_prices(params: PricesInput) -> str:
     },
 )
 async def cometcloud_get_market_movers() -> str:
-    """Fetch the top gainers and losers across the CIS-tracked universe (84 assets).
+    """Fetch the top gainers and losers across the CIS-tracked universe.
 
     Returns the 5 biggest 24H gainers and 5 biggest losers from the CIS universe,
-    including CIS grade, price, change percentage, and signal. Derived from CIS
-    universe data updated every 30 minutes.
+    including the official CIS grade and signal (published daily on the UTC close),
+    price and 24H change.
 
     Returns:
         str: Markdown table of top gainers and losers with symbol, grade, price, change%.
@@ -1491,7 +1491,7 @@ async def cometcloud_get_vc_funding(params: VcFundingInput) -> str:
 @mcp.tool(
     name="cometcloud_get_protocols",
     annotations={
-        "title": "Protocol Intelligence — CIS-Scored DeFi & RWA Shelf",
+        "title": "Protocol Intelligence — Scored DeFi & RWA Shelf",
         "readOnlyHint": True,
         "destructiveHint": False,
         "idempotentHint": True,
@@ -1499,8 +1499,10 @@ async def cometcloud_get_vc_funding(params: VcFundingInput) -> str:
     },
 )
 async def cometcloud_get_protocols(params: ProtocolsInput) -> str:
-    """Retrieve CometCloud's curated protocol universe with CIS scores, live TVL,
-    analyst narratives, and selection rationale for each protocol.
+    """Retrieve CometCloud's curated protocol universe with protocol scores, live TVL,
+    analyst narratives, and selection rationale for each protocol. The protocol score is a separate
+    method from CIS (TVL scale and flows, audits, age, peers); where the protocol's token is in the CIS
+    universe, its official CIS is attached under `cis`.
 
     Covers 25 protocols across RWA (Treasuries, Private Credit), DeFi (Lending,
     DEX, Staking, Yield), Derivatives, and Infrastructure. Each protocol includes
@@ -1510,7 +1512,7 @@ async def cometcloud_get_protocols(params: ProtocolsInput) -> str:
     Args:
         params (ProtocolsInput):
             - category: Filter by category string (optional)
-            - min_grade: Minimum CIS grade (optional)
+            - min_grade: Minimum protocol grade (optional)
             - sort_by: 'score', 'tvl', or 'change_7d' (default: 'score')
             - response_format: 'json' or 'markdown'
 
@@ -1520,7 +1522,8 @@ async def cometcloud_get_protocols(params: ProtocolsInput) -> str:
           "protocols": [
             {
               "id": str, "name": str, "category": str, "chain": str,
-              "cis_score": float, "grade": str, "signal": str,
+              "protocol_score": float, "protocol_grade": str,
+              "cis": {"symbol": str, "cis_score": float, "grade": str, "signal": str} | null,
               "tvl": float, "tvl_formatted": str,
               "tvl_change_7d": float, "tvl_change_30d": float,
               "apy": float, "risk_tier": str,
@@ -1534,7 +1537,7 @@ async def cometcloud_get_protocols(params: ProtocolsInput) -> str:
 
     Examples:
         - "Show me CometCloud's top RWA protocols" → category="RWA - Treasuries"
-        - "What DeFi protocols are rated OUTPERFORM?" → category="DeFi - Lending"
+        - "Which lending protocols score highest?" → category="DeFi - Lending"
         - "Which protocols have the highest TVL?" → sort_by="tvl"
         - "Why did CometCloud choose Aave?" → use json format, look at why_selected
     """
@@ -1545,12 +1548,12 @@ async def cometcloud_get_protocols(params: ProtocolsInput) -> str:
         if params.category:
             protos = [p for p in protos if params.category.lower() in p.get("category", "").lower()]
         if params.min_grade:
-            protos = [p for p in protos if _above_min_grade(p.get("grade", "F"), params.min_grade)]
+            protos = [p for p in protos if _above_min_grade(p.get("protocol_grade", "F"), params.min_grade)]
 
-        sort_key = {"score": "cis_score", "tvl": "tvl", "change_7d": "tvl_change_7d"}.get(
-            params.sort_by, "cis_score"
+        sort_key = {"score": "protocol_score", "tvl": "tvl", "change_7d": "tvl_change_7d"}.get(
+            params.sort_by, "protocol_score"
         )
-        protos = sorted(protos, key=lambda p: p.get(sort_key, 0), reverse=True)
+        protos = sorted(protos, key=lambda p: p.get(sort_key) or 0, reverse=True)
 
         if params.response_format == Fmt.JSON:
             return json.dumps({"count": len(protos), "protocols": protos}, indent=2)
@@ -1558,16 +1561,20 @@ async def cometcloud_get_protocols(params: ProtocolsInput) -> str:
         lines = [
             f"# CometCloud Protocol Intelligence ({len(protos)} protocols)",
             "",
-            "| # | Protocol | Category | Grade | TVL | 7D% | Signal |",
-            "|---|----------|----------|-------|-----|-----|--------|",
+            "| # | Protocol | Category | Protocol grade | TVL | 7D% | Token CIS (official) |",
+            "|---|----------|----------|----------------|-----|-----|----------------------|",
         ]
         for i, p in enumerate(protos, 1):
             tvl_chg = p.get("tvl_change_7d", 0)
+            c = p.get("cis") or {}
+            cis_txt = f"{c.get('symbol')} {c.get('grade')} · {c.get('signal')}" if c else "—"
             lines.append(
                 f"| {i} | **{p.get('name')}** | {p.get('category')} | "
-                f"**{p.get('grade')}** | {p.get('tvl_formatted', '—')} | "
-                f"{tvl_chg:+.1f}% | {p.get('signal')} |"
+                f"**{p.get('protocol_grade')}** | {p.get('tvl_formatted', '—')} | "
+                f"{tvl_chg:+.1f}% | {cis_txt} |"
             )
+        lines += ["", "*Protocol grade is CometCloud's protocol scoring, a separate method from CIS; the last column "
+                      "is the official CIS of the protocol's token where it is in the CIS universe.*"]
         return "\n".join(lines)
 
     except Exception as e:
@@ -2873,7 +2880,7 @@ async def cometcloud_find_similar_assets(params: FindSimilarInput) -> str:
 @mcp.tool()
 async def cometcloud_get_asset_clusters() -> str:
     """
-    K-means++ clustering of all 84 CIS assets by 18-dimensional embedding.
+    K-means++ clustering of all CIS assets by 18-dimensional embedding (official daily-close values).
     Returns 6 natural groupings with per-cluster CIS quality, dominant asset class,
     and member list ranked by score.
 

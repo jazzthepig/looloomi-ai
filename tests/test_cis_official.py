@@ -306,3 +306,30 @@ def test_regime_overlay_and_transitions():
            {"d": "2026-10-10", "regime": "RISK_ON", "provenance": "published"}]
     assert regime_transitions(pts) == [{"symbol": None, "previous_regime": "TIGHTENING", "new_regime": "RISK_ON",
                                         "transition_time": "2026-10-10", "provenance": "published"}]
+
+
+def test_history_never_runs_ahead_of_the_latest_publication():
+    from src.data.cis.official import history_rows
+    reb = [{"symbol": "BTC", "d": d, "raw_score": 60.0, "score": 58.0, "grade": "B", "signal_pct": "NEUTRAL"}
+           for d in ("2026-10-09", "2026-10-10", "2026-10-11")]
+    off = [{"symbol": "BTC", "d": "2026-10-10", "cis_score": 62.0, "grade": "B", "signal": "OUTPERFORM"}]
+    h = history_rows(off, reb, cap="2026-10-10")["BTC"]
+    assert [p["d"] for p in h] == ["2026-10-09", "2026-10-10"] and h[-1]["provenance"] == "published"
+
+
+def test_protocol_scores_are_not_called_cis():
+    """S-541:协议评分是另一套方法;cis_* 只放协议代币的正式 CIS,协议分不带定位档位,不动缓存。"""
+    from src.data.cis.official import protocol_view
+    res = {"protocols": [{"id": "aave", "name": "Aave", "cis_score": 96.4, "grade": "A+", "signal": "STRONG OUTPERFORM",
+                          "pillars": {"F": 100}},
+                         {"id": "maple", "name": "Maple", "cis_score": 98.6, "grade": "A+", "signal": "STRONG OUTPERFORM",
+                          "pillars": {"F": 100}}],
+           "categories": {"DeFi": {"avg_score": 90.0}}, "agent_picks": ["maple"]}
+    latest = {"d": "2026-10-11", "rows": {"AAVE": {"cis_score": 63.4, "grade": "B", "signal": "STRONG OUTPERFORM"}}}
+    out = protocol_view(res, latest)
+    aave, maple = out["protocols"]
+    assert aave["protocol_score"] == 96.4 and aave["protocol_grade"] == "A+"
+    assert aave["cis_score"] == 63.4 and aave["grade"] == "B" and aave["cis"]["symbol"] == "AAVE"
+    assert maple["cis_score"] is None and maple["signal"] is None and maple["cis"] is None, "没有代币 → 没有 CIS"
+    assert res["protocols"][0]["cis_score"] == 96.4, "不改入参(引擎结果有缓存)"
+    assert out["categories"]["DeFi"] == {"avg_protocol_score": 90.0} and "score_basis" in out

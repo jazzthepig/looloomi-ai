@@ -40,7 +40,7 @@ const ASSETS = [
   { id: "celestia",         symbol: "TIA",    name: "Celestia",    category: "Infra",     color: "#7B2FBE" },
   // RWA — Real World Assets
   { id: "ondo-finance",     symbol: "ONDO",   name: "Ondo",        category: "RWA",       color: "#2B65EC" },
-  { id: "maker",            symbol: "MKR",    name: "Maker",       category: "RWA",       color: "#1AAB9B", cisKey: "MKR" },
+  { id: "sky",              symbol: "SKY",    name: "Sky (prev. Maker)", category: "RWA", color: "#1AAB9B", cisKey: "SKY" },
   // US Equity — mega-cap by market cap (S&P 500)
   { id: "spy",              symbol: "SPY",   name: "S&P 500",     category: "TradFi",    color: "#4CAF50", cisKey: "SPY" },
   { id: "aapl",             symbol: "AAPL",   name: "Apple",       category: "TradFi",    color: "#A2AAAD", cisKey: "AAPL" },
@@ -234,6 +234,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
         signal:     item.signal || "NEUTRAL",
         percentile: item.percentile_rank ?? 0,
         dataTier:   item.data_tier ?? 2,
+        basis:      item.signal_basis || "intraday",
         las:        item.las ?? null,
         confidence: item.confidence ?? null,
         narrative:  item.narrative || null,
@@ -593,9 +594,9 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
                               </span>
                               {/* T1/T2 tier: invisible until hover — no badge */}
                               <span
-                                title={`Data: ${cis.dataTier === 1 ? "Local engine (T1)" : "Market estimate (T2)"}`}
+                                title={cis.basis === "daily_close" ? "Official CIS (UTC close)" : "Intraday preview (no official publication for this name)"}
                                 style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, cursor: "help",
-                                  background: cis.dataTier === 1 ? "rgba(0,232,122,0.35)" : "rgba(245,158,11,0.25)",
+                                  background: cis.basis === "daily_close" ? "rgba(0,232,122,0.35)" : "rgba(245,158,11,0.25)",
                                 }}
                               />
                             </div>
@@ -734,8 +735,8 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
           here than on CIS. <span style={{ color: T.t3 }}>LAS = CIS × liquidity × confidence.</span>
         </div>
         <div>
-          <span style={{ color: T.green }}>●</span> T1 local engine
-          {" · "}<span style={{ color: T.amber }}>●</span> T2 market estimate
+          <span style={{ color: T.green }}>●</span> official CIS (UTC close)
+          {" · "}<span style={{ color: T.amber }}>●</span> intraday preview
           {" — "}the dot beside each grade.
         </div>
       </div>
@@ -758,17 +759,13 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
             Both are now derived from the rows on screen. */}
         <span>
           Data: <span style={{ color: T.t2 }}>CoinGecko Pro</span>
-          {" · "}Signals: <span style={{ color: T.blue }}>CIS v4.1</span>
-          {" · "}120s refresh
+          {" · "}Signals: <span style={{ color: T.blue }}>official CIS</span>
           {(() => {
-            const tiers = Object.values(cisData).map(c => c?.dataTier);
-            const t1 = tiers.filter(t => t === 1 || t === "1" || t === "T1").length;
-            const n = tiers.length;
+            const vals = Object.values(cisData);
+            const n = vals.length;
             if (!n) return null;
-            if (t1 === n) return <>{" · "}<span style={{ color: T.green }}>T1</span> Engine</>;
-            if (t1 === 0) return <>{" · "}<span style={{ color: T.amber }}>T2</span> Market Est.</>;
-            return <>{" · "}<span style={{ color: T.green }}>T1</span> {t1}/{n}
-                    {" · "}<span style={{ color: T.amber }}>T2</span> {n - t1}/{n}</>;
+            const official = vals.filter(c => c?.basis === "daily_close").length;
+            return <>{" · "}<span style={{ color: official === n ? T.green : T.amber }}>{official}/{n}</span> official (UTC close)</>;
           })()}
         </span>
         {lastUpdate && (

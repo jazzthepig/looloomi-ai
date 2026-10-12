@@ -270,18 +270,25 @@ async def get_vc_overlap():
 async def get_protocols(
     response: Response,
     category: str | None = Query(None, description="Filter by category (e.g. 'RWA', 'DeFi - Lending')"),
-    min_grade: str | None = Query(None, description="Minimum CIS grade (A+, A, B+, B, C+, C, D, F)"),
+    min_grade: str | None = Query(None, description="Minimum protocol grade (A+, A, B+, B, C+, C, D, F)"),
 ):
     """
-    Protocol Intelligence — CIS-scored protocol universe.
-    Live DeFiLlama TVL data + 5-pillar scoring (F/M/O/S/A).
-    Returns ranked protocols with grade, signal, risk tier, and allocation weight.
+    Protocol Intelligence — the protocol shelf with CometCloud protocol scores (a separate method from CIS:
+    live DeFiLlama TVL, flows, audits, age, peers; 5 pillars). `protocol_score` / `protocol_grade` are that
+    score; `cis_*` is the official CIS of the protocol's token where it is in the CIS universe.
     Agent-consumable: query ?category=RWA&min_grade=B for filtered results.
     """
     try:
         result = await get_protocol_universe(category=category, min_grade=min_grade)
         response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
-        return result
+        # S-541:协议评分是另一套方法,不叫 CIS;cis_* 只放协议代币的正式 CIS
+        try:
+            from src.data.cis.official import latest_official, protocol_view
+            latest = await latest_official()
+        except Exception:
+            latest = None
+        from src.data.cis.official import protocol_view
+        return protocol_view(result, latest)
     except Exception as e:
         _logger.error(f"Protocol universe error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Protocol scoring failed")

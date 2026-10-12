@@ -3306,6 +3306,8 @@ async def _broadcast_cis_update(universe: list):
     try:
         store.last_cis_broadcast = {
             "type":      "full",
+            # S-541:这条流是实时引擎的盘中预览,不是正式 CIS(正式值每天 UTC 收盘后发布一次,见 /api/v1/cis/universe)
+            "basis":     "intraday_preview",
             "timestamp": datetime.now().isoformat(),
             "count":     len(universe),
             "assets": [

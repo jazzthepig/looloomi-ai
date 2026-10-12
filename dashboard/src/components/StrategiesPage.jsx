@@ -7,10 +7,10 @@ import { T, FONTS as F } from "../tokens";
    Strategy 1: CIS Momentum Alpha
      Systematic. Follows top OUTPERFORM / STRONG OUTPERFORM assets by CIS score.
      Regime-aware: full exposure in RISK_ON / GOLDILOCKS, heavy cash in RISK_OFF.
-     Rebalances every 30min on signal change. Min $1K USDC.
+     Rebalances daily on official signal change. Min $1K USDC.
 
    Strategy 2: Protocol Yield Optimizer
-     Allocates to top-3 CIS-rated DeFi protocols with TVL>$100M, live audit.
+     Allocates to top-3 protocol-scored DeFi protocols with TVL>$100M, live audit.
      Weekly rebalance. No leverage, no liquidation risk. Min $500 USDC.
 
    Strategy 3: Balanced AI Portfolio
@@ -529,7 +529,7 @@ const STRATEGIES = [
     risk: "MEDIUM",
     target: "15–25% ann.",
     maxDD: "< 15%",
-    rebalance: "30 min",
+    rebalance: "Daily",
     minEntry: "$1,000 USDC",
     live: true,
     statusLabel: "SIGNALS LIVE",
@@ -541,7 +541,7 @@ const STRATEGIES = [
     metrics: [
       { label: "Target Return",   value: "15–25% ann.",   color: T.green },
       { label: "Max Drawdown",    value: "< 15%",         color: "#f59e0b" },
-      { label: "Signal Latency",  value: "< 30 min",      color: T.cyan },
+      { label: "Signal Cadence",  value: "Daily (UTC close)", color: T.cyan },
       { label: "Min Allocation",  value: "$1K USDC",      color: T.t2 },
       { label: "Universe",        value: "84 assets",     color: T.t2 },
     ],
@@ -565,7 +565,7 @@ const STRATEGIES = [
     icon: "🏦",
     name: "Protocol Yield Optimizer",
     description:
-      "Allocates capital to the top-3 CIS-rated DeFi protocols with TVL > $100M and verified security audits. No leverage, no liquidation risk. Sources yield only from lending, staking, and liquidity provision — never from speculative positions. Rebalances weekly or on TVL drop > 20%.",
+      "Allocates capital to the top-3 highest-scoring DeFi protocols (protocol score) with TVL > $100M and verified security audits. No leverage, no liquidation risk. Sources yield only from lending, staking, and liquidity provision — never from speculative positions. Rebalances weekly or on TVL drop > 20%.",
     risk: "LOW",
     target: "7–15% APY",
     maxDD: "< 5%",
@@ -593,14 +593,15 @@ const STRATEGIES = [
     buildPositions(_, protocols) {
       if (!protocols || protocols.length === 0) return [];
       return protocols
-        .filter(p => p.cis_score > 0)
-        .sort((a, b) => (b.cis_score || 0) - (a.cis_score || 0))
+        .filter(p => p.protocol_score > 0)
+        .sort((a, b) => (b.protocol_score || 0) - (a.protocol_score || 0))
         .slice(0, 3)
         .map(p => ({
           symbol: p.name?.split(" ")[0] || p.symbol || "—",
-          signal: p.signal || "OUTPERFORM",
-          cis_score: p.cis_score,
-          grade: p.grade,
+          // S-541: protocol score is not CIS; the signal shown is the token's official CIS, else none
+          signal: p.signal || "—",
+          cis_score: p.protocol_score,
+          grade: p.protocol_grade,
           // S-396 (2026-09-21): was `p.tvl_change_7d ?? null` — the field
           // name said "price" but the value was TVL. Investors would read
           // "+12.3%" as price return when it was actually protocol TVL

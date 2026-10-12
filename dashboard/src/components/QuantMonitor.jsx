@@ -348,7 +348,7 @@ function SkeletonCard() {
 }
 
 /* ─── Paper Trading Panel ───────────────────────────────────────────── */
-const COMMON_SYMS = ["BTC","ETH","SOL","ARB","OP","LINK","AAVE","MKR","UNI","PENDLE","ONDO","TAO","RENDER","INJ","LDO"];
+const COMMON_SYMS = ["BTC","ETH","SOL","ARB","OP","LINK","AAVE","SKY","UNI","PENDLE","ONDO","TAO","RENDER","INJ","LDO"];
 
 function PaperTrading() {
   const [positions, setPositions] = useState(null);

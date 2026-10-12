@@ -382,11 +382,15 @@ HIST_OFF_COLS = ("symbol,d,asset_class,cis_score,regime_adjusted_score,grade,sig
                  "pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,regime,code_ref")
 
 
-def history_rows(official: list[dict], rebuild: list[dict]) -> dict[str, list[dict]]:
-    """纯函数。两张表的行 → {symbol: [点,旧→新]}。同一天已发布的优先。"""
+def history_rows(official: list[dict], rebuild: list[dict], cap: Optional[str] = None) -> dict[str, list[dict]]:
+    """纯函数。两张表的行 → {symbol: [点,旧→新]}。同一天已发布的优先。
+    cap = 最近一次正式发布的日子:重建里比它新的日子不出 —— 历史的最后一点不能抢在正式发布前面(否则走势图上
+    出现一个页面上还没发布的分数)。"""
     pts: dict[tuple[str, str], dict] = {}
     for r in rebuild or []:
         k = (str(r["symbol"]).upper(), str(r["d"])[:10])
+        if cap and k[1] > cap:
+            continue
         pts[k] = {"symbol": k[0], "d": k[1], "recorded_at": k[1], "asset_class": r.get("asset_class"),
                   "score": _r(r.get("raw_score")), "raw_cis_score": _r(r.get("raw_score")),
                   "regime_adjusted_score": _r(r.get("score")), "grade": r.get("grade"), "signal": r.get("signal_pct"),
@@ -424,7 +428,9 @@ async def standard_history(symbols: list[str], days: int, today: Optional[date] 
     off = await _read_all(TABLE, {"select": HIST_OFF_COLS, **flt, "order": "d.asc,symbol.asc"})
     reb = await _read_all(REBUILD, {"select": HIST_REB_COLS, **flt, "code_ref": f"eq.{STD_REF}",
                                     "order": "d.asc,symbol.asc"})
-    out = history_rows(off, reb)
+    latest = await latest_official()
+    cap = str(latest["d"])[:10] if latest.get("d") else None
+    out = history_rows(off, reb, cap)
     return {s: out.get(s, []) for s in syms}
 
 
@@ -493,3 +499,45 @@ def regime_transitions(points: list[dict]) -> list[dict]:
         if p.get("regime"):
             prev = p
     return list(reversed(out))
+
+
+
+# ── 协议页:协议评分不是 CIS(S-541)────────────────────────────────────────────────
+#
+# 实测 10-12:协议页把另一套方法(TVL / 审计 / 资金流,`protocol_engine`)也叫「CIS」并给档位 ——
+# Aave A+ 96.4 STRONG OUTPERFORM,而 CIS 页的 AAVE 是 B 63.4;Sky A+ 90 vs C+ 51。同一个名字两个「CIS」。
+# 对外:协议自己的分叫 protocol_score / protocol_grade,不再带定位档位;`cis_*` 只放正式 CIS(协议有对应代币时)。
+
+#: 协议 id → CIS 宇宙里的代币
+PROTOCOL_TOKEN = {"aave": "AAVE", "uniswap": "UNI", "lido": "LDO", "pendle": "PENDLE", "ondo": "ONDO",
+                  "maker": "SKY", "hyperliquid": "HYPE"}
+
+
+def protocol_view(result: Any, latest: Optional[Mapping[str, Any]]) -> Any:
+    """纯函数(深拷贝,不动缓存)。协议宇宙响应 → 协议分与正式 CIS 分开。"""
+    import copy
+    if not isinstance(result, dict):
+        return result
+    out = copy.deepcopy(result)
+    rows = (latest or {}).get("rows") or {}
+    for p in out.get("protocols") or []:
+        p["protocol_score"] = p.pop("cis_score", None)
+        p["protocol_grade"] = p.pop("grade", None)
+        p.pop("signal", None)                                  # 定位档位只属于正式 CIS
+        p["protocol_pillars"] = p.get("pillars")
+        tok = PROTOCOL_TOKEN.get(p.get("id"))
+        r = rows.get(tok) if tok else None
+        p["cis"] = ({"symbol": tok, "cis_score": r.get("cis_score"), "grade": r.get("grade"), "signal": r.get("signal"),
+                     "official_date": str(latest.get("d"))} if r else None)
+        p["cis_score"] = r.get("cis_score") if r else None
+        p["grade"] = r.get("grade") if r else None
+        p["signal"] = r.get("signal") if r else None
+    for c in (out.get("categories") or {}).values():
+        if isinstance(c, dict) and "avg_score" in c:
+            c["avg_protocol_score"] = c.pop("avg_score")
+    ranked = sorted(out.get("protocols") or [], key=lambda p: -(p.get("protocol_score") or 0))
+    out["agent_picks"] = [p["id"] for p in ranked if p.get("protocol_grade") in ("A+", "A")][:5]
+    out["score_basis"] = ("protocol_score: CometCloud protocol scoring (TVL scale and flows, audits, age, peers) — a "
+                          "separate method from CIS. cis_*: the official CIS of the protocol's token, where it is in "
+                          "the CIS universe.")
+    return out

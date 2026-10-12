@@ -242,8 +242,12 @@ def standard_series(rebuild: list[dict], official: list[dict]) -> list[dict]:
     """纯函数。统一标准序列:每个 (名字, 日) 一条,已发布(cis_official_daily)优先于按时点重建(cis_rebuild_daily)。
     两张表列名不同,这里统一成 find_events / drivers 读的形状(score = 状态调整分,档位按它的同组分位定)。"""
     out: dict[tuple[str, str], dict] = {}
+    # 重建里比最近一次正式发布还新的日子不进(S-539:历史 / 归因不能抢在正式发布前面)
+    cap = max((str(r.get("d"))[:10] for r in official or []), default=None)
     for r in rebuild or []:
         k = (r.get("symbol"), str(r.get("d"))[:10])
+        if cap and k[1] > cap:
+            continue
         out[k] = {"symbol": k[0], "d": k[1], "asset_class": r.get("asset_class"), "signal": r.get("signal_pct"),
                   "score": r.get("score"), "grade": r.get("grade"), "pct": r.get("pct"),
                   **{f"pillar_{p}": r.get(f"pillar_{p}") for p in "fmosa"}, "source": "cis_rebuild"}

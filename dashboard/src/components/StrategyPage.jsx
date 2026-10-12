@@ -425,7 +425,7 @@ export default function StrategyPage() {
   const universeSize = cisData?.universe_size || allAssets.length || null;
 
   const topProtocols = (protocols?.protocols || [])
-    .sort((a, b) => (b.cis_score || 0) - (a.cis_score || 0))
+    .sort((a, b) => (b.protocol_score || 0) - (a.protocol_score || 0))   // S-541: protocol score ≠ CIS
     .slice(0, 5);
 
   return (
@@ -500,7 +500,7 @@ export default function StrategyPage() {
           }}>
             Proprietary CIS scoring engine analyzes digital assets across 5 dimensions.
             Three distinct investment channels — algorithmic trading, DeFi protocol yield,
-            and fund-of-funds allocation — all driven by real-time intelligence.
+            and fund-of-funds allocation — all driven by one daily-published intelligence series.
           </p>
 
           {/* Key metrics strip */}
@@ -508,7 +508,7 @@ export default function StrategyPage() {
             display: "flex", justifyContent: "center", gap: 48, flexWrap: "wrap",
             padding: "28px 0", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`,
           }}>
-            <Stat label="Assets Scored" value={universeSize ? `${universeSize}+` : "80+"} sub="Crypto + TradFi" />
+            <Stat label="Assets Scored" value={universeSize ? `${universeSize}` : "—"} sub="Crypto + TradFi" />
             <Stat label="Investment Channels" value="3" sub="Algo · Protocol · FoF" />
             <Stat label="Target AUM" value="$30M" sub="Phase 1" />
             <Stat label="Management Fee" value="0%" sub="Performance only" color={T.green} />
@@ -576,9 +576,9 @@ export default function StrategyPage() {
             fontFamily: F.body, fontSize: 13, color: T.t2, lineHeight: 1.65,
             maxWidth: 640, marginBottom: 32,
           }}>
-            Every asset is scored across five dimensions using real-time market data,
-            on-chain analytics, and sentiment indicators. Scores update every 30 minutes
-            from our local AI infrastructure.
+            Every asset is scored across five dimensions using market data,
+            on-chain analytics, and sentiment indicators. The official score is published
+            once per day on the UTC close, from data available at that close.
           </p>
 
           {/* Data source disclosure */}
@@ -697,7 +697,7 @@ export default function StrategyPage() {
               color: T.t3, display: "flex", justifyContent: "space-between",
             }}>
               <span>Source: CIS v4.1 · CoinGecko Pro + DeFiLlama + Alternative.me</span>
-              <span>Updated every 30 min via local AI engine</span>
+              <span>Published daily on the UTC close</span>
             </div>
           </div>
         </Section>
@@ -733,7 +733,7 @@ export default function StrategyPage() {
                 { label: "Strategy", value: "Long/Short Crypto", color: T.t1 },
                 { label: "Target Return", value: "15-25% Ann.", color: T.green },
                 { label: "Max Drawdown", value: "< 15%", color: T.amber },
-                { label: "Rebalance", value: "Every 30min", color: T.t1 },
+                { label: "Rebalance", value: "Daily (UTC close)", color: T.t1 },
               ]}
               status="DRY RUN IN DEPLOYMENT"
               statusColor={T.amber}
@@ -757,8 +757,8 @@ export default function StrategyPage() {
             <ChannelCard
               icon="🏦"
               title="Protocol Yield"
-              subtitle="DEFI · CIS-CURATED · YIELD"
-              description="CIS-rated DeFi protocol allocation. Capital is deployed to the highest-scoring protocols with verified security audits, sustainable yield sources, and sufficient TVL depth."
+              subtitle="DEFI · PROTOCOL-SCORED · YIELD"
+              description="Protocol-scored DeFi allocation. Capital is deployed to the highest-scoring protocols with verified security audits, sustainable yield sources, and sufficient TVL depth."
               metrics={[
                 { label: "Protocols Rated", value: `${(protocols?.protocols || protocols?.data || []).length || 30}+`, color: T.t1 },
                 { label: "Target APY", value: "8-18%", color: T.green },
@@ -771,7 +771,7 @@ export default function StrategyPage() {
               {topProtocols.length > 0 ? (
                 <div>
                   <div style={{ fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.1em", marginBottom: 8 }}>
-                    TOP CIS-RATED PROTOCOLS
+                    TOP-SCORED PROTOCOLS
                   </div>
                   {topProtocols.map((p, i) => (
                     <div key={i} style={{
@@ -787,9 +787,9 @@ export default function StrategyPage() {
                         </span>
                         <span style={{
                           fontFamily: F.mono, fontSize: 11, fontWeight: 700,
-                          color: GRADE_C[p.grade] || T.t3,
+                          color: GRADE_C[p.protocol_grade] || T.t3,
                         }}>
-                          {p.grade || "—"}
+                          {p.protocol_grade || "—"}
                         </span>
                       </div>
                     </div>
@@ -883,7 +883,7 @@ export default function StrategyPage() {
               <FlowStep num="5" title="Risk Management"
                 desc="Maximum per-asset allocation 8%, sector concentration limits, drawdown triggers, and automatic regime-based derisking. All positions monitored in real-time." />
               <FlowStep num="6" title="Investor Dashboard"
-                desc="Full transparency: live CIS scores, channel performance, allocation breakdown, and risk metrics. Real-time updates via WebSocket. All data accessible on-platform." />
+                desc="Full transparency: daily official CIS scores with their history, channel performance, allocation breakdown, and risk metrics. All data accessible on-platform." />
             </div>
           </div>
         </Section>
@@ -906,11 +906,11 @@ export default function StrategyPage() {
           }}>
             {[
               { title: "Regulatory Framework", desc: "Hong Kong incorporated entity. Structured for institutional LP participation with proper fund documentation and compliance.", icon: "🏛" },
-              { title: "Technology Stack", desc: "Cloud-native architecture with real-time data pipelines, local AI scoring infrastructure, persistent caching, and WebSocket live updates.", icon: "⚙" },
+              { title: "Technology Stack", desc: "Point-in-time data pipelines, one scoring standard for history and publication, and append-only daily records.", icon: "⚙" },
               { title: "Fee Structure", desc: "Zero management fee. Performance-only fee alignment ensures our interests are fully aligned with LP returns.", icon: "💎" },
               { title: "On-Chain Settlement", desc: "Solana-based fund operations. OSL stablecoin denominated. Designed for both human LPs and autonomous AI agent participation.", icon: "⛓" },
               { title: "Risk Controls", desc: "Max 8% single-asset allocation. Regime-based derisking. Drawdown triggers. 6 macro regime detection for dynamic weight adjustment.", icon: "🛡" },
-              { title: "Transparency", desc: "Full CIS methodology published. Real-time scoring visible on dashboard. Score history and grade migration tracking for all assets.", icon: "📊" },
+              { title: "Transparency", desc: "Full CIS methodology published. Daily official scores, an intraday preview, score history and grade migration for all assets.", icon: "📊" },
             ].map((card, i) => (
               <div key={i} style={{
                 background: "rgba(10,14,24,0.7)", border: `1px solid ${T.border}`,
@@ -945,7 +945,7 @@ export default function StrategyPage() {
           }}>
             CometCloud Intelligence Score is available as a standalone data product.
             Family offices, quant funds, and crypto research desks subscribe for
-            real-time CIS grades, regime signals, and grade-change webhooks — without
+            daily official CIS grades, regime signals, and grade-change webhooks — without
             building the infrastructure themselves.
           </p>
 
@@ -1037,9 +1037,9 @@ export default function StrategyPage() {
             gap: 12,
           }}>
             {[
-              { icon: "⚡", title: "Real-time Grades", desc: "CIS scores update every 30 minutes from local AI engine. Grade changes fire webhook within 30 seconds." },
+              { icon: "⚡", title: "Daily Official Grades", desc: "CIS is published once per UTC day from data available at the close. Grade and signal changes fire webhooks when each day's batch is published." },
               { icon: "🔐", title: "HMAC-Signed Delivery", desc: "Every webhook signed with per-subscription secret. Verify X-CometCloud-Signature on receipt." },
-              { icon: "📐", title: "Simons-Grade Methodology", desc: "Pearson IC validated pillar weights per macro regime. Same feedback loop as Renaissance quant infrastructure." },
+              { icon: "📐", title: "Point-in-Time Methodology", desc: "One formula and one data timing for history and publication. Every signal change is attributed and shown with the history of signals of the same kind." },
               { icon: "🌏", title: "APAC-First Coverage", desc: "Tailored for Hong Kong, Singapore, and Greater China institutional clients. Multi-regime macro overlay." },
             ].map((item, i) => (
               <div key={i} style={{

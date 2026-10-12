@@ -303,7 +303,7 @@ export default function ScoreAnalytics({ universe: universeProp = [] }) {
             Score Analytics
           </h2>
           <p style={{ fontSize: 12, color: T.t3, margin: "4px 0 0", fontFamily: FONTS.body }}>
-            7-day grade migration & sector rotation — updates every 30 min
+            7-day grade migration & sector rotation — official daily close
           </p>
         </div>
         {histLoading && (
@@ -361,7 +361,7 @@ export default function ScoreAnalytics({ universe: universeProp = [] }) {
         ) : activeTab === "heatmap" ? (
           <>
             <div style={{ fontSize: 11, color: T.t3, fontFamily: FONTS.body, marginBottom: 16 }}>
-              Grade per asset per day — color intensity indicates conviction. Daily average from 30-min intervals.
+              Grade per asset per day (official UTC close) — color intensity indicates the score.
             </div>
             <GradeHeatmap assets={universe} historyMap={historyMap} />
           </>

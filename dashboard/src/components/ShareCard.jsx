@@ -361,7 +361,7 @@ export default function ShareCard() {
 
         <div style={{ fontFamily: F.mono, fontSize: 9, color: "#1E3A5F", lineHeight: 1.6, textAlign: "center" }}>
           Screenshot the card above to share on WeChat / Telegram / social media.
-          CIS data is live and updates every ~30 minutes.
+          Official CIS, published once per day on the UTC close.
           For qualified investors only.
         </div>
       </div>

@@ -226,7 +226,7 @@ const ASSET_META = {
   STRK: { name: "StarkNet", class: "L2" },
   // DeFi
   UNI: { name: "Uniswap", class: "DeFi" }, AAVE: { name: "Aave", class: "DeFi" },
-  MKR: { name: "Maker", class: "RWA" }, SNX: { name: "Synthetix", class: "DeFi" },
+  MKR: { name: "Maker", class: "RWA" }, SKY: { name: "Sky (prev. Maker)", class: "RWA" }, SNX: { name: "Synthetix", class: "DeFi" },
   CRV: { name: "Curve", class: "DeFi" }, LDO: { name: "Lido DAO", class: "DeFi" },
   PENDLE: { name: "Pendle", class: "DeFi" }, ENA: { name: "Ethena", class: "DeFi" },
   RUNE: { name: "THORChain", class: "DeFi" }, COMP: { name: "Compound", class: "DeFi" },
@@ -841,9 +841,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           borderRadius: 8,
         }}>
           <div style={{ fontFamily: FONTS.body, fontSize: 12, color: T.secondary, lineHeight: 1.75, marginBottom: 14 }}>
-            5-pillar scoring system across crypto and TradFi on a unified 0–100 scale. Updated every 30 minutes.
+            5-pillar scoring system across crypto and TradFi on a unified 0–100 scale. Published once per day on the UTC close.
             Absolute grade thresholds: A+≥85 · A≥75 · B+≥65 · B≥55 · C+≥45 · C≥35 · D≥25 · F&lt;25.
-            Percentile rank is metadata only — does not override grades.
+            Signals rank each asset within its group (crypto / traditional) on that close; grades use the absolute score.
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
             {[
@@ -1649,9 +1649,9 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
             background: T.raised,
           }}>
             <div style={{ fontFamily: FONTS.body, fontSize: 10, color: T.muted, lineHeight: 1.6 }}>
-              CIS scores are recalculated every 30 minutes using live market, on-chain, and macro data.
+              Official CIS is published once per day on the UTC close, from data available at that close; between publications an intraday preview is shown separately.
               Grades use absolute thresholds (A+≥85, A≥75, B+≥65, B≥55, C+≥45, C≥35, D≥25, F&lt;25) — consistent across all market regimes.
-              Percentile rank is shown as metadata only.
+              Signals rank each asset within its group with a buffer before a level changes.
               Scores do not constitute investment advice.
             </div>
           </div>

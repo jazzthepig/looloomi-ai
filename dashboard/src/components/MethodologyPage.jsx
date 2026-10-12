@@ -322,21 +322,19 @@ export default function MethodologyPage() {
 
           {/* §2 Architecture */}
           <Section id="architecture">
-            <SectionTitle num="2" title="Architecture: Two Engines, One Methodology"
-              sub="Scores originate from two independent engines that share identical scoring logic and grading thresholds." />
+            <SectionTitle num="2" title="One Official Series, One Intraday Preview"
+              sub="Every page, API response, tool and alert shows the same official CIS. Between publications, a live preview is shown separately and labelled." />
 
             <Table
-              headers={["", "Tier 1 · Full Engine", "Tier 2 · Market Estimation"]}
+              headers={["", "Official CIS · daily close", "Intraday preview"]}
               colWidths={["180px", "auto", "auto"]}
               rows={[
-                ["Price Data",    "High-frequency OHLCV klines (1h, 30d+)", "CoinGecko spot + 24h/7d/30d Δ"],
-                ["On-Chain",      "DeFiLlama TVL real-time",                 "DeFiLlama TVL cached 30min"],
-                ["Macro",         "Fed funds, VIX, DXY, TNX",                "VIX, Fear & Greed Index"],
-                ["Regime",        "6-state detection",                        "Risk-On / Risk-Off binary"],
-                ["Risk Metrics",  "Sharpe, Sortino, rolling beta, max DD",   "ATH distance proxy, vol estimate"],
-                ["Universe",      "40+ assets, 8 asset classes",              "84 assets, curated leaders"],
-                ["Update Freq",   "~30 min push",                             "On-demand (60s refresh)"],
-                ["Display Badge", "CIS PRO · T1 (green)",                    "CIS MKT · T2 (amber)"],
+                ["When",          "Once per UTC day, after the close",                 "Between publications"],
+                ["Inputs",        "Only data available at the close; one source per input", "Live market data"],
+                ["Signal",        "Rank within group, 10-percentile buffer (5 at the outer cuts); changes at most once a day", "Not a signal — context only"],
+                ["History",       "Published days; earlier days are a point-in-time reconstruction of the same standard, labelled", "Not kept as a series"],
+                ["Record",        "Append-only: a published day is never revised",     "—"],
+                ["Where shown",   "Everywhere (pages, API, tools, alerts)",            "Under `intraday` in API responses; labelled on the asset page"],
               ]}
             />
 
