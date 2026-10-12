@@ -1,7 +1,7 @@
 {
   "id": "T-085",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-13",
   "verified": null,
   "title": "可交易规模的第一步(T-082 A 部分):我们实际能下单的现货场所 × 名字覆盖表 + 订单簿 ±1% / ±2% 深度一周采样(只做测量,不建入库循环)",
@@ -20,5 +20,5 @@
     "expect": "报告:每个名字的可下单场所数、深度中位数、深度 / 全市场报告成交额的比例;按 S-544 的口径(5% 仓位、10% 参与率、5 天)重算 $30M 与 $500M 下每个名字与每本账能否建满,和全市场口径并排;最后一节给 Seth:入库表结构与采样频率的建议(T-082 B 部分由 Seth 做)"
   },
   "prior_value": "S-544:全市场报告成交额口径下 $30M 58/58 过、$500M 50/58 过;tokenization_tilt 被 POLYX 卡在 ≈ $9M。场所深度从没量过。",
-  "notes": "2026-10-13 Seth 开卡派 C。T-036 的剩余一步是 Jazz 删 ~/.config/cometcloud/.env(key 文件只经 Jazz),已改 blocked,lane-c 不再为它定时重测。"
+  "notes": "v1(交付于 2026-10-12 16:01):5 venue × 146 / 198 覆盖 + 1 snapshot OB probe + S-544 重算,5 本账里 tokenization_tilt(被 POLYX 钉)与 4 本账 binding=venue @ $500M(BNB / TRX / INJ / POLYX)。详细论据见 t085_report_20261012_1601.json + docs/lane/T-085/T-085_design.md。\nv2(本卡 2026-10-13 lane-c):增补 sweep_7d.py(单 invoke = 1 UTC slot,6h 抖动防重)+ aggregate_7d.py(多 snapshot 中位数重算 verdict)+ sweep_7d_runner.sh(cron 入口)。partial sweep 跑了 2 / 21 快照(都是 2026-10-12,slot H15 + H16,14 分钟内):中央 verdict 与 v1 一致(2-of-2 中位数 vs 单点),印证单日短时间窗内 depth 漂移 < 0.1%。要拿到「跨日波动方差」的最终结论,cron 需在 2026-10-13 → 10-19 每天 UTC 00 / 08 / 16 各 fire 一次 sweep_7d_runner.sh,然后跑 aggregate_7d.py 出 t085_report_7d_<ts>.json。Hyperliquid 仍未接:ccxt 4.5.43 的 hyperliquid.spot 在 macOS sandbox 下 init fail('unsupported operand type(s) for +: NoneType and str')。\n\n交付路径:Mac 数据根 research/t085/(脚本 + snapshot + verdict);worktree docs/lane/T-085/(脚本 + 设计文档,v2,待 commit);cron 安装 = Seth 的 T-082 B 部分;此卡 lane-c 不入库。\n\n实测(2026-10-12 双 snapshot,partial):\n$30M target AUM: venue cap OK = 32 / 32(100%);S-544 adv OK = 25 / 32(78%)。binding = S-544 adv 漏 7 个(HYPE / POL / APT / INJ 缺 adv data → 由下游 capacity 表回 0)。\n$500M design AUM: venue cap OK = 20 / 32(63%);S-544 adv OK = 23 / 32(72%)。12 venue 失败(BNB / TRX / INJ / POLYX 等主线)+ 9 S-544 adv 漏。\n5 本账 @ $500M:core_cap(BNB,binding venue,ratio 0.005)、cis_tilt(TRX,S-544 adv 缺数据)、beta_plus_w(同 INJ binding,ratio 0.028)、beta_plus_m(同 INJ binding,ratio 0.028)、tokenization_tilt(POLYX,S-544 adv + venue 都漏)。"
 }
