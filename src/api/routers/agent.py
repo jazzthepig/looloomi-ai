@@ -348,19 +348,20 @@ async def _exec_regime_briefing(task_id: str, params: dict):
         dom     = macro_pulse.get("btc_dominance") if not isinstance(macro_pulse, Exception) else None
 
         _REGIME_SIGNALS = {
-            "Goldilocks":  {"bias": "STRONG OUTPERFORM", "note": "Balanced growth, momentum rewarded. All asset classes positioned favorably."},
-            "Risk-On":     {"bias": "OUTPERFORM",        "note": "High momentum assets outperform. DeFi and L2 positioned well."},
-            "Easing":      {"bias": "OUTPERFORM",        "note": "Liquidity expanding. Alpha-generating assets favored."},
-            "Neutral":     {"bias": "NEUTRAL",           "note": "Range-bound market. Fundamentals dominate. Selective positioning."},
-            "Tightening":  {"bias": "NEUTRAL",           "note": "Liquidity withdrawal. Fundamentals dominate. High-quality assets only."},
-            "Risk-Off":    {"bias": "UNDERPERFORM",      "note": "Broad risk reduction. Fundamentals and risk-adjusted scores critical."},
-            "Stagflation": {"bias": "UNDERPERFORM",      "note": "Macro stress. Defensive positioning. RWA and commodity-correlated assets."},
+            "Goldilocks":  {"bias": "supportive backdrop", "note": "Balanced growth, momentum rewarded. All asset classes positioned favorably."},
+            "Risk-On":     {"bias": "supportive backdrop", "note": "High momentum assets outperform. DeFi and L2 positioned well."},
+            "Easing":      {"bias": "supportive backdrop", "note": "Liquidity expanding. Alpha-generating assets favored."},
+            "Neutral":     {"bias": "mixed backdrop",      "note": "Range-bound market. Fundamentals dominate. Selective positioning."},
+            "Tightening":  {"bias": "mixed backdrop",      "note": "Liquidity withdrawal. Fundamentals dominate. High-quality assets only."},
+            "Risk-Off":    {"bias": "adverse backdrop",    "note": "Broad risk reduction. Fundamentals and risk-adjusted scores critical."},
+            "Stagflation": {"bias": "adverse backdrop",    "note": "Macro stress. Defensive positioning. RWA and commodity-correlated assets."},
         }
-        regime_ctx = _REGIME_SIGNALS.get(regime, {"bias": "NEUTRAL", "note": "Regime undetermined."})
+        # S-542:状态只描述背景,不再借用档位词(档位词只属于每个资产的正式 CIS)
+        regime_ctx = _REGIME_SIGNALS.get(regime, {"bias": "undetermined", "note": "Regime undetermined."})
 
         result: dict = {
             "macro_regime":         regime,
-            "regime_signal":        regime_ctx["bias"],
+            "regime_backdrop":      regime_ctx["bias"],
             "regime_note":          regime_ctx["note"],
             "btc_price_usd":        btc,
             "fear_greed_value":     fng,
@@ -477,15 +478,11 @@ async def _exec_trade_signal(task_id: str, params: dict):
         sl_pct = round(0.04 * volatility_adj, 4)
         tp_pct = round(0.10 * volatility_adj, 4)
 
-        # Recommendation language (positioning-only, HK SFC compliant)
-        if not passes:
-            recommendation = "NEUTRAL — CIS score below regime gate. Monitor for improvement."
-        elif sig in ("STRONG OUTPERFORM", "OUTPERFORM"):
-            recommendation = f"OUTPERFORM — {symbol} passes CIS gate ({cis:.1f} > {gate}) in {regime}. Consider long entry if risk capacity allows."
-        elif sig == "NEUTRAL":
-            recommendation = f"NEUTRAL — {symbol} passes gate marginally. Monitor regime shift."
-        else:
-            recommendation = f"UNDERPERFORM — {symbol} signaling weakness despite passing gate. Wait for signal upgrade."
+        # S-542:说明以正式档位开头(不再按门槛另给一个档位),只描述,不给动作
+        gate_txt = (f"score {cis:.1f} is above the {regime} gate ({gate})" if passes
+                    else f"score {cis:.1f} is below the {regime} gate ({gate})")
+        recommendation = (f"{sig} — official CIS for {symbol} (UTC daily close); {gate_txt}. "
+                          "A description of past and current data, not a forecast or advice.")
 
         result = {
             "symbol":         symbol,

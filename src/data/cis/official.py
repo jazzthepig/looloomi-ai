@@ -251,7 +251,21 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
 
 #: 叠加时从实时值挪进 `intraday` 的字段。
 INTRADAY_KEYS = ("cis_score", "raw_cis_score", "regime_adjusted_score", "grade", "signal",
-                 "f", "m", "o", "s", "a", "pillars", "percentile_rank", "macro_regime")
+                 "f", "m", "o", "s", "a", "pillars", "percentile_rank", "macro_regime", "las",
+                 "percentile", "cross_asset_percentile", "global_rank", "class_rank",
+                 "score_change_7d", "score_change_30d")
+
+
+def scaled_las(live_las: Any, live_score: Any, official_score: Any) -> Optional[float]:
+    """纯函数。LAS = CIS × 流动性 × 价差 × 置信度(calculate_las,乘法)。正式值叠上去后 LAS 也要跟着正式分,
+    否则页面上「LAS = CIS × …」两边对不上(S-542)。乘数取实时那一份(流动性是盘中的事实)。"""
+    try:
+        ll, ls, os_ = float(live_las), float(live_score), float(official_score)
+    except (TypeError, ValueError):
+        return None
+    if ls <= 0:
+        return None
+    return round(os_ * ll / ls, 1)
 SELECT = ("symbol,d,asset_class,cis_score,regime_adjusted_score,grade,signal,watch,pct,"
           "pillar_f,pillar_m,pillar_o,pillar_s,pillar_a,regime,missing,code_ref,published_at")
 CACHE_S = 600.0
@@ -306,6 +320,15 @@ def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date
             "watch": r.get("watch"), "group_percentile": pct,
             "missing_inputs": r.get("missing") or [],
         })
+        if "las" in a:
+            b["las"] = scaled_las(a.get("las"), a.get("cis_score"), r.get("cis_score"))
+        # 由分数派生的字段也跟着正式值(S-542):组内分位、7 / 30 日分数变化;排名在排序之后统一算
+        b["percentile"] = round(pct * 100) if pct is not None else None
+        b.pop("cross_asset_percentile", None)
+        past = (latest or {}).get("past") or {}
+        for k, key in ((7, "score_change_7d"), (30, "score_change_30d")):
+            p0 = (past.get(k) or {}).get(sym)
+            b[key] = round(r["cis_score"] - p0, 2) if p0 is not None and r.get("cis_score") is not None else None
         uni.append(b)
     for sym, r in rows.items():                             # 正式发布了、实时引擎还没有的名字(如刚换代码的 SKY)
         if sym in seen:
@@ -322,6 +345,14 @@ def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date
                     "watch": r.get("watch"), "group_percentile": pct, "missing_inputs": r.get("missing") or [],
                     "intraday": None})
     uni.sort(key=lambda x: (x.get("cis_score") is None, -(x.get("cis_score") or 0)))
+    by_cls: dict[str, int] = {}
+    for i, x in enumerate(uni, start=1):
+        if x.get("signal_basis") != "daily_close":
+            continue
+        x["global_rank"] = i
+        c = x.get("asset_class") or ""
+        by_cls[c] = by_cls.get(c, 0) + 1
+        x["class_rank"] = by_cls[c]
     out["universe"] = uni
     out["intraday"] = {k: data.get(k) for k in ("macro_regime", "regime_confidence", "timestamp", "source") if k in data}
     regimes = {r.get("regime") for r in rows.values() if r.get("regime")}
@@ -336,6 +367,21 @@ def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date
                        "code_ref": latest.get("code_ref"), "published_at": latest.get("published_at"),
                        "covered": hit, "total": len(uni), "intraday_key": "intraday", "method": OFFICIAL_BASIS,
                        **({"retired": retired} if retired else {})}
+    return out
+
+
+async def _past_scores(d: date) -> dict[int, dict[str, float]]:
+    """d−7 / d−30 那天的正式分(已发布优先,否则同标准重建)—— 给「分数 7 / 30 日变化」用,与页面同一条序列。"""
+    from src.data.cis.rebuild import CODE_REF as STD_REF, TABLE as REBUILD
+    from src.data.style.header import _read_all
+    out: dict[int, dict[str, float]] = {}
+    for k in (7, 30):
+        day = (d - timedelta(days=k)).isoformat()
+        reb = await _read_all(REBUILD, {"select": "symbol,raw_score", "d": f"eq.{day}", "code_ref": f"eq.{STD_REF}"})
+        off = await _read_all(TABLE, {"select": "symbol,cis_score", "d": f"eq.{day}"})
+        m = {str(r["symbol"]).upper(): r.get("raw_score") for r in reb}
+        m.update({str(r["symbol"]).upper(): r.get("cis_score") for r in off})
+        out[k] = {kk: float(v) for kk, v in m.items() if v is not None}
     return out
 
 
@@ -360,6 +406,10 @@ async def latest_official(now: Optional[float] = None) -> dict[str, Any]:
             val = {"d": d, "rows": {str(r["symbol"]).upper(): r for r in rows},
                    "code_ref": rows[0].get("code_ref") if rows else None,
                    "published_at": max((r.get("published_at") or "" for r in rows), default=None)}
+            try:
+                val["past"] = await _past_scores(date.fromisoformat(str(d)[:10]))
+            except Exception:                               # noqa: BLE001 —— 变化量缺了不挡正式值
+                val["past"] = {}
     except Exception:
         val, ttl = {"rows": {}, "reason": "official series unavailable"}, CACHE_FAIL_S
     _LATEST.update({"at": t, "ttl": ttl, "val": val})

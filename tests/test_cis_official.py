@@ -333,3 +333,37 @@ def test_protocol_scores_are_not_called_cis():
     assert maple["cis_score"] is None and maple["signal"] is None and maple["cis"] is None, "没有代币 → 没有 CIS"
     assert res["protocols"][0]["cis_score"] == 96.4, "不改入参(引擎结果有缓存)"
     assert out["categories"]["DeFi"] == {"avg_protocol_score": 90.0} and "score_basis" in out
+
+
+def test_las_follows_the_official_score():
+    from src.data.cis.official import overlay, scaled_las
+    assert scaled_las(56.6, 75.2, 71.1) == round(71.1 * 56.6 / 75.2, 1)
+    assert scaled_las(None, 75.2, 71.1) is None and scaled_las(10, 0, 50) is None
+    live = {"universe": [{"symbol": "BTC", "cis_score": 70.0, "las": 63.0, "signal": "OUTPERFORM"}]}
+    latest = {"d": "2026-10-11", "rows": {"BTC": {"cis_score": 60.0, "grade": "B", "signal": "NEUTRAL", "pct": 0.5,
+                                                  "regime": "RISK_ON"}}}
+    btc = overlay(live, latest)["universe"][0]
+    assert btc["las"] == 54.0 and btc["intraday"]["las"] == 63.0
+
+
+def test_score_derived_fields_follow_the_official_score():
+    from src.data.cis.official import overlay
+    live = {"universe": [{"symbol": "A", "asset_class": "L1", "cis_score": 80.0, "percentile": 95, "global_rank": 1,
+                          "score_change_7d": 5.0, "cross_asset_percentile": 97},
+                         {"symbol": "B", "asset_class": "L1", "cis_score": 40.0, "percentile": 10, "global_rank": 2}]}
+    row = lambda sc, pct: {"cis_score": sc, "grade": "B", "signal": "NEUTRAL", "pct": pct, "regime": "RISK_ON"}  # noqa: E731
+    latest = {"d": "2026-10-11", "rows": {"A": row(50.0, 0.3), "B": row(60.0, 0.7)}, "past": {7: {"A": 48.0}, 30: {}}}
+    out = {x["symbol"]: x for x in overlay(live, latest)["universe"]}
+    assert out["B"]["global_rank"] == 1 and out["A"]["global_rank"] == 2 and out["A"]["class_rank"] == 2
+    assert out["A"]["percentile"] == 30 and "cross_asset_percentile" not in out["A"]
+    assert out["A"]["score_change_7d"] == 2.0 and out["A"]["score_change_30d"] is None
+    assert out["A"]["intraday"]["score_change_7d"] == 5.0 and out["A"]["intraday"]["percentile"] == 95
+
+
+def test_a2a_tasks_do_not_issue_a_second_signal_or_actions():
+    """S-542:A2A 交易信号任务曾按门槛另给一个档位(正式 OUTPERFORM 却写 NEUTRAL)并附「考虑做多入场」;
+    状态简报把状态映射成档位词。说明以正式档位开头、只描述。"""
+    src = (BASE / "src/api/routers/agent.py").read_text()
+    for bad in ("Consider long entry", "Wait for signal upgrade", '"bias": "STRONG OUTPERFORM"', '"regime_signal"'):
+        assert bad not in src, bad
+    assert 'recommendation = (f"{sig} — official CIS' in src
