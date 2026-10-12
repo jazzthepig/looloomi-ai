@@ -159,7 +159,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             id: f.id || `gp-${idx}`,
             performance: f.performance || { ytd: 0, annualReturn: 0, sharpeRatio: 0, maxDrawdown: 0 },
             scores: f.scores || { performance: 0, strategy: 0, team: 0, risk: 0, transparency: 0, aumTrackRecord: 0, total: 0 },
-            grade: f.grade || "B",
+            stars: f.stars ?? null,   // S-545: fund rating in stars; no fabricated default
             description: f.description || "",
             team: f.team || "",
             strategyDetail: f.strategyDetail || "",
@@ -284,14 +284,15 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
     return `$${val}`;
   };
 
-  const getGradeColor = (grade) => {
-    if (!grade || grade === "—") return T.muted;
-    if (grade.startsWith("A")) return T.green;   // A, A+
-    if (grade.startsWith("B")) return T.blue;    // B, B+
-    if (grade.startsWith("C")) return T.amber;   // C, C+
-    if (grade === "D" || grade === "F") return T.red;
-    return T.muted;
+  // S-545 (Jazz 10-12): funds are rated in stars, not A–F letters (letters are the CIS asset grade scale).
+  const getStarColor = (stars) => {
+    if (stars == null) return T.muted;
+    if (stars >= 5) return T.green;
+    if (stars >= 4) return T.blue;
+    if (stars >= 3) return T.amber;
+    return T.red;
   };
+  const starText = (stars) => (stars == null ? "—" : "★".repeat(stars) + "☆".repeat(5 - stars));
 
   const activeFunds = funds.filter(f => f.status === 'active');
   const scoredFunds = funds.filter(f => f.scores?.total > 0);
@@ -300,7 +301,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
     totalFunds: activeFunds.length,
     totalAUM: 'Confidential',
     avgScore: scoredFunds.length > 0 ? Math.round(scoredFunds.reduce((acc, f) => acc + f.scores.total, 0) / scoredFunds.length) : '—',
-    gradeA: funds.filter(f => f.grade === "A").length,
+    fiveStar: funds.filter(f => f.stars === 5).length,
   };
 
   return (
@@ -369,7 +370,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             {[
               { label: "ACTIVE GPs",  value: stats.totalFunds,          color: T.blue  },
               { label: "AVG SCORE",   value: stats.avgScore,             color: T.t2   },
-              { label: "GRADE A",     value: stats.gradeA,               color: T.green },
+              { label: "5-STAR",      value: stats.fiveStar,             color: T.green },
             ].map((s, i, arr) => (
               <div key={i} style={{
                 paddingLeft: 20, paddingRight: i < arr.length - 1 ? 20 : 0,
@@ -469,7 +470,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
             <div>Risk</div>
             <div>Score Breakdown</div>
             <div>Score</div>
-            <div>Grade</div>
+            <div>Rating</div>
           </div>
 
           {loading ? (
@@ -561,14 +562,14 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
 
               {/* Grade */}
               <div>
-                <div style={{
+                <div title={fund.rating_basis || ""} style={{
                   display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  width: 32, height: 32, borderRadius: 6,
-                  background: isPlaceholder ? `${T.muted}20` : `${getGradeColor(fund.grade)}20`,
-                  color: isPlaceholder ? T.muted : getGradeColor(fund.grade),
-                  fontFamily: FONTS.mono, fontWeight: 700, fontSize: 14,
+                  height: 32, padding: "0 6px", borderRadius: 6,
+                  background: isPlaceholder ? `${T.muted}20` : `${getStarColor(fund.stars)}20`,
+                  color: isPlaceholder ? T.muted : getStarColor(fund.stars),
+                  fontFamily: FONTS.mono, fontWeight: 700, fontSize: 12, letterSpacing: "0.05em",
                 }}>
-                  {isPlaceholder ? "—" : fund.grade}
+                  {isPlaceholder ? "—" : starText(fund.stars)}
                 </div>
               </div>
             </div>
@@ -579,7 +580,7 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
         {/* Selected Fund Detail - BottomSheet */}
         <BottomSheet isOpen={!!selectedFund} onClose={() => setSelectedFund(null)}>
           {selectedFund && (
-            <div style={{ borderLeft: `3px solid ${getGradeColor(selectedFund.grade)}`, paddingLeft: 10 }}>
+            <div style={{ borderLeft: `3px solid ${getStarColor(selectedFund.stars)}`, paddingLeft: 10 }}>
               {/* Row 1: Name + Grade */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, lineHeight: 1.2 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -588,9 +589,9 @@ export default function VaultPage({ activeTab, setActiveTab, isSection = false }
                   </h3>
                   <span style={{
                     padding: "1px 6px", borderRadius: 2, fontSize: 10, fontWeight: 600,
-                    background: `${getGradeColor(selectedFund.grade)}20`, color: getGradeColor(selectedFund.grade),
-                  }}>
-                    Grade {selectedFund.grade}
+                    background: `${getStarColor(selectedFund.stars)}20`, color: getStarColor(selectedFund.stars),
+                  }} title={selectedFund.rating_basis || ""}>
+                    {starText(selectedFund.stars)}
                   </span>
                 </div>
                 <div style={{ fontSize: 10, color: T.secondary }}>

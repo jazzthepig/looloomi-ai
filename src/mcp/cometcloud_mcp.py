@@ -1751,11 +1751,11 @@ async def cometcloud_get_fund_portfolio() -> str:
                 )
             elif perf.get("_note"):
                 lines.append(f"*Performance: {perf['_note']}*")
-            # Show CIS composite score if available
+            # S-545:基金的尽调分不是 CIS;评级是星级
             total = sc.get("total")
-            grade = f.get("grade")
-            if total and grade and grade != "—":
-                lines.append(f"**CIS Score**: {total}/100 · **Grade**: {grade}")
+            stars = f.get("stars")
+            if total and stars:
+                lines.append(f"**Due-diligence score**: {total}/100 · **Rating**: {'★' * stars}{'☆' * (5 - stars)}")
             if f.get("note"):
                 lines.append(f"*{f['note']}*")
             if f.get("description"):

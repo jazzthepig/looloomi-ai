@@ -45,7 +45,7 @@ _VAULT_FUNDS = [
             "aumTrackRecord": 5,
             "total": 83,
         },
-        "grade": "A",  # 83 ≥ 75 → A per CIS thresholds (A+=85, A=75, B+=65, B=55)
+        "grade": "A",  # 不对外(S-545):对外是星级,由 scores.total 推出
         "description": "CometCloud's flagship GP partner specializing in institutional DeFi strategies.",
         "team": "Ex-Jane Street, Wintermute, Delphi Digital",
         "strategyDetail": "Multi-strategy DeFi: yield optimization, delta-neutral, protocol governance",
@@ -75,9 +75,31 @@ _VAULT_FUNDS = [
 ]
 
 
+#: S-545(Jazz 10-12「基金页面基金评级按星级来评」):基金评级用星级,不再用 A–F 字母 —— 字母是 CIS 资产等级的,
+#: 同一套字母用在基金上会让人以为是同一个尺子。星级 = 尽调总分(满分 100)按 20 分一档:80–100 ★★★★★ … 0–19 ★。
+STAR_BASIS = "Due-diligence score out of 100, in 20-point bands: 80-100 = 5 stars, 60-79 = 4, 40-59 = 3, 20-39 = 2, 0-19 = 1."
+
+
+def fund_stars(total) -> int | None:
+    """纯函数。尽调总分 → 1–5 星;没评完 → None(不是 0 星)。"""
+    try:
+        t = float(total)
+    except (TypeError, ValueError):
+        return None
+    return max(1, min(5, int(t // 20) + 1)) if t < 100 else 5
+
+
+def fund_view(f: dict) -> dict:
+    out = {k: v for k, v in f.items() if k != "grade"}
+    out["stars"] = fund_stars((f.get("scores") or {}).get("total"))
+    out["rating_basis"] = STAR_BASIS
+    return out
+
+
 @router.get("/api/v1/vault/funds")
 async def get_vault_funds():
-    return {"timestamp": datetime.now().isoformat(), "data": _VAULT_FUNDS}
+    return {"timestamp": datetime.now().isoformat(), "data": [fund_view(f) for f in _VAULT_FUNDS],
+            "rating_basis": STAR_BASIS}
 
 
 # ── Partner Vaults (on-chain, Drift Protocol) ─────────────────────────────────

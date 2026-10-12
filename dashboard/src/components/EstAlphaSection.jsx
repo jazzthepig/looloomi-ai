@@ -6,7 +6,8 @@
  * Compliance notes (per PRD v2.2 must-not-include):
  *   - AUM is intentionally NOT displayed (kept "Confidential" per partner disclosure)
  *   - No performance projections / expected return / Sharpe forward-looking language
- *   - Grade is computed from scores.total (83 ≥ 75 → A per CIS thresholds)
+ *   - Rating is stars from the due-diligence score (S-545: 20-point bands, 83 → 5 stars). Letter grades
+ *     belong to CIS asset scores only, so a fund never shows one.
  *   - Track record shows only live or audited data; placeholders clearly disclosed
  */
 
@@ -16,14 +17,7 @@ import { T, FONTS } from "../tokens";
 const API_BASE = "/api/v1";
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
-const gradeColor = (grade) => {
-  if (!grade || grade === "—") return T.muted;
-  if (grade.startsWith("A")) return T.green;   // A, A+
-  if (grade.startsWith("B")) return T.blue;    // B, B+
-  if (grade.startsWith("C")) return T.amber;   // C, C+
-  if (grade === "D" || grade === "F") return T.red;
-  return T.muted;
-};
+const starColor = (n) => (n >= 4 ? T.green : n === 3 ? T.amber : n ? T.red : T.muted);
 
 const statusBadge = (status) => {
   const active = status === "active";
@@ -230,7 +224,8 @@ export default function EstAlphaSection() {
   }
 
   const badge = statusBadge(fund.status);
-  const gColor = gradeColor(fund.grade);
+  const stars = fund.stars;
+  const sColor = starColor(stars);
   const gScore = fund.scores?.total;
 
   return (
@@ -258,23 +253,17 @@ export default function EstAlphaSection() {
           }}>E</span>
         </div>
 
-        {/* Name + partner info + grade */}
+        {/* Name + partner info + star rating */}
         <div style={{ flex: 1, minWidth: 200 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
             <span style={{
               fontFamily: FONTS.display, fontSize: 24, fontWeight: 700,
               color: T.primary, letterSpacing: "-0.01em",
             }}>{fund.name}</span>
-            {fund.grade && fund.grade !== "—" && (
-              <div style={{
-                width: 32, height: 32, borderRadius: 6,
-                background: `${gColor}20`, border: `1px solid ${gColor}40`,
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              }}>
-                <span style={{
-                  fontFamily: FONTS.mono, fontSize: 14, fontWeight: 700, color: gColor,
-                }}>{fund.grade}</span>
-              </div>
+            {stars != null && (
+              <span title={fund.rating_basis || ""} aria-label={`${stars} of 5 stars`} style={{
+                fontFamily: FONTS.mono, fontSize: 15, letterSpacing: "0.08em", color: sColor, flexShrink: 0,
+              }}>{"★".repeat(stars)}<span style={{ color: T.muted, opacity: 0.4 }}>{"★".repeat(5 - stars)}</span></span>
             )}
           </div>
           <div style={{ fontFamily: FONTS.body, fontSize: 13, color: T.secondary }}>
