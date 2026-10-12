@@ -4,13 +4,11 @@ Endpoints:
   GET  /api/v1/quant/status    — current open trades, balance (from Redis cache)
   GET  /api/v1/quant/trades   — trade history
   GET  /api/v1/quant/equity   — equity curve
-  GET  /api/v1/quant/backtest — backtest results (static JSON)
+  GET  /api/v1/quant/backtest — withdrawn, 410 (S-554: in-sample figures not published)
   POST /internal/quant-push    — Mac Mini pushes Freqtrade status (auth required)
 """
 import os
-import json
 from datetime import datetime, timezone
-from pathlib import Path
 import logging
 from fastapi import APIRouter, HTTPException, Header
 
@@ -217,13 +215,15 @@ async def get_quant_equity():
     }
 
 
-_BACKTEST_PATH = Path(__file__).parent.parent.parent / "data" / "quant" / "quant_backtest_results.json"
 
 
 @router.get("/api/v1/quant/backtest")
 async def get_quant_backtest():
-    """Historical backtest results for CometCloudMultiFactorV2 strategy."""
-    if not _BACKTEST_PATH.exists():
-        raise HTTPException(status_code=404, detail="Backtest results not found")
-    with open(_BACKTEST_PATH) as f:
-        return json.load(f)
+    """Withdrawn (S-554, Jazz 10-12): in-sample backtest figures (a 14-month 3x-leveraged total return and its
+    annualised CAGR) are not published — none was validated out of sample. Forward paper records:
+    /api/v1/portfolio/books and /api/v1/portfolio/combine."""
+    raise HTTPException(status_code=410, detail={
+        "status": "withdrawn",
+        "reason": "In-sample backtest figures are not published; only forward paper records and point-in-time "
+                  "replays are shown.",
+        "see": ["/api/v1/portfolio/books", "/api/v1/portfolio/combine"]})

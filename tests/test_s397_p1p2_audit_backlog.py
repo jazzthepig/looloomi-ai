@@ -215,6 +215,12 @@ def test_c7_quantmonitor_median_ismissing() -> None:
     """C7: median_return must use isMissing (real 0 renders, missing → "—")."""
     rel = "dashboard/src/components/QuantMonitor.jsx"
     text = _file_text(rel)
+    if "median_return" not in text:
+        # S-554 (Jazz 10-12): the backtest card that carried both median_return tiles was withdrawn —
+        # the surface this guard protected no longer exists.
+        check("C7 median_return surface withdrawn (S-554)", "BacktestCard" not in text,
+              "backtest card is back — restore the isMissing checks below")
+        return
     check("C7 imports isMissing",
           "import { isMissing }" in text,
           f"check {rel} for `import {{ isMissing }}`")

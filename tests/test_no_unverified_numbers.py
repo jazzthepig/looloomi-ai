@@ -60,3 +60,16 @@ def test_served_pages_make_no_regulatory_or_stale_count_claims():
             for m in rx.finditer(txt):
                 hits.append(f"{f.name}:{txt.count(chr(10), 0, m.start()) + 1} {what}: {m.group(0)!r}")
     assert not hits, "\n  ".join(["served page claims:"] + hits)
+
+
+def test_quant_backtest_figures_are_withdrawn():
+    """S-554(Jazz 10-12「删掉」):QuantMonitor 曾以 14 个月 3× 杠杆回测的总收益与年化 CAGR 作页面标题数字。"""
+    import asyncio
+    import pytest
+    from fastapi import HTTPException
+    from src.api.routers.quant import get_quant_backtest
+    with pytest.raises(HTTPException) as e:
+        asyncio.run(get_quant_backtest())
+    assert e.value.status_code == 410
+    page = (PAGES / "components" / "QuantMonitor.jsx").read_text(encoding="utf-8")
+    assert "quant/backtest" not in page and "BacktestCard" not in page
